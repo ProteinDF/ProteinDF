@@ -1,0 +1,41 @@
+
+PDF_CMD = ${PDF_HOME}/bin/PDF.x
+PPDF_CMD = mpirun -np ${NCPUS} ${PDF_HOME}/bin/PPDF.x
+
+PDF_MKDIR = $(PDF_HOME)/bin/pdf_mkdir.sh
+PDF_CLEAN = $(PDF_HOME)/bin/pdf_clean.sh
+PDF_XML_CMD = $(PDF_HOME)/bin/pdf_xml.py
+PDF_XML_DIFF = $(PDF_HOME)/bin/pdf_xml_diff.py -v
+
+.PHONY: all clean serial parallel
+
+all: serial
+
+serial: serial.log
+parallel: parallel.log
+
+serial.xml:
+	@$(PDF_MKDIR)
+	$(PDF_CMD) 2>&1 > PDF.log
+	@$(PDF_XML_CMD) fl_Out_Std > $@
+
+serial.log: serial.xml
+	@$(PDF_XML_DIFF) pdf.xml.std serial.xml > $@
+	@echo
+	
+parallel.xml:
+	@$(PDF_MKDIR)
+	$(PPDF_CMD) 2>&1 > PPDF.log
+	@$(PDF_XML_CMD) fl_Out_Std > $@
+
+parallel.log: parallel.xml
+	@$(PDF_XML_DIFF) pdf.xml.std parallel.xml > $@
+	@echo
+	
+clean:
+	@$(RM) serial.xml parallel.xml
+	@$(PDF_CLEAN)
+	@$(RM) result.guess.*
+	@$(RM) file.*
+
+

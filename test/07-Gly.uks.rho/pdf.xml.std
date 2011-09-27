@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+<pdf>
+  <model>
+    <dimensions atoms="10" orbitals="55"/>
+  </model>
+  <integral/>
+  <guess/>
+  <scf iterations="40">
+    <iteration cycle="1">
+      <total_energy value="-282.160836572"/>
+    </iteration>
+    <iteration cycle="2">
+      <total_energy value="-282.109069222"/>
+    </iteration>
+    <iteration cycle="3">
+      <total_energy value="-282.097658014"/>
+    </iteration>
+    <iteration cycle="4">
+      <total_energy value="-282.099362782"/>
+    </iteration>
+    <iteration cycle="5">
+      <total_energy value="-282.104554197"/>
+    </iteration>
+    <iteration cycle="6">
+      <total_energy value="-282.110012119"/>
+    </iteration>
+    <iteration cycle="7">
+      <total_energy value="-282.114799554"/>
+    </iteration>
+    <iteration cycle="8">
+      <total_energy value="-282.118739147"/>
+    </iteration>
+    <iteration cycle="9">
+      <total_energy value="-282.121813992"/>
+    </iteration>
+    <iteration cycle="10">
+      <total_energy value="-282.124310279"/>
+    </iteration>
+    <iteration cycle="11">
+      <total_energy value="-282.126278171"/>
+    </iteration>
+    <iteration cycle="12">
+      <total_energy value="-282.127838067"/>
+    </iteration>
+    <iteration cycle="13">
+      <total_energy value="-282.129112968"/>
+    </iteration>
+    <iteration cycle="14">
+      <total_energy value="-282.130136335"/>
+    </iteration>
+    <iteration cycle="15">
+      <total_energy value="-282.130993914"/>
+    </iteration>
+    <iteration cycle="16">
+      <total_energy value="-282.131685974"/>
+    </iteration>
+    <iteration cycle="17">
+      <total_energy value="-282.132274987"/>
+    </iteration>
+    <iteration cycle="18">
+      <total_energy value="-282.132767299"/>
+    </iteration>
+    <iteration cycle="19">
+      <total_energy value="-282.133178083"/>
+    </iteration>
+    <iteration cycle="20">
+      <total_energy value="-282.133522972"/>
+    </iteration>
+    <iteration cycle="21">
+      <total_energy value="-282.13381134"/>
+    </iteration>
+    <iteration cycle="22">
+      <total_energy value="-282.134053295"/>
+    </iteration>
+    <iteration cycle="23">
+      <total_energy value="-282.134257522"/>
+    </iteration>
+    <iteration cycle="24">
+      <total_energy value="-282.13442994"/>
+    </iteration>
+    <iteration cycle="25">
+      <total_energy value="-282.134575902"/>
+    </iteration>
+    <iteration cycle="26">
+      <total_energy value="-282.134698366"/>
+    </iteration>
+    <iteration cycle="27">
+      <total_energy value="-282.134806561"/>
+    </iteration>
+    <iteration cycle="28">
+      <total_energy value="-282.134912009"/>
+    </iteration>
+    <iteration cycle="29">
+      <total_energy value="-282.134989448"/>
+    </iteration>
+    <iteration cycle="30">
+      <total_energy value="-282.135038139"/>
+    </iteration>
+    <iteration cycle="31">
+      <total_energy value="-282.13508098"/>
+    </iteration>
+    <iteration cycle="32">
+      <total_energy value="-282.135121457"/>
+    </iteration>
+    <iteration cycle="33">
+      <total_energy value="-282.135146617"/>
+    </iteration>
+    <iteration cycle="34">
+      <total_energy value="-282.135172335"/>
+    </iteration>
+    <iteration cycle="35">
+      <total_energy value="-282.135194189"/>
+    </iteration>
+    <iteration cycle="36">
+      <total_energy value="-282.135208446"/>
+    </iteration>
+    <iteration cycle="37">
+      <total_energy value="-282.135224715"/>
+    </iteration>
+    <iteration cycle="38">
+      <total_energy value="-282.135241553"/>
+    </iteration>
+    <iteration cycle="39">
+      <total_energy value="-282.13525149"/>
+    </iteration>
+    <iteration cycle="40">
+      <total_energy value="-282.135260107"/>
+      <population type="atom">
+        <atom index="1" value="-0.609631"/>
+        <atom index="2" value="0.328319"/>
+        <atom index="3" value="0.307245"/>
+        <atom index="4" value="-0.391121"/>
+        <atom index="5" value="0.284665"/>
+        <atom index="6" value="0.209519"/>
+        <atom index="7" value="0.227902"/>
+        <atom index="8" value="-0.313011"/>
+        <atom index="9" value="-0.433352"/>
+        <atom index="10" value="0.389465"/>
+      </population>
+    </iteration>
+  </scf>
+</pdf>

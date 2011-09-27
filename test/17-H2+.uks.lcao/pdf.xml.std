@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<pdf>
+  <model>
+    <dimensions orbitals="10"/>
+  </model>
+  <integral/>
+  <guess/>
+  <scf iterations="3">
+    <iteration cycle="1">
+      <total_energy value="0.331030094521"/>
+    </iteration>
+    <iteration cycle="2">
+      <total_energy value="0.331030093389"/>
+    </iteration>
+    <iteration cycle="3">
+      <total_energy value="0.331030092581"/>
+    </iteration>
+  </scf>
+</pdf>

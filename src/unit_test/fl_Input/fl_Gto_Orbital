@@ -1,0 +1,255 @@
+ ------------------------------------------------------------------------
+ numbercgto     : 17
+ ------------------------------------------------------------------------
+ --- 0 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-HYDROGEN (41) DZVP]
+atom             [H]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       4 
+ // primitive GTO //
+5.0999180000000003e+01  9.6604759999999994e-03
+7.4832179999999999e+00  7.3728859999999993e-02
+1.7774680000000000e+00  2.9585810000000001e-01
+5.1932950000000000e-01  7.1590529999999997e-01
+ --- 1 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-HYDROGEN (41) DZVP]
+atom             [H]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.5411000000000000e-01  1.0000000000000000e+00
+ --- 2 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-OXYGEN (621/41) by FS]
+atom             [O]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       6 
+ // primitive GTO //
+5.2229020000000000e+03  -1.9363720000000000e-03
+7.8253989999999999e+02  -1.4850670000000000e-02
+1.7726740000000001e+02  -7.3318700000000001e-02
+4.9516689999999997e+01  -2.4511620000000001e-01
+1.5666440000000000e+01  -4.8028470000000001e-01
+5.1793600000000000e+00  -3.3594269999999998e-01
+ --- 3 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-OXYGEN (621/41) by FS]
+atom             [O]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       2 
+ // primitive GTO //
+1.0601440000000000e+01  7.8805819999999999e-02
+9.4231710000000002e-01  -5.6769519999999996e-01
+ --- 4 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-OXYGEN (621/41) by FS]
+atom             [O]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+2.7747460000000002e-01  1.0000000000000000e+00
+ --- 5 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-OXYGEN (621/41) by FS]
+atom             [O]
+label            []
+shellname        []
+shell             p 
+scalefactor       1.0000000000000000e+00 
+contraction       4 
+ // primitive GTO //
+3.3424129999999998e+01  1.7560329999999999e-02
+7.6221709999999998e+00  1.0763000000000000e-01
+2.2382089999999999e+00  3.2352550000000002e-01
+6.8672999999999995e-01  4.8322290000000001e-01
+ --- 6 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-OXYGEN (621/41) by FS]
+atom             [O]
+label            []
+shellname        []
+shell             p 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.9381350000000000e-01  1.0000000000000000e+00
+ --- 7 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-CARBON (621/41) by FS]
+atom             [C]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       6 
+ // primitive GTO //
+2.8080639999999999e+03  2.0178300000000000e-03
+4.2113830000000002e+02  1.5433199999999999e-02
+9.5586619999999996e+01  7.5581549999999997e-02
+2.6739000000000001e+01  2.4782820000000000e-01
+8.4328269999999996e+00  4.7937249999999998e-01
+2.7605819999999999e+00  3.3383439999999998e-01
+ --- 8 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-CARBON (621/41) by FS]
+atom             [C]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       2 
+ // primitive GTO //
+5.4470039999999997e+00  -7.7840770000000004e-02
+4.7924220000000001e-01  5.6895600000000002e-01
+ --- 9 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-CARBON (621/41) by FS]
+atom             [C]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.4615649999999999e-01  1.0000000000000000e+00
+ --- 10 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-CARBON (621/41) by FS]
+atom             [C]
+label            []
+shellname        []
+shell             p 
+scalefactor       1.0000000000000000e+00 
+contraction       4 
+ // primitive GTO //
+1.8130849999999999e+01  1.5854730000000001e-02
+4.0998830000000002e+00  9.5682770000000000e-02
+1.1858370000000000e+00  3.0491190000000001e-01
+3.6859740000000002e-01  4.9350169999999999e-01
+ --- 11 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-CARBON (621/41) by FS]
+atom             [C]
+label            []
+shellname        []
+shell             p 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.0972000000000000e-01  1.0000000000000000e+00
+ --- 12 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-NITROGEN (621/41) by FS]
+atom             [N]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       6 
+ // primitive GTO //
+3.8454150000000000e+03  2.0186079999999999e-03
+5.7753319999999997e+02  1.5407760000000000e-02
+1.3131979999999999e+02  7.5371400000000005e-02
+3.6823779999999999e+01  2.4821219999999999e-01
+1.1670120000000001e+01  4.7982740000000002e-01
+3.8542600000000000e+00  3.3180120000000002e-01
+ --- 13 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-NITROGEN (621/41) by FS]
+atom             [N]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       2 
+ // primitive GTO //
+7.8295610000000000e+00  -7.7666869999999999e-02
+6.8773510000000004e-01  5.6545979999999996e-01
+ --- 14 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-NITROGEN (621/41) by FS]
+atom             [N]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+2.0403879999999999e-01  1.0000000000000000e+00
+ --- 15 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-NITROGEN (621/41) by FS]
+atom             [N]
+label            []
+shellname        []
+shell             p 
+scalefactor       1.0000000000000000e+00 
+contraction       4 
+ // primitive GTO //
+2.6809840000000001e+01  1.5466310000000000e-02
+6.0681539999999998e+00  9.6439680000000000e-02
+1.7676259999999999e+00  3.0836100000000000e-01
+5.4667279999999996e-01  4.9115969999999998e-01
+ --- 16 th CGTO --------------------
+Snum [0]
+Pnum [0]
+Dnum [0]
+basis            [O-NITROGEN (621/41) by FS]
+atom             [N]
+label            []
+shellname        []
+shell             p 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.5872890000000001e-01  1.0000000000000000e+00
+ ------------------------------------------------------------------------

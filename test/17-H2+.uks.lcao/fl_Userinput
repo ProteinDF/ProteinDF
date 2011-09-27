@@ -1,0 +1,114 @@
+
+// H2+
+//    geometry           : ???
+//    orbita-basis-set   : H = "O-HYDROGEN (41/1*)"
+//    auxiliary-basis-set: H = "A--HYDROGEN (3,1;3,1)"
+//
+// H9/06/26 EKA
+
+>>>>MAIN
+  //restart
+  //restart-scf = yes
+    step-control = [ create integral guess scf ]
+
+>>>>INTEGRAL
+//    print-level = -2
+      cut-value = 1e-16
+
+>>>>GUESS
+//    guess/ini-print-level = 0
+
+>>>>SCF
+//    print-level = [ DfScf            =-1 ] // -5 is supported
+//    print-level = [ DfLevelshift     =-1 ] // -5 is supported
+//    print-level = [ DfConverge1      =-1 ] // -5 is supported
+//    print-level = [ DfDensityfitting =-1 ] // -1 is supported
+//    print-level = [ DfSummary        =-1 ] // -5 is supported
+//    print-level = [ DfInvmatrix      =-1 ] // -5 is supported
+//    print-level = [ DfXmatrix        =-1 ] // -5, -1 is supported
+//    print-level = [ DfFockmatrix     =-1 ] // -5, -1 is supported
+//    print-level = [ DfTransFmatrix   =-1 ] // -5, -1 is supported
+//    print-level = [ DfDiagonal       =-1 ] // -5 is supported
+//    print-level = [ DfTransatob      =-1 ] // -5 is supported
+//    print-level = [ DfDmatrix        =-1 ] // -5 is supported
+//    print-level = [ DfPopulation     =-1 ] // -5 is supported
+//    print-level = [ DfGrid = -1 ]
+//    print-level =  0 // for DfGrid debug
+//    dfsummary   = -1
+//    dfscf       =  0 // for level-shift debug code
+
+    // GUESS
+    scf-start-guess = file_lcao                     // ( rho / lcao )
+    orbital-overlap-correspondence       = on  // ( on  / off )
+    orbital-overlap-correspondence-first = on  // ( off / on  )
+
+    // METHOD
+    orbital-independence-threshold = 0.7e-2
+//    disk-utilization = yes
+    method           = sp
+    xc-potential     = vwn
+    scf-acceleration = damping
+      level-shift      = on
+
+    // ITERATION
+    max-iteration         = 80
+    convergence/type      = density
+    convergence/threshold        = 1e-4
+    convergence/threshold-energy = 1e-6
+
+    // NUMBER OF ELECTRON, OCCUPIED ORBITALS
+    method/sp/alpha-elec-number   = 1
+      method/sp/beta-elec-number    = 0
+    method/sp/alpha-spin-occlevel = [ 1 ]
+      method/sp/beta-spin-occlevel  = [ nil ]
+
+    // DAMPING
+    scf-acceleration/damping/damping-factor     = [0.3 0.7]
+    scf-acceleration/damping/damping-type       = density
+    scf-acceleration/damping/number-of-damping  = 2
+
+    // DIIS
+    scf-acceleration/diis/number-of-diis        = 6
+    scf-acceleration/diis/property              = density
+    scf-acceleration/diis/start-number          = 6
+    scf-acceleration/diis/type                  = pulay
+
+    // LEVEL-SHIFT
+    level-shift/ls-closed-mo  = -10.0
+    level-shift/ls-open-mo    =  -5.0
+    level-shift/ls-virtual-mo =   0.0
+    level-shift/delta-group-closed  = 0.01;
+    level-shift/delta-group-open    = 0.02;
+    level-shift/delta-group-virtual = 0.03;
+
+    // XC-POTENTIAL
+    xc-potential/gxalpha/alpha-value        = 0.7
+    //xc-potential/xalpha/alpha-value         = 0.7
+    //xc-potential/xalpha/method              = newton-raphson
+    //xc-potential/xalpha/iteration-number    = 50
+    //xc-potential/xalpha/converge-threshold  = 1e-5
+    //xc-potential/xalpha/damping-factor      = 1.0
+
+    // FILE SIZE
+    file-rot-number         = 100
+
+>>>>MOLECULE
+    //unit = a.u.
+    //geometry/cartesian/unit = a.u.
+    geometry/cartesian/input = {
+        H      -0.7   0.0   0.0
+        H       0.7   0.0   0.0
+    }end
+    basis-set/orbital = {
+        H = "O-HYDROGEN (41/1*)"    // (from DeFT, same to basis2)
+    }end
+    basis-set/density-auxiliary = {
+        //H = "A-HYDROGEN (3,1;3,1) from DeFT" // from DeFT
+    	H = "A-HYDROGEN (3,1;3,1) ORG"
+    }end
+    basis-set/exchange-auxiliary = {
+        //H = "A-HYDROGEN (3,1;3,1) from DeFT" // from DeFT
+    	H = "A-HYDROGEN (3,1;3,1) ORG"
+    }end
+
+// end of file

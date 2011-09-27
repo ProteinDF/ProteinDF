@@ -1,0 +1,65 @@
+>>>>MAIN
+  //restart
+  //restart-scf = yes
+    step-control = [ create integral guess scf ]
+
+>>>>INTEGRAL
+      cut-value = 1e-16
+
+>>>>GUESS
+
+>>>>SCF
+    // GUESS
+    scf-start-guess = rho                     // ( rho / lcao )
+    orbital-overlap-correspondence       = on  // ( on  / off )
+    orbital-overlap-correspondence-first = on  // ( off / on  )
+    orbital-overlap-correspondence-method = mo-projection
+
+    // METHOD
+    orbital-independence-threshold = 0.7e-2
+    // disk-utilization = yes
+    method           = sp
+    xc-potential     = vwn~
+    scf-acceleration = damping
+    level-shift      = off
+
+    // ITERATION
+    max-iteration         = 80
+    convergence/type      = density
+    convergence/threshold        = 1e-4
+    convergence/threshold-energy = 1e-6
+
+    // NUMBER OF ELECTRON, OCCUPIED ORBITALS
+    method/sp/alpha-elec-number   = 1
+    method/sp/beta-elec-number    = 0
+    method/sp/alpha-spin-occlevel = [ 1 ]
+    method/sp/beta-spin-occlevel  = [ nil ]
+
+    // DAMPING
+    scf-acceleration/damping/damping-factor     = [0.3 0.7]
+    scf-acceleration/damping/damping-type       = density
+    scf-acceleration/damping/number-of-damping  = 2
+
+    // FILE SIZE
+    file-rot-number         = 100
+
+>>>>MOLECULE
+    //unit = a.u.
+    //geometry/cartesian/unit = a.u.
+    geometry/cartesian/input = {
+        H      -0.7   0.0   0.0
+        H       0.7   0.0   0.0
+    }end
+    basis-set/orbital = {
+        H = "O-HYDROGEN (41/1*)"    // (from DeFT, same to basis2)
+    }end
+    basis-set/density-auxiliary = {
+        //H = "A-HYDROGEN (3,1;3,1) from DeFT" // from DeFT
+    	H = "A-HYDROGEN (3,1;3,1) ORG"
+    }end
+    basis-set/exchange-auxiliary = {
+        //H = "A-HYDROGEN (3,1;3,1) from DeFT" // from DeFT
+    	H = "A-HYDROGEN (3,1;3,1) ORG"
+    }end
+
+// end of file

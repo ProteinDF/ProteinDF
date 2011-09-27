@@ -1,0 +1,420 @@
+ ------------------------------------------------------------------------
+ numbercgto     : 32
+ ------------------------------------------------------------------------
+ --- 0 th CGTO --------------------
+Snum [4]
+Pnum [1]
+Dnum [0]
+basis            [A-HYDROGEN (4,1;4,1) from deMon]
+atom             [H]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.5000000000000000e+01  1.0000000000000000e+00
+ --- 1 th CGTO --------------------
+Snum [4]
+Pnum [1]
+Dnum [0]
+basis            [A-HYDROGEN (4,1;4,1) from deMon]
+atom             [H]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+2.5000000000000000e+00  1.0000000000000000e+00
+ --- 2 th CGTO --------------------
+Snum [4]
+Pnum [1]
+Dnum [0]
+basis            [A-HYDROGEN (4,1;4,1) from deMon]
+atom             [H]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.0000000000000001e-01  1.0000000000000000e+00
+ --- 3 th CGTO --------------------
+Snum [4]
+Pnum [1]
+Dnum [0]
+basis            [A-HYDROGEN (4,1;4,1) from deMon]
+atom             [H]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+5.0000000000000000e-01  1.0000000000000000e+00
+ --- 4 th CGTO --------------------
+Snum [4]
+Pnum [1]
+Dnum [0]
+basis            [A-HYDROGEN (4,1;4,1) from deMon]
+atom             [H]
+label            []
+shellname        []
+shell             p 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+5.0000000000000000e-01  1.0000000000000000e+00
+ --- 5 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-OXYGEN (7/2;7/2) by FS]
+atom             [O]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+2.1000000000000000e+02  1.0000000000000000e+00
+ --- 6 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-OXYGEN (7/2;7/2) by FS]
+atom             [O]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+4.7999206999999998e+01  1.0000000000000000e+00
+ --- 7 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-OXYGEN (7/2;7/2) by FS]
+atom             [O]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.3361967999999999e+01  1.0000000000000000e+00
+ --- 8 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-OXYGEN (7/2;7/2) by FS]
+atom             [O]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+3.9949913000000001e+00  1.0000000000000000e+00
+ --- 9 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-OXYGEN (7/2;7/2) by FS]
+atom             [O]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.5804692000000000e+00  1.0000000000000000e+00
+ --- 10 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-OXYGEN (7/2;7/2) by FS]
+atom             [O]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+4.8534919999999998e-01  1.0000000000000000e+00
+ --- 11 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-OXYGEN (7/2;7/2) by FS]
+atom             [O]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.3533264000000000e-01  1.0000000000000000e+00
+ --- 12 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-OXYGEN (7/2;7/2) by FS]
+atom             [O]
+label            []
+shellname        []
+shell             p 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.5804692000000000e+00  1.0000000000000000e+00
+ --- 13 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-OXYGEN (7/2;7/2) by FS]
+atom             [O]
+label            []
+shellname        []
+shell             p 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.3533264000000000e-01  1.0000000000000000e+00
+ --- 14 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-CARBON (7/2;7/2) by FS]
+atom             [C]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.1600000000000000e+02  1.0000000000000000e+00
+ --- 15 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-CARBON (7/2;7/2) by FS]
+atom             [C]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+2.6556294000000001e+01  1.0000000000000000e+00
+ --- 16 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-CARBON (7/2;7/2) by FS]
+atom             [C]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+7.3369093000000003e+00  1.0000000000000000e+00
+ --- 17 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-CARBON (7/2;7/2) by FS]
+atom             [C]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+2.1579668999999999e+00  1.0000000000000000e+00
+ --- 18 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-CARBON (7/2;7/2) by FS]
+atom             [C]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+8.3604889999999998e-01  1.0000000000000000e+00
+ --- 19 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-CARBON (7/2;7/2) by FS]
+atom             [C]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+2.5936803000000003e-01  1.0000000000000000e+00
+ --- 20 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-CARBON (7/2;7/2) by FS]
+atom             [C]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+7.6267600000000005e-02  1.0000000000000000e+00
+ --- 21 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-CARBON (7/2;7/2) by FS]
+atom             [C]
+label            []
+shellname        []
+shell             p 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+8.3604889999999998e-01  1.0000000000000000e+00
+ --- 22 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-CARBON (7/2;7/2) by FS]
+atom             [C]
+label            []
+shellname        []
+shell             p 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+7.6267600000000005e-02  1.0000000000000000e+00
+ --- 23 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-NITROGEN (7/2;7/2) by FS]
+atom             [N]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.6200000000000000e+02  1.0000000000000000e+00
+ --- 24 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-NITROGEN (7/2;7/2) by FS]
+atom             [N]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+3.6837400000000002e+01  1.0000000000000000e+00
+ --- 25 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-NITROGEN (7/2;7/2) by FS]
+atom             [N]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.0166817000000000e+01  1.0000000000000000e+00
+ --- 26 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-NITROGEN (7/2;7/2) by FS]
+atom             [N]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+3.0109775000000001e+00  1.0000000000000000e+00
+ --- 27 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-NITROGEN (7/2;7/2) by FS]
+atom             [N]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.2128696999999999e+00  1.0000000000000000e+00
+ --- 28 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-NITROGEN (7/2;7/2) by FS]
+atom             [N]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+3.7655850000000002e-01  1.0000000000000000e+00
+ --- 29 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-NITROGEN (7/2;7/2) by FS]
+atom             [N]
+label            []
+shellname        []
+shell             s 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.0874240000000000e-01  1.0000000000000000e+00
+ --- 30 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-NITROGEN (7/2;7/2) by FS]
+atom             [N]
+label            []
+shellname        []
+shell             p 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.2128696999999999e+00  1.0000000000000000e+00
+ --- 31 th CGTO --------------------
+Snum [7]
+Pnum [2]
+Dnum [0]
+basis            [A-NITROGEN (7/2;7/2) by FS]
+atom             [N]
+label            []
+shellname        []
+shell             p 
+scalefactor       1.0000000000000000e+00 
+contraction       1 
+ // primitive GTO //
+1.0874240000000000e-01  1.0000000000000000e+00
+ ------------------------------------------------------------------------

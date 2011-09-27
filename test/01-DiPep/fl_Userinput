@@ -1,0 +1,87 @@
+// Dipeptide (Gly-His), created by T. Nishimura, 2005/Nov/28
+// total number of residues: 2
+// total number of atoms: 27
+//	 residue 4: 8 atoms 
+//	 residue 5: 19 atoms 
+
+
+>>>>MAIN
+  	step-control	= [create integral guess scf]
+//	linear-algebra-package = LAPACK
+
+>>>>INTEGRAL
+	cut-value	= 1.0e-16
+
+>>>>GUESS
+
+>>>>SCF
+	dfpopulation	= -1
+	scf-start-guess	= rho
+	orbital-overlap-correspondence	= off
+	orbital-overlap-correspondence-first	= off
+	max-iteration	= 100
+	method	= nsp
+	method/nsp/electron-number	= 112
+	method/nsp/occlevel	= [ 1 - 56 ]
+	orbital-independance-threshold	= 0.007
+	convergence/type	= density
+	convergence/threshold	= 1e-4
+	convergence/threshold-energy	= 1e-5
+	scf-acceleration	= damping
+	scf-acceleration/damping/damping-factor	= [0.85 0.15]
+	xc-potential	= vwn~
+
+>>>>MOLECULE
+	geometry/cartesian/unit	= angstrom
+	geometry/cartesian/input	= {
+                H        20.471604       11.700999       14.137150
+		N	 20.094000	 11.873000	 15.036000
+		H	 20.259000	 12.759000	 15.492000
+		C	 19.276000	 10.900000	 15.744000
+		H	 19.819000	  9.956000	 15.766000
+		H	 19.156000	 11.258000	 16.767000
+		C	 17.910000	 10.680000	 15.064000
+		O	 17.794000	 10.752000	 13.838000
+		N	 16.844000	 10.396000	 15.818000
+		H	 16.953000	 10.289000	 16.816000
+		C	 15.566000	  9.962000	 15.225000
+		H	 15.573000	 10.213000	 14.164000
+		C	 15.510000	  8.425000	 15.328000
+		H	 15.331000	  8.147000	 16.367000
+		H	 14.677000	  8.061000	 14.726000
+		C	 16.789000	  7.750000	 14.863000
+		N	 17.896000	  7.470000	 15.638000
+		H	 18.012000	  7.656000	 16.624000
+		C	 18.867000	  7.006000	 14.838000
+		H	 19.849000	  6.709000	 15.177000
+		N	 18.467000	  7.002000	 13.555000
+		C	 17.143000	  7.468000	 13.569000
+		H	 16.526000	  7.631000	 12.698000
+		C	 14.311000	 10.686000	 15.771000
+		O	 13.182000	 10.334000	 15.415000
+		O	 14.551271	 11.687894	 16.583294
+		H	 15.492394	 11.750552	 16.696698
+	}end
+
+	basis-set/orbital	= {
+		H = "O-HYDROGEN (41) DZVP"
+		O = "O-OXYGEN (621/41) by FS"
+		C = "O-CARBON (621/41) by FS"
+		N = "O-NITROGEN (621/41) by FS"
+	}end
+
+	basis-set/density-auxiliary	= {
+		H = "A-HYDROGEN (4,1;4,1) from deMon"
+		O = "A-OXYGEN (7/2;7/2) by FS"
+		C = "A-CARBON (7/2;7/2) by FS"
+		N = "A-NITROGEN (7/2;7/2) by FS"
+	}end
+
+	basis-set/exchange-auxiliary	= {
+		H = "A-HYDROGEN (4,1;4,1) from deMon"
+		O = "A-OXYGEN (7/2;7/2) by FS"
+		C = "A-CARBON (7/2;7/2) by FS"
+		N = "A-NITROGEN (7/2;7/2) by FS"
+	}end
+
+

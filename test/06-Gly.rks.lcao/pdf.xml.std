@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<pdf>
+  <model>
+    <dimensions atoms="10" orbitals="55"/>
+  </model>
+  <integral/>
+  <guess/>
+  <scf iterations="3">
+    <iteration cycle="1">
+      <total_energy value="-282.135314552"/>
+    </iteration>
+    <iteration cycle="2">
+      <total_energy value="-282.1353174"/>
+    </iteration>
+    <iteration cycle="3">
+      <total_energy value="-282.135319405"/>
+      <population type="atom">
+        <atom index="1" value="-0.609646"/>
+        <atom index="2" value="0.328323"/>
+        <atom index="3" value="0.307254"/>
+        <atom index="4" value="-0.39113"/>
+        <atom index="5" value="0.284665"/>
+        <atom index="6" value="0.209516"/>
+        <atom index="7" value="0.227731"/>
+        <atom index="8" value="-0.312978"/>
+        <atom index="9" value="-0.4334"/>
+        <atom index="10" value="0.389665"/>
+      </population>
+    </iteration>
+  </scf>
+</pdf>

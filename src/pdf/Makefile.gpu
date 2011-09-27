@@ -1,0 +1,10 @@
+include ../../Makefile.gpu.inc
+
+all: DfHpq_driver_CUDA.cu_o DfHpq_CUDA.cu_o
+
+DfHpq_driver_CUDA.cu_o:
+	$(NVCC) $(NVCCFLAGS) --compiler-options "$(CXXFLAGS)" $(SMVERSIONFLAGS) -o $@ -c DfHpq_driver.cu
+#
+#DfHpq_CUDA.o:
+#	$(NVCC) $(CXXFLAGS) $(NVCCFLAGS) $(SMVERSIONFLAGS) -o $@ DfHpq_CUDA.cu
+

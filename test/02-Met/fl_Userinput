@@ -1,0 +1,75 @@
+>>>>MAIN
+	step-control	= [create integral guess scf]
+
+>>>>INTEGRAL
+	cut-value	= 1.0e-16
+
+>>>>GUESS
+
+>>>>SCF
+	dfpopulation	= -1
+	scf-start-guess	= rho
+	orbital-overlap-correspondence	= off
+	orbital-overlap-correspondence-first	= off
+	max-iteration	= 100
+	method	= nsp
+	method/nsp/electron-number	= 80
+	method/nsp/occlevel	= [ 1 - 40 ]
+	orbital-independence-threshold	= 0.007
+	convergence/type	= density
+	convergence/threshold	= 1e-4
+	convergence/threshold-energy	= 1e-5
+	scf-acceleration	= damping
+	scf-acceleration/damping/damping-factor	= [0.85 0.15]
+	xc-potential	= vwn~
+
+>>>>MOLECULE
+	geometry/cartesian/unit	= angstrom
+	geometry/cartesian/input	= {
+		H	 40.768656	 33.271392	 23.761235
+		N	 40.796000	 34.250000	 23.614000
+		H	 41.664000	 34.698000	 23.358000
+		C	 39.603000	 35.117000	 23.541000
+		H	 38.723000	 34.477000	 23.473000
+		C	 39.452000	 35.970000	 24.829000
+		H	 38.606000	 36.648000	 24.723000
+		H	 39.225000	 35.313000	 25.669000
+		C	 40.671000	 36.840000	 25.173000
+		H	 40.569000	 37.187000	 26.201000
+		H	 41.574000	 36.233000	 25.116000
+		S	 40.854000	 38.305000	 24.110000
+		C	 42.541000	 38.802000	 24.524000
+		H	 42.578000	 39.171000	 25.549000
+		H	 43.194000	 37.938000	 24.398000
+		H	 42.878000	 39.597000	 23.858000
+		C	 39.664000	 35.999000	 22.263000
+		O	 40.585000	 35.853000	 21.450000
+		O	 38.696868	 36.876265	 22.134917
+		H	 38.122498	 36.787093	 22.886348
+	}end
+
+	basis-set/orbital	= {
+		H = "O-HYDROGEN (41) DZVP"
+		O = "O-OXYGEN (621/41) by FS"
+		C = "O-CARBON (621/41) by FS"
+		N = "O-NITROGEN (621/41) by FS"
+		S = "O-SULFUR (6321/521/1*)"
+	}end
+
+	basis-set/density-auxiliary	= {
+		H = "A-HYDROGEN (4,1;4,1) from deMon"
+		O = "A-OXYGEN (7/2;7/2) by FS"
+		C = "A-CARBON (7/2;7/2) by FS"
+		N = "A-NITROGEN (7/2;7/2) by FS"
+		S = "A-SULFUR (5,4;5,4)"
+	}end
+
+	basis-set/exchange-auxiliary	= {
+		H = "A-HYDROGEN (4,1;4,1) from deMon"
+		O = "A-OXYGEN (7/2;7/2) by FS"
+		C = "A-CARBON (7/2;7/2) by FS"
+		N = "A-NITROGEN (7/2;7/2) by FS"
+		S = "A-SULFUR (5,4;5,4)"
+	}end
+
+

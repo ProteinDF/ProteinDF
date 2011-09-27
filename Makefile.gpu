@@ -1,0 +1,13 @@
+include Makefile.gpu.inc
+
+all: makeEsp.cuda
+
+clean:
+	rm *.o
+
+makeEsp.cuda:
+	(cd src/pdf; $(MAKE) -f Makefile.gpu)
+	(cd src/tools; $(MAKE) -f Makefile.gpu)
+
+#makeEsp.cuda: $(OBJS) makeEsp_CUDA.o
+#        $(NVCC) $(CXXFLAGS) $(NVCCFLAGS) $(SMVERSIONFLAGS) -o $@ $^ $(LIBS)

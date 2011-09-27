@@ -1,0 +1,74 @@
+// create by QCLO program
+
+// total number of residues: 1
+// total number of atoms: 10
+//	 residue 1: 10 atoms 
+
+
+>>>>MAIN
+	step-control	= [create integral guess scf]
+
+>>>>INTEGRAL
+	cut-value	= 1.0e-16
+
+>>>>GUESS
+
+>>>>SCF
+	dfpopulation	= -1
+	scf-start-guess	= rho
+	orbital-overlap-correspondence	= off
+	orbital-overlap-correspondence-first	= off
+	max-iteration	= 100
+	method	= sp
+	method/sp/alpha-elec-number	= 20
+	method/sp/alpha-spin-occlevel	= [ 1 - 20 ]
+	method/sp/beta-elec-number	= 19
+	method/sp/beta-spin-occlevel	= [ 1 - 19 ]
+	orbital-independence-threshold	= 0.007
+	convergence/type	= density
+	convergence/threshold	= 1e-4
+	convergence/threshold-energy	= 1e-5
+	scf-acceleration	= damping
+	scf-acceleration/damping/damping-factor	= [ 0.85 0.15 ]
+	level-shift	= on
+	level-shift/ls-open-mo	= -0.1
+	level-shift/ls-virtual-mo	= 0
+	xc-potential	= vwn~
+
+>>>>MOLECULE
+	geometry/cartesian/unit	= angstrom
+	geometry/cartesian/input	= {
+		N	 -1.613000	 -1.107000	 -0.000000
+		C	 -0.182000	 -1.107000	 -0.000000
+		C	  0.380000	  0.350000	 -0.000000
+		O	 -0.328000	  1.323000	 -0.004000
+		O	  1.692000	  0.572000	  0.005000
+		H	 -2.115000	 -1.077000	 -0.847000
+		H	 -2.115000	 -1.078000	  0.847000
+		H	  0.209000	 -1.647000	  0.895000
+		H	  0.209000	 -1.645000	 -0.897000
+		H	  2.205000	 -0.227000	  0.004000
+	}end
+
+	basis-set/orbital	= {
+		H = "O-HYDROGEN (41) DZVP"
+		O = "O-OXYGEN (621/41) by FS"
+		C = "O-CARBON (621/41) by FS"
+		N = "O-NITROGEN (621/41) by FS"
+	}end
+
+	basis-set/density-auxiliary	= {
+		H = "A-HYDROGEN (4,1;4,1) from deMon"
+		O = "A-OXYGEN (7/2;7/2) by FS"
+		C = "A-CARBON (7/2;7/2) by FS"
+		N = "A-NITROGEN (7/2;7/2) by FS"
+	}end
+
+	basis-set/exchange-auxiliary	= {
+		H = "A-HYDROGEN (4,1;4,1) from deMon"
+		O = "A-OXYGEN (7/2;7/2) by FS"
+		C = "A-CARBON (7/2;7/2) by FS"
+		N = "A-NITROGEN (7/2;7/2) by FS"
+	}end
+
+

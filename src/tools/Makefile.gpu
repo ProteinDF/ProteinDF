@@ -1,0 +1,7 @@
+include ../../Makefile.gpu.inc
+
+all: makeEspField.gpu
+
+makeEspField.gpu: TlEspField.cu_o makeEspField.cu_o
+	$(NVCC) -o $@ $<
+

@@ -1,0 +1,175 @@
+<?xml version="1.0"?>
+<pdf>
+  <model>
+    <dimensions atoms="10" orbitals="55"/>
+  </model>
+  <integral/>
+  <guess/>
+  <scf iterations="51">
+    <iteration cycle="1">
+      <total_energy value="-281.777588976"/>
+    </iteration>
+    <iteration cycle="2">
+      <total_energy value="-281.658822136"/>
+    </iteration>
+    <iteration cycle="3">
+      <total_energy value="-281.63689948"/>
+    </iteration>
+    <iteration cycle="4">
+      <total_energy value="-281.655704633"/>
+    </iteration>
+    <iteration cycle="5">
+      <total_energy value="-281.689601614"/>
+    </iteration>
+    <iteration cycle="6">
+      <total_energy value="-281.719580489"/>
+    </iteration>
+    <iteration cycle="7">
+      <total_energy value="-281.736767123"/>
+    </iteration>
+    <iteration cycle="8">
+      <total_energy value="-281.7469303"/>
+    </iteration>
+    <iteration cycle="9">
+      <total_energy value="-281.755615855"/>
+    </iteration>
+    <iteration cycle="10">
+      <total_energy value="-281.763454092"/>
+    </iteration>
+    <iteration cycle="11">
+      <total_energy value="-281.77044049"/>
+    </iteration>
+    <iteration cycle="12">
+      <total_energy value="-281.776420317"/>
+    </iteration>
+    <iteration cycle="13">
+      <total_energy value="-281.781377463"/>
+    </iteration>
+    <iteration cycle="14">
+      <total_energy value="-281.785243558"/>
+    </iteration>
+    <iteration cycle="15">
+      <total_energy value="-281.788189879"/>
+    </iteration>
+    <iteration cycle="16">
+      <total_energy value="-281.790453278"/>
+    </iteration>
+    <iteration cycle="17">
+      <total_energy value="-281.792179321"/>
+    </iteration>
+    <iteration cycle="18">
+      <total_energy value="-281.79361121"/>
+    </iteration>
+    <iteration cycle="19">
+      <total_energy value="-281.794886939"/>
+    </iteration>
+    <iteration cycle="20">
+      <total_energy value="-281.795996511"/>
+    </iteration>
+    <iteration cycle="21">
+      <total_energy value="-281.796969857"/>
+    </iteration>
+    <iteration cycle="22">
+      <total_energy value="-281.797797081"/>
+    </iteration>
+    <iteration cycle="23">
+      <total_energy value="-281.798491004"/>
+    </iteration>
+    <iteration cycle="24">
+      <total_energy value="-281.799070276"/>
+    </iteration>
+    <iteration cycle="25">
+      <total_energy value="-281.799545701"/>
+    </iteration>
+    <iteration cycle="26">
+      <total_energy value="-281.799956877"/>
+    </iteration>
+    <iteration cycle="27">
+      <total_energy value="-281.800310402"/>
+    </iteration>
+    <iteration cycle="28">
+      <total_energy value="-281.800593751"/>
+    </iteration>
+    <iteration cycle="29">
+      <total_energy value="-281.800847237"/>
+    </iteration>
+    <iteration cycle="30">
+      <total_energy value="-281.800978316"/>
+    </iteration>
+    <iteration cycle="31">
+      <total_energy value="-281.801168358"/>
+    </iteration>
+    <iteration cycle="32">
+      <total_energy value="-281.801328521"/>
+    </iteration>
+    <iteration cycle="33">
+      <total_energy value="-281.80145029"/>
+    </iteration>
+    <iteration cycle="34">
+      <total_energy value="-281.801550288"/>
+    </iteration>
+    <iteration cycle="35">
+      <total_energy value="-281.801636201"/>
+    </iteration>
+    <iteration cycle="36">
+      <total_energy value="-281.801721797"/>
+    </iteration>
+    <iteration cycle="37">
+      <total_energy value="-281.801795177"/>
+    </iteration>
+    <iteration cycle="38">
+      <total_energy value="-281.801844688"/>
+    </iteration>
+    <iteration cycle="39">
+      <total_energy value="-281.801896808"/>
+    </iteration>
+    <iteration cycle="40">
+      <total_energy value="-281.801940424"/>
+    </iteration>
+    <iteration cycle="41">
+      <total_energy value="-281.801976879"/>
+    </iteration>
+    <iteration cycle="42">
+      <total_energy value="-281.802012269"/>
+    </iteration>
+    <iteration cycle="43">
+      <total_energy value="-281.802038414"/>
+    </iteration>
+    <iteration cycle="44">
+      <total_energy value="-281.802060362"/>
+    </iteration>
+    <iteration cycle="45">
+      <total_energy value="-281.802081838"/>
+    </iteration>
+    <iteration cycle="46">
+      <total_energy value="-281.802095648"/>
+    </iteration>
+    <iteration cycle="47">
+      <total_energy value="-281.802112186"/>
+    </iteration>
+    <iteration cycle="48">
+      <total_energy value="-281.80212678"/>
+    </iteration>
+    <iteration cycle="49">
+      <total_energy value="-281.802138559"/>
+    </iteration>
+    <iteration cycle="50">
+      <total_energy value="-281.802148111"/>
+    </iteration>
+    <iteration cycle="51">
+      <total_energy value="-281.802155966"/>
+      <population type="atom">
+        <atom index="1" value="-0.545551"/>
+        <atom index="2" value="-0.320949"/>
+        <atom index="3" value="0.300831"/>
+        <atom index="4" value="-0.095662"/>
+        <atom index="5" value="-0.361984"/>
+        <atom index="6" value="0.455277"/>
+        <atom index="7" value="0.455269"/>
+        <atom index="8" value="0.332798"/>
+        <atom index="9" value="0.332828"/>
+        <atom index="10" value="0.447143"/>
+      </population>
+    </iteration>
+  </scf>
+</pdf>

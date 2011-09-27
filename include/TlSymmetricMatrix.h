@@ -1,0 +1,400 @@
+#ifndef TLSYMMETRICMATRIX_H
+#define TLSYMMETRICMATRIX_H
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"    // this file created by autotools
+#endif // HAVE_CONFIG_H
+
+#include <iostream>
+#include <algorithm>
+#include <vector>
+#include <fstream>
+
+#include "TlMatrix.h"
+#include "TlVector.h"
+
+class TlCommunicate; // 通信クラス
+
+/// 対称密行列クラス
+///
+/// 行列は正方行列
+/// 要素の格納方法はLapackでいうところの'L'
+class TlSymmetricMatrix : public TlMatrix {
+    // friend
+    friend class TlCommunicate;
+    friend class TlVector;
+
+public:
+    /// 正方対称行列オブジェクトを作成する
+    ///
+    /// 行列の要素は0で初期化される。
+    /// @param[in] dim 作成する行列の次元数
+    explicit TlSymmetricMatrix(int dim =1);
+
+    /// 正方対称行列オブジェクトを作成する
+    ///
+    /// 行列の要素はバッファから作成される。
+    /// バッファサイズは dim + dim * (dim -1) /2 でなければならない。
+    /// @param[in] dim 作成する行列の次元数
+    TlSymmetricMatrix(const TlVector& rVector, int nDim);
+
+    /// コピーコンストラクタ
+    TlSymmetricMatrix(const TlSymmetricMatrix& rhs);
+
+    /// 行列オブジェクトから正方対称行列オブジェクトを作成する
+    ///
+    /// 対称行列になっているかのチェックは行わず、
+    /// 左下の要素を格納する。
+    TlSymmetricMatrix(const TlMatrix& rhs);
+
+    TlSymmetricMatrix(const TlSerializeData& data);
+
+    virtual ~TlSymmetricMatrix();
+
+public:
+    /** 行列のサイズを変更する
+     *
+     *  行列を大きくする場合、追加される要素は0で初期化される。
+     *  行列を小さくする場合、切り詰められる要素は破棄される。
+     *
+     *  @param[in] dim 次元数
+     */
+    virtual void resize(index_type dim);
+
+    /// 行列要素をベクトルにして返す
+    ///
+    /// 3x3 の行列であれば以下の順に返す。
+    /// [ 0 - - ]
+    /// [ 1 3 - ]
+    /// [ 2 4 5 ]
+    //virtual TlVector getTlVector() const;
+
+//   /// ベクトルから行列に変換する
+//   void convertFromVector(int dim, const TlVector& vector);
+
+    /// 全要素の和を返す
+    virtual double sum() const;
+
+    /// 要素を返す(読み取り専用)
+    ///
+    /// 内部では、行列要素を(2次元配列ではなく)
+    /// 1次元配列として保持しているので、
+    /// 他のメンバ関数内でもこのメンバ関数が呼ばれる。
+    /// @param[in] row 行数
+    /// @param[in] col 列数
+    /// @return 要素
+    virtual double operator()(int row, int col) const;
+    virtual double get(int row, int col) const;
+
+    /// 要素を返す(代入可能)
+    ///
+    /// 内部では、行列要素を(2次元配列ではなく)
+    /// 1次元配列として保持しているので、
+    /// 他のメンバ関数内でもこのメンバ関数が呼ばれる。
+    /// @param[in] row 行数
+    /// @param[in] col 列数
+    /// @return 要素
+    virtual double& operator()(int row, int col);
+    virtual void set(index_type row, index_type col, double value);
+
+    virtual void add(index_type row, index_type col, double value);
+
+    /// 代入演算子
+    TlSymmetricMatrix& operator =(const TlSymmetricMatrix& rhs);
+
+    TlSymmetricMatrix& operator+=(const TlSymmetricMatrix& rhs);
+    //TlSymmetricMatrix& operator+=(const TlMatrix& rhs);
+    TlSymmetricMatrix& operator-=(const TlSymmetricMatrix& rhs);
+
+    /// 行列を定数倍する
+    ///
+    /// @param[in] rhs 定数倍の値
+    /// @return 計算後のオブジェクト
+    TlSymmetricMatrix& operator*=(const double& rhs);
+
+    /// 行列を定数で割る
+    /// @param[in] rhs 割る定数の値
+    /// @return 計算後のオブジェクト
+    TlSymmetricMatrix& operator/=(const double& rhs);
+
+    friend TlSymmetricMatrix operator+(const TlSymmetricMatrix& X, const TlSymmetricMatrix& Y);
+    friend TlMatrix          operator+(const TlMatrix&          X, const TlSymmetricMatrix& Y);
+    friend TlMatrix          operator+(const TlSymmetricMatrix& X, const TlMatrix&          Y) {
+        return (Y + X);
+    }
+    friend TlSymmetricMatrix operator-(const TlSymmetricMatrix& X, const TlSymmetricMatrix& Y);
+    friend TlMatrix          operator-(const TlMatrix&          X, const TlSymmetricMatrix& Y);
+    friend TlMatrix          operator-(const TlSymmetricMatrix& X, const TlMatrix&          Y);
+    friend TlMatrix          operator*(const TlSymmetricMatrix& X, const TlSymmetricMatrix& Y);
+    friend TlMatrix          operator*(const TlMatrix&          X, const TlSymmetricMatrix& Y);
+    friend TlMatrix          operator*(const TlSymmetricMatrix& X, const TlMatrix&          Y);
+    friend TlSymmetricMatrix operator*(const TlSymmetricMatrix& X, double Y);
+    friend TlSymmetricMatrix operator*(double X, const TlSymmetricMatrix& Y);
+    friend TlVector operator*(const TlSymmetricMatrix& A, const TlVector& X);
+    friend TlVector operator*(const TlVector& X, const TlSymmetricMatrix& A);
+    
+    const TlSymmetricMatrix& dot(const TlSymmetricMatrix& X);
+
+public:
+    /// 指定された入力ストリームが読み込み可能かどうかを返す
+    ///
+    /// @param[in] ifs 入力ファイルストリーム
+    /// @retval true 読み取り可能
+    /// @retval false 読み取り不可能
+    static bool isLoadable(std::ifstream& ifs);
+    static bool isLoadable(const std::string& rFilePath);
+
+    /// 指定されたファイルパス名から行列要素を読み込む
+    ///
+    /// パスの区切り文字(UNIXなら'/'、windowsなら'\')は、
+    /// この関数内では変換しない。
+    /// 内部格納形式は、いわゆるRLHDとなる。
+    /// @param[in] sFile ファイルパス名
+    /// @retval true 読み取り成功
+    /// @retval false 読み取り失敗
+    virtual bool load(const std::string& sFile);
+
+    /// 入力ストリームから行列要素を読み込む
+    ///
+    /// パスの区切り文字(UNIXなら'/'、windowsなら'\')は、
+    /// この関数内では変換しない。
+    /// 内部格納形式は、いわゆるRLHDとなる。
+    /// @param[in,out] ifs 入力ストリーム
+    /// @retval true 読み取り成功
+    /// @retval false 読み取り失敗
+    virtual bool load(std::ifstream& ifs);
+
+    /// 指定されたファイルパス名に行列要素を書き込む
+    ///
+    /// パスの区切り文字(UNIXなら'/'、windowsなら'\')は、
+    /// この関数内では変換しない。
+    /// 内部格納形式は、いわゆるRLHDとなる。
+    /// @param[in] sFile ファイルパス名
+    /// @retval true 書き込み成功
+    /// @retval false 書き込み失敗
+    virtual bool save(const std::string& sFile) const;
+
+    /// 出力ストリームに行列要素を書き込む
+    ///
+    ///  パスの区切り文字(UNIXなら'/'、windowsなら'\')は、
+    /// この関数内では変換しない。
+    /// 内部格納形式は、いわゆるRLHDとなる。
+    /// @param[in,out] ofs 出力ストリーム
+    /// @retval true 書き込み成功
+    /// @retval false 書き込み失敗
+    virtual bool save(std::ofstream& ofs) const;
+
+    virtual TlSerializeData getSerialize() const;
+    
+public:
+    /// 転置行列にする
+    ///
+    ///  転置行列となったこのオブジェクト
+    virtual TlSymmetricMatrix& transpose();
+
+    /// 要素の絶対値の最大値を返す
+    ///
+    /// @param[out] outRow 該当要素の行
+    /// @param[out] outCol 該当要素の列
+    /// @return 要素の絶対値の最大値
+    virtual double getMaxAbsoluteElement(int* outRow =NULL, int* outCol =NULL) const;
+
+    /// 各行の要素の絶対値の最大値をベクトルとして返す
+    TlVector getMaxAbsoluteVectorOnEachRow() const;
+
+    /// 指定した行の要素から構成されるベクトルを返す
+    ///
+    /// @param[in] nRow 指定する行
+    virtual TlVector getRowVector(int nRow) const;
+
+    /// 指定した列の要素から構成されるベクトルを返す
+    ///
+    /// @param[in] nCol 指定する列
+    virtual TlVector getColVector(int nCol) const;
+
+
+    /// 指定された値の行または列の要素の絶対値の最大値を返す
+    ///
+    /// @return 要素の絶対値の最大値
+    double getMaxAbsoluteElementByIndex(int index) const;
+
+
+    /// 固有値を求める
+    ///
+    /// @param[out] pEigVal 固有値が格納されたベクトル
+    /// @param[out] pEigVec 固有値ベクトルが格納された行列
+    /// @retval true 固有値が求められた
+    /// @retval false エラーが発生した
+    virtual bool diagonal(TlVector* pEigVal, TlMatrix* pEigVec) const;
+
+    virtual bool inverse();
+
+public:
+    friend std::ostream& operator <<(std::ostream& out, const TlSymmetricMatrix& rhs);
+    template<typename T> void print(T& out) const;
+
+protected:
+    /// サブクラス用コンストラクタ
+    /// データ領域の確保(this->data_)はサブクラスに任せる
+    //TlSymmetricMatrix(int dim, double* pData);
+
+    /// 行列要素用メモリを確保する
+    ///
+    /// @param[in] isZeroClear ゼロで初期化する場合はtrueを指定する
+    //virtual void initialize(bool isZeroClear = true);
+
+    /// 必要な行列要素の数を返す。
+    /// initialize()などから呼び出される。
+    virtual std::size_t getNumOfElements() const {
+        assert(this->getNumOfRows() == this->getNumOfCols());
+        std::size_t dim = this->getNumOfRows();
+        return (dim *(dim +1) / 2);
+    }
+
+    /// オブジェクトの内容を破棄する
+    //virtual void clear();
+
+    virtual inline size_t index(int row, int col) const;
+
+    static bool getHeaderInfo(std::ifstream& ifs, int* pType = NULL,
+                              int* pNumOfRows = NULL, int* pNumOfCols = NULL);
+
+    bool load_RLHD(std::ifstream& ifs);
+    bool load_CLHD(std::ifstream& ifs);
+
+#ifdef HAVE_LAPACK
+    /// 対称行列の積を求める
+    friend TlMatrix multiplicationByLapack(const TlSymmetricMatrix& X, const TlMatrix& Y);
+    friend TlMatrix multiplicationByLapack(const TlMatrix& X, const TlSymmetricMatrix& Y);
+
+    friend TlVector multiplicationByLapack(const TlSymmetricMatrix& A, const TlVector& X);
+
+    /// 対称行列の固有値を求める
+    ///
+    /// @param[in] inMatrix 対称行列
+    /// @param[out] outEigVal 固有値が格納されたベクトル
+    /// @param[out] outEigVec 固有値ベクトルが格納された行列
+    /// @retval true 固有値が求められた
+    /// @retval false エラーが発生した
+    friend bool diagonalByLapack(const TlSymmetricMatrix& inMatrix, TlVector* outEigVal, TlMatrix* outEigVec);
+
+    friend bool inverseByLapack(TlSymmetricMatrix& inoutMatrix);
+#else
+    // cause compile error
+#error NOT found algebra package: need LAPACK library
+#endif // HAVE_LAPACK
+
+private:
+    /// 行列のサイズを変更する
+    ///
+    /// 行列を大きくする場合、追加される要素は0で初期化される。
+    /// 行列を小さくする場合、切り詰められる要素は破棄される。
+    /// このメンバ関数は下位互換性のために用意されている。
+    /// @param[in] row 行数
+    /// @param[in] col 列数
+    virtual void resize(int row, int col) {
+        assert(row == col);
+        this->resize(row);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////
+// inline functions
+//
+inline size_t TlSymmetricMatrix::index(int row, int col) const
+{
+    assert((0 <= row) && (row < this->m_nRows));
+    assert((0 <= col) && (col < this->m_nCols));
+
+    if (row < col) {
+        std::swap(row, col);
+    }
+
+    // This class treats 'L' type matrix.
+    // Follows means:
+    //  index = row + (2 * this->m_nRows - (col +1)) * col / 2;
+    unsigned int s = this->m_nRows;
+    s = s << 1; // means 's *= 2'
+
+    unsigned int t = (s - (col +1)) * col;
+    t = t >> 1; // means 't /= 2'
+
+    return (row + t);
+}
+
+
+inline double TlSymmetricMatrix::get(int row, int col) const
+{
+    return (this->data_[this->index(row, col)]);
+}
+
+
+inline double TlSymmetricMatrix::operator()(int row, int col) const
+{
+    return this->get(row, col);
+}
+
+
+inline double& TlSymmetricMatrix::operator()(int row, int col)
+{
+    return (this->data_[this->index(row, col)]);
+}
+
+
+inline void TlSymmetricMatrix::set(index_type row, index_type col, double value)
+{
+    const std::size_t index = this->index(row, col);
+    // const double diff = value - this->data_[index];
+    
+#pragma omp critical(TlSymmetricMatrix___set)
+    {
+        this->data_[index] = value;
+    }
+}
+
+
+inline void TlSymmetricMatrix::add(index_type row, index_type col, double value)
+{
+    const std::size_t index = this->index(row, col);    
+
+#pragma omp atomic
+    this->data_[index] += value;
+}
+
+
+template <typename T>
+void TlSymmetricMatrix::print(T& out) const
+{
+    const int nNumOfDim = this->getNumOfRows(); // == this->getNumOfCols()
+
+    out << "\n\n";
+    for (int ord = 0; ord < nNumOfDim; ord += 10) {
+        out << "       ";
+        for (int j = ord; ((j < ord+10) && (j < nNumOfDim)); ++j) {
+            out << TlUtils::format("   %5d th", j+1);
+        }
+        out << "\n" << " ----";
+
+        for (int j = ord; ((j < ord+10) && (j < nNumOfDim)); ++j) {
+            out << "-----------";
+        }
+        out << "----\n";
+
+        for (int i = 0; i < nNumOfDim; ++i) {
+            out << TlUtils::format(" %5d  ", i+1);
+
+            for (int j = ord; ((j < ord+10) && (j < nNumOfDim)); ++j) {
+                if (j > i) {
+                    out << "    ----   ";
+                } else {
+                    out << TlUtils::format(" %10.6lf", (*this)(i,j));
+                }
+            }
+            out << "\n";
+        }
+        out << "\n\n";
+    }
+    out.flush();
+}
+
+#endif // TLSYMMETRICMATRIX_H

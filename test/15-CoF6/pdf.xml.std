@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<pdf>
+  <model>
+    <dimensions orbitals="108"/>
+  </model>
+  <integral/>
+  <guess/>
+  <scf iterations="20">
+    <iteration cycle="1">
+      <total_energy value="-1974.97684268"/>
+    </iteration>
+    <iteration cycle="2">
+      <total_energy value="-1991.56523207"/>
+    </iteration>
+    <iteration cycle="3">
+      <total_energy value="-1990.16330643"/>
+    </iteration>
+    <iteration cycle="4">
+      <total_energy value="-1990.56402837"/>
+    </iteration>
+    <iteration cycle="5">
+      <total_energy value="-1990.20151373"/>
+    </iteration>
+    <iteration cycle="6">
+      <total_energy value="-1990.17618735"/>
+    </iteration>
+    <iteration cycle="7">
+      <total_energy value="-1990.03674332"/>
+    </iteration>
+    <iteration cycle="8">
+      <total_energy value="-1990.29116367"/>
+    </iteration>
+    <iteration cycle="9">
+      <total_energy value="-1990.38659787"/>
+    </iteration>
+    <iteration cycle="10">
+      <total_energy value="-1990.03123543"/>
+    </iteration>
+    <iteration cycle="11">
+      <total_energy value="-1989.42298775"/>
+    </iteration>
+    <iteration cycle="12">
+      <total_energy value="-1989.49409401"/>
+    </iteration>
+    <iteration cycle="13">
+      <total_energy value="-1989.5349764"/>
+    </iteration>
+    <iteration cycle="14">
+      <total_energy value="-1989.5243971"/>
+    </iteration>
+    <iteration cycle="15">
+      <total_energy value="-1989.52424108"/>
+    </iteration>
+    <iteration cycle="16">
+      <total_energy value="-1989.52424817"/>
+    </iteration>
+    <iteration cycle="17">
+      <total_energy value="-1989.52419596"/>
+    </iteration>
+    <iteration cycle="18">
+      <total_energy value="-1989.52421067"/>
+    </iteration>
+    <iteration cycle="19">
+      <total_energy value="-1989.52421403"/>
+    </iteration>
+    <iteration cycle="20">
+      <total_energy value="-1989.52421116"/>
+    </iteration>
+  </scf>
+</pdf>

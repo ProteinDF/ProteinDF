@@ -1,0 +1,56 @@
+// CoF6, arranged by T. Nishimura on 2005/Nov/28, 
+// based on the sample by Y.SHIGEMITSU, H7/06/19.
+
+>>>>MAIN
+    step-control = [ create integral guess scf ]
+
+>>>>INTEGRAL
+    cut-value = 1e-10
+
+>>>>GUESS
+
+>>>>SCF
+    print-level = -1
+    convergence/type        = energy
+    convergence/threshold   = 1e-5
+    disk-utilization        = no
+//    file-rot-number         = 100
+//    max-iteration = 10
+    method                      = nsp
+    method/nsp/electron-number  = 84
+    method/nsp/occlevel         = [ 1 - 42 ]
+//    scf-acceleration                            = diis
+    scf-acceleration	= damping
+    scf-acceleration/damping/damping-factor     = 0.85
+    scf-acceleration/diis/number-of-diis        = 4
+    scf-acceleration/diis/property              = fock 
+    scf-acceleration/diis/start-number          = 1
+    scf-acceleration/diis/type                  = pulay
+//    xc-potential                             = vwn
+    xc-potential	= vwn~
+    xc-potential/gxalpha/alpha-value         = 0.7
+
+
+>>>>MOLECULE
+    geometry/cartesian/input = {
+       Co                          0.0      0.0      0.0
+       F                          -3.57159  0.0      0.0
+       F                           0.0      3.57159  0.0
+       F                           0.0      0.0      3.57159
+       F                           0.0     -3.57159  0.0
+       F                           0.0      0.0     -3.57159
+       F                           3.57159  0.0      0.0
+    }end
+
+    basis-set/orbital = {
+        F = "O-FLUORINE (631/31/1)"
+        Co = "O-COBALT (63321/531*/41+)"
+    }end
+    basis-set/density-auxiliary = {
+         F = "A-FLUORINE (5,2;5,2)"
+        Co = "A-COBALT (5,5;5,5)"
+    }end
+    basis-set/exchange-auxiliary = {
+         F = "A-FLUORINE (5,2;5,2)"
+        Co = "A-COBALT (5,5;5,5)"
+    }end

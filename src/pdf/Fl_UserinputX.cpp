@@ -1,0 +1,720 @@
+#include <fstream>
+#include <iostream>
+#include "Fl_UserinputX.h"
+#include "Fl_Db_Basis.h"
+#include "Fl_Tbl_Orbital.h"
+#include "Fl_Geometry.h"
+#include "Fl_Gto_Density.h"
+#include "Fl_Gto_Xcpot.h"
+#include "TlStringTokenizer.h"
+#include "TlAtom.h"
+#include "TlResidue.h"
+
+Fl_UserinputX::Fl_UserinputX(const std::string& sFilePath)
+        : m_sFilePath(sFilePath), m_param()
+{
+}
+
+Fl_UserinputX::~Fl_UserinputX()
+{
+}
+
+TlParameter Fl_UserinputX::getParameter() const
+{
+    return this->m_param;
+}
+
+TlSerializeData Fl_UserinputX::getSerializeData() const
+{
+    return this->data_;
+}
+
+// メモ
+//
+// o コメント行は"//"もしくは"--", "#"で開始します。
+// o グループ行は">>>>"で始まり、空白もしくは改行までです。
+void Fl_UserinputX::load()
+{
+    std::ifstream ifs;
+    ifs.open(this->m_sFilePath.c_str(), std::ios::in);
+
+    if (!ifs.is_open()) {
+        std::cerr << "could not open file: " << this->m_sFilePath << ". stop." << std::endl;
+        abort();
+    }
+
+    std::string sLine = "";
+    std::string sGroup = "";
+    std::string sKeyword = "";
+    bool bNextValue = false; // keywordを読み込み後、"="を読み込んだらtrue。それ以外false
+    int nNumOfLine = 0;
+
+    while (!ifs.eof()) {
+        // 1行読み込む
+        std::string sTmp = "";
+        std::getline(ifs, sTmp);
+        sLine += sTmp;
+        nNumOfLine++;
+
+        // parse
+        while (!sLine.empty()) {
+            //std::cerr << "sline = " << sLine << std::endl;
+
+            // 行頭のホワイトスペースを除去
+            TlUtils::trim_ws(sLine);
+            if (sLine.empty()) {
+                break;
+            }
+
+            // コメント行は改行まで読み込みを破棄する
+            if ((sLine.compare(0, 2, "//") == 0) ||
+                    (sLine.compare(0, 2, "--") == 0) ||
+                    (sLine.compare(0, 1, "#") == 0)) {
+                sLine = "";
+                break;
+            }
+
+            if (sKeyword == "") {
+                // keyword が設定されていない場合 ==============================
+
+                // グループ行
+                if (sLine.compare(0, 4, ">>>>") == 0) {
+                    sLine = sLine.substr(4);
+                    sGroup = TlUtils::getWord(sLine);
+                    continue;
+                }
+
+                // キーワード行
+                // "=" とホワイトスペースの前まで取得
+                std::string::size_type nKeyword = sLine.find_first_of("= \f\n\r\t\v");
+                sKeyword = sLine.substr(0, nKeyword);
+                if (nKeyword == std::string::npos) {
+                    sLine = "";
+                } else {
+                    sLine = sLine.substr(nKeyword);
+                }
+
+                // 特殊なキーワード
+//  if ((sGroup == "MAIN") && (sKeyword == "restart")){
+//    this->m_param["MAIN"]["restart"] = "true";
+//    sKeyword = "";
+//  }
+
+            } else {
+                // keyword が設定されている場合 ================================
+                if (bNextValue == false) {
+                    // "=" がまだ読み込まれていない。
+                    // "=" を読み込む。"="で無ければエラー
+                    if (sLine[0] == '=') {
+                        sLine = sLine.substr(1);
+                        bNextValue = true;
+                        continue;
+                    } else {
+                        // error
+                        std::cerr << "could not found '='. line =" << nNumOfLine << ". stop." << std::endl;
+                        //std::cerr << "sKeyword = " << sKeyword << std::endl;
+                        //std::cerr << "sLine = " << sLine << std::endl;
+                        abort();
+                    }
+                } else {
+                    // "=" が読み込まれている。
+
+                    // value を読み込む
+                    // 括弧の種類によって分類
+                    const char bracketType = sLine[0];
+
+                    std::string sValue = "";
+                    switch (bracketType) {
+                    case '[': {
+                        // "[" で始まるvalue は"]" まで格納する(改行を含まない)。
+                        const std::string::size_type nEndBracket = sLine.find_first_of(']');
+                        if (nEndBracket != std::string::npos) {
+                            sValue = sLine.substr(1, nEndBracket -1);
+                            //this->m_param[sGroup][sKeyword] = sValue;
+                            sLine = sLine.substr(nEndBracket +1);
+
+                            // 次のキーワード、グループを読み込むための後始末
+                            //sKeyword = "";
+                            //bNextValue = false;
+                        } else {
+                            // error
+                            std::cerr << "could not found ']'. line =" << nNumOfLine << ". stop." << std::endl;
+                            abort();
+                        }
+                    }
+                    break;
+
+                    case '{': {
+                        const int nStartBracketLine = nNumOfLine;
+                        // "{" で始まるvalue は"}"もしくは"}end" まで格納する(改行を含む)。
+                        bool bFoundEndBracket = false;
+                        do {
+                            std::string::size_type nEndBracket = sLine.find_first_of("}");
+                            if (nEndBracket != std::string::npos) {
+                                // 終端記号を発見した
+                                sValue = sLine.substr(1, nEndBracket -1);
+                                //this->m_param[sGroup][sKeyword] = sValue;
+                                sLine = sLine.substr(nEndBracket +1);
+                                if (sLine.compare(0, 3, "end") == 0) {
+                                    // "}end"の場合も終端記号としてOKにする<-互換のため
+                                    sLine = sLine.substr(3);
+                                }
+
+                                // 次のキーワード、グループを読み込むための後始末
+                                //sKeyword = "";
+                                bFoundEndBracket = true;
+
+                                break; // while を抜ける
+                            }
+
+                            // 終端記号が見つからなかったので、次の行を読み込む
+                            std::string sTmp = "";
+                            std::getline(ifs, sTmp);
+                            sLine += ("\n" + sTmp);
+                            nNumOfLine++;
+                        } while (!ifs.eof());
+
+                        if (bFoundEndBracket == false) {
+                            // error
+                            // 終端記号が見つからないままファイルの終わりまで来てしまった
+                            std::cerr << "could not found '}'. line =" << nStartBracketLine << ". stop." << std::endl;
+                            abort();
+                        }
+                    }
+                    break;
+
+                    default: {
+                        // 括弧で囲まれていないとき
+                        // ホワイトスペースまでが値
+                        std::string::size_type nValue = sLine.find_first_of(" \f\n\r\t\v");
+                        //std::string sValue;
+                        if (nValue != std::string::npos) {
+                            sValue = sLine.substr(0, nValue);
+                            sLine = sLine.substr(nValue);
+                        } else {
+                            sValue = sLine;
+                            sLine = "";
+                        }
+                        //this->m_param[sGroup][sKeyword] = sValue;
+                        //sKeyword = "";
+                        //bNextValue = false;
+                    }
+                    break;
+                    }
+
+                    // store value
+                    //std::cerr << "g = " << sGroup << ", k = " << sKeyword << ", v = " << sValue << std::endl;
+                    this->m_param[sGroup][sKeyword] = sValue;
+                    this->data_["model"][sKeyword] = sValue;
+
+                    sKeyword = "";
+                    bNextValue = false;
+                }
+            }
+        }
+    }
+
+    ifs.close();
+
+    // make table ========================================================
+    if (this->m_param["MOLECULE"]["geometry/cartesian/input"] != "") {
+        const std::string str = this->m_param["MOLECULE"]["geometry/cartesian/input"];
+        this->m_param["MOLECULE"]["geometry/cartesian/input"] = this->molecule_geometry_cartesian_input(str);
+        this->data_["model"]["geometry/cartesian/input"] = this->molecule_geometry_cartesian_input(str);
+    }
+
+    if (this->m_param["MOLECULE"]["basis-set/orbital"] != "") {
+        const std::string str = this->m_param["MOLECULE"]["basis-set/orbital"];
+        this->m_param["MOLECULE"]["basis-set/orbital"] = this->moleculeBasisSetOrbital(str);
+        this->data_["model"]["basis-set/orbital"] = this->moleculeBasisSetOrbital(str);
+    }
+
+    if (this->m_param["MOLECULE"]["basis-set/density-auxiliary"] != "") {
+        const std::string str = this->m_param["MOLECULE"]["basis-set/density-auxiliary"];
+        this->m_param["MOLECULE"]["basis-set/density-auxiliary"] = this->moleculeBasisSetDensityAuxiliary(str);
+        this->data_["model"]["basis-set/density-auxiliary"] = this->moleculeBasisSetDensityAuxiliary(str);
+    }
+
+    if (this->m_param["MOLECULE"]["basis-set/exchange-auxiliary"] != "") {
+        const std::string str = this->m_param["MOLECULE"]["basis-set/exchange-auxiliary"];
+        this->m_param["MOLECULE"]["basis-set/exchange-auxiliary"] = this->moleculeBasisSetExchangeAuxiliary(str);
+        this->data_["model"]["basis-set/exchange-auxiliary"] = this->moleculeBasisSetExchangeAuxiliary(str);
+    }
+
+    //this->m_param.print(std::cout);
+
+    this->alias();
+    this->check();
+}
+
+
+std::string Fl_UserinputX::molecule_geometry_cartesian_input(const std::string& str)
+{
+    std::istringstream in(str);
+    Fl_Geometry flGeom(Fl_Geometry::getDefaultFileName());
+    flGeom.clear();
+
+    while (in) {
+        std::string sLine;
+        std::getline(in, sLine);
+
+        // 先頭のホワイトスペースを取り除く
+        TlUtils::trim_ws(sLine);
+        if (sLine.empty()) {
+            continue;
+        }
+
+        // コメント行を除く
+        if ((sLine.compare(0, 2, "//") == 0) ||
+                (sLine.compare(0, 1, "#") == 0)) {
+            continue;
+        }
+
+        // ホワイトスペースをデリミタにして、読み込み
+        std::string sAtom    = "";
+        std::string sLabel1  = "";
+        std::string sLabel2  = "";
+        TlPosition position;
+        double charge = 0.0;
+
+        TlStringTokenizer st(sLine);
+        std::string tmp = st.nextToken();
+
+        // Atom
+        if ((tmp == "X") || (TlAtom::getElementNumber(tmp) != 0)) {
+            sAtom = tmp;
+            tmp = st.nextToken();
+        } else {
+            std::cerr << "atom is not defined. stop." << std::endl;
+            abort();
+        }
+
+        // Label2
+        if (tmp[0] == '@') {
+            sLabel2 = tmp.substr(1);
+            tmp = st.nextToken();
+        }
+
+        // 座標
+        {
+            double x = std::atof(tmp.c_str());
+            tmp = st.nextToken();
+            double y = std::atof(tmp.c_str());
+            tmp = st.nextToken();
+            double z = std::atof(tmp.c_str());
+            tmp = st.nextToken();
+
+            position.moveTo(x, y, z);
+
+            // angstrom -> a.u.
+            if (this->m_param["MOLECULE"]["geometry/cartesian/unit"] == "angstrom") {
+                position /= 0.529177249;
+            }
+        }
+
+        // 電荷
+        if ((tmp.compare(0, 2, "//") == 0) ||
+                (tmp.compare(0, 1, "#") == 0)) {
+            tmp = "";
+        }
+        if (!tmp.empty()) {
+            charge = std::atof(tmp.c_str());
+        } else {
+            charge = TlAtom::getElementNumber(sAtom.c_str());
+        }
+
+        // flGeomに格納 ====================================================
+        Fl_Geometry::AtomData atomData;
+        atomData.atom.setElement(sAtom);
+        atomData.atom.setCharge(charge);
+        atomData.atom.moveTo(position);
+        //atomData.label = sLabel1;
+        atomData.label = sLabel2;
+        flGeom.pushBack(atomData);
+    }
+
+    this->data_.merge(flGeom.getSerializeData());
+    
+    return "stored";
+}
+
+std::string Fl_UserinputX::moleculeBasisSetOrbital(const std::string& str)
+{
+    Fl_Gto_Orbital Bas;
+
+    std::istringstream in(str);
+
+    int dNumOfCgto = 0;
+
+    while (in) {
+        std::string sLine;
+        std::getline(in, sLine);
+
+        // 先頭のホワイトスペースを取り除く
+        TlUtils::trim_ws(sLine);
+        if (sLine.empty()) {
+            continue;
+        }
+
+        // コメント行を除く
+        if ((sLine.compare(0, 2, "//") == 0) ||
+                (sLine.compare(0, 1, "#") == 0)) {
+            continue;
+        }
+
+        // ホワイトスペースをデリミタにして、読み込み
+        std::string sLabel = "";
+        std::string sAlias = "";
+
+        // Atom
+        std::string sAtom = "";
+        {
+            std::string tmp = TlUtils::getWord(sLine);
+            TlUtils::trim_ws(sLine);
+            if ((tmp == "X") || (TlAtom::getElementNumber(tmp) != 0)) {
+                sAtom = tmp;
+            } else {
+                std::cerr << "atom is not defined. stop." << std::endl;
+                abort();
+            }
+        }
+
+        // label2
+        if (sLine[0] == '@') {
+            std::string tmp = TlUtils::getWord(sLine);
+            TlUtils::trim_ws(sLine);
+            tmp = tmp.substr(1);
+            sLabel = tmp;
+        }
+
+        // equal
+        if (sLine[0] == '=') {
+            sLine = sLine.substr(1);
+            TlUtils::trim_ws(sLine);
+        } else {
+            std::cerr << "equal is not found. stop." << std::endl;
+            abort();
+        }
+
+        // Name
+        std::string sName = "";
+        if (sLine[0] == '"') {
+            sLine = sLine.substr(1);
+            std::string::size_type nNameEnd = sLine.find_first_of('"');
+            if (nNameEnd != std::string::npos) {
+                sName = sLine.substr(0, nNameEnd);
+                sLine = (nNameEnd +1 < sLine.length()) ? sLine.substr(nNameEnd +1) : "";
+            } else {
+                std::cerr << "double quotation is not closed. stop." << std::endl;
+                abort();
+            }
+        } else {
+            sName = TlUtils::getWord(sLine);
+        }
+
+        // 格納 ============================================================
+        Fl_Db_Basis flDbBasis(sName);
+        for (int i = 0; i < flDbBasis.getTotalcgto(); i++) {
+            Fl_Gto_Orbital::Cgto cgto;
+            cgto.basisName = sName;
+            cgto.Snum = 0;
+            cgto.Pnum = 0;
+            cgto.Dnum = 0;
+            cgto.atom = sAtom;
+            cgto.label = sLabel;
+            cgto.shell = flDbBasis.getShell(i);
+            cgto.scalefactor = flDbBasis.getScalefactor(i);
+
+            const int contraction = flDbBasis.getContraction(i);
+            cgto.pgto.resize(contraction);
+            for (int j = 0; j < contraction; j++) {
+                cgto.pgto[j].exponent = flDbBasis.getExpornent(i, j);
+                cgto.pgto[j].coefficient = flDbBasis.getCoefficient(i ,j);
+            }
+
+            Bas.set(dNumOfCgto, cgto);
+
+            dNumOfCgto++;
+        }
+
+    }
+
+    // 出力
+//   Bas.open("fl_Gto_Orbital", "write");
+//   Bas.write();
+//   Bas.close();
+
+    return "stored";
+}
+
+std::string Fl_UserinputX::moleculeBasisSetDensityAuxiliary(const std::string& str)
+{
+    Fl_Gto_Density Bas;
+
+    std::istringstream in(str);
+
+    int dNumOfCgto = 0;
+
+    while (in) {
+        std::string sLine;
+        std::getline(in, sLine);
+
+        // 先頭のホワイトスペースを取り除く
+        TlUtils::trim_ws(sLine);
+        if (sLine.empty()) {
+            continue;
+        }
+
+        // コメント行を除く
+        if ((sLine.compare(0, 2, "//") == 0) ||
+                (sLine.compare(0, 1, "#") == 0)) {
+            continue;
+        }
+
+        // ホワイトスペースをデリミタにして、読み込み
+        std::string sLabel = "";
+        //std::string sResidue = "";
+        std::string sAlias   = "";
+
+        // Atom
+        std::string sAtom = "";
+        {
+            std::string tmp = TlUtils::getWord(sLine);
+            TlUtils::trim_ws(sLine);
+            if ((tmp == "X") || (TlAtom::getElementNumber(tmp) != 0)) {
+                sAtom = tmp;
+            } else {
+                std::cerr << "atom is not defined. stop." << std::endl;
+                abort();
+            }
+        }
+
+        // label2
+        if (sLine[0] == '@') {
+            std::string tmp = TlUtils::getWord(sLine);
+            TlUtils::trim_ws(sLine);
+            tmp = tmp.substr(1);
+            sLabel = tmp;
+        }
+
+        // equal
+        if (sLine[0] == '=') {
+            sLine = sLine.substr(1);
+            TlUtils::trim_ws(sLine);
+        } else {
+            std::cerr << "equal is not found. stop." << std::endl;
+            abort();
+        }
+
+        // Name
+        std::string sName = "";
+        {
+            if (sLine[0] == '"') {
+                sLine = sLine.substr(1);
+                std::string::size_type nNameEnd = sLine.find_first_of('"');
+                if (nNameEnd != std::string::npos) {
+                    sName = sLine.substr(0, nNameEnd);
+                    sLine = (nNameEnd +1 < sLine.length()) ? sLine.substr(nNameEnd +1) : "";
+                } else {
+                    std::cerr << "double quotation is not closed. stop." << std::endl;
+                    abort();
+                }
+            } else {
+                sName = TlUtils::getWord(sLine);
+            }
+        }
+
+        // 格納 ============================================================
+        Fl_Db_Basis flDbBasis(sName);
+        for (int i = 0; i < flDbBasis.getrouTotalnum(); i++) {
+            Fl_Gto_Density::Cgto cgto;
+            cgto.basisName = sName;
+            cgto.Snum = flDbBasis.getrouSnum();
+            cgto.Pnum = flDbBasis.getrouPnum();
+            cgto.Dnum = flDbBasis.getrouDnum();
+            cgto.atom = sAtom;
+            cgto.label = sLabel;
+            cgto.shell = flDbBasis.getrouShell(i);
+            cgto.scalefactor = 1.0;
+
+            const int contraction = flDbBasis.getrouContraction(i);
+            cgto.pgto.resize(contraction);
+            for (int j = 0; j < contraction; j++) {
+                cgto.pgto[j].exponent = flDbBasis.getrouExpornent(i, j);
+                cgto.pgto[j].coefficient = 1.0;
+            }
+
+            Bas.set(dNumOfCgto, cgto);
+
+            dNumOfCgto++;
+        }
+
+    }
+
+    // 出力
+//   Bas.open("fl_Gto_Density", "write");
+//   Bas.write();
+//   Bas.close();
+
+    return "stored";
+}
+
+std::string Fl_UserinputX::moleculeBasisSetExchangeAuxiliary(const std::string& str)
+{
+    Fl_Gto_Xcpot Bas;
+
+    std::istringstream in(str);
+
+    int dNumOfCgto = 0;
+
+    while (in) {
+        std::string sLine;
+        std::getline(in, sLine);
+
+        // 先頭のホワイトスペースを取り除く
+        TlUtils::trim_ws(sLine);
+        if (sLine.empty()) {
+            continue;
+        }
+
+        // コメント行を除く
+        if ((sLine.compare(0, 2, "//") == 0) ||
+                (sLine.compare(0, 1, "#") == 0)) {
+            continue;
+        }
+
+        // ホワイトスペースをデリミタにして、読み込み
+        std::string sLabel = "";
+        //std::string sResidue = "";
+        std::string sAlias   = "";
+
+        // Atom
+        std::string sAtom = "";
+        {
+            std::string tmp = TlUtils::getWord(sLine);
+            TlUtils::trim_ws(sLine);
+            if ((tmp == "X") || (TlAtom::getElementNumber != 0)) {
+                sAtom = tmp;
+            } else {
+                std::cerr << "atom is not defined. stop." << std::endl;
+                abort();
+            }
+        }
+
+        // label2
+        if (sLine[0] == '@') {
+            std::string tmp = TlUtils::getWord(sLine);
+            TlUtils::trim_ws(sLine);
+            tmp = tmp.substr(1);
+            sLabel = tmp;
+        }
+
+        // equal
+        if (sLine[0] == '=') {
+            sLine = sLine.substr(1);
+            TlUtils::trim_ws(sLine);
+        } else {
+            std::cerr << "equal is not found. stop." << std::endl;
+            abort();
+        }
+
+        // Name
+        std::string sName = "";
+        {
+            if (sLine[0] == '"') {
+                sLine = sLine.substr(1);
+                std::string::size_type nNameEnd = sLine.find_first_of('"');
+                if (nNameEnd != std::string::npos) {
+                    sName = sLine.substr(0, nNameEnd);
+                    sLine = (nNameEnd +1 < sLine.length()) ? sLine.substr(nNameEnd +1) : "";
+                } else {
+                    std::cerr << "double quotation is not closed. stop." << std::endl;
+                    abort();
+                }
+            } else {
+                sName = TlUtils::getWord(sLine);
+            }
+        }
+
+        // 格納 ============================================================
+        Fl_Db_Basis flDbBasis(sName);
+        for (int i = 0; i < flDbBasis.getmyuTotalnum(); i++) {
+            Fl_Gto_Xcpot::Cgto cgto;
+            cgto.basisName = sName;
+            cgto.Snum = flDbBasis.getmyuSnum();
+            cgto.Pnum = flDbBasis.getmyuPnum();
+            cgto.Dnum = flDbBasis.getmyuDnum();
+            cgto.atom = sAtom;
+            cgto.label = sLabel;
+            cgto.shell = flDbBasis.getmyuShell(i);
+            cgto.scalefactor = 1.0;
+
+            const int contraction = flDbBasis.getmyuContraction(i);
+            cgto.pgto.resize(contraction);
+            for (int j = 0; j < flDbBasis.getmyuContraction(i); j++) {
+                cgto.pgto[j].exponent = flDbBasis.getmyuExpornent(i, j);
+                cgto.pgto[j].coefficient = 1.0;
+            }
+
+            Bas.set(dNumOfCgto, cgto);
+
+            dNumOfCgto++;
+        }
+
+    }
+
+    // 出力
+//   Bas.open("fl_Gto_Xcpot", "write");
+//   Bas.write();
+//   Bas.close();
+
+    return "stored";
+}
+
+void Fl_UserinputX::alias()
+{
+    // xc-potential
+    {
+        std::string sXcPotential = this->m_param["SCF"]["xc-potential"];
+        std::string sTilde = "";
+        if (sXcPotential[sXcPotential.length() -1] == '~') {
+            sTilde = "~";
+            sXcPotential = sXcPotential.substr(0, sXcPotential.length() -1);
+        }
+
+        if (TlUtils::toUpper(sXcPotential) == "VWN") {
+            sXcPotential = "svwn";
+        }
+
+        this->m_param["SCF"]["xc-potential"] = sXcPotential + sTilde;
+        this->data_["model"]["xc-potential"] = sXcPotential + sTilde;
+    }
+}
+
+bool Fl_UserinputX::check()
+{
+    bool bAnswer = true;
+
+    // xc-poteintial
+    {
+        std::string sXcPotential = this->m_param["SCF"]["xc-potential"];
+        std::string sTilde = "";
+        if (sXcPotential[sXcPotential.length() -1] == '~') {
+            sTilde = "~";
+            sXcPotential = sXcPotential.substr(0, sXcPotential.length() -1);
+        }
+
+        if (sTilde == "") {
+            if ((TlUtils::toUpper(this->m_param["SCF"]["scf-memory-saving"]) == "NO")) {
+                std::cout << " 'scf-memory-saving = yes' overridded." << std::endl;
+            }
+            this->m_param["SCF"]["scf-memory-saving"] = "yes";
+            this->data_["model"]["scf-memory-saving"] = "yes";
+        }
+    }
+
+    return bAnswer;
+}
+
+
+
