@@ -409,10 +409,9 @@ void DfHpqX::makeShellArrayTable()
 
 DfHpqEngine::PGTOs DfHpqX::getPGTOs(const index_type shellIndex)
 {
-    DfHpqEngine::PGTOs pgtos;
-
     const int numOfContractions = this->orbitalInfo_.getCgtoContraction(shellIndex);
-    pgtos.resize(numOfContractions);
+    DfHpqEngine::PGTOs pgtos(numOfContractions);
+
     for (int i = 0; i < numOfContractions; ++i) {
         const DfHpqEngine::PGTO pgto(this->orbitalInfo_.getCoefficient(shellIndex, i),
                                      this->orbitalInfo_.getExponent(shellIndex, i));

@@ -2,12 +2,13 @@
 #include <cmath>
 #include <limits>
 #include <cassert>
-
-// STL
-#include <list>
+#include <vector>
 #include <numeric>
+#include <algorithm>
 
 #include "TlFmt.h"
+
+#define ValueTableSize 256
 
 TlFmt* TlFmt::m_pInstance = NULL;
 
@@ -90,6 +91,10 @@ void TlFmt::makeFmtTable()
     int m = FMT_MAX_M; // m が小さいものは、後に帰納的に求める (*)
     const double THR_ZERO = 1.0E-17;
 
+    // 変数 func に term を加算していくが、誤差を小さくするために
+    // term が小さい順に加算する。後にsortする必要があるので、そのリスト。
+    double valueTable[ValueTableSize];
+    
     for (int j = 1; j <= FMT_N_STEP; ++j) {
         const double t = FMT_STEPSIZE * j;
         const double expt = std::exp(-t);
@@ -97,21 +102,26 @@ void TlFmt::makeFmtTable()
         const double t2 = t * 2.0;
         const double eps = (expt / t2) * THR_ZERO;
         double term = 1.0 / nu;
-        // 変数 func に term を加算していくが、誤差を小さくするために
-        // term が小さい順に加算する。後にsortする必要があるので、そのリスト。
-        std::list<double> aFuncAdditionList(0); // 0 個のリスト
-        aFuncAdditionList.push_back(term);       //func += term;
-        int i = nu;
 
+        valueTable[0] = term;
+        int index = 1;
+        int i = nu;
         do {
             i += 2;
             term *= (t2 / i);
-            aFuncAdditionList.push_back(term);    //func += term;
+            valueTable[index] = term;
+            ++index;
         } while (term > eps);
-
-        aFuncAdditionList.sort();
-        double func = std::accumulate(aFuncAdditionList.begin(), aFuncAdditionList.end(), 0.0);
-
+        assert(index < ValueTableSize);
+        
+        //std::sort(aFuncAdditionList.begin(), aFuncAdditionList.end());
+        //double func = std::accumulate(aFuncAdditionList.begin(), aFuncAdditionList.end(), 0.0);
+        double func = 0.0;
+        // 小さい順に加算
+        for (int k = index-1; k >= 0; --k) {
+            func += valueTable[k];
+        }
+        
         this->m_FmtTable[j][m] = expt * func; // 0からTf(=2m+36)までをFMT_INV_D分割したうちのj番目のFm(T)の値 (T = FMT_STEPSIZE*j)
 
         // (*)

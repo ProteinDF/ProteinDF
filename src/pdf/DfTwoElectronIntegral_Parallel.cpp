@@ -617,7 +617,12 @@ void DfTwoElectronIntegral_Parallel::RT_slave(TlSparseVectorMatrix* pP,
     
 #pragma omp parallel num_threads(2)
     {
+#ifdef _OPENMP
         const int ompThreadId = omp_get_thread_num();
+#else
+        const int ompThreadId = 0;
+#endif // _OPENMP
+        
         if (ompThreadId == 0) {
             int src = 0;
             while (isLoopBreak == false) {

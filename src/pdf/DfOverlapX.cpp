@@ -333,10 +333,9 @@ DfOverlapX::ShellArrayTable DfOverlapX::makeShellArrayTable(const TlOrbitalInfoO
 DfOverlapEngine::PGTOs DfOverlapX::getPGTOs(const TlOrbitalInfoObject& orbitalInfo,
                                             const int shellIndex)
 {
-    DfOverlapEngine::PGTOs pgtos;
-
     const int numOfContractions = orbitalInfo.getCgtoContraction(shellIndex);
-    pgtos.resize(numOfContractions);
+    DfOverlapEngine::PGTOs pgtos(numOfContractions);
+
     for (int i = 0; i < numOfContractions; ++i) {
         const DfOverlapEngine::PGTO pgto(orbitalInfo.getCoefficient(shellIndex, i),
                                          orbitalInfo.getExponent(shellIndex, i));
