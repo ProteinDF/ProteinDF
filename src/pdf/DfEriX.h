@@ -47,6 +47,17 @@ public:
 
     void getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce);
 
+protected:
+    /// DfEriEngineオブジェクトを作成する
+    ///
+    /// OpenMPスレッド数のオブジェクトを作成する。
+    /// 富士通コンパイラではコンストラクタ中で
+    /// オブジェクトを作成できないため。
+    void createEngines();
+
+    /// DfEriEngineオブジェクトを破棄する
+    void destroyEngines();
+    
    
 protected:
     static const int MAX_SHELL_TYPE;

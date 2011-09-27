@@ -2033,7 +2033,7 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy2(const TlSymmetricMatrix& P,
     this->backupGridData();
 
     // setup
-    const int numOfAtoms = this->numOfRealAtoms_;
+    //const int numOfAtoms = this->numOfRealAtoms_;
     this->physicalValues_.clear();
     this->defineCutOffValues(P);
 
@@ -2379,7 +2379,7 @@ double DfCalcGridX::buildK(const TlMatrix& gridMatrix,
                            DfFunctional_GGA* pFunctional,
                            TlSymmetricMatrix* pF)
 {
-    const index_type numOfAOs = this->m_nNumOfAOs;
+    //const index_type numOfAOs = this->m_nNumOfAOs;
     const double densityCutOffValue = this->m_densityCutOffValueA;
 
     double energy = 0.0;

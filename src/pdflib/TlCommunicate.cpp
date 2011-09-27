@@ -1275,7 +1275,7 @@ int TlCommunicate::receiveData(TlPartialSymmetricMatrix& rData, int nSrc, int nT
     if (nErr == 0) {
         assert(header.size() == 6);
         const std::size_t globalNumOfRows = header[0];
-        const std::size_t globalNumOfCols = header[1];
+        //const std::size_t globalNumOfCols = header[1];
         const std::size_t startRow = header[2];
         const std::size_t startCol = header[3];
         const std::size_t rowRange = header[4];
@@ -1481,7 +1481,7 @@ int TlCommunicate::receiveDataFromAnySource(TlPartialSymmetricMatrix& rData, int
     if (nErr == 0) {
         assert(header.size() == 6);
         const std::size_t globalNumOfRows = header[0];
-        const std::size_t globalNumOfCols = header[1];
+        //const std::size_t globalNumOfCols = header[1];
         const std::size_t startRow = header[2];
         const std::size_t startCol = header[3];
         const std::size_t rowRange = header[4];

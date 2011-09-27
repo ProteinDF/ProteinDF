@@ -7,21 +7,38 @@
 const int DfOverlapX::MAX_SHELL_TYPE = 2 + 1;
 
 DfOverlapX::DfOverlapX(TlSerializeData* pPdfParam) 
-    : DfObject(pPdfParam)
+    : DfObject(pPdfParam), pEngines_(NULL)
 {
-#ifdef _OPENMP
-    const int numOfThreads = omp_get_max_threads();
-    this->pEngines_ = new DfOverlapEngine[numOfThreads];
-#else
-    this->pEngines_ = new DfOverlapEngine[1];
-#endif // _OPENMP
 }
 
 
 DfOverlapX::~DfOverlapX()
 {
-    delete[] this->pEngines_;
-    this->pEngines_ = NULL;
+}
+
+
+void DfOverlapX::createEngines()
+{
+    assert(this->pEngines_ == NULL);
+#ifdef _OPENMP
+    {
+        const int numOfThreads = omp_get_max_threads();
+        this->pEngines_ = new DfOverlapEngine[numOfThreads];
+    }
+#else
+    {
+        this->pEngines_ = new DfOverlapEngine[1];
+    }
+#endif // _OPENMP
+}
+
+
+void DfOverlapX::destroyEngines()
+{
+    if (this->pEngines_ != NULL) {
+        delete[] this->pEngines_;
+        this->pEngines_ = NULL;
+    }
 }
 
 
@@ -80,6 +97,7 @@ void DfOverlapX::getSab(TlSymmetricMatrix* pSab)
 void DfOverlapX::calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
                              TlMatrixObject* pMatrix)
 {
+    this->createEngines();
     DfTaskCtrl*  pTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task2> taskList;
@@ -100,6 +118,7 @@ void DfOverlapX::calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
     
     delete pTaskCtrl;
     pTaskCtrl = NULL;
+    this->destroyEngines();
 }
 
 
@@ -166,6 +185,7 @@ void DfOverlapX::getForce(const TlSymmetricMatrix& W,
                                     (*(this->pPdfParam_))["model"]["basis_set"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
 
+    this->createEngines();
     
     for (int shellTypeP = DfOverlapX::MAX_SHELL_TYPE -1; shellTypeP >= 0; --shellTypeP) {
         const ShellArray shellArrayP = shellArrayTable[shellTypeP];
@@ -186,6 +206,8 @@ void DfOverlapX::getForce(const TlSymmetricMatrix& W,
             }
         }
     }
+
+    this->destroyEngines();
 }
 
 

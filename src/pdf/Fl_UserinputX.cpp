@@ -593,7 +593,7 @@ std::string Fl_UserinputX::moleculeBasisSetExchangeAuxiliary(const std::string& 
         {
             std::string tmp = TlUtils::getWord(sLine);
             TlUtils::trim_ws(sLine);
-            if ((tmp == "X") || (TlAtom::getElementNumber != 0)) {
+            if ((tmp == "X") || (TlAtom::getElementNumber(tmp) != 0)) {
                 sAtom = tmp;
             } else {
                 std::cerr << "atom is not defined. stop." << std::endl;

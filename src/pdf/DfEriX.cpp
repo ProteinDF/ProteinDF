@@ -37,16 +37,6 @@ DfEriX::DfEriX(TlSerializeData* pPdfParam)
         this->cutoffEpsilon3_ = (*pPdfParam)["model"]["cutoff_epsilon3"].getDouble();
     }    
 
-    //
-#ifdef _OPENMP
-    {
-        const int numOfThreads = omp_get_max_threads();
-        this->pEriEngines_ = new DfEriEngine[numOfThreads];
-    }
-#else
-    this->pEriEngines_ = new DfEriEngine[1];
-#endif // _OPENMP
-    
     // debug ===========================================================
     this->isDebugOutJ_ = false;
     if ((*pPdfParam)["model"]["debug_out_J"].getStr().empty() != true) {
@@ -71,9 +61,30 @@ DfEriX::DfEriX(TlSerializeData* pPdfParam)
 
 DfEriX::~DfEriX()
 {
+}
+
+
+void DfEriX::createEngines()
+{
+    assert(this->pEriEngines_ == NULL);
+    
+#ifdef _OPENMP
+    {
+        const int numOfThreads = omp_get_max_threads();
+        this->pEriEngines_ = new DfEriEngine[numOfThreads];
+    }
+#else
+    this->pEriEngines_ = new DfEriEngine[1];
+#endif // _OPENMP
+}
+
+
+void DfEriX::destroyEngines()
+{
     if (this->pEriEngines_ != NULL) {
         delete[] this->pEriEngines_;
     }
+    this->pEriEngines_ = NULL;
 }
 
 
@@ -105,7 +116,6 @@ void DfEriX::finalize(TlVector* pVct)
 void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
 {
     assert(pRho != NULL);
-    //this->clearCutoffStats();
     
     // カットオフ値の設定
     const double maxDeltaP = P.getMaxAbsoluteElement();
@@ -126,7 +136,9 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
     pRho->resize(this->m_nNumOfAux);
     pRho->zeroClear();
 
+    this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
                                          false,
@@ -149,6 +161,7 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
+    this->destroyEngines();
 }
 
 
@@ -159,7 +172,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                        const TlSparseSymmetricMatrix& schwarzTable,
                        const TlMatrixObject& P, TlVector* pRho)
 {
-    const int maxShellType = orbitalInfo.getMaxShellType();
+    //const int maxShellType = orbitalInfo.getMaxShellType();
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
     
@@ -264,7 +277,9 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
     pJ->resize(this->m_nNumOfAOs);
     //pJ->zeroClear();
     
+    this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
                                          false,
@@ -287,6 +302,7 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
+    this->destroyEngines();
 }
 
 
@@ -384,6 +400,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
 }
 
 
+// TODO: OpenMP化
 void DfEriX::getJpq(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
 {
     assert(pJ != NULL);
@@ -689,7 +706,9 @@ void DfEriX::getJab(TlSymmetricMatrix* pJab)
 
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo_Density);
 
+    this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo_Density,
                                          false,
@@ -709,6 +728,7 @@ void DfEriX::getJab(TlSymmetricMatrix* pJab)
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
+    this->destroyEngines();
 }
 
 
@@ -716,7 +736,7 @@ void DfEriX::getJab_part(const TlOrbitalInfoObject& orbitalInfo,
                          const std::vector<DfTaskCtrl::Task2>& taskList,
                          TlMatrixObject* pJab)
 {
-    const int maxShellType = orbitalInfo.getMaxShellType();
+    //const int maxShellType = orbitalInfo.getMaxShellType();
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
@@ -793,7 +813,9 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce)
                                     (*(this->pPdfParam_))["model"]["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
+    this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue_Force4(orbitalInfo,
                                                 schwarzTable,
@@ -811,6 +833,7 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce)
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
+    this->destroyEngines();
 }
 
 
@@ -1004,7 +1027,9 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
+    this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
                                          false,
@@ -1023,6 +1048,10 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
 
     pDfTaskCtrl->cutoffReport();
     this->finalize(pForce);
+
+    delete pDfTaskCtrl;
+    pDfTaskCtrl = NULL;
+    this->destroyEngines();
 }
 
 
@@ -1177,7 +1206,9 @@ void DfEriX::getForceJ(const TlVector& rho, TlMatrix* pForce)
                                                     (*(this->pPdfParam_))["model"]["basis_set_auxD"]);
     const ShellArrayTable shellArray_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
+    this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo_Density,
                                          false,
@@ -1194,6 +1225,10 @@ void DfEriX::getForceJ(const TlVector& rho, TlMatrix* pForce)
 
     this->finalize(pForce);
     pDfTaskCtrl->cutoffReport();
+
+    delete pDfTaskCtrl;
+    pDfTaskCtrl = NULL;
+    this->destroyEngines();
 }
 
 
@@ -1439,7 +1474,9 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
     this->IA_K_ID4_.resize(numOfAOs);
 #endif // DEBUG_K
 
+    this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                           schwarzTable,
@@ -1458,6 +1495,7 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
+    this->destroyEngines();
     
     // debug
 #ifdef DEBUG_K
@@ -1665,7 +1703,9 @@ void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce)
                                     (*(this->pPdfParam_))["model"]["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
+    this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue_Force4(orbitalInfo,
                                                 schwarzTable,
@@ -1683,6 +1723,7 @@ void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce)
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
+    this->destroyEngines();
 }
 
 

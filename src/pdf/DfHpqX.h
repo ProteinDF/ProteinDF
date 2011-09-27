@@ -28,6 +28,16 @@ public:
                   TlMatrix* pForce);
 
 protected:
+    /// DfHpqEngineオブジェクトを作成する
+    ///
+    /// OpenMPスレッド数のオブジェクトを作成する。
+    /// 富士通コンパイラではコンストラクタ中で
+    /// オブジェクトを作成できないため。
+    void createEngines();
+
+    /// DfHpqEngineオブジェクトを破棄する
+    void destroyEngines();
+
     virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
     virtual void finalize(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2);

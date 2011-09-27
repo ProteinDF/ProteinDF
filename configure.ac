@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([ProteinDF], [2011.1.]m4_esyscmd([svnversion -nc | cut -f2 -d: | tr -d "\n"]))
+AC_INIT([ProteinDF], [2011.09.27])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/pdf/main.cpp])
 AC_CONFIG_MACRO_DIR([m4])

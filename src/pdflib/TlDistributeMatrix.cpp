@@ -827,7 +827,7 @@ void TlDistributeMatrix::getPartialMatrix_ServerTasks(const bool isFinalize) con
 #pragma omp critical (TlDistributeMatrix__getPartialMatrix_ServerTasks)
     {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    const int numOfProcs = rComm.getNumOfProc();
+    //const int numOfProcs = rComm.getNumOfProc();
 
     int requestProc = 0;
     if (this->isWaitingRequestHandShake_ == false) {
@@ -1708,8 +1708,8 @@ void TlDistributeMatrix::mergeMatrixAsync_send(const std::vector<std::vector<ind
 void TlDistributeMatrix::mergeMatrixAsync_recv(bool isFinalize)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    const int numOfProcs = rComm.getNumOfProc();
-    const int rank = rComm.getRank();
+    //const int numOfProcs = rComm.getNumOfProc();
+    //const int rank = rComm.getRank();
 
     // セッション待ち受け
     int recvProc = 0;
@@ -2367,7 +2367,7 @@ const TlDistributeMatrix& TlDistributeMatrix::dot(const TlDistributeMatrix& X)
 #else
     // not use OpenMP
     for (size_type index = 0; index < size; ++index) {
-        this->data_[index] *= X.data_[index];
+        this->pData_[index] *= X.pData_[index];
     }
 #endif // _OPENMP
     

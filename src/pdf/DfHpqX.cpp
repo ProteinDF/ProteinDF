@@ -10,6 +10,17 @@ DfHpqX::DfHpqX(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam),
       orbitalInfo_((*pPdfParam)["model"]["coordinates"],
                    (*pPdfParam)["model"]["basis_set"]) {
+    this->makeShellArrayTable();
+}
+
+
+DfHpqX::~DfHpqX()
+{
+}
+
+
+void DfHpqX::createEngines()
+{
 #ifdef _OPENMP
     {
         const int numOfThreads = omp_get_max_threads();
@@ -19,14 +30,15 @@ DfHpqX::DfHpqX(TlSerializeData* pPdfParam)
     this->pEngines_ = new DfHpqEngine[1];
 #endif // _OPENMP
         
-    this->makeShellArrayTable();
 }
 
 
-DfHpqX::~DfHpqX()
+void DfHpqX::destroyEngines()
 {
-    delete[] this->pEngines_;
-    this->pEngines_ = NULL;
+    if (this->pEngines_ != NULL) {
+        delete[] this->pEngines_;
+        this->pEngines_ = NULL;
+    }
 }
 
 
@@ -72,12 +84,12 @@ void DfHpqX::getHpq(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2)
     assert(realAtomIndex == Cs.size());
     assert(dummyAtomIndex == Xs.size());
     
-    DfHpqEngine engine;
-
     pHpq->resize(numOfAOs);
     pHpq2->resize(numOfAOs);
 
+    this->createEngines();
     DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
+
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pTaskCtrl->getQueue(this->orbitalInfo_,
                                        false,
@@ -101,6 +113,8 @@ void DfHpqX::getHpq(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2)
     pTaskCtrl->cutoffReport();
     
     delete pTaskCtrl;
+    pTaskCtrl = NULL;
+    this->destroyEngines();
 }
 
 
@@ -167,8 +181,8 @@ void DfHpqX::getForce(const TlSymmetricMatrix& P,
     assert(pForce != NULL);
     assert(pForce->getNumOfRows() == this->m_nNumOfAtoms);
     assert(pForce->getNumOfCols() == 3);
-    
-    //DfHpqEngine engine;
+
+    this->createEngines();
     
     for (int shellTypeP = DfHpqX::MAX_SHELL_TYPE -1; shellTypeP >= 0; --shellTypeP) {
         const ShellArray shellArrayP = this->shellArrayTable_[shellTypeP];
@@ -190,6 +204,7 @@ void DfHpqX::getForce(const TlSymmetricMatrix& P,
         }
     }
 
+    this->destroyEngines();
 }
 
 

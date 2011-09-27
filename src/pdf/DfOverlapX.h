@@ -35,6 +35,16 @@ protected:
     };
 
 protected:
+    /// DfOverlapEngineオブジェクトを作成する
+    ///
+    /// OpenMPスレッド数のオブジェクトを作成する。
+    /// 富士通コンパイラではコンストラクタ中で
+    /// オブジェクトを作成できないため。
+    void createEngines();
+
+    /// DfOverlapEngineオブジェクトを破棄する
+    void destroyEngines();
+
     virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
     virtual void finalize(TlMatrix* pMtx);

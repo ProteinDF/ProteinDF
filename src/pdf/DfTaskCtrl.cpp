@@ -208,10 +208,10 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
     int grainSize = 0;
     DfTaskCtrl::Task4 task;
     for ( ; shellTypeP >= 0; ) {
-        const int maxStepsP = 2 * shellTypeP + 1;
+        //const int maxStepsP = 2 * shellTypeP + 1;
 
         for ( ; shellTypeR >= 0; ) {
-            const int maxStepsR = 2 * shellTypeR + 1;
+            //const int maxStepsR = 2 * shellTypeR + 1;
             
             const int shellPairType_PR = shellTypeP * maxShellType + shellTypeR;
             const ShellPairArray& shellPairArray_PR = shellPairArrayTable[shellPairType_PR];
@@ -224,7 +224,7 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
                 task.shellIndex3 = shellIndexR;
                 
                 for ( ; shellTypeQ >= 0; ) {
-                    const int maxStepsQ = 2 * shellTypeQ + 1;
+                    //const int maxStepsQ = 2 * shellTypeQ + 1;
                     const ShellArray shellArrayQ =
                         this->selectShellArrayByDistribution(shellArrayTable[shellTypeQ],
                                                              shellIndexP,
@@ -233,7 +233,7 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
                     const std::size_t shellArraySizeQ = std::distance(shellArrayQ.begin(), qItEnd);
                     
                     for ( ; shellTypeS >= 0; ) {
-                        const int maxStepsS = 2 * shellTypeS + 1;
+                        //const int maxStepsS = 2 * shellTypeS + 1;
                         const ShellArray shellArrayS =
                             this->selectShellArrayByDistribution(shellArrayTable[shellTypeS],
                                                                  shellIndexR,
@@ -338,7 +338,7 @@ bool DfTaskCtrl::getQueue4_K(const TlOrbitalInfoObject& orbitalInfo,
         return true;
     }
 
-    int grainSize = 0;
+    //int grainSize = 0;
     DfTaskCtrl::Task4 task;
 
     const index_type numOfRowIndexes = rowIndexes.size();

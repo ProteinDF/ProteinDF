@@ -161,11 +161,11 @@ void DfPopulation::calcPop(const int iteration)
         {
             this->grossOrbPopA_ = this->getGrossOrbPop<SymmetricMatrixType>(DfObject::RUN_UKS_ALPHA, iteration);
             this->grossAtomPopA_ = this->getGrossAtomPop(this->grossOrbPopA_);
-            const double elecChargeA = this->grossOrbPopA_.sum();
+            //const double elecChargeA = this->grossOrbPopA_.sum();
             
             this->grossOrbPopB_ = this->getGrossOrbPop<SymmetricMatrixType>(DfObject::RUN_UKS_BETA, iteration);
             this->grossAtomPopB_ = this->getGrossAtomPop(this->grossOrbPopB_);
-            const double elecChargeB = this->grossOrbPopB_.sum();
+            //const double elecChargeB = this->grossOrbPopB_.sum();
         }
         break;
 

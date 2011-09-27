@@ -353,7 +353,7 @@ void DfEriX_Parallel::getJpq_D(const TlDistributeSymmetricMatrix& P,
                                TlDistributeSymmetricMatrix* pJ)
 {
     assert(pJ != NULL);
-    TlCommunicate& rComm = TlCommunicate::getInstance();
+    //TlCommunicate& rComm = TlCommunicate::getInstance();
     pJ->resize(this->m_nNumOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["model"]["coordinates"],
@@ -470,7 +470,7 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
     this->logger(" background transportation for density matrix.\n");
 
     assert(pK != NULL);
-    TlCommunicate& rComm = TlCommunicate::getInstance();
+    //TlCommunicate& rComm = TlCommunicate::getInstance();
     
     const index_type numOfAOs = this->m_nNumOfAOs;
     pK->resize(numOfAOs);
@@ -588,10 +588,10 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     std::vector<index_type> rowIndexes;
     std::vector<index_type> colIndexes;
     this->expandLocalDensityMatrix(P, orbitalInfo, &localP, &rowIndexes, &colIndexes);
-    const index_type numOfRowIndexes = rowIndexes.size();
-    const index_type numOfColIndexes = colIndexes.size();
+    //const index_type numOfRowIndexes = rowIndexes.size();
+    //const index_type numOfColIndexes = colIndexes.size();
     
-    DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    //DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task4> taskList;
 
     this->loggerTime(" ERI start");
@@ -790,7 +790,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
                                  const TlSparseSymmetricMatrix& schwarzTable,
                                  const TlDistributeMatrix& P, TlVector* pRho)
 {
-    const int maxShellType = orbitalInfo.getMaxShellType();
+    //const int maxShellType = orbitalInfo.getMaxShellType();
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
     
