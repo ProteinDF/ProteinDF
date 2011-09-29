@@ -267,7 +267,7 @@ void PdfKeyword::initialize()
     item.keyword          = "analyze_population";
     item.explanation      = "analize population";
     item.explanationJ     = "電荷解析を行う。";
-    item.defaultValue     = "convergence";
+    item.defaultValue     = "none";
     item.syntax           = "(none|convergence|every-scf)";
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);

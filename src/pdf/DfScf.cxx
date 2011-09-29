@@ -385,7 +385,7 @@ int DfScf::execScfLoop()
             break;
 
         case POPULATION:
-            if (TlUtils::toUpper((*(this->pPdfParam_))["model"]["analyze-population"].getStr()) == "EVERY-SCF") {
+            if (TlUtils::toUpper((*(this->pPdfParam_))["model"]["analyze_population"].getStr()) == "EVERY-SCF") {
                 this->calcPopulation();
             }
             this->setScfRestartPoint("POPULATION");
@@ -460,7 +460,7 @@ int DfScf::execScfLoop()
     }
 
     // pupulation analysis
-    const std::string sAnalizePopulation = TlUtils::toUpper(pdfParam["model"]["analyze-population"].getStr());
+    const std::string sAnalizePopulation = TlUtils::toUpper(pdfParam["model"]["analyze_population"].getStr());
     if ((sAnalizePopulation == "EVERY-SCF") ||
         (sAnalizePopulation == "CONVERGENCE")) {
         this->calcPopulation();
