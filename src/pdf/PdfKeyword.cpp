@@ -259,7 +259,7 @@ void PdfKeyword::initialize()
     item.keyword          = "summary";
     item.explanation      = "print summary data";
     item.explanationJ     = "計算結果の要約を表示する。";
-    item.defaultValue     = "convergence";
+    item.defaultValue     = "none";
     item.syntax           = "(none|convergence|every-scf)";
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);
