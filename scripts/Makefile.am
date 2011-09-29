@@ -1,11 +1,16 @@
 bin_script_src = \
+	pdf_common.sh		\
+	pdf_setup.sh		\
+	pdf_serial.sh		\
+	pdf_parallel.sh		\
+	PDF.sh			\
+	PPDF.sh			\
+	\
 	diff_matrix.py		\
 	pdf_stat.py		\
 	print_matrix.py		\
 	print_vector.py		\
 	\
-	PDF.sh			\
-	PPDF.sh			\
 	pdf_mkdir.sh		\
 	pdf_clean.sh		\
 	\

@@ -1,45 +1,46 @@
 #!/bin/sh
 
-RM="rm"
-
-while getopts fk opt; do
-case ${opt} in
-    f)
-	    # fully clean up
-	    FULLY_CLEAN_UP=true;;
-    k)
-	    # keep integrals
-	    KEEP_INTEGRALS=true;;
-    *)
-	    echo "unkown option: ${opt}"
-	    exit 1;;
-esac
-done
-
-for list in fl_Input fl_Table fl_Temp; do
-    if [ -d ${list} ]; then
-	find ${list} -maxdepth 1 -name "*" -and -type f -print0 | xargs -0 --no-run-if-empty ${RM}
-    fi
-done
-
-if [ -d fl_Work ]; then
-    if [ x${KEEP_INTEGRALS} = xtrue ]; then
-	find fl_Work -regex ".*[0-9]+" -print | xargs -0 --no-run-if-empty rm
+check_pdfhome()
+{
+    if [ x${PDF_HOME} = x ]; then
+	echo "PDF_HOME environment variable is not set."
+	echo "please set the parameter."
+	return 1
     else
-	find fl_Work -maxdepth 1 -name "*" -and -type f -print0 | xargs -0 --no-run-if-empty ${RM}
+	return 0
     fi
+}
+
+# main
+check_pdfhome
+. ${PDF_HOME}/bin/pdf_common.sh
+
+FULL_CLEANUP=false
+KEEP_INTEGRALS=true
+
+if [ x${1} = xall ]; then
+    FULL_CLEANUP=true
+    KEEP_INTEGRALS=false
 fi
 
-for target in fl_Out_Std fl_Out_Arc fl_Out_Sys PDF.pid fl_Plot; do
-    if [ -f $target ]; then
-	${RM} $target
+# cleanup directories
+for DIR in ${PDF_WORK_DIRS}; do
+    if [ -d ${DIR} ]; then
+	if [ x${KEEP_INTEGRALS} = xtrue ]; then
+	    find ${DIR} -regex ".*[0-9]+" -and -type f -print0 | xargs -0 --no-run-if-empty ${RM}
+	else
+	    find ${DIR} -maxdepth 1 -name "*" -and -type f -print0 | xargs -0 --no-run-if-empty ${RM}
+	fi
     fi
 done
 
-if [ x${FULLY_CLEAN_UP} = xtrue ]; then
-    for target in pdfparam.mpac; do
-        if [ -f $target ]; then
-            ${RM} $target
+# cleanup files
+PDF_OUTPUT_FILES="fl_Out_Std pdfparam.mpac"
+if [ x${FULL_CLEANUP} = xtrue ]; then
+    for FILE in ${PDF_OUTPUT_FILES}; do
+	if [ -f $FILE ]; then
+	    ${RM} $FILE
 	fi
     done
 fi
+
