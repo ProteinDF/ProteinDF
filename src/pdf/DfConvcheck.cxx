@@ -121,15 +121,14 @@ void DfConvcheck::showResults()
 }
 
 // total energy convergence
-double DfConvcheck::dev_total_energy(int iteration)
+double DfConvcheck::dev_total_energy(const int iteration)
 {
     assert(iteration >= 2);
 
-    TlVector Ene;
-    Ene.load("fl_Work/fl_Vct_Energy");
-
-    const double deviation_value = std::fabs(Ene[iteration -1] - Ene[iteration -1-1]);
-
+    const double TE = (*this->pPdfParam_)["TE"][iteration].getDouble();
+    const double prevTE = (*this->pPdfParam_)["TE"][iteration -1].getDouble();
+    const double deviation_value = std::fabs(TE - prevTE);
+    
     return deviation_value;
 }
 

@@ -251,7 +251,7 @@ void DfObject::setParam(const TlSerializeData& data)
     paramFileBaseName["grid_matrix"]    = "grid.mtx";
 
     if (paramFileBaseName["rho_vector"].getStr().empty() == true) {
-        paramFileBaseName["rho_vector"] = "rho.vct";
+        paramFileBaseName["rho_vector"] = "rho.vtr";
     }
 }
 

@@ -22,8 +22,6 @@ protected:
     void exec_LAPACK();
     void exec_ScaLAPACK();
 
-    // double calculate_one_electron_part(const TlDistributeSymmetricMatrix& D);
-
 protected:
     virtual void output();
 

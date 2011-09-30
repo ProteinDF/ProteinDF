@@ -655,7 +655,7 @@ void DfScf::buildFock()
     DfFockMatrix* pDfFockMatrix = this->getDfFockMatrixObject();
     pDfFockMatrix->DfFockMatrixMain();
     this->loggerEndTitle();
-    (*this->pPdfParam_)["staat"]["elapse_time"]["fock_matrix"][this->m_nIteration] = timer.getElapseTime();
+    (*this->pPdfParam_)["stat"]["elapse_time"]["fock_matrix"][this->m_nIteration] = timer.getElapseTime();
 
     if (this->m_nDampObject == DAMP_FOCK) {
         this->converge();

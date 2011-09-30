@@ -459,11 +459,8 @@ void DfTotalEnergy::calcRealEnergy()
 {
     this->logger(" total energy --- Information related with dummy atom:\n\n");
 
-    TlVector enevec;
-    enevec.load("fl_Work/fl_Vct_Energy");
-    const double current_energy = enevec[this->m_nIteration -1];
-    this->logger(TlUtils::format(" total energy = %18.16lf\n\n", current_energy));
-
+    const double current_energy = (*this->pPdfParam_)["TE"][this->m_nIteration].getDouble();
+    
     //check whether dummy atom exists or not
     if (this->m_nNumOfDummyAtoms == 0) {
         this->logger(" no dummy atoms are found.\n");

@@ -114,16 +114,7 @@ double DfTotalEnergy::calculate_energy_nuclear_repulsion()
 
 void DfTotalEnergy::write_total_energy(const double E_Total) const
 {
-    TlVector enevec;
-
-    if (this->m_nIteration != 1) {
-        enevec.load("fl_Work/fl_Vct_Energy");
-    }
-
-    enevec.push_back(E_Total);
-    assert(static_cast<int>(enevec.getSize()) == this->m_nIteration);
-
-    enevec.save("fl_Work/fl_Vct_Energy");
+    (*this->pPdfParam_)["TE"][this->m_nIteration] = E_Total;
 }
 
 
