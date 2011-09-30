@@ -87,20 +87,20 @@ void ProteinDF_Parallel::setupGlobalCondition()
 {
 #ifdef HAVE_SCALAPACK
     {
-        bool useScaLAPACK = (TlUtils::toUpper(this->pdfParam_["model"]["linear_algebra_package"].getStr())
+        bool useScaLAPACK = (TlUtils::toUpper(this->pdfParam_["linear_algebra_package"].getStr())
                              == "SCALAPACK") ? true : false;
         if (useScaLAPACK == true) {
             int scalapackBlockSize = 64;
-            if (this->pdfParam_["model"].hasKey("scalapack_block_size") == true) {
-                scalapackBlockSize = this->pdfParam_["model"]["scalapack_block_size"].getInt();
+            if (this->pdfParam_.hasKey("scalapack_block_size") == true) {
+                scalapackBlockSize = this->pdfParam_["scalapack_block_size"].getInt();
             }
             this->logger(TlUtils::format("ScaLAPACK block size(= %d) is set.\n", scalapackBlockSize));
             TlDistributeMatrix::setSystemBlockSize(scalapackBlockSize);
             TlDistributeVector::setSystemBlockSize(scalapackBlockSize);
 
             bool isUsingPartialIO = false;
-            if (this->pdfParam_["model"].hasKey("save_distributed_matrix_to_local_disk") == true) {
-                isUsingPartialIO = this->pdfParam_["model"]["save_distributed_matrix_to_local_disk"].getBoolean();
+            if (this->pdfParam_.hasKey("save_distributed_matrix_to_local_disk") == true) {
+                isUsingPartialIO = this->pdfParam_["save_distributed_matrix_to_local_disk"].getBoolean();
             }
             const std::string isUsingPartialIO_YN = (isUsingPartialIO == true) ? "YES" : "NO ";
             this->logger(TlUtils::format("partial I/O mode = %s\n", isUsingPartialIO_YN.c_str()));

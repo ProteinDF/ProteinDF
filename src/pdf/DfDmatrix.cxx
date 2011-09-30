@@ -22,10 +22,10 @@ DfDmatrix::DfDmatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
     const TlSerializeData& pdfParam = *pPdfParam;
 
     this->orbitalCorrespondenceMethod_ = OCM_NONE;
-    const bool isOrbitalCorrespondence = pdfParam["model"]["orbital-correspondence"].getBoolean();
-    const int startItr = pdfParam["model"]["orbital-correspondence-start"].getInt();
+    const bool isOrbitalCorrespondence = pdfParam["orbital-correspondence"].getBoolean();
+    const int startItr = pdfParam["orbital-correspondence-start"].getInt();
     if (isOrbitalCorrespondence == true) {
-        const std::string method = TlUtils::toUpper(pdfParam["model"]["orbital-correspondence-method"].getStr());
+        const std::string method = TlUtils::toUpper(pdfParam["orbital-correspondence-method"].getStr());
         if ((method == "MO-OVERLAP") && (this->m_nIteration >= startItr)) {
             this->orbitalCorrespondenceMethod_ = OCM_OVERLAP;
         } else if ((method == "MO-PROJECTION") && (this->m_nIteration >= startItr)) {
@@ -180,7 +180,7 @@ TlVector DfDmatrix::createOccupation(const DfObject::RUN_TYPE runType)
     TlVector occ(this->m_nNumOfMOs);
     switch (runType) {
     case RUN_RKS: {
-        std::vector<int> docLevel = this->getLevel(pdfParam["model"]["method/nsp/occlevel"].getStr());
+        std::vector<int> docLevel = this->getLevel(pdfParam["method/nsp/occlevel"].getStr());
         for (std::vector<int>::const_iterator p = docLevel.begin(); p != docLevel.end(); p++) {
             occ[*p -1] = 2.0;
         }
@@ -188,7 +188,7 @@ TlVector DfDmatrix::createOccupation(const DfObject::RUN_TYPE runType)
     break;
 
     case RUN_UKS_ALPHA: {
-        std::vector<int> aoocLevel = this->getLevel(pdfParam["model"]["method/sp/alpha-spin-occlevel"].getStr());
+        std::vector<int> aoocLevel = this->getLevel(pdfParam["method/sp/alpha-spin-occlevel"].getStr());
         for (std::vector<int>::const_iterator p = aoocLevel.begin(); p != aoocLevel.end(); p++) {
             occ[*p -1] = 1.0;
         }
@@ -196,19 +196,19 @@ TlVector DfDmatrix::createOccupation(const DfObject::RUN_TYPE runType)
     break;
 
     case RUN_UKS_BETA: {
-        std::vector<int> boocLevel = this->getLevel(pdfParam["model"]["method/sp/beta-spin-occlevel"].getStr());
+        std::vector<int> boocLevel = this->getLevel(pdfParam["method/sp/beta-spin-occlevel"].getStr());
         for (std::vector<int>::const_iterator p = boocLevel.begin(); p != boocLevel.end(); p++) {
             occ[*p -1] = 1.0;
         }
     }
     break;
     case RUN_ROKS: {
-        std::vector<int> docLevel = this->getLevel(pdfParam["model"]["method/roks/closed-shell"].getStr());
+        std::vector<int> docLevel = this->getLevel(pdfParam["method/roks/closed-shell"].getStr());
         for (std::vector<int>::const_iterator p = docLevel.begin(); p != docLevel.end(); p++) {
             occ[*p -1] = 2.0;
         }
 
-        std::vector<int> socLevel = this->getLevel(pdfParam["model"]["method/roks/open-shell"].getStr());
+        std::vector<int> socLevel = this->getLevel(pdfParam["method/roks/open-shell"].getStr());
         for (std::vector<int>::const_iterator p = socLevel.begin(); p != socLevel.end(); p++) {
             // nsoc
             occ[*p -1] = 1.0;

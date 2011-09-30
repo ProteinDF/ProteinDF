@@ -48,7 +48,7 @@
 DfScf::DfScf(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), m_nDampObject(DAMP_NONE)
 {
-    this->isUseNewEngine_ = (*pPdfParam)["model"]["new_engine"].getBoolean();
+    this->isUseNewEngine_ = (*pPdfParam)["new_engine"].getBoolean();
 }
 
 
@@ -59,9 +59,9 @@ DfScf::~DfScf()
 
 void DfScf::saveParam() const
 {
-    (*(this->pPdfParam_))["model"]["iterations"] = this->m_nIteration;
+    (*(this->pPdfParam_))["iterations"] = this->m_nIteration;
 
-    const std::string pdfParamPath = (*this->pPdfParam_)["model"]["pdf_param_path"].getStr();
+    const std::string pdfParamPath = (*this->pPdfParam_)["pdf_param_path"].getStr();
     TlMsgPack mpac(*(this->pPdfParam_));
     mpac.save(pdfParamPath);
 }
@@ -74,9 +74,9 @@ int DfScf::dfScfMain()
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
     this->setScfParam();
 
-    this->logger(" restart calculation is " + pdfParam["model"]["restart"].getStr() + "\n");
+    this->logger(" restart calculation is " + pdfParam["restart"].getStr() + "\n");
 
-    std::string sStepControl = pdfParam["model"]["step_control"].getStr();
+    std::string sStepControl = pdfParam["step_control"].getStr();
     std::string group = "";
     do {
         group = TlUtils::toUpper(TlUtils::getWord(sStepControl));
@@ -113,14 +113,14 @@ void DfScf::setScfParam()
     // iteration number
     this->m_nIteration = 0;
     if (this->isRestart_ == true) {
-        this->m_nIteration = std::max<int>(1, pdfParam["model"]["iterations"].getInt());
+        this->m_nIteration = std::max<int>(1, pdfParam["iterations"].getInt());
     }
 
     // damping switch
     this->m_nScfAcceleration = SCF_ACCELERATION_SIMPLE;
     {
         const std::string sScfAcceleration =
-            TlUtils::toUpper(pdfParam["model"]["scf-acceleration"].getStr());
+            TlUtils::toUpper(pdfParam["scf-acceleration"].getStr());
 
         if (sScfAcceleration == "DAMPING") {
             this->m_nScfAcceleration = SCF_ACCELERATION_SIMPLE;
@@ -131,8 +131,8 @@ void DfScf::setScfParam()
 
     // DIIS
     this->diisflg = false;
-    if ((pdfParam["model"]["scf-acceleration"] == "diis") ||
-        (pdfParam["model"]["scf-acceleration"] == "mix")) {
+    if ((pdfParam["scf-acceleration"] == "diis") ||
+        (pdfParam["scf-acceleration"] == "mix")) {
         this->diisflg = true;
     }
     this->diisworkflg = false;
@@ -145,7 +145,7 @@ void DfScf::setScfParam()
     }
     {
         const std::string sDampObject =
-            TlUtils::toUpper(pdfParam["model"]["scf-acceleration/damping/damping-type"].getStr());
+            TlUtils::toUpper(pdfParam["scf-acceleration/damping/damping-type"].getStr());
         
         if (sDampObject == "DENSITY_MATRIX") {
             this->m_nDampObject = DAMP_DENSITY_MATRIX;
@@ -162,7 +162,7 @@ int DfScf::execScfLoop()
 {
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
     //int OUTSCF_FLAG = 1;
-    std::string sStepControl = pdfParam["model"]["step_control"].getStr();
+    std::string sStepControl = pdfParam["step_control"].getStr();
 
     std::string group = "";
     do {
@@ -373,7 +373,7 @@ int DfScf::execScfLoop()
             break;
 
         case POPULATION:
-            if (TlUtils::toUpper((*(this->pPdfParam_))["model"]["analyze_population"].getStr()) == "EVERY-SCF") {
+            if (TlUtils::toUpper((*(this->pPdfParam_))["analyze_population"].getStr()) == "EVERY-SCF") {
                 this->calcPopulation();
             }
             this->setScfRestartPoint("POPULATION");
@@ -381,7 +381,7 @@ int DfScf::execScfLoop()
             break;
 
         case SUMMARY:
-            if (TlUtils::toUpper(pdfParam["model"]["summary"].getStr()) == "EVERY-SCF") {
+            if (TlUtils::toUpper(pdfParam["summary"].getStr()) == "EVERY-SCF") {
                 this->summarize();
             }
             this->setScfRestartPoint("SUMMARY");
@@ -425,7 +425,7 @@ int DfScf::execScfLoop()
                 
                 if (isExitScf == false) {
                     ++(this->m_nIteration);
-                    (*(this->pPdfParam_))["model"]["iterations"] = this->m_nIteration;
+                    (*(this->pPdfParam_))["iterations"] = this->m_nIteration;
                     this->saveParam();
                     nScfState = BEGIN;
                 } else {
@@ -448,7 +448,7 @@ int DfScf::execScfLoop()
     }
 
     // pupulation analysis
-    const std::string sAnalizePopulation = TlUtils::toUpper(pdfParam["model"]["analyze_population"].getStr());
+    const std::string sAnalizePopulation = TlUtils::toUpper(pdfParam["analyze_population"].getStr());
     if ((sAnalizePopulation == "EVERY-SCF") ||
         (sAnalizePopulation == "CONVERGENCE")) {
         this->calcPopulation();
@@ -458,7 +458,7 @@ int DfScf::execScfLoop()
     this->calcTotalRealEnergy();
 
     // DfSummary
-    const std::string sDfSummary = TlUtils::toUpper(pdfParam["model"]["summary"].getStr());
+    const std::string sDfSummary = TlUtils::toUpper(pdfParam["summary"].getStr());
     if ((sDfSummary == "EVERY-SCF") ||
         (sDfSummary == "CONVERGENCE")) {
         this->summarize();
@@ -702,8 +702,8 @@ DfTransFmatrix* DfScf::getDfTransFmatrixObject(bool isExecDiis)
 void DfScf::doLevelShift()
 {
     // add level shift to Kohn-Sham matrix
-    const int start_iter = (*(this->pPdfParam_))["model"]["level-shift/start-iteration"].getInt();
-    const bool levelShift = (*(this->pPdfParam_))["model"]["level-shift"].getBoolean();
+    const int start_iter = (*(this->pPdfParam_))["level-shift/start-iteration"].getInt();
+    const bool levelShift = (*(this->pPdfParam_))["level-shift"].getBoolean();
     if ((levelShift == true) &&
         (this->m_nIteration >= start_iter)) {
         TlTime timer;
@@ -972,7 +972,7 @@ DfConverge* DfScf::getDfConverge()
 
 void DfScf::cleanup()
 {
-    if (TlUtils::toUpper((*this->pPdfParam_)["model"]["cleanup"].getStr()) != "NO") {
+    if (TlUtils::toUpper((*this->pPdfParam_)["cleanup"].getStr()) != "NO") {
         this->loggerStartTitle("cleanup files");
         DfCleanup dfCleanup(this->pPdfParam_);
         dfCleanup.cleanup();
@@ -984,9 +984,9 @@ void DfScf::cleanup()
 bool DfScf::checkMaxIteration()
 {
     bool answer = false;
-    if (this->m_nIteration >= (*this->pPdfParam_)["model"]["max-iteration"].getInt()) {
+    if (this->m_nIteration >= (*this->pPdfParam_)["max-iteration"].getInt()) {
         const std::string str = TlUtils::format(" max-iteration %d is reached.\n",
-                                                (*this->pPdfParam_)["model"]["max-iteration"].getInt());
+                                                (*this->pPdfParam_)["max-iteration"].getInt());
         this->logger(str);
         std::cout << str;
 

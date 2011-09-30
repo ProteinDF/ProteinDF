@@ -22,8 +22,8 @@ DfEri_Parallel::DfEri_Parallel(TlSerializeData* pPdfParam) : DfEri(pPdfParam)
     this->densityMatrixCacheMemSize_ = 100 * 1024UL * 1024UL; // 100MB
     
     this->numOfTasksPerProc_ = 4;
-    if ((*pPdfParam)["model"]["tasks_per_proc"].getStr().empty() != true) {
-        this->numOfTasksPerProc_ = (*pPdfParam)["model"]["tasks_per_proc"].getInt();
+    if ((*pPdfParam)["tasks_per_proc"].getStr().empty() != true) {
+        this->numOfTasksPerProc_ = (*pPdfParam)["tasks_per_proc"].getInt();
     }
     
     // this->isDebugOut_getDeltaT_ = true;

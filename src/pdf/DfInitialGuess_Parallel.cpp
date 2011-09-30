@@ -78,8 +78,8 @@ void DfInitialGuess_Parallel::createInitialGuessUsingLCAO_onScaLAPACK(const RUN_
 
     {
         TlSerializeData tmpParam = *(this->pPdfParam_);
-        tmpParam["model"]["orbital-overlap-correspondence-method"] = "keep";
-        tmpParam["model"]["iterations"] = 0;
+        tmpParam["orbital-overlap-correspondence-method"] = "keep";
+        tmpParam["iterations"] = 0;
         DfDmatrix_Parallel dfDmatrix(&tmpParam);
         dfDmatrix.DfDmatrixMain(); // RKS only?
     }
@@ -101,8 +101,8 @@ void DfInitialGuess_Parallel::createInitialGuessUsingLCAO_onLAPACK(const RUN_TYP
          
          {
              TlSerializeData tmpParam = *(this->pPdfParam_);
-             tmpParam["model"]["orbital-overlap-correspondence-method"] = "keep";
-             tmpParam["model"]["control-iteration"] = 0;
+             tmpParam["orbital-overlap-correspondence-method"] = "keep";
+             tmpParam["control-iteration"] = 0;
              
              // 密度行列の作成
              DfDmatrix dfDmatrix(&tmpParam);

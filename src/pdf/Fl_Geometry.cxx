@@ -78,7 +78,7 @@ TlSerializeData Fl_Geometry::getSerializeData() const
         position.pushBack(z);
         atom["xyz"] = position;
         atom["charge"] = charge;
-        data["model"]["coordinates"]["global"].pushBack(atom);
+        data["coordinates"]["global"].pushBack(atom);
     }
 
     return data;

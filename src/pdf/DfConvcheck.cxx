@@ -11,10 +11,10 @@ DfConvcheck::DfConvcheck(TlSerializeData* pPdfParam, int num_iter)
     : DfObject(pPdfParam)
 {
     const TlSerializeData& pdfParam = *pPdfParam;
-    this->convergence_type = pdfParam["model"]["convergence/type"].getStr();
+    this->convergence_type = pdfParam["convergence/type"].getStr();
 
-    this->threshold_cri     = pdfParam["model"]["convergence/threshold"].getDouble();
-    this->threshold_cri_ene = pdfParam["model"]["convergence/threshold-energy"].getDouble();
+    this->threshold_cri     = pdfParam["convergence/threshold"].getDouble();
+    this->threshold_cri_ene = pdfParam["convergence/threshold-energy"].getDouble();
 
     this->dev_sd = 0.0;
     this->dev_dm = 0.0;

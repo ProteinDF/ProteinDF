@@ -9,7 +9,7 @@ void getDefaultSize(const TlSerializeData& param,
                     TlPosition* pEndPos)
 {
     // 計算サイズの決定
-    Fl_Geometry flGeom(param["model"]["coordinates"]); // 単位はa.u.
+    Fl_Geometry flGeom(param["coordinates"]); // 単位はa.u.
     double min_x = 0.0;
     double min_y = 0.0;
     double min_z = 0.0;

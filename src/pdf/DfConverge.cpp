@@ -10,7 +10,7 @@ DfConverge::DfConverge(TlSerializeData* pPdfParam)
 {
     const TlSerializeData& pdfParam = *pPdfParam;
     const std::string sDampingType  =
-        TlUtils::toUpper(pdfParam["model"]["scf-acceleration/damping/damping-type"].getStr());
+        TlUtils::toUpper(pdfParam["scf-acceleration/damping/damping-type"].getStr());
     if (sDampingType == "DENSITY") {
         this->m_nConvergeTarget = RHO_TILDE;
     } else if (sDampingType == "FOCK") {

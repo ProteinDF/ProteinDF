@@ -14,7 +14,7 @@ DfXMatrix::DfXMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
     assert(pPdfParam != NULL);
     const TlSerializeData& pdfParam = *pPdfParam;
-    this->threshold_trancation = pdfParam["model"]["orbital-independence-threshold"].getDouble();
+    this->threshold_trancation = pdfParam["orbital-independence-threshold"].getDouble();
 }
 
 
@@ -32,7 +32,7 @@ void DfXMatrix::main()
 void DfXMatrix::saveNumOfIndependentBasis()
 {
     // parameterファイルに設定
-    (*(this->pPdfParam_))["model"]["MOs"] = this->m_nNumOfMOs;
+    (*(this->pPdfParam_))["MOs"] = this->m_nNumOfMOs;
 }
 
 
@@ -59,7 +59,7 @@ void DfXMatrix::exec()
 
         // MO dimension is defined.
         this->loggerTime(" truncation of linear dependent");
-        const int independent_orbital_number = pdfParam["model"]["MOs"].getInt();
+        const int independent_orbital_number = pdfParam["MOs"].getInt();
         if (independent_orbital_number > 0) {
             this->m_nNumOfMOs = independent_orbital_number;
             this->logger(TlUtils::format(" set number_independent_basis (number) = %d\n", this->m_nNumOfMOs));
@@ -139,7 +139,7 @@ void DfXMatrix::exec()
     this->loggerTime(" finalize");
 
     // for a check
-    if (TlUtils::toUpper(pdfParam["model"]["DfXmatrix/check-matrixes"].getStr()) == "YES") {
+    if (TlUtils::toUpper(pdfParam["DfXmatrix/check-matrixes"].getStr()) == "YES") {
         this->checkMatrixes();
     }
 }

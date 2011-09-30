@@ -4,7 +4,7 @@
 DfTaskCtrl_Parallel::DfTaskCtrl_Parallel(TlSerializeData* pPdfParam) 
     : DfTaskCtrl(pPdfParam) {
     
-    const int input_numOfSessions = (*pPdfParam)["model"]["num_of_sessions"].getInt();
+    const int input_numOfSessions = (*pPdfParam)["num_of_sessions"].getInt();
     this->numOfSessions_ = (input_numOfSessions > 0) ? input_numOfSessions : 1;
 }
 

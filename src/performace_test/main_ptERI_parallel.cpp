@@ -41,8 +41,8 @@ int main(int argc, char *argv[])
     TlMsgPack mpac;
     mpac.load(mpacPath);
     TlSerializeData param = mpac.getSerializeData();
-    TlOrbitalInfo orbitalInfo(param["model"]["coordinates"],
-                              param["model"]["basis_set"]);
+    TlOrbitalInfo orbitalInfo(param["coordinates"],
+                              param["basis_set"]);
     const int numOfAOs = orbitalInfo.getNumOfOrbitals();
     
     if (isVerbose == true) {

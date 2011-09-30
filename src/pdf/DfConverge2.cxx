@@ -16,17 +16,17 @@ DfConverge2::DfConverge2(TlSerializeData* pPdfParam, int num_iter) : DfObject(pP
     TlLogX& Log = TlLogX::getInstance();
 
     // DIIS
-    this->diis_dimension           = pdfParam["model"]["scf-acceleration/diis/number-of-diis"].getInt();
-    this->diis_property            = pdfParam["model"]["scf-acceleration/diis/property"].getInt();
-    this->diis_start_number        = pdfParam["model"]["scf-acceleration/diis/start-number"].getInt();
-    this->diis_start_extrapolation = pdfParam["model"]["scf-acceleration/diis/start-extrapolation"].getInt();
-    this->diis_type                = pdfParam["model"]["scf-acceleration/diis/type"].getStr();
+    this->diis_dimension           = pdfParam["scf-acceleration/diis/number-of-diis"].getInt();
+    this->diis_property            = pdfParam["scf-acceleration/diis/property"].getInt();
+    this->diis_start_number        = pdfParam["scf-acceleration/diis/start-number"].getInt();
+    this->diis_start_extrapolation = pdfParam["scf-acceleration/diis/start-extrapolation"].getInt();
+    this->diis_type                = pdfParam["scf-acceleration/diis/type"].getStr();
 
     // DIIS actual dimension // Ｂ行列の次元とする
     this->diis_actual_dimension = this->m_nIteration - diis_start_number;
     this->diis_actual_dimension += 1;
 
-    if (pdfParam["model"]["scf-acceleration"].getStr() == "mix") {
+    if (pdfParam["scf-acceleration"].getStr() == "mix") {
         Log << "The mix acceleration method is employed.\n";
         if (this->diis_start_extrapolation != (this->diis_dimension + this->diis_start_number)) {
             Log << "*** WARNING ***\n";

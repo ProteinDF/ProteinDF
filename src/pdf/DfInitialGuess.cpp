@@ -179,9 +179,9 @@ void DfInitialGuess::createInitialGuessUsingLCAO(const RUN_TYPE runType)
 
     {
         TlSerializeData tmpParam = *(this->pPdfParam_);
-        tmpParam["model"]["orbital-correspondence"] = false;
-        tmpParam["model"]["orbital-overlap-correspondence-method"] = "keep";
-        tmpParam["model"]["control-iteration"] = 0;
+        tmpParam["orbital-correspondence"] = false;
+        tmpParam["orbital-overlap-correspondence-method"] = "keep";
+        tmpParam["control-iteration"] = 0;
 
         // 密度行列の作成
         DfDmatrix dfDmatrix(&tmpParam);
@@ -236,7 +236,7 @@ void DfInitialGuess::createOccupation(const RUN_TYPE runType)
     switch (runType) {
     case RUN_RKS:
         {
-            std::vector<int> docLevel = this->getLevel(pdfParam["model"]["method/nsp/occlevel"].getStr());
+            std::vector<int> docLevel = this->getLevel(pdfParam["method/nsp/occlevel"].getStr());
             for (std::vector<int>::const_iterator p = docLevel.begin(); p != docLevel.end(); p++) {
                 guess_occ[*p -1] = 2.0;
             }
@@ -245,7 +245,7 @@ void DfInitialGuess::createOccupation(const RUN_TYPE runType)
 
     case RUN_UKS_ALPHA:
         {
-            std::vector<int> aoocLevel = this->getLevel(pdfParam["model"]["method/sp/alpha-spin-occlevel"].getStr());
+            std::vector<int> aoocLevel = this->getLevel(pdfParam["method/sp/alpha-spin-occlevel"].getStr());
             for (std::vector<int>::const_iterator p = aoocLevel.begin(); p != aoocLevel.end(); p++) {
                 guess_occ[*p -1] = 1.0;
             }
@@ -254,7 +254,7 @@ void DfInitialGuess::createOccupation(const RUN_TYPE runType)
 
     case RUN_UKS_BETA:
         {
-            std::vector<int> boocLevel = this->getLevel(pdfParam["model"]["method/sp/beta-spin-occlevel"].getStr());
+            std::vector<int> boocLevel = this->getLevel(pdfParam["method/sp/beta-spin-occlevel"].getStr());
             for (std::vector<int>::const_iterator p = boocLevel.begin(); p != boocLevel.end(); p++) {
                 guess_occ[*p -1] = 1.0;
             }
@@ -263,12 +263,12 @@ void DfInitialGuess::createOccupation(const RUN_TYPE runType)
 
     case RUN_ROKS:
         {
-            std::vector<int> docLevel = this->getLevel(pdfParam["model"]["method/roks/closed-shell"].getStr());
+            std::vector<int> docLevel = this->getLevel(pdfParam["method/roks/closed-shell"].getStr());
             for (std::vector<int>::const_iterator p = docLevel.begin(); p != docLevel.end(); p++) {
                 guess_occ[*p -1] = 2.0;
             }
 
-            std::vector<int> socLevel = this->getLevel(pdfParam["model"]["method/roks/open-shell"].getStr());
+            std::vector<int> socLevel = this->getLevel(pdfParam["method/roks/open-shell"].getStr());
             for (std::vector<int>::const_iterator p = socLevel.begin(); p != socLevel.end(); p++) {
                 // nsoc
                 guess_occ[*p -1] = 1.0;

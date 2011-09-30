@@ -11,7 +11,7 @@ DfXcenefitting::DfXcenefitting(TlSerializeData* pPdfParam, int nItr)
 
     //this->scftype = flGbi["SCF"]["method"];
     //this->naux = atoi(flGbi["SCF"]["control-nauxxc"].c_str());
-    const int number_rotation = (*pPdfParam)["model"]["file-rot-number"].getInt();
+    const int number_rotation = (*pPdfParam)["file-rot-number"].getInt();
     this->m_nIteration  = this->m_nIteration % number_rotation;
     if (this->m_nIteration == 0) {
         this->m_nIteration = number_rotation;

@@ -39,8 +39,8 @@ int main(int argc, char* argv[])
             startBlockAOs.push_back(std::atoi(opt[i +1].c_str()));
         }
     } else {
-        TlOrbitalInfo orbInfo(param["model"]["coordinates"],
-                              param["model"]["basis_set"]);
+        TlOrbitalInfo orbInfo(param["coordinates"],
+                              param["basis_set"]);
         int atomIndex = -1;
         const std::size_t numOfAOs = orbInfo.getNumOfOrbitals();
         for (DfObject::index_type i = 0; i < numOfAOs; ++i) {

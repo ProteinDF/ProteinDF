@@ -12,7 +12,7 @@
 const double TlMoField::INV_SQRT12 = 1.0 / std::sqrt(12.0);
 
 TlMoField::TlMoField(const TlSerializeData& param)
-    : param_(param), orbInfo_(param["model"]["coordinates"], param["model"]["basis_set"])
+    : param_(param), orbInfo_(param["coordinates"], param["basis_set"])
 {
 }
 

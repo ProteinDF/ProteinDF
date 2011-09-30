@@ -13,16 +13,16 @@ DfTwoElectronIntegral_Parallel::DfTwoElectronIntegral_Parallel(TlSerializeData* 
     : DfTwoElectronIntegral(pPdfParam)
 {
     this->densityMatrixCacheMemSize_ = 100 * 1024UL * 1024UL; // 100MB
-    this->isDebugOutMsg_ = (*pPdfParam)["model"]["debugout_TEI_parallel_msg"].getBoolean();
+    this->isDebugOutMsg_ = (*pPdfParam)["debugout_TEI_parallel_msg"].getBoolean();
     
     this->isTeiOriginalCommunication_ = false;
-    if ((*pPdfParam)["model"]["tei_original_communication"].getStr().empty() != true) {
-        this->isTeiOriginalCommunication_ = (*pPdfParam)["model"]["tei_original_communication"].getBoolean();
+    if ((*pPdfParam)["tei_original_communication"].getStr().empty() != true) {
+        this->isTeiOriginalCommunication_ = (*pPdfParam)["tei_original_communication"].getBoolean();
     }
     
     this->numOfTasksPerProc_ = 2;
-    if ((*pPdfParam)["model"]["xc_ms_job_per_proc"].getStr().empty() != true) {
-        this->numOfTasksPerProc_ = (*pPdfParam)["model"]["xc_ms_job_per_proc"].getInt();
+    if ((*pPdfParam)["xc_ms_job_per_proc"].getStr().empty() != true) {
+        this->numOfTasksPerProc_ = (*pPdfParam)["xc_ms_job_per_proc"].getInt();
     }
 }
 

@@ -22,7 +22,7 @@ TlSerializeData PdfKeyword::getDefault() const
     for (KeywordListType::const_iterator p = this->kwdList_.begin(); p != pEnd; ++p) {
         const std::string keyword = p->keyword;
         const std::string value = p->defaultValue;
-        data["model"][keyword] = value;
+        data[keyword] = value;
     }
 
     return data;

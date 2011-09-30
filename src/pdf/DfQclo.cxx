@@ -50,7 +50,7 @@ void DfQclo::DfQcloMain()
 
         // add level shift to Kohn-Sham matrix
         {
-            int start_iter = (*(this->pPdfParam_))["model"]["level-shift/start-iteration"].getInt();
+            int start_iter = (*(this->pPdfParam_))["level-shift/start-iteration"].getInt();
             if (((*(this->pPdfParam_))["SCF"]["level-shift"] == "on") &&
                 (this->m_nIteration >= start_iter)) {
                 this->loggerStartTitle("DfLevelshift");

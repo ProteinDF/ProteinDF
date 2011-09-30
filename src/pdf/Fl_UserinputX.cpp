@@ -205,7 +205,7 @@ void Fl_UserinputX::load()
                     // store value
                     //std::cerr << "g = " << sGroup << ", k = " << sKeyword << ", v = " << sValue << std::endl;
                     this->m_param[sGroup][sKeyword] = sValue;
-                    this->data_["model"][sKeyword] = sValue;
+                    this->data_[sKeyword] = sValue;
 
                     sKeyword = "";
                     bNextValue = false;
@@ -220,25 +220,25 @@ void Fl_UserinputX::load()
     if (this->m_param["MOLECULE"]["geometry/cartesian/input"] != "") {
         const std::string str = this->m_param["MOLECULE"]["geometry/cartesian/input"];
         this->m_param["MOLECULE"]["geometry/cartesian/input"] = this->molecule_geometry_cartesian_input(str);
-        this->data_["model"]["geometry/cartesian/input"] = this->molecule_geometry_cartesian_input(str);
+        this->data_["geometry/cartesian/input"] = this->molecule_geometry_cartesian_input(str);
     }
 
     if (this->m_param["MOLECULE"]["basis-set/orbital"] != "") {
         const std::string str = this->m_param["MOLECULE"]["basis-set/orbital"];
         this->m_param["MOLECULE"]["basis-set/orbital"] = this->moleculeBasisSetOrbital(str);
-        this->data_["model"]["basis-set/orbital"] = this->moleculeBasisSetOrbital(str);
+        this->data_["basis-set/orbital"] = this->moleculeBasisSetOrbital(str);
     }
 
     if (this->m_param["MOLECULE"]["basis-set/density-auxiliary"] != "") {
         const std::string str = this->m_param["MOLECULE"]["basis-set/density-auxiliary"];
         this->m_param["MOLECULE"]["basis-set/density-auxiliary"] = this->moleculeBasisSetDensityAuxiliary(str);
-        this->data_["model"]["basis-set/density-auxiliary"] = this->moleculeBasisSetDensityAuxiliary(str);
+        this->data_["basis-set/density-auxiliary"] = this->moleculeBasisSetDensityAuxiliary(str);
     }
 
     if (this->m_param["MOLECULE"]["basis-set/exchange-auxiliary"] != "") {
         const std::string str = this->m_param["MOLECULE"]["basis-set/exchange-auxiliary"];
         this->m_param["MOLECULE"]["basis-set/exchange-auxiliary"] = this->moleculeBasisSetExchangeAuxiliary(str);
-        this->data_["model"]["basis-set/exchange-auxiliary"] = this->moleculeBasisSetExchangeAuxiliary(str);
+        this->data_["basis-set/exchange-auxiliary"] = this->moleculeBasisSetExchangeAuxiliary(str);
     }
 
     //this->m_param.print(std::cout);
@@ -687,7 +687,7 @@ void Fl_UserinputX::alias()
         }
 
         this->m_param["SCF"]["xc-potential"] = sXcPotential + sTilde;
-        this->data_["model"]["xc-potential"] = sXcPotential + sTilde;
+        this->data_["xc-potential"] = sXcPotential + sTilde;
     }
 }
 
@@ -709,7 +709,7 @@ bool Fl_UserinputX::check()
                 std::cout << " 'scf-memory-saving = yes' overridded." << std::endl;
             }
             this->m_param["SCF"]["scf-memory-saving"] = "yes";
-            this->data_["model"]["scf-memory-saving"] = "yes";
+            this->data_["scf-memory-saving"] = "yes";
         }
     }
 

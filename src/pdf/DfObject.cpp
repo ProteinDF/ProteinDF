@@ -60,7 +60,7 @@ void DfObject::setParam(const TlSerializeData& data)
     // computational resource
     this->procMaxMemSize_ = 1024UL * 1024UL * 1024UL;
     {
-        const std::string memSizeStr = TlUtils::toUpper(data["model"]["memory_size"].getStr());
+        const std::string memSizeStr = TlUtils::toUpper(data["memory_size"].getStr());
         if (memSizeStr.empty() == false) {
             std::size_t value = std::atol(memSizeStr.c_str());
             if (memSizeStr.rfind("MB") != std::string::npos) {
@@ -73,21 +73,21 @@ void DfObject::setParam(const TlSerializeData& data)
         }
     }
 
-    this->isWorkOnDisk_ = (TlUtils::toUpper(data["model"]["work_on_disk"].getStr()) == "YES");
-    this->localTempDir_ = data["model"]["local_temp_dir"].getStr();
+    this->isWorkOnDisk_ = (TlUtils::toUpper(data["work_on_disk"].getStr()) == "YES");
+    this->localTempDir_ = data["local_temp_dir"].getStr();
     if (this->localTempDir_ == "") {
         this->localTempDir_ = "/tmp/";
     }
 
     this->isRestart_ = false;
-    if (TlUtils::toUpper(data["model"]["restart"].getStr()) == "YES") {
+    if (TlUtils::toUpper(data["restart"].getStr()) == "YES") {
         this->isRestart_ = true;
     }
 
-    this->isUseNewEngine_ = data["model"]["new_engine"].getBoolean();
+    this->isUseNewEngine_ = data["new_engine"].getBoolean();
 
     // SCF type
-    const std::string sMethodType = TlUtils::toUpper(data["model"]["method"].getStr());
+    const std::string sMethodType = TlUtils::toUpper(data["method"].getStr());
     if (sMethodType == "NSP") {
         this->m_nMethodType = METHOD_RKS;
     } else if (sMethodType == "SP") {
@@ -100,24 +100,24 @@ void DfObject::setParam(const TlSerializeData& data)
     }
 
     // model
-    this->m_nNumOfAtoms = data["model"]["atoms"].getInt();
-    this->m_nNumOfDummyAtoms = data["model"]["dummyAtoms"].getInt();
+    this->m_nNumOfAtoms = data["atoms"].getInt();
+    this->m_nNumOfDummyAtoms = data["dummyAtoms"].getInt();
     this->numOfRealAtoms_ = this->m_nNumOfAtoms - this->m_nNumOfDummyAtoms;
     
-    this->m_nIteration = data["model"]["iterations"].getInt();
-    this->m_nNumOfAOs = data["model"]["AOs"].getInt();
-    this->m_nNumOfMOs = data["model"]["MOs"].getInt();
-    this->m_nNumOfAux = data["model"]["AuxCDs"].getInt();
-    this->numOfAuxXC_ = data["model"]["AuxXCs"].getInt();
+    this->m_nIteration = data["iterations"].getInt();
+    this->m_nNumOfAOs = data["AOs"].getInt();
+    this->m_nNumOfMOs = data["MOs"].getInt();
+    this->m_nNumOfAux = data["AuxCDs"].getInt();
+    this->numOfAuxXC_ = data["AuxXCs"].getInt();
 
-    this->m_nNumOfElectrons = data["model"]["RKS/electrons"].getInt();
-    this->m_nNumOfAlphaElectrons = data["model"]["UKS/alphaElectrons"].getInt();
-    this->m_nNumOfBetaElectrons = data["model"]["UKS/betaElectrons"].getInt();
+    this->m_nNumOfElectrons = data["RKS/electrons"].getInt();
+    this->m_nNumOfAlphaElectrons = data["UKS/alphaElectrons"].getInt();
+    this->m_nNumOfBetaElectrons = data["UKS/betaElectrons"].getInt();
 
     // guess
     this->initialGuessType_ = GUESS_UNKNOWN;
     {
-        const std::string guess = TlUtils::toUpper(data["model"]["scf-start-guess"].getStr());
+        const std::string guess = TlUtils::toUpper(data["scf-start-guess"].getStr());
         if ((guess == "RHO") || (guess == "ATOM_RHO")) {
             this->initialGuessType_ = GUESS_RHO;
         } else if (guess == "FILE_RHO") {
@@ -142,18 +142,18 @@ void DfObject::setParam(const TlSerializeData& data)
     }
 
     // calculaton properties ===================================================
-    this->chargeExtrapolateNumber_ = data["model"]["charge_extrapolate_number"].getInt(); 
+    this->chargeExtrapolateNumber_ = data["charge_extrapolate_number"].getInt(); 
     // disk utilization(no == DIRECT, yes == DISK)
-    this->m_bDiskUtilization = (TlUtils::toUpper(data["model"]["disk-utilization"].getStr()) == "YES") ? true : false;
-    this->m_bMemorySave = (TlUtils::toUpper(data["model"]["scf-memory-saving"].getStr()) == "YES") ? true : false;
+    this->m_bDiskUtilization = (TlUtils::toUpper(data["disk-utilization"].getStr()) == "YES") ? true : false;
+    this->m_bMemorySave = (TlUtils::toUpper(data["scf-memory-saving"].getStr()) == "YES") ? true : false;
 
     // XC potential
-    this->m_sXCFunctional = TlUtils::toUpper(data["model"]["xc-potential"].getStr());
+    this->m_sXCFunctional = TlUtils::toUpper(data["xc-potential"].getStr());
     {
         const char nLastChar = this->m_sXCFunctional[this->m_sXCFunctional.length() -1];
         this->m_bIsXCFitting = (nLastChar == '~') ? true : false;
     }
-    this->m_bIsUpdateXC = (TlUtils::toUpper(data["model"]["xc-update"].getStr()) == "NO") ? false : true;
+    this->m_bIsUpdateXC = (TlUtils::toUpper(data["xc-update"].getStr()) == "NO") ? false : true;
 
     // Grimme empirical dispersion check
     {
@@ -166,39 +166,39 @@ void DfObject::setParam(const TlSerializeData& data)
     }
 
     // RI_J
-    this->isRI_J_ = data["model"]["RI_J"].getBoolean();
+    this->isRI_J_ = data["RI_J"].getBoolean();
     
     // RI-K
-    this->isRI_K_ = data["model"]["RI_K"].getBoolean();
+    this->isRI_K_ = data["RI_K"].getBoolean();
     
     // matrix operation
     this->m_bUsingSCALAPACK = false;
 #ifdef HAVE_SCALAPACK
-    this->m_bUsingSCALAPACK = (TlUtils::toUpper(data["model"]["linear_algebra_package"].getStr())
+    this->m_bUsingSCALAPACK = (TlUtils::toUpper(data["linear_algebra_package"].getStr())
                                == "SCALAPACK") ? true : false;
 #endif // HAVE_SCALAPACK
 
     this->isSaveDistributedMatrixToLocalDisk_ = false;
 #ifdef HAVE_SCALAPACK
-    if (data["model"].hasKey("save_distributed_matrix_to_local_disk") == true) {
-        this->isSaveDistributedMatrixToLocalDisk_ = data["model"]["save_distributed_matrix_to_local_disk"].getBoolean();
+    if (data.hasKey("save_distributed_matrix_to_local_disk") == true) {
+        this->isSaveDistributedMatrixToLocalDisk_ = data["save_distributed_matrix_to_local_disk"].getBoolean();
     }
 #endif // HAVE_SCALAPACK
 
     this->localDiskPath_ = "/tmp";
-    if (data["model"].hasKey("local_disk_path") == true) {
-        this->localDiskPath_ = data["model"]["local_disk_path"].getStr();
+    if (data.hasKey("local_disk_path") == true) {
+        this->localDiskPath_ = data["local_disk_path"].getStr();
     }
 
     // for HPC ============================================================
     this->grainSize_ = 100 * numOfThreads;
-    if (data["model"].hasKey("omp_grain_size") == true) {
-        this->grainSize_ = data["model"]["omp_grain_size"].getInt() * numOfThreads;
+    if (data.hasKey("omp_grain_size") == true) {
+        this->grainSize_ = data["omp_grain_size"].getInt() * numOfThreads;
     }
     
     this->isMasterSlave_ = false;
     {
-        const std::string parallelProcessingType = TlUtils::toUpper(data["model"]["parallel_processing_type"].getStr());
+        const std::string parallelProcessingType = TlUtils::toUpper(data["parallel_processing_type"].getStr());
         if ((parallelProcessingType == "MASTER_SLAVE") ||
             (parallelProcessingType == "MASTER-SLAVE") ||
             (parallelProcessingType == "MS")) {
@@ -208,14 +208,14 @@ void DfObject::setParam(const TlSerializeData& data)
 
     
     // for DEBUG ===============================================================
-    this->isFileWarning = data["model"]["debug/file_warning"].getBoolean();
-    this->isSaveJMatrix_ = data["model"]["debug/save_J"].getBoolean();
-    this->enableExperimentalCode_ = data["model"]["experimental_code"].getBoolean();
+    this->isFileWarning = data["debug/file_warning"].getBoolean();
+    this->isSaveJMatrix_ = data["debug/save_J"].getBoolean();
+    this->enableExperimentalCode_ = data["experimental_code"].getBoolean();
     
     // for memory ==============================================================
-    this->isUseCache_ = (*(this->pPdfParam_))["model"]["use_matrix_cache"].getBoolean();
+    this->isUseCache_ = (*(this->pPdfParam_))["use_matrix_cache"].getBoolean();
     this->matrixCache_.setMaxMemSize(this->procMaxMemSize_);
-    const bool isForceLoadingFromDisk = (*(this->pPdfParam_))["model"]["force_loading_from_disk"].getBoolean();
+    const bool isForceLoadingFromDisk = (*(this->pPdfParam_))["force_loading_from_disk"].getBoolean();
     this->matrixCache_.forceLoadingFromDisk(isForceLoadingFromDisk);
     
     // setup

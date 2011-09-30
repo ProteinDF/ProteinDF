@@ -12,7 +12,7 @@
 DfXMatrix_Parallel::DfXMatrix_Parallel(TlSerializeData* pPdfParam)
     : DfXMatrix(pPdfParam)
 {
-    this->fastTrancate_ = (*pPdfParam)["model"]["fast_trancate"].getBoolean();
+    this->fastTrancate_ = (*pPdfParam)["fast_trancate"].getBoolean();
 }
 
 
@@ -94,7 +94,7 @@ void DfXMatrix_Parallel::exec_ScaLAPACK()
 
         // MO dimension is defined.
         this->loggerTime(" truncation of linear dependent");
-        const int independent_orbital_number = (*(this->pPdfParam_))["model"]["MOs"].getInt();
+        const int independent_orbital_number = (*(this->pPdfParam_))["MOs"].getInt();
         if (independent_orbital_number > 0) {
             this->m_nNumOfMOs = independent_orbital_number;
             this->logger(TlUtils::format(" set number_independent_basis (number) = %d\n", this->m_nNumOfMOs));

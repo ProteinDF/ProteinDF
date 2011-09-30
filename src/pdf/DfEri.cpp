@@ -22,18 +22,18 @@ DfEri::DfEri(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), pOrbitalInfo_(NULL), m_dStoredCutValue(0.0)
 {
     const TlSerializeData& pdfParam = *pPdfParam;
-    this->m_dStoredCutValue = pdfParam["model"]["cut-value"].getDouble();
+    this->m_dStoredCutValue = pdfParam["cut-value"].getDouble();
     this->m_dCutValue = m_dStoredCutValue;
 
     this->blockSize_ = DEFAULT_BLOCK_SIZE;
-    if (pdfParam["model"]["block-size"].getStr().empty() != true) {
-        this->blockSize_ = pdfParam["model"]["block-size"].getInt();
+    if (pdfParam["block-size"].getStr().empty() != true) {
+        this->blockSize_ = pdfParam["block-size"].getInt();
     }
 
-    this->pOrbitalInfo_ = new TlOrbitalInfo((*pPdfParam)["model"]["coordinates"],
-                                            (*pPdfParam)["model"]["basis_set"]);
-    this->pOrbitalInfo_Density_ = new TlOrbitalInfo_Density((*pPdfParam)["model"]["coordinates"],
-                                                            (*pPdfParam)["model"]["basis_set_auxD"]);
+    this->pOrbitalInfo_ = new TlOrbitalInfo((*pPdfParam)["coordinates"],
+                                            (*pPdfParam)["basis_set"]);
+    this->pOrbitalInfo_Density_ = new TlOrbitalInfo_Density((*pPdfParam)["coordinates"],
+                                                            (*pPdfParam)["basis_set_auxD"]);
     
     this->getMemory();
     this->initialize();

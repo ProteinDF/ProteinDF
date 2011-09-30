@@ -272,14 +272,14 @@ DfXcpotfitting::DfXcpotfitting(TlSerializeData* pPdfParam, int nItr)
 //   const int memory = this->dfXcpEstmemval();
 
 //     this->outlevel = atoi(flGbi["SCF"]["print-level"].c_str());
-    this->alphaval = pdfParam["model"]["xc-potential/xalpha/alpha-value"].getDouble();
+    this->alphaval = pdfParam["xc-potential/xalpha/alpha-value"].getDouble();
     if (fabs(this->alphaval) <= 1.0E-16) {
         this->alphaval = 0.7;
     }
 
-    this->NREPS    = pdfParam["model"]["xc-potential/xalpha/converge-threshold"].getDouble();
-    this->NRiter   = pdfParam["model"]["xc-potential/xalpha/iteration-number"].getInt();
-    this->DFactor  = pdfParam["model"]["xc-potential/xalpha/damping-factor"].getDouble();
+    this->NREPS    = pdfParam["xc-potential/xalpha/converge-threshold"].getDouble();
+    this->NRiter   = pdfParam["xc-potential/xalpha/iteration-number"].getInt();
+    this->DFactor  = pdfParam["xc-potential/xalpha/damping-factor"].getDouble();
 
 //   if (memory > MaxMemory){
 //     Error( "Cannot get memory." );

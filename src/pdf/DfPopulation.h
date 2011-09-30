@@ -216,7 +216,7 @@ void DfPopulation::getAtomPopStr(const TlVector& trPS, const bool isCalcNetCharg
         out << "  index Atom    gross\n";
     }
 
-    const Fl_Geometry flGeom((*(this->pPdfParam_))["model"]["coordinates"]);
+    const Fl_Geometry flGeom((*(this->pPdfParam_))["coordinates"]);
     for (index_type atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
         const double nucCharge = flGeom.getCharge(atomIndex);
         out << TlUtils::format(" %6d   %-2s ",

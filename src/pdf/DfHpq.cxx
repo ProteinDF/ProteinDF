@@ -28,17 +28,17 @@ const std::size_t DfHpq::ADAT_SIZE = 60 * 1901;
 
 DfHpq::DfHpq(TlSerializeData* pPdfParam) : DfObject(pPdfParam), pOrbitalInfo_(NULL)
 {
-    this->pOrbitalInfo_ = new TlOrbitalInfo((*pPdfParam)["model"]["coordinates"],
-                                            (*pPdfParam)["model"]["basis_set"]);
+    this->pOrbitalInfo_ = new TlOrbitalInfo((*pPdfParam)["coordinates"],
+                                            (*pPdfParam)["basis_set"]);
 
     const TlSerializeData& data = *(this->pPdfParam_);
-    this->cutvalue = data["model"]["cut-value"].getDouble();
+    this->cutvalue = data["cut-value"].getDouble();
 
-    this->m_nNumOfTotalAtoms = data["model"]["control-number-of-atoms"].getInt();
+    this->m_nNumOfTotalAtoms = data["control-number-of-atoms"].getInt();
 
     this->blockSize_ = DEFAULT_BLOCK_SIZE;
-    if (data["model"]["block-size"].getStr().empty() != true) {
-        this->blockSize_ = data["model"]["block-size"].getInt();
+    if (data["block-size"].getStr().empty() != true) {
+        this->blockSize_ = data["block-size"].getInt();
     }
 
     this->getMemory();
@@ -253,7 +253,7 @@ void DfHpq::hpqcalc(const std::vector<IJShellPair>& IJShellList,
                     TlMatrixObject* Hpq, TlMatrixObject* Hpq2)
 {
     const int workSize = 25; // 5(d) x 5(d)
-    const Fl_Geometry flGeom((*this->pPdfParam_)["model"]["coordinates"]);
+    const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
     const std::size_t numOfAtoms = flGeom.getNumOfAtoms();
 
     int numOfPairs = IJShellList.size();
@@ -507,7 +507,7 @@ void DfHpq::makeTable()
     }
 
     // Get Atom Coordinates
-    Fl_Geometry fgeom((*this->pPdfParam_)["model"]["coordinates"]);
+    Fl_Geometry fgeom((*this->pPdfParam_)["coordinates"]);
     this->m_nNumOfTotalAtoms = fgeom.getNumOfAtoms();
     this->m_nNumOfRealAtoms  = fgeom.getNumOfAtoms() - fgeom.getDummyatom();
 }

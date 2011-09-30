@@ -73,9 +73,9 @@ void ProteinDF::exec()
     TlLogX& log = TlLogX::getInstance();
 
     // ProteinDF class parameter
-    this->showCacheReport_ = this->pdfParam_["model"]["show_cache_report"].getBoolean();
+    this->showCacheReport_ = this->pdfParam_["show_cache_report"].getBoolean();
 
-    std::string control = this->pdfParam_["model"]["step_control"].getStr();
+    std::string control = this->pdfParam_["step_control"].getStr();
 
     // setup condition
     this->setupGlobalCondition();
@@ -211,21 +211,21 @@ void ProteinDF::setupGlobalCondition()
 
 void ProteinDF::manageMemory()
 {
-    if (TlUtils::toUpper(this->pdfParam_["model"]["use_mapfile"].getStr()) == "YES") {
-        std::string filePath = this->pdfParam_["model"]["mapfile_basename"].getStr();
+    if (TlUtils::toUpper(this->pdfParam_["use_mapfile"].getStr()) == "YES") {
+        std::string filePath = this->pdfParam_["mapfile_basename"].getStr();
         if (filePath == "") {
             filePath = "/tmp/pdfmmap";
         }
 
         std::size_t mapFileSize = std::size_t(1024UL * 1024UL * 1024UL); // 少なくとも 1 GBは欲しい。
-        std::string mapFileSizeStr = TlUtils::toUpper(this->pdfParam_["model"]["mapfile_size"].getStr());
+        std::string mapFileSizeStr = TlUtils::toUpper(this->pdfParam_["mapfile_size"].getStr());
         if (mapFileSizeStr != "AUTO") {
             // mapfile_sizeはMB単位で指定のこと。
             mapFileSize = std::max<std::size_t>(mapFileSize, std::atoi(mapFileSizeStr.c_str()));
         } else {
-            const std::size_t numOfAOs = this->pdfParam_["model"]["AOs"].getInt();
-            const std::size_t numOfAuxDen = this->pdfParam_["model"]["auxCDs"].getInt();
-            const std::size_t numOfAuxXC = this->pdfParam_["model"]["auxXCs"].getInt();
+            const std::size_t numOfAOs = this->pdfParam_["AOs"].getInt();
+            const std::size_t numOfAuxDen = this->pdfParam_["auxCDs"].getInt();
+            const std::size_t numOfAuxXC = this->pdfParam_["auxXCs"].getInt();
             const std::size_t numOfAux = std::max(numOfAuxDen, numOfAuxXC);
 
             const std::size_t needMem_AO = numOfAOs * numOfAOs * 3; // full matrix
@@ -236,8 +236,8 @@ void ProteinDF::manageMemory()
         }
         TlMemManager::setParam(mapFileSize, filePath);
 
-        this->pdfParam_["model"]["mapfile_size"] = mapFileSize;
-        this->pdfParam_["model"]["mapfile_basename"] = filePath;
+        this->pdfParam_["mapfile_size"] = mapFileSize;
+        this->pdfParam_["mapfile_basename"] = filePath;
 
         this->saveParam();
     }
@@ -308,7 +308,7 @@ void ProteinDF::loadParam(const std::string& requestFilePath)
 {
     std::string filePath = requestFilePath;
     if (requestFilePath.empty() == true) {
-        filePath = this->pdfParam_["model"]["pdf_param_path"].getStr();
+        filePath = this->pdfParam_["pdf_param_path"].getStr();
     }
     
     TlMsgPack mpac;
@@ -317,7 +317,7 @@ void ProteinDF::loadParam(const std::string& requestFilePath)
 
     // check
     if (requestFilePath.empty() != true) {
-        const std::string pdfParamPath = this->pdfParam_["model"]["pdf_param_path"].getStr();
+        const std::string pdfParamPath = this->pdfParam_["pdf_param_path"].getStr();
         if (requestFilePath != pdfParamPath) {
             std::cerr << "the specified parameter file path is not consistent with pdf_param_path parameter."
                       << std::endl;
@@ -329,7 +329,7 @@ void ProteinDF::loadParam(const std::string& requestFilePath)
 void ProteinDF::saveParam() const
 {
     TlMsgPack mpac(this->pdfParam_);
-    const std::string pdfParamPath = this->pdfParam_["model"]["pdf_param_path"].getStr();
+    const std::string pdfParamPath = this->pdfParam_["pdf_param_path"].getStr();
     mpac.save(pdfParamPath);
 
     // conventional
@@ -341,13 +341,13 @@ void ProteinDF::save_Fl_Globalinput() const
 {
     // support conventional QCLO program
     Fl_GlobalinputX flGbi;
-    flGbi["SCF"]["method"] = this->pdfParam_["model"]["method"].getStr();
-    flGbi["SCF"]["control-norb"] = this->pdfParam_["model"]["AOs"].getStr();
-    flGbi["SCF"]["control-norbcut"] = this->pdfParam_["model"]["MOs"].getStr();
-    flGbi["SCF"]["control-iteration"] = this->pdfParam_["model"]["iterations"].getStr();
-    flGbi["SCF"]["method/nsp/electron-number"]  = this->pdfParam_["model"]["RKS/electrons"].getStr();
-    flGbi["SCF"]["method/sp/alpha-elec-number"] = this->pdfParam_["model"]["UKS/alphaElectrons"].getStr();
-    flGbi["SCF"]["method/sp/beta-elec-number"]  = this->pdfParam_["model"]["UKS/betaElectrons"].getStr();
+    flGbi["SCF"]["method"] = this->pdfParam_["method"].getStr();
+    flGbi["SCF"]["control-norb"] = this->pdfParam_["AOs"].getStr();
+    flGbi["SCF"]["control-norbcut"] = this->pdfParam_["MOs"].getStr();
+    flGbi["SCF"]["control-iteration"] = this->pdfParam_["iterations"].getStr();
+    flGbi["SCF"]["method/nsp/electron-number"]  = this->pdfParam_["RKS/electrons"].getStr();
+    flGbi["SCF"]["method/sp/alpha-elec-number"] = this->pdfParam_["UKS/alphaElectrons"].getStr();
+    flGbi["SCF"]["method/sp/beta-elec-number"]  = this->pdfParam_["UKS/betaElectrons"].getStr();
     flGbi.save();
 }
 

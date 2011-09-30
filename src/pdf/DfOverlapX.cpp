@@ -73,8 +73,8 @@ void DfOverlapX::getSpq(TlSymmetricMatrix* pSpq)
     const index_type numOfAOs = this->m_nNumOfAOs;
     pSpq->resize(numOfAOs);
 
-    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["model"]["coordinates"],
-                                    (*(this->pPdfParam_))["model"]["basis_set"]);
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
     this->calcOverlap(orbitalInfo, pSpq);
     this->finalize(pSpq);
 }
@@ -86,8 +86,8 @@ void DfOverlapX::getSab(TlSymmetricMatrix* pSab)
     const index_type numOfAuxDens = this->m_nNumOfAux;
     pSab->resize(numOfAuxDens);
 
-    const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["model"]["coordinates"],
-                                                    (*(this->pPdfParam_))["model"]["basis_set_auxD"]);
+    const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
+                                                    (*(this->pPdfParam_))["basis_set_auxD"]);
     this->calcOverlap(orbitalInfo_Density, pSab);
     this->finalize(pSab);
 }
@@ -181,8 +181,8 @@ void DfOverlapX::getForce(const TlSymmetricMatrix& W,
     assert(pForce != NULL);
     pForce->resize(this->m_nNumOfAtoms, 3);
     
-    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["model"]["coordinates"],
-                                    (*(this->pPdfParam_))["model"]["basis_set"]);
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
 
     this->createEngines();

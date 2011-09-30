@@ -26,35 +26,35 @@ const double DfTwoElectronIntegral::CONTRIBUTE_COEF = 2.0 * std::pow(M_PI, 2.5);
 // construct and destruct
 //
 DfTwoElectronIntegral::DfTwoElectronIntegral(TlSerializeData* pPdfParam)
-    : DfObject(pPdfParam), m_TlOrbitalInfo((*pPdfParam)["model"]["coordinates"],
-                                           (*pPdfParam)["model"]["basis_set"])
+    : DfObject(pPdfParam), m_TlOrbitalInfo((*pPdfParam)["coordinates"],
+                                           (*pPdfParam)["basis_set"])
 {
     const TlSerializeData& pdfParam = *pPdfParam;
     // initialize
-    this->m_dInputCutoffThreshold = pdfParam["model"]["cut-value"].getDouble();
+    this->m_dInputCutoffThreshold = pdfParam["cut-value"].getDouble();
     this->m_dCutoffThreshold = this->m_dInputCutoffThreshold;
 
     this->m_dPrimitiveIntegralsCutoffThreshold = 1.0E-16; //this->m_dInputCutoffThreshold * 1.0E-2;
-    if (pdfParam["model"]["TEI-primitive-cutoff"].getStr() != "") {
-        this->m_dPrimitiveIntegralsCutoffThreshold = pdfParam["model"]["TEI-primitive-cutoff"].getDouble(); //1.0E-15;
+    if (pdfParam["TEI-primitive-cutoff"].getStr() != "") {
+        this->m_dPrimitiveIntegralsCutoffThreshold = pdfParam["TEI-primitive-cutoff"].getDouble(); //1.0E-15;
     }
 
     this->isDensityCutoff_ = true;
-    if (TlUtils::toUpper(pdfParam["model"]["TEI-density-cutoff"].getStr()) == "NO") {
+    if (TlUtils::toUpper(pdfParam["TEI-density-cutoff"].getStr()) == "NO") {
         this->isDensityCutoff_ = false;
     }
 
     this->lengthScaleParameter_ = 1.0;
-    if (pdfParam["model"]["TEI-length-scale-parameter"].getStr() != "") {
-        this->lengthScaleParameter_ = pdfParam["model"]["TEI-length-scale-parameter"].getDouble();
+    if (pdfParam["TEI-length-scale-parameter"].getStr() != "") {
+        this->lengthScaleParameter_ = pdfParam["TEI-length-scale-parameter"].getDouble();
     }
 
     // for debug
-    this->isOutputTEI_ = (TlUtils::toUpper(pdfParam["model"]["output_TEI"].getStr()) == "YES") ? true : false;
+    this->isOutputTEI_ = (TlUtils::toUpper(pdfParam["output_TEI"].getStr()) == "YES") ? true : false;
     this->outputTEI_path_ = "TEI.txt";
-//     this->isOutputHGP_ = (TlUtils::toUpper(pdfParam["model"]["output_HGP"].getStr()) == "YES") ? true : false;
+//     this->isOutputHGP_ = (TlUtils::toUpper(pdfParam["output_HGP"].getStr()) == "YES") ? true : false;
 
-    //this->isUseNewEngine_ = (*pPdfParam)["model"]["new_engine"].getBoolean();
+    //this->isUseNewEngine_ = (*pPdfParam)["new_engine"].getBoolean();
     
     //
     this->JShellListSize_ = 0;

@@ -108,7 +108,7 @@ void DfTotalEnergy_Parallel::calculate_real_energy()
 //         rComm.broadcast(number_dummyatom);
 
 //         if (number_dummyatom != 0) {
-//             const int chgextra_number = (*(this->pPdfParam_))["model"]["charge-extrapolate-number"].getInt();
+//             const int chgextra_number = (*(this->pPdfParam_))["charge-extrapolate-number"].getInt();
 
 //             TlDistributeSymmetricMatrix Hpq2 = DfObject::getHpq2Matrix<TlDistributeSymmetricMatrix>();
 

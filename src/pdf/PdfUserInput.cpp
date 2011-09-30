@@ -209,7 +209,7 @@ void PdfUserInput::load_conventional()
                     // store value
                     //std::cerr << "g = " << sGroup << ", k = " << sKeyword << ", v = " << sValue << std::endl;
                     this->param_[sGroup][sKeyword] = sValue;
-                    this->data_["model"][sKeyword] = sValue;
+                    this->data_[sKeyword] = sValue;
 
                     sKeyword = "";
                     bNextValue = false;
@@ -221,35 +221,35 @@ void PdfUserInput::load_conventional()
     ifs.close();
 
     // make table ========================================================
-    if (this->data_["model"]["geometry/cartesian/input"].getStr() != "") {
-        const std::string str = this->data_["model"]["geometry/cartesian/input"].getStr();
+    if (this->data_["geometry/cartesian/input"].getStr() != "") {
+        const std::string str = this->data_["geometry/cartesian/input"].getStr();
         this->molecule_geometry_cartesian_input(str);
 
-        this->data_["model"]["geometry/cartesian/input"] = "";
+        this->data_["geometry/cartesian/input"] = "";
         this->param_["MOLECULE"]["geometry/cartesian/input"] = "stored";
     }
 
-    if (this->data_["model"]["basis-set/orbital"].getStr() != "") {
-        const std::string str = this->data_["model"]["basis-set/orbital"].getStr();
+    if (this->data_["basis-set/orbital"].getStr() != "") {
+        const std::string str = this->data_["basis-set/orbital"].getStr();
         this->moleculeBasisSetOrbital(str);
 
-        this->data_["model"]["basis-set/orbital"] = "";
+        this->data_["basis-set/orbital"] = "";
         this->param_["MOLECULE"]["basis-set/orbital"] = "stored";
     }
 
-    if (this->data_["model"]["basis-set/density-auxiliary"].getStr() != "") {
-        const std::string str = this->data_["model"]["basis-set/density-auxiliary"].getStr();
+    if (this->data_["basis-set/density-auxiliary"].getStr() != "") {
+        const std::string str = this->data_["basis-set/density-auxiliary"].getStr();
         this->moleculeBasisSetDensityAuxiliary(str);
         
-        this->data_["model"]["basis-set/density-auxiliary"] = "s";
+        this->data_["basis-set/density-auxiliary"] = "s";
         this->param_["MOLECULE"]["basis-set/density-auxiliary"] = "stored";
     }
 
-    if (this->data_["model"]["basis-set/exchange-auxiliary"].getStr() != "") {
-        const std::string str = this->data_["model"]["basis-set/exchange-auxiliary"].getStr();
+    if (this->data_["basis-set/exchange-auxiliary"].getStr() != "") {
+        const std::string str = this->data_["basis-set/exchange-auxiliary"].getStr();
         this->moleculeBasisSetExchangeAuxiliary(str);
         
-        this->data_["model"]["basis-set/exchange-auxiliary"] = "";
+        this->data_["basis-set/exchange-auxiliary"] = "";
         this->param_["MOLECULE"]["basis-set/exchange-auxiliary"] = "stored";
     }
 
@@ -319,7 +319,7 @@ void PdfUserInput::molecule_geometry_cartesian_input(const std::string& str)
             position.moveTo(x, y, z);
 
             // angstrom -> a.u.
-            if (this->data_["model"]["geometry/cartesian/unit"].getStr() == "angstrom") {
+            if (this->data_["geometry/cartesian/unit"].getStr() == "angstrom") {
                 //position /= 0.529177249;
                 position /= BOHR_ANGSTROM;
             }
@@ -354,7 +354,7 @@ void PdfUserInput::molecule_geometry_cartesian_input(const std::string& str)
         xyz.pushBack(position.z());
         atom["xyz"] = xyz;
         atom["label"] = sLabel2;
-        this->data_["model"]["coordinates"]["_"].pushBack(atom);
+        this->data_["coordinates"]["_"].pushBack(atom);
     }
 }
 
@@ -463,7 +463,7 @@ void PdfUserInput::moleculeBasisSetOrbital(const std::string& str)
             key += "@" + sLabel;
         }
         const TlSerializeData basisset = this->getBasisInfo(sName);
-        this->data_["model"]["basis_set"][key] = basisset;
+        this->data_["basis_set"][key] = basisset;
     }
 
     // 出力
@@ -621,9 +621,9 @@ void PdfUserInput::moleculeBasisSetDensityAuxiliary(const std::string& str)
                 cGTO["pGTOs"].pushBack(pGTO);
             }
 
-            this->data_["model"]["basis_set_auxD"][key]["cGTOs"].pushBack(cGTO);
+            this->data_["basis_set_auxD"][key]["cGTOs"].pushBack(cGTO);
         }
-        this->data_["model"]["basis_set_auxD"][key]["name"] = sName;
+        this->data_["basis_set_auxD"][key]["name"] = sName;
     }
 
     // 出力
@@ -753,9 +753,9 @@ void PdfUserInput::moleculeBasisSetExchangeAuxiliary(const std::string& str)
                 cGTO["pGTOs"].pushBack(pGTO);
             }
 
-            this->data_["model"]["basis_set_auxXC"][key]["cGTOs"].pushBack(cGTO);
+            this->data_["basis_set_auxXC"][key]["cGTOs"].pushBack(cGTO);
         }
-        this->data_["model"]["basis_set_auxXC"][key]["name"] = sName;
+        this->data_["basis_set_auxXC"][key]["name"] = sName;
     }
 
     // 出力
@@ -768,7 +768,7 @@ void PdfUserInput::alias()
 {
     // xc-potential
     {
-        std::string sXcPotential = this->data_["model"]["xc-potential"].getStr();
+        std::string sXcPotential = this->data_["xc-potential"].getStr();
         std::string sTilde = "";
         if (sXcPotential[sXcPotential.length() -1] == '~') {
             sTilde = "~";
@@ -780,7 +780,7 @@ void PdfUserInput::alias()
         }
 
         this->param_["SCF"]["xc-potential"] = sXcPotential + sTilde;
-        this->data_["model"]["xc-potential"] = sXcPotential + sTilde;
+        this->data_["xc-potential"] = sXcPotential + sTilde;
     }
 }
 
@@ -790,7 +790,7 @@ bool PdfUserInput::check()
 
     // xc-poteintial
     {
-        std::string sXcPotential = this->data_["model"]["xc-potential"].getStr();
+        std::string sXcPotential = this->data_["xc-potential"].getStr();
         std::string sTilde = "";
         if (sXcPotential[sXcPotential.length() -1] == '~') {
             sTilde = "~";
@@ -798,11 +798,11 @@ bool PdfUserInput::check()
         }
 
         if (sTilde == "") {
-            if ((TlUtils::toUpper(this->data_["model"]["scf-memory-saving"].getStr()) == "NO")) {
+            if ((TlUtils::toUpper(this->data_["scf-memory-saving"].getStr()) == "NO")) {
                 std::cout << " 'scf-memory-saving = yes' overridded." << std::endl;
             }
             this->param_["SCF"]["scf-memory-saving"] = "yes";
-            this->data_["model"]["scf-memory-saving"] = "yes";
+            this->data_["scf-memory-saving"] = "yes";
         }
     }
 

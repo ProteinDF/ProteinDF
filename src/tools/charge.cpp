@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     TlSerializeData param = mpac.getSerializeData();
 
     //Fl_Geometry flGeom(Fl_Geometry::getDefaultFileName());
-    Fl_Geometry flGeom(param["model"]["coordinates"]);
+    Fl_Geometry flGeom(param["coordinates"]);
 
     std::map<std::string, int> component;
     double charge = 0.0;

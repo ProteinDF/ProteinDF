@@ -26,17 +26,17 @@ DfXCFunctional::DfXCFunctional(TlSerializeData* pPdfParam)
     DfXCFunctional::m_dXC_Energy = pdfParam["control"]["XC_Energy"].getDouble();
     DfXCFunctional::E_disp_ = pdfParam["control"]["DFT_D_Energy"].getDouble();
 
-    this->m_bRI_K = (TlUtils::toUpper(pdfParam["model"]["RI-K"].getStr()) == "YES") ? true : false;
+    this->m_bRI_K = (TlUtils::toUpper(pdfParam["RI-K"].getStr()) == "YES") ? true : false;
 
-    this->m_bUseRTmethod = pdfParam["model"]["RT_method"].getBoolean();
-    this->isSaveFxcPure_ = pdfParam["model"]["save_Fxc_pure"].getBoolean();
+    this->m_bUseRTmethod = pdfParam["RT_method"].getBoolean();
+    this->isSaveFxcPure_ = pdfParam["save_Fxc_pure"].getBoolean();
 
-    this->m_bDebugTEI = pdfParam["model"]["debug_two_electron_integral_object"].getBoolean();
-    this->m_bPrintTEI = pdfParam["model"]["print_two_electron_integral_value"].getBoolean();
-    this->m_bKMatrixDebugOut = pdfParam["model"]["debug-K-matrix"].getBoolean();
-    this->isDebugOutFockExchangeMatrix_ = pdfParam["model"]["debugout_fock_exchange"].getBoolean();
+    this->m_bDebugTEI = pdfParam["debug_two_electron_integral_object"].getBoolean();
+    this->m_bPrintTEI = pdfParam["print_two_electron_integral_value"].getBoolean();
+    this->m_bKMatrixDebugOut = pdfParam["debug-K-matrix"].getBoolean();
+    this->isDebugOutFockExchangeMatrix_ = pdfParam["debugout_fock_exchange"].getBoolean();
 
-    this->isUseNewEngine_ = pdfParam["model"]["new_engine"].getBoolean();
+    this->isUseNewEngine_ = pdfParam["new_engine"].getBoolean();
     
     // XC function
     std::string checkXC = this->m_sXCFunctional;
@@ -392,7 +392,7 @@ double DfXCFunctional::getGrimmeDispersionEnergy()
         // alpha value
         const double alpha = 20.0; // Grimme2006
         
-        const Fl_Geometry geom((*(this->pPdfParam_))["model"]["coordinates"]);
+        const Fl_Geometry geom((*(this->pPdfParam_))["coordinates"]);
         const int numOfAtoms = geom.getNumOfAtoms();
         double E_disp = 0.0;
         for (int i = 0; i < numOfAtoms; ++i) {

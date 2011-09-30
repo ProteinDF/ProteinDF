@@ -6,12 +6,12 @@
 // #define DELTAG_THRESHOLD (1e-14)
 
 DfLocalize::DfLocalize(TlSerializeData* pPdfParam)
-    : DfObject(pPdfParam), orbInfo_((*pPdfParam)["model"]["coordinates"], (*pPdfParam)["model"]["basis_set"])
+    : DfObject(pPdfParam), orbInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"])
 {
-    this->maxIteration_ = (*pPdfParam)["model"]["max-iteration"].getInt();
+    this->maxIteration_ = (*pPdfParam)["max-iteration"].getInt();
     this->threshold_ = 1.0E-7;
     
-    //((*pPdfParam)["model"]["RKS/electrons"].getInt() +1) / 2;
+    //((*pPdfParam)["RKS/electrons"].getInt() +1) / 2;
     this->numOfOcc_ = (this->m_nNumOfElectrons +1) / 2; 
 
     // for OCC

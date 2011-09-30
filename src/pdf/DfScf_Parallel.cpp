@@ -341,7 +341,7 @@ DfConverge* DfScf_Parallel::getDfConverge()
 
 void DfScf_Parallel::cleanup()
 {
-//     if (TlUtils::toUpper((*this->pPdfParam_)["model"]["cleanup"].getStr()) != "NO") {
+//     if (TlUtils::toUpper((*this->pPdfParam_)["cleanup"].getStr()) != "NO") {
 //         this->loggerStartTitle("cleanup files");
 //         DfCleanup_Parallel dfCleanup(this->pPdfParam_);
 //         dfCleanup.cleanup();

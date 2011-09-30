@@ -365,7 +365,7 @@ double DfTotalEnergy::calculate_E_WITH_DIRECT(const SymmetricMatrixType& D)
         //const int dNumOfDummyAtoms = geom.getDummyatom();
         //if (dNumOfDummyAtoms != 0) {
     if (this->m_nNumOfDummyAtoms > 0) {
-        const int chgextra_number = (*(this->pPdfParam_))["model"]["charge-extrapolate-number"].getInt();
+        const int chgextra_number = (*(this->pPdfParam_))["charge-extrapolate-number"].getInt();
         if (((this->m_nIteration == 1) && (chgextra_number == 0)) ||
             ((this->m_nIteration != 1) && (this->m_nIteration <= (chgextra_number +1)))) {
             // for the case of gradually addition of dummy-charge term
@@ -400,7 +400,7 @@ double DfTotalEnergy::calcOneElectronPart(const SymmetricMatrixType& D)
 
     // add dummy charge
     if (this->m_nNumOfDummyAtoms > 0) {
-        const int chgextra_number = (*(this->pPdfParam_))["model"]["charge-extrapolate-number"].getInt();
+        const int chgextra_number = (*(this->pPdfParam_))["charge-extrapolate-number"].getInt();
         
         SymmetricMatrixType Hpq2;
         Hpq2.load(this->getHpq2MatrixPath());
@@ -494,7 +494,7 @@ double DfTotalEnergy::calcEnergyFromDummy()
     }
 
     // part of Hpq2
-    const int chargeExtrapolateNumber = (*(this->pPdfParam_))["model"]["charge-extrapolate-number"].getInt();
+    const int chargeExtrapolateNumber = (*(this->pPdfParam_))["charge-extrapolate-number"].getInt();
 
     SymmetricMatrixType Hpq2 = DfObject::getHpq2Matrix<SymmetricMatrixType>();
 
@@ -509,7 +509,7 @@ double DfTotalEnergy::calcEnergyFromDummy()
     //part of nuclear-nuclear repulsion
     const int start_number_dummy = this->m_nNumOfAtoms - this->m_nNumOfDummyAtoms;
 
-    Fl_Geometry geom((*this->pPdfParam_)["model"]["coordinates"]);
+    Fl_Geometry geom((*this->pPdfParam_)["coordinates"]);
     double energy_from_nuclear = 0.0;
     for (int i = start_number_dummy; i < this->m_nNumOfAtoms; ++i) {
         const double ci = geom.getCharge(i);

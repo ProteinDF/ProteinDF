@@ -13,48 +13,48 @@ DfEriX::DfEriX(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), pEriEngines_(NULL)
 {
     this->lengthScaleParameter_ = 1.0;
-    if ((*pPdfParam)["model"]["length_scale_parameter"].getStr() != "") {
-        this->lengthScaleParameter_ = (*pPdfParam)["model"]["length_scale_parameter"].getDouble();
+    if ((*pPdfParam)["length_scale_parameter"].getStr() != "") {
+        this->lengthScaleParameter_ = (*pPdfParam)["length_scale_parameter"].getDouble();
     }
     
     this->cutoffThreshold_ = 1.0E-10;
-    if ((*pPdfParam)["model"]["cut-value"].getStr().empty() != true) {
-        this->cutoffThreshold_ = (*pPdfParam)["model"]["cut-value"].getDouble();
+    if ((*pPdfParam)["cut-value"].getStr().empty() != true) {
+        this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
     }    
 
     this->cutoffEpsilon1_ = this->cutoffThreshold_ * 0.01;
-    if ((*pPdfParam)["model"]["cutoff_epsilon1"].getStr().empty() != true) {
-        this->cutoffEpsilon1_ = (*pPdfParam)["model"]["cutoff_epsilon1"].getDouble();
+    if ((*pPdfParam)["cutoff_epsilon1"].getStr().empty() != true) {
+        this->cutoffEpsilon1_ = (*pPdfParam)["cutoff_epsilon1"].getDouble();
     }    
 
     this->cutoffEpsilon2_ = this->cutoffThreshold_;
-    if ((*pPdfParam)["model"]["cutoff_epsilon2"].getStr().empty() != true) {
-        this->cutoffEpsilon2_ = (*pPdfParam)["model"]["cutoff_epsilon2"].getDouble();
+    if ((*pPdfParam)["cutoff_epsilon2"].getStr().empty() != true) {
+        this->cutoffEpsilon2_ = (*pPdfParam)["cutoff_epsilon2"].getDouble();
     }    
 
     this->cutoffEpsilon3_ = this->cutoffThreshold_ * 0.01;
-    if ((*pPdfParam)["model"]["cutoff_epsilon3"].getStr().empty() != true) {
-        this->cutoffEpsilon3_ = (*pPdfParam)["model"]["cutoff_epsilon3"].getDouble();
+    if ((*pPdfParam)["cutoff_epsilon3"].getStr().empty() != true) {
+        this->cutoffEpsilon3_ = (*pPdfParam)["cutoff_epsilon3"].getDouble();
     }    
 
     // debug ===========================================================
     this->isDebugOutJ_ = false;
-    if ((*pPdfParam)["model"]["debug_out_J"].getStr().empty() != true) {
-        this->isDebugOutJ_ = (*pPdfParam)["model"]["debug_out_J"].getBoolean();
+    if ((*pPdfParam)["debug_out_J"].getStr().empty() != true) {
+        this->isDebugOutJ_ = (*pPdfParam)["debug_out_J"].getBoolean();
     }
 
     this->isDebugOutK_ = false;
-    if ((*pPdfParam)["model"]["debug_out_K"].getStr().empty() != true) {
-        this->isDebugOutK_ = (*pPdfParam)["model"]["debug_out_K"].getBoolean();
+    if ((*pPdfParam)["debug_out_K"].getStr().empty() != true) {
+        this->isDebugOutK_ = (*pPdfParam)["debug_out_K"].getBoolean();
     }
 
     this->isDebugExactJ_ = false;
-    if ((*pPdfParam)["model"]["debug_exact_J"].getStr().empty() != true) {
-        this->isDebugExactJ_ = (*pPdfParam)["model"]["debug_exact_J"].getBoolean();
+    if ((*pPdfParam)["debug_exact_J"].getStr().empty() != true) {
+        this->isDebugExactJ_ = (*pPdfParam)["debug_exact_J"].getBoolean();
     }
     this->isDebugExactK_ = false;
-    if ((*pPdfParam)["model"]["debug_exact_K"].getStr().empty() != true) {
-        this->isDebugExactK_ = (*pPdfParam)["model"]["debug_exact_K"].getBoolean();
+    if ((*pPdfParam)["debug_exact_K"].getStr().empty() != true) {
+        this->isDebugExactK_ = (*pPdfParam)["debug_exact_K"].getBoolean();
     }
 }
 
@@ -125,10 +125,10 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
                                      this->cutoffThreshold_));
     }
 
-    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["model"]["coordinates"],
-                                    (*(this->pPdfParam_))["model"]["basis_set"]);
-    const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["model"]["coordinates"],
-                                                    (*(this->pPdfParam_))["model"]["basis_set_auxD"]);
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
+    const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
+                                                    (*(this->pPdfParam_))["basis_set_auxD"]);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
@@ -265,10 +265,10 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
 {
     assert(pJ != NULL);
 
-    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["model"]["coordinates"],
-                                    (*(this->pPdfParam_))["model"]["basis_set"]);
-    const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["model"]["coordinates"],
-                                                    (*(this->pPdfParam_))["model"]["basis_set_auxD"]);
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
+    const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
+                                                    (*(this->pPdfParam_))["basis_set_auxD"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
@@ -438,8 +438,8 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
     DfEriEngine engine;
     engine.setPrimitiveLevelThreshold(0.0);
     
-    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["model"]["coordinates"],
-                                    (*(this->pPdfParam_))["model"]["basis_set"]);
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellPairArrayTable shellPairArrayTable = this->getShellPairArrayTable(shellArrayTable);
     
@@ -523,8 +523,8 @@ void DfEriX::getJpq_integralDriven2(const TlSymmetricMatrix& P, TlSymmetricMatri
     assert(pJ != NULL);
     pJ->resize(this->m_nNumOfAOs);
 
-    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["model"]["coordinates"],
-                                    (*(this->pPdfParam_))["model"]["basis_set"]);
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
 
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
@@ -701,8 +701,8 @@ void DfEriX::getJab(TlSymmetricMatrix* pJab)
     const index_type numOfAuxDens = this->m_nNumOfAux;
     pJab->resize(numOfAuxDens);
 
-    const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["model"]["coordinates"],
-                                                    (*(this->pPdfParam_))["model"]["basis_set_auxD"]);
+    const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
+                                                    (*(this->pPdfParam_))["basis_set_auxD"]);
 
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo_Density);
 
@@ -809,8 +809,8 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce)
     assert(pForce != NULL);
     pForce->resize(this->m_nNumOfAtoms, 3);
     
-    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["model"]["coordinates"],
-                                    (*(this->pPdfParam_))["model"]["basis_set"]);
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
     this->createEngines();
@@ -1020,10 +1020,10 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
     
     pForce->resize(this->m_nNumOfAtoms, 3);
     
-    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["model"]["coordinates"],
-                                    (*(this->pPdfParam_))["model"]["basis_set"]);
-    const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["model"]["coordinates"],
-                                                    (*(this->pPdfParam_))["model"]["basis_set_auxD"]);
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
+    const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
+                                                    (*(this->pPdfParam_))["basis_set_auxD"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
@@ -1202,8 +1202,8 @@ void DfEriX::getForceJ(const TlVector& rho, TlMatrix* pForce)
     assert(pForce != NULL);
     pForce->resize(this->m_nNumOfAtoms, 3);
     
-    const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["model"]["coordinates"],
-                                                    (*(this->pPdfParam_))["model"]["basis_set_auxD"]);
+    const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
+                                                    (*(this->pPdfParam_))["basis_set_auxD"]);
     const ShellArrayTable shellArray_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
     this->createEngines();
@@ -1363,8 +1363,8 @@ void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
     // const index_type numOfAOs = this->m_nNumOfAOs;
     pK->resize(this->m_nNumOfAOs);
 
-    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["model"]["coordinates"],
-                                    (*(this->pPdfParam_))["model"]["basis_set"]);
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellPairArrayTable shellPairArrayTable = this->getShellPairArrayTable(shellArrayTable);
     
@@ -1456,8 +1456,8 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
     const index_type numOfAOs = this->m_nNumOfAOs;
     pK->resize(numOfAOs);
     
-    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["model"]["coordinates"],
-                                    (*(this->pPdfParam_))["model"]["basis_set"]);
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
     // const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
 
     // ShellPairArrayTable shellPairArrayTable = this->getShellPairArrayTable(shellArrayTable);
@@ -1699,8 +1699,8 @@ void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce)
 
     pForce->resize(this->m_nNumOfAtoms, 3);
     
-    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["model"]["coordinates"],
-                                    (*(this->pPdfParam_))["model"]["basis_set"]);
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
     this->createEngines();

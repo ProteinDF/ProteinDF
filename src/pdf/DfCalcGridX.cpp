@@ -21,25 +21,25 @@ const double DfCalcGridX::INV_SQRT3 = 1.0 / std::sqrt(3.0);
 const double DfCalcGridX::INV_SQRT12 = 1.0 / std::sqrt(12.0);
 
 DfCalcGridX::DfCalcGridX(TlSerializeData* pPdfParam)
-    : DfObject(pPdfParam), m_tlOrbInfo((*pPdfParam)["model"]["coordinates"], (*pPdfParam)["model"]["basis_set"])
+    : DfObject(pPdfParam), m_tlOrbInfo((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"])
 {
     const TlSerializeData& pdfParam = *pPdfParam;
     
     this->inputtedDensityCutoffValue_ = 1.0E-16;
-    if (!(pdfParam["model"]["xc-density-threshold"].getStr().empty())) {
-        this->inputtedDensityCutoffValue_ = pdfParam["model"]["xc-density-threshold"].getDouble();
+    if (!(pdfParam["xc-density-threshold"].getStr().empty())) {
+        this->inputtedDensityCutoffValue_ = pdfParam["xc-density-threshold"].getDouble();
     }
     this->m_densityCutOffValueA = this->inputtedDensityCutoffValue_;
     this->m_densityCutOffValueB = this->inputtedDensityCutoffValue_;
 
-    this->m_inputedCutoffThreshold = pdfParam["model"]["cut-value"].getDouble();
+    this->m_inputedCutoffThreshold = pdfParam["cut-value"].getDouble();
 
     this->physicalValues_.clear();
 
     this->readTable();
 
     // for debug
-    this->isDebugOutPhiTable_ = (TlUtils::toUpper(pdfParam["model"]["debug_out_phi_table"].getStr()) == "YES") ? true : false;
+    this->isDebugOutPhiTable_ = (TlUtils::toUpper(pdfParam["debug_out_phi_table"].getStr()) == "YES") ? true : false;
 }
 
 DfCalcGridX::~DfCalcGridX()

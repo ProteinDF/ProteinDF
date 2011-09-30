@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     if (opt["i"].empty() != true) {
         iteration = std::atoi(opt["i"].c_str());
     } else {
-        iteration = param["model"]["iterations"].getInt();
+        iteration = param["iterations"].getInt();
     }
 
     if (isVerbose == true) {

@@ -465,7 +465,7 @@ void Fl_Gto::setup(const TlSerializeData& basisSet)
 //     std::cerr << yaml.str() << std::endl;
     this->cgto.clear();
     
-    //const TlSerializeData& basisSet = data["model"]["basis_set"];
+    //const TlSerializeData& basisSet = data["basis_set"];
     TlSerializeData::MapConstIterator pEnd = basisSet.endMap();
     for (TlSerializeData::MapConstIterator p = basisSet.beginMap(); p != pEnd; ++p) {
         const TlSerializeData contents = p->second;

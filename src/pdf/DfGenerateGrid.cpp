@@ -39,16 +39,16 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
     //nyuswtch = fgi( "xc-potential/gxalpha/nyu-switch" ); // default is "off", gxalpha以外の場合もある
     //this->nyuswtch = "off";                                      // this is temporal for debug
 
-    this->xctype   = pdfParam["model"]["xc-potential"].getStr();
+    this->xctype   = pdfParam["xc-potential"].getStr();
 
     this->weightCutoff_ = 1.0E-16;
-    if (pdfParam["model"]["grid-weight-cutoff"].getStr() != "") {
-        this->weightCutoff_ = pdfParam["model"]["grid-weight-cutoff"].getDouble();
+    if (pdfParam["grid-weight-cutoff"].getStr() != "") {
+        this->weightCutoff_ = pdfParam["grid-weight-cutoff"].getDouble();
     }
 
     //this->vectorelement = nauxxc;
 
-    const std::string sGridType = pdfParam["model"]["xc-potential/grid-type"].getStr();
+    const std::string sGridType = pdfParam["xc-potential/grid-type"].getStr();
     if (TlUtils::toUpper(sGridType) == "COARSE") {
         this->m_gridType = COARSE;
         this->nrgrid =  32;
@@ -129,8 +129,8 @@ void DfGenerateGrid::makeTable()
     // グリッド省略の範囲Rの決定
     {
 
-        TlOrbitalInfo_Density orbInfoAuxCD((*this->pPdfParam_)["model"]["coordinates"],
-                                           (*this->pPdfParam_)["model"]["basis_set_auxD"]);
+        TlOrbitalInfo_Density orbInfoAuxCD((*this->pPdfParam_)["coordinates"],
+                                           (*this->pPdfParam_)["basis_set_auxD"]);
         const int maxNumOfAuxCDs = orbInfoAuxCD.getNumOfOrbitals();
 
         double dMaxExpAlpha = 0.0;

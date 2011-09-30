@@ -129,8 +129,8 @@ void DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::calc()
             this->getTalpha_ROKS(&t_alphaA, &t_alphaB);
             
             this->loggerTime(" calc Ramda");
-            const double dNumOfElecA = pdfParam["model"]["method/roks/electron-number-alpha"].getDouble();
-            const double dNumOfElecB = pdfParam["model"]["method/roks/electron-number-beta" ].getDouble();
+            const double dNumOfElecA = pdfParam["method/roks/electron-number-alpha"].getDouble();
+            const double dNumOfElecB = pdfParam["method/roks/electron-number-beta" ].getDouble();
             const double lamdaA = this->getLamda(SabinvN, t_alphaA, N_alpha, dNumOfElecA);
             const double lamdaB = this->getLamda(SabinvN, t_alphaB, N_alpha, dNumOfElecB);
             this->logger(TlUtils::format(" the number of alpha elctrons = %5.2lf, %5.2lf\n", dNumOfElecA));

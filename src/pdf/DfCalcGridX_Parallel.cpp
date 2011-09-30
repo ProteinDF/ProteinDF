@@ -25,26 +25,26 @@ DfCalcGridX_Parallel::DfCalcGridX_Parallel(TlSerializeData* pPdfParam)
     const TlSerializeData& pdfParam = *pPdfParam;
 
     this->assignAtomRange_ = 1;
-    if (pdfParam["model"]["xc-ms-atom-range"].getStr().empty() != true) {
-        this->assignAtomRange_ = pdfParam["model"]["xc-ms-atom-range"].getInt();
+    if (pdfParam["xc-ms-atom-range"].getStr().empty() != true) {
+        this->assignAtomRange_ = pdfParam["xc-ms-atom-range"].getInt();
     }
 
     this->assignAoRange_ = 64;
-    if (pdfParam["model"]["xc_ms_ao_range"].getStr().empty() != true) {
-        this->assignAoRange_ = pdfParam["model"]["xc_ms_ao_range"].getInt();
+    if (pdfParam["xc_ms_ao_range"].getStr().empty() != true) {
+        this->assignAoRange_ = pdfParam["xc_ms_ao_range"].getInt();
     }
 
     this->assignJobsPerProc_ = 2;
-    if (pdfParam["model"]["xc_ms_job_per_proc"].getStr().empty() != true) {
-        this->assignJobsPerProc_ = pdfParam["model"]["xc_ms_job_per_proc"].getInt();
+    if (pdfParam["xc_ms_job_per_proc"].getStr().empty() != true) {
+        this->assignJobsPerProc_ = pdfParam["xc_ms_job_per_proc"].getInt();
     }
     
     this->densityMatrixCacheMemSize_ = 100 * 1024UL * 1024UL; // 100MB
 
-    this->calcMode_ = pdfParam["model"]["grid_calcmode"].getInt();
+    this->calcMode_ = pdfParam["grid_calcmode"].getInt();
 
     this->isDebugOut_ = false;
-    const std::string debugOut = TlUtils::toUpper(pdfParam["model"]["debug_out"].getStr());
+    const std::string debugOut = TlUtils::toUpper(pdfParam["debug_out"].getStr());
     if (debugOut == "YES") {
         this->isDebugOut_ = true;
     }

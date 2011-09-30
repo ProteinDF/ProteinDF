@@ -71,13 +71,13 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration, const std::string
     TlSerializeData& pdfParam = *(this->pPdfParam_);
     
     // construct level shift matrix for "F' matrix"
-    const double ls_closed_mo = pdfParam["model"]["level-shift/ls-closed-mo"].getDouble();
-    const double ls_open_mo = pdfParam["model"]["level-shift/ls-open-mo"].getDouble();
-    const double ls_virtual_mo = pdfParam["model"]["level-shift/ls-virtual-mo"].getDouble();
+    const double ls_closed_mo = pdfParam["level-shift/ls-closed-mo"].getDouble();
+    const double ls_open_mo = pdfParam["level-shift/ls-open-mo"].getDouble();
+    const double ls_virtual_mo = pdfParam["level-shift/ls-virtual-mo"].getDouble();
 
-    const double delta_group_closed = pdfParam["model"]["level-shift/delta-group-closed"].getDouble();
-    const double delta_group_open = pdfParam["model"]["level-shift/delta-group-open"].getDouble();
-    const double delta_group_virtual = pdfParam["model"]["level-shift/delta-group-virtual"].getDouble();
+    const double delta_group_closed = pdfParam["level-shift/delta-group-closed"].getDouble();
+    const double delta_group_open = pdfParam["level-shift/delta-group-open"].getDouble();
+    const double delta_group_virtual = pdfParam["level-shift/delta-group-virtual"].getDouble();
 
     Log << "construct Level Shift Operator\n";
 

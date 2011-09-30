@@ -27,7 +27,7 @@ void DfHpqX_Parallel::getHpqD(TlDistributeSymmetricMatrix* pHpq,
     const int numOfAOs = this->m_nNumOfAOs;
     
     // make coordinates
-    const Fl_Geometry flGeom((*this->pPdfParam_)["model"]["coordinates"]);
+    const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
     const int numOfAtoms = flGeom.getNumOfAtoms();
     const int numOfDummyAtoms = flGeom.getDummyatom();
     const int numOfRealAtoms = numOfAtoms - numOfDummyAtoms;

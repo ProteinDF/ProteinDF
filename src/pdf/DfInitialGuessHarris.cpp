@@ -46,29 +46,29 @@ DfInitialGuessHarris::~DfInitialGuessHarris()
 void DfInitialGuessHarris::main()
 {
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
-    const TlOrbitalInfo orbInfo_high(pdfParam["model"]["coordinates"],
-                                     pdfParam["model"]["basis_set"]);
+    const TlOrbitalInfo orbInfo_high(pdfParam["coordinates"],
+                                     pdfParam["basis_set"]);
     const int numOfAOs_high = orbInfo_high.getNumOfOrbitals();
     
     TlSerializeData pdfParam_low; // for low-level
     
     // set low-lebel geometry
-    pdfParam_low["model"]["coordinates"]["_"] = pdfParam["model"]["coordinates"]["_"];
+    pdfParam_low["coordinates"]["_"] = pdfParam["coordinates"]["_"];
     
     // set low-level basis set
-    pdfParam_low["model"]["basis_set"] = this->pdfParam_harrisDB_["model"]["basis_set"];
-    const Fl_Geometry flGeom(pdfParam_low["model"]["coordinates"]);
+    pdfParam_low["basis_set"] = this->pdfParam_harrisDB_["basis_set"];
+    const Fl_Geometry flGeom(pdfParam_low["coordinates"]);
     const int numOfAtoms = flGeom.getNumOfAtoms();
     
-    if (pdfParam["model"]["save_harris_param"].getBoolean() == true) {
+    if (pdfParam["save_harris_param"].getBoolean() == true) {
         TlMsgPack mpac(pdfParam_low);
         mpac.save("pdfparam_low.mpac");
     }
 
     
     // create low-level density matrix
-    const TlOrbitalInfo orbInfo_low(pdfParam_low["model"]["coordinates"],
-                                    pdfParam_low["model"]["basis_set"]);
+    const TlOrbitalInfo orbInfo_low(pdfParam_low["coordinates"],
+                                    pdfParam_low["basis_set"]);
     const int numOfAOs_low = orbInfo_low.getNumOfOrbitals();
     TlSymmetricMatrix P_low(numOfAOs_low);
     TlCombineDensityMatrix combineDensMat;
@@ -79,10 +79,10 @@ void DfInitialGuessHarris::main()
         }
         
         TlSerializeData coord;
-        coord["_"].pushBack( pdfParam["model"]["coordinates"]["_"].getAt(atomIndex));
+        coord["_"].pushBack( pdfParam["coordinates"]["_"].getAt(atomIndex));
         
         TlOrbitalInfo orbInfo_harrisDB(coord,
-                                       this->pdfParam_harrisDB_["model"]["basis_set"]);
+                                       this->pdfParam_harrisDB_["basis_set"]);
         
         const TlSymmetricMatrix P_DB(this->pdfParam_harrisDB_["density_matrix"][atomSymbol]);
         combineDensMat.make(orbInfo_harrisDB, P_DB,

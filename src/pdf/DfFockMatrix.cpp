@@ -9,7 +9,7 @@
 
 DfFockMatrix::DfFockMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
-    this->isUseNewEngine_ = (*pPdfParam)["model"]["new_engine"].getBoolean();
+    this->isUseNewEngine_ = (*pPdfParam)["new_engine"].getBoolean();
 }
 
 

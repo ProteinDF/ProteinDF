@@ -8,8 +8,8 @@
 #include "TlSymmetricMatrix.h"
 
 DfPopulation::DfPopulation(TlSerializeData* pPdfParam)
-    : DfObject(pPdfParam), orbitalInfo_((*pPdfParam)["model"]["coordinates"],
-                                        (*pPdfParam)["model"]["basis_set"])
+    : DfObject(pPdfParam), orbitalInfo_((*pPdfParam)["coordinates"],
+                                        (*pPdfParam)["basis_set"])
 {
 }
 
@@ -23,7 +23,7 @@ TlMatrix DfPopulation::getAtomPopData(const int iteration)
 {
     this->calcPop(iteration);
 
-    const Fl_Geometry flGeom((*(this->pPdfParam_))["model"]["coordinates"]);
+    const Fl_Geometry flGeom((*(this->pPdfParam_))["coordinates"]);
 
     TlMatrix answer;
     switch (this->m_nMethodType) {
@@ -78,7 +78,7 @@ void DfPopulation::calcPop(const int iteration)
 
 double DfPopulation::getNucleiCharge()
 {
-    const Fl_Geometry geom((*this->pPdfParam_)["model"]["coordinates"]);
+    const Fl_Geometry geom((*this->pPdfParam_)["coordinates"]);
 
     const int numOfAtoms = this->m_nNumOfAtoms;
     double charge = 0.0;

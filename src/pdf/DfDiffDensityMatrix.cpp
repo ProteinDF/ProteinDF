@@ -4,7 +4,7 @@
 DfDiffDensityMatrix::DfDiffDensityMatrix(TlSerializeData* pPdfData)
   : DfObject(pPdfData)
 {
-    this->isSaveDiffMatrix_ = (TlUtils::toUpper((*pPdfData)["model"]["save_diff_density_matrix"].getStr()) == "YES");
+    this->isSaveDiffMatrix_ = (TlUtils::toUpper((*pPdfData)["save_diff_density_matrix"].getStr()) == "YES");
 }
 
 

@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
     TlMatrix rot;
     rot.load(rotateMatrixPath);
 
-    const TlOrbitalInfo orbInfo(outParam["model"]["coordinates"], outParam["model"]["basis_set"]);
+    const TlOrbitalInfo orbInfo(outParam["coordinates"], outParam["basis_set"]);
     //orbInfo.printCGTOs(std::cerr);
     
     TlRotateLCAO rotateLCAO(orbInfo);

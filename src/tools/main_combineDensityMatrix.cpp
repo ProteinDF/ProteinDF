@@ -67,9 +67,9 @@ int main(int argc, char* argv[])
     }
     readMsgPack.load(readParamPath);
     const TlSerializeData readData = readMsgPack.getSerializeData();
-    const TlOrbitalInfo readOrbInfo(readData["model"]["coordinates"],
-                                    readData["model"]["basis_set"]);
-    const int lastIteration = readData["model"]["iterations"].getInt();
+    const TlOrbitalInfo readOrbInfo(readData["coordinates"],
+                                    readData["basis_set"]);
+    const int lastIteration = readData["iterations"].getInt();
     TlSymmetricMatrix readPpq;
     std::string readMatrixPath = readDir + "/fl_Work/fl_Mtr_Ppq.matrix.rks" + TlUtils::xtos(lastIteration);
     if (isVerbose == true) {
@@ -89,8 +89,8 @@ int main(int argc, char* argv[])
     TlMsgPack targetMsgPack;
     targetMsgPack.load(targetParamPath);
     const TlSerializeData targetData = targetMsgPack.getSerializeData();
-    const TlOrbitalInfo targetOrbInfo(targetData["model"]["coordinates"],
-                                      targetData["model"]["basis_set"]);
+    const TlOrbitalInfo targetOrbInfo(targetData["coordinates"],
+                                      targetData["basis_set"]);
     const int targetNumOfAOs = targetOrbInfo.getNumOfOrbitals();
     if (isVerbose == true) {
         std::cout << "target number Of AOs = " << targetNumOfAOs << std::endl;

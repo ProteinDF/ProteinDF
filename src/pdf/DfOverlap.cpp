@@ -17,19 +17,19 @@ DfOverlap::DfOverlap(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), pOrbitalInfo_(NULL),
       pOrbitalInfo_Density_(NULL), pOrbitalInfo_XC_(NULL)
 {
-    this->pOrbitalInfo_ = new TlOrbitalInfo((*pPdfParam)["model"]["coordinates"],
-                                            (*pPdfParam)["model"]["basis_set"]);
-    this->pOrbitalInfo_Density_ = new TlOrbitalInfo_Density((*pPdfParam)["model"]["coordinates"],
-                                                            (*pPdfParam)["model"]["basis_set_auxD"]);
-    this->pOrbitalInfo_XC_ = new TlOrbitalInfo_XC((*pPdfParam)["model"]["coordinates"],
-                                                  (*pPdfParam)["model"]["basis_set_auxXC"]);
+    this->pOrbitalInfo_ = new TlOrbitalInfo((*pPdfParam)["coordinates"],
+                                            (*pPdfParam)["basis_set"]);
+    this->pOrbitalInfo_Density_ = new TlOrbitalInfo_Density((*pPdfParam)["coordinates"],
+                                                            (*pPdfParam)["basis_set_auxD"]);
+    this->pOrbitalInfo_XC_ = new TlOrbitalInfo_XC((*pPdfParam)["coordinates"],
+                                                  (*pPdfParam)["basis_set_auxXC"]);
 
     const TlSerializeData& pdfParam = *pPdfParam;
-    this->cutvalue = pdfParam["model"]["cut-value"].getDouble();
+    this->cutvalue = pdfParam["cut-value"].getDouble();
 
     this->blockSize_ = DEFAULT_BLOCK_SIZE;
-    if (pdfParam["model"]["block-size"].getStr().empty() != true) {
-        this->blockSize_ = pdfParam["model"]["block-size"].getInt();
+    if (pdfParam["block-size"].getStr().empty() != true) {
+        this->blockSize_ = pdfParam["block-size"].getInt();
     }
 }
 

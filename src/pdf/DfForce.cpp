@@ -12,29 +12,29 @@
 
 DfForce::DfForce(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam),
-      orbitalInfo_((*pPdfParam)["model"]["coordinates"],
-                   (*pPdfParam)["model"]["basis_set"]),
-      orbitalInfoDens_((*pPdfParam)["model"]["coordinates"],
-                       (*pPdfParam)["model"]["basis_set_auxD"]) {
+      orbitalInfo_((*pPdfParam)["coordinates"],
+                   (*pPdfParam)["basis_set"]),
+      orbitalInfoDens_((*pPdfParam)["coordinates"],
+                       (*pPdfParam)["basis_set_auxD"]) {
     // initialize
     this->force_.resize(this->m_nNumOfAtoms, 3);
 
-    this->storedCutoffValue_ = (*pPdfParam)["model"]["cut-value"].getDouble();
-    if ((*pPdfParam)["model"]["force-cut-value"].getStr().empty() != true) {
-        (*pPdfParam)["model"]["cut-value"] = (*pPdfParam)["model"]["force-cut-value"];
+    this->storedCutoffValue_ = (*pPdfParam)["cut-value"].getDouble();
+    if ((*pPdfParam)["force-cut-value"].getStr().empty() != true) {
+        (*pPdfParam)["cut-value"] = (*pPdfParam)["force-cut-value"];
     }
     
     // debug
     this->isDebugOutMatrix_ = false;
-    if ((*pPdfParam)["model"]["debug/save_forces"].getStr().empty() != true) {
-        this->isDebugOutMatrix_ = (*pPdfParam)["model"]["debug/save_forces"].getBoolean();
+    if ((*pPdfParam)["debug/save_forces"].getStr().empty() != true) {
+        this->isDebugOutMatrix_ = (*pPdfParam)["debug/save_forces"].getBoolean();
     }
 }
 
 
 DfForce::~DfForce()
 {
-    (*(this->pPdfParam_))["model"]["cut-value"] = this->storedCutoffValue_;
+    (*(this->pPdfParam_))["cut-value"] = this->storedCutoffValue_;
 }
 
 
@@ -100,7 +100,7 @@ void DfForce::calcForceFromNuclei()
 {
     const int numOfAtoms = this->m_nNumOfAtoms;
 
-    const Fl_Geometry flGeom((*this->pPdfParam_)["model"]["coordinates"]);
+    const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
 
     TlMatrix F_nuc(this->m_nNumOfAtoms, 3);
     for (int i = 0; i < numOfAtoms; ++i) {

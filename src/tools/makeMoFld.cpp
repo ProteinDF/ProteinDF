@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
     // LCAO行列の読み込み
     TlMatrix C;
     if (lcaoMatrixPath.empty() == true) {
-        const int iteration = param["model"]["iterations"].getInt();
+        const int iteration = param["iterations"].getInt();
         DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
         DfObject dfObject(&param);
         lcaoMatrixPath = dfObject.getCMatrixPath(runType, iteration);

@@ -25,17 +25,17 @@
 
 DfCalcGrid::DfCalcGrid(TlSerializeData* pPdfParam, int num_iter)
     : DfObject(pPdfParam), gridDataFilePath_("fl_Work/grids.dat"),
-      m_tlOrbInfo((*pPdfParam)["model"]["coordinates"],
-                  (*pPdfParam)["model"]["basis_set"]),
-      m_tlOrbInfoAuxCD_((*pPdfParam)["model"]["coordinates"],
-                        (*pPdfParam)["model"]["basis_set_auxD"]),
-      m_tlOrbInfoXC_((*pPdfParam)["model"]["coordinates"],
-                     (*pPdfParam)["model"]["basis_set_auxXC"])
+      m_tlOrbInfo((*pPdfParam)["coordinates"],
+                  (*pPdfParam)["basis_set"]),
+      m_tlOrbInfoAuxCD_((*pPdfParam)["coordinates"],
+                        (*pPdfParam)["basis_set_auxD"]),
+      m_tlOrbInfoXC_((*pPdfParam)["coordinates"],
+                     (*pPdfParam)["basis_set_auxXC"])
 {
     const TlSerializeData& pdfParam = *pPdfParam;
     TlLogX& log = TlLogX::getInstance();
 
-    this->alphaval = pdfParam["model"]["xc-potential/gxalpha/alpha-value"].getDouble();
+    this->alphaval = pdfParam["xc-potential/gxalpha/alpha-value"].getDouble();
     if (this->alphaval <= 0.0) {
         CnErr.abort("DfGrid", "", "constructor2", "inputted alpha value is illegal");
     }

@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     // 密度行列の読み込み
     TlSymmetricMatrix P;
     if (PMatrixFilePath == "") {
-        const int iteration = param["model"]["iterations"].getInt();
+        const int iteration = param["iterations"].getInt();
         DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
         DfObject dfObject(&param);
         PMatrixFilePath = dfObject.getPpqMatrixPath(runType, iteration);

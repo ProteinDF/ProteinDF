@@ -5,34 +5,34 @@
 
 DfTaskCtrl::DfTaskCtrl(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
-    TlOrbitalInfo orbitalInfo((*pPdfParam)["model"]["coordinates"],
-                              (*pPdfParam)["model"]["basis_set"]);
+    TlOrbitalInfo orbitalInfo((*pPdfParam)["coordinates"],
+                              (*pPdfParam)["basis_set"]);
     this->maxShellType_ = orbitalInfo.getMaxShellType();
 
 
     this->lengthScaleParameter_ = 1.0;
-    if ((*pPdfParam)["model"]["length_scale_parameter"].getStr() != "") {
-        this->lengthScaleParameter_ = (*pPdfParam)["model"]["length_scale_parameter"].getDouble();
+    if ((*pPdfParam)["length_scale_parameter"].getStr() != "") {
+        this->lengthScaleParameter_ = (*pPdfParam)["length_scale_parameter"].getDouble();
     }
     
     this->cutoffThreshold_ = 1.0E-10;
-    if ((*pPdfParam)["model"]["cut-value"].getStr().empty() != true) {
-        this->cutoffThreshold_ = (*pPdfParam)["model"]["cut-value"].getDouble();
+    if ((*pPdfParam)["cut-value"].getStr().empty() != true) {
+        this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
     }    
 
     this->cutoffEpsilon1_ = this->cutoffThreshold_ * 0.01;
-    if ((*pPdfParam)["model"]["cutoff_epsilon1"].getStr().empty() != true) {
-        this->cutoffEpsilon1_ = (*pPdfParam)["model"]["cutoff_epsilon1"].getDouble();
+    if ((*pPdfParam)["cutoff_epsilon1"].getStr().empty() != true) {
+        this->cutoffEpsilon1_ = (*pPdfParam)["cutoff_epsilon1"].getDouble();
     }    
 
     this->cutoffEpsilon2_ = this->cutoffThreshold_;
-    if ((*pPdfParam)["model"]["cutoff_epsilon2"].getStr().empty() != true) {
-        this->cutoffEpsilon2_ = (*pPdfParam)["model"]["cutoff_epsilon2"].getDouble();
+    if ((*pPdfParam)["cutoff_epsilon2"].getStr().empty() != true) {
+        this->cutoffEpsilon2_ = (*pPdfParam)["cutoff_epsilon2"].getDouble();
     }    
 
     this->cutoffEpsilon3_ = this->cutoffThreshold_ * 0.01;
-    if ((*pPdfParam)["model"]["cutoff_epsilon3"].getStr().empty() != true) {
-        this->cutoffEpsilon3_ = (*pPdfParam)["model"]["cutoff_epsilon3"].getDouble();
+    if ((*pPdfParam)["cutoff_epsilon3"].getStr().empty() != true) {
+        this->cutoffEpsilon3_ = (*pPdfParam)["cutoff_epsilon3"].getDouble();
     }    
 }
 

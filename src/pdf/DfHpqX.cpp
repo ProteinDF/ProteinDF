@@ -8,8 +8,8 @@ const int DfHpqX::MAX_SHELL_TYPE = 2 +1;
 
 DfHpqX::DfHpqX(TlSerializeData* pPdfParam) 
     : DfObject(pPdfParam),
-      orbitalInfo_((*pPdfParam)["model"]["coordinates"],
-                   (*pPdfParam)["model"]["basis_set"]) {
+      orbitalInfo_((*pPdfParam)["coordinates"],
+                   (*pPdfParam)["basis_set"]) {
     this->makeShellArrayTable();
 }
 
@@ -60,7 +60,7 @@ void DfHpqX::getHpq(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2)
     const int numOfAOs = this->m_nNumOfAOs;
     
     // make coordinates
-    const Fl_Geometry flGeom((*this->pPdfParam_)["model"]["coordinates"]);
+    const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
     const int numOfAtoms = flGeom.getNumOfAtoms();
     const int numOfDummyAtoms = flGeom.getDummyatom();
     const int numOfRealAtoms = numOfAtoms - numOfDummyAtoms;
@@ -216,7 +216,7 @@ void DfHpqX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
                                TlMatrix* pForce)
 {
     static const int BUFFER_SIZE_NUC = 3 * 5 * 5 * 5; // (xyz) * 5d * 5d * 5d
-    const Fl_Geometry flGeom((*this->pPdfParam_)["model"]["coordinates"]);
+    const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
 
     const int maxStepsP = 2 * shellTypeP + 1;
     const int maxStepsQ = 2 * shellTypeQ + 1;

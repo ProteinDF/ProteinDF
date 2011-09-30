@@ -70,8 +70,8 @@ void DfPreScf_Parallel::createInitialGuessUsingLCAO_onScaLAPACK(const RUN_TYPE r
 
     {
         TlSerializeData tmpParam = *(this->pPdfParam_);
-        tmpParam["model"]["orbital-overlap-correspondence-method"] = "keep";
-        tmpParam["model"]["iterations"] = 0;
+        tmpParam["orbital-overlap-correspondence-method"] = "keep";
+        tmpParam["iterations"] = 0;
         DfDmatrix_Parallel dfDmatrix(&tmpParam);
         dfDmatrix.DfDmatrixMain(); // RKS only?
     }
@@ -94,8 +94,8 @@ void DfPreScf_Parallel::createInitialGuessUsingLCAO_onDisk(const RUN_TYPE runTyp
 
     {
         TlSerializeData tmpParam = *(this->pPdfParam_);
-        tmpParam["model"]["orbital-overlap-correspondence-method"] = "keep";
-        tmpParam["model"]["iterations"] = 0;
+        tmpParam["orbital-overlap-correspondence-method"] = "keep";
+        tmpParam["iterations"] = 0;
         DfDmatrix dfDmatrix(&tmpParam);
         dfDmatrix.DfDmatrixMain(); // RKS only?
     }

@@ -50,35 +50,35 @@ TlSerializeData DfInputdata::main()
     PdfUserInput pdfUserInput;
     pdfUserInput.load();
     TlSerializeData inputParam = pdfUserInput.getSerializeData();
-    pdfKwd.convertAlias(&(inputParam["model"]));
+    pdfKwd.convertAlias(&(inputParam));
     
     // default値にユーザー入力値を上書きする
     param.merge(inputParam);
 
     // keyword check
-    pdfKwd.convertAlias(&(param["model"]));
-    pdfKwd.checkInputParam(param["model"]);
+    pdfKwd.convertAlias(&(param));
+    pdfKwd.checkInputParam(param);
     
     // テーブルの作成
     {
         Fl_Tbl_Orbital Tbl;
-        param["model"]["AOs"] = Tbl.getcGtoTotalNum();
+        param["AOs"] = Tbl.getcGtoTotalNum();
     }
 
     {
         Fl_Tbl_Density Tbl;
-        param["model"]["AuxCDs"] = Tbl.getcGtoTotalNum();
+        param["AuxCDs"] = Tbl.getcGtoTotalNum();
     }
 
     {
         Fl_Tbl_Xcpot Tbl;
-        param["model"]["AuxXCs"] = Tbl.getcGtoTotalNum();
+        param["AuxXCs"] = Tbl.getcGtoTotalNum();
     }
 
     {
         Fl_Geometry  Geom(Fl_Geometry::getDefaultFileName());
-        param["model"]["atoms"] = Geom.getNumOfAtoms();
-        param["model"]["dummyAtoms"] = Geom.getDummyatom();
+        param["atoms"] = Geom.getNumOfAtoms();
+        param["dummyAtoms"] = Geom.getDummyatom();
     }
 
     // 保存
@@ -101,11 +101,11 @@ void DfInputdata::show(const TlSerializeData& data) const
 
     // print comment
     log << "  >>>> Comment <<<<\n";
-    log << data["model"]["comment"].getStr() << "\n";
+    log << data["comment"].getStr() << "\n";
     log << "\n";
     
     // print input keyword list
-    if (data["model"]["show_keyword"].getBoolean() == true) {
+    if (data["show_keyword"].getBoolean() == true) {
         log << " >>>> Available Keywords <<<<\n";
         kwd.printDefault(log);
     } else {
@@ -115,9 +115,9 @@ void DfInputdata::show(const TlSerializeData& data) const
     log << "\n";
 
     // print global input
-    if (data["model"]["show_input"].getBoolean() == true) {
+    if (data["show_input"].getBoolean() == true) {
         log << " >>>> Input Parameters <<<<\n";
-        kwd.print(log, data["model"]);
+        kwd.print(log, data);
     } else {
         log << " printing available keywords is rejected.\n";
         log << " to print the keywords, please input 'show_input = yes'.\n";
@@ -125,11 +125,11 @@ void DfInputdata::show(const TlSerializeData& data) const
     log << "\n";
 
     // print coordinates
-    if (data["model"]["show_coordinates"].getBoolean() == true) {
+    if (data["show_coordinates"].getBoolean() == true) {
         log << " >>>> Coordinates <<<<\n";
         log << " symbol charge (coord) [label]\n";
 
-        Fl_Geometry geom(data["model"]["coordinates"]);
+        Fl_Geometry geom(data["coordinates"]);
         const int numOfAtoms = geom.getNumOfAtoms();
         for (int i = 0; i < numOfAtoms; ++i) {
             const std::string symbol = geom.getAtom(i);
@@ -149,7 +149,7 @@ void DfInputdata::show(const TlSerializeData& data) const
     
     // print basis set
     {
-        const std::string showOrbitalBasis = TlUtils::toUpper(data["model"]["show_orbital_basis"].getStr());
+        const std::string showOrbitalBasis = TlUtils::toUpper(data["show_orbital_basis"].getStr());
 
         const Fl_Gto_Orbital flGtoOrbital;
         if (showOrbitalBasis == "GAMESS") {

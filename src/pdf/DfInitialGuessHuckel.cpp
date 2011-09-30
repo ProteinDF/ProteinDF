@@ -119,8 +119,8 @@ void DfInitialGuessHuckel::createGuess()
 
 TlSymmetricMatrix DfInitialGuessHuckel::getHuckelMatrix()
 {
-    TlOrbitalInfo orbInfo((*this->pPdfParam_)["model"]["coordinates"],
-                          (*this->pPdfParam_)["model"]["basis_set"]);
+    TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
+                          (*this->pPdfParam_)["basis_set"]);
 
     const int nNumOfOrbs = orbInfo.getNumOfOrbitals();
 

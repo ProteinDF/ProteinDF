@@ -79,9 +79,9 @@ int main(int argc, char* argv[])
     TlMsgPack readMsgPack;
     readMsgPack.load(readParamPath);
     const TlSerializeData readData = readMsgPack.getSerializeData();
-    const TlOrbitalInfo readOrbInfo(readData["model"]["coordinates"],
-                                    readData["model"]["basis_set"]);
-    const int lastIteration = readData["model"]["iterations"].getInt();
+    const TlOrbitalInfo readOrbInfo(readData["coordinates"],
+                                    readData["basis_set"]);
+    const int lastIteration = readData["iterations"].getInt();
 
     // load S
     TlSymmetricMatrix S;

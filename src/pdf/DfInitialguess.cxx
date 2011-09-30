@@ -50,7 +50,7 @@ int DfInitialguess::dfGusMain()
     TlLogX& log = TlLogX::getInstance();
     this->tempflag = 0;
 
-    const std::string sScfStartGuess = pdfParam["model"]["scf-start-guess"].getStr();
+    const std::string sScfStartGuess = pdfParam["scf-start-guess"].getStr();
     if ((sScfStartGuess == "rho") || (sScfStartGuess == "atom_rho")) {
         this->readData();        // Read and Analyzy needData.
         this->calcMain();        // Mainfunction for Calculation.
@@ -64,7 +64,7 @@ int DfInitialguess::dfGusMain()
     this->GusOutput();       // Output : InitialValue(Rou,Myu,Nyu)
 
     if (this->tempflag == 0) {
-        if (pdfParam["model"]["myu-nyu-zero"].getStr() == "yes") {
+        if (pdfParam["myu-nyu-zero"].getStr() == "yes") {
             log << "\n@@@@ DfInitialguess FACE TO 1/1000(ZERO) vector for Myu, Nyu by EKA @@@@\n\n";
 
             const int niter = 1;
@@ -114,34 +114,34 @@ int DfInitialguess::prepare()
     Fl_Gto_Xcpot FlGtoXcpot;
 
     //--get scftype data --------------------------------------------------|
-    if ((pdfParam["model"]["method"].getStr() == "roks") ||
-        (pdfParam["model"]["method"].getStr() == "sp")) {
+    if ((pdfParam["method"].getStr() == "roks") ||
+        (pdfParam["method"].getStr() == "sp")) {
         this->scftype = SP ;
-        if (pdfParam["model"]["method"].getStr() == "roks") {
+        if (pdfParam["method"].getStr() == "roks") {
             // roks
-            this->AlphaSpinNum = pdfParam["model"]["method/roks/electron-number"].getInt();
-            this->BetaSpinNum  = pdfParam["model"]["method/roks/electron-number-alpha"].getInt();
-            this->ElectronNum  = pdfParam["model"]["method/roks/electron-number-beta"].getInt();
+            this->AlphaSpinNum = pdfParam["method/roks/electron-number"].getInt();
+            this->BetaSpinNum  = pdfParam["method/roks/electron-number-alpha"].getInt();
+            this->ElectronNum  = pdfParam["method/roks/electron-number-beta"].getInt();
         } else {
             // sp
-            this->AlphaSpinNum = pdfParam["model"]["UKS/alphaElectrons"].getInt();
-            this->BetaSpinNum  = pdfParam["model"]["UKS/betaElectrons"].getInt();
+            this->AlphaSpinNum = pdfParam["UKS/alphaElectrons"].getInt();
+            this->BetaSpinNum  = pdfParam["UKS/betaElectrons"].getInt();
             this->ElectronNum  = AlphaSpinNum + BetaSpinNum ;
         }
 
-        if (pdfParam["model"]["xc-potential"].getStr() == "xalpha") {
-            this->nAlpha = pdfParam["model"]["xc-potential/xalpha/alpha-value"].getDouble();
+        if (pdfParam["xc-potential"].getStr() == "xalpha") {
+            this->nAlpha = pdfParam["xc-potential/xalpha/alpha-value"].getDouble();
         } else {
-            this->nAlpha = pdfParam["model"]["xc-potential/gxalpha/alpha-value"].getDouble();
+            this->nAlpha = pdfParam["xc-potential/gxalpha/alpha-value"].getDouble();
         }
     } else {
         // rks
         this->scftype = NSP ;
-        this->ElectronNum  = pdfParam["model"]["RKS/electrons"].getInt();
-        if (pdfParam["model"]["xc-potential"].getStr() == "xalpha") {
-            this->nAlpha = pdfParam["model"]["xc-potential/xalpha/alpha-value"].getDouble();
+        this->ElectronNum  = pdfParam["RKS/electrons"].getInt();
+        if (pdfParam["xc-potential"].getStr() == "xalpha") {
+            this->nAlpha = pdfParam["xc-potential/xalpha/alpha-value"].getDouble();
         } else {
-            this->nAlpha = pdfParam["model"]["xc-potential/gxalpha/alpha-value"].getDouble();
+            this->nAlpha = pdfParam["xc-potential/gxalpha/alpha-value"].getDouble();
         }
     }
 
@@ -482,7 +482,7 @@ int DfInitialguess::setKeyword()
 
     // Matrix File Name in NSP.
     {
-        const std::string tmp = pdfParam["model"]["guess/nsp-ppq"].getStr();
+        const std::string tmp = pdfParam["guess/nsp-ppq"].getStr();
         this->PpqFname = tmp;
         if (tmp == "nil") {
             this->PpqFname = "";
@@ -498,7 +498,7 @@ int DfInitialguess::setKeyword()
 
     //Matrix File Name in SP
     {
-        std::string tmp = pdfParam["model"]["guess/sp-ppq"].getStr();
+        std::string tmp = pdfParam["guess/sp-ppq"].getStr();
         if (tmp == "nil") {
             this->AlphaPpqFname = "";
             this->BetaPpqFname  = "";
@@ -523,7 +523,7 @@ int DfInitialguess::setKeyword()
 
     //  Option : Threshold Angle Gosa for Trans Density
     {
-        std::string dummy = pdfParam["model"]["guess/trans-angle-threshold"].getStr();
+        std::string dummy = pdfParam["guess/trans-angle-threshold"].getStr();
         std::vector<std::string> sItems = TlUtils::split(dummy, " ");
 
         this->FirstAveGosa = std::atof(sItems[0].c_str());
@@ -560,7 +560,7 @@ int DfInitialguess::setKeyword()
 
     // Method of making Myu and Nyu.
     {
-        std::string dummy = pdfParam["model"]["guess/make-myu-nyu"].getStr();
+        std::string dummy = pdfParam["guess/make-myu-nyu"].getStr();
         if (dummy == "meth0") {
             this->MethodMyuNyu = Meth0 ;
         } else if (dummy == "meth1") {
@@ -579,7 +579,7 @@ int DfInitialguess::setKeyword()
 
     // Appointment : Total Normalize for Vector(Rou,Myu,Nyu)
     {
-        std::string dummy = pdfParam["model"]["guess/vct-normalize"].getStr();
+        std::string dummy = pdfParam["guess/vct-normalize"].getStr();
         if (dummy.empty()) {
             log<<"Bad appointment vct-normalize "<<"\n";
             log<<"Input ON or OFF for Rou,Myu,Nyu."<<"\n";
@@ -619,7 +619,7 @@ int DfInitialguess::setKeyword()
 
     // Appointment : Partial Normalize for Vector(Rou,Myu,Nyu)
     {
-        std::string tmp = pdfParam["model"]["guess/part-normalize"].getStr();
+        std::string tmp = pdfParam["guess/part-normalize"].getStr();
         //std::cerr << "[TH] DfInitialguess::setKeyword() guess/part-normalize = " << tmp << "." << std::endl;
         if (tmp == "nil") {
             this->PartialRouNormNum = 0;
@@ -729,7 +729,7 @@ int DfInitialguess::setKeyword()
 
     // Appointment : User difine Vector(Rou,Myu,Nyu)
     {
-        std::string dummy = pdfParam["model"]["guess/user-vector"].getStr();
+        std::string dummy = pdfParam["guess/user-vector"].getStr();
         //std::cerr << "[TH] DfInitialguess::setKeyword() guess/user-vector = " << dummy << "." << std::endl;
         if (dummy == "nil") {
             this->UserVctRouNum = 0;

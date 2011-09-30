@@ -83,10 +83,10 @@ int main(int argc, char* argv[])
         pdfParamNew = mpac.getSerializeData();
     }
     
-    const TlOrbitalInfo orbInfo_old(pdfParamOld["model"]["coordinates"],
-                                    pdfParamOld["model"]["basis_set"]);
-    const TlOrbitalInfo orbInfo_new(pdfParamNew["model"]["coordinates"],
-                                    pdfParamNew["model"]["basis_set"]);
+    const TlOrbitalInfo orbInfo_old(pdfParamOld["coordinates"],
+                                    pdfParamOld["basis_set"]);
+    const TlOrbitalInfo orbInfo_new(pdfParamNew["coordinates"],
+                                    pdfParamNew["basis_set"]);
 
     TlMatrix omega;
     {
