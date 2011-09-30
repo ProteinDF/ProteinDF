@@ -41,7 +41,6 @@ protected:
     virtual Vector getNalpha();
     virtual SymmetricMatrix getSabinv();
     virtual Vector calcTAlpha_DIRECT(const SymmetricMatrix& P);
-    virtual Vector get_flVctTalpha(const int nIteration, const std::string& type);
 
     virtual void getTalpha_ROKS(Vector* pT_alphaA, Vector* pT_alphaB);
     virtual SymmetricMatrix getDiffDensityMatrix(RUN_TYPE runType);
@@ -49,6 +48,7 @@ protected:
     virtual SymmetricMatrix getP2pq(const int nIteration);
 
     Vector getTalpha(RUN_TYPE runType);
+    virtual Vector getTalpha(RUN_TYPE runType, int iteration);
 
     virtual double getLamda(const Vector& SabinvN, const Vector& t_alpha,
                             const Vector& N_alpha, double dNumOfElec);
@@ -182,25 +182,22 @@ template<class SymmetricMatrix, class Vector, class DfERI_Class>
 Vector DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getTalpha(const RUN_TYPE runType)
 {
     Vector t_alpha;
-    std::string suffix = "";
-    if (runType == RUN_UKS_ALPHA) {
-        suffix = "a";
-    } else if (runType == RUN_UKS_BETA) {
-        suffix = "b";
-    }
+    // std::string suffix = "";
+    // if (runType == RUN_UKS_ALPHA) {
+    //     suffix = "a";
+    // } else if (runType == RUN_UKS_BETA) {
+    //     suffix = "b";
+    // }
 
     if (this->m_bDiskUtilization == false) {
         const SymmetricMatrix diffP = this->getDiffDensityMatrix(runType);
         t_alpha = this->calcTAlpha_DIRECT(diffP);
-        t_alpha += this->get_flVctTalpha((this->m_nIteration -1), suffix);
-    } else {
-        abort();
-        //t_alpha = this->calc_t_alpha_FILE<SymmetricMatrixType, VectorType>(P);
-    }
+        t_alpha += this->getTalpha(runType, this->m_nIteration -1);
 
-    // save
-    if (this->m_bDiskUtilization == false) {
-        t_alpha.save("fl_Temp/fl_Vct_Talpha" + suffix + TlUtils::xtos(this->m_nIteration));
+        t_alpha.save(this->getTalphaPath(runType, this->m_nIteration));
+    } else {
+        // To do
+        abort();
     }
 
     return t_alpha;
@@ -212,14 +209,7 @@ Vector DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::calcTAlpha_DI
 {
     Vector t_alpha(this->m_nNumOfAux);
 
-    // SymmetricMatrix tmpP(P);
-    // const int dNumOfOrbs = this->m_nNumOfAOs;
-    // for (int i = 0; i < dNumOfOrbs; ++i) {
-    //     tmpP(i, i) *= 0.5;
-    // }
-
     DfERI_Class dfEri(this->pPdfParam_);
-    //dfEri.getDeltaT(tmpP, &t_alpha);
     dfEri.getDeltaT(P, &t_alpha);
 
     return t_alpha;
@@ -227,10 +217,11 @@ Vector DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::calcTAlpha_DI
 
 
 template<class SymmetricMatrix, class Vector, class DfERI_Class>
-Vector DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::get_flVctTalpha(const int nIteration, const std::string& type)
+Vector DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getTalpha(const RUN_TYPE runType,
+                                                                             const int iteration)
 {
     Vector t_alpha(this->m_nNumOfAux);
-    const std::string sFileName = TlUtils::format("fl_Temp/fl_Vct_Talpha%s%d", type.c_str(), nIteration);
+    const std::string sFileName = this->getTalphaPath(runType, iteration);
 
     if (FileX::isExist(sFileName) == true) {
         t_alpha.load(sFileName);
@@ -261,25 +252,25 @@ void DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getTalpha_ROKS(
         }
 
         *pT_alphaA = this->calcTAlpha_DIRECT(PA)
-                     + this->get_flVctTalpha((this->m_nIteration -1), "a");
+            + this->getTalpha(RUN_UKS_ALPHA, this->m_nIteration -1);
         *pT_alphaB = this->calcTAlpha_DIRECT(PB)
-                     + this->get_flVctTalpha((this->m_nIteration -1), "b");
+            + this->getTalpha(RUN_UKS_BETA,  this->m_nIteration -1);
     } else {
+        // TODO
         abort();
-        //*pT_alphaA = this->calc_t_alpha_FILE<SymmetricMatrixType, VectorType>(PA);
-        //*pT_alphaB = this->calc_t_alpha_FILE<SymmetricMatrixType, VectorType>(PB);
     }
 
     // save
     if (this->m_bDiskUtilization == false) {
-        pT_alphaA->save("fl_Temp/fl_Vct_Talphaa" + TlUtils::xtos(this->m_nIteration));
-        pT_alphaB->save("fl_Temp/fl_Vct_Talphab" + TlUtils::xtos(this->m_nIteration));
+        pT_alphaA->save(this->getTalphaPath(RUN_UKS_ALPHA, this->m_nIteration));
+        pT_alphaB->save(this->getTalphaPath(RUN_UKS_BETA,  this->m_nIteration));
     }
 }
 
 
 template<class SymmetricMatrix, class Vector, class DfERI_Class>
-SymmetricMatrix DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getDiffDensityMatrix(RUN_TYPE runType)
+SymmetricMatrix
+DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getDiffDensityMatrix(const RUN_TYPE runType)
 {
     SymmetricMatrix diffP;
     diffP = DfObject::getDiffDensityMatrix<SymmetricMatrix>(runType, this->m_nIteration);

@@ -103,7 +103,8 @@ protected:
     std::string getRhoPath(RUN_TYPE nRunType, int nIteration) const;
     std::string getMyuPath(RUN_TYPE nRunType, int nIteration) const;
     std::string getNyuPath(RUN_TYPE nRunType, int nIteration) const;
-
+    std::string getTalphaPath(RUN_TYPE runType, int iteration) const;
+    
 protected:
     template <class SymmetricMatrixType>
     void saveHpqMatrix(const SymmetricMatrixType& Hpq);

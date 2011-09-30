@@ -44,7 +44,7 @@ DfDensityFittingTmpl<TlDistributeSymmetricMatrix, TlDistributeVector, DfEriX_Par
         TlDistributeSymmetricMatrix P =
             DfObject::getDiffDensityMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration);
         t_alpha = this->calcTAlpha_DIRECT(P);
-        t_alpha += this->get_flVctTalpha((this->m_nIteration -1), suffix);
+        t_alpha += this->getTalpha(runType, this->m_nIteration -1);
     } else {
         abort();
     }

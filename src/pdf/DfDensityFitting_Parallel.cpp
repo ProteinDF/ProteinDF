@@ -74,13 +74,14 @@ TlVector DfDensityFitting_Parallel::calcTAlpha_DIRECT(const TlSymmetricMatrix& P
 }
 
 
-TlVector DfDensityFitting_Parallel::get_flVctTalpha(const int nIteration, const std::string& type)
+TlVector DfDensityFitting_Parallel::getTalpha(const RUN_TYPE runType,
+                                              const int iteration)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
     TlVector flVctTalpha;
     if (rComm.isMaster() == true) {
-        flVctTalpha = DfDensityFittingTmpl<TlSymmetricMatrix, TlVector, DfEri_Parallel>::get_flVctTalpha(nIteration, type);
+        flVctTalpha = DfDensityFittingTmpl<TlSymmetricMatrix, TlVector, DfEri_Parallel>::getTalpha(runType, iteration);
     }
     rComm.broadcast(flVctTalpha);
 
@@ -200,12 +201,12 @@ TlDistributeVector
 DfDensityFittingTmpl<TlDistributeSymmetricMatrix, TlDistributeVector, DfEri_Parallel>::getTalpha(const RUN_TYPE runType)
 {
     TlDistributeVector t_alpha;
-    std::string suffix = "";
-    if (runType == RUN_UKS_ALPHA) {
-        suffix = "a";
-    } else if (runType == RUN_UKS_BETA) {
-        suffix = "b";
-    }
+    // std::string suffix = "";
+    // if (runType == RUN_UKS_ALPHA) {
+    //     suffix = "a";
+    // } else if (runType == RUN_UKS_BETA) {
+    //     suffix = "b";
+    // }
 
     if (this->m_bDiskUtilization == false) {
         TlDistributeSymmetricMatrix P = DfObject::getDiffDensityMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration);
@@ -216,14 +217,14 @@ DfDensityFittingTmpl<TlDistributeSymmetricMatrix, TlDistributeVector, DfEri_Para
 //             P = this->getDiffDensityMatrix(runType);
 //         }
         t_alpha = this->calcTAlpha_DIRECT(P);
-        t_alpha += this->get_flVctTalpha((this->m_nIteration -1), suffix);
+        t_alpha += this->getTalpha(runType, this->m_nIteration -1);
     } else {
         abort();
     }
 
     // save
     if (this->m_bDiskUtilization == false) {
-        t_alpha.save("fl_Temp/fl_Vct_Talpha" + suffix + TlUtils::xtos(this->m_nIteration));
+        t_alpha.save(this->getTalphaPath(runType, this->m_nIteration));
     }
 
     return t_alpha;

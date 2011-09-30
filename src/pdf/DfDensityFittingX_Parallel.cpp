@@ -71,13 +71,13 @@ TlVector DfDensityFittingX_Parallel::calcTAlpha_DIRECT(const TlSymmetricMatrix& 
 }
 
 
-TlVector DfDensityFittingX_Parallel::get_flVctTalpha(const int nIteration, const std::string& type)
+TlVector DfDensityFittingX_Parallel::getTalpha(const RUN_TYPE runType, const int iteration)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
     TlVector flVctTalpha;
     if (rComm.isMaster() == true) {
-        flVctTalpha = DfDensityFittingTmpl<TlSymmetricMatrix, TlVector, DfEriX_Parallel>::get_flVctTalpha(nIteration, type);
+        flVctTalpha = DfDensityFittingTmpl<TlSymmetricMatrix, TlVector, DfEriX_Parallel>::getTalpha(runType, iteration);
     }
     rComm.broadcast(flVctTalpha);
 

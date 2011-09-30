@@ -19,7 +19,7 @@ protected:
     virtual TlVector getNalpha();
     virtual TlSymmetricMatrix getSabinv();
     virtual TlVector calcTAlpha_DIRECT(const TlSymmetricMatrix& P);
-    virtual TlVector get_flVctTalpha(const int nIteration, const std::string& type);
+    virtual TlVector getTalpha(RUN_TYPE runType, const int iteration);
     virtual void getTalpha_ROKS(TlVector* pT_alphaA, TlVector* pT_alphaB);
     virtual TlSymmetricMatrix getDiffDensityMatrix(RUN_TYPE runType);
     virtual TlSymmetricMatrix getP1pq(const int nIteration);

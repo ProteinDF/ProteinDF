@@ -249,6 +249,7 @@ void DfObject::setParam(const TlSerializeData& data)
     paramFileBaseName["C_matrix"]       = "fl_Mtr_C.matrix";
     paramFileBaseName["Cprime_matrix"]  = "fl_Mtr_Cprime.matrix";
     paramFileBaseName["grid_matrix"]    = "grid.mtx";
+    paramFileBaseName["Talpha.vtr"]     = "Talpha.vtr";
 
     if (paramFileBaseName["rho_vector"].getStr().empty() == true) {
         paramFileBaseName["rho_vector"] = "rho.vtr";
@@ -573,5 +574,12 @@ std::string DfObject::getNyuPath(const RUN_TYPE nRunType, const int nIteration) 
     sNyuPath += TlUtils::xtos(nIteration);
 
     return sNyuPath;
+}
+
+std::string DfObject::getTalphaPath(const RUN_TYPE runType, const int iteration) const
+{
+    return this->makeFilePath("Talpha.vtr",
+                              DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+
 }
 
