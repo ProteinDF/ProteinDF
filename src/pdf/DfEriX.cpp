@@ -419,8 +419,7 @@ void DfEriX::getJpq(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
         this->logger("calculate J using DEBUG engine.\n");
         this->getJpq_exact(P, pJ);
     } else {
-        //this->getJpq_integralDriven(P, pJ);
-        this->getJpq_integralDriven2(P, pJ);
+        this->getJpq_integralDriven(P, pJ);
     }
 
     //this->cutoffReport();
@@ -518,7 +517,7 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
 }
 
 
-void DfEriX::getJpq_integralDriven2(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
+void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
 {
     assert(pJ != NULL);
     pJ->resize(this->m_nNumOfAOs);
@@ -534,7 +533,9 @@ void DfEriX::getJpq_integralDriven2(const TlSymmetricMatrix& P, TlSymmetricMatri
     this->IA_J_ID2_.resize(numOfAOs);
 #endif // DEBUG_J
     
+    this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                           schwarzTable,
@@ -553,6 +554,7 @@ void DfEriX::getJpq_integralDriven2(const TlSymmetricMatrix& P, TlSymmetricMatri
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
+    this->destroyEngines();
     
     // debug
 #ifdef DEBUG_J

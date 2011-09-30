@@ -103,8 +103,7 @@ protected:
     /// クーロン項の計算を行う
     ///
     /// integral-driven法を用いる。
-    //void getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ);
-    void getJpq_integralDriven2(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ);
+    void getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ);
     
     void getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                                   const std::vector<DfTaskCtrl::Task4>& taskList,
