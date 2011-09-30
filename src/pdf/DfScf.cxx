@@ -61,9 +61,10 @@ void DfScf::saveParam() const
 {
     (*(this->pPdfParam_))["iterations"] = this->m_nIteration;
 
+    // save PDF parameter
     const std::string pdfParamPath = (*this->pPdfParam_)["pdf_param_path"].getStr();
-    TlMsgPack mpac(*(this->pPdfParam_));
-    mpac.save(pdfParamPath);
+    TlMsgPack pdfParam_mpac(*(this->pPdfParam_));
+    pdfParam_mpac.save(pdfParamPath);
 }
 
 

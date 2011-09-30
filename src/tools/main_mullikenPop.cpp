@@ -15,17 +15,24 @@ void usage();
 int main(int argc, char* argv[])
 {
     TlGetopt opt(argc, argv, "hi:vs:");
-    const bool showHelp = (opt["h"] == "defined");
-    const bool isVerbose = (opt["v"] == "defined");
+
+    std::string paramPath = "pdfparam.mpac";
+    if (opt["p"].empty() != true) {
+        paramPath = opt["p"];
+    }
     const std::string savePath = opt["s"];
+
+    const bool isVerbose = (opt["v"] == "defined");
+    const bool showHelp = (opt["h"] == "defined");
     
     if (showHelp == true) {
         usage();
         return EXIT_SUCCESS;
     }
-    
+
+
     TlMsgPack mpac;
-    mpac.load("pdfparam.mpac");
+    mpac.load(paramPath);
     TlSerializeData param = mpac.getSerializeData();
 
     int iteration = 0;
@@ -60,7 +67,7 @@ void usage()
     std::cerr << "calculation Mulliken Population." << std::endl;
     std::cerr << "usage: mullikenPop [options] " << std::endl;
     std::cerr <<  "  -i num:    set SCF iteration to get Mulliken Population\n"; 
-    std::cerr <<  "  -s path:   save population data file\n"; 
+    std::cerr <<  "  -s path:   save atom population data as pdf matrix file\n"; 
     std::cerr <<  "  -h:        show help(this)\n"; 
     std::cerr <<  "  -v:        verbose\n"; 
 }
