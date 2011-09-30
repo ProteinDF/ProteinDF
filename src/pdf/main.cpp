@@ -29,7 +29,7 @@ int PDF_MAIN(int argc, char *argv[])
     
     ProteinDF PDF;
     if (isRestart == true) {
-        PDF.restart();
+        PDF.restart("pdfparam.mpac");
     } else {
         PDF.run();
     }

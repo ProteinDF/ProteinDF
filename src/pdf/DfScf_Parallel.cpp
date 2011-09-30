@@ -24,8 +24,8 @@
 
 #define   NUMBER_OF_CHECK 2
 
-DfScf_Parallel::DfScf_Parallel(TlSerializeData* pPdfParam, const std::string& pdfParamPath)
-    : DfScf(pPdfParam, pdfParamPath)
+DfScf_Parallel::DfScf_Parallel(TlSerializeData* pPdfParam)
+    : DfScf(pPdfParam)
 {
      TlCommunicate& rComm = TlCommunicate::getInstance();
      DfObject::rank_ = rComm.getRank();

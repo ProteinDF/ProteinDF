@@ -6,7 +6,7 @@
 
 class DfScf_Parallel : public DfScf {
 public:
-    DfScf_Parallel(TlSerializeData* pPdfParam, const std::string& pdfParamPath);
+    DfScf_Parallel(TlSerializeData* pPdfParam);
     virtual ~DfScf_Parallel();
 
 protected:

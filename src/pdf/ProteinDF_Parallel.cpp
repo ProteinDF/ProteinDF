@@ -51,11 +51,11 @@ void ProteinDF_Parallel::save_Fl_Globalinput() const
 }
 
 
-void ProteinDF_Parallel::loadParam()
+void ProteinDF_Parallel::loadParam(const std::string& requestFilePath)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
-        ProteinDF::loadParam();
+        ProteinDF::loadParam(requestFilePath);
     }
     rComm.broadcast(this->pdfParam_);
 }
@@ -131,11 +131,10 @@ void ProteinDF_Parallel::stepScf()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    //std::cerr << TlUtils::format("[%d] ProteinDF_Parallel::stepScf()", rComm.getRank()) << std::endl;
     if (this->pdfParam_["control"]["SCF_finished"].getBoolean() != true) {
         this->stepStartTitle("SCF");
 
-        DfScf_Parallel dscf(&(this->pdfParam_), this->pdfParamPath_);
+        DfScf_Parallel dscf(&(this->pdfParam_));
         dscf.dfScfMain();
 
         this->stepEndTitle();

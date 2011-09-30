@@ -45,8 +45,8 @@
 
 #define NUMBER_OF_CHECK 2
 
-DfScf::DfScf(TlSerializeData* pPdfParam, const std::string& pdfParamPath)
-    : DfObject(pPdfParam), pdfParamPath_(pdfParamPath), m_nDampObject(DAMP_NONE)
+DfScf::DfScf(TlSerializeData* pPdfParam)
+    : DfObject(pPdfParam), m_nDampObject(DAMP_NONE)
 {
     this->isUseNewEngine_ = (*pPdfParam)["model"]["new_engine"].getBoolean();
 }
@@ -60,22 +60,10 @@ DfScf::~DfScf()
 void DfScf::saveParam() const
 {
     (*(this->pPdfParam_))["model"]["iterations"] = this->m_nIteration;
-    
-    TlMsgPack mpac(*(this->pPdfParam_));
-    mpac.save(this->pdfParamPath_);
 
-    // support conventional QCLO program
-//     {
-//         Fl_GlobalinputX flGbi;
-//         flGbi["SCF"]["method"] = (*this->pPdfParam_)["model"]["method"].getStr();
-//         flGbi["SCF"]["control-norb"] = (*this->pPdfParam_)["model"]["AOs"].getStr();
-//         flGbi["SCF"]["control-norbcut"] = (*this->pPdfParam_)["model"]["MOs"].getStr();
-//         flGbi["SCF"]["control-iteration"] = (*this->pPdfParam_)["model"]["iterations"].getStr();
-//         flGbi["SCF"]["method/nsp/electron-number"]  = (*this->pPdfParam_)["model"]["RKS/electrons"].getStr();
-//         flGbi["SCF"]["method/sp/alpha-elec-number"] = (*this->pPdfParam_)["model"]["UKS/alphaElectrons"].getStr();
-//         flGbi["SCF"]["method/sp/beta-elec-number"]  = (*this->pPdfParam_)["model"]["UKS/betaElectrons"].getStr();
-//         flGbi.save();
-//     }
+    const std::string pdfParamPath = (*this->pPdfParam_)["model"]["pdf_param_path"].getStr();
+    TlMsgPack mpac(*(this->pPdfParam_));
+    mpac.save(pdfParamPath);
 }
 
 
@@ -499,7 +487,7 @@ void DfScf::diffDensityMatrix()
         dddm.exec();
 
         this->loggerEndTitle();
-        (*this->pPdfParam_)["control"]["diff_density_matrix"][TlUtils::xtos(this->m_nIteration)] = timer.getElapseTime();
+        (*this->pPdfParam_)["stat"]["elapse_time"]["diff_density_matrix"][this->m_nIteration] = timer.getElapseTime();
     }
 }
 
@@ -524,7 +512,7 @@ void DfScf::doDensityFitting()
         pDfDensityFitting = NULL;
         
         this->loggerEndTitle();
-        (*this->pPdfParam_)["control"]["density_fitting"][TlUtils::xtos(this->m_nIteration)] = timer.getElapseTime();
+        (*this->pPdfParam_)["stat"]["elapse_time"]["density_fitting"][this->m_nIteration] = timer.getElapseTime();
         
         if (this->m_nDampObject == DAMP_DENSITY) {
             this->converge();
@@ -621,7 +609,7 @@ void DfScf::buildXcMatrix()
         DfXCFunctional* pDfXCFunctional = this->getDfXCFunctional();
         pDfXCFunctional->buildXcMatrix();
         this->loggerEndTitle();
-        (*this->pPdfParam_)["control"]["xc_matrix"][TlUtils::xtos(this->m_nIteration)] = timer.getElapseTime();
+        (*this->pPdfParam_)["stat"]["elapse_time"]["xc_matrix"][this->m_nIteration] = timer.getElapseTime();
 
         delete pDfXCFunctional;
         pDfXCFunctional = NULL;
@@ -666,7 +654,7 @@ void DfScf::buildFock()
     DfFockMatrix* pDfFockMatrix = this->getDfFockMatrixObject();
     pDfFockMatrix->DfFockMatrixMain();
     this->loggerEndTitle();
-    (*this->pPdfParam_)["control"]["ks_matrix"][TlUtils::xtos(this->m_nIteration)] = timer.getElapseTime();
+    (*this->pPdfParam_)["staat"]["elapse_time"]["fock_matrix"][this->m_nIteration] = timer.getElapseTime();
 
     if (this->m_nDampObject == DAMP_FOCK) {
         this->converge();
@@ -700,7 +688,7 @@ void DfScf::transformFock()
     pDfTransFmatrix = NULL;
 
     this->loggerEndTitle();
-    (*this->pPdfParam_)["control"]["transform_F_matrix"][TlUtils::xtos(this->m_nIteration)] = timer.getElapseTime();
+    (*this->pPdfParam_)["stat"]["elapse_time"]["transform_F_matrix"][this->m_nIteration] = timer.getElapseTime();
 }
 
 
@@ -725,7 +713,7 @@ void DfScf::doLevelShift()
         LS.DfLshiftMain();
 
         this->loggerEndTitle();
-        (*this->pPdfParam_)["control"]["level_shift"][TlUtils::xtos(this->m_nIteration)] = timer.getElapseTime();
+        (*this->pPdfParam_)["stat"]["elapse_time"]["level_shift"][this->m_nIteration] = timer.getElapseTime();
     }
 }
 
@@ -740,7 +728,7 @@ void DfScf::diagonal()
     delete pDfDiagonal;
     pDfDiagonal = NULL;
     this->loggerEndTitle();
-    (*this->pPdfParam_)["control"]["diagonal"][TlUtils::xtos(this->m_nIteration)] = timer.getElapseTime();
+    (*this->pPdfParam_)["stat"]["elapse_time"]["diagonal"][this->m_nIteration] = timer.getElapseTime();
 
     // flush
     this->matrixCache_.flush();
@@ -764,7 +752,7 @@ void DfScf::execScfLoop_EndFock_TransC()
     delete pDfTransAtoB;
     pDfTransAtoB = NULL;
     this->loggerEndTitle();
-    (*this->pPdfParam_)["control"]["transform_C_matrix"][TlUtils::xtos(this->m_nIteration)] = timer.getElapseTime();
+    (*this->pPdfParam_)["stat"]["elapse_time"]["transform_C_matrix"][this->m_nIteration] = timer.getElapseTime();
 }
 
 
@@ -785,7 +773,7 @@ void DfScf::calcDensityMatrix()
     delete pDfDmatrix;
     pDfDmatrix = NULL;
     this->loggerEndTitle();
-    (*this->pPdfParam_)["control"]["density_matrix"][TlUtils::xtos(this->m_nIteration)] = timer.getElapseTime();
+    (*this->pPdfParam_)["stat"]["elapse_time"]["density_matrix"][this->m_nIteration] = timer.getElapseTime();
 
     // flush
     this->matrixCache_.flush();
@@ -809,7 +797,7 @@ void DfScf::calcTotalEnergy()
     delete pDfTotalEnergy;
     pDfTotalEnergy = NULL;
     this->loggerEndTitle();
-    (*this->pPdfParam_)["control"]["total_energy"][TlUtils::xtos(this->m_nIteration)] = timer.getElapseTime();
+    (*this->pPdfParam_)["stat"]["elapse_time"]["total_energy"][this->m_nIteration] = timer.getElapseTime();
 }
 
 
@@ -962,7 +950,7 @@ void DfScf::converge()
         pDfConverge = NULL;
 
         this->loggerEndTitle();
-        (*this->pPdfParam_)["control"]["converge"][TlUtils::xtos(this->m_nIteration)] = timer.getElapseTime();
+        (*this->pPdfParam_)["stat"]["elapse_time"]["converge"][this->m_nIteration] = timer.getElapseTime();
     }
 }
 

@@ -86,7 +86,7 @@ protected:
     std::string getInvXMatrixPath();
     std::string getNalphaPath();
     std::string getOccupationPath(RUN_TYPE runType);
-    static std::string getEigvalPath(RUN_TYPE runType, int iteration);
+    std::string getEigvalPath(RUN_TYPE runType, int iteration);
     std::string getGridDataFilePath() const;
     std::string getGridMatrixPath() const;
     

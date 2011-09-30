@@ -16,8 +16,6 @@
 
 Fl_Geometry::Fl_Geometry(const TlSerializeData& geomData) : isUpdate_(false)
 {
-//     TlPseudoYaml yaml(geomData);
-//     std::cerr << yaml.str() << std::endl;
     this->setup(geomData);
 }
 
@@ -78,7 +76,7 @@ TlSerializeData Fl_Geometry::getSerializeData() const
         position.pushBack(x);
         position.pushBack(y);
         position.pushBack(z);
-        atom["coord"] = position;
+        atom["xyz"] = position;
         atom["charge"] = charge;
         data["model"]["coordinates"]["global"].pushBack(atom);
     }
@@ -206,17 +204,15 @@ void Fl_Geometry::setup(const TlSerializeData& geomData)
     this->atoms_.clear();
     TlSerializeData::MapConstIterator groupEnd = geomData.endMap();
     for (TlSerializeData::MapConstIterator group = geomData.beginMap(); group != groupEnd; ++group) {
-//         std::cerr << "Fl_Geometry::setup() group=" << group->first.getStr() << std::endl;
-
         TlSerializeData::ArrayConstIterator atomEnd = group->second.endArray();
         for (TlSerializeData::ArrayConstIterator atom = group->second.beginArray(); atom != atomEnd; ++atom) {
 
             AtomData ad;
             ad.atom.setElement((*atom)["symbol"].getStr());
             ad.atom.setCharge((*atom)["charge"].getDouble());
-            const double x = (*atom)["coord"].getAt(0).getDouble();
-            const double y = (*atom)["coord"].getAt(1).getDouble();
-            const double z = (*atom)["coord"].getAt(2).getDouble();
+            const double x = (*atom)["xyz"].getAt(0).getDouble();
+            const double y = (*atom)["xyz"].getAt(1).getDouble();
+            const double z = (*atom)["xyz"].getAt(2).getDouble();
             ad.atom.moveTo(x, y, z);
             ad.label = (*atom)["label"].getStr();
 

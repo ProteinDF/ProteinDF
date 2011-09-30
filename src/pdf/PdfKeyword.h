@@ -11,11 +11,14 @@
 class PdfKeyword {
 public:
     /// キーワードタイプに使われる値
-     enum KeywordType {
-         KWD_DEFAULT  = 0,
-         KWD_HIDDEN   = 1
-     };
-
+    ///
+    /// maskに利用されるため、定数は2の累乗であること
+    enum KeywordType {
+        KWD_DEFAULT  = 0,
+        KWD_DEBUG    = 1,
+        KWD_HIDDEN   = 2
+    };
+    
     /// キーワード情報を保持する構造体
     struct KeywordInfo {
     public:

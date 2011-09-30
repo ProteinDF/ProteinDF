@@ -219,38 +219,39 @@ void DfObject::setParam(const TlSerializeData& data)
     this->matrixCache_.forceLoadingFromDisk(isForceLoadingFromDisk);
     
     // setup
-    (*(this->pPdfParam_))["control"]["Hpq_matrix_basename"]    = "fl_Mtr_Hpq.matrix";
-    (*(this->pPdfParam_))["control"]["Hpq2_matrix_basename"]   = "fl_Mtr_Hpq2.matrix";
-    (*(this->pPdfParam_))["control"]["Spq_matrix_basename"]    = "fl_Mtr_Spq.matrix";
-    (*(this->pPdfParam_))["control"]["Sab_matrix_basename"]    = "fl_Mtr_Sab.matrix";
-    (*(this->pPdfParam_))["control"]["Sab2_matrix_basename"]   = "fl_Mtr_Sab2.matrix";
-    (*(this->pPdfParam_))["control"]["Sgd_matrix_basename"]    = "fl_Mtr_Sgd.matrix";
-    if ((*(this->pPdfParam_))["control"]["SabInv_matrix_basename"].getStr().empty() == true) {
-        (*(this->pPdfParam_))["control"]["SabInv_matrix_basename"] = "fl_Mtr_Sabinv.matrix";
+    TlSerializeData& paramFileBaseName = (*(this->pPdfParam_))["control"]["file_base_name"];
+    paramFileBaseName["Hpq_matrix"]    = "fl_Mtr_Hpq.matrix";
+    paramFileBaseName["Hpq2_matrix"]   = "fl_Mtr_Hpq2.matrix";
+    paramFileBaseName["Spq_matrix"]    = "fl_Mtr_Spq.matrix";
+    paramFileBaseName["Sab_matrix"]    = "fl_Mtr_Sab.matrix";
+    paramFileBaseName["Sab2_matrix"]   = "fl_Mtr_Sab2.matrix";
+    paramFileBaseName["Sgd_matrix"]    = "fl_Mtr_Sgd.matrix";
+    if (paramFileBaseName["SabInv_matrix"].getStr().empty() == true) {
+        paramFileBaseName["SabInv_matrix"] = "fl_Mtr_Sabinv.matrix";
     }
-    (*(this->pPdfParam_))["control"]["SgdInv_matrix_basename"] = "fl_Mtr_Sgdinv.matrix";
-    (*(this->pPdfParam_))["control"]["X_matrix_basename"]      = "fl_Mtr_X.matrix";
-    (*(this->pPdfParam_))["control"]["Xinv_matrix_basename"]   = "fl_Mtr_InvX.matrix";
-    if ((*(this->pPdfParam_))["control"]["diff_matrix_basename"].getStr().empty() == true) {
-        (*(this->pPdfParam_))["control"]["diff_matrix_basename"] = "diff_matrix";
+    paramFileBaseName["SgdInv_matrix"] = "fl_Mtr_Sgdinv.matrix";
+    paramFileBaseName["X_matrix"]      = "fl_Mtr_X.matrix";
+    paramFileBaseName["Xinv_matrix"]   = "fl_Mtr_InvX.matrix";
+    if (paramFileBaseName["diff_matrix"].getStr().empty() == true) {
+        paramFileBaseName["diff_matrix"] = "diff_matrix";
     }
-    if ((*(this->pPdfParam_))["control"]["Ppq_matrix_basename"].getStr().empty() == true) {
-        (*(this->pPdfParam_))["control"]["Ppq_matrix_basename"] = "fl_Mtr_Ppq.matrix";
+    if (paramFileBaseName["Ppq_matrix"].getStr().empty() == true) {
+        paramFileBaseName["Ppq_matrix"] = "fl_Mtr_Ppq.matrix";
     }
-    (*(this->pPdfParam_))["control"]["P1pq_matrix_basename"]   = "fl_Mtr_P1pq.matrix";
-    (*(this->pPdfParam_))["control"]["P2pq_matrix_basename"]   = "fl_Mtr_P2pq.matrix";
-    (*(this->pPdfParam_))["control"]["HFx_matrix_basename"]    = "fl_Mtr_HFx.matrix";
-    (*(this->pPdfParam_))["control"]["Fpq_matrix_basename"]    = "fl_Mtr_Fpq.matrix";
-    (*(this->pPdfParam_))["control"]["Fprime_matrix_basename"] = "fl_Mtr_Fprime.matrix";
-    (*(this->pPdfParam_))["control"]["Fxc_matrix_basename"]    = "fl_Mtr_Fxc.matrix";
-    (*(this->pPdfParam_))["control"]["FxcPure_matrix_basename"] = "fl_Mtr_FxcPure.matrix";
-    (*(this->pPdfParam_))["control"]["J_matrix_basename"]      = "fl_Mtr_J.matrix";
-    (*(this->pPdfParam_))["control"]["C_matrix_basename"]      = "fl_Mtr_C.matrix";
-    (*(this->pPdfParam_))["control"]["Cprime_matrix_basename"] = "fl_Mtr_Cprime.matrix";
-    (*(this->pPdfParam_))["control"]["grid_matrix_basename"]   = "grid.mtx";
+    paramFileBaseName["P1pq_matrix"]    = "fl_Mtr_P1pq.matrix";
+    paramFileBaseName["P2pq_matrix"]    = "fl_Mtr_P2pq.matrix";
+    paramFileBaseName["HFx_matrix"]     = "fl_Mtr_HFx.matrix";
+    paramFileBaseName["Fpq_matrix"]     = "fl_Mtr_Fpq.matrix";
+    paramFileBaseName["Fprime_matrix"]  = "fl_Mtr_Fprime.matrix";
+    paramFileBaseName["Fxc_matrix"]     = "fl_Mtr_Fxc.matrix";
+    paramFileBaseName["FxcPure_matrix"] = "fl_Mtr_FxcPure.matrix";
+    paramFileBaseName["J_matrix"]       = "fl_Mtr_J.matrix";
+    paramFileBaseName["C_matrix"]       = "fl_Mtr_C.matrix";
+    paramFileBaseName["Cprime_matrix"]  = "fl_Mtr_Cprime.matrix";
+    paramFileBaseName["grid_matrix"]    = "grid.mtx";
 
-    if ((*(this->pPdfParam_))["control"]["rho_vector_basename"].getStr().empty() == true) {
-        (*(this->pPdfParam_))["control"]["rho_vector_basename"] = "rho.vct";
+    if (paramFileBaseName["rho_vector"].getStr().empty() == true) {
+        paramFileBaseName["rho_vector"] = "rho.vct";
     }
 }
 
@@ -315,7 +316,7 @@ void DfObject::loggerEndTitle(const std::string& stepName, const char lineChar) 
 std::string DfObject::makeFilePath(const std::string& baseFileName,
                                    const std::string& suffix) const
 {
-    const std::string base = (*(this->pPdfParam_))["control"][baseFileName].getStr();
+    const std::string base = (*(this->pPdfParam_))["control"]["file_base_name"][baseFileName].getStr();
     std::string path;
     if (this->isSaveDistributedMatrixToLocalDisk_ == true) {
         path = this->localDiskPath_ + "/" + base + "." + TlUtils::xtos(this->rank_);
@@ -330,61 +331,61 @@ std::string DfObject::makeFilePath(const std::string& baseFileName,
 
 std::string DfObject::getHpqMatrixPath()
 {
-    return this->makeFilePath("Hpq_matrix_basename");
+    return this->makeFilePath("Hpq_matrix");
 }
 
 
 std::string DfObject::getHpq2MatrixPath()
 {
-    return this->makeFilePath("Hpq2_matrix_basename");
+    return this->makeFilePath("Hpq2_matrix");
 }
 
 
 std::string DfObject::getSpqMatrixPath()
 {
-    return this->makeFilePath("Spq_matrix_basename");
+    return this->makeFilePath("Spq_matrix");
 }
 
 
 std::string DfObject::getSabMatrixPath()
 {
-    return this->makeFilePath("Sab_matrix_basename");
+    return this->makeFilePath("Sab_matrix");
 }
 
 
 std::string DfObject::getSab2MatrixPath()
 {
-    return this->makeFilePath("Sab2_matrix_basename");
+    return this->makeFilePath("Sab2_matrix");
 }
 
 
 std::string DfObject::getSgdMatrixPath()
 {
-    return this->makeFilePath("Sgd_matrix_basename");
+    return this->makeFilePath("Sgd_matrix");
 }
 
 
 std::string DfObject::getSabInvMatrixPath()
 {
-    return this->makeFilePath("SabInv_matrix_basename");
+    return this->makeFilePath("SabInv_matrix");
 }
 
 
 std::string DfObject::getSgdInvMatrixPath()
 {
-    return this->makeFilePath("SgdInv_matrix_basename");
+    return this->makeFilePath("SgdInv_matrix");
 }
 
 
 std::string DfObject::getXMatrixPath()
 {
-    return this->makeFilePath("X_matrix_basename");
+    return this->makeFilePath("X_matrix");
 }
 
 
 std::string DfObject::getInvXMatrixPath()
 {
-    return this->makeFilePath("Xinv_matrix_basename");
+    return this->makeFilePath("Xinv_matrix");
 }
 
 
@@ -427,44 +428,44 @@ std::string DfObject::getGridDataFilePath() const
 
 std::string DfObject::getGridMatrixPath() const
 {
-    return this->makeFilePath("grid_matrix_basename");
+    return this->makeFilePath("grid_matrix");
 }
 
 
 std::string DfObject::getDiffDensityMatrixPath(const RUN_TYPE runType, const int iteration) const
 {
-    return this->makeFilePath("diff_matrix_basename",
+    return this->makeFilePath("diff_matrix",
                               DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
 
 std::string DfObject::getPpqMatrixPath(const RUN_TYPE nRunType, const int nIteration) const
 {
-    return this->makeFilePath("Ppq_matrix_basename",
+    return this->makeFilePath("Ppq_matrix",
                               DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
 std::string DfObject::getP1pqMatrixPath(const int iteration)
 {
-    return this->makeFilePath("P1pq_matrix_basename",
+    return this->makeFilePath("P1pq_matrix",
                               TlUtils::xtos(iteration));
 }
 
 std::string DfObject::getP2pqMatrixPath(const int iteration)
 {
-    return this->makeFilePath("P2pq_matrix_basename",
+    return this->makeFilePath("P2pq_matrix",
                               TlUtils::xtos(iteration));
 }
 
 std::string DfObject::getHFxMatrixPath(const RUN_TYPE nRunType, const int nIteration)
 {
-    return this->makeFilePath("HFx_matrix_basename",
+    return this->makeFilePath("HFx_matrix",
                               DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
 std::string DfObject::getFpqMatrixPath(const RUN_TYPE nRunType, const int nIteration) const
 {
-    return this->makeFilePath("Fpq_matrix_basename",
+    return this->makeFilePath("Fpq_matrix",
                               DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
@@ -477,28 +478,28 @@ std::string DfObject::getFprimeMatrixPath(const RUN_TYPE runType, const int iter
         suffix = fragment + ".";
     }
     suffix += DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration);
-    return this->makeFilePath("Fprime_matrix_basename",
+    return this->makeFilePath("Fprime_matrix",
                               suffix);
 }
 
 
 std::string DfObject::getFxcMatrixPath(const RUN_TYPE nRunType, const int nIteration)
 {
-    return this->makeFilePath("Fxc_matrix_basename",
+    return this->makeFilePath("Fxc_matrix",
                               DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
 
 std::string DfObject::getFxcPureMatrixPath(const RUN_TYPE nRunType, const int nIteration)
 {
-    return this->makeFilePath("FxcPure_matrix_basename",
+    return this->makeFilePath("FxcPure_matrix",
                               DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
 
 std::string DfObject::getJMatrixPath(const int iteration)
 {
-    return this->makeFilePath("J_matrix_basename",
+    return this->makeFilePath("J_matrix",
                               TlUtils::xtos(iteration));
 }
 
@@ -510,7 +511,7 @@ std::string DfObject::getCMatrixPath(const RUN_TYPE runType, int iteration, cons
         suffix = fragment + ".";
     }
     suffix += DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration);
-    return this->makeFilePath("C_matrix_basename",
+    return this->makeFilePath("C_matrix",
                               suffix);
 }
 
@@ -522,31 +523,14 @@ std::string DfObject::getCprimeMatrixPath(const RUN_TYPE runType, int iteration,
         suffix = fragment + ".";
     }
     suffix += DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration);
-    return this->makeFilePath("Cprime_matrix_basename",
+    return this->makeFilePath("Cprime_matrix",
                               suffix);
 }
 
 
 std::string DfObject::getRhoPath(const RUN_TYPE nRunType, const int nIteration) const
 {
-    // std::string sRhoPath = DfObject::m_sWorkDirPath + "/fl_Vct_Rou";
-
-    // switch (nRunType) {
-    // case RUN_UKS_ALPHA:
-    //     sRhoPath += "a";
-    //     break;
-    // case RUN_UKS_BETA:
-    //     sRhoPath += "b";
-    //     break;
-    // default:
-    //     break;
-    // }
-
-    // sRhoPath += TlUtils::xtos(nIteration);
-
-    // return sRhoPath;
-
-    return this->makeFilePath("rho_vector_basename",
+    return this->makeFilePath("rho_vector",
                               DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 
 }

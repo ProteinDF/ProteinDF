@@ -27,11 +27,10 @@
 #include "TlMsgPack.h"
 #include "TlMatrixCache.h"
 
-ProteinDF::ProteinDF() : pdfParamPath_("pdfparam.mpac")
+ProteinDF::ProteinDF()
 {
     this->showCacheReport_ = false;
 }
-
 
 
 ProteinDF::~ProteinDF()
@@ -43,7 +42,8 @@ void ProteinDF::run()
 {
     this->startlogo();
 
-    // input data
+    // 入力データの解析
+    // リスタート時には解析しない
     this->inputData();
     this->saveParam();
 
@@ -53,12 +53,15 @@ void ProteinDF::run()
 }
 
 
-void ProteinDF::restart()
+void ProteinDF::restart(const std::string& restartParamFilePath)
 {
     this->startlogo();
 
     this->logger("loading ProteinDF parameter for restart.\n");
-    this->loadParam();
+
+    // リスタート時にはすでにあるパラメータファイルを読み取るのみ
+    this->loadParam(restartParamFilePath);
+
     this->exec();
 
     this->endlogo();
@@ -80,7 +83,6 @@ void ProteinDF::exec()
     TlStringTokenizer st(control);
     while (st.hasMoreTokens()) {
         std::string group = st.nextToken();
-        //std::cout << group << std::endl;
 
         if (group == "create") {
             // [create]
@@ -282,7 +284,7 @@ void ProteinDF::stepScf()
 {
     this->stepStartTitle("SCF");
     
-    DfScf dscf(&(this->pdfParam_), this->pdfParamPath_);
+    DfScf dscf(&(this->pdfParam_));
     dscf.dfScfMain();
     
     this->pdfParam_["control"]["SCF_finished"] = true;
@@ -302,18 +304,33 @@ void ProteinDF::stepForce()
 }
 
 
-void ProteinDF::loadParam()
+void ProteinDF::loadParam(const std::string& requestFilePath)
 {
+    std::string filePath = requestFilePath;
+    if (requestFilePath.empty() == true) {
+        filePath = this->pdfParam_["model"]["pdf_param_path"].getStr();
+    }
+    
     TlMsgPack mpac;
-    mpac.load(this->pdfParamPath_);
+    mpac.load(filePath);
     this->pdfParam_ = mpac.getSerializeData();
+
+    // check
+    if (requestFilePath.empty() != true) {
+        const std::string pdfParamPath = this->pdfParam_["model"]["pdf_param_path"].getStr();
+        if (requestFilePath != pdfParamPath) {
+            std::cerr << "the specified parameter file path is not consistent with pdf_param_path parameter."
+                      << std::endl;
+        }
+    }
 }
 
 
 void ProteinDF::saveParam() const
 {
     TlMsgPack mpac(this->pdfParam_);
-    mpac.save(this->pdfParamPath_);
+    const std::string pdfParamPath = this->pdfParam_["model"]["pdf_param_path"].getStr();
+    mpac.save(pdfParamPath);
 
     // conventional
     this->save_Fl_Globalinput();
@@ -337,7 +354,7 @@ void ProteinDF::save_Fl_Globalinput() const
 
 DfIntegrals* ProteinDF::getDfIntegralsObject()
 {
-    DfIntegrals* pDfIntegrals = new DfIntegrals(&(this->pdfParam_), this->pdfParamPath_);
+    DfIntegrals* pDfIntegrals = new DfIntegrals(&(this->pdfParam_));
     return pDfIntegrals;
 }
 

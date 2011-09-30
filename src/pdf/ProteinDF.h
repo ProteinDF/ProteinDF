@@ -19,7 +19,7 @@ public:
 
 public:
     void run();
-    void restart();
+    void restart(const std::string& restartParamFilePath);
 
 protected:
     void exec();
@@ -29,7 +29,7 @@ protected:
     virtual void save_Fl_Globalinput() const;
 
     virtual void saveParam() const;
-    virtual void loadParam();
+    virtual void loadParam(const std::string& requestFilePath = "");
 
 protected:
     virtual void setupGlobalCondition();
@@ -55,7 +55,6 @@ protected:
     virtual void stepEndTitle();
 
 protected:
-    std::string pdfParamPath_;
     TlSerializeData pdfParam_;
 
     bool showCacheReport_;

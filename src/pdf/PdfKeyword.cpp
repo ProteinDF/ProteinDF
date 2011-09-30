@@ -35,6 +35,14 @@ void PdfKeyword::initialize()
     KeywordInfo item;
 
     // MAIN ==============================================================
+    item.keyword          = "pdf_param_path";
+    item.explanation      = "the file path for ProteinDF parameters.";
+    item.explanationJ     = "";
+    item.defaultValue     = "pdfparam.mpac";
+    item.syntax           = "*";
+    item.type             = KWD_DEBUG;
+    this->kwdList_.push_back(item);
+
     item.keyword          = "step_control";
     item.explanation      = "Job scheme of the calculation.";
     item.explanationJ     = "計算手順を指示する。createは初期化, integralは初期積分, guessは初期値作成, scfはSCF繰り返し計算の処理を表す。";

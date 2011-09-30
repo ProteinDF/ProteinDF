@@ -348,11 +348,11 @@ void PdfUserInput::molecule_geometry_cartesian_input(const std::string& str)
         TlSerializeData atom;
         atom["symbol"] = sAtom;
         atom["charge"] = charge;
-        TlSerializeData coord;
-        coord.pushBack(position.x());
-        coord.pushBack(position.y());
-        coord.pushBack(position.z());
-        atom["coord"] = coord;
+        TlSerializeData xyz;
+        xyz.pushBack(position.x());
+        xyz.pushBack(position.y());
+        xyz.pushBack(position.z());
+        atom["xyz"] = xyz;
         atom["label"] = sLabel2;
         this->data_["model"]["coordinates"]["_"].pushBack(atom);
     }

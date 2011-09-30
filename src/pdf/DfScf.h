@@ -43,7 +43,7 @@ protected:
     };
 
 public:
-    DfScf(TlSerializeData* pPdfParam, const std::string& pdfParamPath);
+    DfScf(TlSerializeData* pPdfParam);
     virtual ~DfScf();
 
 public:
@@ -117,8 +117,6 @@ protected:
     virtual void saveParam() const;
     
 protected:
-    std::string pdfParamPath_;
-
     // DIIS ON/OFF
     bool diisflg;
 
