@@ -176,3 +176,10 @@ PDF_x_LDADD = libpdf.la ../pdflib/libpdftl.la @LAPACK_LIBS@ @BLAS_LIBS@
 PPDF_x_SOURCES = main_Parallel.cpp
 PPDF_x_LDADD = libpdf.la libppdf.la ../pdflib/libppdftl.la ../pdflib/libpdftl.la @SCALAPACK_LIBS@ @LAPACK_LIBS@ @BLAS_LIBS@ @MPILIBS@
 
+install-exec-hook:
+	cd $(DESTDIR)$(bindir) && \
+	for PROG in $(bin_PROGRAMS); do \
+		mv -f $${PROG}$(EXEEXT) $${PROG}-$(VERSION)$(EXEEXT) && \
+		$(LN_S) $${PROG}-$(VERSION)$(EXEEXT) $${PROG}$(EXEEXT); \
+	done
+

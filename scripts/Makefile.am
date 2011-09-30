@@ -48,11 +48,10 @@ bin_SCRIPTS = $(bin_script_src)
 dist_bin_SCRIPTS = $(bin_script_src)
 
 
-#pdf_bindir = $(bindir)/pdf
-#bin_pdf_script_src = \
-#	pdf/__init__.py		\
-#	pdf/param.py
-#
-#pdf_bin_SCRIPTS = $(bin_pdf_script_src)
-#dist_pdf_bin_SCRIPTS = $(bin_pdf_script_src)
+install-exec-hook:
+	cd $(DESTDIR)$(bindir) && \
+	for PROG in $(bin_script_src); do \
+		echo $${PROG%.*}; \
+		$(LN_S) $${PROG} $${PROG%.*}; \
+	done
 
