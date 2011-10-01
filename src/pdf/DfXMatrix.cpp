@@ -32,7 +32,7 @@ void DfXMatrix::main()
 void DfXMatrix::saveNumOfIndependentBasis()
 {
     // parameterファイルに設定
-    (*(this->pPdfParam_))["MOs"] = this->m_nNumOfMOs;
+    (*(this->pPdfParam_))["num_of_MOs"] = this->m_nNumOfMOs;
 }
 
 
@@ -59,7 +59,7 @@ void DfXMatrix::exec()
 
         // MO dimension is defined.
         this->loggerTime(" truncation of linear dependent");
-        const int independent_orbital_number = pdfParam["MOs"].getInt();
+        const int independent_orbital_number = pdfParam["num_of_MOs"].getInt();
         if (independent_orbital_number > 0) {
             this->m_nNumOfMOs = independent_orbital_number;
             this->logger(TlUtils::format(" set number_independent_basis (number) = %d\n", this->m_nNumOfMOs));

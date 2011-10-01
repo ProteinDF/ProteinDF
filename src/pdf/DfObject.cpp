@@ -100,15 +100,15 @@ void DfObject::setParam(const TlSerializeData& data)
     }
 
     // model
-    this->m_nNumOfAtoms = data["atoms"].getInt();
-    this->m_nNumOfDummyAtoms = data["dummyAtoms"].getInt();
+    this->m_nNumOfAtoms = data["num_of_atoms"].getInt();
+    this->m_nNumOfDummyAtoms = data["num_of_dummy_atoms"].getInt();
     this->numOfRealAtoms_ = this->m_nNumOfAtoms - this->m_nNumOfDummyAtoms;
     
-    this->m_nIteration = data["iterations"].getInt();
-    this->m_nNumOfAOs = data["AOs"].getInt();
-    this->m_nNumOfMOs = data["MOs"].getInt();
-    this->m_nNumOfAux = data["AuxCDs"].getInt();
-    this->numOfAuxXC_ = data["AuxXCs"].getInt();
+    this->m_nIteration = data["num_of_iterations"].getInt();
+    this->m_nNumOfAOs = data["num_of_AOs"].getInt();
+    this->m_nNumOfMOs = data["num_of_MOs"].getInt();
+    this->m_nNumOfAux = data["num_of_auxCDs"].getInt();
+    this->numOfAuxXC_ = data["num_of_auxXCs"].getInt();
 
     this->m_nNumOfElectrons = data["RKS/electrons"].getInt();
     this->m_nNumOfAlphaElectrons = data["UKS/alphaElectrons"].getInt();

@@ -45,7 +45,7 @@ void PdfKeyword::initialize()
 
     item.keyword          = "step_control";
     item.explanation      = "Job scheme of the calculation.";
-    item.explanationJ     = "計算手順を指示する。createは初期化, integralは初期積分, guessは初期値作成, scfはSCF繰り返し計算の処理を表す。";
+    item.explanationJ     = "";
     item.defaultValue     = "create";
     item.syntax           = "(create|integral|guess|scf)+";
     item.type             = KWD_DEFAULT;
@@ -858,10 +858,68 @@ void PdfKeyword::initialize()
     item.type             = KWD_HIDDEN;
     this->kwdList_.push_back(item);
 
+    // internal variables ------------------------------------------------------
+    item.keyword          = "num_of_atoms";
+    item.explanation      = "";
+    item.explanationJ     = "";
+    item.defaultValue     = "";
+    item.syntax           = "";
+    item.type             = KWD_INTERNAL;
+    this->kwdList_.push_back(item);
+
+    item.keyword          = "num_of_dummy_atoms";
+    item.explanation      = "";
+    item.explanationJ     = "";
+    item.defaultValue     = "";
+    item.syntax           = "";
+    item.type             = KWD_INTERNAL;
+    this->kwdList_.push_back(item);
+
+    item.keyword          = "num_of_AOs";
+    item.explanation      = "";
+    item.explanationJ     = "";
+    item.defaultValue     = "";
+    item.syntax           = "";
+    item.type             = KWD_INTERNAL;
+    this->kwdList_.push_back(item);
+
+    item.keyword          = "num_of_MOs";
+    item.explanation      = "";
+    item.explanationJ     = "";
+    item.defaultValue     = "";
+    item.syntax           = "";
+    item.type             = KWD_INTERNAL;
+    this->kwdList_.push_back(item);
+
+    item.keyword          = "num_of_auxCDs";
+    item.explanation      = "";
+    item.explanationJ     = "";
+    item.defaultValue     = "";
+    item.syntax           = "";
+    item.type             = KWD_INTERNAL;
+    this->kwdList_.push_back(item);
+
+    item.keyword          = "num_of_auxXCs";
+    item.explanation      = "";
+    item.explanationJ     = "";
+    item.defaultValue     = "";
+    item.syntax           = "";
+    item.type             = KWD_INTERNAL;
+    this->kwdList_.push_back(item);
+
+    item.keyword          = "TE";
+    item.explanation      = "history of total energy";
+    item.explanationJ     = "";
+    item.defaultValue     = "";
+    item.syntax           = "";
+    item.type             = KWD_INTERNAL;
+    this->kwdList_.push_back(item);
+    
+    // debug -------------------------------------------------------------------
     item.keyword          = "debug/file_warning";
     item.explanation      = "";
     item.explanationJ     = "ファイルが存在しない場合に警告をログに表示する";
-    item.defaultValue     = "no";
+    item.defaultValue     = "yes";
     item.syntax           = "(yes|no)";
     item.type             = KWD_HIDDEN;
     this->kwdList_.push_back(item);

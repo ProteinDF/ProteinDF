@@ -26,7 +26,6 @@ protected:
     
 protected:
     virtual void logger(const std::string& str) const;
-    virtual void save_Fl_Globalinput() const;
 
     virtual void saveParam() const;
     virtual void loadParam(const std::string& requestFilePath = "");

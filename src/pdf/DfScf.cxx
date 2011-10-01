@@ -59,7 +59,7 @@ DfScf::~DfScf()
 
 void DfScf::saveParam() const
 {
-    (*(this->pPdfParam_))["iterations"] = this->m_nIteration;
+    (*(this->pPdfParam_))["num_of_iterations"] = this->m_nIteration;
 
     // save PDF parameter
     const std::string pdfParamPath = (*this->pPdfParam_)["pdf_param_path"].getStr();
@@ -114,7 +114,7 @@ void DfScf::setScfParam()
     // iteration number
     this->m_nIteration = 0;
     if (this->isRestart_ == true) {
-        this->m_nIteration = std::max<int>(1, pdfParam["iterations"].getInt());
+        this->m_nIteration = std::max<int>(1, pdfParam["num_of_iterations"].getInt());
     }
 
     // damping switch
@@ -426,7 +426,6 @@ int DfScf::execScfLoop()
                 
                 if (isExitScf == false) {
                     ++(this->m_nIteration);
-                    (*(this->pPdfParam_))["iterations"] = this->m_nIteration;
                     this->saveParam();
                     nScfState = BEGIN;
                 } else {

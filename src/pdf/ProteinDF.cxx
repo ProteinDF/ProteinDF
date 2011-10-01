@@ -223,9 +223,9 @@ void ProteinDF::manageMemory()
             // mapfile_sizeはMB単位で指定のこと。
             mapFileSize = std::max<std::size_t>(mapFileSize, std::atoi(mapFileSizeStr.c_str()));
         } else {
-            const std::size_t numOfAOs = this->pdfParam_["AOs"].getInt();
-            const std::size_t numOfAuxDen = this->pdfParam_["auxCDs"].getInt();
-            const std::size_t numOfAuxXC = this->pdfParam_["auxXCs"].getInt();
+            const std::size_t numOfAOs = this->pdfParam_["num_of_AOs"].getInt();
+            const std::size_t numOfAuxDen = this->pdfParam_["num_of_auxCDs"].getInt();
+            const std::size_t numOfAuxXC = this->pdfParam_["num_of_auxXCs"].getInt();
             const std::size_t numOfAux = std::max(numOfAuxDen, numOfAuxXC);
 
             const std::size_t needMem_AO = numOfAOs * numOfAOs * 3; // full matrix
@@ -331,24 +331,6 @@ void ProteinDF::saveParam() const
     TlMsgPack mpac(this->pdfParam_);
     const std::string pdfParamPath = this->pdfParam_["pdf_param_path"].getStr();
     mpac.save(pdfParamPath);
-
-    // conventional
-    this->save_Fl_Globalinput();
-}
-
-
-void ProteinDF::save_Fl_Globalinput() const
-{
-    // support conventional QCLO program
-    Fl_GlobalinputX flGbi;
-    flGbi["SCF"]["method"] = this->pdfParam_["method"].getStr();
-    flGbi["SCF"]["control-norb"] = this->pdfParam_["AOs"].getStr();
-    flGbi["SCF"]["control-norbcut"] = this->pdfParam_["MOs"].getStr();
-    flGbi["SCF"]["control-iteration"] = this->pdfParam_["iterations"].getStr();
-    flGbi["SCF"]["method/nsp/electron-number"]  = this->pdfParam_["RKS/electrons"].getStr();
-    flGbi["SCF"]["method/sp/alpha-elec-number"] = this->pdfParam_["UKS/alphaElectrons"].getStr();
-    flGbi["SCF"]["method/sp/beta-elec-number"]  = this->pdfParam_["UKS/betaElectrons"].getStr();
-    flGbi.save();
 }
 
 

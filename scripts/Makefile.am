@@ -6,42 +6,13 @@ bin_script_src = \
 	PDF.sh			\
 	PPDF.sh			\
 	\
-	diff_matrix.py		\
-	pdf_stat.py		\
+	pdf_mkdir.sh		\
+	pdf_clean.sh		\
 	print_matrix.py		\
 	print_vector.py		\
 	\
-	pdf_mkdir.sh		\
-	pdf_clean.sh		\
-	\
-	pdf_xml.py		\
-	pdf_xml_diff.py		\
-	pdfdata.py		\
-	PdfOutput.py		\
-	PdfXml.py		\
-	\
-	pdf_xml14.py		\
-	\
-	brposition.py		\
-	bratom.py		\
-	bratomgroup.py		\
-	brperiodictable.py	\
-	brpdb.py		\
-	\
-	dfdata.py		\
-	dfoutput.py		\
-	dfvector.py		\
-	dfmatrix.py		\
-	viewmpac.py		\
 	mpac2yml.py		\
-	yml2mpac.py		\
-	tlgraph.py		\
-	makepack.py		\
-	makegraph.py		\
-	reg_harris.py		\
-	pdf_extract.py		\
-	pdf_report.py		\
-	pdf_diff_results.py
+	yml2mpac.py		
 
 
 bin_SCRIPTS = $(bin_script_src)

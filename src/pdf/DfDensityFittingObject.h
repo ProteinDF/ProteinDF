@@ -182,12 +182,6 @@ template<class SymmetricMatrix, class Vector, class DfERI_Class>
 Vector DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getTalpha(const RUN_TYPE runType)
 {
     Vector t_alpha;
-    // std::string suffix = "";
-    // if (runType == RUN_UKS_ALPHA) {
-    //     suffix = "a";
-    // } else if (runType == RUN_UKS_BETA) {
-    //     suffix = "b";
-    // }
 
     if (this->m_bDiskUtilization == false) {
         const SymmetricMatrix diffP = this->getDiffDensityMatrix(runType);
@@ -326,7 +320,6 @@ template<class SymmetricMatrix, class Vector, class DfERI_Class>
 void DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::saveRho(const Vector& rho, const RUN_TYPE runType)
 {
     DfObject::saveRho(runType, this->m_nIteration, rho);
-    //rRho.save(this->getRhoPath(runType, this->m_nIteration));
 }
 
 #endif // DFDENSITYFITTING_H

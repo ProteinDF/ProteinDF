@@ -153,7 +153,7 @@ void DfCqclomatrix::main()
         }
         this->m_nNumOfMOs = col_dimension;
 
-        (*(this->pPdfParam_))["MOs"] = this->m_nNumOfMOs;
+        (*(this->pPdfParam_))["num_of_MOs"] = this->m_nNumOfMOs;
     }
 
     // count independant basis in each fragment

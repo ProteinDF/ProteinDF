@@ -62,23 +62,23 @@ TlSerializeData DfInputdata::main()
     // テーブルの作成
     {
         Fl_Tbl_Orbital Tbl;
-        param["AOs"] = Tbl.getcGtoTotalNum();
+        param["num_of_AOs"] = Tbl.getcGtoTotalNum();
     }
 
     {
         Fl_Tbl_Density Tbl;
-        param["AuxCDs"] = Tbl.getcGtoTotalNum();
+        param["num_of_auxCDs"] = Tbl.getcGtoTotalNum();
     }
 
     {
         Fl_Tbl_Xcpot Tbl;
-        param["AuxXCs"] = Tbl.getcGtoTotalNum();
+        param["num_of_auxXCs"] = Tbl.getcGtoTotalNum();
     }
 
     {
         Fl_Geometry  Geom(Fl_Geometry::getDefaultFileName());
-        param["atoms"] = Geom.getNumOfAtoms();
-        param["dummyAtoms"] = Geom.getDummyatom();
+        param["num_of_atoms"] = Geom.getNumOfAtoms();
+        param["num_of_dummy_atoms"] = Geom.getDummyatom();
     }
 
     // 保存

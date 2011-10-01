@@ -41,16 +41,6 @@ void ProteinDF_Parallel::logger(const std::string& str) const
 }
 
 
-void ProteinDF_Parallel::save_Fl_Globalinput() const
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    if (rComm.isMaster() == true) {
-        ProteinDF::save_Fl_Globalinput();
-    }
-}
-
-
 void ProteinDF_Parallel::loadParam(const std::string& requestFilePath)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();

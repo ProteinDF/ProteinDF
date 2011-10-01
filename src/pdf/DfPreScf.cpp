@@ -138,7 +138,7 @@ void DfPreScf::createInitialGuessUsingLCAO(const RUN_TYPE runType)
     {
         TlSerializeData tmpParam = *(this->pPdfParam_);
         tmpParam["orbital-overlap-correspondence-method"] = "keep";
-        tmpParam["iterations"] = 0;
+        tmpParam["num_of_iterations"] = 0;
         DfDmatrix dfDmatrix(&tmpParam);
         dfDmatrix.DfDmatrixMain(); // RKS only?
     }

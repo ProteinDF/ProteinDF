@@ -79,7 +79,7 @@ void DfInitialGuess_Parallel::createInitialGuessUsingLCAO_onScaLAPACK(const RUN_
     {
         TlSerializeData tmpParam = *(this->pPdfParam_);
         tmpParam["orbital-overlap-correspondence-method"] = "keep";
-        tmpParam["iterations"] = 0;
+        tmpParam["num_of_iterations"] = 0;
         DfDmatrix_Parallel dfDmatrix(&tmpParam);
         dfDmatrix.DfDmatrixMain(); // RKS only?
     }
