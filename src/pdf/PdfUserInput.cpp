@@ -488,8 +488,8 @@ TlSerializeData PdfUserInput::getBasisInfo(const std::string& basisName)
 
         for (int j = 0; j < contractions; ++j) {
             TlSerializeData pGTO;
-            pGTO["exponent"] = flDbBasis.getExpornent(i, j);
-            pGTO["coefficient"] = flDbBasis.getCoefficient(i ,j);
+            pGTO["exp"] = flDbBasis.getExpornent(i, j);
+            pGTO["coef"] = flDbBasis.getCoefficient(i ,j);
             cGTO["pGTOs"].pushBack(pGTO);
         }
 
@@ -616,8 +616,8 @@ void PdfUserInput::moleculeBasisSetDensityAuxiliary(const std::string& str)
             const int contraction = flDbBasis.getrouContraction(i);
             for (int j = 0; j < contraction; j++) {
                 TlSerializeData pGTO;
-                pGTO["exponent"] = flDbBasis.getrouExpornent(i, j);
-                pGTO["coefficient"] = 1.0;
+                pGTO["exp"] = flDbBasis.getrouExpornent(i, j);
+                pGTO["coef"] = 1.0;
                 cGTO["pGTOs"].pushBack(pGTO);
             }
 
@@ -748,8 +748,8 @@ void PdfUserInput::moleculeBasisSetExchangeAuxiliary(const std::string& str)
 
             for (int j = 0; j < contractions; ++j) {
                 TlSerializeData pGTO;
-                pGTO["exponent"] = flDbBasis.getmyuExpornent(i, j);
-                pGTO["coefficient"] = 1.0;
+                pGTO["exp"] = flDbBasis.getmyuExpornent(i, j);
+                pGTO["coef"] = 1.0;
                 cGTO["pGTOs"].pushBack(pGTO);
             }
 

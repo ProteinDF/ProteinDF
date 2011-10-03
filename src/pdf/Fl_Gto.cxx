@@ -500,8 +500,8 @@ void Fl_Gto::setup(const TlSerializeData& basisSet)
             const TlSerializeData& pGTOs = (*q)["pGTOs"];
             TlSerializeData::ArrayConstIterator rEnd = pGTOs.endArray();
             for (TlSerializeData::ArrayConstIterator r = pGTOs.beginArray(); r != rEnd; ++r) {
-                double coef = (*r)["coefficient"].getDouble();
-                double exp = (*r)["exponent"].getDouble();
+                double coef = (*r)["coef"].getDouble();
+                double exp = (*r)["exp"].getDouble();
                 Cgto::Pgto pgto;
                 pgto.exponent = exp;
                 pgto.coefficient = coef;
