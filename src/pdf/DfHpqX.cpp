@@ -9,7 +9,7 @@ const int DfHpqX::MAX_SHELL_TYPE = 2 +1;
 DfHpqX::DfHpqX(TlSerializeData* pPdfParam) 
     : DfObject(pPdfParam),
       orbitalInfo_((*pPdfParam)["coordinates"],
-                   (*pPdfParam)["basis_set"]) {
+                   (*pPdfParam)["basis_sets"]) {
     this->makeShellArrayTable();
 }
 

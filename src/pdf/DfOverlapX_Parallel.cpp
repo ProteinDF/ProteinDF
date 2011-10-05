@@ -58,7 +58,7 @@ void DfOverlapX_Parallel::getSpqD(TlDistributeSymmetricMatrix* pSpq)
     TlSparseSymmetricMatrix tmpSpq(numOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_set"]);
+                                    (*(this->pPdfParam_))["basis_sets"]);
     this->calcOverlap(orbitalInfo, &tmpSpq);
 
     this->loggerTime(" finalize");
@@ -74,7 +74,7 @@ void DfOverlapX_Parallel::getSabD(TlDistributeSymmetricMatrix* pSab)
     TlSparseSymmetricMatrix tmpSab(numOfAuxDens);
     
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_set_auxD"]);
+                                                    (*(this->pPdfParam_))["basis_sets_j"]);
     this->calcOverlap(orbitalInfo_Density, &tmpSab);
     
     this->loggerTime(" finalize");

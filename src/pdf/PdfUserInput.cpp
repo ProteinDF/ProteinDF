@@ -463,7 +463,7 @@ void PdfUserInput::moleculeBasisSetOrbital(const std::string& str)
             key += "@" + sLabel;
         }
         const TlSerializeData basisset = this->getBasisInfo(sName);
-        this->data_["basis_set"][key] = basisset;
+        this->data_["basis_sets"][key] = basisset;
     }
 
     // 出力
@@ -621,9 +621,9 @@ void PdfUserInput::moleculeBasisSetDensityAuxiliary(const std::string& str)
                 cGTO["pGTOs"].pushBack(pGTO);
             }
 
-            this->data_["basis_set_auxD"][key]["cGTOs"].pushBack(cGTO);
+            this->data_["basis_sets_j"][key]["cGTOs"].pushBack(cGTO);
         }
-        this->data_["basis_set_auxD"][key]["name"] = sName;
+        this->data_["basis_sets_j"][key]["name"] = sName;
     }
 
     // 出力
@@ -753,9 +753,9 @@ void PdfUserInput::moleculeBasisSetExchangeAuxiliary(const std::string& str)
                 cGTO["pGTOs"].pushBack(pGTO);
             }
 
-            this->data_["basis_set_auxXC"][key]["cGTOs"].pushBack(cGTO);
+            this->data_["basis_sets_k"][key]["cGTOs"].pushBack(cGTO);
         }
-        this->data_["basis_set_auxXC"][key]["name"] = sName;
+        this->data_["basis_sets_k"][key]["name"] = sName;
     }
 
     // 出力

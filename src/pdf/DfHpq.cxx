@@ -29,7 +29,7 @@ const std::size_t DfHpq::ADAT_SIZE = 60 * 1901;
 DfHpq::DfHpq(TlSerializeData* pPdfParam) : DfObject(pPdfParam), pOrbitalInfo_(NULL)
 {
     this->pOrbitalInfo_ = new TlOrbitalInfo((*pPdfParam)["coordinates"],
-                                            (*pPdfParam)["basis_set"]);
+                                            (*pPdfParam)["basis_sets"]);
 
     const TlSerializeData& data = *(this->pPdfParam_);
     this->cutvalue = data["cut-value"].getDouble();

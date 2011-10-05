@@ -31,9 +31,9 @@ DfEri::DfEri(TlSerializeData* pPdfParam)
     }
 
     this->pOrbitalInfo_ = new TlOrbitalInfo((*pPdfParam)["coordinates"],
-                                            (*pPdfParam)["basis_set"]);
+                                            (*pPdfParam)["basis_sets"]);
     this->pOrbitalInfo_Density_ = new TlOrbitalInfo_Density((*pPdfParam)["coordinates"],
-                                                            (*pPdfParam)["basis_set_auxD"]);
+                                                            (*pPdfParam)["basis_sets_j"]);
     
     this->getMemory();
     this->initialize();

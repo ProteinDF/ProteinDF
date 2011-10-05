@@ -27,7 +27,7 @@ const double DfTwoElectronIntegral::CONTRIBUTE_COEF = 2.0 * std::pow(M_PI, 2.5);
 //
 DfTwoElectronIntegral::DfTwoElectronIntegral(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), m_TlOrbitalInfo((*pPdfParam)["coordinates"],
-                                           (*pPdfParam)["basis_set"])
+                                           (*pPdfParam)["basis_sets"])
 {
     const TlSerializeData& pdfParam = *pPdfParam;
     // initialize

@@ -754,7 +754,7 @@ void PdfKeyword::initialize()
     item.type             = KWD_HIDDEN;
     this->kwdList_.push_back(item);
 
-    item.keyword          = "basis_set";
+    item.keyword          = "basis_sets";
     item.explanation      = "";
     item.explanationJ     = "";
     item.defaultValue     = "";
@@ -762,7 +762,7 @@ void PdfKeyword::initialize()
     item.type             = KWD_HIDDEN;
     this->kwdList_.push_back(item);
     
-    item.keyword          = "basis_set_auxD";
+    item.keyword          = "basis_sets_j";
     item.explanation      = "";
     item.explanationJ     = "";
     item.defaultValue     = "";
@@ -770,7 +770,7 @@ void PdfKeyword::initialize()
     item.type             = KWD_HIDDEN;
     this->kwdList_.push_back(item);
 
-    item.keyword          = "basis_set_auxXC";
+    item.keyword          = "basis_sets_k";
     item.explanation      = "";
     item.explanationJ     = "";
     item.defaultValue     = "";

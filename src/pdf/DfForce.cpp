@@ -13,9 +13,9 @@
 DfForce::DfForce(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam),
       orbitalInfo_((*pPdfParam)["coordinates"],
-                   (*pPdfParam)["basis_set"]),
+                   (*pPdfParam)["basis_sets"]),
       orbitalInfoDens_((*pPdfParam)["coordinates"],
-                       (*pPdfParam)["basis_set_auxD"]) {
+                       (*pPdfParam)["basis_sets_j"]) {
     // initialize
     this->force_.resize(this->m_nNumOfAtoms, 3);
 

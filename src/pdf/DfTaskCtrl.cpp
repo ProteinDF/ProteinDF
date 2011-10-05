@@ -6,7 +6,7 @@
 DfTaskCtrl::DfTaskCtrl(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
     TlOrbitalInfo orbitalInfo((*pPdfParam)["coordinates"],
-                              (*pPdfParam)["basis_set"]);
+                              (*pPdfParam)["basis_sets"]);
     this->maxShellType_ = orbitalInfo.getMaxShellType();
 
 

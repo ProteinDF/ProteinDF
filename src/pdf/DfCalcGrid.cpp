@@ -26,11 +26,11 @@
 DfCalcGrid::DfCalcGrid(TlSerializeData* pPdfParam, int num_iter)
     : DfObject(pPdfParam), gridDataFilePath_("fl_Work/grids.dat"),
       m_tlOrbInfo((*pPdfParam)["coordinates"],
-                  (*pPdfParam)["basis_set"]),
+                  (*pPdfParam)["basis_sets"]),
       m_tlOrbInfoAuxCD_((*pPdfParam)["coordinates"],
-                        (*pPdfParam)["basis_set_auxD"]),
+                        (*pPdfParam)["basis_sets_j"]),
       m_tlOrbInfoXC_((*pPdfParam)["coordinates"],
-                     (*pPdfParam)["basis_set_auxXC"])
+                     (*pPdfParam)["basis_sets_k"])
 {
     const TlSerializeData& pdfParam = *pPdfParam;
     TlLogX& log = TlLogX::getInstance();

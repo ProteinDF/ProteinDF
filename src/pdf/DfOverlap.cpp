@@ -18,11 +18,11 @@ DfOverlap::DfOverlap(TlSerializeData* pPdfParam)
       pOrbitalInfo_Density_(NULL), pOrbitalInfo_XC_(NULL)
 {
     this->pOrbitalInfo_ = new TlOrbitalInfo((*pPdfParam)["coordinates"],
-                                            (*pPdfParam)["basis_set"]);
+                                            (*pPdfParam)["basis_sets"]);
     this->pOrbitalInfo_Density_ = new TlOrbitalInfo_Density((*pPdfParam)["coordinates"],
-                                                            (*pPdfParam)["basis_set_auxD"]);
+                                                            (*pPdfParam)["basis_sets_j"]);
     this->pOrbitalInfo_XC_ = new TlOrbitalInfo_XC((*pPdfParam)["coordinates"],
-                                                  (*pPdfParam)["basis_set_auxXC"]);
+                                                  (*pPdfParam)["basis_sets_k"]);
 
     const TlSerializeData& pdfParam = *pPdfParam;
     this->cutvalue = pdfParam["cut-value"].getDouble();

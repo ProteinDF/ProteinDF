@@ -21,7 +21,7 @@ const double DfCalcGridX::INV_SQRT3 = 1.0 / std::sqrt(3.0);
 const double DfCalcGridX::INV_SQRT12 = 1.0 / std::sqrt(12.0);
 
 DfCalcGridX::DfCalcGridX(TlSerializeData* pPdfParam)
-    : DfObject(pPdfParam), m_tlOrbInfo((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"])
+    : DfObject(pPdfParam), m_tlOrbInfo((*pPdfParam)["coordinates"], (*pPdfParam)["basis_sets"])
 {
     const TlSerializeData& pdfParam = *pPdfParam;
     
