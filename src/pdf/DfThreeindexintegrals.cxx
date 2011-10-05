@@ -102,12 +102,12 @@ void DfThreeindexintegrals::mainDIRECT_RKS(int iteration)
 
     // read Rou
     TlVector currRho;
-    currRho.load("fl_Work/fl_Vct_Rou" + TlUtils::xtos(iteration));
+    currRho.load(this->getRhoPath(RUN_RKS, iteration));
     assert(this->m_nNumOfAux == currRho.getSize());
 
     // read Myu
     TlVector currMyu;
-    currMyu.load("fl_Work/fl_Vct_Myu" + TlUtils::xtos(iteration));
+    currMyu.load(this->getMyuPath(RUN_RKS, iteration));
     assert(this->numOfAuxXC_ == currMyu.getSize());
 
     // read Epsilon
@@ -120,7 +120,7 @@ void DfThreeindexintegrals::mainDIRECT_RKS(int iteration)
     if (iteration > 1) {  // iteration != 1
         {
             TlVector prevRho(this->m_nNumOfAux);
-            prevRho.load("fl_Work/fl_Vct_Rou" + TlUtils::xtos(iteration -1));
+            prevRho.load(this->getRhoPath(RUN_RKS, iteration -1));
             assert(this->m_nNumOfAux == prevRho.getSize());
 
             currRho -= prevRho;
@@ -128,7 +128,7 @@ void DfThreeindexintegrals::mainDIRECT_RKS(int iteration)
 
         {
             TlVector prevMyu;
-            prevMyu.load("fl_Work/fl_Vct_Myu" + TlUtils::xtos(iteration -1));
+            prevMyu.load(this->getMyuPath(RUN_RKS, iteration -1));
             assert(this->numOfAuxXC_ == prevMyu.getSize());
 
             currMyu -= prevMyu;

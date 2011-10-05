@@ -114,11 +114,16 @@ void DfTotalEnergy::exec_template()
     const SymmetricMatrixType Ppq = this->getPpq<SymmetricMatrixType>(this->m_nMethodType);
 
     // クーロン項
-    this->m_dE_J_Rho_RhoTilde =
-        this->calcJRhoRhoTilde_DIRECT<DfEriType, SymmetricMatrixType, VectorType>(Ppq);
-    if (this->isRI_J_ == true) {
+    {
+        // use Threeindexintegrals
         const VectorType rho = this->getRho<VectorType>(this->m_nMethodType);
-        this->m_dE_J_RhoTilde_RhoTilde = this->calcJRhoTildeRhoTilde<SymmetricMatrixType, VectorType>(rho);
+        this->m_dE_J_RhoTilde_RhoTilde =
+            this->calcJRhoTildeRhoTilde<SymmetricMatrixType, VectorType>(rho);
+    }
+    if (! ((this->m_bMemorySave == false) && (this->m_bDiskUtilization == false))) {
+        // NOT use Threeindexintegrals
+        this->m_dE_J_Rho_RhoTilde =
+            this->calcJRhoRhoTilde_DIRECT<DfEriType, SymmetricMatrixType, VectorType>(Ppq);
     }
     
     if ((this->m_bMemorySave == false) && (this->m_bDiskUtilization == false)) {

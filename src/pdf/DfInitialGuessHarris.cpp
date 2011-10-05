@@ -95,7 +95,6 @@ void DfInitialGuessHarris::main()
     {
         DfOverlap ovp(this->pPdfParam_);
         TlMatrix S_tilde = ovp.getSpq(orbInfo_low, orbInfo_high);
-        S_tilde.save("Stilde.mat");
         
         TlSymmetricMatrix S_inv;
         S_inv.load(this->getSpqMatrixPath());
