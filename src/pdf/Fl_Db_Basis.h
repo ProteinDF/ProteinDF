@@ -12,6 +12,18 @@
 // Basisset名に対応した値を、データベースから
 // 取ってくるクラス。データベースの名前は今の所basis2である
 class Fl_Db_Basis : public Fl_Database {
+private:
+    struct Cgto {
+        char shell;              // Shelltype { s , p , d };
+        double scalefactor;        // Scalefactor;
+        double normalizedfactor;   // Normalazedfactor;
+        struct Pgto {
+            double exponent;          // Expornent;
+            double coefficient;        // Coefficient;
+        };
+        std::vector<Pgto> contraction;
+    };
+
 public:
     Fl_Db_Basis(const std::string&);
     virtual ~Fl_Db_Basis();
@@ -163,21 +175,16 @@ public:
     }
 
 private:
-    int    setData();
+    void setData();
+    void read_cGTOs(const int numOfCGTOs,
+                    const std::string& shellType,
+                    std::ifstream& fi,
+                    std::vector<Cgto>* pCGTOs);
+
+    std::vector<std::string> getWords(const std::string& str);
 
 private:
     std::string m_sBasisName;
-
-    struct Cgto {
-        char shell;              // Shelltype { s , p , d };
-        double scalefactor;        // Scalefactor;
-        double normalizedfactor;   // Normalazedfactor;
-        struct Pgto {
-            double exponent;          // Expornent;
-            double coefficient;        // Coefficient;
-        };
-        std::vector<Pgto> contraction;
-    };
 
     std::vector<Cgto> cgto;
     std::vector<Cgto> rhoCgto;

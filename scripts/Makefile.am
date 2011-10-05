@@ -3,8 +3,6 @@ bin_script_src = \
 	pdfsetup.sh		\
 	PDF.sh			\
 	PPDF.sh			\
-	\
-	pdfmkdir.sh		\
 	pdfclean.sh
 
 

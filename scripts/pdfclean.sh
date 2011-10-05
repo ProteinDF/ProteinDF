@@ -13,7 +13,7 @@ check_pdfhome()
 
 # main
 check_pdfhome
-. ${PDF_HOME}/bin/pdf_common.sh
+. ${PDF_HOME}/bin/pdfcommon.sh
 
 FULL_CLEANUP=false
 KEEP_INTEGRALS=true
