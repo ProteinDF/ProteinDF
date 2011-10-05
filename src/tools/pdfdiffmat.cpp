@@ -1,15 +1,22 @@
 #include <iostream>
+#include <cstdlib>
 
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
 #include "TlGetopt.h"
+
+void help();
 
 int main(int argc, char* argv[])
 {
     TlGetopt opt(argc, argv, "hs:v");
 
     bool bVerbose = (opt["v"] == "defined");
-
+    if (opt.getCount() < 2) {
+        help();
+        std::exit(1);
+    }
+    
     const std::string sPath1 = opt[1];
     const std::string sPath2 = opt[2];
     if (bVerbose) {
@@ -22,7 +29,7 @@ int main(int argc, char* argv[])
         savePath = opt["s"];
     }
 
-    int nErrorCode = 0;
+    int errorCode = 0;
 
     std::ifstream ifs1;
     ifs1.open(sPath1.c_str());
@@ -38,7 +45,6 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-
     if (TlSymmetricMatrix::isLoadable(ifs1) == true) {
         if (TlSymmetricMatrix::isLoadable(ifs2) == true) {
             TlSymmetricMatrix m1, m2;
@@ -53,7 +59,7 @@ int main(int argc, char* argv[])
             }
         } else {
             std::cerr << "could not open: " << sPath2 << std::endl;
-            nErrorCode = 1;
+            errorCode = 1;
         }
     } else if (TlMatrix::isLoadable(ifs1) == true) {
         if (TlMatrix::isLoadable(ifs2) == true) {
@@ -69,14 +75,26 @@ int main(int argc, char* argv[])
             }
         } else {
             std::cerr << "could not open: " << sPath2 << std::endl;
-            nErrorCode = 1;
+            errorCode = 1;
         }
     } else {
         std::cerr << "could not open: " << sPath1 << std::endl;
-        nErrorCode = 1;
+        errorCode = 1;
     }
 
-    return nErrorCode;
+    return errorCode;
+}
+
+
+void help()
+{
+    std::cout << "Usage: pdfdiffmat [options]... FILE1 FILE2" << std::endl;
+    std::cout << "compare ProteinDF matrix files"
+              << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << " -s FILE      save difference matrix" << std::endl;
+    std::cout << " -h           show help message (this)." << std::endl;
+    std::cout << " -v           show message verbosely." << std::endl;
 }
 
 

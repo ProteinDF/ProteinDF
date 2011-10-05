@@ -1,6 +1,6 @@
 #/bin/sh +x
 
-PDF_WORK_DIR="fl_Input fl_Table fl_Temp fl_Work"
+PDF_WORK_DIR="fl_Input fl_Table fl_Work"
 
 TARGET_DIR=.
 if [ x${1} != x ]; then

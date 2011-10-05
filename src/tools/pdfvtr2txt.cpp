@@ -4,6 +4,8 @@
 #include "TlVector.h"
 #include "TlGetopt.h"
 
+void help();
+
 int main(int argc, char* argv[])
 {
     TlGetopt opt(argc, argv, "ghlv");
@@ -36,6 +38,19 @@ int main(int argc, char* argv[])
     }
 
     return EXIT_SUCCESS;
+}
+
+
+void help()
+{
+    std::cout << "Usage: pdfvtr2txt [options]... FILE" << std::endl;
+    std::cout << "display ProteinDF vector file"
+              << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << " -g           show guess mode" << std::endl;
+    std::cout << " -l           show list mode" << std::endl;
+    std::cout << " -h           show help message (this)." << std::endl;
+    std::cout << " -v           show message verbosely." << std::endl;
 }
 
 

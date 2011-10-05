@@ -4,9 +4,11 @@ PARALLEL_LIBS = ../pdf/libpdf.la ../pdf/libppdf.la ../pdflib/libppdftl.la ../pdf
 AM_CPPFLAGS= -I$(top_srcdir)/include -I$(top_srcdir)/src/pdf
 
 SERIAL_PROGS = 					\
-	showKeywords 				\
-	pdfVector2txt pdfMatrix2txt 		\
-	diffPdfMatrix diffPdfVector 		\
+	pdfkwd 					\
+	pdfvtr2txt 				\
+	pdfmat2txt 				\
+	pdfdiffmat 				\
+	pdfdiffvtr 				\
 	topPdfMatrix				\
 	catPdfMatrix addPdfMatrix		\
 	combineDensityMatrix 			\
@@ -40,23 +42,20 @@ PARALLEL_PROGS = \
 	mergeLocalMatrix \
 	divideGlobalMatrix 
 
-showKeywords_SOURCES = main_showKeywords.cpp
-showKeywords_LDADD = $(SERIAL_LIBS)
+pdfkwd_SOURCES = pdfkwd.cpp
+pdfkwd_LDADD = $(SERIAL_LIBS)
 
-pdfVector2txt_SOURCES = pdfVector2txt.cpp
-pdfVector2txt_LDADD = $(SERIAL_LIBS)
+pdfvtr2txt_SOURCES = pdfvtr2txt.cpp
+pdfvtr2txt_LDADD = $(SERIAL_LIBS)
 
+pdfmat2txt_SOURCES = pdfmat2txt.cpp
+pdfmat2txt_LDADD = $(SERIAL_LIBS)
 
-pdfMatrix2txt_SOURCES = pdfMatrix2txt.cpp
-pdfMatrix2txt_LDADD = $(SERIAL_LIBS)
+pdfdiffmat_SOURCES = pdfdiffmat.cpp
+pdfdiffmat_LDADD = $(SERIAL_LIBS)
 
-
-diffPdfMatrix_SOURCES = diffPdfMatrix.cpp
-diffPdfMatrix_LDADD = $(SERIAL_LIBS)
-
-
-diffPdfVector_SOURCES = diffPdfVector.cpp
-diffPdfVector_LDADD = $(SERIAL_LIBS)
+pdfdiffvtr_SOURCES = pdfdiffvtr.cpp
+pdfdiffvtr_LDADD = $(SERIAL_LIBS)
 
 
 topPdfMatrix_SOURCES = main_topPdfMatrix.cpp

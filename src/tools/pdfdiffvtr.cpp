@@ -3,11 +3,17 @@
 #include "TlVector.h"
 #include "TlGetopt.h"
 
+void help();
+
 int main(int argc, char* argv[])
 {
     TlGetopt opt(argc, argv, "hv");
 
     bool bVerbose = (opt["v"] == "defined");
+    if (opt.getCount() < 2) {
+        help();
+        std::exit(1);
+    }
 
     const std::string sPath1 = opt[1];
     const std::string sPath2 = opt[2];
@@ -17,20 +23,6 @@ int main(int argc, char* argv[])
     }
 
     int nErrorCode = 0;
-
-//   std::ifstream ifs1;
-//   ifs1.open(sPath1.c_str());
-//   if (ifs1.fail()){
-//     std::cerr << "could not open file. " << sPath1 << std::endl;
-//     return 1;
-//   }
-
-//   std::ifstream ifs2;
-//   ifs2.open(sPath2.c_str());
-//   if (ifs2.fail()){
-//     std::cerr << "could not open file. " << sPath2 << std::endl;
-//     return 1;
-//   }
 
     TlVector v1, v2;
     if (v1.load(sPath1) == false) {
@@ -46,6 +38,17 @@ int main(int argc, char* argv[])
     v1.print(std::cout);
 
     return nErrorCode;
+}
+
+
+void help()
+{
+    std::cout << "Usage: pdfdiffvtr [options]... FILE1 FILE2" << std::endl;
+    std::cout << "compare ProteinDF vector files"
+              << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << " -h           show help message (this)." << std::endl;
+    std::cout << " -v           show message verbosely." << std::endl;
 }
 
 

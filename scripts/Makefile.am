@@ -1,18 +1,11 @@
 bin_script_src = \
-	pdf_common.sh		\
-	pdf_setup.sh		\
-	pdf_serial.sh		\
-	pdf_parallel.sh		\
+	pdfcommon.sh		\
+	pdfsetup.sh		\
 	PDF.sh			\
 	PPDF.sh			\
 	\
-	pdf_mkdir.sh		\
-	pdf_clean.sh		\
-	print_matrix.py		\
-	print_vector.py		\
-	\
-	mpac2yml.py		\
-	yml2mpac.py		
+	pdfmkdir.sh		\
+	pdfclean.sh
 
 
 bin_SCRIPTS = $(bin_script_src)
