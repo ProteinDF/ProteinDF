@@ -4,31 +4,33 @@ PARALLEL_LIBS = ../pdf/libppdf.la ../pdf/libpdf.la ../pdflib/libppdftl.la ../pdf
 AM_CPPFLAGS= -I$(top_srcdir)/include -I$(top_srcdir)/src/pdf
 
 SERIAL_PROGS = 		\
-	ptERI		\
-	ptDensFit	\
-	ptXC
+	testERI		\
+	testDensFit	\
+	testXC
 
 PARALLEL_PROGS = 	\
-	pptERI		\
-	pptDensFit
+	testERIp	\
+	testDensFitp	\
+	testXCp
 
 
-ptERI_SOURCES = main_ptERI.cpp
-ptERI_LDADD = $(SERIAL_LIBS)
+testDensFit_SOURCES = main_testDensFit.cpp
+testDensFit_LDADD = $(SERIAL_LIBS)
 
-pptERI_SOURCES = main_ptERI_parallel.cpp
-pptERI_LDADD = $(PARALLEL_LIBS)
+testERI_SOURCES = main_testERI.cpp
+testERI_LDADD = $(SERIAL_LIBS)
 
+testXC_SOURCES = testXC_template.h main_testXC.cpp
+testXC_LDADD = $(SERIAL_LIBS)
 
-ptDensFit_SOURCES = main_ptDensFit.cpp
-ptDensFit_LDADD = $(SERIAL_LIBS)
+testDensFitp_SOURCES = main_testDensFit_parallel.cpp
+testDensFitp_LDADD = $(PARALLEL_LIBS)
 
+testERIp_SOURCES = main_testERI_parallel.cpp
+testERIp_LDADD = $(PARALLEL_LIBS)
 
-pptDensFit_SOURCES = main_ptDensFit_parallel.cpp
-pptDensFit_LDADD = $(PARALLEL_LIBS)
-
-ptXC_SOURCES = main_ptXC.cpp
-ptXC_LDADD = $(SERIAL_LIBS)
+testXCp_SOURCES = testXC_template.h main_testXC_parallel.cpp
+testXCp_LDADD = $(PARALLEL_LIBS)
 
 
 if PARALLEL

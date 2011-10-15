@@ -461,8 +461,9 @@ void Fl_Gto::load()
 
 void Fl_Gto::setup(const TlSerializeData& basisSet)
 {
-//     TlPseudoYaml yaml(basisSet);
-//     std::cerr << yaml.str() << std::endl;
+    // TlPseudoYaml yaml(basisSet);
+    // std::cerr << yaml.str() << std::endl;
+
     this->cgto.clear();
     
     TlSerializeData::MapConstIterator pEnd = basisSet.endMap();
