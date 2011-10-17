@@ -14,6 +14,6 @@ install-exec-hook:
 	cd $(DESTDIR)$(bindir) && \
 	for PROG in $(bin_script_src); do \
 		echo $${PROG%.*}; \
-		$(LN_S) $${PROG} $${PROG%.*}; \
+		$(LN_S) -f $${PROG} $${PROG%.*}; \
 	done
 

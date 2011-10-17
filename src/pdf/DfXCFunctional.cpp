@@ -127,15 +127,20 @@ void DfXCFunctional::buildXcMatrix()
         }
 
         TlSymmetricMatrix Fxc(this->m_nNumOfAOs);
+        this->loggerTime(" start: pure XC term");
         this->getFxc(Ppq, &dfCalcGrid, &Fxc);
+        this->loggerTime(" end: pure XC term");
+
         if (this->isSaveFxcPure_ == true) {
             this->saveFxcPureMatrix(RUN_RKS, this->m_nIteration, Fxc);
         }
         
         if (this->m_bIsHybrid == true) {
             // Fockの交換項を求める
+            this->loggerTime(" start: Fock exchange");
             Fxc += this->getFockExchange((0.5 * this->m_dFockExchangeCoef) * Ppq, RUN_RKS);
             this->m_dXC_Energy += DfXCFunctional::m_dFockExchangeEnergyAlpha;
+            this->loggerTime(" end: Fock exchange");
         }
 
         this->saveFxcMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration, Fxc);
@@ -155,16 +160,20 @@ void DfXCFunctional::buildXcMatrix()
         
         TlSymmetricMatrix FxcA(this->m_nNumOfAOs);
         TlSymmetricMatrix FxcB(this->m_nNumOfAOs);
+        this->loggerTime(" start: pure XC term");
         this->getFxc(PApq, PBpq, &dfCalcGrid, &FxcA, &FxcB);
+        this->loggerTime(" end: pure XC term");
         if (this->isSaveFxcPure_ == true) {
             this->saveFxcPureMatrix(RUN_UKS_ALPHA, this->m_nIteration, FxcA);
             this->saveFxcPureMatrix(RUN_UKS_BETA,  this->m_nIteration, FxcB);
         }
 
         if (this->m_bIsHybrid == true) {
+            this->loggerTime(" start: Fock exchange");
             FxcA += this->getFockExchange(this->m_dFockExchangeCoef * PApq, RUN_UKS_ALPHA);
             FxcB += this->getFockExchange(this->m_dFockExchangeCoef * PBpq, RUN_UKS_BETA);
             this->m_dXC_Energy += (DfXCFunctional::m_dFockExchangeEnergyAlpha + DfXCFunctional::m_dFockExchangeEnergyBeta);
+            this->loggerTime(" end: Fock exchange");
         }
 
         this->saveFxcMatrix<TlSymmetricMatrix>(RUN_UKS_ALPHA, this->m_nIteration, FxcA);
