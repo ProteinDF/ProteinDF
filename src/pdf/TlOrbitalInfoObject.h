@@ -93,6 +93,9 @@ public:
         return TlOrbitalInfoObject::MAX_SHELL_TYPE;
     }
 
+    /// シェル毎にグループ化された軌道の最初の軌道番号の配列を返す
+    std::vector<index_type> getStartIndexArrayOfShellGroup() const;
+    
     /// 与えられた軌道のシェル(角運動量)の型を返す.
     ///
     /// @param[in] index 軌道番号

@@ -183,6 +183,7 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
     static std::size_t prIndex = 0;
     static std::size_t shellArrayIndexQ = 0;
     static std::size_t shellArrayIndexS = 0;
+    static DistributedCutoffTable dct;
     
     pTaskList->clear();
     pTaskList->reserve(maxGrainSize);
@@ -202,17 +203,16 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
         shellArrayIndexQ = 0;
         shellArrayIndexS = 0;
 
+        // make DistributedCutoffTable
+        dct = this->makeDistributedCutoffTable(orbitalInfo);
+        
         return true;
     }
 
     int grainSize = 0;
     DfTaskCtrl::Task4 task;
     for ( ; shellTypeP >= 0; ) {
-        //const int maxStepsP = 2 * shellTypeP + 1;
-
         for ( ; shellTypeR >= 0; ) {
-            //const int maxStepsR = 2 * shellTypeR + 1;
-            
             const int shellPairType_PR = shellTypeP * maxShellType + shellTypeR;
             const ShellPairArray& shellPairArray_PR = shellPairArrayTable[shellPairType_PR];
             const std::size_t numOfShellPairArray_PR = shellPairArray_PR.size();
@@ -224,21 +224,39 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
                 task.shellIndex3 = shellIndexR;
                 
                 for ( ; shellTypeQ >= 0; ) {
-                    //const int maxStepsQ = 2 * shellTypeQ + 1;
-                    const ShellArray shellArrayQ =
-                        this->selectShellArrayByDistribution(shellArrayTable[shellTypeQ],
-                                                             shellIndexP,
-                                                             orbitalInfo);
+                    // const ShellArray shellArrayQ =
+                    //     this->selectShellArrayByDistribution(shellArrayTable[shellTypeQ],
+                    //                                          shellIndexP,
+                    //                                          orbitalInfo);
+                    // const ShellArray shellArrayQ2 = this->selectShellArrayByDistribution(dct[shellIndexP][shellTypeQ],
+                    //                                                                      shellIndexP);
+                    const ShellArray shellArrayQ = dct[shellIndexP][shellTypeQ];
+                    // debug
+                    // {
+                    //     std::cerr << TlUtils::format(">>>> P=%d arrayQ...", shellIndexP) << std::endl;
+                    //     for (ShellArray::const_iterator it = shellArrayQ.begin();
+                    //          it != shellArrayQ.end(); ++it) {
+                    //         std::cerr << *it << " ";
+                    //     }
+                    //     std::cerr << std::endl;
+                    //     std::cerr << TlUtils::format(">>>> P=%d arrayQ2...", shellIndexP) << std::endl;
+                    //     for (ShellArray::const_iterator it = shellArrayQ2.begin();
+                    //          it != shellArrayQ2.end(); ++it) {
+                    //         std::cerr << *it << " ";
+                    //     }
+                    //     std::cerr << std::endl;
+                    // }
+                    
                     ShellArray::const_iterator qItEnd = std::upper_bound(shellArrayQ.begin(), shellArrayQ.end(), shellIndexP);
                     const std::size_t shellArraySizeQ = std::distance(shellArrayQ.begin(), qItEnd);
                     
                     for ( ; shellTypeS >= 0; ) {
-                        //const int maxStepsS = 2 * shellTypeS + 1;
-                        const ShellArray shellArrayS =
-                            this->selectShellArrayByDistribution(shellArrayTable[shellTypeS],
-                                                                 shellIndexR,
-                                                                 orbitalInfo);
-
+                        // const ShellArray shellArrayS =
+                        //     this->selectShellArrayByDistribution(shellArrayTable[shellTypeS],
+                        //                                          shellIndexR,
+                        //                                          orbitalInfo);
+                        const ShellArray shellArrayS = dct[shellIndexR][shellTypeS];
+                        
                         for ( ; shellArrayIndexQ < shellArraySizeQ; ) {
                             const index_type shellIndexQ = shellArrayQ[shellArrayIndexQ];
                             task.shellIndex2 = shellIndexQ;
@@ -769,6 +787,101 @@ DfTaskCtrl::ShellArray DfTaskCtrl::selectShellArrayByDistribution(const ShellArr
 
     // swap technique
     ShellArray(answer).swap(answer);
+    
+    return answer;
+}
+
+
+DfTaskCtrl::ShellArray
+DfTaskCtrl::selectShellArrayByDistribution(const ShellArray& inShellArray,
+                                           const index_type companionShellIndex)
+{
+    ShellArray::const_iterator it = std::upper_bound(inShellArray.begin(),
+                                                     inShellArray.end(),
+                                                     companionShellIndex);
+    ShellArray answer(std::distance(inShellArray.begin(), it));
+    std::copy(inShellArray.begin(), it, answer.begin());
+
+    return answer;
+}
+
+
+// J. Chem. Phys.,105,2726 (1996)
+// eq.32
+DfTaskCtrl::DistributedCutoffTable
+DfTaskCtrl::makeDistributedCutoffTable(const TlOrbitalInfoObject& orbitalInfo)
+{
+    static const double INV_EQ32_COEF = 1.0 / (std::pow(2.0 * TlMath::PI(), 0.25) * TlMath::PI());
+    const double threshold = this->cutoffEpsilon2_ * INV_EQ32_COEF;
+    const int maxShellType = orbitalInfo.getMaxShellType();
+    const index_type numOfAOs = orbitalInfo.getNumOfOrbitals();
+
+    const std::vector<index_type> orbList = orbitalInfo.getStartIndexArrayOfShellGroup();
+    const int orbListSize = orbList.size();
+    
+    DistributedCutoffTable answer;
+
+    for (int i = 0; i < orbListSize; ++i) {
+        const index_type indexI = orbList[i];
+        answer[indexI].clear();
+        answer[indexI].resize(maxShellType +1);
+        for (int j = 0; j < maxShellType +1; ++j) {
+            answer[indexI][j].reserve(orbListSize);
+        }
+    }
+    
+    for (int i = 0; i < orbListSize; ++i) {
+        const index_type indexI = orbList[i];
+        const int shellTypeI = orbitalInfo.getShellType(indexI);
+        const TlPosition posI = orbitalInfo.getPosition(indexI);
+        // orbitalInfoのPGTOリストは指数が小さい順にソートされているため、
+        // 最初(index=0)の指数のみをチェックすれば良い。
+        const double exponentI = orbitalInfo.getExponent(indexI, 0);
+
+        for (int j = 0; j < i; ++j) {
+            const index_type indexJ = orbList[j];
+            const int shellTypeJ = orbitalInfo.getShellType(indexJ);
+
+            // judge
+            const int shellPairType = shellTypeI * maxShellType + shellTypeJ;
+
+            const TlPosition posJ = orbitalInfo.getPosition(indexJ);
+            const double distance2 = posJ.squareDistanceFrom(posI);
+
+            const double exponentJ = orbitalInfo.getExponent(indexJ, 0);
+            const double zetaIJ = exponentI + exponentJ;
+            const double zeta = exponentI * exponentJ / zetaIJ;
+            const double exponent = - zeta * distance2;
+            
+            const double coef = 1.0 / (std::pow(zetaIJ, 1.25));
+            
+            if (coef * std::exp(exponent) >= threshold) {
+                answer[indexI][shellTypeJ].push_back(indexJ);
+                answer[indexJ][shellTypeI].push_back(indexI);
+                
+#pragma omp atomic
+                ++(this->cutoffAlive_E2_[shellPairType]);
+            }
+
+#pragma omp atomic
+        ++(this->cutoffAll_E2_[shellPairType]);
+            
+        }
+        answer[indexI][shellTypeI].push_back(indexI);
+    }
+
+    // sort and optimize
+    for (int i = 0; i < orbListSize; ++i) {
+        const index_type indexI = orbList[i];
+
+        for (int j = 0; j < maxShellType +1; ++j) {
+            // swap technique
+            ShellArray(answer[indexI][j]).swap(answer[indexI][j]);
+            
+            // sort
+            std::sort(answer[indexI][j].begin(), answer[indexI][j].end());
+        }
+    }
     
     return answer;
 }

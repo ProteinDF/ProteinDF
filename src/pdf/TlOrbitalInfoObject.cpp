@@ -222,6 +222,26 @@ void TlOrbitalInfoObject::makeOrbitalTable()
 }
 
 
+std::vector<TlOrbitalInfoObject::index_type> TlOrbitalInfoObject::getStartIndexArrayOfShellGroup() const
+{
+    std::vector<index_type> answer;
+
+    const index_type numOfOrbitals = this->getNumOfOrbitals();
+    for (index_type i = 0; i < numOfOrbitals; ) {
+        const int shellType = this->getShellType(i);
+        answer.push_back(i);
+        
+        i += 2 * shellType + 1;
+    }
+
+    // swap techneque
+    std::vector<index_type>(answer).swap(answer);
+
+    return answer;
+}
+
+
+
 
 void TlOrbitalInfoObject::getPrefactor_S(const TlPosition& pos, double* pValue)
 {

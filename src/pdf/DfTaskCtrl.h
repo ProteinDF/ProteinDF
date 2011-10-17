@@ -40,7 +40,9 @@ public:
     typedef std::vector<index_type> ShellArray;
     typedef std::vector<ShellArray> ShellArrayTable;
 
-   
+protected:
+    typedef std::map<index_type, std::vector<std::vector<index_type> > > DistributedCutoffTable;
+    
 public:
     DfTaskCtrl(TlSerializeData* pPdfParam);
     virtual ~DfTaskCtrl();
@@ -116,6 +118,15 @@ protected:
     double getMaxValue(const TlMatrixObject& P,
                        const TlMatrixObject::index_type row, const TlMatrixObject::index_type d_row, 
                        const TlMatrixObject::index_type col, const TlMatrixObject::index_type d_col);
+
+    /// distributed pair用のカットオフテーブルを作成する
+    ///
+    /// キーの軌道番号に対して有効な軌道番号の配列を返す
+    DistributedCutoffTable makeDistributedCutoffTable(const TlOrbitalInfoObject& orbitalInfo);
+
+    ShellArray selectShellArrayByDistribution(const ShellArray& inShellArray,
+                                              const index_type companionShellIndex);
+    
 protected:
     int maxShellType_;
     
@@ -134,7 +145,8 @@ protected:
     /// カットオフ用閾値
     /// J. Chem. Phys.,105,2726 (1996) : eq.33
     double cutoffEpsilon3_;
-    
+
+    /// カットオフ情報保持変数
     mutable std::vector<unsigned long> cutoffAll_E1_;
     mutable std::vector<unsigned long> cutoffAlive_E1_;
     mutable std::vector<unsigned long> cutoffAll_E2_;
