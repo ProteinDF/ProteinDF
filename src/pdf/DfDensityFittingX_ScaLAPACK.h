@@ -6,6 +6,19 @@
 #include "TlDistributeVector.h"
 #include "TlDistributeSymmetricMatrix.h"
 
+// 特殊化
+template<>
+TlDistributeVector DfDensityFittingTmpl<TlDistributeSymmetricMatrix, TlDistributeVector, DfEriX_Parallel>::calcTAlpha_DIRECT
+(const TlDistributeSymmetricMatrix& P)
+{
+    TlDistributeVector t_alpha(this->m_nNumOfAux);
+
+    DfEriX_Parallel dfEri(this->pPdfParam_);
+    dfEri.getJ_D(P, &t_alpha);
+
+    return t_alpha;
+}
+
 
 // ScaLAPACK版
 class DfDensityFittingX_ScaLAPACK

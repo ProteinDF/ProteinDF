@@ -20,9 +20,9 @@ public:
     virtual ~DfEriX();
 
 public:
-    void getDeltaT(const TlSymmetricMatrix& P, TlVector* pRho) {
-        this->getJ(P, pRho);
-    }
+    // void getDeltaT(const TlSymmetricMatrix& P, TlVector* pRho) {
+    //     this->getJ(P, pRho);
+    // }
     void getJ(const TlSymmetricMatrix& P, TlVector* pRho);
 
     void getdeltaHpqA(const TlVector& rho, TlSymmetricMatrix& P) {

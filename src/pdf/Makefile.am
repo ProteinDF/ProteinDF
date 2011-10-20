@@ -32,7 +32,6 @@ libpdf_la_SOURCES = \
 	DfConverge2.h		DfConverge2.cxx			\
 	DfCqclomatrix.h		DfCqclomatrix.cxx		\
 	DfDensityFittingObject.h				\
-	DfDensityFitting.h	DfDensityFitting.cpp		\
 	DfDiagonal.h		DfDiagonal.cxx			\
 	DfDmatrix.h		DfDmatrix.cxx			\
 	DfEri.h			DfEri.cpp       		\
@@ -55,6 +54,7 @@ libpdf_la_SOURCES = \
 	DfPopulation.h		DfPopulation.cxx		\
 	DfQclo.h		DfQclo.cxx			\
 	DfScf.h			DfScf.cxx			\
+	DfDensityFittingX.h	DfDensityFittingX.cpp		\
 	DfSummary.h		DfSummary.cxx			\
 	DfThreeindexintegrals.h	DfThreeindexintegrals.cxx	\
 	DfTotalEnergy.h		DfTotalEnergy.cpp		\
@@ -137,7 +137,6 @@ libppdf_la_SOURCES = \
 	DfInvMatrix_Parallel.h		DfInvMatrix_Parallel.cpp	\
 	DfGenerateGrid_Parallel.h	DfGenerateGrid_Parallel.cpp	\
 	DfDiffDensityMatrix_Parallel.h	DfDiffDensityMatrix_Parallel.cpp\
-	DfDensityFitting_Parallel.h	DfDensityFitting_Parallel.cpp	\
 	DfDensityFittingX_Parallel.h	DfDensityFittingX_Parallel.cpp	\
 	DfDensityFittingX_ScaLAPACK.h	DfDensityFittingX_ScaLAPACK.cpp	\
 	DfFockMatrix_Parallel.h		DfFockMatrix_Parallel.cpp	\

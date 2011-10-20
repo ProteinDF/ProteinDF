@@ -6,6 +6,12 @@ DfTaskCtrl_Parallel::DfTaskCtrl_Parallel(TlSerializeData* pPdfParam)
     
     const int input_numOfSessions = (*pPdfParam)["num_of_sessions"].getInt();
     this->numOfSessions_ = (input_numOfSessions > 0) ? input_numOfSessions : 1;
+
+    // debug
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        this->logger("DfTaskCtrl_Parallel::DfTaskCtrl_Parallel() called");
+    }
 }
 
 

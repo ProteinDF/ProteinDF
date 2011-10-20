@@ -2,7 +2,6 @@
 #include "TlCommunicate.h"
 
 #include "DfDiffDensityMatrix_Parallel.h"
-#include "DfDensityFitting_Parallel.h"
 #include "DfDensityFittingX_Parallel.h"
 #include "DfDensityFittingX_ScaLAPACK.h"
 #include "DfXCFunctional_Parallel.h"
@@ -116,30 +115,15 @@ DfDensityFittingObject* DfScf_Parallel::getDfDensityFittingObject()
     
 #ifdef HAVE_SCALAPACK
     if (this->m_bUsingSCALAPACK == true) {
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" use new engine\n");
-            pDfDensityFittingObj = new DfDensityFittingX_ScaLAPACK(this->pPdfParam_);
-        } else {
-            pDfDensityFittingObj = new DfDensityFitting_ScaLAPACK(this->pPdfParam_);
-        }
+        pDfDensityFittingObj = new DfDensityFittingX_ScaLAPACK(this->pPdfParam_);
         this->logger(" density fitting (parallel; ScaLAPACK)\n");
     } else {
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" use new engine\n");
-            pDfDensityFittingObj = new DfDensityFittingX_Parallel(this->pPdfParam_);
-        } else {
-            pDfDensityFittingObj = new DfDensityFitting_Parallel(this->pPdfParam_);
-        }
+        pDfDensityFittingObj = new DfDensityFittingX_Parallel(this->pPdfParam_);
         this->logger(" density fitting (parallel; LAPACK)");
     }
 #else
     {
-        if (this->isNewEngine_ == true) {
-            this->logger(" use new engine\n");
-            pDfDensityFittingObj = new DfDensityFittingX_Parallel(this->pPdfParam_);
-        } else {
-            pDfDensityFittingObj = new DfDensityFitting_Parallel(this->pPdfParam_);
-        }
+        pDfDensityFittingObj = new DfDensityFittingX_Parallel(this->pPdfParam_);
         this->logger(" density fitting (parallel; LAPACK)");
     }
 #endif // HAVE_SCALAPACK

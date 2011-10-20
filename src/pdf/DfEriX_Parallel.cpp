@@ -158,10 +158,12 @@ void DfEriX_Parallel::getJ_D(const TlDistributeSymmetricMatrix& P,
 {
     switch (this->calcMode_) {
     case CalcMode_UsingLocalMatrix:
+        this->logger(" ERI calc mode: Local Matrix");
         this->getJ_D_local(P, pRho);
         break;
         
     default:
+        this->logger(" ERI calc mode: Background Comm.");
         this->getJ_D_BG(P, pRho);
         break;
     }

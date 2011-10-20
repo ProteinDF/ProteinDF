@@ -11,7 +11,6 @@
 #include "TlTime.h"
 #include "TlUtils.h"
 
-
 // interface
 class DfDensityFittingObject : public DfObject {
 public:
@@ -204,7 +203,7 @@ Vector DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::calcTAlpha_DI
     Vector t_alpha(this->m_nNumOfAux);
 
     DfERI_Class dfEri(this->pPdfParam_);
-    dfEri.getDeltaT(P, &t_alpha);
+    dfEri.getJ(P, &t_alpha);
 
     return t_alpha;
 }

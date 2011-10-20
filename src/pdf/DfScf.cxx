@@ -4,7 +4,7 @@
 #include "TlUtils.h"
 
 #include "DfDiffDensityMatrix.h"
-#include "DfDensityFitting.h"
+#include "DfDensityFittingX.h"
 #include "DfCalcGrid.h"
 #include "DfThreeindexintegrals.h"
 #include "DfXCFunctional.h"
@@ -524,11 +524,7 @@ void DfScf::doDensityFitting()
 DfDensityFittingObject* DfScf::getDfDensityFittingObject()
 {
     DfDensityFittingObject* pDfDensityFittingObj = NULL;    
-    if (this->isUseNewEngine_ == true) {
-        pDfDensityFittingObj = new DfDensityFittingX(this->pPdfParam_);
-    } else {
-        pDfDensityFittingObj = new DfDensityFitting(this->pPdfParam_);
-    }
+    pDfDensityFittingObj = new DfDensityFittingX(this->pPdfParam_);
 
     return pDfDensityFittingObj;
 }

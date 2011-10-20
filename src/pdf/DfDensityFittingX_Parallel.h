@@ -2,7 +2,6 @@
 #define DFDENSITYFITTINGX_PARALLEL_H
 
 #include "DfDensityFittingObject.h"
-//#include "DfDensityFitting.h"
 #include "DfEriX_Parallel.h"
 #include "TlDistributeVector.h"
 #include "TlDistributeSymmetricMatrix.h"

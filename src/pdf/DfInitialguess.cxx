@@ -16,8 +16,9 @@
 #include "Fl_Tbl_Xcpot.h"
 #include "Fl_Tbl_Xcpot2.h"
 
+#include "DfDensityFittingX.h"
+
 #include "DfInvMatrix.h"
-#include "DfDensityFitting.h"
 
 #include "TlSymmetricMatrix.h"
 #include "TlPrdctbl.h"
@@ -7185,7 +7186,7 @@ void DfInitialguess::densityFitOnly()
 
     {
         // density fitting
-        DfDensityFitting dfDensityFitting(this->pPdfParam_);
+        DfDensityFittingX dfDensityFitting(this->pPdfParam_);
         dfDensityFitting.exec();
     }
 

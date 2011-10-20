@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-#include "DfDensityFitting.h"
+#include "DfDensityFittingX.h"
 
 #include "Fl_Geometry.h"
 #include "Fl_Gto.h"
