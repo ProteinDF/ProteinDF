@@ -746,7 +746,7 @@ int DfXcpotfitting::newton(int number)
         }
 
         Fl_Int_Pqg fip;
-        //fip.open( "fl_Temp", fip.getfilename(), "read" );
+        //fip.open( "fl_Work", fip.getfilename(), "read" );
 
         int icont;
         do {
@@ -774,7 +774,7 @@ int DfXcpotfitting::newton(int number)
 
     // Read fl_Int_Gds one time
     Fl_Int_Gds fig;
-    //fig.open( "fl_Temp", fig.getfilename(), "read" );
+    //fig.open( "fl_Work", fig.getfilename(), "read" );
 
     int icont;
     do {
@@ -1138,7 +1138,7 @@ int DfXcpotfitting::newton(int number)
             }
 
             Fl_Int_Pqg fip;
-            //fip.open( "fl_Temp", fip.getfilename(), "read" );
+            //fip.open( "fl_Work", fip.getfilename(), "read" );
 
             do {
                 int icont;
@@ -1164,7 +1164,7 @@ int DfXcpotfitting::newton(int number)
 
         // Read fl_Int_Gds one time
         Fl_Int_Gds fig;
-        //fig.open( "fl_Temp", fig.getfilename(), "read" );
+        //fig.open( "fl_Work", fig.getfilename(), "read" );
 
         do {
             int icont;

@@ -8,7 +8,7 @@
 // Fl_Vct_OtableX
 //
 
-Fl_Vct_OtableX::Fl_Vct_OtableX() : m_sFilePath("fl_Temp/fl_Vct_Otable")
+Fl_Vct_OtableX::Fl_Vct_OtableX() : m_sFilePath("fl_Work/fl_Vct_Otable")
 {
 }
 

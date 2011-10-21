@@ -198,7 +198,7 @@ void DfThreeindexintegrals::mainDIRECT_RKS(int iteration)
     }
 
     F.save("fl_Work/fl_Mtr_Fpq.matrix.rks" + TlUtils::xtos(iteration));
-    E.save("fl_Temp/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
+    E.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
 }
 
 void DfThreeindexintegrals::mainDIRECT_RKS2(int iteration)
@@ -334,7 +334,7 @@ void DfThreeindexintegrals::mainDIRECT_RKS2(int iteration)
     }
 
     F.save("fl_Work/fl_Mtr_Fpq.matrix.rks" + TlUtils::xtos(iteration));
-    E.save("fl_Temp/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
+    E.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
 }
 
 
@@ -430,7 +430,7 @@ void DfThreeindexintegrals::mainDIRECT_UKS(int iteration)
         dferi.getdeltaHpqA(currRho, F);
     }
 
-    F.save("fl_Temp/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
+    F.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
 
     TlSymmetricMatrix E = F;
 
@@ -442,7 +442,7 @@ void DfThreeindexintegrals::mainDIRECT_UKS(int iteration)
     F.save("fl_Work/fl_Mtr_Fpq.matrix.uks-alpha" + TlUtils::xtos(iteration));
     E.save("fl_Work/fl_Mtr_Fpq.matrix.uks-beta"  + TlUtils::xtos(iteration));
 
-    E.load("fl_Temp/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
+    E.load("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
 
     {
         DfOverlap dfovr(this->pPdfParam_);
@@ -454,7 +454,7 @@ void DfThreeindexintegrals::mainDIRECT_UKS(int iteration)
         }
     }
 
-    E.save("fl_Temp/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
+    E.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
 }
 
 void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration)
@@ -587,10 +587,10 @@ void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration)
         }
 
         // temporarily write F matrix to a file to calculate E
-        E.save("fl_Temp/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
+        E.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
 
         // temporarily write F matrix to a file
-        F.save("fl_Temp/fl_Mtr_F1pqtmp");
+        F.save("fl_Work/fl_Mtr_F1pqtmp");
     }
 
     // construct kohn-sham matrix of open part ( F2 )
@@ -621,6 +621,6 @@ void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration)
             //Log << "■不対電子はαだけにあること！■\n";
         }
 
-        F.save("fl_Temp/fl_Mtr_F2pqtmp");
+        F.save("fl_Work/fl_Mtr_F2pqtmp");
     }
 }

@@ -244,7 +244,7 @@ void DfConverge2::calculate_ErrorVector(const RUN_TYPE runType, int iteration, T
 
         // "write Error Vector"
         std::string suffix = DfObject::m_sRunTypeSuffix[runType];
-        A.save("fl_Temp/fl_Mtr_Errvct.matrix." + suffix + TlUtils::xtos(iteration));
+        A.save("fl_Work/fl_Mtr_Errvct.matrix." + suffix + TlUtils::xtos(iteration));
     }
 
     // X^dagger (FPS - SPF) X スーパベクトルのノルムらしい----収束するとゼロとなる量である
@@ -270,7 +270,7 @@ void DfConverge2::read_PreviousBmatrix(const std::string& type, int iteration, T
 {
     if (diis_actual_dimension >= 3) {
         // read previous B matrix
-        X.load("fl_Temp/fl_Mtr_Bmatrix.matrix." + type + TlUtils::xtos(iteration -1));
+        X.load("fl_Work/fl_Mtr_Bmatrix.matrix." + type + TlUtils::xtos(iteration -1));
     } else {
         // create 1st B matrix
         X.resize(1, 1);
@@ -308,7 +308,7 @@ void DfConverge2::update_Bmatrix(const std::string& type, int iteration, TlMatri
 
     // B行列の追加要素
     for (int bm_k = 1; bm_k < diis_actual_dimension; bm_k++) {
-        G.load("fl_Temp/fl_Mtr_Errvct.matrix." + type + TlUtils::xtos(iteration -bm_k +1));
+        G.load("fl_Work/fl_Mtr_Errvct.matrix." + type + TlUtils::xtos(iteration -bm_k +1));
 
         // inner product between error vectors, <G|E>
         for (int pk = 0; pk < this->m_nNumOfMOs; pk++) {
@@ -321,7 +321,7 @@ void DfConverge2::update_Bmatrix(const std::string& type, int iteration, TlMatri
     }
 
     // write B matrix
-    B.save("fl_Temp/fl_Mtr_Bmatrix.matrix." + type + TlUtils::xtos(iteration));
+    B.save("fl_Work/fl_Mtr_Bmatrix.matrix." + type + TlUtils::xtos(iteration));
 }
 
 void DfConverge2::interpolate_KhonSham(const std::string& type, int iteration, TlVector& c)

@@ -131,7 +131,7 @@ void DfFockMatrix::mainDIRECT_ROKS()
     VectorType Rho, Myua, Myub;
 
     if (this->m_bMemorySave == false) {
-        F.load("fl_Temp/fl_Mtr_F1pqtmp");
+        F.load("fl_Work/fl_Mtr_F1pqtmp");
     } else {
         {
             VectorType Rhoa, Rhob;
@@ -232,7 +232,7 @@ void DfFockMatrix::mainDIRECT_ROKS()
     this->logger("construct Kohn-Sham matrix F2\n");
 
     if (this->m_bMemorySave == false) {
-        F.load("fl_Temp/fl_Mtr_F2pqtmp");
+        F.load("fl_Work/fl_Mtr_F2pqtmp");
     } else {
         F = SymmetricMatrixType(this->m_nNumOfAOs);
 
@@ -301,19 +301,19 @@ void DfFockMatrix::mainDIRECT_ROKS()
             X.load("fl_Work/fl_Mtr_P1pq.matrix.roks" + TlUtils::xtos(this->m_nIteration -1));
 
             MatrixType A = W * X;
-            A.save("fl_Temp/DfFockmatrix.fl_Matrix.S_1");
+            A.save("fl_Work/DfFockmatrix.fl_Matrix.S_1");
 
             A.transpose();
-            A.save("fl_Temp/DfFockmatrix.fl_Matrix.S_1^dagger");
+            A.save("fl_Work/DfFockmatrix.fl_Matrix.S_1^dagger");
 
             SymmetricMatrixType Y;
             Y.load("fl_Work/fl_Mtr_P2pq.matrix.roks" + TlUtils::xtos(this->m_nIteration -1));
 
             A =  W * Y;
-            A.save("fl_Temp/DfFockmatrix.fl_Matrix.S_2");
+            A.save("fl_Work/DfFockmatrix.fl_Matrix.S_2");
 
             A.transpose();
-            A.save("fl_Temp/DfFockmatrix.fl_Matrix.S_2^dagger");
+            A.save("fl_Work/DfFockmatrix.fl_Matrix.S_2^dagger");
         }
 
         // (1 - S_2) F_1 (1 - S_2^dagger) の計算
@@ -323,7 +323,7 @@ void DfFockMatrix::mainDIRECT_ROKS()
             // (1 - S_2) F_1 の計算
             {
                 MatrixType B;
-                B.load("fl_Temp/DfFockmatrix.fl_Matrix.S_2");
+                B.load("fl_Work/DfFockmatrix.fl_Matrix.S_2");
 
                 SymmetricMatrixType Z;
                 Z.load("fl_Work/fl_Mtr_F1pq.matrix.rok" + TlUtils::xtos(this->m_nIteration));
@@ -339,7 +339,7 @@ void DfFockMatrix::mainDIRECT_ROKS()
             // "A" (1 - S_2^dagger) の計算
             {
                 MatrixType B;
-                B.load("fl_Temp/DfFockmatrix.fl_Matrix.S_2^dagger");
+                B.load("fl_Work/DfFockmatrix.fl_Matrix.S_2^dagger");
 
                 B *= -1.0;
                 for (int i=0; i < this->m_nNumOfAOs; i++) {
@@ -349,7 +349,7 @@ void DfFockMatrix::mainDIRECT_ROKS()
                 A *= B;
             }
 
-            A.save("fl_Temp/DfFockmatrix.fl_Matrix.(1-S_2)F_1(1-S_2^dagger)");
+            A.save("fl_Work/DfFockmatrix.fl_Matrix.(1-S_2)F_1(1-S_2^dagger)");
         }
 
         // (1 - S_1) F_2 (1 - S_1^dagger) の計算
@@ -359,7 +359,7 @@ void DfFockMatrix::mainDIRECT_ROKS()
             // (1 - S_1) F_2 の計算
             {
                 MatrixType B;
-                B.load("fl_Temp/DfFockmatrix.fl_Matrix.S_1");
+                B.load("fl_Work/DfFockmatrix.fl_Matrix.S_1");
 
                 SymmetricMatrixType Z;
                 Z.load("fl_Work/fl_Mtr_F2pq.matrix.roks" + TlUtils::xtos(this->m_nIteration));
@@ -375,7 +375,7 @@ void DfFockMatrix::mainDIRECT_ROKS()
             // "A" (1 - S_1^dagger) の計算
             {
                 MatrixType B;
-                B.load("fl_Temp/DfFockmatrix.fl_Matrix.S_1^dagger");
+                B.load("fl_Work/DfFockmatrix.fl_Matrix.S_1^dagger");
 
                 B *= -1.0;
                 for (int i=0; i < this->m_nNumOfAOs; i++) {
@@ -385,7 +385,7 @@ void DfFockMatrix::mainDIRECT_ROKS()
                 A *= B;
             }
 
-            A.save("fl_Temp/DfFockmatrix.fl_Matrix.(1-S_1)F_2(1-S_1^dagger)");
+            A.save("fl_Work/DfFockmatrix.fl_Matrix.(1-S_1)F_2(1-S_1^dagger)");
         }
 
 
@@ -407,7 +407,7 @@ void DfFockMatrix::mainDIRECT_ROKS()
             MatrixType A;
             {
                 MatrixType B;
-                B.load("fl_Temp/DfFockmatrix.fl_Matrix.S_1");
+                B.load("fl_Work/DfFockmatrix.fl_Matrix.S_1");
 
                 A = B * Z;
             }
@@ -415,32 +415,32 @@ void DfFockMatrix::mainDIRECT_ROKS()
             // "A" S_2^dagger の計算
             {
                 MatrixType B;
-                B.load("fl_Temp/DfFockmatrix.fl_Matrix.S_2^dagger");
+                B.load("fl_Work/DfFockmatrix.fl_Matrix.S_2^dagger");
 
                 A *= B;
             }
 
-            A.save("fl_Temp/DfFockmatrix.fl_Matrix.S_1(F_1-F_2)S_2^dagger");
+            A.save("fl_Work/DfFockmatrix.fl_Matrix.S_1(F_1-F_2)S_2^dagger");
 
             A.transpose();
-            A.save("fl_Temp/DfFockmatrix.fl_Matrix.(S_1(F_1-F_2)S_2^dagger)^dagger");
+            A.save("fl_Work/DfFockmatrix.fl_Matrix.(S_1(F_1-F_2)S_2^dagger)^dagger");
         }
 
         // F = "(1 - S_2) F_1 (1 - S_2^dagger)" + "(1 - S_1) F_2 (1 - S_1^dagger)"
         //   + "S_1 (F_1 - F_2) S_2^dagger" + "{S_1 (F_1 - F_2) S_2^dagger}^dagger" の計算
         {
             MatrixType A;
-            A.load("fl_Temp/DfFockmatrix.fl_Matrix.(1-S_2)F_1(1-S_2^dagger)");
+            A.load("fl_Work/DfFockmatrix.fl_Matrix.(1-S_2)F_1(1-S_2^dagger)");
 
             SymmetricMatrixType F(A);
 
-            A.load("fl_Temp/DfFockmatrix.fl_Matrix.(1-S_1)F_2(1-S_1^dagger)");
+            A.load("fl_Work/DfFockmatrix.fl_Matrix.(1-S_1)F_2(1-S_1^dagger)");
             F += A;
 
-            A.load("fl_Temp/DfFockmatrix.fl_Matrix.S_1(F_1-F_2)S_2^dagger");
+            A.load("fl_Work/DfFockmatrix.fl_Matrix.S_1(F_1-F_2)S_2^dagger");
             F += A;
 
-            A.load("fl_Temp/DfFockmatrix.fl_Matrix.(S_1(F_1-F_2)S_2^dagger)^dagger");
+            A.load("fl_Work/DfFockmatrix.fl_Matrix.(S_1(F_1-F_2)S_2^dagger)^dagger");
             F += A;
 
             F.save(this->getFpqMatrixPath(RUN_ROKS, this->m_nIteration));

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([ProteinDF], [2011.10.15])
+AC_INIT([ProteinDF], [2011.1git]m4_esyscmd([git log -1 --format="%h" | tr -d "\n"]))
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/pdf/main.cpp])
 AC_CONFIG_MACRO_DIR([m4])

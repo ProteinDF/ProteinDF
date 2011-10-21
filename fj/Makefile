@@ -1,12 +1,4 @@
-# DfGrid_Common.o			\
-# Fl_KeywordX.o				\
-#  TlListMatrix.o				\
-# DfEnergyWeightedDensityMatrix.o	\
-#  RunoutputX_parallel.o			\
-#  TlLog_Parallel.o			
-#  TlSparseHashMatrix.o			\
-#  TlSparseHashSymmetricMatrix.o		\
-
+# Makefile for Fujitsu compiler
 
 OBJS = \
  CnError.o			\

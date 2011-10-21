@@ -76,7 +76,7 @@ inline Fl_Vct_Table::Info& Fl_Vct_Table::operator[](int index)
 
 class Fl_Vct_RhoTable : public Fl_Vct_Table {
 public:
-    Fl_Vct_RhoTable() : Fl_Vct_Table("fl_Temp/fl_Vct_Rtable") {
+    Fl_Vct_RhoTable() : Fl_Vct_Table("fl_Work/fl_Vct_Rtable") {
     };
     virtual ~Fl_Vct_RhoTable() {
     }
@@ -85,7 +85,7 @@ public:
 
 class Fl_Vct_MyuTable : public Fl_Vct_Table {
 public:
-    Fl_Vct_MyuTable() : Fl_Vct_Table("fl_Temp/fl_Vct_Mtable") {
+    Fl_Vct_MyuTable() : Fl_Vct_Table("fl_Work/fl_Vct_Mtable") {
     };
     virtual ~Fl_Vct_MyuTable() {
     }
@@ -94,7 +94,7 @@ public:
 
 class Fl_Vct_NyuTable : public Fl_Vct_Table {
 public:
-    Fl_Vct_NyuTable() : Fl_Vct_Table("fl_Temp/fl_Vct_Ntable") {
+    Fl_Vct_NyuTable() : Fl_Vct_Table("fl_Work/fl_Vct_Ntable") {
     };
     virtual ~Fl_Vct_NyuTable() {
     }

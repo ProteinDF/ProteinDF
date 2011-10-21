@@ -51,7 +51,7 @@ DfDensityFittingTmpl<TlDistributeSymmetricMatrix, TlDistributeVector, DfEriX_Par
 
     // save
     if (this->m_bDiskUtilization == false) {
-        t_alpha.save("fl_Temp/fl_Vct_Talpha" + suffix + TlUtils::xtos(this->m_nIteration));
+        t_alpha.save("fl_Work/fl_Vct_Talpha" + suffix + TlUtils::xtos(this->m_nIteration));
     }
 
     return t_alpha;

@@ -122,7 +122,7 @@ void DfTotalEnergy::write_total_energy(const double E_Total) const
 double DfTotalEnergy::calculate_J_Rho_Rhotilda_WITH_FILE(const TlSymmetricMatrix& D, const TlVector& R)
 {
     Fl_Int_Pqa IntPqa;  // coulomb three index integrals(tmp)
-    //IntPqa.open( "fl_Temp", IntPqa.getfilename(), "read" );
+    //IntPqa.open( "fl_Work", IntPqa.getfilename(), "read" );
 
     TlSymmetricMatrix B(this->m_nNumOfAOs);
     {
@@ -182,7 +182,7 @@ double DfTotalEnergy::calculate_Exc_WITH_FILE(const TlSymmetricMatrix& D, const 
 
     Fl_Int_Pqg IntPqg;  // xc three index integrals(tmp)
 
-    //IntPqg.open("fl_Temp", IntPqg.getfilename(), "read");
+    //IntPqg.open("fl_Work", IntPqg.getfilename(), "read");
 
     TlSymmetricMatrix B(this->m_nNumOfAOs);
     {

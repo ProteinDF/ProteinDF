@@ -15,7 +15,7 @@
 #include "TlTime.h"
 
 const std::string DfObject::m_sWorkDirPath = "fl_Work";
-const std::string DfObject::m_sTempDirPath = "fl_Temp";
+const std::string DfObject::m_sTempDirPath = "fl_Work";
 
 int DfObject::objectCount_ = 0;
 TlMatrixCache DfObject::matrixCache_;

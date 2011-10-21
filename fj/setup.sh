@@ -1,6 +1,6 @@
 #!/bin/sh
 
-BASEDIR=../ProteinDF
+BASEDIR=..
 CP_CMD="cp"
 
 $CP_CMD $BASEDIR/include/*.h .

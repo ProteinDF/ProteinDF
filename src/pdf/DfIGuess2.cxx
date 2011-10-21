@@ -42,7 +42,7 @@ void DfIGuess2::main()
     fi.close();
 
     TlVector nalpha;
-    nalpha.load("fl_Temp/fl_Vct_Nalpha");
+    nalpha.load("fl_Work/fl_Vct_Nalpha");
 
     Log << "    ./guess2.txt is closed\n\n";
     Log.flush();

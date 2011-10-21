@@ -355,7 +355,7 @@ double DfTotalEnergy::calculate_E_WITH_DIRECT(const SymmetricMatrixType& D)
 {
     SymmetricMatrixType tmpEpq;
     if (this->m_nIteration > 1) {
-        const std::string fname = "fl_Temp/fl_Mtr_Epqtmp" + TlUtils::xtos(this->m_nIteration -1);
+        const std::string fname = "fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(this->m_nIteration -1);
         tmpEpq.load(fname);
     } else {
         tmpEpq.load(this->getHpqMatrixPath());
@@ -383,11 +383,11 @@ double DfTotalEnergy::calculate_E_WITH_DIRECT(const SymmetricMatrixType& D)
 
     {
         SymmetricMatrixType E;
-        E.load("fl_Temp/fl_Mtr_Epqtmp" + TlUtils::xtos(m_nIteration));
+        E.load("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(m_nIteration));
 
         tmpEpq += E;
     }
-    tmpEpq.save("fl_Temp/fl_Mtr_Epqtmp" +  TlUtils::xtos(m_nIteration));
+    tmpEpq.save("fl_Work/fl_Mtr_Epqtmp" +  TlUtils::xtos(m_nIteration));
 
     return tmpEpq.dot(D).sum();
 }
