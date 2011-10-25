@@ -28,32 +28,32 @@ void DfDensityFittingX_ScaLAPACK::logger(const std::string& str) const
 }
 
 
-template<>
-TlDistributeVector
-DfDensityFittingTmpl<TlDistributeSymmetricMatrix, TlDistributeVector, DfEriX_Parallel>::getTalpha(const RUN_TYPE runType)
-{
-    TlDistributeVector t_alpha;
-    std::string suffix = "";
-    if (runType == RUN_UKS_ALPHA) {
-        suffix = "a";
-    } else if (runType == RUN_UKS_BETA) {
-        suffix = "b";
-    }
+// template<>
+// TlDistributeVector
+// DfDensityFittingTmpl<TlDistributeSymmetricMatrix, TlDistributeVector, DfEriX_Parallel>::getTalpha(const RUN_TYPE runType)
+// {
+//     TlDistributeVector t_alpha;
+//     std::string suffix = "";
+//     if (runType == RUN_UKS_ALPHA) {
+//         suffix = "a";
+//     } else if (runType == RUN_UKS_BETA) {
+//         suffix = "b";
+//     }
 
-    if (this->m_bDiskUtilization == false) {
-        TlDistributeSymmetricMatrix P =
-            DfObject::getDiffDensityMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration);
-        t_alpha = this->calcTAlpha_DIRECT(P);
-        t_alpha += this->getTalpha(runType, this->m_nIteration -1);
-    } else {
-        abort();
-    }
+//     if (this->m_bDiskUtilization == false) {
+//         TlDistributeSymmetricMatrix P =
+//             DfObject::getDiffDensityMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration);
+//         t_alpha = this->calcTAlpha_DIRECT(P);
+//         t_alpha += this->getTalpha(runType, this->m_nIteration -1);
+//     } else {
+//         abort();
+//     }
 
-    // save
-    if (this->m_bDiskUtilization == false) {
-        t_alpha.save("fl_Work/fl_Vct_Talpha" + suffix + TlUtils::xtos(this->m_nIteration));
-    }
+//     // save
+//     if (this->m_bDiskUtilization == false) {
+//         t_alpha.save("fl_Work/fl_Vct_Talpha" + suffix + TlUtils::xtos(this->m_nIteration));
+//     }
 
-    return t_alpha;
-}
+//     return t_alpha;
+// }
 

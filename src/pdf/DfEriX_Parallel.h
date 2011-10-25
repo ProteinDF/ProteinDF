@@ -10,8 +10,13 @@ public:
     virtual ~DfEriX_Parallel();
 
 public:
-    void getJ_D(const TlDistributeSymmetricMatrix& P,
-                TlDistributeVector* pRho);
+    void getJ(const TlDistributeSymmetricMatrix& P,
+              TlDistributeVector* pRho) {
+        this->getJ_D(P, pRho);
+    }
+    virtual void getJ(const TlSymmetricMatrix& P, TlVector* pRho) {
+        DfEriX::getJ(P, pRho);
+    }
                 
     void getJ_D(const TlVector& rho, TlDistributeSymmetricMatrix* pJ);
     
@@ -27,18 +32,9 @@ public:
                 TlDistributeSymmetricMatrix* pK);
     
 public:
-    // void getDeltaT(const TlSymmetricMatrix& P,
-    //                TlVector* pRho) {
-    //     this->getJ(P, pRho);
-    // }
-
-    // void getDeltaT(const TlDistributeSymmetricMatrix& P,
-    //                TlDistributeVector* pRho) {
-    //     this->getJ_D(P, pRho);
-    // }
-    
     void getdeltaHpqA(const TlVector& rho, TlSymmetricMatrix& P) {
-        this->getJ(rho, &P);
+        //this->getJ(rho, &P);
+        DfEriX::getJ(rho, &P);
     }
 
     void getdeltaHpqA(const TlVector& rho, TlDistributeSymmetricMatrix& P) {
@@ -46,6 +42,9 @@ public:
     }
 
 protected:
+    void getJ_D(const TlDistributeSymmetricMatrix& P,
+                TlDistributeVector* pRho);
+
     virtual void logger(const std::string& str) const;
     virtual void loggerTime_local(const std::string& str) const;
 
