@@ -1,3 +1,7 @@
+#ifdef __FUJITSU
+#include <fjcoll.h>
+#endif // __FUJITSU
+
 #include <cmath>
 
 #include "DfScf.h"
@@ -494,6 +498,10 @@ void DfScf::diffDensityMatrix()
 
 void DfScf::doDensityFitting()
 {
+#ifdef __FUJITSU
+    start_collection("density_fitting");
+#endif // __FUJITSU
+    
     if (this->isRI_J_ == true) {
         if (this->m_nIteration == 1) {
             if ((this->initialGuessType_ == GUESS_RHO) ||
@@ -518,6 +526,10 @@ void DfScf::doDensityFitting()
             this->converge();
         }
     }
+
+#ifdef __FUJITSU
+    stop_collection("density_fitting");
+#endif // __FUJITSU
 }
 
 
@@ -591,6 +603,10 @@ void DfScf::doThreeIndexIntegral()
 
 void DfScf::buildXcMatrix()
 {
+#ifdef __FUJITSU
+    start_collection("XC");
+#endif // __FUJITSU
+
     if (this->m_bIsXCFitting == false) {
         // for restart
         if (this->isRestart_ == true) {
@@ -615,6 +631,10 @@ void DfScf::buildXcMatrix()
         // flush
         this->matrixCache_.flush();
     }
+
+#ifdef __FUJITSU
+    stop_collection("XC");
+#endif // __FUJITSU
 }
 
 
@@ -627,12 +647,20 @@ DfXCFunctional* DfScf::getDfXCFunctional()
 
 void DfScf::buildJMatrix()
 {
+#ifdef __FUJITSU
+    start_collection("RI_J");
+#endif // __FUJITSU
+
     if (this->isRI_J_ == false) {
         this->loggerStartTitle("Coulomb term");
         DfJMatrix* pDfJMatrix = this->getDfJMatrixObject();
         pDfJMatrix->buildJMatrix();
         this->loggerEndTitle();
     }
+
+#ifdef __FUJITSU
+    stop_collection("RI_J");
+#endif // __FUJITSU
 }
 
 
@@ -645,6 +673,10 @@ DfJMatrix* DfScf::getDfJMatrixObject()
 
 void DfScf::buildFock()
 {
+#ifdef __FUJITSU
+    start_collection("Fock");
+#endif // __FUJITSU
+
     TlTime timer;
     this->loggerStartTitle("Fock matrix");
     DfFockMatrix* pDfFockMatrix = this->getDfFockMatrixObject();
@@ -661,6 +693,10 @@ void DfScf::buildFock()
 
     // flush
     this->matrixCache_.flush();
+
+#ifdef __FUJITSU
+    start_collection("Fock");
+#endif // __FUJITSU
 }
 
 

@@ -14,11 +14,11 @@
 #include "TlUtils.h"
 #include "TlTime.h"
 
-#ifdef AC_F77_MAIN
-#define PDF_MAIN AC_F77_MAIN
+#ifdef __FUJITSU
+#define PDF_MAIN __MAIN
 #else
 #define PDF_MAIN main
-#endif // AC_F77_MAIN
+#endif // __FUJITSU
 
 #define HOSTNAME_LEN 256
 
