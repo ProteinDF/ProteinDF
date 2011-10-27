@@ -899,7 +899,7 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
     } else {
         // slave
         const int root = 0;
-        std::size_t sizeList = 0;
+        int sizeList = 0;
         std::vector<index_type> rowColList;
         std::vector<double> valueList;
         int endMsg = 0;
