@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
         }
     } else {
         TlOrbitalInfo orbInfo(param["coordinates"],
-                              param["basis_set"]);
+                              param["basis_sets"]);
         int atomIndex = -1;
         const std::size_t numOfAOs = orbInfo.getNumOfOrbitals();
         for (DfObject::index_type i = 0; i < numOfAOs; ++i) {
