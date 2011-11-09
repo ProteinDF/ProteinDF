@@ -16,7 +16,6 @@
 #include "Fl_Geometry.h"
 #include "Fl_GlobalinputX.h"
 #include "TlTime.h"
-#include "TlLogX.h"
 #include "TlMsgPack.h"
 
 DfIntegrals::DfIntegrals(TlSerializeData* pParam, const std::string& saveParamPath)
@@ -316,28 +315,12 @@ void DfIntegrals::saveInvSquareVMatrix(const TlSymmetricMatrix& v)
 
 void DfIntegrals::outputStartTitle(const std::string& stepName, const char lineChar)
 {
-    TlLogX& log = TlLogX::getInstance();
-
-    const std::string timeString = TlUtils::format("[%s %s]", TlTime::getNowDate().c_str(), TlTime::getNowTime().c_str());
-
-    std::string title = ">>>> " + stepName + " ";
-    TlUtils::pad(title, (72 - timeString.length()), ' ');
-    title += timeString;
-
-    // 出力
-    log << title << "\n";
+    const std::string title = ">>>> " + stepName;
+    this->log_.info(title);
 }
 
 void DfIntegrals::outputEndTitle(const std::string& stepName, const char lineChar)
 {
-    TlLogX& log = TlLogX::getInstance();
-
-    const std::string timeString = TlUtils::format("[%s %s]", TlTime::getNowDate().c_str(), TlTime::getNowTime().c_str());
-
-    std::string title = "<<<< " + stepName + " ";
-    TlUtils::pad(title, (72 - timeString.length()), ' ');
-    title += timeString;
-
-    // 出力
-    log << title << "\n\n";
+    const std::string title = "<<<< " + stepName + " ";
+    this->log_.info(title);
 }

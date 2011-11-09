@@ -5,7 +5,6 @@
 #include "Common.h"
 #include "TlUtils.h"
 #include "TlTime.h"
-#include "TlLogX.h"
 #include "Fl_Int_Gds.h"
 
 #define F13             0.3333333333333333
@@ -395,65 +394,48 @@ int DfXcpotfitting::getMemory()
 //   functions.
 int DfXcpotfitting::dfXcpMain()
 {
-    TlLogX& Log = TlLogX::getInstance();
-//   Log.precision(8);
-//   Log.setf(ios::scientific, ios::floatfield);
-
-    Log << "=== START ==========\n";
-    Log << "START : " << TlTime::getNow() << "\n";
+    this->log_.info("start");
 
     this->initAtbl();
-    Log << "initAtbl : " << TlTime::getNow() << "\n";
-    Log.flush();
+    this->log_.info("initAtbl");
 
     this->readPpq();
-    Log << "readPpq  : " << TlTime::getNow() << "\n";
-    Log.flush();
+    this->log_.info("readPpq");
 
     this->readSgd();
-    Log << "readSgd  : " << TlTime::getNow() << "\n";
-    Log.flush();
+    this->log_.info("readSgd");
 
     this->bfscalMyu();
-    Log << "bfscalMyu : " << TlTime::getNow() << "\n";
-    Log.flush();
+    this->log_.info("bfscalMyu");
 
     int   flag = -1;      // if flag = 0, converged
     int   mem  = NRiter+1;    // memory of NRiter
     while (NRiter * flag) {
-        Log << TlUtils::format("N-R iter = %3d", mem-NRiter);
+        this->log_.info(TlUtils::format("N-R iter = %3d", mem-NRiter));
 
         flag = this->newton(mem-NRiter);
         NRiter--;
     }
-    Log << "newton  : " << TlTime::getNow() << "\n";
-    Log.flush();
+    this->log_.info("newton");
 
     if (flag) {
         this->calcE1();
-        Log << "calcE1 : " << TlTime::getNow() << "\n";
-        Log.flush();
+        this->log_.info("calcE1");
 
         this->calcE2();
-        Log << "calcE2 : " << TlTime::getNow() << "\n";
-        Log.flush();
+        this->log_.info("calcE2");
 
         this->calcE3();
-        Log << "calcE3 : " << TlTime::getNow() << "\n";
-        Log.flush();
+        this->log_.info("calcE3");
 
         this->calcMN();
-        Log << "calcMN : " << TlTime::getNow() << "\n";
-        Log.flush();
+        this->log_.info("calcMN");
     }
 
     this->afscalMyu();
-    Log << "afscalMyu : " << TlTime::getNow() << "\n";
-    Log.flush();
+    this->log_.info("afscalMyu");
 
-    Log << "END : " << TlTime::getNow() << "\n";
-    Log << "=== END ============\n";
-    Log.flush();
+    this->log_.info("end");
 
     return 0;
 }
@@ -681,7 +663,6 @@ int DfXcpotfitting::readSgd()
 // Now we have Disk and not Workfull case.
 int DfXcpotfitting::newton(int number)
 {
-    TlLogX& Log = TlLogX::getInstance();
     int   naux2 = 2 * naux;
 
     // Prepare the densPpq only once
@@ -807,32 +788,32 @@ int DfXcpotfitting::newton(int number)
             fDeltaA[k] -= tmpvectorB[k];
         }
 
-        if (this->outlevel < -15) {
-            Log << "*** PRINT OUT GDSigma in newton ***" << "\n";
-            Log << "icont = " << icont << "\n";
-            Log << "nGDS  = " << nGDS   << "\n";
-            Log << "nS    = " << nS     << "\n";
-            Log << "\n";
-            for (int i = 0; i < nS; ++i) {
-                Log << "indexS [" << i << "] = " << index0[i]  << "\n";
-            }
-            Log << "\n";
-            for (int j = 0; j < nS; ++j) {
-                Log << "nGD    [" << j << "] = " << n12[j]     << "\n";
-            }
-            Log << "\n";
-            for (int k = 0; k < nGDS; ++k) {
-                Log << "indexG [" << k << "] = " << index1[k]  << "\n";
-            }
-            for (int m = 0; m < nGDS; ++m) {
-                Log << "indexD [" << m << "] = " << index2[m]  << "\n";
-            }
-            Log << "\n";
-            for (int l = 0; l < nGDS; ++l) {
-                Log << "GDS    [" << l << "] = " << Intval[l]  << "\n";
-            }
-            Log << "\n";
-        }
+        // if (this->outlevel < -15) {
+        //     Log << "*** PRINT OUT GDSigma in newton ***" << "\n";
+        //     Log << "icont = " << icont << "\n";
+        //     Log << "nGDS  = " << nGDS   << "\n";
+        //     Log << "nS    = " << nS     << "\n";
+        //     Log << "\n";
+        //     for (int i = 0; i < nS; ++i) {
+        //         Log << "indexS [" << i << "] = " << index0[i]  << "\n";
+        //     }
+        //     Log << "\n";
+        //     for (int j = 0; j < nS; ++j) {
+        //         Log << "nGD    [" << j << "] = " << n12[j]     << "\n";
+        //     }
+        //     Log << "\n";
+        //     for (int k = 0; k < nGDS; ++k) {
+        //         Log << "indexG [" << k << "] = " << index1[k]  << "\n";
+        //     }
+        //     for (int m = 0; m < nGDS; ++m) {
+        //         Log << "indexD [" << m << "] = " << index2[m]  << "\n";
+        //     }
+        //     Log << "\n";
+        //     for (int l = 0; l < nGDS; ++l) {
+        //         Log << "GDS    [" << l << "] = " << Intval[l]  << "\n";
+        //     }
+        //     Log << "\n";
+        // }
 
     } while (icont);
     //fig.close();
@@ -854,68 +835,68 @@ int DfXcpotfitting::newton(int number)
     }
     // calc gSigma end
 
-    if (this->outlevel < -10) {
-        Log << "*** PRINT OUT JacobianA in newton ***" << "\n";
-        Log << "*** A1 Part ***" << "\n";
-        for (int i = 0; i < naux; ++i) {
-            Log << "J[" << i << "][j] =" << "\n";
-            for (int j = 0; j < naux; ++j) {
-                Log << " " << Jacobi[i][j];
-                if ((j+1) % 6 == 0) {
-                    Log << "\n";
-                }
-            }
-            Log << "\n";
-        }
-        Log << "*** A2 Part ***" << "\n";
+    // if (this->outlevel < -10) {
+    //     Log << "*** PRINT OUT JacobianA in newton ***" << "\n";
+    //     Log << "*** A1 Part ***" << "\n";
+    //     for (int i = 0; i < naux; ++i) {
+    //         Log << "J[" << i << "][j] =" << "\n";
+    //         for (int j = 0; j < naux; ++j) {
+    //             Log << " " << Jacobi[i][j];
+    //             if ((j+1) % 6 == 0) {
+    //                 Log << "\n";
+    //             }
+    //         }
+    //         Log << "\n";
+    //     }
+    //     Log << "*** A2 Part ***" << "\n";
 
-        for (int i2 = naux; i2 < naux2; ++i2) {
-            Log << "J[" << i2 << "][j] =" << "\n";
-            for (int j2 = 0; j2 < naux; ++j2) {
-                Log << " " << Jacobi[i2][j2];
-                if ((j2+1)%6 == 0) Log << "\n";
-            }
-            Log << "\n";
-        }
+    //     for (int i2 = naux; i2 < naux2; ++i2) {
+    //         Log << "J[" << i2 << "][j] =" << "\n";
+    //         for (int j2 = 0; j2 < naux; ++j2) {
+    //             Log << " " << Jacobi[i2][j2];
+    //             if ((j2+1)%6 == 0) Log << "\n";
+    //         }
+    //         Log << "\n";
+    //     }
 
-        Log << "*** A3 Part ***" << "\n";
-        for (int i3 = 0; i3 < naux; ++i3) {
-            Log << "J[" << i3 << "][j] =" << "\n";
-            for (int j3 = naux; j3 < naux2; ++j3) {
-                Log << " " << Jacobi[i3][j3];
-                if ((j3+1) % 6 == 0) {
-                    Log << "\n";
-                }
-            }
-            Log << "\n";
-        }
+    //     Log << "*** A3 Part ***" << "\n";
+    //     for (int i3 = 0; i3 < naux; ++i3) {
+    //         Log << "J[" << i3 << "][j] =" << "\n";
+    //         for (int j3 = naux; j3 < naux2; ++j3) {
+    //             Log << " " << Jacobi[i3][j3];
+    //             if ((j3+1) % 6 == 0) {
+    //                 Log << "\n";
+    //             }
+    //         }
+    //         Log << "\n";
+    //     }
 
-        Log << "*** A4 Part ***" << "\n";
-        for (int i4 = naux; i4 < naux2; ++i4) {
-            Log << "J[" << i4 << "][j] =" << "\n";
-            for (int j4 = naux; j4 < naux2; ++j4) {
-                Log << " " << Jacobi[i4][j4];
-                if ((j4+1) % 6 == 0) {
-                    Log << "\n";
-                }
-            }
-            Log << "\n";
-        }
-        Log << "\n";
-    }
+    //     Log << "*** A4 Part ***" << "\n";
+    //     for (int i4 = naux; i4 < naux2; ++i4) {
+    //         Log << "J[" << i4 << "][j] =" << "\n";
+    //         for (int j4 = naux; j4 < naux2; ++j4) {
+    //             Log << " " << Jacobi[i4][j4];
+    //             if ((j4+1) % 6 == 0) {
+    //                 Log << "\n";
+    //             }
+    //         }
+    //         Log << "\n";
+    //     }
+    //     Log << "\n";
+    // }
 
-    if (this->outlevel < -4) {
-        Log << "*** PRINT OUT gSigmaA in newton ***" << "\n";
-        for (int i = 0; i < naux; ++i) {
-            Log << "gSigmaA[" << i << "] = " << gSigmaA[i] << "\n";
-        }
-        Log << "\n";
-        Log << "*** PRINT OUT fDeltaA in newton ***" << "\n";
-        for (int j = 0; j < naux; ++j) {
-            Log << "fDeltaA[" << j << "] = " << fDeltaA[j] << "\n";
-        }
-        Log << "\n";
-    }
+    // if (this->outlevel < -4) {
+    //     Log << "*** PRINT OUT gSigmaA in newton ***" << "\n";
+    //     for (int i = 0; i < naux; ++i) {
+    //         Log << "gSigmaA[" << i << "] = " << gSigmaA[i] << "\n";
+    //     }
+    //     Log << "\n";
+    //     Log << "*** PRINT OUT fDeltaA in newton ***" << "\n";
+    //     for (int j = 0; j < naux; ++j) {
+    //         Log << "fDeltaA[" << j << "] = " << fDeltaA[j] << "\n";
+    //     }
+    //     Log << "\n";
+    // }
 
     // make inversed  Jacobian
     for (int ii = 0; ii < naux2; ++ii) {
@@ -937,57 +918,57 @@ int DfXcpotfitting::newton(int number)
         }
     }
 
-    if (this->outlevel < -10) {
-        Log << "*** PRINT OUT Inversed JacobianA in newton ***" << "\n";
-        Log << "*** X1 Part ***" << "\n";
-        for (int i = 0; i < naux; ++i) {
-            Log << "J-1[" << i << "][j] =" << "\n";
-            for (int j = 0; j < naux; ++j) {
-                Log << " " << InvJacobi[i][j];
-                if ((j+1) % 6 == 0) {
-                    Log << "\n";
-                }
-            }
-            Log << "\n";
-        }
+    // if (this->outlevel < -10) {
+    //     Log << "*** PRINT OUT Inversed JacobianA in newton ***" << "\n";
+    //     Log << "*** X1 Part ***" << "\n";
+    //     for (int i = 0; i < naux; ++i) {
+    //         Log << "J-1[" << i << "][j] =" << "\n";
+    //         for (int j = 0; j < naux; ++j) {
+    //             Log << " " << InvJacobi[i][j];
+    //             if ((j+1) % 6 == 0) {
+    //                 Log << "\n";
+    //             }
+    //         }
+    //         Log << "\n";
+    //     }
 
-        Log << "*** X2 Part ***" << "\n";
-        for (int i2 = naux; i2 < naux2; ++i2) {
-            Log << "J-1[" << i2 << "][j] =" << "\n";
-            for (int j2 = 0; j2 < naux; ++j2) {
-                Log << " " << InvJacobi[i2][j2];
-                if ((j2+1) % 6 == 0) {
-                    Log << "\n";
-                }
-            }
-            Log << "\n";
-        }
+    //     Log << "*** X2 Part ***" << "\n";
+    //     for (int i2 = naux; i2 < naux2; ++i2) {
+    //         Log << "J-1[" << i2 << "][j] =" << "\n";
+    //         for (int j2 = 0; j2 < naux; ++j2) {
+    //             Log << " " << InvJacobi[i2][j2];
+    //             if ((j2+1) % 6 == 0) {
+    //                 Log << "\n";
+    //             }
+    //         }
+    //         Log << "\n";
+    //     }
 
-        Log << "*** X3 Part ***" << "\n";
-        for (int i3 = 0; i3 < naux; ++i3) {
-            Log << "J-1[" << i3 << "][j] =" << "\n";
-            for (int j3 = naux; j3 < naux2; ++j3) {
-                Log << " " << InvJacobi[i3][j3];
-                if ((j3+1) % 6 == 0) {
-                    Log << "\n";
-                }
-            }
-            Log << "\n";
-        }
+    //     Log << "*** X3 Part ***" << "\n";
+    //     for (int i3 = 0; i3 < naux; ++i3) {
+    //         Log << "J-1[" << i3 << "][j] =" << "\n";
+    //         for (int j3 = naux; j3 < naux2; ++j3) {
+    //             Log << " " << InvJacobi[i3][j3];
+    //             if ((j3+1) % 6 == 0) {
+    //                 Log << "\n";
+    //             }
+    //         }
+    //         Log << "\n";
+    //     }
 
-        Log << "*** X4 Part ***" << "\n";
-        for (int i4 = naux; i4 < naux2; ++i4) {
-            Log << "J-1[" << i4 << "][j] =" << "\n";
-            for (int j4 = naux; j4 < naux2; ++j4) {
-                Log << " " << InvJacobi[i4][j4];
-                if ((j4+1) % 6 == 0) {
-                    Log << "\n";
-                }
-            }
-            Log << "\n";
-        }
-        Log << "\n";
-    }
+    //     Log << "*** X4 Part ***" << "\n";
+    //     for (int i4 = naux; i4 < naux2; ++i4) {
+    //         Log << "J-1[" << i4 << "][j] =" << "\n";
+    //         for (int j4 = naux; j4 < naux2; ++j4) {
+    //             Log << " " << InvJacobi[i4][j4];
+    //             if ((j4+1) % 6 == 0) {
+    //                 Log << "\n";
+    //             }
+    //         }
+    //         Log << "\n";
+    //     }
+    //     Log << "\n";
+    // }
 
     // calc deltaMyu and deltaNyu
     for (int i = 0; i < naux; ++i) {
@@ -1020,18 +1001,18 @@ int DfXcpotfitting::newton(int number)
         }
     }
 
-    if (this->outlevel < -4) {
-        Log << "*** PRINT OUT deltaMyuA in newton ***" << "\n";
-        for (int i = 0; i < naux; ++i) {
-            Log << "deltaMyuA[" << i << "] = " << deltaX[i+naux] << "\n";
-        }
-        Log << "\n";
-        Log << "*** PRINT OUT deltaNyuA in newton ***" << "\n";
-        for (int j = 0; j < naux; ++j) {
-            Log << "deltaNyuA[" << j << "] = " << deltaX[j] << "\n";
-        }
-        Log << "\n";
-    }
+    // if (this->outlevel < -4) {
+    //     Log << "*** PRINT OUT deltaMyuA in newton ***" << "\n";
+    //     for (int i = 0; i < naux; ++i) {
+    //         Log << "deltaMyuA[" << i << "] = " << deltaX[i+naux] << "\n";
+    //     }
+    //     Log << "\n";
+    //     Log << "*** PRINT OUT deltaNyuA in newton ***" << "\n";
+    //     for (int j = 0; j < naux; ++j) {
+    //         Log << "deltaNyuA[" << j << "] = " << deltaX[j] << "\n";
+    //     }
+    //     Log << "\n";
+    // }
 
     // renew MyuGamma and NyuGamma
     for (int il = 0; il < naux; ++il) {
@@ -1039,18 +1020,18 @@ int DfXcpotfitting::newton(int number)
         MyuGammaA[il] += deltaX[il+naux];
     }
 
-    if (this->outlevel < -3) {
-        Log << "*** PRINT OUT MyuGammaA in newton ***" << "\n";
-        for (int i = 0; i < naux; ++i) {
-            Log << "MyuGammaA[" << i << "] = " << MyuGammaA[i] << "\n";
-        }
-        Log << "\n";
-        Log << "*** PRINT OUT NyuGammaA in newton ***" << "\n";
-        for (int j = 0; j < naux; ++j) {
-            Log << "NyuGammaA[" << j << "] = " << NyuGammaA[j] << "\n";
-        }
-        Log << "\n";
-    }
+    // if (this->outlevel < -3) {
+    //     Log << "*** PRINT OUT MyuGammaA in newton ***" << "\n";
+    //     for (int i = 0; i < naux; ++i) {
+    //         Log << "MyuGammaA[" << i << "] = " << MyuGammaA[i] << "\n";
+    //     }
+    //     Log << "\n";
+    //     Log << "*** PRINT OUT NyuGammaA in newton ***" << "\n";
+    //     for (int j = 0; j < naux; ++j) {
+    //         Log << "NyuGammaA[" << j << "] = " << NyuGammaA[j] << "\n";
+    //     }
+    //     Log << "\n";
+    // }
 
     double dtotal = 0.0;
     for (int im = 0; im < naux2; ++im) {
@@ -1062,11 +1043,11 @@ int DfXcpotfitting::newton(int number)
         dtotal /= (DFactor * DFactor);
         dtotal  = sqrt(dtotal / naux2);
 
-        if (outlevel <=-1) {
-            Log << TlUtils::format("  dX(stotal)=%10.4le  update-dX(dtotal)=%10.4le", stotal, dtotal);
-            Log << TlUtils::format("  f-s-v=%7.4lf DFactor=%4.2lf naux2=%4ld\n", fukuescaleval, DFactor, naux2);
-            Log.flush();
-        }
+        // if (outlevel <=-1) {
+        //     Log << TlUtils::format("  dX(stotal)=%10.4le  update-dX(dtotal)=%10.4le", stotal, dtotal);
+        //     Log << TlUtils::format("  f-s-v=%7.4lf DFactor=%4.2lf naux2=%4ld\n", fukuescaleval, DFactor, naux2);
+        //     Log.flush();
+        // }
 
         if (dtotal < NREPS) {
             return 0;
@@ -1215,44 +1196,44 @@ int DfXcpotfitting::newton(int number)
         }
         // calc gSigma end
 
-        if (this->outlevel < -10) {
-            Log << "*** PRINT OUT JacobianB in newton ***" << "\n";
-            Log << "*** A1 Part ***" << "\n";
-            for (int i = 0; i < naux; ++i) {
-                Log << "J[" << i << "][j] =" << "\n";
-                for (int j = 0; j < naux; ++j) {
-                    Log << " " << Jacobi[i][j];
-                }
-                Log << "\n";
-            }
+        // if (this->outlevel < -10) {
+        //     Log << "*** PRINT OUT JacobianB in newton ***" << "\n";
+        //     Log << "*** A1 Part ***" << "\n";
+        //     for (int i = 0; i < naux; ++i) {
+        //         Log << "J[" << i << "][j] =" << "\n";
+        //         for (int j = 0; j < naux; ++j) {
+        //             Log << " " << Jacobi[i][j];
+        //         }
+        //         Log << "\n";
+        //     }
 
-            Log << "*** A2 Part ***" << "\n";
-            for (int i2 = naux; i2 < naux2; ++i2) {
-                Log << "J[" << i2 << "][j] =" << "\n";
-                for (int j2 = 0; j2 < naux; ++j2) {
-                    Log << " " << Jacobi[i2][j2];
-                }
-                Log << "\n";
-            }
+        //     Log << "*** A2 Part ***" << "\n";
+        //     for (int i2 = naux; i2 < naux2; ++i2) {
+        //         Log << "J[" << i2 << "][j] =" << "\n";
+        //         for (int j2 = 0; j2 < naux; ++j2) {
+        //             Log << " " << Jacobi[i2][j2];
+        //         }
+        //         Log << "\n";
+        //     }
 
-            Log << "*** A3 Part ***" << "\n";
-            for (int i3 = 0; i3 < naux; ++i3) {
-                Log << "J[" << i3 << "][j] =" << "\n";
-                for (int j3 = naux; j3 < naux2; ++j3)
-                    Log << " " << Jacobi[i3][j3];
-                Log << "\n";
-            }
+        //     Log << "*** A3 Part ***" << "\n";
+        //     for (int i3 = 0; i3 < naux; ++i3) {
+        //         Log << "J[" << i3 << "][j] =" << "\n";
+        //         for (int j3 = naux; j3 < naux2; ++j3)
+        //             Log << " " << Jacobi[i3][j3];
+        //         Log << "\n";
+        //     }
 
-            Log << "*** A4 Part ***" << "\n";
-            for (int i4 = naux; i4 < naux2; ++i4) {
-                Log << "J[" << i4 << "][j] =" << "\n";
-                for (int j4 = naux; j4 < naux2; ++j4) {
-                    Log << " " << Jacobi[i4][j4];
-                }
-                Log << "\n";
-            }
-            Log << "\n";
-        }
+        //     Log << "*** A4 Part ***" << "\n";
+        //     for (int i4 = naux; i4 < naux2; ++i4) {
+        //         Log << "J[" << i4 << "][j] =" << "\n";
+        //         for (int j4 = naux; j4 < naux2; ++j4) {
+        //             Log << " " << Jacobi[i4][j4];
+        //         }
+        //         Log << "\n";
+        //     }
+        //     Log << "\n";
+        // }
 
         // make inversed  Jacobian
         for (int ii = 0; ii < naux2; ++ii) {
@@ -1274,58 +1255,58 @@ int DfXcpotfitting::newton(int number)
             }
         }
 
-        if (this->outlevel < -10) {
-            Log << "*** PRINT OUT Inversed JacobianB in newton ***" << "\n";
-            Log << "*** X1 Part ***" << "\n";
-            for (int i = 0; i < naux; ++i) {
-                Log << "J-1[" << i << "][j] =" << "\n";
-                for (int j = 0; j < naux; ++j) {
-                    Log << " " << InvJacobi[i][j];
-                }
-                Log << "\n";
-            }
+        // if (this->outlevel < -10) {
+        //     Log << "*** PRINT OUT Inversed JacobianB in newton ***" << "\n";
+        //     Log << "*** X1 Part ***" << "\n";
+        //     for (int i = 0; i < naux; ++i) {
+        //         Log << "J-1[" << i << "][j] =" << "\n";
+        //         for (int j = 0; j < naux; ++j) {
+        //             Log << " " << InvJacobi[i][j];
+        //         }
+        //         Log << "\n";
+        //     }
 
-            Log << "*** X2 Part ***" << "\n";
-            for (int i2 = naux; i2 < naux2; ++i2) {
-                Log << "J-1[" << i2 << "][j] =" << "\n";
-                for (int j2 = 0; j2 < naux; ++j2) {
-                    Log << " " << InvJacobi[i2][j2];
-                }
-                Log << "\n";
-            }
+        //     Log << "*** X2 Part ***" << "\n";
+        //     for (int i2 = naux; i2 < naux2; ++i2) {
+        //         Log << "J-1[" << i2 << "][j] =" << "\n";
+        //         for (int j2 = 0; j2 < naux; ++j2) {
+        //             Log << " " << InvJacobi[i2][j2];
+        //         }
+        //         Log << "\n";
+        //     }
 
-            Log << "*** X3 Part ***" << "\n";
-            for (int i3 = 0; i3 < naux; ++i3) {
-                Log << "J-1[" << i3 << "][j] =" << "\n";
-                for (int j3 = naux; j3 < naux2; ++j3) {
-                    Log << " " << InvJacobi[i3][j3];
-                }
-                Log << "\n";
-            }
+        //     Log << "*** X3 Part ***" << "\n";
+        //     for (int i3 = 0; i3 < naux; ++i3) {
+        //         Log << "J-1[" << i3 << "][j] =" << "\n";
+        //         for (int j3 = naux; j3 < naux2; ++j3) {
+        //             Log << " " << InvJacobi[i3][j3];
+        //         }
+        //         Log << "\n";
+        //     }
 
-            Log << "*** X4 Part ***" << "\n";
-            for (int i4 = naux; i4 < naux2; ++i4) {
-                Log << "J-1[" << i4 << "][j] =" << "\n";
-                for (int j4 = naux; j4 < naux2; ++j4) {
-                    Log << " " << InvJacobi[i4][j4];
-                }
-                Log << "\n";
-            }
-            Log << "\n";
-        }
+        //     Log << "*** X4 Part ***" << "\n";
+        //     for (int i4 = naux; i4 < naux2; ++i4) {
+        //         Log << "J-1[" << i4 << "][j] =" << "\n";
+        //         for (int j4 = naux; j4 < naux2; ++j4) {
+        //             Log << " " << InvJacobi[i4][j4];
+        //         }
+        //         Log << "\n";
+        //     }
+        //     Log << "\n";
+        // }
 
-        if (this->outlevel < -4) {
-            Log << "*** PRINT OUT gSigmaB in newton ***" << "\n";
-            for (int i = 0; i < naux; ++i) {
-                Log << "gSigmaB[" << i << "] = " << gSigmaB[i] << "\n";
-            }
-            Log << "\n";
-            Log << "*** PRINT OUT fDeltaB in newton ***" << "\n";
-            for (int j = 0; j < naux; ++j) {
-                Log << "fDeltaB[" << j << "] = " << fDeltaB[j] << "\n";
-            }
-            Log << "\n";
-        }
+        // if (this->outlevel < -4) {
+        //     Log << "*** PRINT OUT gSigmaB in newton ***" << "\n";
+        //     for (int i = 0; i < naux; ++i) {
+        //         Log << "gSigmaB[" << i << "] = " << gSigmaB[i] << "\n";
+        //     }
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT fDeltaB in newton ***" << "\n";
+        //     for (int j = 0; j < naux; ++j) {
+        //         Log << "fDeltaB[" << j << "] = " << fDeltaB[j] << "\n";
+        //     }
+        //     Log << "\n";
+        // }
 
         // calc deltaMyu and deltaNyu
         for (int i = 0; i < naux; ++i) {
@@ -1351,11 +1332,11 @@ int DfXcpotfitting::newton(int number)
 
         stotal = sqrt(stotal);
 
-        if (this->outlevel < -2) {
-            Log << "*** PRINT OUT stotal in newton ***" << "\n";
-            Log << "stotal = " << stotal << "\n";
-            Log << "\n";
-        }
+        // if (this->outlevel < -2) {
+        //     Log << "*** PRINT OUT stotal in newton ***" << "\n";
+        //     Log << "stotal = " << stotal << "\n";
+        //     Log << "\n";
+        // }
 
         double  fukuescaleval = 2.0 * sqrt((double)naux2) ;
         if (stotal > fukuescaleval) {
@@ -1364,18 +1345,18 @@ int DfXcpotfitting::newton(int number)
             }
         }
 
-        if (this->outlevel < -4) {
-            Log << "*** PRINT OUT deltaMyuB in newton ***" << "\n";
-            for (int i = 0; i < naux; ++i) {
-                Log << "deltaMyuB[" << i << "] = " << deltaX[i+naux] << "\n";
-            }
-            Log << "\n";
-            Log << "*** PRINT OUT deltaNyuB in newton ***" << "\n";
-            for (int j = 0; j < naux; ++j) {
-                Log << "deltaNyuB[" << j << "] = " << deltaX[j] << "\n";
-            }
-            Log << "\n";
-        }
+        // if (this->outlevel < -4) {
+        //     Log << "*** PRINT OUT deltaMyuB in newton ***" << "\n";
+        //     for (int i = 0; i < naux; ++i) {
+        //         Log << "deltaMyuB[" << i << "] = " << deltaX[i+naux] << "\n";
+        //     }
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT deltaNyuB in newton ***" << "\n";
+        //     for (int j = 0; j < naux; ++j) {
+        //         Log << "deltaNyuB[" << j << "] = " << deltaX[j] << "\n";
+        //     }
+        //     Log << "\n";
+        // }
 
         // renew MyuGamma and NyuGamma
         for (int il = 0; il < naux; ++il) {
@@ -1383,18 +1364,18 @@ int DfXcpotfitting::newton(int number)
             MyuGammaB[il] += deltaX[il+naux];
         }
 
-        if (this->outlevel < -3) {
-            Log << "*** PRINT OUT MyuGammaB in newton ***" << "\n";
-            for (int i = 0; i < naux; ++i) {
-                Log << "MyuGammaB[" << i << "] = " << MyuGammaB[i] << "\n";
-            }
-            Log << "\n";
-            Log << "*** PRINT OUT NyuGammaB in newton ***" << "\n";
-            for (int j = 0; j < naux; ++j) {
-                Log << "NyuGammaB[" << j << "] = " << NyuGammaB[j] << "\n";
-            }
-            Log << "\n";
-        }
+        // if (this->outlevel < -3) {
+        //     Log << "*** PRINT OUT MyuGammaB in newton ***" << "\n";
+        //     for (int i = 0; i < naux; ++i) {
+        //         Log << "MyuGammaB[" << i << "] = " << MyuGammaB[i] << "\n";
+        //     }
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT NyuGammaB in newton ***" << "\n";
+        //     for (int j = 0; j < naux; ++j) {
+        //         Log << "NyuGammaB[" << j << "] = " << NyuGammaB[j] << "\n";
+        //     }
+        //     Log << "\n";
+        // }
 
         for (int im = 0; im < naux2; ++im) {
             dtotal += deltaX[im] * deltaX[im];
@@ -1403,11 +1384,11 @@ int DfXcpotfitting::newton(int number)
         dtotal /= (DFactor * DFactor);
         dtotal = sqrt(dtotal / naux2);
 
-        if (this->outlevel < -2) {
-            Log << "*** PRINT OUT dtotal in newton ***" << "\n";
-            Log << "dtotal = " << dtotal << "\n";
-            Log << "\n";
-        }
+        // if (this->outlevel < -2) {
+        //     Log << "*** PRINT OUT dtotal in newton ***" << "\n";
+        //     Log << "dtotal = " << dtotal << "\n";
+        //     Log << "\n";
+        // }
 
         if (dtotal < 2*NREPS) {
             return 0;
@@ -1425,7 +1406,6 @@ int DfXcpotfitting::newton(int number)
 // 4. delete Ppq memory
 int DfXcpotfitting::calcE1()
 {
-    TlLogX& Log = TlLogX::getInstance();
     E1A = E1B = 0.0;
 
     if (this->scftype == "nsp") {
@@ -1433,11 +1413,11 @@ int DfXcpotfitting::calcE1()
             E1A += MyuGammaA[i] * tAlpha[i];
         }
 
-        if (this->outlevel < 0) {
-            Log << "*** PRINT OUT E1 in calcE1 ***" << "\n";
-            Log << "E1 = " << E1A << "\n";
-            Log << "\n";
-        }
+        // if (this->outlevel < 0) {
+        //     Log << "*** PRINT OUT E1 in calcE1 ***" << "\n";
+        //     Log << "E1 = " << E1A << "\n";
+        //     Log << "\n";
+        // }
 
     } else {
         for (int i = 0; i < naux; ++i) {
@@ -1445,14 +1425,14 @@ int DfXcpotfitting::calcE1()
             E1B += MyuGammaB[i] * tBeta[i];
         }
 
-        if (this->outlevel < 0) {
-            Log << "*** PRINT OUT E1A in calcE1 ***" << "\n";
-            Log << "E1A = " << E1A << "\n";
-            Log << "\n";
-            Log << "*** PRINT OUT E1B in calcE1 ***" << "\n";
-            Log << "E1B = " << E1B << "\n";
-            Log << "\n";
-        }
+        // if (this->outlevel < 0) {
+        //     Log << "*** PRINT OUT E1A in calcE1 ***" << "\n";
+        //     Log << "E1A = " << E1A << "\n";
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT E1B in calcE1 ***" << "\n";
+        //     Log << "E1B = " << E1B << "\n";
+        //     Log << "\n";
+        // }
     }
 
     return 0;
@@ -1462,7 +1442,6 @@ int DfXcpotfitting::calcE1()
 // we already calculated tmpE2 with spvctprd
 int DfXcpotfitting::calcE2()
 {
-    TlLogX& Log = TlLogX::getInstance();
     E2A = E2B = 0.0;
 
     if (this->scftype == "nsp") {
@@ -1470,11 +1449,11 @@ int DfXcpotfitting::calcE2()
             E2A += NyuGammaA[i] * tmpE2A[i];
         }
 
-        if (this->outlevel < 0) {
-            Log << "*** PRINT OUT E2 in calcE2 ***" << "\n";
-            Log << "E2 = " << E2A << "\n";
-            Log << "\n";
-        }
+        // if (this->outlevel < 0) {
+        //     Log << "*** PRINT OUT E2 in calcE2 ***" << "\n";
+        //     Log << "E2 = " << E2A << "\n";
+        //     Log << "\n";
+        // }
 
     } else {
         for (int i = 0; i < naux; ++i) {
@@ -1482,14 +1461,14 @@ int DfXcpotfitting::calcE2()
             E2B += NyuGammaB[i] * tmpE2B[i];
         }
 
-        if (this->outlevel < 0) {
-            Log << "*** PRINT OUT E2A in calcE2 ***" << "\n";
-            Log << "E2A = " << E2A << "\n";
-            Log << "\n";
-            Log << "*** PRINT OUT E2B in calcE2 ***" << "\n";
-            Log << "E2B = " << E2B << "\n";
-            Log << "\n";
-        }
+        // if (this->outlevel < 0) {
+        //     Log << "*** PRINT OUT E2A in calcE2 ***" << "\n";
+        //     Log << "E2A = " << E2A << "\n";
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT E2B in calcE2 ***" << "\n";
+        //     Log << "E2B = " << E2B << "\n";
+        //     Log << "\n";
+        // }
     }
 
     return 0;
@@ -1501,7 +1480,6 @@ int DfXcpotfitting::calcE2()
 // 2. catlculate E3 from NyuGamma and Sgd
 int DfXcpotfitting::calcE3()
 {
-    TlLogX& Log = TlLogX::getInstance();
     E3A = E3B = 0.0;
 
     if (this->scftype == "nsp") {
@@ -1509,25 +1487,25 @@ int DfXcpotfitting::calcE3()
 
         E3A = spvctprd2(NyuGammaA, Sgd);
 
-        if (this->outlevel < 0) {
-            Log << "*** PRINT OUT E3 in calcE3 ***" << "\n";
-            Log << "E3 = " << E3A << "\n";
-            Log << "\n";
-        }
+        // if (this->outlevel < 0) {
+        //     Log << "*** PRINT OUT E3 in calcE3 ***" << "\n";
+        //     Log << "E3 = " << E3A << "\n";
+        //     Log << "\n";
+        // }
     } else {
         // Spin-polarized case
 
         E3A = spvctprd2(NyuGammaA, Sgd);
         E3B = spvctprd2(NyuGammaB, Sgd);
 
-        if (this->outlevel < 0) {
-            Log << "*** PRINT OUT E3A in calcE3 ***" << "\n";
-            Log << "E3A = " << E3A << "\n";
-            Log << "\n";
-            Log << "*** PRINT OUT E3B in calcE3 ***" << "\n";
-            Log << "E3B = " << E3B << "\n";
-            Log << "\n";
-        }
+        // if (this->outlevel < 0) {
+        //     Log << "*** PRINT OUT E3A in calcE3 ***" << "\n";
+        //     Log << "E3A = " << E3A << "\n";
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT E3B in calcE3 ***" << "\n";
+        //     Log << "E3B = " << E3B << "\n";
+        //     Log << "\n";
+        // }
     }
 
     return 0;
@@ -1536,7 +1514,6 @@ int DfXcpotfitting::calcE3()
 // calculate Myu & Nyu
 int DfXcpotfitting::calcMN()
 {
-    TlLogX& Log = TlLogX::getInstance();
     if (this->scftype == "nsp") {
         // Non-spin-polarized case
 
@@ -1548,27 +1525,27 @@ int DfXcpotfitting::calcMN()
             NyuGammaA[i] = SFactorNA * NyuGammaA[i];
         }
 
-        if (this->outlevel < -2) {
-            Log << "*** PRINT OUT SFactorM in calcMN ***" << "\n";
-            Log << "SFactorM = " << SFactorMA << "\n";
-            Log << "\n";
-            Log << "*** PRINT OUT SFactorN in calcMN ***" << "\n";
-            Log << "SFactorN = " << SFactorNA << "\n";
-            Log << "\n";
-        }
+        // if (this->outlevel < -2) {
+        //     Log << "*** PRINT OUT SFactorM in calcMN ***" << "\n";
+        //     Log << "SFactorM = " << SFactorMA << "\n";
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT SFactorN in calcMN ***" << "\n";
+        //     Log << "SFactorN = " << SFactorNA << "\n";
+        //     Log << "\n";
+        // }
 
-        if (this->outlevel < -3) {
-            Log << "*** PRINT OUT MyuGamma in calcMN ***" << "\n";
-            for (int i = 0; i < naux; ++i) {
-                Log << "MyuGamma[" << i << "] = " << MyuGammaA[i] << "\n";
-            }
-            Log << "\n";
-            Log << "*** PRINT OUT NyuGamma in calcMN ***" << "\n";
-            for (int j = 0; j < naux; ++j) {
-                Log << "NyuGamma[" << j << "] = " << NyuGammaA[j] << "\n";
-            }
-            Log << "\n";
-        }
+        // if (this->outlevel < -3) {
+        //     Log << "*** PRINT OUT MyuGamma in calcMN ***" << "\n";
+        //     for (int i = 0; i < naux; ++i) {
+        //         Log << "MyuGamma[" << i << "] = " << MyuGammaA[i] << "\n";
+        //     }
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT NyuGamma in calcMN ***" << "\n";
+        //     for (int j = 0; j < naux; ++j) {
+        //         Log << "NyuGamma[" << j << "] = " << NyuGammaA[j] << "\n";
+        //     }
+        //     Log << "\n";
+        // }
     } else {
         // Spin-polarized case
 
@@ -1584,43 +1561,43 @@ int DfXcpotfitting::calcMN()
             NyuGammaB[i] = SFactorNB * NyuGammaB[i];
         }
 
-        if (this->outlevel < -2) {
-            Log << "*** PRINT OUT SFactorMA in calcMN ***" << "\n";
-            Log << "SFactorMA = " << SFactorMA << "\n";
-            Log << "\n";
-            Log << "*** PRINT OUT SFactorMB in calcMN ***" << "\n";
-            Log << "SFactorMB = " << SFactorMB << "\n";
-            Log << "\n";
-            Log << "*** PRINT OUT SFactorNA in calcMN ***" << "\n";
-            Log << "SFactorNA = " << SFactorNA << "\n";
-            Log << "\n";
-            Log << "*** PRINT OUT SFactorNB in calcMN ***" << "\n";
-            Log << "SFactorNB = " << SFactorNB << "\n";
-            Log << "\n";
-        }
+        // if (this->outlevel < -2) {
+        //     Log << "*** PRINT OUT SFactorMA in calcMN ***" << "\n";
+        //     Log << "SFactorMA = " << SFactorMA << "\n";
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT SFactorMB in calcMN ***" << "\n";
+        //     Log << "SFactorMB = " << SFactorMB << "\n";
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT SFactorNA in calcMN ***" << "\n";
+        //     Log << "SFactorNA = " << SFactorNA << "\n";
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT SFactorNB in calcMN ***" << "\n";
+        //     Log << "SFactorNB = " << SFactorNB << "\n";
+        //     Log << "\n";
+        // }
 
-        if (this->outlevel < -3) {
-            Log << "*** PRINT OUT MyuGammaA in calcMN ***" << "\n";
-            for (int i = 0; i < naux; ++i) {
-                Log << "MyuGammaA[" << i << "] = " << MyuGammaA[i] << "\n";
-            }
-            Log << "\n";
-            Log << "*** PRINT OUT NyuGammaA in calcMN ***" << "\n";
-            for (int j = 0; j < naux; ++j) {
-                Log << "NyuGammaA[" << j << "] = " << NyuGammaA[j] << "\n";
-            }
-            Log << "\n";
-            Log << "*** PRINT OUT MyuGammaB in calcMN ***" << "\n";
-            for (int k = 0; k < naux; ++k) {
-                Log << "MyuGammaB[" << k << "] = " << MyuGammaB[k] << "\n";
-            }
-            Log << "\n";
-            Log << "*** PRINT OUT NyuGammaB in calcMN ***" << "\n";
-            for (int l = 0; l < naux; ++l) {
-                Log << "NyuGammaB[" << l << "] = " << NyuGammaB[l] << "\n";
-            }
-            Log << "\n";
-        }
+        // if (this->outlevel < -3) {
+        //     Log << "*** PRINT OUT MyuGammaA in calcMN ***" << "\n";
+        //     for (int i = 0; i < naux; ++i) {
+        //         Log << "MyuGammaA[" << i << "] = " << MyuGammaA[i] << "\n";
+        //     }
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT NyuGammaA in calcMN ***" << "\n";
+        //     for (int j = 0; j < naux; ++j) {
+        //         Log << "NyuGammaA[" << j << "] = " << NyuGammaA[j] << "\n";
+        //     }
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT MyuGammaB in calcMN ***" << "\n";
+        //     for (int k = 0; k < naux; ++k) {
+        //         Log << "MyuGammaB[" << k << "] = " << MyuGammaB[k] << "\n";
+        //     }
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT NyuGammaB in calcMN ***" << "\n";
+        //     for (int l = 0; l < naux; ++l) {
+        //         Log << "NyuGammaB[" << l << "] = " << NyuGammaB[l] << "\n";
+        //     }
+        //     Log << "\n";
+        // }
     }
 
     return 0;
@@ -1628,38 +1605,37 @@ int DfXcpotfitting::calcMN()
 
 int DfXcpotfitting::bfscalMyu()
 {
-    TlLogX& Log = TlLogX::getInstance();
     // Scale Myu before calculation
     if (this->scftype == "nsp") {
         for (int i = 0; i < naux; ++i) {
             MyuGammaA[i] = MyuGammaA[i] / Alpha[i];
         }
 
-        if (this->outlevel < -5) {
-            Log << "*** PRINT OUT MyuGamma in bfscalMyu ***" << "\n";
-            for (int i = 0; i < naux; ++i) {
-                Log << "MyuGamma[" << i << "] = " << MyuGammaA[i] << "\n";
-            }
-            Log << "\n";
-        }
+        // if (this->outlevel < -5) {
+        //     Log << "*** PRINT OUT MyuGamma in bfscalMyu ***" << "\n";
+        //     for (int i = 0; i < naux; ++i) {
+        //         Log << "MyuGamma[" << i << "] = " << MyuGammaA[i] << "\n";
+        //     }
+        //     Log << "\n";
+        // }
     } else {
         for (int i = 0; i < naux; ++i) {
             MyuGammaA[i] = MyuGammaA[i] / Alpha[i];
             MyuGammaB[i] = MyuGammaB[i] / Alpha[i];
         }
 
-        if (this->outlevel < -5) {
-            Log << "*** PRINT OUT MyuGammaA in bfscalMyu ***" << "\n";
-            for (int i = 0; i < naux; ++i) {
-                Log << "MyuGammaA[" << i << "] = " << MyuGammaA[i] << "\n";
-            }
-            Log << "\n";
-            Log << "*** PRINT OUT MyuGammaB in bfscalMyu ***" << "\n";
-            for (int j = 0; j < naux; ++j) {
-                Log << "MyuGammaB[" << j << "] = " << MyuGammaB[j] << "\n";
-            }
-            Log << "\n";
-        }
+        // if (this->outlevel < -5) {
+        //     Log << "*** PRINT OUT MyuGammaA in bfscalMyu ***" << "\n";
+        //     for (int i = 0; i < naux; ++i) {
+        //         Log << "MyuGammaA[" << i << "] = " << MyuGammaA[i] << "\n";
+        //     }
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT MyuGammaB in bfscalMyu ***" << "\n";
+        //     for (int j = 0; j < naux; ++j) {
+        //         Log << "MyuGammaB[" << j << "] = " << MyuGammaB[j] << "\n";
+        //     }
+        //     Log << "\n";
+        // }
     }
 
     return 0;
@@ -1671,7 +1647,6 @@ int DfXcpotfitting::bfscalMyu()
 // while in spin-polarized case, file names are fl_Vct_Myua(int) and fl_Vct_Myub(int).
 int DfXcpotfitting::afscalMyu()
 {
-    TlLogX& Log = TlLogX::getInstance();
     if (this->scftype == "nsp") {
         for (int i = 0; i < naux; ++i) {
             MyuGammaA[i] = MyuGammaA[i] * Alpha[i];
@@ -1691,13 +1666,13 @@ int DfXcpotfitting::afscalMyu()
 //     nyu.close();
         this->NyuGammaA.save("fl_Work/fl_Vct_Nyu" + TlUtils::xtos(niteration1));
 
-        if (this->outlevel <= -2) {
-            Log << "*** PRINT OUT MyuGamma in afscalMyu ***" << "\n";
-            for (int i = 0; i < naux; ++i) {
-                Log << "MyuGamma[" << i << "] = " << MyuGammaA[i] << "\n";
-            }
-            Log << "\n";
-        }
+        // if (this->outlevel <= -2) {
+        //     Log << "*** PRINT OUT MyuGamma in afscalMyu ***" << "\n";
+        //     for (int i = 0; i < naux; ++i) {
+        //         Log << "MyuGamma[" << i << "] = " << MyuGammaA[i] << "\n";
+        //     }
+        //     Log << "\n";
+        // }
     } else {
         for (int i = 0; i < naux; ++i) {
             MyuGammaA[i] = MyuGammaA[i] * Alpha[i];
@@ -1732,18 +1707,18 @@ int DfXcpotfitting::afscalMyu()
 //     nyub.close();
         this->NyuGammaB.save("fl_Work/fl_Vct_Nyub" + TlUtils::xtos(niteration1));
 
-        if (this->outlevel < 0) {
-            Log << "*** PRINT OUT MyuGammaA in afscalMyu ***" << "\n";
-            for (int i = 0; i < naux; ++i) {
-                Log << "MyuGammaA[" << i << "] = " << this->MyuGammaA[i] << "\n";
-            }
-            Log << "\n";
-            Log << "*** PRINT OUT MyuGammaB in afscalMyu ***" << "\n";
-            for (int j = 0; j < naux; ++j) {
-                Log << "MyuGammaB[" << j << "] = " << this->MyuGammaB[j] << "\n";
-            }
-            Log << "\n";
-        }
+        // if (this->outlevel < 0) {
+        //     Log << "*** PRINT OUT MyuGammaA in afscalMyu ***" << "\n";
+        //     for (int i = 0; i < naux; ++i) {
+        //         Log << "MyuGammaA[" << i << "] = " << this->MyuGammaA[i] << "\n";
+        //     }
+        //     Log << "\n";
+        //     Log << "*** PRINT OUT MyuGammaB in afscalMyu ***" << "\n";
+        //     for (int j = 0; j < naux; ++j) {
+        //         Log << "MyuGammaB[" << j << "] = " << this->MyuGammaB[j] << "\n";
+        //     }
+        //     Log << "\n";
+        // }
     }
 
     return 0;
@@ -1758,17 +1733,15 @@ void DfXcpotfitting::Error(const char* string)
 
 void DfXcpotfitting::Print(int number, double* vector)
 {
-    TlLogX& Log = TlLogX::getInstance();
     for (int i = 0; i < number; ++i) {
-        Log << "vector[" << i << "] = " << vector[i] << "\n";
+        this->log_.info("vector[" + TlUtils::xtos(i) + "] = " + TlUtils::xtos(vector[i]));
     }
 }
 
 void DfXcpotfitting::Print(int number, int* row, int* col, double* matrix)
 {
-    TlLogX& Log = TlLogX::getInstance();
     for (int i = 0; i < number; ++i) {
-        Log << "matrix[" << row[i] << ", " << col[i] << "] = " << matrix[i] << "\n";
+        this->log_.info("matrix[" + TlUtils::xtos(row[i]) + ", " + TlUtils::xtos(col[i]) + "] = " + TlUtils::xtos(matrix[i]));
     }
 }
 

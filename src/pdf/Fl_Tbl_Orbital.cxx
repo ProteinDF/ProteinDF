@@ -7,7 +7,6 @@
 
 #include "Fl_Tbl_Orbital.h"
 #include "FileX.h"
-#include "TlLogX.h"
 #include "TlUtils.h"
 #include "CnError.h"
 

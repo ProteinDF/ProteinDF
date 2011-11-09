@@ -5,7 +5,6 @@
 #include "TlSymmetricMatrix.h"
 #include "TlSparseSymmetricMatrix.h"
 #include "TlDistributeSymmetricMatrix.h"
-#include "TlLogX.h"
 #include "TlUtils.h"
 #include "TlTime.h"
 #include "TlFileSymmetricMatrix.h"
@@ -154,8 +153,8 @@ void DfHpq_Parallel::parallelLogger(const std::string& str)
 
     const std::string tmp = TlUtils::format("[%3d/%3d]> ", rComm.getRank(), rComm.getNumOfProc()) + str;
 
-    TlLogX& log = TlLogX::getInstance();
-    log << tmp;
+    TlLogging& log = TlLogging::getInstance();
+    log.info(tmp);
 }
 
 

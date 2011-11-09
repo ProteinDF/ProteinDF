@@ -124,8 +124,8 @@ public:
 
     void show() const;
     void show(const std::string& title) const;
-    void showAMOSS(const std::string& title ="") const;
-    void showGAMESS() const;
+    std::string getStr_AMOSS() const;
+    std::string getStr_GAMESS() const;
 
 public:
     // 規格化定数その２ <1|1/(r1-r2)|2>の規格化タイプ

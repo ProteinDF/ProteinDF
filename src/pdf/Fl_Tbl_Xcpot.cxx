@@ -7,7 +7,7 @@
 
 #include "Fl_Tbl_Xcpot.h"
 #include "FileX.h"
-#include "TlLogX.h"
+#include "TlLogging.h"
 #include "CnError.h"
 
 int  Fl_Tbl_Xcpot::flag1=0;         // flag for Constructor;
@@ -21,7 +21,7 @@ int Fl_Tbl_Xcpot::cGtoTotalNum=0; // s*1,p*3,d*5;
 //#######################################################################
 Fl_Tbl_Xcpot::Fl_Tbl_Xcpot()
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
 
     int memory;
 
@@ -30,8 +30,8 @@ Fl_Tbl_Xcpot::Fl_Tbl_Xcpot()
         prepare();
         memory = Estmemval();
         if (memory > MaxFlBasisTblmemory) {
-            Log <<"Cannot get memory !! (in Fl_Tbl_Xcpot.cxx no constractor)"<<"\n";
-            Log <<"Used Memory is " << 8 * memory <<" [byte] " <<"\n";
+            log.error("Cannot get memory !! (in Fl_Tbl_Xcpot.cxx no constractor)");
+            log.error("Used Memory is " + TlUtils::xtos(8 * memory) + " [byte] ");
             CnErr.abort();
         } else {
             //      Log <<"Used Memory is " << 8 * memory <<" [byte] " <<"\n";
@@ -73,7 +73,7 @@ Fl_Tbl_Xcpot::~Fl_Tbl_Xcpot()
 //#######################################################################
 int Fl_Tbl_Xcpot::prepare()
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
 
     int i,j,k,m,start,to,flag;
     // char *Atm = new char[MaxAtomName];
@@ -127,8 +127,7 @@ int Fl_Tbl_Xcpot::prepare()
                         iter=5;
                         break;
                     default  :
-                        Log << "Error (making Table for Yahito(Xcot)))"
-                        << "\n";
+                        log.error("Error (making Table for Yahito(Xcot)))");
                         CnErr.abort();
                     }
 
@@ -181,7 +180,7 @@ int  Fl_Tbl_Xcpot::getMemory(void)
 //#######################################################################
 int Fl_Tbl_Xcpot::makeTable()
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
 
     Fl_Geometry      FlGeom(Fl_Geometry::getDefaultFileName());
     Fl_Gto_Xcpot   FlGtoXcpot;
@@ -216,7 +215,7 @@ int Fl_Tbl_Xcpot::makeTable()
     std::string TblFile = "fl_Table/XcpotTable";
     fo.open(TblFile.c_str(), std::ios::out | std::ios::trunc);
     if (!fo) {
-        Log << "Cannot Open " << TblFile << "\n";
+        log.error("Cannot Open " + TblFile);
         CnErr.abort();
     }
 
@@ -251,8 +250,7 @@ int Fl_Tbl_Xcpot::makeTable()
                         iter=5;
                         break;
                     default  :
-                        Log << "Error (making Table for Yahito(Xpot))!!"
-                        << "\n";
+                        log.error("Error (making Table for Yahito(Xpot))!!");
                         CnErr.abort();
                         break;
                     }
@@ -280,8 +278,7 @@ int Fl_Tbl_Xcpot::makeTable()
                             <<"   ["<<Lb2<<"]"<< "\n";
                             break;
                         default  :
-                            Log << "error(making Table for Yahiro(Xcpot))"
-                            << "\n";
+                            log.error("error(making Table for Yahiro(Xcpot))");
                             CnErr.abort();
                             break;
                         }       //switch(shell);
@@ -305,7 +302,7 @@ int Fl_Tbl_Xcpot::makeTable()
 //#########################################################################
 int  Fl_Tbl_Xcpot::setData()
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
 
     int intI;
     std::ifstream fi;
@@ -314,7 +311,7 @@ int  Fl_Tbl_Xcpot::setData()
     std::string TblFile = "fl_Table/XcpotTable";
     fi.open(TblFile.c_str(), std::ios::in);
     if (!fi) {
-        Log<<"Cannot open "<<TblFile<<"\n";
+        log.error("Cannot open " + TblFile);
         CnErr.abort();
     }
 

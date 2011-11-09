@@ -2,7 +2,6 @@
 #include "DfXcenefitting.h"
 #include "TlTime.h"
 #include "TlVector.h"
-#include "TlLogX.h"
 
 DfXcenefitting::DfXcenefitting(TlSerializeData* pPdfParam, int nItr)
     : DfObject(pPdfParam)
@@ -25,18 +24,11 @@ DfXcenefitting::~DfXcenefitting()
 
 int DfXcenefitting::dfXceMain()
 {
-    TlLogX& Log = TlLogX::getInstance();
-
-    Log << "=== START ==========\n";
-    Log << "START : " << TlTime::getNow() << "\n";
+    this->log_.info("start");
 
     this->calcEpsilon();
-    Log << "calcEpsilon : " << TlTime::getNow() << "\n";
-    Log.flush();
 
-    Log << "END : " << TlTime::getNow() << "\n";
-    Log << "=== END ============\n";
-    Log.flush();
+    this->log_.info("end");
 
     return 0;
 }
@@ -46,8 +38,6 @@ int DfXcenefitting::dfXceMain()
 // File out EpsilonGamma.
 int DfXcenefitting::calcEpsilon()
 {
-//     TlLogX& Log = TlLogX::getInstance();
-    
     if (this->m_nMethodType == METHOD_RKS) {
         TlVector myu;
         myu.load("fl_Work/fl_Vct_Myu" + TlUtils::xtos(this->m_nIteration));

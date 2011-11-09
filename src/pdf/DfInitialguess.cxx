@@ -22,7 +22,6 @@
 
 #include "TlSymmetricMatrix.h"
 #include "TlPrdctbl.h"
-#include "TlLogX.h"
 #include "CnError.h"
 
 int DfInitialguess::w1RouCount = 0;
@@ -48,7 +47,6 @@ int DfInitialguess::dfGusMain()
 {
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
     
-    TlLogX& log = TlLogX::getInstance();
     this->tempflag = 0;
 
     const std::string sScfStartGuess = pdfParam["scf-start-guess"].getStr();
@@ -56,7 +54,7 @@ int DfInitialguess::dfGusMain()
         this->readData();        // Read and Analyzy needData.
         this->calcMain();        // Mainfunction for Calculation.
     } else if (sScfStartGuess == "file_rho") {
-        log << " ##### DfInitialguess, Treatment of user_rho is begun.####\n";
+        this->log_.info("DfInitialguess, Treatment of user_rho is begun.");
         this->setCoefRoudata();
     }
 
@@ -66,7 +64,7 @@ int DfInitialguess::dfGusMain()
 
     if (this->tempflag == 0) {
         if (pdfParam["myu-nyu-zero"].getStr() == "yes") {
-            log << "\n@@@@ DfInitialguess FACE TO 1/1000(ZERO) vector for Myu, Nyu by EKA @@@@\n\n";
+            this->log_.info("DfInitialguess FACE TO 1/1000(ZERO) vector for Myu, Nyu by EKA.");
 
             const int niter = 1;
             // read myu vector
@@ -472,7 +470,6 @@ int DfInitialguess::setKeyword()
 {
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
     
-    TlLogX& log = TlLogX::getInstance();
     int   FromAtom[MaxPartialNum];
     int   ToAtom[MaxPartialNum];
     double Ele[MaxPartialNum];
@@ -489,9 +486,9 @@ int DfInitialguess::setKeyword()
             this->PpqFname = "";
         } else {
             if (this->scftype != NSP) {
-                log<<"Bad appointment Matrix Input Filename\n";
-                log<<"Calulation Method is SP , now .\n";
-                log<<"Input 2 Filename in guess/sp-ppq\n";
+                this->log_.error("Bad appointment Matrix Input Filename");
+                this->log_.error("Calulation Method is SP , now.");
+                this->log_.error("Input 2 Filename in guess/sp-ppq.");
                 CnErr.abort();
             }
         }
@@ -505,16 +502,16 @@ int DfInitialguess::setKeyword()
             this->BetaPpqFname  = "";
         } else {
             if (this->scftype != SP) {
-                log << "Bad appointment Matrix Input Filename\n";
-                log << "Calulation Method is NSP , now .\n";
-                log << "Input Filename in guess/nsp-ppq\n";
+                this->log_.error("Bad appointment Matrix Input Filename");
+                this->log_.error("Calulation Method is NSP , now .");
+                this->log_.error("Input Filename in guess/nsp-ppq");
                 CnErr.abort();
             }
 
             std::vector<std::string> sItems = TlUtils::split(tmp, " ");
             if (sItems.size() != 2) {
-                log << "Bad appointment : MatrixInput for SP \n";
-                log << "Input :  two filenames for alpha and beta\n";
+                this->log_.error("Bad appointment : MatrixInput for SP.");
+                this->log_.error("Input :  two filenames for alpha and beta");
                 CnErr.abort();
             }
             this->AlphaPpqFname = sItems[0];
@@ -529,32 +526,32 @@ int DfInitialguess::setKeyword()
 
         this->FirstAveGosa = std::atof(sItems[0].c_str());
         if (this->FirstAveGosa < 1E-6) {
-            log << " FirstAveGosa = ["<<FirstAveGosa<<"] is very small\n";
-            log << " This suitable value is from 0.1 to 2.0 .\n";
+            this->log_.error(TlUtils::format(" FirstAveGosa = [%f] is very small.", FirstAveGosa));
+            this->log_.error(" This suitable value is from 0.1 to 2.0.");
             CnErr.abort();
         }
 
         this->FirstEachGosa = std::atof(sItems[1].c_str());
         if (this->FirstEachGosa < this->FirstAveGosa) {
-            log << "You must appoint (FirstEachGosa > FirstAveGosa)\n";
-            log << "But now , FirstEachGosa = " << this->FirstEachGosa << "\n";
-            log << "          FirstAveGosa  = " << this->FirstAveGosa  << "\n";
+            this->log_.error("You must appoint (FirstEachGosa > FirstAveGosa)");
+            this->log_.error(TlUtils::format("But now , FirstEachGosa = %f", this->FirstEachGosa));
+            this->log_.error(TlUtils::format("FirstAveGosa = %f", this->FirstAveGosa));
             CnErr.abort();
         }
 
         this->LastAveGosa = std::atof(sItems[2].c_str());
         if (this->LastAveGosa < this->FirstAveGosa) {
-            log <<"You must appoint (LastAveGosa > FirstAveGosa)\n";
-            log <<"But now , FirstAveGosa = " << this->FirstAveGosa << "\n";
-            log <<"          LastAveGosa  = " << this->LastAveGosa  << "\n";
+            this->log_.error("You must appoint (LastAveGosa > FirstAveGosa)");
+            this->log_.error(TlUtils::format("But now , FirstAveGosa = %f", this->FirstAveGosa));
+            this->log_.error(TlUtils::format("LastAveGosa = %f", this->LastAveGosa));
             CnErr.abort();
         }
 
         this->LastEachGosa = std::atof(sItems[3].c_str());
         if (this->LastAveGosa > this->LastEachGosa) {
-            log << "You must appoint (LastAveGosa > LastEachGosa)\n";
-            log << "But now , LastAveGosa  = "  << this->LastAveGosa  << "\n";
-            log << "          LastEachGosa  = " << this->LastEachGosa << "\n";
+            this->log_.error("You must appoint (LastAveGosa > LastEachGosa)");
+            this->log_.error(TlUtils::format("But now , LastAveGosa  = %f", this->LastAveGosa));
+            this->log_.error(TlUtils::format("LastEachGosa = %f", this->LastEachGosa));
             CnErr.abort();
         }
     }
@@ -573,7 +570,7 @@ int DfInitialguess::setKeyword()
         } else if (dummy == "meth4") {
             this->MethodMyuNyu = Meth4 ;
         } else {
-            log << "Bad appointment guess/make-myu-nyu\n";
+            this->log_.error("Bad appointment guess/make-myu-nyu");
             CnErr.abort();
         }
     }
@@ -582,8 +579,8 @@ int DfInitialguess::setKeyword()
     {
         std::string dummy = pdfParam["guess/vct-normalize"].getStr();
         if (dummy.empty()) {
-            log<<"Bad appointment vct-normalize "<<"\n";
-            log<<"Input ON or OFF for Rou,Myu,Nyu."<<"\n";
+            this->log_.error("Bad appointment vct-normaliz");
+            this->log_.error("Input ON or OFF for Rou,Myu,Nyu.");
             CnErr.abort();
         } else {
             std::vector<std::string> sItems = TlUtils::split(dummy, " ");
@@ -593,7 +590,7 @@ int DfInitialguess::setKeyword()
             } else if (TlUtils::toUpper(sItems[0]) == "OFF") {
                 this->VctRouNormalize = OFF;
             } else {
-                log<<"Bad appointment guess/vct-normalize (Rou)"<<"\n";
+                this->log_.error("Bad appointment guess/vct-normalize (Rou)");
                 CnErr.abort();
             }
 
@@ -602,7 +599,7 @@ int DfInitialguess::setKeyword()
             } else if (TlUtils::toUpper(sItems[1]) == "OFF") {
                 this->VctMyuNormalize = OFF;
             } else {
-                log << "Bad appointment guess/vct-normalize (Myu)\n";
+                this->log_.error("Bad appointment guess/vct-normalize (Myu)");
                 CnErr.abort();
             }
 
@@ -611,7 +608,7 @@ int DfInitialguess::setKeyword()
             } else if (TlUtils::toUpper(sItems[2]) == "OFF") {
                 this->VctNyuNormalize = OFF;
             } else {
-                log << "Bad appointment guess/vct-normalize (Nyu)\n";
+                this->log_.error("Bad appointment guess/vct-normalize (Nyu)");
                 CnErr.abort();
             }
 
@@ -630,8 +627,8 @@ int DfInitialguess::setKeyword()
             std::vector<std::string> sItems = TlUtils::split(tmp, " ");
             int blocknumber = std::atoi(sItems[0].c_str());
             if (blocknumber == 0) {
-                log << "Cannot Transfer atoi(dumyCHAR2).\n";
-                log << "Check : format for guess/part-normalize\n";
+                this->log_.error("Cannot Transfer atoi(dumyCHAR2).");
+                this->log_.error("Check : format for guess/part-normalize");
                 CnErr.abort();
             }
 
@@ -650,7 +647,7 @@ int DfInitialguess::setKeyword()
                     ncount++;
                     Conbination[i] = Nyu ;
                 } else {
-                    log << "Bad appintment guess/part-normalize\n";
+                    this->log_.error("Bad appintment guess/part-normalize");
                     CnErr.abort();
                 }
 
@@ -741,8 +738,8 @@ int DfInitialguess::setKeyword()
 
             int blocknumber = std::atoi(sItems[0].c_str()) ;
             if (blocknumber == 0) {
-                log << "Cannot Transfer atoi(dumyCHAR2).\n";
-                log << "Check : format for guess/user-vector\n";
+                this->log_.error("Cannot Transfer atoi(dumyCHAR2).");
+                this->log_.error("Check : format for guess/user-vector");
                 CnErr.abort();
             }
 
@@ -762,7 +759,7 @@ int DfInitialguess::setKeyword()
                     ncount++;
                     Conbination[i] = Nyu ;
                 } else {
-                    log << "Bad appintment guess/part-normalize\n";
+                    this->log_.error("Bad appintment guess/part-normalize");
                     CnErr.abort();
                 }
 
@@ -833,7 +830,6 @@ int DfInitialguess::setKeyword()
         int startaux = this->EachAD[startAtom].Rou_StartNum;
         int auxlength = endaux - startaux ;
         {
-            //Fl_GuessVector FGV(UserVctRou[i].Filename);
             TlVector FGV;
             FGV.load(UserVctRou[i].Filename);
 
@@ -842,12 +838,10 @@ int DfInitialguess::setKeyword()
             std::cout << AtomNum << std::endl;
             std::cout << startAtom << " "<< finalAtom << std::endl;
             std::cout << startaux << " " << endaux << " " << auxlength << std::endl;
-            //cout << FGV.getAuxterm() << endl;
             std::cout << FGV.getSize() << std::endl;
             std::cout << "----------------------------------" << std::endl;
-            //if( auxlength != FGV.getAuxterm() ){
             if (static_cast<TlVector::size_type>(auxlength) != FGV.getSize()) {
-                log<<"Bad defined VectorFile [" <<UserVctRou[i].Filename<<"]\n";
+                this->log_.error(TlUtils::format("Bad defined VectorFile [%s]", UserVctRou[i].Filename.c_str()));
                 CnErr.abort();
             }
         }
@@ -872,7 +866,7 @@ int DfInitialguess::setKeyword()
 
             //if (auxlength != FGV.getAuxterm() ){
             if (static_cast<TlVector::size_type>(auxlength) != FGV.getSize()) {
-                log<<"Bad defined VectorFile [" <<UserVctMyu[i].Filename<<"]\n";
+                this->log_.error(TlUtils::format("Bad defined VectorFile [%s]", UserVctMyu[i].Filename.c_str()));
                 CnErr.abort();
             }
         }
@@ -897,7 +891,7 @@ int DfInitialguess::setKeyword()
 
             //if( auxlength != FGV.getAuxterm() ){
             if (static_cast<TlVector::size_type>(auxlength) != FGV.getSize()) {
-                log<<"Bad defined VectorFile [" << UserVctNyu[i].Filename << "]\n";
+                this->log_.error(TlUtils::format("Bad defined VectorFile [%s]", UserVctNyu[i].Filename.c_str()));
                 CnErr.abort();
             }
         }
@@ -1109,8 +1103,6 @@ int DfInitialguess::setStruct()
 
 int DfInitialguess::makeStepTable()
 {
-    TlLogX& log = TlLogX::getInstance();
-
     Fl_Geometry FlGeom(Fl_Geometry::getDefaultFileName());
 
     int count = 0;
@@ -1147,7 +1139,6 @@ int DfInitialguess::makeStepTable()
             case fl_Molec:
                 atmnum  = FGM.getHeaderAtomNum(GDBfile4, "", 0);
                 count++;
-                log<<"MOLEC"<<"\n";
                 break;
 
             case fl_User:
@@ -1156,7 +1147,7 @@ int DfInitialguess::makeStepTable()
                 break;
 
             default:
-                log<<"Bad information UnitFile in makeStep Table";
+                this->log_.error("Bad information UnitFile in makeStep Table");
                 CnErr.abort();
                 break;
             }
@@ -1166,10 +1157,10 @@ int DfInitialguess::makeStepTable()
 
     STEPnumber = count;
     if (STEPnumber > MaxStepNum) {
-        log<<"Error in makeStepTable in DfInitialguess.\n";
-        log<<"You must change MaxStepNum in DfInitialguess.h\n";
-        log<<"Now , MaxStepNum = " << static_cast<int>(MaxStepNum) <<"\n";
-        log<<"So , MaxStepNum > "  << STEPnumber <<"\n";
+        this->log_.warn("Error in makeStepTable in DfInitialguess.");
+        this->log_.warn("You must change MaxStepNum in DfInitialguess.h");
+        this->log_.warn(TlUtils::format("Now , MaxStepNum = %d", static_cast<int>(MaxStepNum)));
+        this->log_.warn(TlUtils::format("So , MaxStepNum > %d", STEPnumber));
     }
 
     count=0;
@@ -1252,7 +1243,7 @@ int DfInitialguess::makeStepTable()
             }
             break;
             default: {
-                log<<"Bad information UnitFile in makeStep Table";
+                this->log_.error("Bad information UnitFile in makeStep Table");
                 CnErr.abort();
             }
             break;
@@ -1262,7 +1253,7 @@ int DfInitialguess::makeStepTable()
     }
 
     if (count != STEPnumber) {
-        log<<"Bad counter \n";
+        this->log_.error("Bad counter");
         CnErr.abort();
     }
 
@@ -1271,8 +1262,6 @@ int DfInitialguess::makeStepTable()
 
 DfInitialguess::KeyOnOff DfInitialguess::serchUserVctExist(WhichRMN RMN, int from, int to)
 {
-    TlLogX& log = TlLogX::getInstance();
-
     KeyOnOff  Hantei;
     int flag,i;
 
@@ -1291,7 +1280,7 @@ DfInitialguess::KeyOnOff DfInitialguess::serchUserVctExist(WhichRMN RMN, int fro
         } else if (flag==1) {
             Hantei=ON;
         } else if (flag>1) {
-            log<<"Bad appointment UserVectorRou in serchUserVctExist"<<"\n";
+            this->log_.error("Bad appointment UserVectorRou in serchUserVctExist");
             CnErr.abort();
         }
         return  Hantei;
@@ -1309,7 +1298,7 @@ DfInitialguess::KeyOnOff DfInitialguess::serchUserVctExist(WhichRMN RMN, int fro
         } else if (flag==1) {
             Hantei=ON;
         } else if (flag>1) {
-            log<<"Bad appointment UserVectorMyu in serchUserVctExist"<<"\n";
+            this->log_.error("Bad appointment UserVectorMyu in serchUserVctExist");
             CnErr.abort();
         }
         return  Hantei;
@@ -1327,8 +1316,7 @@ DfInitialguess::KeyOnOff DfInitialguess::serchUserVctExist(WhichRMN RMN, int fro
         } else if (flag==1) {
             Hantei=ON;
         } else if (flag>1) {
-            log<<"Bad appointment UserVectorNyu in serchUserVctExist"<<"\n";
-            //        log<<"\7"<<"\n";
+            this->log_.error("Bad appointment UserVectorNyu in serchUserVctExist");
             CnErr.abort();
         }
         return  Hantei;
@@ -1372,16 +1360,12 @@ int DfInitialguess::CorrespOrbital()
 // fl_Gdb_Atomに入っているアトムのデータをメモリ上（構造体）に読み込む。
 int DfInitialguess::setAtomCoef()
 {
-    TlLogX& log = TlLogX::getInstance();
-
-    //char SetName[LineBuf];
     Fl_Gto_Density FlGtoDen;
 
     std::ifstream fi;
     fi.open(this->GDBfile0.c_str());
     if (!fi) {
-        log <<"Cannot Open in setAtomcoef() "<< GDBfile0 << "\n";
-        log.flush();
+        this->log_.warn(TlUtils::format("Cannot Open in setAtomcoef() %s", GDBfile0.c_str()));
     }
 
     for (int i = 0; i < AtomKindNum; ++i) {
@@ -1389,10 +1373,9 @@ int DfInitialguess::setAtomCoef()
         std::string SetName = this->Atomtype[i].AuxSetName;
         Fl_Gdb_Atom FGA;
         FGA.readData(GDBfile0.c_str() ,GDBfile0.c_str(), SetName, 0);
-        log << TlUtils::format(" file: %s, name=%s\n",
-                               GDBfile0.c_str(), SetName.c_str())
-            << std::endl;
-        
+        this->log_.info(TlUtils::format(" file: %s, name=%s\n",
+                                        GDBfile0.c_str(), SetName.c_str()));
+
         // setdata for Rou.
         tempflagw1 = FGA.gettempflag();
         if (tempflagw1 == 1) {
@@ -1400,26 +1383,15 @@ int DfInitialguess::setAtomCoef()
             const int startnumber = FlGtoDen.getStartposition(i);
             const int atomcgtonumber = FlGtoDen.getTermnumber(i);
 
-            log<< "\n";
-            log<< "**** WARNING ****" <<"\n";
-            log<< "ATOM = " <<Atomtype[i].AtomKind <<"\n";
-            log<< "The basis set was not included in fl_Gdb_Atom"<<"\n";
-            log<< "However, force to continue"<<"\n";
-            log<< "**** INFORMATION FROM BASIS2 ****" <<"\n";
-            log<< "Startposition = "<<startnumber<<"  Termnumber = "<<atomcgtonumber <<"\n";
-            log<< "\n";
-
-            std::cout<<std::endl;
-            std::cout<< "**** WARNING ****" <<std::endl;
-            std::cout<< "ATOM = "<<Atomtype[i].AtomKind <<std::endl;
-            std::cout<< "The basis set was not included in fl_Gdb_Atom"<<std::endl;
-            std::cout<< "However, force to continue"<<std::endl;
-            std::cout<< "**** INFORMATION FROM BASIS2 ****" <<std::endl;
-            std::cout<< "Startposition = "<<startnumber<<"  Termnumber = "<<atomcgtonumber <<std::endl;
-            std::cout<<std::endl;
+            this->log_.warn(TlUtils::format("ATOM = %s", Atomtype[i].AtomKind.c_str()));
+            this->log_.warn("The basis set was not included in fl_Gdb_Atom");
+            this->log_.warn("However, force to continue");
+            this->log_.warn("INFORMATION FROM BASIS2");
+            this->log_.warn(TlUtils::format("Startposition = %d, Termnumber = %d",
+                                            startnumber, atomcgtonumber));
 
             // force to set the values of elements of rho
-            log<<" only the coefficient of s-shell term is set to 1.0 "<<"\n";
+            this->log_.info(" only the coefficient of s-shell term is set to 1.0");
             int itmp, rhotermnum; // ,inum
 
             int snumber = 0;
@@ -1433,7 +1405,7 @@ int DfInitialguess::setAtomCoef()
                     Atomtype[i].rou[inum2]=1.0;
                     snumber=snumber+1;
                     inum2+=1;
-                    log<<"s is detected"<<"\n";
+                    this->log_.info("s is detected");
                     break;
                 case 'p':
                     for (itmp=inum2; itmp<inum2+3; itmp++) Atomtype[i].rou[itmp]=0.0;
@@ -1459,10 +1431,10 @@ int DfInitialguess::setAtomCoef()
             Atomtype[i].rDbShellNum[3]=0;
         } else {
             if (Atomtype[i].routerm[0] != FGA.getRouterm(0)) {
-                log << TlUtils::format("Bad term Number: Atomtype[%d].routerm != FGA.getRouterm(0)", i)
-                    << std::endl;
-                log << Atomtype[i].routerm[0] << ", " << FGA.getRouterm(0) <<"\n";
-                log.flush();
+                this->log_.error(TlUtils::format("Bad term Number: Atomtype[%d].routerm != FGA.getRouterm(0)", i));
+                this->log_.error(TlUtils::format("%d, %d",
+                                                 Atomtype[i].routerm[0],
+                                                 FGA.getRouterm(0)));
                 CnErr.abort();
             } else {
                 FGA.getRouCoef(0 , Atomtype[i].rou);
@@ -1471,28 +1443,17 @@ int DfInitialguess::setAtomCoef()
 
             // setdata for Myu.
             if (Atomtype[i].myuterm[0] != FGA.getMyuterm(0)) {
-                log<<"Bad term Number "<<"\n";
-                log<<"Atomtype["<<i<<"].myuterm != FGA.getMyuterm(0)"<<"\n";
-                log << Atomtype[i].myuterm[0] << "\n";
-                log << FGA.getMyuterm(0) << "\n";
-                log.flush();
-
+                this->log_.error("Bad term Number");
+                this->log_.error(TlUtils::format("Atomtype[%d].myuterm != FGA.getMyuterm(0)",
+                                                 i));
+                this->log_.error(TlUtils::format("%d, %d",
+                                                 Atomtype[i].myuterm[0],
+                                                 FGA.getMyuterm(0)));
                 CnErr.abort();
             } else {
                 FGA.getMyuCoef(0 , Atomtype[i].myu);
                 Atomtype[i].mDbShellNum = FGA.getMyuShellterm(0);
             }
-
-            // setdata for Nyu.
-//             if (Atomtype[i].nyuterm[0] != FGA.getNyuterm(0)) {
-//                 log << TlUtils::format("Bad term Number: Atomtype[%d].nyuterm != FGA.getNyuterm(0)\n", i);
-//                 log << "lhs = " << Atomtype[i].nyuterm[0] << "\n";
-//                 log << "rhs = " << FGA.getNyuterm(0) << "\n";
-//                 log.flush();
-//             } else {
-//                 FGA.getNyuCoef(0 , Atomtype[i].nyu);
-//                 Atomtype[i].nDbShellNum = FGA.getNyuShellterm(0);
-//             }
         }
     }
 
@@ -1502,8 +1463,6 @@ int DfInitialguess::setAtomCoef()
 //#############################################################################
 int DfInitialguess::calcMain()
 {
-    TlLogX& log = TlLogX::getInstance();
-
     if (this->PpqFname != "") {
         if (scftype != NSP) {
             GusError("Bad appointment MatrixInput_PpqFname,now SP calulation");
@@ -1542,24 +1501,17 @@ int DfInitialguess::calcMain()
         }// for(i)
 
         if (w1RouCount != MaxTermRou) {
-            log<<" Bad counter and vector in EXE_MOLECULE_routine(). "<<"\n";
-            log<<" w1RouCount = "<<w1RouCount<<"\n";
-            log<<" MaxTermRou = "<<MaxTermRou<<"\n";
-            //    log<<"\7"<<"\n";
+            this->log_.error("Bad counter and vector in EXE_MOLECULE_routine().");
+            this->log_.error(TlUtils::format(" w1RouCount = %d", w1RouCount));
+            this->log_.error(TlUtils::format(" MaxTermRou = %d", MaxTermRou));
             CnErr.abort();
         }
         if (w1MyuCount != MaxTermMyu) {
-            log<<" Bad counter and vector in EXE_MOLECULE_routine(). "<<"\n";
-            log<<" w1MyuCount = "<<w1MyuCount<<"\n";
-            log<<" MaxTermMyu = "<<MaxTermMyu<<"\n";
-            //    log<<"\7"<<"\n";
+            this->log_.error("Bad counter and vector in EXE_MOLECULE_routine().");
+            this->log_.error(TlUtils::format(" w1MyuCount = %d", w1MyuCount));
+            this->log_.error(TlUtils::format(" MaxTermMyu = %d", MaxTermMyu));
             CnErr.abort();
         }
-//         if (w1NyuCount != MaxTermNyu) {
-//             log<<" Bad counter and vector in EXE_MOLECULE_routine(). "<<"\n";
-//             log<<" w1NyuCount = "<<w1NyuCount<<"\n";
-//             log<<" MaxTermNyu = "<<MaxTermNyu<<"\n";
-//         }
 
         //-----------------------------------------
         // Cover Vector which is defined by user.
@@ -1615,13 +1567,9 @@ void DfInitialguess::readPpq()
 
 void DfInitialguess::callDensityfitting()
 {
-    TlLogX& log = TlLogX::getInstance();
-    log<<" ### START DensityFitting Called in DfInitialguess ###"<<"\n";
-
-    //int Rnum;
-    {
-        this->densityFitOnly();
-    }
+    this->log_.info("START DensityFitting Called in DfInitialgues");
+    
+    this->densityFitOnly();
 
     if (scftype==NSP) {
         TlVector rho1;
@@ -1641,10 +1589,8 @@ void DfInitialguess::callDensityfitting()
 
 void DfInitialguess::makeXcpotential()
 {
-    TlLogX& log = TlLogX::getInstance();
-
     if (tempflag==1) {
-        log<<"### makeXcpotential in DfInitialguess is skipped ###"<<"\n";
+        this->log_.info("makeXcpotential in DfInitialguess is skipped");
         return;
     }
 
@@ -1663,11 +1609,9 @@ void DfInitialguess::makeXcpotential()
         }
     } else if (MethodMyuNyu == Meth1) {
         if (MaxTermRou != MaxTermMyu) {
-            log<<"This routine cannot use this calculation"<<"\n";
-            log<<"Because , Total Auxiliary Number for Rou is "
-            <<"differrent from Total Auxiliary Number for Myu."<<"\n";
-            log<<"So, you must appoint other method to make Xcpotential"
-            <<"\n";
+            this->log_.error("This routine cannot use this calculation");
+            this->log_.error("Because , Total Auxiliary Number for Rou is differrent from Total Auxiliary Number for Myu.");
+            this->log_.error("So, you must appoint other method to make Xcpotential");
             CnErr.abort();
         }
         this->CoefRou.save("fl_Work/fl_Vct_Rou1");
@@ -1682,18 +1626,15 @@ void DfInitialguess::makeXcpotential()
             this->CoefNyuBeta  = this->CoefRou;
         }
     } else if (MethodMyuNyu == Meth2) {
-        log<<"Apporoximation(Meth0) for All Space.(fitting);"<<"\n";
-        log<<"This routine is dumy menber function."<<"\n";
-        log<<"So, you must appoint other method to make Xcpotential"<<"\n";
-        //  log<<"\7"<<"\n";
+        this->log_.error("Apporoximation(Meth0) for All Space.(fitting);");
+        this->log_.error("This routine is dumy menber function.");
+        this->log_.error("So, you must appoint other method to make Xcpotential");
         CnErr.abort();
     } else if (MethodMyuNyu == Meth3) {
         if (MaxTermRou != MaxTermMyu) {
-            log<<"This routine cannot use this calculation"<<"\n";
-            log<<"Because , Total Auxiliary Number for Rou is "
-            <<"differrent from Total Auxiliary Number for Myu."<<"\n";
-            log<<"So, you must appoint other method to make Xcpotential"
-            <<"\n";
+            this->log_.error("This routine cannot use this calculation");
+            this->log_.error("Because , Total Auxiliary Number for Rou is differrent from Total Auxiliary Number for Myu.");
+            this->log_.error("So, you must appoint other method to make Xcpotential");
             CnErr.abort();
         }
         {
@@ -1708,8 +1649,8 @@ void DfInitialguess::makeXcpotential()
             }
         }
     } else if (MethodMyuNyu == Meth4) {
-        log<<"This routine is dumy menber function."<<"\n";
-        log<<"So, you must appoint other method to make Xcpotential"<<"\n";
+        this->log_.error("This routine is dumy menber function.");
+        this->log_.error("So, you must appoint other method to make Xcpotential");
         CnErr.abort();
     }
 }
@@ -1751,8 +1692,6 @@ void DfInitialguess::EXE_ATOM(int num)
 
 void DfInitialguess::EXE_MOLECULE(int num)
 {
-    TlLogX& log = TlLogX::getInstance();
-
     int  tAN;  // tAN:totalAtomNumber of One Molecule(Residue) ;
     int  count,showcountR,showcountM,showcountN;
     int j,k,CnNum; // int r,i,,dumynum2, ,dumynum1;
@@ -1817,21 +1756,20 @@ void DfInitialguess::EXE_MOLECULE(int num)
 
     tAN = InpAmino.Res1AtomNum = FGM.getTotalAtomNum();
     if (tAN > Max1DbAtomNum) {
-        log<<" Bad : EXE_MOLECULE "<<"\n";
-        log<<" You must change the number(Max1DbAtomNum)";
-        log<<" in DfInitialguess.h ."<<"\n";
-        log<<" You must chage Max1DbAtomNum > "<< tAN <<"\n";
+        this->log_.error(" Bad : EXE_MOLECULE");
+        this->log_.error(" You must change the number(Max1DbAtomNum)");
+        this->log_.error(" in DfInitialguess.h .");
+        this->log_.error(TlUtils::format(" You must chage Max1DbAtomNum > %d", tAN));
         CnErr.abort();
     }
     DbAmino.Res1AtomNum = InpAmino.Res1AtomNum ;
 
     DbAmino.equalPairNum = FGM.getTotalEqualPairNum();
     if (DbAmino.equalPairNum > MaxEqualPair) {
-        log<<" Bad : EXE_MOLECULE "<<"\n";
-        log<<" You must change the number(MaxEqualPair)";
-        log<<" in DfInitialguess.h ."<<"\n";
-        log<<" You must chage MaxEqualPair > ";
-        log<< DbAmino.equalPairNum <<"\n";
+        this->log_.error(" Bad : EXE_MOLECULE ");
+        this->log_.error(" You must change the number(MaxEqualPair)");
+        this->log_.error(" in DfInitialguess.h .");
+        this->log_.error(TlUtils::format(" You must chage MaxEqualPair > %d", DbAmino.equalPairNum));
         CnErr.abort();
     }
 
@@ -1847,37 +1785,37 @@ void DfInitialguess::EXE_MOLECULE(int num)
     for (j=0; j<tAN; j++) {
         atmRouterm = DbAmino.Atomdata[j].Routerm;
         if (atmRouterm > aboutAuxTerm) {
-            log<<" Bad : EXE_MOLECULE "<<"\n";
-            log<<" You must change the number(aboutAuxTerm)";
-            log<<" in DfInitialguess.h ."<<"\n";
-            log<<" You must chage aboutAuxTerm > "<< atmRouterm <<"\n";
+            this->log_.error(" Bad : EXE_MOLECULE");
+            this->log_.error(" You must change the number(aboutAuxTerm)");
+            this->log_.error(" in DfInitialguess.h .");
+            this->log_.error(TlUtils::format(" You must chage aboutAuxTerm > %d", atmRouterm));
             CnErr.abort();
         }
 
         atmMyuterm = DbAmino.Atomdata[j].Myuterm;
         if (atmMyuterm > aboutAuxTerm) {
-            log<<" Bad : EXE_MOLECULE "<<"\n";
-            log<<" You must change the number(aboutAuxTerm)";
-            log<<" in DfInitialguess.h ."<<"\n";
-            log<<" You must chage aboutAuxTerm > "<< atmMyuterm <<"\n";
+            this->log_.error(" Bad : EXE_MOLECULE ");
+            this->log_.error(" You must change the number(aboutAuxTerm)");
+            this->log_.error(" in DfInitialguess.h .");
+            this->log_.error(TlUtils::format(" You must chage aboutAuxTerm > %d", atmMyuterm));
             CnErr.abort();
         }
 
         atmNyuterm = DbAmino.Atomdata[j].Nyuterm;
         if (atmNyuterm > aboutAuxTerm) {
-            log<<" Bad : EXE_MOLECULE "<<"\n";
-            log<<" You must change the number(aboutAuxTerm)";
-            log<<" in DfInitialguess.h ."<<"\n";
-            log<<" You must chage aboutAuxTerm > "<< atmNyuterm <<"\n";
+            this->log_.error(" Bad : EXE_MOLECULE");
+            this->log_.error(" You must change the number(aboutAuxTerm)");
+            this->log_.error(" in DfInitialguess.h .");
+            this->log_.error(TlUtils::format(" You must chage aboutAuxTerm > %d", atmNyuterm));
             CnErr.abort();
         }
 
         CnNum = DbAmino.Atomdata[j].ConectNum = FGM.getConnectNum(j);
         if (CnNum > MaxCntNum) {
-            log<<" Bad : EXE_MOLECULE "<<"\n";
-            log<<" You must change the number(MaxCntNum)";
-            log<<" in DfInitialguess.h ."<<"\n";
-            log<<" You must chage MaxCntNum > "<< CnNum <<"\n";
+            this->log_.error(" Bad : EXE_MOLECULE");
+            this->log_.error(" You must change the number(MaxCntNum)");
+            this->log_.error(" in DfInitialguess.h .");
+            this->log_.error(TlUtils::format(" You must chage MaxCntNum > %d", CnNum));
             CnErr.abort();
         }
 
@@ -1944,19 +1882,14 @@ void DfInitialguess::EXE_MOLECULE(int num)
 
 void DfInitialguess::CheckDBFormat(int num)
 {
-    TlLogX& log = TlLogX::getInstance();
-
     for (int i=0; i<DbAmino.Res1AtomNum; i++) {
         if (DbAmino.Atomdata[i].atomname != InpAmino.Atomdata[i].atomname) {
-            //        log<<" ### Bad Format ### " <<"\7"<<"\n";
-            log<<" ### Bad Format ### " <<"  "<<"\n";
-            log<<" STEPnumber = "<< num << "\n";
+            this->log_.error("Bad Format");
+            this->log_.error(TlUtils::format(" STEPnumber = %d", num ));
             int dumynum1 = GuessStep[num].FirstAtomNum;
-            //int dumynum2 = this->EachAD[dumynum1].AuxTypeNumber;
-            log<<" The DB_Molecule's fitst number = "<<dumynum1<<"\n";
-            //CHANGE   log<<" wrong DB_Label = "<< Atomtype[dumynum2].Label1<<"\n";
-            log<<" wrong AtomNAME = "<<InpAmino.Atomdata[i].atomname<<"\n";
-            log<<" It's number is "<< i <<"\n";
+            this->log_.error(TlUtils::format(" The DB_Molecule's fitst number = %d", dumynum1));
+            this->log_.error(TlUtils::format(" wrong AtomNAME = %s", InpAmino.Atomdata[i].atomname.c_str()));
+            this->log_.error(TlUtils::format(" It's number is %d", i));
             CnErr.abort();
         }
     }
@@ -1972,7 +1905,6 @@ int DfInitialguess::makeAfinmatrix(int stepnum)
 //等価な原子のペアは、考慮している原子１つに対して、
 //１ペアということにしている
 ////////////////////////////////////////////////////////////////////////
-    TlLogX& log = TlLogX::getInstance();
 
 //   if( OutLevel < -3 ){
 //     log<<"\n";
@@ -2319,7 +2251,6 @@ int DfInitialguess::makeAfinmatrix(int stepnum)
             //       if( OutLevel < -5 ){
             //    log<<"Touka Atom  Ari."<<"\n";
             //       }
-            log.flush();
             //等価原子あり。
             mawasi = 1 ;
 
@@ -2340,7 +2271,6 @@ int DfInitialguess::makeAfinmatrix(int stepnum)
                 //  if( OutLevel < -5 ){
                 //    log<<"  PairAtom["<<j<<"] = "<<PairAtom[j]<<"\n";
                 //  }
-                log.flush();
             }
 
             // ConectSerialAtomNumには等価原子の並びがConectAtom{X,Y,Z}の
@@ -2415,12 +2345,10 @@ int DfInitialguess::makeAfinmatrix(int stepnum)
             double vecNormD1= sqrt(pow(vecXd1,2) + pow(vecYd1,2) + pow(vecZd1,2)) ;
             double vecNormI1= sqrt(pow(vecXi1,2) + pow(vecYi1,2) + pow(vecZi1,2)) ;
             if ((vecNormD1 < 1E-8) || (vecNormI1 < 1E-8)) {
-                log<<"**** Error vecNorm is smaller than 1E-8"<<"\n";
-                log<<"**** vecNnormD1 = "<<vecNormD1<<"\n";
-                log<<"**** vecNnormI1 = "<<vecNormI1<<"\n";
-                //                log<<"\7"<<"\n";
-                log<<" in DfInitialguess::makeAfinmatrix   norm "<<"\n";
-                log.flush();
+                this->log_.error("vecNorm is smaller than 1E-8");
+                this->log_.error("vecNnormD1 = " + TlUtils::xtos(vecNormD1));
+                this->log_.error("vecNnormI1 = " + TlUtils::xtos(vecNormI1));
+                this->log_.error(" in DfInitialguess::makeAfinmatrix norm");
                 CnErr.abort();
             }
 
@@ -2439,8 +2367,8 @@ int DfInitialguess::makeAfinmatrix(int stepnum)
 
             //平行移動した時点で１つ目のベクトル方向が一致している場合。
             if (pow(fabs(CosTheta-1.0) , 2) < 1E-13) {
-                log<<" Vecto awase : type CosTheta==1.0"<<"\n";
-                log<<"CosTheta = "<<CosTheta<<"\n";
+                this->log_.info(" Vecto awase : type CosTheta==1.0");
+                this->log_.info("CosTheta = " + TlUtils::xtos(CosTheta));
                 initialyze_AfinMatrix(DbAmino.Atomdata[CenterAtomNum].afinmat);
                 initialyze_AfinMatrix(TransMatrix);
 
@@ -2459,8 +2387,8 @@ int DfInitialguess::makeAfinmatrix(int stepnum)
 
             //平行移動した時点で１つ目のベクトル方向が逆向きになっている場合。
             if (pow(fabs(CosTheta+1.0) , 2) < 1E-13) {
-                log<<" Vecto awase : type CosTheta==-1.0"<<"\n";
-                log<<"CosTheta = "<<CosTheta<<"\n";
+                this->log_.info(" Vecto awase : type CosTheta==-1.0");
+                this->log_.info("CosTheta = " + TlUtils::xtos(CosTheta));;
                 if (pow(fabs(vecXi1),2) >= pow(fabs(vecYi1),2)) {
                     if (pow(fabs(vecXi1),2) >= pow(fabs(vecZi1),2)) {
                         if (pow(fabs(vecYi1),2) >= pow(fabs(vecZi1),2)) {
@@ -2511,9 +2439,8 @@ int DfInitialguess::makeAfinmatrix(int stepnum)
             //平行移動した時点で１つ目のベクトル方向が一致していない場合。
             if ((CosTheta < -1) || (CosTheta > 1)) {
                 //              log<<"Bad value :   CosTheta = ["<<CosTheta<<"]"<<"\7"<<"\n";
-                log<<"Bad value :   CosTheta = ["<<CosTheta<<"]"<<"  "<<"\n";
-                log<<" in DfInitialguess::makeAfinmatrix   costheta"<<"\n";
-                log.flush();
+                this->log_.error("Bad value :   CosTheta = [" + TlUtils::xtos(CosTheta) + "]");
+                this->log_.error(" in DfInitialguess::makeAfinmatrix   costheta");
                 CnErr.abort();
             }
             SinTheta = sqrt(1 - pow(CosTheta,2));
@@ -2531,11 +2458,9 @@ taiou:;      //
 
             HousenNorm = sqrt(pow(HousenX,2)+pow(HousenY,2)+pow(HousenZ,2));
             if (HousenNorm < 1E-7) {
-                log<<"### Cannot define Housen_Vector###"<<"\n";
-                log<<"HousenNorm = "<<HousenNorm<<"\n";
-                //      log<<"\7"<<"\n";
-                log<<" in DfInitialguess::makeAfinmatrix   Housen"<<"\n";
-                log.flush();
+                this->log_.error("Cannot define Housen_Vector");
+                this->log_.error("HousenNorm = " + TlUtils::xtos(HousenNorm));
+                this->log_.error(" in DfInitialguess::makeAfinmatrix   Housen");
                 CnErr.abort();
             }
             HousenX /= HousenNorm;
@@ -2723,11 +2648,8 @@ first_rotation1:;   //
             } else {
                 thetaflg++;
                 if (thetaflg==2) {
-                    log<<"#@#@#@ Not agree : Bad angular rotation ";
-                    //            log<<"first_rotaion1"<< "\7" << "\n";
-                    log<<"first_rotaion1"<< "  " << "\n";
-                    log<<"in DfInitialguess::makeAfinmatrix  thetaflg"<<"\n";
-                    log.flush();
+                    this->log_.error("Not agree : Bad angular rotation");
+                    this->log_.error("first_rotaion1 in DfInitialguess::makeAfinmatrix  thetaflg");
                     CnErr.abort();
                 }
                 goto first_rotation1;
@@ -2775,11 +2697,10 @@ second_rotation:;  //
             VdNorm1 = sqrt(pow(Vdx1,2.0) + pow(Vdy1,2.0) + pow(Vdz1,2.0));
             VdNorm2 = sqrt(pow(Vdx2,2.0) + pow(Vdy2,2.0) + pow(Vdz2,2.0));
             if ((VdNorm1 < 1E-8) || (VdNorm2 < 1E-8)) {
-                log<<"**** Error vecNorm is smaller than 1E-8"<<"\n";
-                log<<"**** VdNorm1 = "<<VdNorm1<<"\n";
-                log<<"**** VdNorm2 = "<<VdNorm2<<"\n";
-                //                log<<"\7"<<"\n";
-                log<<" in DfInitialguess::makeAfinmatrix   norm "<<"\n";
+                this->log_.error("vecNorm is smaller than 1E-8");
+                this->log_.error("VdNorm1 = " + TlUtils::xtos(VdNorm1));
+                this->log_.error("VdNorm2 = " + TlUtils::xtos(VdNorm2));
+                this->log_.error(" in DfInitialguess::makeAfinmatrix   norm ");
                 CnErr.abort();
             }
 
@@ -2796,10 +2717,9 @@ second_rotation:;  //
 
             HdNorm = sqrt(pow(Hdx,2.0) + pow(Hdy,2.0) + pow(Hdz,2.0));
             if (HdNorm < 1E-7) {
-                log<<"### Cannot define Housen_Vector###"<<"\n";
-                log<<"HdNorm = "<<HdNorm<<"\n";
-                //      log<<"\7"<<"\n";
-                log<<" in DfInitialguess::makeAfinmatrix   Housen"<<"\n";
+                this->log_.error("Cannot define Housen_Vector");
+                this->log_.error("HdNorm = " + TlUtils::xtos(HdNorm));
+                this->log_.error(" in DfInitialguess::makeAfinmatrix   Housen");
                 CnErr.abort();
             }
             Hdx /= HdNorm;
@@ -2818,11 +2738,10 @@ second_rotation:;  //
             ViNorm1 = sqrt(pow(Vix1,2.0) + pow(Viy1,2.0) + pow(Viz1,2.0));
             ViNorm2 = sqrt(pow(Vix2,2.0) + pow(Viy2,2.0) + pow(Viz2,2.0));
             if ((ViNorm1 < 1E-8) || (ViNorm2 < 1E-8)) {
-                log<<"**** Error vecNorm is smaller than 1E-8"<<"\n";
-                log<<"**** ViNorm1 = "<<ViNorm1<<"\n";
-                log<<"**** ViNorm2 = "<<ViNorm2<<"\n";
-                //                log<<"\7"<<"\n";
-                log<<" in DfInitialguess::makeAfinmatrix   norm "<<"\n";
+                this->log_.error("Error vecNorm is smaller than 1E-8");
+                this->log_.error("ViNorm1 = " + TlUtils::xtos(ViNorm1));
+                this->log_.error("ViNorm2 = " + TlUtils::xtos(ViNorm2));
+                this->log_.error(" in DfInitialguess::makeAfinmatrix   norm ");
                 CnErr.abort();
             }
             Vix1 /= ViNorm1 ;
@@ -2838,10 +2757,9 @@ second_rotation:;  //
 
             HiNorm = sqrt(pow(Hix,2.0) + pow(Hiy,2.0) + pow(Hiz,2.0));
             if (HiNorm < 1E-7) {
-                log<<"### Cannot define Housen_Vector###"<<"\n";
-                log<<"HiNorm = "<<HiNorm<<"\n";
-                //      log<<"\7"<<"\n";
-                log<<" in DfInitialguess::makeAfinmatrix   Housen"<<"\n";
+                this->log_.error("Cannot define Housen_Vector");
+                this->log_.error("HiNorm = " + TlUtils::xtos(HiNorm));
+                this->log_.error(" in DfInitialguess::makeAfinmatrix   Housen");
                 CnErr.abort();
             }
             Hix /= HiNorm;
@@ -2866,13 +2784,13 @@ second_rotation:;  //
                     dmY2[t] = dmY1[t];
                     dmZ2[t] = dmZ1[t];
                 }
-                log<<" Heimen awase : type CosTheta==1.0"<<"\n";
+                this->log_.info(" Heimen awase : type CosTheta==1.0");
                 goto next_step1;
             }
             //１つ目のベクトル方向を合わせた時点で２つ目のベクトルが
             //入力原子の２つ目のベクトルと同一平面上（反対の平面）にあるとき。
             if (pow(fabs(CosTheta+1.0) , 2)<1E-13) {
-                log<<" Heimen awase : type CosTheta==-1.0"<<"\n";
+                this->log_.info(" Heimen awase : type CosTheta==-1.0");
                 //              dbgX = Vdx1;
                 //              dbgY = Vdy1;
                 //              dbgZ = Vdz1;
@@ -2885,15 +2803,15 @@ second_rotation:;  //
             //入力原子の２つ目のベクトルと同一平面上にないとき。
             if ((CosTheta < -1) || (CosTheta > 1)) {
                 //              log<<"Bad value :   CosTheta = ["<<CosTheta<<"]"<<"\7"<<"\n";
-                log<<"Bad value :   CosTheta = ["<<CosTheta<<"]"<<"  "<<"\n";
-                log<<" in DfInitialguess::makeAfinmatrix   costheta"<<"\n";
+                this->log_.error("Bad value :   CosTheta = [" + TlUtils::xtos(CosTheta) + "]");
+                this->log_.error(" in DfInitialguess::makeAfinmatrix   costheta");
                 CnErr.abort();
             }
             SinTheta = sqrt(1.0 - pow(CosTheta,2.0));
             if ((SinTheta < -1) || (SinTheta > 1)) {
                 //              log<<"Bad value :   SinTheta = ["<<SinTheta<<"]"<<"\7"<<"\n";
-                log<<"Bad value :   SinTheta = ["<<SinTheta<<"]"<<"  "<<"\n";
-                log<<" in DfInitialguess::makeAfinmatrix   sintheta"<<"\n";
+                this->log_.error("Bad value :   SinTheta = [" + TlUtils::xtos(SinTheta) + "]");
+                this->log_.error(" in DfInitialguess::makeAfinmatrix   sintheta");
                 CnErr.abort();
             }
             CosAngle = acos(CosTheta)*180.0/3.14159265358979;
@@ -2910,9 +2828,9 @@ taiou2:;     //
             dbgNorm = sqrt(pow(dbgX,2.0) + pow(dbgY,2.0) + pow(dbgZ,2.0));
             if (dbgNorm < 1E-8) {
                 //              log<<"Bad value : dbgNorm = ["<<dbgNorm<<"]"<<"\7"<<"\n";
-                log<<"Bad value : dbgNorm = ["<<dbgNorm<<"]"<<"  "<<"\n";
-                log<<" in DfInitialguess::makeAfinmatrix "<<"\n";
-                log<<"You must Rotation Geometry for Calculation's Molecule."<<"\n";
+                this->log_.error("Bad value : dbgNorm = [" + TlUtils::xtos(dbgNorm) + "]");
+                this->log_.error(" in DfInitialguess::makeAfinmatrix");
+                this->log_.error("You must Rotation Geometry for Calculation's Molecule.");
                 CnErr.abort();
             }
 
@@ -2928,9 +2846,9 @@ taiou2:;     //
             SinTheta2 = sqrt(pow(HousenX,2.0) + pow(HousenZ,2.0)) ;
             if (SinTheta2 < 1E-8) {
                 //              Out<<"Bad value :   SinTheta2 = ["<<SinTheta2<<"]"<<"\7"<<"\n";
-                log<<"Bad value :   SinTheta2 = ["<<SinTheta2<<"]"<<"  "<<"\n";
-                log<<" in DfInitialguess::makeAfinmatrix   sintheta"<<"\n";
-                log<<"You must Rotation Geometry for Calculation's Molecule."<<"\n";
+                this->log_.error("Bad value :   SinTheta2 = [" + TlUtils::xtos(SinTheta2) + "]");
+                this->log_.error(" in DfInitialguess::makeAfinmatrix   sintheta");
+                this->log_.error("You must Rotation Geometry for Calculation's Molecule.");
                 CnErr.abort();
             }
             SinTheta1 = HousenX / SinTheta2;
@@ -3146,10 +3064,9 @@ first_rotation2:;  //
                 thetaflg++;
 
                 if (thetaflg == 2) {
-                    log<<"Warning : #@#@#@ Not agree : Bad angular rotation ";
-                    //            log<<"Warning : first_rotaion2"<< "\7" << "\n";
-                    log<<"Warning : first_rotaion2"<< "  " << "\n";
-                    log<<"Warning : DfInitialguess::makeAfinmatrix rot2"<<"\n";
+                    this->log_.warn("Not agree : Bad angular rotation");
+                    this->log_.warn("first_rotaion2");
+                    this->log_.warn("DfInitialguess::makeAfinmatrix rot2");
                     dainyu_vector(dmX2,dmX1,CntNum);
                     dainyu_vector(dmY2,dmY1,CntNum);
                     dainyu_vector(dmZ2,dmZ1,CntNum);
@@ -3292,9 +3209,9 @@ serch:
                 //  }
 
                 if (ToukaAtomNum > 4) {
-                    log<<" ToukaAtomNum is "<<ToukaAtomNum<<"\n";
-                    log<<" Not support : ToukaAtomNum>4 "<<"\n";
-                    log<<" You must write swap argorizm in this case."<<"\n";
+                    this->log_.error(" ToukaAtomNum is " + TlUtils::xtos(ToukaAtomNum));
+                    this->log_.error(" Not support : ToukaAtomNum>4");
+                    this->log_.error(" You must write swap argorizm in this case.");
                     CnErr.abort();
                 }
 
@@ -3338,8 +3255,7 @@ serch:
                     case 5:
                         break;
                     default:
-                        log<<"Bad Number in ToukaAtomNum==3"<<"\n";
-                        //                log<<"\7"<<"\n";
+                        this->log_.error("Bad Number in ToukaAtomNum==3");
                         CnErr.abort();
                     }// switch
 
@@ -3453,8 +3369,7 @@ serch:
                     case 23:
                         break;
                     default:
-                        log<<"Bad Number in ToukaAtomNum==4"<<"\n";
-                        //                 log<<"\7"<<"\n";
+                        this->log_.error("Bad Number in ToukaAtomNum==4");
                         CnErr.abort();
                     }// switch
 
@@ -3750,8 +3665,6 @@ void DfInitialguess::powell(double* U0 ,
                             double* inpX ,  double* inpY ,  double* inpZ ,
                             int CntNum)
 {
-    TlLogX& log = TlLogX::getInstance();
-
     int i,j,k; //int loop=1;
     int   iteration,MaxIteration;
     double alpha,F1,F2,F3,max,Inf,value; // double min_point
@@ -3795,10 +3708,9 @@ void DfInitialguess::powell(double* U0 ,
             }
             a[i]=rsf(U0,0.0,x,coreX,coreY,coreZ,inpX,inpY,inpZ,CntNum);
             if (fabs(a[i])>=Inf) {
-                log<<" go to infinity #1"<<"\n";
-                log<<" one variable serch routine rsf(,,,,)"<<"\n";
-                log<<" powell called rsf "<<"\n";
-                log.flush();
+                this->log_.info(" go to infinity #1");
+                this->log_.info(" one variable serch routine rsf(,,,,)");
+                this->log_.info(" powell called rsf ");
                 break;
             }
         }
@@ -3868,10 +3780,9 @@ void DfInitialguess::powell(double* U0 ,
             alpha=rsf(x,0.0,new_Xi,coreX,coreY,coreZ,
                       inpX,inpY,inpZ,CntNum);
             if ((fabs(alpha)>=Inf)) {
-                log<<" go to infinity #2"<<"\n";
-                log<<" one variable serch routine rsf(,,,,)"<<"\n";
-                log<<" powell called rsf "<<"\n";
-                log.flush();
+                this->log_.info(" go to infinity #2");
+                this->log_.info(" one variable serch routine rsf(,,,,)");
+                this->log_.info(" powell called rsf ");
                 break;
             }
             for (i=k; i<M-1; i++) {
@@ -3895,20 +3806,14 @@ void DfInitialguess::powell(double* U0 ,
         }
 
         if (max >= Inf) {
-            log<<" go to infinity #3"<<"\n";
-            log<<" one variable serch routine rsf(,,,,)"<<"\n";
-            log<<" powell called rsf "<<"\n";
-            log.flush();
+            this->log_.info(" go to infinity #3");
+            this->log_.info(" one variable serch routine rsf(,,,,)");
+            this->log_.info(" powell called rsf");
             break;
         } else if ((max <= 1e-4)) {
-            log<<"\n";
-            log<<" ######################"<<"\n";
-            log<<" ## optimal solution ##"<<"\n";
-            log<<" ######################"<<"\n";
-            log<<"\n";
-            log.flush();
+            this->log_.info("optimal solution");
             for (i=0; i<M; i++) {
-                log<<"Uopt["<<i<<"] = "<<U0[i]<<"\n";
+                this->log_.info("Uopt[" + TlUtils::xtos(i) + "] = " + TlUtils::xtos(U0[i]));
             }
             break;
         } else {
@@ -3924,8 +3829,8 @@ void DfInitialguess::powell(double* U0 ,
         }//else
 
         if (iteration>MaxIteration) {
-            log<<" Iteration is max."<<"\n";
-            log<<" So , This ruotine  exit by force."<<"\n";
+            this->log_.info(" Iteration is max.");
+            this->log_.info(" So , This ruotine  exit by force.");
             break;
         }
 
@@ -4108,25 +4013,24 @@ void DfInitialguess::swap(int pre, int post, double* X, double* Y, double* Z)
 double DfInitialguess::calc_angle(double x0 , double y0 , double z0 ,
                                   double x1 , double y1 , double z1)
 {
-    TlLogX& log = TlLogX::getInstance();
-
     double  Angle_degree,Angle_radian;
     double  Naiseki,Norm0,Norm1,CosTheta;
 
     Norm0   = sqrt(pow(x0,2) + pow(y0,2) + pow(z0,2)) ;
     Norm1   = sqrt(pow(x1,2) + pow(y1,2) + pow(z1,2)) ;
     if (Norm0 < 1E-6) {
-        log<<"in gusCalcAngle, Bad Norm0 = "<<Norm0<<"\n";
-        log<<"vec = ("<<x0<<","<<y0<<","<<z0<<")   ,("<<x1<<","<<y1<<","<<z1
-        <<")"<<"\n";
-        //  log<<"\7"<<"\n";
+        this->log_.error("in gusCalcAngle, Bad Norm0 = " + TlUtils::xtos(Norm0));
+        this->log_.error("vec = (" + TlUtils::xtos(x0) + ","
+                         + TlUtils::xtos(y0) + "," + TlUtils::xtos(z0) + ")   ,("
+                         + TlUtils::xtos(x1) + "," + TlUtils::xtos(y1) + "," + TlUtils::xtos(z1)
+                         + ")");
         CnErr.abort();
     }
     if (Norm1 < 1E-6) {
-        log<<"in gusCalcAngle, Bad Norm1 = "<<Norm1<<"\n";
-        log<<"vec = ("<<x0<<","<<y0<<","<<z0<<")   ,("<<x1<<","<<y1<<","<<z1
-        <<")"<<"\n";
-        //  log<<"\7"<<"\n";
+        this->log_.error("in gusCalcAngle, Bad Norm1 = " + TlUtils::xtos(Norm1));
+        this->log_.error("vec = (" + TlUtils::xtos(x0) + "," + TlUtils::xtos(y0) + "," + TlUtils::xtos(z0)
+                         +")   ,(" + TlUtils::xtos(x1) + "," + TlUtils::xtos(y1) + "," + TlUtils::xtos(z1)
+                         + ")");
         CnErr.abort();
     }
 
@@ -4140,10 +4044,9 @@ double DfInitialguess::calc_angle(double x0 , double y0 , double z0 ,
     CosTheta = Naiseki ;
 
     if ((CosTheta < -1.0000001) || (CosTheta > 1.0000001)) {
-        log<<"Error in DfInitialguess::calc_angle"<<"\n";
-        //  log<<"Bad value CosTheta"<<"\7"<<"\n";
-        log<<"Bad value CosTheta"<<"  "<<"\n";
-        log<<"CosTheta = "<<CosTheta<<"\n";
+        this->log_.error("in DfInitialguess::calc_angle");
+        this->log_.error("Bad value CosTheta");
+        this->log_.error("CosTheta = " + TlUtils::xtos(CosTheta));
         CnErr.abort();
     }
     Angle_radian = acos(CosTheta) ;
@@ -4236,19 +4139,12 @@ void DfInitialguess::clear_AfinMatrix(double* matA)
 //#############################################################################
 void DfInitialguess::display_afinmatrix(double* matA)
 {
-    TlLogX& log = TlLogX::getInstance();
-
     int i,j;
     for (i=0; i<4; i++) {
         for (j=0; j<4; j++) {
-            //log<<"   "<<setw(10)<< matA[i*4+j] <<"  ";
-//       log.precision(10);
-//       log.setf(ios::fixed,ios::floatfield);
-            log<<"   "<< matA[i*4+j] ;
+            this->log_.info("   " + TlUtils::xtos(matA[i*4+j]));
         }
-        log<<"\n";
     }
-    log<<"\n";
 }
 //#############################################################################
 void DfInitialguess::dainyu_vector(double* vec1,double* vec2,int num)
@@ -4261,8 +4157,6 @@ void DfInitialguess::dainyu_vector(double* vec1,double* vec2,int num)
 //#############################################################################
 int DfInitialguess::transOrbital(int tAN)
 {
-    TlLogX& log = TlLogX::getInstance();
-
 //   if( OutLevel < -3 ){
 //     log<<"\n";
 //     log<<"####################################################### "<<"\n";
@@ -4380,8 +4274,7 @@ int DfInitialguess::transOrbital(int tAN)
 //       }
             goto Translation2;
         } else {
-            log<<"Bad value : InpAmino.Order = "<<InpAmino.Order[i]<<"\n";
-            //        log<<"\7"<<"\n";
+            this->log_.error("Bad value : InpAmino.Order = " + TlUtils::xtos(InpAmino.Order[i]));
             CnErr.abort();
         }
 
@@ -5168,8 +5061,6 @@ before_iLoopEnd:
 //#############################################################################
 void DfInitialguess::CoverVector()
 {
-    TlLogX& log = TlLogX::getInstance();
-
 //   if( OutLevel < -3 ){
 //     log<<"\n";
 //     log<<"### Cover Vector(User defined)  START### "<<"\n";
@@ -5202,8 +5093,7 @@ void DfInitialguess::CoverVector()
 
             //if (auxlength != FGV.getAuxterm()){
             if (static_cast<TlVector::size_type>(auxlength) != FGV.getSize()) {
-                log << "Bad defined VectorFile ["
-                << UserVctRou[i].Filename << "]" << "\n";
+                this->log_.error("Bad defined VectorFile [" + UserVctRou[i].Filename + "]");
                 CnErr.abort();
             }
             for (int j=0; j < auxlength; j++) {
@@ -5236,8 +5126,7 @@ void DfInitialguess::CoverVector()
                 FGV.load(UserVctMyu[i].Filename);
                 //if (auxlength != FGV.getAuxterm()){
                 if (static_cast<TlVector::size_type>(auxlength) != FGV.getSize()) {
-                    log << "Bad defined VectorFile ["
-                    << UserVctMyu[i].Filename << "]" << "\n";
+                    this->log_.error("Bad defined VectorFile [" + UserVctMyu[i].Filename + "]");
                     CnErr.abort();
                 }
                 for (int j=0; j < auxlength; j++) {
@@ -5269,8 +5158,7 @@ void DfInitialguess::CoverVector()
                 FGV.load(UserVctNyu[i].Filename);
                 //if (auxlength != FGV.getAuxterm()){
                 if (static_cast<TlVector::size_type>(auxlength) != FGV.getSize()) {
-                    log << "Bad defined VectorFile ["
-                    << UserVctNyu[i].Filename << "]" << "\n";
+                    this->log_.error("Bad defined VectorFile [" + UserVctNyu[i].Filename + "]");
                     CnErr.abort();
                 }
                 for (int j=0; j < auxlength; j++) {
@@ -5310,11 +5198,10 @@ void DfInitialguess::CoverVector()
 //    log<<"attention :  MaxTermRou and MaxTermMyu is equal."<<"\n";
 //  }
                 if (MaxTermRou != MaxTermMyu) {
-                    log<<"This routine cannot use this calculation"<<"\n";
-                    log<<"Because , Total Auxiliary Number for Rou is "
-                    <<"differrent from Total Auxiliary Number for Myu."<<"\n";
-                    log<<"So, you must appoint other method to make Xcpotential"
-                    <<"\n";
+                    this->log_.error("This routine cannot use this calculation");
+                    this->log_.error("Because , Total Auxiliary Number for Rou is ");
+                    this->log_.error("differrent from Total Auxiliary Number for Myu.");
+                    this->log_.error("So, you must appoint other method to make Xcpotential");
                     CnErr.abort();
                 }
 
@@ -5327,10 +5214,10 @@ void DfInitialguess::CoverVector()
             }//meth1
 
             if (MethodMyuNyu == Meth3) {
-                log<<"Bad appointment"<<"\n";
-                log<<"MethodMyuNyu meth3 is SP calculation option."<<"\n";
-                log<<"You must change option's keyword make-myu-nyu "<<"\n";
-                log<<"Keyword is [ meth0 or meth1 ]."<<"\n";
+                this->log_.error("Bad appointment");
+                this->log_.error("MethodMyuNyu meth3 is SP calculation option.");
+                this->log_.error("You must change option's keyword make-myu-nyu ");
+                this->log_.error("Keyword is [ meth0 or meth1 ].");
                 CnErr.abort();
             }
         }
@@ -5370,12 +5257,10 @@ void DfInitialguess::CoverVector()
 //    log<<"attention :  MaxTermRou and MaxTermMyu is equal."<<"\n";
 //  }
                 if (MaxTermRou != MaxTermMyu) {
-                    log<<"This routine cannot use this calculation"<<"\n";
-                    log<<"Because , Total Auxiliary Number for Rou is "
-                    <<"differrent from Total Auxiliary Number for Myu."<<"\n";
-                    log<<"So, you must appoint other method to make Xcpotential"
-                    <<"\n";
-                    //        log<<"\7"<<"\n";
+                    this->log_.error("This routine cannot use this calculation");
+                    this->log_.error("Because , Total Auxiliary Number for Rou is ");
+                    this->log_.error("differrent from Total Auxiliary Number for Myu.");
+                    this->log_.error("So, you must appoint other method to make Xcpotential");
                     CnErr.abort();
                 }
 
@@ -5393,11 +5278,10 @@ void DfInitialguess::CoverVector()
 
             if (MethodMyuNyu == Meth3) {
                 if (MaxTermRou != MaxTermMyu) {
-                    log<<"This routine cannot use this calculation"<<"\n";
-                    log<<"Because , Total Auxiliary Number for Rou is "
-                    <<"differrent from Total Auxiliary Number for Myu."<<"\n";
-                    log<<"So, you must appoint other method to make Xcpotential"
-                    <<"\n";
+                    this->log_.error("This routine cannot use this calculation");
+                    this->log_.error("Because , Total Auxiliary Number for Rou is ");
+                    this->log_.error("differrent from Total Auxiliary Number for Myu.");
+                    this->log_.error("So, you must appoint other method to make Xcpotential");
                     CnErr.abort();
                 }
 
@@ -5506,27 +5390,25 @@ void DfInitialguess::CoverVector()
 //#############################################################################
 int DfInitialguess::VectorNormalyze()
 {
-    TlLogX& log = TlLogX::getInstance();
-
     if (VctRouNormalize==OFF) {
         if (PartialRouNormNum!=0) {
-            log<<"Warning : VctRouNormalize is OFF(=Not Normalize)"<<"\n";
-            log<<"        : But , PartialRouNormNum isnot Zero "<<"\n";
-            log<<"        : PartialRouNormNum = "<<PartialRouNormNum<<"\n";
+            this->log_.warn("VctRouNormalize is OFF(=Not Normalize)");
+            this->log_.warn("But , PartialRouNormNum isnot Zero ");;
+            this->log_.warn("PartialRouNormNum = " + TlUtils::xtos(PartialRouNormNum));;
         }
     }
     if (VctMyuNormalize==OFF) {
         if (PartialMyuNormNum!=0) {
-            log<<"Warning : VctMyuNormalize is OFF(=Not Normalize)"<<"\n";
-            log<<"        : But , PartialMyuNormNum isnot Zero "<<"\n";
-            log<<"        : PartialMyuNormNum = "<<PartialMyuNormNum<<"\n";
+            this->log_.warn("VctMyuNormalize is OFF(=Not Normalize)");
+            this->log_.warn("But , PartialMyuNormNum isnot Zero ");
+            this->log_.warn("PartialMyuNormNum = " + TlUtils::xtos(PartialMyuNormNum));
         }
     }
     if (VctNyuNormalize==OFF) {
         if (PartialNyuNormNum!=0) {
-            log<<"Warning : VctNyuNormalize is OFF(=Not Normalize)"<<"\n";
-            log<<"        : But , PartialNyuNormNum isnot Zero "<<"\n";
-            log<<"        : PartialNyuNormNum = "<<PartialNyuNormNum<<"\n";
+            this->log_.warn("VctNyuNormalize is OFF(=Not Normalize)");
+            this->log_.warn("But , PartialNyuNormNum isnot Zero ");
+            this->log_.warn("PartialNyuNormNum = "+ TlUtils::xtos(PartialNyuNormNum));
         }
     }
 
@@ -5564,8 +5446,6 @@ vctNormalizeEND:
 //#############################################################################
 void DfInitialguess::VctRouNorm()
 {
-    TlLogX& log = TlLogX::getInstance();
-
     int    i,j,k,mcnt,hikisuu,from,to;
     double  myuCC,Pai,N_one3rd,N_two3rd,kata_alpha,Sum,PreSum,InvmyuCC;
     double  FlVctNalpha,invPai;
@@ -5794,24 +5674,20 @@ void DfInitialguess::VctRouNorm()
         PreSum = Sum ;
     } //i;
 
-    // modified and commented out by AS(koike.s) 2003/05/23
-    //    if( OutLevel < -2 ){
-    log<<"Total  CoefRou Electron Num = [" << Sum <<" ]"<<"\n";
-    log<<"Real ElectronNum = [ "<<ElectronNum<<" ]"<<"\n";
+    this->log_.info("Total  CoefRou Electron Num = [" + TlUtils::xtos(Sum) + " ]");
+    this->log_.info("Real ElectronNum = [ " + TlUtils::xtos(ElectronNum) + " ]");
 
     std::cout <<"Total CoefRou Electron Num = [" << Sum <<" ]"<<"\n";
     std::cout <<"Real ElectronNum = [ "<<ElectronNum<<" ]"<<"\n" ;
     //    }
 
     if (pow((Sum-ElectronNum) , 2) > 1E-6) {
-        log<<"BAD Normalize (Rou) "<<"\n";
-        log<<"ElectronNumber is different from ElecNumber after";
-        log<<" Normalized Coefficient"<<"\n";
-        //  log<<"\7"<<"\n";
-
-        log << "#### CoefRou ####\n";
+        this->log_.error("BAD Normalize (Rou)");
+        this->log_.error("ElectronNumber is different from ElecNumber after");
+        this->log_.error(" Normalized Coefficient");
+        this->log_.error("CoefRou");
         for (i=0; i<MaxTermRou; i++) {
-            log<<"CoefRou [ "<<i<<" ]   = "<<CoefRou[i]<<"\n";
+            this->log_.error("CoefRou [ " + TlUtils::xtos(i) + " ]   = " + TlUtils::xtos(CoefRou[i]));
         }
 
         CnErr.abort();
@@ -5833,8 +5709,6 @@ void DfInitialguess::VctRouNorm()
 //#############################################################################
 void DfInitialguess::VctMyuNorm()
 {
-    TlLogX& log = TlLogX::getInstance();
-
     int    i,j,k,mcnt,hikisuu,from,to;
     double  myuCC,Pai,N_one3rd,N_two3rd,kata_alpha,Sum,PreSum,InvmyuCC;
     double  invPai; // double FlVctNalpha;
@@ -6067,10 +5941,9 @@ void DfInitialguess::VctMyuNorm()
 //   }
 
     if (pow((Sum-N_one3rd) , 2) > 1E-6) {
-        log<<"BAD Normalize (Myu) "<<"\n";
-        log<<"ElectronNumber^(1/3) is different from ElecNumber^(1/3) after";
-        log<<" Normalized Coefficient"<<"\n";
-        //  log<<"\7"<<"\n";
+        this->log_.error("BAD Normalize (Myu) ");
+        this->log_.error("ElectronNumber^(1/3) is different from ElecNumber^(1/3) after");
+        this->log_.error(" Normalized Coefficient");
         CnErr.abort();
     }
 
@@ -6091,8 +5964,6 @@ void DfInitialguess::VctMyuNorm()
 //#############################################################################
 void DfInitialguess::VctNyuNorm()
 {
-    TlLogX& log = TlLogX::getInstance();
-
     int    i,j,k,mcnt,hikisuu,from,to;
     double  myuCC,Pai,N_one3rd,N_two3rd,kata_alpha,Sum,PreSum,InvmyuCC;
     double  invPai,Tb2,dumy; // FlVctNalpha
@@ -6328,10 +6199,9 @@ void DfInitialguess::VctNyuNorm()
 //   }
 
     if (pow((Sum-N_two3rd) , 2) > 1E-6) {
-        log<<"BAD Normalize (Nyu) "<<"\n";
-        log<<"ElectronNumber^(2/3) is different from ElecNumber^(2/3) after";
-        log<<" Normalized Coefficient"<<"\n";
-        //  log<<"\7"<<"\n";
+        this->log_.error("BAD Normalize (Nyu) ");
+        this->log_.error("ElectronNumber^(2/3) is different from ElecNumber^(2/3) after");
+        this->log_.error(" Normalized Coefficient");
         CnErr.abort();
     }
 
@@ -6932,40 +6802,36 @@ int DfInitialguess::GusOutput()
 
 void DfInitialguess::Print()
 {
-    TlLogX& log = TlLogX::getInstance();
     if (scftype == NSP) {
         TlVector rho;
         rho.load("fl_Work/fl_Vct_Rou1");
 
-        log<<"\n";
-        log<<"###########################################################"<<"\n";
-        log<<"############ Initialguess Vector ( fl_Vct_Rou ) ###########"<<"\n";
-        log<<"###########################################################"<<"\n";
+        this->log_.info("###########################################################");
+        this->log_.info("############ Initialguess Vector ( fl_Vct_Rou ) ###########");
+        this->log_.info("###########################################################");
         for (TlVector::size_type x = 0; x < rho.getSize(); x++) {
-            log << "Coefficient_Rou[" << x << "]= " << rho[x] << "\n";
+            this->log_.info("Coefficient_Rou[" + TlUtils::xtos(x) + "]= " + TlUtils::xtos(rho[x]));
         }
 
         if (tempflag==0) {
             TlVector myu;
             myu.load("fl_Work/fl_Vct_Myu1");
 
-            log<<"\n";
-            log<<"###########################################################"<<"\n";
-            log<<"############ Initialguess Vector ( fl_Vct_Myu ) ###########"<<"\n";
-            log<<"###########################################################"<<"\n";
+            this->log_.info("###########################################################");
+            this->log_.info("############ Initialguess Vector ( fl_Vct_Myu ) ###########");
+            this->log_.info("###########################################################");
             for (TlVector::size_type x=0; x < myu.getSize(); x++) {
-                log << TlUtils::format("Coefficient_Myu[%6ld] = %15.8lf\n", x, myu[x]);
+                this->log_.info(TlUtils::format("Coefficient_Myu[%6ld] = %15.8lf\n", x, myu[x]));
             }
 
             TlVector nyu;
             nyu.load("fl_Work/fl_Vct_Nyu1");
 
-            log<<"\n";
-            log<<"###########################################################"<<"\n";
-            log<<"############ Initialguess Vector ( fl_Vct_Nyu ) ###########"<<"\n";
-            log<<"###########################################################"<<"\n";
+            this->log_.info("###########################################################");
+            this->log_.info("############ Initialguess Vector ( fl_Vct_Nyu ) ###########");
+            this->log_.info("###########################################################");
             for (TlVector::size_type x = 0; x < nyu.getSize(); x++) {
-                log << TlUtils::format("Coefficient_Nyu[%6ld] = %15.8lf\n",x, nyu[x]);
+                this->log_.info(TlUtils::format("Coefficient_Nyu[%6ld] = %15.8lf\n",x, nyu[x]));
             }
         }
     } else if (scftype == SP) {
@@ -6974,12 +6840,11 @@ void DfInitialguess::Print()
             TlVector rhoa;
             rhoa.load("fl_Work/fl_Vct_Roua1");
 
-            log<<"\n";
-            log<<"###########################################################"<<"\n";
-            log<<"####### Initialguess Vector ( fl_Vct_Rou_Alpha ) ##########"<<"\n";
-            log<<"###########################################################"<<"\n";
+            this->log_.info("###########################################################");
+            this->log_.info("####### Initialguess Vector ( fl_Vct_Rou_Alpha ) ##########");
+            this->log_.info("###########################################################");
             for (TlVector::size_type x = 0; x < rhoa.getSize(); x++) {
-                log << TlUtils::format("Coefficient_Rou_Alpha[%6ld] = %15.8lf\n", x, rhoa[x]);
+                this->log_.info(TlUtils::format("Coefficient_Rou_Alpha[%6ld] = %15.8lf\n", x, rhoa[x]));
             }
         }
 
@@ -6987,12 +6852,11 @@ void DfInitialguess::Print()
             TlVector rhob;
             rhob.load("fl_Work/fl_Vct_Roub1");
 
-            log<<"\n";
-            log<<"###########################################################"<<"\n";
-            log<<"####### Initialguess Vector ( fl_Vct_Rou_Beta ) ###########"<<"\n";
-            log<<"###########################################################"<<"\n";
+            this->log_.info("###########################################################");
+            this->log_.info("####### Initialguess Vector ( fl_Vct_Rou_Beta ) ###########");
+            this->log_.info("###########################################################");
             for (TlVector::size_type x = 0; x < rhob.getSize(); x++) {
-                log << TlUtils::format("Coefficient_Rou_Beta[%6ld] = %15.8lf\n", x, rhob[x]);
+                this->log_.info(TlUtils::format("Coefficient_Rou_Beta[%6ld] = %15.8lf\n", x, rhob[x]));
             }
         }
 
@@ -7001,12 +6865,11 @@ void DfInitialguess::Print()
                 TlVector myua;
                 myua.load("fl_Work/fl_Vct_Myua1");
 
-                log<<"\n";
-                log<<"###########################################################"<<"\n";
-                log<<"####### Initialguess Vector ( fl_Vct_Myu_Alpha ) ##########"<<"\n";
-                log<<"###########################################################"<<"\n";
+                this->log_.info("###########################################################");
+                this->log_.info("####### Initialguess Vector ( fl_Vct_Myu_Alpha ) ##########");
+                this->log_.info("###########################################################");
                 for (TlVector::size_type x = 0; x < myua.getSize(); x++) {
-                    log << TlUtils::format("Coefficient_Myu_Alpha[%6ld] = %15.8lf\n", x, myua[x]);
+                    this->log_.info(TlUtils::format("Coefficient_Myu_Alpha[%6ld] = %15.8lf\n", x, myua[x]));
                 }
             }
 
@@ -7014,12 +6877,11 @@ void DfInitialguess::Print()
                 TlVector myub;
                 myub.load("fl_Work/fl_Vct_Myub1");
 
-                log<<"\n";
-                log<<"###########################################################"<<"\n";
-                log<<"####### Initialguess Vector ( fl_Vct_Myu_Beta ) ###########"<<"\n";
-                log<<"###########################################################"<<"\n";
+                this->log_.info("###########################################################");
+                this->log_.info("####### Initialguess Vector ( fl_Vct_Myu_Beta ) ###########");
+                this->log_.info("###########################################################");
                 for (TlVector::size_type x=0; x < myub.getSize(); x++) {
-                    log << TlUtils::format("Coefficient_Myu_Beta[%6ld] = %15.8lf\n" ,x, myub[x]);
+                    this->log_.info(TlUtils::format("Coefficient_Myu_Beta[%6ld] = %15.8lf\n" ,x, myub[x]));
                 }
             }
 
@@ -7027,12 +6889,11 @@ void DfInitialguess::Print()
                 TlVector nyua;
                 nyua.load("fl_Work/fl_Vct_Nyua1");
 
-                log<<"\n";
-                log<<"###########################################################"<<"\n";
-                log<<"####### Initialguess Vector ( fl_Vct_Nyu_Alpha ) ##########"<<"\n";
-                log<<"###########################################################"<<"\n";
+                this->log_.info("###########################################################");
+                this->log_.info("####### Initialguess Vector ( fl_Vct_Nyu_Alpha ) ##########");
+                this->log_.info("###########################################################");
                 for (TlVector::size_type x = 0; x < nyua.getSize(); x++) {
-                    log << TlUtils::format("Coefficient_Nyu_Alpha[%6ld] = %15.8lf\n", x, nyua[x]);
+                    this->log_.info(TlUtils::format("Coefficient_Nyu_Alpha[%6ld] = %15.8lf\n", x, nyua[x]));
                 }
             }
 
@@ -7040,12 +6901,11 @@ void DfInitialguess::Print()
                 TlVector nyub;
                 nyub.load("fl_Work/fl_Vct_Nyub1");
 
-                log<<"\n";
-                log<<"###########################################################"<<"\n";
-                log<<"####### Initialguess Vector ( fl_Vct_Nyu_Beta ) ###########"<<"\n";
-                log<<"###########################################################"<<"\n";
+                this->log_.info("###########################################################");
+                this->log_.info("####### Initialguess Vector ( fl_Vct_Nyu_Beta ) ###########");
+                this->log_.info("###########################################################");
                 for (TlVector::size_type x=0; x < nyub.getSize(); x++) {
-                    log << TlUtils::format("Coefficient_Nyu_Beta[%6ld] = %15.8lf\n", x, nyub[x]);
+                    this->log_.info(TlUtils::format("Coefficient_Nyu_Beta[%6ld] = %15.8lf\n", x, nyub[x]));
                 }
             }
         }
@@ -7060,20 +6920,16 @@ void DfInitialguess::Print()
 // consistency with DfInitiallguess class.
 void DfInitialguess::setCoefRoudata()
 {
-    TlLogX& log = TlLogX::getInstance();
-
     //---- file open and read data ---------------------------------------------------
     tempflag = 1;
 
     std::ifstream  fi;
     fi.open("guess.rho", std::ios::in);
     if (!fi) {
-        log << "Cannot open \"guess.rho\"" <<"\n";
-        std::cout << "Cannot open \"guess.rho\"" << std::endl;
+        this->log_.error("Cannot open \"guess.rho\"");
         CnErr.abort();
     }
-    log << "    ./guess.rho is opened\n\n";
-    log.flush();
+    this->log_.info("./guess.rho is opened.");
 
     int term;
     fi >> term;
@@ -7095,29 +6951,27 @@ void DfInitialguess::setCoefRoudata()
 // The bugs in the case of SP in DfIguess2 has been modified.
 void DfInitialguess::VctNormfromIGuess2()
 {
-    TlLogX& log = TlLogX::getInstance();
-
     tempflag = 1;
 
     TlVector coefA;
     coefA.load(this->getNalphaPath());
 
     if (coefA.getSize() != static_cast<TlVector::size_type>(MaxTermRou)) {
-        log<<" Inconsistency detected between fl_Vct_Rou and fl_Vct_Nalpha "<<"\n";
+        this->log_.error(" Inconsistency detected between fl_Vct_Rou and fl_Vct_Nalpha ");
         CnErr.abort();
     }
 
     if (scftype==NSP) {
         const double dumelenum = this->CoefRou * coefA;
 
-        std::cout << "    number of electron = " << ElectronNum << "\n";
-        std::cout << "    Rho * Nalpha       = " << dumelenum << "\n";
-        std::cout << "    difference         = " << ElectronNum - dumelenum << "\n";
-        std::cout << "    Rho is normalized by the number of electrons." << "\n";
-        log  << "    number of electron = " << ElectronNum << "\n";
-        log  << "    Rho * Nalpha       = " << dumelenum << "\n";
-        log  << "    difference         = " << ElectronNum - dumelenum << "\n";
-        log  << "    Rho is normalized by the number of electrons." << "\n";
+        // std::cout << "    number of electron = " << ElectronNum << "\n";
+        // std::cout << "    Rho * Nalpha       = " << dumelenum << "\n";
+        // std::cout << "    difference         = " << ElectronNum - dumelenum << "\n";
+        // std::cout << "    Rho is normalized by the number of electrons." << "\n";
+        this->log_.info("number of electron = " + TlUtils::xtos(ElectronNum));
+        this->log_.info("Rho * Nalpha       = " + TlUtils::xtos(dumelenum));
+        this->log_.info("difference         = " + TlUtils::xtos(ElectronNum - dumelenum));
+        this->log_.info("Rho is normalized by the number of electrons.");
 
         this->CoefRou *= (ElectronNum / dumelenum);
 
@@ -7125,38 +6979,36 @@ void DfInitialguess::VctNormfromIGuess2()
     } else if (scftype==SP) {
         const double dumelenumalpha = this->CoefRouAlpha * coefA;
 
-        std::cout << "    number of alpha electron = " << AlphaSpinNum << "\n";
-        std::cout << "    Rho * Nalpha       = " << dumelenumalpha << "\n";
-        std::cout << "    difference         = " << AlphaSpinNum - dumelenumalpha << "\n";
-        std::cout << "    Rho-alpha is normalized by the number of electrons." << "\n";
-        std::cout <<"\n\n\n";
-        log  << "    number of alpha electron = " << AlphaSpinNum << "\n";
-        log  << "    Rho * Nalpha       = " << dumelenumalpha << "\n";
-        log  << "    difference         = " << AlphaSpinNum - dumelenumalpha << "\n";
-        log  << "    Rho-alpha is normalized by the number of electrons." << "\n";
-        log <<"\n\n\n";
+        // std::cout << "    number of alpha electron = " << AlphaSpinNum << "\n";
+        // std::cout << "    Rho * Nalpha       = " << dumelenumalpha << "\n";
+        // std::cout << "    difference         = " << AlphaSpinNum - dumelenumalpha << "\n";
+        // std::cout << "    Rho-alpha is normalized by the number of electrons." << "\n";
+        // std::cout <<"\n\n\n";
+        this->log_.info("number of alpha electron = " + TlUtils::xtos(AlphaSpinNum));
+        this->log_.info("Rho * Nalpha             = " + TlUtils::xtos(dumelenumalpha));
+        this->log_.info("difference               = " + TlUtils::xtos(AlphaSpinNum - dumelenumalpha));
+        this->log_.info("Rho-alpha is normalized by the number of electrons.");
 
         this->CoefRouAlpha *= (AlphaSpinNum / dumelenumalpha);
 
         // for beta-spin
         const double dumelenumbeta = this->CoefRouBeta * coefA;
 
-        std::cout << "    number of alpha electron = " << BetaSpinNum << "\n";
-        std::cout << "    Rho * Nalpha       = " << dumelenumbeta << "\n";
-        std::cout << "    difference         = " << BetaSpinNum - dumelenumbeta << "\n";
-        std::cout << "    Rho-alpha is normalized by the number of electrons." << "\n";
-        std::cout <<"\n\n\n";
-        log  << "    number of alpha electron = " << BetaSpinNum << "\n";
-        log  << "    Rho * Nalpha       = " << dumelenumbeta << "\n";
-        log  << "    difference         = " << BetaSpinNum - dumelenumbeta << "\n";
-        log  << "    Rho-alpha is normalized by the number of electrons." << "\n";
-        log <<"\n\n\n";
+        // std::cout << "    number of alpha electron = " << BetaSpinNum << "\n";
+        // std::cout << "    Rho * Nalpha       = " << dumelenumbeta << "\n";
+        // std::cout << "    difference         = " << BetaSpinNum - dumelenumbeta << "\n";
+        // std::cout << "    Rho-alpha is normalized by the number of electrons." << "\n";
+        // std::cout <<"\n\n\n";
+        this->log_.info("number of alpha electron = " + TlUtils::xtos(BetaSpinNum));
+        this->log_.info("Rho * Nalpha             = " + TlUtils::xtos(dumelenumbeta));
+        this->log_.info("difference               = " + TlUtils::xtos(BetaSpinNum - dumelenumbeta));
+        this->log_.info("Rho-alpha is normalized by the number of electrons.");
 
         this->CoefRouBeta *= (BetaSpinNum / dumelenumbeta);
     } else {
-        std::cout<< " scftype = "<<scftype<<std::endl;
-        std::cout<< " DfInitialguess::VctNormfromIGuess2"<<std::endl;
-        std::cout<< " scftype is somethig wrong "<<std::endl;
+        this->log_.error("scftype = "  + scftype);
+        this->log_.error("DfInitialguess::VctNormfromIGuess2");
+        this->log_.error("scftype is somethig wrong.");
         CnErr.abort();
     }
 }
@@ -7164,19 +7016,15 @@ void DfInitialguess::VctNormfromIGuess2()
 
 int DfInitialguess::GusError(const std::string& str)
 {
-    TlLogX& log = TlLogX::getInstance();
-
-    log << "**** Error in DfInitialguess ****\n";
-    log << str << "\n";
+    this->log_.error("Error in DfInitialguess");
+    this->log_.error(str);
     CnErr.abort();
     return 0;
 }
 
 void DfInitialguess::densityFitOnly()
 {
-    TlLogX& log = TlLogX::getInstance();
-
-    log << "Densityfitonly\n";
+    this->log_.info("Densityfit only");
 
     //diagonarize S-matrix (aux.basis) and obtain inverse matrix etc.
     {
@@ -7190,6 +7038,6 @@ void DfInitialguess::densityFitOnly()
         dfDensityFitting.exec();
     }
 
-    log << "Densityfitonly end\n";
+    this->log_.info("Densityfit only end");
 }
 

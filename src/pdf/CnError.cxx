@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include "CnError.h"
 
-#include "TlLogX.h"
+#include "TlLogging.h"
 #include "TlUtils.h"
 #include "TlTime.h"
 
@@ -17,19 +17,15 @@ CnError::~CnError()
 {
 }
 
-void CnError::abort(const std::string& sMsg)
+void CnError::abort(const std::string& msg)
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
 
-    Log.fatal("**** ERROR WAS DETECTED ****\n");
-    Log.fatal("**** TERMINATE PROGRAM  ****\n");
+    log.critical("**** STOP PROGRAM ****");
 
-    if (sMsg != "") {
-        Log.fatal(sMsg + "\n");
+    if (msg.empty() != true) {
+        log.critical(msg);
     }
-
-    Log.fatal(TlTime::getNow() + "\n");
-    Log.fatal("**** DETAILS WERE DESCRIBED IN 'fl_Out_Std' ****\n");
 
     std::abort();
 }

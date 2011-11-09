@@ -8,6 +8,7 @@
 #include <string>
 #include <iostream>
 
+#include "TlLogging.h"
 #include "TlSerializeData.h"
 #include "TlMatrixObject.h"
 #include "TlMatrixCache.h"
@@ -329,6 +330,8 @@ protected:
 protected:
     TlSerializeData* pPdfParam_;
 
+    TlLogging& log_;
+    
     /// プロセスあたりの最大メモリ容量(byte)
     std::size_t procMaxMemSize_;
     

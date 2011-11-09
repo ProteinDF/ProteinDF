@@ -7,7 +7,6 @@
 #include "DfHpq_driver.h"
 #include "TlTime.h"
 #include "TlSymmetricMatrix.h"
-#include "TlLogX.h"
 
 // 25 = 5 x 5 means D x D.
 #define WORK_SIZE 25

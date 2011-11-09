@@ -10,7 +10,6 @@
 
 #include "TlUtils.h"
 #include "TlFile.h"
-#include "TlLogX.h"
 #include "PdfUtils.h"
 #include "TlPseudoYaml.h"
 

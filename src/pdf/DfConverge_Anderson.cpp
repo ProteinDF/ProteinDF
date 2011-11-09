@@ -1,6 +1,5 @@
 #include "DfConverge_Anderson.h"
 #include "TlSymmetricMatrix.h"
-#include "TlLogX.h"
 
 DfConverge_Anderson::DfConverge_Anderson(TlSerializeData* pPdfParam)
     : DfConverge_Damping(pPdfParam)

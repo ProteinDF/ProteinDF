@@ -7,6 +7,8 @@
 #include "TlParameter.h"
 #include "TlSerializeData.h"
 
+#define PDFKWD_PRINT_WIDTH (72)
+
 /// ProteinDFのキーワード群を保持するクラス
 class PdfKeyword {
 public:
@@ -99,7 +101,7 @@ void PdfKeyword::printDefault(T& out) const
                 
             // 出力
             const std::string index_str = TlUtils::format("% 3d: ", index +1);
-            std::string explanation = "      " + TlUtils::textWrap(this->kwdList_[i].explanation, 74);
+            std::string explanation = "      " + TlUtils::textWrap(this->kwdList_[i].explanation, 72);
             TlUtils::replace(explanation, "\n", "\n      "); // 行の先頭に空白を入れる
             const std::string value = "      default: " + data[keyword].getStr();
             const std::string syntax = "      syntax: " + this->kwdList_[i].syntax;
@@ -132,9 +134,9 @@ void PdfKeyword::print(T& out, const TlSerializeData& data) const
             const std::string value = "[" + data[keyword].getStr() + "]";
             
             std::string line = index_str + " " + keyword + " ";
-            if ((line.length() + value.length()) < 80) {
-                TlUtils::pad(line, (80 - value.length()), ' ');
-            }
+            // if ((line.length() + value.length()) < PDFKWD_PRINT_WIDTH) {
+            //     TlUtils::pad(line, (PDFKWD_PRINT_WIDTH - value.length()), ' ');
+            // }
             line += value;
             
             out << line << "\n";

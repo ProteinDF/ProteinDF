@@ -6,7 +6,6 @@
 
 #include "TlSymmetricMatrix.h"
 #include "TlVector.h"
-#include "TlLogX.h"
 #include "TlTime.h"
 
 DfEri2::DfEri2(TlSerializeData* pPdfParam)
@@ -303,9 +302,8 @@ TlSymmetricMatrix DfEri2::getKMatrixUsingDensityMatrix(const TlSymmetricMatrix& 
     }
 
     // for timing data
-    TlLogX& Log = TlLogX::getInstance();
-    Log << TlUtils::format("ERI time              = %+e\n", dEriTime)
-    << TlUtils::format("matrix operation time = %+e\n", dMatrixOperationTime);
+    this->log_.info(TlUtils::format("ERI time = %+e\n", dEriTime));
+    this->log_.info(TlUtils::format("matrix operation time = %+e", dMatrixOperationTime));
 
     return K;
 }

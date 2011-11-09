@@ -2,7 +2,6 @@
 #include "DfTransatob.h"
 #include "TlUtils.h"
 #include "TlMatrix.h"
-#include "TlLogX.h"
 
 DfTransatob::DfTransatob(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam)

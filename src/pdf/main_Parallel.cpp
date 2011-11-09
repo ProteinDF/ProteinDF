@@ -12,10 +12,11 @@
 #include "ProteinDF_Parallel.h"
 #include "TlCommunicate.h"
 #include "TlUtils.h"
-#include "TlTime.h"
+#include "TlGetopt.h"
+//#include "TlTime.h"
 
 #ifdef __FUJITSU
-#define PDF_MAIN __MAIN
+#define PDF_MAIN MAIN__
 #else
 #define PDF_MAIN main
 #endif // __FUJITSU
@@ -34,8 +35,6 @@ static void func_int(int signum)
     std::abort();
 }
 
-
-
 // 例外処理時にMPI_Abort()を発行するため
 void terminateHandler()
 {
@@ -44,7 +43,6 @@ void terminateHandler()
     
     std::abort();
 }
-
 
 int PDF_MAIN(int argc, char *argv[])
 {
@@ -89,6 +87,27 @@ int PDF_MAIN(int argc, char *argv[])
         rComm.barrier();
     }
 #endif // NDEBUG
+
+    // setup parameters
+    TlGetopt opt(argc, argv, "dro:");
+
+    bool isRestart = false;
+    if (opt["r"] == "defined") {
+        isRestart = true;
+    }
+
+    TlLogging& log = TlLogging::getInstance();
+    std::string output = "fl_Out_Std";
+    if (opt["o"].empty() != true) {
+        output = opt["o"];
+    }
+    log.setFilePath(output);
+
+    if (opt["d"] == "defined") {
+        log.setLevel(TlLogging::DEBUG);
+    }
+
+    log.setProcID(rComm.getRank());
     
     // run ProteinDF
     ProteinDF_Parallel PDF;

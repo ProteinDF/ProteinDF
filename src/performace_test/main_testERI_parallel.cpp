@@ -7,7 +7,7 @@
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
 #include "TlGetopt.h"
-#include "TlLogX.h"
+#include "TlLogging.h"
 #include "TlOrbitalInfo.h"
 
 int main(int argc, char *argv[])
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     assert(P.getNumOfRows() == numOfAOs);
     
     // setup log
-    TlLogX& log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
     log.setFilePath("evalEri.out");
     
     // cakc

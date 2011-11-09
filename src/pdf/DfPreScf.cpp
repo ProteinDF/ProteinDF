@@ -10,7 +10,6 @@
 
 #include "DfDmatrix.h"
 #include "TlStringTokenizer.h"
-#include "TlLogX.h"
 #include "CnError.h"
 
 DfPreScf::DfPreScf(TlSerializeData* pPdfParam) : DfObject(pPdfParam)

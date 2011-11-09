@@ -9,7 +9,6 @@
 #include "TlUtils.h"
 #include "TlMatrix.h"
 #include "TlVector.h"
-#include "TlLogX.h"
 
 DfQclo::DfQclo(TlSerializeData* pPdfParam, int num_iter, bool bExecDiis)
     : DfObject(pPdfParam), m_bExecDiis(bExecDiis)
@@ -124,10 +123,7 @@ void DfQclo::DfQcloMain()
 
 void DfQclo::combineCqclo(const std::string& runtype, int iteration)
 {
-    TlLogX& Log = TlLogX::getInstance();
-
     // read Cqclo matrix of each fragment
-
     int number_dimension_mo = 0;
     std::vector<int> number_dimension_qclo(this->number_fragment);
     for (int frag = 0; frag < this->number_fragment; frag++) {
@@ -144,12 +140,16 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration)
         B.load(fname);
 
         if (B.getNumOfRows() != this->m_nNumOfAOs ||
-                B.getNumOfCols() != number_dimension_qclo[ frag ]) {
-            Log << "rowDim of " << fname << " = " << B.getNumOfRows() << "\n";
-            Log << "colDim of " << fname << " = " << B.getNumOfCols() << "\n";
-            Log << "number_dimension_basis  = " << this->m_nNumOfAOs << "\n";
-            Log << "number_dimension_qclo   = " << number_dimension_qclo[frag]  << "\n";
-            Log << "DfQclo dimension is not consistency, but continue\n";
+            B.getNumOfCols() != number_dimension_qclo[ frag ]) {
+            this->log_.warn(TlUtils::format("rowDim of %d = %d",
+                                            fname.c_str(), B.getNumOfRows()));
+            this->log_.warn(TlUtils::format("colDim of %d = %d",
+                                            fname.c_str(), B.getNumOfCols()));
+            this->log_.warn(TlUtils::format("number_dimension_basis = %d",
+                                            this->m_nNumOfAOs));
+            this->log_.warn(TlUtils::format("number_dimension_qclo = %d",
+                                            number_dimension_qclo[frag]));
+            this->log_.warn("DfQclo dimension is not consistency, but continue.");
         }
 
         Fl_Tbl_Fragment Tfrag;
@@ -213,9 +213,9 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration)
 
     // for debug
     for (int i = 0; i < number_dimension_mo; i++) {
-        Log << i << " th Eigval= " << eigval[i] << "\n";
+        this->log_.debug(TlUtils::format("%d th Eigval = %f",
+                                         i, eigval[i]));
     }
-    Log.flush();
 
     // write merged eigenvalue
     if ("rks" == runtype || "roks" == runtype) {

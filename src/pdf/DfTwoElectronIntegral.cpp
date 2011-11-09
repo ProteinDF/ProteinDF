@@ -8,7 +8,6 @@
 #include "TlPosition.h"
 #include "TlFmt.h"
 #include "TlUtils.h"
-#include "TlLogX.h"
 #include "TlTime.h"
 
 #include "DfTEI.h"

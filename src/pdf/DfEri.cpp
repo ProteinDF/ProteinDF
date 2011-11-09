@@ -6,7 +6,6 @@
 #include "TlSymmetricMatrix.h"
 #include "TlVector.h"
 #include "TlFmt.h"
-#include "TlLogX.h"
 #include "TlTime.h"
 
 #define MAX_SHELL (2) // s=0, p=1, d=2

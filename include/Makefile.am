@@ -1,5 +1,5 @@
 pkginclude_HEADERS = \
-	TlLogX.h			\
+	TlLogging.h			\
 	TlSystem.h			\
 	TlFile.h			\
 	TlResidue.h			\

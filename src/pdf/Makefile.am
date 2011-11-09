@@ -40,7 +40,6 @@ libpdf_la_SOURCES = \
 	DfGenerateGrid.h	DfGenerateGrid.cpp		\
 	DfHpq.h			DfHpq.cxx			\
 	DfHpq_driver.h		DfHpq_driver.c			\
-	DfIGuess2.h		DfIGuess2.cxx			\
 	DfInitialGuess.h	DfInitialGuess.cpp		\
 	DfInitialguess.h	DfInitialguess.cxx		\
 	DfInitialGuessHuckel.h	DfInitialGuessHuckel.cpp	\
@@ -63,9 +62,6 @@ libpdf_la_SOURCES = \
 	DfXcenefitting.h	DfXcenefitting.cxx		\
 	DfXcpotfitting.h	DfXcpotfitting.cxx		\
 	DfXMatrix.h		DfXMatrix.cpp			\
-	DfXmatrixMyu.h		DfXmatrixMyu.cxx		\
-	DfXmatrixNyu.h		DfXmatrixNyu.cxx		\
-	DfXmatrixRou.h		DfXmatrixRou.cxx		\
 	DfCleanup.h		DfCleanup.cpp			\
 	FileX.h			FileX.cxx			\
 	Fl_Database.h		Fl_Database.cxx			\
@@ -91,7 +87,6 @@ libpdf_la_SOURCES = \
 	Fl_Tbl_Xcpot.h		Fl_Tbl_Xcpot.cxx		\
 	Fl_Tbl_Xcpot2.h		Fl_Tbl_Xcpot2.cxx		\
 	Fl_UserinputX.h		Fl_UserinputX.cpp		\
-	Fl_Out.h         	Fl_Out.cxx			\
 	Fl_GlobalinputX.h	Fl_GlobalinputX.cpp		\
 	Fl_Vct_OtableX.h	Fl_Vct_OtableX.cpp		\
 	Fl_Vct_Table.h		Fl_Vct_Table.cpp		\

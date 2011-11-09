@@ -3,7 +3,6 @@
 #include "TlUtils.h"
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
-#include "TlLogX.h"
 
 DfTransFmatrix::DfTransFmatrix(TlSerializeData* pPdfParam, bool bExecDiis)
     : DfObject(pPdfParam), m_bExecDiis(bExecDiis)

@@ -19,8 +19,6 @@
 #include "DfConverge_Anderson_Parallel.h"
 #include "DfCleanup_Parallel.h"
 
-#include "TlLogX.h"
-
 #define   NUMBER_OF_CHECK 2
 
 DfScf_Parallel::DfScf_Parallel(TlSerializeData* pPdfParam)

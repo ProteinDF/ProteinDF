@@ -4,21 +4,17 @@
 #include "TlVector.h"
 #include "TlParameter.h"
 #include "CnError.h"
-#include "TlLogX.h"
 
 void DfIGuess2::main()
 {
-    TlLogX& Log = TlLogX::getInstance();
-
     //---- file open and read data ---------------------------------------------------
     std::ifstream  fi;
     fi.open("guess2.txt", std::ios::in);
     if (!fi) {
-        Log << "Cannot open \"guess2.txt\"\n";
+        this->log_.error("Cannot open \"guess2.txt\"");
         CnErr.abort();
     }
-    Log << "    ./guess2.txt is opened\n\n";
-    Log.flush();
+    this->log_.info("./guess2.txt is opened");
 
     int term;
     fi >> term;
@@ -44,8 +40,7 @@ void DfIGuess2::main()
     TlVector nalpha;
     nalpha.load("fl_Work/fl_Vct_Nalpha");
 
-    Log << "    ./guess2.txt is closed\n\n";
-    Log.flush();
+    this->log_.info("./guess2.txt is closed");
 
     //---- Normalized by the number of electrons -------------------------------------
     int elenum =0;

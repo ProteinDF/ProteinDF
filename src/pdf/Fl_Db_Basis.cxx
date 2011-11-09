@@ -7,7 +7,6 @@
 #include "Fl_Database.h"
 #include "Fl_Db_Basis.h"
 #include "TlUtils.h"
-#include "TlLogX.h"
 #include "TlStringTokenizer.h"
 
 Fl_Db_Basis::Fl_Db_Basis(const std::string& sBasisName) : m_sBasisName(sBasisName)

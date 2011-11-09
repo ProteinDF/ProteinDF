@@ -9,7 +9,7 @@
 #include <iostream>
 #include <cstdlib>
 #include "DfObject.h"
-#include "TlLogX.h"
+#include "TlLogging.h"
 #include "TlUtils.h"
 #include "TlSystem.h"
 #include "TlTime.h"
@@ -32,7 +32,8 @@ const std::string DfObject::m_sRunTypeSuffix[DfObject::RUN_MAXINDEX] = {
 };
 
 
-DfObject::DfObject(TlSerializeData* pPdfParam) : pPdfParam_(pPdfParam)
+DfObject::DfObject(TlSerializeData* pPdfParam)
+    : pPdfParam_(pPdfParam), log_(TlLogging::getInstance())
 {
     this->setParam(*pPdfParam);
     ++DfObject::objectCount_;
@@ -55,7 +56,6 @@ void DfObject::setParam(const TlSerializeData& data)
 #ifdef _OPENMP
     numOfThreads = omp_get_max_threads();
 #endif // _OPENMP
-
 
     // computational resource
     this->procMaxMemSize_ = 1024UL * 1024UL * 1024UL;
@@ -259,57 +259,64 @@ void DfObject::setParam(const TlSerializeData& data)
 
 void DfObject::logger(const std::string& str) const
 {
-    TlLogX& log = TlLogX::getInstance();
-
-    log << str;
+    //TlLogX& log = TlLogX::getInstance();
+    //log << str;
+    this->log_.info(str);
 }
 
 void DfObject::loggerTime(const std::string& str) const
 {
-    std::string out = str;
-    int size = out.size();
-    if (size > 0) {
-        if (out[size -1] == '\n') {
-            out.erase(size -1, 1);
-        }
+    // std::string out = str;
+    // int size = out.size();
+    // if (size > 0) {
+    //     if (out[size -1] == '\n') {
+    //         out.erase(size -1, 1);
+    //     }
 
-        const std::string timeStr = "[" + TlTime::getNow() + "]";
-        TlUtils::pad(out, (72 - timeStr.length()), ' ');
-        out += (timeStr + "\n");
-        this->logger(out);
-    }
+    //     const std::string timeStr = "[" + TlTime::getNow() + "]";
+    //     TlUtils::pad(out, (72 - timeStr.length()), ' ');
+    //     out += (timeStr + "\n");
+    //     this->logger(out);
+    // }
+    this->log_.info(str);
 }
 
 void DfObject::loggerStartTitle(const std::string& stepName, const char lineChar) const
 {
+    // std::string line = "";
+    // TlUtils::pad(line, 72, lineChar);
+
+    // const std::string timeString = TlUtils::format("[%s %s]",
+    //                                                TlTime::getNowDate().c_str(),
+    //                                                TlTime::getNowTime().c_str());
+
+    // std::string title = ">>>> " + stepName + " ";
+    // TlUtils::pad(title, (72 - timeString.length()), ' ');
+    // title += timeString;
+
+    // // 出力
+    // const std::string str = line + "\n" + title + "\n";
+
     std::string line = "";
-    TlUtils::pad(line, 72, lineChar);
-
-    const std::string timeString = TlUtils::format("[%s %s]",
-                                                   TlTime::getNowDate().c_str(),
-                                                   TlTime::getNowTime().c_str());
-
-    std::string title = ">>>> " + stepName + " ";
-    TlUtils::pad(title, (72 - timeString.length()), ' ');
-    title += timeString;
-
-    // 出力
-    const std::string str = line + "\n" + title + "\n";
+    TlUtils::pad(line, 50, lineChar);
+    const std::string str = line + "\n" + ">>>> " + stepName + "\n";
     this->logger(str);
 }
 
 void DfObject::loggerEndTitle(const std::string& stepName, const char lineChar) const
 {
-    const std::string timeString = TlUtils::format("[%s %s]",
-                                                   TlTime::getNowDate().c_str(),
-                                                   TlTime::getNowTime().c_str());
+    // const std::string timeString = TlUtils::format("[%s %s]",
+    //                                                TlTime::getNowDate().c_str(),
+    //                                                TlTime::getNowTime().c_str());
 
-    std::string title = "<<<< " + stepName + " ";
-    TlUtils::pad(title, (72 - timeString.length()), ' ');
-    title += timeString;
+    // std::string title = "<<<< " + stepName + " ";
+    // TlUtils::pad(title, (72 - timeString.length()), ' ');
+    // title += timeString;
 
-    // 出力
-    const std::string str = "\n" + title + "\n";
+    // // 出力
+    // const std::string str = "\n" + title + "\n";
+
+    const std::string str = "<<<<\n";
     this->logger(str);
 }
 

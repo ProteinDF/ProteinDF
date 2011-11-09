@@ -9,14 +9,14 @@
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
 #include "TlGetopt.h"
-#include "TlLogX.h"
+#include "TlLogging.h"
 #include "TlOrbitalInfo.h"
 #include "TlTime.h"
 
 void logger(const std::string& str) 
 {
-    TlLogX& log = TlLogX::getInstance();
-    log << str;
+    TlLogging& log = TlLogging::getInstance();
+    log.info(str);
 }
 
 
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     TlGetopt opt(argc, argv, "d:hp:vs:");
 
     // setup log
-    TlLogX& log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
     log.setFilePath("ptDensFit.out");
     loggerTime("start");
     

@@ -29,7 +29,8 @@ libpdftl_la_SOURCES = \
 	TlListMatrix.cpp		\
 	TlVector.cpp			\
 	TlFmt.cpp			\
-	TlLogX.cpp	TlGetopt.cpp
+	TlLogging.cpp			\
+	TlGetopt.cpp
 
 libppdftl_la_SOURCES = \
 	TlCommunicate.cpp		\

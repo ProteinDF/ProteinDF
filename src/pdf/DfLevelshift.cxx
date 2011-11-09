@@ -6,8 +6,6 @@
 #include "TlSymmetricMatrix.h"
 #include "TlVector.h"
 
-#include "TlLogX.h"
-
 DfLevelshift::DfLevelshift(TlSerializeData* pPdfParam, int num_iter)
     : DfObject(pPdfParam)
 {
@@ -67,7 +65,6 @@ void DfLevelshift::DfLshiftQclo(const std::string& fragname, int norbcut)
 
 void DfLevelshift::main(const RUN_TYPE runType, int iteration, const std::string& fragname, bool bPdfQcloMode)
 {
-    TlLogX& Log = TlLogX::getInstance();
     TlSerializeData& pdfParam = *(this->pPdfParam_);
     
     // construct level shift matrix for "F' matrix"
@@ -79,20 +76,17 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration, const std::string
     const double delta_group_open = pdfParam["level-shift/delta-group-open"].getDouble();
     const double delta_group_virtual = pdfParam["level-shift/delta-group-virtual"].getDouble();
 
-    Log << "construct Level Shift Operator\n";
+    this->log_.info("construct Level Shift Operator.");
 
-    Log << TlUtils::format("  == RKS,UKS calculation ==\n");
-    Log << TlUtils::format("    level shift for closed  MO = %8.2lf\n", ls_closed_mo);
-    Log << TlUtils::format("    level shift for open    MO = %8.2lf\n", ls_open_mo);
-    Log << TlUtils::format("    level shift for virtual MO = %8.2lf\n", ls_virtual_mo);
-    Log << "\n";
-
-    Log << TlUtils::format("    level shift between closed  MO = %8.2lf\n", delta_group_closed);
-    Log << TlUtils::format("    level shift between open    MO = %8.2lf\n", delta_group_open);
-    Log << TlUtils::format("    level shift between virtual MO = %8.2lf\n", delta_group_virtual);
+    this->log_.info("RKS,UKS calculation");
+    this->log_.info(TlUtils::format(" level shift for closed  MO = %8.2lf", ls_closed_mo));
+    this->log_.info(TlUtils::format(" level shift for open    MO = %8.2lf", ls_open_mo));
+    this->log_.info(TlUtils::format(" level shift for virtual MO = %8.2lf\n", ls_virtual_mo));
+    this->log_.info(TlUtils::format(" level shift between closed  MO = %8.2lf", delta_group_closed));
+    this->log_.info(TlUtils::format("    level shift between open    MO = %8.2lf", delta_group_open));
+    this->log_.info(TlUtils::format("    level shift between virtual MO = %8.2lf", delta_group_virtual));
 
     // prepear "beta" vector (level-shift values)
-    //const int norbcut = std::atoi(this->m_rInParam["SCF"]["control-norbcut"].c_str());
     const int norbcut = this->m_nNumOfMOs;
     TlVector beta(norbcut); // b
     {
@@ -134,11 +128,10 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration, const std::string
     // prepar "C'" matrix
     TlMatrix Cprime(this->m_nNumOfMOs, this->m_nNumOfMOs);
     {
-        //const std::string startGuess = this->m_rInParam["SCF"]["scf-start-guess"];
         if (iteration == 1 &&
             ((this->initialGuessType_ != GUESS_LCAO) && (this->initialGuessType_ != GUESS_HUCKEL))) {
-            Log << "construct level shift operator with fukue's Rou at iteration==1\n";
-            Log << "          level shift value is simply add to F' matrix (guess Rou is solution of DFT)\n";
+            this->log_.info("construct level shift operator with fukue's Rou at iteration==1");
+            this->log_.info("level shift value is simply add to F' matrix (guess Rou is solution of DFT)");
 
             // construct "C'" matrix for initial Rou
             const int numOfMOs = this->m_nNumOfMOs;
@@ -147,19 +140,13 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration, const std::string
             }
         } else {
             // "read previous C' matrix"
-//             std::string fname = "fl_Work/fl_Mtr_Cprime.matrix.";
-//             if (bPdfQcloMode == true) {
-//                 fname += fragname + ".";
-//             }
-//             fname += type + TlUtils::xtos(iteration -1);
-//             Cprime.load(fname);
             Cprime = DfObject::getCprimeMatrix<TlMatrix>(runType, iteration -1);
 
             if (Cprime.getNumOfRows() != this->m_nNumOfMOs || Cprime.getNumOfCols() != this->m_nNumOfMOs) {
-                Log << "rowDim of previous C' matrix = " << Cprime.getNumOfRows() << "\n";
-                Log << "colDIm of previous C' matrix = " << Cprime.getNumOfCols() << "\n";
-                Log << "number_mo_basis              = " << this->m_nNumOfMOs << "\n";
-                Log << "DfLevelshift dimension is not consistency, but continue" << "\n";
+                this->log_.warn(TlUtils::format("rowDim of previous C' matrix = %d", Cprime.getNumOfRows()));
+                this->log_.warn(TlUtils::format("colDIm of previous C' matrix = %d", Cprime.getNumOfCols()));
+                this->log_.warn(TlUtils::format("number_mo_basis = %d", this->m_nNumOfMOs));
+                this->log_.warn("DfLevelshift dimension is not consistency, but continue");
             }
         }
     }
@@ -188,10 +175,10 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration, const std::string
         Fprime = DfObject::getFprimeMatrix<TlSymmetricMatrix>(runType, iteration);
 
         if (Fprime.getNumOfRows() != this->m_nNumOfMOs || Fprime.getNumOfCols() != this->m_nNumOfMOs) {
-            Log << "rowDim of fl_Mtr_Fprime.matrix = " << Fprime.getNumOfRows() << "\n";
-            Log << "colDIm of fl_Mtr_Fprime.matrix = " << Fprime.getNumOfCols() << "\n";
-            Log << "number_mo_basis                = " << this->m_nNumOfMOs << "\n";
-            Log << "DfLevelshift dimension is not consistency, but continue\n";
+            this->log_.warn(TlUtils::format("rowDim of fl_Mtr_Fprime.matrix = %d", Fprime.getNumOfRows()));
+            this->log_.warn(TlUtils::format("colDIm of fl_Mtr_Fprime.matrix = %d", Fprime.getNumOfCols()));
+            this->log_.warn(TlUtils::format("number_mo_basis = %d", this->m_nNumOfMOs));
+            this->log_.warn("DfLevelshift dimension is not consistency, but continue");
         }
     }
 

@@ -6,7 +6,6 @@
 #include "DfObject.h"
 #include "Fl_Tbl_Orbital.h"
 #include "TlVector.h"
-#include "TlLogX.h"
 #include "CnError.h"
 
 /** 計算結果の出力を行うクラス

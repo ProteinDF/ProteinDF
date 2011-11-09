@@ -1,7 +1,6 @@
 #include <cassert>
 #include "DfConverge_Damping.h"
 #include "TlSymmetricMatrix.h"
-#include "TlLogX.h"
 #include "TlTime.h"
 
 DfConverge_Damping::DfConverge_Damping(TlSerializeData* pPdfParam)
