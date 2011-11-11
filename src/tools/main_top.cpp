@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
     readMsgPack.load(readParamPath);
     const TlSerializeData readData = readMsgPack.getSerializeData();
     const TlOrbitalInfo readOrbInfo(readData["coordinates"],
-                                    readData["basis_set"]);
+                                    readData["basis_sets"]);
     const int lastIteration = readData["iterations"].getInt();
 
     // load S

@@ -84,9 +84,9 @@ int main(int argc, char* argv[])
     }
     
     const TlOrbitalInfo orbInfo_old(pdfParamOld["coordinates"],
-                                    pdfParamOld["basis_set"]);
+                                    pdfParamOld["basis_sets"]);
     const TlOrbitalInfo orbInfo_new(pdfParamNew["coordinates"],
-                                    pdfParamNew["basis_set"]);
+                                    pdfParamNew["basis_sets"]);
 
     TlMatrix omega;
     {
