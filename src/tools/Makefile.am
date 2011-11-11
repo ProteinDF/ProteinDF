@@ -33,8 +33,7 @@ SERIAL_PROGS = 					\
 	transpose				\
 	getMaxValue				\
 	rotateLCAO				\
-	RLMO					\
-	textwrap
+	RLMO					
 
 
 PARALLEL_PROGS = \
