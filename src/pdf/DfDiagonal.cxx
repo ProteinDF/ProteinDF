@@ -6,7 +6,6 @@
 #include "CnError.h"
 #include "TlUtils.h"
 #include "TlSymmetricMatrix.h"
-#include "TlLogX.h"
 
 DfDiagonal::DfDiagonal(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {

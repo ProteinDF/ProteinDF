@@ -240,30 +240,40 @@ std::string TlUtils::getWord(std::string& str){
   return sAnswer;
 }
 
-std::string TlUtils::textWrap(const std::string& str, size_t width){
-  std::string tmp ="";
-  char cur  = '\0';
-  char last = '\0';
-  size_t i = 0;
+std::string TlUtils::textWrap(const std::string& str, size_t width)
+{
+    std::string tmp ="";
+    char cur  = '\0';
+    char last = '\0';
+    size_t i = 0;
+    
+    std::istringstream in(str);
+    std::ostringstream out;
+    while (in.get(cur)) {
+        if (++i == width) {
+            TlUtils::trim_ws(tmp);
+            out << '\n' << tmp;
+            tmp.clear();
+            i = 0;
+        } else if ((std::isspace(cur) == true) && (!std::isspace(last))) { // 単語の終わり
+            out << tmp;
+            tmp.clear();
+        }
 
-  std::istringstream in(str);
-  std::ostringstream out;
-  while (in.get(cur)){
-    if (++i == width){
-      TlUtils::trim_ws(tmp);
-      out << '\n' << tmp;
-      i = tmp.length();
-      tmp.clear();
-    } else if (std::isspace(cur) && !std::isspace(last)){ // 単語の終わり
-      out << tmp;
-      tmp.clear();
+        if (cur == '\n') {
+            // flush
+            out << tmp << '\n';
+            tmp.clear();
+            i = 0;
+            last = '\0';
+        } else {
+            tmp += cur;
+            last = cur;
+        }
     }
-
-    tmp += cur;
-    last = cur;
-  }
-
-  return out.str();
+    out << tmp;
+    
+    return out.str();
 }
 
 

@@ -20,15 +20,14 @@
 
 #include "TlTime.h"
 #include "TlUtils.h"
-#include "TlLogX.h"
 #include "Fl_GlobalinputX.h"
 #include "TlStringTokenizer.h"
 #include "TlMemManager.h"
 #include "TlMsgPack.h"
 #include "TlMatrixCache.h"
 
-ProteinDF::ProteinDF()
-{
+ProteinDF::ProteinDF() 
+    : log_(TlLogging::getInstance()) {
     this->showCacheReport_ = false;
 }
 
@@ -57,7 +56,7 @@ void ProteinDF::restart(const std::string& restartParamFilePath)
 {
     this->startlogo();
 
-    this->logger("loading ProteinDF parameter for restart.\n");
+    this->log_.info("loading ProteinDF parameter for restart.");
 
     // リスタート時にはすでにあるパラメータファイルを読み取るのみ
     this->loadParam(restartParamFilePath);
@@ -70,8 +69,6 @@ void ProteinDF::restart(const std::string& restartParamFilePath)
 
 void ProteinDF::exec()
 {
-    TlLogX& log = TlLogX::getInstance();
-
     // ProteinDF class parameter
     this->showCacheReport_ = this->pdfParam_["show_cache_report"].getBoolean();
 
@@ -110,84 +107,78 @@ void ProteinDF::exec()
         } else if (group != "") {
             //nothing
             this->stepStartTitle(group);
-            log.warn(TlUtils::format("unkown control keyword: %s, continue...\n", group.c_str()));
+            this->log_.warn(TlUtils::format("unkown control keyword: %s, continue...", group.c_str()));
             this->stepEndTitle();
         }
-
-        log.flush();
     }
 }
-
-void ProteinDF::logger(const std::string& str) const
-{
-    TlLogX& log = TlLogX::getInstance();
-
-    log << str;
-}
-
 
 void ProteinDF::startlogo()
 {
-    TlLogX& log = TlLogX::getInstance();
-    TlTime time;
-
-    log << "************************************************************************\n";
-    log << "ProteinDF version " << VERSION << "\n";
-    log << g_GlobalTime.getNowDate() << " " << g_GlobalTime.getNowTime() << "\n";
-    log << "\n";
 #ifdef _OPENMP
-    log << TlUtils::format(" OpenMP threads: %d\n", omp_get_max_threads());
+    const std::string ompInfo = TlUtils::format(" OpenMP threads: %d\n", omp_get_max_threads());
+    this->startlogo("serial", ompInfo);
+#else
+    this->startlogo("serial");
 #endif // _OPENMP
-    log << "\n";
-    log << "copyright(c) 1997-2011 ProteinDF development team.                      \n";
-    log << "\n";
-    log << "PLEASE CITE following:\n";
-    log << " F. Sato, Y. Shigemitsu, I. Okazaki, S. Yahiro, M. Fukue, S. Kozuru,    \n";
-    log << " H. Kashiwagi, \"Development of a new density functional program for    \n";
-    log << " all-electron calculation of proteins\",                                \n";
-    log << " Int. J. Quant. Chem., 63, 245-246 (1997).                              \n";
-    log << "\n";
-    log << "************************************************************************\n";
 }
 
+void ProteinDF::startlogo(const std::string& version,
+                          const std::string& info)
+{
+    this->log_.info("************************************************************************");
+    this->log_.info(TlUtils::format("ProteinDF version %s (%s)", VERSION, version.c_str()));
+    this->log_.info("\n");
+    this->log_.info(info);
+    this->log_.info("\n");
+    this->log_.info("copyright(c) 1997-2011 ProteinDF development team.");
+    this->log_.info("\n");
+    this->log_.info("PLEASE CITE following:");
+    this->log_.info(" F. Sato, Y. Shigemitsu, I. Okazaki, S. Yahiro, M. Fukue, S. Kozuru,");
+    this->log_.info(" H. Kashiwagi, \"Development of a new density functional program for");
+    this->log_.info(" all-electron calculation of proteins\",");
+    this->log_.info(" Int. J. Quant. Chem., 63, 245-246 (1997).");
+    this->log_.info("************************************************************************");
+}
 
 void ProteinDF::endlogo()
 {
-    TlLogX& log = TlLogX::getInstance();
-
-    log << "************************************************************************\n";
-    log << "ProteinDF Normal Termination\n";
+    std::string reports = "";
 
     // cache report
     if (this->showCacheReport_ == true) {
-        log << " matrix cache report:\n";
-        log << TlMatrixCache::reportStats();
-        log << "\n";
+        reports += " matrix cache report:\n";
+        reports += TlMatrixCache::reportStats();
+        reports += "\n";
     }
+
+    reports += TlUtils::format("CPU_TIME:    %9.0lf sec", g_GlobalTime.getCpuTime());
+    reports += TlUtils::format("ELAPS_TIME:  %9.0lf sec", g_GlobalTime.getElapseTime());
     
-    //log << "CPU_TIME:   " << TlUtils::format("== %9.0lf sec\n", g_GlobalTime.getCpuTime());
-    log << "ELAPS_TIME: " << TlUtils::format("== %9.0lf sec\n", g_GlobalTime.getElapseTime());
-    log << TlTime::getNowDate() << " " << TlTime::getNowTime() << "\n";
-    log << "************************************************************************\n";
+    this->endlogo(reports);
+}
+
+void ProteinDF::endlogo(const std::string& reports)
+{
+    this->log_.info("************************************************************************");
+    this->log_.info("ProteinDF successful completion");
+
+    this->log_.info(reports);
+    
+    this->log_.info("************************************************************************");
 }
 
 
 void ProteinDF::stepStartTitle(const std::string& stepName)
 {
-    TlLogX& log = TlLogX::getInstance();
-
-    log << "========================================================================\n";
-    log << ">>>>" << stepName << " ";
-    log << "(" << TlTime::getNowDate() << " " << TlTime::getNowTime() << ")\n";
-    log << "========================================================================\n";
+    this->log_.info("========================================================================");
+    this->log_.info(">>>> " + stepName);
+    this->log_.info("========================================================================");
 }
 
 void ProteinDF::stepEndTitle()
 {
-    TlLogX& log = TlLogX::getInstance();
-
-    log << "(" << TlTime::getNowDate() << " " << TlTime::getNowTime() << ")\n";
-    log << "========================================================================\n";
+    this->log_.info("========================================================================");
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -196,13 +187,12 @@ void ProteinDF::stepEndTitle()
 void ProteinDF::inputData()
 {
     this->stepStartTitle("INPUT DATA");
-
+    
     DfInputdata dfInputData;
     this->pdfParam_ = dfInputData.main();
 
     this->stepEndTitle();
 }
-
 
 void ProteinDF::setupGlobalCondition()
 {

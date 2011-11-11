@@ -9,7 +9,6 @@
 #include "TlVector.h"
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
-#include "TlLogX.h"
 
 DfCqclomatrix::DfCqclomatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
@@ -23,21 +22,13 @@ DfCqclomatrix::~DfCqclomatrix()
 
 void DfCqclomatrix::main()
 {
-    //const TlSerializeData& pdfParam = *(this->pPdfParam_);
-    TlLogX& Log = TlLogX::getInstance();
-
-    //const int natom = atoi(this->m_flGbi["SCF"]["control-number-of-atoms"].c_str());
     const int natom = this->m_nNumOfAtoms;
     Fl_Fragment FlFrag;
     this->number_fragment = FlFrag.getNumOfFragments();
 
     int* atom_fragment        = new int[natom];
     int* basis_fragment       = new int[this->m_nNumOfAOs];
-    //int* number_fragmentbasis = new int[number_fragment];
     std::vector<int> numOfFragmentBasis(this->m_nNumOfAOs, 0);
-//   for (int i = 0; i < number_fragment; i++){
-//     number_fragmentbasis[i] = 0;
-//   }
 
     // read AtomFragmentTable
     {
@@ -97,14 +88,18 @@ void DfCqclomatrix::main()
                 counti++;
             }
         }
-        Log << "partial S matrix " << frag << "\n";
+        this->log_.info(TlUtils::format("partial S matrix frag=%d", frag));
 
         TlVector eigVal;
         TlMatrix eigVec;
         fragmentS.diagonal(&eigVal, &eigVec);
 
-        Log << "eigenvalue of partial S matrix\n";
-        eigVal.print(Log);
+        this->log_.info("eigenvalue of partial S matrix");
+        {
+            std::stringstream ss;
+            eigVal.print(ss);
+            this->log_.info(ss.str());
+        }
 
         for (int i = 0; i < numOfFragmentBasis[frag]; i++) {
             eigval[ count_basis+i ]  = eigVal[i];
@@ -217,8 +212,6 @@ void DfCqclomatrix::main()
 
 void DfCqclomatrix::main(std::string type)
 {
-    TlLogX& Log = TlLogX::getInstance();
-
     TlMatrix guess_lcao;
     Fl_Tbl_Fragment  Tfrag;
 
@@ -252,8 +245,12 @@ void DfCqclomatrix::main(std::string type)
             }
         }
 
-        Log << std::string("guess lcao " + type) << "\n";
-        guess_lcao.print(Log);
+        this->log_.info("guess lcao " + type);
+        {
+            std::stringstream ss;
+            guess_lcao.print(ss);
+            this->log_.info(ss.str());
+        }
     }
 
     // write Cqclo of each fragment

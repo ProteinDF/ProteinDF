@@ -4,7 +4,6 @@
 #include "DfObject.h"
 #include "TlMatrix.h"
 #include "TlVector.h"
-#include "TlLogX.h"
 
 /// X行列を求めるクラス
 /// S行列から、固有値, 固有ベクトルを求め、X 行列および−1 X 行列の計算を行い、

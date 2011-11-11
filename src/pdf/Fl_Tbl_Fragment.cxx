@@ -1,7 +1,7 @@
 #include "Fl_Tbl_Fragment.h"
 #include "TlParameter.h"
 #include "FileX.h"
-#include "TlLogX.h"
+#include "TlLogging.h"
 
 int  Fl_Tbl_Fragment :: flag = 0; // flag for Constructor
 // first : flag = 0
@@ -141,13 +141,13 @@ void Fl_Tbl_Fragment::prepare()
 
 void Fl_Tbl_Fragment::makeTable()
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
 
     std::ofstream  fo;
     TblFile = "fl_Table/FragmentTable";
     fo.open(TblFile.c_str(), std::ios::out | std::ios::trunc);
     if (!fo) {
-        Log << " Cannot open " << TblFile << "\n";
+        log.error("Cannot open " + TblFile);
         CnErr.abort();
     }
     for (int i = 0; i < number_qclo; i++) {
@@ -164,13 +164,13 @@ void Fl_Tbl_Fragment::makeTable()
 
 void Fl_Tbl_Fragment::setData()
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
 
     std::ifstream  fi;
     TblFile = "fl_Table/FragmentTable";
     fi.open(TblFile.c_str(), std::ios::in);
     if (!fi) {
-        Log << " Cannot open " << TblFile << "\n";
+        log.error("Cannot open " + TblFile);
         CnErr.abort("Fl_Tbl_Fragment", "", "setData", "Cannot open FragmentTable") ;
     }
     for (int i = 0; i < number_fragment; i++) {

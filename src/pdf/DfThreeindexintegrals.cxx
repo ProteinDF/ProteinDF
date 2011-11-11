@@ -10,7 +10,6 @@
 #include "TlVector.h"
 #include "DfEri2.h"
 #include "DfTwoElectronIntegral.h"
-#include "TlLogX.h"
 #include "CnError.h"
 
 DfThreeindexintegrals::DfThreeindexintegrals(TlSerializeData* pPdfParam)
@@ -94,11 +93,7 @@ TlSymmetricMatrix DfThreeindexintegrals::getPMatrix(const RUN_TYPE runType, int 
 
 void DfThreeindexintegrals::mainDIRECT_RKS(int iteration)
 {
-    TlLogX& Log = TlLogX::getInstance();
-    // for debug
-    //std::cout << "DfThreeindexintegrals::mainDIRECT_RKS() entered." << std::endl;
-
-    Log << "Direct scheme method is employed" << "\n";
+    this->log_.info("Direct scheme method is employed");
 
     // read Rou
     TlVector currRho;
@@ -203,8 +198,7 @@ void DfThreeindexintegrals::mainDIRECT_RKS(int iteration)
 
 void DfThreeindexintegrals::mainDIRECT_RKS2(int iteration)
 {
-    TlLogX& Log = TlLogX::getInstance();
-    Log << "Direct scheme method is employed" << "\n";
+    this->log_.info("Direct scheme method is employed");
 
     // read Rou
     TlVector currRho;
@@ -340,8 +334,7 @@ void DfThreeindexintegrals::mainDIRECT_RKS2(int iteration)
 
 void DfThreeindexintegrals::mainDIRECT_UKS(int iteration)
 {
-    TlLogX& Log = TlLogX::getInstance();
-    Log << "Direct scheme method is employed\n";
+    this->log_.info("Direct scheme method is employed");
 
     // read Rho
     TlVector currRho;
@@ -459,9 +452,7 @@ void DfThreeindexintegrals::mainDIRECT_UKS(int iteration)
 
 void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration)
 {
-    TlLogX& Log = TlLogX::getInstance();
-
-    Log << "ROKS Direct scheme method is employed\n";
+    this->log_.info("ROKS Direct scheme method is employed");
 
     // read Rou
     TlVector currRho;
@@ -552,7 +543,7 @@ void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration)
     }
 
     // construct kohn-sham matrix of closed part ( F1 )
-    Log << "construct Kohn-Sham matrix F1" << "\n";
+    this->log_.info("construct Kohn-Sham matrix F1");
     {
         TlSymmetricMatrix F(this->m_nNumOfAOs);
         TlSymmetricMatrix E(this->m_nNumOfAOs);
@@ -594,7 +585,7 @@ void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration)
     }
 
     // construct kohn-sham matrix of open part ( F2 )
-    Log << "construct Kohn-Sham matrix F2\n";
+    this->log_.info("construct Kohn-Sham matrix F2");
     {
         TlSymmetricMatrix F(this->m_nNumOfAOs);
         TlSymmetricMatrix E(this->m_nNumOfAOs);

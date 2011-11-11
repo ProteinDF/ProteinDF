@@ -2,10 +2,8 @@
 #include <cmath>
 
 #include "DfConverge2.h"
-#include "Fl_Out.h"
 #include "CnError.h"
 #include "TlUtils.h"
-#include "TlLogX.h"
 #include "TlSymmetricMatrix.h"
 
 #define LAMBDA  0.0
@@ -13,7 +11,6 @@
 DfConverge2::DfConverge2(TlSerializeData* pPdfParam, int num_iter) : DfObject(pPdfParam)
 {
     const TlSerializeData& pdfParam = *pPdfParam;
-    TlLogX& Log = TlLogX::getInstance();
 
     // DIIS
     this->diis_dimension           = pdfParam["scf-acceleration/diis/number-of-diis"].getInt();
@@ -27,11 +24,10 @@ DfConverge2::DfConverge2(TlSerializeData* pPdfParam, int num_iter) : DfObject(pP
     this->diis_actual_dimension += 1;
 
     if (pdfParam["scf-acceleration"].getStr() == "mix") {
-        Log << "The mix acceleration method is employed.\n";
+        this->log_.info("The mix acceleration method is employed.");
         if (this->diis_start_extrapolation != (this->diis_dimension + this->diis_start_number)) {
-            Log << "*** WARNING ***\n";
-            Log << "In this method, start-extrapolation = number-of-diis + start-number.\n";
-            Log << "Force to set the number of start-extrapolation.\n";
+            this->log_.warn("In this method, start-extrapolation = number-of-diis + start-number.");
+            this->log_.warn("Force to set the number of start-extrapolation.");
             this->diis_start_extrapolation = this->diis_dimension + this->diis_start_number;
         }
 
@@ -69,14 +65,13 @@ DfConverge2::~DfConverge2()
 // 返値: DIIS を行うかどうかを返す
 bool DfConverge2::DfConv2Main()
 {
-    TlLogX& Log = TlLogX::getInstance();
     bool bAnswer = true;
 
     if (!(this->diis_actual_dimension >= 2)) {
-        Log << "DIIS acceleralation is not started yet\n";
+        this->log_.info("DIIS acceleralation is not started yet.");
         bAnswer = false;
     } else {
-        Log << "DIIS acceleralation is started" << "\n";
+        this->log_.info("DIIS acceleralation is started.");
 
         TlMatrix Ev;
         TlMatrix Bm;
@@ -90,13 +85,13 @@ bool DfConverge2::DfConv2Main()
                 this->read_PreviousBmatrix("rks", m_nIteration, Bm);
                 this->update_Bmatrix("rks", m_nIteration, Bm, Ev);
                 if (diis_start_extrapolation <= m_nIteration) {
-                    Log << "solve DIIS equation and extrapolate khon-sham matrix\n";
+                    this->log_.info("solve DIIS equation and extrapolate khon-sham matrix.");
                     this->solve_DIIS(Bm, c);
                     this->interpolate_KhonSham("rks", m_nIteration, c);
                     
                     bAnswer = true;
                 } else {
-                    Log << "only store updated B matrix, do not solve DIIS equation\n";
+                    this->log_.info("only store updated B matrix, do not solve DIIS equation.");
                     bAnswer = false;
                 }
             }
@@ -109,13 +104,13 @@ bool DfConverge2::DfConv2Main()
                 this->read_PreviousBmatrix("uks-alpha", m_nIteration, Bm);
                 this->update_Bmatrix("uks-alpha", m_nIteration, Bm, Ev);
                 if (diis_start_extrapolation <= m_nIteration) {
-                    Log << "solve DIIS equation and extrapolate khon-sham matrix\n";
+                    this->log_.info("solve DIIS equation and extrapolate khon-sham matrix.");
                     this->solve_DIIS(Bm, c);
                     this->interpolate_KhonSham("uks-alpha", m_nIteration, c);
                     
                     bAnswer = true;
                 } else {
-                    Log << "only store updated B matrix, do not solve DIIS equation\n";
+                    this->log_.info("only store updated B matrix, do not solve DIIS equation.");
                     
                     bAnswer = false;
                 }
@@ -124,13 +119,13 @@ bool DfConverge2::DfConv2Main()
                 this->read_PreviousBmatrix("uks-beta", m_nIteration, Bm);
                 this->update_Bmatrix("uks-beta", m_nIteration, Bm, Ev);
                 if (diis_start_extrapolation <= m_nIteration) {
-                    Log << "solve DIIS equation and extrapolate khon-sham matrix\n";
+                    this->log_.info("solve DIIS equation and extrapolate khon-sham matrix.");
                     this->solve_DIIS(Bm, c);
                     this->interpolate_KhonSham("uks-beta",  m_nIteration, c);
                     
                     bAnswer = true;
                 } else {
-                    Log << "only store updated B matrix, do not solve DIIS equation\n";
+                    this->log_.info("only store updated B matrix, do not solve DIIS equation.");
                     bAnswer = false;
                 }
             }
@@ -142,13 +137,13 @@ bool DfConverge2::DfConv2Main()
                 this->read_PreviousBmatrix("roks", m_nIteration, Bm);
                 this->update_Bmatrix("roks", m_nIteration, Bm, Ev);
                 if (diis_start_extrapolation <= m_nIteration) {
-                    Log << "solve DIIS equation and extrapolate khon-sham matrix\n";
+                    this->log_.info("solve DIIS equation and extrapolate khon-sham matrix.");
                     this->solve_DIIS(Bm, c);
                     this->interpolate_KhonSham("roks", m_nIteration, c);
                     
                     bAnswer = true;
                 } else {
-                    Log << "only store updated B matrix, do not solve DIIS equation\n";
+                    this->log_.info("only store updated B matrix, do not solve DIIS equation.");
                     bAnswer = false;
                 }
             }
@@ -167,8 +162,6 @@ bool DfConverge2::DfConv2Main()
 // フル行列２個と、三角行列１個のメモリが必要である。
 void DfConverge2::calculate_ErrorVector(const RUN_TYPE runType, int iteration, TlMatrix& A)
 {
-    TlLogX& Log = TlLogX::getInstance();
-
     TlSymmetricMatrix P(this->m_nNumOfAOs);
     TlSymmetricMatrix F(this->m_nNumOfAOs);
     TlSymmetricMatrix S(this->m_nNumOfAOs);
@@ -237,7 +230,7 @@ void DfConverge2::calculate_ErrorVector(const RUN_TYPE runType, int iteration, T
 
     // write error vector for next DIIS
     {
-        Log << "write Error Vector to a file\n";
+        this->log_.info("write Error Vector to a file.");
 
         assert(A.getNumOfCols() == this->m_nNumOfMOs);
         assert(A.getNumOfRows() == this->m_nNumOfMOs);
@@ -256,12 +249,10 @@ void DfConverge2::calculate_ErrorVector(const RUN_TYPE runType, int iteration, T
             }
         }
 
-        //Log << "これ収束の判定値に使うんでないの？" << "\n";
-        Log << "norm of the error vector" << " ( " << iteration << " iteration ) = " << norm;
-        if (diis_start_extrapolation <= m_nIteration) {
-            Log << "\n";
-        } else {
-            Log << "(do not extrapolation)" << "\n";
+        this->log_.info(TlUtils::format("norm of the error vector (%d iteration) = %f.",
+                                        iteration, norm));
+        if (diis_start_extrapolation > m_nIteration) {
+            this->log_.info("do not extrapolation.");
         }
     }
 }

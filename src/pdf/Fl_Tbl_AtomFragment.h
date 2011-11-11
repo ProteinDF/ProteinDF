@@ -2,10 +2,8 @@
 #define FL_TBL_ATOMFRAGMENT_H
 
 #include <iomanip>
-//#include "Fl_Table.h"
 #include "CnError.h"
 
-//class Fl_Tbl_AtomFragment : public Fl_Table {
 class Fl_Tbl_AtomFragment {
 public:
     Fl_Tbl_AtomFragment();

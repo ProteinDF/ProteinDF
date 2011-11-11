@@ -12,9 +12,7 @@
 #include "DfScf_Parallel.h"
 #include "DfForce_Parallel.h"
 
-#include "TlTime.h"
 #include "TlCommunicate.h"
-#include "TlLogX.h"
 #include "TlUtils.h"
 
 #ifdef HAVE_SCALAPACK
@@ -26,20 +24,9 @@ ProteinDF_Parallel::ProteinDF_Parallel()
 {
 }
 
-
 ProteinDF_Parallel::~ProteinDF_Parallel()
 {
 }
-
-
-void ProteinDF_Parallel::logger(const std::string& str) const
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        ProteinDF::logger(str);
-    }
-}
-
 
 void ProteinDF_Parallel::loadParam(const std::string& requestFilePath)
 {
@@ -84,7 +71,7 @@ void ProteinDF_Parallel::setupGlobalCondition()
             if (this->pdfParam_.hasKey("scalapack_block_size") == true) {
                 scalapackBlockSize = this->pdfParam_["scalapack_block_size"].getInt();
             }
-            this->logger(TlUtils::format("ScaLAPACK block size(= %d) is set.\n", scalapackBlockSize));
+            this->log_.info(TlUtils::format("ScaLAPACK block size(= %d) is set.\n", scalapackBlockSize));
             TlDistributeMatrix::setSystemBlockSize(scalapackBlockSize);
             TlDistributeVector::setSystemBlockSize(scalapackBlockSize);
 
@@ -93,7 +80,7 @@ void ProteinDF_Parallel::setupGlobalCondition()
                 isUsingPartialIO = this->pdfParam_["save_distributed_matrix_to_local_disk"].getBoolean();
             }
             const std::string isUsingPartialIO_YN = (isUsingPartialIO == true) ? "YES" : "NO ";
-            this->logger(TlUtils::format("partial I/O mode = %s\n", isUsingPartialIO_YN.c_str()));
+            this->log_.info(TlUtils::format("partial I/O mode = %s\n", isUsingPartialIO_YN.c_str()));
             TlDistributeMatrix::setUsingPartialIO(isUsingPartialIO);
         }
     }
@@ -129,7 +116,7 @@ void ProteinDF_Parallel::stepScf()
 
         this->stepEndTitle();
     } else {
-        this->logger(" SCF need not to execute.\n");
+        this->log_.info(" SCF need not to execute.\n");
     }
 
     rComm.barrier();
@@ -147,89 +134,69 @@ void ProteinDF_Parallel::startlogo()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    if (rComm.isMaster() == true) {
-
-        //ProteinDF::startlogo();
-        TlLogX& log = TlLogX::getInstance();
-        TlTime time;
-
-        log << "************************************************************************\n";
-        log << "ProteinDF version " << VERSION << "(parallel)\n";
-        log << g_GlobalTime.getNowDate() << " " << g_GlobalTime.getNowTime() << "\n";
-        log << "\n";
-        log << TlUtils::format(" MPI process: %d\n", rComm.getNumOfProc());
+    const std::string version = "parallel";
+    std::string info = "";
+    info += TlUtils::format(" MPI process: %d\n", rComm.getNumOfProc());
 #ifdef _OPENMP
-        log << TlUtils::format(" OpenMP threads: %d\n", omp_get_max_threads());
+    info += TlUtils::format(" OpenMP threads: %d\n", omp_get_max_threads());
 #endif // _OPENMP
-        log << "\n";
-        log << "copyright(c) 1997-2011 ProteinDF development team.                      \n";
-        log << "\n";
-        log << "PLEASE CITE following:\n";
-        log << " F. Sato, Y. Shigemitsu, I. Okazaki, S. Yahiro, M. Fukue, S. Kozuru,    \n";
-        log << " H. Kashiwagi, \"Development of a new density functional program for    \n";
-        log << " all-electron calculation of proteins\",                                \n";
-        log << " Int. J. Quant. Chem., 63, 245-246 (1997).                              \n";
-        log << "\n";
-        log << "************************************************************************\n";
-    }
+    
+    ProteinDF::startlogo(version, info);
 }
 
 void ProteinDF_Parallel::endlogo()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    const int numOfProcs = rComm.getNumOfProcs();
     const int rank = rComm.getRank();
+    const int numOfProcs = rComm.getNumOfProcs();
     
-    this->logger("************************************************************************\n");
-    this->logger("ProteinDF Normal Termination\n");
-    this->logger(TlUtils::format(" MPI Process: %d\n", rComm.getNumOfProc()));
-#ifdef _OPENMP
-    this->logger(TlUtils::format(" OpenMP threads: %d\n", omp_get_max_threads()));
-#endif // _OPENMP
+    std::string performanceReports = "";
+    performanceReports += TlUtils::format(" #%6d:\n", rank);
+    performanceReports += TlUtils::format(" CPU TIME  : %9.0lf sec\n", g_GlobalTime.getCpuTime());
+    performanceReports += TlUtils::format(" ELAPS_TIME: %9.0lf sec\n", g_GlobalTime.getElapseTime());
 
-    this->logger(TlUtils::format("\n"));
-    this->logger(TlUtils::format(" performance information:\n"));
-    rComm.barrier();
-    for (int i = 0; i < numOfProcs; ++i) {
-        if (i == rank) {
-            ProteinDF::logger(TlUtils::format(" #%6d:\n", rank));
-            ProteinDF::logger(TlUtils::format(" CPU TIME  : %9.0lf sec\n", g_GlobalTime.getCpuTime()));
-            ProteinDF::logger(TlUtils::format(" ELAPS_TIME: %9.0lf sec\n", g_GlobalTime.getElapseTime()));
-        }
-        rComm.barrier();
-    }
-
-    // matrix cache report
+    std::string matrixCacheReports = "";
     if (this->showCacheReport_ == true) {
-        this->logger("\n");
-        this->logger(" matrix cache report:\n");
-        rComm.barrier();
-        for (int i = 0; i < numOfProcs; ++i) {
-            if (i == rank) {
-                ProteinDF::logger(TlUtils::format(" #%6d:\n", i));
-                ProteinDF::logger(TlMatrixCache::reportStats());
-                ProteinDF::logger("\n");
-            }
-            rComm.barrier();
-        }
+        matrixCacheReports += TlUtils::format(" #%6d:\n", rank);
+        matrixCacheReports += TlMatrixCache::reportStats();
     }
 
-    // communication report
-    {
-        this->logger("\n");
-        this->logger(" MPI communication report:\n");
-        rComm.barrier();
-        for (int i = 0; i < numOfProcs; ++i) {
-            if (i == rank) {
-                ProteinDF::logger(rComm.getReport());
-            }
-            rComm.barrier();
+    std::string commReports = rComm.getReport();
+    
+    // 集計
+    std::string reports = "";
+    if (rComm.isMaster() == true) {
+        std::string recvMsg = "";
+        reports += " performance information:\n";
+        reports += performanceReports; // from '0'
+        for (int i = 1; i < numOfProcs; ++i) {
+            rComm.receiveData(recvMsg, i);
+            reports += recvMsg;
         }
+        
+        if (this->showCacheReport_ == true) {
+            reports += " matrix cache report:\n";
+            reports += matrixCacheReports; // from '0'
+            for (int i = 1; i < numOfProcs; ++i) {
+                rComm.receiveData(recvMsg, i);
+                reports += recvMsg;
+            }
+        }
+        
+        reports += " MPI communication report:\n";
+        reports += commReports; // from '0'
+        for (int i = 1; i < numOfProcs; ++i) {
+            rComm.receiveData(recvMsg, i);
+            reports += recvMsg;
+        }
+    } else {
+        rComm.sendData(performanceReports, 0);
+        rComm.sendData(matrixCacheReports, 0);
+        rComm.sendData(commReports, 0);
     }
     
-    rComm.barrier();
-    this->logger(TlUtils::format(" %s %s\n", TlTime::getNowDate().c_str(), TlTime::getNowTime().c_str()));
-    this->logger("************************************************************************\n");
+    //
+    ProteinDF::endlogo(reports);
 }
 
 void ProteinDF_Parallel::stepStartTitle(const std::string& stepName)

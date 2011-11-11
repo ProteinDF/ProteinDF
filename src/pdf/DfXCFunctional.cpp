@@ -8,7 +8,6 @@
 #include "FileX.h"
 #include "TlMatrixObject.h"
 #include "TlUtils.h"
-#include "TlLogX.h"
 #include "TlTime.h"
 
 double DfXCFunctional::m_dXC_Energy = 0.0;

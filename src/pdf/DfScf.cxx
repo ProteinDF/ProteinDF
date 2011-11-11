@@ -42,7 +42,6 @@
 #include "DfPreScf.h"
 
 #include "TlFile.h"
-#include "TlLogX.h"
 #include "TlMsgPack.h"
 
 #include "Fl_GlobalinputX.h"
@@ -861,13 +860,15 @@ DfPopulation* DfScf::getDfPopulationObject()
 
 void DfScf::calcPopulation()
 {
-    TlLogX& log = TlLogX::getInstance();
-
     // pupulation analysis
     this->loggerStartTitle("Population analysis");
 
     DfPopulation* pDfPopulation = this->getDfPopulationObject();
-    pDfPopulation->getReport(this->m_nIteration, log);
+    {
+        std::stringstream ss;
+        pDfPopulation->getReport(this->m_nIteration, ss);
+        this->log_.info(ss.str());
+    }
     
     delete pDfPopulation;
     pDfPopulation = NULL;

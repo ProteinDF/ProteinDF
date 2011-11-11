@@ -6,7 +6,6 @@
 
 #include "DfObject.h"
 #include "TlSymmetricMatrix.h"
-#include "TlLogX.h"
 #include "CnError.h"
 #include "TlTime.h"
 

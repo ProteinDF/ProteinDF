@@ -7,7 +7,7 @@
 
 #include "Fl_Tbl_Xcpot2.h"
 #include "FileX.h"
-#include "TlLogX.h"
+#include "TlLogging.h"
 #include "CnError.h"
 
 int  Fl_Tbl_Xcpot2::flag1=0;         // flag for Constructor;
@@ -20,7 +20,7 @@ int Fl_Tbl_Xcpot2::cGtoTotalNum=0; // s*1,p*3,d*5;
 //#######################################################################
 Fl_Tbl_Xcpot2::Fl_Tbl_Xcpot2()
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
 //   std::cerr << "Fl_Tbl_Xcpot2::Fl_Tbl_Xcpot2() constructer" << std::endl;
 
     int memory;
@@ -30,8 +30,8 @@ Fl_Tbl_Xcpot2::Fl_Tbl_Xcpot2()
         prepare();
         memory = Estmemval();
         if (memory > MaxFlBasisTblmemory) {
-            Log <<"Cannot get memory !!(in Fl_Tbl_Xcpot2.cxx no constractor)"<<"\n";
-            Log <<"Used Memory is " << 8 * memory <<" [byte] " <<"\n";
+            log.error("Cannot get memory !!(in Fl_Tbl_Xcpot2.cxx no constractor)");
+            log.error("Used Memory is " + TlUtils::xtos(8 * memory) + " [byte] ");
             CnErr.abort();
         } else {
 //      Log <<"Used Memory is " << 8 * memory <<" [byte] " <<"\n";
@@ -68,7 +68,8 @@ Fl_Tbl_Xcpot2::~Fl_Tbl_Xcpot2()
 //#######################################################################
 int Fl_Tbl_Xcpot2::prepare()
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
+
     int i,j,k,m,start,to,flag;
     char *Atm = new char[MaxAtomName];
     char *Lb2 = new char[MaxLabelname];
@@ -120,8 +121,7 @@ int Fl_Tbl_Xcpot2::prepare()
                         iter=5;
                         break;
                     default  :
-                        Log << "Error (making Table for Yahito(Xcot)))"
-                        << "\n";
+                        log.error("Error (making Table for Yahito(Xcot)))");
                         CnErr.abort();
                     }
 
@@ -174,8 +174,7 @@ int  Fl_Tbl_Xcpot2::getMemory(void)
 //#######################################################################
 int Fl_Tbl_Xcpot2::makeTable(void)
 {
-    TlLogX& Log = TlLogX::getInstance();
-//   std::cerr << "Fl_Tbl_Xcpot2::makeTable()" << std::endl;
+    TlLogging& log = TlLogging::getInstance();
 
     Fl_Geometry      FlGeom(Fl_Geometry::getDefaultFileName());
     Fl_Gto_Xcpot2   FlGtoXcpot2;
@@ -217,7 +216,7 @@ int Fl_Tbl_Xcpot2::makeTable(void)
 
     fo.open(TblFile.c_str(), std::ios::out | std::ios::trunc);
     if (!fo) {
-        Log << "Cannot Open " << TblFile << "\n";
+        log.error("Cannot Open " + TblFile);
         CnErr.abort();
     }
 
@@ -247,8 +246,7 @@ int Fl_Tbl_Xcpot2::makeTable(void)
                         iter=5;
                         break;
                     default  :
-                        Log << "Error (making Table for Yahito(Xpot2))!!"
-                        << "\n";
+                        log.error("Error (making Table for Yahito(Xpot2))!!");
                         CnErr.abort();
                         break;
                     }
@@ -276,8 +274,7 @@ int Fl_Tbl_Xcpot2::makeTable(void)
                             <<"   ["<<Lb2<<"]"<< "\n";
                             break;
                         default  :
-                            Log << "error(making Table for Yahiro(Xcpot2))"
-                            << "\n";
+                            log.error("error(making Table for Yahiro(Xcpot2))");
                             CnErr.abort();
                             break;
                         }       //switch(shell);
@@ -302,27 +299,23 @@ int Fl_Tbl_Xcpot2::makeTable(void)
 //#########################################################################
 int  Fl_Tbl_Xcpot2::setData(void)
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
     int intI;
     std::ifstream fi;
     int inttmp;
-//  char chartmp[MaxLabelname];
 
-///// modified by Fric(mizouchi) 2001/12/09 (s) /////
-//  TblFile = "fl_Table/Xcpot2Table";
     TblFile = "fl_Table/XcpotTable2";
-///// modified by Fric(mizouchi) 2001/12/09 (e) /////
 
     fi.open(TblFile.c_str(), std::ios::in);
     if (!fi) {
-        Log<<"Cannot open "<<TblFile<<"\n";
+        log.error("Cannot open " + TblFile);
         CnErr.abort();
     }
 
     for (intI=0; intI<cGtoTotalNum; intI++) {
         fi >>inttmp >> BsTbl[intI].cGtonum >> BsTbl[intI].InpAtomnumber
-        >> BsTbl[intI].Atom       >> BsTbl[intI].shell
-        >> BsTbl[intI].dumy1      >> BsTbl[intI].dumy2     ;
+           >> BsTbl[intI].Atom       >> BsTbl[intI].shell
+           >> BsTbl[intI].dumy1      >> BsTbl[intI].dumy2     ;
     }
 
     fi.close();

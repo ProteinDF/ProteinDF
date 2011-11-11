@@ -14,7 +14,6 @@
 #include "TlCommunicate.h"
 #include "TlTime.h"
 #include "TlUtils.h"
-#include "TlLogX.h"
 
 #define JOB_PROTOCOL_SIZE (4)
 

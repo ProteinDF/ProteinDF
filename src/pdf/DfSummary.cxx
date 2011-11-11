@@ -9,7 +9,6 @@
 #include "TlUtils.h"
 #include "TlMath.h"
 #include "TlSymmetricMatrix.h"
-#include "TlLogX.h"
 
 DfSummary::DfSummary(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
@@ -32,8 +31,9 @@ void DfSummary::printEigen(DfObject::RUN_TYPE runType)
     TlVector eigval;
     eigval.load(this->getEigvalPath(runType, this->m_nIteration));
 
-    TlLogX& logObj = TlLogX::getInstance();
-    eigval.print(logObj);
+    std::stringstream ss;
+    eigval.print(ss);
+    this->log_.info(ss.str());
 }
 
 

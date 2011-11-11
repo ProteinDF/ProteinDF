@@ -2,7 +2,6 @@
 #define DFCONVERGE_DAMPING
 
 #include "DfConverge.h"
-#include "TlLogX.h"
 
 class DfConverge_Damping : public DfConverge {
 public:

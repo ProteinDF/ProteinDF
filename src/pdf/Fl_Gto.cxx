@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include <cassert>
 
 #include "CnError.h"
@@ -8,9 +9,9 @@
 #include "Fl_Gto.h"
 #include "TlMath.h"
 #include "TlUtils.h"
-#include "TlLogX.h"
 #include "TlStringTokenizer.h"
 #include "TlFile.h"
+#include "TlLogging.h"
 #include "PdfUtils.h"
 #include "TlPseudoYaml.h"
 
@@ -207,96 +208,97 @@ void Fl_Gto::save(const std::string& newSavePath)
     fs.close();
 }
 
-void Fl_Gto::showAMOSS(const std::string& title) const
+std::string Fl_Gto::getStr_AMOSS() const
 {
-    TlLogX& Log = TlLogX::getInstance();
-    Log << "\n\n";
-    Log << "  " << title << "\n";
-    Log << "\n";
-
+    std::stringstream ss;
+    
     std::string previous_atom  = "-1";
     std::string previous_label = "-1";
 
     for (int i=0; i < this->getNumOfCGTOs(); i++) {
         if (previous_atom != cgto[i].atom || previous_label != cgto[i].label) {
-            Log << "\n";
-            Log << TlUtils::format("%5s %5s = NULL ;; %s\n",
-                                   cgto[i].atom.c_str(), cgto[i].label.c_str(), cgto[i].basisName.c_str());
+            ss << "\n";
+            ss << TlUtils::format("%5s %5s = NULL ;; %s\n",
+                                  cgto[i].atom.c_str(), cgto[i].label.c_str(), cgto[i].basisName.c_str());
 
             previous_atom  = cgto[i].atom;
             previous_label = cgto[i].label;
         }
 
-        Log << "      &  " << cgto[i].shell << TlUtils::format("  ( %3.1lf )\n", cgto[i].scalefactor);
+        ss << "      &  " << cgto[i].shell << TlUtils::format("  ( %3.1lf )\n", cgto[i].scalefactor);
 
         for (int j = 0; j < cgto[i].contraction(); j++) {
-            Log << TlUtils::format("      %18.8lE %18.8lE\n",
-                                   this->cgto[i].pgto[j].exponent, this->cgto[i].pgto[j].coefficient);
+            ss << TlUtils::format("      %18.8lE %18.8lE\n",
+                                  this->cgto[i].pgto[j].exponent, this->cgto[i].pgto[j].coefficient);
         }
     }
+
+    return ss.str();
 }
 
-void Fl_Gto::showGAMESS() const
+std::string Fl_Gto::getStr_GAMESS() const
 {
-    TlLogX& Log = TlLogX::getInstance();
+    std::stringstream ss;
+
     std::string prevAtom  = "-1";
     std::string prevBasis = "-1";
 
     for (int i = 0; i < this->getNumOfCGTOs(); ++i) {
-        if (prevAtom   != this->cgto[i].atom ||
-                prevBasis  != this->cgto[i].basisName) {
-            Log << "\n";
-            Log << TlUtils::format("%2s %s\n", cgto[i].atom.c_str(), cgto[i].basisName.c_str());
+        if ((prevAtom  != this->cgto[i].atom) ||
+            (prevBasis != this->cgto[i].basisName)) {
+            ss << "\n";
+            ss << TlUtils::format("%2s %s\n", cgto[i].atom.c_str(), cgto[i].basisName.c_str());
             prevAtom  = cgto[i].atom;
             prevBasis = cgto[i].basisName;
         }
 
         const char sShell       = cgto[i].shell;
         const int nContraction = cgto[i].contraction();
-        Log << TlUtils::format("   %c %d\n", sShell, nContraction);
+        ss << TlUtils::format("   %c %d\n", sShell, nContraction);
 
         for (int j = 0; j < cgto[i].contraction(); j++) {
-            Log << TlUtils::format(" %2d %18.8lE %18.8lE\n",
-                                   j+1, this->cgto[i].pgto[j].exponent, this->cgto[i].pgto[j].coefficient);
+            ss << TlUtils::format(" %2d %18.8lE %18.8lE\n",
+                                  j+1,
+                                  this->cgto[i].pgto[j].exponent,
+                                  this->cgto[i].pgto[j].coefficient);
         }
     }
+
+    return ss.str();
 }
 
 void Fl_Gto::show(const std::string& title) const
 {
-    TlLogX& Log = TlLogX::getInstance();
-    Log << "\n\n";
-    Log << "  " << title << "\n";
-    Log << "\n";
+    TlLogging& log = TlLogging::getInstance();
+    log.info(title);
     this->show();
 }
 
 
 void Fl_Gto::show() const
 {
-    TlLogX& Log = TlLogX::getInstance();
-    Log << "\n\n";
+    TlLogging& log = TlLogging::getInstance();
+
+    std::stringstream ss;
     int angular;
 
-    Log << " ------------------------------------------------------------------------\n";
-//   Log << " MaxContraction : " << int(MaxContraction) << "\n";
-//   Log << " MaxCgto        : " << int(MaxCgto)        << "\n";
-    Log << " numbercgto     : " << this->getNumOfCGTOs()<< "\n";
-    Log << " ------------------------------------------------------------------------\n";
+    ss << "------------------------------------------------------------------------\n";
+    ss << " numbercgto     : " + TlUtils::xtos(this->getNumOfCGTOs()) + "\n";
+    ss << "------------------------------------------------------------------------\n";
     for (int i=0; i < this->getNumOfCGTOs(); i++) {
-        Log << " --- " << i << " th CGTO --------------------\n";
-        Log << "Snum [" << this->cgto[i].Snum << "]\n";
-        Log << "Pnum [" << this->cgto[i].Pnum << "]\n";
-        Log << "Dnum [" << this->cgto[i].Dnum << "]\n";
-        Log << "basis             [" << cgto[i].basisName        << "]\n";
-        Log << "atom              [" << cgto[i].atom             << "]\n";
-        Log << "label             [" << cgto[i].label            << "]\n";
-        Log << "shellname         [" << cgto[i].shellname        << "]\n";
-        Log << "shell              " << cgto[i].shell            << " \n";
+        ss << " --- " << i << " th CGTO --------------------\n";
+        ss << "Snum [" << this->cgto[i].Snum << "]\n";
+        ss << "Pnum [" << this->cgto[i].Pnum << "]\n";
+        ss << "Dnum [" << this->cgto[i].Dnum << "]\n";
+        ss << "basis             [" << cgto[i].basisName        << "]\n";
+        ss << "atom              [" << cgto[i].atom             << "]\n";
+        ss << "label             [" << cgto[i].label            << "]\n";
+        ss << "shellname         [" << cgto[i].shellname        << "]\n";
+        ss << "shell              " << cgto[i].shell            << " \n";
 
-        Log << TlUtils::format("  scale factor     = %18.8lf\n", cgto[i].scalefactor);
-        Log << TlUtils::format("  contraction      = %18ld\n",   cgto[i].contraction());
-        Log << "  <normalizedfactor> ";
+        ss << TlUtils::format("  scale factor     = %18.8lf\n", cgto[i].scalefactor);
+        ss << TlUtils::format("  contraction      = %18ld\n",   cgto[i].contraction());
+        ss << "  <normalizedfactor> ";
 
         if (getShell(i) == 's') {
             angular=0;
@@ -307,41 +309,41 @@ void Fl_Gto::show() const
         } else if (getShell(i) == 'f') {
             angular=3;
         } else {
-            Log << " *** Fl_Gto::show() not supported such large shell.\n";
-            Log << "     +++ calculate in case of l=m=n=0, and continue.\n";
+            ss << " *** Fl_Gto::show() not supported such large shell.\n";
+            ss << "     +++ calculate in case of l=m=n=0, and continue.\n";
             angular=0;
         }
         for (int l=0; l<=angular; l++) {
             for (int m=0; m<=angular; m++) {
                 for (int n=0; n<=angular; n++) {
                     if (l+m+n == angular) {
-                        Log << TlUtils::format("  (%1ld,%1ld,%1ld) = %18.8lE ", l, m, n, getNormalizedfactor(i, l,m,n));
+                        ss << TlUtils::format("  (%1ld,%1ld,%1ld) = %18.8lE ", l, m, n, getNormalizedfactor(i, l,m,n));
                     }
                 }
             }
         }
-        Log << "\n";
-        Log << "    // primitive GTO //\n";
+        ss << "\n";
+        ss << "    // primitive GTO //\n";
 
         for (int j=0; j<cgto[i].contraction(); j++) {
-            Log << TlUtils::format("      %18.8lE %18.8lE ",
+            ss << TlUtils::format("      %18.8lE %18.8lE ",
                                    this->cgto[i].pgto[j].exponent, this->cgto[i].pgto[j].coefficient);
-            Log << "  <normalized> ";
+            ss << "  <normalized> ";
 
             if (getShell(i)=='s') angular=0;
             else if (getShell(i)=='p') angular=1;
             else if (getShell(i)=='d') angular=2;
             else if (getShell(i)=='f') angular=3;
             else {
-                Log << " *** Fl_Gto::show() not supported such large shell.\n";
-                Log << "     +++ calculate in case of l=m=n=0, and continue.\n";
+                ss << " *** Fl_Gto::show() not supported such large shell.\n";
+                ss << "     +++ calculate in case of l=m=n=0, and continue.\n";
                 angular=0;
             }
             for (int l=0; l <= angular; l++) {
                 for (int m=0; m <= angular; m++) {
                     for (int n=0; n <= angular; n++) {
                         if (l +m +n == angular) {
-                            Log << TlUtils::format("  (%1ld,%1ld,%1ld) = %18.8lE %18.8lE",
+                            ss << TlUtils::format("  (%1ld,%1ld,%1ld) = %18.8lE %18.8lE",
                                                    l, m, n,
                                                    getNormalized(i,j, l,m,n),
                                                    getCoulombnormalized(i,j, l,m,n)
@@ -350,10 +352,12 @@ void Fl_Gto::show() const
                     }
                 }
             }
-            Log << "\n";
+            ss << "\n";
         }
     }
-    Log << " ------------------------------------------------------------------------\n";
+    ss << " ------------------------------------------------------------------------\n";
+
+    log.info(ss.str());
 }
 
 void Fl_Gto::load()
@@ -544,19 +548,19 @@ void Fl_Gto::setup(const TlSerializeData& basisSet)
 //
 double Fl_Gto::getNormalizedfactor(int s, int l, int m, int n) const
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
 
     // index check for s.
     if (s > this->getNumOfCGTOs() -1) {
-        Log << " *** Fl_Gto::getNormalizedfactor()\n";
-        Log << "     force to load(get) basis data over avairable maximun(getNumbercgto()), Log of Range.\n";
-        Log << "     this is program error.\n";
+        log.error(" *** Fl_Gto::getNormalizedfactor()");
+        log.error(" force to load(get) basis data over avairable maximun(getNumbercgto()), Log of Range.");
+        log.error("     this is program error.");
         CnErr.abort();
     }
 
     // index chech l, m, n.
     if (l<0 || m<0 || n<0) {
-        Log << " *** Fl_Gto::getNormalizedfactor() illegal angular momentum.\n";
+        log.error(" *** Fl_Gto::getNormalizedfactor() illegal angular momentum.");
         CnErr.abort();
     }
 
@@ -576,13 +580,13 @@ double Fl_Gto::getNormalizedfactor(int s, int l, int m, int n) const
         maxangular=3;
         break;
     default:
-        Log << " *** Fl_Gto::getNormalizedfactor() not support over f angular momentum, sorry.\n";
+        log.error(" *** Fl_Gto::getNormalizedfactor() not support over f angular momentum, sorry.");
         CnErr.abort();
         break;
     }
 
     if (l+m+n>maxangular) {
-        Log << " *** Fl_Gto::getNormalizedfactor() illegal angular momentum, inconsistent with shell.\n";
+        log.error(" *** Fl_Gto::getNormalizedfactor() illegal angular momentum, inconsistent with shell.");
         CnErr.abort();
     }
 
@@ -631,7 +635,7 @@ double Fl_Gto::getNormalized(const int s, const int p, const int l, const int m,
     assert(m >= 0);
     assert(n >= 0);
 
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
 
     // chech consistent with shell.
     int maxangular = 0;
@@ -649,13 +653,13 @@ double Fl_Gto::getNormalized(const int s, const int p, const int l, const int m,
         maxangular=3;
         break;
     default:
-        Log << " *** Fl_Gto::getNormalized() not support over f angular momentum, sorry.\n";
+        log.error(" *** Fl_Gto::getNormalized() not support over f angular momentum, sorry.");
         CnErr.abort();
         break;
     }
 
     if (l+m+n > maxangular) {
-        Log << " *** Fl_Gto::getNormalized() illegal angular momentum, inconsistent with shell.\n";
+        log.error(" *** Fl_Gto::getNormalized() illegal angular momentum, inconsistent with shell.");
         CnErr.abort();
     }
 

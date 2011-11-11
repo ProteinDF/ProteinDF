@@ -1,6 +1,7 @@
 #include <cassert>
 #include "Fl_GuessDB.h"
-#include "TlLogX.h"
+#include "TlLogging.h"
+#include "TlUtils.h"
 
 Fl_GuessDB::Fl_GuessDB()
         : DbFile(""), HdFile(""), DbLabel("")
@@ -25,19 +26,18 @@ int Fl_GuessDB::serchLine(const std::string& filename, const std::string& dblabe
 
 int Fl_GuessDB::getHeaderAtomNum(const std::string& filename, const std::string& dblabel, int hantei) const
 {
-    TlLogX& Log = TlLogX::getInstance();
-
+    TlLogging& log = TlLogging::getInstance();
+    
     std::ifstream fi;
     fi.open(filename.c_str(), std::ios::in);
     if (!fi) {
-        Log <<"Cannot Open "<< filename << "\n";
-        Log <<"\7"<<"\n";
+        log.error("Cannot Open " + filename);
         CnErr.abort();
     }
 
     if (dblabel.empty()) {
-        Log<<"Bad appointment DBLABEL\n";
-        Log<<"in Fl_GuessDB::getHeaderAtomNum\n";
+        log.error("Bad appointment DBLABEL");
+        log.error("in Fl_GuessDB::getHeaderAtomNum");
         CnErr.abort();
     }
 
@@ -66,7 +66,8 @@ int Fl_GuessDB::getHeaderAtomNum(const std::string& filename, const std::string&
 int Fl_GuessDB::readData(const std::string& FileName, const std::string& HeaderFile,
                          const std::string& str, int ATOMorMolecular)
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
+
     this->Atm_or_Mol = ATOMorMolecular ;
 
     this->DbFile = FileName;
@@ -79,14 +80,14 @@ int Fl_GuessDB::readData(const std::string& FileName, const std::string& HeaderF
         //  Log <<"DbLabel  = [ "<< DbLabel << " ]"<< "\n";
         //int passline = serchLine(HdFile,DbLabel);
     } else {
-        Log<<"Bad appointment parameter : Atm_or_Mol"<<"\n";
+        log.error("Bad appointment parameter : Atm_or_Mol");
         CnErr.abort();
     }
 
     std::ifstream fi;
     fi.open(this->DbFile.c_str(), std::ios::in);
     if (!fi) {
-        Log <<"Cannot Open "<< DbFile << "\n";
+        log.error("Cannot Open " + DbFile);
         CnErr.abort();
     }
 
@@ -180,13 +181,12 @@ int Fl_GuessDB::readData(const std::string& FileName, const std::string& HeaderF
                     //Log<<"AUX_SET = ["<<DBM.AtomData[i].AuxSetName<<;
                     //Log<<"]"<<"\n";
                     if (tmp_int != i) {
-                        Log<<"Bad GuessDatabase Format";
-                        Log<<"(each Atom's data)"<<"\n";
-                        Log<<"Database_File = ["<<DbFile<<"]"<<"\n";
-                        Log<<"DB_Label = ["<<DbLabel<<"]"<<"\n";
-                        Log<<"inDEBUG tmp_int ="<<tmp_int<<"\n";
-                        Log<<"inDEBUG i = "<<i<<"\n";
-                        Log<<"\7"<<"\n";
+                        log.error("Bad GuessDatabase Format");
+                        log.error("(each Atom's data)");
+                        log.error("Database_File = [" + DbFile + "]");
+                        log.error("DB_Label = [" + DbLabel + "]");
+                        log.error("inDEBUG tmp_int =" + TlUtils::xtos(tmp_int));
+                        log.error("inDEBUG i = " + TlUtils::xtos(i));
                         CnErr.abort();
                     }
                 }//if(Atm....)
@@ -294,55 +294,54 @@ skip:
 
 void Fl_GuessDB::Print() const
 {
-    TlLogX& Log = TlLogX::getInstance();
-
-    Log<<"\n"<<"\n"<<"Print Start for DEBUG"<<"\n"<<"\n"<<"\n";
-//     int Snum,Pnum,Dnum,SPDnum,i,k;
+    std::stringstream ss;
+    
+    ss << "Print Start for DEBUG\n";
     int DRouterm,DMyuterm,DNyuterm;;
 
     int TotalAtomNum = DBM.TotalAtomNum ;
-    Log <<"TotalAtomNum = "<< TotalAtomNum << "\n";
+    ss <<"TotalAtomNum = "<< TotalAtomNum << "\n";
 
     if (this->Atm_or_Mol) {
-        Log<<"\n"<<" ### ATOM DATA ###"<<"\n";
+        ss<<"\n"<<" ### ATOM DATA ###"<<"\n";
         for (int j = 0; j < TotalAtomNum; j++) {
-            Log << j                     << "  "
+            ss << j                     << "  "
             << DBM.AtomData[j].Atom << "   "
             << DBM.AtomData[j].X << "   "
             << DBM.AtomData[j].Y << "   "
             << DBM.AtomData[j].Z << "   " << "\n" ;
         }
 
-        Log<<"  ### Connection Table ### "<<"\n"<<"\n";
+        ss<<"  ### Connection Table ### "<<"\n"<<"\n";
         for (int i=0; i<TotalAtomNum; i++) {
-            Log<< i <<"   "<<DBM.AtomData[i].ConectNum<<"      ";
+            ss<< i <<"   "<<DBM.AtomData[i].ConectNum<<"      ";
             for (int j=0; j<DBM.AtomData[i].ConectNum; j++) {
-                Log<< DBM.AtomData[i].Conection[j] <<"   ";
+                ss<< DBM.AtomData[i].Conection[j] <<"   ";
             }
-            Log<<"\n";
+            ss<<"\n";
         }
-        Log<<"\n";
+        ss<<"\n";
 
         int sum=0;
-        Log<<" ### EqualAtomData ### "<<"\n"<<"\n";
-        Log<<" Equal atom pair Num = "<< DBM.equalPairNum << "\n";
+        ss<<" ### EqualAtomData ### "<<"\n"<<"\n";
+        ss<<" Equal atom pair Num = "<< DBM.equalPairNum << "\n";
         for (int i=0; i<DBM.equalPairNum; i++) {
-            Log<< DBM.equalPaircount[i] <<"    ";
+            ss<< DBM.equalPaircount[i] <<"    ";
             for (int j=0; j<DBM.equalPaircount[i]; j++) {
-                Log<< DBM.equalPair[sum+j] <<"  ";
+                ss<< DBM.equalPair[sum+j] <<"  ";
             }
             sum +=  DBM.equalPaircount[i] ;
-            Log<<"\n";
+            ss<<"\n";
         }
-        Log<<"\n";
+        ss<<"\n";
 
         for (int j=0; j<TotalAtomNum; j++) {
-            Log << DBM.Order[j] << "  " ;
+            ss << DBM.Order[j] << "  " ;
         }
-        Log << "\n";
+        ss << "\n";
     }
     //-----------------------------------------------------
-    Log <<"\n"<<"Rou(s,p,d,spd)"<<"\n";
+    ss <<"\n"<<"Rou(s,p,d,spd)"<<"\n";
     for (int j=0; j<TotalAtomNum; j++) {
         int Snum   = DBM.AtomData[j].rouDbShellNum[0] ;
         int Pnum   = DBM.AtomData[j].rouDbShellNum[1] ;
@@ -350,9 +349,9 @@ void Fl_GuessDB::Print() const
         int SPDnum = DBM.AtomData[j].rouDbShellNum[3] ;
 
         if (Atm_or_Mol==1) {
-            Log<<"AuxSetName = ["<<DBM.AtomData[j].AuxSetName <<"]"<<"\n";
+            ss<<"AuxSetName = ["<<DBM.AtomData[j].AuxSetName <<"]"<<"\n";
         }
-        Log <<"ATOM_No[ "<< j <<" ]" << " "
+        ss <<"ATOM_No[ "<< j <<" ]" << " "
         << Snum   << "  "
         << Pnum   << "  "
         << Dnum   << "  "
@@ -368,21 +367,21 @@ void Fl_GuessDB::Print() const
 #endif
 
         for (int k=0; k<DRouterm; k++) {
-            Log <<"[ "<<k<<" ]"<<DBM.AtomData[j].CoefRou[k] << "\n";
+            ss <<"[ "<<k<<" ]"<<DBM.AtomData[j].CoefRou[k] << "\n";
         }
 
     }
 
 
     //-----------------------------------------------------
-    Log <<"\n"<<"Myu(s,p,d,spd)"<<"\n";
+    ss <<"\n"<<"Myu(s,p,d,spd)"<<"\n";
     for (int j=0; j<TotalAtomNum; j++) {
         int Snum   = DBM.AtomData[j].myuDbShellNum[0] ;
         int Pnum   = DBM.AtomData[j].myuDbShellNum[1] ;
         int Dnum   = DBM.AtomData[j].myuDbShellNum[2] ;
         int SPDnum = DBM.AtomData[j].myuDbShellNum[3] ;
 
-        Log <<"ATOM_No[ "<< j <<" ]" << " "
+        ss <<"ATOM_No[ "<< j <<" ]" << " "
         << Snum   << "  "
         << Pnum   << "  "
         << Dnum   << "  "
@@ -398,21 +397,21 @@ void Fl_GuessDB::Print() const
 #endif
 
         for (int k=0; k<DMyuterm; k++) {
-            Log <<"[ "<<k<<" ]"<<DBM.AtomData[j].CoefMyu[k] << "\n";
+            ss <<"[ "<<k<<" ]"<<DBM.AtomData[j].CoefMyu[k] << "\n";
         }
 
     }
 
 
     //-----------------------------------------------------
-    Log <<"\n"<<"Nyu(s,p,d,spd)"<<"\n";
+    ss <<"\n"<<"Nyu(s,p,d,spd)"<<"\n";
     for (int j=0; j<TotalAtomNum; j++) {
         int Snum   = DBM.AtomData[j].nyuDbShellNum[0] ;
         int Pnum   = DBM.AtomData[j].nyuDbShellNum[1] ;
         int Dnum   = DBM.AtomData[j].nyuDbShellNum[2] ;
         int SPDnum = DBM.AtomData[j].nyuDbShellNum[3] ;
 
-        Log <<"ATOM_No[ "<< j <<" ]" << " "
+        ss <<"ATOM_No[ "<< j <<" ]" << " "
         << Snum   << "  "
         << Pnum   << "  "
         << Dnum   << "  "
@@ -428,24 +427,25 @@ void Fl_GuessDB::Print() const
 #endif
 
         for (int k=0; k<DNyuterm; k++) {
-            Log <<"[ "<<k<<" ]"<<DBM.AtomData[j].CoefNyu[k] << "\n";
+            ss <<"[ "<<k<<" ]"<<DBM.AtomData[j].CoefNyu[k] << "\n";
         }
-
     }
+
+    TlLogging& log = TlLogging::getInstance();
+    log.debug(ss.str());
 }
 
 
 // Set Member Function  for  AtomDatabase
 void Fl_GuessDB::openAtomDBfile(const std::string& sFile)
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
     this->DbFile = sFile;
 
     SETATOM.open(DbFile.c_str(), std::ios::app);
     if (!SETATOM) {
-        Log<<"Cannot open file ["<<DbFile<<"]."<<"\n";
-        Log<<"Cannot append AtomDatabase"<<"\n";
-        Log<<"\7"<<"\n";
+        log.error("Cannot open file [" + DbFile + "].");
+        log.error("Cannot append AtomDatabase");
         CnErr.abort();
     }
 }

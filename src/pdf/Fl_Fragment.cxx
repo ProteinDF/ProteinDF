@@ -8,7 +8,6 @@
 #include "CnError.h"
 #include "Fl_Geometry.h"
 #include "TlPrdctbl.h"
-#include "TlLogX.h"
 
 
 Fl_Fragment::Fl_Fragment() : m_filePath("fl_Input/fl_Fragment")

@@ -6,7 +6,7 @@
 
 #include "Fl_Tbl_Density.h"
 #include "FileX.h"
-#include "TlLogX.h"
+#include "TlLogging.h"
 #include "CnError.h"
 
 int  Fl_Tbl_Density::flag1=0;        // flag for Constructor;
@@ -49,7 +49,7 @@ int Fl_Tbl_Density::prepare()
 
 int Fl_Tbl_Density::makeTable()
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
 
     Fl_Geometry      FlGeom(Fl_Geometry::getDefaultFileName());
     Fl_Gto_Density   FlGtoDen;
@@ -66,7 +66,7 @@ int Fl_Tbl_Density::makeTable()
     std::string TblFile = "fl_Table/DensityTable";
     fo.open(TblFile.c_str(), std::ios::out | std::ios::trunc);
     if (!fo) {
-        Log << "Cannot Open " << TblFile << "\n";
+        log.error("Cannot Open " + TblFile);
         CnErr.abort();
     }
 
@@ -106,7 +106,7 @@ int Fl_Tbl_Density::makeTable()
                         break;
 
                     default:
-                        Log << "Error (making Table for Yahito)!! \n";
+                        log.error("Error (making Table for Yahito)!!");
                         CnErr.abort();
                     }
 
@@ -138,8 +138,7 @@ int Fl_Tbl_Density::makeTable()
                             break;
 
                         default:
-                            Log << "error(making Table for Yahito(aux))!!"
-                            << "\n";
+                            log.error("error(making Table for Yahito(aux))!!");
                             CnErr.abort();
                             break;
                         }
@@ -170,15 +169,14 @@ int Fl_Tbl_Density::makeTable()
 
 int Fl_Tbl_Density::setData()
 {
-    TlLogX& Log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
 
-    //int intI;
     std::ifstream fi;
 
     std::string TblFile = "fl_Table/DensityTable";
     fi.open(TblFile.c_str(), std::ios::in);
     if (!fi) {
-        Log<<"Cannot open "<<TblFile<<"\n";
+        log.error("Cannot open " + TblFile);
         CnErr.abort();
     }
 

@@ -13,8 +13,6 @@ public:
     virtual ~ProteinDF_Parallel();
 
 protected:
-    virtual void logger(const std::string& str) const;
-
     virtual void loadParam(const std::string& requestFilePath = "");
     virtual void saveParam() const;
     

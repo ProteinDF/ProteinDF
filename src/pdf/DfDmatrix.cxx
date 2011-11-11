@@ -2,7 +2,6 @@
 #include <cmath>
 
 #include "DfDmatrix.h"
-#include "Fl_Out.h"
 #include "Fl_Tbl_Orbital.h"
 #include "Fl_Tbl_Orbital.h"
 #include "TlUtils.h"
@@ -111,13 +110,20 @@ void DfDmatrix::checkOccupation(const TlVector& prevOcc, const TlVector& currOcc
     const double yy = currOcc.sum();
 
     if (std::fabs(xx - yy) > 1.0e-10) {
-        TlLogX& log = TlLogX::getInstance();
-        this->logger(" #####   SUM pre_occ != SUM crr_occ #####\n");
-        this->logger(TlUtils::format(" SUM pre_occ is %10.4lf,  SUM crr_occ is %10.4lf\n", xx, yy));
-        this->logger("previous occupation\n");
-        prevOcc.print(log);
-        this->logger("current  occupation\n");
-        currOcc.print(log);
+        this->log_.error("SUM pre_occ != SUM crr_occ");
+        this->log_.error(TlUtils::format(" SUM pre_occ is %10.4lf,  SUM crr_occ is %10.4lf\n", xx, yy));
+        this->log_.error("previous occupation");
+        {
+            std::stringstream ss;
+            prevOcc.print(ss);
+            this->log_.error(ss.str());
+        }
+        this->log_.error("current occupation");
+        {
+            std::stringstream ss;
+            currOcc.print(ss);
+            this->log_.error(ss.str());
+        }
 
         CnErr.abort("DfDmatrix", "", "", "SUM error for occ !!");
     }
@@ -126,8 +132,9 @@ void DfDmatrix::checkOccupation(const TlVector& prevOcc, const TlVector& currOcc
 
 void DfDmatrix::printOccupation(const TlVector& occ)
 {
-    TlLogX& log = TlLogX::getInstance();
-    occ.print(log);
+    std::stringstream ss;
+    occ.print(ss);
+    this->log_.info(ss.str());
 }
 
 

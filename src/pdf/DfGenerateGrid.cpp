@@ -8,19 +8,13 @@
 #include "Fl_Gto_Density.h"
 #include "Fl_Gto_Xcpot.h"
 #include "Fl_Gto_Xcpot2.h"
-
-// #include "Fl_Vct_Table.h"
-// #include "Fl_Vct_OtableX.h"
 #include "TlPosition.h"
-
 #include "GridDataManager.h"
 #include "TlOrbitalInfo_Density.h"
-
 #include "TlPrdctbl.h"
 #include "TlUtils.h"
 #include "TlTime.h"
 #include "TlMath.h"
-#include "TlLogX.h"
 #include "TlSymmetricMatrix.h"
 
 #define SQ2             1.414213562373095049
@@ -36,17 +30,12 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
       gridDataFilePath_("fl_Work/grids.dat") {
     const TlSerializeData& pdfParam = *pPdfParam;
     
-    //nyuswtch = fgi( "xc-potential/gxalpha/nyu-switch" ); // default is "off", gxalpha以外の場合もある
-    //this->nyuswtch = "off";                                      // this is temporal for debug
-
     this->xctype   = pdfParam["xc-potential"].getStr();
 
     this->weightCutoff_ = 1.0E-16;
     if (pdfParam["grid-weight-cutoff"].getStr() != "") {
         this->weightCutoff_ = pdfParam["grid-weight-cutoff"].getDouble();
     }
-
-    //this->vectorelement = nauxxc;
 
     const std::string sGridType = pdfParam["xc-potential/grid-type"].getStr();
     if (TlUtils::toUpper(sGridType) == "COARSE") {

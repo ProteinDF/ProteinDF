@@ -1,3 +1,4 @@
+#include <sstream>
 #include "DfInputdata.h"
 
 #include "CnError.h"
@@ -14,7 +15,7 @@
 #include "Fl_Tbl_Density.h"
 #include "Fl_Tbl_Xcpot.h"
 #include "TlUtils.h"
-#include "TlLogX.h"
+#include "TlLogging.h"
 #include "TlFile.h"
 
 #include "PdfKeyword.h"
@@ -95,39 +96,43 @@ TlSerializeData DfInputdata::main()
 
 void DfInputdata::show(const TlSerializeData& data) const
 {
-    TlLogX& log = TlLogX::getInstance();
+    TlLogging& log = TlLogging::getInstance();
 
     PdfKeyword kwd;
 
     // print comment
-    log << "  >>>> Comment <<<<\n";
-    log << data["comment"].getStr() << "\n";
-    log << "\n";
+    log.info(TlUtils::format(" Comment: %s", data["comment"].getStr().c_str()));
     
     // print input keyword list
     if (data["show_keyword"].getBoolean() == true) {
-        log << " >>>> Available Keywords <<<<\n";
-        kwd.printDefault(log);
+        log.info(" >>>> Available Keywords <<<<");
+
+        std::stringstream ss;
+        kwd.printDefault(ss);
+        log.info(ss.str());
     } else {
-        log << " printing available keywords is rejected.\n";
-        log << " to print the keywords, please input 'show_keyword = yes'.\n";
+        log.info(" printing available keywords is rejected.");
+        log.info(" to print the keywords, please input 'show_keyword = yes'.");
     }
-    log << "\n";
+    log.info("\n");
 
     // print global input
     if (data["show_input"].getBoolean() == true) {
-        log << " >>>> Input Parameters <<<<\n";
-        kwd.print(log, data);
+        log.info(" >>>> Input Parameters <<<<");
+
+        std::stringstream ss;
+        kwd.print(ss, data);
+        log.info(ss.str());
     } else {
-        log << " printing available keywords is rejected.\n";
-        log << " to print the keywords, please input 'show_input = yes'.\n";
+        log.info(" printing available keywords is rejected.");
+        log.info(" to print the keywords, please input 'show_input = yes'.");
     }
-    log << "\n";
+    log.info("\n");
 
     // print coordinates
     if (data["show_coordinates"].getBoolean() == true) {
-        log << " >>>> Coordinates <<<<\n";
-        log << " symbol charge (coord) [label]\n";
+        log.info(" >>>> Coordinates <<<<");
+        log.info(" symbol charge (coord) [label]");
 
         Fl_Geometry geom(data["coordinates"]);
         const int numOfAtoms = geom.getNumOfAtoms();
@@ -137,15 +142,15 @@ void DfInputdata::show(const TlSerializeData& data) const
             const std::string label = geom.getLabel(i);
             const TlPosition pos = geom.getCoordinate(i);
             
-            log << TlUtils::format(" %-2s %+8.3e (%+16.10e %+16.10e %+16.10e) [%s] \n",
-                                   symbol.c_str(), charge,
-                                   pos.x(), pos.y(), pos.z(), label.c_str());
+            log.info(TlUtils::format(" %-2s %+8.3e (%+16.10e %+16.10e %+16.10e) [%s] \n",
+                                     symbol.c_str(), charge,
+                                     pos.x(), pos.y(), pos.z(), label.c_str()));
         }
     } else {
-        log << " printing coordinates is rejected.\n";
-        log << " to print the keywords, please input 'show_coordinates = yes'.\n";
+        log.info(" printing coordinates is rejected.");
+        log.info(" to print the keywords, please input 'show_coordinates = yes'.");
     }
-    log << "\n";
+    log.info("\n");
     
     // print basis set
     {
@@ -153,24 +158,24 @@ void DfInputdata::show(const TlSerializeData& data) const
 
         const Fl_Gto_Orbital flGtoOrbital;
         if (showOrbitalBasis == "GAMESS") {
-            log << " >>>> Inputted Orbital Basis Set (GAMESS format) <<<<\n";
-            flGtoOrbital.showGAMESS();
-            log << "\n";
+            log.info(" >>>> Inputted Orbital Basis Set (GAMESS format) <<<<");
+            log.info(flGtoOrbital.getStr_GAMESS());
+            log.info("\n");
         } else if (showOrbitalBasis == "AMOSS") {
-            log << " >>>> Inputted Orbital Basis Set (AMOSS format) <<<<\n";
-            flGtoOrbital.showAMOSS();
-            log << "\n";
+            log.info(" >>>> Inputted Orbital Basis Set (AMOSS format) <<<<");
+            log.info(flGtoOrbital.getStr_AMOSS());
+            log.info("\n");
         }
 
         const Fl_Gto_Density flGtoDensity;
         if (showOrbitalBasis == "GAMESS") {
-            log << " >>>> Inputted Density Orbital Basis Set (GAMESS format) <<<<\n";
-            flGtoDensity.showGAMESS();
-            log << "\n";
+            log.info(" >>>> Inputted Density Orbital Basis Set (GAMESS format) <<<<");
+            log.info(flGtoDensity.getStr_GAMESS());
+            log.info("\n");
         } else if (showOrbitalBasis == "AMOSS") {
-            log << " >>>> Inputted Density Orbital Basis Set (AMOSS format) <<<<\n";
-            flGtoDensity.showAMOSS();
-            log << "\n";
+            log.info(" >>>> Inputted Density Orbital Basis Set (AMOSS format) <<<<");
+            log.info(flGtoDensity.getStr_AMOSS());
+            log.info("\n");
         }
     }
 }

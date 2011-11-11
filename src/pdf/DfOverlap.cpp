@@ -5,7 +5,6 @@
 #include "DfOverlap.h"
 #include "TlTime.h"
 #include "TlMatrix.h"
-#include "TlLogX.h"
 
 #define MAX_SHELL 2 // s=0, p=1, d=2
 #define DEFAULT_BLOCK_SIZE 1000

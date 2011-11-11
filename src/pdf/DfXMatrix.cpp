@@ -147,7 +147,6 @@ void DfXMatrix::exec()
 
 void DfXMatrix::checkMatrixes()
 {
-    TlLogX& log = TlLogX::getInstance();
     this->logger("@@@@ we get four matrices\n");
 
     TlMatrix X = DfObject::getXMatrix<TlMatrix>();
@@ -156,14 +155,22 @@ void DfXMatrix::checkMatrixes()
 
     {
         TlMatrix B = X * invX;
-        this->logger("neary equal to be 1 ?, X matrix * inverce of X matrix\n");
-        B.print(log);
+        this->log_.info("neary equal to be 1 ?, X matrix * inverce of X matrix");
+        {
+            std::stringstream ss;
+            B.print(ss);
+            this->log_.info(ss.str());
+        }
     }
 
     {
         TlMatrix C = invX * X;
-        this->logger("must be 1, inverce of X matrix * X matrix\n");
-        C.print(log);
+        this->log_.info("must be 1, inverce of X matrix * X matrix");
+        {
+            std::stringstream ss;
+            C.print(ss);
+            this->log_.info(ss.str());
+        }
     }
 }
 

@@ -10,7 +10,6 @@
 #include "TlSparseMatrix.h"
 #include "TlSparseSymmetricMatrix.h"
 #include "TlDistributeVector.h"
-#include "TlLogX.h"
 #include "TlFileSymmetricMatrix.h"
 #include "TlFile.h"
 #include "TlSparseVectorMatrix.h"

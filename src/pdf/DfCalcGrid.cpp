@@ -6,7 +6,6 @@
 #include "TlPosition.h"
 #include "TlMath.h"
 #include "TlSymmetricMatrix.h"
-#include "TlLogX.h"
 #include "TlTime.h"
 #include "CnError.h"
 
@@ -33,7 +32,6 @@ DfCalcGrid::DfCalcGrid(TlSerializeData* pPdfParam, int num_iter)
                      (*pPdfParam)["basis_sets_k"])
 {
     const TlSerializeData& pdfParam = *pPdfParam;
-    TlLogX& log = TlLogX::getInstance();
 
     this->alphaval = pdfParam["xc-potential/gxalpha/alpha-value"].getDouble();
     if (this->alphaval <= 0.0) {
@@ -161,14 +159,12 @@ DfCalcGrid::DfCalcGrid(TlSerializeData* pPdfParam, int num_iter)
         this->xc        =  12;
     } else if (m_sXCFunctional == "hf") {
         // HF
-        log << "Selection of XC Type is HF.\n";
-        log << "do nothing.\n";
+        this->log_.info("Selection of XC Type is HF. do nothing.");
         this->nlsd_type =  0;
         this->xc        =  99; // HF
     } else {
-        log << "Selection of XC Type is Wrong." << "\n";
-        log << "You type in [" << std::string(m_sXCFunctional) << "]." << "\n";
-        log << "Choose gxalpha, vBH, JMW, GL, VWN, or PZ" << "\n";
+        this->log_.error("Selection of XC Type is Wrong.");
+        this->log_.error("You type in [" + std::string(m_sXCFunctional) + "].");
         CnErr.abort(TlUtils::format("unknown XC functional(%s). @DfCalcGrid constructer", m_sXCFunctional.c_str()));
     }
 }
@@ -180,22 +176,13 @@ DfCalcGrid::~DfCalcGrid()
 
 int DfCalcGrid::dfGrdMain()
 {
-    TlLogX& log = TlLogX::getInstance();
-
-    log << "start        : " << TlTime::getNow() << "\n";
-    log.flush();
-
-//     this->readTable();
-//     log << "readTable    : " << TlTime::getNow() << "\n";
-//     log.flush();
+    this->log_.info("start");
 
     // call readGrid
     TlVector tmpVectorA, tmpVectorB, eTmpVector;
     this->calcXCInteg(tmpVectorA, tmpVectorB, eTmpVector);
-    log << "calcXCInteg  : " << TlTime::getNow() << "\n";
-    log.flush();
+    this->log_.info("calcXCInteg");
     
-    //   this->calcXCcoef();
     switch (this->m_nMethodType) {
     case METHOD_RKS:
         this->calcXCcoef_RKS(tmpVectorA, eTmpVector);
@@ -211,19 +198,10 @@ int DfCalcGrid::dfGrdMain()
         break;
     }
 
-    log << "calcXCcoef   : " << TlTime::getNow() << "\n";
-    log.flush();
-
-    log << "end          : " << TlTime::getNow() << "\n";
-    log.flush();
+    this->log_.info("end");
 
     return 0;
 }
-
-// int DfCalcGrid::readTable()
-// {
-//     return 0;
-// }
 
 void DfCalcGrid::calcXCInteg(TlVector& tmpVectorA, TlVector& tmpVectorB, TlVector& eTmpVector)
 {
