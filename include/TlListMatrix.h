@@ -17,13 +17,13 @@ public:
     };
 
 public:
-    TlListMatrix(size_t reserveSize = 0);
+    TlListMatrix(std::size_t reserveSize = 0);
     ~TlListMatrix();
 
 public:
     void clear();
 
-    size_t size() const {
+    std::size_t size() const {
         return this->size_;
     };
 
@@ -32,7 +32,7 @@ public:
     Element pop();
 
 private:
-    size_t size_;
+    std::size_t size_;
     std::deque<Element> elements_;
 };
 

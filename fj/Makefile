@@ -11,7 +11,7 @@ OBJS = \
  DfConverge_Anderson.o		\
  DfConverge_Damping.o		\
  DfCqclomatrix.o		\
- DfDensityFitting.o		\
+ DfDensityFittingX.o		\
  DfDiagonal.o			\
  DfDiffDensityMatrix.o		\
  DfDmatrix.o			\
@@ -38,7 +38,6 @@ OBJS = \
  DfHpqEngine.o				\
  DfHpq_driver.o				\
  DfHpqX.o				\
- DfIGuess2.o				\
  DfInitialGuess.o			\
  DfInitialGuessHarris.o			\
  DfInitialGuessHuckel.o			\
@@ -69,9 +68,6 @@ OBJS = \
  DfXMatrix.o				\
  DfXcenefitting.o			\
  DfXcpotfitting.o			\
- DfXmatrixMyu.o				\
- DfXmatrixNyu.o				\
- DfXmatrixRou.o				\
  FileX.o				\
  Fl_Database.o				\
  Fl_Db_Basis.o				\
@@ -102,14 +98,13 @@ OBJS = \
  TlAngularMomentumVectorSet.o		\
  TlAtom.o				\
  TlCombineDensityMatrix.o		\
- TlCommunicate.o			\
  TlFile.o				\
  TlFileMatrix.o				\
  TlFileSymmetricMatrix.o		\
  TlFmt.o				\
  TlFname.o				\
  TlGetopt.o				\
- TlLogX.o				\
+ TlLogging.o				\
  TlMath.o				\
  TlMatrix.o				\
  TlMatrixCache.o			\
@@ -144,7 +139,6 @@ P_OBJS = \
  DfConvcheck_Parallel.o			\
  DfConverge_Anderson_Parallel.o		\
  DfConverge_Damping_Parallel.o		\
- DfDensityFitting_Parallel.o		\
  DfDensityFittingX_Parallel.o		\
  DfDensityFittingX_ScaLAPACK.o		\
  DfDiffDensityMatrix_Parallel.o		\
@@ -177,18 +171,33 @@ P_OBJS = \
  DfXCFunctional_Parallel.o		\
  DfXMatrix_Parallel.o			\
  ProteinDF_Parallel.o			\
+ TlCommunicate.o			\
  TlDistributeMatrix.o			\
  TlDistributeSymmetricMatrix.o		\
  TlDistributeVector.o			
 
+CC = mpicc
+CXX = mpicxx
 
-CXX = mpiFCC
-CXXFLAGS = \
- -DHAVE_LAPACK -DHAVE_SCALAPACK -DNDEBUG -DHAVE_CONFIG_H -O3 -Kfast -KOMP \
- -SCALAPACK -SSL2MPI -SSL2BLAMP
-LIBS= -lstd
+CFLAGS = \
+ -DHAVE_LAPACK -DHAVE_SCALAPACK -DNDEBUG -DHAVE_CONFIG_H -O3 -fopenmp 
 
-.SUFFIXES: .o .cpp .cxx
+CXXFLAGS = $(CFLAGS)
+
+LAPACK_LIB = /opt/acml4.4.0/gfortran32/lib/libacml.a 
+SCALAPACK_LIB = \
+  /home/hirano/local/lib/libscalapack.a \
+  /home/hirano/local/lib/blacsC.a \
+  /home/hirano/local/lib/blacsF77.a \
+  /home/hirano/local/lib/blacs.a \
+  /home/hirano/local/lib/blacsC.a \
+  /home/hirano/local/lib/blacsF77.a
+LIBS = -lgfortran
+
+.SUFFIXES: .o .cc .cpp .cxx
+
+.cc.o:
+	$(CC) $(CFLAGS) -c $<
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
@@ -198,10 +207,10 @@ LIBS= -lstd
 
 
 .PHONY: all clean
-all:	PDF.x PPDF.x
+all:	PDF.x PPDF.x test_DensFit.x test_ERI.x test_XC.x
 
 clean:
-	$(RM) $(OBJS) $(P_OBJS) main.o  main_Parallel.o 
+	$(RM) *.o *.x
 
 PDF.x:	main.o $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LAPACK_LIB) $(LIBS)
@@ -209,4 +218,11 @@ PDF.x:	main.o $(OBJS)
 PPDF.x:	main_Parallel.o	$(OBJS) $(P_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(SCALAPACK_LIB) $(LAPACK_LIB) $(LIBS)
 
+test_DensFit.x: main_testDensFit.o $(OBJS) 
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LAPACK_LIB) $(LIBS)
 
+test_ERI.x: main_testERI.o $(OBJS) 
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(SCALAPACK_LIB) $(LAPACK_LIB) $(LIBS)
+
+test_XC.x: main_testXC.o $(OBJS) 
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(SCALAPACK_LIB) $(LAPACK_LIB) $(LIBS)

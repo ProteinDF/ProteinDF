@@ -1,7 +1,7 @@
 #include <cassert>
 #include <TlListMatrix.h>
 
-TlListMatrix::TlListMatrix(const size_t reserveSize) : size_(0)
+TlListMatrix::TlListMatrix(const std::size_t reserveSize) : size_(0)
 {
     this->elements_.clear();
 }
