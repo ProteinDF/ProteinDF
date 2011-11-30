@@ -138,7 +138,9 @@ public:
     /// @param[in] col 列数
     /// @return 要素
     virtual double operator()(int nRow, int nCol) const;
-    virtual double get(int row, int col) const;
+
+    virtual double get(const index_type row,
+                       const index_type col) const;
 
     /// 要素を返す(代入可能)
     ///
@@ -149,9 +151,13 @@ public:
     /// @param[in] col 列数
     /// @return 要素
     virtual double& operator()(int nRow, int nCol);
-    virtual void set(int row, int col, double value);
 
-    virtual void add(index_type row, index_type col, double value);
+    virtual void set(const index_type row,
+                     const index_type col,
+                     const double value);
+    virtual void add(const index_type row,
+                     const index_type col,
+                     const double value);
 
     /// 代入演算子
     TlMatrix& operator =(const TlMatrix& rhs);
@@ -297,7 +303,8 @@ protected:
     void clear_usingStandard();
     void clear_usingMemManager();
     
-    virtual size_t index(int row, int col) const;
+    virtual size_t index(const index_type row,
+                         const index_type col) const;
 
     static bool getHeaderInfo(std::ifstream& ifs, int* pType = NULL,
                               int* pNumOfRows = NULL, int* pNumOfCols = NULL);
@@ -351,25 +358,6 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////
 // inline functions
-inline size_t TlMatrix::index(int nRow, int nCol) const
-{
-    assert((0 <= nRow) && (nRow < this->m_nRows));
-    assert((0 <= nCol) && (nCol < this->m_nCols));
-
-    return (nRow  + (this->m_nRows * nCol));
-}
-
-
-inline double TlMatrix::get(const int row, const int col) const
-{
-    //   assert((0 <= nRow) && (nRow < this->m_nRows));
-    //   assert((0 <= nCol) && (nCol < this->m_nCols));
-
-    //   const int index = nRow  + (this->m_nRows * nCol);
-    return this->data_[this->index(row, col)];
-}
-
-
 inline double TlMatrix::operator()(const int nRow, const int nCol) const
 {
     return this->get(nRow, nCol);
@@ -383,27 +371,6 @@ inline double& TlMatrix::operator()(const int nRow, const int nCol)
 
 //   const int index = nRow + (this->m_nRows * nCol);
     return this->data_[this->index(nRow, nCol)];
-}
-
-
-inline void TlMatrix::set(int row, int col, double value)
-{
-    const std::size_t index = this->index(row, col);
-    // const double diff = value - this->data_[index];
-    
-#pragma omp critical(TlMatrix__set)
-    {
-        this->data_[index] = value;
-    }
-}
-
-
-inline void TlMatrix::add(index_type row, index_type col, double value)
-{
-    const std::size_t index = this->index(row, col);
-
-#pragma omp atomic
-    this->data_[index] += value;
 }
 
 

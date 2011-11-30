@@ -237,6 +237,7 @@ private:
                                    c_prime, d_prime, q_prime);
         }
 
+        // TODO: hotspot
         std::size_t index() const {
             const std::size_t r1 = this->r - 1;
             const std::size_t r_index = (r1+1)*(r1+2)*(r1+3)/6 + this->r_index;
@@ -251,23 +252,23 @@ private:
         }
         
     public:
-        unsigned int r_index : 16; // -32767 ~ +32768 までOK
-        unsigned int r       :  6; // -31 ~ +32 まで OK
-        unsigned int a_prime :  6; // -7 ~ +8 まで OK
-        unsigned int b_prime :  6;
-        unsigned int p_prime :  6;
-        unsigned int c_prime :  6;
-        unsigned int d_prime :  6;
-        unsigned int q_prime :  6;
+        // unsigned int r_index : 16; // -32767 ~ +32768 までOK
+        // unsigned int r       :  6; // -31 ~ +32 まで OK
+        // unsigned int a_prime :  6; // -7 ~ +8 まで OK
+        // unsigned int b_prime :  6;
+        // unsigned int p_prime :  6;
+        // unsigned int c_prime :  6;
+        // unsigned int d_prime :  6;
+        // unsigned int q_prime :  6;
+        std::size_t r_index; // -32767 ~ +32768 までOK
+        std::size_t r      ; // -31 ~ +32 まで OK
+        std::size_t a_prime; // -7 ~ +8 まで OK
+        std::size_t b_prime;
+        std::size_t p_prime;
+        std::size_t c_prime;
+        std::size_t d_prime;
+        std::size_t q_prime;
     };
-
-    // struct ContractState_cmp {
-    //     bool operator()(const ContractState& rhs1, const ContractState& rhs2) const {
-    //         return (rhs1.value < rhs2.value);
-    //     }
-    // };
-
-    // typedef std::map<ContractState, std::vector<double>, ContractState_cmp> n_R_dash_Type;
 
     struct nR_dash {
     public:

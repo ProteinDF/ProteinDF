@@ -211,11 +211,9 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const int nStartAtom, const int 
 
             // build fock matrix
             if (dRhoA > densityCutOffValue) {
-#pragma omp critical (DfCalcGridX_calcXCIntegForFockAndEnergy_LDA_R)
-                {
-                    this->buildFock(dRhoA, aPhi, pFunctional, dWeight, pF); // RKS code
-                    dEnergy += dWeight * pFunctional->getFunctional(dRhoA); // RKS code
-                }
+                this->buildFock(dRhoA, aPhi, pFunctional, dWeight, pF); // RKS code
+#pragma omp atomic
+                dEnergy += dWeight * pFunctional->getFunctional(dRhoA); // RKS code
             }
 
             // save rho data
@@ -293,11 +291,9 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const int nStartAtom, const int 
                 const double rA = std::max(dRhoA, 0.0);
                 const double rB = std::max(dRhoB, 0.0);
 
-#pragma omp critical (DfCalcGridX_calcXCIntegForFockAndEnergy_LDA_U)
-                {
-                    this->buildFock(rA, rB, aPhi, pFunctional, dWeight, pFA, pFB);
-                    dEnergy += dWeight * pFunctional->getFunctional(rA, rB);
-                }
+                this->buildFock(rA, rB, aPhi, pFunctional, dWeight, pFA, pFB);
+#pragma omp atomic
+                dEnergy += dWeight * pFunctional->getFunctional(rA, rB);
             }
 
             // save rho data
@@ -483,13 +479,11 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const int nStartAtom, const int 
             if (dRhoA > densityCutOffValue) {
                 const double gammaAA =  dGradRhoAX*dGradRhoAX + dGradRhoAY*dGradRhoAY + dGradRhoAZ*dGradRhoAZ;
 
-#pragma omp critical (DfCalcGridX_calcXCIntegForFockAndEnergy_GGA_R)
-                {
-                    this->buildFock(dRhoA, dGradRhoAX, dGradRhoAY, dGradRhoAZ,
-                                    aPhi, aGradPhiX, aGradPhiY, aGradPhiZ,
-                                    pFunctional, dWeight, pF); // RKS code
-                    dEnergy += dWeight * pFunctional->getFunctional(dRhoA, gammaAA); // RKS code
-                }
+                this->buildFock(dRhoA, dGradRhoAX, dGradRhoAY, dGradRhoAZ,
+                                aPhi, aGradPhiX, aGradPhiY, aGradPhiZ,
+                                pFunctional, dWeight, pF); // RKS code
+#pragma omp atomic                    
+                dEnergy += dWeight * pFunctional->getFunctional(dRhoA, gammaAA); // RKS code
             }
 
             rhoA[nGrid] = dRhoA;
@@ -618,15 +612,13 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const int nStartAtom, const int 
                 const double gammaAB =  dGradRhoAX*dGradRhoBX + dGradRhoAY*dGradRhoBY + dGradRhoAZ*dGradRhoBZ;
                 const double gammaBB =  dGradRhoBX*dGradRhoBX + dGradRhoBY*dGradRhoBY + dGradRhoBZ*dGradRhoBZ;
 
-#pragma omp critical (DfCalcGridX_calcXCIntegForFockAndEnergy_GGA_U)
-                {
-                    this->buildFock(rA, rB,
-                                    dGradRhoAX, dGradRhoAY, dGradRhoAZ,
-                                    dGradRhoBX, dGradRhoBY, dGradRhoBZ,
-                                    aPhi, aGradPhiX, aGradPhiY, aGradPhiZ,
-                                    pFunctional, dWeight, pFA, pFB); // UKS code
-                    dEnergy += dWeight * pFunctional->getFunctional(rA, rB, gammaAA, gammaAB, gammaBB);
-                }
+                this->buildFock(rA, rB,
+                                dGradRhoAX, dGradRhoAY, dGradRhoAZ,
+                                dGradRhoBX, dGradRhoBY, dGradRhoBZ,
+                                aPhi, aGradPhiX, aGradPhiY, aGradPhiZ,
+                                pFunctional, dWeight, pFA, pFB); // UKS code
+#pragma omp atomic
+                dEnergy += dWeight * pFunctional->getFunctional(rA, rB, gammaAA, gammaAB, gammaBB);
             }
 
             rhoA[nGrid] = dRhoA;
@@ -1568,14 +1560,6 @@ void DfCalcGridX::buildFock(std::vector<WFGrid>::const_iterator pBegin,
 
         // 対角要素
         pF->add(u_index, u_index, tmp1A * u_value);
-//         if (u_index == 4) {
-//             std::cerr << TlUtils::format("C4 % f", tmp1A * u_value)
-//                       << std::endl;
-//         }
-//         if (u_index == 9) {
-//             std::cerr << TlUtils::format("C9 % f", tmp1A * u_value)
-//                       << std::endl;
-//         }
 
         // 対角要素以外
         std::vector<WFGrid>::const_iterator qEnd = std::upper_bound(p +1, pEnd,
@@ -1584,16 +1568,8 @@ void DfCalcGridX::buildFock(std::vector<WFGrid>::const_iterator pBegin,
         for (std::vector<WFGrid>::const_iterator q = p +1; q != qEnd; ++q) {
             const int v_index = q->index;
             const double v_value = q->value;
-            pF->add(u_index, v_index, tmp1A * v_value);
 
-//             if (u_index == 4 && v_index == 4) {
-//                 std::cerr << TlUtils::format("A4 % f", tmp1A * v_value)
-//                           << std::endl;
-//             }
-//             if (u_index == 9 && v_index == 9) {
-//                 std::cerr << TlUtils::format("A9 % f",  tmp1A * v_value)
-//                           << std::endl;
-//             }
+            pF->add(u_index, v_index, tmp1A * v_value);
         }
     }
 }
@@ -1620,28 +1596,6 @@ void DfCalcGridX::buildFock(std::vector<WFGrid>::const_iterator pBegin,
              if (u_index >= v_index) {
                  pF->add(u_index, v_index, tmp2AX * v_value);
              }
-             // else {
-             //     //pF->add(u_index, v_index, tmp2AX * v_value);
-             //    pF->add(v_index, u_index, tmp2AX * v_value);
-             // }
-
-//             if (u_index == 4 && v_index == 4) {
-//                 std::cerr << TlUtils::format("B4 % f, % f, % f, % f, % f",
-//                                              tmp2AX * v_value,
-//                                              coef,
-//                                              u_value,
-//                                              v_value,
-//                                              pF->get(4, 4))
-//                           << std::endl;
-//             } else if (u_index == 9 && v_index == 9) {
-//                 std::cerr << TlUtils::format("B9 % f, % f, % f, % f, % f",
-//                                              tmp2AX * v_value,
-//                                              coef,
-//                                              u_value,
-//                                              v_value,
-//                                              pF->get(9, 9))
-//                           << std::endl;
-//             }
         }
     }
 }

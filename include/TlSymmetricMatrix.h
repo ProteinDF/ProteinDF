@@ -95,9 +95,9 @@ public:
     /// @param[in] col 列数
     /// @return 要素
     virtual double& operator()(int row, int col);
-    virtual void set(index_type row, index_type col, double value);
 
-    virtual void add(index_type row, index_type col, double value);
+    //virtual void set(index_type row, index_type col, double value);
+    //virtual void add(index_type row, index_type col, double value);
 
     /// 代入演算子
     TlSymmetricMatrix& operator =(const TlSymmetricMatrix& rhs);
@@ -254,7 +254,8 @@ protected:
     /// オブジェクトの内容を破棄する
     //virtual void clear();
 
-    virtual inline size_t index(int row, int col) const;
+    virtual size_t index(const index_type row,
+                         const index_type col) const;
 
     static bool getHeaderInfo(std::ifstream& ifs, int* pType = NULL,
                               int* pNumOfRows = NULL, int* pNumOfCols = NULL);
@@ -301,28 +302,6 @@ private:
 ////////////////////////////////////////////////////////////////////////
 // inline functions
 //
-inline size_t TlSymmetricMatrix::index(int row, int col) const
-{
-    assert((0 <= row) && (row < this->m_nRows));
-    assert((0 <= col) && (col < this->m_nCols));
-
-    if (row < col) {
-        std::swap(row, col);
-    }
-
-    // This class treats 'L' type matrix.
-    // Follows means:
-    //  index = row + (2 * this->m_nRows - (col +1)) * col / 2;
-    unsigned int s = this->m_nRows;
-    s = s << 1; // means 's *= 2'
-
-    unsigned int t = (s - (col +1)) * col;
-    t = t >> 1; // means 't /= 2'
-
-    return (row + t);
-}
-
-
 inline double TlSymmetricMatrix::get(int row, int col) const
 {
     return (this->data_[this->index(row, col)]);
@@ -341,25 +320,25 @@ inline double& TlSymmetricMatrix::operator()(int row, int col)
 }
 
 
-inline void TlSymmetricMatrix::set(index_type row, index_type col, double value)
-{
-    const std::size_t index = this->index(row, col);
-    // const double diff = value - this->data_[index];
+// inline void TlSymmetricMatrix::set(index_type row, index_type col, double value)
+// {
+//     const std::size_t index = this->index(row, col);
+//     // const double diff = value - this->data_[index];
     
-#pragma omp critical(TlSymmetricMatrix___set)
-    {
-        this->data_[index] = value;
-    }
-}
+// #pragma omp critical(TlSymmetricMatrix___set)
+//     {
+//         this->data_[index] = value;
+//     }
+// }
 
 
-inline void TlSymmetricMatrix::add(index_type row, index_type col, double value)
-{
-    const std::size_t index = this->index(row, col);    
+// inline void TlSymmetricMatrix::add(index_type row, index_type col, double value)
+// {
+//     const std::size_t index = this->index(row, col);    
 
-#pragma omp atomic
-    this->data_[index] += value;
-}
+// #pragma omp atomic
+//     this->data_[index] += value;
+// }
 
 
 template <typename T>

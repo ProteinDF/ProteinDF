@@ -202,6 +202,47 @@ void TlMatrix::resize(const int nRow, const int nCol)
 }
 
 
+std::size_t TlMatrix::index(const index_type row,
+                            const index_type col) const
+{
+    assert((0 <= row) && (row < this->m_nRows));
+    assert((0 <= col) && (col < this->m_nCols));
+
+    return (row  + (this->m_nRows * col));
+}
+
+
+double TlMatrix::get(const index_type row,
+                     const index_type col) const
+{
+    return this->data_[this->index(row, col)];
+}
+
+
+void TlMatrix::set(const index_type row,
+                   const index_type col,
+                   const double value)
+{
+    const std::size_t index = this->index(row, col);
+    
+#pragma omp critical(TlMatrix__set)
+    {
+        this->data_[index] = value;
+    }
+}
+
+
+void TlMatrix::add(const index_type row,
+                   const index_type col,
+                   const double value)
+{
+    const std::size_t index = this->index(row, col);
+
+#pragma omp atomic
+    this->data_[index] += value;
+}
+
+
 TlVector TlMatrix::getVector() const
 {
     return TlVector(this->data_, this->getNumOfElements());
