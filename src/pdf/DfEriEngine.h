@@ -96,10 +96,14 @@ public:
         };
         
     public:
-        int a_bar : 8; // grad i
-        int b_bar : 8; // grad j
-        int a : 8;
-        int b : 8;
+        // int a_bar : 8; // grad i
+        // int b_bar : 8; // grad j
+        // int a : 8;
+        // int b : 8;
+        int a_bar; // grad i
+        int b_bar; // grad j
+        int a;
+        int b;
     };
 
     // for pGTO ----------------------------------------------------------------

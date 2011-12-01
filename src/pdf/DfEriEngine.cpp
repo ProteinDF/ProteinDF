@@ -1474,10 +1474,10 @@ void DfEriEngine::contract_bra(const DfEriEngine::Query& qAB,
     for (int KP_index = 0; KP_index < KP; ++KP_index) {
         const double alpha = this->bra_[KP_index].alpha;
         const double beta  = this->bra_[KP_index].beta;
-        const double _2a   = std::pow(2.0 * alpha, a_prime);
-        const double _2b   = std::pow(2.0 * beta,  b_prime);
+        const double _2a   = TlMath::pow(2.0 * alpha, a_prime);
+        const double _2b   = TlMath::pow(2.0 * beta,  b_prime);
         const double zeta  = alpha + beta;
-        const double _2z   = std::pow(2.0 * zeta,  zeta_exp);
+        const double _2z   = TlMath::pow(2.0 * zeta,  zeta_exp);
 
         this->pContractBraCoef_[KP_index] = _2a * _2b / _2z;
     }
@@ -1528,10 +1528,10 @@ void DfEriEngine::contract_ket(const DfEriEngine::Query& qCD,
     for (int KQ_index = 0; KQ_index < KQ; ++KQ_index) {
         const double alpha = this->ket_[KQ_index].alpha;
         const double beta = this->ket_[KQ_index].beta;
-        const double _2a = std::pow(2.0 * alpha, c_prime);
-        const double _2b = std::pow(2.0 * beta,  d_prime);
+        const double _2a = TlMath::pow(2.0 * alpha, c_prime);
+        const double _2b = TlMath::pow(2.0 * beta,  d_prime);
         const double zeta = alpha + beta;
-        const double _2z = std::pow(2.0 * zeta,  zeta_exp);
+        const double _2z = TlMath::pow(2.0 * zeta,  zeta_exp);
         const double coef = _2a * _2b / _2z;
 
         value += coef * KQ_values[KQ_index];
@@ -1622,7 +1622,9 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
 
                 // ket ---------------------------------------------------------
                 //this->ERI_bra_[braStateIndex][bra_index].resize(max_ket_index);
-                this->ERI_bra_[braStateIndex][bra_index].resize(ERI_MAX_BATCH);
+                //this->ERI_bra_[braStateIndex][bra_index].resize(ERI_MAX_BATCH);
+                std::vector<double>& ket = this->ERI_bra_[braStateIndex][bra_index];
+                ket.resize(ERI_MAX_BATCH);
                 int ket_index = 0;
                 ContractScalesType::const_iterator it_ket_end = this->ket_contractScales_.end();
                 for (ContractScalesType::const_iterator it_ket = this->ket_contractScales_.begin();
@@ -1668,7 +1670,8 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
                             
 
                             assert(ket_index < max_ket_index);
-                            this->ERI_bra_[braStateIndex][bra_index][ket_index] = coef * value;
+                            //this->ERI_bra_[braStateIndex][bra_index][ket_index] = coef * value;
+                            ket[ket_index] = coef * value;
                             ++ket_index;
                         }
                     }
