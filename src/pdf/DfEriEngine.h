@@ -215,7 +215,8 @@ private:
                                const unsigned int cp =0, const unsigned int dp =0, const unsigned int qp =0)
             : r_index(R.index()), r(R.angularMomentum()),
               a_prime(ap), b_prime(bp), p_prime(pp),
-              c_prime(cp), d_prime(dp), q_prime(qp) {
+              c_prime(cp), d_prime(dp), q_prime(qp),
+              isCached_index_(false), index_(0) {
             assert(this->r < (1 << 4));
             assert(this->r_index < (1 << 6));
             
@@ -230,10 +231,41 @@ private:
         ContractState(const ContractState& rhs)
             : r_index(rhs.r_index), r(rhs.r),
               a_prime(rhs.a_prime), b_prime(rhs.b_prime), p_prime(rhs.p_prime),
-              c_prime(rhs.c_prime), d_prime(rhs.d_prime), q_prime(rhs.q_prime) {
+              c_prime(rhs.c_prime), d_prime(rhs.d_prime), q_prime(rhs.q_prime),
+              isCached_index_(rhs.isCached_index_), index_(rhs.index_) {
         }
 
     public:
+        void setABP(const unsigned int ap, const unsigned int bp, const unsigned int pp) {
+            this->a_prime = ap;
+            this->b_prime = bp;
+            this->p_prime = pp;
+            this->isCached_index_ = false;
+        }
+
+        void setCDQ(const unsigned int cp, const unsigned int dp, const unsigned int qp) {
+            this->c_prime = cp;
+            this->d_prime = dp;
+            this->q_prime = qp;
+            this->isCached_index_ = false;
+        }
+
+        void setR(const TlAngularMomentumVector& R) {
+            this->r_index = R.index();
+            this->r = R.angularMomentum();
+            this->isCached_index_ = false;
+        }
+
+        unsigned int getCprime() const {
+            return this->c_prime;
+        }
+        unsigned int getDprime() const {
+            return this->d_prime;
+        }
+        unsigned int getQprime() const {
+            return this->q_prime;
+        }
+        
         std::string debugOut() const {
             return TlUtils::format("[%u(%u); (%u %u %u|%u %u %u)]",
                                    r, r_index,
@@ -243,19 +275,25 @@ private:
 
         // TODO: hotspot
         std::size_t index() const {
-            const std::size_t r1 = this->r - 1;
-            const std::size_t r_index = (r1+1)*(r1+2)*(r1+3)/6 + this->r_index;
-            const std::size_t index =
-                (((((( this->a_prime)*(ERI_B_PRIME_MAX)
-                     + this->b_prime)*(ERI_P_PRIME_MAX)
-                     + this->p_prime)*(ERI_A_PRIME_MAX)
-                     + this->c_prime)*(ERI_B_PRIME_MAX)
-                     + this->d_prime)*(ERI_P_PRIME_MAX)
-                     + this->q_prime)*ERI_NUM_OF_AMVS + r_index;
-            return index;
+            if (this->isCached_index_ != true) {
+                const std::size_t r = this->r;
+                const std::size_t r_index = (r)*(r+1)*(r+2)/6 + this->r_index;
+                const std::size_t index =
+                    (((((( this->a_prime)*(ERI_B_PRIME_MAX)
+                         + this->b_prime)*(ERI_P_PRIME_MAX)
+                         + this->p_prime)*(ERI_A_PRIME_MAX)
+                         + this->c_prime)*(ERI_B_PRIME_MAX)
+                         + this->d_prime)*(ERI_P_PRIME_MAX)
+                         + this->q_prime)*ERI_NUM_OF_AMVS + r_index;
+
+                this->index_ = index;
+                this->isCached_index_ = true;
+            }
+
+            return this->index_;
         }
         
-    public:
+    private:
         // unsigned int r_index : 16; // -32767 ~ +32768 までOK
         // unsigned int r       :  6; // -31 ~ +32 まで OK
         // unsigned int a_prime :  6; // -7 ~ +8 まで OK
@@ -264,14 +302,18 @@ private:
         // unsigned int c_prime :  6;
         // unsigned int d_prime :  6;
         // unsigned int q_prime :  6;
-        std::size_t r_index; // -32767 ~ +32768 までOK
-        std::size_t r      ; // -31 ~ +32 まで OK
-        std::size_t a_prime; // -7 ~ +8 まで OK
-        std::size_t b_prime;
-        std::size_t p_prime;
-        std::size_t c_prime;
-        std::size_t d_prime;
-        std::size_t q_prime;
+        unsigned int r_index;
+        unsigned int r;
+        unsigned int a_prime;
+        unsigned int b_prime;
+        unsigned int p_prime;
+        unsigned int c_prime;
+        unsigned int d_prime;
+        unsigned int q_prime;
+
+    private:
+        mutable bool isCached_index_;
+        mutable std::size_t index_;
     };
 
     struct nR_dash {

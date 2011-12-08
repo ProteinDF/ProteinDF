@@ -105,6 +105,7 @@ libpdf_la_SOURCES = \
 	DfHpqEngine.h		DfHpqEngine.cpp			\
 	DfEriEngine.h		DfEriEngine.cpp			\
 	TlAngularMomentumVector.h				\
+	TlAngularMomentumVector.cpp				\
 	TlAngularMomentumVectorSet.h				\
 	TlAngularMomentumVectorSet.cpp				\
 	DfForce.h		DfForce.cpp			\

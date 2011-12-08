@@ -1421,9 +1421,10 @@ void DfEriEngine::contract(const DfEriEngine::Query& qAB,
             
             for (std::size_t i = 0; i < nR_dash_index; ++i) {
                 ContractState cs = this->nR_dash_[i].cs;
-                cs.c_prime = c_prime;
-                cs.d_prime = d_prime;
-                cs.q_prime = q_prime;
+                // cs.c_prime = c_prime;
+                // cs.d_prime = d_prime;
+                // cs.q_prime = q_prime;
+                cs.setCDQ(c_prime, d_prime, q_prime);
                 this->contract_ket(qCD, cs, this->nR_dash_[i].values);
             }
         }
@@ -1463,11 +1464,13 @@ void DfEriEngine::contract_bra(const DfEriEngine::Query& qAB,
     assert(KQ < ERI_KPKQ_MAX);
     
     ContractState& cs = this->nR_dash_[nR_dash_index].cs;
-    cs.r_index = r.index();
-    cs.r = r.angularMomentum();
-    cs.a_prime = a_prime;
-    cs.b_prime = b_prime;
-    cs.p_prime = p_prime;
+    // cs.r_index = r.index();
+    // cs.r = r.angularMomentum();
+    cs.setR(r);
+    // cs.a_prime = a_prime;
+    // cs.b_prime = b_prime;
+    // cs.p_prime = p_prime;
+    cs.setABP(a_prime, b_prime, p_prime);
     std::vector<double>& values = this->nR_dash_[nR_dash_index].values;
     values.resize(KQ);
 
@@ -1517,9 +1520,12 @@ void DfEriEngine::contract_ket(const DfEriEngine::Query& qCD,
     const int c = qCD.a;
     const int d = qCD.b;
 
-    const int c_prime = cs.c_prime;
-    const int d_prime = cs.d_prime;
-    const int q_prime = cs.q_prime;
+    // const int c_prime = cs.c_prime;
+    // const int d_prime = cs.d_prime;
+    // const int q_prime = cs.q_prime;
+    const int c_prime = cs.getCprime();
+    const int d_prime = cs.getDprime();
+    const int q_prime = cs.getQprime();
     const int zeta_exp = q_prime - c - d;
     
     double value = 0.0;
@@ -1588,9 +1594,10 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
         const int a_prime = it_bra->a_prime;
         const int b_prime = it_bra->b_prime;
         const int p_prime = it_bra->p_prime;
-        cs.a_prime = a_prime;
-        cs.b_prime = b_prime;
-        cs.p_prime = p_prime;
+        // cs.a_prime = a_prime;
+        // cs.b_prime = b_prime;
+        // cs.p_prime = p_prime;
+        cs.setABP(a_prime, b_prime, p_prime);
 
         for (int p = 0; p <= angularMomentumP; ++p) {
             const ERI_State bra_state(a_bar, b_bar, a, b, p, a_prime, b_prime, p_prime);
@@ -1632,9 +1639,10 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
                     const int c_prime = it_ket->a_prime;
                     const int d_prime = it_ket->b_prime;
                     const int q_prime = it_ket->p_prime;
-                    cs.c_prime = c_prime;
-                    cs.d_prime = d_prime;
-                    cs.q_prime = q_prime;
+                    // cs.c_prime = c_prime;
+                    // cs.d_prime = d_prime;
+                    // cs.q_prime = q_prime;
+                    cs.setCDQ(c_prime, d_prime, q_prime);
                     
                     for (int q = 0; q <= angularMomentumQ; ++q) {
                         const TlAngularMomentumVectorSet amvs_q(q);
@@ -1648,8 +1656,9 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
                             // const ContractState cs(r,
                             //                        a_prime, b_prime, p_prime,
                             //                        c_prime, d_prime, q_prime);
-                            cs.r_index = r.index();
-                            cs.r = r.angularMomentum();
+                            // cs.r_index = r.index();
+                            // cs.r = r.angularMomentum();
+                            cs.setR(r);
                             
                             const std::size_t cs_index = cs.index();
                             assert(cs_index < (ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_P_PRIME_MAX *
