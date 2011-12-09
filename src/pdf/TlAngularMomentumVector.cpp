@@ -16,13 +16,13 @@ TlAngularMomentumVector::TlAngularMomentumVector(const TlAngularMomentumVector& 
     this->v_[Z] = rhs.v_[Z];
 }
 
-unsigned int TlAngularMomentumVector::angularMomentum() const {
+int TlAngularMomentumVector::angularMomentum() const {
     return this->v_[X] + this->v_[Y] + this->v_[Z];
 }
 
-unsigned int TlAngularMomentumVector::index() const {
+int TlAngularMomentumVector::index() const {
     // (y * (y + 1) + z * (2*y + z + 3)) /2 = ((y+z)*(y+z+1)+2z)/2
-    const unsigned int yz = this->v_[Y] + this->v_[Z];
+    const int yz = this->v_[Y] + this->v_[Z];
     return (yz * (yz+1) / 2 + this->v_[Z]);
 }
 
@@ -30,7 +30,7 @@ bool TlAngularMomentumVector::isExist() const {
     return ((v_[0] >= 0) && (v_[1] >= 0) && (v_[2] >= 0));
 }
 
-char TlAngularMomentumVector::get(const int i) const {
+int TlAngularMomentumVector::get(const int i) const {
     assert((0 <= i) && (i < 3));
     return this->v_[i];
 }

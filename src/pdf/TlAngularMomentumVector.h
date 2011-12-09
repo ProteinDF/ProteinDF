@@ -25,14 +25,14 @@ public:
     TlAngularMomentumVector(const TlAngularMomentumVector& rhs);
 
     /// angular momentumを返す
-    unsigned int angularMomentum() const;
+    int angularMomentum() const;
     
-    unsigned int index() const;
+    int index() const;
 
     bool isExist() const;
 
     /// 指定された軸[x(=0), y(=1), z(=3)] の要素を返す
-    char get(const int i) const;
+    int get(const int i) const;
 
     TlAngularMomentumVector operator+=(const TlAngularMomentumVector& rhs);
 
@@ -47,7 +47,7 @@ public:
     std::string debugOut() const;
 
 private:
-    char v_[3];
+    int v_[3];
 };
 
 #endif // TLANGULARMOMENTUMVECTOR_H

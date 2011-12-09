@@ -16,15 +16,12 @@ public:
     TlAngularMomentumVectorSet(const int angularMomentum);
 
     /// angular momentum vector の総数を返す
-    int size() const {
-        return (angularMomentum_+1)*(angularMomentum_+2) / 2;
-    }
+    int size() const;
 
     /// 指定されたインデックスのangular momentum vectorを返す
     /// @ref count
     const TlAngularMomentumVector& get(const int index) const;
 
-    
 private:
     struct AMV_DB {
     public:
@@ -50,11 +47,29 @@ private:
     public:
         std::vector<std::vector<TlAngularMomentumVector> > data;
     };
-
     
 private:
     static const AMV_DB db_;
     int angularMomentum_;
 };
+
+
+inline TlAngularMomentumVectorSet::TlAngularMomentumVectorSet(const int angularMomentum)
+    : angularMomentum_(angularMomentum) {
+    assert((0 <= angularMomentum) && (angularMomentum < MAX_ANGULAR_MOMENTUM));
+}
+
+inline int TlAngularMomentumVectorSet::size() const
+{
+    return (angularMomentum_+1)*(angularMomentum_+2) / 2;
+}
+
+inline const TlAngularMomentumVector&
+TlAngularMomentumVectorSet::get(const int index) const
+{
+    assert((0 <= index) && (index < this->size()));
+    return this->db_.data[this->angularMomentum_][index];
+}
+
 
 #endif // TLANGULARMOMENTUMVECTORSET_H
