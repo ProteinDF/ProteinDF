@@ -59,7 +59,7 @@ public:
     static std::vector<int> factor(int x);
     
     /// 指数が整数のpow()関数
-    static double pow(const double base, int exponent);
+    static double pow(double base, int exponent);
 
     static double pow(const double x, const double y);
 
