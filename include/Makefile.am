@@ -1,4 +1,5 @@
 pkginclude_HEADERS = \
+	pdflib-int.h			\
 	TlLogging.h			\
 	TlSystem.h			\
 	TlFile.h			\

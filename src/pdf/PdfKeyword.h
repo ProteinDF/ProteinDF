@@ -16,9 +16,9 @@ public:
     ///
     /// maskに利用されるため、定数は2の累乗であること
     enum KeywordType {
-        KWD_DEFAULT  = 0,
+        KWD_DEFAULT  = 0, // デフォルト値が設定されるキーワード
         KWD_HIDDEN   = 1,
-        KWD_INTERNAL = 2,
+        KWD_INTERNAL = 2, // 内部で利用されるキーワード
         KWD_DEBUG    = 4
     };
     
@@ -26,9 +26,8 @@ public:
     struct KeywordInfo {
     public:
         std::string keyword;       /// キーワード
-        KeywordType type;         /// キーワードタイプ
+        unsigned int type;         /// キーワードタイプ
         std::string explanation;   /// 説明(英語)
-        std::string explanationJ;  /// 説明(日本語)
         std::string defaultValue;  /// デフォルト値
         std::string syntax;        /// 文法
     };

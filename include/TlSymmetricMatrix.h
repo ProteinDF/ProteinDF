@@ -254,8 +254,8 @@ protected:
     /// オブジェクトの内容を破棄する
     //virtual void clear();
 
-    virtual size_t index(const index_type row,
-                         const index_type col) const;
+    virtual size_t index(index_type row,
+                         index_type col) const;
 
     static bool getHeaderInfo(std::ifstream& ifs, int* pType = NULL,
                               int* pNumOfRows = NULL, int* pNumOfCols = NULL);

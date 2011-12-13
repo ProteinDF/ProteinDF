@@ -12,6 +12,7 @@
 class DfIntegrals;
 class DfInitialGuess;
 class DfForce;
+class DfScf;
 
 class ProteinDF {
 public:
@@ -42,7 +43,8 @@ protected:
     void stepCreate();
     void stepIntegral();
     virtual void stepGuess();
-    virtual void stepScf();
+    virtual DfScf* createDfScfInstance();
+    void stepScf();
     virtual void stepForce();
 
     virtual void endlogo();

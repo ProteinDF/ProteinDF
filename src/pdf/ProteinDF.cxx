@@ -273,13 +273,22 @@ void ProteinDF::stepGuess()
 void ProteinDF::stepScf()
 {
     this->stepStartTitle("SCF");
+
+    DfScf* pDfScf = this->createDfScfInstance();
+    pDfScf->dfScfMain();
     
-    DfScf dscf(&(this->pdfParam_));
-    dscf.dfScfMain();
-    
-    this->pdfParam_["control"]["SCF_finished"] = true;
+    this->pdfParam_["control"]["scf_converged"] = true;
+
+    delete pDfScf;
+    pDfScf = NULL;
     
     this->stepEndTitle();
+}
+
+DfScf* ProteinDF::createDfScfInstance()
+{
+    DfScf* pObj = new DfScf(&(this->pdfParam_));
+    return pObj;
 }
 
 

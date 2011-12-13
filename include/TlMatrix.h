@@ -303,8 +303,8 @@ protected:
     void clear_usingStandard();
     void clear_usingMemManager();
     
-    virtual size_t index(const index_type row,
-                         const index_type col) const;
+    virtual std::size_t index(index_type row,
+                              index_type col) const;
 
     static bool getHeaderInfo(std::ifstream& ifs, int* pType = NULL,
                               int* pNumOfRows = NULL, int* pNumOfCols = NULL);

@@ -202,8 +202,8 @@ void TlMatrix::resize(const int nRow, const int nCol)
 }
 
 
-std::size_t TlMatrix::index(const index_type row,
-                            const index_type col) const
+std::size_t TlMatrix::index(index_type row,
+                            index_type col) const
 {
     assert((0 <= row) && (row < this->m_nRows));
     assert((0 <= col) && (col < this->m_nCols));

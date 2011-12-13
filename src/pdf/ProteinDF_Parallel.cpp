@@ -104,22 +104,10 @@ DfInitialGuess* ProteinDF_Parallel::getDfInitialGuessObject()
 }
 
 
-void ProteinDF_Parallel::stepScf()
+DfScf* ProteinDF_Parallel::createDfScfInstance()
 {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    if (this->pdfParam_["control"]["SCF_finished"].getBoolean() != true) {
-        this->stepStartTitle("SCF");
-
-        DfScf_Parallel dscf(&(this->pdfParam_));
-        dscf.dfScfMain();
-
-        this->stepEndTitle();
-    } else {
-        this->log_.info(" SCF need not to execute.\n");
-    }
-
-    rComm.barrier();
+    DfScf* pObj = new DfScf_Parallel(&(this->pdfParam_));
+    return pObj;
 }
 
 

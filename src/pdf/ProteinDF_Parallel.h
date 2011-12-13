@@ -24,7 +24,8 @@ protected:
     virtual DfForce* getDfForceObject();
     
     virtual void inputData();
-    virtual void stepScf();
+
+    virtual DfScf* createDfScfInstance();
 
     virtual void startlogo();
     virtual void endlogo();

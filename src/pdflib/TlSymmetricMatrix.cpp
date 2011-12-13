@@ -130,8 +130,8 @@ void TlSymmetricMatrix::resize(const index_type dim)
 }
 
 
-std::size_t TlSymmetricMatrix::index(const index_type row,
-                                     const index_type col) const
+std::size_t TlSymmetricMatrix::index(index_type row,
+                                     index_type col) const
 {
     assert((0 <= row) && (row < this->m_nRows));
     assert((0 <= col) && (col < this->m_nCols));
@@ -139,7 +139,7 @@ std::size_t TlSymmetricMatrix::index(const index_type row,
     if (row < col) {
         std::swap(row, col);
     }
-
+    
     // This class treats 'L' type matrix.
     // Follows means:
     //  index = row + (2 * this->m_nRows - (col +1)) * col / 2;

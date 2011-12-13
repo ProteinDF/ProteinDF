@@ -37,15 +37,13 @@ void PdfKeyword::initialize()
     // MAIN ==============================================================
     item.keyword          = "pdf_param_path";
     item.explanation      = "the file path for ProteinDF parameters.";
-    item.explanationJ     = "";
     item.defaultValue     = "pdfparam.mpac";
     item.syntax           = "*";
-    item.type             = KWD_DEBUG;
+    item.type             = KWD_INTERNAL | KWD_DEBUG;
     this->kwdList_.push_back(item);
 
     item.keyword          = "step_control";
     item.explanation      = "Job scheme of the calculation.";
-    item.explanationJ     = "";
     item.defaultValue     = "create";
     item.syntax           = "(create|integral|guess|scf)+";
     item.type             = KWD_DEFAULT;
@@ -55,14 +53,6 @@ void PdfKeyword::initialize()
     item.explanation      = "Comment of the calcculation. ";
     item.defaultValue     = "";
     item.syntax           = "nil/(none)";
-    item.type             = KWD_DEFAULT;
-    
-    this->kwdList_.push_back(item);
-
-    item.keyword          = "restart";
-    item.explanation      = "The calculation is restarted with the previous result.";
-    item.defaultValue     = "no";
-    item.syntax           = "no/yes";
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);
 
@@ -131,15 +121,13 @@ void PdfKeyword::initialize()
 
     item.keyword          = "parallel_processing_type";
     item.explanation      = "computing method in parallel calculation";
-    //item.defaultValue     = "divide_and_conquer";
-    item.defaultValue     = "MS";
+    item.defaultValue     = "divide_and_conquer";
     item.syntax           = "(divide_and_conquer|DC|master_slave|MS)";
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);
 
     item.keyword          = "cleanup";
     item.explanation      = "clean up intermediate files";
-    item.explanationJ     = "";
     item.defaultValue     = "no";
     item.syntax           = "(yes|no)";
     item.type             = KWD_DEFAULT;
@@ -214,7 +202,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "orbital-overlap-correspondence-first";
     item.explanation      = "skip 1st orbital correspondence to 0th orbital in DfDmatrix";
-    item.explanationJ     = "";
     item.defaultValue     = "off";
     item.syntax           = "on/off";
     item.type             = KWD_DEFAULT;
@@ -236,7 +223,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "orbital-overlap-correspondence-number";
     item.explanation      = "maxmum iteration number by orbital projection method";
-    item.explanationJ     = "";
     item.defaultValue     = "3";
     item.syntax           = "integer";
     item.type             = KWD_DEFAULT;
@@ -328,7 +314,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "show_cache_report";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "no";
     item.syntax           = "(yes|no)";
     item.type             = KWD_DEFAULT;
@@ -336,7 +321,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "new_engine";
     item.explanation      = "using new engine(2011)";
-    item.explanationJ     = "";
     item.defaultValue     = "yes";
     item.syntax           = "(yes|no)";
     item.type             = KWD_HIDDEN;
@@ -394,7 +378,6 @@ void PdfKeyword::initialize()
 
 //     item.keyword          = "convergence";
 //     item.explanation      = "";
-//     item.explanationJ     = "";
 //     item.defaultValue     = "this";
 //     item.syntax           = "this";
 //     item.type             = KWD_DEFAULT;
@@ -500,7 +483,6 @@ void PdfKeyword::initialize()
 
 //     item.keyword          = "level-shift/delta-group-closed";
 //     item.explanation      = "level shift value between closed group";
-//     item.explanationJ     = "";
 //     item.defaultValue     = "0.00";
 //     item.syntax           = "(real)";
 //     item.type             = KWD_DEFAULT;
@@ -508,7 +490,6 @@ void PdfKeyword::initialize()
 
 //     item.keyword          = "level-shift/delta-group-open";
 //     item.explanation      = "level shift value between open group";
-//     item.explanationJ     = "";
 //     item.defaultValue     = "0.00";
 //     item.syntax           = "(real)";
 //     item.type             = KWD_DEFAULT;
@@ -516,7 +497,6 @@ void PdfKeyword::initialize()
 
 //     item.keyword          = "level-shift/delta-group-virtual";
 //     item.explanation      = "level shift value between virtual group";
-//     item.explanationJ     = "";
 //     item.defaultValue     = "0.00";
 //     item.syntax           = "(real)";
 //     item.type             = KWD_DEFAULT;
@@ -524,7 +504,6 @@ void PdfKeyword::initialize()
 
 //     item.keyword          = "scf-acceleration/diis/type";
 //     item.explanation      = "";
-//     item.explanationJ     = "";
 //     item.defaultValue     = "pulay";
 //     item.syntax           = "pulay/sellers";
 //     item.type             = KWD_DEFAULT;
@@ -532,7 +511,6 @@ void PdfKeyword::initialize()
 
 //     item.keyword          = "scf-acceleration/diis/property";
 //     item.explanation      = "";
-//     item.explanationJ     = "";
 //     item.defaultValue     = "fock";
 //     item.syntax           = "fock/density";
 //     item.type             = KWD_DEFAULT;
@@ -610,7 +588,6 @@ void PdfKeyword::initialize()
     
     item.keyword          = "scf-memory-saving";
     item.explanation      = "yes : use less memories and increase the times of calculation of three-index integrals";
-    item.explanationJ     = "";
     item.defaultValue     = "no";
     item.syntax           = "yes/no";
     item.type             = KWD_DEFAULT;
@@ -660,7 +637,6 @@ void PdfKeyword::initialize()
 
 //     item.keyword          = "incDFT";
 //     item.explanation      = "";
-//     item.explanationJ     = "incDFT法を用いる。";
 //     item.defaultValue     = "yes";
 //     item.syntax           = "(yes|no)";
 //     item.type             = KWD_DEFAULT;
@@ -669,7 +645,6 @@ void PdfKeyword::initialize()
     // internal ================================================================
     item.keyword          = "geometry";
     item.explanation      = "set geometry.";
-    item.explanationJ     = "";
     item.defaultValue     = "cartesian";
     item.syntax           = "cartesian/file";
     item.type             = KWD_HIDDEN;
@@ -677,7 +652,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "coordinates";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "";
     item.syntax           = "";
     item.type             = KWD_HIDDEN;
@@ -685,7 +659,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "basis_sets";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "";
     item.syntax           = "";
     item.type             = KWD_HIDDEN;
@@ -693,7 +666,6 @@ void PdfKeyword::initialize()
     
     item.keyword          = "basis_sets_j";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "";
     item.syntax           = "";
     item.type             = KWD_HIDDEN;
@@ -701,7 +673,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "basis_sets_k";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "";
     item.syntax           = "";
     item.type             = KWD_HIDDEN;
@@ -709,7 +680,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "independent-orbital-number";
     item.explanation      = "number of linearly independent orbitals";
-    item.explanationJ     = "";
     item.defaultValue     = "0";
     item.syntax           = "(integer > 0)";
     item.type             = KWD_HIDDEN;
@@ -717,7 +687,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "xc-potential/gxalpha/alpha-value";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "0.7";
     item.syntax           = "real";
     item.type             = KWD_HIDDEN;
@@ -725,7 +694,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "myu-nyu-zero";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "no";
     item.syntax           = "(yes|no)";
     item.type             = KWD_HIDDEN;
@@ -733,7 +701,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "guess/nsp-ppq";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "nil";
     item.syntax           = "nil/stored";
     item.type             = KWD_HIDDEN;
@@ -741,7 +708,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "guess/sp-ppq";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "nil";
     item.syntax           = "nil/stored";
     item.type             = KWD_HIDDEN;
@@ -749,7 +715,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "guess/trans-angle-threshold";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "1.0 1.5 20 30";
     item.syntax           = "nil/stored";
     item.type             = KWD_HIDDEN;
@@ -757,7 +722,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "guess/make-myu-nyu";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "meth0";
     item.syntax           = "meth0/meth1/meth2/meth3/meth4";
     item.type             = KWD_HIDDEN;
@@ -765,7 +729,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "guess/vct-normalize";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "ON OFF OFF";
     item.syntax           = "";
     item.type             = KWD_HIDDEN;
@@ -773,7 +736,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "guess/part-normalize";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "nil";
     item.syntax           = "nil/stored";
     item.type             = KWD_HIDDEN;
@@ -781,7 +743,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "guess/user-vector";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "nil";
     item.syntax           = "(nil|stored)";
     item.type             = KWD_HIDDEN;
@@ -790,7 +751,6 @@ void PdfKeyword::initialize()
     // internal variables ------------------------------------------------------
     item.keyword          = "num_of_atoms";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "";
     item.syntax           = "";
     item.type             = KWD_INTERNAL;
@@ -798,7 +758,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "num_of_dummy_atoms";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "";
     item.syntax           = "";
     item.type             = KWD_INTERNAL;
@@ -806,7 +765,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "num_of_AOs";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "";
     item.syntax           = "";
     item.type             = KWD_INTERNAL;
@@ -814,7 +772,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "num_of_MOs";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "";
     item.syntax           = "";
     item.type             = KWD_INTERNAL;
@@ -822,7 +779,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "num_of_auxCDs";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "";
     item.syntax           = "";
     item.type             = KWD_INTERNAL;
@@ -830,7 +786,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "num_of_auxXCs";
     item.explanation      = "";
-    item.explanationJ     = "";
     item.defaultValue     = "";
     item.syntax           = "";
     item.type             = KWD_INTERNAL;
@@ -838,7 +793,6 @@ void PdfKeyword::initialize()
 
     item.keyword          = "TE";
     item.explanation      = "history of total energy";
-    item.explanationJ     = "";
     item.defaultValue     = "";
     item.syntax           = "";
     item.type             = KWD_INTERNAL;
@@ -861,7 +815,6 @@ void PdfKeyword::initialize()
     
     item.keyword          = "debug/save_forces";
     item.explanation      = "save the force of each term.";
-    item.explanationJ     = "";
     item.defaultValue     = "no";
     item.syntax           = "(yes|no)";
     item.type             = KWD_HIDDEN;
@@ -948,9 +901,8 @@ std::string PdfKeyword::getCSV_J(bool showHiddenItem) const
             (showHiddenItem == false)) {
             continue;
         }
-        output += TlUtils::format("\"%s\", \"%s\", \"%s\", \"%s\"\n",
+        output += TlUtils::format("\"%s\", \"%s\", \"%s\"\n",
                                   item.keyword.c_str(),
-                                  item.explanationJ.c_str(),
                                   item.defaultValue.c_str(),
                                   item.syntax.c_str());
     }
