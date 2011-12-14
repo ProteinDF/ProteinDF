@@ -25,6 +25,7 @@ libpdf_la_SOURCES = \
 	DfObject.h		DfObject.cpp			\
 	DfDiffDensityMatrix.h	DfDiffDensityMatrix.cpp		\
 	DfCalcGrid.h		DfCalcGrid.cpp			\
+	DfCD.h			DfCD.cpp			\
 	DfConvcheck.h		DfConvcheck.cxx			\
 	DfConverge.h		DfConverge.cpp			\
 	DfConverge_Damping.h	DfConverge_Damping.cpp		\
