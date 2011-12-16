@@ -64,9 +64,7 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
         CnErr.abort();
     }
 
-    //const int dNumOfAtoms = this->m_nNumOfAtoms;
     const int dNumOfAtoms = this->numOfRealAtoms_;
-    
     this->coord_.resize(dNumOfAtoms);
     for (int i = 0; i < dNumOfAtoms; ++i) {
         this->coord_[i] = this->flGeometry_.getCoordinate(i);
@@ -81,6 +79,17 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
                 std::cerr << " distance < 1E-10: " << mc << " th atom and " << nc << " th atom." << std::endl;
             }
             this->distanceMatrix_(mc, nc) = dist;
+        }
+    }
+
+    this->numOfColsOfGrdMat_ = 4; // x, y, z, weight
+    {
+        const int coef = (this->m_nMethodType == METHOD_RKS) ? 1 : 2;
+        DfXCFunctional dfXcFunctional(this->pPdfParam_);
+        if (dfXcFunctional.getFunctionalType() == DfXCFunctional::LDA) {
+            this->numOfColsOfGrdMat_ += coef * 1; // rho only
+        } else if (dfXcFunctional.getFunctionalType() == DfXCFunctional::GGA) {
+            this->numOfColsOfGrdMat_ += coef * 4; // rho, gradRhoX, gradRhoY, gradRhoZ
         }
     }
 }
@@ -109,27 +118,17 @@ int DfGenerateGrid::dfGrdMain()
 
 void DfGenerateGrid::makeTable()
 {
-    // Fl_Geometry fg(Fl_Geometry::getDefaultFileName());
-
-    // Fl_Gto_Orbital FlGtoOrb;
-    // Fl_Gto_Density fgd;
-    // Fl_Gto_Xcpot fgx;
-
-    // グリッド省略の範囲Rの決定
-    {
-
-        TlOrbitalInfo_Density orbInfoAuxCD((*this->pPdfParam_)["coordinates"],
-                                           (*this->pPdfParam_)["basis_sets_j"]);
-        const int maxNumOfAuxCDs = orbInfoAuxCD.getNumOfOrbitals();
-
-        double dMaxExpAlpha = 0.0;
-        for (int i = 0; i < maxNumOfAuxCDs; ++i) {
-            dMaxExpAlpha = std::max(dMaxExpAlpha, orbInfoAuxCD.getExponent(i, 0));
-        }
-
-        const double r = std::max((TOOBIG / dMaxExpAlpha), 200.0);
-        this->maxRadii_ = std::sqrt(r);
+    TlOrbitalInfo_Density orbInfoAuxCD((*this->pPdfParam_)["coordinates"],
+                                       (*this->pPdfParam_)["basis_sets_j"]);
+    const int maxNumOfAuxCDs = orbInfoAuxCD.getNumOfOrbitals();
+    
+    double dMaxExpAlpha = 0.0;
+    for (int i = 0; i < maxNumOfAuxCDs; ++i) {
+        dMaxExpAlpha = std::max(dMaxExpAlpha, orbInfoAuxCD.getExponent(i, 0));
     }
+    
+    const double r = std::max((TOOBIG / dMaxExpAlpha), 200.0);
+    this->maxRadii_ = std::sqrt(r);
 }
 
 void DfGenerateGrid::setCellPara()
@@ -592,18 +591,18 @@ void DfGenerateGrid::setCellPara()
 
 void DfGenerateGrid::generateGrid()
 {
-    int numOfCols = 4; // x, y, z, weight
-    const int coef = (this->m_nMethodType == METHOD_RKS) ? 1 : 2;
-    {
-        DfXCFunctional dfXcFunctional(this->pPdfParam_);
-        if (dfXcFunctional.getFunctionalType() == DfXCFunctional::LDA) {
-            numOfCols += coef * 1; // rho only
-        } else if (dfXcFunctional.getFunctionalType() == DfXCFunctional::GGA) {
-            numOfCols += coef * 4; // rho, gradRhoX, gradRhoY, gradRhoZ
-        }
-    }
+    // int numOfCols = 4; // x, y, z, weight
+    // const int coef = (this->m_nMethodType == METHOD_RKS) ? 1 : 2;
+    // {
+    //     DfXCFunctional dfXcFunctional(this->pPdfParam_);
+    //     if (dfXcFunctional.getFunctionalType() == DfXCFunctional::LDA) {
+    //         numOfCols += coef * 1; // rho only
+    //     } else if (dfXcFunctional.getFunctionalType() == DfXCFunctional::GGA) {
+    //         numOfCols += coef * 4; // rho, gradRhoX, gradRhoY, gradRhoZ
+    //     }
+    // }
     
-    TlMatrix gridMtx(1, numOfCols);
+    //TlMatrix gridMtx(1, numOfCols);
     GridDataManager gdm(this->gridDataFilePath_);
 
     std::size_t numOfGrids = 0;
@@ -625,17 +624,18 @@ void DfGenerateGrid::generateGrid()
         gdm.setData(atom, GridDataManager::COORD_Z, coordZ);
         gdm.setData(atom, GridDataManager::GRID_WEIGHT, weight);
 
-        const std::size_t increment = weight.size();
-        gridMtx.resize(numOfGrids + increment, numOfCols);
-        for (std::size_t i = 0; i < increment; ++i) {
-            gridMtx.set(numOfGrids, 0, coordX[i]);
-            gridMtx.set(numOfGrids, 1, coordY[i]);
-            gridMtx.set(numOfGrids, 2, coordZ[i]);
-            gridMtx.set(numOfGrids, 3, weight[i]);
-            ++numOfGrids;
-        }
+        // const std::size_t increment = weight.size();
+        // gridMtx.resize(numOfGrids + increment, numOfCols);
+        // for (std::size_t i = 0; i < increment; ++i) {
+        //     gridMtx.set(numOfGrids, 0, coordX[i]);
+        //     gridMtx.set(numOfGrids, 1, coordY[i]);
+        //     gridMtx.set(numOfGrids, 2, coordZ[i]);
+        //     gridMtx.set(numOfGrids, 3, weight[i]);
+        //     ++numOfGrids;
+        // }
     }
-    this->saveGridMatrix(gridMtx);
+
+    this->saveGridMatrix(this->grdMat_);
 }
 
 
@@ -811,8 +811,9 @@ void DfGenerateGrid::generateGrid_SG1(const int iAtom,
 
     const int atomnum = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtom(iAtom));
     const double rM = this->radiusList_[atomnum];
+    const double inv_rM = 1.0 / rM;
 
-    // Set the partitioning parameters Alfa used in the SG-1 grid
+    // Set the partitioning parameters alpha used in the SG-1 grid
     // set default value; for after atom #18
     double alpha0 = 0.0;
     double alpha1 = 0.0;
@@ -838,15 +839,15 @@ void DfGenerateGrid::generateGrid_SG1(const int iAtom,
     // Loop for the grid number of radial vector
     const int radvec_max = this->nrgrid;
     for (int radvec = 0; radvec < radvec_max; ++radvec) {
-        const double r0 = rM * std::pow(radvec + 1.0, 2.0) * pow(radvec_max - radvec, -2.0);
+        const double r0 = rM * TlMath::pow(radvec + 1.0, 2) * TlMath::pow(radvec_max - radvec, -2);
         const double weight = 2.0 * rM * rM * rM * (radvec_max + 1.0)
-                              * std::pow(radvec + 1.0, 5.0)
-                              * std::pow(radvec_max - radvec, -7.0)
+                              * TlMath::pow(radvec + 1.0, 5)
+                              * TlMath::pow(radvec_max - radvec, -7)
                               * 4.0 * M_PI;
 
         // Set the partitioning area
         int Ogrid = 86;
-        const double judge = r0 / rM;
+        const double judge = r0 * inv_rM;
         if (judge <= alpha0) {
             // (0, alpha0)
             Ogrid = 6;
@@ -892,6 +893,7 @@ void DfGenerateGrid::generateGrid_SG1(const int iAtom,
             for (int mc = 0; mc < numOfAtoms; ++mc) {
                 double Psuij = 1.0;
                 for (int n = 0; n < numOfAtoms; ++n) {
+                    // 隣接番号の原子からサーチ
                     int nc = iAtom + n;
                     if (nc >= numOfAtoms) {
                         nc -= numOfAtoms;
@@ -939,7 +941,6 @@ void DfGenerateGrid::generateGrid_SG1(const int iAtom,
             }
         }
     }
-
     ++GPthrnum;
 
     // save
@@ -953,6 +954,17 @@ void DfGenerateGrid::generateGrid_SG1(const int iAtom,
     }
     weightvec.resize(GPthrnum);
     *pWeight = weightvec;
+
+    index_type row = this->grdMat_.getNumOfRows();
+    this->grdMat_.resize(row + GPthrnum, this->numOfColsOfGrdMat_);
+    for (int i = 0; i < GPthrnum; ++i) {
+        this->grdMat_.set(row, 0, crdpoint[i].x());
+        this->grdMat_.set(row, 1, crdpoint[i].y());
+        this->grdMat_.set(row, 2, crdpoint[i].z());
+        this->grdMat_.set(row, 3, weightvec[i]);
+        ++row;
+    }
+    
 }
 
 
@@ -973,7 +985,7 @@ void DfGenerateGrid::points2(const int nOgrid, const double r0, const TlPosition
     }
 
     if ((this->m_gridType == COARSE) ||
-            (this->m_gridType == FINE)) {
+        (this->m_gridType == FINE)) {
         std::cout << "Sorry, do not support now." << std::endl;
     } else if (this->m_gridType == SG_1) {
         //  SG-1 Metod

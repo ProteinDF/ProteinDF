@@ -4,6 +4,7 @@
 #include <string>
 #include "DfObject.h"
 #include "TlPosition.h"
+#include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
 #include "Fl_Geometry.h"
 
@@ -58,20 +59,14 @@ protected:
         SG_1
     };
 
-    //int outlevel;
-    //int pout;
-
+protected:
     std::string gridtype;
-//     std::string nyuswtch;
-
     std::string xctype;
-
     GridType m_gridType;
 
     int nrgrid; /// grid point number or diagonal
     int nOgrid; /// grid point number of Omega
 
-protected:
     const Fl_Geometry flGeometry_;
 
     /// GridDataFileのパス
@@ -91,6 +86,15 @@ protected:
     std::vector<double> wGL_;
 
     double weightCutoff_;
+
+    /// グリッド情報行列
+    /// 行方向: grid
+    /// 0, 1, 2列: x, y, z
+    /// 3列: weight
+    TlMatrix grdMat_;
+
+    /// グリッド情報行列の列数
+    int numOfColsOfGrdMat_;
 };
 
 #endif // DFGENERATEGRID_H

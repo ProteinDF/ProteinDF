@@ -218,6 +218,14 @@ protected:
 
 protected:
     // experimental code -------------------------------------------------------
+    double calcXCIntegForFockAndEnergy_usemat(const TlSymmetricMatrix& P,
+                                              DfFunctional_GGA* pFunctional,
+                                              TlSymmetricMatrix* pF,
+                                              TlMatrix* pGridMatrix);
+    double calcXCIntegForFockAndEnergy3(const TlSymmetricMatrix& P,
+                                        DfFunctional_GGA* pFunctional,
+                                        TlSymmetricMatrix* pF);
+
     double calcXCIntegForFockAndEnergy2(const TlSymmetricMatrix& P,
                                         DfFunctional_LDA* pFunctional,
                                         TlSymmetricMatrix* pF);
