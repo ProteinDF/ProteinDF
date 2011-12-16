@@ -591,19 +591,7 @@ void DfGenerateGrid::setCellPara()
 
 void DfGenerateGrid::generateGrid()
 {
-    // int numOfCols = 4; // x, y, z, weight
-    // const int coef = (this->m_nMethodType == METHOD_RKS) ? 1 : 2;
-    // {
-    //     DfXCFunctional dfXcFunctional(this->pPdfParam_);
-    //     if (dfXcFunctional.getFunctionalType() == DfXCFunctional::LDA) {
-    //         numOfCols += coef * 1; // rho only
-    //     } else if (dfXcFunctional.getFunctionalType() == DfXCFunctional::GGA) {
-    //         numOfCols += coef * 4; // rho, gradRhoX, gradRhoY, gradRhoZ
-    //     }
-    // }
-    
-    //TlMatrix gridMtx(1, numOfCols);
-    GridDataManager gdm(this->gridDataFilePath_);
+    //GridDataManager gdm(this->gridDataFilePath_);
 
     std::size_t numOfGrids = 0;
     const int endAtom = this->numOfRealAtoms_;
@@ -619,20 +607,10 @@ void DfGenerateGrid::generateGrid()
             this->generateGrid(atom, &coordX, &coordY, &coordZ, &weight);
         }
 
-        gdm.setData(atom, GridDataManager::COORD_X, coordX);
-        gdm.setData(atom, GridDataManager::COORD_Y, coordY);
-        gdm.setData(atom, GridDataManager::COORD_Z, coordZ);
-        gdm.setData(atom, GridDataManager::GRID_WEIGHT, weight);
-
-        // const std::size_t increment = weight.size();
-        // gridMtx.resize(numOfGrids + increment, numOfCols);
-        // for (std::size_t i = 0; i < increment; ++i) {
-        //     gridMtx.set(numOfGrids, 0, coordX[i]);
-        //     gridMtx.set(numOfGrids, 1, coordY[i]);
-        //     gridMtx.set(numOfGrids, 2, coordZ[i]);
-        //     gridMtx.set(numOfGrids, 3, weight[i]);
-        //     ++numOfGrids;
-        // }
+        // gdm.setData(atom, GridDataManager::COORD_X, coordX);
+        // gdm.setData(atom, GridDataManager::COORD_Y, coordY);
+        // gdm.setData(atom, GridDataManager::COORD_Z, coordZ);
+        // gdm.setData(atom, GridDataManager::GRID_WEIGHT, weight);
     }
 
     this->saveGridMatrix(this->grdMat_);
