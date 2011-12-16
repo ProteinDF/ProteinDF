@@ -220,39 +220,49 @@ void DfObject::setParam(const TlSerializeData& data)
     
     // setup
     TlSerializeData& paramFileBaseName = (*(this->pPdfParam_))["control"]["file_base_name"];
-    paramFileBaseName["Hpq_matrix"]    = "fl_Mtr_Hpq.matrix";
-    paramFileBaseName["Hpq2_matrix"]   = "fl_Mtr_Hpq2.matrix";
-    paramFileBaseName["Spq_matrix"]    = "fl_Mtr_Spq.matrix";
-    paramFileBaseName["Sab_matrix"]    = "fl_Mtr_Sab.matrix";
-    paramFileBaseName["Sab2_matrix"]   = "fl_Mtr_Sab2.matrix";
-    paramFileBaseName["Sgd_matrix"]    = "fl_Mtr_Sgd.matrix";
+    paramFileBaseName["Hpq_matrix"]    = "Hpq.mat";
+    paramFileBaseName["Hpq2_matrix"]   = "Hpq2.mat";
+    paramFileBaseName["Spq_matrix"]    = "Spq.mat";
+    paramFileBaseName["Sab_matrix"]    = "Sab.mat";
+    paramFileBaseName["Sab2_matrix"]   = "Sab2.mat";
+    paramFileBaseName["Sgd_matrix"]    = "Sgd.mat";
     if (paramFileBaseName["SabInv_matrix"].getStr().empty() == true) {
-        paramFileBaseName["SabInv_matrix"] = "fl_Mtr_Sabinv.matrix";
+        paramFileBaseName["SabInv_matrix"] = "Sabinv.mat";
     }
-    paramFileBaseName["SgdInv_matrix"] = "fl_Mtr_Sgdinv.matrix";
-    paramFileBaseName["X_matrix"]      = "fl_Mtr_X.matrix";
-    paramFileBaseName["Xinv_matrix"]   = "fl_Mtr_InvX.matrix";
-    if (paramFileBaseName["diff_matrix"].getStr().empty() == true) {
-        paramFileBaseName["diff_matrix"] = "diff_matrix";
+    paramFileBaseName["SgdInv_matrix"] = "Sgdinv.mat";
+    paramFileBaseName["X_matrix"]      = "X.mat";
+    paramFileBaseName["Xinv_matrix"]   = "Xinv.mat";
+    if (paramFileBaseName["diff_density_matrix"].getStr().empty() == true) {
+        paramFileBaseName["diff_density_matrix"] = "dP.mat";
     }
+
     if (paramFileBaseName["Ppq_matrix"].getStr().empty() == true) {
-        paramFileBaseName["Ppq_matrix"] = "fl_Mtr_Ppq.matrix";
+        paramFileBaseName["Ppq_matrix"] = "Ppq%s.mat";
     }
-    paramFileBaseName["P1pq_matrix"]    = "fl_Mtr_P1pq.matrix";
-    paramFileBaseName["P2pq_matrix"]    = "fl_Mtr_P2pq.matrix";
-    paramFileBaseName["HFx_matrix"]     = "fl_Mtr_HFx.matrix";
-    paramFileBaseName["Fpq_matrix"]     = "fl_Mtr_Fpq.matrix";
-    paramFileBaseName["Fprime_matrix"]  = "fl_Mtr_Fprime.matrix";
-    paramFileBaseName["Fxc_matrix"]     = "fl_Mtr_Fxc.matrix";
-    paramFileBaseName["FxcPure_matrix"] = "fl_Mtr_FxcPure.matrix";
-    paramFileBaseName["J_matrix"]       = "fl_Mtr_J.matrix";
-    paramFileBaseName["C_matrix"]       = "fl_Mtr_C.matrix";
-    paramFileBaseName["Cprime_matrix"]  = "fl_Mtr_Cprime.matrix";
-    paramFileBaseName["grid_matrix"]    = "grid.mtx";
+    paramFileBaseName["P1pq_matrix"]    = "P1pq%s.mat";
+    paramFileBaseName["P2pq_matrix"]    = "P2pq%s.mat";
+    paramFileBaseName["HFx_matrix"]     = "HFx%s.mat";
+    paramFileBaseName["Fpq_matrix"]     = "Fpq%s.mat";
+    paramFileBaseName["Fprime_matrix"]  = "Fprime%s.mat";
+    paramFileBaseName["Fxc_matrix"]     = "Fxc%s.mat";
+    paramFileBaseName["FxcPure_matrix"] = "FxcPure%s.mat";
+    paramFileBaseName["J_matrix"]       = "J%s.mat";
+    paramFileBaseName["C_matrix"]       = "C%s.mat";
+    paramFileBaseName["Cprime_matrix"]  = "Cprime%s.mat";
+    paramFileBaseName["grid_matrix"]    = "grid.mat";
     paramFileBaseName["Talpha.vtr"]     = "Talpha.vtr";
 
     if (paramFileBaseName["rho_vector"].getStr().empty() == true) {
-        paramFileBaseName["rho_vector"] = "rho.vtr";
+        paramFileBaseName["rho_vector"] = "rho%s.vtr";
+    }
+    if (paramFileBaseName["myu_vector"].getStr().empty() == true) {
+        paramFileBaseName["myu_vector"] = "myu%s.vtr";
+    }
+    if (paramFileBaseName["nyu_vector"].getStr().empty() == true) {
+        paramFileBaseName["nyu_vector"] = "nyu%s.vtr";
+    }
+    if (paramFileBaseName["eigenvalues"].getStr().empty() == true) {
+        paramFileBaseName["eigenvalues"] = "eigenvalues%s.vtr";
     }
 }
 
@@ -324,16 +334,18 @@ void DfObject::loggerEndTitle(const std::string& stepName, const char lineChar) 
 std::string DfObject::makeFilePath(const std::string& baseFileName,
                                    const std::string& suffix) const
 {
-    const std::string base = (*(this->pPdfParam_))["control"]["file_base_name"][baseFileName].getStr();
+    std::string base = (*(this->pPdfParam_))["control"]["file_base_name"][baseFileName].getStr();
+    if (suffix.empty() != true) {
+        base = TlUtils::format(base.c_str(), suffix.c_str());
+    }
+
     std::string path;
     if (this->isSaveDistributedMatrixToLocalDisk_ == true) {
         path = this->localDiskPath_ + "/" + base + "." + TlUtils::xtos(this->rank_);
     } else {
         path = DfObject::m_sWorkDirPath + "/" + base;
     }
-    if (suffix.empty() != true) {
-        path += ("." + suffix);
-    }
+
     return path;
 }
 
@@ -414,20 +426,6 @@ std::string DfObject::getOccupationPath(const RUN_TYPE runType)
     return sFileName;
 }
 
-std::string DfObject::getEigvalPath(RUN_TYPE runType, int iteration)
-{
-    std::string filePath = DfObject::m_sWorkDirPath + "/fl_Vct_Eigval";
-    if (runType == RUN_UKS_ALPHA) {
-        filePath += "a";
-    } else if (runType == RUN_UKS_BETA) {
-        filePath += "b";
-    }
-    filePath += TlUtils::xtos(iteration);
-
-    return filePath;
-}
-
-
 std::string DfObject::getGridDataFilePath() const
 {
     return DfObject::m_sWorkDirPath + "/grids.dat";
@@ -442,7 +440,7 @@ std::string DfObject::getGridMatrixPath() const
 
 std::string DfObject::getDiffDensityMatrixPath(const RUN_TYPE runType, const int iteration) const
 {
-    return this->makeFilePath("diff_matrix",
+    return this->makeFilePath("diff_density_matrix",
                               DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
@@ -545,42 +543,14 @@ std::string DfObject::getRhoPath(const RUN_TYPE nRunType, const int nIteration) 
 
 std::string DfObject::getMyuPath(const RUN_TYPE nRunType, const int nIteration) const
 {
-    std::string sMyuPath = DfObject::m_sWorkDirPath + "/fl_Vct_Myu";
-
-    switch (nRunType) {
-    case RUN_UKS_ALPHA:
-        sMyuPath += "a";
-        break;
-    case RUN_UKS_BETA:
-        sMyuPath += "b";
-        break;
-    default:
-        break;
-    }
-
-    sMyuPath += TlUtils::xtos(nIteration);
-
-    return sMyuPath;
+    return this->makeFilePath("myu_vector",
+                              DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
 std::string DfObject::getNyuPath(const RUN_TYPE nRunType, const int nIteration) const
 {
-    std::string sNyuPath = DfObject::m_sWorkDirPath + "/fl_Vct_Nyu";
-
-    switch (nRunType) {
-    case RUN_UKS_ALPHA:
-        sNyuPath += "a";
-        break;
-    case RUN_UKS_BETA:
-        sNyuPath += "b";
-        break;
-    default:
-        break;
-    }
-
-    sNyuPath += TlUtils::xtos(nIteration);
-
-    return sNyuPath;
+    return this->makeFilePath("myu_vector",
+                              DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
 std::string DfObject::getTalphaPath(const RUN_TYPE runType, const int iteration) const
@@ -588,5 +558,12 @@ std::string DfObject::getTalphaPath(const RUN_TYPE runType, const int iteration)
     return this->makeFilePath("Talpha.vtr",
                               DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 
+}
+
+std::string DfObject::getEigenvaluesPath(const RUN_TYPE runType,
+                                         const int iteration) const
+{
+    return this->makeFilePath("eigenvalues",
+                              DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 

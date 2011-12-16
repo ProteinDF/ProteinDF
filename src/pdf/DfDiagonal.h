@@ -34,7 +34,7 @@ void DfDiagonal::main(const DfObject::RUN_TYPE runType, const std::string& fragn
     Fprime.diagonal(pEigVal, pEigVec);
 
     // save eigval
-    pEigVal->save(this->getEigvalPath(runType, this->m_nIteration));
+    pEigVal->save(this->getEigenvaluesPath(runType, this->m_nIteration));
 
     // save eigvec
     this->saveCprimeMatrix(runType, this->m_nIteration, fragname, *pEigVec);

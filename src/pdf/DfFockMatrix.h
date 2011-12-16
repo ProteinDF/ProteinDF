@@ -135,8 +135,8 @@ void DfFockMatrix::mainDIRECT_ROKS()
     } else {
         {
             VectorType Rhoa, Rhob;
-            Rhoa.load("fl_Work/fl_Vct_Roua" + TlUtils::xtos(this->m_nIteration));
-            Rhob.load("fl_Work/fl_Vct_Roub" + TlUtils::xtos(this->m_nIteration));
+            Rhoa.load(this->getRhoPath(RUN_UKS_ALPHA, this->m_nIteration));
+            Rhob.load(this->getRhoPath(RUN_UKS_BETA,  this->m_nIteration));
             assert(Rhoa.getSize() == Rhob.getSize());
             assert(Rhoa.getSize() == static_cast<TlVector::size_type>(this->m_nNumOfAux));
 
@@ -144,16 +144,16 @@ void DfFockMatrix::mainDIRECT_ROKS()
         }
 
         // read Myu
-        Myua.load("fl_Work/fl_Vct_Myua" + TlUtils::xtos(this->m_nIteration));
-        Myub.load("fl_Work/fl_Vct_Myub" + TlUtils::xtos(this->m_nIteration));
+        Myua.load(this->getMyuPath(RUN_UKS_ALPHA, this->m_nIteration));
+        Myub.load(this->getMyuPath(RUN_UKS_BETA,  this->m_nIteration));
         assert(Myua.getSize() == Myub.getSize());
 
         // read previous Rou
         VectorType prevRho;
         if (this->m_nIteration > 1) {
             VectorType prevRhoa, prevRhob;
-            prevRhoa.load("fl_Work/fl_Vct_Roua" + TlUtils::xtos(this->m_nIteration -1));
-            prevRhoa.load("fl_Work/fl_Vct_Roub" + TlUtils::xtos(this->m_nIteration -1));
+            prevRhoa.load(this->getRhoPath(RUN_UKS_ALPHA, this->m_nIteration -1));
+            prevRhoa.load(this->getRhoPath(RUN_UKS_BETA,  this->m_nIteration -1));
             assert(prevRhoa.getSize() == prevRhob.getSize());
             assert(prevRhoa.getSize() == static_cast<TlVector::size_type>(this->m_nNumOfAux));
 
@@ -163,8 +163,8 @@ void DfFockMatrix::mainDIRECT_ROKS()
         // read previous Myu
         VectorType prevMyua, prevMyub;
         if (this->m_nIteration > 1) {
-            Myua.load("fl_Work/fl_Vct_Myua" + TlUtils::xtos(this->m_nIteration -1));
-            Myub.load("fl_Work/fl_Vct_Myub" + TlUtils::xtos(this->m_nIteration -1));
+            Myua.load(this->getMyuPath(RUN_UKS_ALPHA, this->m_nIteration -1));
+            Myub.load(this->getMyuPath(RUN_UKS_BETA,  this->m_nIteration -1));
             assert(Myua.getSize() == Myub.getSize());
             assert(Myua.getSize() == static_cast<TlVector::size_type>(this->m_nNumOfAux));
         }

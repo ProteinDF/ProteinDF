@@ -188,7 +188,7 @@ TlMatrix DfForce::getEnergyWeightedDensityMatrix(RUN_TYPE runType)
     assert(eps.getSize() == numOfMOs);
     {
         TlVector eig;
-        eig.load(this->getEigvalPath(runType, iteration));
+        eig.load(this->getEigenvaluesPath(runType, iteration));
         assert(eig.getSize() == numOfMOs);
 
         // TODO: 高速化

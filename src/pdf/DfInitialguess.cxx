@@ -69,15 +69,15 @@ int DfInitialguess::dfGusMain()
             const int niter = 1;
             // read myu vector
             TlVector myu;
-            myu.load("fl_Work/fl_Vct_Myu" + TlUtils::xtos(niter));
+            myu.load(this->getMyuPath(RUN_RKS, niter));
             myu /= 1000.0;
-            myu.save("fl_Work/fl_Vct_Myu" + TlUtils::xtos(niter));
+            myu.save(this->getMyuPath(RUN_RKS, niter));
 
             // read nyu vector
             TlVector nyu;
-            nyu.load("fl_Work/fl_Vct_Nyu" + TlUtils::xtos(niter));
+            nyu.load(this->getNyuPath(RUN_RKS, niter));
             nyu /= 1000.0;
-            nyu.save("fl_Work/fl_Vct_Myu" + TlUtils::xtos(niter));
+            nyu.save(this->getNyuPath(RUN_RKS, niter));
         }
     }
 
@@ -1573,17 +1573,15 @@ void DfInitialguess::callDensityfitting()
 
     if (scftype==NSP) {
         TlVector rho1;
-        rho1.load("fl_Work/fl_Vct_Rou1");
-        rho1.save("fl_Work/fl_Vct_Rou0");
+        rho1.load(this->getRhoPath(RUN_RKS, 1));
+        rho1.save(this->getRhoPath(RUN_RKS, 0));
     } else if (scftype == SP) {
-        {
-            TlVector rho1;
-            rho1.load("fl_Work/fl_Vct_Roua1");
-            rho1.save("fl_Work/fl_Vct_Roua0");
-
-            rho1.load("fl_Work/fl_Vct_Roub1");
-            rho1.save("fl_Work/fl_Vct_Roub0");
-        }
+        TlVector rho1;
+        rho1.load(this->getRhoPath(RUN_UKS_ALPHA, 1));
+        rho1.save(this->getRhoPath(RUN_UKS_ALPHA, 0));
+        
+        rho1.load(this->getRhoPath(RUN_UKS_BETA, 1));
+        rho1.save(this->getRhoPath(RUN_UKS_BETA, 0));
     }
 }
 

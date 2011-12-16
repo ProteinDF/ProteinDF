@@ -245,14 +245,11 @@ void DfCalcGrid::calcXCInteg(TlVector& tmpVectorA, TlVector& tmpVectorB, TlVecto
     } else {
         switch (this->m_nMethodType) {
         case METHOD_RKS:
-            //RhoAlphaA.load("fl_Work/fl_Vct_Rou" + TlUtils::xtos(this->m_nIteration));
             RhoAlphaA.load(this->getRhoPath(RUN_RKS, this->m_nIteration));
             break;
 
         case METHOD_UKS:
         case METHOD_ROKS:
-            //RhoAlphaA.load("fl_Work/fl_Vct_Roua" + TlUtils::xtos(this->m_nIteration));
-            //RhoAlphaB.load("fl_Work/fl_Vct_Roub" + TlUtils::xtos(this->m_nIteration));
             RhoAlphaA.load(this->getRhoPath(RUN_UKS_ALPHA, this->m_nIteration));
             RhoAlphaB.load(this->getRhoPath(RUN_UKS_BETA, this->m_nIteration));
             break;
@@ -1305,7 +1302,7 @@ void DfCalcGrid::calcXCcoef_RKS(const TlVector& tmpVector, const TlVector& eTmpV
 
     {
         TlVector myuGamma = Sgdinv * tmpVector;
-        myuGamma.save("fl_Work/fl_Vct_Myu" + TlUtils::xtos(this->m_nIteration));
+        myuGamma.save(this->getMyuPath(RUN_RKS, this->m_nIteration));
     }
 
     if (xc > 0) {
@@ -1326,9 +1323,9 @@ void DfCalcGrid::calcXCcoef_UKS(const TlVector& tmpVectorA, const TlVector& tmpV
 
     {
         TlVector myuGammaA = Sgdinv * tmpVectorA;
-        myuGammaA.save("fl_Work/fl_Vct_Myua" + TlUtils::xtos(this->m_nIteration));
+        myuGammaA.save(this->getMyuPath(RUN_UKS_ALPHA, this->m_nIteration));
         TlVector myuGammaB = Sgdinv * tmpVectorB;
-        myuGammaB.save("fl_Work/fl_Vct_Myub" + TlUtils::xtos(this->m_nIteration));
+        myuGammaB.save(this->getMyuPath(RUN_UKS_BETA,  this->m_nIteration));
     }
 
     if (xc > 0) {
