@@ -36,8 +36,6 @@ DfCalcGridX::DfCalcGridX(TlSerializeData* pPdfParam)
 
     this->physicalValues_.clear();
 
-    this->readTable();
-
     // for debug
     this->isDebugOutPhiTable_ = (TlUtils::toUpper(pdfParam["debug_out_phi_table"].getStr()) == "YES") ? true : false;
 }
@@ -89,69 +87,39 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P,
                                                 DfFunctional_LDA* pFunctional,
                                                 TlSymmetricMatrix* pF)
 {
-    if (this->enableExperimentalCode_ != true) {
-        return this->calcXCIntegForFockAndEnergy1(P, pFunctional, pF);
-    } else {
-        this->logger(" !!! experimental code !!!\n");
-        return this->calcXCIntegForFockAndEnergy2(P, pFunctional, pF);
-    }
-}
-
-
-double DfCalcGridX::calcXCIntegForFockAndEnergy1(const TlSymmetricMatrix& P,
-                                                 DfFunctional_LDA* pFunctional,
-                                                 TlSymmetricMatrix* pF)
-{
-    assert(pFunctional != NULL);
-    assert(pF != NULL);
-
-    this->backupGridData();
-
-    // setup
-    const int nNumOfAtoms = this->numOfRealAtoms_;
-    this->physicalValues_.clear();
-    this->defineCutOffValues(P);
-
-    // calc
-    const double dEnergy = this->calcXCIntegForFockAndEnergy(0, nNumOfAtoms,
-                                                             P, pFunctional, pF);
-
+    TlMatrix gridMatrix = this->getGridMatrix<TlMatrix>();
+    double energy =  this->calcXCIntegForFockAndEnergy(0.5 * P, TlSymmetricMatrix(),
+                                                       pFunctional,
+                                                       pF, NULL,
+                                                       &gridMatrix);
     if (this->m_bIsUpdateXC == true) {
-        this->flushGridData();
+        this->saveGridMatrix(gridMatrix);
     }
-
-    return dEnergy;
+    return energy;
 }
 
 
 // Fockの交換相関項と、エネルギーを同時に求める
 // for LDA and UKS
-double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& PA,
-                                                const TlSymmetricMatrix& PB,
+double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                                const TlSymmetricMatrix& P_B,
                                                 DfFunctional_LDA* pFunctional,
-                                                TlSymmetricMatrix* pFA,
-                                                TlSymmetricMatrix* pFB)
+                                                TlSymmetricMatrix* pF_A,
+                                                TlSymmetricMatrix* pF_B)
 {
     assert(pFunctional != NULL);
-    assert(pFA != NULL);
-    assert(pFB != NULL);
+    assert(pF_A != NULL);
+    assert(pF_B != NULL);
 
-    this->backupGridData();
-
-    // setup
-    const int nNumOfAtoms = this->numOfRealAtoms_;
-    this->physicalValues_.clear();
-    this->defineCutOffValues(PA, PB);
-
-    // calc
-    const double dEnergy = this->calcXCIntegForFockAndEnergy(0, nNumOfAtoms,
-                                                             PA, PB, pFunctional,
-                                                             pFA, pFB);
+    TlMatrix gridMatrix = this->getGridMatrix<TlMatrix>();
+    double energy =  this->calcXCIntegForFockAndEnergy(P_A, P_B,
+                                                       pFunctional,
+                                                       pF_A, pF_B,
+                                                       &gridMatrix);
     if (this->m_bIsUpdateXC == true) {
-        this->flushGridData();
+        this->saveGridMatrix(gridMatrix);
     }
-
-    return dEnergy;
+    return energy;
 }
 
 
@@ -334,97 +302,38 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P,
                                                 DfFunctional_GGA* pFunctional,
                                                 TlSymmetricMatrix* pF)
 {
-    if (this->enableExperimentalCode_ != true) {
-        //return this->calcXCIntegForFockAndEnergy1(P, pFunctional, pF);
-        return this->calcXCIntegForFockAndEnergy3(P, pFunctional, pF);
-    } else {
-        this->logger(" !!! experimental code !!!\n");
-        return this->calcXCIntegForFockAndEnergy2(P, pFunctional, pF);
-    }
-}
-
-
-double DfCalcGridX::calcXCIntegForFockAndEnergy1(const TlSymmetricMatrix& P,
-                                                 DfFunctional_GGA* pFunctional,
-                                                 TlSymmetricMatrix* pF)
-{
-    assert(pFunctional != NULL);
-    assert(pF != NULL);
-
-    this->backupGridData();
-
-    // setup
-    const int nNumOfAtoms = this->numOfRealAtoms_;
-    this->physicalValues_.clear();
-    this->defineCutOffValues(P);
-
-    // calc
-    const double dEnergy = this->calcXCIntegForFockAndEnergy(0, nNumOfAtoms,
-                                                             P, pFunctional,
-                                                             pF);
-    if (this->m_bIsUpdateXC == true) {
-        this->flushGridData();
-    }
-
-    return dEnergy;
-}
-
-
-double DfCalcGridX::calcXCIntegForFockAndEnergy3(const TlSymmetricMatrix& P,
-                                                 DfFunctional_GGA* pFunctional,
-                                                 TlSymmetricMatrix* pF)
-{
-    assert(pFunctional != NULL);
-    assert(pF != NULL);
-
-    this->backupGridData();
-
-    // setup
-    const int nNumOfAtoms = this->numOfRealAtoms_;
-    this->physicalValues_.clear();
-    this->defineCutOffValues(P);
-
-    // calc
     TlMatrix gridMatrix = this->getGridMatrix<TlMatrix>();
-    const double energy = this->calcXCIntegForFockAndEnergy_usemat(P, pFunctional,
-                                                                   pF,
-                                                                   &gridMatrix);
+    double energy =  this->calcXCIntegForFockAndEnergy(0.5 * P, TlSymmetricMatrix(),
+                                                       pFunctional,
+                                                       pF, NULL,
+                                                       &gridMatrix);
     if (this->m_bIsUpdateXC == true) {
         this->saveGridMatrix(gridMatrix);
     }
-
     return energy;
 }
 
 
 // GGA, UKS
-double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& PA,
-                                                const TlSymmetricMatrix& PB,
+double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                                const TlSymmetricMatrix& P_B,
                                                 DfFunctional_GGA* pFunctional,
-                                                TlSymmetricMatrix* pFA,
-                                                TlSymmetricMatrix* pFB)
+                                                TlSymmetricMatrix* pF_A,
+                                                TlSymmetricMatrix* pF_B)
 {
     assert(pFunctional != NULL);
     assert(pFA != NULL);
     assert(pFB != NULL);
 
-    // backup grid data
-    this->backupGridData();
-
-    // setup
-    const int nNumOfAtoms = this->numOfRealAtoms_; //this->m_nNumOfAtoms - this->m_nNumOfDummyAtoms;
-    this->physicalValues_.clear();
-    this->defineCutOffValues(PA, PB);
-
-    // calc
-    const double dEnergy = this->calcXCIntegForFockAndEnergy(0, nNumOfAtoms,
-                                                             PA, PB, pFunctional,
-                                                             pFA, pFB);
+    TlMatrix gridMatrix = this->getGridMatrix<TlMatrix>();
+    double energy =  this->calcXCIntegForFockAndEnergy(P_A, P_B,
+                                                       pFunctional,
+                                                       pF_A, pF_B,
+                                                       &gridMatrix);
     if (this->m_bIsUpdateXC == true) {
-        this->flushGridData();
+        this->saveGridMatrix(gridMatrix);
     }
-
-    return dEnergy;
+    return energy;
 }
 
 
@@ -529,76 +438,6 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const int nStartAtom, const int 
     }
 
     return dEnergy;
-}
-
-
-double DfCalcGridX::calcXCIntegForFockAndEnergy_usemat(const TlSymmetricMatrix& P,
-                                                       DfFunctional_GGA* pFunctional,
-                                                       TlSymmetricMatrix* pF,
-                                                       TlMatrix* pGridMatrix)
-{
-    assert(pFunctional != NULL);
-    assert(pF != NULL);
-
-    double energy = 0.0;
-    const double densityCutOffValue = this->m_densityCutOffValueA;
-
-    const index_type numOfGrids = pGridMatrix->getNumOfRows();
-#pragma omp parallel for schedule(runtime)
-    for (int grid = 0; grid < numOfGrids; ++grid) {
-        const TlPosition gridPosition(pGridMatrix->get(grid, 0),
-                                      pGridMatrix->get(grid, 1),
-                                      pGridMatrix->get(grid, 2));
-        const double weight = pGridMatrix->get(grid, 3);
-
-        // calc phi table
-        std::vector<WFGrid> aPhi;
-        std::vector<WFGrid> aGradPhiX;
-        std::vector<WFGrid> aGradPhiY;
-        std::vector<WFGrid> aGradPhiZ;
-        this->getPhiTable(gridPosition, aPhi, aGradPhiX, aGradPhiY, aGradPhiZ);
-        std::sort(aPhi.begin(), aPhi.end(), WFGrid_sort_functional());
-        std::sort(aGradPhiX.begin(), aGradPhiX.end(), WFGrid_sort_functional());
-        std::sort(aGradPhiY.begin(), aGradPhiY.end(), WFGrid_sort_functional());
-        std::sort(aGradPhiZ.begin(), aGradPhiZ.end(), WFGrid_sort_functional());
-
-        // get rho at grid point
-        double dRhoA = 0.0;
-        double dGradRhoAX = 0.0;
-        double dGradRhoAY = 0.0;
-        double dGradRhoAZ = 0.0;
-        this->getRhoAtGridPoint(P, aPhi, aGradPhiX, aGradPhiY, aGradPhiZ,
-                                &dRhoA, &dGradRhoAX, &dGradRhoAY, &dGradRhoAZ);
-            
-        dRhoA *= 0.5;
-        dGradRhoAX *= 0.5;
-        dGradRhoAY *= 0.5;
-        dGradRhoAZ *= 0.5;
-        dRhoA += pGridMatrix->get(grid, 4);
-        dGradRhoAX += pGridMatrix->get(grid, 5);
-        dGradRhoAY += pGridMatrix->get(grid, 6);
-        dGradRhoAZ += pGridMatrix->get(grid, 7);
-
-        // calc
-        if (dRhoA > densityCutOffValue) {
-            const double gammaAA =  dGradRhoAX*dGradRhoAX + dGradRhoAY*dGradRhoAY + dGradRhoAZ*dGradRhoAZ;
-            
-            this->buildFock(dRhoA, dGradRhoAX, dGradRhoAY, dGradRhoAZ,
-                            aPhi, aGradPhiX, aGradPhiY, aGradPhiZ,
-                            pFunctional, weight, pF); // RKS code
-#pragma omp atomic                    
-            energy += weight * pFunctional->getFunctional(dRhoA, gammaAA); // RKS code
-        }
-
-        if (this->m_bIsUpdateXC == true) {
-            pGridMatrix->set(grid, 4, dRhoA);
-            pGridMatrix->set(grid, 5, dGradRhoAX);
-            pGridMatrix->set(grid, 6, dGradRhoAY);
-            pGridMatrix->set(grid, 7, dGradRhoAZ);
-        }
-    }
-
-    return energy;
 }
 
 
@@ -884,10 +723,6 @@ void DfCalcGridX::getPrefactorForDerivative(const int nType, const double alpha,
 }
 
 ////////////////////////////////////////////////////////////////////////
-
-void DfCalcGridX::readTable()
-{
-}
 
 // φの値を求める
 // for NSD
@@ -1559,91 +1394,6 @@ void DfCalcGridX::buildFock(const double dRhoA, const double dRhoB,
 }
 
 
-//
-// void DfCalcGridX::buildFock(const double rhoA,
-//                             const double gradRhoAX,
-//                             const double gradRhoAY,
-//                             const double gradRhoAZ,
-//                             const std::vector<WFGrid>& phis,
-//                             const std::vector<WFGrid>& gradPhiAXs,
-//                             const std::vector<WFGrid>& gradPhiAYs,
-//                             const std::vector<WFGrid>& gradPhiAZs,
-//                             DfFunctional_GGA* pFunctional,
-//                             const double dWeight,
-//                             TlMatrixObject* pF)
-// {
-
-//     const double gammaAA =
-//           gradRhoAX * gradRhoAX
-//         + gradRhoAY * gradRhoAY
-//         + gradRhoAZ * gradRhoAZ;
-//     double roundF_roundRhoA;
-//     double roundF_roundGammaAA, roundF_roundGammaAB;
-//     pFunctional->getDerivativeFunctional(rhoA, gammaAA,
-//                                          &roundF_roundRhoA,
-//                                          &roundF_roundGammaAA,
-//                                          &roundF_roundGammaAB);
-
-//     const double coeff1_A = weight * roundF_roundRhoA;
-//     const double roundF_roundGammaAA2 = 2.0 * roundF_roundGammaAA;
-//     const double coeff2_AX = weight
-//         * (  roundF_roundGammaAA2 * gradRhoAX
-//            + roundF_roundGammaAB  * gradRhoAX); // dGradRhoBX = dGradRhoAX
-//     const double coeff2_AY = weight
-//         * (  roundF_roundGammaAA2 * gradRhoAY
-//            + roundF_roundGammaAB  * gradRhoAY); // dGradRhoBY = dGradRhoAY
-//     const double coeff2_AZ = weight
-//         * (  roundF_roundGammaAA2 * gradRhoAZ
-//            + roundF_roundGammaAB    gradRhoAZ); // dGradRhoBZ = dGradRhoAZ
-//     const double cutOffValue = this->m_inputedCutoffThreshold;
-
-//     if (phis.size() > 0) {
-//         const double phi_0 = phis[0].value;
-//         // phi v.s. phi
-//         if (std::fabs(coeff1_A * phi_0 * phi_0) > cutOffValue) {
-//             std::vector<WFGrid>::const_iterator pEnd =
-//                 std::upper_bound(phis.begin(), phis.end(),
-//                                  WFGrid(0, std::sqrt(std::fabs(cutOffValue / coeff1_A))),
-//                                  WFGrid_sort_functional());
-//             this->buildFock(phis.begin(), pEnd, coeff1_A, cutOffValue, pF);
-//         }
-
-//         // phi v.s. grad-phi(x)
-//         if ((gradPhiAXs.size() > 0) &&
-//             (std::fabs(coeff2_AX * phi_0 * gradPhiAXs[0].value) > cutOffValue)) {
-//             std::vector<WFGrid>::const_iterator pEnd =
-//                 std::upper_bound(phis.begin(), phis.end(),
-//                                  WFGrid(0, cutOffValue / (coeff2_AX * gradPhiAXs[0].value)),
-//                                  WFGrid_sort_functional());
-//             this->buildFock(phis.begin(), pEnd, gradPhiAXs.begin(), gradPhiAXs.end(),
-//                             coeff2_AX, cutOffValue, pF);
-//         }
-
-//         // phi v.s. grad-phi(y)
-//         if ((gradPhiAYs.size() > 0) &&
-//             (std::fabs(coeff2_AY * phi_0 * gradPhiAYs[0].value) > cutOffValue)) {
-//             std::vector<WFGrid>::const_iterator pEnd =
-//                 std::upper_bound(phis.begin(), phis.end(),
-//                                  WFGrid(0, cutOffValue / (coeff2_AY * gradPhiAYs[0].value)),
-//                                  WFGrid_sort_functional());
-//             this->buildFock(phis.begin(), pEnd, gradPhiAYs.begin(), gradPhiAYs.end(),
-//                             coeff2_AY, cutOffValue, pF);
-//         }
-
-//         // phi v.s. grad-phi(z)
-//         if ((gradPhiAZs.size() > 0) &&
-//             (std::fabs(coeff2_AZ * phi_0 * gradPhiAZs[0].value) > cutOffValue)) {
-//             std::vector<WFGrid>::const_iterator pEnd =
-//                 std::upper_bound(phis.begin(), phis.end(),
-//                                  WFGrid(0, cutOffValue / (coeff2_AZ * gradPhiAZs[0].value)),
-//                                  WFGrid_sort_functional());
-//             this->buildFock(phis.begin(), pEnd, gradPhiAZs.begin(), gradPhiAZs.end(),
-//                             coeff2_AZ, cutOffValue, pF);
-//         }
-//     }
-// }
-
-
 void DfCalcGridX::buildFock(std::vector<WFGrid>::const_iterator pBegin,
                             std::vector<WFGrid>::const_iterator pEnd,
                             const double coef, const double cutoffValue,
@@ -2075,95 +1825,6 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
 
 
 // experimental code
-double DfCalcGridX::calcXCIntegForFockAndEnergy2(const TlSymmetricMatrix& P,
-                                                 DfFunctional_LDA* pFunctional,
-                                                 TlSymmetricMatrix* pF)
-{
-    assert(pFunctional != NULL);
-    assert(pF != NULL);
-
-    this->backupGridData();
-
-    // setup
-    //const int numOfAtoms = this->numOfRealAtoms_;
-    this->physicalValues_.clear();
-    this->defineCutOffValues(P);
-
-    const index_type numOfAOs = this->m_nNumOfAOs;
-    std::vector<index_type> AO_indexes(numOfAOs);
-    for (index_type i = 0; i < numOfAOs; ++i) {
-        AO_indexes[i] = i;
-    }
-
-    TlMatrix gridMatrix = this->getGridMatrix<TlMatrix>();
-    gridMatrix.resize(gridMatrix.getNumOfRows(), 5);
-    
-    this->loggerTime(" calculate population of each grid");
-    this->calcRhoVals_LDA(AO_indexes, AO_indexes, 0.5 * TlMatrix(P),
-                          &gridMatrix);
-    
-
-    this->loggerTime(" build the KS matrix of XC term");
-    // const double energy = this->buildK(gridMatrix,
-    //                                    pFunctional, pF);
-    const double energy = this->buildK_2(gridMatrix,
-                                         AO_indexes, AO_indexes,
-                                         pFunctional, pF);
-
-    if (this->m_bIsUpdateXC == true) {
-        this->loggerTime(" save grid data");
-        this->saveGridMatrix(gridMatrix);
-    }
-    this->logger("\n");
-
-    return energy;
-}
-
-
-double DfCalcGridX::calcXCIntegForFockAndEnergy2(const TlSymmetricMatrix& P,
-                                                 DfFunctional_GGA* pFunctional,
-                                                 TlSymmetricMatrix* pF)
-{
-    assert(pFunctional != NULL);
-    assert(pF != NULL);
-
-    this->backupGridData();
-
-    // setup
-    this->physicalValues_.clear();
-    this->defineCutOffValues(P);
-
-    const index_type numOfAOs = this->m_nNumOfAOs;
-    std::vector<index_type> AO_indexes(numOfAOs);
-    for (index_type i = 0; i < numOfAOs; ++i) {
-        AO_indexes[i] = i;
-    }
-
-    TlMatrix gridMatrix = this->getGridMatrix<TlMatrix>();
-    gridMatrix.resize(gridMatrix.getNumOfRows(), 8);
-    
-    this->loggerTime(" calculate population of each grid");
-    this->calcRhoVals_GGA(AO_indexes, AO_indexes, 0.5 * TlMatrix(P),
-                          &gridMatrix);
-    
-
-    this->loggerTime(" build the KS matrix of XC term");
-    TlMatrix tmpF(numOfAOs, numOfAOs);
-    const double energy = this->buildK_2(gridMatrix,
-                                         AO_indexes, AO_indexes,
-                                         pFunctional, &tmpF);
-    *pF = tmpF;
-
-    if (this->m_bIsUpdateXC == true) {
-        this->loggerTime(" save grid data");
-        this->saveGridMatrix(gridMatrix);
-    }
-    this->loggerTime("\n");
-
-    return energy;
-}
-
-
 void DfCalcGridX::calcRhoVals_LDA(const std::vector<index_type>& P_rowIndexes,
                                   const std::vector<index_type>& P_colIndexes,
                                   const TlMatrix& P,
@@ -2557,4 +2218,279 @@ double DfCalcGridX::buildK_2(const TlMatrix& gridMatrix,
     return energy;
 }
 
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                                const TlSymmetricMatrix& P_B,
+                                                DfFunctional_LDA* pFunctional,
+                                                TlSymmetricMatrix* pF_A,
+                                                TlSymmetricMatrix* pF_B,                                           
+                                                TlMatrix* pGridMatrix)
+{
+    assert(pFunctional != NULL);
+    assert(pF != NULL);
+    assert(pGridMatrix != NULL);
+    
+    double energy = 0.0;
+    const double densityCutOffValue = this->m_densityCutOffValueA;
 
+    const index_type numOfGrids = pGridMatrix->getNumOfRows();
+#pragma omp parallel for schedule(runtime) reduction(+:energy)
+    for (int grid = 0; grid < numOfGrids; ++grid) {
+        const TlPosition gridPosition(pGridMatrix->get(grid, GM_X),
+                                      pGridMatrix->get(grid, GM_Y),
+                                      pGridMatrix->get(grid, GM_Z));
+        const double weight = pGridMatrix->get(grid, GM_WEIGHT);
+
+        // calc phi table
+        std::vector<WFGrid> phi;
+        this->getPhiTable(gridPosition, phi);
+        std::sort(phi.begin(), phi.end(), WFGrid_sort_functional());
+
+        // get rho at grid point
+        double rhoA = 0.0;
+        double rhoB = 0.0;
+        this->getRhoAtGridPoint(P_A, phi, &rhoA);
+        rhoA += pGridMatrix->get(grid, GM_LDA_RHO_ALPHA);
+        double roundF_roundRhoA = 0.0;
+        double roundF_roundRhoB = 0.0;
+
+        if (this->m_nMethodType == METHOD_RKS) {
+            if (rhoA > densityCutOffValue) {
+                pFunctional->getDerivativeFunctional(rhoA, rhoA,
+                                                     &roundF_roundRhoA, &roundF_roundRhoB);
+                
+                this->build_XC_Matrix(roundF_roundRhoA, phi, pFunctional, weight, pF_A);
+                energy += weight * pFunctional->getFunctional(rhoA, rhoA);
+
+                if (this->m_bIsUpdateXC == true) {
+                    pGridMatrix->set(grid, GM_LDA_RHO_ALPHA, rhoA);
+                }
+            }
+        } else {
+            this->getRhoAtGridPoint(P_B, phi, &rhoB);
+            rhoB += pGridMatrix->get(grid, GM_LDA_RHO_BETA);
+
+            if ((rhoA > densityCutOffValue) || (rhoB > densityCutOffValue)) {
+                pFunctional->getDerivativeFunctional(rhoA, rhoB,
+                                                     &roundF_roundRhoA, &roundF_roundRhoB);
+
+                this->build_XC_Matrix(roundF_roundRhoA, phi, pFunctional, weight, pF_A);
+                this->build_XC_Matrix(roundF_roundRhoB, phi, pFunctional, weight, pF_B);
+                energy += weight * pFunctional->getFunctional(rhoA, rhoB);
+
+                if (this->m_bIsUpdateXC == true) {
+                    pGridMatrix->set(grid, GM_LDA_RHO_BETA, rhoB);
+                }
+            }
+        }
+
+    }
+
+    return energy;
+}
+
+double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                                const TlSymmetricMatrix& P_B,
+                                                DfFunctional_GGA* pFunctional,
+                                                TlSymmetricMatrix* pF_A,
+                                                TlSymmetricMatrix* pF_B,
+                                                TlMatrix* pGridMatrix)
+{
+    assert(pFunctional != NULL);
+    assert(pF != NULL);
+    assert(pGridMatrix != NULL);
+    
+    double energy = 0.0;
+    const double densityCutOffValue = this->m_densityCutOffValueA;
+
+    const index_type numOfGrids = pGridMatrix->getNumOfRows();
+#pragma omp parallel for schedule(runtime) reduction(+:energy)
+    for (int grid = 0; grid < numOfGrids; ++grid) {
+        const TlPosition gridPosition(pGridMatrix->get(grid, GM_X),
+                                      pGridMatrix->get(grid, GM_Y),
+                                      pGridMatrix->get(grid, GM_Z));
+        const double weight = pGridMatrix->get(grid, GM_WEIGHT);
+
+        // calc phi table
+        std::vector<WFGrid> phi;
+        std::vector<WFGrid> gradPhiX;
+        std::vector<WFGrid> gradPhiY;
+        std::vector<WFGrid> gradPhiZ;
+        this->getPhiTable(gridPosition, phi, gradPhiX, gradPhiY, gradPhiZ);
+        std::sort(phi.begin(), phi.end(), WFGrid_sort_functional());
+        std::sort(gradPhiX.begin(), gradPhiX.end(), WFGrid_sort_functional());
+        std::sort(gradPhiY.begin(), gradPhiY.end(), WFGrid_sort_functional());
+        std::sort(gradPhiZ.begin(), gradPhiZ.end(), WFGrid_sort_functional());
+
+        // get rho at grid point
+        double rhoA = 0.0;
+        double gradRhoXA = 0.0;
+        double gradRhoYA = 0.0;
+        double gradRhoZA = 0.0;
+        double rhoB = 0.0;
+        double gradRhoXB = 0.0;
+        double gradRhoYB = 0.0;
+        double gradRhoZB = 0.0;
+
+        this->getRhoAtGridPoint(P_A, phi, gradPhiX, gradPhiY, gradPhiZ,
+                                &rhoA, &gradRhoXA, &gradRhoYA, &gradRhoZA);
+        rhoA += pGridMatrix->get(grid, GM_GGA_RHO_ALPHA);
+        gradRhoXA += pGridMatrix->get(grid, GM_GGA_GRAD_RHO_X_ALPHA);
+        gradRhoYA += pGridMatrix->get(grid, GM_GGA_GRAD_RHO_Y_ALPHA);
+        gradRhoZA += pGridMatrix->get(grid, GM_GGA_GRAD_RHO_Z_ALPHA);
+
+        if (this->m_nMethodType == METHOD_RKS) {
+            if (rhoA > densityCutOffValue) {
+                const double gammaAA = gradRhoXA*gradRhoXA + gradRhoYA*gradRhoYA + gradRhoZA*gradRhoZA;
+                double roundF_roundRhoA, roundF_roundRhoB;
+                double roundF_roundGammaAA, roundF_roundGammaAB, roundF_roundGammaBB;
+                pFunctional->getDerivativeFunctional(rhoA, rhoA, gammaAA, gammaAA, gammaAA,
+                                                     &roundF_roundRhoA, &roundF_roundRhoB,
+                                                     &roundF_roundGammaAA, &roundF_roundGammaAB, &roundF_roundGammaBB);
+
+                this->build_XC_Matrix(roundF_roundRhoA,
+                                      roundF_roundGammaAA, roundF_roundGammaAB,
+                                      gradRhoXA, gradRhoYA, gradRhoZA,
+                                      phi, gradPhiX, gradPhiY, gradPhiZ,
+                                      pFunctional, weight, pF_A);
+                energy += weight * pFunctional->getFunctional(rhoA, rhoA,
+                                                              gammaAA, gammaAA, gammaAA);
+                if (this->m_bIsUpdateXC == true) {
+                    pGridMatrix->set(grid, GM_GGA_RHO_ALPHA, rhoA);
+                    pGridMatrix->set(grid, GM_GGA_GRAD_RHO_X_ALPHA, gradRhoXA);
+                    pGridMatrix->set(grid, GM_GGA_GRAD_RHO_Y_ALPHA, gradRhoYA);
+                    pGridMatrix->set(grid, GM_GGA_GRAD_RHO_Z_ALPHA, gradRhoZA);
+                }
+            }
+        } else {
+            this->getRhoAtGridPoint(P_B, phi, gradPhiX, gradPhiY, gradPhiZ,
+                                    &rhoB, &gradRhoXB, &gradRhoYB, &gradRhoZB);
+            rhoB += pGridMatrix->get(grid, GM_GGA_RHO_BETA);
+            gradRhoXB += pGridMatrix->get(grid, GM_GGA_GRAD_RHO_X_BETA);
+            gradRhoYB += pGridMatrix->get(grid, GM_GGA_GRAD_RHO_Y_BETA);
+            gradRhoZB += pGridMatrix->get(grid, GM_GGA_GRAD_RHO_Z_BETA);
+
+            if ((rhoA > densityCutOffValue) || ((rhoB > densityCutOffValue))) {
+                const double gammaAA = gradRhoXA*gradRhoXA + gradRhoYA*gradRhoYA + gradRhoZA*gradRhoZA;
+                const double gammaAB = gradRhoXA*gradRhoXB + gradRhoYA*gradRhoYB + gradRhoZA*gradRhoZB;
+                const double gammaBB = gradRhoXB*gradRhoXB + gradRhoYB*gradRhoYB + gradRhoZB*gradRhoZB;
+
+                double roundF_roundRhoA, roundF_roundRhoB;
+                double roundF_roundGammaAA, roundF_roundGammaAB, roundF_roundGammaBB;
+                pFunctional->getDerivativeFunctional(rhoA, rhoB, gammaAA, gammaAB, gammaBB,
+                                                     &roundF_roundRhoA, &roundF_roundRhoB,
+                                                     &roundF_roundGammaAA, &roundF_roundGammaAB, &roundF_roundGammaBB);
+
+                this->build_XC_Matrix(roundF_roundRhoA, roundF_roundGammaAA, roundF_roundGammaAB,
+                                      gradRhoXA, gradRhoYA, gradRhoZA,
+                                      phi, gradPhiX, gradPhiY, gradPhiZ,
+                                      pFunctional, weight, pF_A);
+                this->build_XC_Matrix(roundF_roundRhoB, roundF_roundGammaBB, roundF_roundGammaAB,
+                                      gradRhoXB, gradRhoYB, gradRhoZB,
+                                      phi, gradPhiX, gradPhiY, gradPhiZ,
+                                      pFunctional, weight, pF_B);
+                energy += weight * pFunctional->getFunctional(rhoA, rhoB,
+                                                              gammaAA, gammaAB, gammaBB);
+
+                if (this->m_bIsUpdateXC == true) {
+                    pGridMatrix->set(grid, GM_GGA_RHO_ALPHA, rhoA);
+                    pGridMatrix->set(grid, GM_GGA_GRAD_RHO_X_ALPHA, gradRhoXA);
+                    pGridMatrix->set(grid, GM_GGA_GRAD_RHO_Y_ALPHA, gradRhoYA);
+                    pGridMatrix->set(grid, GM_GGA_GRAD_RHO_Z_ALPHA, gradRhoZA);
+                    pGridMatrix->set(grid, GM_GGA_RHO_BETA, rhoB);
+                    pGridMatrix->set(grid, GM_GGA_GRAD_RHO_X_BETA, gradRhoXB);
+                    pGridMatrix->set(grid, GM_GGA_GRAD_RHO_Y_BETA, gradRhoYB);
+                    pGridMatrix->set(grid, GM_GGA_GRAD_RHO_Z_BETA, gradRhoZB);
+                }
+            }
+        }
+        
+
+    }
+
+    return energy;
+}
+
+void DfCalcGridX::build_XC_Matrix(const double roundF_roundRhoA,
+                                  const std::vector<WFGrid>& phi,
+                                  DfFunctional_LDA* pFunctional, const double weight,
+                                  TlMatrixObject* pF_A)
+{
+    const double coeff1_A = weight * roundF_roundRhoA;
+    const double cutOffValue = this->m_inputedCutoffThreshold;
+
+    if (phi.size() > 0) {
+        const double phi_0 = phi[0].value;
+        if (std::fabs(coeff1_A * phi_0 * phi_0) > cutOffValue) {
+            std::vector<WFGrid>::const_iterator pEnd =
+                std::upper_bound(phi.begin(), phi.end(),
+                                 WFGrid(0, std::sqrt(std::fabs(cutOffValue/coeff1_A))),
+                                 WFGrid_sort_functional());
+            this->buildFock(phi.begin(), pEnd, coeff1_A, cutOffValue, pF_A);
+        }
+    }
+}
+
+void DfCalcGridX::build_XC_Matrix(const double roundF_roundRhoA,
+                                  const double roundF_roundGammaAA,
+                                  const double roundF_roundGammaAB,
+                                  const double gradRhoAX, const double gradRhoAY, const double gradRhoAZ,
+                                  const std::vector<WFGrid>& phi,
+                                  const std::vector<WFGrid>& gradPhiX,
+                                  const std::vector<WFGrid>& gradPhiY,
+                                  const std::vector<WFGrid>& gradPhiZ,
+                                  DfFunctional_GGA* pFunctional,
+                                  const double weight,
+                                  TlMatrixObject* pF_A)
+{
+    const double coeff1_A = weight * roundF_roundRhoA;
+    const double roundF_roundGammaAA2 = 2.0 * roundF_roundGammaAA;
+    const double coeff2_AX = weight
+        * (roundF_roundGammaAA2 * gradRhoAX + roundF_roundGammaAB * gradRhoAX);
+    const double coeff2_AY = weight
+        * (roundF_roundGammaAA2 * gradRhoAY + roundF_roundGammaAB * gradRhoAY);
+    const double coeff2_AZ = weight
+        * (roundF_roundGammaAA2 * gradRhoAZ + roundF_roundGammaAB * gradRhoAZ);
+    const double cutOffValue = this->m_inputedCutoffThreshold;
+
+    if (phi.size() > 0) {
+        const double phi_0 = phi[0].value;
+
+        {
+            // phi v.s. phi
+            if (std::fabs(coeff1_A * phi_0 * phi_0) > cutOffValue) {
+                std::vector<WFGrid>::const_iterator pEnd = std::upper_bound(phi.begin(), phi.end(),
+                                                                            WFGrid(0, std::sqrt(std::fabs(cutOffValue / coeff1_A))),
+                                                                            WFGrid_sort_functional());
+                this->buildFock(phi.begin(), pEnd, coeff1_A, cutOffValue, pF_A);
+            }
+            // phi v.s. grad-phi(x)
+            if ((gradPhiX.size() > 0) &&
+                (std::fabs(coeff2_AX * phi_0 * gradPhiX[0].value) > cutOffValue)) {
+                std::vector<WFGrid>::const_iterator pEnd = std::upper_bound(phi.begin(), phi.end(),
+                                                                            WFGrid(0, cutOffValue / (coeff2_AX * gradPhiX[0].value)),
+                                                                            WFGrid_sort_functional());
+                this->buildFock(phi.begin(), pEnd, gradPhiX.begin(), gradPhiX.end(),
+                                coeff2_AX, cutOffValue, pF_A);
+            }
+            // phi v.s. grad-phi(y)
+            if ((gradPhiY.size() > 0) &&
+                (std::fabs(coeff2_AY * phi_0 * gradPhiY[0].value) > cutOffValue)) {
+                std::vector<WFGrid>::const_iterator pEnd = std::upper_bound(phi.begin(), phi.end(),
+                                                                            WFGrid(0, cutOffValue / (coeff2_AY * gradPhiY[0].value)),
+                                                                            WFGrid_sort_functional());
+                this->buildFock(phi.begin(), pEnd, gradPhiY.begin(), gradPhiY.end(),
+                                coeff2_AY, cutOffValue, pF_A);
+            }
+            // phi v.s. grad-phi(z)
+            if ((gradPhiZ.size() > 0) &&
+                (std::fabs(coeff2_AZ * phi_0 * gradPhiZ[0].value) > cutOffValue)) {
+                std::vector<WFGrid>::const_iterator pEnd = std::upper_bound(phi.begin(), phi.end(),
+                                                                            WFGrid(0, cutOffValue / (coeff2_AZ * gradPhiZ[0].value)),
+                                                                            WFGrid_sort_functional());
+                this->buildFock(phi.begin(), pEnd, gradPhiZ.begin(), gradPhiZ.end(),
+                                coeff2_AZ, cutOffValue, pF_A);
+            }
+        }
+    }
+}

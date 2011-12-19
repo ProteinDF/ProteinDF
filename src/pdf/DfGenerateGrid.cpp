@@ -82,7 +82,7 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
         }
     }
 
-    this->numOfColsOfGrdMat_ = 4; // x, y, z, weight
+    this->numOfColsOfGrdMat_ = 5; // x, y, z, weight
     {
         const int coef = (this->m_nMethodType == METHOD_RKS) ? 1 : 2;
         DfXCFunctional dfXcFunctional(this->pPdfParam_);
@@ -940,6 +940,7 @@ void DfGenerateGrid::generateGrid_SG1(const int iAtom,
         this->grdMat_.set(row, 1, crdpoint[i].y());
         this->grdMat_.set(row, 2, crdpoint[i].z());
         this->grdMat_.set(row, 3, weightvec[i]);
+        this->grdMat_.set(row, 4, iAtom);
         ++row;
     }
     

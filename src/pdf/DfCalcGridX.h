@@ -13,6 +13,28 @@ class TlMatrixObject;
 
 class DfCalcGridX : public DfObject {
 public:
+    enum {
+        // COMMON
+        GM_X = 0,
+        GM_Y = 1,
+        GM_Z = 2,
+        GM_WEIGHT = 3,
+        GM_ATOM_INDEX = 4,
+        // for LDA
+        GM_LDA_RHO_ALPHA = 5,
+        GM_LDA_RHO_BETA  = 6,
+        // for GGA
+        GM_GGA_RHO_ALPHA = 5,
+        GM_GGA_GRAD_RHO_X_ALPHA =  6,
+        GM_GGA_GRAD_RHO_Y_ALPHA =  7,
+        GM_GGA_GRAD_RHO_Z_ALPHA =  8,
+        GM_GGA_RHO_BETA = 9,
+        GM_GGA_GRAD_RHO_X_BETA  = 10,
+        GM_GGA_GRAD_RHO_Y_BETA  = 12,
+        GM_GGA_GRAD_RHO_Z_BETA  = 13
+    };
+    
+public:
     // the value of wave function on the grid
     struct WFGrid {
         WFGrid(std::size_t i =0, double v =0.0) : index(i), value(v) {
@@ -83,13 +105,13 @@ protected:
     virtual void defineCutOffValues(const TlSymmetricMatrix& PA,
                                     const TlSymmetricMatrix& PB);
 
-    double calcXCIntegForFockAndEnergy1(const TlSymmetricMatrix& P,
-                                        DfFunctional_LDA* pFunctional,
-                                        TlSymmetricMatrix* pF);
+    // double calcXCIntegForFockAndEnergy1(const TlSymmetricMatrix& P,
+    //                                     DfFunctional_LDA* pFunctional,
+    //                                     TlSymmetricMatrix* pF);
 
-    double calcXCIntegForFockAndEnergy1(const TlSymmetricMatrix& P,
-                                        DfFunctional_GGA* pFunctional,
-                                        TlSymmetricMatrix* pF);
+    // double calcXCIntegForFockAndEnergy1(const TlSymmetricMatrix& P,
+    //                                     DfFunctional_GGA* pFunctional,
+    //                                     TlSymmetricMatrix* pF);
 
     /// Fockの交換相関項と、エネルギーを同時に求める(RKS, LDA用; 並列計算と共通部分)
     double calcXCIntegForFockAndEnergy(int nStartAtom, int nEndAtom,
@@ -217,21 +239,46 @@ protected:
                            double* pRhoA, double* pGradRhoAX, double* pGradRhoAY, double* pGradRhoAZ);
 
 protected:
-    // experimental code -------------------------------------------------------
-    double calcXCIntegForFockAndEnergy_usemat(const TlSymmetricMatrix& P,
-                                              DfFunctional_GGA* pFunctional,
-                                              TlSymmetricMatrix* pF,
-                                              TlMatrix* pGridMatrix);
-    double calcXCIntegForFockAndEnergy3(const TlSymmetricMatrix& P,
-                                        DfFunctional_GGA* pFunctional,
-                                        TlSymmetricMatrix* pF);
+    double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                       const TlSymmetricMatrix& P_B,
+                                       DfFunctional_LDA* pFunctional,
+                                       TlSymmetricMatrix* pF_A,
+                                       TlSymmetricMatrix* pF_B,
+                                       TlMatrix* pGridMatrix);
+    double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                       const TlSymmetricMatrix& P_B,
+                                       DfFunctional_GGA* pFunctional,
+                                       TlSymmetricMatrix* pF_A,
+                                       TlSymmetricMatrix* pF_B,
+                                       TlMatrix* pGridMatrix);
 
-    double calcXCIntegForFockAndEnergy2(const TlSymmetricMatrix& P,
-                                        DfFunctional_LDA* pFunctional,
-                                        TlSymmetricMatrix* pF);
-    double calcXCIntegForFockAndEnergy2(const TlSymmetricMatrix& P,
-                                        DfFunctional_GGA* pFunctional,
-                                        TlSymmetricMatrix* pF);
+    void build_XC_Matrix(const double roundF_roundRhoA,
+                         const std::vector<WFGrid>& phi,
+                         DfFunctional_LDA* pFunctional, const double weight,
+                         TlMatrixObject* pF_A);
+    void build_XC_Matrix(const double roundF_roundRhoA,
+                         const double roundF_roundGammaAA,
+                         const double roundF_roundGammaAB,
+                         const double gradRhoAX, const double gradRhoAY, const double gradRhoAZ,
+                         const std::vector<WFGrid>& phi,
+                         const std::vector<WFGrid>& gradPhiX,
+                         const std::vector<WFGrid>& gradPhiY,
+                         const std::vector<WFGrid>& gradPhiZ,
+                         DfFunctional_GGA* pFunctional,
+                         const double weight,
+                         TlMatrixObject* pF_A);
+
+    // experimental code -------------------------------------------------------
+    // double calcXCIntegForFockAndEnergy3(const TlSymmetricMatrix& P,
+    //                                     DfFunctional_GGA* pFunctional,
+    //                                     TlSymmetricMatrix* pF);
+
+    // double calcXCIntegForFockAndEnergy2(const TlSymmetricMatrix& P,
+    //                                     DfFunctional_LDA* pFunctional,
+    //                                     TlSymmetricMatrix* pF);
+    // double calcXCIntegForFockAndEnergy2(const TlSymmetricMatrix& P,
+    //                                     DfFunctional_GGA* pFunctional,
+    //                                     TlSymmetricMatrix* pF);
     void calcRhoVals_LDA(const std::vector<index_type>& P_rowIndexes,
                          const std::vector<index_type>& P_colIndexes,
                          const TlMatrix& P,
@@ -265,10 +312,6 @@ protected:
                     const std::vector<index_type>& colIndexes,
                     DfFunctional_GGA* pFunctional,
                     TlMatrix* pF);
-    
-    
-private:
-    void readTable();
 
 protected:
     static const double TOOBIG;
