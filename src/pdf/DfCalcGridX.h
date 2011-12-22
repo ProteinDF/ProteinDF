@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "DfObject.h"
+#include "DfXCFunctional.h"
 #include "DfFunctional.h"
 #include "TlOrbitalInfo.h"
 #include "GridDataManager.h"
@@ -313,12 +314,19 @@ protected:
                     DfFunctional_GGA* pFunctional,
                     TlMatrix* pF);
 
+    // NEW IMPLIMENT -----------------------------------------------------------
+protected:
+    virtual TlMatrix getGridMatrix();
+    virtual void saveGridMatrix(const TlMatrix& gridMat);
+
 protected:
     static const double TOOBIG;
     static const double EPS;
     static const double INV_SQRT3; // = 1.0 / sqrt(3.0);
     static const double INV_SQRT12; // = 1.0 / sqrt(12.0);
 
+    DfXCFunctional::FUNCTIONAL_TYPE functionalType_;
+    
     /// 入力された電子密度・勾配のカットオフ値
     double inputtedDensityCutoffValue_;
 

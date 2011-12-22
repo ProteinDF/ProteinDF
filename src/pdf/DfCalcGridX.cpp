@@ -24,6 +24,9 @@ DfCalcGridX::DfCalcGridX(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), m_tlOrbInfo((*pPdfParam)["coordinates"], (*pPdfParam)["basis_sets"])
 {
     const TlSerializeData& pdfParam = *pPdfParam;
+
+    DfXCFunctional dfXcFunc(pPdfParam);
+    this->functionalType_ = dfXcFunc.getFunctionalType();
     
     this->inputtedDensityCutoffValue_ = 1.0E-16;
     if (!(pdfParam["xc-density-threshold"].getStr().empty())) {
@@ -87,14 +90,12 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P,
                                                 DfFunctional_LDA* pFunctional,
                                                 TlSymmetricMatrix* pF)
 {
-    TlMatrix gridMatrix = this->getGridMatrix<TlMatrix>();
+    TlMatrix gridMatrix = this->getGridMatrix();
     double energy =  this->calcXCIntegForFockAndEnergy(0.5 * P, TlSymmetricMatrix(),
                                                        pFunctional,
                                                        pF, NULL,
                                                        &gridMatrix);
-    if (this->m_bIsUpdateXC == true) {
-        this->saveGridMatrix(gridMatrix);
-    }
+    this->saveGridMatrix(gridMatrix);
     return energy;
 }
 
@@ -111,15 +112,25 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
     assert(pF_A != NULL);
     assert(pF_B != NULL);
 
-    TlMatrix gridMatrix = this->getGridMatrix<TlMatrix>();
+    TlMatrix gridMat = this->getGridMatrix();
     double energy =  this->calcXCIntegForFockAndEnergy(P_A, P_B,
                                                        pFunctional,
                                                        pF_A, pF_B,
-                                                       &gridMatrix);
-    if (this->m_bIsUpdateXC == true) {
-        this->saveGridMatrix(gridMatrix);
-    }
+                                                       &gridMat);
+    this->saveGridMatrix(gridMat);
     return energy;
+}
+
+TlMatrix DfCalcGridX::getGridMatrix()
+{
+    return DfObject::getGridMatrix<TlMatrix>();
+}
+
+void DfCalcGridX::saveGridMatrix(const TlMatrix& gridMat)
+{
+    if (this->m_bIsUpdateXC == true) {
+        DfObject::saveGridMatrix(gridMat);
+    }
 }
 
 
@@ -302,14 +313,12 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P,
                                                 DfFunctional_GGA* pFunctional,
                                                 TlSymmetricMatrix* pF)
 {
-    TlMatrix gridMatrix = this->getGridMatrix<TlMatrix>();
+    TlMatrix gridMatrix = this->getGridMatrix();
     double energy =  this->calcXCIntegForFockAndEnergy(0.5 * P, TlSymmetricMatrix(),
                                                        pFunctional,
                                                        pF, NULL,
                                                        &gridMatrix);
-    if (this->m_bIsUpdateXC == true) {
-        this->saveGridMatrix(gridMatrix);
-    }
+    this->saveGridMatrix(gridMatrix);
     return energy;
 }
 
@@ -325,14 +334,12 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
     assert(pFA != NULL);
     assert(pFB != NULL);
 
-    TlMatrix gridMatrix = this->getGridMatrix<TlMatrix>();
+    TlMatrix gridMatrix = this->getGridMatrix();
     double energy =  this->calcXCIntegForFockAndEnergy(P_A, P_B,
                                                        pFunctional,
                                                        pF_A, pF_B,
                                                        &gridMatrix);
-    if (this->m_bIsUpdateXC == true) {
-        this->saveGridMatrix(gridMatrix);
-    }
+    this->saveGridMatrix(gridMatrix);
     return energy;
 }
 

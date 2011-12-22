@@ -92,71 +92,34 @@ double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix
     assert(pFunctional != NULL);
     assert(pF != NULL);
 
-    this->backupGridData();
-
-    // setup
-    this->physicalValues_.clear();
-    this->defineCutOffValues(P);
-
-    // calc
-    double dEnergy = 0.0;
-    if (this->isMasterSlave_ == false) {
-        this->logger(" numerical integral using D&C parallel\n");
-        dEnergy = this->calcXCIntegForFockAndEnergy_atomParallel(P, pFunctional, pF);
-    } else {
-        this->logger(" numerical integral using M/S parallel\n");
-        dEnergy = this->calcXCIntegForFockAndEnergy_MasterSlave(P, pFunctional, pF);
-    }
-
-    // finalize
-    if (this->m_bIsUpdateXC == true) {
-        this->flushGridData();
-    }
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    rComm.allReduce_SUM(*pF);
-    rComm.allReduce_SUM(dEnergy);
-
-    return dEnergy;
+    TlMatrix gridMat = this->getGridMatrix();
+    double energy =  DfCalcGridX::calcXCIntegForFockAndEnergy(0.5 * P, TlSymmetricMatrix(),
+                                                              pFunctional,
+                                                              pF, NULL,
+                                                              &gridMat);
+    this->saveGridMatrix(gridMat);
+    return energy;
 }
 
 
 // for UKS, LDA
-double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& PA,
-                                                         const TlSymmetricMatrix& PB,
+double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                                         const TlSymmetricMatrix& P_B,
                                                          DfFunctional_LDA* pFunctional,
-                                                         TlSymmetricMatrix* pFA,
-                                                         TlSymmetricMatrix* pFB)
+                                                         TlSymmetricMatrix* pF_A,
+                                                         TlSymmetricMatrix* pF_B)
 {
     assert(pFunctional != NULL);
-    assert(pFA != NULL);
-    assert(pFB != NULL);
+    assert(pF_A != NULL);
+    assert(pF_B != NULL);
 
-    this->backupGridData();
-
-    // setup
-    this->physicalValues_.clear();
-    this->defineCutOffValues(PA, PB);
-
-    // calc
-    double dEnergy = 0.0;
-    if (this->isMasterSlave_ == false) {
-        this->logger(" numerical integral using D&C parallel\n");
-        dEnergy = this->calcXCIntegForFockAndEnergy_atomParallel(PA, PB, pFunctional, pFA, pFB);
-    } else {
-        this->logger(" numerical integral using M/S parallel\n");
-        dEnergy = this->calcXCIntegForFockAndEnergy_MasterSlave(PA, PB, pFunctional, pFA, pFB);
-    }
-
-    // finalize
-    if (this->m_bIsUpdateXC == true) {
-        this->flushGridData();
-    }
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    rComm.allReduce_SUM(*pFA);
-    rComm.allReduce_SUM(*pFB);
-    rComm.allReduce_SUM(dEnergy);
-
-    return dEnergy;
+    TlMatrix gridMat = this->getGridMatrix();
+    double energy =  DfCalcGridX::calcXCIntegForFockAndEnergy(P_A, P_B,
+                                                              pFunctional,
+                                                              pF_A, pF_B,
+                                                              &gridMat);
+    this->saveGridMatrix(gridMat);
+    return energy;
 }
 
 
@@ -168,71 +131,81 @@ double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix
     assert(pFunctional != NULL);
     assert(pF != NULL);
 
-    this->backupGridData();
-
-    // setup
-    this->physicalValues_.clear();
-    this->defineCutOffValues(P);
-
-    // calc
-    double dEnergy = 0.0;
-    if (this->isMasterSlave_ == false) {
-        this->logger(" numerical integral using D&C parallel\n");
-        dEnergy = this->calcXCIntegForFockAndEnergy_atomParallel(P, pFunctional, pF);
-    } else {
-        this->logger(" numerical integral using M/S parallel\n");
-        dEnergy = this->calcXCIntegForFockAndEnergy_MasterSlave(P, pFunctional, pF);
-    }
-
-    // finalize
-    if (this->m_bIsUpdateXC == true) {
-        this->flushGridData();
-    }
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    rComm.allReduce_SUM(*pF);
-    rComm.allReduce_SUM(dEnergy);
-
-    return dEnergy;
+    TlMatrix gridMat = this->getGridMatrix();
+    double energy =  DfCalcGridX::calcXCIntegForFockAndEnergy(0.5 * P, TlSymmetricMatrix(),
+                                                              pFunctional,
+                                                              pF, NULL,
+                                                              &gridMat);
+    this->saveGridMatrix(gridMat);
+    return energy;
 }
 
 
 // for UKS, GGA
-double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& PA,
-                                                         const TlSymmetricMatrix& PB,
+double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                                         const TlSymmetricMatrix& P_B,
                                                          DfFunctional_GGA* pFunctional,
-                                                         TlSymmetricMatrix* pFA,
-                                                         TlSymmetricMatrix* pFB)
+                                                         TlSymmetricMatrix* pF_A,
+                                                         TlSymmetricMatrix* pF_B)
 {
     assert(pFunctional != NULL);
-    assert(pFA != NULL);
-    assert(pFB != NULL);
+    assert(pF_A != NULL);
+    assert(pF_B != NULL);
 
-    this->backupGridData();
+    TlMatrix gridMat = this->getGridMatrix();
+    double energy =  DfCalcGridX::calcXCIntegForFockAndEnergy(P_A, P_B,
+                                                              pFunctional,
+                                                              pF_A, pF_B,
+                                                              &gridMat);
+    this->saveGridMatrix(gridMat);
+    return energy;
+}
 
-    // setup
-    this->physicalValues_.clear();
-    this->defineCutOffValues(PA, PB);
-
-    // calc
-    double dEnergy = 0.0;
-    if (this->isMasterSlave_ == false) {
-        this->logger(" using D&C parallel");
-        dEnergy = this->calcXCIntegForFockAndEnergy_atomParallel(PA, PB, pFunctional, pFA, pFB);
-    } else {
-        this->logger(" using M/S parallel");
-        dEnergy = this->calcXCIntegForFockAndEnergy_MasterSlave(PA, PB, pFunctional, pFA, pFB);
-    }
-
-    // finalize
-    if (this->m_bIsUpdateXC == true) {
-        this->flushGridData();
-    }
+TlMatrix DfCalcGridX_Parallel::getGridMatrix()
+{
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    rComm.allReduce_SUM(*pFA);
-    rComm.allReduce_SUM(*pFB);
-    rComm.allReduce_SUM(dEnergy);
+    TlMatrix gridMat;
+    if (rComm.isMaster() == true) {
+        gridMat = DfCalcGridX::getGridMatrix();
+    }
+    rComm.broadcast(gridMat);
 
-    return dEnergy;
+    return gridMat;
+}
+
+void DfCalcGridX_Parallel::saveGridMatrix(const TlMatrix& gridMat)
+{
+    if (this->m_bIsUpdateXC == true) {
+        TlCommunicate& rComm = TlCommunicate::getInstance();
+        
+        const index_type numOfGrids = gridMat.getNumOfRows();
+        int startCol = 0;
+        int endCol = 0;
+        if (this->functionalType_ == DfXCFunctional::LDA) {
+            startCol = GM_LDA_RHO_ALPHA;
+            endCol = GM_LDA_RHO_ALPHA + 1;
+            if (this->m_nMethodType == METHOD_UKS) {
+                endCol = GM_LDA_RHO_BETA + 1;
+            }
+        } else {
+            assert(this->functionalType_ == DfXCFunctional::GGA);
+            startCol = GM_GGA_RHO_ALPHA;
+            endCol = GM_GGA_GRAD_RHO_Z_ALPHA + 1;
+            if (this->m_nMethodType == METHOD_UKS) {
+                endCol = GM_GGA_GRAD_RHO_Z_BETA + 1;
+            }
+        }
+        TlMatrix commMat = gridMat.getBlockMatrix(0, numOfGrids,
+                                                  startCol, endCol - startCol);
+        
+        rComm.allReduce_SUM(commMat);
+        
+        if (rComm.isMaster() == true) {
+            TlMatrix newMat = gridMat;
+            newMat.setBlockMatrix(0, startCol, commMat);
+            DfCalcGridX::saveGridMatrix(newMat);
+        }
+    }
 }
 
 
@@ -2616,12 +2589,8 @@ double DfCalcGridX_Parallel::calcXC_DC(const TlDistributeSymmetricMatrix& P,
     assert(localP.getNumOfRows() == numOfLocalRows);
     assert(localP.getNumOfCols() == numOfLocalCols);
     
-    //
-    TlMatrix gridMatrix;
-    if (rComm.isMaster() == true) {
-        gridMatrix = this->getGridMatrix<TlMatrix>();
-    }
-    rComm.broadcast(gridMatrix);
+    
+    TlMatrix gridMatrix = this->getGridMatrix();
     gridMatrix.resize(gridMatrix.getNumOfRows(), 8);
 
     //

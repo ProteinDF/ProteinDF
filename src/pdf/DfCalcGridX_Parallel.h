@@ -54,7 +54,7 @@ public:
                                        DfFunctional_GGA* pFunctional,
                                        TlDistributeSymmetricMatrix* pFA,
                                        TlDistributeSymmetricMatrix* pFB);
-    
+   
 protected:
     template<class SymmetricMatrixType, class DfFunctionalClass>
     double calcXCIntegForFockAndEnergy_atomParallel(const SymmetricMatrixType& P,
@@ -320,6 +320,12 @@ protected:
         index_type endCol;
         TlPartialSymmetricMatrix partialMatrix;
     };
+
+    // NEW IMPLIMENT -----------------------------------------------------------
+protected:
+    virtual TlMatrix getGridMatrix();
+    virtual void saveGridMatrix(const TlMatrix& gridMat);
+    
 
     
 protected:
