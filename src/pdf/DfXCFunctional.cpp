@@ -37,8 +37,11 @@ DfXCFunctional::DfXCFunctional(TlSerializeData* pPdfParam)
     
     // XC function
     std::string checkXC = this->m_sXCFunctional;
+    if (this->m_bIsXCFitting == true) {
+        checkXC = checkXC.substr(0, checkXC.size() -1); // remove "~"
+    }
     if (this->enableGrimmeDispersion_ == true) {
-        checkXC = checkXC.substr(0, checkXC.size() -2);
+        checkXC = checkXC.substr(0, checkXC.size() -2); // remove "-D"
     }
     if (checkXC == "SHF") {
         // SHF

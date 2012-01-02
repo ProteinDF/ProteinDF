@@ -8,7 +8,6 @@
 #include "TlOrbitalInfo.h"
 #include "TlOrbitalInfo_Density.h"
 #include "TlOrbitalInfo_XC.h"
-#include "GridDataManager.h"
 #include "TlVector.h"
 #include "TlPosition.h"
 
@@ -49,35 +48,15 @@ private:
 
 
 private:
-    void calcXCIntegRho(const std::vector<GridDataManager::GridInfo>& grids,
-                        const TlSymmetricMatrix& PA, const TlSymmetricMatrix& PB,
-                        TlVector& gridRhoA,  TlVector& gridRhoB,
-                        TlVector& gradRhoAx, TlVector& gradRhoAy, TlVector& gradRhoAz,
-                        TlVector& gradRhoBx, TlVector& gradRhoBy, TlVector& gradRhoBz);
-    void calcXCIntegRhoTilde_RKS(const std::vector<GridDataManager::GridInfo>& grids,
-                                 const TlVector& RhoAlphaA,
-                                 TlVector& gridRhoA);
-    void calcXCIntegRhoTilde_UKS(const std::vector<GridDataManager::GridInfo>& grids,
-                                 const TlVector& RhoAlphaA, const TlVector& RhoAlphaB,
-                                 TlVector& gridRhoA, TlVector& gridRhoB);
+    void calcXCIntegRhoTilde_RKS(const TlVector& RhoAlphaA,
+                                 TlMatrix* pGridMat);
+    void calcXCIntegRhoTilde_UKS(const TlVector& RhoAlphaA, const TlVector& RhoAlphaB,
+                                 TlMatrix* pGridMat);
 
-    void calcXCIntegGradRhoTilde(const std::vector<GridDataManager::GridInfo>& grids,
-                                 const TlVector& RhoAlphaA, const TlVector& RhoAlphaB,
-                                 TlVector& gradRhoAx, TlVector& gradRhoAy, TlVector& gradRhoAz,
-                                 TlVector& gradRhoBx, TlVector& gradRhoBy, TlVector& gradRhoBz);
-
-    void calcXCIntegMyuEpsilon_RKS(const std::vector<GridDataManager::GridInfo>& grids,
-                                   const TlVector& gridRhoA,
+    void calcXCIntegMyuEpsilon_RKS(const TlMatrix& gridMat,
                                    TlVector& tmpVectorA, TlVector& eTmpVector);
-    void calcXCIntegMyuEpsilon_UKS(const std::vector<GridDataManager::GridInfo>& grids,
-                                   const TlVector& gridRhoA, const TlVector& gridRhoB,
+    void calcXCIntegMyuEpsilon_UKS(const TlMatrix& gridMat,
                                    TlVector& tmpVectorA, TlVector& tmpVectorB, TlVector& eTmpVector);
-
-    void calcXCIntegLyp(const std::vector<GridDataManager::GridInfo>& grids,
-                        const TlVector& gridRhoA, const TlVector& gridRhoB,
-                        const TlVector& gradRhoAx, const TlVector& gradRhoAy, const TlVector& gradRhoAz,
-                        const TlVector& gradRhoBx, const TlVector& gradRhoBy, const TlVector& gradRhoBz,
-                        TlVector& tmpVectorA, TlVector& tmpVectorB, TlVector& eTmpVector);
 
 private:
     double polfunc(double z);

@@ -86,6 +86,7 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
     {
         const int coef = (this->m_nMethodType == METHOD_RKS) ? 1 : 2;
         DfXCFunctional dfXcFunctional(this->pPdfParam_);
+        std::cerr << dfXcFunctional.getFunctionalType() << std::endl;
         if (dfXcFunctional.getFunctionalType() == DfXCFunctional::LDA) {
             this->numOfColsOfGrdMat_ += coef * 1; // rho only
         } else if (dfXcFunctional.getFunctionalType() == DfXCFunctional::GGA) {

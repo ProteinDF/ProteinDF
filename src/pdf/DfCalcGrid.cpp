@@ -209,50 +209,15 @@ void DfCalcGrid::calcXCInteg(TlVector& tmpVectorA, TlVector& tmpVectorB, TlVecto
     tmpVectorB = TlVector(this->numOfAuxXC_);
     eTmpVector = TlVector(this->numOfAuxXC_);
 
-    if (this->xc == 99) {
-        // HF
-        std::cerr << "HF selected. do nothing." << std::endl;
-        return;
-    }
-
-    TlSymmetricMatrix PA;
-    TlSymmetricMatrix PB;
     TlVector RhoAlphaA, RhoAlphaB;
-
-    if (((this->m_nIteration -1) > 0 ||
-         (this->initialGuessType_ == GUESS_LCAO || this->initialGuessType_ == GUESS_HUCKEL)) && tilude== 0) {
-
+    {
         switch (this->m_nMethodType) {
         case METHOD_RKS:
-            PA.load(this->getPpqMatrixPath(RUN_RKS, this->m_nIteration -1));
-            break;
-
-        case METHOD_UKS:
-            PA.load(this->getPpqMatrixPath(RUN_UKS_ALPHA, this->m_nIteration -1));
-            PB.load(this->getPpqMatrixPath(RUN_UKS_BETA, this->m_nIteration -1));
-            break;
-
-        case METHOD_ROKS:
-            PA.load(this->getP2pqMatrixPath(this->m_nIteration -1));
-            PB.load(this->getP1pqMatrixPath(this->m_nIteration -1));
-            PA += PB;
-            break;
-
-        default:
-            CnErr.abort();
-            break;
-        }
-    } else {
-        switch (this->m_nMethodType) {
-        case METHOD_RKS:
-            //RhoAlphaA.load("fl_Work/fl_Vct_Rou" + TlUtils::xtos(this->m_nIteration));
             RhoAlphaA.load(this->getRhoPath(RUN_RKS, this->m_nIteration));
             break;
 
         case METHOD_UKS:
         case METHOD_ROKS:
-            //RhoAlphaA.load("fl_Work/fl_Vct_Roua" + TlUtils::xtos(this->m_nIteration));
-            //RhoAlphaB.load("fl_Work/fl_Vct_Roub" + TlUtils::xtos(this->m_nIteration));
             RhoAlphaA.load(this->getRhoPath(RUN_UKS_ALPHA, this->m_nIteration));
             RhoAlphaB.load(this->getRhoPath(RUN_UKS_BETA, this->m_nIteration));
             break;
@@ -263,72 +228,36 @@ void DfCalcGrid::calcXCInteg(TlVector& tmpVectorA, TlVector& tmpVectorB, TlVecto
         }
     }
 
-    const GridDataManager gdm(this->gridDataFilePath_);
-    for (int iatom = 0; iatom < this->numOfRealAtoms_; ++iatom) {
-        // read data of grid and weight
-        std::vector<GridDataManager::GridInfo> grids;
-        {
-            const std::vector<double> coordX = gdm.getData(iatom, GridDataManager::COORD_X);
-            const std::vector<double> coordY = gdm.getData(iatom, GridDataManager::COORD_Y);
-            const std::vector<double> coordZ = gdm.getData(iatom, GridDataManager::COORD_Z);
-            const std::vector<double> weight = gdm.getData(iatom, GridDataManager::GRID_WEIGHT);
-            grids = GridDataManager::composeGridInfo(coordX, coordY, coordZ, weight);
-        }
-
-        TlVector gridRhoA, gridRhoB;
-        TlVector gradRhoAx, gradRhoAy, gradRhoAz;
-        TlVector gradRhoBx, gradRhoBy, gradRhoBz;
-
-//         if (((this->m_nIteration -1) > 0 ||
-//              (startguess_type=="lcao" || startguess_type=="file_lcao" || startguess_type == "huckel")) && tilude == 0) {
-        if (((this->m_nIteration -1) > 0 ||
-             (this->initialGuessType_ == GUESS_LCAO || this->initialGuessType_ == GUESS_HUCKEL)) && tilude == 0) {
-            this->calcXCIntegRho(grids, PA, PB, gridRhoA, gridRhoB,
-                                 gradRhoAx, gradRhoAy, gradRhoAz, gradRhoBx, gradRhoBy, gradRhoBz);
-        } else {
-            switch (this->m_nMethodType) {
-            case METHOD_RKS:
-                this->calcXCIntegRhoTilde_RKS(grids, RhoAlphaA, gridRhoA);
-                break;
-
-            case METHOD_UKS:
-            case METHOD_ROKS:
-                this->calcXCIntegRhoTilde_UKS(grids, RhoAlphaA, RhoAlphaB, gridRhoA, gridRhoB);
-                break;
-
-            default:
-                CnErr.abort();
-                break;
-            }
-            
-            if (this->nlsd_type >= 0) {
-                this->calcXCIntegGradRhoTilde(grids, RhoAlphaA, RhoAlphaB,
-                                              gradRhoAx, gradRhoAy, gradRhoAz, gradRhoBx, gradRhoBy, gradRhoBz);
-            }
-        }
-
-        // calc Epsilon and Myu
-        if (xc == 12) {
-            // LYP
-            this->calcXCIntegLyp(grids, gridRhoA, gridRhoB,
-                                 gradRhoAx, gradRhoAy, gradRhoAz, gradRhoBx, gradRhoBy, gradRhoBz,
-                                 tmpVectorA, tmpVectorB, eTmpVector);
-        } else {
-            switch (this->m_nMethodType) {
-            case METHOD_RKS:
-                this->calcXCIntegMyuEpsilon_RKS(grids, gridRhoA, tmpVectorA, eTmpVector);
-                break;
-
-            case METHOD_UKS:
-            case METHOD_ROKS:
-                this->calcXCIntegMyuEpsilon_UKS(grids, gridRhoA, gridRhoB, tmpVectorA, tmpVectorB, eTmpVector);
-                break;
-
-            default:
-                CnErr.abort();
-                break;
-            }
-        }
+    TlMatrix gridMat = DfObject::getGridMatrix<TlMatrix>(this->m_nIteration -1);
+    switch (this->m_nMethodType) {
+    case METHOD_RKS:
+        this->calcXCIntegRhoTilde_RKS(RhoAlphaA, &gridMat);
+        break;
+        
+    case METHOD_UKS:
+    case METHOD_ROKS:
+        this->calcXCIntegRhoTilde_UKS(RhoAlphaA, RhoAlphaB, &gridMat);
+        break;
+        
+    default:
+        CnErr.abort();
+        break;
+    }
+    DfObject::saveGridMatrix(this->m_nIteration, gridMat);
+    
+    switch (this->m_nMethodType) {
+    case METHOD_RKS:
+        this->calcXCIntegMyuEpsilon_RKS(gridMat, tmpVectorA, eTmpVector);
+        break;
+        
+    case METHOD_UKS:
+    case METHOD_ROKS:
+        this->calcXCIntegMyuEpsilon_UKS(gridMat, tmpVectorA, tmpVectorB, eTmpVector);
+        break;
+        
+    default:
+        CnErr.abort();
+        break;
     }
 }
 
@@ -442,245 +371,16 @@ void DfCalcGrid::getPrefactorForDerivative(int nType, double alpha, const TlPosi
     }
 }
 
-void DfCalcGrid::calcXCIntegRho(const std::vector<GridDataManager::GridInfo>& grids,
-                                const TlSymmetricMatrix& PA, const TlSymmetricMatrix& PB,
-                                TlVector& gridRhoA, TlVector& gridRhoB,
-                                TlVector& gradRhoAx, TlVector& gradRhoAy, TlVector& gradRhoAz,
-                                TlVector& gradRhoBx, TlVector& gradRhoBy, TlVector& gradRhoBz)
+void DfCalcGrid::calcXCIntegRhoTilde_RKS(const TlVector& RhoAlphaA,
+                                         TlMatrix* pGridMat)
 {
-    //****** calc Rou ****************************************************
-    const size_t GPthrnum = grids.size();
-    gridRhoA = TlVector(GPthrnum);
-    gridRhoB = TlVector(GPthrnum);
-    if (this->nlsd_type >= 0) {
-        gradRhoAx = TlVector(GPthrnum);
-        gradRhoAy = TlVector(GPthrnum);
-        gradRhoAz = TlVector(GPthrnum);
-        gradRhoBx = TlVector(GPthrnum);
-        gradRhoBy = TlVector(GPthrnum);
-        gradRhoBz = TlVector(GPthrnum);
-    }
+    const index_type numOfGrids = pGridMat->getNumOfRows();
+    for (index_type i = 0; i < numOfGrids; ++i) {
+        const TlPosition crdPoint(pGridMat->get(i, 0),
+                                  pGridMat->get(i, 1),
+                                  pGridMat->get(i, 2));
 
-    for (size_t i = 0; i < GPthrnum; ++i) {
-        int ptmp = 0;
-        const TlPosition crdPoint = grids[i].position;
-
-        // calc gporb
-        const int dNumOfOrb = this->m_nNumOfAOs;
-        std::vector<double> gporb(dNumOfOrb, 0.0);
-        std::vector<int> gpnum;
-        gpnum.reserve(dNumOfOrb);
-        for (int p = 0; p < dNumOfOrb; ++p) {
-            //const TlPosition pos = crdPoint - this->m_atomPositions[this->flVctOtable[ptmp +p].atomBelong];
-            const TlPosition pos = crdPoint - this->m_tlOrbInfo.getPosition(p);
-            const double distance2 = pos.squareDistanceFrom();
-            //const int pcont = this->flVctOtable[ptmp + p].contract;
-            const int pcont = this->m_tlOrbInfo.getCgtoContraction(p);
-
-            const int basisType = this->m_tlOrbInfo.getBasisType(p);
-            const double prefactor = this->getPrefactor(basisType, pos);
-            
-            for (int l = 0; l < pcont; ++l) {
-                //const double shoulder  = this->flVctOtable[ptmp +p +l].expAlpha * distance2;
-                const double alpha = this->m_tlOrbInfo.getExponent(p, l);
-                const double shoulder = alpha * distance2;
-                
-                if (shoulder <= TOOBIG) {
-                    const double gtmp = std::exp(-shoulder);
-                    //const double prefactor = this->getPrefactor(this->flVctOtable[ptmp +p +l].basisType, pos);
-                    //gporb[p] += prefactor * this->flVctOtable[ptmp +p +l].preExp * gtmp;
-                    gporb[p] += prefactor * this->m_tlOrbInfo.getCoefficient(p, l) * gtmp;
-                }
-            }
-
-            ptmp += pcont - 1;
-            if (std::fabs(gporb[p]) > EPS) {
-                gpnum.push_back(p);
-            }
-        }
-
-        // get gridRho =====================================================
-        const int num = gpnum.size();
-        switch (this->m_nMethodType) {
-        case METHOD_RKS:
-            {
-                for (int p = 0; p < num; ++p) {
-                    const int pp = gpnum[p];
-                    const double gporb_p = gporb[pp];
-                    gridRhoA[i] += PA(pp, pp) * gporb_p * gporb_p;
-                    
-                    for (int q = p + 1; q < num; ++q) {
-                        const int qq = gpnum[q];
-                        gridRhoA[i] += 2.0 * PA(pp, qq) * gporb_p * gporb[qq];
-                    }
-                }
-            }
-            break;
-
-        case METHOD_UKS:
-        case METHOD_ROKS:
-            {
-                for (int p = 0; p < num; ++p) {
-                    const int pp = gpnum[p];
-                    const double gporb_p = gporb[pp];
-                    gridRhoA[i] += PA(pp, pp) * gporb_p * gporb_p;
-                    gridRhoB[i] += PB(pp, pp) * gporb_p * gporb_p;
-                    
-                    for (int q = p+1; q < num; ++q) {
-                        const int qq = gpnum[q];
-                        gridRhoA[i] += 2.0 * PA(pp, qq) * gporb_p * gporb[qq];
-                        gridRhoB[i] += 2.0 * PB(pp, qq) * gporb_p * gporb[qq];
-                    }
-                }
-            }
-            break;
-
-        default:
-            CnErr.abort();
-            break;
-        }
-
-        if (this->nlsd_type >= 0) {
-            int ptmp  = 0;
-            // calc Gradient gporb
-            //const int dNumOfOrb = this->norb;
-            const int dNumOfOrb = this->m_nNumOfAOs;
-            std::vector<double> gradgx(dNumOfOrb, 0.0);
-            std::vector<double> gradgy(dNumOfOrb, 0.0);
-            std::vector<double> gradgz(dNumOfOrb, 0.0);
-            std::vector<int> gradnx;
-            gradnx.reserve(dNumOfOrb);
-            std::vector<int> gradny;
-            gradny.reserve(dNumOfOrb);
-            std::vector<int> gradnz;
-            gradnz.reserve(dNumOfOrb);
-
-            for (int r = 0; r < dNumOfOrb; ++r) {
-                //const TlPosition pos = crdPoint - this->m_atomPositions[this->flVctOtable[ptmp + r].atomBelong];
-                const TlPosition pos = crdPoint - this->m_tlOrbInfo.getPosition(r);
-                const double distance2 = pos.squareDistanceFrom();
-                //const int   pcont     = this->flVctOtable[ ptmp + r ].contract;
-                const int pcont = this->m_tlOrbInfo.getCgtoContraction(r);
-
-                const int basisType = this->m_tlOrbInfo.getBasisType(r);
-
-                for (int h = 0; h < pcont; ++h) {
-                    //const double alpha     = this->flVctOtable[ptmp +r +h].expAlpha;
-                    //const double shoulder  = alpha * distance2;
-                    const double alpha = this->m_tlOrbInfo.getExponent(r, h);
-                    const double shoulder = alpha * distance2;
-
-                    if (shoulder <= TOOBIG) {
-                        const double gtmp = std::exp(-shoulder) * this->m_tlOrbInfo.getCoefficient(r, h);
-                        double prefactorx = 0.0;
-                        double prefactory = 0.0;
-                        double prefactorz = 0.0;
-                        //this->getPrefactorForDerivative(this->flVctOtable[ptmp +r +h].basisType, alpha, pos,
-                        //&prefactorx, &prefactory, &prefactorz);
-                        this->getPrefactorForDerivative(basisType, alpha, pos,
-                                                        &prefactorx, &prefactory, &prefactorz);
-
-//                         gradgx[r] += prefactorx * this->flVctOtable[ ptmp + r + h ].preExp * gtmp;
-//                         gradgy[r] += prefactory * this->flVctOtable[ ptmp + r + h ].preExp * gtmp;
-//                         gradgz[r] += prefactorz * this->flVctOtable[ ptmp + r + h ].preExp * gtmp;
-                        gradgx[r] += prefactorx * gtmp;
-                        gradgy[r] += prefactory * gtmp;
-                        gradgz[r] += prefactorz * gtmp;
-                    }
-                }
-
-                ptmp += pcont - 1;
-
-                if (fabs(gradgx[r]) > EPS) {
-                    gradnx.push_back(r);
-                }
-                if (fabs(gradgy[r]) > EPS) {
-                    gradny.push_back(r);
-                }
-                if (fabs(gradgz[r]) > EPS) {
-                    gradnz.push_back(r);
-                }
-            }
-
-            //========================= accelerate =============================
-            const int numgx = gradnx.size();
-            const int numgy = gradny.size();
-            const int numgz = gradnz.size();
-
-            switch (this->m_nMethodType) {
-            case METHOD_RKS:
-                {
-                    for (int q = 0; q < num; ++q) {
-                        const int qq = gpnum[q];
-                        const double gporb_q2 = 2.0 * gporb[qq];
-                        
-                        for (int r = 0; r < numgx; ++r) {
-                            const int rr = gradnx[r];
-                            gradRhoAx[i] += PA(qq, rr) * gradgx[rr] * gporb_q2;
-                        }
-                        
-                        for (int r = 0; r < numgy; ++r) {
-                            const int rr = gradny[r];
-                            gradRhoAy[i] += PA(qq, rr) * gradgy[rr] * gporb_q2;
-                        }
-                        
-                        for (int r = 0; r < numgz; ++r) {
-                            const int rr = gradnz[r];
-                            gradRhoAz[i] += PA(qq, rr) * gradgz[rr] * gporb_q2;
-                        }
-                    }
-                }
-                break;
-
-            case METHOD_UKS:
-            case METHOD_ROKS:
-                {
-                    for (int q = 0; q < num; ++q) {
-                        const int qq = gpnum[q];
-                        const double gporb_q2 = 2.0 * gporb[qq];
-                        
-                        for (int r = 0; r < numgx; ++r) {
-                            const int rr = gradnx[r];
-                            gradRhoAx[i] += PA(qq, rr) * gradgx[rr] * gporb_q2;
-                            gradRhoBx[i] += PB(qq, rr) * gradgx[rr] * gporb_q2;
-                        }
-                        
-                        for (int r = 0; r < numgy; ++r) {
-                            const int rr = gradny[r];
-                            gradRhoAy[i] += PA(qq, rr) * gradgy[rr] * gporb_q2;
-                            gradRhoBy[i] += PB(qq, rr) * gradgy[rr] * gporb_q2;
-                        }
-                        
-                        for (int r = 0; r < numgz; ++r) {
-                            const int rr = gradnz[r];
-                            gradRhoAz[i] += PA(qq, rr) * gradgz[rr] * gporb_q2;
-                            gradRhoBz[i] += PB(qq, rr) * gradgz[rr] * gporb_q2;
-                        }
-                    }
-                }
-                break;
-
-            default:
-                CnErr.abort();
-                break;
-            }
-        }
-    }
-}
-
-void DfCalcGrid::calcXCIntegRhoTilde_RKS(const std::vector<GridDataManager::GridInfo>& grids,
-                                         const TlVector& RhoAlphaA, TlVector& gridRhoA)
-{
-    const size_t GPthrnum = grids.size();
-    gridRhoA = TlVector(GPthrnum);
-
-    for (size_t i = 0; i < GPthrnum; ++i) {
-        const TlPosition crdPoint = grids[i].position;
-
-        // The next loop can be conbined up with idelta one,
-        // because the expanded number of Rou, nauxden, is same as that of Myu, numOfAuxXC_.
-        // However, these are separeted as follow for further extention.
-        // If you want to speed up, you must combine these loop.
+        double gridRhoA = 0.0;
         for (int ialpha = 0; ialpha < this->m_nNumOfAux; ++ialpha) {
             // calc gAlpha
             const TlPosition pos = crdPoint - this->m_tlOrbInfoAuxCD_.getPosition(ialpha);
@@ -709,41 +409,35 @@ void DfCalcGrid::calcXCIntegRhoTilde_RKS(const std::vector<GridDataManager::Grid
                 }
 
                 gAlpha *= prefactor * coef;
-                gridRhoA[i] += RhoAlphaA[ialpha] * gAlpha;
+                gridRhoA += RhoAlphaA[ialpha] * gAlpha;
             }
         }
+        pGridMat->set(i, 5, gridRhoA);
     }
 }
 
-void DfCalcGrid::calcXCIntegRhoTilde_UKS(const std::vector<GridDataManager::GridInfo>& grids,
-                                         const TlVector& RhoAlphaA, const TlVector& RhoAlphaB,
-                                         TlVector& gridRhoA, TlVector& gridRhoB)
+void DfCalcGrid::calcXCIntegRhoTilde_UKS(const TlVector& RhoAlphaA, const TlVector& RhoAlphaB,
+                                         TlMatrix* pGridMat)
 {
-    const int GPthrnum = grids.size();
-    gridRhoA = TlVector(GPthrnum);
-    gridRhoB = TlVector(GPthrnum);
+    const index_type numOfGrids = pGridMat->getNumOfRows();
+    for (index_type i = 0; i < numOfGrids; ++i) {
+        const TlPosition crdPoint(pGridMat->get(i, 0),
+                                  pGridMat->get(i, 1),
+                                  pGridMat->get(i, 2));
 
-    for (int i = 0; i < GPthrnum; ++i) {
-        const TlPosition crdPoint = grids[i].position;
-
-        // The next loop can be conbined up with idelta one,
-        // because the expanded number of Rou, m_nNumOfAux, is same as that of Myu, numOfAuxXC_.
-        // However, these are separeted as follow for further extention.
-        // If you want to speed up, you must combine these loop.
+        double gridRhoA = 0.0;
+        double gridRhoB = 0.0;
         for (int ialpha = 0; ialpha < this->m_nNumOfAux; ++ialpha) {
             // calc gAlpha
-            //const TlPosition pos = crdPoint - this->m_atomPositions[this->flVctRhoTable[ialpha].atomBelong];
             const TlPosition pos = crdPoint - this->m_tlOrbInfoAuxCD_.getPosition(ialpha);
 
             const double distance2 = pos.squareDistanceFrom();
-            //const double shoulder  = this->flVctRhoTable[ialpha].expAlpha * distance2;
             const double shoulder  = this->m_tlOrbInfoAuxCD_.getExponent(ialpha, 0) * distance2;
             
             if (shoulder <= TOOBIG) {
                 double gAlpha = exp(- shoulder);
                 const int basisType = this->m_tlOrbInfoAuxCD_.getBasisType(ialpha);
                 
-                //const double prefactor = this->getPrefactor(this->flVctRhoTable[ialpha].basisType, pos);
                 const double prefactor = this->getPrefactor(basisType, pos);
 
                 double coef = this->m_tlOrbInfoAuxCD_.getCoefficient(ialpha, 0);
@@ -762,73 +456,17 @@ void DfCalcGrid::calcXCIntegRhoTilde_UKS(const std::vector<GridDataManager::Grid
                 }
 
                 gAlpha *= prefactor * coef;
-                gridRhoA[i] += RhoAlphaA[ialpha] * gAlpha;
-                gridRhoB[i] += RhoAlphaB[ialpha] * gAlpha; // for SP and ROKS case
+                gridRhoA += RhoAlphaA[ialpha] * gAlpha;
+                gridRhoB += RhoAlphaB[ialpha] * gAlpha; // for SP and ROKS case
             }
         }
+
+        pGridMat->set(i, 5, gridRhoA);
+        pGridMat->set(i, 6, gridRhoB);
     }
 }
 
-void DfCalcGrid::calcXCIntegGradRhoTilde(const std::vector<GridDataManager::GridInfo>& grids,
-                                         const TlVector& RhoAlphaA, const TlVector& RhoAlphaB,
-                                         TlVector& gradRhoAx, TlVector& gradRhoAy, TlVector& gradRhoAz,
-                                         TlVector& gradRhoBx, TlVector& gradRhoBy, TlVector& gradRhoBz)
-{
-    const size_t GPthrnum = grids.size();
-    gradRhoAx = TlVector(GPthrnum);
-    gradRhoAy = TlVector(GPthrnum);
-    gradRhoAz = TlVector(GPthrnum);
-    gradRhoBx = TlVector(GPthrnum);
-    gradRhoBy = TlVector(GPthrnum);
-    gradRhoBz = TlVector(GPthrnum);
-
-    for (size_t i = 0; i < GPthrnum; ++i) {
-        const TlPosition crdPoint = grids[i].position;
-
-        // calc Grad Rou~(r)
-        for (int ialpha = 0; ialpha < this->m_nNumOfAux; ++ialpha) {
-            // calc gAlpha
-            //const TlPosition pos = crdPoint - this->m_atomPositions[this->flVctRhoTable[ialpha].atomBelong];
-            const TlPosition pos = crdPoint - this->m_tlOrbInfoAuxCD_.getPosition(ialpha);
-
-            const double distance2 = pos.squareDistanceFrom();
-
-            //const double alpha     = this->flVctRhoTable[ialpha].expAlpha;
-            const double alpha = this->m_tlOrbInfoAuxCD_.getExponent(ialpha, 0);
-            //const double shoulder  = alpha * distance2;
-            const double shoulder  = alpha * distance2;
-
-            if (shoulder <= TOOBIG) {
-                const double gAlpha = exp(-shoulder);
-
-                const int basisType = this->m_tlOrbInfoAuxCD_.getBasisType(ialpha);
-                double prefactorx = 0.0;
-                double prefactory = 0.0;
-                double prefactorz = 0.0;
-//                 this->getPrefactorForDerivative(this->flVctRhoTable[ialpha].basisType, alpha, pos,
-//                                                 &prefactorx, &prefactory, &prefactorz);
-                this->getPrefactorForDerivative(basisType, alpha, pos,
-                                                &prefactorx, &prefactory, &prefactorz);
-
-                //const double pretmp = this->flVctRhoTable[ialpha].preExp * gAlpha;
-                const double pretmp = this->m_tlOrbInfoAuxCD_.getCoefficient(ialpha, 0) * gAlpha;
-                gradRhoAx[i] += RhoAlphaA[ialpha] * prefactorx * pretmp;
-                gradRhoAy[i] += RhoAlphaA[ialpha] * prefactory * pretmp;
-                gradRhoAz[i] += RhoAlphaA[ialpha] * prefactorz * pretmp;
-
-                if (this->m_nMethodType != METHOD_RKS) {   // for SP and ROKS case
-                    gradRhoBx[i] += RhoAlphaB[ialpha] * prefactorx * pretmp;
-                    gradRhoBy[i] += RhoAlphaB[ialpha] * prefactory * pretmp;
-                    gradRhoBz[i] += RhoAlphaB[ialpha] * prefactorz * pretmp;
-                }
-            }
-        }
-    }
-}
-
-
-void DfCalcGrid::calcXCIntegMyuEpsilon_RKS(const std::vector<GridDataManager::GridInfo>& grids,
-                                           const TlVector& gridRhoA,
+void DfCalcGrid::calcXCIntegMyuEpsilon_RKS(const TlMatrix& gridMat,
                                            TlVector& tmpVectorA, TlVector& eTmpVector)
 {
     double Coef = 0.0;
@@ -841,31 +479,31 @@ void DfCalcGrid::calcXCIntegMyuEpsilon_RKS(const std::vector<GridDataManager::Gr
     const double sCoef = pow(0.75 / M_PI, F13);
     const double XCoef = -0.75 * pow(1.5 / M_PI, F23);
 
-    const int GPthrnum = grids.size();
-    for (int i = 0; i < GPthrnum; ++i) {
-        if (gridRhoA[i] <= 0.0) {
+    const index_type numOfGrids = gridMat.getNumOfRows();
+    for (index_type i = 0; i < numOfGrids; ++i) {
+        double gridRhoA = gridMat.get(i, 5);
+        if (gridRhoA <= 0.0) {
             continue;
         }
 
-        const double rs  = sCoef * pow(gridRhoA[i], -F13);
-        const double rsA = sCoef * pow(gridRhoA[i],  F13);
-        const TlPosition crdPoint = grids[i].position;
-        const double weight = grids[i].weight;
+        const double rs  = sCoef * pow(gridRhoA, -F13);
+        const double rsA = sCoef * pow(gridRhoA,  F13);
+        const TlPosition crdPoint(gridMat.get(i, 0),
+                                  gridMat.get(i, 1),
+                                  gridMat.get(i, 2));
+        const double weight = gridMat.get(i, 3);
 
         for (int idelta = 0; idelta < this->numOfAuxXC_; ++idelta) {
             // calc gDelta
-            //const TlPosition pos = crdPoint - this->m_atomPositions[this->flVctMyuTable[idelta].atomBelong];
             const TlPosition pos = crdPoint - this->m_tlOrbInfoXC_.getPosition(idelta);
 
             const double distance2 = pos.squareDistanceFrom();
 
-            //const double shoulder  = this->flVctMyuTable[idelta].expAlpha * distance2;
             const double shoulder = this->m_tlOrbInfoXC_.getExponent(idelta, 0) * distance2;
             if (shoulder <= TOOBIG) {
                 double gDelta = exp(-shoulder);
 
                 const int basisType = this->m_tlOrbInfoXC_.getBasisType(idelta);
-                //const double prefactor = this->getPrefactor(this->flVctMyuTable[idelta].basisType, pos);
                 double prefactor = this->getPrefactor(basisType, pos);
                 switch (basisType) {
                 case 7: // dxx-yy
@@ -881,7 +519,6 @@ void DfCalcGrid::calcXCIntegMyuEpsilon_RKS(const std::vector<GridDataManager::Gr
                     break;
                 }
 
-                //gDelta *= prefactor * this->flVctMyuTable[idelta].preExp;
                 gDelta *= prefactor * this->m_tlOrbInfoXC_.getCoefficient(idelta, 0);
                 const double gDweight = gDelta * weight;
                 double EpsilonXP = 0.0;
@@ -933,8 +570,7 @@ void DfCalcGrid::calcXCIntegMyuEpsilon_RKS(const std::vector<GridDataManager::Gr
     }
 }
 
-void DfCalcGrid::calcXCIntegMyuEpsilon_UKS(const std::vector<GridDataManager::GridInfo>& grids,
-                                           const TlVector& gridRhoA, const TlVector& gridRhoB,
+void DfCalcGrid::calcXCIntegMyuEpsilon_UKS(const TlMatrix& gridMat,
                                            TlVector& tmpVectorA, TlVector& tmpVectorB, TlVector& eTmpVector)
 {
     double Coef = 0.0;
@@ -948,17 +584,20 @@ void DfCalcGrid::calcXCIntegMyuEpsilon_UKS(const std::vector<GridDataManager::Gr
     // Myu & Epsilon case
     const double sCoef = pow(0.75 / M_PI, F13);
     const double XCoef = -0.75 * pow(1.5 / M_PI, F23);
-    const size_t GPthrnum = grids.size();
-    for (size_t i = 0; i < GPthrnum; ++i) {
-        if ((gridRhoA[i] <= 0.0) || (gridRhoB[i] <= 0.0)) {
+
+    const index_type numOfGrids = gridMat.getNumOfRows();
+    for (index_type i = 0; i < numOfGrids; ++i) {
+        const double gridRhoA = gridMat.get(i, 5);
+        const double gridRhoB = gridMat.get(i, 6);
+        if ((gridRhoA <= 0.0) || (gridRhoB <= 0.0)) {
             continue;
         }
 
-        const double rsA      = sCoef * pow(gridRhoA[i], F13);
-        const double rsB      = sCoef * pow(gridRhoB[i], F13);
-        const double TotalRou = gridRhoA[i] + gridRhoB[i];
+        const double rsA      = sCoef * pow(gridRhoA, F13);
+        const double rsB      = sCoef * pow(gridRhoB, F13);
+        const double TotalRou = gridRhoA + gridRhoB;
         const double rs       = sCoef * pow(TotalRou,   -F13);
-        const double Theta    = (gridRhoA[i] - gridRhoB[i]) / TotalRou;
+        const double Theta    = (gridRhoA - gridRhoB) / TotalRou;
         const double pTheta   = 1.0 + Theta;
         const double mTheta   = 1.0 - Theta;
         const double pTheta13 = pow(pTheta, F13);
@@ -968,17 +607,17 @@ void DfCalcGrid::calcXCIntegMyuEpsilon_UKS(const std::vector<GridDataManager::Gr
         const double fdTheta  = poldrfunc(Theta);
         const double Csp      = 1.0 + (pow(2.0, F13) - 1.0) * fTheta;
 
-        const TlPosition crdPoint = grids[i].position;
-        const double weight = grids[i].weight;
+        const TlPosition crdPoint(gridMat.get(i, 0),
+                                  gridMat.get(i, 1),
+                                  gridMat.get(i, 2));
+        const double weight = gridMat.get(i, 3);
 
         for (int idelta = 0; idelta < this->numOfAuxXC_; ++idelta) {
             // calc gDelta
-            //const TlPosition pos = crdPoint - this->m_atomPositions[this->flVctMyuTable[idelta].atomBelong];
             const TlPosition pos = crdPoint - this->m_tlOrbInfoXC_.getPosition(idelta);
 
             const double distance2 = pos.squareDistanceFrom();
 
-            //const double shoulder  = this->flVctMyuTable[idelta].expAlpha * distance2;
             const double shoulder = this->m_tlOrbInfoXC_.getExponent(idelta, 0) * distance2;
             if (shoulder <= TOOBIG) {
                 double gDelta = exp(-shoulder);
@@ -1070,222 +709,6 @@ void DfCalcGrid::calcXCIntegMyuEpsilon_UKS(const std::vector<GridDataManager::Gr
                                       + (fTheta - fdTheta * pTheta) * EpsilonCF
                                       + mfTheta * RouDeltaEpsilonCP
                                       +  fTheta * RouDeltaEpsilonCF;
-            }
-        }
-    }
-}
-
-
-void DfCalcGrid::calcXCIntegLyp(const std::vector<GridDataManager::GridInfo>& grids,
-                                const TlVector& gridRhoA, const TlVector& gridRhoB,
-                                const TlVector& gradRhoAx, const TlVector& gradRhoAy, const TlVector& gradRhoAz,
-                                const TlVector& gradRhoBx, const TlVector& gradRhoBy, const TlVector& gradRhoBz,
-                                TlVector& tmpVectorA, TlVector& tmpVectorB, TlVector& eTmpVector)
-{
-    const size_t GPthrnum = grids.size();
-    for (size_t i = 0; i < GPthrnum; ++i) {
-        if (gridRhoA[i] <= 0) {
-            continue;
-        }
-        if ((this->m_nMethodType != METHOD_RKS) && (gridRhoB[i] <= 0)) {
-            continue;
-        }
-
-        double RouA   = 0.0;
-        double RouB   = 0.0;
-        double gradAx = 0.0;
-        double gradAy = 0.0;
-        double gradAz = 0.0;
-        double gradBx = 0.0;
-        double gradBy = 0.0;
-        double gradBz = 0.0;
-
-        double TotalRou = 0.0;
-        if (this->m_nMethodType == METHOD_RKS) {
-            // for NSP
-            TotalRou = gridRhoA[i];
-            RouA     = gridRhoA[i] /2.0;
-            RouB     = RouA;
-            gradAx   = gradRhoAx[i]/2.0;
-            gradAy   = gradRhoAy[i]/2.0;
-            gradAz   = gradRhoAz[i]/2.0;
-            gradBx   = gradAx;
-            gradBy   = gradAy;
-            gradBz   = gradAz;
-        } else {
-            // for SP and ROKS
-            TotalRou = gridRhoA[i] + gridRhoB[i];
-            RouA     = gridRhoA[i];
-            RouB     = gridRhoB[i];
-            gradAx   = gradRhoAx[i];
-            gradAy   = gradRhoAy[i];
-            gradAz   = gradRhoAz[i];
-            gradBx   = gradRhoBx[i];
-            gradBy   = gradRhoBy[i];
-            gradBz   = gradRhoBz[i];
-        }
-
-        const double GAA = gradAx*gradAx + gradAy*gradAy + gradAz*gradAz;
-        const double GBB = gradBx*gradBx + gradBy*gradBy + gradBz*gradBz;
-        const double GAB = gradAx*gradBx + gradAy*gradBy + gradAz*gradBz;
-        const double XA  = sqrt(GAA) / pow(RouA, F43);
-        const double XB  = sqrt(GBB) / pow(RouB, F43);
-
-        const TlPosition crdPoint = grids[i].position;
-        const double weight = grids[i].weight;
-
-        for (int idelta = 0; idelta < this->numOfAuxXC_; ++idelta) {
-            // calc gDelta & grad( gDelta )
-            //const TlPosition pos = crdPoint - this->m_atomPositions[this->flVctMyuTable[idelta].atomBelong];
-            const TlPosition pos = crdPoint - this->m_tlOrbInfoXC_.getPosition(idelta);
-            const double distance2 = pos.squareDistanceFrom();
-
-            //const double alpha     = this->flVctMyuTable[idelta].expAlpha;
-            const double alpha = this->m_tlOrbInfoXC_.getExponent(idelta, 0);
-            const double shoulder  = alpha * distance2;
-
-            if (shoulder <= TOOBIG) {
-                // no need to calculate ifnot
-                const double gDeltatmp = exp(-shoulder);
-                //const double prefactor  = this->getPrefactor(this->flVctMyuTable[idelta].basisType, pos);
-                const int basisType = this->m_tlOrbInfoXC_.getBasisType(idelta);
-                const double prefactor = this->getPrefactor(basisType, pos);
-
-                double prefactorx = 0.0;
-                double prefactory = 0.0;
-                double prefactorz = 0.0;
-//                 this->getPrefactorForDerivative(this->flVctMyuTable[idelta].basisType, alpha, pos,
-//                                                 &prefactorx, &prefactory, &prefactorz);
-                this->getPrefactorForDerivative(basisType, alpha, pos,
-                                                &prefactorx, &prefactory, &prefactorz);
-
-                //double gDelta = gDeltatmp * prefactor * this->flVctMyuTable[idelta].preExp;
-                double gDelta = gDeltatmp * prefactor * this->m_tlOrbInfoXC_.getCoefficient(idelta, 0);
-                const double gDweight       = gDelta * weight;
-
-                //const double pretmp         = this->flVctMyuTable[idelta].preExp * gDeltatmp * weight;
-                const double pretmp = this->m_tlOrbInfoXC_.getCoefficient(idelta, 0) * gDeltatmp * weight;
-                const double gradgDwx       = prefactorx * pretmp;
-                const double gradgDwy       = prefactory * pretmp;
-                const double gradgDwz       = prefactorz * pretmp;
-
-                // Calc Exchange Energy Correction
-                double GCXetmp = 0.0, GCCetmp = 0.0;   // X  = eXchange term, C = Correlation term
-                double GCXtmpA = 0.0, GCXtmpB = 0.0;
-                double GCCtmpA = 0.0, GCCtmpB = 0.0;
-                double GCXDetmp= 0.0, GCXDtmpA= 0.0, GCXDtmpB= 0.0;
-
-                if (xc != 12) {
-                    // for vwn
-
-                    if (nlsd_type == 0) {
-                        // b88
-                        GCXDetmp = DB88func(RouA, RouB, XA, XB);
-                        if (this->m_nMethodType == METHOD_RKS) {
-                            // for NSP
-                            GCXDtmpA = DB88dfunc(RouA, XA, GAA,
-                                                 gradAx, gradAy, gradAz,
-                                                 gDweight, gradgDwx, gradgDwy, gradgDwz);
-                            GCXDtmpB = GCXDtmpA;
-                        } else {
-                            // for SP and ROKS
-                            GCXDtmpA = DB88dfunc(RouA, XA, GAA,
-                                                 gradAx, gradAy, gradAz,
-                                                 gDweight, gradgDwx, gradgDwy, gradgDwz);
-                            GCXDtmpB = DB88dfunc(RouB, XB, GBB,
-                                                 gradBx, gradBy, gradBz,
-                                                 gDweight, gradgDwx, gradgDwy, gradgDwz);
-                        }
-                    } else if (nlsd_type == 2) {
-                        // g96
-                        GCXDetmp = DG96func(RouA, RouB, XA, XB);
-                        if (this->m_nMethodType == METHOD_RKS) {
-                            // for NSP
-                            GCXDtmpA = DG96dfunc(RouA, XA, GAA,
-                                                 gradAx, gradAy, gradAz,
-                                                 gDweight, gradgDwx, gradgDwy, gradgDwz);
-                            GCXDtmpB = GCXDtmpA;
-                        } else {
-                            // for SP and ROKS
-                            GCXDtmpA = DG96dfunc(RouA, XA, GAA,
-                                                 gradAx, gradAy, gradAz,
-                                                 gDweight, gradgDwx, gradgDwy, gradgDwz);
-                            GCXDtmpB = DG96dfunc(RouB, XB, GBB,
-                                                 gradBx, gradBy, gradBz,
-                                                 gDweight, gradgDwx, gradgDwy, gradgDwz);
-                        }
-                    }
-                } else {
-                    // lyp
-                    if (nlsd_type == 0) {
-                        // b88
-                        GCXetmp = B88func(RouA, RouB, XA, XB);
-                        if (this->m_nMethodType == METHOD_RKS) {
-                            // for NSP
-                            GCXtmpA = B88dfunc(RouA, XA, GAA,
-                                               gradAx, gradAy, gradAz,
-                                               gDweight, gradgDwx, gradgDwy, gradgDwz);
-                            GCXtmpB = GCXtmpA;
-                        } else {
-                            // for SP and ROKS
-                            GCXtmpA = B88dfunc(RouA, XA, GAA,
-                                               gradAx, gradAy, gradAz,
-                                               gDweight, gradgDwx, gradgDwy, gradgDwz);
-                            GCXtmpB = B88dfunc(RouB, XB, GBB,
-                                               gradBx, gradBy, gradBz,
-                                               gDweight, gradgDwx, gradgDwy, gradgDwz);
-                        }
-                    } else if (nlsd_type == 2) {
-                        // g96
-                        GCXetmp = G96func(RouA, RouB, XA, XB);
-                        if (this->m_nMethodType == METHOD_RKS) {
-                            // for NSP
-                            GCXtmpA = G96dfunc(RouA, XA, GAA,
-                                               gradAx, gradAy, gradAz,
-                                               gDweight, gradgDwx, gradgDwy, gradgDwz);
-                            GCXtmpB = GCXtmpA;
-                        } else {
-                            // for SP and ROKS
-                            GCXtmpA = G96dfunc(RouA, XA, GAA,
-                                               gradAx, gradAy, gradAz,
-                                               gDweight, gradgDwx, gradgDwy, gradgDwz);
-                            GCXtmpB = G96dfunc(RouB, XB, GBB,
-                                               gradBx, gradBy, gradBz,
-                                               gDweight, gradgDwx, gradgDwy, gradgDwz);
-                        }
-                    }
-
-                    // Correlation Energy Correction, lyp
-                    GCCetmp = LYPfunc(TotalRou, RouA, RouB, GAA, GAB, GBB);
-                    if (this->m_nMethodType == METHOD_RKS) {
-                        // for NSP
-                        GCCtmpA = LYPdfunc(TotalRou, RouA, RouB, GAA, GAB, GBB,
-                                           gradAx, gradAy, gradAz, gradBx, gradBy, gradBz,
-                                           gDweight, gradgDwx, gradgDwy, gradgDwz);
-                        GCCtmpB = GCCtmpA;
-                    } else {
-                        // for SP and ROKS
-                        GCCtmpA = LYPdfunc(TotalRou, RouA, RouB, GAA, GAB, GBB,
-                                           gradAx, gradAy, gradAz, gradBx, gradBy, gradBz,
-                                           gDweight, gradgDwx, gradgDwy, gradgDwz);
-                        GCCtmpB = LYPdfunc(TotalRou, RouB, RouA, GBB, GAB, GAA,
-                                           gradBx, gradBy, gradBz, gradAx, gradAy, gradAz,
-                                           gDweight, gradgDwx, gradgDwy, gradgDwz);
-                    }
-                }
-
-                // add b88 or g96 and lyp
-                if (xc != 12) {
-                    // for b88(g96)vwn
-                    eTmpVector[idelta] += (GCXDetmp * gDweight) / TotalRou;
-                    tmpVectorA[idelta] += GCXDtmpA;
-                    tmpVectorB[idelta] += GCXDtmpB;
-                } else {
-                    // for b88(g96)lyp
-                    eTmpVector[idelta] += (GCXetmp + GCCetmp) * gDweight / TotalRou;
-                    tmpVectorA[idelta] += GCXtmpA + GCCtmpA;
-                    tmpVectorB[idelta] += GCXtmpB + GCCtmpB;
-                }
             }
         }
     }
