@@ -89,7 +89,7 @@ protected:
     std::string getOccupationPath(RUN_TYPE runType);
     std::string getEigvalPath(RUN_TYPE runType, int iteration);
     std::string getGridDataFilePath() const;
-    std::string getGridMatrixPath() const;
+    std::string getGridMatrixPath(const int iteration) const;
     
     std::string getDiffDensityMatrixPath(RUN_TYPE runType, int iteration) const;
     std::string getP1pqMatrixPath(int iteration);
@@ -161,10 +161,11 @@ protected:
     
 
     template <class MatrixType>
-    void saveGridMatrix(const MatrixType& gridMatrix);
+    void saveGridMatrix(const int iteration,
+                        const MatrixType& gridMatrix);
     
     template <class MatrixType>
-    MatrixType getGridMatrix();
+    MatrixType getGridMatrix(const int iteration);
     
     
     template <class SymmetricMatrixType>
@@ -588,9 +589,10 @@ SymmetricMatrixType DfObject::getSgdInvMatrix()
 
 
 template<class MatrixType>
-void DfObject::saveGridMatrix(const MatrixType& gridMatrix)
+void DfObject::saveGridMatrix(const int iteration,
+                              const MatrixType& gridMatrix)
 {
-    const std::string path = this->getGridMatrixPath();
+    const std::string path = this->getGridMatrixPath(iteration);
     if (this->isUseCache_ == true) {
         this->matrixCache_.set(path, gridMatrix, true);
     } else {
@@ -600,10 +602,10 @@ void DfObject::saveGridMatrix(const MatrixType& gridMatrix)
 
 
 template<class MatrixType>
-MatrixType DfObject::getGridMatrix()
+MatrixType DfObject::getGridMatrix(const int iteration)
 {
     MatrixType gridMatrix;
-    const std::string path = this->getGridMatrixPath();
+    const std::string path = this->getGridMatrixPath(iteration);
     gridMatrix = this->matrixCache_.get<MatrixType>(path);
     return gridMatrix;
 }

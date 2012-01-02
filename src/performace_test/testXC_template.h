@@ -39,7 +39,9 @@ void testXC(const TlSerializeData& inParam,
     DfCalcGridClass dfCalcGrid(&param);
     DfFunctional_B3LYP b3lyp;
     SymmetricMatrixType K(numOfAOs);
-    dfCalcGrid.calcXCIntegForFockAndEnergy(P, &b3lyp, &K);
+    dfCalcGrid.calcXCIntegForFockAndEnergy(P, SymmetricMatrixType(),
+                                           &b3lyp,
+                                           &K, NULL);
 
     // save
     K.save(KMatrixPath);

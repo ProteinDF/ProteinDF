@@ -9,6 +9,7 @@
 #include <cassert>
 
 #include "TlMatrixObject.h"
+#include "TlMatrix.h"
 #include "TlVector.h"
 
 // default cache size (16 MB)
@@ -84,6 +85,23 @@ public:
     /// @param[in] nCol 指定する列
     virtual TlVector getColumnVector(int nCol) const;
 
+    /// ブロック行列を返す
+    ///
+    /// @param[in] row 始点となる行
+    /// @param[in] col 始点となる列
+    /// @param[in] row_distance 取得する行数
+    /// @param[in] col_distance 取得する列数
+    /// @return row_distance × col_distance 次元のブロック行列
+    virtual TlMatrix getBlockMatrix(index_type row, index_type col,
+                                    index_type rowDistance, index_type colDistance) const;
+
+    /// 行列要素を指定された位置に上書きする
+    ///
+    /// @param[in] row 始点となる行
+    /// @param[in] col 始点となる列
+    /// @param[in] matrix 行列要素
+    virtual void setBlockMatrix(index_type row, index_type col,
+                                const TlMatrix& matrix);
 protected:
     virtual bool readHeader();
 

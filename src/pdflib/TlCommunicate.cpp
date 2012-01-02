@@ -5,6 +5,7 @@
 
 #include "TlCommunicate.h"
 #include "TlVector.h"
+#include "TlMatrixObject.h"
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
 #include "TlSparseSymmetricMatrix.h"
@@ -889,6 +890,26 @@ int TlCommunicate::sendData(const TlVector& data, int destination, int nTag)
     return nErr;
 }
 
+int TlCommunicate::sendData(const TlMatrix& data, const int destination, const int tag)
+{
+    const int headerSize = 2;
+    TlMatrixObject::index_type* pHeader = new TlMatrixObject::index_type[headerSize];
+    pHeader[0] = data.getNumOfRows();
+    pHeader[1] = data.getNumOfCols();
+    int err = this->sendDataX(pHeader, headerSize, destination, tag);
+    this->log_.debug(TlUtils::format("TlCommunicate::sendData(TlMatrix): dest=%d, tag=%d, row=%d, col=%d, err=%d.",
+                                     destination, tag, data.getNumOfRows(), data.getNumOfCols(), err));
+    delete[] pHeader;
+    pHeader = NULL;
+    if (err != 0) {
+        return err;
+    }
+
+    err = this->sendDataX(data.data_, data.getNumOfElements(), destination, tag);
+    this->log_.debug(TlUtils::format("TlCommunicate::sendData(TlMatrix): dest=%d, tag=%d, size=%ld, err=%d.",
+                                     destination, tag, data.getNumOfElements(), err));
+    return err;
+}
 
 int TlCommunicate::sendData(const TlSymmetricMatrix& data, int nDestination, int nTag)
 {
@@ -947,6 +968,24 @@ int TlCommunicate::sendData(const TlPartialSymmetricMatrix& data, int nDestinati
 }
 
 // sendDataX ===================================================================
+int TlCommunicate::sendDataX(const int* pData, const std::size_t size,
+                             const int dest, const int tag)
+{
+    return this->sendDataX(pData, MPI_INT, 0, size, dest, tag);
+}
+
+int TlCommunicate::sendDataX(const unsigned int* pData, const std::size_t size,
+                             const int dest, const int tag)
+{
+    return this->sendDataX(pData, MPI_UNSIGNED, 0, size, dest, tag);
+}
+
+int TlCommunicate::sendDataX(const double* pData, const std::size_t size,
+                             const int dest, const int tag)
+{
+    return this->sendDataX(pData, MPI_DOUBLE, 0, size, dest, tag);
+}
+
 template<typename T>
 int TlCommunicate::sendDataX(const T* pData, const MPI_Datatype mpiType,
                              const std::size_t start, const std::size_t end,
@@ -961,13 +1000,6 @@ int TlCommunicate::sendDataX(const T* pData, const MPI_Datatype mpiType,
     }
 
     return answer;
-}
-
-
-int TlCommunicate::sendDataX(const int* pData, const std::size_t size,
-                             const int dest, const int tag)
-{
-    return this->sendDataX(pData, MPI_INT, 0, size, dest, tag);
 }
 
 // receiveData =================================================================
@@ -1224,6 +1256,29 @@ int TlCommunicate::receiveData(TlVector& rData, int src, int tag)
     return nErr;
 }
 
+int TlCommunicate::receiveData(TlMatrix& data, const int src, const int tag)
+{
+    const int headerSize = 2;
+    TlMatrixObject::index_type* pHeader = new TlMatrixObject::index_type[headerSize];
+    int err = this->receiveDataX(pHeader, headerSize, src, tag);
+    const TlMatrixObject::index_type numOfRows = pHeader[0];
+    const TlMatrixObject::index_type numOfCols = pHeader[1];
+    this->log_.debug(TlUtils::format("TlCommunicate::recvData(TlMatrix): src=%d, tag=%d, row=%d, col=%d, err=%d.",
+                                     src, tag, numOfRows, numOfCols, err));
+    
+    delete[] pHeader;
+    pHeader = NULL;
+    if (err != 0) {
+        return err;
+    }
+    
+    data.resize(numOfRows, numOfCols);
+    err = this->receiveDataX(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(), src, tag);
+    this->log_.debug(TlUtils::format("TlCommunicate::recvData(TlMatrix): src=%d, tag=%d, size=%ld, err=%d.",
+                                     src, tag, data.getNumOfElements(), err));
+    
+    return err;
+}
 
 int TlCommunicate::receiveData(TlSymmetricMatrix& rData, int nSrc, int nTag)
 {
@@ -1291,6 +1346,27 @@ int TlCommunicate::receiveData(TlPartialSymmetricMatrix& rData, int nSrc, int nT
 }
 
 // =============================================================================
+int TlCommunicate::receiveDataX(int* pData, const std::size_t size,
+                                const int src, const int tag)
+{
+    return this->receiveDataX(pData, MPI_INT,
+                              0, size, src, tag);
+}
+
+int TlCommunicate::receiveDataX(unsigned int* pData, const std::size_t size,
+                                const int src, const int tag)
+{
+    return this->receiveDataX(pData, MPI_UNSIGNED,
+                              0, size, src, tag);
+}
+
+int TlCommunicate::receiveDataX(double* pData, const std::size_t size,
+                                const int src, const int tag)
+{
+    return this->receiveDataX(pData, MPI_DOUBLE,
+                              0, size, src, tag);
+}
+
 template<typename T>
 int TlCommunicate::receiveDataX(T* pData, const MPI_Datatype mpiType,
                                const std::size_t start, const std::size_t end,
@@ -1367,7 +1443,6 @@ int TlCommunicate::receiveDataFromAnySource(int& data, int* pSrc, const int tag)
     return this->receiveDataFromAnySource(data, MPI_INT, pSrc, tag);
 }
 
-
 int TlCommunicate::receiveDataFromAnySource(int& data, int* pSrc, int* pTag)
 {
     return this->receiveDataFromAnySource(data, MPI_INT, pSrc, pTag);
@@ -1432,6 +1507,29 @@ int TlCommunicate::receiveDataFromAnySource(std::vector<unsigned long>& data, in
 int TlCommunicate::receiveDataFromAnySource(std::vector<double>& data, int* pSrc, int* pTag)
 {
     return this->receiveDataFromAnySource(data, MPI_DOUBLE, pSrc, pTag);
+}
+
+int TlCommunicate::receiveDataFromAnySource(TlMatrix& data, int* pSrc, int tag)
+{
+    assert(pSrc != NULL);
+
+    const int headerSize = 2;
+    TlMatrixObject::index_type* pHeader = new TlMatrixObject::index_type[headerSize];
+    int src = 0;
+    int err = this->receiveDataFromAnySourceX(pHeader, headerSize, &src, tag);
+    if (err != 0) {
+        return err;
+    }
+    
+    *pSrc = src;
+
+    const TlMatrixObject::index_type numOfRows = pHeader[0];
+    const TlMatrixObject::index_type numOfCols = pHeader[1];
+    delete[] pHeader;
+    pHeader = NULL;
+    
+    data.resize(numOfRows, numOfCols);
+    return this->receiveDataX(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(), src, tag);
 }
 
 int TlCommunicate::receiveDataFromAnySource(TlSparseSymmetricMatrix& rData, int* pSrc, int* pTag)
@@ -2204,11 +2302,13 @@ int TlCommunicate::wait(void* pData, int* pSrc)
 
 // =====================================================================
 // private
-TlCommunicate::TlCommunicate() : workMemSize_(DEFAULT_WORK_MEM_SIZE)
+TlCommunicate::TlCommunicate()
+    : workMemSize_(DEFAULT_WORK_MEM_SIZE), log_(TlLogging::getInstance())
 {
 }
 
 TlCommunicate::TlCommunicate(const TlCommunicate& rhs)
+    : log_(TlLogging::getInstance())
 {
 }
 
@@ -2539,17 +2639,17 @@ int TlCommunicate::broadcast(TlVector& data, const int root)
 
 int TlCommunicate::broadcast(TlMatrix& data, const int root)
 {
-    std::size_t nRow = 0;
-    std::size_t nCol = 0;
+    TlMatrixObject::index_type row = 0;
+    TlMatrixObject::index_type col = 0;
 
     if (this->getRank() == root) {
-        nRow = data.getNumOfRows();
-        nCol = data.getNumOfCols();
+        row = data.getNumOfRows();
+        col = data.getNumOfCols();
     }
     int answer = 0;
-    answer = this->broadcast(nRow, root);
-    answer = this->broadcast(nCol, root);
-    data.resize(nRow, nCol);
+    answer = this->broadcast(row, root);
+    answer = this->broadcast(col, root);
+    data.resize(row, col);
 
     if (answer == 0) {
         this->broadcast(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(), root);

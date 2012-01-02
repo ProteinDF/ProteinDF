@@ -812,6 +812,20 @@ void PdfKeyword::initialize()
     item.syntax           = "(yes|no)";
     item.type             = KWD_HIDDEN;
     this->kwdList_.push_back(item);
+
+    item.keyword          = "debug/save_K";
+    item.explanation      = "";
+    item.defaultValue     = "no";
+    item.syntax           = "(yes|no)";
+    item.type             = KWD_HIDDEN;
+    this->kwdList_.push_back(item);
+    
+    item.keyword          = "debug/save_Fxc_pure";
+    item.explanation      = "";
+    item.defaultValue     = "no";
+    item.syntax           = "(yes|no)";
+    item.type             = KWD_HIDDEN;
+    this->kwdList_.push_back(item);
     
     item.keyword          = "debug/save_forces";
     item.explanation      = "save the force of each term.";

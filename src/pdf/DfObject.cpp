@@ -434,9 +434,10 @@ std::string DfObject::getGridDataFilePath() const
 }
 
 
-std::string DfObject::getGridMatrixPath() const
+std::string DfObject::getGridMatrixPath(const int iteration) const
 {
-    return this->makeFilePath("grid_matrix");
+    return this->makeFilePath("grid_matrix",
+                              TlUtils::xtos(iteration));
 }
 
 

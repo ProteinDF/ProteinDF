@@ -320,3 +320,53 @@ TlFileMatrix& TlFileMatrix::operator*=(const double coef)
 
     return *this;
 }
+
+TlMatrix TlFileMatrix::getBlockMatrix(const index_type row, const index_type col,
+                                      const index_type rowDistance,
+                                      const index_type colDistance) const
+{
+    assert((0 <= row) && (row < this->getNumOfRows()));
+    assert((0 <= col) && (col < this->getNumOfCols()));
+    assert(0 < rowDistance);
+    assert(0 < colDistance);
+
+    assert(0 <= (row + rowDistance) && (row + rowDistance) <= this->getNumOfRows());
+    assert(0 <= (col + colDistance) && (col + colDistance) <= this->getNumOfCols());
+
+    TlMatrix answer(rowDistance, colDistance);
+#pragma omp parallel for
+    for (index_type dr = 0; dr < rowDistance; ++dr) {
+        const index_type r = row + dr;
+        for (index_type dc = 0; dc < colDistance; ++dc) {
+            const index_type c = col + dc;
+
+            answer.set(dr, dc, this->get(r, c));
+        }
+    }
+
+    return answer;
+}
+
+void TlFileMatrix::setBlockMatrix(const index_type row,
+                                  const index_type col,
+                                  const TlMatrix& matrix)
+{
+    const index_type row_distance = matrix.getNumOfRows();
+    const index_type col_distance = matrix.getNumOfCols();
+
+    assert(0 <= row && row < this->getNumOfRows());
+    assert(0 <= col && col < this->getNumOfCols());
+    assert(0 < (row + row_distance) && (row + row_distance) <= this->getNumOfRows());
+    assert(0 < (col + col_distance) && (col + col_distance) <= this->getNumOfCols());
+
+#pragma omp parallel for
+    for (index_type dr = 0; dr < row_distance; ++dr) {
+        const index_type r = row + dr;
+        for (index_type dc = 0; dc < col_distance; ++dc) {
+            const index_type c = col + dc;
+
+            this->set(r, c,  matrix.get(dr, dc));
+        }
+    }
+}
+

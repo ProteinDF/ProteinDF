@@ -14,6 +14,7 @@
 #include "TlCommunicate.h"
 #include "TlTime.h"
 #include "TlUtils.h"
+#include "TlFileMatrix.h"
 
 #define JOB_PROTOCOL_SIZE (4)
 
@@ -42,136 +43,17 @@ DfCalcGridX_Parallel::DfCalcGridX_Parallel(TlSerializeData* pPdfParam)
 
     this->calcMode_ = pdfParam["grid_calcmode"].getInt();
 
-    this->isDebugOut_ = false;
-    const std::string debugOut = TlUtils::toUpper(pdfParam["debug_out"].getStr());
-    if (debugOut == "YES") {
-        this->isDebugOut_ = true;
-    }
+    // this->isDebugOut_ = false;
+    // const std::string debugOut = TlUtils::toUpper(pdfParam["debug_out"].getStr());
+    // if (debugOut == "YES") {
+    //     this->isDebugOut_ = true;
+    // }
 }
 
 DfCalcGridX_Parallel::~DfCalcGridX_Parallel()
 {
 }
 
-
-void DfCalcGridX_Parallel::logger(const std::string& str) const
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        DfObject::logger(str);
-    }
-}
-
-
-void DfCalcGridX_Parallel::loggerP(const std::string& str) const
-{
-    DfObject::logger(str);
-}
-
-void DfCalcGridX_Parallel::loggerTime_local(const std::string& str) const
-{
-    std::string out = str;
-    int size = out.size();
-    if (size > 0) {
-        if (out[size -1] == '\n') {
-            out.erase(size -1, 1);
-        }
-
-        const std::string timeStr = "[" + TlTime::getNow() + "]";
-        TlUtils::pad(out, (72 - timeStr.length()), ' ');
-        out += (timeStr + "\n");
-        DfObject::logger(out);
-    }
-}
-
-// for RKS, LDA
-double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P,
-                                                         DfFunctional_LDA* pFunctional,
-                                                         TlSymmetricMatrix* pF)
-{
-    assert(pFunctional != NULL);
-    assert(pF != NULL);
-
-    TlMatrix gridMat = this->getGridMatrix();
-    double energy =  DfCalcGridX::calcXCIntegForFockAndEnergy(0.5 * P, TlSymmetricMatrix(),
-                                                              pFunctional,
-                                                              pF, NULL,
-                                                              &gridMat);
-    this->saveGridMatrix(gridMat);
-    return energy;
-}
-
-
-// for UKS, LDA
-double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-                                                         const TlSymmetricMatrix& P_B,
-                                                         DfFunctional_LDA* pFunctional,
-                                                         TlSymmetricMatrix* pF_A,
-                                                         TlSymmetricMatrix* pF_B)
-{
-    assert(pFunctional != NULL);
-    assert(pF_A != NULL);
-    assert(pF_B != NULL);
-
-    TlMatrix gridMat = this->getGridMatrix();
-    double energy =  DfCalcGridX::calcXCIntegForFockAndEnergy(P_A, P_B,
-                                                              pFunctional,
-                                                              pF_A, pF_B,
-                                                              &gridMat);
-    this->saveGridMatrix(gridMat);
-    return energy;
-}
-
-
-// for RKS, GGA
-double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P,
-                                                         DfFunctional_GGA* pFunctional,
-                                                         TlSymmetricMatrix* pF)
-{
-    assert(pFunctional != NULL);
-    assert(pF != NULL);
-
-    TlMatrix gridMat = this->getGridMatrix();
-    double energy =  DfCalcGridX::calcXCIntegForFockAndEnergy(0.5 * P, TlSymmetricMatrix(),
-                                                              pFunctional,
-                                                              pF, NULL,
-                                                              &gridMat);
-    this->saveGridMatrix(gridMat);
-    return energy;
-}
-
-
-// for UKS, GGA
-double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-                                                         const TlSymmetricMatrix& P_B,
-                                                         DfFunctional_GGA* pFunctional,
-                                                         TlSymmetricMatrix* pF_A,
-                                                         TlSymmetricMatrix* pF_B)
-{
-    assert(pFunctional != NULL);
-    assert(pF_A != NULL);
-    assert(pF_B != NULL);
-
-    TlMatrix gridMat = this->getGridMatrix();
-    double energy =  DfCalcGridX::calcXCIntegForFockAndEnergy(P_A, P_B,
-                                                              pFunctional,
-                                                              pF_A, pF_B,
-                                                              &gridMat);
-    this->saveGridMatrix(gridMat);
-    return energy;
-}
-
-TlMatrix DfCalcGridX_Parallel::getGridMatrix()
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    TlMatrix gridMat;
-    if (rComm.isMaster() == true) {
-        gridMat = DfCalcGridX::getGridMatrix();
-    }
-    rComm.broadcast(gridMat);
-
-    return gridMat;
-}
 
 void DfCalcGridX_Parallel::saveGridMatrix(const TlMatrix& gridMat)
 {
@@ -203,7 +85,7 @@ void DfCalcGridX_Parallel::saveGridMatrix(const TlMatrix& gridMat)
         if (rComm.isMaster() == true) {
             TlMatrix newMat = gridMat;
             newMat.setBlockMatrix(0, startCol, commMat);
-            DfCalcGridX::saveGridMatrix(newMat);
+            DfCalcGridX::saveGridMatrix(this->m_nIteration, newMat);
         }
     }
 }
@@ -452,22 +334,22 @@ double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy2(const TlDistributeSymm
 }
 
 
-double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlDistributeSymmetricMatrix& PA,
-                                                         const TlDistributeSymmetricMatrix& PB,
+double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlDistributeSymmetricMatrix& P_A,
+                                                         const TlDistributeSymmetricMatrix& P_B,
                                                          DfFunctional_LDA* pFunctional,
-                                                         TlDistributeSymmetricMatrix* pFA,
-                                                         TlDistributeSymmetricMatrix* pFB)
+                                                         TlDistributeSymmetricMatrix* pF_A,
+                                                         TlDistributeSymmetricMatrix* pF_B)
 {
     assert(pFunctional != NULL);
-    assert(pFA != NULL);
-    assert(pFB != NULL);
+    assert(pF_A != NULL);
+    assert(pF_B != NULL);
 
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
         DfCalcGridX::backupGridData();
     }
     this->physicalValues_.clear();
-    this->defineCutOffValues(PA, PB);
+    this->defineCutOffValues(P_A, P_B);
 
     // gird情報(座標, 重み)をMasterから全ノードに配布
     std::vector<int> gridCounts;
@@ -475,12 +357,12 @@ double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlDistributeSymme
     this->broadcastGridInfo(&gridCounts, &gridInfo);
     
     // 各ノードはローカルScaLAPACK行列に対し, 各グリッド点の電子密度, 勾配を計算
-    const std::vector<int> AO_list = this->getScaLapackLocalAOs(PA); // PBも同じ
+    const std::vector<int> AO_list = this->getScaLapackLocalAOs(P_A); // PBも同じ
     std::vector<double> rhoAs;
     std::vector<double> rhoBs;
-    this->calcPhys(PA, AO_list, gridInfo,
+    this->calcPhys(P_A, AO_list, gridInfo,
                    &rhoAs);
-    this->calcPhys(PB, AO_list, gridInfo,
+    this->calcPhys(P_B, AO_list, gridInfo,
                    &rhoBs);
     
     // 各グリッド点の電子密度, 勾配をMasterノードに集計/再配布
@@ -504,10 +386,10 @@ double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlDistributeSymme
     double energy = this->buildK(gridCounts, gridInfo,
                                  rhoAs, rhoBs,
                                  pFunctional, &tmpFA, &tmpFB);
-    pFA->resize(this->m_nNumOfAOs);
-    pFB->resize(this->m_nNumOfAOs);
-    pFA->mergeSparseMatrix(tmpFA);
-    pFB->mergeSparseMatrix(tmpFB);
+    pF_A->resize(this->m_nNumOfAOs);
+    pF_B->resize(this->m_nNumOfAOs);
+    pF_A->mergeSparseMatrix(tmpFA);
+    pF_B->mergeSparseMatrix(tmpFB);
     rComm.allReduce_SUM(energy);
     
     return energy;
@@ -1076,9 +958,7 @@ void DfCalcGridX_Parallel::calcPhys_Master(const TlDistributeSymmetricMatrix& P)
         if (isWaitingCmdRequestJob != true) {
             rComm.iReceiveDataFromAnySource(cmdRequestJob, TAG_REQUEST_JOB);
             isWaitingCmdRequestJob = true;
-            if (this->isDebugOut_ == true) {
-                this->loggerP(" [0] RECV[**] request job\n");
-            }
+            this->log_.debug(" [0] RECV[**] request job\n");
         }
         
         // phase2
@@ -1086,10 +966,8 @@ void DfCalcGridX_Parallel::calcPhys_Master(const TlDistributeSymmetricMatrix& P)
             (rComm.test(cmdRequestJob, &src) == true)) {
             rComm.wait(cmdRequestJob);
             isWaitingCmdRequestJob = false;
-            if (this->isDebugOut_ == true) {
-                this->loggerP(TlUtils::format(" [0] RECV[OK] request job from [%d].\n",
-                                              src));
-            }
+            this->log_.debug(TlUtils::format(" [0] RECV[OK] request job from [%d].\n",
+                                             src));
             
             assignJobQueue.push_back(src);
         }
@@ -1122,10 +1000,8 @@ void DfCalcGridX_Parallel::calcPhys_Master(const TlDistributeSymmetricMatrix& P)
                 if (isWaitingJobList[slave] == true) {
                     rComm.wait(jobList[slave]);
                     isWaitingJobList[slave] = false;
-                    if (this->isDebugOut_ == true) {
-                        this->loggerP(TlUtils::format(" [0] SEND[OK] assign job to [%d].\n",
-                                                      slave));
-                    }
+                    this->log_.debug(TlUtils::format(" [0] SEND[OK] assign job to [%d].\n",
+                                                     slave));
                 }
                 jobList[slave][0] = startShell_I;
                 jobList[slave][1] = startShell_J;
@@ -1133,18 +1009,14 @@ void DfCalcGridX_Parallel::calcPhys_Master(const TlDistributeSymmetricMatrix& P)
                 jobList[slave][3] = endShell_J;
                 rComm.iSendDataX(jobList[slave], JOB_PROTOCOL_SIZE, slave, TAG_ASSIGN_JOB);
                 isWaitingJobList[slave] = true;
-                if (this->isDebugOut_ == true) {
-                    this->loggerP(TlUtils::format(" [0] SEND[**] assign job to [%d]: (%d, %d) -> (%d, %d).\n",
-                                                  slave,
-                                                  startShell_I, startShell_J, endShell_I, endShell_J));
-                }
+                this->log_.debug(TlUtils::format(" [0] SEND[**] assign job to [%d]: (%d, %d) -> (%d, %d).\n",
+                                                 slave,
+                                                 startShell_I, startShell_J, endShell_I, endShell_J));
             } else {
                 // finish job
                 ++terminateJobProc;
                 if (terminateJobProc >= (numOfProcs -1) * jobsPerProc) {
-                    if (this->isDebugOut_ == true) {
-                        this->loggerP(" [0] SEND[OK] terminate to others.\n");
-                    }
+                    this->log_.debug(" [0] SEND[OK] terminate to others.\n");
                     int cmdTerminateSlave = -1;
                     for (int i = 0; i < numOfProcs -1; ++i) {
                         rComm.sendData(cmdTerminateSlave, i +1, TAG_TERMINATE_SLAVE);
@@ -1241,19 +1113,15 @@ void DfCalcGridX_Parallel::calcPhys_Slave(const TlDistributeSymmetricMatrix& P,
             if (isWaitingCmdAssignJobs[i] != true) {
                 rComm.iReceiveDataX(&(cmdAssignJobs[i][0]), JOB_PROTOCOL_SIZE, root, TAG_ASSIGN_JOB);
                 isWaitingCmdAssignJobs[i] = true;
-                if (this->isDebugOut_ == true) {
-                    this->loggerP(TlUtils::format(" [%d] RECV[**] assign job[%d] from [0]\n",
-                                                  rComm.getRank(), i));
-                }
+                this->log_.debug(TlUtils::format(" [%d] RECV[**] assign job[%d] from [0]\n",
+                                                 rComm.getRank(), i));
             }
         }
         if (isWaitingCmdTerminateSlave != true) {
             rComm.iReceiveData(cmdTerminateSlave, root, TAG_TERMINATE_SLAVE);
             isWaitingCmdTerminateSlave = true;
-            if (this->isDebugOut_ == true) {
-                this->loggerP(TlUtils::format(" [%d] RECV[**] terminate from [0]\n",
-                                              rComm.getRank()));
-            }
+            this->log_.debug(TlUtils::format(" [%d] RECV[**] terminate from [0]\n",
+                                             rComm.getRank()));
         }
 
         // phase2
@@ -1262,10 +1130,8 @@ void DfCalcGridX_Parallel::calcPhys_Slave(const TlDistributeSymmetricMatrix& P,
                 (rComm.test(&(cmdAssignJobs[i][0])) == true)) {
                 rComm.wait(&(cmdAssignJobs[i][0]));
                 isWaitingCmdAssignJobs[i] = false;
-                if (this->isDebugOut_ == true) {
-                    this->loggerP(TlUtils::format(" [%d] RECV[OK] assign job[%d] from [0]\n",
-                                                  rComm.getRank(), i));
-                }
+                this->log_.debug(TlUtils::format(" [%d] RECV[OK] assign job[%d] from [0]\n",
+                                                 rComm.getRank(), i));
                 
                 DensityCalcJob job(this->m_nNumOfAOs,
                                    cmdAssignJobs[i][0],
@@ -1278,10 +1144,8 @@ void DfCalcGridX_Parallel::calcPhys_Slave(const TlDistributeSymmetricMatrix& P,
         }
         if ((isWaitingCmdTerminateSlave == true) &&
             (rComm.test(cmdTerminateSlave) == true)) {
-            if (this->isDebugOut_ == true) {
-                this->loggerP(TlUtils::format(" [%d] RECV[**] terminate from [0]\n",
-                                              rComm.getRank()));
-            }
+            this->log_.debug(TlUtils::format(" [%d] RECV[**] terminate from [0]\n",
+                                             rComm.getRank()));
             rComm.wait(cmdTerminateSlave);
             isWaitingCmdTerminateSlave = false;
             
@@ -1325,10 +1189,8 @@ void DfCalcGridX_Parallel::calcPhys_Slave(const TlDistributeSymmetricMatrix& P,
                 }
             }
             
-            if (this->isDebugOut_ == true) {
-                this->loggerP(TlUtils::format(" [%d] calc...\n",
-                                              rComm.getRank()));
-            }
+            this->log_.debug(TlUtils::format(" [%d] calc...\n",
+                                             rComm.getRank()));
             //time_calc.start();
             this->calcPhysX(it->partialMatrix, pAOs, numOfAOs, gridInfo,
                             pRhoAs, pGradRhoAXs, pGradRhoAYs, pGradRhoAZs);
@@ -1342,17 +1204,13 @@ void DfCalcGridX_Parallel::calcPhys_Slave(const TlDistributeSymmetricMatrix& P,
                     (rComm.test(cmdRequestJob[i]) == true)) {
                     rComm.wait(cmdRequestJob[i]);
                     isWaitingCmdRequestJob[i] = false; 
-                    if (this->isDebugOut_ == true) {
-                        this->loggerP(TlUtils::format(" [%d] SEND[OK] request job to [0]\n",
-                                                      rComm.getRank()));
-                    }
+                    this->log_.debug(TlUtils::format(" [%d] SEND[OK] request job to [0]\n",
+                                                     rComm.getRank()));
                     
                     rComm.iSendData(cmdRequestJob[i], root, TAG_REQUEST_JOB);
                     isWaitingCmdRequestJob[i] = true;
-                    if (this->isDebugOut_ == true) {
-                        this->loggerP(TlUtils::format(" [%d] SEND[**] request job to [0]\n",
-                                                      rComm.getRank()));
-                    }
+                    this->log_.debug(TlUtils::format(" [%d] SEND[**] request job to [0]\n",
+                                                     rComm.getRank()));
                     break; // 1つだけ処理すればよい
                 }
             }
@@ -1362,10 +1220,8 @@ void DfCalcGridX_Parallel::calcPhys_Slave(const TlDistributeSymmetricMatrix& P,
                 
         // phase4
         if ((isTerminate == true) &&(jobList.empty() == true)) {
-            if (this->isDebugOut_ == true) {
-                this->loggerP(TlUtils::format(" [%d] SEND[--] terminate OK to [0]\n",
-                                              rComm.getRank()));
-            }
+            this->log_.debug(TlUtils::format(" [%d] SEND[--] terminate OK to [0]\n",
+                                             rComm.getRank()));
             isBreakLoop = true;
         }
     } // end of while
@@ -2366,10 +2222,8 @@ void DfCalcGridX_Parallel::buildK_Slave(const std::vector<int>& gridCounts,
                 }
                 if ((isWaitingCmdTerminateSlave == true) &&
                     (rComm.test(cmdTerminateSlave) == true)) {
-                    if (this->isDebugOut_ == true) {
-                        this->loggerP(TlUtils::format(" [%d] BUILD_XC: RECV[**] terminate from [0]\n",
-                                                      rComm.getRank()));
-                    }
+                    this->log_.debug(TlUtils::format(" [%d] BUILD_XC: RECV[**] terminate from [0]\n",
+                                                     rComm.getRank()));
                     rComm.wait(cmdTerminateSlave);
                     isWaitingCmdTerminateSlave = false;
                     
@@ -2590,7 +2444,7 @@ double DfCalcGridX_Parallel::calcXC_DC(const TlDistributeSymmetricMatrix& P,
     assert(localP.getNumOfCols() == numOfLocalCols);
     
     
-    TlMatrix gridMatrix = this->getGridMatrix();
+    TlMatrix gridMatrix = DfObject::getGridMatrix<TlMatrix>(this->m_nIteration -1);
     gridMatrix.resize(gridMatrix.getNumOfRows(), 8);
 
     //
@@ -2604,7 +2458,7 @@ double DfCalcGridX_Parallel::calcXC_DC(const TlDistributeSymmetricMatrix& P,
         gridMatrix.getBlockMatrix(0, 4,
                                   gridMatrix.getNumOfRows(), 4);
     currRhoValsMtx -= prevRhoValsMtx;
-    this->loggerTime_local(TlUtils::format("  waiting...#%6d", rComm.getRank()));
+    this->log_.info(TlUtils::format("  waiting...#%6d", rComm.getRank()));
     rComm.allReduce_SUM(currRhoValsMtx);
     currRhoValsMtx += prevRhoValsMtx;
     gridMatrix.setBlockMatrix(0, 4, currRhoValsMtx);
@@ -2625,7 +2479,7 @@ double DfCalcGridX_Parallel::calcXC_DC(const TlDistributeSymmetricMatrix& P,
             }
         }
     }
-    this->loggerTime_local(TlUtils::format("  waiting...#%6d", rComm.getRank()));
+    this->log_.info(TlUtils::format("  waiting...#%6d", rComm.getRank()));
 
     if (rComm.isMaster() == true) {
         if (this->m_bIsUpdateXC == true) {
@@ -2637,6 +2491,73 @@ double DfCalcGridX_Parallel::calcXC_DC(const TlDistributeSymmetricMatrix& P,
 
     return energy;
 }
+
+
+// double DfCalcGridX_Parallel::calcXC_DC(const TlDistributeSymmetricMatrix& P_A,
+//                                        DfFunctional_GGA* pFunctional,
+//                                        TlDistributeSymmetricMatrix* pF_A)
+// {
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+//     assert(pFunctional != NULL);
+//     assert(pF_A != NULL);
+    
+//     //this->defineCutOffValues(P_A, P_B);
+//     this->defineCutOffValues(P_A);
+
+//     // 大域分散行列である密度行列において、ローカルな部分行列を取得する
+//     const TlMatrix localP_A = TlDistributeMatrix(P_A).getLocalMatrix();
+//     const std::vector<index_type> rowIndexes = P_A.getRowIndexTable();
+//     const std::vector<index_type> colIndexes = P_A.getColIndexTable();
+//     const index_type numOfLocalRows = rowIndexes.size();
+//     const index_type numOfLocalCols = colIndexes.size();
+//     assert(localP_A.getNumOfRows() == numOfLocalRows);
+//     assert(localP_A.getNumOfCols() == numOfLocalCols);
+    
+//     TlMatrix gridMatrix = this->getGridMatrix();
+//     gridMatrix.resize(gridMatrix.getNumOfRows(), 8);
+
+//     this->log_.info(" calculate population of each grid.");
+//     TlMatrix prevRhoValsMtx =
+//         gridMatrix.getBlockMatrix(0, 4,
+//                                   gridMatrix.getNumOfRows(), 4);
+//     this->calcRhoVals_GGA(rowIndexes, colIndexes, localP_A,
+//                           &gridMatrix);
+//     TlMatrix currRhoValsMtx =
+//         gridMatrix.getBlockMatrix(0, 4,
+//                                   gridMatrix.getNumOfRows(), 4);
+//     currRhoValsMtx -= prevRhoValsMtx;
+//     this->log_.info(TlUtils::format("  waiting...#%6d", rComm.getRank()));
+//     rComm.allReduce_SUM(currRhoValsMtx);
+//     currRhoValsMtx += prevRhoValsMtx;
+//     gridMatrix.setBlockMatrix(0, 4, currRhoValsMtx);
+
+//     this->log_.info(" build the KS matrix of XC term");
+//     TlMatrix localF_A(localP_A.getNumOfRows(), localP_A.getNumOfCols());
+//     const double energy = this->buildK_2(gridMatrix,
+//                                          rowIndexes, colIndexes,
+//                                          pFunctional, &localF_A);
+//     for (index_type r = 0; r < numOfLocalRows; ++r) {
+//         const index_type globalRow = rowIndexes[r];
+//         for (index_type c = 0; c < numOfLocalCols; ++c) {
+//             const index_type globalCol = colIndexes[c];
+//             if (globalRow >= globalCol) {
+//                 const double value = localF_A.get(r, c);
+//                 pF_A->add(globalRow, globalCol, value);
+//             }
+//         }
+//     }
+//     this->log_.info(TlUtils::format("  waiting...#%6d", rComm.getRank()));
+
+//     if (rComm.isMaster() == true) {
+//         if (this->m_bIsUpdateXC == true) {
+//             this->loggerTime(" save grid matrix");
+//             this->saveGridMatrix(gridMatrix);
+//         }
+//     }
+//     this->loggerTime(" finished");
+
+//     return energy;
+// }
 
 
 // void DfCalcGridX_Parallel::calcRhoVals_GGA(const std::vector<index_type>& P_rowIndexes,
@@ -2696,5 +2617,290 @@ double DfCalcGridX_Parallel::calcXC_DC(const TlDistributeSymmetricMatrix& P,
 //             pGridMatrix->add(grid, 7, 2.0 * wf_rc.sum());
 //         }
 //     }
+// }
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy_DC(const TlSymmetricMatrix& P_A,
+//                                                             DfFunctional_LDA* pFunctional,
+//                                                             TlSymmetricMatrix* pF_A)
+// {
+//     this->calcRho_LDA(P_A);
+//     double energy = this->buildVxc(pFunctional,
+//                                    pF_A);
+//     return energy;
+// }
+
+double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                                         DfFunctional_LDA* pFunctional,
+                                                         TlSymmetricMatrix* pF_A)
+{
+    this->log_.debug("calc rho");
+    this->calcRho_LDA(P_A);
+    this->log_.debug("Vxc");
+    double energy = this->buildVxc(pFunctional, pF_A);
+    this->log_.debug("end");
+    return energy;
+}
+
+double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                                         const TlSymmetricMatrix& P_B,
+                                                         DfFunctional_LDA* pFunctional,
+                                                         TlSymmetricMatrix* pF_A,
+                                                         TlSymmetricMatrix* pF_B)
+{
+    this->calcRho_LDA(P_A, P_B);
+    double energy = this->buildVxc(pFunctional, pF_A, pF_B);
+    return energy;
+}
+
+double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                                         DfFunctional_GGA* pFunctional,
+                                                         TlSymmetricMatrix* pF_A)
+{
+    this->calcRho_GGA(P_A);
+    double energy = this->buildVxc(pFunctional, pF_A);
+    return energy;
+}
+
+double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                                         const TlSymmetricMatrix& P_B,
+                                                         DfFunctional_GGA* pFunctional,
+                                                         TlSymmetricMatrix* pF_A,
+                                                         TlSymmetricMatrix* pF_B)
+{
+    this->calcRho_GGA(P_A, P_B);
+    double energy = this->buildVxc(pFunctional, pF_A, pF_B);
+    return energy;
+}
+
+void DfCalcGridX_Parallel::calcRho_LDA(const TlSymmetricMatrix& P_A)
+{
+    TlMatrix gridMat = this->distributeGridMatrix(this->m_nIteration -1);
+    DfCalcGridX::calcRho_LDA(P_A, &gridMat);
+    this->gatherGridMatrix(gridMat);
+}
+
+void DfCalcGridX_Parallel::calcRho_LDA(const TlSymmetricMatrix& P_A,
+                                       const TlSymmetricMatrix& P_B)
+{
+    TlMatrix gridMat = this->distributeGridMatrix(this->m_nIteration -1);
+    DfCalcGridX::calcRho_LDA(P_A, P_B, &gridMat);
+    this->gatherGridMatrix(gridMat);
+}
+
+void DfCalcGridX_Parallel::calcRho_GGA(const TlSymmetricMatrix& P_A)
+{
+    TlMatrix gridMat = this->distributeGridMatrix(this->m_nIteration -1);
+    DfCalcGridX::calcRho_GGA(P_A, &gridMat);
+    this->gatherGridMatrix(gridMat);
+}
+
+void DfCalcGridX_Parallel::calcRho_GGA(const TlSymmetricMatrix& P_A,
+                                       const TlSymmetricMatrix& P_B)
+{
+    TlMatrix gridMat = this->distributeGridMatrix(this->m_nIteration -1);
+    DfCalcGridX::calcRho_GGA(P_A, P_B, &gridMat);
+    this->gatherGridMatrix(gridMat);
+}
+
+double DfCalcGridX_Parallel::buildVxc(DfFunctional_LDA* pFunctional,
+                                      TlSymmetricMatrix* pF_A)
+{
+    TlMatrix gridMat = this->distributeGridMatrix(this->m_nIteration);
+    double energy = DfCalcGridX::buildVxc(gridMat, pFunctional, pF_A);
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    rComm.allReduce_SUM(*pF_A);
+    rComm.allReduce_SUM(energy);
+    return energy;
+}
+
+double DfCalcGridX_Parallel::buildVxc(DfFunctional_LDA* pFunctional,
+                                      TlSymmetricMatrix* pF_A,
+                                      TlSymmetricMatrix* pF_B)
+{
+    TlMatrix gridMat = this->distributeGridMatrix(this->m_nIteration);
+    double energy = DfCalcGridX::buildVxc(gridMat, pFunctional, pF_A, pF_B);
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    rComm.allReduce_SUM(*pF_A);
+    rComm.allReduce_SUM(energy);
+    return energy;
+}
+
+double DfCalcGridX_Parallel::buildVxc(DfFunctional_GGA* pFunctional,
+                                      TlSymmetricMatrix* pF_A)
+{
+    TlMatrix gridMat = this->distributeGridMatrix(this->m_nIteration);
+    double energy = DfCalcGridX::buildVxc(gridMat, pFunctional, pF_A);
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    rComm.allReduce_SUM(*pF_A);
+    rComm.allReduce_SUM(energy);
+    return energy;
+}
+
+double DfCalcGridX_Parallel::buildVxc(DfFunctional_GGA* pFunctional,
+                                      TlSymmetricMatrix* pF_A,
+                                      TlSymmetricMatrix* pF_B)
+{
+    TlMatrix gridMat = this->distributeGridMatrix(this->m_nIteration);
+    double energy = DfCalcGridX::buildVxc(gridMat, pFunctional, pF_A, pF_B);
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    rComm.allReduce_SUM(*pF_A);
+    rComm.allReduce_SUM(energy);
+    return energy;
+}
+
+TlMatrix DfCalcGridX_Parallel::distributeGridMatrix(const int iteration)
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int numOfProcs = rComm.getNumOfProc();
+    const int rank = rComm.getRank();
+
+    TlMatrix gridMat;
+    if (rComm.isMaster() == true) {
+        TlFileMatrix globalGridMat(DfObject::getGridMatrixPath(iteration));
+        this->numOfRows_gridMatrix_ = globalGridMat.getNumOfRows();
+        this->numOfCols_gridMatrix_ = globalGridMat.getNumOfCols();
+        
+        const index_type range = (this->numOfRows_gridMatrix_ + numOfProcs -1) / numOfProcs;
+
+        // for self(master)
+        {
+            const index_type startGrid = 0;
+            const index_type endGrid = std::min<index_type>(startGrid + range,
+                                                            this->numOfRows_gridMatrix_);
+            gridMat = globalGridMat.getBlockMatrix(startGrid, 0,
+                                                   endGrid - startGrid,
+                                                   globalGridMat.getNumOfCols());
+        }
+        
+        // for slave
+        for (int i = 1; i < numOfProcs; ++i) {
+            const index_type startGrid = range * i;
+            const index_type endGrid = std::min<index_type>(startGrid + range,
+                                                            this->numOfRows_gridMatrix_);
+            TlMatrix tmpMat = globalGridMat.getBlockMatrix(startGrid, 0,
+                                                           endGrid - startGrid,
+                                                           globalGridMat.getNumOfCols());
+            rComm.sendData(tmpMat, i);
+        }
+    } else {
+        rComm.receiveData(gridMat, 0);
+    }
+
+    return gridMat;
+}
+
+void DfCalcGridX_Parallel::gatherGridMatrix(const TlMatrix& gridMat)
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int numOfProcs = rComm.getNumOfProc();
+
+    if (rComm.isMaster() == true) {
+        TlFileMatrix globalGridMat(DfObject::getGridMatrixPath(this->m_nIteration),
+                                   this->numOfRows_gridMatrix_,
+                                   this->numOfCols_gridMatrix_);
+        globalGridMat.setBlockMatrix(0, 0,
+                                     gridMat);
+        index_type currentGridIndex = gridMat.getNumOfRows();
+        for (int i = 1; i < numOfProcs; ++i) {
+            TlMatrix tmpMat;
+            rComm.receiveData(tmpMat, i);
+            
+            assert(globalGridMat.getNumOfCols() == gridMat.getNumOfCols());
+            globalGridMat.setBlockMatrix(currentGridIndex, 0,
+                                         tmpMat);
+            currentGridIndex += gridMat.getNumOfRows();
+        }
+    } else {
+        rComm.sendData(gridMat, 0);
+    }
+}
+
+
+
+
+// bool DfCalcGridX_Parallel::getTask_DC(TlMatrix* pOutMat,
+//                                       bool initialize)
+// {
+//     static TlMatrix globalGridMat;
+//     static bool allocateMatrix = false;
+    
+//     // initialize
+//     if (initialize == true) {
+//         globalGridMat = this->getGridMatrix();
+//         allocateMatrix = false;
+
+//         return true;
+//     }
+
+//     if (allocateMatrix != true) {
+//         TlCommunicate& rComm = TlCommunicate::getInstance();
+//         const int numOfProcs = rComm.getNumOfProc();
+//         const int rank = rComm.getRank();
+
+//         const index_type numOfRows = globalGridMat.getNumOfRows();
+//         const index_type range = (numOfRows + numOfProcs -1) / numOfProcs;
+//         const index_type startIndex = range * rank;
+//         const index_type endIndex = std::min(startIndex + range, numOfRows);
+
+//         *pOutMat = globalGridMat.getBlockMatrix(startIndex, 0,
+//                                                 endIndex - startIndex,
+//                                                 globalGridMat.getNumOfCols());
+//         allocateMatrix = true;
+//     }
+    
+//     return (allocateMatrix != true);
+// }
+
+
+// TlMatrix DfCalcGridX_Parallel::getGridMatrix()
+// {
+//     this->log_.debug("DfCalcGridX_Parallel::getGridMatrix() in.");
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+//     TlMatrix gridMat;
+//     if (rComm.isMaster() == true) {
+//         gridMat = DfCalcGridX::getGridMatrix();
+//     }
+//     rComm.broadcast(gridMat);
+
+//     this->log_.debug("DfCalcGridX_Parallel::getGridMatrix() out.");
+//     return gridMat;
+// }
+
+
+// void DfCalcGridX_Parallel::finalizeGridMatrix(const TlMatrix& localGridMat)
+// {
+//     this->log_.debug("DfCalcGridX_Parallel::finalizeGridMatrix() in.");
+    
+//     const int tag = 99;
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+//     if (rComm.isMaster() == true) {
+//         // master
+//         TlMatrix globalGridMat = localGridMat;
+
+//         const int numOfSlaves = rComm.getNumOfProc() - 1;
+//         int src = 0;
+//         for (int i = 0; i < numOfSlaves; ++i) {
+//             TlMatrix tmpGridMat;
+//             rComm.receiveDataFromAnySource(tmpGridMat, &src, tag);
+//             this->log_.debug(TlUtils::format(" receive grid data from #%d.",
+//                                              src));
+//             assert(globalGridMat.getNumOfCols() == tmpGridMat.getNumOfCols());
+//             index_type oldNumOfRows = globalGridMat.getNumOfRows();
+//             globalGridMat.resize(oldNumOfRows + tmpGridMat.getNumOfRows(),
+//                                  globalGridMat.getNumOfCols());
+//             globalGridMat.setBlockMatrix(oldNumOfRows, 0,
+//                                          tmpGridMat);
+//         }
+//     } else {
+//         // slave
+//         rComm.sendData(localGridMat, 0, tag);
+//     }
+
+//     rComm.barrier();
 // }
 

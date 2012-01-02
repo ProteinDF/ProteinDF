@@ -109,8 +109,6 @@ protected:
     bool isSaveFxcPure_;
     bool m_bDebugTEI;
     bool m_bPrintTEI;
-    bool m_bKMatrixDebugOut;
-    bool isDebugOutFockExchangeMatrix_;
 
     bool isUseNewEngine_;
     
@@ -133,6 +131,9 @@ void DfXCFunctional::getFxc(const SymmetricMatrixType& Ppq,
     assert(pDfCalcGridObj != NULL);
     assert(pFxc != NULL);
 
+    // 1e density matrix
+    const SymmetricMatrixType P1 = 0.5 * Ppq;
+    
     switch (this->m_nXCFunctional) {
     case HF:
         this->m_dXC_Energy = 0.0;
@@ -140,32 +141,42 @@ void DfXCFunctional::getFxc(const SymmetricMatrixType& Ppq,
 
     case SHF: {
         DfFunctional_SHF shf;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(Ppq, &shf, pFxc);
+        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
+                                                                         &shf,
+                                                                         pFxc);
     }
     break;
 
     case SVWN: {
         DfFunctional_SVWN svwn;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(Ppq, &svwn, pFxc);
+        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
+                                                                         &svwn,
+                                                                         pFxc);
     }
     break;
 
     case HFB: {
         DfFunctional_Becke88 b88;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(Ppq, &b88, pFxc);
+        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
+                                                                         &b88,
+                                                                         pFxc);
     }
     break;
 
     case BLYP: {
         DfFunctional_B88LYP blyp;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(Ppq, &blyp, pFxc);
+        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
+                                                                         &blyp,
+                                                                         pFxc);
     }
     break;
 
     case B3LYP: {
         // except HF exchange
         DfFunctional_B3LYP b3lyp;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(Ppq, &b3lyp, pFxc);
+        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
+                                                                         &b3lyp,
+                                                                         pFxc);
     }
     break;
 

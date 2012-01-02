@@ -11,6 +11,7 @@
 #include "TlPartialMatrix.h"
 #include "TlPartialSymmetricMatrix.h"
 #include "TlTime.h"
+#include "TlLogging.h"
 
 //#define ANY_TAG_OK
 
@@ -144,6 +145,7 @@ public:
     int sendData(const std::valarray<double>& data, int nDestination = 0, int nTag = 0);
     int sendData(const std::string& data, int nDestination = 0, int nTag = 0);
     int sendData(const TlVector& data, int destination = 0, int tag = 0);
+    int sendData(const TlMatrix& data, int destination = 0, int tag = 0);
     int sendData(const TlSymmetricMatrix& rData, int nDestination = 0, int nTag = 0);
     int sendData(const TlSparseSymmetricMatrix& rData, int nDestination = 0, int nTag = 0);
     int sendData(const TlPartialSymmetricMatrix& rData, int nDestination = 0, int nTag = 0);
@@ -162,6 +164,7 @@ public:
     int receiveData(std::valarray<double>& rData, int nSrc, int nTag = 0);
     int receiveData(std::string& pData, int nSrc, int nTag = 0);
     int receiveData(TlVector& data, int src, int tag = 0);
+    int receiveData(TlMatrix& data, int src, int tag = 0);
     int receiveData(TlSymmetricMatrix& rData, int nSrc, int nTag = 0);
     int receiveData(TlSparseSymmetricMatrix& rData, int nSrc, int nTag = 0);
     int receiveData(TlPartialSymmetricMatrix& rData, int nSrc, int nTag = 0);
@@ -180,6 +183,9 @@ public:
     int receiveDataFromAnySource(TlSparseSymmetricMatrix& rData, int* pSrc, int* pTag = NULL);
     int receiveDataFromAnySource(TlPartialSymmetricMatrix& rData, int* pSrc, int* pTag = NULL);
 
+    // タグ付き
+    int receiveDataFromAnySource(TlMatrix& rData, int* pSrc, int tag = 0);
+    
     // 1:1通信 非ブロッキング
     int iSendData(const int& data, int destination = 0, int tag = 0);
     int iSendData(const unsigned int& data, int destination = 0, int tag = 0);
@@ -204,13 +210,25 @@ public:
 
     int sendDataX(const int* pData, const std::size_t size,
                   const int dest, const int tag = 0);
+    int sendDataX(const unsigned int* pData, const std::size_t size,
+                  const int dest, const int tag = 0);
+    int sendDataX(const double* pData, const std::size_t size,
+                  const int dest, const int tag = 0);
+    
+    int receiveDataX(int* pData, const std::size_t size,
+                     const int src, const int tag = 0);
+    int receiveDataX(unsigned int* pData, const std::size_t size,
+                     const int src, const int tag = 0);
+    int receiveDataX(double* pData, const std::size_t size,
+                     const int src, const int tag = 0);
+    
     int receiveDataFromAnySourceX(int* pData, std::size_t size, int* pSrc, int tag = 0);
 
     int iSendDataX(const int* pData, const std::size_t size,
                    const int dest, const int tag = 0);
     int iSendDataX(const double* pData, const std::size_t size,
                    const int dest, const int tag = 0);
-
+    
     int iReceiveDataX(int* pData, const std::size_t size,
                       const int src, const int tag = 0);
     int iReceiveDataX(double* pData, const std::size_t size,
@@ -453,6 +471,8 @@ private:
     mutable TlTime time_test_;
     mutable TlTime time_wait_;
     mutable TlTime time_allreduce_;
+
+    TlLogging& log_;
     
 private:
     // for non-blocking communication

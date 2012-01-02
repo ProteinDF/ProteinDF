@@ -28,12 +28,10 @@ DfXCFunctional::DfXCFunctional(TlSerializeData* pPdfParam)
     this->m_bRI_K = (TlUtils::toUpper(pdfParam["RI-K"].getStr()) == "YES") ? true : false;
 
     this->m_bUseRTmethod = pdfParam["RT_method"].getBoolean();
-    this->isSaveFxcPure_ = pdfParam["save_Fxc_pure"].getBoolean();
+    this->isSaveFxcPure_ = pdfParam["debug/save_Fxc_pure"].getBoolean();
 
     this->m_bDebugTEI = pdfParam["debug_two_electron_integral_object"].getBoolean();
     this->m_bPrintTEI = pdfParam["print_two_electron_integral_value"].getBoolean();
-    this->m_bKMatrixDebugOut = pdfParam["debug-K-matrix"].getBoolean();
-    this->isDebugOutFockExchangeMatrix_ = pdfParam["debugout_fock_exchange"].getBoolean();
 
     this->isUseNewEngine_ = pdfParam["new_engine"].getBoolean();
     

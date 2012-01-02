@@ -82,7 +82,7 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
         }
     }
 
-    this->numOfColsOfGrdMat_ = 5; // x, y, z, weight
+    this->numOfColsOfGrdMat_ = 5; // x, y, z, weight, atom_index
     {
         const int coef = (this->m_nMethodType == METHOD_RKS) ? 1 : 2;
         DfXCFunctional dfXcFunctional(this->pPdfParam_);
@@ -591,8 +591,6 @@ void DfGenerateGrid::setCellPara()
 
 void DfGenerateGrid::generateGrid()
 {
-    //GridDataManager gdm(this->gridDataFilePath_);
-
     std::size_t numOfGrids = 0;
     const int endAtom = this->numOfRealAtoms_;
     for (int atom = 0; atom < endAtom; ++atom) {
@@ -607,13 +605,20 @@ void DfGenerateGrid::generateGrid()
             this->generateGrid(atom, &coordX, &coordY, &coordZ, &weight);
         }
 
-        // gdm.setData(atom, GridDataManager::COORD_X, coordX);
-        // gdm.setData(atom, GridDataManager::COORD_Y, coordY);
-        // gdm.setData(atom, GridDataManager::COORD_Z, coordZ);
-        // gdm.setData(atom, GridDataManager::GRID_WEIGHT, weight);
+        // store grid matrix
+        const std::size_t numOfAtomGrids = weight.size();
+        this->grdMat_.resize(numOfGrids + numOfAtomGrids, this->numOfColsOfGrdMat_);
+        for (std::size_t i = 0; i < numOfAtomGrids; ++i) {
+            this->grdMat_.set(numOfGrids, 0, coordX[i]);
+            this->grdMat_.set(numOfGrids, 1, coordY[i]);
+            this->grdMat_.set(numOfGrids, 2, coordZ[i]);
+            this->grdMat_.set(numOfGrids, 3, weight[i]);
+            this->grdMat_.set(numOfGrids, 4, atom);
+            ++numOfGrids;
+        }
     }
 
-    this->saveGridMatrix(this->grdMat_);
+    this->saveGridMatrix(0, this->grdMat_);
 }
 
 
@@ -638,7 +643,7 @@ void DfGenerateGrid::generateGrid(const int iatom,
     std::vector<double> weightvec(20000);
     std::vector<double> Ps(this->numOfRealAtoms_);
     const int nNumOfAtoms = this->numOfRealAtoms_; //this->m_nNumOfAtoms - this->m_nNumOfDummyAtoms;
-    int GPthrnum = -1;
+    int GPthrnum = 0;
     const double rM = 0.5 * this->radiusList_[TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtom(iatom))] / BOHR;
 
     for (int radvec = 0; radvec < this->nrgrid; ++radvec) {
@@ -741,17 +746,14 @@ JUMPMC1:
                 weight *= Ps[iatom] / Pstotal;
             }
 
-            GPthrnum++;
-
             weightvec[GPthrnum] = weight;
             crdpoint[GPthrnum] = grid[Omega];
+            ++GPthrnum;
 
 JUMP1:
             continue; // グリッド省略でここにJUMPする
         }
     }
-
-    ++GPthrnum;
 
     pCoordX->resize(GPthrnum);
     pCoordY->resize(GPthrnum);
@@ -785,7 +787,7 @@ void DfGenerateGrid::generateGrid_SG1(const int iAtom,
     pCoordZ->resize(maxGridSize);
     pWeight->resize(maxGridSize);
     std::vector<double> Ps(this->numOfRealAtoms_);
-    int GPthrnum = -1;
+    int GPthrnum = 0;
 
     const int atomnum = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtom(iAtom));
     const double rM = this->radiusList_[atomnum];
@@ -912,14 +914,14 @@ void DfGenerateGrid::generateGrid_SG1(const int iAtom,
             //#pragma omp critical (generateGrid_SG1)
             {
                 if (std::fabs(weight_omega) > this->weightCutoff_) {
-                    ++GPthrnum;
                     weightvec[GPthrnum] = weight_omega;
                     crdpoint[GPthrnum] = grid[Omega];
+                    ++GPthrnum;
                 }
             }
         }
     }
-    ++GPthrnum;
+    //++GPthrnum;
 
     // save
     pCoordX->resize(GPthrnum);
@@ -932,18 +934,6 @@ void DfGenerateGrid::generateGrid_SG1(const int iAtom,
     }
     weightvec.resize(GPthrnum);
     *pWeight = weightvec;
-
-    index_type row = this->grdMat_.getNumOfRows();
-    this->grdMat_.resize(row + GPthrnum, this->numOfColsOfGrdMat_);
-    for (int i = 0; i < GPthrnum; ++i) {
-        this->grdMat_.set(row, 0, crdpoint[i].x());
-        this->grdMat_.set(row, 1, crdpoint[i].y());
-        this->grdMat_.set(row, 2, crdpoint[i].z());
-        this->grdMat_.set(row, 3, weightvec[i]);
-        this->grdMat_.set(row, 4, iAtom);
-        ++row;
-    }
-    
 }
 
 

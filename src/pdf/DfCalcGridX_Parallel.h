@@ -16,44 +16,76 @@ public:
     virtual ~DfCalcGridX_Parallel();
 
 public:
-    // for RKS, LDA
-    virtual double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P,
-                                               DfFunctional_LDA* pFunctional,
-                                               TlSymmetricMatrix* pF);
-    // for UKS, LDA
-    virtual double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& PA,
-                                               const TlSymmetricMatrix& PB,
-                                               DfFunctional_LDA* pFunctional,
-                                               TlSymmetricMatrix* pFA,
-                                               TlSymmetricMatrix* pFB);
-    // for RKS, GGA
-    virtual double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P,
-                                               DfFunctional_GGA* pFunctional,
-                                               TlSymmetricMatrix* pF);
-
-    // for UKS, GGA
-    virtual double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& PA,
-                                               const TlSymmetricMatrix& PB,
-                                               DfFunctional_GGA* pFunctional,
-                                               TlSymmetricMatrix* pFA,
-                                               TlSymmetricMatrix* pFB);
-
-    double calcXCIntegForFockAndEnergy(const TlDistributeSymmetricMatrix& P,
+    // template<class DfFunctionalType>
+    // double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+    //                                    DfFunctionalType* pFunctional,
+    //                                    TlSymmetricMatrix* pF_A);
+    // template<class DfFunctionalType>
+    // double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+    //                                    const TlSymmetricMatrix& P_B,
+    //                                    DfFunctionalType* pFunctional,
+    //                                    TlSymmetricMatrix* pF_A,
+    //                                    TlSymmetricMatrix* pF_B);
+public:
+    double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
                                        DfFunctional_LDA* pFunctional,
-                                       TlDistributeSymmetricMatrix* pF);
-    double calcXCIntegForFockAndEnergy(const TlDistributeSymmetricMatrix& PA,
-                                       const TlDistributeSymmetricMatrix& PB,
+                                       TlSymmetricMatrix* pF_A);
+    double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                       const TlSymmetricMatrix& P_B,
                                        DfFunctional_LDA* pFunctional,
-                                       TlDistributeSymmetricMatrix* pFA,
-                                       TlDistributeSymmetricMatrix* pFB);
-    double calcXCIntegForFockAndEnergy(const TlDistributeSymmetricMatrix& P,
+                                       TlSymmetricMatrix* pF_A,
+                                       TlSymmetricMatrix* pF_B);
+    double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
                                        DfFunctional_GGA* pFunctional,
-                                       TlDistributeSymmetricMatrix* pF);
-    double calcXCIntegForFockAndEnergy(const TlDistributeSymmetricMatrix& PA,
-                                       const TlDistributeSymmetricMatrix& PB,
+                                       TlSymmetricMatrix* pF_A);
+    double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                       const TlSymmetricMatrix& P_B,
                                        DfFunctional_GGA* pFunctional,
-                                       TlDistributeSymmetricMatrix* pFA,
-                                       TlDistributeSymmetricMatrix* pFB);
+                                       TlSymmetricMatrix* pF_A,
+                                       TlSymmetricMatrix* pF_B);
+    
+    
+protected:
+    virtual void calcRho_LDA(const TlSymmetricMatrix& P_A);
+    virtual void calcRho_LDA(const TlSymmetricMatrix& P_A,
+                             const TlSymmetricMatrix& P_B);
+    virtual void calcRho_GGA(const TlSymmetricMatrix& P_A);
+    virtual void calcRho_GGA(const TlSymmetricMatrix& P_A,
+                             const TlSymmetricMatrix& P_B);
+
+    double buildVxc(DfFunctional_LDA* pFunctional,
+                    TlSymmetricMatrix* pF_A);
+    double buildVxc(DfFunctional_LDA* pFunctional,
+                    TlSymmetricMatrix* pF_A,
+                    TlSymmetricMatrix* pF_B);
+    double buildVxc(DfFunctional_GGA* pFunctional,
+                    TlSymmetricMatrix* pF_A);
+    double buildVxc(DfFunctional_GGA* pFunctional,
+                    TlSymmetricMatrix* pF_A,
+                    TlSymmetricMatrix* pF_B);
+    
+    TlMatrix distributeGridMatrix(const int iteration);
+    void gatherGridMatrix(const TlMatrix& gridMat);
+
+// -----------------------------------------------------------------------------
+    
+public:
+    double calcXCIntegForFockAndEnergy(const TlDistributeSymmetricMatrix& P_A,
+                                       DfFunctional_LDA* pFunctional,
+                                       TlDistributeSymmetricMatrix* pF_A);
+    double calcXCIntegForFockAndEnergy(const TlDistributeSymmetricMatrix& P_A,
+                                       const TlDistributeSymmetricMatrix& P_B,
+                                       DfFunctional_LDA* pFunctional,
+                                       TlDistributeSymmetricMatrix* pF_A,
+                                       TlDistributeSymmetricMatrix* pF_B);
+    double calcXCIntegForFockAndEnergy(const TlDistributeSymmetricMatrix& P_A,
+                                       DfFunctional_GGA* pFunctional,
+                                       TlDistributeSymmetricMatrix* pF_A);
+    double calcXCIntegForFockAndEnergy(const TlDistributeSymmetricMatrix& P_A,
+                                       const TlDistributeSymmetricMatrix& P_B,
+                                       DfFunctional_GGA* pFunctional,
+                                       TlDistributeSymmetricMatrix* pF_A,
+                                       TlDistributeSymmetricMatrix* pF_B);
    
 protected:
     template<class SymmetricMatrixType, class DfFunctionalClass>
@@ -89,10 +121,6 @@ protected:
 
     virtual void backupGridData();
     virtual void flushGridData();
-
-    virtual void logger(const std::string& str) const;
-    void loggerP(const std::string& str) const;
-    void loggerTime_local(const std::string& str) const;
     
 protected:
 
@@ -287,12 +315,6 @@ protected:
                              TlMatrix* pGradWF_X,
                              TlMatrix* pGradWF_Y,
                              TlMatrix* pGradWF_Z);
-    // expermental code
-    // void calcRhoVals_GGA(const std::vector<index_type>& P_rowIndexes,
-    //                      const std::vector<index_type>& P_colIndexes,
-    //                      const TlDistributeMatrix& P,
-    //                      TlMatrix* pGridMatrix);
-
     
 protected:
     // tag for MPI
@@ -321,12 +343,16 @@ protected:
         TlPartialSymmetricMatrix partialMatrix;
     };
 
+    virtual void saveGridMatrix(const TlMatrix& gridMat);
+
     // NEW IMPLIMENT -----------------------------------------------------------
 protected:
-    virtual TlMatrix getGridMatrix();
-    virtual void saveGridMatrix(const TlMatrix& gridMat);
+    // virtual TlMatrix getGridMatrix();
     
+    // bool getTask_DC(TlMatrix* pOutMat,
+    //                 bool initialize = false);
 
+    // virtual void finalizeGridMatrix(const TlMatrix& gridMat);
     
 protected:
     int assignAtomRange_;
@@ -335,8 +361,6 @@ protected:
     std::size_t densityMatrixCacheMemSize_;
 
     int calcMode_;
-    
-    bool isDebugOut_;
 };
 
 
@@ -585,5 +609,99 @@ double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy_MasterSlave(const Symme
     return energy;
 }
 
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// template<class DfFunctionalType>
+// double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+//                                                          DfFunctionalType* pFunctional,
+//                                                          TlSymmetricMatrix* pF_A)
+// {
+//     assert(pFunctional != NULL);
+//     assert(pF_A != NULL);
+
+    
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+
+
+
+
+
+    
+//     TlMatrix localGridMat; // このプロセスが一時的に保持するグリッド行列
+//     index_type numOfRowsOfLocalGridMat = 0;
+
+//     double energy = 0.0;
+//     TlMatrix tmpGridMat;   // while 1cycleで用いるグリッド行列
+//     this->getTask_DC(NULL, true); // initialize
+//     while (this->getTask_DC(&tmpGridMat)) {
+//         energy += DfCalcGridX::calcXCIntegForFockAndEnergy(P_A,
+//                                                            pFunctional,
+//                                                            pF_A,
+//                                                            &tmpGridMat);
+
+//         // merge
+//         const index_type numOfRowsOfTmpMat = tmpGridMat.getNumOfRows();
+//         const index_type numOfColsOfTmpMat = tmpGridMat.getNumOfCols();
+//         localGridMat.resize(numOfRowsOfLocalGridMat + numOfRowsOfTmpMat,
+//                             tmpGridMat.getNumOfCols());
+//         localGridMat.setBlockMatrix(numOfRowsOfLocalGridMat, 0,
+//                                     tmpGridMat);
+//         numOfRowsOfLocalGridMat += tmpGridMat.getNumOfRows();
+//     }
+
+//     this->finalizeGridMatrix(localGridMat);
+//     rComm.allReduce_SUM(*pF_A);
+//     pF_A->save("FxcA.mat");
+//     rComm.allReduce_SUM(energy);
+
+//     return energy;
+// }
+
+// template<class DfFunctionalType>
+// double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+//                                                          const TlSymmetricMatrix& P_B,
+//                                                          DfFunctionalType* pFunctional,
+//                                                          TlSymmetricMatrix* pF_A,
+//                                                          TlSymmetricMatrix* pF_B)
+// {
+//     this->log_.debug("DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy() in.");
+//     assert(pFunctional != NULL);
+//     assert(pF_A != NULL);
+//     assert(pF_B != NULL);
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+    
+//     double energy = 0.0;
+
+//     TlMatrix localGridMat; // このプロセスが一時的に保持するグリッド行列
+//     index_type numOfRowsOfLocalGridMat = 0;
+
+//     TlMatrix tmpGridMat;   // while 1cycleで用いるグリッド行列
+//     this->getTask_DC(NULL, true); // initialize
+//     while (this->getTask_DC(&tmpGridMat)) {
+//         energy += DfCalcGridX::calcXCIntegForFockAndEnergy(P_A, P_B,
+//                                                            pFunctional,
+//                                                            pF_A, pF_B,
+//                                                            &tmpGridMat);
+
+//         // merge
+//         const index_type numOfRowsOfTmpMat = tmpGridMat.getNumOfRows();
+//         const index_type numOfColsOfTmpMat = tmpGridMat.getNumOfCols();
+//         localGridMat.resize(numOfRowsOfLocalGridMat + numOfRowsOfTmpMat,
+//                             tmpGridMat.getNumOfCols());
+//         localGridMat.setBlockMatrix(numOfRowsOfLocalGridMat, 0,
+//                                     tmpGridMat);
+//         numOfRowsOfLocalGridMat += tmpGridMat.getNumOfRows();
+//     }
+
+//     this->finalizeGridMatrix(localGridMat);
+//     rComm.allReduce_SUM(*pF_A);
+//     pF_A->save("FxcA.mat");
+//     if (pF_B != NULL) {
+//         rComm.allReduce_SUM(*pF_B);
+//     }
+//     rComm.allReduce_SUM(energy);
+
+//     return energy;
+// }
 
 #endif // DFCALCGRIDX_PARALLEL_H

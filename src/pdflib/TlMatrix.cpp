@@ -161,14 +161,13 @@ void TlMatrix::clear()
         this->clear_usingStandard();
 #endif // HAVE_MMAP
     }
-    this->data_ = NULL;
 }
 
 
 void TlMatrix::clear_usingStandard()
 {
     delete[] this->data_;
-    //this->data_ = NULL;
+    this->data_ = NULL;
 }
 
 
@@ -176,7 +175,7 @@ void TlMatrix::clear_usingMemManager()
 {
     TlMemManager& rMemManager = TlMemManager::getInstance();
     rMemManager.deallocate((char*)this->data_, sizeof(double) * this->getNumOfElements());
-    //this->data_ = NULL;
+    this->data_ = NULL;
 }
 
 

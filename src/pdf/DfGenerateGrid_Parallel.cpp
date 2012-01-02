@@ -4,6 +4,7 @@
 #include "TlCommunicate.h"
 #include "GridDataManager.h"
 #include "TlUtils.h"
+#include "TlFileMatrix.h"
 
 DfGenerateGrid_Parallel::DfGenerateGrid_Parallel(TlSerializeData* pPdfParam)
     : DfGenerateGrid(pPdfParam)
@@ -37,59 +38,46 @@ void DfGenerateGrid_Parallel::makeTable()
 void DfGenerateGrid_Parallel::generateGrid()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    if (this->isMasterSlave_ == true) {
-        this->generateGrid_MS();
-    } else {
-        this->generateGrid_DC();
-    }
-
-    // grid matrix
-    // 最適化すること
-    if (rComm.isMaster() == true) {
-        int numOfCols = 4; // x, y, z, weight
-        const int coef = (this->m_nMethodType == METHOD_RKS) ? 1 : 2;
-        {
-            DfXCFunctional dfXcFunctional(this->pPdfParam_);
-            if (dfXcFunctional.getFunctionalType() == DfXCFunctional::LDA) {
-                numOfCols += coef * 1; // rho only
-            } else if (dfXcFunctional.getFunctionalType() == DfXCFunctional::GGA) {
-                numOfCols += coef * 4; // rho, gradRhoX, gradRhoY, gradRhoZ
-            }
-        }
-        
-        TlMatrix gridMtx(1, numOfCols);
-        GridDataManager gdm(this->gridDataFilePath_);
-        const int endAtom = this->numOfRealAtoms_;
-        std::size_t numOfGrids = 0;
-        for (int atom = 0; atom < endAtom; ++atom) {
-            std::vector<double> coordX = gdm.getData(atom, GridDataManager::COORD_X);
-            std::vector<double> coordY = gdm.getData(atom, GridDataManager::COORD_Y);
-            std::vector<double> coordZ = gdm.getData(atom, GridDataManager::COORD_Z);
-            std::vector<double> weight = gdm.getData(atom, GridDataManager::GRID_WEIGHT);
-
-            const std::size_t gridSize = coordX.size();
-            gridMtx.resize(numOfGrids + gridSize, numOfCols);
-            for (std::size_t i = 0; i < gridSize; ++i) {
-                gridMtx.set(numOfGrids + i, 0, coordX[i]);
-                gridMtx.set(numOfGrids + i, 1, coordY[i]);
-                gridMtx.set(numOfGrids + i, 2, coordZ[i]);
-                gridMtx.set(numOfGrids + i, 3, weight[i]);
-            }
-            numOfGrids += gridSize;
-        }
-        this->saveGridMatrix(gridMtx);
-    }
-    //
+    const int numOfProcs = rComm.getNumOfProc();
     
-    rComm.barrier();
+    // if (this->isMasterSlave_ == true) {
+    //     this->generateGrid_MS();
+    // } else {
+        this->generateGrid_DC();
+    // }
+
+    // gather
+    index_type numOfRowsOfGlobalGridMatrix = this->grdMat_.getNumOfRows();
+    rComm.allReduce_SUM(numOfRowsOfGlobalGridMatrix);
+    if (rComm.isMaster() == true) {
+        const index_type numOfColsOfGlobalGridMatrix = this->grdMat_.getNumOfCols();
+        TlFileMatrix grdMat(this->getGridMatrixPath(0),
+                            numOfRowsOfGlobalGridMatrix,
+                            numOfColsOfGlobalGridMatrix);
+
+        index_type currentNumOfRows = 0;
+        // from 0
+        grdMat.setBlockMatrix(currentNumOfRows, 0,
+                              this->grdMat_);
+        currentNumOfRows += this->grdMat_.getNumOfRows();
+        
+        // from the others
+        for (int i = 1; i < numOfProcs; ++i) {
+            TlMatrix tmpGrdMat;
+            rComm.receiveData(tmpGrdMat, i);
+            grdMat.setBlockMatrix(currentNumOfRows, 0,
+                                  tmpGrdMat);
+            currentNumOfRows += tmpGrdMat.getNumOfRows();
+        }
+    } else {
+        rComm.sendData(this->grdMat_, 0);
+    }
 }
 
 void DfGenerateGrid_Parallel::generateGrid_DC()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    //const int nStartAtomNumber = 0;
     const int nEndAtomNumber = this->m_nNumOfAtoms;
 
     const int nProc = rComm.getNumOfProc();
@@ -99,14 +87,11 @@ void DfGenerateGrid_Parallel::generateGrid_DC()
     const int nLocalStart = nRank * nInterval; // nProc = 0, 1, 2, ...
     const int nLocalEnd   = std::min((nLocalStart + nInterval), nEndAtomNumber);
 
-    // A set of grid points is generated around each nucleus in the system.
-    // Loop for the number of atom
-    rComm.barrier();
-
-    std::map<int, std::vector<double> > atomCoordX;
-    std::map<int, std::vector<double> > atomCoordY;
-    std::map<int, std::vector<double> > atomCoordZ;
-    std::map<int, std::vector<double> > atomWeight;
+    // std::map<int, std::vector<double> > atomCoordX;
+    // std::map<int, std::vector<double> > atomCoordY;
+    // std::map<int, std::vector<double> > atomCoordZ;
+    // std::map<int, std::vector<double> > atomWeight;
+    std::size_t numOfGrids = 0;
     for (int atom = nLocalStart; atom < nLocalEnd; ++atom) {
         std::vector<double> coordX;
         std::vector<double> coordY;
@@ -119,114 +104,24 @@ void DfGenerateGrid_Parallel::generateGrid_DC()
             DfGenerateGrid::generateGrid(atom, &coordX, &coordY, &coordZ, &weight);
         }
 
-        atomCoordX[atom] = coordX;
-        atomCoordY[atom] = coordY;
-        atomCoordZ[atom] = coordZ;
-        atomWeight[atom] = weight;
-//     std::cerr << TlUtils::format("DfGenerateGrid_Parallel::generateGrid() atom=%d, size=%d",
-//               atom, coordX.size())
-//        << std::endl;
-    }
+        // atomCoordX[atom] = coordX;
+        // atomCoordY[atom] = coordY;
+        // atomCoordZ[atom] = coordZ;
+        // atomWeight[atom] = weight;
 
-    // all reduce
-    if (rComm.isMaster() == true) {
-        GridDataManager gdm(this->gridDataFilePath_);
-        // for master
-        {
-            for (std::map<int, std::vector<double> >::const_iterator p = atomCoordX.begin();
-                    p != atomCoordX.end(); ++p) {
-                gdm.setData(p->first, GridDataManager::COORD_X, p->second);
-            }
-            for (std::map<int, std::vector<double> >::const_iterator p = atomCoordY.begin();
-                    p != atomCoordY.end(); ++p) {
-                gdm.setData(p->first, GridDataManager::COORD_Y, p->second);
-            }
-            for (std::map<int, std::vector<double> >::const_iterator p = atomCoordZ.begin();
-                    p != atomCoordZ.end(); ++p) {
-                gdm.setData(p->first, GridDataManager::COORD_Z, p->second);
-            }
-            for (std::map<int, std::vector<double> >::const_iterator p = atomWeight.begin();
-                    p != atomWeight.end(); ++p) {
-                gdm.setData(p->first, GridDataManager::GRID_WEIGHT, p->second);
-            }
-        }
-        // for slave
-        for (int proc = 1; proc < nProc; ++proc) {
-            int numOfAtoms = 0;
-            rComm.receiveData(numOfAtoms, proc);
-
-            for (int i = 0; i < numOfAtoms; ++i) {
-                int atom = 0;
-                std::vector<double> coordX;
-
-                rComm.receiveData(atom, proc);
-                rComm.receiveData(coordX, proc);
-                gdm.setData(atom, GridDataManager::COORD_X, coordX);
-            }
-
-            for (int i = 0; i < numOfAtoms; ++i) {
-                int atom = 0;
-                std::vector<double> coordY;
-
-                rComm.receiveData(atom, proc);
-                rComm.receiveData(coordY, proc);
-                gdm.setData(atom, GridDataManager::COORD_Y, coordY);
-            }
-
-            for (int i = 0; i < numOfAtoms; ++i) {
-                int atom = 0;
-                std::vector<double> coordZ;
-
-                rComm.receiveData(atom, proc);
-                rComm.receiveData(coordZ, proc);
-                gdm.setData(atom, GridDataManager::COORD_Z, coordZ);
-            }
-
-            for (int i = 0; i < numOfAtoms; ++i) {
-                int atom = 0;
-                std::vector<double> weight;
-
-                rComm.receiveData(atom, proc);
-                rComm.receiveData(weight, proc);
-                gdm.setData(atom, GridDataManager::GRID_WEIGHT, weight);
-            }
-
-            rComm.barrier();
-        }
-    } else {
-        for (int proc = 1; proc < nProc; ++proc) {
-            if (proc == nRank) {
-                const int numOfAtoms = atomCoordX.size();
-                assert(static_cast<std::size_t>(numOfAtoms) == atomCoordY.size());
-                assert(static_cast<std::size_t>(numOfAtoms) == atomCoordZ.size());
-                assert(static_cast<std::size_t>(numOfAtoms) == atomWeight.size());
-                rComm.sendData(numOfAtoms);
-
-                for (std::map<int, std::vector<double> >::const_iterator p = atomCoordX.begin();
-                        p != atomCoordX.end(); ++p) {
-                    rComm.sendData(p->first);
-                    rComm.sendData(p->second);
-                }
-                for (std::map<int, std::vector<double> >::const_iterator p = atomCoordY.begin();
-                        p != atomCoordY.end(); ++p) {
-                    rComm.sendData(p->first);
-                    rComm.sendData(p->second);
-                }
-                for (std::map<int, std::vector<double> >::const_iterator p = atomCoordZ.begin();
-                        p != atomCoordZ.end(); ++p) {
-                    rComm.sendData(p->first);
-                    rComm.sendData(p->second);
-                }
-                for (std::map<int, std::vector<double> >::const_iterator p = atomWeight.begin();
-                        p != atomWeight.end(); ++p) {
-                    rComm.sendData(p->first);
-                    rComm.sendData(p->second);
-                }
-            }
-
-            rComm.barrier();
+        // store grid matrix
+        const std::size_t numOfAtomGrids = weight.size();
+        this->grdMat_.resize(numOfGrids + numOfAtomGrids, this->numOfColsOfGrdMat_);
+        for (std::size_t i = 0; i < numOfAtomGrids; ++i) {
+            this->grdMat_.set(numOfGrids, 0, coordX[i]);
+            this->grdMat_.set(numOfGrids, 1, coordY[i]);
+            this->grdMat_.set(numOfGrids, 2, coordZ[i]);
+            this->grdMat_.set(numOfGrids, 3, weight[i]);
+            this->grdMat_.set(numOfGrids, 4, atom);
+            ++numOfGrids;
         }
     }
+
 }
 
 void DfGenerateGrid_Parallel::generateGrid_MS()

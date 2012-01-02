@@ -89,7 +89,7 @@ int PDF_MAIN(int argc, char *argv[])
 #endif // NDEBUG
 
     // setup parameters
-    TlGetopt opt(argc, argv, "dro:");
+    TlGetopt opt(argc, argv, "Ddro:");
 
     bool isRestart = false;
     if (opt["r"] == "defined") {
@@ -103,11 +103,13 @@ int PDF_MAIN(int argc, char *argv[])
     }
     log.setFilePath(output);
 
-    if (opt["d"] == "defined") {
-        log.setLevel(TlLogging::DEBUG);
-    }
-
     log.setProcID(rComm.getRank());
+    if (opt["d"] == "defined") {
+        log.setLevel(TlLogging::DEBUG, TlLogging::WARN);
+    }
+    if (opt["D"] == "defined") {
+        log.setLevel(TlLogging::DEBUG, TlLogging::DEBUG);
+    }
     
     // run ProteinDF
     ProteinDF_Parallel PDF;
