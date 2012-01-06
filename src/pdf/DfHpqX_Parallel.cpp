@@ -57,7 +57,8 @@ void DfHpqX_Parallel::getHpqD(TlDistributeSymmetricMatrix* pHpq,
     pHpq2->resize(numOfAOs);
     TlSparseSymmetricMatrix tmpHpq(numOfAOs);
     TlSparseSymmetricMatrix tmpHpq2(numOfAOs);
-    
+
+    this->createEngines();
     DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pTaskCtrl->getQueue(this->orbitalInfo_,
@@ -81,6 +82,10 @@ void DfHpqX_Parallel::getHpqD(TlDistributeSymmetricMatrix* pHpq,
     this->loggerTime(" finalize");
     pHpq->mergeSparseMatrix(tmpHpq);
     pHpq2->mergeSparseMatrix(tmpHpq2);
+
+    delete pTaskCtrl;
+    pTaskCtrl = NULL;
+    this->destroyEngines();
 }
 
 

@@ -70,8 +70,8 @@ void DfXMatrix_Parallel::exec_LAPACK()
 
 void DfXMatrix_Parallel::exec_ScaLAPACK()
 {
-    //TlCommunicate& rComm = TlCommunicate::getInstance();
-    //rComm.barrier();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    rComm.barrier();
     
     this->logger("X matrix is created using ScaLAPACK.\n");
 

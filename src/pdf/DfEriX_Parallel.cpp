@@ -87,7 +87,8 @@ void DfEriX_Parallel::getJ_D(const TlVector& rho, TlDistributeSymmetricMatrix* p
     pJ->resize(this->m_nNumOfAOs);
     TlSparseSymmetricMatrix tmpJ(this->m_nNumOfAOs);
     //pJ->zeroClear();
-    
+
+    this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
@@ -113,6 +114,7 @@ void DfEriX_Parallel::getJ_D(const TlVector& rho, TlDistributeSymmetricMatrix* p
     
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
+    this->destroyEngines();
 }
 
 
@@ -128,6 +130,7 @@ void DfEriX_Parallel::getJab_D(TlDistributeSymmetricMatrix* pJab)
 
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo_Density);
 
+    this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo_Density,
@@ -150,6 +153,7 @@ void DfEriX_Parallel::getJab_D(TlDistributeSymmetricMatrix* pJab)
     
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
+    this->destroyEngines();
 }
 
 
@@ -200,7 +204,7 @@ void DfEriX_Parallel::getJ_D_local(const TlDistributeSymmetricMatrix& P,
     this->expandLocalDensityMatrix(P, orbitalInfo, &localP, &rowIndexes, &colIndexes);
     const index_type numOfRowIndexes = rowIndexes.size();
     const index_type numOfColIndexes = colIndexes.size();
-    
+
     std::vector<DfTaskCtrl::Task2> taskList;
     DfTaskCtrl::Task2 task;
     for (index_type p = 0; p < numOfRowIndexes; ) {
@@ -216,7 +220,8 @@ void DfEriX_Parallel::getJ_D_local(const TlDistributeSymmetricMatrix& P,
         }
         p += orbitalInfo.getShellType(shellIndexP) * 2 + 1;
     }
-    
+
+    this->createEngines();
     TlVector tmpRho(this->m_nNumOfAux);
     this->loggerTime(" ERI start");
     this->getJ_part2(orbitalInfo,
@@ -227,7 +232,8 @@ void DfEriX_Parallel::getJ_D_local(const TlDistributeSymmetricMatrix& P,
                      TlDistributeMatrix(P), &tmpRho);
     this->loggerTime_local(TlUtils::format("  waiting...#%6d", rComm.getRank()));
     this->loggerTime(" ERI end");
-
+    this->destroyEngines();
+    
     // finalize
     rComm.allReduce_SUM(tmpRho);
     *pRho = TlDistributeVector(tmpRho);
@@ -263,6 +269,7 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
     bool isSetTempP = false;
     TlVector tmpRho(this->m_nNumOfAux);
 
+    this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
@@ -343,7 +350,8 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
     pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
-
+    this->destroyEngines();
+    
     // finalize
     //this->finalize(pRho);
     rComm.allReduce_SUM(tmpRho);
