@@ -10,7 +10,7 @@
 #include "TlUtils.h"
 #include "TlTime.h"
 
-double DfXCFunctional::m_dXC_Energy = 0.0;
+//double DfXCFunctional::m_dXC_Energy = 0.0;
 double DfXCFunctional::m_dFockExchangeEnergyAlpha = 0.0; // Update法を使うため、直前のenergyを保存
 double DfXCFunctional::m_dFockExchangeEnergyBeta = 0.0; // Update法を使うため、直前のenergyを保存
 
@@ -22,7 +22,8 @@ DfXCFunctional::DfXCFunctional(TlSerializeData* pPdfParam)
 {
     const TlSerializeData& pdfParam = *pPdfParam;
 
-    DfXCFunctional::m_dXC_Energy = pdfParam["control"]["XC_Energy"].getDouble();
+    //DfXCFunctional::m_dXC_Energy = pdfParam["control"]["XC_Energy"].getDouble();
+    this->XC_energy_ = pdfParam["control"]["XC_Energy"].getDouble();
     DfXCFunctional::E_disp_ = pdfParam["control"]["DFT_D_Energy"].getDouble();
 
     this->m_bRI_K = (TlUtils::toUpper(pdfParam["RI-K"].getStr()) == "YES") ? true : false;
@@ -83,7 +84,7 @@ DfXCFunctional::DfXCFunctional(TlSerializeData* pPdfParam)
 
 DfXCFunctional::~DfXCFunctional()
 {
-    (*this->pPdfParam_)["control"]["XC_Energy"] = DfXCFunctional::m_dXC_Energy;
+    (*this->pPdfParam_)["control"]["XC_Energy"] = this->XC_energy_;
     (*this->pPdfParam_)["control"]["DFT_D_Energy"] = DfXCFunctional::E_disp_;
 }
 
@@ -118,12 +119,12 @@ void DfXCFunctional::buildXcMatrix()
 
     switch (this->m_nMethodType) {
     case METHOD_RKS: {
-        // 密度行列の準備
+        // 密度行列(alpha spin)の準備
         TlSymmetricMatrix Ppq;
         if (this->m_bIsUpdateXC == true) {
-            Ppq = this->getDiffDensityMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration);
+            Ppq = 0.5 * this->getDiffDensityMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration);
         } else {
-            Ppq = this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+            Ppq = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
         }
 
         TlSymmetricMatrix Fxc(this->m_nNumOfAOs);
@@ -139,7 +140,7 @@ void DfXCFunctional::buildXcMatrix()
             // Fockの交換項を求める
             this->loggerTime(" start: Fock exchange");
             Fxc += this->getFockExchange((0.5 * this->m_dFockExchangeCoef) * Ppq, RUN_RKS);
-            this->m_dXC_Energy += DfXCFunctional::m_dFockExchangeEnergyAlpha;
+            this->XC_energy_ += DfXCFunctional::m_dFockExchangeEnergyAlpha;
             this->loggerTime(" end: Fock exchange");
         }
 
@@ -172,7 +173,7 @@ void DfXCFunctional::buildXcMatrix()
             this->loggerTime(" start: Fock exchange");
             FxcA += this->getFockExchange(this->m_dFockExchangeCoef * PApq, RUN_UKS_ALPHA);
             FxcB += this->getFockExchange(this->m_dFockExchangeCoef * PBpq, RUN_UKS_BETA);
-            this->m_dXC_Energy += (DfXCFunctional::m_dFockExchangeEnergyAlpha + DfXCFunctional::m_dFockExchangeEnergyBeta);
+            this->XC_energy_ += (DfXCFunctional::m_dFockExchangeEnergyAlpha + DfXCFunctional::m_dFockExchangeEnergyBeta);
             this->loggerTime(" end: Fock exchange");
         }
 
@@ -188,8 +189,28 @@ void DfXCFunctional::buildXcMatrix()
     default:
         break;
     }
+
+    this->checkGridAccuracy();
 }
 
+void DfXCFunctional::checkGridAccuracy()
+{
+    DfCalcGridX dfCalcGrid(this->pPdfParam_);
+
+    this->log_.info(" grid accuracy check:");
+    double rhoA = 0.0;
+    double rhoB = 0.0;
+    dfCalcGrid.getWholeDensity(&rhoA, &rhoB);
+    if (this->m_nMethodType == METHOD_RKS) {
+        this->log_.info(TlUtils::format(" number of electrons = % 16.10f (input: %d)",
+                                        rhoA * 2, this->m_nNumOfElectrons));
+    } else {
+        this->log_.info(TlUtils::format(" number of electrons(alpha) = % 16.10f (input: %d)",
+                                        rhoA, this->m_nNumOfAlphaElectrons));
+        this->log_.info(TlUtils::format(" number of electrons(beta ) = % 16.10f (input: %d)",
+                                        rhoB, this->m_nNumOfBetaElectrons));
+    }
+}
 
 TlSymmetricMatrix DfXCFunctional::getFockExchange(const TlSymmetricMatrix& deltaP, const RUN_TYPE nRunType)
 {

@@ -57,8 +57,8 @@ public:
     ///
     /// XCエネルギー計算はKohn-Sham行列を作成するときに、
     /// その時点の密度行列を元に計算する
-    double getEnergy() {
-        return this->m_dXC_Energy;
+    double getEnergy() const {
+        return this->XC_energy_;
     }
 
     virtual double getGrimmeDispersionEnergy();
@@ -87,6 +87,10 @@ protected:
     double getFockExchangeEnergy(const TlSymmetricMatrix& PA, const TlSymmetricMatrix& PB,
                                  const TlSymmetricMatrix& Ex);
 
+
+    /// 電子数を数値積分により求めることにより、グリッドの精度をチェックする
+    void checkGridAccuracy();
+    
 protected:
     virtual DfEri2* getDfEri2();
     virtual DfEriX* getDfEriXObject();
@@ -112,7 +116,8 @@ protected:
 
     bool isUseNewEngine_;
     
-    static double m_dXC_Energy;
+    //static double m_dXC_Energy;
+    double XC_energy_;
     static double m_dFockExchangeEnergyAlpha; // Update法を使うため、直前のenergyを保存
     static double m_dFockExchangeEnergyBeta;
     
@@ -124,65 +129,65 @@ protected:
 
 // build F_xc matrix for RKS case
 template<typename SymmetricMatrixType, typename DfCalcGridClass>
-void DfXCFunctional::getFxc(const SymmetricMatrixType& Ppq,
+void DfXCFunctional::getFxc(const SymmetricMatrixType& P1,
                             DfCalcGridClass* pDfCalcGridObj,
                             SymmetricMatrixType* pFxc)
 {
     assert(pDfCalcGridObj != NULL);
     assert(pFxc != NULL);
 
-    // 1e density matrix
-    const SymmetricMatrixType P1 = 0.5 * Ppq;
-    
     switch (this->m_nXCFunctional) {
     case HF:
-        this->m_dXC_Energy = 0.0;
+        this->XC_energy_ = 0.0;
         break;
 
     case SHF: {
         DfFunctional_SHF shf;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
-                                                                         &shf,
-                                                                         pFxc);
+        this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
+                                                                       &shf,
+                                                                       pFxc);
     }
-    break;
-
+        break;
+        
     case SVWN: {
         DfFunctional_SVWN svwn;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
-                                                                         &svwn,
-                                                                         pFxc);
+        this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
+                                                                       &svwn,
+                                                                       pFxc);
     }
-    break;
-
+        break;
+        
     case HFB: {
         DfFunctional_Becke88 b88;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
-                                                                         &b88,
-                                                                         pFxc);
+        this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
+                                                                       &b88,
+                                                                       pFxc);
     }
-    break;
-
+        break;
+        
     case BLYP: {
         DfFunctional_B88LYP blyp;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
-                                                                         &blyp,
-                                                                         pFxc);
+        this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
+                                                                       &blyp,
+                                                                       pFxc);
     }
-    break;
-
+        break;
+        
     case B3LYP: {
         // except HF exchange
         DfFunctional_B3LYP b3lyp;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
-                                                                         &b3lyp,
-                                                                         pFxc);
+        this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
+                                                                       &b3lyp,
+                                                                       pFxc);
     }
-    break;
-
+        break;
+        
     default:
         CnErr.abort("unknown XC functional. STOP. @DfXCFunctional::getFxc()");
     }
+    
+    this->log_.debug(TlUtils::format("DfXCFunctional::getFxc(): XC_energy=% 16.10f",
+                                     this->XC_energy_));
 }
 
 
@@ -196,48 +201,48 @@ void DfXCFunctional::getFxc(const SymmetricMatrixType& PpqA,
     assert(pDfCalcGridObj != NULL);
     assert(pFxcA != NULL);
     assert(pFxcB != NULL);
-
+    
     switch (this->m_nXCFunctional) {
     case HF:
-        this->m_dXC_Energy = 0.0;
+        this->XC_energy_ = 0.0;
         break;
-
+        
     case SHF: {
         DfFunctional_SHF shf;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(PpqA, PpqB, &shf,
-                                                                         pFxcA, pFxcB);
+        this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(PpqA, PpqB, &shf,
+                                                                       pFxcA, pFxcB);
     }
-    break;
-
+        break;
+        
     case SVWN: {
         DfFunctional_SVWN svwn;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(PpqA, PpqB, &svwn,
-                                                                         pFxcA, pFxcB);
+        this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(PpqA, PpqB, &svwn,
+                                                                       pFxcA, pFxcB);
     }
-    break;
-
+        break;
+        
     case HFB: {
         DfFunctional_Becke88 hfb;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(PpqA, PpqB, &hfb,
-                                                                         pFxcA, pFxcB);
+        this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(PpqA, PpqB, &hfb,
+                                                                       pFxcA, pFxcB);
     }
-    break;
-
+        break;
+        
     case BLYP: {
         DfFunctional_B88LYP blyp;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(PpqA, PpqB, &blyp,
-                                                                         pFxcA, pFxcB);
+        this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(PpqA, PpqB, &blyp,
+                                                                       pFxcA, pFxcB);
     }
-    break;
-
+        break;
+        
     case B3LYP: {
         // except HF exchange
         DfFunctional_B3LYP b3lyp;
-        this->m_dXC_Energy = pDfCalcGridObj->calcXCIntegForFockAndEnergy(PpqA, PpqB, &b3lyp,
-                                                                         pFxcA, pFxcB);
+        this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(PpqA, PpqB, &b3lyp,
+                                                                       pFxcA, pFxcB);
     }
-    break;
-
+        break;
+        
     default:
         CnErr.abort("unknown XC functional. STOP. @DfXCFunctional::getFxc()");
     }

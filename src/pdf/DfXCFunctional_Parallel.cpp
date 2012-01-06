@@ -48,6 +48,8 @@ void DfXCFunctional_Parallel::buildXcMatrix()
     } else {
         this->buildXC_LAPACK();
     }
+
+    this->checkGridAccuracy();
 }
 
 
@@ -61,9 +63,9 @@ void DfXCFunctional_Parallel::buildXC_LAPACK()
         TlSymmetricMatrix Ppq;
         if (rComm.isMaster() == true) {
             if (this->m_bIsUpdateXC == true) {
-                Ppq = this->getDiffDensityMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration);
+                Ppq = 0.5 * this->getDiffDensityMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration);
             } else {
-                Ppq = this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+                Ppq = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
             }
         }
         rComm.broadcast(Ppq);
@@ -78,7 +80,7 @@ void DfXCFunctional_Parallel::buildXC_LAPACK()
 
         if (this->m_bIsHybrid == true) {
             Fxc += this->getFockExchange((0.5 * this->m_dFockExchangeCoef) * Ppq, RUN_RKS);
-            this->m_dXC_Energy += DfXCFunctional::m_dFockExchangeEnergyAlpha;
+            this->XC_energy_ += DfXCFunctional::m_dFockExchangeEnergyAlpha;
         }
 
         if (rComm.isMaster() == true) {
@@ -114,7 +116,7 @@ void DfXCFunctional_Parallel::buildXC_LAPACK()
         if (this->m_bIsHybrid == true) {
             FxcA += this->getFockExchange(this->m_dFockExchangeCoef * PApq, RUN_UKS_ALPHA);
             FxcB += this->getFockExchange(this->m_dFockExchangeCoef * PBpq, RUN_UKS_BETA);
-            this->m_dXC_Energy += (DfXCFunctional::m_dFockExchangeEnergyAlpha + DfXCFunctional::m_dFockExchangeEnergyBeta);
+            this->XC_energy_ += (DfXCFunctional::m_dFockExchangeEnergyAlpha + DfXCFunctional::m_dFockExchangeEnergyBeta);
         }
 
         if (rComm.isMaster() == true) {
@@ -130,6 +132,7 @@ void DfXCFunctional_Parallel::buildXC_LAPACK()
     default:
         break;
     }
+
 }
 
 
@@ -141,9 +144,9 @@ void DfXCFunctional_Parallel::buildXC_ScaLAPACK()
     case METHOD_RKS: {
         TlDistributeSymmetricMatrix Ppq;
         if (this->m_bIsUpdateXC == true) {
-            Ppq = this->getDiffDensityMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration);
+            Ppq = 0.5 * this->getDiffDensityMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration);
         } else {
-            Ppq = this->getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+            Ppq = 0.5 * this->getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
         }
 
         TlDistributeSymmetricMatrix Fxc(this->m_nNumOfAOs);
@@ -153,8 +156,8 @@ void DfXCFunctional_Parallel::buildXC_ScaLAPACK()
         }
         
         if (this->m_bIsHybrid == true) {
-            Fxc += this->getFockExchange((0.5 * this->m_dFockExchangeCoef) * Ppq, RUN_RKS);
-            this->m_dXC_Energy += DfXCFunctional::m_dFockExchangeEnergyAlpha;
+            Fxc += this->getFockExchange(this->m_dFockExchangeCoef * Ppq, RUN_RKS);
+            this->XC_energy_ += DfXCFunctional::m_dFockExchangeEnergyAlpha;
         }
 
         this->saveFxcMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration, Fxc);
@@ -182,7 +185,7 @@ void DfXCFunctional_Parallel::buildXC_ScaLAPACK()
         if (this->m_bIsHybrid == true) {
             FxcA += this->getFockExchange(this->m_dFockExchangeCoef * PApq, RUN_UKS_ALPHA);
             FxcB += this->getFockExchange(this->m_dFockExchangeCoef * PBpq, RUN_UKS_BETA);
-            this->m_dXC_Energy += (DfXCFunctional::m_dFockExchangeEnergyAlpha + DfXCFunctional::m_dFockExchangeEnergyBeta);
+            this->XC_energy_ += (DfXCFunctional::m_dFockExchangeEnergyAlpha + DfXCFunctional::m_dFockExchangeEnergyBeta);
         }
 
         this->saveFxcMatrix<TlDistributeSymmetricMatrix>(RUN_UKS_ALPHA, this->m_nIteration, FxcA);

@@ -70,7 +70,7 @@ protected:
     const Fl_Geometry flGeometry_;
 
     /// GridDataFileのパス
-    std::string gridDataFilePath_;
+    //std::string gridDataFilePath_;
 
     double maxRadii_;
     std::vector<TlPosition> coord_;

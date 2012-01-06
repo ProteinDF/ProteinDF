@@ -15,7 +15,9 @@ protected:
     virtual void generateGrid();
 
     void generateGrid_DC();
-    void generateGrid_MS();
+
+    // TODO: implement master-slave model
+    //void generateGrid_MS();
 
 protected:
     enum {

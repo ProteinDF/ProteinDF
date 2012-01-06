@@ -1,15 +1,9 @@
 #include <cmath>
 
-#include "Common.h"
 #include "CnError.h"
 #include "DfGenerateGrid.h"
 #include "DfXCFunctional.h"
-#include "Fl_Gto_Orbital.h"
-#include "Fl_Gto_Density.h"
-#include "Fl_Gto_Xcpot.h"
-#include "Fl_Gto_Xcpot2.h"
 #include "TlPosition.h"
-#include "GridDataManager.h"
 #include "TlOrbitalInfo_Density.h"
 #include "TlPrdctbl.h"
 #include "TlUtils.h"
@@ -26,8 +20,7 @@
 
 
 DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
-    : DfObject(pPdfParam), flGeometry_(Fl_Geometry::getDefaultFileName()),
-      gridDataFilePath_("fl_Work/grids.dat") {
+    : DfObject(pPdfParam), flGeometry_(Fl_Geometry::getDefaultFileName()) {
     const TlSerializeData& pdfParam = *pPdfParam;
     
     this->xctype   = pdfParam["xc-potential"].getStr();
@@ -86,7 +79,6 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
     {
         const int coef = (this->m_nMethodType == METHOD_RKS) ? 1 : 2;
         DfXCFunctional dfXcFunctional(this->pPdfParam_);
-        std::cerr << dfXcFunctional.getFunctionalType() << std::endl;
         if (dfXcFunctional.getFunctionalType() == DfXCFunctional::LDA) {
             this->numOfColsOfGrdMat_ += coef * 1; // rho only
         } else if (dfXcFunctional.getFunctionalType() == DfXCFunctional::GGA) {
