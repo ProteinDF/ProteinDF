@@ -33,6 +33,7 @@ PdfTests_SOURCES = \
 	TlSparseMatrixTest.h		TlSparseMatrixTest.cpp		\
 	TlSparseSymmetricMatrixTest.h	TlSparseSymmetricMatrixTest.cpp	\
 	TlVectorTest.h			TlVectorTest.cpp		\
+	TlFileMatrixTest.h		TlFileMatrixTest.cpp		\
 	TlFileSymmetricMatrixTest.h	TlFileSymmetricMatrixTest.cpp	\
 	TlPartialSymmetricMatrixTest.h	TlPartialSymmetricMatrixTest.cpp\
 	TlMemManagerTest.h		TlMemManagerTest.cpp		\

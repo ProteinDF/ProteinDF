@@ -10,6 +10,7 @@
 #include "TlSymmetricMatrixTest.h"
 #include "TlSparseMatrixTest.h"
 #include "TlSparseSymmetricMatrixTest.h"
+#include "TlFileMatrixTest.h"
 #include "TlFileSymmetricMatrixTest.h"
 #include "TlPartialSymmetricMatrixTest.h"
 #include "TlMemManagerTest.h"
@@ -43,6 +44,7 @@ int main(int argc, char* argv[]){
     runner.addTest(TlSymmetricMatrixTest::suite());
     runner.addTest(TlSparseMatrixTest::suite());
     runner.addTest(TlSparseSymmetricMatrixTest::suite());
+    runner.addTest(TlFileMatrixTest::suite());
     runner.addTest(TlFileSymmetricMatrixTest::suite());
     runner.addTest(TlPartialSymmetricMatrixTest::suite());
     runner.addTest(TlMemManagerTest::suite());
