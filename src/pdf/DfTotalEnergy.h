@@ -37,13 +37,13 @@ protected:
     //double calculate_J_Rho_Rhotilda_WITH_DIRECT(const TlSymmetricMatrix& T, const TlVector& R);
 
     /// J[rho, rho~]の計算を行う(積分をファイルに蓄えて計算)
-    double calculate_J_Rho_Rhotilda_WITH_FILE(const TlSymmetricMatrix& T, const TlVector& R);
+    //double calculate_J_Rho_Rhotilda_WITH_FILE(const TlSymmetricMatrix& T, const TlVector& R);
 
     /// 交換相関ポテンシャル部分の計算を行う
     //double calculate_Exc_WITH_DIRECT(const TlSymmetricMatrix& D, const TlVector& E);
 
     /// 交換相関ポテンシャル部分の計算を行う
-    double calculate_Exc_WITH_FILE(const TlSymmetricMatrix& D, const TlVector& E);
+    //double calculate_Exc_WITH_FILE(const TlSymmetricMatrix& D, const TlVector& E);
     
     /// 全エネルギーを出力する
     void write_total_energy(double E_Total) const;

@@ -1,7 +1,6 @@
 #include <cmath>
 
 #include "DfTotalEnergy.h"
-#include "Common.h"
 #include "DfEri.h"
 #include "DfOverlap.h"
 #include "DfEri2.h"
@@ -116,124 +115,6 @@ void DfTotalEnergy::write_total_energy(const double E_Total) const
 {
     (*this->pPdfParam_)["TE"][this->m_nIteration] = E_Total;
 }
-
-
-// energy for a part of coulomb term ( rho*Ppq*Pqa )
-double DfTotalEnergy::calculate_J_Rho_Rhotilda_WITH_FILE(const TlSymmetricMatrix& D, const TlVector& R)
-{
-    Fl_Int_Pqa IntPqa;  // coulomb three index integrals(tmp)
-    //IntPqa.open( "fl_Work", IntPqa.getfilename(), "read" );
-
-    TlSymmetricMatrix B(this->m_nNumOfAOs);
-    {
-        int icount, npqalp, nalp, alpha;
-        int*   indalp = new int   [ MAXNA   ];
-        int*   npq    = new int   [ MAXNA   ];
-        int*   indp   = new int   [ MAXNPQA ];
-        int*   indq   = new int   [ MAXNPQA ];
-        int*   indpq  = new int   [ MAXNPQA ];
-        int*   indgam = new int   [ MAXNA   ];
-        double* pqA    = new double [ MAXNPQA ];
-        double* pqG    = new double [ MAXNPQA ];
-
-        do {
-            IntPqa.read(&icount, &npqalp, &nalp, indalp, npq, indp, indq, pqA);
-            int ind = 0;
-            for (int i=0; i<nalp; i++) {
-                alpha = indalp[i];
-                for (int j=0; j<npq[i]; j++) {
-                    indpq[ind] = indp[ind] * (indp[ind]+1)/2 + indq[ind];
-                    B(indp[ind], indq[ind]) += R[alpha] * pqA[ind];
-                    ind++;
-                }
-            }
-        } while (icount != 0);
-
-        delete [] indalp;
-        delete [] npq;
-        delete [] indp;
-        delete [] indq;
-        delete [] indpq;
-        delete [] indgam;
-        delete [] pqA;
-        delete [] pqG;
-    }
-
-    double E_J_Rou_Routilda = 0.0;
-    for (int i = 0; i < this->m_nNumOfAOs; ++i) {
-        // case: i != j
-        for (int j = 0; j < i; ++j) {
-            E_J_Rou_Routilda += 2.0 * D(i,j) * B(i,j);
-        }
-        // case: i == j
-        E_J_Rou_Routilda += D(i,i) * B(i,i);
-    }
-
-    //this->logger(TlUtils::format("    Energy of a part of Coulomb Energy Part = %28.10lf\n", E_J_Rou_Routilda ));
-
-    return E_J_Rou_Routilda;
-}
-
-
-// energy for xc energy term (compaire myu*Ppq*Pqa with 4/3*Ex1)
-double DfTotalEnergy::calculate_Exc_WITH_FILE(const TlSymmetricMatrix& D, const TlVector& E)
-{
-    //LogX& Log = TlLogX::getInstance();
-
-    Fl_Int_Pqg IntPqg;  // xc three index integrals(tmp)
-
-    //IntPqg.open("fl_Work", IntPqg.getfilename(), "read");
-
-    TlSymmetricMatrix B(this->m_nNumOfAOs);
-    {
-        int icount, npqgam, ngam, gamma;
-        int*   indalp = new int   [ MAXNA   ];
-        int*   npq    = new int   [ MAXNA   ];
-        int*   indp   = new int   [ MAXNPQA ];
-        int*   indq   = new int   [ MAXNPQA ];
-        int*   indpq  = new int   [ MAXNPQA ];
-        int*   indgam = new int   [ MAXNA   ];
-        double* pqA    = new double [ MAXNPQA ];
-        double* pqG    = new double [ MAXNPQA ];
-        do {
-            IntPqg.read(&icount, &npqgam, &ngam, indgam, npq, indp, indq, pqG);
-
-            int ind=0;
-            for (int i=0; i<ngam; i++) {
-                gamma = indgam[i];
-                for (int j=0; j<npq[i]; j++) {
-                    indpq[ind] = indp[ind] * (indp[ind]+1)/2 + indq[ind];
-                    B(indp[ind], indq[ind]) += E[gamma] * pqG[ind];
-                    ind++;
-                }
-            }
-        } while (icount != 0);
-
-        delete [] indalp;
-        delete [] npq;
-        delete [] indp;
-        delete [] indq;
-        delete [] indpq;
-        delete [] indgam;
-        delete [] pqA;
-        delete [] pqG;
-    }
-
-    double E_Exc = 0.0;
-    for (int i = 0; i < this->m_nNumOfAOs; ++i) {
-        // case: i != j
-        for (int j = 0; j < i; ++j) {
-            E_Exc += 2.0 * D(i,j) * B(i,j);
-        }
-        // case: i == j
-        E_Exc += D(i,i) * B(i,i);
-    }
-
-    //this->logger(TlUtils::format("    Energy of Exc Part                      = %28.10lf\n", E_Exc));
-
-    return E_Exc;
-}
-
 
 // total energy including dummy charge
 void DfTotalEnergy::calculate_real_energy()
