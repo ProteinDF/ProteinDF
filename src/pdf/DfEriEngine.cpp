@@ -45,6 +45,7 @@ const TlAngularMomentumVector DfEriEngine::E2_[3] = {
 
 ////////////////////////////////////////////////////////////////////////////////
 DfEriEngine::DfEriEngine()
+    : log_(TlLogging::getInstance())
 {
     this->p0M_ = new double*[ERI_L_MAX];
     for (int i = 0; i < ERI_L_MAX; ++i) {
@@ -295,8 +296,8 @@ void DfEriEngine::calc(const Query& qAB, const Query& qCD,
         const std::string AB_str = TlUtils::format("[%f %f %f]", this->AB_[0], this->AB_[1], this->AB_[2]);
         const std::string CD_str = TlUtils::format("[%f %f %f]", this->CD_[0], this->CD_[1], this->CD_[2]);
         std::cerr << TlUtils::format(">>>> BEGIN\n(%d %d, %d %d |%d %d, %d %d) AB=%s, CD=%s",
-                                     a_bar, b_bar, a, b,
-                                     c_bar, d_bar, c, d,
+                                     qAB.a_bar, qAB.b_bar, qAB.a, qAB.b,
+                                     qCD.a_bar, qCD.b_bar, qCD.a, qCD.b,
                                      AB_str.c_str(), CD_str.c_str())
                   << std::endl;
     }
@@ -849,6 +850,10 @@ void DfEriEngine::calc(const DfEriEngine::Query& qAB,
     // const int b_bar = qAB.b_bar;
     // const int a = qAB.a;
     // const int b = qAB.b;
+    this->log_.debug(TlUtils::format("DfEriEngine::calc(): a~=%d, b~=%d, a=%d, b=%d,",
+                                     qAB.a_bar, qAB.b_bar, qAB.a, qAB.b));
+    this->log_.debug(TlUtils::format("                     c~=%d, d~=%d, c=%d, d=%d,",
+                                     qCD.a_bar, qCD.b_bar, qCD.a, qCD.b));
     
     this->calcE4CQ();
     this->calc0m();
@@ -871,7 +876,7 @@ void DfEriEngine::calc(const DfEriEngine::Query& qAB,
         for (ContractScalesType::const_iterator p = this->bra_contractScales_.begin();
              p != this->bra_contractScales_.end(); ++p) {
             std::cerr << TlUtils::format("choice[%d]: (a', b', p')=(%d, %d, %d)",
-                                         count, p->pack.a_prime, p->pack.b_prime, p->pack.p_prime)
+                                         count, p->a_prime, p->b_prime, p->p_prime)
                       << std::endl;
             ++count;
         }
@@ -879,7 +884,7 @@ void DfEriEngine::calc(const DfEriEngine::Query& qAB,
         for (ContractScalesType::const_iterator p = this->ket_contractScales_.begin();
              p != this->ket_contractScales_.end(); ++p) {
             std::cerr << TlUtils::format("choice[%d]: (c', d', q')=(%d, %d, %d)",
-                                         count, p->pack.a_prime, p->pack.b_prime, p->pack.p_prime)
+                                         count, p->a_prime, p->b_prime, p->p_prime)
                       << std::endl;
             ++count;
         }
@@ -1331,7 +1336,7 @@ void DfEriEngine::choice(const int a_bar, const int b_bar,
         this->choice(a_bar,   b_bar-1, a-1, b,   p,   a_prime,   b_prime,   p_prime,   pContractList);
         this->choice(a_bar,   b_bar-1, a,   b-1, p,   a_prime,   b_prime,   p_prime,   pContractList);
     } else if (b > 0) {
-        // use eq.40
+        // use eq.44
         this->choice(a_bar,   b_bar,   a+1, b-1, p,   a_prime,   b_prime,   p_prime,   pContractList);
         this->choice(a_bar,   b_bar,   a,   b-1, p,   a_prime,   b_prime,   p_prime,   pContractList);
         this->choice(a_bar-1, b_bar,   a,   b-1, p,   a_prime,   b_prime,   p_prime,   pContractList);
@@ -1846,10 +1851,9 @@ void DfEriEngine::calcERI(const int a_bar, const int b_bar,
     const ERI_State eriState(a_bar, b_bar, a, b, p, a_prime, b_prime, p_prime);
     
 #ifdef DEBUG_HGP
-    std::cerr << TlUtils::format("calcERI %s calcdERIs=%d",
-                                 eriState.debugOut().c_str(),
-                                 (int)this->isCalcdERI_.size())
-              << std::endl;
+    this->log_.debug(TlUtils::format("calcERI %s calcdERIs=%d",
+                                     eriState.debugOut().c_str(),
+                                     (int)this->isCalcdERI_.size()));
 #endif // DEBUG_HGP
 
     if (this->isCalcdERI_[eriState] != true) {
@@ -1884,9 +1888,9 @@ void DfEriEngine::calcERI(const int a_bar, const int b_bar,
             this->ERI_EQ45(eriState, pERI);
         } else {
             // something wrong
-            std::cerr << TlUtils::format("ERROR@calcERI() [a~=%d, b~=%d, a=%d, b=%d, p=%d, a'=%d, b='%d, p='%d]",
-                                         a_bar, b_bar, a, b, p, a_prime, b_prime, p_prime)
-                      << std::endl;
+            this->log_.critical("DfEriEngine::calcERI(): not calcd.");
+            this->log_.critical(TlUtils::format(" [a~=%d, b~=%d, a=%d, b=%d, p=%d, a'=%d, b='%d, p='%d]",
+                                                a_bar, b_bar, a, b, p, a_prime, b_prime, p_prime));
             abort();
         }
         

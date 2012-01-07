@@ -15,6 +15,7 @@
 #include "TlUtils.h"
 #include "TlMath.h"
 #include "TlOrbitalInfoObject.h"
+#include "TlLogging.h"
 
 /// 仕様
 ///
@@ -189,7 +190,7 @@ private:
         }
 
         unsigned int index() const {
-            const unsigned long v = ((a_prime * ERI_B_MAX) + b_prime) * ERI_P_MAX + p_prime;
+            const unsigned long v = ((a_prime * ERI_B_PRIME_MAX) + b_prime) * ERI_P_PRIME_MAX + p_prime;
             return v;
         }
 
@@ -557,6 +558,9 @@ private:
     // see J. Chem. Phys., 105, 2726 (1996), eq33
     double primitiveLevelThreshold_;
 
+    //
+    TlLogging& log_;
+    
 #ifdef CHECK_MAX_COUNT
     int maxSizeOf_sumOfAngularMomentums_;
     int max_a_bar_;
