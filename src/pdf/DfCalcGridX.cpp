@@ -38,7 +38,7 @@ DfCalcGridX::DfCalcGridX(TlSerializeData* pPdfParam)
 
     this->m_inputedCutoffThreshold = pdfParam["cut-value"].getDouble();
 
-    this->physicalValues_.clear();
+    //this->physicalValues_.clear();
 
     // for debug
     this->isDebugOutPhiTable_ = (TlUtils::toUpper(pdfParam["debug_out_phi_table"].getStr()) == "YES") ? true : false;
@@ -78,451 +78,28 @@ void DfCalcGridX::defineCutOffValues(const TlSymmetricMatrix& PA,
 }
 
 
-void DfCalcGridX::backupGridData()
-{
-    const std::string prevGridDataFilePath = TlUtils::format("%s.itr%d", this->getGridDataFilePath().c_str(), this->m_nIteration -1);
-    TlFile::copy(this->getGridDataFilePath(), prevGridDataFilePath);
-}
-
-
-// TlMatrix DfCalcGridX::getGridMatrix()
+// void DfCalcGridX::backupGridData()
 // {
-//     return DfObject::getGridMatrix<TlMatrix>();
-// }
-
-// void DfCalcGridX::finalizeGridMatrix(const TlMatrix& gridMat)
-// {
-//     if (this->m_bIsUpdateXC == true) {
-//         DfObject::saveGridMatrix(gridMat);
-//     }
+//     const std::string prevGridDataFilePath = TlUtils::format("%s.itr%d", this->getGridDataFilePath().c_str(), this->m_nIteration -1);
+//     TlFile::copy(this->getGridDataFilePath(), prevGridDataFilePath);
 // }
 
 
-// Fockの交換相関項と、エネルギーを同時に求める
-// for LDA and RKS (共通部分)
-// double DfCalcGridX::calcXCIntegForFockAndEnergy(const int nStartAtom, const int nEndAtom,
-//                                                 const TlSymmetricMatrix& P,
-//                                                 DfFunctional_LDA* pFunctional,
-//                                                 TlSymmetricMatrix* pF)
+// void DfCalcGridX::flushGridData()
 // {
-//     assert(pFunctional != NULL);
-//     assert(pF != NULL);
+//     typedef std::map<GridDataManager::ChunkType, std::map<int, std::vector<double> > > physicalValuesType;
+//     GridDataManager gdm(this->getGridDataFilePath());
 
-//     double dEnergy = 0.0;
-//     const double densityCutOffValue = this->m_densityCutOffValueA;
-//     const GridDataManager gdm(this->getGridDataFilePath());
-
-//     for (int nAtom = nStartAtom; nAtom < nEndAtom; ++nAtom) {
-//         std::vector<GridDataManager::GridInfo> grids;
-//         {
-//             const std::vector<double> coordX = gdm.getData(nAtom, GridDataManager::COORD_X);
-//             const std::vector<double> coordY = gdm.getData(nAtom, GridDataManager::COORD_Y);
-//             const std::vector<double> coordZ = gdm.getData(nAtom, GridDataManager::COORD_Z);
-//             const std::vector<double> weight = gdm.getData(nAtom, GridDataManager::GRID_WEIGHT);
-//             grids = GridDataManager::composeGridInfo(coordX, coordY, coordZ, weight);
-//         }
-//         const int nNumOfGrids = grids.size();
-
-//         // calc rho
-//         std::vector<double> rhoA(nNumOfGrids, 0.0);
-//         if ((this->m_bIsUpdateXC == true) && (this->m_nIteration >= 2)) {
-//             rhoA = gdm.getData(nAtom, GridDataManager::DENSITY);
-//         }
-
-// #pragma omp parallel for schedule(runtime)
-//         for (int nGrid = 0; nGrid < nNumOfGrids; ++nGrid) {
-//             const TlPosition gridPosition = grids[nGrid].position;
-//             const double dWeight = grids[nGrid].weight;
-
-//             // calc phi table
-//             std::vector<WFGrid> aPhi;
-//             this->getPhiTable(gridPosition, aPhi);
-//             // debug
-//             // for (std::vector<WFGrid>::iterator it = aPhi.begin(); it != aPhi.end(); ++it) {
-//             //     std::cerr << it->value << std::endl;
-//             // }
-            
-//             // get rho at grid point
-//             double dRhoA = 0.0;
-//             this->getRhoAtGridPoint(P, aPhi, &dRhoA);
-//             // debug
-//             // std::cerr << dRhoA << std::endl;
-
-//             dRhoA *= 0.5;
-//             dRhoA += rhoA[nGrid];
-
-//             // build fock matrix
-//             if (dRhoA > densityCutOffValue) {
-//                 this->buildFock(dRhoA, aPhi, pFunctional, dWeight, pF); // RKS code
-// #pragma omp atomic
-//                 dEnergy += dWeight * pFunctional->getFunctional(dRhoA); // RKS code
-//             }
-
-//             // save rho data
-//             rhoA[nGrid] = dRhoA;
-//         }
-
-//         if (this->m_bIsUpdateXC == true) {
-//             this->physicalValues_[GridDataManager::DENSITY][nAtom] = rhoA;
+//     physicalValuesType::const_iterator pEnd = this->physicalValues_.end();
+//     for (physicalValuesType::const_iterator p = this->physicalValues_.begin(); p != pEnd; ++p) {
+//         const GridDataManager::ChunkType chunkType = p->first;
+//         std::map<int, std::vector<double> >::const_iterator qEnd = p->second.end();
+//         for (std::map<int, std::vector<double> >::const_iterator q = p->second.begin(); q != qEnd; ++q) {
+//             gdm.setData(q->first, chunkType, q->second);
 //         }
 //     }
 
-//     return dEnergy;
-// }
-
-
-// Fockの交換相関項と、エネルギーを同時に求める
-// for LDA and UKS (共通部分)
-// double DfCalcGridX::calcXCIntegForFockAndEnergy(const int nStartAtom, const int nEndAtom,
-//                                                 const TlSymmetricMatrix& PA,
-//                                                 const TlSymmetricMatrix& PB,
-//                                                 DfFunctional_LDA* pFunctional,
-//                                                 TlSymmetricMatrix* pFA,
-//                                                 TlSymmetricMatrix* pFB)
-// {
-//     assert(pFunctional != NULL);
-//     assert(pFA != NULL);
-//     assert(pFB != NULL);
-
-//     double dEnergy = 0.0;
-//     const double densityCutOffValueA = this->m_densityCutOffValueA;
-//     const double densityCutOffValueB = this->m_densityCutOffValueB;
-//     const GridDataManager gdm(this->getGridDataFilePath());
-//     std::map<int, std::vector<double> > storedRhoA;
-//     std::map<int, std::vector<double> > storedRhoB;
-
-//     for (int nAtom = nStartAtom; nAtom < nEndAtom; ++nAtom) {
-//         // read data of grid and weight
-//         std::vector<GridDataManager::GridInfo> grids;
-//         {
-//             const std::vector<double> coordX = gdm.getData(nAtom, GridDataManager::COORD_X);
-//             const std::vector<double> coordY = gdm.getData(nAtom, GridDataManager::COORD_Y);
-//             const std::vector<double> coordZ = gdm.getData(nAtom, GridDataManager::COORD_Z);
-//             const std::vector<double> weight = gdm.getData(nAtom, GridDataManager::GRID_WEIGHT);
-//             grids = GridDataManager::composeGridInfo(coordX, coordY, coordZ, weight);
-//         }
-//         const int nNumOfGrids = grids.size();
-        
-//         // calc rho
-//         std::vector<double> rhoA(nNumOfGrids, 0.0);
-//         std::vector<double> rhoB(nNumOfGrids, 0.0);
-//         if ((this->m_bIsUpdateXC == true) && (this->m_nIteration >= 2)) {
-//             rhoA = gdm.getData(nAtom, GridDataManager::DENSITY_ALPHA);
-//             rhoB = gdm.getData(nAtom, GridDataManager::DENSITY_BETA);
-//         }
-
-// #pragma omp parallel for schedule(runtime)
-//         for (int nGrid = 0; nGrid < nNumOfGrids; ++nGrid) {
-//             const TlPosition gridPosition = grids[nGrid].position;
-//             const double dWeight = grids[nGrid].weight;
-
-//             // calc phi table
-//             std::vector<WFGrid> aPhi;
-//             this->getPhiTable(gridPosition, aPhi);
-
-//             // get rho at grid point
-//             double dRhoA, dRhoB;
-//             this->getRhoAtGridPoint(PA, aPhi, &dRhoA);
-//             this->getRhoAtGridPoint(PB, aPhi, &dRhoB);
-//             dRhoA += rhoA[nGrid];
-//             dRhoB += rhoB[nGrid];
-
-//             // build fock matrix
-//             if ((dRhoA > densityCutOffValueA) || (dRhoB > densityCutOffValueB)) {
-//                 const double rA = std::max(dRhoA, 0.0);
-//                 const double rB = std::max(dRhoB, 0.0);
-
-//                 this->buildFock(rA, rB, aPhi, pFunctional, dWeight, pFA, pFB);
-// #pragma omp atomic
-//                 dEnergy += dWeight * pFunctional->getFunctional(rA, rB);
-//             }
-
-//             // save rho data
-//             rhoA[nGrid] = dRhoA;
-//             rhoB[nGrid] = dRhoB;
-//         }
-
-//         if (this->m_bIsUpdateXC == true) {
-//             this->physicalValues_[GridDataManager::DENSITY_ALPHA][nAtom] = rhoA;
-//             this->physicalValues_[GridDataManager::DENSITY_BETA][nAtom] = rhoB;
-//         }
-//     }
-
-//     return dEnergy;
-// }
-
-
-void DfCalcGridX::flushGridData()
-{
-    typedef std::map<GridDataManager::ChunkType, std::map<int, std::vector<double> > > physicalValuesType;
-    GridDataManager gdm(this->getGridDataFilePath());
-
-    physicalValuesType::const_iterator pEnd = this->physicalValues_.end();
-    for (physicalValuesType::const_iterator p = this->physicalValues_.begin(); p != pEnd; ++p) {
-        const GridDataManager::ChunkType chunkType = p->first;
-        std::map<int, std::vector<double> >::const_iterator qEnd = p->second.end();
-        for (std::map<int, std::vector<double> >::const_iterator q = p->second.begin(); q != qEnd; ++q) {
-            gdm.setData(q->first, chunkType, q->second);
-        }
-    }
-
-    this->physicalValues_.clear();
-}
-
-
-// GGA, RKS 版
-// double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P,
-//                                                 DfFunctional_GGA* pFunctional,
-//                                                 TlSymmetricMatrix* pF)
-// {
-//     TlMatrix gridMatrix = this->getGridMatrix();
-//     double energy =  this->calcXCIntegForFockAndEnergy(0.5 * P, TlSymmetricMatrix(),
-//                                                        pFunctional,
-//                                                        pF, NULL,
-//                                                        &gridMatrix);
-//     this->saveGridMatrix(gridMatrix);
-//     return energy;
-// }
-
-
-// // GGA, UKS
-
-
-// for GGA and RKS
-// double DfCalcGridX::calcXCIntegForFockAndEnergy(const int nStartAtom, const int nEndAtom,
-//                                                 const TlSymmetricMatrix& P,
-//                                                 DfFunctional_GGA* pFunctional,
-//                                                 TlSymmetricMatrix* pF)
-// {
-//     assert(pFunctional != NULL);
-//     assert(pF != NULL);
-
-//     double dEnergy = 0.0;
-//     const double densityCutOffValue = this->m_densityCutOffValueA;
-//     const GridDataManager gdm(this->getGridDataFilePath());
-
-//     for (int nAtom = nStartAtom; nAtom < nEndAtom; ++nAtom) {
-//         std::vector<GridDataManager::GridInfo> grids;
-//         {
-//             const std::vector<double> coordX = gdm.getData(nAtom, GridDataManager::COORD_X);
-//             const std::vector<double> coordY = gdm.getData(nAtom, GridDataManager::COORD_Y);
-//             const std::vector<double> coordZ = gdm.getData(nAtom, GridDataManager::COORD_Z);
-//             const std::vector<double> weight = gdm.getData(nAtom, GridDataManager::GRID_WEIGHT);
-//             grids = GridDataManager::composeGridInfo(coordX, coordY, coordZ, weight);
-//         }
-//         const int nNumOfGrids = grids.size();
-
-//         // calc rho
-//         std::vector<double> rhoA(nNumOfGrids, 0.0);
-//         std::vector<double> gradRhoAX(nNumOfGrids, 0.0);
-//         std::vector<double> gradRhoAY(nNumOfGrids, 0.0);
-//         std::vector<double> gradRhoAZ(nNumOfGrids, 0.0);
-//         if ((this->m_bIsUpdateXC == true) && (this->m_nIteration >= 2)) {
-//             rhoA = gdm.getData(nAtom, GridDataManager::DENSITY);
-//             gradRhoAX = gdm.getData(nAtom, GridDataManager::GRAD_DENSITY_X);
-//             gradRhoAY = gdm.getData(nAtom, GridDataManager::GRAD_DENSITY_Y);
-//             gradRhoAZ = gdm.getData(nAtom, GridDataManager::GRAD_DENSITY_Z);
-//         }
-
-// #pragma omp parallel for schedule(runtime)
-//         for (int nGrid = 0; nGrid < nNumOfGrids; ++nGrid) {
-//             const TlPosition gridPosition = grids[nGrid].position;
-//             const double dWeight = grids[nGrid].weight;
-
-//             // calc phi table
-//             std::vector<WFGrid> aPhi;
-//             std::vector<WFGrid> aGradPhiX;
-//             std::vector<WFGrid> aGradPhiY;
-//             std::vector<WFGrid> aGradPhiZ;
-//             this->getPhiTable(gridPosition, aPhi, aGradPhiX, aGradPhiY, aGradPhiZ);
-//             // // debug
-//             // for (std::vector<WFGrid>::iterator it = aPhi.begin(); it != aPhi.end(); ++it) {
-//             //     std::cerr << it->value << std::endl;
-//             // }
-
-//             // get rho at grid point
-//             double dRhoA = 0.0;
-//             double dGradRhoAX = 0.0;
-//             double dGradRhoAY = 0.0;
-//             double dGradRhoAZ = 0.0;
-//             this->getRhoAtGridPoint(P, aPhi, aGradPhiX, aGradPhiY, aGradPhiZ,
-//                                     &dRhoA, &dGradRhoAX, &dGradRhoAY, &dGradRhoAZ);
-//             // debug
-//             // std::cerr << dRhoA << std::endl;
-            
-//             dRhoA *= 0.5;
-//             dGradRhoAX *= 0.5;
-//             dGradRhoAY *= 0.5;
-//             dGradRhoAZ *= 0.5;
-//             dRhoA += rhoA[nGrid];
-//             dGradRhoAX += gradRhoAX[nGrid];
-//             dGradRhoAY += gradRhoAY[nGrid];
-//             dGradRhoAZ += gradRhoAZ[nGrid];
-
-//             // calc
-//             if (dRhoA > densityCutOffValue) {
-//                 const double gammaAA =  dGradRhoAX*dGradRhoAX + dGradRhoAY*dGradRhoAY + dGradRhoAZ*dGradRhoAZ;
-
-//                 this->buildFock(dRhoA, dGradRhoAX, dGradRhoAY, dGradRhoAZ,
-//                                 aPhi, aGradPhiX, aGradPhiY, aGradPhiZ,
-//                                 pFunctional, dWeight, pF); // RKS code
-// #pragma omp atomic                    
-//                 dEnergy += dWeight * pFunctional->getFunctional(dRhoA, gammaAA); // RKS code
-//             }
-
-//             rhoA[nGrid] = dRhoA;
-//             gradRhoAX[nGrid] = dGradRhoAX;
-//             gradRhoAY[nGrid] = dGradRhoAY;
-//             gradRhoAZ[nGrid] = dGradRhoAZ;
-//         }
-
-//         if (this->m_bIsUpdateXC == true) {
-//             this->physicalValues_[GridDataManager::DENSITY][nAtom] = rhoA;
-//             this->physicalValues_[GridDataManager::GRAD_DENSITY_X][nAtom] = gradRhoAX;
-//             this->physicalValues_[GridDataManager::GRAD_DENSITY_Y][nAtom] = gradRhoAY;
-//             this->physicalValues_[GridDataManager::GRAD_DENSITY_Z][nAtom] = gradRhoAZ;
-//         }
-//     }
-
-//     return dEnergy;
-// }
-
-
-// for GGA and UKS
-// double DfCalcGridX::calcXCIntegForFockAndEnergy(const int nStartAtom, const int nEndAtom,
-//                                                 const TlSymmetricMatrix& PA,
-//                                                 const TlSymmetricMatrix& PB,
-//                                                 DfFunctional_GGA* pFunctional,
-//                                                 TlSymmetricMatrix* pFA,
-//                                                 TlSymmetricMatrix* pFB)
-// {
-//     assert(pFunctional != NULL);
-//     assert(pFA != NULL);
-//     assert(pFB != NULL);
-
-//     double dEnergy = 0.0;
-//     const double densityCutOffValueA = this->m_densityCutOffValueA;
-//     const double densityCutOffValueB = this->m_densityCutOffValueB;
-//     const GridDataManager gdm(this->getGridDataFilePath());
-//     std::map<int, std::vector<double> > storedRhoA;
-//     std::map<int, std::vector<double> > storedGradRhoAX;
-//     std::map<int, std::vector<double> > storedGradRhoAY;
-//     std::map<int, std::vector<double> > storedGradRhoAZ;
-//     std::map<int, std::vector<double> > storedRhoB;
-//     std::map<int, std::vector<double> > storedGradRhoBX;
-//     std::map<int, std::vector<double> > storedGradRhoBY;
-//     std::map<int, std::vector<double> > storedGradRhoBZ;
-
-//     for (int nAtom = nStartAtom; nAtom < nEndAtom; ++nAtom) {
-//         std::vector<GridDataManager::GridInfo> grids;
-//         {
-//             const std::vector<double> coordX = gdm.getData(nAtom, GridDataManager::COORD_X);
-//             const std::vector<double> coordY = gdm.getData(nAtom, GridDataManager::COORD_Y);
-//             const std::vector<double> coordZ = gdm.getData(nAtom, GridDataManager::COORD_Z);
-//             const std::vector<double> weight = gdm.getData(nAtom, GridDataManager::GRID_WEIGHT);
-//             grids = GridDataManager::composeGridInfo(coordX, coordY, coordZ, weight);
-//         }
-//         const int nNumOfGrids = grids.size();
-
-//         // calc rho
-//         std::vector<double> rhoA(nNumOfGrids, 0.0);
-//         std::vector<double> rhoB(nNumOfGrids, 0.0);
-//         std::vector<double> gradRhoAX(nNumOfGrids, 0.0);
-//         std::vector<double> gradRhoAY(nNumOfGrids, 0.0);
-//         std::vector<double> gradRhoAZ(nNumOfGrids, 0.0);
-//         std::vector<double> gradRhoBX(nNumOfGrids, 0.0);
-//         std::vector<double> gradRhoBY(nNumOfGrids, 0.0);
-//         std::vector<double> gradRhoBZ(nNumOfGrids, 0.0);
-//         if ((this->m_bIsUpdateXC == true) && (this->m_nIteration >= 2)) {
-//             rhoA = gdm.getData(nAtom, GridDataManager::DENSITY_ALPHA);
-//             rhoB = gdm.getData(nAtom, GridDataManager::DENSITY_BETA);
-//             gradRhoAX = gdm.getData(nAtom, GridDataManager::GRAD_DENSITY_X_ALPHA);
-//             gradRhoAY = gdm.getData(nAtom, GridDataManager::GRAD_DENSITY_Y_ALPHA);
-//             gradRhoAZ = gdm.getData(nAtom, GridDataManager::GRAD_DENSITY_Z_ALPHA);
-//             gradRhoBX = gdm.getData(nAtom, GridDataManager::GRAD_DENSITY_X_BETA);
-//             gradRhoBY = gdm.getData(nAtom, GridDataManager::GRAD_DENSITY_Y_BETA);
-//             gradRhoBZ = gdm.getData(nAtom, GridDataManager::GRAD_DENSITY_Z_BETA);
-//         }
-
-// #pragma omp parallel for schedule(runtime)
-//         for (int nGrid = 0; nGrid < nNumOfGrids; ++nGrid) {
-//             const TlPosition gridPosition = grids[nGrid].position;
-//             const double dWeight = grids[nGrid].weight;
-
-//             // calc phi table
-//             std::vector<WFGrid> aPhi;
-//             std::vector<WFGrid> aGradPhiX;
-//             std::vector<WFGrid> aGradPhiY;
-//             std::vector<WFGrid> aGradPhiZ;
-//             this->getPhiTable(gridPosition, aPhi, aGradPhiX, aGradPhiY, aGradPhiZ);
-
-//             // get rho at grid point
-//             double dRhoA = 0.0;
-//             double dRhoB = 0.0;
-//             double dGradRhoAX = 0.0;
-//             double dGradRhoAY = 0.0;
-//             double dGradRhoAZ = 0.0;
-//             double dGradRhoBX = 0.0;
-//             double dGradRhoBY = 0.0;
-//             double dGradRhoBZ = 0.0;
-//             this->getRhoAtGridPoint(PA,
-//                                     aPhi, aGradPhiX, aGradPhiY, aGradPhiZ,
-//                                     &dRhoA, &dGradRhoAX, &dGradRhoAY, &dGradRhoAZ);
-//             this->getRhoAtGridPoint(PB,
-//                                     aPhi, aGradPhiX, aGradPhiY, aGradPhiZ,
-//                                     &dRhoB, &dGradRhoBX, &dGradRhoBY, &dGradRhoBZ);
-//             dRhoA += rhoA[nGrid];
-//             dGradRhoAX += gradRhoAX[nGrid];
-//             dGradRhoAY += gradRhoAY[nGrid];
-//             dGradRhoAZ += gradRhoAZ[nGrid];
-//             dRhoB += rhoB[nGrid];
-//             dGradRhoBX += gradRhoBX[nGrid];
-//             dGradRhoBY += gradRhoBY[nGrid];
-//             dGradRhoBZ += gradRhoBZ[nGrid];
-
-//             // calc
-//             if ((dRhoA > densityCutOffValueA) || (dRhoB > densityCutOffValueB)) {
-//                 const double rA = std::max(dRhoA, 0.0);
-//                 const double rB = std::max(dRhoB, 0.0);
-//                 assert(rA >= 0.0);
-//                 assert(rB >= 0.0);
-
-//                 const double gammaAA =  dGradRhoAX*dGradRhoAX + dGradRhoAY*dGradRhoAY + dGradRhoAZ*dGradRhoAZ;
-//                 const double gammaAB =  dGradRhoAX*dGradRhoBX + dGradRhoAY*dGradRhoBY + dGradRhoAZ*dGradRhoBZ;
-//                 const double gammaBB =  dGradRhoBX*dGradRhoBX + dGradRhoBY*dGradRhoBY + dGradRhoBZ*dGradRhoBZ;
-
-//                 this->buildFock(rA, rB,
-//                                 dGradRhoAX, dGradRhoAY, dGradRhoAZ,
-//                                 dGradRhoBX, dGradRhoBY, dGradRhoBZ,
-//                                 aPhi, aGradPhiX, aGradPhiY, aGradPhiZ,
-//                                 pFunctional, dWeight, pFA, pFB); // UKS code
-// #pragma omp atomic
-//                 dEnergy += dWeight * pFunctional->getFunctional(rA, rB, gammaAA, gammaAB, gammaBB);
-//             }
-
-//             rhoA[nGrid] = dRhoA;
-//             gradRhoAX[nGrid] = dGradRhoAX;
-//             gradRhoAY[nGrid] = dGradRhoAY;
-//             gradRhoAZ[nGrid] = dGradRhoAZ;
-//             rhoB[nGrid] = dRhoB;
-//             gradRhoBX[nGrid] = dGradRhoBX;
-//             gradRhoBY[nGrid] = dGradRhoBY;
-//             gradRhoBZ[nGrid] = dGradRhoBZ;
-//         }
-
-//         if (this->m_bIsUpdateXC == true) {
-//             this->physicalValues_[GridDataManager::DENSITY_ALPHA][nAtom] = rhoA;
-//             this->physicalValues_[GridDataManager::GRAD_DENSITY_X_ALPHA][nAtom] = gradRhoAX;
-//             this->physicalValues_[GridDataManager::GRAD_DENSITY_Y_ALPHA][nAtom] = gradRhoAY;
-//             this->physicalValues_[GridDataManager::GRAD_DENSITY_Z_ALPHA][nAtom] = gradRhoAZ;
-//             this->physicalValues_[GridDataManager::DENSITY_BETA][nAtom] = rhoB;
-//             this->physicalValues_[GridDataManager::GRAD_DENSITY_X_BETA][nAtom] = gradRhoBX;
-//             this->physicalValues_[GridDataManager::GRAD_DENSITY_Y_BETA][nAtom] = gradRhoBY;
-//             this->physicalValues_[GridDataManager::GRAD_DENSITY_Z_BETA][nAtom] = gradRhoBZ;
-//         }
-//     }
-
-//     return dEnergy;
+//     this->physicalValues_.clear();
 // }
 
 
@@ -817,9 +394,6 @@ void DfCalcGridX::getPhiTable(const TlPosition& gridPosition,
         const int AO = AO_list[AO_index];
 
         double phi = 0.0;
-//         double gradPhiX = 0.0;
-//         double gradPhiY = 0.0;
-//         double gradPhiZ = 0.0;
 
         const TlPosition pos = gridPosition - this->m_tlOrbInfo.getPosition(AO);
         const double distance2 = pos.squareDistanceFrom();
@@ -927,48 +501,6 @@ void DfCalcGridX::getPhiTable(const TlPosition& gridPosition,
         }
     }
 }
-
-
-// get rho at grid point
-// void DfCalcGridX::getRhoAtGridPoint(const TlMatrixObject& P,
-//                                     const std::vector<WFGrid>& aPhi,
-//                                     double* pRhoA)
-// {
-//     //const double densityCutOffValue = this->m_densityCutOffValueA;
-//     const double densityCutOffValue = 1.0E-16;
-//     double dRho = 0.0;
-
-//     // 密度行列のループ(index = p)の最大を求める
-//     //double value = std::sqrt(densityCutOffValue);
-//     std::vector<WFGrid>::const_iterator pEnd = std::upper_bound(aPhi.begin(), aPhi.end(),
-//                                                                 WFGrid(0, densityCutOffValue),
-//                                                                 WFGrid_sort_functional());
-//     const std::size_t max_p = std::distance(aPhi.begin(), pEnd);
-//     //std::size_t max_q = aPhi.size();
-//     for (std::size_t p = 0; p < max_p; ++p) {
-//         const std::size_t nOrb_p = aPhi[p].index;
-//         const double phi_p = aPhi[p].value;
-//         const double cutValue = std::fabs(densityCutOffValue / phi_p);
-
-//         // 高速化
-//         const TlVector P_row = P.getRowVector(nOrb_p);
-
-//         dRho += P_row[nOrb_p] * phi_p * phi_p;
-
-//         std::vector<WFGrid>::const_iterator qEnd = std::upper_bound(aPhi.begin() + p +1,
-//                                                                     aPhi.end(),
-//                                                                     WFGrid(0, cutValue),
-//                                                                     WFGrid_sort_functional());
-//         const std::size_t max_q = std::distance(aPhi.begin(), qEnd);
-//         for (std::size_t q = p + 1; q < max_q; ++q) {
-//             const std::size_t nOrb_q = aPhi[q].index;
-//             const double phi_q = aPhi[q].value;
-//             dRho += 2.0 * P_row[nOrb_q] * phi_p * phi_q;
-//         }
-//     }
-
-//     *pRhoA = dRho;
-// }
 
 void DfCalcGridX::getRhoAtGridPoint(const TlMatrixObject& P,
                                     const std::vector<WFGrid>& aPhi,
@@ -1505,7 +1037,8 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
     assert(pGY != NULL);
     assert(pGZ != NULL);
 
-    const GridDataManager gdm(this->getGridDataFilePath());
+    //const GridDataManager gdm(this->getGridDataFilePath());
+    TlMatrix gridMat = this->getGridMatrix<TlMatrix>(this->m_nIteration);
 
     const int numOfAtoms = this->numOfRealAtoms_;
     const int numOfAOs = this->m_nNumOfAOs;
@@ -1516,16 +1049,17 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
 
     for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
         // get grid information
-        std::vector<GridDataManager::GridInfo> grids;
-        {
-            const std::vector<double> coordX = gdm.getData(atomIndex, GridDataManager::COORD_X);
-            const std::vector<double> coordY = gdm.getData(atomIndex, GridDataManager::COORD_Y);
-            const std::vector<double> coordZ = gdm.getData(atomIndex, GridDataManager::COORD_Z);
-            const std::vector<double> weight = gdm.getData(atomIndex, GridDataManager::GRID_WEIGHT);
-            grids = GridDataManager::composeGridInfo(coordX, coordY, coordZ, weight);
-        }
-        const int numOfGrids = grids.size();
-    
+        // std::vector<GridDataManager::GridInfo> grids;
+        // {
+        //     const std::vector<double> coordX = gdm.getData(atomIndex, GridDataManager::COORD_X);
+        //     const std::vector<double> coordY = gdm.getData(atomIndex, GridDataManager::COORD_Y);
+        //     const std::vector<double> coordZ = gdm.getData(atomIndex, GridDataManager::COORD_Z);
+        //     const std::vector<double> weight = gdm.getData(atomIndex, GridDataManager::GRID_WEIGHT);
+        //     grids = GridDataManager::composeGridInfo(coordX, coordY, coordZ, weight);
+        // }
+        // const int numOfGrids = grids.size();
+        TlMatrix atomGridMat = this->selectGridMatrixByAtom(gridMat, atomIndex);
+        const index_type numOfGrids = atomGridMat.getNumOfRows();
         std::vector<double> rhoA(numOfGrids, 0.0);
         std::vector<double> gradRhoAX(numOfGrids, 0.0);
         std::vector<double> gradRhoAY(numOfGrids, 0.0);
@@ -1533,7 +1067,10 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
         // 電子密度を計算する
         // LDAではSCF中に微分を計算しないため
         for (int gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
-            const TlPosition gridPosition = grids[gridIndex].position;
+            //const TlPosition gridPosition = grids[gridIndex].position;
+            const TlPosition gridPosition(atomGridMat.get(gridIndex, GM_X),
+                                          atomGridMat.get(gridIndex, GM_Y),
+                                          atomGridMat.get(gridIndex, GM_Z));
             
             // calc phi table
             std::vector<WFGrid> phis;
@@ -1549,10 +1086,10 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
             double gridGradRhoAZ = 0.0;
             this->getRhoAtGridPoint(P, phis, gradPhisX, gradPhisY, gradPhisZ,
                                     &gridRhoA, &gridGradRhoAX, &gridGradRhoAY, &gridGradRhoAZ);
-            gridRhoA *= 0.5;
-            gridGradRhoAX *= 0.5;
-            gridGradRhoAY *= 0.5;
-            gridGradRhoAZ *= 0.5;
+            // gridRhoA *= 0.5;
+            // gridGradRhoAX *= 0.5;
+            // gridGradRhoAY *= 0.5;
+            // gridGradRhoAZ *= 0.5;
             
             rhoA[gridIndex] = gridRhoA;
             gradRhoAX[gridIndex] = gridGradRhoAX;
@@ -1569,21 +1106,16 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
         std::vector<WFGrid> gradEtasY(numOfGrids);
         std::vector<WFGrid> gradEtasZ(numOfGrids);
         for (int gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
-            const TlPosition gridPosition = grids[gridIndex].position;
+            //const TlPosition gridPosition = grids[gridIndex].position;
+            const TlPosition gridPosition(atomGridMat.get(gridIndex, GM_X),
+                                          atomGridMat.get(gridIndex, GM_Y),
+                                          atomGridMat.get(gridIndex, GM_Z));
             this->getPhiTable(gridPosition, etas, gradEtasX, gradEtasY, gradEtasZ);
             
-            const double weight = grids[gridIndex].weight;
+            //const double weight = grids[gridIndex].weight;
+            const double weight = gridMat.get(gridIndex, GM_WEIGHT);
             const double gridRhoA = rhoA[gridIndex];
-            // const double gridGradRhoAX = gradRhoAX[gridIndex];
-            // const double gridGradRhoAY = gradRhoAY[gridIndex];
-            // const double gridGradRhoAZ = gradRhoAZ[gridIndex];
-            // const double gridGammaAA = gridGradRhoAX*gridGradRhoAX
-            //     + gridGradRhoAY*gridGradRhoAY
-            //     + gridGradRhoAZ*gridGradRhoAZ;
             double roundF_roundRhoA;
-            // double roundF_roundGammaAA, roundF_roundGammaAB;
-            // pFunctional->getDerivativeFunctional(gridRhoA, gridGammaAA,
-            //                                      &roundF_roundRhoA, &roundF_roundGammaAA, &roundF_roundGammaAB);
             pFunctional->getDerivativeFunctional(gridRhoA, &roundF_roundRhoA);
             
             const double coef = weight * roundF_roundRhoA;
@@ -1647,7 +1179,8 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
     assert(pGZ != NULL);
 
     const double densityCutOffValue = this->m_densityCutOffValueA;
-    const GridDataManager gdm(this->getGridDataFilePath());
+    //const GridDataManager gdm(this->getGridDataFilePath());
+    TlMatrix gridMat = this->getGridMatrix<TlMatrix>(this->m_nIteration);
 
     const int numOfAtoms = this->numOfRealAtoms_;
     const int numOfAOs = this->m_nNumOfAOs;
@@ -1658,30 +1191,39 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
 
     for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
         // get grid information
-        std::vector<GridDataManager::GridInfo> grids;
-        {
-            const std::vector<double> coordX = gdm.getData(atomIndex, GridDataManager::COORD_X);
-            const std::vector<double> coordY = gdm.getData(atomIndex, GridDataManager::COORD_Y);
-            const std::vector<double> coordZ = gdm.getData(atomIndex, GridDataManager::COORD_Z);
-            const std::vector<double> weight = gdm.getData(atomIndex, GridDataManager::GRID_WEIGHT);
-            grids = GridDataManager::composeGridInfo(coordX, coordY, coordZ, weight);
-        }
-        const int numOfGrids = grids.size();
-    
+        // std::vector<GridDataManager::GridInfo> grids;
+        // {
+        //     const std::vector<double> coordX = gdm.getData(atomIndex, GridDataManager::COORD_X);
+        //     const std::vector<double> coordY = gdm.getData(atomIndex, GridDataManager::COORD_Y);
+        //     const std::vector<double> coordZ = gdm.getData(atomIndex, GridDataManager::COORD_Z);
+        //     const std::vector<double> weight = gdm.getData(atomIndex, GridDataManager::GRID_WEIGHT);
+        //     grids = GridDataManager::composeGridInfo(coordX, coordY, coordZ, weight);
+        // }
+        TlMatrix atomGridMat = this->selectGridMatrixByAtom(gridMat, atomIndex);
+        const int numOfGrids = atomGridMat.getNumOfRows();
         std::vector<double> rhoA(numOfGrids, 0.0);
         std::vector<double> gradRhoAX(numOfGrids, 0.0);
         std::vector<double> gradRhoAY(numOfGrids, 0.0);
         std::vector<double> gradRhoAZ(numOfGrids, 0.0);
         if (this->m_bIsUpdateXC == true) {
             // すでにSCF計算中に電子密度を計算済み
-            rhoA = gdm.getData(atomIndex, GridDataManager::DENSITY);
-            gradRhoAX = gdm.getData(atomIndex, GridDataManager::GRAD_DENSITY_X);
-            gradRhoAY = gdm.getData(atomIndex, GridDataManager::GRAD_DENSITY_Y);
-            gradRhoAZ = gdm.getData(atomIndex, GridDataManager::GRAD_DENSITY_Z);
+            // rhoA = gdm.getData(atomIndex, GridDataManager::DENSITY);
+            // gradRhoAX = gdm.getData(atomIndex, GridDataManager::GRAD_DENSITY_X);
+            // gradRhoAY = gdm.getData(atomIndex, GridDataManager::GRAD_DENSITY_Y);
+            // gradRhoAZ = gdm.getData(atomIndex, GridDataManager::GRAD_DENSITY_Z);
+            for (index_type i = 0; i < numOfGrids; ++i) {
+                rhoA[i] = atomGridMat.get(i, GM_GGA_RHO_ALPHA);
+                gradRhoAX[i] = atomGridMat.get(i, GM_GGA_GRAD_RHO_X_ALPHA);
+                gradRhoAY[i] = atomGridMat.get(i, GM_GGA_GRAD_RHO_Y_ALPHA);
+                gradRhoAZ[i] = atomGridMat.get(i, GM_GGA_GRAD_RHO_Z_ALPHA);
+            }
         } else {
             // 電子密度を計算し直す
             for (int gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
-                const TlPosition gridPosition = grids[gridIndex].position;
+                //const TlPosition gridPosition = grids[gridIndex].position;
+                TlPosition gridPosition(atomGridMat.get(gridIndex, GM_X),
+                                        atomGridMat.get(gridIndex, GM_Y),
+                                        atomGridMat.get(gridIndex, GM_Z));
                 
                 // calc phi table
                 std::vector<WFGrid> phis;
@@ -1697,10 +1239,10 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
                 double gridGradRhoAZ = 0.0;
                 this->getRhoAtGridPoint(P, phis, gradPhisX, gradPhisY, gradPhisZ,
                                         &gridRhoA, &gridGradRhoAX, &gridGradRhoAY, &gridGradRhoAZ);
-                gridRhoA *= 0.5;
-                gridGradRhoAX *= 0.5;
-                gridGradRhoAY *= 0.5;
-                gridGradRhoAZ *= 0.5;
+                // gridRhoA *= 0.5;
+                // gridGradRhoAX *= 0.5;
+                // gridGradRhoAY *= 0.5;
+                // gridGradRhoAZ *= 0.5;
                 
                 rhoA[gridIndex] = gridRhoA;
                 gradRhoAX[gridIndex] = gridGradRhoAX;
@@ -1718,10 +1260,14 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
         std::vector<WFGrid> gradEtasY(numOfGrids);
         std::vector<WFGrid> gradEtasZ(numOfGrids);
         for (int gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
-            const TlPosition gridPosition = grids[gridIndex].position;
+            //const TlPosition gridPosition = grids[gridIndex].position;
+            const TlPosition gridPosition(atomGridMat.get(gridIndex, GM_X),
+                                          atomGridMat.get(gridIndex, GM_Y),
+                                          atomGridMat.get(gridIndex, GM_Z));
             this->getPhiTable(gridPosition, etas, gradEtasX, gradEtasY, gradEtasZ);
             
-            const double weight = grids[gridIndex].weight;
+            //const double weight = grids[gridIndex].weight;
+            const double weight = atomGridMat.get(gridIndex, GM_WEIGHT);
             const double gridRhoA = rhoA[gridIndex];
             const double gridGradRhoAX = gradRhoAX[gridIndex];
             const double gridGradRhoAY = gradRhoAY[gridIndex];
@@ -1786,6 +1332,33 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
             pGZ->set(p, atomIndex, 2.0 * Gpz.sum());
         }
     }
+}
+
+TlMatrix DfCalcGridX::selectGridMatrixByAtom(const TlMatrix& globalGridMat,
+                                             const int atomIndex)
+{
+    const index_type numOfGrids = globalGridMat.getNumOfRows();
+    const double atomIndex_real = double(atomIndex);
+    std::vector<index_type> finder;
+    for (index_type i = 0; i < numOfGrids; ++i) {
+        const double validation = std::fabs(globalGridMat.get(i, GM_ATOM_INDEX) - atomIndex_real);
+        if (validation < 1.0E-5) {
+            finder.push_back(i);
+        }
+    }
+
+    const index_type numOfFinds = finder.size();
+    const index_type numOfCols = globalGridMat.getNumOfCols();
+    TlMatrix answer(numOfFinds, numOfCols);
+    for (index_type i = 0; i < numOfFinds; ++i) {
+        const index_type globalRow = finder[i];
+        for (index_type col = 0; col < numOfCols; ++col) {
+            const double value = globalGridMat.get(globalRow, col);
+            answer.set(i, col, value);
+        }
+    }
+
+    return answer;
 }
 
 
@@ -2212,7 +1785,6 @@ void DfCalcGridX::calcRho_GGA(const TlSymmetricMatrix& P_A,
 void DfCalcGridX::calcRho_LDA(const TlSymmetricMatrix& P_A,
                               TlMatrix* pGridMat)
 {
-    P_A.save(TlUtils::format("calcRho_%d.mat", this->m_nIteration));
     assert(pGridMat != NULL);
     const index_type numOfGrids = pGridMat->getNumOfRows();
     assert(pGridMat->getNumOfCols() == GM_LDA_RHO_ALPHA +1);
@@ -2646,74 +2218,6 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
     double energy = this->buildVxc(pFunctional, pF_A, pF_B);
     return energy;
 }
-
-// double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-//                                                 DfFunctional_LDA* pFunctional,
-//                                                 TlSymmetricMatrix* pF_A,
-//                                                 TlMatrix* pGridMatrix)
-// {
-//     assert(pFunctional != NULL);
-//     assert(pGridMatrix != NULL);
-    
-//     this->calcRho_LDA(P_A,
-//                       pGridMatrix);
-
-//     const double energy = this->buildVxc(*pGridMatrix, pFunctional, pF_A);
-    
-//     return energy;
-// }
-
-// double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-//                                                 const TlSymmetricMatrix& P_B,
-//                                                 DfFunctional_LDA* pFunctional,
-//                                                 TlSymmetricMatrix* pF_A,
-//                                                 TlSymmetricMatrix* pF_B,
-//                                                 TlMatrix* pGridMatrix)
-// {
-//     assert(pFunctional != NULL);
-//     assert(pGridMatrix != NULL);
-    
-//     this->calcRho_LDA(P_A, P_B,
-//                       pGridMatrix);
-
-//     const double energy = this->buildVxc(*pGridMatrix, pFunctional, pF_A, pF_B);
-    
-//     return energy;
-// }
-
-// double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-//                                                 DfFunctional_GGA* pFunctional,
-//                                                 TlSymmetricMatrix* pF_A,
-//                                                 TlMatrix* pGridMatrix)
-// {
-//     assert(pFunctional != NULL);
-//     assert(pGridMatrix != NULL);
-    
-//     this->calcRho_GGA(P_A,
-//                       pGridMatrix);
-    
-//     const double energy = this->buildVxc(*pGridMatrix, pFunctional, pF_A);
-
-//     return energy;
-// }
-
-// double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-//                                                 const TlSymmetricMatrix& P_B,
-//                                                 DfFunctional_GGA* pFunctional,
-//                                                 TlSymmetricMatrix* pF_A,
-//                                                 TlSymmetricMatrix* pF_B,
-//                                                 TlMatrix* pGridMatrix)
-// {
-//     assert(pFunctional != NULL);
-//     assert(pGridMatrix != NULL);
-    
-//     this->calcRho_GGA(P_A, P_B,
-//                       pGridMatrix);
-    
-//     const double energy = this->buildVxc(*pGridMatrix, pFunctional, pF_A, pF_B);
-
-//     return energy;
-// }
 
 void DfCalcGridX::build_XC_Matrix(const double roundF_roundRhoA,
                                   const std::vector<WFGrid>& phi,

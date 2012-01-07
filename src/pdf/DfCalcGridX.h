@@ -8,7 +8,6 @@
 #include "DfXCFunctional.h"
 #include "DfFunctional.h"
 #include "TlOrbitalInfo.h"
-#include "GridDataManager.h"
 
 class TlMatrixObject;
 
@@ -74,6 +73,9 @@ public:
     void makeGammaMatrix(const TlSymmetricMatrix& P,
                          DfFunctional_GGA* pFunctional,
                          TlMatrix* pGX, TlMatrix* pGY, TlMatrix* pGZ);
+
+    TlMatrix selectGridMatrixByAtom(const TlMatrix& globalGridMat,
+                                    const int atomIndex);
     
 protected:
     virtual void defineCutOffValues(const TlSymmetricMatrix& P);
@@ -109,8 +111,8 @@ protected:
     //                                    TlSymmetricMatrix* pFA,
     //                                    TlSymmetricMatrix* pFB);
 
-    virtual void backupGridData();
-    virtual void flushGridData();
+    // virtual void backupGridData();
+    // virtual void flushGridData();
 
 
 protected:
@@ -402,8 +404,8 @@ protected:
     TlOrbitalInfo m_tlOrbInfo;
 
     /// [データ型][原子][グリッド点index]
-    std::map<GridDataManager::ChunkType,
-    std::map<int, std::vector<double> > > physicalValues_;
+    //std::map<GridDataManager::ChunkType,
+    //std::map<int, std::vector<double> > > physicalValues_;
 
     //
     index_type numOfRows_gridMatrix_;

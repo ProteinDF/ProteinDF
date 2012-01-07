@@ -139,7 +139,7 @@ void DfXCFunctional::buildXcMatrix()
         if (this->m_bIsHybrid == true) {
             // Fockの交換項を求める
             this->loggerTime(" start: Fock exchange");
-            Fxc += this->getFockExchange((0.5 * this->m_dFockExchangeCoef) * Ppq, RUN_RKS);
+            Fxc += this->getFockExchange(this->m_dFockExchangeCoef * Ppq, RUN_RKS);
             this->XC_energy_ += DfXCFunctional::m_dFockExchangeEnergyAlpha;
             this->loggerTime(" end: Fock exchange");
         }
@@ -189,8 +189,6 @@ void DfXCFunctional::buildXcMatrix()
     default:
         break;
     }
-
-    this->checkGridAccuracy();
 }
 
 void DfXCFunctional::checkGridAccuracy()

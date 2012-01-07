@@ -146,6 +146,7 @@ void DfXCFunctional::getFxc(const SymmetricMatrixType& P1,
         this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
                                                                        &shf,
                                                                        pFxc);
+        this->checkGridAccuracy();
     }
         break;
         
@@ -154,6 +155,7 @@ void DfXCFunctional::getFxc(const SymmetricMatrixType& P1,
         this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
                                                                        &svwn,
                                                                        pFxc);
+        this->checkGridAccuracy();
     }
         break;
         
@@ -162,6 +164,7 @@ void DfXCFunctional::getFxc(const SymmetricMatrixType& P1,
         this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
                                                                        &b88,
                                                                        pFxc);
+        this->checkGridAccuracy();
     }
         break;
         
@@ -170,6 +173,7 @@ void DfXCFunctional::getFxc(const SymmetricMatrixType& P1,
         this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
                                                                        &blyp,
                                                                        pFxc);
+        this->checkGridAccuracy();
     }
         break;
         
@@ -179,12 +183,14 @@ void DfXCFunctional::getFxc(const SymmetricMatrixType& P1,
         this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
                                                                        &b3lyp,
                                                                        pFxc);
+        this->checkGridAccuracy();
     }
         break;
         
     default:
         CnErr.abort("unknown XC functional. STOP. @DfXCFunctional::getFxc()");
     }
+
     
     this->log_.debug(TlUtils::format("DfXCFunctional::getFxc(): XC_energy=% 16.10f",
                                      this->XC_energy_));
