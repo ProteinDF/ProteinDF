@@ -33,7 +33,8 @@ SERIAL_PROGS = 					\
 	transpose				\
 	getMaxValue				\
 	rotateLCAO				\
-	RLMO					
+	RLMO					\
+	checkERI
 
 
 PARALLEL_PROGS = \
@@ -207,6 +208,9 @@ mergeLocalMatrix_LDADD = $(SERIAL_LIBS) $(PARALLEL_LIBS)
 
 divideGlobalMatrix_SOURCES = main_divideGlobalMatrix.cpp
 divideGlobalMatrix_LDADD = $(SERIAL_LIBS) $(PARALLEL_LIBS)
+
+checkERI_SOURCES = main_checkERI.cpp
+checkERI_LDADD = $(SERIAL_LIBS)
 
 if PARALLEL
 bin_PROGRAMS = $(SERIAL_PROGS) $(PARALLEL_PROGS)
