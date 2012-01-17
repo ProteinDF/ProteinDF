@@ -41,6 +41,15 @@ DfTaskCtrl::~DfTaskCtrl()
 {
 }
 
+void DfTaskCtrl::setCutoffThreshold(const double value)
+{
+    this->cutoffThreshold_ = value;
+}
+
+double DfTaskCtrl::getCutoffThreshold() const
+{
+    return this->cutoffThreshold_;
+}
 
 void DfTaskCtrl::clearCutoffStats(const TlOrbitalInfoObject& orbitalInfo)
 {

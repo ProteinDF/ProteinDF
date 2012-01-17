@@ -48,6 +48,9 @@ public:
     virtual ~DfTaskCtrl();
 
 public:
+    void setCutoffThreshold(const double value);
+    double getCutoffThreshold() const;
+    
     virtual void cutoffReport();
     virtual bool getQueue(const TlOrbitalInfoObject& orbitalInfo,
                           const bool isCutoffByDistibution,
