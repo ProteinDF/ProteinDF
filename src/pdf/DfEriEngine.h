@@ -38,7 +38,7 @@
 ///
 
 /// 本プログラムで扱うことのできる angular momentum の最大値
-#define ERI_L_MAX (9 +1)
+#define ERI_L_MAX (13 +1)
 
 /// 縮約数(4中心)の積の最大値 
 #define ERI_KPKQ_MAX (100)
