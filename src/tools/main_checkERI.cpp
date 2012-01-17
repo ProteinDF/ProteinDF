@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "DfEriEngine.h"
+#include "DfTwoElectronIntegral.h"
 #include "TlGetopt.h"
 #include "TlUtils.h"
 #include "TlFile.h"
@@ -24,9 +25,22 @@ void showHelp()
 }
 
 
+void calc_eri(const int shellIndexP, const int shellIndexQ,
+              const int shellIndexR, const int shellIndexS,
+              const TlOrbitalInfo& orbitalInfo);
+void calc_eri_old(TlSerializeData* pPdfParam,
+                  const int shellIndexP, const int shellIndexQ,
+                  const int shellIndexR, const int shellIndexS,
+                  const TlOrbitalInfo& orbitalInfo);
+
+void output(int shellTypeP, int shellTypeQ,
+            int shellTypeR, int shellTypeS,
+            const double* WORK);
+
+
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "hv");
+    TlGetopt opt(argc, argv, "hov");
 
     // parameters
     const bool isVerbose = (opt["v"] == "defined");
@@ -50,10 +64,28 @@ int main(int argc, char* argv[])
         return 1;
     }
     readMsgPack.load(readParamPath);
-    const TlSerializeData readData = readMsgPack.getSerializeData();
+    TlSerializeData readData = readMsgPack.getSerializeData();
     const TlOrbitalInfo orbitalInfo(readData["coordinates"],
                                     readData["basis_sets"]);
 
+    if (opt["o"] != "defined") {
+        calc_eri(shellIndexP, shellIndexQ, shellIndexR, shellIndexS,
+                 orbitalInfo);
+    } else {
+        std::cerr << "old engine" << std::endl;
+        calc_eri_old(&readData,
+                     shellIndexP, shellIndexQ, shellIndexR, shellIndexS,
+                     orbitalInfo);
+    }
+    
+    return EXIT_SUCCESS;
+}
+
+
+void calc_eri(const int shellIndexP, const int shellIndexQ,
+              const int shellIndexR, const int shellIndexS,
+              const TlOrbitalInfo& orbitalInfo)
+{
     DfEriEngine engine;
     const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
     const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
@@ -69,20 +101,54 @@ int main(int argc, char* argv[])
                                                           0.0);
     engine.calc(queryPQ, queryRS, PQ, RS);
 
-    // const int maxStepsP = 2 * shellTypeP + 1;
-    // const int maxStepsQ = 2 * shellTypeQ + 1;
-    // const int maxStepsR = 2 * shellTypeR + 1;
-    // const int maxStepsS = 2 * shellTypeS + 1;
-    const int maxStepsP = shellTypeP * (shellTypeP + 3) / 2 + 1;
-    const int maxStepsQ = shellTypeQ * (shellTypeQ + 3) / 2 + 1;
-    const int maxStepsR = shellTypeR * (shellTypeR + 3) / 2 + 1;
-    const int maxStepsS = shellTypeS * (shellTypeS + 3) / 2 + 1;
+    output(shellTypeP, shellTypeQ,
+           shellTypeR, shellTypeS,
+           engine.WORK);
+}
+
+void calc_eri_old(TlSerializeData* pPdfParam,
+                  const int shellIndexP, const int shellIndexQ,
+                  const int shellIndexR, const int shellIndexS,
+                  const TlOrbitalInfo& orbitalInfo)
+{
+    DfTwoElectronIntegral dfTwoElectronIntegral(pPdfParam);
+    DfTEI dfTEI;
+
+    const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+    const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+    const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
+    const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
+    const unsigned int eriType = DfTEI::getEriType(shellTypeP, shellTypeQ, shellTypeR, shellTypeS);
+    dfTwoElectronIntegral.prepare_ERI();
+    const DfTEI::ShellPair IJ = dfTwoElectronIntegral.getShellPair(shellIndexP, shellIndexQ);
+    const DfTEI::ShellPair KL = dfTwoElectronIntegral.getShellPair(shellIndexR, shellIndexS);
+
+    
+    dfTEI.calc(eriType, IJ, KL);
+
+    output(shellTypeP, shellTypeQ,
+           shellTypeR, shellTypeS,
+           dfTEI.ERI);
+}
+
+void output(int shellTypeP, int shellTypeQ,
+            int shellTypeR, int shellTypeS,
+            const double* WORK)
+{
+    const int maxStepsP = 2 * shellTypeP + 1;
+    const int maxStepsQ = 2 * shellTypeQ + 1;
+    const int maxStepsR = 2 * shellTypeR + 1;
+    const int maxStepsS = 2 * shellTypeS + 1;
+    // const int maxStepsP = shellTypeP * (shellTypeP + 3) / 2 + 1;
+    // const int maxStepsQ = shellTypeQ * (shellTypeQ + 3) / 2 + 1;
+    // const int maxStepsR = shellTypeR * (shellTypeR + 3) / 2 + 1;
+    // const int maxStepsS = shellTypeS * (shellTypeS + 3) / 2 + 1;
     int index = 0;
     for (int i = 0; i < maxStepsP; ++i) {
         for (int j = 0; j < maxStepsQ; ++j) {
             for (int k = 0; k < maxStepsR; ++k) {
                 for (int l = 0; l < maxStepsS; ++l) {
-                    const double value = engine.WORK[index];
+                    const double value = WORK[index];
                     std::cout << TlUtils::format("(%2d %2d|%2d %2d)=%18.10f",
                                                  i, j, k, l, value)
                               << std::endl;
@@ -91,8 +157,4 @@ int main(int argc, char* argv[])
             }
         }
     }
-    
-    return EXIT_SUCCESS;
 }
-
-

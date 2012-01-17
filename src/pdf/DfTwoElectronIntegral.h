@@ -147,8 +147,11 @@ protected:
                                       int nShell2, int nStep2,
                                       const TlSymmetricMatrix& P);
 
+public:
     DfTEI::ShellPair getShellPair(int nIShell, int nJShell);
+    void prepare_ERI();
 
+protected:
     /// 積分値と密度行列要素の積をK行列に足しこむ
     void storeKmatrixByIntegralDriven(const int ishell, const int istep,
                                       const int jshell, const int jstep,

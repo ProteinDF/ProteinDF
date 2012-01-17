@@ -75,6 +75,22 @@ DfTwoElectronIntegral::~DfTwoElectronIntegral()
     }
 }
 
+void DfTwoElectronIntegral::prepare_ERI()
+{
+    // initialize
+    this->m_ShellList.clear();
+    this->m_DistributionShellList.clear();
+    this->m_IKShellPairList.clear();
+
+    // define threshold
+    this->m_dCutoffThreshold = 1.0E-16;    
+
+    // list up shell-pair
+    this->makeShellList();
+    this->screenDistributions();
+    this->getShellList_density_nocut();
+}
+
 
 void DfTwoElectronIntegral::getContractKMatrixByIntegralDriven(const TlSymmetricMatrix& P,
                                                                TlSymmetricMatrix* pK)
