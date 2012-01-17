@@ -135,6 +135,7 @@ public:
     
     const TlSymmetricMatrix& dot(const TlSymmetricMatrix& X);
 
+    
 public:
     /// 指定された入力ストリームが読み込み可能かどうかを返す
     ///
@@ -280,6 +281,9 @@ protected:
     friend bool diagonalByLapack(const TlSymmetricMatrix& inMatrix, TlVector* outEigVal, TlMatrix* outEigVec);
 
     friend bool inverseByLapack(TlSymmetricMatrix& inoutMatrix);
+
+    friend bool choleskyFactorization(const TlSymmetricMatrix& A,
+                                      TlMatrix* pL);
 #else
     // cause compile error
 #error NOT found algebra package: need LAPACK library

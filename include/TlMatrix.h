@@ -349,6 +349,9 @@ protected:
     friend bool diagonalByLapack(const TlSymmetricMatrix& inMatrix, TlVector* outEigVal, TlMatrix* outEigVec);
 
     friend bool inverseByLapack(TlMatrix& inoutMatrix);
+
+    friend bool choleskyFactorization(const TlSymmetricMatrix& A,
+                                      TlMatrix* pL);
 #else
     // cause compile error
 #error NOT found algebra package: need LAPACK library

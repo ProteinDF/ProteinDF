@@ -959,6 +959,15 @@ extern "C" {
     // A in packed storage using the factorization A = U*D*U**T or
     // A = L*D*L**T computed by DSPTRF.
     void dsptri_(const char* UPLO, const int* N, double* PA, int* IPIV, double* WORK, int* INFO);
+
+    // *  DPOTRF computes the Cholesky factorization of a real symmetric
+    // *  positive definite matrix A.
+    // *
+    // *  The factorization has the form
+    // *     A = U**T * U,  if UPLO = 'U', or
+    // *     A = L  * L**T,  if UPLO = 'L',
+    // *  where U is an upper triangular matrix and L is lower triangular.
+    void dpotrf_(const char* UPLO, const int* N, double* A, const int* LDA, int* INFO);
 }
 
 
@@ -1217,6 +1226,59 @@ bool inverseByLapack(TlSymmetricMatrix& X)
     WORK = NULL;
 
     return bAnswer;
+}
+
+bool choleskyFactorization(const TlSymmetricMatrix& A,
+                           TlMatrix* pL)
+{
+    const int dim = A.getNumOfRows();
+    pL->resize(dim, dim);
+    *pL = A;
+    
+    // *  UPLO    (input) CHARACTER*1
+    // *          = 'U':  Upper triangle of A is stored;
+    // *          = 'L':  Lower triangle of A is stored.
+    char UPLO = 'L';
+
+    // *  N       (input) INTEGER
+    // *          The order of the matrix A.  N >= 0.
+    int N = A.getNumOfRows();
+
+    // *  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+    // *          On entry, the symmetric matrix A.  If UPLO = 'U', the leading
+    // *          N-by-N upper triangular part of A contains the upper
+    // *          triangular part of the matrix A, and the strictly lower
+    // *          triangular part of A is not referenced.  If UPLO = 'L', the
+    // *          leading N-by-N lower triangular part of A contains the lower
+    // *          triangular part of the matrix A, and the strictly upper
+    // *          triangular part of A is not referenced.
+    // *
+    // *          On exit, if INFO = 0, the factor U or L from the Cholesky
+    // *          factorization A = U**T*U or A = L*L**T.
+    double* pA = pL->data_;
+
+    // *  LDA     (input) INTEGER
+    // *          The leading dimension of the array A.  LDA >= max(1,N).
+    int LDA = std::max<int>(1, N);
+
+    // *  INFO    (output) INTEGER
+    // *          = 0:  successful exit
+    // *          < 0:  if INFO = -i, the i-th argument had an illegal value
+    // *          > 0:  if INFO = i, the leading minor of order i is not
+    // *                positive definite, and the factorization could not be
+    // *                completed.
+    int INFO = 0;
+
+    dpotrf_(&UPLO, &N, pA, &LDA, &INFO);
+    bool answer = (INFO == 0);
+    if (INFO < 0) {
+        std::cerr << (-INFO) << "th argument had an illegal value." << std::endl;
+    } else if (INFO > 0) {
+        std::cerr << "the leading mirror of order " << INFO << " is not positive definite."
+                  << std::endl;
+    }
+    
+    return answer;
 }
 
 #endif // HAVE_LAPACK
