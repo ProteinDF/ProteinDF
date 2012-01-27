@@ -20,12 +20,6 @@ int TlAngularMomentumVector::angularMomentum() const {
     return this->v_[X] + this->v_[Y] + this->v_[Z];
 }
 
-int TlAngularMomentumVector::index() const {
-    // (y * (y + 1) + z * (2*y + z + 3)) /2 = ((y+z)*(y+z+1)+2z)/2
-    const int yz = this->v_[Y] + this->v_[Z];
-    return (yz * (yz+1) / 2 + this->v_[Z]);
-}
-
 bool TlAngularMomentumVector::isExist() const {
     return ((v_[0] >= 0) && (v_[1] >= 0) && (v_[2] >= 0));
 }

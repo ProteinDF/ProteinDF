@@ -50,4 +50,15 @@ private:
     int v_[3];
 };
 
+
+inline int TlAngularMomentumVector::index() const {
+    // (y * (y + 1) + z * (2*y + z + 3)) /2 = ((y+z)*(y+z+1)+2z)/2
+
+    const int y = this->v_[Y];
+    const int z = this->v_[Z];
+    const int yz = y + z;
+    return ((yz * (yz+1)) >> 1) + z;
+}
+
+
 #endif // TLANGULARMOMENTUMVECTOR_H
