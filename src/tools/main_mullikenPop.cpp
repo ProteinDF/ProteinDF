@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     if (opt["i"].empty() != true) {
         iteration = std::atoi(opt["i"].c_str());
     } else {
-        iteration = param["iterations"].getInt();
+        iteration = param["num_of_iterations"].getInt();
     }
 
     if (isVerbose == true) {
@@ -66,6 +66,7 @@ void usage()
 {
     std::cerr << "calculation Mulliken Population." << std::endl;
     std::cerr << "usage: mullikenPop [options] " << std::endl;
+    std::cerr <<  "  -p param:\n";
     std::cerr <<  "  -i num:    set SCF iteration to get Mulliken Population\n"; 
     std::cerr <<  "  -s path:   save atom population data as pdf matrix file\n"; 
     std::cerr <<  "  -h:        show help(this)\n"; 
