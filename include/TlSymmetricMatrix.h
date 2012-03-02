@@ -282,8 +282,8 @@ protected:
 
     friend bool inverseByLapack(TlSymmetricMatrix& inoutMatrix);
 
-    friend bool choleskyFactorization(const TlSymmetricMatrix& A,
-                                      TlMatrix* pL);
+    friend int choleskyFactorization(TlSymmetricMatrix* A,
+                                     std::vector<int>* pPivot);
 #else
     // cause compile error
 #error NOT found algebra package: need LAPACK library

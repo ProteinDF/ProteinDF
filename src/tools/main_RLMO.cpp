@@ -9,17 +9,15 @@
 
 void showHelp()
 {
-    std::cout << "diagonal [options] input_file_path" << std::endl;
+    std::cout << "RLMO [options] start_block_AO_index ..." << std::endl;
     std::cout << " OPTIONS:" << std::endl;
-    std::cout << "  -l FILE: save vector for eigen values" << std::endl;
-    std::cout << "  -x FILE: save matrix for eigen vector" << std::endl;
     std::cout << "  -h:      show help" << std::endl;
     std::cout << "  -v:      verbose" << std::endl;
 }
 
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "hvl:x:");
+    TlGetopt opt(argc, argv, "hv");
     
     if (opt["h"] == "defined") {
         showHelp();

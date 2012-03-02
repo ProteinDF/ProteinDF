@@ -159,9 +159,11 @@ void DfObject::setParam(const TlSerializeData& data)
     {
         this->enableGrimmeDispersion_ = false;
         int len = this->m_sXCFunctional.size();
-        const std::string suffix = this->m_sXCFunctional.substr(len -2, 2);
-        if (suffix == "-D") {
-            this->enableGrimmeDispersion_ = true;
+        if (len > 2) {
+            const std::string suffix = this->m_sXCFunctional.substr(len -2, 2);
+            if (suffix == "-D") {
+                this->enableGrimmeDispersion_ = true;
+            }
         }
     }
 
