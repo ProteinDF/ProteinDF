@@ -29,7 +29,7 @@ void DfSummary::exec()
 void DfSummary::printEigen(DfObject::RUN_TYPE runType)
 {
     TlVector eigval;
-    eigval.load(this->getEigvalPath(runType, this->m_nIteration));
+    eigval.load(this->getEigenvaluesPath(runType, this->m_nIteration));
 
     std::stringstream ss;
     eigval.print(ss);

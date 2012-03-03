@@ -65,7 +65,6 @@ public:
     void print(T& out, const TlSerializeData& data) const;
 
     std::string getCSV(bool showHiddenItem = false) const;
-    std::string getCSV_J(bool showHiddenItem = false) const;
 
     TlSerializeData getSerializeData() const;
     

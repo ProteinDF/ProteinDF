@@ -89,7 +89,6 @@ libpdf_la_SOURCES = \
 	Fl_Tbl_Xcpot2.h		Fl_Tbl_Xcpot2.cxx		\
 	Fl_UserinputX.h		Fl_UserinputX.cpp		\
 	Fl_GlobalinputX.h	Fl_GlobalinputX.cpp		\
-	Fl_Vct_OtableX.h	Fl_Vct_OtableX.cpp		\
 	Fl_Vct_Table.h		Fl_Vct_Table.cpp		\
 	PdfKeyword.h		PdfKeyword.cpp			\
 	ProteinDF.h		ProteinDF.cxx			\

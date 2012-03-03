@@ -23,12 +23,6 @@ public:
     int dfGrdMain();
 
 private:
-    /** fl_Vct_Rou(niteration1), fl_Vct_Otable, fl_Vct_Rtable, fl_Vct_Mtabale, fl_Vct_Ntable 読み、
-     *  密度行列展開係数、基底関数の情報、密度行列補助基底関数の情報、
-     *  交換相関ポテンシャル補助基底関数の情報を標準出力する
-     */
-    //int readTable();
-
     /** rhoとrhoの微分を計算し、グリッド積分の計算を行い
      */
     void calcXCInteg(TlVector& tmpVectorA, TlVector& tmpVectorB, TlVector& eTmpVector);

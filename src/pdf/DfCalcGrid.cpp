@@ -728,7 +728,7 @@ void DfCalcGrid::calcXCcoef_RKS(const TlVector& tmpVector, const TlVector& eTmpV
 
     {
         TlVector myuGamma = Sgdinv * tmpVector;
-        myuGamma.save("fl_Work/fl_Vct_Myu" + TlUtils::xtos(this->m_nIteration));
+        myuGamma.save(this->getMyuPath(RUN_RKS, this->m_nIteration));
     }
 
     if (xc > 0) {
@@ -749,9 +749,9 @@ void DfCalcGrid::calcXCcoef_UKS(const TlVector& tmpVectorA, const TlVector& tmpV
 
     {
         TlVector myuGammaA = Sgdinv * tmpVectorA;
-        myuGammaA.save("fl_Work/fl_Vct_Myua" + TlUtils::xtos(this->m_nIteration));
+        myuGammaA.save(this->getMyuPath(RUN_UKS_ALPHA, this->m_nIteration));
         TlVector myuGammaB = Sgdinv * tmpVectorB;
-        myuGammaB.save("fl_Work/fl_Vct_Myub" + TlUtils::xtos(this->m_nIteration));
+        myuGammaB.save(this->getMyuPath(RUN_UKS_BETA,  this->m_nIteration));
     }
 
     if (xc > 0) {

@@ -20,9 +20,6 @@ public:
     int dfGrdMain();
 
 protected:
-    /** 基底関数、密度行列の補助基底関数、交換相関ポテンシャルの補助基底関数の情報をテーブルにして、
-     *  標準出力及びfl_Vct_Otable, fl_Vct_Rtable, fl_Vct_Mtable, fl_Vct_Ntableに出力する
-     */
     virtual void makeTable();
 
     void generateGrid(int iatom,

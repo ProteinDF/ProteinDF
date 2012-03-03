@@ -87,7 +87,6 @@ protected:
     std::string getInvXMatrixPath();
     std::string getNalphaPath();
     std::string getOccupationPath(RUN_TYPE runType);
-    std::string getEigvalPath(RUN_TYPE runType, int iteration);
     std::string getGridDataFilePath() const;
     std::string getGridMatrixPath(const int iteration) const;
     
@@ -105,6 +104,9 @@ protected:
     std::string getMyuPath(RUN_TYPE nRunType, int nIteration) const;
     std::string getNyuPath(RUN_TYPE nRunType, int nIteration) const;
     std::string getTalphaPath(RUN_TYPE runType, int iteration) const;
+
+    std::string getEigenvaluesPath(const RUN_TYPE runType,
+                                   const int iteration) const;
     
 protected:
     template <class SymmetricMatrixType>

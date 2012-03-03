@@ -219,11 +219,11 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration)
 
     // write merged eigenvalue
     if ("rks" == runtype || "roks" == runtype) {
-        eigval.save("fl_Work/fl_Vct_Eigval");
+        eigval.save(this->getEigenvaluesPath(RUN_RKS, this->m_nIteration));
     } else if ("uks-alpha" == runtype) {
-        eigval.save("fl_Work/fl_Vct_Eigvala");
+        eigval.save(this->getEigenvaluesPath(RUN_UKS_ALPHA, this->m_nIteration));
     } else if ("uks-beta" == runtype) {
-        eigval.save("fl_Work/fl_Vct_Eigvalb");
+        eigval.save(this->getEigenvaluesPath(RUN_UKS_BETA, this->m_nIteration));
     } else {
         CnErr.abort("DfQclo", "", "main", "runtype is illegal");
     }

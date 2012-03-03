@@ -904,27 +904,6 @@ std::string PdfKeyword::getCSV(bool showHiddenItem) const
 }
 
 
-std::string PdfKeyword::getCSV_J(bool showHiddenItem) const
-{
-    std::string output = "keyword, explanation, default, syntax\n";
-
-    const int numOfItems = this->kwdList_.size();
-    for (int i = 0; i < numOfItems; ++i) {
-        const KeywordInfo& item = this->kwdList_[i];
-        if (((item.type & KWD_HIDDEN) != 0) &&
-            (showHiddenItem == false)) {
-            continue;
-        }
-        output += TlUtils::format("\"%s\", \"%s\", \"%s\"\n",
-                                  item.keyword.c_str(),
-                                  item.defaultValue.c_str(),
-                                  item.syntax.c_str());
-    }
-
-    return output;
-}
-
-
 TlSerializeData PdfKeyword::getSerializeData() const
 {
     TlSerializeData data;
