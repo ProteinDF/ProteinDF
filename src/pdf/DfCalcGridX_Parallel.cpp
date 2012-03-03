@@ -2749,10 +2749,13 @@ double DfCalcGridX_Parallel::buildVxc(DfFunctional_GGA* pFunctional,
 
 TlMatrix DfCalcGridX_Parallel::distributeGridMatrix(const int iteration)
 {
+    this->log_.info("distribute grid matrix: start");
+
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProc();
     const int rank = rComm.getRank();
 
+    const int tag = TAG_CALC_GRID_DISTRIBUTE;
     TlMatrix gridMat;
     if (rComm.isMaster() == true) {
         TlFileMatrix globalGridMat(DfObject::getGridMatrixPath(iteration));
@@ -2779,19 +2782,25 @@ TlMatrix DfCalcGridX_Parallel::distributeGridMatrix(const int iteration)
             TlMatrix tmpMat = globalGridMat.getBlockMatrix(startGrid, 0,
                                                            endGrid - startGrid,
                                                            globalGridMat.getNumOfCols());
-            rComm.sendData(tmpMat, i);
+            rComm.sendData(tmpMat, i, tag);
+            this->log_.info(TlUtils::format("send grid data to %d", i));
         }
     } else {
-        rComm.receiveData(gridMat, 0);
+      rComm.receiveData(gridMat, 0, tag);
+      this->log_.info("recv grid data");
     }
 
+    this->log_.info("distribute grid matrix: end");
     return gridMat;
 }
 
 void DfCalcGridX_Parallel::gatherGridMatrix(const TlMatrix& gridMat)
 {
+  this->log_.info("gather grid matrix: start");
+
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProc();
+    const int tag = TAG_CALCGRID_GATHER;
 
     if (rComm.isMaster() == true) {
         TlFileMatrix globalGridMat(DfObject::getGridMatrixPath(this->m_nIteration),
@@ -2800,18 +2809,27 @@ void DfCalcGridX_Parallel::gatherGridMatrix(const TlMatrix& gridMat)
         globalGridMat.setBlockMatrix(0, 0,
                                      gridMat);
         index_type currentGridIndex = gridMat.getNumOfRows();
+	std::vector<bool> recvCheck(numOfProcs, false);
         for (int i = 1; i < numOfProcs; ++i) {
+	    int proc = 0;
             TlMatrix tmpMat;
-            rComm.receiveData(tmpMat, i);
-            
+            rComm.receiveDataFromAnySource(tmpMat, &proc, tag);
+	    if (recvCheck[proc] != false) {
+	      this->log_.warn(TlUtils::format("already receive grid data from %d",
+					      proc));
+	    }
+	    recvCheck[proc] = true;
+	    this->log_.debug(TlUtils::format("recv grid data from %d", proc));
+
             assert(globalGridMat.getNumOfCols() == gridMat.getNumOfCols());
             globalGridMat.setBlockMatrix(currentGridIndex, 0,
                                          tmpMat);
             currentGridIndex += gridMat.getNumOfRows();
         }
     } else {
-        rComm.sendData(gridMat, 0);
+      rComm.sendData(gridMat, 0, tag);
     }
+  this->log_.info("gather grid matrix: end");
 }
 
 // =============================================================================

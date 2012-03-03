@@ -2,7 +2,6 @@
 #include "DfGenerateGrid_Parallel.h"
 #include "DfXCFunctional.h"
 #include "TlCommunicate.h"
-//#include "GridDataManager.h"
 #include "TlUtils.h"
 #include "TlFileMatrix.h"
 
@@ -37,45 +36,18 @@ void DfGenerateGrid_Parallel::makeTable()
 
 void DfGenerateGrid_Parallel::generateGrid()
 {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    const int numOfProcs = rComm.getNumOfProc();
-    
     // if (this->isMasterSlave_ == true) {
     //     this->generateGrid_MS();
     // } else {
-        this->generateGrid_DC();
+    this->generateGrid_DC();
     // }
-
-    // gather
-    index_type numOfRowsOfGlobalGridMatrix = this->grdMat_.getNumOfRows();
-    rComm.allReduce_SUM(numOfRowsOfGlobalGridMatrix);
-    if (rComm.isMaster() == true) {
-        const index_type numOfColsOfGlobalGridMatrix = this->grdMat_.getNumOfCols();
-        TlFileMatrix grdMat(this->getGridMatrixPath(0),
-                            numOfRowsOfGlobalGridMatrix,
-                            numOfColsOfGlobalGridMatrix);
-
-        index_type currentNumOfRows = 0;
-        // from 0
-        grdMat.setBlockMatrix(currentNumOfRows, 0,
-                              this->grdMat_);
-        currentNumOfRows += this->grdMat_.getNumOfRows();
-        
-        // from the others
-        for (int i = 1; i < numOfProcs; ++i) {
-            TlMatrix tmpGrdMat;
-            rComm.receiveData(tmpGrdMat, i);
-            grdMat.setBlockMatrix(currentNumOfRows, 0,
-                                  tmpGrdMat);
-            currentNumOfRows += tmpGrdMat.getNumOfRows();
-        }
-    } else {
-        rComm.sendData(this->grdMat_, 0);
-    }
+    
+    this->gatherGridData();
 }
 
 void DfGenerateGrid_Parallel::generateGrid_DC()
 {
+    this->logger("generate grid by DC");
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
     const int nEndAtomNumber = this->m_nNumOfAtoms;
@@ -115,3 +87,54 @@ void DfGenerateGrid_Parallel::generateGrid_DC()
 
 }
 
+void DfGenerateGrid_Parallel::gatherGridData()
+{
+    this->logger("gather grid data");
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int numOfProcs = rComm.getNumOfProc();
+
+    index_type numOfRowsOfGlobalGridMatrix = this->grdMat_.getNumOfRows();
+
+    const int tag = TAG_GENGRID_GATHER_GRID_DATA;
+    if (rComm.isMaster() == true) {
+        const index_type numOfColsOfGlobalGridMatrix = this->grdMat_.getNumOfCols();
+        // TODO: use TlFileMatrix instead of TlMatrix because of memory waste.
+        TlMatrix grdMat(numOfRowsOfGlobalGridMatrix,
+                        numOfColsOfGlobalGridMatrix);
+
+        index_type currentNumOfRows = 0;
+
+        // set elements from 0
+        grdMat.setBlockMatrix(currentNumOfRows, 0,
+                              this->grdMat_);
+        currentNumOfRows += this->grdMat_.getNumOfRows();
+        
+        // set elements from the others
+        std::vector<bool> recvCheck(numOfProcs, false);
+        for (int i = 1; i < numOfProcs; ++i) {
+            int proc = 0;
+            TlMatrix tmpGrdMat;
+            rComm.receiveDataFromAnySource(tmpGrdMat, &proc, tag);
+            if (recvCheck[proc] != false) {
+                this->log_.warn(TlUtils::format("already received grid data from %d",
+                                                proc));
+            }
+            recvCheck[proc] = true;
+            this->log_.debug(TlUtils::format("recv grid data from %d", proc));
+            
+            numOfRowsOfGlobalGridMatrix += tmpGrdMat.getNumOfRows();
+            grdMat.resize(numOfRowsOfGlobalGridMatrix,
+                          numOfColsOfGlobalGridMatrix);
+            
+            grdMat.setBlockMatrix(currentNumOfRows, 0,
+                                  tmpGrdMat);
+            currentNumOfRows += tmpGrdMat.getNumOfRows();
+        }
+
+        grdMat.save(this->getGridMatrixPath(0));
+    } else {
+        rComm.sendData(this->grdMat_, 0, tag);
+        this->log_.debug("send grid data");
+    }
+}
