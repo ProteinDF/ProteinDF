@@ -17,7 +17,6 @@ SERIAL_PROGS = 					\
 	pdfMatrixCheck 				\
 	mullikenPop 				\
 	charge 					\
-	gdselect gdinfo 			\
 	mmap_bench 				\
 	mmap_bench_matrix_calc 			\
 	localize 				\
@@ -91,14 +90,6 @@ mullikenPop_LDADD = $(SERIAL_LIBS)
 
 charge_SOURCES = charge.cpp
 charge_LDADD = $(SERIAL_LIBS)
-
-
-gdselect_SOURCES = gdselect.cpp
-gdselect_LDADD = $(SERIAL_LIBS)
-
-
-gdinfo_SOURCES = gdinfo.cpp
-gdinfo_LDADD = $(SERIAL_LIBS)
 
 
 mmap_bench_SOURCES = mmap_bench.cpp

@@ -403,55 +403,12 @@ protected:
 
     TlOrbitalInfo m_tlOrbInfo;
 
-    /// [データ型][原子][グリッド点index]
-    //std::map<GridDataManager::ChunkType,
-    //std::map<int, std::vector<double> > > physicalValues_;
-
-    //
     index_type numOfRows_gridMatrix_;
     index_type numOfCols_gridMatrix_;
 
 protected:
     bool isDebugOutPhiTable_;
 };
-
-
-// template<class DfFunctionalType>
-// double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-//                                                 DfFunctionalType* pFunctional,
-//                                                 TlSymmetricMatrix* pF_A)
-// {
-//     assert(pFunctional != NULL);
-//     assert(pF_A != NULL);
-
-//     TlMatrix gridMat = this->getGridMatrix();
-//     double energy = this->calcXCIntegForFockAndEnergy(P_A,
-//                                                       pFunctional,
-//                                                       pF_A,
-//                                                       &gridMat);
-//     this->finalizeGridMatrix(gridMat);
-//     return energy;
-// }
-
-// template<class DfFunctionalType>
-// double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-//                                                 const TlSymmetricMatrix& P_B,
-//                                                 DfFunctionalType* pFunctional,
-//                                                 TlSymmetricMatrix* pF_A,
-//                                                 TlSymmetricMatrix* pF_B)
-// {
-//     assert(pFunctional != NULL);
-//     assert(pF_A != NULL);
-//     assert(pF_B != NULL);
-
-//     TlMatrix gridMat = this->getGridMatrix();
-//     double energy = this->calcXCIntegForFockAndEnergy(P_A, P_B,
-//                                                       pFunctional,
-//                                                       pF_A, pF_B,
-//                                                       &gridMat);
-//     this->finalizeGridMatrix(gridMat);
-//     return energy;
-// }
 
 
 #endif //DFCALCGRIDX_H

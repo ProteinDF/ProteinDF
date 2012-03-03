@@ -98,7 +98,6 @@ libpdf_la_SOURCES = \
 	TlOrbitalInfo_XC.h	TlOrbitalInfo_XC.cpp		\
 	TlCombineDensityMatrix.h				\
 	TlCombineDensityMatrix.cpp				\
-	GridDataManager.h	GridDataManager.cpp		\
 	PdfUserInput.h		PdfUserInput.cpp		\
 	PdfUtils.h		PdfUtils.cpp			\
 	DfOverlapEngine.h	DfOverlapEngine.cpp		\
