@@ -28,7 +28,6 @@ public:
         std::string keyword;       /// キーワード
         KeywordType type;         /// キーワードタイプ
         std::string explanation;   /// 説明(英語)
-        std::string explanationJ;  /// 説明(日本語)
         std::string defaultValue;  /// デフォルト値
         std::string syntax;        /// 文法
     };
@@ -66,7 +65,7 @@ public:
     void print(T& out, const TlSerializeData& data) const;
 
     std::string getCSV(bool showHiddenItem = false) const;
-    std::string getCSV_J(bool showHiddenItem = false) const;
+    // std::string getCSV_J(bool showHiddenItem = false) const;
 
     TlSerializeData getSerializeData() const;
     
