@@ -93,18 +93,18 @@ DfGenerateGrid::~DfGenerateGrid()
 
 int DfGenerateGrid::dfGrdMain()
 {
-    this->logger("start        : " + TlTime::getNow() + "\n");
+    this->logger("start");
 
     this->makeTable();
-    this->logger("makeTable    : " + TlTime::getNow() + "\n");
+    this->logger("make table");
 
     this->setCellPara();
-    this->logger("setCellPara  : " + TlTime::getNow() + "\n");
+    this->logger("set Cell Para");
 
     this->generateGrid();
-    this->logger("generateGrid : " + TlTime::getNow() + "\n");
+    this->logger("generateGrid");
 
-    this->logger("end          : " + TlTime::getNow() + "\n");
+    this->logger("end");
 
     return 0;
 }
