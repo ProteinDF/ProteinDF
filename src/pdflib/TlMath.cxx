@@ -129,18 +129,3 @@ std::vector<int> TlMath::factor(const int nInput)
 }
 
 
-double TlMath::pow(double base, int exponent)
-{
-    double answer = 1.0;
-    if (exponent < 0) {
-        base = 1.0 / base;
-        exponent = - exponent;
-    }
-    
-    for (int i = 0; i < exponent; ++i) {
-        answer *= base;
-    }
-
-    return answer;
-}
-
