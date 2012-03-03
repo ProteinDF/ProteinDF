@@ -21,7 +21,9 @@ int TlAngularMomentumVector::angularMomentum() const {
 }
 
 bool TlAngularMomentumVector::isExist() const {
-    return ((v_[0] >= 0) && (v_[1] >= 0) && (v_[2] >= 0));
+    //return ((v_[0] >= 0) && (v_[1] >= 0) && (v_[2] >= 0));
+
+    return ((this->v_[0] | this->v_[1]) | this->v_[2]) >= 0;
 }
 
 int TlAngularMomentumVector::get(const int i) const {
