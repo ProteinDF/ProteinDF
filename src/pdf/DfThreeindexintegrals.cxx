@@ -9,39 +9,12 @@
 #include "TlSymmetricMatrix.h"
 #include "TlVector.h"
 #include "DfEri2.h"
-#include "DfTwoElectronIntegral.h"
+#include "DfEriX.h"
 #include "CnError.h"
 
 DfThreeindexintegrals::DfThreeindexintegrals(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam)
 {
-//     TlLogX& Log = TlLogX::getInstance();
-
-//     {
-//         Fl_Geometry geom(Fl_Geometry::getDefaultFileName());
-//         this->number_dummyatom = geom.getDummyatom();
-//     }
-
-//     this->restart_scf = flGbi["MAIN"]["restart-scf"];
-
-//     this->scftype         = flGbi["SCF"]["method"];
-//     this->chgextra_number = atoi(flGbi["SCF"]["charge-extrapolate-number"].c_str());
-//     this->xc_potential    = flGbi["SCF"]["xc-potential"];
-
-//     {
-//         const std::string sXcPotential = TlUtils::toUpper(flGbi["SCF"]["xc-potential"]);
-//         const char nLastChar = sXcPotential[sXcPotential.length() -1];
-//         this->m_bIsXcFitting = (nLastChar == '~') ? true : false;
-//     }
-
-//     this->number_ao_basis = atoi(flGbi["SCF"]["control-norb"].c_str());
-//     this->number_de_basis = atoi(flGbi["SCF"]["control-nauxden"].c_str());
-//     this->number_xc_basis = atoi(flGbi["SCF"]["control-nauxxc"].c_str());
-
-//     // output informations
-//     Log << "number_ao_basis  = " << this->number_ao_basis  << "\n";
-//     Log << "number_de_basis  = " << this->number_de_basis  << "\n";
-//     Log << "number_xc_basis  = " << this->number_xc_basis  << "\n";
 }
 
 
@@ -52,8 +25,6 @@ DfThreeindexintegrals::~DfThreeindexintegrals()
 
 void DfThreeindexintegrals::DfThreeindexintegralsMain()
 {
-    //assert((this->scftype == "nsp") || (this->scftype == "sp") || (this->scftype == "roks"));
-
     // DIRECT SCHEME
     switch (this->m_nMethodType) {
     case METHOD_RKS:
@@ -180,9 +151,11 @@ void DfThreeindexintegrals::mainDIRECT_RKS(int iteration)
         //     K.print(std::cerr);
 
         //     std::cerr << "DfThreeindexintegral using HF." << std::endl;
-        DfTwoElectronIntegral dfTEI(this->pPdfParam_);
+        //DfTwoElectronIntegral dfTEI(this->pPdfParam_);
+        DfEriX dfEri(this->pPdfParam_);
         TlSymmetricMatrix K(this->m_nNumOfAOs);
-        dfTEI.getContractKMatrixByIntegralDriven(P, &K);
+        //dfTEI.getContractKMatrixByIntegralDriven(P, &K);
+        dfEri.getK(P, &K);
 
         //TlSymmetricMatrix K = dfTEI.getContractKMatrixByRTmethod(P);
         //     std::cerr << "K(HF) >>>>" << std::endl;
@@ -315,9 +288,11 @@ void DfThreeindexintegrals::mainDIRECT_RKS2(int iteration)
         //     K.print(std::cerr);
 
         //     std::cerr << "DfThreeindexintegral using HF." << std::endl;
-        DfTwoElectronIntegral dfTEI(this->pPdfParam_);
+        //DfTwoElectronIntegral dfTEI(this->pPdfParam_);
+        DfEriX dfEri(this->pPdfParam_);
         TlSymmetricMatrix K(this->m_nNumOfAOs);
-        dfTEI.getContractKMatrixByIntegralDriven(P, &K);
+        //dfTEI.getContractKMatrixByIntegralDriven(P, &K);
+        dfEri.getK(P, &K);
 
         //TlSymmetricMatrix K = dfTEI.getContractKMatrixByRTmethod(P);
         //     std::cerr << "K(HF) >>>>" << std::endl;

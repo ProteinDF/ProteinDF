@@ -256,6 +256,7 @@ TlSymmetricMatrix DfXCFunctional::getFockExchange(const TlSymmetricMatrix& P)
             delete pDfEri;
             pDfEri = NULL;
         } else {
+#ifdef USE_OLD_TEI_ENGINE
             DfTwoElectronIntegral* pDfTei = this->getDfTwoElectronIntegral();
             
             if (this->m_bUseRTmethod == true) {
@@ -268,6 +269,7 @@ TlSymmetricMatrix DfXCFunctional::getFockExchange(const TlSymmetricMatrix& P)
             
             delete pDfTei;
             pDfTei = NULL;
+#endif // USE_OLD_TEI_ENGINE
         }
     } else {
         // using RI-K
@@ -320,9 +322,15 @@ DfEriX* DfXCFunctional::getDfEriXObject()
 
 DfTwoElectronIntegral* DfXCFunctional::getDfTwoElectronIntegral()
 {
+#ifdef USE_OLD_TEI_ENGINE
     DfTwoElectronIntegral* pDfTei = new DfTwoElectronIntegral(this->pPdfParam_);
-
     return pDfTei;
+#else
+    this->log_.critical("cannot use old two-electron integral engine.");
+    this->log_.critical("please check USE_OLD_TEI_ENGINE flag.");
+    abort();
+    return NULL;
+#endif // USE_OLD_TEI_ENGINE
 }
 
 
