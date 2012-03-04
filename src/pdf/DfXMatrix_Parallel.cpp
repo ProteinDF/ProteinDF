@@ -177,9 +177,9 @@ void DfXMatrix_Parallel::exec_ScaLAPACK()
 
         U.transpose();
 
-        const TlDistributeMatrix invX = S * U;
+        const TlDistributeMatrix XInv = S * U;
 
-        invX.save(this->getInvXMatrixPath());
+        DfObject::saveXInvMatrix(XInv);
     }
 
     this->loggerTime(" finalize");

@@ -116,8 +116,7 @@ void DfInitialGuess::saveC0(const RUN_TYPE runType, const MatrixType& C0)
 template <typename MatrixType>
 void DfInitialGuess::buildCprime0(const RUN_TYPE runType, const MatrixType& C)
 {
-    MatrixType Xinv;
-    Xinv.load(this->getInvXMatrixPath());
+    MatrixType Xinv = DfObject::getXInvMatrix<MatrixType>();
 
     //  Xinv(RSFD) = Xinv(RSFD) * guess_lcao(RSFD)
     Xinv *= C;

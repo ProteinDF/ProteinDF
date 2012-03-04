@@ -130,10 +130,10 @@ void DfXMatrix::exec()
 
         U.transpose();
         //const TlMatrix invX = S * U;
-        TlMatrix invX = S;
-        invX *= U;
+        TlMatrix Xinv = S;
+        Xinv *= U;
 
-        invX.save("fl_Work/fl_Mtr_InvX.matrix");
+        DfObject::saveXInvMatrix(Xinv);
     }
 
     this->loggerTime(" finalize");
@@ -150,8 +150,7 @@ void DfXMatrix::checkMatrixes()
     this->logger("@@@@ we get four matrices\n");
 
     TlMatrix X = DfObject::getXMatrix<TlMatrix>();
-    TlMatrix invX;
-    invX.load("fl_Work/fl_Mtr_InvX.matrix");
+    TlMatrix invX = DfObject::getXInvMatrix<TlMatrix>();
 
     {
         TlMatrix B = X * invX;

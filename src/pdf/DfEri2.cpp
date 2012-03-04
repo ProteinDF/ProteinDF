@@ -68,8 +68,7 @@ DfEri* DfEri2::getDfEri()
 
 TlSymmetricMatrix DfEri2::generateInvSquareVMatrix()
 {
-    TlSymmetricMatrix V;
-    V.load("fl_Work/fl_Mtr_Sab.matrix");
+    TlSymmetricMatrix V = DfObject::getSabMatrix<TlSymmetricMatrix>();
     assert(V.getNumOfRows() == this->m_nNumOfAux);
 
     TlVector s(this->m_nNumOfAux);
@@ -122,7 +121,6 @@ TlSymmetricMatrix DfEri2::generateInvSquareVMatrix()
     //std::cerr << "[DfEri2] V^(-1/2)\n";
     //invSquareV.print(std::cerr);
 
-    //invSquareV.save("fl_Work/fl_Mtr_invSquareV.matrix");
     return invSquareV;
 }
 
