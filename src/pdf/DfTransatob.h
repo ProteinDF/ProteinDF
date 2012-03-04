@@ -42,8 +42,8 @@ void DfTransatob::main(const RUN_TYPE runType, const std::string& fragname, bool
 
         if (X.getNumOfRows() != this->m_nNumOfAOs ||
                 X.getNumOfCols() != this->m_nNumOfMOs) {
-            this->logger(TlUtils::format("rowDim of fl_Mtr_X.matrix = %d\n", X.getNumOfRows()));
-            this->logger(TlUtils::format("colDim of fl_Mtr_X.matrix = %d\n", X.getNumOfCols()));
+            this->logger(TlUtils::format("rowDim of X matrix = %d\n", X.getNumOfRows()));
+            this->logger(TlUtils::format("colDim of X matrix = %d\n", X.getNumOfCols()));
             this->logger(TlUtils::format("number_ao_basis = %d", this->m_nNumOfAOs));
             this->logger(TlUtils::format("number_independant_basis = %d\n", this->m_nNumOfMOs));
             this->logger("DfTransatob dimension is not consistency, but continue\n");

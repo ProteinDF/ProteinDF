@@ -51,8 +51,7 @@ void DfInitialGuessHuckel::createGuess()
         break;
     }
 
-    TlMatrix X;
-    X.load("fl_Work/fl_Mtr_X.matrix");
+    TlMatrix X = DfObject::getXMatrix<TlMatrix>();
     {
         TlMatrix tX = X;
         tX.transpose();
@@ -124,12 +123,10 @@ TlSymmetricMatrix DfInitialGuessHuckel::getHuckelMatrix()
 
     const int nNumOfOrbs = orbInfo.getNumOfOrbitals();
 
-    TlSymmetricMatrix Hpq;
-    Hpq.load("fl_Work/fl_Mtr_Hpq.matrix");
+    TlSymmetricMatrix Hpq = DfObject::getHpqMatrix<TlSymmetricMatrix>();
     assert(nNumOfOrbs == Hpq.getNumOfRows());
 
-    TlSymmetricMatrix Spq;
-    Spq.load("fl_Work/fl_Mtr_Spq.matrix");
+    TlSymmetricMatrix Spq = DfObject::getSpqMatrix<TlSymmetricMatrix>();
     assert(nNumOfOrbs == Spq.getNumOfRows());
 
     const double K = 1.75;
@@ -182,90 +179,10 @@ double DfInitialGuessHuckel::getHii(const std::string& sAtomName, const int nOrb
 
 TlSymmetricMatrix DfInitialGuessHuckel::getHpqMatrix()
 {
-    TlSymmetricMatrix Hpq;
-    Hpq.load("fl_Work/fl_Mtr_Hpq.matrix");
+    TlSymmetricMatrix Hpq = DfObject::getHpqMatrix<TlSymmetricMatrix>();
 
     return Hpq;
 }
-
-// TlMatrix DfInitialGuessHuckel::getCmatrix(const TlSymmetricMatrix& F){
-//   TlMatrix X;
-//   X.load("fl_Work/fl_Mtr_X.matrix");
-
-//   TlMatrix Cprime;
-//   {
-//     TlMatrix Xt = X;
-//     Xt.transpose();
-
-//     TlSymmetricMatrix Fprime = Xt * F * X;
-
-//     TlVector eigval;
-//     Fprime.diagonal(&eigval, &Cprime);
-//   }
-
-//   TlMatrix C = X * Cprime;
-
-//   switch (this->m_nScfType){
-//   case RKS:
-//     C.save("fl_Work/fl_Mtr_C.matrix.rks0");
-//     break;
-//   default:
-//     CnErr.abort("unknown SCF type. stop.");
-//   }
-
-//   return C;
-// }
-
-// TlMatrix DfInitialGuessHuckel::getCmatrix(const TlSymmetricMatrix& F){
-//   TlMatrix X;
-//   X.load("fl_Work/fl_Mtr_X.matrix");
-
-//   F *= X;
-//   X.transpose();
-//   X *= F;
-
-//   TlMatrix C;
-//   {
-//     TlVector eigval;
-//     F.diagonal(&eigval, &C);
-//   }
-
-//   C = X * C;
-
-//   switch (this->m_nMethodType){
-//   case METHOD_RKS:
-//     this->saveCMatrix(RUN_RKS, 0, C);
-//     break;
-//   case METHOD_UKS:
-//     this->saveCMatrix(RUN_UKS_ALPHA, 0, C);
-//     this->saveCMatrix(RUN_UKS_BETA, 0, C);
-//     break;
-//   case METHOD_ROKS:
-//     CnErr.abort("to implement. sorry.");
-//     break;
-//   default:
-//     CnErr.abort("unknown SCF type. stop.");
-//     break;
-//   }
-
-//   return C;
-// }
-
-// // output guess in orthonormal basis to a files in fl_Work directory
-// void DfInitialGuessHuckel::generateCprime(const TlMatrix& C){
-//   TlMatrix Xinv;
-//   Xinv.load("fl_Work/fl_Mtr_InvX.matrix");
-
-//   Xinv *= C;
-
-//   switch (this->m_nScfType){
-//   case RKS:
-//     Xinv.save("fl_Work/fl_Mtr_Cprime.matrix.rks0");
-//     break;
-//   default:
-//     CnErr.abort("unknown SCF type. stop.");
-//   }
-// }
 
 // output occupation number to a files in fl_Work directory
 TlVector DfInitialGuessHuckel::generateOccupation(const RUN_TYPE nRunType, const int nNumOrbcut, const int nNumOfElectrons)

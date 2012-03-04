@@ -405,7 +405,7 @@ std::string DfObject::getXMatrixPath()
 }
 
 
-std::string DfObject::getInvXMatrixPath()
+std::string DfObject::getXInvMatrixPath()
 {
     return this->makeFilePath("Xinv_matrix");
 }

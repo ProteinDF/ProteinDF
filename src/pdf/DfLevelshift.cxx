@@ -175,8 +175,8 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration, const std::string
         Fprime = DfObject::getFprimeMatrix<TlSymmetricMatrix>(runType, iteration);
 
         if (Fprime.getNumOfRows() != this->m_nNumOfMOs || Fprime.getNumOfCols() != this->m_nNumOfMOs) {
-            this->log_.warn(TlUtils::format("rowDim of fl_Mtr_Fprime.matrix = %d", Fprime.getNumOfRows()));
-            this->log_.warn(TlUtils::format("colDIm of fl_Mtr_Fprime.matrix = %d", Fprime.getNumOfCols()));
+            this->log_.warn(TlUtils::format("rowDim of F' matrix = %d", Fprime.getNumOfRows()));
+            this->log_.warn(TlUtils::format("colDIm of F' matrix = %d", Fprime.getNumOfCols()));
             this->log_.warn(TlUtils::format("number_mo_basis = %d", this->m_nNumOfMOs));
             this->log_.warn("DfLevelshift dimension is not consistency, but continue");
         }

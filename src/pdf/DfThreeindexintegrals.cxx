@@ -192,7 +192,7 @@ void DfThreeindexintegrals::mainDIRECT_RKS(int iteration)
         E += (0.5 * K);
     }
 
-    F.save("fl_Work/fl_Mtr_Fpq.matrix.rks" + TlUtils::xtos(iteration));
+    DfObject::saveFpqMatrix(RUN_RKS, iteration, F);
     E.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
 }
 
@@ -327,7 +327,7 @@ void DfThreeindexintegrals::mainDIRECT_RKS2(int iteration)
         E += (0.5 * K);
     }
 
-    F.save("fl_Work/fl_Mtr_Fpq.matrix.rks" + TlUtils::xtos(iteration));
+    DfObject::saveFpqMatrix(RUN_RKS, iteration, F);
     E.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
 }
 

@@ -84,7 +84,7 @@ protected:
     std::string getSabInvMatrixPath();
     std::string getSgdInvMatrixPath();
     std::string getXMatrixPath();
-    std::string getInvXMatrixPath();
+    std::string getXInvMatrixPath();
     std::string getNalphaPath();
     std::string getOccupationPath(RUN_TYPE runType);
     std::string getGridDataFilePath() const;
@@ -129,6 +129,11 @@ protected:
     template <class SymmetricMatrixType>
     SymmetricMatrixType getSpqMatrix();
     
+    template <class MatrixType>
+    void saveXInvMatrix(const MatrixType& Xinv);
+
+    template <class MatrixType>
+    MatrixType getXInvMatrix();
 
     template <class SymmetricMatrixType>
     void saveSabMatrix(const SymmetricMatrixType& Sab);
@@ -472,6 +477,28 @@ SymmetricMatrixType DfObject::getSpqMatrix()
     Spq = this->matrixCache_.get<SymmetricMatrixType>(path);
     Spq.resize((this->m_nNumOfAOs));
     return Spq;
+}
+
+
+template<class MatrixType>
+void DfObject::saveXInvMatrix(const MatrixType& XInv)
+{
+    const std::string path = this->getXInvMatrixPath();
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, XInv, true);
+    } else {
+        XInv.save(path);
+    }
+}
+
+
+template<class MatrixType>
+MatrixType DfObject::getXInvMatrix()
+{
+    MatrixType XInv;
+    const std::string path = this->getXInvMatrixPath();
+    XInv = this->matrixCache_.get<MatrixType>(path);
+    return XInv;
 }
 
 

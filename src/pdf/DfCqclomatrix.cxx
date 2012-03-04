@@ -61,8 +61,7 @@ void DfCqclomatrix::main()
     }
 
     // read S matrix
-    TlSymmetricMatrix Spq;
-    Spq.load("fl_Work/fl_Mtr_Spq.matrix");
+    TlSymmetricMatrix Spq = DfObject::getSpqMatrix<TlSymmetricMatrix>();
 
     // fragment loop
     int count_basis = 0;

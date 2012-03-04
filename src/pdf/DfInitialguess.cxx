@@ -1525,15 +1525,11 @@ int DfInitialguess::calcMain()
 
 void DfInitialguess::readPpq()
 {
-    const int niter = 0;  // output file number :  fl_Mtr_PpqDr0.
-    // or fl_Mtr_PpqDra0 , fl_Mtr_PpqDrb0 .
+    const int niter = 0;
 
     if (this->scftype == NSP) {
-        //Fl_GuessMatrix FGMAT(PpqFname);
         TlSymmetricMatrix FGMAT;
         FGMAT.load(PpqFname);
-        //TlSymmetricMatrix PpqD = FGMAT.getValue();
-        //PpqD.save("fl_Work/fl_Mtr_PpqDr" + TlUtils::xtos(niter));
         FGMAT.save("fl_Work/fl_Mtr_PpqDr" + TlUtils::xtos(niter));
     } else {
         //============================================================
@@ -1547,7 +1543,6 @@ void DfInitialguess::readPpq()
             TlSymmetricMatrix FGMAT;
             FGMAT.load(AlphaPpqFname);
             //TlSymmetricMatrix PpqDa = FGMAT.getValue();
-            //PpqDa.save("fl_Work/fl_Mtr_PpqDra" + TlUtils::xtos(niter));
             FGMAT.save("fl_Work/fl_Mtr_PpqDra" + TlUtils::xtos(niter));
         }
 
@@ -1559,7 +1554,6 @@ void DfInitialguess::readPpq()
             TlSymmetricMatrix FGMAT;
             FGMAT.load(BetaPpqFname);
             //TlSymmetricMatrix PpqDb = FGMAT.getValue();
-            //PpqDb.save("fl_Work/fl_Mtr_PpqDrb" + TlUtils::xtos(niter));
             FGMAT.save("fl_Work/fl_Mtr_PpqDrb" + TlUtils::xtos(niter));
         }
     }

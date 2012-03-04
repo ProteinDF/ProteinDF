@@ -722,8 +722,7 @@ void DfCalcGrid::calcXCIntegMyuEpsilon_UKS(const TlMatrix& gridMat,
 
 void DfCalcGrid::calcXCcoef_RKS(const TlVector& tmpVector, const TlVector& eTmpVector)
 {
-    TlSymmetricMatrix Sgdinv;
-    Sgdinv.load("fl_Work/fl_Mtr_Sgdinv.matrix");
+    TlSymmetricMatrix Sgdinv = DfObject::getSgdInvMatrix<TlSymmetricMatrix>();
     assert(Sgdinv.getNumOfRows() == this->numOfAuxXC_);
 
     {
@@ -743,8 +742,7 @@ void DfCalcGrid::calcXCcoef_RKS(const TlVector& tmpVector, const TlVector& eTmpV
 
 void DfCalcGrid::calcXCcoef_UKS(const TlVector& tmpVectorA, const TlVector& tmpVectorB, const TlVector& eTmpVector)
 {
-    TlSymmetricMatrix Sgdinv;
-    Sgdinv.load("fl_Work/fl_Mtr_Sgdinv.matrix");
+    TlSymmetricMatrix Sgdinv = DfObject::getSgdInvMatrix<TlSymmetricMatrix>();
     assert(Sgdinv.getNumOfRows() == this->numOfAuxXC_);
 
     {

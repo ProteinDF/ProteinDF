@@ -100,9 +100,10 @@ void DfPreScf::saveC0(const RUN_TYPE runType, const MatrixType& C0)
 template <typename MatrixType>
 void DfPreScf::buildCprime0(const RUN_TYPE runType, const MatrixType& C)
 {
-    MatrixType Xinv(this->m_nNumOfAOs, this->m_nNumOfMOs);
-    Xinv.load(this->getInvXMatrixPath());
-
+    MatrixType Xinv = DfObject::getXInvMatrix<MatrixType>();
+    assert(Xinv.getNumOfRows() == this->m_nNumOfAOs);
+    assert(Xinv.getNumOfCols() == this->m_nNumOfMOs);
+    
     //  Xinv(RSFD) = Xinv(RSFD) * guess_lcao(RSFD)
     Xinv *= C;
 

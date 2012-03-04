@@ -214,8 +214,7 @@ void DfFockMatrix::mainDIRECT_ROKS()
         }
     } else {
         // at first iteration, add one electron part to deltaH
-        SymmetricMatrixType Hpq;
-        Hpq.load("fl_Work/fl_Mtr_Hpq.matrix");
+        SymmetricMatrixType Hpq = DfObject::getHpqMatrix<SymmetricMatrixType>();
 
         if (Hpq.getNumOfRows() != this->m_nNumOfAOs || Hpq.getNumOfCols() != this->m_nNumOfAOs) {
             CnErr.abort("DfFockmatrix", "mainDirect", "", "program error");
@@ -273,8 +272,7 @@ void DfFockMatrix::mainDIRECT_ROKS()
 
     } else {
         // at first iteration, add one electron part to deltaH
-        SymmetricMatrixType Hpq;
-        Hpq.load("fl_Work/fl_Mtr_Hpq.matrix");
+        SymmetricMatrixType Hpq = DfObject::getHpqMatrix<SymmetricMatrixType>();
 
         if (Hpq.getNumOfRows() != this->m_nNumOfAOs || Hpq.getNumOfCols() != this->m_nNumOfAOs) {
             CnErr.abort("DfFockmatrix", "mainDirect", "", "program error");
@@ -294,8 +292,7 @@ void DfFockMatrix::mainDIRECT_ROKS()
     {
         // S_1, S_1^dagger と S_2, S_2^dagger を作る
         {
-            SymmetricMatrixType W;
-            W.load("fl_Work/fl_Mtr_Spq.matrix");
+            SymmetricMatrixType W = DfObject::getSpqMatrix<SymmetricMatrixType>();
 
             SymmetricMatrixType X;
             X.load("fl_Work/fl_Mtr_P1pq.matrix.roks" + TlUtils::xtos(this->m_nIteration -1));

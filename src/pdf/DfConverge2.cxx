@@ -179,16 +179,14 @@ void DfConverge2::calculate_ErrorVector(const RUN_TYPE runType, int iteration, T
         // for rks, uks-alpha or uks-beta case
 
         // read previous density matrix
-        //P.load("fl_Work/fl_Mtr_Ppq.matrix." + type + TlUtils::xtos(iteration -1));
         P.load(this->getPpqMatrixPath(runType, iteration -1));
     }
 
     // read S matrix
-    S.load("fl_Work/fl_Mtr_Spq.matrix");
+    DfObject::saveSpqMatrix(S);
 
     // "read F matrix"
-    //F.load("fl_Work/fl_Mtr_Fpq.matrix." + type + TlUtils::xtos(iteration));
-    F.load(this->getFpqMatrixPath(runType, iteration));
+    F = DfObject::getFpqMatrix<TlSymmetricMatrix>(runType, iteration);
 
     // generate FPS - SPF
     TlMatrix B(this->m_nNumOfAOs, this->m_nNumOfAOs);
@@ -219,7 +217,7 @@ void DfConverge2::calculate_ErrorVector(const RUN_TYPE runType, int iteration, T
 
     // generate error vector e_i ;  e_i = X^dagger (FPS - SPF) X
     {
-        A.load("fl_Work/fl_Mtr_X.matrix");
+        A = DfObject::getXMatrix<TlMatrix>();
 
         B *= A;
 
