@@ -221,9 +221,15 @@ DfEriX* DfXCFunctional_Parallel::getDfEriXObject()
 
 DfTwoElectronIntegral* DfXCFunctional_Parallel::getDfTwoElectronIntegral()
 {
+#ifdef USE_OLD_ERI_ENGINE
     DfTwoElectronIntegral* pDfTEI = new DfTwoElectronIntegral_Parallel(this->pPdfParam_);
-
     return pDfTEI;
+#else
+    this->log_.critical("cannot use old two-electron integral engine.");
+    this->log_.critical("please check USE_OLD_TEI_ENGINE flag.");
+    abort();
+    return NULL;
+#endif // USE_OLD_ERI_ENGINE
 }
 
 
@@ -338,12 +344,14 @@ TlDistributeSymmetricMatrix DfXCFunctional_Parallel::getFockExchange(const TlDis
         DfEriX_Parallel dfEriX(this->pPdfParam_);
         dfEriX.getK_D(P, &FxHF);
     } else {
+#ifdef USE_OLD_ERI_ENGINE
         DfTwoElectronIntegral_Parallel dfTEI(this->pPdfParam_);
         if (this->m_bUseRTmethod != true) {
             this->logger(" force into using RT-method replaced by integral-driven.\n");
         }
         this->logger(" using RT method\n");
         dfTEI.getContractKMatrixByRTmethod(P, &FxHF);
+#endif // USE_OLD_ERI_ENGINE
     }
     
     return FxHF;

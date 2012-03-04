@@ -7,6 +7,8 @@
 #include "TlFile.h"
 #include "TlTime.h"
 
+#ifdef USE_OLD_ERI_ENGINE
+
 #define MASTER_TO_SLAVE_MSG_SIZE (3)
 
 DfTwoElectronIntegral_Parallel::DfTwoElectronIntegral_Parallel(TlSerializeData* pPdfParam)
@@ -1256,3 +1258,4 @@ void DfTwoElectronIntegral_Parallel::sendDensityVector(const TlSparseVectorMatri
 }
 
 
+#endif // USE_OLD_ERI_ENGINE

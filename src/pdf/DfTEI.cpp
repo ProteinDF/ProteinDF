@@ -1,3 +1,5 @@
+#ifdef USE_OLD_TEI_ENGINE
+
 #include "DfTEI.h"
 #include "TlFmt.h"
 
@@ -6180,4 +6182,4 @@ void DfTEI::primitiveGSGS(const PrimitiveShellPair& ij,
     }
 }
 
-
+#endif // USE_OLD_TEI_ENGINE

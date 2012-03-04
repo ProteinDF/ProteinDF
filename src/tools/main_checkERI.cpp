@@ -111,6 +111,7 @@ void calc_eri_old(TlSerializeData* pPdfParam,
                   const int shellIndexR, const int shellIndexS,
                   const TlOrbitalInfo& orbitalInfo)
 {
+#ifdef USE_OLD_ERI_ENGINE
     DfTwoElectronIntegral dfTwoElectronIntegral(pPdfParam);
     DfTEI dfTEI;
 
@@ -129,6 +130,7 @@ void calc_eri_old(TlSerializeData* pPdfParam,
     output(shellTypeP, shellTypeQ,
            shellTypeR, shellTypeS,
            dfTEI.ERI);
+#endif // USE_OLD_ERI_ENGINE
 }
 
 void output(int shellTypeP, int shellTypeQ,

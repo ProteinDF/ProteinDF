@@ -1,6 +1,8 @@
 #ifndef DFTWOELECTRONINTEGRAL_PARALLEL_H
 #define DFTWOELECTRONINTEGRAL_PARALLEL_H
 
+#ifdef USE_OLD_ERI_ENGINE
+
 #include "DfTwoElectronIntegral.h"
 #include "TlDistributeSymmetricMatrix.h"
 #include "TlSparseVectorMatrix.h"
@@ -155,4 +157,5 @@ protected:
     bool isDebugOutMsg_;
 };
 
+#endif // USE_OLD_ERI_ENGINE
 #endif // DFTWOELECTRONINTEGRAL_PARALLEL_H
