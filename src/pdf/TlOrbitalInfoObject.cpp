@@ -4,6 +4,7 @@
 #include "TlOrbitalInfoObject.h"
 #include "Fl_Geometry.h"
 #include "Fl_Gto.h"
+#include "TlLogging.h"
 
 const int TlOrbitalInfoObject::MAX_SHELL_TYPE = 3;
 const double TlOrbitalInfoObject::INV_SQRT3 = 1.0 / std::sqrt(3.0);
@@ -34,6 +35,8 @@ TlOrbitalInfoObject::~TlOrbitalInfoObject()
 
 void TlOrbitalInfoObject::setCGTO(const Fl_Gto& flGto)
 {
+    TlLogging& log = TlLogging::getInstance();
+
     const int numOfCgto = flGto.getNumOfCGTOs();
     this->cgtos_.resize(numOfCgto);
 
@@ -55,7 +58,8 @@ void TlOrbitalInfoObject::setCGTO(const Fl_Gto& flGto)
             n = 0;
             break;
         default:
-            std::cerr << "### Now we support 's' to 'd'. ###" << std::endl;
+            log.critical(TlUtils::format("Now we support 's' to 'd': input %d.", shell));
+            log.critical("stop at TlOrbitalInfoObject::setCGTO().");
             exit(1);
         }
 
@@ -95,6 +99,8 @@ void TlOrbitalInfoObject::setCGTO(const Fl_Gto& flGto)
 
 void TlOrbitalInfoObject::setCGTO_coulomb(const Fl_Gto& flGto)
 {
+    TlLogging& log = TlLogging::getInstance();
+
     const int numOfCgto = flGto.getNumOfCGTOs();
     this->cgtos_.resize(numOfCgto);
 
@@ -116,7 +122,8 @@ void TlOrbitalInfoObject::setCGTO_coulomb(const Fl_Gto& flGto)
             n = 0;
             break;
         default:
-            std::cerr << "### Now we support 's' to 'd'. ###" << std::endl;
+            log.critical(TlUtils::format("Now we support 's' to 'd': input %d.", shell));
+            log.critical("stop at TlOrbitalInfoObject::setCGTO_coulomb().");
             exit(1);
         }
 

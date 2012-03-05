@@ -99,6 +99,56 @@ DfTaskCtrl::ShellArrayTable DfTaskCtrl::makeShellArrayTable(const TlOrbitalInfoO
 
 
 bool DfTaskCtrl::getQueue(const TlOrbitalInfoObject& orbitalInfo,
+                          const int maxGrainSize,
+                          std::vector<Task>* pTaskList,
+                          bool initialize)
+{
+    assert(pTaskList != NULL);
+
+    const int maxShellType = orbitalInfo.getMaxShellType();
+    static ShellArrayTable shellArrayTable;
+    static int shellTypeP = maxShellType -1;
+    static std::size_t shellArrayIndexP = 0;
+    
+    pTaskList->clear();
+    pTaskList->reserve(maxGrainSize);
+
+    if (initialize == true) {
+        this->clearCutoffStats(orbitalInfo);
+        shellArrayTable = this->makeShellArrayTable(orbitalInfo);
+        shellTypeP = maxShellType -1;
+        shellArrayIndexP = 0;
+
+        return true;
+    }
+
+    int grainSize = 0;
+    Task task;
+    for ( ; shellTypeP >= 0; ) {
+        const ShellArray& shellArrayP = shellArrayTable[shellTypeP];
+        const size_t shellArraySizeP = shellArrayP.size();
+        
+        for ( ; shellArrayIndexP < shellArraySizeP; ) {
+            const index_type shellIndexP = shellArrayP[shellArrayIndexP];
+            task.shellIndex1 = shellIndexP;
+            
+            pTaskList->push_back(task);
+            ++shellArrayIndexP;
+            ++grainSize;
+            
+            if (grainSize >= maxGrainSize) {
+                return true;
+            }
+        }
+        shellArrayIndexP = 0;
+        --shellTypeP;
+    }
+
+    return (pTaskList->empty() != true);
+}
+
+
+bool DfTaskCtrl::getQueue(const TlOrbitalInfoObject& orbitalInfo,
                           const bool isCutoffByDistibution,
                           const int maxGrainSize,
                           std::vector<Task2>* pTaskList,                          

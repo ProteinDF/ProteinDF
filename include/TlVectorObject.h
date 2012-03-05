@@ -24,6 +24,8 @@ public:
     virtual void resize(size_type nSize) =0;
 
 public:
+    virtual void add(const size_type index, const double value) =0;
+
     /// 要素を返す(読み取り専用)
     ///
     /// @param[in] index 要素番号

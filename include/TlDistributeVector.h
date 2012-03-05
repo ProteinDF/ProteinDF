@@ -34,6 +34,8 @@ public:
 
     void set(size_type index, double value);
     double get(size_type index) const;
+    virtual void add(const size_type index, const double value);
+
     double operator[](size_type index) const;
     double& operator[](size_type index);
 

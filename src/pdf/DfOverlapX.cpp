@@ -93,12 +93,24 @@ void DfOverlapX::getSab(TlSymmetricMatrix* pSab)
 }
 
 
+void DfOverlapX::getNalpha(TlVector* pNalpha)
+{
+    assert(pNalpha != NULL);
+    const index_type numOfAuxDens = this->m_nNumOfAux;
+    pNalpha->resize(numOfAuxDens);
+    
+    const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
+                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+    this->calcOverlap(orbitalInfo_Density, pNalpha);
+    this->finalize(pNalpha);
+}
+
 
 void DfOverlapX::calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
                              TlMatrixObject* pMatrix)
 {
     this->createEngines();
-    DfTaskCtrl*  pTaskCtrl = this->getDfTaskCtrlObject();
+    DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pTaskCtrl->getQueue(orbitalInfo,
@@ -111,6 +123,32 @@ void DfOverlapX::calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
         
         hasTask = pTaskCtrl->getQueue(orbitalInfo,
                                       false,
+                                      this->grainSize_, &taskList);
+    }
+
+    pTaskCtrl->cutoffReport();
+    
+    delete pTaskCtrl;
+    pTaskCtrl = NULL;
+    this->destroyEngines();
+}
+
+
+void DfOverlapX::calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
+                             TlVectorObject* pVector)
+{
+    this->createEngines();
+    DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
+
+    std::vector<DfTaskCtrl::Task> taskList;
+    bool hasTask = pTaskCtrl->getQueue(orbitalInfo,
+                                       this->grainSize_, &taskList, true);
+    while (hasTask == true) {
+        this->calcOverlap_part(orbitalInfo,
+                               taskList,
+                               pVector);
+        
+        hasTask = pTaskCtrl->getQueue(orbitalInfo,
                                       this->grainSize_, &taskList);
     }
 
@@ -174,6 +212,54 @@ void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
         }
     }
 }
+
+
+void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
+                                  const std::vector<DfTaskCtrl::Task>& taskList,
+                                  TlVectorObject* pVector)
+{
+    // 第2, 第3中心点の固定値を設定
+    static const TlPosition posQ(0.0, 0.0, 0.0);
+    static DfOverlapEngine::PGTO pgtoQ(1.0, 0.0);
+    static DfOverlapEngine::PGTOs pgtosQ(1);
+    pgtosQ[0] = pgtoQ;
+    static const TlPosition posR(0.0, 0.0, 0.0);
+    static DfOverlapEngine::PGTO pgtoR(1.0, 0.0);
+    static DfOverlapEngine::PGTOs pgtosR(1);
+    pgtosR[0] = pgtoR;
+
+    const int taskListSize = taskList.size();
+
+#pragma omp parallel
+    {
+        int threadID = 0;
+#ifdef _OPENMP
+        threadID = omp_get_thread_num();
+#endif // _OPENMP
+
+#pragma omp for schedule(runtime)
+        for (int i = 0; i < taskListSize; ++i) {
+            const index_type shellIndexP = taskList[i].shellIndex1;
+            
+            const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+            const int maxStepsP = 2 * shellTypeP + 1;
+            const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
+            const DfOverlapEngine::PGTOs pgtosP = this->getPGTOs(orbitalInfo, shellIndexP);
+            const DfOverlapEngine::Query query(0, 0, 0, shellTypeP, 0, 0);
+            
+            this->pEngines_[threadID].calc(query, posP, posQ, posR, pgtosP, pgtosQ, pgtosR);
+            
+            int index = 0;
+            for (int stepP = 0; stepP < maxStepsP; ++stepP) {
+                const index_type globalShellIndexP = shellIndexP + stepP;
+
+                pVector->add(globalShellIndexP, this->pEngines_[threadID].WORK[index]);
+                ++index;
+            }
+        }
+    }
+}
+
 
 void DfOverlapX::getForce(const TlSymmetricMatrix& W,
                           TlMatrix* pForce)

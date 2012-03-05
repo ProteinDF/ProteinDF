@@ -2,6 +2,7 @@
 #include <cassert>
 #include "PdfKeyword.h"
 #include "TlUtils.h"
+#include "TlLogging.h"
 
 PdfKeyword::PdfKeyword()
 {
@@ -855,7 +856,8 @@ void PdfKeyword::setupAliasList()
 void PdfKeyword::convertAlias(TlSerializeData* pData)
 {
     assert(pData != NULL);
-
+    TlLogging& log = TlLogging::getInstance();
+    
     TlSerializeData::MapIterator p = pData->beginMap();
     TlSerializeData::MapIterator pEnd = pData->endMap();
     while (p != pEnd) {
@@ -869,12 +871,12 @@ void PdfKeyword::convertAlias(TlSerializeData* pData)
             if (pData->hasKey(newKeyword) != true) {
                 (*pData)[newKeyword] = value;
                 pData->erase(keyword);
+                p = pData->beginMap();
             } else {
-                std::cerr << TlUtils::format("[WARN] alias keyword \"%s\" could not overwrite to \"%s\".",
-                                             keyword.c_str(), newKeyword.c_str())
-                          << std::endl;
+                log.warn(TlUtils::format(" alias keyword \"%s\" could not overwrite to \"%s\".",
+                                         keyword.c_str(), newKeyword.c_str()));
+                ++p;
             }
-            p = pData->beginMap();
         } else {
             ++p;
         }

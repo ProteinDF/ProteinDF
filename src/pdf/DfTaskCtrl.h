@@ -10,6 +10,11 @@
 
 class DfTaskCtrl : public DfObject {
 public:
+    struct Task {
+    public:
+        index_type shellIndex1;
+    };
+
     struct Task2 {
     public:
         index_type shellIndex1;
@@ -52,6 +57,12 @@ public:
     double getCutoffThreshold() const;
     
     virtual void cutoffReport();
+
+    virtual bool getQueue(const TlOrbitalInfoObject& orbitalInfo,
+                          const int maxGrainSize,
+                          std::vector<Task>* pTask,
+                          bool initialize = false);
+
     virtual bool getQueue(const TlOrbitalInfoObject& orbitalInfo,
                           const bool isCutoffByDistibution,
                           const int maxGrainSize,
