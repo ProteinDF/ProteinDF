@@ -846,10 +846,6 @@ void DfEriEngine::compD(const DfEriEngine::Query& qAB,
 void DfEriEngine::calc(const DfEriEngine::Query& qAB,
                        const DfEriEngine::Query& qCD)
 {
-    // const int a_bar = qAB.a_bar;
-    // const int b_bar = qAB.b_bar;
-    // const int a = qAB.a;
-    // const int b = qAB.b;
     this->log_.debug(TlUtils::format("DfEriEngine::calc(): a~=%d, b~=%d, a=%d, b=%d,",
                                      qAB.a_bar, qAB.b_bar, qAB.a, qAB.b));
     this->log_.debug(TlUtils::format("                     c~=%d, d~=%d, c=%d, d=%d,",
@@ -860,17 +856,9 @@ void DfEriEngine::calc(const DfEriEngine::Query& qAB,
     this->calcR0();
 
     // choice
-    //this->bra_contractScales_.clear();
-    //this->ket_contractScales_.clear();
-    ContractScalesSet bra_contractScales;
-    ContractScalesSet ket_contractScales;
-    this->choice(qAB.a_bar, qAB.b_bar,
-                 qAB.a, qAB.b,
-                 0, 0, 0, 0, &bra_contractScales);
-    this->choice(qCD.a_bar, qCD.b_bar,
-                 qCD.a, qCD.b,
-                 0, 0, 0, 0, &ket_contractScales);
-
+    const ContractScalesVector bra_contractScales_vtr = this->choice(qAB);
+    const ContractScalesVector ket_contractScales_vtr = this->choice(qCD);
+    
 #ifdef DEBUG_CHOICE
     // for debug
     {
@@ -892,12 +880,6 @@ void DfEriEngine::calc(const DfEriEngine::Query& qAB,
         }
     }
 #endif // CHOICE
-    
-    // "set -> vector" transform
-    const ContractScalesVector bra_contractScales_vtr =
-        this->transContractScales_SetToVector(bra_contractScales);
-    const ContractScalesVector ket_contractScales_vtr =
-        this->transContractScales_SetToVector(ket_contractScales);
     
     // contract
     this->contract(qAB, qCD,
@@ -992,28 +974,28 @@ void DfEriEngine::calcGrad(const DfEriEngine::Query& qAB,
 
 
     // AB
-    //this->bra_contractScales_.clear();
-    //this->ket_contractScales_.clear();
-    ContractScalesSet bra_contractScales;
-    ContractScalesSet ket_contractScales;
+    // ContractScalesSet bra_contractScales;
+    // ContractScalesSet ket_contractScales;
     
     // choice
-    this->choice(1, 0,
-                 qAB.a, qAB.b, 0,
-                 0, 0, 0, &bra_contractScales);
-    this->choice(0, 1,
-                 qAB.a, qAB.b, 0,
-                 0, 0, 0, &bra_contractScales);
-    
-    this->choice(0, 0,
-                 qCD.a, qCD.b, 0,
-                 0, 0, 0, &ket_contractScales);
+    // this->choice(1, 0,
+    //              qAB.a, qAB.b, 0,
+    //              0, 0, 0, &bra_contractScales);
+    // this->choice(0, 1,
+    //              qAB.a, qAB.b, 0,
+    //              0, 0, 0, &bra_contractScales);
+    // this->choice(0, 0,
+    //              qCD.a, qCD.b, 0,
+    //              0, 0, 0, &ket_contractScales);
     
     // "set -> vector" transform
-    const ContractScalesVector bra_contractScales_vtr =
-        this->transContractScales_SetToVector(bra_contractScales);
-    const ContractScalesVector ket_contractScales_vtr =
-        this->transContractScales_SetToVector(ket_contractScales);
+    // const ContractScalesVector bra_contractScales_vtr =
+    //     this->transContractScales_SetToVector(bra_contractScales);
+    // const ContractScalesVector ket_contractScales_vtr =
+    //     this->transContractScales_SetToVector(ket_contractScales);
+
+    const ContractScalesVector bra_contractScales_vtr = this->choice(qAB10, qAB01);
+    const ContractScalesVector ket_contractScales_vtr = this->choice(qCD00);
     
     // contract
     this->contract(qAB10, qCD00,
@@ -1084,22 +1066,23 @@ void DfEriEngine::calcGrad_sub(const DfEriEngine::Query& qAB,
                                const DfEriEngine::Query& qCD)
 {
     // choice
-    //this->bra_contractScales_.clear();
-    //this->ket_contractScales_.clear();
-    ContractScalesSet bra_contractScales;
-    ContractScalesSet ket_contractScales;
-    this->choice(qAB.a_bar, qAB.b_bar,
-                 qAB.a, qAB.b,
-                 0, 0, 0, 0, &bra_contractScales);
-    this->choice(qCD.a_bar, qCD.b_bar,
-                 qCD.a, qCD.b,
-                 0, 0, 0, 0, &ket_contractScales);
+    // ContractScalesSet bra_contractScales;
+    // ContractScalesSet ket_contractScales;
+    // this->choice(qAB.a_bar, qAB.b_bar,
+    //              qAB.a, qAB.b,
+    //              0, 0, 0, 0, &bra_contractScales);
+    // this->choice(qCD.a_bar, qCD.b_bar,
+    //              qCD.a, qCD.b,
+    //              0, 0, 0, 0, &ket_contractScales);
     
     // "set -> vector" transform
-    const ContractScalesVector bra_contractScales_vtr =
-        this->transContractScales_SetToVector(bra_contractScales);
-    const ContractScalesVector ket_contractScales_vtr =
-        this->transContractScales_SetToVector(ket_contractScales);
+    // const ContractScalesVector bra_contractScales_vtr =
+    //     this->transContractScales_SetToVector(bra_contractScales);
+    // const ContractScalesVector ket_contractScales_vtr =
+    //     this->transContractScales_SetToVector(ket_contractScales);
+
+    const ContractScalesVector bra_contractScales_vtr = this->choice(qAB);
+    const ContractScalesVector ket_contractScales_vtr = this->choice(qCD);
     
     // contract
     this->contract(qAB, qCD,
@@ -1334,6 +1317,40 @@ int DfEriEngine::initiativeRM(const TlAngularMomentumVector& amv) const {
     } else {
         return 0;
     }
+}
+
+DfEriEngine::ContractScalesVector
+DfEriEngine::choice(const DfEriEngine::Query& qAB)
+{
+    static std::map<int, ContractScalesVector> choice_tbl;
+
+    const int index = qAB.index();
+    if (choice_tbl.find(index) == choice_tbl.end()) {
+        ContractScalesSet contractList;
+        this->choice(qAB.a_bar, qAB.b_bar,
+                     qAB.a, qAB.b, 0,
+                     0, 0, 0,
+                     &contractList);
+        choice_tbl[index] = this->transContractScales_SetToVector(contractList);
+    }
+    return choice_tbl[index];
+}
+
+
+DfEriEngine::ContractScalesVector
+DfEriEngine::choice(const DfEriEngine::Query& qAB1,
+                    const DfEriEngine::Query& qAB2)
+{
+    ContractScalesSet contractList;
+    this->choice(qAB1.a_bar, qAB1.b_bar,
+                 qAB1.a, qAB1.b, 0,
+                 0, 0, 0,
+                 &contractList);
+    this->choice(qAB2.a_bar, qAB2.b_bar,
+                 qAB2.a, qAB2.b, 0,
+                 0, 0, 0,
+                 &contractList);
+    return this->transContractScales_SetToVector(contractList);
 }
 
 

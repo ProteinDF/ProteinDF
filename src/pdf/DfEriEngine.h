@@ -95,6 +95,10 @@ public:
         int sum() const {
             return a_bar + b_bar + a + b;
         };
+
+        int index() const {
+            return ((a_bar*ERI_B_BAR_MAX + b_bar)*ERI_A_MAX + a)*ERI_B_MAX + b;
+        }
         
     public:
         // int a_bar : 8; // grad i
@@ -435,6 +439,9 @@ private:
     int initiativeRM(const TlAngularMomentumVector& amv) const;
 
     // contract ================================================================
+    ContractScalesVector choice(const Query& AB);
+    ContractScalesVector choice(const Query& AB1, const Query& AB2);
+    
     void choice(const int a_bar, const int b_bar,
                 const int a, const int b, const int p,
                 const int a_prime, const int b_prime, const int p_prime,
@@ -442,7 +449,7 @@ private:
     unsigned int index_contract(const int a_prime, const int b_prime, const int p_prime) const;
 
     ContractScalesVector transContractScales_SetToVector(const ContractScalesSet& contractScales);
-    
+
     void contract(const DfEriEngine::Query& qAB,
                   const DfEriEngine::Query& qCD,
                   const ContractScalesVector& bra_contractScales,
