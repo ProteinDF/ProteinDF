@@ -48,6 +48,7 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
         this->nrgrid =  64;
         this->nOgrid = 302;
     } else if (TlUtils::toUpper(sGridType) == "SG-1") {
+        this->log_.info("grid type = SG-1");
         this->m_gridType = SG_1;
         this->nrgrid =  50;
         this->nOgrid = 196;   // 適当
@@ -811,6 +812,7 @@ void DfGenerateGrid::generateGrid_SG1(const int iAtom,
 
     // Loop for the grid number of radial vector
     const int radvec_max = this->nrgrid;
+#pragma omp parallel for schedule(runtime)
     for (int radvec = 0; radvec < radvec_max; ++radvec) {
         const double r0 = rM * TlMath::pow(radvec + 1.0, 2) * TlMath::pow(radvec_max - radvec, -2);
         const double weight = 2.0 * rM * rM * rM * (radvec_max + 1.0)
@@ -862,7 +864,7 @@ void DfGenerateGrid::generateGrid_SG1(const int iAtom,
             }
 
             // Loop for the m-center
-#pragma omp parallel for
+//#pragma omp parallel for schedule(runtime)
             for (int mc = 0; mc < numOfAtoms; ++mc) {
                 double Psuij = 1.0;
                 for (int n = 0; n < numOfAtoms; ++n) {
@@ -897,14 +899,14 @@ void DfGenerateGrid::generateGrid_SG1(const int iAtom,
 
             // Normalization
             double Pstotal = 0.0;
-#pragma omp parallel for reduction(+:Pstotal)
+//#pragma omp parallel for reduction(+:Pstotal)
             for (int mc = 0; mc < numOfAtoms; ++mc) {
                 Pstotal += Ps[mc];
             }
             weight_omega *= (Ps[iAtom] / Pstotal);
 
             // weight cutoff
-            //#pragma omp critical (generateGrid_SG1)
+#pragma omp critical (generateGrid_SG1)
             {
                 if (std::fabs(weight_omega) > this->weightCutoff_) {
                     weightvec[GPthrnum] = weight_omega;
