@@ -206,7 +206,8 @@ private:
         }
     };
     
-    typedef std::set<ContractScale, ContractScale_cmp> ContractScalesType;
+    typedef std::set<ContractScale, ContractScale_cmp> ContractScalesSet;
+    typedef std::vector<ContractScale> ContractScalesVector;    
 
     
     struct ContractState {
@@ -437,11 +438,15 @@ private:
     void choice(const int a_bar, const int b_bar,
                 const int a, const int b, const int p,
                 const int a_prime, const int b_prime, const int p_prime,
-                ContractScalesType* pContractList);
+                ContractScalesSet* pContractList);
     unsigned int index_contract(const int a_prime, const int b_prime, const int p_prime) const;
 
+    ContractScalesVector transContractScales_SetToVector(const ContractScalesSet& contractScales);
+    
     void contract(const DfEriEngine::Query& qAB,
-                  const DfEriEngine::Query& qCD);
+                  const DfEriEngine::Query& qCD,
+                  const ContractScalesVector& bra_contractScales,
+                  const ContractScalesVector& ket_contractScales);
     void contract_bra(const DfEriEngine::Query& qAB,
                       const TlAngularMomentumVector& r,
                       const int a_prime, const int b_prime, const int p_prime,
@@ -451,9 +456,12 @@ private:
     
     // calc PQ
     void calcPQ(const DfEriEngine::Query& qAB,
-                const DfEriEngine::Query& qCD);
+                const DfEriEngine::Query& qCD,
+                const ContractScalesVector& bra_contractScales,
+                const ContractScalesVector& ket_contractScales);
     void transpose(const DfEriEngine::Query& qAB,
-                   const DfEriEngine::Query& qCD);
+                   const DfEriEngine::Query& qCD,
+                   const ContractScalesVector& ket_contractScales);
     
     // ERI
     void calcERI(const int a_bar, const int b_bar,
@@ -536,8 +544,8 @@ private:
     std::bitset<ERI_NUM_OF_RM_KINDS> calcdRM_;
 
     // for contract ------------------------------------------------------------
-    ContractScalesType bra_contractScales_;
-    ContractScalesType ket_contractScales_;
+    // ContractScalesSet bra_contractScales_;
+    // ContractScalesSet ket_contractScales_;
 
     double* pContractBraCoef_;
     
