@@ -846,10 +846,6 @@ void DfEriEngine::compD(const DfEriEngine::Query& qAB,
 void DfEriEngine::calc(const DfEriEngine::Query& qAB,
                        const DfEriEngine::Query& qCD)
 {
-    // const int a_bar = qAB.a_bar;
-    // const int b_bar = qAB.b_bar;
-    // const int a = qAB.a;
-    // const int b = qAB.b;
     this->log_.debug(TlUtils::format("DfEriEngine::calc(): a~=%d, b~=%d, a=%d, b=%d,",
                                      qAB.a_bar, qAB.b_bar, qAB.a, qAB.b));
     this->log_.debug(TlUtils::format("                     c~=%d, d~=%d, c=%d, d=%d,",
@@ -860,29 +856,23 @@ void DfEriEngine::calc(const DfEriEngine::Query& qAB,
     this->calcR0();
 
     // choice
-    this->bra_contractScales_.clear();
-    this->choice(qAB.a_bar, qAB.b_bar,
-                 qAB.a, qAB.b,
-                 0, 0, 0, 0, &(this->bra_contractScales_));
-    this->ket_contractScales_.clear();
-    this->choice(qCD.a_bar, qCD.b_bar,
-                 qCD.a, qCD.b,
-                 0, 0, 0, 0, &(this->ket_contractScales_));
-
+    const ContractScalesVector bra_contractScales_vtr = this->choice(qAB);
+    const ContractScalesVector ket_contractScales_vtr = this->choice(qCD);
+    
 #ifdef DEBUG_CHOICE
     // for debug
     {
         int count = 0;
-        for (ContractScalesType::const_iterator p = this->bra_contractScales_.begin();
-             p != this->bra_contractScales_.end(); ++p) {
+        for (ContractScalesType::const_iterator p = bra_contractScales_.begin();
+             p != bra_contractScales_.end(); ++p) {
             std::cerr << TlUtils::format("choice[%d]: (a', b', p')=(%d, %d, %d)",
                                          count, p->a_prime, p->b_prime, p->p_prime)
                       << std::endl;
             ++count;
         }
         count = 0;
-        for (ContractScalesType::const_iterator p = this->ket_contractScales_.begin();
-             p != this->ket_contractScales_.end(); ++p) {
+        for (ContractScalesType::const_iterator p = ket_contractScales_.begin();
+             p != ket_contractScales_.end(); ++p) {
             std::cerr << TlUtils::format("choice[%d]: (c', d', q')=(%d, %d, %d)",
                                          count, p->a_prime, p->b_prime, p->p_prime)
                       << std::endl;
@@ -892,10 +882,14 @@ void DfEriEngine::calc(const DfEriEngine::Query& qAB,
 #endif // CHOICE
     
     // contract
-    this->contract(qAB, qCD);
+    this->contract(qAB, qCD,
+                   bra_contractScales_vtr,
+                   ket_contractScales_vtr);
 
     // calc PQ
-    this->calcPQ(qAB, qCD);
+    this->calcPQ(qAB, qCD,
+                 bra_contractScales_vtr,
+                 ket_contractScales_vtr);
 
     // calc ERI for bra-
     this->calcERI(qAB.a_bar, qAB.b_bar,
@@ -953,7 +947,7 @@ void DfEriEngine::calc(const DfEriEngine::Query& qAB,
 #endif // DEBUG_BRA_ERI
     
     // swap
-    this->transpose(qAB, qCD);
+    this->transpose(qAB, qCD, ket_contractScales_vtr);
     std::swap(this->AB_, this->CD_); 
 
     // calc ERI for ket-
@@ -978,30 +972,42 @@ void DfEriEngine::calcGrad(const DfEriEngine::Query& qAB,
     this->calc0m();
     this->calcR0();
 
-    // AB
-    {
-        // choice
-        this->bra_contractScales_.clear();
-        this->choice(1, 0,
-                     qAB.a, qAB.b, 0,
-                     0, 0, 0, &(this->bra_contractScales_));
-        this->choice(0, 1,
-                     qAB.a, qAB.b, 0,
-                     0, 0, 0, &(this->bra_contractScales_));
 
-        this->ket_contractScales_.clear();
-        this->choice(0, 0,
-                     qCD.a, qCD.b, 0,
-                     0, 0, 0, &(this->ket_contractScales_));
-        
-        // contract
-        this->contract(qAB10, qCD00);
-    }
+    // AB
+    // ContractScalesSet bra_contractScales;
+    // ContractScalesSet ket_contractScales;
+    
+    // choice
+    // this->choice(1, 0,
+    //              qAB.a, qAB.b, 0,
+    //              0, 0, 0, &bra_contractScales);
+    // this->choice(0, 1,
+    //              qAB.a, qAB.b, 0,
+    //              0, 0, 0, &bra_contractScales);
+    // this->choice(0, 0,
+    //              qCD.a, qCD.b, 0,
+    //              0, 0, 0, &ket_contractScales);
+    
+    // "set -> vector" transform
+    // const ContractScalesVector bra_contractScales_vtr =
+    //     this->transContractScales_SetToVector(bra_contractScales);
+    // const ContractScalesVector ket_contractScales_vtr =
+    //     this->transContractScales_SetToVector(ket_contractScales);
+
+    const ContractScalesVector bra_contractScales_vtr = this->choice(qAB10, qAB01);
+    const ContractScalesVector ket_contractScales_vtr = this->choice(qCD00);
+    
+    // contract
+    this->contract(qAB10, qCD00,
+                   bra_contractScales_vtr,
+                   ket_contractScales_vtr);
     
     // A ----------------------------------------------------
     {
         // calc PQ
-        this->calcPQ(qAB10, qCD00);
+        this->calcPQ(qAB10, qCD00,
+                     bra_contractScales_vtr,
+                     ket_contractScales_vtr);
         
         // calc ERI for bra-
         this->calcERI(1, 0,
@@ -1010,7 +1016,8 @@ void DfEriEngine::calcGrad(const DfEriEngine::Query& qAB,
                       &(this->ERI_bra_));
         
         // swap
-        this->transpose(qAB10, qCD00);
+        this->transpose(qAB10, qCD00,
+                        ket_contractScales_vtr);
         std::swap(this->AB_, this->CD_); 
         
         // calc ERI for ket-
@@ -1025,7 +1032,9 @@ void DfEriEngine::calcGrad(const DfEriEngine::Query& qAB,
     // B ----------------------------------------------------
     {
         // // calc PQ
-        this->calcPQ(qAB01, qCD00);
+        this->calcPQ(qAB01, qCD00,
+                     bra_contractScales_vtr,
+                     ket_contractScales_vtr);
         
         // calc ERI for bra-
         this->calcERI(0, 1,
@@ -1034,7 +1043,8 @@ void DfEriEngine::calcGrad(const DfEriEngine::Query& qAB,
                       &(this->ERI_bra_));
         
         // swap
-        this->transpose(qAB01, qCD00);
+        this->transpose(qAB01, qCD00,
+                        ket_contractScales_vtr);
         std::swap(this->AB_, this->CD_); 
         
         // calc ERI for ket-
@@ -1056,20 +1066,33 @@ void DfEriEngine::calcGrad_sub(const DfEriEngine::Query& qAB,
                                const DfEriEngine::Query& qCD)
 {
     // choice
-    this->bra_contractScales_.clear();
-    this->choice(qAB.a_bar, qAB.b_bar,
-                 qAB.a, qAB.b,
-                 0, 0, 0, 0, &(this->bra_contractScales_));
-    this->ket_contractScales_.clear();
-    this->choice(qCD.a_bar, qCD.b_bar,
-                 qCD.a, qCD.b,
-                 0, 0, 0, 0, &(this->ket_contractScales_));
+    // ContractScalesSet bra_contractScales;
+    // ContractScalesSet ket_contractScales;
+    // this->choice(qAB.a_bar, qAB.b_bar,
+    //              qAB.a, qAB.b,
+    //              0, 0, 0, 0, &bra_contractScales);
+    // this->choice(qCD.a_bar, qCD.b_bar,
+    //              qCD.a, qCD.b,
+    //              0, 0, 0, 0, &ket_contractScales);
+    
+    // "set -> vector" transform
+    // const ContractScalesVector bra_contractScales_vtr =
+    //     this->transContractScales_SetToVector(bra_contractScales);
+    // const ContractScalesVector ket_contractScales_vtr =
+    //     this->transContractScales_SetToVector(ket_contractScales);
+
+    const ContractScalesVector bra_contractScales_vtr = this->choice(qAB);
+    const ContractScalesVector ket_contractScales_vtr = this->choice(qCD);
     
     // contract
-    this->contract(qAB, qCD);
+    this->contract(qAB, qCD,
+                   bra_contractScales_vtr,
+                   ket_contractScales_vtr);
 
     // calc PQ
-    this->calcPQ(qAB, qCD);
+    this->calcPQ(qAB, qCD,
+                 bra_contractScales_vtr,
+                 ket_contractScales_vtr);
 
     // calc ERI for bra-
     this->calcERI(qAB.a_bar, qAB.b_bar,
@@ -1078,7 +1101,8 @@ void DfEriEngine::calcGrad_sub(const DfEriEngine::Query& qAB,
                   &(this->ERI_bra_));
 
     // swap
-    this->transpose(qAB, qCD);
+    this->transpose(qAB, qCD,
+                    ket_contractScales_vtr);
     std::swap(this->AB_, this->CD_); 
 
     // calc ERI for ket-
@@ -1295,12 +1319,46 @@ int DfEriEngine::initiativeRM(const TlAngularMomentumVector& amv) const {
     }
 }
 
+DfEriEngine::ContractScalesVector
+DfEriEngine::choice(const DfEriEngine::Query& qAB)
+{
+    static std::map<int, ContractScalesVector> choice_tbl;
+
+    const int index = qAB.index();
+    if (choice_tbl.find(index) == choice_tbl.end()) {
+        ContractScalesSet contractList;
+        this->choice(qAB.a_bar, qAB.b_bar,
+                     qAB.a, qAB.b, 0,
+                     0, 0, 0,
+                     &contractList);
+        choice_tbl[index] = this->transContractScales_SetToVector(contractList);
+    }
+    return choice_tbl[index];
+}
+
+
+DfEriEngine::ContractScalesVector
+DfEriEngine::choice(const DfEriEngine::Query& qAB1,
+                    const DfEriEngine::Query& qAB2)
+{
+    ContractScalesSet contractList;
+    this->choice(qAB1.a_bar, qAB1.b_bar,
+                 qAB1.a, qAB1.b, 0,
+                 0, 0, 0,
+                 &contractList);
+    this->choice(qAB2.a_bar, qAB2.b_bar,
+                 qAB2.a, qAB2.b, 0,
+                 0, 0, 0,
+                 &contractList);
+    return this->transContractScales_SetToVector(contractList);
+}
+
 
 // pContractList に計算に必要な状態が登録される
 void DfEriEngine::choice(const int a_bar, const int b_bar,
                          const int a, const int b, const int p,
                          const int a_prime, const int b_prime, const int p_prime,
-                         ContractScalesType* pContractList)
+                         ContractScalesSet* pContractList)
 {
     assert(pContractList != NULL);
 
@@ -1362,8 +1420,27 @@ void DfEriEngine::choice(const int a_bar, const int b_bar,
 }
 
 
+DfEriEngine::ContractScalesVector
+DfEriEngine::transContractScales_SetToVector(const ContractScalesSet& contractScales)
+{
+    const std::size_t size = contractScales.size();
+    ContractScalesVector answer(size);
+
+    std::size_t index = 0;
+    ContractScalesSet::const_iterator pEnd = contractScales.end();
+    for (ContractScalesSet::const_iterator p = contractScales.begin();  p != pEnd; ++p) {
+        answer[index] = *p;
+        ++index;
+    }
+
+    return answer;
+}
+
+
 void DfEriEngine::contract(const DfEriEngine::Query& qAB,
-                           const DfEriEngine::Query& qCD)
+                           const DfEriEngine::Query& qCD,
+                           const ContractScalesVector& bra_contractScales,
+                           const ContractScalesVector& ket_contractScales)
 {
     const int R = this->sumOfAngularMomentums_;
     //this->nR_dash_.clear();
@@ -1371,11 +1448,13 @@ void DfEriEngine::contract(const DfEriEngine::Query& qAB,
     // contract bra-
     std::size_t nR_dash_index = 0;
     {
-        ContractScalesType::const_iterator pEnd = this->bra_contractScales_.end();
-        for (ContractScalesType::const_iterator p = this->bra_contractScales_.begin(); p != pEnd; ++p) {
-            const int a_prime = p->a_prime;
-            const int b_prime = p->b_prime;
-            const int p_prime = p->p_prime;
+        // ContractScalesVector::const_iterator pEnd = bra_contractScales.end();
+        // for (ContractScalesVector::const_iterator p = bra_contractScales.begin(); p != pEnd; ++p) {
+        const int max_bra_cs_index = bra_contractScales.size();
+        for (int bra_cs_index = 0; bra_cs_index < max_bra_cs_index; ++bra_cs_index) {
+            const int a_prime = bra_contractScales[bra_cs_index].a_prime;
+            const int b_prime = bra_contractScales[bra_cs_index].b_prime;
+            const int p_prime = bra_contractScales[bra_cs_index].p_prime;
             
             for (int r = 0; r <= R; ++r) {
 //             std::cerr << TlUtils::format("contract() for bra- a'=%d b'=%d p'=%d r=%d",
@@ -1418,11 +1497,13 @@ void DfEriEngine::contract(const DfEriEngine::Query& qAB,
 
     // contract ket-
     {
-        ContractScalesType::const_iterator pEnd = this->ket_contractScales_.end();
-        for (ContractScalesType::const_iterator p = this->ket_contractScales_.begin(); p != pEnd; ++p) {
-            const int c_prime = p->a_prime;
-            const int d_prime = p->b_prime;
-            const int q_prime = p->p_prime;
+        // ContractScalesVector::const_iterator pEnd = ket_contractScales.end();
+        // for (ContractScalesVector::const_iterator p = ket_contractScales.begin(); p != pEnd; ++p) {
+        const int max_ket_cs_index = ket_contractScales.size();
+        for (int ket_cs_index = 0; ket_cs_index < max_ket_cs_index; ++ket_cs_index) {
+            const int c_prime = ket_contractScales[ket_cs_index].a_prime;
+            const int d_prime = ket_contractScales[ket_cs_index].b_prime;
+            const int q_prime = ket_contractScales[ket_cs_index].p_prime;
             
             for (std::size_t i = 0; i < nR_dash_index; ++i) {
                 ContractState cs = this->nR_dash_[i].cs;
@@ -1556,7 +1637,9 @@ void DfEriEngine::contract_ket(const DfEriEngine::Query& qCD,
 
 
 void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
-                         const DfEriEngine::Query& qCD)
+                         const DfEriEngine::Query& qCD,
+                         const ContractScalesVector& bra_contractScales,
+                         const ContractScalesVector& ket_contractScales)
 {
     this->isCalcdERI_.clear();
     
@@ -1577,7 +1660,7 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
     const TlAngularMomentumVector amv_a(0, 0, 0);
     const TlAngularMomentumVector amv_b(0, 0, 0);
     
-    const int max_ket_index = this->ket_contractScales_.size()
+    const int max_ket_index = ket_contractScales.size()
         * ((angularMomentumQ +1) * (angularMomentumQ +2) * (angularMomentumQ +3) / 6);
     this->ERI_batch_ = max_ket_index;
 
@@ -1593,12 +1676,14 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
     ContractState cs;
     
     // bra ---------------------------------------------------------------------
-    ContractScalesType::const_iterator it_bra_end = this->bra_contractScales_.end();
-    for (ContractScalesType::const_iterator it_bra = this->bra_contractScales_.begin();
-         it_bra != it_bra_end; ++it_bra) {
-        const int a_prime = it_bra->a_prime;
-        const int b_prime = it_bra->b_prime;
-        const int p_prime = it_bra->p_prime;
+    // ContractScalesVector::const_iterator it_bra_end = bra_contractScales.end();
+    // for (ContractScalesVector::const_iterator it_bra = bra_contractScales.begin();
+         // it_bra != it_bra_end; ++it_bra) {
+    const int max_bra_cs_index = bra_contractScales.size();
+    for (int bra_cs_index = 0; bra_cs_index < max_bra_cs_index; ++bra_cs_index) {
+        const int a_prime = bra_contractScales[bra_cs_index].a_prime;
+        const int b_prime = bra_contractScales[bra_cs_index].b_prime;
+        const int p_prime = bra_contractScales[bra_cs_index].p_prime;
         // cs.a_prime = a_prime;
         // cs.b_prime = b_prime;
         // cs.p_prime = p_prime;
@@ -1638,12 +1723,14 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
                 std::vector<double>& ket = this->ERI_bra_[braStateIndex][bra_index];
                 ket.resize(ERI_MAX_BATCH);
                 int ket_index = 0;
-                ContractScalesType::const_iterator it_ket_end = this->ket_contractScales_.end();
-                for (ContractScalesType::const_iterator it_ket = this->ket_contractScales_.begin();
-                     it_ket != it_ket_end; ++it_ket) {
-                    const int c_prime = it_ket->a_prime;
-                    const int d_prime = it_ket->b_prime;
-                    const int q_prime = it_ket->p_prime;
+                // ContractScalesVector::const_iterator it_ket_end = ket_contractScales.end();
+                // for (ContractScalesVector::const_iterator it_ket = ket_contractScales.begin();
+                    // it_ket != it_ket_end; ++it_ket) {
+                const int max_ket_cs_index = ket_contractScales.size();
+                for (int ket_cs_index = 0; ket_cs_index < max_ket_cs_index; ++ket_cs_index) {
+                    const int c_prime = ket_contractScales[ket_cs_index].a_prime;
+                    const int d_prime = ket_contractScales[ket_cs_index].b_prime;
+                    const int q_prime = ket_contractScales[ket_cs_index].p_prime;
                     // cs.c_prime = c_prime;
                     // cs.d_prime = d_prime;
                     // cs.q_prime = q_prime;
@@ -1698,7 +1785,8 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
 
 
 void DfEriEngine::transpose(const DfEriEngine::Query& qAB,
-                            const DfEriEngine::Query& qCD)
+                            const DfEriEngine::Query& qCD,
+                            const ContractScalesVector& ket_contractScales)
 {
     this->isCalcdERI_.clear();
     
@@ -1746,12 +1834,14 @@ void DfEriEngine::transpose(const DfEriEngine::Query& qAB,
     
     // ket ---------------------------------------------------------------------
     int ket_index = 0;
-    ContractScalesType::const_iterator it_ket_end = this->ket_contractScales_.end();
-    for (ContractScalesType::const_iterator it_ket = this->ket_contractScales_.begin();
-         it_ket != it_ket_end; ++it_ket) {
-        const int c_prime = it_ket->a_prime;
-        const int d_prime = it_ket->b_prime;
-        const int q_prime = it_ket->p_prime;
+    // ContractScalesVector::const_iterator it_ket_end = ket_contractScales.end();
+    // for (ContractScalesVector::const_iterator it_ket = ket_contractScales.begin();
+         // it_ket != it_ket_end; ++it_ket) {
+    const int max_ket_cs_index = ket_contractScales.size();
+    for (int ket_cs_index = 0; ket_cs_index < max_ket_cs_index; ++ket_cs_index) {
+        const int c_prime = ket_contractScales[ket_cs_index].a_prime;
+        const int d_prime = ket_contractScales[ket_cs_index].b_prime;
+        const int q_prime = ket_contractScales[ket_cs_index].p_prime;
 
         for (int q = 0; q <= angularMomentumQ; ++q) {
             const ERI_State ket_state(c_bar, d_bar, c, d, q, c_prime, d_prime, q_prime);
@@ -1815,7 +1905,7 @@ void DfEriEngine::transpose(const DfEriEngine::Query& qAB,
         }
     }
 
-    const int max_ket_index = this->ket_contractScales_.size()
+    const int max_ket_index = ket_contractScales.size()
         * ((angularMomentumQ +1) * (angularMomentumQ +2) * (angularMomentumQ +3) / 6);
     assert(ket_index == max_ket_index);
 
