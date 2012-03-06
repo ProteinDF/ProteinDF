@@ -212,6 +212,16 @@ double TlDistributeVector::get(const size_type index) const
     return dAnswer;
 }
 
+
+void TlDistributeVector::add(const size_type index, const double value)
+{
+    const int localIndex = this->getIndex(index, 0);
+    if (localIndex != -1) {
+        this->data_[localIndex] = value;
+    }
+}
+
+
 double TlDistributeVector::operator[](const size_type index) const
 {
     return this->get(index);

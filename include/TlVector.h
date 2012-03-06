@@ -127,7 +127,7 @@ public:
 
     void set(size_type index, double value);
 
-    void add(size_type index, double value);
+    virtual void add(const size_type index, const double value);
 
     /// 要素を返す(読み取り専用)
     ///

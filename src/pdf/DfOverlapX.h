@@ -23,6 +23,7 @@ public:
 public:
     void getSpq(TlSymmetricMatrix* pSpq);
     void getSab(TlSymmetricMatrix* pSab);
+    void getNalpha(TlVector* pNalpha);
     void getForce(const TlSymmetricMatrix& W, TlMatrix* pForce);
 
 protected:
@@ -54,9 +55,14 @@ protected:
 protected:
     void calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
                      TlMatrixObject* pMatrix);
+    void calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
+                     TlVectorObject* pVector);
     void calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
                           const std::vector<DfTaskCtrl::Task2>& taskList,
                           TlMatrixObject* pMatrix);
+    void calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
+                          const std::vector<DfTaskCtrl::Task>& taskList,
+                          TlVectorObject* pVector);
     
     ShellArrayTable makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo);
     DfOverlapEngine::PGTOs getPGTOs(const TlOrbitalInfoObject& orbitalInfo,

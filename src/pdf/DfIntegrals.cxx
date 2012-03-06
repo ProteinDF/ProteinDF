@@ -202,7 +202,12 @@ void DfIntegrals::createOverlapMatrix()
         this->outputStartTitle("N_alpha");
 
         TlVector Na(this->m_nNumOfAux);
-        dfOverlap.getNa(&Na);
+        if (this->isUseNewEngine_ == true) {
+            this->logger(" use new engine.\n");
+            dfOverlapX.getNalpha(&Na);
+        } else {
+            dfOverlap.getNa(&Na);
+        }
         this->saveNalpha(Na);
         
         this->outputEndTitle();
