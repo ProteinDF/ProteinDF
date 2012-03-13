@@ -17,8 +17,8 @@
 #include "TlSparseSymmetricMatrix.h"
 #include "TlFileMatrix.h"
 
+//#define USE_FILE_MATRIX
 #define JOB_PROTOCOL_SIZE (4)
-
 
 DfCalcGridX_Parallel::DfCalcGridX_Parallel(TlSerializeData* pPdfParam)
     : DfCalcGridX(pPdfParam)
@@ -2758,7 +2758,12 @@ TlMatrix DfCalcGridX_Parallel::distributeGridMatrix(const int iteration)
     const int tag = TAG_CALC_GRID_DISTRIBUTE;
     TlMatrix gridMat;
     if (rComm.isMaster() == true) {
+#ifdef USE_FILE_MATRIX
         TlFileMatrix globalGridMat(DfObject::getGridMatrixPath(iteration));
+#else
+        TlMatrix globalGridMat;
+        globalGridMat.load(DfObject::getGridMatrixPath(iteration));
+#endif // USE_FILE_MATRIX
         this->numOfRows_gridMatrix_ = globalGridMat.getNumOfRows();
         this->numOfCols_gridMatrix_ = globalGridMat.getNumOfCols();
         
@@ -2803,13 +2808,18 @@ void DfCalcGridX_Parallel::gatherGridMatrix(const TlMatrix& gridMat)
     const int tag = TAG_CALCGRID_GATHER;
 
     if (rComm.isMaster() == true) {
+#ifdef USE_FILE_MATRIX
         TlFileMatrix globalGridMat(DfObject::getGridMatrixPath(this->m_nIteration),
                                    this->numOfRows_gridMatrix_,
                                    this->numOfCols_gridMatrix_);
+#else
+        TlMatrix globalGridMat(this->numOfRows_gridMatrix_,
+                               this->numOfCols_gridMatrix_);
+#endif // USE_FILE_MATRIX
         globalGridMat.setBlockMatrix(0, 0,
                                      gridMat);
         index_type currentGridIndex = gridMat.getNumOfRows();
-	std::vector<bool> recvCheck(numOfProcs, false);
+        std::vector<bool> recvCheck(numOfProcs, false);
         for (int i = 1; i < numOfProcs; ++i) {
 	    int proc = 0;
             TlMatrix tmpMat;
@@ -2826,6 +2836,10 @@ void DfCalcGridX_Parallel::gatherGridMatrix(const TlMatrix& gridMat)
                                          tmpMat);
             currentGridIndex += gridMat.getNumOfRows();
         }
+
+#ifndef USE_FILE_MATRIX
+        globalGridMat.save(DfObject::getGridMatrixPath(this->m_nIteration));
+#endif // USE_FILE_MATRIX
     } else {
       rComm.sendData(gridMat, 0, tag);
     }
