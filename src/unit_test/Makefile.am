@@ -18,8 +18,7 @@ PDF_OBJS = \
 	DfFunctional_VWN3.o	\
 	DfFunctional_Becke88_ExceptLDA.o \
 	DfFunctional_B3LYP.o	\
-	DfFunctional_PW91X.o	\
-	GridDataManager.o
+	DfFunctional_PW91X.o
 
 PdfTests_SOURCES = \
 	digit.cpp							\
@@ -45,8 +44,7 @@ PdfTests_SOURCES = \
 	DfFunctional_VWNTest.h		DfFunctional_VWNTest.cpp	\
 	DfFunctional_LYPTest.h		DfFunctional_LYPTest.cpp	\
 	DfFunctional_B3LYPTest.h	DfFunctional_B3LYPTest.cpp	\
-	DfFunctional_PW91XTest.h	DfFunctional_PW91XTest.cpp	\
-	GridDataManagerTest.h		GridDataManagerTest.cpp
+	DfFunctional_PW91XTest.h	DfFunctional_PW91XTest.cpp
 
 PdfTests_LDFLAGS = -L$(libdir)
 PdfTests_LDADD   = ../pdf/libpdf.la ../pdflib/libpdftl.la -lcppunit -ldl @LAPACK_LIBS@ @BLAS_LIBS@ 

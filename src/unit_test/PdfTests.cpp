@@ -26,8 +26,6 @@
 #include "DfFunctional_B3LYPTest.h"
 #include "DfFunctional_PW91XTest.h"
 
-#include "GridDataManagerTest.h"
-
 int main(int argc, char* argv[]){
     // TestRunnerを生成してrun()を実行する
     CppUnit::TextUi::TestRunner runner;
@@ -61,9 +59,6 @@ int main(int argc, char* argv[]){
     runner.addTest(DfFunctional_LYPTest::suite());
     runner.addTest(DfFunctional_B3LYPTest::suite());
     runner.addTest(DfFunctional_PW91XTest::suite());
-    
-    //
-//     runner.addTest(GridDataManagerTest::suite());
     
     CppUnit::Outputter* outputter = new CppUnit::TextOutputter(&runner.result(), std::cout);
     runner.setOutputter(outputter);
