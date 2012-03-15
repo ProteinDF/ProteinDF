@@ -38,7 +38,6 @@
 #include "DfQclo.h"
 #include "DfCqclomatrix.h"
 
-#include "DfTwoElectronIntegral.h"
 #include "DfPreScf.h"
 
 #include "TlFile.h"

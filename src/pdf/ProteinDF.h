@@ -37,7 +37,7 @@ protected:
 protected:
     virtual void startlogo();
     void startlogo(const std::string& version,
-                   const std::string& info);
+                   const std::string& info = "");
 
     virtual void inputData();
     void stepCreate();

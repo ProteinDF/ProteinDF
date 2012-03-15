@@ -13,6 +13,8 @@
 #include "DfTEI.h"
 #include "DfEriEngine.h"
 
+#ifdef USE_OLD_TEI_ENGINE
+
 ////////////////////////////////////////////////////////////////////////
 // static member variables
 //
@@ -1045,3 +1047,4 @@ void DfTwoElectronIntegral::getShellList_density()
 }
 
 
+#endif // USE_OLD_TEI_ENGINE

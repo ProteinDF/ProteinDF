@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"    // this file created by autotools
+#endif // HAVE_CONFIG_H
+
 #include <cmath>
 #include <iostream>
 #include <algorithm>
@@ -75,31 +79,6 @@ void DfCalcGridX::defineCutOffValues(const TlSymmetricMatrix& PA,
     this->logger(TlUtils::format(" density cutoff value(beta ) = %e\n",
                                  this->m_densityCutOffValueB));
 }
-
-
-// void DfCalcGridX::backupGridData()
-// {
-//     const std::string prevGridDataFilePath = TlUtils::format("%s.itr%d", this->getGridDataFilePath().c_str(), this->m_nIteration -1);
-//     TlFile::copy(this->getGridDataFilePath(), prevGridDataFilePath);
-// }
-
-
-// void DfCalcGridX::flushGridData()
-// {
-//     typedef std::map<GridDataManager::ChunkType, std::map<int, std::vector<double> > > physicalValuesType;
-//     GridDataManager gdm(this->getGridDataFilePath());
-
-//     physicalValuesType::const_iterator pEnd = this->physicalValues_.end();
-//     for (physicalValuesType::const_iterator p = this->physicalValues_.begin(); p != pEnd; ++p) {
-//         const GridDataManager::ChunkType chunkType = p->first;
-//         std::map<int, std::vector<double> >::const_iterator qEnd = p->second.end();
-//         for (std::map<int, std::vector<double> >::const_iterator q = p->second.begin(); q != qEnd; ++q) {
-//             gdm.setData(q->first, chunkType, q->second);
-//         }
-//     }
-
-//     this->physicalValues_.clear();
-// }
 
 
 double DfCalcGridX::getPrefactor(const int nType, const TlPosition& pos)
@@ -518,7 +497,7 @@ void DfCalcGridX::getRhoAtGridPoint(const TlMatrixObject& P,
     for (std::size_t p = 0; p < max_p; ++p) {
         const std::size_t nOrb_p = aPhi[p].index;
         const double phi_p = aPhi[p].value;
-        const double cutValue = std::fabs(densityCutOffValue / phi_p);
+        //const double cutValue = std::fabs(densityCutOffValue / phi_p);
 
         // 高速化
         const TlVector P_row = P.getRowVector(nOrb_p);
@@ -1036,7 +1015,6 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
     assert(pGY != NULL);
     assert(pGZ != NULL);
 
-    //const GridDataManager gdm(this->getGridDataFilePath());
     TlMatrix gridMat = this->getGridMatrix<TlMatrix>(this->m_nIteration);
 
     const int numOfAtoms = this->numOfRealAtoms_;
@@ -1048,15 +1026,6 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
 
     for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
         // get grid information
-        // std::vector<GridDataManager::GridInfo> grids;
-        // {
-        //     const std::vector<double> coordX = gdm.getData(atomIndex, GridDataManager::COORD_X);
-        //     const std::vector<double> coordY = gdm.getData(atomIndex, GridDataManager::COORD_Y);
-        //     const std::vector<double> coordZ = gdm.getData(atomIndex, GridDataManager::COORD_Z);
-        //     const std::vector<double> weight = gdm.getData(atomIndex, GridDataManager::GRID_WEIGHT);
-        //     grids = GridDataManager::composeGridInfo(coordX, coordY, coordZ, weight);
-        // }
-        // const int numOfGrids = grids.size();
         TlMatrix atomGridMat = this->selectGridMatrixByAtom(gridMat, atomIndex);
         const index_type numOfGrids = atomGridMat.getNumOfRows();
         std::vector<double> rhoA(numOfGrids, 0.0);
@@ -1178,7 +1147,6 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
     assert(pGZ != NULL);
 
     const double densityCutOffValue = this->m_densityCutOffValueA;
-    //const GridDataManager gdm(this->getGridDataFilePath());
     TlMatrix gridMat = this->getGridMatrix<TlMatrix>(this->m_nIteration);
 
     const int numOfAtoms = this->numOfRealAtoms_;
@@ -1190,14 +1158,6 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
 
     for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
         // get grid information
-        // std::vector<GridDataManager::GridInfo> grids;
-        // {
-        //     const std::vector<double> coordX = gdm.getData(atomIndex, GridDataManager::COORD_X);
-        //     const std::vector<double> coordY = gdm.getData(atomIndex, GridDataManager::COORD_Y);
-        //     const std::vector<double> coordZ = gdm.getData(atomIndex, GridDataManager::COORD_Z);
-        //     const std::vector<double> weight = gdm.getData(atomIndex, GridDataManager::GRID_WEIGHT);
-        //     grids = GridDataManager::composeGridInfo(coordX, coordY, coordZ, weight);
-        // }
         TlMatrix atomGridMat = this->selectGridMatrixByAtom(gridMat, atomIndex);
         const int numOfGrids = atomGridMat.getNumOfRows();
         std::vector<double> rhoA(numOfGrids, 0.0);
@@ -1206,10 +1166,6 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
         std::vector<double> gradRhoAZ(numOfGrids, 0.0);
         if (this->m_bIsUpdateXC == true) {
             // すでにSCF計算中に電子密度を計算済み
-            // rhoA = gdm.getData(atomIndex, GridDataManager::DENSITY);
-            // gradRhoAX = gdm.getData(atomIndex, GridDataManager::GRAD_DENSITY_X);
-            // gradRhoAY = gdm.getData(atomIndex, GridDataManager::GRAD_DENSITY_Y);
-            // gradRhoAZ = gdm.getData(atomIndex, GridDataManager::GRAD_DENSITY_Z);
             for (index_type i = 0; i < numOfGrids; ++i) {
                 rhoA[i] = atomGridMat.get(i, GM_GGA_RHO_ALPHA);
                 gradRhoAX[i] = atomGridMat.get(i, GM_GGA_GRAD_RHO_X_ALPHA);
@@ -1369,11 +1325,11 @@ void DfCalcGridX::calcRhoVals_LDA(const std::vector<index_type>& P_rowIndexes,
 {
     assert(pGridMatrix != NULL);
     
-    const std::size_t numOfRows = P.getNumOfRows();
-    const std::size_t numOfCols = P.getNumOfCols();
+    // const std::size_t numOfRows = P.getNumOfRows();
+    // const std::size_t numOfCols = P.getNumOfCols();
     assert(P_rowIndexes.size() == numOfRows);
     assert(P_colIndexes.size() == numOfCols);
-    const int calcMode = pGridMatrix->getNumOfCols();
+    // const int calcMode = pGridMatrix->getNumOfCols();
     
     const std::size_t numOfGrids = pGridMatrix->getNumOfRows();
 #pragma omp parallel for schedule(runtime)
@@ -1406,11 +1362,11 @@ void DfCalcGridX::calcRhoVals_GGA(const std::vector<index_type>& P_rowIndexes,
 {
     assert(pGridMatrix != NULL);
     
-    const std::size_t numOfRows = P.getNumOfRows();
-    const std::size_t numOfCols = P.getNumOfCols();
+    // const std::size_t numOfRows = P.getNumOfRows();
+    // const std::size_t numOfCols = P.getNumOfCols();
     assert(P_rowIndexes.size() == numOfRows);
     assert(P_colIndexes.size() == numOfCols);
-    const int calcMode = pGridMatrix->getNumOfCols();
+    // const int calcMode = pGridMatrix->getNumOfCols();
     
     const std::size_t numOfGrids = pGridMatrix->getNumOfRows();
 #pragma omp parallel for schedule(runtime)

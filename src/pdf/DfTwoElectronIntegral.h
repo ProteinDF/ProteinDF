@@ -9,6 +9,9 @@
 #include <omp.h>
 #endif // _OPENMP
 
+#ifdef USE_OLD_TEI_ENGINE
+
+
 #include <cmath>
 #include <vector>
 #include <list>
@@ -398,6 +401,6 @@ void DfTwoElectronIntegral::storeKmatrixByRTmethod(const int ishell, const int i
     }
 }
 
-
+#endif // USE_OLD_TEI_ENGINE
 #endif // DFTWOELECTRONINTEGRAL_H
 

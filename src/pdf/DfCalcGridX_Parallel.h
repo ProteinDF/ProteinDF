@@ -4,7 +4,6 @@
 #include <set>
 #include <cassert>
 #include "DfCalcGridX.h"
-#include "GridDataManager.h"
 #include "TlCommunicate.h"
 #include "TlDistributeSymmetricMatrix.h"
 #include "TlPartialSymmetricMatrix.h"

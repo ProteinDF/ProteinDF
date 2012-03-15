@@ -4,7 +4,6 @@
 #include "DfEri.h"
 #include "DfOverlap.h"
 #include "DfEri2.h"
-#include "DfTwoElectronIntegral.h"
 #include "DfXCFunctional.h"
 
 #include "Fl_Geometry.h"

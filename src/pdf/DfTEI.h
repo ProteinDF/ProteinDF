@@ -1,6 +1,8 @@
 #ifndef DFTEI_H
 #define DFTEI_H
 
+#ifdef USE_OLD_TEI_ENGINE
+
 #include <vector>
 #include <string>
 #include <iostream>
@@ -417,5 +419,7 @@ private:
     double pGSFS[ 2][150]; // 15*10
     double pGSGS[ 1][225]; // 15*15
 };
+
+#endif // USE_OLD_TEI_ENGINE
 
 #endif // DFTEI_H

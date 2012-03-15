@@ -239,32 +239,32 @@ void DfObject::setParam(const TlSerializeData& data)
     }
 
     if (paramFileBaseName["Ppq_matrix"].getStr().empty() == true) {
-        paramFileBaseName["Ppq_matrix"] = "Ppq%s.mat";
+        paramFileBaseName["Ppq_matrix"] = "Ppq.%s.mat";
     }
-    paramFileBaseName["P1pq_matrix"]    = "P1pq%s.mat";
-    paramFileBaseName["P2pq_matrix"]    = "P2pq%s.mat";
-    paramFileBaseName["HFx_matrix"]     = "HFx%s.mat";
-    paramFileBaseName["Fpq_matrix"]     = "Fpq%s.mat";
-    paramFileBaseName["Fprime_matrix"]  = "Fprime%s.mat";
-    paramFileBaseName["Fxc_matrix"]     = "Fxc%s.mat";
-    paramFileBaseName["FxcPure_matrix"] = "FxcPure%s.mat";
-    paramFileBaseName["J_matrix"]       = "J%s.mat";
-    paramFileBaseName["C_matrix"]       = "C%s.mat";
-    paramFileBaseName["Cprime_matrix"]  = "Cprime%s.mat";
+    paramFileBaseName["P1pq_matrix"]    = "P1pq.%s.mat";
+    paramFileBaseName["P2pq_matrix"]    = "P2pq.%s.mat";
+    paramFileBaseName["HFx_matrix"]     = "HFx.%s.mat";
+    paramFileBaseName["Fpq_matrix"]     = "Fpq.%s.mat";
+    paramFileBaseName["Fprime_matrix"]  = "Fprime.%s.mat";
+    paramFileBaseName["Fxc_matrix"]     = "Fxc.%s.mat";
+    paramFileBaseName["FxcPure_matrix"] = "FxcPure.%s.mat";
+    paramFileBaseName["J_matrix"]       = "J.%s.mat";
+    paramFileBaseName["C_matrix"]       = "C.%s.mat";
+    paramFileBaseName["Cprime_matrix"]  = "Cprime.%s.mat";
     paramFileBaseName["grid_matrix"]    = "grid.mat";
     paramFileBaseName["Talpha.vtr"]     = "Talpha.vtr";
 
     if (paramFileBaseName["rho_vector"].getStr().empty() == true) {
-        paramFileBaseName["rho_vector"] = "rho%s.vtr";
+        paramFileBaseName["rho_vector"] = "rho.%s.vtr";
     }
     if (paramFileBaseName["myu_vector"].getStr().empty() == true) {
-        paramFileBaseName["myu_vector"] = "myu%s.vtr";
+        paramFileBaseName["myu_vector"] = "myu.%s.vtr";
     }
     if (paramFileBaseName["nyu_vector"].getStr().empty() == true) {
-        paramFileBaseName["nyu_vector"] = "nyu%s.vtr";
+        paramFileBaseName["nyu_vector"] = "nyu.%s.vtr";
     }
     if (paramFileBaseName["eigenvalues"].getStr().empty() == true) {
-        paramFileBaseName["eigenvalues"] = "eigenvalues%s.vtr";
+        paramFileBaseName["eigenvalues"] = "eigenvalues.%s.vtr";
     }
 }
 
