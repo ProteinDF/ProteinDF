@@ -492,13 +492,13 @@ private:
                       const std::size_t nR_dash_index);
     // void contract_ket(const DfEriEngine::Query& qCD,
     //                   const ContractState& cs, const std::vector<double>& KQ_values);
-    std::vector<double>
-    get_contract_ket_coef_numerators(const int c_prime,
-                                     const int d_prime,
-                                     const int zeta_exp);
-    void contract_ket(const ContractState& cs,
-                      const std::vector<double>& coef_numerators,
-                      const std::vector<double>& KQ_values);
+    void get_contract_ket_coef_numerators(const int c_prime,
+                                          const int d_prime,
+                                          const int zeta_exp,
+                                          std::vector<double>* pCoefNumerators);
+    // void contract_ket(const ContractState& cs,
+    //                   const std::vector<double>& coef_numerators,
+    //                   const std::vector<double>& KQ_values);
     
     // calc PQ
     void calcPQ(const DfEriEngine::Query& qAB,
