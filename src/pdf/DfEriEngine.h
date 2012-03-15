@@ -116,35 +116,72 @@ public:
     public:
         // default constructer for container template
         PGTO_Pair()
-            : alpha(0.0), beta(0.0), sigma_P(0.0), P(0.0, 0.0, 0.0), U_P(0.0) {
+            : alpha_(0.0), beta_(0.0), alpha2_(0.0), beta2_(0.0), zeta2_(0.0),
+              sigma_P_(0.0), P_(0.0, 0.0, 0.0), U_P_(0.0) {
         };
 
         PGTO_Pair(const int a, const double coefA, const double expA,
                   const int b, const double coefB, const double expB,
                   const TlPosition& A,
                   const TlPosition& B)
-            : alpha(expA), beta(expB) {
+            : alpha_(expA), beta_(expB), alpha2_(2.0 * expA), beta2_(2.0 * expB) {
             const static double U_COEF = std::sqrt(8.0 * M_PI * M_PI * M_PI);
-            //const double ab = expA + expB;
-            this->sigma_P = 1.0 / (2.0 * (this->alpha + this->beta));
-            this->P = (this->alpha * A + this->beta * B) * 2.0 * this->sigma_P;
-            this->U_P = U_COEF * std::pow(this->sigma_P, (a + b + 1.5))
-                * coefA * coefB * std::exp(-2.0 * this->alpha * this->beta * this->sigma_P * A.squareDistanceFrom(B));
+            this->zeta2_ = this->alpha2_ + this->beta2_;
+            this->sigma_P_ = 1.0 / (2.0 * (this->alpha_ + this->beta_));
+            this->P_ = (this->alpha_ * A + this->beta_ * B) * 2.0 * this->sigma_P_;
+            this->U_P_ = U_COEF * std::pow(this->sigma_P_, (a + b + 1.5))
+                * coefA * coefB * std::exp(-2.0 * this->alpha_ * this->beta_ * this->sigma_P_ * A.squareDistanceFrom(B));
         }
 
     public:
-        double alpha;
-        double beta;
-        double sigma_P; // eq.(20)
-        TlPosition P;   // eq.(21)
-        double U_P;     // eq.(22)
+        double alpha() const {
+            return this->alpha_;
+        }
+
+        double beta() const {
+            return this->beta_;
+        }
+
+        double alpha2() const {
+            return this->alpha2_;
+        }
+
+        double beta2() const {
+            return this->beta2_;
+        }
+        
+        double zeta2() const {
+            return this->zeta2_;
+        }
+
+        double sigma_P() const {
+            return this->sigma_P_;
+        }
+
+        TlPosition P() const {
+            return this->P_;
+        }
+
+        double U_P() const {
+            return this->U_P_;
+        }
+            
+    private:
+        double alpha_;
+        double beta_;
+        double alpha2_; // = alpha * 2
+        double beta2_;  // = beta * 2
+        double zeta2_; // = alpha *2 + beta *2
+        double sigma_P_; // eq.(20)
+        TlPosition P_;   // eq.(21)
+        double U_P_;     // eq.(22)
     };
     typedef std::vector<PGTO_Pair> PGTO_Pairs;
 
     // PGTO_Pairsを比較するためのfunctor
     struct PGTO_sort_functor_cmp {
         bool operator()(const PGTO_Pair& a, const PGTO_Pair& b) const {
-            return (std::fabs(a.U_P) > std::fabs(b.U_P));
+            return (std::fabs(a.U_P()) > std::fabs(b.U_P()));
         }
     };
 
