@@ -1472,24 +1472,21 @@ void DfEriEngine::contract(const DfEriEngine::Query& qAB,
 #endif //DEBUG_R_DASH
 
     // contract ket-
+    const int cd = qCD.a + qCD.b;
     const int max_ket_cs_index = ket_contractScales.size();
     for (int ket_cs_index = 0; ket_cs_index < max_ket_cs_index; ++ket_cs_index) {
         const int c_prime = ket_contractScales[ket_cs_index].a_prime;
         const int d_prime = ket_contractScales[ket_cs_index].b_prime;
         const int q_prime = ket_contractScales[ket_cs_index].p_prime;
 
-        const std::vector<double> coef_numerators = 
-            this->get_contract_ket_coef_numerators(c_prime, d_prime);
-        
+        const int zeta_exp = q_prime - cd;
+        std::vector<double> coef_numerators = 
+            this->get_contract_ket_coef_numerators(c_prime, d_prime, zeta_exp);
+
         for (std::size_t i = 0; i < nR_dash_index; ++i) {
             ContractState cs = this->nR_dash_[i].cs;
-            // cs.c_prime = c_prime;
-            // cs.d_prime = d_prime;
-            // cs.q_prime = q_prime;
             cs.setCDQ(c_prime, d_prime, q_prime);
-            //this->contract_ket(qCD, cs, this->nR_dash_[i].values);
-            this->contract_ket(qCD.a, qCD.b,
-                               cs,
+            this->contract_ket(cs,
                                coef_numerators,
                                this->nR_dash_[i].values);
         }
@@ -1580,37 +1577,33 @@ void DfEriEngine::contract_bra(const DfEriEngine::Query& qAB,
 // eq.36
 std::vector<double>
 DfEriEngine::get_contract_ket_coef_numerators(const int c_prime,
-                                              const int d_prime)
+                                              const int d_prime,
+                                              const int zeta_exp)
 {
     const int KQ = this->ket_.size();
     std::vector<double> answer(KQ);
     for (int KQ_index = 0; KQ_index < KQ; ++KQ_index) {
         const double alpha2 = this->ket_[KQ_index].alpha2();
         const double beta2 = this->ket_[KQ_index].beta2();
+        const double zeta2 = this->ket_[KQ_index].zeta2();
         const double _2a = TlMath::pow(alpha2, c_prime);
         const double _2b = TlMath::pow(beta2,  d_prime);
-        answer[KQ_index] = _2a * _2b;
+        const double _2z = TlMath::pow(zeta2,  zeta_exp);
+        answer[KQ_index] = _2a * _2b / _2z;
     }
     
     return answer;
 }
 
-void DfEriEngine::contract_ket(const int c, const int d,
-                               const ContractState& cs,
+void DfEriEngine::contract_ket(const ContractState& cs,
                                const std::vector<double>& coef_numerators,
                                const std::vector<double>& KQ_values)
 {
-    const int q_prime = cs.getQprime();
-    const int zeta_exp = q_prime - c - d;
-    
     double value = 0.0;
     const int KQ = this->ket_.size();
     assert(KQ == (int)KQ_values.size());
     for (int KQ_index = 0; KQ_index < KQ; ++KQ_index) {
-        const double zeta2 = this->ket_[KQ_index].zeta2();
-        const double _2z = TlMath::pow(zeta2,  zeta_exp);
-        const double coef = coef_numerators[KQ_index] / _2z;
-        value += coef * KQ_values[KQ_index];
+        value += coef_numerators[KQ_index] * KQ_values[KQ_index];
     }
 
     const std::size_t cs_index = cs.index();

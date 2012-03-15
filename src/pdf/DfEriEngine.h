@@ -494,9 +494,9 @@ private:
     //                   const ContractState& cs, const std::vector<double>& KQ_values);
     std::vector<double>
     get_contract_ket_coef_numerators(const int c_prime,
-                                     const int d_prime);
-    void contract_ket(const int c, const int d,
-                      const ContractState& cs,
+                                     const int d_prime,
+                                     const int zeta_exp);
+    void contract_ket(const ContractState& cs,
                       const std::vector<double>& coef_numerators,
                       const std::vector<double>& KQ_values);
     
