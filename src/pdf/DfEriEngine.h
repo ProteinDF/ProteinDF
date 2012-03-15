@@ -199,9 +199,12 @@ private:
         }
 
     public:
-        int a_prime : 6; // -31 ~ +32 まで OK
-        int b_prime : 6;
-        int p_prime : 6;
+        // int a_prime : 6; // -31 ~ +32 まで OK
+        // int b_prime : 6;
+        // int p_prime : 6;
+        int a_prime;
+        int b_prime;
+        int p_prime;
     };
 
     struct ContractScale_cmp {
@@ -551,9 +554,8 @@ private:
     std::bitset<ERI_NUM_OF_RM_KINDS> calcdRM_;
 
     // for contract ------------------------------------------------------------
-    // ContractScalesSet bra_contractScales_;
-    // ContractScalesSet ket_contractScales_;
-
+    std::map<int, ContractScalesVector> choice_tbl;
+    
     double* pContractBraCoef_;
     
     //n_R_dash_Type n_R_dash_;
@@ -575,7 +577,7 @@ private:
 
     //
     TlLogging& log_;
-    
+
 #ifdef CHECK_MAX_COUNT
     int maxSizeOf_sumOfAngularMomentums_;
     int max_a_bar_;

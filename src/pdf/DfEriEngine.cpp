@@ -22,6 +22,8 @@
 // #define DEBUG_OUTPUT
 // #define DEBUG_TRANSFORM_6D_TO_5D
 
+#define USE_CACHED_ROUTE // choice()をキャッシングする
+
 /// 結果出力用のサイズ
 /// d軌道の6Dから5Dへの変換領域にも利用するため、
 /// d軌道のサイズを6Dベースとして確保している。
@@ -258,6 +260,10 @@ DfEriEngine::CGTO_Pair DfEriEngine::getCGTO_pair(const TlOrbitalInfoObject& orbI
 void DfEriEngine::calc(const Query& qAB, const Query& qCD,
                        const CGTO_Pair& IJ, const CGTO_Pair& KL)
 {
+    assert((0 <= qAB.a_bar) && (qAB.a_bar < ERI_A_BAR_MAX));
+    assert((0 <= qAB.b_bar) && (qAB.b_bar < ERI_B_BAR_MAX));
+    assert((0 <= qAB.a) && (qAB.a < ERI_A_MAX));
+    assert((0 <= qAB.b) && (qAB.b < ERI_B_MAX));
     // initialize
     this->sumOfAngularMomentums_ = qAB.sum() + qCD.sum();
 #ifdef CHECK_MAX_COUNT
@@ -974,26 +980,6 @@ void DfEriEngine::calcGrad(const DfEriEngine::Query& qAB,
 
 
     // AB
-    // ContractScalesSet bra_contractScales;
-    // ContractScalesSet ket_contractScales;
-    
-    // choice
-    // this->choice(1, 0,
-    //              qAB.a, qAB.b, 0,
-    //              0, 0, 0, &bra_contractScales);
-    // this->choice(0, 1,
-    //              qAB.a, qAB.b, 0,
-    //              0, 0, 0, &bra_contractScales);
-    // this->choice(0, 0,
-    //              qCD.a, qCD.b, 0,
-    //              0, 0, 0, &ket_contractScales);
-    
-    // "set -> vector" transform
-    // const ContractScalesVector bra_contractScales_vtr =
-    //     this->transContractScales_SetToVector(bra_contractScales);
-    // const ContractScalesVector ket_contractScales_vtr =
-    //     this->transContractScales_SetToVector(ket_contractScales);
-
     const ContractScalesVector bra_contractScales_vtr = this->choice(qAB10, qAB01);
     const ContractScalesVector ket_contractScales_vtr = this->choice(qCD00);
     
@@ -1066,21 +1052,6 @@ void DfEriEngine::calcGrad_sub(const DfEriEngine::Query& qAB,
                                const DfEriEngine::Query& qCD)
 {
     // choice
-    // ContractScalesSet bra_contractScales;
-    // ContractScalesSet ket_contractScales;
-    // this->choice(qAB.a_bar, qAB.b_bar,
-    //              qAB.a, qAB.b,
-    //              0, 0, 0, 0, &bra_contractScales);
-    // this->choice(qCD.a_bar, qCD.b_bar,
-    //              qCD.a, qCD.b,
-    //              0, 0, 0, 0, &ket_contractScales);
-    
-    // "set -> vector" transform
-    // const ContractScalesVector bra_contractScales_vtr =
-    //     this->transContractScales_SetToVector(bra_contractScales);
-    // const ContractScalesVector ket_contractScales_vtr =
-    //     this->transContractScales_SetToVector(ket_contractScales);
-
     const ContractScalesVector bra_contractScales_vtr = this->choice(qAB);
     const ContractScalesVector ket_contractScales_vtr = this->choice(qCD);
     
@@ -1322,8 +1293,7 @@ int DfEriEngine::initiativeRM(const TlAngularMomentumVector& amv) const {
 DfEriEngine::ContractScalesVector
 DfEriEngine::choice(const DfEriEngine::Query& qAB)
 {
-    static std::map<int, ContractScalesVector> choice_tbl;
-
+#ifdef USE_CACHED_ROUTE
     const int index = qAB.index();
     if (choice_tbl.find(index) == choice_tbl.end()) {
         ContractScalesSet contractList;
@@ -1331,9 +1301,19 @@ DfEriEngine::choice(const DfEriEngine::Query& qAB)
                      qAB.a, qAB.b, 0,
                      0, 0, 0,
                      &contractList);
-        choice_tbl[index] = this->transContractScales_SetToVector(contractList);
+        this->choice_tbl[index] = this->transContractScales_SetToVector(contractList);
     }
-    return choice_tbl[index];
+    return this->choice_tbl[index];
+#else
+    {
+        ContractScalesSet contractList;
+        this->choice(qAB.a_bar, qAB.b_bar,
+                     qAB.a, qAB.b, 0,
+                     0, 0, 0,
+                     &contractList);
+        return this->transContractScales_SetToVector(contractList);
+    }
+#endif // USE_CACHED_ROUTE
 }
 
 
