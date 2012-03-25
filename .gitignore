@@ -1,4 +1,16 @@
+Makefile.in
+Makefile
+
+configure
+config.guess
+config.status
+config.h.in
+
+autom4te.cache
+m4
+
 *~
+#*
 *.o
 *.lo
 *.la
@@ -6,4 +18,9 @@
 *.pyc
 *.exe
 *.log
+
+config.h
+pdflib-int.h
+src/*/.deps
+src/*/.libs
 
