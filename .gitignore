@@ -4,10 +4,17 @@ Makefile
 configure
 config.guess
 config.status
+config.sub
 config.h.in
 
 autom4te.cache
+aclocal.m4
 m4
+
+depcomp
+missing
+ltmain.sh
+install-sh
 
 *~
 #*
