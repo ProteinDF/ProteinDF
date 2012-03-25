@@ -1474,7 +1474,7 @@ void DfEriEngine::contract(const DfEriEngine::Query& qAB,
     // contract ket-
     const int cd = qCD.a + qCD.b;
     const int KQ = this->ket_.size();
-    assert(KQ == (int)KQ_values.size());
+    //assert(KQ == (int)KQ_values.size());
     std::vector<double> coef_numerators(KQ);
     const int max_ket_cs_index = ket_contractScales.size();
     for (int ket_cs_index = 0; ket_cs_index < max_ket_cs_index; ++ket_cs_index) {
@@ -2002,8 +2002,8 @@ int DfEriEngine::index(const TlAngularMomentumVector& a_bar, const TlAngularMome
 
     const int index = ((((a_bar.index()) * b_bars +b_bar.index()) * as +a.index()) * bs +b.index()) * ps +p.index();
 
-    assert(cs_index < (ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_P_PRIME_MAX *
-                       ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_NUM_OF_R_KINDS));
+    // assert(cs_index < (ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_P_PRIME_MAX *
+    //                    ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_NUM_OF_R_KINDS));
     return index;
 }
 
