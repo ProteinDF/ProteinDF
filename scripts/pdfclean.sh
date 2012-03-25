@@ -24,12 +24,16 @@ if [ x${1} = xall ]; then
 fi
 
 # cleanup directories
+XARGS_NO_RUN_IF_EMPTY=''
+if [ `uname` == Linux ]; then
+    XARGS_NO_RUN_IF_EMPTY='--no-run-if-empty'
+fi
 for DIR in ${PDF_WORK_DIRS}; do
     if [ -d ${DIR} ]; then
 	if [ x${KEEP_INTEGRALS} = xtrue ]; then
-	    find ${DIR} -regex ".*[0-9]+" -and -type f -print0 | xargs -0 --no-run-if-empty ${RM}
+	    find ${DIR} -regex ".*[0-9]+" -and -type f -print0 | xargs -0 ${XARGS_NO_RUN_IF_EMPTY} ${RM}
 	else
-	    find ${DIR} -maxdepth 1 -name "*" -and -type f -print0 | xargs -0 --no-run-if-empty ${RM}
+	    find ${DIR} -maxdepth 1 -name "*" -and -type f -print0 | xargs -0 ${XARGS_NO_RUN_IF_EMPTY} ${RM}
 	fi
     fi
 done
