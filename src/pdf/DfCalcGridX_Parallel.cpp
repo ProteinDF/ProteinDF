@@ -410,8 +410,8 @@ void DfCalcGridX_Parallel::allReduceGridMatrix(const TlMatrix& gridMat)
         TlFileMatrix globalGridMat(DfObject::getGridMatrixPath(this->m_nIteration),
                                    gridMat.getNumOfRows(),
                                    gridMat.getNumOfCols());
-        assert(globalGridMat.getNumOfRows() == numOfAllGrids);
-        assert(globalGridMat.getNumOfCols() == numOfCols);
+        assert(globalGridMat.getNumOfRows() == gridMat.getNumOfRows());
+        assert(globalGridMat.getNumOfCols() == gridMat.getNumOfCols());
         
         const TlMatrix crdMat = gridMat.getBlockMatrix(0, 0,
                                                        gridMat.getNumOfRows(),

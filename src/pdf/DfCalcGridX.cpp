@@ -1327,8 +1327,8 @@ void DfCalcGridX::calcRhoVals_LDA(const std::vector<index_type>& P_rowIndexes,
     
     // const std::size_t numOfRows = P.getNumOfRows();
     // const std::size_t numOfCols = P.getNumOfCols();
-    assert(P_rowIndexes.size() == numOfRows);
-    assert(P_colIndexes.size() == numOfCols);
+    assert(P_rowIndexes.size() == P.getNumOfRows());
+    assert(P_colIndexes.size() == P.getNumOfCols());
     // const int calcMode = pGridMatrix->getNumOfCols();
     
     const std::size_t numOfGrids = pGridMatrix->getNumOfRows();
@@ -1346,8 +1346,8 @@ void DfCalcGridX::calcRhoVals_LDA(const std::vector<index_type>& P_rowIndexes,
             this->getWaveFunctionValues(P_colIndexes, r, &wf_col);
             wf_col.transpose();
             TlMatrix coefMatrix = wf_row * wf_col;
-            assert(coefMatrix.getNumOfRows() == numOfRows);
-            assert(coefMatrix.getNumOfCols() == numOfCols);
+            assert(coefMatrix.getNumOfRows() == P.getNumOfRows());
+            assert(coefMatrix.getNumOfCols() == P.getNumOfCols());
             coefMatrix.dot(P);
             pGridMatrix->add(grid, 4, coefMatrix.sum());
         }
@@ -1364,8 +1364,8 @@ void DfCalcGridX::calcRhoVals_GGA(const std::vector<index_type>& P_rowIndexes,
     
     // const std::size_t numOfRows = P.getNumOfRows();
     // const std::size_t numOfCols = P.getNumOfCols();
-    assert(P_rowIndexes.size() == numOfRows);
-    assert(P_colIndexes.size() == numOfCols);
+    assert(P_rowIndexes.size() == P.getNumOfRows());
+    assert(P_colIndexes.size() == P.getNumOfCols());
     // const int calcMode = pGridMatrix->getNumOfCols();
     
     const std::size_t numOfGrids = pGridMatrix->getNumOfRows();
@@ -1388,29 +1388,29 @@ void DfCalcGridX::calcRhoVals_GGA(const std::vector<index_type>& P_rowIndexes,
         wf_dZ.transpose();
         {
             TlMatrix wf_rc = wf_row * wf_col;
-            assert(wf_rc.getNumOfRows() == numOfRows);
-            assert(wf_rc.getNumOfCols() == numOfCols);
+            assert(wf_rc.getNumOfRows() == P.getNumOfRows());
+            assert(wf_rc.getNumOfCols() == P.getNumOfCols());
             wf_rc.dot(P);
             pGridMatrix->add(grid, 4, wf_rc.sum());
         }
         {
             TlMatrix wf_rc = wf_row * wf_dX;
-            assert(wf_rc.getNumOfRows() == numOfRows);
-            assert(wf_rc.getNumOfCols() == numOfCols);
+            assert(wf_rc.getNumOfRows() == P.getNumOfRows());
+            assert(wf_rc.getNumOfCols() == P.getNumOfCols());
             wf_rc.dot(P);
             pGridMatrix->add(grid, 5, 2.0 * wf_rc.sum());
         }
         {
             TlMatrix wf_rc = wf_row * wf_dY;
-            assert(wf_rc.getNumOfRows() == numOfRows);
-            assert(wf_rc.getNumOfCols() == numOfCols);
+            assert(wf_rc.getNumOfRows() == P.getNumOfRows());
+            assert(wf_rc.getNumOfCols() == P.getNumOfCols());
             wf_rc.dot(P);
             pGridMatrix->add(grid, 6, 2.0 * wf_rc.sum());
         }
         {
             TlMatrix wf_rc = wf_row * wf_dZ;
-            assert(wf_rc.getNumOfRows() == numOfRows);
-            assert(wf_rc.getNumOfCols() == numOfCols);
+            assert(wf_rc.getNumOfRows() == P.getNumOfRows());
+            assert(wf_rc.getNumOfCols() == P.getNumOfCols());
             wf_rc.dot(P);
             pGridMatrix->add(grid, 7, 2.0 * wf_rc.sum());
         }
