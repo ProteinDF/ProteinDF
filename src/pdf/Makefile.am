@@ -1,3 +1,5 @@
+#	DfRLMO.h		DfRLMO.cpp
+
 lib_LTLIBRARIES = libpdf.la libppdf.la
 
 libpdf_la_SOURCES = \
@@ -112,8 +114,7 @@ libpdf_la_SOURCES = \
 	DfOverlapX.h		DfOverlapX.cpp			\
 	DfEriX.h		DfEriX.cpp			\
 	TlMatrixCache.h		TlMatrixCache.cpp		\
-	DfTaskCtrl.h		DfTaskCtrl.cpp			\
-	DfRLMO.h		DfRLMO.cpp
+	DfTaskCtrl.h		DfTaskCtrl.cpp			
 
 
 

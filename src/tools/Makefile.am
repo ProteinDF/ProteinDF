@@ -1,3 +1,8 @@
+#	RLMO					
+#RLMO_SOURCES = \
+#	main_RLMO.cpp
+#RLMO_LDADD = $(SERIAL_LIBS)
+
 SERIAL_LIBS = ../pdf/libpdf.la ../pdflib/libpdftl.la @LAPACK_LIBS@ @BLAS_LIBS@ @FCLIBS@
 PARALLEL_LIBS = ../pdf/libpdf.la ../pdf/libppdf.la ../pdflib/libppdftl.la ../pdflib/libpdftl.la @SCALAPACK_LIBS@ @LAPACK_LIBS@ @BLAS_LIBS@ @FCLIBS@ @MPILIBS@
 
@@ -32,7 +37,6 @@ SERIAL_PROGS = 					\
 	transpose				\
 	getMaxValue				\
 	rotateLCAO				\
-	RLMO					\
 	checkERI
 
 
@@ -150,11 +154,6 @@ makeDensEspFld_SOURCES = \
 	TlEspField.h		TlEspField.cpp		\
 	makeDensEspFld.cpp
 makeDensEspFld_LDADD = $(SERIAL_LIBS)
-
-
-RLMO_SOURCES = \
-	main_RLMO.cpp
-RLMO_LDADD = $(SERIAL_LIBS)
 
 
 transdim_SOURCES = \
