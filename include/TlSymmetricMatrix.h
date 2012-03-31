@@ -230,6 +230,8 @@ public:
 
     virtual bool inverse();
 
+    TlMatrix choleskyFactorization();
+
 public:
     friend std::ostream& operator <<(std::ostream& out, const TlSymmetricMatrix& rhs);
     template<typename T> void print(T& out) const;
@@ -282,8 +284,9 @@ protected:
 
     friend bool inverseByLapack(TlSymmetricMatrix& inoutMatrix);
 
-    friend int choleskyFactorization(TlSymmetricMatrix* A,
-                                     std::vector<int>* pPivot);
+    // friend int choleskyFactorization(TlSymmetricMatrix* A,
+    //                                  std::vector<int>* pPivot);
+    
 #else
     // cause compile error
 #error NOT found algebra package: need LAPACK library

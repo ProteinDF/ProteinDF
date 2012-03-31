@@ -24,6 +24,7 @@ class TlSymmetricMatrixTest : public CppUnit::TestFixture{
     CPPUNIT_TEST(testMulti2);
     CPPUNIT_TEST(testDot);
     CPPUNIT_TEST(testSum);
+    CPPUNIT_TEST(testCholeskyDecomposition);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -43,6 +44,7 @@ public:
     void testMulti2();
     void testDot();
     void testSum();
+    void testCholeskyDecomposition();
 
 public:
     TlSymmetricMatrixTest(){
@@ -57,6 +59,7 @@ public:
 private:
     TlSymmetricMatrix getMatrixA();
     TlSymmetricMatrix getMatrixB();
+    TlSymmetricMatrix getMatrixC();
 
 private:
     static const double threshold;

@@ -1232,46 +1232,77 @@ bool inverseByLapack(TlSymmetricMatrix& X)
     return bAnswer;
 }
 
-int choleskyFactorization(TlSymmetricMatrix* A,
-                          std::vector<int>* pPivot)
+// int choleskyFactorization(TlSymmetricMatrix* A,
+//                           std::vector<int>* pPivot)
+// {
+//     // *  UPLO    (input) CHARACTER*1
+//     // *          = 'U':  Upper triangle of A is stored;
+//     // *          = 'L':  Lower triangle of A is stored.
+//     char UPLO = 'L';
+
+//     // *  N       (input) INTEGER
+//     // *          The order of the matrix A.  N >= 0.
+//     const int N = A->getNumOfRows();
+
+//     // (input/output) The order of the matrix A.  N >= 0.
+//     // if UPLO = 'U', AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j;
+//     // if UPLO = 'L', AP(i + (j-1)*(2n-j)/2) = A(i,j) for j<=i<=n.
+//     // On exit, if INFO = 0, the triangular factor U or L from the
+//     // Cholesky factorization A = U**T*U or A = L*L**T, in the same
+//     // storage format as A.
+//     double* AP = A->data_;
+
+//     // INTEGER array, dimension (N)
+//     // Details of the interchanges and the block structure of D
+//     // as determined by DSPTRF.
+//     //int* IPIV = new int[N];
+//     pPivot->resize(N);
+//     int* IPIV = &((*pPivot)[0]);
+
+//     int INFO = 0;
+
+//     dsptrf_(&UPLO, &N, AP, IPIV, &INFO);
+
+//     //bool answer = (INFO == 0);
+//     // if (INFO < 0) {
+//     //     std::cerr << (-INFO) << "th argument had an illegal value." << std::endl;
+//     // } else if (INFO > 0) {
+//     //     std::cerr << "the leading mirror of order " << INFO << " is not positive definite."
+//     //               << std::endl;
+//     // }
+
+//     return INFO;
+// }
+
+
+TlMatrix TlSymmetricMatrix::choleskyFactorization()
 {
-    // *  UPLO    (input) CHARACTER*1
-    // *          = 'U':  Upper triangle of A is stored;
-    // *          = 'L':  Lower triangle of A is stored.
-    char UPLO = 'L';
+    const index_type dim = this->getNumOfRows();
+    TlMatrix L(dim, dim);
+    for (index_type j = 0; j < dim; ++j) {
+        // calc L_jj
+        double s = this->get(j, j);
+        for (index_type k = 0; k < j; ++k) {
+            s -= L.get(j, k) * L.get(j, k);
+        }
+        if (s < 0.0) {
+            std::cerr << "CholeskyFactorization() s < 0" << std::endl;
+            abort();
+        }
+        L.set(j, j, std::sqrt(s));
+        
+        // calc L_ij (i > j)
+        const double L_jj = L.get(j, j);
+        for (index_type i = j +1; i < dim; ++i) {
+            double s = this->get(i, j);
+            for (index_type k = 0; k < j; ++k) {
+                s -= L.get(i, k) * L.get(j, k);
+            }
+            L.set(i, j, s / L_jj);
+        }
+    }
 
-    // *  N       (input) INTEGER
-    // *          The order of the matrix A.  N >= 0.
-    const int N = A->getNumOfRows();
-
-    // (input/output) The order of the matrix A.  N >= 0.
-    // if UPLO = 'U', AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j;
-    // if UPLO = 'L', AP(i + (j-1)*(2n-j)/2) = A(i,j) for j<=i<=n.
-    // On exit, if INFO = 0, the triangular factor U or L from the
-    // Cholesky factorization A = U**T*U or A = L*L**T, in the same
-    // storage format as A.
-    double* AP = A->data_;
-
-    // INTEGER array, dimension (N)
-    // Details of the interchanges and the block structure of D
-    // as determined by DSPTRF.
-    //int* IPIV = new int[N];
-    pPivot->resize(N);
-    int* IPIV = &((*pPivot)[0]);
-
-    int INFO = 0;
-
-    dsptrf_(&UPLO, &N, AP, IPIV, &INFO);
-
-    //bool answer = (INFO == 0);
-    // if (INFO < 0) {
-    //     std::cerr << (-INFO) << "th argument had an illegal value." << std::endl;
-    // } else if (INFO > 0) {
-    //     std::cerr << "the leading mirror of order " << INFO << " is not positive definite."
-    //               << std::endl;
-    // }
-
-    return INFO;
+    return L;
 }
 
 #endif // HAVE_LAPACK

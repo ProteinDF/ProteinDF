@@ -26,15 +26,15 @@ const double TlSymmetricMatrixTest::threshold = std::numeric_limits<double>::eps
 // [ 1  2  - ]
 // [ 3  4  5 ]
 TlSymmetricMatrix TlSymmetricMatrixTest::getMatrixA(){
-  TlSymmetricMatrix a(3);
-  a(0, 0) = 0.0;
-  a(1, 0) = 1.0;
-  a(1, 1) = 2.0;
-  a(2, 0) = 3.0;
-  a(2, 1) = 4.0;
-  a(2, 2) = 5.0;
-
-  return a;
+    TlSymmetricMatrix a(3);
+    a(0, 0) = 0.0;
+    a(1, 0) = 1.0;
+    a(1, 1) = 2.0;
+    a(2, 0) = 3.0;
+    a(2, 1) = 4.0;
+    a(2, 2) = 5.0;
+    
+    return a;
 }
 
 // 以下の要素を設定した行列を返す
@@ -42,32 +42,54 @@ TlSymmetricMatrix TlSymmetricMatrixTest::getMatrixA(){
 // [ 1  3  - ]
 // [ 2  4  5 ]
 TlSymmetricMatrix TlSymmetricMatrixTest::getMatrixB(){
-  TlSymmetricMatrix b(3);
-  b(0, 0) = 0.0;
-  b(1, 0) = 1.0;
-  b(1, 1) = 3.0;
-  b(2, 0) = 2.0;
-  b(2, 1) = 4.0;
-  b(2, 2) = 5.0;
-
-  return b;
+    TlSymmetricMatrix b(3);
+    b(0, 0) = 0.0;
+    b(1, 0) = 1.0;
+    b(1, 1) = 3.0;
+    b(2, 0) = 2.0;
+    b(2, 1) = 4.0;
+    b(2, 2) = 5.0;
+    
+    return b;
 }
 
+//
+// [ 0.937162
+// [ 0.064600 0.233206
+// [ 0.880494 0.228902 1.820559
+// [ 0.633540 0.053748 1.080290 0.731896
+TlSymmetricMatrix TlSymmetricMatrixTest::getMatrixC(){
+    TlSymmetricMatrix c(4);
+    c(0, 0) = 0.937162;
+    c(1, 0) = 0.064600;
+    c(1, 1) = 0.233206;
+    c(2, 0) = 0.880494;
+    c(2, 1) = 0.228902;
+    c(2, 2) = 1.820559;
+    c(3, 0) = 0.633540;
+    c(3, 1) = 0.053748;
+    c(3, 2) = 1.080290;
+    c(3, 3) = 0.731896;
+    
+    return c;
+}
+
+
+
 void TlSymmetricMatrixTest::testConstructer(){
-
-  TlSymmetricMatrix a(3);
-
-  CPPUNIT_ASSERT_EQUAL(3, a.getNumOfRows());
-  CPPUNIT_ASSERT_EQUAL(3, a.getNumOfCols());
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(0, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(0, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(0, 2), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(1, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(1, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(1, 2), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(2, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(2, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(2, 2), threshold);
+    TlSymmetricMatrix a(3);
+    
+    CPPUNIT_ASSERT_EQUAL(3, a.getNumOfRows());
+    CPPUNIT_ASSERT_EQUAL(3, a.getNumOfCols());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(0, 0), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(0, 1), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(0, 2), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(1, 0), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(1, 1), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(1, 2), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(2, 0), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(2, 1), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(2, 2), threshold);
 }
 
 void TlSymmetricMatrixTest::testOperaterRoundBracket(){
@@ -366,3 +388,15 @@ void TlSymmetricMatrixTest::testSum() {
     CPPUNIT_ASSERT_DOUBLES_EQUAL(23.0, s, threshold);
 }
 
+void TlSymmetricMatrixTest::testCholeskyDecomposition()
+{
+    TlSymmetricMatrix A = this->getMatrixC();
+    TlMatrix L = A.choleskyFactorization();
+    L.print(std::cout);
+    
+    TlMatrix Lt = L;
+    Lt.transpose();
+
+    TlMatrix LL = L * Lt;
+    LL.print(std::cout);
+}
