@@ -1333,7 +1333,7 @@ void DfCalcGridX::calcRhoVals_LDA(const std::vector<index_type>& P_rowIndexes,
     
     const std::size_t numOfGrids = pGridMatrix->getNumOfRows();
 #pragma omp parallel for schedule(runtime)
-    for (std::size_t grid = 0; grid < numOfGrids; ++grid) {
+    for (int grid = 0; grid < numOfGrids; ++grid) {
         const double x = pGridMatrix->get(grid, 0);
         const double y = pGridMatrix->get(grid, 1);
         const double z = pGridMatrix->get(grid, 2);
@@ -1370,7 +1370,7 @@ void DfCalcGridX::calcRhoVals_GGA(const std::vector<index_type>& P_rowIndexes,
     
     const std::size_t numOfGrids = pGridMatrix->getNumOfRows();
 #pragma omp parallel for schedule(runtime)
-    for (std::size_t grid = 0; grid < numOfGrids; ++grid) {
+    for (int grid = 0; grid < numOfGrids; ++grid) {
         const double x = pGridMatrix->get(grid, 0);
         const double y = pGridMatrix->get(grid, 1);
         const double z = pGridMatrix->get(grid, 2);
@@ -1632,7 +1632,7 @@ double DfCalcGridX::buildK_2(const TlMatrix& gridMatrix,
     double energy = 0.0;
     const std::size_t numOfAllGrids = gridMatrix.getNumOfRows();
 #pragma omp parallel for schedule(runtime) reduction(+:energy)
-    for (std::size_t grid = 0; grid < numOfAllGrids; ++grid) {
+    for (int grid = 0; grid < numOfAllGrids; ++grid) {
         const double x = gridMatrix.get(grid, 0);
         const double y = gridMatrix.get(grid, 1);
         const double z = gridMatrix.get(grid, 2);
