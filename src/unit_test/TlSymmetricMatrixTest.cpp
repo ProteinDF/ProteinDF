@@ -391,7 +391,10 @@ void TlSymmetricMatrixTest::testSum() {
 void TlSymmetricMatrixTest::testCholeskyDecomposition()
 {
     TlSymmetricMatrix A = this->getMatrixC();
-    TlMatrix L = A.choleskyFactorization();
+    A.print(std::cout);
+
+    //TlMatrix L = A.choleskyFactorization();
+    TlMatrix L = A.choleskyFactorization2();
     L.print(std::cout);
     
     TlMatrix Lt = L;

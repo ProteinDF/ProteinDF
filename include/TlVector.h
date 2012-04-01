@@ -76,6 +76,10 @@ public:
     /// 要素を値の大きい順にソートする
     void sortByGrater();
 
+    /// 大きな要素のインデックスを返す
+    /// @param startIndex[in]: 探査を開始するインデックス
+    size_type argmax(const size_type startIndex = 0);
+
 public:
     static bool isLoadable(const std::string& sFilePath);
     static bool isLoadable(std::ifstream& ifs);

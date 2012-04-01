@@ -129,6 +129,25 @@ void TlVector::sortByGrater()
 }
 
 
+TlVectorObject::size_type
+TlVector::argmax(const size_type startIndex)
+{
+    assert((0 <= startIndex) && (startIndex < this->getSize()));
+    const size_type size = this->getSize();
+    size_type index = startIndex;
+    double maxValue = this->get(startIndex);
+    for (size_type i = startIndex; i < size; ++i) {
+        double value = this->get(i);
+        if (maxValue < value) {
+            index = i;
+            maxValue = value;
+        }
+    }
+
+    return index;
+}
+
+
 TlVector& TlVector::operator=(const TlVector& rhs)
 {
     if (this != &rhs) {

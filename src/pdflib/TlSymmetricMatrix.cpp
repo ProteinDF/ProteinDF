@@ -1305,6 +1305,55 @@ TlMatrix TlSymmetricMatrix::choleskyFactorization()
     return L;
 }
 
+// Harbrecht, Peter, Schneider, 2011
+TlMatrix TlSymmetricMatrix::choleskyFactorization2(std::vector<index_type>* pPivot)
+{
+    const double epsilon = 1.0E-16;
+    const index_type N = this->getNumOfRows();
+    TlVector d = this->getDiagonalElements();
+    double error = d.sum();
+    std::vector<index_type> pivot(N);
+    for (index_type i = 0; i < N; ++i) {
+        pivot[i] = i;
+    }
+
+    TlMatrix L(N, N);
+    index_type m = 0;
+    while (error > epsilon) {
+        {
+            index_type i = d.argmax(m);
+            std::swap(pivot[m], pivot[i]);
+        }
+        L.set(m, pivot[m], std::sqrt(d[pivot[m]]));
+
+        for (index_type i = m +1; i < N; ++i) {
+            double sum_ll = 0.0;
+            for (index_type j = 0; j < m; ++j) {
+                sum_ll += L.get(j, pivot[m]) * L.get(j, pivot[i]);
+            }
+            const double value = (this->get(pivot[m], pivot[i]) - sum_ll) / L.get(m, pivot[m]);
+            L.set(m, pivot[i], value);
+
+            double l_mi = L.get(m, pivot[i]);
+            d[pivot[i]] -= l_mi * l_mi;
+        }
+
+        error = 0.0;
+        for (index_type i = m +1; i < N; ++i) {
+            error += d[i];
+        }
+        ++m;
+    }
+
+    L.transpose();
+    // std::cout << "cutoff " << m << "/" << N << std::endl;
+    // L.resize(N, m);
+    if (pPivot != NULL) {
+        *pPivot = pivot;
+    }
+    return L;
+}
+
 #endif // HAVE_LAPACK
 
 

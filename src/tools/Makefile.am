@@ -8,30 +8,31 @@ PARALLEL_LIBS = ../pdf/libpdf.la ../pdf/libppdf.la ../pdflib/libppdftl.la ../pdf
 
 AM_CPPFLAGS= -I$(top_srcdir)/include -I$(top_srcdir)/src/pdf
 
-SERIAL_PROGS = 					\
+SERIAL_PROGS = 				\
 	pdfkwd 					\
 	pdfvtr2txt 				\
 	pdfmat2txt 				\
 	pdfdiffmat 				\
 	pdfdiffvtr 				\
 	topPdfMatrix				\
-	catPdfMatrix addPdfMatrix		\
-	combineDensityMatrix 			\
+	catPdfMatrix addPdfMatrix	\
+	combineDensityMatrix 		\
 	pdfTop					\
 	pdfOrbInfo 				\
-	pdfMatrixCheck 				\
-	mullikenPop 				\
+	pdfMatrixCheck 			\
+	mullikenPop 			\
 	charge 					\
 	mmap_bench 				\
-	mmap_bench_matrix_calc 			\
+	mmap_bench_matrix_calc 	\
 	localize 				\
 	merge 					\
 	makeCrd					\
 	makeMoFld				\
-	makeEspFld makeDensFld 			\
-	makeDensEspFld 				\
+	makeEspFld makeDensFld 	\
+	makeDensEspFld 			\
 	transdim				\
 	diagonal				\
+	cholesky				\
 	inverse					\
 	multiple				\
 	transpose				\
@@ -169,6 +170,11 @@ inverse_LDADD = $(SERIAL_LIBS)
 diagonal_SOURCES = \
 	main_diagonal.cpp
 diagonal_LDADD = $(SERIAL_LIBS)
+
+
+cholesky_SOURCES = \
+	main_choleskydecompose.cpp
+cholesky_LDADD = $(SERIAL_LIBS)
 
 
 multiple_SOURCES = \
