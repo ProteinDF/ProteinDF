@@ -13,6 +13,8 @@
 #include "DfInvMatrix.h"
 #include "DfGenerateGrid.h"
 
+#include "DfCD.h"
+
 #include "Fl_Geometry.h"
 #include "Fl_GlobalinputX.h"
 #include "TlTime.h"
@@ -86,6 +88,12 @@ void DfIntegrals::main()
     // initialize grids
     this->createGrids();
 
+    // CholeskyDecomposition
+    {
+        DfCD dfCD(this->pPdfParam_);
+        dfCD.makeSuperMatrix();
+    }
+    
     // flush
     this->matrixCache_.flush();
 }

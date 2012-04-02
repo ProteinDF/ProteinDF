@@ -112,24 +112,23 @@ void DfCD::makeSuperMatrix()
         eigvec.save("G_eigvec.mat");
     }
 
-    TlMatrix L;
-    choleskyFactorization(G, &L);
+    TlMatrix L = G.choleskyFactorization2();
     L.save("L0.mat");
 
-    std::cerr << "dim=" << dim << std::endl;
-    std::cerr << "L size=(" << L.getNumOfRows()
-              << ", " << L.getNumOfCols()
-              << ")" << std::endl;
-    for (int i = 0; i < dim; ++i) {
-        // for (int j = 0; j <= i; ++j) {
-        //     const double v = L.get(i, j);
-        //     L.set(i, j, v);
-        // }
-        for (int j = i +1; j < dim; ++j) {
-            L.set(i, j, 0.0);
-        }
-    }
-    L.save("L.mat");
+    // std::cerr << "dim=" << dim << std::endl;
+    // std::cerr << "L size=(" << L.getNumOfRows()
+    //           << ", " << L.getNumOfCols()
+    //           << ")" << std::endl;
+    // for (int i = 0; i < dim; ++i) {
+    //     // for (int j = 0; j <= i; ++j) {
+    //     //     const double v = L.get(i, j);
+    //     //     L.set(i, j, v);
+    //     // }
+    //     for (int j = i +1; j < dim; ++j) {
+    //         L.set(i, j, 0.0);
+    //     }
+    // }
+    // L.save("L.mat");
     TlMatrix Lt = L;
     Lt.transpose();
     
