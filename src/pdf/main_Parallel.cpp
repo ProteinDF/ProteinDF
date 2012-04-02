@@ -2,7 +2,9 @@
 #include "config.h"    // this file created by autotools
 #endif // HAVE_CONFIG_H
 
+#include <sys/types.h>
 #include <signal.h>
+#include <unistd.h>
 #include <cstring>
 #include <cstdlib>
 #include <ios>

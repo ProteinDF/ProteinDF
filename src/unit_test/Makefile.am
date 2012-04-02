@@ -47,7 +47,7 @@ PdfTests_SOURCES = \
 	DfFunctional_PW91XTest.h	DfFunctional_PW91XTest.cpp
 
 PdfTests_LDFLAGS = -L$(libdir)
-PdfTests_LDADD   = ../pdf/libpdf.la ../pdflib/libpdftl.la -lcppunit -ldl @LAPACK_LIBS@ @BLAS_LIBS@ 
+PdfTests_LDADD   = ../pdf/libpdf.la ../pdflib/libpdftl.la -lcppunit -ldl @LAPACK_LIBS@ @BLAS_LIBS@ @FCLIBS@
 
 
 
