@@ -105,6 +105,9 @@ void DfCD::makeSuperMatrix()
     
     // 正定値(固有値が正)であるかをチェック
     {
+        TlVector diag = G.getDiagonalElements();
+        diag.save("G_diag.vtr");
+
         TlMatrix eigvec;
         TlVector eigval;
         G.diagonal(&eigval, &eigvec);
@@ -113,7 +116,7 @@ void DfCD::makeSuperMatrix()
     }
 
     TlMatrix L = G.choleskyFactorization2();
-    L.save("L0.mat");
+    L.save("L.mat");
 
     // std::cerr << "dim=" << dim << std::endl;
     // std::cerr << "L size=(" << L.getNumOfRows()

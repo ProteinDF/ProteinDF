@@ -78,7 +78,9 @@ public:
 
     /// 大きな要素のインデックスを返す
     /// @param startIndex[in]: 探査を開始するインデックス
-    size_type argmax(const size_type startIndex = 0);
+    std::vector<TlVectorObject::size_type>::const_iterator
+    argmax(const std::vector<TlVectorObject::size_type>::const_iterator& begin,
+           const std::vector<TlVectorObject::size_type>::const_iterator& end) const;
 
 public:
     static bool isLoadable(const std::string& sFilePath);

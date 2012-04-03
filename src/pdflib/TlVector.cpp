@@ -129,22 +129,22 @@ void TlVector::sortByGrater()
 }
 
 
-TlVectorObject::size_type
-TlVector::argmax(const size_type startIndex)
+std::vector<TlVectorObject::size_type>::const_iterator
+TlVector::argmax(const std::vector<TlVectorObject::size_type>::const_iterator& begin,
+                 const std::vector<TlVectorObject::size_type>::const_iterator& end) const
 {
-    assert((0 <= startIndex) && (startIndex < this->getSize()));
-    const size_type size = this->getSize();
-    size_type index = startIndex;
-    double maxValue = this->get(startIndex);
-    for (size_type i = startIndex; i < size; ++i) {
-        double value = this->get(i);
+    std::vector<TlVectorObject::size_type>::const_iterator answer = begin;
+    double maxValue = this->get(*begin);
+    for (std::vector<size_type>::const_iterator it = begin; it != end; ++it) {
+        const size_type index = *it;
+        const double value = this->get(index);
         if (maxValue < value) {
-            index = i;
+            answer = it;
             maxValue = value;
         }
     }
 
-    return index;
+    return answer;
 }
 
 

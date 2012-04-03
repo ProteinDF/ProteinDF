@@ -1306,13 +1306,13 @@ TlMatrix TlSymmetricMatrix::choleskyFactorization()
 }
 
 // Harbrecht, Peter, Schneider, 2011
-TlMatrix TlSymmetricMatrix::choleskyFactorization2(std::vector<index_type>* pPivot)
+TlMatrix TlSymmetricMatrix::choleskyFactorization2(std::vector<TlVectorObject::size_type>* pPivot)
 {
     const double epsilon = 1.0E-16;
     const index_type N = this->getNumOfRows();
     TlVector d = this->getDiagonalElements();
     double error = d.sum();
-    std::vector<index_type> pivot(N);
+    std::vector<TlVector::size_type> pivot(N);
     for (index_type i = 0; i < N; ++i) {
         pivot[i] = i;
     }
@@ -1321,17 +1321,22 @@ TlMatrix TlSymmetricMatrix::choleskyFactorization2(std::vector<index_type>* pPiv
     index_type m = 0;
     while (error > epsilon) {
         {
-            index_type i = d.argmax(m);
+            std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+                                                                           pivot.end());
+            index_type i = it - pivot.begin();
             std::swap(pivot[m], pivot[i]);
         }
-        L.set(m, pivot[m], std::sqrt(d[pivot[m]]));
+        const double l_m_pm = std::sqrt(d[pivot[m]]);
+        L.set(m, pivot[m], l_m_pm);
 
+        const double inv_l_m_pm = 1.0 / l_m_pm;
         for (index_type i = m +1; i < N; ++i) {
             double sum_ll = 0.0;
             for (index_type j = 0; j < m; ++j) {
                 sum_ll += L.get(j, pivot[m]) * L.get(j, pivot[i]);
             }
-            const double value = (this->get(pivot[m], pivot[i]) - sum_ll) / L.get(m, pivot[m]);
+            //const double value = (this->get(pivot[m], pivot[i]) - sum_ll) / L.get(m, pivot[m]);
+            const double value = (this->get(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
             L.set(m, pivot[i], value);
 
             double l_mi = L.get(m, pivot[i]);
@@ -1340,14 +1345,14 @@ TlMatrix TlSymmetricMatrix::choleskyFactorization2(std::vector<index_type>* pPiv
 
         error = 0.0;
         for (index_type i = m +1; i < N; ++i) {
-            error += d[i];
+            error += d[pivot[i]];
         }
         ++m;
     }
 
     L.transpose();
     // std::cout << "cutoff " << m << "/" << N << std::endl;
-    // L.resize(N, m);
+    L.resize(N, m);
     if (pPivot != NULL) {
         *pPivot = pivot;
     }
