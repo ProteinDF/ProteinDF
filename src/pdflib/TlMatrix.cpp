@@ -14,6 +14,7 @@
 #include "TlVector.h"
 #include "TlUtils.h"
 #include "TlMemManager.h"
+#include "TlLogging.h"
 
 const TlMatrix::size_type TlMatrix::MAX_LOOP = std::numeric_limits<int>::max();
 bool TlMatrix::isUsingMemManagerDefault_ = false;
@@ -284,9 +285,18 @@ TlMatrix TlMatrix::getBlockMatrix(const int nRow, const int nCol,
 
 void TlMatrix::setBlockMatrix(const index_type row, const index_type col, const TlMatrix& matrix)
 {
+    TlLogging& log = TlLogging::getInstance();
     const int row_distance = matrix.getNumOfRows();
     const int col_distance = matrix.getNumOfCols();
 
+    if (!((0 <= row && row < this->getNumOfRows()) &&
+          (0 <= col && col < this->getNumOfCols()) &&
+          (0 < (row + row_distance) && (row + row_distance) <= this->getNumOfRows()) &&
+          (0 < (col + col_distance) && (col + col_distance) <= this->getNumOfCols()))) {
+        log.critical(TlUtils::format("setBlockMatrix() start(%d, %d) mat(%d, %d) -> (%d, %d)",
+                                     row, col, matrix.getNumOfRows(), matrix.getNumOfCols(),
+                                     this->getNumOfRows(), this->getNumOfCols()));
+    }
     assert(0 <= row && row < this->getNumOfRows());
     assert(0 <= col && col < this->getNumOfCols());
     assert(0 < (row + row_distance) && (row + row_distance) <= this->getNumOfRows());
