@@ -1295,15 +1295,15 @@ DfEriEngine::choice(const DfEriEngine::Query& qAB)
 {
 #ifdef USE_CACHED_ROUTE
     const int index = qAB.index();
-    if (choice_tbl.find(index) == choice_tbl.end()) {
+    if (this->choice_tbl_.find(index) == this->choice_tbl_.end()) {
         ContractScalesSet contractList;
         this->choice(qAB.a_bar, qAB.b_bar,
                      qAB.a, qAB.b, 0,
                      0, 0, 0,
                      &contractList);
-        this->choice_tbl[index] = this->transContractScales_SetToVector(contractList);
+        this->choice_tbl_[index] = this->transContractScales_SetToVector(contractList);
     }
-    return this->choice_tbl[index];
+    return this->choice_tbl_[index];
 #else
     {
         ContractScalesSet contractList;
@@ -1672,6 +1672,7 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
     const int angularMomentumQ =
           qCD.a + qCD.b
         + qCD.a_bar + qCD.b_bar;
+
     const int a = 0;
     const int b = 0;
     const int a_bar = 0;
@@ -1693,15 +1694,18 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
     std::cerr << "calcPQ: max_ket_index=" << max_ket_index << std::endl;
 #endif // DEBUG_HGP
 
-    ContractState cs;
-    
+    // ContractState cs;
+    const std::vector<int> cs_indeces = this->get_csindex_for_calcPQ(angularMomentumP, qAB,
+                                                                     angularMomentumQ, qCD);
+    int cs_index_order = 0;
+
     // bra ---------------------------------------------------------------------
     const int max_bra_cs_index = bra_contractScales.size();
     for (int bra_cs_index = 0; bra_cs_index < max_bra_cs_index; ++bra_cs_index) {
         const int a_prime = bra_contractScales[bra_cs_index].a_prime;
         const int b_prime = bra_contractScales[bra_cs_index].b_prime;
         const int p_prime = bra_contractScales[bra_cs_index].p_prime;
-        cs.setABP(a_prime, b_prime, p_prime);
+        // cs.setABP(a_prime, b_prime, p_prime);
 
         for (int p = 0; p <= angularMomentumP; ++p) {
             const ERI_State bra_state(a_bar, b_bar, a, b, p, a_prime, b_prime, p_prime);
@@ -1736,10 +1740,10 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
                 int ket_index = 0;
                 const int max_ket_cs_index = ket_contractScales.size();
                 for (int ket_cs_index = 0; ket_cs_index < max_ket_cs_index; ++ket_cs_index) {
-                    const int c_prime = ket_contractScales[ket_cs_index].a_prime;
-                    const int d_prime = ket_contractScales[ket_cs_index].b_prime;
-                    const int q_prime = ket_contractScales[ket_cs_index].p_prime;
-                    cs.setCDQ(c_prime, d_prime, q_prime);
+                    // const int c_prime = ket_contractScales[ket_cs_index].a_prime;
+                    // const int d_prime = ket_contractScales[ket_cs_index].b_prime;
+                    // const int q_prime = ket_contractScales[ket_cs_index].p_prime;
+                    // cs.setCDQ(c_prime, d_prime, q_prime);
 
                     double coef = -1.0;
                     for (int q = 0; q <= angularMomentumQ; ++q) {
@@ -1749,10 +1753,19 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
 
                         const int numOf_amvs_q = amvs_q.size();
                         for (int j = 0; j < numOf_amvs_q; ++j) {
-                            const TlAngularMomentumVector amv_q = amvs_q.get(j);
-                            const TlAngularMomentumVector r = amv_p + amv_q;
-                            cs.setR(r);
-                            const int cs_index = cs.index();
+                            // const TlAngularMomentumVector amv_q = amvs_q.get(j);
+                            // const TlAngularMomentumVector r = amv_p + amv_q;
+                            // cs.setR(r);
+
+                            // const int cs_index = cs.index();
+                            // if (cs_indeces[cs_index_order] != cs_index) {
+                            //     std::cerr << TlUtils::format("err! %d != %d",
+                            //                                  cs_indeces[cs_index_order], cs_index)
+                            //               << std::endl;
+                            // }
+                            const int cs_index = cs_indeces[cs_index_order];
+                            ++cs_index_order;
+
                             const double value = this->p_abpRcdq_[cs_index];
 #ifdef DEBUG_CALC_PQ
                             // for debug
@@ -1778,6 +1791,64 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
     }
 }
 
+
+std::vector<int> 
+DfEriEngine::get_csindex_for_calcPQ(const int angularMomentumP,
+                                    const DfEriEngine::Query& qAB,
+                                    const int angularMomentumQ,
+                                    const DfEriEngine::Query& qCD)
+{
+    const int index = 
+        ((angularMomentumP*Query::maxIndex() + qAB.index())*ERI_P_MAX + angularMomentumQ)*Query::maxIndex() + qCD.index();
+    if (this->csindeces_forCalcPQ_.find(index) == this->csindeces_forCalcPQ_.end()) {
+        std::vector<int> answer;
+        const ContractScalesVector bra_contractScales = this->choice(qAB);
+        const ContractScalesVector ket_contractScales = this->choice(qCD);
+        
+        ContractState cs;
+        // bra ---------------------------------------------------------------------
+        const int max_bra_cs_index = bra_contractScales.size();
+        for (int bra_cs_index = 0; bra_cs_index < max_bra_cs_index; ++bra_cs_index) {
+            const int a_prime = bra_contractScales[bra_cs_index].a_prime;
+            const int b_prime = bra_contractScales[bra_cs_index].b_prime;
+            const int p_prime = bra_contractScales[bra_cs_index].p_prime;
+            cs.setABP(a_prime, b_prime, p_prime);
+            
+            for (int p = 0; p <= angularMomentumP; ++p) {
+                const TlAngularMomentumVectorSet amvs_p(p);
+                const int numOf_amvs_p = amvs_p.size(); // amvs_p の数だけで十分
+                for (int i = 0; i < numOf_amvs_p; ++i) {
+                    const TlAngularMomentumVector amv_p = amvs_p.get(i);
+                    
+                    // ket ---------------------------------------------------------
+                    int ket_index = 0;
+                    const int max_ket_cs_index = ket_contractScales.size();
+                    for (int ket_cs_index = 0; ket_cs_index < max_ket_cs_index; ++ket_cs_index) {
+                        const int c_prime = ket_contractScales[ket_cs_index].a_prime;
+                        const int d_prime = ket_contractScales[ket_cs_index].b_prime;
+                        const int q_prime = ket_contractScales[ket_cs_index].p_prime;
+                        cs.setCDQ(c_prime, d_prime, q_prime);
+                        
+                        for (int q = 0; q <= angularMomentumQ; ++q) {
+                            const TlAngularMomentumVectorSet amvs_q(q);
+                            const int numOf_amvs_q = amvs_q.size();
+                            for (int j = 0; j < numOf_amvs_q; ++j) {
+                                const TlAngularMomentumVector amv_q = amvs_q.get(j);
+                                const TlAngularMomentumVector r = amv_p + amv_q;
+                                cs.setR(r);
+                                const int cs_index = cs.index();
+                                answer.push_back(cs_index);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        this->csindeces_forCalcPQ_[index] = answer;
+    }
+
+    return this->csindeces_forCalcPQ_[index];
+}
 
 void DfEriEngine::transpose(const DfEriEngine::Query& qAB,
                             const DfEriEngine::Query& qCD,
