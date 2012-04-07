@@ -247,16 +247,8 @@ TlSymmetricMatrix DfXCFunctional::getFockExchange(const TlSymmetricMatrix& P)
 
     if (this->m_bRI_K == false) {
         // disable RI-K
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" new ERI engine\n");
-            DfEriX* pDfEri = this->getDfEriXObject();
-
-            pDfEri->getK(P, &FxHF);
-
-            delete pDfEri;
-            pDfEri = NULL;
-        } else {
 #ifdef USE_OLD_TEI_ENGINE
+        {
             DfTwoElectronIntegral* pDfTei = this->getDfTwoElectronIntegral();
             
             if (this->m_bUseRTmethod == true) {
@@ -269,8 +261,15 @@ TlSymmetricMatrix DfXCFunctional::getFockExchange(const TlSymmetricMatrix& P)
             
             delete pDfTei;
             pDfTei = NULL;
-#endif // USE_OLD_TEI_ENGINE
         }
+#else 
+        {
+            DfEriX* pDfEri = this->getDfEriXObject();
+            pDfEri->getK(P, &FxHF);
+            delete pDfEri;
+            pDfEri = NULL;
+        }
+#endif // USE_OLD_TEI_ENGINE
     } else {
         // using RI-K
         DfEri2* pDfEri2 = this->getDfEri2();

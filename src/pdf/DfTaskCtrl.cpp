@@ -44,6 +44,9 @@ DfTaskCtrl::~DfTaskCtrl()
 void DfTaskCtrl::setCutoffThreshold(const double value)
 {
     this->cutoffThreshold_ = value;
+    this->cutoffEpsilon1_ = value * 0.01;
+    this->cutoffEpsilon2_ = value;
+    this->cutoffEpsilon3_ = value * 0.01;
 }
 
 double DfTaskCtrl::getCutoffThreshold() const

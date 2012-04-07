@@ -92,6 +92,7 @@ void DfIntegrals::main()
     {
         DfCD dfCD(this->pPdfParam_);
         dfCD.makeSuperMatrix();
+        //dfCD.makeSuperMatrix_exact();
     }
     
     // flush

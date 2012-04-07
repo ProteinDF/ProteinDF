@@ -9,7 +9,7 @@ public:
     virtual ~DfJMatrix_Parallel();
 
 public:
-    virtual void buildJMatrix();
+    virtual void buildJ();
 
 protected:
     void buildJMatrix_LAPACK(int iteration,

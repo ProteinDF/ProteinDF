@@ -59,25 +59,45 @@ protected:
 template<typename SymmetricMatrixType>
 void DfFockMatrix::mainDIRECT_RKS()
 {
-    this->logger("Direct scheme method is employed\n");
+    //this->logger("Direct scheme method is employed\n");
     SymmetricMatrixType F(this->m_nNumOfAOs);
 
-    if (this->m_bMemorySave == true) {
-        // DfThreeindexintegrals を使わない
-        if (this->m_bIsXCFitting == true) {
-            this->setXC_RI(RUN_RKS, F);
-        } else {
-            this->setXC_DIRECT(RUN_RKS, F);
-        }
+    // if (this->m_bMemorySave == true) {
+    //     // DfThreeindexintegrals を使わない
+    //     if (this->m_bIsXCFitting == true) {
+    //         this->setXC_RI(RUN_RKS, F);
+    //     } else {
+    //         this->setXC_DIRECT(RUN_RKS, F);
+    //     }
 
-        this->setCoulomb(METHOD_RKS, F);
-    } else {
-        // DfThreeindexintegrals を使う
-        assert(this->m_bIsXCFitting == true);
-        F = this->getFpqMatrix(RUN_RKS, this->m_nIteration);
+    //     this->setCoulomb(METHOD_RKS, F);
+    // } else {
+    //     // DfThreeindexintegrals を使う
+    //     assert(this->m_bIsXCFitting == true);
+    //     F = this->getFpqMatrix(RUN_RKS, this->m_nIteration);
+    // }
+
+    //this->setHpq(RUN_RKS, F);
+    {
+        SymmetricMatrixType Hpq = DfObject::getHpqMatrix<SymmetricMatrixType>();
+        F += Hpq;
+    }
+    if (this->m_nNumOfDummyAtoms > 0) {
+        if (this->m_nIteration <= this->chargeExtrapolateNumber_) {
+            SymmetricMatrixType Hpq2 = DfObject::getHpq2Matrix<SymmetricMatrixType>();
+            F += Hpq2;
+        }
     }
 
-    this->setHpq(RUN_RKS, F);
+    {
+        SymmetricMatrixType J = DfObject::getJMatrix<SymmetricMatrixType>(this->m_nIteration);
+        F += J;
+    }
+
+    {
+        SymmetricMatrixType Fxc = DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration);
+        F += Fxc;
+    }
 
     DfObject::saveFpqMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration, F);
 }

@@ -189,8 +189,8 @@ void PdfKeyword::initialize()
     // SCF ===============================================================
     item.keyword          = "charge-extrapolate-number";
     item.explanation      = "";
-    item.defaultValue     = "0";
-    item.syntax           = "(integer >= 0)";
+    item.defaultValue     = "1";
+    item.syntax           = "(integer >= 1)";
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);
 
@@ -367,6 +367,13 @@ void PdfKeyword::initialize()
     item.explanation      = "";
     item.defaultValue     = "no";
     item.syntax           = "yes/no";
+    item.type             = KWD_DEFAULT;
+    this->kwdList_.push_back(item);
+
+    item.keyword          = "update_method";
+    item.explanation      = "use update method";
+    item.defaultValue     = "yes";
+    item.syntax           = "(yes|no)";
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);
 
@@ -573,10 +580,10 @@ void PdfKeyword::initialize()
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);
 
-    item.keyword          = "RI_J";
-    item.explanation      = "using RI method on building J matrix";
-    item.defaultValue     = "yes";
-    item.syntax           = "(yes|no)";
+    item.keyword          = "J_engine";
+    item.explanation      = "build method for J matrix";
+    item.defaultValue     = "RI_J";
+    item.syntax           = "(conventional|RI_J|CD)";
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);
 

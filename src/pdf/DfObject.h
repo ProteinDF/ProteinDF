@@ -97,6 +97,7 @@ protected:
     std::string getFxcMatrixPath(RUN_TYPE runType, int iteration);
     std::string getFxcPureMatrixPath(RUN_TYPE runType, int iteration);
     std::string getJMatrixPath(int iteration);
+    //std::string getKMatrixPath(int iteration);
     std::string getFprimeMatrixPath(RUN_TYPE runType, int iteration, const std::string& fragment = "");
     std::string getCprimeMatrixPath(RUN_TYPE runType, int iteration, const std::string& fragment = "");
 
@@ -329,6 +330,13 @@ protected:
 
 protected:
     //void clearCache(const std::string& path);
+
+protected:
+    enum J_Engine_Type {
+        J_ENGINE_CONVENTIONAL,
+        J_ENGINE_RI_J,
+        J_ENGINE_CD
+    };
     
 protected:
     static const std::string m_sWorkDirPath; // fl_Work directory name
@@ -371,12 +379,18 @@ protected:
     bool m_bDiskUtilization;
     bool m_bMemorySave;
 
+    /// update法を使用する(true)
+    bool isUpdateMethod_;
+
+    // J
+    J_Engine_Type J_engine_;
+
     std::string m_sXCFunctional;
     bool m_bIsXCFitting; /// true => XC項をRI法で計算, false => XC項を直接計算
     bool m_bIsUpdateXC; /// XC項をupdate法で計算する(true)
     bool enableGrimmeDispersion_; /// Grimmeの経験的分散力補正を計算するかどうか
 
-    bool isRI_J_; /// RI_J法を用いる(true)
+    //bool isRI_J_; /// RI_J法を用いる(true)
     bool isRI_K_; /// RI-K法を用いる(true)
     
     /// ScaLAPACKを使用する(true)かどうかを表すフラグ
@@ -775,6 +789,30 @@ SymmetricMatrixType DfObject::getJMatrix(const int iteration)
     J.resize(this->m_nNumOfAOs);
     return J;
 }
+
+
+// template<class SymmetricMatrixType>
+// void DfObject::saveKMatrix(const RUN_TYPE runType, const int iteration,
+//                            const SymmetricMatrixType& K)
+// {
+//     const std::string path = this->getKMatrixPath(runType, iteration);
+//     if (this->isUseCache_ == true) {
+//         this->matrixCache_.set(path, K, true);
+//     } else {
+//         K.save(path);
+//     }
+// }
+
+// template<class SymmetricMatrixType>
+// SymmetricMatrixType DfObject::getKMatrix(const RUN_TYPE runType,
+//                                          const int iteration)
+// {
+//     SymmetricMatrixType K;
+//     const std::string path = this->getKMatrixPath(runType, iteration);
+//     K = this->matrixCache_.get<SymmetricMatrixType>(path);
+//     K.resize(this->m_nNumOfAOs);
+//     return K;
+// }
 
 
 template<class SymmetricMatrixType>

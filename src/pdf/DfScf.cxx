@@ -649,12 +649,12 @@ void DfScf::buildJMatrix()
     start_collection("RI_J");
 #endif // __FUJITSU
 
-    if (this->isRI_J_ == false) {
+    // if (this->isRI_J_ == false) {
         this->loggerStartTitle("Coulomb term");
         DfJMatrix* pDfJMatrix = this->getDfJMatrixObject();
-        pDfJMatrix->buildJMatrix();
+        pDfJMatrix->buildJ();
         this->loggerEndTitle();
-    }
+    // }
 
 #ifdef __FUJITSU
     stop_collection("RI_J");

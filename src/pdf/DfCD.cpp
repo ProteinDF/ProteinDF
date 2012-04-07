@@ -6,7 +6,9 @@
 #include "DfCD.h"
 #include "DfEriEngine.h"
 #include "TlOrbitalInfo.h"
+#include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
+#include "TlUtils.h"
 
 const int DfCD::MAX_SHELL_TYPE = 2 + 1;
 
@@ -65,9 +67,8 @@ void DfCD::destroyEngines()
 
 void DfCD::makeSuperMatrix()
 {
-    
     const index_type numOfAOs = this->m_nNumOfAOs;
-    const std::size_t dim = numOfAOs * (numOfAOs +1) / 2;
+    const index_type dim = numOfAOs * (numOfAOs +1) / 2;
     TlSymmetricMatrix G(dim);
 
     this->check.resize(dim);
@@ -79,6 +80,7 @@ void DfCD::makeSuperMatrix()
 
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    pDfTaskCtrl->setCutoffThreshold(-1.0);
 
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
@@ -101,42 +103,29 @@ void DfCD::makeSuperMatrix()
     this->destroyEngines();
 
     G.save("G.mat");
-    this->check.save("check.mat");
-    
-    // 正定値(固有値が正)であるかをチェック
     {
-        TlVector diag = G.getDiagonalElements();
-        diag.save("G_diag.vtr");
-
-        TlMatrix eigvec;
-        TlVector eigval;
-        G.diagonal(&eigval, &eigvec);
-        eigval.save("G_eigval.vec");
-        eigvec.save("G_eigvec.mat");
+        this->check.save("check.mat");
+        for (int i = 0; i < dim; ++i) {
+            for (int j = 0; j <= i; ++j) {
+                if (std::fabs(this->check.get(i, j) - 1.0) > 1.0E-5) {
+                    std::cerr << TlUtils::format("count err: (%d, %d)=%f", i, j, this->check.get(i, j))
+                              << std::endl;
+                }
+            }
+        }
     }
-
+    
     TlMatrix L = G.choleskyFactorization2();
     L.save("L.mat");
 
-    // std::cerr << "dim=" << dim << std::endl;
-    // std::cerr << "L size=(" << L.getNumOfRows()
-    //           << ", " << L.getNumOfCols()
-    //           << ")" << std::endl;
-    // for (int i = 0; i < dim; ++i) {
-    //     // for (int j = 0; j <= i; ++j) {
-    //     //     const double v = L.get(i, j);
-    //     //     L.set(i, j, v);
-    //     // }
-    //     for (int j = i +1; j < dim; ++j) {
-    //         L.set(i, j, 0.0);
-    //     }
-    // }
-    // L.save("L.mat");
-    TlMatrix Lt = L;
-    Lt.transpose();
-    
-    TlMatrix LL = L * Lt;
-    LL.save("LL.mat");
+    // check
+    {
+        TlMatrix Lt = L;
+        Lt.transpose();
+        
+        TlMatrix LLt = L * Lt;
+        LLt.save("LLt.mat");
+    }
 }
 
 void DfCD::makeSuperMatrix_kernel(const TlOrbitalInfo& orbitalInfo,
@@ -154,6 +143,7 @@ void DfCD::makeSuperMatrix_kernel(const TlOrbitalInfo& orbitalInfo,
 #endif // _OPENMP
         
         //this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+#pragma omp for
         for (int i = 0; i < taskListSize; ++i) {
             const index_type shellIndexP = taskList[i].shellIndex1;
             const index_type shellIndexQ = taskList[i].shellIndex2;
@@ -214,16 +204,17 @@ void DfCD::storeG(const index_type shellIndexP, const int maxStepsP,
                     const index_type maxIndexS = (indexP == indexR) ? indexQ : indexR;
                     
                     const std::size_t indexRS = this->index(indexR, indexS);
-                    
-                    if ((indexP >= indexQ) && (maxIndexS >= indexS)) {
-                        if ((this->index(shellIndexP, shellIndexQ) != this->index(shellIndexR, shellIndexS)) |
-                            (indexPQ >= indexRS)) {
-                            this->check.add(indexPQ, indexRS, 1.0);
-                            pG->set(indexPQ, indexRS, value);
+
+                    if (indexQ <= indexP) {
+                        if ((shellIndexQ != shellIndexS) || (indexR <= indexP)) {
+                            if (indexS <= maxIndexS) {
+                                this->check.add(indexPQ, indexRS, 1.0);
+                                pG->set(indexPQ, indexRS, value);
+                            }
                         }
                     }
                     ++index;
-                }
+                 }
             }
         }
     }
@@ -234,7 +225,7 @@ void DfCD::makeSuperMatrix_exact()
     const index_type numOfAOs = this->m_nNumOfAOs;
     const index_type numOfDims = numOfAOs * (numOfAOs +1) / 2;
     TlSymmetricMatrix G(numOfDims);
-    std::set<index_type> calcd; // 計算済みかどうかを格納
+    //std::set<index_type> calcd; // 計算済みかどうかを格納
     
     DfEriEngine engine;
     engine.setPrimitiveLevelThreshold(0.0);
@@ -273,7 +264,7 @@ void DfCD::makeSuperMatrix_exact()
                         for (ShellArray::const_iterator qIt = shellArrayQ.begin(); qIt != qItEnd; ++qIt) {
                             const index_type shellIndexQ = *qIt;
 
-                            const index_type shellIndexPQ = this->index(shellIndexP, shellIndexQ);
+                            //const index_type shellIndexPQ = this->index(shellIndexP, shellIndexQ);
                             const DfEriEngine::CGTO_Pair PQ = engine.getCGTO_pair(orbitalInfo,
                                                                                   shellIndexP, shellIndexQ,
                                                                                   0.0);
@@ -283,7 +274,7 @@ void DfCD::makeSuperMatrix_exact()
                                 for (ShellArray::const_iterator sIt = shellArrayS.begin(); sIt != sItEnd; ++sIt) {
                                     const index_type shellIndexS = *sIt;
 
-                                    const index_type shellIndexRS = this->index(shellIndexR, shellIndexS);
+                                    //const index_type shellIndexRS = this->index(shellIndexR, shellIndexS);
                                     const DfEriEngine::CGTO_Pair RS = engine.getCGTO_pair(orbitalInfo,
                                                                                           shellIndexR, shellIndexS,
                                                                                           0.0);
@@ -306,15 +297,15 @@ void DfCD::makeSuperMatrix_exact()
                                                     const double value = engine.WORK[index];
 
                                                     // check
-                                                    if (((indexPQ == 115) && (indexRS == 111)) ||
-                                                        ((indexPQ == 111) && (indexRS == 115))) {
-                                                        std::cerr << TlUtils::format("CHECK <%d, %d> (%d, %d|%d, %d) [%d, %d|%d, %d]= %18.10f",
-                                                                                     indexPQ, indexRS,
-                                                                                     indexP, indexQ, indexR, indexS,
-                                                                                     shellIndexP, shellIndexQ, shellIndexR, shellIndexS,
-                                                                                     value)
-                                                                  << std::endl;
-                                                    }
+                                                    // if (((indexPQ == 115) && (indexRS == 111)) ||
+                                                    //     ((indexPQ == 111) && (indexRS == 115))) {
+                                                    //     std::cerr << TlUtils::format("CHECK <%d, %d> (%d, %d|%d, %d) [%d, %d|%d, %d]= %18.10f",
+                                                    //                                  indexPQ, indexRS,
+                                                    //                                  indexP, indexQ, indexR, indexS,
+                                                    //                                  shellIndexP, shellIndexQ, shellIndexR, shellIndexS,
+                                                    //                                  value)
+                                                    //               << std::endl;
+                                                    // }
                                                     // if ((shellIndexP == 9) && (shellIndexQ == 9) &&
                                                     //     (shellIndexR == 9) && (shellIndexS == 9)) {
                                                     //     std::cerr << TlUtils::format("CHECK <%2d, %2d> (%2d, %2d|%2d, %2d) [%2d, %2d|%2d, %2d]= %18.10f",
@@ -341,14 +332,26 @@ void DfCD::makeSuperMatrix_exact()
     }
 
     G.save("G_exact.mat");
-    this->checkCholeskyFactorization(G);
-    // 正定値(固有値が正)であるかをチェック
+    // this->checkCholeskyFactorization(G);
+    // // 正定値(固有値が正)であるかをチェック
+    // {
+    //     TlMatrix eigvec;
+    //     TlVector eigval;
+    //     G.diagonal(&eigval, &eigvec);
+    //     eigval.save("G_exact_eigval.vec");
+    //     eigvec.save("G_exact_eigvec.mat");
+    // }
+
+    TlMatrix L = G.choleskyFactorization2();
+    L.save("L_exact.mat");
+
+    // check
     {
-        TlMatrix eigvec;
-        TlVector eigval;
-        G.diagonal(&eigval, &eigvec);
-        eigval.save("G_exact_eigval.vec");
-        eigvec.save("G_exact_eigvec.mat");
+        TlMatrix Lt = L;
+        Lt.transpose();
+        
+        TlMatrix LLt = L * Lt;
+        LLt.save("LLt_exact.mat");
     }
 }
 

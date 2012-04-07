@@ -13,7 +13,7 @@ DfJMatrix_Parallel::~DfJMatrix_Parallel()
 }
 
 
-void DfJMatrix_Parallel::buildJMatrix()
+void DfJMatrix_Parallel::buildJ()
 {
     const int iteration = this->m_nIteration;
     const RUN_TYPE runType = RUN_RKS;

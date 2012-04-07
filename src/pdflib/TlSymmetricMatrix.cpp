@@ -1306,7 +1306,7 @@ TlMatrix TlSymmetricMatrix::choleskyFactorization()
 }
 
 // Harbrecht, Peter, Schneider, 2011
-TlMatrix TlSymmetricMatrix::choleskyFactorization2(std::vector<TlVectorObject::size_type>* pPivot)
+TlMatrix TlSymmetricMatrix::choleskyFactorization2(std::vector<TlVectorObject::size_type>* pPivot) const
 {
     const double epsilon = 1.0E-16;
     const index_type N = this->getNumOfRows();

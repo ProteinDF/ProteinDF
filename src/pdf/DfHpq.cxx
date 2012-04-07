@@ -97,7 +97,7 @@ void DfHpq::getHpq(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2)
     this->loggerTime(" integral");
     this->resetCounter();
     this->getHpq_core(pHpq, pHpq2);
-    if (this->m_nChargeExtrapolateNumber != 0) {
+    if (this->m_nChargeExtrapolateNumber > 1) {
         *pHpq2 /= static_cast<double>(this->m_nChargeExtrapolateNumber);
     }
 

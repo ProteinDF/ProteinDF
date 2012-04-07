@@ -391,15 +391,32 @@ void TlSymmetricMatrixTest::testSum() {
 void TlSymmetricMatrixTest::testCholeskyDecomposition()
 {
     TlSymmetricMatrix A = this->getMatrixC();
-    A.print(std::cout);
+    //A.print(std::cout);
 
     //TlMatrix L = A.choleskyFactorization();
     TlMatrix L = A.choleskyFactorization2();
-    L.print(std::cout);
-    
+    //L.print(std::cout);
+
     TlMatrix Lt = L;
     Lt.transpose();
 
     TlMatrix LL = L * Lt;
-    LL.print(std::cout);
+    //LL.print(std::cout);
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(0, 0), LL(0, 0), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(0, 1), LL(0, 1), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(0, 2), LL(0, 2), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(0, 3), LL(0, 3), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(1, 0), LL(1, 0), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(1, 1), LL(1, 1), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(1, 2), LL(1, 2), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(1, 3), LL(1, 3), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(2, 0), LL(2, 0), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(2, 1), LL(2, 1), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(2, 2), LL(2, 2), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(2, 3), LL(2, 3), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(3, 0), LL(3, 0), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(3, 1), LL(3, 1), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(3, 2), LL(3, 2), threshold);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(A(3, 3), LL(3, 3), threshold);
 }

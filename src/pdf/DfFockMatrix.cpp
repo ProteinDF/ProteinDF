@@ -103,6 +103,8 @@ void DfFockMatrix::setCoulomb(const METHOD_TYPE nMethodType, TlSymmetricMatrix& 
         this->saveJMatrix(this->m_nIteration, J);
     } else {
         J = this->getJMatrix<TlSymmetricMatrix>(this->m_nIteration);
+        J.save(TlUtils::format("J.%d.mat", this->m_nIteration));
+
         // update method
         if (this->m_nIteration > 1) {
             const TlSymmetricMatrix prevJ = DfObject::getJMatrix<TlSymmetricMatrix>(this->m_nIteration -1);

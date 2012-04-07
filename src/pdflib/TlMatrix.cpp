@@ -1309,13 +1309,13 @@ bool inverseByLapack(TlMatrix& X)
         if (INFO == 0) {
             bAnswer = true;
         } else {
-            std::cerr << "inverseByLapack() faild.: dgetri() return code = " << INFO << std::endl;
+            std::cerr << "inverseByLapack() failed.: dgetri() return code = " << INFO << std::endl;
         }
     } else {
-        std::cerr << "inverseByLapack() faild.: dgetrf() return code = " << INFO << std::endl;
+        std::cerr << "inverseByLapack() failed.: dgetrf() return code = " << INFO << std::endl;
     }
 
-    //std::swap(X.m_nRows, X.m_nCols);
+    std::swap(X.m_nRows, X.m_nCols);
     
     delete[] WORK;
     WORK = NULL;

@@ -1505,6 +1505,8 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
         this->debugoutK_integralDriven();
     }
 #endif // DEBUG_K
+
+    pK->save("K.mat");
 }
 
 

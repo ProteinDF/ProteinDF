@@ -1327,11 +1327,11 @@ void DfCalcGridX::calcRhoVals_LDA(const std::vector<index_type>& P_rowIndexes,
     
     // const std::size_t numOfRows = P.getNumOfRows();
     // const std::size_t numOfCols = P.getNumOfCols();
-    assert(P_rowIndexes.size() == P.getNumOfRows());
-    assert(P_colIndexes.size() == P.getNumOfCols());
+    assert((index_type)P_rowIndexes.size() == P.getNumOfRows());
+    assert((index_type)P_colIndexes.size() == P.getNumOfCols());
     // const int calcMode = pGridMatrix->getNumOfCols();
     
-    const std::size_t numOfGrids = pGridMatrix->getNumOfRows();
+    const index_type numOfGrids = pGridMatrix->getNumOfRows();
 #pragma omp parallel for schedule(runtime)
     for (int grid = 0; grid < numOfGrids; ++grid) {
         const double x = pGridMatrix->get(grid, 0);
@@ -1364,11 +1364,11 @@ void DfCalcGridX::calcRhoVals_GGA(const std::vector<index_type>& P_rowIndexes,
     
     // const std::size_t numOfRows = P.getNumOfRows();
     // const std::size_t numOfCols = P.getNumOfCols();
-    assert(P_rowIndexes.size() == P.getNumOfRows());
-    assert(P_colIndexes.size() == P.getNumOfCols());
+    assert((index_type)P_rowIndexes.size() == P.getNumOfRows());
+    assert((index_type)P_colIndexes.size() == P.getNumOfCols());
     // const int calcMode = pGridMatrix->getNumOfCols();
     
-    const std::size_t numOfGrids = pGridMatrix->getNumOfRows();
+    const index_type numOfGrids = pGridMatrix->getNumOfRows();
 #pragma omp parallel for schedule(runtime)
     for (int grid = 0; grid < numOfGrids; ++grid) {
         const double x = pGridMatrix->get(grid, 0);
@@ -1630,7 +1630,7 @@ double DfCalcGridX::buildK_2(const TlMatrix& gridMatrix,
 
     TlMatrix tmpF(*pF);
     double energy = 0.0;
-    const std::size_t numOfAllGrids = gridMatrix.getNumOfRows();
+    const index_type numOfAllGrids = gridMatrix.getNumOfRows();
 #pragma omp parallel for schedule(runtime) reduction(+:energy)
     for (int grid = 0; grid < numOfAllGrids; ++grid) {
         const double x = gridMatrix.get(grid, 0);

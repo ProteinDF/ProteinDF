@@ -146,7 +146,20 @@ void DfObject::setParam(const TlSerializeData& data)
     // disk utilization(no == DIRECT, yes == DISK)
     this->m_bDiskUtilization = (TlUtils::toUpper(data["disk-utilization"].getStr()) == "YES") ? true : false;
     this->m_bMemorySave = (TlUtils::toUpper(data["scf-memory-saving"].getStr()) == "YES") ? true : false;
+    
+    this->isUpdateMethod_ = data["update_method"].getBoolean();
 
+    // J
+    {
+        this->J_engine_ = J_ENGINE_CONVENTIONAL;
+        const std::string J_Engine = TlUtils::toUpper(data["J_engine"].getStr());
+        if (J_Engine == "RI_J") {
+            this->J_engine_ = J_ENGINE_RI_J;
+        } else if (J_Engine == "CD") {
+            this->J_engine_ = J_ENGINE_CD;
+        }
+    }
+    
     // XC potential
     this->m_sXCFunctional = TlUtils::toUpper(data["xc-potential"].getStr());
     {
@@ -167,9 +180,6 @@ void DfObject::setParam(const TlSerializeData& data)
         }
     }
 
-    // RI_J
-    this->isRI_J_ = data["RI_J"].getBoolean();
-    
     // RI-K
     this->isRI_K_ = data["RI_K"].getBoolean();
     
