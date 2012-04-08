@@ -337,6 +337,12 @@ protected:
         J_ENGINE_RI_J,
         J_ENGINE_CD
     };
+
+    enum K_Engine_Type {
+        K_ENGINE_CONVENTIONAL,
+        K_ENGINE_RI_K,
+        K_ENGINE_CD
+    };
     
 protected:
     static const std::string m_sWorkDirPath; // fl_Work directory name
@@ -384,6 +390,9 @@ protected:
 
     // J
     J_Engine_Type J_engine_;
+
+    // K
+    K_Engine_Type K_engine_;
 
     std::string m_sXCFunctional;
     bool m_bIsXCFitting; /// true => XC項をRI法で計算, false => XC項を直接計算

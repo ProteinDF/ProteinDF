@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include "DfObject.h"
+#include "DfXCFunctional.h"
 #include "CnError.h"
 #include "TlVector.h"
 
@@ -97,6 +98,16 @@ void DfFockMatrix::mainDIRECT_RKS()
     {
         SymmetricMatrixType Fxc = DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration);
         F += Fxc;
+    }
+
+    {
+        const DfXCFunctional dfXCFunctional(this->pPdfParam_);
+        if (dfXCFunctional.isHybridFunctional() == true) {
+            double coef = dfXCFunctional.getFockExchangeCoefficient();
+            SymmetricMatrixType K = DfObject::getHFxMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration);
+            K *= coef;
+            F += K;
+        }
     }
 
     DfObject::saveFpqMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration, F);

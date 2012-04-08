@@ -172,7 +172,7 @@ void DfFockMatrix_Parallel::setCoulomb(const METHOD_TYPE nMethodType, TlSymmetri
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
     TlSymmetricMatrix J(this->m_nNumOfAOs);
-    if (this->isRI_J_ == true) {
+    if (this->J_engine_ == J_ENGINE_RI_J) {
         if (this->isUseNewEngine_ == true) {
             this->logger(" use new engine\n");
             DfFockMatrix::setCoulomb<TlSymmetricMatrix, TlVector, DfEriX_Parallel>(nMethodType, J);
@@ -209,7 +209,7 @@ void DfFockMatrix_Parallel::setCoulomb(const METHOD_TYPE nMethodType, TlSymmetri
 void DfFockMatrix_Parallel::setCoulomb(const METHOD_TYPE nMethodType, TlDistributeSymmetricMatrix& F)
 {
     TlDistributeSymmetricMatrix J(this->m_nNumOfAOs);
-    if (this->isRI_J_ == true) {
+    if (this->J_engine_ == J_ENGINE_RI_J) {
         if (this->isUseNewEngine_ == true) {
             this->logger(" use new engine\n");
             DfFockMatrix::setCoulomb<TlDistributeSymmetricMatrix, TlVector, DfEriX_Parallel>(nMethodType, J);

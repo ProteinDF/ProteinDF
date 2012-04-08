@@ -85,7 +85,7 @@ void DfFockMatrix::setXC_DIRECT(const RUN_TYPE nRunType, TlSymmetricMatrix& F)
 void DfFockMatrix::setCoulomb(const METHOD_TYPE nMethodType, TlSymmetricMatrix& F)
 {
     TlSymmetricMatrix J(this->m_nNumOfAOs);
-    if (this->isRI_J_ == true) {
+    if (this->J_engine_ == J_ENGINE_RI_J) {
         if (this->isUseNewEngine_ == true) {
             this->logger(" use new engine\n");
             this->setCoulomb<TlSymmetricMatrix, TlVector, DfEriX>(nMethodType, J);

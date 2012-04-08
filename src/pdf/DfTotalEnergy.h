@@ -72,6 +72,10 @@ protected:
     template<typename SymmetricMatrixType>
     double calcOneElectronPart(const SymmetricMatrixType& D);
 
+    /// Jの計算を行う
+    template<typename SymmetricMatrixType>
+    double calcJ(const SymmetricMatrixType& P);
+
     /// J[rho, rho~]の計算を行う（積分を直接計算）
     template<typename DfEriType, typename SymmetricMatrixType, typename VectorType>
     double calcJRhoRhoTilde_DIRECT(const SymmetricMatrixType& D);
@@ -80,6 +84,10 @@ protected:
     template<typename DfOverlapType, typename SymmetricMatrixType, typename VectorType>
     double calcExc_DIRECT(const SymmetricMatrixType& D, const VectorType& E);
     
+    /// Kの計算を行う
+    template<typename SymmetricMatrixType>
+    double calcK(const RUN_TYPE runType, const SymmetricMatrixType& P);
+
     template <class SymmetricMatrixType>
     void calcRealEnergy();
 
@@ -94,9 +102,11 @@ protected:
 
 protected:
     double m_dE_OneElectronPart;
+    double J_term_;
     double m_dE_J_Rho_RhoTilde;
     double m_dE_J_RhoTilde_RhoTilde;
     double m_dExc;
+    double K_term_;
     double m_dE_NuclearRepulsion;
     double m_dE_OEP_JRR_Exc;
     double E_disp_; /// Grimme dispersion Energy
@@ -109,21 +119,35 @@ protected:
 template<typename DfOverlapType, typename DfEriType, typename SymmetricMatrixType, typename VectorType>
 void DfTotalEnergy::exec_template()
 {
+    // 核-核反発
     this->m_dE_NuclearRepulsion = this->calculate_energy_nuclear_repulsion();
  
     const SymmetricMatrixType Ppq = this->getPpq<SymmetricMatrixType>(this->m_nMethodType);
 
     // クーロン項
-    {
-        // use Threeindexintegrals
-        const VectorType rho = this->getRho<VectorType>(this->m_nMethodType);
-        this->m_dE_J_RhoTilde_RhoTilde =
-            this->calcJRhoTildeRhoTilde<SymmetricMatrixType, VectorType>(rho);
-    }
-    if (! ((this->m_bMemorySave == false) && (this->m_bDiskUtilization == false))) {
-        // NOT use Threeindexintegrals
-        this->m_dE_J_Rho_RhoTilde =
-            this->calcJRhoRhoTilde_DIRECT<DfEriType, SymmetricMatrixType, VectorType>(Ppq);
+    switch (this->J_engine_) {
+    case J_ENGINE_RI_J:
+        {
+            // use Threeindexintegrals
+            const VectorType rho = this->getRho<VectorType>(this->m_nMethodType);
+            this->m_dE_J_RhoTilde_RhoTilde =
+                this->calcJRhoTildeRhoTilde<SymmetricMatrixType, VectorType>(rho);
+
+            if (! ((this->m_bMemorySave == false) && (this->m_bDiskUtilization == false))) {
+                // NOT use Threeindexintegrals
+                this->m_dE_J_Rho_RhoTilde =
+                    this->calcJRhoRhoTilde_DIRECT<DfEriType, SymmetricMatrixType, VectorType>(Ppq);
+            }
+        }
+        break;
+
+    case J_ENGINE_CONVENTIONAL:
+    case J_ENGINE_CD:
+        this->J_term_ = this->calcJ(Ppq);
+        break;
+
+    default:
+        break;
     }
     
     if ((this->m_bMemorySave == false) && (this->m_bDiskUtilization == false)) {
@@ -146,6 +170,8 @@ void DfTotalEnergy::exec_template()
                 if (this->enableGrimmeDispersion_ == true) {
                     this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
                 }
+
+                this->K_term_ = this->calcK(RUN_RKS, 0.5 * Ppq);
             }
             break;
 
@@ -417,13 +443,20 @@ double DfTotalEnergy::calcOneElectronPart(const SymmetricMatrixType& D)
     return Hpq.dot(D).sum();
 }
 
+template<typename SymmetricMatrixType>
+double DfTotalEnergy::calcJ(const SymmetricMatrixType& P)
+{
+    SymmetricMatrixType J = DfObject::getJMatrix<SymmetricMatrixType>(this->m_nIteration);
+    return 0.5 * J.dot(P).sum();
+}
+
 
 /// J[rho~, rho~] (( "1/2*rho*rho'*Sab" ))の計算を行う
 template<typename SymmetricMatrixType, typename VectorType>
 double DfTotalEnergy::calcJRhoTildeRhoTilde(const VectorType& rho)
 {
     double answer = 0.0;
-    if (this->isRI_J_ == true) {
+    if (this->J_engine_ == J_ENGINE_RI_J) {
         SymmetricMatrixType Sab;
         Sab.load(this->getSabMatrixPath());
         answer = -0.5 * (rho * (Sab * rho));
@@ -439,7 +472,7 @@ double DfTotalEnergy::calcJRhoRhoTilde_DIRECT(const SymmetricMatrixType& D)
 {
     SymmetricMatrixType J = DfObject::getJMatrix<SymmetricMatrixType>(this->m_nIteration);
 
-    const double coef = (this->isRI_J_ == true) ? 1.0 : 0.5;
+    const double coef = (this->J_engine_ == J_ENGINE_RI_J) ? 1.0 : 0.5;
     
     return coef * (J.dot(D).sum());
 }
@@ -456,6 +489,21 @@ double DfTotalEnergy::calcExc_DIRECT(const SymmetricMatrixType& D, const VectorT
     dfOverlap.getdeltaHpqG(E, B);
 
     return B.dot(D).sum();
+}
+
+
+template<typename SymmetricMatrixType>
+double DfTotalEnergy::calcK(const RUN_TYPE runType,
+                            const SymmetricMatrixType& P)
+{
+    double answer = 0.0;
+    DfXCFunctional dfXCFunctional(this->pPdfParam_);
+    if (dfXCFunctional.isHybridFunctional() == true) {
+        SymmetricMatrixType K = DfObject::getHFxMatrix<SymmetricMatrixType>(runType, this->m_nIteration);
+        answer = 0.5 * dfXCFunctional.getFockExchangeCoefficient() * K.dot(P).sum();
+    }
+
+    return answer;
 }
 
 

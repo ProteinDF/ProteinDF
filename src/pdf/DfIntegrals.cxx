@@ -232,7 +232,7 @@ void DfIntegrals::createERIMatrix()
 {
     unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-    if ((this->isRI_J_ == true) &&
+    if ((this->J_engine_ == J_ENGINE_RI_J) &&
         ((calcState & DfIntegrals::Sab) == 0)) {
         this->outputStartTitle("Sab");
 
@@ -282,7 +282,7 @@ void DfIntegrals::createInverseMatrixes()
 {
     unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-    if ((this->isRI_J_ == true) &&
+    if ((this->J_engine_ == J_ENGINE_RI_J) &&
         ((calcState & DfIntegrals::INV) == 0)) {
         this->outputStartTitle("inverse matrix");
         DfInvMatrix* pDfInvMatrix = this->getDfInvMatrixObject();

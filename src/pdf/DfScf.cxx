@@ -12,6 +12,7 @@
 #include "DfCalcGrid.h"
 #include "DfThreeindexintegrals.h"
 #include "DfXCFunctional.h"
+#include "DfKMatrix.h"
 #include "DfJMatrix.h"
 #include "DfFockMatrix.h"
 #include "DfTransFmatrix.h"
@@ -143,7 +144,7 @@ void DfScf::setScfParam()
 
     // Damp Object Type
     this->m_nDampObject = DAMP_DENSITY;
-    if (this->isRI_J_ == false) {
+    if (this->J_engine_ != J_ENGINE_RI_J) {
         this->m_nDampObject = DAMP_DENSITY_MATRIX;
     }
     {
@@ -182,6 +183,7 @@ int DfScf::execScfLoop()
         XCENEFIT,
         THREE_INDEX_INTEGRAL,
         XC_MATRIX,
+        K_MATRIX,
         J_MATRIX,
         FOCK,
         ENDFOCK,
@@ -218,6 +220,8 @@ int DfScf::execScfLoop()
         } else if ("THREE_INDEX_INTEGRAL" == respoint) {
             nScfState = XC_MATRIX;
         } else if ("XC_MATRIX" == respoint) {
+            nScfState = K_MATRIX;
+        } else if ("K_MATRIX" == respoint) {
             nScfState = J_MATRIX;
         } else if ("J_MATRIX" == respoint) {
             nScfState = FOCK;
@@ -289,9 +293,15 @@ int DfScf::execScfLoop()
         case XC_MATRIX:
             this->buildXcMatrix();
             this->setScfRestartPoint("XC_MATRIX");
-            nScfState = J_MATRIX;
+            nScfState = K_MATRIX;
             break;
 
+        case K_MATRIX:
+            this->setScfRestartPoint("K_MATRIX");
+            this->buildKMatrix();
+            nScfState = J_MATRIX;
+            break;
+            
         case J_MATRIX:
             this->setScfRestartPoint("J_MATRIX");
             this->buildJMatrix();
@@ -500,7 +510,7 @@ void DfScf::doDensityFitting()
     start_collection("density_fitting");
 #endif // __FUJITSU
     
-    if (this->isRI_J_ == true) {
+    if (this->J_engine_ == J_ENGINE_RI_J) {
         if (this->m_nIteration == 1) {
             if ((this->initialGuessType_ == GUESS_RHO) ||
                 (this->initialGuessType_ == GUESS_FILE_RHO)) {
@@ -645,20 +655,10 @@ DfXCFunctional* DfScf::getDfXCFunctional()
 
 void DfScf::buildJMatrix()
 {
-#ifdef __FUJITSU
-    start_collection("RI_J");
-#endif // __FUJITSU
-
-    // if (this->isRI_J_ == false) {
-        this->loggerStartTitle("Coulomb term");
-        DfJMatrix* pDfJMatrix = this->getDfJMatrixObject();
-        pDfJMatrix->buildJ();
-        this->loggerEndTitle();
-    // }
-
-#ifdef __FUJITSU
-    stop_collection("RI_J");
-#endif // __FUJITSU
+    this->loggerStartTitle("J matrix");
+    DfJMatrix* pDfJMatrix = this->getDfJMatrixObject();
+    pDfJMatrix->buildJ();
+    this->loggerEndTitle();
 }
 
 
@@ -666,6 +666,25 @@ DfJMatrix* DfScf::getDfJMatrixObject()
 {
     DfJMatrix* pDfJMatrix = new DfJMatrix(this->pPdfParam_);
     return pDfJMatrix;
+}
+
+
+void DfScf::buildKMatrix()
+{
+    const DfXCFunctional dfXCFunctional(this->pPdfParam_);
+    if (dfXCFunctional.isHybridFunctional() == true) {
+        this->loggerStartTitle("K matrix");
+        DfKMatrix* pDfKMatrix = this->getDfKMatrixObject();
+        pDfKMatrix->buildK();
+        this->loggerEndTitle();
+    }
+}
+
+
+DfKMatrix* DfScf::getDfKMatrixObject()
+{
+    DfKMatrix *pDfKMatrix = new DfKMatrix(this->pPdfParam_);
+    return pDfKMatrix;
 }
 
 

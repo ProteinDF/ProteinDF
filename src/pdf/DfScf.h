@@ -11,6 +11,7 @@
 
 class DfDensityFittingObject;
 class DfJMatrix;
+class DfKMatrix;
 class DfTransFmatrix;
 class DfDiagonal;
 class DfTransatob;
@@ -75,6 +76,9 @@ protected:
     void buildJMatrix();
     virtual DfJMatrix* getDfJMatrixObject();
     
+    void buildKMatrix();
+    virtual DfKMatrix* getDfKMatrixObject();
+
     void buildFock();
     virtual DfFockMatrix* getDfFockMatrixObject();
 

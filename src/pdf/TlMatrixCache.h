@@ -7,6 +7,7 @@
 #include "TlMatrixObject.h"
 #include "TlUtils.h"
 #include "TlFile.h"
+#include "TlLogging.h"
 
 class TlMatrixCache {
 public:
@@ -192,9 +193,12 @@ MatrixType TlMatrixCache::get(const std::string& path)
                 ++(stats.getFromDisk);
             }
         } else {
-            std::cerr << TlUtils::format("[WARN] TlMatrixCache::get(): file not found: %s",
-                                         path.c_str())
-                      << std::endl;
+            TlLogging& log = TlLogging::getInstance();
+            log.critical(TlUtils::format("TlMatrixCache::get(): file not found: %s",
+                                         path.c_str()));
+#ifndef NDEBUG
+            abort();
+#endif // NDEBUG
         }
     }
 

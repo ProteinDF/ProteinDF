@@ -47,27 +47,54 @@ void DfTotalEnergy::output()
         this->logger(TlUtils::format(" TE                     = %28.16lf\n", E_Total));
         this->logger("------------------------------------------------\n");
     } else {
+        this->log_.info("------------------------------------------------");
+
+        this->log_.info(TlUtils::format(" Ts+Vn          = %28.16lf\n", this->m_dE_OneElectronPart));
         E_Total += this->m_dE_OneElectronPart;
-        E_Total += this->m_dE_J_Rho_RhoTilde;
-        if (this->isRI_J_ == true) {
+
+        switch (this->J_engine_) {
+        case J_ENGINE_RI_J:
+            this->log_.info(TlUtils::format(" E_J[Rho, Rho~] = %28.16lf\n", this->m_dE_J_Rho_RhoTilde));
+            E_Total += this->m_dE_J_Rho_RhoTilde;
+            this->log_.info(TlUtils::format(" E_J[Rho~,Rho~] = %28.16lf\n", this->m_dE_J_RhoTilde_RhoTilde));
             E_Total += this->m_dE_J_RhoTilde_RhoTilde;
+            break;
+            
+        case J_ENGINE_CONVENTIONAL:
+        case J_ENGINE_CD:
+            this->log_.info(TlUtils::format(" E_J            = %28.16lf\n", this->J_term_));
+            E_Total += this->J_term_;
+            break;
+
+        default:
+            break;
         }
+
+        this->log_.info(TlUtils::format(" E_xc(pure)     = %28.16lf\n", this->m_dExc));
         E_Total += this->m_dExc;
+
+        if (this->enableGrimmeDispersion_ == true) {
+            this->log_.info(TlUtils::format(" E_cx(+disp.)   = %28.16lf\n", E_Total + this->E_disp_));
+        }
+
+        this->log_.info(TlUtils::format(" E_K            = %28.16lf\n", this->K_term_));
+        E_Total += this->K_term_;
+
+        this->log_.info(TlUtils::format(" E_nuclei       = %28.16lf\n", this->m_dE_NuclearRepulsion));
         E_Total += this->m_dE_NuclearRepulsion;
 
-        this->logger("------------------------------------------------\n");
-        this->logger(TlUtils::format(" Ts+Vn        = %28.16lf\n", this->m_dE_OneElectronPart));
-        this->logger(TlUtils::format(" J[Rho, Rho~] = %28.16lf\n", this->m_dE_J_Rho_RhoTilde));
-        if (this->isRI_J_ == true) {
-            this->logger(TlUtils::format(" J[Rho~,Rho~] = %28.16lf\n", this->m_dE_J_RhoTilde_RhoTilde));
-        }
-        this->logger(TlUtils::format(" Exc          = %28.16lf\n", this->m_dExc));
-        this->logger(TlUtils::format(" Enuclei      = %28.16lf\n", this->m_dE_NuclearRepulsion));
-        this->logger(TlUtils::format(" TE           = %28.16lf\n", E_Total));
-        if (this->enableGrimmeDispersion_ == true) {
-            this->logger(TlUtils::format(" TE(+disp.)   = %28.16lf\n", E_Total + this->E_disp_));
-        }
-        this->logger("------------------------------------------------\n");
+        this->log_.info(TlUtils::format(" TE             = %28.16lf\n", E_Total));
+        this->log_.info("------------------------------------------------");
+        // this->logger("------------------------------------------------\n");
+        // this->logger(TlUtils::format(" Ts+Vn        = %28.16lf\n", this->m_dE_OneElectronPart));
+        // this->logger(TlUtils::format(" J[Rho, Rho~] = %28.16lf\n", this->m_dE_J_Rho_RhoTilde));
+        // if (this->J_engine_ == J_ENGINE_RI_J) {
+        //     this->logger(TlUtils::format(" J[Rho~,Rho~] = %28.16lf\n", this->m_dE_J_RhoTilde_RhoTilde));
+        // }
+        // this->logger(TlUtils::format(" Exc          = %28.16lf\n", this->m_dExc));
+        // this->logger(TlUtils::format(" Enuclei      = %28.16lf\n", this->m_dE_NuclearRepulsion));
+        // this->logger(TlUtils::format(" TE           = %28.16lf\n", E_Total));
+        // this->logger("------------------------------------------------\n");
     }
 
     std::cout << TlUtils::format(" %3d th TE = %18.16lf", this->m_nIteration, E_Total) << std::endl;

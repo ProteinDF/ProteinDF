@@ -136,13 +136,13 @@ void DfXCFunctional::buildXcMatrix()
             this->saveFxcPureMatrix(RUN_RKS, this->m_nIteration, Fxc);
         }
         
-        if (this->m_bIsHybrid == true) {
-            // Fockの交換項を求める
-            this->loggerTime(" start: Fock exchange");
-            Fxc += this->getFockExchange(this->m_dFockExchangeCoef * Ppq, RUN_RKS);
-            this->XC_energy_ += DfXCFunctional::m_dFockExchangeEnergyAlpha;
-            this->loggerTime(" end: Fock exchange");
-        }
+        // if (this->m_bIsHybrid == true) {
+        //     // Fockの交換項を求める
+        //     this->loggerTime(" start: Fock exchange");
+        //     Fxc += this->getFockExchange(this->m_dFockExchangeCoef * Ppq, RUN_RKS);
+        //     this->XC_energy_ += DfXCFunctional::m_dFockExchangeEnergyAlpha;
+        //     this->loggerTime(" end: Fock exchange");
+        // }
 
         this->saveFxcMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration, Fxc);
     }
@@ -169,13 +169,13 @@ void DfXCFunctional::buildXcMatrix()
             this->saveFxcPureMatrix(RUN_UKS_BETA,  this->m_nIteration, FxcB);
         }
 
-        if (this->m_bIsHybrid == true) {
-            this->loggerTime(" start: Fock exchange");
-            FxcA += this->getFockExchange(this->m_dFockExchangeCoef * PApq, RUN_UKS_ALPHA);
-            FxcB += this->getFockExchange(this->m_dFockExchangeCoef * PBpq, RUN_UKS_BETA);
-            this->XC_energy_ += (DfXCFunctional::m_dFockExchangeEnergyAlpha + DfXCFunctional::m_dFockExchangeEnergyBeta);
-            this->loggerTime(" end: Fock exchange");
-        }
+        // if (this->m_bIsHybrid == true) {
+        //     this->loggerTime(" start: Fock exchange");
+        //     FxcA += this->getFockExchange(this->m_dFockExchangeCoef * PApq, RUN_UKS_ALPHA);
+        //     FxcB += this->getFockExchange(this->m_dFockExchangeCoef * PBpq, RUN_UKS_BETA);
+        //     this->XC_energy_ += (DfXCFunctional::m_dFockExchangeEnergyAlpha + DfXCFunctional::m_dFockExchangeEnergyBeta);
+        //     this->loggerTime(" end: Fock exchange");
+        // }
 
         this->saveFxcMatrix<TlSymmetricMatrix>(RUN_UKS_ALPHA, this->m_nIteration, FxcA);
         this->saveFxcMatrix<TlSymmetricMatrix>(RUN_UKS_BETA, this->m_nIteration, FxcB);

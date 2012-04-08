@@ -39,6 +39,7 @@ libpdf_la_SOURCES = \
 	DfDmatrix.h		DfDmatrix.cxx			\
 	DfEri.h			DfEri.cpp       		\
 	DfJMatrix.h		DfJMatrix.cpp			\
+	DfKMatrix.h		DfKMatrix.cpp			\
 	DfFockMatrix.h		DfFockMatrix.cpp		\
 	DfGenerateGrid.h	DfGenerateGrid.cpp		\
 	DfHpq.h			DfHpq.cxx			\

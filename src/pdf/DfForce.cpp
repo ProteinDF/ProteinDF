@@ -219,7 +219,7 @@ TlMatrix DfForce::getEnergyWeightedDensityMatrix(RUN_TYPE runType)
 
 void DfForce::calcForceFromCoulomb(RUN_TYPE runType)
 {
-    if (this->isRI_J_ == true) {
+    if (this->J_engine_ == J_ENGINE_RI_J) {
         this->calcForceFromCoulomb_RIJ(runType);
     } else {
         this->calcForceFromCoulomb_exact(runType);

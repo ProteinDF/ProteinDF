@@ -34,7 +34,7 @@ void DfJMatrix::buildJ()
         break;
     }
 
-    this->saveJMatrix(this->m_nIteration, J);
+    DfObject::saveJMatrix(this->m_nIteration, J);
 }
 
 

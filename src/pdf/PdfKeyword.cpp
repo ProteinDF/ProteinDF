@@ -587,13 +587,13 @@ void PdfKeyword::initialize()
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);
 
-    item.keyword          = "RI_K";
-    item.explanation      = "using RI method on building K matrix";
-    item.defaultValue     = "no";
-    item.syntax           = "(yes|no)";
+    item.keyword          = "K_engine";
+    item.explanation      = "build method for K matrix";
+    item.defaultValue     = "conventional";
+    item.syntax           = "(conventional|RI_K|CD)";
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);
-    
+
     item.keyword          = "scf-memory-saving";
     item.explanation      = "yes : use less memories and increase the times of calculation of three-index integrals";
     item.defaultValue     = "no";

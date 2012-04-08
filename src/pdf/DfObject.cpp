@@ -159,6 +159,17 @@ void DfObject::setParam(const TlSerializeData& data)
             this->J_engine_ = J_ENGINE_CD;
         }
     }
+
+    // K
+    {
+        this->K_engine_ = K_ENGINE_CONVENTIONAL;
+        const std::string K_Engine = TlUtils::toUpper(data["K_engine"].getStr());
+        if (K_Engine == "RI_K") {
+            this->K_engine_ = K_ENGINE_RI_K;
+        } else if (K_Engine == "CD") {
+            this->K_engine_ = K_ENGINE_CD;
+        }
+    }
     
     // XC potential
     this->m_sXCFunctional = TlUtils::toUpper(data["xc-potential"].getStr());
