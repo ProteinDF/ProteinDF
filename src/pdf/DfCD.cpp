@@ -71,7 +71,9 @@ void DfCD::makeSuperMatrix()
     const index_type dim = numOfAOs * (numOfAOs +1) / 2;
     TlSymmetricMatrix G(dim);
 
+#ifdef CHECK_LOOP
     this->check.resize(dim);
+#endif // CHECK_LOOP
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_sets"]);
@@ -80,7 +82,9 @@ void DfCD::makeSuperMatrix()
 
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+#ifdef CHECK_LOOP
     pDfTaskCtrl->setCutoffThreshold(-1.0);
+#endif // CHECK_LOOP
 
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
@@ -103,29 +107,29 @@ void DfCD::makeSuperMatrix()
     this->destroyEngines();
 
     G.save("G.mat");
-    {
-        this->check.save("check.mat");
-        for (int i = 0; i < dim; ++i) {
-            for (int j = 0; j <= i; ++j) {
-                if (std::fabs(this->check.get(i, j) - 1.0) > 1.0E-5) {
-                    std::cerr << TlUtils::format("count err: (%d, %d)=%f", i, j, this->check.get(i, j))
-                              << std::endl;
-                }
+#ifdef CHECK_LOOP
+    this->check.save("check.mat");
+    for (int i = 0; i < dim; ++i) {
+        for (int j = 0; j <= i; ++j) {
+            if (std::fabs(this->check.get(i, j) - 1.0) > 1.0E-5) {
+                std::cerr << TlUtils::format("count err: (%d, %d)=%f", i, j, this->check.get(i, j))
+                          << std::endl;
             }
         }
     }
+#endif // CHECK_LOOP
     
     TlMatrix L = G.choleskyFactorization2();
     L.save("L.mat");
 
     // check
-    {
-        TlMatrix Lt = L;
-        Lt.transpose();
+    // {
+    //     TlMatrix Lt = L;
+    //     Lt.transpose();
         
-        TlMatrix LLt = L * Lt;
-        LLt.save("LLt.mat");
-    }
+    //     TlMatrix LLt = L * Lt;
+    //     LLt.save("LLt.mat");
+    // }
 }
 
 void DfCD::makeSuperMatrix_kernel(const TlOrbitalInfo& orbitalInfo,
@@ -208,8 +212,10 @@ void DfCD::storeG(const index_type shellIndexP, const int maxStepsP,
                     if (indexQ <= indexP) {
                         if ((shellIndexQ != shellIndexS) || (indexR <= indexP)) {
                             if (indexS <= maxIndexS) {
-                                this->check.add(indexPQ, indexRS, 1.0);
                                 pG->set(indexPQ, indexRS, value);
+#ifdef CHECK_LOOP
+                                this->check.add(indexPQ, indexRS, 1.0);
+#endif // CHECK_LOOP
                             }
                         }
                     }
@@ -296,26 +302,6 @@ void DfCD::makeSuperMatrix_exact()
                                                     
                                                     const double value = engine.WORK[index];
 
-                                                    // check
-                                                    // if (((indexPQ == 115) && (indexRS == 111)) ||
-                                                    //     ((indexPQ == 111) && (indexRS == 115))) {
-                                                    //     std::cerr << TlUtils::format("CHECK <%d, %d> (%d, %d|%d, %d) [%d, %d|%d, %d]= %18.10f",
-                                                    //                                  indexPQ, indexRS,
-                                                    //                                  indexP, indexQ, indexR, indexS,
-                                                    //                                  shellIndexP, shellIndexQ, shellIndexR, shellIndexS,
-                                                    //                                  value)
-                                                    //               << std::endl;
-                                                    // }
-                                                    // if ((shellIndexP == 9) && (shellIndexQ == 9) &&
-                                                    //     (shellIndexR == 9) && (shellIndexS == 9)) {
-                                                    //     std::cerr << TlUtils::format("CHECK <%2d, %2d> (%2d, %2d|%2d, %2d) [%2d, %2d|%2d, %2d]= %18.10f",
-                                                    //                                  indexPQ, indexRS,
-                                                    //                                  indexP, indexQ, indexR, indexS,
-                                                    //                                  shellIndexP, shellIndexQ, shellIndexR, shellIndexS,
-                                                    //                                  value)
-                                                    //               << std::endl;
-                                                    // }
-
                                                     G.set(indexPQ, indexRS, value);
                                                     ++index;
                                                 }
@@ -332,15 +318,6 @@ void DfCD::makeSuperMatrix_exact()
     }
 
     G.save("G_exact.mat");
-    // this->checkCholeskyFactorization(G);
-    // // 正定値(固有値が正)であるかをチェック
-    // {
-    //     TlMatrix eigvec;
-    //     TlVector eigval;
-    //     G.diagonal(&eigval, &eigvec);
-    //     eigval.save("G_exact_eigval.vec");
-    //     eigvec.save("G_exact_eigvec.mat");
-    // }
 
     TlMatrix L = G.choleskyFactorization2();
     L.save("L_exact.mat");

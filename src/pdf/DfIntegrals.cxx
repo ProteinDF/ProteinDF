@@ -8,12 +8,11 @@
 #include "DfEri.h"
 #include "DfEriX.h"
 #include "DfEri2.h"
+#include "DfCD.h"
 
 #include "DfXMatrix.h"
 #include "DfInvMatrix.h"
 #include "DfGenerateGrid.h"
-
-#include "DfCD.h"
 
 #include "Fl_Geometry.h"
 #include "Fl_GlobalinputX.h"
@@ -79,6 +78,9 @@ void DfIntegrals::main()
 //     this->outputEndTitle();
 //   }
 
+    // Cholesky Vector
+    this->createCholeskyVectors();
+
     // X matrix
     this->createXMatrix();
 
@@ -88,17 +90,16 @@ void DfIntegrals::main()
     // initialize grids
     this->createGrids();
 
-    // CholeskyDecomposition
-    {
-        DfCD dfCD(this->pPdfParam_);
-        dfCD.makeSuperMatrix();
-        //dfCD.makeSuperMatrix_exact();
-    }
-    
     // flush
     this->matrixCache_.flush();
 }
 
+
+DfCD* DfIntegrals::getDfCDObject()
+{
+    DfCD *pDfCD = new DfCD(this->pPdfParam_);
+    return pDfCD;
+}
 
 DfXMatrix* DfIntegrals::getDfXMatrixObject()
 {
@@ -170,60 +171,62 @@ void DfIntegrals::createOverlapMatrix()
     }
 
     // Sab2
-    if ((calcState & DfIntegrals::Sab2) == 0) {
-        this->outputStartTitle("Sab2");
-
-        TlSymmetricMatrix Sab2(this->m_nNumOfAux);
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" use new engine.\n");
-            dfOverlapX.getSab(&Sab2);
-        } else {
-            dfOverlap.getSab2(&Sab2);
-        }
-        this->saveSab2Matrix(Sab2);
-        
-        this->outputEndTitle();
-
-        calcState |= DfIntegrals::Sab2;
-        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-        this->saveParam();
-    }
-
-    // Sgd
-    if ((calcState & DfIntegrals::Sgd) == 0) {
-        if (this->m_bIsXCFitting == true) {
-            this->outputStartTitle("Sgd");
-
-            TlSymmetricMatrix Sgd(this->numOfAuxXC_);
-            dfOverlap.getSgd(&Sgd);
-            this->saveSgdMatrix(Sgd);
+    if (this->K_engine_ == K_ENGINE_RI_K) {
+        if ((calcState & DfIntegrals::Sab2) == 0) {
+            this->outputStartTitle("Sab2");
+            
+            TlSymmetricMatrix Sab2(this->m_nNumOfAux);
+            if (this->isUseNewEngine_ == true) {
+                this->logger(" use new engine.\n");
+                dfOverlapX.getSab(&Sab2);
+            } else {
+                dfOverlap.getSab2(&Sab2);
+            }
+            this->saveSab2Matrix(Sab2);
             
             this->outputEndTitle();
+            
+            calcState |= DfIntegrals::Sab2;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
         }
-
-        calcState |= DfIntegrals::Sgd;
-        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-        this->saveParam();
-    }
-
-    // Na
-    if ((calcState & DfIntegrals::Na) == 0) {
-        this->outputStartTitle("N_alpha");
-
-        TlVector Na(this->m_nNumOfAux);
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" use new engine.\n");
-            dfOverlapX.getNalpha(&Na);
-        } else {
-            dfOverlap.getNa(&Na);
-        }
-        this->saveNalpha(Na);
         
-        this->outputEndTitle();
+        // Sgd
+        if ((calcState & DfIntegrals::Sgd) == 0) {
+            if (this->m_bIsXCFitting == true) {
+                this->outputStartTitle("Sgd");
+                
+                TlSymmetricMatrix Sgd(this->numOfAuxXC_);
+                dfOverlap.getSgd(&Sgd);
+                this->saveSgdMatrix(Sgd);
+                
+                this->outputEndTitle();
+            }
+            
+            calcState |= DfIntegrals::Sgd;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
+        }
 
-        calcState |= DfIntegrals::Na;
-        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-        this->saveParam();
+        // Na
+        if ((calcState & DfIntegrals::Na) == 0) {
+            this->outputStartTitle("N_alpha");
+            
+            TlVector Na(this->m_nNumOfAux);
+            if (this->isUseNewEngine_ == true) {
+                this->logger(" use new engine.\n");
+                dfOverlapX.getNalpha(&Na);
+            } else {
+                dfOverlap.getNa(&Na);
+            }
+            this->saveNalpha(Na);
+            
+            this->outputEndTitle();
+            
+            calcState |= DfIntegrals::Na;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
+        }
     }
 }
 
@@ -232,25 +235,48 @@ void DfIntegrals::createERIMatrix()
 {
     unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-    if ((this->J_engine_ == J_ENGINE_RI_J) &&
-        ((calcState & DfIntegrals::Sab) == 0)) {
-        this->outputStartTitle("Sab");
-
-        TlSymmetricMatrix Sab(this->m_nNumOfAux);
-        DfEri dfEri(this->pPdfParam_);
-        DfEriX dfEriX(this->pPdfParam_);
-
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" use new engine.\n");
-            dfEriX.getJab(&Sab);
-        } else {
-            dfEri.getSab(&Sab);
+    if (this->J_engine_ == J_ENGINE_RI_J) {
+        if ((calcState & DfIntegrals::Sab) == 0) {
+            this->outputStartTitle("Sab");
+            
+            TlSymmetricMatrix Sab(this->m_nNumOfAux);
+            DfEri dfEri(this->pPdfParam_);
+            DfEriX dfEriX(this->pPdfParam_);
+            
+            if (this->isUseNewEngine_ == true) {
+                this->logger(" use new engine.\n");
+                dfEriX.getJab(&Sab);
+            } else {
+                dfEri.getSab(&Sab);
+            }
+            this->saveSabMatrix(Sab);
+            
+            this->outputEndTitle();
+            
+            calcState |= DfIntegrals::Sab;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
         }
-        this->saveSabMatrix(Sab);
-        
+    }
+}
+
+
+void DfIntegrals::createCholeskyVectors()
+{
+    if ((this->J_engine_ == J_ENGINE_CD) || (this->K_engine_ == K_ENGINE_CD)) {
+        unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+        if ((calcState & DfIntegrals::CD) == 0) { 
+            this->outputStartTitle("Cholesky Vectors");
+            DfCD *pDfCD = this->getDfCDObject();
+            pDfCD->makeSuperMatrix();
+            
+            delete pDfCD;
+            pDfCD = NULL;
+        }
+
         this->outputEndTitle();
 
-        calcState |= DfIntegrals::Sab;
+        calcState |= DfIntegrals::CD;
         (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
         this->saveParam();
     }
@@ -282,20 +308,21 @@ void DfIntegrals::createInverseMatrixes()
 {
     unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-    if ((this->J_engine_ == J_ENGINE_RI_J) &&
-        ((calcState & DfIntegrals::INV) == 0)) {
-        this->outputStartTitle("inverse matrix");
-        DfInvMatrix* pDfInvMatrix = this->getDfInvMatrixObject();
-        pDfInvMatrix->DfInvMain();
-
-        delete pDfInvMatrix;
-        pDfInvMatrix = NULL;
-
-        this->outputEndTitle();
-
-        calcState |= DfIntegrals::INV;
-        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-        this->saveParam();
+    if (this->J_engine_ == J_ENGINE_RI_J) {
+        if ((calcState & DfIntegrals::INV) == 0) {
+            this->outputStartTitle("inverse matrix");
+            DfInvMatrix* pDfInvMatrix = this->getDfInvMatrixObject();
+            pDfInvMatrix->DfInvMain();
+            
+            delete pDfInvMatrix;
+            pDfInvMatrix = NULL;
+            
+            this->outputEndTitle();
+            
+            calcState |= DfIntegrals::INV;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
+        }
     }
 }
 

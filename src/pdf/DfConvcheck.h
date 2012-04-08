@@ -104,7 +104,9 @@ void DfConvcheck::main(const int iteration)
     switch (this->m_nMethodType) {
     case METHOD_RKS:
         {
-            this->dev_sd = this->dev_standard_dev_cd<SymmetricMatrixType>(RUN_RKS, iteration);
+            if (this->J_engine_ == J_ENGINE_RI_J) {
+                this->dev_sd = this->dev_standard_dev_cd<SymmetricMatrixType>(RUN_RKS, iteration);
+            }
             this->dev_dm = this->dev_density_matrix<SymmetricMatrixType>(RUN_RKS, iteration);
             this->dev_ks = this->dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_RKS, iteration);
             if (this->m_bIsXCFitting == true) {
@@ -117,14 +119,17 @@ void DfConvcheck::main(const int iteration)
 
     case METHOD_UKS:
         {
-            this->dev_sd_a = dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
+            if (this->J_engine_ == J_ENGINE_RI_J) {
+                this->dev_sd_a = dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
+                this->dev_sd_b = dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
+            }
+
             this->dev_dm_a = dev_density_matrix<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
             this->dev_ks_a = dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
             this->dev_cd_a = dev_cd_coefficient(RUN_UKS_ALPHA, iteration);
             this->dev_xc_a = dev_xc_coefficient(RUN_UKS_ALPHA, iteration);
             this->dev_xa_a = dev_xa_coefficient(RUN_UKS_ALPHA, iteration);
 
-            this->dev_sd_b = dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
             this->dev_dm_b = dev_density_matrix<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
             this->dev_ks_b = dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
             this->dev_cd_b = dev_cd_coefficient(RUN_UKS_BETA,  iteration);

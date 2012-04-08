@@ -8,6 +8,7 @@
 class DfHpq;
 class DfOverlap;
 class DfEri;
+class DfCD;
 class DfXMatrix;
 class DfInvMatrix;
 class DfGenerateGrid;
@@ -23,9 +24,10 @@ protected:
         Sgd = 8,
         Na = 16,
         Sab = 32,
-        X = 64,
-        INV = 128,
-        GRID = 256
+        CD = 64,
+        X = 128,
+        INV = 256,
+        GRID = 512
     };
 
 public:
@@ -43,12 +45,14 @@ protected:
     virtual void createHpqMatrix();
     virtual void createOverlapMatrix();
     virtual void createERIMatrix();
+    void createCholeskyVectors();
 
     void createInverseMatrixes();
     void createXMatrix();
     void createGrids();
 
 protected:
+    virtual DfCD* getDfCDObject();
     virtual DfXMatrix* getDfXMatrixObject();
     virtual DfInvMatrix* getDfInvMatrixObject();
     virtual DfGenerateGrid* getDfGenerateGridObject();

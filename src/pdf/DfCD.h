@@ -9,6 +9,8 @@
 class TlOrbitalInfo;
 class DfEriEngine;
 
+// #define CHECK_LOOP // 計算ループ構造のチェック
+
 class DfCD : public DfObject
 {
 public:
@@ -81,7 +83,9 @@ protected:
     double cutoffEpsilon3_;
 
 private:
+#ifdef CHECK_LOOP
     TlSymmetricMatrix check;
+#endif // CHECK_LOOP
 };
 
 #endif // DFCD_H
