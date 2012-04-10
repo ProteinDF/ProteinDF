@@ -594,6 +594,13 @@ void PdfKeyword::initialize()
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);
 
+    item.keyword          = "CD_epsilon";
+    item.explanation      = "epsilon for Cholesky Decomposition";
+    item.defaultValue     = "1.0E-5";
+    item.syntax           = "(real)";
+    item.type             = KWD_DEFAULT;
+    this->kwdList_.push_back(item);
+
     item.keyword          = "scf-memory-saving";
     item.explanation      = "yes : use less memories and increase the times of calculation of three-index integrals";
     item.defaultValue     = "no";

@@ -1,6 +1,7 @@
 #include "CnError.h"
 #include "DfJMatrix.h"
 #include "DfEriX.h"
+#include "DfCD.h"
 #include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
 
@@ -111,28 +112,6 @@ void DfJMatrix::getJ_RI(TlSymmetricMatrix* pJ)
 
 void DfJMatrix::getJ_CD(TlSymmetricMatrix* pJ)
 {
-    const index_type numOfAOs = this->m_nNumOfAOs;
-
-    const TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
-
-    // cholesky vector
-    TlMatrix L;
-    L.load("L.mat");
-    const index_type numOfCBs = L.getNumOfCols();
-    
-    for (index_type I = 0; I < numOfCBs; ++I) {
-        TlSymmetricMatrix LI(numOfAOs);
-        for (index_type p = 0; p < numOfAOs; ++p) {
-            for (index_type q = 0; q <= p; ++q) {
-                const index_type rs = p + (2 * numOfAOs - (q +1)) * q / 2;
-                LI.set(p, q, L.get(rs, I));
-            }
-        }
-
-        TlMatrix QI = LI;
-        QI.dot(P);
-        double qi = QI.sum();
-
-        *pJ += qi*LI;
-    }
+    DfCD dfCD(this->pPdfParam_);
+    dfCD.getJ(pJ);
 }

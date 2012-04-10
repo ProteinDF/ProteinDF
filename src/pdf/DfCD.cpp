@@ -16,10 +16,18 @@ const int DfCD::MAX_SHELL_TYPE = 2 + 1;
 DfCD::DfCD(TlSerializeData* pPdfParam) 
     : DfObject(pPdfParam), pEriEngines_(NULL)
 {
+    this->numOfPQs_ = this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2;
+
     this->cutoffThreshold_ = 1.0E-10;
     if ((*pPdfParam)["cut-value"].getStr().empty() != true) {
         this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
     }    
+
+    this->epsilon_ = std::sqrt(this->cutoffThreshold_);
+    if ((*pPdfParam)["CD_epsilon"].getStr().empty() != true) {
+        this->epsilon_ = (*pPdfParam)["CD_epsilon"].getDouble();
+    }    
+
 
     // this->cutoffEpsilon1_ = this->cutoffThreshold_ * 0.01;
     // if ((*pPdfParam)["cutoff_epsilon1"].getStr().empty() != true) {
@@ -66,6 +74,284 @@ void DfCD::destroyEngines()
 }
 
 void DfCD::makeSuperMatrix()
+{
+    this->makeSuperMatrix_screening();
+    //this->makeSuperMatrix_noScreening();
+}
+
+void DfCD::makeSuperMatrix_screening()
+{
+    //const index_type numOfAOs = this->m_nNumOfAOs;
+    const index_type numOfPQs = this->numOfPQs_;
+
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_sets"]);
+    
+    TlSparseSymmetricMatrix schwarzTable;
+    std::vector<index_type> I2PQ; // I~ to (pq) index table; size of (I2PQ) is the number of I~.
+    this->calcPQPQ(orbitalInfo, &schwarzTable, &I2PQ);
+    const index_type numOfItilde = I2PQ.size();
+    this->log_.info(TlUtils::format(" # of PQ dimension: %d", int(numOfPQs)));
+    this->log_.info(TlUtils::format(" # of I~ dimension: %d", int(numOfItilde)));
+
+    // 
+    std::vector<index_type> PQ2I(numOfPQs, -1);
+    for (index_type i = 0; i < numOfItilde; ++i) {
+        const index_type pq_index = I2PQ[i];
+        assert(pq_index < numOfPQs);
+        PQ2I[pq_index] = i;
+    }
+
+    this->createEngines();
+    DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+
+    TlSymmetricMatrix G(numOfItilde);
+    std::vector<DfTaskCtrl::Task4> taskList;
+    bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                          schwarzTable,
+                                          this->grainSize_, &taskList, true);
+    while (hasTask == true) {
+        this->makeSuperMatrix_kernel2(orbitalInfo,
+                                      taskList,
+                                      PQ2I,
+                                      &G);
+        hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                         schwarzTable,
+                                         this->grainSize_, &taskList);
+    }
+
+    this->finalize(&G);
+    pDfTaskCtrl->cutoffReport();
+
+    delete pDfTaskCtrl;
+    pDfTaskCtrl = NULL;
+    this->destroyEngines();
+
+    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
+    TlMatrix L = G.choleskyFactorization2(this->epsilon_);
+    this->log_.info(TlUtils::format("Cholesky Vectors: %d", L.getNumOfCols()));
+    L.save("L.mat");
+
+    this->saveI2PQ(I2PQ);
+}
+
+
+void DfCD::calcPQPQ(const TlOrbitalInfoObject& orbitalInfo,
+                    TlSparseSymmetricMatrix *pSchwarzTable,
+                    std::vector<index_type> *pI2PQ)
+{
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    assert(numOfAOs == orbitalInfo.getNumOfOrbitals());
+
+    const double threshold = this->cutoffThreshold_;
+    this->log_.info(TlUtils::format(" I~ threshold: %e", threshold));
+
+    DfEriEngine engine;
+    engine.setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+    this->log_.info(TlUtils::format(" pGTO quartet threshold: %e", this->cutoffEpsilon3_));
+
+    // initialize
+    pI2PQ->clear();
+    pI2PQ->reserve(this->numOfPQs_);
+    pSchwarzTable->clear();
+    pSchwarzTable->resize(numOfAOs);
+
+    for (index_type shellIndexP = 0; shellIndexP < numOfAOs; ) {
+        const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+        const int maxStepsP = 2 * shellTypeP + 1;
+
+        for (index_type shellIndexQ = 0; shellIndexQ <= shellIndexP; ) {
+            const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+            
+            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::CGTO_Pair PQ = engine.getCGTO_pair(orbitalInfo,
+                                                                  shellIndexP,
+                                                                  shellIndexQ,
+                                                                  0.0);
+            engine.calc(queryPQ, queryPQ, PQ, PQ);
+
+            const int maxStepsPQ = maxStepsP * maxStepsQ;
+            double maxValue = 0.0;
+            for (int p = 0; p < maxStepsP; ++p) {
+                const index_type indexP = shellIndexP + p;
+                for (int q = 0; q < maxStepsQ; ++q) {
+                    const index_type indexQ = shellIndexQ + q;
+                    
+                    const int pq_index = p * maxStepsQ + q;
+                    const int pqpq_index = pq_index * maxStepsPQ + pq_index;
+                    
+                    const double value = std::fabs(engine.WORK[pqpq_index]);
+
+                    // for schwartz
+                    maxValue = std::max(maxValue, value);
+
+                    // for I~ to pq table
+                    if (value > threshold) {
+                        pI2PQ->push_back(TlSymmetricMatrix::vtr_index(indexP, indexQ, numOfAOs));
+                    }
+                }
+            }
+            pSchwarzTable->set(shellIndexP, shellIndexQ, std::sqrt(maxValue));
+            
+            shellIndexQ += maxStepsQ;
+        }
+        shellIndexP += maxStepsP;
+    }
+}
+
+void DfCD::makeSuperMatrix_kernel2(const TlOrbitalInfo& orbitalInfo,
+                                   const std::vector<DfTaskCtrl::Task4>& taskList,
+                                   const std::vector<index_type>& PQ2I,
+                                   TlSymmetricMatrix* pG)
+{
+    const int taskListSize = taskList.size();
+    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+
+#pragma omp parallel
+    {
+        int threadID = 0;
+#ifdef _OPENMP
+        threadID = omp_get_thread_num();
+#endif // _OPENMP
+        
+        //this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+#pragma omp for
+        for (int i = 0; i < taskListSize; ++i) {
+            const index_type shellIndexP = taskList[i].shellIndex1;
+            const index_type shellIndexQ = taskList[i].shellIndex2;
+            const index_type shellIndexR = taskList[i].shellIndex3;
+            const index_type shellIndexS = taskList[i].shellIndex4;
+            const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+            const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+            const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
+            const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
+            const int maxStepsP = 2 * shellTypeP + 1;
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+            const int maxStepsR = 2 * shellTypeR + 1;
+            const int maxStepsS = 2 * shellTypeS + 1;
+
+            const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
+                                                                                        shellIndexP,
+                                                                                        shellIndexQ,
+                                                                                        pairwisePGTO_cutoffThreshold);
+            const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
+                                                                                        shellIndexR,
+                                                                                        shellIndexS,
+                                                                                        pairwisePGTO_cutoffThreshold);
+            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
+            
+            this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
+            this->storeG2(shellIndexP, maxStepsP,
+                          shellIndexQ, maxStepsQ,
+                          shellIndexR, maxStepsR,
+                          shellIndexS, maxStepsS,
+                          PQ2I,
+                          this->pEriEngines_[threadID], pG);
+        }
+    }
+}
+
+void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
+                   const index_type shellIndexQ, const int maxStepsQ,
+                   const index_type shellIndexR, const int maxStepsR,
+                   const index_type shellIndexS, const int maxStepsS,
+                   const std::vector<index_type>& PQ2I,
+                   const DfEriEngine& engine,
+                   TlSymmetricMatrix* pG)
+{
+    const index_type numOfAOs = this->m_nNumOfAOs;
+
+    int index = 0;
+    for (int i = 0; i < maxStepsP; ++i) {
+        const index_type indexP = shellIndexP + i;
+
+        for (int j = 0; j < maxStepsQ; ++j) {
+            const index_type indexQ = shellIndexQ + j;
+            const index_type I_pq_index = TlSymmetricMatrix::vtr_index(indexP, indexQ, numOfAOs);
+            assert(I_pq_index < PQ2I.size());
+            const index_type indexPQ = PQ2I[I_pq_index];
+            if (indexPQ == -1) {
+                index += maxStepsR * maxStepsS;
+                continue;
+            }
+            
+            for (int k = 0; k < maxStepsR; ++k) {
+                const index_type indexR = shellIndexR + k;
+                
+                for (int l = 0; l < maxStepsS; ++l) {
+                    const index_type indexS = shellIndexS + l;
+                    
+                    const double value = engine.WORK[index];
+                    const index_type maxIndexS = (indexP == indexR) ? indexQ : indexR;
+
+                    const index_type I_rs_index = TlSymmetricMatrix::vtr_index(indexR, indexS, numOfAOs);
+                    assert(I_rs_index < PQ2I.size());
+                    const index_type indexRS = PQ2I[I_rs_index];
+                    if (indexRS == -1) {
+                        ++index;
+                        continue;
+                    }
+
+                    if (indexQ <= indexP) {
+                        if ((shellIndexQ != shellIndexS) || (indexR <= indexP)) {
+                            if (indexS <= maxIndexS) {
+                                pG->set(indexPQ, indexRS, value);
+#ifdef CHECK_LOOP
+                                this->check.add(indexPQ, indexRS, 1.0);
+#endif // CHECK_LOOP
+                            }
+                        }
+                    }
+                    ++index;
+                 }
+            }
+        }
+    }
+}
+
+void DfCD::saveI2PQ(const std::vector<int>& I2PQ) 
+{
+    std::string filepath = "I2PQ.vtr";
+    std::ofstream ofs;
+    ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::binary);
+
+    const std::size_t size = I2PQ.size();
+    ofs.write(reinterpret_cast<const char*>(&size), sizeof(std::size_t));
+    for (std::size_t i = 0; i < size; ++i) {
+        int tmp = I2PQ[i];
+        ofs.write(reinterpret_cast<const char*>(&tmp), sizeof(int));
+    }
+
+    ofs.close();
+}
+
+std::vector<int> DfCD::getI2PQ()
+{
+    std::string filepath = "I2PQ.vtr";
+    std::ifstream ifs;
+    ifs.open(filepath.c_str(), std::ofstream::in | std::ofstream::binary);
+    if (ifs.fail()) {
+        abort();
+    }
+
+    std::size_t size = 0;
+    ifs.read(reinterpret_cast<char*>(&size), sizeof(std::size_t));
+
+    std::vector<int> answer(size);
+    int tmp = 0;
+    for (std::size_t i = 0; i < size; ++i) {
+        ifs.read(reinterpret_cast<char*>(&tmp), sizeof(int));
+        answer[i] = tmp;
+    }
+
+    ifs.close();
+    return answer;
+}
+
+
+void DfCD::makeSuperMatrix_noScreening()
 {
     const index_type numOfAOs = this->m_nNumOfAOs;
     const index_type dim = numOfAOs * (numOfAOs +1) / 2;
@@ -119,17 +405,8 @@ void DfCD::makeSuperMatrix()
     }
 #endif // CHECK_LOOP
     
-    TlMatrix L = G.choleskyFactorization2();
+    TlMatrix L = G.choleskyFactorization2(this->epsilon_);
     L.save("L.mat");
-
-    // check
-    // {
-    //     TlMatrix Lt = L;
-    //     Lt.transpose();
-        
-    //     TlMatrix LLt = L * Lt;
-    //     LLt.save("LLt.mat");
-    // }
 }
 
 void DfCD::makeSuperMatrix_kernel(const TlOrbitalInfo& orbitalInfo,
@@ -319,7 +596,7 @@ void DfCD::makeSuperMatrix_exact()
 
     G.save("G_exact.mat");
 
-    TlMatrix L = G.choleskyFactorization2();
+    TlMatrix L = G.choleskyFactorization2(this->epsilon_);
     L.save("L_exact.mat");
 
     // check
@@ -331,51 +608,6 @@ void DfCD::makeSuperMatrix_exact()
         LLt.save("LLt_exact.mat");
     }
 }
-
-void DfCD::checkCholeskyFactorization(const TlSymmetricMatrix& G)
-{
-    const index_type dim = G.getNumOfRows();
-    
-    FittingTbl ft(dim);
-    {
-        const index_type numOfAOs = this->m_nNumOfAOs;
-        index_type index = 0;
-        for (index_type i = 0; i < numOfAOs; ++i) {
-            for (index_type j = 0; j <= i; ++j) {
-                ft[index].p = i;
-                ft[index].q = j;
-                this->log_.debug(TlUtils::format("(%d, %d) -> %d", i, j, index));
-                ++index;
-            }
-        }
-        assert(index == dim);
-    }
-
-    
-    std::vector<double> diagonals(dim);
-    for (index_type i = 0; i < dim; ++i) {
-        diagonals[i] = G.get(i, i);
-    }
-
-    for (index_type i = 0; i < dim; ++i) {
-        const double max_i = diagonals[i];
-        for (index_type j = 0; j < i; ++j) {
-            const double max_j = diagonals[j];
-            const double value = G.get(i, j);
-            if (std::fabs(value) < 1.0E-16) {
-                continue;
-            }
-            if (value > std::max(max_i, max_j)) {
-                this->log_.debug(TlUtils::format("CD_check G((%d, %d), (%d, %d))=%16.10f > max(%16.10f, %16.10f)",
-                                                 ft[i].p, ft[i].q,
-                                                 ft[j].p, ft[j].q,
-                                                 value,
-                                                 max_i, max_j));
-            }
-        }
-    }
-}
-
 
 DfCD::ShellArrayTable DfCD::makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo)
 {
@@ -494,3 +726,129 @@ TlSparseSymmetricMatrix DfCD::makeSchwarzTable(const TlOrbitalInfoObject& orbita
 
     return schwarz;
 }
+
+TlSymmetricMatrix DfCD::getCholeskyVector(const TlVector& L_col,
+                                          const std::vector<int>& I2PQ)
+{
+    const index_type numOfItilde = L_col.getSize();
+    TlVector buf(this->numOfPQs_);
+    for (index_type i = 0; i < numOfItilde; ++i) {
+        const index_type index = I2PQ[i];
+        buf[index] = L_col[i];
+    }
+
+    return TlSymmetricMatrix(buf, this->m_nNumOfAOs);
+}
+
+void DfCD::getJ(TlSymmetricMatrix* pJ)
+{
+    const index_type numOfAOs = this->m_nNumOfAOs;
+
+    const TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+
+    // cholesky vector
+    TlMatrix L;
+    L.load("L.mat");
+    const index_type numOfCBs = L.getNumOfCols();
+
+    const std::vector<int> I2PQ = this->getI2PQ();
+    for (index_type I = 0; I < numOfCBs; ++I) {
+        TlSymmetricMatrix LI = this->getCholeskyVector(L.getColVector(I), I2PQ);
+        assert(LI.getNumOfRows() == numOfAOs);
+        assert(LI.getNumOfCols() == numOfAOs);
+        
+        TlMatrix QI = LI;
+        QI.dot(P);
+        const double qi = QI.sum();
+        
+        *pJ += qi*LI;
+    }
+}
+
+
+void DfCD::getK(const RUN_TYPE runType,
+                TlSymmetricMatrix *pK)
+{
+    TlMatrix L;
+    L.load("L.mat");
+    const index_type numOfCBs = L.getNumOfCols();
+    
+    TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(runType, this->m_nIteration -1);
+    const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
+    
+    const std::vector<int> I2PQ = this->getI2PQ();
+    for (index_type I = 0; I < numOfCBs; ++I) {
+        TlSymmetricMatrix l = this->getCholeskyVector(L.getColVector(I), I2PQ);;
+    
+        TlMatrix X = l * C;
+        TlMatrix Xt = X;
+        Xt.transpose();
+        
+        TlSymmetricMatrix XX = X * Xt;
+        *pK += XX;
+    }
+    
+    *pK *= -1.0;
+}
+
+
+// void DfCD::getJ(TlSymmetricMatrix* pJ)
+// {
+//     const index_type numOfAOs = this->m_nNumOfAOs;
+
+//     const TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+
+//     // cholesky vector
+//     TlMatrix L;
+//     L.load("L.mat");
+//     const index_type numOfCBs = L.getNumOfCols();
+    
+//     for (index_type I = 0; I < numOfCBs; ++I) {
+//         TlSymmetricMatrix LI(numOfAOs);
+//         for (index_type p = 0; p < numOfAOs; ++p) {
+//             for (index_type q = 0; q <= p; ++q) {
+//                 const index_type rs = p + (2 * numOfAOs - (q +1)) * q / 2;
+//                 LI.set(p, q, L.get(rs, I));
+//             }
+//         }
+
+//         TlMatrix QI = LI;
+//         QI.dot(P);
+//         double qi = QI.sum();
+
+//         *pJ += qi*LI;
+//     }
+// }
+
+
+// void DfCD::getK(const RUN_TYPE runType,
+//                 TlSymmetricMatrix *pK)
+// {
+//     const index_type numOfAOs = this->m_nNumOfAOs;
+    
+//     TlMatrix L;
+//     L.load("L.mat");
+//     const index_type numOfCBs = L.getNumOfCols();
+    
+//     TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(runType, this->m_nIteration -1);
+//     const TlMatrix C = P.choleskyFactorization2();
+    
+//     for (index_type I = 0; I < numOfCBs; ++I) {
+//         TlSymmetricMatrix l(numOfAOs);
+//         for (index_type p = 0; p < numOfAOs; ++p) {
+//             for (index_type q = 0; q <= p; ++q) {
+//                 const index_type index = p + (2 * numOfAOs - (q +1)) * q / 2;
+//                 l.set(p, q, L.get(index, I));
+//             }
+//         }
+    
+//         TlMatrix X = l * C;
+//         TlMatrix Xt = X;
+//         Xt.transpose();
+        
+//         TlSymmetricMatrix XX = X * Xt;
+//         *pK += XX;
+//     }
+    
+//     *pK *= -1.0;
+// }

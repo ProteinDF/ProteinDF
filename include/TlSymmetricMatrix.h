@@ -236,7 +236,7 @@ public:
     virtual bool inverse();
 
     TlMatrix choleskyFactorization();
-    TlMatrix choleskyFactorization2(std::vector<TlVectorObject::size_type>* pPivot = NULL) const;
+    TlMatrix choleskyFactorization2(const double threshold = 1.0E-16) const;
 
 public:
     friend std::ostream& operator <<(std::ostream& out, const TlSymmetricMatrix& rhs);

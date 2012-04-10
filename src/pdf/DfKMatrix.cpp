@@ -57,42 +57,6 @@ void DfKMatrix::getK_byRI_K(const RUN_TYPE runType,
     }
 }
 
-void DfKMatrix::getK_byCD(const RUN_TYPE runType,
-                          TlSymmetricMatrix *pK)
-{
-    // DfCD dfCD(this->pPdfParam_);
-    // dfCD.getK(runType, pK);
-
-    const index_type numOfAOs = this->m_nNumOfAOs;
-    
-    TlMatrix L;
-    L.load("L.mat");
-    const index_type numOfCBs = L.getNumOfCols();
-    
-    TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(runType, this->m_nIteration -1);
-    const TlMatrix C = P.choleskyFactorization2();
-    
-    for (index_type I = 0; I < numOfCBs; ++I) {
-        TlSymmetricMatrix l(numOfAOs);
-        for (index_type p = 0; p < numOfAOs; ++p) {
-            for (index_type q = 0; q <= p; ++q) {
-                const index_type index = p + (2 * numOfAOs - (q +1)) * q / 2;
-                l.set(p, q, L.get(index, I));
-            }
-        }
-    
-        TlMatrix X = l * C;
-        TlMatrix Xt = X;
-        Xt.transpose();
-        
-        TlSymmetricMatrix XX = X * Xt;
-        *pK += XX;
-    }
-    
-    *pK *= -1.0;
-}
-
-
 void DfKMatrix::getK_conventional(const RUN_TYPE runType,
                                   TlSymmetricMatrix *pK)
 {
@@ -113,4 +77,13 @@ void DfKMatrix::getK_conventional(const RUN_TYPE runType,
         }
     }
 }
+
+
+void DfKMatrix::getK_byCD(const RUN_TYPE runType,
+                          TlSymmetricMatrix *pK)
+{
+    DfCD dfCD(this->pPdfParam_);
+    dfCD.getK(runType, pK);
+}
+
 

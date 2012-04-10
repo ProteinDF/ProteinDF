@@ -14,26 +14,16 @@ class DfEriEngine;
 class DfCD : public DfObject
 {
 public:
-    struct CholeskyBasis {
-        explicit CholeskyBasis(index_type in_p = 0, index_type in_q = 0)
-            : p(in_p), q(in_q) {
-        }
-        index_type p;
-        index_type q;
-    };
-
-    ///
-    /// 0, 1, 2,... の順に対応するp, qのペアを格納する
-    typedef std::vector<CholeskyBasis> FittingTbl;
-    
-    
-public:
     DfCD(TlSerializeData* pPdfParam);
     virtual ~DfCD();
 
 public:
     void makeSuperMatrix();
     void makeSuperMatrix_exact();
+    
+    void getJ(TlSymmetricMatrix *pJ);
+    void getK(const RUN_TYPE runType,
+              TlSymmetricMatrix *pK);
 
 protected:
     void createEngines();
@@ -55,8 +45,31 @@ protected:
     DfTaskCtrl* getDfTaskCtrlObject() const;
     void finalize(TlMatrix* pMtx);
 
-    void checkCholeskyFactorization(const TlSymmetricMatrix& G);
-    
+protected:
+    void makeSuperMatrix_screening();
+    void makeSuperMatrix_noScreening();
+
+protected:
+    void calcPQPQ(const TlOrbitalInfoObject& orbitalInfo,
+                  TlSparseSymmetricMatrix *pSchwarzTable,
+                  std::vector<index_type> *pI2PQ);
+    void makeSuperMatrix_kernel2(const TlOrbitalInfo& orbitalInfo,
+                                 const std::vector<DfTaskCtrl::Task4>& taskList,
+                                 const std::vector<index_type>& PQ2I,
+                                 TlSymmetricMatrix* pG);
+    void storeG2(const index_type shellIndexP, const int maxStepsP,
+                 const index_type shellIndexQ, const int maxStepsQ,
+                 const index_type shellIndexR, const int maxStepsR,
+                 const index_type shellIndexS, const int maxStepsS,
+                 const std::vector<index_type>& PQ2I,
+                 const DfEriEngine& engine,
+                 TlSymmetricMatrix* pG);
+    void saveI2PQ(const std::vector<int>& I2PQ);
+    std::vector<int> getI2PQ();
+
+    TlSymmetricMatrix getCholeskyVector(const TlVector& L_col,
+                                        const std::vector<int>& I2PQ);
+
 protected: // for exact
     typedef std::vector<index_type> ShellArray;
     typedef std::vector<ShellArray> ShellArrayTable;
@@ -78,9 +91,13 @@ protected: // for exact
     static const int MAX_SHELL_TYPE;
     
 protected:
+    index_type numOfPQs_;
+
     DfEriEngine* pEriEngines_;
+
     double cutoffThreshold_;
     double cutoffEpsilon3_;
+    double epsilon_;
 
 private:
 #ifdef CHECK_LOOP

@@ -1329,9 +1329,8 @@ TlMatrix TlSymmetricMatrix::choleskyFactorization()
 }
 
 // Harbrecht, Peter, Schneider, 2011
-TlMatrix TlSymmetricMatrix::choleskyFactorization2(std::vector<TlVectorObject::size_type>* pPivot) const
+TlMatrix TlSymmetricMatrix::choleskyFactorization2(const double threshold) const
 {
-    const double epsilon = 1.0E-16;
     const index_type N = this->getNumOfRows();
     TlVector d = this->getDiagonalElements();
     double error = d.sum();
@@ -1342,7 +1341,7 @@ TlMatrix TlSymmetricMatrix::choleskyFactorization2(std::vector<TlVectorObject::s
 
     TlMatrix L(N, N);
     index_type m = 0;
-    while (error > epsilon) {
+    while (error > threshold) {
         {
             std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
                                                                            pivot.end());
@@ -1374,11 +1373,8 @@ TlMatrix TlSymmetricMatrix::choleskyFactorization2(std::vector<TlVectorObject::s
     }
 
     L.transpose();
-    // std::cout << "cutoff " << m << "/" << N << std::endl;
     L.resize(N, m);
-    if (pPivot != NULL) {
-        *pPivot = pivot;
-    }
+
     return L;
 }
 

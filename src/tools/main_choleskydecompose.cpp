@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     if (bVerbose == true) {
         std::cerr << "running..." << inputMatrixPath << std::endl;
     }
-    TlMatrix L = A.choleskyFactorization2();
+    TlMatrix L = A.choleskyFactorization2(1.0E-16);
 
     TlMatrix Lt = L;
     Lt.transpose();
