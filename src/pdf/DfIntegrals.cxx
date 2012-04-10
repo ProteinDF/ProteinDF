@@ -170,8 +170,27 @@ void DfIntegrals::createOverlapMatrix()
         this->saveParam();
     }
 
-    // Sab2
     if (this->K_engine_ == K_ENGINE_RI_K) {
+        // Sgd
+        if ((calcState & DfIntegrals::Sgd) == 0) {
+            if (this->m_bIsXCFitting == true) {
+                this->outputStartTitle("Sgd");
+                
+                TlSymmetricMatrix Sgd(this->numOfAuxXC_);
+                dfOverlap.getSgd(&Sgd);
+                this->saveSgdMatrix(Sgd);
+                
+                this->outputEndTitle();
+            }
+            
+            calcState |= DfIntegrals::Sgd;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
+        }
+    }
+
+    if (this->J_engine_ == J_ENGINE_RI_J) {
+        // Sab2
         if ((calcState & DfIntegrals::Sab2) == 0) {
             this->outputStartTitle("Sab2");
             
@@ -187,23 +206,6 @@ void DfIntegrals::createOverlapMatrix()
             this->outputEndTitle();
             
             calcState |= DfIntegrals::Sab2;
-            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-            this->saveParam();
-        }
-        
-        // Sgd
-        if ((calcState & DfIntegrals::Sgd) == 0) {
-            if (this->m_bIsXCFitting == true) {
-                this->outputStartTitle("Sgd");
-                
-                TlSymmetricMatrix Sgd(this->numOfAuxXC_);
-                dfOverlap.getSgd(&Sgd);
-                this->saveSgdMatrix(Sgd);
-                
-                this->outputEndTitle();
-            }
-            
-            calcState |= DfIntegrals::Sgd;
             (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
             this->saveParam();
         }

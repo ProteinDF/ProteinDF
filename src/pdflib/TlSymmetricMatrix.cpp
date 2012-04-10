@@ -152,6 +152,29 @@ std::size_t TlSymmetricMatrix::index(index_type row,
     return (row + t);
 }
 
+std::size_t TlSymmetricMatrix::vtr_index(index_type row,
+                                         index_type col,
+                                         index_type dim) 
+{
+    assert((0 <= row) && (row < dim));
+    assert((0 <= col) && (col < dim));
+
+    if (row < col) {
+        std::swap(row, col);
+    }
+    
+    // This class treats 'L' type matrix.
+    // Follows means:
+    //  index = row + (2 * this->m_nRows - (col +1)) * col / 2;
+    unsigned int s = dim;
+    s = s << 1; // means 's *= 2'
+
+    unsigned int t = (s - (col +1)) * col;
+    t = t >> 1; // means 't /= 2'
+
+    return (row + t);
+}
+
 
 double TlSymmetricMatrix::sum() const
 {

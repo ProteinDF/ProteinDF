@@ -72,6 +72,11 @@ public:
 //   /// ベクトルから行列に変換する
 //   void convertFromVector(int dim, const TlVector& vector);
 
+    static std::size_t vtr_index(index_type row,
+                                 index_type col,
+                                 index_type dim);
+
+
     /// 全要素の和を返す
     virtual double sum() const;
 
