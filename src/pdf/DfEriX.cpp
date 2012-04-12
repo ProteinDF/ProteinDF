@@ -140,9 +140,9 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task2> taskList;
-    bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
-                                         false,
-                                         this->grainSize_, &taskList, true);
+    bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
+                                          false,
+                                          this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getJ_part(orbitalInfo,
                         orbitalInfo_Density,
@@ -151,9 +151,9 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
                         schwarzTable,
                         P, pRho);
 
-        hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
-                                        false,
-                                        this->grainSize_, &taskList);
+        hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
+                                         false,
+                                         this->grainSize_, &taskList);
     }
 
     this->finalize(pRho);
@@ -281,9 +281,9 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     
     std::vector<DfTaskCtrl::Task2> taskList;
-    bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
-                                         false,
-                                         this->grainSize_, &taskList, true);
+    bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
+                                          false,
+                                          this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getJ_part(orbitalInfo,
                         orbitalInfo_Density,
@@ -292,9 +292,9 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
                         schwarzTable,
                         rho, pJ);
 
-        hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
-                                        false,
-                                        this->grainSize_, &taskList);
+        hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
+                                         false,
+                                         this->grainSize_, &taskList);
     }
 
     this->finalize(pJ);
@@ -712,17 +712,17 @@ void DfEriX::getJab(TlSymmetricMatrix* pJab)
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task2> taskList;
-    bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo_Density,
-                                         false,
-                                         this->grainSize_, &taskList, true);
+    bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo_Density,
+                                          false,
+                                          this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getJab_part(orbitalInfo_Density,
                           taskList,
                           pJab);
 
-        hasTask = pDfTaskCtrl->getQueue(orbitalInfo_Density,
-                                        false,
-                                        this->grainSize_, &taskList);
+        hasTask = pDfTaskCtrl->getQueue2(orbitalInfo_Density,
+                                         false,
+                                         this->grainSize_, &taskList);
     }
 
     this->finalize(pJab);
@@ -1033,9 +1033,9 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task2> taskList;
-    bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
-                                         false,
-                                         this->grainSize_, &taskList, true);
+    bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
+                                          false,
+                                          this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getForceJ_part(orbitalInfo,
                              orbitalInfo_Density,
@@ -1043,9 +1043,9 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
                              taskList,
                              P, rho, pForce);
 
-        hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
-                                        false,
-                                        this->grainSize_, &taskList);
+        hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
+                                         false,
+                                         this->grainSize_, &taskList);
     }
 
     pDfTaskCtrl->cutoffReport();
@@ -1212,17 +1212,17 @@ void DfEriX::getForceJ(const TlVector& rho, TlMatrix* pForce)
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task2> taskList;
-    bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo_Density,
-                                         false,
-                                         this->grainSize_, &taskList, true);
+    bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo_Density,
+                                          false,
+                                          this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getForceJ_part(orbitalInfo_Density,
                              taskList,
                              rho, pForce);
 
-        hasTask = pDfTaskCtrl->getQueue(orbitalInfo_Density,
-                                        false,
-                                        this->grainSize_, &taskList);
+        hasTask = pDfTaskCtrl->getQueue2(orbitalInfo_Density,
+                                         false,
+                                         this->grainSize_, &taskList);
     }
 
     this->finalize(pForce);

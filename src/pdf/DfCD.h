@@ -53,6 +53,10 @@ protected:
     void calcPQPQ(const TlOrbitalInfoObject& orbitalInfo,
                   TlSparseSymmetricMatrix *pSchwarzTable,
                   std::vector<index_type> *pI2PQ);
+    void calcPQPQ_kernel(const TlOrbitalInfoObject& orbitalInfo,
+                         const std::vector<DfTaskCtrl::Task2>& taskList,
+                         TlSparseSymmetricMatrix *pSchwarzTable,
+                         std::vector<index_type> *pI2PQ);
     void makeSuperMatrix_kernel2(const TlOrbitalInfo& orbitalInfo,
                                  const std::vector<DfTaskCtrl::Task4>& taskList,
                                  const std::vector<index_type>& PQ2I,

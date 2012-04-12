@@ -34,11 +34,11 @@ void DfTaskCtrl_Parallel::cutoffReport()
 }
 
 
-bool DfTaskCtrl_Parallel::getQueue(const TlOrbitalInfoObject& orbitalInfo,
-                                   const bool isCutoffDistribution,
-                                   const int maxGrainSize,
-                                   std::vector<Task2>* pTask,
-                                   bool initialize)
+bool DfTaskCtrl_Parallel::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
+                                    const bool isCutoffDistribution,
+                                    const int maxGrainSize,
+                                    std::vector<Task2>* pTask,
+                                    bool initialize)
 {
     bool answer = false;
     if (this->isMasterSlave_ == true) {
@@ -68,9 +68,9 @@ bool DfTaskCtrl_Parallel::getQueue_DC(const TlOrbitalInfoObject& orbitalInfo,
 
     std::vector<Task2> globalTask;
     bool answer = false;
-    answer = DfTaskCtrl::getQueue(orbitalInfo, isCutoffDistribution,
-                                  globalMaxGrainSize,
-                                  &globalTask, initialize);
+    answer = DfTaskCtrl::getQueue2(orbitalInfo, isCutoffDistribution,
+                                   globalMaxGrainSize,
+                                   &globalTask, initialize);
     if (answer == true) {
         const std::size_t grainSize = globalTask.size();
         const std::size_t localGrainSize = (grainSize + numOfProcs -1) / numOfProcs;
@@ -124,8 +124,8 @@ bool DfTaskCtrl_Parallel::getQueue_MS_master(const TlOrbitalInfoObject& orbitalI
     if (initialize == true) {
         numOfFinishStateSlaves = 0;
         
-        answer = DfTaskCtrl::getQueue(orbitalInfo, isCutoffDistribution,
-                                      maxGrainSize, pTaskList, true);
+        answer = DfTaskCtrl::getQueue2(orbitalInfo, isCutoffDistribution,
+                                       maxGrainSize, pTaskList, true);
         return answer;
     }
 
@@ -177,8 +177,8 @@ bool DfTaskCtrl_Parallel::getQueue_MS_master(const TlOrbitalInfoObject& orbitalI
     for (RequestListType::iterator it = requestList.begin(); it != itEnd; ++it) {
         if (it->state[Request::TASK_ASSIGNED] != true) {
             std::vector<Task2> tmpTaskList;
-            const bool hasTask = DfTaskCtrl::getQueue(orbitalInfo, isCutoffDistribution,
-                                                      maxGrainSize, &tmpTaskList);
+            const bool hasTask = DfTaskCtrl::getQueue2(orbitalInfo, isCutoffDistribution,
+                                                       maxGrainSize, &tmpTaskList);
             if (hasTask == true) {
                 const std::size_t numOfTasks = tmpTaskList.size();
                 const std::size_t unpackTaskListSize = numOfTasks * 2;
@@ -303,8 +303,8 @@ bool DfTaskCtrl_Parallel::getQueue_MS_slave(const TlOrbitalInfoObject& orbitalIn
             sessions[i].state.reset();
         }
         
-        answer = DfTaskCtrl::getQueue(orbitalInfo, isCutoffDistribution,
-                                      maxGrainSize, pTaskList, true);
+        answer = DfTaskCtrl::getQueue2(orbitalInfo, isCutoffDistribution,
+                                       maxGrainSize, pTaskList, true);
         return answer;
     }
 

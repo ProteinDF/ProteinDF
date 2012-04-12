@@ -91,9 +91,9 @@ void DfEriX_Parallel::getJ_D(const TlVector& rho, TlDistributeSymmetricMatrix* p
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task2> taskList;
-    bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
-                                         false,
-                                         this->grainSize_, &taskList, true);
+    bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
+                                          false,
+                                          this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getJ_part(orbitalInfo,
                         orbitalInfo_Density,
@@ -102,9 +102,9 @@ void DfEriX_Parallel::getJ_D(const TlVector& rho, TlDistributeSymmetricMatrix* p
                         schwarzTable,
                         rho, &tmpJ);
         
-        hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
-                                        false,
-                                        this->grainSize_, &taskList);
+        hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
+                                         false,
+                                         this->grainSize_, &taskList);
     }
     
     //this->finalize(pJ);
@@ -133,17 +133,17 @@ void DfEriX_Parallel::getJab_D(TlDistributeSymmetricMatrix* pJab)
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task2> taskList;
-    bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo_Density,
-                                         false,
-                                         this->grainSize_, &taskList, true);
+    bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo_Density,
+                                          false,
+                                          this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getJab_part(orbitalInfo_Density,
                           taskList,
                           &tmpJab);
 
-        hasTask = pDfTaskCtrl->getQueue(orbitalInfo_Density,
-                                        false,
-                                        this->grainSize_, &taskList);
+        hasTask = pDfTaskCtrl->getQueue2(orbitalInfo_Density,
+                                         false,
+                                         this->grainSize_, &taskList);
     }
 
     //this->finalize(pJab);
@@ -272,9 +272,9 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task2> taskList;
-    bool hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
-                                         false,
-                                         this->grainSize_, &taskList, true);
+    bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
+                                          false,
+                                          this->grainSize_, &taskList, true);
     while (hasTask == true) {
         if (isSetTempP != true) {
             const int numOfTasks = taskList.size();
@@ -307,9 +307,9 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
             tmpP.zeroClear();
             isSetTempP = false;
 
-            hasTask = pDfTaskCtrl->getQueue(orbitalInfo,
-                                            false,
-                                            this->grainSize_, &taskList);
+            hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
+                                             false,
+                                             this->grainSize_, &taskList);
             // std::cerr << TlUtils::format("[%d] DfEriX_Parallel::getJ_D() task=%s",
             //                              rComm.getRank(),
             //                              ((hasTask == true) ? "T" : "F"))
@@ -778,7 +778,7 @@ DfEriX_Parallel::getExpandIndexes(const std::vector<index_type>& refIndexes,
     for (index_type i = 0; i < numOfRefIndexes; ++i) {
         const index_type orb = refIndexes[i];
         const int basisType = orbInfo.getBasisType(orb);
-        assert(basisType < (sizeof(BlockStartIndexTable)/sizeof(index_type)));
+        assert(basisType < static_cast<int>(sizeof(BlockStartIndexTable)/sizeof(index_type)));
         const index_type blockStartIndex = orb + BlockStartIndexTable[basisType];
         if (prevBlockStartIndex != blockStartIndex) {
             const int blockSize = orbInfo.getShellType(orb) * 2 + 1;

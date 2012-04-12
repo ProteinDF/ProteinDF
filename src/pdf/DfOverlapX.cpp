@@ -113,17 +113,17 @@ void DfOverlapX::calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
     DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task2> taskList;
-    bool hasTask = pTaskCtrl->getQueue(orbitalInfo,
-                                       false,
+    bool hasTask = pTaskCtrl->getQueue2(orbitalInfo,
+                                       true,
                                        this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->calcOverlap_part(orbitalInfo,
                                taskList,
                                pMatrix);
         
-        hasTask = pTaskCtrl->getQueue(orbitalInfo,
-                                      false,
-                                      this->grainSize_, &taskList);
+        hasTask = pTaskCtrl->getQueue2(orbitalInfo,
+                                       true,
+                                       this->grainSize_, &taskList);
     }
 
     pTaskCtrl->cutoffReport();

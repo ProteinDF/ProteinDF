@@ -91,18 +91,18 @@ void DfHpqX::getHpq(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2)
     DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task2> taskList;
-    bool hasTask = pTaskCtrl->getQueue(this->orbitalInfo_,
-                                       false,
-                                       this->grainSize_, &taskList, true);
+    bool hasTask = pTaskCtrl->getQueue2(this->orbitalInfo_,
+                                        false,
+                                        this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getHpq_part(this->orbitalInfo_,
                           taskList,
                           Cs, Xs,
                           pHpq, pHpq2);
         
-        hasTask = pTaskCtrl->getQueue(this->orbitalInfo_,
-                                      false,
-                                      this->grainSize_, &taskList);
+        hasTask = pTaskCtrl->getQueue2(this->orbitalInfo_,
+                                       false,
+                                       this->grainSize_, &taskList);
     } 
 
     if (this->chargeExtrapolateNumber_ > 0) {

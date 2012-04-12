@@ -81,12 +81,12 @@ void DfCD::makeSuperMatrix()
 
 void DfCD::makeSuperMatrix_screening()
 {
-    //const index_type numOfAOs = this->m_nNumOfAOs;
     const index_type numOfPQs = this->numOfPQs_;
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_sets"]);
-    
+
+    // calc (pq|pq)
     TlSparseSymmetricMatrix schwarzTable;
     std::vector<index_type> I2PQ; // I~ to (pq) index table; size of (I2PQ) is the number of I~.
     this->calcPQPQ(orbitalInfo, &schwarzTable, &I2PQ);
@@ -94,7 +94,7 @@ void DfCD::makeSuperMatrix_screening()
     this->log_.info(TlUtils::format(" # of PQ dimension: %d", int(numOfPQs)));
     this->log_.info(TlUtils::format(" # of I~ dimension: %d", int(numOfItilde)));
 
-    // 
+    // make PQ2I from I2PQ
     std::vector<index_type> PQ2I(numOfPQs, -1);
     for (index_type i = 0; i < numOfItilde; ++i) {
         const index_type pq_index = I2PQ[i];
@@ -102,6 +102,7 @@ void DfCD::makeSuperMatrix_screening()
         PQ2I[pq_index] = i;
     }
 
+    // 
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
 
@@ -146,8 +147,7 @@ void DfCD::calcPQPQ(const TlOrbitalInfoObject& orbitalInfo,
     const double threshold = this->cutoffThreshold_;
     this->log_.info(TlUtils::format(" I~ threshold: %e", threshold));
 
-    DfEriEngine engine;
-    engine.setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+    this->createEngines();
     this->log_.info(TlUtils::format(" pGTO quartet threshold: %e", this->cutoffEpsilon3_));
 
     // initialize
@@ -156,21 +156,69 @@ void DfCD::calcPQPQ(const TlOrbitalInfoObject& orbitalInfo,
     pSchwarzTable->clear();
     pSchwarzTable->resize(numOfAOs);
 
-    for (index_type shellIndexP = 0; shellIndexP < numOfAOs; ) {
-        const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
-        const int maxStepsP = 2 * shellTypeP + 1;
+    // task
+    DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    const bool isCutoffByDistribution = true;
+    std::vector<DfTaskCtrl::Task2> taskList;
+    bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
+                                          isCutoffByDistribution,
+                                          this->grainSize_,
+                                          &taskList, true);
+    while (hasTask == true) {
+        this->calcPQPQ_kernel(orbitalInfo,
+                              taskList,
+                              &(*pSchwarzTable), &(*pI2PQ));
+        hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
+                                         isCutoffByDistribution,
+                                         this->grainSize_,
+                                         &taskList);
+    }
+    
+    // finalize
+    pDfTaskCtrl->cutoffReport();
+    delete pDfTaskCtrl;
+    pDfTaskCtrl = NULL;
+    this->destroyEngines();
+}
 
-        for (index_type shellIndexQ = 0; shellIndexQ <= shellIndexP; ) {
+
+void DfCD::calcPQPQ_kernel(const TlOrbitalInfoObject& orbitalInfo,
+                           const std::vector<DfTaskCtrl::Task2>& taskList,
+                           TlSparseSymmetricMatrix *pSchwarzTable,
+                           std::vector<index_type> *pI2PQ)
+{
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    const double threshold = this->cutoffThreshold_;
+    const int taskListSize = taskList.size();
+    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+
+#pragma omp parallel
+    {
+        std::vector<index_type> local_I2PQ;
+        TlSparseSymmetricMatrix local_schwarzTable(pSchwarzTable->getNumOfRows());
+        int threadID = 0;
+#ifdef _OPENMP
+        threadID = omp_get_thread_num();
+#endif // _OPENMP
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        
+#pragma omp for schedule(runtime)
+        for (int i = 0; i < taskListSize; ++i) {
+            const index_type shellIndexP = taskList[i].shellIndex1;
+            const index_type shellIndexQ = taskList[i].shellIndex2;
+            const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
             const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+            const int maxStepsP = 2 * shellTypeP + 1;
             const int maxStepsQ = 2 * shellTypeQ + 1;
-            
-            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
-            const DfEriEngine::CGTO_Pair PQ = engine.getCGTO_pair(orbitalInfo,
-                                                                  shellIndexP,
-                                                                  shellIndexQ,
-                                                                  0.0);
-            engine.calc(queryPQ, queryPQ, PQ, PQ);
 
+            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::CGTO_Pair PQ = 
+                this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
+                                                          shellIndexP,
+                                                          shellIndexQ,
+                                                          pairwisePGTO_cutoffThreshold);
+            this->pEriEngines_[threadID].calc(queryPQ, queryPQ, PQ, PQ);
+                
             const int maxStepsPQ = maxStepsP * maxStepsQ;
             double maxValue = 0.0;
             for (int p = 0; p < maxStepsP; ++p) {
@@ -181,24 +229,42 @@ void DfCD::calcPQPQ(const TlOrbitalInfoObject& orbitalInfo,
                     const int pq_index = p * maxStepsQ + q;
                     const int pqpq_index = pq_index * maxStepsPQ + pq_index;
                     
-                    const double value = std::fabs(engine.WORK[pqpq_index]);
-
+                    const double value = std::fabs(this->pEriEngines_[threadID].WORK[pqpq_index]);
+                    
                     // for schwartz
                     maxValue = std::max(maxValue, value);
-
+                    
                     // for I~ to pq table
                     if (value > threshold) {
-                        pI2PQ->push_back(TlSymmetricMatrix::vtr_index(indexP, indexQ, numOfAOs));
+                        local_I2PQ.push_back(TlSymmetricMatrix::vtr_index(indexP, indexQ, numOfAOs));
                     }
                 }
             }
-            pSchwarzTable->set(shellIndexP, shellIndexQ, std::sqrt(maxValue));
-            
-            shellIndexQ += maxStepsQ;
+            local_schwarzTable.set(shellIndexP, shellIndexQ, std::sqrt(maxValue));
         }
-        shellIndexP += maxStepsP;
+
+        // add up
+#ifdef _OPENMP
+        {
+            const int numOfThreads = omp_get_num_threads();
+            for (int i = 0; i < numOfThreads; ++i) {
+                if (threadID == i) {
+                    pI2PQ->insert(pI2PQ->end(),
+                                  local_I2PQ.begin(), local_I2PQ.end());
+                    pSchwarzTable->merge(local_schwarzTable);
+                }
+#pragma omp barrier                
+            }
+        }
+#else
+        {
+            *pI2PQ = local_I2PQ;
+            *pSchwarzTable = localSchwarzTable;
+        }
+#endif // _OPENMP
     }
 }
+
 
 void DfCD::makeSuperMatrix_kernel2(const TlOrbitalInfo& orbitalInfo,
                                    const std::vector<DfTaskCtrl::Task4>& taskList,
@@ -214,8 +280,8 @@ void DfCD::makeSuperMatrix_kernel2(const TlOrbitalInfo& orbitalInfo,
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
-        
-        //this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+
 #pragma omp for
         for (int i = 0; i < taskListSize; ++i) {
             const index_type shellIndexP = taskList[i].shellIndex1;
@@ -270,7 +336,7 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
         for (int j = 0; j < maxStepsQ; ++j) {
             const index_type indexQ = shellIndexQ + j;
             const index_type I_pq_index = TlSymmetricMatrix::vtr_index(indexP, indexQ, numOfAOs);
-            assert(I_pq_index < PQ2I.size());
+            assert(I_pq_index < static_cast<index_type>(PQ2I.size()));
             const index_type indexPQ = PQ2I[I_pq_index];
             if (indexPQ == -1) {
                 index += maxStepsR * maxStepsS;
@@ -287,7 +353,7 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
                     const index_type maxIndexS = (indexP == indexR) ? indexQ : indexR;
 
                     const index_type I_rs_index = TlSymmetricMatrix::vtr_index(indexR, indexS, numOfAOs);
-                    assert(I_rs_index < PQ2I.size());
+                    assert(I_rs_index < static_cast<index_type>(PQ2I.size()));
                     const index_type indexRS = PQ2I[I_rs_index];
                     if (indexRS == -1) {
                         ++index;
