@@ -151,11 +151,11 @@ bool DfTaskCtrl::getQueue(const TlOrbitalInfoObject& orbitalInfo,
 }
 
 
-bool DfTaskCtrl::getQueue(const TlOrbitalInfoObject& orbitalInfo,
-                          const bool isCutoffByDistibution,
-                          const int maxGrainSize,
-                          std::vector<Task2>* pTaskList,                          
-                          bool initialize)
+bool DfTaskCtrl::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
+                           const bool isCutoffByDistribution,
+                           const int maxGrainSize,
+                           std::vector<Task2>* pTaskList,                          
+                           bool initialize)
 {
     assert(pTaskList != NULL);
 
@@ -165,6 +165,7 @@ bool DfTaskCtrl::getQueue(const TlOrbitalInfoObject& orbitalInfo,
     static int shellTypeQ = maxShellType -1;
     static std::size_t shellArrayIndexP = 0;
     static std::size_t shellArrayIndexQ = 0;
+    static DistributedCutoffTable dct;
     
     pTaskList->clear();
     pTaskList->reserve(maxGrainSize);
@@ -177,6 +178,10 @@ bool DfTaskCtrl::getQueue(const TlOrbitalInfoObject& orbitalInfo,
         shellArrayIndexP = 0;
         shellArrayIndexQ = 0;
 
+        if (isCutoffByDistribution == true) {
+            dct = this->makeDistributedCutoffTable(orbitalInfo);
+        }
+
         return true;
     }
 
@@ -187,16 +192,16 @@ bool DfTaskCtrl::getQueue(const TlOrbitalInfoObject& orbitalInfo,
         const size_t shellArraySizeP = shellArrayP.size();
         
         for ( ; shellTypeQ >= 0; ) {
-            ShellArray shellArrayQ = shellArrayTable[shellTypeQ];
             
             for ( ; shellArrayIndexP < shellArraySizeP; ) {
                 const index_type shellIndexP = shellArrayP[shellArrayIndexP];
                 task.shellIndex1 = shellIndexP;
 
-                if (isCutoffByDistibution == true) {
-                    shellArrayQ =
-                        this->selectShellArrayByDistribution(shellArrayQ,
-                                                             shellIndexP, orbitalInfo);
+                ShellArray shellArrayQ;
+                if (isCutoffByDistribution == true) {
+                    shellArrayQ = dct[shellIndexP][shellTypeQ];
+                } else {
+                    shellArrayQ = shellArrayTable[shellTypeQ];
                 }
                 ShellArray::iterator qItEnd = std::upper_bound(shellArrayQ.begin(), shellArrayQ.end(), shellIndexP);
                 const std::size_t shellArraySizeQ = std::distance(shellArrayQ.begin(), qItEnd);
@@ -219,8 +224,8 @@ bool DfTaskCtrl::getQueue(const TlOrbitalInfoObject& orbitalInfo,
             shellArrayIndexP = 0;
             --shellTypeQ;
         }
-        shellTypeQ = maxShellType -1;
         --shellTypeP;
+        shellTypeQ = maxShellType -1;
     }
 
     return (pTaskList->empty() != true);
@@ -839,11 +844,11 @@ DfTaskCtrl::ShellArray DfTaskCtrl::selectShellArrayByDistribution(const ShellArr
         if (coef * std::exp(exponent) >= threshold) {
             answer.push_back(*it);
 
-#pragma omp atomic
+//#pragma omp atomic
             ++(this->cutoffAlive_E2_[shellPairType]);
         }
 
-#pragma omp atomic
+//#pragma omp atomic
         ++(this->cutoffAll_E2_[shellPairType]);
     }
 

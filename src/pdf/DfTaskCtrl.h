@@ -63,18 +63,19 @@ public:
                           std::vector<Task>* pTask,
                           bool initialize = false);
 
-    virtual bool getQueue(const TlOrbitalInfoObject& orbitalInfo,
-                          const bool isCutoffByDistibution,
-                          const int maxGrainSize,
-                          std::vector<Task2>* pTask,
-                          bool initialize = false);
-
+    virtual bool getQueue2(const TlOrbitalInfoObject& orbitalInfo,
+                           const bool isCutoffByDistibution,
+                           const int maxGrainSize,
+                           std::vector<Task2>* pTask,
+                           bool initialize = false);
+    
     virtual bool getQueue4(const TlOrbitalInfoObject& orbitalInfo,
                             const TlSparseSymmetricMatrix& schwarzTable,
                             const int maxGrainSize,
                             std::vector<Task4>* pTaskList,
                             bool initialize = false);
-
+    
+    // local matrix用?
     virtual bool getQueue4_K(const TlOrbitalInfoObject& orbitalInfo,
                              const TlSparseSymmetricMatrix& schwarzTable,
                              const TlMatrixObject& P,
