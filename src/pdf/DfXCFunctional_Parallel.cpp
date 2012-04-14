@@ -48,8 +48,6 @@ void DfXCFunctional_Parallel::buildXcMatrix()
     } else {
         this->buildXC_LAPACK();
     }
-
-    this->checkGridAccuracy();
 }
 
 
@@ -78,10 +76,10 @@ void DfXCFunctional_Parallel::buildXC_LAPACK()
             }
         }
 
-        if (this->m_bIsHybrid == true) {
-            Fxc += this->getFockExchange(this->m_dFockExchangeCoef * Ppq, RUN_RKS);
-            this->XC_energy_ += DfXCFunctional::m_dFockExchangeEnergyAlpha;
-        }
+        // if (this->m_bIsHybrid == true) {
+        //     Fxc += this->getFockExchange(this->m_dFockExchangeCoef * Ppq, RUN_RKS);
+        //     this->XC_energy_ += DfXCFunctional::m_dFockExchangeEnergyAlpha;
+        // }
 
         if (rComm.isMaster() == true) {
             this->saveFxcMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration, Fxc);
@@ -113,11 +111,11 @@ void DfXCFunctional_Parallel::buildXC_LAPACK()
             }
         }
 
-        if (this->m_bIsHybrid == true) {
-            FxcA += this->getFockExchange(this->m_dFockExchangeCoef * PApq, RUN_UKS_ALPHA);
-            FxcB += this->getFockExchange(this->m_dFockExchangeCoef * PBpq, RUN_UKS_BETA);
-            this->XC_energy_ += (DfXCFunctional::m_dFockExchangeEnergyAlpha + DfXCFunctional::m_dFockExchangeEnergyBeta);
-        }
+        // if (this->m_bIsHybrid == true) {
+        //     FxcA += this->getFockExchange(this->m_dFockExchangeCoef * PApq, RUN_UKS_ALPHA);
+        //     FxcB += this->getFockExchange(this->m_dFockExchangeCoef * PBpq, RUN_UKS_BETA);
+        //     this->XC_energy_ += (DfXCFunctional::m_dFockExchangeEnergyAlpha + DfXCFunctional::m_dFockExchangeEnergyBeta);
+        // }
 
         if (rComm.isMaster() == true) {
             this->saveFxcMatrix<TlSymmetricMatrix>(RUN_UKS_ALPHA, this->m_nIteration, FxcA);
@@ -155,10 +153,10 @@ void DfXCFunctional_Parallel::buildXC_ScaLAPACK()
             this->saveFxcPureMatrix(RUN_RKS, this->m_nIteration, Fxc);
         }
         
-        if (this->m_bIsHybrid == true) {
-            Fxc += this->getFockExchange(this->m_dFockExchangeCoef * Ppq, RUN_RKS);
-            this->XC_energy_ += DfXCFunctional::m_dFockExchangeEnergyAlpha;
-        }
+        // if (this->m_bIsHybrid == true) {
+        //     Fxc += this->getFockExchange(this->m_dFockExchangeCoef * Ppq, RUN_RKS);
+        //     this->XC_energy_ += DfXCFunctional::m_dFockExchangeEnergyAlpha;
+        // }
 
         this->saveFxcMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration, Fxc);
     }
@@ -182,11 +180,11 @@ void DfXCFunctional_Parallel::buildXC_ScaLAPACK()
             this->saveFxcPureMatrix(RUN_UKS_BETA,  this->m_nIteration, FxcB);
         }
 
-        if (this->m_bIsHybrid == true) {
-            FxcA += this->getFockExchange(this->m_dFockExchangeCoef * PApq, RUN_UKS_ALPHA);
-            FxcB += this->getFockExchange(this->m_dFockExchangeCoef * PBpq, RUN_UKS_BETA);
-            this->XC_energy_ += (DfXCFunctional::m_dFockExchangeEnergyAlpha + DfXCFunctional::m_dFockExchangeEnergyBeta);
-        }
+        // if (this->m_bIsHybrid == true) {
+        //     FxcA += this->getFockExchange(this->m_dFockExchangeCoef * PApq, RUN_UKS_ALPHA);
+        //     FxcB += this->getFockExchange(this->m_dFockExchangeCoef * PBpq, RUN_UKS_BETA);
+        //     this->XC_energy_ += (DfXCFunctional::m_dFockExchangeEnergyAlpha + DfXCFunctional::m_dFockExchangeEnergyBeta);
+        // }
 
         this->saveFxcMatrix<TlDistributeSymmetricMatrix>(RUN_UKS_ALPHA, this->m_nIteration, FxcA);
         this->saveFxcMatrix<TlDistributeSymmetricMatrix>(RUN_UKS_BETA, this->m_nIteration, FxcB);

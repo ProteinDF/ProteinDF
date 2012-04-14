@@ -15,6 +15,7 @@ protected:
     virtual void logger(const std::string& str) const;
 
 protected:
+    virtual DfCD* getDfCDObject();
     virtual DfXMatrix* getDfXMatrixObject();
     virtual DfInvMatrix* getDfInvMatrixObject();
     virtual DfGenerateGrid* getDfGenerateGridObject();

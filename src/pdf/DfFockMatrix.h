@@ -60,23 +60,7 @@ protected:
 template<typename SymmetricMatrixType>
 void DfFockMatrix::mainDIRECT_RKS()
 {
-    //this->logger("Direct scheme method is employed\n");
     SymmetricMatrixType F(this->m_nNumOfAOs);
-
-    // if (this->m_bMemorySave == true) {
-    //     // DfThreeindexintegrals を使わない
-    //     if (this->m_bIsXCFitting == true) {
-    //         this->setXC_RI(RUN_RKS, F);
-    //     } else {
-    //         this->setXC_DIRECT(RUN_RKS, F);
-    //     }
-
-    //     this->setCoulomb(METHOD_RKS, F);
-    // } else {
-    //     // DfThreeindexintegrals を使う
-    //     assert(this->m_bIsXCFitting == true);
-    //     F = this->getFpqMatrix(RUN_RKS, this->m_nIteration);
-    // }
 
     //this->setHpq(RUN_RKS, F);
     {

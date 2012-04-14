@@ -25,7 +25,7 @@ fi
 
 # cleanup directories
 XARGS_NO_RUN_IF_EMPTY=''
-if [ `uname` == Linux ]; then
+if [ `uname` = Linux ]; then
     XARGS_NO_RUN_IF_EMPTY='--no-run-if-empty'
 fi
 for DIR in ${PDF_WORK_DIRS}; do

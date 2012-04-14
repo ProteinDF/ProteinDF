@@ -36,7 +36,7 @@ public:
     /// 行列の要素は0で初期化される。
     /// @param[in] row 作成する行列の行数
     /// @param[in] col 作成する行列の列数
-    explicit TlMatrix(int row = 1, int col = 1);
+    explicit TlMatrix(index_type row = 1, index_type col = 1);
 
     TlMatrix(const TlSerializeData& data);
     
@@ -47,13 +47,15 @@ public:
     /// @param[in] rVector ベクトル
     /// @param[in] row 作成する行列の行数
     /// @param[in] col 作成する行列の列数
-    //TlMatrix(const TlVector& rVector, int row, int col);
+    TlMatrix(const TlVector& rVector,
+             index_type row, index_type col);
     
 public:
     /// コピーコンストラクタ
     TlMatrix(const TlMatrix& rhs);
 
     /// 対称行列オブジェクトからTlMatrixオブジェクトを作成する
+
     TlMatrix(const TlSymmetricMatrix& rhs);
 
     virtual ~TlMatrix();

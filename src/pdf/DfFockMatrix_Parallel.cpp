@@ -30,82 +30,79 @@ void DfFockMatrix_Parallel::mainDIRECT_RKS()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    //std::cerr << "DfFockMatrix_Parallel::mainDIRECT_RKS()" << std::endl;
     if (this->m_bUsingSCALAPACK == true) {
         // ScaLAPACK
-        if (rComm.isMaster() == true) {
-            this->logger("buid KS matrix using ScaLAPACK.\n");
-        }
-        this->mainDIRECT_RKS_ScaLAPACK();
+        this->log_.info("buid KS matrix using ScaLAPACK.");
+        DfFockMatrix::mainDIRECT_RKS<TlDistributeSymmetricMatrix>();
     } else {
         // LAPACK
+        this->log_.info("buid KS matrix using LAPACK.");
         if (rComm.isMaster() == true) {
-            this->logger("buid KS matrix using LAPACK.\n");
+            DfFockMatrix::mainDIRECT_RKS();
         }
-        this->mainDIRECT_RKS_LAPACK();
     }
 }
 
 
-void DfFockMatrix_Parallel::mainDIRECT_RKS_LAPACK()
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
+// void DfFockMatrix_Parallel::mainDIRECT_RKS_LAPACK()
+// {
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    if (rComm.isMaster() == true) {
-        this->logger("Direct scheme method is employed\n");
-    }
+//     if (rComm.isMaster() == true) {
+//         this->logger("Direct scheme method is employed\n");
+//     }
 
-    TlSymmetricMatrix F(this->m_nNumOfAOs);
-    if (this->m_bMemorySave == true) {
-        // DfThreeindexintegrals を使わない
-        if (this->m_bIsXCFitting == true) {
-            this->setXC_RI(RUN_RKS, F);
-        } else {
-            this->setXC_DIRECT(RUN_RKS, F);
-        }
+//     TlSymmetricMatrix F(this->m_nNumOfAOs);
+//     if (this->m_bMemorySave == true) {
+//         // DfThreeindexintegrals を使わない
+//         if (this->m_bIsXCFitting == true) {
+//             this->setXC_RI(RUN_RKS, F);
+//         } else {
+//             this->setXC_DIRECT(RUN_RKS, F);
+//         }
 
-        this->setCoulomb(METHOD_RKS, F);
-    } else {
-        // DfThreeindexintegrals を使う
-        assert(this->m_bIsXCFitting == true);
-        F = this->getFpqMatrix(RUN_RKS, this->m_nIteration);
-    }
+//         this->setCoulomb(METHOD_RKS, F);
+//     } else {
+//         // DfThreeindexintegrals を使う
+//         assert(this->m_bIsXCFitting == true);
+//         F = this->getFpqMatrix(RUN_RKS, this->m_nIteration);
+//     }
 
-    if (rComm.isMaster() == true) {
-        this->setHpq(RUN_RKS, F);
-        DfObject::saveFpqMatrix(RUN_RKS, this->m_nIteration, F);
-    }
-}
+//     if (rComm.isMaster() == true) {
+//         this->setHpq(RUN_RKS, F);
+//         DfObject::saveFpqMatrix(RUN_RKS, this->m_nIteration, F);
+//     }
+// }
 
 
-void DfFockMatrix_Parallel::mainDIRECT_RKS_ScaLAPACK()
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
+// void DfFockMatrix_Parallel::mainDIRECT_RKS_ScaLAPACK()
+// {
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    if (rComm.isMaster() == true) {
-        this->logger("Direct scheme method is employed\n");
-    }
+//     if (rComm.isMaster() == true) {
+//         this->logger("Direct scheme method is employed\n");
+//     }
 
-    TlDistributeSymmetricMatrix F(this->m_nNumOfAOs);
-    if (this->m_bMemorySave == true) {
-        // DfThreeindexintegrals を使わない
-        if (this->m_bIsXCFitting == true) {
-            DfFockMatrix::setXC_RI<TlDistributeSymmetricMatrix, TlVector, DfOverlap_Parallel>(RUN_RKS, F);
-        } else {
-            DfFockMatrix::setXC_DIRECT<TlDistributeSymmetricMatrix>(RUN_RKS, F);
-        }
+//     TlDistributeSymmetricMatrix F(this->m_nNumOfAOs);
+//     if (this->m_bMemorySave == true) {
+//         // DfThreeindexintegrals を使わない
+//         if (this->m_bIsXCFitting == true) {
+//             DfFockMatrix::setXC_RI<TlDistributeSymmetricMatrix, TlVector, DfOverlap_Parallel>(RUN_RKS, F);
+//         } else {
+//             DfFockMatrix::setXC_DIRECT<TlDistributeSymmetricMatrix>(RUN_RKS, F);
+//         }
 
-        this->setCoulomb(METHOD_RKS, F);
-    } else {
-        // DfThreeindexintegrals を使う
-        assert(this->m_bIsXCFitting == true);
-        F = DfObject::getFpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration);
-    }
+//         this->setCoulomb(METHOD_RKS, F);
+//     } else {
+//         // DfThreeindexintegrals を使う
+//         assert(this->m_bIsXCFitting == true);
+//         F = DfObject::getFpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration);
+//     }
 
-    this->setHpq(RUN_RKS, F);
+//     this->setHpq(RUN_RKS, F);
 
-    DfObject::saveFpqMatrix(RUN_RKS, this->m_nIteration, F);
-}
+//     DfObject::saveFpqMatrix(RUN_RKS, this->m_nIteration, F);
+// }
 
 
 void DfFockMatrix_Parallel::mainDIRECT_UKS()

@@ -62,42 +62,22 @@ TlSymmetricMatrix::TlSymmetricMatrix(const TlSerializeData& data)
 }
 
 
-TlSymmetricMatrix::TlSymmetricMatrix(const TlVector& rVector, index_type nDim)
-    : TlMatrix(nDim, nDim, NULL)
+TlSymmetricMatrix::TlSymmetricMatrix(const TlVector& vct, index_type dim)
+    : TlMatrix(dim, dim, NULL)
 {
+    assert(0 <= dim);
+
     const size_type size = this->getNumOfElements();
-    assert(rVector.getSize() == size);
+    assert(vct.getSize() == size);
 
     this->initialize(false);
 
-#ifdef _OPENMP
-    // use OpenMP
-    const size_type quot = size / MAX_LOOP;
-    const int rem = size - quot * MAX_LOOP;
-#pragma omp parallel
-    {
-        for (size_type block = 0; block < quot; ++block) {
-            const size_type index_base = block * MAX_LOOP;
-#pragma omp for
-            for (int i = 0; i < MAX_LOOP; ++i) {
-                const size_type index = index_base + i;
-                this->data_[index] = rVector[index];
-            }
-        }
-
-        const size_type index_base = quot * MAX_LOOP;
-#pragma omp for
-        for (int i = 0; i < rem; ++i) {
-            const size_type index = index_base + i;
-            this->data_[index] = rVector[index];
-        }
-    }
-#else
-    // not use OpenMP
+#ifndef __FUJITSU // cannot use OpenMP in constructor
+#pragma omp parallel for
+#endif // __FUJITSU 
     for (size_type index = 0; index < size; ++index) {
-        this->data_[index] = rVector[index];
+        this->data_[index] = vct[index];
     }
-#endif // _OPENMP
 }
 
 

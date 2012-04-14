@@ -13,8 +13,8 @@ protected:
     
 protected:
     virtual void mainDIRECT_RKS();
-    void mainDIRECT_RKS_LAPACK();
-    void mainDIRECT_RKS_ScaLAPACK();
+    // void mainDIRECT_RKS_LAPACK();
+    // void mainDIRECT_RKS_ScaLAPACK();
 
     virtual void mainDIRECT_UKS();
     virtual void mainDIRECT_ROKS();

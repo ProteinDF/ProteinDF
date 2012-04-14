@@ -32,6 +32,8 @@ protected:
 
     virtual DfJMatrix* getDfJMatrixObject();
     
+    virtual DfKMatrix* getDfKMatrixObject();
+
     virtual DfFockMatrix* getDfFockMatrixObject();
 
     virtual DfTransFmatrix* getDfTransFmatrixObject(bool isExecDiis);

@@ -90,6 +90,7 @@ void DfCD::makeSuperMatrix_screening()
     TlSparseSymmetricMatrix schwarzTable;
     std::vector<index_type> I2PQ; // I~ to (pq) index table; size of (I2PQ) is the number of I~.
     this->calcPQPQ(orbitalInfo, &schwarzTable, &I2PQ);
+    this->saveI2PQ(I2PQ);
     const index_type numOfItilde = I2PQ.size();
     this->log_.info(TlUtils::format(" # of PQ dimension: %d", int(numOfPQs)));
     this->log_.info(TlUtils::format(" # of I~ dimension: %d", int(numOfItilde)));
@@ -122,6 +123,8 @@ void DfCD::makeSuperMatrix_screening()
     }
 
     this->finalize(&G);
+    //G.save("G.mat");
+    //std::cerr << TlUtils::format("G(%d, %d)", G.getNumOfRows(), G.getNumOfCols()) << std::endl;
     pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
@@ -130,10 +133,9 @@ void DfCD::makeSuperMatrix_screening()
 
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
     TlMatrix L = G.choleskyFactorization2(this->epsilon_);
+    //std::cerr << TlUtils::format("L(%d, %d)", L.getNumOfRows(), L.getNumOfCols()) << std::endl;
     this->log_.info(TlUtils::format("Cholesky Vectors: %d", L.getNumOfCols()));
-    L.save("L.mat");
-
-    this->saveI2PQ(I2PQ);
+    this->saveL(L);
 }
 
 
@@ -179,6 +181,9 @@ void DfCD::calcPQPQ(const TlOrbitalInfoObject& orbitalInfo,
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
+
+    this->finalize(pSchwarzTable);
+    this->finalize_I2PQ(pI2PQ);
 }
 
 
@@ -377,7 +382,7 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
     }
 }
 
-void DfCD::saveI2PQ(const std::vector<int>& I2PQ) 
+void DfCD::saveI2PQ(const std::vector<index_type>& I2PQ) 
 {
     std::string filepath = "I2PQ.vtr";
     std::ofstream ofs;
@@ -416,6 +421,18 @@ std::vector<int> DfCD::getI2PQ()
     return answer;
 }
 
+void DfCD::saveL(const TlMatrix& L)
+{
+    L.save("L.mat");
+}
+
+
+TlMatrix DfCD::getL()
+{
+    TlMatrix L;
+    L.load("L.mat");
+    return L;
+}
 
 void DfCD::makeSuperMatrix_noScreening()
 {
@@ -750,10 +767,21 @@ DfTaskCtrl* DfCD::getDfTaskCtrlObject() const
     return pDfTaskCtrl;
 }
 
-void DfCD::finalize(TlMatrix* pMtx)
+void DfCD::finalize(TlSymmetricMatrix* pMat)
 {
     // do nothing
 }
+
+void DfCD::finalize(TlSparseSymmetricMatrix *pMat) 
+{
+    // do nothing
+}
+
+void DfCD::finalize_I2PQ(std::vector<index_type> *pI2PQ)
+{
+    std::sort(pI2PQ->begin(), pI2PQ->end());
+}
+
 
 TlSparseSymmetricMatrix DfCD::makeSchwarzTable(const TlOrbitalInfoObject& orbitalInfo)
 {
@@ -794,7 +822,7 @@ TlSparseSymmetricMatrix DfCD::makeSchwarzTable(const TlOrbitalInfoObject& orbita
 }
 
 TlSymmetricMatrix DfCD::getCholeskyVector(const TlVector& L_col,
-                                          const std::vector<int>& I2PQ)
+                                          const std::vector<index_type>& I2PQ)
 {
     const index_type numOfItilde = L_col.getSize();
     TlVector buf(this->numOfPQs_);
@@ -808,20 +836,20 @@ TlSymmetricMatrix DfCD::getCholeskyVector(const TlVector& L_col,
 
 void DfCD::getJ(TlSymmetricMatrix* pJ)
 {
-    const index_type numOfAOs = this->m_nNumOfAOs;
-
-    const TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+    const TlSymmetricMatrix P = this->getPMatrix();
 
     // cholesky vector
-    TlMatrix L;
-    L.load("L.mat");
+    TlMatrix L = this->getL();
     const index_type numOfCBs = L.getNumOfCols();
 
-    const std::vector<int> I2PQ = this->getI2PQ();
-    for (index_type I = 0; I < numOfCBs; ++I) {
+    const std::vector<index_type> I2PQ = this->getI2PQ();
+    index_type start_CholeskyBasis = 0;
+    index_type end_CholeskyBasis = 0;
+    this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
+    for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
         TlSymmetricMatrix LI = this->getCholeskyVector(L.getColVector(I), I2PQ);
-        assert(LI.getNumOfRows() == numOfAOs);
-        assert(LI.getNumOfCols() == numOfAOs);
+        assert(LI.getNumOfRows() == this->m_nNumOfAOs);
+        assert(LI.getNumOfCols() == this->m_nNumOfAOs);
         
         TlMatrix QI = LI;
         QI.dot(P);
@@ -829,21 +857,33 @@ void DfCD::getJ(TlSymmetricMatrix* pJ)
         
         *pJ += qi*LI;
     }
+
+    this->finalize(pJ);
+}
+
+
+void DfCD::divideCholeskyBasis(const index_type numOfCBs,
+                               index_type *pStart, index_type *pEnd)
+{
+    *pStart = 0;
+    *pEnd = numOfCBs;
 }
 
 
 void DfCD::getK(const RUN_TYPE runType,
                 TlSymmetricMatrix *pK)
 {
-    TlMatrix L;
-    L.load("L.mat");
+    TlMatrix L = this->getL();
     const index_type numOfCBs = L.getNumOfCols();
     
-    TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(runType, this->m_nIteration -1);
+    TlSymmetricMatrix P = this->getPMatrix(); // RKS
     const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
     
-    const std::vector<int> I2PQ = this->getI2PQ();
-    for (index_type I = 0; I < numOfCBs; ++I) {
+    const std::vector<index_type> I2PQ = this->getI2PQ();
+    index_type start_CholeskyBasis = 0;
+    index_type end_CholeskyBasis = 0;
+    this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
+    for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
         TlSymmetricMatrix l = this->getCholeskyVector(L.getColVector(I), I2PQ);;
     
         TlMatrix X = l * C;
@@ -855,6 +895,13 @@ void DfCD::getK(const RUN_TYPE runType,
     }
     
     *pK *= -1.0;
+    this->finalize(pK);
+}
+
+TlSymmetricMatrix DfCD::getPMatrix()
+{
+    TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+    return P;
 }
 
 

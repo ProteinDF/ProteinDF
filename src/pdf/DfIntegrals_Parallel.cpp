@@ -6,7 +6,7 @@
 #include "DfEriX_Parallel.h"
 
 #include "DfHpqX_Parallel.h"
-
+#include "DfCD_Parallel.h"
 #include "DfXMatrix_Parallel.h"
 #include "DfInvMatrix_Parallel.h"
 #include "DfGenerateGrid_Parallel.h"
@@ -39,6 +39,13 @@ void DfIntegrals_Parallel::logger(const std::string& str) const
     if (rComm.isMaster() == true) {
         DfIntegrals::logger(str);
     }
+}
+
+
+DfCD* DfIntegrals_Parallel::getDfCDObject()
+{
+    DfCD *pDfCD = new DfCD_Parallel(this->pPdfParam_);
+    return pDfCD;
 }
 
 

@@ -6,6 +6,7 @@
 #include "DfDensityFittingX_ScaLAPACK.h"
 #include "DfXCFunctional_Parallel.h"
 #include "DfJMatrix_Parallel.h"
+#include "DfKMatrix_Parallel.h"
 #include "DfFockMatrix_Parallel.h"
 #include "DfTransFmatrix_Parallel.h"
 #include "DfTransatob_Parallel.h"
@@ -133,12 +134,11 @@ DfDensityFittingObject* DfScf_Parallel::getDfDensityFittingObject()
 void DfScf_Parallel::doXCIntegral()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-
+    
     if (rComm.isMaster() == true) {
         DfScf::doXCIntegral();
     }
-
-    rComm.barrier();
+    //rComm.barrier();
 }
 
 
@@ -177,6 +177,13 @@ DfJMatrix* DfScf_Parallel::getDfJMatrixObject()
 {
     DfJMatrix* pDfJMatrix = new DfJMatrix_Parallel(this->pPdfParam_);
     return pDfJMatrix;
+}
+
+
+DfKMatrix* DfScf_Parallel::getDfKMatrixObject()
+{
+    DfKMatrix* pDfKMatrix = new DfKMatrix_Parallel(this->pPdfParam_);
+    return pDfKMatrix;
 }
 
 

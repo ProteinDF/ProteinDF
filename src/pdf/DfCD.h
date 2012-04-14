@@ -42,8 +42,12 @@ protected:
     TlSparseSymmetricMatrix makeSchwarzTable(const TlOrbitalInfoObject& orbitalInfo);
 
     std::size_t index(index_type p, index_type q) const;
-    DfTaskCtrl* getDfTaskCtrlObject() const;
-    void finalize(TlMatrix* pMtx);
+
+    virtual DfTaskCtrl* getDfTaskCtrlObject() const;
+
+    virtual void finalize(TlSymmetricMatrix *pMat);
+    virtual void finalize(TlSparseSymmetricMatrix *pMat);
+    virtual void finalize_I2PQ(std::vector<index_type> *pI2PQ);
 
 protected:
     void makeSuperMatrix_screening();
@@ -68,11 +72,19 @@ protected:
                  const std::vector<index_type>& PQ2I,
                  const DfEriEngine& engine,
                  TlSymmetricMatrix* pG);
-    void saveI2PQ(const std::vector<int>& I2PQ);
-    std::vector<int> getI2PQ();
+    void saveI2PQ(const std::vector<index_type>& I2PQ);
+    std::vector<index_type> getI2PQ();
+
+    virtual void saveL(const TlMatrix& L);
+    virtual TlMatrix getL();
 
     TlSymmetricMatrix getCholeskyVector(const TlVector& L_col,
-                                        const std::vector<int>& I2PQ);
+                                        const std::vector<index_type>& I2PQ);
+
+    virtual TlSymmetricMatrix getPMatrix();
+
+    virtual void divideCholeskyBasis(const index_type numOfCBs,
+                                     index_type *pStart, index_type *pEnd);
 
 protected: // for exact
     typedef std::vector<index_type> ShellArray;

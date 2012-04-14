@@ -26,7 +26,7 @@ void TlMatrix::useMemManager(bool isUsingMemManager)
     TlMatrix::isUsingMemManagerDefault_ = isUsingMemManager;
 }
 
-TlMatrix::TlMatrix(const int nRow, const int nCol)
+TlMatrix::TlMatrix(const index_type nRow, const index_type nCol)
     : TlMatrixObject(), m_nRows(nRow), m_nCols(nCol), data_(NULL),
       isUsingMemManager_(TlMatrix::isUsingMemManagerDefault_)
 {
@@ -36,7 +36,7 @@ TlMatrix::TlMatrix(const int nRow, const int nCol)
 
 
 // for sub-class
-TlMatrix::TlMatrix(const int nRow, const int nCol, double* pData)
+TlMatrix::TlMatrix(const index_type nRow, const index_type nCol, double* pData)
     : TlMatrixObject(), m_nRows(nRow), m_nCols(nCol), data_(pData),
       isUsingMemManager_(TlMatrix::isUsingMemManagerDefault_)
 {
@@ -90,6 +90,27 @@ TlMatrix::TlMatrix(const TlSerializeData& data)
     const size_type size = this->getNumOfElements();
     for (size_type index = 0; index < size; ++index) {
         this->data_[index] = data["data"].getAt(index).getDouble();
+    }
+}
+
+
+TlMatrix::TlMatrix(const TlVector& vct,
+                   const index_type row, const index_type col)
+    : TlMatrixObject(), m_nRows(row), m_nCols(col), data_(NULL),
+      isUsingMemManager_(TlMatrix::isUsingMemManagerDefault_)
+{
+    assert((0 <= row) && (0 <= col));
+
+    const size_type size = this->getNumOfElements();
+    assert(vct.getSize() == size);
+
+    this->initialize(false);
+
+#ifndef __FUJITSU // cannot use OpenMP in constructor
+#pragma omp parallel for
+#endif // __FUJITSU 
+    for (size_type index = 0; index < size; ++index) {
+        this->data_[index] = vct[index];
     }
 }
 

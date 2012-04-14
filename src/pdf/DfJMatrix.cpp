@@ -23,44 +23,51 @@ void DfJMatrix::buildJ()
     switch (this->J_engine_) {
     case J_ENGINE_RI_J:
         this->log_.info("use RI_J engine");
-        this->getJ_RI(&J);
+        this->getJ_RI();
         break;
     case J_ENGINE_CD:
         this->log_.info("use CD engine");
-        this->getJ_CD(&J);
+        this->getJ_CD();
         break;
     default:
         this->log_.info("use conventional engine");
-        this->getJ_conventional(&J);
+        this->getJ_conventional();
         break;
     }
+}
 
+
+void DfJMatrix::getJ_RI()
+{
+    TlSymmetricMatrix J(this->m_nNumOfAOs);
+    this->getJ_RI_local(&J);
+    this->saveJMatrix(J);
+}
+
+
+void DfJMatrix::getJ_CD()
+{
+    TlSymmetricMatrix J(this->m_nNumOfAOs);
+    this->getJ_CD_local(&J);
+    this->saveJMatrix(J);
+}
+
+
+void DfJMatrix::getJ_conventional()
+{
+    TlSymmetricMatrix J(this->m_nNumOfAOs);
+    this->getJ_conventional_local(&J);
+    this->saveJMatrix(J);
+}
+
+
+void DfJMatrix::saveJMatrix(const TlSymmetricMatrix& J)
+{
     DfObject::saveJMatrix(this->m_nIteration, J);
 }
 
 
-void DfJMatrix::getJ_conventional(TlSymmetricMatrix* pJ)
-{
-    TlSymmetricMatrix P;
-    if (this->isUpdateMethod_ == true) {
-        P = this->getDiffDensityMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration);
-    } else {
-        P = this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
-    }
-
-    DfEriX dfEri(this->pPdfParam_);
-    dfEri.getJpq(P, pJ);
-
-    if (this->isUpdateMethod_ == true) {
-        if (this->m_nIteration > 1) {
-            const TlSymmetricMatrix prevJ = this->getJMatrix<TlSymmetricMatrix>(this->m_nIteration -1);
-            *pJ += prevJ;
-        }
-    }
-}
-
-
-void DfJMatrix::getJ_RI(TlSymmetricMatrix* pJ)
+void DfJMatrix::getJ_RI_local(TlSymmetricMatrix* pJ)
 {
     TlVector Rho;
     switch (this->m_nMethodType) {
@@ -110,8 +117,60 @@ void DfJMatrix::getJ_RI(TlSymmetricMatrix* pJ)
 }
 
 
-void DfJMatrix::getJ_CD(TlSymmetricMatrix* pJ)
+TlVector DfJMatrix::getRho(const RUN_TYPE runType, const int iteration)
+{
+    TlVector rho = DfObject::getRho<TlVector>(runType, iteration);
+    return rho;
+}
+
+
+void DfJMatrix::getJ_CD_local(TlSymmetricMatrix* pJ)
 {
     DfCD dfCD(this->pPdfParam_);
     dfCD.getJ(pJ);
 }
+
+
+void DfJMatrix::getJ_conventional_local(TlSymmetricMatrix* pJ)
+{
+    TlSymmetricMatrix P;
+    if (this->isUpdateMethod_ == true) {
+        P = this->getDiffDensityMatrix();
+    } else {
+        P = this->getPMatrix(this->m_nIteration -1);
+    }
+
+    DfEriX dfEri(this->pPdfParam_);
+    dfEri.getJpq(P, pJ);
+
+    if (this->isUpdateMethod_ == true) {
+        if (this->m_nIteration > 1) {
+            const TlSymmetricMatrix prevJ = this->getJMatrix(this->m_nIteration -1);
+            *pJ += prevJ;
+        }
+    }
+}
+
+
+TlSymmetricMatrix DfJMatrix::getPMatrix(const int iteration)
+{
+    const TlSymmetricMatrix P = DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, iteration);
+    return P;
+}
+
+
+TlSymmetricMatrix DfJMatrix::getDiffDensityMatrix()
+{
+    const TlSymmetricMatrix diffP = 
+        DfObject::getDiffDensityMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration);
+    return diffP;
+}
+
+
+TlSymmetricMatrix DfJMatrix::getJMatrix(const int iteration)
+{
+    const TlSymmetricMatrix J = DfObject::getJMatrix<TlSymmetricMatrix>(iteration);
+    return J;
+}
+
+
