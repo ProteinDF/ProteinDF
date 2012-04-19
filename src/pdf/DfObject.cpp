@@ -252,7 +252,12 @@ void DfObject::setParam(const TlSerializeData& data)
     if (paramFileBaseName["SabInv_matrix"].getStr().empty() == true) {
         paramFileBaseName["SabInv_matrix"] = "Sabinv.mat";
     }
-    paramFileBaseName["SgdInv_matrix"] = "Sgdinv.mat";
+    if (paramFileBaseName["SgdInv_matrix"].getStr().empty() == true) {
+        paramFileBaseName["SgdInv_matrix"] = "Sgdinv.mat";
+    }
+    if (paramFileBaseName["L_matrix"].getStr().empty() == true) {
+        paramFileBaseName["L_matrix"] = "L.mat";
+    }
     paramFileBaseName["X_matrix"]      = "X.mat";
     paramFileBaseName["Xinv_matrix"]   = "Xinv.mat";
     if (paramFileBaseName["diff_density_matrix"].getStr().empty() == true) {
@@ -417,6 +422,12 @@ std::string DfObject::getSabInvMatrixPath()
 std::string DfObject::getSgdInvMatrixPath()
 {
     return this->makeFilePath("SgdInv_matrix");
+}
+
+
+std::string DfObject::getLMatrixPath()
+{
+    return this->makeFilePath("L_matrix");
 }
 
 

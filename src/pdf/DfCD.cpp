@@ -423,14 +423,13 @@ std::vector<int> DfCD::getI2PQ()
 
 void DfCD::saveL(const TlMatrix& L)
 {
-    L.save("L.mat");
+    DfObject::saveLMatrix(L);
 }
 
 
 TlMatrix DfCD::getL()
 {
-    TlMatrix L;
-    L.load("L.mat");
+    TlMatrix L = DfObject::getLMatrix<TlMatrix>();
     return L;
 }
 
@@ -854,7 +853,7 @@ void DfCD::getJ(TlSymmetricMatrix* pJ)
         TlMatrix QI = LI;
         QI.dot(P);
         const double qi = QI.sum();
-        
+
         *pJ += qi*LI;
     }
 

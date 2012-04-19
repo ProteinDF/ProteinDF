@@ -83,6 +83,7 @@ protected:
     std::string getSgdMatrixPath();
     std::string getSabInvMatrixPath();
     std::string getSgdInvMatrixPath();
+    std::string getLMatrixPath();
     std::string getXMatrixPath();
     std::string getXInvMatrixPath();
     std::string getNalphaPath();
@@ -167,6 +168,13 @@ protected:
     template <class SymmetricMatrixType>
     SymmetricMatrixType getSgdInvMatrix();
     
+
+    template <class MatrixType>
+    MatrixType getLMatrix();
+
+    template <class MatrixType>
+    void saveLMatrix(const MatrixType& L);
+
 
     template <class MatrixType>
     void saveGridMatrix(const int iteration,
@@ -500,6 +508,26 @@ SymmetricMatrixType DfObject::getSpqMatrix()
     Spq = this->matrixCache_.get<SymmetricMatrixType>(path);
     Spq.resize((this->m_nNumOfAOs));
     return Spq;
+}
+
+
+template <class MatrixType>
+MatrixType DfObject::getLMatrix()
+{
+    const std::string path = this->getLMatrixPath();
+    MatrixType L = this->matrixCache_.get<MatrixType>(path);
+    return L;
+}
+
+template <class MatrixType>
+void DfObject::saveLMatrix(const MatrixType& L)
+{
+    const std::string path = this->getLMatrixPath();
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, L, true);
+    } else {
+        L.save(path);
+    }
 }
 
 
