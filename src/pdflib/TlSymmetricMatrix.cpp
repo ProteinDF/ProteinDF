@@ -1325,7 +1325,7 @@ TlMatrix TlSymmetricMatrix::choleskyFactorization2(const double threshold) const
         {
             std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
                                                                            pivot.end());
-            index_type i = it - pivot.begin();
+            const index_type i = it - pivot.begin();
             std::swap(pivot[m], pivot[i]);
         }
         const double l_m_pm = std::sqrt(d[pivot[m]]);
@@ -1334,18 +1334,18 @@ TlMatrix TlSymmetricMatrix::choleskyFactorization2(const double threshold) const
         const double inv_l_m_pm = 1.0 / l_m_pm;
         for (index_type i = m +1; i < N; ++i) {
             double sum_ll = 0.0;
+#pragma omp parallel for reduction(+:sum_ll) schedule(runtime) 
             for (index_type j = 0; j < m; ++j) {
                 sum_ll += L.get(j, pivot[m]) * L.get(j, pivot[i]);
             }
-            //const double value = (this->get(pivot[m], pivot[i]) - sum_ll) / L.get(m, pivot[m]);
-            const double value = (this->get(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
-            L.set(m, pivot[i], value);
+            const double l_m_pi = (this->get(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
+            L.set(m, pivot[i], l_m_pi);
 
-            double l_mi = L.get(m, pivot[i]);
-            d[pivot[i]] -= l_mi * l_mi;
+            d[pivot[i]] -= l_m_pi * l_m_pi;
         }
 
         error = 0.0;
+#pragma omp parallel for reduction(+:error) schedule(runtime) 
         for (index_type i = m +1; i < N; ++i) {
             error += d[pivot[i]];
         }
