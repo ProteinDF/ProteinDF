@@ -29,11 +29,11 @@ protected:
     struct PQ_Pair {
     public:
         PQ_Pair(index_type index1 =0, index_type index2 =0) : shellIndex1(index1), shellIndex2(index2) {
-            if (index1 < index2) {
-                std::swap(index1, index2);
+            if (this->shellIndex1 > this->shellIndex2) {
+                std::swap(this->shellIndex1, this->shellIndex2);
             }
         }
-        
+
     public:
         index_type shellIndex1;
         index_type shellIndex2;
@@ -53,7 +53,8 @@ protected:
     typedef std::vector<PQ_Pair> PQ_PairArray;
 
     typedef std::vector<PQ_Pair> I2PQ_Type;
-    typedef std::map<PQ_Pair, std::size_t, PQ_Pair_less> PQ2I_Type;
+    //typedef std::map<PQ_Pair, std::size_t, PQ_Pair_less> PQ2I_Type;
+    typedef std::vector<size_type> PQ2I_Type;
 
 protected:
     void createEngines();
@@ -115,6 +116,13 @@ protected:
 
     virtual void divideCholeskyBasis(const index_type numOfCBs,
                                      index_type *pStart, index_type *pEnd);
+
+    size_type pqPairIndex(const PQ_Pair& pq) const {
+        // 'U' format
+        assert(pq.shellIndex1 <= pq.shellIndex2);
+        size_type answer = pq.shellIndex1 +  pq.shellIndex2 * (pq.shellIndex2 +1) / 2;
+        return answer;
+    }
 
 protected: // for exact
     struct ShellPair {

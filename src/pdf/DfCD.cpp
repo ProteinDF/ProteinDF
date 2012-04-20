@@ -96,10 +96,12 @@ void DfCD::makeSuperMatrix_screening()
     this->log_.info(TlUtils::format(" # of I~ dimension: %d", int(numOfItilde)));
 
     // make PQ2I from I2PQ
-    PQ2I_Type PQ2I;
-    for (index_type i = 0; i < numOfItilde; ++i) {
-        const PQ_Pair& pq = I2PQ[i];
-        PQ2I[pq] = i;
+    PQ2I_Type PQ2I(numOfPQs, -1);
+    for (size_type i = 0; i < numOfItilde; ++i) {
+        //const PQ_Pair& pq = I2PQ[i];
+        const size_type PQ2I_index = this->pqPairIndex(I2PQ[i]);
+        assert(PQ2I_index < numOfPQs);
+        PQ2I[PQ2I_index] = i;
     }
 
     // 
@@ -122,7 +124,7 @@ void DfCD::makeSuperMatrix_screening()
     }
 
     this->finalize(&G);
-    //G.save("G.mat");
+    G.save("G.mat");
     //std::cerr << TlUtils::format("G(%d, %d)", G.getNumOfRows(), G.getNumOfCols()) << std::endl;
     pDfTaskCtrl->cutoffReport();
 
@@ -340,12 +342,19 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
         for (int j = 0; j < maxStepsQ; ++j) {
             const index_type indexQ = shellIndexQ + j;
             PQ_Pair pq(indexP, indexQ);
-            PQ2I_Type::const_iterator it_pq = PQ2I.find(pq);
-            if (it_pq == PQ2I.end()) {
+
+            // PQ2I_Type::const_iterator it_pq = PQ2I.find(pq);
+            // if (it_pq == PQ2I.end()) {
+            //     index += maxStepsR * maxStepsS;
+            //     continue;
+            // }
+            // const index_type indexPQ = it_pq->second;
+            const size_type indexPQ = PQ2I[this->pqPairIndex(pq)];
+            if (indexPQ == -1) {
+                // std::cerr << TlUtils::format("PQ(%d, %d)", indexP, indexQ) << std::endl;
                 index += maxStepsR * maxStepsS;
                 continue;
             }
-            const index_type indexPQ = it_pq->second;
 
             for (int k = 0; k < maxStepsR; ++k) {
                 const index_type indexR = shellIndexR + k;
@@ -354,12 +363,20 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
                 for (int l = 0; l < maxStepsS; ++l) {
                     const index_type indexS = shellIndexS + l;
                     PQ_Pair rs(indexR, indexS);
-                    PQ2I_Type::const_iterator it_rs = PQ2I.find(rs);
-                    if (it_rs == PQ2I.end()) {
+
+                    // PQ2I_Type::const_iterator it_rs = PQ2I.find(rs);
+                    // if (it_rs == PQ2I.end()) {
+                    //     ++index;
+                    //     continue;
+                    // }
+                    // const index_type indexRS = it_rs->second;
+
+                    const index_type indexRS = PQ2I[this->pqPairIndex(rs)];
+                    if (indexRS == -1) {
+                        // std::cerr << TlUtils::format("PQ(%d, %d)", indexR, indexS) << std::endl;
                         ++index;
                         continue;
                     }
-                    const index_type indexRS = it_rs->second;
                     
                     const double value = engine.WORK[index];
 
