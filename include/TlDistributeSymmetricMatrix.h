@@ -93,7 +93,9 @@ public:
 
     //const TlDistributeSymmetricMatrix& dot(const TlDistributeSymmetricMatrix& X);
     virtual double sum() const;
-    
+
+    TlDistributeMatrix choleskyFactorization(const double threshold = 1.0E-16) const;
+
 public:
     /// 指定された入力ストリームが読み込み可能かどうかを返す
     ///

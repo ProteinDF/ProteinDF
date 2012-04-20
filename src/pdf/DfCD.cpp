@@ -88,7 +88,7 @@ void DfCD::makeSuperMatrix_screening()
 
     // calc (pq|pq)
     TlSparseSymmetricMatrix schwarzTable;
-    std::vector<index_type> I2PQ; // I~ to (pq) index table; size of (I2PQ) is the number of I~.
+    PQ_PairArray I2PQ; // I~ to (pq) index table; size of (I2PQ) is the number of I~.
     this->calcPQPQ(orbitalInfo, &schwarzTable, &I2PQ);
     this->saveI2PQ(I2PQ);
     const index_type numOfItilde = I2PQ.size();
@@ -96,11 +96,10 @@ void DfCD::makeSuperMatrix_screening()
     this->log_.info(TlUtils::format(" # of I~ dimension: %d", int(numOfItilde)));
 
     // make PQ2I from I2PQ
-    std::vector<index_type> PQ2I(numOfPQs, -1);
+    PQ2I_Type PQ2I;
     for (index_type i = 0; i < numOfItilde; ++i) {
-        const index_type pq_index = I2PQ[i];
-        assert(pq_index < numOfPQs);
-        PQ2I[pq_index] = i;
+        const PQ_Pair& pq = I2PQ[i];
+        PQ2I[pq] = i;
     }
 
     // 
@@ -141,7 +140,7 @@ void DfCD::makeSuperMatrix_screening()
 
 void DfCD::calcPQPQ(const TlOrbitalInfoObject& orbitalInfo,
                     TlSparseSymmetricMatrix *pSchwarzTable,
-                    std::vector<index_type> *pI2PQ)
+                    PQ_PairArray *pI2PQ)
 {
     const index_type numOfAOs = this->m_nNumOfAOs;
     assert(numOfAOs == orbitalInfo.getNumOfOrbitals());
@@ -190,7 +189,7 @@ void DfCD::calcPQPQ(const TlOrbitalInfoObject& orbitalInfo,
 void DfCD::calcPQPQ_kernel(const TlOrbitalInfoObject& orbitalInfo,
                            const std::vector<DfTaskCtrl::Task2>& taskList,
                            TlSparseSymmetricMatrix *pSchwarzTable,
-                           std::vector<index_type> *pI2PQ)
+                           PQ_PairArray *pI2PQ)
 {
     const index_type numOfAOs = this->m_nNumOfAOs;
     const double threshold = this->cutoffThreshold_;
@@ -199,7 +198,7 @@ void DfCD::calcPQPQ_kernel(const TlOrbitalInfoObject& orbitalInfo,
 
 #pragma omp parallel
     {
-        std::vector<index_type> local_I2PQ;
+        PQ_PairArray local_I2PQ;
         TlSparseSymmetricMatrix local_schwarzTable(pSchwarzTable->getNumOfRows());
         int threadID = 0;
 #ifdef _OPENMP
@@ -241,7 +240,7 @@ void DfCD::calcPQPQ_kernel(const TlOrbitalInfoObject& orbitalInfo,
                     
                     // for I~ to pq table
                     if (value > threshold) {
-                        local_I2PQ.push_back(TlSymmetricMatrix::vtr_index(indexP, indexQ, numOfAOs));
+                        local_I2PQ.push_back(PQ_Pair(indexP, indexQ));
                     }
                 }
             }
@@ -273,7 +272,7 @@ void DfCD::calcPQPQ_kernel(const TlOrbitalInfoObject& orbitalInfo,
 
 void DfCD::makeSuperMatrix_kernel2(const TlOrbitalInfo& orbitalInfo,
                                    const std::vector<DfTaskCtrl::Task4>& taskList,
-                                   const std::vector<index_type>& PQ2I,
+                                   const PQ2I_Type& PQ2I,
                                    TlSymmetricMatrix* pG)
 {
     const int taskListSize = taskList.size();
@@ -328,7 +327,7 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
                    const index_type shellIndexQ, const int maxStepsQ,
                    const index_type shellIndexR, const int maxStepsR,
                    const index_type shellIndexS, const int maxStepsS,
-                   const std::vector<index_type>& PQ2I,
+                   const PQ2I_Type& PQ2I,
                    const DfEriEngine& engine,
                    TlSymmetricMatrix* pG)
 {
@@ -340,30 +339,29 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
 
         for (int j = 0; j < maxStepsQ; ++j) {
             const index_type indexQ = shellIndexQ + j;
-            const index_type I_pq_index = TlSymmetricMatrix::vtr_index(indexP, indexQ, numOfAOs);
-            assert(I_pq_index < static_cast<index_type>(PQ2I.size()));
-            const index_type indexPQ = PQ2I[I_pq_index];
-            if (indexPQ == -1) {
+            PQ_Pair pq(indexP, indexQ);
+            PQ2I_Type::const_iterator it_pq = PQ2I.find(pq);
+            if (it_pq == PQ2I.end()) {
                 index += maxStepsR * maxStepsS;
                 continue;
             }
-            
+            const index_type indexPQ = it_pq->second;
+
             for (int k = 0; k < maxStepsR; ++k) {
                 const index_type indexR = shellIndexR + k;
-                
+                const index_type maxIndexS = (indexP == indexR) ? indexQ : indexR;
+
                 for (int l = 0; l < maxStepsS; ++l) {
                     const index_type indexS = shellIndexS + l;
-                    
-                    const double value = engine.WORK[index];
-                    const index_type maxIndexS = (indexP == indexR) ? indexQ : indexR;
-
-                    const index_type I_rs_index = TlSymmetricMatrix::vtr_index(indexR, indexS, numOfAOs);
-                    assert(I_rs_index < static_cast<index_type>(PQ2I.size()));
-                    const index_type indexRS = PQ2I[I_rs_index];
-                    if (indexRS == -1) {
+                    PQ_Pair rs(indexR, indexS);
+                    PQ2I_Type::const_iterator it_rs = PQ2I.find(rs);
+                    if (it_rs == PQ2I.end()) {
                         ++index;
                         continue;
                     }
+                    const index_type indexRS = it_rs->second;
+                    
+                    const double value = engine.WORK[index];
 
                     if (indexQ <= indexP) {
                         if ((shellIndexQ != shellIndexS) || (indexR <= indexP)) {
@@ -382,7 +380,7 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
     }
 }
 
-void DfCD::saveI2PQ(const std::vector<index_type>& I2PQ) 
+void DfCD::saveI2PQ(const PQ_PairArray& I2PQ) 
 {
     std::string filepath = "I2PQ.vtr";
     std::ofstream ofs;
@@ -391,14 +389,14 @@ void DfCD::saveI2PQ(const std::vector<index_type>& I2PQ)
     const std::size_t size = I2PQ.size();
     ofs.write(reinterpret_cast<const char*>(&size), sizeof(std::size_t));
     for (std::size_t i = 0; i < size; ++i) {
-        int tmp = I2PQ[i];
-        ofs.write(reinterpret_cast<const char*>(&tmp), sizeof(int));
+        ofs.write(reinterpret_cast<const char*>(&(I2PQ[i].shellIndex1)), sizeof(index_type));
+        ofs.write(reinterpret_cast<const char*>(&(I2PQ[i].shellIndex2)), sizeof(index_type));
     }
 
     ofs.close();
 }
 
-std::vector<int> DfCD::getI2PQ()
+DfCD::PQ_PairArray DfCD::getI2PQ()
 {
     std::string filepath = "I2PQ.vtr";
     std::ifstream ifs;
@@ -410,11 +408,13 @@ std::vector<int> DfCD::getI2PQ()
     std::size_t size = 0;
     ifs.read(reinterpret_cast<char*>(&size), sizeof(std::size_t));
 
-    std::vector<int> answer(size);
-    int tmp = 0;
+    PQ_PairArray answer(size);
+    index_type shellPair1 = 0;
+    index_type shellPair2 = 0;
     for (std::size_t i = 0; i < size; ++i) {
-        ifs.read(reinterpret_cast<char*>(&tmp), sizeof(int));
-        answer[i] = tmp;
+        ifs.read(reinterpret_cast<char*>(&shellPair1), sizeof(index_type));
+        ifs.read(reinterpret_cast<char*>(&shellPair2), sizeof(index_type));
+        answer[i] = PQ_Pair(shellPair1, shellPair2);
     }
 
     ifs.close();
@@ -776,9 +776,9 @@ void DfCD::finalize(TlSparseSymmetricMatrix *pMat)
     // do nothing
 }
 
-void DfCD::finalize_I2PQ(std::vector<index_type> *pI2PQ)
+void DfCD::finalize_I2PQ(PQ_PairArray *pI2PQ)
 {
-    std::sort(pI2PQ->begin(), pI2PQ->end());
+    std::sort(pI2PQ->begin(), pI2PQ->end(), PQ_Pair_less());
 }
 
 
@@ -821,16 +821,17 @@ TlSparseSymmetricMatrix DfCD::makeSchwarzTable(const TlOrbitalInfoObject& orbita
 }
 
 TlSymmetricMatrix DfCD::getCholeskyVector(const TlVector& L_col,
-                                          const std::vector<index_type>& I2PQ)
+                                          const I2PQ_Type& I2PQ)
 {
     const index_type numOfItilde = L_col.getSize();
-    TlVector buf(this->numOfPQs_);
+    TlSymmetricMatrix answer(this->m_nNumOfAOs);
     for (index_type i = 0; i < numOfItilde; ++i) {
-        const index_type index = I2PQ[i];
-        buf[index] = L_col[i];
+        answer.set(I2PQ[i].shellIndex1,
+                   I2PQ[i].shellIndex2,
+                   L_col[i]);
     }
 
-    return TlSymmetricMatrix(buf, this->m_nNumOfAOs);
+    return answer;
 }
 
 void DfCD::getJ(TlSymmetricMatrix* pJ)
@@ -841,7 +842,7 @@ void DfCD::getJ(TlSymmetricMatrix* pJ)
     TlMatrix L = this->getL();
     const index_type numOfCBs = L.getNumOfCols();
 
-    const std::vector<index_type> I2PQ = this->getI2PQ();
+    const I2PQ_Type I2PQ = this->getI2PQ();
     index_type start_CholeskyBasis = 0;
     index_type end_CholeskyBasis = 0;
     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
@@ -878,12 +879,12 @@ void DfCD::getK(const RUN_TYPE runType,
     TlSymmetricMatrix P = this->getPMatrix(); // RKS
     const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
     
-    const std::vector<index_type> I2PQ = this->getI2PQ();
+    const I2PQ_Type I2PQ = this->getI2PQ();
     index_type start_CholeskyBasis = 0;
     index_type end_CholeskyBasis = 0;
     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-        TlSymmetricMatrix l = this->getCholeskyVector(L.getColVector(I), I2PQ);;
+        TlSymmetricMatrix l = this->getCholeskyVector(L.getColVector(I), I2PQ);
     
         TlMatrix X = l * C;
         TlMatrix Xt = X;
