@@ -23,6 +23,7 @@ class TlScalapackContext {
 public:
     static void getData(int& rContext, int& rProc, int& rRank,
                         int& rProcGridRow, int& rProcGridCol);
+    static void finalize();
 private:
     TlScalapackContext();
     ~TlScalapackContext();

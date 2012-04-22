@@ -21,7 +21,7 @@ void DfKMatrix_Parallel::getK_CD()
     if (this->m_bUsingSCALAPACK == true) {
         TlDistributeSymmetricMatrix K(this->m_nNumOfAOs);
         this->getK_CD_distributed(RUN_RKS, &K);
-        DfObject::saveJMatrix(this->m_nIteration, K);
+        DfObject::saveHFxMatrix(RUN_RKS, this->m_nIteration, K);
     } else {
         TlSymmetricMatrix K(this->m_nNumOfAOs);
         this->getK_CD_local(RUN_RKS, &K);

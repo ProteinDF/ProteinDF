@@ -14,6 +14,7 @@
 #include "TlParameter.h"
 #include "TlSerializeData.h"
 #include "TlMsgPack.h"
+#include "TlDistributeMatrix.h"
 
 // minimum work memory size is 400 MB
 #define DEFAULT_WORK_MEM_SIZE (400UL * 1024UL * 1024UL)
@@ -2345,6 +2346,9 @@ int TlCommunicate::initialize(int argc, char* argv[])
 int TlCommunicate::finalize()
 {
     //this->barrier();
+    
+    TlScalapackContext::finalize();
+
     return MPI_Finalize();
 }
 
