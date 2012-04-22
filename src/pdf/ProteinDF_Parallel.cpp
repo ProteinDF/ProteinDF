@@ -179,7 +179,9 @@ void ProteinDF_Parallel::endlogo()
         }
     } else {
         rComm.sendData(performanceReports, 0);
-        rComm.sendData(matrixCacheReports, 0);
+        if (this->showCacheReport_ == true) {
+            rComm.sendData(matrixCacheReports, 0);
+        }
         rComm.sendData(commReports, 0);
     }
     
