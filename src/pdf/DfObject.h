@@ -506,7 +506,7 @@ SymmetricMatrixType DfObject::getSpqMatrix()
     SymmetricMatrixType Spq;
     const std::string path = this->getSpqMatrixPath();
     Spq = this->matrixCache_.get<SymmetricMatrixType>(path);
-    Spq.resize((this->m_nNumOfAOs));
+    Spq.resize(this->m_nNumOfAOs);
     return Spq;
 }
 

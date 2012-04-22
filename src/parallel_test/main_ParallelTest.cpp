@@ -75,13 +75,13 @@ int main(int argc, char *argv[])
     testBroadcast_TlVector();
     testBroadcast_TlParam();
     testBroadcast_TlSparseMatrix();
-    testBroadcast_TlMmapSymmetricMatrix();
+    //testBroadcast_TlMmapSymmetricMatrix();
 
     testAllreduceSum_double();
     testAllreduceSum_vectorDouble();
     testAllreduceSum_TlVector();
     testAllreduceSum_matrix_symmetric();
-    testAllreduceSum_TlMmapSymmetricMatrix();
+    //testAllreduceSum_TlMmapSymmetricMatrix();
     // ===================================================================
 
     // finalize

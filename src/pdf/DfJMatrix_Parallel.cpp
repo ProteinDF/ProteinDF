@@ -239,13 +239,9 @@ void DfJMatrix_Parallel::getJ_conventional_distributed(TlDistributeSymmetricMatr
     TlCommunicate& rComm = TlCommunicate::getInstance();
     TlDistributeSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {
-        if (rComm.isMaster() == true) {
-            P = DfObject::getDiffDensityMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration);
-        }
+        P = DfObject::getDiffDensityMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration);
     } else {
-        if (rComm.isMaster() == true) {
-            P = DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
-        }
+        P = DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
     }
     assert(P.getNumOfRows() == this->m_nNumOfAOs);
 

@@ -94,7 +94,23 @@ public:
     //const TlDistributeSymmetricMatrix& dot(const TlDistributeSymmetricMatrix& X);
     virtual double sum() const;
 
+    /// 指定された要素(グローバル)がどのプロセスが所有しているかを返す
+    virtual int getProcIdForIndex(index_type globalRow, index_type globalCol) const {
+        if (globalRow < globalCol) {
+            std::swap(globalRow, globalCol);
+        }
+        return TlDistributeMatrix::getProcIdForIndex(globalRow, globalCol);
+    }
+
+    virtual int getIndex(index_type globalRow, index_type globalCol) const {
+        if (globalRow < globalCol) {
+            std::swap(globalRow, globalCol);
+        }
+        return TlDistributeMatrix::getIndex(globalRow, globalCol);
+    }
+
     TlDistributeMatrix choleskyFactorization(const double threshold = 1.0E-16) const;
+    TlDistributeMatrix choleskyFactorization_mod(const double threshold = 1.0E-16) const;
 
 public:
     /// 指定された入力ストリームが読み込み可能かどうかを返す

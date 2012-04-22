@@ -73,27 +73,27 @@ void DfXMatrix_Parallel::exec_ScaLAPACK()
     TlCommunicate& rComm = TlCommunicate::getInstance();
     rComm.barrier();
     
-    this->logger("X matrix is created using ScaLAPACK.\n");
+    this->log_.info("X matrix is created using ScaLAPACK.");
 
     const int numOfAOs = this->m_nNumOfAOs;
     TlVector s;
     TlDistributeMatrix U(this->m_nNumOfAOs, this->m_nNumOfAOs);
 
     // MO dimension will be defined by follow code.
-    this->loggerTime(" start");
     {
-        this->loggerTime(" diagonalization of S matrix");
+        this->log_.info(" diagonalization of S matrix");
         TlVector EigVal;
         TlDistributeMatrix EigVec;
         {
             TlDistributeSymmetricMatrix Spq = this->getSpqMatrix<TlDistributeSymmetricMatrix>();
+            this->log_.info("loaded S matrix.");
             Spq.diagonal(&EigVal, &EigVec);
         }
         assert(EigVal.getSize() == numOfAOs);
 
 
         // MO dimension is defined.
-        this->loggerTime(" truncation of linear dependent");
+        this->log_.info(" truncation of linear dependent");
         const int independent_orbital_number = (*(this->pPdfParam_))["num_of_MOs"].getInt();
         if (independent_orbital_number > 0) {
             this->m_nNumOfMOs = independent_orbital_number;

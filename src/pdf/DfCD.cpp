@@ -98,45 +98,15 @@ void DfCD::makeSuperMatrix_screening()
     // make PQ2I from I2PQ
     PQ2I_Type PQ2I(numOfPQs, -1);
     for (size_type i = 0; i < numOfItilde; ++i) {
-        //const PQ_Pair& pq = I2PQ[i];
         const size_type PQ2I_index = this->pqPairIndex(I2PQ[i]);
         assert(PQ2I_index < numOfPQs);
         PQ2I[PQ2I_index] = i;
     }
 
     // 
-    this->createEngines();
-    DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    TlSymmetricMatrix G = this->getGMatrix(orbitalInfo, schwarzTable, numOfItilde, PQ2I);
 
-    TlSymmetricMatrix G(numOfItilde);
-    std::vector<DfTaskCtrl::Task4> taskList;
-    bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
-                                          schwarzTable,
-                                          this->grainSize_, &taskList, true);
-    while (hasTask == true) {
-        this->makeSuperMatrix_kernel2(orbitalInfo,
-                                      taskList,
-                                      PQ2I,
-                                      &G);
-        hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
-                                         schwarzTable,
-                                         this->grainSize_, &taskList);
-    }
-
-    this->finalize(&G);
-    G.save("G.mat");
-    //std::cerr << TlUtils::format("G(%d, %d)", G.getNumOfRows(), G.getNumOfCols()) << std::endl;
-    pDfTaskCtrl->cutoffReport();
-
-    delete pDfTaskCtrl;
-    pDfTaskCtrl = NULL;
-    this->destroyEngines();
-
-    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
-    TlMatrix L = G.choleskyFactorization2(this->epsilon_);
-    //std::cerr << TlUtils::format("L(%d, %d)", L.getNumOfRows(), L.getNumOfCols()) << std::endl;
-    this->log_.info(TlUtils::format("Cholesky Vectors: %d", L.getNumOfCols()));
-    this->saveL(L);
+    this->makeL(G);
 }
 
 
@@ -272,10 +242,46 @@ void DfCD::calcPQPQ_kernel(const TlOrbitalInfoObject& orbitalInfo,
 }
 
 
-void DfCD::makeSuperMatrix_kernel2(const TlOrbitalInfo& orbitalInfo,
+TlSymmetricMatrix DfCD::getGMatrix(const TlOrbitalInfoObject& orbitalInfo, 
+                                   const TlSparseSymmetricMatrix& schwarzTable,
+                                   const index_type numOfItilde,
+                                   const PQ2I_Type& PQ2I)
+{
+    this->createEngines();
+    DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+
+    TlSymmetricMatrix G(numOfItilde);
+    std::vector<DfTaskCtrl::Task4> taskList;
+    bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                          schwarzTable,
+                                          this->grainSize_, &taskList, true);
+    while (hasTask == true) {
+        this->makeSuperMatrix_kernel2(orbitalInfo,
+                                      taskList,
+                                      PQ2I,
+                                      &G);
+        hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                         schwarzTable,
+                                         this->grainSize_, &taskList);
+    }
+
+    this->finalize(&G);
+    //G.save("G.mat");
+    //std::cerr << TlUtils::format("G(%d, %d)", G.getNumOfRows(), G.getNumOfCols()) << std::endl;
+    pDfTaskCtrl->cutoffReport();
+
+    delete pDfTaskCtrl;
+    pDfTaskCtrl = NULL;
+    this->destroyEngines();
+
+    return G;
+}
+
+
+void DfCD::makeSuperMatrix_kernel2(const TlOrbitalInfoObject& orbitalInfo,
                                    const std::vector<DfTaskCtrl::Task4>& taskList,
                                    const PQ2I_Type& PQ2I,
-                                   TlSymmetricMatrix* pG)
+                                   TlMatrixObject* pG)
 {
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
@@ -331,7 +337,7 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
                    const index_type shellIndexS, const int maxStepsS,
                    const PQ2I_Type& PQ2I,
                    const DfEriEngine& engine,
-                   TlSymmetricMatrix* pG)
+                   TlMatrixObject* pG)
 {
     const index_type numOfAOs = this->m_nNumOfAOs;
 
@@ -426,17 +432,28 @@ DfCD::PQ_PairArray DfCD::getI2PQ()
     ifs.read(reinterpret_cast<char*>(&size), sizeof(std::size_t));
 
     PQ_PairArray answer(size);
-    index_type shellPair1 = 0;
-    index_type shellPair2 = 0;
+    index_type shellIndex1 = 0;
+    index_type shellIndex2 = 0;
     for (std::size_t i = 0; i < size; ++i) {
-        ifs.read(reinterpret_cast<char*>(&shellPair1), sizeof(index_type));
-        ifs.read(reinterpret_cast<char*>(&shellPair2), sizeof(index_type));
-        answer[i] = PQ_Pair(shellPair1, shellPair2);
+        ifs.read(reinterpret_cast<char*>(&shellIndex1), sizeof(index_type));
+        ifs.read(reinterpret_cast<char*>(&shellIndex2), sizeof(index_type));
+        answer[i] = PQ_Pair(shellIndex1, shellIndex2);
     }
 
     ifs.close();
     return answer;
 }
+
+
+void DfCD::makeL(const TlSymmetricMatrix& G)
+{
+    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
+    TlMatrix L = G.choleskyFactorization2omp(this->epsilon_);
+    //std::cerr << TlUtils::format("L(%d, %d)", L.getNumOfRows(), L.getNumOfCols()) << std::endl;
+    this->log_.info(TlUtils::format("Cholesky Vectors: %d", L.getNumOfCols()));
+    this->saveL(L);
+}
+
 
 void DfCD::saveL(const TlMatrix& L)
 {

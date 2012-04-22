@@ -176,7 +176,7 @@ public:
     virtual double sum() const;
 
     /// 指定された要素(グローバル)がどのプロセスが所有しているかを返す
-    int getProcIdForIndex(index_type globalRow, index_type globalCol) const;
+    virtual int getProcIdForIndex(index_type globalRow, index_type globalCol) const;
     
     std::vector<index_type> getRowIndexTable() const;
     std::vector<index_type> getColIndexTable() const;
@@ -260,8 +260,10 @@ protected:
     /// initialize()などから呼び出される。
     virtual std::size_t getNumOfMyElements() const;
 
-    
-    int getIndex(index_type globalRow, index_type globalCol) const;
+
+    /// ローカル行列のインデックスを返す。
+    /// 保持していない場合は-1を返す。
+    virtual int getIndex(index_type globalRow, index_type globalCol) const;
 
 
     /// 各ノードに配列保持された行列要素をマージする

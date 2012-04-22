@@ -3,6 +3,7 @@
 
 #include "DfObject.h"
 #include "DfTaskCtrl.h"
+#include "TlOrbitalInfo.h"
 #include "TlSparseSymmetricMatrix.h"
 #include "TlSymmetricMatrix.h"
 
@@ -18,7 +19,7 @@ public:
     virtual ~DfCD();
 
 public:
-    void makeSuperMatrix();
+    virtual void makeSuperMatrix();
     void makeSuperMatrix_exact();
     
     void getJ(TlSymmetricMatrix *pJ);
@@ -92,19 +93,27 @@ protected:
                          const std::vector<DfTaskCtrl::Task2>& taskList,
                          TlSparseSymmetricMatrix *pSchwarzTable,
                          PQ_PairArray *pI2PQ);
-    void makeSuperMatrix_kernel2(const TlOrbitalInfo& orbitalInfo,
+
+    TlSymmetricMatrix getGMatrix(const TlOrbitalInfoObject& orbitalInfo, 
+                                 const TlSparseSymmetricMatrix& schwarzTable,
+                                 const index_type numOfItilde,
+                                 const PQ2I_Type& PQ2I);
+
+    void makeSuperMatrix_kernel2(const TlOrbitalInfoObject& orbitalInfo,
                                  const std::vector<DfTaskCtrl::Task4>& taskList,
                                  const PQ2I_Type& PQ2I,
-                                 TlSymmetricMatrix* pG);
+                                 TlMatrixObject* pG);
     void storeG2(const index_type shellIndexP, const int maxStepsP,
                  const index_type shellIndexQ, const int maxStepsQ,
                  const index_type shellIndexR, const int maxStepsR,
                  const index_type shellIndexS, const int maxStepsS,
                  const PQ2I_Type& PQ2I,
                  const DfEriEngine& engine,
-                 TlSymmetricMatrix* pG);
-    void saveI2PQ(const PQ_PairArray& I2PQ);
+                 TlMatrixObject* pG);
+    virtual void saveI2PQ(const I2PQ_Type& I2PQ);
     PQ_PairArray getI2PQ();
+
+    void makeL(const TlSymmetricMatrix& G);
     
     virtual void saveL(const TlMatrix& L);
     virtual TlMatrix getL();
@@ -158,5 +167,6 @@ private:
     TlSymmetricMatrix check;
 #endif // CHECK_LOOP
 };
+
 
 #endif // DFCD_H

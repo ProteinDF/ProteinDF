@@ -237,6 +237,7 @@ public:
 
     TlMatrix choleskyFactorization();
     TlMatrix choleskyFactorization2(const double threshold = 1.0E-16) const;
+    TlMatrix choleskyFactorization2omp(const double threshold = 1.0E-16) const;
 
 public:
     friend std::ostream& operator <<(std::ostream& out, const TlSymmetricMatrix& rhs);

@@ -123,13 +123,9 @@ void DfKMatrix_Parallel::getK_conventional_distributed(const RUN_TYPE runType,
     TlCommunicate& rComm = TlCommunicate::getInstance();
     TlDistributeSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {
-        if (rComm.isMaster() == true) {
-            P = DfObject::getDiffDensityMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration);
-        }
+        P = DfObject::getDiffDensityMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration);
     } else {
-        if (rComm.isMaster() == true) {
-            P = DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration -1);
-        }
+        P = DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration -1);
     }
     assert(P.getNumOfRows() == this->m_nNumOfAOs);
 

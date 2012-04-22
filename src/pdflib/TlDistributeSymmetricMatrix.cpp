@@ -11,6 +11,7 @@
 #include "TlFileSymmetricMatrix.h"
 #include "scalapack.h"
 #include "TlUtils.h"
+#include "TlLogging.h"
 
 TlDistributeSymmetricMatrix::TlDistributeSymmetricMatrix(const index_type dim)
     : TlDistributeMatrix(dim, dim)
@@ -794,6 +795,7 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
     rComm.broadcast(this->m_nRows);
     rComm.broadcast(this->m_nCols);
     this->initialize();
+    //std::cerr << "TlDistributeSymmetricMatrix::load() init." << std::endl;
 
     if (rComm.isMaster() == true) {
         static const std::size_t bufferCount = FILE_BUFFER_SIZE / sizeof(double);
@@ -910,6 +912,9 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
         while (isBreakLoop == false) {
             if (rComm.test(sizeList) == true) {
                 rComm.wait(sizeList);
+                // std::cerr << TlUtils::format("RECV [%d] sizeList=",
+                //                              rComm.getRank(), sizeList)
+                //           << std::endl;
                 assert(sizeList > 0);
 
                 rowColList.resize(sizeList * 2);
@@ -932,14 +937,16 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
             if (rComm.test(endMsg) == true) {
                 rComm.wait(endMsg);
                 rComm.cancel(sizeList);
-//                 std::cerr << TlUtils::format("RECV [%d] END",
-//                                                  rComm.getRank())
-//                               << std::endl;
+                // std::cerr << TlUtils::format("RECV [%d] END",
+                //                              rComm.getRank())
+                //           << std::endl;
                 isBreakLoop = true;
             }
         }
     }
 
+    // std::cerr << TlUtils::format("[%d] END", rComm.getRank())
+    //           << std::endl;
     return bAnswer;
 }
 
@@ -1528,51 +1535,267 @@ TlDistributeSymmetricMatrix operator*(const TlDistributeSymmetricMatrix& X, cons
 TlDistributeMatrix 
 TlDistributeSymmetricMatrix::choleskyFactorization(const double threshold) const
 {
-    // const index_type N = this->getNumOfRows();
-    // TlVector d = this->getDiagonalElements();
-    // double error = d.sum();
-    // std::vector<TlVector::size_type> pivot(N);
-    // for (index_type i = 0; i < N; ++i) {
-    //     pivot[i] = i;
-    // }
+    TlLogging& log = TlLogging::getInstance();
 
-    // TlDistributeMatrix L(N, N);
-    // index_type m = 0;
-    // while (error > threshold) {
-    //     {
-    //         std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
-    //                                                                        pivot.end());
-    //         index_type i = it - pivot.begin();
-    //         std::swap(pivot[m], pivot[i]);
-    //     }
-    //     const double l_m_pm = std::sqrt(d[pivot[m]]);
-    //     L.set(m, pivot[m], l_m_pm);
+    const index_type N = this->getNumOfRows();
+    TlVector d = this->getDiagonalElements();
+    double error = d.sum();
+    std::vector<TlVector::size_type> pivot(N);
+    for (index_type i = 0; i < N; ++i) {
+        pivot[i] = i;
+    }
 
-    //     const double inv_l_m_pm = 1.0 / l_m_pm;
-    //     for (index_type i = m +1; i < N; ++i) {
-    //         double sum_ll = 0.0;
-    //         for (index_type j = 0; j < m; ++j) {
-    //             sum_ll += L.get(j, pivot[m]) * L.get(j, pivot[i]);
-    //         }
-    //         //const double value = (this->get(pivot[m], pivot[i]) - sum_ll) / L.get(m, pivot[m]);
-    //         const double value = (this->get(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
-    //         L.set(m, pivot[i], value);
+    TlDistributeMatrix L(N, N);
+    index_type m = 0;
+    double sum_ll = 0.0;
 
-    //         double l_mi = L.get(m, pivot[i]);
-    //         d[pivot[i]] -= l_mi * l_mi;
-    //     }
+    while (error > threshold) {
+        std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+                                                                       pivot.end());
+        const index_type i = it - pivot.begin();
+        std::swap(pivot[m], pivot[i]);
+        
+        const double l_m_pm = std::sqrt(d[pivot[m]]);
+        L.set(m, pivot[m], l_m_pm);
+        
+        const double inv_l_m_pm = 1.0 / l_m_pm;
+        
+        for (index_type i = m +1; i < N; ++i) {
+            double sum_ll = 0.0;
+            for (index_type j = 0; j < m; ++j) {
+                sum_ll += L.get(j, pivot[m]) * L.get(j, pivot[i]);
+            }
+            const double l_m_pi = (this->get(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
+            L.set(m, pivot[i], l_m_pi);
+            
+            d[pivot[i]] -= l_m_pi * l_m_pi;
+        }
+            
+        error = 0.0;
+        for (index_type i = m +1; i < N; ++i) {
+            error += d[pivot[i]];
+        }
 
-    //     error = 0.0;
-    //     for (index_type i = m +1; i < N; ++i) {
-    //         error += d[pivot[i]];
-    //     }
-    //     ++m;
-    // }
+        log.info(TlUtils::format("cholesky: m=%d, err=%e", m, error));
+        ++m;
+    }
 
-    // L.transpose();
-    // L.resize(N, m);
+    L.transpose();
+    L.resize(N, m);
 
-    // return L;
-
-    return TlDistributeMatrix();
+    return L;
 }
+
+
+// TlDistributeMatrix 
+// TlDistributeSymmetricMatrix::choleskyFactorization_mod0(const double threshold) const
+// {
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+//     TlLogging& log = TlLogging::getInstance();
+
+//     const index_type N = this->getNumOfRows();
+//     TlVector d = this->getDiagonalElements();
+//     double error = d.sum();
+//     std::vector<TlVector::size_type> pivot(N);
+//     for (index_type i = 0; i < N; ++i) {
+//         pivot[i] = i;
+//     }
+
+//     TlDistributeMatrix L(N, N);
+//     index_type m = 0;
+//     double sum_ll = 0.0;
+
+//     while (error > threshold) {
+//         std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+//                                                                        pivot.end());
+//         const index_type i = it - pivot.begin();
+//         std::swap(pivot[m], pivot[i]);
+        
+//         const double l_m_pm = std::sqrt(d[pivot[m]]);
+//         L.set(m, pivot[m], l_m_pm);
+        
+//         const double inv_l_m_pm = 1.0 / l_m_pm;
+        
+//         // L(0:m, pivot[m])を一時保管
+//         const TlVector L_x_pm = L.getColVector(pivot[m]); // TODO: バッファの摂り過ぎ
+
+//         for (index_type i = m +1; i < N; ++i) {
+//             double sum_ll = 0.0;
+//             for (index_type j = 0; j < m; ++j) {
+//                 //sum_ll += L.get(j, pivot[m]) * L.get(j, pivot[i]);
+//                 sum_ll += L_x_pm[j] * L.getLocal(j, pivot[i]);
+//             }
+//             rComm.allReduce_SUM(sum_ll);
+//             const double l_m_pi = (this->get(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
+//             L.set(m, pivot[i], l_m_pi);
+            
+//             d[pivot[i]] -= l_m_pi * l_m_pi;
+//         }
+            
+//         error = 0.0;
+//         for (index_type i = m +1; i < N; ++i) {
+//             error += d[pivot[i]];
+//         }
+
+//         log.info(TlUtils::format("cholesky: m=%d, err=%e", m, error));
+//         ++m;
+//     }
+
+//     L.transpose();
+//     L.resize(N, m);
+
+//     return L;
+// }
+
+
+TlDistributeMatrix 
+TlDistributeSymmetricMatrix::choleskyFactorization_mod(const double threshold) const
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    TlLogging& log = TlLogging::getInstance();
+
+    const index_type N = this->getNumOfRows();
+    TlVector d = this->getDiagonalElements();
+    double error = d.sum();
+    std::vector<TlVector::size_type> pivot(N);
+    for (index_type i = 0; i < N; ++i) {
+        pivot[i] = i;
+    }
+
+    TlDistributeMatrix L(N, N);
+    index_type m = 0;
+    double sum_ll = 0.0;
+
+    while (error > threshold) {
+        std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+                                                                       pivot.end());
+        const index_type i = it - pivot.begin();
+        std::swap(pivot[m], pivot[i]);
+        
+        const double l_m_pm = std::sqrt(d[pivot[m]]);
+        L.set(m, pivot[m], l_m_pm);
+        
+        const double inv_l_m_pm = 1.0 / l_m_pm;
+        
+        // L(0:m, pivot[m])を一時保管
+        const TlVector L_x_pm = L.getColVector(pivot[m]); // TODO: バッファの取り過ぎ
+
+        for (index_type i = m +1; i < N; ++i) {
+            double sum_ll = 0.0;
+            for (index_type j = 0; j < m; ++j) {
+                //sum_ll += L.get(j, pivot[m]) * L.get(j, pivot[i]);
+                sum_ll += L_x_pm[j] * L.getLocal(j, pivot[i]);
+            }
+            rComm.allReduce_SUM(sum_ll);
+
+            double l_m_pi = 0.0;
+            {
+                // double G_pm_pi_exact = this->get(pivot[m], pivot[i]);
+                // double l_m_pi_exact = (this->get(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
+                // double G_pm_pi_local = this->getLocal(pivot[m], pivot[i]);
+
+                // for (int p = 0; p < rComm.getNumOfProcs(); ++p) {
+                //     if (p == rComm.getRank()) {
+                //         std::cerr << TlUtils::format("[%d] G(%d, %d)=% f(% f), holder=%d, index=%d",
+                //                                      rComm.getRank(),
+                //                                      pivot[m], pivot[i],
+                //                                      G_pm_pi_exact, G_pm_pi_local,
+                //                                      this->getProcIdForIndex(pivot[m], pivot[i]),
+                //                                      this->getIndex(pivot[m], pivot[i]))
+                //                   << std::endl;
+                //     }
+                //     rComm.barrier();
+                // }
+
+                int holder = this->getProcIdForIndex(pivot[m], pivot[i]);
+                if (holder == rComm.getRank()) {
+                    assert(this->getIndex(pivot[m], pivot[i]) != -1);
+                    //assert(std::fabs(this->getLocal(pivot[m], pivot[i]) - G_pm_pi_exact) < 1.0E-5);
+                    l_m_pi = (this->getLocal(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
+                }
+                rComm.broadcast(l_m_pi, holder);
+            }
+            //assert(std::fabs(l_m_pi - l_m_pi_exact) < 1.0E-5);
+            L.set(m, pivot[i], l_m_pi);
+            
+            d[pivot[i]] -= l_m_pi * l_m_pi;
+        }
+            
+        error = 0.0;
+        for (index_type i = m +1; i < N; ++i) {
+            error += d[pivot[i]];
+        }
+
+        log.info(TlUtils::format("cholesky: m=%d, err=%e", m, error));
+        ++m;
+    }
+
+    L.transpose();
+    L.resize(N, m);
+
+    return L;
+}
+
+
+// TlDistributeMatrix 
+// TlDistributeSymmetricMatrix::choleskyFactorization_mod(const double threshold) const
+// {
+//     TlLogging& log = TlLogging::getInstance();
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+
+//     const index_type N = this->getNumOfRows();
+//     TlVector d = this->getDiagonalElements();
+//     double error = d.sum();
+//     std::vector<TlVector::size_type> pivot(N);
+//     for (index_type i = 0; i < N; ++i) {
+//         pivot[i] = i;
+//     }
+
+//     TlDistributeMatrix L(N, N);
+//     index_type m = 0;
+//     double sum_ll = 0.0;
+
+//     while (error > threshold) {
+//         std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+//                                                                        pivot.end());
+//         const index_type i = it - pivot.begin();
+//         std::swap(pivot[m], pivot[i]);
+        
+//         const double l_m_pm = std::sqrt(d[pivot[m]]);
+//         L.set(m, pivot[m], l_m_pm);
+        
+//         const double inv_l_m_pm = 1.0 / l_m_pm;
+
+//         // L(0:m, pivot[m])を一時保管
+//         const TlVector L_x_pm = L.getColVector(pivot[m]); // TODO: バッファの摂り過ぎ
+
+//         for (index_type i = m +1; i < N; ++i) {
+//             double sum_ll = 0.0;
+//             for (index_type j = 0; j < m; ++j) {
+//                 //sum_ll += L.get(j, pivot[m]) * L.get(j, pivot[i]);
+//                 sum_ll += L_x_pm[j] * L.getLocal(j, pivot[i]);
+//             }
+//             rComm.allReduce_SUM(sum_ll);
+
+//             double l_m_pi = 0.0;
+//             l_m_pi = (this->getLocal(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
+//             rComm.allReduce_SUM(l_m_pi);
+//             L.set(m, pivot[i], l_m_pi);
+            
+//             d[pivot[i]] -= l_m_pi * l_m_pi;
+//         }
+            
+//         error = 0.0;
+//         for (index_type i = m +1; i < N; ++i) {
+//             error += d[pivot[i]];
+//         }
+
+//         log.info(TlUtils::format("cholesky: m=%d, err=%e", m, error));
+//         ++m;
+//     }
+
+//     L.transpose();
+//     L.resize(N, m);
+
+//     return L;
+// }

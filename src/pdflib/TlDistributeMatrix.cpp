@@ -42,6 +42,7 @@ int TlScalapackContext::m_nProcGridCol = 0;
 TlScalapackContext::TlScalapackContext()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
+    //std::cerr << TlUtils::format("[%d] TlScalapackContext::TlScalapackContext() in", rComm.getRank()) << std::endl;
 
     // initialize
     Cblacs_pinfo(&(this->m_nRank), &(this->m_nProc));
@@ -75,6 +76,7 @@ TlScalapackContext::TlScalapackContext()
     //          TlScalapackContext::m_nProcGridRow, TlScalapackContext::m_nProcGridCol);
     Cblacs_gridinit(&(TlScalapackContext::m_nContext), "Row-major",
                     TlScalapackContext::m_nProcGridRow, TlScalapackContext::m_nProcGridCol);
+    //std::cerr << TlUtils::format("[%d] TlScalapackContext::TlScalapackContext() out", rComm.getRank()) << std::endl;
 }
 
 TlScalapackContext::~TlScalapackContext()
@@ -90,6 +92,7 @@ void TlScalapackContext::getData(int& rContext, int& rProc, int& rRank,
     if (TlScalapackContext::m_pTlScalapackContextInstance == NULL) {
         TlScalapackContext::m_pTlScalapackContextInstance = new TlScalapackContext();
     }
+    assert(TlScalapackContext::m_pTlScalapackContextInstance != NULL);
 
     rContext =  TlScalapackContext::m_nContext;
     rProc = TlScalapackContext::m_nProc;
@@ -1870,9 +1873,12 @@ void TlDistributeMatrix::initialize()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProc();
+    // std::cerr << TlUtils::format("[%d] TlDistributeMatrix::initialize() start", rComm.getRank()) << std::endl;
 
     TlScalapackContext::getData(this->m_nContext, this->m_nProc, this->m_nRank,
                                 this->m_nProcGridRow, this->m_nProcGridCol);
+
+    // std::cerr << TlUtils::format("[%d] TlDistributeMatrix::initialize() point1", rComm.getRank()) << std::endl;
 
     // my process position on the process matrix
     Cblacs_gridinfo(this->m_nContext, &(this->m_nProcGridRow), &(this->m_nProcGridCol),
@@ -1886,6 +1892,7 @@ void TlDistributeMatrix::initialize()
     this->m_nMyCols = std::max(1, numroc_(&(this->m_nCols), &(this->m_nBlockSize),
                                           &(this->m_nMyProcCol), &nStartColProc, &(this->m_nProcGridCol)));
 
+    // std::cerr << TlUtils::format("[%d] TlDistributeMatrix::initialize() point2", rComm.getRank()) << std::endl;
     // make parameter, desca
     int nInfo = 0;
     descinit_(this->m_pDESC, &(this->m_nRows), &(this->m_nCols), &(this->m_nBlockSize), &(this->m_nBlockSize),
@@ -1899,6 +1906,7 @@ void TlDistributeMatrix::initialize()
     }
     this->pData_ = new double[this->getNumOfMyElements()];
     std::fill(this->pData_, this->pData_ + this->getNumOfMyElements(), 0.0);
+    // std::cerr << TlUtils::format("[%d] TlDistributeMatrix::initialize() point3", rComm.getRank()) << std::endl;
     
     // 行方向のglobal_index v.s. local_indexのリストを作成
     {
@@ -1939,6 +1947,7 @@ void TlDistributeMatrix::initialize()
         }
         std::vector<int>(this->m_ColIndexTable).swap(this->m_ColIndexTable);
     }
+    // std::cerr << TlUtils::format("[%d] TlDistributeMatrix::initialize() point4", rComm.getRank()) << std::endl;
 
     // getPartialMatrix通信用 初期化処理
     this->isDebugOut_GPM_ = false;
@@ -1960,6 +1969,7 @@ void TlDistributeMatrix::initialize()
     for (int proc = 0; proc < numOfProcs; ++proc) {
         this->sessionTable_[proc].reset();
     }
+    // std::cerr << TlUtils::format("[%d] TlDistributeMatrix::initialize() point4", rComm.getRank()) << std::endl;
     
     this->gpmClientTasks_.clear();
 

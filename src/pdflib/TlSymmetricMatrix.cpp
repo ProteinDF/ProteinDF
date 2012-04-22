@@ -1321,31 +1321,31 @@ TlMatrix TlSymmetricMatrix::choleskyFactorization2(const double threshold) const
 
     TlMatrix L(N, N);
     index_type m = 0;
+    double sum_ll = 0.0;
+
     while (error > threshold) {
-        {
-            std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
-                                                                           pivot.end());
-            const index_type i = it - pivot.begin();
-            std::swap(pivot[m], pivot[i]);
-        }
+        std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+                                                                       pivot.end());
+        const index_type i = it - pivot.begin();
+        std::swap(pivot[m], pivot[i]);
+        
         const double l_m_pm = std::sqrt(d[pivot[m]]);
         L.set(m, pivot[m], l_m_pm);
-
+        
         const double inv_l_m_pm = 1.0 / l_m_pm;
+        
         for (index_type i = m +1; i < N; ++i) {
             double sum_ll = 0.0;
-#pragma omp parallel for reduction(+:sum_ll) schedule(runtime) 
             for (index_type j = 0; j < m; ++j) {
                 sum_ll += L.get(j, pivot[m]) * L.get(j, pivot[i]);
             }
             const double l_m_pi = (this->get(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
             L.set(m, pivot[i], l_m_pi);
-
+            
             d[pivot[i]] -= l_m_pi * l_m_pi;
         }
-
+            
         error = 0.0;
-#pragma omp parallel for reduction(+:error) schedule(runtime) 
         for (index_type i = m +1; i < N; ++i) {
             error += d[pivot[i]];
         }
@@ -1357,6 +1357,135 @@ TlMatrix TlSymmetricMatrix::choleskyFactorization2(const double threshold) const
 
     return L;
 }
+
+
+TlMatrix TlSymmetricMatrix::choleskyFactorization2omp(const double threshold) const
+{
+    const index_type N = this->getNumOfRows();
+    TlVector d = this->getDiagonalElements();
+    double error = d.sum();
+    std::vector<TlVector::size_type> pivot(N);
+    for (index_type i = 0; i < N; ++i) {
+        pivot[i] = i;
+    }
+
+    TlMatrix L(N, N);
+    index_type m = 0;
+    double sum_ll = 0.0;
+    double inv_l_m_pm = 0.0;
+
+#pragma omp parallel
+    {
+        while (error > threshold) {
+#pragma omp single
+            {
+                std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+                                                                               pivot.end());
+                const index_type i = it - pivot.begin();
+                std::swap(pivot[m], pivot[i]);
+                
+                const double l_m_pm = std::sqrt(d[pivot[m]]);
+                L.set(m, pivot[m], l_m_pm);
+                
+                //const double inv_l_m_pm = 1.0 / l_m_pm;
+                inv_l_m_pm = 1.0 / l_m_pm;
+            }
+
+#pragma omp single // この箇所をOpenMP並列にすると遅くなる。要調査
+            {
+                for (index_type i = m +1; i < N; ++i) {
+                    sum_ll = 0.0;
+                    for (index_type j = 0; j < m; ++j) {
+                        sum_ll += L.get(j, pivot[m]) * L.get(j, pivot[i]);
+                    }
+                    const double l_m_pi = (this->get(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
+                    L.set(m, pivot[i], l_m_pi);
+                    
+                    d[pivot[i]] -= l_m_pi * l_m_pi;
+                }
+            }
+
+#pragma omp single
+            {
+                ++m;
+                error = 0.0;
+            }
+#pragma omp for schedule(runtime) reduction(+:error)
+            for (index_type i = m +1; i < N; ++i) {
+                error += d[pivot[i]];
+            }
+        }
+    }
+        
+    L.transpose();
+    L.resize(N, m);
+
+    return L;
+}
+
+
+// TlMatrix TlSymmetricMatrix::choleskyFactorization2omp(const double threshold) const
+// {
+//     const index_type N = this->getNumOfRows();
+//     TlVector d = this->getDiagonalElements();
+//     double error = d.sum();
+//     std::vector<TlVector::size_type> pivot(N);
+//     for (index_type i = 0; i < N; ++i) {
+//         pivot[i] = i;
+//     }
+
+//     TlMatrix L(N, N);
+//     index_type m = 0;
+//     double sum_ll = 0.0;
+//     double inv_l_m_pm = 0.0;
+
+// #pragma omp parallel
+//     {
+//         while (error > threshold) {
+// #pragma omp single
+//             {
+//                 std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+//                                                                                pivot.end());
+//                 const index_type i = it - pivot.begin();
+//                 std::swap(pivot[m], pivot[i]);
+                
+//                 const double l_m_pm = std::sqrt(d[pivot[m]]);
+//                 L.set(m, pivot[m], l_m_pm);
+                
+//                 //const double inv_l_m_pm = 1.0 / l_m_pm;
+//                 inv_l_m_pm = 1.0 / l_m_pm;
+//             }
+
+// #pragma omp single
+//             {
+//                 for (index_type i = m +1; i < N; ++i) {
+//                     sum_ll = 0.0;
+//                     for (index_type j = 0; j < m; ++j) {
+//                         sum_ll += L.get(j, pivot[m]) * L.get(j, pivot[i]);
+//                     }   
+//                     const double l_m_pi = (this->get(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
+//                     L.set(m, pivot[i], l_m_pi);
+                        
+//                     d[pivot[i]] -= l_m_pi * l_m_pi;
+//                 }
+//             }
+
+// #pragma omp single
+//             {
+//                 error = 0.0;
+//                 for (index_type i = m +1; i < N; ++i) {
+//                     error += d[pivot[i]];
+//                 }
+//                 ++m;
+//             }
+//         }
+//     }
+        
+//     L.transpose();
+//     L.resize(N, m);
+
+//     return L;
+// }
 
 #endif // HAVE_LAPACK
 
