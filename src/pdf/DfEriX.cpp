@@ -22,15 +22,29 @@ DfEriX::DfEriX(TlSerializeData* pPdfParam)
         this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
     }    
 
-    this->cutoffEpsilon1_ = this->cutoffThreshold_ * 0.01;
-    if ((*pPdfParam)["cutoff_epsilon1"].getStr().empty() != true) {
-        this->cutoffEpsilon1_ = (*pPdfParam)["cutoff_epsilon1"].getDouble();
+    this->cutoffEpsilon_density_ = this->cutoffThreshold_;
+    if ((*pPdfParam)["cutoff_density"].getStr().empty() != true) {
+        this->cutoffEpsilon_density_ = (*pPdfParam)["cutoff_density"].getDouble();
     }    
 
-    this->cutoffEpsilon2_ = this->cutoffThreshold_;
-    if ((*pPdfParam)["cutoff_epsilon2"].getStr().empty() != true) {
-        this->cutoffEpsilon2_ = (*pPdfParam)["cutoff_epsilon2"].getDouble();
+    this->cutoffEpsilon_distribution_ = this->cutoffThreshold_;
+    if ((*pPdfParam)["cutoff_distribution"].getStr().empty() != true) {
+        this->cutoffEpsilon_distribution_ = (*pPdfParam)["cutoff_distribution"].getDouble();
     }    
+    // this->cutoffThreshold_ = 1.0E-10;
+    // if ((*pPdfParam)["cut-value"].getStr().empty() != true) {
+    //     this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
+    // }    
+
+    // this->cutoffEpsilon1_ = this->cutoffThreshold_ * 0.01;
+    // if ((*pPdfParam)["cutoff_epsilon1"].getStr().empty() != true) {
+    //     this->cutoffEpsilon1_ = (*pPdfParam)["cutoff_epsilon1"].getDouble();
+    // }    
+
+    // this->cutoffEpsilon2_ = this->cutoffThreshold_;
+    // if ((*pPdfParam)["cutoff_epsilon2"].getStr().empty() != true) {
+    //     this->cutoffEpsilon2_ = (*pPdfParam)["cutoff_epsilon2"].getDouble();
+    // }    
 
     this->cutoffEpsilon3_ = this->cutoffThreshold_ * 0.01;
     if ((*pPdfParam)["cutoff_epsilon3"].getStr().empty() != true) {
@@ -535,6 +549,9 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
     
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
 
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
@@ -712,6 +729,10 @@ void DfEriX::getJab(TlSymmetricMatrix* pJab)
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task2> taskList;
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
+
     bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo_Density,
                                           false,
                                           this->grainSize_, &taskList, true);
@@ -819,6 +840,10 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce)
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task4> taskList;
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
+
     bool hasTask = pDfTaskCtrl->getQueue_Force4(orbitalInfo,
                                                 schwarzTable,
                                                 this->grainSize_, &taskList, true);
@@ -1031,6 +1056,9 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
 
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
 
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
@@ -1210,6 +1238,9 @@ void DfEriX::getForceJ(const TlVector& rho, TlMatrix* pForce)
 
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
 
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo_Density,
@@ -1478,6 +1509,9 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
 
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(this->cutoffEpsilon_density_);
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
 
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
@@ -1506,7 +1540,7 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
     }
 #endif // DEBUG_K
 
-    pK->save("K.mat");
+    //pK->save("K.mat");
 }
 
 
@@ -1711,6 +1745,10 @@ void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce)
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task4> taskList;
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(this->cutoffEpsilon_density_);
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
+
     bool hasTask = pDfTaskCtrl->getQueue_Force4(orbitalInfo,
                                                 schwarzTable,
                                                 this->grainSize_, &taskList, true);

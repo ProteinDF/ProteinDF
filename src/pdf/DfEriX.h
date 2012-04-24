@@ -262,19 +262,21 @@ protected:
 
 protected:
     double cutoffThreshold_;
+    double cutoffEpsilon_density_;
+    double cutoffEpsilon_distribution_;
     
     // std::vector<unsigned long> cutoffAll_schwarz_;
     // std::vector<unsigned long> cutoffAlive_schwarz_;
 
 
     double lengthScaleParameter_;
-    /// カットオフ用閾値
-    /// J. Chem. Phys.,105,2726 (1996) : eq.32
-    double cutoffEpsilon1_;
+    // /// カットオフ用閾値
+    // /// J. Chem. Phys.,105,2726 (1996) : eq.32
+    // double cutoffEpsilon1_;
 
-    /// カットオフ用閾値
-    /// J. Chem. Phys.,105,2726 (1996) : eq.32
-    double cutoffEpsilon2_;
+    // /// カットオフ用閾値
+    // /// J. Chem. Phys.,105,2726 (1996) : eq.32
+    // double cutoffEpsilon2_;
 
     /// カットオフ用閾値
     /// J. Chem. Phys.,105,2726 (1996) : eq.33

@@ -160,6 +160,7 @@ protected:
 
     double cutoffThreshold_;
     double cutoffEpsilon3_;
+    double CDAM_tau_;
     double epsilon_;
 
 private:
