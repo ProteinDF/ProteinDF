@@ -155,14 +155,12 @@ protected:
                    const TlOrbitalInfo_Density& orbitalInfo_Density,
                    const ShellArrayTable& shellArrayTable_Density,
                    const std::vector<DfTaskCtrl::Task2>& taskList,
-                   const TlSparseSymmetricMatrix& schwarzTable,
                    const TlMatrixObject& P, TlVector* pRho);
 
     void getJ_part(const TlOrbitalInfo& orbitalInfo,
                    const TlOrbitalInfo_Density& orbitalInfo_Density,
                    const ShellArrayTable& shellArrayTable_Density,
                    const std::vector<DfTaskCtrl::Task2>& taskList,
-                   const TlSparseSymmetricMatrix& schwarzTable,
                    const TlVector& rho, TlMatrixObject* pP);
 
     void getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
@@ -262,19 +260,21 @@ protected:
 
 protected:
     double cutoffThreshold_;
+    double cutoffEpsilon_density_;
+    double cutoffEpsilon_distribution_;
     
     // std::vector<unsigned long> cutoffAll_schwarz_;
     // std::vector<unsigned long> cutoffAlive_schwarz_;
 
 
     double lengthScaleParameter_;
-    /// カットオフ用閾値
-    /// J. Chem. Phys.,105,2726 (1996) : eq.32
-    double cutoffEpsilon1_;
+    // /// カットオフ用閾値
+    // /// J. Chem. Phys.,105,2726 (1996) : eq.32
+    // double cutoffEpsilon1_;
 
-    /// カットオフ用閾値
-    /// J. Chem. Phys.,105,2726 (1996) : eq.32
-    double cutoffEpsilon2_;
+    // /// カットオフ用閾値
+    // /// J. Chem. Phys.,105,2726 (1996) : eq.32
+    // double cutoffEpsilon2_;
 
     /// カットオフ用閾値
     /// J. Chem. Phys.,105,2726 (1996) : eq.33

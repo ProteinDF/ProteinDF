@@ -22,15 +22,29 @@ DfEriX::DfEriX(TlSerializeData* pPdfParam)
         this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
     }    
 
-    this->cutoffEpsilon1_ = this->cutoffThreshold_ * 0.01;
-    if ((*pPdfParam)["cutoff_epsilon1"].getStr().empty() != true) {
-        this->cutoffEpsilon1_ = (*pPdfParam)["cutoff_epsilon1"].getDouble();
+    this->cutoffEpsilon_density_ = this->cutoffThreshold_;
+    if ((*pPdfParam)["cutoff_density"].getStr().empty() != true) {
+        this->cutoffEpsilon_density_ = (*pPdfParam)["cutoff_density"].getDouble();
     }    
 
-    this->cutoffEpsilon2_ = this->cutoffThreshold_;
-    if ((*pPdfParam)["cutoff_epsilon2"].getStr().empty() != true) {
-        this->cutoffEpsilon2_ = (*pPdfParam)["cutoff_epsilon2"].getDouble();
+    this->cutoffEpsilon_distribution_ = this->cutoffThreshold_;
+    if ((*pPdfParam)["cutoff_distribution"].getStr().empty() != true) {
+        this->cutoffEpsilon_distribution_ = (*pPdfParam)["cutoff_distribution"].getDouble();
     }    
+    // this->cutoffThreshold_ = 1.0E-10;
+    // if ((*pPdfParam)["cut-value"].getStr().empty() != true) {
+    //     this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
+    // }    
+
+    // this->cutoffEpsilon1_ = this->cutoffThreshold_ * 0.01;
+    // if ((*pPdfParam)["cutoff_epsilon1"].getStr().empty() != true) {
+    //     this->cutoffEpsilon1_ = (*pPdfParam)["cutoff_epsilon1"].getDouble();
+    // }    
+
+    // this->cutoffEpsilon2_ = this->cutoffThreshold_;
+    // if ((*pPdfParam)["cutoff_epsilon2"].getStr().empty() != true) {
+    //     this->cutoffEpsilon2_ = (*pPdfParam)["cutoff_epsilon2"].getDouble();
+    // }    
 
     this->cutoffEpsilon3_ = this->cutoffThreshold_ * 0.01;
     if ((*pPdfParam)["cutoff_epsilon3"].getStr().empty() != true) {
@@ -131,28 +145,26 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
                                                     (*(this->pPdfParam_))["basis_sets_j"]);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
-    const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
-    
     pRho->resize(this->m_nNumOfAux);
     pRho->zeroClear();
 
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
 
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
-                                          false,
+                                          true,
                                           this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getJ_part(orbitalInfo,
                         orbitalInfo_Density,
                         shellArrayTable_Density,
                         taskList,
-                        schwarzTable,
                         P, pRho);
 
         hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
-                                         false,
+                                         true,
                                          this->grainSize_, &taskList);
     }
 
@@ -169,10 +181,8 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                        const TlOrbitalInfo_Density& orbitalInfo_Density,
                        const ShellArrayTable& shellArrayTable_Density,
                        const std::vector<DfTaskCtrl::Task2>& taskList,
-                       const TlSparseSymmetricMatrix& schwarzTable,
                        const TlMatrixObject& P, TlVector* pRho)
 {
-    //const int maxShellType = orbitalInfo.getMaxShellType();
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
     
@@ -192,18 +202,6 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
             const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
             const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
             
-            // schwarz cutoff
-            // const int shellQuartetType =
-            //     ((shellTypeP * maxShellType + shellTypeQ) * maxShellType + shellTypeP) * maxShellType + shellTypeQ;
-            // const bool isAlive = this->isAliveBySchwarzCutoff(shellIndexP, shellIndexQ,
-            //                                                   shellIndexP, shellIndexQ,
-            //                                                   shellQuartetType,
-            //                                                   schwarzTable,
-            //                                                   this->cutoffThreshold_);
-            // if (isAlive != true) {
-            //     continue;
-            // }
-
             const int maxStepsP = 2 * shellTypeP + 1;
             const int maxStepsQ = 2 * shellTypeQ + 1;
             const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
@@ -224,10 +222,11 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                 for (std::size_t indexR = 0; indexR < numOfShellArrayR; ++indexR) {
                     const index_type shellIndexR = shellArrayTable_Density[shellTypeR][indexR];
                 
-                    const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo_Density,
-                                                                                                shellIndexR,
-                                                                                                -1,
-                                                                                                pairwisePGTO_cutoffThreshold);
+                    const DfEriEngine::CGTO_Pair RS = 
+                        this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo_Density,
+                                                                  shellIndexR,
+                                                                  -1,
+                                                                  pairwisePGTO_cutoffThreshold);
                     this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
                 
                     int index = 0;
@@ -272,7 +271,7 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
-    const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
+    //const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
     pJ->resize(this->m_nNumOfAOs);
     //pJ->zeroClear();
@@ -282,18 +281,17 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
     
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
-                                          false,
+                                          true,
                                           this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getJ_part(orbitalInfo,
                         orbitalInfo_Density,
                         shellArrayTable_Density,
                         taskList,
-                        schwarzTable,
                         rho, pJ);
 
         hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
-                                         false,
+                                         true,
                                          this->grainSize_, &taskList);
     }
 
@@ -310,7 +308,6 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                        const TlOrbitalInfo_Density& orbitalInfo_Density,
                        const ShellArrayTable& shellArrayTable_Density,
                        const std::vector<DfTaskCtrl::Task2>& taskList,
-                       const TlSparseSymmetricMatrix& schwarzTable,
                        const TlVector& rho, TlMatrixObject* pP)
 {
     const int maxShellType = orbitalInfo.getMaxShellType();
@@ -333,18 +330,6 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
             const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
             const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
             
-            // schwarz cutoff
-            // const int shellQuartetType =
-            //     ((shellTypeP * maxShellType + shellTypeQ) * maxShellType + shellTypeP) * maxShellType + shellTypeQ;
-            // const bool isAlive = this->isAliveBySchwarzCutoff(shellIndexP, shellIndexQ,
-            //                                                   shellIndexP, shellIndexQ,
-            //                                                   shellQuartetType,
-            //                                                   schwarzTable,
-            //                                                   this->cutoffThreshold_);
-            // if (isAlive != true) {
-            //     continue;
-            // }
-
             const int maxStepsP = 2 * shellTypeP + 1;
             const int maxStepsQ = 2 * shellTypeQ + 1;
             const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
@@ -365,10 +350,11 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                 for (std::size_t indexR = 0; indexR < numOfShellArrayR; ++indexR) {
                     const index_type shellIndexR = shellArrayTable_Density[shellTypeR][indexR];
                     
-                    const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo_Density,
-                                                                                                shellIndexR,
-                                                                                                -1,
-                                                                                                pairwisePGTO_cutoffThreshold);
+                    const DfEriEngine::CGTO_Pair RS = 
+                        this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo_Density,
+                                                                  shellIndexR,
+                                                                  -1,
+                                                                  pairwisePGTO_cutoffThreshold);
                     this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
                 
                     int index = 0;
@@ -535,6 +521,9 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
     
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
 
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
@@ -712,6 +701,10 @@ void DfEriX::getJab(TlSymmetricMatrix* pJab)
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task2> taskList;
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
+
     bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo_Density,
                                           false,
                                           this->grainSize_, &taskList, true);
@@ -819,6 +812,10 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce)
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task4> taskList;
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
+
     bool hasTask = pDfTaskCtrl->getQueue_Force4(orbitalInfo,
                                                 schwarzTable,
                                                 this->grainSize_, &taskList, true);
@@ -1031,6 +1028,9 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
 
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
 
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
@@ -1210,6 +1210,9 @@ void DfEriX::getForceJ(const TlVector& rho, TlMatrix* pForce)
 
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
 
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo_Density,
@@ -1478,6 +1481,9 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
 
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(this->cutoffEpsilon_density_);
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
 
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
@@ -1506,7 +1512,7 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
     }
 #endif // DEBUG_K
 
-    pK->save("K.mat");
+    //pK->save("K.mat");
 }
 
 
@@ -1711,6 +1717,10 @@ void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce)
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task4> taskList;
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(this->cutoffEpsilon_density_);
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
+
     bool hasTask = pDfTaskCtrl->getQueue_Force4(orbitalInfo,
                                                 schwarzTable,
                                                 this->grainSize_, &taskList, true);

@@ -9,8 +9,7 @@ DfTaskCtrl::DfTaskCtrl(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
                               (*pPdfParam)["basis_sets"]);
     this->maxShellType_ = orbitalInfo.getMaxShellType();
 
-
-    this->lengthScaleParameter_ = 1.0;
+    this->lengthScaleParameter_ = 3.0;
     if ((*pPdfParam)["length_scale_parameter"].getStr() != "") {
         this->lengthScaleParameter_ = (*pPdfParam)["length_scale_parameter"].getDouble();
     }
@@ -20,20 +19,20 @@ DfTaskCtrl::DfTaskCtrl(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
         this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
     }    
 
-    this->cutoffEpsilon1_ = this->cutoffThreshold_ * 0.01;
-    if ((*pPdfParam)["cutoff_epsilon1"].getStr().empty() != true) {
-        this->cutoffEpsilon1_ = (*pPdfParam)["cutoff_epsilon1"].getDouble();
+    this->cutoffEpsilon_density_ = this->cutoffThreshold_;
+    if ((*pPdfParam)["cutoff_density"].getStr().empty() != true) {
+        this->cutoffEpsilon_density_ = (*pPdfParam)["cutoff_density"].getDouble();
     }    
 
-    this->cutoffEpsilon2_ = this->cutoffThreshold_;
-    if ((*pPdfParam)["cutoff_epsilon2"].getStr().empty() != true) {
-        this->cutoffEpsilon2_ = (*pPdfParam)["cutoff_epsilon2"].getDouble();
+    this->cutoffEpsilon_distribution_ = this->cutoffThreshold_;
+    if ((*pPdfParam)["cutoff_distribution"].getStr().empty() != true) {
+        this->cutoffEpsilon_distribution_ = (*pPdfParam)["cutoff_distribution"].getDouble();
     }    
 
-    this->cutoffEpsilon3_ = this->cutoffThreshold_ * 0.01;
-    if ((*pPdfParam)["cutoff_epsilon3"].getStr().empty() != true) {
-        this->cutoffEpsilon3_ = (*pPdfParam)["cutoff_epsilon3"].getDouble();
-    }    
+    // this->cutoffEpsilon_primitive_ = this->cutoffThreshold_ * 0.01;
+    // if ((*pPdfParam)["cutoff_primitive"].getStr().empty() != true) {
+    //     this->cutoffEpsilon_primitive_ = (*pPdfParam)["cutoff_primitive"].getDouble();
+    // }    
 }
 
 
@@ -41,12 +40,11 @@ DfTaskCtrl::~DfTaskCtrl()
 {
 }
 
+// -----------------------------------------------------------------------------
+
 void DfTaskCtrl::setCutoffThreshold(const double value)
 {
     this->cutoffThreshold_ = value;
-    this->cutoffEpsilon1_ = value * 0.01;
-    this->cutoffEpsilon2_ = value;
-    this->cutoffEpsilon3_ = value * 0.01;
 }
 
 double DfTaskCtrl::getCutoffThreshold() const
@@ -54,21 +52,56 @@ double DfTaskCtrl::getCutoffThreshold() const
     return this->cutoffThreshold_;
 }
 
+
+void DfTaskCtrl::setCutoffEpsilon_distribution(const double value)
+{
+    this->cutoffEpsilon_distribution_ = value;
+}
+
+double DfTaskCtrl::getCutoffEpsilon_distribution() const
+{
+    return this->cutoffEpsilon_distribution_;
+}
+
+
+void DfTaskCtrl::setCutoffEpsilon_density(const double value)
+{
+    this->cutoffEpsilon_density_ = value;
+}
+
+double DfTaskCtrl::getCutoffEpsilon_density() const
+{
+    return this->cutoffEpsilon_density_;
+}
+
+
+// void DfTaskCtrl::setCutoffEpsilon_primitive(const double value)
+// {
+//     this->cutoffEpsilon_primitive_ = value;
+// }
+
+// double DfTaskCtrl::getCutoffEpsilon_primitive() const
+// {
+//     return this->cutoffEpsilon_primitive_;
+// }
+
+// -----------------------------------------------------------------------------
+
 void DfTaskCtrl::clearCutoffStats(const TlOrbitalInfoObject& orbitalInfo)
 {
     const int maxShellType = orbitalInfo.getMaxShellType();
     const int numOfShellPairType = maxShellType* maxShellType;
     const int numOfShellQuartetType = numOfShellPairType * numOfShellPairType;
 
-    this->cutoffAll_E1_.clear();
-    this->cutoffAlive_E1_.clear();
-    this->cutoffAll_E1_.resize(numOfShellPairType, 0);
-    this->cutoffAlive_E1_.resize(numOfShellPairType, 0);
+    this->cutoffAll_density_.clear();
+    this->cutoffAlive_density_.clear();
+    this->cutoffAll_density_.resize(numOfShellPairType, 0);
+    this->cutoffAlive_density_.resize(numOfShellPairType, 0);
 
-    this->cutoffAll_E2_.clear();
-    this->cutoffAlive_E2_.clear();
-    this->cutoffAll_E2_.resize(numOfShellPairType, 0);
-    this->cutoffAlive_E2_.resize(numOfShellPairType, 0);
+    this->cutoffAll_distribution_.clear();
+    this->cutoffAlive_distribution_.clear();
+    this->cutoffAll_distribution_.resize(numOfShellPairType, 0);
+    this->cutoffAlive_distribution_.resize(numOfShellPairType, 0);
 
     this->cutoffAll_schwarz_.clear();
     this->cutoffAlive_schwarz_.clear();
@@ -828,7 +861,7 @@ DfTaskCtrl::ShellArray DfTaskCtrl::selectShellArrayByDistribution(const ShellArr
     // check
     const int maxShellType = orbitalInfo.getMaxShellType();
     static const double INV_EQ32_COEF = 1.0 / (std::pow(2.0 * TlMath::PI(), 0.25) * TlMath::PI());
-    const double threshold = this->cutoffEpsilon2_ * INV_EQ32_COEF;
+    const double threshold = this->cutoffEpsilon_distribution_ * INV_EQ32_COEF;
     ShellArray::const_iterator itEnd = inShellArray.end();
     for (ShellArray::const_iterator it = inShellArray.begin(); it != itEnd; ++it) {
         const int shellPairType = orbitalInfo.getShellType(*it) * maxShellType + shellTypeB;
@@ -845,11 +878,11 @@ DfTaskCtrl::ShellArray DfTaskCtrl::selectShellArrayByDistribution(const ShellArr
             answer.push_back(*it);
 
 //#pragma omp atomic
-            ++(this->cutoffAlive_E2_[shellPairType]);
+            ++(this->cutoffAlive_distribution_[shellPairType]);
         }
 
 //#pragma omp atomic
-        ++(this->cutoffAll_E2_[shellPairType]);
+        ++(this->cutoffAll_distribution_[shellPairType]);
     }
 
     // swap technique
@@ -879,7 +912,7 @@ DfTaskCtrl::DistributedCutoffTable
 DfTaskCtrl::makeDistributedCutoffTable(const TlOrbitalInfoObject& orbitalInfo)
 {
     static const double INV_EQ32_COEF = 1.0 / (std::pow(2.0 * TlMath::PI(), 0.25) * TlMath::PI());
-    const double threshold = this->cutoffEpsilon2_ * INV_EQ32_COEF;
+    const double threshold = this->cutoffEpsilon_distribution_ * INV_EQ32_COEF;
     const int maxShellType = orbitalInfo.getMaxShellType();
     const index_type numOfAOs = orbitalInfo.getNumOfOrbitals();
 
@@ -927,11 +960,11 @@ DfTaskCtrl::makeDistributedCutoffTable(const TlOrbitalInfoObject& orbitalInfo)
                 answer[indexJ][shellTypeI].push_back(indexI);
                 
 #pragma omp atomic
-                ++(this->cutoffAlive_E2_[shellPairType]);
+                ++(this->cutoffAlive_distribution_[shellPairType]);
             }
 
 #pragma omp atomic
-        ++(this->cutoffAll_E2_[shellPairType]);
+        ++(this->cutoffAll_distribution_[shellPairType]);
             
         }
         answer[indexI][shellTypeI].push_back(indexI);
@@ -998,7 +1031,7 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
     const int maxShellType = this->maxShellType_;
     assert(inShellPairArrayTable.size() == (maxShellType * maxShellType));
     
-    const double cutoffThreshold = this->cutoffEpsilon1_;
+    const double cutoffThreshold = this->cutoffEpsilon_density_;
     const double CONTRIBUTE_COEF = 2.0 * std::pow(TlMath::PI(), 2.5);
     
     TlFmt& FmT = TlFmt::getInstance();
@@ -1076,11 +1109,11 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
                 tmp.push_back(shellPairArray[shellPairIndex]);
 
 #pragma omp atomic
-                ++(this->cutoffAlive_E1_[shellPairType]);
+                ++(this->cutoffAlive_density_[shellPairType]);
             }
 
 #pragma omp atomic
-            ++(this->cutoffAll_E1_[shellPairType]);
+            ++(this->cutoffAll_density_[shellPairType]);
         }
 
         // swap technique
@@ -1198,69 +1231,71 @@ void DfTaskCtrl::cutoffReport()
     };
     
     // cutoff report for Epsilon1
-    bool hasCutoff1 = false;
-    for (int shellTypeA = 0; ((hasCutoff1 == false) && (shellTypeA < maxShellType)); ++shellTypeA) {
+    bool hasCutoff_density = false;
+    for (int shellTypeA = 0; ((hasCutoff_density == false) && (shellTypeA < maxShellType)); ++shellTypeA) {
         for (int shellTypeB = 0; shellTypeB < maxShellType; ++shellTypeB) {
             const int shellPairType = shellTypeA * maxShellType + shellTypeB;
-            if (this->cutoffAll_E1_[shellPairType] != 0) {
-                hasCutoff1 = true;
+            if (this->cutoffAll_density_[shellPairType] != 0) {
+                hasCutoff_density = true;
                 break;
             }
         }
     }
-    if (hasCutoff1 == true) {
-        this->logger(TlUtils::format(" density cutoff report\n"));
-        this->logger(TlUtils::format(" type: alive / all (ratio )\n"));
+    if (hasCutoff_density == true) {
+        this->log_.info("density cutoff report");
+        this->log_.info(TlUtils::format("epsilon(density): %e", this->cutoffEpsilon_density_));
+        this->log_.info("type: alive / all (ratio)");
         for (int shellTypeA = 0; shellTypeA < maxShellType; ++shellTypeA) {
             for (int shellTypeB = 0; shellTypeB < maxShellType; ++shellTypeB) {
                 const int shellPairType = shellTypeA * maxShellType + shellTypeB;
                 
-                if (this->cutoffAll_E1_[shellPairType] > 0) {
-                    const double ratio = (double)this->cutoffAlive_E1_[shellPairType]
-                        / (double)this->cutoffAll_E1_[shellPairType]
+                if (this->cutoffAll_density_[shellPairType] > 0) {
+                    const double ratio = (double)this->cutoffAlive_density_[shellPairType]
+                        / (double)this->cutoffAll_density_[shellPairType]
                         * 100.0;
-                    this->logger(TlUtils::format(" %2s: %12ld / %12ld (%6.2f%%)\n",
-                                                 typeStr2[shellPairType],
-                                                 this->cutoffAlive_E1_[shellPairType],
-                                                 this->cutoffAll_E1_[shellPairType],
-                                                 ratio));
+                    this->log_.info(TlUtils::format(" %2s: %12ld / %12ld (%6.2f%%)",
+                                                    typeStr2[shellPairType],
+                                                    this->cutoffAlive_density_[shellPairType],
+                                                    this->cutoffAll_density_[shellPairType],
+                                                    ratio));
                 }
             }
         }
-        this->logger("\n");
+        this->log_.info("\n");
     }
 
-    // cutoff report for Epsilon2
-    bool hasCutoff2 = false;
-    for (int shellTypeA = 0; ((hasCutoff2 == false) && (shellTypeA < maxShellType)); ++shellTypeA) {
+    // cutoff report for distribition
+    bool hasCutoff_distribution = false;
+    for (int shellTypeA = 0; ((hasCutoff_distribution == false) && (shellTypeA < maxShellType)); ++shellTypeA) {
         for (int shellTypeB = 0; shellTypeB < maxShellType; ++shellTypeB) {
             const int shellPairType = shellTypeA * maxShellType + shellTypeB;
-            if (this->cutoffAll_E2_[shellPairType] != 0) {
-                hasCutoff2 = true;
+            if (this->cutoffAll_distribution_[shellPairType] != 0) {
+                hasCutoff_distribution = true;
                 break;
             }
         }
     }
-    if (hasCutoff2 == true) {
-        this->logger(TlUtils::format(" distribute cutoff report\n"));
-        this->logger(TlUtils::format(" type: alive / all (ratio )\n"));
+    if (hasCutoff_distribution == true) {
+        this->log_.info("distribution cutoff report");
+        this->log_.info(TlUtils::format("epsilon(distribution): %e", this->cutoffEpsilon_distribution_));
+        this->log_.info("type: alive / all (ratio)");
         for (int shellTypeA = 0; shellTypeA < maxShellType; ++shellTypeA) {
             for (int shellTypeB = 0; shellTypeB < maxShellType; ++shellTypeB) {
                 const int shellPairType = shellTypeA * maxShellType + shellTypeB;
                 
-                if (this->cutoffAll_E2_[shellPairType] > 0) {
-                    const double ratio = (double)this->cutoffAlive_E2_[shellPairType]
-                        / (double)this->cutoffAll_E2_[shellPairType]
+                if (this->cutoffAll_distribution_[shellPairType] > 0) {
+                    const double ratio = (double)this->cutoffAlive_distribution_[shellPairType]
+                        / (double)this->cutoffAll_distribution_[shellPairType]
                         * 100.0;
-                    this->logger(TlUtils::format(" %2s: %12ld / %12ld (%6.2f%%)\n",
-                                                 typeStr2[shellPairType],
-                                                 this->cutoffAlive_E2_[shellPairType],
-                                                 this->cutoffAll_E2_[shellPairType],
-                                                 ratio));
+                    this->log_.info(TlUtils::format(" %2s: %12ld / %12ld (%6.2f%%)",
+                                                    typeStr2[shellPairType],
+                                                    this->cutoffAlive_distribution_[shellPairType],
+                                                    this->cutoffAll_distribution_[shellPairType],
+                                                    ratio));
                 }
             }
         }
-        this->logger("\n");
+        this->log_.info("\n");
     }
 
     // cutoff report for schwarz
@@ -1281,8 +1316,9 @@ void DfTaskCtrl::cutoffReport()
         }
     }
     if (hasCutoffSchwarz == true) {
-        this->logger(TlUtils::format(" schwarz cutoff report\n"));
-        this->logger(TlUtils::format(" type: alive / all (ratio )\n"));
+        this->log_.info("schwarz cutoff report");
+        this->log_.info(TlUtils::format("threshold: %e", this->cutoffThreshold_));
+        this->log_.info("type: alive / all (ratio)");
         for (int shellTypeA = 0; shellTypeA < maxShellType; ++shellTypeA) {
             for (int shellTypeB = 0; shellTypeB < maxShellType; ++shellTypeB) {
                 const int shellTypeAB = shellTypeA * maxShellType + shellTypeB;
@@ -1295,11 +1331,11 @@ void DfTaskCtrl::cutoffReport()
                             const double ratio = (double)this->cutoffAlive_schwarz_[shellTypeABCD]
                                 / (double)this->cutoffAll_schwarz_[shellTypeABCD]
                                 * 100.0;
-                            this->logger(TlUtils::format(" %4s: %12ld / %12ld (%6.2f%%)\n",
-                                                         typeStr4[shellTypeABCD],
-                                                         this->cutoffAlive_schwarz_[shellTypeABCD],
-                                                         this->cutoffAll_schwarz_[shellTypeABCD],
-                                                         ratio));
+                            this->log_.info(TlUtils::format(" %4s: %12ld / %12ld (%6.2f%%)",
+                                                            typeStr4[shellTypeABCD],
+                                                            this->cutoffAlive_schwarz_[shellTypeABCD],
+                                                            this->cutoffAll_schwarz_[shellTypeABCD],
+                                                            ratio));
                         }
                     }
                 }

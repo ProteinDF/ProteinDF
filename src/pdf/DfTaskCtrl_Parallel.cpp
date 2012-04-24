@@ -20,10 +20,10 @@ DfTaskCtrl_Parallel::~DfTaskCtrl_Parallel()
 void DfTaskCtrl_Parallel::cutoffReport()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    rComm.allReduce_SUM(cutoffAll_E1_);
-    rComm.allReduce_SUM(cutoffAlive_E1_);
-    rComm.allReduce_SUM(cutoffAll_E2_);
-    rComm.allReduce_SUM(cutoffAlive_E2_);
+    rComm.allReduce_SUM(cutoffAll_density_);
+    rComm.allReduce_SUM(cutoffAlive_density_);
+    rComm.allReduce_SUM(cutoffAll_distribution_);
+    rComm.allReduce_SUM(cutoffAlive_distribution_);
     rComm.allReduce_SUM(cutoffAll_schwarz_);
     rComm.allReduce_SUM(cutoffAlive_schwarz_);
 

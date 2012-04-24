@@ -55,7 +55,14 @@ public:
 public:
     void setCutoffThreshold(const double value);
     double getCutoffThreshold() const;
-    
+    void setCutoffEpsilon_density(const double value);
+    double getCutoffEpsilon_density() const;
+    void setCutoffEpsilon_distribution(const double value);
+    double getCutoffEpsilon_distribution() const;
+    // void setCutoffEpsilon_primitive(const double value);
+    // double getCutoffEpsilon_primitive() const;
+
+public:
     virtual void cutoffReport();
 
     virtual bool getQueue(const TlOrbitalInfoObject& orbitalInfo,
@@ -145,27 +152,29 @@ protected:
 protected:
     int maxShellType_;
     
-    double cutoffThreshold_;
-    
     double lengthScaleParameter_;
 
     /// カットオフ用閾値
-    /// J. Chem. Phys.,105,2726 (1996) : eq.32
-    double cutoffEpsilon1_;
+    /// for Schwarz 
+    double cutoffThreshold_;
+
+    /// カットオフ用閾値
+    /// J. Chem. Phys.,105,2726 (1996) : eq.20
+    double cutoffEpsilon_density_;
 
     /// カットオフ用閾値
     /// J. Chem. Phys.,105,2726 (1996) : eq.32
-    double cutoffEpsilon2_;
+    double cutoffEpsilon_distribution_;
 
     /// カットオフ用閾値
     /// J. Chem. Phys.,105,2726 (1996) : eq.33
-    double cutoffEpsilon3_;
+    // double cutoffEpsilon_primitive_;
 
     /// カットオフ情報保持変数
-    mutable std::vector<unsigned long> cutoffAll_E1_;
-    mutable std::vector<unsigned long> cutoffAlive_E1_;
-    mutable std::vector<unsigned long> cutoffAll_E2_;
-    mutable std::vector<unsigned long> cutoffAlive_E2_;
+    mutable std::vector<unsigned long> cutoffAll_density_;
+    mutable std::vector<unsigned long> cutoffAlive_density_;
+    mutable std::vector<unsigned long> cutoffAll_distribution_;
+    mutable std::vector<unsigned long> cutoffAlive_distribution_;
     mutable std::vector<unsigned long> cutoffAll_schwarz_;
     mutable std::vector<unsigned long> cutoffAlive_schwarz_;
 };

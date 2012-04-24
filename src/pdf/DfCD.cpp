@@ -23,6 +23,11 @@ DfCD::DfCD(TlSerializeData* pPdfParam)
         this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
     }    
 
+    this->CDAM_tau_ = 1.0E-5;
+    if ((*pPdfParam)["CDAM_tau"].getStr().empty() != true) {
+        this->CDAM_tau_ = (*pPdfParam)["CDAM_tau"].getDouble();
+    }    
+
     this->epsilon_ = std::sqrt(this->cutoffThreshold_);
     if ((*pPdfParam)["CD_epsilon"].getStr().empty() != true) {
         this->epsilon_ = (*pPdfParam)["CD_epsilon"].getDouble();
@@ -117,8 +122,8 @@ void DfCD::calcPQPQ(const TlOrbitalInfoObject& orbitalInfo,
     const index_type numOfAOs = this->m_nNumOfAOs;
     assert(numOfAOs == orbitalInfo.getNumOfOrbitals());
 
-    const double threshold = this->cutoffThreshold_;
-    this->log_.info(TlUtils::format(" I~ threshold: %e", threshold));
+    const double tau = this->CDAM_tau_;
+    this->log_.info(TlUtils::format(" CDAM tau: %e", tau));
 
     this->createEngines();
     this->log_.info(TlUtils::format(" pGTO quartet threshold: %e", this->cutoffEpsilon3_));
@@ -164,7 +169,7 @@ void DfCD::calcPQPQ_kernel(const TlOrbitalInfoObject& orbitalInfo,
                            PQ_PairArray *pI2PQ)
 {
     const index_type numOfAOs = this->m_nNumOfAOs;
-    const double threshold = this->cutoffThreshold_;
+    const double tau = this->CDAM_tau_;
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
@@ -211,7 +216,7 @@ void DfCD::calcPQPQ_kernel(const TlOrbitalInfoObject& orbitalInfo,
                     maxValue = std::max(maxValue, value);
                     
                     // for I~ to pq table
-                    if (value > threshold) {
+                    if (value > tau) {
                         local_I2PQ.push_back(PQ_Pair(indexP, indexQ));
                     }
                 }
@@ -797,6 +802,10 @@ std::size_t DfCD::index(index_type p, index_type q) const
 DfTaskCtrl* DfCD::getDfTaskCtrlObject() const
 {
     DfTaskCtrl* pDfTaskCtrl = new DfTaskCtrl(this->pPdfParam_);
+    pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffEpsilon_density(0.0);
+    pDfTaskCtrl->setCutoffEpsilon_distribution(this->CDAM_tau_);
+
     return pDfTaskCtrl;
 }
 

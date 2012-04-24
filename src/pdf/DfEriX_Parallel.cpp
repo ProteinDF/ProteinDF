@@ -82,8 +82,6 @@ void DfEriX_Parallel::getJ_D(const TlVector& rho, TlDistributeSymmetricMatrix* p
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
-    const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
-
     pJ->resize(this->m_nNumOfAOs);
     TlSparseSymmetricMatrix tmpJ(this->m_nNumOfAOs);
     //pJ->zeroClear();
@@ -99,7 +97,6 @@ void DfEriX_Parallel::getJ_D(const TlVector& rho, TlDistributeSymmetricMatrix* p
                         orbitalInfo_Density,
                         shellArrayTable_Density,
                         taskList,
-                        schwarzTable,
                         rho, &tmpJ);
         
         hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
@@ -196,8 +193,6 @@ void DfEriX_Parallel::getJ_D_local(const TlDistributeSymmetricMatrix& P,
                                                     (*(this->pPdfParam_))["basis_sets_j"]);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
-    const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
-
     TlMatrix localP;
     std::vector<index_type> rowIndexes;
     std::vector<index_type> colIndexes;
@@ -228,7 +223,6 @@ void DfEriX_Parallel::getJ_D_local(const TlDistributeSymmetricMatrix& P,
                      orbitalInfo_Density,
                      shellArrayTable_Density,
                      taskList,
-                     schwarzTable,
                      TlDistributeMatrix(P), &tmpRho);
     this->loggerTime_local(TlUtils::format("  waiting...#%6d", rComm.getRank()));
     this->loggerTime(" ERI end");
@@ -262,8 +256,6 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
                                                     (*(this->pPdfParam_))["basis_sets_j"]);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
-
-    const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
     TlSparseSymmetricMatrix tmpP(this->m_nNumOfAOs);
     bool isSetTempP = false;
@@ -301,7 +293,6 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
                             orbitalInfo_Density,
                             shellArrayTable_Density,
                             taskList,
-                            schwarzTable,
                             tmpP, &tmpRho);
             
             tmpP.zeroClear();
@@ -797,10 +788,8 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
                                  const TlOrbitalInfo_Density& orbitalInfo_Density,
                                  const ShellArrayTable& shellArrayTable_Density,
                                  const std::vector<DfTaskCtrl::Task2>& taskList,
-                                 const TlSparseSymmetricMatrix& schwarzTable,
                                  const TlDistributeMatrix& P, TlVector* pRho)
 {
-    //const int maxShellType = orbitalInfo.getMaxShellType();
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
     
