@@ -70,7 +70,7 @@ protected:
                     const TlOrbitalInfo_Density& orbitalInfo_Density,
                     const ShellArrayTable& shellArrayTable_Density,
                     const std::vector<DfTaskCtrl::Task2>& taskList,
-                    const TlSparseSymmetricMatrix& schwarzTable,
+                    // const TlSparseSymmetricMatrix& schwarzTable,
                     const TlDistributeMatrix& P, TlVector* pRho);
 
     void getK_D_BG(const TlDistributeSymmetricMatrix& P,

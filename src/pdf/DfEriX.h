@@ -155,14 +155,12 @@ protected:
                    const TlOrbitalInfo_Density& orbitalInfo_Density,
                    const ShellArrayTable& shellArrayTable_Density,
                    const std::vector<DfTaskCtrl::Task2>& taskList,
-                   const TlSparseSymmetricMatrix& schwarzTable,
                    const TlMatrixObject& P, TlVector* pRho);
 
     void getJ_part(const TlOrbitalInfo& orbitalInfo,
                    const TlOrbitalInfo_Density& orbitalInfo_Density,
                    const ShellArrayTable& shellArrayTable_Density,
                    const std::vector<DfTaskCtrl::Task2>& taskList,
-                   const TlSparseSymmetricMatrix& schwarzTable,
                    const TlVector& rho, TlMatrixObject* pP);
 
     void getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
