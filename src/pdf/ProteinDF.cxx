@@ -196,11 +196,32 @@ void ProteinDF::inputData()
 
 void ProteinDF::setupGlobalCondition()
 {
+    this->stepStartTitle("RESOURCE");
+
     this->manageMemory();
+    this->setupGlobalCondition_extra();
+    
+    this->stepEndTitle();
 }
 
 void ProteinDF::manageMemory()
 {
+    std::string memSizeStr = TlUtils::toUpper(this->pdfParam_["memory_size"].getStr());
+    if (memSizeStr.empty() == true) {
+        memSizeStr = "1GB";
+    }
+    {
+        std::size_t value = std::atol(memSizeStr.c_str());
+        if (memSizeStr.rfind("MB") != std::string::npos) {
+            value *= (1024UL * 1024UL);
+        } else if (memSizeStr.rfind("GB") != std::string::npos) {
+            value *= (1024UL * 1024UL * 1024UL);
+        }
+        this->pdfParam_["memory_size"] = value;
+    }
+    this->log_.info(TlUtils::format("allocatable memory: %ld byte",
+                                    this->pdfParam_["memory_size"].getLong()));
+
     if (this->pdfParam_["use_mapfile"].getBoolean() == true) {
         std::string filePath = this->pdfParam_["mapfile_basename"].getStr();
         if (filePath == "") {
@@ -236,6 +257,11 @@ void ProteinDF::manageMemory()
     }
 }
 
+
+void ProteinDF::setupGlobalCondition_extra()
+{
+    // do nothing 
+}
 
 void ProteinDF::stepCreate()
 {

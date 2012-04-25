@@ -60,7 +60,7 @@ void ProteinDF_Parallel::inputData()
 }
 
 
-void ProteinDF_Parallel::setupGlobalCondition()
+void ProteinDF_Parallel::setupGlobalCondition_extra()
 {
 #ifdef HAVE_SCALAPACK
     {
@@ -71,7 +71,7 @@ void ProteinDF_Parallel::setupGlobalCondition()
             if (this->pdfParam_.hasKey("scalapack_block_size") == true) {
                 scalapackBlockSize = this->pdfParam_["scalapack_block_size"].getInt();
             }
-            this->log_.info(TlUtils::format("ScaLAPACK block size(= %d) is set.\n", scalapackBlockSize));
+            this->log_.info(TlUtils::format("ScaLAPACK block size: %d", scalapackBlockSize));
             TlDistributeMatrix::setSystemBlockSize(scalapackBlockSize);
             TlDistributeVector::setSystemBlockSize(scalapackBlockSize);
 
@@ -82,11 +82,17 @@ void ProteinDF_Parallel::setupGlobalCondition()
             const std::string isUsingPartialIO_YN = (isUsingPartialIO == true) ? "YES" : "NO ";
             this->log_.info(TlUtils::format("partial I/O mode = %s\n", isUsingPartialIO_YN.c_str()));
             TlDistributeMatrix::setUsingPartialIO(isUsingPartialIO);
+
+            // experimental 
+            this->log_.info("[experimental parameters]");
+            this->log_.info("use_matrix_cache parameter disabled.");
+            this->pdfParam_["use_matrix_cache"] = false;
+
+            this->pdfParam_["ERI_calcmode"] = 2;
+            this->log_.info(TlUtils::format("ERI calc mode: %d", this->pdfParam_["ERI_calcmode"].getInt()));
         }
     }
 #endif // HAVE_SCALAPACK
-    
-    ProteinDF::setupGlobalCondition();
 }
 
 

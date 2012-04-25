@@ -16,7 +16,7 @@ protected:
     virtual void loadParam(const std::string& requestFilePath = "");
     virtual void saveParam() const;
     
-    virtual void setupGlobalCondition();
+    virtual void setupGlobalCondition_extra();
 
 protected:
     virtual DfIntegrals* getDfIntegralsObject();
