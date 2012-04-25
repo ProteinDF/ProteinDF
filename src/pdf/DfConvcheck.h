@@ -223,6 +223,8 @@ double DfConvcheck::dev_standard_dev_cd(const RUN_TYPE runType, const int iterat
     TlVector deltaRho = rho - prevRho;
         
     SymmetricMatrixType Sab2 = DfObject::getSab2Matrix<SymmetricMatrixType>();
+    assert(Sab2.getNumOfRows() == numOfAuxDens);
+    assert(Sab2.getNumOfCols() == numOfAuxDens);
     TlVector v(numOfAuxDens);
     for (index_type p = 0; p < numOfAuxDens; ++p) {
         TlVector Sab2_v = Sab2.getRowVector(p);

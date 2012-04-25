@@ -127,6 +127,20 @@ double TlDistributeSymmetricMatrix::getLocal(index_type row, index_type col) con
 }
 
 
+TlVector TlDistributeSymmetricMatrix::getRowVector(const index_type row) const
+{
+    TlDistributeMatrix tmp = *this;
+    return tmp.getRowVector(row);
+}
+
+
+TlVector TlDistributeSymmetricMatrix::getColumnVector(const index_type col) const
+{
+    TlDistributeMatrix tmp = *this;
+    return tmp.getColVector(col);
+}
+
+
 TlSparseSymmetricMatrix TlDistributeSymmetricMatrix::getPartialMatrix(const double threshold) const
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();

@@ -186,6 +186,14 @@ void DfJMatrix_Parallel::getJ_RI_distributed(TlDistributeSymmetricMatrix *pJ)
 
     DfEriX_Parallel dfEri(this->pPdfParam_);
     dfEri.getJ_D(rho, pJ);
+
+    if (this->isUpdateMethod_ == true) {
+        if (this->m_nIteration > 1) {
+            TlDistributeSymmetricMatrix prevJ = 
+                DfObject::getJMatrix<TlDistributeSymmetricMatrix>(this->m_nIteration -1);
+            *pJ += prevJ;
+        }
+    }
 }
 
 
