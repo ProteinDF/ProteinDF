@@ -17,29 +17,18 @@ DfConvcheck_Parallel::~DfConvcheck_Parallel()
 }
 
 
-void DfConvcheck_Parallel::logger(const std::string& str) const
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    if (rComm.isMaster() == true) {
-        DfConvcheck::logger(str);
-    }
-}
-
-
-
 void DfConvcheck_Parallel::DfConvcheckMain()
 {
 #ifdef HAVE_SCALAPACK
     if (this->m_bUsingSCALAPACK == true) {
-        this->logger(" convergence check using SCALAPACK.\n");
+        this->log_.info("convergence check using SCALAPACK.");
         this->main_ScaLAPACK();
         return;
     }
 #endif // HAVE_SCALAPACK
 
     // LAPACK
-    this->logger(" convergence check using LAPACK.\n");
+    this->log_.info("convergence check using LAPACK.");
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
         DfConvcheck::DfConvcheckMain();

@@ -250,11 +250,11 @@ void DfJMatrix_Parallel::getJ_conventional_distributed(TlDistributeSymmetricMatr
     
     if (this->isUpdateMethod_ == true) {
         if (this->m_nIteration > 1) {
-            if (rComm.isMaster() == true) {
-                const TlDistributeSymmetricMatrix prevJ = 
-                    DfObject::getJMatrix<TlDistributeSymmetricMatrix>(this->m_nIteration -1);
-                *pJ += prevJ;
-            }
+            this->log_.info("update J matrix: start");
+            const TlDistributeSymmetricMatrix prevJ = 
+                DfObject::getJMatrix<TlDistributeSymmetricMatrix>(this->m_nIteration -1);
+            *pJ += prevJ;
+            this->log_.info("update J matrix: end");
         }
     }
 }

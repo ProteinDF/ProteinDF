@@ -17,8 +17,6 @@ protected:
     virtual void printOccupation(const TlVector& occ);
 
     virtual TlVector getOccupation(DfObject::RUN_TYPE runType);
-    
-    virtual void logger(const std::string& str) const;
 };
 
 #endif // DFDMATRIX_PARALLEL_H

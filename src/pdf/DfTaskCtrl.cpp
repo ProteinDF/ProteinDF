@@ -1244,6 +1244,7 @@ void DfTaskCtrl::cutoffReport()
     if (hasCutoff_density == true) {
         this->log_.info("density cutoff report");
         this->log_.info(TlUtils::format("epsilon(density): %e", this->cutoffEpsilon_density_));
+        this->log_.info(TlUtils::format("length scale parameter: %f", this->lengthScaleParameter_));
         this->log_.info("type: alive / all (ratio)");
         for (int shellTypeA = 0; shellTypeA < maxShellType; ++shellTypeA) {
             for (int shellTypeB = 0; shellTypeB < maxShellType; ++shellTypeB) {

@@ -88,16 +88,23 @@ void DfKMatrix_Parallel::getK_CD_distributed(const RUN_TYPE runType,
 void DfKMatrix_Parallel::getK_conventional_local(const RUN_TYPE runType,
                                                  TlSymmetricMatrix *pK)
 {
+    this->log_.info("build K on replica parallel method");
     TlCommunicate& rComm = TlCommunicate::getInstance();
     
     TlSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {
         if (rComm.isMaster() == true) {
             P = this->getDiffDensityMatrix(runType);
+            if (runType == RUN_RKS) {
+                P *= 0.5;
+            }
         }
     } else {
         if (rComm.isMaster() == true) {
             P = this->getPMatrix(runType, this->m_nIteration -1);
+            if (runType == RUN_RKS) {
+                P *= 0.5;
+            }
         }
     }
     rComm.broadcast(P);
@@ -120,26 +127,34 @@ void DfKMatrix_Parallel::getK_conventional_local(const RUN_TYPE runType,
 void DfKMatrix_Parallel::getK_conventional_distributed(const RUN_TYPE runType,
                                                        TlDistributeSymmetricMatrix *pK)
 {
+    this->log_.info("build K on distributed parallel method");
     TlCommunicate& rComm = TlCommunicate::getInstance();
     TlDistributeSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {
         P = DfObject::getDiffDensityMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration);
+        if (runType == RUN_RKS) {
+            P *= 0.5;
+        }
     } else {
         P = DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration -1);
+        if (runType == RUN_RKS) {
+            P *= 0.5;
+        }
     }
     assert(P.getNumOfRows() == this->m_nNumOfAOs);
+    this->log_.info("density matrix loaded.");
 
     DfEriX_Parallel dfEri(this->pPdfParam_);
     dfEri.getK_D(P, pK);
-    
+
     if (this->isUpdateMethod_ == true) {
         if (this->m_nIteration > 1) {
-            if (rComm.isMaster() == true) {
-                const TlDistributeSymmetricMatrix prevK = 
-                    DfObject::getHFxMatrix<TlDistributeSymmetricMatrix>(runType,
-                                                                        this->m_nIteration -1);
-                *pK += prevK;
-            }
+            this->log_.info("update K matrix: start");
+            const TlDistributeSymmetricMatrix prevK = 
+                DfObject::getHFxMatrix<TlDistributeSymmetricMatrix>(runType,
+                                                                    this->m_nIteration -1);
+            *pK += prevK;
+            this->log_.info("update K matrix: end");
         }
     }
 }

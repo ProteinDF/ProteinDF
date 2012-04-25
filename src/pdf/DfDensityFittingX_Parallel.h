@@ -26,8 +26,6 @@ protected:
     virtual double getLamda(const TlVector& SabinvN, const TlVector& t_alpha,
                             const TlVector& N_alpha, const double dNumOfElec);
     virtual void saveRho(const TlVector& rRho, RUN_TYPE runType);
-
-    virtual void logger(const std::string& str) const;
 };
 
 

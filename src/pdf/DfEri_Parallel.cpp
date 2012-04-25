@@ -33,24 +33,6 @@ DfEri_Parallel::~DfEri_Parallel()
 {
 }
 
-void DfEri_Parallel::logger(const std::string& str) const
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    if (rComm.isMaster() == true) {
-        DfEri::logger(str);
-    }
-}
-
-
-void DfEri_Parallel::parallelLogger(const std::string& str)
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    const std::string tmp = TlUtils::format(" %3d/%3d > ", rComm.getRank(), rComm.getNumOfProc() -1) + str;
-    DfObject::logger(tmp);
-}
-
 
 void DfEri_Parallel::cutoffReport()
 {

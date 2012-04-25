@@ -19,10 +19,10 @@ void DfDiffDensityMatrix::exec()
     const std::size_t needMem = this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) * sizeof(double);
     if ((this->isWorkOnDisk_ == true) ||
         (this->procMaxMemSize_ < needMem)) {
-        this->logger(" The differencial density matrix is build on disk.\n");
+        this->log_.info(" The differencial density matrix is build on disk.");
         TlMatrix::useMemManager(true);
     } else {
-        this->logger(" The differencial density matrix is build on memory.\n");
+        this->log_.info(" The differencial density matrix is build on memory.");
         TlMatrix::useMemManager(false);
     }
 

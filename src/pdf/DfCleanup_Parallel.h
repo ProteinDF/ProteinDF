@@ -9,9 +9,6 @@ public:
     virtual ~DfCleanup_Parallel();
 
     virtual void cleanup();
-
-protected:
-    virtual void logger(const std::string& str) const;
 };
 
 #endif // DFCLEANUP_PARALLEL_H

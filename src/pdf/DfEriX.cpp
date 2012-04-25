@@ -85,6 +85,7 @@ void DfEriX::createEngines()
 #ifdef _OPENMP
     {
         const int numOfThreads = omp_get_max_threads();
+        this->log_.info(TlUtils::format("create OpenMP ERI engine: %d", numOfThreads));
         this->pEriEngines_ = new DfEriEngine[numOfThreads];
     }
 #else
@@ -95,6 +96,7 @@ void DfEriX::createEngines()
 
 void DfEriX::destroyEngines()
 {
+    this->log_.info("delete OpenMP ERI engine");
     if (this->pEriEngines_ != NULL) {
         delete[] this->pEriEngines_;
     }
@@ -135,8 +137,8 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
     const double maxDeltaP = P.getMaxAbsoluteElement();
     if (maxDeltaP < 1.0) {
         this->cutoffThreshold_ /= std::fabs(maxDeltaP);
-        this->logger(TlUtils::format(" new cutoff threshold = % e\n",
-                                     this->cutoffThreshold_));
+        this->log_.info(TlUtils::format(" new cutoff threshold = % e\n",
+                                        this->cutoffThreshold_));
     }
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
@@ -396,13 +398,13 @@ void DfEriX::getJpq(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
     const double maxDeltaP = P.getMaxAbsoluteElement();
     if ((maxDeltaP > 0.0) && (maxDeltaP < 1.0)) {
         this->cutoffThreshold_ /= maxDeltaP;
-        this->logger(TlUtils::format(" new cutoff threshold = % e\n",
-                                     this->cutoffThreshold_));
+        this->log_.info(TlUtils::format(" new cutoff threshold = % e\n",
+                                        this->cutoffThreshold_));
     }
 
     // 本計算
     if (this->isDebugExactJ_ == true) {
-        this->logger("calculate J using DEBUG engine.\n");
+        this->log_.info("calculate J using DEBUG engine.");
         this->getJpq_exact(P, pJ);
     } else {
         this->getJpq_integralDriven(P, pJ);
@@ -1013,8 +1015,8 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
     const double maxDeltaP = P.getMaxAbsoluteElement();
     if (maxDeltaP < 1.0) {
         this->cutoffThreshold_ /= std::fabs(maxDeltaP);
-        this->logger(TlUtils::format(" new cutoff threshold = % e\n",
-                                     this->cutoffThreshold_));
+        this->log_.info(TlUtils::format(" new cutoff threshold = % e",
+                                        this->cutoffThreshold_));
     }
     
     pForce->resize(this->m_nNumOfAtoms, 3);
@@ -1346,13 +1348,13 @@ void DfEriX::getK(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
     const double maxDeltaP = P.getMaxAbsoluteElement();
     if ((maxDeltaP > 0.0) && (maxDeltaP < 1.0)) {
         this->cutoffThreshold_ /= maxDeltaP;
-        this->logger(TlUtils::format(" new cutoff threshold = % e\n",
-                                     this->cutoffThreshold_));
+        this->log_.info(TlUtils::format(" new cutoff threshold = % e",
+                                        this->cutoffThreshold_));
     }
 
     // 本計算
     if (this->isDebugExactK_ == true) {
-        this->logger("calculate K using DEBUG engine.\n");
+        this->log_.info("calculate K using DEBUG engine.");
         this->getK_exact(P, pK);
     } else {
         this->getK_integralDriven(P, pK);
@@ -1703,8 +1705,8 @@ void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce)
     const double maxDeltaP = P.getMaxAbsoluteElement();
     if (maxDeltaP < 1.0) {
         this->cutoffThreshold_ /= std::fabs(maxDeltaP);
-        this->logger(TlUtils::format(" new cutoff threshold = % e\n",
-                                     this->cutoffThreshold_));
+        this->log_.info(TlUtils::format(" new cutoff threshold = % e",
+                                        this->cutoffThreshold_));
     }
 
     pForce->resize(this->m_nNumOfAtoms, 3);

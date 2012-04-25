@@ -45,9 +45,6 @@ protected:
     void getJ_D(const TlDistributeSymmetricMatrix& P,
                 TlDistributeVector* pRho);
 
-    virtual void logger(const std::string& str) const;
-    virtual void loggerTime_local(const std::string& str) const;
-
     virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
     virtual void finalize(TlMatrix* pMtx);

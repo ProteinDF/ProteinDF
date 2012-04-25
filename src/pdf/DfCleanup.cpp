@@ -52,7 +52,7 @@ void DfCleanup::cleanupFxc(const RUN_TYPE runType, const int iteration)
         path = DfObject::getFxcMatrixPath(runType, iteration);
     }
 
-    this->logger(" remove " + path + "\n");
+    this->log_.info(TlUtils::format("remove: %s", path.c_str()));
     this->matrixCache_.erase(path);
     TlFile::remove(path);
 }
@@ -69,7 +69,7 @@ void DfCleanup::cleanupHFx(const RUN_TYPE runType, const int iteration)
         path = DfObject::getHFxMatrixPath(runType, iteration);
     }
 
-    this->logger(" remove " + path + "\n");
+    this->log_.info(TlUtils::format("remove: %s", path.c_str()));
     this->matrixCache_.erase(path);
     TlFile::remove(path);
 }
@@ -83,7 +83,7 @@ void DfCleanup::cleanupFpq(const RUN_TYPE runType, const int iteration)
 
     const std::string path = DfObject::getFpqMatrixPath(runType, itr);
 
-    this->logger(" remove " + path + "\n");
+    this->log_.info(TlUtils::format("remove: %s", path.c_str()));
     this->matrixCache_.erase(path);
     TlFile::remove(path);
 }
@@ -94,7 +94,7 @@ void DfCleanup::cleanupFprime(const RUN_TYPE runType, const int iteration)
     // current iterationを削除
     const std::string path = DfObject::getFprimeMatrixPath(runType, iteration);
 
-    this->logger(" remove " + path + "\n");
+    this->log_.info(TlUtils::format("remove: %s", path.c_str()));
     this->matrixCache_.erase(path);
     TlFile::remove(path);
 }
@@ -105,7 +105,7 @@ void DfCleanup::cleanupCprime(const RUN_TYPE runType, const int iteration)
     // 1つ前はDfDmatrixのチェックで利用
     const std::string path = DfObject::getCprimeMatrixPath(runType, iteration -1);
 
-    this->logger(" remove " + path + "\n");
+    this->log_.info(TlUtils::format("remove: %s", path.c_str()));
     this->matrixCache_.erase(path);
     TlFile::remove(path);
 }
@@ -116,7 +116,7 @@ void DfCleanup::cleanupC(const RUN_TYPE runType, const int iteration)
     // current iterationの1つ前を削除(中断からの継続のため)
     const std::string path = DfObject::getCMatrixPath(runType, iteration -1);
 
-    this->logger(" remove " + path + "\n");
+    this->log_.info(TlUtils::format("remove: %s", path.c_str()));
     this->matrixCache_.erase(path);
     TlFile::remove(path);
 }
@@ -134,15 +134,15 @@ void DfCleanup::cleanupP(const RUN_TYPE runType, const int iteration)
     const std::string P1pqPath = DfObject::getP1pqMatrixPath(itr);
     const std::string P2pqPath = DfObject::getP2pqMatrixPath(itr);
 
-    this->logger(" remove " + PpqPath + "\n");
+    this->log_.info(TlUtils::format("remove: %s", PpqPath.c_str()));
     this->matrixCache_.erase(PpqPath);
     TlFile::remove(PpqPath);
 
-    this->logger(" remove " + P1pqPath + "\n");
+    this->log_.info(TlUtils::format("remove: %s", P1pqPath.c_str()));
     this->matrixCache_.erase(P1pqPath);
     TlFile::remove(P1pqPath);
 
-    this->logger(" remove " + P2pqPath + "\n");
+    this->log_.info(TlUtils::format("remove: %s", P2pqPath.c_str()));
     this->matrixCache_.erase(P2pqPath);
     TlFile::remove(P2pqPath);
 }

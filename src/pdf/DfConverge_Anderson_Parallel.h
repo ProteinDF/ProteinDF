@@ -9,8 +9,6 @@ public:
     virtual ~DfConverge_Anderson_Parallel();
 
 protected:
-    virtual void logger(const std::string& str) const;
-    
     virtual void convergeRhoTilde();
     virtual void convergeKSMatrix();
     virtual void convergePMatrix();

@@ -17,30 +17,24 @@ DfDiagonal_Parallel::DfDiagonal_Parallel(TlSerializeData* pPdfParam)
 {
 }
 
+
 DfDiagonal_Parallel::~DfDiagonal_Parallel()
 {
 }
 
-void DfDiagonal_Parallel::logger(const std::string& str) const
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        DfDiagonal::logger(str);
-    }
-}
 
 void DfDiagonal_Parallel::DfDiagMain()
 {
 #ifdef HAVE_SCALAPACK
     if (this->m_bUsingSCALAPACK == true) {
-        this->logger(" diagonal(parallel) using SCALAPACK.\n");
+        this->log_.info("diagonal(parallel) using SCALAPACK.");
         this->DfDiagMain_SCALAPACK();
         return;
     }
 #endif // HAVE_SCALAPACK
 
     // LAPACK 
-    this->logger(" diagonal(parallel) using LAPACK.\n");
+    this->log_.info("diagonal(parallel) using LAPACK.");
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
         DfDiagonal::DfDiagMain();
@@ -52,11 +46,11 @@ void DfDiagonal_Parallel::DfDiagQclo(const DfObject::RUN_TYPE runType, const std
 {
 #ifdef HAVE_SCALAPACK
     if (this->m_bUsingSCALAPACK == true) {
-        this->logger("DfDiagonal_Parallel using SCALAPACK.\n");
+        this->log_.info("diagonalization using SCALAPACK.");
         this->DfDiagQclo_SCALAPACK(runType, fragname, norbcut);
         return;
     } else {
-        this->logger("DfDiagonal_Parallel using LAPACK.\n");
+        this->log_.info("diagonalization using LAPACK.");
     }
 #endif // HAVE_SCALAPACK
 

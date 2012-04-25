@@ -13,25 +13,16 @@ DfConverge_Damping_Parallel::~DfConverge_Damping_Parallel()
 }
 
 
-void DfConverge_Damping_Parallel::logger(const std::string& str) const
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        DfObject::logger(str);
-    }
-}
-
-
 void DfConverge_Damping_Parallel::convergeRhoTilde()
 {
 #ifdef HAVE_SCALAPACK
     if (this->m_bUsingSCALAPACK == true) {
-        this->logger(" converge rho~ using ScaLAPACK.\n");
+        this->log_.info(" converge rho~ using ScaLAPACK.");
         this->convergeRhoTilde_ScaLAPACK();
         return;
     }
 #endif // HAVE_SCALAPACK    
-    this->logger(" converge rho~ using LAPACK.\n");
+    this->log_.info(" converge rho~ using LAPACK.");
     this->convergeRhoTilde_LAPACK();
 }
 
@@ -70,12 +61,12 @@ void DfConverge_Damping_Parallel::convergeKSMatrix()
 {
 #ifdef HAVE_SCALAPACK
     if (this->m_bUsingSCALAPACK == true) {
-        this->logger(" converge KS matrix using ScaLAPACK.\n");
+        this->log_.info(" converge KS matrix using ScaLAPACK.");
         this->convergeKSMatrix_ScaLAPACK();
         return;
     }
 #endif // HAVE_SCALAPACK
-    this->logger(" converge KS matrix using LAPACK.\n");
+    this->log_.info(" converge KS matrix using LAPACK.");
     this->convergeKSMatrix_LAPACK();
 }
 
@@ -114,12 +105,12 @@ void DfConverge_Damping_Parallel::convergePMatrix()
 {
 #ifdef HAVE_SCALAPACK
     if (this->m_bUsingSCALAPACK == true) {
-        this->logger(" converge density matrix using ScaLAPACK.\n");
+        this->log_.info(" converge density matrix using ScaLAPACK.");
         this->convergePMatrix_ScaLAPACK();
         return;
     }
 #endif // HAVE_SCALAPACK
-    this->logger(" converge density matrix using LAPACK.\n");
+    this->log_.info(" converge density matrix using LAPACK.");
     this->convergePMatrix_LAPACK();
 }
 

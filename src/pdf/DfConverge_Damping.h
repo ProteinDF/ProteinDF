@@ -35,7 +35,7 @@ void DfConverge_Damping::convergeRhoTilde(const DfObject::RUN_TYPE runType)
     const int iteration = this->m_nIteration;
 
     if (iteration >= this->m_nStartIteration) {
-        this->logger(" damping to cd coefficient\n");
+        this->log_.info("damping to cd coefficient");
 
         // read previous rho
         VectorType prevRho;
@@ -48,7 +48,7 @@ void DfConverge_Damping::convergeRhoTilde(const DfObject::RUN_TYPE runType)
         assert(currRho.getSize() == this->m_nNumOfAux);
 
         // get damped rho
-        this->logger(TlUtils::format(" damping factor = %f\n", this->m_dDampingFactor));
+        this->log_.info(TlUtils::format(" damping factor = %f", this->m_dDampingFactor));
         currRho *= (1.0 - this->m_dDampingFactor);
         prevRho *= this->m_dDampingFactor;
         currRho += prevRho;
@@ -65,7 +65,7 @@ void DfConverge_Damping::convergeKSMatrix(const DfObject::RUN_TYPE runType)
     const int iteration = this->m_nIteration;
 
     if (iteration >= this->m_nStartIteration) {
-        this->logger(" damping to kohn-sham matrix\n");
+        this->log_.info("damping to kohn-sham matrix");
 
         // Fpq damping
         SymmetricMatrixType currFpq;
@@ -74,7 +74,7 @@ void DfConverge_Damping::convergeKSMatrix(const DfObject::RUN_TYPE runType)
         prevFpq = DfObject::getFpqMatrix<SymmetricMatrixType>(runType, iteration -1);
 
         // get damped Fpq
-        this->logger(TlUtils::format(" damping factor = %f\n", this->m_dDampingFactor));
+        this->log_.info(TlUtils::format(" damping factor = %f", this->m_dDampingFactor));
         currFpq *= (1.0 - this->m_dDampingFactor);
         prevFpq *= this->m_dDampingFactor;
         currFpq += prevFpq;
@@ -91,7 +91,7 @@ void DfConverge_Damping::convergePMatrix(const DfObject::RUN_TYPE runType)
     const int iteration = this->m_nIteration;
 
     if (iteration >= (this->m_nStartIteration +1)) {
-        this->logger(" damping to density matrix\n");
+        this->log_.info(" damping to density matrix");
 
         // Fpq damping
         SymmetricMatrixType currPpq;
@@ -100,7 +100,7 @@ void DfConverge_Damping::convergePMatrix(const DfObject::RUN_TYPE runType)
         prevPpq = DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration -2);
 
         // get damped Ppq
-        this->logger(TlUtils::format(" damping factor = %f\n", this->m_dDampingFactor));
+        this->log_.info(TlUtils::format(" damping factor = %f", this->m_dDampingFactor));
         currPpq *= (1.0 - this->m_dDampingFactor);
         prevPpq *= this->m_dDampingFactor;
         currPpq += prevPpq;

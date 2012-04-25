@@ -14,15 +14,6 @@ DfDiffDensityMatrix_Parallel::~DfDiffDensityMatrix_Parallel()
 }
 
 
-void DfDiffDensityMatrix_Parallel::logger(const std::string& str) const
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        DfObject::logger(str);
-    }
-}
-
-
 void DfDiffDensityMatrix_Parallel::exec()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
@@ -71,7 +62,7 @@ void DfDiffDensityMatrix_Parallel::exec()
 void DfDiffDensityMatrix_Parallel::calc_usingScaLAPACK(const DfObject::RUN_TYPE runType,
                                                        const int iteration)
 {
-    this->logger(" (delta P) is build using ScaLAPACK.\n");
+    this->log_.info("(delta P) is build using ScaLAPACK.");
     TlDistributeSymmetricMatrix P = this->getPpqMatrix<TlDistributeSymmetricMatrix>(runType, iteration -1);
     if (TlFile::isExist(this->getPpqMatrixPath(runType, iteration -2)) == true) {
         P -= (this->getPpqMatrix<TlDistributeSymmetricMatrix>(runType, iteration -2));
