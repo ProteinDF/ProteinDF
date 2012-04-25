@@ -185,7 +185,9 @@ Vector DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getTalpha(con
     if (this->m_bDiskUtilization == false) {
         const SymmetricMatrix diffP = this->getDiffDensityMatrix(runType);
         t_alpha = this->calcTAlpha_DIRECT(diffP);
-        t_alpha += this->getTalpha(runType, this->m_nIteration -1);
+        if (this->m_nIteration > 1) {
+            t_alpha += this->getTalpha(runType, this->m_nIteration -1);
+        }
 
         t_alpha.save(this->getTalphaPath(runType, this->m_nIteration));
     } else {
@@ -216,9 +218,9 @@ Vector DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getTalpha(con
     Vector t_alpha(this->m_nNumOfAux);
     const std::string sFileName = this->getTalphaPath(runType, iteration);
 
-    if (FileX::isExist(sFileName) == true) {
+    // if (FileX::isExist(sFileName) == true) {
         t_alpha.load(sFileName);
-    }
+    // }
 
     return t_alpha;
 }

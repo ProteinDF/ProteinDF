@@ -15,6 +15,7 @@ public:
     virtual void exec();
 
 protected:
+    template<class SymmetricMatrixType>
     void calc(DfObject::RUN_TYPE runType, int iteration);
 
     template<class SymmetricMatrixType>
@@ -24,6 +25,20 @@ protected:
     /// 差電子密度行列をディスクに保存する(true)かどうか
     bool isSaveDiffMatrix_;
 };
+
+
+template<class SymmetricMatrixType>
+void DfDiffDensityMatrix::calc(const DfObject::RUN_TYPE runType, const int iteration)
+{
+    SymmetricMatrixType P = DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration -1);
+    //if (TlFile::isExist(this->getPpqMatrixPath(runType, iteration -2)) == true) {
+    if (iteration > 1) {
+        P -= (DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration -2));
+    }
+
+    this->saveDiffDensityMatrix(runType, iteration, P);
+}
+
 
 
 template<class SymmetricMatrixType>

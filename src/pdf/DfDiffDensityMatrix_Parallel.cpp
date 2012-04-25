@@ -23,12 +23,12 @@ void DfDiffDensityMatrix_Parallel::exec()
         // using ScaLAPACK
         switch (this->m_nMethodType) {
         case METHOD_RKS:
-            this->calc_usingScaLAPACK(RUN_RKS, this->m_nIteration);
+            DfDiffDensityMatrix::calc<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration);
             break;
 
         case METHOD_UKS:
-            this->calc_usingScaLAPACK(RUN_UKS_ALPHA, this->m_nIteration);
-            this->calc_usingScaLAPACK(RUN_UKS_BETA, this->m_nIteration);
+            DfDiffDensityMatrix::calc<TlDistributeSymmetricMatrix>(RUN_UKS_ALPHA, this->m_nIteration);
+            DfDiffDensityMatrix::calc<TlDistributeSymmetricMatrix>(RUN_UKS_BETA, this->m_nIteration);
             break;
 
         case METHOD_ROKS:
@@ -59,14 +59,15 @@ void DfDiffDensityMatrix_Parallel::exec()
 }
 
 
-void DfDiffDensityMatrix_Parallel::calc_usingScaLAPACK(const DfObject::RUN_TYPE runType,
-                                                       const int iteration)
-{
-    this->log_.info("(delta P) is build using ScaLAPACK.");
-    TlDistributeSymmetricMatrix P = this->getPpqMatrix<TlDistributeSymmetricMatrix>(runType, iteration -1);
-    if (TlFile::isExist(this->getPpqMatrixPath(runType, iteration -2)) == true) {
-        P -= (this->getPpqMatrix<TlDistributeSymmetricMatrix>(runType, iteration -2));
-    }
+// void DfDiffDensityMatrix_Parallel::calc_usingScaLAPACK(const DfObject::RUN_TYPE runType,
+//                                                        const int iteration)
+// {
+//     this->log_.info("(delta P) is build using ScaLAPACK.");
+//     TlDistributeSymmetricMatrix P = DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(runType, iteration -1);
+//     P.save(TlUtils::format("diffP_%d.mat", iteration));
+//     if (TlFile::isExist(this->getPpqMatrixPath(runType, iteration -2)) == true) {
+//         P -= (this->getPpqMatrix<TlDistributeSymmetricMatrix>(runType, iteration -2));
+//     }
 
-    this->saveDiffDensityMatrix(runType, iteration, P);
-}
+//     this->saveDiffDensityMatrix(runType, iteration, P);
+// }

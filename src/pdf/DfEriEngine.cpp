@@ -852,10 +852,10 @@ void DfEriEngine::compD(const DfEriEngine::Query& qAB,
 void DfEriEngine::calc(const DfEriEngine::Query& qAB,
                        const DfEriEngine::Query& qCD)
 {
-    this->log_.debug(TlUtils::format("DfEriEngine::calc(): a~=%d, b~=%d, a=%d, b=%d,",
-                                     qAB.a_bar, qAB.b_bar, qAB.a, qAB.b));
-    this->log_.debug(TlUtils::format("                     c~=%d, d~=%d, c=%d, d=%d,",
-                                     qCD.a_bar, qCD.b_bar, qCD.a, qCD.b));
+    // this->log_.debug(TlUtils::format("DfEriEngine::calc(): a~=%d, b~=%d, a=%d, b=%d,",
+    //                                  qAB.a_bar, qAB.b_bar, qAB.a, qAB.b));
+    // this->log_.debug(TlUtils::format("                     c~=%d, d~=%d, c=%d, d=%d,",
+    //                                  qCD.a_bar, qCD.b_bar, qCD.a, qCD.b));
     
     this->calcE4CQ();
     this->calc0m();

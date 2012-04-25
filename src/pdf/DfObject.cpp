@@ -237,7 +237,11 @@ void DfObject::setParam(const TlSerializeData& data)
     
     // for memory ==============================================================
     this->isUseCache_ = (*(this->pPdfParam_))["use_matrix_cache"].getBoolean();
-    this->matrixCache_.setMaxMemSize(this->procMaxMemSize_);
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.setMaxMemSize(this->procMaxMemSize_);
+    } else {
+        this->matrixCache_.setMaxMemSize(0);
+    }
     const bool isForceLoadingFromDisk = (*(this->pPdfParam_))["force_loading_from_disk"].getBoolean();
     this->matrixCache_.forceLoadingFromDisk(isForceLoadingFromDisk);
     

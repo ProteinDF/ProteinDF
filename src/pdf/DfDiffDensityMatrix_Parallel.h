@@ -12,7 +12,7 @@ public:
     virtual void exec();
 
 protected:
-    void calc_usingScaLAPACK(DfObject::RUN_TYPE runType, int iteration);
+    //void calc_usingScaLAPACK(DfObject::RUN_TYPE runType, int iteration);
 };
 
 #endif // DFDIFFDENSITYMATRIX_PARALLEL_H

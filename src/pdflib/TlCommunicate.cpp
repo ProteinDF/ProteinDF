@@ -89,10 +89,9 @@ int TlCommunicate::barrier(bool isDebugOut) const
     ++(this->counter_barrier_);
     
     if (isDebugOut == true) {
-        std::cerr << TlUtils::format("[%2d] barrier called. times=%ld",
-                                     this->getRank(),
-                                     this->counter_barrier_)
-                  << std::endl;
+        TlLogging& log = TlLogging::getInstance();
+        log.debug(TlUtils::format("barrier called. times=%ld",
+                                  this->counter_barrier_));
     }
 
     const int answer = MPI_Barrier(MPI_COMM_WORLD);
@@ -136,6 +135,7 @@ bool TlCommunicate::checkNonBlockingTableCollision(uintptr_t key,
 bool TlCommunicate::checkNonBlockingCommunications() const
 {
     bool answer = true;
+    TlLogging& log = TlLogging::getInstance();
 
 #pragma omp critical (TlCommunicate_nonBlockingCommParamTable_update)
     {
@@ -145,10 +145,9 @@ bool TlCommunicate::checkNonBlockingCommunications() const
             for (NonBlockingCommParamTableType::const_iterator it = this->nonBlockingCommParamTable_.begin();
                  it != itEnd; ++it) {
                 const char isSendRecv = ((it->second.property & NonBlockingCommParam::SEND) != 0) ? 'S' : 'R';
-                std::cerr << TlUtils::format("[%5d/%5d WARN] rest waiting communication(%c) in TlCommunicate: TAG=%d",
-                                             this->getRank(), this->getNumOfProcs() -1,
-                                             isSendRecv, it->second.tag)
-                          << std::endl;
+                log.warn(TlUtils::format("[%5d/%5d WARN] rest waiting communication(%c) in TlCommunicate: TAG=%d",
+                                         this->getRank(), this->getNumOfProcs() -1,
+                                         isSendRecv, it->second.tag));
             }
         }
     }

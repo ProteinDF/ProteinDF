@@ -28,12 +28,12 @@ void DfDiffDensityMatrix::exec()
 
     switch (this->m_nMethodType) {
     case METHOD_RKS:
-        this->calc(RUN_RKS, this->m_nIteration);
+        this->calc<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration);
         break;
         
     case METHOD_UKS:
-        this->calc(RUN_UKS_ALPHA, this->m_nIteration);
-        this->calc(RUN_UKS_BETA, this->m_nIteration);
+        this->calc<TlSymmetricMatrix>(RUN_UKS_ALPHA, this->m_nIteration);
+        this->calc<TlSymmetricMatrix>(RUN_UKS_BETA, this->m_nIteration);
         break;
         
     case METHOD_ROKS:
@@ -49,14 +49,14 @@ void DfDiffDensityMatrix::exec()
 }
 
 
-void DfDiffDensityMatrix::calc(const DfObject::RUN_TYPE runType, const int iteration)
-{
-    TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration -1);
-    if (TlFile::isExist(this->getPpqMatrixPath(runType, iteration -2)) == true) {
-        P -= (this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration -2));
-    }
+// void DfDiffDensityMatrix::calc(const DfObject::RUN_TYPE runType, const int iteration)
+// {
+//     TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration -1);
+//     if (TlFile::isExist(this->getPpqMatrixPath(runType, iteration -2)) == true) {
+//         P -= (this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration -2));
+//     }
 
-    this->saveDiffDensityMatrix(runType, iteration, P);
-}
+//     this->saveDiffDensityMatrix(runType, iteration, P);
+// }
 
 
