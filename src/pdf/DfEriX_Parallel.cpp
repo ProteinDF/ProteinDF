@@ -1011,7 +1011,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
 
 TlSparseSymmetricMatrix DfEriX_Parallel::makeSchwarzTable(const TlOrbitalInfoObject& orbitalInfo)
 {
-    this->log_.info("make schwartz table: start");
+    this->log_.info("make Schwartz cutoff table(parallel): start");
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProcs();
     const int rank = rComm.getRank();
@@ -1061,6 +1061,6 @@ TlSparseSymmetricMatrix DfEriX_Parallel::makeSchwarzTable(const TlOrbitalInfoObj
     rComm.gatherToMaster(schwarz);
     rComm.broadcast(schwarz);
     
-    this->log_.info("make schwartz table: end");
+    this->log_.info("make Schwartz cutoff table(parallel): end");
     return schwarz;
 }

@@ -2405,6 +2405,8 @@ int TlCommunicate::broadcast(bool& rData)
 template<typename T>
 int TlCommunicate::broadcast(T& data, const MPI_Datatype mpiType, const int root)
 {
+    this->log_.debug(TlUtils::format("TlCommunicate::broadcast(): type=%s, root=%d",
+                                     TlUtils::xtos(mpiType).c_str(), root));
     return MPI_Bcast(&data, 1, mpiType, root, MPI_COMM_WORLD);
 }
 
@@ -2663,7 +2665,7 @@ int TlCommunicate::broadcast(TlMatrix& data, const int root)
 
 int TlCommunicate::broadcast(TlSymmetricMatrix& data, int root)
 {
-    std::size_t dim = 0;
+    TlMatrixObject::index_type dim = 0;
 
     if (this->getRank() == root) {
         dim = data.getNumOfRows();
@@ -2672,7 +2674,7 @@ int TlCommunicate::broadcast(TlSymmetricMatrix& data, int root)
     data.resize(dim);
 
     if (answer == 0) {
-        this->broadcast(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(), root);
+        answer = this->broadcast(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(), root);
     }
 
     return answer;

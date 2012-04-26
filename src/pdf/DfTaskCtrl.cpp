@@ -427,13 +427,13 @@ bool DfTaskCtrl::getQueue4_K(const TlOrbitalInfoObject& orbitalInfo,
     const int maxShellType = orbitalInfo.getMaxShellType();
     static ShellArrayTable shellArrayTable;
     static ShellPairArrayTable shellPairArrayTable;
-    static int shellTypeP = maxShellType -1;
-    static int shellTypeQ = maxShellType -1;
-    static int shellTypeR = maxShellType -1;
-    static int shellTypeS = maxShellType -1;
-    static std::size_t prIndex = 0;
-    static std::size_t shellArrayIndexQ = 0;
-    static std::size_t shellArrayIndexS = 0;
+    // static int shellTypeP = maxShellType -1;
+    // static int shellTypeQ = maxShellType -1;
+    // static int shellTypeR = maxShellType -1;
+    // static int shellTypeS = maxShellType -1;
+    // static std::size_t prIndex = 0;
+    // static std::size_t shellArrayIndexQ = 0;
+    // static std::size_t shellArrayIndexS = 0;
     
     pTaskList->clear();
     pTaskList->reserve(maxGrainSize);
@@ -445,13 +445,13 @@ bool DfTaskCtrl::getQueue4_K(const TlOrbitalInfoObject& orbitalInfo,
                                                            shellArrayTable);
         shellPairArrayTable = this->selectShellPairArrayTableByDensity(shellPairArrayTable,
                                                                        orbitalInfo);
-        shellTypeP = maxShellType -1;
-        shellTypeQ = maxShellType -1;
-        shellTypeR = maxShellType -1;
-        shellTypeS = maxShellType -1;
-        prIndex = 0;
-        shellArrayIndexQ = 0;
-        shellArrayIndexS = 0;
+        // shellTypeP = maxShellType -1;
+        // shellTypeQ = maxShellType -1;
+        // shellTypeR = maxShellType -1;
+        // shellTypeS = maxShellType -1;
+        // prIndex = 0;
+        // shellArrayIndexQ = 0;
+        // shellArrayIndexS = 0;
 
         return true;
     }

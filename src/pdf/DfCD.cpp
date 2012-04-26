@@ -168,7 +168,6 @@ void DfCD::calcPQPQ_kernel(const TlOrbitalInfoObject& orbitalInfo,
                            TlSparseSymmetricMatrix *pSchwarzTable,
                            PQ_PairArray *pI2PQ)
 {
-    const index_type numOfAOs = this->m_nNumOfAOs;
     const double tau = this->CDAM_tau_;
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
@@ -344,8 +343,6 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
                    const DfEriEngine& engine,
                    TlMatrixObject* pG)
 {
-    const index_type numOfAOs = this->m_nNumOfAOs;
-
     int index = 0;
     for (int i = 0; i < maxStepsP; ++i) {
         const index_type indexP = shellIndexP + i;

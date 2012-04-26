@@ -88,8 +88,10 @@ void DfKMatrix_Parallel::getK_CD_distributed(const RUN_TYPE runType,
 void DfKMatrix_Parallel::getK_conventional_local(const RUN_TYPE runType,
                                                  TlSymmetricMatrix *pK)
 {
-    this->log_.info("build K on replica parallel method");
     TlCommunicate& rComm = TlCommunicate::getInstance();
+    assert(rComm.checkNonBlockingCommunications());
+    rComm.barrier();
+    this->log_.info("build K on replica parallel method");
     
     TlSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {
@@ -107,14 +109,24 @@ void DfKMatrix_Parallel::getK_conventional_local(const RUN_TYPE runType,
             }
         }
     }
+    this->log_.info(TlUtils::format("density matrix size: %dx%d",
+                                    P.getNumOfRows(), P.getNumOfCols()));
+    this->log_.info(TlUtils::format("num of AOs: %d",
+                                    this->m_nNumOfAOs));
+    rComm.barrier();
+    assert(rComm.checkNonBlockingCommunications());
+    this->log_.info("broadcast density matrix");
     rComm.broadcast(P);
     assert(P.getNumOfRows() == this->m_nNumOfAOs);
     
+    this->log_.info("ERI operation: start");
     DfEriX_Parallel dfEri(this->pPdfParam_);
     dfEri.getK(P, pK);
+    this->log_.info("ERI operation: end");
 
     if (this->isUpdateMethod_ == true) {
         if (this->m_nIteration > 1) {
+            this->log_.info("update K matrix");
             if (rComm.isMaster() == true) {
                 const TlSymmetricMatrix prevK = this->getKMatrix(runType, this->m_nIteration -1);
                 *pK += prevK;

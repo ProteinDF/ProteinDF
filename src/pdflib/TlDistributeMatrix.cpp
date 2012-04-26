@@ -103,7 +103,7 @@ void TlScalapackContext::finalize()
 {
     if (TlScalapackContext::m_pTlScalapackContextInstance != NULL) {
         delete TlScalapackContext::m_pTlScalapackContextInstance;
-        TlScalapackContext::m_pTlScalapackContextInstance == NULL;
+        TlScalapackContext::m_pTlScalapackContextInstance = NULL;
     }
 }
 

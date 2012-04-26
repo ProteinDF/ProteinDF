@@ -2118,6 +2118,7 @@ DfEriX::ShellPairArrayTable DfEriX::getShellPairArrayTable(const ShellArrayTable
 
 TlSparseSymmetricMatrix DfEriX::makeSchwarzTable(const TlOrbitalInfoObject& orbitalInfo)
 {
+    this->log_.info("make Schwartz cutoff table: start");
     const index_type maxShellIndex = orbitalInfo.getNumOfOrbitals();
     TlSparseSymmetricMatrix schwarz(maxShellIndex);
 
@@ -2151,6 +2152,7 @@ TlSparseSymmetricMatrix DfEriX::makeSchwarzTable(const TlOrbitalInfoObject& orbi
         shellIndexP += maxStepsP;
     }
 
+    this->log_.info("make Schwartz cutoff table: end");
     return schwarz;
 }
 
