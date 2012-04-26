@@ -4173,9 +4173,10 @@ int DfInitialguess::transOrbital(int tAN)
     Rs = 1.0 / 6.0  ;          // for d_Orbtial;  ( 1/6 = 0.16666666..... )
     InvRoot3 = 1.0 / sqrt(3.0);  // for d_Orbital;  ( 1/sqrt(3) )
 
-    Fl_Tbl_Density  FTD;
-    Fl_Tbl_Xcpot    FTX;
-    Fl_Tbl_Xcpot    FTX2;
+    const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
+    Fl_Tbl_Density  FTD(flGeom);
+    Fl_Tbl_Xcpot    FTX(flGeom);
+    Fl_Tbl_Xcpot    FTX2(flGeom);
 
     Fl_Gto_Density  FGD;
 //   FGD.open("fl_Gto_Density","read");

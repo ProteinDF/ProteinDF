@@ -11,7 +11,7 @@
 
 class Fl_Tbl_Density {
 public:
-    Fl_Tbl_Density();
+    Fl_Tbl_Density(const Fl_Geometry& flGeom);
     ~Fl_Tbl_Density();
 
     int getcGtoTotalNum() const {
@@ -49,6 +49,8 @@ private:
     int setData();        // SetFunction  to Private Data Member.
 
 private:
+    const Fl_Geometry& flGeom_;
+
     static int flag1;         // flag for Constructor.
     static int flag2;         // flag for Destructor.
 

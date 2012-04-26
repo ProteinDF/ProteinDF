@@ -53,7 +53,7 @@ void DfSummary::printAux(const TlVector& rho, const TlVector& myu, const TlVecto
     }
     this->logger("\n");
 
-    const Fl_Tbl_Density Tdens;
+    const Fl_Tbl_Density Tdens(Fl_Geometry((*this->pPdfParam_)["coordinates"]));
     int previous_blflag = -1;
     const int dim = std::max(rhoSize, std::max(myuSize, nyuSize));
     for (int k = 0, blflag = Tdens.getInpAtomnum(k) +1; k < dim; ++k) {
@@ -96,7 +96,7 @@ void DfSummary::printAux(const TlVector& rho, const TlVector& myu, const TlVecto
 
 void DfSummary::printRhoPop(const TlVector& rho)
 {
-    const Fl_Tbl_Density Tdens;
+    const Fl_Tbl_Density Tdens((*this->pPdfParam_)["coordinates"]);
     const Fl_Gto_Density RGTO;
     const int numOfAux = this->m_nNumOfAux;
 

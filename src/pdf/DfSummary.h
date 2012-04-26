@@ -201,7 +201,7 @@ void DfSummary::exec()
 template<class MatrixType>
 void DfSummary::printMO(const MatrixType& C)
 {
-    const Fl_Tbl_Orbital Torb;
+    const Fl_Tbl_Orbital Torb(Fl_Geometry((*this->pPdfParam_)["coordinates"]));
 
     // print out LCAO coefficent
     const int numOfAOs = this->m_nNumOfAOs;

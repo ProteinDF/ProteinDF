@@ -111,7 +111,7 @@ double DfTotalEnergy::calculate_energy_nuclear_repulsion()
         E_nuclear_repulsion = this->m_dNuclearRepulsion;
     } else {
         // read nuclear charge
-        Fl_Geometry geom(Fl_Geometry::getDefaultFileName());
+        const Fl_Geometry geom((*this->pPdfParam_)["coordinates"]);
 
         //calculate nuclear repulsion
         for (int i = 0; i < this->m_nNumOfAtoms; ++i) {

@@ -19,8 +19,8 @@ int  Fl_Tbl_Xcpot::flag2=0;         // flag for Destructor;
 int Fl_Tbl_Xcpot::cGtoTotalNum=0; // s*1,p*3,d*5;
 
 //#######################################################################
-Fl_Tbl_Xcpot::Fl_Tbl_Xcpot()
-{
+Fl_Tbl_Xcpot::Fl_Tbl_Xcpot(const Fl_Geometry& flGeom)
+    : flGeom_(flGeom) {
     TlLogging& log = TlLogging::getInstance();
 
     int memory;
