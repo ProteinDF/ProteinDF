@@ -4,7 +4,6 @@
 #include "Fl_Geometry.h"
 #include "Fl_Gto_Density.h"
 #include "Fl_Tbl_Density.h"
-#include "Fl_Tbl_Orbital.h"
 
 #include "TlUtils.h"
 #include "TlMath.h"

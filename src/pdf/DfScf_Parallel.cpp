@@ -142,18 +142,6 @@ void DfScf_Parallel::doXCIntegral()
 }
 
 
-void DfScf_Parallel::execScfLoop_XcEneFit()
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    if (rComm.isMaster() == true) {
-        DfScf::execScfLoop_XcEneFit();
-    }
-
-    rComm.barrier();
-}
-
-
 void DfScf_Parallel::doThreeIndexIntegral()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();

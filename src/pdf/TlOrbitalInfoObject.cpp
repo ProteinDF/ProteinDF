@@ -2,8 +2,6 @@
 #include <cmath>
 #include <limits>
 #include "TlOrbitalInfoObject.h"
-#include "Fl_Geometry.h"
-#include "Fl_Gto.h"
 #include "TlLogging.h"
 
 const int TlOrbitalInfoObject::MAX_SHELL_TYPE = 3;

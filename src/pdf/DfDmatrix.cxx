@@ -2,8 +2,6 @@
 #include <cmath>
 
 #include "DfDmatrix.h"
-#include "Fl_Tbl_Orbital.h"
-#include "Fl_Tbl_Orbital.h"
 #include "TlUtils.h"
 #include "TlVector.h"
 #include "TlMatrix.h"

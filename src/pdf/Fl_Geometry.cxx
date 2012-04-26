@@ -19,14 +19,6 @@ Fl_Geometry::Fl_Geometry(const TlSerializeData& geomData) : isUpdate_(false)
 }
 
 
-Fl_Geometry::Fl_Geometry(const std::string& path) : filePath_(path), isUpdate_(false)
-{
-    if (TlFile::isExist(this->filePath_) == true) {
-        this->load();
-    }
-}
-
-
 Fl_Geometry::Fl_Geometry(const Fl_Geometry& rhs)
         : filePath_(rhs.filePath_), isUpdate_(false), atoms_(rhs.atoms_)
 {

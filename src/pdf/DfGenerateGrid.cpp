@@ -20,7 +20,8 @@
 
 
 DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
-    : DfObject(pPdfParam), flGeometry_(Fl_Geometry::getDefaultFileName()) {
+    : DfObject(pPdfParam),
+      flGeometry_((*pPdfParam)["coordinates"]) {
     const TlSerializeData& pdfParam = *pPdfParam;
     
     this->xctype   = pdfParam["xc-potential"].getStr();

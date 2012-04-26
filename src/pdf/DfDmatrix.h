@@ -9,7 +9,6 @@
 #include "CnError.h"
 #include "TlTime.h"
 
-class Fl_Out;
 class TlVector;
 class TlMatrix;
 

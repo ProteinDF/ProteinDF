@@ -108,7 +108,7 @@ int DfInitialguess::prepare()
 {
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
     
-    Fl_Geometry FlGeom(Fl_Geometry::getDefaultFileName());
+    Fl_Geometry FlGeom(pdfParam["coordinates"]);
     Fl_Gto_Density FlGtoDen;
     Fl_Gto_Xcpot FlGtoXcpot;
 

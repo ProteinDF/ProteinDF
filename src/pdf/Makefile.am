@@ -64,7 +64,6 @@ libpdf_la_SOURCES = \
 	DfTransFmatrix.h		DfTransFmatrix.cxx		\
 	DfTransatob.h			DfTransatob.cxx			\
 	DfXcenefitting.h		DfXcenefitting.cxx		\
-	DfXcpotfitting.h		DfXcpotfitting.cxx		\
 	DfXMatrix.h				DfXMatrix.cpp			\
 	DfCleanup.h				DfCleanup.cpp			\
 	FileX.h					FileX.cxx			\
@@ -80,10 +79,6 @@ libpdf_la_SOURCES = \
 	Fl_Gto_Xcpot.h						\
 	Fl_Gto_Xcpot2.h						\
 	Fl_GuessDB.h			Fl_GuessDB.cxx			\
-	Fl_Int_Gds.h			Fl_Int_Gds.cxx			\
-	Fl_Int_Pqa.h			Fl_Int_Pqa.cxx			\
-	Fl_Int_Pqg.h			Fl_Int_Pqg.cxx			\
-	Fl_Integrals.h			Fl_Integrals.cxx		\
 	Fl_Tbl_AtomFragment.h	Fl_Tbl_AtomFragment.cxx		\
 	Fl_Tbl_Density.h		Fl_Tbl_Density.cxx		\
 	Fl_Tbl_Fragment.h		Fl_Tbl_Fragment.cxx		\
