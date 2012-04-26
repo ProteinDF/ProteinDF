@@ -8,8 +8,8 @@ int  Fl_Tbl_Fragment :: flag = 0; // flag for Constructor
 // after : flag = 1
 
 
-Fl_Tbl_Fragment::Fl_Tbl_Fragment()
-{
+Fl_Tbl_Fragment::Fl_Tbl_Fragment(const Fl_Geometry& flGeom)
+    : FlFrag(flGeom) {
 //     FlFrag.open("fl_Input/fl_Fragment", "read");
 //     FlFrag.read();
 

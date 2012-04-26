@@ -4,10 +4,11 @@
 #include <map>
 #include <vector>
 #include <string>
+#include "Fl_Geometry.h"
 
 class Fl_Fragment {
 public:
-    Fl_Fragment();
+    Fl_Fragment(const Fl_Geometry& flGeom);
     ~Fl_Fragment();
 
 public:
@@ -26,6 +27,7 @@ private:
     void load();
 
 private:
+    const Fl_Geometry& flGeom_;
 //   void  level(int pout);
 //   int   read();
 //   void  show() const;

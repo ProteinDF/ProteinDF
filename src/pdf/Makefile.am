@@ -1,4 +1,5 @@
 #	DfRLMO.h		DfRLMO.cpp
+# 	Fl_UserinputX.h			Fl_UserinputX.cpp		
 
 lib_LTLIBRARIES = libpdf.la libppdf.la
 
@@ -85,7 +86,6 @@ libpdf_la_SOURCES = \
 	Fl_Tbl_Orbital.h		Fl_Tbl_Orbital.cxx		\
 	Fl_Tbl_Xcpot.h			Fl_Tbl_Xcpot.cxx		\
 	Fl_Tbl_Xcpot2.h			Fl_Tbl_Xcpot2.cxx		\
-	Fl_UserinputX.h			Fl_UserinputX.cpp		\
 	Fl_GlobalinputX.h		Fl_GlobalinputX.cpp		\
 	Fl_Vct_Table.h			Fl_Vct_Table.cpp		\
 	PdfKeyword.h			PdfKeyword.cpp			\

@@ -102,7 +102,7 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration, const std::string
         for (int k = 0; k < norbcut; k++) {
             if (bPdfQcloMode == true) {
                 int frag_id = -1;
-                Fl_Tbl_Fragment Tfrag;
+                Fl_Tbl_Fragment Tfrag(Fl_Geometry((*this->pPdfParam_)["coordinates"]));
                 if (Tfrag.getFragment(k) != frag_id) {
                     continue;
                 }

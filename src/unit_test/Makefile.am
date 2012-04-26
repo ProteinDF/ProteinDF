@@ -38,7 +38,6 @@ PdfTests_SOURCES = \
 	TlMemManagerTest.h		TlMemManagerTest.cpp		\
 	TlMsgPackTest.h			TlMsgPackTest.cpp		\
 	TlSerializeDataTest.h		TlSerializeDataTest.cpp		\
-	Fl_UserinputXTest.h		Fl_UserinputXTest.cpp		\
 	DfFunctional_SlaterTest.h	DfFunctional_SlaterTest.cpp	\
 	DfFunctional_Becke88Test.h	DfFunctional_Becke88Test.cpp	\
 	DfFunctional_VWNTest.h		DfFunctional_VWNTest.cpp	\

@@ -263,8 +263,8 @@ void PdfUserInput::load_conventional()
 void PdfUserInput::molecule_geometry_cartesian_input(const std::string& str)
 {
     std::istringstream in(str);
-    Fl_Geometry flGeom(Fl_Geometry::getDefaultFileName());
-    flGeom.clear();
+    // Fl_Geometry flGeom;
+    // flGeom.clear();
 
     while (in) {
         std::string sLine;
@@ -337,12 +337,13 @@ void PdfUserInput::molecule_geometry_cartesian_input(const std::string& str)
         }
 
         // flGeomに格納 ====================================================
-        Fl_Geometry::AtomData atomData;
-        atomData.atom.setElement(sAtom);
-        atomData.atom.setCharge(charge);        atomData.atom.moveTo(position);
-        //atomData.label = sLabel1;
-        atomData.label = sLabel2;
-        flGeom.pushBack(atomData);
+        // Fl_Geometry::AtomData atomData;
+        // atomData.atom.setElement(sAtom);
+        // atomData.atom.setCharge(charge);
+        // atomData.atom.moveTo(position);
+        // //atomData.label = sLabel1;
+        // atomData.label = sLabel2;
+        // flGeom.pushBack(atomData);
 
         // serializeDataに格納
         TlSerializeData atom;

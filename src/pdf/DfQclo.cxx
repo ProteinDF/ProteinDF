@@ -11,7 +11,7 @@
 #include "TlVector.h"
 
 DfQclo::DfQclo(TlSerializeData* pPdfParam, int num_iter, bool bExecDiis)
-    : DfObject(pPdfParam), m_bExecDiis(bExecDiis)
+    : DfObject(pPdfParam), m_bExecDiis(bExecDiis), FlFrag(Fl_Geometry((*pPdfParam)["coordinates"]))
 {
 //     TlLogX& Log = TlLogX::getInstance();
 //     this->number_iteration = num_iter;
@@ -152,7 +152,7 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration)
             this->log_.warn("DfQclo dimension is not consistency, but continue.");
         }
 
-        Fl_Tbl_Fragment Tfrag;
+        Fl_Tbl_Fragment Tfrag(Fl_Geometry((*this->pPdfParam_)["coordinates"]));
         for (int qclo = 0; qclo < number_dimension_qclo[frag]; qclo++) {
             int mo =0;
             if (runtype == "rks" || runtype == "roks") {

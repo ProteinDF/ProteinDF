@@ -403,7 +403,7 @@ void DfInitialguess::setGuessDBfile()
 
 int DfInitialguess::prepare2()
 {
-    Fl_Geometry FlGeom(Fl_Geometry::getDefaultFileName());
+    Fl_Geometry FlGeom((*this->pPdfParam_)["coordinates"]);
     Fl_Gto_Density FlGtoDen;
     Fl_Gto_Xcpot FlGtoXcpot;
 
@@ -902,7 +902,7 @@ int DfInitialguess::setKeyword()
 
 int DfInitialguess::setStruct()
 {
-    Fl_Geometry    FlGeom(Fl_Geometry::getDefaultFileName());
+    Fl_Geometry    FlGeom((*this->pPdfParam_)["coordinates"]);
     Fl_Gto_Density FlGtoDen;
     Fl_Gto_Xcpot   FlGtoXcpot;
     Fl_Gto_Xcpot2   FlGtoXcpot2;
@@ -1103,7 +1103,7 @@ int DfInitialguess::setStruct()
 
 int DfInitialguess::makeStepTable()
 {
-    Fl_Geometry FlGeom(Fl_Geometry::getDefaultFileName());
+    Fl_Geometry FlGeom((*this->pPdfParam_)["coordinates"]);
 
     int count = 0;
     for (int i=0; i<AtomNum;) {
@@ -1693,7 +1693,7 @@ void DfInitialguess::EXE_MOLECULE(int num)
     std::string filename;  // Honmono DB file.
     std::string filename2; // Header DB file.
 
-    Fl_Geometry FlGeom(Fl_Geometry::getDefaultFileName());
+    const Fl_Geometry FlGeom((*this->pPdfParam_)["coordinates"]);
     showcountR=0;
     showcountM=0;
     showcountN=0;
@@ -2012,7 +2012,7 @@ int DfInitialguess::makeAfinmatrix(int stepnum)
     // Unknown Variable Number is three.(angleX,angleY,angleZ);
 
 
-    Fl_Geometry FlGeom(Fl_Geometry::getDefaultFileName());
+    const Fl_Geometry FlGeom((*this->pPdfParam_)["coordinates"]);
 //   FlGeom.load();
 //   FlGeom.open("fl_Geometry", "read");
 //   FlGeom.read();
@@ -5449,7 +5449,7 @@ void DfInitialguess::VctRouNorm()
     int x,f2,t2;
     double Dens;
 
-    Fl_Geometry FG(Fl_Geometry::getDefaultFileName());
+    const Fl_Geometry FG((*this->pPdfParam_)["coordinates"]);
     Fl_Gto_Density FGD;
 
     Pai = 3.14159265358979;
@@ -5713,7 +5713,7 @@ void DfInitialguess::VctMyuNorm()
     double Dens;
     //int Rnum;
 
-    Fl_Geometry FG(Fl_Geometry::getDefaultFileName());
+    const Fl_Geometry FG((*this->pPdfParam_)["coordinates"]);
     Fl_Gto_Xcpot FGX;
 
     Pai = 3.14159265358979;
@@ -5968,7 +5968,7 @@ void DfInitialguess::VctNyuNorm()
     double Dens;
     // int Rnum;
 
-    Fl_Geometry FG(Fl_Geometry::getDefaultFileName());
+    const Fl_Geometry FG((*this->pPdfParam_)["coordinates"]);
     Fl_Gto_Xcpot2 FGX2;
 
     Pai = 3.14159265358979;
@@ -6246,7 +6246,7 @@ void DfInitialguess::VctRouNorm2(void)
     //int x,f2,t2;
     //double Dens;
 
-    Fl_Geometry FG(Fl_Geometry::getDefaultFileName());
+    const Fl_Geometry FG((*this->pPdfParam_)["coordinates"]);
     Fl_Gto_Density FGD;
 
     Pai = 3.14159265358979;
@@ -6428,7 +6428,7 @@ void DfInitialguess::VctMyuNorm2(void)
     // int x,f2,t2;
     //double Dens;
 
-    Fl_Geometry FG(Fl_Geometry::getDefaultFileName());
+    const Fl_Geometry FG((*this->pPdfParam_)["coordinates"]);
     Fl_Gto_Xcpot FGX;
 
     Pai = 3.14159265358979;
@@ -6597,7 +6597,7 @@ void DfInitialguess::VctNyuNorm2(void)
     //int x,f2,t2;
     //double Dens;
 
-    Fl_Geometry FG(Fl_Geometry::getDefaultFileName());
+    const Fl_Geometry FG((*this->pPdfParam_)["coordinates"]);
     Fl_Gto_Xcpot2 FGX2;
 
     Pai = 3.14159265358979;

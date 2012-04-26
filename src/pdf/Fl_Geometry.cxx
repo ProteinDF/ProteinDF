@@ -13,6 +13,12 @@
 #include "PdfUtils.h"
 #include "TlPseudoYaml.h"
 
+// Fl_Geometry::Fl_Geometry() : isUpdate_(false)
+// {
+//     this->clear();
+// }
+
+
 Fl_Geometry::Fl_Geometry(const TlSerializeData& geomData) : isUpdate_(false)
 {
     this->setup(geomData);

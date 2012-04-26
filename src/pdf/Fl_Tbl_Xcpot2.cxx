@@ -18,8 +18,8 @@ int  Fl_Tbl_Xcpot2::flag2=0;         // flag for Destructor;
 int Fl_Tbl_Xcpot2::cGtoTotalNum=0; // s*1,p*3,d*5;
 
 //#######################################################################
-Fl_Tbl_Xcpot2::Fl_Tbl_Xcpot2()
-{
+Fl_Tbl_Xcpot2::Fl_Tbl_Xcpot2(const Fl_Geometry& flGeom)
+    : flGeom_(flGeom) {
     TlLogging& log = TlLogging::getInstance();
 //   std::cerr << "Fl_Tbl_Xcpot2::Fl_Tbl_Xcpot2() constructer" << std::endl;
 
@@ -74,7 +74,7 @@ int Fl_Tbl_Xcpot2::prepare()
     char *Atm = new char[MaxAtomName];
     char *Lb2 = new char[MaxLabelname];
     char shell;
-    Fl_Geometry FlGeom(Fl_Geometry::getDefaultFileName());
+    //const Fl_Geometry FlGeom((*this->pPdfParam_)["coordinates"]);
     Fl_Gto_Xcpot2      FlGtoXcpot2;
 
 //   FlGeom.load();
@@ -92,15 +92,15 @@ int Fl_Tbl_Xcpot2::prepare()
 //FlGtoXcpot2.show();
 //   FlGtoXcpot2.close();
 
-    AtomNum     = FlGeom.getNumOfAtoms();
-    AtomKindNum = FlGeom.getAtomKindNumber();
+    AtomNum     = this->flGeom_.getNumOfAtoms();
+    AtomKindNum = this->flGeom_.getAtomKindNumber();
 
     cGtoTotalNum=0;
 
     for (i=0; i<AtomNum; i++) {
         flag=0;
-        std::strcpy(Atm,FlGeom.getAtom(i).c_str());
-        std::strcpy(Lb2,FlGeom.getLabel(i).c_str());
+        std::strcpy(Atm, this->flGeom_.getAtom(i).c_str());
+        std::strcpy(Lb2, this->flGeom_.getLabel(i).c_str());
         for (j=0; j<AtomKindNum; j++) {
             m = FlGtoXcpot2.getStartposition(j);
             if ((strcmp(Atm,FlGtoXcpot2.getAtom(m).c_str())==0)  &&
@@ -176,7 +176,7 @@ int Fl_Tbl_Xcpot2::makeTable(void)
 {
     TlLogging& log = TlLogging::getInstance();
 
-    Fl_Geometry      FlGeom(Fl_Geometry::getDefaultFileName());
+    //const Fl_Geometry FlGeom((*this->pPdfParam_)["coordinates"]);
     Fl_Gto_Xcpot2   FlGtoXcpot2;
     TlPrdctbl        TPobj;    //これは、使うか？;
 
@@ -223,8 +223,8 @@ int Fl_Tbl_Xcpot2::makeTable(void)
     basiscount = 0;
     for (i=0; i<AtomNum; i++) {
         flag=0;
-        strcpy(Atm,FlGeom.getAtom(i).c_str());
-        strcpy(Lb2,FlGeom.getLabel(i).c_str());
+        strcpy(Atm, this->flGeom_.getAtom(i).c_str());
+        strcpy(Lb2, this->flGeom_.getLabel(i).c_str());
         for (j=0; j<AtomKindNum; j++) {
             m = FlGtoXcpot2.getStartposition(j);
             if ((strcmp(Atm,FlGtoXcpot2.getAtom(m).c_str())==0)  &&

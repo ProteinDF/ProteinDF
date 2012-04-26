@@ -80,7 +80,7 @@ int Fl_Tbl_Xcpot::prepare()
     // char *Lb2 = new char[MaxLabelname];
     std::string Atm, Lb2;
     char shell;
-    Fl_Geometry FlGeom(Fl_Geometry::getDefaultFileName());
+    //const Fl_Geometry FlGeom((*this->pPdfParam_)["coordinates"]);
     Fl_Gto_Xcpot      FlGtoXcpot;
 
 //   FlGeom.load();
@@ -94,8 +94,8 @@ int Fl_Tbl_Xcpot::prepare()
 //FlGtoXcpot.show();
 //   FlGtoXcpot.close();
 
-    AtomNum     = FlGeom.getNumOfAtoms();
-    AtomKindNum = FlGeom.getAtomKindNumber();
+    AtomNum     = this->flGeom_.getNumOfAtoms();
+    AtomKindNum = this->flGeom_.getAtomKindNumber();
 
     cGtoTotalNum=0;
 
@@ -103,8 +103,8 @@ int Fl_Tbl_Xcpot::prepare()
         flag=0;
         // std::strcpy(Atm,FlGeom.getAtom(i).c_str());
         // std::strcpy(Lb2,FlGeom.getLabel(i).c_str());
-        Atm = FlGeom.getAtom(i);
-        Lb2 = FlGeom.getLabel(i);
+        Atm = this->flGeom_.getAtom(i);
+        Lb2 = this->flGeom_.getLabel(i);
         for (j=0; j<AtomKindNum; j++) {
             m = FlGtoXcpot.getStartposition(j);
             // if ((std::strcmp(Atm,FlGtoXcpot.getAtom(m).c_str())==0)  &&
@@ -182,7 +182,7 @@ int Fl_Tbl_Xcpot::makeTable()
 {
     TlLogging& log = TlLogging::getInstance();
 
-    Fl_Geometry      FlGeom(Fl_Geometry::getDefaultFileName());
+    //const Fl_Geometry FlGeom((*this->pPdfParam)["coordinates"]);
     Fl_Gto_Xcpot   FlGtoXcpot;
     TlPrdctbl        TPobj;    //これは、使うか？;
 
@@ -225,8 +225,8 @@ int Fl_Tbl_Xcpot::makeTable()
         flag=0;
         // std::strcpy(Atm,FlGeom.getAtom(i).c_str());
         // std::strcpy(Lb2,FlGeom.getLabel(i).c_str());
-        Atm = FlGeom.getAtom(i);
-        Lb2 = FlGeom.getLabel(i);
+        Atm = this->flGeom_.getAtom(i);
+        Lb2 = this->flGeom_.getLabel(i);
         for (j=0; j<AtomKindNum; j++) {
             m = FlGtoXcpot.getStartposition(j);
             // if ((std::strcmp(Atm,FlGtoXcpot.getAtom(m).c_str())==0)  &&

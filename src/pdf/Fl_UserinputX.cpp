@@ -251,7 +251,7 @@ void Fl_UserinputX::load()
 std::string Fl_UserinputX::molecule_geometry_cartesian_input(const std::string& str)
 {
     std::istringstream in(str);
-    Fl_Geometry flGeom(Fl_Geometry::getDefaultFileName());
+    Fl_Geometry flGeom;
     flGeom.clear();
 
     while (in) {

@@ -90,11 +90,11 @@ void Fl_Tbl_Orbital::prepare()
 
 void Fl_Tbl_Orbital::makeTable()
 {
-    Fl_Geometry FlGeom(Fl_Geometry::getDefaultFileName());
+    //const Fl_Geometry FlGeom((*this->pPdfParam_)["coordinates"]);
     Fl_Gto_Orbital FlGtoOrb;
 
-    const int nAtomNum = FlGeom.getNumOfAtoms();
-    const int nAtomKindNum = FlGeom.getAtomKindNumber();
+    const int nAtomNum = this->flGeom_.getNumOfAtoms();
+    const int nAtomKindNum = this->flGeom_.getAtomKindNumber();
 
     std::ofstream fo;
     fo.open(Fl_Tbl_Orbital::m_sTableFilePath.c_str(), std::ios::out | std::ios::trunc);
@@ -104,8 +104,8 @@ void Fl_Tbl_Orbital::makeTable()
 
     int basiscount = 0;
     for (int i = 0; i < nAtomNum; ++i) {
-        const std::string Atm = FlGeom.getAtom(i);
-        const std::string Lb2 = FlGeom.getLabel(i);
+        const std::string Atm = this->flGeom_.getAtom(i);
+        const std::string Lb2 = this->flGeom_.getLabel(i);
 
         //std::cout << "Atm=\"" << Atm << "\", Lb2=\"" << Lb2 << "\"" << std::endl;
 
