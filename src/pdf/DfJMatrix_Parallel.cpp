@@ -130,6 +130,13 @@ void DfJMatrix_Parallel::getJ_RI_local(TlSymmetricMatrix *pJ)
 
     DfEriX dfEri(this->pPdfParam_);
     dfEri.getdeltaHpqA(rho, *pJ);
+
+    if (this->isUpdateMethod_ == true) {
+        if (this->m_nIteration > 1) {
+            TlSymmetricMatrix prevJ = this->getJMatrix(this->m_nIteration -1);
+            *pJ += prevJ;
+        }
+    }
 }
 
 
@@ -217,15 +224,10 @@ void DfJMatrix_Parallel::getJ_conventional_local(TlSymmetricMatrix *pJ)
     
     TlSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {
-        if (rComm.isMaster() == true) {
-            P = this->getDiffDensityMatrix();
-        }
+        P = this->getDiffDensityMatrix();
     } else {
-        if (rComm.isMaster() == true) {
-            P = this->getPMatrix(this->m_nIteration -1);
-        }
+        P = this->getPMatrix(this->m_nIteration -1);
     }
-    rComm.broadcast(P);
     assert(P.getNumOfRows() == this->m_nNumOfAOs);
     
     DfEriX_Parallel dfEri(this->pPdfParam_);
@@ -233,10 +235,8 @@ void DfJMatrix_Parallel::getJ_conventional_local(TlSymmetricMatrix *pJ)
 
     if (this->isUpdateMethod_ == true) {
         if (this->m_nIteration > 1) {
-            if (rComm.isMaster() == true) {
-                const TlSymmetricMatrix prevJ = this->getJMatrix(this->m_nIteration -1);
-                *pJ += prevJ;
-            }
+            const TlSymmetricMatrix prevJ = this->getJMatrix(this->m_nIteration -1);
+            *pJ += prevJ;
         }
     }
 }
@@ -302,7 +302,7 @@ TlSymmetricMatrix DfJMatrix_Parallel::getJMatrix(const int iteration)
 
     TlSymmetricMatrix J;
     if (rComm.isMaster() == true) {
-        J = this->getJMatrix(iteration);
+        J = DfJMatrix::getJMatrix(iteration);
     }
     rComm.broadcast(J);
 

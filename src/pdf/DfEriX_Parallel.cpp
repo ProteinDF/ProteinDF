@@ -29,15 +29,19 @@ DfTaskCtrl* DfEriX_Parallel::getDfTaskCtrlObject() const
 
 void DfEriX_Parallel::finalize(TlMatrix* pMtx)
 {
+    this->log_.info("finalize Matrix: start");
     TlCommunicate& rComm = TlCommunicate::getInstance();
     rComm.allReduce_SUM(*pMtx);
+    this->log_.info("finalize Matrix: end");
 }
 
 
 void DfEriX_Parallel::finalize(TlSymmetricMatrix* pMtx)
 {
+    this->log_.info("finalize SymmetricMatrix: start");
     TlCommunicate& rComm = TlCommunicate::getInstance();
     rComm.allReduce_SUM(*pMtx);
+    this->log_.info("finalize SymmetricMatrix: end");
 }
 
 

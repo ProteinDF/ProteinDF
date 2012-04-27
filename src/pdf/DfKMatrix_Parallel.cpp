@@ -95,28 +95,24 @@ void DfKMatrix_Parallel::getK_conventional_local(const RUN_TYPE runType,
     
     TlSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {
-        if (rComm.isMaster() == true) {
-            P = this->getDiffDensityMatrix(runType);
-            if (runType == RUN_RKS) {
-                P *= 0.5;
-            }
+        P = this->getDiffDensityMatrix(runType);
+        if (runType == RUN_RKS) {
+            P *= 0.5;
         }
-    } else {
-        if (rComm.isMaster() == true) {
-            P = this->getPMatrix(runType, this->m_nIteration -1);
-            if (runType == RUN_RKS) {
-                P *= 0.5;
-            }
+    }  else {
+        P = this->getPMatrix(runType, this->m_nIteration -1);
+        if (runType == RUN_RKS) {
+            P *= 0.5;
         }
     }
+    rComm.barrier();
+    assert(rComm.checkNonBlockingCommunications());
+    this->log_.info("broadcast density matrix");
+    //rComm.broadcast(P);
     this->log_.info(TlUtils::format("density matrix size: %dx%d",
                                     P.getNumOfRows(), P.getNumOfCols()));
     this->log_.info(TlUtils::format("num of AOs: %d",
                                     this->m_nNumOfAOs));
-    rComm.barrier();
-    assert(rComm.checkNonBlockingCommunications());
-    this->log_.info("broadcast density matrix");
-    rComm.broadcast(P);
     assert(P.getNumOfRows() == this->m_nNumOfAOs);
     
     this->log_.info("ERI operation: start");
