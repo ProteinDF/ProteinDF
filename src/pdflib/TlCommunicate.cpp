@@ -89,9 +89,8 @@ int TlCommunicate::barrier(bool isDebugOut) const
     ++(this->counter_barrier_);
     
     if (isDebugOut == true) {
-        TlLogging& log = TlLogging::getInstance();
-        log.debug(TlUtils::format("barrier called. times=%ld",
-                                  this->counter_barrier_));
+        this->log_.debug(TlUtils::format("barrier called. times=%ld",
+                                         this->counter_barrier_));
     }
 
     const int answer = MPI_Barrier(MPI_COMM_WORLD);

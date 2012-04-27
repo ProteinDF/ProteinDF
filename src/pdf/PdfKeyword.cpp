@@ -313,6 +313,13 @@ void PdfKeyword::initialize()
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);
 
+    item.keyword          = "force_loading_from_disk";
+    item.explanation      = "";
+    item.defaultValue     = "yes";
+    item.syntax           = "(yes|no)";
+    item.type             = KWD_DEFAULT;
+    this->kwdList_.push_back(item);
+
     item.keyword          = "show_cache_report";
     item.explanation      = "";
     item.defaultValue     = "no";
