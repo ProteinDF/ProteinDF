@@ -17,20 +17,46 @@ DfTaskCtrl_Parallel::~DfTaskCtrl_Parallel()
 }
 
 
-void DfTaskCtrl_Parallel::cutoffReport()
+void DfTaskCtrl_Parallel::prescreeningReport()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     rComm.allReduce_SUM(cutoffAll_density_);
     rComm.allReduce_SUM(cutoffAlive_density_);
     rComm.allReduce_SUM(cutoffAll_distribution_);
     rComm.allReduce_SUM(cutoffAlive_distribution_);
+
+    if (rComm.isMaster() == true) {
+        DfTaskCtrl::prescreeningReport();
+    }
+    //rComm.barrier();
+}
+
+
+void DfTaskCtrl_Parallel::cutoffReport()
+{
+    // 親クラス(DfTaskCtrl)から呼ばれる
+    // MS法ではここでは出力しない。
+    if (this->isMasterSlave_ != true) {
+        TlCommunicate& rComm = TlCommunicate::getInstance();
+        rComm.allReduce_SUM(cutoffAll_schwarz_);
+        rComm.allReduce_SUM(cutoffAlive_schwarz_);
+        
+        if (rComm.isMaster() == true) {
+            DfTaskCtrl::cutoffReport();
+        }
+    }
+}
+
+
+void DfTaskCtrl_Parallel::cutoffReport_MS()
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
     rComm.allReduce_SUM(cutoffAll_schwarz_);
     rComm.allReduce_SUM(cutoffAlive_schwarz_);
 
     if (rComm.isMaster() == true) {
         DfTaskCtrl::cutoffReport();
     }
-    rComm.barrier();
 }
 
 
@@ -265,7 +291,9 @@ bool DfTaskCtrl_Parallel::getQueue_MS_master(const TlOrbitalInfoObject& orbitalI
     // 終了条件のチェック
     const int numOfSlaves = rComm.getNumOfProcs() - 1;
     if (numOfFinishStateSlaves >= numOfSlaves) {
+        // master process 終了
         answer = false;
+        this->cutoffReport_MS();
 
         if (isRecvFinishMsg == true) {
             rComm.cancel(&finishMsg);
@@ -441,6 +469,7 @@ bool DfTaskCtrl_Parallel::getQueue_MS_slave(const TlOrbitalInfoObject& orbitalIn
 
             isAllSessionFinished = true;
             answer = false;
+            this->cutoffReport_MS();
         }
     }
     
@@ -623,11 +652,15 @@ bool DfTaskCtrl_Parallel::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
     if (this->isMasterSlave_ == true) {
         answer = this->getQueue4_MS(orbitalInfo,
                                     schwarzTable,
-                                    maxGrainSize, pTaskList, initialize);
+                                    maxGrainSize,
+                                    pTaskList,
+                                    initialize);
     } else {
         answer = this->getQueue4_DC(orbitalInfo,
                                     schwarzTable,
-                                    maxGrainSize, pTaskList, initialize);
+                                    maxGrainSize,
+                                    pTaskList,
+                                    initialize);
     }
 
     return answer;
@@ -651,7 +684,8 @@ bool DfTaskCtrl_Parallel::getQueue4_DC(const TlOrbitalInfoObject& orbitalInfo,
     answer = DfTaskCtrl::getQueue4(orbitalInfo,
                                    schwarzTable,
                                    globalMaxGrainSize,
-                                   &globalTask, initialize);
+                                   &globalTask,
+                                   initialize);
     if (answer == true) {
         const int rank = rComm.getRank();
         std::vector<Task4>::const_iterator begin = std::min(globalTask.begin()
@@ -679,10 +713,14 @@ bool DfTaskCtrl_Parallel::getQueue4_MS(const TlOrbitalInfoObject& orbitalInfo,
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
         answer = this->getQueue4_MS_master(orbitalInfo, schwarzTable,
-                                           maxGrainSize, pTaskList, initialize);
+                                           maxGrainSize,
+                                           pTaskList,
+                                           initialize);
     } else {
         answer = this->getQueue4_MS_slave(orbitalInfo, schwarzTable,
-                                          maxGrainSize, pTaskList, initialize);
+                                          maxGrainSize,
+                                          pTaskList,
+                                          initialize);
     }
 
     return answer;
@@ -706,7 +744,8 @@ bool DfTaskCtrl_Parallel::getQueue4_MS_master(const TlOrbitalInfoObject& orbital
         numOfFinishStateSlaves = 0;
         
         answer = DfTaskCtrl::getQueue4(orbitalInfo, schwarzTable,
-                                       maxGrainSize, pTaskList, true);
+                                       maxGrainSize, pTaskList,
+                                       true);
         return answer;
     }
 
@@ -757,7 +796,8 @@ bool DfTaskCtrl_Parallel::getQueue4_MS_master(const TlOrbitalInfoObject& orbital
         if (it->state[Request::TASK_ASSIGNED] != true) {
             std::vector<Task4> tmpTaskList;
             const bool hasTask = DfTaskCtrl::getQueue4(orbitalInfo, schwarzTable,
-                                                       maxGrainSize, &tmpTaskList);
+                                                       maxGrainSize,
+                                                       &tmpTaskList);
             if (hasTask == true) {
                 const std::size_t numOfTasks = tmpTaskList.size();
                 const std::size_t unpackTaskListSize = numOfTasks * 4;
@@ -840,7 +880,9 @@ bool DfTaskCtrl_Parallel::getQueue4_MS_master(const TlOrbitalInfoObject& orbital
     // 終了条件のチェック
     const int numOfSlaves = rComm.getNumOfProcs() - 1;
     if (numOfFinishStateSlaves >= numOfSlaves) {
+        // master node 終了
         answer = false;
+        this->cutoffReport_MS();
 
         if (isRecvFinishMsg == true) {
             rComm.cancel(&finishMsg);
@@ -879,7 +921,9 @@ bool DfTaskCtrl_Parallel::getQueue4_MS_slave(const TlOrbitalInfoObject& orbitalI
         }
         
         answer = DfTaskCtrl::getQueue4(orbitalInfo, schwarzTable,
-                                       maxGrainSize, pTaskList, true);
+                                       maxGrainSize,
+                                       pTaskList,
+                                       true);
         return answer;
     }
 
@@ -1018,6 +1062,7 @@ bool DfTaskCtrl_Parallel::getQueue4_MS_slave(const TlOrbitalInfoObject& orbitalI
 
             isAllSessionFinished = true;
             answer = false;
+            this->cutoffReport_MS();
         }
     }
     

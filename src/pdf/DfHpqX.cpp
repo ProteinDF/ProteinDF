@@ -110,8 +110,7 @@ void DfHpqX::getHpq(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2)
     }
 
     this->finalize(pHpq, pHpq2);
-    pTaskCtrl->cutoffReport();
-    
+
     delete pTaskCtrl;
     pTaskCtrl = NULL;
     this->destroyEngines();

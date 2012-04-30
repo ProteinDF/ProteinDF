@@ -83,7 +83,6 @@ void DfHpqX_Parallel::getHpqD(TlDistributeSymmetricMatrix* pHpq,
     pHpq->mergeSparseMatrix(tmpHpq);
     pHpq2->mergeSparseMatrix(tmpHpq2);
 
-    pTaskCtrl->cutoffReport();
     delete pTaskCtrl;
     pTaskCtrl = NULL;
     this->destroyEngines();

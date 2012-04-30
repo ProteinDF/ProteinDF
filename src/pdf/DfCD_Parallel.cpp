@@ -328,7 +328,9 @@ DfCD_Parallel::getGMatrix_distribute(const TlOrbitalInfoObject& orbitalInfo,
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                           schwarzTable,
-                                          this->grainSize_, &taskList, true);
+                                          this->grainSize_,
+                                          &taskList,
+                                          true);
     while (hasTask == true) {
         this->makeSuperMatrix_kernel2(orbitalInfo,
                                       taskList,
@@ -336,14 +338,14 @@ DfCD_Parallel::getGMatrix_distribute(const TlOrbitalInfoObject& orbitalInfo,
                                       &tmpG);
         hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                          schwarzTable,
-                                         this->grainSize_, &taskList);
+                                         this->grainSize_,
+                                         &taskList);
     }
 
     // finalize
     G.mergeSparseMatrix(tmpG);
     //G.save("G.mat");
     //std::cerr << TlUtils::format("G(%d, %d)", G.getNumOfRows(), G.getNumOfCols()) << std::endl;
-    pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;

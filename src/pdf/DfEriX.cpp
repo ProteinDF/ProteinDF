@@ -171,7 +171,6 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
     }
 
     this->finalize(pRho);
-    pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
@@ -298,7 +297,6 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
     }
 
     this->finalize(pJ);
-    pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
@@ -530,18 +528,21 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                           schwarzTable,
-                                          this->grainSize_, &taskList, true);
+                                          this->grainSize_,
+                                          &taskList,
+                                          true);
     while (hasTask == true) {
         this->getJ_integralDriven_part(orbitalInfo,
                                        taskList,
                                        P, pJ);
         hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                          schwarzTable,
-                                         this->grainSize_, &taskList);
+                                         this->grainSize_,
+                                         &taskList);
     }
                     
     this->finalize(pJ);
-    pDfTaskCtrl->cutoffReport();
+    //pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
@@ -721,7 +722,6 @@ void DfEriX::getJab(TlSymmetricMatrix* pJab)
     }
 
     this->finalize(pJab);
-    pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
@@ -830,7 +830,6 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce)
     }
 
     this->finalize(pForce);
-    pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
@@ -1050,7 +1049,6 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
                                          this->grainSize_, &taskList);
     }
 
-    pDfTaskCtrl->cutoffReport();
     this->finalize(pForce);
 
     delete pDfTaskCtrl;
@@ -1231,7 +1229,6 @@ void DfEriX::getForceJ(const TlVector& rho, TlMatrix* pForce)
     }
 
     this->finalize(pForce);
-    pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
@@ -1490,18 +1487,20 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                           schwarzTable,
-                                          this->grainSize_, &taskList, true);
+                                          this->grainSize_,
+                                          &taskList,
+                                          true);
     while (hasTask == true) {
         this->getK_integralDriven_part(orbitalInfo,
                                        taskList,
                                        P, pK);
         hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                          schwarzTable,
-                                         this->grainSize_, &taskList);
+                                         this->grainSize_,
+                                         &taskList);
     }
 
     this->finalize(pK);
-    pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
@@ -1735,7 +1734,6 @@ void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce)
     }
 
     this->finalize(pForce);
-    pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;

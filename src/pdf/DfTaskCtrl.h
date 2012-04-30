@@ -63,8 +63,6 @@ public:
     // double getCutoffEpsilon_primitive() const;
 
 public:
-    virtual void cutoffReport();
-
     virtual bool getQueue(const TlOrbitalInfoObject& orbitalInfo,
                           const int maxGrainSize,
                           std::vector<Task>* pTask,
@@ -77,10 +75,10 @@ public:
                            bool initialize = false);
     
     virtual bool getQueue4(const TlOrbitalInfoObject& orbitalInfo,
-                            const TlSparseSymmetricMatrix& schwarzTable,
-                            const int maxGrainSize,
-                            std::vector<Task4>* pTaskList,
-                            bool initialize = false);
+                           const TlSparseSymmetricMatrix& schwarzTable,
+                           const int maxGrainSize,
+                           std::vector<Task4>* pTaskList,
+                           bool initialize = false);
     
     // local matrix用?
     virtual bool getQueue4_K(const TlOrbitalInfoObject& orbitalInfo,
@@ -108,6 +106,12 @@ public:
     
 protected:
     void clearCutoffStats(const TlOrbitalInfoObject& orbitalInfo);
+
+    /// pre-screeningに関わるレポートを出力する
+    virtual void prescreeningReport();
+
+    /// Schwartzのカットオフレポートを出力する
+    virtual void cutoffReport();
 
     ShellArrayTable makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo);
 
@@ -148,6 +152,15 @@ protected:
 
     ShellArray selectShellArrayByDistribution(const ShellArray& inShellArray,
                                               const index_type companionShellIndex);
+
+    std::size_t getTotalCalcAmount2(const TlOrbitalInfoObject& orbitalInfo,
+                                     const ShellArrayTable& shellArrayTable);
+    std::size_t getTotalCalcAmount2(const TlOrbitalInfoObject& orbitalInfo,
+                                    const ShellArrayTable& shellArrayTable,
+                                    const DistributedCutoffTable& dct);
+    std::size_t getTotalCalcAmount4(const TlOrbitalInfoObject& orbitalInfo,
+                                    const ShellPairArrayTable& shellPairArrayTable,
+                                    const DistributedCutoffTable& dct);
     
 protected:
     int maxShellType_;

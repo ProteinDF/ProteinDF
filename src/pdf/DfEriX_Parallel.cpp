@@ -86,7 +86,6 @@ void DfEriX_Parallel::getJ_D(const TlVector& rho, TlDistributeSymmetricMatrix* p
     }
     
     //this->finalize(pJ);
-    pDfTaskCtrl->cutoffReport();
 
     pJ->mergeSparseMatrix(tmpJ);
     
@@ -125,7 +124,6 @@ void DfEriX_Parallel::getJab_D(TlDistributeSymmetricMatrix* pJab)
     }
 
     //this->finalize(pJab);
-    pDfTaskCtrl->cutoffReport();
 
     pJab->mergeSparseMatrix(tmpJab);
     
@@ -338,7 +336,6 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
     //                              rComm.getRank())
     //           << std::endl;
     
-    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
@@ -370,7 +367,9 @@ void DfEriX_Parallel::getJpq_D(const TlDistributeSymmetricMatrix& P,
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                           schwarzTable,
-                                          this->grainSize_, &taskList, true);
+                                          this->grainSize_,
+                                          &taskList,
+                                          true);
     while (hasTask == true) {
         if (isSetTempP != true) {
             const int numOfTasks = taskList.size();
@@ -414,7 +413,8 @@ void DfEriX_Parallel::getJpq_D(const TlDistributeSymmetricMatrix& P,
             
             hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                              schwarzTable,
-                                             this->grainSize_, &taskList);
+                                             this->grainSize_,
+                                             &taskList);
         }
 
         P.getSparseMatrixX(NULL, false);
@@ -441,7 +441,6 @@ void DfEriX_Parallel::getJpq_D(const TlDistributeSymmetricMatrix& P,
     P.getSparseMatrixX(NULL, true);
 
     //this->finalize(pJ);
-    pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
@@ -489,7 +488,9 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                           schwarzTable,
-                                          this->grainSize_, &taskList, true);
+                                          this->grainSize_,
+                                          &taskList,
+                                          true);
     while (hasTask == true) {
         if (isSetTempP != true) {
             const int numOfTasks = taskList.size();
@@ -541,7 +542,9 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
 
             hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                              schwarzTable,
-                                             this->grainSize_, &taskList);
+                                             this->grainSize_,
+                                             &taskList);
+
             // if (hasTask == false) {
             //     std::cerr << TlUtils::format("[%d] DfEriX_Parallel::getK_D() taskEnd",
             //                                  rComm.getRank())
@@ -560,7 +563,6 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
     P.getSparseMatrixX(NULL, true);
 
     //this->finalize(pK);
-    pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;

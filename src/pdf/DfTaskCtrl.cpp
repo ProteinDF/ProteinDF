@@ -187,7 +187,7 @@ bool DfTaskCtrl::getQueue(const TlOrbitalInfoObject& orbitalInfo,
 bool DfTaskCtrl::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
                            const bool isCutoffByDistribution,
                            const int maxGrainSize,
-                           std::vector<Task2>* pTaskList,                          
+                           std::vector<Task2>* pTaskList,
                            bool initialize)
 {
     assert(pTaskList != NULL);
@@ -199,6 +199,8 @@ bool DfTaskCtrl::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
     static std::size_t shellArrayIndexP = 0;
     static std::size_t shellArrayIndexQ = 0;
     static DistributedCutoffTable dct;
+    static std::size_t progress = 0;
+    static std::size_t progress_all = 0;
     
     pTaskList->clear();
     pTaskList->reserve(maxGrainSize);
@@ -213,6 +215,18 @@ bool DfTaskCtrl::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
 
         if (isCutoffByDistribution == true) {
             dct = this->makeDistributedCutoffTable(orbitalInfo);
+
+            // setup progress status
+            progress = 0;
+            progress_all = this->getTotalCalcAmount2(orbitalInfo,
+                                                     shellArrayTable,
+                                                     dct);
+            // pre-screening report
+            this->prescreeningReport();
+        } else {
+            progress = 0;
+            progress_all = this->getTotalCalcAmount2(orbitalInfo,
+                                                     shellArrayTable);
         }
 
         return true;
@@ -221,10 +235,12 @@ bool DfTaskCtrl::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
     int grainSize = 0;
     Task2 task;
     for ( ; shellTypeP >= 0; ) {
+        const int maxStepsP = 2 * shellTypeP + 1;
         const ShellArray& shellArrayP = shellArrayTable[shellTypeP];
         const size_t shellArraySizeP = shellArrayP.size();
         
         for ( ; shellTypeQ >= 0; ) {
+            const int maxStepsQ = 2 * shellTypeQ + 1;
             
             for ( ; shellArrayIndexP < shellArraySizeP; ) {
                 const index_type shellIndexP = shellArrayP[shellArrayIndexP];
@@ -246,8 +262,11 @@ bool DfTaskCtrl::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
                     pTaskList->push_back(task);
                     ++shellArrayIndexQ;
                     ++grainSize;
+                    progress += maxStepsP * maxStepsQ;
 
                     if (grainSize >= maxGrainSize) {
+                        const double progressLevel = (double)progress/(double)progress_all * 100.0;
+                        this->log_.info(TlUtils::format("progress: %3.0f%% done.", progressLevel));
                         return true;
                     }
                 }
@@ -261,7 +280,14 @@ bool DfTaskCtrl::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
         shellTypeQ = maxShellType -1;
     }
 
-    return (pTaskList->empty() != true);
+    if (pTaskList->empty() != true) {
+        const double progressLevel = (double)progress/(double)progress_all * 100.0;
+        this->log_.info(TlUtils::format("progress: %3.0f%% done.", progressLevel));
+        return true;
+    }
+
+    this->cutoffReport();
+    return false;
 }
 
 
@@ -284,6 +310,8 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
     static std::size_t shellArrayIndexQ = 0;
     static std::size_t shellArrayIndexS = 0;
     static DistributedCutoffTable dct;
+    static std::size_t progress = 0;
+    static std::size_t progress_all = 0;
     
     pTaskList->clear();
     pTaskList->reserve(maxGrainSize);
@@ -305,6 +333,15 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
 
         // make DistributedCutoffTable
         dct = this->makeDistributedCutoffTable(orbitalInfo);
+
+        // setup progress status
+        progress = 0;
+        progress_all = this->getTotalCalcAmount4(orbitalInfo,
+                                                 shellPairArrayTable,
+                                                 dct);
+
+        // pre-screening report
+        this->prescreeningReport();
         
         return true;
     }
@@ -312,7 +349,9 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
     int grainSize = 0;
     DfTaskCtrl::Task4 task;
     for ( ; shellTypeP >= 0; ) {
+        const int maxStepsP = 2 * shellTypeP + 1;
         for ( ; shellTypeR >= 0; ) {
+            const int maxStepsR = 2 * shellTypeR + 1;
             const int shellPairType_PR = shellTypeP * maxShellType + shellTypeR;
             const ShellPairArray& shellPairArray_PR = shellPairArrayTable[shellPairType_PR];
             const std::size_t numOfShellPairArray_PR = shellPairArray_PR.size();
@@ -324,45 +363,24 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
                 task.shellIndex3 = shellIndexR;
                 
                 for ( ; shellTypeQ >= 0; ) {
-                    // const ShellArray shellArrayQ =
-                    //     this->selectShellArrayByDistribution(shellArrayTable[shellTypeQ],
-                    //                                          shellIndexP,
-                    //                                          orbitalInfo);
-                    // const ShellArray shellArrayQ2 = this->selectShellArrayByDistribution(dct[shellIndexP][shellTypeQ],
-                    //                                                                      shellIndexP);
+                    const int maxStepsQ = 2 * shellTypeQ + 1;
                     const ShellArray shellArrayQ = dct[shellIndexP][shellTypeQ];
-                    // debug
-                    // {
-                    //     std::cerr << TlUtils::format(">>>> P=%d arrayQ...", shellIndexP) << std::endl;
-                    //     for (ShellArray::const_iterator it = shellArrayQ.begin();
-                    //          it != shellArrayQ.end(); ++it) {
-                    //         std::cerr << *it << " ";
-                    //     }
-                    //     std::cerr << std::endl;
-                    //     std::cerr << TlUtils::format(">>>> P=%d arrayQ2...", shellIndexP) << std::endl;
-                    //     for (ShellArray::const_iterator it = shellArrayQ2.begin();
-                    //          it != shellArrayQ2.end(); ++it) {
-                    //         std::cerr << *it << " ";
-                    //     }
-                    //     std::cerr << std::endl;
-                    // }
-                    
-                    ShellArray::const_iterator qItEnd = std::upper_bound(shellArrayQ.begin(), shellArrayQ.end(), shellIndexP);
+                    ShellArray::const_iterator qItEnd = 
+                        std::upper_bound(shellArrayQ.begin(), shellArrayQ.end(), shellIndexP);
                     const std::size_t shellArraySizeQ = std::distance(shellArrayQ.begin(), qItEnd);
                     
                     for ( ; shellTypeS >= 0; ) {
-                        // const ShellArray shellArrayS =
-                        //     this->selectShellArrayByDistribution(shellArrayTable[shellTypeS],
-                        //                                          shellIndexR,
-                        //                                          orbitalInfo);
+                        const int maxStepsS = 2 * shellTypeS + 1;
                         const ShellArray shellArrayS = dct[shellIndexR][shellTypeS];
                         
                         for ( ; shellArrayIndexQ < shellArraySizeQ; ) {
                             const index_type shellIndexQ = shellArrayQ[shellArrayIndexQ];
                             task.shellIndex2 = shellIndexQ;
                             
-                            const index_type maxShellIndexS = (shellIndexP == shellIndexR) ? shellIndexQ : shellIndexR;
-                            ShellArray::const_iterator sItEnd = std::upper_bound(shellArrayS.begin(), shellArrayS.end(), maxShellIndexS);
+                            const index_type maxShellIndexS = 
+                                (shellIndexP == shellIndexR) ? shellIndexQ : shellIndexR;
+                            ShellArray::const_iterator sItEnd = 
+                                std::upper_bound(shellArrayS.begin(), shellArrayS.end(), maxShellIndexS);
                             const std::size_t shellArraySizeS = std::distance(shellArrayS.begin(), sItEnd);
                             for ( ; shellArrayIndexS < shellArraySizeS; ) {
                                 const index_type shellIndexS = shellArrayS[shellArrayIndexS];
@@ -378,11 +396,14 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
                                                                                   schwarzTable,
                                                                                   this->cutoffThreshold_);
                                 ++shellArrayIndexS;
+                                progress += maxStepsP * maxStepsQ * maxStepsR * maxStepsS;
                                 if (isAlive == true) {
                                     pTaskList->push_back(task);
                                     ++grainSize;
                                     
                                     if (grainSize >= maxGrainSize) {
+                                        const double progressLevel = (double)progress/(double)progress_all * 100.0;
+                                        this->log_.info(TlUtils::format("progress: %3.0f%% done.", progressLevel));
                                         return true;
                                     }
                                 }
@@ -407,9 +428,12 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
     }
 
     if  (pTaskList->empty() != true) {
+        const double progressLevel = (double)progress/(double)progress_all * 100.0;
+        this->log_.info(TlUtils::format("progress: %3.0f%% done.", progressLevel));
         return true;
     }
 
+    this->cutoffReport();
     return false;
 }
 
@@ -1210,24 +1234,13 @@ bool DfTaskCtrl::isAliveBySchwarzCutoff(const index_type shellIndexP,
 }
 
 
-void DfTaskCtrl::cutoffReport()
+void DfTaskCtrl::prescreeningReport()
 {
     const int maxShellType = this->maxShellType_;
     static const char typeStr2[][3] = {
         "SS", "SP", "SD",
         "PS", "PP", "PD",
         "DS", "DP", "DD"
-    };
-    static const char typeStr4[][5] = {
-        "SSSS", "SSSP", "SSSD", "SSPS", "SSPP", "SSPD", "SSDS", "SSDP", "SSDD",
-        "SPSS", "SPSP", "SPSD", "SPPS", "SPPP", "SPPD", "SPDS", "SPDP", "SPDD",
-        "SDSS", "SDSP", "SDSD", "SDPS", "SDPP", "SDPD", "SDDS", "SDDP", "SDDD",
-        "PSSS", "PSSP", "PSSD", "PSPS", "PSPP", "PSPD", "PSDS", "PSDP", "PSDD",
-        "PPSS", "PPSP", "PPSD", "PPPS", "PPPP", "PPPD", "PPDS", "PPDP", "PPDD",
-        "PDSS", "PDSP", "PDSD", "PDPS", "PDPP", "PDPD", "PDDS", "PDDP", "PDDD",
-        "DSSS", "DSSP", "DSSD", "DSPS", "DSPP", "DSPD", "DSDS", "DSDP", "DSDD",
-        "DPSS", "DPSP", "DPSD", "DPPS", "DPPP", "DPPD", "DPDS", "DPDP", "DPDD",
-        "DDSS", "DDSP", "DDSD", "DDPS", "DDPP", "DDPD", "DDDS", "DDDP", "DDDD",
     };
     
     // cutoff report for Epsilon1
@@ -1242,7 +1255,7 @@ void DfTaskCtrl::cutoffReport()
         }
     }
     if (hasCutoff_density == true) {
-        this->log_.info("density cutoff report");
+        this->log_.info("pre-screening: density cutoff report");
         this->log_.info(TlUtils::format("epsilon(density): %e", this->cutoffEpsilon_density_));
         this->log_.info(TlUtils::format("length scale parameter: %f", this->lengthScaleParameter_));
         this->log_.info("type: alive / all (ratio)");
@@ -1277,7 +1290,7 @@ void DfTaskCtrl::cutoffReport()
         }
     }
     if (hasCutoff_distribution == true) {
-        this->log_.info("distribution cutoff report");
+        this->log_.info("prescreening: distribution cutoff report");
         this->log_.info(TlUtils::format("epsilon(distribution): %e", this->cutoffEpsilon_distribution_));
         this->log_.info("type: alive / all (ratio)");
         for (int shellTypeA = 0; shellTypeA < maxShellType; ++shellTypeA) {
@@ -1298,6 +1311,23 @@ void DfTaskCtrl::cutoffReport()
         }
         this->log_.info("\n");
     }
+}
+
+
+void DfTaskCtrl::cutoffReport()
+{
+    const int maxShellType = this->maxShellType_;
+    static const char typeStr4[][5] = {
+        "SSSS", "SSSP", "SSSD", "SSPS", "SSPP", "SSPD", "SSDS", "SSDP", "SSDD",
+        "SPSS", "SPSP", "SPSD", "SPPS", "SPPP", "SPPD", "SPDS", "SPDP", "SPDD",
+        "SDSS", "SDSP", "SDSD", "SDPS", "SDPP", "SDPD", "SDDS", "SDDP", "SDDD",
+        "PSSS", "PSSP", "PSSD", "PSPS", "PSPP", "PSPD", "PSDS", "PSDP", "PSDD",
+        "PPSS", "PPSP", "PPSD", "PPPS", "PPPP", "PPPD", "PPDS", "PPDP", "PPDD",
+        "PDSS", "PDSP", "PDSD", "PDPS", "PDPP", "PDPD", "PDDS", "PDDP", "PDDD",
+        "DSSS", "DSSP", "DSSD", "DSPS", "DSPP", "DSPD", "DSDS", "DSDP", "DSDD",
+        "DPSS", "DPSP", "DPSD", "DPPS", "DPPP", "DPPD", "DPDS", "DPDP", "DPDD",
+        "DDSS", "DDSP", "DDSD", "DDPS", "DDPP", "DDPD", "DDDS", "DDDP", "DDDD",
+    };
 
     // cutoff report for schwarz
     bool hasCutoffSchwarz = false;
@@ -1343,4 +1373,131 @@ void DfTaskCtrl::cutoffReport()
             }
         }
     }
+}
+
+
+std::size_t DfTaskCtrl::getTotalCalcAmount2(const TlOrbitalInfoObject& orbitalInfo,
+                                            const ShellArrayTable& shellArrayTable)
+{
+    std::size_t answer = 0;
+    const int maxShellType = orbitalInfo.getMaxShellType();
+    for (int shellTypeP = 0; shellTypeP < maxShellType; ++shellTypeP) {
+        const int maxStepsP = 2 * shellTypeP + 1;
+        const ShellArray& shellArrayP = shellArrayTable[shellTypeP];
+        const size_t shellArraySizeP = shellArrayP.size();
+
+        for (int shellTypeQ = 0; shellTypeQ < maxShellType; ++shellTypeQ) {
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+
+            for (std::size_t shellArrayIndexP = 0 ; shellArrayIndexP < shellArraySizeP; ++shellArrayIndexP) {
+                const index_type shellIndexP = shellArrayP[shellArrayIndexP];
+                
+                const ShellArray& shellArrayQ = shellArrayTable[shellTypeQ];
+                ShellArray::const_iterator qItEnd = 
+                    std::upper_bound(shellArrayQ.begin(), shellArrayQ.end(), shellIndexP);
+                const std::size_t shellArraySizeQ = std::distance(shellArrayQ.begin(), qItEnd);
+
+                answer += shellArraySizeQ * maxStepsP * maxStepsQ;
+            }
+        }
+    }
+    
+    return answer;
+}
+
+
+std::size_t DfTaskCtrl::getTotalCalcAmount2(const TlOrbitalInfoObject& orbitalInfo,
+                                            const ShellArrayTable& shellArrayTable,
+                                            const DistributedCutoffTable& dct)
+{
+    std::size_t answer = 0;
+    const int maxShellType = orbitalInfo.getMaxShellType();
+    for (int shellTypeP = 0; shellTypeP < maxShellType; ++shellTypeP) {
+        const int maxStepsP = 2 * shellTypeP + 1;
+        const ShellArray& shellArrayP = shellArrayTable[shellTypeP];
+        const size_t shellArraySizeP = shellArrayP.size();
+
+        for (int shellTypeQ = 0; shellTypeQ < maxShellType; ++shellTypeQ) {
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+
+            for (std::size_t shellArrayIndexP = 0 ; shellArrayIndexP < shellArraySizeP; ++shellArrayIndexP) {
+                const index_type shellIndexP = shellArrayP[shellArrayIndexP];
+
+                // const ShellArray& shellArrayQ = dct[shellIndexP][shellTypeQ];
+                DistributedCutoffTable::const_iterator dctItQ = dct.find(shellIndexP);
+                assert(dctItQ != dct.end());
+                const ShellArray shellArrayQ = dctItQ->second[shellTypeQ];
+
+                ShellArray::const_iterator qItEnd = 
+                    std::upper_bound(shellArrayQ.begin(), shellArrayQ.end(), shellIndexP);
+                const std::size_t shellArraySizeQ = std::distance(shellArrayQ.begin(), qItEnd);
+
+                answer += shellArraySizeQ * maxStepsP * maxStepsQ;
+            }
+        }
+    }
+
+    return answer;
+}
+
+
+std::size_t DfTaskCtrl::getTotalCalcAmount4(const TlOrbitalInfoObject& orbitalInfo,
+                                            const ShellPairArrayTable& shellPairArrayTable,
+                                            const DistributedCutoffTable& dct)
+{
+    std::size_t answer = 0;
+
+    // calc prescreened size
+    const int maxShellType = orbitalInfo.getMaxShellType();
+    for (int shellTypeP = 0; shellTypeP < maxShellType; ++shellTypeP) {
+        const int maxStepsP = 2 * shellTypeP + 1;
+
+        for (int shellTypeR = 0 ; shellTypeR < maxShellType; ++shellTypeR) {
+            const int maxStepsR = 2 * shellTypeR + 1;
+
+            const int shellPairType_PR = shellTypeP * maxShellType + shellTypeR;
+            const ShellPairArray& shellPairArray_PR = shellPairArrayTable[shellPairType_PR];
+            const std::size_t numOfShellPairArray_PR = shellPairArray_PR.size();
+            
+            for (std::size_t prIndex = 0; prIndex < numOfShellPairArray_PR; ++prIndex) {
+                const index_type shellIndexP = shellPairArray_PR[prIndex].shellIndex1;
+                const index_type shellIndexR = shellPairArray_PR[prIndex].shellIndex2;
+                
+                for (int shellTypeQ = 0; shellTypeQ < maxShellType; ++shellTypeQ) {
+                    const int maxStepsQ = 2 * shellTypeQ + 1;
+
+                    //const ShellArray shellArrayQ = dct[shellIndexP][shellTypeQ];
+                    DistributedCutoffTable::const_iterator dctItP = dct.find(shellIndexP);
+                    assert(dctItP != dct.end());
+                    const ShellArray shellArrayQ = dctItP->second[shellTypeQ];
+
+                    ShellArray::const_iterator qItEnd = 
+                        std::upper_bound(shellArrayQ.begin(), shellArrayQ.end(), shellIndexP);
+                    const std::size_t shellArraySizeQ = std::distance(shellArrayQ.begin(), qItEnd);
+                    
+                    for (int shellTypeS = 0; shellTypeS < maxShellType; ++shellTypeS) {
+                        const int maxStepsS = 2 * shellTypeS + 1;
+
+                        //const ShellArray shellArrayS = dct[shellIndexR][shellTypeS];
+                        DistributedCutoffTable::const_iterator dctItR = dct.find(shellIndexR);
+                        assert(dctItR != dct.end());
+                        const ShellArray shellArrayS = dctItR->second[shellTypeS];
+                        
+                        for (std::size_t shellArrayIndexQ = 0; shellArrayIndexQ < shellArraySizeQ; ++shellArrayIndexQ) {
+                            const index_type shellIndexQ = shellArrayQ[shellArrayIndexQ];
+                            
+                            const index_type maxShellIndexS = 
+                                (shellIndexP == shellIndexR) ? shellIndexQ : shellIndexR;
+                            ShellArray::const_iterator sItEnd = 
+                                std::upper_bound(shellArrayS.begin(), shellArrayS.end(), maxShellIndexS);
+                            const std::size_t shellArraySizeS = std::distance(shellArrayS.begin(), sItEnd);
+                            answer += shellArraySizeS * maxStepsP * maxStepsQ * maxStepsR * maxStepsS;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return answer;
 }

@@ -141,7 +141,8 @@ void DfCD::calcPQPQ(const TlOrbitalInfoObject& orbitalInfo,
     bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
                                           isCutoffByDistribution,
                                           this->grainSize_,
-                                          &taskList, true);
+                                          &taskList,
+                                          true);
     while (hasTask == true) {
         this->calcPQPQ_kernel(orbitalInfo,
                               taskList,
@@ -153,7 +154,6 @@ void DfCD::calcPQPQ(const TlOrbitalInfoObject& orbitalInfo,
     }
     
     // finalize
-    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
@@ -258,7 +258,9 @@ TlSymmetricMatrix DfCD::getGMatrix(const TlOrbitalInfoObject& orbitalInfo,
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                           schwarzTable,
-                                          this->grainSize_, &taskList, true);
+                                          this->grainSize_,
+                                          &taskList,
+                                          true);
     while (hasTask == true) {
         this->makeSuperMatrix_kernel2(orbitalInfo,
                                       taskList,
@@ -266,13 +268,13 @@ TlSymmetricMatrix DfCD::getGMatrix(const TlOrbitalInfoObject& orbitalInfo,
                                       &G);
         hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                          schwarzTable,
-                                         this->grainSize_, &taskList);
+                                         this->grainSize_,
+                                         &taskList);
     }
 
     this->finalize(&G);
     //G.save("G.mat");
     //std::cerr << TlUtils::format("G(%d, %d)", G.getNumOfRows(), G.getNumOfCols()) << std::endl;
-    pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
@@ -493,18 +495,20 @@ void DfCD::makeSuperMatrix_noScreening()
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                           schwarzTable,
-                                          this->grainSize_, &taskList, true);
+                                          this->grainSize_,
+                                          &taskList,
+                                          true);
     while (hasTask == true) {
         this->makeSuperMatrix_kernel(orbitalInfo,
                                      taskList,
                                      &G);
         hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                          schwarzTable,
-                                         this->grainSize_, &taskList);
+                                         this->grainSize_,
+                                         &taskList);
     }
 
     this->finalize(&G);
-    pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;

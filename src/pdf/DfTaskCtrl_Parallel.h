@@ -11,7 +11,6 @@ public:
     virtual ~DfTaskCtrl_Parallel();
 
 public:
-    virtual void cutoffReport();
     virtual bool getQueue2(const TlOrbitalInfoObject& orbitalInfo,
                            const bool isCutoffByDistibution,
                            const int maxGrainSize,
@@ -19,10 +18,10 @@ public:
                            bool initialize = false);
 
     virtual bool getQueue4(const TlOrbitalInfoObject& orbitalInfo,
-                            const TlSparseSymmetricMatrix& schwarzTable,
-                            const int maxGrainSize,
-                            std::vector<Task4>* pTaskList,
-                            bool initialize = false);
+                           const TlSparseSymmetricMatrix& schwarzTable,
+                           const int maxGrainSize,
+                           std::vector<Task4>* pTaskList,
+                           bool initialize = false);
     virtual bool getQueue_Force4(const TlOrbitalInfoObject& orbitalInfo,
                                  const TlSparseSymmetricMatrix& schwarzTable,
                                  const int maxGrainSize,
@@ -86,8 +85,11 @@ protected:
         std::bitset<NUM_OF_SESSION_STATES> state;
     };
     
-    
-    
+protected:  
+    virtual void prescreeningReport();
+    virtual void cutoffReport();
+    void cutoffReport_MS();
+
 protected:
     bool getQueue_DC(const TlOrbitalInfoObject& orbitalInfo,
                      const bool isCutoffByDistibution,
