@@ -91,7 +91,8 @@ void DfCD::makeSuperMatrix_screening()
     // make PQ2I from I2PQ
     PQ2I_Type PQ2I(numOfPQs, -1);
     for (size_type i = 0; i < numOfItilde; ++i) {
-        const size_type PQ2I_index = this->pqPairIndex(I2PQ[i]);
+        //const size_type PQ2I_index = this->pqPairIndex(I2PQ[i]);
+        const size_type PQ2I_index = I2PQ[i].index();
         assert(PQ2I_index < numOfPQs);
         PQ2I[PQ2I_index] = i;
     }
@@ -358,7 +359,7 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
             const index_type indexQ = shellIndexQ + j;
             PQ_Pair pq(indexP, indexQ);
 
-            const size_type indexPQ = PQ2I[this->pqPairIndex(pq)];
+            const size_type indexPQ = PQ2I[pq.index()];
             // if (indexPQ == -1) {
             //     index += maxStepsR * maxStepsS;
             //     continue;
@@ -372,7 +373,7 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
                     const index_type indexS = shellIndexS + l;
                     PQ_Pair rs(indexR, indexS);
 
-                    const index_type indexRS = PQ2I[this->pqPairIndex(rs)];
+                    const index_type indexRS = PQ2I[rs.index()];
                     // if (indexRS == -1) {
                     //     ++index;
                     //     continue;
@@ -461,25 +462,6 @@ TlMatrix DfCD::getL()
 {
     TlMatrix L = DfObject::getLMatrix<TlMatrix>();
     return L;
-}
-
-
-std::size_t DfCD::index(index_type p, index_type q) const
-{
-    if (p < q) {
-        std::swap(p, q);
-    }
-
-    // This class treats 'L' type matrix.
-    // Follows means:
-    //  index = row + (2 * this->m_nRows - (col +1)) * col / 2;
-    std::size_t s = this->m_nNumOfAOs;
-    s = s << 1; // means 's *= 2'
-
-    std::size_t t = (s - (q +1)) * q;
-    t = t >> 1; // means 't /= 2'
-
-    return (p + t);
 }
 
 
@@ -900,14 +882,18 @@ void DfCD::calcERIs(const TlSparseSymmetricMatrix& schwartzTable,
         const index_type indexR = I2PQ[G_col].shellIndex1;
         const index_type indexS = I2PQ[G_col].shellIndex2;
 
-        const int basisTypeP = this->orbitalInfo_.getBasisType(indexP) - basisTypeBase[this->orbitalInfo_.getShellType(indexP)];
-        const int basisTypeQ = this->orbitalInfo_.getBasisType(indexQ) - basisTypeBase[this->orbitalInfo_.getShellType(indexQ)];
-        const int basisTypeR = this->orbitalInfo_.getBasisType(indexR) - basisTypeBase[this->orbitalInfo_.getShellType(indexR)];
-        const int basisTypeS = this->orbitalInfo_.getBasisType(indexS) - basisTypeBase[this->orbitalInfo_.getShellType(indexS)];
-        const index_type shellIndexP = indexP - basisTypeP;
-        const index_type shellIndexQ = indexQ - basisTypeQ;
-        const index_type shellIndexR = indexR - basisTypeR;
-        const index_type shellIndexS = indexS - basisTypeS;
+        // const int basisTypeP = this->orbitalInfo_.getBasisType(indexP) - basisTypeBase[this->orbitalInfo_.getShellType(indexP)];
+        // const int basisTypeQ = this->orbitalInfo_.getBasisType(indexQ) - basisTypeBase[this->orbitalInfo_.getShellType(indexQ)];
+        // const int basisTypeR = this->orbitalInfo_.getBasisType(indexR) - basisTypeBase[this->orbitalInfo_.getShellType(indexR)];
+        // const int basisTypeS = this->orbitalInfo_.getBasisType(indexS) - basisTypeBase[this->orbitalInfo_.getShellType(indexS)];
+        // const index_type shellIndexP = indexP - basisTypeP;
+        // const index_type shellIndexQ = indexQ - basisTypeQ;
+        // const index_type shellIndexR = indexR - basisTypeR;
+        // const index_type shellIndexS = indexS - basisTypeS;
+        const index_type shellIndexP = this->orbitalInfo_.getShellIndex(indexP);
+        const index_type shellIndexQ = this->orbitalInfo_.getShellIndex(indexQ);
+        const index_type shellIndexR = this->orbitalInfo_.getShellIndex(indexR);
+        const index_type shellIndexS = this->orbitalInfo_.getShellIndex(indexS);
         assert((this->orbitalInfo_.getBasisType(shellIndexP) == 0) ||
                (this->orbitalInfo_.getBasisType(shellIndexP) == 1) ||
                (this->orbitalInfo_.getBasisType(shellIndexP) == 4));
@@ -951,7 +937,11 @@ void DfCD::calcERIs(const TlSparseSymmetricMatrix& schwartzTable,
             const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
             
             this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
-            
+
+            const int basisTypeP = indexP - shellIndexP;
+            const int basisTypeQ = indexQ - shellIndexQ;
+            const int basisTypeR = indexR - shellIndexR;
+            const int basisTypeS = indexS - shellIndexS;
             const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
             const double value = this->pEriEngines_[threadID].WORK[index];
             pG->set(G_row, G_col, value);
@@ -1047,3 +1037,41 @@ void DfCD::schwartzCutoffReport()
         }
     }
 }
+
+
+// void DfCD::getERIs(const TlSparseSymmetricMatrix& schwartzTable,
+//                    const I2PQ_Type& I2PQ,
+//                    TlSparseSymmetricMatrix* pG)
+// {
+//     TlSparseSymmetricMatrix requestMat = this->makeRequest(*pG);
+// }
+
+
+// TlSparseSymmetricMatrix DfCD::makeRequest(const TlSparseSymmetricMatrix& request)
+// {
+//     static const int basisTypeBase[] = {0, 1, 4}; // s, px, dxy
+
+//     TlSparseSymmetricMatrix::const_iterator itEnd = request.end();
+//     for (TlSparseSymmetricMatrix::const_iterator it = request.begin(); it != itEnd; ++it) {
+//         index_type pq_index = 0;
+//         index_type rs_index = 0;
+//         request.index(it->first, &pq_index, &rs_index);
+
+//         const index_type indexP = I2PQ[G_row].shellIndex1;
+//         const index_type indexQ = I2PQ[G_row].shellIndex2;
+//         const index_type indexR = I2PQ[G_col].shellIndex1;
+//         const index_type indexS = I2PQ[G_col].shellIndex2;
+//         const int basisTypeP = this->orbitalInfo_.getBasisType(indexP) - basisTypeBase[this->orbitalInfo_.getShellType(indexP)];
+//         const int basisTypeQ = this->orbitalInfo_.getBasisType(indexQ) - basisTypeBase[this->orbitalInfo_.getShellType(indexQ)];
+//         const int basisTypeR = this->orbitalInfo_.getBasisType(indexR) - basisTypeBase[this->orbitalInfo_.getShellType(indexR)];
+//         const int basisTypeS = this->orbitalInfo_.getBasisType(indexS) - basisTypeBase[this->orbitalInfo_.getShellType(indexS)];
+//         const index_type shellIndexP = indexP - basisTypeP;
+//         const index_type shellIndexQ = indexQ - basisTypeQ;
+//         const index_type shellIndexR = indexR - basisTypeR;
+//         const index_type shellIndexS = indexS - basisTypeS;
+        
+//         PQ_Pair ()
+//     }
+    
+// }
+

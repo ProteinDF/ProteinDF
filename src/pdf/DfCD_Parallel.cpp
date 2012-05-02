@@ -303,7 +303,7 @@ void DfCD_Parallel::makeSuperMatrix_distribute()
     // make PQ2I from I2PQ
     PQ2I_Type PQ2I(numOfPQs, -1);
     for (size_type i = 0; i < numOfItilde; ++i) {
-        const size_type PQ2I_index = this->pqPairIndex(I2PQ[i]);
+        const size_type PQ2I_index = I2PQ[i].index();
         assert(PQ2I_index < numOfPQs);
         PQ2I[PQ2I_index] = i;
     }
