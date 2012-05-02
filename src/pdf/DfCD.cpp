@@ -5,7 +5,6 @@
 #include <set>
 #include "DfCD.h"
 #include "DfEriEngine.h"
-#include "TlOrbitalInfo.h"
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
@@ -14,7 +13,8 @@ const int DfCD::MAX_SHELL_TYPE = 2 + 1;
 
 
 DfCD::DfCD(TlSerializeData* pPdfParam) 
-    : DfObject(pPdfParam), pEriEngines_(NULL)
+    : DfObject(pPdfParam), pEriEngines_(NULL),
+      orbitalInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_sets"])
 {
     this->numOfPQs_ = this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2;
 
@@ -67,9 +67,10 @@ void DfCD::destroyEngines()
     this->pEriEngines_ = NULL;
 }
 
-void DfCD::makeSuperMatrix()
+void DfCD::calcCholeskyVectors()
 {
-    this->makeSuperMatrix_screening();
+    this->calcCholeskyVectors_onTheFly();
+    //this->makeSuperMatrix_screening();
     //this->makeSuperMatrix_noScreening();
 }
 
@@ -101,12 +102,6 @@ void DfCD::makeSuperMatrix_screening()
     TlSymmetricMatrix G = this->getGMatrix(orbitalInfo, schwarzTable, numOfItilde, PQ2I);
 
     this->makeL(G);
-
-    {
-        G.save("G.mat");
-        TlMatrix L = this->getLMatrix_onTheFly(this->epsilon_, G);
-        L.save("L_otf.mat");
-    }
 }
 
 
@@ -945,47 +940,55 @@ TlSymmetricMatrix DfCD::getPMatrix()
 
 
 /// @param numOfCDAMs [in] I~の総数
-TlMatrix DfCD::getLMatrix_onTheFly(const double threshold,
-                                   const TlSymmetricMatrix& exactG)
+void DfCD::calcCholeskyVectors_onTheFly()
 {
     this->createEngines();
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_sets"]);
+    TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
     PQ_PairArray I2PQ;
     TlVector d; // 対角成分
-    this->calcDiagonals(orbitalInfo, &I2PQ, &d);
-    // d.save("d.vtr");
-    // {
-    //     d.resize(exactG.getNumOfRows());
-    //     for (index_type i = 0; i < exactG.getNumOfRows(); ++i) {
-    //         d[i] = exactG.get(i, i);
-    //     }
-    //     d.save("exact_d.vtr");
-    // }
+    this->calcDiagonals(&schwartzTable, &I2PQ, &d);
+    this->log_.info(TlUtils::format(" # of PQ dimension: %d", int(this->numOfPQs_)));
+    this->log_.info(TlUtils::format(" # of I~ dimension: %d", int(I2PQ.size())));
+    this->saveI2PQ(I2PQ);
 
-    //const index_type N = I2PQ.size();
-    const index_type N = exactG.getNumOfRows();
+    const index_type N = I2PQ.size();
     double error = d.sum();
     std::vector<TlVector::size_type> pivot(N);
     for (index_type i = 0; i < N; ++i) {
         pivot[i] = i;
     }
 
+    // clear cutoff stats
+    {
+        const int maxShellType = this->orbitalInfo_.getMaxShellType();
+        const int numOfShellPairType = maxShellType* maxShellType;
+        const int numOfShellQuartetType = numOfShellPairType * numOfShellPairType;
+        this->cutoffAll_schwartz_.clear();
+        this->cutoffAlive_schwartz_.clear();
+        this->cutoffAll_schwartz_.resize(numOfShellQuartetType, 0);
+        this->cutoffAlive_schwartz_.resize(numOfShellQuartetType, 0);
+    }
+
+    // prepare variables
     TlMatrix L;
     index_type m = 0;
     double sum_ll = 0.0;
     TlSparseSymmetricMatrix request(N);
 
+    const double threshold = this->epsilon_;
+    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
     while (error > threshold) {
-        L.resize(m +1, N);
+        L.resize(N, m+1);
         std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
                                                                        pivot.end());
         const index_type i = it - pivot.begin();
         std::swap(pivot[m], pivot[i]);
         
         const double l_m_pm = std::sqrt(d[pivot[m]]);
-        L.set(m, pivot[m], l_m_pm);
+        L.set(pivot[m], m, l_m_pm);
         
         const double inv_l_m_pm = 1.0 / l_m_pm;
 
@@ -996,26 +999,18 @@ TlMatrix DfCD::getLMatrix_onTheFly(const double threshold,
             const index_type pivot_i = pivot[i];
             G.set(pivot_m, pivot_i, 0.0);
         }
-        this->calcERIs(orbitalInfo, I2PQ, &G);
+        this->calcERIs(schwartzTable, I2PQ, &G);
 
         // calc
         for (index_type i = m +1; i < N; ++i) {
             const index_type pivot_i = pivot[i];
             double sum_ll = 0.0;
             for (index_type j = 0; j < m; ++j) {
-                sum_ll += L.get(j, pivot_m) * L.get(j, pivot_i);
+                sum_ll += L.get(pivot_m, j) * L.get(pivot_i, j);
             }
 
-            // if (std::fabs(G.get(pivot_m, pivot_i) - exactG.get(pivot_m, pivot_i)) > 1.0E-5) {
-            //     std::cerr << TlUtils::format("deltaG: (%d, %d) % f != % f",
-            //                                  pivot_m, pivot_i,
-            //                                  G.get(pivot_m, pivot_i),
-            //                                  exactG.get(pivot_m, pivot_i))
-            //               << std::endl;
-            // }
             const double l_m_pi = (G.get(pivot_m, pivot_i) - sum_ll) * inv_l_m_pm;
-            //const double l_m_pi = (exactG.get(pivot_m, pivot_i) - sum_ll) * inv_l_m_pm;
-            L.set(m, pivot_i, l_m_pi);
+            L.set(pivot_i, m, l_m_pi);
             
             d[pivot_i] -= l_m_pi * l_m_pi;
         }
@@ -1027,21 +1022,21 @@ TlMatrix DfCD::getLMatrix_onTheFly(const double threshold,
 
         ++m;
     }
+    this->log_.info(TlUtils::format("Cholesky Vectors: %d", m));
 
     this->destroyEngines();
-    L.transpose();
-    L.resize(N, m);
+    this->schwartzCutoffReport();
 
-    return L;
+    this->saveL(L);
 }
 
 
-void DfCD::calcDiagonals(const TlOrbitalInfoObject& orbitalInfo,
+void DfCD::calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
                          PQ_PairArray *pI2PQ,
                          TlVector *pDiagonals)
 {
     const index_type numOfAOs = this->m_nNumOfAOs;
-    assert(numOfAOs == orbitalInfo.getNumOfOrbitals());
+    assert(numOfAOs == this->orbitalInfo_.getNumOfOrbitals());
 
     const double tau = this->CDAM_tau_;
     this->log_.info(TlUtils::format(" CDAM tau: %e", tau));
@@ -1053,19 +1048,21 @@ void DfCD::calcDiagonals(const TlOrbitalInfoObject& orbitalInfo,
     TlSparseSymmetricMatrix diagonalMat(numOfAOs);
     pI2PQ->clear();
     pI2PQ->reserve(this->numOfPQs_);
+    pSchwartzTable->clear();
+    pSchwartzTable->resize(numOfAOs);
 
     // task
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task2> taskList;
-    bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
+    bool hasTask = pDfTaskCtrl->getQueue2(this->orbitalInfo_,
                                           true,
                                           this->grainSize_,
                                           &taskList, true);
     while (hasTask == true) {
-        this->calcDiagonals_kernel(orbitalInfo,
-                                   taskList,
+        this->calcDiagonals_kernel(taskList,
+                                   pSchwartzTable,
                                    &diagonalMat, pI2PQ);
-        hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
+        hasTask = pDfTaskCtrl->getQueue2(this->orbitalInfo_,
                                          true,
                                          this->grainSize_,
                                          &taskList);
@@ -1085,21 +1082,18 @@ void DfCD::calcDiagonals(const TlOrbitalInfoObject& orbitalInfo,
             const index_type row = (*pI2PQ)[i].shellIndex1;
             const index_type col = (*pI2PQ)[i].shellIndex2;
             const double value = diagonalMat.get(row, col);
-            // std::cerr << TlUtils::format("diagonal vtr: %4d th (%3d, %3d)=% f",
-            //                              i, row, col, value)
-            //           << std::endl;
             (*pDiagonals)[i] = value;
         }
     }
 }
 
 
-void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbitalInfo,
-                                const std::vector<DfTaskCtrl::Task2>& taskList,
+void DfCD::calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
+                                TlSparseSymmetricMatrix *pSchwartzTable,
                                 TlSparseSymmetricMatrix *pDiagonalMat,
                                 PQ_PairArray *pI2PQ)
 {
-    const index_type numOfAOs = orbitalInfo.getNumOfOrbitals();
+    const index_type numOfAOs = this->orbitalInfo_.getNumOfOrbitals();
     pDiagonalMat->resize(numOfAOs);
 
     const double tau = this->CDAM_tau_;
@@ -1110,6 +1104,7 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbitalInfo,
     {
         PQ_PairArray local_I2PQ;
         TlSparseSymmetricMatrix local_diagMat(numOfAOs);
+        TlSparseSymmetricMatrix local_schwartzTable(numOfAOs);
         int threadID = 0;
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
@@ -1120,14 +1115,14 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbitalInfo,
         for (int i = 0; i < taskListSize; ++i) {
             const index_type shellIndexP = taskList[i].shellIndex1;
             const index_type shellIndexQ = taskList[i].shellIndex2;
-            const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
-            const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+            const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
+            const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
             const int maxStepsP = 2 * shellTypeP + 1;
             const int maxStepsQ = 2 * shellTypeQ + 1;
 
             const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
             const DfEriEngine::CGTO_Pair PQ = 
-                this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
+                this->pEriEngines_[threadID].getCGTO_pair(this->orbitalInfo_,
                                                           shellIndexP,
                                                           shellIndexQ,
                                                           pairwisePGTO_cutoffThreshold);
@@ -1145,6 +1140,9 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbitalInfo,
                         const int pqpq_index = pq_index * maxStepsPQ + pq_index;
                         
                         const double value = this->pEriEngines_[threadID].WORK[pqpq_index];
+
+                        // for schwartz
+                        maxValue = std::max(maxValue, std::fabs(value));
                         
                         // for I~ to pq table
                         if (std::fabs(value) > tau) {
@@ -1154,6 +1152,7 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbitalInfo,
                     }
                 }
             }
+            local_schwartzTable.set(shellIndexP, shellIndexQ, std::sqrt(maxValue));
         }
 
         // add up
@@ -1165,6 +1164,7 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbitalInfo,
                     pI2PQ->insert(pI2PQ->end(),
                                   local_I2PQ.begin(), local_I2PQ.end());
                     pDiagonalMat->merge(local_diagMat);
+                    pSchwartzTable->merge(local_schwartzTable);
                 }
 #pragma omp barrier                
             }
@@ -1173,17 +1173,20 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbitalInfo,
         {
             *pI2PQ = local_I2PQ;
             *pDiagonalMat = local_diagMat;
+            *pSchwartzTable = local_schwartzTable;
         }
 #endif // _OPENMP
     }
 }
 
 
-void DfCD::calcERIs(const TlOrbitalInfoObject& orbitalInfo,
+void DfCD::calcERIs(const TlSparseSymmetricMatrix& schwartzTable,
                     const I2PQ_Type& I2PQ,
                     TlSparseSymmetricMatrix* pG)
 {
     static const int basisTypeBase[] = {0, 1, 4}; // s, px, dxy
+    const int maxShellType = this->orbitalInfo_.getMaxShellType();
+    const double threshold = this->CDAM_tau_;
 
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
     int threadID = 0;
@@ -1203,51 +1206,150 @@ void DfCD::calcERIs(const TlOrbitalInfoObject& orbitalInfo,
         const index_type indexR = I2PQ[G_col].shellIndex1;
         const index_type indexS = I2PQ[G_col].shellIndex2;
 
-        const int basisTypeP = orbitalInfo.getBasisType(indexP) - basisTypeBase[orbitalInfo.getShellType(indexP)];
-        const int basisTypeQ = orbitalInfo.getBasisType(indexQ) - basisTypeBase[orbitalInfo.getShellType(indexQ)];
-        const int basisTypeR = orbitalInfo.getBasisType(indexR) - basisTypeBase[orbitalInfo.getShellType(indexR)];
-        const int basisTypeS = orbitalInfo.getBasisType(indexS) - basisTypeBase[orbitalInfo.getShellType(indexS)];
+        const int basisTypeP = this->orbitalInfo_.getBasisType(indexP) - basisTypeBase[this->orbitalInfo_.getShellType(indexP)];
+        const int basisTypeQ = this->orbitalInfo_.getBasisType(indexQ) - basisTypeBase[this->orbitalInfo_.getShellType(indexQ)];
+        const int basisTypeR = this->orbitalInfo_.getBasisType(indexR) - basisTypeBase[this->orbitalInfo_.getShellType(indexR)];
+        const int basisTypeS = this->orbitalInfo_.getBasisType(indexS) - basisTypeBase[this->orbitalInfo_.getShellType(indexS)];
         const index_type shellIndexP = indexP - basisTypeP;
         const index_type shellIndexQ = indexQ - basisTypeQ;
         const index_type shellIndexR = indexR - basisTypeR;
         const index_type shellIndexS = indexS - basisTypeS;
-        assert((orbitalInfo.getBasisType(shellIndexP) == 0) ||
-               (orbitalInfo.getBasisType(shellIndexP) == 1) ||
-               (orbitalInfo.getBasisType(shellIndexP) == 4));
-        assert((orbitalInfo.getBasisType(shellIndexQ) == 0) ||
-               (orbitalInfo.getBasisType(shellIndexQ) == 1) ||
-               (orbitalInfo.getBasisType(shellIndexQ) == 4));
-        assert((orbitalInfo.getBasisType(shellIndexR) == 0) ||
-               (orbitalInfo.getBasisType(shellIndexR) == 1) ||
-               (orbitalInfo.getBasisType(shellIndexR) == 4));
-        assert((orbitalInfo.getBasisType(shellIndexS) == 0) ||
-               (orbitalInfo.getBasisType(shellIndexS) == 1) ||
-               (orbitalInfo.getBasisType(shellIndexS) == 4));
+        assert((this->orbitalInfo_.getBasisType(shellIndexP) == 0) ||
+               (this->orbitalInfo_.getBasisType(shellIndexP) == 1) ||
+               (this->orbitalInfo_.getBasisType(shellIndexP) == 4));
+        assert((this->orbitalInfo_.getBasisType(shellIndexQ) == 0) ||
+               (this->orbitalInfo_.getBasisType(shellIndexQ) == 1) ||
+               (this->orbitalInfo_.getBasisType(shellIndexQ) == 4));
+        assert((this->orbitalInfo_.getBasisType(shellIndexR) == 0) ||
+               (this->orbitalInfo_.getBasisType(shellIndexR) == 1) ||
+               (this->orbitalInfo_.getBasisType(shellIndexR) == 4));
+        assert((this->orbitalInfo_.getBasisType(shellIndexS) == 0) ||
+               (this->orbitalInfo_.getBasisType(shellIndexS) == 1) ||
+               (this->orbitalInfo_.getBasisType(shellIndexS) == 4));
 
-        const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
-        const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
-        const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
-        const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
-        const int maxStepsP = 2 * shellTypeP + 1;
-        const int maxStepsQ = 2 * shellTypeQ + 1;
-        const int maxStepsR = 2 * shellTypeR + 1;
-        const int maxStepsS = 2 * shellTypeS + 1;
-        
-        const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
-                                                                                    shellIndexP,
-                                                                                    shellIndexQ,
-                                                                                    pairwisePGTO_cutoffThreshold);
-        const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
-                                                                                    shellIndexR,
-                                                                                    shellIndexS,
-                                                                                    pairwisePGTO_cutoffThreshold);
-        const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
-        const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
-        
-        this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
+        const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
+        const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
+        const int shellTypeR = this->orbitalInfo_.getShellType(shellIndexR);
+        const int shellTypeS = this->orbitalInfo_.getShellType(shellIndexS);
 
-        const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
-        const double value = this->pEriEngines_[threadID].WORK[index];
-        pG->set(G_row, G_col, value);
+        const int shellQuartetType =
+            ((shellTypeP * maxShellType + shellTypeQ) * maxShellType + shellTypeP) * maxShellType + shellTypeQ;
+        const bool isAlive = this->isAliveBySchwartzCutoff(shellIndexP, shellIndexQ,
+                                                           shellIndexR, shellIndexS,
+                                                           shellQuartetType,
+                                                           schwartzTable,
+                                                           threshold);
+        if (isAlive == true) {
+            const int maxStepsP = 2 * shellTypeP + 1;
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+            const int maxStepsR = 2 * shellTypeR + 1;
+            const int maxStepsS = 2 * shellTypeS + 1;
+            
+            const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(this->orbitalInfo_,
+                                                                                        shellIndexP,
+                                                                                        shellIndexQ,
+                                                                                        pairwisePGTO_cutoffThreshold);
+            const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(this->orbitalInfo_,
+                                                                                        shellIndexR,
+                                                                                        shellIndexS,
+                                                                                        pairwisePGTO_cutoffThreshold);
+            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
+            
+            this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
+            
+            const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
+            const double value = this->pEriEngines_[threadID].WORK[index];
+            pG->set(G_row, G_col, value);
+        }
+    }
+}
+
+
+bool DfCD::isAliveBySchwartzCutoff(const index_type shellIndexP,
+                                   const index_type shellIndexQ,
+                                   const index_type shellIndexR,
+                                   const index_type shellIndexS,
+                                   const int shellQuartetType,
+                                   const TlSparseSymmetricMatrix& schwarzTable,
+                                   const double threshold)
+{
+    bool answer = false;
+
+    const double sqrt_pqpq = schwarzTable.get(shellIndexP, shellIndexQ);
+    const double sqrt_rsrs = schwarzTable.get(shellIndexR, shellIndexS);
+
+    if ((sqrt_pqpq * sqrt_rsrs) >= threshold) {
+        answer = true;
+
+#pragma omp atomic
+        ++(this->cutoffAlive_schwartz_[shellQuartetType]);
+    }
+
+#pragma omp atomic
+    ++(this->cutoffAll_schwartz_[shellQuartetType]);
+
+    return answer;
+}
+
+
+void DfCD::schwartzCutoffReport()
+{
+    static const char typeStr4[][5] = {
+        "SSSS", "SSSP", "SSSD", "SSPS", "SSPP", "SSPD", "SSDS", "SSDP", "SSDD",
+        "SPSS", "SPSP", "SPSD", "SPPS", "SPPP", "SPPD", "SPDS", "SPDP", "SPDD",
+        "SDSS", "SDSP", "SDSD", "SDPS", "SDPP", "SDPD", "SDDS", "SDDP", "SDDD",
+        "PSSS", "PSSP", "PSSD", "PSPS", "PSPP", "PSPD", "PSDS", "PSDP", "PSDD",
+        "PPSS", "PPSP", "PPSD", "PPPS", "PPPP", "PPPD", "PPDS", "PPDP", "PPDD",
+        "PDSS", "PDSP", "PDSD", "PDPS", "PDPP", "PDPD", "PDDS", "PDDP", "PDDD",
+        "DSSS", "DSSP", "DSSD", "DSPS", "DSPP", "DSPD", "DSDS", "DSDP", "DSDD",
+        "DPSS", "DPSP", "DPSD", "DPPS", "DPPP", "DPPD", "DPDS", "DPDP", "DPDD",
+        "DDSS", "DDSP", "DDSD", "DDPS", "DDPP", "DDPD", "DDDS", "DDDP", "DDDD",
+    };
+    const int maxShellType = this->orbitalInfo_.getMaxShellType();
+
+    // cutoff report for schwarz
+    bool hasCutoffSchwarz = false;
+    for (int shellTypeA = 0; shellTypeA < maxShellType; ++shellTypeA) {
+        for (int shellTypeB = 0; shellTypeB < maxShellType; ++shellTypeB) {
+            const int shellTypeAB = shellTypeA * maxShellType + shellTypeB;
+            for (int shellTypeC = 0; shellTypeC < maxShellType; ++shellTypeC) {
+                const int shellTypeABC = shellTypeAB * maxShellType + shellTypeC;
+                for (int shellTypeD = 0; shellTypeD < maxShellType; ++shellTypeD) {
+                    const int shellTypeABCD = shellTypeABC * maxShellType + shellTypeD;
+                    if (this->cutoffAll_schwartz_[shellTypeABCD] != 0) {
+                        hasCutoffSchwarz = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    if (hasCutoffSchwarz == true) {
+        this->log_.info("schwarz cutoff report");
+        this->log_.info(TlUtils::format("threshold: %e", this->CDAM_tau_));
+        this->log_.info("type: alive / all (ratio)");
+        for (int shellTypeA = 0; shellTypeA < maxShellType; ++shellTypeA) {
+            for (int shellTypeB = 0; shellTypeB < maxShellType; ++shellTypeB) {
+                const int shellTypeAB = shellTypeA * maxShellType + shellTypeB;
+                for (int shellTypeC = 0; shellTypeC < maxShellType; ++shellTypeC) {
+                    const int shellTypeABC = shellTypeAB * maxShellType + shellTypeC;
+                    for (int shellTypeD = 0; shellTypeD < maxShellType; ++shellTypeD) {
+                        const int shellTypeABCD = shellTypeABC * maxShellType + shellTypeD;
+                        
+                        if (this->cutoffAll_schwartz_[shellTypeABCD] > 0) {
+                            const double ratio = (double)this->cutoffAlive_schwartz_[shellTypeABCD]
+                                / (double)this->cutoffAll_schwartz_[shellTypeABCD]
+                                * 100.0;
+                            this->log_.info(TlUtils::format(" %4s: %12ld / %12ld (%6.2f%%)",
+                                                            typeStr4[shellTypeABCD],
+                                                            this->cutoffAlive_schwartz_[shellTypeABCD],
+                                                            this->cutoffAll_schwartz_[shellTypeABCD],
+                                                            ratio));
+                        }
+                    }
+                }
+            }
+        }
     }
 }

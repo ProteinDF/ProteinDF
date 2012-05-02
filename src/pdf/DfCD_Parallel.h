@@ -10,7 +10,7 @@ public:
     virtual ~DfCD_Parallel();
 
 public:
-    virtual void makeSuperMatrix();
+    virtual void calcCholeskyVectors();
     void getJ_distributed(TlDistributeSymmetricMatrix *pJ);
     void getK_distributed(const RUN_TYPE runType,
                           TlDistributeSymmetricMatrix *pK);

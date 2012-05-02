@@ -13,7 +13,7 @@ DfCD_Parallel::~DfCD_Parallel()
 }
 
 
-void DfCD_Parallel::makeSuperMatrix()
+void DfCD_Parallel::calcCholeskyVectors()
 {
 #ifdef HAVE_SCALAPACK
     if (this->m_bUsingSCALAPACK == true) {

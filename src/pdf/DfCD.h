@@ -19,7 +19,9 @@ public:
     virtual ~DfCD();
 
 public:
-    virtual void makeSuperMatrix();
+    virtual void calcCholeskyVectors();
+
+    //virtual void makeSuperMatrix();
     void makeSuperMatrix_exact();
     
     void getJ(TlSymmetricMatrix *pJ);
@@ -154,24 +156,34 @@ protected: // for exact
     static const int MAX_SHELL_TYPE;
 
 protected:
-    TlMatrix getLMatrix_onTheFly(const double threshold,
-                                 const TlSymmetricMatrix& exactG);
-    void calcDiagonals(const TlOrbitalInfoObject& orbitalInfo,
+    void calcCholeskyVectors_onTheFly();
+    void calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
                        PQ_PairArray *pI2PQ,
                        TlVector *pDiagonals);
-    void calcDiagonals_kernel(const TlOrbitalInfoObject& orbitalInfo,
-                              const std::vector<DfTaskCtrl::Task2>& taskList,
+    void calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
+                              TlSparseSymmetricMatrix *pSchwartzTable,
                               TlSparseSymmetricMatrix *pDiagonalMat,
                               PQ_PairArray *pI2PQ);
-    void calcERIs(const TlOrbitalInfoObject& orbitalInfo,
+    void calcERIs(const TlSparseSymmetricMatrix& schwartzTable,
                   const I2PQ_Type& I2PQ,
                   TlSparseSymmetricMatrix* pG);
+    bool isAliveBySchwartzCutoff(const index_type shellIndexP,
+                                 const index_type shellIndexQ,
+                                 const index_type shellIndexR,
+                                 const index_type shellIndexS,
+                                 const int shellQuartetType,
+                                 const TlSparseSymmetricMatrix& schwarzTable,
+                                 const double threshold);
+    void schwartzCutoffReport();
+    mutable std::vector<unsigned long> cutoffAll_schwartz_;
+    mutable std::vector<unsigned long> cutoffAlive_schwartz_;
     
     
 protected:
     index_type numOfPQs_;
 
     DfEriEngine* pEriEngines_;
+    TlOrbitalInfo orbitalInfo_;
 
     double cutoffThreshold_;
     double cutoffEpsilon3_;
