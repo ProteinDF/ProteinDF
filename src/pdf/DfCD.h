@@ -152,6 +152,21 @@ protected: // for exact
     ShellArrayTable makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo);
     ShellPairArrayTable getShellPairArrayTable(const ShellArrayTable& shellArrayTable);
     static const int MAX_SHELL_TYPE;
+
+protected:
+    TlMatrix getLMatrix_onTheFly(const double threshold,
+                                 const TlSymmetricMatrix& exactG);
+    void calcDiagonals(const TlOrbitalInfoObject& orbitalInfo,
+                       PQ_PairArray *pI2PQ,
+                       TlVector *pDiagonals);
+    void calcDiagonals_kernel(const TlOrbitalInfoObject& orbitalInfo,
+                              const std::vector<DfTaskCtrl::Task2>& taskList,
+                              TlSparseSymmetricMatrix *pDiagonalMat,
+                              PQ_PairArray *pI2PQ);
+    void calcERIs(const TlOrbitalInfoObject& orbitalInfo,
+                  const I2PQ_Type& I2PQ,
+                  TlSparseSymmetricMatrix* pG);
+    
     
 protected:
     index_type numOfPQs_;
