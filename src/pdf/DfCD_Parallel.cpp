@@ -72,7 +72,8 @@ void DfCD_Parallel::finalize_I2PQ(I2PQ_Type* pI2PQ)
             pI2PQ->insert(pI2PQ->end(),
                           i2pq_tmp.begin(), i2pq_tmp.end());
         }
-        std::sort(pI2PQ->begin(), pI2PQ->end(), PQ_Pair_less());
+        //std::sort(pI2PQ->begin(), pI2PQ->end(), PQ_Pair_less());
+        std::sort(pI2PQ->begin(), pI2PQ->end());
     } else {
         const std::size_t I2PQ_size = pI2PQ->size();
         std::vector<index_type> shellArray(I2PQ_size * 2);
