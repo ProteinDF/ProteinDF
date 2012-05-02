@@ -26,38 +26,117 @@ public:
               TlSymmetricMatrix *pK);
 
 protected:
-    struct PQ_Pair {
+    struct IndexPair2 {
     public:
-        PQ_Pair(index_type index1 =0, index_type index2 =0) : shellIndex1(index1), shellIndex2(index2) {
-            if (this->shellIndex1 > this->shellIndex2) {
-                std::swap(this->shellIndex1, this->shellIndex2);
+        explicit IndexPair2(index_type i1 =0, index_type i2 =0) : index1_(i1), index2_(i2) {
+            if (this->index1_ > this->index2_) {
+                std::swap(this->index1_, this->index2_);
             }
         }
 
-        bool operator<(const PQ_Pair& rhs) const {
-            bool answer = false;
-            if ((this->shellIndex1 < rhs.shellIndex1) ||
-                ((this->shellIndex1 == rhs.shellIndex1) && (this->shellIndex2 < rhs.shellIndex2))) {
-                answer = true;
-            }
-            return answer;
-        }
-
-        size_type index() const {
+        std::size_t index() const {
             // 'U' format
-            if (this->shellIndex1 > this->shellIndex2) {
-                std::swap(this->shellIndex1, this->shellIndex2);
-            }
-            return this->shellIndex1 +  this->shellIndex2 * (this->shellIndex2 +1) / 2;
+            assert(this->index1_ <= this->index2_);
+            return this->index1_ + this->index2_ * (this->index2_ +1) / 2;
         }
 
-    public:
-        index_type shellIndex1;
-        index_type shellIndex2;
+        bool operator<(const IndexPair2& rhs) const {
+            return (this->index() < rhs.index());
+        }
+
+        index_type index1() const {
+            return this->index1_;
+        }
+
+        index_type index2() const {
+            return this->index2_;
+        }
+
+    private:
+        index_type index1_;
+        index_type index2_;
     };
+
+    struct IndexPair4 {
+    public:
+        explicit IndexPair4(index_type i1 =0, index_type i2 =0,
+                            index_type i3 =0, index_type i4 =0) 
+            : indexPair1_(i1, i2), indexPair2_(i3, i4) {
+            if (this->indexPair1_.index() > this->indexPair2_.index()) {
+                std::swap(this->indexPair1_, this->indexPair2_);
+            }
+        }
+
+        std::size_t index() const {
+            std::size_t pair_index1 = this->indexPair1_.index();
+            std::size_t pair_index2 = this->indexPair2_.index();
+            assert(pair_index1 <= pair_index2);
+            return pair_index1 + pair_index2 * (pair_index2 +1) / 2;
+        }
+
+        bool operator<(const IndexPair4& rhs) const {
+            return (this->index() < rhs.index());
+        }
+
+        bool operator==(const IndexPair4& rhs) const {
+            return (this->index() == rhs.index());
+        }
+
+        index_type index1() const {
+            return this->indexPair1_.index1();
+        }
+
+        index_type index2() const {
+            return this->indexPair1_.index2();
+        }
+
+        index_type index3() const {
+            return this->indexPair2_.index1();
+        }
+
+        index_type index4() const {
+            return this->indexPair2_.index2();
+        }
+
+    private:
+        IndexPair2 indexPair1_;
+        IndexPair2 indexPair2_;
+    };
+
+
+protected:
+    // struct PQ_Pair {
+    // public:
+    //     PQ_Pair(index_type index1 =0, index_type index2 =0) : shellIndex1(index1), shellIndex2(index2) {
+    //         if (this->shellIndex1 > this->shellIndex2) {
+    //             std::swap(this->shellIndex1, this->shellIndex2);
+    //         }
+    //     }
+
+    //     bool operator<(const PQ_Pair& rhs) const {
+    //         bool answer = false;
+    //         if ((this->shellIndex1 < rhs.shellIndex1) ||
+    //             ((this->shellIndex1 == rhs.shellIndex1) && (this->shellIndex2 < rhs.shellIndex2))) {
+    //             answer = true;
+    //         }
+    //         return answer;
+    //     }
+
+    //     size_type index() const {
+    //         // 'U' format
+    //         if (this->shellIndex1 > this->shellIndex2) {
+    //             std::swap(this->shellIndex1, this->shellIndex2);
+    //         }
+    //         return this->shellIndex1 +  this->shellIndex2 * (this->shellIndex2 +1) / 2;
+    //     }
+
+    // public:
+    //     index_type shellIndex1;
+    //     index_type shellIndex2;
+    // };
     
-    typedef std::vector<PQ_Pair> PQ_PairArray;
-    typedef std::vector<PQ_Pair> I2PQ_Type;
+    typedef std::vector<IndexPair2> PQ_PairArray;
+    typedef std::vector<IndexPair2> I2PQ_Type;
     typedef std::vector<size_type> PQ2I_Type;
 
 protected:
@@ -125,6 +204,7 @@ protected:
                               TlSparseSymmetricMatrix *pSchwartzTable,
                               TlSparseSymmetricMatrix *pDiagonalMat,
                               PQ_PairArray *pI2PQ);
+
     void calcERIs(const TlSparseSymmetricMatrix& schwartzTable,
                   const I2PQ_Type& I2PQ,
                   TlSparseSymmetricMatrix* pG);
@@ -140,85 +220,22 @@ protected:
     mutable std::vector<unsigned long> cutoffAlive_schwartz_;
 
 protected:
-    struct IndexPair2 {
-    public:
-        IndexPair2(index_type i1, index_type i2) : index1_(i1), index2_(i2) {
-            if (this->index1_ > this->index2_) {
-                std::swap(this->index1_, this->index2_);
-            }
-        }
-
-        std::size_t index() const {
-            // 'U' format
-            assert(this->index1_ <= this->index2_);
-            return this->index1_ + this->index2_ * (this->index2_ +1) / 2;
-        }
-
-        bool operator<(const IndexPair2& rhs) const {
-            return (this->index() < rhs.index());
-        }
-
-        index_type index1() const {
-            return this->index1_;
-        }
-
-        index_type index2() const {
-            return this->index2_;
-        }
-
-    private:
-        index_type index1_;
-        index_type index2_;
-    };
-
-    struct IndexPair4 {
-    public:
-        IndexPair4(index_type i1, index_type i2,
-                   index_type i3, index_type i4) 
-            : indexPair1_(i1, i2), indexPair2_(i3, i4) {
-            if (this->indexPair1_.index() > this->indexPair2_.index()) {
-                std::swap(this->indexPair1_, this->indexPair2_);
-            }
-        }
-
-        std::size_t index() const {
-            std::size_t pair_index1 = this->indexPair1_.index();
-            std::size_t pair_index2 = this->indexPair2_.index();
-            assert(pair_index1 <= pair_index2);
-            return pair_index1 + pair_index2 * (pair_index2 +1) / 2;
-        }
-
-        bool operator<(const IndexPair4& rhs) const {
-            return (this->index() < rhs.index());
-        }
-
-        bool operator==(const IndexPair4& rhs) const {
-            return (this->index() == rhs.index());
-        }
-
-        index_type index1() const {
-            return this->indexPair1_.index1();
-        }
-
-        index_type index2() const {
-            return this->indexPair1_.index2();
-        }
-
-        index_type index3() const {
-            return this->indexPair2_.index1();
-        }
-
-        index_type index4() const {
-            return this->indexPair2_.index2();
-        }
-
-    private:
-        IndexPair2 indexPair1_;
-        IndexPair2 indexPair2_;
-    };
     typedef std::map<IndexPair4, std::vector<double> > ERI_CACHE_TYPE;
     ERI_CACHE_TYPE eriCache_;
     
+protected:
+    void getSuperMatrixElements(const I2PQ_Type& I2PQ,
+                                const TlSparseSymmetricMatrix& schwartzTable,
+                                TlSparseSymmetricMatrix *pRequest);
+    std::vector<IndexPair4> getCalcList(const TlSparseSymmetricMatrix& G,
+                                        const I2PQ_Type& I2PQ);
+    ERI_CACHE_TYPE calcERIs(const std::vector<IndexPair4>& calcList,
+                            const TlSparseSymmetricMatrix& schwartzTable);
+    void setERIs(const I2PQ_Type& I2PQ,
+                 const ERI_CACHE_TYPE& cache,
+                 TlSparseSymmetricMatrix *pRequest);
+
+
 protected:
     index_type numOfPQs_;
 

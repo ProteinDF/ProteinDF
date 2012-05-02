@@ -67,9 +67,8 @@ void DfCD::destroyEngines()
 
 void DfCD::calcCholeskyVectors()
 {
-    this->calcCholeskyVectors_onTheFly();
     //this->makeSuperMatrix_screening();
-    //this->makeSuperMatrix_noScreening();
+    this->calcCholeskyVectors_onTheFly();
 }
 
 void DfCD::makeSuperMatrix_screening()
@@ -99,6 +98,8 @@ void DfCD::makeSuperMatrix_screening()
 
     // 
     TlSymmetricMatrix G = this->getGMatrix(orbitalInfo, schwarzTable, numOfItilde, PQ2I);
+    G.save("G.mat");
+    //std::cerr << TlUtils::format("G(%d, %d)", G.getNumOfRows(), G.getNumOfCols()) << std::endl;
 
     this->makeL(G);
 }
@@ -205,7 +206,7 @@ void DfCD::calcPQPQ_kernel(const TlOrbitalInfoObject& orbitalInfo,
                         
                         // for I~ to pq table
                         if (value > tau) {
-                            local_I2PQ.push_back(PQ_Pair(indexP, indexQ));
+                            local_I2PQ.push_back(IndexPair2(indexP, indexQ));
                         }
                     }
                 }
@@ -263,8 +264,6 @@ TlSymmetricMatrix DfCD::getGMatrix(const TlOrbitalInfoObject& orbitalInfo,
     }
 
     this->finalize(&G);
-    //G.save("G.mat");
-    //std::cerr << TlUtils::format("G(%d, %d)", G.getNumOfRows(), G.getNumOfCols()) << std::endl;
     pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
@@ -357,7 +356,7 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
 
         for (int j = 0; j < maxStepsQ; ++j) {
             const index_type indexQ = shellIndexQ + j;
-            PQ_Pair pq(indexP, indexQ);
+            IndexPair2 pq(indexP, indexQ);
 
             const size_type indexPQ = PQ2I[pq.index()];
             // if (indexPQ == -1) {
@@ -371,7 +370,7 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
 
                 for (int l = 0; l < maxStepsS; ++l) {
                     const index_type indexS = shellIndexS + l;
-                    PQ_Pair rs(indexR, indexS);
+                    IndexPair2 rs(indexR, indexS);
 
                     const index_type indexRS = PQ2I[rs.index()];
                     // if (indexRS == -1) {
@@ -409,8 +408,10 @@ void DfCD::saveI2PQ(const PQ_PairArray& I2PQ)
     const std::size_t size = I2PQ.size();
     ofs.write(reinterpret_cast<const char*>(&size), sizeof(std::size_t));
     for (std::size_t i = 0; i < size; ++i) {
-        ofs.write(reinterpret_cast<const char*>(&(I2PQ[i].shellIndex1)), sizeof(index_type));
-        ofs.write(reinterpret_cast<const char*>(&(I2PQ[i].shellIndex2)), sizeof(index_type));
+        const index_type index1 = I2PQ[i].index1();
+        const index_type index2 = I2PQ[i].index2();
+        ofs.write(reinterpret_cast<const char*>(&index1), sizeof(index_type));
+        ofs.write(reinterpret_cast<const char*>(&index2), sizeof(index_type));
     }
 
     ofs.close();
@@ -434,7 +435,7 @@ DfCD::PQ_PairArray DfCD::getI2PQ()
     for (std::size_t i = 0; i < size; ++i) {
         ifs.read(reinterpret_cast<char*>(&shellIndex1), sizeof(index_type));
         ifs.read(reinterpret_cast<char*>(&shellIndex2), sizeof(index_type));
-        answer[i] = PQ_Pair(shellIndex1, shellIndex2);
+        answer[i] = IndexPair2(shellIndex1, shellIndex2);
     }
 
     ifs.close();
@@ -535,8 +536,8 @@ TlSymmetricMatrix DfCD::getCholeskyVector(const TlVector& L_col,
     const index_type numOfItilde = L_col.getSize();
     TlSymmetricMatrix answer(this->m_nNumOfAOs);
     for (index_type i = 0; i < numOfItilde; ++i) {
-        answer.set(I2PQ[i].shellIndex1,
-                   I2PQ[i].shellIndex2,
+        answer.set(I2PQ[i].index1(),
+                   I2PQ[i].index2(),
                    L_col[i]);
     }
 
@@ -675,7 +676,9 @@ void DfCD::calcCholeskyVectors_onTheFly()
             const index_type pivot_i = pivot[i];
             G.set(pivot_m, pivot_i, 0.0);
         }
-        this->calcERIs(schwartzTable, I2PQ, &G);
+
+        //this->calcERIs(schwartzTable, I2PQ, &G);
+        this->getSuperMatrixElements(I2PQ, schwartzTable, &G);
 
         // calc
         for (index_type i = m +1; i < N; ++i) {
@@ -755,8 +758,8 @@ void DfCD::calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
         const index_type numOfI = pI2PQ->size();
         pDiagonals->resize(numOfI);
         for (index_type i = 0; i < numOfI; ++i) {
-            const index_type row = (*pI2PQ)[i].shellIndex1;
-            const index_type col = (*pI2PQ)[i].shellIndex2;
+            const index_type row = (*pI2PQ)[i].index1();
+            const index_type col = (*pI2PQ)[i].index2();
             const double value = diagonalMat.get(row, col);
             (*pDiagonals)[i] = value;
         }
@@ -823,7 +826,7 @@ void DfCD::calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
                         // for I~ to pq table
                         if (std::fabs(value) > tau) {
                             local_diagMat.set(indexP, indexQ, value);
-                            local_I2PQ.push_back(PQ_Pair(indexP, indexQ));
+                            local_I2PQ.push_back(IndexPair2(indexP, indexQ));
                         }
                     }
                 }
@@ -877,19 +880,11 @@ void DfCD::calcERIs(const TlSparseSymmetricMatrix& schwartzTable,
         index_type G_col = 0;
         pG->index(it->first, &G_row, &G_col);
 
-        const index_type indexP = I2PQ[G_row].shellIndex1;
-        const index_type indexQ = I2PQ[G_row].shellIndex2;
-        const index_type indexR = I2PQ[G_col].shellIndex1;
-        const index_type indexS = I2PQ[G_col].shellIndex2;
+        const index_type indexP = I2PQ[G_row].index1();
+        const index_type indexQ = I2PQ[G_row].index2();
+        const index_type indexR = I2PQ[G_col].index1();
+        const index_type indexS = I2PQ[G_col].index2();
 
-        // const int basisTypeP = this->orbitalInfo_.getBasisType(indexP) - basisTypeBase[this->orbitalInfo_.getShellType(indexP)];
-        // const int basisTypeQ = this->orbitalInfo_.getBasisType(indexQ) - basisTypeBase[this->orbitalInfo_.getShellType(indexQ)];
-        // const int basisTypeR = this->orbitalInfo_.getBasisType(indexR) - basisTypeBase[this->orbitalInfo_.getShellType(indexR)];
-        // const int basisTypeS = this->orbitalInfo_.getBasisType(indexS) - basisTypeBase[this->orbitalInfo_.getShellType(indexS)];
-        // const index_type shellIndexP = indexP - basisTypeP;
-        // const index_type shellIndexQ = indexQ - basisTypeQ;
-        // const index_type shellIndexR = indexR - basisTypeR;
-        // const index_type shellIndexS = indexS - basisTypeS;
         const index_type shellIndexP = this->orbitalInfo_.getShellIndex(indexP);
         const index_type shellIndexQ = this->orbitalInfo_.getShellIndex(indexQ);
         const index_type shellIndexR = this->orbitalInfo_.getShellIndex(indexR);
@@ -1039,39 +1034,199 @@ void DfCD::schwartzCutoffReport()
 }
 
 
-// void DfCD::getERIs(const TlSparseSymmetricMatrix& schwartzTable,
-//                    const I2PQ_Type& I2PQ,
-//                    TlSparseSymmetricMatrix* pG)
-// {
-//     TlSparseSymmetricMatrix requestMat = this->makeRequest(*pG);
-// }
+void DfCD::getSuperMatrixElements(const I2PQ_Type& I2PQ,
+                                  const TlSparseSymmetricMatrix& schwartzTable,
+                                  TlSparseSymmetricMatrix *pG)
+{
+    const std::vector<IndexPair4> calcList = this->getCalcList(*pG, I2PQ);
+    ERI_CACHE_TYPE cache = this->calcERIs(calcList, schwartzTable);
+    this->setERIs(I2PQ, cache, pG);
+
+    // check
+    // {
+    //     TlSymmetricMatrix exactG;
+    //     exactG.load("G.mat");
+    //     TlSparseSymmetricMatrix::const_iterator itEnd = pG->end();
+    //     for (TlSparseSymmetricMatrix::const_iterator it = pG->begin(); it != itEnd; ++it) {
+    //         index_type index1 = 0;
+    //         index_type index2 = 0;
+    //         pG->index(it->first, &index1, &index2);
+    //         std::string mark = "    ";
+    //         if (std::fabs(it->second - exactG.get(index1, index2)) > 1.0E-5) {
+    //             mark = "[NG]";
+    //         }
+    //         std::cerr << TlUtils::format("G(%d, %d)=% f, % f %s",
+    //                                      index1, index2, it->second,
+    //                                      exactG.get(index1, index2),
+    //                                      mark.c_str())
+    //                   << std::endl;
+    //     }
+    // }
+}
 
 
-// TlSparseSymmetricMatrix DfCD::makeRequest(const TlSparseSymmetricMatrix& request)
-// {
-//     static const int basisTypeBase[] = {0, 1, 4}; // s, px, dxy
+std::vector<DfCD::IndexPair4> DfCD::getCalcList(const TlSparseSymmetricMatrix& G,
+                                                const I2PQ_Type& I2PQ)
+{
+    std::set<IndexPair4> calcSet;
+    TlSparseSymmetricMatrix::const_iterator itEnd = G.end();
+    for (TlSparseSymmetricMatrix::const_iterator it = G.begin(); it != itEnd; ++it) {
+        index_type G_row = 0;
+        index_type G_col = 0;
+        G.index(it->first, &G_row, &G_col);
 
-//     TlSparseSymmetricMatrix::const_iterator itEnd = request.end();
-//     for (TlSparseSymmetricMatrix::const_iterator it = request.begin(); it != itEnd; ++it) {
-//         index_type pq_index = 0;
-//         index_type rs_index = 0;
-//         request.index(it->first, &pq_index, &rs_index);
+        const index_type indexP = I2PQ[G_row].index1();
+        const index_type indexQ = I2PQ[G_row].index2();
+        const index_type indexR = I2PQ[G_col].index1();
+        const index_type indexS = I2PQ[G_col].index2();
 
-//         const index_type indexP = I2PQ[G_row].shellIndex1;
-//         const index_type indexQ = I2PQ[G_row].shellIndex2;
-//         const index_type indexR = I2PQ[G_col].shellIndex1;
-//         const index_type indexS = I2PQ[G_col].shellIndex2;
-//         const int basisTypeP = this->orbitalInfo_.getBasisType(indexP) - basisTypeBase[this->orbitalInfo_.getShellType(indexP)];
-//         const int basisTypeQ = this->orbitalInfo_.getBasisType(indexQ) - basisTypeBase[this->orbitalInfo_.getShellType(indexQ)];
-//         const int basisTypeR = this->orbitalInfo_.getBasisType(indexR) - basisTypeBase[this->orbitalInfo_.getShellType(indexR)];
-//         const int basisTypeS = this->orbitalInfo_.getBasisType(indexS) - basisTypeBase[this->orbitalInfo_.getShellType(indexS)];
-//         const index_type shellIndexP = indexP - basisTypeP;
-//         const index_type shellIndexQ = indexQ - basisTypeQ;
-//         const index_type shellIndexR = indexR - basisTypeR;
-//         const index_type shellIndexS = indexS - basisTypeS;
+        const index_type shellIndexP = this->orbitalInfo_.getShellIndex(indexP);
+        const index_type shellIndexQ = this->orbitalInfo_.getShellIndex(indexQ);
+        const index_type shellIndexR = this->orbitalInfo_.getShellIndex(indexR);
+        const index_type shellIndexS = this->orbitalInfo_.getShellIndex(indexS);
+
+        IndexPair4 indexPair4(shellIndexP, shellIndexQ, shellIndexR, shellIndexS);
+        if (this->eriCache_.find(indexPair4) == this->eriCache_.end()) {
+            calcSet.insert(indexPair4);
+        }
+    }
+
+    std::vector<IndexPair4> calcList(calcSet.size());
+    std::copy(calcSet.begin(), calcSet.end(), calcList.begin());
+
+    return calcList;
+}
+
+
+DfCD::ERI_CACHE_TYPE DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
+                                    const TlSparseSymmetricMatrix& schwartzTable) 
+{
+    const int maxShellType = this->orbitalInfo_.getMaxShellType();
+    const double threshold = this->CDAM_tau_;
+    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+    ERI_CACHE_TYPE cache;
+
+    const int numOfList = calcList.size();
+#pragma omp parallel
+    {
+        int threadID = 0;
+#ifdef _OPENMP
+        threadID = omp_get_thread_num();
+#endif // _OPENMP
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
         
-//         PQ_Pair ()
-//     }
-    
-// }
+#pragma omp for schedule(runtime)
+        for (int i = 0; i < numOfList; ++i) {
+            const index_type shellIndexP = calcList[i].index1();
+            const index_type shellIndexQ = calcList[i].index2();
+            const index_type shellIndexR = calcList[i].index3();
+            const index_type shellIndexS = calcList[i].index4();
+            
+            const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
+            const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
+            const int shellTypeR = this->orbitalInfo_.getShellType(shellIndexR);
+            const int shellTypeS = this->orbitalInfo_.getShellType(shellIndexS);
+            
+            const int shellQuartetType =
+                ((shellTypeP * maxShellType + shellTypeQ) * maxShellType + shellTypeP) * maxShellType + shellTypeQ;
+            const bool isAlive = this->isAliveBySchwartzCutoff(shellIndexP, shellIndexQ,
+                                                               shellIndexR, shellIndexS,
+                                                               shellQuartetType,
+                                                               schwartzTable,
+                                                               threshold);
+            if (isAlive == true) {
+                const int maxStepsP = 2 * shellTypeP + 1;
+                const int maxStepsQ = 2 * shellTypeQ + 1;
+                const int maxStepsR = 2 * shellTypeR + 1;
+                const int maxStepsS = 2 * shellTypeS + 1;
+                
+                const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(this->orbitalInfo_,
+                                                                                            shellIndexP,
+                                                                                            shellIndexQ,
+                                                                                            pairwisePGTO_cutoffThreshold);
+                const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(this->orbitalInfo_,
+                                                                                            shellIndexR,
+                                                                                            shellIndexS,
+                                                                                            pairwisePGTO_cutoffThreshold);
+                const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+                const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
+                
+                this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
+                
+                const int steps = maxStepsP * maxStepsQ * maxStepsR * maxStepsS;
+                std::vector<double> buf(steps);
+                std::copy(this->pEriEngines_[threadID].WORK, this->pEriEngines_[threadID].WORK + steps,
+                          buf.begin());
+                
+                cache[calcList[i]] = buf;
+            }
+        }
+    }
+
+    return cache;
+}
+
+
+void DfCD::setERIs(const I2PQ_Type& I2PQ,
+                   const ERI_CACHE_TYPE& cache,
+                   TlSparseSymmetricMatrix *pG)
+{
+    TlSparseSymmetricMatrix::iterator itEnd = pG->end();
+    for (TlSparseSymmetricMatrix::iterator it = pG->begin(); it != itEnd; ++it) {
+        index_type G_row = 0;
+        index_type G_col = 0;
+        pG->index(it->first, &G_row, &G_col);
+
+        index_type indexP = I2PQ[G_row].index1();
+        index_type indexQ = I2PQ[G_row].index2();
+        index_type indexR = I2PQ[G_col].index1();
+        index_type indexS = I2PQ[G_col].index2();
+
+        index_type shellIndexP = this->orbitalInfo_.getShellIndex(indexP);
+        index_type shellIndexQ = this->orbitalInfo_.getShellIndex(indexQ);
+        index_type shellIndexR = this->orbitalInfo_.getShellIndex(indexR);
+        index_type shellIndexS = this->orbitalInfo_.getShellIndex(indexS);
+
+        // swap
+        if (shellIndexP > shellIndexQ) {
+            std::swap(shellIndexP, shellIndexQ);
+            std::swap(indexP, indexQ);
+        }
+        if (shellIndexR > shellIndexS) {
+            std::swap(shellIndexR, shellIndexS);
+            std::swap(indexR, indexS);
+        }
+        {
+            IndexPair2 pq(shellIndexP, shellIndexQ);
+            IndexPair2 rs(shellIndexR, shellIndexS);
+            if (pq.index() > rs.index()) {
+                std::swap(shellIndexP, shellIndexR);
+                std::swap(indexP, indexR);
+                std::swap(shellIndexQ, shellIndexS);
+                std::swap(indexQ, indexS);
+            }
+        }
+
+        const int basisTypeP = indexP - shellIndexP;
+        const int basisTypeQ = indexQ - shellIndexQ;
+        const int basisTypeR = indexR - shellIndexR;
+        const int basisTypeS = indexS - shellIndexS;
+
+        const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
+        const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
+        const int shellTypeR = this->orbitalInfo_.getShellType(shellIndexR);
+        const int shellTypeS = this->orbitalInfo_.getShellType(shellIndexS);
+        const int maxStepsP = 2 * shellTypeP + 1;
+        const int maxStepsQ = 2 * shellTypeQ + 1;
+        const int maxStepsR = 2 * shellTypeR + 1;
+        const int maxStepsS = 2 * shellTypeS + 1;
+
+        ERI_CACHE_TYPE::const_iterator pCache = cache.find(IndexPair4(shellIndexP, shellIndexQ,
+                                                                      shellIndexR, shellIndexS));
+        assert(pCache != cache.end());
+        const std::vector<double>& values = pCache->second;
+        const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
+        it->second = values[index];
+    }
+}
 

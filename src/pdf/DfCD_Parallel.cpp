@@ -65,8 +65,8 @@ void DfCD_Parallel::finalize_I2PQ(I2PQ_Type* pI2PQ)
             const std::size_t I2PQ_size = shellArray.size() / 2;
             I2PQ_Type i2pq_tmp(I2PQ_size);
             for (std::size_t i = 0; i < I2PQ_size; ++i) {
-                i2pq_tmp[i] = PQ_Pair(shellArray[i*2   ],
-                                      shellArray[i*2 +1]);
+                i2pq_tmp[i] = IndexPair2(shellArray[i*2   ],
+                                         shellArray[i*2 +1]);
             }
             
             pI2PQ->insert(pI2PQ->end(),
@@ -78,8 +78,8 @@ void DfCD_Parallel::finalize_I2PQ(I2PQ_Type* pI2PQ)
         const std::size_t I2PQ_size = pI2PQ->size();
         std::vector<index_type> shellArray(I2PQ_size * 2);
         for (std::size_t i = 0; i < I2PQ_size; ++i) {
-            shellArray[i*2   ] = (*pI2PQ)[i].shellIndex1;
-            shellArray[i*2 +1] = (*pI2PQ)[i].shellIndex2;
+            shellArray[i*2   ] = (*pI2PQ)[i].index1();
+            shellArray[i*2 +1] = (*pI2PQ)[i].index2();
         }
         rComm.sendData(shellArray);
     }
@@ -91,8 +91,8 @@ void DfCD_Parallel::finalize_I2PQ(I2PQ_Type* pI2PQ)
             const std::size_t size = pI2PQ->size();
             tmp.resize(size * 2);
             for (std::size_t i = 0; i < size; ++i) {
-                tmp[i*2   ] = (*pI2PQ)[i].shellIndex1;
-                tmp[i*2 +1] = (*pI2PQ)[i].shellIndex2;
+                tmp[i*2   ] = (*pI2PQ)[i].index1();
+                tmp[i*2 +1] = (*pI2PQ)[i].index2();
             }
         }
         rComm.broadcast(tmp);
@@ -100,8 +100,8 @@ void DfCD_Parallel::finalize_I2PQ(I2PQ_Type* pI2PQ)
             const std::size_t size = tmp.size() / 2;
             pI2PQ->resize(size);
             for (std::size_t i = 0; i < size; ++i) {
-                (*pI2PQ)[i] = PQ_Pair(tmp[i*2   ],
-                                      tmp[i*2 +1]);
+                (*pI2PQ)[i] = IndexPair2(tmp[i*2   ],
+                                         tmp[i*2 +1]);
             }
         }
     }
@@ -130,8 +130,8 @@ DfCD::I2PQ_Type DfCD_Parallel::getI2PQ()
         const std::size_t I2PQ_size = I2PQ.size(); 
         shellArray.resize(I2PQ_size * 2);
         for (std::size_t i = 0; i < I2PQ_size; ++i) {
-            shellArray[i*2   ] = I2PQ[i].shellIndex1;
-            shellArray[i*2 +1] = I2PQ[i].shellIndex2;
+            shellArray[i*2   ] = I2PQ[i].index1();
+            shellArray[i*2 +1] = I2PQ[i].index2();
         }
     }
     
@@ -140,8 +140,8 @@ DfCD::I2PQ_Type DfCD_Parallel::getI2PQ()
         const std::size_t I2PQ_size = shellArray.size() / 2;
         I2PQ.resize(I2PQ_size);
         for (std::size_t i = 0; i < I2PQ_size; ++i) {
-            I2PQ[i] = PQ_Pair(shellArray[i*2   ],
-                              shellArray[i*2 +1]);
+            I2PQ[i] = IndexPair2(shellArray[i*2   ],
+                                 shellArray[i*2 +1]);
         }
     }
 
@@ -275,8 +275,8 @@ DfCD_Parallel::getCholeskyVector_distribute(const TlVector& L_col,
         //                              rComm.getRank(),
         //                              i, I2PQ[i].shellIndex1, I2PQ[i].shellIndex2)
         //           << std::endl;
-        answer.set(I2PQ[i].shellIndex1,
-                   I2PQ[i].shellIndex2,
+        answer.set(I2PQ[i].index1(),
+                   I2PQ[i].index2(),
                    L_col[i]);
     }
 
