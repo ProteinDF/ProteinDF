@@ -363,3 +363,92 @@ void DfCD_Parallel::makeL(const TlDistributeSymmetricMatrix& G)
 
     DfObject::saveLMatrix(L);
 }
+
+// On the Fly method -----------------------------------------------------------
+// void DfCD_Parallel::calcCholeskyVectors_onTheFly_replica()
+// {
+//     this->createEngines();
+
+//     TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
+//     PQ_PairArray I2PQ;
+//     TlVector d; // 対角成分
+//     this->calcDiagonals(&schwartzTable, &I2PQ, &d);
+//     this->log_.info(TlUtils::format(" # of PQ dimension: %d", int(this->numOfPQs_)));
+//     this->log_.info(TlUtils::format(" # of I~ dimension: %d", int(I2PQ.size())));
+//     this->saveI2PQ(I2PQ);
+
+//     const index_type N = I2PQ.size();
+//     double error = d.sum();
+//     std::vector<TlVector::size_type> pivot(N);
+//     for (index_type i = 0; i < N; ++i) {
+//         pivot[i] = i;
+//     }
+
+//     // clear cutoff stats
+//     {
+//         const int maxShellType = this->orbitalInfo_.getMaxShellType();
+//         const int numOfShellPairType = maxShellType* maxShellType;
+//         const int numOfShellQuartetType = numOfShellPairType * numOfShellPairType;
+//         this->cutoffAll_schwartz_.clear();
+//         this->cutoffAlive_schwartz_.clear();
+//         this->cutoffAll_schwartz_.resize(numOfShellQuartetType, 0);
+//         this->cutoffAlive_schwartz_.resize(numOfShellQuartetType, 0);
+//     }
+
+//     // prepare variables
+//     TlMatrix L;
+//     index_type m = 0;
+//     double sum_ll = 0.0;
+
+//     const double threshold = this->epsilon_;
+//     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
+//     while (error > threshold) {
+//         L.resize(N, m+1);
+//         std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+//                                                                        pivot.end());
+//         const index_type i = it - pivot.begin();
+//         std::swap(pivot[m], pivot[i]);
+        
+//         const double l_m_pm = std::sqrt(d[pivot[m]]);
+//         L.set(pivot[m], m, l_m_pm);
+        
+//         const double inv_l_m_pm = 1.0 / l_m_pm;
+
+//         // request
+//         TlSparseSymmetricMatrix G(N);
+//         const index_type pivot_m = pivot[m];
+//         for (index_type i = m +1; i < N; ++i) {
+//             const index_type pivot_i = pivot[i];
+//             G.set(pivot_m, pivot_i, 0.0);
+//         }
+//         this->getSuperMatrixElements(I2PQ, schwartzTable, &G);
+
+//         // calc
+//         for (index_type i = m +1; i < N; ++i) {
+//             const index_type pivot_i = pivot[i];
+//             double sum_ll = 0.0;
+//             for (index_type j = 0; j < m; ++j) {
+//                 sum_ll += L.get(pivot_m, j) * L.get(pivot_i, j);
+//             }
+
+//             const double l_m_pi = (G.get(pivot_m, pivot_i) - sum_ll) * inv_l_m_pm;
+//             L.set(pivot_i, m, l_m_pi);
+            
+//             d[pivot_i] -= l_m_pi * l_m_pi;
+//         }
+            
+//         error = 0.0;
+//         for (index_type i = m +1; i < N; ++i) {
+//             error += d[pivot[i]];
+//         }
+
+//         ++m;
+//     }
+//     this->log_.info(TlUtils::format("Cholesky Vectors: %d", m));
+
+//     this->destroyEngines();
+//     this->schwartzCutoffReport();
+
+//     this->saveL(L);
+// }
+

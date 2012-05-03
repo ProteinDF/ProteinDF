@@ -195,19 +195,34 @@ protected:
 
     /// 与えられたsuper matrix の要素に対し、2電子積分を計算して代入する。
     /// On-the-Fly時に使用する。
-    void getSuperMatrixElements(const I2PQ_Type& I2PQ,
-                                const TlSparseSymmetricMatrix& schwartzTable,
-                                TlSparseSymmetricMatrix *pG);
+    // void getSuperMatrixElements(const I2PQ_Type& I2PQ,
+    //                             const TlSparseSymmetricMatrix& schwartzTable,
+    //                             TlSparseSymmetricMatrix *pG);
+    std::vector<double> getSuperMatrixElements(const index_type G_row,
+                                               const std::vector<index_type>& G_col_list,
+                                               const I2PQ_Type& I2PQ,
+                                               const TlSparseSymmetricMatrix& schwartzTable);
     /// 要求されたsuper matrixの行列要素のうち、必要なshell indexのリストを返す。
-    std::vector<IndexPair4> getCalcList(const TlSparseSymmetricMatrix& G,
-                                        const I2PQ_Type& I2PQ);
+    // std::vector<IndexPair4> getCalcList(const TlSparseSymmetricMatrix& G,
+    //                                     const I2PQ_Type& I2PQ);
+    /// 要求されたsuper matrixの行列要素のうち、必要なshell indexのリストを返す。
+    ///
+    /// @param G_row 必要なsuper matrixの行要素。
+    /// @param G_col_list 必要なsuper matrixの列要素の配列。
+    std::vector<DfCD::IndexPair4> getCalcList(const index_type G_row,
+                                              const std::vector<index_type>& G_col_list,
+                                              const I2PQ_Type& I2PQ);
     /// 計算リストの2電子積分を求め、キャッシュに代入して返す。
     ERI_CACHE_TYPE calcERIs(const std::vector<IndexPair4>& calcList,
                             const TlSparseSymmetricMatrix& schwartzTable);
     /// キャッシュから必要な行列要素を代入する。
-    void setERIs(const I2PQ_Type& I2PQ,
-                 const ERI_CACHE_TYPE& cache,
-                 TlSparseSymmetricMatrix *pG);
+    // void setERIs(const I2PQ_Type& I2PQ,
+    //              const ERI_CACHE_TYPE& cache,
+    //              TlSparseSymmetricMatrix *pG);
+    std::vector<double> setERIs(const index_type G_row,
+                                const std::vector<index_type> G_col_list,
+                                const I2PQ_Type& I2PQ,
+                                const ERI_CACHE_TYPE& cache);
     /// 2電子積分キャッシュ
     ERI_CACHE_TYPE eriCache_;
 

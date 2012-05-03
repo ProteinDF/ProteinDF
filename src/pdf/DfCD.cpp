@@ -616,13 +616,10 @@ TlSymmetricMatrix DfCD::getPMatrix()
 }
 
 
-/// @param numOfCDAMs [in] I~の総数
 void DfCD::calcCholeskyVectors_onTheFly()
 {
     this->createEngines();
 
-    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
     TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
     PQ_PairArray I2PQ;
     TlVector d; // 対角成分
@@ -653,7 +650,6 @@ void DfCD::calcCholeskyVectors_onTheFly()
     TlMatrix L;
     index_type m = 0;
     double sum_ll = 0.0;
-    TlSparseSymmetricMatrix request(N);
 
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
@@ -670,23 +666,28 @@ void DfCD::calcCholeskyVectors_onTheFly()
         const double inv_l_m_pm = 1.0 / l_m_pm;
 
         // request
-        TlSparseSymmetricMatrix G(N);
         const index_type pivot_m = pivot[m];
-        for (index_type i = m +1; i < N; ++i) {
-            const index_type pivot_i = pivot[i];
-            G.set(pivot_m, pivot_i, 0.0);
+        std::vector<double> G_pm;
+        const index_type numOf_G_cols = N -(m+1);
+        {
+            std::vector<index_type> G_col_list(numOf_G_cols);
+            for (index_type i = 0; i < numOf_G_cols; ++i) {
+                const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+                G_col_list[i] = pivot_i;
+            }
+            G_pm = this->getSuperMatrixElements(pivot_m, G_col_list, I2PQ, schwartzTable);
         }
-        this->getSuperMatrixElements(I2PQ, schwartzTable, &G);
+        assert(G_pm.size() == numOf_G_cols);
 
         // calc
-        for (index_type i = m +1; i < N; ++i) {
-            const index_type pivot_i = pivot[i];
+        for (index_type i = 0; i < numOf_G_cols; ++i) {
+            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
             double sum_ll = 0.0;
             for (index_type j = 0; j < m; ++j) {
                 sum_ll += L.get(pivot_m, j) * L.get(pivot_i, j);
             }
 
-            const double l_m_pi = (G.get(pivot_m, pivot_i) - sum_ll) * inv_l_m_pm;
+            const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
             L.set(pivot_i, m, l_m_pi);
             
             d[pivot_i] -= l_m_pi * l_m_pi;
@@ -946,58 +947,41 @@ void DfCD::schwartzCutoffReport()
 }
 
 
-void DfCD::getSuperMatrixElements(const I2PQ_Type& I2PQ,
-                                  const TlSparseSymmetricMatrix& schwartzTable,
-                                  TlSparseSymmetricMatrix *pG)
+std::vector<double>
+DfCD::getSuperMatrixElements(const index_type G_row,
+                             const std::vector<index_type>& G_col_list,
+                             const I2PQ_Type& I2PQ,
+                             const TlSparseSymmetricMatrix& schwartzTable)
 {
-    const std::vector<IndexPair4> calcList = this->getCalcList(*pG, I2PQ);
-    ERI_CACHE_TYPE cache = this->calcERIs(calcList, schwartzTable);
+    const std::vector<IndexPair4> calcList = this->getCalcList(G_row, G_col_list, I2PQ);
+    {
+        const ERI_CACHE_TYPE cache = this->calcERIs(calcList, schwartzTable);
+        // merge cache
+        this->eriCache_.insert(cache.begin(), cache.end());
+    }
 
-    // merge cache
-    this->eriCache_.insert(cache.begin(), cache.end());
-
-    this->setERIs(I2PQ, this->eriCache_, pG);
-
-    // check
-    // {
-    //     TlSymmetricMatrix exactG;
-    //     exactG.load("G.mat");
-    //     TlSparseSymmetricMatrix::const_iterator itEnd = pG->end();
-    //     for (TlSparseSymmetricMatrix::const_iterator it = pG->begin(); it != itEnd; ++it) {
-    //         index_type index1 = 0;
-    //         index_type index2 = 0;
-    //         pG->index(it->first, &index1, &index2);
-    //         std::string mark = "    ";
-    //         if (std::fabs(it->second - exactG.get(index1, index2)) > 1.0E-5) {
-    //             mark = "[NG]";
-    //         }
-    //         std::cerr << TlUtils::format("G(%d, %d)=% f, % f %s",
-    //                                      index1, index2, it->second,
-    //                                      exactG.get(index1, index2),
-    //                                      mark.c_str())
-    //                   << std::endl;
-    //     }
-    // }
+    return this->setERIs(G_row, G_col_list, I2PQ, this->eriCache_);
 }
 
 
-std::vector<DfCD::IndexPair4> DfCD::getCalcList(const TlSparseSymmetricMatrix& G,
-                                                const I2PQ_Type& I2PQ)
+std::vector<DfCD::IndexPair4> 
+DfCD::getCalcList(const index_type G_row,
+                  const std::vector<index_type>& G_col_list,
+                  const I2PQ_Type& I2PQ)
 {
     std::set<IndexPair4> calcSet;
-    TlSparseSymmetricMatrix::const_iterator itEnd = G.end();
-    for (TlSparseSymmetricMatrix::const_iterator it = G.begin(); it != itEnd; ++it) {
-        index_type G_row = 0;
-        index_type G_col = 0;
-        G.index(it->first, &G_row, &G_col);
 
-        const index_type indexP = I2PQ[G_row].index1();
-        const index_type indexQ = I2PQ[G_row].index2();
+    const index_type indexP = I2PQ[G_row].index1();
+    const index_type indexQ = I2PQ[G_row].index2();
+    const index_type shellIndexP = this->orbitalInfo_.getShellIndex(indexP);
+    const index_type shellIndexQ = this->orbitalInfo_.getShellIndex(indexQ);
+
+    const index_type numOf_G_cols = G_col_list.size();
+    for (index_type i = 0; i < numOf_G_cols; ++i) {
+        const index_type G_col = G_col_list[i];
+
         const index_type indexR = I2PQ[G_col].index1();
         const index_type indexS = I2PQ[G_col].index2();
-
-        const index_type shellIndexP = this->orbitalInfo_.getShellIndex(indexP);
-        const index_type shellIndexQ = this->orbitalInfo_.getShellIndex(indexQ);
         const index_type shellIndexR = this->orbitalInfo_.getShellIndex(indexR);
         const index_type shellIndexS = this->orbitalInfo_.getShellIndex(indexS);
 
@@ -1090,23 +1074,30 @@ DfCD::ERI_CACHE_TYPE DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
 }
 
 
-void DfCD::setERIs(const I2PQ_Type& I2PQ,
-                   const ERI_CACHE_TYPE& cache,
-                   TlSparseSymmetricMatrix *pG)
+std::vector<double>
+DfCD::setERIs(const index_type G_row,
+              const std::vector<index_type> G_col_list,
+              const I2PQ_Type& I2PQ,
+              const ERI_CACHE_TYPE& cache)
 {
-    TlSparseSymmetricMatrix::iterator itEnd = pG->end();
-    for (TlSparseSymmetricMatrix::iterator it = pG->begin(); it != itEnd; ++it) {
-        index_type G_row = 0;
-        index_type G_col = 0;
-        pG->index(it->first, &G_row, &G_col);
+    const index_type indexP_orig = I2PQ[G_row].index1();
+    const index_type indexQ_orig = I2PQ[G_row].index2();
+    const index_type shellIndexP_orig = this->orbitalInfo_.getShellIndex(indexP_orig);
+    const index_type shellIndexQ_orig = this->orbitalInfo_.getShellIndex(indexQ_orig);
 
-        index_type indexP = I2PQ[G_row].index1();
-        index_type indexQ = I2PQ[G_row].index2();
+    const index_type numOf_G_cols = G_col_list.size();
+    std::vector<double> answer(numOf_G_cols);
+#pragma omp parallel for
+    for (index_type i = 0; i < numOf_G_cols; ++i) {
+        index_type indexP = indexP_orig;
+        index_type indexQ = indexQ_orig;
+        index_type shellIndexP = shellIndexP_orig;
+        index_type shellIndexQ = shellIndexQ_orig;
+
+        const index_type G_col = G_col_list[i];
+
         index_type indexR = I2PQ[G_col].index1();
         index_type indexS = I2PQ[G_col].index2();
-
-        index_type shellIndexP = this->orbitalInfo_.getShellIndex(indexP);
-        index_type shellIndexQ = this->orbitalInfo_.getShellIndex(indexQ);
         index_type shellIndexR = this->orbitalInfo_.getShellIndex(indexR);
         index_type shellIndexS = this->orbitalInfo_.getShellIndex(indexS);
 
@@ -1130,26 +1121,32 @@ void DfCD::setERIs(const I2PQ_Type& I2PQ,
             }
         }
 
-        const int basisTypeP = indexP - shellIndexP;
-        const int basisTypeQ = indexQ - shellIndexQ;
-        const int basisTypeR = indexR - shellIndexR;
-        const int basisTypeS = indexS - shellIndexS;
-
-        const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
-        const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
-        const int shellTypeR = this->orbitalInfo_.getShellType(shellIndexR);
-        const int shellTypeS = this->orbitalInfo_.getShellType(shellIndexS);
-        const int maxStepsP = 2 * shellTypeP + 1;
-        const int maxStepsQ = 2 * shellTypeQ + 1;
-        const int maxStepsR = 2 * shellTypeR + 1;
-        const int maxStepsS = 2 * shellTypeS + 1;
-
         ERI_CACHE_TYPE::const_iterator pCache = cache.find(IndexPair4(shellIndexP, shellIndexQ,
                                                                       shellIndexR, shellIndexS));
-        assert(pCache != cache.end());
-        const std::vector<double>& values = pCache->second;
-        const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
-        it->second = values[index];
+        if (pCache != cache.end()) {
+            const int basisTypeP = indexP - shellIndexP;
+            const int basisTypeQ = indexQ - shellIndexQ;
+            const int basisTypeR = indexR - shellIndexR;
+            const int basisTypeS = indexS - shellIndexS;
+            
+            const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
+            const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
+            const int shellTypeR = this->orbitalInfo_.getShellType(shellIndexR);
+            const int shellTypeS = this->orbitalInfo_.getShellType(shellIndexS);
+            const int maxStepsP = 2 * shellTypeP + 1;
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+            const int maxStepsR = 2 * shellTypeR + 1;
+            const int maxStepsS = 2 * shellTypeS + 1;
+            
+            const std::vector<double>& values = pCache->second;
+            const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
+#pragma omp critical(DfCD__setERIs)
+            {
+                answer[i] = values[index];
+            }
+        }
     }
+
+    return answer;
 }
 
