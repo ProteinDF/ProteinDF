@@ -105,36 +105,6 @@ protected:
 
 
 protected:
-    // struct PQ_Pair {
-    // public:
-    //     PQ_Pair(index_type index1 =0, index_type index2 =0) : shellIndex1(index1), shellIndex2(index2) {
-    //         if (this->shellIndex1 > this->shellIndex2) {
-    //             std::swap(this->shellIndex1, this->shellIndex2);
-    //         }
-    //     }
-
-    //     bool operator<(const PQ_Pair& rhs) const {
-    //         bool answer = false;
-    //         if ((this->shellIndex1 < rhs.shellIndex1) ||
-    //             ((this->shellIndex1 == rhs.shellIndex1) && (this->shellIndex2 < rhs.shellIndex2))) {
-    //             answer = true;
-    //         }
-    //         return answer;
-    //     }
-
-    //     size_type index() const {
-    //         // 'U' format
-    //         if (this->shellIndex1 > this->shellIndex2) {
-    //             std::swap(this->shellIndex1, this->shellIndex2);
-    //         }
-    //         return this->shellIndex1 +  this->shellIndex2 * (this->shellIndex2 +1) / 2;
-    //     }
-
-    // public:
-    //     index_type shellIndex1;
-    //     index_type shellIndex2;
-    // };
-    
     typedef std::vector<IndexPair2> PQ_PairArray;
     typedef std::vector<IndexPair2> I2PQ_Type;
     typedef std::vector<size_type> PQ2I_Type;
@@ -205,9 +175,9 @@ protected:
                               TlSparseSymmetricMatrix *pDiagonalMat,
                               PQ_PairArray *pI2PQ);
 
-    void calcERIs(const TlSparseSymmetricMatrix& schwartzTable,
-                  const I2PQ_Type& I2PQ,
-                  TlSparseSymmetricMatrix* pG);
+    // void calcERIs(const TlSparseSymmetricMatrix& schwartzTable,
+    //               const I2PQ_Type& I2PQ,
+    //               TlSparseSymmetricMatrix* pG);
     bool isAliveBySchwartzCutoff(const index_type shellIndexP,
                                  const index_type shellIndexQ,
                                  const index_type shellIndexR,
@@ -220,20 +190,26 @@ protected:
     mutable std::vector<unsigned long> cutoffAlive_schwartz_;
 
 protected:
+    /// 2電子積分キャッシュの型
     typedef std::map<IndexPair4, std::vector<double> > ERI_CACHE_TYPE;
-    ERI_CACHE_TYPE eriCache_;
-    
-protected:
+
+    /// 与えられたsuper matrix の要素に対し、2電子積分を計算して代入する。
+    /// On-the-Fly時に使用する。
     void getSuperMatrixElements(const I2PQ_Type& I2PQ,
                                 const TlSparseSymmetricMatrix& schwartzTable,
-                                TlSparseSymmetricMatrix *pRequest);
+                                TlSparseSymmetricMatrix *pG);
+    /// 要求されたsuper matrixの行列要素のうち、必要なshell indexのリストを返す。
     std::vector<IndexPair4> getCalcList(const TlSparseSymmetricMatrix& G,
                                         const I2PQ_Type& I2PQ);
+    /// 計算リストの2電子積分を求め、キャッシュに代入して返す。
     ERI_CACHE_TYPE calcERIs(const std::vector<IndexPair4>& calcList,
                             const TlSparseSymmetricMatrix& schwartzTable);
+    /// キャッシュから必要な行列要素を代入する。
     void setERIs(const I2PQ_Type& I2PQ,
                  const ERI_CACHE_TYPE& cache,
-                 TlSparseSymmetricMatrix *pRequest);
+                 TlSparseSymmetricMatrix *pG);
+    /// 2電子積分キャッシュ
+    ERI_CACHE_TYPE eriCache_;
 
 
 protected:

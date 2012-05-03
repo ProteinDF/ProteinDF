@@ -676,8 +676,6 @@ void DfCD::calcCholeskyVectors_onTheFly()
             const index_type pivot_i = pivot[i];
             G.set(pivot_m, pivot_i, 0.0);
         }
-
-        //this->calcERIs(schwartzTable, I2PQ, &G);
         this->getSuperMatrixElements(I2PQ, schwartzTable, &G);
 
         // calc
@@ -859,92 +857,6 @@ void DfCD::calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
 }
 
 
-void DfCD::calcERIs(const TlSparseSymmetricMatrix& schwartzTable,
-                    const I2PQ_Type& I2PQ,
-                    TlSparseSymmetricMatrix* pG)
-{
-    static const int basisTypeBase[] = {0, 1, 4}; // s, px, dxy
-    const int maxShellType = this->orbitalInfo_.getMaxShellType();
-    const double threshold = this->CDAM_tau_;
-
-    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
-    int threadID = 0;
-#ifdef _OPENMP
-    threadID = omp_get_thread_num();
-#endif // _OPENMP
-    this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
-
-    TlSparseSymmetricMatrix::const_iterator itEnd = pG->end();
-    for (TlSparseSymmetricMatrix::const_iterator it = pG->begin(); it != itEnd; ++it) {
-        index_type G_row = 0;
-        index_type G_col = 0;
-        pG->index(it->first, &G_row, &G_col);
-
-        const index_type indexP = I2PQ[G_row].index1();
-        const index_type indexQ = I2PQ[G_row].index2();
-        const index_type indexR = I2PQ[G_col].index1();
-        const index_type indexS = I2PQ[G_col].index2();
-
-        const index_type shellIndexP = this->orbitalInfo_.getShellIndex(indexP);
-        const index_type shellIndexQ = this->orbitalInfo_.getShellIndex(indexQ);
-        const index_type shellIndexR = this->orbitalInfo_.getShellIndex(indexR);
-        const index_type shellIndexS = this->orbitalInfo_.getShellIndex(indexS);
-        assert((this->orbitalInfo_.getBasisType(shellIndexP) == 0) ||
-               (this->orbitalInfo_.getBasisType(shellIndexP) == 1) ||
-               (this->orbitalInfo_.getBasisType(shellIndexP) == 4));
-        assert((this->orbitalInfo_.getBasisType(shellIndexQ) == 0) ||
-               (this->orbitalInfo_.getBasisType(shellIndexQ) == 1) ||
-               (this->orbitalInfo_.getBasisType(shellIndexQ) == 4));
-        assert((this->orbitalInfo_.getBasisType(shellIndexR) == 0) ||
-               (this->orbitalInfo_.getBasisType(shellIndexR) == 1) ||
-               (this->orbitalInfo_.getBasisType(shellIndexR) == 4));
-        assert((this->orbitalInfo_.getBasisType(shellIndexS) == 0) ||
-               (this->orbitalInfo_.getBasisType(shellIndexS) == 1) ||
-               (this->orbitalInfo_.getBasisType(shellIndexS) == 4));
-
-        const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
-        const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
-        const int shellTypeR = this->orbitalInfo_.getShellType(shellIndexR);
-        const int shellTypeS = this->orbitalInfo_.getShellType(shellIndexS);
-
-        const int shellQuartetType =
-            ((shellTypeP * maxShellType + shellTypeQ) * maxShellType + shellTypeP) * maxShellType + shellTypeQ;
-        const bool isAlive = this->isAliveBySchwartzCutoff(shellIndexP, shellIndexQ,
-                                                           shellIndexR, shellIndexS,
-                                                           shellQuartetType,
-                                                           schwartzTable,
-                                                           threshold);
-        if (isAlive == true) {
-            const int maxStepsP = 2 * shellTypeP + 1;
-            const int maxStepsQ = 2 * shellTypeQ + 1;
-            const int maxStepsR = 2 * shellTypeR + 1;
-            const int maxStepsS = 2 * shellTypeS + 1;
-            
-            const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(this->orbitalInfo_,
-                                                                                        shellIndexP,
-                                                                                        shellIndexQ,
-                                                                                        pairwisePGTO_cutoffThreshold);
-            const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(this->orbitalInfo_,
-                                                                                        shellIndexR,
-                                                                                        shellIndexS,
-                                                                                        pairwisePGTO_cutoffThreshold);
-            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
-            const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
-            
-            this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
-
-            const int basisTypeP = indexP - shellIndexP;
-            const int basisTypeQ = indexQ - shellIndexQ;
-            const int basisTypeR = indexR - shellIndexR;
-            const int basisTypeS = indexS - shellIndexS;
-            const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
-            const double value = this->pEriEngines_[threadID].WORK[index];
-            pG->set(G_row, G_col, value);
-        }
-    }
-}
-
-
 bool DfCD::isAliveBySchwartzCutoff(const index_type shellIndexP,
                                    const index_type shellIndexQ,
                                    const index_type shellIndexR,
@@ -1040,7 +952,11 @@ void DfCD::getSuperMatrixElements(const I2PQ_Type& I2PQ,
 {
     const std::vector<IndexPair4> calcList = this->getCalcList(*pG, I2PQ);
     ERI_CACHE_TYPE cache = this->calcERIs(calcList, schwartzTable);
-    this->setERIs(I2PQ, cache, pG);
+
+    // merge cache
+    this->eriCache_.insert(cache.begin(), cache.end());
+
+    this->setERIs(I2PQ, this->eriCache_, pG);
 
     // check
     // {
@@ -1110,6 +1026,7 @@ DfCD::ERI_CACHE_TYPE DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
 #pragma omp parallel
     {
         int threadID = 0;
+        ERI_CACHE_TYPE local_cache;
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
@@ -1157,9 +1074,15 @@ DfCD::ERI_CACHE_TYPE DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
                 std::vector<double> buf(steps);
                 std::copy(this->pEriEngines_[threadID].WORK, this->pEriEngines_[threadID].WORK + steps,
                           buf.begin());
-                
-                cache[calcList[i]] = buf;
+
+                local_cache[calcList[i]] = buf;
             }
+        }
+
+        // merge cache
+#pragma omp critical(DfCD__calcERIs)
+        {
+            cache.insert(local_cache.begin(), local_cache.end());
         }
     }
 
