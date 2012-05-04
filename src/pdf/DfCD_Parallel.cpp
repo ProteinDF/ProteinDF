@@ -5,30 +5,22 @@
 
 DfCD_Parallel::DfCD_Parallel(TlSerializeData* pPdfParam) 
     : DfCD(pPdfParam) {
+    this->CD_all_time_.stop();
+    this->CD_ERI_time_.stop();
+    this->CD_calc_time_.stop();
+    this->CD_calc_d1_time_.stop();
+    this->CD_calc_d2_time_.stop();
 }
 
 
 DfCD_Parallel::~DfCD_Parallel()
 {
+    this->log_.info(TlUtils::format("CD all:    %f sec.", this->CD_all_time_.getElapseTime()));
+    this->log_.info(TlUtils::format("CD ERI:    %f sec.", this->CD_ERI_time_.getElapseTime()));
+    this->log_.info(TlUtils::format("CD calc:   %f sec.", this->CD_calc_time_.getElapseTime()));
+    this->log_.info(TlUtils::format("CD d1:     %f sec.", this->CD_calc_d1_time_.getElapseTime()));
+    this->log_.info(TlUtils::format("CD d2:     %f sec.", this->CD_calc_d2_time_.getElapseTime()));
 }
-
-
-// void DfCD_Parallel::calcCholeskyVectors()
-// {
-// #ifdef HAVE_SCALAPACK
-//     if (this->m_bUsingSCALAPACK == true) {
-//         this->makeSuperMatrix_distribute();
-//     } else {
-//         DfCD::makeSuperMatrix_screening();
-//     }
-// #else
-//     {
-//         DfCD::makeSuperMatrix_screening();
-//     }
-// #endif // HAVE_SCALAPACK
-
-//     this->
-// }
 
 
 DfTaskCtrl* DfCD_Parallel::getDfTaskCtrlObject() const
@@ -373,6 +365,8 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     this->createEngines();
     this->initializeCutoffStats();
 
+    this->CD_all_time_.start();
+
     this->log_.info(TlUtils::format("# of PQ dimension: %d", int(this->numOfPQs_)));
     TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
     PQ_PairArray I2PQ;
@@ -393,13 +387,12 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
 
     // prepare variables
     RowVectorMatrix L; // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
-    //TlMatrix L;
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
     index_type m = 0;
     while (error > threshold) {
-        this->log_.info(TlUtils::format("m=%d: err=%f", m, error));
+        // this->log_.info(TlUtils::format("m=%d: err=%f", m, error));
         L.resize(N, m+1);
 
         // pivot
@@ -408,7 +401,6 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
                                                                            pivot.end());
             const index_type i = it - pivot.begin();
             std::swap(pivot[m], pivot[i]);
-            this->log_.info(TlUtils::format("m=%d: pivot_m=%d", m, pivot[m]));
         }
         
         const double l_m_pm = std::sqrt(d[pivot[m]]);
@@ -417,6 +409,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         const double inv_l_m_pm = 1.0 / l_m_pm;
 
         // ERI
+        this->CD_ERI_time_.start();
         const index_type pivot_m = pivot[m];
         std::vector<double> G_pm;
         const index_type numOf_G_cols = N -(m+1);
@@ -428,9 +421,11 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
             }
             G_pm = this->getSuperMatrixElements(pivot_m, G_col_list, I2PQ, schwartzTable);
         }
+        this->CD_ERI_time_.stop();
         assert(G_pm.size() == numOf_G_cols);
 
         // CD calc
+        this->CD_calc_time_.start();
         TlVector L_pm;
         // L_pm = L.getRowVector(pivot_m);
         {
@@ -442,7 +437,9 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
             rComm.broadcast(L_pm, PEinCharge);
         }
         assert(L_pm.getSize() == (m+1));
+        this->CD_calc_time_.stop();
 
+        this->CD_calc_d1_time_.start();
         std::vector<double> tmp_d(numOf_G_cols);
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
@@ -461,11 +458,15 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
                 // d[pivot_i] -= l_m_pi * l_m_pi;
             }
         }
-        rComm.allReduce_SUM(tmp_d);
+        this->CD_calc_d1_time_.start();
+
+        this->CD_calc_d2_time_.start();
+        rComm.allReduce_SUM(&(tmp_d[0]), numOf_G_cols);
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
             d[pivot_i] += tmp_d[i];
         }
+        this->CD_calc_d2_time_.stop();
 
         // calc error
         error = 0.0;
@@ -480,6 +481,8 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
 
     this->destroyEngines();
     this->schwartzCutoffReport();
+
+    this->CD_all_time_.stop();
 
     this->saveL(L);
 }
@@ -514,32 +517,41 @@ DfCD_Parallel::getSuperMatrixElements(const index_type G_row,
     assert(elements.size() == (end - start));
 
     // gather to master
-    std::vector<double> answer;
+    const int TAG_SME_HEADER = 1001;
+    const int TAG_SME_DATA   = 1002;
+    std::vector<double> answer(numOfG_cols);
+    std::vector<std::size_t> header(2);
     if (rank == 0) {
-        answer = elements;
-    }
-    for (int pe = 1; pe < numOfProcs; ++pe) {
-        if (rank == 0) {
-            std::size_t size = 0;
-            rComm.receiveData(size, pe);
-            if (size > 0) {
-                rComm.receiveData(elements, pe);
-                
-                const std::size_t prev_size = answer.size();
-                answer.resize(prev_size + elements.size());
-                std::copy(elements.begin(), elements.end(),
-                          answer.begin() + prev_size);
-            }
-        } else if (pe == rank) {
-            const std::size_t size = end - start;
-            rComm.sendData(size, 0);
-            if (size > 0) {
-                rComm.sendData(elements);
-            }
+        // copy from myself
+        std::copy(elements.begin(), elements.end(),
+                  answer.begin());
+
+        // receive data from slaves
+        std::vector<bool> recvCheck(numOfProcs, false);
+        std::vector<double> buf(range);
+        for (int pe = 1; pe < numOfProcs; ++pe) {
+            int src = 0;
+            rComm.receiveDataFromAnySourceX(&(header[0]), 2, &src, TAG_SME_HEADER);
+
+            const std::size_t local_start = header[0];
+            const std::size_t local_end   = header[1];
+            const std::size_t size = local_end - local_start;
+            rComm.receiveDataX(&(buf[0]), size, src, TAG_SME_DATA);
+
+            std::copy(buf.begin(), buf.begin() + size,
+                      answer.begin() + local_start);
         }
+
+    } else {
+        header[0] = start;
+        header[1] = end;
+        rComm.sendDataX(&(header[0]), 2, 0, TAG_SME_HEADER);
+        rComm.sendDataX(&(elements[0]), elements.size(), 0, TAG_SME_DATA);
     }
-    rComm.broadcast(answer);
-    
+
+    //rComm.broadcast(answer);
+    rComm.broadcast(&(answer[0]), numOfG_cols, 0);
+
     return answer;
 }
 

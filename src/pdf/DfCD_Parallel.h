@@ -4,11 +4,7 @@
 #include <cstdlib>
 #include "DfCD.h"
 #include "TlDistributeSymmetricMatrix.h"
-
-/// 行毎のベクトルとして保持した行列
-class TlRowVectorMatrix {
-};
-
+#include "TlTime.h"
 
 class DfCD_Parallel : public DfCD {
 public:
@@ -108,6 +104,12 @@ protected:
                            const TlSparseSymmetricMatrix& schwartzTable);
     void saveL(const RowVectorMatrix& L);
 
+private:
+    TlTime CD_all_time_;
+    TlTime CD_ERI_time_;
+    TlTime CD_calc_time_;
+    TlTime CD_calc_d1_time_;
+    TlTime CD_calc_d2_time_;
 };
 
 #endif // DFCD_PARALLEL_H
