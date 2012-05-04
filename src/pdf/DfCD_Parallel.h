@@ -4,7 +4,6 @@
 #include <cstdlib>
 #include "DfCD.h"
 #include "TlDistributeSymmetricMatrix.h"
-#include "TlTime.h"
 
 class DfCD_Parallel : public DfCD {
 public:
@@ -103,13 +102,6 @@ protected:
                            const I2PQ_Type& I2PQ,
                            const TlSparseSymmetricMatrix& schwartzTable);
     void saveL(const RowVectorMatrix& L);
-
-private:
-    TlTime CD_all_time_;
-    TlTime CD_ERI_time_;
-    TlTime CD_calc_time_;
-    TlTime CD_calc_d1_time_;
-    TlTime CD_calc_d2_time_;
 };
 
 #endif // DFCD_PARALLEL_H

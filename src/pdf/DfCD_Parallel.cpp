@@ -2,24 +2,15 @@
 #include "DfCD_Parallel.h"
 #include "DfTaskCtrl_Parallel.h"
 #include "TlCommunicate.h"
+#include "TlTime.h"
 
 DfCD_Parallel::DfCD_Parallel(TlSerializeData* pPdfParam) 
     : DfCD(pPdfParam) {
-    this->CD_all_time_.stop();
-    this->CD_ERI_time_.stop();
-    this->CD_calc_time_.stop();
-    this->CD_calc_d1_time_.stop();
-    this->CD_calc_d2_time_.stop();
 }
 
 
 DfCD_Parallel::~DfCD_Parallel()
 {
-    this->log_.info(TlUtils::format("CD all:    %f sec.", this->CD_all_time_.getElapseTime()));
-    this->log_.info(TlUtils::format("CD ERI:    %f sec.", this->CD_ERI_time_.getElapseTime()));
-    this->log_.info(TlUtils::format("CD calc:   %f sec.", this->CD_calc_time_.getElapseTime()));
-    this->log_.info(TlUtils::format("CD d1:     %f sec.", this->CD_calc_d1_time_.getElapseTime()));
-    this->log_.info(TlUtils::format("CD d2:     %f sec.", this->CD_calc_d2_time_.getElapseTime()));
 }
 
 
@@ -361,18 +352,31 @@ void DfCD_Parallel::makeL(const TlDistributeSymmetricMatrix& G)
 // On the Fly method -----------------------------------------------------------
 void DfCD_Parallel::calcCholeskyVectors_onTheFly()
 {
+    // timing data
+    TlTime CD_all_time;
+    TlTime CD_diagonals_time;
+    TlTime CD_resizeL_time;
+    TlTime CD_pivot_time;
+    TlTime CD_ERI_time;
+    TlTime CD_Lpm_time;
+    TlTime CD_calc_time;
+    TlTime CD_d_time;
+    TlTime CD_save_time;
+
+    CD_all_time.start();
+
     TlCommunicate& rComm = TlCommunicate::getInstance();
     this->createEngines();
     this->initializeCutoffStats();
-
-    this->CD_all_time_.start();
 
     this->log_.info(TlUtils::format("# of PQ dimension: %d", int(this->numOfPQs_)));
     TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
     PQ_PairArray I2PQ;
     TlVector d; // 対角成分
 
+    CD_diagonals_time.start();
     this->calcDiagonals(&schwartzTable, &I2PQ, &d);
+    CD_diagonals_time.stop();
 
     this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
     this->saveI2PQ(I2PQ);
@@ -391,17 +395,28 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
     index_type m = 0;
+    int progress = 0; // 10% 刻み
+    index_type progress_increment = index_type(N * 0.1);
     while (error > threshold) {
-        // this->log_.info(TlUtils::format("m=%d: err=%f", m, error));
+        // progress 
+        if (m >= progress * progress_increment) {
+            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=%f", m, N, error));
+            ++progress;
+        }
+
+        CD_resizeL_time.start();
         L.resize(N, m+1);
+        CD_resizeL_time.stop();
 
         // pivot
+        CD_pivot_time.start();
         {
             std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
                                                                            pivot.end());
             const index_type i = it - pivot.begin();
             std::swap(pivot[m], pivot[i]);
         }
+        CD_pivot_time.stop();
         
         const double l_m_pm = std::sqrt(d[pivot[m]]);
         L.set(pivot[m], m, l_m_pm); // 通信発生せず。関係無いPEは値を捨てる。
@@ -409,7 +424,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         const double inv_l_m_pm = 1.0 / l_m_pm;
 
         // ERI
-        this->CD_ERI_time_.start();
+        CD_ERI_time.start();
         const index_type pivot_m = pivot[m];
         std::vector<double> G_pm;
         const index_type numOf_G_cols = N -(m+1);
@@ -421,13 +436,12 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
             }
             G_pm = this->getSuperMatrixElements(pivot_m, G_col_list, I2PQ, schwartzTable);
         }
-        this->CD_ERI_time_.stop();
         assert(G_pm.size() == numOf_G_cols);
+        CD_ERI_time.stop();
 
         // CD calc
-        this->CD_calc_time_.start();
+        CD_Lpm_time.start();
         TlVector L_pm;
-        // L_pm = L.getRowVector(pivot_m);
         {
             // 全PEに分配
             const int PEinCharge = L.getPEinChargeByRow(pivot_m);
@@ -437,9 +451,9 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
             rComm.broadcast(L_pm, PEinCharge);
         }
         assert(L_pm.getSize() == (m+1));
-        this->CD_calc_time_.stop();
+        CD_Lpm_time.stop();
 
-        this->CD_calc_d1_time_.start();
+        CD_calc_time.start();
         std::vector<double> tmp_d(numOf_G_cols);
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
@@ -455,18 +469,17 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
                 L.set(pivot_i, m, l_m_pi);
             
                 tmp_d[i] -= l_m_pi * l_m_pi;
-                // d[pivot_i] -= l_m_pi * l_m_pi;
             }
         }
-        this->CD_calc_d1_time_.start();
+        CD_calc_time.stop();
 
-        this->CD_calc_d2_time_.start();
+        CD_d_time.start();
         rComm.allReduce_SUM(&(tmp_d[0]), numOf_G_cols);
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
             d[pivot_i] += tmp_d[i];
         }
-        this->CD_calc_d2_time_.stop();
+        CD_d_time.stop();
 
         // calc error
         error = 0.0;
@@ -482,9 +495,22 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     this->destroyEngines();
     this->schwartzCutoffReport();
 
-    this->CD_all_time_.stop();
-
+    CD_save_time.start();
     this->saveL(L);
+    CD_save_time.stop();
+
+    CD_all_time.stop();
+
+    // timing data
+    this->log_.info(TlUtils::format("CD all:       %f sec.", CD_all_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD diagonals: %f sec.", CD_diagonals_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD resize L:  %f sec.", CD_resizeL_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD pivot:     %f sec.", CD_pivot_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD ERI:       %f sec.", CD_ERI_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD L(m):      %f sec.", CD_Lpm_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD calc:      %f sec.", CD_calc_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD d:         %f sec.", CD_d_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD save:      %f sec.", CD_save_time.getElapseTime()));
 }
 
 
