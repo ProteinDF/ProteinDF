@@ -277,3 +277,88 @@ std::vector<int> TlSparseMatrix::getColIndexList() const
 }
 
 
+bool TlSparseMatrix::save(const std::string& filePath) const
+{
+    std::ofstream ofs;
+    ofs.open(filePath.c_str(), std::ofstream::out | std::ofstream::binary);
+
+    bool answer = this->save(ofs);
+
+    ofs.close();
+    return answer;
+}
+
+
+bool TlSparseMatrix::save(std::ofstream& ofs) const
+{
+    const int type = 128; // means SparseMatrix
+    ofs.write(reinterpret_cast<const char*>(&type), sizeof(int));
+    ofs.write(reinterpret_cast<const char*>(&this->m_nRows), sizeof(int));
+    ofs.write(reinterpret_cast<const char*>(&this->m_nCols), sizeof(int));
+    unsigned long counts = this->m_aMatrix.size();
+    ofs.write(reinterpret_cast<const char*>(&counts), sizeof(unsigned long));
+
+    index_type row = 0;
+    index_type col = 0;
+    SparseMatrixData::const_iterator itEnd = this->m_aMatrix.end();
+    for (SparseMatrixData::const_iterator it = this->m_aMatrix.begin(); it != itEnd; ++it) {
+        this->index(it->first, &row, &col);
+        ofs.write(reinterpret_cast<const char*>(&row), sizeof(int));
+        ofs.write(reinterpret_cast<const char*>(&col), sizeof(int));
+        ofs.write(reinterpret_cast<const char*>(&it->second), sizeof(double));
+    }
+
+    return true;
+}
+
+
+bool TlSparseMatrix::load(const std::string& filePath)
+{
+    std::ifstream ifs;
+
+    ifs.open(filePath.c_str());
+    if (ifs.fail()) {
+#ifdef DEBUG
+        std::cerr << "[error] TlMatrix::load(): could not open file. " << filePath << std::endl;
+#endif // DEBUG
+        return false;
+    }
+
+    bool answer = this->load(ifs);
+    ifs.close();
+
+    if (answer != true) {
+        std::cerr << "TlMatrix::load() is not supported: " << filePath << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+
+bool TlSparseMatrix::load(std::ifstream& ifs)
+{
+    // read header
+    int type = 0;
+    int numOfRows = 0;
+    int numOfCols = 0;
+    unsigned long counts = 0;
+    ifs.read((char*)&type, sizeof(int));
+    ifs.read((char*)&numOfRows, sizeof(int));
+    ifs.read((char*)&numOfCols, sizeof(int));
+    ifs.read((char*)&counts, sizeof(unsigned long));
+    assert(type == 128);
+    this->resize(numOfRows, numOfCols);
+
+    int row = 0;
+    int col = 0;
+    double value = 0.0;
+    for (unsigned long i = 0; i < counts; ++i) {
+        ifs.read((char*)&row, sizeof(int));
+        ifs.read((char*)&col, sizeof(int));
+        ifs.read((char*)&value, sizeof(double));
+        this->set(row, col, value);
+    }
+
+    return true;
+}
