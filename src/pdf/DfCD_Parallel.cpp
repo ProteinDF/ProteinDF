@@ -390,7 +390,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     }
 
     // prepare variables
-    RowVectorMatrix L; // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
+    RowVectorMatrix L(N, 1); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
@@ -399,12 +399,14 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     index_type progress_increment = index_type(N * 0.1);
     while (error > threshold) {
         // progress 
+        CD_resizeL_time.start();
         if (m >= progress * progress_increment) {
             this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=%f", m, N, error));
             ++progress;
-        }
 
-        CD_resizeL_time.start();
+            // メモリの確保
+            L.reserve_cols(progress * progress_increment);
+        }
         L.resize(N, m+1);
         CD_resizeL_time.stop();
 
@@ -460,6 +462,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
 
             if (L.getPEinChargeByRow(pivot_i) == rComm.getRank()) { // 自分がL(pivot_i, *)を持っていたら
                 const TlVector L_pi = L.getRowVector(pivot_i);
+
                 double sum_ll = 0.0;
                 for (index_type j = 0; j < m; ++j) {
                     sum_ll += L_pm[j] * L_pi[j];
@@ -467,7 +470,6 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
 
                 const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
                 L.set(pivot_i, m, l_m_pi);
-            
                 tmp_d[i] -= l_m_pi * l_m_pi;
             }
         }
@@ -604,6 +606,7 @@ DfCD_Parallel::RowVectorMatrix::RowVectorMatrix(const index_type row,
 {
     this->globalRows_ = 0;
     this->globalCols_ = 0;
+    this->reserveCols_ = 10;
     this->resize(row, col);
 }
 
@@ -657,11 +660,17 @@ void DfCD_Parallel::RowVectorMatrix::resize(const index_type new_globalRows,
 
     std::vector<RowVector>::iterator itEnd = this->data_.end();
     for (std::vector<RowVector>::iterator it = this->data_.begin(); it != itEnd; ++it) {
+        it->cols.reserve(this->reserveCols_);
         it->cols.resize(new_globalCols);
     }
 
     this->globalRows_ = new_globalRows;
     this->globalCols_ = new_globalCols;
+}
+
+
+void DfCD_Parallel::RowVectorMatrix::reserve_cols(const index_type cols) {
+    this->reserveCols_ = std::max(globalCols_, cols);
 }
 
 
@@ -671,7 +680,7 @@ void DfCD_Parallel::RowVectorMatrix::set(index_type row, index_type col, double 
         std::lower_bound(this->data_.begin(), this->data_.end(), RowVector(row));
 
     if ((it != this->data_.end()) && (it->row == row)) {
-        it->cols.set(col, value);
+        it->cols[col] = value;
     }
 }
 
@@ -708,7 +717,7 @@ TlMatrix DfCD_Parallel::RowVectorMatrix::getTlMatrix() const
     for (std::vector<RowVector>::const_iterator it = this->data_.begin(); it != itEnd; ++it) {
         const index_type r = it->row;
         for (index_type c = 0; c < col; ++c) {
-            answer.set(r, c, it->cols.get(c));
+            answer.set(r, c, it->cols[c]);
         }
     }
 
@@ -737,7 +746,7 @@ TlDistributeMatrix DfCD_Parallel::RowVectorMatrix::getTlDistributeMatrix() const
             for (int i = 0; i < blocks; ++i) {
                 rows[i] = this->data_[i].row;
                 for (index_type c = 0; c < col; ++c) {
-                    vtr[col * i + c] = this->data_[i].cols.get(c);
+                    vtr[col * i + c] = this->data_[i].cols[c];
                 }
             }
         }

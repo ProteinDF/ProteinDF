@@ -57,6 +57,10 @@ protected:
         index_type getNumOfRows() const {
             return this->globalRows_;
         };
+
+        /// 列数のcapacityを設定する
+        void reserve_cols(index_type col);
+
         index_type getNumOfCols() const {
             return this->globalCols_;
         };
@@ -83,12 +87,13 @@ protected:
             
         public:
             index_type row;
-            TlVector cols;
+            std::vector<double> cols;
         };
         
     private:
         index_type globalRows_;
         index_type globalCols_;
+        index_type reserveCols_; // 列数のメモリ確保量
         std::vector<RowVector> data_;
 
         std::vector<int> row_PE_table_;
