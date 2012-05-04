@@ -13,20 +13,22 @@ DfCD_Parallel::~DfCD_Parallel()
 }
 
 
-void DfCD_Parallel::calcCholeskyVectors()
-{
-#ifdef HAVE_SCALAPACK
-    if (this->m_bUsingSCALAPACK == true) {
-        this->makeSuperMatrix_distribute();
-    } else {
-        DfCD::makeSuperMatrix_screening();
-    }
-#else
-    {
-        DfCD::makeSuperMatrix_screening();
-    }
-#endif // HAVE_SCALAPACK
-}
+// void DfCD_Parallel::calcCholeskyVectors()
+// {
+// #ifdef HAVE_SCALAPACK
+//     if (this->m_bUsingSCALAPACK == true) {
+//         this->makeSuperMatrix_distribute();
+//     } else {
+//         DfCD::makeSuperMatrix_screening();
+//     }
+// #else
+//     {
+//         DfCD::makeSuperMatrix_screening();
+//     }
+// #endif // HAVE_SCALAPACK
+
+//     this->
+// }
 
 
 DfTaskCtrl* DfCD_Parallel::getDfTaskCtrlObject() const
@@ -105,7 +107,7 @@ void DfCD_Parallel::finalize_I2PQ(I2PQ_Type* pI2PQ)
             }
         }
     }
- }
+}
 
 
 void DfCD_Parallel::saveI2PQ(const I2PQ_Type& I2PQ)
@@ -365,90 +367,357 @@ void DfCD_Parallel::makeL(const TlDistributeSymmetricMatrix& G)
 }
 
 // On the Fly method -----------------------------------------------------------
-// void DfCD_Parallel::calcCholeskyVectors_onTheFly_replica()
-// {
-//     this->createEngines();
+void DfCD_Parallel::calcCholeskyVectors_onTheFly()
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    this->createEngines();
+    this->initializeCutoffStats();
 
-//     TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
-//     PQ_PairArray I2PQ;
-//     TlVector d; // 対角成分
-//     this->calcDiagonals(&schwartzTable, &I2PQ, &d);
-//     this->log_.info(TlUtils::format(" # of PQ dimension: %d", int(this->numOfPQs_)));
-//     this->log_.info(TlUtils::format(" # of I~ dimension: %d", int(I2PQ.size())));
-//     this->saveI2PQ(I2PQ);
+    this->log_.info(TlUtils::format("# of PQ dimension: %d", int(this->numOfPQs_)));
+    TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
+    PQ_PairArray I2PQ;
+    TlVector d; // 対角成分
 
-//     const index_type N = I2PQ.size();
-//     double error = d.sum();
-//     std::vector<TlVector::size_type> pivot(N);
-//     for (index_type i = 0; i < N; ++i) {
-//         pivot[i] = i;
-//     }
+    this->calcDiagonals(&schwartzTable, &I2PQ, &d);
 
-//     // clear cutoff stats
-//     {
-//         const int maxShellType = this->orbitalInfo_.getMaxShellType();
-//         const int numOfShellPairType = maxShellType* maxShellType;
-//         const int numOfShellQuartetType = numOfShellPairType * numOfShellPairType;
-//         this->cutoffAll_schwartz_.clear();
-//         this->cutoffAlive_schwartz_.clear();
-//         this->cutoffAll_schwartz_.resize(numOfShellQuartetType, 0);
-//         this->cutoffAlive_schwartz_.resize(numOfShellQuartetType, 0);
-//     }
+    this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
+    this->saveI2PQ(I2PQ);
 
-//     // prepare variables
-//     TlMatrix L;
-//     index_type m = 0;
-//     double sum_ll = 0.0;
+    const index_type N = I2PQ.size();
+    double error = d.sum();
+    std::vector<TlVector::size_type> pivot(N);
+#pragma omp parallel for 
+    for (index_type i = 0; i < N; ++i) {
+        pivot[i] = i;
+    }
 
-//     const double threshold = this->epsilon_;
-//     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
-//     while (error > threshold) {
-//         L.resize(N, m+1);
-//         std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
-//                                                                        pivot.end());
-//         const index_type i = it - pivot.begin();
-//         std::swap(pivot[m], pivot[i]);
+    // prepare variables
+    RowVectorMatrix L; // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
+    //TlMatrix L;
+    const double threshold = this->epsilon_;
+    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
+
+    index_type m = 0;
+    while (error > threshold) {
+        this->log_.info(TlUtils::format("m=%d: err=%f", m, error));
+        L.resize(N, m+1);
+
+        // pivot
+        {
+            std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+                                                                           pivot.end());
+            const index_type i = it - pivot.begin();
+            std::swap(pivot[m], pivot[i]);
+            this->log_.info(TlUtils::format("m=%d: pivot_m=%d", m, pivot[m]));
+        }
         
-//         const double l_m_pm = std::sqrt(d[pivot[m]]);
-//         L.set(pivot[m], m, l_m_pm);
+        const double l_m_pm = std::sqrt(d[pivot[m]]);
+        L.set(pivot[m], m, l_m_pm); // 通信発生せず。関係無いPEは値を捨てる。
         
-//         const double inv_l_m_pm = 1.0 / l_m_pm;
+        const double inv_l_m_pm = 1.0 / l_m_pm;
 
-//         // request
-//         TlSparseSymmetricMatrix G(N);
-//         const index_type pivot_m = pivot[m];
-//         for (index_type i = m +1; i < N; ++i) {
-//             const index_type pivot_i = pivot[i];
-//             G.set(pivot_m, pivot_i, 0.0);
-//         }
-//         this->getSuperMatrixElements(I2PQ, schwartzTable, &G);
+        // ERI
+        const index_type pivot_m = pivot[m];
+        std::vector<double> G_pm;
+        const index_type numOf_G_cols = N -(m+1);
+        {
+            std::vector<index_type> G_col_list(numOf_G_cols);
+            for (index_type i = 0; i < numOf_G_cols; ++i) {
+                const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+                G_col_list[i] = pivot_i;
+            }
+            G_pm = this->getSuperMatrixElements(pivot_m, G_col_list, I2PQ, schwartzTable);
+        }
+        assert(G_pm.size() == numOf_G_cols);
 
-//         // calc
-//         for (index_type i = m +1; i < N; ++i) {
-//             const index_type pivot_i = pivot[i];
-//             double sum_ll = 0.0;
-//             for (index_type j = 0; j < m; ++j) {
-//                 sum_ll += L.get(pivot_m, j) * L.get(pivot_i, j);
-//             }
+        // CD calc
+        TlVector L_pm;
+        // L_pm = L.getRowVector(pivot_m);
+        {
+            // 全PEに分配
+            const int PEinCharge = L.getPEinChargeByRow(pivot_m);
+            if (PEinCharge == rComm.getRank()) {
+                L_pm = L.getRowVector(pivot_m);
+            }
+            rComm.broadcast(L_pm, PEinCharge);
+        }
+        assert(L_pm.getSize() == (m+1));
 
-//             const double l_m_pi = (G.get(pivot_m, pivot_i) - sum_ll) * inv_l_m_pm;
-//             L.set(pivot_i, m, l_m_pi);
+        std::vector<double> tmp_d(numOf_G_cols);
+        for (index_type i = 0; i < numOf_G_cols; ++i) {
+            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+
+            if (L.getPEinChargeByRow(pivot_i) == rComm.getRank()) { // 自分がL(pivot_i, *)を持っていたら
+                const TlVector L_pi = L.getRowVector(pivot_i);
+                double sum_ll = 0.0;
+                for (index_type j = 0; j < m; ++j) {
+                    sum_ll += L_pm[j] * L_pi[j];
+                }
+
+                const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+                L.set(pivot_i, m, l_m_pi);
             
-//             d[pivot_i] -= l_m_pi * l_m_pi;
-//         }
+                tmp_d[i] -= l_m_pi * l_m_pi;
+                // d[pivot_i] -= l_m_pi * l_m_pi;
+            }
+        }
+        rComm.allReduce_SUM(tmp_d);
+        for (index_type i = 0; i < numOf_G_cols; ++i) {
+            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+            d[pivot_i] += tmp_d[i];
+        }
+
+        // calc error
+        error = 0.0;
+#pragma omp parallel for reduction(+: error)
+        for (index_type i = m +1; i < N; ++i) {
+            error += d[pivot[i]];
+        }
+
+        ++m;
+    }
+    this->log_.info(TlUtils::format("Cholesky Vectors: %d", m));
+
+    this->destroyEngines();
+    this->schwartzCutoffReport();
+
+    this->saveL(L);
+}
+
+
+std::vector<double>
+DfCD_Parallel::getSuperMatrixElements(const index_type G_row,
+                                      const std::vector<index_type>& G_col_list,
+                                      const I2PQ_Type& I2PQ,
+                                      const TlSparseSymmetricMatrix& schwartzTable)
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int numOfProcs = rComm.getNumOfProcs();
+    const int rank = rComm.getRank();
+
+    const std::size_t numOfG_cols = G_col_list.size();
+    const std::size_t range = (numOfG_cols + numOfProcs -1) / numOfProcs;
+    const std::size_t start = std::min(range * rank, numOfG_cols);
+    const std::size_t end = std::min(range * (rank +1), numOfG_cols);
+
+    std::vector<double> elements;
+    if (end - start > 0) {
+        std::vector<index_type> G_col_list_local(end - start);
+        std::copy(G_col_list.begin() + start,
+                  G_col_list.begin() + end,
+                  G_col_list_local.begin());
+        elements = DfCD::getSuperMatrixElements(G_row,
+                                                      G_col_list_local,
+                                                      I2PQ,
+                                                      schwartzTable);
+    }
+    assert(elements.size() == (end - start));
+
+    // gather to master
+    std::vector<double> answer;
+    if (rank == 0) {
+        answer = elements;
+    }
+    for (int pe = 1; pe < numOfProcs; ++pe) {
+        if (rank == 0) {
+            std::size_t size = 0;
+            rComm.receiveData(size, pe);
+            if (size > 0) {
+                rComm.receiveData(elements, pe);
+                
+                const std::size_t prev_size = answer.size();
+                answer.resize(prev_size + elements.size());
+                std::copy(elements.begin(), elements.end(),
+                          answer.begin() + prev_size);
+            }
+        } else if (pe == rank) {
+            const std::size_t size = end - start;
+            rComm.sendData(size, 0);
+            if (size > 0) {
+                rComm.sendData(elements);
+            }
+        }
+    }
+    rComm.broadcast(answer);
+    
+    return answer;
+}
+
+
+void DfCD_Parallel::saveL(const RowVectorMatrix& L)
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    if (this->m_bUsingSCALAPACK == true) {
+        const TlDistributeMatrix tmpL = L.getTlDistributeMatrix();
+        DfObject::saveLMatrix(tmpL);
+    } else {
+        const TlMatrix tmpL = L.getTlMatrix();
+        if (rComm.isMaster() == true) {
+            DfCD::saveL(tmpL);
+        }
+    }
+}
+
+
+// =============================================================================
+DfCD_Parallel::RowVectorMatrix::RowVectorMatrix(const index_type row,
+                                                const index_type col)
+{
+    this->globalRows_ = 0;
+    this->globalCols_ = 0;
+    this->resize(row, col);
+}
+
+
+DfCD_Parallel::RowVectorMatrix::~RowVectorMatrix()
+{
+}
+
+
+void DfCD_Parallel::RowVectorMatrix::resize(const index_type new_globalRows,
+                                            const index_type new_globalCols)
+{
+    const index_type prev_globalRows = this->globalRows_;
+
+    if (prev_globalRows != new_globalRows) {
+        // remake PE table
+        TlCommunicate& rComm = TlCommunicate::getInstance();
+        const int numOfProcs = rComm.getNumOfProcs();
+        const int myRank = rComm.getRank();
+
+        this->row_PE_table_.resize(new_globalRows);
+        int pe = 0;
+        for (index_type r = 0; r < new_globalRows; ++r) {
+            this->row_PE_table_[r] = pe;
             
-//         error = 0.0;
-//         for (index_type i = m +1; i < N; ++i) {
-//             error += d[pivot[i]];
-//         }
+            ++pe;
+            if (pe >= numOfProcs) {
+                pe = 0;
+            }
+        }
 
-//         ++m;
-//     }
-//     this->log_.info(TlUtils::format("Cholesky Vectors: %d", m));
+        std::vector<index_type> localRowTable;
+        localRowTable.reserve(new_globalRows / numOfProcs +1);
+        for (index_type r = 0; r < new_globalRows; ++r) {
+            if (this->row_PE_table_[r] == myRank) {
+                localRowTable.push_back(r);
+            }
+        }
 
-//     this->destroyEngines();
-//     this->schwartzCutoffReport();
+        const std::size_t prev_localRowTableSize = this->data_.size();
+        const std::size_t new_localRowTableSize = localRowTable.size();
+        if (prev_localRowTableSize < new_localRowTableSize) {
+            this->data_.resize(new_localRowTableSize);
+            for (std::size_t i = prev_localRowTableSize; i < new_localRowTableSize; ++i) {
+                this->data_[i].row = localRowTable[i];
+            }
+        } else if (prev_localRowTableSize < new_localRowTableSize) {
+            this->data_.resize(new_localRowTableSize);
+        }
+    }
 
-//     this->saveL(L);
-// }
+    std::vector<RowVector>::iterator itEnd = this->data_.end();
+    for (std::vector<RowVector>::iterator it = this->data_.begin(); it != itEnd; ++it) {
+        it->cols.resize(new_globalCols);
+    }
+
+    this->globalRows_ = new_globalRows;
+    this->globalCols_ = new_globalCols;
+}
+
+
+void DfCD_Parallel::RowVectorMatrix::set(index_type row, index_type col, double value)
+{
+    std::vector<RowVector>::iterator it = 
+        std::lower_bound(this->data_.begin(), this->data_.end(), RowVector(row));
+
+    if ((it != this->data_.end()) && (it->row == row)) {
+        it->cols.set(col, value);
+    }
+}
+
+
+TlVector DfCD_Parallel::RowVectorMatrix::getRowVector(index_type row) const
+{
+    TlVector answer;
+    std::vector<RowVector>::const_iterator it = 
+        std::lower_bound(this->data_.begin(), this->data_.end(), RowVector(row));
+    if (it != this->data_.end()) {
+        assert(it->row == row);
+        answer = it->cols;
+    }
+
+    return answer;
+}
+
+
+int DfCD_Parallel::RowVectorMatrix::getPEinChargeByRow(const index_type row) const
+{
+    assert((0 <= row) && (row < this->getNumOfRows()));
+    return this->row_PE_table_[row];
+}
+
+
+TlMatrix DfCD_Parallel::RowVectorMatrix::getTlMatrix() const 
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const index_type row = this->getNumOfRows();
+    const index_type col = this->getNumOfCols();
+    TlMatrix answer(row, col);
+    
+    std::vector<RowVector>::const_iterator itEnd = this->data_.end();
+    for (std::vector<RowVector>::const_iterator it = this->data_.begin(); it != itEnd; ++it) {
+        const index_type r = it->row;
+        for (index_type c = 0; c < col; ++c) {
+            answer.set(r, c, it->cols.get(c));
+        }
+    }
+
+    rComm.allReduce_SUM(answer);
+    return answer;
+}
+
+
+TlDistributeMatrix DfCD_Parallel::RowVectorMatrix::getTlDistributeMatrix() const
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int numOfProcs = rComm.getNumOfProcs();
+    const int myRank = rComm.getRank();
+
+    const index_type row = this->getNumOfRows();
+    const index_type col = this->getNumOfCols();
+    TlDistributeMatrix answer(row, col);
+
+    int blocks = 0;
+    std::vector<index_type> rows;
+    std::vector<double> vtr;
+    for (int pe = 0; pe < numOfProcs; ++pe) {
+        if (pe == myRank) {
+            blocks = this->data_.size();
+            vtr.resize(col * blocks);
+            for (int i = 0; i < blocks; ++i) {
+                rows[i] = this->data_[i].row;
+                for (index_type c = 0; c < col; ++c) {
+                    vtr[col * i + c] = this->data_[i].cols.get(c);
+                }
+            }
+        }
+
+        rComm.broadcast(blocks, pe);
+        rComm.broadcast(rows, pe);
+        rComm.broadcast(vtr, pe);
+
+        // set
+        for (int i = 0; i < blocks; ++i) {
+            const index_type r = rows[i];
+            for (index_type c = 0; c < col; ++c) {
+                answer.set(r, c, vtr[col * i + c]);
+            }
+        }
+    }
+
+    return answer;
+}
+
 

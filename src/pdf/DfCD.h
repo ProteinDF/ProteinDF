@@ -19,7 +19,7 @@ public:
     virtual ~DfCD();
 
 public:
-    virtual void calcCholeskyVectors();
+    void calcCholeskyVectors();
 
     void getJ(TlSymmetricMatrix *pJ);
     void getK(const RUN_TYPE runType,
@@ -166,7 +166,7 @@ protected:
 
 protected:
     // NEW ---------------------------------------------------------------------
-    void calcCholeskyVectors_onTheFly();
+    virtual void calcCholeskyVectors_onTheFly();
     void calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
                        PQ_PairArray *pI2PQ,
                        TlVector *pDiagonals);
@@ -185,6 +185,7 @@ protected:
                                  const int shellQuartetType,
                                  const TlSparseSymmetricMatrix& schwarzTable,
                                  const double threshold);
+    void initializeCutoffStats();
     void schwartzCutoffReport();
     mutable std::vector<unsigned long> cutoffAll_schwartz_;
     mutable std::vector<unsigned long> cutoffAlive_schwartz_;
@@ -195,16 +196,10 @@ protected:
 
     /// 与えられたsuper matrix の要素に対し、2電子積分を計算して代入する。
     /// On-the-Fly時に使用する。
-    // void getSuperMatrixElements(const I2PQ_Type& I2PQ,
-    //                             const TlSparseSymmetricMatrix& schwartzTable,
-    //                             TlSparseSymmetricMatrix *pG);
-    std::vector<double> getSuperMatrixElements(const index_type G_row,
-                                               const std::vector<index_type>& G_col_list,
-                                               const I2PQ_Type& I2PQ,
-                                               const TlSparseSymmetricMatrix& schwartzTable);
-    /// 要求されたsuper matrixの行列要素のうち、必要なshell indexのリストを返す。
-    // std::vector<IndexPair4> getCalcList(const TlSparseSymmetricMatrix& G,
-    //                                     const I2PQ_Type& I2PQ);
+    virtual std::vector<double> getSuperMatrixElements(const index_type G_row,
+                                                       const std::vector<index_type>& G_col_list,
+                                                       const I2PQ_Type& I2PQ,
+                                                       const TlSparseSymmetricMatrix& schwartzTable);
     /// 要求されたsuper matrixの行列要素のうち、必要なshell indexのリストを返す。
     ///
     /// @param G_row 必要なsuper matrixの行要素。

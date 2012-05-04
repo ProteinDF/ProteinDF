@@ -1,8 +1,14 @@
 #ifndef DFCD_PARALLEL_H
 #define DFCD_PARALLEL_H
 
+#include <cstdlib>
 #include "DfCD.h"
 #include "TlDistributeSymmetricMatrix.h"
+
+/// 行毎のベクトルとして保持した行列
+class TlRowVectorMatrix {
+};
+
 
 class DfCD_Parallel : public DfCD {
 public:
@@ -10,7 +16,7 @@ public:
     virtual ~DfCD_Parallel();
 
 public:
-    virtual void calcCholeskyVectors();
+    // virtual void calcCholeskyVectors();
     void getJ_distributed(TlDistributeSymmetricMatrix *pJ);
     void getK_distributed(const RUN_TYPE runType,
                           TlDistributeSymmetricMatrix *pK);
@@ -44,8 +50,64 @@ protected:
     getCholeskyVector_distribute(const TlVector& L_col,
                                  const I2PQ_Type& I2PQ);
     
+    // NEW ---------------------------------------------------------------------
 protected:
-    //TlDistributeSymmetricMatrix getCholeskyVector_distribute(L.getColVector(I), I2PQ);    
+    class RowVectorMatrix {
+    public:
+        RowVectorMatrix(index_type row = 1, index_type col = 1);
+        ~RowVectorMatrix();
+        
+    public:
+        void resize(index_type row, index_type col);
+        index_type getNumOfRows() const {
+            return this->globalRows_;
+        };
+        index_type getNumOfCols() const {
+            return this->globalCols_;
+        };
+
+        void set(index_type row, index_type col, double value);
+        
+        TlVector getRowVector(index_type row) const;
+        
+        int getPEinChargeByRow(index_type row) const;
+        
+        TlMatrix getTlMatrix() const;
+        TlDistributeMatrix getTlDistributeMatrix() const;
+
+    private:
+        struct RowVector {
+        public:
+            explicit RowVector(index_type r =0, index_type c =1) 
+                : row(r), cols(c) {
+            };
+            
+            bool operator<(const RowVector& rhs) const {
+                return (this->row < rhs.row);
+            };
+            
+        public:
+            index_type row;
+            TlVector cols;
+        };
+        
+    private:
+        index_type globalRows_;
+        index_type globalCols_;
+        std::vector<RowVector> data_;
+
+        std::vector<int> row_PE_table_;
+    };
+
+protected:
+    virtual void calcCholeskyVectors_onTheFly();
+    virtual std::vector<double>
+    getSuperMatrixElements(const index_type G_row,
+                           const std::vector<index_type>& G_col_list,
+                           const I2PQ_Type& I2PQ,
+                           const TlSparseSymmetricMatrix& schwartzTable);
+    void saveL(const RowVectorMatrix& L);
+
 };
 
 #endif // DFCD_PARALLEL_H

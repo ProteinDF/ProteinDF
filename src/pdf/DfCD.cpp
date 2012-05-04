@@ -619,72 +619,71 @@ TlSymmetricMatrix DfCD::getPMatrix()
 void DfCD::calcCholeskyVectors_onTheFly()
 {
     this->createEngines();
+    this->initializeCutoffStats();
 
+    this->log_.info(TlUtils::format("# of PQ dimension: %d", int(this->numOfPQs_)));
     TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
     PQ_PairArray I2PQ;
     TlVector d; // 対角成分
+
     this->calcDiagonals(&schwartzTable, &I2PQ, &d);
-    this->log_.info(TlUtils::format(" # of PQ dimension: %d", int(this->numOfPQs_)));
-    this->log_.info(TlUtils::format(" # of I~ dimension: %d", int(I2PQ.size())));
+
+    this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
     this->saveI2PQ(I2PQ);
 
     const index_type N = I2PQ.size();
     double error = d.sum();
     std::vector<TlVector::size_type> pivot(N);
+#pragma omp parallel for 
     for (index_type i = 0; i < N; ++i) {
         pivot[i] = i;
     }
 
-    // clear cutoff stats
-    {
-        const int maxShellType = this->orbitalInfo_.getMaxShellType();
-        const int numOfShellPairType = maxShellType* maxShellType;
-        const int numOfShellQuartetType = numOfShellPairType * numOfShellPairType;
-        this->cutoffAll_schwartz_.clear();
-        this->cutoffAlive_schwartz_.clear();
-        this->cutoffAll_schwartz_.resize(numOfShellQuartetType, 0);
-        this->cutoffAlive_schwartz_.resize(numOfShellQuartetType, 0);
-    }
-
     // prepare variables
     TlMatrix L;
-    index_type m = 0;
-    double sum_ll = 0.0;
-
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
+
+    index_type m = 0;
     while (error > threshold) {
+        // this->log_.info(TlUtils::format("m=%d: err=%f", m, error));
         L.resize(N, m+1);
-        std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
-                                                                       pivot.end());
-        const index_type i = it - pivot.begin();
-        std::swap(pivot[m], pivot[i]);
+
+        // pivot
+        {
+            std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+                                                                           pivot.end());
+            const index_type i = it - pivot.begin();
+            std::swap(pivot[m], pivot[i]);
+            this->log_.info(TlUtils::format("m=%d: pivot_m=%d", m, pivot[m]));
+        }
         
         const double l_m_pm = std::sqrt(d[pivot[m]]);
         L.set(pivot[m], m, l_m_pm);
         
         const double inv_l_m_pm = 1.0 / l_m_pm;
 
-        // request
+        // ERI
         const index_type pivot_m = pivot[m];
         std::vector<double> G_pm;
         const index_type numOf_G_cols = N -(m+1);
         {
             std::vector<index_type> G_col_list(numOf_G_cols);
-            for (index_type i = 0; i < numOf_G_cols; ++i) {
-                const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
-                G_col_list[i] = pivot_i;
+            for (index_type c = 0; c < numOf_G_cols; ++c) {
+                const index_type pivot_i = pivot[m+1 +c]; // from (m+1) to N
+                G_col_list[c] = pivot_i;
             }
             G_pm = this->getSuperMatrixElements(pivot_m, G_col_list, I2PQ, schwartzTable);
         }
         assert(G_pm.size() == numOf_G_cols);
 
-        // calc
+        // CD calc
+        const TlVector L_pm = L.getRowVector(pivot_m);
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
             double sum_ll = 0.0;
             for (index_type j = 0; j < m; ++j) {
-                sum_ll += L.get(pivot_m, j) * L.get(pivot_i, j);
+                sum_ll += L_pm[j] * L.get(pivot_i, j);
             }
 
             const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
@@ -692,8 +691,10 @@ void DfCD::calcCholeskyVectors_onTheFly()
             
             d[pivot_i] -= l_m_pi * l_m_pi;
         }
-            
+
+        // calc error
         error = 0.0;
+#pragma omp parallel for reduction(+: error)
         for (index_type i = m +1; i < N; ++i) {
             error += d[pivot[i]];
         }
@@ -717,19 +718,18 @@ void DfCD::calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
     assert(numOfAOs == this->orbitalInfo_.getNumOfOrbitals());
 
     const double tau = this->CDAM_tau_;
-    this->log_.info(TlUtils::format(" CDAM tau: %e", tau));
-
-    //this->createEngines();
-    this->log_.info(TlUtils::format(" pGTO quartet threshold: %e", this->cutoffEpsilon3_));
+    this->log_.info(TlUtils::format("CDAM tau: %e", tau));
+    this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffEpsilon3_));
 
     // initialize
-    TlSparseSymmetricMatrix diagonalMat(numOfAOs);
     pI2PQ->clear();
     pI2PQ->reserve(this->numOfPQs_);
     pSchwartzTable->clear();
     pSchwartzTable->resize(numOfAOs);
+    TlSparseSymmetricMatrix diagonalMat(numOfAOs);
 
     // task
+    this->log_.info("diagonal calculation: start");
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue2(this->orbitalInfo_,
@@ -745,23 +745,23 @@ void DfCD::calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
                                          this->grainSize_,
                                          &taskList);
     }
-    
-    // finalize
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
-    //this->destroyEngines();
+    
+    // finalize
+    this->log_.info("diagonal calculation: finalize");
     this->finalize_I2PQ(pI2PQ);
+    this->finalize(&diagonalMat);
+    this->finalize(pSchwartzTable);
 
     // set diagonals
-    {
-        const index_type numOfI = pI2PQ->size();
-        pDiagonals->resize(numOfI);
-        for (index_type i = 0; i < numOfI; ++i) {
-            const index_type row = (*pI2PQ)[i].index1();
-            const index_type col = (*pI2PQ)[i].index2();
-            const double value = diagonalMat.get(row, col);
-            (*pDiagonals)[i] = value;
-        }
+    const index_type numOfI = pI2PQ->size();
+    pDiagonals->resize(numOfI);
+    for (index_type i = 0; i < numOfI; ++i) {
+        const index_type row = (*pI2PQ)[i].index1();
+        const index_type col = (*pI2PQ)[i].index2();
+        const double value = diagonalMat.get(row, col);
+        (*pDiagonals)[i] = value;
     }
 }
 
@@ -882,6 +882,19 @@ bool DfCD::isAliveBySchwartzCutoff(const index_type shellIndexP,
     ++(this->cutoffAll_schwartz_[shellQuartetType]);
 
     return answer;
+}
+
+
+void DfCD::initializeCutoffStats()
+{
+    // clear cutoff stats
+    const int maxShellType = this->orbitalInfo_.getMaxShellType();
+    const int numOfShellPairType = maxShellType* maxShellType;
+    const int numOfShellQuartetType = numOfShellPairType * numOfShellPairType;
+    this->cutoffAll_schwartz_.clear();
+    this->cutoffAlive_schwartz_.clear();
+    this->cutoffAll_schwartz_.resize(numOfShellQuartetType, 0);
+    this->cutoffAlive_schwartz_.resize(numOfShellQuartetType, 0);
 }
 
 
