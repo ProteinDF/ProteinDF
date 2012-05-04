@@ -443,25 +443,32 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
 
         // CD calc
         CD_Lpm_time.start();
-        TlVector L_pm;
+        //TlVector L_pm;
+        std::vector<double> L_pm(m +1);
         {
             // 全PEに分配
             const int PEinCharge = L.getPEinChargeByRow(pivot_m);
             if (PEinCharge == rComm.getRank()) {
-                L_pm = L.getRowVector(pivot_m);
+                // L_pm = L.getRowVector(pivot_m);
+                const index_type copySize = L.getRowVector(pivot_m, &(L_pm[0]), m +1);
+                assert(copySize == m +1);
             }
-            rComm.broadcast(L_pm, PEinCharge);
+            //rComm.broadcast(L_pm, PEinCharge);
+            rComm.broadcast(&(L_pm[0]), m +1, PEinCharge);
         }
-        assert(L_pm.getSize() == (m+1));
+        assert(L_pm.size() == (m+1));
         CD_Lpm_time.stop();
 
         CD_calc_time.start();
         std::vector<double> tmp_d(numOf_G_cols);
+        std::vector<double> L_pi(m +1);
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
 
             if (L.getPEinChargeByRow(pivot_i) == rComm.getRank()) { // 自分がL(pivot_i, *)を持っていたら
-                const TlVector L_pi = L.getRowVector(pivot_i);
+                // const TlVector L_pi = L.getRowVector(pivot_i);
+                const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
+                assert(copySize == m +1);
 
                 double sum_ll = 0.0;
                 for (index_type j = 0; j < m; ++j) {
@@ -538,9 +545,9 @@ DfCD_Parallel::getSuperMatrixElements(const index_type G_row,
                   G_col_list.begin() + end,
                   G_col_list_local.begin());
         elements = DfCD::getSuperMatrixElements(G_row,
-                                                      G_col_list_local,
-                                                      I2PQ,
-                                                      schwartzTable);
+                                                G_col_list_local,
+                                                I2PQ,
+                                                schwartzTable);
     }
     assert(elements.size() == (end - start));
 
@@ -696,6 +703,24 @@ TlVector DfCD_Parallel::RowVectorMatrix::getRowVector(index_type row) const
     }
 
     return answer;
+}
+
+
+DfObject::index_type DfCD_Parallel::RowVectorMatrix::getRowVector(index_type row,
+                                                        double *pBuf,
+                                                        index_type maxColSize) const
+{
+    index_type copySize = 0;
+    std::vector<RowVector>::const_iterator it = 
+        std::lower_bound(this->data_.begin(), this->data_.end(), RowVector(row));
+    if (it != this->data_.end()) {
+        assert(it->row == row);
+        assert(it->cols.size() == this->getNumOfCols());
+        copySize = std::min(this->getNumOfCols(), maxColSize);
+        std::copy(it->cols.begin(), it->cols.begin() + copySize,
+                  pBuf);
+    }
+    return copySize;
 }
 
 

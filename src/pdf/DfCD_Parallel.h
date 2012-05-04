@@ -68,6 +68,7 @@ protected:
         void set(index_type row, index_type col, double value);
         
         TlVector getRowVector(index_type row) const;
+        index_type getRowVector(index_type row, double *pBuf, index_type maxColSize) const;
         
         int getPEinChargeByRow(index_type row) const;
         
