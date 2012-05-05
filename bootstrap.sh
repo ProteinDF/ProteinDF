@@ -5,7 +5,7 @@ rm -rf autom4te.cache
 
 OS=`uname -s`
 
-if [ $OS == "Darwin" ]; then
+if [ $OS = "Darwin" ]; then
     LIBTOOLIZE=glibtoolize
 else
     LIBTOOLIZE=libtoolize
