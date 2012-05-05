@@ -979,6 +979,12 @@ int TlCommunicate::sendDataX(const unsigned int* pData, const std::size_t size,
     return this->sendDataX(pData, MPI_UNSIGNED, 0, size, dest, tag);
 }
 
+int TlCommunicate::sendDataX(const unsigned long* pData, const std::size_t size,
+                             const int dest, const int tag)
+{
+    return this->sendDataX(pData, MPI_UNSIGNED_LONG, 0, size, dest, tag);
+}
+
 int TlCommunicate::sendDataX(const double* pData, const std::size_t size,
                              const int dest, const int tag)
 {
@@ -1666,6 +1672,14 @@ int TlCommunicate::receiveDataFromAnySourceX(int* pData, const std::size_t size,
 {
     return this->receiveDataFromAnySourceX(pData, MPI_INT, 0, size, pSrc, tag);
 }
+
+
+int TlCommunicate::receiveDataFromAnySourceX(unsigned long* pData, const std::size_t size,
+                                             int* pSrc, const int tag)
+{
+    return this->receiveDataFromAnySourceX(pData, MPI_UNSIGNED_LONG, 0, size, pSrc, tag);
+}
+
 
 // =============================================================================
 template<typename T>

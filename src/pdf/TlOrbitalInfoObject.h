@@ -113,6 +113,13 @@ public:
         return this->orbitals_[AO].basisType;
     }
 
+    /// 与えられたインデックスのシェルインデックスを返す
+    index_type getShellIndex(const index_type AO) const {
+        static const int basisTypeBase[] = {0, 1, 4}; // s, px, dxy
+        const int shellType = this->getShellType(AO);
+        const int basisType = this->getBasisType(AO);
+        return AO - (basisType - basisTypeBase[shellType]);
+    }
 
     std::string getBasisTypeName(const index_type AO) const {
         assert(AO < this->getNumOfOrbitals());
