@@ -586,7 +586,7 @@ void DfCD::getK(const RUN_TYPE runType,
     TlMatrix L = this->getL();
     const index_type numOfCBs = L.getNumOfCols();
     
-    TlSymmetricMatrix P = this->getPMatrix(); // RKS
+    TlSymmetricMatrix P = 0.5 * this->getPMatrix(); // RKS
     const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
     
     const I2PQ_Type I2PQ = this->getI2PQ();

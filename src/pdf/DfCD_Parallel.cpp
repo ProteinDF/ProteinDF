@@ -222,8 +222,9 @@ void DfCD_Parallel::getK_distributed(const RUN_TYPE runType,
     TlDistributeMatrix L = DfObject::getLMatrix<TlDistributeMatrix>();
     const index_type numOfCBs = L.getNumOfCols();
     
-    TlDistributeSymmetricMatrix P = DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(runType,
-                                                                                        this->m_nIteration -1);
+    // for RKS
+    TlDistributeSymmetricMatrix P = 0.5 * DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(runType,
+                                                                                              this->m_nIteration -1);
     const TlDistributeMatrix C = P.choleskyFactorization(this->epsilon_);
     
     const I2PQ_Type I2PQ = this->getI2PQ();
