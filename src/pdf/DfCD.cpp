@@ -9,7 +9,7 @@
 #include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
 #include "TlTime.h"
-
+#include "TlRowVectorMatrix2.h"
 
 DfCD::DfCD(TlSerializeData* pPdfParam) 
     : DfObject(pPdfParam), pEriEngines_(NULL),
@@ -656,7 +656,9 @@ void DfCD::calcCholeskyVectors_onTheFly()
     }
 
     // prepare variables
-    TlMatrix L(N, 1);
+    //TlMatrix L(N, 1);
+    TlRowVectorMatrix2 L(N, 1);
+    L.reserve_cols(N);
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
@@ -716,13 +718,7 @@ void DfCD::calcCholeskyVectors_onTheFly()
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
             TlVector L_pi = L.getRowVector(pivot_i);
-            // double sum_ll = 0.0;
-            // for (index_type j = 0; j < m; ++j) {
-            //     // sum_ll += L_pm[j] * L.get(pivot_i, j);
-            //     sum_ll += L_pm[j] * L_pi[j];
-            // }
             const double sum_ll = (L_pi.dot(L_pm)).sum();
-
             const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
 
             //L.set(pivot_i, m, l_m_pi);
@@ -754,7 +750,7 @@ void DfCD::calcCholeskyVectors_onTheFly()
     this->schwartzCutoffReport();
 
     CD_save_time.start();
-    this->saveL(L);
+    this->saveL(L.getTlMatrix());
     CD_save_time.stop();
 
     CD_all_time.stop();
