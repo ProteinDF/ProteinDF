@@ -394,17 +394,17 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
     index_type m = 0;
-    int progress = 0; // 10% 刻み
-    index_type progress_increment = index_type(N * 0.1);
+    int progress = 0;
+    index_type division = index_type(N * 0.01);
     while (error > threshold) {
         // progress 
         CD_resizeL_time.start();
-        if (m >= progress * progress_increment) {
-            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=%f", m, N, error));
+        if (m >= progress * division) {
+            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e", m, N, error));
             ++progress;
 
             // メモリの確保
-            L.reserve_cols(progress * progress_increment);
+            L.reserve_cols(progress * division);
         }
         L.resize(N, m+1);
         CD_resizeL_time.stop();
@@ -461,6 +461,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         CD_calc_time.start();
         std::vector<double> tmp_d(numOf_G_cols);
         std::vector<double> L_pi(m +1);
+#pragma omp parallel for schedule(runtime)
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
 
@@ -476,6 +477,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
 
                 const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
                 L.set(pivot_i, m, l_m_pi);
+#pragma omp atomic
                 tmp_d[i] -= l_m_pi * l_m_pi;
             }
         }

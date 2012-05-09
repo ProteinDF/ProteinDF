@@ -8,6 +8,7 @@
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
+#include "TlTime.h"
 
 
 DfCD::DfCD(TlSerializeData* pPdfParam) 
@@ -618,6 +619,19 @@ TlSymmetricMatrix DfCD::getPMatrix()
 
 void DfCD::calcCholeskyVectors_onTheFly()
 {
+    // timing data
+    TlTime CD_all_time;
+    TlTime CD_diagonals_time;
+    TlTime CD_resizeL_time;
+    TlTime CD_pivot_time;
+    TlTime CD_ERI_time;
+    // TlTime CD_Lpm_time;
+    TlTime CD_calc_time;
+    // TlTime CD_d_time;
+    TlTime CD_save_time;
+
+    CD_all_time.start();
+
     this->createEngines();
     this->initializeCutoffStats();
 
@@ -626,7 +640,9 @@ void DfCD::calcCholeskyVectors_onTheFly()
     PQ_PairArray I2PQ;
     TlVector d; // 対角成分
 
+    CD_diagonals_time.start();
     this->calcDiagonals(&schwartzTable, &I2PQ, &d);
+    CD_diagonals_time.stop();
 
     this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
     this->saveI2PQ(I2PQ);
@@ -640,23 +656,36 @@ void DfCD::calcCholeskyVectors_onTheFly()
     }
 
     // prepare variables
-    TlMatrix L;
+    TlMatrix L(N, 1);
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
+    int progress = 0;
+    index_type division =  index_type(N * 0.01);
+    L.resize(N, division);
     index_type m = 0;
     while (error > threshold) {
-        // this->log_.info(TlUtils::format("m=%d: err=%f", m, error));
-        L.resize(N, m+1);
+        CD_resizeL_time.start();
+        // progress 
+        if (m >= progress * division) {
+            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e", m, N, error));
+            ++progress;
+
+            // メモリの確保
+            L.resize(N, division * progress);
+        }
+        // L.resize(N, m+1);
+        CD_resizeL_time.stop();
 
         // pivot
+        CD_pivot_time.start();
         {
             std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
                                                                            pivot.end());
             const index_type i = it - pivot.begin();
             std::swap(pivot[m], pivot[i]);
-            //this->log_.info(TlUtils::format("m=%d: pivot_m=%d", m, pivot[m]));
         }
+        CD_pivot_time.stop();
         
         const double l_m_pm = std::sqrt(d[pivot[m]]);
         L.set(pivot[m], m, l_m_pm);
@@ -664,6 +693,7 @@ void DfCD::calcCholeskyVectors_onTheFly()
         const double inv_l_m_pm = 1.0 / l_m_pm;
 
         // ERI
+        CD_ERI_time.start();
         const index_type pivot_m = pivot[m];
         std::vector<double> G_pm;
         const index_type numOf_G_cols = N -(m+1);
@@ -676,21 +706,37 @@ void DfCD::calcCholeskyVectors_onTheFly()
             G_pm = this->getSuperMatrixElements(pivot_m, G_col_list, I2PQ, schwartzTable);
         }
         assert(G_pm.size() == numOf_G_cols);
+        CD_ERI_time.stop();
 
         // CD calc
+        CD_calc_time.start();
         const TlVector L_pm = L.getRowVector(pivot_m);
+        std::vector<double> L_xm(numOf_G_cols);
+#pragma omp parallel for schedule(runtime)
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
-            double sum_ll = 0.0;
-            for (index_type j = 0; j < m; ++j) {
-                sum_ll += L_pm[j] * L.get(pivot_i, j);
-            }
+            TlVector L_pi = L.getRowVector(pivot_i);
+            // double sum_ll = 0.0;
+            // for (index_type j = 0; j < m; ++j) {
+            //     // sum_ll += L_pm[j] * L.get(pivot_i, j);
+            //     sum_ll += L_pm[j] * L_pi[j];
+            // }
+            const double sum_ll = (L_pi.dot(L_pm)).sum();
 
             const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
-            L.set(pivot_i, m, l_m_pi);
+
+            //L.set(pivot_i, m, l_m_pi);
+#pragma omp atomic
+            L_xm[i] += l_m_pi; // for OpenMP
             
+#pragma omp atomic
             d[pivot_i] -= l_m_pi * l_m_pi;
         }
+        for (index_type i = 0; i < numOf_G_cols; ++i) {
+            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+            L.set(pivot_i, m, L_xm[i]);
+        }
+        CD_calc_time.stop();
 
         // calc error
         error = 0.0;
@@ -701,12 +747,28 @@ void DfCD::calcCholeskyVectors_onTheFly()
 
         ++m;
     }
+    L.resize(N, m);
     this->log_.info(TlUtils::format("Cholesky Vectors: %d", m));
 
     this->destroyEngines();
     this->schwartzCutoffReport();
 
+    CD_save_time.start();
     this->saveL(L);
+    CD_save_time.stop();
+
+    CD_all_time.stop();
+
+    // timing data
+    this->log_.info(TlUtils::format("CD all:       %f sec.", CD_all_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD diagonals: %f sec.", CD_diagonals_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD resize L:  %f sec.", CD_resizeL_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD pivot:     %f sec.", CD_pivot_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD ERI:       %f sec.", CD_ERI_time.getElapseTime()));
+    // this->log_.info(TlUtils::format("CD L(m):      %f sec.", CD_Lpm_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD calc:      %f sec.", CD_calc_time.getElapseTime()));
+    // this->log_.info(TlUtils::format("CD d:         %f sec.", CD_d_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD save:      %f sec.", CD_save_time.getElapseTime()));
 }
 
 
@@ -824,8 +886,13 @@ void DfCD::calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
                         
                         // for I~ to pq table
                         if (std::fabs(value) > tau) {
-                            local_diagMat.set(indexP, indexQ, value);
-                            local_I2PQ.push_back(IndexPair2(indexP, indexQ));
+                            if (value > 0) {
+                                local_diagMat.set(indexP, indexQ, value);
+                                local_I2PQ.push_back(IndexPair2(indexP, indexQ));
+                            } else {
+                                this->log_.warn(TlUtils::format("pqpq_value: (%d %d)=% e is spoiled.",
+                                                                indexP, indexQ, value));
+                            }
                         }
                     }
                 }
@@ -990,6 +1057,7 @@ DfCD::getCalcList(const index_type G_row,
     const index_type shellIndexQ = this->orbitalInfo_.getShellIndex(indexQ);
 
     const index_type numOf_G_cols = G_col_list.size();
+#pragma omp parallel for schedule(runtime)
     for (index_type i = 0; i < numOf_G_cols; ++i) {
         const index_type G_col = G_col_list[i];
 
@@ -1000,7 +1068,10 @@ DfCD::getCalcList(const index_type G_row,
 
         IndexPair4 indexPair4(shellIndexP, shellIndexQ, shellIndexR, shellIndexS);
         if (this->eriCache_.find(indexPair4) == this->eriCache_.end()) {
-            calcSet.insert(indexPair4);
+#pragma omp critical(DfCD__getCalcList) 
+            {
+                calcSet.insert(indexPair4);
+            }
         }
     }
 
