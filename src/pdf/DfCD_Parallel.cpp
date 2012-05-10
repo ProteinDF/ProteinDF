@@ -460,13 +460,13 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
 
         CD_calc_time.start();
         std::vector<double> tmp_d(numOf_G_cols);
-        std::vector<double> L_pi(m +1);
 #pragma omp parallel for schedule(runtime)
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
 
             if (L.getPEinChargeByRow(pivot_i) == rComm.getRank()) { // 自分がL(pivot_i, *)を持っていたら
                 // const TlVector L_pi = L.getRowVector(pivot_i);
+                std::vector<double> L_pi(m +1);
                 const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
                 assert(copySize == m +1);
 
@@ -476,7 +476,11 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
                 }
 
                 const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
-                L.set(pivot_i, m, l_m_pi);
+#pragma omp critical(DfCD_Parallel__calcCholeskyVectors_onTheFly)
+                {
+                    L.set(pivot_i, m, l_m_pi);
+                }
+
 #pragma omp atomic
                 tmp_d[i] -= l_m_pi * l_m_pi;
             }
