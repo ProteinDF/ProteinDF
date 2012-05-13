@@ -4,8 +4,9 @@
 #include <cstdlib>
 #include "DfCD.h"
 #include "TlDistributeSymmetricMatrix.h"
-#include "TlRowVectorMatrix.h"
+// #include "TlRowVectorMatrix.h"
 #include "TlRowVectorMatrix2.h"
+#include "TlColVectorMatrix2.h"
 
 class DfCD_Parallel : public DfCD {
 public:
@@ -46,6 +47,12 @@ protected:
     TlDistributeSymmetricMatrix 
     getCholeskyVector_distribute(const TlVector& L_col,
                                  const I2PQ_Type& I2PQ);
+
+    // -------------------------------------------------------------------------
+public:
+    virtual void getJ(TlSymmetricMatrix* pJ);
+    virtual void getK(const RUN_TYPE runType,
+              TlSymmetricMatrix* pK);
     
 protected:
     virtual void calcCholeskyVectors_onTheFly();
@@ -55,6 +62,11 @@ protected:
                            const I2PQ_Type& I2PQ,
                            const TlSparseSymmetricMatrix& schwartzTable);
     void saveL(const TlRowVectorMatrix2& L);
+    TlColVectorMatrix2 getColVector(const TlRowVectorMatrix2& L);
+
+    // for debug
+    TlMatrix mergeL(const TlRowVectorMatrix2& L);
+    TlMatrix mergeL(const TlColVectorMatrix2& L);
 };
 
 #endif // DFCD_PARALLEL_H

@@ -41,6 +41,14 @@ public:
     int getPEinChargeByCol(index_type col) const;
         
 public:
+    int getNumOfAllProcs() const {
+        return this->allProcs_;
+    };
+
+    int getRank() const {
+        return this->rank_;
+    };
+
     void save(const std::string& basename) const;
     void load(const std::string& basename);
 

@@ -29,6 +29,8 @@ TlColVectorMatrix2& TlColVectorMatrix2::operator=(const TlColVectorMatrix2& rhs)
         this->resize(rhs.getNumOfRows(), rhs.getNumOfCols());
         this->data_ = rhs.data_;
     }
+
+    return *this;
 }
 
 
@@ -89,7 +91,7 @@ TlColVectorMatrix2::getColVector(index_type col,
     const div_t turns = std::div(col, this->allProcs_);
     if (turns.rem == this->rank_) {
         const index_type col = turns.quot;
-        copySize = std::min(this->getNumOfCols(), maxRowSize);
+        copySize = std::min(this->getNumOfRows(), maxRowSize);
         std::copy(this->data_[col].begin(),
                   this->data_[col].begin() + copySize,
                   pBuf);
@@ -137,9 +139,10 @@ void TlColVectorMatrix2::save(const std::string& basename) const
 void TlColVectorMatrix2::load(const std::string& basename)
 {
     std::ifstream ifs;
-    const std::string path = TlUtils::format("%s.paart%d.mat",
+    const std::string path = TlUtils::format("%s.part%d.mat",
                                              basename.c_str(),
                                              this->rank_);
+    //std::cerr << "TlColVectorMatrix2::load() path=" << path << ", " << this->allProcs_ << std::endl;
     ifs.open(path.c_str());
 
     // header
@@ -153,10 +156,12 @@ void TlColVectorMatrix2::load(const std::string& basename)
     ifs.read((char*)&rank, sizeof(int));
     this->resize(numOfRows, numOfCols);
     
-    if ((allProcs != this->allProcs_) || 
-        (rank != this->rank_)) {
-        std::cerr << "something wrong!" << std::endl;
-    }
+    // std::cerr << TlUtils::format("ERROR: TlColVectorMatrix2::load() %s %d/%d (%dx%d; %d/%d)",
+    //                              path.c_str(),
+    //                              this->rank_, this->allProcs_,
+    //                              numOfRows, numOfCols, rank, allProcs)
+    //           << std::endl;
+    assert((allProcs == this->allProcs_) && (rank == this->rank_));
 
     // data
     const div_t turns = std::div(this->getNumOfRows(), this->allProcs_);

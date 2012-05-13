@@ -212,10 +212,7 @@ void TlRowVectorMatrix2::load(const std::string& basename)
     ifs.read((char*)&rank, sizeof(int));
     this->resize(numOfRows, numOfCols);
     
-    if ((allProcs != this->allProcs_) || 
-        (rank != this->rank_)) {
-        std::cerr << "something wrong!" << std::endl;
-    }
+    assert((allProcs == this->allProcs_) && (rank == this->rank_));
 
     // data
     const div_t turns = std::div(this->getNumOfRows(), this->allProcs_);
