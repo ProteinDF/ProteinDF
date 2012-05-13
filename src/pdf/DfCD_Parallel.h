@@ -52,7 +52,11 @@ protected:
 public:
     virtual void getJ(TlSymmetricMatrix* pJ);
     virtual void getK(const RUN_TYPE runType,
-              TlSymmetricMatrix* pK);
+                      TlSymmetricMatrix* pK);
+
+    void getJ_D(TlDistributeSymmetricMatrix* pJ);
+    void getK_D(const RUN_TYPE runType,
+                TlDistributeSymmetricMatrix* pK);
     
 protected:
     virtual void calcCholeskyVectors_onTheFly();
