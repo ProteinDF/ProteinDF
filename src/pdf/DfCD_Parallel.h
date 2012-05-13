@@ -5,6 +5,7 @@
 #include "DfCD.h"
 #include "TlDistributeSymmetricMatrix.h"
 #include "TlRowVectorMatrix.h"
+#include "TlRowVectorMatrix2.h"
 
 class DfCD_Parallel : public DfCD {
 public:
@@ -53,7 +54,7 @@ protected:
                            const std::vector<index_type>& G_col_list,
                            const I2PQ_Type& I2PQ,
                            const TlSparseSymmetricMatrix& schwartzTable);
-    void saveL(const TlRowVectorMatrix& L);
+    void saveL(const TlRowVectorMatrix2& L);
 };
 
 #endif // DFCD_PARALLEL_H

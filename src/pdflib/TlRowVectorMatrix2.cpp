@@ -1,6 +1,6 @@
 #include <iostream>
 #include "TlRowVectorMatrix2.h"
-
+#include "TlCommunicate.h"
 
 TlRowVectorMatrix2::TlRowVectorMatrix2(const index_type row,
                                        const index_type col,
@@ -10,8 +10,28 @@ TlRowVectorMatrix2::TlRowVectorMatrix2(const index_type row,
 }
 
 
+TlRowVectorMatrix2::TlRowVectorMatrix2(const TlRowVectorMatrix2& rhs) 
+    : allProcs_(rhs.allProcs_), rank_(rhs.rank_) {
+    this->resize(rhs.getNumOfRows(), rhs.getNumOfCols());
+    this->data_ = rhs.data_;
+}
+
+
 TlRowVectorMatrix2::~TlRowVectorMatrix2()
 {
+}
+
+
+TlRowVectorMatrix2& TlRowVectorMatrix2::operator=(const TlRowVectorMatrix2& rhs)
+{
+    if (this != &rhs) {
+        this->allProcs_ = rhs.allProcs_;
+        this->rank_ = rhs.rank_;
+        this->resize(rhs.getNumOfRows(), rhs.getNumOfCols());
+        this->data_ = rhs.data_;
+    }
+
+    return *this;
 }
 
 
@@ -107,6 +127,43 @@ TlMatrix TlRowVectorMatrix2::getTlMatrix() const
     
     return answer;
 }
+
+
+// TlColVectorMatrix2 TlRowVectorMatrix2::getColVectorMatrix() const 
+// {
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+//     const index_type numOfRows = this->getNumOfRows();
+//     const index_type numOfCols = this->getNumOfCols();
+//     const int numOfProcs = this->allProcs_;
+//     const int myRank = this->rank_;
+//     TlColVectorMatrix2 answer(numOfRows, numOfCols, numOfProcs, myRank);
+
+//     const div_t turns = std::div(numOfRows, numOfProcs);
+//     const index_type localRows = turns.quot + 1;
+//     std::vector<double> buf(localRows * numOfCols);;
+//     for (int i = 0; i < numOfProcs; ++i) {
+//         if (i == myRank) {
+//             for (index_type j = 0; j < localRows; ++j) {
+//                 std::copy(this->data_[j].begin(),
+//                           this->data_[j].begin() + numOfCols,
+//                           buf.begin() + numOfCols * j);
+//             }
+//         }
+//         rComm.broadcast(&(buf[0]), localRows * numOfCols, i);
+
+//         // set
+//         for (index_type j = 0; j < localRows; ++j) {
+//             index_type row = numOfProcs * j + i;
+//             if (row < numOfRows) {
+//                 for (index_type col = 0; col < numOfCols; ++col) {
+//                     answer.set(row, col, buf[numOfCols * j + col]);
+//                 }
+//             }
+//         }
+//     }
+    
+//     return answer;
+// }
 
 
 void TlRowVectorMatrix2::save(const std::string& basename) const 

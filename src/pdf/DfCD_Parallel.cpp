@@ -389,7 +389,9 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     }
 
     // prepare variables
-    TlRowVectorMatrix L(N, 1); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
+    TlRowVectorMatrix2 L(N, 1,
+                         rComm.getNumOfProcs(),
+                         rComm.getRank()); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
@@ -400,7 +402,9 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         // progress 
         CD_resizeL_time.start();
         if (m >= progress * division) {
-            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e", m, N, error));
+            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e, ERI cache=%ld MB"
+                                            , m, N, error,
+                                            this->eriCache_.size() * (sizeof(IndexPair4) + sizeof(double)) / (1024*1024) ));
             ++progress;
 
             // メモリの確保
@@ -596,35 +600,36 @@ DfCD_Parallel::getSuperMatrixElements(const index_type G_row,
 }
 
 
-void DfCD_Parallel::saveL(const TlRowVectorMatrix& L)
+void DfCD_Parallel::saveL(const TlRowVectorMatrix2& L)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    if (this->m_bUsingSCALAPACK == true) {
-        // const TlColVectorMatrix cvL = L.getTlColVectorMatrix();
-        // cvL.save("L", rComm.getRank());
-        const TlDistributeMatrix tmpL = L.getTlDistributeMatrix();
-        DfObject::saveLMatrix(tmpL);
-    } else {
-        const TlMatrix tmpL = L.getTlMatrix();
-        if (rComm.isMaster() == true) {
+    //TlColVectorMatrix2 tmpL = L.getColVectorMatrix();
+    //tmpL.save("L");
+    // if (this->m_bUsingSCALAPACK == true) {
+    //     // const TlColVectorMatrix cvL = L.getTlColVectorMatrix();
+    //     // cvL.save("L", rComm.getRank());
+    //     const TlDistributeMatrix tmpL = L.getTlDistributeMatrix();
+    //     DfObject::saveLMatrix(tmpL);
+    // } else {
+    const TlMatrix tmpL = L.getTlMatrix();
+    if (rComm.isMaster() == true) {
             DfCD::saveL(tmpL);
-        }
-    }
+     }
+    // }
 }
 
 #ifdef UNTESTED_CODE
-void DfCD_Parallel::getJ_D(TlDistributeSymmetricMatrix* pJ)
+void DfCD_Parallel::getJ(TlSymmetricMatrix* pJ)
 {
     this->log_.info("calc J by CD method on distributed matrix.");
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    const TlDistributeSymmetricMatrix P = 
-        DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+    const TlSymmetricMatrix P = 
+        DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
 
     // cholesky vector
     const I2PQ_Type I2PQ = this->getI2PQ();
-    TlColVectorMatrix L;
+    TlColVectorMatrix2 L;
     L.load("L", rComm.getRank());
     const index_type cvSize = L.getNumOfRows();
     const index_type numOfCBs = L.getNumOfCols();
@@ -652,6 +657,85 @@ void DfCD_Parallel::getJ_D(TlDistributeSymmetricMatrix* pJ)
     }
 }
 
+
+void DfCD_Parallel::getJ_D(TlDistributeSymmetricMatrix* pJ)
+{
+    this->log_.info("calc J by CD method on distributed matrix.");
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    const TlDistributeSymmetricMatrix P = 
+        DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+
+    // cholesky vector
+    const I2PQ_Type I2PQ = this->getI2PQ();
+    TlColVectorMatrix2 L;
+    L.load("L", rComm.getRank());
+    const index_type cvSize = L.getNumOfRows();
+    const index_type numOfCBs = L.getNumOfCols();
+
+    std::vector<double> cv(cvSize);
+    for (index_type I = 0; I < numOfCBs; ++I) {
+        // 
+        const int PEinCharge = L.getPEinChargeByCol(I);
+        if (PEinCharge == rComm.getRank()) {
+            const index_type copySize = L.getColVector(I, &(cv[0]), cvSize);
+            assert(copySize == cvSize);
+        }
+        rComm.broadcast(&(cv[0]), cvSize, PEinCharge);
+
+        TlDistributeSymmetricMatrix LI = 
+            this->getCholeskyVector_distribute(cv, I2PQ);
+        assert(LI.getNumOfRows() == this->m_nNumOfAOs);
+        assert(LI.getNumOfCols() == this->m_nNumOfAOs);
+
+        TlDistributeSymmetricMatrix QI = LI;
+        QI.dot(P);
+        const double qi = QI.sum();
+        
+        *pJ += qi*LI;
+    }
+}
+
+void DfCD_Parallel::getK(const RUN_TYPE runType,
+                         TlSymmetricMatrix* pK)
+{
+    this->log_.info("calc K by CD method on distributed matrix.");
+
+    // cholesky vector
+    const I2PQ_Type I2PQ = this->getI2PQ();
+    TlColVectorMatrix2 L;
+    L.load("L", rComm.getRank());
+    const index_type cvSize = L.getNumOfRows();
+    const index_type numOfCBs = L.getNumOfCols();
+    
+    TlSymmetricMatrix P = DfObject::getPpqMatrix<TlSymmetricMatrix>(runType,
+                                                                    this->m_nIteration -1);
+    const TlMatrix C = P.choleskyFactorization(this->epsilon_);
+    
+    std::vector<double> cv(cvSize);
+    for (index_type I = 0; I < numOfCBs; ++I) {
+        // 
+        const int PEinCharge = L.getPEinChargeByCol(I);
+        if (PEinCharge == rComm.getRank()) {
+            const index_type copySize = L.getColVector(I, &(cv[0]), cvSize);
+            assert(copySize == cvSize);
+        }
+        rComm.broadcast(&(cv[0]), cvSize, PEinCharge);
+
+        TlDistributeSymmetricMatrix l = 
+            this->getCholeskyVector_distribute(cv, I2PQ);
+
+        TlDistributeMatrix X = l * C;
+        TlDistributeMatrix Xt = X;
+        Xt.transpose();
+        
+        TlDistributeSymmetricMatrix XX = X * Xt;
+        *pK += XX;
+    }
+    
+    *pK *= -1.0;
+}
+
 void DfCD_Parallel::getK_D(const RUN_TYPE runType,
                            TlDistributeSymmetricMatrix* pK)
 {
@@ -659,7 +743,7 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
 
     // cholesky vector
     const I2PQ_Type I2PQ = this->getI2PQ();
-    TlColVectorMatrix L;
+    TlColVectorMatrix2 L;
     L.load("L", rComm.getRank());
     const index_type cvSize = L.getNumOfRows();
     const index_type numOfCBs = L.getNumOfCols();
@@ -691,6 +775,43 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
     
     *pK *= -1.0;
 }
+
+TlColVectorMatrix2 TlRowVectorMatrix2::getColVectorMatrix() const 
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const index_type numOfRows = this->getNumOfRows();
+    const index_type numOfCols = this->getNumOfCols();
+    const int numOfProcs = this->allProcs_;
+    const int myRank = this->rank_;
+    TlColVectorMatrix2 answer(numOfRows, numOfCols, numOfProcs, myRank);
+
+    const div_t turns = std::div(numOfRows, numOfProcs);
+    const index_type localRows = turns.quot + 1;
+    std::vector<double> buf(localRows * numOfCols);;
+    for (int i = 0; i < numOfProcs; ++i) {
+        if (i == myRank) {
+            for (index_type j = 0; j < localRows; ++j) {
+                std::copy(this->data_[j].begin(),
+                          this->data_[j].begin() + numOfCols,
+                          buf.begin() + numOfCols * j);
+            }
+        }
+        rComm.broadcast(&(buf[0]), localRows * numOfCols, i);
+
+        // set
+        for (index_type j = 0; j < localRows; ++j) {
+            index_type row = numOfProcs * j + i;
+            if (row < numOfRows) {
+                for (index_type col = 0; col < numOfCols; ++col) {
+                    answer.set(row, col, buf[numOfCols * j + col]);
+                }
+            }
+        }
+    }
+    
+    return answer;
+}
+
 
 #endif // UNTESTED_CODE
 // =============================================================================

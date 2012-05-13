@@ -1,5 +1,5 @@
-#ifndef TLROWVECTORMATRIX2_H
-#define TLROWVECTORMATRIX2_H
+#ifndef TLCOLVECTORMATRIX2_H
+#define TLCOLVECTORMATRIX2_H
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -8,19 +8,18 @@
 #include "TlMatrixObject.h"
 #include "TlMatrix.h"
 
-class TlRowVectorMatrix2 {
+class TlColVectorMatrix2 {
 public:
     typedef TlMatrixObject::index_type index_type;
 
 public:
-    explicit TlRowVectorMatrix2(index_type row = 1, index_type col = 1,
+    explicit TlColVectorMatrix2(index_type row = 1, index_type col = 1,
                                 int allProcs = 1, int rank = 0);
-    TlRowVectorMatrix2(const TlRowVectorMatrix2& rhs);
-
-    ~TlRowVectorMatrix2();
+    TlColVectorMatrix2(const TlColVectorMatrix2& rhs);
+    ~TlColVectorMatrix2();
         
 public:
-    TlRowVectorMatrix2& operator=(const TlRowVectorMatrix2& rhs);
+    TlColVectorMatrix2& operator=(const TlColVectorMatrix2& rhs);
 
     void resize(index_type row, index_type col);
     index_type getNumOfRows() const {
@@ -31,18 +30,16 @@ public:
         return this->numOfCols_;
     };
 
-    /// 列数のcapacityを設定する
-    void reserve_cols(index_type col);
+    /// 行数のcapacityを設定する
+    void reserve_rows(index_type row);
 
     void set(index_type row, index_type col, double value);
         
-    TlVector getRowVector(index_type row) const;
-    index_type getRowVector(index_type row, double *pBuf, index_type maxColSize) const;
+    TlVector getColVector(index_type col) const;
+    index_type getColVector(index_type col, double *pBuf, index_type maxRowSize) const;
         
-    int getPEinChargeByRow(index_type row) const;
+    int getPEinChargeByCol(index_type col) const;
         
-    TlMatrix getTlMatrix() const;
-
 public:
     void save(const std::string& basename) const;
     void load(const std::string& basename);
@@ -50,7 +47,7 @@ public:
 private:
     index_type numOfRows_;
     index_type numOfCols_;
-    index_type reserveCols_; // 列数のメモリ確保量
+    index_type reserveRows_; // 行数のメモリ確保量
 
     int allProcs_;
     int rank_;
@@ -58,4 +55,4 @@ private:
     std::vector<std::vector<double> > data_;
 };
 
-#endif // TLROWVECTORMATRIX2_H
+#endif // TLCOLVECTORMATRIX2_H
