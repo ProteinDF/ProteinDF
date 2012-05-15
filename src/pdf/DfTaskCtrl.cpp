@@ -201,6 +201,8 @@ bool DfTaskCtrl::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
     static DistributedCutoffTable dct;
     static std::size_t progress = 0;
     static std::size_t progress_all = 0;
+    static int progress_stage = 0;
+    static std::size_t division = 0;
     
     pTaskList->clear();
     pTaskList->reserve(maxGrainSize);
@@ -221,12 +223,16 @@ bool DfTaskCtrl::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
             progress_all = this->getTotalCalcAmount2(orbitalInfo,
                                                      shellArrayTable,
                                                      dct);
+            progress_stage = 0;
+            division = progress_all * 0.1;
             // pre-screening report
             this->prescreeningReport();
         } else {
             progress = 0;
             progress_all = this->getTotalCalcAmount2(orbitalInfo,
                                                      shellArrayTable);
+            progress_stage = 0;
+            division = progress_all * 0.1;
         }
 
         return true;
@@ -265,8 +271,12 @@ bool DfTaskCtrl::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
                     progress += maxStepsP * maxStepsQ;
 
                     if (grainSize >= maxGrainSize) {
-                        const double progressLevel = (double)progress/(double)progress_all * 100.0;
-                        this->log_.info(TlUtils::format("progress: %3.0f%% done.", progressLevel));
+                        if (progress >= (progress_stage * division)) {
+                            const double progressLevel = (double)progress/(double)progress_all * 100.0;
+                            this->log_.info(TlUtils::format("progress: %3.0f%% done.", progressLevel));
+
+                            progress_stage = progress / division + 1;
+                        }
                         return true;
                     }
                 }
@@ -312,6 +322,8 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
     static DistributedCutoffTable dct;
     static std::size_t progress = 0;
     static std::size_t progress_all = 0;
+    static int progress_stage = 0;
+    static std::size_t division = 0;
     
     pTaskList->clear();
     pTaskList->reserve(maxGrainSize);
@@ -339,6 +351,8 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
         progress_all = this->getTotalCalcAmount4(orbitalInfo,
                                                  shellPairArrayTable,
                                                  dct);
+        progress_stage = 0;
+        division = progress_all * 0.1;
 
         // pre-screening report
         this->prescreeningReport();
@@ -402,8 +416,12 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
                                     ++grainSize;
                                     
                                     if (grainSize >= maxGrainSize) {
-                                        const double progressLevel = (double)progress/(double)progress_all * 100.0;
-                                        this->log_.info(TlUtils::format("progress: %3.0f%% done.", progressLevel));
+                                        if (progress >= (progress_stage * division)) {
+                                            const double progressLevel = (double)progress/(double)progress_all * 100.0;
+                                            this->log_.info(TlUtils::format("progress: %3.0f%% done.", progressLevel));
+
+                                            progress_stage = progress /division + 1;
+                                        }
                                         return true;
                                     }
                                 }

@@ -81,7 +81,7 @@ void DfKMatrix_Parallel::getK_CD_distributed(const RUN_TYPE runType,
                                              TlDistributeSymmetricMatrix *pK)
 {
     DfCD_Parallel dfCD(this->pPdfParam_);
-    dfCD.getK_distributed(runType, pK);
+    dfCD.getK_D(runType, pK);
 }
 
 

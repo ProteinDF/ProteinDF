@@ -214,7 +214,7 @@ void DfJMatrix_Parallel::getJ_CD_local(TlSymmetricMatrix *pJ)
 void DfJMatrix_Parallel::getJ_CD_distributed(TlDistributeSymmetricMatrix *pJ)
 {
     DfCD_Parallel dfCD(this->pPdfParam_);
-    dfCD.getJ_distributed(pJ);
+    dfCD.getJ_D(pJ);
 }
 
 

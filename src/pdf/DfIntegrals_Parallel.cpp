@@ -221,93 +221,97 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK()
         this->saveParam();
     }
 
-    // Sab2
-    if ((calcState & DfIntegrals::Sab2) == 0) {
-        this->outputStartTitle("Sab2");
-
-        const std::size_t needMem = this->m_nNumOfAux * (this->m_nNumOfAux + 1) / 2 * sizeof(double);
-        if ((this->isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
-            this->logger(" S_(alpha beta) is build on disk.\n");
-            TlMatrix::useMemManager(true);
-        } else {
-            this->logger(" S_(alpha beta) is build on memory.\n");
-            TlMatrix::useMemManager(false);
+    if (this->K_engine_ == K_ENGINE_RI_K) {
+        // Sgd
+        if ((calcState & DfIntegrals::Sgd) == 0) {
+            if (this->m_bIsXCFitting == true) {
+                this->outputStartTitle("Sgd");
+                
+                const std::size_t needMem = this->numOfAuxXC_ * (this->numOfAuxXC_ + 1) / 2 * sizeof(double);
+                if ((isWorkOnDisk_ == true) ||
+                    (this->procMaxMemSize_ < needMem)) {
+                    this->logger(" S_(gamma delta) is build on disk.\n");
+                    TlMatrix::useMemManager(true);
+                } else {
+                    this->logger(" S_(gamma delta) is build on memory.\n");
+                    TlMatrix::useMemManager(false);
+                }
+                
+                TlSymmetricMatrix Sgd(this->numOfAuxXC_);
+                dfOverlap.getSgd(&Sgd);
+                
+                if (rComm.isMaster() == true) {
+                    this->saveSgdMatrix(Sgd);
+                }
+                rComm.barrier();
+                
+                this->outputEndTitle();
+            }
+            
+            calcState |= DfIntegrals::Sgd;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
         }
-
-        TlSymmetricMatrix Sab2(this->m_nNumOfAux);
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" use new engine.\n");
-            dfOverlapX.getSab(&Sab2);
-        } else {
-            dfOverlap.getSab2(&Sab2);
-        }
-
-        if (rComm.isMaster() == true) {
-            this->saveSab2Matrix(Sab2);
-        }
-        rComm.barrier();
-        
-        this->outputEndTitle();
-
-        calcState |= DfIntegrals::Sab2;
-        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-        this->saveParam();
     }
 
-    // Sgd
-    if ((calcState & DfIntegrals::Sgd) == 0) {
-        if (this->m_bIsXCFitting == true) {
-            this->outputStartTitle("Sgd");
-
-            const std::size_t needMem = this->numOfAuxXC_ * (this->numOfAuxXC_ + 1) / 2 * sizeof(double);
-            if ((isWorkOnDisk_ == true) ||
-                (this->procMaxMemSize_ < needMem)) {
-                this->logger(" S_(gamma delta) is build on disk.\n");
+    if (this->J_engine_ == J_ENGINE_RI_J) {
+        // Sab2
+        if ((calcState & DfIntegrals::Sab2) == 0) {
+            this->outputStartTitle("Sab2");
+            
+            const std::size_t needMem = this->m_nNumOfAux * (this->m_nNumOfAux + 1) / 2 * sizeof(double);
+            if ((this->isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
+                this->logger(" S_(alpha beta) is build on disk.\n");
                 TlMatrix::useMemManager(true);
             } else {
-                this->logger(" S_(gamma delta) is build on memory.\n");
+                this->logger(" S_(alpha beta) is build on memory.\n");
                 TlMatrix::useMemManager(false);
             }
-
-            TlSymmetricMatrix Sgd(this->numOfAuxXC_);
-            dfOverlap.getSgd(&Sgd);
-
+            
+            TlSymmetricMatrix Sab2(this->m_nNumOfAux);
+            if (this->isUseNewEngine_ == true) {
+                this->logger(" use new engine.\n");
+                dfOverlapX.getSab(&Sab2);
+            } else {
+                dfOverlap.getSab2(&Sab2);
+            }
+            
             if (rComm.isMaster() == true) {
-                this->saveSgdMatrix(Sgd);
+                this->saveSab2Matrix(Sab2);
             }
             rComm.barrier();
-        
+            
             this->outputEndTitle();
+            
+            calcState |= DfIntegrals::Sab2;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
         }
 
-        calcState |= DfIntegrals::Sgd;
-        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-        this->saveParam();
-    }
-
-    // Na
-    if ((calcState & DfIntegrals::Na) == 0) {
-        this->outputStartTitle("N_alpha");
-
-        const std::size_t needMem = this->m_nNumOfAux * sizeof(double);
-        if ((this->isWorkOnDisk_ == true) ||
-            (this->procMaxMemSize_ < needMem)) {
-            this->logger(" [alpha] is build on disk.\n");
-            TlMatrix::useMemManager(true);
-        } else {
-            this->logger(" [alpha] is build on memory.\n");
-            TlMatrix::useMemManager(false);
+        // Na
+        if ((calcState & DfIntegrals::Na) == 0) {
+            this->outputStartTitle("N_alpha");
+            
+            const std::size_t needMem = this->m_nNumOfAux * sizeof(double);
+            if ((this->isWorkOnDisk_ == true) ||
+                (this->procMaxMemSize_ < needMem)) {
+                this->logger(" [alpha] is build on disk.\n");
+                TlMatrix::useMemManager(true);
+            } else {
+                this->logger(" [alpha] is build on memory.\n");
+                TlMatrix::useMemManager(false);
+            }
+            
+            TlVector Na(this->m_nNumOfAux);
+            dfOverlap.getNa(&Na);
+            this->saveNalpha(Na);
+            
+            this->outputEndTitle();
+            
+            calcState |= DfIntegrals::Na;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
         }
-
-        TlVector Na(this->m_nNumOfAux);
-        dfOverlap.getNa(&Na);
-        this->saveNalpha(Na);
-        
-        this->outputEndTitle();
-
-        calcState |= DfIntegrals::Na;
-        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-        this->saveParam();
     }
 }
 
@@ -341,67 +345,71 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK()
         this->saveParam();
     }
 
-    // Sab2
-    if ((calcState & DfIntegrals::Sab2) == 0) {
-        this->outputStartTitle("Sab2");
-
-        this->logger(" S_(alpha beta) is build using on distribute matrix.\n");
-        TlDistributeSymmetricMatrix Sab2(this->m_nNumOfAux);
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" use new engine.\n");
-            dfOverlapX.getSabD(&Sab2);
-        } else {
-            dfOverlap.getSab2(&Sab2);
+    if (this->K_engine_ == K_ENGINE_RI_K) {
+        // Sgd
+        if ((calcState & DfIntegrals::Sgd) == 0) {
+            if (this->m_bIsXCFitting == true) {
+                this->outputStartTitle("Sgd");
+                
+                TlDistributeSymmetricMatrix Sgd(this->numOfAuxXC_);
+                dfOverlap.getSgd(&Sgd);
+                this->saveSgdMatrix(Sgd);
+                
+                this->outputEndTitle();
+            }
+            
+            calcState |= DfIntegrals::Sgd;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
         }
-        this->saveSab2Matrix(Sab2);
-
-        this->outputEndTitle();
-
-        calcState |= DfIntegrals::Sab2;
-        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-        this->saveParam();
     }
 
-    // Sgd
-    if ((calcState & DfIntegrals::Sgd) == 0) {
-        if (this->m_bIsXCFitting == true) {
-            this->outputStartTitle("Sgd");
-
-            TlDistributeSymmetricMatrix Sgd(this->numOfAuxXC_);
-            dfOverlap.getSgd(&Sgd);
-            this->saveSgdMatrix(Sgd);
-
+    if (this->K_engine_ == K_ENGINE_RI_K) {
+        // Sab2
+        if ((calcState & DfIntegrals::Sab2) == 0) {
+            this->outputStartTitle("Sab2");
+            
+            this->logger(" S_(alpha beta) is build using on distribute matrix.\n");
+            TlDistributeSymmetricMatrix Sab2(this->m_nNumOfAux);
+            if (this->isUseNewEngine_ == true) {
+                this->logger(" use new engine.\n");
+                dfOverlapX.getSabD(&Sab2);
+            } else {
+                dfOverlap.getSab2(&Sab2);
+            }
+            this->saveSab2Matrix(Sab2);
+            
             this->outputEndTitle();
+            
+            calcState |= DfIntegrals::Sab2;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
         }
-
-        calcState |= DfIntegrals::Sgd;
-        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-        this->saveParam();
-    }
-
-    // Na
-    if ((calcState & DfIntegrals::Na) == 0) {
-        this->outputStartTitle("N_alpha");
-
-        const std::size_t needMem = this->m_nNumOfAux * sizeof(double);
-        if ((this->isWorkOnDisk_ == true) ||
-            (this->procMaxMemSize_ < needMem)) {
-            this->logger(" [alpha] is build on disk.\n");
-            TlMatrix::useMemManager(true);
-        } else {
-            this->logger(" [alpha] is build on memory.\n");
-            TlMatrix::useMemManager(false);
-        }
-
-        TlVector Na(this->m_nNumOfAux);
-        dfOverlap.getNa(&Na);
-        this->saveNalpha(Na);
         
-        this->outputEndTitle();
-
-        calcState |= DfIntegrals::Na;
-        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-        this->saveParam();
+        // Na
+        if ((calcState & DfIntegrals::Na) == 0) {
+            this->outputStartTitle("N_alpha");
+            
+            const std::size_t needMem = this->m_nNumOfAux * sizeof(double);
+            if ((this->isWorkOnDisk_ == true) ||
+                (this->procMaxMemSize_ < needMem)) {
+                this->logger(" [alpha] is build on disk.\n");
+                TlMatrix::useMemManager(true);
+            } else {
+                this->logger(" [alpha] is build on memory.\n");
+                TlMatrix::useMemManager(false);
+            }
+            
+            TlVector Na(this->m_nNumOfAux);
+            dfOverlap.getNa(&Na);
+            this->saveNalpha(Na);
+            
+            this->outputEndTitle();
+            
+            calcState |= DfIntegrals::Na;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
+        }
     }
 }
 
@@ -423,40 +431,42 @@ void DfIntegrals_Parallel::createERIMatrix_LAPACK()
 {
     unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-    if ((calcState & DfIntegrals::Sab) == 0) {
-        this->outputStartTitle("Sab");
-
-        const std::size_t needMem = this->m_nNumOfAux * (this->m_nNumOfAux + 1) / 2 * sizeof(double);
-        if ((this->isWorkOnDisk_ == true) ||
-            (this->procMaxMemSize_ < needMem)) {
-            this->logger(" <alpha|beta> is build on disk.\n");
-            TlMatrix::useMemManager(true);
-        } else {
-            this->logger(" <alpha|beta> is build on memory.\n");
-            TlMatrix::useMemManager(false);
+    if (this->J_engine_ == J_ENGINE_RI_J) {
+        if ((calcState & DfIntegrals::Sab) == 0) {
+            this->outputStartTitle("Sab");
+            
+            const std::size_t needMem = this->m_nNumOfAux * (this->m_nNumOfAux + 1) / 2 * sizeof(double);
+            if ((this->isWorkOnDisk_ == true) ||
+                (this->procMaxMemSize_ < needMem)) {
+                this->logger(" <alpha|beta> is build on disk.\n");
+                TlMatrix::useMemManager(true);
+            } else {
+                this->logger(" <alpha|beta> is build on memory.\n");
+                TlMatrix::useMemManager(false);
+            }
+            
+            TlSymmetricMatrix Sab(this->m_nNumOfAux);
+            
+            if (this->isUseNewEngine_ == true) {
+                this->logger(" use new engine.\n");
+                DfEriX_Parallel dfEri(this->pPdfParam_);
+                dfEri.getJab(&Sab);
+            } else {
+                DfEri_Parallel dfEri(this->pPdfParam_);
+                dfEri.getSab(&Sab);
+            }
+            
+            TlCommunicate& rComm = TlCommunicate::getInstance();
+            if (rComm.isMaster() == true) {
+                this->saveSabMatrix(Sab);
+            }
+            
+            this->outputEndTitle();
+            
+            calcState |= DfIntegrals::Sab;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
         }
-        
-        TlSymmetricMatrix Sab(this->m_nNumOfAux);
-
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" use new engine.\n");
-            DfEriX_Parallel dfEri(this->pPdfParam_);
-            dfEri.getJab(&Sab);
-        } else {
-            DfEri_Parallel dfEri(this->pPdfParam_);
-            dfEri.getSab(&Sab);
-        }
-
-        TlCommunicate& rComm = TlCommunicate::getInstance();
-        if (rComm.isMaster() == true) {
-            this->saveSabMatrix(Sab);
-        }
-        
-        this->outputEndTitle();
-
-        calcState |= DfIntegrals::Sab;
-        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-        this->saveParam();
     }
 }
 
@@ -464,19 +474,21 @@ void DfIntegrals_Parallel::createERIMatrix_LAPACK()
 void DfIntegrals_Parallel::createERIMatrix_ScaLAPACK()
 {
     unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
-
-    if ((calcState & DfIntegrals::Sab) == 0) {
-        this->outputStartTitle("Sab");
-
-        DfEri_Parallel dfEri(this->pPdfParam_);
-        TlDistributeSymmetricMatrix Sab(this->m_nNumOfAux);
-        dfEri.getSab(&Sab);
-        this->saveSabMatrix(Sab);
-        
-        this->outputEndTitle();
-
-        calcState |= DfIntegrals::Sab;
-        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-        this->saveParam();
+    
+    if (this->J_engine_ == J_ENGINE_RI_J) {
+        if ((calcState & DfIntegrals::Sab) == 0) {
+            this->outputStartTitle("Sab");
+            
+            DfEri_Parallel dfEri(this->pPdfParam_);
+            TlDistributeSymmetricMatrix Sab(this->m_nNumOfAux);
+            dfEri.getSab(&Sab);
+            this->saveSabMatrix(Sab);
+            
+            this->outputEndTitle();
+            
+            calcState |= DfIntegrals::Sab;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
+        }
     }
 }
