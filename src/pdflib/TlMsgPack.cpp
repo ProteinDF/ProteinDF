@@ -39,14 +39,17 @@ TlSerializeData TlMsgPack::getSerializeData() const
     return this->data_;
 }
 
-void TlMsgPack::load(const std::string& path)
+bool TlMsgPack::load(const std::string& path)
 {
     std::ifstream ifs;
-    // TODO: error handling
     ifs.open(path.c_str(), std::ios::in | std::ios::binary);
+    if (!ifs) {
+        return false;
+    }
 
     this->debugCurrentPos_ = 0; // initialize
     this->data_ = this->loadBinary(ifs);
+    return true;
 }
 
 void TlMsgPack::pack(const std::string& str)
