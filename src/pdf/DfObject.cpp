@@ -259,6 +259,9 @@ void DfObject::setParam(const TlSerializeData& data)
     if (paramFileBaseName["SgdInv_matrix"].getStr().empty() == true) {
         paramFileBaseName["SgdInv_matrix"] = "Sgdinv.mat";
     }
+    if (paramFileBaseName["I2PQ_vtr"].getStr().empty() == true) {
+        paramFileBaseName["I2PQ_vtr"] = "I2PQ.vtr";
+    }
     if (paramFileBaseName["L_matrix"].getStr().empty() == true) {
         paramFileBaseName["L_matrix"] = "L.mat";
     }
@@ -428,6 +431,11 @@ std::string DfObject::getSgdInvMatrixPath()
     return this->makeFilePath("SgdInv_matrix");
 }
 
+
+std::string DfObject::getI2pqVtrPath()
+{
+    return this->makeFilePath("I2PQ_vtr");
+}
 
 std::string DfObject::getLMatrixPath()
 {

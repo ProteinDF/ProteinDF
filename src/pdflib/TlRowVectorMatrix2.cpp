@@ -5,13 +5,13 @@
 TlRowVectorMatrix2::TlRowVectorMatrix2(const index_type row,
                                        const index_type col,
                                        int allProcs, int rank)
-    : allProcs_(allProcs), rank_(rank) {
+    : reserveCols_(0), allProcs_(allProcs), rank_(rank) {
     this->resize(row, col);
 }
 
 
 TlRowVectorMatrix2::TlRowVectorMatrix2(const TlRowVectorMatrix2& rhs) 
-    : allProcs_(rhs.allProcs_), rank_(rhs.rank_) {
+    : reserveCols_(rhs.reserveCols_), allProcs_(rhs.allProcs_), rank_(rhs.rank_) {
     this->resize(rhs.getNumOfRows(), rhs.getNumOfCols());
     this->data_ = rhs.data_;
 }

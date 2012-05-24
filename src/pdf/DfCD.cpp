@@ -402,7 +402,7 @@ void DfCD::storeG2(const index_type shellIndexP, const int maxStepsP,
 
 void DfCD::saveI2PQ(const PQ_PairArray& I2PQ) 
 {
-    std::string filepath = "I2PQ.vtr";
+    std::string filepath = this->getI2pqVtrPath();
     std::ofstream ofs;
     ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::binary);
 
@@ -420,7 +420,7 @@ void DfCD::saveI2PQ(const PQ_PairArray& I2PQ)
 
 DfCD::PQ_PairArray DfCD::getI2PQ()
 {
-    std::string filepath = "I2PQ.vtr";
+    std::string filepath = this->getI2pqVtrPath();
     std::ifstream ifs;
     ifs.open(filepath.c_str(), std::ofstream::in | std::ofstream::binary);
     if (ifs.fail()) {
@@ -648,15 +648,13 @@ void DfCD::calcCholeskyVectors_onTheFly()
     this->saveI2PQ(I2PQ);
 
     const index_type N = I2PQ.size();
-    double error = d.sum();
+    double error = d.getMaxAbsoluteElement();
     std::vector<TlVector::size_type> pivot(N);
-#pragma omp parallel for 
     for (index_type i = 0; i < N; ++i) {
         pivot[i] = i;
     }
 
     // prepare variables
-    //TlMatrix L(N, 1);
     TlRowVectorMatrix2 L(N, 1);
     L.reserve_cols(N);
     const double threshold = this->epsilon_;
@@ -688,7 +686,8 @@ void DfCD::calcCholeskyVectors_onTheFly()
             std::swap(pivot[m], pivot[i]);
         }
         CD_pivot_time.stop();
-        
+
+        error = d[pivot[m]];
         const double l_m_pm = std::sqrt(d[pivot[m]]);
         L.set(pivot[m], m, l_m_pm);
         
@@ -733,13 +732,6 @@ void DfCD::calcCholeskyVectors_onTheFly()
             L.set(pivot_i, m, L_xm[i]);
         }
         CD_calc_time.stop();
-
-        // calc error
-        error = 0.0;
-#pragma omp parallel for reduction(+: error)
-        for (index_type i = m +1; i < N; ++i) {
-            error += d[pivot[i]];
-        }
 
         ++m;
     }
