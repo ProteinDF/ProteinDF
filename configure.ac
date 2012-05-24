@@ -7,6 +7,7 @@ AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/pdf/main.cpp])
 AC_CONFIG_MACRO_DIR([m4])
 AC_REVISION([m4_esyscmd_s([git describe --always])])
+AC_DEFINE_UNQUOTED([GIT_DESCRIBE], "[m4_esyscmd_s([git describe --always])]", [git describe])
 
 # ====================================================================
 # config.h
