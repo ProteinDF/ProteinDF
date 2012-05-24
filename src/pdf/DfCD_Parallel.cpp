@@ -381,9 +381,8 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     this->saveI2PQ(I2PQ);
 
     const index_type N = I2PQ.size();
-    double error = d.sum();
+    double error = d.getMaxAbsoluteElement();
     std::vector<TlVector::size_type> pivot(N);
-#pragma omp parallel for 
     for (index_type i = 0; i < N; ++i) {
         pivot[i] = i;
     }
@@ -422,7 +421,8 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
             std::swap(pivot[m], pivot[i]);
         }
         CD_pivot_time.stop();
-        
+
+        error = d[pivot[m]];
         const double l_m_pm = std::sqrt(d[pivot[m]]);
         L.set(pivot[m], m, l_m_pm); // 通信発生せず。関係無いPEは値を捨てる。
         
@@ -498,13 +498,6 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
             d[pivot_i] += tmp_d[i];
         }
         CD_d_time.stop();
-
-        // calc error
-        error = 0.0;
-#pragma omp parallel for reduction(+: error)
-        for (index_type i = m +1; i < N; ++i) {
-            error += d[pivot[i]];
-        }
 
         ++m;
     }
