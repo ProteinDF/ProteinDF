@@ -151,12 +151,14 @@ void DfObject::setParam(const TlSerializeData& data)
 
     // J
     {
-        this->J_engine_ = J_ENGINE_CONVENTIONAL;
+        this->J_engine_ = J_ENGINE_RI_J;
         const std::string J_Engine = TlUtils::toUpper(data["J_engine"].getStr());
         if (J_Engine == "RI_J") {
             this->J_engine_ = J_ENGINE_RI_J;
         } else if (J_Engine == "CD") {
             this->J_engine_ = J_ENGINE_CD;
+        } else if (J_Engine == "CONVENTIONAL") {
+            this->J_engine_ = J_ENGINE_CONVENTIONAL;
         }
     }
 
@@ -168,6 +170,8 @@ void DfObject::setParam(const TlSerializeData& data)
             this->K_engine_ = K_ENGINE_RI_K;
         } else if (K_Engine == "CD") {
             this->K_engine_ = K_ENGINE_CD;
+        } else if (K_Engine == "CONVENTIONAL") {
+            this->K_engine_ = K_ENGINE_CONVENTIONAL;
         }
     }
     
