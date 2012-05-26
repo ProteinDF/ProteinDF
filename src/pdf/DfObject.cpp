@@ -255,6 +255,7 @@ void DfObject::setParam(const TlSerializeData& data)
     paramFileBaseName["Hpq2_matrix"]   = "Hpq2.mat";
     paramFileBaseName["Spq_matrix"]    = "Spq.mat";
     paramFileBaseName["Sab_matrix"]    = "Sab.mat";
+    paramFileBaseName["Nalpha_vtr"]    = "Nalpha.vtr";
     paramFileBaseName["Sab2_matrix"]   = "Sab2.mat";
     paramFileBaseName["Sgd_matrix"]    = "Sgd.mat";
     if (paramFileBaseName["SabInv_matrix"].getStr().empty() == true) {
@@ -274,7 +275,8 @@ void DfObject::setParam(const TlSerializeData& data)
     if (paramFileBaseName["diff_density_matrix"].getStr().empty() == true) {
         paramFileBaseName["diff_density_matrix"] = "dP.mat";
     }
-
+    
+    paramFileBaseName["occupation_vtr"] = "occupation.vtr";
     if (paramFileBaseName["Ppq_matrix"].getStr().empty() == true) {
         paramFileBaseName["Ppq_matrix"] = "Ppq.%s.mat";
     }
@@ -461,19 +463,12 @@ std::string DfObject::getXInvMatrixPath()
 
 std::string DfObject::getNalphaPath()
 {
-    return (DfObject::m_sWorkDirPath + "/fl_Vct_Nalpha");
+    return this->makeFilePath("Nalpha_vtr");
 }
 
 std::string DfObject::getOccupationPath(const RUN_TYPE runType)
 {
-    std::string sFileName = DfObject::m_sWorkDirPath + "/fl_Occupation";
-    if (runType == RUN_UKS_ALPHA) {
-        sFileName += "_Alpha";
-    } else if (runType == RUN_UKS_BETA) {
-        sFileName += "_Beta";
-    }
-
-    return sFileName;
+    return this->makeFilePath("occupation_vtr", DfObject::m_sRunTypeSuffix[runType]);
 }
 
 std::string DfObject::getGridDataFilePath() const
