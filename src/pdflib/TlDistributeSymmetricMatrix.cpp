@@ -1594,7 +1594,7 @@ TlDistributeSymmetricMatrix::choleskyFactorization(const double threshold) const
             error += d[pivot[i]];
         }
 
-        log.info(TlUtils::format("cholesky: m=%d, err=%e", m, error));
+        // log.info(TlUtils::format("cholesky: m=%d, err=%e", m, error));
         ++m;
     }
 

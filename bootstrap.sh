@@ -1,5 +1,5 @@
 #!/bin/sh
-set -x
+#set -x
 
 rm -rf autom4te.cache
 

@@ -5,6 +5,7 @@
 #include "Fl_GlobalinputX.h"
 #include "TlParameter.h"
 #include "TlSerializeData.h"
+#include "TlLogging.h"
 
 /// 入力データの読み込み処理を行うクラス
 class PdfUserInput {
@@ -37,6 +38,8 @@ private:
     std::string filePath_;
     TlSerializeData data_;
     TlParameter param_;
+
+    TlLogging& log_;
 };
 
 #endif // PDFUSERINPUT_H

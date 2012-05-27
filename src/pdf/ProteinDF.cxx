@@ -127,11 +127,14 @@ void ProteinDF::startlogo(const std::string& version,
                           const std::string& info)
 {
     this->log_.info("************************************************************************");
-    this->log_.info(TlUtils::format("ProteinDF version %s (%s)", VERSION, version.c_str()));
+    this->log_.info(TlUtils::format("ProteinDF version %s:%s (%s)",
+                                    VERSION,
+                                    GIT_DESCRIBE,
+                                    version.c_str()));
     this->log_.info("\n");
     this->log_.info(info);
     this->log_.info("\n");
-    this->log_.info("copyright(c) 1997-2011 ProteinDF development team.");
+    this->log_.info("copyright(c) 1997-2012 ProteinDF development team.");
     this->log_.info("\n");
     this->log_.info("PLEASE CITE following:");
     this->log_.info(" F. Sato, Y. Shigemitsu, I. Okazaki, S. Yahiro, M. Fukue, S. Kozuru,");

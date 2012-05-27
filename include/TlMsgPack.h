@@ -31,7 +31,12 @@ public:
 public:
     TlSerializeData getSerializeData() const;
 
-    void load(const std::string& path);
+    /// MsgPack形式のファイルを読み込む
+    ///
+    /// @retval true  ファイルの読み込みに成功した
+    /// @retval false ファイルの読み込みに失敗した
+    bool load(const std::string& path);
+
     void save(const std::string& path) const;
 
     void pack(const std::string& str);

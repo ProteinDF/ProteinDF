@@ -13,7 +13,7 @@
 #define BOHR_ANGSTROM (0.5291772108)
 
 PdfUserInput::PdfUserInput(const std::string& filePath)
-    : filePath_(filePath), data_(), param_()
+    : filePath_(filePath), data_(), param_(), log_(TlLogging::getInstance())
 {
 }
 
@@ -47,7 +47,8 @@ void PdfUserInput::load_conventional()
     ifs.open(this->filePath_.c_str(), std::ios::in);
 
     if (!ifs.is_open()) {
-        std::cerr << "could not open file: " << this->filePath_ << ". stop." << std::endl;
+        this->log_.critical(TlUtils::format("could not open file: %s. stop.",
+                                            this->filePath_.c_str()));
         abort();
     }
 

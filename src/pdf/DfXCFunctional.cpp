@@ -10,6 +10,8 @@
 #include "TlUtils.h"
 #include "TlTime.h"
 
+// #define CHECK_GRID_ACCURACY
+
 //double DfXCFunctional::m_dXC_Energy = 0.0;
 double DfXCFunctional::m_dFockExchangeEnergyAlpha = 0.0; // Update法を使うため、直前のenergyを保存
 double DfXCFunctional::m_dFockExchangeEnergyBeta = 0.0; // Update法を使うため、直前のenergyを保存
@@ -193,6 +195,7 @@ void DfXCFunctional::buildXcMatrix()
 
 void DfXCFunctional::checkGridAccuracy()
 {
+#ifdef CHECK_GRID_ACCURACY
     DfCalcGridX dfCalcGrid(this->pPdfParam_);
 
     this->log_.info(" grid accuracy check:");
@@ -208,6 +211,7 @@ void DfXCFunctional::checkGridAccuracy()
         this->log_.info(TlUtils::format(" number of electrons(beta ) = % 16.10f (input: %d)",
                                         rhoB, this->m_nNumOfBetaElectrons));
     }
+#endif // CHECK_GRID_ACCURACY
 }
 
 TlSymmetricMatrix DfXCFunctional::getFockExchange(const TlSymmetricMatrix& deltaP, const RUN_TYPE nRunType)

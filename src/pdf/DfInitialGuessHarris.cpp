@@ -28,7 +28,10 @@ DfInitialGuessHarris::DfInitialGuessHarris(TlSerializeData* pPdfParam)
     }
 
     TlMsgPack mpac;
-    mpac.load(harrisDbFile);
+    if (!mpac.load(harrisDbFile)) {
+        this->log_.critical(TlUtils::format("cannot load %s.", harrisDbFile.c_str()));
+        abort();
+    }
     this->pdfParam_harrisDB_ = mpac.getSerializeData();
  
     if (this->isWorkOnDisk_ == true) {

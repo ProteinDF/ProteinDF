@@ -220,7 +220,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK()
         (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
         this->saveParam();
     }
-
+    
     if (this->K_engine_ == K_ENGINE_RI_K) {
         // Sgd
         if ((calcState & DfIntegrals::Sgd) == 0) {
@@ -364,7 +364,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK()
         }
     }
 
-    if (this->K_engine_ == K_ENGINE_RI_K) {
+    if (this->J_engine_ == J_ENGINE_RI_J) {
         // Sab2
         if ((calcState & DfIntegrals::Sab2) == 0) {
             this->outputStartTitle("Sab2");
