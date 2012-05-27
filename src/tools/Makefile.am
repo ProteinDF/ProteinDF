@@ -81,7 +81,7 @@ combineDensityMatrix_LDADD = $(SERIAL_LIBS)
 pdfTop_SOURCES = main_top.cpp
 pdfTop_LDADD = $(SERIAL_LIBS)
 
-pdfOrbInfo_SOURCES = pdfOrbInfo.cpp
+pdfOrbInfo_SOURCES = main_pdfOrbInfo.cpp
 pdfOrbInfo_LDADD = $(SERIAL_LIBS)
 
 

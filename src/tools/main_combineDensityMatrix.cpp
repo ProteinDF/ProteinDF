@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <vector>
 
+#include "DfObject.h"
 #include "TlGetopt.h"
 #include "TlUtils.h"
 #include "TlFile.h"
@@ -38,10 +39,6 @@ int main(int argc, char* argv[])
     
     std::string readDir = opt[1];
     std::string targetDir = opt[2];
-    std::string savePpqPath = opt[3];
-    if (savePpqPath == "") {
-        savePpqPath = targetDir + "/fl_Work/fl_Mtr_Ppq.matrix.rks0";
-    }
 
     if ((readDir == "") || (targetDir == "") ||
         (opt["h"] == "defined"))  {
@@ -52,7 +49,6 @@ int main(int argc, char* argv[])
     if (isVerbose == true) {
         std::cerr << "read dir: " << readDir << std::endl;
         std::cerr << "target dir: " << targetDir << std::endl;
-        std::cerr << "save matrix path: " << savePpqPath << std::endl;
     }
 
     // for reading object
@@ -66,12 +62,14 @@ int main(int argc, char* argv[])
         return 1;
     }
     readMsgPack.load(readParamPath);
-    const TlSerializeData readData = readMsgPack.getSerializeData();
+    TlSerializeData readData = readMsgPack.getSerializeData();
     const TlOrbitalInfo readOrbInfo(readData["coordinates"],
                                     readData["basis_sets"]);
     const int lastIteration = readData["num_of_iterations"].getInt();
     TlSymmetricMatrix readPpq;
-    std::string readMatrixPath = readDir + "/fl_Work/fl_Mtr_Ppq.matrix.rks" + TlUtils::xtos(lastIteration);
+    DfObject refObj(&readData);
+    // std::string readMatrixPath = readDir + "/fl_Work/fl_Mtr_Ppq.matrix.rks" + TlUtils::xtos(lastIteration);
+    std::string readMatrixPath = readDir + "/" + refObj.getPpqMatrixPath(DfObject::RUN_RKS, lastIteration);
     if (isVerbose == true) {
         std::cout << TlUtils::format("read %s.", readMatrixPath.c_str()) << std::endl;
     }
@@ -95,12 +93,23 @@ int main(int argc, char* argv[])
     if (isVerbose == true) {
         std::cout << "target number Of AOs = " << targetNumOfAOs << std::endl;
     }
+
+    std::string savePpqPath = opt[3];
+    if (savePpqPath == "") {
+        // savePpqPath = targetDir + "/fl_Work/fl_Mtr_Ppq.matrix.rks0";
+        savePpqPath = targetDir + "/" + refObj.getPpqMatrixPath(DfObject::RUN_RKS, 0);
+    }
+    if (isVerbose == true) {
+        std::cerr << "save matrix path: " << savePpqPath << std::endl;
+    }
+
     TlSymmetricMatrix targetPpq(targetNumOfAOs);
     if (TlFile::isExist(savePpqPath) == true) {
         targetPpq.load(savePpqPath);
     }
     assert(targetPpq.getNumOfRows() == targetNumOfAOs);
     assert(targetPpq.getNumOfCols() == targetNumOfAOs);
+
 
     // Combine
     TlCombineDensityMatrix tlCombineDensMat(range, isVerbose);

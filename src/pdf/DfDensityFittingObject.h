@@ -61,50 +61,50 @@ template<class SymmetricMatrix, class Vector, class DfERI_Class>
 void DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::calc()
 {
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
-    this->loggerTime(" start");
+    this->log_.info("start");
 
     const Vector N_alpha = this->getNalpha();
     const SymmetricMatrix Sabinv = this->getSabinv();
-    this->loggerTime(" calc S^-1*N_alpha");
+    this->log_.info(" calc S^-1*N_alpha");
     const Vector SabinvN = Sabinv * N_alpha;
 
     switch(this->m_nMethodType) {
     case METHOD_RKS:
         {
             // RKS
-            this->loggerTime(" calc t_alpha");
+            this->log_.info(" calc t_alpha");
             const Vector t_alpha = this->getTalpha(RUN_RKS);
             
             //calcRamda
-            this->loggerTime(" calc Ramda");
+            this->log_.info(" calc Ramda");
             const double dNumOfElec = this->m_nNumOfElectrons;
             const double lamda = this->getLamda(SabinvN, t_alpha, N_alpha, dNumOfElec);
-            this->logger(TlUtils::format(" the number of electrons = %5.2lf\n", dNumOfElec));
+            this->log_.info(TlUtils::format(" the number of electrons = %5.2lf", dNumOfElec));
             
             // calculate Sabinv * (tAlpha - lamda * nAlpha)
             const Vector rho = Sabinv * (t_alpha - lamda * N_alpha);
             this->saveRho(rho, RUN_RKS);
             
             const double Sum = rho * N_alpha;
-            this->logger(" following parameter must be equal to the number of electrons.\n");
-            this->logger(TlUtils::format(" Sum RouAlpha*nAlpha = %f\n\n", Sum));
+            this->log_.info(" following parameter must be equal to the number of electrons.");
+            this->log_.info(TlUtils::format(" Sum RouAlpha*nAlpha = %f", Sum));
         }
         break;
 
     case METHOD_UKS:
         {
             // UKS
-            this->loggerTime(" calc t_alpha");
+            this->log_.info(" calc t_alpha");
             const Vector t_alphaA = this->getTalpha(RUN_UKS_ALPHA);
             const Vector t_alphaB = this->getTalpha(RUN_UKS_BETA);
             
-            this->loggerTime(" calc Ramda");
+            this->log_.info(" calc Ramda");
             const double dNumOfElecA = this->m_nNumOfAlphaElectrons;
             const double dNumOfElecB = this->m_nNumOfBetaElectrons;
             const double lamdaA = this->getLamda(SabinvN, t_alphaA, N_alpha, dNumOfElecA);
             const double lamdaB = this->getLamda(SabinvN, t_alphaB, N_alpha, dNumOfElecB);
-            this->logger(TlUtils::format(" the number of alpha elctrons = %5.2lf\n", dNumOfElecA));
-            this->logger(TlUtils::format(" the number of beta  elctrons = %5.2lf\n", dNumOfElecB));
+            this->log_.info(TlUtils::format(" the number of alpha elctrons = %5.2lf", dNumOfElecA));
+            this->log_.info(TlUtils::format(" the number of beta  elctrons = %5.2lf", dNumOfElecB));
             
             // calculate Sabinv * (tAlpha - lamda * nAlpha)
             const Vector rhoA = Sabinv * (t_alphaA - lamdaA * N_alpha);
@@ -114,26 +114,26 @@ void DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::calc()
             
             const double SumA = rhoA * N_alpha;
             const double SumB = rhoB * N_alpha;
-            this->logger(" following parameter must be equal to the number of electrons.\n");
-            this->logger(TlUtils::format(" Sum RouAlphaA*nAlpha = %f\n\n", SumA));
-            this->logger(TlUtils::format(" Sum RouAlphaB*nAlpha = %f\n\n", SumB));
+            this->log_.info(" following parameter must be equal to the number of electrons.");
+            this->log_.info(TlUtils::format(" Sum RouAlphaA*nAlpha = %f", SumA));
+            this->log_.info(TlUtils::format(" Sum RouAlphaB*nAlpha = %f", SumB));
         }
         break;
 
     case METHOD_ROKS:
         {
             // ROKS
-            this->loggerTime(" calc t_alpha");
+            this->log_.info(" calc t_alpha");
             Vector t_alphaA, t_alphaB;
             this->getTalpha_ROKS(&t_alphaA, &t_alphaB);
             
-            this->loggerTime(" calc Ramda");
+            this->log_.info(" calc Ramda");
             const double dNumOfElecA = pdfParam["method/roks/electron-number-alpha"].getDouble();
             const double dNumOfElecB = pdfParam["method/roks/electron-number-beta" ].getDouble();
             const double lamdaA = this->getLamda(SabinvN, t_alphaA, N_alpha, dNumOfElecA);
             const double lamdaB = this->getLamda(SabinvN, t_alphaB, N_alpha, dNumOfElecB);
-            this->logger(TlUtils::format(" the number of alpha elctrons = %5.2lf, %5.2lf\n", dNumOfElecA));
-            this->logger(TlUtils::format(" the number of beta  elctrons = %5.2lf, %5.2lf\n", dNumOfElecA));
+            this->log_.info(TlUtils::format(" the number of alpha elctrons = %5.2lf, %5.2lf", dNumOfElecA));
+            this->log_.info(TlUtils::format(" the number of beta  elctrons = %5.2lf, %5.2lf", dNumOfElecA));
             
             // calculate tAlpha - lamda * nAlpha
             const Vector rhoA = Sabinv * (t_alphaA - lamdaA * N_alpha);
@@ -143,9 +143,9 @@ void DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::calc()
             
             const double SumA = rhoA * N_alpha;
             const double SumB = rhoB * N_alpha;
-            this->logger(" following parameter must be equal to the number of electrons.\n");
-            this->logger(TlUtils::format("Sum RouAlphaA*nAlpha = %f\n\n", SumA));
-            this->logger(TlUtils::format("Sum RouAlphaB*nAlpha = %f\n\n", SumB));
+            this->log_.info(" following parameter must be equal to the number of electrons.");
+            this->log_.info(TlUtils::format("Sum RouAlphaA*nAlpha = %f", SumA));
+            this->log_.info(TlUtils::format("Sum RouAlphaB*nAlpha = %f", SumB));
         }
         break;
 
@@ -154,7 +154,7 @@ void DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::calc()
         break;
     }
     
-    this->loggerTime(" finish");
+    this->log_.info("finish");
 }
 
 template<class SymmetricMatrix, class Vector, class DfERI_Class>
@@ -185,7 +185,9 @@ Vector DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getTalpha(con
     if (this->m_bDiskUtilization == false) {
         const SymmetricMatrix diffP = this->getDiffDensityMatrix(runType);
         t_alpha = this->calcTAlpha_DIRECT(diffP);
-        t_alpha += this->getTalpha(runType, this->m_nIteration -1);
+        if (this->m_nIteration > 1) {
+            t_alpha += this->getTalpha(runType, this->m_nIteration -1);
+        }
 
         t_alpha.save(this->getTalphaPath(runType, this->m_nIteration));
     } else {
@@ -216,9 +218,9 @@ Vector DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getTalpha(con
     Vector t_alpha(this->m_nNumOfAux);
     const std::string sFileName = this->getTalphaPath(runType, iteration);
 
-    if (FileX::isExist(sFileName) == true) {
+    // if (FileX::isExist(sFileName) == true) {
         t_alpha.load(sFileName);
-    }
+    // }
 
     return t_alpha;
 }

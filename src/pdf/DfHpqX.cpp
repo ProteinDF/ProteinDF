@@ -92,7 +92,7 @@ void DfHpqX::getHpq(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2)
 
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pTaskCtrl->getQueue2(this->orbitalInfo_,
-                                        false,
+                                        true,
                                         this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getHpq_part(this->orbitalInfo_,
@@ -101,7 +101,7 @@ void DfHpqX::getHpq(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2)
                           pHpq, pHpq2);
         
         hasTask = pTaskCtrl->getQueue2(this->orbitalInfo_,
-                                       false,
+                                       true,
                                        this->grainSize_, &taskList);
     } 
 
@@ -110,8 +110,7 @@ void DfHpqX::getHpq(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2)
     }
 
     this->finalize(pHpq, pHpq2);
-    pTaskCtrl->cutoffReport();
-    
+
     delete pTaskCtrl;
     pTaskCtrl = NULL;
     this->destroyEngines();

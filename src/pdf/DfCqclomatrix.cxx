@@ -23,7 +23,7 @@ DfCqclomatrix::~DfCqclomatrix()
 void DfCqclomatrix::main()
 {
     const int natom = this->m_nNumOfAtoms;
-    Fl_Fragment FlFrag;
+    Fl_Fragment FlFrag(Fl_Geometry((*this->pPdfParam_)["coordinates"]));
     this->number_fragment = FlFrag.getNumOfFragments();
 
     int* atom_fragment        = new int[natom];
@@ -178,7 +178,7 @@ void DfCqclomatrix::main()
     }
 
     // write FragmentTable
-    Fl_Tbl_Fragment  Tfrag;
+    Fl_Tbl_Fragment Tfrag(Fl_Geometry((*this->pPdfParam_)["coordinates"]));
 
     // write matrices
     switch (this->m_nMethodType) {
@@ -212,7 +212,7 @@ void DfCqclomatrix::main()
 void DfCqclomatrix::main(std::string type)
 {
     TlMatrix guess_lcao;
-    Fl_Tbl_Fragment  Tfrag;
+    Fl_Tbl_Fragment Tfrag(Fl_Geometry((*this->pPdfParam_)["coordinates"]));
 
     // read guess.lcao
     {

@@ -193,14 +193,13 @@ void DfEri::countupCutoff(int ity, int jty)
 
 void DfEri::cutoffReport()
 {
-    this->logger(" cut off report:\n");
+    this->log_.info(" cut off report:");
     this->cutoffReport("ss", this->CcountSS, this->TcountSS);
     this->cutoffReport("ps", this->CcountPS, this->TcountPS);
     this->cutoffReport("pp", this->CcountPP, this->TcountPP);
     this->cutoffReport("ds", this->CcountDS, this->TcountDS);
     this->cutoffReport("dp", this->CcountDP, this->TcountDP);
     this->cutoffReport("dd", this->CcountDD, this->TcountDD);
-    this->logger("\n");
 }
 
 
@@ -215,7 +214,7 @@ void DfEri::cutoffReport(const std::string& shell, const std::size_t cutoffCount
        << cutoffCount << " / "
        << totalCount << " "
        << TlUtils::format(" (%6.2f%%)\n", rate);
-    this->logger(ss.str());
+    this->log_.info(ss.str());
 }
 
 
@@ -226,7 +225,7 @@ void DfEri::getSab(TlSymmetricMatrix* pSab)
 
     this->getSab_core(pSab);
 
-    this->loggerTime(" finalize");
+    this->log_.info(" finalize");
     // nothing to do
 }
 
@@ -235,7 +234,7 @@ void DfEri::getSab_core(TlMatrixObject* pSab)
 {
     assert(pSab != NULL);
 
-    this->loggerTime(" integral");
+    this->log_.info(" integral");
     const std::size_t maxNumOfPairs = this->blockSize_;
 
     this->getQueue(NULL, this->shellList_Dens_,
@@ -256,7 +255,7 @@ void DfEri::getDeltaT(const TlSymmetricMatrix& deltaPpq, TlVector* pDeltaT)
         const double MAXdeltaPpq = deltaPpq.getMaxAbsoluteElement();
         if ((MAXdeltaPpq > this->m_dCutValue) && (MAXdeltaPpq < 1.0)) {
             this->m_dCutValue /= MAXdeltaPpq;
-            this->logger(TlUtils::format("new cutvalue in DfEri.getdeltaT is %.2e\n", this->m_dCutValue));
+            this->log_.info(TlUtils::format("new cutvalue in DfEri.getdeltaT is %.2e\n", this->m_dCutValue));
         } else {
             this->m_dCutValue = this->m_dStoredCutValue;
         }
@@ -267,7 +266,7 @@ void DfEri::getDeltaT(const TlSymmetricMatrix& deltaPpq, TlVector* pDeltaT)
 
 void DfEri::getDeltaT_core(const TlMatrixObject* deltaPpq, TlVectorObject* pDeltaT)
 {
-    this->loggerTime(" ERI start");
+    this->log_.info("ERI start");
 
     TcountSS = TcountPS = TcountPP = TcountDS = TcountDP = TcountDD = 0;
     CcountSS = CcountPS = CcountPP = CcountDS = CcountDP = CcountDD = 0;
@@ -286,20 +285,20 @@ void DfEri::getDeltaT_core(const TlMatrixObject* deltaPpq, TlVectorObject* pDelt
 
     this->cutoffReport();
 
-    this->loggerTime(" ERI end");
+    this->log_.info("ERI end");
 }
 
 // delta [pq|alpha]
 void DfEri::getdeltaHpqA(const TlVector& deltaRho, TlSymmetricMatrix& deltaH)
 {
-    this->loggerTime(" 'deltaRho * <pq|alpha>' start");
+    this->log_.info(" 'deltaRho * <pq|alpha>' start");
 
     // Set new cutvalue
     const double MAXdeltaRho = deltaRho.getMaxAbsoluteElement();
     this->m_dCutValue = this->m_dStoredCutValue;
     if ((MAXdeltaRho > this->m_dCutValue) && (MAXdeltaRho < 1.0)) {
         this->m_dCutValue /= MAXdeltaRho;
-        this->logger(TlUtils::format("new cutoff value of (deltaRho * <pq|alpha>) is %.2e\n", this->m_dCutValue));
+        this->log_.info(TlUtils::format("new cutoff value of (deltaRho * <pq|alpha>) is %.2e\n", this->m_dCutValue));
     }
 
     TcountSS = TcountPS = TcountPP = TcountDS = TcountDP = TcountDD = 0;
@@ -319,7 +318,7 @@ void DfEri::getdeltaHpqA(const TlVector& deltaRho, TlSymmetricMatrix& deltaH)
     this->finalizeIntegral(deltaH);
     this->cutoffReport();
 
-    this->loggerTime(" end");
+    this->log_.info(" end");
 }
 
 
@@ -328,7 +327,7 @@ void DfEri::getDeltaHpqAForEri2(const TlVector& deltaRho, TlSymmetricMatrix& del
     assert(0 < dCutoffCoef);
 
     // START
-    this->loggerTime(" start");
+    this->log_.info(" start");
 
     const std::size_t maxNumOfPairs = this->blockSize_;
     this->getQueue(this->pOrbitalInfo_, this->shellList_,
@@ -344,7 +343,7 @@ void DfEri::getDeltaHpqAForEri2(const TlVector& deltaRho, TlSymmetricMatrix& del
     this->finalizeIntegral(deltaH);
 
     // finish
-    this->loggerTime(" end");
+    this->log_.info(" end");
 }
 
 

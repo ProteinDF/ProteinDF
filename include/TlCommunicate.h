@@ -212,6 +212,8 @@ public:
                   const int dest, const int tag = 0);
     int sendDataX(const unsigned int* pData, const std::size_t size,
                   const int dest, const int tag = 0);
+    int sendDataX(const unsigned long* pData, const std::size_t size,
+                  const int dest, const int tag = 0);
     int sendDataX(const double* pData, const std::size_t size,
                   const int dest, const int tag = 0);
     
@@ -223,6 +225,7 @@ public:
                      const int src, const int tag = 0);
     
     int receiveDataFromAnySourceX(int* pData, std::size_t size, int* pSrc, int tag = 0);
+    int receiveDataFromAnySourceX(unsigned long* pData, std::size_t size, int* pSrc, int tag = 0);
 
     int iSendDataX(const int* pData, const std::size_t size,
                    const int dest, const int tag = 0);

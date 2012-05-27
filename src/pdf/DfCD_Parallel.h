@@ -1,8 +1,12 @@
 #ifndef DFCD_PARALLEL_H
 #define DFCD_PARALLEL_H
 
+#include <cstdlib>
 #include "DfCD.h"
 #include "TlDistributeSymmetricMatrix.h"
+// #include "TlRowVectorMatrix.h"
+#include "TlRowVectorMatrix2.h"
+#include "TlColVectorMatrix2.h"
 
 class DfCD_Parallel : public DfCD {
 public:
@@ -10,7 +14,7 @@ public:
     virtual ~DfCD_Parallel();
 
 public:
-    virtual void makeSuperMatrix();
+    // virtual void calcCholeskyVectors();
     void getJ_distributed(TlDistributeSymmetricMatrix *pJ);
     void getK_distributed(const RUN_TYPE runType,
                           TlDistributeSymmetricMatrix *pK);
@@ -43,9 +47,30 @@ protected:
     TlDistributeSymmetricMatrix 
     getCholeskyVector_distribute(const TlVector& L_col,
                                  const I2PQ_Type& I2PQ);
+
+    // -------------------------------------------------------------------------
+public:
+    virtual void getJ(TlSymmetricMatrix* pJ);
+    virtual void getK(const RUN_TYPE runType,
+                      TlSymmetricMatrix* pK);
+
+    void getJ_D(TlDistributeSymmetricMatrix* pJ);
+    void getK_D(const RUN_TYPE runType,
+                TlDistributeSymmetricMatrix* pK);
     
 protected:
-    //TlDistributeSymmetricMatrix getCholeskyVector_distribute(L.getColVector(I), I2PQ);    
+    virtual void calcCholeskyVectors_onTheFly();
+    virtual std::vector<double>
+    getSuperMatrixElements(const index_type G_row,
+                           const std::vector<index_type>& G_col_list,
+                           const I2PQ_Type& I2PQ,
+                           const TlSparseSymmetricMatrix& schwartzTable);
+    void saveL(const TlRowVectorMatrix2& L);
+    TlColVectorMatrix2 getColVector(const TlRowVectorMatrix2& L);
+
+    // for debug
+    TlMatrix mergeL(const TlRowVectorMatrix2& L);
+    TlMatrix mergeL(const TlColVectorMatrix2& L);
 };
 
 #endif // DFCD_PARALLEL_H

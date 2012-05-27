@@ -10,6 +10,7 @@
 DfEriX_Parallel::DfEriX_Parallel(TlSerializeData* pPdfParam) 
     : DfEriX(pPdfParam) {
 
+    this->calcMode_ = CalcMode_UsingLocalMatrix;
     this->calcMode_ = (*pPdfParam)["ERI_calcmode"].getInt();
 }
 
@@ -18,30 +19,6 @@ DfEriX_Parallel::~DfEriX_Parallel()
 {
 }
 
-
-void DfEriX_Parallel::logger(const std::string& str) const
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        DfEriX::logger(str);
-    }
-}
-
-void DfEriX_Parallel::loggerTime_local(const std::string& str) const
-{
-    std::string out = str;
-    int size = out.size();
-    if (size > 0) {
-        if (out[size -1] == '\n') {
-            out.erase(size -1, 1);
-        }
-
-        const std::string timeStr = "[" + TlTime::getNow() + "]";
-        TlUtils::pad(out, (72 - timeStr.length()), ' ');
-        out += (timeStr + "\n");
-        DfObject::logger(out);
-    }
-}
 
 DfTaskCtrl* DfEriX_Parallel::getDfTaskCtrlObject() const
 {
@@ -52,15 +29,19 @@ DfTaskCtrl* DfEriX_Parallel::getDfTaskCtrlObject() const
 
 void DfEriX_Parallel::finalize(TlMatrix* pMtx)
 {
+    this->log_.info("finalize Matrix: start");
     TlCommunicate& rComm = TlCommunicate::getInstance();
     rComm.allReduce_SUM(*pMtx);
+    this->log_.info("finalize Matrix: end");
 }
 
 
 void DfEriX_Parallel::finalize(TlSymmetricMatrix* pMtx)
 {
+    this->log_.info("finalize SymmetricMatrix: start");
     TlCommunicate& rComm = TlCommunicate::getInstance();
     rComm.allReduce_SUM(*pMtx);
+    this->log_.info("finalize SymmetricMatrix: end");
 }
 
 
@@ -90,7 +71,7 @@ void DfEriX_Parallel::getJ_D(const TlVector& rho, TlDistributeSymmetricMatrix* p
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
-                                          false,
+                                          true,
                                           this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getJ_part(orbitalInfo,
@@ -100,12 +81,11 @@ void DfEriX_Parallel::getJ_D(const TlVector& rho, TlDistributeSymmetricMatrix* p
                         rho, &tmpJ);
         
         hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
-                                         false,
+                                         true,
                                          this->grainSize_, &taskList);
     }
     
     //this->finalize(pJ);
-    pDfTaskCtrl->cutoffReport();
 
     pJ->mergeSparseMatrix(tmpJ);
     
@@ -144,7 +124,6 @@ void DfEriX_Parallel::getJab_D(TlDistributeSymmetricMatrix* pJab)
     }
 
     //this->finalize(pJab);
-    pDfTaskCtrl->cutoffReport();
 
     pJab->mergeSparseMatrix(tmpJab);
     
@@ -159,12 +138,12 @@ void DfEriX_Parallel::getJ_D(const TlDistributeSymmetricMatrix& P,
 {
     switch (this->calcMode_) {
     case CalcMode_UsingLocalMatrix:
-        this->logger(" ERI calc mode: Local Matrix");
+        this->log_.info(" ERI calc mode: Local Matrix");
         this->getJ_D_local(P, pRho);
         break;
         
     default:
-        this->logger(" ERI calc mode: Background Comm.");
+        this->log_.info(" ERI calc mode: Background Comm.");
         this->getJ_D_BG(P, pRho);
         break;
     }
@@ -173,18 +152,19 @@ void DfEriX_Parallel::getJ_D(const TlDistributeSymmetricMatrix& P,
 void DfEriX_Parallel::getJ_D_local(const TlDistributeSymmetricMatrix& P,
                                    TlDistributeVector* pRho)
 {
-    this->logger(" using local matrix for density matrix.\n");
-    
+    this->log_.info(" using local matrix for density matrix.");
+        
     assert(pRho != NULL);
     //this->clearCutoffStats();
     TlCommunicate& rComm = TlCommunicate::getInstance();
+    assert(rComm.checkNonBlockingCommunications());
     
     // カットオフ値の設定
     const double maxDeltaP = P.getMaxAbsoluteElement();
     if (maxDeltaP < 1.0) {
         this->cutoffThreshold_ /= std::fabs(maxDeltaP);
-        this->logger(TlUtils::format(" new cutoff threshold = % e\n",
-                                     this->cutoffThreshold_));
+        this->log_.info(TlUtils::format(" new cutoff threshold = % e",
+                                        this->cutoffThreshold_));
     }
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
@@ -200,16 +180,33 @@ void DfEriX_Parallel::getJ_D_local(const TlDistributeSymmetricMatrix& P,
     const index_type numOfRowIndexes = rowIndexes.size();
     const index_type numOfColIndexes = colIndexes.size();
 
+    const double threshold = this->cutoffThreshold_;
     std::vector<DfTaskCtrl::Task2> taskList;
     DfTaskCtrl::Task2 task;
     for (index_type p = 0; p < numOfRowIndexes; ) {
         const index_type shellIndexP = rowIndexes[p];
         task.shellIndex1 = shellIndexP;
+
+        const double exponentP = orbitalInfo.getExponent(shellIndexP, 0);
+        const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
+
         for (index_type q = 0; q < numOfColIndexes; ) {
             const index_type shellIndexQ = colIndexes[q];
             if (shellIndexP >= shellIndexQ) {
-                task.shellIndex2 = shellIndexQ;
-                taskList.push_back(task);
+                // prepare 
+                const double exponentQ = orbitalInfo.getExponent(shellIndexQ, 0);
+                const double zetaPQ = exponentP + exponentQ;
+                const double zeta = exponentP * exponentQ / zetaPQ;
+                const TlPosition posQ = orbitalInfo.getPosition(shellIndexQ);
+                const double distance2 = posQ.squareDistanceFrom(posP);
+                const double exponent = - zeta * distance2;
+                const double coef = 1.0 / (std::pow(zetaPQ, 1.25));
+
+                // cutoff
+                if (coef * std::exp(exponent) >= threshold) {
+                    task.shellIndex2 = shellIndexQ;
+                    taskList.push_back(task);
+                }
             }
             q += orbitalInfo.getShellType(shellIndexQ) * 2 + 1;
         }
@@ -218,26 +215,27 @@ void DfEriX_Parallel::getJ_D_local(const TlDistributeSymmetricMatrix& P,
 
     this->createEngines();
     TlVector tmpRho(this->m_nNumOfAux);
-    this->loggerTime(" ERI start");
+    this->log_.info("ERI start");
     this->getJ_part2(orbitalInfo,
                      orbitalInfo_Density,
                      shellArrayTable_Density,
                      taskList,
                      TlDistributeMatrix(P), &tmpRho);
-    this->loggerTime_local(TlUtils::format("  waiting...#%6d", rComm.getRank()));
-    this->loggerTime(" ERI end");
+    this->log_.warn(" waiting...");
+    this->log_.info("ERI end");
     this->destroyEngines();
     
     // finalize
     rComm.allReduce_SUM(tmpRho);
     *pRho = TlDistributeVector(tmpRho);
-    this->loggerTime(" finished");
+    this->log_.info("finished");
+    assert(rComm.checkNonBlockingCommunications());
 }
 
 void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
                                 TlDistributeVector* pRho)
 {
-    this->logger(" background transportation for density matrix.\n");
+    this->log_.info(" background transportation for density matrix.");
     
     assert(pRho != NULL);
     //this->clearCutoffStats();
@@ -247,8 +245,8 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
     const double maxDeltaP = P.getMaxAbsoluteElement();
     if (maxDeltaP < 1.0) {
         this->cutoffThreshold_ /= std::fabs(maxDeltaP);
-        this->logger(TlUtils::format(" new cutoff threshold = % e\n",
-                                     this->cutoffThreshold_));
+        this->log_.info(TlUtils::format("new cutoff threshold = % e",
+                                        this->cutoffThreshold_));
     }
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
@@ -338,7 +336,6 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
     //                              rComm.getRank())
     //           << std::endl;
     
-    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
@@ -370,7 +367,9 @@ void DfEriX_Parallel::getJpq_D(const TlDistributeSymmetricMatrix& P,
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                           schwarzTable,
-                                          this->grainSize_, &taskList, true);
+                                          this->grainSize_,
+                                          &taskList,
+                                          true);
     while (hasTask == true) {
         if (isSetTempP != true) {
             const int numOfTasks = taskList.size();
@@ -414,7 +413,8 @@ void DfEriX_Parallel::getJpq_D(const TlDistributeSymmetricMatrix& P,
             
             hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                              schwarzTable,
-                                             this->grainSize_, &taskList);
+                                             this->grainSize_,
+                                             &taskList);
         }
 
         P.getSparseMatrixX(NULL, false);
@@ -441,7 +441,6 @@ void DfEriX_Parallel::getJpq_D(const TlDistributeSymmetricMatrix& P,
     P.getSparseMatrixX(NULL, true);
 
     //this->finalize(pJ);
-    pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
@@ -468,7 +467,7 @@ void DfEriX_Parallel::getK_D(const TlDistributeSymmetricMatrix& P,
 void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
                                 TlDistributeSymmetricMatrix* pK)
 {
-    this->logger(" background transportation for density matrix.\n");
+    this->log_.info("background transportation for density matrix.");
 
     assert(pK != NULL);
     //TlCommunicate& rComm = TlCommunicate::getInstance();
@@ -489,7 +488,9 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                           schwarzTable,
-                                          this->grainSize_, &taskList, true);
+                                          this->grainSize_,
+                                          &taskList,
+                                          true);
     while (hasTask == true) {
         if (isSetTempP != true) {
             const int numOfTasks = taskList.size();
@@ -541,7 +542,9 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
 
             hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                              schwarzTable,
-                                             this->grainSize_, &taskList);
+                                             this->grainSize_,
+                                             &taskList);
+
             // if (hasTask == false) {
             //     std::cerr << TlUtils::format("[%d] DfEriX_Parallel::getK_D() taskEnd",
             //                                  rComm.getRank())
@@ -560,7 +563,6 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
     P.getSparseMatrixX(NULL, true);
 
     //this->finalize(pK);
-    pDfTaskCtrl->cutoffReport();
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
@@ -572,10 +574,11 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
 void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
                                    TlDistributeSymmetricMatrix* pK)
 {
-    this->logger(" using local matrix for density matrix.\n");
+    this->log_.info("using local matrix for density matrix.");
 
     assert(pK != NULL);
     TlCommunicate& rComm = TlCommunicate::getInstance();
+    assert(rComm.checkNonBlockingCommunications());
     
     const index_type numOfAOs = this->m_nNumOfAOs;
     pK->resize(numOfAOs);
@@ -595,11 +598,12 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     //DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task4> taskList;
 
-    this->loggerTime(" ERI start");
+    this->log_.info("ERI start");
     TlSparseSymmetricMatrix tmpK(this->m_nNumOfAOs);
     const TlDistributeMatrix tmpP(P);
     DfTaskCtrl dfTaskCtrl(this->pPdfParam_);
 
+    this->createEngines();
     bool hasTask = dfTaskCtrl.getQueue4_K0(orbitalInfo,
                                           schwarzTable,
                                           tmpP,
@@ -632,11 +636,14 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     //                                      rowIndexes, colIndexes,
     //                                      this->grainSize_, &taskList);
     
-    this->loggerTime_local(TlUtils::format("  waiting...#%6d", rComm.getRank()));
-    this->loggerTime(" ERI end");
+    this->log_.warn(" waiting...");
+    this->log_.info("ERI end");
+
+    this->destroyEngines();
 
     pK->mergeSparseMatrix(tmpK);
-    this->loggerTime(" finished");
+    this->log_.info("finished");
+    assert(rComm.checkNonBlockingCommunications());
 }
 
 
@@ -1010,6 +1017,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
 
 TlSparseSymmetricMatrix DfEriX_Parallel::makeSchwarzTable(const TlOrbitalInfoObject& orbitalInfo)
 {
+    this->log_.info("make Schwartz cutoff table(parallel): start");
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProcs();
     const int rank = rComm.getRank();
@@ -1055,8 +1063,10 @@ TlSparseSymmetricMatrix DfEriX_Parallel::makeSchwarzTable(const TlOrbitalInfoObj
         shellIndexP += maxStepsP;
     }
 
+    this->log_.info("make schwartz table: finalize");
     rComm.gatherToMaster(schwarz);
     rComm.broadcast(schwarz);
     
+    this->log_.info("make Schwartz cutoff table(parallel): end");
     return schwarz;
 }

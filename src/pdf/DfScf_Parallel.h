@@ -26,8 +26,6 @@ protected:
 
     virtual void doXCIntegral();
 
-    virtual void execScfLoop_XcEneFit();
-
     virtual void doThreeIndexIntegral();
 
     virtual DfJMatrix* getDfJMatrixObject();

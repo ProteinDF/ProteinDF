@@ -12,9 +12,6 @@ public:
     virtual void DfDiagQclo(DfObject::RUN_TYPE runType, const std::string& fragname, int norbcut);
 
 protected:
-    virtual void logger(const std::string& str) const;
-
-protected:
     void DfDiagMain_SCALAPACK();
     void DfDiagQclo_SCALAPACK(DfObject::RUN_TYPE runType, const std::string& fragname, int norbcut);
 };

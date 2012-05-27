@@ -270,7 +270,7 @@ void DfIntegrals::createCholeskyVectors()
         if ((calcState & DfIntegrals::CD) == 0) { 
             this->outputStartTitle("Cholesky Vectors");
             DfCD *pDfCD = this->getDfCDObject();
-            pDfCD->makeSuperMatrix();
+            pDfCD->calcCholeskyVectors();
             
             delete pDfCD;
             pDfCD = NULL;

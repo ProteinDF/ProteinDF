@@ -127,11 +127,14 @@ void ProteinDF::startlogo(const std::string& version,
                           const std::string& info)
 {
     this->log_.info("************************************************************************");
-    this->log_.info(TlUtils::format("ProteinDF version %s (%s)", VERSION, version.c_str()));
+    this->log_.info(TlUtils::format("ProteinDF version %s:%s (%s)",
+                                    VERSION,
+                                    GIT_DESCRIBE,
+                                    version.c_str()));
     this->log_.info("\n");
     this->log_.info(info);
     this->log_.info("\n");
-    this->log_.info("copyright(c) 1997-2011 ProteinDF development team.");
+    this->log_.info("copyright(c) 1997-2012 ProteinDF development team.");
     this->log_.info("\n");
     this->log_.info("PLEASE CITE following:");
     this->log_.info(" F. Sato, Y. Shigemitsu, I. Okazaki, S. Yahiro, M. Fukue, S. Kozuru,");
@@ -196,12 +199,33 @@ void ProteinDF::inputData()
 
 void ProteinDF::setupGlobalCondition()
 {
+    this->stepStartTitle("RESOURCE");
+
     this->manageMemory();
+    this->setupGlobalCondition_extra();
+    
+    this->stepEndTitle();
 }
 
 void ProteinDF::manageMemory()
 {
-    if (TlUtils::toUpper(this->pdfParam_["use_mapfile"].getStr()) == "YES") {
+    std::string memSizeStr = TlUtils::toUpper(this->pdfParam_["memory_size"].getStr());
+    if (memSizeStr.empty() == true) {
+        memSizeStr = "1GB";
+    }
+    {
+        std::size_t value = std::atol(memSizeStr.c_str());
+        if (memSizeStr.rfind("MB") != std::string::npos) {
+            value *= (1024UL * 1024UL);
+        } else if (memSizeStr.rfind("GB") != std::string::npos) {
+            value *= (1024UL * 1024UL * 1024UL);
+        }
+        this->pdfParam_["memory_size"] = value;
+    }
+    this->log_.info(TlUtils::format("allocatable memory: %ld byte",
+                                    this->pdfParam_["memory_size"].getLong()));
+
+    if (this->pdfParam_["use_mapfile"].getBoolean() == true) {
         std::string filePath = this->pdfParam_["mapfile_basename"].getStr();
         if (filePath == "") {
             filePath = "/tmp/pdfmmap";
@@ -212,6 +236,7 @@ void ProteinDF::manageMemory()
         if (mapFileSizeStr != "AUTO") {
             // mapfile_sizeはMB単位で指定のこと。
             mapFileSize = std::max<std::size_t>(mapFileSize, std::atoi(mapFileSizeStr.c_str()));
+            this->log_.info("map file size is calculated automatically.");
         } else {
             const std::size_t numOfAOs = this->pdfParam_["num_of_AOs"].getInt();
             const std::size_t numOfAuxDen = this->pdfParam_["num_of_auxCDs"].getInt();
@@ -228,11 +253,18 @@ void ProteinDF::manageMemory()
 
         this->pdfParam_["mapfile_size"] = mapFileSize;
         this->pdfParam_["mapfile_basename"] = filePath;
+        this->log_.info(TlUtils::format("map file size: %ld byte", mapFileSize));
+        this->log_.info(TlUtils::format("map file basename: %s", filePath.c_str()));
 
         this->saveParam();
     }
 }
 
+
+void ProteinDF::setupGlobalCondition_extra()
+{
+    // do nothing 
+}
 
 void ProteinDF::stepCreate()
 {

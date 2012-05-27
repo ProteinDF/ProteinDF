@@ -9,7 +9,6 @@
 #include "CnError.h"
 #include "TlTime.h"
 
-class Fl_Out;
 class TlVector;
 class TlMatrix;
 
@@ -84,9 +83,9 @@ TlVector DfDmatrix::getOccupationUsingOverlap(DfObject::RUN_TYPE runType)
 {
     const int nNumOfMOs = this->m_nNumOfMOs;
 
-    this->logger(" MO overlap method is started.\n");
+    this->log_.info(" MO overlap method is started.\n");
 
-    this->loggerTime(" load previous C' matrix");
+    this->log_.info(" load previous C' matrix");
     MatrixType prevCprime(nNumOfMOs, nNumOfMOs);
     {
         // read current orbital in orthonormal basis
@@ -112,7 +111,7 @@ TlVector DfDmatrix::getOccupationUsingOverlap(DfObject::RUN_TYPE runType)
 
     // construct occupation number of current orbital with MO overlap matrix
     // 旧MO(pre)がどの新MO(crr)との重なりが一番大きいかを探す
-    this->loggerTime(" check overlap");
+    this->log_.info(" check overlap");
     TlVector currOcc(nNumOfMOs);
     {
         std::vector<bool> g(nNumOfMOs, false);
@@ -134,16 +133,16 @@ TlVector DfDmatrix::getOccupationUsingOverlap(DfObject::RUN_TYPE runType)
                 }
 
                 if (xord == -1) {
-                    this->logger(TlUtils::format(" crr MO %d th is not corresponded!\n", pre));
+                    this->log_.info(TlUtils::format(" crr MO %d th is not corresponded!\n", pre));
                     //CnErr.abort("DfDmatrix", "", "", "MO Overlap is not corresponded");
                 }
 
                 if (xval < 0.3) {
                     if (bListHeaderOutput == false) {
-                        this->logger(" ##### MO Overlap is less than 0.3 #####\n");
+                        this->log_.info(" ##### MO Overlap is less than 0.3 #####\n");
                         bListHeaderOutput = true;
                     }
-                    this->logger(TlUtils::format("pre MO %6d th -> crr MO %6d th %12.8lf\n",
+                    this->log_.info(TlUtils::format("pre MO %6d th -> crr MO %6d th %12.8lf\n",
                                                  (pre+1), (xord+1), xval));
                 }
                 currOcc[xord] = dPrevOcc;
@@ -152,7 +151,7 @@ TlVector DfDmatrix::getOccupationUsingOverlap(DfObject::RUN_TYPE runType)
         }
     }
 
-    this->loggerTime(" check occupation vectors");
+    this->log_.info(" check occupation vectors");
     this->checkOccupation(prevOcc, currOcc);
 
 //     if (this->m_nIteration != 1) {
@@ -178,7 +177,7 @@ TlVector DfDmatrix::getOccupationUsingOverlap(DfObject::RUN_TYPE runType)
 //         }
 //     }
 
-    this->loggerTime(" finish");
+    this->log_.info(" finish");
     return currOcc;
 }
 
@@ -187,7 +186,7 @@ TlVector DfDmatrix::getOccupationUsingOverlap(DfObject::RUN_TYPE runType)
 template<typename MatrixType, typename SymmetricMatrixType>
 TlVector DfDmatrix::getOccupationUsingProjection(const DfObject::RUN_TYPE runType)
 {
-    this->logger("orbital_overlap_method is mo-projection\n");
+    this->log_.info("orbital_overlap_method is mo-projection\n");
 
     const int nNumOfMOs = this->m_nNumOfMOs;
     //const int nNumOfAOs = this->m_nNumOfAOs;
@@ -217,9 +216,9 @@ TlVector DfDmatrix::getOccupationUsingProjection(const DfObject::RUN_TYPE runTyp
             }
         }
 
-        this->logger(TlUtils::format(" closed  orbital = %5ld\n", num_mo_closed));
-        this->logger(TlUtils::format(" open    orbital = %5ld\n", num_mo_open));
-        this->logger(TlUtils::format(" virtual orbital = %5ld\n", num_mo_virtual));
+        this->log_.info(TlUtils::format(" closed  orbital = %5ld", num_mo_closed));
+        this->log_.info(TlUtils::format(" open    orbital = %5ld", num_mo_open));
+        this->log_.info(TlUtils::format(" virtual orbital = %5ld", num_mo_virtual));
 
         // read molecular orbital ^(n)
         MatrixType C;
@@ -306,14 +305,14 @@ TlVector DfDmatrix::getOccupationUsingProjection(const DfObject::RUN_TYPE runTyp
         if (num_mo_closed != 0) {
             this->printTwoVectors(pd_c_ord, pd_c, "projection diagonal of closed MO(sorted)", 10);
         } else {
-            this->logger("projection diagonal of closed MO(sorted)\n");
-            this->logger(" .. nothing of closed MO\n");
+            this->log_.info("projection diagonal of closed MO(sorted)");
+            this->log_.info(" .. nothing of closed MO");
         }
         if (num_mo_open != 0) {
             this->printTwoVectors(pd_o_ord, pd_o, "projection diagonal of open   MO(sorted)", 10);
         } else {
-            this->logger("projection diagonal of open   MO(sorted)\n");
-            this->logger(" .. nothing of open MO\n");
+            this->log_.info("projection diagonal of open   MO(sorted)");
+            this->log_.info(" .. nothing of open MO");
         }
 
         // store electrons
@@ -336,11 +335,11 @@ TlVector DfDmatrix::getOccupationUsingProjection(const DfObject::RUN_TYPE runTyp
                 ssum += currOcc[k];
             }
 
-            this->logger(TlUtils::format(" sum of electrons (new occupation) = %10.2lf\n", ssum));
-            this->logger(TlUtils::format(" sum of electrons (must be)        = %10.2lf\n", mustbe));
+            this->log_.info(TlUtils::format(" sum of electrons (new occupation) = %10.2lf", ssum));
+            this->log_.info(TlUtils::format(" sum of electrons (must be)        = %10.2lf", mustbe));
 
             if (fabs(mustbe-ssum) > 1.0e-10) {
-                this->logger("projection occupation was failed. change program code\n");
+                this->log_.info("projection occupation was failed. change program code");
                 CnErr.abort("DfDmatrix", "", "main", "projection occupation was failed");
             }
         }

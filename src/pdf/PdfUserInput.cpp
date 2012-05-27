@@ -2,10 +2,10 @@
 #include <iostream>
 #include "PdfUserInput.h"
 #include "Fl_Db_Basis.h"
-#include "Fl_Tbl_Orbital.h"
 #include "Fl_Geometry.h"
 #include "Fl_Gto_Density.h"
 #include "Fl_Gto_Xcpot.h"
+#include "Fl_Gto_Orbital.h"
 #include "TlStringTokenizer.h"
 #include "TlAtom.h"
 #include "TlResidue.h"
@@ -13,7 +13,7 @@
 #define BOHR_ANGSTROM (0.5291772108)
 
 PdfUserInput::PdfUserInput(const std::string& filePath)
-    : filePath_(filePath), data_(), param_()
+    : filePath_(filePath), data_(), param_(), log_(TlLogging::getInstance())
 {
 }
 
@@ -47,7 +47,8 @@ void PdfUserInput::load_conventional()
     ifs.open(this->filePath_.c_str(), std::ios::in);
 
     if (!ifs.is_open()) {
-        std::cerr << "could not open file: " << this->filePath_ << ". stop." << std::endl;
+        this->log_.critical(TlUtils::format("could not open file: %s. stop.",
+                                            this->filePath_.c_str()));
         abort();
     }
 
@@ -263,8 +264,8 @@ void PdfUserInput::load_conventional()
 void PdfUserInput::molecule_geometry_cartesian_input(const std::string& str)
 {
     std::istringstream in(str);
-    Fl_Geometry flGeom(Fl_Geometry::getDefaultFileName());
-    flGeom.clear();
+    // Fl_Geometry flGeom;
+    // flGeom.clear();
 
     while (in) {
         std::string sLine;
@@ -337,12 +338,13 @@ void PdfUserInput::molecule_geometry_cartesian_input(const std::string& str)
         }
 
         // flGeomに格納 ====================================================
-        Fl_Geometry::AtomData atomData;
-        atomData.atom.setElement(sAtom);
-        atomData.atom.setCharge(charge);        atomData.atom.moveTo(position);
-        //atomData.label = sLabel1;
-        atomData.label = sLabel2;
-        flGeom.pushBack(atomData);
+        // Fl_Geometry::AtomData atomData;
+        // atomData.atom.setElement(sAtom);
+        // atomData.atom.setCharge(charge);
+        // atomData.atom.moveTo(position);
+        // //atomData.label = sLabel1;
+        // atomData.label = sLabel2;
+        // flGeom.pushBack(atomData);
 
         // serializeDataに格納
         TlSerializeData atom;

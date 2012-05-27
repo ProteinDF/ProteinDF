@@ -18,7 +18,8 @@ int Fl_Tbl_Orbital::flag1=0;        // flag for Constructor;
 // first : flag1=0; after : flag1=1;
 int Fl_Tbl_Orbital::cGtoTotalNum=0; // s*1,p*3,d*5;
 
-Fl_Tbl_Orbital::Fl_Tbl_Orbital(const std::string& path) : m_sTableFilePath(path)
+Fl_Tbl_Orbital::Fl_Tbl_Orbital(const Fl_Geometry& flGeom,
+                               const std::string& path) : flGeom_(flGeom), m_sTableFilePath(path)
 {
     if (flag1 == 0) {
         this->prepare();
@@ -39,17 +40,17 @@ Fl_Tbl_Orbital::~Fl_Tbl_Orbital()
 
 void Fl_Tbl_Orbital::prepare()
 {
-    Fl_Geometry FlGeom(Fl_Geometry::getDefaultFileName());
+    //Fl_Geometry FlGeom(Fl_Geometry::getDefaultFileName());
     Fl_Gto_Orbital FlGtoOrb;
 
-    AtomNum = FlGeom.getNumOfAtoms();
-    AtomKindNum = FlGeom.getAtomKindNumber();
+    AtomNum = this->flGeom_.getNumOfAtoms();
+    AtomKindNum = this->flGeom_.getAtomKindNumber();
 
     cGtoTotalNum = 0;
 
     for (int i = 0; i < AtomNum; ++i) {
-        std::string Atm = FlGeom.getAtom(i);
-        std::string Lb2 = FlGeom.getLabel(i);
+        std::string Atm = this->flGeom_.getAtom(i);
+        std::string Lb2 = this->flGeom_.getLabel(i);
 
         for (int j = 0; j < AtomKindNum; ++j) {
             int m = FlGtoOrb.getStartposition(j);
@@ -89,11 +90,11 @@ void Fl_Tbl_Orbital::prepare()
 
 void Fl_Tbl_Orbital::makeTable()
 {
-    Fl_Geometry FlGeom(Fl_Geometry::getDefaultFileName());
+    //const Fl_Geometry FlGeom((*this->pPdfParam_)["coordinates"]);
     Fl_Gto_Orbital FlGtoOrb;
 
-    const int nAtomNum = FlGeom.getNumOfAtoms();
-    const int nAtomKindNum = FlGeom.getAtomKindNumber();
+    const int nAtomNum = this->flGeom_.getNumOfAtoms();
+    const int nAtomKindNum = this->flGeom_.getAtomKindNumber();
 
     std::ofstream fo;
     fo.open(Fl_Tbl_Orbital::m_sTableFilePath.c_str(), std::ios::out | std::ios::trunc);
@@ -103,8 +104,8 @@ void Fl_Tbl_Orbital::makeTable()
 
     int basiscount = 0;
     for (int i = 0; i < nAtomNum; ++i) {
-        const std::string Atm = FlGeom.getAtom(i);
-        const std::string Lb2 = FlGeom.getLabel(i);
+        const std::string Atm = this->flGeom_.getAtom(i);
+        const std::string Lb2 = this->flGeom_.getLabel(i);
 
         //std::cout << "Atm=\"" << Atm << "\", Lb2=\"" << Lb2 << "\"" << std::endl;
 

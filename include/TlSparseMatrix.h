@@ -203,14 +203,13 @@ public:
 
     void index(const KeyType i, index_type* pRow, index_type* pCol) const;
 
-protected:
-    virtual bool load(const std::string& path) {
-        return false;
-    }
+public:
+    virtual bool load(const std::string& path);
+    virtual bool save(const std::string& path) const;
 
-    virtual bool save(const std::string& path) const {
-        return false;
-    }
+protected:
+    bool load(std::ifstream& ifs);
+    bool save(std::ofstream& ofs) const;
     
 protected:
     index_type m_nRows;                  /// 行数

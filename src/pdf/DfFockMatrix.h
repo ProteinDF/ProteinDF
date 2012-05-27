@@ -87,7 +87,8 @@ void DfFockMatrix::mainDIRECT_RKS()
     {
         const DfXCFunctional dfXCFunctional(this->pPdfParam_);
         if (dfXCFunctional.isHybridFunctional() == true) {
-            double coef = dfXCFunctional.getFockExchangeCoefficient();
+            const double coef = dfXCFunctional.getFockExchangeCoefficient();
+            this->log_.info(TlUtils::format("coefficient of K: %f", coef));
             SymmetricMatrixType K = DfObject::getHFxMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration);
             K *= coef;
             F += K;

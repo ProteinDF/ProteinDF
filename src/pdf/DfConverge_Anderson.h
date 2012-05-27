@@ -54,8 +54,8 @@ void DfConverge_Anderson::convergeRhoTilde(const DfObject::RUN_TYPE runType)
     const int nIteration = this->m_nIteration;
     const int nAndersonStartIterationNumber = this->m_nStartIterationOfAnderson;
 
-    this->logger("Anderson's convergence method applied to rho~:\n");
-    this->logger(TlUtils::format(" start-number = %2d\n", nAndersonStartIterationNumber));
+    this->log_.info("Anderson's convergence method applied to rho~:");
+    this->log_.info(TlUtils::format(" start-number = %2d", nAndersonStartIterationNumber));
 
     if (this->m_nIteration >= (nAndersonStartIterationNumber -1)) {
         VectorType nextY1;
@@ -91,8 +91,8 @@ void DfConverge_Anderson::convergeKSMatrix(const DfObject::RUN_TYPE runType)
     const int nIteration = this->m_nIteration;
     const int nAndersonStartIterationNumber = this->m_nStartIterationOfAnderson;
 
-    this->logger("Anderson's convergence method applied to KS Matrix:\n");
-    this->logger(TlUtils::format(" start-number = %2d\n", nAndersonStartIterationNumber));
+    this->log_.info("Anderson's convergence method applied to KS Matrix:");
+    this->log_.info(TlUtils::format(" start-number = %2d", nAndersonStartIterationNumber));
 
     if (this->m_nIteration >= (nAndersonStartIterationNumber -1)) {
         VectorType nextY1 = this->getVectorOfKSMatrix<SymmetricMatrixType, VectorType>(runType, nIteration);
@@ -126,8 +126,8 @@ void DfConverge_Anderson::convergePMatrix(const DfObject::RUN_TYPE runType)
     //const int itr = this->m_nIteration -1;
     const int nAndersonStartIterationNumber = this->m_nStartIterationOfAnderson;
 
-    this->logger("Anderson's convergence method applied to P Matrix:\n");
-    this->logger(TlUtils::format(" start-number = %2d\n", nAndersonStartIterationNumber));
+    this->log_.info("Anderson's convergence method applied to P Matrix:");
+    this->log_.info(TlUtils::format(" start-number = %2d", nAndersonStartIterationNumber));
 
     if (this->m_nIteration >= (nAndersonStartIterationNumber -1)) {
         VectorType nextY1 = this->getVectorOfPMatrix<SymmetricMatrixType, VectorType>(runType, this->m_nIteration -1);
@@ -173,7 +173,7 @@ VectorType DfConverge_Anderson::anderson(const VectorType& X1, const VectorType&
                                          const VectorType& Y0, const VectorType& Y1)
 {
     const double beta = this->m_dDampingFactorOfAnderson; // damping factor of Anderson's method
-    this->logger(TlUtils::format(" beta = %f\n", beta));
+    this->log_.info(TlUtils::format(" beta = %f", beta));
 
     // theta を求める
     double theta = 0.0;
@@ -191,11 +191,11 @@ VectorType DfConverge_Anderson::anderson(const VectorType& X1, const VectorType&
 
         double t1 = r1 * r12;
         double t2 = r12 * r12;
-        this->logger(TlUtils::format(" t1 = %f\n", t1));
-        this->logger(TlUtils::format(" t2 = %f\n", t2));
+        this->log_.info(TlUtils::format(" t1 = %f", t1));
+        this->log_.info(TlUtils::format(" t2 = %f", t2));
         theta = t1 / t2;
     }
-    this->logger(TlUtils::format(" theta = %f\n", theta));
+    this->log_.info(TlUtils::format(" theta = %f", theta));
 
     const double theta_rest = 1.0 - theta;
     // U^(n-1) = (1-theta)*X^(n-1) + theta * X^(n-2)

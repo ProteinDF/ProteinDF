@@ -2,7 +2,6 @@
 #define TLORBITAL_INFO_DENSITY_H
 
 #include "TlOrbitalInfoObject.h"
-#include "Fl_Gto_Density.h"
 
 class TlOrbitalInfo_Density : public TlOrbitalInfoObject {
 public:

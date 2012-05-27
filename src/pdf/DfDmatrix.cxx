@@ -2,8 +2,6 @@
 #include <cmath>
 
 #include "DfDmatrix.h"
-#include "Fl_Tbl_Orbital.h"
-#include "Fl_Tbl_Orbital.h"
 #include "TlUtils.h"
 #include "TlVector.h"
 #include "TlMatrix.h"
@@ -68,19 +66,19 @@ void DfDmatrix::main(const DfObject::RUN_TYPE runType)
     TlVector currOcc;
     switch (this->orbitalCorrespondenceMethod_) {
     case OCM_OVERLAP:
-        this->logger(" orbital correspondence method: MO-overlap\n");
+        this->log_.info(" orbital correspondence method: MO-overlap");
         currOcc = this->getOccupationUsingOverlap<TlMatrix>(runType);
         currOcc.save(this->getOccupationPath(runType));
         break;
 
     case OCM_PROJECTION:
-        this->logger(" orbital correspondence method: MO-projection\n");
+        this->log_.info(" orbital correspondence method: MO-projection");
         currOcc = this->getOccupationUsingProjection<TlMatrix, TlSymmetricMatrix>(runType);
         currOcc.save(this->getOccupationPath(runType));
         break;
 
     default:
-        this->logger(" orbital correspondence method: none\n");
+        this->log_.info(" orbital correspondence method: none");
         if (TlFile::isExist(this->getOccupationPath(runType)) == true) {
             currOcc.load(this->getOccupationPath(runType));
         } else {
@@ -142,39 +140,39 @@ void DfDmatrix::printOccupation(const TlVector& occ)
 void DfDmatrix::printTwoVectors(const TlVector& a, const TlVector& b,
                                 const std::string& title, int pnumcol)
 {
-    this->logger(TlUtils::format("\n\n       %s\n\n", title.c_str()));
+    this->log_.info(TlUtils::format("\n\n       %s\n\n", title.c_str()));
 
     if (a.getSize() != b.getSize()) {
-        this->logger("DfDmatrix::printTwoVectors() : dimensions of vectors are not much\n");
-        this->logger("                             : omit\n");
+        this->log_.info("DfDmatrix::printTwoVectors() : dimensions of vectors are not much");
+        this->log_.info("                             : omit");
     }
 
-    this->logger("       two vectors\n");
+    this->log_.info("       two vectors");
 
     const int number_of_emt = a.getSize();
     for (int ord = 0; ord < number_of_emt; ord += pnumcol) {
-        this->logger("       ");
+        this->log_.info("       ");
         for (int j = ord; ((j < ord + pnumcol) && (j < number_of_emt)); ++j) {
-            this->logger(TlUtils::format("   %5d th", j+1));
+            this->log_.info(TlUtils::format("   %5d th", j+1));
         }
-        this->logger("\n     ");
+        this->log_.info("\n     ");
 
         for (int j = ord; ((j < ord + pnumcol) && (j < number_of_emt)); ++j) {
-            this->logger("-----------");
+            this->log_.info("-----------");
         }
-        this->logger("----\n       ");
+        this->log_.info("----\n       ");
 
         for (int j = ord; j < ord + pnumcol && j < number_of_emt; ++j) {
             const double aj = a[j];
-            this->logger(TlUtils::format(" %6.0lf    ", aj + 1));
+            this->log_.info(TlUtils::format(" %6.0lf    ", aj + 1));
         }
-        this->logger("\n\n       ");
+        this->log_.info("\n\n       ");
 
         for (int j = ord; ((j < ord + pnumcol) && (j < number_of_emt)); ++j) {
             const double bj = b[j];
-            this->logger(TlUtils::format(" %10.6lf", bj));
+            this->log_.info(TlUtils::format(" %10.6lf", bj));
         }
-        this->logger("\n\n");
+        this->log_.info("\n\n");
     }
 }
 

@@ -23,16 +23,10 @@
 #include "DfPopulation.h"
 #include "DfSummary.h"
 #include "DfConvcheck.h"
-#include "DfXcpotfitting.h"
-
 #include "DfConverge_Damping.h"
 #include "DfConverge_Anderson.h"
-
 #include "DfConverge2.h"
-
-#include "DfXcenefitting.h"
 #include "DfLevelshift.h"
-
 #include "DfCleanup.h"
 
 // FoR Extended QCLO
@@ -180,7 +174,6 @@ int DfScf::execScfLoop()
         DENSITY_FITTING,
         XC_INTEGRAL,
         BEGIN,
-        XCENEFIT,
         THREE_INDEX_INTEGRAL,
         XC_MATRIX,
         K_MATRIX,
@@ -214,8 +207,6 @@ int DfScf::execScfLoop()
         } else if ("DENSITY_FITTING" == respoint) {
             nScfState = XC_INTEGRAL;
         } else if ("XC_INTEGRAL" == respoint) {
-            nScfState = XCENEFIT;
-        } else if ("XCENEFIT" == respoint) {
             nScfState = THREE_INDEX_INTEGRAL;
         } else if ("THREE_INDEX_INTEGRAL" == respoint) {
             nScfState = XC_MATRIX;
@@ -275,12 +266,6 @@ int DfScf::execScfLoop()
         case XC_INTEGRAL:
             this->doXCIntegral();
             this->setScfRestartPoint("XC_INTEGRAL");
-            nScfState = XCENEFIT;
-            break;
-
-        case XCENEFIT:
-            this->execScfLoop_XcEneFit();
-            this->setScfRestartPoint("XCENEFIT");
             nScfState = THREE_INDEX_INTEGRAL;
             break;
 
@@ -553,45 +538,11 @@ DfDensityFittingObject* DfScf::getDfDensityFittingObject()
 void DfScf::doXCIntegral()
 {
     if (this->m_bIsXCFitting == true) {
-        if (this->m_sXCFunctional != "xalpha") {
-            // grid-method
-
-            this->loggerStartTitle("DfGrid fitting Myu");
-
-            DfCalcGrid dg(this->pPdfParam_, this->m_nIteration);
-            dg.dfGrdMain();
-
-            this->loggerEndTitle();
-        } else {
-            // xalpha-method
-            if ((*(this->pPdfParam_))["SCF"]["xc-potential/xalpha/method"] == "newton-raphson") {
-                // newton-raphson
-                this->loggerStartTitle("DfXcpotfitting");
-
-                DfXcpotfitting dfXcpotfitting(this->pPdfParam_, this->m_nIteration);
-                dfXcpotfitting.dfXcpMain();
-
-                this->loggerEndTitle();
-            } else {
-                // broyden
-                this->loggerStartTitle("DfBroyden");
-                this->loggerEndTitle();
-            }
-        }
-    }
-}
-
-
-void DfScf::execScfLoop_XcEneFit()
-{
-    // x.c. energy fitting
-    if (this->m_sXCFunctional == "xalpha" ||
-        this->m_sXCFunctional == "gxalpha") {
-        this->loggerStartTitle("Xc ene fitting");
-
-        DfXcenefitting dfXcenefitting(this->pPdfParam_, this->m_nIteration);
-        dfXcenefitting.dfXceMain();
-
+        this->loggerStartTitle("Grid fitting Myu");
+        
+        DfCalcGrid dg(this->pPdfParam_, this->m_nIteration);
+        dg.dfGrdMain();
+        
         this->loggerEndTitle();
     }
 }

@@ -223,6 +223,8 @@ double DfConvcheck::dev_standard_dev_cd(const RUN_TYPE runType, const int iterat
     TlVector deltaRho = rho - prevRho;
         
     SymmetricMatrixType Sab2 = DfObject::getSab2Matrix<SymmetricMatrixType>();
+    assert(Sab2.getNumOfRows() == numOfAuxDens);
+    assert(Sab2.getNumOfCols() == numOfAuxDens);
     TlVector v(numOfAuxDens);
     for (index_type p = 0; p < numOfAuxDens; ++p) {
         TlVector Sab2_v = Sab2.getRowVector(p);
@@ -237,8 +239,8 @@ double DfConvcheck::dev_standard_dev_cd(const RUN_TYPE runType, const int iterat
     // calc standard_deviation
     standard_deviation = std::sqrt(std::fabs(IntegSquDeltaRho)) / (double)this->m_nNumOfAux;
     
-    this->logger(TlUtils::format("IntegSquDeltaRho         is %14.4le\n", IntegSquDeltaRho));
-    this->logger(TlUtils::format("standard deviation of cd is %14.4le\n", standard_deviation));
+    this->log_.info(TlUtils::format("IntegSquDeltaRho         is %14.4le", IntegSquDeltaRho));
+    this->log_.info(TlUtils::format("standard deviation of cd is %14.4le", standard_deviation));
 
     return standard_deviation;
 }

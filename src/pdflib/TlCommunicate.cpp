@@ -89,10 +89,8 @@ int TlCommunicate::barrier(bool isDebugOut) const
     ++(this->counter_barrier_);
     
     if (isDebugOut == true) {
-        std::cerr << TlUtils::format("[%2d] barrier called. times=%ld",
-                                     this->getRank(),
-                                     this->counter_barrier_)
-                  << std::endl;
+        this->log_.debug(TlUtils::format("barrier called. times=%ld",
+                                         this->counter_barrier_));
     }
 
     const int answer = MPI_Barrier(MPI_COMM_WORLD);
@@ -136,6 +134,7 @@ bool TlCommunicate::checkNonBlockingTableCollision(uintptr_t key,
 bool TlCommunicate::checkNonBlockingCommunications() const
 {
     bool answer = true;
+    TlLogging& log = TlLogging::getInstance();
 
 #pragma omp critical (TlCommunicate_nonBlockingCommParamTable_update)
     {
@@ -145,10 +144,9 @@ bool TlCommunicate::checkNonBlockingCommunications() const
             for (NonBlockingCommParamTableType::const_iterator it = this->nonBlockingCommParamTable_.begin();
                  it != itEnd; ++it) {
                 const char isSendRecv = ((it->second.property & NonBlockingCommParam::SEND) != 0) ? 'S' : 'R';
-                std::cerr << TlUtils::format("[%5d/%5d WARN] rest waiting communication(%c) in TlCommunicate: TAG=%d",
-                                             this->getRank(), this->getNumOfProcs() -1,
-                                             isSendRecv, it->second.tag)
-                          << std::endl;
+                log.warn(TlUtils::format("[%5d/%5d WARN] rest waiting communication(%c) in TlCommunicate: TAG=%d",
+                                         this->getRank(), this->getNumOfProcs() -1,
+                                         isSendRecv, it->second.tag));
             }
         }
     }
@@ -981,6 +979,12 @@ int TlCommunicate::sendDataX(const unsigned int* pData, const std::size_t size,
     return this->sendDataX(pData, MPI_UNSIGNED, 0, size, dest, tag);
 }
 
+int TlCommunicate::sendDataX(const unsigned long* pData, const std::size_t size,
+                             const int dest, const int tag)
+{
+    return this->sendDataX(pData, MPI_UNSIGNED_LONG, 0, size, dest, tag);
+}
+
 int TlCommunicate::sendDataX(const double* pData, const std::size_t size,
                              const int dest, const int tag)
 {
@@ -1668,6 +1672,14 @@ int TlCommunicate::receiveDataFromAnySourceX(int* pData, const std::size_t size,
 {
     return this->receiveDataFromAnySourceX(pData, MPI_INT, 0, size, pSrc, tag);
 }
+
+
+int TlCommunicate::receiveDataFromAnySourceX(unsigned long* pData, const std::size_t size,
+                                             int* pSrc, const int tag)
+{
+    return this->receiveDataFromAnySourceX(pData, MPI_UNSIGNED_LONG, 0, size, pSrc, tag);
+}
+
 
 // =============================================================================
 template<typename T>
@@ -2406,6 +2418,8 @@ int TlCommunicate::broadcast(bool& rData)
 template<typename T>
 int TlCommunicate::broadcast(T& data, const MPI_Datatype mpiType, const int root)
 {
+    this->log_.debug(TlUtils::format("TlCommunicate::broadcast(): type=%s, root=%d",
+                                     TlUtils::xtos(mpiType).c_str(), root));
     return MPI_Bcast(&data, 1, mpiType, root, MPI_COMM_WORLD);
 }
 
@@ -2664,7 +2678,7 @@ int TlCommunicate::broadcast(TlMatrix& data, const int root)
 
 int TlCommunicate::broadcast(TlSymmetricMatrix& data, int root)
 {
-    std::size_t dim = 0;
+    TlMatrixObject::index_type dim = 0;
 
     if (this->getRank() == root) {
         dim = data.getNumOfRows();
@@ -2673,7 +2687,7 @@ int TlCommunicate::broadcast(TlSymmetricMatrix& data, int root)
     data.resize(dim);
 
     if (answer == 0) {
-        this->broadcast(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(), root);
+        answer = this->broadcast(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(), root);
     }
 
     return answer;

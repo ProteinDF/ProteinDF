@@ -20,15 +20,15 @@ public:
     };
 
 public:
-    Fl_Geometry(const TlSerializeData& data);
-    Fl_Geometry(const std::string& path = Fl_Geometry::getDefaultFileName());
+    //Fl_Geometry();
+    Fl_Geometry(const TlSerializeData& data); // for data["coordinates"]
     Fl_Geometry(const Fl_Geometry& rhs);
     ~Fl_Geometry();
 
 public:
-    static std::string getDefaultFileName() {
-        return "fl_Input/fl_Geometry";
-    }
+    // static std::string getDefaultFileName() {
+    //     return "fl_Input/fl_Geometry";
+    // }
 
 public:
     void clear();

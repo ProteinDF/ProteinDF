@@ -5,11 +5,12 @@
 #include "Fl_Gto.h"
 #include "Fl_Gto_Xcpot2.h"
 #include "TlPrdctbl.h"
+#include "Fl_Geometry.h"
 
 class Fl_Tbl_Xcpot2 {
 
 public:
-    Fl_Tbl_Xcpot2();
+    Fl_Tbl_Xcpot2(const Fl_Geometry& flGeom);
     ~Fl_Tbl_Xcpot2();
 
     int    getcGtoTotalNum(void)     {
@@ -36,6 +37,7 @@ public:
     };
 
 private:
+    const Fl_Geometry& flGeom_;
     static int  flag1;          // flag for Constructor.
     static int  flag2;          // flag for Destructor.
     static int cGtoTotalNum;   // s*1, p*3, d*5.

@@ -64,52 +64,52 @@ void DfConvcheck::showResults()
 {
     switch (this->m_nMethodType) {
     case METHOD_RKS:
-        this->logger(TlUtils::format("+ convergence informations\n"));
-        this->logger(TlUtils::format("+     standard deviation of cd               = %14.4le\n", this->dev_sd));
-        this->logger(TlUtils::format("+     maximum  deviation of cd coefficient   = %14.4le\n", this->dev_cd));
-        this->logger(TlUtils::format("+     maximum  deviation of density matrix   = %14.4le\n", this->dev_dm));
-        this->logger(TlUtils::format("+              deviation of total energy     = %14.4le\n", this->dev_te));
-        this->logger(TlUtils::format("+     maximum  deviation of kohn-sham matrix = %14.4le\n", this->dev_ks));
+        this->log_.info(TlUtils::format("+ convergence informations\n"));
+        this->log_.info(TlUtils::format("+     standard deviation of cd               = %14.4le", this->dev_sd));
+        this->log_.info(TlUtils::format("+     maximum  deviation of cd coefficient   = %14.4le", this->dev_cd));
+        this->log_.info(TlUtils::format("+     maximum  deviation of density matrix   = %14.4le", this->dev_dm));
+        this->log_.info(TlUtils::format("+              deviation of total energy     = %14.4le", this->dev_te));
+        this->log_.info(TlUtils::format("+     maximum  deviation of kohn-sham matrix = %14.4le", this->dev_ks));
         if (this->m_bIsXCFitting == true) {
-            this->logger(TlUtils::format("+     maximum  deviation of xc coefficient   = %14.4le\n", this->dev_xc));
-            this->logger(TlUtils::format("+     maximum  deviation of xa coefficient   = %14.4le", this->dev_xa));
+            this->log_.info(TlUtils::format("+     maximum  deviation of xc coefficient   = %14.4le", this->dev_xc));
+            this->log_.info(TlUtils::format("+     maximum  deviation of xa coefficient   = %14.4le", this->dev_xa));
         }
         break;
         
     case METHOD_UKS:
-        this->logger("+ convergence informations\n");
-        this->logger(TlUtils::format("+     standard deviation of alpha cd               = %14.4le\n", this->dev_sd_a));
-        this->logger(TlUtils::format("+     standard deviation of beta  cd               = %14.4le\n", this->dev_sd_b));
-        this->logger(TlUtils::format("+     maximum  deviation of alpha density matrix   = %14.4le\n", this->dev_dm_a));
-        this->logger(TlUtils::format("+     maximum  deviation of beta  density matrix   = %14.4le\n", this->dev_dm_b));
-        this->logger(TlUtils::format("+              deviation of total energy           = %14.4le\n", this->dev_te));
-        this->logger(TlUtils::format("+     maximum  deviation of alpha kohn-sham matrix = %14.4le\n", this->dev_ks_a));
-        this->logger(TlUtils::format("+     maximum  deviation of beta  kohn-sham matrix = %14.4le\n", this->dev_ks_b));
-        this->logger(TlUtils::format("+     maximum  deviation of cd alpha coefficient   = %14.4le\n", this->dev_cd_a));
-        this->logger(TlUtils::format("+     maximum  deviation of cd beta  coefficient   = %14.4le\n", this->dev_cd_b));
+        this->log_.info("+ convergence informations");
+        this->log_.info(TlUtils::format("+     standard deviation of alpha cd               = %14.4le", this->dev_sd_a));
+        this->log_.info(TlUtils::format("+     standard deviation of beta  cd               = %14.4le", this->dev_sd_b));
+        this->log_.info(TlUtils::format("+     maximum  deviation of alpha density matrix   = %14.4le", this->dev_dm_a));
+        this->log_.info(TlUtils::format("+     maximum  deviation of beta  density matrix   = %14.4le", this->dev_dm_b));
+        this->log_.info(TlUtils::format("+              deviation of total energy           = %14.4le", this->dev_te));
+        this->log_.info(TlUtils::format("+     maximum  deviation of alpha kohn-sham matrix = %14.4le", this->dev_ks_a));
+        this->log_.info(TlUtils::format("+     maximum  deviation of beta  kohn-sham matrix = %14.4le", this->dev_ks_b));
+        this->log_.info(TlUtils::format("+     maximum  deviation of cd alpha coefficient   = %14.4le", this->dev_cd_a));
+        this->log_.info(TlUtils::format("+     maximum  deviation of cd beta  coefficient   = %14.4le", this->dev_cd_b));
         if (this->m_bIsXCFitting == true) {
-            this->logger(TlUtils::format("+     maximum  deviation of xc alpha coefficient   = %14.4le\n", this->dev_xc_a));
-            this->logger(TlUtils::format("+     maximum  deviation of xc beta  coefficient   = %14.4le\n", this->dev_xc_b));
-            this->logger(TlUtils::format("+     maximum  deviation of xa alpha coefficient   = %14.4le\n", this->dev_xa_a));
-            this->logger(TlUtils::format("+     maximum  deviation of xa beta  coefficient   = %14.4le\n", this->dev_xa_b));
+            this->log_.info(TlUtils::format("+     maximum  deviation of xc alpha coefficient   = %14.4le", this->dev_xc_a));
+            this->log_.info(TlUtils::format("+     maximum  deviation of xc beta  coefficient   = %14.4le", this->dev_xc_b));
+            this->log_.info(TlUtils::format("+     maximum  deviation of xa alpha coefficient   = %14.4le", this->dev_xa_a));
+            this->log_.info(TlUtils::format("+     maximum  deviation of xa beta  coefficient   = %14.4le", this->dev_xa_b));
         }
         break;
 
     case METHOD_ROKS:
-        this->logger("+ convergence informations\n");
-        this->logger(TlUtils::format("+     standard deviation of alpha cd                     = %14.4le\n", this->dev_sd_a));
-        this->logger(TlUtils::format("+     standard deviation of beta  cd                     = %14.4le\n", this->dev_sd_b));
-        this->logger(TlUtils::format("+     maximum  deviation of closed part density matrix   = %14.4le\n", this->dev_dm_c));
-        this->logger(TlUtils::format("+     maximum  deviation of open   part density matrix   = %14.4le\n", this->dev_dm_o));
-        this->logger(TlUtils::format("+              deviation of total energy                 = %14.4le\n", this->dev_te));
-        this->logger(TlUtils::format("+     maximum  deviation of kohn-sham matrix             = %14.4le\n", this->dev_ks));
-        this->logger(TlUtils::format("+     maximum  deviation of cd alpha coefficient         = %14.4le\n", this->dev_cd_a));
-        this->logger(TlUtils::format("+     maximum  deviation of cd beta  coefficient         = %14.4le\n", this->dev_cd_b));
+        this->log_.info("+ convergence informations");
+        this->log_.info(TlUtils::format("+     standard deviation of alpha cd                     = %14.4le", this->dev_sd_a));
+        this->log_.info(TlUtils::format("+     standard deviation of beta  cd                     = %14.4le", this->dev_sd_b));
+        this->log_.info(TlUtils::format("+     maximum  deviation of closed part density matrix   = %14.4le", this->dev_dm_c));
+        this->log_.info(TlUtils::format("+     maximum  deviation of open   part density matrix   = %14.4le", this->dev_dm_o));
+        this->log_.info(TlUtils::format("+              deviation of total energy                 = %14.4le", this->dev_te));
+        this->log_.info(TlUtils::format("+     maximum  deviation of kohn-sham matrix             = %14.4le", this->dev_ks));
+        this->log_.info(TlUtils::format("+     maximum  deviation of cd alpha coefficient         = %14.4le", this->dev_cd_a));
+        this->log_.info(TlUtils::format("+     maximum  deviation of cd beta  coefficient         = %14.4le", this->dev_cd_b));
         if (this->m_bIsXCFitting == true) {
-            this->logger(TlUtils::format("+     maximum  deviation of xc alpha coefficient         = %14.4le\n", this->dev_xc_a));
-            this->logger(TlUtils::format("+     maximum  deviation of xc beta  coefficient         = %14.4le\n", this->dev_xc_b));
-            this->logger(TlUtils::format("+     maximum  deviation of xa alpha coefficient         = %14.4le\n", this->dev_xa_a));
-            this->logger(TlUtils::format("+     maximum  deviation of xa beta  coefficient         = %14.4le\n", this->dev_xa_b));
+            this->log_.info(TlUtils::format("+     maximum  deviation of xc alpha coefficient         = %14.4le", this->dev_xc_a));
+            this->log_.info(TlUtils::format("+     maximum  deviation of xc beta  coefficient         = %14.4le", this->dev_xc_b));
+            this->log_.info(TlUtils::format("+     maximum  deviation of xa alpha coefficient         = %14.4le", this->dev_xa_a));
+            this->log_.info(TlUtils::format("+     maximum  deviation of xa beta  coefficient         = %14.4le", this->dev_xa_b));
         }
         break;
 

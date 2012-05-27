@@ -83,6 +83,7 @@ protected:
     std::string getSgdMatrixPath();
     std::string getSabInvMatrixPath();
     std::string getSgdInvMatrixPath();
+    std::string getI2pqVtrPath();
     std::string getLMatrixPath();
     std::string getXMatrixPath();
     std::string getXInvMatrixPath();

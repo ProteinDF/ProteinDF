@@ -127,6 +127,20 @@ double TlDistributeSymmetricMatrix::getLocal(index_type row, index_type col) con
 }
 
 
+TlVector TlDistributeSymmetricMatrix::getRowVector(const index_type row) const
+{
+    TlDistributeMatrix tmp = *this;
+    return tmp.getRowVector(row);
+}
+
+
+TlVector TlDistributeSymmetricMatrix::getColumnVector(const index_type col) const
+{
+    TlDistributeMatrix tmp = *this;
+    return tmp.getColVector(col);
+}
+
+
 TlSparseSymmetricMatrix TlDistributeSymmetricMatrix::getPartialMatrix(const double threshold) const
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
@@ -764,6 +778,7 @@ bool TlDistributeSymmetricMatrix::load(const std::string& sFilePath)
 bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
+    assert(rComm.checkNonBlockingCommunications());
     const int numOfProcs = rComm.getNumOfProc();
 
     bool bAnswer = true;
@@ -947,6 +962,7 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
 
     // std::cerr << TlUtils::format("[%d] END", rComm.getRank())
     //           << std::endl;
+    assert(rComm.checkNonBlockingCommunications());
     return bAnswer;
 }
 
@@ -960,6 +976,7 @@ bool TlDistributeSymmetricMatrix::save(const std::string& sFilePath) const
     bool bAnswer = true;
 
     TlCommunicate& rComm = TlCommunicate::getInstance();
+    assert(rComm.checkNonBlockingCommunications());
     if (rComm.isMaster() == true) {
         // master
         assert(this->m_nRows == this->m_nCols);
@@ -1058,6 +1075,7 @@ bool TlDistributeSymmetricMatrix::save(const std::string& sFilePath) const
     }
 
     rComm.broadcast(bAnswer);
+    assert(rComm.checkNonBlockingCommunications());
     return bAnswer;
 }
 
@@ -1576,7 +1594,7 @@ TlDistributeSymmetricMatrix::choleskyFactorization(const double threshold) const
             error += d[pivot[i]];
         }
 
-        log.info(TlUtils::format("cholesky: m=%d, err=%e", m, error));
+        // log.info(TlUtils::format("cholesky: m=%d, err=%e", m, error));
         ++m;
     }
 

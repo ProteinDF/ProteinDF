@@ -4,6 +4,7 @@
 #include <fstream>
 #include "scalapack.h"
 #include "TlDistributeVector.h"
+#include "TlLogging.h"
 
 int TlDistributeVector::systemBlockSize_ = 64;
 const std::size_t TlDistributeVector::FILE_BUFFER_SIZE = 100*1024*1024; // 100 MB
@@ -361,6 +362,8 @@ bool TlDistributeVector::load(const std::string& sFilePath)
 bool TlDistributeVector::load(std::ifstream& ifs)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
+    TlLogging& log = TlLogging::getInstance();
+
     const int numOfProcs = rComm.getNumOfProc();
 
     bool bAnswer = true;
@@ -402,9 +405,8 @@ bool TlDistributeVector::load(std::ifstream& ifs)
                     assert(index != -1);
                     this->data_[index] = buf[i];
                 } else {
-//                     std::cerr << TlUtils::format("SEND [%d] (%4d, %4d)",
-//                                                  proc, currentRow, currentCol)
-//                               << std::endl;
+                    log.debug(TlUtils::format("SEND [%d] (%4d)",
+                                              proc, currentIndex));
 
                     tmpIndexLists[proc].push_back(currentIndex);
                     tmpValueLists[proc].push_back(buf[i]);
@@ -486,10 +488,10 @@ bool TlDistributeVector::load(std::ifstream& ifs)
         while (isLoopBreak == false) {
             if (rComm.test(sizeList) == true) {
                 rComm.wait(sizeList);
-//                 std::cerr << TlUtils::format("RECV [%d] size=%d",
-//                                              rComm.getRank(),
-//                                              sizeList)
-//                           << std::endl;
+                log.debug(TlUtils::format("RECV [%d] size=%d",
+                                          rComm.getRank(),
+                                          sizeList));
+
                 assert(sizeList != -1);
                 indexList.resize(sizeList);
                 valueList.resize(sizeList);
@@ -503,26 +505,26 @@ bool TlDistributeVector::load(std::ifstream& ifs)
                     const index_type row = indexList[i];
                     const size_type index = this->getIndex(row, 0);
                     
-//                         std::cerr << TlUtils::format("RECV [%d] (%4d, %4d)",
-//                                                      rComm.getRank(),
-//                                                      row, col) << std::endl;
+                    log.debug(TlUtils::format("RECV [%d] (%4d, %4d)",
+                                              rComm.getRank(), row));
                     
                     assert(index != -1);
                     this->data_[index] = valueList[i];
                 }
             }
-
+            
             if (rComm.test(endMsg) == true) {
                 rComm.wait(endMsg);
                 rComm.cancel(sizeList);
-//                 std::cerr << TlUtils::format("RECV [%d] END",
-//                                                  rComm.getRank())
-//                               << std::endl;
+                log.debug(TlUtils::format("RECV [%d] END",
+                                          rComm.getRank()));
                 isLoopBreak = true;
             }
         }
     }
 
+    rComm.barrier(true);
+    assert(rComm.checkNonBlockingCommunications());
     return bAnswer;
 }
 
@@ -554,11 +556,9 @@ bool TlDistributeVector::save(std::ofstream& ofs) const
     // "error: expression must be an lvalue or a function designator"
     DataType& dataTmp = const_cast<DataType&>(this->data_);
 
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    //const double dStartTime = rComm.getTime();
-
     bool bAnswer = true;
 
+    TlCommunicate& rComm = TlCommunicate::getInstance();
     const int nSize = this->getSize();
     if (rComm.isMaster() == true) {
         ofs.write(reinterpret_cast<const char*>(&nSize), sizeof(int));
@@ -569,8 +569,8 @@ bool TlDistributeVector::save(std::ofstream& ofs) const
     const int nRank = rComm.getRank();
     const int nGlobalRows = this->m_nRows;
     const int nGlobalCols = this->m_nCols;;
-    // for master ======
-    if (nRank == 0) {
+
+    if (rComm.isMaster() == true) {
         const int nRows = this->m_nMyRows;
         const int nCols = this->m_nMyCols;
         //const int nBlockSize = this->m_nBlockSize;
@@ -595,7 +595,6 @@ bool TlDistributeVector::save(std::ofstream& ofs) const
         }
     }
 
-    // for slave =======
     for (int i = 1; i < nNumOfProc; ++i) {
         if (i == nRank) {
             // slave
@@ -631,13 +630,8 @@ bool TlDistributeVector::save(std::ofstream& ofs) const
 
                     const int nGlobalIndex = nGlobalRowIndex * nGlobalCols + nGlobalColIndex;
                     ofs.seekp(sizeof(double)*nGlobalIndex +offset, std::ios_base::beg);
-
+                    
                     const int index = r + nRows * c; // row-major
-//    {
-//      const int get_index = this->getIndex(nGlobalRowIndex, nGlobalColIndex);
-//      assert((get_index == -1) || (index == get_index));
-//    }
-
                     ofs.write(reinterpret_cast<const char*>(&(buf[index])), sizeof(double));
                 }
             }
@@ -650,6 +644,9 @@ bool TlDistributeVector::save(std::ofstream& ofs) const
     //if (rComm.isMaster() == true){
     //  std::cout << "TlDistributeMatrix::save() time:" << (dEndTime - dStartTime) << std::endl;
     //}
+
+    rComm.barrier();
+    assert(rComm.checkNonBlockingCommunications());
     return bAnswer;
 }
 

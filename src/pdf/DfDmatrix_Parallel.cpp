@@ -14,18 +14,11 @@ DfDmatrix_Parallel::DfDmatrix_Parallel(TlSerializeData* pPdfParam)
 {
 }
 
+
 DfDmatrix_Parallel::~DfDmatrix_Parallel()
 {
 }
 
-void DfDmatrix_Parallel::logger(const std::string& str) const
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    if (rComm.isMaster() == true) {
-        DfDmatrix::logger(str);
-    }
-}
 
 void DfDmatrix_Parallel::main(const DfObject::RUN_TYPE runType)
 {
@@ -53,13 +46,13 @@ void DfDmatrix_Parallel::main(const DfObject::RUN_TYPE runType)
 void DfDmatrix_Parallel::main_SCALAPACK(const DfObject::RUN_TYPE runType)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    this->logger(" build density matrix using ScaLAPACK.\n");
+    this->log_.info("build density matrix using ScaLAPACK.");
 
     // occupation
     TlVector currOcc;
     switch (this->orbitalCorrespondenceMethod_) {
     case OCM_OVERLAP:
-        this->logger(" orbital correspondence method: MO-overlap\n");
+        this->log_.info(" orbital correspondence method: MO-overlap");
         currOcc = this->getOccupationUsingOverlap<TlDistributeMatrix>(runType);
         if (rComm.isMaster() == true) {
             currOcc.save(this->getOccupationPath(runType));
@@ -67,7 +60,7 @@ void DfDmatrix_Parallel::main_SCALAPACK(const DfObject::RUN_TYPE runType)
         break;
 
     case OCM_PROJECTION:
-        this->logger(" orbital correspondence method: MO-projection\n");
+        this->log_.info(" orbital correspondence method: MO-projection");
         currOcc = this->getOccupationUsingProjection<TlDistributeMatrix, TlDistributeSymmetricMatrix>(runType);
         if (rComm.isMaster() == true) {
             currOcc.save(this->getOccupationPath(runType));
@@ -76,7 +69,7 @@ void DfDmatrix_Parallel::main_SCALAPACK(const DfObject::RUN_TYPE runType)
 
     default:
         if (rComm.isMaster() == true) {
-            this->logger(" orbital correspondence method: none\n");
+            this->log_.info(" orbital correspondence method: none");
             if (TlFile::isExist(this->getOccupationPath(runType)) == true) {
                 currOcc.load(this->getOccupationPath(runType));
             } else {

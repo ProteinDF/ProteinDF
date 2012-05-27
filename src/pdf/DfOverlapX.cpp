@@ -126,8 +126,6 @@ void DfOverlapX::calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
                                        this->grainSize_, &taskList);
     }
 
-    pTaskCtrl->cutoffReport();
-    
     delete pTaskCtrl;
     pTaskCtrl = NULL;
     this->destroyEngines();
@@ -152,8 +150,6 @@ void DfOverlapX::calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
                                       this->grainSize_, &taskList);
     }
 
-    pTaskCtrl->cutoffReport();
-    
     delete pTaskCtrl;
     pTaskCtrl = NULL;
     this->destroyEngines();

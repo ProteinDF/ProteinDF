@@ -99,6 +99,10 @@ public:
         int index() const {
             return ((a_bar*ERI_B_BAR_MAX + b_bar)*ERI_A_MAX + a)*ERI_B_MAX + b;
         }
+
+        static int maxIndex() {
+            return ERI_A_BAR_MAX * ERI_B_BAR_MAX * ERI_A_MAX * ERI_B_MAX;
+        }
         
     public:
         // int a_bar : 8; // grad i
@@ -505,6 +509,16 @@ private:
                 const DfEriEngine::Query& qCD,
                 const ContractScalesVector& bra_contractScales,
                 const ContractScalesVector& ket_contractScales);
+
+    /// calcPQ内で利用するcs_indexを返す
+    /// 
+    /// 目的は高速化。cs_indexの格納順序はcalcPQ内の多重ループに従う。
+    std::vector<int> 
+    get_csindex_for_calcPQ(const int angularMomentumP,
+                           const DfEriEngine::Query& qAB,
+                           const int angularMomentumQ,
+                           const DfEriEngine::Query& qCD);
+
     void transpose(const DfEriEngine::Query& qAB,
                    const DfEriEngine::Query& qCD,
                    const ContractScalesVector& ket_contractScales);
@@ -590,7 +604,7 @@ private:
     std::bitset<ERI_NUM_OF_RM_KINDS> calcdRM_;
 
     // for contract ------------------------------------------------------------
-    std::map<int, ContractScalesVector> choice_tbl;
+    std::map<int, ContractScalesVector> choice_tbl_;
     
     double* pContractBraCoef_;
     
@@ -600,6 +614,9 @@ private:
     /// abp(r)cdq を格納
     /// indexはContractState::index()で求める。
     double* p_abpRcdq_; 
+
+    // for calcPQ
+    std::map<int, std::vector<int> > csindeces_forCalcPQ_;
     
     // for recursive relations
     EriDataType ERI_bra_;

@@ -26,18 +26,6 @@ void DfDensityFittingX_Parallel::exec()
 }
 
 
-void DfDensityFittingX_Parallel::logger(const std::string& str) const
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    if (rComm.isMaster() == true) {
-        DfObject::logger(str);
-    }
-
-    rComm.barrier();
-}
-
-
 TlVector DfDensityFittingX_Parallel::getNalpha()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();

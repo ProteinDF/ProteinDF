@@ -313,6 +313,13 @@ void PdfKeyword::initialize()
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);
 
+    item.keyword          = "force_loading_from_disk";
+    item.explanation      = "";
+    item.defaultValue     = "yes";
+    item.syntax           = "(yes|no)";
+    item.type             = KWD_DEFAULT;
+    this->kwdList_.push_back(item);
+
     item.keyword          = "show_cache_report";
     item.explanation      = "";
     item.defaultValue     = "no";
@@ -596,14 +603,14 @@ void PdfKeyword::initialize()
 
     item.keyword          = "CDAM_tau";
     item.explanation      = "tau for CDAM";
-    item.defaultValue     = "1.0E-5";
+    item.defaultValue     = "1.0E-10";
     item.syntax           = "(real)";
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);
 
     item.keyword          = "CD_epsilon";
     item.explanation      = "epsilon for Cholesky Decomposition";
-    item.defaultValue     = "1.0E-5";
+    item.defaultValue     = "1.0E-4";
     item.syntax           = "(real)";
     item.type             = KWD_DEFAULT;
     this->kwdList_.push_back(item);

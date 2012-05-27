@@ -171,7 +171,8 @@ void DfTotalEnergy::exec_template()
                     this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
                 }
 
-                this->K_term_ = this->calcK(RUN_RKS, 0.5 * Ppq);
+                //this->K_term_ = this->calcK(RUN_RKS, 0.5 * Ppq) * 2.0; // 0.5 means alpha-spin, 2.0 means "alpha + beta"
+                this->K_term_ = this->calcK(RUN_RKS, Ppq);
             }
             break;
 

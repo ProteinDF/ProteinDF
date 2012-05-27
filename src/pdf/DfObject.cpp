@@ -151,12 +151,14 @@ void DfObject::setParam(const TlSerializeData& data)
 
     // J
     {
-        this->J_engine_ = J_ENGINE_CONVENTIONAL;
+        this->J_engine_ = J_ENGINE_RI_J;
         const std::string J_Engine = TlUtils::toUpper(data["J_engine"].getStr());
         if (J_Engine == "RI_J") {
             this->J_engine_ = J_ENGINE_RI_J;
         } else if (J_Engine == "CD") {
             this->J_engine_ = J_ENGINE_CD;
+        } else if (J_Engine == "CONVENTIONAL") {
+            this->J_engine_ = J_ENGINE_CONVENTIONAL;
         }
     }
 
@@ -168,6 +170,8 @@ void DfObject::setParam(const TlSerializeData& data)
             this->K_engine_ = K_ENGINE_RI_K;
         } else if (K_Engine == "CD") {
             this->K_engine_ = K_ENGINE_CD;
+        } else if (K_Engine == "CONVENTIONAL") {
+            this->K_engine_ = K_ENGINE_CONVENTIONAL;
         }
     }
     
@@ -237,7 +241,11 @@ void DfObject::setParam(const TlSerializeData& data)
     
     // for memory ==============================================================
     this->isUseCache_ = (*(this->pPdfParam_))["use_matrix_cache"].getBoolean();
-    this->matrixCache_.setMaxMemSize(this->procMaxMemSize_);
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.setMaxMemSize(this->procMaxMemSize_);
+    } else {
+        this->matrixCache_.setMaxMemSize(0);
+    }
     const bool isForceLoadingFromDisk = (*(this->pPdfParam_))["force_loading_from_disk"].getBoolean();
     this->matrixCache_.forceLoadingFromDisk(isForceLoadingFromDisk);
     
@@ -247,6 +255,7 @@ void DfObject::setParam(const TlSerializeData& data)
     paramFileBaseName["Hpq2_matrix"]   = "Hpq2.mat";
     paramFileBaseName["Spq_matrix"]    = "Spq.mat";
     paramFileBaseName["Sab_matrix"]    = "Sab.mat";
+    paramFileBaseName["Nalpha_vtr"]    = "Nalpha.vtr";
     paramFileBaseName["Sab2_matrix"]   = "Sab2.mat";
     paramFileBaseName["Sgd_matrix"]    = "Sgd.mat";
     if (paramFileBaseName["SabInv_matrix"].getStr().empty() == true) {
@@ -254,6 +263,9 @@ void DfObject::setParam(const TlSerializeData& data)
     }
     if (paramFileBaseName["SgdInv_matrix"].getStr().empty() == true) {
         paramFileBaseName["SgdInv_matrix"] = "Sgdinv.mat";
+    }
+    if (paramFileBaseName["I2PQ_vtr"].getStr().empty() == true) {
+        paramFileBaseName["I2PQ_vtr"] = "I2PQ.vtr";
     }
     if (paramFileBaseName["L_matrix"].getStr().empty() == true) {
         paramFileBaseName["L_matrix"] = "L.mat";
@@ -263,7 +275,8 @@ void DfObject::setParam(const TlSerializeData& data)
     if (paramFileBaseName["diff_density_matrix"].getStr().empty() == true) {
         paramFileBaseName["diff_density_matrix"] = "dP.mat";
     }
-
+    
+    paramFileBaseName["occupation_vtr"] = "occupation.vtr";
     if (paramFileBaseName["Ppq_matrix"].getStr().empty() == true) {
         paramFileBaseName["Ppq_matrix"] = "Ppq.%s.mat";
     }
@@ -425,6 +438,11 @@ std::string DfObject::getSgdInvMatrixPath()
 }
 
 
+std::string DfObject::getI2pqVtrPath()
+{
+    return this->makeFilePath("I2PQ_vtr");
+}
+
 std::string DfObject::getLMatrixPath()
 {
     return this->makeFilePath("L_matrix");
@@ -445,19 +463,12 @@ std::string DfObject::getXInvMatrixPath()
 
 std::string DfObject::getNalphaPath()
 {
-    return (DfObject::m_sWorkDirPath + "/fl_Vct_Nalpha");
+    return this->makeFilePath("Nalpha_vtr");
 }
 
 std::string DfObject::getOccupationPath(const RUN_TYPE runType)
 {
-    std::string sFileName = DfObject::m_sWorkDirPath + "/fl_Occupation";
-    if (runType == RUN_UKS_ALPHA) {
-        sFileName += "_Alpha";
-    } else if (runType == RUN_UKS_BETA) {
-        sFileName += "_Beta";
-    }
-
-    return sFileName;
+    return this->makeFilePath("occupation_vtr", DfObject::m_sRunTypeSuffix[runType]);
 }
 
 std::string DfObject::getGridDataFilePath() const

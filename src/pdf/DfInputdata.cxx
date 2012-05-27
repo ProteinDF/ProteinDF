@@ -61,25 +61,26 @@ TlSerializeData DfInputdata::main()
     pdfKwd.checkInputParam(param);
     
     // テーブルの作成
+    const Fl_Geometry flGeom(param["coordinates"]);
     {
-        Fl_Tbl_Orbital Tbl;
+        Fl_Tbl_Orbital Tbl(flGeom);
         param["num_of_AOs"] = Tbl.getcGtoTotalNum();
     }
 
     {
-        Fl_Tbl_Density Tbl;
+        Fl_Tbl_Density Tbl(flGeom);
         param["num_of_auxCDs"] = Tbl.getcGtoTotalNum();
     }
 
     {
-        Fl_Tbl_Xcpot Tbl;
+        Fl_Tbl_Xcpot Tbl(flGeom);
         param["num_of_auxXCs"] = Tbl.getcGtoTotalNum();
     }
 
     {
-        Fl_Geometry  Geom(Fl_Geometry::getDefaultFileName());
-        param["num_of_atoms"] = Geom.getNumOfAtoms();
-        param["num_of_dummy_atoms"] = Geom.getDummyatom();
+        //Fl_Geometry Geom(Fl_Geometry::getDefaultFileName());
+        param["num_of_atoms"] = flGeom.getNumOfAtoms();
+        param["num_of_dummy_atoms"] = flGeom.getDummyatom();
     }
 
     // 保存

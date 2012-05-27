@@ -103,7 +103,7 @@ void TlScalapackContext::finalize()
 {
     if (TlScalapackContext::m_pTlScalapackContextInstance != NULL) {
         delete TlScalapackContext::m_pTlScalapackContextInstance;
-        TlScalapackContext::m_pTlScalapackContextInstance == NULL;
+        TlScalapackContext::m_pTlScalapackContextInstance = NULL;
     }
 }
 
@@ -168,7 +168,7 @@ TlDistributeMatrix::TlDistributeMatrix(const TlDistributeSymmetricMatrix& rhs)
     std::copy(rhs.pData_, rhs.pData_ + rhs.getNumOfMyElements(), this->pData_);
     
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    rComm.checkNonBlockingCommunications();
+    assert(rComm.checkNonBlockingCommunications());
     const int numOfProcs = rComm.getNumOfProc();
     const int rank = rComm.getRank();
 
@@ -351,7 +351,8 @@ TlDistributeMatrix::TlDistributeMatrix(const TlDistributeSymmetricMatrix& rhs)
         }
     }
 
-    rComm.checkNonBlockingCommunications();
+    rComm.barrier(true);
+    assert(rComm.checkNonBlockingCommunications());
 }
 
 
@@ -2469,6 +2470,8 @@ bool TlDistributeMatrix::load(const std::string& sFilePath)
 bool TlDistributeMatrix::load(std::ifstream& ifs)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
+    assert(rComm.checkNonBlockingCommunications());
+
     const int numOfProcs = rComm.getNumOfProc();
 
     bool bAnswer = true;
@@ -2659,6 +2662,7 @@ bool TlDistributeMatrix::load(std::ifstream& ifs)
         }
     }
 
+    assert(rComm.checkNonBlockingCommunications());
     return bAnswer;
 }
 
@@ -2673,6 +2677,8 @@ bool TlDistributeMatrix::save(const std::string& sFilePath) const
     bool bAnswer = true;
 
     TlCommunicate& rComm = TlCommunicate::getInstance();
+    assert(rComm.checkNonBlockingCommunications());
+
     if (rComm.isMaster() == true) {
         // master
         const int nGlobalRows = this->m_nRows;
@@ -2766,6 +2772,7 @@ bool TlDistributeMatrix::save(const std::string& sFilePath) const
     }
 
     rComm.broadcast(bAnswer);
+    assert(rComm.checkNonBlockingCommunications());
     return bAnswer;
 }
 

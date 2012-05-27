@@ -17,7 +17,7 @@
 #include "TlMsgPackTest.h"
 #include "TlSerializeDataTest.h"
 
-#include "Fl_UserinputXTest.h"
+//#include "Fl_UserinputXTest.h"
 
 #include "DfFunctional_SlaterTest.h"
 #include "DfFunctional_Becke88Test.h"
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]){
     runner.addTest(TlSerializeDataTest::suite());
     
     // 
-    runner.addTest(Fl_UserinputXTest::suite());
+    //runner.addTest(Fl_UserinputXTest::suite());
     
     // Df class
     runner.addTest(DfFunctional_SlaterTest::suite());

@@ -12,7 +12,6 @@ public:
     virtual void DfConvcheckMain();
 
 protected:
-    virtual void logger(const std::string& str) const;
     void main_ScaLAPACK();
 };
 

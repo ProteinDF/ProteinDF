@@ -53,8 +53,7 @@ private:
 // ========== Public Member Function ==========
 
 public:
-
-    Fl_Tbl_Xcpot();
+    Fl_Tbl_Xcpot(const Fl_Geometry& flGeom);
     ~Fl_Tbl_Xcpot();
 
     int    getcGtoTotalNum(void)     {
@@ -79,6 +78,9 @@ public:
     char*   getNote2(int num)        {
         return BsTbl[num].dumy2;
     };
+
+private:
+    const Fl_Geometry& flGeom_;
 };
 #endif
 /* end of file(Fl_Tbl_Xcpot.h) */

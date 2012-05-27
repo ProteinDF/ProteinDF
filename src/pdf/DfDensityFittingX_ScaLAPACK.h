@@ -29,9 +29,6 @@ public:
     virtual ~DfDensityFittingX_ScaLAPACK();
 
     void exec();
-    
-protected:
-    virtual void logger(const std::string& str) const;
 };
 
 

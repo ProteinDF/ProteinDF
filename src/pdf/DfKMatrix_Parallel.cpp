@@ -81,7 +81,7 @@ void DfKMatrix_Parallel::getK_CD_distributed(const RUN_TYPE runType,
                                              TlDistributeSymmetricMatrix *pK)
 {
     DfCD_Parallel dfCD(this->pPdfParam_);
-    dfCD.getK_distributed(runType, pK);
+    dfCD.getK_D(runType, pK);
 }
 
 
@@ -89,29 +89,42 @@ void DfKMatrix_Parallel::getK_conventional_local(const RUN_TYPE runType,
                                                  TlSymmetricMatrix *pK)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
+    assert(rComm.checkNonBlockingCommunications());
+    rComm.barrier();
+    this->log_.info("build K on replica parallel method");
     
     TlSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {
-        if (rComm.isMaster() == true) {
-            P = this->getDiffDensityMatrix(runType);
+        P = this->getDiffDensityMatrix(runType);
+        if (runType == RUN_RKS) {
+            P *= 0.5;
         }
-    } else {
-        if (rComm.isMaster() == true) {
-            P = this->getPMatrix(runType, this->m_nIteration -1);
+    }  else {
+        P = this->getPMatrix(runType, this->m_nIteration -1);
+        if (runType == RUN_RKS) {
+            P *= 0.5;
         }
     }
-    rComm.broadcast(P);
+    rComm.barrier();
+    assert(rComm.checkNonBlockingCommunications());
+    this->log_.info("broadcast density matrix");
+    //rComm.broadcast(P);
+    this->log_.info(TlUtils::format("density matrix size: %dx%d",
+                                    P.getNumOfRows(), P.getNumOfCols()));
+    this->log_.info(TlUtils::format("num of AOs: %d",
+                                    this->m_nNumOfAOs));
     assert(P.getNumOfRows() == this->m_nNumOfAOs);
     
+    this->log_.info("ERI operation: start");
     DfEriX_Parallel dfEri(this->pPdfParam_);
     dfEri.getK(P, pK);
+    this->log_.info("ERI operation: end");
 
     if (this->isUpdateMethod_ == true) {
         if (this->m_nIteration > 1) {
-            if (rComm.isMaster() == true) {
-                const TlSymmetricMatrix prevK = this->getKMatrix(runType, this->m_nIteration -1);
-                *pK += prevK;
-            }
+            this->log_.info("update K matrix");
+            const TlSymmetricMatrix prevK = this->getKMatrix(runType, this->m_nIteration -1);
+            *pK += prevK;
         }
     }
 }
@@ -120,26 +133,36 @@ void DfKMatrix_Parallel::getK_conventional_local(const RUN_TYPE runType,
 void DfKMatrix_Parallel::getK_conventional_distributed(const RUN_TYPE runType,
                                                        TlDistributeSymmetricMatrix *pK)
 {
+    this->log_.info("build K on distributed parallel method");
     TlCommunicate& rComm = TlCommunicate::getInstance();
+
     TlDistributeSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {
         P = DfObject::getDiffDensityMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration);
+        if (runType == RUN_RKS) {
+            P *= 0.5;
+        }
     } else {
         P = DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration -1);
+        if (runType == RUN_RKS) {
+            P *= 0.5;
+        }
     }
+    assert(rComm.checkNonBlockingCommunications());
     assert(P.getNumOfRows() == this->m_nNumOfAOs);
+    this->log_.info("density matrix loaded.");
 
     DfEriX_Parallel dfEri(this->pPdfParam_);
     dfEri.getK_D(P, pK);
-    
+
     if (this->isUpdateMethod_ == true) {
         if (this->m_nIteration > 1) {
-            if (rComm.isMaster() == true) {
-                const TlDistributeSymmetricMatrix prevK = 
-                    DfObject::getHFxMatrix<TlDistributeSymmetricMatrix>(runType,
-                                                                        this->m_nIteration -1);
-                *pK += prevK;
-            }
+            this->log_.info("update K matrix: start");
+            const TlDistributeSymmetricMatrix prevK = 
+                DfObject::getHFxMatrix<TlDistributeSymmetricMatrix>(runType,
+                                                                    this->m_nIteration -1);
+            *pK += prevK;
+            this->log_.info("update K matrix: end");
         }
     }
 }
@@ -181,7 +204,7 @@ TlSymmetricMatrix DfKMatrix_Parallel::getKMatrix(const RUN_TYPE runType,
 
     TlSymmetricMatrix K;
     if (rComm.isMaster() == true) {
-        K = this->getKMatrix(runType, iteration);
+        K = DfKMatrix::getKMatrix(runType, iteration);
     }
     rComm.broadcast(K);
 

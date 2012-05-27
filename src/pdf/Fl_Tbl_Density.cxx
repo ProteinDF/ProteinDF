@@ -16,7 +16,8 @@ int  Fl_Tbl_Density::flag2=0;        // flag for Destructor;
 // getMemory    : flag2=1;
 // int Fl_Tbl_Density::cGtoTotalNum=0; // s*1,p*3,d*5;
 
-Fl_Tbl_Density::Fl_Tbl_Density()
+Fl_Tbl_Density::Fl_Tbl_Density(const Fl_Geometry& flGeom)
+    : flGeom_(flGeom)
 {
     flag2=0;
     if (flag1 == 0) {
@@ -51,12 +52,12 @@ int Fl_Tbl_Density::makeTable()
 {
     TlLogging& log = TlLogging::getInstance();
 
-    Fl_Geometry      FlGeom(Fl_Geometry::getDefaultFileName());
+    //Fl_Geometry      FlGeom(Fl_Geometry::getDefaultFileName());
     Fl_Gto_Density   FlGtoDen;
     TlPrdctbl        TPobj;    //これは、使うか？;
 
-    const int AtomNum = FlGeom.getNumOfAtoms();
-    const int AtomKindNum = FlGeom.getAtomKindNumber();
+    const int AtomNum = this->flGeom_.getNumOfAtoms();
+    const int AtomKindNum = this->flGeom_.getAtomKindNumber();
 
     static const char* Sorb[20] = {"s()"};
     static const char* Porb[20] = {"p(x)","p(y)","p(z)"};
@@ -74,8 +75,8 @@ int Fl_Tbl_Density::makeTable()
     for (int i = 0; i < AtomNum; ++i) {
         //int flag = 0;
         bool isFound = false;
-        std::string Atm = FlGeom.getAtom(i);
-        std::string Lb2 = FlGeom.getLabel(i);
+        std::string Atm = this->flGeom_.getAtom(i);
+        std::string Lb2 = this->flGeom_.getLabel(i);
 
         if (Atm == "X") {
             continue;

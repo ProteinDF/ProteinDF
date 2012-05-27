@@ -8,7 +8,7 @@
 
 class Fl_Tbl_Fragment {
 public:
-    Fl_Tbl_Fragment();
+    Fl_Tbl_Fragment(const Fl_Geometry& flGeom);
     ~Fl_Tbl_Fragment();
 
     int getQclo(int fragindex, int fragqcloindex);

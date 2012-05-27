@@ -21,11 +21,11 @@ void DfKMatrix::buildK()
     //     this->getK_RI();
     //     break;
     case K_ENGINE_CD:
-        this->log_.info("use CD engine");
+        this->log_.info("use CD method");
         this->getK_CD();
         break;
     default:
-        this->log_.info("use conventional engine");
+        this->log_.info("use conventional method");
         this->getK_conventional();
         break;
     }
@@ -91,8 +91,14 @@ void DfKMatrix::getK_conventional_local(const RUN_TYPE runType,
     TlSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {
         P = this->getDiffDensityMatrix(runType);
+        if (runType == RUN_RKS) {
+            P *= 0.5;
+        }
     } else {
         P = this->getPMatrix(runType, this->m_nIteration -1);
+        if (runType == RUN_RKS) {
+            P *= 0.5;
+        }
     }
 
     DfEriX dfEri(this->pPdfParam_);

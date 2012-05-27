@@ -62,7 +62,7 @@ void DfHpqX_Parallel::getHpqD(TlDistributeSymmetricMatrix* pHpq,
     DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pTaskCtrl->getQueue2(this->orbitalInfo_,
-                                        false,
+                                        true,
                                         this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getHpq_part(this->orbitalInfo_,
@@ -71,7 +71,7 @@ void DfHpqX_Parallel::getHpqD(TlDistributeSymmetricMatrix* pHpq,
                           &tmpHpq, &tmpHpq2);
         
         hasTask = pTaskCtrl->getQueue2(this->orbitalInfo_,
-                                       false,
+                                       true,
                                        this->grainSize_, &taskList);
     } 
 

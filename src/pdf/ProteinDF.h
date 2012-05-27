@@ -31,7 +31,8 @@ protected:
     virtual void loadParam(const std::string& requestFilePath = "");
 
 protected:
-    virtual void setupGlobalCondition();
+    void setupGlobalCondition();
+    virtual void setupGlobalCondition_extra();
     virtual void manageMemory();
     
 protected:

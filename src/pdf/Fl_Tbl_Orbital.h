@@ -11,7 +11,8 @@
 
 class Fl_Tbl_Orbital {
 public:
-    Fl_Tbl_Orbital(const std::string& path = Fl_Tbl_Orbital::getDefaultFileName());
+    Fl_Tbl_Orbital(const Fl_Geometry& flGeom,
+                   const std::string& path = Fl_Tbl_Orbital::getDefaultFileName());
     ~Fl_Tbl_Orbital();
 
 public:
@@ -56,6 +57,8 @@ private:
     void setData();        // SetFunction  to Private Data Member.
 
 private:
+    const Fl_Geometry& flGeom_;
+
     static int  flag1;         // flag for Constructor.
     static int cGtoTotalNum;  // s*1, p*3, d*5.
 

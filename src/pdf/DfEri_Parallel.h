@@ -43,8 +43,6 @@ protected:
     }
 
 protected:
-    virtual void logger(const std::string& str) const;
-    virtual void parallelLogger(const std::string& str);
     virtual void cutoffReport();
 
 protected:

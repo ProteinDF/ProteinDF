@@ -58,8 +58,8 @@ void DfCalcGridX::defineCutOffValues(const TlSymmetricMatrix& P)
     if (maxValueOfP < 1.0) {
         this->m_densityCutOffValueA /= maxValueOfP;
     }
-    this->logger(TlUtils::format(" density cutoff value = %e\n",
-                                 this->m_densityCutOffValueA));
+    this->log_.info(TlUtils::format(" density cutoff value = %e",
+                                    this->m_densityCutOffValueA));
 }
 
 
@@ -74,10 +74,10 @@ void DfCalcGridX::defineCutOffValues(const TlSymmetricMatrix& PA,
     if (maxValueOfPB < 1.0) {
         this->m_densityCutOffValueB /= maxValueOfPB;
     }
-    this->logger(TlUtils::format(" density cutoff value(alpha) = %e\n",
-                                 this->m_densityCutOffValueA));
-    this->logger(TlUtils::format(" density cutoff value(beta ) = %e\n",
-                                 this->m_densityCutOffValueB));
+    this->log_.info(TlUtils::format("density cutoff value(alpha) = %e",
+                                    this->m_densityCutOffValueA));
+    this->log_.info(TlUtils::format("density cutoff value(beta ) = %e",
+                                    this->m_densityCutOffValueB));
 }
 
 

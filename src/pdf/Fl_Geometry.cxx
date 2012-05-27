@@ -13,17 +13,15 @@
 #include "PdfUtils.h"
 #include "TlPseudoYaml.h"
 
+// Fl_Geometry::Fl_Geometry() : isUpdate_(false)
+// {
+//     this->clear();
+// }
+
+
 Fl_Geometry::Fl_Geometry(const TlSerializeData& geomData) : isUpdate_(false)
 {
     this->setup(geomData);
-}
-
-
-Fl_Geometry::Fl_Geometry(const std::string& path) : filePath_(path), isUpdate_(false)
-{
-    if (TlFile::isExist(this->filePath_) == true) {
-        this->load();
-    }
 }
 
 

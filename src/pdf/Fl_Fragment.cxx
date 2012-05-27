@@ -10,7 +10,8 @@
 #include "TlPrdctbl.h"
 
 
-Fl_Fragment::Fl_Fragment() : m_filePath("fl_Input/fl_Fragment")
+Fl_Fragment::Fl_Fragment(const Fl_Geometry& flGeom) 
+    : flGeom_(flGeom), m_filePath("fl_Input/fl_Fragment")
 {
 }
 
@@ -190,11 +191,11 @@ int Fl_Fragment::getNumOfOccupiedBetaOrbitals(const int index) const
 
 void Fl_Fragment::calcDefault(const std::vector<int>& norbcut)
 {
-    const Fl_Geometry FlGeom(Fl_Geometry::getDefaultFileName());
+    //const Fl_Geometry FlGeom((*this->pPdfParam_)["coordinates"]);
     const TlPrdctbl Prdctbl;
 
     std::vector<int> electrons(this->m_fragments.size(), 0);
-    const int natom = FlGeom.getNumOfAtoms();
+    const int natom = this->flGeom_.getNumOfAtoms();
 
     // read AtomFragmentTable
     {
@@ -212,7 +213,7 @@ void Fl_Fragment::calcDefault(const std::vector<int>& norbcut)
 
         // count electrons in each fragment
         for (int i = 0;  i < natom; ++i) {
-            const std::string element = FlGeom.getAtom(i);
+            const std::string element = this->flGeom_.getAtom(i);
             const int fragindex = atomFragment[i];
             electrons[fragindex] += Prdctbl.getAtomicNumber(element);
         }

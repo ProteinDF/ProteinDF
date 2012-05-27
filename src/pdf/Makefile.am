@@ -1,4 +1,5 @@
 #	DfRLMO.h		DfRLMO.cpp
+# 	Fl_UserinputX.h			Fl_UserinputX.cpp		
 
 lib_LTLIBRARIES = libpdf.la libppdf.la
 
@@ -64,7 +65,6 @@ libpdf_la_SOURCES = \
 	DfTransFmatrix.h		DfTransFmatrix.cxx		\
 	DfTransatob.h			DfTransatob.cxx			\
 	DfXcenefitting.h		DfXcenefitting.cxx		\
-	DfXcpotfitting.h		DfXcpotfitting.cxx		\
 	DfXMatrix.h				DfXMatrix.cpp			\
 	DfCleanup.h				DfCleanup.cpp			\
 	FileX.h					FileX.cxx			\
@@ -80,17 +80,12 @@ libpdf_la_SOURCES = \
 	Fl_Gto_Xcpot.h						\
 	Fl_Gto_Xcpot2.h						\
 	Fl_GuessDB.h			Fl_GuessDB.cxx			\
-	Fl_Int_Gds.h			Fl_Int_Gds.cxx			\
-	Fl_Int_Pqa.h			Fl_Int_Pqa.cxx			\
-	Fl_Int_Pqg.h			Fl_Int_Pqg.cxx			\
-	Fl_Integrals.h			Fl_Integrals.cxx		\
 	Fl_Tbl_AtomFragment.h	Fl_Tbl_AtomFragment.cxx		\
 	Fl_Tbl_Density.h		Fl_Tbl_Density.cxx		\
 	Fl_Tbl_Fragment.h		Fl_Tbl_Fragment.cxx		\
 	Fl_Tbl_Orbital.h		Fl_Tbl_Orbital.cxx		\
 	Fl_Tbl_Xcpot.h			Fl_Tbl_Xcpot.cxx		\
 	Fl_Tbl_Xcpot2.h			Fl_Tbl_Xcpot2.cxx		\
-	Fl_UserinputX.h			Fl_UserinputX.cpp		\
 	Fl_GlobalinputX.h		Fl_GlobalinputX.cpp		\
 	Fl_Vct_Table.h			Fl_Vct_Table.cpp		\
 	PdfKeyword.h			PdfKeyword.cpp			\

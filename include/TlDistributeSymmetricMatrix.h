@@ -53,6 +53,16 @@ public:
      */
     virtual double getLocal(index_type row, index_type col) const;
 
+    /// 指定した行の要素から構成されるベクトルを返す
+    ///
+    /// @param[in] nRow 指定する行
+    virtual TlVector getRowVector(index_type row) const;
+
+    /// 指定した列の要素から構成されるベクトルを返す
+    ///
+    /// @param[in] nCol 指定する列
+    virtual TlVector getColumnVector(index_type col) const;
+
     /// 全行列を各プロセスに均等分割された疎行列を返す
     TlSparseSymmetricMatrix getPartialMatrix(double threshold = 1.0E-16) const;
 
