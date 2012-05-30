@@ -627,7 +627,7 @@ TlColVectorMatrix2 DfCD_Parallel::getColVector(const TlRowVectorMatrix2& L)
 
     const div_t turns = std::div(numOfRows, numOfProcs);
     const index_type localRows = turns.quot + 1;
-    std::vector<double> buf(localRows * numOfCols);;
+    std::vector<double> buf(localRows * numOfCols);
     for (int i = 0; i < numOfProcs; ++i) {
         if (i == rank) {
             std::vector<double> v(numOfCols);

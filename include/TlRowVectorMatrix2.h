@@ -15,12 +15,10 @@ public:
 public:
     explicit TlRowVectorMatrix2(index_type row = 1, index_type col = 1,
                                 int allProcs = 1, int rank = 0);
-    TlRowVectorMatrix2(const TlRowVectorMatrix2& rhs);
 
     ~TlRowVectorMatrix2();
         
 public:
-    TlRowVectorMatrix2& operator=(const TlRowVectorMatrix2& rhs);
 
     void resize(index_type row, index_type col);
     index_type getNumOfRows() const {
@@ -43,9 +41,9 @@ public:
         
     TlMatrix getTlMatrix() const;
 
-public:
-    void save(const std::string& basename) const;
-    void load(const std::string& basename);
+private:
+    TlRowVectorMatrix2(const TlRowVectorMatrix2& rhs);
+    TlRowVectorMatrix2& operator=(const TlRowVectorMatrix2& rhs);
 
 private:
     index_type numOfRows_;
@@ -55,6 +53,7 @@ private:
     int allProcs_;
     int rank_;
 
+    index_type numOfLocalRows_;
     std::vector<std::vector<double> > data_;
 };
 

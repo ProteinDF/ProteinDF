@@ -656,13 +656,12 @@ void DfCD::calcCholeskyVectors_onTheFly()
 
     // prepare variables
     TlRowVectorMatrix2 L(N, 1);
-    L.reserve_cols(N);
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
     int progress = 0;
     index_type division =  index_type(N * 0.01);
-    L.resize(N, division);
+    L.reserve_cols(division);
     index_type m = 0;
     while (error > threshold) {
         CD_resizeL_time.start();

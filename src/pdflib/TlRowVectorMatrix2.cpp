@@ -5,33 +5,15 @@
 TlRowVectorMatrix2::TlRowVectorMatrix2(const index_type row,
                                        const index_type col,
                                        int allProcs, int rank)
-    : reserveCols_(0), allProcs_(allProcs), rank_(rank) {
+    : numOfRows_(0), numOfCols_(0), reserveCols_(0),
+      allProcs_(allProcs), rank_(rank),
+      numOfLocalRows_(0) {
     this->resize(row, col);
-}
-
-
-TlRowVectorMatrix2::TlRowVectorMatrix2(const TlRowVectorMatrix2& rhs) 
-    : reserveCols_(rhs.reserveCols_), allProcs_(rhs.allProcs_), rank_(rhs.rank_) {
-    this->resize(rhs.getNumOfRows(), rhs.getNumOfCols());
-    this->data_ = rhs.data_;
 }
 
 
 TlRowVectorMatrix2::~TlRowVectorMatrix2()
 {
-}
-
-
-TlRowVectorMatrix2& TlRowVectorMatrix2::operator=(const TlRowVectorMatrix2& rhs)
-{
-    if (this != &rhs) {
-        this->allProcs_ = rhs.allProcs_;
-        this->rank_ = rhs.rank_;
-        this->resize(rhs.getNumOfRows(), rhs.getNumOfCols());
-        this->data_ = rhs.data_;
-    }
-
-    return *this;
 }
 
 
@@ -42,13 +24,17 @@ void TlRowVectorMatrix2::resize(const index_type newRows,
     this->numOfCols_ = newCols;
 
     const div_t turns = std::div(newRows, this->allProcs_);
-    const index_type localRows = turns.quot + 1;
-    this->data_.resize(localRows);
+    index_type numOfLocalRows = turns.quot;
+    if (this->rank_ < turns.rem) {
+        numOfLocalRows += 1;
+    }
+    this->numOfLocalRows_ = numOfLocalRows;
+    this->data_.resize(numOfLocalRows);
 
     if (this->reserveCols_ < newCols) {
         this->reserveCols_ = newCols;
     }
-    for (index_type i = 0; i < localRows; ++i) {
+    for (index_type i = 0; i < numOfLocalRows; ++i) {
         this->data_[i].reserve(this->reserveCols_);
         this->data_[i].resize(newCols);
     }
@@ -70,12 +56,16 @@ void TlRowVectorMatrix2::set(index_type row, index_type col, double value)
 }
 
 
-TlVector TlRowVectorMatrix2::getRowVector(index_type row) const
+TlVector TlRowVectorMatrix2::getRowVector(index_type globalRow) const
 {
     TlVector answer;
-    const div_t turns = std::div(row, this->allProcs_);
+    const div_t turns = std::div(globalRow, this->allProcs_);
     if (turns.rem == this->rank_) {
         const index_type row = turns.quot;
+        // std::cerr << globalRow << ", " 
+        //           << row << ", " << this->numOfLocalRows_ << ", " 
+        //           << this->data_.size() << std::endl;
+        assert(row < this->numOfLocalRows_);
         answer = TlVector(this->data_[row]);
     }
 
@@ -92,6 +82,8 @@ TlRowVectorMatrix2::getRowVector(index_type row,
     const div_t turns = std::div(row, this->allProcs_);
     if (turns.rem == this->rank_) {
         const index_type row = turns.quot;
+        assert(row < this->numOfLocalRows_);
+
         copySize = std::min(this->getNumOfCols(), maxColSize);
         std::copy(this->data_[row].begin(),
                   this->data_[row].begin() + copySize,
@@ -116,9 +108,10 @@ TlMatrix TlRowVectorMatrix2::getTlMatrix() const
     const index_type numOfCols = this->getNumOfCols();
     TlMatrix answer(numOfRows, numOfCols);
 
-    const div_t turns = std::div(numOfRows, this->allProcs_);
-    const index_type localRows = turns.quot + ((this->rank_ < turns.rem) ? 1 : 0);
-    for (index_type r = 0; r < localRows; ++r) {
+    // const div_t turns = std::div(numOfRows, this->allProcs_);
+    // const index_type localRows = turns.quot + ((this->rank_ < turns.rem) ? 1 : 0);
+    const index_type numOfLocalRows = this->numOfLocalRows_;
+    for (index_type r = 0; r < numOfLocalRows; ++r) {
         const index_type row = r * this->allProcs_ + this->rank_;
         for (index_type col = 0; col < numOfCols; ++col) {
             answer.set(row, col, this->data_[r][col]);
@@ -129,103 +122,5 @@ TlMatrix TlRowVectorMatrix2::getTlMatrix() const
 }
 
 
-// TlColVectorMatrix2 TlRowVectorMatrix2::getColVectorMatrix() const 
-// {
-//     TlCommunicate& rComm = TlCommunicate::getInstance();
-//     const index_type numOfRows = this->getNumOfRows();
-//     const index_type numOfCols = this->getNumOfCols();
-//     const int numOfProcs = this->allProcs_;
-//     const int myRank = this->rank_;
-//     TlColVectorMatrix2 answer(numOfRows, numOfCols, numOfProcs, myRank);
-
-//     const div_t turns = std::div(numOfRows, numOfProcs);
-//     const index_type localRows = turns.quot + 1;
-//     std::vector<double> buf(localRows * numOfCols);;
-//     for (int i = 0; i < numOfProcs; ++i) {
-//         if (i == myRank) {
-//             for (index_type j = 0; j < localRows; ++j) {
-//                 std::copy(this->data_[j].begin(),
-//                           this->data_[j].begin() + numOfCols,
-//                           buf.begin() + numOfCols * j);
-//             }
-//         }
-//         rComm.broadcast(&(buf[0]), localRows * numOfCols, i);
-
-//         // set
-//         for (index_type j = 0; j < localRows; ++j) {
-//             index_type row = numOfProcs * j + i;
-//             if (row < numOfRows) {
-//                 for (index_type col = 0; col < numOfCols; ++col) {
-//                     answer.set(row, col, buf[numOfCols * j + col]);
-//                 }
-//             }
-//         }
-//     }
-    
-//     return answer;
-// }
-
-
-void TlRowVectorMatrix2::save(const std::string& basename) const 
-{
-    const index_type numOfRows = this->getNumOfRows();
-    const index_type numOfCols = this->getNumOfCols();
-
-    std::ofstream ofs;
-    const std::string path = TlUtils::format("%s.part%d.mat",
-                                             basename.c_str(),
-                                             this->rank_);
-    ofs.open(path.c_str(), std::ofstream::out | std::ofstream::binary);
-
-    // header
-    ofs.write(reinterpret_cast<const char*>(&numOfRows), sizeof(index_type));
-    ofs.write(reinterpret_cast<const char*>(&numOfCols), sizeof(index_type));
-    ofs.write(reinterpret_cast<const char*>(&(this->allProcs_)), sizeof(int));
-    ofs.write(reinterpret_cast<const char*>(&(this->rank_)), sizeof(int));
-
-    // data
-    const index_type numOfLocalRows = this->data_.size();
-    for (int i = 0; i < numOfLocalRows; ++i) {
-        ofs.write(reinterpret_cast<const char*>(&(this->data_[i][0])), sizeof(double) * numOfCols);
-    }
-    
-    ofs.close();
-}
-
-
-void TlRowVectorMatrix2::load(const std::string& basename)
-{
-    std::ifstream ifs;
-    const std::string path = TlUtils::format("%s.paart%d.mat",
-                                             basename.c_str(),
-                                             this->rank_);
-    ifs.open(path.c_str());
-
-    // header
-    index_type numOfRows = 0;
-    index_type numOfCols = 0;
-    int allProcs = 0;
-    int rank = 0;
-    ifs.read((char*)&numOfRows, sizeof(index_type));
-    ifs.read((char*)&numOfCols, sizeof(index_type));
-    ifs.read((char*)&allProcs, sizeof(int));
-    ifs.read((char*)&rank, sizeof(int));
-    this->resize(numOfRows, numOfCols);
-    
-    assert((allProcs == this->allProcs_) && (rank == this->rank_));
-
-    // data
-    const div_t turns = std::div(this->getNumOfRows(), this->allProcs_);
-    index_type numOfLocalRows = turns.quot;
-    if (this->rank_ < turns.rem) {
-        ++numOfLocalRows;
-    }
-
-    for (int i = 0; i < numOfLocalRows; ++i) {
-        ifs.read((char*)&(this->data_[i][0]), sizeof(double) * this->getNumOfCols());
-    }
-
-    ifs.close();
-}
 
 
