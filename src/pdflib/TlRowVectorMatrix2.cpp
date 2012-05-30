@@ -31,18 +31,21 @@ void TlRowVectorMatrix2::resize(const index_type newRows,
     this->numOfLocalRows_ = numOfLocalRows;
     this->data_.resize(numOfLocalRows);
 
-    if (this->reserveCols_ < newCols) {
-        this->reserveCols_ = newCols;
-    }
+    this->reserve_cols(newCols);
     for (index_type i = 0; i < numOfLocalRows; ++i) {
-        this->data_[i].reserve(this->reserveCols_);
         this->data_[i].resize(newCols);
     }
 }
 
 
 void TlRowVectorMatrix2::reserve_cols(const index_type newReserves) {
-    this->reserveCols_ = std::max(this->getNumOfCols(), newReserves);
+    const index_type reserveCols = std::max(this->getNumOfCols(), newReserves);
+
+    this->reserveCols_ = reserveCols;
+    const index_type numOfLocalRows = this->numOfLocalRows_;
+    for (index_type i = 0; i < numOfLocalRows; ++i) {
+        this->data_[i].reserve(reserveCols);
+    }
 }
 
 
