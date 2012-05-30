@@ -14,6 +14,12 @@ TlRowVectorMatrix2::TlRowVectorMatrix2(const index_type row,
 
 TlRowVectorMatrix2::~TlRowVectorMatrix2()
 {
+    const index_type numOfLocalRows = this->numOfLocalRows_;
+    for (index_type i = 0; i < numOfLocalRows; ++i) {
+        delete[] this->data_[i];
+        this->data_[i] = NULL;
+    }
+    this->data_.clear();
 }
 
 
@@ -21,30 +27,52 @@ void TlRowVectorMatrix2::resize(const index_type newRows,
                                 const index_type newCols)
 {
     this->numOfRows_ = newRows;
-    this->numOfCols_ = newCols;
-
+    index_type prevNumOfLocalRows = this->numOfLocalRows_;
     const div_t turns = std::div(newRows, this->allProcs_);
-    index_type numOfLocalRows = turns.quot;
+    index_type newNumOfLocalRows = turns.quot;
     if (this->rank_ < turns.rem) {
-        numOfLocalRows += 1;
+        newNumOfLocalRows += 1;
     }
-    this->numOfLocalRows_ = numOfLocalRows;
-    this->data_.resize(numOfLocalRows);
-
+    this->numOfLocalRows_ = newNumOfLocalRows;
+    if (newNumOfLocalRows > prevNumOfLocalRows) {
+        this->data_.resize(newNumOfLocalRows, NULL);
+    } else if (newNumOfLocalRows < prevNumOfLocalRows) {
+        for (index_type i = newNumOfLocalRows; i < prevNumOfLocalRows; ++i) {
+            delete this->data_[i];
+            this->data_[i] = NULL;
+        }
+        this->data_.resize(newNumOfLocalRows);
+    }
+    
+    this->numOfCols_ = newCols;
     this->reserve_cols(newCols);
-    for (index_type i = 0; i < numOfLocalRows; ++i) {
-        this->data_[i].resize(newCols);
-    }
 }
 
 
 void TlRowVectorMatrix2::reserve_cols(const index_type newReserves) {
-    const index_type reserveCols = std::max(this->getNumOfCols(), newReserves);
+    const index_type prevReserveCols = this->reserveCols_;
+    const index_type newReserveCols = std::max(this->getNumOfCols(), newReserves);
+    const index_type numOfCols = this->getNumOfCols();
 
-    this->reserveCols_ = reserveCols;
-    const index_type numOfLocalRows = this->numOfLocalRows_;
-    for (index_type i = 0; i < numOfLocalRows; ++i) {
-        this->data_[i].reserve(reserveCols);
+    if (prevReserveCols < newReserveCols) {
+        this->reserveCols_ = newReserveCols;
+        const index_type numOfLocalRows = this->numOfLocalRows_;
+        for (index_type i = 0; i < numOfLocalRows; ++i) {
+            double* pNew = new double[newReserveCols];
+            for (index_type i = 0; i < newReserveCols; ++i) {
+                pNew[i] = 0.0;
+            }
+            
+            if (this->data_[i] != NULL) {
+                for (index_type j = 0; j < numOfCols; ++j) {
+                    pNew[j] = this->data_[i][j];
+                }
+                delete[] this->data_[i];
+                this->data_[i] = NULL;
+            }
+
+            this->data_[i] = pNew;
+        }
     }
 }
 
@@ -54,6 +82,8 @@ void TlRowVectorMatrix2::set(index_type row, index_type col, double value)
     const div_t turns = std::div(row, this->allProcs_);
     if (turns.rem == this->rank_) {
         const index_type row = turns.quot;
+        assert(row < this->numOfLocalRows_);
+        assert(col < this->getNumOfCols());
         this->data_[row][col] = value;
     }
 }
@@ -69,7 +99,8 @@ TlVector TlRowVectorMatrix2::getRowVector(index_type globalRow) const
         //           << row << ", " << this->numOfLocalRows_ << ", " 
         //           << this->data_.size() << std::endl;
         assert(row < this->numOfLocalRows_);
-        answer = TlVector(this->data_[row]);
+        assert(this->getNumOfCols() <= this->reserveCols_);
+        answer = TlVector(this->data_[row], this->getNumOfCols());
     }
 
     return answer;
@@ -88,8 +119,8 @@ TlRowVectorMatrix2::getRowVector(index_type row,
         assert(row < this->numOfLocalRows_);
 
         copySize = std::min(this->getNumOfCols(), maxColSize);
-        std::copy(this->data_[row].begin(),
-                  this->data_[row].begin() + copySize,
+        std::copy(this->data_[row],
+                  this->data_[row] + copySize,
                   pBuf);
     }
 

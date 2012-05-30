@@ -671,9 +671,9 @@ void DfCD::calcCholeskyVectors_onTheFly()
             ++progress;
 
             // メモリの確保
-            L.resize(N, division * progress);
+            L.reserve_cols(division * progress);
         }
-        // L.resize(N, m+1);
+        L.resize(N, m+1);
         CD_resizeL_time.stop();
 
         // pivot

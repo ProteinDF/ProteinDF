@@ -54,7 +54,7 @@ private:
     int rank_;
 
     index_type numOfLocalRows_;
-    std::vector<std::vector<double> > data_;
+    std::vector<double* > data_;
 };
 
 #endif // TLROWVECTORMATRIX2_H
