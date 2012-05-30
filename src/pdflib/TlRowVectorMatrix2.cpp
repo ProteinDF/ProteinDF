@@ -1,6 +1,7 @@
 #include <iostream>
 #include "TlRowVectorMatrix2.h"
 #include "TlCommunicate.h"
+#include "TlMemManager.h"
 
 TlRowVectorMatrix2::TlRowVectorMatrix2(const index_type row,
                                        const index_type col,
@@ -8,6 +9,7 @@ TlRowVectorMatrix2::TlRowVectorMatrix2(const index_type row,
     : numOfRows_(0), numOfCols_(0), reserveCols_(0),
       allProcs_(allProcs), rank_(rank),
       numOfLocalRows_(0) {
+    this->isUsingMemManager_ = false;
     this->resize(row, col);
 }
 
@@ -15,9 +17,19 @@ TlRowVectorMatrix2::TlRowVectorMatrix2(const index_type row,
 TlRowVectorMatrix2::~TlRowVectorMatrix2()
 {
     const index_type numOfLocalRows = this->numOfLocalRows_;
-    for (index_type i = 0; i < numOfLocalRows; ++i) {
-        delete[] this->data_[i];
-        this->data_[i] = NULL;
+
+    if (this->isUsingMemManager_ == true) {
+        TlMemManager& rMemManager = TlMemManager::getInstance();
+        const index_type reserveCols = this->reserveCols_;
+        for (index_type i = 0; i < numOfLocalRows; ++i) {
+            rMemManager.deallocate((char*)this->data_[i], sizeof(double)*reserveCols);
+            this->data_[i] = NULL;
+        }
+    } else {
+        for (index_type i = 0; i < numOfLocalRows; ++i) {
+            delete[] this->data_[i];
+            this->data_[i] = NULL;
+        }
     }
     this->data_.clear();
 }
@@ -37,9 +49,18 @@ void TlRowVectorMatrix2::resize(const index_type newRows,
     if (newNumOfLocalRows > prevNumOfLocalRows) {
         this->data_.resize(newNumOfLocalRows, NULL);
     } else if (newNumOfLocalRows < prevNumOfLocalRows) {
-        for (index_type i = newNumOfLocalRows; i < prevNumOfLocalRows; ++i) {
-            delete this->data_[i];
-            this->data_[i] = NULL;
+        if (this->isUsingMemManager_ == true) {
+            TlMemManager& rMemManager = TlMemManager::getInstance();
+            const index_type reserveCols = this->reserveCols_;
+            for (index_type i = newNumOfLocalRows; i < prevNumOfLocalRows; ++i) {
+                rMemManager.deallocate((char*)this->data_[i], sizeof(double)*reserveCols);
+                this->data_[i] = NULL;
+            }
+        } else {
+            for (index_type i = newNumOfLocalRows; i < prevNumOfLocalRows; ++i) {
+                delete this->data_[i];
+                this->data_[i] = NULL;
+            }
         }
         this->data_.resize(newNumOfLocalRows);
     }
@@ -50,6 +71,7 @@ void TlRowVectorMatrix2::resize(const index_type newRows,
 
 
 void TlRowVectorMatrix2::reserve_cols(const index_type newReserves) {
+    TlMemManager& rMemManager = TlMemManager::getInstance();
     const index_type prevReserveCols = this->reserveCols_;
     const index_type newReserveCols = std::max(this->getNumOfCols(), newReserves);
     const index_type numOfCols = this->getNumOfCols();
@@ -58,16 +80,26 @@ void TlRowVectorMatrix2::reserve_cols(const index_type newReserves) {
         this->reserveCols_ = newReserveCols;
         const index_type numOfLocalRows = this->numOfLocalRows_;
         for (index_type i = 0; i < numOfLocalRows; ++i) {
-            double* pNew = new double[newReserveCols];
-            for (index_type i = 0; i < newReserveCols; ++i) {
-                pNew[i] = 0.0;
+            double* pNew = NULL;
+            if (this->isUsingMemManager_ == true) {
+                pNew = (double*)rMemManager.allocate(sizeof(double)*newReserveCols);
+            } else {
+                pNew = new double[newReserveCols];
+            }
+
+            for (index_type j = 0; j < newReserveCols; ++j) {
+                pNew[j] = 0.0;
             }
             
             if (this->data_[i] != NULL) {
                 for (index_type j = 0; j < numOfCols; ++j) {
                     pNew[j] = this->data_[i][j];
                 }
-                delete[] this->data_[i];
+                if (this->isUsingMemManager_ == true) {
+                    rMemManager.deallocate((char*)this->data_[i], sizeof(double)*prevReserveCols);
+                } else {
+                    delete[] this->data_[i];
+                }
                 this->data_[i] = NULL;
             }
 

@@ -55,6 +55,8 @@ private:
 
     index_type numOfLocalRows_;
     std::vector<double* > data_;
+
+    bool isUsingMemManager_;
 };
 
 #endif // TLROWVECTORMATRIX2_H
