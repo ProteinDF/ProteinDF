@@ -4,6 +4,8 @@
 #include "TlCommunicate.h"
 #include "TlTime.h"
 
+#define TRANS_MEM_SIZE (1 * 1024 * 1024 * 1024) // 1GB
+
 DfCD_Parallel::DfCD_Parallel(TlSerializeData* pPdfParam) 
     : DfCD(pPdfParam) {
 }
@@ -388,9 +390,11 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     }
 
     // prepare variables
+    bool isUsingMemManager = true;
     TlRowVectorMatrix2 L(N, 1,
                          rComm.getNumOfProcs(),
-                         rComm.getRank()); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
+                         rComm.getRank(),
+                         isUsingMemManager); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
@@ -401,8 +405,8 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         // progress 
         CD_resizeL_time.start();
         if (m >= progress * division) {
-            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e, ERI cache=%ld MB"
-                                            , m, N, error,
+            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e, ERI cache=%ld MB",
+                                            m, N, error,
                                             this->eriCache_.size() * (sizeof(IndexPair4) + sizeof(double)) / (1024*1024) ));
             ++progress;
 
@@ -596,65 +600,52 @@ DfCD_Parallel::getSuperMatrixElements(const index_type G_row,
 void DfCD_Parallel::saveL(const TlRowVectorMatrix2& L)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    TlColVectorMatrix2 colVecL = this->getColVector(L);
-    colVecL.save(DfObject::getLMatrixPath());
-    
-    // for debug
-    // TlMatrix fullL = this->mergeL(colVecL);
-    // if (rComm.isMaster() == true) {
-    //     DfCD::saveL(fullL);
-    // }
-
-    // for debug
-    // Notice: below code is enable in case of small molecules.
-    // NOT use large molecule.
-    // const TlMatrix tmpL = this->mergeL(L);
-    // if (rComm.isMaster() == true) {
-    //         DfCD::saveL(tmpL);
-    //  }
-}
-
-
-TlColVectorMatrix2 DfCD_Parallel::getColVector(const TlRowVectorMatrix2& L)
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProcs();
     const int rank = rComm.getRank();
 
     const index_type numOfRows = L.getNumOfRows();
     const index_type numOfCols = L.getNumOfCols();
-    TlColVectorMatrix2 answer(numOfRows, numOfCols, numOfProcs, rank);
+    bool isUsingMemManager = true;
+    TlColVectorMatrix2 colVecL(numOfRows, numOfCols, numOfProcs, rank,
+                               isUsingMemManager);
 
     const div_t turns = std::div(numOfRows, numOfProcs);
     const index_type localRows = turns.quot + 1;
-    std::vector<double> buf(localRows * numOfCols);;
-    for (int i = 0; i < numOfProcs; ++i) {
-        if (i == rank) {
-            std::vector<double> v(numOfCols);
-            for (index_type r = 0; r < localRows; ++r) {
-                const index_type row = r * numOfProcs + rank;
-                if (row < numOfRows) {
-                    L.getRowVector(row, &(v[0]), numOfCols);
-                    std::copy(v.begin(),
-                              v.begin() + numOfCols,
-                              buf.begin() + numOfCols * r);
+
+    const std::size_t colMemSize = numOfCols * sizeof(double);
+    const std::size_t transMemSize = TRANS_MEM_SIZE;
+    const int transRowsPerCycle = std::max<int>(transMemSize / colMemSize, 1);
+    const int transCycle = localRows / transRowsPerCycle + 1;
+    std::vector<double> buf(numOfCols * transRowsPerCycle);
+    for (int proc = 0; proc < numOfProcs; ++proc) {
+        for (int cycle = 0; cycle < transCycle; ++cycle) {
+            if (proc == rank) {
+                std::vector<double> v(numOfCols);
+                for (index_type r = 0; r < transRowsPerCycle; ++r) {
+                    const index_type row = (cycle * transRowsPerCycle + r) * numOfProcs + rank;
+                    if (row < numOfRows) {
+                        L.getRowVector(row, &(v[0]), numOfCols);
+                        std::copy(v.begin(),
+                                  v.begin() + numOfCols,
+                                  buf.begin() + numOfCols * r);
+                    }
                 }
             }
-        }
-        rComm.broadcast(&(buf[0]), localRows * numOfCols, i);
-
-        // set
-        for (index_type j = 0; j < localRows; ++j) {
-            index_type row = numOfProcs * j + i;
-            if (row < numOfRows) {
-                for (index_type col = 0; col < numOfCols; ++col) {
-                    answer.set(row, col, buf[numOfCols * j + col]);
+            rComm.broadcast(&(buf[0]), transRowsPerCycle * numOfCols, proc);
+            
+            // set
+            for (index_type r = 0; r < transRowsPerCycle; ++r) {
+                index_type row = (cycle * transRowsPerCycle + r) * numOfProcs + proc;
+                if (row < numOfRows) {
+                    for (index_type col = 0; col < numOfCols; ++col) {
+                        colVecL.set(row, col, buf[numOfCols * r + col]);
+                    }
                 }
             }
         }
     }
     
-    return answer;
+    colVecL.save(DfObject::getLMatrixPath());
 }
 
 
@@ -804,7 +795,9 @@ void DfCD_Parallel::getJ_D(TlDistributeSymmetricMatrix* pJ)
 
     // cholesky vector
     const I2PQ_Type I2PQ = this->getI2PQ();
-    TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
+    bool isUsingMemManager = true;
+    TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank(), 
+                         isUsingMemManager);
     L.load(DfObject::getLMatrixPath());
     assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
     assert(L.getRank() == rComm.getRank());
@@ -843,7 +836,9 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
 
     // cholesky vector
     const I2PQ_Type I2PQ = this->getI2PQ();
-    TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
+    bool isUsingMemManager = true;
+    TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
+                         isUsingMemManager);
     L.load(DfObject::getLMatrixPath());
 
     const index_type cvSize = L.getNumOfRows();

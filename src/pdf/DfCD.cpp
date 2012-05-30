@@ -36,7 +36,6 @@ DfCD::DfCD(TlSerializeData* pPdfParam)
     if ((*pPdfParam)["cutoff_epsilon3"].getStr().empty() != true) {
         this->cutoffEpsilon3_ = (*pPdfParam)["cutoff_epsilon3"].getDouble();
     }    
-
 }
 
 DfCD::~DfCD()
@@ -655,14 +654,14 @@ void DfCD::calcCholeskyVectors_onTheFly()
     }
 
     // prepare variables
-    TlRowVectorMatrix2 L(N, 1);
-    L.reserve_cols(N);
+    bool isUsingMemManager = true;
+    TlRowVectorMatrix2 L(N, 1, 1, 0, isUsingMemManager);
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
     int progress = 0;
     index_type division =  index_type(N * 0.01);
-    L.resize(N, division);
+    L.reserve_cols(division);
     index_type m = 0;
     while (error > threshold) {
         CD_resizeL_time.start();
@@ -672,9 +671,9 @@ void DfCD::calcCholeskyVectors_onTheFly()
             ++progress;
 
             // メモリの確保
-            L.resize(N, division * progress);
+            L.reserve_cols(division * progress);
         }
-        // L.resize(N, m+1);
+        L.resize(N, m+1);
         CD_resizeL_time.stop();
 
         // pivot
