@@ -36,7 +36,6 @@ DfCD::DfCD(TlSerializeData* pPdfParam)
     if ((*pPdfParam)["cutoff_epsilon3"].getStr().empty() != true) {
         this->cutoffEpsilon3_ = (*pPdfParam)["cutoff_epsilon3"].getDouble();
     }    
-
 }
 
 DfCD::~DfCD()
@@ -655,7 +654,8 @@ void DfCD::calcCholeskyVectors_onTheFly()
     }
 
     // prepare variables
-    TlRowVectorMatrix2 L(N, 1);
+    bool isUsingMemManager = true;
+    TlRowVectorMatrix2 L(N, 1, 1, 0, isUsingMemManager);
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 

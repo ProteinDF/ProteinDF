@@ -15,11 +15,9 @@ public:
 public:
     explicit TlColVectorMatrix2(index_type row = 1, index_type col = 1,
                                 int allProcs = 1, int rank = 0);
-    TlColVectorMatrix2(const TlColVectorMatrix2& rhs);
     ~TlColVectorMatrix2();
         
 public:
-    TlColVectorMatrix2& operator=(const TlColVectorMatrix2& rhs);
 
     void resize(index_type row, index_type col);
     index_type getNumOfRows() const {
@@ -51,6 +49,10 @@ public:
 
     void save(const std::string& basename) const;
     void load(const std::string& basename);
+
+private:
+    TlColVectorMatrix2(const TlColVectorMatrix2& rhs);
+    TlColVectorMatrix2& operator=(const TlColVectorMatrix2& rhs);
 
 private:
     index_type numOfRows_;

@@ -388,9 +388,11 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     }
 
     // prepare variables
+    bool isUsingMemManager = true;
     TlRowVectorMatrix2 L(N, 1,
                          rComm.getNumOfProcs(),
-                         rComm.getRank()); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
+                         rComm.getRank(),
+                         isUsingMemManager); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
@@ -401,8 +403,8 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         // progress 
         CD_resizeL_time.start();
         if (m >= progress * division) {
-            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e, ERI cache=%ld MB"
-                                            , m, N, error,
+            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e, ERI cache=%ld MB",
+                                            m, N, error,
                                             this->eriCache_.size() * (sizeof(IndexPair4) + sizeof(double)) / (1024*1024) ));
             ++progress;
 
@@ -596,34 +598,12 @@ DfCD_Parallel::getSuperMatrixElements(const index_type G_row,
 void DfCD_Parallel::saveL(const TlRowVectorMatrix2& L)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    TlColVectorMatrix2 colVecL = this->getColVector(L);
-    colVecL.save(DfObject::getLMatrixPath());
-    
-    // for debug
-    // TlMatrix fullL = this->mergeL(colVecL);
-    // if (rComm.isMaster() == true) {
-    //     DfCD::saveL(fullL);
-    // }
-
-    // for debug
-    // Notice: below code is enable in case of small molecules.
-    // NOT use large molecule.
-    // const TlMatrix tmpL = this->mergeL(L);
-    // if (rComm.isMaster() == true) {
-    //         DfCD::saveL(tmpL);
-    //  }
-}
-
-
-TlColVectorMatrix2 DfCD_Parallel::getColVector(const TlRowVectorMatrix2& L)
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProcs();
     const int rank = rComm.getRank();
 
     const index_type numOfRows = L.getNumOfRows();
     const index_type numOfCols = L.getNumOfCols();
-    TlColVectorMatrix2 answer(numOfRows, numOfCols, numOfProcs, rank);
+    TlColVectorMatrix2 colVecL(numOfRows, numOfCols, numOfProcs, rank);
 
     const div_t turns = std::div(numOfRows, numOfProcs);
     const index_type localRows = turns.quot + 1;
@@ -648,13 +628,13 @@ TlColVectorMatrix2 DfCD_Parallel::getColVector(const TlRowVectorMatrix2& L)
             index_type row = numOfProcs * j + i;
             if (row < numOfRows) {
                 for (index_type col = 0; col < numOfCols; ++col) {
-                    answer.set(row, col, buf[numOfCols * j + col]);
+                    colVecL.set(row, col, buf[numOfCols * j + col]);
                 }
             }
         }
     }
     
-    return answer;
+    colVecL.save(DfObject::getLMatrixPath());
 }
 
 

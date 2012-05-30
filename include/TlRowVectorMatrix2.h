@@ -14,7 +14,8 @@ public:
 
 public:
     explicit TlRowVectorMatrix2(index_type row = 1, index_type col = 1,
-                                int allProcs = 1, int rank = 0);
+                                int allProcs = 1, int rank = 0,
+                                bool isUsingMemManager = false);
 
     ~TlRowVectorMatrix2();
         

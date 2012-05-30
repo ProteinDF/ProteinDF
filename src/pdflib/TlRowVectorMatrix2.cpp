@@ -5,11 +5,11 @@
 
 TlRowVectorMatrix2::TlRowVectorMatrix2(const index_type row,
                                        const index_type col,
-                                       int allProcs, int rank)
+                                       int allProcs, int rank,
+                                       bool isUsingMemManager)
     : numOfRows_(0), numOfCols_(0), reserveCols_(0),
       allProcs_(allProcs), rank_(rank),
-      numOfLocalRows_(0) {
-    this->isUsingMemManager_ = false;
+      numOfLocalRows_(0), isUsingMemManager_(isUsingMemManager) {
     this->resize(row, col);
 }
 

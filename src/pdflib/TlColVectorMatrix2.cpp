@@ -10,27 +10,8 @@ TlColVectorMatrix2::TlColVectorMatrix2(const index_type row,
 }
 
 
-TlColVectorMatrix2::TlColVectorMatrix2(const TlColVectorMatrix2& rhs) 
-    : reserveRows_(rhs.reserveRows_), allProcs_(rhs.allProcs_), rank_(rhs.rank_) {
-    this->resize(rhs.getNumOfRows(), rhs.getNumOfCols());
-    this->data_ = rhs.data_;
-}
-
 TlColVectorMatrix2::~TlColVectorMatrix2()
 {
-}
-
-
-TlColVectorMatrix2& TlColVectorMatrix2::operator=(const TlColVectorMatrix2& rhs)
-{
-    if (this != &rhs) {
-        this->allProcs_ = rhs.allProcs_;
-        this->rank_ = rhs.rank_;
-        this->resize(rhs.getNumOfRows(), rhs.getNumOfCols());
-        this->data_ = rhs.data_;
-    }
-
-    return *this;
 }
 
 
