@@ -4,6 +4,8 @@
 #include "TlCommunicate.h"
 #include "TlTime.h"
 
+#define TRANS_MEM_SIZE (1 * 1024 * 1024 * 1024) // 1GB
+
 DfCD_Parallel::DfCD_Parallel(TlSerializeData* pPdfParam) 
     : DfCD(pPdfParam) {
 }
@@ -609,28 +611,35 @@ void DfCD_Parallel::saveL(const TlRowVectorMatrix2& L)
 
     const div_t turns = std::div(numOfRows, numOfProcs);
     const index_type localRows = turns.quot + 1;
-    std::vector<double> buf(localRows * numOfCols);
-    for (int i = 0; i < numOfProcs; ++i) {
-        if (i == rank) {
-            std::vector<double> v(numOfCols);
-            for (index_type r = 0; r < localRows; ++r) {
-                const index_type row = r * numOfProcs + rank;
-                if (row < numOfRows) {
-                    L.getRowVector(row, &(v[0]), numOfCols);
-                    std::copy(v.begin(),
-                              v.begin() + numOfCols,
-                              buf.begin() + numOfCols * r);
+
+    const std::size_t colMemSize = numOfCols * sizeof(double);
+    const std::size_t transMemSize = TRANS_MEM_SIZE;
+    const int transRowsPerCycle = std::max<int>(transMemSize / colMemSize, 1);
+    const int transCycle = localRows / transRowsPerCycle + 1;
+    std::vector<double> buf(numOfCols * transRowsPerCycle);
+    for (int proc = 0; proc < numOfProcs; ++proc) {
+        for (int cycle = 0; cycle < transCycle; ++cycle) {
+            if (proc == rank) {
+                std::vector<double> v(numOfCols);
+                for (index_type r = 0; r < transRowsPerCycle; ++r) {
+                    const index_type row = (cycle * transRowsPerCycle + r) * numOfProcs + rank;
+                    if (row < numOfRows) {
+                        L.getRowVector(row, &(v[0]), numOfCols);
+                        std::copy(v.begin(),
+                                  v.begin() + numOfCols,
+                                  buf.begin() + numOfCols * r);
+                    }
                 }
             }
-        }
-        rComm.broadcast(&(buf[0]), localRows * numOfCols, i);
-
-        // set
-        for (index_type j = 0; j < localRows; ++j) {
-            index_type row = numOfProcs * j + i;
-            if (row < numOfRows) {
-                for (index_type col = 0; col < numOfCols; ++col) {
-                    colVecL.set(row, col, buf[numOfCols * j + col]);
+            rComm.broadcast(&(buf[0]), transRowsPerCycle * numOfCols, proc);
+            
+            // set
+            for (index_type r = 0; r < transRowsPerCycle; ++r) {
+                index_type row = (cycle * transRowsPerCycle + r) * numOfProcs + proc;
+                if (row < numOfRows) {
+                    for (index_type col = 0; col < numOfCols; ++col) {
+                        colVecL.set(row, col, buf[numOfCols * r + col]);
+                    }
                 }
             }
         }
