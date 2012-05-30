@@ -14,7 +14,8 @@ public:
 
 public:
     explicit TlColVectorMatrix2(index_type row = 1, index_type col = 1,
-                                int allProcs = 1, int rank = 0);
+                                int allProcs = 1, int rank = 0,
+                                bool isUsingMemManager = false);
     ~TlColVectorMatrix2();
         
 public:
@@ -62,7 +63,10 @@ private:
     int allProcs_;
     int rank_;
 
-    std::vector<std::vector<double> > data_;
+    index_type numOfLocalCols_;
+    std::vector<double* > data_;
+
+    bool isUsingMemManager_;
 };
 
 #endif // TLCOLVECTORMATRIX2_H

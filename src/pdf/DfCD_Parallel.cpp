@@ -603,7 +603,9 @@ void DfCD_Parallel::saveL(const TlRowVectorMatrix2& L)
 
     const index_type numOfRows = L.getNumOfRows();
     const index_type numOfCols = L.getNumOfCols();
-    TlColVectorMatrix2 colVecL(numOfRows, numOfCols, numOfProcs, rank);
+    bool isUsingMemManager = true;
+    TlColVectorMatrix2 colVecL(numOfRows, numOfCols, numOfProcs, rank,
+                               isUsingMemManager);
 
     const div_t turns = std::div(numOfRows, numOfProcs);
     const index_type localRows = turns.quot + 1;
@@ -784,7 +786,9 @@ void DfCD_Parallel::getJ_D(TlDistributeSymmetricMatrix* pJ)
 
     // cholesky vector
     const I2PQ_Type I2PQ = this->getI2PQ();
-    TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
+    bool isUsingMemManager = true;
+    TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank(), 
+                         isUsingMemManager);
     L.load(DfObject::getLMatrixPath());
     assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
     assert(L.getRank() == rComm.getRank());
@@ -823,7 +827,9 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
 
     // cholesky vector
     const I2PQ_Type I2PQ = this->getI2PQ();
-    TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
+    bool isUsingMemManager = true;
+    TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
+                         isUsingMemManager);
     L.load(DfObject::getLMatrixPath());
 
     const index_type cvSize = L.getNumOfRows();

@@ -1,42 +1,111 @@
 #include <iostream>
 #include "TlColVectorMatrix2.h"
-
+#include "TlMemManager.h"
 
 TlColVectorMatrix2::TlColVectorMatrix2(const index_type row,
                                        const index_type col,
-                                       int allProcs, int rank)
-    : reserveRows_(0), allProcs_(allProcs), rank_(rank) {
+                                       int allProcs, int rank,
+                                       bool isUsingMemManager)
+    : numOfRows_(0), numOfCols_(0), reserveRows_(0),
+      allProcs_(allProcs), rank_(rank),
+      numOfLocalCols_(0),
+      isUsingMemManager_(isUsingMemManager) {
     this->resize(row, col);
 }
 
 
 TlColVectorMatrix2::~TlColVectorMatrix2()
 {
+    const index_type numOfLocalCols = this->numOfLocalCols_;
+
+    if (this->isUsingMemManager_ == true) {
+        TlMemManager& rMemManager = TlMemManager::getInstance();
+        const index_type reserveRows = this->reserveRows_;
+        for (index_type i = 0; i < numOfLocalCols; ++i) {
+            rMemManager.deallocate((char*)this->data_[i], sizeof(double)*reserveRows);
+            this->data_[i] = NULL;
+        }
+    } else {
+        for (index_type i = 0; i < numOfLocalCols; ++i) {
+            delete[] this->data_[i];
+            this->data_[i] = NULL;
+        }
+    }
+    this->data_.clear();
 }
 
 
 void TlColVectorMatrix2::resize(const index_type newRows,
                                 const index_type newCols)
 {
-    this->numOfRows_ = newRows;
     this->numOfCols_ = newCols;
-
+    index_type prevNumOfLocalCols = this->numOfLocalCols_;
     const div_t turns = std::div(newCols, this->allProcs_);
-    const index_type localCols = turns.quot + 1;
-    this->data_.resize(localCols);
-
-    if (this->reserveRows_ < newRows) {
-        this->reserveRows_ = newRows;
+    index_type newNumOfLocalCols = turns.quot;
+    if (this->rank_ < turns.rem) {
+        newNumOfLocalCols += 1;
     }
-    for (index_type i = 0; i < localCols; ++i) {
-        this->data_[i].reserve(this->reserveRows_);
-        this->data_[i].resize(newRows);
+    this->numOfLocalCols_ = newNumOfLocalCols;
+    if (newNumOfLocalCols > prevNumOfLocalCols) {
+        this->data_.resize(newNumOfLocalCols, NULL);
+    } else if (newNumOfLocalCols < prevNumOfLocalCols) {
+        if (this->isUsingMemManager_ == true) {
+            TlMemManager& rMemManager = TlMemManager::getInstance();
+            const index_type reserveRows = this->reserveRows_;
+            for (index_type i = newNumOfLocalCols; i < prevNumOfLocalCols; ++i) {
+                rMemManager.deallocate((char*)this->data_[i], sizeof(double)*reserveRows);
+                this->data_[i] = NULL;
+            }
+        } else {
+            for (index_type i = newNumOfLocalCols; i < prevNumOfLocalCols; ++i) {
+                delete this->data_[i];
+                this->data_[i] = NULL;
+            }
+        }
+        this->data_.resize(newNumOfLocalCols);
     }
+    
+    this->numOfRows_ = newRows;
+    this->reserve_rows(newRows);
 }
 
 
 void TlColVectorMatrix2::reserve_rows(const index_type newReserves) {
-    this->reserveRows_ = std::max(this->getNumOfRows(), newReserves);
+    TlMemManager& rMemManager = TlMemManager::getInstance();
+    const index_type prevReserveRows = this->reserveRows_;
+    const index_type newReserveRows = std::max(this->getNumOfRows(), newReserves);
+    const index_type numOfRows = this->getNumOfRows();
+
+    if (prevReserveRows < newReserveRows) {
+        this->reserveRows_ = newReserveRows;
+        const index_type numOfLocalCols = this->numOfLocalCols_;
+        for (index_type i = 0; i < numOfLocalCols; ++i) {
+            double* pNew = NULL;
+            if (this->isUsingMemManager_ == true) {
+                pNew = (double*)rMemManager.allocate(sizeof(double)*newReserveRows);
+            } else {
+                pNew = new double[newReserveRows];
+            }
+
+            for (index_type j = 0; j < newReserveRows; ++j) {
+                pNew[j] = 0.0;
+            }
+            
+            if (this->data_[i] != NULL) {
+                for (index_type j = 0; j < numOfRows; ++j) {
+                    pNew[j] = this->data_[i][j];
+                }
+                if (this->isUsingMemManager_ == true) {
+                    rMemManager.deallocate((char*)this->data_[i], sizeof(double)*prevReserveRows);
+                } else {
+                    delete[] this->data_[i];
+                }
+                this->data_[i] = NULL;
+            }
+
+            this->data_[i] = pNew;
+        }
+    }
 }
 
 
@@ -56,7 +125,7 @@ TlVector TlColVectorMatrix2::getColVector(index_type col) const
     const div_t turns = std::div(col, this->allProcs_);
     if (turns.rem == this->rank_) {
         const index_type col = turns.quot;
-        answer = TlVector(this->data_[col]);
+        answer = TlVector(this->data_[col], this->getNumOfRows());
     }
 
     return answer;
@@ -73,8 +142,8 @@ TlColVectorMatrix2::getColVector(index_type col,
     if (turns.rem == this->rank_) {
         const index_type col = turns.quot;
         copySize = std::min(this->getNumOfRows(), maxRowSize);
-        std::copy(this->data_[col].begin(),
-                  this->data_[col].begin() + copySize,
+        std::copy(this->data_[col],
+                  this->data_[col] + copySize,
                   pBuf);
     }
 

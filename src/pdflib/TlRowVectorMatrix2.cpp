@@ -1,6 +1,5 @@
 #include <iostream>
 #include "TlRowVectorMatrix2.h"
-#include "TlCommunicate.h"
 #include "TlMemManager.h"
 
 TlRowVectorMatrix2::TlRowVectorMatrix2(const index_type row,
