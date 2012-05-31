@@ -71,7 +71,6 @@ void TlColVectorMatrix2::resize(const index_type newRows,
 
 
 void TlColVectorMatrix2::reserve_rows(const index_type newReserves) {
-    TlMemManager& rMemManager = TlMemManager::getInstance();
     const index_type prevReserveRows = this->reserveRows_;
     const index_type newReserveRows = std::max(this->getNumOfRows(), newReserves);
     const index_type numOfRows = this->getNumOfRows();
@@ -82,6 +81,7 @@ void TlColVectorMatrix2::reserve_rows(const index_type newReserves) {
         for (index_type i = 0; i < numOfLocalCols; ++i) {
             double* pNew = NULL;
             if (this->isUsingMemManager_ == true) {
+                TlMemManager& rMemManager = TlMemManager::getInstance();
                 pNew = (double*)rMemManager.allocate(sizeof(double)*newReserveRows);
             } else {
                 pNew = new double[newReserveRows];
@@ -96,6 +96,7 @@ void TlColVectorMatrix2::reserve_rows(const index_type newReserves) {
                     pNew[j] = this->data_[i][j];
                 }
                 if (this->isUsingMemManager_ == true) {
+                    TlMemManager& rMemManager = TlMemManager::getInstance();
                     rMemManager.deallocate((char*)this->data_[i], sizeof(double)*prevReserveRows);
                 } else {
                     delete[] this->data_[i];
