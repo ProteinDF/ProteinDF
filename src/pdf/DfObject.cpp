@@ -73,7 +73,8 @@ void DfObject::setParam(const TlSerializeData& data)
         }
     }
 
-    this->isWorkOnDisk_ = (TlUtils::toUpper(data["work_on_disk"].getStr()) == "YES");
+    this->isEnableMmap_ = data["use_mapfile"].getBoolean();
+    this->isWorkOnDisk_ = data["work_on_disk"].getBoolean();
     this->localTempDir_ = data["local_temp_dir"].getStr();
     if (this->localTempDir_ == "") {
         this->localTempDir_ = "/tmp/";

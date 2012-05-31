@@ -365,6 +365,8 @@ protected:
     
     /// プロセスあたりの最大メモリ容量(byte)
     std::size_t procMaxMemSize_;
+
+    bool isEnableMmap_; /// mmap使用可(true)
     
     bool isWorkOnDisk_;
     std::string localTempDir_;

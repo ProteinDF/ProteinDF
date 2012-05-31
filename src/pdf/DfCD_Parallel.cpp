@@ -390,7 +390,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     }
 
     // prepare variables
-    bool isUsingMemManager = true;
+    const bool isUsingMemManager = this->isEnableMmap_;
     TlRowVectorMatrix2 L(N, 1,
                          rComm.getNumOfProcs(),
                          rComm.getRank(),
@@ -605,7 +605,7 @@ void DfCD_Parallel::saveL(const TlRowVectorMatrix2& L)
 
     const index_type numOfRows = L.getNumOfRows();
     const index_type numOfCols = L.getNumOfCols();
-    bool isUsingMemManager = true;
+    const bool isUsingMemManager = this->isEnableMmap_;
     TlColVectorMatrix2 colVecL(numOfRows, numOfCols, numOfProcs, rank,
                                isUsingMemManager);
 
@@ -795,7 +795,7 @@ void DfCD_Parallel::getJ_D(TlDistributeSymmetricMatrix* pJ)
 
     // cholesky vector
     const I2PQ_Type I2PQ = this->getI2PQ();
-    bool isUsingMemManager = true;
+    const bool isUsingMemManager = this->isEnableMmap_;
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank(), 
                          isUsingMemManager);
     L.load(DfObject::getLMatrixPath());
@@ -836,7 +836,7 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
 
     // cholesky vector
     const I2PQ_Type I2PQ = this->getI2PQ();
-    bool isUsingMemManager = true;
+    const bool isUsingMemManager = this->isEnableMmap_;
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
                          isUsingMemManager);
     L.load(DfObject::getLMatrixPath());

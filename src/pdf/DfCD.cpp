@@ -654,7 +654,7 @@ void DfCD::calcCholeskyVectors_onTheFly()
     }
 
     // prepare variables
-    bool isUsingMemManager = true;
+    const bool isUsingMemManager = this->isEnableMmap_;
     TlRowVectorMatrix2 L(N, 1, 1, 0, isUsingMemManager);
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
