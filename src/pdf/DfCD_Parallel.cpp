@@ -398,6 +398,11 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
+    // loop内メモリの確保
+    std::vector<double> L_pi(N);
+    std::vector<double> L_pm(N);
+    std::vector<double> tmp_d(N);
+
     index_type m = 0;
     int progress = 0;
     index_type division = index_type(N * 0.01);
@@ -450,31 +455,26 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
 
         // CD calc
         CD_Lpm_time.start();
-        //TlVector L_pm;
-        std::vector<double> L_pm(m +1);
         {
             // 全PEに分配
             const int PEinCharge = L.getPEinChargeByRow(pivot_m);
             if (PEinCharge == rComm.getRank()) {
-                // L_pm = L.getRowVector(pivot_m);
                 const index_type copySize = L.getRowVector(pivot_m, &(L_pm[0]), m +1);
                 assert(copySize == m +1);
             }
-            //rComm.broadcast(L_pm, PEinCharge);
             rComm.broadcast(&(L_pm[0]), m +1, PEinCharge);
         }
-        assert(L_pm.size() == (m+1));
         CD_Lpm_time.stop();
 
         CD_calc_time.start();
-        std::vector<double> tmp_d(numOf_G_cols);
+        for (index_type i = 0; i < numOf_G_cols; ++i) {
+            tmp_d[i] = 0.0;
+        }        
 #pragma omp parallel for schedule(runtime)
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
 
             if (L.getPEinChargeByRow(pivot_i) == rComm.getRank()) { // 自分がL(pivot_i, *)を持っていたら
-                // const TlVector L_pi = L.getRowVector(pivot_i);
-                std::vector<double> L_pi(m +1);
                 const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
                 assert(copySize == m +1);
 
