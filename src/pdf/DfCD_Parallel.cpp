@@ -357,7 +357,6 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     TlTime CD_all_time;
     TlTime CD_diagonals_time;
     TlTime CD_resizeL_time;
-    TlTime CD_pivot_time;
     TlTime CD_ERI_time;
     TlTime CD_Lpm_time;
     TlTime CD_calc_time;
@@ -408,10 +407,6 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     int progress = 0;
     index_type division = index_type(N * 0.01);
     while (error > threshold) {
-        // this->log_.warn(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e, max_d_loc=%d, ERI cache=%ld MB",
-        //                                 m, N, error,
-        //                                 max_d_loc,
-        //                                 this->eriCache_.size() * (sizeof(IndexPair4) + sizeof(double)) / (1024*1024) ));
         // progress 
         CD_resizeL_time.start();
         if (m >= progress * division) {
@@ -427,20 +422,10 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         CD_resizeL_time.stop();
 
         // pivot
-        CD_pivot_time.start();
-        {
-            // std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
-            //                                                                pivot.end());
-            // const index_type i = it - pivot.begin();
-            // std::swap(pivot[m], pivot[i]);
-            std::swap(pivot[m], pivot[max_d_loc]);
-        }
-        CD_pivot_time.stop();
-
+        std::swap(pivot[m], pivot[max_d_loc]);
         error = d[pivot[m]];
         const double l_m_pm = std::sqrt(d[pivot[m]]);
         L.set(pivot[m], m, l_m_pm); // 通信発生せず。関係無いPEは値を捨てる。
-        
         const double inv_l_m_pm = 1.0 / l_m_pm;
 
         // ERI
@@ -510,14 +495,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         CD_calc_time.stop();
 
         CD_d_time.start();
-        // rComm.allReduce_SUM(&(tmp_d[0]), numOf_G_cols);
-        // for (index_type i = 0; i < numOf_G_cols; ++i) {
-        //     const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
-        //     d[pivot_i] += tmp_d[i];
-        // }
-        this->log_.warn(TlUtils::format("max_d: %f, %d", max_d_value, max_d_loc));
         rComm.allReduce_MAXLOC(&max_d_value, &max_d_loc);
-        this->log_.info(TlUtils::format("max_d: %f, %d", max_d_value, max_d_loc));
         d[pivot[max_d_loc]] = max_d_value;
         CD_d_time.stop();
 
@@ -538,7 +516,6 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     this->log_.info(TlUtils::format("CD all:       %f sec.", CD_all_time.getElapseTime()));
     this->log_.info(TlUtils::format("CD diagonals: %f sec.", CD_diagonals_time.getElapseTime()));
     this->log_.info(TlUtils::format("CD resize L:  %f sec.", CD_resizeL_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD pivot:     %f sec.", CD_pivot_time.getElapseTime()));
     this->log_.info(TlUtils::format("CD ERI:       %f sec.", CD_ERI_time.getElapseTime()));
     this->log_.info(TlUtils::format("CD L(m):      %f sec.", CD_Lpm_time.getElapseTime()));
     this->log_.info(TlUtils::format("CD calc:      %f sec.", CD_calc_time.getElapseTime()));
