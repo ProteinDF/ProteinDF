@@ -401,12 +401,17 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     // loop内メモリの確保
     std::vector<double> L_pi(N);
     std::vector<double> L_pm(N);
-    std::vector<double> tmp_d(N);
+    int max_d_loc = d.argmax(pivot.begin(), pivot.end()) - pivot.begin();
+    double max_d_value = 0.0;
 
     index_type m = 0;
     int progress = 0;
     index_type division = index_type(N * 0.01);
     while (error > threshold) {
+        // this->log_.warn(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e, max_d_loc=%d, ERI cache=%ld MB",
+        //                                 m, N, error,
+        //                                 max_d_loc,
+        //                                 this->eriCache_.size() * (sizeof(IndexPair4) + sizeof(double)) / (1024*1024) ));
         // progress 
         CD_resizeL_time.start();
         if (m >= progress * division) {
@@ -424,10 +429,11 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         // pivot
         CD_pivot_time.start();
         {
-            std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
-                                                                           pivot.end());
-            const index_type i = it - pivot.begin();
-            std::swap(pivot[m], pivot[i]);
+            // std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+            //                                                                pivot.end());
+            // const index_type i = it - pivot.begin();
+            // std::swap(pivot[m], pivot[i]);
+            std::swap(pivot[m], pivot[max_d_loc]);
         }
         CD_pivot_time.stop();
 
@@ -467,9 +473,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         CD_Lpm_time.stop();
 
         CD_calc_time.start();
-        for (index_type i = 0; i < numOf_G_cols; ++i) {
-            tmp_d[i] = 0.0;
-        }        
+        max_d_value = 0.0;
 #pragma omp parallel for schedule(runtime)
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
@@ -489,18 +493,32 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
                     L.set(pivot_i, m, l_m_pi);
                 }
 
+                const double ll = l_m_pi * l_m_pi;
 #pragma omp atomic
-                tmp_d[i] -= l_m_pi * l_m_pi;
+                d[pivot_i] -= ll;
+
+                if (d[pivot_i] > max_d_value) {
+#pragma omp critical(DfCD_Parallel__calcCholeskyVectors_onTheFly2)
+                    {
+                        max_d_value = d[pivot_i];
+                        max_d_loc = m+1 + i;
+                    }
+                }
+
             }
         }
         CD_calc_time.stop();
 
         CD_d_time.start();
-        rComm.allReduce_SUM(&(tmp_d[0]), numOf_G_cols);
-        for (index_type i = 0; i < numOf_G_cols; ++i) {
-            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
-            d[pivot_i] += tmp_d[i];
-        }
+        // rComm.allReduce_SUM(&(tmp_d[0]), numOf_G_cols);
+        // for (index_type i = 0; i < numOf_G_cols; ++i) {
+        //     const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+        //     d[pivot_i] += tmp_d[i];
+        // }
+        this->log_.warn(TlUtils::format("max_d: %f, %d", max_d_value, max_d_loc));
+        rComm.allReduce_MAXLOC(&max_d_value, &max_d_loc);
+        this->log_.info(TlUtils::format("max_d: %f, %d", max_d_value, max_d_loc));
+        d[pivot[max_d_loc]] = max_d_value;
         CD_d_time.stop();
 
         ++m;

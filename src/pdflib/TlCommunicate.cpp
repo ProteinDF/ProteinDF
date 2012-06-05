@@ -211,6 +211,25 @@ int TlCommunicate::reduce_SUM(unsigned long* pData, std::size_t size, int root)
     return this->reduce(pData, MPI_UNSIGNED_LONG, 0, size, MPI_SUM, root);
 }
 
+int TlCommunicate::reduce_MAXLOC(double* pValue, int* pIndex, int root)
+{
+    struct DoubleInt {
+        double value;
+        int index;
+    };
+    DoubleInt in;
+    DoubleInt out;
+
+    in.value = *pValue;
+    in.index = *pIndex;
+
+    const int answer = MPI_Reduce(&in, &out, 1, MPI_DOUBLE_INT, MPI_MAXLOC, root, MPI_COMM_WORLD);
+    *pValue = out.value;
+    *pIndex = out.index;
+
+    return answer;
+}
+
 
 // =============================================================================
 template<typename T>
@@ -611,6 +630,26 @@ int TlCommunicate::allReduce_MIN(int& rData)
     this->time_allreduce_.stop();
     return nError;
 }
+
+int TlCommunicate::allReduce_MAXLOC(double* pValue, int* pIndex)
+{
+    struct DoubleInt {
+        double value;
+        int index;
+    };
+    DoubleInt in;
+    DoubleInt out;
+
+    in.value = *pValue;
+    in.index = *pIndex;
+
+    const int answer = MPI_Allreduce(&in, &out, 1, MPI_DOUBLE_INT, MPI_MAXLOC, MPI_COMM_WORLD);
+    *pValue = out.value;
+    *pIndex = out.index;
+
+    return answer;
+}
+
 
 int TlCommunicate::gatherToMaster(TlSparseMatrix& rMatrix)
 {
