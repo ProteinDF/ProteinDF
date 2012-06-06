@@ -1,4 +1,9 @@
 #include <algorithm>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif // _OPENMP
+
 #include "DfCD_Parallel.h"
 #include "DfTaskCtrl_Parallel.h"
 #include "TlCommunicate.h"
@@ -357,7 +362,6 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     TlTime CD_all_time;
     TlTime CD_diagonals_time;
     TlTime CD_resizeL_time;
-    TlTime CD_pivot_time;
     TlTime CD_ERI_time;
     TlTime CD_Lpm_time;
     TlTime CD_calc_time;
@@ -398,16 +402,27 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     const double threshold = this->epsilon_;
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
+    // loop内メモリの確保
+    // std::vector<double> L_pi(N);
+    std::vector<double> L_pm(N);
+    int max_d_loc = d.argmax(pivot.begin(), pivot.end()) - pivot.begin();
+    double max_d_value = 0.0;
+
     index_type m = 0;
     int progress = 0;
     index_type division = index_type(N * 0.01);
     while (error > threshold) {
+#ifdef CD_DEBUG
+        this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
+#endif // CD_DEBUG
+
         // progress 
         CD_resizeL_time.start();
         if (m >= progress * division) {
-            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e, ERI cache=%ld MB",
+            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e, ERI cache=%ld MB",
                                             m, N, error,
-                                            this->eriCache_.size() * (sizeof(IndexPair4) + sizeof(double)) / (1024*1024) ));
+                                            this->eriCache_.size() * (sizeof(IndexPair4) 
+                                                                      + sizeof(double)) / (1024*1024)));
             ++progress;
 
             // メモリの確保
@@ -417,19 +432,10 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         CD_resizeL_time.stop();
 
         // pivot
-        CD_pivot_time.start();
-        {
-            std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
-                                                                           pivot.end());
-            const index_type i = it - pivot.begin();
-            std::swap(pivot[m], pivot[i]);
-        }
-        CD_pivot_time.stop();
-
+        std::swap(pivot[m], pivot[max_d_loc]);
         error = d[pivot[m]];
         const double l_m_pm = std::sqrt(d[pivot[m]]);
         L.set(pivot[m], m, l_m_pm); // 通信発生せず。関係無いPEは値を捨てる。
-        
         const double inv_l_m_pm = 1.0 / l_m_pm;
 
         // ERI
@@ -450,57 +456,76 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
 
         // CD calc
         CD_Lpm_time.start();
-        //TlVector L_pm;
-        std::vector<double> L_pm(m +1);
         {
             // 全PEに分配
             const int PEinCharge = L.getPEinChargeByRow(pivot_m);
             if (PEinCharge == rComm.getRank()) {
-                // L_pm = L.getRowVector(pivot_m);
                 const index_type copySize = L.getRowVector(pivot_m, &(L_pm[0]), m +1);
                 assert(copySize == m +1);
             }
-            //rComm.broadcast(L_pm, PEinCharge);
             rComm.broadcast(&(L_pm[0]), m +1, PEinCharge);
         }
-        assert(L_pm.size() == (m+1));
         CD_Lpm_time.stop();
 
         CD_calc_time.start();
-        std::vector<double> tmp_d(numOf_G_cols);
-#pragma omp parallel for schedule(runtime)
-        for (index_type i = 0; i < numOf_G_cols; ++i) {
-            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
-
-            if (L.getPEinChargeByRow(pivot_i) == rComm.getRank()) { // 自分がL(pivot_i, *)を持っていたら
-                // const TlVector L_pi = L.getRowVector(pivot_i);
-                std::vector<double> L_pi(m +1);
-                const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
-                assert(copySize == m +1);
-
-                double sum_ll = 0.0;
-                for (index_type j = 0; j < m; ++j) {
-                    sum_ll += L_pm[j] * L_pi[j];
-                }
-
-                const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+        max_d_value = 0.0;
+#pragma omp parallel
+        {
+            std::vector<double> L_pi[m +1];
+            double local_max_d_value = 0.0;
+            int local_max_d_loc = -1;
+#pragma omp for schedule(runtime)
+            for (index_type i = 0; i < numOf_G_cols; ++i) {
+                const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+                
+                if (L.getPEinChargeByRow(pivot_i) == rComm.getRank()) { // 自分がL(pivot_i, *)を持っていたら
+                    const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
+                    assert(copySize == m +1);
+                    
+                    double sum_ll = 0.0;
+                    for (index_type j = 0; j < m; ++j) {
+                        sum_ll += L_pm[j] * L_pi[j];
+                    }
+                    
+                    const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
 #pragma omp critical(DfCD_Parallel__calcCholeskyVectors_onTheFly)
-                {
-                    L.set(pivot_i, m, l_m_pi);
-                }
-
+                    {
+                        L.set(pivot_i, m, l_m_pi);
+                    }
+                    
+                    const double ll = l_m_pi * l_m_pi;
 #pragma omp atomic
-                tmp_d[i] -= l_m_pi * l_m_pi;
+                    d[pivot_i] -= ll;
+                    
+                    if (d[pivot_i] > local_max_d_value) {
+                        local_max_d_value = d[pivot_i];
+                        local_max_d_loc = m+1 + i;
+                    }
+                }
             }
+
+#ifdef _OPENMP
+            const int numOfThreads = omp_get_num_threads();
+            const int myThreadID = omp_get_thread_num();
+            for (int thread = 0; thread < numOfThreads; ++thread) {
+                if (thread == myThreadID) {
+                    if (max_d_value < local_max_d_value) {
+                        max_d_value = local_max_d_value;
+                        max_d_loc = local_max_d_loc;
+                    }
+                }
+#pragma omp flush(max_d_value, max_d_loc)
+            }
+#else
+            max_d_value = local_max_d_value;
+            max_d_loc = local_max_d_loc;
+#endif // _OPENMP
         }
         CD_calc_time.stop();
 
         CD_d_time.start();
-        rComm.allReduce_SUM(&(tmp_d[0]), numOf_G_cols);
-        for (index_type i = 0; i < numOf_G_cols; ++i) {
-            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
-            d[pivot_i] += tmp_d[i];
-        }
+        rComm.allReduce_MAXLOC(&max_d_value, &max_d_loc);
+        d[pivot[max_d_loc]] = max_d_value;
         CD_d_time.stop();
 
         ++m;
@@ -520,7 +545,6 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     this->log_.info(TlUtils::format("CD all:       %f sec.", CD_all_time.getElapseTime()));
     this->log_.info(TlUtils::format("CD diagonals: %f sec.", CD_diagonals_time.getElapseTime()));
     this->log_.info(TlUtils::format("CD resize L:  %f sec.", CD_resizeL_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD pivot:     %f sec.", CD_pivot_time.getElapseTime()));
     this->log_.info(TlUtils::format("CD ERI:       %f sec.", CD_ERI_time.getElapseTime()));
     this->log_.info(TlUtils::format("CD L(m):      %f sec.", CD_Lpm_time.getElapseTime()));
     this->log_.info(TlUtils::format("CD calc:      %f sec.", CD_calc_time.getElapseTime()));

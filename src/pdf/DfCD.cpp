@@ -664,10 +664,14 @@ void DfCD::calcCholeskyVectors_onTheFly()
     L.reserve_cols(division);
     index_type m = 0;
     while (error > threshold) {
+#ifdef DEBUG_CD
+        this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
+#endif //DEBUG_CD
+
         CD_resizeL_time.start();
         // progress 
         if (m >= progress * division) {
-            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e", m, N, error));
+            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
             ++progress;
 
             // メモリの確保
