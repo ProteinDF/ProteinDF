@@ -403,7 +403,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
     // loop内メモリの確保
-    std::vector<double> L_pi(N);
+    // std::vector<double> L_pi(N);
     std::vector<double> L_pm(N);
     int max_d_loc = d.argmax(pivot.begin(), pivot.end()) - pivot.begin();
     double max_d_value = 0.0;
@@ -471,6 +471,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         max_d_value = 0.0;
 #pragma omp parallel
         {
+            std::vector<double> L_pi[m +1];
             double local_max_d_value = 0.0;
             int local_max_d_loc = -1;
 #pragma omp for schedule(runtime)
@@ -512,8 +513,8 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
                         max_d_value = local_max_d_value;
                         max_d_loc = local_max_d_loc;
                     }
-#pragma omp barrier
                 }
+#pragma omp flush(max_d_value, max_d_loc)
             }
 #else
             max_d_value = local_max_d_value;

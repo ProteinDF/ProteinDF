@@ -633,6 +633,9 @@ int TlCommunicate::allReduce_MIN(int& rData)
 
 int TlCommunicate::allReduce_MAXLOC(double* pValue, int* pIndex)
 {
+    this->time_allreduce_.start();
+    ++(this->counter_allreduce_);
+
     struct DoubleInt {
         double value;
         int index;
@@ -647,6 +650,7 @@ int TlCommunicate::allReduce_MAXLOC(double* pValue, int* pIndex)
     *pValue = out.value;
     *pIndex = out.index;
 
+    this->time_allreduce_.stop();
     return answer;
 }
 
