@@ -471,7 +471,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         max_d_value = 0.0;
 #pragma omp parallel
         {
-            std::vector<double> L_pi[m +1];
+            std::vector<double> L_pi(m +1);
             double local_max_d_value = 0.0;
             int local_max_d_loc = -1;
 #pragma omp for schedule(runtime)
