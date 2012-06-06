@@ -7,6 +7,8 @@
 #include "TlSparseSymmetricMatrix.h"
 #include "TlSymmetricMatrix.h"
 
+// #define CD_DEBUG
+
 class TlOrbitalInfo;
 class DfEriEngine;
 
