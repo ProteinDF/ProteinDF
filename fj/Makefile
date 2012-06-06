@@ -1,9 +1,8 @@
-# Makefile for Fujitsu compiler
-
 OBJS = \
  CnError.o			\
  DfCalcGrid.o			\
  DfCalcGridX.o			\
+ DfCD.o				\
  DfCleanup.o			\
  DfConvcheck.o			\
  DfConverge.o			\
@@ -46,6 +45,7 @@ OBJS = \
  DfIntegrals.o				\
  DfInvMatrix.o				\
  DfJMatrix.o				\
+ DfKMatrix.o				\
  DfLevelshift.o				\
  DfObject.o				\
  DfOverlap.o				\
@@ -54,7 +54,6 @@ OBJS = \
  DfPopulation.o				\
  DfPreScf.o				\
  DfQclo.o				\
- DfRLMO.o				\
  DfScf.o				\
  DfSummary.o				\
  DfTaskCtrl.o				\
@@ -66,8 +65,6 @@ OBJS = \
  DfTwoElectronIntegral.o		\
  DfXCFunctional.o			\
  DfXMatrix.o				\
- DfXcenefitting.o			\
- DfXcpotfitting.o			\
  FileX.o				\
  Fl_Database.o				\
  Fl_Db_Basis.o				\
@@ -76,27 +73,21 @@ OBJS = \
  Fl_GlobalinputX.o			\
  Fl_Gto.o				\
  Fl_GuessDB.o				\
- Fl_Int_Gds.o				\
- Fl_Int_Pqa.o				\
- Fl_Int_Pqg.o				\
- Fl_Integrals.o				\
- Fl_Out.o				\
  Fl_Tbl_AtomFragment.o			\
  Fl_Tbl_Density.o			\
  Fl_Tbl_Fragment.o			\
  Fl_Tbl_Orbital.o			\
  Fl_Tbl_Xcpot.o				\
  Fl_Tbl_Xcpot2.o			\
- Fl_UserinputX.o			\
- Fl_Vct_OtableX.o			\
  Fl_Vct_Table.o				\
- GridDataManager.o			\
  PdfKeyword.o				\
  PdfUserInput.o				\
  PdfUtils.o				\
  ProteinDF.o				\
+ TlAngularMomentumVector.o              \
  TlAngularMomentumVectorSet.o		\
  TlAtom.o				\
+ TlColVectorMatrix2.o			\
  TlCombineDensityMatrix.o		\
  TlFile.o				\
  TlFileMatrix.o				\
@@ -122,6 +113,7 @@ OBJS = \
  TlPrdctbl.o				\
  TlPseudoYaml.o				\
  TlResidue.o				\
+ TlRowVectorMatrix2.o			\
  TlSerializeData.o			\
  TlSparseMatrix.o			\
  TlSparseSymmetricMatrix.o		\
@@ -139,6 +131,7 @@ P_OBJS = \
  DfConvcheck_Parallel.o			\
  DfConverge_Anderson_Parallel.o		\
  DfConverge_Damping_Parallel.o		\
+ DfCD_Parallel.o			\
  DfDensityFittingX_Parallel.o		\
  DfDensityFittingX_ScaLAPACK.o		\
  DfDiffDensityMatrix_Parallel.o		\
@@ -157,6 +150,7 @@ P_OBJS = \
  DfIntegrals_Parallel.o			\
  DfInvMatrix_Parallel.o			\
  DfJMatrix_Parallel.o			\
+ DfKMatrix_Parallel.o			\
  DfOverlap_Parallel.o			\
  DfOverlapX_Parallel.o			\
  DfPopulation_Parallel.o		\
@@ -176,23 +170,30 @@ P_OBJS = \
  TlDistributeSymmetricMatrix.o		\
  TlDistributeVector.o			
 
-CC = mpicc
-CXX = mpicxx
+CC = mpifccpx
+CXX = mpiFCCpx
+
+#CFLAGS = -DHAVE_CONFIG_H -Kfast -Kopenmp -Kocl -Kpreex -Karray_private -SSL2BLAMP -SCALAPACK
+
+# success
+#CFLAGS = -DHAVE_CONFIG_H -Kfast -Kocl -Kpreex -Karray_private -SSL2BLAMP -SCALAPACK
+#CFLAGS = \
+# -DHAVE_CONFIG_H -Kfast -Kocl -Kpreex -Karray_private \
+# -Kparallel -Kregion_extension -Koptmsg=2 \
+# -SSL2BLAMP -SCALAPACK
+
+# 2012.04.26
+#CFLAGS = \
+# -DHAVE_CONFIG_H -Kfast,openmp \
+# -SSL2BLAMP -SCALAPACK
 
 CFLAGS = \
- -DHAVE_LAPACK -DHAVE_SCALAPACK -DNDEBUG -DHAVE_CONFIG_H -O3 -fopenmp 
+ -DHAVE_CONFIG_H \
+ -O3 -Kfast -Kocl -Kpreex -Karray_private -Kregion_extension -Kparallel \
+ -Kopenmp \
+ -SSL2BLAMP -SCALAPACK
 
 CXXFLAGS = $(CFLAGS)
-
-LAPACK_LIB = /opt/acml4.4.0/gfortran32/lib/libacml.a 
-SCALAPACK_LIB = \
-  /home/hirano/local/lib/libscalapack.a \
-  /home/hirano/local/lib/blacsC.a \
-  /home/hirano/local/lib/blacsF77.a \
-  /home/hirano/local/lib/blacs.a \
-  /home/hirano/local/lib/blacsC.a \
-  /home/hirano/local/lib/blacsF77.a
-LIBS = -lgfortran
 
 .SUFFIXES: .o .cc .cpp .cxx
 
@@ -206,8 +207,8 @@ LIBS = -lgfortran
 	$(CXX) $(CXXFLAGS) -c $<
 
 
-.PHONY: all clean
-all:	PDF.x PPDF.x test_DensFit.x test_ERI.x test_XC.x
+.PHONY: all clean install
+all:	PDF.x PPDF.x pdfdivmat
 
 clean:
 	$(RM) *.o *.x
@@ -218,6 +219,9 @@ PDF.x:	main.o $(OBJS)
 PPDF.x:	main_Parallel.o	$(OBJS) $(P_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(SCALAPACK_LIB) $(LAPACK_LIB) $(LIBS)
 
+pdfdivmat: main_pdfdivmat.cpp $(OBJS) $(P_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(SCALAPACK_LIB) $(LAPACK_LIB) $(LIBS)
+
 test_DensFit.x: main_testDensFit.o $(OBJS) 
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LAPACK_LIB) $(LIBS)
 
@@ -226,3 +230,12 @@ test_ERI.x: main_testERI.o $(OBJS)
 
 test_XC.x: main_testXC.o $(OBJS) 
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(SCALAPACK_LIB) $(LAPACK_LIB) $(LIBS)
+
+install: all
+	mkdir -p $(PDF_HOME)
+	mkdir -p $(PDF_HOME)/bin
+	cp -r ../data $(PDF_HOME)
+	cp PDF.x PPDF.x test_DensFit.x test_ERI.x test_XC.x $(PDF_HOME)/bin
+
+
+

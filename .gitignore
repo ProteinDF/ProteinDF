@@ -26,8 +26,10 @@ install-sh
 *.exe
 *.log
 
-config.h
-pdflib-int.h
+include/config.h
+include/pdflib-int.h
 src/*/.deps
 src/*/.libs
+fj/*.cpp
+fj/*.cxx
 
