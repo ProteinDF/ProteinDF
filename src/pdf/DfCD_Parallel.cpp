@@ -10,7 +10,7 @@
 #include "TlTime.h"
 
 #define TRANS_MEM_SIZE (1 * 1024 * 1024 * 1024) // 1GB
-#define CD_DEBUG
+// #define CD_DEBUG
 
 DfCD_Parallel::DfCD_Parallel(TlSerializeData* pPdfParam) 
     : DfCD(pPdfParam) {
@@ -433,7 +433,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     index_type division = index_type(N * 0.01);
     while (error > threshold) {
 #ifdef CD_DEBUG
-        this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
+        this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
 #endif // CD_DEBUG
 
         // progress 
@@ -526,38 +526,6 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
                     my_error_local_loc = i;
                 }
             }
-// #else
-// #pragma omp for schedule(runtime)
-//             for (index_type i = 0; i < numOf_G_cols; ++i) {
-//                 const index_type pivot_i = global_pivot[m+1 +i]; // from (m+1) to N
-//                 assert(reverse_pivot[pivot_i] == (m+1 +i));
-                
-//                 if (L.getPEinChargeByRow(pivot_i) == rComm.getRank()) { // 自分がL(pivot_i, *)を持っていたら
-//                     const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
-//                     assert(copySize == m +1);
-                    
-//                     double sum_ll = 0.0;
-//                     for (index_type j = 0; j < m; ++j) {
-//                         sum_ll += L_pm[j] * L_pi[j];
-//                     }
-                    
-//                     const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
-// #pragma omp critical(DfCD_Parallel__calcCholeskyVectors_onTheFly)
-//                     {
-//                         L.set(pivot_i, m, l_m_pi);
-//                     }
-                    
-//                     const double ll = l_m_pi * l_m_pi;
-// #pragma omp atomic
-//                     global_diagonals[pivot_i] -= ll;
-                    
-//                     if (global_diagonals[pivot_i] > my_error) {
-//                         my_error = global_diagonals[pivot_i];
-//                         my_error_global_loc = reverse_pivot[pivot_i]; // == m +1 + i
-//                     }
-//                 }
-//             }
-// #endif // FEATURE_CODE
 
 #ifdef _OPENMP
             const int numOfThreads = omp_get_num_threads();
