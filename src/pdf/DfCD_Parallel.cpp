@@ -10,6 +10,7 @@
 #include "TlTime.h"
 
 #define TRANS_MEM_SIZE (1 * 1024 * 1024 * 1024) // 1GB
+#define CD_DEBUG
 
 DfCD_Parallel::DfCD_Parallel(TlSerializeData* pPdfParam) 
     : DfCD(pPdfParam) {
@@ -369,51 +370,70 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     TlTime CD_save_time;
 
     CD_all_time.start();
-
     TlCommunicate& rComm = TlCommunicate::getInstance();
     this->createEngines();
     this->initializeCutoffStats();
 
+    CD_diagonals_time.start();
     this->log_.info(TlUtils::format("# of PQ dimension: %d", int(this->numOfPQs_)));
     TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
     PQ_PairArray I2PQ;
-    TlVector d; // 対角成分
-
-    CD_diagonals_time.start();
-    this->calcDiagonals(&schwartzTable, &I2PQ, &d);
-    CD_diagonals_time.stop();
-
+    TlVector global_diagonals; // 対角成分
+    this->calcDiagonals(&schwartzTable, &I2PQ, &global_diagonals);
     this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
     this->saveI2PQ(I2PQ);
-
-    const index_type N = I2PQ.size();
-    double error = d.getMaxAbsoluteElement();
-    std::vector<TlVector::size_type> pivot(N);
-    for (index_type i = 0; i < N; ++i) {
-        pivot[i] = i;
-    }
+    CD_diagonals_time.stop();
 
     // prepare variables
-    const bool isUsingMemManager = this->isEnableMmap_;
+    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
+    const double threshold = this->epsilon_;
+    const index_type N = I2PQ.size();
     TlRowVectorMatrix2 L(N, 1,
                          rComm.getNumOfProcs(),
                          rComm.getRank(),
-                         isUsingMemManager); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
-    const double threshold = this->epsilon_;
-    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
-
-    // loop内メモリの確保
-    // std::vector<double> L_pi(N);
+                         this->isEnableMmap_); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
+    const index_type local_N = L.getNumOfLocalRows();
     std::vector<double> L_pm(N);
-    int max_d_loc = d.argmax(pivot.begin(), pivot.end()) - pivot.begin();
-    double max_d_value = 0.0;
+    std::vector<int> global_pivot(N); // ERI計算リストを作成するために必要
+    std::vector<int> reverse_pivot(N); // global_pivotの逆引き
+    std::vector<int> local_pivot(local_N);
+    std::vector<double> local_diagonals(local_N);
+    const int myRank = rComm.getRank();
+    double error = 0.0;
+    index_type error_global_loc = 0;
+    index_type error_local_loc = 0;
+    {
+        int local_i = 0;
+        for (int global_i = 0; global_i < N; ++global_i) {
+            global_pivot[global_i] = global_i;
+            reverse_pivot[global_i] = global_i;
+            if (L.getPEinChargeByRow(global_i) == myRank) {
+                local_pivot[local_i] = global_i;
+                local_diagonals[local_i] = global_diagonals[global_i];
+                if (error < local_diagonals[local_i]) {
+                    error_local_loc = local_i;
+                    error_global_loc = local_pivot[local_i];
+                    error = local_diagonals[local_i];
+                }
+                ++local_i;
+            }
+        }
+        assert(local_i == local_N);
+    }
+    rComm.allReduce_MAXLOC(&error, &error_global_loc);
 
     index_type m = 0;
+    index_type local_m = 0;
+    if (error_global_loc == reverse_pivot[local_pivot[error_local_loc]]) {
+        std::swap(local_pivot[local_m], local_pivot[error_local_loc]);
+        ++local_m;
+    }
+
     int progress = 0;
     index_type division = index_type(N * 0.01);
     while (error > threshold) {
 #ifdef CD_DEBUG
-        this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
+        this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
 #endif // CD_DEBUG
 
         // progress 
@@ -432,21 +452,24 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         CD_resizeL_time.stop();
 
         // pivot
-        std::swap(pivot[m], pivot[max_d_loc]);
-        error = d[pivot[m]];
-        const double l_m_pm = std::sqrt(d[pivot[m]]);
-        L.set(pivot[m], m, l_m_pm); // 通信発生せず。関係無いPEは値を捨てる。
+        std::swap(global_pivot[m], global_pivot[error_global_loc]);
+        reverse_pivot[global_pivot[m]] = m;
+        reverse_pivot[global_pivot[error_global_loc]] = error_global_loc;
+
+        const double l_m_pm = std::sqrt(error);
+        const index_type pivot_m = global_pivot[m];
+        L.set(pivot_m, m, l_m_pm); // 通信発生せず。関係無いPEは値を捨てる。
         const double inv_l_m_pm = 1.0 / l_m_pm;
 
         // ERI
         CD_ERI_time.start();
-        const index_type pivot_m = pivot[m];
         std::vector<double> G_pm;
+        // const index_type numOf_G_cols = N -(m+1);
         const index_type numOf_G_cols = N -(m+1);
         {
             std::vector<index_type> G_col_list(numOf_G_cols);
             for (index_type i = 0; i < numOf_G_cols; ++i) {
-                const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+                const index_type pivot_i = global_pivot[m+1 +i]; // from (m+1) to N
                 G_col_list[i] = pivot_i;
             }
             G_pm = this->getSuperMatrixElements(pivot_m, G_col_list, I2PQ, schwartzTable);
@@ -468,67 +491,105 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         CD_Lpm_time.stop();
 
         CD_calc_time.start();
-        max_d_value = 0.0;
+        error = 0.0;
 #pragma omp parallel
         {
             std::vector<double> L_pi(m +1);
-            double local_max_d_value = 0.0;
-            int local_max_d_loc = -1;
+            double my_error = 0.0;
+            int my_error_global_loc = 0;
+            int my_error_local_loc = 0;
+
 #pragma omp for schedule(runtime)
-            for (index_type i = 0; i < numOf_G_cols; ++i) {
-                const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
-                
-                if (L.getPEinChargeByRow(pivot_i) == rComm.getRank()) { // 自分がL(pivot_i, *)を持っていたら
-                    const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
-                    assert(copySize == m +1);
-                    
-                    double sum_ll = 0.0;
-                    for (index_type j = 0; j < m; ++j) {
-                        sum_ll += L_pm[j] * L_pi[j];
-                    }
-                    
-                    const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+            for (int i = local_m; i < local_N; ++i) {
+                const int pivot_i = local_pivot[i];
+                const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
+                assert(copySize == m +1);
+                double sum_ll = 0.0;
+                for (index_type j = 0; j < m; ++j) {
+                    sum_ll += L_pm[j] * L_pi[j];
+                }
+
+                const int G_pm_index = reverse_pivot[pivot_i] - (m+1);
+                const double l_m_pi = (G_pm[G_pm_index] - sum_ll) * inv_l_m_pm;
 #pragma omp critical(DfCD_Parallel__calcCholeskyVectors_onTheFly)
-                    {
-                        L.set(pivot_i, m, l_m_pi);
-                    }
-                    
-                    const double ll = l_m_pi * l_m_pi;
+                {
+                    L.set(pivot_i, m, l_m_pi);
+                }
+
+                const double ll = l_m_pi * l_m_pi;
 #pragma omp atomic
-                    d[pivot_i] -= ll;
-                    
-                    if (d[pivot_i] > local_max_d_value) {
-                        local_max_d_value = d[pivot_i];
-                        local_max_d_loc = m+1 + i;
-                    }
+                global_diagonals[pivot_i] -= ll;
+
+                if (global_diagonals[pivot_i] > my_error) {
+                    my_error = global_diagonals[pivot_i];
+                    my_error_global_loc = reverse_pivot[pivot_i]; // == m +1 + i
+                    my_error_local_loc = i;
                 }
             }
+// #else
+// #pragma omp for schedule(runtime)
+//             for (index_type i = 0; i < numOf_G_cols; ++i) {
+//                 const index_type pivot_i = global_pivot[m+1 +i]; // from (m+1) to N
+//                 assert(reverse_pivot[pivot_i] == (m+1 +i));
+                
+//                 if (L.getPEinChargeByRow(pivot_i) == rComm.getRank()) { // 自分がL(pivot_i, *)を持っていたら
+//                     const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
+//                     assert(copySize == m +1);
+                    
+//                     double sum_ll = 0.0;
+//                     for (index_type j = 0; j < m; ++j) {
+//                         sum_ll += L_pm[j] * L_pi[j];
+//                     }
+                    
+//                     const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+// #pragma omp critical(DfCD_Parallel__calcCholeskyVectors_onTheFly)
+//                     {
+//                         L.set(pivot_i, m, l_m_pi);
+//                     }
+                    
+//                     const double ll = l_m_pi * l_m_pi;
+// #pragma omp atomic
+//                     global_diagonals[pivot_i] -= ll;
+                    
+//                     if (global_diagonals[pivot_i] > my_error) {
+//                         my_error = global_diagonals[pivot_i];
+//                         my_error_global_loc = reverse_pivot[pivot_i]; // == m +1 + i
+//                     }
+//                 }
+//             }
+// #endif // FEATURE_CODE
 
 #ifdef _OPENMP
             const int numOfThreads = omp_get_num_threads();
             const int myThreadID = omp_get_thread_num();
             for (int thread = 0; thread < numOfThreads; ++thread) {
                 if (thread == myThreadID) {
-                    if (max_d_value < local_max_d_value) {
-                        max_d_value = local_max_d_value;
-                        max_d_loc = local_max_d_loc;
+                    if (error < my_error) {
+                        error = my_error;
+                        error_global_loc = my_error_global_loc;
+                        error_local_loc = my_error_local_loc;
                     }
                 }
-#pragma omp flush(max_d_value, max_d_loc)
+#pragma omp flush(error, error_global_loc)
             }
 #else
-            max_d_value = local_max_d_value;
-            max_d_loc = local_max_d_loc;
+            error = my_error;
+            error_global_loc = my_error_global_loc;
+            error_local_loc = my_error_local_loc;
 #endif // _OPENMP
         }
         CD_calc_time.stop();
 
         CD_d_time.start();
-        rComm.allReduce_MAXLOC(&max_d_value, &max_d_loc);
-        d[pivot[max_d_loc]] = max_d_value;
+        rComm.allReduce_MAXLOC(&error, &error_global_loc);
+        global_diagonals[global_pivot[error_global_loc]] = error;
         CD_d_time.stop();
 
         ++m;
+        if (error_global_loc == reverse_pivot[local_pivot[error_local_loc]]) {
+            std::swap(local_pivot[local_m], local_pivot[error_local_loc]);
+            ++local_m;
+        }
     }
     this->log_.info(TlUtils::format("Cholesky Vectors: %d", m));
 

@@ -30,6 +30,10 @@ public:
         return this->numOfCols_;
     };
 
+    index_type getNumOfLocalRows() const {
+        return this->numOfLocalRows_;
+    }
+
     /// 列数のcapacityを設定する
     void reserve_cols(index_type col);
 
