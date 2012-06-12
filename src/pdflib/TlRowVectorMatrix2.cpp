@@ -174,8 +174,6 @@ TlMatrix TlRowVectorMatrix2::getTlMatrix() const
     const index_type numOfCols = this->getNumOfCols();
     TlMatrix answer(numOfRows, numOfCols);
 
-    // const div_t turns = std::div(numOfRows, this->allProcs_);
-    // const index_type localRows = turns.quot + ((this->rank_ < turns.rem) ? 1 : 0);
     const index_type numOfLocalRows = this->numOfLocalRows_;
     for (index_type r = 0; r < numOfLocalRows; ++r) {
         const index_type row = r * this->allProcs_ + this->rank_;

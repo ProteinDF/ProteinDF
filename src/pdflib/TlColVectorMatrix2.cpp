@@ -229,3 +229,22 @@ void TlColVectorMatrix2::load(const std::string& basename)
 }
 
 
+
+TlMatrix TlColVectorMatrix2::getTlMatrix() const 
+{
+    const index_type numOfRows = this->getNumOfRows();
+    const index_type numOfCols = this->getNumOfCols();
+    TlMatrix answer(numOfRows, numOfCols);
+
+    const index_type numOfLocalCols = this->numOfLocalCols_;
+    for (index_type c = 0; c < numOfLocalCols; ++c) {
+        const index_type col = c * this->allProcs_ + this->rank_;
+        for (index_type row = 0; row < numOfRows; ++row) {
+            answer.set(row, col, this->data_[c][row]);
+        }
+    }
+    
+    return answer;
+}
+
+

@@ -71,6 +71,9 @@ protected:
     // for debug
     TlMatrix mergeL(const TlRowVectorMatrix2& L);
     TlMatrix mergeL(const TlColVectorMatrix2& L);
+
+private:
+    bool isDebugSaveL_;
 };
 
 #endif // DFCD_PARALLEL_H
