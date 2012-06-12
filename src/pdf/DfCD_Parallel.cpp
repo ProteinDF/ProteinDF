@@ -14,6 +14,11 @@
 
 DfCD_Parallel::DfCD_Parallel(TlSerializeData* pPdfParam) 
     : DfCD(pPdfParam) {
+
+    this->isDebugSaveL_ = false;
+    if (! (*this->pPdfParam_)["debug/saveL"].getStr().empty()) {
+        this->isDebugSaveL_ = (*this->pPdfParam_)["debug/saveL"].getBoolean();
+    }
 }
 
 
@@ -699,6 +704,24 @@ void DfCD_Parallel::saveL(const TlRowVectorMatrix2& L)
     }
     
     colVecL.save(DfObject::getLMatrixPath());
+
+    if (this->isDebugSaveL_ == true) {
+        {
+            TlMatrix tmpL = L.getTlMatrix();
+            rComm.allReduce_SUM(tmpL);
+            if (rComm.isMaster()) {
+                tmpL.save("L.mat");
+            }
+        }
+
+        {
+            TlMatrix tmpL = colVecL.getTlMatrix();
+            rComm.allReduce_SUM(tmpL);
+            if (rComm.isMaster()) {
+                tmpL.save("L2.mat");
+            }
+        }
+    }
 }
 
 

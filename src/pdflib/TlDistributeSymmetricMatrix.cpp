@@ -823,9 +823,9 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
         bool isFinished = false;
 
         std::vector<int> sizeLists(numOfProcs, 0);
+        std::vector<bool> isSendData(numOfProcs, false);
         std::vector<std::vector<index_type> > rowColLists(numOfProcs);
         std::vector<std::vector<double> > valueLists(numOfProcs);
-        std::vector<bool> isSendData(numOfProcs, false);
         
         while (isFinished == false) {
             // buffer分を一度に読み込み
@@ -866,15 +866,12 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
                 const int numOfContents = it->second.size() / 2;
                 assert(numOfContents == tmpValueLists[proc].size());
 
-                if (numOfContents == 0) {
-                    // 送るリストがない場合は送らない
-                    continue;
-                }
-                
                 if (isSendData[proc] == true) {
                     rComm.wait(sizeLists[proc]);
-                    rComm.wait(&(rowColLists[proc][0]));
-                    rComm.wait(&(valueLists[proc][0]));
+                    if (sizeLists[proc] > 0) {
+                        rComm.wait(&(rowColLists[proc][0]));
+                        rComm.wait(&(valueLists[proc][0]));
+                    }
                     isSendData[proc] = false;
                 }
                 
@@ -883,8 +880,10 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
                 valueLists[proc] = tmpValueLists[proc];
                 
                 rComm.iSendData(sizeLists[proc], proc, TAG_LOAD_SIZE);
-                rComm.iSendDataX(&(rowColLists[proc][0]), (sizeLists[proc] * 2), proc, TAG_LOAD_ROWCOLS);
-                rComm.iSendDataX(&(valueLists[proc][0]), sizeLists[proc], proc, TAG_LOAD_VALUES);
+                if (sizeLists[proc] > 0) {
+                    rComm.iSendDataX(&(rowColLists[proc][0]), (sizeLists[proc] * 2), proc, TAG_LOAD_ROWCOLS);
+                    rComm.iSendDataX(&(valueLists[proc][0]), sizeLists[proc], proc, TAG_LOAD_VALUES);
+                }
                 isSendData[proc] = true;
             }
         } // end while
@@ -930,23 +929,22 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
                 // std::cerr << TlUtils::format("RECV [%d] sizeList=",
                 //                              rComm.getRank(), sizeList)
                 //           << std::endl;
-                assert(sizeList > 0);
-
-                rowColList.resize(sizeList * 2);
-                valueList.resize(sizeList);
-                rComm.iReceiveDataX(&(rowColList[0]), sizeList * 2, root, TAG_LOAD_ROWCOLS);
-                rComm.iReceiveDataX(&(valueList[0]), sizeList, root, TAG_LOAD_VALUES);
-                rComm.wait(&(rowColList[0]));
-                rComm.wait(&(valueList[0]));
-                rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
+                if (sizeList > 0) {
+                    rowColList.resize(sizeList * 2);
+                    valueList.resize(sizeList);
+                    rComm.receiveDataX(&(rowColList[0]), sizeList * 2, root, TAG_LOAD_ROWCOLS);
+                    rComm.receiveDataX(&(valueList[0]), sizeList, root, TAG_LOAD_VALUES);
                 
-                for (int i = 0; i < sizeList; ++i) {
-                    const index_type row = rowColList[i * 2    ];
-                    const index_type col = rowColList[i * 2 + 1];
-                    const size_type index = this->getIndex(row, col);
-                    assert(index != -1);
-                    this->pData_[index] = valueList[i];
+                    for (int i = 0; i < sizeList; ++i) {
+                        const index_type row = rowColList[i * 2    ];
+                        const index_type col = rowColList[i * 2 + 1];
+                        const size_type index = this->getIndex(row, col);
+                        assert(index != -1);
+                        this->pData_[index] = valueList[i];
+                    }
                 }
+                
+                rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
             }
 
             if (rComm.test(endMsg) == true) {

@@ -12,6 +12,7 @@
 #include "TlVector.h"
 #include "TlSparseMatrix.h"
 #include "TlUtils.h"
+#include "TlLogging.h"
 #include "TlCommunicate.h"
 
 #define MAX_SESSION_ID (100)
@@ -279,6 +280,8 @@ protected:
     virtual bool saveLocal(const std::string& filePath) const;
 
 protected:
+    TlLogging& log_;
+
     int m_nContext;
     int m_pDESC[9];
 

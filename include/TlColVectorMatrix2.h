@@ -38,6 +38,8 @@ public:
     index_type getColVector(index_type col, double *pBuf, index_type maxRowSize) const;
         
     int getPEinChargeByCol(index_type col) const;
+
+    TlMatrix getTlMatrix() const;
         
 public:
     int getNumOfAllProcs() const {
