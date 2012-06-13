@@ -201,11 +201,15 @@ void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
                                   const std::vector<DfTaskCtrl::Task2>& taskList,
                                   TlMatrixObject* pMatrix)
 {
-    // 第三中心点の固定値を設定
+    // 第三、四中心点の固定値を設定
     static const TlPosition posR(0.0, 0.0, 0.0);
     static DfOverlapEngine::PGTO pgtoR(1.0, 0.0);
     static DfOverlapEngine::PGTOs pgtosR(1);
     pgtosR[0] = pgtoR;
+    static const TlPosition posS(0.0, 0.0, 0.0);
+    static DfOverlapEngine::PGTO pgtoS(1.0, 0.0);
+    static DfOverlapEngine::PGTOs pgtosS(1);
+    pgtosS[0] = pgtoR;
 
     const int taskListSize = taskList.size();
 
@@ -229,9 +233,9 @@ void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
             const TlPosition posQ = orbitalInfo.getPosition(shellIndexQ);
             const DfOverlapEngine::PGTOs pgtosP = this->getPGTOs(orbitalInfo, shellIndexP);
             const DfOverlapEngine::PGTOs pgtosQ = this->getPGTOs(orbitalInfo, shellIndexQ);
-            const DfOverlapEngine::Query query(0, 0, 0, shellTypeP, shellTypeQ, 0);
+            const DfOverlapEngine::Query query(0, 0, 0, 0, shellTypeP, shellTypeQ, 0, 0);
             
-            this->pEngines_[threadID].calc(query, posP, posQ, posR, pgtosP, pgtosQ, pgtosR);
+            this->pEngines_[threadID].calc(query, posP, posQ, posR, posS, pgtosP, pgtosQ, pgtosR, pgtosS);
             
             int index = 0;
             for (int stepP = 0; stepP < maxStepsP; ++stepP) {
@@ -256,11 +260,15 @@ void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo1,
                                   const std::vector<DfTaskCtrl::Task2>& taskList,
                                   TlMatrixObject* pMatrix)
 {
-    // 第三中心点の固定値を設定
+    // 第三、四中心点の固定値を設定
     static const TlPosition posR(0.0, 0.0, 0.0);
     static DfOverlapEngine::PGTO pgtoR(1.0, 0.0);
     static DfOverlapEngine::PGTOs pgtosR(1);
     pgtosR[0] = pgtoR;
+    static const TlPosition posS(0.0, 0.0, 0.0);
+    static DfOverlapEngine::PGTO pgtoS(1.0, 0.0);
+    static DfOverlapEngine::PGTOs pgtosS(1);
+    pgtosS[0] = pgtoS;
 
     const int taskListSize = taskList.size();
 
@@ -284,9 +292,9 @@ void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo1,
             const TlPosition posQ = orbitalInfo2.getPosition(shellIndexQ);
             const DfOverlapEngine::PGTOs pgtosP = this->getPGTOs(orbitalInfo1, shellIndexP);
             const DfOverlapEngine::PGTOs pgtosQ = this->getPGTOs(orbitalInfo2, shellIndexQ);
-            const DfOverlapEngine::Query query(0, 0, 0, shellTypeP, shellTypeQ, 0);
+            const DfOverlapEngine::Query query(0, 0, 0, 0, shellTypeP, shellTypeQ, 0, 0);
             
-            this->pEngines_[threadID].calc(query, posP, posQ, posR, pgtosP, pgtosQ, pgtosR);
+            this->pEngines_[threadID].calc(query, posP, posQ, posR, posS, pgtosP, pgtosQ, pgtosR, pgtosS);
             
             int index = 0;
 
@@ -309,7 +317,7 @@ void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
                                   const std::vector<DfTaskCtrl::Task>& taskList,
                                   TlVectorObject* pVector)
 {
-    // 第2, 第3中心点の固定値を設定
+    // 第2, 第3, 第4中心点の固定値を設定
     static const TlPosition posQ(0.0, 0.0, 0.0);
     static DfOverlapEngine::PGTO pgtoQ(1.0, 0.0);
     static DfOverlapEngine::PGTOs pgtosQ(1);
@@ -318,6 +326,10 @@ void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
     static DfOverlapEngine::PGTO pgtoR(1.0, 0.0);
     static DfOverlapEngine::PGTOs pgtosR(1);
     pgtosR[0] = pgtoR;
+    static const TlPosition posS(0.0, 0.0, 0.0);
+    static DfOverlapEngine::PGTO pgtoS(1.0, 0.0);
+    static DfOverlapEngine::PGTOs pgtosS(1);
+    pgtosS[0] = pgtoS;
 
     const int taskListSize = taskList.size();
 
@@ -336,9 +348,9 @@ void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
             const int maxStepsP = 2 * shellTypeP + 1;
             const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
             const DfOverlapEngine::PGTOs pgtosP = this->getPGTOs(orbitalInfo, shellIndexP);
-            const DfOverlapEngine::Query query(0, 0, 0, shellTypeP, 0, 0);
+            const DfOverlapEngine::Query query(0, 0, 0, 0, shellTypeP, 0, 0, 0);
             
-            this->pEngines_[threadID].calc(query, posP, posQ, posR, pgtosP, pgtosQ, pgtosR);
+            this->pEngines_[threadID].calc(query, posP, posQ, posR, posS, pgtosP, pgtosQ, pgtosR, pgtosS);
             
             int index = 0;
             for (int stepP = 0; stepP < maxStepsP; ++stepP) {
@@ -395,16 +407,20 @@ void DfOverlapX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
                                    const TlSymmetricMatrix& W,
                                    TlMatrix* pForce)
 {
-    // 第三中心点の固定値を設定
+    // 第3,第4中心点の固定値を設定
     static const TlPosition posR(0.0, 0.0, 0.0);
     static const DfOverlapEngine::PGTO pgtoR(1.0, 0.0);
     static DfOverlapEngine::PGTOs pgtosR(1);
     pgtosR[0] = pgtoR;
+    static const TlPosition posS(0.0, 0.0, 0.0);
+    static const DfOverlapEngine::PGTO pgtoS(1.0, 0.0);
+    static DfOverlapEngine::PGTOs pgtosS(1);
+    pgtosS[0] = pgtoS;
 
     const int maxStepsP = 2 * shellTypeP + 1;
     const int maxStepsQ = 2 * shellTypeQ + 1;
     const std::size_t shellArraySizeQ = shellArrayQ.size();
-    const DfOverlapEngine::Query query(1, 0, 0, shellTypeP, shellTypeQ, 0);
+    const DfOverlapEngine::Query query(1, 0, 0, 0, shellTypeP, shellTypeQ, 0, 0);
     
     const DfOverlapEngine::PGTOs pgtosP = this->getPGTOs(orbitalInfo,
                                                          shellIndexP);
@@ -431,7 +447,7 @@ void DfOverlapX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
                                                                  shellIndexQ);
             const int atomIndexB = orbitalInfo.getAtomIndex(shellIndexQ);
                 
-            this->pEngines_[threadID].calc(query, posP, posQ, posR, pgtosP, pgtosQ, pgtosR);
+            this->pEngines_[threadID].calc(query, posP, posQ, posR, posS, pgtosP, pgtosQ, pgtosR, pgtosS);
 
             int index = 0;
             for (int stepP = 0; stepP < maxStepsP; ++stepP) {
