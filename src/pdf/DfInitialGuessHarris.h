@@ -89,7 +89,7 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
         DfOverlapType ovp(this->pPdfParam_);
         MatrixType S_tilde;
         ovp.getTransMat(orbInfo_low, orbInfo_high, &S_tilde);
-        S_tilde.save("S_tilde.mat");
+        // S_tilde.save("S_tilde.mat");
         
         SymmetricMatrixType S_inv;
         S_inv.load(this->getSpqMatrixPath());
@@ -101,6 +101,7 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
 
         P_high = omega_t * P_low * omega;
     }
+    P_high.save(this->getPpqMatrixPath(RUN_RKS, 0)); // save for calc population
 
     // normalize
     {
