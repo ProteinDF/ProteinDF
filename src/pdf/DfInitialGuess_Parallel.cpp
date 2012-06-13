@@ -4,6 +4,7 @@
 
 #include "DfInitialGuess_Parallel.h"
 #include "DfInitialguess.h"
+#include "DfInitialGuessHarris_Parallel.h"
 #include "DfDmatrix_Parallel.h"
 
 DfInitialGuess_Parallel::DfInitialGuess_Parallel(TlSerializeData* pPdfParam)
@@ -236,9 +237,24 @@ void DfInitialGuess_Parallel::createInitialGuessUsingCore()
 
 void DfInitialGuess_Parallel::createInitialGuessUsingHarris()
 {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        DfInitialGuess::createInitialGuessUsingHarris();
+    switch (this->m_nMethodType) {
+    case METHOD_RKS:
+        {
+            DfInitialGuessHarris_Parallel harris(this->pPdfParam_);
+            harris.main();
+        }
+        break;
+
+    case METHOD_UKS:
+        CnErr.abort("Sorry. harris method is not supported except RKS. stop.\n");
+        break;
+
+    case METHOD_ROKS:
+        CnErr.abort("Sorry. harris method is not supported except RKS. stop.\n");
+        break;
+
+    default:
+        CnErr.abort();
+        break;
     }
-    rComm.barrier();
 }
