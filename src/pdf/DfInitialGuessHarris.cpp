@@ -9,7 +9,7 @@
 
 #include "DfEri.h"
 #include "DfCalcGrid.h"
-#include "DfOverlap.h"
+#include "DfOverlapX.h"
 
 #include "TlSymmetricMatrix.h"
 #include "TlVector.h"
@@ -96,8 +96,9 @@ void DfInitialGuessHarris::main()
     // transform low-level density matrix to high-level one
     TlSymmetricMatrix P_high(numOfAOs_high);
     {
-        DfOverlap ovp(this->pPdfParam_);
-        TlMatrix S_tilde = ovp.getSpq(orbInfo_low, orbInfo_high);
+        DfOverlapX ovp(this->pPdfParam_);
+        TlMatrix S_tilde;
+        ovp.getTransMat(orbInfo_low, orbInfo_high, &S_tilde);
         
         TlSymmetricMatrix S_inv;
         S_inv.load(this->getSpqMatrixPath());
