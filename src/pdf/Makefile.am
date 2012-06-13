@@ -114,46 +114,47 @@ libpdf_la_SOURCES = \
 
 
 libppdf_la_SOURCES = \
-	DfInputdata_Parallel.h			DfInputdata_Parallel.cpp	\
-	DfIntegrals_Parallel.h			DfIntegrals_Parallel.cpp	\
-	DfHpq_Parallel.h				DfHpq_Parallel.cpp		\
-	DfHpqX_Parallel.h				DfHpqX_Parallel.cpp		\
-	DfOverlap_Parallel.h			DfOverlap_Parallel.cpp		\
-	DfOverlapX_Parallel.h			DfOverlapX_Parallel.cpp		\
-	DfEri_Parallel.h				DfEri_Parallel.cpp		\
-	DfEriX_Parallel.h				DfEriX_Parallel.cpp		\
-	DfCD_Parallel.h					DfCD_Parallel.cpp	\
-	DfInitialGuess_Parallel.h		DfInitialGuess_Parallel.cpp	\
-	DfPreScf_Parallel.h				DfPreScf_Parallel.cpp		\
-	DfScf_Parallel.h				DfScf_Parallel.cpp		\
-	DfInvMatrix_Parallel.h			DfInvMatrix_Parallel.cpp	\
-	DfGenerateGrid_Parallel.h		DfGenerateGrid_Parallel.cpp	\
-	DfDiffDensityMatrix_Parallel.h	DfDiffDensityMatrix_Parallel.cpp\
-	DfDensityFittingX_Parallel.h	DfDensityFittingX_Parallel.cpp	\
-	DfDensityFittingX_ScaLAPACK.h	DfDensityFittingX_ScaLAPACK.cpp	\
-	DfFockMatrix_Parallel.h			DfFockMatrix_Parallel.cpp	\
-	DfXCFunctional_Parallel.h		DfXCFunctional_Parallel.cpp	\
-	DfEri2_Parallel.h				DfEri2_Parallel.cpp		\
-	DfTwoElectronIntegral_Parallel.h				\
-	DfTwoElectronIntegral_Parallel.cpp				\
-	DfCalcGridX_Parallel.h			DfCalcGridX_Parallel.cpp	\
-	DfConvcheck_Parallel.h			DfConvcheck_Parallel.cpp	\
-	DfTotalEnergy_Parallel.h		DfTotalEnergy_Parallel.cpp	\
-	DfDiagonal_Parallel.h			DfDiagonal_Parallel.cpp		\
-	DfXMatrix_Parallel.h			DfXMatrix_Parallel.cpp		\
-	DfJMatrix_Parallel.h			DfJMatrix_Parallel.cpp		\
-	DfKMatrix_Parallel.h			DfKMatrix_Parallel.cpp		\
-	DfTransFmatrix_Parallel.h		DfTransFmatrix_Parallel.cpp	\
-	DfTransatob_Parallel.h			DfTransatob_Parallel.cpp	\
-	DfDmatrix_Parallel.h			DfDmatrix_Parallel.cpp		\
-	DfConverge_Damping_Parallel.h	DfConverge_Damping_Parallel.cpp \
-	DfConverge_Anderson_Parallel.h	DfConverge_Anderson_Parallel.cpp\
-	DfPopulation_Parallel.h			DfPopulation_Parallel.cpp	\
-	DfSummary_Parallel.h			DfSummary_Parallel.cpp		\
-	DfCleanup_Parallel.h			DfCleanup_Parallel.cpp		\
-	DfForce_Parallel.h				DfForce_Parallel.cpp		\
-	DfTaskCtrl_Parallel.h			DfTaskCtrl_Parallel.cpp		\
-	ProteinDF_Parallel.h			ProteinDF_Parallel.cpp
+	DfInputdata_Parallel.h				DfInputdata_Parallel.cpp			\
+	DfIntegrals_Parallel.h				DfIntegrals_Parallel.cpp			\
+	DfHpq_Parallel.h					DfHpq_Parallel.cpp					\
+	DfHpqX_Parallel.h					DfHpqX_Parallel.cpp					\
+	DfOverlap_Parallel.h				DfOverlap_Parallel.cpp				\
+	DfOverlapX_Parallel.h				DfOverlapX_Parallel.cpp				\
+	DfEri_Parallel.h					DfEri_Parallel.cpp					\
+	DfEriX_Parallel.h					DfEriX_Parallel.cpp					\
+	DfCD_Parallel.h						DfCD_Parallel.cpp					\
+	DfInitialGuess_Parallel.h			DfInitialGuess_Parallel.cpp			\
+	DfInitialGuessHarris_Parallel.h		DfInitialGuessHarris_Parallel.cpp	\
+	DfPreScf_Parallel.h					DfPreScf_Parallel.cpp				\
+	DfScf_Parallel.h					DfScf_Parallel.cpp					\
+	DfInvMatrix_Parallel.h				DfInvMatrix_Parallel.cpp			\
+	DfGenerateGrid_Parallel.h			DfGenerateGrid_Parallel.cpp			\
+	DfDiffDensityMatrix_Parallel.h		DfDiffDensityMatrix_Parallel.cpp	\
+	DfDensityFittingX_Parallel.h		DfDensityFittingX_Parallel.cpp		\
+	DfDensityFittingX_ScaLAPACK.h		DfDensityFittingX_ScaLAPACK.cpp		\
+	DfFockMatrix_Parallel.h				DfFockMatrix_Parallel.cpp			\
+	DfXCFunctional_Parallel.h			DfXCFunctional_Parallel.cpp			\
+	DfEri2_Parallel.h					DfEri2_Parallel.cpp					\
+	DfTwoElectronIntegral_Parallel.h										\
+	DfTwoElectronIntegral_Parallel.cpp										\
+	DfCalcGridX_Parallel.h				DfCalcGridX_Parallel.cpp			\
+	DfConvcheck_Parallel.h				DfConvcheck_Parallel.cpp			\
+	DfTotalEnergy_Parallel.h			DfTotalEnergy_Parallel.cpp			\
+	DfDiagonal_Parallel.h				DfDiagonal_Parallel.cpp				\
+	DfXMatrix_Parallel.h				DfXMatrix_Parallel.cpp				\
+	DfJMatrix_Parallel.h				DfJMatrix_Parallel.cpp				\
+	DfKMatrix_Parallel.h				DfKMatrix_Parallel.cpp				\
+	DfTransFmatrix_Parallel.h			DfTransFmatrix_Parallel.cpp			\
+	DfTransatob_Parallel.h				DfTransatob_Parallel.cpp			\
+	DfDmatrix_Parallel.h				DfDmatrix_Parallel.cpp				\
+	DfConverge_Damping_Parallel.h		DfConverge_Damping_Parallel.cpp 	\
+	DfConverge_Anderson_Parallel.h		DfConverge_Anderson_Parallel.cpp	\
+	DfPopulation_Parallel.h				DfPopulation_Parallel.cpp			\
+	DfSummary_Parallel.h				DfSummary_Parallel.cpp				\
+	DfCleanup_Parallel.h				DfCleanup_Parallel.cpp				\
+	DfForce_Parallel.h					DfForce_Parallel.cpp				\
+	DfTaskCtrl_Parallel.h				DfTaskCtrl_Parallel.cpp				\
+	ProteinDF_Parallel.h				ProteinDF_Parallel.cpp
 
 if PARALLEL
 bin_PROGRAMS = PDF.x PPDF.x

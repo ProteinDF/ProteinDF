@@ -4,7 +4,6 @@
 #include <vector>
 #include "TlOrbitalInfoObject.h"
 
-// class DfCombineDensityMatrix : public DfObject {
 class TlCombineDensityMatrix {
 public:
     TlCombineDensityMatrix(double nearThreshold = 1.0E-3,
