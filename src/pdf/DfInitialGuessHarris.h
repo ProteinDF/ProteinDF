@@ -26,14 +26,16 @@ public:
     virtual void main();
 
 protected:
-    template<class MatrixType, class SymmetricMatrixType, class DfOverlapType>
+    template<class MatrixType, class SymmetricMatrixType, class DfOverlapType, class DfPopulationType>
     void calcInitialDensityMatrix();
 
 private:
     TlSerializeData pdfParam_harrisDB_;
 };
 
-template<class MatrixType, class SymmetricMatrixType, class DfOverlapType>
+
+template<class MatrixType, class SymmetricMatrixType,
+         class DfOverlapType, class DfPopulationType>
 void DfInitialGuessHarris::calcInitialDensityMatrix()
 {
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
@@ -98,6 +100,15 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
         omega_t.transpose();
 
         P_high = omega_t * P_low * omega;
+    }
+
+    // normalize
+    {
+        double numOfElectrons = 0.0;
+        DfPopulationType dfPop(this->pPdfParam_);
+        dfPop.sumOfElectrons(0, &numOfElectrons, NULL);
+        const double coef = numOfElectrons / this->m_nNumOfElectrons;
+        P_high *= coef;
     }
 
     P_high.save(this->getPpqMatrixPath(RUN_RKS, 0));

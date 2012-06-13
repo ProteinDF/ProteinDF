@@ -10,6 +10,7 @@
 #include "PdfUserInput.h"
 #include "DfInitialguess.h"
 #include "DfInitialGuessHarris.h"
+#include "DfPopulation.h"
 
 #include "DfOverlapX.h"
 #include "TlSymmetricMatrix.h"
@@ -45,7 +46,7 @@ DfInitialGuessHarris::~DfInitialGuessHarris()
 
 void DfInitialGuessHarris::main()
 {
-    DfInitialGuessHarris::calcInitialDensityMatrix<TlMatrix, TlSymmetricMatrix, DfOverlapX>();
+    DfInitialGuessHarris::calcInitialDensityMatrix<TlMatrix, TlSymmetricMatrix, DfOverlapX, DfPopulation>();
 }
 
 
