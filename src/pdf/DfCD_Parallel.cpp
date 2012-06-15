@@ -576,14 +576,14 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     CD_all_time.stop();
 
     // timing data
-    this->log_.info(TlUtils::format("CD all:       %f sec.", CD_all_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD diagonals: %f sec.", CD_diagonals_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD resize L:  %f sec.", CD_resizeL_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD ERI:       %f sec.", CD_ERI_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD L(m):      %f sec.", CD_Lpm_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD calc:      %f sec.", CD_calc_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD d:         %f sec.", CD_d_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD save:      %f sec.", CD_save_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD all:       %10.1f sec.", CD_all_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD diagonals: %10.1f sec.", CD_diagonals_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD resize L:  %10.1f sec.", CD_resizeL_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD ERI:       %10.1f sec.", CD_ERI_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD L(m):      %10.1f sec.", CD_Lpm_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD calc:      %10.1f sec.", CD_calc_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD d:         %10.1f sec.", CD_d_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD save:      %10.1f sec.", CD_save_time.getElapseTime()));
 }
 
 
@@ -922,29 +922,49 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
     
     TlDistributeSymmetricMatrix P = 
         0.5 * DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1); // RKS
-    const TlDistributeMatrix C = P.choleskyFactorization(this->epsilon_);
+    //const TlDistributeMatrix C = P.choleskyFactorization(this->epsilon_);
+    const TlDistributeMatrix C = P.choleskyFactorization_mod2(this->epsilon_);
+
+    TlTime time_all;
+    TlTime time_bcast;
+    TlTime time_translate;
+    TlTime time_multimat;
     
+    time_all.start();
     std::vector<double> cv(cvSize);
     for (index_type I = 0; I < numOfCBs; ++I) {
+        time_bcast.start();
         const int PEinCharge = L.getPEinChargeByCol(I);
         if (PEinCharge == rComm.getRank()) {
             const index_type copySize = L.getColVector(I, &(cv[0]), cvSize);
             assert(copySize == cvSize);
         }
         rComm.broadcast(&(cv[0]), cvSize, PEinCharge);
-            
+        time_bcast.stop();
+
+        time_translate.start();
         TlDistributeSymmetricMatrix l = 
             this->getCholeskyVector_distribute(cv, I2PQ);
-        
+        time_translate.stop();
+
+        time_multimat.start();
         TlDistributeMatrix X = l * C;
         TlDistributeMatrix Xt = X;
         Xt.transpose();
         
         TlDistributeSymmetricMatrix XX = X * Xt;
         *pK += XX;
+        time_multimat.stop();
     }
     
     *pK *= -1.0;
+    time_all.stop();
+
+    // timing data
+    this->log_.info(TlUtils::format("K all:       %10.1f sec.", time_all.getElapseTime()));
+    this->log_.info(TlUtils::format("K bcast:     %10.1f sec.", time_bcast.getElapseTime()));
+    this->log_.info(TlUtils::format("K translate: %10.1f sec.", time_translate.getElapseTime()));
+    this->log_.info(TlUtils::format("K multi:     %10.1f sec.", time_multimat.getElapseTime()));
 }
 
 

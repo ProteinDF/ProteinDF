@@ -11,6 +11,7 @@
 #include "TlMatrixObject.h"
 #include "TlVector.h"
 #include "TlSparseMatrix.h"
+#include "TlRowVectorMatrix2.h"
 #include "TlUtils.h"
 #include "TlLogging.h"
 #include "TlCommunicate.h"
@@ -90,8 +91,10 @@ public:
     TlDistributeMatrix(const TlDistributeSymmetricMatrix& rhs);
 
     /// ベクトルからの変換コンストラクタ
-    explicit TlDistributeMatrix(const TlDistributeVector& rhs,
-                                const int row, const int col);
+    TlDistributeMatrix(const TlDistributeVector& rhs,
+                       const int row, const int col);
+
+    TlDistributeMatrix(const TlRowVectorMatrix2& rhs);
 
     virtual ~TlDistributeMatrix();
 

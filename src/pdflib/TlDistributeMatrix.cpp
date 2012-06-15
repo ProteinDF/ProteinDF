@@ -373,6 +373,35 @@ TlDistributeMatrix::TlDistributeMatrix(const TlDistributeVector& rhs,
 }
 
 
+TlDistributeMatrix::TlDistributeMatrix(const TlRowVectorMatrix2& rhs)
+    : log_(TlLogging::getInstance()),
+      m_nContext(0), m_nRows(rhs.getNumOfRows()), m_nCols(rhs.getNumOfCols()),
+      m_nBlockSize(TlDistributeMatrix::systemBlockSize_),
+      pData_(NULL)
+{
+    this->initialize();
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int numOfProcs = rComm.getNumOfProcs();
+    const int myRank = rComm.getRank();
+
+    const index_type numOfRows = this->getNumOfRows();
+    const index_type numOfCols = this->getNumOfCols();
+    std::vector<double> rowVec(numOfCols);
+    for (index_type row = 0; row < numOfRows; ++row) {
+        const int charge = rhs.getPEinChargeByRow(row);
+        if (charge == myRank) {
+            rhs.getRowVector(row, &(rowVec[0]), numOfCols);
+        }
+        rComm.broadcast(&(rowVec[0]), numOfCols, charge);
+        
+        for (index_type col = 0; col < numOfCols; ++col) {
+            this->set(row, col, rowVec[col]);
+        }
+    }
+}
+
+
 TlDistributeMatrix::~TlDistributeMatrix()
 {
     if (this->pData_ != NULL) {

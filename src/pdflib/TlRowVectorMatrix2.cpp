@@ -186,5 +186,3 @@ TlMatrix TlRowVectorMatrix2::getTlMatrix() const
 }
 
 
-
-
