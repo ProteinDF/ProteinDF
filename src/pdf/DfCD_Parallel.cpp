@@ -910,6 +910,7 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
     TlCommunicate& rComm = TlCommunicate::getInstance();
     this->log_.info("calc K by CD method (parallel; distributed).");
 
+
     // cholesky vector
     const I2PQ_Type I2PQ = this->getI2PQ();
     const bool isUsingMemManager = this->isEnableMmap_;

@@ -132,17 +132,57 @@ double TlDistributeSymmetricMatrix::getLocal(index_type row, index_type col) con
 }
 
 
-TlVector TlDistributeSymmetricMatrix::getRowVector(const index_type row) const
+TlVector TlDistributeSymmetricMatrix::getRowVector(const index_type inRow) const
 {
-    TlDistributeMatrix tmp = *this;
-    return tmp.getRowVector(row);
+    assert((0 <= inRow) && (inRow < this->getNumOfRows()));
+    const index_type numOfGlobalRows = this->getNumOfRows();
+    const index_type numOfGlobalCols = this->getNumOfCols();
+    std::vector<double> v(numOfGlobalCols, 0.0);
+
+    if (std::binary_search(this->m_RowIndexTable.begin(), this->m_RowIndexTable.end(), inRow) == true) {
+        const index_type row = inRow;
+        std::vector<index_type>::const_iterator pEnd = 
+            std::upper_bound(this->m_ColIndexTable.begin(),
+                             this->m_ColIndexTable.end(), row);
+        for (std::vector<index_type>::const_iterator p = this->m_ColIndexTable.begin(); p != pEnd; ++p) {
+            const index_type col = *p;
+            assert(row >= col);
+            if (col < numOfGlobalCols) {
+                const index_type local_index = this->getIndex(row, col);
+                assert(local_index != -1);
+                v[col] = this->pData_[local_index];
+            }
+        }
+    }
+
+    // row-col 交換
+    if (std::binary_search(this->m_ColIndexTable.begin(), this->m_ColIndexTable.end(), inRow) == true) {
+        const index_type col = inRow;
+        std::vector<index_type>::const_iterator pBegin = 
+            std::lower_bound(this->m_RowIndexTable.begin(),
+                             this->m_RowIndexTable.end(), col);
+        std::vector<index_type>::const_iterator pEnd = this->m_RowIndexTable.end();
+        for (std::vector<index_type>::const_iterator p = pBegin; p != pEnd; ++p) {
+            const index_type row = *p;
+            assert(row >= col);
+            if (row < numOfGlobalRows) {
+                const index_type local_index = this->getIndex(row, col);
+                assert(local_index != -1);
+                v[row] = this->pData_[local_index];
+            }
+        }
+    }
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    rComm.allReduce_SUM(&(v[0]), numOfGlobalCols);
+
+    return TlVector(v);
 }
 
 
 TlVector TlDistributeSymmetricMatrix::getColumnVector(const index_type col) const
 {
-    TlDistributeMatrix tmp = *this;
-    return tmp.getColVector(col);
+    return this->getRowVector(col);
 }
 
 
