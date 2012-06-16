@@ -11,7 +11,6 @@ $CP $BASEDIR/src/pdf/*.c .
 $CP $BASEDIR/src/pdf/*.cpp .
 $CP $BASEDIR/src/pdf/*.cxx .
 $CP $BASEDIR/src/tools/*.cpp .
-$CP $BASEDIR/src/tools/*.cxx .
 
 $CP $BASEDIR/src/performace_test/*.cpp .
 $CP $BASEDIR/src/performace_test/*.h .
