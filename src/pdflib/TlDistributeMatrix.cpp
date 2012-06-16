@@ -3048,44 +3048,21 @@ bool inverseByScaLapack(TlDistributeMatrix& X)
 
 const TlDistributeMatrix& TlDistributeMatrix::transpose()
 {
-//   TlCommunicate& rComm = TlCommunicate::getInstance();
-//   const double dStartTime = rComm.getTime();
-
-    // safe code
-    const int numOfOldRows = this->getNumOfRows();
-    const int numOfOldCols = this->getNumOfCols();
-    TlDistributeMatrix tmp(numOfOldCols, numOfOldRows);
-    for (int r = 0; r < numOfOldRows; ++r) {
-        for (int c = 0; c < numOfOldCols; ++c) {
-            tmp.set(c, r, this->get(r, c));
-        }
-    }
-    (*this) = tmp;
+    const int M = this->m_nCols;
+    const int N = this->m_nRows;
+    const double alpha = 1.0;
+    const double beta = 0.0;
+    const int IA = 1;
+    const int JA = 1;
+    TlDistributeMatrix C(M, N);
+    const int IC = 1;
+    const int JC = 1;
+    pdtran_(&M, &N,
+            &alpha, &(this->pData_[0]), &IA, &JA, this->m_pDESC,
+            &beta,  &(C.pData_[0]), &IC, &JC, C.m_pDESC);
     
-    // MB_A == NB_C, NB_A == MB_Cの条件でなければ
-    // pdtran_は動作しない
-//     const int M = this->m_nCols; // transpose(NOT row)
-//     const int N = this->m_nRows; // transpose(NOT col)
-//     const double alpha = 1.0;
-//     const double beta = 0.0;
-//     const double* A = &(this->data_[0]);
-//     const int IA = 1;
-//     const int JA = 1;
-//     TlDistributeMatrix Ctmp(M, N);
-//     double* C = &(Ctmp.data_[0]);
-//     const int IC = 1;
-//     const int JC = 1;
-//     pdtran_(&M, &N,
-//             &alpha, A, &IA, &JA, this->m_pDESC,
-//             &beta,  C, &IC, &JC, Ctmp.m_pDESC);
-
-//     (*this) = Ctmp;
-
-//   const double dEndTime = rComm.getTime();
-//   if (rComm.isMaster() == true){
-//     std::cout << "TlDistributeMatrix::transpose() time:" << (dEndTime - dStartTime) << std::endl;
-//   }
-
+    (*this) = C;
+    
     return (*this);
 }
 

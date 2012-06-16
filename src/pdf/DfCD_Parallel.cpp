@@ -705,23 +705,23 @@ void DfCD_Parallel::saveL(const TlRowVectorMatrix2& L)
     
     colVecL.save(DfObject::getLMatrixPath());
 
-    if (this->isDebugSaveL_ == true) {
-        {
-            TlMatrix tmpL = L.getTlMatrix();
-            rComm.allReduce_SUM(tmpL);
-            if (rComm.isMaster()) {
-                tmpL.save("L.mat");
-            }
-        }
+    // if (this->isDebugSaveL_ == true) {
+    //     {
+    //         TlMatrix tmpL = L.getTlMatrix();
+    //         rComm.allReduce_SUM(tmpL);
+    //         if (rComm.isMaster()) {
+    //             tmpL.save("L.mat");
+    //         }
+    //     }
 
-        {
-            TlMatrix tmpL = colVecL.getTlMatrix();
-            rComm.allReduce_SUM(tmpL);
-            if (rComm.isMaster()) {
-                tmpL.save("L2.mat");
-            }
-        }
-    }
+    //     {
+    //         TlMatrix tmpL = colVecL.getTlMatrix();
+    //         rComm.allReduce_SUM(tmpL);
+    //         if (rComm.isMaster()) {
+    //             tmpL.save("L2.mat");
+    //         }
+    //     }
+    // }
 }
 
 
@@ -919,7 +919,8 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
 
     const index_type cvSize = L.getNumOfRows();
     const index_type numOfCBs = L.getNumOfCols();
-    
+
+    this->log_.info("calc CD of density matrix");
     TlDistributeSymmetricMatrix P = 
         0.5 * DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1); // RKS
     //const TlDistributeMatrix C = P.choleskyFactorization(this->epsilon_);
@@ -929,7 +930,11 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
     TlTime time_bcast;
     TlTime time_translate;
     TlTime time_multimat;
+    TlTime time_sym2gen;
+    TlTime time_transpose;
+    TlTime time_add;
     
+    this->log_.info("start loop");
     time_all.start();
     std::vector<double> cv(cvSize);
     for (index_type I = 0; I < numOfCBs; ++I) {
@@ -949,12 +954,23 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
 
         time_multimat.start();
         TlDistributeMatrix X = l * C;
-        TlDistributeMatrix Xt = X;
-        Xt.transpose();
-        
-        TlDistributeSymmetricMatrix XX = X * Xt;
-        *pK += XX;
         time_multimat.stop();
+
+        time_sym2gen.start();
+        TlDistributeMatrix Xt = X;
+        time_sym2gen.stop();
+
+        time_transpose.start();
+        Xt.transpose();
+        time_transpose.stop();
+        
+        time_multimat.start();
+        TlDistributeSymmetricMatrix XX = X * Xt;
+        time_multimat.stop();
+
+        time_add.start();
+        *pK += XX;
+        time_add.stop();
     }
     
     *pK *= -1.0;
@@ -965,6 +981,9 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
     this->log_.info(TlUtils::format("K bcast:     %10.1f sec.", time_bcast.getElapseTime()));
     this->log_.info(TlUtils::format("K translate: %10.1f sec.", time_translate.getElapseTime()));
     this->log_.info(TlUtils::format("K multi:     %10.1f sec.", time_multimat.getElapseTime()));
+    this->log_.info(TlUtils::format("K sym2gen:   %10.1f sec.", time_sym2gen.getElapseTime()));
+    this->log_.info(TlUtils::format("K transpose: %10.1f sec.", time_transpose.getElapseTime()));
+    this->log_.info(TlUtils::format("K add:       %10.1f sec.", time_add.getElapseTime()));
 }
 
 
