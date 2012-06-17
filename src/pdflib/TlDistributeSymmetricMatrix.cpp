@@ -1860,11 +1860,12 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
     }
 
     int progress = 0;
-    index_type division = index_type(N * 0.01);
+    index_type division = index_type(N * 0.1);
     while (error > threshold) {
-        //this->log_.info(TlUtils::format("cd try=%d, error=%f", m, error));
         // progress 
         if (m >= progress * division) {
+            this->log_.info(TlUtils::format("cd progress %8d/%8d, error=%f",
+                                            m, N, error));
             ++progress;
             L.reserve_cols(progress * division); // メモリの確保
         }
