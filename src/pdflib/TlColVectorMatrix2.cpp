@@ -58,7 +58,7 @@ void TlColVectorMatrix2::resize(const index_type newRows,
             }
         } else {
             for (index_type i = newNumOfLocalCols; i < prevNumOfLocalCols; ++i) {
-                delete this->data_[i];
+                delete[] this->data_[i];
                 this->data_[i] = NULL;
             }
         }
@@ -92,7 +92,7 @@ void TlColVectorMatrix2::reserve_rows(const index_type newReserves) {
             }
             
             if (this->data_[i] != NULL) {
-                for (index_type j = 0; j < numOfRows; ++j) {
+                for (index_type j = 0; j < prevReserveRows; ++j) {
                     pNew[j] = this->data_[i][j];
                 }
                 if (this->isUsingMemManager_ == true) {
@@ -215,7 +215,7 @@ void TlColVectorMatrix2::load(const std::string& basename)
     assert((allProcs == this->allProcs_) && (rank == this->rank_));
 
     // data
-    const div_t turns = std::div(this->getNumOfRows(), this->allProcs_);
+    const div_t turns = std::div(this->getNumOfCols(), this->allProcs_);
     index_type numOfLocalCols = turns.quot;
     if (this->rank_ < turns.rem) {
         ++numOfLocalCols;

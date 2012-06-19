@@ -57,7 +57,7 @@ void TlRowVectorMatrix2::resize(const index_type newRows,
             }
         } else {
             for (index_type i = newNumOfLocalRows; i < prevNumOfLocalRows; ++i) {
-                delete this->data_[i];
+                delete[] this->data_[i];
                 this->data_[i] = NULL;
             }
         }
@@ -91,7 +91,7 @@ void TlRowVectorMatrix2::reserve_cols(const index_type newReserves) {
             }
             
             if (this->data_[i] != NULL) {
-                for (index_type j = 0; j < numOfCols; ++j) {
+                for (index_type j = 0; j < prevReserveCols; ++j) {
                     pNew[j] = this->data_[i][j];
                 }
                 if (this->isUsingMemManager_ == true) {
