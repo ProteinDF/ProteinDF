@@ -53,8 +53,8 @@ protected:
     void createEngines();
 
     /// DfEriEngineオブジェクトを破棄する
-    void destroyEngines();
-    
+    /// @return ERIの計算にかかった時間
+    double destroyEngines();
    
 protected:
     static const int MAX_SHELL_TYPE;
@@ -286,7 +286,7 @@ protected:
     // mutable std::vector<unsigned long> cutoffAlive_E2_;
 
     DfEriEngine* pEriEngines_;
-    
+
 protected:
     /// デバッグ用積分インデックス積算クラス
     ///

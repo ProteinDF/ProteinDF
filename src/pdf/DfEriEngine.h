@@ -15,6 +15,7 @@
 #include "TlUtils.h"
 #include "TlMath.h"
 #include "TlOrbitalInfoObject.h"
+#include "TlTime.h"
 #include "TlLogging.h"
 
 /// 仕様
@@ -431,7 +432,9 @@ private:
 public:
     DfEriEngine();
     ~DfEriEngine();
-    
+
+    double getElapseCalcTime() const;
+
     static CGTO_Pair getCGTO_pair(const TlOrbitalInfoObject& orbInfoconst,
                                   const index_type shellIndexP,
                                   const index_type shellIndexQ = -1,
@@ -629,6 +632,7 @@ private:
     double primitiveLevelThreshold_;
 
     //
+    TlTime time_calc_all_;
     TlLogging& log_;
 
 #ifdef CHECK_MAX_COUNT

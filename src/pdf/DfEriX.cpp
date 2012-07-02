@@ -94,13 +94,28 @@ void DfEriX::createEngines()
 }
 
 
-void DfEriX::destroyEngines()
+double DfEriX::destroyEngines()
 {
     this->log_.info("delete OpenMP ERI engine");
+    
+    // sum up elapse time
+    double time_ERI_all = 0.0;
+    int numOfThreads = 1;
+#ifdef _OPENMP
+    {
+        numOfThreads = omp_get_max_threads();
+    }
+#endif // _OPENMP
+    for (int thread = 0; thread < numOfThreads; ++thread) {
+        time_ERI_all += this->pEriEngines_[thread].getElapseCalcTime();
+    }
+
     if (this->pEriEngines_ != NULL) {
         delete[] this->pEriEngines_;
     }
     this->pEriEngines_ = NULL;
+
+    return time_ERI_all;
 }
 
 
@@ -132,6 +147,8 @@ void DfEriX::finalize(TlVector* pVct)
 void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
 {
     assert(pRho != NULL);
+    TlTime time_all;
+    time_all.start();
     
     // カットオフ値の設定
     const double maxDeltaP = P.getMaxAbsoluteElement();
@@ -174,7 +191,14 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
-    this->destroyEngines();
+    const double time_ERI_all = this->destroyEngines();
+
+    // statics report
+    time_all.stop();
+    {
+        this->log_.info(TlUtils::format("all time: %16.1f sec.", time_all.getElapseTime()));
+        this->log_.info(TlUtils::format("ERI time: %16.1f sec.", time_ERI_all));
+    }
 }
 
 
@@ -264,6 +288,8 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
 void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
 {
     assert(pJ != NULL);
+    TlTime time_all;
+    time_all.start();
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_sets"]);
@@ -300,7 +326,14 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
-    this->destroyEngines();
+    const double time_ERI_all = this->destroyEngines();
+
+    // statics report
+    time_all.stop();
+    {
+        this->log_.info(TlUtils::format("all time: %16.1f sec.", time_all.getElapseTime()));
+        this->log_.info(TlUtils::format("ERI time: %16.1f sec.", time_ERI_all));
+    }
 }
 
 
@@ -506,6 +539,9 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
 void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
 {
     assert(pJ != NULL);
+    TlTime time_all;
+    time_all.start();
+
     pJ->resize(this->m_nNumOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
@@ -546,8 +582,15 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
-    this->destroyEngines();
+    const double time_ERI_all = this->destroyEngines();
     
+    // statics report
+    time_all.stop();
+    {
+        this->log_.info(TlUtils::format("all time: %16.1f sec.", time_all.getElapseTime()));
+        this->log_.info(TlUtils::format("ERI time: %16.1f sec.", time_ERI_all));
+    }
+
     // debug
 #ifdef DEBUG_J
     if (this->isDebugOutJ_ == true) {
@@ -1456,6 +1499,8 @@ void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
 void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
 {
     assert(pK != NULL);
+    TlTime time_all;
+    time_all.start();
 
     const index_type numOfAOs = this->m_nNumOfAOs;
     pK->resize(numOfAOs);
@@ -1504,7 +1549,7 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
 
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
-    this->destroyEngines();
+    const double time_ERI_all = this->destroyEngines();
     
     // debug
 #ifdef DEBUG_K
@@ -1514,6 +1559,13 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
 #endif // DEBUG_K
 
     //pK->save("K.mat");
+
+    // statics report
+    time_all.stop();
+    {
+        this->log_.info(TlUtils::format("all time: %16.1f sec.", time_all.getElapseTime()));
+        this->log_.info(TlUtils::format("ERI time: %16.1f sec.", time_ERI_all));
+    }
 }
 
 
