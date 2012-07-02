@@ -287,6 +287,9 @@ protected:
 
     DfEriEngine* pEriEngines_;
 
+    // statics
+    double elapsetime_store_;
+
 protected:
     /// デバッグ用積分インデックス積算クラス
     ///

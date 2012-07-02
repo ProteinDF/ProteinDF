@@ -147,6 +147,7 @@ void DfEriX::finalize(TlVector* pVct)
 void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
 {
     assert(pRho != NULL);
+    this->elapsetime_store_ = 0.0;
     TlTime time_all;
     time_all.start();
     
@@ -196,8 +197,9 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
     // statics report
     time_all.stop();
     {
-        this->log_.info(TlUtils::format("all time: %16.1f sec.", time_all.getElapseTime()));
-        this->log_.info(TlUtils::format("ERI time: %16.1f sec.", time_ERI_all));
+        this->log_.info(TlUtils::format("all time:  %16.1f sec.", time_all.getElapseTime()));
+        this->log_.info(TlUtils::format(" store:    %16.1f sec.", this->elapsetime_store_));
+        this->log_.info(TlUtils::format(" ERI time: %16.1f sec.", time_ERI_all));
     }
 }
 
@@ -213,6 +215,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
     
 #pragma omp parallel
     {
+        TlTime time_store;
         int threadID = 0;
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
@@ -270,7 +273,9 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                                     const index_type indexR = shellIndexR + k;
                                     
                                     const double value = this->pEriEngines_[threadID].WORK[index];
+                                    time_store.start();
                                     pRho->add(indexR, P_pq * value);
+                                    time_store.stop();
                                     ++index;
                                 }
                             } else {
@@ -281,6 +286,22 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                 }
             }
         }
+
+#ifdef _OPENMP        
+        {
+            const int numOfThreads = omp_get_num_threads();
+            for (int thread = 0; thread < numOfThreads; ++thread) {
+                if (thread == threadID) {
+                    this->elapsetime_store_ += time_store.getElapseTime();
+                }
+#pragma omp barrier                
+            }
+        }
+#else
+        {
+            this->elapsetime_store_ = time_store.getElapseTime();
+        }
+#endif // _OPENMP
     }
 }
 
@@ -288,6 +309,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
 void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
 {
     assert(pJ != NULL);
+    this->elapsetime_store_ = 0.0;
     TlTime time_all;
     time_all.start();
 
@@ -332,7 +354,8 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
     time_all.stop();
     {
         this->log_.info(TlUtils::format("all time: %16.1f sec.", time_all.getElapseTime()));
-        this->log_.info(TlUtils::format("ERI time: %16.1f sec.", time_ERI_all));
+        this->log_.info(TlUtils::format(" store:    %16.1f sec.", this->elapsetime_store_));
+        this->log_.info(TlUtils::format(" ERI time: %16.1f sec.", time_ERI_all));
     }
 }
 
@@ -349,6 +372,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
     
 #pragma omp parallel
     {
+        TlTime time_store;
         int threadID = 0;
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
@@ -406,7 +430,9 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                                     ++index;
                                 }
 
+                                time_store.start();
                                 pP->add(indexP, indexQ, value);
+                                time_store.stop();
                             } else {
                                 index += maxStepsR;
                             }
@@ -415,6 +441,22 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                 }
             }
         }
+
+#ifdef _OPENMP        
+        {
+            const int numOfThreads = omp_get_num_threads();
+            for (int thread = 0; thread < numOfThreads; ++thread) {
+                if (thread == threadID) {
+                    this->elapsetime_store_ += time_store.getElapseTime();
+                }
+#pragma omp barrier
+            }
+        }
+#else
+        {
+            this->elapsetime_store_ = time_store.getElapseTime();
+        }
+#endif // _OPENMP
     }
 }
 
@@ -539,6 +581,7 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
 void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
 {
     assert(pJ != NULL);
+    this->elapsetime_store_ = 0.0;
     TlTime time_all;
     time_all.start();
 
@@ -587,8 +630,9 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
     // statics report
     time_all.stop();
     {
-        this->log_.info(TlUtils::format("all time: %16.1f sec.", time_all.getElapseTime()));
-        this->log_.info(TlUtils::format("ERI time: %16.1f sec.", time_ERI_all));
+        this->log_.info(TlUtils::format("all time:  %16.1f sec.", time_all.getElapseTime()));
+        this->log_.info(TlUtils::format(" store:    %16.1f sec.", this->elapsetime_store_));
+        this->log_.info(TlUtils::format(" ERI time: %16.1f sec.", time_ERI_all));
     }
 
     // debug
@@ -630,7 +674,9 @@ void DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
 
 #pragma omp parallel
     {
+        TlTime time_store;
         int threadID = 0;
+
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
@@ -671,6 +717,22 @@ void DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                                         shellIndexS, maxStepsS,
                                         this->pEriEngines_[threadID], P, pJ);
         }
+
+#ifdef _OPENMP        
+        {
+            const int numOfThreads = omp_get_num_threads();
+            for (int thread = 0; thread < numOfThreads; ++thread) {
+                if (thread == threadID) {
+                    this->elapsetime_store_ += time_store.getElapseTime();
+                }
+#pragma omp barrier
+            }
+        }
+#else
+        {
+            this->elapsetime_store_ = time_store.getElapseTime();
+        }
+#endif // _OPENMP
     }
         
 }
