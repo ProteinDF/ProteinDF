@@ -5,6 +5,7 @@
 #include "DfEriX.h"
 #include "TlMath.h"
 #include "TlFmt.h"
+#include "TlSparseVector.h"
 
 const int DfEriX::MAX_SHELL_TYPE = 2 + 1; // (s=0, p, d)
 const int DfEriX::FORCE_K_BUFFER_SIZE = 3 * 5 * 5 * 5; // (xyz) * 5d * 5d * 5d
@@ -217,6 +218,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
     {
         TlTime time_store;
         int threadID = 0;
+        TlSparseVector local_rho(pRho->getSize());
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
@@ -274,7 +276,8 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                                     
                                     const double value = this->pEriEngines_[threadID].WORK[index];
                                     time_store.start();
-                                    pRho->add(indexR, P_pq * value);
+                                    //pRho->add(indexR, P_pq * value);
+                                    local_rho.add(indexR, P_pq * value);
                                     time_store.stop();
                                     ++index;
                                 }
@@ -292,6 +295,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
             const int numOfThreads = omp_get_num_threads();
             for (int thread = 0; thread < numOfThreads; ++thread) {
                 if (thread == threadID) {
+                    *pRho += local_rho;
                     this->elapsetime_store_ += time_store.getElapseTime();
                 }
 #pragma omp barrier                
@@ -299,6 +303,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
         }
 #else
         {
+            *pRho += local_rho;
             this->elapsetime_store_ = time_store.getElapseTime();
         }
 #endif // _OPENMP
