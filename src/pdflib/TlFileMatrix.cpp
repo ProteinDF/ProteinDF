@@ -359,7 +359,7 @@ void TlFileMatrix::setBlockMatrix(const index_type row,
     assert(0 < (row + row_distance) && (row + row_distance) <= this->getNumOfRows());
     assert(0 < (col + col_distance) && (col + col_distance) <= this->getNumOfCols());
 
-#pragma omp parallel for
+    // this->set()はスレッドセーフではないのでOpenMPでは注意すること
     for (index_type dr = 0; dr < row_distance; ++dr) {
         const index_type r = row + dr;
         for (index_type dc = 0; dc < col_distance; ++dc) {
