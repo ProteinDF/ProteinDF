@@ -500,7 +500,7 @@ void DfCalcGridX_Parallel::calcRho_LDA(const TlDistributeMatrix& P_A,
                                 rowPhi, colPhi,
                                 &rhoA);
 
-        pGridMat->add(grid, GM_GGA_RHO_ALPHA, rhoA);
+        pGridMat->add(grid, GM_LDA_RHO_ALPHA, rhoA);
     }
 }
 
@@ -539,8 +539,8 @@ void DfCalcGridX_Parallel::calcRho_LDA(const TlDistributeMatrix& P_A,
                                 rowPhi, colPhi,
                                 &rhoB);
 
-        pGridMat->add(grid, GM_GGA_RHO_ALPHA, rhoA);
-        pGridMat->add(grid, GM_GGA_RHO_BETA, rhoB);
+        pGridMat->add(grid, GM_LDA_RHO_ALPHA, rhoA);
+        pGridMat->add(grid, GM_LDA_RHO_BETA, rhoB);
     }
 }
 
