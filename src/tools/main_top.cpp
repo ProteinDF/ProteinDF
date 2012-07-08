@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <vector>
 
+#include "DfObject.h"
 #include "TlGetopt.h"
 #include "TlUtils.h"
 #include "TlFile.h"
@@ -78,18 +79,19 @@ int main(int argc, char* argv[])
     const std::string readParamPath = TlUtils::format("%s/pdfparam.mpac", readDir.c_str());
     TlMsgPack readMsgPack;
     readMsgPack.load(readParamPath);
-    const TlSerializeData readData = readMsgPack.getSerializeData();
-    const TlOrbitalInfo readOrbInfo(readData["coordinates"],
-                                    readData["basis_sets"]);
-    const int lastIteration = readData["iterations"].getInt();
+    TlSerializeData pdfparam = readMsgPack.getSerializeData();
+    const TlOrbitalInfo readOrbInfo(pdfparam["coordinates"],
+                                    pdfparam["basis_sets"]);
+    const int lastIteration = pdfparam["num_of_iterations"].getInt();
+    DfObject dfObj(&pdfparam);
 
     // load S
     TlSymmetricMatrix S;
-    S.load(readDir + "/fl_Work/fl_Mtr_Spq.matrix");
+    S.load(dfObj.getSpqMatrixPath());
     
     // load C
     TlMatrix C;
-    std::string readMatrixPath = readDir + "/fl_Work/fl_Mtr_C.matrix.rks" + TlUtils::xtos(lastIteration);
+    const std::string readMatrixPath = dfObj.getCMatrixPath(DfObject::RUN_RKS, lastIteration);
     if (isVerbose == true) {
         std::cout << TlUtils::format("read %s.", readMatrixPath.c_str()) << std::endl;
     }
@@ -107,7 +109,7 @@ int main(int argc, char* argv[])
     double energy = 0.0;
     {
         TlVector eigval;
-        const std::string eigvalPath = readDir + "/fl_Work/fl_Vct_Eigval" + TlUtils::xtos(lastIteration);
+        const std::string eigvalPath = dfObj.getEigenvaluesPath(DfObject::RUN_RKS, lastIteration);
         eigval.load(eigvalPath);
         energy = eigval.get(level);
     }
@@ -132,7 +134,7 @@ int main(int argc, char* argv[])
         const double coef_i = MO[i];
         for (int j = 0; j < i; ++j) {
             const double coef_j = MO[j];
-            allSquareCoef += 2.0 * coef_i * coef_j * S.get(i, j);
+            allSquareCoef += std::fabs(2.0 * coef_i * coef_j * S.get(i, j));
         }
         allSquareCoef += coef_i * coef_i;
     }
@@ -158,12 +160,12 @@ int main(int argc, char* argv[])
         const TlPosition pos = readOrbInfo.getPosition(AO);
         double squareCoef = 0.0; // 係数の2乗値
         for (int i = 0; i < maxAO; ++i) {
-            squareCoef += MO[i] * value * S.get(AO, i);
+            squareCoef += std::fabs(MO[i] * value * S.get(AO, i));
         }
         const double ratio = 100.0 * squareCoef / allSquareCoef;
         accumulateRatio += ratio;
 
-        std::cout << TlUtils::format("No.%2d %5d %2s (% 8.3f, % 8.3f, % 8.3f) %c(%6s) value=% 8.3f(%5.2f%%; %5.2f%%)",
+        std::cout << TlUtils::format("No.%2d %5d %2s (% 8.3f, % 8.3f, % 8.3f) %c(%6s) value=% 8.3f(%6.2f%%; %6.2f%%)",
                                      rank+1,
                                      readOrbInfo.getAtomIndex(AO),
                                      readOrbInfo.getAtomName(AO).c_str(),
