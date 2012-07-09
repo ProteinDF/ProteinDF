@@ -68,16 +68,18 @@ public:
     virtual ~DfObject();
 
 public:
+    std::string getSpqMatrixPath();
     std::string getFpqMatrixPath(RUN_TYPE runType, int iteration) const;
     std::string getCMatrixPath(RUN_TYPE runType, int iteration, const std::string& fragment = "") const;
     std::string getPpqMatrixPath(RUN_TYPE runType, int iteration) const;
+    std::string getEigenvaluesPath(const RUN_TYPE runType,
+                                   const int iteration) const;
     
 protected:
     std::string makeFilePath(const std::string& baseFileName,
                              const std::string& suffix = "") const;
     std::string getHpqMatrixPath();
     std::string getHpq2MatrixPath();
-    std::string getSpqMatrixPath();
     std::string getSabMatrixPath();
     std::string getSab2MatrixPath();
     std::string getSgdMatrixPath();
@@ -108,9 +110,6 @@ protected:
     std::string getNyuPath(RUN_TYPE nRunType, int nIteration) const;
     std::string getTalphaPath(RUN_TYPE runType, int iteration) const;
 
-    std::string getEigenvaluesPath(const RUN_TYPE runType,
-                                   const int iteration) const;
-    
 protected:
     template <class SymmetricMatrixType>
     void saveHpqMatrix(const SymmetricMatrixType& Hpq);
