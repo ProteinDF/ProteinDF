@@ -29,7 +29,7 @@ public:
 
 void showHelp()
 {
-    std::cout << "pdfTop <OPTIONS> MO_LEVEL NUM_OF_ITEMS" << std::endl;
+    std::cout << "pdftop <OPTIONS> MO_LEVEL NUM_OF_ITEMS" << std::endl;
     std::cout << std::endl;
     std::cout << "OPTIONS:" << std::endl;
     std::cout << "  -a:             output all basis functions" << std::endl;
@@ -104,6 +104,8 @@ int main(int argc, char* argv[])
                   << std::endl;
         return EXIT_FAILURE;
     }
+    const int numOfAOs = C.getNumOfRows();
+    const int numOfMOs = C.getNumOfCols();
 
     // energy
     double energy = 0.0;
@@ -114,31 +116,23 @@ int main(int argc, char* argv[])
         energy = eigval.get(level);
     }
 
+    const TlMatrix SC = S * C;
+    
     // MO
     const TlVector MO = C.getColVector(level);
-    const int maxAO = MO.getSize();
-    std::vector<LCAO> AOs(maxAO);
-    for (int i = 0; i < maxAO; ++i) {
+    std::vector<LCAO> AOs(numOfAOs);
+    double sum = 0.0;
+    for (int i = 0; i < numOfAOs; ++i) {
         AOs[i].index = i;
-        const double value = MO[i];
-        AOs[i].value = value;
-    }
-    std::sort(AOs.begin(), AOs.end(), LCAO_cmp());
-    if (isAllAOs == true) {
-        top = maxAO;
+        const double w = std::fabs(MO[i] * SC.get(i, level));
+        sum += w;
+        AOs[i].value = w;
     }
 
-    // calc normalize factor
-    double allSquareCoef = 0.0; // 係数の2乗値の合計
-    for (int i = 0; i < maxAO; ++i) {
-        const double coef_i = MO[i];
-        for (int j = 0; j < i; ++j) {
-            const double coef_j = MO[j];
-            allSquareCoef += std::fabs(2.0 * coef_i * coef_j * S.get(i, j));
-        }
-        allSquareCoef += coef_i * coef_i;
-    }
-    
+    // sort
+    std::sort(AOs.begin(), AOs.end(), LCAO_cmp());
+
+
     // display
     const char shellTypes[] = {'s', 'p', 'd'};
     const char* angularMomentumTypes[] = {
@@ -152,28 +146,27 @@ int main(int argc, char* argv[])
     std::cout << TlUtils::format("energy = % 18.8f", energy)
               << std::endl;
 
-    double accumulateRatio = 0.0;
+    if (isAllAOs == true) {
+        top = numOfAOs;
+    }
+
+    double accumulate = 0.0;
     for (int rank = 0; rank < top; ++rank) {
         const int AO = AOs[rank].index;
-        const double value = AOs[rank].value;
-
+        const double w = AOs[rank].value;
         const TlPosition pos = readOrbInfo.getPosition(AO);
-        double squareCoef = 0.0; // 係数の2乗値
-        for (int i = 0; i < maxAO; ++i) {
-            squareCoef += std::fabs(MO[i] * value * S.get(AO, i));
-        }
-        const double ratio = 100.0 * squareCoef / allSquareCoef;
-        accumulateRatio += ratio;
 
-        std::cout << TlUtils::format("No.%2d %5d %2s (% 8.3f, % 8.3f, % 8.3f) %c(%6s) value=% 8.3f(%6.2f%%; %6.2f%%)",
+        const double rate = w / sum * 100.0;
+        accumulate += rate;
+        std::cout << TlUtils::format("No.%2d %5d %2s (% 8.3f, % 8.3f, % 8.3f) %c(%6s) coef=% 8.3f w=% 8.3f(%6.2f%%; %6.2f%%)",
                                      rank+1,
                                      readOrbInfo.getAtomIndex(AO),
                                      readOrbInfo.getAtomName(AO).c_str(),
                                      pos.x() / AU_BOHR, pos.y() / AU_BOHR, pos.z() / AU_BOHR,
                                      shellTypes[readOrbInfo.getShellType(AO)],
                                      angularMomentumTypes[readOrbInfo.getBasisType(AO)],
-                                     value,
-                                     ratio, accumulateRatio)
+                                     MO.get(AO), w,
+                                     rate, accumulate)
                   << std::endl;
     }
     

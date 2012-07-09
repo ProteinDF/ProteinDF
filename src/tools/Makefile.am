@@ -17,7 +17,7 @@ SERIAL_PROGS = 				\
 	topPdfMatrix				\
 	catPdfMatrix addPdfMatrix	\
 	combineDensityMatrix 		\
-	pdfTop					\
+	pdftop					\
 	pdfOrbInfo 				\
 	pdfMatrixCheck 			\
 	mullikenPop 			\
@@ -78,8 +78,8 @@ addPdfMatrix_LDADD = $(SERIAL_LIBS)
 combineDensityMatrix_SOURCES = main_combineDensityMatrix.cpp
 combineDensityMatrix_LDADD = $(SERIAL_LIBS)
 
-pdfTop_SOURCES = main_top.cpp
-pdfTop_LDADD = $(SERIAL_LIBS)
+pdftop_SOURCES = main_top.cpp
+pdftop_LDADD = $(SERIAL_LIBS)
 
 pdfOrbInfo_SOURCES = main_pdfOrbInfo.cpp
 pdfOrbInfo_LDADD = $(SERIAL_LIBS)
