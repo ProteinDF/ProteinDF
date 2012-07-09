@@ -262,7 +262,7 @@ void DfPopulation::getOrbPopStr(const TlVector& trPS, T& out) const
                                    aoIndex +1,
                                    this->orbitalInfo_.getBasisTypeName(aoIndex).c_str());
         }
-        out << TlUtils::format(" %12.6lf\n", trPS.get(atomIndex));
+        out << TlUtils::format(" %12.6lf\n", trPS.get(aoIndex));
     }
 }
 
