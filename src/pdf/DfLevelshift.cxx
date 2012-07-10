@@ -140,7 +140,13 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration, const std::string
             }
         } else {
             // "read previous C' matrix"
-            Cprime = DfObject::getCprimeMatrix<TlMatrix>(runType, iteration -1);
+            if (TlFile::isExist(DfObject::getCprimeMatrixPath(runType, iteration -1)) == true) {
+                Cprime = DfObject::getCprimeMatrix<TlMatrix>(runType, iteration -1);
+            } else {
+                TlMatrix C = DfObject::getCMatrix<TlMatrix>(runType, iteration -1);
+                TlMatrix X = DfObject::getXMatrix<TlMatrix>();
+                Cprime = C * X;
+            }
 
             if (Cprime.getNumOfRows() != this->m_nNumOfMOs || Cprime.getNumOfCols() != this->m_nNumOfMOs) {
                 this->log_.warn(TlUtils::format("rowDim of previous C' matrix = %d", Cprime.getNumOfRows()));
