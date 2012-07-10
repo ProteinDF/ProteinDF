@@ -87,7 +87,7 @@ void TlOrbitalInfoObject::setCGTO(const Fl_Gto& flGto)
         tmpCGTO.basisName = flGto.getBasisName(cgto);
         tmpCGTO.atomSymbol = flGto.getAtom(cgto);
         tmpCGTO.shell = shell;
-        tmpCGTO.basisName = flGto.getLabel(cgto);
+        tmpCGTO.label = flGto.getLabel(cgto);
         tmpCGTO.factor = factor;
         
         this->cgtos_[cgto] = tmpCGTO;
