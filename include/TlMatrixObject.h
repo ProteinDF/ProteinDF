@@ -81,6 +81,10 @@ public:
     virtual TlVector getColVector(index_type col) const;
 
 public:
+    virtual TlMatrixObject& operator+=(const TlMatrixObject& rhs);
+
+
+public:
     /// 指定されたパスから内容を読み込む
     ///
     /// @retval true 成功

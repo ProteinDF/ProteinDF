@@ -11,6 +11,7 @@
 #include <fstream>
 
 #include "TlMatrix.h"
+#include "TlSparseSymmetricMatrix.h"
 #include "TlVector.h"
 
 class TlCommunicate; // 通信クラス
@@ -108,6 +109,8 @@ public:
     TlSymmetricMatrix& operator =(const TlSymmetricMatrix& rhs);
 
     TlSymmetricMatrix& operator+=(const TlSymmetricMatrix& rhs);
+    virtual TlSymmetricMatrix& operator+=(const TlSparseSymmetricMatrix& rhs);
+
     //TlSymmetricMatrix& operator+=(const TlMatrix& rhs);
     TlSymmetricMatrix& operator-=(const TlSymmetricMatrix& rhs);
 

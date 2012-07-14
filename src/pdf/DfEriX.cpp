@@ -369,8 +369,11 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                        const TlOrbitalInfo_Density& orbitalInfo_Density,
                        const ShellArrayTable& shellArrayTable_Density,
                        const std::vector<DfTaskCtrl::Task2>& taskList,
-                       const TlVector& rho, TlMatrixObject* pP)
+                       const TlVector& rho, TlMatrixObject* pJ)
 {
+    const TlMatrixObject::index_type dim = pJ->getNumOfRows();
+    assert(dim == pJ->getNumOfCols());
+
     const int maxShellType = orbitalInfo.getMaxShellType();
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
@@ -379,6 +382,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
     {
         TlTime time_store;
         int threadID = 0;
+        TlSparseSymmetricMatrix local_J(dim);
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
@@ -436,7 +440,8 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                                 }
 
                                 time_store.start();
-                                pP->add(indexP, indexQ, value);
+                                // pJ->add(indexP, indexQ, value);
+                                local_J.add(indexP, indexQ, value);
                                 time_store.stop();
                             } else {
                                 index += maxStepsR;
@@ -452,6 +457,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
             const int numOfThreads = omp_get_num_threads();
             for (int thread = 0; thread < numOfThreads; ++thread) {
                 if (thread == threadID) {
+                    *pJ += local_J;
                     this->elapsetime_store_ += time_store.getElapseTime();
                 }
 #pragma omp barrier
@@ -459,6 +465,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
         }
 #else
         {
+            *pJ += local_J;
             this->elapsetime_store_ = time_store.getElapseTime();
         }
 #endif // _OPENMP
@@ -466,7 +473,6 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
 }
 
 
-// TODO: OpenMP化
 void DfEriX::getJpq(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
 {
     assert(pJ != NULL);
@@ -674,6 +680,9 @@ void DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                                       const std::vector<DfTaskCtrl::Task4>& taskList,
                                       const TlMatrixObject& P, TlMatrixObject* pJ)
 {
+    const TlMatrixObject::index_type dim = pJ->getNumOfRows();
+    assert(dim == pJ->getNumOfCols());
+    
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
@@ -681,7 +690,7 @@ void DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
     {
         TlTime time_store;
         int threadID = 0;
-
+        TlSparseSymmetricMatrix local_J(dim);
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
@@ -716,11 +725,16 @@ void DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
 
             this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
                         
+            // this->storeJ_integralDriven(shellIndexP, maxStepsP,
+            //                             shellIndexQ, maxStepsQ,
+            //                             shellIndexR, maxStepsR,
+            //                             shellIndexS, maxStepsS,
+            //                             this->pEriEngines_[threadID], P, pJ);
             this->storeJ_integralDriven(shellIndexP, maxStepsP,
                                         shellIndexQ, maxStepsQ,
                                         shellIndexR, maxStepsR,
                                         shellIndexS, maxStepsS,
-                                        this->pEriEngines_[threadID], P, pJ);
+                                        this->pEriEngines_[threadID], P, &local_J);
         }
 
 #ifdef _OPENMP        
@@ -728,6 +742,7 @@ void DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
             const int numOfThreads = omp_get_num_threads();
             for (int thread = 0; thread < numOfThreads; ++thread) {
                 if (thread == threadID) {
+                    *pJ += local_J;
                     this->elapsetime_store_ += time_store.getElapseTime();
                 }
 #pragma omp barrier
@@ -735,6 +750,7 @@ void DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
         }
 #else
         {
+            *pJ += local_J;
             this->elapsetime_store_ = time_store.getElapseTime();
         }
 #endif // _OPENMP
