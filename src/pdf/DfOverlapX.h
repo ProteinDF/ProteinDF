@@ -77,8 +77,8 @@ protected:
                           TlVectorObject* pVector);
     
     ShellArrayTable makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo);
-    DfOverlapEngine::PGTOs getPGTOs(const TlOrbitalInfoObject& orbitalInfo,
-                                    const int shellIndex);
+    // DfOverlapEngine::PGTOs getPGTOs(const TlOrbitalInfoObject& orbitalInfo,
+    //                                 const int shellIndex);
 
     void getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
                            const int shellTypeP, const int shellTypeQ,

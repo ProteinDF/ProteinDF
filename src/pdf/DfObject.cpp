@@ -183,6 +183,7 @@ void DfObject::setParam(const TlSerializeData& data)
         this->m_bIsXCFitting = (nLastChar == '~') ? true : false;
     }
     this->m_bIsUpdateXC = (TlUtils::toUpper(data["xc-update"].getStr()) == "NO") ? false : true;
+    this->isGridFree_ = data["grid_free"].getBoolean();
 
     // Grimme empirical dispersion check
     {

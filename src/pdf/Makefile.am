@@ -43,6 +43,7 @@ libpdf_la_SOURCES = \
 	DfKMatrix.h				DfKMatrix.cpp			\
 	DfFockMatrix.h			DfFockMatrix.cpp		\
 	DfGenerateGrid.h		DfGenerateGrid.cpp		\
+	DfGridFreeXC.h			DfGridFreeXC.cpp			\
 	DfHpq.h					DfHpq.cxx				\
 	DfHpq_driver.h			DfHpq_driver.c			\
 	DfInitialGuess.h		DfInitialGuess.cpp		\

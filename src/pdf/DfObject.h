@@ -408,6 +408,7 @@ protected:
     bool m_bIsXCFitting; /// true => XC項をRI法で計算, false => XC項を直接計算
     bool m_bIsUpdateXC; /// XC項をupdate法で計算する(true)
     bool enableGrimmeDispersion_; /// Grimmeの経験的分散力補正を計算するかどうか
+    bool isGridFree_;  /// Grid-Free法を使用する(true)
 
     //bool isRI_J_; /// RI_J法を用いる(true)
     bool isRI_K_; /// RI-K法を用いる(true)
