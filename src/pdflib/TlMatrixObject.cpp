@@ -63,20 +63,20 @@ double TlMatrixObject::getMaxAbsoluteElement(int* pOutRow,
 }
 
 
-TlMatrixObject& TlMatrixObject::operator+=(const TlMatrixObject& rhs)
-{
-    const index_type numOfRows = this->getNumOfRows();
-    const index_type numOfCols = this->getNumOfCols();
-    assert(numOfRows == rhs.getNumOfRows());
-    assert(numOfCols == rhs.getNumOfCols());
+// TlMatrixObject& TlMatrixObject::operator+=(const TlMatrixObject& rhs)
+// {
+//     const index_type numOfRows = this->getNumOfRows();
+//     const index_type numOfCols = this->getNumOfCols();
+//     assert(numOfRows == rhs.getNumOfRows());
+//     assert(numOfCols == rhs.getNumOfCols());
 
-    for (index_type r = 0; r < numOfRows; ++r) {
-        for (index_type c = 0; c < numOfCols; ++c) {
-            this->add(r, c, rhs.get(r, c));
-        }
-    }
+//     for (index_type r = 0; r < numOfRows; ++r) {
+//         for (index_type c = 0; c < numOfCols; ++c) {
+//             this->add(r, c, rhs.get(r, c));
+//         }
+//     }
 
-    return *this;
-}
+//     return *this;
+// }
 
 

@@ -109,7 +109,7 @@ public:
     TlSymmetricMatrix& operator =(const TlSymmetricMatrix& rhs);
 
     TlSymmetricMatrix& operator+=(const TlSymmetricMatrix& rhs);
-    virtual TlSymmetricMatrix& operator+=(const TlSparseSymmetricMatrix& rhs);
+    //virtual TlSymmetricMatrix& operator+=(const TlSparseSymmetricMatrix& rhs);
 
     //TlSymmetricMatrix& operator+=(const TlMatrix& rhs);
     TlSymmetricMatrix& operator-=(const TlSymmetricMatrix& rhs);

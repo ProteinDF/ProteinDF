@@ -62,44 +62,6 @@ std::string TlTime::getNowTime()
 }
 
 
-std::string TlTime::start()
-{
-    this->isRunning_  = true;
-    this->startTime_  = std::time(NULL);
-    this->startClock_ = std::clock();
-
-    return (TlUtils::format("%s %s",
-                            this->createDateString(this->startTime_).c_str(),
-                            this->createTimeString(this->startTime_).c_str()));
-}
-
-
-std::string TlTime::stop()
-{
-    std::string answer = "";
-
-    if (this->isRunning() == true) {
-        std::time_t endTime = std::time(NULL);
-        std::clock_t endClock = std::clock();
-        this->cumulativeTime_ += endTime - this->startTime_;
-        this->cumulativeClock_ += endClock - this->startClock_;
-        this->isRunning_ = false;
-        
-        answer = TlUtils::format("%s %s",
-                                 this->createDateString(this->startTime_).c_str(),
-                                 this->createTimeString(this->startTime_).c_str());
-    }
-
-    return answer;
-}
-
-void TlTime::reset()
-{
-    this->startTime_ = 0;
-    this->startClock_ = 0;
-}
-
-
 // 基準となる時刻からのCPU時間を返す
 double TlTime::getCpuTime() const
 {

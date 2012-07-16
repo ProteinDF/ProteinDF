@@ -177,12 +177,6 @@ DfEriEngine::~DfEriEngine()
 }
 
 
-double DfEriEngine::getElapseCalcTime() const
-{
-    return this->time_calc_all_.getElapseTime();
-}
-
-
 DfEriEngine::CGTO_Pair DfEriEngine::getCGTO_pair(const TlOrbitalInfoObject& orbInfo,
                                                  const index_type shellIndexP,
                                                  const index_type shellIndexQ,
@@ -271,7 +265,7 @@ void DfEriEngine::calc(const Query& qAB, const Query& qCD,
     assert((0 <= qAB.a) && (qAB.a < ERI_A_MAX));
     assert((0 <= qAB.b) && (qAB.b < ERI_B_MAX));
     
-    this->time_calc_all_.start();
+    // this->time_calc_all_.start();
     // initialize
     this->sumOfAngularMomentums_ = qAB.sum() + qCD.sum();
 #ifdef CHECK_MAX_COUNT
@@ -405,7 +399,7 @@ void DfEriEngine::calc(const Query& qAB, const Query& qCD,
     this->transform6Dto5D(qAB, qCD, this->WORK);
     
    
-    this->time_calc_all_.stop();
+    // this->time_calc_all_.stop();
 #ifdef DEBUG_HGP
     std::cerr << "<<<<END\n" << std::endl;
 #endif // DEBUG_HGP
