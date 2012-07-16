@@ -35,17 +35,11 @@ public:
      */
     static std::string getNowTime();
 
-    /**
-     *  基準時刻を現在時刻(呼び出し時刻)に設定する。
-     *  @return 基準時刻のタイムスタンプを返す。
-     */
-    std::string start();
+    /// 基準時刻を現在時刻(呼び出し時刻)に設定する。
+    void start();
 
-    /**
-     *  現在時刻(呼び出し時刻)でタイマーを止める。
-     *  @return 基準時刻のタイムスタンプを返す。
-     */
-    std::string stop();
+    /// 現在時刻(呼び出し時刻)でタイマーを止める。
+    void stop();
 
     void reset();
     
@@ -97,6 +91,43 @@ private:
 };
 
 extern const TlTime g_GlobalTime;
+
+inline void TlTime::start()
+{
+#pragma omp critical(TlTime)
+    {
+        this->isRunning_  = true;
+        this->startTime_  = std::time(NULL);
+        this->startClock_ = std::clock();
+    }
+}
+
+
+inline void TlTime::stop()
+{
+#pragma omp critical(TlTime)
+    {
+        if (this->isRunning() == true) {
+            std::time_t endTime = std::time(NULL);
+            std::clock_t endClock = std::clock();
+            this->cumulativeTime_ += endTime - this->startTime_;
+            this->cumulativeClock_ += endClock - this->startClock_;
+            this->isRunning_ = false;
+        }
+    }
+}
+
+
+inline void TlTime::reset()
+{
+#pragma omp critical(TlTime)
+    {
+        this->startTime_ = 0;
+        this->startClock_ = 0;
+    }
+}
+
+
 
 #endif // TLTIME_H
 

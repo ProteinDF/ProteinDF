@@ -21,6 +21,7 @@ pkginclude_HEADERS = \
 	TlFileSymmetricMatrix.h		\
 	TlSparseMatrix.h			\
 	TlSparseSymmetricMatrix.h	\
+	TlSparseVector.h			\
 	TlSparseVectorMatrix.h		\
 	TlRowVectorMatrix2.h		\
 	TlColVectorMatrix2.h		\
@@ -32,8 +33,9 @@ pkginclude_HEADERS = \
 	TlPseudoYaml.h				\
 	TlMsgPack.h					\
 	TlTime.h					\
+	TlStlUtils.h				\
 	\
-	scalapack.h			\
+	scalapack.h					\
 	TlCommunicate.h				\
 	TlDistributeMatrix.h		\
 	TlDistributeSymmetricMatrix.h	\
