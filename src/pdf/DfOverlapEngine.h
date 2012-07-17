@@ -5,6 +5,7 @@
 #include <bitset>
 #include "TlAngularMomentumVector.h"
 #include "TlPosition.h"
+#include "TlOrbitalInfoObject.h"
 
 /// 結果出力用のサイズ
 /// d軌道の6Dから5Dへの変換領域にも利用するため、
@@ -118,6 +119,9 @@ public:
               const PGTOs& PGTOs_B,
               const PGTOs& PGTOs_C,
               const PGTOs& PGTOs_D);
+
+    static PGTOs getPGTOs(const TlOrbitalInfoObject& orbitalInfo,
+                          const int shellIndex);
 
 private:
     void calc(const int aBar, const int bBar, const int cBar, const int dBar,

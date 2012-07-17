@@ -114,7 +114,6 @@ void DfOverlapEngine::calc(const Query& query,
                     const double kappa_exp = zeta * (G2 - (zetaA * A2 + zetaB * B2 + zetaC * C2 + zetaD * D2) * invZeta);
                     if (kappa_exp < DfOverlapEngine::MAX_EXPONENT) {
                         const double kappa = std::exp(kappa_exp);
-                        
                         const double base = M_PI * invZeta;
                         const double sss = coefA * coefB * coefC * coefD * base * std::sqrt(base) * kappa;
                         
@@ -141,6 +140,22 @@ void DfOverlapEngine::calc(const Query& query,
 
     this->copyResultsToOutputBuffer();
     this->transform6Dto5D();
+}
+
+
+DfOverlapEngine::PGTOs DfOverlapEngine::getPGTOs(const TlOrbitalInfoObject& orbitalInfo,
+                                                 const int shellIndex)
+{
+    const int numOfContractions = orbitalInfo.getCgtoContraction(shellIndex);
+    PGTOs pgtos(numOfContractions);
+
+    for (int i = 0; i < numOfContractions; ++i) {
+        const PGTO pgto(orbitalInfo.getCoefficient(shellIndex, i),
+                        orbitalInfo.getExponent(shellIndex, i));
+        pgtos[i] = pgto;
+    }
+    
+    return pgtos;
 }
 
 
@@ -187,8 +202,8 @@ void DfOverlapEngine::calc(const int a_bar, const int b_bar, const int c_bar, co
         this->EQ20A(state);
     } else if (b > 0) {
         this->calc(a_bar, b_bar, c_bar, d_bar, a,   b-1, c,   d  );
-        this->calc(a_bar, b_bar, c_bar, d_bar, a-1, b-2, c,   d  );
-        this->calc(a_bar, b_bar, c_bar, d_bar, a,   b-1, c,   d  );
+        this->calc(a_bar, b_bar, c_bar, d_bar, a-1, b-1, c,   d  );
+        this->calc(a_bar, b_bar, c_bar, d_bar, a,   b-2, c,   d  );
         this->calc(a_bar, b_bar, c_bar, d_bar, a,   b-1, c-1, d  );
         this->calc(a_bar, b_bar, c_bar, d_bar, a,   b-1, c,   d-1);
         this->EQ20B(state);
