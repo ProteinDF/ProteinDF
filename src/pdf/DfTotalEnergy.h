@@ -506,8 +506,10 @@ double DfTotalEnergy::calcExc(const RUN_TYPE runType,
                               const SymmetricMatrixType& P)
 {
     double answer = 0.0;
-    SymmetricMatrixType Fxc = DfObject::getFxcMatrix<SymmetricMatrixType>(runType, this->m_nIteration);
-    answer = Fxc.dot(P).sum();
+    const SymmetricMatrixType Fxc = DfObject::getFxcMatrix<SymmetricMatrixType>(runType, this->m_nIteration);
+    const SymmetricMatrixType PFxc = P * Fxc;
+    const TlVector diag = PFxc.getDiagonalElements();
+    answer = diag.sum();
 
     return answer;
 }

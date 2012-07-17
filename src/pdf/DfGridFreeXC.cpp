@@ -60,15 +60,15 @@ void DfGridFreeXC::buildFxc()
         DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, Fxc);
 
         // check 
-        {
-            TlSymmetricMatrix L(numOfAOs);
-            for (int i = 0; i < numOfAOs; ++i) {
-                L(i, i) = lamda[i];
-            }
+        // {
+        //     TlSymmetricMatrix L(numOfAOs);
+        //     for (int i = 0; i < numOfAOs; ++i) {
+        //         L(i, i) = lamda[i];
+        //     }
         
-            TlSymmetricMatrix SVULUVS = S * V * U * L * tU * tV * S;
-            SVULUVS.save("SVULUVS_M.mat");
-        }
+        //     TlSymmetricMatrix SVULUVS = S * V * U * L * tU * tV * S;
+        //     SVULUVS.save("SVULUVS_M.mat");
+        // }
     }
 
     // X version
