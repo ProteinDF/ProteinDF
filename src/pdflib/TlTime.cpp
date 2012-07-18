@@ -7,11 +7,15 @@
 #include "TlTime.h"
 #include "TlUtils.h"
 
-const TlTime g_GlobalTime;
+const TlTime g_GlobalTime(true);
+const double TlTime::BILLION = 1.0E9;
 
-TlTime::TlTime()
-    : cumulativeTime_(0), cumulativeClock_(0) {
-    this->start();
+TlTime::TlTime(bool isAutoStart)
+{
+    this->reset();
+    if (isAutoStart) {
+        this->start();
+    }
 }
 
 
@@ -65,6 +69,19 @@ std::string TlTime::getNowTime()
 // 基準となる時刻からのCPU時間を返す
 double TlTime::getCpuTime() const
 {
+    double answer = 0.0;
+
+#ifdef HAVE_TIME_H
+    if (this->isRunning() == true) {
+        struct timespec stop;
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop);
+        answer = (stop.tv_sec - this->startCpuTime_.tv_sec) 
+            + (double)(stop.tv_nsec - this->startCpuTime_.tv_nsec) / TlTime::BILLION;
+    } else {
+        answer = this->accumCpuTime_.tv_sec 
+            + (double)(this->accumCpuTime_.tv_nsec) / TlTime::BILLION;
+    }
+#else
     std::clock_t clocks;
     if (this->isRunning() == true) {
         std::clock_t now = std::clock();
@@ -72,20 +89,35 @@ double TlTime::getCpuTime() const
     } else {
         clocks = this->cumulativeClock_;
     }
+    answer = static_cast<double>(clocks / CLOCKS_PER_SEC);
+#endif // HAVE_TIME_H
 
-    return static_cast<double>(clocks / CLOCKS_PER_SEC);
+    return answer;
 }
 
 
 // 基準となる時刻からの経過時間を返す
 double TlTime::getElapseTime() const
 {
-    double answer;
+    double answer = 0.0;
+
+#ifdef HAVE_TIME_H
+    if (this->isRunning() == true) {
+        struct timespec stop;
+        clock_gettime(CLOCK_MONOTONIC, &stop);
+        answer = (stop.tv_sec - this->startElapseTime_.tv_sec) 
+            + (double)(stop.tv_nsec - this->startElapseTime_.tv_nsec) / TlTime::BILLION;
+    } else {
+        answer = this->accumElapseTime_.tv_sec 
+            + (double)(this->accumElapseTime_.tv_nsec) / TlTime::BILLION;
+    }
+#else
     if (this->isRunning() == true) {
         answer = std::difftime(std::time(NULL), this->startTime_);
     } else {
         answer = std::difftime(this->cumulativeTime_, 0);
     }
+#endif // HAVE_TIME_H
 
     return answer;
 }
@@ -108,16 +140,16 @@ void TlTime::sleep(const unsigned long x)
 }
 
 
-std::string TlTime::getReferenceDate() const
-{
-    return this->createDateString(this->startTime_);
-}
+// std::string TlTime::getReferenceDate() const
+// {
+//     return this->createDateString(this->startTime_);
+// }
 
 
-std::string TlTime::getReferenceTime() const
-{
-    return this->createTimeString(this->startClock_);
-}
+// std::string TlTime::getReferenceTime() const
+// {
+//     return this->createTimeString(this->startClock_);
+// }
 
 
 

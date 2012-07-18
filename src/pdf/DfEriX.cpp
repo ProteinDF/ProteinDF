@@ -75,6 +75,7 @@ DfEriX::DfEriX(TlSerializeData* pPdfParam)
 
     // statics
     this->elapsetime_calc_     = 0.0;
+    this->elapsetime_makepair_ = 0.0;
     this->elapsetime_calc_eri_ = 0.0;
     this->elapsetime_store_    = 0.0;
     this->elapsetime_sumup_    = 0.0;
@@ -208,6 +209,9 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
     int numOfThreads = 1;
     
     TlTime time_sumup;
+    double elapsetime_calc = 0.0;
+    double elapsetime_calc_eri = 0.0;
+    double elapsetime_store = 0.0;
 #pragma omp parallel
     {
         TlTime time_calc;
@@ -300,18 +304,18 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
             for (int i = 0; i < numOfAux; ++i) {
                 (*pRho)[i] += local_rho[i];
             }
-            this->elapsetime_calc_     += time_calc.getElapseTime();
-            this->elapsetime_calc_eri_ += time_calc_eri.getElapseTime();
-            this->elapsetime_store_    += time_store.getElapseTime();
+            elapsetime_calc     += time_calc.getElapseTime();
+            elapsetime_calc_eri += time_calc_eri.getElapseTime();
+            elapsetime_store    += time_store.getElapseTime();
         }
 #pragma omp barrier
         time_sumup.stop();
     }
 
-    this->elapsetime_calc_     /= double(numOfThreads);
-    this->elapsetime_calc_eri_ /= double(numOfThreads);
-    this->elapsetime_store_    /= double(numOfThreads);
-    this->elapsetime_sumup_ = time_sumup.getElapseTime();
+    this->elapsetime_calc_     += elapsetime_calc / double(numOfThreads);
+    this->elapsetime_calc_eri_ += elapsetime_calc_eri / double(numOfThreads);
+    this->elapsetime_store_    += elapsetime_store / double(numOfThreads);
+    this->elapsetime_sumup_ += time_sumup.getElapseTime();
 }
 
 
@@ -386,6 +390,9 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
     int numOfThreads = 1;
 
+    double elapsetime_calc     = 0.0;
+    double elapsetime_calc_eri = 0.0;
+    double elapsetime_store    = 0.0;
 #pragma omp parallel
     {
         TlTime time_calc;
@@ -483,16 +490,16 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
             for (int i = 0; i < local_size; ++i) {
                 pJ->add(local_indexP[i], local_indexQ[i], local_values[i]);
             }
-            this->elapsetime_calc_     += time_calc.getElapseTime();
-            this->elapsetime_calc_eri_ += time_calc_eri.getElapseTime();
-            this->elapsetime_store_    += time_store.getElapseTime();
+            elapsetime_calc     += time_calc.getElapseTime();
+            elapsetime_calc_eri += time_calc_eri.getElapseTime();
+            elapsetime_store    += time_store.getElapseTime();
         }
 
     }
 
-    this->elapsetime_calc_     /= double(numOfThreads);
-    this->elapsetime_calc_eri_ /= double(numOfThreads);
-    this->elapsetime_store_    /= double(numOfThreads);
+    this->elapsetime_calc_     += elapsetime_calc / double(numOfThreads);
+    this->elapsetime_calc_eri_ += elapsetime_calc_eri / double(numOfThreads);
+    this->elapsetime_store_    += elapsetime_store / double(numOfThreads);
 }
 
 
@@ -709,6 +716,9 @@ void DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
     int numOfThreads = 1;
 
+    double elapsetime_calc = 0.0;
+    double elapsetime_calc_eri = 0.0;
+    double elapsetime_store = 0.0;
 #pragma omp parallel
     {
         TlTime time_calc;
@@ -780,15 +790,15 @@ void DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
             for (int i = 0; i < local_size; ++i) {
                 pJ->add(localIndexP[i], localIndexQ[i], localValues[i]);
             }
-            this->elapsetime_calc_     += time_calc.getElapseTime();
-            this->elapsetime_calc_eri_ += time_calc_eri.getElapseTime();
-            this->elapsetime_store_    += time_store.getElapseTime();
+            elapsetime_calc     += time_calc.getElapseTime();
+            elapsetime_calc_eri += time_calc_eri.getElapseTime();
+            elapsetime_store    += time_store.getElapseTime();
         }
     }
 
-    this->elapsetime_calc_     /= double(numOfThreads);
-    this->elapsetime_calc_eri_ /= double(numOfThreads);
-    this->elapsetime_store_    /= double(numOfThreads);
+    this->elapsetime_calc_     += elapsetime_calc / double(numOfThreads);
+    this->elapsetime_calc_eri_ += elapsetime_calc_eri / double(numOfThreads);
+    this->elapsetime_store_    += elapsetime_store / double(numOfThreads);
 }
 
 
@@ -1624,8 +1634,11 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
 {
     assert(pK != NULL);
     TlTime time_all;
+    TlTime time_prepare;
+
     time_all.start();
 
+    time_prepare.start();
     const index_type numOfAOs = this->m_nNumOfAOs;
     pK->resize(numOfAOs);
     
@@ -1652,6 +1665,7 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
     pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
     pDfTaskCtrl->setCutoffEpsilon_density(this->cutoffEpsilon_density_);
     pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
+    time_prepare.stop();
 
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
@@ -1686,7 +1700,9 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
     time_all.stop();
     {
         this->log_.info(TlUtils::format("all time:       %16.1f sec.", time_all.getElapseTime()));
+        this->log_.info(TlUtils::format(" prepare time:  %16.1f sec.", time_prepare.getElapseTime()));
         this->log_.info(TlUtils::format(" calc(ave.):    %16.1f sec.", this->elapsetime_calc_));
+        this->log_.info(TlUtils::format(" makepair:      %16.1f sec.", this->elapsetime_makepair_));
         this->log_.info(TlUtils::format(" eri(ave.):     %16.1f sec.", this->elapsetime_calc_eri_));
         this->log_.info(TlUtils::format(" store(ave.):   %16.1f sec.", this->elapsetime_store_));
         this->log_.info(TlUtils::format(" sumup(ave.):   %16.1f sec.", this->elapsetime_sumup_));
@@ -1703,9 +1719,14 @@ void DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
     int numOfThreads = 1;
 
     TlTime time_sumup;
+    double elapsetime_calc = 0.0;
+    double elapsetime_makepair = 0.0;
+    double elapsetime_calc_eri = 0.0;
+    double elapsetime_store = 0.0;
 #pragma omp parallel
     {
         TlTime time_calc;
+        TlTime time_makepair;
         TlTime time_calc_eri;
         TlTime time_store;
 
@@ -1738,7 +1759,8 @@ void DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
             const int maxStepsQ = 2 * shellTypeQ + 1;
             const int maxStepsR = 2 * shellTypeR + 1;
             const int maxStepsS = 2 * shellTypeS + 1;
-                        
+
+            time_makepair.start();
             const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
                                                                                         shellIndexP,
                                                                                         shellIndexQ,
@@ -1747,6 +1769,7 @@ void DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                                                                                         shellIndexR,
                                                                                         shellIndexS,
                                                                                         pairwisePGTO_cutoffThreshold);
+            time_makepair.stop();
             const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
             const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
 
@@ -1776,18 +1799,20 @@ void DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                         localIndexQ[i],
                         localValues[i]);
             }
-            this->elapsetime_calc_     += time_calc.getElapseTime();
-            this->elapsetime_calc_eri_ += time_calc_eri.getElapseTime();
-            this->elapsetime_store_    += time_store.getElapseTime();
+            elapsetime_calc     += time_calc.getElapseTime();
+            elapsetime_makepair += time_makepair.getElapseTime();
+            elapsetime_calc_eri += time_calc_eri.getElapseTime();
+            elapsetime_store    += time_store.getElapseTime();
         }
 #pragma omp barrier
         time_sumup.stop();
     }
 
-    this->elapsetime_calc_     /= double(numOfThreads);
-    this->elapsetime_calc_eri_ /= double(numOfThreads);
-    this->elapsetime_store_    /= double(numOfThreads);
-    this->elapsetime_sumup_ = time_sumup.getElapseTime();
+    this->elapsetime_calc_     += elapsetime_calc / double(numOfThreads);
+    this->elapsetime_makepair_ += elapsetime_makepair / double(numOfThreads);
+    this->elapsetime_calc_eri_ += elapsetime_calc_eri / double(numOfThreads);
+    this->elapsetime_store_    += elapsetime_store / double(numOfThreads);
+    this->elapsetime_sumup_    += time_sumup.getElapseTime();
 }
 
 

@@ -292,6 +292,7 @@ protected:
 
     // statics
     double elapsetime_calc_;
+    double elapsetime_makepair_;
     double elapsetime_calc_eri_;
     double elapsetime_store_;
     double elapsetime_sumup_;
