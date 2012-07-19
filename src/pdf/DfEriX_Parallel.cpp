@@ -11,7 +11,9 @@ DfEriX_Parallel::DfEriX_Parallel(TlSerializeData* pPdfParam)
     : DfEriX(pPdfParam) {
 
     this->calcMode_ = CalcMode_UsingLocalMatrix;
-    this->calcMode_ = (*pPdfParam)["ERI_calcmode"].getInt();
+    if ((*pPdfParam)["ERI_calcmode"].getStr().empty() != true) {
+        this->calcMode_ = (*pPdfParam)["ERI_calcmode"].getInt();
+    }
 }
 
 
