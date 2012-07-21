@@ -294,7 +294,7 @@ bool DfTaskCtrl::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
         return true;
     }
 
-    this->cutoffReport();
+    // this->cutoffReport();
     return false;
 }
 
@@ -574,7 +574,7 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
         return true;
     }
 
-    this->cutoffReport();
+    // this->cutoffReport();
     return false;
 }
 

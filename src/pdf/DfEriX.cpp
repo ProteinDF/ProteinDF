@@ -182,6 +182,7 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
     }
     this->finalize(pRho);
 
+    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
@@ -360,6 +361,7 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
 
     this->finalize(pJ);
 
+    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
@@ -662,8 +664,8 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
     }
                     
     this->finalize(pJ);
-    //pDfTaskCtrl->cutoffReport();
 
+    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
@@ -899,7 +901,8 @@ void DfEriX::getJab(TlSymmetricMatrix* pJab)
     }
 
     this->finalize(pJab);
-
+    
+    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
@@ -1008,6 +1011,7 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce)
 
     this->finalize(pForce);
 
+    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
@@ -1228,6 +1232,7 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
 
     this->finalize(pForce);
 
+    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
@@ -1407,6 +1412,7 @@ void DfEriX::getForceJ(const TlVector& rho, TlMatrix* pForce)
 
     this->finalize(pForce);
 
+    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
@@ -1685,6 +1691,7 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
 
     this->finalize(pK);
 
+    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
@@ -1993,6 +2000,7 @@ void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce)
 
     this->finalize(pForce);
 
+    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
