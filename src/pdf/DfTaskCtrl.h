@@ -112,16 +112,18 @@ public:
                                  const int maxGrainSize,
                                  std::vector<Task4>* pTaskList,
                                  bool initialize = false);
-    
+
+public:
+    /// Schwartzのカットオフレポートを出力する
+    virtual void cutoffReport();
+
 protected:
     void clearCutoffStats(const int maxShellType);
 
     /// pre-screeningに関わるレポートを出力する
     virtual void prescreeningReport();
 
-    /// Schwartzのカットオフレポートを出力する
-    virtual void cutoffReport();
-
+protected:
     ShellArrayTable makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo);
 
     ShellArray selectShellArrayByDistribution(const ShellArray& inShellArray,

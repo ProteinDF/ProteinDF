@@ -90,7 +90,8 @@ void DfEriX_Parallel::getJ_D(const TlVector& rho, TlDistributeSymmetricMatrix* p
     //this->finalize(pJ);
 
     pJ->mergeSparseMatrix(tmpJ);
-    
+
+    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
@@ -128,7 +129,8 @@ void DfEriX_Parallel::getJab_D(TlDistributeSymmetricMatrix* pJab)
     //this->finalize(pJab);
 
     pJab->mergeSparseMatrix(tmpJab);
-    
+
+    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
@@ -223,8 +225,7 @@ void DfEriX_Parallel::getJ_D_local(const TlDistributeSymmetricMatrix& P,
                      shellArrayTable_Density,
                      taskList,
                      TlDistributeMatrix(P), &tmpRho);
-    this->log_.warn(" waiting...");
-    this->log_.info("ERI end");
+    this->log_.info("ERI end: waiting all process tasks");
     this->destroyEngines();
     
     // finalize
@@ -301,18 +302,14 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
             hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
                                              false,
                                              this->grainSize_, &taskList);
-            // std::cerr << TlUtils::format("[%d] DfEriX_Parallel::getJ_D() task=%s",
-            //                              rComm.getRank(),
-            //                              ((hasTask == true) ? "T" : "F"))
-            //           << std::endl;
+
+            // const std::string TF = ((hasTask == true) ? "true" : "false");
+            // this->log_.warn(TlUtils::format("DfEriX_Parallel::getJ_D() hasTask=%s",
+            //                                 TF.c_str()));
         }
 
         P.getSparseMatrixX(NULL, false);
     }
-    
-    // std::cerr << TlUtils::format("[%d] DfEriX_Parallel::getJ_D() loop end",
-    //                              rComm.getRank())
-    //           << std::endl;
 
     // int allProcFinished = 0;
     // if (rComm.isMaster() == true) {
@@ -337,7 +334,8 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
     // std::cerr << TlUtils::format("[%d] DfEriX_Parallel::getJ_D() end",
     //                              rComm.getRank())
     //           << std::endl;
-    
+
+    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
@@ -444,6 +442,7 @@ void DfEriX_Parallel::getJpq_D(const TlDistributeSymmetricMatrix& P,
 
     //this->finalize(pJ);
 
+    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
 
@@ -486,6 +485,7 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
     bool isSetTempP = false;
     TlSparseSymmetricMatrix tmpK(this->m_nNumOfAOs);
 
+    this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
@@ -547,18 +547,14 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
                                              this->grainSize_,
                                              &taskList);
 
-            // if (hasTask == false) {
-            //     std::cerr << TlUtils::format("[%d] DfEriX_Parallel::getK_D() taskEnd",
-            //                                  rComm.getRank())
-            //               << std::endl;
-            // }
+            // const std::string TF = ((hasTask == true) ? "true" : "false");
+            // this->log_.warn(TlUtils::format("DfEriX_Parallel::getJ_D() hasTask=%s",
+                                            // TF.c_str()));
         }
 
         P.getSparseMatrixX(NULL, false);
     }
-    // std::cerr << TlUtils::format("[%d] DfEriX_Parallel::getK_D() waiting",
-    //                              rComm.getRank())
-    //           << std::endl;
+    this->log_.warn("DfEriX_Parallel::getK_D() loop end");
     
     // waiting another proc
     this->waitAnotherProcs(P);
@@ -566,6 +562,8 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
 
     //this->finalize(pK);
 
+    this->destroyEngines();
+    pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
 
@@ -638,9 +636,9 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     //                                      rowIndexes, colIndexes,
     //                                      this->grainSize_, &taskList);
     
-    this->log_.warn(" waiting...");
-    this->log_.info("ERI end");
+    this->log_.info("ERI end: waiting all process tasks");
 
+    dfTaskCtrl.cutoffReport();
     this->destroyEngines();
 
     pK->mergeSparseMatrix(tmpK);
