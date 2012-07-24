@@ -30,6 +30,7 @@ pkginclude_HEADERS = \
 	TlStringTokenizer.h			\
 	TlUtils.h					\
 	TlSerializeData.h			\
+	TlSharedPointer.h			\
 	TlPseudoYaml.h				\
 	TlMsgPack.h					\
 	TlTime.h					\
