@@ -164,7 +164,7 @@ void DfGridFreeXC::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 
 void DfGridFreeXC::createEngines()
 {
-    assert(this->pEriEngines_ == NULL);
+    assert(this->pOvpEngines_ == NULL);
     
 #ifdef _OPENMP
     {

@@ -1029,7 +1029,7 @@ DfCD::getSuperMatrixElements(const index_type G_row,
                              const I2PQ_Type& I2PQ,
                              const TlSparseSymmetricMatrix& schwartzTable)
 {
-    this->ERI_cache_manager_.createNewGeneration();
+    // this->ERI_cache_manager_.createNewGeneration();
     {
         const std::vector<IndexPair4> calcList = this->getCalcList(G_row, G_col_list, I2PQ);
         this->calcERIs(calcList, schwartzTable);
@@ -1037,7 +1037,7 @@ DfCD::getSuperMatrixElements(const index_type G_row,
 
     const std::vector<double> answer = this->setERIs(G_row, G_col_list, I2PQ);
 
-    this->ERI_cache_manager_.releaseMem(10 * 1024 * 1024); // 10 MB
+    //this->ERI_cache_manager_.releaseMem(10 * 1024 * 1024); // 10 MB
 
     return answer;
 }
@@ -1084,6 +1084,8 @@ DfCD::getCalcList(const index_type G_row,
 void DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
                     const TlSparseSymmetricMatrix& schwartzTable) 
 {
+    typedef std::map<IndexPair4, std::vector<double> > ERI_CacheType;
+
     const int maxShellType = this->orbitalInfo_.getMaxShellType();
     const double threshold = this->CDAM_tau_;
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
@@ -1092,7 +1094,8 @@ void DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
 #pragma omp parallel
     {
         int threadID = 0;
-        ERI_CacheManager::ERI_CacheType local_cache;
+        ERI_CacheType local_cache;
+
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
@@ -1148,7 +1151,11 @@ void DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
         // merge cache
 #pragma omp critical(DfCD__calcERIs)
         {
-            this->ERI_cache_manager_.insert(local_cache);
+            ERI_CacheType::iterator itEnd = local_cache.end();
+            for (ERI_CacheType::iterator it = local_cache.begin(); it != itEnd; ++it) {
+                this->ERI_cache_manager_.set(it->first, it->second);
+            }
+            // this->ERI_cache_manager_.insert(local_cache);
         }
     }
 }
@@ -1200,28 +1207,30 @@ DfCD::setERIs(const index_type G_row,
             }
         }
 
-        const std::vector<double> values = this->ERI_cache_manager_.get(IndexPair4(shellIndexP, shellIndexQ,
-                                                                                   shellIndexR, shellIndexS));
-        if (values.empty() != true) {
-            const int basisTypeP = indexP - shellIndexP;
-            const int basisTypeQ = indexQ - shellIndexQ;
-            const int basisTypeR = indexR - shellIndexR;
-            const int basisTypeS = indexS - shellIndexS;
-            
-            const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
-            const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
-            const int shellTypeR = this->orbitalInfo_.getShellType(shellIndexR);
-            const int shellTypeS = this->orbitalInfo_.getShellType(shellIndexS);
-            const int maxStepsP = 2 * shellTypeP + 1;
-            const int maxStepsQ = 2 * shellTypeQ + 1;
-            const int maxStepsR = 2 * shellTypeR + 1;
-            const int maxStepsS = 2 * shellTypeS + 1;
-            
-            const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
-            assert(values.size() > index);
 #pragma omp critical(DfCD__setERIs)
-            {
-                answer[i] = values[index];
+        {
+            TlSharedPointer<std::vector<double> > pValues = 
+                this->ERI_cache_manager_.get(IndexPair4(shellIndexP, shellIndexQ,
+                                                        shellIndexR, shellIndexS));
+            if (pValues->empty() != true) {
+                const int basisTypeP = indexP - shellIndexP;
+                const int basisTypeQ = indexQ - shellIndexQ;
+                const int basisTypeR = indexR - shellIndexR;
+                const int basisTypeS = indexS - shellIndexS;
+                
+                const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
+                const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
+                const int shellTypeR = this->orbitalInfo_.getShellType(shellIndexR);
+                const int shellTypeS = this->orbitalInfo_.getShellType(shellIndexS);
+                const int maxStepsP = 2 * shellTypeP + 1;
+                const int maxStepsQ = 2 * shellTypeQ + 1;
+                const int maxStepsR = 2 * shellTypeR + 1;
+                const int maxStepsS = 2 * shellTypeS + 1;
+            
+                const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
+                assert(pValues->size() > index);
+
+                answer[i] = (*pValues).at(index);
             }
         }
     }

@@ -307,7 +307,8 @@ protected:
     bool isStoreERIs_;
 
     /// 2電子積分キャッシュ
-    ERI_CacheManager ERI_cache_manager_;
+    // ERI_CacheManager ERI_cache_manager_;
+    TlCache<IndexPair4, std::vector<double> > ERI_cache_manager_;
 
 
 protected:
