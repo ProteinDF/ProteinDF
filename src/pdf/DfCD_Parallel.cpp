@@ -444,10 +444,9 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         // progress 
         CD_resizeL_time.start();
         if (m >= progress * division) {
-            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e, ERI cache=%ld MB",
+            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e, ERI cache=%ld MB",
                                             m, N, error,
-                                            this->eriCache_.size() * (sizeof(IndexPair4) 
-                                                                      + sizeof(double)) / (1024*1024)));
+                                            this->ERI_cache_manager_.memSize() / (1024 * 1024)));
             ++progress;
 
             // メモリの確保
