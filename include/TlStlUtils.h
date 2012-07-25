@@ -36,26 +36,37 @@ template<typename KeyType, typename DataType, typename KeyCompare=std::less<KeyT
 class TlCache {
 private:
     typedef std::list<KeyType> KeyList;
-    typedef typename std::list<KeyType>::iterator KeyListItr;
+    typedef typename KeyList::iterator KeyListItr;
     typedef typename std::pair<TlSharedPointer<DataType>, KeyListItr> CacheType;
     typedef std::map<KeyType, CacheType, KeyCompare> CacheTable;
 
 public:
     // デフォルトのキャッシュ制限は1MB
-    TlCache(std::size_t cacheLimit = 1024 * 1024) : cacheLimit_(cacheLimit) {
+    TlCache(const std::size_t maxItems = 10240) : maxItems_(maxItems), numOfItems_(0) {
     }
     ~TlCache() {}
 
 public:
     void set(const KeyType& key, const DataType& data) {
+        // 古いデータを消す
+        while (this->getNumOfItems() > this->getMaxItems()) {
+            KeyListItr reqHistoryTail = this->reqHistory_.end();
+            --reqHistoryTail;
+            this->cacheTbl_.erase(*reqHistoryTail);
+            this->reqHistory_.erase(reqHistoryTail);
+            --(this->numOfItems_);
+        }
+
         typename CacheTable::iterator pCache = this->cacheTbl_.lower_bound(key);        
         if ((pCache != this->cacheTbl_.end()) &&
             (this->cacheTbl_.key_comp()(key, pCache->first) != true)) {
             pCache->second.first = TlSharedPointer<DataType>(new DataType(data));
         } else {
+            // create new data
             CacheType cacheData = std::make_pair(TlSharedPointer<DataType>(new DataType(data)),
                                                  this->reqHistory_.insert(this->reqHistory_.begin(), key));
             this->cacheTbl_.insert(pCache, std::make_pair(key, cacheData));
+            ++(this->numOfItems_);
         }
     }
 
@@ -69,50 +80,58 @@ public:
                                      this->reqHistory_, pCache->second.second);
             return pCache->second.first;
         } else {
-            // create new data
-            abort();
             // 古いデータを消す
-            // while (this->cacheTbl_.size() > this->cacheLimit_) {
-            //     KeyListItr reqHistoryTail = --(this->reqHistory_.end());
-            //     this->cacheTbl_.erase(*reqHistoryTail);
-            //     this->reqHistory_.erase(reqHistoryTail);
-            // }
+            while (this->getNumOfItems() > this->getMaxItems()) {
+                KeyListItr reqHistoryTail = --(this->reqHistory_.end());
+                this->cacheTbl_.erase(*reqHistoryTail);
+                this->reqHistory_.erase(reqHistoryTail);
+                --(this->numOfItems_);
 
-            // 
+                // update iterator
+                pCache = this->cacheTbl_.lower_bound(key);
+            }
+        
+            // create new data
             CacheType cacheData = std::make_pair(TlSharedPointer<DataType>(new DataType()),
                                                  this->reqHistory_.insert(reqHistoryHead, key));
             this->cacheTbl_.insert(pCache, std::make_pair(key, cacheData));
+            ++(this->numOfItems_);
+
             return cacheData.first;
         }
     }
 
     bool find(const KeyType& key) {
         bool answer = false;
-        typename CacheTable::iterator pCache = this->cacheTbl_.lower_bound(key);        
-        if ((pCache != this->cacheTbl_.end()) &&
-            (!(this->cacheTbl_.key_comp()(key, pCache->first)))) {
-            answer = true;
+        typename CacheTable::iterator pCache = this->cacheTbl_.find(key);
+        if (pCache != this->cacheTbl_.end()) {
+            KeyListItr reqHistoryHead = this->reqHistory_.begin();
+            this->reqHistory_.splice(reqHistoryHead,
+                                     this->reqHistory_,
+                                     pCache->second.second);
+            answer = true;            
         }
         return answer;
     }
 
-    std::size_t getCacheLimit() const {
-        return this->cacheLimit_;
+    std::size_t getMaxItems() const {
+        return this->maxItems_ +1;
     }
 
-    void setCacheLimit(const std::size_t cacheLimit) {
-        this->cacheLimit_ = cacheLimit;
+    void setMaxItems(const std::size_t maxItems) {
+        this->maxItems_ = maxItems;
     }
 
-    std::size_t memSize() const {
-        return sizeof(this->cacheTbl_) + sizeof(this->reqHistory_) + sizeof(this->cacheLimit_);
+    std::size_t getNumOfItems() const {
+        return this->numOfItems_;
     }
 
 private:
     CacheTable cacheTbl_;
     KeyList reqHistory_;
 
-    std::size_t cacheLimit_;
+    std::size_t numOfItems_;
+    std::size_t maxItems_;
 };
 
 #endif // TLSTLUTILS_H
