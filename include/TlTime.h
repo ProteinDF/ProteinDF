@@ -8,6 +8,15 @@
 #include <ctime>
 #include <string>
 
+#if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+#include <sys/resource.h>
+#include <sys/time.h>
+#endif // defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif // HAVE_UNISTD_H
+
 /**
  *  時間計測クラス
  *
@@ -85,21 +94,20 @@ private:
     // std::string getReferenceDate() const;
     // std::string getReferenceTime() const;
 
+#if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+    double timeVal2double(struct timeval& tv) {
+        return (double)tv.tv_sec + tv.tv_usec * 0.000001;
+    }
+#endif // defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+
 private:
     static const double BILLION;
     bool isRunning_;
 
-#ifdef HAVE_TIME_H
-    struct timespec accumElapseTime_;
-    struct timespec accumCpuTime_;
-    struct timespec startElapseTime_;
-    struct timespec startCpuTime_;
-#else
-    std::time_t cumulativeTime_;
-    std::clock_t cumulativeClock_;
-    std::time_t startTime_;
-    std::clock_t startClock_;
-#endif // HAVE_TIME_H
+    double accumElapseTime_;
+    double accumCpuTime_;
+    double startElapseTime_;
+    double startCpuTime_;
 };
 
 extern const TlTime g_GlobalTime;
@@ -109,12 +117,20 @@ inline void TlTime::start()
 #pragma omp critical(TlTime)
     {
         this->isRunning_  = true;
-#ifdef HAVE_TIME_H
-        clock_gettime(CLOCK_MONOTONIC, &(this->startElapseTime_));
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &(this->startCpuTime_));
-#else
-        this->startTime_  = std::time(NULL);
-        this->startClock_ = std::clock();
+
+#if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+        {
+            struct timeval tv;
+            (void)gettimeofday(&tv, NULL);
+            this->startElapseTime_ = this->timeVal2double(tv);
+
+            struct rusage ru;
+            (void)getrusage(RUSAGE_SELF, &ru);
+            this->startCpuTime_ = this->timeVal2double(ru.ru_utime) + this->timeVal2double(ru.ru_stime);
+        }
+#else 
+        this->startTime_  = std::difftime(std::time(NULL), 0);
+        this->startClock_ = std::difftime(std::clock(), 0);
 #endif // HAVE_TIME_H
     }
 }
@@ -126,21 +142,35 @@ inline void TlTime::stop()
     {
         if (this->isRunning() == true) {
             this->isRunning_ = false;
-#ifdef HAVE_TIME_H
-            struct timespec stopElapseTime;
-            struct timespec stopCpuTime;
-            clock_gettime(CLOCK_MONOTONIC, &stopElapseTime);
-            clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stopCpuTime);
-            this->accumElapseTime_.tv_sec += stopElapseTime.tv_sec - this->startElapseTime_.tv_sec;
-            this->accumElapseTime_.tv_nsec += stopElapseTime.tv_nsec - this->startElapseTime_.tv_nsec;
-            this->accumCpuTime_.tv_sec += stopCpuTime.tv_sec - this->startCpuTime_.tv_sec;
-            this->accumCpuTime_.tv_nsec += stopCpuTime.tv_nsec - this->startCpuTime_.tv_nsec;
+            
+            double thisElapseTime = 0.0;
+            double thisCpuTime = 0.0;
+            
+#if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+            {
+                struct timeval tv;
+                (void)gettimeofday(&tv, NULL);
+                thisElapseTime = this->timeVal2double(tv);
+                
+                struct rusage ru;
+                (void)getrusage(RUSAGE_SELF, &ru);
+                thisCpuTime = this->timeVal2double(ru.ru_utime) + this->timeVal2double(ru.ru_stime);
+            }
 #else
-            std::time_t endTime = std::time(NULL);
-            std::clock_t endClock = std::clock();
-            this->cumulativeTime_ += endTime - this->startTime_;
-            this->cumulativeClock_ += endClock - this->startClock_;
-#endif // HAVE_TIME_H
+            {
+                thisElapseTime = std::difftime(std::time(NULL), 0);
+                thisCpuTime = std::difftime(std::clock(), 0);
+            
+                std::time_t endTime = std::time(NULL);
+                std::clock_t endClock = std::clock();
+                this->cumulativeTime_ += endTime - this->startTime_;
+                this->cumulativeClock_ += endClock - this->startClock_;
+            }
+#endif // defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+
+            this->accumElapseTime_ += thisElapseTime - this->startElapseTime_;
+            this->accumCpuTime_ += thisCpuTime - this->startCpuTime_;
+
         }
     }
 }
@@ -150,17 +180,8 @@ inline void TlTime::reset()
 {
 #pragma omp critical(TlTime)
     {
-#ifdef HAVE_TIME_H
-        clock_gettime(CLOCK_MONOTONIC, &(this->startElapseTime_));
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &(this->startCpuTime_));
-        this->accumElapseTime_.tv_sec = 0;
-        this->accumElapseTime_.tv_nsec = 0;
-        this->accumCpuTime_.tv_sec = 0;
-        this->accumCpuTime_.tv_nsec = 0;
-#else
-        this->cumulativeTime_ = 0;
-        this->cumulativeClock_ = 0;
-#endif // HAVE_TIME_H
+        this->accumElapseTime_ = 0.0;
+        this->accumCpuTime_ = 0.0;
     }
 }
 
