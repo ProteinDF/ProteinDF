@@ -164,7 +164,7 @@ void DfGridFreeXC::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 
 void DfGridFreeXC::createEngines()
 {
-    assert(this->pEriEngines_ == NULL);
+    assert(this->pOvpEngines_ == NULL);
     
 #ifdef _OPENMP
     {
@@ -361,11 +361,13 @@ TlSymmetricMatrix DfGridFreeXC::get_F_lamda(const TlVector lamda)
 
     DfFunctional_LDA* pFunc = new DfFunctional_SVWN();
 
+    double fv_a = 0.0;
+    double fv_b = 0.0;
     for (int i = 0; i < dim; ++i) {
         const double v = lamda.get(i);
         if (v > 1.0E-16) {
-            const double fv = pFunc->getFunctional(v, v);
-            F_lamda.set(i, i, fv);
+            pFunc->getDerivativeFunctional(v, v, &fv_a, &fv_b);
+            F_lamda.set(i, i, fv_a);
         }
     }
 

@@ -1833,7 +1833,7 @@ void DfEriX::storeK_integralDriven(const index_type shellIndexP, const int maxSt
                                    std::vector<index_type>* pLocalIndexQ,
                                    std::vector<double>* pLocalValues)
 {
-    assert(pK != NULL);
+    assert(pLocalValues != NULL);
 
     int index = 0;
     for (int i = 0; i < maxStepsP; ++i) {
