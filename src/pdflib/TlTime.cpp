@@ -1,9 +1,3 @@
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif // HAVE_UNISTD_H
-
-#include <ctime>
-
 #include "TlTime.h"
 #include "TlUtils.h"
 
@@ -69,57 +63,14 @@ std::string TlTime::getNowTime()
 // 基準となる時刻からのCPU時間を返す
 double TlTime::getCpuTime() const
 {
-    double answer = 0.0;
-
-#ifdef HAVE_TIME_H
-    if (this->isRunning() == true) {
-        struct timespec stop;
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop);
-        answer = (stop.tv_sec - this->startCpuTime_.tv_sec) 
-            + (double)(stop.tv_nsec - this->startCpuTime_.tv_nsec) / TlTime::BILLION;
-    } else {
-        answer = this->accumCpuTime_.tv_sec 
-            + (double)(this->accumCpuTime_.tv_nsec) / TlTime::BILLION;
-    }
-#else
-    std::clock_t clocks;
-    if (this->isRunning() == true) {
-        std::clock_t now = std::clock();
-        clocks = now - this->startClock_;
-    } else {
-        clocks = this->cumulativeClock_;
-    }
-    answer = static_cast<double>(clocks / CLOCKS_PER_SEC);
-#endif // HAVE_TIME_H
-
-    return answer;
+    return this->accumCpuTime_;
 }
 
 
 // 基準となる時刻からの経過時間を返す
 double TlTime::getElapseTime() const
 {
-    double answer = 0.0;
-
-#ifdef HAVE_TIME_H
-    if (this->isRunning() == true) {
-        struct timespec stop;
-        clock_gettime(CLOCK_MONOTONIC, &stop);
-        answer = (stop.tv_sec - this->startElapseTime_.tv_sec) 
-            + (double)(stop.tv_nsec - this->startElapseTime_.tv_nsec) / TlTime::BILLION;
-    } else {
-        answer = this->accumElapseTime_.tv_sec 
-            + (double)(this->accumElapseTime_.tv_nsec) / TlTime::BILLION;
-    }
-#else
-    if (this->isRunning() == true) {
-        answer = std::difftime(std::time(NULL), this->startTime_);
-    } else {
-        answer = std::difftime(this->cumulativeTime_, 0);
-    }
-#endif // HAVE_TIME_H
-
-    return answer;
+    return this->accumElapseTime_;
 }
 
 

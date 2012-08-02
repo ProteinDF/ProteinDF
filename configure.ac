@@ -35,7 +35,7 @@ AC_PROG_INSTALL
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([float.h limits.h stdlib.h string.h unistd.h time.h])
+AC_CHECK_HEADERS([float.h limits.h stdlib.h string.h unistd.h sys/resource.h sys/time.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

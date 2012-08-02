@@ -7,9 +7,10 @@
 #include "DfEriEngine.h"
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
-#include "TlUtils.h"
 #include "TlTime.h"
 #include "TlRowVectorMatrix2.h"
+#include "TlUtils.h"
+#include "TlSystem.h"
 
 DfCD::DfCD(TlSerializeData* pPdfParam) 
     : DfObject(pPdfParam), pEriEngines_(NULL),
@@ -35,6 +36,11 @@ DfCD::DfCD(TlSerializeData* pPdfParam)
     this->cutoffEpsilon3_ = this->cutoffThreshold_ * 0.01;
     if ((*pPdfParam)["cutoff_epsilon3"].getStr().empty() != true) {
         this->cutoffEpsilon3_ = (*pPdfParam)["cutoff_epsilon3"].getDouble();
+    }    
+
+    this->isStoreERIs_ = true;
+    if ((*pPdfParam)["CD_store_ERIs"].getStr().empty() != true) {
+        this->isStoreERIs_ = (*pPdfParam)["CD_store_ERIs"].getBoolean();
     }    
 }
 
@@ -645,6 +651,7 @@ void DfCD::calcCholeskyVectors_onTheFly()
 
     this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
     this->saveI2PQ(I2PQ);
+    // this->ERI_cache_manager_.setMaxItems(I2PQ.size() * 2);
 
     const index_type N = I2PQ.size();
     double error = d.getMaxAbsoluteElement();
@@ -665,13 +672,14 @@ void DfCD::calcCholeskyVectors_onTheFly()
     index_type m = 0;
     while (error > threshold) {
 #ifdef DEBUG_CD
-        this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
+        this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e", m, N, error));
 #endif //DEBUG_CD
 
         CD_resizeL_time.start();
         // progress 
         if (m >= progress * division) {
-            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
+            this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e, local mem:%8.1f MB",
+                                            m, error, TlSystem::getMaxRSS()));
             ++progress;
 
             // メモリの確保
@@ -751,15 +759,13 @@ void DfCD::calcCholeskyVectors_onTheFly()
     CD_all_time.stop();
 
     // timing data
-    this->log_.info(TlUtils::format("CD all:       %f sec.", CD_all_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD diagonals: %f sec.", CD_diagonals_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD resize L:  %f sec.", CD_resizeL_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD pivot:     %f sec.", CD_pivot_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD ERI:       %f sec.", CD_ERI_time.getElapseTime()));
-    // this->log_.info(TlUtils::format("CD L(m):      %f sec.", CD_Lpm_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD calc:      %f sec.", CD_calc_time.getElapseTime()));
-    // this->log_.info(TlUtils::format("CD d:         %f sec.", CD_d_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD save:      %f sec.", CD_save_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD all:       %12.2f sec.", CD_all_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD diagonals: %12.2f sec.", CD_diagonals_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD resize L:  %12.2f sec.", CD_resizeL_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD pivot:     %12.2f sec.", CD_pivot_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD ERI:       %12.2f sec.", CD_ERI_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD calc:      %12.2f sec.", CD_calc_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD save:      %12.2f sec.", CD_save_time.getElapseTime()));
 }
 
 
@@ -1024,14 +1030,13 @@ DfCD::getSuperMatrixElements(const index_type G_row,
                              const I2PQ_Type& I2PQ,
                              const TlSparseSymmetricMatrix& schwartzTable)
 {
-    const std::vector<IndexPair4> calcList = this->getCalcList(G_row, G_col_list, I2PQ);
-    {
-        const ERI_CACHE_TYPE cache = this->calcERIs(calcList, schwartzTable);
-        // merge cache
-        this->eriCache_.insert(cache.begin(), cache.end());
-    }
+    this->ERI_cache_.clear();
 
-    return this->setERIs(G_row, G_col_list, I2PQ, this->eriCache_);
+    const std::vector<IndexPair4> calcList = this->getCalcList(G_row, G_col_list, I2PQ);
+    this->calcERIs(calcList, schwartzTable);
+    const std::vector<double> answer = this->setERIs(G_row, G_col_list, I2PQ);
+
+    return answer;
 }
 
 
@@ -1058,12 +1063,12 @@ DfCD::getCalcList(const index_type G_row,
         const index_type shellIndexS = this->orbitalInfo_.getShellIndex(indexS);
 
         IndexPair4 indexPair4(shellIndexP, shellIndexQ, shellIndexR, shellIndexS);
-        if (this->eriCache_.find(indexPair4) == this->eriCache_.end()) {
+        // if (this->ERI_cache_manager_.find(indexPair4) != true) {
 #pragma omp critical(DfCD__getCalcList) 
-            {
-                calcSet.insert(indexPair4);
-            }
+        {
+            calcSet.insert(indexPair4);
         }
+        //}
     }
 
     std::vector<IndexPair4> calcList(calcSet.size());
@@ -1073,19 +1078,19 @@ DfCD::getCalcList(const index_type G_row,
 }
 
 
-DfCD::ERI_CACHE_TYPE DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
-                                    const TlSparseSymmetricMatrix& schwartzTable) 
+void DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
+                    const TlSparseSymmetricMatrix& schwartzTable) 
 {
     const int maxShellType = this->orbitalInfo_.getMaxShellType();
     const double threshold = this->CDAM_tau_;
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
-    ERI_CACHE_TYPE cache;
 
     const int numOfList = calcList.size();
 #pragma omp parallel
     {
         int threadID = 0;
-        ERI_CACHE_TYPE local_cache;
+        ERI_CacheType local_cache;
+
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
@@ -1141,19 +1146,16 @@ DfCD::ERI_CACHE_TYPE DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
         // merge cache
 #pragma omp critical(DfCD__calcERIs)
         {
-            cache.insert(local_cache.begin(), local_cache.end());
+            this->ERI_cache_.insert(local_cache.begin(), local_cache.end());
         }
     }
-
-    return cache;
 }
 
 
 std::vector<double>
 DfCD::setERIs(const index_type G_row,
               const std::vector<index_type> G_col_list,
-              const I2PQ_Type& I2PQ,
-              const ERI_CACHE_TYPE& cache)
+              const I2PQ_Type& I2PQ)
 {
     const index_type indexP_orig = I2PQ[G_row].index1();
     const index_type indexQ_orig = I2PQ[G_row].index2();
@@ -1196,9 +1198,14 @@ DfCD::setERIs(const index_type G_row,
             }
         }
 
-        ERI_CACHE_TYPE::const_iterator pCache = cache.find(IndexPair4(shellIndexP, shellIndexQ,
-                                                                      shellIndexR, shellIndexS));
-        if (pCache != cache.end()) {
+        std::vector<double> values;
+#pragma omp critical(DfCD__setERIs)
+        {
+            values = this->ERI_cache_[IndexPair4(shellIndexP, shellIndexQ,
+                                                 shellIndexR, shellIndexS)];
+        }
+
+        if (values.empty() != true) {
             const int basisTypeP = indexP - shellIndexP;
             const int basisTypeQ = indexQ - shellIndexQ;
             const int basisTypeR = indexR - shellIndexR;
@@ -1213,12 +1220,11 @@ DfCD::setERIs(const index_type G_row,
             const int maxStepsR = 2 * shellTypeR + 1;
             const int maxStepsS = 2 * shellTypeS + 1;
             
-            const std::vector<double>& values = pCache->second;
             const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
-#pragma omp critical(DfCD__setERIs)
-            {
-                answer[i] = values[index];
-            }
+            assert(values.size() > index);
+            
+#pragma omp atomic
+            answer[i] += values.at(index);
         }
     }
 

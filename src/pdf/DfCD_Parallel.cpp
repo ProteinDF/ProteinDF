@@ -387,6 +387,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     this->calcDiagonals(&schwartzTable, &I2PQ, &global_diagonals);
     this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
     this->saveI2PQ(I2PQ);
+    // this->ERI_cache_manager_.setMaxItems(I2PQ.size() * 2);
     CD_diagonals_time.stop();
 
     // prepare variables
@@ -444,10 +445,8 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         // progress 
         CD_resizeL_time.start();
         if (m >= progress * division) {
-            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e, ERI cache=%ld MB",
-                                            m, N, error,
-                                            this->eriCache_.size() * (sizeof(IndexPair4) 
-                                                                      + sizeof(double)) / (1024*1024)));
+            this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e",
+                                            m, error));
             ++progress;
 
             // メモリの確保
