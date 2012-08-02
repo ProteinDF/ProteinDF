@@ -111,11 +111,11 @@ void TlSharedPointer<T>::release(){
         if (*(this->m_pCount) == 0){
             delete this->m_pObject;
             delete this->m_pCount;
+
+            this->m_pObject = NULL;
+            this->m_pCount = NULL;
         }
     }
-
-    this->m_pObject = NULL;
-    this->m_pCount = NULL;
 }
 
 #endif // TLSHAREDPOINTER_H
