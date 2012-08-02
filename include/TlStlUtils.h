@@ -82,7 +82,8 @@ public:
         } else {
             // 古いデータを消す
             while (this->getNumOfItems() > this->getMaxItems()) {
-                KeyListItr reqHistoryTail = --(this->reqHistory_.end());
+                KeyListItr reqHistoryTail = this->reqHistory_.end();
+                --reqHistoryTail;
                 this->cacheTbl_.erase(*reqHistoryTail);
                 this->reqHistory_.erase(reqHistoryTail);
                 --(this->numOfItems_);

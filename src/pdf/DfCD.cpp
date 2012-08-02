@@ -7,9 +7,10 @@
 #include "DfEriEngine.h"
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
-#include "TlUtils.h"
 #include "TlTime.h"
 #include "TlRowVectorMatrix2.h"
+#include "TlUtils.h"
+#include "TlSystem.h"
 
 DfCD::DfCD(TlSerializeData* pPdfParam) 
     : DfObject(pPdfParam), pEriEngines_(NULL),
@@ -650,7 +651,7 @@ void DfCD::calcCholeskyVectors_onTheFly()
 
     this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
     this->saveI2PQ(I2PQ);
-    this->ERI_cache_manager_.setMaxItems(I2PQ.size() * 2);
+    // this->ERI_cache_manager_.setMaxItems(I2PQ.size() * 2);
 
     const index_type N = I2PQ.size();
     double error = d.getMaxAbsoluteElement();
@@ -677,10 +678,8 @@ void DfCD::calcCholeskyVectors_onTheFly()
         CD_resizeL_time.start();
         // progress 
         if (m >= progress * division) {
-            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e, cache:(%8d/%8d)",
-                                            m, N, error,
-                                            this->ERI_cache_manager_.getNumOfItems(),
-                                            this->ERI_cache_manager_.getMaxItems()));
+            this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e, local mem:%8.1f MB",
+                                            m, error, TlSystem::getMaxRSS()));
             ++progress;
 
             // メモリの確保
@@ -1031,15 +1030,11 @@ DfCD::getSuperMatrixElements(const index_type G_row,
                              const I2PQ_Type& I2PQ,
                              const TlSparseSymmetricMatrix& schwartzTable)
 {
-    // this->ERI_cache_manager_.createNewGeneration();
-    {
-        const std::vector<IndexPair4> calcList = this->getCalcList(G_row, G_col_list, I2PQ);
-        this->calcERIs(calcList, schwartzTable);
-    }
+    this->ERI_cache_.clear();
 
+    const std::vector<IndexPair4> calcList = this->getCalcList(G_row, G_col_list, I2PQ);
+    this->calcERIs(calcList, schwartzTable);
     const std::vector<double> answer = this->setERIs(G_row, G_col_list, I2PQ);
-
-    //this->ERI_cache_manager_.releaseMem(10 * 1024 * 1024); // 10 MB
 
     return answer;
 }
@@ -1068,12 +1063,12 @@ DfCD::getCalcList(const index_type G_row,
         const index_type shellIndexS = this->orbitalInfo_.getShellIndex(indexS);
 
         IndexPair4 indexPair4(shellIndexP, shellIndexQ, shellIndexR, shellIndexS);
+        // if (this->ERI_cache_manager_.find(indexPair4) != true) {
 #pragma omp critical(DfCD__getCalcList) 
         {
-            if (this->ERI_cache_manager_.find(indexPair4) != true) {
-                calcSet.insert(indexPair4);
-            }
+            calcSet.insert(indexPair4);
         }
+        //}
     }
 
     std::vector<IndexPair4> calcList(calcSet.size());
@@ -1086,8 +1081,6 @@ DfCD::getCalcList(const index_type G_row,
 void DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
                     const TlSparseSymmetricMatrix& schwartzTable) 
 {
-    typedef std::map<IndexPair4, std::vector<double> > ERI_CacheType;
-
     const int maxShellType = this->orbitalInfo_.getMaxShellType();
     const double threshold = this->CDAM_tau_;
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
@@ -1153,11 +1146,7 @@ void DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
         // merge cache
 #pragma omp critical(DfCD__calcERIs)
         {
-            ERI_CacheType::iterator itEnd = local_cache.end();
-            for (ERI_CacheType::iterator it = local_cache.begin(); it != itEnd; ++it) {
-                this->ERI_cache_manager_.set(it->first, it->second);
-            }
-            // this->ERI_cache_manager_.insert(local_cache);
+            this->ERI_cache_.insert(local_cache.begin(), local_cache.end());
         }
     }
 }
@@ -1209,31 +1198,33 @@ DfCD::setERIs(const index_type G_row,
             }
         }
 
+        std::vector<double> values;
 #pragma omp critical(DfCD__setERIs)
         {
-            TlSharedPointer<std::vector<double> > pValues = 
-                this->ERI_cache_manager_.get(IndexPair4(shellIndexP, shellIndexQ,
-                                                        shellIndexR, shellIndexS));
-            if (pValues->empty() != true) {
-                const int basisTypeP = indexP - shellIndexP;
-                const int basisTypeQ = indexQ - shellIndexQ;
-                const int basisTypeR = indexR - shellIndexR;
-                const int basisTypeS = indexS - shellIndexS;
-                
-                const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
-                const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
-                const int shellTypeR = this->orbitalInfo_.getShellType(shellIndexR);
-                const int shellTypeS = this->orbitalInfo_.getShellType(shellIndexS);
-                const int maxStepsP = 2 * shellTypeP + 1;
-                const int maxStepsQ = 2 * shellTypeQ + 1;
-                const int maxStepsR = 2 * shellTypeR + 1;
-                const int maxStepsS = 2 * shellTypeS + 1;
-            
-                const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
-                assert(pValues->size() > index);
+            values = this->ERI_cache_[IndexPair4(shellIndexP, shellIndexQ,
+                                                 shellIndexR, shellIndexS)];
+        }
 
-                answer[i] = (*pValues).at(index);
-            }
+        if (values.empty() != true) {
+            const int basisTypeP = indexP - shellIndexP;
+            const int basisTypeQ = indexQ - shellIndexQ;
+            const int basisTypeR = indexR - shellIndexR;
+            const int basisTypeS = indexS - shellIndexS;
+            
+            const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
+            const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
+            const int shellTypeR = this->orbitalInfo_.getShellType(shellIndexR);
+            const int shellTypeS = this->orbitalInfo_.getShellType(shellIndexS);
+            const int maxStepsP = 2 * shellTypeP + 1;
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+            const int maxStepsR = 2 * shellTypeR + 1;
+            const int maxStepsS = 2 * shellTypeS + 1;
+            
+            const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
+            assert(values.size() > index);
+            
+#pragma omp atomic
+            answer[i] += values.at(index);
         }
     }
 
