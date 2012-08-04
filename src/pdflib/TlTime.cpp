@@ -63,14 +63,54 @@ std::string TlTime::getNowTime()
 // 基準となる時刻からのCPU時間を返す
 double TlTime::getCpuTime() const
 {
-    return this->accumCpuTime_;
+    double answer = 0.0;
+    double thisCpuTime = 0.0;
+
+    if (this->isRunning()) {
+#if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+        {
+            struct rusage ru;
+            (void)getrusage(RUSAGE_SELF, &ru);
+            thisCpuTime = this->timeVal2double(ru.ru_utime) + this->timeVal2double(ru.ru_stime);
+        }
+#else
+        {
+            thisCpuTime = std::difftime(std::clock(), 0);
+        }
+#endif // defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+        answer = thisCpuTime - this->startCpuTime_;
+    } else {
+        answer = this->accumCpuTime_;
+    }
+
+    return answer;
 }
 
 
 // 基準となる時刻からの経過時間を返す
 double TlTime::getElapseTime() const
 {
-    return this->accumElapseTime_;
+    double answer = 0.0;
+    double thisElapseTime = 0.0;
+
+    if (this->isRunning()) {
+#if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+        {
+            struct timeval tv;
+            (void)gettimeofday(&tv, NULL);
+            thisElapseTime = TlTime::timeVal2double(tv);
+        }
+#else
+        {
+            thisElapseTime = std::difftime(std::time(NULL), 0);
+        }
+#endif // defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+        answer = thisElapseTime - this->startElapseTime_;
+    } else {
+        answer = this->accumElapseTime_;
+    }
+
+    return answer;
 }
 
 

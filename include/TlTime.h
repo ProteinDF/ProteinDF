@@ -95,7 +95,7 @@ private:
     // std::string getReferenceTime() const;
 
 #if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
-    double timeVal2double(struct timeval& tv) {
+    static double timeVal2double(struct timeval& tv) {
         return (double)tv.tv_sec + tv.tv_usec * 0.000001;
     }
 #endif // defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
@@ -141,36 +141,9 @@ inline void TlTime::stop()
 #pragma omp critical(TlTime)
     {
         if (this->isRunning() == true) {
+            this->accumElapseTime_ += this->getCpuTime();
+            this->accumCpuTime_ += this->getElapseTime();
             this->isRunning_ = false;
-            
-            double thisElapseTime = 0.0;
-            double thisCpuTime = 0.0;
-            
-#if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
-            {
-                struct timeval tv;
-                (void)gettimeofday(&tv, NULL);
-                thisElapseTime = this->timeVal2double(tv);
-                
-                struct rusage ru;
-                (void)getrusage(RUSAGE_SELF, &ru);
-                thisCpuTime = this->timeVal2double(ru.ru_utime) + this->timeVal2double(ru.ru_stime);
-            }
-#else
-            {
-                thisElapseTime = std::difftime(std::time(NULL), 0);
-                thisCpuTime = std::difftime(std::clock(), 0);
-            
-                std::time_t endTime = std::time(NULL);
-                std::clock_t endClock = std::clock();
-                this->cumulativeTime_ += endTime - this->startTime_;
-                this->cumulativeClock_ += endClock - this->startClock_;
-            }
-#endif // defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
-
-            this->accumElapseTime_ += thisElapseTime - this->startElapseTime_;
-            this->accumCpuTime_ += thisCpuTime - this->startCpuTime_;
-
         }
     }
 }
