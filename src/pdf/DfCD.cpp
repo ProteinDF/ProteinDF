@@ -236,7 +236,7 @@ void DfCD::calcPQPQ_kernel(const TlOrbitalInfoObject& orbitalInfo,
 #else
         {
             *pI2PQ = local_I2PQ;
-            *pSchwarzTable = localSchwarzTable;
+            *pSchwarzTable = local_schwarzTable;
         }
 #endif // _OPENMP
     }
