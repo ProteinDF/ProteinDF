@@ -80,7 +80,7 @@ TlSerializeData DfInputdata::main()
     {
         //Fl_Geometry Geom(Fl_Geometry::getDefaultFileName());
         param["num_of_atoms"] = flGeom.getNumOfAtoms();
-        param["num_of_dummy_atoms"] = flGeom.getDummyatom();
+        param["num_of_dummy_atoms"] = flGeom.getNumOfDummyAtoms();
     }
 
     // 保存

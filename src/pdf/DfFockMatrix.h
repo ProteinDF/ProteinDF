@@ -62,16 +62,15 @@ void DfFockMatrix::mainDIRECT_RKS()
 {
     SymmetricMatrixType F(this->m_nNumOfAOs);
 
-    //this->setHpq(RUN_RKS, F);
     {
         SymmetricMatrixType Hpq = DfObject::getHpqMatrix<SymmetricMatrixType>();
         F += Hpq;
     }
     if (this->m_nNumOfDummyAtoms > 0) {
-        if (this->m_nIteration <= this->chargeExtrapolateNumber_) {
-            SymmetricMatrixType Hpq2 = DfObject::getHpq2Matrix<SymmetricMatrixType>();
-            F += Hpq2;
-        }
+        SymmetricMatrixType Hpq2 = DfObject::getHpq2Matrix<SymmetricMatrixType>();
+        const int chargeExtrapolateNumber = std::max(this->chargeExtrapolateNumber_, 1);
+        const int times = std::min(this->m_nIteration, chargeExtrapolateNumber);
+        F += static_cast<int>(times) * Hpq2;
     }
 
     {

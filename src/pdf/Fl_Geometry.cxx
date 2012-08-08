@@ -273,13 +273,15 @@ int Fl_Geometry::getNumOfAtoms() const
     return this->atoms_.size();
 }
 
-int Fl_Geometry::getDummyatom() const
+int Fl_Geometry::getNumOfDummyAtoms() const
 {
-    int  x;
-    int  cunt;
-    for (x=0, cunt=0; x < this->getNumOfAtoms(); x++) {
-        if ("X"==getAtom(x)) cunt++;
+    int count = 0;
+    const int numOfAtoms = this->getNumOfAtoms();
+    for (int i = 0; i < numOfAtoms; ++i) {
+        if ("X" == this->getAtom(i)) {
+            ++count;
+        }
     }
-    return cunt;
+    return count;
 }
 

@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cstdlib>
 #include "DfObject.h"
+#include "Fl_Geometry.h"
 #include "TlLogging.h"
 #include "TlUtils.h"
 #include "TlSystem.h"
@@ -101,7 +102,10 @@ void DfObject::setParam(const TlSerializeData& data)
 
     // model
     this->m_nNumOfAtoms = data["num_of_atoms"].getInt();
-    this->m_nNumOfDummyAtoms = data["num_of_dummy_atoms"].getInt();
+    {
+        const Fl_Geometry geom(data["coordinates"]);
+        this->m_nNumOfDummyAtoms = geom.getNumOfDummyAtoms();
+    }
     this->numOfRealAtoms_ = this->m_nNumOfAtoms - this->m_nNumOfDummyAtoms;
     
     this->m_nIteration = data["num_of_iterations"].getInt();

@@ -62,7 +62,7 @@ void DfHpqX::getHpq(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2)
     // make coordinates
     const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
     const int numOfAtoms = flGeom.getNumOfAtoms();
-    const int numOfDummyAtoms = flGeom.getDummyatom();
+    const int numOfDummyAtoms = flGeom.getNumOfDummyAtoms();
     const int numOfRealAtoms = numOfAtoms - numOfDummyAtoms;
     std::vector<TlAtom> Cs(numOfRealAtoms);
     std::vector<TlAtom> Xs(numOfDummyAtoms);
