@@ -52,7 +52,7 @@ public:
     int getAtomKindNumber() const;
 
     /// ダミー原子(X)の数を返す。
-    int getDummyatom() const;
+    int getNumOfDummyAtoms() const;
 
     TlSerializeData getSerializeData() const;
     

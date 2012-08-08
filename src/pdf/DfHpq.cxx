@@ -508,7 +508,7 @@ void DfHpq::makeTable()
     // Get Atom Coordinates
     Fl_Geometry fgeom((*this->pPdfParam_)["coordinates"]);
     this->m_nNumOfTotalAtoms = fgeom.getNumOfAtoms();
-    this->m_nNumOfRealAtoms  = fgeom.getNumOfAtoms() - fgeom.getDummyatom();
+    this->m_nNumOfRealAtoms  = fgeom.getNumOfAtoms() - fgeom.getNumOfDummyAtoms();
 }
 
 /*****************************************************************************/

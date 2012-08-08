@@ -146,7 +146,7 @@ int DfInitialguess::prepare()
 
     this->AtomNum              = FlGeom.getNumOfAtoms();      // set Total Atom Number;
     this->AtomKindNumInclDummy = FlGeom.getAtomKindNumber();  // set Atom Kind Num including Dummy;
-    this->DumyAtomNum          = FlGeom.getDummyatom();       // ser
+    this->DumyAtomNum          = FlGeom.getNumOfDummyAtoms();
     this->AtomKindNum          = this->AtomKindNumInclDummy;
     if (DumyAtomNum != 0) {
         AtomKindNum -=  1;
