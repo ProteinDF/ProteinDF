@@ -568,6 +568,9 @@ void DfScf::buildXcMatrix()
 #endif // __FUJITSU
 
     if (this->m_bIsXCFitting == false) {
+        TlTime timer;
+        this->loggerStartTitle("generate XC matrix");
+
         if (this->isGridFree_ == true) {
             DfGridFreeXC dfGridFreeXC(this->pPdfParam_);
             dfGridFreeXC.buildFxc();
@@ -580,21 +583,20 @@ void DfScf::buildXcMatrix()
                 TlFile::copy(prevGridDataFilePath, this->getGridDataFilePath());
             }
             
-            TlTime timer;
-            this->loggerStartTitle("generate XC matrix");
             DfXCFunctional* pDfXCFunctional = this->getDfXCFunctional();
             pDfXCFunctional->buildXcMatrix();
-            this->loggerEndTitle();
-            (*this->pPdfParam_)["stat"]["elapsed_time"]["xc_matrix"][this->m_nIteration] = timer.getElapseTime();
             
             delete pDfXCFunctional;
             pDfXCFunctional = NULL;
             
-            this->saveParam();
-            
-            // flush
-            this->matrixCache_.flush();
         }
+
+        this->loggerEndTitle();
+        (*this->pPdfParam_)["stat"]["elapsed_time"]["xc_matrix"][this->m_nIteration] = timer.getElapseTime();
+        this->saveParam();
+
+        // flush
+        this->matrixCache_.flush();
     }
 
 #ifdef __FUJITSU

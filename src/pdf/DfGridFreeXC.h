@@ -65,6 +65,12 @@ protected:
 
 protected:
     DfOverlapEngine* pOvpEngines_;
+
+protected:
+    // TlSymmetricMatrix check_;
+    // TlSymmetricMatrix check2_;
+    // TlMatrix check_exact_;
+    // TlSymmetricMatrix check_exact2_;
 };
 
 #endif // DFGRIDFREEXC_H

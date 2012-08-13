@@ -1108,7 +1108,7 @@ void DfOverlapEngine::EQ20D(const OvpState& state)
                                         
                                         // 1st term
                                         {
-                                            answer += (this->G_[batch][i] - this->C_[i]) * this->OVP_[state1_index][index1][batch];
+                                            answer += (this->G_[batch][i] - this->D_[i]) * this->OVP_[state1_index][index1][batch];
                                         }
                                         
                                         // 2nd term

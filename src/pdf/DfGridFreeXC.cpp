@@ -9,7 +9,7 @@
 const int DfGridFreeXC::MAX_SHELL_TYPE = 2 + 1;
 
 DfGridFreeXC::DfGridFreeXC(TlSerializeData* pPdfParam)
-    : DfObject(pPdfParam) {
+    : DfObject(pPdfParam), pOvpEngines_(NULL) {
 }
 
 
@@ -25,99 +25,43 @@ void DfGridFreeXC::buildFxc()
     TlSymmetricMatrix S = DfObject::getSpqMatrix<TlSymmetricMatrix>();
 
     TlSymmetricMatrix M;
-    this->getM_exact(P, &M);
-    M.save("M_exact.mat");
-    // this->getM(P, &M);
+    this->getM(P, &M);
     // M.save("M.mat");
+    // this->getM_exact(P, &M);
+    // M.save("M_exact.mat");
 
-    // V version
-    {
-        TlMatrix V = DfObject::getXMatrix<TlMatrix>();
-        TlMatrix tV = V;
-        tV.transpose();
-        {
-            // check
-            TlMatrix VSV = tV * S * V;
-            VSV.save("VSV.mat"); // = I
-        }
-        
-        TlSymmetricMatrix M_tilda = tV * M * V;
-        M_tilda.save("M_tilda.mat");
-        
-        TlMatrix U;
-        TlVector lamda;
-        M_tilda.diagonal(&lamda, &U);
-        U.save("U.mat");
-        lamda.save("lamda.vct");
-        
-        TlSymmetricMatrix F_lamda = this->get_F_lamda(lamda);
-        F_lamda.save("F_lamda.mat");
-        
-        TlMatrix tU = U;
-        tU.transpose();
-        
-        TlSymmetricMatrix Fxc = S * V * U * F_lamda * tU * tV * S;
-        DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, Fxc);
+    // tV * S * V == I
+    TlMatrix V = DfObject::getXMatrix<TlMatrix>();
+    TlMatrix tV = V;
+    tV.transpose();
+    
+    TlSymmetricMatrix M_tilda = tV * M * V;
+    const int numOfOrthgonalAOs = M_tilda.getNumOfRows();
+    
+    TlMatrix U;
+    TlVector lamda;
+    M_tilda.diagonal(&lamda, &U);
+    
+    TlSymmetricMatrix F_lamda = this->get_F_lamda(lamda);
+    
+    // TlMatrix tU = U;
+    // tU.transpose();
 
-        // check 
-        // {
-        //     TlSymmetricMatrix L(numOfAOs);
-        //     for (int i = 0; i < numOfAOs; ++i) {
-        //         L(i, i) = lamda[i];
-        //     }
-        
-        //     TlSymmetricMatrix SVULUVS = S * V * U * L * tU * tV * S;
-        //     SVULUVS.save("SVULUVS_M.mat");
-        // }
-    }
+    TlMatrix SVU = S * V * U;
+    TlMatrix UVS = SVU;
+    UVS.transpose();
+    
+    // TlSymmetricMatrix Fxc = S * V * U * F_lamda * tU * tV * S;
+    TlSymmetricMatrix Fxc = SVU * F_lamda * UVS;
+    DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, Fxc);
 
-    // X version
     // {
-    //     TlSymmetricMatrix X;
-    //     {
-    //         TlMatrix u;
-    //         TlVector eigval;
-    //         S.diagonal(&eigval, &u);
-            
-    //         TlSymmetricMatrix s(numOfAOs);
-    //         for (int i = 0; i < numOfAOs; ++i) {
-    //             s(i, i) = 1.0 / std::sqrt(eigval[i]);
-    //         }
-    //         TlMatrix tu = u;
-    //         tu.transpose();
-    //         X = u * s * tu;
-    //     }
-    //     X.save("X.mat");
-    //     // check
-    //     {
-    //         TlMatrix XSX = X * S * X;
-    //         XSX.save("XSX.mat");
-    //     }
-        
-    //     TlSymmetricMatrix M_tilda = X * M * X;
-    //     M_tilda.save("XMX.mat");
-    //     TlMatrix U;
-    //     TlVector lamda;
-    //     M_tilda.diagonal(&lamda, &U);
-    //     TlSymmetricMatrix F_lamda = this->get_F_lamda(lamda);
+    //     TlMatrix tSVU = S * V * U;
+    //     tSVU.transpose();
+    //     tSVU.save("tSVU.mat");
 
-    //     TlSymmetricMatrix L(numOfAOs);
-    //     for (int i = 0; i < numOfAOs; ++i) {
-    //         L(i, i) = lamda[i];
-    //     }
-
-    //     TlMatrix tU = U;
-    //     tU.transpose();
-
-    //     TlSymmetricMatrix Fxc = X * S * U * F_lamda * tU * S * X;
-    //     //TlSymmetricMatrix Fxc = S * X * U * F_lamda * tU * X * S;
-    //     Fxc.save("Fxc_X.mat");
-
-    //     TlSymmetricMatrix XSULUSX = X * S * U * L * tU * S * X;
-    //     XSULUSX.save("XSULUSX_M.mat");
-
-    //     TlSymmetricMatrix PF = P * Fxc;
-    //     PF.save("PF.mat");
+    //     TlMatrix tUtVS = tU * tV * S;
+    //     tUtVS.save("tUtVS.mat");
     // }
 }
 
@@ -126,6 +70,8 @@ void DfGridFreeXC::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 {
     assert(pM != NULL);
     pM->resize(this->m_nNumOfAOs);
+    // this->check_.resize(this->m_nNumOfAOs);
+    // this->check2_.resize(this->m_nNumOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_sets"]);
@@ -135,8 +81,10 @@ void DfGridFreeXC::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     // pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
-    // pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
+    pDfTaskCtrl->setCutoffThreshold(0.0);
+    pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
     // pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
+    pDfTaskCtrl->setCutoffEpsilon_distribution(0.0);
 
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
@@ -159,6 +107,9 @@ void DfGridFreeXC::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
+
+    // this->check_.save("check.mat");
+    // this->check2_.save("check2.mat");
 }
 
 
@@ -334,6 +285,10 @@ void DfGridFreeXC::storeM(const index_type shellIndexP, const int maxStepsP,
                         // Eq.1 : (indexP, indexQ) <= (indexR, indexS)
                         const double coefEq1 = (indexR != indexS) ? 2.0 : 1.0;
                         pM->add(indexP, indexQ, coefEq1 * P_rs * value);
+                        // this->check_.add(indexP, indexQ, coefEq1 * 1.0);
+                        // if ((indexP == 0) && (indexQ == 0)) {
+                        //     this->check2_.add(indexR, indexS, coefEq1 * P_rs * value);
+                        // }
                         
                         // Eq.2 : (indexR, indexS) <= (indexP, indexQ)
                         if ((shellIndexP != shellIndexR) || (shellIndexQ != shellIndexS) || (indexP == indexR)) {
@@ -343,6 +298,10 @@ void DfGridFreeXC::storeM(const index_type shellIndexP, const int maxStepsP,
                                             
                                 const double coefEq2 = (indexP != indexQ) ? 2.0 : 1.0;
                                 pM->add(indexR, indexS, coefEq2 * P_pq * value);
+                                // this->check_.add(indexR, indexS, coefEq2 * 1.0);
+                                // if ((indexR == 0) && (indexS == 0)) {
+                                //     this->check2_.add(indexP, indexQ, coefEq2 * P_pq * value);
+                                // }
                             }
                         }
                     }
@@ -381,18 +340,18 @@ TlSymmetricMatrix DfGridFreeXC::get_F_lamda(const TlVector lamda)
 void DfGridFreeXC::getM_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 {
     assert(pM != NULL);
+    TlMatrix M(this->m_nNumOfAOs, this->m_nNumOfAOs);
     pM->resize(this->m_nNumOfAOs);
-    TlMatrix tmpM(this->m_nNumOfAOs, this->m_nNumOfAOs);
+    // this->check_exact_.resize(this->m_nNumOfAOs, this->m_nNumOfAOs);
+    // this->check_exact2_.resize(this->m_nNumOfAOs);
 
     DfOverlapEngine engine;
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_sets"]);
-    // for debug
-    // orbitalInfo.printCGTOs(std::cerr);
 
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
-    const ShellPairArrayTable shellPairArrayTable = this->getShellPairArrayTable(shellArrayTable);
+    // const ShellPairArrayTable shellPairArrayTable = this->getShellPairArrayTable(shellArrayTable);
 
     for (int shellTypeP = MAX_SHELL_TYPE -1; shellTypeP >= 0; --shellTypeP) {
         const int maxStepsP = 2 * shellTypeP + 1;
@@ -409,7 +368,7 @@ void DfGridFreeXC::getM_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
                 const ShellArray shellArrayR = shellArrayTable[shellTypeR];
                 ShellArray::const_iterator rItEnd = shellArrayR.end();
 
-                for (int shellTypeS = 0; shellTypeS >= 0; --shellTypeS) {
+                for (int shellTypeS = MAX_SHELL_TYPE -1; shellTypeS >= 0; --shellTypeS) {
                     const int maxStepsS = 2 * shellTypeS + 1;
                     const ShellArray shellArrayS = shellArrayTable[shellTypeS];
                     ShellArray::const_iterator sItEnd = shellArrayS.end();
@@ -441,34 +400,50 @@ void DfGridFreeXC::getM_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
                                     engine.calc(query,
                                                 posP, posQ, posR, posS,
                                                 pgtosP, pgtosQ, pgtosR, pgtosS);
+
+                                    // debug
+                                    // {
+                                    //     if (((shellIndexP == 0) && (shellIndexQ == 0) &&
+                                    //          (shellIndexR == 3) && (shellIndexS == 26)) ||
+                                    //         ((shellIndexP == 0) && (shellIndexQ == 0) &&
+                                    //          (shellIndexR == 26) && (shellIndexS == 3)) ||
+                                    //         ((shellIndexP == 3) && (shellIndexQ == 26) &&
+                                    //          (shellIndexR == 0) && (shellIndexS == 0)) || 
+                                    //         ((shellIndexP == 26) && (shellIndexQ == 3) &&
+                                    //          (shellIndexR == 0) && (shellIndexS == 0))) {
+                                    //             for (int i = 0; i < 3; ++i) {
+                                    //                 std::cerr << TlUtils::format("OVP(%d %d %d %d)[%d %d %d %d]: %d %f",
+                                    //                                              shellIndexP, shellIndexQ, shellIndexR, shellIndexS,
+                                    //                                              shellTypeP, shellTypeQ, shellTypeR, shellTypeS,
+                                    //                                              i, engine.WORK[i])
+                                    //                           << std::endl;
+                                    //             }
+                                    //     }
+                                    // }
                                     
                                     int index = 0;
                                     for (int i = 0; i < maxStepsP; ++i) {
                                         const int indexP = shellIndexP + i;
+
                                         for (int j = 0; j < maxStepsQ; ++j) {
                                             const int indexQ = shellIndexQ + j;
                                             
                                             for (int k = 0; k < maxStepsR; ++k) {
                                                 const int indexR = shellIndexR + k;
+
                                                 for (int l = 0; l < maxStepsS; ++l) {
                                                     const int indexS = shellIndexS + l;
                                                     
-                                                    if (indexP >= indexQ) {
-                                                        const double P_rs = P.get(indexR, indexS);
-                                                        const double value = engine.WORK[index];
-                                                        pM->add(indexP, indexQ, P_rs * value);
-                                                    }
-
-                                                    // for debug
                                                     {
                                                         const double P_rs = P.get(indexR, indexS);
                                                         const double value = engine.WORK[index];
-                                                        // std::cerr << TlUtils::format("M(%d %d) P(%d %d)=% e (%d %d %d %d)=% e",
-                                                        //                              indexP, indexQ, indexR, indexS, P_rs,
-                                                        //                              indexP, indexQ, indexR, indexS, value)
-                                                        //           << std::endl;
-                                                        tmpM.add(indexP, indexQ, P_rs * value);
+                                                        M.add(indexP, indexQ, P_rs * value);
+                                                        // this->check_exact_.add(indexP, indexQ, 1.0);
+                                                        // if ((indexP == 0) && (indexQ == 0)) {
+                                                        //     this->check_exact2_.add(indexR, indexS, P_rs * value);
+                                                        // }
                                                     }
+
                                                     ++index;
                                                 }
                                             }
@@ -483,7 +458,9 @@ void DfGridFreeXC::getM_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
         }
     }
 
-    tmpM.save("tmpM.mat");
+    *pM = M;
+    // this->check_exact_.save("check_exact.mat");
+    // this->check_exact2_.save("check_exact2.mat");
 }
 
 
