@@ -110,12 +110,14 @@ void DfInitialGuess::saveRho1(const RUN_TYPE runType)
 void DfInitialGuess::createInitialGuessUsingHuckel()
 {
     DfInitialGuessHuckel huckel(this->pPdfParam_);
+    huckel.createGuess();
 }
 
 
 void DfInitialGuess::createInitialGuessUsingCore()
 {
     DfInitialGuessHuckel huckel(this->pPdfParam_);
+    huckel.createGuess();
 }
 
 

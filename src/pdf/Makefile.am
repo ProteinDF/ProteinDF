@@ -126,6 +126,7 @@ libppdf_la_SOURCES = \
 	DfCD_Parallel.h						DfCD_Parallel.cpp					\
 	DfInitialGuess_Parallel.h			DfInitialGuess_Parallel.cpp			\
 	DfInitialGuessHarris_Parallel.h		DfInitialGuessHarris_Parallel.cpp	\
+	DfInitialGuessHuckel_Parallel.h     DfInitialGuessHuckel_Parallel.cpp	\
 	DfPreScf_Parallel.h					DfPreScf_Parallel.cpp				\
 	DfScf_Parallel.h					DfScf_Parallel.cpp					\
 	DfInvMatrix_Parallel.h				DfInvMatrix_Parallel.cpp			\

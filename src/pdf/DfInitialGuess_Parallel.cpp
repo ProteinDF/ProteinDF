@@ -5,6 +5,7 @@
 #include "DfInitialGuess_Parallel.h"
 #include "DfInitialguess.h"
 #include "DfInitialGuessHarris_Parallel.h"
+#include "DfInitialGuessHuckel_Parallel.h"
 #include "DfDmatrix_Parallel.h"
 
 DfInitialGuess_Parallel::DfInitialGuess_Parallel(TlSerializeData* pPdfParam)
@@ -217,21 +218,51 @@ void DfInitialGuess_Parallel::saveOccupation(const RUN_TYPE runType, const TlVec
 
 void DfInitialGuess_Parallel::createInitialGuessUsingHuckel()
 {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        DfInitialGuess::createInitialGuessUsingHuckel();
+#ifdef HAVE_SCALAPACK
+    if (this->m_bUsingSCALAPACK) {
+        DfInitialGuessHuckel_Parallel huckel(this->pPdfParam_);
+        huckel.createGuess();
+    } else {
+        TlCommunicate& rComm = TlCommunicate::getInstance();
+        if (rComm.isMaster() == true) {
+            DfInitialGuess::createInitialGuessUsingHuckel();
+        }
+        rComm.barrier();
     }
-    rComm.barrier();
+#else
+    {
+        TlCommunicate& rComm = TlCommunicate::getInstance();
+        if (rComm.isMaster() == true) {
+            DfInitialGuess::createInitialGuessUsingHuckel();
+        }
+        rComm.barrier();
+    }
+#endif // HAVE_SCALAPACK
 }
 
 
 void DfInitialGuess_Parallel::createInitialGuessUsingCore()
 {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        DfInitialGuess::createInitialGuessUsingCore();
+#ifdef HAVE_SCALAPACK
+    if (this->m_bUsingSCALAPACK) {
+        DfInitialGuessHuckel_Parallel huckel(this->pPdfParam_);
+        huckel.createGuess();
+    } else {
+        TlCommunicate& rComm = TlCommunicate::getInstance();
+        if (rComm.isMaster() == true) {
+            DfInitialGuess::createInitialGuessUsingCore();
+        }
+        rComm.barrier();
     }
-    rComm.barrier();
+#else
+    {
+        TlCommunicate& rComm = TlCommunicate::getInstance();
+        if (rComm.isMaster() == true) {
+            DfInitialGuess::createInitialGuessUsingCore();
+        }
+        rComm.barrier();
+    }
+#endif // HAVE_SCALAPACK
 }
 
 
