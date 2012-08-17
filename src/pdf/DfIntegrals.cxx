@@ -9,6 +9,7 @@
 #include "DfEriX.h"
 #include "DfEri2.h"
 #include "DfCD.h"
+#include "DfGridFreeXC.h"
 
 #include "DfXMatrix.h"
 #include "DfInvMatrix.h"
@@ -87,8 +88,15 @@ void DfIntegrals::main()
     // inverse matrix
     this->createInverseMatrixes();
 
-    // initialize grids
-    this->createGrids();
+    if (this->isGridFree_ == true) {
+        if (this->XC_engine_ == XC_ENGINE_CD) {
+            DfGridFreeXC dfGridFreeXC(this->pPdfParam_);
+            dfGridFreeXC.calcCholeskyVectors_onTheFly();
+        }
+    } else {
+        // initialize grids
+        this->createGrids();
+    }
 
     // flush
     this->matrixCache_.flush();
