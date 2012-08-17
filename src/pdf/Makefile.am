@@ -18,7 +18,7 @@ libpdf_la_SOURCES = \
 	DfFunctional_VWN.h		DfFunctional_VWN.cpp		\
 	DfFunctional_VWN3.h		DfFunctional_VWN3.cpp		\
 	DfFunctional_LYP.h		DfFunctional_LYP.cpp		\
-	DfFunctional_SHF.h		DfFunctional_SHF.cpp		\
+	DfFunctional_HFS.h		DfFunctional_HFS.cpp		\
 	DfFunctional_SVWN.h		DfFunctional_SVWN.cpp		\
 	DfFunctional_B88LYP.h	DfFunctional_B88LYP.cpp		\
 	DfFunctional_B3LYP.h	DfFunctional_B3LYP.cpp		\

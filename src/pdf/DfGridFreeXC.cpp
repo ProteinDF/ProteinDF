@@ -5,6 +5,7 @@
 
 #include "DfGridFreeXC.h"
 #include "DfFunctional_SVWN.h"
+#include "DfFunctional_HFS.h"
 
 const int DfGridFreeXC::MAX_SHELL_TYPE = 2 + 1;
 
@@ -318,7 +319,16 @@ TlSymmetricMatrix DfGridFreeXC::get_F_lamda(const TlVector lamda)
     const int dim = lamda.getSize();
     TlSymmetricMatrix F_lamda(dim);
 
-    DfFunctional_LDA* pFunc = new DfFunctional_SVWN();
+    DfFunctional_LDA* pFunc = NULL;
+    std::string checkXC = this->m_sXCFunctional;
+    if (checkXC == "SVWN") {
+        pFunc = new DfFunctional_SVWN();
+    } else if (checkXC == "HFS") {
+        pFunc = new DfFunctional_HFS();
+    } else {
+        this->log_.critical(TlUtils::format("not support functional: %s", checkXC.c_str()));
+        abort();
+    }
 
     double fv_a = 0.0;
     double fv_b = 0.0;
