@@ -19,13 +19,13 @@ DfGridFreeXC::DfGridFreeXC(TlSerializeData* pPdfParam)
     this->numOfPQs_ = this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2;
 
     this->tau_ = 1.0E-10;
-    if ((*pPdfParam)["CDAM_tau"].getStr().empty() != true) {
-        this->tau_ = (*pPdfParam)["CDAM_tau"].getDouble();
+    if ((*pPdfParam)["grid_free/CDAM_tau"].getStr().empty() != true) {
+        this->tau_ = (*pPdfParam)["grid_free/CDAM_tau"].getDouble();
     }    
 
     this->epsilon_ = 1.0E-4;
-    if ((*pPdfParam)["CD_epsilon"].getStr().empty() != true) {
-        this->epsilon_ = (*pPdfParam)["CD_epsilon"].getDouble();
+    if ((*pPdfParam)["grid_free/CD_epsilon"].getStr().empty() != true) {
+        this->epsilon_ = (*pPdfParam)["grid_free/CD_epsilon"].getDouble();
     }    
 
 }
@@ -44,10 +44,13 @@ void DfGridFreeXC::buildFxc()
 
     TlSymmetricMatrix M;
     if (this->XC_engine_ == XC_ENGINE_CD) {
+        this->log_.info("begin to create M matrix based on CD.");
         this->getM_byCD(&M);
     } else {
+        this->log_.info("begin to create M matrix using 4-center overlap.");
         this->getM(P, &M);
     }
+    this->log_.info("begin to generate Fxc using grid-free method.");
     // M.save("M.mat");
 
     // this->getM_exact(P, &M);

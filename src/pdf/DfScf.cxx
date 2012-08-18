@@ -572,9 +572,12 @@ void DfScf::buildXcMatrix()
         this->loggerStartTitle("generate XC matrix");
 
         if (this->isGridFree_ == true) {
+            this->log_.info("using grid-free method");
             DfGridFreeXC dfGridFreeXC(this->pPdfParam_);
             dfGridFreeXC.buildFxc();
         } else {
+            this->log_.info("using grid method");
+
             // for restart
             if (this->isRestart_ == true) {
                 const std::string prevGridDataFilePath = TlUtils::format("%s.itr%d",
