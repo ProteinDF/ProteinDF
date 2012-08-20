@@ -9,8 +9,6 @@
 #include "TlSymmetricMatrix.h"
 #include "TlStlUtils.h"
 
-// #define CD_DEBUG
-
 class TlOrbitalInfo;
 class DfEriEngine;
 
@@ -110,7 +108,6 @@ protected:
 
 protected:
     typedef std::vector<IndexPair2> PQ_PairArray;
-    typedef std::vector<IndexPair2> I2PQ_Type;
     typedef std::vector<size_type> PQ2I_Type;
 
 protected:
@@ -118,50 +115,21 @@ protected:
     void destroyEngines();
     
 protected:
-    void makeSuperMatrix_screening();
-    TlSparseSymmetricMatrix makeSchwarzTable(const TlOrbitalInfoObject& orbitalInfo);
-
     virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
     virtual void finalize(TlSymmetricMatrix *pMat);
     virtual void finalize(TlSparseSymmetricMatrix *pMat);
-    virtual void finalize_I2PQ(I2PQ_Type *pI2PQ);
+    virtual void finalize_I2PQ(PQ_PairArray *pI2PQ);
 
 protected:
-    void calcPQPQ(const TlOrbitalInfoObject& orbitalInfo,
-                  TlSparseSymmetricMatrix *pSchwarzTable,
-                  PQ_PairArray *pI2PQ);
-    void calcPQPQ_kernel(const TlOrbitalInfoObject& orbitalInfo,
-                         const std::vector<DfTaskCtrl::Task2>& taskList,
-                         TlSparseSymmetricMatrix *pSchwarzTable,
-                         PQ_PairArray *pI2PQ);
-
-    TlSymmetricMatrix getGMatrix(const TlOrbitalInfoObject& orbitalInfo, 
-                                 const TlSparseSymmetricMatrix& schwarzTable,
-                                 const index_type numOfItilde,
-                                 const PQ2I_Type& PQ2I);
-
-    void makeSuperMatrix_kernel2(const TlOrbitalInfoObject& orbitalInfo,
-                                 const std::vector<DfTaskCtrl::Task4>& taskList,
-                                 const PQ2I_Type& PQ2I,
-                                 TlMatrixObject* pG);
-    void storeG2(const index_type shellIndexP, const int maxStepsP,
-                 const index_type shellIndexQ, const int maxStepsQ,
-                 const index_type shellIndexR, const int maxStepsR,
-                 const index_type shellIndexS, const int maxStepsS,
-                 const PQ2I_Type& PQ2I,
-                 const DfEriEngine& engine,
-                 TlMatrixObject* pG);
-    virtual void saveI2PQ(const I2PQ_Type& I2PQ);
+    virtual void saveI2PQ(const PQ_PairArray& I2PQ);
     PQ_PairArray getI2PQ();
 
-    void makeL(const TlSymmetricMatrix& G);
-    
     virtual void saveL(const TlMatrix& L);
     virtual TlMatrix getL();
 
     TlSymmetricMatrix getCholeskyVector(const TlVector& L_col,
-                                        const I2PQ_Type& I2PQ);
+                                        const PQ_PairArray& I2PQ);
 
     virtual TlSymmetricMatrix getPMatrix();
 
@@ -169,7 +137,6 @@ protected:
                                      index_type *pStart, index_type *pEnd);
 
 protected:
-    // NEW ---------------------------------------------------------------------
     virtual void calcCholeskyVectors_onTheFly();
     void calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
                        PQ_PairArray *pI2PQ,
@@ -179,9 +146,6 @@ protected:
                               TlSparseSymmetricMatrix *pDiagonalMat,
                               PQ_PairArray *pI2PQ);
 
-    // void calcERIs(const TlSparseSymmetricMatrix& schwartzTable,
-    //               const I2PQ_Type& I2PQ,
-    //               TlSparseSymmetricMatrix* pG);
     bool isAliveBySchwartzCutoff(const index_type shellIndexP,
                                  const index_type shellIndexQ,
                                  const index_type shellIndexR,
@@ -277,7 +241,7 @@ protected:
     /// On-the-Fly時に使用する。
     virtual std::vector<double> getSuperMatrixElements(const index_type G_row,
                                                        const std::vector<index_type>& G_col_list,
-                                                       const I2PQ_Type& I2PQ,
+                                                       const PQ_PairArray& I2PQ,
                                                        const TlSparseSymmetricMatrix& schwartzTable);
 
     /// 要求されたsuper matrixの行列要素のうち、必要なshell indexのリストを返す。
@@ -286,7 +250,7 @@ protected:
     /// @param G_col_list 必要なsuper matrixの列要素の配列。
     std::vector<DfCD::IndexPair4> getCalcList(const index_type G_row,
                                               const std::vector<index_type>& G_col_list,
-                                              const I2PQ_Type& I2PQ);
+                                              const PQ_PairArray& I2PQ);
 
     /// 計算リストの2電子積分を求め、キャッシュに代入して返す。
     void calcERIs(const std::vector<IndexPair4>& calcList,
@@ -295,7 +259,7 @@ protected:
     /// キャッシュから必要な行列要素を代入する。
     std::vector<double> setERIs(const index_type G_row,
                                 const std::vector<index_type> G_col_list,
-                                const I2PQ_Type& I2PQ);
+                                const PQ_PairArray& I2PQ);
 
     /// 2電子積分をキャッシュするかどうか
     bool isStoreERIs_;
@@ -316,11 +280,6 @@ protected:
     double cutoffEpsilon3_;
     double CDAM_tau_;
     double epsilon_;
-
-private:
-#ifdef CHECK_LOOP
-    TlSymmetricMatrix check;
-#endif // CHECK_LOOP
 };
 
 
