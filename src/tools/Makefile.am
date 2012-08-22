@@ -42,10 +42,11 @@ SERIAL_PROGS = 				\
 
 
 PARALLEL_PROGS = \
-	pdiagonal \
-	plocalize \
-	mergeLocalMatrix \
-	divideGlobalMatrix 
+	pdiagonal 				\
+	plocalize 				\
+	mergeLocalMatrix 		\
+	divideGlobalMatrix 		\
+	pdfdivmat
 
 pdfkwd_SOURCES = pdfkwd.cpp
 pdfkwd_LDADD = $(SERIAL_LIBS)
@@ -204,6 +205,9 @@ mergeLocalMatrix_LDADD = $(SERIAL_LIBS) $(PARALLEL_LIBS)
 
 divideGlobalMatrix_SOURCES = main_divideGlobalMatrix.cpp
 divideGlobalMatrix_LDADD = $(SERIAL_LIBS) $(PARALLEL_LIBS)
+
+pdfdivmat_SOURCES = main_pdfdivmat.cpp
+pdfdivmat_LDADD = $(SERIAL_LIBS) $(PARALLEL_LIBS)
 
 checkERI_SOURCES = main_checkERI.cpp
 checkERI_LDADD = $(SERIAL_LIBS)

@@ -1,17 +1,15 @@
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif // HAVE_UNISTD_H
-
-#include <ctime>
-
 #include "TlTime.h"
 #include "TlUtils.h"
 
-const TlTime g_GlobalTime;
+const TlTime g_GlobalTime(true);
+const double TlTime::BILLION = 1.0E9;
 
-TlTime::TlTime()
-    : cumulativeTime_(0), cumulativeClock_(0) {
-    this->start();
+TlTime::TlTime(bool isAutoStart)
+{
+    this->reset();
+    if (isAutoStart) {
+        this->start();
+    }
 }
 
 
@@ -62,67 +60,54 @@ std::string TlTime::getNowTime()
 }
 
 
-std::string TlTime::start()
-{
-    this->isRunning_  = true;
-    this->startTime_  = std::time(NULL);
-    this->startClock_ = std::clock();
-
-    return (TlUtils::format("%s %s",
-                            this->createDateString(this->startTime_).c_str(),
-                            this->createTimeString(this->startTime_).c_str()));
-}
-
-
-std::string TlTime::stop()
-{
-    std::string answer = "";
-
-    if (this->isRunning() == true) {
-        std::time_t endTime = std::time(NULL);
-        std::clock_t endClock = std::clock();
-        this->cumulativeTime_ += endTime - this->startTime_;
-        this->cumulativeClock_ += endClock - this->startClock_;
-        this->isRunning_ = false;
-        
-        answer = TlUtils::format("%s %s",
-                                 this->createDateString(this->startTime_).c_str(),
-                                 this->createTimeString(this->startTime_).c_str());
-    }
-
-    return answer;
-}
-
-void TlTime::reset()
-{
-    this->startTime_ = 0;
-    this->startClock_ = 0;
-}
-
-
 // 基準となる時刻からのCPU時間を返す
 double TlTime::getCpuTime() const
 {
-    std::clock_t clocks;
-    if (this->isRunning() == true) {
-        std::clock_t now = std::clock();
-        clocks = now - this->startClock_;
+    double answer = 0.0;
+    double thisCpuTime = 0.0;
+
+    if (this->isRunning()) {
+#if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+        {
+            struct rusage ru;
+            (void)getrusage(RUSAGE_SELF, &ru);
+            thisCpuTime = this->timeVal2double(ru.ru_utime) + this->timeVal2double(ru.ru_stime);
+        }
+#else
+        {
+            thisCpuTime = std::difftime(std::clock(), 0);
+        }
+#endif // defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+        answer = thisCpuTime - this->startCpuTime_;
     } else {
-        clocks = this->cumulativeClock_;
+        answer = this->accumCpuTime_;
     }
 
-    return static_cast<double>(clocks / CLOCKS_PER_SEC);
+    return answer;
 }
 
 
 // 基準となる時刻からの経過時間を返す
 double TlTime::getElapseTime() const
 {
-    double answer;
-    if (this->isRunning() == true) {
-        answer = std::difftime(std::time(NULL), this->startTime_);
+    double answer = 0.0;
+    double thisElapseTime = 0.0;
+
+    if (this->isRunning()) {
+#if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+        {
+            struct timeval tv;
+            (void)gettimeofday(&tv, NULL);
+            thisElapseTime = TlTime::timeVal2double(tv);
+        }
+#else
+        {
+            thisElapseTime = std::difftime(std::time(NULL), 0);
+        }
+#endif // defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
+        answer = thisElapseTime - this->startElapseTime_;
     } else {
-        answer = std::difftime(this->cumulativeTime_, 0);
+        answer = this->accumElapseTime_;
     }
 
     return answer;
@@ -146,16 +131,16 @@ void TlTime::sleep(const unsigned long x)
 }
 
 
-std::string TlTime::getReferenceDate() const
-{
-    return this->createDateString(this->startTime_);
-}
+// std::string TlTime::getReferenceDate() const
+// {
+//     return this->createDateString(this->startTime_);
+// }
 
 
-std::string TlTime::getReferenceTime() const
-{
-    return this->createTimeString(this->startClock_);
-}
+// std::string TlTime::getReferenceTime() const
+// {
+//     return this->createTimeString(this->startClock_);
+// }
 
 
 

@@ -179,6 +179,17 @@ TlVector& TlVector::operator+=(const TlVector& rhs)
 }
 
 
+TlVector& TlVector::operator+=(const TlSparseVector& rhs)
+{
+    assert(this->getSize() == rhs.getSize());
+    
+    TlSparseVector::const_iterator itEnd = rhs.end();
+    for (TlSparseVector::const_iterator it = rhs.begin(); it != itEnd; ++it) {
+        this->data_[it->first] += it->second;
+    }
+}
+
+
 TlVector& TlVector::operator-=(const TlVector& rhs)
 {
     assert(this->getSize() == rhs.getSize());

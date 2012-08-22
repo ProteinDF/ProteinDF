@@ -74,7 +74,8 @@ void DfObject::setParam(const TlSerializeData& data)
         }
     }
 
-    this->isWorkOnDisk_ = (TlUtils::toUpper(data["work_on_disk"].getStr()) == "YES");
+    this->isEnableMmap_ = data["use_mapfile"].getBoolean();
+    this->isWorkOnDisk_ = data["work_on_disk"].getBoolean();
     this->localTempDir_ = data["local_temp_dir"].getStr();
     if (this->localTempDir_ == "") {
         this->localTempDir_ = "/tmp/";
@@ -186,6 +187,7 @@ void DfObject::setParam(const TlSerializeData& data)
         this->m_bIsXCFitting = (nLastChar == '~') ? true : false;
     }
     this->m_bIsUpdateXC = (TlUtils::toUpper(data["xc-update"].getStr()) == "NO") ? false : true;
+    this->isGridFree_ = data["grid_free"].getBoolean();
 
     // Grimme empirical dispersion check
     {

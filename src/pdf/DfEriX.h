@@ -54,7 +54,6 @@ protected:
 
     /// DfEriEngineオブジェクトを破棄する
     void destroyEngines();
-    
    
 protected:
     static const int MAX_SHELL_TYPE;
@@ -112,7 +111,9 @@ protected:
                                const index_type shellIndexS, const int maxStepsS,
                                const DfEriEngine& engine,
                                const TlMatrixObject& P,
-                               TlMatrixObject* pJ);
+                               std::vector<index_type>* pLocalIndexP,
+                               std::vector<index_type>* pLocalIndexQ,
+                               std::vector<double>* pLocalValues);
 
     void getJab_part(const TlOrbitalInfoObject& orbitalInfo_Density,
                      const std::vector<DfTaskCtrl::Task2>& taskList,
@@ -126,7 +127,9 @@ protected:
                                const index_type shellIndexS, const int maxStepsS,
                                const DfEriEngine& engine,
                                const TlMatrixObject& P,
-                               TlMatrixObject* pK);
+                               std::vector<index_type>* pLocalIndexP,
+                               std::vector<index_type>* pLocalIndexQ,
+                               std::vector<double>* pLocalValues);
     void debugoutK_integralDriven() const;
     
     ShellPairArrayTable getShellPairArrayTable(const ShellArrayTable& shellArrayTable);
@@ -286,7 +289,14 @@ protected:
     // mutable std::vector<unsigned long> cutoffAlive_E2_;
 
     DfEriEngine* pEriEngines_;
-    
+
+    // statics
+    double elapsetime_calc_;
+    double elapsetime_makepair_;
+    double elapsetime_calc_eri_;
+    double elapsetime_store_;
+    double elapsetime_sumup_;
+
 protected:
     /// デバッグ用積分インデックス積算クラス
     ///

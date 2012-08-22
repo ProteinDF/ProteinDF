@@ -121,6 +121,7 @@ public:
 
     TlDistributeMatrix choleskyFactorization(const double threshold = 1.0E-16) const;
     TlDistributeMatrix choleskyFactorization_mod(const double threshold = 1.0E-16) const;
+    TlDistributeMatrix choleskyFactorization_mod2(const double threshold = 1.0E-16) const;
 
 public:
     /// 指定された入力ストリームが読み込み可能かどうかを返す

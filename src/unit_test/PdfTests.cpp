@@ -10,6 +10,7 @@
 #include "TlSymmetricMatrixTest.h"
 #include "TlSparseMatrixTest.h"
 #include "TlSparseSymmetricMatrixTest.h"
+#include "TlSparseVectorTest.h"
 #include "TlFileMatrixTest.h"
 #include "TlFileSymmetricMatrixTest.h"
 #include "TlPartialSymmetricMatrixTest.h"
@@ -37,17 +38,20 @@ int main(int argc, char* argv[]){
     runner.addTest(TlUtilsTest::suite());
     runner.addTest(TlParameterTest::suite());
     runner.addTest(TlStringTokenizerTest::suite());
+    runner.addTest(TlMemManagerTest::suite());
+    runner.addTest(TlMsgPackTest::suite());
+    runner.addTest(TlSerializeDataTest::suite());
+
     runner.addTest(TlVectorTest::suite());
     runner.addTest(TlMatrixTest::suite());
     runner.addTest(TlSymmetricMatrixTest::suite());
     runner.addTest(TlSparseMatrixTest::suite());
     runner.addTest(TlSparseSymmetricMatrixTest::suite());
+    runner.addTest(TlSparseVectorTest::suite());
     runner.addTest(TlFileMatrixTest::suite());
     runner.addTest(TlFileSymmetricMatrixTest::suite());
     runner.addTest(TlPartialSymmetricMatrixTest::suite());
-    runner.addTest(TlMemManagerTest::suite());
-    runner.addTest(TlMsgPackTest::suite());
-    runner.addTest(TlSerializeDataTest::suite());
+
     
     // 
     //runner.addTest(Fl_UserinputXTest::suite());

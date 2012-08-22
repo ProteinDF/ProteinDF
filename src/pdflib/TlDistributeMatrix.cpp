@@ -144,7 +144,8 @@ void TlDistributeMatrix::LocalMatrixHeader::save(std::ofstream* pOs)
 
 ////////////////////////////////////////////////////////////////////////
 TlDistributeMatrix::TlDistributeMatrix(const index_type row, const index_type col)
-    : m_nContext(0), m_nRows(row), m_nCols(col), m_nBlockSize(TlDistributeMatrix::systemBlockSize_),
+    : log_(TlLogging::getInstance()),
+      m_nContext(0), m_nRows(row), m_nCols(col), m_nBlockSize(TlDistributeMatrix::systemBlockSize_),
       pData_(NULL)
 {
     this->initialize();
@@ -152,7 +153,8 @@ TlDistributeMatrix::TlDistributeMatrix(const index_type row, const index_type co
 
 
 TlDistributeMatrix::TlDistributeMatrix(const TlDistributeMatrix& rhs)
-    : m_nContext(0), m_nRows(rhs.m_nRows), m_nCols(rhs.m_nCols), m_nBlockSize(rhs.m_nBlockSize),
+    : log_(TlLogging::getInstance()),
+      m_nContext(0), m_nRows(rhs.m_nRows), m_nCols(rhs.m_nCols), m_nBlockSize(rhs.m_nBlockSize),
       pData_(NULL)
 {
     this->initialize();
@@ -161,7 +163,8 @@ TlDistributeMatrix::TlDistributeMatrix(const TlDistributeMatrix& rhs)
 
 
 TlDistributeMatrix::TlDistributeMatrix(const TlDistributeSymmetricMatrix& rhs)
-    : m_nContext(0), m_nRows(rhs.m_nRows), m_nCols(rhs.m_nCols), m_nBlockSize(rhs.m_nBlockSize),
+    : log_(TlLogging::getInstance()),
+      m_nContext(0), m_nRows(rhs.m_nRows), m_nCols(rhs.m_nCols), m_nBlockSize(rhs.m_nBlockSize),
       pData_(NULL)
 {
     this->initialize();
@@ -358,7 +361,8 @@ TlDistributeMatrix::TlDistributeMatrix(const TlDistributeSymmetricMatrix& rhs)
 
 TlDistributeMatrix::TlDistributeMatrix(const TlDistributeVector& rhs,
                                        const index_type row, const index_type col)
-    : m_nContext(0), m_nRows(row), m_nCols(col), m_nBlockSize(TlDistributeMatrix::systemBlockSize_),
+    : log_(TlLogging::getInstance()),
+      m_nContext(0), m_nRows(row), m_nCols(col), m_nBlockSize(TlDistributeMatrix::systemBlockSize_),
       pData_(NULL)
 {
     this->initialize();
@@ -366,6 +370,35 @@ TlDistributeMatrix::TlDistributeMatrix(const TlDistributeVector& rhs,
     TlDistributeVector rhs_tmp = const_cast<TlDistributeVector&>(rhs); // for PGI compiler
     const std::size_t bufSize = this->getNumOfMyElements();
     std::copy(&(rhs_tmp.data_[0]), &(rhs_tmp.data_[0]) + bufSize, this->pData_);
+}
+
+
+TlDistributeMatrix::TlDistributeMatrix(const TlRowVectorMatrix2& rhs)
+    : log_(TlLogging::getInstance()),
+      m_nContext(0), m_nRows(rhs.getNumOfRows()), m_nCols(rhs.getNumOfCols()),
+      m_nBlockSize(TlDistributeMatrix::systemBlockSize_),
+      pData_(NULL)
+{
+    this->initialize();
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int numOfProcs = rComm.getNumOfProcs();
+    const int myRank = rComm.getRank();
+
+    const index_type numOfRows = this->getNumOfRows();
+    const index_type numOfCols = this->getNumOfCols();
+    std::vector<double> rowVec(numOfCols);
+    for (index_type row = 0; row < numOfRows; ++row) {
+        const int charge = rhs.getPEinChargeByRow(row);
+        if (charge == myRank) {
+            rhs.getRowVector(row, &(rowVec[0]), numOfCols);
+        }
+        rComm.broadcast(&(rowVec[0]), numOfCols, charge);
+        
+        for (index_type col = 0; col < numOfCols; ++col) {
+            this->set(row, col, rowVec[col]);
+        }
+    }
 }
 
 
@@ -2560,15 +2593,12 @@ bool TlDistributeMatrix::load(std::ifstream& ifs)
                 const int numOfContents = it->second.size() / 2;
                 assert(numOfContents == tmpValueLists[proc].size());
 
-                if (numOfContents == 0) {
-                    // 送る要素がない場合は送らない
-                    continue;
-                }
-                
                 if (isSendData[proc] == true) {
                     rComm.wait(sizeLists[proc]);
-                    rComm.wait(&(rowColLists[proc][0]));
-                    rComm.wait(&(valueLists[proc][0]));
+                    if (sizeLists[proc] > 0) {
+                        rComm.wait(&(rowColLists[proc][0]));
+                        rComm.wait(&(valueLists[proc][0]));
+                    }
                     isSendData[proc] = false;
                 }
                 
@@ -2577,8 +2607,10 @@ bool TlDistributeMatrix::load(std::ifstream& ifs)
                 valueLists[proc] = tmpValueLists[proc];
                 
                 rComm.iSendData(sizeLists[proc], proc, TAG_LOAD_SIZE);
-                rComm.iSendDataX(&(rowColLists[proc][0]), (sizeLists[proc] * 2), proc, TAG_LOAD_ROWCOLS);
-                rComm.iSendDataX(&(valueLists[proc][0]), sizeLists[proc], proc, TAG_LOAD_VALUES);
+                if (sizeLists[proc] > 0) {
+                    rComm.iSendDataX(&(rowColLists[proc][0]), (sizeLists[proc] * 2), proc, TAG_LOAD_ROWCOLS);
+                    rComm.iSendDataX(&(valueLists[proc][0]), sizeLists[proc], proc, TAG_LOAD_VALUES);
+                }
                 isSendData[proc] = true;
             }
         } // end while
@@ -2625,30 +2657,30 @@ bool TlDistributeMatrix::load(std::ifstream& ifs)
 //                                              rComm.getRank(),
 //                                              sizeList)
 //                           << std::endl;
-                assert(sizeList != -1);
-                rowColList.resize(sizeList * 2);
-                valueList.resize(sizeList);
-                rComm.iReceiveDataX(&(rowColList[0]), sizeList * 2, root, TAG_LOAD_ROWCOLS);
-                rComm.iReceiveDataX(&(valueList[0]), sizeList, root, TAG_LOAD_VALUES);
-                rComm.wait(&(rowColList[0]));
-                rComm.wait(&(valueList[0]));
-                rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
+                if (sizeList > 0) {
+                    rowColList.resize(sizeList * 2);
+                    valueList.resize(sizeList);
+                    rComm.receiveDataX(&(rowColList[0]), sizeList * 2, root, TAG_LOAD_ROWCOLS);
+                    rComm.receiveDataX(&(valueList[0]), sizeList, root, TAG_LOAD_VALUES);
 
-                for (int i = 0; i < sizeList; ++i) {
-                    const index_type row = rowColList[i * 2    ];
-                    const index_type col = rowColList[i * 2 + 1];
-                    const size_type index = this->getIndex(row, col);
-                    
+                    for (int i = 0; i < sizeList; ++i) {
+                        const index_type row = rowColList[i * 2    ];
+                        const index_type col = rowColList[i * 2 + 1];
+                        const size_type index = this->getIndex(row, col);
+                        
 //                         std::cerr << TlUtils::format("RECV [%d] (%4d, %4d)",
 //                                                      rComm.getRank(),
 //                                                      row, col) << std::endl;
-                    
-                    assert(index != -1);
-                    if (index == -1) {
-                        abort();
+                        
+                        assert(index != -1);
+                        if (index == -1) {
+                            abort();
+                        }
+                        this->pData_[index] = valueList[i];
                     }
-                    this->pData_[index] = valueList[i];
                 }
+
+                rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
             }
 
             if (rComm.test(endMsg) == true) {
@@ -3016,44 +3048,21 @@ bool inverseByScaLapack(TlDistributeMatrix& X)
 
 const TlDistributeMatrix& TlDistributeMatrix::transpose()
 {
-//   TlCommunicate& rComm = TlCommunicate::getInstance();
-//   const double dStartTime = rComm.getTime();
-
-    // safe code
-    const int numOfOldRows = this->getNumOfRows();
-    const int numOfOldCols = this->getNumOfCols();
-    TlDistributeMatrix tmp(numOfOldCols, numOfOldRows);
-    for (int r = 0; r < numOfOldRows; ++r) {
-        for (int c = 0; c < numOfOldCols; ++c) {
-            tmp.set(c, r, this->get(r, c));
-        }
-    }
-    (*this) = tmp;
+    const int M = this->m_nCols;
+    const int N = this->m_nRows;
+    const double alpha = 1.0;
+    const double beta = 0.0;
+    const int IA = 1;
+    const int JA = 1;
+    TlDistributeMatrix C(M, N);
+    const int IC = 1;
+    const int JC = 1;
+    pdtran_(&M, &N,
+            &alpha, &(this->pData_[0]), &IA, &JA, this->m_pDESC,
+            &beta,  &(C.pData_[0]), &IC, &JC, C.m_pDESC);
     
-    // MB_A == NB_C, NB_A == MB_Cの条件でなければ
-    // pdtran_は動作しない
-//     const int M = this->m_nCols; // transpose(NOT row)
-//     const int N = this->m_nRows; // transpose(NOT col)
-//     const double alpha = 1.0;
-//     const double beta = 0.0;
-//     const double* A = &(this->data_[0]);
-//     const int IA = 1;
-//     const int JA = 1;
-//     TlDistributeMatrix Ctmp(M, N);
-//     double* C = &(Ctmp.data_[0]);
-//     const int IC = 1;
-//     const int JC = 1;
-//     pdtran_(&M, &N,
-//             &alpha, A, &IA, &JA, this->m_pDESC,
-//             &beta,  C, &IC, &JC, Ctmp.m_pDESC);
-
-//     (*this) = Ctmp;
-
-//   const double dEndTime = rComm.getTime();
-//   if (rComm.isMaster() == true){
-//     std::cout << "TlDistributeMatrix::transpose() time:" << (dEndTime - dStartTime) << std::endl;
-//   }
-
+    (*this) = C;
+    
     return (*this);
 }
 

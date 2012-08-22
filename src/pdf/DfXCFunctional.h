@@ -4,7 +4,7 @@
 #include "DfObject.h"
 #include "TlSymmetricMatrix.h"
 
-#include "DfFunctional_SHF.h"
+#include "DfFunctional_HFS.h"
 #include "DfFunctional_SVWN.h"
 #include "DfFunctional_Becke88.h"
 #include "DfFunctional_B88LYP.h"
@@ -31,7 +31,7 @@ public:
     enum XC_TYPE {
         UNDEFINED_XC,
         HF,
-        SHF,
+        HFS,
         SVWN,
         HFB,
         BLYP,
@@ -141,10 +141,10 @@ void DfXCFunctional::getFxc(const SymmetricMatrixType& P1,
         this->XC_energy_ = 0.0;
         break;
 
-    case SHF: {
-        DfFunctional_SHF shf;
+    case HFS: {
+        DfFunctional_HFS hfs;
         this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
-                                                                       &shf,
+                                                                       &hfs,
                                                                        pFxc);
         this->checkGridAccuracy();
     }
@@ -213,9 +213,9 @@ void DfXCFunctional::getFxc(const SymmetricMatrixType& PpqA,
         this->XC_energy_ = 0.0;
         break;
         
-    case SHF: {
-        DfFunctional_SHF shf;
-        this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(PpqA, PpqB, &shf,
+    case HFS: {
+        DfFunctional_HFS hfs;
+        this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(PpqA, PpqB, &hfs,
                                                                        pFxcA, pFxcB);
     }
         break;

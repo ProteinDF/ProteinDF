@@ -264,6 +264,8 @@ void DfEriEngine::calc(const Query& qAB, const Query& qCD,
     assert((0 <= qAB.b_bar) && (qAB.b_bar < ERI_B_BAR_MAX));
     assert((0 <= qAB.a) && (qAB.a < ERI_A_MAX));
     assert((0 <= qAB.b) && (qAB.b < ERI_B_MAX));
+    
+    // this->time_calc_all_.start();
     // initialize
     this->sumOfAngularMomentums_ = qAB.sum() + qCD.sum();
 #ifdef CHECK_MAX_COUNT
@@ -273,10 +275,10 @@ void DfEriEngine::calc(const Query& qAB, const Query& qCD,
 
     this->initialize();
     // fill is too slow!
-    //std::fill(this->WORK, this->WORK + OUTPUT_BUFFER_SIZE, 0.0); 
-    for (int i = 0; i < OUTPUT_BUFFER_SIZE; ++i) {
-        this->WORK[i] = 0.0;
-    }
+    std::fill_n(this->WORK, OUTPUT_BUFFER_SIZE, 0.0); 
+    // for (int i = 0; i < OUTPUT_BUFFER_SIZE; ++i) {
+    //     this->WORK[i] = 0.0;
+    // }
     
     // 総角運動量を求める
     // const int a = qAB.a;
@@ -397,6 +399,7 @@ void DfEriEngine::calc(const Query& qAB, const Query& qCD,
     this->transform6Dto5D(qAB, qCD, this->WORK);
     
    
+    // this->time_calc_all_.stop();
 #ifdef DEBUG_HGP
     std::cerr << "<<<<END\n" << std::endl;
 #endif // DEBUG_HGP
@@ -1555,9 +1558,11 @@ void DfEriEngine::contract_bra(const DfEriEngine::Query& qAB,
         const double zeta2  = this->bra_[KP_index].zeta2();
         const double _2a   = TlMath::pow(alpha2, a_prime);
         const double _2b   = TlMath::pow(beta2,  b_prime);
-        const double _2z   = TlMath::pow(zeta2,  zeta_exp);
 
-        this->pContractBraCoef_[KP_index] = _2a * _2b / _2z;
+        const double _2z   = TlMath::pow(zeta2,  - zeta_exp);
+        this->pContractBraCoef_[KP_index] = _2a * _2b * _2z;
+        // const double _2z   = TlMath::pow(zeta2,  zeta_exp);
+        // this->pContractBraCoef_[KP_index] = _2a * _2b / _2z;
     }
 
     for (int KQ_index = 0; KQ_index < KQ; ++KQ_index) {
@@ -2119,6 +2124,7 @@ void DfEriEngine::ERI_EQ44(const ERI_State eriState, EriDataType* pERI)
     for (int amv_b_index = 0; amv_b_index < numOfAmv_b; ++amv_b_index) {
         const TlAngularMomentumVector amv_b = AMVS_b.get(amv_b_index);
         const int i = this->initiativeRM(amv_b);
+        const double AB_i = this->AB_[i];
         
         const TlAngularMomentumVector amv_b1 = amv_b - this->E1_[i];
         assert(amv_b1.isExist() == true);
@@ -2211,7 +2217,8 @@ void DfEriEngine::ERI_EQ44(const ERI_State eriState, EriDataType* pERI)
                                                              batch, value2)
                                           << std::endl;
 #endif // DEBUG_EQ44
-                                answer -= this->AB_[i] * value2;
+                                // answer -= this->AB_[i] * value2;
+                                answer -= AB_i * value2;
                             }
                             
                             // 3rd term
@@ -2275,7 +2282,8 @@ void DfEriEngine::ERI_EQ45(const ERI_State eriState, EriDataType* pERI)
     for (int amv_a_index = 0; amv_a_index < numOfAmv_a; ++amv_a_index) {
         const TlAngularMomentumVector amv_a = AMVS_a.get(amv_a_index);
         const int i = this->initiativeRM(amv_a);
-        
+        const double AB_i = this->AB_[i];
+
         const TlAngularMomentumVector amv_a1 = amv_a - this->E1_[i];
         assert(amv_a1.isExist() == true);
 
@@ -2396,7 +2404,8 @@ void DfEriEngine::ERI_EQ45(const ERI_State eriState, EriDataType* pERI)
                                                              batch, value3)
                                           << std::endl;
 #endif // DEBUG_EQ45
-                                answer += this->AB_[i] * value3;
+                                // answer += this->AB_[i] * value3;
+                                answer += AB_i * value3;
                             }
                             
                             // 4th term

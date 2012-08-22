@@ -9,6 +9,7 @@
 
 #include "DfDiffDensityMatrix.h"
 #include "DfDensityFittingX.h"
+#include "DfGridFreeXC.h"
 #include "DfCalcGrid.h"
 #include "DfThreeindexintegrals.h"
 #include "DfXCFunctional.h"
@@ -567,24 +568,31 @@ void DfScf::buildXcMatrix()
 #endif // __FUJITSU
 
     if (this->m_bIsXCFitting == false) {
-        // for restart
-        if (this->isRestart_ == true) {
-            const std::string prevGridDataFilePath = TlUtils::format("%s.itr%d",
-                                                                     this->getGridDataFilePath().c_str(),
-                                                                     this->m_nIteration -1);
-            TlFile::copy(prevGridDataFilePath, this->getGridDataFilePath());
-        }
-
         TlTime timer;
         this->loggerStartTitle("generate XC matrix");
-        DfXCFunctional* pDfXCFunctional = this->getDfXCFunctional();
-        pDfXCFunctional->buildXcMatrix();
+
+        if (this->isGridFree_ == true) {
+            DfGridFreeXC dfGridFreeXC(this->pPdfParam_);
+            dfGridFreeXC.buildFxc();
+        } else {
+            // for restart
+            if (this->isRestart_ == true) {
+                const std::string prevGridDataFilePath = TlUtils::format("%s.itr%d",
+                                                                         this->getGridDataFilePath().c_str(),
+                                                                         this->m_nIteration -1);
+                TlFile::copy(prevGridDataFilePath, this->getGridDataFilePath());
+            }
+            
+            DfXCFunctional* pDfXCFunctional = this->getDfXCFunctional();
+            pDfXCFunctional->buildXcMatrix();
+            
+            delete pDfXCFunctional;
+            pDfXCFunctional = NULL;
+            
+        }
+
         this->loggerEndTitle();
         (*this->pPdfParam_)["stat"]["elapsed_time"]["xc_matrix"][this->m_nIteration] = timer.getElapseTime();
-
-        delete pDfXCFunctional;
-        pDfXCFunctional = NULL;
-
         this->saveParam();
 
         // flush

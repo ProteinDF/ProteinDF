@@ -221,6 +221,24 @@ TlSymmetricMatrix& TlSymmetricMatrix::operator+=(const TlSymmetricMatrix& rhs)
 }
 
 
+// TlSymmetricMatrix& TlSymmetricMatrix::operator+=(const TlSparseSymmetricMatrix& rhs)
+// {
+//     std::cerr << "call TlSymmetricMatrix::operator+=(const TlSparseSymmetricMatrix&)" << std::endl;
+//     assert(this->getNumOfRows() == rhs.getNumOfRows());
+//     assert(this->getNumOfCols() == rhs.getNumOfCols());
+
+//     index_type row = 0;
+//     index_type col = 0;
+//     TlSparseSymmetricMatrix::const_iterator itEnd = rhs.end();
+//     for (TlSparseSymmetricMatrix::const_iterator it = rhs.begin(); it != itEnd; ++it) {
+//         rhs.index(it->first, &row, &col);
+//         this->add(row, col, it->second);
+//     }
+
+//     return *this;
+// }
+
+
 TlSymmetricMatrix& TlSymmetricMatrix::operator-=(const TlSymmetricMatrix& rhs)
 {
     assert(this->m_nRows == rhs.m_nRows);

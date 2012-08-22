@@ -20,6 +20,7 @@ libpdftl_la_SOURCES = \
 	TlMatrix.cpp 					\
 	TlSparseMatrix.cpp				\
 	TlSparseSymmetricMatrix.cpp		\
+	TlSparseVector.cpp				\
 	TlSparseVectorMatrix.cpp		\
 	TlSymmetricMatrix.cpp			\
 	TlPartialMatrix.cpp				\

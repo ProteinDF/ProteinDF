@@ -1,11 +1,24 @@
 #include <algorithm>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif // _OPENMP
+
 #include "DfCD_Parallel.h"
 #include "DfTaskCtrl_Parallel.h"
 #include "TlCommunicate.h"
 #include "TlTime.h"
 
+#define TRANS_MEM_SIZE (1 * 1024 * 1024 * 1024) // 1GB
+// #define CD_DEBUG
+
 DfCD_Parallel::DfCD_Parallel(TlSerializeData* pPdfParam) 
     : DfCD(pPdfParam) {
+
+    this->isDebugSaveL_ = false;
+    if (! (*this->pPdfParam_)["debug/saveL"].getStr().empty()) {
+        this->isDebugSaveL_ = (*this->pPdfParam_)["debug/saveL"].getBoolean();
+    }
 }
 
 
@@ -355,7 +368,6 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     TlTime CD_all_time;
     TlTime CD_diagonals_time;
     TlTime CD_resizeL_time;
-    TlTime CD_pivot_time;
     TlTime CD_ERI_time;
     TlTime CD_Lpm_time;
     TlTime CD_calc_time;
@@ -363,47 +375,78 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     TlTime CD_save_time;
 
     CD_all_time.start();
-
     TlCommunicate& rComm = TlCommunicate::getInstance();
     this->createEngines();
     this->initializeCutoffStats();
 
+    CD_diagonals_time.start();
     this->log_.info(TlUtils::format("# of PQ dimension: %d", int(this->numOfPQs_)));
     TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
     PQ_PairArray I2PQ;
-    TlVector d; // 対角成分
-
-    CD_diagonals_time.start();
-    this->calcDiagonals(&schwartzTable, &I2PQ, &d);
-    CD_diagonals_time.stop();
-
+    TlVector global_diagonals; // 対角成分
+    this->calcDiagonals(&schwartzTable, &I2PQ, &global_diagonals);
     this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
     this->saveI2PQ(I2PQ);
-
-    const index_type N = I2PQ.size();
-    double error = d.getMaxAbsoluteElement();
-    std::vector<TlVector::size_type> pivot(N);
-    for (index_type i = 0; i < N; ++i) {
-        pivot[i] = i;
-    }
+    // this->ERI_cache_manager_.setMaxItems(I2PQ.size() * 2);
+    CD_diagonals_time.stop();
 
     // prepare variables
+    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
+    const double threshold = this->epsilon_;
+    const index_type N = I2PQ.size();
     TlRowVectorMatrix2 L(N, 1,
                          rComm.getNumOfProcs(),
-                         rComm.getRank()); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
-    const double threshold = this->epsilon_;
-    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
+                         rComm.getRank(),
+                         this->isEnableMmap_); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
+    const index_type local_N = L.getNumOfLocalRows();
+    std::vector<double> L_pm(N);
+    std::vector<int> global_pivot(N); // ERI計算リストを作成するために必要
+    std::vector<int> reverse_pivot(N); // global_pivotの逆引き
+    std::vector<int> local_pivot(local_N);
+    std::vector<double> local_diagonals(local_N);
+    const int myRank = rComm.getRank();
+    double error = 0.0;
+    index_type error_global_loc = 0;
+    index_type error_local_loc = 0;
+    {
+        int local_i = 0;
+        for (int global_i = 0; global_i < N; ++global_i) {
+            global_pivot[global_i] = global_i;
+            reverse_pivot[global_i] = global_i;
+            if (L.getPEinChargeByRow(global_i) == myRank) {
+                local_pivot[local_i] = global_i;
+                local_diagonals[local_i] = global_diagonals[global_i];
+                if (error < local_diagonals[local_i]) {
+                    error_local_loc = local_i;
+                    error_global_loc = local_pivot[local_i];
+                    error = local_diagonals[local_i];
+                }
+                ++local_i;
+            }
+        }
+        assert(local_i == local_N);
+    }
+    rComm.allReduce_MAXLOC(&error, &error_global_loc);
 
     index_type m = 0;
+    index_type local_m = 0;
+    if (error_global_loc == reverse_pivot[local_pivot[error_local_loc]]) {
+        std::swap(local_pivot[local_m], local_pivot[error_local_loc]);
+        ++local_m;
+    }
+
     int progress = 0;
     index_type division = index_type(N * 0.01);
     while (error > threshold) {
+#ifdef CD_DEBUG
+        this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
+#endif // CD_DEBUG
+
         // progress 
         CD_resizeL_time.start();
         if (m >= progress * division) {
-            this->log_.info(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e, ERI cache=%ld MB"
-                                            , m, N, error,
-                                            this->eriCache_.size() * (sizeof(IndexPair4) + sizeof(double)) / (1024*1024) ));
+            this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e",
+                                            m, error));
             ++progress;
 
             // メモリの確保
@@ -413,30 +456,24 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
         CD_resizeL_time.stop();
 
         // pivot
-        CD_pivot_time.start();
-        {
-            std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
-                                                                           pivot.end());
-            const index_type i = it - pivot.begin();
-            std::swap(pivot[m], pivot[i]);
-        }
-        CD_pivot_time.stop();
+        std::swap(global_pivot[m], global_pivot[error_global_loc]);
+        reverse_pivot[global_pivot[m]] = m;
+        reverse_pivot[global_pivot[error_global_loc]] = error_global_loc;
 
-        error = d[pivot[m]];
-        const double l_m_pm = std::sqrt(d[pivot[m]]);
-        L.set(pivot[m], m, l_m_pm); // 通信発生せず。関係無いPEは値を捨てる。
-        
+        const double l_m_pm = std::sqrt(error);
+        const index_type pivot_m = global_pivot[m];
+        L.set(pivot_m, m, l_m_pm); // 通信発生せず。関係無いPEは値を捨てる。
         const double inv_l_m_pm = 1.0 / l_m_pm;
 
         // ERI
         CD_ERI_time.start();
-        const index_type pivot_m = pivot[m];
         std::vector<double> G_pm;
+        // const index_type numOf_G_cols = N -(m+1);
         const index_type numOf_G_cols = N -(m+1);
         {
             std::vector<index_type> G_col_list(numOf_G_cols);
             for (index_type i = 0; i < numOf_G_cols; ++i) {
-                const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+                const index_type pivot_i = global_pivot[m+1 +i]; // from (m+1) to N
                 G_col_list[i] = pivot_i;
             }
             G_pm = this->getSuperMatrixElements(pivot_m, G_col_list, I2PQ, schwartzTable);
@@ -446,60 +483,85 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
 
         // CD calc
         CD_Lpm_time.start();
-        //TlVector L_pm;
-        std::vector<double> L_pm(m +1);
         {
             // 全PEに分配
             const int PEinCharge = L.getPEinChargeByRow(pivot_m);
             if (PEinCharge == rComm.getRank()) {
-                // L_pm = L.getRowVector(pivot_m);
                 const index_type copySize = L.getRowVector(pivot_m, &(L_pm[0]), m +1);
                 assert(copySize == m +1);
             }
-            //rComm.broadcast(L_pm, PEinCharge);
             rComm.broadcast(&(L_pm[0]), m +1, PEinCharge);
         }
-        assert(L_pm.size() == (m+1));
         CD_Lpm_time.stop();
 
         CD_calc_time.start();
-        std::vector<double> tmp_d(numOf_G_cols);
-#pragma omp parallel for schedule(runtime)
-        for (index_type i = 0; i < numOf_G_cols; ++i) {
-            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+        error = 0.0;
+#pragma omp parallel
+        {
+            std::vector<double> L_pi(m +1);
+            double my_error = 0.0;
+            int my_error_global_loc = 0;
+            int my_error_local_loc = 0;
 
-            if (L.getPEinChargeByRow(pivot_i) == rComm.getRank()) { // 自分がL(pivot_i, *)を持っていたら
-                // const TlVector L_pi = L.getRowVector(pivot_i);
-                std::vector<double> L_pi(m +1);
+#pragma omp for schedule(runtime)
+            for (int i = local_m; i < local_N; ++i) {
+                const int pivot_i = local_pivot[i];
                 const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
                 assert(copySize == m +1);
-
                 double sum_ll = 0.0;
                 for (index_type j = 0; j < m; ++j) {
                     sum_ll += L_pm[j] * L_pi[j];
                 }
 
-                const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+                const int G_pm_index = reverse_pivot[pivot_i] - (m+1);
+                const double l_m_pi = (G_pm[G_pm_index] - sum_ll) * inv_l_m_pm;
 #pragma omp critical(DfCD_Parallel__calcCholeskyVectors_onTheFly)
                 {
                     L.set(pivot_i, m, l_m_pi);
                 }
 
+                const double ll = l_m_pi * l_m_pi;
 #pragma omp atomic
-                tmp_d[i] -= l_m_pi * l_m_pi;
+                global_diagonals[pivot_i] -= ll;
+
+                if (global_diagonals[pivot_i] > my_error) {
+                    my_error = global_diagonals[pivot_i];
+                    my_error_global_loc = reverse_pivot[pivot_i]; // == m +1 + i
+                    my_error_local_loc = i;
+                }
             }
+
+#ifdef _OPENMP
+            const int numOfThreads = omp_get_num_threads();
+            const int myThreadID = omp_get_thread_num();
+            for (int thread = 0; thread < numOfThreads; ++thread) {
+                if (thread == myThreadID) {
+                    if (error < my_error) {
+                        error = my_error;
+                        error_global_loc = my_error_global_loc;
+                        error_local_loc = my_error_local_loc;
+                    }
+                }
+#pragma omp flush(error, error_global_loc)
+            }
+#else
+            error = my_error;
+            error_global_loc = my_error_global_loc;
+            error_local_loc = my_error_local_loc;
+#endif // _OPENMP
         }
         CD_calc_time.stop();
 
         CD_d_time.start();
-        rComm.allReduce_SUM(&(tmp_d[0]), numOf_G_cols);
-        for (index_type i = 0; i < numOf_G_cols; ++i) {
-            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
-            d[pivot_i] += tmp_d[i];
-        }
+        rComm.allReduce_MAXLOC(&error, &error_global_loc);
+        global_diagonals[global_pivot[error_global_loc]] = error;
         CD_d_time.stop();
 
         ++m;
+        if (error_global_loc == reverse_pivot[local_pivot[error_local_loc]]) {
+            std::swap(local_pivot[local_m], local_pivot[error_local_loc]);
+            ++local_m;
+        }
     }
     this->log_.info(TlUtils::format("Cholesky Vectors: %d", m));
 
@@ -513,15 +575,14 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     CD_all_time.stop();
 
     // timing data
-    this->log_.info(TlUtils::format("CD all:       %f sec.", CD_all_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD diagonals: %f sec.", CD_diagonals_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD resize L:  %f sec.", CD_resizeL_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD pivot:     %f sec.", CD_pivot_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD ERI:       %f sec.", CD_ERI_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD L(m):      %f sec.", CD_Lpm_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD calc:      %f sec.", CD_calc_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD d:         %f sec.", CD_d_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD save:      %f sec.", CD_save_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD all:       %10.1f sec.", CD_all_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD diagonals: %10.1f sec.", CD_diagonals_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD resize L:  %10.1f sec.", CD_resizeL_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD ERI:       %10.1f sec.", CD_ERI_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD L(m):      %10.1f sec.", CD_Lpm_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD calc:      %10.1f sec.", CD_calc_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD d:         %10.1f sec.", CD_d_time.getElapseTime()));
+    this->log_.info(TlUtils::format("CD save:      %10.1f sec.", CD_save_time.getElapseTime()));
 }
 
 
@@ -596,65 +657,70 @@ DfCD_Parallel::getSuperMatrixElements(const index_type G_row,
 void DfCD_Parallel::saveL(const TlRowVectorMatrix2& L)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    TlColVectorMatrix2 colVecL = this->getColVector(L);
-    colVecL.save(DfObject::getLMatrixPath());
-    
-    // for debug
-    // TlMatrix fullL = this->mergeL(colVecL);
-    // if (rComm.isMaster() == true) {
-    //     DfCD::saveL(fullL);
-    // }
-
-    // for debug
-    // Notice: below code is enable in case of small molecules.
-    // NOT use large molecule.
-    // const TlMatrix tmpL = this->mergeL(L);
-    // if (rComm.isMaster() == true) {
-    //         DfCD::saveL(tmpL);
-    //  }
-}
-
-
-TlColVectorMatrix2 DfCD_Parallel::getColVector(const TlRowVectorMatrix2& L)
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProcs();
     const int rank = rComm.getRank();
 
     const index_type numOfRows = L.getNumOfRows();
     const index_type numOfCols = L.getNumOfCols();
-    TlColVectorMatrix2 answer(numOfRows, numOfCols, numOfProcs, rank);
+    const bool isUsingMemManager = this->isEnableMmap_;
+    TlColVectorMatrix2 colVecL(numOfRows, numOfCols, numOfProcs, rank,
+                               isUsingMemManager);
 
     const div_t turns = std::div(numOfRows, numOfProcs);
     const index_type localRows = turns.quot + 1;
-    std::vector<double> buf(localRows * numOfCols);;
-    for (int i = 0; i < numOfProcs; ++i) {
-        if (i == rank) {
-            std::vector<double> v(numOfCols);
-            for (index_type r = 0; r < localRows; ++r) {
-                const index_type row = r * numOfProcs + rank;
-                if (row < numOfRows) {
-                    L.getRowVector(row, &(v[0]), numOfCols);
-                    std::copy(v.begin(),
-                              v.begin() + numOfCols,
-                              buf.begin() + numOfCols * r);
+
+    const std::size_t colMemSize = numOfCols * sizeof(double);
+    const std::size_t transMemSize = TRANS_MEM_SIZE;
+    const int transRowsPerCycle = std::max<int>(transMemSize / colMemSize, 1);
+    const int transCycle = localRows / transRowsPerCycle + 1;
+    std::vector<double> buf(numOfCols * transRowsPerCycle);
+    for (int proc = 0; proc < numOfProcs; ++proc) {
+        for (int cycle = 0; cycle < transCycle; ++cycle) {
+            if (proc == rank) {
+                std::vector<double> v(numOfCols);
+                for (index_type r = 0; r < transRowsPerCycle; ++r) {
+                    const index_type row = (cycle * transRowsPerCycle + r) * numOfProcs + rank;
+                    if (row < numOfRows) {
+                        L.getRowVector(row, &(v[0]), numOfCols);
+                        std::copy(v.begin(),
+                                  v.begin() + numOfCols,
+                                  buf.begin() + numOfCols * r);
+                    }
                 }
             }
-        }
-        rComm.broadcast(&(buf[0]), localRows * numOfCols, i);
-
-        // set
-        for (index_type j = 0; j < localRows; ++j) {
-            index_type row = numOfProcs * j + i;
-            if (row < numOfRows) {
-                for (index_type col = 0; col < numOfCols; ++col) {
-                    answer.set(row, col, buf[numOfCols * j + col]);
+            rComm.broadcast(&(buf[0]), transRowsPerCycle * numOfCols, proc);
+            
+            // set
+            for (index_type r = 0; r < transRowsPerCycle; ++r) {
+                index_type row = (cycle * transRowsPerCycle + r) * numOfProcs + proc;
+                if (row < numOfRows) {
+                    for (index_type col = 0; col < numOfCols; ++col) {
+                        colVecL.set(row, col, buf[numOfCols * r + col]);
+                    }
                 }
             }
         }
     }
     
-    return answer;
+    colVecL.save(DfObject::getLMatrixPath());
+
+    // if (this->isDebugSaveL_ == true) {
+    //     {
+    //         TlMatrix tmpL = L.getTlMatrix();
+    //         rComm.allReduce_SUM(tmpL);
+    //         if (rComm.isMaster()) {
+    //             tmpL.save("L.mat");
+    //         }
+    //     }
+
+    //     {
+    //         TlMatrix tmpL = colVecL.getTlMatrix();
+    //         rComm.allReduce_SUM(tmpL);
+    //         if (rComm.isMaster()) {
+    //             tmpL.save("L2.mat");
+    //         }
+    //     }
+    // }
 }
 
 
@@ -804,7 +870,9 @@ void DfCD_Parallel::getJ_D(TlDistributeSymmetricMatrix* pJ)
 
     // cholesky vector
     const I2PQ_Type I2PQ = this->getI2PQ();
-    TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
+    const bool isUsingMemManager = this->isEnableMmap_;
+    TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank(), 
+                         isUsingMemManager);
     L.load(DfObject::getLMatrixPath());
     assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
     assert(L.getRank() == rComm.getRank());
@@ -841,39 +909,93 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
     TlCommunicate& rComm = TlCommunicate::getInstance();
     this->log_.info("calc K by CD method (parallel; distributed).");
 
+
     // cholesky vector
     const I2PQ_Type I2PQ = this->getI2PQ();
-    TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
+    const bool isUsingMemManager = this->isEnableMmap_;
+    TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
+                         isUsingMemManager);
     L.load(DfObject::getLMatrixPath());
 
     const index_type cvSize = L.getNumOfRows();
-    const index_type numOfCBs = L.getNumOfCols();
-    
+    const index_type numOfCVs = L.getNumOfCols();
+
+    this->log_.info("calc CD of density matrix");
+    this->log_.info(TlUtils::format("epsilon = %8.3e", this->epsilon_));
     TlDistributeSymmetricMatrix P = 
         0.5 * DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1); // RKS
-    const TlDistributeMatrix C = P.choleskyFactorization(this->epsilon_);
+    //const TlDistributeMatrix C = P.choleskyFactorization(this->epsilon_);
+    const TlDistributeMatrix C = P.choleskyFactorization_mod2(this->epsilon_);
+
+    TlTime time_all;
+    TlTime time_bcast;
+    TlTime time_translate;
+    TlTime time_multimat1;
+    TlTime time_multimat2;
+    TlTime time_sym2gen;
+    TlTime time_transpose;
+    TlTime time_add;
     
+    time_all.start();
+    this->log_.info("start loop");
+    int progress = 0;
+    const int division = numOfCVs * 0.1;
     std::vector<double> cv(cvSize);
-    for (index_type I = 0; I < numOfCBs; ++I) {
+    for (index_type I = 0; I < numOfCVs; ++I) {
+        // progress
+        if (I >= progress * division) {
+            const double rate = double(I) / double(numOfCVs) * 100.0;
+            this->log_.info(TlUtils::format("K loop progress: %5.2f%%", rate));
+            ++progress;
+        }
+
+        time_bcast.start();
         const int PEinCharge = L.getPEinChargeByCol(I);
         if (PEinCharge == rComm.getRank()) {
             const index_type copySize = L.getColVector(I, &(cv[0]), cvSize);
             assert(copySize == cvSize);
         }
         rComm.broadcast(&(cv[0]), cvSize, PEinCharge);
-            
+        time_bcast.stop();
+
+        time_translate.start();
         TlDistributeSymmetricMatrix l = 
             this->getCholeskyVector_distribute(cv, I2PQ);
-        
+        time_translate.stop();
+
+        time_multimat1.start();
         TlDistributeMatrix X = l * C;
+        time_multimat1.stop();
+
+        time_sym2gen.start();
         TlDistributeMatrix Xt = X;
+        time_sym2gen.stop();
+
+        time_transpose.start();
         Xt.transpose();
+        time_transpose.stop();
         
+        time_multimat2.start();
         TlDistributeSymmetricMatrix XX = X * Xt;
+        time_multimat2.stop();
+
+        time_add.start();
         *pK += XX;
+        time_add.stop();
     }
     
     *pK *= -1.0;
+    time_all.stop();
+
+    // timing data
+    this->log_.info(TlUtils::format("K all:       %10.1f sec.", time_all.getElapseTime()));
+    this->log_.info(TlUtils::format("K bcast:     %10.1f sec.", time_bcast.getElapseTime()));
+    this->log_.info(TlUtils::format("K translate: %10.1f sec.", time_translate.getElapseTime()));
+    this->log_.info(TlUtils::format("K multi1:    %10.1f sec.", time_multimat1.getElapseTime()));
+    this->log_.info(TlUtils::format("K multi2:    %10.1f sec.", time_multimat2.getElapseTime()));
+    this->log_.info(TlUtils::format("K sym2gen:   %10.1f sec.", time_sym2gen.getElapseTime()));
+    this->log_.info(TlUtils::format("K transpose: %10.1f sec.", time_transpose.getElapseTime()));
+    this->log_.info(TlUtils::format("K add:       %10.1f sec.", time_add.getElapseTime()));
 }
 
 

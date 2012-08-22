@@ -66,11 +66,14 @@ protected:
                            const I2PQ_Type& I2PQ,
                            const TlSparseSymmetricMatrix& schwartzTable);
     void saveL(const TlRowVectorMatrix2& L);
-    TlColVectorMatrix2 getColVector(const TlRowVectorMatrix2& L);
+    // TlColVectorMatrix2 getColVector(const TlRowVectorMatrix2& L);
 
     // for debug
     TlMatrix mergeL(const TlRowVectorMatrix2& L);
     TlMatrix mergeL(const TlColVectorMatrix2& L);
+
+private:
+    bool isDebugSaveL_;
 };
 
 #endif // DFCD_PARALLEL_H

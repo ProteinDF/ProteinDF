@@ -11,7 +11,9 @@
 #include "TlMatrixObject.h"
 #include "TlVector.h"
 #include "TlSparseMatrix.h"
+#include "TlRowVectorMatrix2.h"
 #include "TlUtils.h"
+#include "TlLogging.h"
 #include "TlCommunicate.h"
 
 #define MAX_SESSION_ID (100)
@@ -89,8 +91,10 @@ public:
     TlDistributeMatrix(const TlDistributeSymmetricMatrix& rhs);
 
     /// ベクトルからの変換コンストラクタ
-    explicit TlDistributeMatrix(const TlDistributeVector& rhs,
-                                const int row, const int col);
+    TlDistributeMatrix(const TlDistributeVector& rhs,
+                       const int row, const int col);
+
+    TlDistributeMatrix(const TlRowVectorMatrix2& rhs);
 
     virtual ~TlDistributeMatrix();
 
@@ -279,6 +283,8 @@ protected:
     virtual bool saveLocal(const std::string& filePath) const;
 
 protected:
+    TlLogging& log_;
+
     int m_nContext;
     int m_pDESC[9];
 
