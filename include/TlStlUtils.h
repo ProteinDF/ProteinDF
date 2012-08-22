@@ -51,7 +51,7 @@ public:
 public:
     void set(const KeyType& key, const DataType& data) {
         // 古いデータを消す
-        while (this->getNumOfItems() > this->getMaxItems()) {
+        while (this->getNumOfItems() >= this->getMaxItems()) {
             KeyListItr reqHistoryTail = this->reqHistory_.end();
             --reqHistoryTail;
             this->cacheTbl_.erase(*reqHistoryTail);
@@ -83,7 +83,7 @@ public:
             return pCache->second.first;
         } else {
             // 古いデータを消す
-            while (this->getNumOfItems() > this->getMaxItems()) {
+            while (this->getNumOfItems() >= this->getMaxItems()) {
                 KeyListItr reqHistoryTail = this->reqHistory_.end();
                 --reqHistoryTail;
                 this->cacheTbl_.erase(*reqHistoryTail);
@@ -118,7 +118,7 @@ public:
     }
 
     std::size_t getMaxItems() const {
-        return this->maxItems_ +1;
+        return this->maxItems_;
     }
 
     void setMaxItems(const std::size_t maxItems) {

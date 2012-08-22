@@ -17,6 +17,7 @@
 #include "TlMemManagerTest.h"
 #include "TlMsgPackTest.h"
 #include "TlSerializeDataTest.h"
+#include "TlStlUtilsTest.h"
 
 //#include "Fl_UserinputXTest.h"
 
@@ -51,7 +52,7 @@ int main(int argc, char* argv[]){
     runner.addTest(TlFileMatrixTest::suite());
     runner.addTest(TlFileSymmetricMatrixTest::suite());
     runner.addTest(TlPartialSymmetricMatrixTest::suite());
-
+    runner.addTest(TlStlUtilsTest::suite());
     
     // 
     //runner.addTest(Fl_UserinputXTest::suite());

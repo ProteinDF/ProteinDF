@@ -38,6 +38,7 @@ PdfTests_SOURCES = \
 	TlPartialSymmetricMatrixTest.h	TlPartialSymmetricMatrixTest.cpp\
 	TlMemManagerTest.h				TlMemManagerTest.cpp			\
 	TlMsgPackTest.h					TlMsgPackTest.cpp				\
+	TlStlUtilsTest.h				TlStlUtilsTest.cpp				\
 	TlSerializeDataTest.h			TlSerializeDataTest.cpp			\
 	DfFunctional_SlaterTest.h		DfFunctional_SlaterTest.cpp		\
 	DfFunctional_Becke88Test.h		DfFunctional_Becke88Test.cpp	\
