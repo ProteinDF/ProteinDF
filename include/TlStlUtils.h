@@ -35,14 +35,16 @@ typename MapType::iterator TlStlUtils::efficientAddOrUpdate(MapType& m,
 template<typename KeyType, typename DataType, typename KeyCompare=std::less<KeyType> >
 class TlCache {
 private:
+    // データ本体はCacheTableに保存される。
+    // MRUリストはKeyListにキーのリストとして格納される。
     typedef std::list<KeyType> KeyList;
     typedef typename KeyList::iterator KeyListItr;
     typedef typename std::pair<TlSharedPointer<DataType>, KeyListItr> CacheType;
     typedef std::map<KeyType, CacheType, KeyCompare> CacheTable;
 
 public:
-    // デフォルトのキャッシュ制限は1MB
-    TlCache(const std::size_t maxItems = 10240) : maxItems_(maxItems), numOfItems_(0) {
+    // デフォルトのキャッシュ個数は10,000個
+    TlCache(const std::size_t maxItems = 10000) : maxItems_(maxItems), numOfItems_(0) {
     }
     ~TlCache() {}
 
