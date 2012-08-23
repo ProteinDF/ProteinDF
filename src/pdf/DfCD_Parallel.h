@@ -20,21 +20,21 @@ public:
                           TlDistributeSymmetricMatrix *pK);
 
 protected:
-    void makeSuperMatrix_distribute();
-    TlDistributeSymmetricMatrix 
-    getGMatrix_distribute(const TlOrbitalInfoObject& orbitalInfo, 
-                          const TlSparseSymmetricMatrix& schwarzTable,
-                          const index_type numOfItilde,
-                          const PQ2I_Type& PQ2I);
-    void makeL(const TlDistributeSymmetricMatrix& G);
+    // void makeSuperMatrix_distribute();
+    // TlDistributeSymmetricMatrix 
+    // getGMatrix_distribute(const TlOrbitalInfoObject& orbitalInfo, 
+    //                       const TlSparseSymmetricMatrix& schwarzTable,
+    //                       const index_type numOfItilde,
+    //                       const PQ2I_Type& PQ2I);
+    // void makeL(const TlDistributeSymmetricMatrix& G);
 
     virtual DfTaskCtrl* getDfTaskCtrlObject() const;
     virtual void finalize(TlSymmetricMatrix *pMat);
     virtual void finalize(TlSparseSymmetricMatrix *pMat);
-    virtual void finalize_I2PQ(I2PQ_Type* pI2PQ);
+    virtual void finalize_I2PQ(PQ_PairArray* pI2PQ);
 
-    virtual void saveI2PQ(const I2PQ_Type& I2PQ);
-    virtual I2PQ_Type getI2PQ();
+    virtual void saveI2PQ(const PQ_PairArray& I2PQ);
+    virtual PQ_PairArray getI2PQ();
 
     virtual void saveL(const TlMatrix& L);
     virtual TlMatrix getL();
@@ -46,7 +46,7 @@ protected:
 
     TlDistributeSymmetricMatrix 
     getCholeskyVector_distribute(const TlVector& L_col,
-                                 const I2PQ_Type& I2PQ);
+                                 const PQ_PairArray& I2PQ);
 
     // -------------------------------------------------------------------------
 public:
@@ -63,7 +63,7 @@ protected:
     virtual std::vector<double>
     getSuperMatrixElements(const index_type G_row,
                            const std::vector<index_type>& G_col_list,
-                           const I2PQ_Type& I2PQ,
+                           const PQ_PairArray& I2PQ,
                            const TlSparseSymmetricMatrix& schwartzTable);
     void saveL(const TlRowVectorMatrix2& L);
     // TlColVectorMatrix2 getColVector(const TlRowVectorMatrix2& L);

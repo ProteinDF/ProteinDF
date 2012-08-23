@@ -47,7 +47,7 @@ void DfCD_Parallel::finalize(TlSparseSymmetricMatrix *pMat)
 }
 
 
-void DfCD_Parallel::finalize_I2PQ(I2PQ_Type* pI2PQ)
+void DfCD_Parallel::finalize_I2PQ(PQ_PairArray* pI2PQ)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProcs();
@@ -61,7 +61,7 @@ void DfCD_Parallel::finalize_I2PQ(I2PQ_Type* pI2PQ)
             rComm.receiveDataFromAnySource(shellArray, &proc);
 
             const std::size_t I2PQ_size = shellArray.size() / 2;
-            I2PQ_Type i2pq_tmp(I2PQ_size);
+            PQ_PairArray i2pq_tmp(I2PQ_size);
             for (std::size_t i = 0; i < I2PQ_size; ++i) {
                 i2pq_tmp[i] = IndexPair2(shellArray[i*2   ],
                                          shellArray[i*2 +1]);
@@ -106,7 +106,7 @@ void DfCD_Parallel::finalize_I2PQ(I2PQ_Type* pI2PQ)
 }
 
 
-void DfCD_Parallel::saveI2PQ(const I2PQ_Type& I2PQ)
+void DfCD_Parallel::saveI2PQ(const PQ_PairArray& I2PQ)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
@@ -115,12 +115,12 @@ void DfCD_Parallel::saveI2PQ(const I2PQ_Type& I2PQ)
 }
 
 
-DfCD::I2PQ_Type DfCD_Parallel::getI2PQ()
+DfCD::PQ_PairArray DfCD_Parallel::getI2PQ()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     this->log_.info("distribute I2PQ table.");
 
-    I2PQ_Type I2PQ;
+    PQ_PairArray I2PQ;
     std::vector<index_type> shellArray;
     if (rComm.isMaster() == true) {
         I2PQ = DfCD::getI2PQ();
@@ -207,7 +207,7 @@ void DfCD_Parallel::getJ_distributed(TlDistributeSymmetricMatrix* pJ)
     TlDistributeMatrix L = DfObject::getLMatrix<TlDistributeMatrix>();
     const index_type numOfCBs = L.getNumOfCols();
 
-    const I2PQ_Type I2PQ = this->getI2PQ();
+    const PQ_PairArray I2PQ = this->getI2PQ();
     index_type start_CholeskyBasis = 0;
     index_type end_CholeskyBasis = numOfCBs;
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
@@ -240,7 +240,7 @@ void DfCD_Parallel::getK_distributed(const RUN_TYPE runType,
                                                                                               this->m_nIteration -1);
     const TlDistributeMatrix C = P.choleskyFactorization(this->epsilon_);
     
-    const I2PQ_Type I2PQ = this->getI2PQ();
+    const PQ_PairArray I2PQ = this->getI2PQ();
     index_type start_CholeskyBasis = 0;
     index_type end_CholeskyBasis = numOfCBs;
     //this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
@@ -262,7 +262,7 @@ void DfCD_Parallel::getK_distributed(const RUN_TYPE runType,
 
 TlDistributeSymmetricMatrix 
 DfCD_Parallel::getCholeskyVector_distribute(const TlVector& L_col,
-                                            const I2PQ_Type& I2PQ)
+                                            const PQ_PairArray& I2PQ)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const index_type numOfItilde = L_col.getSize();
@@ -281,85 +281,85 @@ DfCD_Parallel::getCholeskyVector_distribute(const TlVector& L_col,
 }
 
 
-void DfCD_Parallel::makeSuperMatrix_distribute()
-{
-    const index_type numOfPQs = this->numOfPQs_;
+// void DfCD_Parallel::makeSuperMatrix_distribute()
+// {
+//     const index_type numOfPQs = this->numOfPQs_;
 
-    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+//     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+//                                     (*(this->pPdfParam_))["basis_sets"]);
 
-    // calc (pq|pq)
-    TlSparseSymmetricMatrix schwarzTable;
-    PQ_PairArray I2PQ; // I~ to (pq) index table; size of (I2PQ) is the number of I~.
-    this->calcPQPQ(orbitalInfo, &schwarzTable, &I2PQ);
-    this->saveI2PQ(I2PQ);
-    const index_type numOfItilde = I2PQ.size();
-    this->log_.info(TlUtils::format(" # of PQ dimension: %d", int(numOfPQs)));
-    this->log_.info(TlUtils::format(" # of I~ dimension: %d", int(numOfItilde)));
+//     // calc (pq|pq)
+//     TlSparseSymmetricMatrix schwarzTable;
+//     PQ_PairArray I2PQ; // I~ to (pq) index table; size of (I2PQ) is the number of I~.
+//     this->calcPQPQ(orbitalInfo, &schwarzTable, &I2PQ);
+//     this->saveI2PQ(I2PQ);
+//     const index_type numOfItilde = I2PQ.size();
+//     this->log_.info(TlUtils::format(" # of PQ dimension: %d", int(numOfPQs)));
+//     this->log_.info(TlUtils::format(" # of I~ dimension: %d", int(numOfItilde)));
 
-    // make PQ2I from I2PQ
-    PQ2I_Type PQ2I(numOfPQs, -1);
-    for (size_type i = 0; i < numOfItilde; ++i) {
-        const size_type PQ2I_index = I2PQ[i].index();
-        assert(PQ2I_index < numOfPQs);
-        PQ2I[PQ2I_index] = i;
-    }
+//     // make PQ2I from I2PQ
+//     PQ2I_Type PQ2I(numOfPQs, -1);
+//     for (size_type i = 0; i < numOfItilde; ++i) {
+//         const size_type PQ2I_index = I2PQ[i].index();
+//         assert(PQ2I_index < numOfPQs);
+//         PQ2I[PQ2I_index] = i;
+//     }
 
-    // 
-    TlDistributeSymmetricMatrix G = this->getGMatrix_distribute(orbitalInfo, schwarzTable, numOfItilde, PQ2I);
+//     // 
+//     TlDistributeSymmetricMatrix G = this->getGMatrix_distribute(orbitalInfo, schwarzTable, numOfItilde, PQ2I);
 
-    this->makeL(G);
-}
-
-
-TlDistributeSymmetricMatrix 
-DfCD_Parallel::getGMatrix_distribute(const TlOrbitalInfoObject& orbitalInfo, 
-                                     const TlSparseSymmetricMatrix& schwarzTable,
-                                     const index_type numOfItilde,
-                                     const PQ2I_Type& PQ2I)
-{
-    this->createEngines();
-    DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
-
-    TlDistributeSymmetricMatrix G(numOfItilde);
-    TlSparseSymmetricMatrix tmpG(numOfItilde);
-    std::vector<DfTaskCtrl::Task4> taskList;
-    bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
-                                          schwarzTable,
-                                          this->grainSize_, &taskList, true);
-    while (hasTask == true) {
-        this->makeSuperMatrix_kernel2(orbitalInfo,
-                                      taskList,
-                                      PQ2I,
-                                      &tmpG);
-        hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
-                                         schwarzTable,
-                                         this->grainSize_, &taskList);
-    }
-
-    // finalize
-    G.mergeSparseMatrix(tmpG);
-    //G.save("G.mat");
-    //std::cerr << TlUtils::format("G(%d, %d)", G.getNumOfRows(), G.getNumOfCols()) << std::endl;
-    //pDfTaskCtrl->cutoffReport();
-
-    delete pDfTaskCtrl;
-    pDfTaskCtrl = NULL;
-    this->destroyEngines();
-
-    return G;
-}
+//     this->makeL(G);
+// }
 
 
-void DfCD_Parallel::makeL(const TlDistributeSymmetricMatrix& G)
-{
-    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
-    TlDistributeMatrix L = G.choleskyFactorization_mod(this->epsilon_);
-    //std::cerr << TlUtils::format("L(%d, %d)", L.getNumOfRows(), L.getNumOfCols()) << std::endl;
-    this->log_.info(TlUtils::format("Cholesky Vectors: %d", L.getNumOfCols()));
+// TlDistributeSymmetricMatrix 
+// DfCD_Parallel::getGMatrix_distribute(const TlOrbitalInfoObject& orbitalInfo, 
+//                                      const TlSparseSymmetricMatrix& schwarzTable,
+//                                      const index_type numOfItilde,
+//                                      const PQ2I_Type& PQ2I)
+// {
+//     this->createEngines();
+//     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
 
-    DfObject::saveLMatrix(L);
-}
+//     TlDistributeSymmetricMatrix G(numOfItilde);
+//     TlSparseSymmetricMatrix tmpG(numOfItilde);
+//     std::vector<DfTaskCtrl::Task4> taskList;
+//     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+//                                           schwarzTable,
+//                                           this->grainSize_, &taskList, true);
+//     while (hasTask == true) {
+//         this->makeSuperMatrix_kernel2(orbitalInfo,
+//                                       taskList,
+//                                       PQ2I,
+//                                       &tmpG);
+//         hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+//                                          schwarzTable,
+//                                          this->grainSize_, &taskList);
+//     }
+
+//     // finalize
+//     G.mergeSparseMatrix(tmpG);
+//     //G.save("G.mat");
+//     //std::cerr << TlUtils::format("G(%d, %d)", G.getNumOfRows(), G.getNumOfCols()) << std::endl;
+//     //pDfTaskCtrl->cutoffReport();
+
+//     delete pDfTaskCtrl;
+//     pDfTaskCtrl = NULL;
+//     this->destroyEngines();
+
+//     return G;
+// }
+
+
+// void DfCD_Parallel::makeL(const TlDistributeSymmetricMatrix& G)
+// {
+//     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
+//     TlDistributeMatrix L = G.choleskyFactorization_mod(this->epsilon_);
+//     //std::cerr << TlUtils::format("L(%d, %d)", L.getNumOfRows(), L.getNumOfCols()) << std::endl;
+//     this->log_.info(TlUtils::format("Cholesky Vectors: %d", L.getNumOfCols()));
+
+//     DfObject::saveLMatrix(L);
+// }
 
 // On the Fly method -----------------------------------------------------------
 void DfCD_Parallel::calcCholeskyVectors_onTheFly()
@@ -589,7 +589,7 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
 std::vector<double>
 DfCD_Parallel::getSuperMatrixElements(const index_type G_row,
                                       const std::vector<index_type>& G_col_list,
-                                      const I2PQ_Type& I2PQ,
+                                      const PQ_PairArray& I2PQ,
                                       const TlSparseSymmetricMatrix& schwartzTable)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
@@ -786,7 +786,7 @@ void DfCD_Parallel::getJ(TlSymmetricMatrix* pJ)
     const TlSymmetricMatrix P = this->getPMatrix();
 
     // cholesky vector
-    const I2PQ_Type I2PQ = this->getI2PQ();
+    const PQ_PairArray I2PQ = this->getI2PQ();
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
     L.load(DfObject::getLMatrixPath());
     assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
@@ -826,7 +826,7 @@ void DfCD_Parallel::getK(const RUN_TYPE runType,
     this->log_.info("calc K by CD method (parallel).");
 
     // cholesky vector
-    const I2PQ_Type I2PQ = this->getI2PQ();
+    const PQ_PairArray I2PQ = this->getI2PQ();
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
     L.load(DfObject::getLMatrixPath());
 
@@ -869,7 +869,7 @@ void DfCD_Parallel::getJ_D(TlDistributeSymmetricMatrix* pJ)
         DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
 
     // cholesky vector
-    const I2PQ_Type I2PQ = this->getI2PQ();
+    const PQ_PairArray I2PQ = this->getI2PQ();
     const bool isUsingMemManager = this->isEnableMmap_;
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank(), 
                          isUsingMemManager);
@@ -911,7 +911,7 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
 
 
     // cholesky vector
-    const I2PQ_Type I2PQ = this->getI2PQ();
+    const PQ_PairArray I2PQ = this->getI2PQ();
     const bool isUsingMemManager = this->isEnableMmap_;
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
                          isUsingMemManager);

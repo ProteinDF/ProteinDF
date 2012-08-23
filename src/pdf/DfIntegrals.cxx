@@ -9,6 +9,7 @@
 #include "DfEriX.h"
 #include "DfEri2.h"
 #include "DfCD.h"
+#include "DfGridFreeXC.h"
 
 #include "DfXMatrix.h"
 #include "DfInvMatrix.h"
@@ -87,7 +88,8 @@ void DfIntegrals::main()
     // inverse matrix
     this->createInverseMatrixes();
 
-    // initialize grids
+    // XC
+    this->createCholeskyVectors_XC();
     this->createGrids();
 
     // flush
@@ -265,23 +267,23 @@ void DfIntegrals::createERIMatrix()
 
 void DfIntegrals::createCholeskyVectors()
 {
-    if ((this->J_engine_ == J_ENGINE_CD) || (this->K_engine_ == K_ENGINE_CD)) {
-        unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
-        if ((calcState & DfIntegrals::CD) == 0) { 
-            this->outputStartTitle("Cholesky Vectors");
-            DfCD *pDfCD = this->getDfCDObject();
-            pDfCD->calcCholeskyVectors();
-            
-            delete pDfCD;
-            pDfCD = NULL;
-        }
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+
+    if (((calcState & DfIntegrals::CD) == 0) && 
+        ((this->J_engine_ == J_ENGINE_CD) || (this->K_engine_ == K_ENGINE_CD))) {
+        this->outputStartTitle("Cholesky Vectors");
+        DfCD *pDfCD = this->getDfCDObject();
+        pDfCD->calcCholeskyVectors();
+        
+        delete pDfCD;
+        pDfCD = NULL;
 
         this->outputEndTitle();
-
-        calcState |= DfIntegrals::CD;
-        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-        this->saveParam();
     }
+
+    calcState |= DfIntegrals::CD;
+    (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+    this->saveParam();
 }
 
 
@@ -329,11 +331,32 @@ void DfIntegrals::createInverseMatrixes()
 }
 
 
+void DfIntegrals::createCholeskyVectors_XC()
+{
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    if (((calcState & DfIntegrals::CHOLESKY_VECTORS_XC) == 0) && 
+        (this->isGridFree_ == true) &&
+        (this->XC_engine_ == XC_ENGINE_CD)) {
+        this->outputStartTitle("Cholesky Vectors for XC");
+            
+        DfGridFreeXC dfGridFreeXC(this->pPdfParam_);
+        dfGridFreeXC.calcCholeskyVectors_onTheFly();
+
+        this->outputEndTitle();
+    }
+
+    calcState |= DfIntegrals::CHOLESKY_VECTORS_XC;
+    (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+    this->saveParam();
+}
+
+
 void DfIntegrals::createGrids()
 {
     unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-    if ((calcState & DfIntegrals::GRID) == 0) {
+    if (((calcState & DfIntegrals::GRID) == 0) &&
+        (this->isGridFree_ != true)) {
         this->outputStartTitle("Grid generation");
         
         DfGenerateGrid* pDfGenerateGrid = this->getDfGenerateGridObject();

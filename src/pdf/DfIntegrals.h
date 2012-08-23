@@ -27,7 +27,8 @@ protected:
         CD = 64,
         X = 128,
         INV = 256,
-        GRID = 512
+        CHOLESKY_VECTORS_XC = 512,
+        GRID = 1024
     };
 
 public:
@@ -49,6 +50,7 @@ protected:
 
     void createInverseMatrixes();
     void createXMatrix();
+    void createCholeskyVectors_XC();
     void createGrids();
 
 protected:
