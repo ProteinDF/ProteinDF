@@ -181,6 +181,14 @@ void DfObject::setParam(const TlSerializeData& data)
     }
     
     // XC potential
+    {
+        this->XC_engine_ = XC_ENGINE_CONVENTIONAL;
+        const std::string XC_engine = TlUtils::toUpper(data["XC_engine"].getStr());
+        if (XC_engine == "CD") {
+            this->XC_engine_ = XC_ENGINE_CD;
+        }
+    }
+
     this->m_sXCFunctional = TlUtils::toUpper(data["xc-potential"].getStr());
     {
         const char nLastChar = this->m_sXCFunctional[this->m_sXCFunctional.length() -1];
