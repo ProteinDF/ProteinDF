@@ -153,8 +153,11 @@ inline void TlTime::reset()
 {
 #pragma omp critical(TlTime)
     {
+        this->isRunning_ = false;
         this->accumElapseTime_ = 0.0;
         this->accumCpuTime_ = 0.0;
+        this->startElapseTime_ = 0.0;
+        this->startCpuTime_ = 0.0;
     }
 }
 
