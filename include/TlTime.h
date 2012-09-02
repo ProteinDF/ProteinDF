@@ -110,55 +110,48 @@ private:
     double startCpuTime_;
 };
 
+
 extern const TlTime g_GlobalTime;
+
 
 inline void TlTime::start()
 {
-#pragma omp critical(TlTime)
-    {
-        this->isRunning_  = true;
+    this->isRunning_  = true;
 
 #if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
-        {
-            struct timeval tv;
-            (void)gettimeofday(&tv, NULL);
-            this->startElapseTime_ = this->timeVal2double(tv);
-
-            struct rusage ru;
-            (void)getrusage(RUSAGE_SELF, &ru);
-            this->startCpuTime_ = this->timeVal2double(ru.ru_utime) + this->timeVal2double(ru.ru_stime);
-        }
-#else 
-        this->startTime_  = std::difftime(std::time(NULL), 0);
-        this->startClock_ = std::difftime(std::clock(), 0);
-#endif // HAVE_TIME_H
+    {
+        struct timeval tv;
+        (void)gettimeofday(&tv, NULL);
+        this->startElapseTime_ = this->timeVal2double(tv);
+        
+        struct rusage ru;
+        (void)getrusage(RUSAGE_SELF, &ru);
+        this->startCpuTime_ = this->timeVal2double(ru.ru_utime) + this->timeVal2double(ru.ru_stime);
     }
+#else 
+    this->startTime_  = std::difftime(std::time(NULL), 0);
+    this->startClock_ = std::difftime(std::clock(), 0);
+#endif // HAVE_TIME_H
 }
 
 
 inline void TlTime::stop()
 {
-#pragma omp critical(TlTime)
-    {
-        if (this->isRunning() == true) {
-            this->accumElapseTime_ += this->getCpuTime();
-            this->accumCpuTime_ += this->getElapseTime();
-            this->isRunning_ = false;
-        }
+    if (this->isRunning() == true) {
+        this->accumElapseTime_ += this->getCpuTime();
+        this->accumCpuTime_ += this->getElapseTime();
+        this->isRunning_ = false;
     }
 }
 
 
 inline void TlTime::reset()
 {
-#pragma omp critical(TlTime)
-    {
-        this->isRunning_ = false;
-        this->accumElapseTime_ = 0.0;
-        this->accumCpuTime_ = 0.0;
-        this->startElapseTime_ = 0.0;
-        this->startCpuTime_ = 0.0;
-    }
+    this->isRunning_ = false;
+    this->accumElapseTime_ = 0.0;
+    this->accumCpuTime_ = 0.0;
+    this->startElapseTime_ = 0.0;
+    this->startCpuTime_ = 0.0;
 }
 
 

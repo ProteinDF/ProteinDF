@@ -2108,6 +2108,41 @@ void TlDistributeMatrix::add(const index_type row, const index_type col, const d
 }
 
 
+void TlDistributeMatrix::addByList(const std::vector<index_type>& indexPairs,
+                                   const std::vector<double>& values)
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int numOfProcs = rComm.getNumOfProc();
+    rComm.checkNonBlockingCommunications();
+
+    // 送信すべきインデックスリストの作成
+    std::vector<std::vector<index_type> > sendIndexArrays(numOfProcs);
+    std::vector<std::vector<double> > sendValues(numOfProcs);
+
+    std::size_t numOfItems = values.size();
+    assert(indexPairs.size() == numOfItems *2);
+
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        const index_type globalRow = indexPairs[i*2   ];
+        const index_type globalCol = indexPairs[i*2 +1];
+        const double value = values[i];
+
+        const int index = this->getIndex(globalRow, globalCol);
+        if (index != -1) {
+            this->pData_[index] += value;
+        } else {
+            const int targetProc = this->getProcIdForIndex(globalRow, globalCol);
+            sendIndexArrays[targetProc].push_back(globalRow);
+            sendIndexArrays[targetProc].push_back(globalCol);
+            sendValues[targetProc].push_back(value);
+        }
+    }
+
+    this->mergeMatrix_common(sendIndexArrays, sendValues);
+    rComm.checkNonBlockingCommunications();
+}
+
+
 double TlDistributeMatrix::getLocal(const index_type row, const index_type col) const
 {
     double answer = 0.0;

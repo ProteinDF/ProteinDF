@@ -101,19 +101,20 @@ protected:
     /// integral-driven法を用いる。
     void getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ);
     
-    void getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
-                                  const std::vector<DfTaskCtrl::Task4>& taskList,
-                                  const TlMatrixObject& P, TlMatrixObject* pJ);
+    int getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
+                                 const std::vector<DfTaskCtrl::Task4>& taskList,
+                                 const TlMatrixObject& P,
+                                 index_type* pIndexPairs,
+                                 double* pValues);
 
-    void storeJ_integralDriven(const index_type shellIndexP, const int maxStepsP,
-                               const index_type shellIndexQ, const int maxStepsQ,
-                               const index_type shellIndexR, const int maxStepsR,
-                               const index_type shellIndexS, const int maxStepsS,
-                               const DfEriEngine& engine,
-                               const TlMatrixObject& P,
-                               std::vector<index_type>* pLocalIndexP,
-                               std::vector<index_type>* pLocalIndexQ,
-                               std::vector<double>* pLocalValues);
+    int storeJ_integralDriven(const index_type shellIndexP, const int maxStepsP,
+                              const index_type shellIndexQ, const int maxStepsQ,
+                              const index_type shellIndexR, const int maxStepsR,
+                              const index_type shellIndexS, const int maxStepsS,
+                              const DfEriEngine& engine,
+                              const TlMatrixObject& P,
+                              index_type* pIndexPairs,
+                              double* pValues);
 
     void getJab_part(const TlOrbitalInfoObject& orbitalInfo_Density,
                      const std::vector<DfTaskCtrl::Task2>& taskList,
@@ -121,15 +122,15 @@ protected:
     
     void getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK);
     void getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK);
-    void storeK_integralDriven(const index_type shellIndexP, const int maxStepsP,
-                               const index_type shellIndexQ, const int maxStepsQ,
-                               const index_type shellIndexR, const int maxStepsR,
-                               const index_type shellIndexS, const int maxStepsS,
-                               const DfEriEngine& engine,
-                               const TlMatrixObject& P,
-                               std::vector<index_type>* pLocalIndexP,
-                               std::vector<index_type>* pLocalIndexQ,
-                               std::vector<double>* pLocalValues);
+    int storeK_integralDriven(const index_type shellIndexP, const int maxStepsP,
+                              const index_type shellIndexQ, const int maxStepsQ,
+                              const index_type shellIndexR, const int maxStepsR,
+                              const index_type shellIndexS, const int maxStepsS,
+                              const DfEriEngine& engine,
+                              const TlMatrixObject& P,
+                              index_type* pIndexPairs,
+                              double* pValues);
+                              
     void debugoutK_integralDriven() const;
     
     ShellPairArrayTable getShellPairArrayTable(const ShellArrayTable& shellArrayTable);
@@ -166,9 +167,14 @@ protected:
                    const std::vector<DfTaskCtrl::Task2>& taskList,
                    const TlVector& rho, TlMatrixObject* pP);
 
-    void getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
-                                  const std::vector<DfTaskCtrl::Task4>& taskList,
-                                  const TlMatrixObject& P, TlMatrixObject* pK);
+    /// 
+    /// @param [out] pIndexPQ K行列の行、列インデックスを格納する。総数はtaskListのサイズの2倍
+    /// @param [out] pValues  K行列の要素を格納する。総数はtaskListのサイズ
+    int getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
+                                 const std::vector<DfTaskCtrl::Task4>& taskList,
+                                 const TlMatrixObject& P,
+                                 index_type* pIndexPairs,
+                                 double* pValues);
     
     void getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
                         const TlOrbitalInfoObject& orbitalInfo_Density,
@@ -289,7 +295,9 @@ protected:
     // mutable std::vector<unsigned long> cutoffAlive_E2_;
 
     DfEriEngine* pEriEngines_;
-
+    std::vector<index_type>* pThreadIndexPairs_;
+    std::vector<double>* pThreadValues_;
+    
     // statics
     double elapsetime_calc_;
     double elapsetime_makepair_;

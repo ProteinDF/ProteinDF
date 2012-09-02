@@ -232,9 +232,9 @@ void DfObject::setParam(const TlSerializeData& data)
     }
 
     // for HPC ============================================================
-    this->grainSize_ = 100 * numOfThreads;
+    this->grainSize_ = 100;
     if (data.hasKey("omp_grain_size") == true) {
-        this->grainSize_ = data["omp_grain_size"].getInt() * numOfThreads;
+        this->grainSize_ = data["omp_grain_size"].getInt();
     }
     
     this->isMasterSlave_ = false;

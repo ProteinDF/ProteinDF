@@ -430,8 +430,6 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
                            std::vector<Task4>* pTaskList,
                            bool initialize)
 {
-    assert(pTaskList != NULL);
-
     const int maxShellType = orbitalInfo.getMaxShellType();
     static ShellArrayTable shellArrayTable;
     static ShellPairArrayTable shellPairArrayTable;
@@ -448,9 +446,6 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
     static int progress_stage = 0;
     static std::size_t division = 0;
     
-    pTaskList->clear();
-    pTaskList->reserve(maxGrainSize);
-
     if (initialize == true) {
         this->clearCutoffStats(maxShellType);
         shellArrayTable = this->makeShellArrayTable(orbitalInfo);
@@ -482,6 +477,10 @@ bool DfTaskCtrl::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
         
         return true;
     }
+
+    assert(pTaskList != NULL);
+    pTaskList->clear();
+    pTaskList->reserve(maxGrainSize);
 
     int grainSize = 0;
     DfTaskCtrl::Task4 task;

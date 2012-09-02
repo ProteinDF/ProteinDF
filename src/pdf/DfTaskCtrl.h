@@ -23,6 +23,17 @@ public:
 
     struct Task4 {
     public:
+        Task4()
+            : shellIndex1(0), shellIndex2(0),
+              shellIndex3(0), shellIndex4(0) {
+        }
+            
+        Task4(const Task4& rhs) 
+            : shellIndex1(rhs.shellIndex1), shellIndex2(rhs.shellIndex2),
+              shellIndex3(rhs.shellIndex3), shellIndex4(rhs.shellIndex4) {
+        }
+
+    public:
         index_type shellIndex1;
         index_type shellIndex2;
         index_type shellIndex3;

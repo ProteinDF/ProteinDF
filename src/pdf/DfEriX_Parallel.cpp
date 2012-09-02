@@ -347,12 +347,15 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
 }
 
 
+// BG?
 void DfEriX_Parallel::getJpq_D(const TlDistributeSymmetricMatrix& P,
                                TlDistributeSymmetricMatrix* pJ)
 {
+    this->log_.info("background transportation for density matrix.");
+
     assert(pJ != NULL);
-    //TlCommunicate& rComm = TlCommunicate::getInstance();
-    pJ->resize(this->m_nNumOfAOs);
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    pJ->resize(numOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_sets"]);
@@ -361,92 +364,104 @@ void DfEriX_Parallel::getJpq_D(const TlDistributeSymmetricMatrix& P,
 
     TlSparseSymmetricMatrix tmpP(this->m_nNumOfAOs);
     bool isSetTempP = false;
-    TlSparseSymmetricMatrix tmpJ(this->m_nNumOfAOs);
+    //TlSparseSymmetricMatrix tmpJ(this->m_nNumOfAOs);
 
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task4> taskList;
-    bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
-                                          schwarzTable,
-                                          this->grainSize_,
-                                          &taskList,
-                                          true);
-    while (hasTask == true) {
-        if (isSetTempP != true) {
-            const int numOfTasks = taskList.size();
-            for (int task = 0; task < numOfTasks; ++task) {
-                const index_type shellIndexP = taskList[task].shellIndex1;
-                const index_type shellIndexQ = taskList[task].shellIndex2;
-                const index_type shellIndexR = taskList[task].shellIndex3;
-                const index_type shellIndexS = taskList[task].shellIndex4;
-                const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
-                const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
-                const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
-                const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
-                const int maxStepsP = 2 * shellTypeP + 1;
-                const int maxStepsQ = 2 * shellTypeQ + 1;
-                const int maxStepsR = 2 * shellTypeR + 1;
-                const int maxStepsS = 2 * shellTypeS + 1;
-                for (int i = 0; i < maxStepsP; ++i) {
-                    const index_type indexP = shellIndexP + i;
-                    for (int j = 0; j < maxStepsQ; ++j) {
-                        const index_type indexQ = shellIndexQ + j;
-                        tmpP.set(indexP, indexQ, 0.0);
+    std::vector<index_type> procIndexPQ;
+    std::vector<double> procValues;
+
+    this->createEngines();
+    {
+        bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                              schwarzTable,
+                                              this->grainSize_,
+                                              &taskList,
+                                              true);
+        static const int maxElements = 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4-type)
+        index_type* pTaskIndexPairs = new index_type[maxElements * this->grainSize_ * 2];
+        double* pTaskValues = new double[maxElements * this->grainSize_];
+
+        while (hasTask == true) {
+            if (isSetTempP != true) {
+                const int numOfTasks = taskList.size();
+                for (int task = 0; task < numOfTasks; ++task) {
+                    const index_type shellIndexP = taskList[task].shellIndex1;
+                    const index_type shellIndexQ = taskList[task].shellIndex2;
+                    const index_type shellIndexR = taskList[task].shellIndex3;
+                    const index_type shellIndexS = taskList[task].shellIndex4;
+                    const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+                    const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+                    const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
+                    const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
+                    const int maxStepsP = 2 * shellTypeP + 1;
+                    const int maxStepsQ = 2 * shellTypeQ + 1;
+                    const int maxStepsR = 2 * shellTypeR + 1;
+                    const int maxStepsS = 2 * shellTypeS + 1;
+                    for (int i = 0; i < maxStepsP; ++i) {
+                        const index_type indexP = shellIndexP + i;
+                        for (int j = 0; j < maxStepsQ; ++j) {
+                            const index_type indexQ = shellIndexQ + j;
+                            tmpP.set(indexP, indexQ, 0.0);
+                        }
+                    }
+                    for (int i = 0; i < maxStepsR; ++i) {
+                        const index_type indexR = shellIndexR + i;
+                        for (int j = 0; j < maxStepsS; ++j) {
+                            const index_type indexS = shellIndexS + j;
+                            tmpP.set(indexR, indexS, 0.0);
+                        }
                     }
                 }
-                for (int i = 0; i < maxStepsR; ++i) {
-                    const index_type indexR = shellIndexR + i;
-                    for (int j = 0; j < maxStepsS; ++j) {
-                        const index_type indexS = shellIndexS + j;
-                        tmpP.set(indexR, indexS, 0.0);
-                    }
-                }
+                isSetTempP = true;
             }
-            isSetTempP = true;
-        }
 
-        if (P.getSparseMatrixX(&tmpP, false) == true) {
-            this->getJ_integralDriven_part(orbitalInfo,
-                                           taskList,
-                                           tmpP, &tmpJ);
-            tmpP.zeroClear();
-            isSetTempP = false;
+            if (P.getSparseMatrixX(&tmpP, false) == true) {
+                const int numOfTaskElements = this->getJ_integralDriven_part(orbitalInfo,
+                                                                             taskList,
+                                                                             tmpP,
+                                                                             pTaskIndexPairs, pTaskValues);
+                {
+                    const std::size_t baseIndexPQ = procIndexPQ.size();
+                    procIndexPQ.resize(baseIndexPQ + numOfTaskElements * 2);
+                    std::copy(pTaskIndexPairs,
+                              pTaskIndexPairs + numOfTaskElements * 2,
+                              procIndexPQ.begin() + baseIndexPQ);
+                    const std::size_t baseValues = procValues.size();
+                    procValues.resize(baseValues + numOfTaskElements);
+                    std::copy(pTaskValues, pTaskValues + numOfTaskElements,
+                              procValues.begin() + baseValues);
+                }
+                tmpP.zeroClear();
+                isSetTempP = false;
             
-            hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
-                                             schwarzTable,
-                                             this->grainSize_,
-                                             &taskList);
+                hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                                 schwarzTable,
+                                                 this->grainSize_,
+                                                 &taskList);
+            }
+            
+            P.getSparseMatrixX(NULL, false);
         }
+        
+        delete[] pTaskIndexPairs;
+        pTaskIndexPairs = NULL;
+        delete[] pTaskValues;
+        pTaskValues = NULL;
+    }            
+    this->log_.warn("DfEriX_Parallel::getJ_D() loop end");
 
-        P.getSparseMatrixX(NULL, false);
-    }
-                    
-    // int allProcFinished = 0;
-    // if (rComm.isMaster() == true) {
-    //     const int numOfProcs = rComm.getNumOfProcs();
-    //     for (int proc = 1; proc < numOfProcs; ++proc) {
-    //         rComm.sendData(allProcFinished, proc, TAG_ALL_PROC_FINISHED);
-    //     }
-    // } else {
-    //     rComm.iReceiveData(allProcFinished, 0, TAG_ALL_PROC_FINISHED);
-    //     while (true) {
-    //         P.getSparseMatrixX(NULL, false);
-            
-    //         if (rComm.test(&allProcFinished) == true) {
-    //             rComm.wait(&allProcFinished);
-    //             break;
-    //         }
-    //     }
-    // }
+    // waiting another proc
     this->waitAnotherProcs(P);
     P.getSparseMatrixX(NULL, true);
 
-    //this->finalize(pJ);
+    this->log_.info("finalize");
+    pJ->addByList(procIndexPQ, procValues);
 
+    this->destroyEngines();
     pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
-
-    pJ->mergeSparseMatrix(tmpJ);
 }
 
 
@@ -471,8 +486,6 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
     this->log_.info("background transportation for density matrix.");
 
     assert(pK != NULL);
-    //TlCommunicate& rComm = TlCommunicate::getInstance();
-    
     const index_type numOfAOs = this->m_nNumOfAOs;
     pK->resize(numOfAOs);
     
@@ -483,76 +496,98 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
 
     TlSparseSymmetricMatrix tmpP(this->m_nNumOfAOs);
     bool isSetTempP = false;
-    TlSparseSymmetricMatrix tmpK(this->m_nNumOfAOs);
+    // TlSparseSymmetricMatrix tmpK(this->m_nNumOfAOs);
 
-    this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<DfTaskCtrl::Task4> taskList;
-    bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
-                                          schwarzTable,
-                                          this->grainSize_,
-                                          &taskList,
-                                          true);
-    while (hasTask == true) {
-        if (isSetTempP != true) {
-            const int numOfTasks = taskList.size();
-            for (int task = 0; task < numOfTasks; ++task) {
-                const index_type shellIndexP = taskList[task].shellIndex1;
-                const index_type shellIndexQ = taskList[task].shellIndex2;
-                const index_type shellIndexR = taskList[task].shellIndex3;
-                const index_type shellIndexS = taskList[task].shellIndex4;
-                const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
-                const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
-                const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
-                const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
-                const int maxStepsP = 2 * shellTypeP + 1;
-                const int maxStepsQ = 2 * shellTypeQ + 1;
-                const int maxStepsR = 2 * shellTypeR + 1;
-                const int maxStepsS = 2 * shellTypeS + 1;
-                for (int i = 0; i < maxStepsQ; ++i) {
-                    const index_type indexQ = shellIndexQ + i;
-                    for (int j = 0; j < maxStepsS; ++j) {
-                        const index_type indexS = shellIndexS + j;
-                        tmpP.set(indexQ, indexS, 0.0);
+    std::vector<index_type> procIndexPQ;
+    std::vector<double> procValues;
+
+    this->createEngines();
+    {
+        bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                              schwarzTable,
+                                              this->grainSize_,
+                                              &taskList,
+                                              true);
+        static const int maxElements = 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4-type)
+        index_type* pTaskIndexPairs = new index_type[maxElements * this->grainSize_ * 2];
+        double* pTaskValues = new double[maxElements * this->grainSize_];
+
+        while (hasTask == true) {
+            if (isSetTempP != true) {
+                const int numOfTasks = taskList.size();
+                for (int task = 0; task < numOfTasks; ++task) {
+                    const index_type shellIndexP = taskList[task].shellIndex1;
+                    const index_type shellIndexQ = taskList[task].shellIndex2;
+                    const index_type shellIndexR = taskList[task].shellIndex3;
+                    const index_type shellIndexS = taskList[task].shellIndex4;
+                    const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+                    const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+                    const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
+                    const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
+                    const int maxStepsP = 2 * shellTypeP + 1;
+                    const int maxStepsQ = 2 * shellTypeQ + 1;
+                    const int maxStepsR = 2 * shellTypeR + 1;
+                    const int maxStepsS = 2 * shellTypeS + 1;
+                    for (int i = 0; i < maxStepsQ; ++i) {
+                        const index_type indexQ = shellIndexQ + i;
+                        for (int j = 0; j < maxStepsS; ++j) {
+                            const index_type indexS = shellIndexS + j;
+                            tmpP.set(indexQ, indexS, 0.0);
+                        }
+                        for (int j = 0; j < maxStepsR; ++j) {
+                            const index_type indexR = shellIndexR + j;
+                            tmpP.set(indexQ, indexR, 0.0);
+                        }
                     }
-                    for (int j = 0; j < maxStepsR; ++j) {
-                        const index_type indexR = shellIndexR + j;
-                        tmpP.set(indexQ, indexR, 0.0);
+                    for (int i = 0; i < maxStepsP; ++i) {
+                        const index_type indexP = shellIndexP + i;
+                        for (int j = 0; j < maxStepsS; ++j) {
+                            const index_type indexS = shellIndexS + j;
+                            tmpP.set(indexP, indexS, 0.0);
+                    }
+                        for (int j = 0; j < maxStepsR; ++j) {
+                            const index_type indexR = shellIndexR + j;
+                            tmpP.set(indexP, indexR, 0.0);
+                        }
                     }
                 }
-                for (int i = 0; i < maxStepsP; ++i) {
-                    const index_type indexP = shellIndexP + i;
-                    for (int j = 0; j < maxStepsS; ++j) {
-                        const index_type indexS = shellIndexS + j;
-                        tmpP.set(indexP, indexS, 0.0);
-                    }
-                    for (int j = 0; j < maxStepsR; ++j) {
-                        const index_type indexR = shellIndexR + j;
-                        tmpP.set(indexP, indexR, 0.0);
-                    }
-                }
+                isSetTempP = true;
             }
-            isSetTempP = true;
+
+            if (P.getSparseMatrixX(&tmpP, false) == true) {
+                const int numOfTaskElements = this->getK_integralDriven_part(orbitalInfo,
+                                                                             taskList,
+                                                                             tmpP,
+                                                                             pTaskIndexPairs, pTaskValues);
+                {
+                    const std::size_t baseIndexPQ = procIndexPQ.size();
+                    procIndexPQ.resize(baseIndexPQ + numOfTaskElements * 2);
+                    std::copy(pTaskIndexPairs,
+                              pTaskIndexPairs + numOfTaskElements * 2,
+                              procIndexPQ.begin() + baseIndexPQ);
+                    const std::size_t baseValues = procValues.size();
+                    procValues.resize(baseValues + numOfTaskElements);
+                    std::copy(pTaskValues, pTaskValues + numOfTaskElements,
+                              procValues.begin() + baseValues);
+                }
+                tmpP.zeroClear();
+                isSetTempP = false;
+                
+                hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                                 schwarzTable,
+                                                 this->grainSize_,
+                                                 &taskList);
+            }
+
+            P.getSparseMatrixX(NULL, false);
         }
 
-        if (P.getSparseMatrixX(&tmpP, false) == true) {
-            this->getK_integralDriven_part(orbitalInfo,
-                                           taskList,
-                                           tmpP, &tmpK);
-            tmpP.zeroClear();
-            isSetTempP = false;
-
-            hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
-                                             schwarzTable,
-                                             this->grainSize_,
-                                             &taskList);
-
-            // const std::string TF = ((hasTask == true) ? "true" : "false");
-            // this->log_.warn(TlUtils::format("DfEriX_Parallel::getJ_D() hasTask=%s",
-                                            // TF.c_str()));
-        }
-
-        P.getSparseMatrixX(NULL, false);
+        delete[] pTaskIndexPairs;
+        pTaskIndexPairs = NULL;
+        delete[] pTaskValues;
+        pTaskValues = NULL;
     }
     this->log_.warn("DfEriX_Parallel::getK_D() loop end");
     
@@ -560,14 +595,14 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
     this->waitAnotherProcs(P);
     P.getSparseMatrixX(NULL, true);
 
-    //this->finalize(pK);
+    this->log_.info("finalize");
+    pK->addByList(procIndexPQ, procValues);
 
     this->destroyEngines();
     pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
 
-    pK->mergeSparseMatrix(tmpK);
 }
 
 
@@ -592,32 +627,54 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     std::vector<index_type> rowIndexes;
     std::vector<index_type> colIndexes;
     this->expandLocalDensityMatrix(P, orbitalInfo, &localP, &rowIndexes, &colIndexes);
-    //const index_type numOfRowIndexes = rowIndexes.size();
-    //const index_type numOfColIndexes = colIndexes.size();
     
-    //DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
-    std::vector<DfTaskCtrl::Task4> taskList;
-
     this->log_.info("ERI start");
-    TlSparseSymmetricMatrix tmpK(this->m_nNumOfAOs);
     const TlDistributeMatrix tmpP(P);
     DfTaskCtrl dfTaskCtrl(this->pPdfParam_);
+    //DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+
+    std::vector<DfTaskCtrl::Task4> taskList;
+    std::vector<index_type> procIndexPQ;
+    std::vector<double> procValues;
 
     this->createEngines();
-    bool hasTask = dfTaskCtrl.getQueue4_K0(orbitalInfo,
-                                          schwarzTable,
-                                          tmpP,
-                                          rowIndexes, colIndexes,
-                                          this->grainSize_, &taskList, true);
-    while (hasTask == true) {
-        DfEriX::getK_integralDriven_part(orbitalInfo,
-                                         taskList,
-                                         tmpP, &tmpK);
-        hasTask = dfTaskCtrl.getQueue4_K0(orbitalInfo,
-                                         schwarzTable,
-                                         tmpP,
-                                         rowIndexes, colIndexes,
-                                         this->grainSize_, &taskList);
+    {
+        bool hasTask = dfTaskCtrl.getQueue4_K0(orbitalInfo,
+                                               schwarzTable,
+                                               tmpP,
+                                               rowIndexes, colIndexes,
+                                               this->grainSize_, &taskList, true);
+        static const int maxElements = 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4-type)
+        index_type* pTaskIndexPairs = new index_type[maxElements * this->grainSize_ * 2];
+        double* pTaskValues = new double[maxElements * this->grainSize_];
+
+        while (hasTask == true) {
+            const int numOfTaskElements = DfEriX::getK_integralDriven_part(orbitalInfo,
+                                                                           taskList,
+                                                                           tmpP,
+                                                                           pTaskIndexPairs, pTaskValues);
+            {
+                const std::size_t baseIndexPQ = procIndexPQ.size();
+                procIndexPQ.resize(baseIndexPQ + numOfTaskElements * 2);
+                std::copy(pTaskIndexPairs, pTaskIndexPairs + numOfTaskElements * 2,
+                          procIndexPQ.begin() + baseIndexPQ);
+
+                const std::size_t baseValues = procValues.size();
+                procValues.resize(baseValues + numOfTaskElements);
+                std::copy(pTaskValues, pTaskValues + numOfTaskElements,
+                          procValues.begin() + baseValues);
+            }
+            hasTask = dfTaskCtrl.getQueue4_K0(orbitalInfo,
+                                              schwarzTable,
+                                              tmpP,
+                                              rowIndexes, colIndexes,
+                                              this->grainSize_, &taskList);
+        }
+
+        delete[] pTaskIndexPairs;
+        pTaskIndexPairs = NULL;
+        delete[] pTaskValues;
+        pTaskValues = NULL;
     }
 
     // bool hasTask = dfTaskCtrl.getQueue4_K(orbitalInfo,
@@ -641,7 +698,10 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     dfTaskCtrl.cutoffReport();
     this->destroyEngines();
 
-    pK->mergeSparseMatrix(tmpK);
+    this->log_.info("finalize");
+    // pK->mergeSparseMatrix(tmpK);
+    pK->addByList(procIndexPQ, procValues);
+
     this->log_.info("finished");
     assert(rComm.checkNonBlockingCommunications());
 }
