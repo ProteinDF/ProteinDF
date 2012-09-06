@@ -300,6 +300,7 @@ void DfObject::setParam(const TlSerializeData& data)
     paramFileBaseName["Fpq_matrix"]     = "Fpq.%s.mat";
     paramFileBaseName["Fprime_matrix"]  = "Fprime.%s.mat";
     paramFileBaseName["Fxc_matrix"]     = "Fxc.%s.mat";
+    paramFileBaseName["Exc_matrix"]     = "Exc.%s.mat";
     paramFileBaseName["FxcPure_matrix"] = "FxcPure.%s.mat";
     paramFileBaseName["J_matrix"]       = "J.%s.mat";
     paramFileBaseName["C_matrix"]       = "C.%s.mat";
@@ -553,6 +554,13 @@ std::string DfObject::getFxcMatrixPath(const RUN_TYPE nRunType, const int nItera
 {
     return this->makeFilePath("Fxc_matrix",
                               DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
+}
+
+
+std::string DfObject::getExcMatrixPath(const RUN_TYPE runType, const int iteration)
+{
+    return this->makeFilePath("Exc_matrix",
+                              DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
 

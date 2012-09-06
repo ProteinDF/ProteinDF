@@ -170,8 +170,7 @@ void DfTotalEnergy::exec_template()
                 this->m_dExc = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, Eps);
             } else {
                 if (this->isGridFree_ == true) {
-                    this->m_dExc = this->calcExc(RUN_RKS, Ppq);
-                    // this->m_dExc = this->calcExc(RUN_RKS, Ppq);
+                    this->m_dExc = this->calcExc(RUN_RKS, 0.5 * Ppq) * 2.0;
                 } else {
                     DfXCFunctional dfXCFunctional(this->pPdfParam_);
                     this->m_dExc = dfXCFunctional.getEnergy();
@@ -506,8 +505,8 @@ template<typename SymmetricMatrixType>
 double DfTotalEnergy::calcExc(const RUN_TYPE runType,
                               const SymmetricMatrixType& P)
 {
-    SymmetricMatrixType Fxc = DfObject::getFxcMatrix<SymmetricMatrixType>(runType, this->m_nIteration);
-    const double answer = 0.75 * Fxc.dot(P).sum();
+    SymmetricMatrixType Exc = DfObject::getExcMatrix<SymmetricMatrixType>(runType, this->m_nIteration);
+    const double answer = Exc.dot(P).sum();
     
     return answer;
 }

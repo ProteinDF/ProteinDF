@@ -99,6 +99,7 @@ protected:
     std::string getP2pqMatrixPath(int iteration);
     std::string getHFxMatrixPath(RUN_TYPE runType, int iteration);
     std::string getFxcMatrixPath(RUN_TYPE runType, int iteration);
+    std::string getExcMatrixPath(RUN_TYPE runType, int iteration);
     std::string getFxcPureMatrixPath(RUN_TYPE runType, int iteration);
     std::string getJMatrixPath(int iteration);
     //std::string getKMatrixPath(int iteration);
@@ -214,6 +215,12 @@ protected:
 
     template <class SymmetricMatrixType>
     SymmetricMatrixType getFxcMatrix(RUN_TYPE runType, int iteration);
+
+    template <class SymmetricMatrixType>
+    void saveExcMatrix(RUN_TYPE runType, int iteration, const SymmetricMatrixType& Fxc);
+
+    template <class SymmetricMatrixType>
+    SymmetricMatrixType getExcMatrix(RUN_TYPE runType, int iteration);
 
     template <class SymmetricMatrixType>
     void saveFxcPureMatrix(RUN_TYPE runType, int iteration, const SymmetricMatrixType& FxcPure);
@@ -790,6 +797,29 @@ SymmetricMatrixType DfObject::getFxcMatrix(const RUN_TYPE runType, const int ite
     Fxc = this->matrixCache_.get<SymmetricMatrixType>(path);
     Fxc.resize(this->m_nNumOfAOs);
     return Fxc;
+}
+
+
+template<class SymmetricMatrixType>
+void DfObject::saveExcMatrix(const RUN_TYPE runType, const int iteration,
+                             const SymmetricMatrixType& Exc)
+{
+    const std::string path = this->getExcMatrixPath(runType, iteration);
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, Exc, true);
+    } else {
+        Exc.save(path);
+    }
+}
+
+template<class SymmetricMatrixType>
+SymmetricMatrixType DfObject::getExcMatrix(const RUN_TYPE runType, const int iteration)
+{
+    SymmetricMatrixType Exc;
+    const std::string path = this->getExcMatrixPath(runType, iteration);
+    Exc = this->matrixCache_.get<SymmetricMatrixType>(path);
+    Exc.resize(this->m_nNumOfAOs);
+    return Exc;
 }
 
 

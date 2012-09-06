@@ -27,7 +27,6 @@ DfGridFreeXC::DfGridFreeXC(TlSerializeData* pPdfParam)
     if ((*pPdfParam)["grid_free/CD_epsilon"].getStr().empty() != true) {
         this->epsilon_ = (*pPdfParam)["grid_free/CD_epsilon"].getDouble();
     }    
-
 }
 
 
@@ -62,17 +61,19 @@ void DfGridFreeXC::buildFxc()
     tV.transpose();
     
     TlSymmetricMatrix M_tilda = tV * M * V;
+    // M_tilda.save("Mtilda.mat");
     const int numOfOrthgonalAOs = M_tilda.getNumOfRows();
     
     TlMatrix U;
     TlVector lamda;
     M_tilda.diagonal(&lamda, &U);
+    // U.save("U.mat");
+    // lamda.save("lamda.vct");
     
-    TlSymmetricMatrix F_lamda = this->get_F_lamda(lamda);
+    TlSymmetricMatrix F_lamda;
+    TlSymmetricMatrix E_lamda;
+    this->get_F_lamda(lamda, &F_lamda, &E_lamda);
     
-    // TlMatrix tU = U;
-    // tU.transpose();
-
     TlMatrix SVU = S * V * U;
     TlMatrix UVS = SVU;
     UVS.transpose();
@@ -80,6 +81,12 @@ void DfGridFreeXC::buildFxc()
     // TlSymmetricMatrix Fxc = S * V * U * F_lamda * tU * tV * S;
     TlSymmetricMatrix Fxc = SVU * F_lamda * UVS;
     DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, Fxc);
+    // TlSymmetricMatrix PE = 2.0 * P * Fxc; 
+
+    TlSymmetricMatrix Exc = SVU * E_lamda * UVS;
+    DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, Exc);
+    // this->XC_energy_ = E.dot(P).sum() * 2.0; // rks
+    // this->log_.info(TlUtils::format("Exc = %f", this->XC_energy_));
 
     // {
     //     TlMatrix tSVU = S * V * U;
@@ -328,10 +335,13 @@ void DfGridFreeXC::storeM(const index_type shellIndexP, const int maxStepsP,
 }
 
 
-TlSymmetricMatrix DfGridFreeXC::get_F_lamda(const TlVector lamda)
+void DfGridFreeXC::get_F_lamda(const TlVector lamda,
+                               TlSymmetricMatrix* pF_lamda,
+                               TlSymmetricMatrix* pE_lamda)
 {
     const int dim = lamda.getSize();
-    TlSymmetricMatrix F_lamda(dim);
+    pF_lamda->resize(dim);
+    pE_lamda->resize(dim);
 
     DfFunctional_LDA* pFunc = NULL;
     std::string checkXC = this->m_sXCFunctional;
@@ -350,14 +360,15 @@ TlSymmetricMatrix DfGridFreeXC::get_F_lamda(const TlVector lamda)
         const double v = lamda.get(i);
         if (v > 1.0E-16) {
             pFunc->getDerivativeFunctional(v, v, &fv_a, &fv_b);
-            F_lamda.set(i, i, fv_a);
+            pF_lamda->set(i, i, fv_a);
+
+            const double f = pFunc->getFunctional(v, v) / (2.0 * v);
+            pE_lamda->set(i, i, f);
         }
     }
 
     delete pFunc;
     pFunc = NULL;
-
-    return F_lamda;
 }
 
 

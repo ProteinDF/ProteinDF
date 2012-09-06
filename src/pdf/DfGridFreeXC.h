@@ -135,8 +135,9 @@ protected:
     virtual DfTaskCtrl* getDfTaskCtrlObject() const;
     virtual void finalize(TlSymmetricMatrix* pMtx);
 
-    TlSymmetricMatrix get_F_lamda(const TlVector lamda);
-
+    void get_F_lamda(const TlVector lamda,
+                     TlSymmetricMatrix* pF_lamda,
+                     TlSymmetricMatrix* pE_lamda);
 
     void getM_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
     ShellArrayTable makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo);
