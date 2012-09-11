@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([ProteinDF], [2012.0])
+AC_INIT([ProteinDF], [2012.1])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/pdf/main.cpp])
 AC_CONFIG_MACRO_DIR([m4])
@@ -20,22 +20,15 @@ PACKAGE=$PACKAGE_NAME
 
 # Checks for programs.
 AC_LANG([C++])
-
-AC_PROG_F77
-AC_FC_LIBRARY_LDFLAGS
-AC_FC_MAIN
-AC_FC_WRAPPERS
-
 AC_PROG_CXX
-
-AC_PROG_LN_S
+AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
 AC_PROG_INSTALL
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([float.h limits.h stdlib.h string.h unistd.h sys/resource.h sys/time.h])
+AC_CHECK_HEADERS([stdlib.h string.h unistd.h sys/resource.h sys/time.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
