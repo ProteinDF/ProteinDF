@@ -526,7 +526,7 @@ private:
                    const DfEriEngine::Query& qCD,
                    const ContractScalesVector& ket_contractScales);
     
-    // ERI
+    // ERI ---------------------------------------------------------------------
     void calcERI(const int a_bar, const int b_bar,
                  const int a, const int b, const int p,
                  const int a_prime, const int b_prime, const int p_prime,
@@ -535,9 +535,28 @@ private:
     int index(const TlAngularMomentumVector& a_bar, const TlAngularMomentumVector& b_bar,
               const TlAngularMomentumVector& a, const TlAngularMomentumVector& b,
               const TlAngularMomentumVector& p) const;
-    
+
+    /// eq.44
     void ERI_EQ44(const ERI_State eriState, EriDataType* pERI);
+
+    /// optimized EQ44
+    ///
+    /// ERI_EQ44() in case of "a^=b^=0"
+    void ERI_EQ44_00xxx(const ERI_State eriState, EriDataType* pERI);
+
+    /// eq.45
     void ERI_EQ45(const ERI_State eriState, EriDataType* pERI);
+
+    /// optimized EQ45
+    ///
+    /// ERI_EQ45() in case of "a^=b^=b=p=0"
+    void ERI_EQ45_00x00(const ERI_State eriState, EriDataType* pERI);
+
+    /// optimized EQ45
+    ///
+    /// ERI_EQ45() in case of "a^=b^=b=0"
+    void ERI_EQ45_00x0x(const ERI_State eriState, EriDataType* pERI);
+
     void ERI_EQ46(const ERI_State eriState, EriDataType* pERI); // 非常用
     void ERI_EQ43(const ERI_State eriState, EriDataType* pERI);
     void ERI_EQ47(const ERI_State eriState, EriDataType* pERI);
