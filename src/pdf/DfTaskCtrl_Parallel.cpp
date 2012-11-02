@@ -318,7 +318,6 @@ bool DfTaskCtrl_Parallel::getQueue_MS_slave(const TlOrbitalInfoObject& orbitalIn
                                             bool initialize)
 {
     bool answer = true;
-    pTaskList->clear();
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
     // 初期化
@@ -340,6 +339,8 @@ bool DfTaskCtrl_Parallel::getQueue_MS_slave(const TlOrbitalInfoObject& orbitalIn
         return false;
     }
     
+    assert(pTaskList != NULL);
+    pTaskList->clear();
     const int master = 0;
 
     for (int i = 0; i < numOfSessions; ++i) {
@@ -754,7 +755,6 @@ bool DfTaskCtrl_Parallel::getQueue2_MS_slave(const TlOrbitalInfoObject& orbitalI
                                              bool initialize)
 {
     bool answer = true;
-    pTaskList->clear();
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
     // 初期化
@@ -777,7 +777,9 @@ bool DfTaskCtrl_Parallel::getQueue2_MS_slave(const TlOrbitalInfoObject& orbitalI
     if (isAllSessionFinished == true) {
         return false;
     }
-    
+
+    assert(pTaskList != NULL);
+    pTaskList->clear();
     const int master = 0;
 
     for (int i = 0; i < numOfSessions; ++i) {
@@ -1180,7 +1182,6 @@ bool DfTaskCtrl_Parallel::getQueue4_MS_slave(const TlOrbitalInfoObject& orbitalI
                                              bool initialize)
 {
     bool answer = true;
-    pTaskList->clear();
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
     // 初期化
@@ -1203,7 +1204,9 @@ bool DfTaskCtrl_Parallel::getQueue4_MS_slave(const TlOrbitalInfoObject& orbitalI
     if (isAllSessionFinished == true) {
         return false;
     }
-    
+
+    assert(pTaskList != NULL);
+    pTaskList->clear();
     const int master = 0;
 
     for (int i = 0; i < numOfSessions; ++i) {
