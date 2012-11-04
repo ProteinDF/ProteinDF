@@ -948,9 +948,6 @@ bool DfTaskCtrl_Parallel::getQueue4_DC(const TlOrbitalInfoObject& orbitalInfo,
                                        std::vector<Task4>* pTaskList,
                                        bool initialize)
 {
-    assert(pTaskList != NULL);
-    pTaskList->clear();
-
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int globalMaxGrainSize = maxGrainSize * rComm.getNumOfProcs();
 
@@ -961,7 +958,7 @@ bool DfTaskCtrl_Parallel::getQueue4_DC(const TlOrbitalInfoObject& orbitalInfo,
                                    globalMaxGrainSize,
                                    &globalTask,
                                    initialize);
-    if (answer == true) {
+    if ((pTaskList != NULL) && (answer == true)) {
         const int rank = rComm.getRank();
         std::vector<Task4>::const_iterator begin = std::min(globalTask.begin()
                                                             + maxGrainSize * rank,
