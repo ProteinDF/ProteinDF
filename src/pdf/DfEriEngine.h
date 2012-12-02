@@ -38,6 +38,12 @@
 ///   コード中は L_MAX で定義される。
 ///
 
+/// query上限値
+#define A_BAR_MAX (2) // 2階微分
+#define B_BAR_MAX (2) // 2階微分
+#define A_MAX (2) // s=0, p=1, d=2
+#define B_MAX (2) // s=0, p=1, d=2
+
 /// 本プログラムで扱うことのできる angular momentum の最大値
 #define ERI_L_MAX (13 +1)
 
