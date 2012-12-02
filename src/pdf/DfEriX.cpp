@@ -74,11 +74,11 @@ DfEriX::DfEriX(TlSerializeData* pPdfParam)
     }
 
     // statics
-    this->elapsetime_calc_     = 0.0;
-    this->elapsetime_makepair_ = 0.0;
-    this->elapsetime_calc_eri_ = 0.0;
-    this->elapsetime_store_    = 0.0;
-    this->elapsetime_sumup_    = 0.0;
+    // this->elapsetime_calc_     = 0.0;
+    // this->elapsetime_makepair_ = 0.0;
+    // this->elapsetime_calc_eri_ = 0.0;
+    // this->elapsetime_store_    = 0.0;
+    // this->elapsetime_sumup_    = 0.0;
 }
 
 
@@ -164,8 +164,8 @@ void DfEriX::finalize(TlVector* pVct)
 void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
 {
     assert(pRho != NULL);
-    TlTime time_all;
-    time_all.start();
+    // TlTime time_all;
+    // time_all.start();
     
     // カットオフ値の設定
     const double maxDeltaP = P.getMaxAbsoluteElement();
@@ -211,13 +211,13 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
     this->destroyEngines();
 
     // statics report
-    time_all.stop();
+    // time_all.stop();
     {
-        this->log_.info(TlUtils::format("all time:       %16.1f sec.", time_all.getElapseTime()));
-        this->log_.info(TlUtils::format(" calc(ave.):    %16.1f sec.", this->elapsetime_calc_));
-        this->log_.info(TlUtils::format(" eri(ave.):     %16.1f sec.", this->elapsetime_calc_eri_));
-        this->log_.info(TlUtils::format(" store(ave.):   %16.1f sec.", this->elapsetime_store_));
-        this->log_.info(TlUtils::format(" sumup(ave.):   %16.1f sec.", this->elapsetime_sumup_));
+        // this->log_.info(TlUtils::format("all time:       %16.1f sec.", time_all.getElapseTime()));
+        // this->log_.info(TlUtils::format(" calc(ave.):    %16.1f sec.", this->elapsetime_calc_));
+        // this->log_.info(TlUtils::format(" eri(ave.):     %16.1f sec.", this->elapsetime_calc_eri_));
+        // this->log_.info(TlUtils::format(" store(ave.):   %16.1f sec.", this->elapsetime_store_));
+        // this->log_.info(TlUtils::format(" sumup(ave.):   %16.1f sec.", this->elapsetime_sumup_));
     }
 }
 
@@ -232,15 +232,15 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
     int numOfThreads = 1;
     
-    TlTime time_sumup;
-    double elapsetime_calc = 0.0;
-    double elapsetime_calc_eri = 0.0;
-    double elapsetime_store = 0.0;
+    // TlTime time_sumup;
+    // double elapsetime_calc = 0.0;
+    // double elapsetime_calc_eri = 0.0;
+    // double elapsetime_store = 0.0;
 #pragma omp parallel
     {
-        TlTime time_calc;
-        TlTime time_calc_eri;
-        TlTime time_store;
+        // TlTime time_calc;
+        // TlTime time_calc_eri;
+        // TlTime time_store;
 
         std::vector<double> local_rho(this->m_nNumOfAux);
 
@@ -251,7 +251,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
 #endif // _OPENMP
         this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
 
-        time_calc.start();
+        // time_calc.start();
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {
             const index_type shellIndexP = taskList[i].shellIndex1;
@@ -285,11 +285,11 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                                                                   -1,
                                                                   pairwisePGTO_cutoffThreshold);
 
-                    time_calc_eri.start();
+                    // time_calc_eri.start();
                     this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
-                    time_calc_eri.stop();
+                    // time_calc_eri.stop();
                     
-                    time_store.start();
+                    // time_store.start();
                     int index = 0;
                     for (int i = 0; i < maxStepsP; ++i) {
                         const index_type indexP = shellIndexP + i;
@@ -315,41 +315,41 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                             }
                         }
                     }
-                    time_store.stop();
+                    // time_store.stop();
                 }
             }
         }
-        time_calc.stop();
+        // time_calc.stop();
 
-        time_sumup.start();
+        // time_sumup.start();
 #pragma omp critical(DfEriX__getJ_P_to_rho)
         {
             const int numOfAux = this->m_nNumOfAux;
             for (int i = 0; i < numOfAux; ++i) {
                 (*pRho)[i] += local_rho[i];
             }
-            elapsetime_calc     += time_calc.getElapseTime();
-            elapsetime_calc_eri += time_calc_eri.getElapseTime();
-            elapsetime_store    += time_store.getElapseTime();
+            // elapsetime_calc     += time_calc.getElapseTime();
+            // elapsetime_calc_eri += time_calc_eri.getElapseTime();
+            // elapsetime_store    += time_store.getElapseTime();
         }
 #pragma omp barrier
-        time_sumup.stop();
+        // time_sumup.stop();
     }
 
-    this->elapsetime_calc_     += elapsetime_calc / double(numOfThreads);
-    this->elapsetime_calc_eri_ += elapsetime_calc_eri / double(numOfThreads);
-    this->elapsetime_store_    += elapsetime_store / double(numOfThreads);
-    this->elapsetime_sumup_ += time_sumup.getElapseTime();
+    // this->elapsetime_calc_     += elapsetime_calc / double(numOfThreads);
+    // this->elapsetime_calc_eri_ += elapsetime_calc_eri / double(numOfThreads);
+    // this->elapsetime_store_    += elapsetime_store / double(numOfThreads);
+    // this->elapsetime_sumup_ += time_sumup.getElapseTime();
 }
 
 
 void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
 {
     assert(pJ != NULL);
-    this->elapsetime_calc_ = 0.0;
-    this->elapsetime_store_ = 0.0;
-    TlTime time_all;
-    time_all.start();
+    // this->elapsetime_calc_ = 0.0;
+    // this->elapsetime_store_ = 0.0;
+    // TlTime time_all;
+    // time_all.start();
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_sets"]);
@@ -390,13 +390,13 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
     this->destroyEngines();
 
     // statics report
-    time_all.stop();
+    // time_all.stop();
     {
-        this->log_.info(TlUtils::format("all time:       %16.1f sec.", time_all.getElapseTime()));
-        this->log_.info(TlUtils::format(" calc(ave.):    %16.1f sec.", this->elapsetime_calc_));
-        this->log_.info(TlUtils::format(" eri(ave.):     %16.1f sec.", this->elapsetime_calc_eri_));
-        this->log_.info(TlUtils::format(" store(ave.):   %16.1f sec.", this->elapsetime_store_));
-        this->log_.info(TlUtils::format(" sumup(ave.):   %16.1f sec.", this->elapsetime_sumup_));
+        // this->log_.info(TlUtils::format("all time:       %16.1f sec.", time_all.getElapseTime()));
+        // this->log_.info(TlUtils::format(" calc(ave.):    %16.1f sec.", this->elapsetime_calc_));
+        // this->log_.info(TlUtils::format(" eri(ave.):     %16.1f sec.", this->elapsetime_calc_eri_));
+        // this->log_.info(TlUtils::format(" store(ave.):   %16.1f sec.", this->elapsetime_store_));
+        // this->log_.info(TlUtils::format(" sumup(ave.):   %16.1f sec.", this->elapsetime_sumup_));
     }
 }
 
@@ -415,14 +415,14 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
     int numOfThreads = 1;
 
-    double elapsetime_calc     = 0.0;
-    double elapsetime_calc_eri = 0.0;
-    double elapsetime_store    = 0.0;
+    // double elapsetime_calc     = 0.0;
+    // double elapsetime_calc_eri = 0.0;
+    // double elapsetime_store    = 0.0;
 #pragma omp parallel
     {
-        TlTime time_calc;
-        TlTime time_calc_eri;
-        TlTime time_store;
+        // TlTime time_calc;
+        // TlTime time_calc_eri;
+        // TlTime time_store;
 
         std::vector<index_type> local_indexP;
         std::vector<index_type> local_indexQ;
@@ -438,7 +438,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
 #endif // _OPENMP
         this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
 
-        time_calc.start();
+        // time_calc.start();
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {
             const index_type shellIndexP = taskList[i].shellIndex1;
@@ -471,9 +471,9 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                                                                   shellIndexR,
                                                                   -1,
                                                                   pairwisePGTO_cutoffThreshold);
-                    time_calc_eri.start();
+                    // time_calc_eri.start();
                     this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
-                    time_calc_eri.stop();
+                    // time_calc_eri.stop();
 
                     int index = 0;
                     for (int i = 0; i < maxStepsP; ++i) {
@@ -491,12 +491,12 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                                     ++index;
                                 }
 
-                                time_store.start();
+                                // time_store.start();
                                 //pJ->add(indexP, indexQ, value);
                                 local_indexP.push_back(indexP);
                                 local_indexQ.push_back(indexQ);
                                 local_values.push_back(value);
-                                time_store.stop();
+                                // time_store.stop();
                             } else {
                                 index += maxStepsR;
                             }
@@ -505,7 +505,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                 }
             }
         }
-        time_calc.stop();
+        // time_calc.stop();
 
 #pragma omp critical(DfEriX__getJ_rho_to_J)
         {
@@ -515,16 +515,16 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
             for (int i = 0; i < local_size; ++i) {
                 pJ->add(local_indexP[i], local_indexQ[i], local_values[i]);
             }
-            elapsetime_calc     += time_calc.getElapseTime();
-            elapsetime_calc_eri += time_calc_eri.getElapseTime();
-            elapsetime_store    += time_store.getElapseTime();
+            // elapsetime_calc     += time_calc.getElapseTime();
+            // elapsetime_calc_eri += time_calc_eri.getElapseTime();
+            // elapsetime_store    += time_store.getElapseTime();
         }
 
     }
 
-    this->elapsetime_calc_     += elapsetime_calc / double(numOfThreads);
-    this->elapsetime_calc_eri_ += elapsetime_calc_eri / double(numOfThreads);
-    this->elapsetime_store_    += elapsetime_store / double(numOfThreads);
+    // this->elapsetime_calc_     += elapsetime_calc / double(numOfThreads);
+    // this->elapsetime_calc_eri_ += elapsetime_calc_eri / double(numOfThreads);
+    // this->elapsetime_store_    += elapsetime_store / double(numOfThreads);
 }
 
 
@@ -647,9 +647,9 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
 void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
 {
     assert(pJ != NULL);
-    this->elapsetime_store_ = 0.0;
-    TlTime time_all;
-    time_all.start();
+    // this->elapsetime_store_ = 0.0;
+    // TlTime time_all;
+    // time_all.start();
 
     pJ->resize(this->m_nNumOfAOs);
 
@@ -749,10 +749,10 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
     this->destroyEngines();
     
     // statics report
-    time_all.stop();
+    // time_all.stop();
     {
-        this->log_.info(TlUtils::format("all time:  %16.1f sec.", time_all.getElapseTime()));
-        this->log_.info(TlUtils::format(" store:    %16.1f sec.", this->elapsetime_store_));
+        // this->log_.info(TlUtils::format("all time:  %16.1f sec.", time_all.getElapseTime()));
+        // this->log_.info(TlUtils::format(" store:    %16.1f sec.", this->elapsetime_store_));
     }
 
     // debug
@@ -795,9 +795,9 @@ int DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
-    TlTime time_calc;
-    TlTime time_calc_eri;
-    TlTime time_store;
+    // TlTime time_calc;
+    // TlTime time_calc_eri;
+    // TlTime time_store;
 
     int threadID = 0;
 #ifdef _OPENMP
@@ -844,9 +844,9 @@ int DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
 
 #pragma omp critical(DfEriX__getJ_P_to_J)
     {
-        this->elapsetime_calc_     += time_calc.getElapseTime();
-        this->elapsetime_calc_eri_ += time_calc_eri.getElapseTime();
-        this->elapsetime_store_    += time_store.getElapseTime();
+        // this->elapsetime_calc_     += time_calc.getElapseTime();
+        // this->elapsetime_calc_eri_ += time_calc_eri.getElapseTime();
+        // this->elapsetime_store_    += time_store.getElapseTime();
     }
     
     return numOfElements;
@@ -1695,12 +1695,12 @@ void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
 void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
 {
     assert(pK != NULL);
-    TlTime time_all;
-    TlTime time_prepare;
+    // TlTime time_all;
+    // TlTime time_prepare;
 
-    time_all.start();
+    // time_all.start();
 
-    time_prepare.start();
+    // time_prepare.start();
     const index_type numOfAOs = this->m_nNumOfAOs;
     pK->resize(numOfAOs);
     
@@ -1721,7 +1721,7 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
     pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
     pDfTaskCtrl->setCutoffEpsilon_density(this->cutoffEpsilon_density_);
     pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
-    time_prepare.stop();
+    // time_prepare.stop();
 
     // allocate work mem
     static const int maxElements = 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4-type)
@@ -1808,21 +1808,21 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
 #endif // DEBUG_K
 
     // statics report
-    time_all.stop();
-    const double perNumOfThreads = 1.0 / double(omp_get_num_threads());
-    this->elapsetime_calc_     *= perNumOfThreads;
-    this->elapsetime_makepair_ *= perNumOfThreads;
-    this->elapsetime_calc_eri_ *= perNumOfThreads;
-    this->elapsetime_store_    *= perNumOfThreads;
-    this->elapsetime_sumup_    *= perNumOfThreads;
+    // time_all.stop();
+    // const double perNumOfThreads = 1.0 / double(omp_get_num_threads());
+    // this->elapsetime_calc_     *= perNumOfThreads;
+    // this->elapsetime_makepair_ *= perNumOfThreads;
+    // this->elapsetime_calc_eri_ *= perNumOfThreads;
+    // this->elapsetime_store_    *= perNumOfThreads;
+    // this->elapsetime_sumup_    *= perNumOfThreads;
     
-    this->log_.info(TlUtils::format("all time:       %16.1f sec.", time_all.getElapseTime()));
-    this->log_.info(TlUtils::format(" prepare time:  %16.1f sec.", time_prepare.getElapseTime()));
-    this->log_.info(TlUtils::format(" calc(ave.):    %16.1f sec.", this->elapsetime_calc_));
-    this->log_.info(TlUtils::format(" makepair:      %16.1f sec.", this->elapsetime_makepair_));
-    this->log_.info(TlUtils::format(" eri(ave.):     %16.1f sec.", this->elapsetime_calc_eri_));
-    this->log_.info(TlUtils::format(" store(ave.):   %16.1f sec.", this->elapsetime_store_));
-    this->log_.info(TlUtils::format(" sumup(ave.):   %16.1f sec.", this->elapsetime_sumup_));
+    // this->log_.info(TlUtils::format("all time:       %16.1f sec.", time_all.getElapseTime()));
+    // this->log_.info(TlUtils::format(" prepare time:  %16.1f sec.", time_prepare.getElapseTime()));
+    // this->log_.info(TlUtils::format(" calc(ave.):    %16.1f sec.", this->elapsetime_calc_));
+    // this->log_.info(TlUtils::format(" makepair:      %16.1f sec.", this->elapsetime_makepair_));
+    // this->log_.info(TlUtils::format(" eri(ave.):     %16.1f sec.", this->elapsetime_calc_eri_));
+    // this->log_.info(TlUtils::format(" store(ave.):   %16.1f sec.", this->elapsetime_store_));
+    // this->log_.info(TlUtils::format(" sumup(ave.):   %16.1f sec.", this->elapsetime_sumup_));
 }
 
 
@@ -1836,10 +1836,10 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
-    TlTime time_calc;
-    TlTime time_makepair;
-    TlTime time_calc_eri;
-    TlTime time_store;
+    // TlTime time_calc;
+    // TlTime time_makepair;
+    // TlTime time_calc_eri;
+    // TlTime time_store;
 
     int threadID = 0;
 #ifdef _OPENMP
@@ -1847,7 +1847,7 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
 #endif // _OPENMP
     this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
     
-    time_calc.start();
+    // time_calc.start();
     for (int i = 0; i < taskListSize; ++i) {
         const index_type shellIndexP = taskList[i].shellIndex1;
         const index_type shellIndexQ = taskList[i].shellIndex2;
@@ -1863,7 +1863,7 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
         const int maxStepsR = 2 * shellTypeR + 1;
         const int maxStepsS = 2 * shellTypeS + 1;
 
-        time_makepair.start();
+        // time_makepair.start();
         const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
                                                                                     shellIndexP,
                                                                                     shellIndexQ,
@@ -1872,15 +1872,15 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                                                                                     shellIndexR,
                                                                                     shellIndexS,
                                                                                     pairwisePGTO_cutoffThreshold);
-        time_makepair.stop();
+        // time_makepair.stop();
         const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
         const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
         
-        time_calc_eri.start();
+        // time_calc_eri.start();
         this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
-        time_calc_eri.stop();
+        // time_calc_eri.stop();
         
-        time_store.start();
+        // time_store.start();
         int numOfStoreElements = 0;
         const int stores = this->storeK_integralDriven(shellIndexP, maxStepsP,
                                                        shellIndexQ, maxStepsQ,
@@ -1890,16 +1890,16 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                                                        pIndexPairs + numOfElements * 2,
                                                        pValues + numOfElements);
         numOfElements += stores;
-        time_store.stop();
+        // time_store.stop();
     }
-    time_calc.stop();
+    // time_calc.stop();
 
-#pragma omp critical(DfEriX__getK_integralDriven_P_to_K)
+// #pragma omp critical(DfEriX__getK_integralDriven_P_to_K)
     {
-        this->elapsetime_calc_     += time_calc.getElapseTime();
-        this->elapsetime_makepair_ += time_makepair.getElapseTime();
-        this->elapsetime_calc_eri_ += time_calc_eri.getElapseTime();
-        this->elapsetime_store_    += time_store.getElapseTime();
+        // this->elapsetime_calc_     += time_calc.getElapseTime();
+        // this->elapsetime_makepair_ += time_makepair.getElapseTime();
+        // this->elapsetime_calc_eri_ += time_calc_eri.getElapseTime();
+        // this->elapsetime_store_    += time_store.getElapseTime();
     }
 
     return numOfElements;

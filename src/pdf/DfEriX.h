@@ -299,11 +299,11 @@ protected:
     std::vector<double>* pThreadValues_;
     
     // statics
-    double elapsetime_calc_;
-    double elapsetime_makepair_;
-    double elapsetime_calc_eri_;
-    double elapsetime_store_;
-    double elapsetime_sumup_;
+    // double elapsetime_calc_;
+    // double elapsetime_makepair_;
+    // double elapsetime_calc_eri_;
+    // double elapsetime_store_;
+    // double elapsetime_sumup_;
 
 protected:
     /// デバッグ用積分インデックス積算クラス
