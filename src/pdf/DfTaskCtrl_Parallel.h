@@ -100,29 +100,29 @@ protected:
     void cutoffReport_MS();
 
 protected:
-    bool getQueue_DC(const TlOrbitalInfoObject& orbitalInfo,
-                     const bool isCutoffByDistibution,
-                     const int maxGrainSize,
-                     std::vector<Task2>* pTask,
-                     bool initialize = false);
+    bool getQueue2_DC(const TlOrbitalInfoObject& orbitalInfo,
+                      const bool isCutoffByDistibution,
+                      const int maxGrainSize,
+                      std::vector<Task2>* pTask,
+                      bool initialize = false);
 
-    bool getQueue_MS(const TlOrbitalInfoObject& orbitalInfo,
-                     const bool isCutoffByDistibution,
-                     const int maxGrainSize,
-                     std::vector<Task2>* pTask,
-                     bool initialize = false);
+    bool getQueue2_MS(const TlOrbitalInfoObject& orbitalInfo,
+                      const bool isCutoffByDistibution,
+                      const int maxGrainSize,
+                      std::vector<Task2>* pTask,
+                      bool initialize = false);
 
-    bool getQueue_MS_master(const TlOrbitalInfoObject& orbitalInfo,
+    bool getQueue2_MS_master(const TlOrbitalInfoObject& orbitalInfo,
+                             const bool isCutoffDistribution,
+                             const int maxGrainSize,
+                             std::vector<Task2>* pTaskList,
+                             bool initialize);
+
+    bool getQueue2_MS_slave(const TlOrbitalInfoObject& orbitalInfo,
                             const bool isCutoffDistribution,
                             const int maxGrainSize,
                             std::vector<Task2>* pTaskList,
                             bool initialize);
-
-    bool getQueue_MS_slave(const TlOrbitalInfoObject& orbitalInfo,
-                           const bool isCutoffDistribution,
-                           const int maxGrainSize,
-                           std::vector<Task2>* pTaskList,
-                           bool initialize);
 
     //
     bool getQueue2_DC(const TlOrbitalInfoObject& orbitalInfo1,
