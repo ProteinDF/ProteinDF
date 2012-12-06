@@ -182,6 +182,14 @@ std::string TlUtils::xtos(const T& t){
     return s.str();
 }
 
+template<>
+std::string TlUtils::xtos<bool>(const bool& t) 
+{
+    std::stringstream s;
+    s << std::boolalpha << t;
+    return s.str();
+}
+
 template <typename T>
 void TlUtils::pad(std::basic_string<T>& s, typename std::basic_string<T>::size_type n, T c){
     if (n > s.length()){

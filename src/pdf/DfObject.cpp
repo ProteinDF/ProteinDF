@@ -236,6 +236,7 @@ void DfObject::setParam(const TlSerializeData& data)
     if (data.hasKey("omp_grain_size") == true) {
         this->grainSize_ = data["omp_grain_size"].getInt();
     }
+    this->grainSize_ *= numOfThreads;
     
     this->isMasterSlave_ = false;
     {

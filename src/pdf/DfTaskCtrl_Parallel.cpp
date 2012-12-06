@@ -68,10 +68,10 @@ bool DfTaskCtrl_Parallel::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
 {
     bool answer = false;
     if (this->isMasterSlave_ == true) {
-        answer = this->getQueue_MS(orbitalInfo, isCutoffDistribution,
+        answer = this->getQueue2_MS(orbitalInfo, isCutoffDistribution,
                                    maxGrainSize, pTask, initialize);
     } else {
-        answer = this->getQueue_DC(orbitalInfo, isCutoffDistribution,
+        answer = this->getQueue2_DC(orbitalInfo, isCutoffDistribution,
                                    maxGrainSize, pTask, initialize);
     }
 
@@ -79,11 +79,11 @@ bool DfTaskCtrl_Parallel::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
 }
 
 
-bool DfTaskCtrl_Parallel::getQueue_DC(const TlOrbitalInfoObject& orbitalInfo,
-                                      const bool isCutoffDistribution,
-                                      const int maxGrainSize,
-                                      std::vector<Task2>* pTask,
-                                      bool initialize)
+bool DfTaskCtrl_Parallel::getQueue2_DC(const TlOrbitalInfoObject& orbitalInfo,
+                                       const bool isCutoffDistribution,
+                                       const int maxGrainSize,
+                                       std::vector<Task2>* pTask,
+                                       bool initialize)
 {
     assert(pTask != NULL);
     pTask->clear();
@@ -104,29 +104,32 @@ bool DfTaskCtrl_Parallel::getQueue_DC(const TlOrbitalInfoObject& orbitalInfo,
         const int rank = rComm.getRank();
         const std::size_t begin = localGrainSize * rank;
         const std::size_t end = std::min(localGrainSize * (rank +1), grainSize);
-        pTask->resize(end - begin);
-        std::copy(globalTask.begin() + begin,
-                  globalTask.begin() + end,
-                  pTask->begin());
+        
+        if (begin < end) {
+            pTask->resize(end - begin);
+            std::copy(globalTask.begin() + begin,
+                      globalTask.begin() + end,
+                      pTask->begin());
+        }
     }
 
     return answer;
 }
 
 
-bool DfTaskCtrl_Parallel::getQueue_MS(const TlOrbitalInfoObject& orbitalInfo,
-                                      const bool isCutoffDistribution,
-                                      const int maxGrainSize,
-                                      std::vector<Task2>* pTaskList,
-                                      bool initialize)
+bool DfTaskCtrl_Parallel::getQueue2_MS(const TlOrbitalInfoObject& orbitalInfo,
+                                       const bool isCutoffDistribution,
+                                       const int maxGrainSize,
+                                       std::vector<Task2>* pTaskList,
+                                       bool initialize)
 {
     bool answer = true;
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
-        answer = this->getQueue_MS_master(orbitalInfo, isCutoffDistribution,
+        answer = this->getQueue2_MS_master(orbitalInfo, isCutoffDistribution,
                                         maxGrainSize, pTaskList, initialize);
     } else {
-        answer = this->getQueue_MS_slave(orbitalInfo, isCutoffDistribution,
+        answer = this->getQueue2_MS_slave(orbitalInfo, isCutoffDistribution,
                                          maxGrainSize, pTaskList, initialize);
     }
 
@@ -134,11 +137,11 @@ bool DfTaskCtrl_Parallel::getQueue_MS(const TlOrbitalInfoObject& orbitalInfo,
 }
 
 
-bool DfTaskCtrl_Parallel::getQueue_MS_master(const TlOrbitalInfoObject& orbitalInfo,
-                                             const bool isCutoffDistribution,
-                                             const int maxGrainSize,
-                                             std::vector<Task2>* pTaskList,
-                                             bool initialize)
+bool DfTaskCtrl_Parallel::getQueue2_MS_master(const TlOrbitalInfoObject& orbitalInfo,
+                                              const bool isCutoffDistribution,
+                                              const int maxGrainSize,
+                                              std::vector<Task2>* pTaskList,
+                                              bool initialize)
 {
     bool answer = true;
     TlCommunicate& rComm = TlCommunicate::getInstance();
@@ -311,11 +314,11 @@ bool DfTaskCtrl_Parallel::getQueue_MS_master(const TlOrbitalInfoObject& orbitalI
 }
 
 
-bool DfTaskCtrl_Parallel::getQueue_MS_slave(const TlOrbitalInfoObject& orbitalInfo,
-                                            const bool isCutoffDistribution,
-                                            const int maxGrainSize,
-                                            std::vector<Task2>* pTaskList,
-                                            bool initialize)
+bool DfTaskCtrl_Parallel::getQueue2_MS_slave(const TlOrbitalInfoObject& orbitalInfo,
+                                             const bool isCutoffDistribution,
+                                             const int maxGrainSize,
+                                             std::vector<Task2>* pTaskList,
+                                             bool initialize)
 {
     bool answer = true;
     TlCommunicate& rComm = TlCommunicate::getInstance();
@@ -530,10 +533,13 @@ bool DfTaskCtrl_Parallel::getQueue2_DC(const TlOrbitalInfoObject& orbitalInfo1,
         const int rank = rComm.getRank();
         const std::size_t begin = localGrainSize * rank;
         const std::size_t end = std::min(localGrainSize * (rank +1), grainSize);
-        pTask->resize(end - begin);
-        std::copy(globalTask.begin() + begin,
-                  globalTask.begin() + end,
-                  pTask->begin());
+        
+        if (begin < end) {
+            pTask->resize(end - begin);
+            std::copy(globalTask.begin() + begin,
+                      globalTask.begin() + end,
+                      pTask->begin());
+        }
     }
 
     return answer;
@@ -945,11 +951,12 @@ bool DfTaskCtrl_Parallel::getQueue4(const TlOrbitalInfoObject& orbitalInfo,
 bool DfTaskCtrl_Parallel::getQueue4_DC(const TlOrbitalInfoObject& orbitalInfo,
                                        const TlSparseSymmetricMatrix& schwarzTable,
                                        const int maxGrainSize,
-                                       std::vector<Task4>* pTaskList,
+                                       std::vector<Task4>* pTask,
                                        bool initialize)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    const int globalMaxGrainSize = maxGrainSize * rComm.getNumOfProcs();
+    const int numOfProcs = rComm.getNumOfProcs();
+    const int globalMaxGrainSize = maxGrainSize * numOfProcs;
 
     std::vector<Task4> globalTask;
     bool answer = false;
@@ -958,17 +965,20 @@ bool DfTaskCtrl_Parallel::getQueue4_DC(const TlOrbitalInfoObject& orbitalInfo,
                                    globalMaxGrainSize,
                                    &globalTask,
                                    initialize);
-    if ((pTaskList != NULL) && (answer == true)) {
+    if (answer == true) {
+        const std::size_t grainSize = globalTask.size();
+        const std::size_t localGrainSize = (grainSize + numOfProcs -1) / numOfProcs;
+
         const int rank = rComm.getRank();
-        std::vector<Task4>::const_iterator begin = std::min(globalTask.begin()
-                                                            + maxGrainSize * rank,
-                                                            globalTask.end());
-        std::vector<Task4>::const_iterator end = std::min(globalTask.begin()
-                                                          + maxGrainSize * (rank +1),
-                                                          globalTask.end());
-        const std::size_t size = std::distance(begin, end);
-        pTaskList->resize(size);
-        std::copy(begin, end, pTaskList->begin());
+        const std::size_t begin = localGrainSize * rank;
+        const std::size_t end = std::min(localGrainSize * (rank +1), grainSize);
+        
+        if (begin < end) {
+            pTask->resize(end - begin);
+            std::copy(globalTask.begin() + begin,
+                      globalTask.begin() + end,
+                      pTask->begin());
+        }
     }
 
     return answer;
@@ -1369,14 +1379,15 @@ bool DfTaskCtrl_Parallel::getQueue_Force4(const TlOrbitalInfoObject& orbitalInfo
 bool DfTaskCtrl_Parallel::getQueue_Force4_DC(const TlOrbitalInfoObject& orbitalInfo,
                                              const TlSparseSymmetricMatrix& schwarzTable,
                                              const int maxGrainSize,
-                                             std::vector<Task4>* pTaskList,
+                                             std::vector<Task4>* pTask,
                                              bool initialize)
 {
-    assert(pTaskList != NULL);
-    pTaskList->clear();
+    assert(pTask != NULL);
+    pTask->clear();
 
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    const int globalMaxGrainSize = maxGrainSize * rComm.getNumOfProcs();
+    const int numOfProcs = rComm.getNumOfProcs();
+    const int globalMaxGrainSize = maxGrainSize * numOfProcs;
 
     std::vector<Task4> globalTask;
     bool answer = false;
@@ -1386,16 +1397,20 @@ bool DfTaskCtrl_Parallel::getQueue_Force4_DC(const TlOrbitalInfoObject& orbitalI
                                          &globalTask,
                                          initialize);
     if (answer == true) {
+        const std::size_t grainSize = globalTask.size();
+        const std::size_t localGrainSize = (grainSize + numOfProcs -1) / numOfProcs;
+
         const int rank = rComm.getRank();
-        std::vector<Task4>::const_iterator begin = std::min(globalTask.begin()
-                                                            + maxGrainSize * rank,
-                                                            globalTask.end());
-        std::vector<Task4>::const_iterator end = std::min(globalTask.begin()
-                                                          + maxGrainSize * (rank +1),
-                                                          globalTask.end());
-        const std::size_t size = std::distance(begin, end);
-        pTaskList->resize(size);
-        std::copy(begin, end, pTaskList->begin());
+        const std::size_t begin = localGrainSize * rank;
+        const std::size_t end = std::min(localGrainSize * (rank +1), grainSize);
+
+        
+        if (begin < end) {
+            pTask->resize(end - begin);
+            std::copy(globalTask.begin() + begin,
+                      globalTask.begin() + end,
+                      pTask->begin());
+        }
     }
 
     return answer;
