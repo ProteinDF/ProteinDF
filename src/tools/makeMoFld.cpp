@@ -2,8 +2,10 @@
 #include <cstdlib>
 #include <vector>
 #include <map>
+#include <fstream>
 #include "DfObject.h"
 #include "Fl_Geometry.h"
+#include "TlAtom.h"
 #include "TlMoField.h"
 #include "TlSymmetricMatrix.h"
 #include "TlGetopt.h"
@@ -18,9 +20,10 @@ void help(const std::string& progName)
     std::cout << "output volume data of molecular orbital" << std::endl;
     std::cout << "OPTIONS:" << std::endl;
     std::cout << " -p <path>    set ProteinDF parameter file(default: pdfparam.mpac)" << std::endl;
-    std::cout << " -c <path>    set LCAO matrix file" << std::endl;
+    std::cout << " -l <path>    set LCAO matrix file" << std::endl;
     std::cout << " -f <path>    save AVS field file" << std::endl;
     std::cout << " -m <path>    save message pack file" << std::endl;
+    std::cout << " -c <path>    save cube file" << std::endl;
     std::cout << " -h           show help message (this)" << std::endl;
     std::cout << " -v           verbose mode" << std::endl;
 }
@@ -28,7 +31,7 @@ void help(const std::string& progName)
 
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "c:f:hm:p:v");
+    TlGetopt opt(argc, argv, "c:f:hl:m:p:v");
 
     const bool verbose = (opt["v"] == "defined");
     std::string pdfParamPath = "pdfparam.mpac";
@@ -36,19 +39,24 @@ int main(int argc, char* argv[])
         pdfParamPath = opt["p"];
     }
     std::string lcaoMatrixPath = "";
-    if (opt["c"].empty() != true) {
-        lcaoMatrixPath = opt["c"];
+    if (opt["l"].empty() != true) {
+        lcaoMatrixPath = opt["l"];
     }
     std::string mpacFilePath = "";
     if (opt["m"].empty() != true) {
         mpacFilePath = opt["m"];
     }
-    std::string fieldFilePath = (mpacFilePath != "") ? "" : "MO.fld";
+    std::string fieldFilePath = "";
     if (opt["f"].empty() != true) {
         fieldFilePath = opt["f"];
     }
+    std::string cubeFilePath = "";
+    if (opt["c"].empty() != true) {
+        cubeFilePath = opt["c"];
+    }
 
-    if ((opt["h"] == "defined")) {
+    if ((lcaoMatrixPath.empty() && mpacFilePath.empty() && cubeFilePath.empty()) ||
+        (opt["h"] == "defined")) {
         help(opt[0]);
         return EXIT_SUCCESS;
     }
@@ -64,11 +72,12 @@ int main(int argc, char* argv[])
     // LCAO行列の読み込み
     TlMatrix C;
     if (lcaoMatrixPath.empty() == true) {
-        const int iteration = param["iterations"].getInt();
+        const int iteration = param["num_of_iterations"].getInt();
         DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
         DfObject dfObject(&param);
         lcaoMatrixPath = dfObject.getCMatrixPath(runType, iteration);
     }
+    std::cerr << "C matrix path: " << lcaoMatrixPath << std::endl;
     C.load(lcaoMatrixPath);
 
     // 計算サイズの決定
@@ -131,6 +140,7 @@ int main(int argc, char* argv[])
              p != storeData.end(); ++p) {
             const std::string key = p->first;
             const std::vector<double>& value = p->second;
+            std::cerr << key << std::endl;
 
             for (std::size_t i = 0; i < numOfGrids; ++i) {
                 output[key].setAt(i, value[i]);
@@ -157,6 +167,61 @@ int main(int argc, char* argv[])
         }
 
         saveFieldData(numOfGridX, numOfGridY, numOfGridZ, grids, data, label, fieldFilePath);
+    }
+
+    // save to cube
+    if (cubeFilePath.empty() != true) {
+        const Fl_Geometry flGeom(param["coordinates"]);
+        const int numOfAtoms = flGeom.getNumOfAtoms();
+
+        std::string output = "";
+        output += "comment line: \n";
+        output += "comment line: \n";
+        output += TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n",
+                                  numOfAtoms, startPos.x(), startPos.y(), startPos.z());
+
+        output += TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridX, gridPitch.x(), 0.0, 0.0);
+        output += TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridY, 0.0, gridPitch.y(), 0.0);
+        output += TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridZ, 0.0, 0.0, gridPitch.z());
+
+        for (int i = 0; i < numOfAtoms; ++i) {
+            const int atomic_number = TlAtom::getElementNumber(flGeom.getAtom(i));
+            const double charge = flGeom.getCharge(i);
+            const TlPosition p = flGeom.getCoordinate(i);
+            output += TlUtils::format("%5d % 12.6f % 12.6f % 12.6f % 12.6f\n",
+                                      atomic_number, charge, p.x(), p.y(), p.z());
+        }
+
+        for (std::map<std::string, std::vector<double> >::const_iterator p = storeData.begin();
+             p != storeData.end(); ++p) {
+
+            const std::string key = p->first;
+            const std::vector<double>& value = p->second;
+
+            std::string dat_str = "";
+            //int counter = 0;
+            for (int x = 0; x < numOfGridX; ++x) {
+                for (int y = 0; y < numOfGridY; ++y) {
+                    for (int z = 0; z < numOfGridZ; ++z) {
+                        const int index = (z*numOfGridY +y)*numOfGridX +x;
+                        dat_str += TlUtils::format("% 12.5E ", value[index]);
+                        if (z % 6 == 5) {
+                            dat_str += "\n";
+                        }
+                        // ++counter;
+                    }
+                    dat_str += "\n";
+                }
+            }
+
+            const std::string path = TlUtils::format("%s_%s.cube",
+                                                     cubeFilePath.c_str(),
+                                                     key.c_str());
+            std::cerr << "save CUBE file: " << path << std::endl;
+            std::ofstream ofs(path.c_str());
+            ofs << output << dat_str << std::endl;
+            ofs.close();
+        }
     }
     
     return EXIT_SUCCESS;
