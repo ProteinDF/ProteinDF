@@ -187,6 +187,8 @@ TlVector& TlVector::operator+=(const TlSparseVector& rhs)
     for (TlSparseVector::const_iterator it = rhs.begin(); it != itEnd; ++it) {
         this->data_[it->first] += it->second;
     }
+
+    return (*this);
 }
 
 
