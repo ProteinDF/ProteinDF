@@ -147,15 +147,9 @@ void DfGridFreeXC::createEngines()
 {
     assert(this->pOvpEngines_ == NULL);
     
-#ifdef _OPENMP
-    {
-        const int numOfThreads = omp_get_max_threads();
-        this->log_.info(TlUtils::format("create OpenMP ERI engine: %d", numOfThreads));
-        this->pOvpEngines_ = new DfOverlapEngine[numOfThreads];
-    }
-#else
-    this->pOvpEngines_ = new DfOverlapEngine[1];
-#endif // _OPENMP
+    this->log_.info(TlUtils::format("create ERI engine: %d",
+                                    this->numOfThreads_));
+    this->pOvpEngines_ = new DfOverlapEngine[this->numOfThreads_];
 }
 
 

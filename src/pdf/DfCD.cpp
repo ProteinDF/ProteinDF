@@ -51,14 +51,7 @@ void DfCD::createEngines()
 {
     assert(this->pEriEngines_ == NULL);
     
-#ifdef _OPENMP
-    {
-        const int numOfThreads = omp_get_max_threads();
-        this->pEriEngines_ = new DfEriEngine[numOfThreads];
-    }
-#else
-    this->pEriEngines_ = new DfEriEngine[1];
-#endif // _OPENMP
+    this->pEriEngines_ = new DfEriEngine[this->numOfThreads_];
 }
 
 

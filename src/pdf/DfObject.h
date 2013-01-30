@@ -373,9 +373,13 @@ protected:
     TlSerializeData* pPdfParam_;
 
     TlLogging& log_;
-    
+
+    // system parameters -------------------------------------------------------
     /// プロセスあたりの最大メモリ容量(byte)
     std::size_t procMaxMemSize_;
+
+    /// OpenMPスレッド数
+    int numOfThreads_;
 
     bool isEnableMmap_; /// mmap使用可(true)
     

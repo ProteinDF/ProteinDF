@@ -53,9 +53,9 @@ DfObject::~DfObject()
 
 void DfObject::setParam(const TlSerializeData& data)
 {
-    int numOfThreads = 1;
+    this->numOfThreads_ = 1;
 #ifdef _OPENMP
-    numOfThreads = omp_get_max_threads();
+    this->numOfThreads_ = omp_get_max_threads();
 #endif // _OPENMP
 
     // computational resource
@@ -236,7 +236,7 @@ void DfObject::setParam(const TlSerializeData& data)
     if (data.hasKey("omp_grain_size") == true) {
         this->grainSize_ = data["omp_grain_size"].getInt();
     }
-    this->grainSize_ *= numOfThreads;
+    this->grainSize_ *= this->numOfThreads_;
     
     this->isMasterSlave_ = false;
     {

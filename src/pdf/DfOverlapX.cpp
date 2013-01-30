@@ -20,16 +20,7 @@ DfOverlapX::~DfOverlapX()
 void DfOverlapX::createEngines()
 {
     assert(this->pEngines_ == NULL);
-#ifdef _OPENMP
-    {
-        const int numOfThreads = omp_get_max_threads();
-        this->pEngines_ = new DfOverlapEngine[numOfThreads];
-    }
-#else
-    {
-        this->pEngines_ = new DfOverlapEngine[1];
-    }
-#endif // _OPENMP
+    this->pEngines_ = new DfOverlapEngine[this->numOfThreads_];
 }
 
 

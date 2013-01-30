@@ -92,12 +92,7 @@ void DfEriX::createEngines()
     assert(this->pEriEngines_ == NULL);
     
     static const int maxSizeOfElement = 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4)
-    int numOfThreads = 1;
-#ifdef _OPENMP
-    {
-        numOfThreads = omp_get_max_threads();
-    }
-#endif // _OPENMP
+    const int numOfThreads = this->numOfThreads_;
     
     this->log_.info(TlUtils::format("create ERI engine: %d", numOfThreads));
     this->pEriEngines_ = new DfEriEngine[numOfThreads];
@@ -114,12 +109,7 @@ void DfEriX::createEngines()
 
 void DfEriX::destroyEngines()
 {
-    int numOfThreads = 1;
-#ifdef _OPENMP
-    {
-        numOfThreads = omp_get_max_threads();
-    }
-#endif // _OPENMP
+    const int numOfThreads = this->numOfThreads_;
 
     this->log_.info("delete ERI engine");
     delete[] this->pEriEngines_;
@@ -672,10 +662,7 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
 
     // allocate work mem
     static const int maxElements = 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4-type)
-    int numOfThreads = 1;
-#ifdef _OPENMP
-    numOfThreads = omp_get_max_threads();
-#endif // _OPENMP
+    const int numOfThreads = this->numOfThreads_;
     index_type** pIndexPairsList = new index_type*[numOfThreads];
     double** pValuesList = new double*[numOfThreads];
     for (int i = 0; i < numOfThreads; ++i) {
@@ -1725,10 +1712,7 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
 
     // allocate work mem
     static const int maxElements = 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4-type)
-    int numOfThreads = 1;
-#ifdef _OPENMP
-    numOfThreads = omp_get_max_threads();
-#endif // _OPENMP
+    int numOfThreads = this->numOfThreads_;
     index_type** pIndexPairsList = new index_type*[numOfThreads];
     double** pValuesList = new double*[numOfThreads];
     for (int i = 0; i < numOfThreads; ++i) {
