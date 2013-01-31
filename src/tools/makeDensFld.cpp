@@ -15,10 +15,12 @@ void help(const std::string& progName)
     std::cout << "output volume data of density."
               << std::endl;
     std::cout << "OPTIONS:" << std::endl;
-    std::cout << " -p <path>    set ProteinDF parameter file. default = pdfparam.mpac" << std::endl;
-    std::cout << " -d <path>    set density matrix file. default is presumed by parameter file." << std::endl;
-    std::cout << " -f <path>    save AVS field file." << std::endl;
-    std::cout << " -m <path>    save message pack file." << std::endl;
+    std::cout << " -p PATH      set ProteinDF parameter file. default = pdfparam.mpac" << std::endl;
+    std::cout << " -d PATH      set density matrix file. default is presumed by parameter file." << std::endl;
+    std::cout << " -f           save AVS field (.fld) file." << std::endl;
+    std::cout << " -c           save cube (.cube) file" << std::endl;
+    std::cout << " -m           save message pack (.mpac) file." << std::endl;
+    std::cout << " -o PREFIX    output prefix (default: density)" << std::endl;
     std::cout << " -h           show help message (this)." << std::endl;
     std::cout << " -v           show message verbosely." << std::endl;
 }
@@ -26,9 +28,14 @@ void help(const std::string& progName)
 
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "c:d:f:hm:p:v");
+    TlGetopt opt(argc, argv, "cd:fhmo:p:v");
 
     const bool verbose = (opt["v"] == "defined");
+    if ((opt["h"] == "defined")) {
+        help(opt[0]);
+        return EXIT_SUCCESS;
+    }
+    
     std::string pdfParamPath = "pdfparam.mpac";
     if (opt["p"].empty() != true) {
         pdfParamPath = opt["p"];
@@ -37,24 +44,27 @@ int main(int argc, char* argv[])
     if (opt["d"].empty() != true) {
         PMatrixFilePath = opt["d"];
     }
-    std::string mpacFilePath = "";
-    if (opt["m"].empty() != true) {
-        mpacFilePath = opt["m"];
+
+    bool isSaveAvsFieldFile = false;
+    if (opt["f"] == "defined") {
+        isSaveAvsFieldFile = true;
     }
-    std::string fieldFilePath = (mpacFilePath != "") ? "" : "density.fld";
-    if (opt["f"].empty() != true) {
-        fieldFilePath = opt["f"];
-    }
-    std::string cubeFilePath = "";
-    if (opt["c"].empty() != true) {
-        cubeFilePath = opt["c"];
+
+    bool isSaveCubeFile = false;
+    if (opt["c"] == "defined") {
+        isSaveCubeFile = true;
     }
     
-    if ((opt["h"] == "defined")) {
-        help(opt[0]);
-        return EXIT_SUCCESS;
+    bool isSaveMpacFile = false;
+    if (opt["m"] == "defined") {
+        isSaveMpacFile = true;
     }
-    
+
+    std::string outputPrefix = "density";
+    if (! opt["o"].empty()) {
+        outputPrefix = opt["o"];
+    }
+
     // パラメータファイルの読み込み
     TlSerializeData param;
     {
@@ -99,14 +109,15 @@ int main(int argc, char* argv[])
     const std::vector<double> values = densFld.makeDensFld(P, grids);
 
     // convert grid unit to angstrom
-    for (std::size_t i = 0; i < numOfGrids; ++i) {
-        grids[i] *= ANG_PER_AU;
-    }
-    startPos *= ANG_PER_AU;
-    gridPitch *= ANG_PER_AU;
+    // for (std::size_t i = 0; i < numOfGrids; ++i) {
+    //     grids[i] *= ANG_PER_AU;
+    // }
+    // startPos *= ANG_PER_AU;
+    // gridPitch *= ANG_PER_AU;
     
     // save to mpac
-    if (mpacFilePath.empty() != true) {
+    if (isSaveMpacFile) {
+        const std::string mpacFilePath = outputPrefix + ".mpac";
         std::cerr << "save message pack file: " << mpacFilePath << std::endl;
 
         TlSerializeData output;
@@ -132,7 +143,8 @@ int main(int argc, char* argv[])
      }
 
     // save to fld
-    if (fieldFilePath.empty() != true) {
+    if (isSaveAvsFieldFile) {
+        const std::string fieldFilePath = outputPrefix + ".fld";
         std::cerr << "save AVS field file: " << fieldFilePath << std::endl;
 
         std::string label = "density";
@@ -143,24 +155,22 @@ int main(int argc, char* argv[])
     }
 
     // save to cube file
-    if (cubeFilePath.empty() != true) {
+    if (isSaveCubeFile) {
+        const std::string cubeFilePath = outputPrefix + ".cube";
         std::cerr << "save CUBE file: " << cubeFilePath << std::endl;
 
-        const Fl_Geometry flGeom(param["model"]["coordinates"]);
+        const Fl_Geometry flGeom(param["coordinates"]);
         const int numOfAtoms = flGeom.getNumOfAtoms();
         std::vector<TlAtom> atoms(numOfAtoms);
         for (int i = 0; i < numOfAtoms; ++i) {
             TlAtom atom(flGeom.getAtom(i));
             atom.setCharge(flGeom.getCharge(i));
-            atom.moveTo(flGeom.getCoordinate(i) * ANG_PER_AU);
+            atom.moveTo(flGeom.getCoordinate(i));
+            // atom.moveTo(flGeom.getCoordinate(i) * ANG_PER_AU); // angstroamに変換
             atoms[i] = atom;
         }
 
-        std::string label = "density";
-        std::vector<double> values_au = values;
-        for (int i = 0; i < values_au.size(); ++i) {
-            values_au[i] /= (ANG_PER_AU * ANG_PER_AU * ANG_PER_AU);
-        }
+        const std::string label = "density";
         saveCubeData(atoms,
                      numOfGridX, numOfGridY, numOfGridZ,
                      startPos, gridPitch,

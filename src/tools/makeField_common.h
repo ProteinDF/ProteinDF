@@ -37,6 +37,9 @@ void saveFieldData(const std::size_t numOfGridX,
                    const std::string& label,
                    const std::string& filePath);
 
+/// output Gaussian cube file format
+///
+/// startPos, gridPitchはBohr単位で入力すること。
 void saveCubeData(const std::vector<TlAtom>& atoms,
                   const std::size_t numOfGridX,
                   const std::size_t numOfGridY,

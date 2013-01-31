@@ -21,19 +21,25 @@ void help(const std::string& progName)
     std::cout << "OPTIONS:" << std::endl;
     std::cout << " -p <path>    set ProteinDF parameter file(default: pdfparam.mpac)" << std::endl;
     std::cout << " -l <path>    set LCAO matrix file" << std::endl;
-    std::cout << " -f <path>    save AVS field file" << std::endl;
-    std::cout << " -m <path>    save message pack file" << std::endl;
-    std::cout << " -c <path>    save cube file" << std::endl;
-    std::cout << " -h           show help message (this)" << std::endl;
-    std::cout << " -v           verbose mode" << std::endl;
+    std::cout << " -f           save AVS field (.fld) file." << std::endl;
+    std::cout << " -c           save cube (.cube) file" << std::endl;
+    std::cout << " -m           save message pack (.mpac) file." << std::endl;
+    std::cout << " -o PREFIX    output prefix (default: MO)" << std::endl;
+    std::cout << " -h           show help message (this)." << std::endl;
+    std::cout << " -v           show message verbosely." << std::endl;
 }
 
 
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "c:f:hl:m:p:v");
+    TlGetopt opt(argc, argv, "cfhl:mo:p:v");
 
     const bool verbose = (opt["v"] == "defined");
+    if ((opt["h"] == "defined")) {
+        help(opt[0]);
+        return EXIT_SUCCESS;
+    }
+    
     std::string pdfParamPath = "pdfparam.mpac";
     if (opt["p"].empty() != true) {
         pdfParamPath = opt["p"];
@@ -42,25 +48,27 @@ int main(int argc, char* argv[])
     if (opt["l"].empty() != true) {
         lcaoMatrixPath = opt["l"];
     }
-    std::string mpacFilePath = "";
-    if (opt["m"].empty() != true) {
-        mpacFilePath = opt["m"];
-    }
-    std::string fieldFilePath = "";
-    if (opt["f"].empty() != true) {
-        fieldFilePath = opt["f"];
-    }
-    std::string cubeFilePath = "";
-    if (opt["c"].empty() != true) {
-        cubeFilePath = opt["c"];
+
+    bool isSaveAvsFieldFile = false;
+    if (opt["f"] == "defined") {
+        isSaveAvsFieldFile = true;
     }
 
-    if ((lcaoMatrixPath.empty() && mpacFilePath.empty() && cubeFilePath.empty()) ||
-        (opt["h"] == "defined")) {
-        help(opt[0]);
-        return EXIT_SUCCESS;
+    bool isSaveCubeFile = false;
+    if (opt["c"] == "defined") {
+        isSaveCubeFile = true;
     }
     
+    bool isSaveMpacFile = false;
+    if (opt["m"] == "defined") {
+        isSaveMpacFile = true;
+    }
+
+    std::string outputPrefix = "MO";
+    if (! opt["o"].empty()) {
+        outputPrefix = opt["o"];
+    }
+
     // パラメータファイルの読み込み
     TlSerializeData param;
     {
@@ -71,7 +79,7 @@ int main(int argc, char* argv[])
 
     // LCAO行列の読み込み
     TlMatrix C;
-    if (lcaoMatrixPath.empty() == true) {
+    if (lcaoMatrixPath.empty()) {
         const int iteration = param["num_of_iterations"].getInt();
         DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
         DfObject dfObject(&param);
@@ -83,7 +91,7 @@ int main(int argc, char* argv[])
     // 計算サイズの決定
     TlPosition startPos;
     TlPosition endPos;
-    getDefaultSize(param, &startPos, &endPos);
+    getDefaultSize(param, &startPos, &endPos); // a.u.で取得
     compensateRange(&startPos, &endPos);
 
     const TlPosition gridPitch(GRID_PITCH, GRID_PITCH, GRID_PITCH);
@@ -109,17 +117,18 @@ int main(int argc, char* argv[])
         const int MO_index = std::atoi(opt[i].c_str());
         const std::vector<double>values = moFld.makeMoFld(C.getColVector(MO_index), grids);
 
-        const std::string key = TlUtils::format("MO_%d", MO_index);
+        const std::string key = TlUtils::format("%d", MO_index);
         storeData[key] = values;
     }
 
     // convert grid unit to angstrom
-    for (std::size_t i = 0; i < numOfGrids; ++i) {
-        grids[i] *= ANG_PER_AU;
-    }
+    // for (std::size_t i = 0; i < numOfGrids; ++i) {
+    //     grids[i] *= ANG_PER_AU;
+    // }
     
     // save to mpac
-    if (mpacFilePath.empty() != true) {
+    if (isSaveMpacFile) {
+        const std::string mpacFilePath = outputPrefix + ".mpac";
         std::cerr << "save message pack file: " << mpacFilePath << std::endl;
 
         TlSerializeData output;
@@ -152,7 +161,8 @@ int main(int argc, char* argv[])
      }
 
     // save to fld
-    if (fieldFilePath.empty() != true) {
+    if (isSaveAvsFieldFile) {
+        const std::string fieldFilePath = outputPrefix + ".mpac";
         std::cerr << "save AVS field file: " << fieldFilePath << std::endl;
 
         std::string label = "";
@@ -170,57 +180,35 @@ int main(int argc, char* argv[])
     }
 
     // save to cube
-    if (cubeFilePath.empty() != true) {
+    if (isSaveCubeFile) {
         const Fl_Geometry flGeom(param["coordinates"]);
         const int numOfAtoms = flGeom.getNumOfAtoms();
-
-        std::string output = "";
-        output += "comment line: \n";
-        output += "comment line: \n";
-        output += TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n",
-                                  numOfAtoms, startPos.x(), startPos.y(), startPos.z());
-
-        output += TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridX, gridPitch.x(), 0.0, 0.0);
-        output += TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridY, 0.0, gridPitch.y(), 0.0);
-        output += TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridZ, 0.0, 0.0, gridPitch.z());
-
+        std::vector<TlAtom> atoms(numOfAtoms);
         for (int i = 0; i < numOfAtoms; ++i) {
-            const int atomic_number = TlAtom::getElementNumber(flGeom.getAtom(i));
-            const double charge = flGeom.getCharge(i);
-            const TlPosition p = flGeom.getCoordinate(i);
-            output += TlUtils::format("%5d % 12.6f % 12.6f % 12.6f % 12.6f\n",
-                                      atomic_number, charge, p.x(), p.y(), p.z());
+            TlAtom atom(flGeom.getAtom(i));
+            atom.setCharge(flGeom.getCharge(i));
+            atom.moveTo(flGeom.getCoordinate(i));
+            //atom.moveTo(flGeom.getCoordinate(i) * ANG_PER_AU); // angstroamに変換
+            atoms[i] = atom;
         }
 
         for (std::map<std::string, std::vector<double> >::const_iterator p = storeData.begin();
              p != storeData.end(); ++p) {
 
             const std::string key = p->first;
-            const std::vector<double>& value = p->second;
+            const std::vector<double>& values = p->second;
 
-            std::string dat_str = "";
-            //int counter = 0;
-            for (int x = 0; x < numOfGridX; ++x) {
-                for (int y = 0; y < numOfGridY; ++y) {
-                    for (int z = 0; z < numOfGridZ; ++z) {
-                        const int index = (z*numOfGridY +y)*numOfGridX +x;
-                        dat_str += TlUtils::format("% 12.5E ", value[index]);
-                        if (z % 6 == 5) {
-                            dat_str += "\n";
-                        }
-                        // ++counter;
-                    }
-                    dat_str += "\n";
-                }
-            }
+            const std::string label = TlUtils::format("MO_%s", key.c_str());
+            std::vector<double> values_au = values;
 
-            const std::string path = TlUtils::format("%s_%s.cube",
-                                                     cubeFilePath.c_str(),
-                                                     key.c_str());
+            std::string path = TlUtils::format("%s%s.cube",
+                                               outputPrefix.c_str(),
+                                               key.c_str());
             std::cerr << "save CUBE file: " << path << std::endl;
-            std::ofstream ofs(path.c_str());
-            ofs << output << dat_str << std::endl;
-            ofs.close();
+            saveCubeData(atoms,
+                         numOfGridX, numOfGridY, numOfGridZ,
+                         startPos, gridPitch,
+                         values, label, path);
         }
     }
     
