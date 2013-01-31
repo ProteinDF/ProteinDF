@@ -28,7 +28,9 @@ AC_PROG_INSTALL
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([stdlib.h string.h unistd.h sys/resource.h sys/time.h])
+AC_CHECK_HEADERS([stdlib.h string.h unistd.h sys/resource.h sys/time.h \
+                 google/sparse_hash_map \
+                 ])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -52,6 +54,18 @@ AX_CREATE_STDINT_H(include/pdflib-int.h)
 # for sleep
 # ====================================================================
 AX_SHORT_SLEEP([WITH_SLEEP=yes],[WITH_SLEEP=no])
+
+# ====================================================================
+# ordered_map
+# ====================================================================
+AC_ARG_ENABLE(ordered_map, [  --enable-ordered-map  trun on ordered_map [default no]],,enable_ordered_map=no)
+AC_MSG_CHECKING(whether to enable ordered_map)
+if test x$enable_ordered_map = xyes; then
+   AC_CHECK_HEADERS([unordered_map tr1/unordered_map])
+   #AC_MSG_RESULT([check])
+else
+   AC_MSG_RESULT(no)
+fi
 
 # ====================================================================
 # for LAPACK
