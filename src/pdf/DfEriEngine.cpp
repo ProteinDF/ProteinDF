@@ -75,6 +75,10 @@ DfEriEngine::DfEriEngine()
         const int a_bar = 0;
         const int b_bar = 0;
 
+        const int p_max = A_BAR_MAX + B_BAR_MAX + A_MAX + B_MAX;
+        const TlAngularMomentumVectorSet amvs_p_max(p_max);
+        const int numOf_amvs_p_max = amvs_p_max.size();
+
         for (int q_a_bar = 0; q_a_bar <= A_BAR_MAX; ++q_a_bar) {
             for (int q_b_bar = 0; q_b_bar <= B_BAR_MAX; ++q_b_bar) {
                 for (int q_a = 0; q_a <= A_MAX; ++q_a){ 
@@ -89,12 +93,14 @@ DfEriEngine::DfEriEngine()
                             const int b_prime = bra_contractScales[bra_cs_index].b_prime;
                             const int p_prime = bra_contractScales[bra_cs_index].p_prime;
                             for (int p = 0; p <= angularMomentumP; ++p) {
-                                const ERI_State bra_state(a_bar, b_bar, a, b, p, a_prime, b_prime, p_prime);
+                                const ERI_State bra_state(a_bar, b_bar,
+                                                          a, b, p,
+                                                          a_prime, b_prime, p_prime);
                                 const std::size_t braStateIndex = bra_state.index();
                                 
-                                const TlAngularMomentumVectorSet amvs_p(p);
-                                const int numOf_amvs_p = amvs_p.size(); // amvs_p の数だけで十分
-                                this->ERI_bra_[braStateIndex].resize(numOf_amvs_p);
+                                //const TlAngularMomentumVectorSet amvs_p(p);
+                                //const int numOf_amvs_p = amvs_p.size(); // amvs_p の数だけで十分
+                                this->ERI_bra_[braStateIndex].resize(numOf_amvs_p_max);
                             }
                         }
                     }
@@ -1741,7 +1747,9 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
         // cs.setABP(a_prime, b_prime, p_prime);
 
         for (int p = 0; p <= angularMomentumP; ++p) {
-            const ERI_State bra_state(a_bar, b_bar, a, b, p, a_prime, b_prime, p_prime);
+            const ERI_State bra_state(a_bar, b_bar,
+                                      a, b, p,
+                                      a_prime, b_prime, p_prime);
             const std::size_t braStateIndex = bra_state.index();
             this->isCalcdERI_[bra_state] = true;
 
@@ -1755,8 +1763,7 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
             const TlAngularMomentumVectorSet amvs_p(p);
             const int numOf_amvs_p = amvs_p.size(); // amvs_p の数だけで十分
             assert(braStateIndex < ERI_NUM_OF_ERI_STATES);
-            // this->ERI_bra_[braStateIndex].resize(numOf_amvs_p);
-            assert(this->ERI_bra_[braStateIndex].size() == numOf_amvs_p);
+            assert(this->ERI_bra_[braStateIndex].size() > numOf_amvs_p);
 
 #ifdef CHECK_MAX_COUNT
             this->maxNumOfAMVs_ = std::max(this->maxNumOfAMVs_, numOf_amvs_p);
