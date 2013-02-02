@@ -2,6 +2,18 @@
 #include <limits>
 #include "TlMatrixObject.h"
 
+void TlMatrixObject::addByList(const index_type* pIndexPairs,
+                               const double* pValues,
+                               const std::size_t size)
+{
+    for (std::size_t i = 0; i < size; ++i) {
+        const index_type globalRow = pIndexPairs[i*2   ];
+        const index_type globalCol = pIndexPairs[i*2 +1];
+        const double value = pValues[i];
+        
+        this->add(globalRow, globalCol, value);
+    }
+}
 
 TlVector TlMatrixObject::getRowVector(const int row) const
 {

@@ -227,8 +227,9 @@ public:
 
     virtual void add(index_type row, index_type col, double value);
 
-    virtual void addByList(const std::vector<index_type>& indexPairs,
-                           const std::vector<double>& values);
+    virtual void addByList(const index_type* pIndexPairs,
+                           const double* pValues,
+                           const std::size_t size);
 
     /// ローカルから該当する要素があれば値を返す
     ///

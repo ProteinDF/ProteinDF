@@ -456,7 +456,9 @@ void DfEriX_Parallel::getJpq_D(const TlDistributeSymmetricMatrix& P,
     P.getSparseMatrixX(NULL, true);
 
     this->log_.info("finalize");
-    pJ->addByList(procIndexPQ, procValues);
+    pJ->addByList(&(procIndexPQ[0]),
+                  &(procValues[0]),
+                  procValues.size());
 
     this->destroyEngines();
     pDfTaskCtrl->cutoffReport();
@@ -596,7 +598,9 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
     P.getSparseMatrixX(NULL, true);
 
     this->log_.info("finalize");
-    pK->addByList(procIndexPQ, procValues);
+    pK->addByList(&(procIndexPQ[0]),
+                  &(procValues[0]),
+                  procValues.size());
 
     this->destroyEngines();
     pDfTaskCtrl->cutoffReport();
@@ -623,6 +627,7 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
+    // TODO:
     TlMatrix localP;
     std::vector<index_type> rowIndexes;
     std::vector<index_type> colIndexes;
@@ -631,67 +636,40 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     this->log_.info("ERI start");
     const TlDistributeMatrix tmpP(P);
     DfTaskCtrl dfTaskCtrl(this->pPdfParam_);
-    //DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
 
     std::vector<DfTaskCtrl::Task4> taskList;
     std::vector<index_type> procIndexPQ;
     std::vector<double> procValues;
 
     this->createEngines();
-    {
-        bool hasTask = dfTaskCtrl.getQueue4_K0(orbitalInfo,
-                                               schwarzTable,
-                                               tmpP,
-                                               rowIndexes, colIndexes,
-                                               this->grainSize_, &taskList, true);
-        static const int maxElements = 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4-type)
-        index_type* pTaskIndexPairs = new index_type[maxElements * this->grainSize_ * 2];
-        double* pTaskValues = new double[maxElements * this->grainSize_];
+    bool hasTask = dfTaskCtrl.getQueue4_K0(orbitalInfo,
+                                           schwarzTable,
+                                           tmpP,
+                                           rowIndexes, colIndexes,
+                                           this->grainSize_, &taskList, true);
+    static const int maxElements = 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4-type)
+    index_type* pTaskIndexPairs = new index_type[maxElements * this->grainSize_ * 2];
+    double* pTaskValues = new double[maxElements * this->grainSize_];
 
-        while (hasTask == true) {
-            const int numOfTaskElements = DfEriX::getK_integralDriven_part(orbitalInfo,
-                                                                           taskList,
-                                                                           tmpP,
-                                                                           pTaskIndexPairs, pTaskValues);
-            {
-                const std::size_t baseIndexPQ = procIndexPQ.size();
-                procIndexPQ.resize(baseIndexPQ + numOfTaskElements * 2);
-                std::copy(pTaskIndexPairs, pTaskIndexPairs + numOfTaskElements * 2,
-                          procIndexPQ.begin() + baseIndexPQ);
-
-                const std::size_t baseValues = procValues.size();
-                procValues.resize(baseValues + numOfTaskElements);
-                std::copy(pTaskValues, pTaskValues + numOfTaskElements,
-                          procValues.begin() + baseValues);
-            }
-            hasTask = dfTaskCtrl.getQueue4_K0(orbitalInfo,
-                                              schwarzTable,
-                                              tmpP,
-                                              rowIndexes, colIndexes,
-                                              this->grainSize_, &taskList);
-        }
-
-        delete[] pTaskIndexPairs;
-        pTaskIndexPairs = NULL;
-        delete[] pTaskValues;
-        pTaskValues = NULL;
+    TlSparseSymmetricMatrix tmpK(numOfAOs);
+    while (hasTask == true) {
+        const int numOfTaskElements = DfEriX::getK_integralDriven_part(orbitalInfo,
+                                                                       taskList,
+                                                                       tmpP,
+                                                                       pTaskIndexPairs,
+                                                                       pTaskValues);
+        tmpK.addByList(pTaskIndexPairs, pTaskValues, numOfTaskElements);
+        hasTask = dfTaskCtrl.getQueue4_K0(orbitalInfo,
+                                          schwarzTable,
+                                          tmpP,
+                                          rowIndexes, colIndexes,
+                                          this->grainSize_, &taskList);
     }
-
-    // bool hasTask = dfTaskCtrl.getQueue4_K(orbitalInfo,
-    //                                       schwarzTable,
-    //                                       tmpP,
-    //                                       rowIndexes, colIndexes,
-    //                                       this->grainSize_, &taskList, true);
-    // dfTaskCtrl.getQueue4_K(orbitalInfo,
-    //                        schwarzTable,
-    //                        tmpP,
-    //                        rowIndexes, colIndexes,
-    //                        this->grainSize_, &taskList);
-    //     hasTask = dfTaskCtrl.getQueue4_K(orbitalInfo,
-    //                                      schwarzTable,
-    //                                      tmpP,
-    //                                      rowIndexes, colIndexes,
-    //                                      this->grainSize_, &taskList);
+    
+    delete[] pTaskIndexPairs;
+    pTaskIndexPairs = NULL;
+    delete[] pTaskValues;
+    pTaskValues = NULL;
     
     this->log_.info("ERI end: waiting all process tasks");
 
@@ -699,8 +677,7 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     this->destroyEngines();
 
     this->log_.info("finalize");
-    // pK->mergeSparseMatrix(tmpK);
-    pK->addByList(procIndexPQ, procValues);
+    pK->mergeSparseMatrix(tmpK);
 
     this->log_.info("finished");
     assert(rComm.checkNonBlockingCommunications());

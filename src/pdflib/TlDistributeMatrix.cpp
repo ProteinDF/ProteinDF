@@ -2108,8 +2108,9 @@ void TlDistributeMatrix::add(const index_type row, const index_type col, const d
 }
 
 
-void TlDistributeMatrix::addByList(const std::vector<index_type>& indexPairs,
-                                   const std::vector<double>& values)
+void TlDistributeMatrix::addByList(const index_type* pIndexPairs,
+                                   const double* pValues,
+                                   const std::size_t size)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProc();
@@ -2119,13 +2120,10 @@ void TlDistributeMatrix::addByList(const std::vector<index_type>& indexPairs,
     std::vector<std::vector<index_type> > sendIndexArrays(numOfProcs);
     std::vector<std::vector<double> > sendValues(numOfProcs);
 
-    std::size_t numOfItems = values.size();
-    assert(indexPairs.size() == numOfItems *2);
-
-    for (std::size_t i = 0; i < numOfItems; ++i) {
-        const index_type globalRow = indexPairs[i*2   ];
-        const index_type globalCol = indexPairs[i*2 +1];
-        const double value = values[i];
+    for (std::size_t i = 0; i < size; ++i) {
+        const index_type globalRow = pIndexPairs[i*2   ];
+        const index_type globalCol = pIndexPairs[i*2 +1];
+        const double value = pValues[i];
 
         const int index = this->getIndex(globalRow, globalCol);
         if (index != -1) {

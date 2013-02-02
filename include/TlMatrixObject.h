@@ -80,6 +80,15 @@ public:
     /// @param[in] col 指定する行
     virtual TlVector getColVector(index_type col) const;
 
+    /// リストからまとめて要素を加算する
+    ///
+    /// @param[in] pIndexPairs インデックスのリスト(row1, col1, row2, col2, ...)
+    /// @param[in] pValues 値のリスト
+    /// @param[in] size 要素数
+    virtual void addByList(const index_type* pIndexPairs,
+                           const double* pValues,
+                           const std::size_t size);
+
 public:
     //virtual TlMatrixObject& operator+=(const TlMatrixObject& rhs);
 
