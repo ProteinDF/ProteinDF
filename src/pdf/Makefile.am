@@ -31,86 +31,86 @@ libpdf_la_SOURCES = \
 	DfCD.h					DfCD.cpp					\
 	DfConvcheck.h			DfConvcheck.cxx				\
 	DfConverge.h			DfConverge.cpp				\
-	DfConverge_Damping.h	DfConverge_Damping.cpp		\
 	DfConverge_Anderson.h	DfConverge_Anderson.cpp		\
-	DfConverge2.h			DfConverge2.cxx				\
+	DfConverge_Damping.h	DfConverge_Damping.cpp		\
+	DfConverge_DIIS.h		DfConverge_DIIS.cpp			\
 	DfCqclomatrix.h			DfCqclomatrix.cxx			\
 	DfDensityFittingObject.h							\
 	DfDiagonal.h			DfDiagonal.cxx				\
-	DfDmatrix.h				DfDmatrix.cxx			\
-	DfEri.h					DfEri.cpp       		\
-	DfJMatrix.h				DfJMatrix.cpp			\
-	DfKMatrix.h				DfKMatrix.cpp			\
-	DfFockMatrix.h			DfFockMatrix.cpp		\
-	DfGenerateGrid.h		DfGenerateGrid.cpp		\
+	DfDmatrix.h				DfDmatrix.cxx				\
+	DfEri.h					DfEri.cpp       			\
+	DfJMatrix.h				DfJMatrix.cpp				\
+	DfKMatrix.h				DfKMatrix.cpp				\
+	DfFockMatrix.h			DfFockMatrix.cpp			\
+	DfGenerateGrid.h		DfGenerateGrid.cpp			\
 	DfGridFreeXC.h			DfGridFreeXC.cpp			\
-	DfHpq.h					DfHpq.cxx				\
-	DfHpq_driver.h			DfHpq_driver.c			\
-	DfInitialGuess.h		DfInitialGuess.cpp		\
-	DfInitialguess.h		DfInitialguess.cxx		\
+	DfHpq.h					DfHpq.cxx					\
+	DfHpq_driver.h			DfHpq_driver.c				\
+	DfInitialGuess.h		DfInitialGuess.cpp			\
+	DfInitialguess.h		DfInitialguess.cxx			\
 	DfInitialGuessHuckel.h	DfInitialGuessHuckel.cpp	\
 	DfInitialGuessHarris.h	DfInitialGuessHarris.cpp	\
-	DfInputdata.h			DfInputdata.cxx			\
-	DfIntegrals.h			DfIntegrals.cxx			\
-	DfInvMatrix.h			DfInvMatrix.cpp			\
-	DfLevelshift.h			DfLevelshift.cxx		\
-	DfOverlap.h				DfOverlap.cpp			\
-	DfPreScf.h				DfPreScf.cpp			\
-	DfPopulation.h			DfPopulation.cxx		\
-	DfQclo.h				DfQclo.cxx			\
-	DfScf.h					DfScf.cxx			\
+	DfInputdata.h			DfInputdata.cxx				\
+	DfIntegrals.h			DfIntegrals.cxx				\
+	DfInvMatrix.h			DfInvMatrix.cpp				\
+	DfLevelshift.h			DfLevelshift.cxx			\
+	DfOverlap.h				DfOverlap.cpp				\
+	DfPreScf.h				DfPreScf.cpp				\
+	DfPopulation.h			DfPopulation.cxx			\
+	DfQclo.h				DfQclo.cxx					\
+	DfScf.h					DfScf.cxx					\
 	DfDensityFittingX.h		DfDensityFittingX.cpp		\
-	DfSummary.h				DfSummary.cxx			\
+	DfSummary.h				DfSummary.cxx				\
 	DfThreeindexintegrals.h	DfThreeindexintegrals.cxx	\
-	DfTotalEnergy.h			DfTotalEnergy.cpp		\
-	DfTransFmatrix.h		DfTransFmatrix.cxx		\
-	DfTransatob.h			DfTransatob.cxx			\
-	DfXcenefitting.h		DfXcenefitting.cxx		\
-	DfXMatrix.h				DfXMatrix.cpp			\
-	DfCleanup.h				DfCleanup.cpp			\
-	FileX.h					FileX.cxx			\
-	Fl_Database.h			Fl_Database.cxx			\
-	Fl_Db_Basis.h			Fl_Db_Basis.cxx			\
-	Fl_Fragment.h			Fl_Fragment.cxx			\
-	Fl_Gdb_Atom.h						\
-	Fl_Gdb_Molecular.h					\
-	Fl_Geometry.h			Fl_Geometry.cxx			\
-	Fl_Gto.h				Fl_Gto.cxx			\
-	Fl_Gto_Density.h					\
-	Fl_Gto_Orbital.h					\
-	Fl_Gto_Xcpot.h						\
-	Fl_Gto_Xcpot2.h						\
-	Fl_GuessDB.h			Fl_GuessDB.cxx			\
+	DfTotalEnergy.h			DfTotalEnergy.cpp			\
+	DfTransFmatrix.h		DfTransFmatrix.cxx			\
+	DfTransatob.h			DfTransatob.cxx				\
+	DfXcenefitting.h		DfXcenefitting.cxx			\
+	DfXMatrix.h				DfXMatrix.cpp				\
+	DfCleanup.h				DfCleanup.cpp				\
+	FileX.h					FileX.cxx					\
+	Fl_Database.h			Fl_Database.cxx				\
+	Fl_Db_Basis.h			Fl_Db_Basis.cxx				\
+	Fl_Fragment.h			Fl_Fragment.cxx				\
+	Fl_Gdb_Atom.h										\
+	Fl_Gdb_Molecular.h									\
+	Fl_Geometry.h			Fl_Geometry.cxx				\
+	Fl_Gto.h				Fl_Gto.cxx					\
+	Fl_Gto_Density.h									\
+	Fl_Gto_Orbital.h									\
+	Fl_Gto_Xcpot.h										\
+	Fl_Gto_Xcpot2.h										\
+	Fl_GuessDB.h			Fl_GuessDB.cxx				\
 	Fl_Tbl_AtomFragment.h	Fl_Tbl_AtomFragment.cxx		\
-	Fl_Tbl_Density.h		Fl_Tbl_Density.cxx		\
-	Fl_Tbl_Fragment.h		Fl_Tbl_Fragment.cxx		\
-	Fl_Tbl_Orbital.h		Fl_Tbl_Orbital.cxx		\
-	Fl_Tbl_Xcpot.h			Fl_Tbl_Xcpot.cxx		\
-	Fl_Tbl_Xcpot2.h			Fl_Tbl_Xcpot2.cxx		\
-	Fl_GlobalinputX.h		Fl_GlobalinputX.cpp		\
-	Fl_Vct_Table.h			Fl_Vct_Table.cpp		\
-	PdfKeyword.h			PdfKeyword.cpp			\
-	ProteinDF.h				ProteinDF.cxx			\
+	Fl_Tbl_Density.h		Fl_Tbl_Density.cxx			\
+	Fl_Tbl_Fragment.h		Fl_Tbl_Fragment.cxx			\
+	Fl_Tbl_Orbital.h		Fl_Tbl_Orbital.cxx			\
+	Fl_Tbl_Xcpot.h			Fl_Tbl_Xcpot.cxx			\
+	Fl_Tbl_Xcpot2.h			Fl_Tbl_Xcpot2.cxx			\
+	Fl_GlobalinputX.h		Fl_GlobalinputX.cpp			\
+	Fl_Vct_Table.h			Fl_Vct_Table.cpp			\
+	PdfKeyword.h			PdfKeyword.cpp				\
+	ProteinDF.h				ProteinDF.cxx				\
 	TlOrbitalInfoObject.h	TlOrbitalInfoObject.cpp		\
-	TlOrbitalInfo.h			TlOrbitalInfo.cpp		\
+	TlOrbitalInfo.h			TlOrbitalInfo.cpp			\
 	TlOrbitalInfo_Density.h	TlOrbitalInfo_Density.cpp	\
 	TlOrbitalInfo_XC.h		TlOrbitalInfo_XC.cpp		\
-	TlCombineDensityMatrix.h				\
-	TlCombineDensityMatrix.cpp				\
-	PdfUserInput.h			PdfUserInput.cpp		\
-	PdfUtils.h				PdfUtils.cpp			\
-	DfOverlapEngine.h		DfOverlapEngine.cpp		\
-	DfHpqEngine.h			DfHpqEngine.cpp			\
-	DfEriEngine.h			DfEriEngine.cpp			\
-	TlAngularMomentumVector.h				\
-	TlAngularMomentumVector.cpp				\
-	TlAngularMomentumVectorSet.h				\
-	TlAngularMomentumVectorSet.cpp				\
-	DfForce.h				DfForce.cpp			\
-	DfHpqX.h				DfHpqX.cpp			\
-	DfOverlapX.h			DfOverlapX.cpp			\
-	DfEriX.h				DfEriX.cpp			\
-	TlMatrixCache.h			TlMatrixCache.cpp		\
+	TlCombineDensityMatrix.h							\
+	TlCombineDensityMatrix.cpp							\
+	PdfUserInput.h			PdfUserInput.cpp			\
+	PdfUtils.h				PdfUtils.cpp				\
+	DfOverlapEngine.h		DfOverlapEngine.cpp			\
+	DfHpqEngine.h			DfHpqEngine.cpp				\
+	DfEriEngine.h			DfEriEngine.cpp				\
+	TlAngularMomentumVector.h							\
+	TlAngularMomentumVector.cpp							\
+	TlAngularMomentumVectorSet.h						\
+	TlAngularMomentumVectorSet.cpp						\
+	DfForce.h				DfForce.cpp					\
+	DfHpqX.h				DfHpqX.cpp					\
+	DfOverlapX.h			DfOverlapX.cpp				\
+	DfEriX.h				DfEriX.cpp					\
+	TlMatrixCache.h			TlMatrixCache.cpp			\
 	DfTaskCtrl.h			DfTaskCtrl.cpp			
 
 

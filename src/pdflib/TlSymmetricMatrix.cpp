@@ -10,6 +10,7 @@
 
 #include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
+#include "TlLogging.h"
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -690,10 +691,10 @@ bool TlSymmetricMatrix::load(const std::string& sFilePath)
     ifs.close();
 
     if (bAnswer == false) {
-        //TlLogX& log = TlLogX::getInstance();
-        //log << "TlSymmetricMatrix::load() is not supported: " << sFilePath << std::endl;
-        //std::cerr << "TlSymmetricMatrix::load() is not supported: " << sFilePath << std::endl;
-        //std::abort();
+        TlLogging& log = TlLogging::getInstance();
+        log.critical(TlUtils::format("TlSymmetricMatrix::load() is not supported: %s",
+                                     sFilePath.c_str()));
+        std::abort();
 
         return false;
     }

@@ -25,8 +25,8 @@
 #include "DfSummary.h"
 #include "DfConvcheck.h"
 #include "DfConverge_Damping.h"
+#include "DfConverge_DIIS.h"
 #include "DfConverge_Anderson.h"
-#include "DfConverge2.h"
 #include "DfLevelshift.h"
 #include "DfCleanup.h"
 
@@ -125,17 +125,10 @@ void DfScf::setScfParam()
             this->m_nScfAcceleration = SCF_ACCELERATION_SIMPLE;
         } else if (sScfAcceleration == "ANDERSON") {
             this->m_nScfAcceleration = SCF_ACCELERATION_ANDERSON;
+        } else if (sScfAcceleration == "DIIS") {
+            this->m_nScfAcceleration = SCF_ACCELERATION_DIIS;
         }
     }
-
-    // DIIS
-    this->diisflg = false;
-    if ((pdfParam["scf-acceleration"] == "diis") ||
-        (pdfParam["scf-acceleration"] == "mix")) {
-        this->diisflg = true;
-    }
-    this->diisworkflg = false;
-    this->diiscycle = 0; // diis stream specifier -> off
 
     // Damp Object Type
     this->m_nDampObject = DAMP_DENSITY;
@@ -186,12 +179,10 @@ int DfScf::execScfLoop()
         DIAGONAL,
         ENDFOCK_TRANSC,
         DENSITY_MATRIX,
-        DIIS_TOTALENE,
         TOTAL_ENERGY,
         POPULATION,
         SUMMARY,
         JUDGE,
-        JUDGE_CONV2,
         JUDGE_TAIL,
         END_OF_SCF_LOOP,
         END_SCF_LOOP
@@ -230,7 +221,7 @@ int DfScf::execScfLoop()
         } else if ("QCLO" == respoint) {
             nScfState = DENSITY_MATRIX;
         } else if ("DENSITY_MATRIX" == respoint) {
-            nScfState = DIIS_TOTALENE;
+            nScfState = TOTAL_ENERGY;
         } else if ("TOTAL_ENERGY" == respoint) {
             nScfState = POPULATION;
         } else if ("POPULATION" == respoint) {
@@ -306,11 +297,7 @@ int DfScf::execScfLoop()
             } else if (group == "scfqclo") {
                 this->loggerStartTitle("DfQclo");
 
-                // if (diiscycle == 1) {
-                //     this->logger("DIIS内挿Fpqを処理する\n");
-                // }
-                bool bExecDiis = (this->diiscycle == 1) ? true : false;
-                DfQclo dfQclo(this->pPdfParam_, this->m_nIteration, bExecDiis);
+                DfQclo dfQclo(this->pPdfParam_, this->m_nIteration, false);
                 dfQclo.DfQcloMain();
 
                 this->loggerEndTitle();
@@ -351,18 +338,7 @@ int DfScf::execScfLoop()
         case DENSITY_MATRIX:
             this->calcDensityMatrix();
             this->setScfRestartPoint("DENSITY_MATRIX");
-            nScfState = DIIS_TOTALENE;
-            break;
-
-        case DIIS_TOTALENE:
-            if (diiscycle == 1) {
-                // this->logger("DIIS内挿Fpqを処理した\n");
-                diiscycle = 0;
-
-                nScfState = JUDGE_TAIL;
-            } else {
-                nScfState = TOTAL_ENERGY;
-            }
+            nScfState = TOTAL_ENERGY;
             break;
 
         case TOTAL_ENERGY:
@@ -389,32 +365,11 @@ int DfScf::execScfLoop()
 
         case JUDGE:
             if (this->judge() == false) {
-                nScfState = JUDGE_CONV2;
+                nScfState = JUDGE_TAIL;
             } else {
                 nScfState = END_OF_SCF_LOOP;
             }
 
-            break;
-
-        case JUDGE_CONV2:
-            if (this->diisflg == true) {
-                this->loggerStartTitle("DfConverge2");
-
-                DfConverge2 dfconverge2(this->pPdfParam_, this->m_nIteration);
-                this->diisworkflg = dfconverge2.DfConv2Main();
-
-                this->loggerEndTitle();
-
-                // if DIIS not work well, changed to damping
-                if (this->diisworkflg == false) {
-                    nScfState = JUDGE_TAIL;
-                } else {
-                    diiscycle = 1;
-                    nScfState = TRANSFORM_FOCK;
-                }
-            } else {
-                nScfState = JUDGE_TAIL;
-            }
             break;
 
         case JUDGE_TAIL:
@@ -691,9 +646,8 @@ void DfScf::transformFock()
     // transformed to orth. A.O. based Fock matrix
     TlTime timer;
     this->loggerStartTitle("Transform KS matrix");
-    bool isExecDiis = (this->diiscycle == 1) ? true : false;
 
-    DfTransFmatrix* pDfTransFmatrix = this->getDfTransFmatrixObject(isExecDiis);
+    DfTransFmatrix* pDfTransFmatrix = this->getDfTransFmatrixObject(false);
     pDfTransFmatrix->DfTrsFmatMain();
     delete pDfTransFmatrix;
     pDfTransFmatrix = NULL;
@@ -945,26 +899,17 @@ int DfScf::checkConverge()
 
 void DfScf::converge()
 {
-    if (this->m_nIteration == 1) {
-        return;
-    }
-
-    if ((this->m_nScfAcceleration == SCF_ACCELERATION_SIMPLE) ||
-        (this->m_nScfAcceleration == SCF_ACCELERATION_ANDERSON) ||
-        ((this->diisflg == true) && (this->diisworkflg == false))) {
-
-        TlTime timer;
-        this->loggerStartTitle("Converge");
-
-        DfConverge* pDfConverge = this->getDfConverge();
-        pDfConverge->doConverge();
-
-        delete pDfConverge;
-        pDfConverge = NULL;
-
-        this->loggerEndTitle();
-        (*this->pPdfParam_)["stat"]["elapsed_time"]["converge"][this->m_nIteration] = timer.getElapseTime();
-    }
+    TlTime timer;
+    this->loggerStartTitle("Converge");
+    
+    DfConverge* pDfConverge = this->getDfConverge();
+    pDfConverge->doConverge();
+    
+    delete pDfConverge;
+    pDfConverge = NULL;
+    
+    this->loggerEndTitle();
+    (*this->pPdfParam_)["stat"]["elapsed_time"]["converge"][this->m_nIteration] = timer.getElapseTime();
 }
 
 
@@ -975,8 +920,9 @@ DfConverge* DfScf::getDfConverge()
         pDfConverge = new DfConverge_Damping(this->pPdfParam_);
     } else if (this->m_nScfAcceleration == SCF_ACCELERATION_ANDERSON) {
         pDfConverge = new DfConverge_Anderson(this->pPdfParam_);
+    } else if (this->m_nScfAcceleration == SCF_ACCELERATION_DIIS) {
+        pDfConverge = new DfConverge_DIIS(this->pPdfParam_);
     } else {
-        // diis 法の最初のdampingなど
         pDfConverge = new DfConverge_Damping(this->pPdfParam_);
     }
     return pDfConverge;
