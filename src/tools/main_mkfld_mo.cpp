@@ -11,7 +11,7 @@
 #include "TlGetopt.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
-#include "makeField_common.h"
+#include "mkfld_common.h"
 
 void help(const std::string& progName)
 {
@@ -61,6 +61,10 @@ int main(int argc, char* argv[])
     
     bool isSaveMpacFile = false;
     if (opt["m"] == "defined") {
+        isSaveMpacFile = true;
+    }
+
+    if ((!isSaveAvsFieldFile) && (!isSaveCubeFile) && (!isSaveMpacFile)) {
         isSaveMpacFile = true;
     }
 
@@ -132,27 +136,25 @@ int main(int argc, char* argv[])
         std::cerr << "save message pack file: " << mpacFilePath << std::endl;
 
         TlSerializeData output;
-        output["version"] = "2010.0";
-        output["num_of_grids_x"] = numOfGridX;
-        output["num_of_grids_y"] = numOfGridY;
-        output["num_of_grids_z"] = numOfGridZ;
+        output["version"] = "2013.0";
+        output["num_of_grids"] = numOfGrids;
         for (std::size_t gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
             TlSerializeData pos;
-            pos.pushBack(grids[gridIndex].x());
-            pos.pushBack(grids[gridIndex].y());
-            pos.pushBack(grids[gridIndex].z());
+            pos.pushBack(grids[gridIndex].x() * ANG_PER_AU);
+            pos.pushBack(grids[gridIndex].y() * ANG_PER_AU);
+            pos.pushBack(grids[gridIndex].z() * ANG_PER_AU);
             
-            output["coord"].pushBack(pos);
+            output["grids"].pushBack(pos);
         }
+        output["grid_unit"] = "angstrom";
 
         for (std::map<std::string, std::vector<double> >::const_iterator p = storeData.begin();
              p != storeData.end(); ++p) {
             const std::string key = p->first;
             const std::vector<double>& value = p->second;
-            std::cerr << key << std::endl;
 
             for (std::size_t i = 0; i < numOfGrids; ++i) {
-                output[key].setAt(i, value[i]);
+                output["data"][key].setAt(i, value[i]);
             }
         }
 

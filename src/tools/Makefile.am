@@ -26,10 +26,9 @@ SERIAL_PROGS = 				\
 	mmap_bench_matrix_calc 	\
 	localize 				\
 	merge 					\
-	makeCrd					\
-	makeMoFld				\
-	makeEspFld makeDensFld 	\
-	makeDensEspFld 			\
+	pdf-mkfld-mo			\
+	pdf-mkfld-dens			\
+	pdf-mkfld-esp			\
 	transdim				\
 	diagonal				\
 	cholesky				\
@@ -123,39 +122,25 @@ merge_SOURCES = merge.cpp
 merge_LDADD = $(SERIAL_LIBS)
 
 
-makeCrd_SOURCES = \
-	makeField_common.h	makeField_common.cpp	\
-	main_makeCrd.cpp
-makeCrd_LDADD = $(SERIAL_LIBS)
-
-
-makeMoFld_SOURCES = \
-	makeField_common.h	makeField_common.cpp	\
+pdf_mkfld_mo_SOURCES = \
+	mkfld_common.h	mkfld_common.cpp	\
 	TlMoField.h		TlMoField.cpp		\
-	makeMoFld.cpp
-makeMoFld_LDADD = $(SERIAL_LIBS)
+	main_mkfld_mo.cpp
+pdf_mkfld_mo_LDADD = $(SERIAL_LIBS)
 
 
-makeEspFld_SOURCES = \
-	makeField_common.h	makeField_common.cpp	\
-	TlEspField.h		TlEspField.cpp		\
-	makeEspFld.cpp
-makeEspFld_LDADD = $(SERIAL_LIBS)
+pdf_mkfld_dens_SOURCES = \
+	mkfld_common.h	mkfld_common.cpp	\
+	TlDensField.h	TlDensField.cpp		\
+	main_mkfld_dens.cpp
+pdf_mkfld_dens_LDADD = $(SERIAL_LIBS)
 
 
-makeDensFld_SOURCES = \
-	makeField_common.h	makeField_common.cpp	\
-	TlDensField.h		TlDensField.cpp		\
-	makeDensFld.cpp
-makeDensFld_LDADD = $(SERIAL_LIBS)
-
-
-makeDensEspFld_SOURCES = \
-	makeField_common.h	makeField_common.cpp	\
-	TlDensField.h		TlDensField.cpp		\
-	TlEspField.h		TlEspField.cpp		\
-	makeDensEspFld.cpp
-makeDensEspFld_LDADD = $(SERIAL_LIBS)
+pdf_mkfld_esp_SOURCES = \
+	mkfld_common.h	mkfld_common.cpp	\
+	TlEspField.h	TlEspField.cpp		\
+	main_mkfld_esp.cpp
+pdf_mkfld_esp_LDADD = $(SERIAL_LIBS)
 
 
 transdim_SOURCES = \
