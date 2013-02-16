@@ -19,6 +19,9 @@
 // minimum work memory size is 400 MB
 #define DEFAULT_WORK_MEM_SIZE (400UL * 1024UL * 1024UL)
 
+// 分割転送する場合はdefineする
+// #define DIV_COMM
+
 // =====================================================================
 // static member parameters
 //
@@ -162,40 +165,54 @@ int TlCommunicate::reduce(T* pData, const MPI_Datatype mpiType,
                           const MPI_Op mpiOp, const int root)
 {
     int answer = 0;
-    const long length = end - start;
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
-    const ldiv_t tmp = std::ldiv(length, bufCount);
-    T* pBuf = new T[bufCount];
 
-    // 作業用メモリ分のループ
-    for (long i = 0; i < tmp.quot; ++i) {
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-        answer = MPI_Reduce(pData + startIndex, pBuf, bufCount,
-                            mpiType, mpiOp, root, MPI_COMM_WORLD);
-        std::copy(pBuf, pBuf + bufCount, pData + startIndex);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+#ifdef DIV_COMM
+    {
+        const long length = end - start;
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        T* pBuf = new T[bufCount];
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Reduce(pData + startIndex, pBuf, bufCount,
+                                mpiType, mpiOp, root, MPI_COMM_WORLD);
+            std::copy(pBuf, pBuf + bufCount, pData + startIndex);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
-    }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const std::size_t remain = tmp.rem;
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-        answer = MPI_Reduce(pData + startIndex, pBuf, remain,
-                            mpiType, mpiOp, root, MPI_COMM_WORLD);
-        std::copy(pBuf, pBuf + remain, pData + startIndex);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const std::size_t remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Reduce(pData + startIndex, pBuf, remain,
+                                mpiType, mpiOp, root, MPI_COMM_WORLD);
+            std::copy(pBuf, pBuf + remain, pData + startIndex);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
-    }
 
-    delete[] pBuf;
-    pBuf = NULL;
+        delete[] pBuf;
+        pBuf = NULL;
+    }
+#else
+    {
+        T* pBuf = new T[end - start];
+        answer = MPI_Reduce(pData, pBuf, end - start,
+                            mpiType, mpiOp, root, MPI_COMM_WORLD);
+        std::copy(pBuf, pBuf + (end - start), pData);
+        delete[] pBuf;
+        pBuf = NULL;
+    }
+#endif // DIV_COMM
 
     return answer;
 }
@@ -241,40 +258,54 @@ int TlCommunicate::allReduce(T* pData, const MPI_Datatype mpiType,
     ++(this->counter_allreduce_);
     
     int answer = 0;
-    const long length = end - start;
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
-    const ldiv_t tmp = std::ldiv(length, bufCount);
-    T* pBuf = new T[bufCount];
 
-    // 作業用メモリ分のループ
-    for (long i = 0; i < tmp.quot; ++i) {
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-        answer = MPI_Allreduce(pData + startIndex, pBuf, bufCount,
-                               mpiType, mpiOp, MPI_COMM_WORLD);
-        std::copy(pBuf, pBuf + bufCount, pData + startIndex);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+#ifdef DIV_COMM
+    {
+        const long length = end - start;
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        T* pBuf = new T[bufCount];
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Allreduce(pData + startIndex, pBuf, bufCount,
+                                   mpiType, mpiOp, MPI_COMM_WORLD);
+            std::copy(pBuf, pBuf + bufCount, pData + startIndex);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
-    }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const std::size_t remain = tmp.rem;
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-        answer = MPI_Allreduce(pData + startIndex, pBuf, remain,
-                               mpiType, mpiOp, MPI_COMM_WORLD);
-        std::copy(pBuf, pBuf + remain, pData + startIndex);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const std::size_t remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Allreduce(pData + startIndex, pBuf, remain,
+                                   mpiType, mpiOp, MPI_COMM_WORLD);
+            std::copy(pBuf, pBuf + remain, pData + startIndex);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
+        
+        delete[] pBuf;
+        pBuf = NULL;
     }
-
-    delete[] pBuf;
-    pBuf = NULL;
+#else
+    {
+        T* pBuf = new T[end - start];
+        answer = MPI_Allreduce(pData, pBuf, end - start,
+                               mpiType, mpiOp, MPI_COMM_WORLD);
+        std::copy(pBuf, pBuf + (end - start), pData);
+        delete[] pBuf;
+        pBuf = NULL;
+    }
+#endif // DIV_COMM
 
     this->time_allreduce_.stop();
     return answer;
@@ -410,37 +441,50 @@ int TlCommunicate::allReduce_SUM(std::vector<T>& data, const MPI_Datatype mpiTyp
 
     int answer = 0;
 
-    const long length = static_cast<long>(end - start);
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
-    std::vector<T> buf(bufCount);
-    const ldiv_t tmp = std::ldiv(length, bufCount);
-
-    // 作業用メモリ分のループ
-    for (long i = 0; i < tmp.quot; ++i) {
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-        answer = MPI_Allreduce(&(data[startIndex]), &(buf[0]), bufCount,
-                               mpiType, MPI_SUM, MPI_COMM_WORLD);
-        std::copy(buf.begin(), buf.end(), data.begin() + startIndex);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+#ifdef DIV_COMM
+    {
+        const long length = static_cast<long>(end - start);
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
+        std::vector<T> buf(bufCount);
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Allreduce(&(data[startIndex]), &(buf[0]), bufCount,
+                                   mpiType, MPI_SUM, MPI_COMM_WORLD);
+            std::copy(buf.begin(), buf.end(), data.begin() + startIndex);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
+        }
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const int remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Allreduce(&(data[startIndex]), &(buf[0]), remain,
+                                   mpiType, MPI_SUM, MPI_COMM_WORLD);
+            std::copy(buf.begin(), buf.begin() + remain, data.begin() + startIndex);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
     }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const int remain = tmp.rem;
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-        answer = MPI_Allreduce(&(data[startIndex]), &(buf[0]), remain,
+#else
+    {
+        T* pBuf = new T[end - start];
+        answer = MPI_Allreduce(&(data[0]), pBuf, end - start,
                                mpiType, MPI_SUM, MPI_COMM_WORLD);
-        std::copy(buf.begin(), buf.begin() + remain, data.begin() + startIndex);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
-        }
+        std::copy(pBuf, pBuf + (end - start), &(data[0]));
+        delete[] pBuf;
+        pBuf = NULL;
     }
+#endif // DIV_COMM
 
     this->time_allreduce_.stop();
     return answer;
@@ -459,40 +503,53 @@ int TlCommunicate::allReduce_SUM(std::valarray<double>& data,
 
     int answer = 0;
 
-    const long length = static_cast<long>(end - start);
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
-    const ldiv_t tmp = std::ldiv(length, bufCount);
-    double* pBuf = new double[bufCount];
-
-    // 作業用メモリ分のループ
-    for (long i = 0; i < tmp.quot; ++i) {
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-        answer = MPI_Allreduce((void*)&(data[startIndex]), pBuf, bufCount,
-                               MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        std::copy(pBuf, pBuf + bufCount, &(data[0]) + startIndex);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+#ifdef DIV_COMM
+    {
+        const long length = static_cast<long>(end - start);
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        double* pBuf = new double[bufCount];
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Allreduce((void*)&(data[startIndex]), pBuf, bufCount,
+                                   MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            std::copy(pBuf, pBuf + bufCount, &(data[0]) + startIndex);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
-    }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const int remain = tmp.rem;
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-        answer = MPI_Allreduce((void*)&(data[startIndex]), pBuf, remain,
-                               MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        std::copy(pBuf, pBuf + remain, &(data[0]) + startIndex);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const int remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Allreduce((void*)&(data[startIndex]), pBuf, remain,
+                                   MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            std::copy(pBuf, pBuf + remain, &(data[0]) + startIndex);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
+        
+        delete[] pBuf;
+        pBuf = NULL;
     }
-
-    delete[] pBuf;
-    pBuf = NULL;
+#else
+    {
+        double* pBuf = new double[end - start];
+        answer = MPI_Allreduce((void*)&(data[0]), pBuf, end - start,
+                               MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        std::copy(pBuf, pBuf + (end - start), &(data[0]));
+        delete[] pBuf;
+        pBuf = NULL;
+    }
+#endif // DIV_COMM
 
     this->time_allreduce_.stop();
     return answer;
@@ -762,34 +819,43 @@ int TlCommunicate::sendData(const std::vector<T>& data, const MPI_Datatype mpiTy
 {
     int answer = 0;
 
-    const long length = static_cast<long>(end - start);
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
-    const ldiv_t tmp = std::ldiv(length, bufCount);
-
-    // 作業用メモリ分のループ
-    for (long i = 0; i < tmp.quot; ++i) {
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-        answer = MPI_Send((void*)&(data[startIndex]), bufCount,
-                          mpiType, destination, tag, MPI_COMM_WORLD);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+#ifdef DIV_COMM
+    {
+        const long length = static_cast<long>(end - start);
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Send((void*)&(data[startIndex]), bufCount,
+                              mpiType, destination, tag, MPI_COMM_WORLD);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
+        }
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const int remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Send((void*)&(data[startIndex]), remain,
+                              mpiType, destination, tag, MPI_COMM_WORLD);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
     }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const int remain = tmp.rem;
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-        answer = MPI_Send((void*)&(data[startIndex]), remain,
+#else
+    {
+        answer = MPI_Send((void*)&(data[0]), end - start,
                           mpiType, destination, tag, MPI_COMM_WORLD);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
-        }
     }
+#endif // DIV_COMM
 
     return answer;
 }
@@ -872,34 +938,43 @@ int TlCommunicate::sendData(const std::valarray<double>& data,
 
     int answer = 0;
 
-    const long length = static_cast<long>(end - start);
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
-    const ldiv_t tmp = std::ldiv(length, bufCount);
-
-    // 作業用メモリ分のループ
-    for (long i = 0; i < tmp.quot; ++i) {
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-        answer = MPI_Send((void*)&(data_tmp[startIndex]), bufCount,
-                          MPI_DOUBLE, destination, tag, MPI_COMM_WORLD);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+#ifdef DIV_COMM
+    {
+        const long length = static_cast<long>(end - start);
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Send((void*)&(data_tmp[startIndex]), bufCount,
+                              MPI_DOUBLE, destination, tag, MPI_COMM_WORLD);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
+        }
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const int remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Send((void*)&(data_tmp[startIndex]), remain,
+                              MPI_DOUBLE, destination, tag, MPI_COMM_WORLD);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
     }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const int remain = tmp.rem;
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-        answer = MPI_Send((void*)&(data_tmp[startIndex]), remain,
+#else
+    {
+        answer = MPI_Send((void*)&(data_tmp[0]), end - start,
                           MPI_DOUBLE, destination, tag, MPI_COMM_WORLD);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
-        }
     }
+#endif // DIV_COMM
 
     return answer;
 }
@@ -1108,37 +1183,45 @@ int TlCommunicate::receiveData(std::vector<T>& data, const MPI_Datatype mpiType,
                                const int src, const int tag)
 {
     int answer = 0;
+    MPI_Status status;
 
-    const long length = static_cast<long>(end - start);
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
-    const ldiv_t tmp = std::ldiv(length, bufCount);
-
-    // 作業用メモリ分のループ
-    for (long i = 0; i < tmp.quot; ++i) {
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-        MPI_Status status;
-        answer = MPI_Recv(&(data[startIndex]), bufCount, mpiType,
-                          src, tag, MPI_COMM_WORLD, &status);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
+#ifdef DIV_COMM
+    {
+        const long length = static_cast<long>(end - start);
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Recv(&(data[startIndex]), bufCount, mpiType,
+                              src, tag, MPI_COMM_WORLD, &status);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
+        }
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const int remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Recv(&(data[startIndex]), remain, mpiType,
+                              src, tag, MPI_COMM_WORLD, &status);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
                       << std::endl;
+            }
         }
     }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const int remain = tmp.rem;
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-        MPI_Status status;
-        answer = MPI_Recv(&(data[startIndex]), remain, mpiType,
+#else
+    {
+        answer = MPI_Recv(&(data[0]), end - start, mpiType,
                           src, tag, MPI_COMM_WORLD, &status);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
-        }
     }
+#endif // DIV_COMM
 
     return answer = 0;
 }
@@ -1231,35 +1314,45 @@ int TlCommunicate::receiveData(std::valarray<double>& data,
                                const int src, const int tag)
 {
     int answer = 0;
-    const long length = static_cast<long>(end - start);
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
-    const ldiv_t tmp = std::ldiv(length, bufCount);
     MPI_Status status;
 
-    // 作業用メモリ分のループ
-    for (long i = 0; i < tmp.quot; ++i) {
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-        answer = MPI_Recv((void*)&(data[startIndex]), bufCount,
-                          MPI_DOUBLE, src, tag, MPI_COMM_WORLD, &status);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+#ifdef DIV_COMM
+    {
+        const long length = static_cast<long>(end - start);
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Recv((void*)&(data[startIndex]), bufCount,
+                              MPI_DOUBLE, src, tag, MPI_COMM_WORLD, &status);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
+        }
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const int remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Recv((void*)&(data[startIndex]), remain,
+                              MPI_DOUBLE, src, tag, MPI_COMM_WORLD, &status);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
     }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const int remain = tmp.rem;
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-        answer = MPI_Recv((void*)&(data[startIndex]), remain,
+#else
+    {
+        answer = MPI_Recv((void*)&(data[0]), end - start,
                           MPI_DOUBLE, src, tag, MPI_COMM_WORLD, &status);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
-        }
     }
+#endif // DIV_COMM
 
     return answer;
 }
@@ -1421,35 +1514,45 @@ int TlCommunicate::receiveDataX(T* pData, const MPI_Datatype mpiType,
                                const int src, const int tag)
 {
     int answer = 0;
-    const long length = static_cast<long>(end - start);
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
-    const ldiv_t tmp = std::ldiv(length, bufCount);
     MPI_Status status;
 
-    // 作業用メモリ分のループ
-    for (long i = 0; i < tmp.quot; ++i) {
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-        answer = MPI_Recv((void*)(pData + startIndex), bufCount,
-                          mpiType, src, tag, MPI_COMM_WORLD, &status);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+#ifdef DIV_COMM
+    {
+        const long length = static_cast<long>(end - start);
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Recv((void*)(pData + startIndex), bufCount,
+                              mpiType, src, tag, MPI_COMM_WORLD, &status);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
+        }
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const int remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Recv((void*)(pData + startIndex), remain,
+                              mpiType, src, tag, MPI_COMM_WORLD, &status);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
     }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const int remain = tmp.rem;
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-        answer = MPI_Recv((void*)(pData + startIndex), remain,
+#else 
+    {
+        answer = MPI_Recv((void*)(pData), end - start,
                           mpiType, src, tag, MPI_COMM_WORLD, &status);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
-        }
     }
+#endif // DIV_COMM
 
     return answer;
 }
@@ -1656,51 +1759,62 @@ int TlCommunicate::receiveDataFromAnySourceX(T* pData, const MPI_Datatype mpiTyp
                                              int* pSrc, const int tag)
 {
     int answer = 0;
-    const long length = static_cast<long>(end - start);
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
-    const ldiv_t tmp = std::ldiv(length, bufCount);
     MPI_Status status;
     int src = 0;
-    bool isSrcDefined = false;
 
-    // 作業用メモリ分のループ
-    for (long i = 0; i < tmp.quot; ++i) {
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-        if (isSrcDefined != true) {
-            answer = MPI_Recv((void*)(pData + startIndex), bufCount,
-                              mpiType, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
-            src = status.MPI_SOURCE;
-            isSrcDefined = true;
-        } else {
-            answer = MPI_Recv((void*)(pData + startIndex), bufCount,
-                              mpiType, src, tag, MPI_COMM_WORLD, &status);
+#ifdef DIV_COMM
+    {
+        const long length = static_cast<long>(end - start);
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        bool isSrcDefined = false;
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            if (isSrcDefined != true) {
+                answer = MPI_Recv((void*)(pData + startIndex), bufCount,
+                                  mpiType, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
+                src = status.MPI_SOURCE;
+                isSrcDefined = true;
+            } else {
+                answer = MPI_Recv((void*)(pData + startIndex), bufCount,
+                                  mpiType, src, tag, MPI_COMM_WORLD, &status);
+            }
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const int remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            if (isSrcDefined != true) {
+                answer = MPI_Recv((void*)(pData + startIndex), remain,
+                                  mpiType, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
+                src = status.MPI_SOURCE;
+                isSrcDefined = true;
+            } else {
+                answer = MPI_Recv((void*)(pData + startIndex), remain,
+                                  mpiType, src, tag, MPI_COMM_WORLD, &status);
+            }
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
     }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const int remain = tmp.rem;
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-        if (isSrcDefined != true) {
-            answer = MPI_Recv((void*)(pData + startIndex), remain,
-                              mpiType, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
-            src = status.MPI_SOURCE;
-            isSrcDefined = true;
-        } else {
-            answer = MPI_Recv((void*)(pData + startIndex), remain,
-                              mpiType, src, tag, MPI_COMM_WORLD, &status);
-        }
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
-        }
+#else
+    {
+        answer = MPI_Recv((void*)(pData), end - start,
+                          mpiType, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
+        src = status.MPI_SOURCE;
     }
+#endif // DIV_COMM
 
     if (pSrc != NULL) {
         *pSrc = src;
@@ -1777,20 +1891,38 @@ int TlCommunicate::iSendData(const std::vector<T>& data, const MPI_Datatype mpiT
                              const int destination, const int tag)
 {
     int answer = 0;
-
-    const long length = static_cast<long>(end - start);
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
-    std::vector<T> buf(bufCount);
-    const ldiv_t tmp = std::ldiv(length, bufCount);
-
     std::vector<uintptr_t> requests;
 
-    // 作業用メモリ分のループ
-    if (tmp.quot != 0) {
-        for (long i = 0; i < tmp.quot; ++i) {
-            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+#ifdef DIV_COMM
+    {
+        const long length = static_cast<long>(end - start);
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
+        std::vector<T> buf(bufCount);
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        
+        // 作業用メモリ分のループ
+        if (tmp.quot != 0) {
+            for (long i = 0; i < tmp.quot; ++i) {
+                std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+                MPI_Request* pRequest = new MPI_Request;
+                answer = MPI_Isend((void*)&(data[startIndex]), bufCount,
+                                   mpiType, destination, tag, MPI_COMM_WORLD, pRequest);
+                requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest));
+                if (answer != 0) {
+                    std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                              << " anwer=" << answer
+                              << std::endl;
+                }
+                // don't delete pRequest!
+            }
+        }
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const int remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
             MPI_Request* pRequest = new MPI_Request;
-            answer = MPI_Isend((void*)&(data[startIndex]), bufCount,
+            answer = MPI_Isend((void*)&(data[startIndex]), remain,
                                mpiType, destination, tag, MPI_COMM_WORLD, pRequest);
             requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest));
             if (answer != 0) {
@@ -1801,26 +1933,18 @@ int TlCommunicate::iSendData(const std::vector<T>& data, const MPI_Datatype mpiT
             // don't delete pRequest!
         }
     }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const int remain = tmp.rem;
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+#else
+    {
         MPI_Request* pRequest = new MPI_Request;
-        answer = MPI_Isend((void*)&(data[startIndex]), remain,
+        answer = MPI_Isend((void*)&(data[0]), end - start,
                            mpiType, destination, tag, MPI_COMM_WORLD, pRequest);
         requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest));
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
-        }
-        // don't delete pRequest!
     }
+#endif // DIV_COMM
 
     const uintptr_t key = reinterpret_cast<uintptr_t>((void*)&data[start]);
     const NonBlockingCommParam param(requests, tag,
-                                     NonBlockingCommParam::SEND);
+                                         NonBlockingCommParam::SEND);
     this->checkNonBlockingTableCollision(key, param, __LINE__);
 #pragma omp critical (TlCommunicate_nonBlockingCommParamTable_update)
     {
@@ -1971,20 +2095,38 @@ int TlCommunicate::iReceiveData(std::vector<T>& data, const MPI_Datatype mpiType
                                 const int src, const int tag)
 {
     int answer = 0;
-
-    const long length = static_cast<long>(end - start);
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
-    std::vector<T> buf(bufCount);
-    const ldiv_t tmp = std::ldiv(length, bufCount);
-
     std::vector<uintptr_t> requests;
 
-    // 作業用メモリ分のループ
-    if (tmp.quot != 0) {
-        for (long i = 0; i < tmp.quot; ++i) {
-            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+#ifdef DIV_COMM
+    {
+        const long length = static_cast<long>(end - start);
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
+        std::vector<T> buf(bufCount);
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        
+        // 作業用メモリ分のループ
+        if (tmp.quot != 0) {
+            for (long i = 0; i < tmp.quot; ++i) {
+                std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+                MPI_Request* pRequest = new MPI_Request;
+                answer = MPI_Irecv(&(data[startIndex]), bufCount, mpiType,
+                                   src, tag, MPI_COMM_WORLD, pRequest);
+                requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest));
+                if (answer != 0) {
+                    std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                              << " anwer=" << answer
+                              << std::endl;
+                }
+                // don't delete pRequest
+            }
+        }
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const int remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
             MPI_Request* pRequest = new MPI_Request;
-            answer = MPI_Irecv(&(data[startIndex]), bufCount, mpiType,
+            answer = MPI_Irecv(&(data[startIndex]), remain, mpiType,
                                src, tag, MPI_COMM_WORLD, pRequest);
             requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest));
             if (answer != 0) {
@@ -1995,22 +2137,14 @@ int TlCommunicate::iReceiveData(std::vector<T>& data, const MPI_Datatype mpiType
             // don't delete pRequest
         }
     }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const int remain = tmp.rem;
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+#else
+    {
         MPI_Request* pRequest = new MPI_Request;
-        answer = MPI_Irecv(&(data[startIndex]), remain, mpiType,
+        answer = MPI_Irecv(&(data[0]), end - start, mpiType,
                            src, tag, MPI_COMM_WORLD, pRequest);
         requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest));
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
-        }
-        // don't delete pRequest
     }
+#endif // DIV_COMM
 
     const uintptr_t key = reinterpret_cast<uintptr_t>((void*)&(data[start]));
     const NonBlockingCommParam param(requests, tag,
@@ -2183,13 +2317,15 @@ int TlCommunicate::iReceiveDataFromAnySourceX(T* pData, const MPI_Datatype mpiTy
                                               const std::size_t start, const std::size_t end,
                                               const int tag)
 {
-    const long length = static_cast<long>(end - start);
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
-    const ldiv_t tmp = std::ldiv(length, bufCount);
+    int answer = 0;
+
+    // const long length = static_cast<long>(end - start);
+    // const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
+    // const ldiv_t tmp = std::ldiv(length, bufCount);
 
     MPI_Request* pRequest = new MPI_Request;
-    const int answer = MPI_Irecv((void*)(pData + start), (end - start), mpiType,
-                                 MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, pRequest);
+    answer = MPI_Irecv((void*)(pData + start), (end - start), mpiType,
+                       MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, pRequest);
 
     if (answer == 0) {
         std::vector<uintptr_t> requests;
@@ -2523,35 +2659,44 @@ int TlCommunicate::broadcast(std::vector<T>& data, const MPI_Datatype mpiType,
 {
     int answer = 0;
 
-    const long length = static_cast<long>(end - start);
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
-    std::vector<T> buf(bufCount);
-    const ldiv_t tmp = std::ldiv(length, bufCount);
-
-    // 作業用メモリ分のループ
-    for (long i = 0; i < tmp.quot; ++i) {
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-        answer = MPI_Bcast(&(data[startIndex]), bufCount, mpiType,
-                           root, MPI_COMM_WORLD);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+#ifdef DIV_COMM
+    {
+        const long length = static_cast<long>(end - start);
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
+        std::vector<T> buf(bufCount);
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Bcast(&(data[startIndex]), bufCount, mpiType,
+                               root, MPI_COMM_WORLD);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
+        }
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const int remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Bcast(&(data[startIndex]), remain, mpiType,
+                               root, MPI_COMM_WORLD);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
     }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const int remain = tmp.rem;
-        std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-        answer = MPI_Bcast(&(data[startIndex]), remain, mpiType,
+#else
+    {
+        answer = MPI_Bcast(&(data[0]), end - start, mpiType,
                            root, MPI_COMM_WORLD);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
-        }
     }
+#endif // DIV_COMM
 
     return answer;
 }
@@ -2610,32 +2755,41 @@ int TlCommunicate::broadcast(std::valarray<double>& data,
                              int root)
 {
     int answer = 0;
-    const long length = static_cast<long>(end - start);
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
-    const ldiv_t tmp = std::ldiv(length, bufCount);
 
-    // 作業用メモリ分のループ
-    for (long i = 0; i < tmp.quot; ++i) {
-        const std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-        answer = MPI_Bcast((void*)(&data[startIndex]), bufCount, MPI_DOUBLE, root, MPI_COMM_WORLD);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+#ifdef DIV_COMM
+    {
+        const long length = static_cast<long>(end - start);
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            const std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Bcast((void*)(&data[startIndex]), bufCount, MPI_DOUBLE, root, MPI_COMM_WORLD);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
+        }
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const int remain = tmp.rem;
+            const std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Bcast((void*)(&data[startIndex]), remain, MPI_DOUBLE, root, MPI_COMM_WORLD);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
     }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const int remain = tmp.rem;
-        const std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-        answer = MPI_Bcast((void*)(&data[startIndex]), remain, MPI_DOUBLE, root, MPI_COMM_WORLD);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
-        }
+#else
+    {
+        answer = MPI_Bcast((void*)(&data[0]), end - start, MPI_DOUBLE, root, MPI_COMM_WORLD);
     }
+#endif // DIV_COMM
 
     return answer;
 }
@@ -2860,32 +3014,40 @@ int TlCommunicate::broadcast(T* pData, const MPI_Datatype mpiType,
 {
     int answer = 0;
 
-    const long length = static_cast<long>(end - start);
-    const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
-    const ldiv_t tmp = std::ldiv(length, bufCount);
-
-    // 作業用メモリ分のループ
-    for (long i = 0; i < tmp.quot; ++i) {
-        const std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-        answer = MPI_Bcast((void*)(pData + startIndex), bufCount, mpiType, root, MPI_COMM_WORLD);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
+#ifdef DIV_COMM
+    {
+        const long length = static_cast<long>(end - start);
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            const std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Bcast((void*)(pData + startIndex), bufCount, mpiType, root, MPI_COMM_WORLD);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
+        }
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const int remain = tmp.rem;
+            const std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Bcast((void*)(pData + startIndex), remain, mpiType, root, MPI_COMM_WORLD);
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
         }
     }
-
-    // 残り分のループ
-    if (tmp.rem != 0) {
-        const int remain = tmp.rem;
-        const std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-        answer = MPI_Bcast((void*)(pData + startIndex), remain, mpiType, root, MPI_COMM_WORLD);
-        if (answer != 0) {
-            std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                      << " anwer=" << answer
-                      << std::endl;
-        }
+#else
+    {
+        answer = MPI_Bcast((void*)(pData), end - start, mpiType, root, MPI_COMM_WORLD);
     }
+#endif // DIV_COMM
 
     return answer;
 }
