@@ -11,7 +11,7 @@
 
 void showHelp()
 {
-    std::cout << "checkERI indexP indexQ indexR indexS" << std::endl;
+    std::cout << "pdf-eri indexP indexQ indexR indexS" << std::endl;
     std::cout << "OPTIONS:" << std::endl;
     std::cout << "  -p PDF_PARAM: ProteinDF parameter file";
     std::cout << "  -h:           show help(this)" << std::endl;
