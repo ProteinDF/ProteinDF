@@ -116,21 +116,17 @@ std::size_t TlSymmetricMatrix::index(index_type row,
 {
     assert((0 <= row) && (row < this->m_nRows));
     assert((0 <= col) && (col < this->m_nCols));
-
-    if (row < col) {
+    
+    // This class treats 'U' type matrix.
+    // if UPLO = 'U', AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j; in Fortran
+    // index = row + col * (col +1) /2; // in C/C++
+    
+    if (row > col) {
         std::swap(row, col);
     }
-    
-    // This class treats 'L' type matrix.
-    // Follows means:
-    //  index = row + (2 * this->m_nRows - (col +1)) * col / 2;
-    unsigned int s = this->m_nRows;
-    s = s << 1; // means 's *= 2'
-
-    unsigned int t = (s - (col +1)) * col;
-    t = t >> 1; // means 't /= 2'
-
-    return (row + t);
+    unsigned int t = col * (col +1);
+    t = t >> 1; // == 't /= 2'
+    return row + t;
 }
 
 std::size_t TlSymmetricMatrix::vtr_index(index_type row,
@@ -140,20 +136,16 @@ std::size_t TlSymmetricMatrix::vtr_index(index_type row,
     assert((0 <= row) && (row < dim));
     assert((0 <= col) && (col < dim));
 
-    if (row < col) {
+    // This class treats 'U' type matrix.
+    // if UPLO = 'U', AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j; in Fortran
+    // index = row + col * (col +1) /2; // in C/C++
+    
+    if (row > col) {
         std::swap(row, col);
     }
-    
-    // This class treats 'L' type matrix.
-    // Follows means:
-    //  index = row + (2 * this->m_nRows - (col +1)) * col / 2;
-    unsigned int s = dim;
-    s = s << 1; // means 's *= 2'
-
-    unsigned int t = (s - (col +1)) * col;
-    t = t >> 1; // means 't /= 2'
-
-    return (row + t);
+    unsigned int t = col * (col +1);
+    t = t >> 1; // == 't /= 2'
+    return row + t;
 }
 
 
@@ -1149,7 +1141,7 @@ bool diagonalByLapack(const TlSymmetricMatrix& inMatrix, TlVector* outEigVal, Tl
     bool bAnswer = false;
 
     const char JOBZ = 'V';                         // 固有値と固有ベクトルを計算する。
-    const char UPLO = 'L';                         // Aの下三角部分を格納する。
+    const char UPLO = 'U';
     const int N    = inMatrix.getNumOfRows();      // 行列Aの次数(N>=0)
     const int LDA  = N;                            // 配列Aの第一次元。LDA>=max(1, N);
 
@@ -1189,7 +1181,7 @@ bool inverseByLapack(TlSymmetricMatrix& X)
     // (input)
     // 'U':  Upper triangle of A is stored
     // 'L':  Lower triangle of A is stored.
-    char UPLO = 'L';
+    char UPLO = 'U';
 
     //(input) The order of the matrix A.  N >= 0.
     const int N = X.getNumOfRows();

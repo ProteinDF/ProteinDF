@@ -22,32 +22,32 @@
 const double TlSymmetricMatrixTest::threshold = std::numeric_limits<double>::epsilon() * 100;
 
 // 以下の要素を設定した行列を返す
-// [ 0  -  - ]
-// [ 1  2  - ]
-// [ 3  4  5 ]
+// [ 0  1  3 ]
+// [ -  2  4 ]
+// [ -  -  5 ]
 TlSymmetricMatrix TlSymmetricMatrixTest::getMatrixA(){
     TlSymmetricMatrix a(3);
     a(0, 0) = 0.0;
-    a(1, 0) = 1.0;
+    a(0, 1) = 1.0;
     a(1, 1) = 2.0;
-    a(2, 0) = 3.0;
-    a(2, 1) = 4.0;
+    a(0, 2) = 3.0;
+    a(1, 2) = 4.0;
     a(2, 2) = 5.0;
     
     return a;
 }
 
 // 以下の要素を設定した行列を返す
-// [ 0  -  - ]
-// [ 1  3  - ]
-// [ 2  4  5 ]
+// [ 0  1  2 ]
+// [ -  3  4 ]
+// [ -  -  5 ]
 TlSymmetricMatrix TlSymmetricMatrixTest::getMatrixB(){
     TlSymmetricMatrix b(3);
     b(0, 0) = 0.0;
-    b(1, 0) = 1.0;
+    b(0, 1) = 1.0;
     b(1, 1) = 3.0;
-    b(2, 0) = 2.0;
-    b(2, 1) = 4.0;
+    b(0, 2) = 2.0;
+    b(1, 2) = 4.0;
     b(2, 2) = 5.0;
     
     return b;
@@ -147,8 +147,8 @@ void TlSymmetricMatrixTest::testConvertFromTlVector1(){
   // column oriented
   CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, A(0, 0), threshold);
   CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, A(0, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, A(0, 2), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0, A(1, 1), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, A(1, 1), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0, A(0, 2), threshold);
   CPPUNIT_ASSERT_DOUBLES_EQUAL(4.0, A(1, 2), threshold);
   CPPUNIT_ASSERT_DOUBLES_EQUAL(5.0, A(2, 2), threshold);
 }
@@ -160,8 +160,8 @@ void TlSymmetricMatrixTest::testConvertFromTlVector2(){
 
   CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, v[0], threshold);
   CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, v[1], threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0, v[2], threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, v[3], threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, v[2], threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0, v[3], threshold);
   CPPUNIT_ASSERT_DOUBLES_EQUAL(4.0, v[4], threshold);
   CPPUNIT_ASSERT_DOUBLES_EQUAL(5.0, v[5], threshold);
   

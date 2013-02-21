@@ -19,7 +19,8 @@ class TlCommunicate; // 通信クラス
 /// 対称密行列クラス
 ///
 /// 行列は正方行列
-/// 要素の格納方法はLapackでいうところの'L'
+/// 要素の格納方法はLapackでいうところの'U'
+/// AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j;
 class TlSymmetricMatrix : public TlMatrix {
     // friend
     friend class TlCommunicate;
@@ -335,27 +336,6 @@ inline double& TlSymmetricMatrix::operator()(int row, int col)
 {
     return (this->data_[this->index(row, col)]);
 }
-
-
-// inline void TlSymmetricMatrix::set(index_type row, index_type col, double value)
-// {
-//     const std::size_t index = this->index(row, col);
-//     // const double diff = value - this->data_[index];
-    
-// #pragma omp critical(TlSymmetricMatrix___set)
-//     {
-//         this->data_[index] = value;
-//     }
-// }
-
-
-// inline void TlSymmetricMatrix::add(index_type row, index_type col, double value)
-// {
-//     const std::size_t index = this->index(row, col);    
-
-// #pragma omp atomic
-//     this->data_[index] += value;
-// }
 
 
 template <typename T>
