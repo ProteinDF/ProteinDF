@@ -941,10 +941,14 @@ double TlSymmetricMatrix::getMaxAbsoluteElementByIndex(int index) const
 #ifdef HAVE_LAPACK
 // for LAPACK
 extern "C" {
-    void dsymv_(const char* UPLO, const int* N, const double* ALPHA,
-                const double* A, const int* LDA,
-                const double* X, const int* INCX,
-                const double* BETA, double* Y, const int* INCY);
+    // dspmv
+    // DSPMV  performs the matrix-vector operation
+    //  y := alpha*A*x + beta*y,
+    // where alpha and beta are scalars, x and y are n element vectors and
+    // A is an n by n symmetric matrix, supplied in packed form.
+    void dspmv_(const char* UPLO, const int* N, const double* ALPHA,
+                const double* AP, const double* X,
+                const int* INCX, double* BETA, double* Y, const int* INCY);
 
     // performs one of the matrix-matrix operations
     //    C := alpha*A*B + beta*C,
@@ -953,13 +957,20 @@ extern "C" {
     // where alpha and beta are scalars,  A is a symmetric matrix and  B and
     // C are  m by n matrices.
     void dsymm_(const char* SIDE, const char* UPLO, const int* M, const int* N,
-    const double* ALPHA, const double* A, const int* LDA,
-    const double* B, const int* LDB, const double* BETA ,
-    double* C, const int* LDC);
+                const double* ALPHA, const double* A, const int* LDA,
+                const double* B, const int* LDB, const double* BETA ,
+                double* C, const int* LDC);
 
-    // DSYEV computes all eigenvalues and, optionally, eigenvectors of a
-    // real symmetric matrix A.
-    void dsyev_(const char*, const char*, const int*, double*, const int*, double*, double*, const int*, int*);
+    // DSPEV
+    void dspev_(const char* JOBZ, const char* UPLO,
+                const int* N, double* AP, double* W,
+                double* Z, const int* LDZ, double* WORK,
+                int* INFO);
+    // DSPEVD
+    // void dspevd_(const char* JOBZ, const char* UPLO,
+    //              const int* N, double* AP, double* W,
+    //              double* Z, const int* LDZ, double* WORK, int* LWORK,
+    //              int* IWORK, int* LIWORK, int* INFO);
 
     // DSPTRF computes the factorization of a real symmetric matrix A stored
     // in packed format using the Bunch-Kaufman diagonal pivoting method:
@@ -973,120 +984,85 @@ extern "C" {
     // A in packed storage using the factorization A = U*D*U**T or
     // A = L*D*L**T computed by DSPTRF.
     void dsptri_(const char* UPLO, const int* N, double* PA, int* IPIV, double* WORK, int* INFO);
-
-
-    // *  DSPTRF computes the factorization of a real symmetric matrix A stored
-    // *  in packed format using the Bunch-Kaufman diagonal pivoting method:
-    // *
-    // *     A = U*D*U**T  or  A = L*D*L**T
-    // *
-    // *  where U (or L) is a product of permutation and unit upper (lower)
-    // *  triangular matrices, and D is symmetric and block diagonal with
-    // *  1-by-1 and 2-by-2 diagonal blocks.
-    // *  DSPTRF computes the Cholesky factorization of a real symmetric
-    // *  positive definite matrix A.
-    //void dsptrf_(const char* UPLO, const int* N, double* AP, int* IPIV, int* INFO);
 }
 
 
-// 結局この方法は圧縮形式をサポートしていない
-TlMatrix multiplicationByLapack(const TlSymmetricMatrix& X, const TlMatrix& Y)
+TlMatrix multiplicationByLapack(const TlSymmetricMatrix& A, const TlMatrix& B)
 {
-    assert(X.getNumOfCols() == Y.getNumOfRows());
+    assert(A.getNumOfCols() == B.getNumOfRows());
 
-    TlMatrix Z(X.m_nRows, Y.m_nCols);
+    TlMatrix C(A.getNumOfRows(), B.getNumOfCols());
 
     // use LAPACK
     const char SIDE = 'L';                 // L means "C := alpha*A*B + beta*C",
-    // R means "C := alpha*B*A + beta*C"
-    const char UPLO = 'L';                 // L means the lower triangular part of the symmetric matrix
-    // U means the upper triangular part of the symmetric matrix
-    const int M = Z.getNumOfRows();        // the number of rows of the matrix  C
-    const int N = Z.getNumOfCols();        // the number of columns of the matrix C
+                                           // R means "C := alpha*B*A + beta*C"
+    const char UPLO = 'U';                 // L means the lower triangular part of the symmetric matrix
+                                           // U means the upper triangular part of the symmetric matrix
+    const int M = C.getNumOfRows();        // the number of rows of the matrix  C
+    const int N = C.getNumOfCols();        // the number of columns of the matrix C
     const double ALPHA = 1.0;              // ALPHA specifies the scalar alpha
+    const int LDA = M;                     // When  SIDE = 'L' or 'l'  then LDA must be at least max(1, M),
+                                           // otherwise  LDA must be at least  max(1, N).
 
-    //const double* A = const_cast<TlSymmetricMatrix&>(X).data_;    // DIMENSION (LDA, ka)
-    const int dimX = X.getNumOfRows();
-    assert(dimX == X.getNumOfCols());
-    double* A = new double[dimX * dimX];
-#pragma omp parallel for
-    for (int row = 0; row < dimX; ++row) {
-        int col = 0;
-        const std::size_t base = row * dimX;
-        for (; col < row; ++col) {
-            A[base + col] = 0.0;
-        }
-        for (; col < dimX; ++col) {
-            A[base + col] = X.get(row, col);
+    double* pA = new double[M * M];
+    for (int c = 0; c < M; ++c) {
+        const int base = c * M;
+        for (int r = 0; r <= c;  ++r) {
+            pA[base + r] = A.get(r, c);
         }
     }
 
-    const int LDA = M;                     // When  SIDE = 'L' or 'l'  then LDA must be at least max(1, m),
-    // otherwise  LDA must be at least  max(1, n).
-
-    const double* B = const_cast<TlMatrix&>(Y).data_;             // DIMENSION (LDB, n)
-
-    const int LDB = M;                     // max(1, m)
+    const double* pB = const_cast<TlMatrix&>(B).data_; // DIMENSION (LDB, N)
+    const int LDB = M;                     // max(1, M)
     const double BETA = 0.0;               // BETA  specifies the scalar  beta
-    double* C = Z.data_;                   // DIMENSION (LDC, n)
-    const int LDC = M;                     // max(1, m)
+    double* pC = C.data_;                  // DIMENSION (LDC, N)
+    const int LDC = M;                     // max(1, M)
 
-    dsymm_(&SIDE, &UPLO, &M, &N, &ALPHA, A, &LDA, B, &LDB, &BETA, C, &LDC);
+    dsymm_(&SIDE, &UPLO, &M, &N, &ALPHA, pA, &LDA, pB, &LDB, &BETA, pC, &LDC);
 
-    delete[] A;
-    A = NULL;
+    delete[] pA;
+    pA = NULL;
 
-    return Z;
+    return C;
 }
 
 
-TlMatrix multiplicationByLapack(const TlMatrix& Y, const TlSymmetricMatrix& X)
+TlMatrix multiplicationByLapack(const TlMatrix& B, const TlSymmetricMatrix& A)
 {
-    assert(Y.getNumOfCols() == X.getNumOfRows());
+    assert(B.getNumOfCols() == A.getNumOfRows());
 
-    TlMatrix Z(Y.m_nRows, X.m_nCols);
+    TlMatrix C(B.getNumOfRows(), A.getNumOfCols());
 
     // use LAPACK
     const char SIDE = 'R';                 // L means "C := alpha*A*B + beta*C",
-    // R means "C := alpha*B*A + beta*C"
-    const char UPLO = 'L';                 // L means the lower triangular part of the symmetric matrix
-    // U means the upper triangular part of the symmetric matrix
-    const int M = Z.getNumOfRows();        // the number of rows of the matrix  C
-    const int N = Z.getNumOfCols();        // the number of columns of the matrix C
+                                           // R means "C := alpha*B*A + beta*C"
+    const char UPLO = 'U';                 // L means the lower triangular part of the symmetric matrix
+                                           // U means the upper triangular part of the symmetric matrix
+    const int M = C.getNumOfRows();        // the number of rows of the matrix  C
+    const int N = C.getNumOfCols();        // the number of columns of the matrix C
     const double ALPHA = 1.0;              // ALPHA specifies the scalar alpha
-
-    //const double* A = const_cast<TlSymmetricMatrix&>(X).data_;    // DIMENSION (LDA, ka)
-    const int dimX = X.getNumOfRows();
-    assert(dimX == X.getNumOfCols());
-    double* A = new double[dimX * dimX];
-#pragma omp parallel for
-    for (int row = 0; row < dimX; ++row) {
-        int col = 0;
-        const std::size_t base = row * dimX;
-        for (; col < row; ++col) {
-            A[base + col] = 0.0;
-        }
-        for (; col < dimX; ++col) {
-            A[base + col] = X.get(row, col);
+    const int LDA = N;                     // When  SIDE = 'L' or 'l'  then LDA must be at least max(1, M),
+                                           // otherwise  LDA must be at least  max(1, N).
+    double* pA = new double[N * N];
+    for (int c = 0; c < M; ++c) {
+        const int base = c * M;
+        for (int r = 0; r <= c;  ++r) {
+            pA[base + r] = A.get(r, c);
         }
     }
 
-    const int LDA = N;                     // When  SIDE = 'L' or 'l'  then LDA must be at least max(1, m),
-    // otherwise  LDA must be at least  max(1, n).
-
-    const double* B = const_cast<TlMatrix&>(Y).data_;    // DIMENSION (LDB, n)
-
-    const int LDB = M;                     // max(1, m)
+    const double* pB = const_cast<TlMatrix&>(B).data_; // DIMENSION (LDB, N)
+    const int LDB = M;                     // max(1, M)
     const double BETA = 0.0;               // BETA  specifies the scalar  beta
-    double* C = Z.data_;                   // DIMENSION (LDC, n)
-    const int LDC = M;                     // max(1, m)
+    double* pC = C.data_;                  // DIMENSION (LDC, N)
+    const int LDC = M;                     // max(1, M)
 
-    dsymm_(&SIDE, &UPLO, &M, &N, &ALPHA, A, &LDA, B, &LDB, &BETA, C, &LDC);
+    dsymm_(&SIDE, &UPLO, &M, &N, &ALPHA, pA, &LDA, pB, &LDB, &BETA, pC, &LDC);
 
-    delete[] A;
-    A = NULL;
+    delete[] pA;
+    pA = NULL;
 
-    return Z;
+    return C;
 }
 
 
@@ -1094,44 +1070,28 @@ TlVector multiplicationByLapack(const TlSymmetricMatrix& A, const TlVector& X)
 {
     assert(A.getNumOfCols() == X.getSize());
 
-    TlVector Z(A.getNumOfRows());
-
     // use LAPACK
-    const char UPLO = 'L';                 // L means the lower triangular part of the symmetric matrix
+    const char UPLO = 'U';                 // L means the lower triangular part of the symmetric matrix
                                            // U means the upper triangular part of the symmetric matrix
-    const int N = A.getNumOfRows();        // the number of rows of the matrix  C
+    const int N = A.getNumOfRows();
     const double ALPHA = 1.0;              // ALPHA specifies the scalar alpha
-
-    double* tmpA = new double[N * N];
-#pragma omp parallel for
-    for (int row = 0; row < N; ++row) {
-        int col = 0;
-        const std::size_t base = row * N;
-        for (; col < row; ++col) {
-            tmpA[base + col] = 0.0;
-        }
-        for (; col < N; ++col) {
-            tmpA[base + col] = A.get(row, col);
-        }
-    }
-
-    const int LDA = N;                     // When  SIDE = 'L' or 'l'  then LDA must be at least max(1, m),
-                                           // otherwise  LDA must be at least  max(1, n).
+    const double* AP = A.data_;
+    const double* pX = X.data_;
     const int INCX = 1;
-    const double BETA = 0.0;               // BETA  specifies the scalar  beta
+    double BETA = 1.0;
+    TlVector answer(N);
+    double* Y = answer.data_;
     const int INCY = 1;
 
-    dsymv_(&UPLO, &N, &ALPHA, tmpA, &LDA,
-           X.data_, &INCX, &BETA, Z.data_, &INCY);
+    dspmv_(&UPLO, &N, &ALPHA, AP, pX, &INCX,
+           &BETA, Y, &INCY);
     
-    delete[] tmpA;
-    tmpA = NULL;
-
-    return Z;
+    return answer;
 }
 
 
-bool diagonalByLapack(const TlSymmetricMatrix& inMatrix, TlVector* outEigVal, TlMatrix* outEigVec)
+bool diagonalByLapack(const TlSymmetricMatrix& inMatrix,
+                      TlVector* outEigVal, TlMatrix* outEigVec)
 {
     assert(outEigVal != NULL);
     assert(outEigVec != NULL);
@@ -1142,26 +1102,26 @@ bool diagonalByLapack(const TlSymmetricMatrix& inMatrix, TlVector* outEigVal, Tl
 
     const char JOBZ = 'V';                         // 固有値と固有ベクトルを計算する。
     const char UPLO = 'U';
-    const int N    = inMatrix.getNumOfRows();      // 行列Aの次数(N>=0)
-    const int LDA  = N;                            // 配列Aの第一次元。LDA>=max(1, N);
+    const int N = inMatrix.getNumOfRows();     // 行列Aの次数(N>=0)
+    double* AP = new double[N * (N+1) / 2];
+    std::copy(inMatrix.data_, inMatrix.data_ + (N * (N+1) / 2), AP);
 
-    // 倍精度実数配列A, 次元(LDA, N)
-    // (input) 対称/エルミート行列A
-    // UPLO='L'のとき、Aの先頭の(n,n)の下三角部分に行列Aの下三角部分を入れる
-    // (output) JOBZ='V'のとき、INFO=0ならAに行列Aの正規直交固有ベクトルが入る
-    *outEigVec = inMatrix;
-    assert((outEigVec->getNumOfRows() == LDA) && (outEigVec->getNumOfCols() == N));
-    double* A = outEigVec->data_;
-
-    outEigVal->resize(N);                          // 固有値が入るvector
+    outEigVal->resize(N);
     double* W = outEigVal->data_;                  // (出力用) INFO=0のとき, Wに固有値が昇順で入る。大きさN
 
-    const int LWORK = std::max<int>(1, 3*N -1);    // 配列WORKの大きさ
-    double* WORK = new double[LWORK];              // (作業/出力用)
+    const int LDZ = N;
+    outEigVec->resize(LDZ, N);
+    double* Z = outEigVec->data_;
+
+    double* WORK = new double[3 * N];              // (作業/出力用)
     int INFO =0;                                   // (出力用) =0: 正常終了, >0: 収束しなかった
 
-    dsyev_(&JOBZ, &UPLO, &N, A, &LDA, W, WORK, &LWORK, &INFO);
+    dspev_(&JOBZ, &UPLO, &N, AP, W, Z, &LDZ, WORK, &INFO);
+
     delete[] WORK;
+    WORK = NULL;
+    delete[] AP;
+    AP = NULL;
 
     if (INFO == 0) {
         bAnswer = true;
