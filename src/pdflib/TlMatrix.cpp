@@ -87,9 +87,14 @@ TlMatrix::TlMatrix(const TlSerializeData& data)
     this->m_nCols = std::max(data["col"].getInt(), 1);
     this->initialize(false);
 
-    const size_type size = this->getNumOfElements();
-    for (size_type index = 0; index < size; ++index) {
-        this->data_[index] = data["data"].getAt(index).getDouble();
+    size_type index = 0;
+    const index_type maxRow = this->getNumOfRows();
+    const index_type maxCol = this->getNumOfCols();
+    for (index_type row = 0; row < maxRow; ++row) {
+        for (index_type col = 0; col < maxCol; ++col) {
+            this->set(row, col, data["data"].getAt(index).getDouble());
+            ++index;
+        }
     }
 }
 

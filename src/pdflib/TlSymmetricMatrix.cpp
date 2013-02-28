@@ -54,11 +54,16 @@ TlSymmetricMatrix::TlSymmetricMatrix(const TlSerializeData& data)
 {
     this->m_nRows = std::max(data["row"].getInt(), 1);
     this->m_nCols = std::max(data["col"].getInt(), 1);
+    assert(this->getNumOfRows() == this->getNumOfCols());
     this->initialize(false);
 
-    const size_type size = this->getNumOfElements();
-    for (size_type index = 0; index < size; ++index) {
-        this->data_[index] = data["data"].getAt(index).getDouble();
+    size_type index = 0;
+    const index_type maxRow = this->getNumOfRows();
+    for (index_type row = 0; row < maxRow; ++row) {
+        for (index_type col = 0; col <= row; ++col) {
+            this->set(row, col, data["data"].getAt(index).getDouble());
+            ++index;
+        }
     }
 }
 
@@ -1044,8 +1049,8 @@ TlMatrix multiplicationByLapack(const TlMatrix& B, const TlSymmetricMatrix& A)
     const int LDA = N;                     // When  SIDE = 'L' or 'l'  then LDA must be at least max(1, M),
                                            // otherwise  LDA must be at least  max(1, N).
     double* pA = new double[N * N];
-    for (int c = 0; c < M; ++c) {
-        const int base = c * M;
+    for (int c = 0; c < N; ++c) {
+        const int base = c * N;
         for (int r = 0; r <= c;  ++r) {
             pA[base + r] = A.get(r, c);
         }
