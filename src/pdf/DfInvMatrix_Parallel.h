@@ -9,12 +9,6 @@ public:
     virtual ~DfInvMatrix_Parallel();
 
     virtual void DfInvMain();
-
-protected:
-    virtual void logger(const std::string& str) const;
-//     virtual void inverseMatrix(const std::string& sInFile, const std::string& sOutFile);
-//     void inverseMatrix_LAPACK(const std::string& sInFile, const std::string& sOutFile);
-//     void inverseMatrix_ScaLAPACK(const std::string& sInFile, const std::string& sOutFile);
 };
 
 #endif // DFINVMATRIX_PARALLEL_H

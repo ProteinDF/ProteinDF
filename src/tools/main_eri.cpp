@@ -9,17 +9,17 @@
 #include "TlMsgPack.h"
 #include "TlFile.h"
 
-void showHelp()
-{
-    std::cout << "checkERI indexP indexQ indexR indexS" << std::endl;
-    std::cout << "OPTIONS:" << std::endl;
-    std::cout << "  -p PDF_PARAM: ProteinDF parameter file";
-    std::cout << "  -h:           show help(this)" << std::endl;
-    std::cout << "  -v:           verbose" << std::endl;
-}
+struct ShellIndex4 {
+    int p;
+    int q;
+    int r;
+    int s;
+};
 
+std::vector<ShellIndex4> getList(const std::string& listPath);
 
-void calc_eri(const int shellIndexP, const int shellIndexQ,
+void calc_eri(DfEriEngine* pEngine,
+              const int shellIndexP, const int shellIndexQ,
               const int shellIndexR, const int shellIndexS,
               const TlOrbitalInfo& orbitalInfo);
 
@@ -28,23 +28,25 @@ void output(int indexP, int indexQ,
             const TlOrbitalInfoObject& orbitalInfo,
             const double* WORK);
 
+void showHelp();
+
 int main(int argc, char* argv[])
 {
     TlGetopt opt(argc, argv, "hp:v");
 
     // parameters
     const bool isVerbose = (opt["v"] == "defined");
-
-    int indexP = std::atoi(opt[1].c_str());
-    int indexQ = std::atoi(opt[2].c_str());
-    int indexR = std::atoi(opt[3].c_str());
-    int indexS = std::atoi(opt[4].c_str());
-    
-    // for reading object
     std::string readParamPath = "pdfparam.mpac";
     if (!opt["p"].empty()) {
         readParamPath = opt["p"];
     }
+
+    if (opt["h"] == "defined") {
+        showHelp();
+        return EXIT_SUCCESS;
+    }
+
+    // for reading object
     TlMsgPack readMsgPack;
     if (isVerbose == true) {
         std::cout << "read parmeter file: " << readParamPath << std::endl;
@@ -57,53 +59,97 @@ int main(int argc, char* argv[])
     TlSerializeData readData = readMsgPack.getSerializeData();
     const TlOrbitalInfo orbitalInfo(readData["coordinates"],
                                     readData["basis_sets"]);
-
     const int numOfAOs = orbitalInfo.getNumOfOrbitals();
-    if (! (0 <=indexP) && (indexP < numOfAOs)) {
-        std::cerr << TlUtils::format("illegal input parameter1. %d / %d",
-                                     indexP, numOfAOs) 
-                  << std::endl;
-        std::exit(1);
-    }
-    if (! (0 <=indexQ) && (indexQ < numOfAOs)) {
-        std::cerr << TlUtils::format("illegal input parameter2. %d / %d",
-                                     indexQ, numOfAOs) 
-                  << std::endl;
-        std::exit(1);
-    }
-    if (! (0 <=indexR) && (indexR < numOfAOs)) {
-        std::cerr << TlUtils::format("illegal input parameter3. %d / %d",
-                                     indexR, numOfAOs) 
-                  << std::endl;
-        std::exit(1);
-    }
-    if (! (0 <=indexS) && (indexS < numOfAOs)) {
-        std::cerr << TlUtils::format("illegal input parameter4. %d / %d",
-                                     indexS, numOfAOs) 
-                  << std::endl;
-        std::exit(1);
-    }
 
-    calc_eri(indexP, indexQ, indexR, indexS,
-             orbitalInfo);
+    // calc ERI
+    if (opt.getCount() == 2) {
+        std::string listPath = opt[1];
+        std::vector<ShellIndex4> indeces = getList(listPath);
+        const int size = indeces.size();
+        DfEriEngine engine;
+        for (int i = 0; i < size; ++i) {
+            int indexP = indeces[i].p;
+            int indexQ = indeces[i].q;
+            int indexR = indeces[i].r;
+            int indexS = indeces[i].s;
+            
+            calc_eri(&engine,
+                     indexP, indexQ, indexR, indexS,
+                     orbitalInfo);
+        }
+    } else if (opt.getCount() == 5) {
+        int indexP = std::atoi(opt[1].c_str());
+        int indexQ = std::atoi(opt[2].c_str());
+        int indexR = std::atoi(opt[3].c_str());
+        int indexS = std::atoi(opt[4].c_str());
 
-    // if (opt["o"] != "defined") {
-    // } else {
-    //     std::cerr << "old engine" << std::endl;
-    //     calc_eri_old(&readData,
-    //                  shellIndexP, shellIndexQ, shellIndexR, shellIndexS,
-    //                  orbitalInfo);
-    // }
+        if (! (0 <=indexP) && (indexP < numOfAOs)) {
+            std::cerr << TlUtils::format("illegal input parameter1. %d / %d",
+                                         indexP, numOfAOs) 
+                      << std::endl;
+            std::exit(1);
+        }
+        if (! (0 <=indexQ) && (indexQ < numOfAOs)) {
+            std::cerr << TlUtils::format("illegal input parameter2. %d / %d",
+                                         indexQ, numOfAOs) 
+                      << std::endl;
+            std::exit(1);
+        }
+        if (! (0 <=indexR) && (indexR < numOfAOs)) {
+            std::cerr << TlUtils::format("illegal input parameter3. %d / %d",
+                                         indexR, numOfAOs) 
+                      << std::endl;
+            std::exit(1);
+        }
+        if (! (0 <=indexS) && (indexS < numOfAOs)) {
+            std::cerr << TlUtils::format("illegal input parameter4. %d / %d",
+                                         indexS, numOfAOs) 
+                      << std::endl;
+            std::exit(1);
+        }
+        
+        DfEriEngine engine;
+        calc_eri(&engine,
+                 indexP, indexQ, indexR, indexS,
+                 orbitalInfo);
+    } else {
+        showHelp();
+        return EXIT_SUCCESS;
+    }
     
+
     return EXIT_SUCCESS;
 }
 
 
-void calc_eri(const int indexP, const int indexQ,
+std::vector<ShellIndex4> getList(const std::string& listPath)
+{
+    std::vector<ShellIndex4> answer;
+
+    TlMsgPack mpac;
+    mpac.load(listPath);
+    TlSerializeData data = mpac.getSerializeData();
+    if (data.getType() == TlSerializeData::ARRAY) {
+        const int size = data.getSize();
+        answer.resize(size);
+        for (int i = 0; i < size; ++i) {
+            const TlSerializeData& item = data.getAt(i);
+            answer[i].p = item.getAt(0).getInt();
+            answer[i].q = item.getAt(1).getInt();
+            answer[i].r = item.getAt(2).getInt();
+            answer[i].s = item.getAt(3).getInt();
+        }
+    }
+
+    return answer;
+}
+
+
+void calc_eri(DfEriEngine* pEngine,
+              const int indexP, const int indexQ,
               const int indexR, const int indexS,
               const TlOrbitalInfo& orbitalInfo)
 {
-    DfEriEngine engine;
     const int shellIndexP = orbitalInfo.getShellIndex(indexP);
     const int shellIndexQ = orbitalInfo.getShellIndex(indexQ);
     const int shellIndexR = orbitalInfo.getShellIndex(indexR);
@@ -114,17 +160,17 @@ void calc_eri(const int indexP, const int indexQ,
     const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
     const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
     const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
-    const DfEriEngine::CGTO_Pair PQ = engine.getCGTO_pair(orbitalInfo,
-                                                          shellIndexP, shellIndexQ,
-                                                          0.0);
-    const DfEriEngine::CGTO_Pair RS = engine.getCGTO_pair(orbitalInfo,
-                                                          shellIndexR, shellIndexS,
-                                                          0.0);
-    engine.calc(queryPQ, queryRS, PQ, RS);
+    const DfEriEngine::CGTO_Pair PQ = pEngine->getCGTO_pair(orbitalInfo,
+                                                            shellIndexP, shellIndexQ,
+                                                            0.0);
+    const DfEriEngine::CGTO_Pair RS = pEngine->getCGTO_pair(orbitalInfo,
+                                                            shellIndexR, shellIndexS,
+                                                            0.0);
+    pEngine->calc(queryPQ, queryRS, PQ, RS);
 
     output(indexP, indexQ, indexR, indexS,
            orbitalInfo,
-           engine.WORK);
+           pEngine->WORK);
 }
 
 
@@ -176,3 +222,16 @@ void output(int indexP, int indexQ,
                                  indexP, indexQ, indexR, indexS, value)
               << std::endl;
 }
+
+void showHelp()
+{
+    std::cout << "pdf-eri indexP indexQ indexR indexS" << std::endl;
+    std::cout << " or " << std::endl;
+    std::cout << "pdf-eri index_list" << std::endl;
+    std::cout << "OPTIONS:" << std::endl;
+    std::cout << "  -p PDF_PARAM: ProteinDF parameter file";
+    std::cout << "  -h:           show help(this)" << std::endl;
+    std::cout << "  -v:           verbose" << std::endl;
+}
+
+

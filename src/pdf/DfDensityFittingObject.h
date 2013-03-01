@@ -78,11 +78,12 @@ void DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::calc()
             //calcRamda
             this->log_.info(" calc Ramda");
             const double dNumOfElec = this->m_nNumOfElectrons;
-            const double lamda = this->getLamda(SabinvN, t_alpha, N_alpha, dNumOfElec);
+            const double lambda = this->getLamda(SabinvN, t_alpha, N_alpha, dNumOfElec);
             this->log_.info(TlUtils::format(" the number of electrons = %5.2lf", dNumOfElec));
+            this->log_.info(TlUtils::format(" lambda = % 8.3f", lambda));
             
             // calculate Sabinv * (tAlpha - lamda * nAlpha)
-            const Vector rho = Sabinv * (t_alpha - lamda * N_alpha);
+            const Vector rho = Sabinv * (t_alpha - lambda * N_alpha);
             this->saveRho(rho, RUN_RKS);
             
             const double Sum = rho * N_alpha;

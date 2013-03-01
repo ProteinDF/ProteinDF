@@ -29,9 +29,9 @@ public:
 
 void showHelp()
 {
-    std::cout << "pdftop <OPTIONS> MO_LEVEL NUM_OF_ITEMS" << std::endl;
+    std::cout << "pdf-component <OPTIONS> MO_LEVEL NUM_OF_ITEMS" << std::endl;
     std::cout << " or " << std::endl;
-    std::cout << "pdftop -A ATOM_INDEX" << std::endl;
+    std::cout << "pdf-component -A ATOM_INDEX" << std::endl;
     std::cout << std::endl;
     std::cout << "OPTIONS:" << std::endl;
     std::cout << "  <MO mode>" << std::endl;

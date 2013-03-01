@@ -48,8 +48,11 @@ void printOrbInfo(const TlOrbitalInfo& tlOrbInfo,
 
 void showHelp()
 {
-    std::cout << "pdfOrbInfo [OPTIONS] index ..." << std::endl;
+    std::cout << "pdf-info-orb [OPTIONS] index ..." << std::endl;
+    std::cout << std::endl;
     std::cout << " display orbital information." << std::endl;
+    std::cout << " index:        Specify orbital indeces which begin from '0' to output." << std::endl;
+    std::cout << "               Output all orbitals if no entry." << std::endl;
     std::cout << " -a:           Atom index mode: index means atom serial number." << std::endl;
     std::cout << " -p PDF_param: ProteinDF parameter file (default: pdfparam.mpac)" << std::endl;
     std::cout << " -w mpac_file: output MessagaPack file" << std::endl;
@@ -77,7 +80,7 @@ int main(int argc, char* argv[])
         showHelp();
         std::exit(0);
     }
-
+    
     TlMsgPack mpac;
     if (isVerbose) {
         std::cerr << TlUtils::format("reading %s ...", pdfparamPath.c_str());
@@ -93,12 +96,13 @@ int main(int argc, char* argv[])
     }
 
     const int numOfArgs = opt.getCount() -1; // opt[0] means the name of this program.
-    if (numOfArgs == 0) {
-        showHelp();
-        std::exit(1);
-    }
 
     if (isAtomIndexMode == true) {
+        if (numOfArgs == 0) {
+            showHelp();
+            std::exit(1);
+        }
+
         for (int i = 0; i < numOfArgs; ++i) {
             const int atomIndex = std::atoi(opt[i +1].c_str());
             
@@ -110,17 +114,31 @@ int main(int argc, char* argv[])
             }
         }
     } else {
-        if (saveMpacPath.empty()) {
+        std::vector<int> orbitals;
+        if (numOfArgs == 0) {
+            orbitals.resize(numOfAOs);
+            for (int i = 0; i < numOfAOs; ++i) {
+                orbitals[i] = i;
+            }
+        } else {
             for (int i = 0; i < numOfArgs; ++i) {
-                const std::size_t orb = std::atol(opt[i +1].c_str());
+                const int orb = std::atoi(opt[i +1].c_str());
+                orbitals.push_back(orb);
+            }
+        }
+        const int numOfQueries = orbitals.size();
+
+        if (saveMpacPath.empty()) {
+            for (int i = 0; i < numOfQueries; ++i) {
+                const int orb = orbitals[i];
                 if (orb < numOfAOs) {
                     printOrbInfo(orbInfo, orb);
                 }
             }
         } else {
             TlSerializeData output;
-            for (int i = 0; i < numOfArgs; ++i) {
-                const int orb = std::atoi(opt[i +1].c_str());
+            for (int i = 0; i < numOfQueries; ++i) {
+                const int orb = orbitals[i];
                 if (orb < numOfAOs) {
                     TlSerializeData entry;
 

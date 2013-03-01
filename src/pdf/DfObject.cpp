@@ -307,7 +307,7 @@ void DfObject::setParam(const TlSerializeData& data)
     paramFileBaseName["C_matrix"]       = "C.%s.mat";
     paramFileBaseName["Cprime_matrix"]  = "Cprime.%s.mat";
     paramFileBaseName["grid_matrix"]    = "grid.mat";
-    paramFileBaseName["Talpha.vtr"]     = "Talpha.vtr";
+    paramFileBaseName["T_alpha"]        = "T_alpha.%s.vtr";
 
     if (paramFileBaseName["rho_vector"].getStr().empty() == true) {
         paramFileBaseName["rho_vector"] = "rho.%s.vtr";
@@ -624,7 +624,7 @@ std::string DfObject::getNyuPath(const RUN_TYPE nRunType, const int nIteration) 
 
 std::string DfObject::getTalphaPath(const RUN_TYPE runType, const int iteration) const
 {
-    return this->makeFilePath("Talpha.vtr",
+    return this->makeFilePath("T_alpha",
                               DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 
 }
