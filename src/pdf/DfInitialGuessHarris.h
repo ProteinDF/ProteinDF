@@ -30,6 +30,9 @@ protected:
     void calcInitialDensityMatrix();
 
 private:
+    /// debug時はtrueにする
+    bool debug_;
+
     TlSerializeData pdfParam_harrisDB_;
 };
 
@@ -57,7 +60,6 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
         TlMsgPack mpac(pdfParam_low);
         mpac.save("pdfparam_low.mpac");
     }
-
     
     // create low-level density matrix
     const TlOrbitalInfo orbInfo_low(pdfParam_low["coordinates"],
@@ -72,7 +74,7 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
         }
         
         TlSerializeData coord;
-        coord["_"].pushBack( pdfParam["coordinates"]["_"].getAt(atomIndex));
+        coord["_"].pushBack(pdfParam["coordinates"]["_"].getAt(atomIndex));
         
         TlOrbitalInfo orbInfo_harrisDB(coord,
                                        this->pdfParam_harrisDB_["basis_sets"]);
@@ -81,7 +83,9 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
         combineDensMat.make(orbInfo_harrisDB, P_DB,
                             orbInfo_low, &P_low);
     }
-    //P_low.save("P_low.mtx");
+    if (this->debug_) {
+        P_low.save("P_low.mtx");
+    }
 
     // transform low-level density matrix to high-level one
     SymmetricMatrixType P_high(numOfAOs_high);
@@ -99,6 +103,9 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
         MatrixType omega_t = omega;
         omega_t.transpose();
 
+        if (this->debug_) {
+            omega.save("omega.mtx");
+        }
         P_high = omega_t * P_low * omega;
     }
     P_high.save(this->getPpqMatrixPath(RUN_RKS, 0)); // save for calc population
