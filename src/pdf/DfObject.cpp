@@ -89,12 +89,12 @@ void DfObject::setParam(const TlSerializeData& data)
     this->isUseNewEngine_ = data["new_engine"].getBoolean();
 
     // SCF type
-    const std::string sMethodType = TlUtils::toUpper(data["method"].getStr());
-    if (sMethodType == "RKS") {
+    const std::string methodType = TlUtils::toUpper(data["method"].getStr());
+    if (methodType == "RKS") {
         this->m_nMethodType = METHOD_RKS;
-    } else if (sMethodType == "UKS") {
+    } else if (methodType == "UKS") {
         this->m_nMethodType = METHOD_UKS;
-    } else if (sMethodType == "ROKS") {
+    } else if (methodType == "ROKS") {
         this->m_nMethodType = METHOD_ROKS;
     } else {
         this->log_.warn("no method is specified. use rks method.");

@@ -108,18 +108,47 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
         }
         P_high = omega_t * P_low * omega;
     }
-    P_high.save(this->getPpqMatrixPath(RUN_RKS, 0)); // save for calc population
 
     // normalize
-    {
-        double numOfElectrons = 0.0;
-        DfPopulationType dfPop(this->pPdfParam_);
-        dfPop.sumOfElectrons(0, &numOfElectrons, NULL);
-        const double coef = numOfElectrons / this->m_nNumOfElectrons;
-        P_high *= coef;
+    switch (this->m_nMethodType) {
+    case METHOD_RKS:
+        {
+            double numOfElectrons = 0.0;
+            DfPopulationType dfPop(this->pPdfParam_);
+            dfPop.sumOfElectrons(0, &numOfElectrons, NULL);
+            const double coef = numOfElectrons / this->m_nNumOfElectrons;
+
+            this->savePpqMatrix(RUN_RKS, 0, coef * P_high);
+        }
+        break;
+
+    case METHOD_UKS:
+        {
+            double numOfAlphaElectrons = 0.0;
+            double numOfBetaElectrons = 0.0;
+            DfPopulationType dfPop(this->pPdfParam_);
+            dfPop.sumOfElectrons(0, &numOfAlphaElectrons, &numOfBetaElectrons);
+            const double coef_alpha = numOfAlphaElectrons / this->m_nNumOfAlphaElectrons;
+            const double coef_beta  = numOfBetaElectrons  / this->m_nNumOfBetaElectrons;
+
+            this->savePpqMatrix(RUN_UKS_ALPHA, 0, coef_alpha * P_high);
+            this->savePpqMatrix(RUN_UKS_BETA,  0, coef_beta  * P_high);
+        }
+        break;
+
+    case METHOD_ROKS:
+        {
+            this->log_.critical(TlUtils::format("sorry not implement. %s %s", __FILE__, __LINE__));
+            abort();
+        }
+        break;
+
+    default:
+        this->log_.critical(TlUtils::format("program error: %s %s", __FILE__, __LINE__));
+        abort();
+        break;
     }
 
-    P_high.save(this->getPpqMatrixPath(RUN_RKS, 0));
     this->logger(" initial density matrix is created using Harris functional.\n");
 }
 
