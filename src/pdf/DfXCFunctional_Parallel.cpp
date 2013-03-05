@@ -231,129 +231,129 @@ DfTwoElectronIntegral* DfXCFunctional_Parallel::getDfTwoElectronIntegral()
 }
 
 
-TlSymmetricMatrix DfXCFunctional_Parallel::getFockExchange(const TlSymmetricMatrix& deltaP,
-                                                           const RUN_TYPE nRunType)
-{
-    this->loggerTime(" build fock exchange (on memory)");
+// TlSymmetricMatrix DfXCFunctional_Parallel::getFockExchange(const TlSymmetricMatrix& deltaP,
+//                                                            const RUN_TYPE nRunType)
+// {
+//     this->loggerTime(" build fock exchange (on memory)");
 
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    TlSymmetricMatrix FxHF = DfXCFunctional::getFockExchange(deltaP);
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+//     TlSymmetricMatrix FxHF = DfXCFunctional::getFockExchange(deltaP);
 
-    // update法を使用する場合は、前回のFock交換項を加算する
-    if (this->m_bIsUpdateXC == true) {
-        if (rComm.isMaster() == true) {
-            if (this->m_nIteration >= 2) {
-                FxHF += this->getHFxMatrix<TlSymmetricMatrix>(nRunType, this->m_nIteration -1);
-            }
-            this->saveHFxMatrix(nRunType, this->m_nIteration, FxHF);
-        }
-        rComm.broadcast(FxHF);
-    }
+//     // update法を使用する場合は、前回のFock交換項を加算する
+//     if (this->m_bIsUpdateXC == true) {
+//         if (rComm.isMaster() == true) {
+//             if (this->m_nIteration >= 2) {
+//                 FxHF += this->getHFxMatrix<TlSymmetricMatrix>(nRunType, this->m_nIteration -1);
+//             }
+//             this->saveHFxMatrix(nRunType, this->m_nIteration, FxHF);
+//         }
+//         rComm.broadcast(FxHF);
+//     }
 
-    // calc energy
-    {
-        TlSymmetricMatrix P;
-        if (rComm.isMaster() == true) {
-            P = this->getPpqMatrix<TlSymmetricMatrix>(nRunType, this->m_nIteration -1);
-        }
-        rComm.broadcast(P);
+//     // calc energy
+//     {
+//         TlSymmetricMatrix P;
+//         if (rComm.isMaster() == true) {
+//             P = this->getPpqMatrix<TlSymmetricMatrix>(nRunType, this->m_nIteration -1);
+//         }
+//         rComm.broadcast(P);
 
-        if (nRunType == RUN_RKS) {
-            DfXCFunctional::m_dFockExchangeEnergyAlpha = 0.5 * DfXCFunctional::getFockExchangeEnergy(P, FxHF);
-        } else if (nRunType == RUN_UKS_ALPHA) {
-            DfXCFunctional::m_dFockExchangeEnergyAlpha = 0.5 * DfXCFunctional::getFockExchangeEnergy(P, FxHF);
-        } else if (nRunType == RUN_UKS_BETA) {
-            DfXCFunctional::m_dFockExchangeEnergyBeta = 0.5 * DfXCFunctional::getFockExchangeEnergy(P, FxHF);
-        }
-    }
+//         if (nRunType == RUN_RKS) {
+//             DfXCFunctional::m_dFockExchangeEnergyAlpha = 0.5 * DfXCFunctional::getFockExchangeEnergy(P, FxHF);
+//         } else if (nRunType == RUN_UKS_ALPHA) {
+//             DfXCFunctional::m_dFockExchangeEnergyAlpha = 0.5 * DfXCFunctional::getFockExchangeEnergy(P, FxHF);
+//         } else if (nRunType == RUN_UKS_BETA) {
+//             DfXCFunctional::m_dFockExchangeEnergyBeta = 0.5 * DfXCFunctional::getFockExchangeEnergy(P, FxHF);
+//         }
+//     }
 
-    this->loggerTime(" end to build fock exchange.");
-    return FxHF;
-}
+//     this->loggerTime(" end to build fock exchange.");
+//     return FxHF;
+// }
 
 
-TlDistributeSymmetricMatrix
-DfXCFunctional_Parallel::getFockExchange(const TlDistributeSymmetricMatrix& deltaP,
-                                         const RUN_TYPE runType)
-{
-    this->loggerTime(" build fock exchange using distribute matrix");
+// TlDistributeSymmetricMatrix
+// DfXCFunctional_Parallel::getFockExchange(const TlDistributeSymmetricMatrix& deltaP,
+//                                          const RUN_TYPE runType)
+// {
+//     this->loggerTime(" build fock exchange using distribute matrix");
 
-    TlDistributeSymmetricMatrix FxHF = this->getFockExchange(deltaP);
-    if (this->m_bIsUpdateXC == true) {
-        if (this->m_nIteration >= 2) {
-            FxHF += this->getHFxMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration -1);
-        }
-        this->saveHFxMatrix(runType, this->m_nIteration, FxHF);
-    }
+//     TlDistributeSymmetricMatrix FxHF = this->getFockExchange(deltaP);
+//     if (this->m_bIsUpdateXC == true) {
+//         if (this->m_nIteration >= 2) {
+//             FxHF += this->getHFxMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration -1);
+//         }
+//         this->saveHFxMatrix(runType, this->m_nIteration, FxHF);
+//     }
 
-    // calc energy
-    {
-        TlDistributeSymmetricMatrix P = this->getPpqMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration -1);
+//     // calc energy
+//     {
+//         TlDistributeSymmetricMatrix P = this->getPpqMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration -1);
 
-        if (runType == RUN_RKS) {
-            DfXCFunctional::m_dFockExchangeEnergyAlpha = 0.5 * this->getFockExchangeEnergy(P, FxHF);
-        } else if (runType == RUN_UKS_ALPHA) {
-            DfXCFunctional::m_dFockExchangeEnergyAlpha = 0.5 * this->getFockExchangeEnergy(P, FxHF);
-        } else if (runType == RUN_UKS_BETA) {
-            DfXCFunctional::m_dFockExchangeEnergyBeta = 0.5 * this->getFockExchangeEnergy(P, FxHF);
-        }
-    }
+//         if (runType == RUN_RKS) {
+//             DfXCFunctional::m_dFockExchangeEnergyAlpha = 0.5 * this->getFockExchangeEnergy(P, FxHF);
+//         } else if (runType == RUN_UKS_ALPHA) {
+//             DfXCFunctional::m_dFockExchangeEnergyAlpha = 0.5 * this->getFockExchangeEnergy(P, FxHF);
+//         } else if (runType == RUN_UKS_BETA) {
+//             DfXCFunctional::m_dFockExchangeEnergyBeta = 0.5 * this->getFockExchangeEnergy(P, FxHF);
+//         }
+//     }
 
-    this->loggerTime(" end to build fock exchange.");
-    return FxHF;
+//     this->loggerTime(" end to build fock exchange.");
+//     return FxHF;
 
   
 
-//     deltaP.save("deltaP.tmp");
+// //     deltaP.save("deltaP.tmp");
 
-//     TlCommunicate& rComm = TlCommunicate::getInstance();
-//     TlSymmetricMatrix tmpP;
-//     if (rComm.isMaster() == true) {
-//         tmpP.load("deltaP.tmp");
+// //     TlCommunicate& rComm = TlCommunicate::getInstance();
+// //     TlSymmetricMatrix tmpP;
+// //     if (rComm.isMaster() == true) {
+// //         tmpP.load("deltaP.tmp");
+// //     }
+// //     rComm.broadcast(tmpP);
+
+// //     TlSymmetricMatrix tmpF = this->getFockExchange(tmpP, runType);
+// //     tmpF.save("FxHF.tmp");
+
+// //     TlDistributeSymmetricMatrix FxHF;
+// //     FxHF.load("FxHF.tmp");
+    
+//     // return FxHF;
+// }
+
+
+// double DfXCFunctional_Parallel::getFockExchangeEnergy(const TlDistributeSymmetricMatrix& P,
+//                                                       const TlDistributeSymmetricMatrix& HFx)
+// {
+//     TlDistributeSymmetricMatrix tmp(P);
+//     double energy = tmp.dot(HFx).sum();
+    
+//     return energy;
+// }
+
+
+// TlDistributeSymmetricMatrix DfXCFunctional_Parallel::getFockExchange(const TlDistributeSymmetricMatrix& P)
+// {
+//     TlDistributeSymmetricMatrix FxHF(this->m_nNumOfAOs);
+
+//     if (this->isUseNewEngine_ == true) {
+//         this->logger(" use new engine\n");
+//         DfEriX_Parallel dfEriX(this->pPdfParam_);
+//         dfEriX.getK_D(P, &FxHF);
+//     } else {
+// #ifdef USE_OLD_ERI_ENGINE
+//         DfTwoElectronIntegral_Parallel dfTEI(this->pPdfParam_);
+//         if (this->m_bUseRTmethod != true) {
+//             this->logger(" force into using RT-method replaced by integral-driven.\n");
+//         }
+//         this->logger(" using RT method\n");
+//         dfTEI.getContractKMatrixByRTmethod(P, &FxHF);
+// #endif // USE_OLD_ERI_ENGINE
 //     }
-//     rComm.broadcast(tmpP);
-
-//     TlSymmetricMatrix tmpF = this->getFockExchange(tmpP, runType);
-//     tmpF.save("FxHF.tmp");
-
-//     TlDistributeSymmetricMatrix FxHF;
-//     FxHF.load("FxHF.tmp");
     
-    // return FxHF;
-}
-
-
-double DfXCFunctional_Parallel::getFockExchangeEnergy(const TlDistributeSymmetricMatrix& P,
-                                                      const TlDistributeSymmetricMatrix& HFx)
-{
-    TlDistributeSymmetricMatrix tmp(P);
-    double energy = tmp.dot(HFx).sum();
-    
-    return energy;
-}
-
-
-TlDistributeSymmetricMatrix DfXCFunctional_Parallel::getFockExchange(const TlDistributeSymmetricMatrix& P)
-{
-    TlDistributeSymmetricMatrix FxHF(this->m_nNumOfAOs);
-
-    if (this->isUseNewEngine_ == true) {
-        this->logger(" use new engine\n");
-        DfEriX_Parallel dfEriX(this->pPdfParam_);
-        dfEriX.getK_D(P, &FxHF);
-    } else {
-#ifdef USE_OLD_ERI_ENGINE
-        DfTwoElectronIntegral_Parallel dfTEI(this->pPdfParam_);
-        if (this->m_bUseRTmethod != true) {
-            this->logger(" force into using RT-method replaced by integral-driven.\n");
-        }
-        this->logger(" using RT method\n");
-        dfTEI.getContractKMatrixByRTmethod(P, &FxHF);
-#endif // USE_OLD_ERI_ENGINE
-    }
-    
-    return FxHF;
-}
+//     return FxHF;
+// }
 
 
 double DfXCFunctional_Parallel::getGrimmeDispersionEnergy()

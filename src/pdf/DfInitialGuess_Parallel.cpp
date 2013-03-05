@@ -18,16 +18,6 @@ DfInitialGuess_Parallel::~DfInitialGuess_Parallel()
 {
 }
 
-
-void DfInitialGuess_Parallel::logger(const std::string& str) const
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        DfInitialGuess::logger(str);
-    }
-}
-
-
 void DfInitialGuess_Parallel::createRho()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
@@ -37,17 +27,6 @@ void DfInitialGuess_Parallel::createRho()
     }
     rComm.barrier();
 }
-
-
-void DfInitialGuess_Parallel::saveRho1(const RUN_TYPE runType)
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        DfInitialGuess::saveRho1(runType);
-    }
-    rComm.barrier();
-}
-
 
 void DfInitialGuess_Parallel::createInitialGuessUsingLCAO(const RUN_TYPE runType)
 {
@@ -78,13 +57,7 @@ void DfInitialGuess_Parallel::createInitialGuessUsingLCAO_onScaLAPACK(const RUN_
     // output guess lcao in orthonormal basis to a files in fl_Work directory
     this->buildCprime0<TlDistributeMatrix>(runType, LCAO);
 
-    {
-        TlSerializeData tmpParam = *(this->pPdfParam_);
-        tmpParam["orbital-overlap-correspondence-method"] = "keep";
-        tmpParam["num_of_iterations"] = 0;
-        DfDmatrix_Parallel dfDmatrix(&tmpParam);
-        dfDmatrix.DfDmatrixMain(); // RKS only?
-    }
+    this->makeDensityMatrix();
 }
 
 
@@ -101,15 +74,7 @@ void DfInitialGuess_Parallel::createInitialGuessUsingLCAO_onLAPACK(const RUN_TYP
          const TlVector aOccupation = DfInitialGuess::getOccupation(runType);
          DfInitialGuess::saveOccupation(runType, aOccupation);
          
-         {
-             TlSerializeData tmpParam = *(this->pPdfParam_);
-             tmpParam["orbital-overlap-correspondence-method"] = "keep";
-             tmpParam["control-iteration"] = 0;
-             
-             // 密度行列の作成
-             DfDmatrix dfDmatrix(&tmpParam);
-             dfDmatrix.DfDmatrixMain(); // RKS only?
-         }
+         this->makeDensityMatrix();
      }
      
     rComm.barrier();
@@ -143,8 +108,8 @@ TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK(const RUN_TYPE r
         }
 
         if (this->m_nNumOfMOs < col_dimension) {
-            this->logger("The number of column dimension in inputed LCAO is larger than independent basis.\n");
-            this->logger("Excess elements are discarded.\n");
+            this->log_.info("The number of column dimension in inputed LCAO is larger than independent basis.");
+            this->log_.info("Excess elements are discarded.");
         }
 
         // read matrix and store it
@@ -183,13 +148,15 @@ TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK(const RUN_TYPE r
 }
 
 
-void DfInitialGuess_Parallel::createOccupation(const RUN_TYPE runType)
+TlVector DfInitialGuess_Parallel::createOccupation(const RUN_TYPE runType)
 {
+    TlVector answer;
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
-        DfInitialGuess::createOccupation(runType);
+        answer = DfInitialGuess::createOccupation(runType);
     }
-    rComm.barrier();
+    rComm.broadcast(answer);
+    return answer;
 }
 
 
@@ -288,4 +255,10 @@ void DfInitialGuess_Parallel::createInitialGuessUsingHarris()
         CnErr.abort();
         break;
     }
+}
+
+DfDmatrix* DfInitialGuess_Parallel::getDfDmatrixObject(TlSerializeData* param)
+{
+    DfDmatrix* obj = new DfDmatrix_Parallel(param);
+    return obj;
 }
