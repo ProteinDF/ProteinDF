@@ -5,7 +5,6 @@
 #include "DfTwoElectronIntegral.h"
 #include "DfEriX.h"
 
-#include "FileX.h"
 #include "TlMatrixObject.h"
 #include "TlUtils.h"
 #include "TlTime.h"
@@ -46,9 +45,9 @@ DfXCFunctional::DfXCFunctional(TlSerializeData* pPdfParam)
     if (this->enableGrimmeDispersion_ == true) {
         checkXC = checkXC.substr(0, checkXC.size() -2); // remove "-D"
     }
-    if (checkXC == "SHF") {
+    if (checkXC == "HFS") {
         // SHF
-        this->m_nXCFunctional = SHF;
+        this->m_nXCFunctional = HFS;
         this->functionalType_ = LDA;
         this->m_bIsHybrid = false;
     } else if (checkXC == "SVWN") {

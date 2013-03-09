@@ -295,3 +295,61 @@ void TlMatrixTest::testSum() {
     
     CPPUNIT_ASSERT_DOUBLES_EQUAL(36.0, s, threshold);
 }
+
+
+void TlMatrixTest::testsolveLinearLeastSquaresProblem()
+{
+    TlMatrix A(6, 5);
+    A(0, 0) = -0.09;
+    A(0, 1) =  0.14;
+    A(0, 2) = -0.46;
+    A(0, 3) =  0.68;
+    A(0, 4) =  1.29;
+    A(1, 0) = -1.56;
+    A(1, 1) =  0.20;
+    A(1, 2) =  0.29;
+    A(1, 3) =  1.09;
+    A(1, 4) =  0.51;
+    A(2, 0) = -1.48;
+    A(2, 1) = -0.43;
+    A(2, 2) =  0.89;
+    A(2, 3) = -0.71;
+    A(2, 4) = -0.96;
+    A(3, 0) = -1.09;
+    A(3, 1) =  0.84;
+    A(3, 2) =  0.77;
+    A(3, 3) =  2.11;
+    A(3, 4) = -1.27;
+    A(4, 0) =  0.08;
+    A(4, 1) =  0.55;
+    A(4, 2) = -1.13;
+    A(4, 3) =  0.14;
+    A(4, 4) =  1.74;
+    A(5, 0) = -1.59;
+    A(5, 1) = -0.72;
+    A(5, 2) =  1.06;
+    A(5, 3) =  1.24;
+    A(5, 4) =  0.34;
+
+    TlMatrix B(6, 1);
+    B(0, 0) =  7.4;
+    B(1, 0) =  4.2;
+    B(2, 0) = -8.3;
+    B(3, 0) =  1.8;
+    B(4, 0) =  8.6;
+    B(5, 0) =  2.1;
+
+    TlMatrix X = A.solveLinearLeastSquaresProblem(B);
+    //X.print(std::cout);
+    
+    TlMatrix AX = A * X;
+    //AX.print(std::cout);
+
+    CPPUNIT_ASSERT_EQUAL(5, X.getNumOfRows());
+    CPPUNIT_ASSERT_EQUAL(1, X.getNumOfCols());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(B(0, 0), AX(0, 0), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(B(1, 0), AX(1, 0), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(B(2, 0), AX(2, 0), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(B(3, 0), AX(3, 0), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(B(4, 0), AX(4, 0), 0.1);
+}

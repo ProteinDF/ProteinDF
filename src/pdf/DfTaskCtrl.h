@@ -23,6 +23,17 @@ public:
 
     struct Task4 {
     public:
+        Task4()
+            : shellIndex1(0), shellIndex2(0),
+              shellIndex3(0), shellIndex4(0) {
+        }
+            
+        Task4(const Task4& rhs) 
+            : shellIndex1(rhs.shellIndex1), shellIndex2(rhs.shellIndex2),
+              shellIndex3(rhs.shellIndex3), shellIndex4(rhs.shellIndex4) {
+        }
+
+    public:
         index_type shellIndex1;
         index_type shellIndex2;
         index_type shellIndex3;
@@ -68,12 +79,21 @@ public:
                           std::vector<Task>* pTask,
                           bool initialize = false);
 
+    /// 2つのインデックスのタスクを返す(軌道情報が同じ場合)
     virtual bool getQueue2(const TlOrbitalInfoObject& orbitalInfo,
                            const bool isCutoffByDistibution,
                            const int maxGrainSize,
                            std::vector<Task2>* pTask,
                            bool initialize = false);
-    
+
+    /// 2つのインデックスのタスクを返す(軌道情報が異なる場合)
+    virtual bool getQueue2(const TlOrbitalInfoObject& orbitalInfo1,
+                           const TlOrbitalInfoObject& orbitalInfo2,
+                           const bool isCutoffByDistibution,
+                           const int maxGrainSize,
+                           std::vector<Task2>* pTask,
+                           bool initialize = false);
+
     virtual bool getQueue4(const TlOrbitalInfoObject& orbitalInfo,
                            const TlSparseSymmetricMatrix& schwarzTable,
                            const int maxGrainSize,
@@ -103,16 +123,18 @@ public:
                                  const int maxGrainSize,
                                  std::vector<Task4>* pTaskList,
                                  bool initialize = false);
-    
+
+public:
+    /// Schwartzのカットオフレポートを出力する
+    virtual void cutoffReport();
+
 protected:
-    void clearCutoffStats(const TlOrbitalInfoObject& orbitalInfo);
+    void clearCutoffStats(const int maxShellType);
 
     /// pre-screeningに関わるレポートを出力する
     virtual void prescreeningReport();
 
-    /// Schwartzのカットオフレポートを出力する
-    virtual void cutoffReport();
-
+protected:
     ShellArrayTable makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo);
 
     ShellArray selectShellArrayByDistribution(const ShellArray& inShellArray,
@@ -150,13 +172,28 @@ protected:
     /// キーの軌道番号に対して有効な軌道番号の配列を返す
     DistributedCutoffTable makeDistributedCutoffTable(const TlOrbitalInfoObject& orbitalInfo);
 
+    /// distributed pair用のカットオフテーブルを作成する(軌道情報が異なる場合)
+    ///
+    /// キーの軌道番号に対して有効な軌道番号の配列を返す
+    DistributedCutoffTable makeDistributedCutoffTable(const TlOrbitalInfoObject& orbitalInfo1,
+                                                      const TlOrbitalInfoObject& orbitalInfo2);
+
     ShellArray selectShellArrayByDistribution(const ShellArray& inShellArray,
                                               const index_type companionShellIndex);
 
     std::size_t getTotalCalcAmount2(const TlOrbitalInfoObject& orbitalInfo,
                                      const ShellArrayTable& shellArrayTable);
+    std::size_t getTotalCalcAmount2(const TlOrbitalInfoObject& orbitalInfo1,
+                                    const TlOrbitalInfoObject& orbitalInfo2,
+                                    const ShellArrayTable& shellArrayTable1,
+                                    const ShellArrayTable& shellArrayTable2);
     std::size_t getTotalCalcAmount2(const TlOrbitalInfoObject& orbitalInfo,
                                     const ShellArrayTable& shellArrayTable,
+                                    const DistributedCutoffTable& dct);
+    std::size_t getTotalCalcAmount2(const TlOrbitalInfoObject& orbitalInfo1,
+                                    const TlOrbitalInfoObject& orbitalInfo2,
+                                    const ShellArrayTable& shellArrayTable1,
+                                    const ShellArrayTable& shellArrayTable2,
                                     const DistributedCutoffTable& dct);
     std::size_t getTotalCalcAmount4(const TlOrbitalInfoObject& orbitalInfo,
                                     const ShellPairArrayTable& shellPairArrayTable,

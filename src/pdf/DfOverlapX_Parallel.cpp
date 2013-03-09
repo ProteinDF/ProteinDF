@@ -80,3 +80,20 @@ void DfOverlapX_Parallel::getSabD(TlDistributeSymmetricMatrix* pSab)
     this->loggerTime(" finalize");
     pSab->mergeSparseMatrix(tmpSab);
 }
+
+
+void DfOverlapX_Parallel::getTransMat(const TlOrbitalInfoObject& orbitalInfo1,
+                                      const TlOrbitalInfoObject& orbitalInfo2,
+                                      TlDistributeMatrix* pTransMat)
+{
+    assert(pTransMat != NULL);
+    pTransMat->resize(orbitalInfo1.getNumOfOrbitals(),
+                      orbitalInfo2.getNumOfOrbitals());
+
+    TlSparseMatrix tmpTransMat(orbitalInfo1.getNumOfOrbitals(),
+                               orbitalInfo2.getNumOfOrbitals());
+    this->calcOverlap(orbitalInfo1, orbitalInfo2, &tmpTransMat);
+    pTransMat->mergeSparseMatrix(tmpTransMat);
+}
+
+

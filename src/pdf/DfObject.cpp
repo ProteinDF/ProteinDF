@@ -53,9 +53,9 @@ DfObject::~DfObject()
 
 void DfObject::setParam(const TlSerializeData& data)
 {
-    int numOfThreads = 1;
+    this->numOfThreads_ = 1;
 #ifdef _OPENMP
-    numOfThreads = omp_get_max_threads();
+    this->numOfThreads_ = omp_get_max_threads();
 #endif // _OPENMP
 
     // computational resource
@@ -74,7 +74,8 @@ void DfObject::setParam(const TlSerializeData& data)
         }
     }
 
-    this->isWorkOnDisk_ = (TlUtils::toUpper(data["work_on_disk"].getStr()) == "YES");
+    this->isEnableMmap_ = data["use_mapfile"].getBoolean();
+    this->isWorkOnDisk_ = data["work_on_disk"].getBoolean();
     this->localTempDir_ = data["local_temp_dir"].getStr();
     if (this->localTempDir_ == "") {
         this->localTempDir_ = "/tmp/";
@@ -180,12 +181,21 @@ void DfObject::setParam(const TlSerializeData& data)
     }
     
     // XC potential
+    {
+        this->XC_engine_ = XC_ENGINE_CONVENTIONAL;
+        const std::string XC_engine = TlUtils::toUpper(data["XC_engine"].getStr());
+        if (XC_engine == "CD") {
+            this->XC_engine_ = XC_ENGINE_CD;
+        }
+    }
+
     this->m_sXCFunctional = TlUtils::toUpper(data["xc-potential"].getStr());
     {
         const char nLastChar = this->m_sXCFunctional[this->m_sXCFunctional.length() -1];
         this->m_bIsXCFitting = (nLastChar == '~') ? true : false;
     }
     this->m_bIsUpdateXC = (TlUtils::toUpper(data["xc-update"].getStr()) == "NO") ? false : true;
+    this->isGridFree_ = data["grid_free"].getBoolean();
 
     // Grimme empirical dispersion check
     {
@@ -222,10 +232,11 @@ void DfObject::setParam(const TlSerializeData& data)
     }
 
     // for HPC ============================================================
-    this->grainSize_ = 100 * numOfThreads;
+    this->grainSize_ = 100;
     if (data.hasKey("omp_grain_size") == true) {
-        this->grainSize_ = data["omp_grain_size"].getInt() * numOfThreads;
+        this->grainSize_ = data["omp_grain_size"].getInt();
     }
+    this->grainSize_ *= this->numOfThreads_;
     
     this->isMasterSlave_ = false;
     {
@@ -290,12 +301,13 @@ void DfObject::setParam(const TlSerializeData& data)
     paramFileBaseName["Fpq_matrix"]     = "Fpq.%s.mat";
     paramFileBaseName["Fprime_matrix"]  = "Fprime.%s.mat";
     paramFileBaseName["Fxc_matrix"]     = "Fxc.%s.mat";
+    paramFileBaseName["Exc_matrix"]     = "Exc.%s.mat";
     paramFileBaseName["FxcPure_matrix"] = "FxcPure.%s.mat";
     paramFileBaseName["J_matrix"]       = "J.%s.mat";
     paramFileBaseName["C_matrix"]       = "C.%s.mat";
     paramFileBaseName["Cprime_matrix"]  = "Cprime.%s.mat";
     paramFileBaseName["grid_matrix"]    = "grid.mat";
-    paramFileBaseName["Talpha.vtr"]     = "Talpha.vtr";
+    paramFileBaseName["T_alpha"]        = "T_alpha.%s.vtr";
 
     if (paramFileBaseName["rho_vector"].getStr().empty() == true) {
         paramFileBaseName["rho_vector"] = "rho.%s.vtr";
@@ -546,6 +558,13 @@ std::string DfObject::getFxcMatrixPath(const RUN_TYPE nRunType, const int nItera
 }
 
 
+std::string DfObject::getExcMatrixPath(const RUN_TYPE runType, const int iteration)
+{
+    return this->makeFilePath("Exc_matrix",
+                              DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+}
+
+
 std::string DfObject::getFxcPureMatrixPath(const RUN_TYPE nRunType, const int nIteration)
 {
     return this->makeFilePath("FxcPure_matrix",
@@ -605,7 +624,7 @@ std::string DfObject::getNyuPath(const RUN_TYPE nRunType, const int nIteration) 
 
 std::string DfObject::getTalphaPath(const RUN_TYPE runType, const int iteration) const
 {
-    return this->makeFilePath("Talpha.vtr",
+    return this->makeFilePath("T_alpha",
                               DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 
 }

@@ -2,14 +2,16 @@
 #include <cstdlib>
 #include <vector>
 #include <map>
+#include <fstream>
 #include "DfObject.h"
 #include "Fl_Geometry.h"
+#include "TlAtom.h"
 #include "TlMoField.h"
 #include "TlSymmetricMatrix.h"
 #include "TlGetopt.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
-#include "makeField_common.h"
+#include "mkfld_common.h"
 
 void help(const std::string& progName)
 {
@@ -18,41 +20,59 @@ void help(const std::string& progName)
     std::cout << "output volume data of molecular orbital" << std::endl;
     std::cout << "OPTIONS:" << std::endl;
     std::cout << " -p <path>    set ProteinDF parameter file(default: pdfparam.mpac)" << std::endl;
-    std::cout << " -c <path>    set LCAO matrix file" << std::endl;
-    std::cout << " -f <path>    save AVS field file" << std::endl;
-    std::cout << " -m <path>    save message pack file" << std::endl;
-    std::cout << " -h           show help message (this)" << std::endl;
-    std::cout << " -v           verbose mode" << std::endl;
+    std::cout << " -l <path>    set LCAO matrix file" << std::endl;
+    std::cout << " -f           save AVS field (.fld) file." << std::endl;
+    std::cout << " -c           save cube (.cube) file" << std::endl;
+    std::cout << " -m           save message pack (.mpac) file." << std::endl;
+    std::cout << " -o PREFIX    output prefix (default: MO)" << std::endl;
+    std::cout << " -h           show help message (this)." << std::endl;
+    std::cout << " -v           show message verbosely." << std::endl;
 }
 
 
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "c:f:hm:p:v");
+    TlGetopt opt(argc, argv, "cfhl:mo:p:v");
 
     const bool verbose = (opt["v"] == "defined");
-    std::string pdfParamPath = "pdfparam.mpac";
-    if (opt["p"].empty() != true) {
-        pdfParamPath = opt["p"];
-    }
-    std::string lcaoMatrixPath = "";
-    if (opt["c"].empty() != true) {
-        lcaoMatrixPath = opt["c"];
-    }
-    std::string mpacFilePath = "";
-    if (opt["m"].empty() != true) {
-        mpacFilePath = opt["m"];
-    }
-    std::string fieldFilePath = (mpacFilePath != "") ? "" : "MO.fld";
-    if (opt["f"].empty() != true) {
-        fieldFilePath = opt["f"];
-    }
-
     if ((opt["h"] == "defined")) {
         help(opt[0]);
         return EXIT_SUCCESS;
     }
     
+    std::string pdfParamPath = "pdfparam.mpac";
+    if (opt["p"].empty() != true) {
+        pdfParamPath = opt["p"];
+    }
+    std::string lcaoMatrixPath = "";
+    if (opt["l"].empty() != true) {
+        lcaoMatrixPath = opt["l"];
+    }
+
+    bool isSaveAvsFieldFile = false;
+    if (opt["f"] == "defined") {
+        isSaveAvsFieldFile = true;
+    }
+
+    bool isSaveCubeFile = false;
+    if (opt["c"] == "defined") {
+        isSaveCubeFile = true;
+    }
+    
+    bool isSaveMpacFile = false;
+    if (opt["m"] == "defined") {
+        isSaveMpacFile = true;
+    }
+
+    if ((!isSaveAvsFieldFile) && (!isSaveCubeFile) && (!isSaveMpacFile)) {
+        isSaveMpacFile = true;
+    }
+
+    std::string outputPrefix = "MO";
+    if (! opt["o"].empty()) {
+        outputPrefix = opt["o"];
+    }
+
     // パラメータファイルの読み込み
     TlSerializeData param;
     {
@@ -63,18 +83,19 @@ int main(int argc, char* argv[])
 
     // LCAO行列の読み込み
     TlMatrix C;
-    if (lcaoMatrixPath.empty() == true) {
-        const int iteration = param["iterations"].getInt();
+    if (lcaoMatrixPath.empty()) {
+        const int iteration = param["num_of_iterations"].getInt();
         DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
         DfObject dfObject(&param);
         lcaoMatrixPath = dfObject.getCMatrixPath(runType, iteration);
     }
+    std::cerr << "C matrix path: " << lcaoMatrixPath << std::endl;
     C.load(lcaoMatrixPath);
 
     // 計算サイズの決定
     TlPosition startPos;
     TlPosition endPos;
-    getDefaultSize(param, &startPos, &endPos);
+    getDefaultSize(param, &startPos, &endPos); // a.u.で取得
     compensateRange(&startPos, &endPos);
 
     const TlPosition gridPitch(GRID_PITCH, GRID_PITCH, GRID_PITCH);
@@ -100,32 +121,32 @@ int main(int argc, char* argv[])
         const int MO_index = std::atoi(opt[i].c_str());
         const std::vector<double>values = moFld.makeMoFld(C.getColVector(MO_index), grids);
 
-        const std::string key = TlUtils::format("MO_%d", MO_index);
+        const std::string key = TlUtils::format("%d", MO_index);
         storeData[key] = values;
     }
 
     // convert grid unit to angstrom
-    for (std::size_t i = 0; i < numOfGrids; ++i) {
-        grids[i] *= ANG_PER_AU;
-    }
+    // for (std::size_t i = 0; i < numOfGrids; ++i) {
+    //     grids[i] *= ANG_PER_AU;
+    // }
     
     // save to mpac
-    if (mpacFilePath.empty() != true) {
+    if (isSaveMpacFile) {
+        const std::string mpacFilePath = outputPrefix + ".mpac";
         std::cerr << "save message pack file: " << mpacFilePath << std::endl;
 
         TlSerializeData output;
-        output["version"] = "2010.0";
-        output["num_of_grids_x"] = numOfGridX;
-        output["num_of_grids_y"] = numOfGridY;
-        output["num_of_grids_z"] = numOfGridZ;
+        output["version"] = "2013.0";
+        output["num_of_grids"] = numOfGrids;
         for (std::size_t gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
             TlSerializeData pos;
-            pos.pushBack(grids[gridIndex].x());
-            pos.pushBack(grids[gridIndex].y());
-            pos.pushBack(grids[gridIndex].z());
+            pos.pushBack(grids[gridIndex].x() * ANG_PER_AU);
+            pos.pushBack(grids[gridIndex].y() * ANG_PER_AU);
+            pos.pushBack(grids[gridIndex].z() * ANG_PER_AU);
             
-            output["coord"].pushBack(pos);
+            output["grids"].pushBack(pos);
         }
+        output["grid_unit"] = "angstrom";
 
         for (std::map<std::string, std::vector<double> >::const_iterator p = storeData.begin();
              p != storeData.end(); ++p) {
@@ -133,7 +154,7 @@ int main(int argc, char* argv[])
             const std::vector<double>& value = p->second;
 
             for (std::size_t i = 0; i < numOfGrids; ++i) {
-                output[key].setAt(i, value[i]);
+                output["data"][key].setAt(i, value[i]);
             }
         }
 
@@ -142,7 +163,8 @@ int main(int argc, char* argv[])
      }
 
     // save to fld
-    if (fieldFilePath.empty() != true) {
+    if (isSaveAvsFieldFile) {
+        const std::string fieldFilePath = outputPrefix + ".mpac";
         std::cerr << "save AVS field file: " << fieldFilePath << std::endl;
 
         std::string label = "";
@@ -157,6 +179,39 @@ int main(int argc, char* argv[])
         }
 
         saveFieldData(numOfGridX, numOfGridY, numOfGridZ, grids, data, label, fieldFilePath);
+    }
+
+    // save to cube
+    if (isSaveCubeFile) {
+        const Fl_Geometry flGeom(param["coordinates"]);
+        const int numOfAtoms = flGeom.getNumOfAtoms();
+        std::vector<TlAtom> atoms(numOfAtoms);
+        for (int i = 0; i < numOfAtoms; ++i) {
+            TlAtom atom(flGeom.getAtom(i));
+            atom.setCharge(flGeom.getCharge(i));
+            atom.moveTo(flGeom.getCoordinate(i));
+            //atom.moveTo(flGeom.getCoordinate(i) * ANG_PER_AU); // angstroamに変換
+            atoms[i] = atom;
+        }
+
+        for (std::map<std::string, std::vector<double> >::const_iterator p = storeData.begin();
+             p != storeData.end(); ++p) {
+
+            const std::string key = p->first;
+            const std::vector<double>& values = p->second;
+
+            const std::string label = TlUtils::format("MO_%s", key.c_str());
+            std::vector<double> values_au = values;
+
+            std::string path = TlUtils::format("%s%s.cube",
+                                               outputPrefix.c_str(),
+                                               key.c_str());
+            std::cerr << "save CUBE file: " << path << std::endl;
+            saveCubeData(atoms,
+                         numOfGridX, numOfGridY, numOfGridZ,
+                         startPos, gridPitch,
+                         values, label, path);
+        }
     }
     
     return EXIT_SUCCESS;

@@ -15,6 +15,7 @@
 #include "TlUtils.h"
 #include "TlMath.h"
 #include "TlOrbitalInfoObject.h"
+// #include "TlTime.h"
 #include "TlLogging.h"
 
 /// 仕様
@@ -36,6 +37,12 @@
 ///   f型(=3)と1回微分(=1)をサポート =>  L_max = 3 * 4 + 1 = 13 あれば十分。
 ///   コード中は L_MAX で定義される。
 ///
+
+/// query上限値
+#define A_BAR_MAX (2) // 2階微分
+#define B_BAR_MAX (2) // 2階微分
+#define A_MAX (2) // s=0, p=1, d=2
+#define B_MAX (2) // s=0, p=1, d=2
 
 /// 本プログラムで扱うことのできる angular momentum の最大値
 #define ERI_L_MAX (13 +1)
@@ -431,7 +438,9 @@ private:
 public:
     DfEriEngine();
     ~DfEriEngine();
-    
+
+    // double getElapseCalcTime() const;
+
     static CGTO_Pair getCGTO_pair(const TlOrbitalInfoObject& orbInfoconst,
                                   const index_type shellIndexP,
                                   const index_type shellIndexQ = -1,
@@ -523,7 +532,7 @@ private:
                    const DfEriEngine::Query& qCD,
                    const ContractScalesVector& ket_contractScales);
     
-    // ERI
+    // ERI ---------------------------------------------------------------------
     void calcERI(const int a_bar, const int b_bar,
                  const int a, const int b, const int p,
                  const int a_prime, const int b_prime, const int p_prime,
@@ -532,9 +541,28 @@ private:
     int index(const TlAngularMomentumVector& a_bar, const TlAngularMomentumVector& b_bar,
               const TlAngularMomentumVector& a, const TlAngularMomentumVector& b,
               const TlAngularMomentumVector& p) const;
-    
+
+    /// eq.44
     void ERI_EQ44(const ERI_State eriState, EriDataType* pERI);
+
+    /// optimized EQ44
+    ///
+    /// ERI_EQ44() in case of "a^=b^=0"
+    void ERI_EQ44_00xxx(const ERI_State eriState, EriDataType* pERI);
+
+    /// eq.45
     void ERI_EQ45(const ERI_State eriState, EriDataType* pERI);
+
+    /// optimized EQ45
+    ///
+    /// ERI_EQ45() in case of "a^=b^=b=p=0"
+    void ERI_EQ45_00x00(const ERI_State eriState, EriDataType* pERI);
+
+    /// optimized EQ45
+    ///
+    /// ERI_EQ45() in case of "a^=b^=b=0"
+    void ERI_EQ45_00x0x(const ERI_State eriState, EriDataType* pERI);
+
     void ERI_EQ46(const ERI_State eriState, EriDataType* pERI); // 非常用
     void ERI_EQ43(const ERI_State eriState, EriDataType* pERI);
     void ERI_EQ47(const ERI_State eriState, EriDataType* pERI);
@@ -629,6 +657,7 @@ private:
     double primitiveLevelThreshold_;
 
     //
+    // TlTime time_calc_all_;
     TlLogging& log_;
 
 #ifdef CHECK_MAX_COUNT

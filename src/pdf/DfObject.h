@@ -99,6 +99,7 @@ protected:
     std::string getP2pqMatrixPath(int iteration);
     std::string getHFxMatrixPath(RUN_TYPE runType, int iteration);
     std::string getFxcMatrixPath(RUN_TYPE runType, int iteration);
+    std::string getExcMatrixPath(RUN_TYPE runType, int iteration);
     std::string getFxcPureMatrixPath(RUN_TYPE runType, int iteration);
     std::string getJMatrixPath(int iteration);
     //std::string getKMatrixPath(int iteration);
@@ -214,6 +215,12 @@ protected:
 
     template <class SymmetricMatrixType>
     SymmetricMatrixType getFxcMatrix(RUN_TYPE runType, int iteration);
+
+    template <class SymmetricMatrixType>
+    void saveExcMatrix(RUN_TYPE runType, int iteration, const SymmetricMatrixType& Fxc);
+
+    template <class SymmetricMatrixType>
+    SymmetricMatrixType getExcMatrix(RUN_TYPE runType, int iteration);
 
     template <class SymmetricMatrixType>
     void saveFxcPureMatrix(RUN_TYPE runType, int iteration, const SymmetricMatrixType& FxcPure);
@@ -351,6 +358,11 @@ protected:
         K_ENGINE_RI_K,
         K_ENGINE_CD
     };
+
+    enum XC_Engine_Type {
+        XC_ENGINE_CONVENTIONAL,
+        XC_ENGINE_CD
+    };
     
 protected:
     static const std::string m_sWorkDirPath; // fl_Work directory name
@@ -361,9 +373,15 @@ protected:
     TlSerializeData* pPdfParam_;
 
     TlLogging& log_;
-    
+
+    // system parameters -------------------------------------------------------
     /// プロセスあたりの最大メモリ容量(byte)
     std::size_t procMaxMemSize_;
+
+    /// OpenMPスレッド数
+    int numOfThreads_;
+
+    bool isEnableMmap_; /// mmap使用可(true)
     
     bool isWorkOnDisk_;
     std::string localTempDir_;
@@ -402,10 +420,14 @@ protected:
     // K
     K_Engine_Type K_engine_;
 
+    // XC
+    XC_Engine_Type XC_engine_;
+
     std::string m_sXCFunctional;
     bool m_bIsXCFitting; /// true => XC項をRI法で計算, false => XC項を直接計算
     bool m_bIsUpdateXC; /// XC項をupdate法で計算する(true)
     bool enableGrimmeDispersion_; /// Grimmeの経験的分散力補正を計算するかどうか
+    bool isGridFree_;  /// Grid-Free法を使用する(true)
 
     //bool isRI_J_; /// RI_J法を用いる(true)
     bool isRI_K_; /// RI-K法を用いる(true)
@@ -779,6 +801,29 @@ SymmetricMatrixType DfObject::getFxcMatrix(const RUN_TYPE runType, const int ite
     Fxc = this->matrixCache_.get<SymmetricMatrixType>(path);
     Fxc.resize(this->m_nNumOfAOs);
     return Fxc;
+}
+
+
+template<class SymmetricMatrixType>
+void DfObject::saveExcMatrix(const RUN_TYPE runType, const int iteration,
+                             const SymmetricMatrixType& Exc)
+{
+    const std::string path = this->getExcMatrixPath(runType, iteration);
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, Exc, true);
+    } else {
+        Exc.save(path);
+    }
+}
+
+template<class SymmetricMatrixType>
+SymmetricMatrixType DfObject::getExcMatrix(const RUN_TYPE runType, const int iteration)
+{
+    SymmetricMatrixType Exc;
+    const std::string path = this->getExcMatrixPath(runType, iteration);
+    Exc = this->matrixCache_.get<SymmetricMatrixType>(path);
+    Exc.resize(this->m_nNumOfAOs);
+    return Exc;
 }
 
 

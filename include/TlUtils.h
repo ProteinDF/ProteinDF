@@ -138,7 +138,7 @@ public:
         return *(reinterpret_cast<char*>(&i)) == 1;
     }
     
-    bool isBigEndian() {
+    static bool isBigEndian() {
         return !(TlUtils::isLittleEndian());
     }
 

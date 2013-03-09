@@ -21,15 +21,7 @@ DfHpqX::~DfHpqX()
 
 void DfHpqX::createEngines()
 {
-#ifdef _OPENMP
-    {
-        const int numOfThreads = omp_get_max_threads();
-        this->pEngines_ = new DfHpqEngine[numOfThreads];
-    }
-#else
-    this->pEngines_ = new DfHpqEngine[1];
-#endif // _OPENMP
-        
+    this->pEngines_ = new DfHpqEngine[this->numOfThreads_];
 }
 
 

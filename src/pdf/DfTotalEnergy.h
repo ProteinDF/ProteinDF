@@ -84,6 +84,10 @@ protected:
     template<typename DfOverlapType, typename SymmetricMatrixType, typename VectorType>
     double calcExc_DIRECT(const SymmetricMatrixType& D, const VectorType& E);
     
+    template<typename SymmetricMatrixType>
+    double calcExc(const RUN_TYPE runType,
+                   const SymmetricMatrixType& P);
+
     /// Kの計算を行う
     template<typename SymmetricMatrixType>
     double calcK(const RUN_TYPE runType, const SymmetricMatrixType& P);
@@ -165,10 +169,14 @@ void DfTotalEnergy::exec_template()
                 const VectorType Eps = this->getEps<VectorType>(RUN_RKS);
                 this->m_dExc = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, Eps);
             } else {
-                DfXCFunctional dfXCFunctional(this->pPdfParam_);
-                this->m_dExc = dfXCFunctional.getEnergy();
-                if (this->enableGrimmeDispersion_ == true) {
-                    this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
+                if (this->isGridFree_ == true) {
+                    this->m_dExc = this->calcExc(RUN_RKS, 0.5 * Ppq) * 2.0;
+                } else {
+                    DfXCFunctional dfXCFunctional(this->pPdfParam_);
+                    this->m_dExc = dfXCFunctional.getEnergy();
+                    if (this->enableGrimmeDispersion_ == true) {
+                        this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
+                    }
                 }
 
                 //this->K_term_ = this->calcK(RUN_RKS, 0.5 * Ppq) * 2.0; // 0.5 means alpha-spin, 2.0 means "alpha + beta"
@@ -490,6 +498,17 @@ double DfTotalEnergy::calcExc_DIRECT(const SymmetricMatrixType& D, const VectorT
     dfOverlap.getdeltaHpqG(E, B);
 
     return B.dot(D).sum();
+}
+
+
+template<typename SymmetricMatrixType>
+double DfTotalEnergy::calcExc(const RUN_TYPE runType,
+                              const SymmetricMatrixType& P)
+{
+    SymmetricMatrixType Exc = DfObject::getExcMatrix<SymmetricMatrixType>(runType, this->m_nIteration);
+    const double answer = Exc.dot(P).sum();
+    
+    return answer;
 }
 
 

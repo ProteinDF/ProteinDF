@@ -64,8 +64,9 @@ int main(int argc, char* argv[])
 
 void usage()
 {
+    std::cerr << "usage: pdf-pop-mulliken [options] " << std::endl;
+    std::cerr << std::endl;
     std::cerr << "calculation Mulliken Population." << std::endl;
-    std::cerr << "usage: mullikenPop [options] " << std::endl;
     std::cerr <<  "  -p param:\n";
     std::cerr <<  "  -i num:    set SCF iteration to get Mulliken Population\n"; 
     std::cerr <<  "  -s path:   save atom population data as pdf matrix file\n"; 

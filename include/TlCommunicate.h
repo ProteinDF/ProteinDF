@@ -77,6 +77,7 @@ public:
     // 集団通信
     int reduce_SUM(unsigned int* pData, std::size_t size, int root = 0);
     int reduce_SUM(unsigned long* pData, std::size_t size, int root = 0);
+    int reduce_MAXLOC(double* pValue, int* pIndex, int root = 0);
     
     int allReduce_SUM(int& rData);
     int allReduce_SUM(unsigned int& rData);
@@ -99,6 +100,7 @@ public:
     int allReduce_AND(bool& rData);
     int allReduce_MAX(int& rData);
     int allReduce_MIN(int& rData);
+    int allReduce_MAXLOC(double* pValue, int* pIndex);
 
     int gatherToMaster(TlSparseMatrix& rMatrix);
 

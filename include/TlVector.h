@@ -5,6 +5,7 @@
 #include <valarray>
 
 #include "TlVectorObject.h"
+#include "TlSparseVector.h"
 #include "TlUtils.h"
 
 class TlMatrix;
@@ -152,6 +153,8 @@ public:
 
     /// 要素数は同じである必要がある
     TlVector& operator+=(const TlVector& rhs);
+
+    TlVector& operator+=(const TlSparseVector& rhs);
 
     /// 要素数は同じである必要がある
     TlVector& operator-=(const TlVector& rhs);

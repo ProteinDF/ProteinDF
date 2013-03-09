@@ -3,33 +3,22 @@
 #	main_RLMO.cpp
 #RLMO_LDADD = $(SERIAL_LIBS)
 
-SERIAL_LIBS = ../pdf/libpdf.la ../pdflib/libpdftl.la @LAPACK_LIBS@ @BLAS_LIBS@ @FCLIBS@
-PARALLEL_LIBS = ../pdf/libpdf.la ../pdf/libppdf.la ../pdflib/libppdftl.la ../pdflib/libpdftl.la @SCALAPACK_LIBS@ @LAPACK_LIBS@ @BLAS_LIBS@ @FCLIBS@ @MPILIBS@
+SERIAL_LIBS = ../pdf/libpdf.la ../pdflib/libpdftl.la @LAPACK_LIBS@ @BLAS_LIBS@
+PARALLEL_LIBS = ../pdf/libpdf.la ../pdf/libppdf.la ../pdflib/libppdftl.la ../pdflib/libpdftl.la @SCALAPACK_LIBS@ @LAPACK_LIBS@ @BLAS_LIBS@ @MPILIBS@
 
 AM_CPPFLAGS= -I$(top_srcdir)/include -I$(top_srcdir)/src/pdf
 
 SERIAL_PROGS = 				\
-	pdfkwd 					\
-	pdfvtr2txt 				\
-	pdfmat2txt 				\
 	pdfdiffmat 				\
 	pdfdiffvtr 				\
 	topPdfMatrix				\
 	catPdfMatrix addPdfMatrix	\
 	combineDensityMatrix 		\
-	pdftop					\
-	pdfOrbInfo 				\
 	pdfMatrixCheck 			\
-	mullikenPop 			\
-	charge 					\
 	mmap_bench 				\
 	mmap_bench_matrix_calc 	\
 	localize 				\
 	merge 					\
-	makeCrd					\
-	makeMoFld				\
-	makeEspFld makeDensFld 	\
-	makeDensEspFld 			\
 	transdim				\
 	diagonal				\
 	cholesky				\
@@ -38,23 +27,26 @@ SERIAL_PROGS = 				\
 	transpose				\
 	getMaxValue				\
 	rotateLCAO				\
-	checkERI
+	\
+	pdf-component			\
+	pdf-eri					\
+	pdf-info-charge 		\
+	pdf-info-orb			\
+	pdf-kwd					\
+	pdf-mkfld-mo			\
+	pdf-mkfld-dens			\
+	pdf-mkfld-esp			\
+	pdf-pop-mulliken		\
+	pdf-show-mat			\
+	pdf-show-vtr
 
 
 PARALLEL_PROGS = \
-	pdiagonal \
-	plocalize \
-	mergeLocalMatrix \
-	divideGlobalMatrix 
-
-pdfkwd_SOURCES = pdfkwd.cpp
-pdfkwd_LDADD = $(SERIAL_LIBS)
-
-pdfvtr2txt_SOURCES = pdfvtr2txt.cpp
-pdfvtr2txt_LDADD = $(SERIAL_LIBS)
-
-pdfmat2txt_SOURCES = pdfmat2txt.cpp
-pdfmat2txt_LDADD = $(SERIAL_LIBS)
+	pdiagonal 				\
+	plocalize 				\
+	mergeLocalMatrix 		\
+	divideGlobalMatrix 		\
+	pdfdivmat
 
 pdfdiffmat_SOURCES = pdfdiffmat.cpp
 pdfdiffmat_LDADD = $(SERIAL_LIBS)
@@ -78,23 +70,8 @@ addPdfMatrix_LDADD = $(SERIAL_LIBS)
 combineDensityMatrix_SOURCES = main_combineDensityMatrix.cpp
 combineDensityMatrix_LDADD = $(SERIAL_LIBS)
 
-pdftop_SOURCES = main_top.cpp
-pdftop_LDADD = $(SERIAL_LIBS)
-
-pdfOrbInfo_SOURCES = main_pdfOrbInfo.cpp
-pdfOrbInfo_LDADD = $(SERIAL_LIBS)
-
-
 pdfMatrixCheck_SOURCES = pdfMatrixCheck.cpp
 pdfMatrixCheck_LDADD = $(SERIAL_LIBS)
-
-
-mullikenPop_SOURCES = main_mullikenPop.cpp
-mullikenPop_LDADD = $(SERIAL_LIBS)
-
-
-charge_SOURCES = charge.cpp
-charge_LDADD = $(SERIAL_LIBS)
 
 
 mmap_bench_SOURCES = mmap_bench.cpp
@@ -120,41 +97,6 @@ plocalize_LDADD = $(PARALLEL_LIBS)
 
 merge_SOURCES = merge.cpp
 merge_LDADD = $(SERIAL_LIBS)
-
-
-makeCrd_SOURCES = \
-	makeField_common.h	makeField_common.cpp	\
-	main_makeCrd.cpp
-makeCrd_LDADD = $(SERIAL_LIBS)
-
-
-makeMoFld_SOURCES = \
-	makeField_common.h	makeField_common.cpp	\
-	TlMoField.h		TlMoField.cpp		\
-	makeMoFld.cpp
-makeMoFld_LDADD = $(SERIAL_LIBS)
-
-
-makeEspFld_SOURCES = \
-	makeField_common.h	makeField_common.cpp	\
-	TlEspField.h		TlEspField.cpp		\
-	makeEspFld.cpp
-makeEspFld_LDADD = $(SERIAL_LIBS)
-
-
-makeDensFld_SOURCES = \
-	makeField_common.h	makeField_common.cpp	\
-	TlDensField.h		TlDensField.cpp		\
-	makeDensFld.cpp
-makeDensFld_LDADD = $(SERIAL_LIBS)
-
-
-makeDensEspFld_SOURCES = \
-	makeField_common.h	makeField_common.cpp	\
-	TlDensField.h		TlDensField.cpp		\
-	TlEspField.h		TlEspField.cpp		\
-	makeDensEspFld.cpp
-makeDensEspFld_LDADD = $(SERIAL_LIBS)
 
 
 transdim_SOURCES = \
@@ -205,8 +147,53 @@ mergeLocalMatrix_LDADD = $(SERIAL_LIBS) $(PARALLEL_LIBS)
 divideGlobalMatrix_SOURCES = main_divideGlobalMatrix.cpp
 divideGlobalMatrix_LDADD = $(SERIAL_LIBS) $(PARALLEL_LIBS)
 
-checkERI_SOURCES = main_checkERI.cpp
-checkERI_LDADD = $(SERIAL_LIBS)
+pdfdivmat_SOURCES = main_pdfdivmat.cpp
+pdfdivmat_LDADD = $(SERIAL_LIBS) $(PARALLEL_LIBS)
+
+
+pdf_component_SOURCES = main_component.cpp
+pdf_component_LDADD = $(SERIAL_LIBS)
+
+pdf_eri_SOURCES = main_eri.cpp
+pdf_eri_LDADD = $(SERIAL_LIBS)
+
+pdf_info_charge_SOURCES = main_info_charge.cpp
+pdf_info_charge_LDADD = $(SERIAL_LIBS)
+
+pdf_info_orb_SOURCES = main_info_orb.cpp
+pdf_info_orb_LDADD = $(SERIAL_LIBS)
+
+pdf_kwd_SOURCES = main_kwd.cpp
+pdf_kwd_LDADD = $(SERIAL_LIBS)
+
+pdf_mkfld_mo_SOURCES = \
+	mkfld_common.h	mkfld_common.cpp	\
+	TlMoField.h		TlMoField.cpp		\
+	main_mkfld_mo.cpp
+pdf_mkfld_mo_LDADD = $(SERIAL_LIBS)
+
+pdf_mkfld_dens_SOURCES = \
+	mkfld_common.h	mkfld_common.cpp	\
+	TlDensField.h	TlDensField.cpp		\
+	main_mkfld_dens.cpp
+pdf_mkfld_dens_LDADD = $(SERIAL_LIBS)
+
+pdf_mkfld_esp_SOURCES = \
+	mkfld_common.h	mkfld_common.cpp	\
+	TlEspField.h	TlEspField.cpp		\
+	main_mkfld_esp.cpp
+pdf_mkfld_esp_LDADD = $(SERIAL_LIBS)
+
+pdf_pop_mulliken_SOURCES = main_pop_mulliken.cpp
+pdf_pop_mulliken_LDADD = $(SERIAL_LIBS)
+
+pdf_show_mat_SOURCES = main_show_mat.cpp
+pdf_show_mat_LDADD = $(SERIAL_LIBS)
+
+pdf_show_vtr_SOURCES = main_show_vtr.cpp
+pdf_show_vtr_LDADD = $(SERIAL_LIBS)
+
+
 
 if PARALLEL
 bin_PROGRAMS = $(SERIAL_PROGS) $(PARALLEL_PROGS)

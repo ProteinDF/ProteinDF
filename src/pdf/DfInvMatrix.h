@@ -51,7 +51,7 @@ template<class SymmetricMatrixType>
 void DfInvMatrix::exec()
 {
     // for Sab (cd basis)
-    this->logger(" construct Sabinv with three full matrix in term of diagonalization\n");
+    this->logger(" construct Sabinv with three full matrix in term of diagonalization");
     {
         SymmetricMatrixType Sab = DfObject::getSabMatrix<SymmetricMatrixType>();
         Sab.inverse();
@@ -60,7 +60,7 @@ void DfInvMatrix::exec()
     
     // for Sgd (xc basis)
     if (this->m_bIsXcFitting == true) {
-        this->logger(" construct Sgdinv with three full matrix in term of diagonalization\n");
+        this->logger(" construct Sgdinv with three full matrix in term of diagonalization");
         SymmetricMatrixType Sgd = DfObject::getSgdMatrix<SymmetricMatrixType>();
         Sgd.inverse();
         DfObject::saveSgdInvMatrix(Sgd);

@@ -51,12 +51,18 @@ private:
 };
 
 
+inline bool TlAngularMomentumVector::isExist() const {
+    //return ((v_[0] >= 0) && (v_[1] >= 0) && (v_[2] >= 0));
+    return ((this->v_[0] | this->v_[1]) | this->v_[2]) >= 0;
+}
+
 inline int TlAngularMomentumVector::index() const {
     // (y * (y + 1) + z * (2*y + z + 3)) /2 = ((y+z)*(y+z+1)+2z)/2
 
-    const int y = this->v_[Y];
+    // const int y = this->v_[Y];
     const int z = this->v_[Z];
-    const int yz = y + z;
+    // const int yz = this->v_[Y] + z;
+    const int yz = this->v_[Y] + this->v_[Z];
     return ((yz * (yz+1)) >> 1) + z;
 }
 
