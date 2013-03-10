@@ -2,6 +2,8 @@ pdfdatadir = $(prefix)/data
 
 pdfdata = \
 	basis2		\
+	pdfkwd.mpac	\
+	alias.mpac	\
 	harris.mpac
 
 dist_pdfdata_DATA = $(pdfdata)

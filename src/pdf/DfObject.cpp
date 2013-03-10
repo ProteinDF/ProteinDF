@@ -90,14 +90,14 @@ void DfObject::setParam(const TlSerializeData& data)
 
     // SCF type
     const std::string sMethodType = TlUtils::toUpper(data["method"].getStr());
-    if (sMethodType == "NSP") {
+    if (sMethodType == "RKS") {
         this->m_nMethodType = METHOD_RKS;
-    } else if (sMethodType == "SP") {
+    } else if (sMethodType == "UKS") {
         this->m_nMethodType = METHOD_UKS;
     } else if (sMethodType == "ROKS") {
         this->m_nMethodType = METHOD_ROKS;
     } else {
-        //this->logger("no method is specified. use RKS method.\n");
+        this->log_.warn("no method is specified. use rks method.");
         this->m_nMethodType = METHOD_RKS;
     }
 
@@ -114,15 +114,15 @@ void DfObject::setParam(const TlSerializeData& data)
     this->m_nNumOfMOs = data["num_of_MOs"].getInt();
     this->m_nNumOfAux = data["num_of_auxCDs"].getInt();
     this->numOfAuxXC_ = data["num_of_auxXCs"].getInt();
-
-    this->m_nNumOfElectrons = data["RKS/electrons"].getInt();
-    this->m_nNumOfAlphaElectrons = data["UKS/alphaElectrons"].getInt();
-    this->m_nNumOfBetaElectrons = data["UKS/betaElectrons"].getInt();
+    
+    this->m_nNumOfElectrons = data["method/rks/electrons"].getInt();
+    this->m_nNumOfAlphaElectrons = data["method/uls/alpha_electrons"].getInt();
+    this->m_nNumOfBetaElectrons = data["method/uks/beta_electrons"].getInt();
 
     // guess
     this->initialGuessType_ = GUESS_UNKNOWN;
     {
-        const std::string guess = TlUtils::toUpper(data["scf-start-guess"].getStr());
+        const std::string guess = TlUtils::toUpper(data["guess"].getStr());
         if ((guess == "RHO") || (guess == "ATOM_RHO")) {
             this->initialGuessType_ = GUESS_RHO;
         } else if (guess == "FILE_RHO") {
@@ -285,13 +285,19 @@ void DfObject::setParam(const TlSerializeData& data)
     if (paramFileBaseName["L_matrix"].getStr().empty() == true) {
         paramFileBaseName["L_matrix"] = "L.mat";
     }
-    paramFileBaseName["X_matrix"]      = "X.mat";
-    paramFileBaseName["Xinv_matrix"]   = "Xinv.mat";
+    if (paramFileBaseName["X_matrix"].getStr().empty() == true) {
+        paramFileBaseName["X_matrix"] = "X.mat";
+    }
+    if (paramFileBaseName["Xinv_matrix"].getStr().empty() == true) {
+        paramFileBaseName["Xinv_matrix"] = "Xinv.mat";
+    }
     if (paramFileBaseName["diff_density_matrix"].getStr().empty() == true) {
-        paramFileBaseName["diff_density_matrix"] = "dP.mat";
+        paramFileBaseName["diff_density_matrix"] = "dP.%s.mat";
     }
     
-    paramFileBaseName["occupation_vtr"] = "occupation.vtr";
+    if (paramFileBaseName["occupation_vtr"].getStr().empty() == true) {
+        paramFileBaseName["occupation_vtr"] = "occupation.%s.vtr";
+    }
     if (paramFileBaseName["Ppq_matrix"].getStr().empty() == true) {
         paramFileBaseName["Ppq_matrix"] = "Ppq.%s.mat";
     }

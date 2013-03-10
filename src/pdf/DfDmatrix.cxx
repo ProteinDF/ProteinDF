@@ -79,12 +79,12 @@ void DfDmatrix::main(const DfObject::RUN_TYPE runType)
 
     default:
         this->log_.info(" orbital correspondence method: none");
-        if (TlFile::isExist(this->getOccupationPath(runType)) == true) {
-            currOcc.load(this->getOccupationPath(runType));
-        } else {
-            currOcc = this->createOccupation(runType);
-            currOcc.save(this->getOccupationPath(runType));
-        }
+        currOcc.load(this->getOccupationPath(runType));
+        // if (TlFile::isExist(this->getOccupationPath(runType)) == true) {
+        // } else {
+        //     currOcc = this->createOccupation(runType);
+        //     currOcc.save(this->getOccupationPath(runType));
+        // }
         break;
     }
     
@@ -177,108 +177,108 @@ void DfDmatrix::printTwoVectors(const TlVector& a, const TlVector& b,
 }
 
 
-TlVector DfDmatrix::createOccupation(const DfObject::RUN_TYPE runType)
-{
-    const TlSerializeData& pdfParam = *(this->pPdfParam_);
+// TlVector DfDmatrix::createOccupation(const DfObject::RUN_TYPE runType)
+// {
+//     const TlSerializeData& pdfParam = *(this->pPdfParam_);
     
-    // construct guess occupations
-    TlVector occ(this->m_nNumOfMOs);
-    switch (runType) {
-    case RUN_RKS: {
-        std::vector<int> docLevel = this->getLevel(pdfParam["method/nsp/occlevel"].getStr());
-        for (std::vector<int>::const_iterator p = docLevel.begin(); p != docLevel.end(); p++) {
-            occ[*p -1] = 2.0;
-        }
-    }
-    break;
+//     // construct guess occupations
+//     TlVector occ(this->m_nNumOfMOs);
+//     switch (runType) {
+//     case RUN_RKS: {
+//         std::vector<int> docLevel = this->getLevel(pdfParam["method/rks/occlevel"].getStr());
+//         for (std::vector<int>::const_iterator p = docLevel.begin(); p != docLevel.end(); p++) {
+//             occ[*p -1] = 2.0;
+//         }
+//     }
+//     break;
 
-    case RUN_UKS_ALPHA: {
-        std::vector<int> aoocLevel = this->getLevel(pdfParam["method/sp/alpha-spin-occlevel"].getStr());
-        for (std::vector<int>::const_iterator p = aoocLevel.begin(); p != aoocLevel.end(); p++) {
-            occ[*p -1] = 1.0;
-        }
-    }
-    break;
+//     case RUN_UKS_ALPHA: {
+//         std::vector<int> aoocLevel = this->getLevel(pdfParam["method/uks/alpha_spin_occlevel"].getStr());
+//         for (std::vector<int>::const_iterator p = aoocLevel.begin(); p != aoocLevel.end(); p++) {
+//             occ[*p -1] = 1.0;
+//         }
+//     }
+//     break;
 
-    case RUN_UKS_BETA: {
-        std::vector<int> boocLevel = this->getLevel(pdfParam["method/sp/beta-spin-occlevel"].getStr());
-        for (std::vector<int>::const_iterator p = boocLevel.begin(); p != boocLevel.end(); p++) {
-            occ[*p -1] = 1.0;
-        }
-    }
-    break;
-    case RUN_ROKS: {
-        std::vector<int> docLevel = this->getLevel(pdfParam["method/roks/closed-shell"].getStr());
-        for (std::vector<int>::const_iterator p = docLevel.begin(); p != docLevel.end(); p++) {
-            occ[*p -1] = 2.0;
-        }
+//     case RUN_UKS_BETA: {
+//         std::vector<int> boocLevel = this->getLevel(pdfParam["method/uks/beta_spin_occlevel"].getStr());
+//         for (std::vector<int>::const_iterator p = boocLevel.begin(); p != boocLevel.end(); p++) {
+//             occ[*p -1] = 1.0;
+//         }
+//     }
+//     break;
+//     case RUN_ROKS: {
+//         std::vector<int> docLevel = this->getLevel(pdfParam["method/roks/closed-shell"].getStr());
+//         for (std::vector<int>::const_iterator p = docLevel.begin(); p != docLevel.end(); p++) {
+//             occ[*p -1] = 2.0;
+//         }
 
-        std::vector<int> socLevel = this->getLevel(pdfParam["method/roks/open-shell"].getStr());
-        for (std::vector<int>::const_iterator p = socLevel.begin(); p != socLevel.end(); p++) {
-            // nsoc
-            occ[*p -1] = 1.0;
-        }
-    }
-    break;
+//         std::vector<int> socLevel = this->getLevel(pdfParam["method/roks/open-shell"].getStr());
+//         for (std::vector<int>::const_iterator p = socLevel.begin(); p != socLevel.end(); p++) {
+//             // nsoc
+//             occ[*p -1] = 1.0;
+//         }
+//     }
+//     break;
 
-    default:
-        std::cerr << "program error. (DfDmatrix::createOccupation)" << std::endl;
-        break;
-    }
+//     default:
+//         std::cerr << "program error. (DfDmatrix::createOccupation)" << std::endl;
+//         break;
+//     }
 
-    return occ;
-}
+//     return occ;
+// }
 
-std::vector<int> DfDmatrix::getLevel(std::string sLevel)
-{
-    std::vector<int> answer;
-    answer.clear();
+// std::vector<int> DfDmatrix::getLevel(std::string sLevel)
+// {
+//     std::vector<int> answer;
+//     answer.clear();
 
-    // "-" を " - " に置換
-    TlUtils::replace(sLevel, "-", " - ");
+//     // "-" を " - " に置換
+//     TlUtils::replace(sLevel, "-", " - ");
 
-    TlStringTokenizer token(sLevel);
-    bool bRegionMode = false;
-    int nPrevIndex = 0;
-    while (token.hasMoreTokens()) {
-        std::string tmp = token.nextToken();
+//     TlStringTokenizer token(sLevel);
+//     bool bRegionMode = false;
+//     int nPrevIndex = 0;
+//     while (token.hasMoreTokens()) {
+//         std::string tmp = token.nextToken();
 
-        if (tmp == "nil") {
-            continue;
-        }
+//         if (tmp == "nil") {
+//             continue;
+//         }
 
-        if (tmp == "-") {
-            if (nPrevIndex != 0) {
-                bRegionMode = true;
-                continue;
-            } else {
-                abort();
-                //CnErr.abort("DfPreScf", "", "putdoclevel", "syntax error.");
-            }
-        }
+//         if (tmp == "-") {
+//             if (nPrevIndex != 0) {
+//                 bRegionMode = true;
+//                 continue;
+//             } else {
+//                 abort();
+//                 //CnErr.abort("DfPreScf", "", "putdoclevel", "syntax error.");
+//             }
+//         }
 
-        int nIndex = atoi(tmp.c_str());
-        //std::cerr << "nIndex = " << nIndex << std::endl;
-        if (nIndex > 0) {
-            if (bRegionMode == true) {
-                // 数字が xx - yy の形で入力
-                for (int i = nPrevIndex +1; i <= nIndex; i++) {
-                    answer.push_back(i);
-                }
-                bRegionMode = false;
-                nPrevIndex = 0;
-            } else {
-                // 数字が単独で入力
-                answer.push_back(nIndex);
-                nPrevIndex = nIndex;
-                continue;
-            }
-        } else {
-            abort();
-            //CnErr.abort("DfPreScf", "", "putdoclevel", "syntax error.");
-        }
-    }
+//         int nIndex = atoi(tmp.c_str());
+//         //std::cerr << "nIndex = " << nIndex << std::endl;
+//         if (nIndex > 0) {
+//             if (bRegionMode == true) {
+//                 // 数字が xx - yy の形で入力
+//                 for (int i = nPrevIndex +1; i <= nIndex; i++) {
+//                     answer.push_back(i);
+//                 }
+//                 bRegionMode = false;
+//                 nPrevIndex = 0;
+//             } else {
+//                 // 数字が単独で入力
+//                 answer.push_back(nIndex);
+//                 nPrevIndex = nIndex;
+//                 continue;
+//             }
+//         } else {
+//             abort();
+//             //CnErr.abort("DfPreScf", "", "putdoclevel", "syntax error.");
+//         }
+//     }
 
 
-    return answer;
-}
+//     return answer;
+// }

@@ -8,7 +8,7 @@
 const double DfInitialGuessHuckel::EPS = std::numeric_limits<double>::epsilon();
 
 DfInitialGuessHuckel::DfInitialGuessHuckel(TlSerializeData* pPdfParam)
-    : DfObject(pPdfParam)
+    : DfInitialGuess(pPdfParam)
 {
     this->initialize();
 }
@@ -53,49 +53,5 @@ double DfInitialGuessHuckel::getHii(const std::string& sAtomName, const int nOrb
     }
 
     return dAnswer;
-}
-
-// TlSymmetricMatrix DfInitialGuessHuckel::getHpqMatrix()
-// {
-//     TlSymmetricMatrix Hpq = DfObject::getHpqMatrix<TlSymmetricMatrix>();
-//     return Hpq;
-// }
-
-// output occupation number to a files in fl_Work directory
-TlVector DfInitialGuessHuckel::generateOccupation(const RUN_TYPE nRunType, const int nNumOrbcut, const int nNumOfElectrons)
-{
-    TlVector occ(nNumOrbcut);
-
-    const int nElec_2 = (this->m_nMethodType == METHOD_RKS) ? (nNumOfElectrons / 2) : nNumOfElectrons;
-    std::cerr << "elec = " << nElec_2 << std::endl;
-
-    const double dElectrons = (this->m_nMethodType == METHOD_RKS) ? 2.0 : 1.0;
-    for (int i = 0; i <nElec_2; i++) {
-        occ[i] = dElectrons;
-    }
-
-    std::string sSuffix = "";
-    switch (nRunType) {
-    case RUN_RKS:
-        //sSuffix = "";
-        break;
-    case RUN_UKS_ALPHA:
-        sSuffix = "_Alpha";
-        break;
-    case RUN_UKS_BETA:
-        sSuffix = "_Beta";
-        break;
-    case RUN_ROKS:
-        CnErr.abort("to implement. DfInitialGuessHuckel::generateOccupation()");
-        break;
-    default:
-        CnErr.abort("unknown run type.");
-        break;
-    }
-
-    const std::string sFileName = "fl_Work/fl_Occupation" + sSuffix;
-    occ.save(sFileName);
-
-    return occ;
 }
 

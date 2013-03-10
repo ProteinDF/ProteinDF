@@ -27,9 +27,6 @@ protected:
     virtual TlSymmetricMatrix getJMatrix(const int iteration);
 
     virtual TlVector getRho(const RUN_TYPE runType, const int iteration);
-    virtual TlSymmetricMatrix getPMatrix(const int iteration);
-    virtual TlSymmetricMatrix getDiffDensityMatrix();
-
 };
 
 #endif // DFJMATRIX_PARALLEL_H

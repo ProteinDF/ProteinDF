@@ -80,12 +80,12 @@ protected:
 
 protected:
     /// Fockの交換項を求める
-    virtual TlSymmetricMatrix getFockExchange(const TlSymmetricMatrix& prevP, RUN_TYPE nRunType);
-    TlSymmetricMatrix getFockExchange(const TlSymmetricMatrix& P);
+    // virtual TlSymmetricMatrix getFockExchange(const TlSymmetricMatrix& prevP, RUN_TYPE nRunType);
+    // TlSymmetricMatrix getFockExchange(const TlSymmetricMatrix& P);
 
-    double getFockExchangeEnergy(const TlSymmetricMatrix& P, const TlSymmetricMatrix& Ex);
-    double getFockExchangeEnergy(const TlSymmetricMatrix& PA, const TlSymmetricMatrix& PB,
-                                 const TlSymmetricMatrix& Ex);
+    // double getFockExchangeEnergy(const TlSymmetricMatrix& P, const TlSymmetricMatrix& Ex);
+    // double getFockExchangeEnergy(const TlSymmetricMatrix& PA, const TlSymmetricMatrix& PB,
+    //                              const TlSymmetricMatrix& Ex);
 
 
     /// 電子数を数値積分により求めることにより、グリッドの精度をチェックする
@@ -118,8 +118,8 @@ protected:
     
     //static double m_dXC_Energy;
     double XC_energy_;
-    static double m_dFockExchangeEnergyAlpha; // Update法を使うため、直前のenergyを保存
-    static double m_dFockExchangeEnergyBeta;
+    // static double m_dFockExchangeEnergyAlpha; // Update法を使うため、直前のenergyを保存
+    // static double m_dFockExchangeEnergyBeta;
     
     /// Grimmeの分散力補正
     static bool isCalcd_E_disp_;

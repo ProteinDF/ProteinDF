@@ -39,7 +39,7 @@ for DIR in ${PDF_WORK_DIRS}; do
 done
 
 # cleanup files
-PDF_OUTPUT_FILES="fl_Out_Std pdfparam.mpac"
+PDF_OUTPUT_FILES="fl_Out_Std pdfparam.mpac pdfresults.db"
 if [ x${FULL_CLEANUP} = xtrue ]; then
     for FILE in ${PDF_OUTPUT_FILES}; do
 	if [ -f $FILE ]; then

@@ -31,7 +31,6 @@ template<class SymmetricMatrixType>
 void DfDiffDensityMatrix::calc(const DfObject::RUN_TYPE runType, const int iteration)
 {
     SymmetricMatrixType P = DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration -1);
-    //if (TlFile::isExist(this->getPpqMatrixPath(runType, iteration -2)) == true) {
     if (iteration > 1) {
         P -= (DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration -2));
     }

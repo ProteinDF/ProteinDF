@@ -135,10 +135,11 @@ void DfJMatrix::getJ_conventional_local(TlSymmetricMatrix* pJ)
 {
     TlSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {
-        P = this->getDiffDensityMatrix();
+        P = this->getDiffDensityMatrix<TlSymmetricMatrix>();
     } else {
-        P = this->getPMatrix(this->m_nIteration -1);
+        P = this->getDensityMatrix<TlSymmetricMatrix>();
     }
+    P.save("P.mat");
 
     DfEriX dfEri(this->pPdfParam_);
     dfEri.getJpq(P, pJ);
@@ -150,22 +151,6 @@ void DfJMatrix::getJ_conventional_local(TlSymmetricMatrix* pJ)
         }
     }
 }
-
-
-TlSymmetricMatrix DfJMatrix::getPMatrix(const int iteration)
-{
-    const TlSymmetricMatrix P = DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, iteration);
-    return P;
-}
-
-
-TlSymmetricMatrix DfJMatrix::getDiffDensityMatrix()
-{
-    const TlSymmetricMatrix diffP = 
-        DfObject::getDiffDensityMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration);
-    return diffP;
-}
-
 
 TlSymmetricMatrix DfJMatrix::getJMatrix(const int iteration)
 {
