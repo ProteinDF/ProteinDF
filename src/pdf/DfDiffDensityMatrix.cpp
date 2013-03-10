@@ -48,15 +48,3 @@ void DfDiffDensityMatrix::exec()
     }
 }
 
-
-// void DfDiffDensityMatrix::calc(const DfObject::RUN_TYPE runType, const int iteration)
-// {
-//     TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration -1);
-//     if (TlFile::isExist(this->getPpqMatrixPath(runType, iteration -2)) == true) {
-//         P -= (this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration -2));
-//     }
-
-//     this->saveDiffDensityMatrix(runType, iteration, P);
-// }
-
-

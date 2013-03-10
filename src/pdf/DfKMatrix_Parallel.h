@@ -23,9 +23,10 @@ protected:
     void getK_conventional_distributed(const RUN_TYPE runType, TlDistributeSymmetricMatrix *pJ);
 
 protected:
-    virtual TlSymmetricMatrix getPMatrix(const RUN_TYPE runType,
-                                         const int iteration);
-    virtual TlSymmetricMatrix getDiffDensityMatrix(const RUN_TYPE runType);
+    // virtual TlSymmetricMatrix getPMatrix(const RUN_TYPE runType,
+    //                                      const int iteration);
+    // virtual TlSymmetricMatrix getDiffDensityMatrix(const RUN_TYPE runType);
+
     virtual TlSymmetricMatrix getKMatrix(const RUN_TYPE runType,
                                          const int iteration);
     virtual void saveKMatrix(const RUN_TYPE runType,

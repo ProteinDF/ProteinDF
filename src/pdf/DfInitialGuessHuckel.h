@@ -3,15 +3,14 @@
 
 #include <string>
 
-#include "DfObject.h"
+#include "DfInitialGuess.h"
 #include "TlVector.h"
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
 #include "TlOrbitalInfo.h"
 
-/** 拡張Huckel法による初期値を作成する
- */
-class DfInitialGuessHuckel : public DfObject {
+/// 拡張Huckel法による初期値を作成する
+class DfInitialGuessHuckel : public DfInitialGuess {
 public:
     DfInitialGuessHuckel(TlSerializeData* pPdfParam);
     virtual ~DfInitialGuessHuckel();
@@ -28,10 +27,7 @@ protected:
     template<typename SymmetricMatrixType>
     SymmetricMatrixType getHuckelMatrix();
 
-    // TlSymmetricMatrix getHpqMatrix();
     double getHii(const std::string& sAtomName, int nOrbitalType);
-
-    TlVector generateOccupation(RUN_TYPE nRunType, int nNumOrbcut, int nNumOfElectrons);
 
     template<typename SymmetricMatrixType, typename MatrixType>
     void generatePMatrix(const MatrixType& C, const TlVector& occ,
@@ -72,36 +68,40 @@ void DfInitialGuessHuckel::createGuess()
         TlVector eigval;
         F.diagonal(&eigval, &C);
     }
-
     C = X * C;
 
     // P
     switch (this->m_nMethodType) {
     case METHOD_RKS: {
-        const TlVector occ = this->generateOccupation(RUN_RKS, this->m_nNumOfMOs, this->m_nNumOfElectrons);
-        SymmetricMatrixType P, P1, P2;
-        this->generatePMatrix(C, occ, P1, P2);
+        const TlVector occ = this->createOccupation(RUN_RKS);
+        this->saveCMatrix(RUN_RKS, 0, C);
+        this->makeDensityMatrix();
 
-        P = 2.0 * P1;
-        P += P2;
-        DfObject::savePpqMatrix(RUN_RKS, 0, P);
+        // SymmetricMatrixType P, P1, P2;
+        // this->generatePMatrix(C, occ, P1, P2);
+        // P = 2.0 * P1;
+        // P += P2;
+        // DfObject::savePpqMatrix(RUN_RKS, 0, P);
     }
     break;
 
     case METHOD_UKS: {
-        const TlVector occA = this->generateOccupation(RUN_UKS_ALPHA, this->m_nNumOfMOs, this->m_nNumOfAlphaElectrons);
-        const TlVector occB = this->generateOccupation(RUN_UKS_BETA, this->m_nNumOfMOs, this->m_nNumOfBetaElectrons);
+        const TlVector occA = this->createOccupation(RUN_UKS_ALPHA);
+        const TlVector occB = this->createOccupation(RUN_UKS_BETA);
+        this->saveCMatrix(RUN_UKS_ALPHA, 0, C);
+        this->saveCMatrix(RUN_UKS_BETA, 0, C);
+        this->makeDensityMatrix();
 
-        SymmetricMatrixType P, P1, P2;
-        this->generatePMatrix(C, occA, P1, P2);
-        P = 2.0 * P1;
-        P += P2;
-        DfObject::savePpqMatrix(RUN_UKS_ALPHA, 0, P);
+        // SymmetricMatrixType P, P1, P2;
+        // this->generatePMatrix(C, occA, P1, P2);
+        // P = 2.0 * P1;
+        // P += P2;
+        // DfObject::savePpqMatrix(RUN_UKS_ALPHA, 0, P);
 
-        this->generatePMatrix(C, occB, P1, P2);
-        P = 2.0 * P1;
-        P += P2;
-        DfObject::savePpqMatrix(RUN_UKS_BETA, 0, P);
+        // this->generatePMatrix(C, occB, P1, P2);
+        // P = 2.0 * P1;
+        // P += P2;
+        // DfObject::savePpqMatrix(RUN_UKS_BETA, 0, P);
     }
     break;
 

@@ -76,7 +76,24 @@ void DfTotalEnergy::output()
             this->log_.info(TlUtils::format(" E_cx(+disp.)   = %28.16lf\n", E_Total + this->E_disp_));
         }
 
-        this->log_.info(TlUtils::format(" E_K            = %28.16lf\n", this->K_term_));
+        switch (this->m_nMethodType) {
+        case METHOD_RKS:
+            this->log_.info(TlUtils::format(" E_K            = %28.16lf\n", this->K_term_));
+            break;
+
+        case METHOD_UKS:
+            this->log_.info(TlUtils::format(" E_K            = %28.16lf\n", this->K_term_));
+            this->log_.info(TlUtils::format("   E_K(alpha)   = %28.16lf\n", this->E_KA_));
+            this->log_.info(TlUtils::format("   E_K(beta)    = %28.16lf\n", this->E_KB_));
+            break;
+
+        case METHOD_ROKS:
+            break;
+
+        default:
+            this->log_.critical("program error");
+            break;
+        }
         E_Total += this->K_term_;
 
         this->log_.info(TlUtils::format(" E_nuclei       = %28.16lf\n", this->m_dE_NuclearRepulsion));

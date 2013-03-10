@@ -70,12 +70,7 @@ void DfDmatrix_Parallel::main_SCALAPACK(const DfObject::RUN_TYPE runType)
     default:
         if (rComm.isMaster() == true) {
             this->log_.info(" orbital correspondence method: none");
-            if (TlFile::isExist(this->getOccupationPath(runType)) == true) {
-                currOcc.load(this->getOccupationPath(runType));
-            } else {
-                currOcc = this->createOccupation(runType);
-                currOcc.save(this->getOccupationPath(runType));
-            }
+            currOcc.load(this->getOccupationPath(runType));
         }
         rComm.broadcast(currOcc);
         break;
