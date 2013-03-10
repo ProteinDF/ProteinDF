@@ -33,18 +33,6 @@ protected:
     template<typename SymmetricMatrixType, typename VectorType>
     double calcJRhoTildeRhoTilde(const VectorType& rho);
 
-    /// J[rho, rho~]の計算を行う（積分を直接計算）
-    //double calculate_J_Rho_Rhotilda_WITH_DIRECT(const TlSymmetricMatrix& T, const TlVector& R);
-
-    /// J[rho, rho~]の計算を行う(積分をファイルに蓄えて計算)
-    //double calculate_J_Rho_Rhotilda_WITH_FILE(const TlSymmetricMatrix& T, const TlVector& R);
-
-    /// 交換相関ポテンシャル部分の計算を行う
-    //double calculate_Exc_WITH_DIRECT(const TlSymmetricMatrix& D, const TlVector& E);
-
-    /// 交換相関ポテンシャル部分の計算を行う
-    //double calculate_Exc_WITH_FILE(const TlSymmetricMatrix& D, const TlVector& E);
-    
     /// 全エネルギーを出力する
     void write_total_energy(double E_Total) const;
 
@@ -110,7 +98,11 @@ protected:
     double m_dE_J_Rho_RhoTilde;
     double m_dE_J_RhoTilde_RhoTilde;
     double m_dExc;
+
     double K_term_;
+    double E_KA_;
+    double E_KB_;
+
     double m_dE_NuclearRepulsion;
     double m_dE_OEP_JRR_Exc;
     double E_disp_; /// Grimme dispersion Energy
@@ -123,11 +115,34 @@ protected:
 template<typename DfOverlapType, typename DfEriType, typename SymmetricMatrixType, typename VectorType>
 void DfTotalEnergy::exec_template()
 {
+    // setup density matrix
+    SymmetricMatrixType Ppq, PpqA, PpqB;
+    switch (this->m_nMethodType) {
+    case METHOD_RKS:
+        Ppq = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration);
+        break;
+
+    case METHOD_UKS:
+        PpqA = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_UKS_ALPHA, this->m_nIteration);
+        PpqB = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_UKS_BETA,  this->m_nIteration);
+        Ppq = PpqA;
+        Ppq += PpqB;
+        break;
+
+    case METHOD_ROKS:
+        PpqA = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSE, this->m_nIteration);
+        PpqB = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN,  this->m_nIteration);
+        Ppq = PpqA;
+        Ppq += PpqB;
+        break;
+
+    default:
+        this->log_.critical("program error");
+    }
+
     // 核-核反発
     this->m_dE_NuclearRepulsion = this->calculate_energy_nuclear_repulsion();
  
-    const SymmetricMatrixType Ppq = this->getPpq<SymmetricMatrixType>(this->m_nMethodType);
-
     // クーロン項
     switch (this->J_engine_) {
     case J_ENGINE_RI_J:
@@ -164,7 +179,6 @@ void DfTotalEnergy::exec_template()
 
         switch (this->m_nMethodType) {
         case METHOD_RKS:
-            // DIRECT SCHEME
             if (this->m_bIsXCFitting == true) {
                 const VectorType Eps = this->getEps<VectorType>(RUN_RKS);
                 this->m_dExc = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, Eps);
@@ -179,32 +193,32 @@ void DfTotalEnergy::exec_template()
                     }
                 }
 
-                //this->K_term_ = this->calcK(RUN_RKS, 0.5 * Ppq) * 2.0; // 0.5 means alpha-spin, 2.0 means "alpha + beta"
-                this->K_term_ = this->calcK(RUN_RKS, Ppq);
+                this->K_term_ = this->calcK(RUN_RKS, 0.5 * Ppq) * 2.0;
             }
             break;
 
         case METHOD_UKS:
-            // DIRECT SCHEME
-            if ((this->m_sXCFunctional == "xalpha") || (this->m_sXCFunctional == "gxalpha")) {
-                const VectorType epsa = this->getEps<VectorType>(RUN_UKS_ALPHA);
-                const VectorType epsb = this->getEps<VectorType>(RUN_UKS_BETA);
-                const double E_Exc_alpha  =
-                    this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, epsa);
-                const double E_Exc_beta   =
-                    this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, epsb);
-                    
-                    this->m_dExc = E_Exc_alpha + E_Exc_beta;
-            } else {
+            {
                 if (this->m_bIsXCFitting == true) {
-                    const VectorType eps = this->getEps<VectorType>(RUN_UKS_ALPHA);
-                    this->m_dExc = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, eps);
+                    const VectorType EpsA = this->getEps<VectorType>(RUN_UKS_ALPHA);
+                    const VectorType EpsB = this->getEps<VectorType>(RUN_UKS_BETA);
+                    this->m_dExc  = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(PpqA, EpsA);
+                    this->m_dExc += this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(PpqB, EpsB);
                 } else {
-                    DfXCFunctional dfXCFunctional(this->pPdfParam_);
-                    this->m_dExc = dfXCFunctional.getEnergy();
-                    if (this->enableGrimmeDispersion_ == true) {
-                        this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
+                    if (this->isGridFree_ == true) {
+                        this->m_dExc  = this->calcExc(RUN_UKS_ALPHA, PpqA);
+                        this->m_dExc += this->calcExc(RUN_UKS_BETA,  PpqB);
+                    } else {
+                        DfXCFunctional dfXCFunctional(this->pPdfParam_);
+                        this->m_dExc = dfXCFunctional.getEnergy();
+                        if (this->enableGrimmeDispersion_ == true) {
+                            this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
+                        }
                     }
+                    
+                    this->E_KA_ = this->calcK(RUN_UKS_ALPHA, PpqA);
+                    this->E_KB_ = this->calcK(RUN_UKS_ALPHA, PpqB);
+                    this->K_term_ = this->E_KA_ + this->E_KB_;
                 }
             }
             break;
@@ -312,7 +326,6 @@ SymmetricMatrixType DfTotalEnergy::getPpq(const METHOD_TYPE methodType)
     return Ppq;
 }
 
-
 // 全電子密度分布を用意する
 template<typename VectorType>
 VectorType DfTotalEnergy::getRho(const METHOD_TYPE methodType)
@@ -341,7 +354,6 @@ VectorType DfTotalEnergy::getRho(const METHOD_TYPE methodType)
 
     return rho;
 }
-
 
 template<typename VectorType>
 VectorType DfTotalEnergy::getEps(const RUN_TYPE runType)
@@ -384,7 +396,6 @@ VectorType DfTotalEnergy::getEps(const RUN_TYPE runType)
     return E;
 }
 
-
 template<typename SymmetricMatrixType>
 double DfTotalEnergy::calculate_E_WITH_DIRECT(const SymmetricMatrixType& D)
 {
@@ -426,7 +437,6 @@ double DfTotalEnergy::calculate_E_WITH_DIRECT(const SymmetricMatrixType& D)
 
     return tmpEpq.dot(D).sum();
 }
-
 
 // energy for one electron part
 template<typename SymmetricMatrixType>

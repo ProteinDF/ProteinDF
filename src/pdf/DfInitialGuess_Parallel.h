@@ -11,9 +11,8 @@ public:
     
 protected:
     virtual void createRho();
-    virtual void saveRho1(RUN_TYPE runType);
     
-    virtual void createOccupation(RUN_TYPE runType);
+    virtual TlVector createOccupation(RUN_TYPE runType);
 
     virtual void createInitialGuessUsingHuckel();
     virtual void createInitialGuessUsingCore();
@@ -21,8 +20,6 @@ protected:
 
     virtual void createInitialGuessUsingLCAO(RUN_TYPE runType);
 
-    //virtual std::vector<int> getLevel(std::string sLevel);
-    
     /// 占有軌道情報を取得する
     virtual TlVector getOccupation(const RUN_TYPE runType);
 
@@ -30,12 +27,12 @@ protected:
     virtual void saveOccupation(const RUN_TYPE runType, const TlVector& rOccupation);
 
 protected:
-    virtual void logger(const std::string& str) const;
-
     void createInitialGuessUsingLCAO_onScaLAPACK(const RUN_TYPE runType);
     void createInitialGuessUsingLCAO_onLAPACK(const RUN_TYPE runType);
 
     TlDistributeMatrix getLCAO_onScaLAPACK(const RUN_TYPE runType);
+
+    virtual DfDmatrix* getDfDmatrixObject(TlSerializeData* param);
 };
 
 #endif // DFINITIALGUESS_PARALLEL_H

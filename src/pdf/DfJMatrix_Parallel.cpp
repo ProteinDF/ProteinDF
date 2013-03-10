@@ -223,11 +223,14 @@ void DfJMatrix_Parallel::getJ_conventional_local(TlSymmetricMatrix *pJ)
     TlCommunicate& rComm = TlCommunicate::getInstance();
     
     TlSymmetricMatrix P;
-    if (this->isUpdateMethod_ == true) {
-        P = this->getDiffDensityMatrix();
-    } else {
-        P = this->getPMatrix(this->m_nIteration -1);
+    if (rComm.isMaster() == true) {
+        if (this->isUpdateMethod_ == true) {
+            P = this->getDiffDensityMatrix<TlSymmetricMatrix>();
+        } else {
+            P = this->getDensityMatrix<TlSymmetricMatrix>();
+        }
     }
+    rComm.broadcast(P);
     assert(P.getNumOfRows() == this->m_nNumOfAOs);
     
     DfEriX_Parallel dfEri(this->pPdfParam_);
@@ -247,7 +250,7 @@ void DfJMatrix_Parallel::getJ_conventional_distributed(TlDistributeSymmetricMatr
     TlCommunicate& rComm = TlCommunicate::getInstance();
     TlDistributeSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {
-        P = DfObject::getDiffDensityMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration);
+        P = this->getDiffDensityMatrix<TlDistributeSymmetricMatrix>();
     } else {
         P = DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
     }
@@ -266,35 +269,6 @@ void DfJMatrix_Parallel::getJ_conventional_distributed(TlDistributeSymmetricMatr
         }
     }
 }
-
-
-TlSymmetricMatrix DfJMatrix_Parallel::getPMatrix(const int iteration)
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    TlSymmetricMatrix P;
-    if (rComm.isMaster() == true) {
-        P = DfJMatrix::getPMatrix(iteration);
-    }
-    rComm.broadcast(P);
-
-    return P;
-}
-
-
-TlSymmetricMatrix DfJMatrix_Parallel::getDiffDensityMatrix()
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    TlSymmetricMatrix diffP;
-    if (rComm.isMaster() == true) {
-        diffP = DfJMatrix::getDiffDensityMatrix();
-    }
-    rComm.broadcast(diffP);
-
-    return diffP;
-}
-
 
 TlSymmetricMatrix DfJMatrix_Parallel::getJMatrix(const int iteration)
 {
