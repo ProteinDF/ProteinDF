@@ -115,8 +115,9 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
         {
             double numOfElectrons = 0.0;
             DfPopulationType dfPop(this->pPdfParam_);
+            this->savePpqMatrix(RUN_RKS, 0, P_high); // sumOfElectrons()で必要
             dfPop.sumOfElectrons(0, &numOfElectrons, NULL);
-            const double coef = numOfElectrons / this->m_nNumOfElectrons;
+            const double coef = this->m_nNumOfElectrons / numOfElectrons;
 
             this->savePpqMatrix(RUN_RKS, 0, coef * P_high);
         }
@@ -127,9 +128,11 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
             double numOfAlphaElectrons = 0.0;
             double numOfBetaElectrons = 0.0;
             DfPopulationType dfPop(this->pPdfParam_);
+            this->savePpqMatrix(RUN_UKS_ALPHA, 0, P_high); // sumOfElectrons()で必要
+            this->savePpqMatrix(RUN_UKS_BETA,  0, P_high);
             dfPop.sumOfElectrons(0, &numOfAlphaElectrons, &numOfBetaElectrons);
-            const double coef_alpha = numOfAlphaElectrons / this->m_nNumOfAlphaElectrons;
-            const double coef_beta  = numOfBetaElectrons  / this->m_nNumOfBetaElectrons;
+            const double coef_alpha = this->m_nNumOfAlphaElectrons / numOfAlphaElectrons;
+            const double coef_beta  = this->m_nNumOfBetaElectrons  / numOfBetaElectrons;
 
             this->savePpqMatrix(RUN_UKS_ALPHA, 0, coef_alpha * P_high);
             this->savePpqMatrix(RUN_UKS_BETA,  0, coef_beta  * P_high);
