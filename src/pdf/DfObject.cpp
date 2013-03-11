@@ -90,9 +90,9 @@ void DfObject::setParam(const TlSerializeData& data)
 
     // SCF type
     const std::string methodType = TlUtils::toUpper(data["method"].getStr());
-    if (methodType == "RKS") {
+    if ((methodType == "RKS") || (methodType == "NSP")) {
         this->m_nMethodType = METHOD_RKS;
-    } else if (methodType == "UKS") {
+    } else if ((methodType == "UKS") || (methodType == "SP")) {
         this->m_nMethodType = METHOD_UKS;
     } else if (methodType == "ROKS") {
         this->m_nMethodType = METHOD_ROKS;
