@@ -55,22 +55,22 @@ DfEriX::DfEriX(TlSerializeData* pPdfParam)
 
     // debug ===========================================================
     this->isDebugOutJ_ = false;
-    if ((*pPdfParam)["debug_out_J"].getStr().empty() != true) {
-        this->isDebugOutJ_ = (*pPdfParam)["debug_out_J"].getBoolean();
+    if ((*pPdfParam)["debug/eri/output_J"].getStr().empty() != true) {
+        this->isDebugOutJ_ = (*pPdfParam)["debug/eri/output_J"].getBoolean();
     }
 
     this->isDebugOutK_ = false;
-    if ((*pPdfParam)["debug_out_K"].getStr().empty() != true) {
-        this->isDebugOutK_ = (*pPdfParam)["debug_out_K"].getBoolean();
+    if ((*pPdfParam)["debug/eri/output_K"].getStr().empty() != true) {
+        this->isDebugOutK_ = (*pPdfParam)["debug/eri/output_K"].getBoolean();
     }
 
     this->isDebugExactJ_ = false;
-    if ((*pPdfParam)["debug_exact_J"].getStr().empty() != true) {
-        this->isDebugExactJ_ = (*pPdfParam)["debug_exact_J"].getBoolean();
+    if ((*pPdfParam)["debug/eri/exact_J"].getStr().empty() != true) {
+        this->isDebugExactJ_ = (*pPdfParam)["debug/eri/exact_J"].getBoolean();
     }
     this->isDebugExactK_ = false;
-    if ((*pPdfParam)["debug_exact_K"].getStr().empty() != true) {
-        this->isDebugExactK_ = (*pPdfParam)["debug_exact_K"].getBoolean();
+    if ((*pPdfParam)["debug/eri/exact_K"].getStr().empty() != true) {
+        this->isDebugExactK_ = (*pPdfParam)["debug/eri/exact_K"].getBoolean();
     }
 
     // statics
