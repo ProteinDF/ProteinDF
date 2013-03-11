@@ -17,7 +17,7 @@
 #include "TlSerializeData.h"
 
 DfInitialGuessHarris::DfInitialGuessHarris(TlSerializeData* pPdfParam)
-    : DfObject(pPdfParam)
+    : DfObject(pPdfParam), debug_(false)
 {
     std::string harrisDbFile = "harris.mpac";
     const char* pdfHome = std::getenv("PDF_HOME");
