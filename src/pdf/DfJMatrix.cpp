@@ -139,7 +139,7 @@ void DfJMatrix::getJ_conventional_local(TlSymmetricMatrix* pJ)
     } else {
         P = this->getDensityMatrix<TlSymmetricMatrix>();
     }
-    P.save("P.mat");
+    // P.save("P.mat");
 
     DfEriX dfEri(this->pPdfParam_);
     dfEri.getJpq(P, pJ);
