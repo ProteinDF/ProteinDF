@@ -889,45 +889,6 @@ double TlSymmetricMatrix::getMaxAbsoluteElement(int* outRow, int* outCol) const
     return dAnswer;
 }
 
-TlVector TlSymmetricMatrix::getRowVector(const int nRow) const
-{
-    assert((0 <= nRow) && (nRow < this->m_nRows));
-
-    const int nSize = this->m_nCols;
-    TlVector answer(nSize);
-
-    const int nSize2 = nSize * 2;
-    {
-        // nCol < nRow
-        for (int nCol = 0; nCol < nRow; ++nCol) {
-            //const int index = nRow + (nSize2 - (nCol +1)) * nCol / 2;
-            unsigned int index = (nSize2 - (nCol +1)) * nCol;
-            index = index >> 1; // means index /= 2
-            index += nRow;
-
-            answer[nCol] = this->data_[index];
-        }
-    }
-    {
-        // nCol >= nRow
-        //const int base = (nSize2 - (nRow +1)) * nRow / 2;
-        unsigned int base = (nSize2 - (nRow +1)) * nRow;
-        base = base >> 1; // means base /= 2
-        for (int nCol = nRow; nCol < nSize; ++nCol) {
-            answer[nCol] = this->data_[base + nCol];
-        }
-    }
-
-    return answer;
-}
-
-
-TlVector TlSymmetricMatrix::getColVector(const int nCol) const
-{
-    return this->getRowVector(nCol);
-}
-
-
 double TlSymmetricMatrix::getMaxAbsoluteElementByIndex(int index) const
 {
     double dAnswer = 0.0;
