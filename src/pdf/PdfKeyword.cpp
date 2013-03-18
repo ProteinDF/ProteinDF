@@ -210,7 +210,7 @@ void PdfKeyword::makeDB() const
     }
 
     if (this->kwdDb_.size() != numOfKwds) {
-        std::cerr << TlUtils::format("[WARN] size mismatch: file: %s, line: %s.", __FILE__, __LINE__)
+        std::cerr << TlUtils::format("[WARN] size mismatch: file: %s, line: %d.", __FILE__, (int)__LINE__)
                   << std::endl;
     }
 }
