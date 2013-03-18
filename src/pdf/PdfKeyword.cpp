@@ -6,7 +6,7 @@
 #include "TlLogging.h"
 
 PdfKeyword::PdfKeyword()
-{
+ : log_(TlLogging::getInstance()) {
     this->initialize();
 }
 
@@ -210,8 +210,7 @@ void PdfKeyword::makeDB() const
     }
 
     if (this->kwdDb_.size() != numOfKwds) {
-        std::cerr << TlUtils::format("[WARN] size mismatch: file: %s, line: %d.", __FILE__, (int)__LINE__)
-                  << std::endl;
+        this->log_.debug(TlUtils::format("[WARN] size mismatch: file: %s, line: %d.", __FILE__, (int)__LINE__));
     }
 }
 

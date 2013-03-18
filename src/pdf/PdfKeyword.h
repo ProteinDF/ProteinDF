@@ -6,6 +6,7 @@
 #include "TlUtils.h"
 #include "TlParameter.h"
 #include "TlSerializeData.h"
+#include "TlLogging.h"
 
 #define PDFKWD_PRINT_WIDTH (72)
 
@@ -84,6 +85,8 @@ protected:
     KeywordListType kwdList_;
     AliasContainerType kwdAlias_;
     mutable KeywordDbType kwdDb_;
+
+    TlLogging& log_;
 };
 
 
