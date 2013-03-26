@@ -87,9 +87,14 @@ TlMatrix::TlMatrix(const TlSerializeData& data)
     this->m_nCols = std::max(data["col"].getInt(), 1);
     this->initialize(false);
 
-    const size_type size = this->getNumOfElements();
-    for (size_type index = 0; index < size; ++index) {
-        this->data_[index] = data["data"].getAt(index).getDouble();
+    size_type index = 0;
+    const index_type maxRow = this->getNumOfRows();
+    const index_type maxCol = this->getNumOfCols();
+    for (index_type row = 0; row < maxRow; ++row) {
+        for (index_type col = 0; col < maxCol; ++col) {
+            this->set(row, col, data["data"].getAt(index).getDouble());
+            ++index;
+        }
     }
 }
 
@@ -1157,6 +1162,15 @@ TlVector TlMatrix::getDiagonalElements() const
 }
 
 
+TlMatrix TlMatrix::solveLinearLeastSquaresProblem(const TlMatrix& inB) const
+{
+    TlMatrix X;
+    const bool answer = solveLinearLeastSquaresProblemByLapack(*this, inB, &X);
+    assert(answer == true);
+    
+    return X;
+}
+
 
 // 要素の絶対値の最大値を返す
 // int* outRow, outCol にはその要素がある行と列を返す
@@ -1202,6 +1216,12 @@ extern "C" {
 
     void dgetrf_(const int* M, const int* N, double* A, const int* LDA, int* IPIV, int* INFO);
     void dgetri_(const int* N, double* A, const int* LDA, int* IPIV, double* WORK, int* LWORK, int* INFO);
+
+    void dgelss_(const int* M, const int* N, const int* NRHS,
+                 double* A, const int* LDA,
+                 double* B, const int* LDB,
+                 double* S, const double* RCOND,
+                 int* RANK, double* WORK, const int* LWORK, int* INFO);
 }
 
 
@@ -1346,6 +1366,62 @@ bool inverseByLapack(TlMatrix& X)
 
     return bAnswer;
 }
+
+bool solveLinearLeastSquaresProblemByLapack(const TlMatrix& inA,
+                                            const TlMatrix& inB,
+                                            TlMatrix* pX)
+{
+    bool answer = true;
+    TlLogging& log = TlLogging::getInstance();
+
+    const int M = inA.getNumOfRows();
+    if (M != inB.getNumOfRows()) {
+        log.critical(TlUtils::format("the numbers of A and B are not consistent: %d != %d",
+                                     M, inB.getNumOfRows()));
+        answer = false;
+        return answer;
+    }
+    const int N = inA.getNumOfCols();
+    const int NRHS = inB.getNumOfCols();
+    TlMatrix A = inA;
+    const int LDA = std::max(1, M);
+    const int LDB = std::max(1, std::max(M, N));
+    TlMatrix B = inB;
+    B.resize(LDB, NRHS); // size extended.
+    double* pS = new double[std::min(M, N)];
+    const double RCOND = -1.0; // If RCOND < 0, machine precision is used instead.
+    int RANK = 0;
+    const int LWORK = 3*std::min(M, N) + std::max(std::max(2*std::min(M, N), std::max(M, N)),
+                                                  NRHS);
+    double* pWORK = new double[std::max(1, LWORK)];
+    int INFO = 0;
+
+    dgelss_(&M, &N, &NRHS,
+            A.data_, &LDA,
+            B.data_, &LDB,
+            pS, &RCOND,
+            &RANK, pWORK, &LWORK,
+            &INFO);
+    if (INFO != 0) {
+        answer = false;
+        if (INFO > 0) {
+            log.critical(TlUtils::format("%d-th argument had an illegal value.",
+                                         -INFO));
+        } else {
+            log.critical(TlUtils::format("%d-th off-diagonal elements of an intermediate bidiagonal form did not converge to zero.",
+                                         INFO));
+        }
+    }
+    
+    delete[] pS;
+    pS = NULL;
+
+    *pX = B;
+    pX->resize(N, NRHS);
+    
+    return answer;
+}
+
 
 #endif // HAVE_LAPACK
 

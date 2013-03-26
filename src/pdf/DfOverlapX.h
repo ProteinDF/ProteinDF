@@ -26,6 +26,11 @@ public:
     void getNalpha(TlVector* pNalpha);
     void getForce(const TlSymmetricMatrix& W, TlMatrix* pForce);
 
+    /// 変換行列を作成する
+    void getTransMat(const TlOrbitalInfoObject& orbInfo1,
+                     const TlOrbitalInfoObject& orbInfo2,
+                     TlMatrix* pS);
+
 protected:
     static const int MAX_SHELL_TYPE;
     
@@ -55,9 +60,16 @@ protected:
 protected:
     void calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
                      TlMatrixObject* pMatrix);
+    void calcOverlap(const TlOrbitalInfoObject& orbitalInfo1,
+                     const TlOrbitalInfoObject& orbitalInfo2,
+                     TlMatrixObject* pMatrix);
     void calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
                      TlVectorObject* pVector);
     void calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
+                          const std::vector<DfTaskCtrl::Task2>& taskList,
+                          TlMatrixObject* pMatrix);
+    void calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo1,
+                          const TlOrbitalInfoObject& orbitalInfo2,
                           const std::vector<DfTaskCtrl::Task2>& taskList,
                           TlMatrixObject* pMatrix);
     void calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
@@ -65,8 +77,8 @@ protected:
                           TlVectorObject* pVector);
     
     ShellArrayTable makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo);
-    DfOverlapEngine::PGTOs getPGTOs(const TlOrbitalInfoObject& orbitalInfo,
-                                    const int shellIndex);
+    // DfOverlapEngine::PGTOs getPGTOs(const TlOrbitalInfoObject& orbitalInfo,
+    //                                 const int shellIndex);
 
     void getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
                            const int shellTypeP, const int shellTypeQ,

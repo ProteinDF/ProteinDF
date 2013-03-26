@@ -90,7 +90,7 @@ void DfConverge_Damping::convergePMatrix(const DfObject::RUN_TYPE runType)
 {
     const int iteration = this->m_nIteration;
 
-    if (iteration >= (this->m_nStartIteration +1)) {
+    if (iteration >= this->m_nStartIteration) {
         this->log_.info(" damping to density matrix");
 
         // Fpq damping

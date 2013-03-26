@@ -10,6 +10,7 @@
 #include "TlPosition.h"
 #include "TlAtom.h"
 #include "TlUtils.h"
+#include "TlLogging.h"
 #include "Fl_Gto.h"
 #include "Fl_Geometry.h"
 
@@ -94,6 +95,9 @@ public:
     }
 
     /// シェル毎にグループ化された軌道の最初の軌道番号の配列を返す
+    ///
+    /// 例えば 0:s, 1:s, 2:px, 3:py, 4:pz, 5:s, ...ならば
+    /// 0, 1, 2, 5, ...を返す
     std::vector<index_type> getStartIndexArrayOfShellGroup() const;
     
     /// 与えられた軌道のシェル(角運動量)の型を返す.
@@ -274,6 +278,8 @@ protected:
     Atoms atoms_;
     CGTOs cgtos_;
     std::vector<Orbital> orbitals_;
+
+    TlLogging& log_;
 };
 
 

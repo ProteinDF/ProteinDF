@@ -273,7 +273,10 @@ public:
 
     /// 対角成分をベクトルとして抽出する
     virtual TlVector getDiagonalElements() const;
-    
+
+    /// Ax=bを求める
+    TlMatrix solveLinearLeastSquaresProblem(const TlMatrix& inB) const;
+
 public:
     friend std::ostream& operator <<(std::ostream& out, const TlMatrix& rhs);
     template <typename T> void print(T& out) const;
@@ -352,6 +355,12 @@ protected:
 
     friend bool inverseByLapack(TlMatrix& inoutMatrix);
 
+    /// the minimum norm solution to a real linear least
+    /// squares problem:
+    ///  Minimize 2-norm(| b - A*x |).
+    friend bool solveLinearLeastSquaresProblemByLapack(const TlMatrix& inA,
+                                                       const TlMatrix& inB,
+                                                       TlMatrix* pX);
 #else
     // cause compile error
 #error NOT found algebra package: need LAPACK library

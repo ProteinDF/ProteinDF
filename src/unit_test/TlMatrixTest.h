@@ -22,6 +22,7 @@ class TlMatrixTest : public CppUnit::TestFixture {
     CPPUNIT_TEST(testOperatorMul_XA);
     CPPUNIT_TEST(testDot);
     CPPUNIT_TEST(testSum);
+    CPPUNIT_TEST(testsolveLinearLeastSquaresProblem);
     CPPUNIT_TEST_SUITE_END();
     
 public:
@@ -39,6 +40,7 @@ public:
     void testOperatorMul_XA();
     void testDot();
     void testSum();
+    void testsolveLinearLeastSquaresProblem();
     
 public:
     TlMatrixTest(){

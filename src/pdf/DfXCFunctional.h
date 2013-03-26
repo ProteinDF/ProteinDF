@@ -4,7 +4,7 @@
 #include "DfObject.h"
 #include "TlSymmetricMatrix.h"
 
-#include "DfFunctional_SHF.h"
+#include "DfFunctional_HFS.h"
 #include "DfFunctional_SVWN.h"
 #include "DfFunctional_Becke88.h"
 #include "DfFunctional_B88LYP.h"
@@ -31,7 +31,7 @@ public:
     enum XC_TYPE {
         UNDEFINED_XC,
         HF,
-        SHF,
+        HFS,
         SVWN,
         HFB,
         BLYP,
@@ -80,12 +80,12 @@ protected:
 
 protected:
     /// Fockの交換項を求める
-    virtual TlSymmetricMatrix getFockExchange(const TlSymmetricMatrix& prevP, RUN_TYPE nRunType);
-    TlSymmetricMatrix getFockExchange(const TlSymmetricMatrix& P);
+    // virtual TlSymmetricMatrix getFockExchange(const TlSymmetricMatrix& prevP, RUN_TYPE nRunType);
+    // TlSymmetricMatrix getFockExchange(const TlSymmetricMatrix& P);
 
-    double getFockExchangeEnergy(const TlSymmetricMatrix& P, const TlSymmetricMatrix& Ex);
-    double getFockExchangeEnergy(const TlSymmetricMatrix& PA, const TlSymmetricMatrix& PB,
-                                 const TlSymmetricMatrix& Ex);
+    // double getFockExchangeEnergy(const TlSymmetricMatrix& P, const TlSymmetricMatrix& Ex);
+    // double getFockExchangeEnergy(const TlSymmetricMatrix& PA, const TlSymmetricMatrix& PB,
+    //                              const TlSymmetricMatrix& Ex);
 
 
     /// 電子数を数値積分により求めることにより、グリッドの精度をチェックする
@@ -118,8 +118,8 @@ protected:
     
     //static double m_dXC_Energy;
     double XC_energy_;
-    static double m_dFockExchangeEnergyAlpha; // Update法を使うため、直前のenergyを保存
-    static double m_dFockExchangeEnergyBeta;
+    // static double m_dFockExchangeEnergyAlpha; // Update法を使うため、直前のenergyを保存
+    // static double m_dFockExchangeEnergyBeta;
     
     /// Grimmeの分散力補正
     static bool isCalcd_E_disp_;
@@ -141,10 +141,10 @@ void DfXCFunctional::getFxc(const SymmetricMatrixType& P1,
         this->XC_energy_ = 0.0;
         break;
 
-    case SHF: {
-        DfFunctional_SHF shf;
+    case HFS: {
+        DfFunctional_HFS hfs;
         this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(P1,
-                                                                       &shf,
+                                                                       &hfs,
                                                                        pFxc);
         this->checkGridAccuracy();
     }
@@ -213,9 +213,9 @@ void DfXCFunctional::getFxc(const SymmetricMatrixType& PpqA,
         this->XC_energy_ = 0.0;
         break;
         
-    case SHF: {
-        DfFunctional_SHF shf;
-        this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(PpqA, PpqB, &shf,
+    case HFS: {
+        DfFunctional_HFS hfs;
+        this->XC_energy_ = pDfCalcGridObj->calcXCIntegForFockAndEnergy(PpqA, PpqB, &hfs,
                                                                        pFxcA, pFxcB);
     }
         break;

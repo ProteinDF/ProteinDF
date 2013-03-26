@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include "makeField_common.h"
+#include "mkfld_common.h"
 #include "TlSerializeData.h"
 #include "Fl_Geometry.h"
 
@@ -226,33 +226,42 @@ void saveCubeData(const std::vector<TlAtom>& atoms,
     
     std::ofstream ofs;
     ofs.open(filePath.c_str(), std::ios::out | std::ios::trunc);
-    // header
-    ofs << "comemnt line:\n";
+    // header ------------------------------------------------------------------
+    // 1,2行目: コメント
+    ofs << "comment line:\n";
     ofs << TlUtils::format("comment line:%s\n", label.c_str());
-    ofs << TlUtils::format("%5d%12.6f%12.6f%12.6f\n", numOfAtoms, startPos.x(), startPos.y(), startPos.z()); // 開始点
-    ofs << TlUtils::format("%5d%12.6f%12.6f%12.6f\n", numOfGridZ, 0.0, 0.0, gridPitch.z());
-    ofs << TlUtils::format("%5d%12.6f%12.6f%12.6f\n", numOfGridY, 0.0, gridPitch.y(), 0.0);
-    ofs << TlUtils::format("%5d%12.6f%12.6f%12.6f\n", numOfGridX, gridPitch.x(), 0.0, 0.0);
+    
+    // 3行目: 原子数, 原点(x, y, z)
+    ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n",
+                           numOfAtoms, startPos.x(), startPos.y(), startPos.z()); // 開始点
+    
+    // 4,5,6行目: 各ベクトル方向への分割数およびステップ幅
+    // 各ベクトルが負の値ならばAngstrom単位, 正の値ならBohr単位
+    ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridX, gridPitch.x(), 0.0, 0.0);
+    ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridY, 0.0, gridPitch.y(), 0.0);
+    ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridZ, 0.0, 0.0, gridPitch.z());
 
-    // 原子
+    // 7行目以降: 原子の原子番号, 価電子数, x, y, z
+    // 
     for (int i = 0; i < numOfAtoms; ++i) {
-        ofs << TlUtils::format("%5d%12.6f%12.6f%12.6f%12.6f\n",
+        ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f % 12.6f\n",
                                TlAtom::getElementNumber(atoms[i].getSymbol()),
                                atoms[i].getCharge(),
                                atoms[i].getPosition().x(), atoms[i].getPosition().y(), atoms[i].getPosition().z());
     }
 
     // 物理量
-    const int numOfOutputGridGroups = numOfGrids / 6;
-    for (int i = 0; i < numOfOutputGridGroups; ++i) {
-        const int base = 6 * i;
-        ofs << TlUtils::format("% 12e % 12e % 12e % 12e % 12e % 12e\n",
-                               data[base], data[base +1], data[base +2],
-                               data[base +3], data[base +4], data[base +5]);
-    }
-    const int numOfOutputRests = numOfGrids - numOfOutputGridGroups * 6;
-    for (int i = 0; i < numOfOutputRests; ++i) {
-        ofs << TlUtils::format("% 12e ", data[numOfOutputGridGroups * 6 + i]);
+    for (int x = 0; x < numOfGridX; ++x) {
+        for (int y = 0; y < numOfGridY; ++y) {
+            for (int z = 0; z < numOfGridZ; ++z) {
+                const int index = (z*numOfGridY +y)*numOfGridX +x;
+                ofs << TlUtils::format("% 12.5E ", data[index]);
+                if (z % 6 == 5) {
+                    ofs << "\n";
+                }
+            }
+            ofs << "\n";
+        }
     }
     ofs << "\n";
     

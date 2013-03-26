@@ -2,7 +2,6 @@
 #include <cmath>
 #include <limits>
 #include "TlOrbitalInfoObject.h"
-#include "TlLogging.h"
 
 const int TlOrbitalInfoObject::MAX_SHELL_TYPE = 3;
 const double TlOrbitalInfoObject::INV_SQRT3 = 1.0 / std::sqrt(3.0);
@@ -21,7 +20,7 @@ const char* TlOrbitalInfoObject::basisTypeNameTbl_[] = {
 };
 
 
-TlOrbitalInfoObject::TlOrbitalInfoObject()
+TlOrbitalInfoObject::TlOrbitalInfoObject() : log_(TlLogging::getInstance())
 {
 }
 
@@ -33,8 +32,6 @@ TlOrbitalInfoObject::~TlOrbitalInfoObject()
 
 void TlOrbitalInfoObject::setCGTO(const Fl_Gto& flGto)
 {
-    TlLogging& log = TlLogging::getInstance();
-
     const int numOfCgto = flGto.getNumOfCGTOs();
     this->cgtos_.resize(numOfCgto);
 
@@ -56,8 +53,8 @@ void TlOrbitalInfoObject::setCGTO(const Fl_Gto& flGto)
             n = 0;
             break;
         default:
-            log.critical(TlUtils::format("Now we support 's' to 'd': input %d.", shell));
-            log.critical("stop at TlOrbitalInfoObject::setCGTO().");
+            this->log_.critical(TlUtils::format("Now we support 's' to 'd': input %d.", shell));
+            this->log_.critical("stop at TlOrbitalInfoObject::setCGTO().");
             exit(1);
         }
 
@@ -97,8 +94,6 @@ void TlOrbitalInfoObject::setCGTO(const Fl_Gto& flGto)
 
 void TlOrbitalInfoObject::setCGTO_coulomb(const Fl_Gto& flGto)
 {
-    TlLogging& log = TlLogging::getInstance();
-
     const int numOfCgto = flGto.getNumOfCGTOs();
     this->cgtos_.resize(numOfCgto);
 
@@ -120,8 +115,8 @@ void TlOrbitalInfoObject::setCGTO_coulomb(const Fl_Gto& flGto)
             n = 0;
             break;
         default:
-            log.critical(TlUtils::format("Now we support 's' to 'd': input %d.", shell));
-            log.critical("stop at TlOrbitalInfoObject::setCGTO_coulomb().");
+            this->log_.critical(TlUtils::format("Now we support 's' to 'd': input %d.", shell));
+            this->log_.critical("stop at TlOrbitalInfoObject::setCGTO_coulomb().");
             exit(1);
         }
 
@@ -134,7 +129,8 @@ void TlOrbitalInfoObject::setCGTO_coulomb(const Fl_Gto& flGto)
         tmpCGTO.basisName = flGto.getBasisName(cgto);
         tmpCGTO.atomSymbol = flGto.getAtom(cgto);
         tmpCGTO.shell = shell;
-        tmpCGTO.basisName = flGto.getLabel(cgto);
+        tmpCGTO.label = flGto.getLabel(cgto);
+        tmpCGTO.factor = 1.0;
 
         this->cgtos_[cgto] = tmpCGTO;
     }
@@ -182,7 +178,13 @@ void TlOrbitalInfoObject::makeOrbitalTable()
         tmpOrbital.atomIndex = atom;
         
         bool isFound = false;
+        this->log_.debug(TlUtils::format("check: symbol=%s label=\"%s\"",
+                                         symbol.c_str(), label.c_str()));
         for (int cgto = 0; cgto < numOfCgtos; ++cgto) {
+            this->log_.debug(TlUtils::format("current: cgto=%d symbol=%s label=\"%s\"",
+                                             cgto,
+                                             this->cgtos_[cgto].atomSymbol.c_str(),
+                                             this->cgtos_[cgto].label.c_str()));
             if ((this->cgtos_[cgto].atomSymbol == symbol) && (this->cgtos_[cgto].label == label)) {
                 tmpOrbital.cgtoIndex = cgto;
                 
@@ -218,9 +220,8 @@ void TlOrbitalInfoObject::makeOrbitalTable()
         }
 
         if (isFound == false) {
-            std::cerr << TlUtils::format("basis not found: atom index = %d, symbol=\"%s\", label=\"%s\"",
-                                         atom, symbol.c_str(), label.c_str())
-                      << std::endl;
+            this->log_.critical(TlUtils::format("the basis is not found: atom index = %d, symbol=\"%s\", label=\"%s\"",
+                                                atom, symbol.c_str(), label.c_str()));
         }
     }
     assert((index_type)this->orbitals_.size() == numOfOrbitals);

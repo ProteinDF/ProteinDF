@@ -12,6 +12,11 @@ public:
 public:
     void getSpqD(TlDistributeSymmetricMatrix* pSpq);
     void getSabD(TlDistributeSymmetricMatrix* pSab);
+
+    /// 変換行列を作成する
+    void getTransMat(const TlOrbitalInfoObject& orbInfo1,
+                     const TlOrbitalInfoObject& orbInfo2,
+                     TlDistributeMatrix* pS);
     
 protected:
     virtual void logger(const std::string& str) const;

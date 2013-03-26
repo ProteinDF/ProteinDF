@@ -11,6 +11,7 @@
 #include <fstream>
 
 #include "TlMatrix.h"
+#include "TlSparseSymmetricMatrix.h"
 #include "TlVector.h"
 
 class TlCommunicate; // 通信クラス
@@ -18,7 +19,8 @@ class TlCommunicate; // 通信クラス
 /// 対称密行列クラス
 ///
 /// 行列は正方行列
-/// 要素の格納方法はLapackでいうところの'L'
+/// 要素の格納方法はLapackでいうところの'U'
+/// AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j;
 class TlSymmetricMatrix : public TlMatrix {
     // friend
     friend class TlCommunicate;
@@ -108,6 +110,8 @@ public:
     TlSymmetricMatrix& operator =(const TlSymmetricMatrix& rhs);
 
     TlSymmetricMatrix& operator+=(const TlSymmetricMatrix& rhs);
+    //virtual TlSymmetricMatrix& operator+=(const TlSparseSymmetricMatrix& rhs);
+
     //TlSymmetricMatrix& operator+=(const TlMatrix& rhs);
     TlSymmetricMatrix& operator-=(const TlSymmetricMatrix& rhs);
 
@@ -207,17 +211,6 @@ public:
 
     /// 各行の要素の絶対値の最大値をベクトルとして返す
     TlVector getMaxAbsoluteVectorOnEachRow() const;
-
-    /// 指定した行の要素から構成されるベクトルを返す
-    ///
-    /// @param[in] nRow 指定する行
-    virtual TlVector getRowVector(int nRow) const;
-
-    /// 指定した列の要素から構成されるベクトルを返す
-    ///
-    /// @param[in] nCol 指定する列
-    virtual TlVector getColVector(int nCol) const;
-
 
     /// 指定された値の行または列の要素の絶対値の最大値を返す
     ///
@@ -332,27 +325,6 @@ inline double& TlSymmetricMatrix::operator()(int row, int col)
 {
     return (this->data_[this->index(row, col)]);
 }
-
-
-// inline void TlSymmetricMatrix::set(index_type row, index_type col, double value)
-// {
-//     const std::size_t index = this->index(row, col);
-//     // const double diff = value - this->data_[index];
-    
-// #pragma omp critical(TlSymmetricMatrix___set)
-//     {
-//         this->data_[index] = value;
-//     }
-// }
-
-
-// inline void TlSymmetricMatrix::add(index_type row, index_type col, double value)
-// {
-//     const std::size_t index = this->index(row, col);    
-
-// #pragma omp atomic
-//     this->data_[index] += value;
-// }
 
 
 template <typename T>

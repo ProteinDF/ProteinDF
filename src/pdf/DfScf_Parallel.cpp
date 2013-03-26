@@ -62,7 +62,6 @@ void DfScf_Parallel::setScfParam()
     }
     
     rComm.broadcast(*(this->pPdfParam_));
-    rComm.broadcast(this->diisflg);
 
     int dampObject = this->m_nDampObject;
     rComm.broadcast(dampObject);
@@ -72,8 +71,6 @@ void DfScf_Parallel::setScfParam()
     rComm.broadcast(scfAcceleration);
     this->m_nScfAcceleration = (DfScf::ScfAccelerationType)scfAcceleration;
     
-    rComm.broadcast(this->diisworkflg);
-    rComm.broadcast(this->diiscycle);
     rComm.broadcast(this->m_nConvergenceCounter);
 }
 
