@@ -141,6 +141,53 @@ std::string PdfKeyword::getCSV(bool showHiddenItem) const
     return output;
 }
 
+std::string PdfKeyword::getCSV_jp(bool showHiddenItem) const
+{
+    std::string output = "keyword, explanation, default, syntax\n";
+    
+    const int numOfItems = this->kwdList_.size();
+    for (int i = 0; i < numOfItems; ++i) {
+        const KeywordInfo& item = this->kwdList_[i];
+        if (((item.type & KWD_HIDDEN) != 0) &&
+            (showHiddenItem == false)) {
+            continue;
+        }
+        output += TlUtils::format("\"%s\", \"%s\", \"%s\", \"%s\"\n",
+                                  item.keyword.c_str(),
+                                  item.desc_jp.c_str(),
+                                  item.defaultValue.c_str(),
+                                  item.syntax.c_str());
+    }
+    
+    return output;
+}
+
+std::string PdfKeyword::get_reST_jp(bool showHiddenItem) const
+{
+    std::string output = "";
+    
+    const int numOfItems = this->kwdList_.size();
+    for (int i = 0; i < numOfItems; ++i) {
+        const KeywordInfo& item = this->kwdList_[i];
+        if (((item.type & KWD_HIDDEN) != 0) &&
+            (showHiddenItem == false)) {
+            continue;
+        }
+        
+        output += TlUtils::format("* %s\n\n", item.keyword.c_str());
+        output += ".. csv-table::\n";
+        output += "  :widths: 20,80\n";
+        output += "  :stub-columns: 1\n";
+        output += "\n";
+        output += TlUtils::format("  \"パラメータ\", \"%s\"\n", item.keyword.c_str());
+        output += TlUtils::format("  \"説明\", \"%s\"\n", item.desc_jp.c_str());
+        output += TlUtils::format("  \"規定値\", \"%s\"\n", item.defaultValue.c_str());
+        output += TlUtils::format("  \"取りうる値\", \"%s\"\n", item.syntax.c_str());
+        output += "\n\n";
+    }
+    
+    return output;
+}
 
 TlSerializeData PdfKeyword::getSerializeData() const
 {
