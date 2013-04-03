@@ -12,7 +12,7 @@ SERIAL_PROGS = 				\
 	pdfdiffmat 				\
 	pdfdiffvtr 				\
 	topPdfMatrix				\
-	catPdfMatrix addPdfMatrix	\
+	catPdfMatrix 			\
 	combineDensityMatrix 		\
 	pdfMatrixCheck 			\
 	mmap_bench 				\
@@ -33,6 +33,7 @@ SERIAL_PROGS = 				\
 	pdf-info-charge 		\
 	pdf-info-orb			\
 	pdf-kwd					\
+	pdf-mat-add				\
 	pdf-mkfld-mo			\
 	pdf-mkfld-dens			\
 	pdf-mkfld-esp			\
@@ -61,10 +62,6 @@ topPdfMatrix_LDADD = $(SERIAL_LIBS)
 
 catPdfMatrix_SOURCES = catPdfMatrix.cpp
 catPdfMatrix_LDADD = $(SERIAL_LIBS)
-
-
-addPdfMatrix_SOURCES = addPdfMatrix.cpp
-addPdfMatrix_LDADD = $(SERIAL_LIBS)
 
 
 combineDensityMatrix_SOURCES = main_combineDensityMatrix.cpp
@@ -165,6 +162,9 @@ pdf_info_orb_LDADD = $(SERIAL_LIBS)
 
 pdf_kwd_SOURCES = main_kwd.cpp
 pdf_kwd_LDADD = $(SERIAL_LIBS)
+
+pdf_mat_add_SOURCES = main_mat_add.cpp
+pdf_mat_add_LDADD = $(SERIAL_LIBS)
 
 pdf_mkfld_mo_SOURCES = \
 	mkfld_common.h	mkfld_common.cpp	\

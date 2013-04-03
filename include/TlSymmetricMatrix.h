@@ -212,17 +212,6 @@ public:
     /// 各行の要素の絶対値の最大値をベクトルとして返す
     TlVector getMaxAbsoluteVectorOnEachRow() const;
 
-    /// 指定した行の要素から構成されるベクトルを返す
-    ///
-    /// @param[in] nRow 指定する行
-    virtual TlVector getRowVector(int nRow) const;
-
-    /// 指定した列の要素から構成されるベクトルを返す
-    ///
-    /// @param[in] nCol 指定する列
-    virtual TlVector getColVector(int nCol) const;
-
-
     /// 指定された値の行または列の要素の絶対値の最大値を返す
     ///
     /// @return 要素の絶対値の最大値

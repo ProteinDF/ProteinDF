@@ -94,21 +94,16 @@ void DfKMatrix_Parallel::getK_conventional_local(const RUN_TYPE runType,
     this->log_.info("build K on replica parallel method");
     
     TlSymmetricMatrix P;
-    if (this->isUpdateMethod_ == true) {
-        P = this->getDiffDensityMatrix(runType);
-        if (runType == RUN_RKS) {
-            P *= 0.5;
-        }
-    }  else {
-        P = this->getPMatrix(runType, this->m_nIteration -1);
-        if (runType == RUN_RKS) {
-            P *= 0.5;
+    if (rComm.isMaster() == true) {
+        if (this->isUpdateMethod_ == true) {
+            P = this->getDiffDensityMatrix<TlSymmetricMatrix>(runType);
+        }  else {
+            P = this->getDensityMatrix<TlSymmetricMatrix>(runType);
         }
     }
-    rComm.barrier();
+    rComm.broadcast(P);
     assert(rComm.checkNonBlockingCommunications());
     this->log_.info("broadcast density matrix");
-    //rComm.broadcast(P);
     this->log_.info(TlUtils::format("density matrix size: %dx%d",
                                     P.getNumOfRows(), P.getNumOfCols()));
     this->log_.info(TlUtils::format("num of AOs: %d",
@@ -166,36 +161,6 @@ void DfKMatrix_Parallel::getK_conventional_distributed(const RUN_TYPE runType,
         }
     }
 }
-
-
-TlSymmetricMatrix DfKMatrix_Parallel::getPMatrix(const RUN_TYPE runType,
-                                                 const int iteration)
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    TlSymmetricMatrix P;
-    if (rComm.isMaster() == true) {
-        P = DfKMatrix::getPMatrix(runType, iteration);
-    }
-    rComm.broadcast(P);
-
-    return P;
-}
-
-
-TlSymmetricMatrix DfKMatrix_Parallel::getDiffDensityMatrix(const RUN_TYPE runType)
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    TlSymmetricMatrix diffP;
-    if (rComm.isMaster() == true) {
-        diffP = DfKMatrix::getDiffDensityMatrix(runType);
-    }
-    rComm.broadcast(diffP);
-
-    return diffP;
-}
-
 
 TlSymmetricMatrix DfKMatrix_Parallel::getKMatrix(const RUN_TYPE runType,
                                                  const int iteration)

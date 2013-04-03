@@ -50,9 +50,32 @@ void DfKMatrix::getK_CD()
 
 void DfKMatrix::getK_conventional()
 {
-    TlSymmetricMatrix K(this->m_nNumOfAOs);
-    this->getK_conventional_local(RUN_RKS, &K);
-    this->saveKMatrix(RUN_RKS, K);
+    switch (this->m_nMethodType) {
+    case METHOD_RKS:
+        {
+            TlSymmetricMatrix K(this->m_nNumOfAOs);
+            this->getK_conventional_local(RUN_RKS, &K);
+            this->saveKMatrix(RUN_RKS, K);
+        }
+        break;
+
+    case METHOD_UKS:
+        {
+            TlSymmetricMatrix K(this->m_nNumOfAOs);
+            this->getK_conventional_local(RUN_UKS_ALPHA, &K);
+            this->saveKMatrix(RUN_UKS_ALPHA, K);
+        }
+        {
+            TlSymmetricMatrix K(this->m_nNumOfAOs);
+            this->getK_conventional_local(RUN_UKS_BETA, &K);
+            this->saveKMatrix(RUN_UKS_BETA, K);
+        }
+        break;
+
+    default:
+        this->log_.critical("program error.");
+        break;
+    }
 }
 
 
@@ -90,15 +113,9 @@ void DfKMatrix::getK_conventional_local(const RUN_TYPE runType,
 {
     TlSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {
-        P = this->getDiffDensityMatrix(runType);
-        if (runType == RUN_RKS) {
-            P *= 0.5;
-        }
+        P = this->getDiffDensityMatrix<TlSymmetricMatrix>(runType);
     } else {
-        P = this->getPMatrix(runType, this->m_nIteration -1);
-        if (runType == RUN_RKS) {
-            P *= 0.5;
-        }
+        P = this->getDensityMatrix<TlSymmetricMatrix>(runType);
     }
 
     DfEriX dfEri(this->pPdfParam_);
@@ -111,23 +128,6 @@ void DfKMatrix::getK_conventional_local(const RUN_TYPE runType,
         }
     }
 }
-
-
-TlSymmetricMatrix DfKMatrix::getPMatrix(const RUN_TYPE runType,
-                                        const int iteration)
-{
-    const TlSymmetricMatrix P = DfObject::getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
-    return P;
-}
-
-
-TlSymmetricMatrix DfKMatrix::getDiffDensityMatrix(const RUN_TYPE runType)
-{
-    const TlSymmetricMatrix diffP = 
-        DfObject::getDiffDensityMatrix<TlSymmetricMatrix>(runType, this->m_nIteration);
-    return diffP;
-}
-
 
 TlSymmetricMatrix DfKMatrix::getKMatrix(const RUN_TYPE runType,
                                         const int iteration)

@@ -9,6 +9,7 @@
 #include "TlStringTokenizer.h"
 #include "TlAtom.h"
 #include "TlResidue.h"
+#include "TlLogging.h"
 
 #define BOHR_ANGSTROM (0.5291772108)
 
@@ -264,8 +265,6 @@ void PdfUserInput::load_conventional()
 void PdfUserInput::molecule_geometry_cartesian_input(const std::string& str)
 {
     std::istringstream in(str);
-    // Fl_Geometry flGeom;
-    // flGeom.clear();
 
     while (in) {
         std::string sLine;
@@ -298,7 +297,7 @@ void PdfUserInput::molecule_geometry_cartesian_input(const std::string& str)
             sAtom = tmp;
             tmp = st.nextToken();
         } else {
-            std::cerr << "atom is not defined. stop." << std::endl;
+            this->log_.critical(TlUtils::format("atom \"%s\" is not defined. stop.", tmp.c_str()));
             abort();
         }
 
@@ -396,7 +395,7 @@ void PdfUserInput::moleculeBasisSetOrbital(const std::string& str)
             if ((tmp == "X") || (TlAtom::getElementNumber(tmp) != 0)) {
                 sAtom = tmp;
             } else {
-                std::cerr << "atom is not defined. stop." << std::endl;
+                this->log_.critical(TlUtils::format("atom \"%s\" is not defined. stop.", tmp.c_str()));
                 abort();
             }
         }
@@ -539,7 +538,7 @@ void PdfUserInput::moleculeBasisSetDensityAuxiliary(const std::string& str)
             if ((tmp == "X") || (TlAtom::getElementNumber(tmp) != 0)) {
                 sAtom = tmp;
             } else {
-                std::cerr << "atom is not defined. stop." << std::endl;
+                this->log_.critical(TlUtils::format("atom \"%s\" is not defined. stop.", tmp.c_str()));
                 abort();
             }
         }
@@ -671,7 +670,7 @@ void PdfUserInput::moleculeBasisSetExchangeAuxiliary(const std::string& str)
             if ((tmp == "X") || (TlAtom::getElementNumber(tmp) != 0)) {
                 sAtom = tmp;
             } else {
-                std::cerr << "atom is not defined. stop." << std::endl;
+                this->log_.critical(TlUtils::format("atom \"%s\" is not defined. stop.", tmp.c_str()));
                 abort();
             }
         }

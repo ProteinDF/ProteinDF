@@ -10,6 +10,7 @@
 #include "TlPosition.h"
 #include "TlAtom.h"
 #include "TlUtils.h"
+#include "TlLogging.h"
 #include "Fl_Gto.h"
 #include "Fl_Geometry.h"
 
@@ -277,6 +278,8 @@ protected:
     Atoms atoms_;
     CGTOs cgtos_;
     std::vector<Orbital> orbitals_;
+
+    TlLogging& log_;
 };
 
 
