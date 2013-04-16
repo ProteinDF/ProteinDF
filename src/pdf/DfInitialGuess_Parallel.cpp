@@ -40,6 +40,7 @@ void DfInitialGuess_Parallel::createInitialGuessUsingLCAO(const RUN_TYPE runType
     { 
         this->createInitialGuessUsingLCAO_onLAPACK(runType);
     }
+
 #endif // HAVE_SCALAPACK
 }
 
@@ -65,19 +66,28 @@ void DfInitialGuess_Parallel::createInitialGuessUsingLCAO_onLAPACK(const RUN_TYP
 {
      TlCommunicate& rComm = TlCommunicate::getInstance();
 
+     // read guess lcao
+     TlMatrix LCAO;
      if (rComm.isMaster() == true) {
-         // read guess lcao
-         const TlMatrix LCAO = DfInitialGuess::getLCAO<TlMatrix>(runType);
-         this->saveC0(runType, LCAO);
-         
-         // read guess occupation
-         const TlVector aOccupation = DfInitialGuess::getOccupation(runType);
-         DfInitialGuess::saveOccupation(runType, aOccupation);
-         
-         this->makeDensityMatrix();
+         LCAO = DfInitialGuess::getLCAO<TlMatrix>(runType);
      }
-     
-    rComm.barrier();
+     rComm.broadcast(LCAO);
+     this->saveC0(runType, LCAO);
+
+    // read guess occupation
+    const TlVector aOccupation = this->getOccupation(runType);
+    this->saveOccupation(runType, aOccupation);
+
+    {
+        TlSerializeData tmpParam = *(this->pPdfParam_);
+        tmpParam["orbital-correspondence"] = false;
+        tmpParam["orbital-overlap-correspondence-method"] = "simple";
+        tmpParam["control-iteration"] = 0;
+
+        // 密度行列の作成
+        DfDmatrix_Parallel dfDmatrix(&tmpParam);
+        dfDmatrix.DfDmatrixMain(); // RKS only?
+    }
 }
 
 
