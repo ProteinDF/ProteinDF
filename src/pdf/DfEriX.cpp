@@ -637,15 +637,10 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
 void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
 {
     assert(pJ != NULL);
-    // this->elapsetime_store_ = 0.0;
-    // TlTime time_all;
-    // time_all.start();
-
     pJ->resize(this->m_nNumOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_sets"]);
-
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
 #ifdef DEBUG_J
@@ -662,13 +657,8 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
 
     // allocate work mem
     static const int maxElements = 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4-type)
-    const int numOfThreads = this->numOfThreads_;
-    index_type** pIndexPairsList = new index_type*[numOfThreads];
-    double** pValuesList = new double*[numOfThreads];
-    for (int i = 0; i < numOfThreads; ++i) {
-        pIndexPairsList[i] = new index_type[maxElements * this->grainSize_ * 2];
-        pValuesList[i] = new double[maxElements * this->grainSize_];
-    }
+    index_type* pIndexPairs = new index_type[maxElements * this->grainSize_ * 2];
+    double* pValues = new double[maxElements * this->grainSize_];
 
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                           schwarzTable,
@@ -676,72 +666,40 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
                                           NULL,
                                           true);
 
-#pragma omp parallel default(none) firstprivate(hasTask, pIndexPairsList, pValuesList) shared(P, pJ, pDfTaskCtrl)
-    {
-        std::vector<DfTaskCtrl::Task4> taskList;
-
-#pragma omp single nowait
-        {
-            while (hasTask) {
-#pragma omp task firstprivate(taskList, pIndexPairsList, pValuesList)
-                {
-                    int threadID = 0;
-#ifdef _OPENMP
-                    threadID = omp_get_thread_num();
-#endif // _OPENMP
-                    index_type* pTaskIndexPairs = pIndexPairsList[threadID];
-                    double* pTaskValues = pValuesList[threadID];
-
-                    const int numOfTaskElements = this->getJ_integralDriven_part(orbitalInfo,
-                                                                                 taskList,
-                                                                                 P,
-                                                                                 pTaskIndexPairs, pTaskValues);
-                    assert(numOfTaskElements <= (maxElements * this->grainSize_));
-
-// #pragma omp critical(DfEriX__getJ_integralDriven)
-                    {
-                        // update J
-                        for (int i = 0; i < numOfTaskElements; ++i) {
-                            const index_type p = pTaskIndexPairs[i*2   ];
-                            const index_type q = pTaskIndexPairs[i*2 +1];
-                            pJ->add(p, q, pTaskValues[i]);
-                        }
-                    }
-                }
-
-                hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
-                                                 schwarzTable,
-                                                 this->grainSize_,
-                                                 &taskList);
-            }
+    std::vector<DfTaskCtrl::Task4> taskList;
+    
+    while (hasTask) {
+        const int numOfTaskElements = this->getJ_integralDriven_part(orbitalInfo,
+                                                                     taskList,
+                                                                     P,
+                                                                     pIndexPairs, pValues);
+        assert(numOfTaskElements <= (maxElements * this->grainSize_));
+        
+        // update J
+        for (int i = 0; i < numOfTaskElements; ++i) {
+            const index_type p = pIndexPairs[i*2   ];
+            const index_type q = pIndexPairs[i*2 +1];
+            pJ->add(p, q, pValues[i]);
         }
+        
+        hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                         schwarzTable,
+                                         this->grainSize_,
+                                         &taskList);
     }
     this->finalize(pJ);
 
     // delete work mem
-    for (int i = 0; i < numOfThreads; ++i) {
-        delete[] pIndexPairsList[i];
-        pIndexPairsList[i] = NULL;
-        delete[] pValuesList[i];
-        pValuesList[i] = NULL;
-    }
-    delete[] pIndexPairsList;
-    delete[] pValuesList;
-    pIndexPairsList = NULL;
-    pValuesList = NULL;
+    delete[] pIndexPairs;
+    delete[] pValues;
+    pIndexPairs = NULL;
+    pValues = NULL;
 
     pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
     
-    // statics report
-    // time_all.stop();
-    {
-        // this->log_.info(TlUtils::format("all time:  %16.1f sec.", time_all.getElapseTime()));
-        // this->log_.info(TlUtils::format(" store:    %16.1f sec.", this->elapsetime_store_));
-    }
-
     // debug
 #ifdef DEBUG_J
     if (this->isDebugOutJ_ == true) {
@@ -782,59 +740,74 @@ int DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
-    // TlTime time_calc;
-    // TlTime time_calc_eri;
-    // TlTime time_store;
-
-    int threadID = 0;
-#ifdef _OPENMP
-    threadID = omp_get_thread_num();
-#endif // _OPENMP
-    this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
-
-    for (int i = 0; i < taskListSize; ++i) {
-        const index_type shellIndexP = taskList[i].shellIndex1;
-        const index_type shellIndexQ = taskList[i].shellIndex2;
-        const index_type shellIndexR = taskList[i].shellIndex3;
-        const index_type shellIndexS = taskList[i].shellIndex4;
-        const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
-        const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
-        const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
-        const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
-        const int maxStepsP = 2 * shellTypeP + 1;
-        const int maxStepsQ = 2 * shellTypeQ + 1;
-        const int maxStepsR = 2 * shellTypeR + 1;
-        const int maxStepsS = 2 * shellTypeS + 1;
-        
-        const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
-                                                                                    shellIndexP,
-                                                                                    shellIndexQ,
-                                                                                    pairwisePGTO_cutoffThreshold);
-        const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
-                                                                                    shellIndexR,
-                                                                                    shellIndexS,
-                                                                                    pairwisePGTO_cutoffThreshold);
-        const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
-        const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
-        
-        this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
-        
-        const int stores = this->storeJ_integralDriven(shellIndexP, maxStepsP,
-                                                       shellIndexQ, maxStepsQ,
-                                                       shellIndexR, maxStepsR,
-                                                       shellIndexS, maxStepsS,
-                                                       this->pEriEngines_[threadID], P,
-                                                       pIndexPairs + numOfElements * 2,
-                                                       pValues + numOfElements);
-        numOfElements += stores;
-    }
-
-#pragma omp critical(DfEriX__getJ_P_to_J)
+#pragma omp parallel
     {
-        // this->elapsetime_calc_     += time_calc.getElapseTime();
-        // this->elapsetime_calc_eri_ += time_calc_eri.getElapseTime();
-        // this->elapsetime_store_    += time_store.getElapseTime();
+        int threadID = 0;
+#ifdef _OPENMP
+        threadID = omp_get_thread_num();
+#endif // _OPENMP
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+
+        const std::size_t maxThreadElements = taskListSize * 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4-type)
+        index_type* pThreadIndexPairs = new index_type[maxThreadElements * 2];
+        double* pThreadValues = new double[maxThreadElements];
+        int numOfThreadElements = 0;
+
+#pragma omp for schedule(runtime)
+        for (int i = 0; i < taskListSize; ++i) {
+            const index_type shellIndexP = taskList[i].shellIndex1;
+            const index_type shellIndexQ = taskList[i].shellIndex2;
+            const index_type shellIndexR = taskList[i].shellIndex3;
+            const index_type shellIndexS = taskList[i].shellIndex4;
+            const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+            const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+            const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
+            const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
+            const int maxStepsP = 2 * shellTypeP + 1;
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+            const int maxStepsR = 2 * shellTypeR + 1;
+            const int maxStepsS = 2 * shellTypeS + 1;
+            
+            const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
+                                                                                        shellIndexP,
+                                                                                        shellIndexQ,
+                                                                                        pairwisePGTO_cutoffThreshold);
+            const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
+                                                                                        shellIndexR,
+                                                                                        shellIndexS,
+                                                                                        pairwisePGTO_cutoffThreshold);
+            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
+            
+            this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
+            
+            const int stores = this->storeJ_integralDriven(shellIndexP, maxStepsP,
+                                                           shellIndexQ, maxStepsQ,
+                                                           shellIndexR, maxStepsR,
+                                                           shellIndexS, maxStepsS,
+                                                           this->pEriEngines_[threadID], P,
+                                                           pThreadIndexPairs + numOfThreadElements * 2,
+                                                           pThreadValues + numOfThreadElements);
+            numOfThreadElements += stores;
+            assert(numOfThreadElements < maxThreadElements);
+        }
+
+#pragma omp critical(DfEriX__getJ_integralDriven_part)
+        {
+            for (int i = 0; i < numOfThreadElements; ++i) {
+                pIndexPairs[numOfElements*2]    = pThreadIndexPairs[i*2];
+                pIndexPairs[numOfElements*2 +1] = pThreadIndexPairs[i*2 +1];
+                pValues[numOfElements] = pThreadValues[i];
+                ++numOfElements;
+            }
+        }
+
+        delete[] pThreadIndexPairs;
+        delete[] pThreadValues;
+        pThreadIndexPairs = NULL;
+        pThreadValues = NULL;
     }
+    assert(numOfElements < (this->grainSize_ * 5 * 5 * 5 * 4));
     
     return numOfElements;
 }
@@ -1682,14 +1655,7 @@ void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
 void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
 {
     assert(pK != NULL);
-    // TlTime time_all;
-    // TlTime time_prepare;
-
-    // time_all.start();
-
-    // time_prepare.start();
-    const index_type numOfAOs = this->m_nNumOfAOs;
-    pK->resize(numOfAOs);
+    pK->resize(this->m_nNumOfAOs);
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_sets"]);
@@ -1708,76 +1674,45 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
     pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
     pDfTaskCtrl->setCutoffEpsilon_density(this->cutoffEpsilon_density_);
     pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
-    // time_prepare.stop();
 
     // allocate work mem
     static const int maxElements = 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4-type)
-    int numOfThreads = this->numOfThreads_;
-    index_type** pIndexPairsList = new index_type*[numOfThreads];
-    double** pValuesList = new double*[numOfThreads];
-    for (int i = 0; i < numOfThreads; ++i) {
-        pIndexPairsList[i] = new index_type[maxElements * this->grainSize_ * 2];
-        pValuesList[i] = new double[maxElements * this->grainSize_];
-    }
+    index_type* pIndexPairs = new index_type[maxElements * this->grainSize_ * 2];
+    double* pValues = new double[maxElements * this->grainSize_];
 
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                           schwarzTable,
                                           this->grainSize_,
                                           NULL,
                                           true);
-#pragma omp parallel default(none) firstprivate(hasTask, pIndexPairsList, pValuesList) shared(P, pK, pDfTaskCtrl)
-    {
-        std::vector<DfTaskCtrl::Task4> taskList;
-        
-#pragma omp single nowait
-        {
-            while (hasTask) {
-#pragma omp task firstprivate(taskList, pIndexPairsList, pValuesList)
-                {
-                    int threadID = 0;
-#ifdef _OPENMP
-                    threadID = omp_get_thread_num();
-#endif // _OPENMP
-                    index_type* pTaskIndexPairs = pIndexPairsList[threadID];
-                    double* pTaskValues = pValuesList[threadID];
+    std::vector<DfTaskCtrl::Task4> taskList;
 
-                    const int numOfTaskElements = this->getK_integralDriven_part(orbitalInfo,
-                                                                                 taskList,
-                                                                                 P,
-                                                                                 pTaskIndexPairs, pTaskValues);
-                    assert(numOfTaskElements <= (maxElements * this->grainSize_));
-                    
-// #pragma omp critical(DfEriX__getK_integralDriven) 
-                    {                        
-                        // update K
-                        for (int i = 0; i < numOfTaskElements; ++i) {
-                            const index_type p = pTaskIndexPairs[i*2   ];
-                            const index_type q = pTaskIndexPairs[i*2 +1];
-                            pK->add(p, q, pTaskValues[i]);
-                        }
-                    }
-                }
-                
-                hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
-                                                 schwarzTable,
-                                                 this->grainSize_,
-                                                 &taskList);
-            }
+    while (hasTask) {
+        const int numOfTaskElements = this->getK_integralDriven_part(orbitalInfo,
+                                                                     taskList,
+                                                                     P,
+                                                                     pIndexPairs, pValues);
+        assert(numOfTaskElements <= (maxElements * this->grainSize_));
+            
+        // update K
+        for (int i = 0; i < numOfTaskElements; ++i) {
+            const index_type p = pIndexPairs[i*2   ];
+            const index_type q = pIndexPairs[i*2 +1];
+            pK->add(p, q, pValues[i]);
         }
+        
+        hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                         schwarzTable,
+                                         this->grainSize_,
+                                         &taskList);
     }
     this->finalize(pK);
 
     // delete work mem
-    for (int i = 0; i < numOfThreads; ++i) {
-        delete[] pIndexPairsList[i];
-        pIndexPairsList[i] = NULL;
-        delete[] pValuesList[i];
-        pValuesList[i] = NULL;
-    }
-    delete[] pIndexPairsList;
-    delete[] pValuesList;
-    pIndexPairsList = NULL;
-    pValuesList = NULL;
+    delete[] pIndexPairs;
+    delete[] pValues;
+    pIndexPairs = NULL;
+    pValues = NULL;
     
     pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
@@ -1809,7 +1744,6 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
     // this->log_.info(TlUtils::format(" sumup(ave.):   %16.1f sec.", this->elapsetime_sumup_));
 }
 
-
 int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                                      const std::vector<DfTaskCtrl::Task4>& taskList,
                                      const TlMatrixObject& P,
@@ -1820,71 +1754,76 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
-    // TlTime time_calc;
-    // TlTime time_makepair;
-    // TlTime time_calc_eri;
-    // TlTime time_store;
-
-    int threadID = 0;
-#ifdef _OPENMP
-    threadID = omp_get_thread_num();
-#endif // _OPENMP
-    this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
-    
-    // time_calc.start();
-    for (int i = 0; i < taskListSize; ++i) {
-        const index_type shellIndexP = taskList[i].shellIndex1;
-        const index_type shellIndexQ = taskList[i].shellIndex2;
-        const index_type shellIndexR = taskList[i].shellIndex3;
-        const index_type shellIndexS = taskList[i].shellIndex4;
-        
-        const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
-        const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
-        const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
-        const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
-        const int maxStepsP = 2 * shellTypeP + 1;
-        const int maxStepsQ = 2 * shellTypeQ + 1;
-        const int maxStepsR = 2 * shellTypeR + 1;
-        const int maxStepsS = 2 * shellTypeS + 1;
-
-        // time_makepair.start();
-        const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
-                                                                                    shellIndexP,
-                                                                                    shellIndexQ,
-                                                                                    pairwisePGTO_cutoffThreshold);
-        const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
-                                                                                    shellIndexR,
-                                                                                    shellIndexS,
-                                                                                    pairwisePGTO_cutoffThreshold);
-        // time_makepair.stop();
-        const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
-        const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
-        
-        // time_calc_eri.start();
-        this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
-        // time_calc_eri.stop();
-        
-        // time_store.start();
-        int numOfStoreElements = 0;
-        const int stores = this->storeK_integralDriven(shellIndexP, maxStepsP,
-                                                       shellIndexQ, maxStepsQ,
-                                                       shellIndexR, maxStepsR,
-                                                       shellIndexS, maxStepsS,
-                                                       this->pEriEngines_[threadID], P,
-                                                       pIndexPairs + numOfElements * 2,
-                                                       pValues + numOfElements);
-        numOfElements += stores;
-        // time_store.stop();
-    }
-    // time_calc.stop();
-
-// #pragma omp critical(DfEriX__getK_integralDriven_P_to_K)
+#pragma omp parallel
     {
-        // this->elapsetime_calc_     += time_calc.getElapseTime();
-        // this->elapsetime_makepair_ += time_makepair.getElapseTime();
-        // this->elapsetime_calc_eri_ += time_calc_eri.getElapseTime();
-        // this->elapsetime_store_    += time_store.getElapseTime();
+        int threadID = 0;
+#ifdef _OPENMP
+        threadID = omp_get_thread_num();
+#endif // _OPENMP
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+
+        const std::size_t maxThreadElements = taskListSize * 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4-type)
+        index_type* pThreadIndexPairs = new index_type[maxThreadElements * 2];
+        double* pThreadValues = new double[maxThreadElements];
+        int numOfThreadElements = 0;
+
+#pragma omp for schedule(runtime)
+        for (int i = 0; i < taskListSize; ++i) {
+            const index_type shellIndexP = taskList[i].shellIndex1;
+            const index_type shellIndexQ = taskList[i].shellIndex2;
+            const index_type shellIndexR = taskList[i].shellIndex3;
+            const index_type shellIndexS = taskList[i].shellIndex4;
+            
+            const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+            const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+            const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
+            const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
+            const int maxStepsP = 2 * shellTypeP + 1;
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+            const int maxStepsR = 2 * shellTypeR + 1;
+            const int maxStepsS = 2 * shellTypeS + 1;
+            
+            const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
+                                                                                        shellIndexP,
+                                                                                        shellIndexQ,
+                                                                                        pairwisePGTO_cutoffThreshold);
+            const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
+                                                                                        shellIndexR,
+                                                                                        shellIndexS,
+                                                                                        pairwisePGTO_cutoffThreshold);
+            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
+            
+            this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
+            
+            int numOfStoreElements = 0;
+            const int stores = this->storeK_integralDriven(shellIndexP, maxStepsP,
+                                                           shellIndexQ, maxStepsQ,
+                                                           shellIndexR, maxStepsR,
+                                                           shellIndexS, maxStepsS,
+                                                           this->pEriEngines_[threadID], P,
+                                                           pThreadIndexPairs + numOfThreadElements * 2,
+                                                           pThreadValues + numOfThreadElements);
+            numOfThreadElements += stores;
+            assert(numOfThreadElements < maxThreadElements);
+        }
+
+#pragma omp critical(DfEriX__getK_integralDriven_part)
+        {
+            for (int i = 0; i < numOfThreadElements; ++i) {
+                pIndexPairs[numOfElements*2]    = pThreadIndexPairs[i*2];
+                pIndexPairs[numOfElements*2 +1] = pThreadIndexPairs[i*2 +1];
+                pValues[numOfElements] = pThreadValues[i];
+                ++numOfElements;
+            }
+        }
+
+        delete[] pThreadIndexPairs;
+        delete[] pThreadValues;
+        pThreadIndexPairs = NULL;
+        pThreadValues = NULL;
     }
+    assert(numOfElements < (this->grainSize_ * 5 * 5 * 5 * 4));
 
     return numOfElements;
 }
