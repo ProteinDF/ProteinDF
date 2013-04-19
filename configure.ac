@@ -140,7 +140,7 @@ esac], [cppunit=false])
 AM_CONDITIONAL(CPPUNIT, test x$cppunit = xtrue)
 
 
-AM_CONFIG_HEADER([include/config.h])
+AC_CONFIG_HEADER([include/config.h])
 AC_CONFIG_FILES([
 	Makefile
 	include/Makefile
