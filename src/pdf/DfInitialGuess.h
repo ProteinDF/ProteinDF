@@ -9,6 +9,8 @@
 #include "DfObject.h"
 #include "CnError.h"
 #include "TlUtils.h"
+
+class DfDmatrix;
 class TlVector;
 
 /// 初期電子密度を求めるクラス
@@ -21,11 +23,9 @@ public:
 
 protected:
     virtual void createRho();
-    virtual void saveRho1(RUN_TYPE runType);
 
     void createOccupation();
-    virtual void createOccupation(const RUN_TYPE runType);
-
+    virtual TlVector createOccupation(const RUN_TYPE runType);
     
     virtual void createInitialGuessUsingHuckel();
     virtual void createInitialGuessUsingCore();
@@ -34,7 +34,7 @@ protected:
     void createInitialGuessUsingLCAO();
     virtual void createInitialGuessUsingLCAO(const RUN_TYPE runType);
 
-    std::vector<int> getLevel(std::string sLevel);
+    std::vector<int> getLevel(const std::string& level);
 
     /// 占有軌道情報を取得する
     virtual TlVector getOccupation(const RUN_TYPE runType);
@@ -54,6 +54,15 @@ protected:
     /// Cprime0 を作成し、保存する
     template <typename MatrixType>
     void buildCprime0(const RUN_TYPE runType, const MatrixType& C);
+
+    /// 密度行列を作成する
+    ///
+    /// DfDmatrixクラスを用いる
+    void makeDensityMatrix();
+
+    /// DfDmatrixクラスオブジェクトを作成して返す
+    virtual DfDmatrix* getDfDmatrixObject(TlSerializeData* param);
+    
 };
 
 
@@ -79,27 +88,14 @@ MatrixType DfInitialGuess::getLCAO(const RUN_TYPE runType)
         if (row_dimension != this->m_nNumOfAOs) {
             CnErr.abort("DfPreScf", "", "prepare_occupation_and_or_mo", "inputted guess lcao has illegal dimension");
         }
-
-//         if (this->m_nNumOfMOs < col_dimension) {
-//             this->logger("The number of column dimension in inputed LCAO is larger than independent basis.\n");
-//             this->logger("Excess elements are discarded.\n");
-//         }
         lcaoMatrix.resize(row_dimension, col_dimension);
         
-        //const int maxRows = this->m_nNumOfAOs;
-        //const int maxCols = this->m_nNumOfMOs;
-        //const int excessCols = col_dimension - this->m_nNumOfMOs;
         const int maxRows = row_dimension;
         const int maxCols = col_dimension;
         for (int i = 0; i < maxRows; ++i) {
             for (int j = 0; j < maxCols; ++j) {
                 fi >> lcaoMatrix(i, j);
             }
-
-//             for (int j = 0; j < excessCols; ++j) {
-//                 double spoil;
-//                 fi >> spoil;
-//             }
         }
     }
 

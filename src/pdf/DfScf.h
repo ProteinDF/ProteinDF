@@ -121,14 +121,8 @@ protected:
     virtual void saveParam() const;
     
 protected:
-    // DIIS ON/OFF
-    bool diisflg;
-
     DampObjectType m_nDampObject;
     ScfAccelerationType m_nScfAcceleration;
-
-    bool diisworkflg;            // judge DIIS or not by monitoring diisnorm (false==nodiis, true==diis)
-    int  diiscycle;              // diis job stream specifier
 
     int m_nConvergenceCounter;
 

@@ -48,6 +48,13 @@ std::string TlUtils::format(const char* psFormat, ...){
   return str;
 }
 
+template<>
+std::string TlUtils::xtos<bool>(const bool& t) 
+{
+    std::stringstream s;
+    s << std::boolalpha << t;
+    return s.str();
+}
 
 void TlUtils::trim_ws(std::string& s){
   if (s.empty()){

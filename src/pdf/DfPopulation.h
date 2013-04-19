@@ -17,7 +17,9 @@ public:
     template <typename T>
     void getReport(const int iteration, T& out);
 
-    TlMatrix getAtomPopData(int iteration);
+    virtual void sumOfElectrons(const int iteration, double* pAlpha, double* pBeta = NULL);
+    
+    TlMatrix getAtomPopData(const int iteration);
     
 protected:
     virtual void calcPop(const int iteration);

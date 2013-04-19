@@ -46,8 +46,8 @@ protected:
     void printTwoVectors(const TlVector& a, const TlVector& b, const std::string& title, int pnumcol);
 
     // for simple
-    TlVector createOccupation(DfObject::RUN_TYPE runType);
-    std::vector<int> getLevel(std::string sLevel);
+    //TlVector createOccupation(DfObject::RUN_TYPE runType);
+    //std::vector<int> getLevel(std::string sLevel);
 
 protected:
     enum ORBITAL_CORRESPONDENCE_METHOD {

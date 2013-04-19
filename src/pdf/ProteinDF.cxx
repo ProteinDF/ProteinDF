@@ -155,7 +155,7 @@ void ProteinDF::endlogo()
         reports += "\n";
     }
 
-    reports += TlUtils::format("CPU_TIME:    %9.0lf sec", g_GlobalTime.getCpuTime());
+    reports += TlUtils::format("CPU_TIME:    %9.0lf sec\n", g_GlobalTime.getCpuTime());
     reports += TlUtils::format("ELAPS_TIME:  %9.0lf sec", g_GlobalTime.getElapseTime());
     
     this->endlogo(reports);

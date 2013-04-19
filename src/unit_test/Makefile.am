@@ -21,32 +21,34 @@ PDF_OBJS = \
 	DfFunctional_PW91X.o
 
 PdfTests_SOURCES = \
-	digit.cpp							\
-	PdfTests.cpp \
-	TlUtilsTest.h			TlUtilsTest.cpp			\
-	TlPositionTest.h		TlPositionTest.cpp		\
-	TlParameterTest.h		TlParameterTest.cpp		\
-	TlStringTokenizerTest.h		TlStringTokenizerTest.cpp	\
-	TlMatrixTest.h			TlMatrixTest.cpp		\
-	TlSymmetricMatrixTest.h		TlSymmetricMatrixTest.cpp	\
-	TlSparseMatrixTest.h		TlSparseMatrixTest.cpp		\
+	digit.cpp														\
+	PdfTests.cpp 													\
+	TlUtilsTest.h					TlUtilsTest.cpp					\
+	TlPositionTest.h				TlPositionTest.cpp				\
+	TlParameterTest.h				TlParameterTest.cpp				\
+	TlStringTokenizerTest.h			TlStringTokenizerTest.cpp		\
+	TlMatrixTest.h					TlMatrixTest.cpp				\
+	TlSymmetricMatrixTest.h			TlSymmetricMatrixTest.cpp		\
+	TlSparseMatrixTest.h			TlSparseMatrixTest.cpp			\
 	TlSparseSymmetricMatrixTest.h	TlSparseSymmetricMatrixTest.cpp	\
-	TlVectorTest.h			TlVectorTest.cpp		\
-	TlFileMatrixTest.h		TlFileMatrixTest.cpp		\
-	TlFileSymmetricMatrixTest.h	TlFileSymmetricMatrixTest.cpp	\
+	TlSparseVectorTest.h			TlSparseVectorTest.cpp			\
+	TlVectorTest.h					TlVectorTest.cpp				\
+	TlFileMatrixTest.h				TlFileMatrixTest.cpp			\
+	TlFileSymmetricMatrixTest.h		TlFileSymmetricMatrixTest.cpp	\
 	TlPartialSymmetricMatrixTest.h	TlPartialSymmetricMatrixTest.cpp\
-	TlMemManagerTest.h		TlMemManagerTest.cpp		\
-	TlMsgPackTest.h			TlMsgPackTest.cpp		\
-	TlSerializeDataTest.h		TlSerializeDataTest.cpp		\
-	DfFunctional_SlaterTest.h	DfFunctional_SlaterTest.cpp	\
-	DfFunctional_Becke88Test.h	DfFunctional_Becke88Test.cpp	\
-	DfFunctional_VWNTest.h		DfFunctional_VWNTest.cpp	\
-	DfFunctional_LYPTest.h		DfFunctional_LYPTest.cpp	\
-	DfFunctional_B3LYPTest.h	DfFunctional_B3LYPTest.cpp	\
-	DfFunctional_PW91XTest.h	DfFunctional_PW91XTest.cpp
+	TlMemManagerTest.h				TlMemManagerTest.cpp			\
+	TlMsgPackTest.h					TlMsgPackTest.cpp				\
+	TlStlUtilsTest.h				TlStlUtilsTest.cpp				\
+	TlSerializeDataTest.h			TlSerializeDataTest.cpp			\
+	DfFunctional_SlaterTest.h		DfFunctional_SlaterTest.cpp		\
+	DfFunctional_Becke88Test.h		DfFunctional_Becke88Test.cpp	\
+	DfFunctional_VWNTest.h			DfFunctional_VWNTest.cpp		\
+	DfFunctional_LYPTest.h			DfFunctional_LYPTest.cpp		\
+	DfFunctional_B3LYPTest.h		DfFunctional_B3LYPTest.cpp		\
+	DfFunctional_PW91XTest.h		DfFunctional_PW91XTest.cpp
 
 PdfTests_LDFLAGS = -L$(libdir)
-PdfTests_LDADD   = ../pdf/libpdf.la ../pdflib/libpdftl.la -lcppunit -ldl @LAPACK_LIBS@ @BLAS_LIBS@ @FCLIBS@
+PdfTests_LDADD   = ../pdf/libpdf.la ../pdflib/libpdftl.la -lcppunit -ldl @LAPACK_LIBS@ @BLAS_LIBS@
 
 
 

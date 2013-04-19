@@ -17,11 +17,20 @@ public:
                            std::vector<Task2>* pTask,
                            bool initialize = false);
 
+    /// 2つのインデックスのタスクを返す(軌道情報が異なる場合)
+    virtual bool getQueue2(const TlOrbitalInfoObject& orbitalInfo1,
+                           const TlOrbitalInfoObject& orbitalInfo2,
+                           const bool isCutoffByDistibution,
+                           const int maxGrainSize,
+                           std::vector<Task2>* pTask,
+                           bool initialize = false);
+
     virtual bool getQueue4(const TlOrbitalInfoObject& orbitalInfo,
                            const TlSparseSymmetricMatrix& schwarzTable,
                            const int maxGrainSize,
                            std::vector<Task4>* pTaskList,
                            bool initialize = false);
+
     virtual bool getQueue_Force4(const TlOrbitalInfoObject& orbitalInfo,
                                  const TlSparseSymmetricMatrix& schwarzTable,
                                  const int maxGrainSize,
@@ -91,30 +100,59 @@ protected:
     void cutoffReport_MS();
 
 protected:
-    bool getQueue_DC(const TlOrbitalInfoObject& orbitalInfo,
-                     const bool isCutoffByDistibution,
-                     const int maxGrainSize,
-                     std::vector<Task2>* pTask,
-                     bool initialize = false);
+    bool getQueue2_DC(const TlOrbitalInfoObject& orbitalInfo,
+                      const bool isCutoffByDistibution,
+                      const int maxGrainSize,
+                      std::vector<Task2>* pTask,
+                      bool initialize = false);
 
-    bool getQueue_MS(const TlOrbitalInfoObject& orbitalInfo,
-                     const bool isCutoffByDistibution,
-                     const int maxGrainSize,
-                     std::vector<Task2>* pTask,
-                     bool initialize = false);
+    bool getQueue2_MS(const TlOrbitalInfoObject& orbitalInfo,
+                      const bool isCutoffByDistibution,
+                      const int maxGrainSize,
+                      std::vector<Task2>* pTask,
+                      bool initialize = false);
 
-    bool getQueue_MS_master(const TlOrbitalInfoObject& orbitalInfo,
+    bool getQueue2_MS_master(const TlOrbitalInfoObject& orbitalInfo,
+                             const bool isCutoffDistribution,
+                             const int maxGrainSize,
+                             std::vector<Task2>* pTaskList,
+                             bool initialize);
+
+    bool getQueue2_MS_slave(const TlOrbitalInfoObject& orbitalInfo,
                             const bool isCutoffDistribution,
                             const int maxGrainSize,
                             std::vector<Task2>* pTaskList,
                             bool initialize);
 
-    bool getQueue_MS_slave(const TlOrbitalInfoObject& orbitalInfo,
-                           const bool isCutoffDistribution,
-                           const int maxGrainSize,
-                           std::vector<Task2>* pTaskList,
-                           bool initialize);
+    //
+    bool getQueue2_DC(const TlOrbitalInfoObject& orbitalInfo1,
+                      const TlOrbitalInfoObject& orbitalInfo2,
+                      const bool isCutoffByDistibution,
+                      const int maxGrainSize,
+                      std::vector<Task2>* pTask,
+                      bool initialize = false);
 
+    bool getQueue2_MS(const TlOrbitalInfoObject& orbitalInfo1,
+                      const TlOrbitalInfoObject& orbitalInfo2,
+                      const bool isCutoffByDistibution,
+                      const int maxGrainSize,
+                      std::vector<Task2>* pTask,
+                      bool initialize = false);
+    
+    bool getQueue2_MS_master(const TlOrbitalInfoObject& orbitalInfo1,
+                             const TlOrbitalInfoObject& orbitalInfo2,
+                             const bool isCutoffDistribution,
+                             const int maxGrainSize,
+                             std::vector<Task2>* pTaskList,
+                             bool initialize);
+
+    bool getQueue2_MS_slave(const TlOrbitalInfoObject& orbitalInfo1,
+                            const TlOrbitalInfoObject& orbitalInfo2,
+                            const bool isCutoffDistribution,
+                            const int maxGrainSize,
+                            std::vector<Task2>* pTaskList,
+                            bool initialize);
+    //
     
     bool getQueue4_DC(const TlOrbitalInfoObject& orbitalInfo,
                       const TlSparseSymmetricMatrix& schwarzTable,

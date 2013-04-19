@@ -10,16 +10,14 @@
 #include <iostream>
 
 // -------------------------------------
-#ifdef HAVE_HASH_MAP
-#include <ext/hash_map>
-
+#ifdef HAVE_UNORDERED_MAP
+#include <unordered_map>
+#elifdef HAVE_TR1_UNORDERED_MAP
+#include <tr1/unordered_map>
 #elifdef HAVE_GOOGLE_SPARSE_HASH_MAP
 #include <google/sparse_hash_map>
-
 #else
 #include <map>
-#define TSM_USING_BINTREE_MAP
-
 #endif
 // -------------------------------------
 
@@ -45,15 +43,16 @@ public:
 public:
     typedef std::size_t KeyType;
 
-#ifdef HAVE_HASH_MAP
-    typedef __gnu_cxx::hash_map<KeyType, double> SparseMatrixData;
+#ifdef HAVE_UNORDERED_MAP
+    typedef std::unordered_map<KeyType, double> SparseMatrixData;
+#elifdef HAVE_TR1_UNORDERED_MAP
+    typedef std::tr1::unordered_map<KeyType, double> SparseMatrixData;
 #elifdef HAVE_GOOGLE_SPARSE_HASH_MAP
-    //typedef tr1::hash<KeyType> HashFunc;
-    //typedef google::sparse_hash_map<KeyType, double, HashFunc, std::equal_to<KeyType>()> SparseMatrixData;
     typedef google::sparse_hash_map<KeyType, double> SparseMatrixData;
 #else
     typedef std::map<KeyType, double> SparseMatrixData;
-#endif // HAVE_HASH_MAP
+    #define TSM_DATATYPE_BINTREE 1
+#endif
 
     typedef SparseMatrixData::const_iterator const_iterator;
     typedef SparseMatrixData::iterator iterator;
@@ -256,22 +255,24 @@ inline void TlSparseMatrix::set(const index_type row, const index_type col, cons
 inline void TlSparseMatrix::set(const std::pair<unsigned long, double>& obj)
 {
     const unsigned long index = obj.first;
-#ifndef TSM_USING_BINTREE_MAP
+
 #pragma omp critical(TlSparseMatrix__update)
     {
-        this->m_aMatrix[index] = obj.second;
-    }
-#else
-#pragma omp critical(TlSparseMatrix__update)
-    {
-        iterator p = this->m_aMatrix.lower_bound(index);
-        if ((p != this->m_aMatrix.end()) && (index == p->first)) {
-            p->second = obj.second;
-        } else {
-            this->m_aMatrix.insert(p, obj);
+#ifdef TSM_DATATYPE_BINTREE
+        {
+            iterator p = this->m_aMatrix.lower_bound(index);
+            if ((p != this->m_aMatrix.end()) && (index == p->first)) {
+                p->second = obj.second;
+            } else {
+                this->m_aMatrix.insert(p, obj);
+            }
         }
+#else
+        {
+            this->m_aMatrix[index] = obj.second;
+        }
+#endif // TSM_DATATYPE_BINTREE
     }
-#endif // HAVE_HASH_MAP
 }
 
 
@@ -285,22 +286,24 @@ inline void TlSparseMatrix::add(const index_type row, const index_type col, cons
 inline void TlSparseMatrix::add(const std::pair<unsigned long, double>& obj)
 {
     const unsigned long index = obj.first;
-#ifndef TSM_USING_BINTREE_MAP
+
 #pragma omp critical(TlSparseMatrix__update)
     {
-        this->m_aMatrix[index] += obj.second;
-    }
-#else
-#pragma omp critical(TlSparseMatrix__update)
-    {
-        iterator p = this->m_aMatrix.lower_bound(index);
-        if ((p != this->m_aMatrix.end()) && (index == p->first)) {
-            p->second += obj.second;
-        } else {
-            this->m_aMatrix.insert(p, obj);
+#ifdef TSM_DATATYPE_BINTREE
+        {
+            iterator p = this->m_aMatrix.lower_bound(index);
+            if ((p != this->m_aMatrix.end()) && (index == p->first)) {
+                p->second += obj.second;
+            } else {
+                this->m_aMatrix.insert(p, obj);
+            }
         }
+#else
+        {
+            this->m_aMatrix[index] += obj.second;
+        }
+#endif // TSM_DATATYPE_BINTREE
     }
-#endif // HAVE_HASH_MAP
 }
 
 

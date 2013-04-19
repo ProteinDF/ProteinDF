@@ -2,33 +2,40 @@
 #include <cstdlib>
 #include "DfObject.h"
 #include "Fl_Geometry.h"
-#include "TlDensField.h"
+#include "TlParameter.h"
+#include "TlEspField.h"
 #include "TlSymmetricMatrix.h"
 #include "TlGetopt.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
-#include "makeField_common.h"
+#include "mkfld_common.h"
 
 void help(const std::string& progName)
 {
     std::cout << TlUtils::format("%s [options] args...", progName.c_str()) << std::endl;
-    std::cout << "output volume data of density."
+    std::cout << "output volume data of ESP."
               << std::endl;
     std::cout << "OPTIONS:" << std::endl;
-    std::cout << " -p <path>    set ProteinDF parameter file. default = pdfparam.mpac" << std::endl;
-    std::cout << " -d <path>    set density matrix file. default is presumed by parameter file." << std::endl;
-    std::cout << " -f <path>    save AVS field file." << std::endl;
-    std::cout << " -m <path>    save message pack file." << std::endl;
+    std::cout << " -p PATH      set ProteinDF parameter file. default = pdfparam.mpac" << std::endl;
+    std::cout << " -d PATH      set density matrix file. default is presumed by parameter file." << std::endl;
+    std::cout << " -f           save AVS field (.fld) file." << std::endl;
+    std::cout << " -c           save cube (.cube) file" << std::endl;
+    std::cout << " -m           save message pack (.mpac) file." << std::endl;
+    std::cout << " -o PREFIX    output prefix (default: esp)" << std::endl;
     std::cout << " -h           show help message (this)." << std::endl;
     std::cout << " -v           show message verbosely." << std::endl;
 }
 
-
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "c:d:f:hm:p:v");
-
+    TlGetopt opt(argc, argv, "cd:fhmo:p:v");
+    
     const bool verbose = (opt["v"] == "defined");
+    if ((opt["h"] == "defined")) {
+        help(opt[0]);
+        return EXIT_SUCCESS;
+    }
+
     std::string pdfParamPath = "pdfparam.mpac";
     if (opt["p"].empty() != true) {
         pdfParamPath = opt["p"];
@@ -37,24 +44,31 @@ int main(int argc, char* argv[])
     if (opt["d"].empty() != true) {
         PMatrixFilePath = opt["d"];
     }
-    std::string mpacFilePath = "";
-    if (opt["m"].empty() != true) {
-        mpacFilePath = opt["m"];
+
+    bool isSaveAvsFieldFile = false;
+    if (opt["f"] == "defined") {
+        isSaveAvsFieldFile = true;
     }
-    std::string fieldFilePath = (mpacFilePath != "") ? "" : "density.fld";
-    if (opt["f"].empty() != true) {
-        fieldFilePath = opt["f"];
-    }
-    std::string cubeFilePath = "";
-    if (opt["c"].empty() != true) {
-        cubeFilePath = opt["c"];
+
+    bool isSaveCubeFile = false;
+    if (opt["c"] == "defined") {
+        isSaveCubeFile = true;
     }
     
-    if ((opt["h"] == "defined")) {
-        help(opt[0]);
-        return EXIT_SUCCESS;
+    bool isSaveMpacFile = false;
+    if (opt["m"] == "defined") {
+        isSaveMpacFile = true;
     }
-    
+
+    if ((!isSaveAvsFieldFile) && (!isSaveCubeFile) && (!isSaveMpacFile)) {
+        isSaveMpacFile = true;
+    }
+
+    std::string outputPrefix = "esp";
+    if (! opt["o"].empty()) {
+        outputPrefix = opt["o"];
+    }
+
     // パラメータファイルの読み込み
     TlSerializeData param;
     {
@@ -79,7 +93,7 @@ int main(int argc, char* argv[])
     getDefaultSize(param, &startPos, &endPos);
     compensateRange(&startPos, &endPos);
 
-    TlPosition gridPitch(GRID_PITCH, GRID_PITCH, GRID_PITCH);
+    const TlPosition gridPitch(GRID_PITCH, GRID_PITCH, GRID_PITCH);
     int numOfGridX, numOfGridY, numOfGridZ;
     std::vector<TlPosition> grids = makeGrids(startPos, endPos, gridPitch,
                                               &numOfGridX, &numOfGridY, &numOfGridZ);
@@ -94,37 +108,35 @@ int main(int argc, char* argv[])
                   << std::endl;
     }
 
-    // 電子密度計算
-    TlDensField densFld(param); 
-    const std::vector<double> values = densFld.makeDensFld(P, grids);
+    // ESP計算
+    TlEspField espFld(param);
+    const std::vector<double> values = espFld.makeEspFld(P, grids);
 
     // convert grid unit to angstrom
-    for (std::size_t i = 0; i < numOfGrids; ++i) {
-        grids[i] *= ANG_PER_AU;
-    }
-    startPos *= ANG_PER_AU;
-    gridPitch *= ANG_PER_AU;
-    
+    // for (std::size_t i = 0; i < numOfGrids; ++i) {
+    //     grids[i] *= ANG_PER_AU;
+    // }
+
     // save to mpac
-    if (mpacFilePath.empty() != true) {
+    if (isSaveMpacFile) {
+        const std::string mpacFilePath = outputPrefix + ".mpac";
         std::cerr << "save message pack file: " << mpacFilePath << std::endl;
 
         TlSerializeData output;
-        output["version"] = "2010.0";
-        output["num_of_grids_x"] = numOfGridX;
-        output["num_of_grids_y"] = numOfGridY;
-        output["num_of_grids_z"] = numOfGridZ;
+        output["version"] = "2013.0";
+        output["num_of_grids"] = numOfGrids;
         for (std::size_t gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
             TlSerializeData pos;
-            pos.pushBack(grids[gridIndex].x());
-            pos.pushBack(grids[gridIndex].y());
-            pos.pushBack(grids[gridIndex].z());
+            pos.pushBack(grids[gridIndex].x() * ANG_PER_AU);
+            pos.pushBack(grids[gridIndex].y() * ANG_PER_AU);
+            pos.pushBack(grids[gridIndex].z() * ANG_PER_AU);
             
-            output["coord"].pushBack(pos);
+            output["grids"].pushBack(pos);
         }
+        output["grid_unit"] = "angstrom";
 
         for (std::size_t i = 0; i < numOfGrids; ++i) {
-            output["density"].setAt(i, values[i]);
+            output["data"]["ESP"].setAt(i, values[i]);
         }
 
         TlMsgPack mpac(output);
@@ -132,10 +144,11 @@ int main(int argc, char* argv[])
      }
 
     // save to fld
-    if (fieldFilePath.empty() != true) {
+    if (isSaveAvsFieldFile) {
+        const std::string fieldFilePath = outputPrefix + ".fld";
         std::cerr << "save AVS field file: " << fieldFilePath << std::endl;
 
-        std::string label = "density";
+        std::string label = "ESP";
         std::vector<std::vector<double> > data;
         data.push_back(values);
         
@@ -143,24 +156,22 @@ int main(int argc, char* argv[])
     }
 
     // save to cube file
-    if (cubeFilePath.empty() != true) {
+    if (isSaveCubeFile) {
+        const std::string cubeFilePath = outputPrefix + ".cube";
         std::cerr << "save CUBE file: " << cubeFilePath << std::endl;
 
-        const Fl_Geometry flGeom(param["model"]["coordinates"]);
+        const Fl_Geometry flGeom(param["coordinates"]);
         const int numOfAtoms = flGeom.getNumOfAtoms();
         std::vector<TlAtom> atoms(numOfAtoms);
         for (int i = 0; i < numOfAtoms; ++i) {
             TlAtom atom(flGeom.getAtom(i));
             atom.setCharge(flGeom.getCharge(i));
-            atom.moveTo(flGeom.getCoordinate(i) * ANG_PER_AU);
+            atom.moveTo(flGeom.getCoordinate(i));
+            //atom.moveTo(flGeom.getCoordinate(i) * ANG_PER_AU); // angstroamに変換
             atoms[i] = atom;
         }
 
-        std::string label = "density";
-        std::vector<double> values_au = values;
-        for (int i = 0; i < values_au.size(); ++i) {
-            values_au[i] /= (ANG_PER_AU * ANG_PER_AU * ANG_PER_AU);
-        }
+        const std::string label = "esp";
         saveCubeData(atoms,
                      numOfGridX, numOfGridY, numOfGridZ,
                      startPos, gridPitch,

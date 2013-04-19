@@ -1,4 +1,5 @@
 #include <fstream>
+#include "CnError.h"
 #include "DfInitialGuess.h"
 #include "DfInitialguess.h"
 #include "DfInitialGuessHuckel.h"
@@ -26,24 +27,6 @@ void DfInitialGuess::exec()
         this->createOccupation();
         break;
 
-//         switch (this->m_nMethodType) {
-//         case METHOD_RKS:
-//             this->saveRho1(RUN_RKS);
-//             break;
-
-//         case METHOD_UKS:
-//             this->saveRho1(RUN_UKS_ALPHA);
-//             this->saveRho1(RUN_UKS_BETA);
-//             break;
-
-//         case METHOD_ROKS:
-//             this->saveRho1(RUN_ROKS_CLOSE);
-//             this->saveRho1(RUN_ROKS_OPEN);
-//             break;
-//         } 
-//         this->createOccupation();
-//         break;
-
     case GUESS_DENSITY:
         this->createOccupation();
         break;
@@ -68,7 +51,7 @@ void DfInitialGuess::exec()
         break;
 
     default:
-        this->logger("unknown initial guess parameter.\n");
+        this->log_.warn("unknown initial guess parameter.");
         break;
     }
 }
@@ -79,43 +62,17 @@ void DfInitialGuess::createRho()
     diguess.dfGusMain();
 }
 
-
-void DfInitialGuess::saveRho1(const RUN_TYPE runType)
-{
-    this->loggerTime(" loading initial rho file.");
-
-    TlVector rho;
-    std::ifstream ifs;
-    ifs.open("guess.rho", std::ios::in);
-    if (!ifs) {
-        this->logger(" could not open: guess.rho.\n");
-    } else {
-        std::size_t size;
-        ifs >> size;
-        rho.resize(size);
-
-        double data = 0.0;
-        for (std::size_t i = 0; i < size; ++i) {
-            ifs >> data;
-            rho[i] = data;
-        }
-    }
-    ifs.close();
-    
-    this->loggerTime(" saving rho file.");
-    rho.save(this->getRhoPath(runType, 1));
-    this->loggerTime(" finished.");
-}
-
 void DfInitialGuess::createInitialGuessUsingHuckel()
 {
     DfInitialGuessHuckel huckel(this->pPdfParam_);
+    huckel.createGuess();
 }
 
 
 void DfInitialGuess::createInitialGuessUsingCore()
 {
     DfInitialGuessHuckel huckel(this->pPdfParam_);
+    huckel.createGuess();
 }
 
 
@@ -180,7 +137,7 @@ void DfInitialGuess::createInitialGuessUsingLCAO(const RUN_TYPE runType)
     {
         TlSerializeData tmpParam = *(this->pPdfParam_);
         tmpParam["orbital-correspondence"] = false;
-        tmpParam["orbital-overlap-correspondence-method"] = "keep";
+        tmpParam["orbital-overlap-correspondence-method"] = "simple";
         tmpParam["control-iteration"] = 0;
 
         // 密度行列の作成
@@ -195,10 +152,6 @@ TlVector DfInitialGuess::getOccupation(const RUN_TYPE runType)
     TlVector occupation;
     const std::string sFile = std::string("./guess.occ.") + this->m_sRunTypeSuffix[runType];
     occupation.loadText(sFile.c_str());
-//     if (this->m_nNumOfMOs < occupation.getSize()) {
-//         this->logger("Occupation vector is shrinked.");
-//         occupation.resize(this->m_nNumOfMOs);
-//     }
 
     return occupation;
 }
@@ -227,51 +180,66 @@ void DfInitialGuess::createOccupation()
 }
 
 
-void DfInitialGuess::createOccupation(const RUN_TYPE runType)
+TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType)
 {
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
 
     // construct guess occupations
-    TlVector guess_occ(this->m_nNumOfMOs);
+    const index_type numOfMOs = this->m_nNumOfMOs;
+    TlVector guess_occ(numOfMOs);
     switch (runType) {
     case RUN_RKS:
         {
-            std::vector<int> docLevel = this->getLevel(pdfParam["method/nsp/occlevel"].getStr());
+            const std::vector<int> docLevel = this->getLevel(pdfParam["method/rks/occlevel"].getStr());
             for (std::vector<int>::const_iterator p = docLevel.begin(); p != docLevel.end(); p++) {
-                guess_occ[*p -1] = 2.0;
+                const int level = *p -1;
+                if ((0 <= level) && (level < numOfMOs)) {
+                    guess_occ[*p -1] = 2.0;
+                }
             }
         }
         break;
 
     case RUN_UKS_ALPHA:
         {
-            std::vector<int> aoocLevel = this->getLevel(pdfParam["method/sp/alpha-spin-occlevel"].getStr());
-            for (std::vector<int>::const_iterator p = aoocLevel.begin(); p != aoocLevel.end(); p++) {
-                guess_occ[*p -1] = 1.0;
+            const std::vector<int> occLevel = this->getLevel(pdfParam["method/uks/alpha_occlevel"].getStr());
+            for (std::vector<int>::const_iterator p = occLevel.begin(); p != occLevel.end(); p++) {
+                const int level = *p -1;
+                if ((0 <= level) && (level < numOfMOs)) {
+                    guess_occ[level] = 1.0;
+                }
             }
         }
         break;
 
     case RUN_UKS_BETA:
         {
-            std::vector<int> boocLevel = this->getLevel(pdfParam["method/sp/beta-spin-occlevel"].getStr());
-            for (std::vector<int>::const_iterator p = boocLevel.begin(); p != boocLevel.end(); p++) {
-                guess_occ[*p -1] = 1.0;
+            const std::vector<int> occLevel = this->getLevel(pdfParam["method/uks/beta_occlevel"].getStr());
+            for (std::vector<int>::const_iterator p = occLevel.begin(); p != occLevel.end(); p++) {
+                const int level = *p -1;
+                if ((0 <= level) && (level < numOfMOs)) {
+                    guess_occ[*p -1] = 1.0;
+                }
             }
         }
         break;
 
     case RUN_ROKS:
         {
-            std::vector<int> docLevel = this->getLevel(pdfParam["method/roks/closed-shell"].getStr());
-            for (std::vector<int>::const_iterator p = docLevel.begin(); p != docLevel.end(); p++) {
-                guess_occ[*p -1] = 2.0;
+            const std::vector<int> occLevel_c = this->getLevel(pdfParam["method/roks/closed_occlevel"].getStr());
+            for (std::vector<int>::const_iterator p = occLevel_c.begin(); p != occLevel_c.end(); p++) {
+                const int level = *p -1;
+                if ((0 <= level) && (level < numOfMOs)) {
+                    guess_occ[*p -1] = 2.0;
+                }
             }
 
-            std::vector<int> socLevel = this->getLevel(pdfParam["method/roks/open-shell"].getStr());
-            for (std::vector<int>::const_iterator p = socLevel.begin(); p != socLevel.end(); p++) {
-                // nsoc
-                guess_occ[*p -1] = 1.0;
+            const std::vector<int> occLevel_o = this->getLevel(pdfParam["method/roks/open_occlevel"].getStr());
+            for (std::vector<int>::const_iterator p = occLevel_o.begin(); p != occLevel_o.end(); p++) {
+                const int level = *p -1;
+                if ((0 <= level) && (level < numOfMOs)) {
+                    guess_occ[*p -1] = 1.0;
+                }
             }
         }
         break;
@@ -284,55 +252,56 @@ void DfInitialGuess::createOccupation(const RUN_TYPE runType)
     // output occupation number to a files in fl_Work directory
     const std::string sOccFileName = this->getOccupationPath(runType);
     guess_occ.save(sOccFileName);
+
+    return guess_occ;
 }
 
-
-std::vector<int> DfInitialGuess::getLevel(std::string sLevel)
+std::vector<int> DfInitialGuess::getLevel(const std::string& inputStr)
 {
     std::vector<int> answer;
-    answer.clear();
 
-    // "-" を " - " に置換
-    TlUtils::replace(sLevel, "-", " - ");
-
-    TlStringTokenizer token(sLevel);
-    bool bRegionMode = false;
-    int nPrevIndex = 0;
-    while (token.hasMoreTokens()) {
-        std::string tmp = token.nextToken();
-
-        if (tmp == "nil") {
-            continue;
-        }
-
-        if (tmp == "-") {
-            if (nPrevIndex != 0) {
-                bRegionMode = true;
-                continue;
-            } else {
-                abort();
-                //CnErr.abort("DfPreScf", "", "putdoclevel", "syntax error.");
-            }
-        }
-
-        int nIndex = atoi(tmp.c_str());
-        if (nIndex > 0) {
-            if (bRegionMode == true) {
-                // 数字が xx - yy の形で入力
-                for (int i = nPrevIndex +1; i <= nIndex; i++) {
-                    answer.push_back(i);
-                }
-                bRegionMode = false;
-                nPrevIndex = 0;
-            } else {
-                // 数字が単独で入力
-                answer.push_back(nIndex);
-                nPrevIndex = nIndex;
-                continue;
-            }
+    // 構文解釈
+    std::string numStr = "";
+    std::vector<int> stack;
+    const int len = inputStr.size();
+    for (int i = 0; i < len; ++i) {
+        const char c = inputStr[i];
+        if (std::isdigit(c) != 0) {
+            numStr.append(1, c);
         } else {
-            abort();
-            //CnErr.abort("DfPreScf", "", "putdoclevel", "syntax error.");
+            if (numStr.size() > 0) {
+                const int num = std::atoi(numStr.c_str());
+                stack.push_back(num);
+                numStr = "";
+            }
+
+            if (c == '-') {
+                stack.push_back(-1);
+            }
+        }
+    }
+    if (numStr.empty() == false) {
+        stack.push_back(std::atoi(numStr.c_str()));
+    }
+
+    // 翻訳
+    const int stackSize = stack.size();
+    for (int i = 0; i < stackSize; ++i) {
+        const int v = stack[i];
+        if (v > 0) {
+            answer.push_back(v);
+        } else if (v == -1) {
+            const int i1 = i + 1;
+            if ((i1 < stackSize) && (answer.size() > 0)) {
+                const int end = stack[i1];
+                const int start = answer.at(answer.size() -1);
+                if (start > 0) { 
+                    for (int v = start +1; v <= end; ++v) {
+                        answer.push_back(v);
+                    }
+                }
+                ++i;
+            }
         }
     }
 
@@ -344,4 +313,24 @@ void DfInitialGuess::saveOccupation(const RUN_TYPE runType, const TlVector& rOcc
 {
     const std::string sOccFileName = this->getOccupationPath(runType);
     rOccupation.save(sOccFileName);
+}
+
+
+void DfInitialGuess::makeDensityMatrix()
+{
+    TlSerializeData tmpParam = *(this->pPdfParam_);
+    tmpParam["orbital-correspondence"] = false;
+    tmpParam["orbital-overlap-correspondence-method"] = "simple";
+    tmpParam["control-iteration"] = 0;
+
+    DfDmatrix* pDfDmat = getDfDmatrixObject(&tmpParam);
+    pDfDmat->DfDmatrixMain();
+    delete pDfDmat;
+    pDfDmat = NULL;
+}
+
+DfDmatrix* DfInitialGuess::getDfDmatrixObject(TlSerializeData* param)
+{
+    DfDmatrix* obj = new DfDmatrix(param);
+    return obj;
 }

@@ -19,6 +19,18 @@ DfPopulation::~DfPopulation()
 }
 
 
+void DfPopulation::sumOfElectrons(int iteration, double* pAlpha, double* pBeta)
+{
+    this->calcPop(iteration);
+    if (pAlpha != NULL) {
+        *pAlpha = this->grossAtomPopA_.sum();
+    }
+    if (pBeta != NULL) {
+        *pBeta = this->grossAtomPopB_.sum();
+    }
+}
+
+
 TlMatrix DfPopulation::getAtomPopData(const int iteration)
 {
     this->calcPop(iteration);
