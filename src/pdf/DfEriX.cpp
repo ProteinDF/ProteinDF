@@ -807,7 +807,7 @@ int DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
         pThreadIndexPairs = NULL;
         pThreadValues = NULL;
     }
-    assert(numOfElements < (this->grainSize_ * 5 * 5 * 5 * 4));
+    assert(numOfElements < (this->grainSize_ * 5 * 5 * 5 * 5 * 4));
     
     return numOfElements;
 }
@@ -1823,7 +1823,7 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
         pThreadIndexPairs = NULL;
         pThreadValues = NULL;
     }
-    assert(numOfElements < (this->grainSize_ * 5 * 5 * 5 * 4));
+    assert(numOfElements < (this->grainSize_ * 5 * 5 * 5 * 5 * 4));
 
     return numOfElements;
 }
