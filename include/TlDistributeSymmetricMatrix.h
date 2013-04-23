@@ -97,7 +97,7 @@ public:
     /// @retval true 固有値が求められた
     /// @retval false エラーが発生した
     virtual bool diagonal(TlVector* pEigVal, TlDistributeMatrix* pEigVec,
-                          DIAGONAL_METHOD method = DIVIDE_AND_CONQUER);
+                          DIAGONAL_METHOD method = DIVIDE_AND_CONQUER) const;
 
     virtual bool inverse();
 
@@ -180,7 +180,7 @@ protected:
     /// @param[out] outEigVec 固有値ベクトルが格納された行列
     /// @retval true 固有値が求められた
     /// @retval false エラーが発生した
-    friend bool diagonalByScaLapack_QR(TlDistributeSymmetricMatrix& inMatrix,
+    friend bool diagonalByScaLapack_QR(const TlDistributeSymmetricMatrix& inMatrix,
                                        TlVector* outEigVal, TlDistributeMatrix* outEigVec);
 
     /// 対称行列の固有値を求める(Divide&Conquer)
@@ -190,7 +190,7 @@ protected:
     /// @param[out] outEigVec 固有値ベクトルが格納された行列
     /// @retval true 固有値が求められた
     /// @retval false エラーが発生した
-    friend bool diagonalByScaLapack_DC(TlDistributeSymmetricMatrix& inMatrix,
+    friend bool diagonalByScaLapack_DC(const TlDistributeSymmetricMatrix& inMatrix,
                                        TlVector* outEigVal, TlDistributeMatrix* outEigVec);
 
     friend bool inverseByScaLapack(TlDistributeSymmetricMatrix& inoutMatrix);
