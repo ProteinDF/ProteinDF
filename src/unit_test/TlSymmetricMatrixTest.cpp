@@ -364,6 +364,68 @@ void TlSymmetricMatrixTest::testMulti2() {
   CPPUNIT_ASSERT_DOUBLES_EQUAL(86.0, C(2, 2), threshold);
 }
 
+void TlSymmetricMatrixTest::testMultiEqual1() {
+  TlSymmetricMatrix A = this->getMatrixA();
+  // [ 0  -  - ]
+  // [ 1  2  - ]
+  // [ 3  4  5 ]
+  
+  TlMatrix B(3, 3);
+  B(0, 0) = 0.0;
+  B(0, 1) = 1.0;
+  B(0, 2) = 2.0;
+  B(1, 0) = 3.0;
+  B(1, 1) = 4.0;
+  B(1, 2) = 5.0;
+  B(2, 0) = 6.0;
+  B(2, 1) = 7.0;
+  B(2, 2) = 8.0;
+
+  TlMatrix C = A;
+  C *= B;
+  
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(21.0, C(0, 0), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(25.0, C(0, 1), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(29.0, C(0, 2), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(30.0, C(1, 0), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(37.0, C(1, 1), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(44.0, C(1, 2), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(42.0, C(2, 0), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(54.0, C(2, 1), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(66.0, C(2, 2), threshold);
+}
+
+void TlSymmetricMatrixTest::testMultiEqual2() {
+  TlSymmetricMatrix A = this->getMatrixA();
+  // [ 0  -  - ]
+  // [ 1  2  - ]
+  // [ 3  4  5 ]
+  
+  TlMatrix B(3, 3);
+  B(0, 0) = 0.0;
+  B(0, 1) = 1.0;
+  B(0, 2) = 2.0;
+  B(1, 0) = 3.0;
+  B(1, 1) = 4.0;
+  B(1, 2) = 5.0;
+  B(2, 0) = 6.0;
+  B(2, 1) = 7.0;
+  B(2, 2) = 8.0;
+
+  TlMatrix C = B;
+  C *= A;
+
+  CPPUNIT_ASSERT_DOUBLES_EQUAL( 7.0, C(0, 0), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(10.0, C(0, 1), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(14.0, C(0, 2), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(19.0, C(1, 0), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(31.0, C(1, 1), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(50.0, C(1, 2), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(31.0, C(2, 0), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(52.0, C(2, 1), threshold);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(86.0, C(2, 2), threshold);
+}
+
 void TlSymmetricMatrixTest::testDot() {
     TlSymmetricMatrix A = this->getMatrixA();
     TlSymmetricMatrix B = this->getMatrixB();

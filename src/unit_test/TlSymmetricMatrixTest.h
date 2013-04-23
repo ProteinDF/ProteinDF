@@ -22,6 +22,8 @@ class TlSymmetricMatrixTest : public CppUnit::TestFixture{
     CPPUNIT_TEST(testInverse);
     CPPUNIT_TEST(testMulti1);
     CPPUNIT_TEST(testMulti2);
+    CPPUNIT_TEST(testMultiEqual1);
+    CPPUNIT_TEST(testMultiEqual2);
     CPPUNIT_TEST(testDot);
     CPPUNIT_TEST(testSum);
     CPPUNIT_TEST(testCholeskyDecomposition);
@@ -42,6 +44,8 @@ public:
     void testInverse();
     void testMulti1();
     void testMulti2();
+    void testMultiEqual1();
+    void testMultiEqual2();
     void testDot();
     void testSum();
     void testCholeskyDecomposition();
