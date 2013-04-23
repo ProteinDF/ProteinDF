@@ -173,6 +173,7 @@ public:
     TlMatrix& operator-=(const TlMatrix& rhs);
     TlMatrix& operator-=(const TlSymmetricMatrix& rhs);
     TlMatrix& operator*=(const TlMatrix& rhs);
+    TlMatrix& operator*=(const TlSymmetricMatrix& rhs);
 
     /// 行列を定数倍する
     ///
