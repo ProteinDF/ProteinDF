@@ -1229,7 +1229,7 @@ bool TlDistributeSymmetricMatrix::loadLocal(const std::string& filePath)
 
 
 bool TlDistributeSymmetricMatrix::diagonal(TlVector* pEigVal, TlDistributeMatrix* pEigVec,
-                                           TlDistributeSymmetricMatrix::DIAGONAL_METHOD method)
+                                           TlDistributeSymmetricMatrix::DIAGONAL_METHOD method) const
 {
 #ifdef HAVE_SCALAPACK
     if (method == DIVIDE_AND_CONQUER) {
@@ -1342,7 +1342,7 @@ TlDistributeMatrix multiplicationByScaLapack(const TlDistributeMatrix& X, const 
 }
 
 
-bool diagonalByScaLapack_QR(TlDistributeSymmetricMatrix& inMatrix,
+bool diagonalByScaLapack_QR(const TlDistributeSymmetricMatrix& inMatrix,
                             TlVector* outEigVal, TlDistributeMatrix* outEigVec)
 {
     assert(outEigVal != NULL);
@@ -1404,7 +1404,7 @@ bool diagonalByScaLapack_QR(TlDistributeSymmetricMatrix& inMatrix,
 
 
 // Divide-and-Conquer Algorithm
-bool diagonalByScaLapack_DC(TlDistributeSymmetricMatrix& inMatrix,
+bool diagonalByScaLapack_DC(const TlDistributeSymmetricMatrix& inMatrix,
                             TlVector* outEigVal, TlDistributeMatrix* outEigVec)
 {
     assert(outEigVal != NULL);

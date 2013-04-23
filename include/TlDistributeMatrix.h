@@ -486,9 +486,9 @@ protected:
     friend TlDistributeMatrix multiplicationByScaLapack(const TlDistributeMatrix& X,
                                                         const TlDistributeSymmetricMatrix& Y);
 
-    friend bool diagonalByScaLapack_QR(TlDistributeSymmetricMatrix& inMatrix,
+    friend bool diagonalByScaLapack_QR(const TlDistributeSymmetricMatrix& inMatrix,
                                        TlVector* outEigVal, TlDistributeMatrix* outEigVec);
-    friend bool diagonalByScaLapack_DC(TlDistributeSymmetricMatrix& inMatrix,
+    friend bool diagonalByScaLapack_DC(const TlDistributeSymmetricMatrix& inMatrix,
                                        TlVector* outEigVal, TlDistributeMatrix* outEigVec);
 
     friend bool inverseByScaLapack(TlDistributeMatrix& X);
