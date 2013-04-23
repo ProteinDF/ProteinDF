@@ -33,6 +33,7 @@ private:
     void moleculeBasisSetOrbital(const std::string& str);
     void moleculeBasisSetDensityAuxiliary(const std::string& str);
     void moleculeBasisSetExchangeAuxiliary(const std::string& str);
+    void moleculeBasisSetGridFree(const std::string& str);
 
 private:
     std::string filePath_;
