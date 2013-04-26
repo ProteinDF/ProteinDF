@@ -8,9 +8,10 @@
 class DfHpq;
 class DfOverlap;
 class DfEri;
-class DfCD;
 class DfXMatrix;
 class DfInvMatrix;
+class DfCD;
+class DfGridFreeXC;
 class DfGenerateGrid;
 class TlSymmetricMatrix;
 
@@ -28,7 +29,8 @@ protected:
         X = 128,
         INV = 256,
         CHOLESKY_VECTORS_XC = 512,
-        GRID = 1024
+        GRID_FREE = 1024,
+        GRID = 2048
     };
 
 public:
@@ -51,12 +53,14 @@ protected:
     void createInverseMatrixes();
     void createXMatrix();
     void createCholeskyVectors_XC();
+    void prepareGridFree();
     void createGrids();
 
 protected:
-    virtual DfCD* getDfCDObject();
     virtual DfXMatrix* getDfXMatrixObject();
     virtual DfInvMatrix* getDfInvMatrixObject();
+    virtual DfCD* getDfCDObject();
+    virtual DfGridFreeXC* getDfGridFreeXCObject();
     virtual DfGenerateGrid* getDfGenerateGridObject();
 
 protected:

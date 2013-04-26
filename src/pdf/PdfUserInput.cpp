@@ -369,7 +369,7 @@ void PdfUserInput::molecule_geometry_cartesian_input(const std::string& str)
 
 void PdfUserInput::moleculeBasisSetOrbital(const std::string& str)
 {
-    Fl_Gto_Orbital Bas;
+    // Fl_Gto_Orbital Bas;
 
     std::istringstream in(str);
 
@@ -442,29 +442,29 @@ void PdfUserInput::moleculeBasisSetOrbital(const std::string& str)
         }
 
         // 格納 ============================================================
-        Fl_Db_Basis flDbBasis(sName);
-        for (int i = 0; i < flDbBasis.getTotalcgto(); i++) {
-            Fl_Gto_Orbital::Cgto cgto;
-            cgto.basisName = sName;
-            cgto.Snum = 0;
-            cgto.Pnum = 0;
-            cgto.Dnum = 0;
-            cgto.atom = sAtom;
-            cgto.label = sLabel;
-            cgto.shell = flDbBasis.getShell(i);
-            cgto.scalefactor = flDbBasis.getScalefactor(i);
+        // Fl_Db_Basis flDbBasis(sName);
+        // for (int i = 0; i < flDbBasis.getTotalcgto(); i++) {
+        //     Fl_Gto_Orbital::Cgto cgto;
+        //     cgto.basisName = sName;
+        //     cgto.Snum = 0;
+        //     cgto.Pnum = 0;
+        //     cgto.Dnum = 0;
+        //     cgto.atom = sAtom;
+        //     cgto.label = sLabel;
+        //     cgto.shell = flDbBasis.getShell(i);
+        //     cgto.scalefactor = flDbBasis.getScalefactor(i);
 
-            const int contraction = flDbBasis.getContraction(i);
-            cgto.pgto.resize(contraction);
-            for (int j = 0; j < contraction; j++) {
-                cgto.pgto[j].exponent = flDbBasis.getExpornent(i, j);
-                cgto.pgto[j].coefficient = flDbBasis.getCoefficient(i ,j);
-            }
+        //     const int contraction = flDbBasis.getContraction(i);
+        //     cgto.pgto.resize(contraction);
+        //     for (int j = 0; j < contraction; j++) {
+        //         cgto.pgto[j].exponent = flDbBasis.getExpornent(i, j);
+        //         cgto.pgto[j].coefficient = flDbBasis.getCoefficient(i ,j);
+        //     }
 
-            Bas.set(dNumOfCgto, cgto);
+        //     Bas.set(dNumOfCgto, cgto);
 
-            dNumOfCgto++;
-        }
+        //     dNumOfCgto++;
+        // }
 
         // store to serializeData
         std::string key = sAtom;
@@ -775,7 +775,7 @@ void PdfUserInput::moleculeBasisSetExchangeAuxiliary(const std::string& str)
 
 void PdfUserInput::moleculeBasisSetGridFree(const std::string& str)
 {
-    Fl_Gto_Orbital Bas;
+    // Fl_Gto_Orbital Bas;
     std::istringstream in(str);
     int dNumOfCgto = 0;
 
@@ -846,29 +846,29 @@ void PdfUserInput::moleculeBasisSetGridFree(const std::string& str)
         }
 
         // 格納 ============================================================
-        Fl_Db_Basis flDbBasis(sName);
-        for (int i = 0; i < flDbBasis.getTotalcgto(); i++) {
-            Fl_Gto_Orbital::Cgto cgto;
-            cgto.basisName = sName;
-            cgto.Snum = 0;
-            cgto.Pnum = 0;
-            cgto.Dnum = 0;
-            cgto.atom = sAtom;
-            cgto.label = sLabel;
-            cgto.shell = flDbBasis.getShell(i);
-            cgto.scalefactor = flDbBasis.getScalefactor(i);
+        // Fl_Db_Basis flDbBasis(sName);
+        // for (int i = 0; i < flDbBasis.getTotalcgto(); i++) {
+        //     Fl_Gto_Orbital::Cgto cgto;
+        //     cgto.basisName = sName;
+        //     cgto.Snum = 0;
+        //     cgto.Pnum = 0;
+        //     cgto.Dnum = 0;
+        //     cgto.atom = sAtom;
+        //     cgto.label = sLabel;
+        //     cgto.shell = flDbBasis.getShell(i);
+        //     cgto.scalefactor = flDbBasis.getScalefactor(i);
 
-            const int contraction = flDbBasis.getContraction(i);
-            cgto.pgto.resize(contraction);
-            for (int j = 0; j < contraction; j++) {
-                cgto.pgto[j].exponent = flDbBasis.getExpornent(i, j);
-                cgto.pgto[j].coefficient = flDbBasis.getCoefficient(i ,j);
-            }
+        //     const int contraction = flDbBasis.getContraction(i);
+        //     cgto.pgto.resize(contraction);
+        //     for (int j = 0; j < contraction; j++) {
+        //         cgto.pgto[j].exponent = flDbBasis.getExpornent(i, j);
+        //         cgto.pgto[j].coefficient = flDbBasis.getCoefficient(i ,j);
+        //     }
 
-            Bas.set(dNumOfCgto, cgto);
+        //     Bas.set(dNumOfCgto, cgto);
 
-            dNumOfCgto++;
-        }
+        //     dNumOfCgto++;
+        // }
 
         // store to serializeData
         std::string key = sAtom;
@@ -878,11 +878,6 @@ void PdfUserInput::moleculeBasisSetGridFree(const std::string& str)
         const TlSerializeData basisset = this->getBasisInfo(sName);
         this->data_["basis_sets_GF"][key] = basisset;
     }
-
-    // 出力
-//   Bas.open("fl_Gto_Orbital", "write");
-//   Bas.write();
-//   Bas.close();
 }
 
 void PdfUserInput::alias()

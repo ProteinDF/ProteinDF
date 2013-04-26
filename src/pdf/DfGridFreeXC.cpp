@@ -6,6 +6,8 @@
 #include "DfGridFreeXC.h"
 #include "DfFunctional_SVWN.h"
 #include "DfFunctional_HFS.h"
+#include "DfOverlapX.h"
+#include "DfXMatrix.h"
 #include "TlTime.h"
 #include "TlRowVectorMatrix2.h"
 #include "TlSystem.h"
@@ -26,7 +28,14 @@ DfGridFreeXC::DfGridFreeXC(TlSerializeData* pPdfParam)
     this->epsilon_ = 1.0E-4;
     if ((*pPdfParam)["grid_free/CD_epsilon"].getStr().empty() != true) {
         this->epsilon_ = (*pPdfParam)["grid_free/CD_epsilon"].getDouble();
+    }
+
+    this->GF_mode_ = 0;
+    if ((*pPdfParam)["GF_mode"].getStr().empty() != true) {
+        this->GF_mode_ = (*pPdfParam)["GF_mode"].getInt();
     }    
+
+    this->debugSaveM_ = this->debugSaveM_ = (*pPdfParam)["debug/DfGridFreeXC/saveM"].getBoolean();
 }
 
 
@@ -34,8 +43,59 @@ DfGridFreeXC::~DfGridFreeXC()
 {
 }
 
+// before SCF ==================================================================
+void DfGridFreeXC::buildDualLevelOp()
+{
+    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
+                                       (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
 
+    DfOverlapX ovp(this->pPdfParam_);
+    {
+        TlSymmetricMatrix gfS;
+        ovp.getOvpMat(orbitalInfo_GF,
+                      &gfS);
+
+        DfXMatrix dfXMat(this->pPdfParam_);
+        TlMatrix gfV;
+        dfXMat.canonicalOrthogonalize<TlSymmetricMatrix, TlMatrix>(gfS, &gfV, NULL);
+        DfObject::saveGfVMatrix(gfV);
+    }
+
+    {
+        TlMatrix gfStilde;
+        ovp.getTransMat(this->orbitalInfo_,
+                        orbitalInfo_GF,
+                        &gfStilde);
+        DfObject::saveGfStildeMatrix(gfStilde);
+
+        TlSymmetricMatrix Sinv = DfObject::getSpqMatrix<TlSymmetricMatrix>();
+        Sinv.inverse();
+        
+        gfStilde.transpose();
+        const TlMatrix gfOmega = gfStilde * Sinv;
+        DfObject::saveGfOmegaMatrix(gfOmega);
+    }
+}
+
+// in SCF ======================================================================
 void DfGridFreeXC::buildFxc()
+{
+    switch(this->GF_mode_) {
+    case 1:
+        this->buildFxc1();
+        break;
+
+    case 2:
+        this->buildFxc2();
+        break;
+
+    default:
+        this->buildFxc0();
+        break;
+    }
+}
+
+void DfGridFreeXC::buildFxc0()
 {
     const index_type numOfAOs = this->m_nNumOfAOs;
     const TlSymmetricMatrix P = 0.5 * DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
@@ -50,7 +110,9 @@ void DfGridFreeXC::buildFxc()
         this->getM(P, &M);
     }
     this->log_.info("begin to generate Fxc using grid-free method.");
-    // M.save("M.mat");
+    if (this->debugSaveM_) {
+        M.save(TlUtils::format("M.%d.mat", this->m_nIteration));
+    }
 
     // this->getM_exact(P, &M);
     // M.save("M_exact.mat");
@@ -98,13 +160,249 @@ void DfGridFreeXC::buildFxc()
     // }
 }
 
+void DfGridFreeXC::buildFxc1()
+{
+    const TlSymmetricMatrix P = 0.5 * DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+    assert(P.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
+
+    this->log_.info("generate high level M-matrix by 4-center integrals.");
+    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
+                                       (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
+
+    this->log_.info(TlUtils::format("AOs = %d", this->orbitalInfo_.getNumOfOrbitals()));
+    this->log_.info(TlUtils::format("auxAOs for GF = %d", orbitalInfo_GF.getNumOfOrbitals()));
+
+    TlSymmetricMatrix M;
+    this->log_.info("begin to create M matrix using 4-center overlap.");
+    this->getM1(P, &M);
+    // if (this->XC_engine_ == XC_ENGINE_CD) {
+    //     this->log_.info("begin to create M matrix based on CD.");
+    //     this->getM_byCD(&M);
+    // } else {
+    //     this->log_.info("begin to create M matrix using 4-center overlap.");
+    //     this->log_.info("use specified basis for grid-free.");
+    //     this->getM1(P, &M);
+    // }
+    assert(M.getNumOfRows() == orbitalInfo_GF.getNumOfOrbitals());
+    if (this->debugSaveM_) {
+        M.save(TlUtils::format("M.%d.mat", this->m_nIteration));
+    }
+
+    this->log_.info("begin to generate Fxc using grid-free method.");
+    // ----------------------------------
+    // DfOverlapX ovp(this->pPdfParam_);
+    // TlSymmetricMatrix S;
+    // // S = DfObject::getSpqMatrix<TlSymmetricMatrix>();
+    // {
+    //     ovp.getOvpMat(orbitalInfo_GF,
+    //                   &S);
+    // }
+    // TlMatrix S_tilde;
+    // {
+    //     ovp.getTransMat(orbitalInfo_GF,
+    //                     this->orbitalInfo_,
+    //                     &S_tilde);
+    //     S_tilde.save("S_tilde.mat");
+    // }
+    // TlMatrix S_tilde_t = S_tilde;
+    // S_tilde_t.transpose();
+
+    // TlSymmetricMatrix S_inv = DfObject::getSpqMatrix<TlSymmetricMatrix>();
+    // S_inv.inverse();
+    // TlMatrix omega = S_tilde * S_inv;
+    // TlMatrix omega_t = omega;
+    // omega_t.transpose();
+
+    // DfXMatrix dfXMat(this->pPdfParam_);
+    // TlMatrix V;
+    // dfXMat.canonicalOrthogonalize<TlSymmetricMatrix, TlMatrix>(S, &V, NULL);
+    // ----------------------------------
+
+    this->log_.info("begin to generate Fxc using grid-free method.");
+    // M~(=V^t * M * V) & SVU(=SVU, but now only SV)の作成
+    TlSymmetricMatrix Mtilde;
+    TlMatrix SVU;
+    {
+        TlMatrix V = DfObject::getGfVMatrix<TlMatrix>();
+        TlMatrix gfStilde = DfObject::getGfStildeMatrix<TlMatrix>();
+        TlMatrix tmp_Mtilde = M * V;
+        SVU = gfStilde * V;
+        
+        V.transpose(); // make V^t
+        Mtilde = V * tmp_Mtilde;
+    }
+
+    TlMatrix Fxc;
+    TlMatrix Exc;
+    {
+        TlSymmetricMatrix F_lambda;
+        TlSymmetricMatrix E_lambda;
+        {
+            TlMatrix U;
+            TlVector lambda;
+            Mtilde.diagonal(&lambda, &U);
+            
+            SVU *= U;
+            this->get_F_lamda(lambda, &F_lambda, &E_lambda);
+        }
+
+        Fxc = SVU * F_lambda;
+        Exc = SVU * E_lambda;
+
+        SVU.transpose(); // make (SVU)^t = UVS
+
+        Fxc *= SVU;
+        Exc *= SVU;
+    }
+    DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, TlSymmetricMatrix(Fxc));
+    DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, TlSymmetricMatrix(Exc));
+}
+
+void DfGridFreeXC::buildFxc2()
+{
+    const TlSymmetricMatrix P = 0.5 * DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+    assert(P.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
+
+    this->log_.info("generate high level M-matrix by translation matrix.");
+    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
+                                       (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
+
+    this->log_.info(TlUtils::format("AOs = %d", this->orbitalInfo_.getNumOfOrbitals()));
+    this->log_.info(TlUtils::format("orbitals for GF = %d", orbitalInfo_GF.getNumOfOrbitals()));
+
+    // ----------------------------------
+    // DfOverlapX ovp(this->pPdfParam_);
+    // TlMatrix S_HL;
+    // {
+    //     ovp.getTransMat(orbitalInfo_GF,
+    //                     this->orbitalInfo_,
+    //                     &S_HL);
+    //     //S_HL.save("S_HL.mat");
+    // }
+    // assert(S_HL.getNumOfRows() == orbitalInfo_GF.getNumOfOrbitals());
+    // assert(S_HL.getNumOfCols() == this->orbitalInfo_.getNumOfOrbitals());
+    // TlMatrix S_LH = S_HL;
+    // S_LH.transpose();
+    // assert(S_LH.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
+    // assert(S_LH.getNumOfCols() == orbitalInfo_GF.getNumOfOrbitals());
+
+    // TlSymmetricMatrix S_H;
+    // TlMatrix omega_LH, omega_LH_t;
+    // {
+    //     ovp.getOvpMat(orbitalInfo_GF,
+    //                   &S_H);
+
+    //     TlSymmetricMatrix S_H_inv = S_H;
+    //     S_H_inv.inverse();
+    //     omega_LH = S_LH * S_H_inv;
+    //     omega_LH_t = omega_LH;
+    //     omega_LH_t.transpose();
+    // }
+    // assert(omega_LH.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
+    // assert(omega_LH.getNumOfCols() == orbitalInfo_GF.getNumOfOrbitals());
+    // omega_LH.save("omega_LH.mat");
+
+    // ----------------------------------
+        
+    // low levelのM行列を求める
+    TlSymmetricMatrix M;
+    if (this->XC_engine_ == XC_ENGINE_CD) {
+        this->log_.info("begin to create M matrix based on CD.");
+        this->getM_byCD(&M);
+    } else {
+        this->log_.info("begin to create M matrix using 4-center overlap.");
+        this->getM(P, &M);
+    }
+    assert(M.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
+
+    // high levelのM行列を求める
+    this->log_.info("build high-level M matrix by translation matrix.");
+    {
+        TlMatrix omega_LH = DfObject::getGfOmegaMatrix<TlMatrix>();
+        TlMatrix tmp_M = omega_LH * M;
+        omega_LH.transpose();
+        M = tmp_M * omega_LH;
+    }
+    assert(M.getNumOfRows() == orbitalInfo_GF.getNumOfOrbitals());
+    if (this->debugSaveM_) {
+        M.save(TlUtils::format("M_H.%d.mat", this->m_nIteration));
+    }
+    
+    this->log_.info("begin to generate Fxc using grid-free method.");
+    // M~(=V^t * M * V) & SVU(=SVU, but now only SV)の作成
+    TlSymmetricMatrix Mtilde;
+    TlMatrix SVU;
+    {
+        TlMatrix V = DfObject::getGfVMatrix<TlMatrix>();
+        TlMatrix gfStilde = DfObject::getGfStildeMatrix<TlMatrix>();
+        TlMatrix tmp_Mtilde = M * V;
+        SVU = gfStilde * V;
+        
+        V.transpose(); // make V^t
+        Mtilde = V * tmp_Mtilde;
+    }
+
+    TlMatrix Fxc;
+    TlMatrix Exc;
+    {
+        TlSymmetricMatrix F_lambda;
+        TlSymmetricMatrix E_lambda;
+        {
+            TlMatrix U;
+            TlVector lambda;
+            Mtilde.diagonal(&lambda, &U);
+            
+            SVU *= U;
+            this->get_F_lamda(lambda, &F_lambda, &E_lambda);
+        }
+
+        Fxc = SVU * F_lambda;
+        Exc = SVU * E_lambda;
+
+        SVU.transpose(); // make (SVU)^t = UVS
+
+        Fxc *= SVU;
+        Exc *= SVU;
+    }
+    DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, TlSymmetricMatrix(Fxc));
+    DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, TlSymmetricMatrix(Exc));
+
+
+    // this->log_.info("begin to generate Fxc using grid-free method.");
+    // // tV * S * V == I
+    // TlMatrix V_H, V_H_t;
+    // {
+    //     DfXMatrix dfXMat(this->pPdfParam_);
+    //     dfXMat.canonicalOrthogonalize<TlSymmetricMatrix, TlMatrix>(S_H, &V_H, NULL);
+    //     V_H_t = V_H;
+    //     V_H_t.transpose();
+    // }
+    
+    // TlSymmetricMatrix M_tilda = V_H_t * M_H * V_H;
+    
+    // TlMatrix U;
+    // TlVector lamda;
+    // M_tilda.diagonal(&lamda, &U);
+    
+    // TlSymmetricMatrix F_lamda;
+    // TlSymmetricMatrix E_lamda;
+    // this->get_F_lamda(lamda, &F_lamda, &E_lamda);
+    
+    // TlMatrix SVU = S_LH * V_H * U;
+    // TlMatrix UVS = SVU;
+    // UVS.transpose();
+    
+    // TlSymmetricMatrix Fxc = SVU * F_lamda * UVS;
+    // DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, Fxc);
+
+    // TlSymmetricMatrix Exc = SVU * E_lamda * UVS;
+    // DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, Exc);
+}
 
 void DfGridFreeXC::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 {
     assert(pM != NULL);
     pM->resize(this->m_nNumOfAOs);
-    // this->check_.resize(this->m_nNumOfAOs);
-    // this->check2_.resize(this->m_nNumOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_sets"]);
@@ -142,6 +440,55 @@ void DfGridFreeXC::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     this->destroyEngines();
 }
 
+void DfGridFreeXC::getM1(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
+{
+    assert(pM != NULL);
+    pM->resize(this->m_nNumOfAOs);
+
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_sets"]);
+    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
+                                       (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
+    pM->resize(orbitalInfo_GF.getNumOfOrbitals());
+    
+    const TlSparseSymmetricMatrix schwarzTable_PQ = this->makeSchwarzTable(orbitalInfo_GF);
+    const TlSparseSymmetricMatrix schwarzTable_RS = this->makeSchwarzTable(orbitalInfo);
+
+    this->createEngines();
+    DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    // pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
+    pDfTaskCtrl->setCutoffThreshold(0.0);
+    pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
+    // pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
+    pDfTaskCtrl->setCutoffEpsilon_distribution(0.0);
+
+    std::vector<DfTaskCtrl::Task4> taskList;
+    bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo_GF,
+                                          orbitalInfo,
+                                          schwarzTable_PQ,
+                                          schwarzTable_RS,
+                                          this->grainSize_,
+                                          &taskList,
+                                          true);
+    while (hasTask == true) {
+        this->getM_part(orbitalInfo_GF,
+                        orbitalInfo,
+                        taskList,
+                        P, pM);
+        hasTask = pDfTaskCtrl->getQueue4(orbitalInfo_GF,
+                                         orbitalInfo,
+                                         schwarzTable_PQ,
+                                         schwarzTable_RS,
+                                         this->grainSize_,
+                                         &taskList);
+    }
+                    
+    this->finalize(pM);
+
+    delete pDfTaskCtrl;
+    pDfTaskCtrl = NULL;
+    this->destroyEngines();
+}
 
 void DfGridFreeXC::createEngines()
 {
@@ -219,7 +566,6 @@ TlSparseSymmetricMatrix DfGridFreeXC::makeSchwarzTable(const TlOrbitalInfoObject
     this->log_.info("make Schwartz cutoff table: end");
     return schwarz;
 }
-
 
 void DfGridFreeXC::getM_part(const TlOrbitalInfoObject& orbitalInfo,
                              const std::vector<DfTaskCtrl::Task4>& taskList,
@@ -328,6 +674,100 @@ void DfGridFreeXC::storeM(const index_type shellIndexP, const int maxStepsP,
     }
 }
 
+void DfGridFreeXC::getM_part(const TlOrbitalInfoObject& orbitalInfo_PQ,
+                             const TlOrbitalInfoObject& orbitalInfo_RS,
+                             const std::vector<DfTaskCtrl::Task4>& taskList,
+                             const TlMatrixObject& P, TlMatrixObject* pM)
+{
+    const int taskListSize = taskList.size();
+    // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+
+#pragma omp parallel
+    {
+        int threadID = 0;
+#ifdef _OPENMP
+        threadID = omp_get_thread_num();
+#endif // _OPENMP
+        
+        // this->pOvpEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+
+#pragma omp for schedule(runtime)
+        for (int i = 0; i < taskListSize; ++i) {
+            const index_type shellIndexP = taskList[i].shellIndex1;
+            const index_type shellIndexQ = taskList[i].shellIndex2;
+            const index_type shellIndexR = taskList[i].shellIndex3;
+            const index_type shellIndexS = taskList[i].shellIndex4;
+            const int shellTypeP = orbitalInfo_PQ.getShellType(shellIndexP);
+            const int shellTypeQ = orbitalInfo_PQ.getShellType(shellIndexQ);
+            const int shellTypeR = orbitalInfo_RS.getShellType(shellIndexR);
+            const int shellTypeS = orbitalInfo_RS.getShellType(shellIndexS);
+            const int maxStepsP = 2 * shellTypeP + 1;
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+            const int maxStepsR = 2 * shellTypeR + 1;
+            const int maxStepsS = 2 * shellTypeS + 1;
+            const TlPosition posP = orbitalInfo_PQ.getPosition(shellIndexP);
+            const TlPosition posQ = orbitalInfo_PQ.getPosition(shellIndexQ);
+            const TlPosition posR = orbitalInfo_RS.getPosition(shellIndexR);
+            const TlPosition posS = orbitalInfo_RS.getPosition(shellIndexS);
+            const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(orbitalInfo_PQ, shellIndexP);
+            const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(orbitalInfo_PQ, shellIndexQ);
+            const DfOverlapEngine::PGTOs pgtosR = DfOverlapEngine::getPGTOs(orbitalInfo_RS, shellIndexR);
+            const DfOverlapEngine::PGTOs pgtosS = DfOverlapEngine::getPGTOs(orbitalInfo_RS, shellIndexS);
+                        
+            const DfOverlapEngine::Query query(0, 0, 0, 0,
+                                               shellTypeP, shellTypeQ,
+                                               shellTypeR, shellTypeS);
+
+            this->pOvpEngines_[threadID].calc(query,
+                                              posP, posQ, posR, posS,
+                                              pgtosP, pgtosQ, pgtosR, pgtosS);
+                        
+            this->storeM_pq(shellIndexP, maxStepsP,
+                            shellIndexQ, maxStepsQ,
+                            shellIndexR, maxStepsR,
+                            shellIndexS, maxStepsS,
+                            this->pOvpEngines_[threadID], P, pM);
+        }
+    }
+        
+}
+
+void DfGridFreeXC::storeM_pq(const index_type shellIndexP, const int maxStepsP,
+                             const index_type shellIndexQ, const int maxStepsQ,
+                             const index_type shellIndexR, const int maxStepsR,
+                             const index_type shellIndexS, const int maxStepsS,
+                             const DfOverlapEngine& engine,
+                             const TlMatrixObject& P,
+                             TlMatrixObject* pM)
+{
+    int index = 0;
+    for (int i = 0; i < maxStepsP; ++i) {
+        const index_type indexP = shellIndexP + i;
+
+        for (int j = 0; j < maxStepsQ; ++j) {
+            const index_type indexQ = shellIndexQ + j;
+            //const double P_pq = P.get(indexP, indexQ);
+            
+            for (int k = 0; k < maxStepsR; ++k) {
+                const index_type indexR = shellIndexR + k;
+
+                for (int l = 0; l < maxStepsS; ++l) {
+                    const index_type indexS = shellIndexS + l;
+                    const double P_rs = P.get(indexR, indexS);
+                    
+                    const double value = engine.WORK[index];
+                    //const index_type maxIndexS = indexR;
+                    
+                    if ((indexP >= indexQ) && (indexR >= indexS)) {
+                        const double coefEq1 = (indexR != indexS) ? 2.0 : 1.0;
+                        pM->add(indexP, indexQ, coefEq1 * P_rs * value);
+                    }
+                    ++index;
+                }
+            }
+        }
+    }
+}
 
 void DfGridFreeXC::get_F_lamda(const TlVector lamda,
                                TlSymmetricMatrix* pF_lamda,
