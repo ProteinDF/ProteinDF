@@ -20,6 +20,9 @@
 
 #include "PdfKeyword.h"
 #include "PdfUserInput.h"
+#include "TlOrbitalInfo.h"
+#include "TlOrbitalInfo_Density.h"
+#include "TlOrbitalInfo_XC.h"
 #include "TlMsgPack.h"
 
 DfInputdata::DfInputdata()
@@ -59,29 +62,43 @@ TlSerializeData DfInputdata::main()
     // keyword check
     pdfKwd.convertAlias(&(param));
     pdfKwd.checkInputParam(param);
-    
-    // テーブルの作成
-    const Fl_Geometry flGeom(param["coordinates"]);
-    {
-        Fl_Tbl_Orbital Tbl(flGeom);
-        param["num_of_AOs"] = Tbl.getcGtoTotalNum();
-    }
 
+    // 
     {
-        Fl_Tbl_Density Tbl(flGeom);
-        param["num_of_auxCDs"] = Tbl.getcGtoTotalNum();
-    }
+        const Fl_Geometry flGeom(param["coordinates"]);
+        const TlOrbitalInfo orbInfo(param["coordinates"], param["basis_sets"]);
+        const TlOrbitalInfo_Density orbInfo_J(param["coordinates"], param["basis_sets_j"]);
+        const TlOrbitalInfo_XC orbInfo_XC(param["coordinates"], param["basis_sets_k"]);
 
-    {
-        Fl_Tbl_Xcpot Tbl(flGeom);
-        param["num_of_auxXCs"] = Tbl.getcGtoTotalNum();
-    }
-
-    {
-        //Fl_Geometry Geom(Fl_Geometry::getDefaultFileName());
         param["num_of_atoms"] = flGeom.getNumOfAtoms();
         param["num_of_dummy_atoms"] = flGeom.getNumOfDummyAtoms();
+        param["num_of_AOs"] = orbInfo.getNumOfOrbitals();
+        param["num_of_auxCDs"] = orbInfo_J.getNumOfOrbitals();
+        param["num_of_auxXCs"] = orbInfo_XC.getNumOfOrbitals();
     }
+    
+    // テーブルの作成
+    // const Fl_Geometry flGeom(param["coordinates"]);
+    // {
+    //     Fl_Tbl_Orbital Tbl(flGeom);
+    //     param["num_of_AOs"] = Tbl.getcGtoTotalNum();
+    // }
+
+    // {
+    //     Fl_Tbl_Density Tbl(flGeom);
+    //     param["num_of_auxCDs"] = Tbl.getcGtoTotalNum();
+    // }
+
+    // {
+    //     Fl_Tbl_Xcpot Tbl(flGeom);
+    //     param["num_of_auxXCs"] = Tbl.getcGtoTotalNum();
+    // }
+
+    // {
+    //     //Fl_Geometry Geom(Fl_Geometry::getDefaultFileName());
+    //     param["num_of_atoms"] = flGeom.getNumOfAtoms();
+    //     param["num_of_dummy_atoms"] = flGeom.getNumOfDummyAtoms();
+    // }
 
     // 保存
     this->data_ = param;

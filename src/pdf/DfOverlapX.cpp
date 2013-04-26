@@ -96,6 +96,15 @@ void DfOverlapX::getNalpha(TlVector* pNalpha)
     this->finalize(pNalpha);
 }
 
+void DfOverlapX::getOvpMat(const TlOrbitalInfoObject& orbitalInfo,
+                           TlSymmetricMatrix* pS)
+{
+    assert(pS != NULL);
+    pS->resize(orbitalInfo.getNumOfOrbitals());
+
+    this->calcOverlap(orbitalInfo, pS);
+    this->finalize(pS);
+}
 
 void DfOverlapX::getTransMat(const TlOrbitalInfoObject& orbitalInfo1,
                              const TlOrbitalInfoObject& orbitalInfo2,

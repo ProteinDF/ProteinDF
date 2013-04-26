@@ -26,6 +26,10 @@ public:
     void getNalpha(TlVector* pNalpha);
     void getForce(const TlSymmetricMatrix& W, TlMatrix* pForce);
 
+    /// 重なり行列を作成する
+    void getOvpMat(const TlOrbitalInfoObject& orbInfo,
+                   TlSymmetricMatrix* pS);
+
     /// 変換行列を作成する
     void getTransMat(const TlOrbitalInfoObject& orbInfo1,
                      const TlOrbitalInfoObject& orbInfo2,
