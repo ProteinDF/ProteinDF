@@ -352,8 +352,7 @@ template<typename MatrixType, typename SymmetricMatrixType>
 void DfDmatrix::generateDensityMatrix(const DfObject::RUN_TYPE runType, const TlVector& currOcc)
 {
     // read current orbital in ao basis
-    MatrixType C;
-    C = DfObject::getCMatrix<MatrixType>(runType, this->m_nIteration);
+    MatrixType C = DfObject::getCMatrix<MatrixType>(runType, this->m_nIteration);
 
     // generate densty matrix in terms of guess lcao and occupation
     switch (runType) {

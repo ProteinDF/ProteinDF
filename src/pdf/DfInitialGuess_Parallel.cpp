@@ -65,28 +65,8 @@ void DfInitialGuess_Parallel::createInitialGuessUsingLCAO_onScaLAPACK(const RUN_
 void DfInitialGuess_Parallel::createInitialGuessUsingLCAO_onLAPACK(const RUN_TYPE runType)
 {
      TlCommunicate& rComm = TlCommunicate::getInstance();
-
-     // read guess lcao
-     TlMatrix LCAO;
      if (rComm.isMaster() == true) {
-         LCAO = DfInitialGuess::getLCAO<TlMatrix>(runType);
-     }
-     rComm.broadcast(LCAO);
-     this->saveC0(runType, LCAO);
-
-    // read guess occupation
-    const TlVector aOccupation = this->getOccupation(runType);
-    this->saveOccupation(runType, aOccupation);
-
-    {
-        TlSerializeData tmpParam = *(this->pPdfParam_);
-        tmpParam["orbital-correspondence"] = false;
-        tmpParam["orbital-overlap-correspondence-method"] = "simple";
-        tmpParam["control-iteration"] = 0;
-
-        // 密度行列の作成
-        DfDmatrix_Parallel dfDmatrix(&tmpParam);
-        dfDmatrix.DfDmatrixMain(); // RKS only?
+         DfInitialGuess::createInitialGuessUsingLCAO(runType);
     }
 }
 
