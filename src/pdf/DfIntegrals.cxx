@@ -294,7 +294,7 @@ void DfIntegrals::createXMatrix()
     if ((calcState & DfIntegrals::X) == 0) {
         this->outputStartTitle("X matrix");
         DfXMatrix* pDfXMatrix = this->getDfXMatrixObject();
-        pDfXMatrix->main();
+        pDfXMatrix->buildX();
 
         delete pDfXMatrix;
         pDfXMatrix = NULL;
