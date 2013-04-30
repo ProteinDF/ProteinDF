@@ -102,11 +102,10 @@ MatrixType DfInitialGuess::getLCAO(const RUN_TYPE runType)
     return lcaoMatrix;
 }
 
-
 template <typename MatrixType>
 void DfInitialGuess::saveC0(const RUN_TYPE runType, const MatrixType& C0)
 {
-    C0.save(this->getCMatrixPath(runType, 0));
+    DfObject::saveCMatrix(runType, 0, C0);
 }
 
 template <typename MatrixType>
