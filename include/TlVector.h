@@ -220,9 +220,9 @@ protected:
 #endif // HAVE_LAPACK
 
 #ifdef HAVE_SCALAPACK
-    friend bool diagonalByScaLapack_QR(TlDistributeSymmetricMatrix& inMatrix,
+    friend bool diagonalByScaLapack_QR(const TlDistributeSymmetricMatrix& inMatrix,
                                        TlVector* outEigVal, TlDistributeMatrix* outEigVec);
-    friend bool diagonalByScaLapack_DC(TlDistributeSymmetricMatrix& inMatrix,
+    friend bool diagonalByScaLapack_DC(const TlDistributeSymmetricMatrix& inMatrix,
                                        TlVector* outEigVal, TlDistributeMatrix* outEigVec);
 #endif // HAVE_SCALAPACK
 };

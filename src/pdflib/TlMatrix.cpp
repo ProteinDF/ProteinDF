@@ -568,6 +568,10 @@ TlMatrix& TlMatrix::operator*=(const TlMatrix& rhs)
     return (*this);
 }
 
+TlMatrix& TlMatrix::operator*=(const TlSymmetricMatrix& rhs)
+{
+    return this->operator*=(TlMatrix(rhs));
+}
 
 TlMatrix& TlMatrix::operator*=(const double& rhs)
 {
