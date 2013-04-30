@@ -138,7 +138,7 @@ void DfInitialGuess::createInitialGuessUsingLCAO(const RUN_TYPE runType)
         TlSerializeData tmpParam = *(this->pPdfParam_);
         tmpParam["orbital-correspondence"] = false;
         tmpParam["orbital-overlap-correspondence-method"] = "simple";
-        tmpParam["control-iteration"] = 0;
+        tmpParam["num_of_iterations"] = 0;
 
         // 密度行列の作成
         DfDmatrix dfDmatrix(&tmpParam);
