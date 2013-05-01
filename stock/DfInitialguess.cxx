@@ -1489,9 +1489,9 @@ int DfInitialguess::calcMain()
     } else {
         for (int i=0; i<STEPnumber; i++) {
             if ((GuessStep[i].UserVctRouExist==OFF) ||
-                    (GuessStep[i].UserVctMyuExist==OFF) ||
-                    (GuessStep[i].UserVctNyuExist==OFF)) {
-
+                (GuessStep[i].UserVctMyuExist==OFF) ||
+                (GuessStep[i].UserVctNyuExist==OFF)) {
+                
                 if (GuessStep[i].Unitfile == fl_Atom) {
                     this->EXE_ATOM(i);
                 } else {
@@ -6760,7 +6760,6 @@ int DfInitialguess::GusOutput()
 {
     if (this->scftype == NSP) {
         if (this->PpqFname.empty()) {
-            //this->CoefRou.save("fl_Work/fl_Vct_Rou0");
             this->CoefRou.save("fl_Work/fl_Vct_Rou1");
         }
 
@@ -6772,19 +6771,13 @@ int DfInitialguess::GusOutput()
         }
     } else if (this->scftype == SP) {
         if ((this->AlphaPpqFname.empty()) || (this->BetaPpqFname.empty())) {
-            //this->CoefRouAlpha.save("fl_Work/fl_Vct_Roua0");
-            //this->CoefRouBeta.save("fl_Work/fl_Vct_Roub0");
             this->CoefRouAlpha.save("fl_Work/fl_Vct_Roua1");
             this->CoefRouBeta.save("fl_Work/fl_Vct_Roub1");
         }
 
         if (tempflag==0) {
-            //this->CoefMyuAlpha.save("fl_Work/fl_Vct_Myua0");
-            //this->CoefMyuBeta.save("fl_Work/fl_Vct_Myub0");
             this->CoefMyuAlpha.save("fl_Work/fl_Vct_Myua1");
             this->CoefMyuBeta.save("fl_Work/fl_Vct_Myub1");
-            //this->CoefNyuAlpha.save("fl_Work/fl_Vct_Nyua0");
-            //this->CoefNyuBeta.save("fl_Work/fl_Vct_Nyub0");
             this->CoefNyuAlpha.save("fl_Work/fl_Vct_Nyua1");
             this->CoefNyuBeta.save("fl_Work/fl_Vct_Nyub1");
         }

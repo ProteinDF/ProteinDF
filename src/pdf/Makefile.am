@@ -1,5 +1,14 @@
 #	DfRLMO.h		DfRLMO.cpp
 # 	Fl_UserinputX.h			Fl_UserinputX.cpp		
+#	Fl_Gto_Density.h									
+#	Fl_Gto_Orbital.h									
+#	Fl_Gto_Xcpot.h										
+#	Fl_Gto_Xcpot2.h										
+# 	DfInitialguess.h		DfInitialguess.cxx
+#	Fl_Tbl_Density.h		Fl_Tbl_Density.cxx			
+#	Fl_Tbl_Orbital.h		Fl_Tbl_Orbital.cxx			
+#	Fl_Tbl_Xcpot.h			Fl_Tbl_Xcpot.cxx			
+#	Fl_Tbl_Xcpot2.h			Fl_Tbl_Xcpot2.cxx			
 
 lib_LTLIBRARIES = libpdf.la libppdf.la
 
@@ -47,7 +56,6 @@ libpdf_la_SOURCES = \
 	DfHpq.h					DfHpq.cxx					\
 	DfHpq_driver.h			DfHpq_driver.c				\
 	DfInitialGuess.h		DfInitialGuess.cpp			\
-	DfInitialguess.h		DfInitialguess.cxx			\
 	DfInitialGuessHuckel.h	DfInitialGuessHuckel.cpp	\
 	DfInitialGuessHarris.h	DfInitialGuessHarris.cpp	\
 	DfInputdata.h			DfInputdata.cxx				\
@@ -76,17 +84,9 @@ libpdf_la_SOURCES = \
 	Fl_Gdb_Molecular.h									\
 	Fl_Geometry.h			Fl_Geometry.cxx				\
 	Fl_Gto.h				Fl_Gto.cxx					\
-	Fl_Gto_Density.h									\
-	Fl_Gto_Orbital.h									\
-	Fl_Gto_Xcpot.h										\
-	Fl_Gto_Xcpot2.h										\
 	Fl_GuessDB.h			Fl_GuessDB.cxx				\
 	Fl_Tbl_AtomFragment.h	Fl_Tbl_AtomFragment.cxx		\
-	Fl_Tbl_Density.h		Fl_Tbl_Density.cxx			\
 	Fl_Tbl_Fragment.h		Fl_Tbl_Fragment.cxx			\
-	Fl_Tbl_Orbital.h		Fl_Tbl_Orbital.cxx			\
-	Fl_Tbl_Xcpot.h			Fl_Tbl_Xcpot.cxx			\
-	Fl_Tbl_Xcpot2.h			Fl_Tbl_Xcpot2.cxx			\
 	Fl_GlobalinputX.h		Fl_GlobalinputX.cpp			\
 	Fl_Vct_Table.h			Fl_Vct_Table.cpp			\
 	PdfKeyword.h			PdfKeyword.cpp				\

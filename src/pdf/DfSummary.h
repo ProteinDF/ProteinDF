@@ -4,7 +4,7 @@
 #include <string>
 
 #include "DfObject.h"
-#include "Fl_Tbl_Orbital.h"
+#include "TlOrbitalInfo.h"
 #include "TlVector.h"
 #include "CnError.h"
 
@@ -201,7 +201,8 @@ void DfSummary::exec()
 template<class MatrixType>
 void DfSummary::printMO(const MatrixType& C)
 {
-    const Fl_Tbl_Orbital Torb(Fl_Geometry((*this->pPdfParam_)["coordinates"]));
+    const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
+                                (*this->pPdfParam_)["basis_sets"]);
 
     // print out LCAO coefficent
     const int numOfAOs = this->m_nNumOfAOs;
@@ -218,19 +219,12 @@ void DfSummary::printMO(const MatrixType& C)
         }
         this->logger("----\n");
 
-        int previous_blflag = -1;
-        for (int i = 0, blflag = Torb.getInpAtomnum(i)+1; i < numOfAOs; ++i) {
-            if (blflag != Torb.getInpAtomnum(i)+1) {
-                blflag = Torb.getInpAtomnum(i) +1;
-            }
-            if (previous_blflag != blflag) {
-                this->logger(TlUtils::format(" %5ld  %-2s %3ld  %-9s",
-                                             i+1, Torb.getInpAtomtype(i).c_str(),
-                                             Torb.getInpAtomnum(i) +1, Torb.getNote1(i).c_str()));
-                previous_blflag = blflag;
-            } else {
-                this->logger(TlUtils::format(" %5ld          %-9s", i+1, Torb.getNote1(i).c_str()));
-            }
+        for (int i = 0; i < numOfAOs; ++i) {
+            this->logger(TlUtils::format(" %6d %-2s %6s",
+                                         i+1, 
+                                         orbInfo.getAtomName(i).c_str(),
+                                         TlOrbitalInfoObject::basisTypeNameTbl_[orbInfo.getBasisType(i)]));
+
             for (int j = orderMO; (j < orderMO+10) && (j < numOfMOs); ++j) {
                 this->logger(TlUtils::format(" %10.6lf", C(i, j)));
             }

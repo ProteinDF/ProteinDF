@@ -1,7 +1,6 @@
 #include <fstream>
 #include "CnError.h"
 #include "DfInitialGuess.h"
-#include "DfInitialguess.h"
 #include "DfInitialGuessHuckel.h"
 #include "DfInitialGuessHarris.h"
 #include "DfDmatrix.h"
@@ -23,8 +22,10 @@ void DfInitialGuess::exec()
     case GUESS_RHO:
         // go below
     case GUESS_FILE_RHO:
-        this->createRho();
-        this->createOccupation();
+        // this->createRho();
+        // this->createOccupation();
+        this->log_.critical("sorry. guess rho parameter is obsolete.");
+        CnErr.abort();
         break;
 
     case GUESS_DENSITY:
@@ -54,12 +55,6 @@ void DfInitialGuess::exec()
         this->log_.warn("unknown initial guess parameter.");
         break;
     }
-}
-
-void DfInitialGuess::createRho()
-{
-    DfInitialguess diguess(this->pPdfParam_);
-    diguess.dfGusMain();
 }
 
 void DfInitialGuess::createInitialGuessUsingHuckel()

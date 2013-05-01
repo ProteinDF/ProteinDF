@@ -2,10 +2,6 @@
 #include <iostream>
 #include "PdfUserInput.h"
 #include "Fl_Db_Basis.h"
-#include "Fl_Geometry.h"
-#include "Fl_Gto_Density.h"
-#include "Fl_Gto_Xcpot.h"
-#include "Fl_Gto_Orbital.h"
 #include "TlStringTokenizer.h"
 #include "TlAtom.h"
 #include "TlResidue.h"
@@ -336,15 +332,6 @@ void PdfUserInput::molecule_geometry_cartesian_input(const std::string& str)
             charge = TlAtom::getElementNumber(sAtom.c_str());
         }
 
-        // flGeomに格納 ====================================================
-        // Fl_Geometry::AtomData atomData;
-        // atomData.atom.setElement(sAtom);
-        // atomData.atom.setCharge(charge);
-        // atomData.atom.moveTo(position);
-        // //atomData.label = sLabel1;
-        // atomData.label = sLabel2;
-        // flGeom.pushBack(atomData);
-
         // serializeDataに格納
         TlSerializeData atom;
         atom["symbol"] = sAtom;
@@ -361,8 +348,6 @@ void PdfUserInput::molecule_geometry_cartesian_input(const std::string& str)
 
 void PdfUserInput::moleculeBasisSetOrbital(const std::string& str)
 {
-    Fl_Gto_Orbital Bas;
-
     std::istringstream in(str);
 
     int dNumOfCgto = 0;
@@ -435,28 +420,6 @@ void PdfUserInput::moleculeBasisSetOrbital(const std::string& str)
 
         // 格納 ============================================================
         Fl_Db_Basis flDbBasis(sName);
-        for (int i = 0; i < flDbBasis.getTotalcgto(); i++) {
-            Fl_Gto_Orbital::Cgto cgto;
-            cgto.basisName = sName;
-            cgto.Snum = 0;
-            cgto.Pnum = 0;
-            cgto.Dnum = 0;
-            cgto.atom = sAtom;
-            cgto.label = sLabel;
-            cgto.shell = flDbBasis.getShell(i);
-            cgto.scalefactor = flDbBasis.getScalefactor(i);
-
-            const int contraction = flDbBasis.getContraction(i);
-            cgto.pgto.resize(contraction);
-            for (int j = 0; j < contraction; j++) {
-                cgto.pgto[j].exponent = flDbBasis.getExpornent(i, j);
-                cgto.pgto[j].coefficient = flDbBasis.getCoefficient(i ,j);
-            }
-
-            Bas.set(dNumOfCgto, cgto);
-
-            dNumOfCgto++;
-        }
 
         // store to serializeData
         std::string key = sAtom;
@@ -466,11 +429,6 @@ void PdfUserInput::moleculeBasisSetOrbital(const std::string& str)
         const TlSerializeData basisset = this->getBasisInfo(sName);
         this->data_["basis_sets"][key] = basisset;
     }
-
-    // 出力
-//   Bas.open("fl_Gto_Orbital", "write");
-//   Bas.write();
-//   Bas.close();
 }
 
 
@@ -503,8 +461,6 @@ TlSerializeData PdfUserInput::getBasisInfo(const std::string& basisName)
 
 void PdfUserInput::moleculeBasisSetDensityAuxiliary(const std::string& str)
 {
-    Fl_Gto_Density Bas;
-
     std::istringstream in(str);
 
     int dNumOfCgto = 0;
@@ -580,28 +536,6 @@ void PdfUserInput::moleculeBasisSetDensityAuxiliary(const std::string& str)
 
         // 格納 ============================================================
         Fl_Db_Basis flDbBasis(sName);
-        for (int i = 0; i < flDbBasis.getrouTotalnum(); i++) {
-            Fl_Gto_Density::Cgto cgto;
-            cgto.basisName = sName;
-            cgto.Snum = flDbBasis.getrouSnum();
-            cgto.Pnum = flDbBasis.getrouPnum();
-            cgto.Dnum = flDbBasis.getrouDnum();
-            cgto.atom = sAtom;
-            cgto.label = sLabel;
-            cgto.shell = flDbBasis.getrouShell(i);
-            cgto.scalefactor = 1.0;
-
-            const int contraction = flDbBasis.getrouContraction(i);
-            cgto.pgto.resize(contraction);
-            for (int j = 0; j < contraction; j++) {
-                cgto.pgto[j].exponent = flDbBasis.getrouExpornent(i, j);
-                cgto.pgto[j].coefficient = 1.0;
-            }
-
-            Bas.set(dNumOfCgto, cgto);
-
-            dNumOfCgto++;
-        }
 
         // store to serializeData
         std::string key = sAtom;
@@ -626,17 +560,10 @@ void PdfUserInput::moleculeBasisSetDensityAuxiliary(const std::string& str)
         }
         this->data_["basis_sets_j"][key]["name"] = sName;
     }
-
-    // 出力
-//   Bas.open("fl_Gto_Density", "write");
-//   Bas.write();
-//   Bas.close();
 }
 
 void PdfUserInput::moleculeBasisSetExchangeAuxiliary(const std::string& str)
 {
-    Fl_Gto_Xcpot Bas;
-
     std::istringstream in(str);
 
     int dNumOfCgto = 0;
@@ -712,28 +639,6 @@ void PdfUserInput::moleculeBasisSetExchangeAuxiliary(const std::string& str)
 
         // 格納 ============================================================
         Fl_Db_Basis flDbBasis(sName);
-        for (int i = 0; i < flDbBasis.getmyuTotalnum(); i++) {
-            Fl_Gto_Xcpot::Cgto cgto;
-            cgto.basisName = sName;
-            cgto.Snum = flDbBasis.getmyuSnum();
-            cgto.Pnum = flDbBasis.getmyuPnum();
-            cgto.Dnum = flDbBasis.getmyuDnum();
-            cgto.atom = sAtom;
-            cgto.label = sLabel;
-            cgto.shell = flDbBasis.getmyuShell(i);
-            cgto.scalefactor = 1.0;
-
-            const int contraction = flDbBasis.getmyuContraction(i);
-            cgto.pgto.resize(contraction);
-            for (int j = 0; j < flDbBasis.getmyuContraction(i); j++) {
-                cgto.pgto[j].exponent = flDbBasis.getmyuExpornent(i, j);
-                cgto.pgto[j].coefficient = 1.0;
-            }
-
-            Bas.set(dNumOfCgto, cgto);
-
-            dNumOfCgto++;
-        }
 
         // store to serializeData
         std::string key = sAtom;
@@ -758,11 +663,6 @@ void PdfUserInput::moleculeBasisSetExchangeAuxiliary(const std::string& str)
         }
         this->data_["basis_sets_k"][key]["name"] = sName;
     }
-
-    // 出力
-//   Bas.open("fl_Gto_Xcpot", "write");
-//   Bas.write();
-//   Bas.close();
 }
 
 void PdfUserInput::alias()
