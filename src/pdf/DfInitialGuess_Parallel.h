@@ -10,7 +10,7 @@ public:
     virtual ~DfInitialGuess_Parallel();
     
 protected:
-    virtual void createRho();
+    // virtual void createRho();
     
     virtual TlVector createOccupation(RUN_TYPE runType);
 

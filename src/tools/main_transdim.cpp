@@ -8,7 +8,6 @@
 #include "TlSymmetricMatrix.h"
 #include "TlOrbitalInfo.h"
 #include "Fl_Geometry.h"
-#include "Fl_Gto_Orbital.h"
 #include "DfOverlap.h"
 #include "TlMsgPack.h"
 

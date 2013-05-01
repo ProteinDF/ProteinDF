@@ -22,7 +22,7 @@ public:
     void exec();
 
 protected:
-    virtual void createRho();
+    // virtual void createRho();
 
     void createOccupation();
     virtual TlVector createOccupation(const RUN_TYPE runType);
