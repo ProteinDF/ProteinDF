@@ -1,4 +1,7 @@
 #include "DfOverlapX_Parallel.h"
+#include "TlOrbitalInfo.h"
+#include "TlOrbitalInfo_Density.h"
+#include "TlOrbitalInfo_XC.h"
 #include "DfTaskCtrl_Parallel.h"
 #include "TlCommunicate.h"
 #include "TlSparseSymmetricMatrix.h"

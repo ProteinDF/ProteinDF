@@ -3,6 +3,9 @@
 #endif // _OPENMP
 
 #include "DfOverlapX.h"
+#include "TlOrbitalInfo.h"
+#include "TlOrbitalInfo_Density.h"
+#include "TlOrbitalInfo_XC.h"
 
 const int DfOverlapX::MAX_SHELL_TYPE = 2 + 1;
 
@@ -83,6 +86,17 @@ void DfOverlapX::getSab(TlSymmetricMatrix* pSab)
     this->finalize(pSab);
 }
 
+void DfOverlapX::getSgd(TlSymmetricMatrix* pSgd)
+{
+    assert(pSgd != NULL);
+    const index_type numOfAuxXC = this->numOfAuxXC_;
+    pSgd->resize(numOfAuxXC);
+
+    const TlOrbitalInfo_XC orbitalInfo_XC((*(this->pPdfParam_))["coordinates"],
+                                          (*(this->pPdfParam_))["basis_sets_k"]);
+    this->calcOverlap(orbitalInfo_XC, pSgd);
+    this->finalize(pSgd);
+}
 
 void DfOverlapX::getNalpha(TlVector* pNalpha)
 {
