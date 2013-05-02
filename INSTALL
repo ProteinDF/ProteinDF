@@ -1,0 +1,31 @@
+ProteinDF works and has been tested on Linux system.
+The standard configure scripts given will work for building it 
+on any of the systems.
+
+Prerequisites:
+
+In order to build ProteinDF, you must have LAPACK, ScaLAPACK, MPI 
+and any related dev packages installed.
+
+
+Configuring ProteinDF:
+
+To configure ProteinDF simply run:
+./configure
+
+If you want to specify a library installed in a non-standard location run,
+you can see help message:
+./configure --help
+
+
+Building ProteinDF:
+
+To build ProteinDF, simply run:
+make
+
+
+Installing ProteinDF:
+
+To install ProteinDF, run:
+make install
+
