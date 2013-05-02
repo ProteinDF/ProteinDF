@@ -7,8 +7,6 @@
 #include "TlVector.h"
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
-#include "Fl_GlobalinputX.h"
-
 
 DfXMatrix::DfXMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
