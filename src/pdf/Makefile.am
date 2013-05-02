@@ -1,12 +1,6 @@
-#	DfStruct.h											
-#	Common.h											
-#	Fl_GlobalinputX.h		Fl_GlobalinputX.cpp			
-
 lib_LTLIBRARIES = libpdf.la libppdf.la
 
 libpdf_la_SOURCES = \
-	DfTEI.h					DfTEI.cpp					\
-	DfTwoElectronIntegral.h DfTwoElectronIntegral.cpp	\
 	DfEri2.h				DfEri2.cpp					\
 	DfXCFunctional.h		DfXCFunctional.cpp			\
 	DfCalcGridX.h			DfCalcGridX.cpp				\
@@ -122,8 +116,6 @@ libppdf_la_SOURCES = \
 	DfFockMatrix_Parallel.h				DfFockMatrix_Parallel.cpp			\
 	DfXCFunctional_Parallel.h			DfXCFunctional_Parallel.cpp			\
 	DfEri2_Parallel.h					DfEri2_Parallel.cpp					\
-	DfTwoElectronIntegral_Parallel.h										\
-	DfTwoElectronIntegral_Parallel.cpp										\
 	DfCalcGridX_Parallel.h				DfCalcGridX_Parallel.cpp			\
 	DfConvcheck_Parallel.h				DfConvcheck_Parallel.cpp			\
 	DfTotalEnergy_Parallel.h			DfTotalEnergy_Parallel.cpp			\
