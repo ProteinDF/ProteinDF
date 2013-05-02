@@ -2,7 +2,6 @@
 #include "DfXCFunctional.h"
 #include "DfEri2.h"
 #include "DfCalcGridX.h"
-#include "DfTwoElectronIntegral.h"
 #include "DfEriX.h"
 
 #include "TlMatrixObject.h"
@@ -213,99 +212,6 @@ void DfXCFunctional::checkGridAccuracy()
 #endif // CHECK_GRID_ACCURACY
 }
 
-// TlSymmetricMatrix DfXCFunctional::getFockExchange(const TlSymmetricMatrix& deltaP, const RUN_TYPE nRunType)
-// {
-//     this->loggerTime(" start to build fock exchange.");
-
-//     TlSymmetricMatrix FxHF = this->getFockExchange(deltaP);
-
-//     if (this->m_bIsUpdateXC == true) {
-//         if (this->m_nIteration >= 2) {
-//             FxHF += this->getHFxMatrix<TlSymmetricMatrix>(nRunType, this->m_nIteration -1);
-//         }
-//         this->saveHFxMatrix(nRunType, this->m_nIteration, FxHF);
-//     }
-
-//     // calc energy
-//     {
-//         TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(nRunType, this->m_nIteration -1);
-
-//         if (nRunType == RUN_RKS) {
-//             DfXCFunctional::m_dFockExchangeEnergyAlpha = 0.5 * this->getFockExchangeEnergy(P, FxHF);
-//         } else if (nRunType == RUN_UKS_ALPHA) {
-//             DfXCFunctional::m_dFockExchangeEnergyAlpha = 0.5 * this->getFockExchangeEnergy(P, FxHF);
-//         } else if (nRunType == RUN_UKS_BETA) {
-//             DfXCFunctional::m_dFockExchangeEnergyBeta = 0.5 * this->getFockExchangeEnergy(P, FxHF);
-//         }
-//     }
-
-//     this->loggerTime(" end to build fock exchange.");
-//     return FxHF;
-// }
-
-
-// TlSymmetricMatrix DfXCFunctional::getFockExchange(const TlSymmetricMatrix& P)
-// {
-//     TlSymmetricMatrix FxHF(this->m_nNumOfAOs);
-
-//     if (this->m_bRI_K == false) {
-//         // disable RI-K
-// #ifdef USE_OLD_TEI_ENGINE
-//         {
-//             DfTwoElectronIntegral* pDfTei = this->getDfTwoElectronIntegral();
-            
-//             if (this->m_bUseRTmethod == true) {
-//                 this->logger(" using RT method\n");
-//                 pDfTei->getContractKMatrixByRTmethod(P, &FxHF);
-//             } else {
-//                 this->logger(" using integral-driven\n");
-//                 pDfTei->getContractKMatrixByIntegralDriven(P, &FxHF);
-//             }
-            
-//             delete pDfTei;
-//             pDfTei = NULL;
-//         }
-// #else 
-//         {
-//             DfEriX* pDfEri = this->getDfEriXObject();
-//             pDfEri->getK(P, &FxHF);
-//             delete pDfEri;
-//             pDfEri = NULL;
-//         }
-// #endif // USE_OLD_TEI_ENGINE
-//     } else {
-//         // using RI-K
-//         DfEri2* pDfEri2 = this->getDfEri2();
-//         FxHF = pDfEri2->getKMatrix(P);
-
-//         delete pDfEri2;
-//         pDfEri2 = NULL;
-//     }
-
-//     return FxHF;
-// }
-
-
-// double DfXCFunctional::getFockExchangeEnergy(const TlSymmetricMatrix& P, const TlSymmetricMatrix& Ex)
-// {
-//     double dEnergy = 0.0;
-
-//     const int nNumOfAOs = this->m_nNumOfAOs;
-//     for (int i = 0; i < nNumOfAOs; ++i) {
-//         // case: i != j
-//         for (int j = 0; j < i; ++j) {
-//             dEnergy += 2.0 * P(i, j) * Ex(i, j);
-//         }
-//         // case: i == j
-//         dEnergy += P(i, i) * Ex(i, i);
-//     }
-
-//     //dEnergy *= 0.5;
-
-//     return dEnergy;
-// }
-
-
 DfEri2* DfXCFunctional::getDfEri2()
 {
     DfEri2* pDfEri2 = new DfEri2(this->pPdfParam_);
@@ -313,28 +219,12 @@ DfEri2* DfXCFunctional::getDfEri2()
     return pDfEri2;
 }
 
-
 DfEriX* DfXCFunctional::getDfEriXObject()
 {
     DfEriX* pDfEriX = new DfEriX(this->pPdfParam_);
 
     return pDfEriX;
 }
-
-
-DfTwoElectronIntegral* DfXCFunctional::getDfTwoElectronIntegral()
-{
-#ifdef USE_OLD_TEI_ENGINE
-    DfTwoElectronIntegral* pDfTei = new DfTwoElectronIntegral(this->pPdfParam_);
-    return pDfTei;
-#else
-    this->log_.critical("cannot use old two-electron integral engine.");
-    this->log_.critical("please check USE_OLD_TEI_ENGINE flag.");
-    abort();
-    return NULL;
-#endif // USE_OLD_TEI_ENGINE
-}
-
 
 double DfXCFunctional::getGrimmeDispersionEnergy()
 {

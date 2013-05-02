@@ -23,16 +23,8 @@ protected:
     void buildXC_ScaLAPACK();
 
 protected:
-    // virtual TlSymmetricMatrix getFockExchange(const TlSymmetricMatrix& prevP, RUN_TYPE runType);
-    // TlDistributeSymmetricMatrix getFockExchange(const TlDistributeSymmetricMatrix& deltaP,
-    //                                             const RUN_TYPE runType);
-    // TlDistributeSymmetricMatrix getFockExchange(const TlDistributeSymmetricMatrix& P);
-    // double getFockExchangeEnergy(const TlDistributeSymmetricMatrix& P,
-    //                              const TlDistributeSymmetricMatrix& Ex);
-
     virtual DfEri2* getDfEri2();
     virtual DfEriX* getDfEriXObject();
-    virtual DfTwoElectronIntegral* getDfTwoElectronIntegral();
 };
 
 

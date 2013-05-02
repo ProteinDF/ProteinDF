@@ -14,7 +14,6 @@
 class DfCalcGridX;
 class DfEri2;
 class DfEriX;
-class DfTwoElectronIntegral;
 
 // 交換・相関項の計算を行う
 //
@@ -94,7 +93,6 @@ protected:
 protected:
     virtual DfEri2* getDfEri2();
     virtual DfEriX* getDfEriXObject();
-    virtual DfTwoElectronIntegral* getDfTwoElectronIntegral();
 
 protected:
     FUNCTIONAL_TYPE functionalType_;
