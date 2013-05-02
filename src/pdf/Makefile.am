@@ -46,7 +46,6 @@ libpdf_la_SOURCES = \
 	DfIntegrals.h			DfIntegrals.cxx				\
 	DfInvMatrix.h			DfInvMatrix.cpp				\
 	DfLevelshift.h			DfLevelshift.cxx			\
-	DfOverlap.h				DfOverlap.cpp				\
 	DfPreScf.h				DfPreScf.cpp				\
 	DfPopulation.h			DfPopulation.cxx			\
 	DfQclo.h				DfQclo.cxx					\
@@ -98,7 +97,6 @@ libppdf_la_SOURCES = \
 	DfIntegrals_Parallel.h				DfIntegrals_Parallel.cpp			\
 	DfHpq_Parallel.h					DfHpq_Parallel.cpp					\
 	DfHpqX_Parallel.h					DfHpqX_Parallel.cpp					\
-	DfOverlap_Parallel.h				DfOverlap_Parallel.cpp				\
 	DfOverlapX_Parallel.h				DfOverlapX_Parallel.cpp				\
 	DfEri_Parallel.h					DfEri_Parallel.cpp					\
 	DfEriX_Parallel.h					DfEriX_Parallel.cpp					\

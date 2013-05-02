@@ -10,7 +10,7 @@
 #include "DfXCFunctional.h"
 
 class DfEri;
-class DfOverlap;
+class DfOverlapX;
 
 /// 得られた密度行列、交換相関ポテンシャルをもとに全エネルギーの計算を行う
 class DfTotalEnergy : public DfObject {
@@ -90,7 +90,7 @@ protected:
     virtual void output();
 
     virtual DfEri* getDfEri() const;
-    virtual DfOverlap* getDfOverlap() const;
+    virtual DfOverlapX* getDfOverlapX() const;
 
 protected:
     double m_dE_OneElectronPart;
@@ -505,7 +505,7 @@ double DfTotalEnergy::calcExc_DIRECT(const SymmetricMatrixType& D, const VectorT
     SymmetricMatrixType B(this->m_nNumOfAOs);
 
     DfOverlapType dfOverlap(this->pPdfParam_);
-    dfOverlap.getdeltaHpqG(E, B);
+    dfOverlap.get_pqg(E, &B);
 
     return B.dot(D).sum();
 }

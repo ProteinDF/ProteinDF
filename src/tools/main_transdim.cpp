@@ -8,7 +8,7 @@
 #include "TlSymmetricMatrix.h"
 #include "TlOrbitalInfo.h"
 #include "Fl_Geometry.h"
-#include "DfOverlap.h"
+#include "DfOverlapX.h"
 #include "TlMsgPack.h"
 
 void usage()
@@ -90,8 +90,9 @@ int main(int argc, char* argv[])
     TlMatrix omega;
     {
         // S_tilde
-        DfOverlap ovp(&pdfParamNew);
-        TlMatrix S_tilde = ovp.getSpq(orbInfo_old, orbInfo_new);
+        DfOverlapX ovp(&pdfParamNew);
+        TlMatrix S_tilde;
+        ovp.getTransMat(orbInfo_old, orbInfo_new, &S_tilde);
         if (sTildePath.empty() == false) {
             std::cerr << "S_tilde save: " << sTildePath << std::endl;
             S_tilde.save(sTildePath);

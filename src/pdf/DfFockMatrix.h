@@ -580,7 +580,7 @@ void DfFockMatrix::setXC_RI(const RUN_TYPE nRunType, SymmetricMatrixType& F)
     }
 
     DfOverlapClass dfOverlap(this->pPdfParam_);
-    dfOverlap.getdeltaHpqG(Myu, F);
+    dfOverlap.get_pqg(Myu, &F);
 }
 
 template<typename SymmetricMatrixType>
