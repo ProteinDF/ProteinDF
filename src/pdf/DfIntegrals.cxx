@@ -16,7 +16,6 @@
 #include "DfGenerateGrid.h"
 
 #include "Fl_Geometry.h"
-#include "Fl_GlobalinputX.h"
 #include "TlTime.h"
 #include "TlMsgPack.h"
 

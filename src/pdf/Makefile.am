@@ -1,12 +1,10 @@
-#	Fl_Vct_Table.h			Fl_Vct_Table.cpp			
-#	Fl_GuessDB.h			Fl_GuessDB.cxx				
-#	Fl_Gdb_Atom.h										
-#	Fl_Gdb_Molecular.h									
+#	DfStruct.h											
+#	Common.h											
+#	Fl_GlobalinputX.h		Fl_GlobalinputX.cpp			
 
 lib_LTLIBRARIES = libpdf.la libppdf.la
 
 libpdf_la_SOURCES = \
-	DfStruct.h											\
 	DfTEI.h					DfTEI.cpp					\
 	DfTwoElectronIntegral.h DfTwoElectronIntegral.cpp	\
 	DfEri2.h				DfEri2.cpp					\
@@ -25,7 +23,6 @@ libpdf_la_SOURCES = \
 	DfFunctional_B88LYP.h	DfFunctional_B88LYP.cpp		\
 	DfFunctional_B3LYP.h	DfFunctional_B3LYP.cpp		\
 	DfFunctional_PW91X.h	DfFunctional_PW91X.cpp		\
-	Common.h											\
 	CnError.h				CnError.cxx 				\
 	DfObject.h				DfObject.cpp				\
 	DfDiffDensityMatrix.h	DfDiffDensityMatrix.cpp		\
@@ -77,7 +74,6 @@ libpdf_la_SOURCES = \
 	Fl_Gto.h				Fl_Gto.cxx					\
 	Fl_Tbl_AtomFragment.h	Fl_Tbl_AtomFragment.cxx		\
 	Fl_Tbl_Fragment.h		Fl_Tbl_Fragment.cxx			\
-	Fl_GlobalinputX.h		Fl_GlobalinputX.cpp			\
 	PdfKeyword.h			PdfKeyword.cpp				\
 	ProteinDF.h				ProteinDF.cxx				\
 	TlOrbitalInfoObject.h	TlOrbitalInfoObject.cpp		\
