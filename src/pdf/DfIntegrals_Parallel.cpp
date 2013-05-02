@@ -1,6 +1,5 @@
 #include "DfIntegrals_Parallel.h"
 #include "DfHpq_Parallel.h"
-#include "DfOverlap_Parallel.h"
 #include "DfOverlapX_Parallel.h"
 #include "DfEri_Parallel.h"
 #include "DfEriX_Parallel.h"
@@ -184,7 +183,6 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
-    DfOverlap_Parallel dfOverlap(this->pPdfParam_);
     DfOverlapX_Parallel dfOverlapX(this->pPdfParam_);
 
     // Spq
@@ -202,12 +200,13 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK()
         }
         
         TlSymmetricMatrix Spq(this->m_nNumOfAOs);
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" use new engine.\n");
-            dfOverlapX.getSpq(&Spq);
-        } else {
-            dfOverlap.getSpq(&Spq);
-        }
+        dfOverlapX.getSpq(&Spq);
+        // if (this->isUseNewEngine_ == true) {
+        //     this->logger(" use new engine.\n");
+        //     dfOverlapX.getSpq(&Spq);
+        // } else {
+        //     dfOverlap.getSpq(&Spq);
+        // }
 
         if (rComm.isMaster() == true) {
             this->saveSpqMatrix(Spq);
@@ -238,7 +237,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK()
                 }
                 
                 TlSymmetricMatrix Sgd(this->numOfAuxXC_);
-                dfOverlap.getSgd(&Sgd);
+                dfOverlapX.getSgd(&Sgd);
                 
                 if (rComm.isMaster() == true) {
                     this->saveSgdMatrix(Sgd);
@@ -269,12 +268,13 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK()
             }
             
             TlSymmetricMatrix Sab2(this->m_nNumOfAux);
-            if (this->isUseNewEngine_ == true) {
-                this->logger(" use new engine.\n");
-                dfOverlapX.getSab(&Sab2);
-            } else {
-                dfOverlap.getSab2(&Sab2);
-            }
+            dfOverlapX.getSab(&Sab2);
+            // if (this->isUseNewEngine_ == true) {
+            //     this->logger(" use new engine.\n");
+            //     dfOverlapX.getSab(&Sab2);
+            // } else {
+            //     dfOverlap.getSab2(&Sab2);
+            // }
             
             if (rComm.isMaster() == true) {
                 this->saveSab2Matrix(Sab2);
@@ -303,7 +303,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK()
             }
             
             TlVector Na(this->m_nNumOfAux);
-            dfOverlap.getNa(&Na);
+            dfOverlapX.getNalpha(&Na);
             this->saveNalpha(Na);
             
             this->outputEndTitle();
@@ -320,7 +320,6 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK()
 {
     // TlCommunicate& rComm = TlCommunicate::getInstance();
     unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
-    DfOverlap_Parallel dfOverlap(this->pPdfParam_);
     DfOverlapX_Parallel dfOverlapX(this->pPdfParam_);
 
     // Spq
@@ -329,14 +328,14 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK()
 
         this->logger(" S_(p q) is build using distribute matrix.\n");
         TlDistributeSymmetricMatrix Spq(this->m_nNumOfAOs);
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" use new engine.\n");
-            dfOverlapX.getSpqD(&Spq);
-        } else {
-            dfOverlap.getSpq(&Spq);
-        }
-            this->saveSpqMatrix(Spq);
-            
+        dfOverlapX.getSpqD(&Spq);
+        // if (this->isUseNewEngine_ == true) {
+        //     this->logger(" use new engine.\n");
+        //     dfOverlapX.getSpqD(&Spq);
+        // } else {
+        //     dfOverlap.getSpq(&Spq);
+        // }
+        this->saveSpqMatrix(Spq);
         
         this->outputEndTitle();
 
@@ -352,7 +351,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK()
                 this->outputStartTitle("Sgd");
                 
                 TlDistributeSymmetricMatrix Sgd(this->numOfAuxXC_);
-                dfOverlap.getSgd(&Sgd);
+                dfOverlapX.getSgd(&Sgd);
                 this->saveSgdMatrix(Sgd);
                 
                 this->outputEndTitle();
@@ -371,12 +370,13 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK()
             
             this->logger(" S_(alpha beta) is build using on distribute matrix.\n");
             TlDistributeSymmetricMatrix Sab2(this->m_nNumOfAux);
-            if (this->isUseNewEngine_ == true) {
-                this->logger(" use new engine.\n");
-                dfOverlapX.getSabD(&Sab2);
-            } else {
-                dfOverlap.getSab2(&Sab2);
-            }
+            dfOverlapX.getSabD(&Sab2);
+            // if (this->isUseNewEngine_ == true) {
+            //     this->logger(" use new engine.\n");
+            //     dfOverlapX.getSabD(&Sab2);
+            // } else {
+            //     dfOverlap.getSab2(&Sab2);
+            // }
             this->saveSab2Matrix(Sab2);
             
             this->outputEndTitle();
@@ -401,7 +401,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK()
             }
             
             TlVector Na(this->m_nNumOfAux);
-            dfOverlap.getNa(&Na);
+            dfOverlapX.getNalpha(&Na);
             this->saveNalpha(Na);
             
             this->outputEndTitle();

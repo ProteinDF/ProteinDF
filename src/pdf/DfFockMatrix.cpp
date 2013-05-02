@@ -5,7 +5,7 @@
 #include "TlVector.h"
 #include "DfEri.h"
 #include "DfEriX.h"
-#include "DfOverlap.h"
+#include "DfOverlapX.h"
 
 DfFockMatrix::DfFockMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
@@ -69,12 +69,12 @@ void DfFockMatrix::mainDIRECT_UKS()
 
 void DfFockMatrix::mainDIRECT_ROKS()
 {
-    this->mainDIRECT_ROKS<TlMatrix, TlSymmetricMatrix, TlVector, DfEri, DfOverlap>();
+    this->mainDIRECT_ROKS<TlMatrix, TlSymmetricMatrix, TlVector, DfEri, DfOverlapX>();
 }
 
 void DfFockMatrix::setXC_RI(const RUN_TYPE nRunType, TlSymmetricMatrix& F)
 {
-    this->setXC_RI<TlSymmetricMatrix, TlVector, DfOverlap>(nRunType, F);
+    this->setXC_RI<TlSymmetricMatrix, TlVector, DfOverlapX>(nRunType, F);
 }
 
 void DfFockMatrix::setXC_DIRECT(const RUN_TYPE nRunType, TlSymmetricMatrix& F)

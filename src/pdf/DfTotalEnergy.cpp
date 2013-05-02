@@ -2,7 +2,7 @@
 
 #include "DfTotalEnergy.h"
 #include "DfEri.h"
-#include "DfOverlap.h"
+#include "DfOverlapX.h"
 #include "DfEri2.h"
 #include "DfXCFunctional.h"
 
@@ -25,7 +25,7 @@ DfTotalEnergy::~DfTotalEnergy()
 
 void DfTotalEnergy::exec()
 {
-    this->exec_template<DfOverlap, DfEri, TlSymmetricMatrix, TlVector>();
+    this->exec_template<DfOverlapX, DfEri, TlSymmetricMatrix, TlVector>();
 }
 
 
@@ -173,9 +173,9 @@ DfEri* DfTotalEnergy::getDfEri() const
 }
 
 
-DfOverlap* DfTotalEnergy::getDfOverlap() const
+DfOverlapX* DfTotalEnergy::getDfOverlapX() const
 {
-    DfOverlap* pDfOverlap = new DfOverlap(this->pPdfParam_);
+    DfOverlapX* pDfOverlap = new DfOverlapX(this->pPdfParam_);
 
     return pDfOverlap;
 }
