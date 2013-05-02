@@ -8,8 +8,8 @@
 
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
-#include "TlOrbitalInfo.h"
-#include "TlOrbitalInfo_Density.h"
+
+class TlOrbitalInfoObject;
 
 class DfOverlapX : public DfObject {
 public:
@@ -23,6 +23,7 @@ public:
 public:
     void getSpq(TlSymmetricMatrix* pSpq);
     void getSab(TlSymmetricMatrix* pSab);
+    void getSgd(TlSymmetricMatrix* pSgd);
     void getNalpha(TlVector* pNalpha);
     void getForce(const TlSymmetricMatrix& W, TlMatrix* pForce);
 
