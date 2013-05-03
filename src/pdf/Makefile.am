@@ -37,8 +37,6 @@ libpdf_la_SOURCES = \
 	DfFockMatrix.h			DfFockMatrix.cpp			\
 	DfGenerateGrid.h		DfGenerateGrid.cpp			\
 	DfGridFreeXC.h			DfGridFreeXC.cpp			\
-	DfHpq.h					DfHpq.cxx					\
-	DfHpq_driver.h			DfHpq_driver.c				\
 	DfInitialGuess.h		DfInitialGuess.cpp			\
 	DfInitialGuessHuckel.h	DfInitialGuessHuckel.cpp	\
 	DfInitialGuessHarris.h	DfInitialGuessHarris.cpp	\
@@ -95,7 +93,6 @@ libpdf_la_SOURCES = \
 libppdf_la_SOURCES = \
 	DfInputdata_Parallel.h				DfInputdata_Parallel.cpp			\
 	DfIntegrals_Parallel.h				DfIntegrals_Parallel.cpp			\
-	DfHpq_Parallel.h					DfHpq_Parallel.cpp					\
 	DfHpqX_Parallel.h					DfHpqX_Parallel.cpp					\
 	DfOverlapX_Parallel.h				DfOverlapX_Parallel.cpp				\
 	DfEri_Parallel.h					DfEri_Parallel.cpp					\
