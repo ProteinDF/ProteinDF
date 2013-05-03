@@ -1,5 +1,5 @@
 #include "DfIntegrals_Parallel.h"
-#include "DfHpq_Parallel.h"
+//#include "DfHpq_Parallel.h"
 #include "DfOverlapX_Parallel.h"
 #include "DfEri_Parallel.h"
 #include "DfEriX_Parallel.h"
@@ -130,14 +130,16 @@ void DfIntegrals_Parallel::createHpqMatrix_LAPACK()
     TlSymmetricMatrix Hpq(this->m_nNumOfAOs);
     TlSymmetricMatrix Hpq2(this->m_nNumOfAOs);
 
-    if (this->isUseNewEngine_ == true) {
-        this->logger(" use new engine\n");
-        DfHpqX_Parallel dfHpq(this->pPdfParam_);
-        dfHpq.getHpq(&Hpq, &Hpq2);
-    } else {
-        DfHpq_Parallel dfHpq(this->pPdfParam_);
-        dfHpq.getHpq(&Hpq, &Hpq2);
-    }
+    DfHpqX_Parallel dfHpq(this->pPdfParam_);
+    dfHpq.getHpq(&Hpq, &Hpq2);
+    // if (this->isUseNewEngine_ == true) {
+    //     this->logger(" use new engine\n");
+    //     DfHpqX_Parallel dfHpq(this->pPdfParam_);
+    //     dfHpq.getHpq(&Hpq, &Hpq2);
+    // } else {
+    //     DfHpq_Parallel dfHpq(this->pPdfParam_);
+    //     dfHpq.getHpq(&Hpq, &Hpq2);
+    // }
 
     if (rComm.isMaster() == true) {
         this->saveHpqMatrix(Hpq);
@@ -152,14 +154,16 @@ void DfIntegrals_Parallel::createHpqMatrix_ScaLAPACK()
     TlDistributeSymmetricMatrix Hpq2(this->m_nNumOfAOs);
     
     this->logger(" Hpq build using distribute matrix.\n");
-    if (this->isUseNewEngine_ == true) {
-        this->logger(" use new engine\n");
-        DfHpqX_Parallel dfHpq(this->pPdfParam_);
-        dfHpq.getHpqD(&Hpq, &Hpq2);
-    } else {
-        DfHpq_Parallel dfHpq(this->pPdfParam_);
-        dfHpq.getHpq(&Hpq, &Hpq2);
-    }
+    DfHpqX_Parallel dfHpq(this->pPdfParam_);
+    dfHpq.getHpqD(&Hpq, &Hpq2);
+    // if (this->isUseNewEngine_ == true) {
+    //     this->logger(" use new engine\n");
+    //     DfHpqX_Parallel dfHpq(this->pPdfParam_);
+    //     dfHpq.getHpqD(&Hpq, &Hpq2);
+    // } else {
+    //     DfHpq_Parallel dfHpq(this->pPdfParam_);
+    //     dfHpq.getHpq(&Hpq, &Hpq2);
+    // }
     
     this->saveHpqMatrix(Hpq);
     this->saveHpq2Matrix(Hpq2);
