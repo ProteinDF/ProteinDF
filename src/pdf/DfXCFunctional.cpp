@@ -1,6 +1,5 @@
 #include <cassert>
 #include "DfXCFunctional.h"
-#include "DfEri2.h"
 #include "DfCalcGridX.h"
 #include "DfEriX.h"
 
@@ -210,13 +209,6 @@ void DfXCFunctional::checkGridAccuracy()
                                         rhoB, this->m_nNumOfBetaElectrons));
     }
 #endif // CHECK_GRID_ACCURACY
-}
-
-DfEri2* DfXCFunctional::getDfEri2()
-{
-    DfEri2* pDfEri2 = new DfEri2(this->pPdfParam_);
-
-    return pDfEri2;
 }
 
 DfEriX* DfXCFunctional::getDfEriXObject()

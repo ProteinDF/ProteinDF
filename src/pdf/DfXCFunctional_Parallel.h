@@ -23,7 +23,6 @@ protected:
     void buildXC_ScaLAPACK();
 
 protected:
-    virtual DfEri2* getDfEri2();
     virtual DfEriX* getDfEriXObject();
 };
 

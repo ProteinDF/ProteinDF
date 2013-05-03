@@ -1,6 +1,5 @@
 #include "DfXCFunctional_Parallel.h"
 #include "DfCalcGridX_Parallel.h"
-#include "DfEri2_Parallel.h"
 #include "DfEriX_Parallel.h"
 #include "TlCommunicate.h"
 #include "TlTime.h"
@@ -197,15 +196,6 @@ void DfXCFunctional_Parallel::buildXC_ScaLAPACK()
         break;
     }
 }
-
-
-DfEri2* DfXCFunctional_Parallel::getDfEri2()
-{
-    DfEri2* pDfEri2 = new DfEri2_Parallel(this->pPdfParam_);
-
-    return pDfEri2;
-}
-
 
 DfEriX* DfXCFunctional_Parallel::getDfEriXObject()
 {

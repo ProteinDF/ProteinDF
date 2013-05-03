@@ -1,7 +1,5 @@
 #include "DfIntegrals_Parallel.h"
-//#include "DfHpq_Parallel.h"
 #include "DfOverlapX_Parallel.h"
-#include "DfEri_Parallel.h"
 #include "DfEriX_Parallel.h"
 
 #include "DfHpqX_Parallel.h"
@@ -451,14 +449,16 @@ void DfIntegrals_Parallel::createERIMatrix_LAPACK()
             
             TlSymmetricMatrix Sab(this->m_nNumOfAux);
             
-            if (this->isUseNewEngine_ == true) {
-                this->logger(" use new engine.\n");
-                DfEriX_Parallel dfEri(this->pPdfParam_);
-                dfEri.getJab(&Sab);
-            } else {
-                DfEri_Parallel dfEri(this->pPdfParam_);
-                dfEri.getSab(&Sab);
-            }
+            DfEriX_Parallel dfEri(this->pPdfParam_);
+            dfEri.getJab(&Sab);
+            // if (this->isUseNewEngine_ == true) {
+            //     this->logger(" use new engine.\n");
+            //     DfEriX_Parallel dfEri(this->pPdfParam_);
+            //     dfEri.getJab(&Sab);
+            // } else {
+            //     DfEri_Parallel dfEri(this->pPdfParam_);
+            //     dfEri.getSab(&Sab);
+            // }
             
             TlCommunicate& rComm = TlCommunicate::getInstance();
             if (rComm.isMaster() == true) {
@@ -483,10 +483,10 @@ void DfIntegrals_Parallel::createERIMatrix_ScaLAPACK()
         if ((calcState & DfIntegrals::Sab) == 0) {
             this->outputStartTitle("Sab");
             
-            DfEri_Parallel dfEri(this->pPdfParam_);
-            TlDistributeSymmetricMatrix Sab(this->m_nNumOfAux);
-            dfEri.getSab(&Sab);
-            this->saveSabMatrix(Sab);
+            DfEriX_Parallel dfEri(this->pPdfParam_);
+            TlDistributeSymmetricMatrix Jab(this->m_nNumOfAux);
+            dfEri.getJab(&Jab);
+            this->saveSabMatrix(Jab);
             
             this->outputEndTitle();
             

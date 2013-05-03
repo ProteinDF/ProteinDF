@@ -633,7 +633,7 @@ void DfFockMatrix::setCoulomb(const METHOD_TYPE nMethodType, SymmetricMatrixType
     }
 
     DfEriClass dfEri(this->pPdfParam_);
-    dfEri.getdeltaHpqA(Rho, F);
+    dfEri.getJ(Rho, &F);
 }
 
 

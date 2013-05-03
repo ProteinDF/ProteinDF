@@ -1,12 +1,10 @@
 #include "DfThreeindexintegrals.h"
 #include "Fl_Geometry.h"
-#include "DfEri.h"
+#include "DfEriX.h"
 #include "DfOverlapX.h"
 #include "TlUtils.h"
 #include "TlSymmetricMatrix.h"
 #include "TlVector.h"
-#include "DfEri2.h"
-#include "DfEriX.h"
 #include "CnError.h"
 
 DfThreeindexintegrals::DfThreeindexintegrals(TlSerializeData* pPdfParam)
@@ -112,8 +110,9 @@ void DfThreeindexintegrals::mainDIRECT_RKS(int iteration)
     // クーロン項
     // [pq|alpha]
     {
-        DfEri dferi(this->pPdfParam_);
-        dferi.getdeltaHpqA(currRho, F);
+        DfEriX dferi(this->pPdfParam_);
+        //dferi.getdeltaHpqA(currRho, F);
+        dferi.getJ(currRho, &F);
     }
 
     // prepare E
@@ -220,8 +219,9 @@ void DfThreeindexintegrals::mainDIRECT_RKS2(int iteration)
     // クーロン項
     // [pq|alpha]
     {
-        DfEri dferi(this->pPdfParam_);
-        dferi.getdeltaHpqA(currRho, F);
+        DfEriX dferi(this->pPdfParam_);
+        //dferi.getdeltaHpqA(currRho, F);
+        dferi.getJ(currRho, &F);
     }
 
     // prepare E
@@ -392,8 +392,9 @@ void DfThreeindexintegrals::mainDIRECT_UKS(int iteration)
     TlSymmetricMatrix F(this->m_nNumOfAOs);
 
     {
-        DfEri dferi(this->pPdfParam_);
-        dferi.getdeltaHpqA(currRho, F);
+        DfEriX dferi(this->pPdfParam_);
+        //dferi.getdeltaHpqA(currRho, F);
+        dferi.getJ(currRho, &F);
     }
 
     F.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
@@ -525,8 +526,8 @@ void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration)
             // integral object generated
             // then add coulomb contribution of rho to F ?
             {
-                DfEri dferi(this->pPdfParam_);
-                dferi.getdeltaHpqA(currRho, F);
+                DfEriX dferi(this->pPdfParam_);
+                dferi.getJ(currRho, &F);
             }
 
             E = F;
@@ -565,8 +566,8 @@ void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration)
         // then add coulomb contribution of rho to F ?
         {
             TlVector tmpRho = 0.5 * currRho;
-            DfEri dferi(this->pPdfParam_);
-            dferi.getdeltaHpqA(tmpRho, F);
+            DfEriX dferi(this->pPdfParam_);
+            dferi.getJ(tmpRho, &F);
         }
 
         // integral object generated

@@ -9,7 +9,7 @@
 #include "CnError.h"
 #include "DfXCFunctional.h"
 
-class DfEri;
+class DfEriX;
 class DfOverlapX;
 
 /// 得られた密度行列、交換相関ポテンシャルをもとに全エネルギーの計算を行う
@@ -89,7 +89,7 @@ protected:
 protected:
     virtual void output();
 
-    virtual DfEri* getDfEri() const;
+    virtual DfEriX* getDfEriX() const;
     virtual DfOverlapX* getDfOverlapX() const;
 
 protected:
