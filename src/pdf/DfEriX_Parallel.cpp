@@ -54,7 +54,7 @@ void DfEriX_Parallel::finalize(TlVector* pVct)
 }
 
 
-void DfEriX_Parallel::getJ_D(const TlVector& rho, TlDistributeSymmetricMatrix* pJ)
+void DfEriX_Parallel::getJ(const TlVector& rho, TlDistributeSymmetricMatrix* pJ)
 {
     assert(pJ != NULL);
 
@@ -98,7 +98,7 @@ void DfEriX_Parallel::getJ_D(const TlVector& rho, TlDistributeSymmetricMatrix* p
 }
 
 
-void DfEriX_Parallel::getJab_D(TlDistributeSymmetricMatrix* pJab)
+void DfEriX_Parallel::getJab(TlDistributeSymmetricMatrix* pJab)
 {
     assert(pJab != NULL);
     const index_type numOfAuxDens = this->m_nNumOfAux;
@@ -137,8 +137,8 @@ void DfEriX_Parallel::getJab_D(TlDistributeSymmetricMatrix* pJab)
 }
 
 
-void DfEriX_Parallel::getJ_D(const TlDistributeSymmetricMatrix& P,
-                             TlDistributeVector* pRho)
+void DfEriX_Parallel::getJ(const TlDistributeSymmetricMatrix& P,
+                           TlDistributeVector* pRho)
 {
     switch (this->calcMode_) {
     case CalcMode_UsingLocalMatrix:

@@ -1,7 +1,6 @@
 lib_LTLIBRARIES = libpdf.la libppdf.la
 
 libpdf_la_SOURCES = \
-	DfEri2.h				DfEri2.cpp					\
 	DfXCFunctional.h		DfXCFunctional.cpp			\
 	DfCalcGridX.h			DfCalcGridX.cpp				\
 	DfFunctional.h			DfFunctional.cpp			\
@@ -31,7 +30,6 @@ libpdf_la_SOURCES = \
 	DfDensityFittingObject.h							\
 	DfDiagonal.h			DfDiagonal.cxx				\
 	DfDmatrix.h				DfDmatrix.cxx				\
-	DfEri.h					DfEri.cpp       			\
 	DfJMatrix.h				DfJMatrix.cpp				\
 	DfKMatrix.h				DfKMatrix.cpp				\
 	DfFockMatrix.h			DfFockMatrix.cpp			\
@@ -110,7 +108,6 @@ libppdf_la_SOURCES = \
 	DfDensityFittingX_ScaLAPACK.h		DfDensityFittingX_ScaLAPACK.cpp		\
 	DfFockMatrix_Parallel.h				DfFockMatrix_Parallel.cpp			\
 	DfXCFunctional_Parallel.h			DfXCFunctional_Parallel.cpp			\
-	DfEri2_Parallel.h					DfEri2_Parallel.cpp					\
 	DfCalcGridX_Parallel.h				DfCalcGridX_Parallel.cpp			\
 	DfConvcheck_Parallel.h				DfConvcheck_Parallel.cpp			\
 	DfTotalEnergy_Parallel.h			DfTotalEnergy_Parallel.cpp			\

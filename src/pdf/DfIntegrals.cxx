@@ -1,13 +1,9 @@
 #include <cassert>
 
 #include "DfIntegrals.h"
-//#include "DfHpq.h"
 #include "DfHpqX.h"
-//#include "DfOverlap.h"
 #include "DfOverlapX.h"
-#include "DfEri.h"
 #include "DfEriX.h"
-#include "DfEri2.h"
 #include "DfCD.h"
 #include "DfGridFreeXC.h"
 
@@ -248,15 +244,16 @@ void DfIntegrals::createERIMatrix()
             this->outputStartTitle("Sab");
             
             TlSymmetricMatrix Sab(this->m_nNumOfAux);
-            DfEri dfEri(this->pPdfParam_);
+            //DfEri dfEri(this->pPdfParam_);
             DfEriX dfEriX(this->pPdfParam_);
             
-            if (this->isUseNewEngine_ == true) {
-                this->logger(" use new engine.\n");
-                dfEriX.getJab(&Sab);
-            } else {
-                dfEri.getSab(&Sab);
-            }
+            dfEriX.getJab(&Sab);
+            // if (this->isUseNewEngine_ == true) {
+            //     this->logger(" use new engine.\n");
+            //     dfEriX.getJab(&Sab);
+            // } else {
+            //     dfEri.getSab(&Sab);
+            // }
             this->saveSabMatrix(Sab);
             
             this->outputEndTitle();
