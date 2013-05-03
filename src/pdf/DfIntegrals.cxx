@@ -1,7 +1,7 @@
 #include <cassert>
 
 #include "DfIntegrals.h"
-#include "DfHpq.h"
+//#include "DfHpq.h"
 #include "DfHpqX.h"
 //#include "DfOverlap.h"
 #include "DfOverlapX.h"
@@ -131,14 +131,16 @@ void DfIntegrals::createHpqMatrix()
     TlSymmetricMatrix Hpq(this->m_nNumOfAOs);
     TlSymmetricMatrix Hpq2(this->m_nNumOfAOs);
 
-    if (this->isUseNewEngine_ == true) {
-        this->logger(" use new engine.\n");
-        DfHpqX dfHpqX = DfHpqX(this->pPdfParam_);
-        dfHpqX.getHpq(&Hpq, &Hpq2);
-    } else {
-        DfHpq dfHpq = DfHpq(this->pPdfParam_);
-        dfHpq.getHpq(&Hpq, &Hpq2);
-    }
+    DfHpqX dfHpqX = DfHpqX(this->pPdfParam_);
+    dfHpqX.getHpq(&Hpq, &Hpq2);
+    // if (this->isUseNewEngine_ == true) {
+    //     this->logger(" use new engine.\n");
+    //     DfHpqX dfHpqX = DfHpqX(this->pPdfParam_);
+    //     dfHpqX.getHpq(&Hpq, &Hpq2);
+    // } else {
+    //     DfHpq dfHpq = DfHpq(this->pPdfParam_);
+    //     dfHpq.getHpq(&Hpq, &Hpq2);
+    // }
 
     this->saveHpqMatrix(Hpq);
     this->saveHpq2Matrix(Hpq2);

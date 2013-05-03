@@ -130,6 +130,14 @@ public:
               const std::vector<TlAtom>& Cs,
               const std::vector<TlAtom>& Xs);
 
+    // for ESP
+    void calc(const Query& query,
+              const TlPosition& A,
+              const TlPosition& B,
+              const PGTOs& PGTOsA,
+              const PGTOs& PGTOsB,
+              const TlPosition& C);
+
     void calcKineticPart(const Query& query,
                          const TlPosition& A,
                          const TlPosition& B,

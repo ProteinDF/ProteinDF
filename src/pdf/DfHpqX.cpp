@@ -33,19 +33,21 @@ void DfHpqX::destroyEngines()
     }
 }
 
-
 DfTaskCtrl* DfHpqX::getDfTaskCtrlObject() const
 {
     DfTaskCtrl* pDfTaskCtrl = new DfTaskCtrl(this->pPdfParam_);
     return pDfTaskCtrl;
 }
 
-
 void DfHpqX::finalize(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2)
 {
     // do nothing
 }
 
+void DfHpqX::finalize(std::vector<double>* pValues)
+{
+    // do nothing
+}
 
 void DfHpqX::getHpq(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2)
 {
@@ -412,4 +414,117 @@ DfHpqEngine::PGTOs DfHpqX::getPGTOs(const index_type shellIndex)
     return pgtos;
 }
 
+std::vector<double> DfHpqX::getESP(const TlMatrixObject& P,
+                                   const std::vector<TlPosition>& grids)
+{
+    std::vector<double> values(grids.size());
+
+    this->createEngines();
+    DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
+
+    std::vector<DfTaskCtrl::Task2> taskList;
+    bool hasTask = pTaskCtrl->getQueue2(this->orbitalInfo_,
+                                        true,
+                                        this->grainSize_, &taskList, true);
+    while (hasTask == true) {
+        this->getESP_part(this->orbitalInfo_,
+                          taskList,
+                          P,
+                          grids,
+                          &values);
+        
+        hasTask = pTaskCtrl->getQueue2(this->orbitalInfo_,
+                                       true,
+                                       this->grainSize_, &taskList);
+    } 
+
+    this->finalize(&values);
+
+    delete pTaskCtrl;
+    pTaskCtrl = NULL;
+    this->destroyEngines();
+
+    return values;
+}
+
+void DfHpqX::getESP_part(const TlOrbitalInfoObject& orbitalInfo,
+                         const std::vector<DfTaskCtrl::Task2>& taskList,
+                         const TlMatrixObject& P,
+                         const std::vector<TlPosition>& grids,
+                         std::vector<double>* pValues)
+{
+    assert(pValues != NULL);
+    const std::size_t numOfGrids = grids.size();
+    pValues->resize(numOfGrids);
+
+    const int taskListSize = taskList.size();
+
+#pragma omp parallel
+    {
+        int threadID = 0;
+#ifdef _OPENMP
+        threadID = omp_get_thread_num();
+#endif // _OPENMP
+
+#pragma omp for schedule(runtime)
+        for (int i = 0; i < taskListSize; ++i) {
+            const index_type shellIndexP = taskList[i].shellIndex1;
+            const index_type shellIndexQ = taskList[i].shellIndex2;
+            
+            const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+            const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+            const int maxStepsP = 2 * shellTypeP + 1;
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+            const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
+            const TlPosition posQ = orbitalInfo.getPosition(shellIndexQ);
+            const DfHpqEngine::PGTOs pgtosP = this->getPGTOs(shellIndexP);
+            const DfHpqEngine::PGTOs pgtosQ = this->getPGTOs(shellIndexQ);
+            const DfHpqEngine::Query query(0, 0, shellTypeP, shellTypeQ); 
+
+            if (shellIndexP != shellIndexQ) {
+                for (std::size_t r = 0; r < numOfGrids; ++r) {
+                    const TlPosition& posR = grids[r];
+                    this->pEngines_[threadID].calc(query, posP, posQ, pgtosP, pgtosQ, posR);
+
+                    double esp = 0.0;
+                    int index = 0;
+                    for (int stepP = 0; stepP < maxStepsP; ++stepP) {
+                        const index_type globalShellIndexP = shellIndexP + stepP;
+                        for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
+                            const index_type globalShellIndexQ = shellIndexQ + stepQ;
+                            
+                            esp += 2.0 * P.get(globalShellIndexP, globalShellIndexQ) * this->pEngines_[threadID].WORK_NUC[index];
+                            ++index;
+                        }
+                    }
+#pragma omp atomic
+                    (*pValues)[r] += esp;
+                }
+
+            } else {
+                for (std::size_t r = 0; r < numOfGrids; ++r) {
+                    const TlPosition& posR = grids[r];
+                    this->pEngines_[threadID].calc(query, posP, posQ, pgtosP, pgtosQ, posR);
+
+                    double esp = 0.0;
+                    int index = 0;
+                    for (int stepP = 0; stepP < maxStepsP; ++stepP) {
+                        const index_type globalShellIndexP = shellIndexP + stepP;                    
+                        for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
+                            const index_type globalShellIndexQ = shellIndexQ + stepQ;
+                            
+                            if (globalShellIndexP >= globalShellIndexQ) {
+                                double coef = (globalShellIndexP != globalShellIndexQ) ? 2.0 : 1.0;
+                                esp += coef * P.get(globalShellIndexP, globalShellIndexQ) * this->pEngines_[threadID].WORK_NUC[index];
+                            }
+                            ++index;
+                        }
+                    }
+#pragma omp atomic
+                    (*pValues)[r] += esp;
+                }
+            }
+        }
+    }
+}
 
