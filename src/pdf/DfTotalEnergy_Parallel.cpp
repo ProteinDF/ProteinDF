@@ -3,8 +3,8 @@
 #endif // HAVE_CONFIG_H
 
 #include "DfTotalEnergy_Parallel.h"
-#include "DfEri_Parallel.h"
 #include "DfOverlapX_Parallel.h"
+#include "DfEriX_Parallel.h"
 #include "DfXCFunctional_Parallel.h"
 #include "Fl_Geometry.h"
 #include "TlCommunicate.h"
@@ -66,7 +66,10 @@ void DfTotalEnergy_Parallel::exec_LAPACK()
 
 void DfTotalEnergy_Parallel::exec_ScaLAPACK()
 {
-    DfTotalEnergy::exec_template<DfOverlapX_Parallel, DfEri_Parallel, TlDistributeSymmetricMatrix, TlDistributeVector>();
+    DfTotalEnergy::exec_template<DfOverlapX_Parallel,
+                                 DfEriX_Parallel,
+                                 TlDistributeSymmetricMatrix,
+                                 TlDistributeVector>();
 }
 
 

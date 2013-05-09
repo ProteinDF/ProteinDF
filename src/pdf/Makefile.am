@@ -93,7 +93,6 @@ libppdf_la_SOURCES = \
 	DfIntegrals_Parallel.h				DfIntegrals_Parallel.cpp			\
 	DfHpqX_Parallel.h					DfHpqX_Parallel.cpp					\
 	DfOverlapX_Parallel.h				DfOverlapX_Parallel.cpp				\
-	DfEri_Parallel.h					DfEri_Parallel.cpp					\
 	DfEriX_Parallel.h					DfEriX_Parallel.cpp					\
 	DfCD_Parallel.h						DfCD_Parallel.cpp					\
 	DfInitialGuess_Parallel.h			DfInitialGuess_Parallel.cpp			\
