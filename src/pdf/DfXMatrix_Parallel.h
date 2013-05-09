@@ -9,17 +9,11 @@ public:
     virtual ~DfXMatrix_Parallel();
 
 public:
-    virtual void main();
+    virtual void buildX();
 
 protected:
-    virtual void logger(const std::string& str) const;
-    virtual void saveNumOfIndependentBasis();
-
-    void exec_LAPACK();
-    void exec_ScaLAPACK();
-
-protected:
-    bool fastTrancate_;
+    void buildX_LAPACK();
+    void buildX_ScaLAPACK();
 };
 
 #endif // DFXMATRIX_PARALLEL_H
