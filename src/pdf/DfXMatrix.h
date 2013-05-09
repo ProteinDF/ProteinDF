@@ -53,8 +53,6 @@ void DfXMatrix::canonicalOrthogonalize(const SymmetricMatrixType& S,
         MatrixType EigVec;
         S.diagonal(&EigVal, &EigVec);
         assert(EigVal.getSize() == dim);
-        EigVal.save("eigval.vct");
-        EigVec.save("eigvec.mat");
 
         this->loggerTime("truncation of linear dependent");
         {
