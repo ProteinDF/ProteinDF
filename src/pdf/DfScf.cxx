@@ -274,14 +274,14 @@ int DfScf::execScfLoop()
             break;
 
         case K_MATRIX:
-            this->setScfRestartPoint("K_MATRIX");
             this->buildKMatrix();
+            this->setScfRestartPoint("K_MATRIX");
             nScfState = J_MATRIX;
             break;
             
         case J_MATRIX:
-            this->setScfRestartPoint("J_MATRIX");
             this->buildJMatrix();
+            this->setScfRestartPoint("J_MATRIX");
             nScfState = FOCK;
             break;
             
