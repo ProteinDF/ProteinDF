@@ -5,7 +5,6 @@
 #include <cassert>
 
 #include "CnError.h"
-#include "FileX.h"
 #include "Fl_Gto.h"
 #include "TlMath.h"
 #include "TlUtils.h"
@@ -362,7 +361,7 @@ void Fl_Gto::show() const
 
 void Fl_Gto::load()
 {
-    if (FileX::isExist(this->m_sFileName) == false) {
+    if (TlFile::isExist(this->m_sFileName) == false) {
         std::cerr << this->m_sFileName << " is not found." << std::endl;
         //return false;
         return;
