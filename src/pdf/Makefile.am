@@ -55,8 +55,6 @@ libpdf_la_SOURCES = \
 	DfXcenefitting.h		DfXcenefitting.cxx			\
 	DfXMatrix.h				DfXMatrix.cpp				\
 	DfCleanup.h				DfCleanup.cpp				\
-	FileX.h					FileX.cxx					\
-	Fl_Database.h			Fl_Database.cxx				\
 	Fl_Db_Basis.h			Fl_Db_Basis.cxx				\
 	Fl_Fragment.h			Fl_Fragment.cxx				\
 	Fl_Geometry.h			Fl_Geometry.cxx				\
