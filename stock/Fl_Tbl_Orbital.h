@@ -6,7 +6,7 @@
 
 #include "Fl_Geometry.h"
 #include "Fl_Gto.h"
-#include "Fl_Gto_Orbital.h"
+//#include "Fl_Gto_Orbital.h"
 #include "TlPrdctbl.h"
 
 class Fl_Tbl_Orbital {

@@ -2,7 +2,6 @@
 #define PDFUSERINPUT_H
 
 #include <string>
-#include "Fl_GlobalinputX.h"
 #include "TlParameter.h"
 #include "TlSerializeData.h"
 #include "TlLogging.h"

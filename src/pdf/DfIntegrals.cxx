@@ -1,13 +1,9 @@
 #include <cassert>
 
 #include "DfIntegrals.h"
-#include "DfHpq.h"
 #include "DfHpqX.h"
-#include "DfOverlap.h"
 #include "DfOverlapX.h"
-#include "DfEri.h"
 #include "DfEriX.h"
-#include "DfEri2.h"
 #include "DfCD.h"
 #include "DfGridFreeXC.h"
 
@@ -16,7 +12,6 @@
 #include "DfGenerateGrid.h"
 
 #include "Fl_Geometry.h"
-#include "Fl_GlobalinputX.h"
 #include "TlTime.h"
 #include "TlMsgPack.h"
 
@@ -132,14 +127,16 @@ void DfIntegrals::createHpqMatrix()
     TlSymmetricMatrix Hpq(this->m_nNumOfAOs);
     TlSymmetricMatrix Hpq2(this->m_nNumOfAOs);
 
-    if (this->isUseNewEngine_ == true) {
-        this->logger(" use new engine.\n");
-        DfHpqX dfHpqX = DfHpqX(this->pPdfParam_);
-        dfHpqX.getHpq(&Hpq, &Hpq2);
-    } else {
-        DfHpq dfHpq = DfHpq(this->pPdfParam_);
-        dfHpq.getHpq(&Hpq, &Hpq2);
-    }
+    DfHpqX dfHpqX = DfHpqX(this->pPdfParam_);
+    dfHpqX.getHpq(&Hpq, &Hpq2);
+    // if (this->isUseNewEngine_ == true) {
+    //     this->logger(" use new engine.\n");
+    //     DfHpqX dfHpqX = DfHpqX(this->pPdfParam_);
+    //     dfHpqX.getHpq(&Hpq, &Hpq2);
+    // } else {
+    //     DfHpq dfHpq = DfHpq(this->pPdfParam_);
+    //     dfHpq.getHpq(&Hpq, &Hpq2);
+    // }
 
     this->saveHpqMatrix(Hpq);
     this->saveHpq2Matrix(Hpq2);
@@ -149,7 +146,7 @@ void DfIntegrals::createHpqMatrix()
 void DfIntegrals::createOverlapMatrix()
 {
     unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
-    DfOverlap dfOverlap(this->pPdfParam_);
+    //DfOverlap dfOverlap(this->pPdfParam_);
     DfOverlapX dfOverlapX(this->pPdfParam_);
 
     // Spq
@@ -157,12 +154,13 @@ void DfIntegrals::createOverlapMatrix()
         this->outputStartTitle("Spq");
 
         TlSymmetricMatrix Spq(this->m_nNumOfAOs);
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" use new engine.\n");
-            dfOverlapX.getSpq(&Spq);
-        } else {
-            dfOverlap.getSpq(&Spq);
-        }
+        dfOverlapX.getSpq(&Spq);
+        // if (this->isUseNewEngine_ == true) {
+        //     this->logger(" use new engine.\n");
+        //     dfOverlapX.getSpq(&Spq);
+        // } else {
+        //     dfOverlap.getSpq(&Spq);
+        // }
         this->saveSpqMatrix(Spq);
         
         this->outputEndTitle();
@@ -179,7 +177,7 @@ void DfIntegrals::createOverlapMatrix()
                 this->outputStartTitle("Sgd");
                 
                 TlSymmetricMatrix Sgd(this->numOfAuxXC_);
-                dfOverlap.getSgd(&Sgd);
+                dfOverlapX.getSgd(&Sgd);
                 this->saveSgdMatrix(Sgd);
                 
                 this->outputEndTitle();
@@ -197,12 +195,13 @@ void DfIntegrals::createOverlapMatrix()
             this->outputStartTitle("Sab2");
             
             TlSymmetricMatrix Sab2(this->m_nNumOfAux);
-            if (this->isUseNewEngine_ == true) {
-                this->logger(" use new engine.\n");
-                dfOverlapX.getSab(&Sab2);
-            } else {
-                dfOverlap.getSab2(&Sab2);
-            }
+            dfOverlapX.getSab(&Sab2);
+            // if (this->isUseNewEngine_ == true) {
+            //     this->logger(" use new engine.\n");
+            //     dfOverlapX.getSab(&Sab2);
+            // } else {
+            //     dfOverlap.getSab2(&Sab2);
+            // }
             this->saveSab2Matrix(Sab2);
             
             this->outputEndTitle();
@@ -217,12 +216,13 @@ void DfIntegrals::createOverlapMatrix()
             this->outputStartTitle("N_alpha");
             
             TlVector Na(this->m_nNumOfAux);
-            if (this->isUseNewEngine_ == true) {
-                this->logger(" use new engine.\n");
-                dfOverlapX.getNalpha(&Na);
-            } else {
-                dfOverlap.getNa(&Na);
-            }
+            dfOverlapX.getNalpha(&Na);
+            // if (this->isUseNewEngine_ == true) {
+            //     this->logger(" use new engine.\n");
+            //     dfOverlapX.getNalpha(&Na);
+            // } else {
+            //     dfOverlap.getNa(&Na);
+            // }
             this->saveNalpha(Na);
             
             this->outputEndTitle();
@@ -244,15 +244,16 @@ void DfIntegrals::createERIMatrix()
             this->outputStartTitle("Sab");
             
             TlSymmetricMatrix Sab(this->m_nNumOfAux);
-            DfEri dfEri(this->pPdfParam_);
+            //DfEri dfEri(this->pPdfParam_);
             DfEriX dfEriX(this->pPdfParam_);
             
-            if (this->isUseNewEngine_ == true) {
-                this->logger(" use new engine.\n");
-                dfEriX.getJab(&Sab);
-            } else {
-                dfEri.getSab(&Sab);
-            }
+            dfEriX.getJab(&Sab);
+            // if (this->isUseNewEngine_ == true) {
+            //     this->logger(" use new engine.\n");
+            //     dfEriX.getJab(&Sab);
+            // } else {
+            //     dfEri.getSab(&Sab);
+            // }
             this->saveSabMatrix(Sab);
             
             this->outputEndTitle();

@@ -39,8 +39,6 @@
 #include "TlFile.h"
 #include "TlMsgPack.h"
 
-#include "Fl_GlobalinputX.h"
-
 #define NUMBER_OF_CHECK 2
 
 DfScf::DfScf(TlSerializeData* pPdfParam)
