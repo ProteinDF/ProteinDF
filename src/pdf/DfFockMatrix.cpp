@@ -3,9 +3,8 @@
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
 #include "TlVector.h"
-#include "DfEri.h"
 #include "DfEriX.h"
-#include "DfOverlap.h"
+#include "DfOverlapX.h"
 
 DfFockMatrix::DfFockMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
@@ -69,12 +68,12 @@ void DfFockMatrix::mainDIRECT_UKS()
 
 void DfFockMatrix::mainDIRECT_ROKS()
 {
-    this->mainDIRECT_ROKS<TlMatrix, TlSymmetricMatrix, TlVector, DfEri, DfOverlap>();
+    this->mainDIRECT_ROKS<TlMatrix, TlSymmetricMatrix, TlVector, DfEriX, DfOverlapX>();
 }
 
 void DfFockMatrix::setXC_RI(const RUN_TYPE nRunType, TlSymmetricMatrix& F)
 {
-    this->setXC_RI<TlSymmetricMatrix, TlVector, DfOverlap>(nRunType, F);
+    this->setXC_RI<TlSymmetricMatrix, TlVector, DfOverlapX>(nRunType, F);
 }
 
 void DfFockMatrix::setXC_DIRECT(const RUN_TYPE nRunType, TlSymmetricMatrix& F)
@@ -86,12 +85,13 @@ void DfFockMatrix::setCoulomb(const METHOD_TYPE nMethodType, TlSymmetricMatrix& 
 {
     TlSymmetricMatrix J(this->m_nNumOfAOs);
     if (this->J_engine_ == J_ENGINE_RI_J) {
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" use new engine\n");
-            this->setCoulomb<TlSymmetricMatrix, TlVector, DfEriX>(nMethodType, J);
-        } else {
-            this->setCoulomb<TlSymmetricMatrix, TlVector, DfEri>(nMethodType, J);
-        }
+        this->setCoulomb<TlSymmetricMatrix, TlVector, DfEriX>(nMethodType, J);
+        // if (this->isUseNewEngine_ == true) {
+        //     this->logger(" use new engine\n");
+        //     this->setCoulomb<TlSymmetricMatrix, TlVector, DfEriX>(nMethodType, J);
+        // } else {
+        //     this->setCoulomb<TlSymmetricMatrix, TlVector, DfEri>(nMethodType, J);
+        // }
         F += J;
         
         // update method

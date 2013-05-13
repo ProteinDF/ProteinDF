@@ -1,12 +1,10 @@
 #include "DfThreeindexintegrals.h"
 #include "Fl_Geometry.h"
-#include "DfEri.h"
-#include "DfOverlap.h"
+#include "DfEriX.h"
+#include "DfOverlapX.h"
 #include "TlUtils.h"
 #include "TlSymmetricMatrix.h"
 #include "TlVector.h"
-#include "DfEri2.h"
-#include "DfEriX.h"
 #include "CnError.h"
 
 DfThreeindexintegrals::DfThreeindexintegrals(TlSerializeData* pPdfParam)
@@ -112,8 +110,9 @@ void DfThreeindexintegrals::mainDIRECT_RKS(int iteration)
     // クーロン項
     // [pq|alpha]
     {
-        DfEri dferi(this->pPdfParam_);
-        dferi.getdeltaHpqA(currRho, F);
+        DfEriX dferi(this->pPdfParam_);
+        //dferi.getdeltaHpqA(currRho, F);
+        dferi.getJ(currRho, &F);
     }
 
     // prepare E
@@ -124,8 +123,9 @@ void DfThreeindexintegrals::mainDIRECT_RKS(int iteration)
         // myu * [pq gamma] for Fock
         // eps * [pq gamma] for E
         {
-            DfOverlap dfovr(this->pPdfParam_);
-            dfovr.getdeltaHpqG(currMyu, currEps, F, E);
+            DfOverlapX dfovr(this->pPdfParam_);
+            //dfovr.getdeltaHpqG(currMyu, currEps, F, E);
+            dfovr.get_pqg(currMyu, currEps, &F, &E);
         }
     } else {
         // Ex using HF
@@ -219,8 +219,9 @@ void DfThreeindexintegrals::mainDIRECT_RKS2(int iteration)
     // クーロン項
     // [pq|alpha]
     {
-        DfEri dferi(this->pPdfParam_);
-        dferi.getdeltaHpqA(currRho, F);
+        DfEriX dferi(this->pPdfParam_);
+        //dferi.getdeltaHpqA(currRho, F);
+        dferi.getJ(currRho, &F);
     }
 
     // prepare E
@@ -391,8 +392,9 @@ void DfThreeindexintegrals::mainDIRECT_UKS(int iteration)
     TlSymmetricMatrix F(this->m_nNumOfAOs);
 
     {
-        DfEri dferi(this->pPdfParam_);
-        dferi.getdeltaHpqA(currRho, F);
+        DfEriX dferi(this->pPdfParam_);
+        //dferi.getdeltaHpqA(currRho, F);
+        dferi.getJ(currRho, &F);
     }
 
     F.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
@@ -400,8 +402,8 @@ void DfThreeindexintegrals::mainDIRECT_UKS(int iteration)
     TlSymmetricMatrix E = F;
 
     {
-        DfOverlap dfovr(this->pPdfParam_);
-        dfovr.getdeltaHpqG(currMyuA, currMyuB, F, E);
+        DfOverlapX dfovr(this->pPdfParam_);
+        dfovr.get_pqg(currMyuA, currMyuB, &F, &E);
     }
 
     F.save("fl_Work/fl_Mtr_Fpq.matrix.uks-alpha" + TlUtils::xtos(iteration));
@@ -410,12 +412,12 @@ void DfThreeindexintegrals::mainDIRECT_UKS(int iteration)
     E.load("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
 
     {
-        DfOverlap dfovr(this->pPdfParam_);
+        DfOverlapX dfovr(this->pPdfParam_);
         if (m_sXCFunctional =="xalpha" || m_sXCFunctional == "gxalpha") {
-            dfovr.getdeltaHpqG(currEpsA, E);
-            dfovr.getdeltaHpqG(currEpsB, E);
+            dfovr.get_pqg(currEpsA, &E);
+            dfovr.get_pqg(currEpsB, &E);
         } else {
-            dfovr.getdeltaHpqG(currEpsA, E);
+            dfovr.get_pqg(currEpsA, &E);
         }
     }
 
@@ -524,28 +526,26 @@ void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration)
             // integral object generated
             // then add coulomb contribution of rho to F ?
             {
-                DfEri dferi(this->pPdfParam_);
-                dferi.getdeltaHpqA(currRho, F);
+                DfEriX dferi(this->pPdfParam_);
+                dferi.getJ(currRho, &F);
             }
 
             E = F;
 
+            DfOverlapX dfovr(this->pPdfParam_);
             if (m_sXCFunctional == "xalpha" || m_sXCFunctional == "gxalpha") {
                 TlVector myu = 0.5 * currMyuA;
 
-                DfOverlap dfovr(this->pPdfParam_);
-                dfovr.getdeltaHpqG(myu, currEpsA, F, E);
+                dfovr.get_pqg(myu, currEpsA, &F, &E);
 
                 myu = 0.5 * currMyuB;
-                dfovr.getdeltaHpqG(myu, currEpsB, F, E);
+                dfovr.get_pqg(myu, currEpsB, &F, &E);
             } else {
-                DfOverlap dfovr(this->pPdfParam_);
-
                 TlVector myu = 0.5 * currMyuA;
-                dfovr.getdeltaHpqG(myu, F);
+                dfovr.get_pqg(myu, &F);
 
                 myu = 0.5 * currMyuB;
-                dfovr.getdeltaHpqG(myu, currEpsA, F, E);
+                dfovr.get_pqg(myu, currEpsA, &F, &E);
             }
         }
 
@@ -566,16 +566,16 @@ void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration)
         // then add coulomb contribution of rho to F ?
         {
             TlVector tmpRho = 0.5 * currRho;
-            DfEri dferi(this->pPdfParam_);
-            dferi.getdeltaHpqA(tmpRho, F);
+            DfEriX dferi(this->pPdfParam_);
+            dferi.getJ(tmpRho, &F);
         }
 
         // integral object generated
         // then add xc potential contribution of myu-alpha to F ?
         {
             TlVector myu = 0.5 * currMyuA;
-            DfOverlap dfovr(this->pPdfParam_);
-            dfovr.getdeltaHpqG(currMyuA, F);
+            DfOverlapX dfovr(this->pPdfParam_);
+            dfovr.get_pqg(currMyuA, &F);
         }
 
         // integral object generated

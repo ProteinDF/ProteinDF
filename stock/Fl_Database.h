@@ -1,9 +1,7 @@
 #ifndef FL_DATABASE_H
 #define FL_DATABASE_H
 
-#include "FileX.h"
-
-class Fl_Database : public FileX {
+class Fl_Database {
 public:
     Fl_Database();
     virtual ~Fl_Database();

@@ -6,14 +6,11 @@
 #include "TlResidue.h"
 #include "Fl_Geometry.h"
 #include "Fl_Gto.h"
-#include "Fl_Gto_Orbital.h"
-#include "Fl_Gto_Density.h"
-#include "Fl_Gto_Xcpot.h"
-#include "Fl_Gto_Xcpot2.h"
-#include "Fl_Db_Basis.h"
-#include "Fl_Tbl_Orbital.h"
-#include "Fl_Tbl_Density.h"
-#include "Fl_Tbl_Xcpot.h"
+
+#include "TlOrbitalInfo.h"
+#include "TlOrbitalInfo_Density.h"
+#include "TlOrbitalInfo_XC.h"
+
 #include "TlUtils.h"
 #include "TlLogging.h"
 #include "TlFile.h"
@@ -62,25 +59,25 @@ TlSerializeData DfInputdata::main()
     
     // テーブルの作成
     const Fl_Geometry flGeom(param["coordinates"]);
+    param["num_of_atoms"] = flGeom.getNumOfAtoms();
+    param["num_of_dummy_atoms"] = flGeom.getNumOfDummyAtoms();
+    
     {
-        Fl_Tbl_Orbital Tbl(flGeom);
-        param["num_of_AOs"] = Tbl.getcGtoTotalNum();
+        const TlOrbitalInfo orb(param["coordinates"],
+                                param["basis_sets"]);
+        param["num_of_AOs"] = orb.getNumOfOrbitals();
     }
 
     {
-        Fl_Tbl_Density Tbl(flGeom);
-        param["num_of_auxCDs"] = Tbl.getcGtoTotalNum();
+        const TlOrbitalInfo_Density orb_j(param["coordinates"],
+                                          param["basis_sets_j"]);
+        param["num_of_auxCDs"] = orb_j.getNumOfOrbitals();
     }
 
     {
-        Fl_Tbl_Xcpot Tbl(flGeom);
-        param["num_of_auxXCs"] = Tbl.getcGtoTotalNum();
-    }
-
-    {
-        //Fl_Geometry Geom(Fl_Geometry::getDefaultFileName());
-        param["num_of_atoms"] = flGeom.getNumOfAtoms();
-        param["num_of_dummy_atoms"] = flGeom.getNumOfDummyAtoms();
+        const TlOrbitalInfo_XC orb_k(param["coordinates"],
+                                     param["basis_sets_k"]);
+        param["num_of_auxXCs"] = orb_k.getNumOfOrbitals();
     }
 
     // 保存
@@ -157,25 +154,28 @@ void DfInputdata::show(const TlSerializeData& data) const
     {
         const std::string showOrbitalBasis = TlUtils::toUpper(data["show_orbital_basis"].getStr());
 
-        const Fl_Gto_Orbital flGtoOrbital;
+        const Fl_Gto orb(data["basis_sets"]);
+        const Fl_Gto orb_j(data["basis_sets_j"]);
+        const Fl_Gto orb_k(data["basis_sets_k"]);
         if (showOrbitalBasis == "GAMESS") {
             log.info(" >>>> Inputted Orbital Basis Set (GAMESS format) <<<<");
-            log.info(flGtoOrbital.getStr_GAMESS());
+            log.info(orb.getStr_GAMESS());
+            log.info("\n");
+            log.info(" >>>> Inputted Density Orbital Basis Set (GAMESS format) <<<<");
+            log.info(orb_j.getStr_GAMESS());
+            log.info("\n");
+            log.info(" >>>> Inputted XC Orbital Basis Set (GAMESS format) <<<<");
+            log.info(orb_k.getStr_GAMESS());
             log.info("\n");
         } else if (showOrbitalBasis == "AMOSS") {
             log.info(" >>>> Inputted Orbital Basis Set (AMOSS format) <<<<");
-            log.info(flGtoOrbital.getStr_AMOSS());
+            log.info(orb.getStr_AMOSS());
             log.info("\n");
-        }
-
-        const Fl_Gto_Density flGtoDensity;
-        if (showOrbitalBasis == "GAMESS") {
             log.info(" >>>> Inputted Density Orbital Basis Set (GAMESS format) <<<<");
-            log.info(flGtoDensity.getStr_GAMESS());
+            log.info(orb_j.getStr_AMOSS());
             log.info("\n");
-        } else if (showOrbitalBasis == "AMOSS") {
-            log.info(" >>>> Inputted Density Orbital Basis Set (AMOSS format) <<<<");
-            log.info(flGtoDensity.getStr_AMOSS());
+            log.info(" >>>> Inputted XC Orbital Basis Set (GAMESS format) <<<<");
+            log.info(orb_k.getStr_AMOSS());
             log.info("\n");
         }
     }

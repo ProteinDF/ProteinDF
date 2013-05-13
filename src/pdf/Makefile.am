@@ -1,13 +1,6 @@
-#	DfRLMO.h		DfRLMO.cpp
-# 	Fl_UserinputX.h			Fl_UserinputX.cpp		
-
 lib_LTLIBRARIES = libpdf.la libppdf.la
 
 libpdf_la_SOURCES = \
-	DfStruct.h											\
-	DfTEI.h					DfTEI.cpp					\
-	DfTwoElectronIntegral.h DfTwoElectronIntegral.cpp	\
-	DfEri2.h				DfEri2.cpp					\
 	DfXCFunctional.h		DfXCFunctional.cpp			\
 	DfCalcGridX.h			DfCalcGridX.cpp				\
 	DfFunctional.h			DfFunctional.cpp			\
@@ -23,7 +16,6 @@ libpdf_la_SOURCES = \
 	DfFunctional_B88LYP.h	DfFunctional_B88LYP.cpp		\
 	DfFunctional_B3LYP.h	DfFunctional_B3LYP.cpp		\
 	DfFunctional_PW91X.h	DfFunctional_PW91X.cpp		\
-	Common.h											\
 	CnError.h				CnError.cxx 				\
 	DfObject.h				DfObject.cpp				\
 	DfDiffDensityMatrix.h	DfDiffDensityMatrix.cpp		\
@@ -38,23 +30,18 @@ libpdf_la_SOURCES = \
 	DfDensityFittingObject.h							\
 	DfDiagonal.h			DfDiagonal.cxx				\
 	DfDmatrix.h				DfDmatrix.cxx				\
-	DfEri.h					DfEri.cpp       			\
 	DfJMatrix.h				DfJMatrix.cpp				\
 	DfKMatrix.h				DfKMatrix.cpp				\
 	DfFockMatrix.h			DfFockMatrix.cpp			\
 	DfGenerateGrid.h		DfGenerateGrid.cpp			\
 	DfGridFreeXC.h			DfGridFreeXC.cpp			\
-	DfHpq.h					DfHpq.cxx					\
-	DfHpq_driver.h			DfHpq_driver.c				\
 	DfInitialGuess.h		DfInitialGuess.cpp			\
-	DfInitialguess.h		DfInitialguess.cxx			\
 	DfInitialGuessHuckel.h	DfInitialGuessHuckel.cpp	\
 	DfInitialGuessHarris.h	DfInitialGuessHarris.cpp	\
 	DfInputdata.h			DfInputdata.cxx				\
 	DfIntegrals.h			DfIntegrals.cxx				\
 	DfInvMatrix.h			DfInvMatrix.cpp				\
 	DfLevelshift.h			DfLevelshift.cxx			\
-	DfOverlap.h				DfOverlap.cpp				\
 	DfPreScf.h				DfPreScf.cpp				\
 	DfPopulation.h			DfPopulation.cxx			\
 	DfQclo.h				DfQclo.cxx					\
@@ -68,27 +55,12 @@ libpdf_la_SOURCES = \
 	DfXcenefitting.h		DfXcenefitting.cxx			\
 	DfXMatrix.h				DfXMatrix.cpp				\
 	DfCleanup.h				DfCleanup.cpp				\
-	FileX.h					FileX.cxx					\
-	Fl_Database.h			Fl_Database.cxx				\
 	Fl_Db_Basis.h			Fl_Db_Basis.cxx				\
 	Fl_Fragment.h			Fl_Fragment.cxx				\
-	Fl_Gdb_Atom.h										\
-	Fl_Gdb_Molecular.h									\
 	Fl_Geometry.h			Fl_Geometry.cxx				\
 	Fl_Gto.h				Fl_Gto.cxx					\
-	Fl_Gto_Density.h									\
-	Fl_Gto_Orbital.h									\
-	Fl_Gto_Xcpot.h										\
-	Fl_Gto_Xcpot2.h										\
-	Fl_GuessDB.h			Fl_GuessDB.cxx				\
 	Fl_Tbl_AtomFragment.h	Fl_Tbl_AtomFragment.cxx		\
-	Fl_Tbl_Density.h		Fl_Tbl_Density.cxx			\
 	Fl_Tbl_Fragment.h		Fl_Tbl_Fragment.cxx			\
-	Fl_Tbl_Orbital.h		Fl_Tbl_Orbital.cxx			\
-	Fl_Tbl_Xcpot.h			Fl_Tbl_Xcpot.cxx			\
-	Fl_Tbl_Xcpot2.h			Fl_Tbl_Xcpot2.cxx			\
-	Fl_GlobalinputX.h		Fl_GlobalinputX.cpp			\
-	Fl_Vct_Table.h			Fl_Vct_Table.cpp			\
 	PdfKeyword.h			PdfKeyword.cpp				\
 	ProteinDF.h				ProteinDF.cxx				\
 	TlOrbitalInfoObject.h	TlOrbitalInfoObject.cpp		\
@@ -117,11 +89,8 @@ libpdf_la_SOURCES = \
 libppdf_la_SOURCES = \
 	DfInputdata_Parallel.h				DfInputdata_Parallel.cpp			\
 	DfIntegrals_Parallel.h				DfIntegrals_Parallel.cpp			\
-	DfHpq_Parallel.h					DfHpq_Parallel.cpp					\
 	DfHpqX_Parallel.h					DfHpqX_Parallel.cpp					\
-	DfOverlap_Parallel.h				DfOverlap_Parallel.cpp				\
 	DfOverlapX_Parallel.h				DfOverlapX_Parallel.cpp				\
-	DfEri_Parallel.h					DfEri_Parallel.cpp					\
 	DfEriX_Parallel.h					DfEriX_Parallel.cpp					\
 	DfCD_Parallel.h						DfCD_Parallel.cpp					\
 	DfInitialGuess_Parallel.h			DfInitialGuess_Parallel.cpp			\
@@ -136,9 +105,6 @@ libppdf_la_SOURCES = \
 	DfDensityFittingX_ScaLAPACK.h		DfDensityFittingX_ScaLAPACK.cpp		\
 	DfFockMatrix_Parallel.h				DfFockMatrix_Parallel.cpp			\
 	DfXCFunctional_Parallel.h			DfXCFunctional_Parallel.cpp			\
-	DfEri2_Parallel.h					DfEri2_Parallel.cpp					\
-	DfTwoElectronIntegral_Parallel.h										\
-	DfTwoElectronIntegral_Parallel.cpp										\
 	DfCalcGridX_Parallel.h				DfCalcGridX_Parallel.cpp			\
 	DfConvcheck_Parallel.h				DfConvcheck_Parallel.cpp			\
 	DfTotalEnergy_Parallel.h			DfTotalEnergy_Parallel.cpp			\

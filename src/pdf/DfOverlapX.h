@@ -8,8 +8,8 @@
 
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
-#include "TlOrbitalInfo.h"
-#include "TlOrbitalInfo_Density.h"
+
+class TlOrbitalInfoObject;
 
 class DfOverlapX : public DfObject {
 public:
@@ -23,6 +23,7 @@ public:
 public:
     void getSpq(TlSymmetricMatrix* pSpq);
     void getSab(TlSymmetricMatrix* pSab);
+    virtual void getSgd(TlSymmetricMatrix* pSgd);
     void getNalpha(TlVector* pNalpha);
     void getForce(const TlSymmetricMatrix& W, TlMatrix* pForce);
 
@@ -30,6 +31,13 @@ public:
     void getTransMat(const TlOrbitalInfoObject& orbInfo1,
                      const TlOrbitalInfoObject& orbInfo2,
                      TlMatrix* pS);
+
+public:
+    /// calc <pq gamma>
+    virtual void get_pqg(const TlVector& myu, TlSymmetricMatrix* pF);
+    virtual void get_pqg(const TlVector& myu, const TlVector& epsilon,
+                         TlSymmetricMatrix* pF,
+                         TlSymmetricMatrix* pE);
 
 protected:
     static const int MAX_SHELL_TYPE;
@@ -63,8 +71,8 @@ protected:
     void calcOverlap(const TlOrbitalInfoObject& orbitalInfo1,
                      const TlOrbitalInfoObject& orbitalInfo2,
                      TlMatrixObject* pMatrix);
-    void calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
-                     TlVectorObject* pVector);
+
+
     void calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
                           const std::vector<DfTaskCtrl::Task2>& taskList,
                           TlMatrixObject* pMatrix);
@@ -72,13 +80,39 @@ protected:
                           const TlOrbitalInfoObject& orbitalInfo2,
                           const std::vector<DfTaskCtrl::Task2>& taskList,
                           TlMatrixObject* pMatrix);
+    // <pq gamma>
+    void calcOverlap(const TlOrbitalInfoObject& orbitalInfo_XC,
+                     const TlVector& myu,
+                     const TlOrbitalInfoObject& orbitalInfo,
+                     TlMatrixObject* pF);
+    void calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo_XC,
+                          const TlVector& myu,
+                          const TlOrbitalInfoObject& orbitalInfo,
+                          const std::vector<DfTaskCtrl::Task2>& taskList,
+                          TlMatrixObject* pMatrix);
+
+    void calcOverlap(const TlOrbitalInfoObject& orbitalInfo_XC,
+                     const TlVector& myu,
+                     const TlVector& epsilon,
+                     const TlOrbitalInfoObject& orbitalInfo,
+                     TlMatrixObject* pF,
+                     TlMatrixObject* pE);
+    void calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo_XC,
+                          const TlVector& myu,
+                          const TlVector& epsilon,
+                          const TlOrbitalInfoObject& orbitalInfo,
+                          const std::vector<DfTaskCtrl::Task2>& taskList,
+                          TlMatrixObject* pF,
+                          TlMatrixObject* pE);
+
+    // <alpha>
+    void calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
+                     TlVectorObject* pVector);
     void calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
                           const std::vector<DfTaskCtrl::Task>& taskList,
                           TlVectorObject* pVector);
     
     ShellArrayTable makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo);
-    // DfOverlapEngine::PGTOs getPGTOs(const TlOrbitalInfoObject& orbitalInfo,
-    //                                 const int shellIndex);
 
     void getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
                            const int shellTypeP, const int shellTypeQ,

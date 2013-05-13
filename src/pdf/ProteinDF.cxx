@@ -20,7 +20,6 @@
 
 #include "TlTime.h"
 #include "TlUtils.h"
-#include "Fl_GlobalinputX.h"
 #include "TlStringTokenizer.h"
 #include "TlMemManager.h"
 #include "TlMsgPack.h"

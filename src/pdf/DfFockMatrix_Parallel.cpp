@@ -1,7 +1,6 @@
 #include "DfFockMatrix_Parallel.h"
-#include "DfEri_Parallel.h"
 #include "DfEriX_Parallel.h"
-#include "DfOverlap_Parallel.h"
+#include "DfOverlapX_Parallel.h"
 #include "TlCommunicate.h"
 
 DfFockMatrix_Parallel::DfFockMatrix_Parallel(TlSerializeData* pPdfParam)
@@ -148,7 +147,7 @@ void DfFockMatrix_Parallel::mainDIRECT_ROKS()
 void DfFockMatrix_Parallel::setXC_RI(const RUN_TYPE nRunType, TlSymmetricMatrix& F)
 {
     assert(this->m_bUsingSCALAPACK == false);
-    DfFockMatrix::setXC_RI<TlSymmetricMatrix, TlVector, DfOverlap_Parallel>(nRunType, F);
+    DfFockMatrix::setXC_RI<TlSymmetricMatrix, TlVector, DfOverlapX_Parallel>(nRunType, F);
 }
 
 
@@ -170,12 +169,13 @@ void DfFockMatrix_Parallel::setCoulomb(const METHOD_TYPE nMethodType, TlSymmetri
 
     TlSymmetricMatrix J(this->m_nNumOfAOs);
     if (this->J_engine_ == J_ENGINE_RI_J) {
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" use new engine\n");
-            DfFockMatrix::setCoulomb<TlSymmetricMatrix, TlVector, DfEriX_Parallel>(nMethodType, J);
-        } else {
-            DfFockMatrix::setCoulomb<TlSymmetricMatrix, TlVector, DfEri_Parallel>(nMethodType, J);
-        }
+        DfFockMatrix::setCoulomb<TlSymmetricMatrix, TlVector, DfEriX_Parallel>(nMethodType, J);
+        // if (this->isUseNewEngine_ == true) {
+        //     this->logger(" use new engine\n");
+        //     DfFockMatrix::setCoulomb<TlSymmetricMatrix, TlVector, DfEriX_Parallel>(nMethodType, J);
+        // } else {
+        //     DfFockMatrix::setCoulomb<TlSymmetricMatrix, TlVector, DfEri_Parallel>(nMethodType, J);
+        // }
         F += J;
         
         if (rComm.isMaster() == true) {
@@ -207,12 +207,13 @@ void DfFockMatrix_Parallel::setCoulomb(const METHOD_TYPE nMethodType, TlDistribu
 {
     TlDistributeSymmetricMatrix J(this->m_nNumOfAOs);
     if (this->J_engine_ == J_ENGINE_RI_J) {
-        if (this->isUseNewEngine_ == true) {
-            this->logger(" use new engine\n");
-            DfFockMatrix::setCoulomb<TlDistributeSymmetricMatrix, TlVector, DfEriX_Parallel>(nMethodType, J);
-        } else {
-            DfFockMatrix::setCoulomb<TlDistributeSymmetricMatrix, TlVector, DfEri_Parallel>(nMethodType, J);
-        }
+        DfFockMatrix::setCoulomb<TlDistributeSymmetricMatrix, TlVector, DfEriX_Parallel>(nMethodType, J);
+        // if (this->isUseNewEngine_ == true) {
+        //     this->logger(" use new engine\n");
+        //     DfFockMatrix::setCoulomb<TlDistributeSymmetricMatrix, TlVector, DfEriX_Parallel>(nMethodType, J);
+        // } else {
+        //     DfFockMatrix::setCoulomb<TlDistributeSymmetricMatrix, TlVector, DfEri_Parallel>(nMethodType, J);
+        // }
         F += J;
         
         // update method

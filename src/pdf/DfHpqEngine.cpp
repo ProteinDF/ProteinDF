@@ -112,6 +112,44 @@ void DfHpqEngine::calc(const Query& query,
     this->transform6Dto5D(this->WORK_NUCX);
 }
 
+void DfHpqEngine::calc(const Query& query,
+                       const TlPosition& A,
+                       const TlPosition& B,
+                       const PGTOs& PGTOsA,
+                       const PGTOs& PGTOsB,
+                       const TlPosition& C)
+{
+    this->a_bar_ = query.shellTypeA_bar;
+    this->b_bar_ = query.shellTypeB_bar;
+    this->a_ = query.shellTypeA;
+    this->b_ = query.shellTypeB;
+    
+    this->A_ = A;
+    this->B_ = B;
+
+    this->prepare(PGTOsA, PGTOsB);
+    
+    // clean up
+    {
+        const int dimAbar = this->a_bar_ * (this->a_bar_ + 3) /2 +1;
+        const int dimBbar = this->b_bar_ * (this->b_bar_ + 3) /2 +1;
+        const int dimA = this->a_ * (this->a_ + 3) /2 +1;
+        const int dimB = this->b_ * (this->b_ + 3) /2 +1;
+        const int length = dimAbar * dimBbar * dimA * dimB;
+        std::fill(this->WORK_NUC, this->WORK_NUC + length, 0.0);
+    }
+
+    this->isCalcdOvp_.reset();
+    this->calcOvpSS();
+
+    this->C_ = C;
+    this->chargeC_ = 1.0;
+    this->isCalcdNuc_.reset();
+    this->calcNucSS();
+    this->calcNuc(this->a_bar_, this->b_bar_, this->a_, this->b_, 0);
+    this->addResultsToOutputBuffer<NucState, NucDataType>(this->NUC_, this->WORK_NUC);
+    this->transform6Dto5D(this->WORK_NUC);
+}
 
 void DfHpqEngine::calcKineticPart(const Query& query,
                                   const TlPosition& A,
@@ -459,7 +497,7 @@ void DfHpqEngine::calcKin(const int a_bar, const int b_bar,
 
 
 void DfHpqEngine::calcNuc(const int a_bar, const int b_bar,
-                     const int a, const int b, const int m)
+                          const int a, const int b, const int m)
 {
     if ((a_bar < 0) || (b_bar < 0) ||
         (a < 0) || (b < 0) || (m < 0)) {

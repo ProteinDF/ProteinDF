@@ -6,12 +6,12 @@
 #include <string>
 #include <vector>
 
-#include "Fl_Database.h"
+//#include "Fl_Database.h"
 #include "CnError.h"
 
 // Basisset名に対応した値を、データベースから
 // 取ってくるクラス。データベースの名前は今の所basis2である
-class Fl_Db_Basis : public Fl_Database {
+class Fl_Db_Basis {
 private:
     struct Cgto {
         char shell;              // Shelltype { s , p , d };

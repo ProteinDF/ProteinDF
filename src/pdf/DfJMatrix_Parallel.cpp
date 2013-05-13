@@ -129,7 +129,7 @@ void DfJMatrix_Parallel::getJ_RI_local(TlSymmetricMatrix *pJ)
     }
 
     DfEriX dfEri(this->pPdfParam_);
-    dfEri.getdeltaHpqA(rho, *pJ);
+    dfEri.getJ(rho, pJ);
 
     if (this->isUpdateMethod_ == true) {
         if (this->m_nIteration > 1) {
@@ -192,7 +192,7 @@ void DfJMatrix_Parallel::getJ_RI_distributed(TlDistributeSymmetricMatrix *pJ)
     }
 
     DfEriX_Parallel dfEri(this->pPdfParam_);
-    dfEri.getJ_D(rho, pJ);
+    dfEri.getJ(rho, pJ);
 
     if (this->isUpdateMethod_ == true) {
         if (this->m_nIteration > 1) {

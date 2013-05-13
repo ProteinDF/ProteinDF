@@ -2,7 +2,6 @@
 #define DFINTEGRALS_H
 
 #include "DfObject.h"
-#include "Fl_GlobalinputX.h"
 #include "TlSerializeData.h"
 
 class DfHpq;
