@@ -44,7 +44,7 @@ void DfXMatrix_Parallel::buildX_LAPACK()
 
     index_type numOfMOs = 0;
     if (rComm.isMaster() == true) {
-        (*(this->pPdfParam_))["num_of_MOs"].getInt();
+        numOfMOs = (*(this->pPdfParam_))["num_of_MOs"].getInt();
     }
     rComm.broadcast(numOfMOs);
     (*(this->pPdfParam_))["num_of_MOs"] = numOfMOs;
