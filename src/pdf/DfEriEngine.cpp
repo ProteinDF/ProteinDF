@@ -1735,7 +1735,9 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
 
     // ContractState cs;
     const std::vector<int> cs_indeces = this->get_csindex_for_calcPQ(angularMomentumP, qAB,
-                                                                     angularMomentumQ, qCD);
+                                                                     angularMomentumQ, qCD,
+                                                                     bra_contractScales,
+                                                                     ket_contractScales);
     int cs_index_order = 0;
 
     // bra ---------------------------------------------------------------------
@@ -1837,14 +1839,15 @@ std::vector<int>
 DfEriEngine::get_csindex_for_calcPQ(const int angularMomentumP,
                                     const DfEriEngine::Query& qAB,
                                     const int angularMomentumQ,
-                                    const DfEriEngine::Query& qCD)
+                                    const DfEriEngine::Query& qCD,
+                                    const ContractScalesVector& bra_contractScales,
+                                    const ContractScalesVector& ket_contractScales)
 {
-    const int index = 
-        ((angularMomentumP*Query::maxIndex() + qAB.index())*ERI_P_MAX + angularMomentumQ)*Query::maxIndex() + qCD.index();
+    // const int index = 
+    //     ((angularMomentumP*Query::maxIndex() + qAB.index())*ERI_P_MAX + angularMomentumQ)*Query::maxIndex() + qCD.index();
+    const int index = qAB.index() * Query::maxIndex() + qCD.index();
     if (this->csindeces_forCalcPQ_.find(index) == this->csindeces_forCalcPQ_.end()) {
         std::vector<int> answer;
-        const ContractScalesVector bra_contractScales = this->choice(qAB);
-        const ContractScalesVector ket_contractScales = this->choice(qCD);
         
         ContractState cs;
         // bra ---------------------------------------------------------------------
