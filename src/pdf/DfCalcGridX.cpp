@@ -1015,6 +1015,7 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
     assert(pGY != NULL);
     assert(pGZ != NULL);
 
+    const double densityCutOffValue = this->m_densityCutOffValueA;
     TlMatrix gridMat = this->getGridMatrix<TlMatrix>(this->m_nIteration);
 
     const int numOfAtoms = this->numOfRealAtoms_;
@@ -1074,48 +1075,49 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
         std::vector<WFGrid> gradEtasY(numOfGrids);
         std::vector<WFGrid> gradEtasZ(numOfGrids);
         for (int gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
-            //const TlPosition gridPosition = grids[gridIndex].position;
             const TlPosition gridPosition(atomGridMat.get(gridIndex, GM_X),
                                           atomGridMat.get(gridIndex, GM_Y),
                                           atomGridMat.get(gridIndex, GM_Z));
             this->getPhiTable(gridPosition, etas, gradEtasX, gradEtasY, gradEtasZ);
             
-            //const double weight = grids[gridIndex].weight;
-            const double weight = gridMat.get(gridIndex, GM_WEIGHT);
+            const double weight = atomGridMat.get(gridIndex, GM_WEIGHT);
             const double gridRhoA = rhoA[gridIndex];
             double roundF_roundRhoA;
-            pFunctional->getDerivativeFunctional(gridRhoA, &roundF_roundRhoA);
-            
-            const double coef = weight * roundF_roundRhoA;
-            const int numOfEtas = etas.size();
-            const int numOfGradEtasX = gradEtasX.size();
-            const int numOfGradEtasY = gradEtasY.size();
-            const int numOfGradEtasZ = gradEtasZ.size();
-            for (int i = 0; i < numOfEtas; ++i) {
-                const double eta = etas[i].value;
-                const index_type q = etas[i].index;
-                const double coef_eta = coef * eta;
+
+            if (gridRhoA > densityCutOffValue) {
+                pFunctional->getDerivativeFunctional(gridRhoA, &roundF_roundRhoA);
                 
-                for (int j = 0; j < numOfGradEtasX; ++j) {
-                    const double etaDash = gradEtasX[j].value;
-                    const index_type p = gradEtasX[j].index;
-                    
-                    const double value = coef_eta * etaDash;
-                    Gx.add(p, q, value);
-                }
-                for (int j = 0; j < numOfGradEtasY; ++j) {
-                    const double etaDash = gradEtasY[j].value;
-                    const index_type p = gradEtasY[j].index;
-                    
-                    const double value = coef_eta * etaDash;
-                    Gy.add(p, q, value);
-                }
-                for (int j = 0; j < numOfGradEtasZ; ++j) {
-                    const double etaDash = gradEtasZ[j].value;
-                    const index_type p = gradEtasZ[j].index;
-                    
-                    const double value = coef_eta * etaDash;
-                    Gz.add(p, q, value);
+                const double coef = weight * roundF_roundRhoA;
+                const int numOfEtas = etas.size();
+                const int numOfGradEtasX = gradEtasX.size();
+                const int numOfGradEtasY = gradEtasY.size();
+                const int numOfGradEtasZ = gradEtasZ.size();
+                for (int i = 0; i < numOfEtas; ++i) {
+                    const double eta = etas[i].value;
+                    const index_type q = etas[i].index;
+                    const double coef_eta = coef * eta;
+                
+                    for (int j = 0; j < numOfGradEtasX; ++j) {
+                        const double etaDash = gradEtasX[j].value;
+                        const index_type p = gradEtasX[j].index;
+                        
+                        const double value = coef_eta * etaDash;
+                        Gx.add(p, q, value);
+                    }
+                    for (int j = 0; j < numOfGradEtasY; ++j) {
+                        const double etaDash = gradEtasY[j].value;
+                        const index_type p = gradEtasY[j].index;
+                        
+                        const double value = coef_eta * etaDash;
+                        Gy.add(p, q, value);
+                    }
+                    for (int j = 0; j < numOfGradEtasZ; ++j) {
+                        const double etaDash = gradEtasZ[j].value;
+                        const index_type p = gradEtasZ[j].index;
+                        
+                        const double value = coef_eta * etaDash;
+                        Gz.add(p, q, value);
+                    }
                 }
             }
         }
@@ -1215,13 +1217,11 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
         std::vector<WFGrid> gradEtasY(numOfGrids);
         std::vector<WFGrid> gradEtasZ(numOfGrids);
         for (int gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
-            //const TlPosition gridPosition = grids[gridIndex].position;
             const TlPosition gridPosition(atomGridMat.get(gridIndex, GM_X),
                                           atomGridMat.get(gridIndex, GM_Y),
                                           atomGridMat.get(gridIndex, GM_Z));
             this->getPhiTable(gridPosition, etas, gradEtasX, gradEtasY, gradEtasZ);
             
-            //const double weight = grids[gridIndex].weight;
             const double weight = atomGridMat.get(gridIndex, GM_WEIGHT);
             const double gridRhoA = rhoA[gridIndex];
             const double gridGradRhoAX = gradRhoAX[gridIndex];
