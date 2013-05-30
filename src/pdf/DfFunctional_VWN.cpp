@@ -279,8 +279,8 @@ void DfFunctional_VWN::roundVWN_roundRho(const double dRhoA, const double dRhoB,
                                                + dEc_a_prime * g * (1.0 + h * zeta4)
                                                + dEc_a * g * h_prime * zeta4);
 
-    //const double term2coef = dEc_a * (g_prime * (1.0 + h * zeta4) + 4.0 * g * h * zeta3);
-    const double term2coef = dEc_a * (g_prime * (1.0 + h * zeta) + 4.0 * g * h * zeta);
+    const double term2coef = dEc_a * (g_prime * (1.0 + h * zeta4) + 4.0 * g * h * zeta3);
+    //const double term2coef = dEc_a * (g_prime * (1.0 + h * zeta) + 4.0 * g * h * zeta);
 
     const double dRoundZeta_roundRhoA =   dInvRho * (1.0 - zeta);
     const double dRoundZeta_roundRhoB = - dInvRho * (1.0 + zeta);
