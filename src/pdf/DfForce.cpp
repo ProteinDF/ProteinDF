@@ -6,6 +6,8 @@
 #include "DfCalcGridX.h"
 #include "DfXCFunctional.h"
 
+#include "DfFunctional_SVWN.h"
+#include "DfFunctional_B88LYP.h"
 #include "DfFunctional_B3LYP.h"
 #include "TlMsgPack.h"
 #include "TlTime.h"
@@ -304,6 +306,14 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
         }
         break;
 
+    case DfXCFunctional::BLYP:
+        {
+            DfFunctional_B88LYP blyp;
+            calcGrid.makeGammaMatrix(P, &blyp,
+                                     &Gx, &Gy, &Gz);
+        }
+        break;
+
     case DfXCFunctional::B3LYP:
         {
             DfFunctional_B3LYP b3lyp;
@@ -356,6 +366,7 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
         }
     }
 
+    Fxc *= -1.0;
     if (this->isDebugOutMatrix_ == true) {
         Fxc.save("F_xc.mtx");
     }
