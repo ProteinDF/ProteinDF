@@ -97,14 +97,17 @@ int DfGenerateGrid::dfGrdMain()
 {
     this->logger("start");
 
-    this->makeTable();
     this->logger("make table");
+    this->makeTable();
 
-    this->setCellPara();
     this->logger("set Cell Para");
+    this->setCellPara();
 
-    this->generateGrid();
+    this->log_.info("calc grid origin");
+    const TlMatrix O = this->getOMatrix();
+
     this->logger("generateGrid");
+    this->generateGrid(O);
 
     this->logger("end");
 
@@ -584,7 +587,7 @@ void DfGenerateGrid::setCellPara()
 }
 
 
-void DfGenerateGrid::generateGrid()
+void DfGenerateGrid::generateGrid(const TlMatrix& O)
 {
     std::size_t numOfGrids = 0;
     const int endAtom = this->numOfRealAtoms_;
@@ -595,9 +598,9 @@ void DfGenerateGrid::generateGrid()
         std::vector<double> weight;
 
         if (this->m_gridType == SG_1) {
-            this->generateGrid_SG1(atom, &coordX, &coordY, &coordZ, &weight);
+            this->generateGrid_SG1(O, atom, &coordX, &coordY, &coordZ, &weight);
         } else {
-            this->generateGrid(atom, &coordX, &coordY, &coordZ, &weight);
+            this->generateGrid(O, atom, &coordX, &coordY, &coordZ, &weight);
         }
 
         // store grid matrix
@@ -617,7 +620,8 @@ void DfGenerateGrid::generateGrid()
 }
 
 
-void DfGenerateGrid::generateGrid(const int iatom,
+void DfGenerateGrid::generateGrid(const TlMatrix& O,
+                                  const int iatom,
                                   std::vector<double>* pCoordX,
                                   std::vector<double>* pCoordY,
                                   std::vector<double>* pCoordZ,
@@ -649,7 +653,7 @@ void DfGenerateGrid::generateGrid(const int iatom,
 
         std::vector<TlPosition> grid(nOgrid);
         std::vector<double> lebWeight(nOgrid);
-        this->points2(nOgrid, r0, this->coord_[iatom], weight, grid, lebWeight);
+        this->points2(nOgrid, r0, this->coord_[iatom], weight, O, grid, lebWeight);
 
         // Loop for the grid number of Omega vector for normal Grid(Beck\'s Method)
         for (int Omega = 0; Omega < nOgrid; ++Omega) {
@@ -763,7 +767,8 @@ JUMP1:
 }
 
 
-void DfGenerateGrid::generateGrid_SG1(const int iAtom,
+void DfGenerateGrid::generateGrid_SG1(const TlMatrix& O,
+                                      const int iAtom,
                                       std::vector<double>* pCoordX,
                                       std::vector<double>* pCoordY,
                                       std::vector<double>* pCoordZ,
@@ -841,7 +846,7 @@ void DfGenerateGrid::generateGrid_SG1(const int iAtom,
         // The coordinates of the atom on which the present grid is centred are put into the array "Ogridr"
         std::vector<TlPosition> grid(Ogrid);
         std::vector<double> lebWeight(Ogrid);
-        this->points2(Ogrid, r0, this->coord_[iAtom], weight,
+        this->points2(Ogrid, r0, this->coord_[iAtom], weight, O,
                       grid, lebWeight);
 
         // Loop for the grid number of Omega vector for SG-1
@@ -936,7 +941,9 @@ void DfGenerateGrid::generateGrid_SG1(const int iAtom,
 // Set the grid coordinates in "Ogridr" and the Lebedev weight in "w"
 // Get atom core coordinates
 void DfGenerateGrid::points2(const int nOgrid, const double r0, const TlPosition& core,
-                             const double weight, std::vector<TlPosition>& Ogrid, std::vector<double>& w)
+                             const double weight,
+                             const TlMatrix& O,
+                             std::vector<TlPosition>& Ogrid, std::vector<double>& w)
 {
     double bm[4];
     double bl[4];
@@ -968,13 +975,6 @@ void DfGenerateGrid::points2(const int nOgrid, const double r0, const TlPosition
             Ogrid[ 3] = TlPosition(-1.0,  0.0,  0.0);
             Ogrid[ 4] = TlPosition(0.0, -1.0,  0.0);
             Ogrid[ 5] = TlPosition(0.0,  0.0, -1.0);
-
-            // Scale and Shift
-            for (int i = 0; i < nOgrid; ++i) {
-                Ogrid[i] *= r0;
-                Ogrid[i] += core;
-            }
-
         } else if (nOgrid == 38) {
             //******Set the Lebedev Grid of 38 points*******************
             // Set the Lebedev parameter
@@ -1038,13 +1038,6 @@ void DfGenerateGrid::points2(const int nOgrid, const double r0, const TlPosition
             Ogrid[35] = TlPosition(0.0,  q1, -p1);
             Ogrid[36] = TlPosition(0.0, -q1,  p1);
             Ogrid[37] = TlPosition(0.0, -q1, -p1);
-
-            // Scale and Shift
-            for (int i = 0; i < nOgrid; ++i) {
-                Ogrid[i] *= r0;
-                Ogrid[i] += core;
-            }
-
         } else if (nOgrid == 86) {
             // ******Set the Lebedev grid of 86 points*****************
             // Set the Lebedev parameter
@@ -1145,13 +1138,6 @@ void DfGenerateGrid::points2(const int nOgrid, const double r0, const TlPosition
             Ogrid[ 83 ] = TlPosition(0.0,  q1, -p1);
             Ogrid[ 84 ] = TlPosition(0.0, -q1,  p1);
             Ogrid[ 85 ] = TlPosition(0.0, -q1, -p1);
-
-            // Scale and Shift
-            for (int i = 0; i < nOgrid; ++i) {
-                Ogrid[i] *= r0;
-                Ogrid[i] += core;
-            }
-
         } else if (nOgrid == 194) {
             // ******Set the Lebedev grid of 194 points******************
             // Set the Lebedev parameter
@@ -1306,12 +1292,6 @@ void DfGenerateGrid::points2(const int nOgrid, const double r0, const TlPosition
                 Ogrid[ 146 + 32 + i ] = TlPosition(tmp.z(), tmp.y(), tmp.x());
                 Ogrid[ 146 + 40 + i ] = TlPosition(tmp.z(), tmp.x(), tmp.y());
             }
-
-            // Scale and Shift
-            for (int i = 0; i < nOgrid; ++i) {
-                Ogrid[i] *= r0;
-                Ogrid[i] += core;
-            }
         }
     } else if ((this->m_gridType == MEDIUM) ||
                (this->m_gridType == MEDIUM_FINE)) {
@@ -1434,12 +1414,97 @@ void DfGenerateGrid::points2(const int nOgrid, const double r0, const TlPosition
             Ogrid[ 98 + 32 + i ] = TlPosition(tmp.z(), tmp.y(), tmp.x());
             Ogrid[ 98 + 40 + i ] = TlPosition(tmp.z(), tmp.x(), tmp.y());
         }
-
-        // Scale and Shift
-        for (int i = 0; i < nOgrid; ++i) {
-            Ogrid[i] *= r0;
-            Ogrid[i] += core;
-        }
     }
 
+    // Scale and Shift
+    for (int i = 0; i < nOgrid; ++i) {
+        TlVector v(3);
+        v[0] = Ogrid[i][0];
+        v[1] = Ogrid[i][1];
+        v[2] = Ogrid[i][2];
+        v = O * v;
+        Ogrid[i][0] = v[0];
+        Ogrid[i][1] = v[1];
+        Ogrid[i][2] = v[2];
+
+        Ogrid[i] *= r0;
+        Ogrid[i] += core;
+    }
 }
+
+//
+// ref) B. G. Johnson, P. M. W. Gill, J. A. Pople, Chem. Phys. Lett., 220, 377, (1994).
+TlMatrix DfGenerateGrid::getOMatrix()
+{
+    const int numOfAtoms = this->flGeometry_.getNumOfAtoms();
+
+    // calc T-matrix
+    TlPosition sum_zr(0.0, 0.0, 0.0);
+    double sum_z = 0.0;
+    for (int atom = 0; atom < numOfAtoms; ++atom) {
+        const std::string symbol = this->flGeometry_.getAtom(atom);
+        if (symbol == "X") {
+            continue;
+        }
+
+        const double z = this->flGeometry_.getCharge(atom);
+        const TlPosition r = this->flGeometry_.getCoordinate(atom);
+        sum_zr += z * r;
+        sum_z += z;
+    }
+    sum_zr /= sum_z;
+    TlVector T(3);
+    T[0] = sum_zr[0];
+    T[1] = sum_zr[1];
+    T[2] = sum_zr[2];
+
+    // build M
+    TlSymmetricMatrix M(3);
+    TlSymmetricMatrix I(3);
+    I.set(0, 0, 1.0);
+    I.set(1, 1, 1.0);
+    I.set(2, 2, 1.0);
+#pragma omp parallel for
+    for (int atom = 0; atom < numOfAtoms; ++atom) {
+        const std::string symbol = this->flGeometry_.getAtom(atom);
+        if (symbol == "X") {
+            continue;
+        }
+
+        const double z = this->flGeometry_.getCharge(atom);
+        const TlPosition p = this->flGeometry_.getCoordinate(atom);
+        TlVector R(3);
+        R[0] = p[0];
+        R[1] = p[1];
+        R[2] = p[2];
+
+        const TlVector RT = R - T;
+        const double RT2 = RT.norm2();
+        
+        TlMatrix mRT(3, 1);
+        mRT.set(0, 0, RT.get(0));
+        mRT.set(1, 0, RT.get(1));
+        mRT.set(2, 0, RT.get(2));
+        TlMatrix mRTt = mRT;
+        mRTt.transpose();
+        const TlSymmetricMatrix RTRT = mRT * mRTt;
+        assert(RTRT.getNumOfRows() == 3);
+        assert(RTRT.getNumOfCols() == 3);
+
+        M += z * (RT2 * I - RTRT);
+    }
+
+    // diagonal
+    TlMatrix O;
+    TlVector lambda;
+    M.diagonal(&lambda, &O);
+
+    //T.save("T.vct");
+    //M.save("M.mat");
+    O.save("O.mat");
+    lambda.save("lambda.vct");
+
+    return O;
+}
+
+

@@ -34,18 +34,31 @@ void DfGenerateGrid_Parallel::makeTable()
 }
 
 
-void DfGenerateGrid_Parallel::generateGrid()
+TlMatrix DfGenerateGrid_Parallel::getOMatrix()
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    TlMatrix O;
+    if (rComm.isMaster() == true) {
+        O = DfGenerateGrid::getOMatrix();
+    }
+    rComm.broadcast(O);
+
+    return O;
+}
+
+void DfGenerateGrid_Parallel::generateGrid(const TlMatrix& O)
 {
     // if (this->isMasterSlave_ == true) {
     //     this->generateGrid_MS();
     // } else {
-    this->generateGrid_DC();
+    this->generateGrid_DC(O);
     // }
     
     this->gatherGridData();
 }
 
-void DfGenerateGrid_Parallel::generateGrid_DC()
+void DfGenerateGrid_Parallel::generateGrid_DC(const TlMatrix& O)
 {
     this->logger("generate grid by DC");
     TlCommunicate& rComm = TlCommunicate::getInstance();
@@ -67,9 +80,9 @@ void DfGenerateGrid_Parallel::generateGrid_DC()
         std::vector<double> weight;
 
         if (this->m_gridType == SG_1) {
-            DfGenerateGrid::generateGrid_SG1(atom, &coordX, &coordY, &coordZ, &weight);
+            DfGenerateGrid::generateGrid_SG1(O, atom, &coordX, &coordY, &coordZ, &weight);
         } else {
-            DfGenerateGrid::generateGrid(atom, &coordX, &coordY, &coordZ, &weight);
+            DfGenerateGrid::generateGrid(O, atom, &coordX, &coordY, &coordZ, &weight);
         }
 
         // store grid matrix
