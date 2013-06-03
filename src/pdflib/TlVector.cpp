@@ -147,6 +147,23 @@ TlVector::argmax(const std::vector<TlVectorObject::size_type>::const_iterator& b
     return answer;
 }
 
+double TlVector::norm2() const
+{
+    double answer = 0.0;
+    const std::size_t size = this->getSize();
+#pragma omp parallel for reduction(+:answer)
+    for (std::size_t i = 0; i < size; ++i) {
+        const double v = this->get(i);
+        answer += v * v;
+    }
+
+    return answer;
+}
+
+double TlVector::norm() const
+{
+    return std::sqrt(this->norm());
+}
 
 TlVector& TlVector::operator=(const TlVector& rhs)
 {
