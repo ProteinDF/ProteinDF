@@ -918,52 +918,52 @@ void DfCalcGridX::gridDensity(const TlSymmetricMatrix& P,
 }
 
 
-void DfCalcGridX::calcForceFromXC(const TlSymmetricMatrix& P,
-                                  DfFunctional_GGA* pFunctional,
-                                  TlVector* pFx, TlVector* pFy, TlVector* pFz)
-{
-    const int numOfAtoms = this->numOfRealAtoms_;
-    const int numOfAOs = this->m_nNumOfAOs;
+// void DfCalcGridX::calcForceFromXC(const TlSymmetricMatrix& P,
+//                                   DfFunctional_GGA* pFunctional,
+//                                   TlVector* pFx, TlVector* pFy, TlVector* pFz)
+// {
+//     const int numOfAtoms = this->numOfRealAtoms_;
+//     const int numOfAOs = this->m_nNumOfAOs;
 
-    // grid derivative
-    // to implement!
+//     // grid derivative
+//     // to implement!
     
-    // functional derivative
-    TlMatrix GX(numOfAOs, numOfAtoms);
-    TlMatrix GY(numOfAOs, numOfAtoms);
-    TlMatrix GZ(numOfAOs, numOfAtoms);
-    this->makeGammaMatrix(P, pFunctional,
-                          &GX, &GY, &GZ);
+//     // functional derivative
+//     TlMatrix GX(numOfAOs, numOfAtoms);
+//     TlMatrix GY(numOfAOs, numOfAtoms);
+//     TlMatrix GZ(numOfAOs, numOfAtoms);
+//     this->makeGammaMatrix(P, pFunctional,
+//                           &GX, &GY, &GZ);
 
-    for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
-        double term1X = 0.0;
-        double term1Y = 0.0;
-        double term1Z = 0.0;
-        double term2X = 0.0;
-        double term2Y = 0.0;
-        double term2Z = 0.0;
+//     for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
+//         double term1X = 0.0;
+//         double term1Y = 0.0;
+//         double term1Z = 0.0;
+//         double term2X = 0.0;
+//         double term2Y = 0.0;
+//         double term2Z = 0.0;
 
-        for (int aoIndex = 0; aoIndex < numOfAOs; ++aoIndex) {
-            if (this->m_tlOrbInfo.getAtomIndex(aoIndex) != atomIndex) {
-                term1X += GX.get(atomIndex, aoIndex);
-                term1Y += GY.get(atomIndex, aoIndex);
-                term1Z += GZ.get(atomIndex, aoIndex);
-            } else {
-                for (int atomIndex2 = 0; atomIndex2 < numOfAtoms; ++atomIndex2) {
-                    if (atomIndex != atomIndex2) {
-                        term2X += GX.get(atomIndex2, aoIndex);
-                        term2Y += GY.get(atomIndex2, aoIndex);
-                        term2Z += GZ.get(atomIndex2, aoIndex);
-                    }
-                }
-            }
-        }
+//         for (int aoIndex = 0; aoIndex < numOfAOs; ++aoIndex) {
+//             if (this->m_tlOrbInfo.getAtomIndex(aoIndex) != atomIndex) {
+//                 term1X += GX.get(atomIndex, aoIndex);
+//                 term1Y += GY.get(atomIndex, aoIndex);
+//                 term1Z += GZ.get(atomIndex, aoIndex);
+//             } else {
+//                 for (int atomIndex2 = 0; atomIndex2 < numOfAtoms; ++atomIndex2) {
+//                     if (atomIndex != atomIndex2) {
+//                         term2X += GX.get(atomIndex2, aoIndex);
+//                         term2Y += GY.get(atomIndex2, aoIndex);
+//                         term2Z += GZ.get(atomIndex2, aoIndex);
+//                     }
+//                 }
+//             }
+//         }
 
-        pFx->set(atomIndex, (term1X - term2X));
-        pFy->set(atomIndex, (term1Y - term2Y));
-        pFz->set(atomIndex, (term1Z - term2Z));
-    }
-}
+//         pFx->set(atomIndex, (term1X - term2X));
+//         pFy->set(atomIndex, (term1Y - term2Y));
+//         pFz->set(atomIndex, (term1Z - term2Z));
+//     }
+// }
 
 
 /// Brown et al., J. Comput. Chem., 31, 2008 (2010).
@@ -1052,26 +1052,26 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
                 const int numOfGradEtasZ = gradEtasZ.size();
                 for (int i = 0; i < numOfEtas; ++i) {
                     const double eta = etas[i].value;
-                    const index_type p = etas[i].index;
+                    const index_type q = etas[i].index;
                     const double coef_eta = coef * eta;
                 
                     for (int j = 0; j < numOfGradEtasX; ++j) {
                         const double etaDash = gradEtasX[j].value;
-                        const index_type q = gradEtasX[j].index;
+                        const index_type p = gradEtasX[j].index;
                         
                         const double value = coef_eta * etaDash;
                         Gx.add(p, q, value);
                     }
                     for (int j = 0; j < numOfGradEtasY; ++j) {
                         const double etaDash = gradEtasY[j].value;
-                        const index_type q = gradEtasY[j].index;
+                        const index_type p = gradEtasY[j].index;
                         
                         const double value = coef_eta * etaDash;
                         Gy.add(p, q, value);
                     }
                     for (int j = 0; j < numOfGradEtasZ; ++j) {
                         const double etaDash = gradEtasZ[j].value;
-                        const index_type q = gradEtasZ[j].index;
+                        const index_type p = gradEtasZ[j].index;
                         
                         const double value = coef_eta * etaDash;
                         Gz.add(p, q, value);
@@ -1203,26 +1203,26 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
                 const int numOfGradEtasZ = gradEtasZ.size();
                 for (int i = 0; i < numOfEtas; ++i) {
                     const double eta = etas[i].value;
-                    const index_type p = etas[i].index;
+                    const index_type q = etas[i].index;
                     const double coef_eta = coef * eta;
                     
                     for (int j = 0; j < numOfGradEtasX; ++j) {
                         const double etaDash = gradEtasX[j].value;
-                        const index_type q = gradEtasX[j].index;
+                        const index_type p = gradEtasX[j].index;
                         
                         const double value = coef_eta * etaDash;
                         Gx.add(p, q, value);
                     }
                     for (int j = 0; j < numOfGradEtasY; ++j) {
                         const double etaDash = gradEtasY[j].value;
-                        const index_type q = gradEtasY[j].index;
+                        const index_type p = gradEtasY[j].index;
                         
                         const double value = coef_eta * etaDash;
                         Gy.add(p, q, value);
                     }
                     for (int j = 0; j < numOfGradEtasZ; ++j) {
                         const double etaDash = gradEtasZ[j].value;
-                        const index_type q = gradEtasZ[j].index;
+                        const index_type p = gradEtasZ[j].index;
                         
                         const double value = coef_eta * etaDash;
                         Gz.add(p, q, value);
