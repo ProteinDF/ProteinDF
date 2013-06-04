@@ -22,17 +22,23 @@ public:
 protected:
     virtual void makeTable();
 
-    void generateGrid(int iatom,
+    void generateGrid(const TlMatrix& O,
+                      const int iatom,
                       std::vector<double>* pCoordX,
                       std::vector<double>* pCoordY,
                       std::vector<double>* pCoordZ,
                       std::vector<double>* pWeight);
 
-    void generateGrid_SG1(int iatom,
+    void generateGrid_SG1(const TlMatrix& O,
+                          const int iatom,
                           std::vector<double>* pCoordX,
                           std::vector<double>* pCoordY,
                           std::vector<double>* pCoordZ,
                           std::vector<double>* pWeight);
+
+    /// rotation invariant用行列を求める
+    /// ref) B. G. Johnson, P. M. W. Gill, J. A. Pople, Chem. Phys. Lett., 220, 377, (1994).
+    virtual TlMatrix getOMatrix();
 
 private:
 
@@ -42,10 +48,14 @@ private:
 
     /** ファジーセル法を用いて、各グリッドの中心座標とそのグリッドにおける重みベクトルを計算する。
      */
-    virtual void generateGrid();
+    virtual void generateGrid(const TlMatrix& O);
 
+    /// 球面方向のグリッドを生成する
     void points2(const int nOgrid, const double r0, const TlPosition& core,
-                 const double weight, std::vector<TlPosition>& Ogrid, std::vector<double>& w);
+                 const double weight, 
+                 const TlMatrix& O,
+                 std::vector<TlPosition>& Ogrid, std::vector<double>& w);
+
 
 protected:
     enum GridType {
