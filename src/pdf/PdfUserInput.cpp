@@ -251,6 +251,14 @@ void PdfUserInput::load_conventional()
         this->param_["MOLECULE"]["basis-set/exchange-auxiliary"] = "stored";
     }
 
+    if (this->data_["basis-set/gridfree"].getStr() != "") {
+        const std::string str = this->data_["basis-set/gridfree"].getStr();
+        this->moleculeBasisSetGridFree(str);
+        
+        this->data_["basis-set/gridfree"] = "";
+        this->param_["MOLECULE"]["basis-set/gridfree"] = "stored";
+    }
+
     //this->m_param.print(std::cout);
 
     this->alias();
@@ -419,7 +427,29 @@ void PdfUserInput::moleculeBasisSetOrbital(const std::string& str)
         }
 
         // 格納 ============================================================
-        Fl_Db_Basis flDbBasis(sName);
+        // Fl_Db_Basis flDbBasis(sName);
+        // for (int i = 0; i < flDbBasis.getTotalcgto(); i++) {
+        //     Fl_Gto_Orbital::Cgto cgto;
+        //     cgto.basisName = sName;
+        //     cgto.Snum = 0;
+        //     cgto.Pnum = 0;
+        //     cgto.Dnum = 0;
+        //     cgto.atom = sAtom;
+        //     cgto.label = sLabel;
+        //     cgto.shell = flDbBasis.getShell(i);
+        //     cgto.scalefactor = flDbBasis.getScalefactor(i);
+
+        //     const int contraction = flDbBasis.getContraction(i);
+        //     cgto.pgto.resize(contraction);
+        //     for (int j = 0; j < contraction; j++) {
+        //         cgto.pgto[j].exponent = flDbBasis.getExpornent(i, j);
+        //         cgto.pgto[j].coefficient = flDbBasis.getCoefficient(i ,j);
+        //     }
+
+        //     Bas.set(dNumOfCgto, cgto);
+
+        //     dNumOfCgto++;
+        // }
 
         // store to serializeData
         std::string key = sAtom;
@@ -662,6 +692,113 @@ void PdfUserInput::moleculeBasisSetExchangeAuxiliary(const std::string& str)
             this->data_["basis_sets_k"][key]["cGTOs"].pushBack(cGTO);
         }
         this->data_["basis_sets_k"][key]["name"] = sName;
+    }
+}
+
+void PdfUserInput::moleculeBasisSetGridFree(const std::string& str)
+{
+    // Fl_Gto_Orbital Bas;
+    std::istringstream in(str);
+    int dNumOfCgto = 0;
+
+    while (in) {
+        std::string sLine;
+        std::getline(in, sLine);
+
+        // 先頭のホワイトスペースを取り除く
+        TlUtils::trim_ws(sLine);
+        if (sLine.empty()) {
+            continue;
+        }
+
+        // コメント行を除く
+        if ((sLine.compare(0, 2, "//") == 0) ||
+                (sLine.compare(0, 1, "#") == 0)) {
+            continue;
+        }
+
+        // ホワイトスペースをデリミタにして、読み込み
+        std::string sLabel = "";
+        std::string sAlias = "";
+
+        // Atom
+        std::string sAtom = "";
+        {
+            std::string tmp = TlUtils::getWord(sLine);
+            TlUtils::trim_ws(sLine);
+            if ((tmp == "X") || (TlAtom::getElementNumber(tmp) != 0)) {
+                sAtom = tmp;
+            } else {
+                this->log_.critical(TlUtils::format("atom \"%s\" is not defined. stop.", tmp.c_str()));
+                abort();
+            }
+        }
+
+        // label2
+        if (sLine[0] == '@') {
+            std::string tmp = TlUtils::getWord(sLine);
+            TlUtils::trim_ws(sLine);
+            tmp = tmp.substr(1);
+            sLabel = tmp;
+        }
+
+        // equal
+        if (sLine[0] == '=') {
+            sLine = sLine.substr(1);
+            TlUtils::trim_ws(sLine);
+        } else {
+            std::cerr << "equal is not found. stop." << std::endl;
+            abort();
+        }
+
+        // Name
+        std::string sName = "";
+        if (sLine[0] == '"') {
+            sLine = sLine.substr(1);
+            std::string::size_type nNameEnd = sLine.find_first_of('"');
+            if (nNameEnd != std::string::npos) {
+                sName = sLine.substr(0, nNameEnd);
+                sLine = (nNameEnd +1 < sLine.length()) ? sLine.substr(nNameEnd +1) : "";
+            } else {
+                std::cerr << "double quotation is not closed. stop." << std::endl;
+                abort();
+            }
+        } else {
+            sName = TlUtils::getWord(sLine);
+        }
+
+        // 格納 ============================================================
+        // Fl_Db_Basis flDbBasis(sName);
+        // for (int i = 0; i < flDbBasis.getTotalcgto(); i++) {
+        //     Fl_Gto_Orbital::Cgto cgto;
+        //     cgto.basisName = sName;
+        //     cgto.Snum = 0;
+        //     cgto.Pnum = 0;
+        //     cgto.Dnum = 0;
+        //     cgto.atom = sAtom;
+        //     cgto.label = sLabel;
+        //     cgto.shell = flDbBasis.getShell(i);
+        //     cgto.scalefactor = flDbBasis.getScalefactor(i);
+
+        //     const int contraction = flDbBasis.getContraction(i);
+        //     cgto.pgto.resize(contraction);
+        //     for (int j = 0; j < contraction; j++) {
+        //         cgto.pgto[j].exponent = flDbBasis.getExpornent(i, j);
+        //         cgto.pgto[j].coefficient = flDbBasis.getCoefficient(i ,j);
+        //     }
+
+        //     Bas.set(dNumOfCgto, cgto);
+
+        //     dNumOfCgto++;
+        // }
+
+        // store to serializeData
+        std::string key = sAtom;
+        if (sLabel != "") {
+            key += "@" + sLabel;
+        }
+        const TlSerializeData basisset = this->getBasisInfo(sName);
+        this->data_["basis_sets_GF"][key] = basisset;
     }
 }
 

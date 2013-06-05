@@ -100,6 +100,14 @@ public:
                            std::vector<Task4>* pTaskList,
                            bool initialize = false);
     
+    virtual bool getQueue4(const TlOrbitalInfoObject& orbitalInfo_PQ,
+                           const TlOrbitalInfoObject& orbitalInfo_RS,
+                           const TlSparseSymmetricMatrix& schwarzTable_PQ,
+                           const TlSparseSymmetricMatrix& schwarzTable_RS,
+                           const int maxGrainSize,
+                           std::vector<Task4>* pTaskList,
+                           bool initialize = false);
+
     // local matrix用?
     virtual bool getQueue4_K(const TlOrbitalInfoObject& orbitalInfo,
                              const TlSparseSymmetricMatrix& schwarzTable,
@@ -141,26 +149,49 @@ protected:
                                               const index_type companionShellIndex,
                                               const TlOrbitalInfoObject& orbitalInfo);
 
+    // P v.s. R
     ShellPairArrayTable getShellPairArrayTable(const TlOrbitalInfoObject& orbitalInfo,
                                                const ShellArrayTable& shellArrayTable);
+    ShellPairArrayTable getShellPairArrayTable(const TlOrbitalInfoObject& orbitalInfo1,
+                                               const ShellArrayTable& shellArrayTable1,
+                                               const TlOrbitalInfoObject& orbitalInfo2,
+                                               const ShellArrayTable& shellArrayTable2);
 
     ShellPairArrayTable selectShellPairArrayTableByDensity(const ShellPairArrayTable& inShellPairArrayTable,
                                                            const TlOrbitalInfoObject& orbitalInfo);
+    ShellPairArrayTable selectShellPairArrayTableByDensity(const ShellPairArrayTable& inShellPairArrayTable,
+                                                           const TlOrbitalInfoObject& orbitalInfo1,
+                                                           const TlOrbitalInfoObject& orbitalInfo2);
     
     TlSparseSymmetricMatrix makeSchwarzTable(const TlOrbitalInfoObject& orbitalInfo,
                                              DfEriEngine* pEngine);
     
-    int getShellQuartetType(const TlOrbitalInfoObject& orbitalInfo,
+    // int getShellQuartetType(const TlOrbitalInfoObject& orbitalInfo,
+    //                         const int shellTypeP,
+    //                         const int shellTypeQ,
+    //                         const int shellTypeR,
+    //                         const int shellTypeS);
+    int getShellQuartetType(const TlOrbitalInfoObject& orbitalInfo_PQ,
+                            const TlOrbitalInfoObject& orbitalInfo_RS,
                             const int shellTypeP,
                             const int shellTypeQ,
                             const int shellTypeR,
                             const int shellTypeS);
+
     bool isAliveBySchwarzCutoff(const index_type shellIndexP,
                                 const index_type shellIndexQ,
                                 const index_type shellIndexR,
                                 const index_type shellIndexS,
                                 const int shellQuartetType,
                                 const TlSparseSymmetricMatrix& schwarzTable,
+                                const double threshold);
+    bool isAliveBySchwarzCutoff(const index_type shellIndexP,
+                                const index_type shellIndexQ,
+                                const index_type shellIndexR,
+                                const index_type shellIndexS,
+                                const int shellQuartetType,
+                                const TlSparseSymmetricMatrix& schwarzTable_PQ,
+                                const TlSparseSymmetricMatrix& schwarzTable_RS,
                                 const double threshold);
 
     double getMaxValue(const TlMatrixObject& P,
@@ -198,6 +229,11 @@ protected:
     std::size_t getTotalCalcAmount4(const TlOrbitalInfoObject& orbitalInfo,
                                     const ShellPairArrayTable& shellPairArrayTable,
                                     const DistributedCutoffTable& dct);
+    std::size_t getTotalCalcAmount4(const TlOrbitalInfoObject& orbitalInfo1,
+                                    const TlOrbitalInfoObject& orbitalInfo2,
+                                    const ShellPairArrayTable& shellPairArrayTable,
+                                    const DistributedCutoffTable& dct1,
+                                    const DistributedCutoffTable& dct2);
     
 protected:
     int maxShellType_;
