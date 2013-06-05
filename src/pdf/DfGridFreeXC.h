@@ -96,7 +96,13 @@ public:
     virtual ~DfGridFreeXC();
     
 public:
+    void buildDualLevelOp();
     void buildFxc();
+
+protected:
+    void buildFxc0();
+    void buildFxc1();
+    void buildFxc2();
 
 protected:
     static const int MAX_SHELL_TYPE;
@@ -117,9 +123,14 @@ protected:
     
 protected:
     virtual void getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+    virtual void getM1(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
 
     TlSparseSymmetricMatrix makeSchwarzTable(const TlOrbitalInfoObject& orbitalInfo);
     void getM_part(const TlOrbitalInfoObject& orbitalInfo,
+                   const std::vector<DfTaskCtrl::Task4>& taskList,
+                   const TlMatrixObject& P, TlMatrixObject* pM);
+    void getM_part(const TlOrbitalInfoObject& orbitalInfo_PQ,
+                   const TlOrbitalInfoObject& orbitalInfo_RS,
                    const std::vector<DfTaskCtrl::Task4>& taskList,
                    const TlMatrixObject& P, TlMatrixObject* pM);
     void storeM(const index_type shellIndexP, const int maxStepsP,
@@ -129,6 +140,13 @@ protected:
                 const DfOverlapEngine& engine,
                 const TlMatrixObject& P,
                 TlMatrixObject* pM);
+    void storeM_pq(const index_type shellIndexP, const int maxStepsP,
+                   const index_type shellIndexQ, const int maxStepsQ,
+                   const index_type shellIndexR, const int maxStepsR,
+                   const index_type shellIndexS, const int maxStepsS,
+                   const DfOverlapEngine& engine,
+                   const TlMatrixObject& P,
+                   TlMatrixObject* pM);
 
     virtual void createEngines();
     virtual void destroyEngines();
@@ -208,6 +226,12 @@ protected:
     /// キャッシュ
     typedef std::map<IndexPair4, std::vector<double> > ElementsCacheType;
     ElementsCacheType elements_cache_;
+
+    ///
+    bool debugSaveM_;
+
+    /// 試験コード
+    int GF_mode_;
 };
 
 #endif // DFGRIDFREEXC_H

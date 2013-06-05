@@ -116,7 +116,7 @@ void DfObject::setParam(const TlSerializeData& data)
     this->numOfAuxXC_ = data["num_of_auxXCs"].getInt();
     
     this->m_nNumOfElectrons = data["method/rks/electrons"].getInt();
-    this->m_nNumOfAlphaElectrons = data["method/uls/alpha_electrons"].getInt();
+    this->m_nNumOfAlphaElectrons = data["method/uks/alpha_electrons"].getInt();
     this->m_nNumOfBetaElectrons = data["method/uks/beta_electrons"].getInt();
 
     // guess
@@ -196,6 +196,7 @@ void DfObject::setParam(const TlSerializeData& data)
     }
     this->m_bIsUpdateXC = (TlUtils::toUpper(data["xc-update"].getStr()) == "NO") ? false : true;
     this->isGridFree_ = data["grid_free"].getBoolean();
+    this->isDualLevelGridFree_ = data["dual_level_grid_free"].getBoolean();
 
     // Grimme empirical dispersion check
     {
@@ -315,6 +316,21 @@ void DfObject::setParam(const TlSerializeData& data)
     paramFileBaseName["grid_matrix"]    = "grid.mat";
     paramFileBaseName["T_alpha"]        = "T_alpha.%s.vtr";
 
+    // for GridFree
+    if (paramFileBaseName["GF_S_matrix"].getStr().empty() == true) {
+        paramFileBaseName["GF_S_matrix"] = "GF_S.mat";
+    }
+    if (paramFileBaseName["GF_Stilde_matrix"].getStr().empty() == true) {
+        paramFileBaseName["GF_Stilde_matrix"] = "GF_S.mat";
+    }
+    if (paramFileBaseName["GF_omega_matrix"].getStr().empty() == true) {
+        paramFileBaseName["GF_omega_matrix"] = "GF_omega.mat";
+    }
+    if (paramFileBaseName["GF_V_matrix"].getStr().empty() == true) {
+        paramFileBaseName["GF_V_matrix"] = "GF_V.mat";
+    }
+    
+    // vectors
     if (paramFileBaseName["rho_vector"].getStr().empty() == true) {
         paramFileBaseName["rho_vector"] = "rho.%s.vtr";
     }
@@ -608,6 +624,25 @@ std::string DfObject::getCprimeMatrixPath(const RUN_TYPE runType, int iteration,
                               suffix);
 }
 
+std::string DfObject::getGfSMatrixPath() const
+{
+    return this->makeFilePath("GF_S_matrix");
+}
+
+std::string DfObject::getGfStildeMatrixPath() const
+{
+    return this->makeFilePath("GF_Stilde_matrix");
+}
+
+std::string DfObject::getGfOmegaMatrixPath() const
+{
+    return this->makeFilePath("GF_omega_matrix");
+}
+
+std::string DfObject::getGfVMatrixPath() const
+{
+    return this->makeFilePath("GF_V_matrix");
+}
 
 std::string DfObject::getRhoPath(const RUN_TYPE nRunType, const int nIteration) const
 {
