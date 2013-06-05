@@ -10,41 +10,32 @@ public:
     virtual ~DfEriX_Parallel();
 
 public:
-    void getJ(const TlDistributeSymmetricMatrix& P,
-              TlDistributeVector* pRho) {
-        this->getJ_D(P, pRho);
-    }
     virtual void getJ(const TlSymmetricMatrix& P, TlVector* pRho) {
         DfEriX::getJ(P, pRho);
     }
-                
-    void getJ_D(const TlVector& rho, TlDistributeSymmetricMatrix* pJ);
+    void getJ(const TlDistributeSymmetricMatrix& P,
+              TlDistributeVector* pRho);
+
+    virtual void getJ(const TlVector& rho, TlSymmetricMatrix* pJ) {
+        DfEriX::getJ(rho, pJ);
+    }
+    void getJ(const TlVector& rho, TlDistributeSymmetricMatrix* pJ);
     
     /// J([pq | rs])
     void getJpq_D(const TlDistributeSymmetricMatrix& P,
                   TlDistributeSymmetricMatrix* pJpq);
 
     /// J([alpha | beta])
-    void getJab_D(TlDistributeSymmetricMatrix* pJab);
+    virtual void getJab(TlSymmetricMatrix* pJab) {
+        DfEriX::getJab(pJab);
+    }
+    void getJab(TlDistributeSymmetricMatrix* pJab);
 
     /// K
     void getK_D(const TlDistributeSymmetricMatrix& P,
                 TlDistributeSymmetricMatrix* pK);
     
-public:
-    void getdeltaHpqA(const TlVector& rho, TlSymmetricMatrix& P) {
-        //this->getJ(rho, &P);
-        DfEriX::getJ(rho, &P);
-    }
-
-    void getdeltaHpqA(const TlVector& rho, TlDistributeSymmetricMatrix& P) {
-        this->getJ_D(rho, &P);
-    }
-
 protected:
-    void getJ_D(const TlDistributeSymmetricMatrix& P,
-                TlDistributeVector* pRho);
-
     virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
     virtual void finalize(TlMatrix* pMtx);

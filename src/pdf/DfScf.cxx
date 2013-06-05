@@ -39,8 +39,6 @@
 #include "TlFile.h"
 #include "TlMsgPack.h"
 
-#include "Fl_GlobalinputX.h"
-
 #define NUMBER_OF_CHECK 2
 
 DfScf::DfScf(TlSerializeData* pPdfParam)
@@ -274,14 +272,14 @@ int DfScf::execScfLoop()
             break;
 
         case K_MATRIX:
-            this->setScfRestartPoint("K_MATRIX");
             this->buildKMatrix();
+            this->setScfRestartPoint("K_MATRIX");
             nScfState = J_MATRIX;
             break;
             
         case J_MATRIX:
-            this->setScfRestartPoint("J_MATRIX");
             this->buildJMatrix();
+            this->setScfRestartPoint("J_MATRIX");
             nScfState = FOCK;
             break;
             

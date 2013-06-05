@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <vector>
+#include <string>
 
 #ifndef M_PI
 #define M_PI (3.14159265358979323846)
@@ -76,6 +77,10 @@ public:
         return ::exp(x);
     };
 
+    /// 桁落ちのチェック
+    /// cancellation of significant digits
+    static std::string checkCancellationErr(const std::string& file, int line,
+                                            const double a, const double b);
 };
 
 

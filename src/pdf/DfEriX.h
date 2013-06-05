@@ -21,17 +21,13 @@ public:
 
 public:
     virtual void getJ(const TlSymmetricMatrix& P, TlVector* pRho);
-
-    void getdeltaHpqA(const TlVector& rho, TlSymmetricMatrix& P) {
-        this->getJ(rho, &P);
-    }
     void getJ(const TlVector& rho, TlSymmetricMatrix* pP);
 
     /// J([pq | rs])
     void getJpq(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJpq);
     
     /// J([alpha | beta])
-    void getJab(TlSymmetricMatrix* pJab);
+    virtual void getJab(TlSymmetricMatrix* pJab);
 
     void getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce);
     void getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,

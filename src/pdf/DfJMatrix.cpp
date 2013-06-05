@@ -106,7 +106,7 @@ void DfJMatrix::getJ_RI_local(TlSymmetricMatrix* pJ)
     }
 
     DfEriX dfEri(this->pPdfParam_);
-    dfEri.getdeltaHpqA(Rho, *pJ);
+    dfEri.getJ(Rho, pJ);
 
     if (this->isUpdateMethod_ == true) {
         if (this->m_nIteration > 1) {

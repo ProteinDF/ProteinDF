@@ -83,6 +83,12 @@ public:
     argmax(const std::vector<TlVectorObject::size_type>::const_iterator& begin,
            const std::vector<TlVectorObject::size_type>::const_iterator& end) const;
 
+    /// ユークリッドノルムを返す
+    double norm() const;
+
+    /// ユークリッドノルムの2乗を返す
+    double norm2() const;
+
 public:
     static bool isLoadable(const std::string& sFilePath);
     static bool isLoadable(std::ifstream& ifs);

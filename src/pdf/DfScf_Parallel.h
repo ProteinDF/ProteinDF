@@ -2,7 +2,6 @@
 #define DFSCF_PARALLEL_H
 
 #include "DfScf.h"
-#include "Fl_GlobalinputX.h"
 
 class DfScf_Parallel : public DfScf {
 public:

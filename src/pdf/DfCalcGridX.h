@@ -62,10 +62,6 @@ public:
 
 public:
     // for derivative
-    void calcForceFromXC(const TlSymmetricMatrix& P,
-                         DfFunctional_GGA* pFunctional,
-                         TlVector* pFx, TlVector* pFy, TlVector* pFz);
-
     void makeGammaMatrix(const TlSymmetricMatrix& P,
                          DfFunctional_LDA* pFunctional,
                          TlMatrix* pGX, TlMatrix* pGY, TlMatrix* pGZ);
@@ -73,6 +69,11 @@ public:
     void makeGammaMatrix(const TlSymmetricMatrix& P,
                          DfFunctional_GGA* pFunctional,
                          TlMatrix* pGX, TlMatrix* pGY, TlMatrix* pGZ);
+
+protected:
+    // void calcForceFromXC(const TlSymmetricMatrix& P,
+    //                      DfFunctional_GGA* pFunctional,
+    //                      TlVector* pFx, TlVector* pFy, TlVector* pFz);
 
     TlMatrix selectGridMatrixByAtom(const TlMatrix& globalGridMat,
                                     const int atomIndex);
@@ -83,39 +84,6 @@ protected:
     virtual void defineCutOffValues(const TlSymmetricMatrix& PA,
                                     const TlSymmetricMatrix& PB);
 
-    /// Fockの交換相関項と、エネルギーを同時に求める(RKS, LDA用; 並列計算と共通部分)
-    // double calcXCIntegForFockAndEnergy(int nStartAtom, int nEndAtom,
-    //                                    const TlSymmetricMatrix& P,
-    //                                    DfFunctional_LDA* pFunctional,
-    //                                    TlSymmetricMatrix* pF);
-
-    /// Fockの交換相関項と、エネルギーを同時に求める(UKS, LDA用; 並列計算と共通部分)
-    // double calcXCIntegForFockAndEnergy(int nStartAtom, int nEndAtom,
-    //                                    const TlSymmetricMatrix& PA,
-    //                                    const TlSymmetricMatrix& PB,
-    //                                    DfFunctional_LDA* pFunctional,
-    //                                    TlSymmetricMatrix* pFA,
-    //                                    TlSymmetricMatrix* pFB);
-
-    /// Fockの交換相関項と、エネルギーを同時に求める(RKS, GGA用; 並列計算と共通部分)
-    // double calcXCIntegForFockAndEnergy(int nStartAtom, int nEndAtom,
-    //                                    const TlSymmetricMatrix& P,
-    //                                    DfFunctional_GGA* pFunctional,
-    //                                    TlSymmetricMatrix* pF);
-
-    /// Fockの交換相関項と、エネルギーを同時に求める(UKS, GGA用; 並列計算と共通部分)
-    // double calcXCIntegForFockAndEnergy(int nStartAtom, int nEndAtom,
-    //                                    const TlSymmetricMatrix& PA,
-    //                                    const TlSymmetricMatrix& PB,
-    //                                    DfFunctional_GGA* pFunctional,
-    //                                    TlSymmetricMatrix* pFA,
-    //                                    TlSymmetricMatrix* pFB);
-
-    // virtual void backupGridData();
-    // virtual void flushGridData();
-
-
-protected:
     void buildFock(double dRhoA,
                    const std::vector<WFGrid>& aPhi,
                    DfFunctional_LDA* pFunctional, double dWeight,
@@ -166,13 +134,10 @@ protected:
                    const double coef, const double cutoffValue,
                    TlMatrixObject* pF);
 
-
-protected:
     double getPrefactor(int nType, const TlPosition& pos);
     void getPrefactorForDerivative(int nType, double alpha, const TlPosition& pos,
                                    double* pPrefactorX, double* pPrefactorY, double* pPrefactorZ);
 
-protected:
     /// グリッド点における波動関数の値、勾配の値を求める
     void getPhiTable(const TlPosition& pos, std::vector<WFGrid>& aPhi);
 
@@ -281,34 +246,6 @@ public:
 
     virtual void getWholeDensity(double* pRhoA, double* pRhoB) const;
     
-    // Fockの交換相関項と、エネルギーを同時に求める
-    // template<class DfFunctionalType>
-    // double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-    //                                    DfFunctionalType* pFunctional,
-    //                                    TlSymmetricMatrix* pF_A);
-    // template<class DfFunctionalType>
-    // double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-    //                                    const TlSymmetricMatrix& P_B,
-    //                                    DfFunctionalType* pFunctional,
-    //                                    TlSymmetricMatrix* pF_A,
-    //                                    TlSymmetricMatrix* pF_B);
-    // double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-    //                                    DfFunctional_LDA* pFunctional,
-    //                                    TlSymmetricMatrix* pF_A);
-    // double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-    //                                    const TlSymmetricMatrix& P_B,
-    //                                    DfFunctional_LDA* pFunctional,
-    //                                    TlSymmetricMatrix* pF_A,
-    //                                    TlSymmetricMatrix* pF_B);
-    // double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-    //                                    DfFunctional_GGA* pFunctional,
-    //                                    TlSymmetricMatrix* pF_A);
-    // double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-    //                                    const TlSymmetricMatrix& P_B,
-    //                                    DfFunctional_GGA* pFunctional,
-    //                                    TlSymmetricMatrix* pF_A,
-    //                                    TlSymmetricMatrix* pF_B);
-    
 protected:
     double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
                                        DfFunctional_LDA* pFunctional,
@@ -376,10 +313,6 @@ protected:
                     TlMatrixObject* pF_A,
                     TlMatrixObject* pF_B);
     
-protected:
-    //virtual TlMatrix getGridMatrix();
-    // virtual void finalizeGridMatrix(const TlMatrix& gridMat);
-
 protected:
     static const double TOOBIG;
     static const double EPS;

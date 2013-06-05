@@ -13,10 +13,28 @@ public:
     void getSpqD(TlDistributeSymmetricMatrix* pSpq);
     void getSabD(TlDistributeSymmetricMatrix* pSab);
 
+    virtual void getSgd(TlSymmetricMatrix* pSgd) {
+        DfOverlapX::getSgd(pSgd);
+    }
+    void getSgd(TlDistributeSymmetricMatrix* pSab);
+
     /// 変換行列を作成する
     void getTransMat(const TlOrbitalInfoObject& orbInfo1,
                      const TlOrbitalInfoObject& orbInfo2,
                      TlDistributeMatrix* pS);
+
+    /// calc <pq gamma>
+    virtual void get_pqg(const TlVector& myu, TlSymmetricMatrix* pF) {
+        DfOverlapX::get_pqg(myu, pF);
+    }
+    virtual void get_pqg(const TlVector& myu, const TlVector& epsilon,
+                         TlSymmetricMatrix* pF,
+                         TlSymmetricMatrix* pE) {
+        DfOverlapX::get_pqg(myu, epsilon, pF, pE);
+    }
+    virtual void get_pqg(const TlDistributeVector& myu,
+                         TlDistributeSymmetricMatrix* pF);
+    
     
 protected:
     virtual void logger(const std::string& str) const;

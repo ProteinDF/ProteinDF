@@ -5,8 +5,6 @@
 #include <string>
 
 #include "DfObject.h"
-#include "Fl_GlobalinputX.h"
-//#include "TlParameter.h"
 #include "TlSymmetricMatrix.h"
 #include "TlMatrix.h"
 #include "TlOrbitalInfo.h"

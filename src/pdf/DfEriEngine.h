@@ -526,7 +526,9 @@ private:
     get_csindex_for_calcPQ(const int angularMomentumP,
                            const DfEriEngine::Query& qAB,
                            const int angularMomentumQ,
-                           const DfEriEngine::Query& qCD);
+                           const DfEriEngine::Query& qCD,
+                           const ContractScalesVector& bra_contractScales,
+                           const ContractScalesVector& ket_contractScales);
 
     void transpose(const DfEriEngine::Query& qAB,
                    const DfEriEngine::Query& qCD,

@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cmath>
 #include "TlMath.h"
+#include "TlUtils.h"
 
 /* limit is 170!=7.257416...e+306 (MACHINE DEPEND). */
 /* note such a overflow error is not supported!     */
@@ -129,3 +130,11 @@ std::vector<int> TlMath::factor(const int nInput)
 }
 
 
+std::string TlMath::checkCancellationErr(const std::string& file, int line,
+                                         const double a, const double b)
+{
+    const double c = a - b;
+    return TlUtils::format("%s:%d: %16.10e - %16.10e = %16.10e",
+                           file.c_str(), line,
+                           a, b, c);
+}

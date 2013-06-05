@@ -392,22 +392,22 @@ void DfFunctional_LYP::roundRoundLYP_roundRhoRoundGamma(const double dRho, const
 
     // dRoundRoundLYP_roundRhoXRoundGammaAA
     {
-        const double term1 = dOmegaPrime_Omega * dRoundLYP_roundGammaAA;
-
         // for alpha spin
+        const double term1A = dOmegaPrime_Omega * dRoundLYP_roundGammaAA;
         const double term2A_1 =   INV_9 * dRhoB * (1.0 - 3.0 * dDelta - (dDelta - 11.0) * dRhoA * dInvRho);
         const double term2A_2 = - INV_9 * dRhoAB * ((3.0 + dRhoA * dInvRho) * dDeltaPrime
                                                     + (dDelta - 11.0) * dRhoB * dInvRho * dInvRho);
         const double term2A = - ABOmega * (term2A_1 + term2A_2);
 
         // for beta spin
+        const double term1B = dOmegaPrime_Omega * dRoundLYP_roundGammaBB;
         const double term2B_1 =   INV_9 * dRhoA * (1.0 - 3.0 * dDelta - (dDelta - 11.0) * dRhoB * dInvRho);
         const double term2B_2 = - INV_9 * dRhoAB * ((3.0 + dRhoB * dInvRho) * dDeltaPrime
                                                     + (dDelta - 11.0) * dRhoA * dInvRho * dInvRho);
         const double term2B = - ABOmega * (term2B_1 + term2B_2);
 
-        *pRoundRoundLYP_roundRhoARoundGammaAA = term1 + term2A;
-        *pRoundRoundLYP_roundRhoBRoundGammaBB = term1 + term2B;
+        *pRoundRoundLYP_roundRhoARoundGammaAA = term1A + term2A;
+        *pRoundRoundLYP_roundRhoBRoundGammaBB = term1B + term2B;
     }
 
     // roundRoundLYP_roundRhoARoundGammaAB
@@ -425,22 +425,22 @@ void DfFunctional_LYP::roundRoundLYP_roundRhoRoundGamma(const double dRho, const
 
     // dRoundRoundLYP_roundRhoXRoundGammaBB
     {
-        const double term1 = dOmegaPrime_Omega * dRoundLYP_roundGammaBB;
-
+        const double term1A = dOmegaPrime_Omega * dRoundLYP_roundGammaBB;
         const double term2A_1 =   INV_9 * dRhoB * (1.0 - 3.0 * dDelta - (dDelta - 11.0) * dRhoB * dInvRho);
         const double term2A_2 = - INV_9 * dRhoAB * ((3.0 + dRhoB * dInvRho) * dDeltaPrime
                                                     - (dDelta - 11.0) * dRhoB * dInvRho * dInvRho);
         const double term2A_3 = - 2.0 * dRhoA;
         const double term2A = - ABOmega * (term2A_1 + term2A_2 + term2A_3);
 
+        const double term1B = dOmegaPrime_Omega * dRoundLYP_roundGammaAA;
         const double term2B_1 = INV_9 * dRhoA * (1.0 - 3.0 * dDelta - (dDelta - 11.0) * dRhoA * dInvRho);
         const double term2B_2 = - INV_9 * dRhoAB * ((3.0 + dRhoA * dInvRho) * dDeltaPrime
                                                     - (dDelta - 11.0) * dRhoA * dInvRho * dInvRho);
         const double term2B_3 = - 2.0 * dRhoB;
         const double term2B = - ABOmega * (term2B_1 + term2B_2 + term2B_3);
 
-        *pRoundRoundLYP_roundRhoARoundGammaBB = term1 + term2A;
-        *pRoundRoundLYP_roundRhoBRoundGammaAA = term1 + term2B;
+        *pRoundRoundLYP_roundRhoARoundGammaBB = term1A + term2A;
+        *pRoundRoundLYP_roundRhoBRoundGammaAA = term1B + term2B;
     }
 }
 

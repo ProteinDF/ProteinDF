@@ -6,9 +6,9 @@
 #include <cassert>
 
 #include "CnError.h"
-#include "FileX.h"
 #include "DfObject.h"
 #include "TlTime.h"
+#include "TlFile.h"
 #include "TlUtils.h"
 
 // interface
@@ -219,10 +219,7 @@ Vector DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getTalpha(con
     Vector t_alpha(this->m_nNumOfAux);
     const std::string sFileName = this->getTalphaPath(runType, iteration);
 
-    // if (FileX::isExist(sFileName) == true) {
-        t_alpha.load(sFileName);
-    // }
-
+    t_alpha.load(sFileName);
     return t_alpha;
 }
 
@@ -282,7 +279,7 @@ SymmetricMatrix DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getP
     SymmetricMatrix P(this->m_nNumOfAOs);
     const std::string sFileName = TlUtils::format("fl_Work/fl_Mtr_P1pq.matrix.roks%d", nIteration);
 
-    if (FileX::isExist(sFileName) == true) {
+    if (TlFile::isExist(sFileName) == true) {
         P.load(sFileName);
     }
 
@@ -296,7 +293,7 @@ SymmetricMatrix DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getP
     SymmetricMatrix P(this->m_nNumOfAOs);
     const std::string sFileName = TlUtils::format("fl_Work/fl_Mtr_P2pq.matrix.roks%d", nIteration);
 
-    if (FileX::isExist(sFileName) == true) {
+    if (TlFile::isExist(sFileName) == true) {
         P.load(sFileName);
     }
 

@@ -3,7 +3,6 @@
 #endif // HAVE_CONFIG_H
 
 #include "DfInitialGuess_Parallel.h"
-#include "DfInitialguess.h"
 #include "DfInitialGuessHarris_Parallel.h"
 #include "DfInitialGuessHuckel_Parallel.h"
 #include "DfDmatrix_Parallel.h"
@@ -16,16 +15,6 @@ DfInitialGuess_Parallel::DfInitialGuess_Parallel(TlSerializeData* pPdfParam)
 
 DfInitialGuess_Parallel::~DfInitialGuess_Parallel()
 {
-}
-
-void DfInitialGuess_Parallel::createRho()
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        DfInitialguess diguess(this->pPdfParam_);
-        diguess.dfGusMain();
-    }
-    rComm.barrier();
 }
 
 void DfInitialGuess_Parallel::createInitialGuessUsingLCAO(const RUN_TYPE runType)

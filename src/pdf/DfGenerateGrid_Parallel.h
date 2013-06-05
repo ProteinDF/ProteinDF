@@ -12,9 +12,11 @@ protected:
     virtual void logger(const std::string& str) const;
 
     virtual void makeTable();
-    virtual void generateGrid();
 
-    void generateGrid_DC();
+    virtual TlMatrix getOMatrix();
+
+    virtual void generateGrid(const TlMatrix& O);
+    void generateGrid_DC(const TlMatrix& O);
 
     // TODO: implement master-slave model
     //void generateGrid_MS();

@@ -1,9 +1,8 @@
 #include <cmath>
 
 #include "DfTotalEnergy.h"
-#include "DfEri.h"
-#include "DfOverlap.h"
-#include "DfEri2.h"
+#include "DfEriX.h"
+#include "DfOverlapX.h"
 #include "DfXCFunctional.h"
 
 #include "Fl_Geometry.h"
@@ -25,7 +24,7 @@ DfTotalEnergy::~DfTotalEnergy()
 
 void DfTotalEnergy::exec()
 {
-    this->exec_template<DfOverlap, DfEri, TlSymmetricMatrix, TlVector>();
+    this->exec_template<DfOverlapX, DfEriX, TlSymmetricMatrix, TlVector>();
 }
 
 
@@ -165,17 +164,17 @@ void DfTotalEnergy::calculate_real_energy()
 }
 
 
-DfEri* DfTotalEnergy::getDfEri() const
+DfEriX* DfTotalEnergy::getDfEriX() const
 {
-    DfEri* pDfEri = new DfEri(this->pPdfParam_);
+    DfEriX* pDfEri = new DfEriX(this->pPdfParam_);
 
     return pDfEri;
 }
 
 
-DfOverlap* DfTotalEnergy::getDfOverlap() const
+DfOverlapX* DfTotalEnergy::getDfOverlapX() const
 {
-    DfOverlap* pDfOverlap = new DfOverlap(this->pPdfParam_);
+    DfOverlapX* pDfOverlap = new DfOverlapX(this->pPdfParam_);
 
     return pDfOverlap;
 }

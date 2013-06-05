@@ -523,32 +523,14 @@ void DfCalcGridX::getRhoAtGridPoint(const TlMatrixObject& P,
                                     double* pGradRhoAY,
                                     double* pGradRhoAZ)
 {
-    //const double densityCutOffValue = this->m_densityCutOffValueA;
-    const double densityCutOffValue = 1.0E-16;;
+    const double densityCutOffValue = 1.0E-16;
     double dRho = 0.0;
     double dGradRhoX = 0.0;
     double dGradRhoY = 0.0;
     double dGradRhoZ = 0.0;
 
-    // 密度行列のループ(index = p)の最大を求める
-    // double value = std::sqrt(densityCutOffValue);
-    // if (aGradPhiX.size() > 0) {
-    //     value = std::min(value, std::fabs(aGradPhiX[0].value));
-    // }
-    // if (aGradPhiY.size() > 0) {
-    //     value = std::min(value, std::fabs(aGradPhiY[0].value));
-    // }
-    // if (aGradPhiZ.size() > 0) {
-    //     value = std::min(value, std::fabs(aGradPhiZ[0].value));
-    // }
-
-    // std::size_t max_q = aPhi.size();
-    // std::size_t max_qx = aGradPhiX.size();
-    // std::size_t max_qy = aGradPhiY.size();
-    // std::size_t max_qz = aGradPhiZ.size();
-    double value = 1.0E-16;
     std::vector<WFGrid>::const_iterator pEnd = std::upper_bound(aPhi.begin(), aPhi.end(),
-                                                                WFGrid(0, value),
+                                                                WFGrid(0, densityCutOffValue),
                                                                 WFGrid_sort_functional());
     const std::size_t max_p = std::distance(aPhi.begin(), pEnd);
     for (std::size_t p = 0; p < max_p; ++p) {
@@ -559,23 +541,12 @@ void DfCalcGridX::getRhoAtGridPoint(const TlMatrixObject& P,
         // 高速化
         const TlVector P_row = P.getRowVector(nOrb_p);
 
-        dRho += P_row[nOrb_p] * phi_p * phi_p;
-
-        std::vector<WFGrid>::const_iterator qEnd = std::upper_bound(aPhi.begin() + p +1,
-                                                                    aPhi.end(),
-                                                                    WFGrid(0, cutValue),
-                                                                    WFGrid_sort_functional());
-        const std::size_t max_q = std::distance(aPhi.begin(), qEnd);
-        for (std::size_t q = p + 1; q < max_q; ++q) {
+        for (std::size_t q = 0; q < max_p; ++q) {
             const std::size_t nOrb_q = aPhi[q].index;
             const double phi_q = aPhi[q].value;
-            dRho += 2.0 * P_row[nOrb_q] * phi_p * phi_q;
+            dRho += P_row[nOrb_q] * phi_p * phi_q;
         }
 
-        // std::vector<WFGrid>::const_iterator qxEnd = std::upper_bound(aGradPhiX.begin(),
-        //                                                              aGradPhiX.begin() + max_qx,
-        //                                                              WFGrid(0, cutValue),
-        //                                                              WFGrid_sort_functional());
         std::vector<WFGrid>::const_iterator qxEnd = std::upper_bound(aGradPhiX.begin(),
                                                                      aGradPhiX.end(),
                                                                      WFGrid(0, cutValue),
@@ -587,10 +558,6 @@ void DfCalcGridX::getRhoAtGridPoint(const TlMatrixObject& P,
             dGradRhoX += P_row[nOrb_q] * phi_p * phi_q;
         }
 
-        // std::vector<WFGrid>::const_iterator qyEnd = std::upper_bound(aGradPhiY.begin(),
-        //                                                              aGradPhiY.begin() + max_qy,
-        //                                                              WFGrid(0, cutValue),
-        //                                                              WFGrid_sort_functional());
         std::vector<WFGrid>::const_iterator qyEnd = std::upper_bound(aGradPhiY.begin(),
                                                                      aGradPhiY.end(),
                                                                      WFGrid(0, cutValue),
@@ -602,10 +569,6 @@ void DfCalcGridX::getRhoAtGridPoint(const TlMatrixObject& P,
             dGradRhoY += P_row[nOrb_q] * phi_p * phi_q;
         }
 
-        // std::vector<WFGrid>::const_iterator qzEnd = std::upper_bound(aGradPhiZ.begin(),
-        //                                                              aGradPhiZ.begin() + max_qz,
-        //                                                              WFGrid(0, cutValue),
-        //                                                              WFGrid_sort_functional());
         std::vector<WFGrid>::const_iterator qzEnd = std::upper_bound(aGradPhiZ.begin(),
                                                                      aGradPhiZ.end(),
                                                                      WFGrid(0, cutValue),
@@ -619,9 +582,9 @@ void DfCalcGridX::getRhoAtGridPoint(const TlMatrixObject& P,
     }
 
     *pRhoA = dRho;
-    *pGradRhoAX = dGradRhoX;
-    *pGradRhoAY = dGradRhoY;
-    *pGradRhoAZ = dGradRhoZ;
+    *pGradRhoAX = 2.0 * dGradRhoX;
+    *pGradRhoAY = 2.0 * dGradRhoY;
+    *pGradRhoAZ = 2.0 * dGradRhoZ;
 }
 
 
@@ -733,13 +696,13 @@ void DfCalcGridX::buildFock(const double dRhoA,
                 std::upper_bound(aPhi.begin(), aPhi.end(),
                                  WFGrid(0, dCutOffValue / (dCoeff2_AX * aGradPhiX[0].value)),
                                  WFGrid_sort_functional());
-
-        this->buildFock(aPhi.begin(), pEnd, aGradPhiX.begin(), aGradPhiX.end(),
-                        dCoeff2_AX, dCutOffValue, pF);
-        this->buildFock(aGradPhiX.begin(), aGradPhiX.end(), aPhi.begin(), pEnd,
-                        dCoeff2_AX, dCutOffValue, pF);
+            
+            this->buildFock(aPhi.begin(), pEnd, aGradPhiX.begin(), aGradPhiX.end(),
+                            dCoeff2_AX, dCutOffValue, pF);
+            this->buildFock(aGradPhiX.begin(), aGradPhiX.end(), aPhi.begin(), pEnd,
+                            dCoeff2_AX, dCutOffValue, pF);
         }
-
+        
         // phi v.s. grad-phi(y)
         if ((aGradPhiY.size() > 0) &&
             (std::fabs(dCoeff2_AY * aPhi_0 * aGradPhiY[0].value) > dCutOffValue)) {
@@ -747,7 +710,7 @@ void DfCalcGridX::buildFock(const double dRhoA,
                 std::upper_bound(aPhi.begin(), aPhi.end(),
                                  WFGrid(0, dCutOffValue / (dCoeff2_AY * aGradPhiY[0].value)),
                                  WFGrid_sort_functional());
-        
+            
             this->buildFock(aPhi.begin(), pEnd, aGradPhiY.begin(), aGradPhiY.end(),
                             dCoeff2_AY, dCutOffValue, pF);
             this->buildFock(aGradPhiY.begin(), aGradPhiY.end(), aPhi.begin(), pEnd,
@@ -955,52 +918,52 @@ void DfCalcGridX::gridDensity(const TlSymmetricMatrix& P,
 }
 
 
-void DfCalcGridX::calcForceFromXC(const TlSymmetricMatrix& P,
-                                  DfFunctional_GGA* pFunctional,
-                                  TlVector* pFx, TlVector* pFy, TlVector* pFz)
-{
-    const int numOfAtoms = this->numOfRealAtoms_;
-    const int numOfAOs = this->m_nNumOfAOs;
+// void DfCalcGridX::calcForceFromXC(const TlSymmetricMatrix& P,
+//                                   DfFunctional_GGA* pFunctional,
+//                                   TlVector* pFx, TlVector* pFy, TlVector* pFz)
+// {
+//     const int numOfAtoms = this->numOfRealAtoms_;
+//     const int numOfAOs = this->m_nNumOfAOs;
 
-    // grid derivative
-    // to implement!
+//     // grid derivative
+//     // to implement!
     
-    // functional derivative
-    TlMatrix GX(numOfAOs, numOfAtoms);
-    TlMatrix GY(numOfAOs, numOfAtoms);
-    TlMatrix GZ(numOfAOs, numOfAtoms);
-    this->makeGammaMatrix(P, pFunctional,
-                          &GX, &GY, &GZ);
+//     // functional derivative
+//     TlMatrix GX(numOfAOs, numOfAtoms);
+//     TlMatrix GY(numOfAOs, numOfAtoms);
+//     TlMatrix GZ(numOfAOs, numOfAtoms);
+//     this->makeGammaMatrix(P, pFunctional,
+//                           &GX, &GY, &GZ);
 
-    for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
-        double term1X = 0.0;
-        double term1Y = 0.0;
-        double term1Z = 0.0;
-        double term2X = 0.0;
-        double term2Y = 0.0;
-        double term2Z = 0.0;
+//     for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
+//         double term1X = 0.0;
+//         double term1Y = 0.0;
+//         double term1Z = 0.0;
+//         double term2X = 0.0;
+//         double term2Y = 0.0;
+//         double term2Z = 0.0;
 
-        for (int aoIndex = 0; aoIndex < numOfAOs; ++aoIndex) {
-            if (this->m_tlOrbInfo.getAtomIndex(aoIndex) != atomIndex) {
-                term1X += GX.get(atomIndex, aoIndex);
-                term1Y += GY.get(atomIndex, aoIndex);
-                term1Z += GZ.get(atomIndex, aoIndex);
-            } else {
-                for (int atomIndex2 = 0; atomIndex2 < numOfAtoms; ++atomIndex2) {
-                    if (atomIndex != atomIndex2) {
-                        term2X += GX.get(atomIndex2, aoIndex);
-                        term2Y += GY.get(atomIndex2, aoIndex);
-                        term2Z += GZ.get(atomIndex2, aoIndex);
-                    }
-                }
-            }
-        }
+//         for (int aoIndex = 0; aoIndex < numOfAOs; ++aoIndex) {
+//             if (this->m_tlOrbInfo.getAtomIndex(aoIndex) != atomIndex) {
+//                 term1X += GX.get(atomIndex, aoIndex);
+//                 term1Y += GY.get(atomIndex, aoIndex);
+//                 term1Z += GZ.get(atomIndex, aoIndex);
+//             } else {
+//                 for (int atomIndex2 = 0; atomIndex2 < numOfAtoms; ++atomIndex2) {
+//                     if (atomIndex != atomIndex2) {
+//                         term2X += GX.get(atomIndex2, aoIndex);
+//                         term2Y += GY.get(atomIndex2, aoIndex);
+//                         term2Z += GZ.get(atomIndex2, aoIndex);
+//                     }
+//                 }
+//             }
+//         }
 
-        pFx->set(atomIndex, (term1X - term2X));
-        pFy->set(atomIndex, (term1Y - term2Y));
-        pFz->set(atomIndex, (term1Z - term2Z));
-    }
-}
+//         pFx->set(atomIndex, (term1X - term2X));
+//         pFy->set(atomIndex, (term1Y - term2Y));
+//         pFz->set(atomIndex, (term1Z - term2Z));
+//     }
+// }
 
 
 /// Brown et al., J. Comput. Chem., 31, 2008 (2010).
@@ -1015,6 +978,7 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
     assert(pGY != NULL);
     assert(pGZ != NULL);
 
+    const double densityCutOffValue = this->m_densityCutOffValueA;
     TlMatrix gridMat = this->getGridMatrix<TlMatrix>(this->m_nIteration);
 
     const int numOfAtoms = this->numOfRealAtoms_;
@@ -1026,7 +990,7 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
 
     for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
         // get grid information
-        TlMatrix atomGridMat = this->selectGridMatrixByAtom(gridMat, atomIndex);
+        const TlMatrix atomGridMat = this->selectGridMatrixByAtom(gridMat, atomIndex);
         const index_type numOfGrids = atomGridMat.getNumOfRows();
         std::vector<double> rhoA(numOfGrids, 0.0);
         std::vector<double> gradRhoAX(numOfGrids, 0.0);
@@ -1035,7 +999,6 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
         // 電子密度を計算する
         // LDAではSCF中に微分を計算しないため
         for (int gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
-            //const TlPosition gridPosition = grids[gridIndex].position;
             const TlPosition gridPosition(atomGridMat.get(gridIndex, GM_X),
                                           atomGridMat.get(gridIndex, GM_Y),
                                           atomGridMat.get(gridIndex, GM_Z));
@@ -1054,10 +1017,6 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
             double gridGradRhoAZ = 0.0;
             this->getRhoAtGridPoint(P, phis, gradPhisX, gradPhisY, gradPhisZ,
                                     &gridRhoA, &gridGradRhoAX, &gridGradRhoAY, &gridGradRhoAZ);
-            // gridRhoA *= 0.5;
-            // gridGradRhoAX *= 0.5;
-            // gridGradRhoAY *= 0.5;
-            // gridGradRhoAZ *= 0.5;
             
             rhoA[gridIndex] = gridRhoA;
             gradRhoAX[gridIndex] = gridGradRhoAX;
@@ -1074,48 +1033,49 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
         std::vector<WFGrid> gradEtasY(numOfGrids);
         std::vector<WFGrid> gradEtasZ(numOfGrids);
         for (int gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
-            //const TlPosition gridPosition = grids[gridIndex].position;
             const TlPosition gridPosition(atomGridMat.get(gridIndex, GM_X),
                                           atomGridMat.get(gridIndex, GM_Y),
                                           atomGridMat.get(gridIndex, GM_Z));
             this->getPhiTable(gridPosition, etas, gradEtasX, gradEtasY, gradEtasZ);
             
-            //const double weight = grids[gridIndex].weight;
-            const double weight = gridMat.get(gridIndex, GM_WEIGHT);
+            const double weight = atomGridMat.get(gridIndex, GM_WEIGHT);
             const double gridRhoA = rhoA[gridIndex];
             double roundF_roundRhoA;
-            pFunctional->getDerivativeFunctional(gridRhoA, &roundF_roundRhoA);
-            
-            const double coef = weight * roundF_roundRhoA;
-            const int numOfEtas = etas.size();
-            const int numOfGradEtasX = gradEtasX.size();
-            const int numOfGradEtasY = gradEtasY.size();
-            const int numOfGradEtasZ = gradEtasZ.size();
-            for (int i = 0; i < numOfEtas; ++i) {
-                const double eta = etas[i].value;
-                const index_type q = etas[i].index;
-                const double coef_eta = coef * eta;
+
+            if (gridRhoA > densityCutOffValue) {
+                pFunctional->getDerivativeFunctional(gridRhoA, &roundF_roundRhoA);
                 
-                for (int j = 0; j < numOfGradEtasX; ++j) {
-                    const double etaDash = gradEtasX[j].value;
-                    const index_type p = gradEtasX[j].index;
-                    
-                    const double value = coef_eta * etaDash;
-                    Gx.add(p, q, value);
-                }
-                for (int j = 0; j < numOfGradEtasY; ++j) {
-                    const double etaDash = gradEtasY[j].value;
-                    const index_type p = gradEtasY[j].index;
-                    
-                    const double value = coef_eta * etaDash;
-                    Gy.add(p, q, value);
-                }
-                for (int j = 0; j < numOfGradEtasZ; ++j) {
-                    const double etaDash = gradEtasZ[j].value;
-                    const index_type p = gradEtasZ[j].index;
-                    
-                    const double value = coef_eta * etaDash;
-                    Gz.add(p, q, value);
+                const double coef = weight * roundF_roundRhoA;
+                const int numOfEtas = etas.size();
+                const int numOfGradEtasX = gradEtasX.size();
+                const int numOfGradEtasY = gradEtasY.size();
+                const int numOfGradEtasZ = gradEtasZ.size();
+                for (int i = 0; i < numOfEtas; ++i) {
+                    const double eta = etas[i].value;
+                    const index_type q = etas[i].index;
+                    const double coef_eta = coef * eta;
+                
+                    for (int j = 0; j < numOfGradEtasX; ++j) {
+                        const double etaDash = gradEtasX[j].value;
+                        const index_type p = gradEtasX[j].index;
+                        
+                        const double value = coef_eta * etaDash;
+                        Gx.add(p, q, value);
+                    }
+                    for (int j = 0; j < numOfGradEtasY; ++j) {
+                        const double etaDash = gradEtasY[j].value;
+                        const index_type p = gradEtasY[j].index;
+                        
+                        const double value = coef_eta * etaDash;
+                        Gy.add(p, q, value);
+                    }
+                    for (int j = 0; j < numOfGradEtasZ; ++j) {
+                        const double etaDash = gradEtasZ[j].value;
+                        const index_type p = gradEtasZ[j].index;
+                        
+                        const double value = coef_eta * etaDash;
+                        Gz.add(p, q, value);
+                    }
                 }
             }
         }
@@ -1215,13 +1175,11 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
         std::vector<WFGrid> gradEtasY(numOfGrids);
         std::vector<WFGrid> gradEtasZ(numOfGrids);
         for (int gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
-            //const TlPosition gridPosition = grids[gridIndex].position;
             const TlPosition gridPosition(atomGridMat.get(gridIndex, GM_X),
                                           atomGridMat.get(gridIndex, GM_Y),
                                           atomGridMat.get(gridIndex, GM_Z));
             this->getPhiTable(gridPosition, etas, gradEtasX, gradEtasY, gradEtasZ);
             
-            //const double weight = grids[gridIndex].weight;
             const double weight = atomGridMat.get(gridIndex, GM_WEIGHT);
             const double gridRhoA = rhoA[gridIndex];
             const double gridGradRhoAX = gradRhoAX[gridIndex];

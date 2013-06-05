@@ -1,6 +1,6 @@
 #include "Fl_Tbl_Fragment.h"
 #include "TlParameter.h"
-#include "FileX.h"
+#include "TlFile.h"
 #include "TlLogging.h"
 
 int  Fl_Tbl_Fragment :: flag = 0; // flag for Constructor
@@ -35,7 +35,7 @@ Fl_Tbl_Fragment::Fl_Tbl_Fragment(const Fl_Geometry& flGeom)
     if (flag == 0) {            // If the table was not written, write table.
         prepare();
 
-        if (FileX::isExist("fl_Table/FragmentTable") == false) {
+        if (TlFile::isExist("fl_Table/FragmentTable") == false) {
             this->makeTable();
         }
 
