@@ -426,31 +426,6 @@ void PdfUserInput::moleculeBasisSetOrbital(const std::string& str)
             sName = TlUtils::getWord(sLine);
         }
 
-        // 格納 ============================================================
-        // Fl_Db_Basis flDbBasis(sName);
-        // for (int i = 0; i < flDbBasis.getTotalcgto(); i++) {
-        //     Fl_Gto_Orbital::Cgto cgto;
-        //     cgto.basisName = sName;
-        //     cgto.Snum = 0;
-        //     cgto.Pnum = 0;
-        //     cgto.Dnum = 0;
-        //     cgto.atom = sAtom;
-        //     cgto.label = sLabel;
-        //     cgto.shell = flDbBasis.getShell(i);
-        //     cgto.scalefactor = flDbBasis.getScalefactor(i);
-
-        //     const int contraction = flDbBasis.getContraction(i);
-        //     cgto.pgto.resize(contraction);
-        //     for (int j = 0; j < contraction; j++) {
-        //         cgto.pgto[j].exponent = flDbBasis.getExpornent(i, j);
-        //         cgto.pgto[j].coefficient = flDbBasis.getCoefficient(i ,j);
-        //     }
-
-        //     Bas.set(dNumOfCgto, cgto);
-
-        //     dNumOfCgto++;
-        // }
-
         // store to serializeData
         std::string key = sAtom;
         if (sLabel != "") {
