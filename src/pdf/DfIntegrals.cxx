@@ -85,6 +85,7 @@ void DfIntegrals::main()
 
     // XC
     this->createCholeskyVectors_XC();
+    this->prepareGridFree();
     this->createGrids();
 
     // flush
@@ -96,6 +97,12 @@ DfCD* DfIntegrals::getDfCDObject()
 {
     DfCD *pDfCD = new DfCD(this->pPdfParam_);
     return pDfCD;
+}
+
+DfGridFreeXC* DfIntegrals::getDfGridFreeXCObject()
+{
+    DfGridFreeXC *pDfGridFreeXC = new DfGridFreeXC(this->pPdfParam_);
+    return pDfGridFreeXC;
 }
 
 DfXMatrix* DfIntegrals::getDfXMatrixObject()
@@ -287,6 +294,26 @@ void DfIntegrals::createCholeskyVectors()
     this->saveParam();
 }
 
+void DfIntegrals::prepareGridFree()
+{
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+
+    if (((calcState & DfIntegrals::GRID_FREE) == 0) && 
+        (this->isDualLevelGridFree_ == true)) {
+        this->outputStartTitle("prepare GridFree");
+        DfGridFreeXC *pDfGridFreeXC = this->getDfGridFreeXCObject();
+        pDfGridFreeXC->buildDualLevelOp();
+        
+        delete pDfGridFreeXC;
+        pDfGridFreeXC = NULL;
+
+        this->outputEndTitle();
+    }
+
+    calcState |= DfIntegrals::GRID_FREE;
+    (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+    this->saveParam();
+}
 
 void DfIntegrals::createXMatrix()
 {

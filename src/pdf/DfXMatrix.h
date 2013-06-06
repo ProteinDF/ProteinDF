@@ -16,11 +16,11 @@ public:
 public:
     virtual void buildX();
 
-protected:
     template<typename SymmetricMatrixType, typename MatrixType>
     void canonicalOrthogonalize(const SymmetricMatrixType& S,
                                 MatrixType* pX, MatrixType* pXinv);
 
+protected:
     template<typename MatrixType>
     void check_X(const MatrixType& X,
                  const MatrixType& Xinv,
@@ -94,8 +94,8 @@ void DfXMatrix::canonicalOrthogonalize(const SymmetricMatrixType& S,
         sqrt_s.save("sqrt_s.vct");
     }
 
-    this->loggerTime("generate X matrix");
-    {
+    if (pX != NULL) {
+        this->loggerTime("generate X matrix");
         SymmetricMatrixType S12(rest);
         for (index_type i = 0; i < rest; ++i) {
             S12.set(i, i, (1.0 / sqrt_s.get(i)));
@@ -104,8 +104,9 @@ void DfXMatrix::canonicalOrthogonalize(const SymmetricMatrixType& S,
         *pX = U * S12;
     }
 
-    this->loggerTime("generate X^-1 matrix");
-    {
+    if (pXinv != NULL) {
+        this->loggerTime("generate X^-1 matrix");
+
         SymmetricMatrixType S12(rest);
         for (index_type i = 0; i < rest; ++i) {
             S12.set(i, i, sqrt_s.get(i));

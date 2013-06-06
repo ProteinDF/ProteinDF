@@ -106,6 +106,12 @@ protected:
     std::string getFprimeMatrixPath(RUN_TYPE runType, int iteration, const std::string& fragment = "");
     std::string getCprimeMatrixPath(RUN_TYPE runType, int iteration, const std::string& fragment = "");
 
+    // GridFree
+    std::string getGfSMatrixPath() const;
+    std::string getGfStildeMatrixPath() const;
+    std::string getGfOmegaMatrixPath() const;
+    std::string getGfVMatrixPath() const;
+
     std::string getRhoPath(RUN_TYPE nRunType, int nIteration) const;
     std::string getMyuPath(RUN_TYPE nRunType, int nIteration) const;
     std::string getNyuPath(RUN_TYPE nRunType, int nIteration) const;
@@ -194,7 +200,35 @@ protected:
     SymmetricMatrixType getDiffDensityMatrix(const RUN_TYPE runType,
                                              const int iteration);
 
+    // GridFree S matrix -------------------------------------------------------
+    template<class SymmetricMatrixType>
+    void saveGfSMatrix(const SymmetricMatrixType& gfS);
 
+    template<class SymmetricMatrixType>
+    SymmetricMatrixType getGfSMatrix();
+
+    // GridFree S~ matrix -------------------------------------------------------
+    template<class MatrixType>
+    void saveGfStildeMatrix(const MatrixType& gfStilde);
+
+    template<class MatrixType>
+    MatrixType getGfStildeMatrix();
+
+    // GridFree omega matrix ---------------------------------------------------
+    template<class MatrixType>
+    void saveGfOmegaMatrix(const MatrixType& GfOmega);
+
+    template<class MatrixType>
+    MatrixType getGfOmegaMatrix();
+
+    // GridFree V matrxi -------------------------------------------------------
+    template<class MatrixType>
+    void saveGfVMatrix(const MatrixType& gfV);
+
+    template<class MatrixType>
+    MatrixType getGfVMatrix();
+
+    
     template<class VectorType>
     void saveRho(const RUN_TYPE runType, const int iteration,
                  const VectorType& rho);
@@ -428,6 +462,7 @@ protected:
     bool m_bIsUpdateXC; /// XC項をupdate法で計算する(true)
     bool enableGrimmeDispersion_; /// Grimmeの経験的分散力補正を計算するかどうか
     bool isGridFree_;  /// Grid-Free法を使用する(true)
+    bool isDualLevelGridFree_; /// Grid-Free法を使用する場合、専用の基底関数を使用する
 
     //bool isRI_J_; /// RI_J法を用いる(true)
     bool isRI_K_; /// RI-K法を用いる(true)
@@ -1086,6 +1121,85 @@ SymmetricMatrixType DfObject::getPOMatrix(const int iteration)
     return PO;
 }
 
+template<class SymmetricMatrixType>
+void DfObject::saveGfSMatrix(const SymmetricMatrixType& gfS)
+{
+    const std::string path = this->getGfSMatrixPath();
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, gfS, true);
+    } else {
+        gfS.save(path);
+    }
+}
+
+template<class SymmetricMatrixType>
+SymmetricMatrixType DfObject::getGfSMatrix()
+{
+    SymmetricMatrixType gfS;
+    const std::string path = this->getGfSMatrixPath();
+    gfS = this->matrixCache_.get<SymmetricMatrixType>(path);
+    return gfS;
+}
+
+template<class MatrixType>
+void DfObject::saveGfStildeMatrix(const MatrixType& gfStilde)
+{
+    const std::string path = this->getGfStildeMatrixPath();
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, gfStilde, true);
+    } else {
+        gfStilde.save(path);
+    }
+}
+
+template<class MatrixType>
+MatrixType DfObject::getGfStildeMatrix()
+{
+    MatrixType gfStilde;
+    const std::string path = this->getGfStildeMatrixPath();
+    gfStilde = this->matrixCache_.get<MatrixType>(path);
+    return gfStilde;
+}
+
+template<class MatrixType>
+void DfObject::saveGfOmegaMatrix(const MatrixType& gfOmega)
+{
+    const std::string path = this->getGfOmegaMatrixPath();
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, gfOmega, true);
+    } else {
+        gfOmega.save(path);
+    }
+}
+
+template<class MatrixType>
+MatrixType DfObject::getGfOmegaMatrix()
+{
+    MatrixType gfOmega;
+    const std::string path = this->getGfOmegaMatrixPath();
+    gfOmega = this->matrixCache_.get<MatrixType>(path);
+    return gfOmega;
+}
+
+template<class MatrixType>
+void DfObject::saveGfVMatrix(const MatrixType& gfV)
+{
+    const std::string path = this->getGfVMatrixPath();
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, gfV, true);
+    } else {
+        gfV.save(path);
+    }
+}
+
+template<class MatrixType>
+MatrixType DfObject::getGfVMatrix()
+{
+    MatrixType gfV;
+    const std::string path = this->getGfVMatrixPath();
+    gfV = this->matrixCache_.get<MatrixType>(path);
+    return gfV;
+}
 
 template<class VectorType>
 void DfObject::saveNalpha(const VectorType& Na)
