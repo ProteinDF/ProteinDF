@@ -3,6 +3,10 @@
 
 DfFunctional_B88LYP::DfFunctional_B88LYP()
 {
+    this->numOfFunctionalTerms_ = 
+        this->m_Becke88.getNumOfFunctionalTerms() + this->m_LYP.getNumOfFunctionalTerms();
+    this->numOfDerivativeFunctionalTerms_ = 
+        this->m_Becke88.getNumOfDerivativeFunctionalTerms() + this->m_LYP.getNumOfDerivativeFunctionalTerms();
 }
 
 DfFunctional_B88LYP::~DfFunctional_B88LYP()
@@ -61,5 +65,72 @@ void DfFunctional_B88LYP::getDerivativeFunctional(const double dRhoA, const doub
 //   std::cerr << std::endl;
 }
 
+TlVector DfFunctional_B88LYP::getFunctionalTermCoef_GF()
+{
+    const int dim = this->getNumOfFunctionalTerms();
+    TlVector coef(dim);
+    for (int i = 0; i < dim; ++i) {
+        coef[i] = 1.0;
+    }
 
+    return coef;
+}
+
+TlVector DfFunctional_B88LYP::getDerivativeFunctionalTermCoef_GF()
+{
+    const int dim = this->getNumOfDerivativeFunctionalTerms();
+    TlVector coef(dim);
+    for (int i = 0; i < dim; ++i) {
+        coef[i] = 1.0;
+    }
+
+    return coef;
+}
+
+
+TlMatrix DfFunctional_B88LYP::getFunctionalCore(const double rhoA, 
+                                                const double rhoB,
+                                                const double xA,
+                                                const double xB)
+{
+    const TlMatrix x = this->m_Becke88.getFunctionalCore(rhoA, rhoB, xA, xB);
+    const TlMatrix c = this->m_LYP.getFunctionalCore(rhoA, rhoB, xA, xB);
+
+    const index_type numOfFunctionalTerms_X = this->m_Becke88.getNumOfFunctionalTerms();
+    const index_type numOfFunctionalTerms_C = this->m_LYP.getNumOfFunctionalTerms();
+    TlMatrix xc(F_DIM, this->getNumOfFunctionalTerms());
+    for (index_type i = 0; i < F_DIM; ++i) {
+        for (index_type j = 0; j < numOfFunctionalTerms_X; ++j) {
+            xc(i, j) = x(i, j);
+        }
+        for (index_type j = 0; j < numOfFunctionalTerms_C; ++j) {
+            xc(i, numOfFunctionalTerms_X + j) = c(i, j);
+        }
+    }
+
+    return xc;
+}
+
+TlMatrix DfFunctional_B88LYP::getDerivativeFunctionalCore(const double rhoA,
+                                                          const double rhoB,
+                                                          const double xA,
+                                                          const double xB)
+{
+    const TlMatrix x = this->m_Becke88.getDerivativeFunctionalCore(rhoA, rhoB, xA, xB);
+    const TlMatrix c = this->m_LYP.getDerivativeFunctionalCore(rhoA, rhoB, xA, xB);
+
+    const index_type numOfDerivativeFunctionalTerms_X = this->m_Becke88.getNumOfDerivativeFunctionalTerms();
+    const index_type numOfDerivativeFunctionalTerms_C = this->m_LYP.getNumOfDerivativeFunctionalTerms();
+    TlMatrix xc(D_DIM, this->getNumOfDerivativeFunctionalTerms());
+    for (index_type i = 0; i < D_DIM; ++i) {
+        for (index_type j = 0; j < numOfDerivativeFunctionalTerms_X; ++j) {
+            xc(i, j) = x(i, j);
+        }
+        for (index_type j = 0; j < numOfDerivativeFunctionalTerms_C; ++j) {
+            xc(i, numOfDerivativeFunctionalTerms_X + j) = c(i, j);
+        }
+    }
+
+    return xc;
+}
 

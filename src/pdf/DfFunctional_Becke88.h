@@ -2,6 +2,7 @@
 #define DFFUNCTIONAL_BECKE88_H
 
 #include "DfFunctional.h"
+#include "TlMatrix.h"
 
 class DfFunctional_Becke88 : public DfFunctional_GGA {
 public:
@@ -18,6 +19,19 @@ public:
     virtual void getDerivativeFunctional(double dRhoA, double dGammaAA,
                                          double* pRoundF_roundRhoA, double* pRoundF_roundGammaAA, double* pRoundF_roundGammaAB);
 
+
+public:
+    // for Grid-Free ===================================================
+    virtual TlMatrix getFunctionalCore(const double rhoA, 
+                                       const double rhoB,
+                                       const double xA,
+                                       const double xB);
+
+    virtual TlMatrix getDerivativeFunctionalCore(const double rhoA,
+                                                 const double rhoB,
+                                                 const double xA,
+                                                 const double xB);
+
 protected:
     double x(double dRho, double dGamma);
 
@@ -30,6 +44,9 @@ protected:
     static const double M_4_3;
     static const double G_PARAM;
     static const double BECKE_B;
+
+private:
+    friend class DfFunctional_B88LYP;
 };
 
 #endif // DFFUNCTIONAL_BECKE88_H

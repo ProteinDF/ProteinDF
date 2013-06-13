@@ -53,6 +53,15 @@ private:
     double omega_prime(const double dRho, const double dOmega);
     double delta_prime(const double dRho, const double dDelta);
 
+public:
+    virtual TlMatrix getFunctionalCore(const double rhoA, const double rhoB,
+                                       const double xA, const double xB);
+    virtual TlMatrix getDerivativeFunctionalCore(const double rhoA,
+                                                 const double rhoB,
+                                                 const double xA,
+                                                 const double xB);
+
+
 private:
     static const double TOLERANCE;
 

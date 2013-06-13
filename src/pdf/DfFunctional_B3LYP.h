@@ -23,6 +23,14 @@ public:
                                          double* pRoundF_roundRhoA, double* pRoundF_roundGammaAA, double* pRoundF_roundGammaAB);
 
 protected:
+    virtual TlMatrix getFunctionalCore(const double rhoA, const double rhoB,
+                                       const double xA, const double xB);
+    virtual TlMatrix getDerivativeFunctionalCore(const double rhoA,
+                                                 const double rhoB,
+                                                 const double xA,
+                                                 const double xB);
+
+protected:
     DfFunctional_Slater m_LDA;
     DfFunctional_Becke88_ExceptLDA m_B88;
     DfFunctional_VWN3 m_VWN;

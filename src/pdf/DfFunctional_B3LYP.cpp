@@ -7,9 +7,22 @@ const double DfFunctional_B3LYP::B88_COEF = 0.72;
 const double DfFunctional_B3LYP::VWN_COEF = 0.19;
 const double DfFunctional_B3LYP::LYP_COEF = 0.81;
 
-
 DfFunctional_B3LYP::DfFunctional_B3LYP()
 {
+    const index_type numOfFunctionalTerms_LDA = this->m_LDA.getNumOfFunctionalTerms();
+    const index_type numOfFunctionalTerms_B88 = this->m_B88.getNumOfFunctionalTerms();
+    const index_type numOfFunctionalTerms_VWN = this->m_VWN.getNumOfFunctionalTerms();
+    const index_type numOfFunctionalTerms_LYP = this->m_LYP.getNumOfFunctionalTerms();
+    this->numOfFunctionalTerms_ = 
+        numOfFunctionalTerms_LDA + numOfFunctionalTerms_B88 + numOfFunctionalTerms_VWN + numOfFunctionalTerms_LYP;
+
+    const index_type numOfDerivativeFunctionalTerms_LDA = this->m_LDA.getNumOfDerivativeFunctionalTerms();
+    const index_type numOfDerivativeFunctionalTerms_B88 = this->m_B88.getNumOfDerivativeFunctionalTerms();
+    const index_type numOfDerivativeFunctionalTerms_VWN = this->m_VWN.getNumOfDerivativeFunctionalTerms();
+    const index_type numOfDerivativeFunctionalTerms_LYP = this->m_LYP.getNumOfDerivativeFunctionalTerms();
+    this->numOfDerivativeFunctionalTerms_ = 
+          numOfDerivativeFunctionalTerms_LDA + numOfDerivativeFunctionalTerms_B88 
+        + numOfDerivativeFunctionalTerms_VWN + numOfDerivativeFunctionalTerms_LYP;
 }
 
 DfFunctional_B3LYP::~DfFunctional_B3LYP()
@@ -132,4 +145,77 @@ void DfFunctional_B3LYP::getDerivativeFunctional(const double dRhoA, const doubl
     *pRoundF_roundGammaAB = B88_COEF * dRoundF_roundGammaAB_B88 + LYP_COEF * dRoundF_roundGammaAB_LYP;
 }
 
+TlMatrix DfFunctional_B3LYP::getFunctionalCore(const double rhoA, 
+                                               const double rhoB,
+                                               const double xA,
+                                               const double xB)
+{
+    const TlMatrix x_lda = this->m_LDA.getFunctionalCore(rhoA, rhoB);
+    const TlMatrix x_b88 = this->m_B88.getFunctionalCore(rhoA, rhoB, xA, xB);
+    const TlMatrix c_vwn = this->m_VWN.getFunctionalCore(rhoA, rhoB);
+    const TlMatrix c_lyp = this->m_LYP.getFunctionalCore(rhoA, rhoB, xA, xB);
+
+    const index_type numOfFunctionalTerms_LDA = this->m_LDA.getNumOfFunctionalTerms();
+    const index_type numOfFunctionalTerms_B88 = this->m_B88.getNumOfFunctionalTerms();
+    const index_type numOfFunctionalTerms_VWN = this->m_VWN.getNumOfFunctionalTerms();
+    const index_type numOfFunctionalTerms_LYP = this->m_LYP.getNumOfFunctionalTerms();
+    TlMatrix xc(F_DIM, this->getNumOfFunctionalTerms());
+    for (index_type i = 0; i < F_DIM; ++i) {
+        index_type base = 0;
+        for (index_type j = 0; j < numOfFunctionalTerms_LDA; ++j) {
+            xc(i, j) = DfFunctional_B3LYP::LDA_COEF * x_lda(i, j);
+        }
+        base += numOfFunctionalTerms_LDA;
+        for (index_type j = 0; j < numOfFunctionalTerms_B88; ++j) {
+            xc(i, base + j) = DfFunctional_B3LYP::B88_COEF * x_b88(i, j);
+        }
+        base += numOfFunctionalTerms_B88;
+        for (index_type j = 0; j < numOfFunctionalTerms_VWN; ++j) {
+            xc(i, base + j) = DfFunctional_B3LYP::VWN_COEF * c_vwn(i, j);
+        }
+        base += numOfFunctionalTerms_VWN;
+        for (index_type j = 0; j < numOfFunctionalTerms_LYP; ++j) {
+            xc(i, base + j) = DfFunctional_B3LYP::LYP_COEF * c_lyp(i, j);
+        }
+    }
+
+    return xc;
+}
+
+TlMatrix DfFunctional_B3LYP::getDerivativeFunctionalCore(const double rhoA,
+                                                         const double rhoB,
+                                                         const double xA,
+                                                         const double xB)
+{
+    const TlMatrix x_lda = this->m_LDA.getDerivativeFunctionalCore(rhoA, rhoB);
+    const TlMatrix x_b88 = this->m_B88.getDerivativeFunctionalCore(rhoA, rhoB, xA, xB);
+    const TlMatrix c_vwn = this->m_VWN.getDerivativeFunctionalCore(rhoA, rhoB);
+    const TlMatrix c_lyp = this->m_LYP.getDerivativeFunctionalCore(rhoA, rhoB, xA, xB);
+    
+    const index_type numOfDerivativeFunctionalTerms_LDA = this->m_LDA.getNumOfDerivativeFunctionalTerms();
+    const index_type numOfDerivativeFunctionalTerms_B88 = this->m_B88.getNumOfDerivativeFunctionalTerms();
+    const index_type numOfDerivativeFunctionalTerms_VWN = this->m_VWN.getNumOfDerivativeFunctionalTerms();
+    const index_type numOfDerivativeFunctionalTerms_LYP = this->m_LYP.getNumOfDerivativeFunctionalTerms();
+    TlMatrix xc(D_DIM, this->getNumOfDerivativeFunctionalTerms());
+    for (index_type i = 0; i < D_DIM; ++i) {
+        index_type base = 0;
+        for (index_type j = 0; j < numOfDerivativeFunctionalTerms_LDA; ++j) {
+            xc(i, j) = DfFunctional_B3LYP::LDA_COEF * x_lda(i, j);
+        }
+        base += numOfDerivativeFunctionalTerms_LDA;
+        for (index_type j = 0; j < numOfDerivativeFunctionalTerms_B88; ++j) {
+            xc(i, base + j) = DfFunctional_B3LYP::B88_COEF * x_b88(i, j);
+        }
+        base += numOfDerivativeFunctionalTerms_B88;
+        for (index_type j = 0; j < numOfDerivativeFunctionalTerms_VWN; ++j) {
+            xc(i, base + j) = DfFunctional_B3LYP::VWN_COEF * c_vwn(i, j);
+        }
+        base += numOfDerivativeFunctionalTerms_VWN;
+        for (index_type j = 0; j < numOfDerivativeFunctionalTerms_LYP; ++j) {
+            xc(i, base + j) = DfFunctional_B3LYP::LYP_COEF * c_lyp(i, j);
+        }
+    }
+
+    return xc;
+}
 

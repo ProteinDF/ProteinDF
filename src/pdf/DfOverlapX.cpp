@@ -786,3 +786,136 @@ DfOverlapX::ShellArrayTable DfOverlapX::makeShellArrayTable(const TlOrbitalInfoO
 // }
 
 
+void DfOverlapX::getGradient(const TlOrbitalInfoObject& orbitalInfo,
+                             TlMatrix* pMatX, TlMatrix* pMatY, TlMatrix* pMatZ)
+{
+    assert(pMatX != NULL);
+    assert(pMatY != NULL);
+    assert(pMatZ != NULL);
+    
+    const index_type numOfAOs = orbitalInfo.getNumOfOrbitals();
+    pMatX->resize(numOfAOs, numOfAOs);
+    pMatY->resize(numOfAOs, numOfAOs);
+    pMatZ->resize(numOfAOs, numOfAOs);
+
+    const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
+
+    this->createEngines();
+    DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
+
+    std::vector<DfTaskCtrl::Task2> taskList;
+    bool hasTask = pTaskCtrl->getQueue2(orbitalInfo,
+                                       true,
+                                       this->grainSize_, &taskList, true);
+    while (hasTask == true) {
+        this->getGradient_partProc(orbitalInfo,
+                                   taskList,
+                                   pMatX, pMatY, pMatZ);
+        
+        hasTask = pTaskCtrl->getQueue2(orbitalInfo,
+                                       true,
+                                       this->grainSize_, &taskList);
+    }
+
+    pTaskCtrl->cutoffReport();
+    delete pTaskCtrl;
+    pTaskCtrl = NULL;
+    this->destroyEngines();
+}
+
+
+void DfOverlapX::getGradient_partProc(const TlOrbitalInfoObject& orbitalInfo,
+                                      const std::vector<DfTaskCtrl::Task2>& taskList,
+                                      TlMatrixObject* pMatX, TlMatrixObject* pMatY, TlMatrixObject* pMatZ)
+{
+    // 第3,第4中心点の固定値を設定
+    static const TlPosition posR(0.0, 0.0, 0.0);
+    static const DfOverlapEngine::PGTO pgtoR(1.0, 0.0);
+    static DfOverlapEngine::PGTOs pgtosR(1);
+    pgtosR[0] = pgtoR;
+    static const TlPosition posS(0.0, 0.0, 0.0);
+    static const DfOverlapEngine::PGTO pgtoS(1.0, 0.0);
+    static DfOverlapEngine::PGTOs pgtosS(1);
+    pgtosS[0] = pgtoS;
+
+    const int taskListSize = taskList.size();
+#pragma omp parallel
+    {
+        int threadID = 0;
+#ifdef _OPENMP
+        threadID = omp_get_thread_num();
+#endif // _OPENMP
+
+#pragma omp for schedule(runtime)
+        for (int i = 0; i < taskListSize; ++i) {
+            const index_type shellIndexP = taskList[i].shellIndex1;
+            const index_type shellIndexQ = taskList[i].shellIndex2;
+            
+            const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+            const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+            const int maxStepsP = 2 * shellTypeP + 1;
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+            const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
+            const TlPosition posQ = orbitalInfo.getPosition(shellIndexQ);
+            const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexP);
+            const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexQ);
+            const DfOverlapEngine::Query query(1, 0, 0, 0, shellTypeP, shellTypeQ, 0, 0);
+            
+            this->pEngines_[threadID].calc(query, posP, posQ, posR, posS, pgtosP, pgtosQ, pgtosR, pgtosS);
+            
+            int index = 0;
+            // X
+            for (int stepP = 0; stepP < maxStepsP; ++stepP) {
+                const index_type globalShellIndexP = shellIndexP + stepP;
+
+                for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
+                    const index_type globalShellIndexQ = shellIndexQ + stepQ;
+
+                    if ((shellIndexP != shellIndexQ) || (globalShellIndexP >= globalShellIndexQ)) {
+                        const double dSdA = this->pEngines_[threadID].WORK[index];
+                        const double dSdB = - dSdA;
+                        
+                        pMatX->add(globalShellIndexP, globalShellIndexQ, dSdA);
+                        pMatX->add(globalShellIndexQ, globalShellIndexP, dSdB);
+                    }
+                    ++index;
+                }
+            }
+            // Y
+            for (int stepP = 0; stepP < maxStepsP; ++stepP) {
+                const index_type globalShellIndexP = shellIndexP + stepP;
+
+                for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
+                    const index_type globalShellIndexQ = shellIndexQ + stepQ;
+
+                    if ((shellIndexP != shellIndexQ) || (globalShellIndexP >= globalShellIndexQ)) {
+                        const double dSdA = this->pEngines_[threadID].WORK[index];
+                        const double dSdB = - dSdA;
+                        
+                        pMatY->add(globalShellIndexP, globalShellIndexQ, dSdA);
+                        pMatY->add(globalShellIndexQ, globalShellIndexP, dSdB);
+                    }
+                    ++index;
+                }
+            }
+            // Z
+            for (int stepP = 0; stepP < maxStepsP; ++stepP) {
+                const index_type globalShellIndexP = shellIndexP + stepP;
+
+                for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
+                    const index_type globalShellIndexQ = shellIndexQ + stepQ;
+
+                    if ((shellIndexP != shellIndexQ) || (globalShellIndexP >= globalShellIndexQ)) {
+                        const double dSdA = this->pEngines_[threadID].WORK[index];
+                        const double dSdB = - dSdA;
+                        
+                        pMatZ->add(globalShellIndexP, globalShellIndexQ, dSdA);
+                        pMatZ->add(globalShellIndexQ, globalShellIndexP, dSdB);
+                    }
+                    ++index;
+                }
+            }
+        }
+    }
+}
+

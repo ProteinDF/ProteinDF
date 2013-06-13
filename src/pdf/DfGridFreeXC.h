@@ -8,6 +8,7 @@
 #include "TlSerializeData.h"
 #include "TlSymmetricMatrix.h"
 #include "TlSparseSymmetricMatrix.h"
+#include "DfFunctional.h"
 
 class DfGridFreeXC : public DfObject 
 {
@@ -104,6 +105,8 @@ protected:
     void buildFxc1();
     void buildFxc2();
 
+    void buildFxc1_GGA();
+
 protected:
     static const int MAX_SHELL_TYPE;
     typedef std::vector<index_type> ShellArray;
@@ -156,6 +159,15 @@ protected:
     void get_F_lamda(const TlVector lamda,
                      TlSymmetricMatrix* pF_lamda,
                      TlSymmetricMatrix* pE_lamda);
+
+    // void get_F_lamda_GGA(const TlVector lambda_f,
+    //                      const TlVector lambda_g,
+    //                      TlSymmetricMatrix* pE_f,
+    //                      TlSymmetricMatrix* pE_g,
+    //                      TlSymmetricMatrix* pF_f_rho,
+    //                      TlSymmetricMatrix* pF_g_rho,
+    //                      TlSymmetricMatrix* pF_f_gaa,
+    //                      TlSymmetricMatrix* pF_g_gaa);
 
     void getM_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
     ShellArrayTable makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo);
@@ -215,7 +227,11 @@ protected:
     TlSymmetricMatrix getCholeskyVector(const TlVector& L_col,
                                         const PQ_PairArray& I2PQ);
 
+    DfFunctional_GGA* getFunctionalGGA();
+
 protected:
+    static const double ONE_THIRD; // = 1.0 / 3.0
+
     DfOverlapEngine* pOvpEngines_;
     TlOrbitalInfo orbitalInfo_;
 
@@ -231,6 +247,7 @@ protected:
     bool debugSaveM_;
 
     /// 試験コード
+    bool lowdin_;
     int GF_mode_;
 };
 

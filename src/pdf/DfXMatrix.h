@@ -20,6 +20,10 @@ public:
     void canonicalOrthogonalize(const SymmetricMatrixType& S,
                                 MatrixType* pX, MatrixType* pXinv);
 
+    template<typename SymmetricMatrixType, typename MatrixType>
+    void lowdinOrthogonalize(const SymmetricMatrixType& S,
+                             MatrixType* pX, MatrixType* pXinv);
+
 protected:
     template<typename MatrixType>
     void check_X(const MatrixType& X,
@@ -124,13 +128,99 @@ void DfXMatrix::canonicalOrthogonalize(const SymmetricMatrixType& S,
     }
 }
 
+template<typename SymmetricMatrixType, typename MatrixType>
+void DfXMatrix::lowdinOrthogonalize(const SymmetricMatrixType& S,
+                                    MatrixType* pX, MatrixType* pXinv)
+{
+    const index_type dim = S.getNumOfRows();
+    index_type rest = 0;
+
+    TlVector sqrt_s; // Sの固有値の平方根
+    MatrixType U; // Sの固有ベクトル
+    {
+        this->loggerTime("diagonalization of S matrix");
+        TlVector EigVal;
+        MatrixType EigVec;
+        S.diagonal(&EigVal, &EigVec);
+        assert(EigVal.getSize() == dim);
+
+        this->loggerTime("truncation of linear dependent");
+        {
+            const double threshold = this->threshold_trancation;
+            int cutoffCount = 0;
+            for (index_type k = 0; k < dim; ++k) {
+                if (EigVal.get(k) < threshold) {
+                    ++cutoffCount;
+                } else {
+                    // 固有値は小さい方から格納されているはずなので、探査終了
+                    break;
+                }
+            }
+            rest = dim - cutoffCount;
+        }
+
+        this->loggerTime(" generation of U matrix");
+        const index_type cutoffBasis = dim - rest;
+
+        {
+            MatrixType trans(dim, rest);
+#pragma omp parallel for
+            for (index_type i = 0; i < rest; ++i) {
+                trans.set(cutoffBasis + i, i, 1.0);
+            }
+            U = EigVec * trans;
+        }
+        {
+            sqrt_s.resize(rest);
+#pragma omp parallel for
+            for (index_type k = 0; k < rest; ++k) {
+                const index_type index = cutoffBasis + k;
+                sqrt_s.set(k, std::sqrt(EigVal.get(index)));
+            }
+        }
+    }
+    if (this->debug_save_mat_) {
+        U.save("U.mat");
+        sqrt_s.save("sqrt_s.vct");
+    }
+
+    if (pX != NULL) {
+        this->loggerTime("generate X matrix");
+        SymmetricMatrixType S12(rest);
+        for (index_type i = 0; i < rest; ++i) {
+            S12.set(i, i, (1.0 / sqrt_s.get(i)));
+        }
+
+        *pX = U * S12;
+
+        MatrixType Ut = U;
+        Ut.transpose();
+
+        *pX *= Ut;
+    }
+
+    if (pXinv != NULL) {
+        this->loggerTime("generate X^-1 matrix");
+        *pXinv = *pX;
+        pXinv->inverse();
+    }
+
+    this->loggerTime(" finalize");
+    
+    if (this->debug_check_X_) {
+        this->check_X(*pX, *pXinv,
+                      TlUtils::format("%s/S_", this->m_sWorkDirPath.c_str()));
+    }
+}
+
+
+// X^(-1) が X の逆行列になっているかチェック
 template<typename MatrixType>
 void DfXMatrix::check_X(const MatrixType& X,
                         const MatrixType& Xinv,
                         const std::string& savePathPrefix)
 {
     this->log_.info("check X");
-
     {
         const std::string path = TlUtils::format("XXinv.mat", savePathPrefix.c_str());
         this->log_.info(TlUtils::format("calc X * Xinv to save %s.", path.c_str()));

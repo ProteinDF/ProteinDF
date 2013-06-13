@@ -27,6 +27,21 @@ public:
 //           const std::vector<DfCalcGridX::WFGrid>& aGradPhiZ,
 //           double dWeight, TlMatrix_Symmetric& F);
 
+// for Grid-Free =======================================================
+protected:
+    virtual TlVector getFunctionalTermCoef_GF();
+    virtual TlVector getDerivativeFunctionalTermCoef_GF();
+
+    virtual TlMatrix getFunctionalCore(const double rhoA, 
+                                       const double rhoB,
+                                       const double xA,
+                                       const double xB);
+
+    virtual TlMatrix getDerivativeFunctionalCore(const double rhoA,
+                                                 const double rhoB,
+                                                 const double xA,
+                                                 const double xB);
+
 protected:
     DfFunctional_Becke88 m_Becke88;
     DfFunctional_LYP m_LYP;
