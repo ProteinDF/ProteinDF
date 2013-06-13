@@ -58,7 +58,7 @@ DfXCFunctional::DfXCFunctional(TlSerializeData* pPdfParam)
     } else if (checkXC == "HFB") {
         // HFB
         this->m_nXCFunctional = HFB;
-        this->functionalType_ = LDA;
+        this->functionalType_ = GGA;
         this->m_bIsHybrid = false;
     } else if ((checkXC == "BLYP") || (checkXC == "B88LYP")) {
         // BLYP
