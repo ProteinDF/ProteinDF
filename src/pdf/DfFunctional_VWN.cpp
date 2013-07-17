@@ -28,6 +28,8 @@ const double DfFunctional_VWN::VWN_X0_ANTI = - 0.0047584;
 
 DfFunctional_VWN::DfFunctional_VWN()
 {
+    this->numOfFunctionalTerms_ = 1;
+    this->numOfDerivativeFunctionalTerms_ = 1;   
 }
 
 DfFunctional_VWN::~DfFunctional_VWN()
@@ -382,3 +384,58 @@ double  DfFunctional_VWN::epsilonCPrime_ANTI(const double x)
 {
     return this->epsilonCPrime(VWN_A_ANTI, VWN_B_ANTI, VWN_C_ANTI, VWN_X0_ANTI, x);
 }
+
+// ----------------
+TlMatrix DfFunctional_VWN::getFunctionalCore(const double rhoA, 
+                                             const double rhoB)
+{
+    TlMatrix answer(F_DIM, this->getNumOfFunctionalTerms());
+    assert(this->getNumOfFunctionalTerms() == 1);
+
+    // (A10)
+    const double rho = rhoA + rhoB;
+    const double invRho = 1.0 / rho;
+
+    const double x = pow(M_3_4PI * invRho, INV_6);
+    const double zeta = (rhoA - rhoB) * invRho;
+
+    // (A9)
+    const double epsilonC = this->epsilonC(x, zeta);
+    // const double vwn = rho * epsilonC;
+
+    const double FA_termR = rhoA * epsilonC;
+    const double FA_termX = 1.0;
+    const double FB_termR = rhoB * epsilonC;
+    const double FB_termX = 1.0;
+    answer.set(FA_R, 0, FA_termR);
+    answer.set(FA_X, 0, FA_termX);
+    answer.set(FB_R, 0, FB_termR);
+    answer.set(FB_X, 0, FB_termX);
+
+    return answer;
+}
+
+TlMatrix DfFunctional_VWN::getDerivativeFunctionalCore(const double rhoA,
+                                                       const double rhoB)
+{
+    TlMatrix answer(D_DIM, this->getNumOfDerivativeFunctionalTerms());
+    assert(this->getNumOfFunctionalTerms() == 1);
+
+    // roundF_roundRho =========================================================
+    double roundF_roundRhoA = 0.0;
+    double roundF_roundRhoB = 0.0;
+    this->roundVWN_roundRho(rhoA, rhoB, &roundF_roundRhoA, &roundF_roundRhoB);
+
+    const double roundF_roundRhoA_termR = roundF_roundRhoA;
+    const double roundF_roundRhoA_termX = 1.0;
+    const double roundF_roundRhoB_termR = roundF_roundRhoB;
+    const double roundF_roundRhoB_termX = 1.0;
+    answer.set(RA_R, 0, roundF_roundRhoA_termR);
+    answer.set(RA_X, 0, roundF_roundRhoA_termX);
+    answer.set(RB_R, 0, roundF_roundRhoB_termR);
+    answer.set(RB_X, 0, roundF_roundRhoB_termX);
+    
+    return answer;
+}
+
+

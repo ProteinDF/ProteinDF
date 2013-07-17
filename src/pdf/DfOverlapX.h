@@ -36,6 +36,10 @@ public:
                      const TlOrbitalInfoObject& orbInfo2,
                      TlMatrix* pS);
 
+    /// <p|nabra|q> を求める
+    void getGradient(const TlOrbitalInfoObject& orbitalInfo,
+                     TlMatrix* pMatX, TlMatrix* pMatY, TlMatrix* pMatZ);
+
 public:
     /// calc <pq gamma>
     virtual void get_pqg(const TlVector& myu, TlSymmetricMatrix* pF);
@@ -124,6 +128,10 @@ protected:
                            const ShellArray& shellArrayQ,
                            const TlSymmetricMatrix& W,
                            TlMatrix* pForce);
+    
+    void getGradient_partProc(const TlOrbitalInfoObject& orbitalInfo,
+                              const std::vector<DfTaskCtrl::Task2>& taskList,
+                              TlMatrixObject* pMatX, TlMatrixObject* pMatY, TlMatrixObject* pMatZ);
 
 protected:
     DfOverlapEngine* pEngines_;

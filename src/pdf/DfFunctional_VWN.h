@@ -18,6 +18,12 @@ public:
                                          double* pRoundF_roundRhoA, double* pRoundF_roundRhoB);
     virtual void getDerivativeFunctional(double dRhoA, double* pRoundF_roundRhoA);
 
+public:
+    virtual TlMatrix getFunctionalCore(const double rhoA, 
+                                       const double rhoB);
+    virtual TlMatrix getDerivativeFunctionalCore(const double rhoA,
+                                                 const double rhoB);
+
 protected:
     // for UKS
     double VWN(double dRhoA, double dRhoB);
