@@ -7,7 +7,7 @@
 #include "TlResidue.h"
 #include "TlLogging.h"
 
-#define BOHR_ANGSTROM (0.5291772108)
+#define BOHR_ANGSTROM (0.52917721092)
 
 PdfUserInput::PdfUserInput(const std::string& filePath)
     : filePath_(filePath), data_(), param_(), log_(TlLogging::getInstance())
