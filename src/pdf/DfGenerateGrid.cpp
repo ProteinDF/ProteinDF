@@ -1501,8 +1501,8 @@ TlMatrix DfGenerateGrid::getOMatrix()
 
     //T.save("T.vct");
     //M.save("M.mat");
-    O.save("O.mat");
-    lambda.save("lambda.vct");
+    //O.save("O.mat");
+    //lambda.save("lambda.vct");
 
     return O;
 }
