@@ -257,6 +257,12 @@ void PdfUserInput::load_conventional()
         
         this->data_["basis-set/gridfree"] = "";
         this->param_["MOLECULE"]["basis-set/gridfree"] = "stored";
+    } else {
+        this->log_.info(" use orbital basis-set for gridfree.");
+        this->data_["basis_sets_GF"] = this->data_["basis_sets"];
+
+        this->data_["basis-set/gridfree"] = "";
+        this->param_["MOLECULE"]["basis-set/gridfree"] = "stored";
     }
 
     //this->m_param.print(std::cout);

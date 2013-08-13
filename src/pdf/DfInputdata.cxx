@@ -151,6 +151,8 @@ void DfInputdata::show(const TlSerializeData& data) const
         const Fl_Gto orb(data["basis_sets"]);
         const Fl_Gto orb_j(data["basis_sets_j"]);
         const Fl_Gto orb_k(data["basis_sets_k"]);
+        const Fl_Gto orb_GF(data["basis_sets_GF"]);
+        const bool isUseGF = data["grid_free"].getBoolean();
         if (showOrbitalBasis == "GAMESS") {
             log.info(" >>>> Inputted Orbital Basis Set (GAMESS format) <<<<");
             log.info(orb.getStr_GAMESS());
@@ -161,6 +163,11 @@ void DfInputdata::show(const TlSerializeData& data) const
             log.info(" >>>> Inputted XC Orbital Basis Set (GAMESS format) <<<<");
             log.info(orb_k.getStr_GAMESS());
             log.info("\n");
+            if (isUseGF) {
+                log.info(" >>>> Inputted GridFree Orbital Basis Set (GAMESS format) <<<<");
+                log.info(orb_GF.getStr_GAMESS());
+                log.info("\n");
+            }
         } else if (showOrbitalBasis == "AMOSS") {
             log.info(" >>>> Inputted Orbital Basis Set (AMOSS format) <<<<");
             log.info(orb.getStr_AMOSS());
@@ -171,6 +178,11 @@ void DfInputdata::show(const TlSerializeData& data) const
             log.info(" >>>> Inputted XC Orbital Basis Set (GAMESS format) <<<<");
             log.info(orb_k.getStr_AMOSS());
             log.info("\n");
+            if (isUseGF) {
+                log.info(" >>>> Inputted XC Orbital Basis Set (GAMESS format) <<<<");
+                log.info(orb_GF.getStr_AMOSS());
+                log.info("\n");
+            }
         }
     }
 }
