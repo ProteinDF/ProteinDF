@@ -90,8 +90,8 @@ class DfEriEngine {
 public:
     typedef int index_type;
     
-    struct Query {
-        Query(int ibar =0, int jbar =0, int i =0, int j =0)
+    struct AngularMomentum2 {
+        AngularMomentum2(int ibar =0, int jbar =0, int i =0, int j =0)
             : a_bar(ibar), b_bar(jbar), a(i), b(j) {
             assert(ibar < ERI_A_BAR_MAX);
             assert(jbar < ERI_B_BAR_MAX);
@@ -112,14 +112,11 @@ public:
         }
         
     public:
-        // int a_bar : 8; // grad i
-        // int b_bar : 8; // grad j
-        // int a : 8;
-        // int b : 8;
-        int a_bar; // grad i
-        int b_bar; // grad j
-        int a;
-        int b;
+        // 8bitで-31 ~ +32 まで OK
+        int a_bar : 8; // grad i
+        int b_bar : 8; // grad j
+        int a : 8;
+        int b : 8;
     };
 
     // for pGTO ----------------------------------------------------------------
@@ -446,10 +443,10 @@ public:
                                   const index_type shellIndexQ = -1,
                                   const double threshold = 1.0E-20);
     
-    void calc(const Query& qAB, const Query& qCD,
+    void calc(const AngularMomentum2& qAB, const AngularMomentum2& qCD,
               const CGTO_Pair& IJ, const CGTO_Pair& KL);
 
-    void calcGrad(const Query& qAB, const Query& qCD,
+    void calcGrad(const AngularMomentum2& qAB, const AngularMomentum2& qCD,
                   const CGTO_Pair& IJ, const CGTO_Pair& KL);
 
     void setPrimitiveLevelThreshold(const double threshold) {
@@ -462,14 +459,14 @@ public:
 private:
     void initialize();
     
-    void calc(const Query& qAB, const Query& qCD);
+    void calc(const AngularMomentum2& qAB, const AngularMomentum2& qCD);
 
-    void calcGrad(const Query& qAB, const Query& qCD);
+    void calcGrad(const AngularMomentum2& qAB, const AngularMomentum2& qCD);
 
-    void calcGrad_sub(const Query& qAB, const Query& qCD);
+    void calcGrad_sub(const AngularMomentum2& qAB, const AngularMomentum2& qCD);
     
-    void copyResultsToOutputBuffer(const Query& qAB,
-                                   const Query& qCD,
+    void copyResultsToOutputBuffer(const AngularMomentum2& qAB,
+                                   const AngularMomentum2& qCD,
                                    double* pOutput);
     
     void calcE4CQ();
@@ -484,8 +481,8 @@ private:
     int initiativeRM(const TlAngularMomentumVector& amv) const;
 
     // contract ================================================================
-    ContractScalesVector choice(const Query& AB);
-    ContractScalesVector choice(const Query& AB1, const Query& AB2);
+    ContractScalesVector choice(const AngularMomentum2& AB);
+    ContractScalesVector choice(const AngularMomentum2& AB1, const AngularMomentum2& AB2);
     
     void choice(const int a_bar, const int b_bar,
                 const int a, const int b, const int p,
@@ -495,15 +492,15 @@ private:
 
     ContractScalesVector transContractScales_SetToVector(const ContractScalesSet& contractScales);
 
-    void contract(const DfEriEngine::Query& qAB,
-                  const DfEriEngine::Query& qCD,
+    void contract(const AngularMomentum2& qAB,
+                  const AngularMomentum2& qCD,
                   const ContractScalesVector& bra_contractScales,
                   const ContractScalesVector& ket_contractScales);
-    void contract_bra(const DfEriEngine::Query& qAB,
+    void contract_bra(const AngularMomentum2& qAB,
                       const TlAngularMomentumVector& r,
                       const int a_prime, const int b_prime, const int p_prime,
                       const std::size_t nR_dash_index);
-    // void contract_ket(const DfEriEngine::Query& qCD,
+    // void contract_ket(const AngularMomentum2& qCD,
     //                   const ContractState& cs, const std::vector<double>& KQ_values);
     void get_contract_ket_coef_numerators(const int c_prime,
                                           const int d_prime,
@@ -514,8 +511,8 @@ private:
     //                   const std::vector<double>& KQ_values);
     
     // calc PQ
-    void calcPQ(const DfEriEngine::Query& qAB,
-                const DfEriEngine::Query& qCD,
+    void calcPQ(const AngularMomentum2& qAB,
+                const AngularMomentum2& qCD,
                 const ContractScalesVector& bra_contractScales,
                 const ContractScalesVector& ket_contractScales);
 
@@ -524,14 +521,14 @@ private:
     /// 目的は高速化。cs_indexの格納順序はcalcPQ内の多重ループに従う。
     std::vector<int> 
     get_csindex_for_calcPQ(const int angularMomentumP,
-                           const DfEriEngine::Query& qAB,
+                           const AngularMomentum2& qAB,
                            const int angularMomentumQ,
-                           const DfEriEngine::Query& qCD,
+                           const AngularMomentum2& qCD,
                            const ContractScalesVector& bra_contractScales,
                            const ContractScalesVector& ket_contractScales);
 
-    void transpose(const DfEriEngine::Query& qAB,
-                   const DfEriEngine::Query& qCD,
+    void transpose(const AngularMomentum2& qAB,
+                   const AngularMomentum2& qCD,
                    const ContractScalesVector& ket_contractScales);
     
     // ERI ---------------------------------------------------------------------
@@ -570,8 +567,8 @@ private:
     void ERI_EQ47(const ERI_State eriState, EriDataType* pERI);
 
     // transform 6D to 5D
-    void transform6Dto5D(const DfEriEngine::Query& qAB,
-                         const DfEriEngine::Query& qCD,
+    void transform6Dto5D(const AngularMomentum2& qAB,
+                         const AngularMomentum2& qCD,
                          double* pOutput);
     void transform6Dto5D_i(const int I_, const int J_, const int K_, const int L_,
                            const int J, const int K, const int L,
@@ -586,8 +583,8 @@ private:
                            const int I, const int J, const int K,
                            const double* pInput, double* pOutput);
 
-    void compD(const DfEriEngine::Query& qAB,
-               const DfEriEngine::Query& qCD);
+    void compD(const AngularMomentum2& qAB,
+               const AngularMomentum2& qCD);
     
 public:
     double* WORK;

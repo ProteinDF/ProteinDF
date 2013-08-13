@@ -861,13 +861,13 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
                                                                                         shellIndexP,
                                                                                         shellIndexQ,
                                                                                         pairwisePGTO_cutoffThreshold);
-            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
 
             for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
             
                 const int shellTypeS = 0;
-                const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
+                const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
                 
                 const std::size_t numOfShellArrayR = shellArrayTable_Density[shellTypeR].size();
                 for (std::size_t indexR = 0; indexR < numOfShellArrayR; ++indexR) {
@@ -1075,7 +1075,7 @@ TlSparseSymmetricMatrix DfEriX_Parallel::makeSchwarzTable(const TlOrbitalInfoObj
             const int maxStepsQ = 2 * shellTypeQ + 1;
                 
             if (counter == rank) {
-                const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+                const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
                 const DfEriEngine::CGTO_Pair PQ = engine.getCGTO_pair(orbitalInfo,
                                                                       shellIndexP,
                                                                       shellIndexQ,

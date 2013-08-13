@@ -257,13 +257,13 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                                                                                         shellIndexP,
                                                                                         shellIndexQ,
                                                                                         pairwisePGTO_cutoffThreshold);
-            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
 
             for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
             
                 const int shellTypeS = 0;
-                const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
+                const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
                 
                 const std::size_t numOfShellArrayR = shellArrayTable_Density[shellTypeR].size();
                 for (std::size_t indexR = 0; indexR < numOfShellArrayR; ++indexR) {
@@ -444,13 +444,13 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                                                                                         shellIndexP,
                                                                                         shellIndexQ,
                                                                                         pairwisePGTO_cutoffThreshold);
-            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
 
             for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
             
                 const int shellTypeS = 0;
-                const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
+                const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
                 
                 const std::size_t numOfShellArrayR = shellArrayTable_Density[shellTypeR].size();
                 for (std::size_t indexR = 0; indexR < numOfShellArrayR; ++indexR) {
@@ -569,7 +569,7 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
             const ShellArray shellArrayQ = shellArrayTable[shellTypeQ];
             ShellArray::const_iterator qItEnd = shellArrayQ.end();
 
-            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
 
             for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
@@ -581,7 +581,7 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
                     const ShellArray shellArrayS = shellArrayTable[shellTypeS];
                     ShellArray::const_iterator sItEnd = shellArrayS.end();
 
-                    const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
+                    const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
         
                     for (ShellArray::const_iterator pIt = shellArrayP.begin(); pIt != pItEnd; ++pIt) {
                         const index_type shellIndexP = *pIt;
@@ -776,8 +776,8 @@ int DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                                                                                         shellIndexR,
                                                                                         shellIndexS,
                                                                                         pairwisePGTO_cutoffThreshold);
-            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
-            const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
+            const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
             
             this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
             
@@ -965,8 +965,8 @@ void DfEriX::getJab_part(const TlOrbitalInfoObject& orbitalInfo,
             const int maxStepsR = 2 * shellTypeR + 1;
             //const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
             //const TlPosition posR = orbitalInfo.getPosition(shellIndexR);
-            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, 0);
-            const DfEriEngine::Query queryRS(0, 0, shellTypeR, 0);
+            const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, 0);
+            const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, 0);
             const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
                                                                                         shellIndexP,
                                                                                         -1,
@@ -1078,8 +1078,8 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
                 continue;
             }
             
-            const DfEriEngine::Query queryPQ00(0, 0, shellTypeP, shellTypeQ);
-            const DfEriEngine::Query queryRS00(0, 0, shellTypeR, shellTypeS);
+            const DfEriEngine::AngularMomentum2 queryPQ00(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::AngularMomentum2 queryRS00(0, 0, shellTypeR, shellTypeS);
             const DfEriEngine::CGTO_Pair PQ =
                 this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
                                                           shellIndexP,
@@ -1295,13 +1295,13 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
                                                                                         shellIndexP,
                                                                                         shellIndexQ,
                                                                                         pairwisePGTO_cutoffThreshold);
-            const DfEriEngine::Query queryPQ(1, 0, shellTypeP, shellTypeQ);
-            const DfEriEngine::Query queryQP(0, 1, shellTypeP, shellTypeQ);
+            const DfEriEngine::AngularMomentum2 queryPQ(1, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::AngularMomentum2 queryQP(0, 1, shellTypeP, shellTypeQ);
 
             for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
                 const ShellArray& shellArrayR = shellArrayTable_Density[shellTypeR];
-                const DfEriEngine::Query queryRS(0, 0, shellTypeR, 0);
+                const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, 0);
 
                 const std::size_t shellArraySizeR = shellArrayR.size();
                 for (std::size_t r = 0; r < shellArraySizeR; ++r) {
@@ -1468,8 +1468,8 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo_Density,
             const int shellTypeR = orbitalInfo_Density.getShellType(shellIndexR);
             const int maxStepsP = 2 * shellTypeP + 1;
             const int maxStepsR = 2 * shellTypeR + 1;
-            const DfEriEngine::Query queryPQ(1, 0, shellTypeP, 0);
-            const DfEriEngine::Query queryRS(0, 0, shellTypeR, 0);
+            const DfEriEngine::AngularMomentum2 queryPQ(1, 0, shellTypeP, 0);
+            const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, 0);
             const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo_Density,
                                                                                         shellIndexP,
                                                                                         -1,
@@ -1584,7 +1584,7 @@ void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
             const ShellArray shellArrayQ = shellArrayTable[shellTypeQ];
             ShellArray::const_iterator qItEnd = shellArrayQ.end();
 
-            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
 
             for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
@@ -1596,7 +1596,7 @@ void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
                     const ShellArray shellArrayS = shellArrayTable[shellTypeS];
                     ShellArray::const_iterator sItEnd = shellArrayS.end();
 
-                    const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
+                    const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
         
                     for (ShellArray::const_iterator pIt = shellArrayP.begin(); pIt != pItEnd; ++pIt) {
                         const index_type shellIndexP = *pIt;
@@ -1791,8 +1791,8 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                                                                                         shellIndexR,
                                                                                         shellIndexS,
                                                                                         pairwisePGTO_cutoffThreshold);
-            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
-            const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
+            const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
             
             this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
             
@@ -2065,8 +2065,8 @@ void DfEriX::getForceK_part(const TlOrbitalInfoObject& orbitalInfo,
                 continue;
             }
             
-            const DfEriEngine::Query queryRS00(0, 0, shellTypeR, shellTypeS);
-            const DfEriEngine::Query queryPQ00(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::AngularMomentum2 queryRS00(0, 0, shellTypeR, shellTypeS);
+            const DfEriEngine::AngularMomentum2 queryPQ00(0, 0, shellTypeP, shellTypeQ);
             const DfEriEngine::CGTO_Pair PQ =
                 this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
                                                           shellIndexP,
@@ -2411,7 +2411,7 @@ TlSparseSymmetricMatrix DfEriX::makeSchwarzTable(const TlOrbitalInfoObject& orbi
             const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
             const int maxStepsQ = 2 * shellTypeQ + 1;
             
-            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
             const DfEriEngine::CGTO_Pair PQ = engine.getCGTO_pair(orbitalInfo,
                                                                   shellIndexP,
                                                                   shellIndexQ,

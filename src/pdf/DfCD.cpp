@@ -472,7 +472,7 @@ void DfCD::calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
             const int maxStepsP = 2 * shellTypeP + 1;
             const int maxStepsQ = 2 * shellTypeQ + 1;
 
-            const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
+            const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
             const DfEriEngine::CGTO_Pair PQ = 
                 this->pEriEngines_[threadID].getCGTO_pair(this->orbitalInfo_,
                                                           shellIndexP,
@@ -742,8 +742,8 @@ void DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
                                                                                             shellIndexR,
                                                                                             shellIndexS,
                                                                                             pairwisePGTO_cutoffThreshold);
-                const DfEriEngine::Query queryPQ(0, 0, shellTypeP, shellTypeQ);
-                const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
+                const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
+                const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
                 
                 this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
                 

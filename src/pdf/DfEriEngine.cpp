@@ -84,7 +84,7 @@ DfEriEngine::DfEriEngine()
                 for (int q_a = 0; q_a <= A_MAX; ++q_a){ 
                     for (int q_b = 0; q_b <= B_MAX; ++q_b) {
 
-                        Query q(q_a_bar, q_b_bar, q_a, q_b);
+                        AngularMomentum2 q(q_a_bar, q_b_bar, q_a, q_b);
                         const int angularMomentumP = q.a + q.b + q.a_bar + q.b_bar;
                         const ContractScalesVector bra_contractScales = this->choice(q);
                         const int max_bra_cs_index = bra_contractScales.size();
@@ -263,7 +263,7 @@ DfEriEngine::CGTO_Pair DfEriEngine::getCGTO_pair(const TlOrbitalInfoObject& orbI
     // }
 
     // make pair
-    DfEriEngine::PGTO_Pairs pgtosPQ(numOfContractionsP * numOfContractionsQ);
+    PGTO_Pairs pgtosPQ(numOfContractionsP * numOfContractionsQ);
     int index = 0;
     for (int pP = 0; pP < numOfContractionsP; ++pP) {
         const double coefP = orbInfo.getCoefficient(shellIndexP, pP);
@@ -277,7 +277,7 @@ DfEriEngine::CGTO_Pair DfEriEngine::getCGTO_pair(const TlOrbitalInfoObject& orbI
                 expQ = orbInfo.getExponent(shellIndexQ, pQ);
             }
             
-            DfEriEngine::PGTO_Pair pgtoPair(shellTypeP, coefP, expP,
+            PGTO_Pair pgtoPair(shellTypeP, coefP, expP,
                                             shellTypeQ, coefQ, expQ,
                                             P, Q);
             pgtosPQ[index] = pgtoPair;
@@ -291,7 +291,7 @@ DfEriEngine::CGTO_Pair DfEriEngine::getCGTO_pair(const TlOrbitalInfoObject& orbI
 }
 
 
-void DfEriEngine::calc(const Query& qAB, const Query& qCD,
+void DfEriEngine::calc(const AngularMomentum2& qAB, const AngularMomentum2& qCD,
                        const CGTO_Pair& IJ, const CGTO_Pair& KL)
 {
     assert((0 <= qAB.a_bar) && (qAB.a_bar < ERI_A_BAR_MAX));
@@ -440,7 +440,7 @@ void DfEriEngine::calc(const Query& qAB, const Query& qCD,
 }
 
 
-void DfEriEngine::calcGrad(const Query& in_qAB, const Query& in_qCD,
+void DfEriEngine::calcGrad(const AngularMomentum2& in_qAB, const AngularMomentum2& in_qCD,
                            const CGTO_Pair& IJ, const CGTO_Pair& KL)
 {
     // initialize
@@ -461,8 +461,8 @@ void DfEriEngine::calcGrad(const Query& in_qAB, const Query& in_qCD,
     this->CD_ = KL.AB;
 
     {
-        const Query qAB00(0, 0, in_qAB.a, in_qAB.b);
-        const Query qCD00(0, 0, in_qCD.a, in_qCD.b);
+        const AngularMomentum2 qAB00(0, 0, in_qAB.a, in_qAB.b);
+        const AngularMomentum2 qCD00(0, 0, in_qCD.a, in_qCD.b);
 
         // 一度に計算するbra-ketに切り分ける
         this->bra_ = IJ.PS;
@@ -490,9 +490,9 @@ void DfEriEngine::calcGrad(const Query& in_qAB, const Query& in_qCD,
         }
 
         // transform 6D to 5D
-        const Query qAB10(1, 0, in_qAB.a, in_qAB.b);
-        const Query qAB01(0, 1, in_qAB.a, in_qAB.b);
-        const Query qCD10(1, 0, in_qCD.a, in_qCD.b);
+        const AngularMomentum2 qAB10(1, 0, in_qAB.a, in_qAB.b);
+        const AngularMomentum2 qAB01(0, 1, in_qAB.a, in_qAB.b);
+        const AngularMomentum2 qCD10(1, 0, in_qCD.a, in_qCD.b);
         this->transform6Dto5D(qAB10, qCD00, this->WORK_A);
         this->transform6Dto5D(qAB01, qCD00, this->WORK_B);
         this->transform6Dto5D(qAB00, qCD10, this->WORK_C);
@@ -500,8 +500,8 @@ void DfEriEngine::calcGrad(const Query& in_qAB, const Query& in_qCD,
     
     // D'
     {
-        const Query qAB00(0, 0, in_qAB.a, in_qAB.b);
-        const Query qCD01(0, 1, in_qCD.a, in_qCD.b);
+        const AngularMomentum2 qAB00(0, 0, in_qAB.a, in_qAB.b);
+        const AngularMomentum2 qCD01(0, 1, in_qCD.a, in_qCD.b);
         this->compD(qAB00, qCD01);
     }
 }
@@ -525,8 +525,8 @@ void DfEriEngine::initialize()
 }
 
 
-void DfEriEngine::copyResultsToOutputBuffer(const DfEriEngine::Query& qAB,
-                                            const DfEriEngine::Query& qCD,
+void DfEriEngine::copyResultsToOutputBuffer(const AngularMomentum2& qAB,
+                                            const AngularMomentum2& qCD,
                                             double* pOutput)
 {
     const int a_bar = qAB.a_bar;
@@ -619,8 +619,8 @@ void DfEriEngine::copyResultsToOutputBuffer(const DfEriEngine::Query& qAB,
 }
 
 
-void DfEriEngine::transform6Dto5D(const DfEriEngine::Query& qAB,
-                                  const DfEriEngine::Query& qCD,
+void DfEriEngine::transform6Dto5D(const AngularMomentum2& qAB,
+                                  const AngularMomentum2& qCD,
                                   double* pOutput)
 {
     const int a_bar = qAB.a_bar;
@@ -866,8 +866,8 @@ void DfEriEngine::transform6Dto5D_l(const int I_, const int J_, const int K_, co
 }
 
 
-void DfEriEngine::compD(const DfEriEngine::Query& qAB,
-                        const DfEriEngine::Query& qCD)
+void DfEriEngine::compD(const AngularMomentum2& qAB,
+                        const AngularMomentum2& qCD)
 {
     const int a = qAB.a;
     const int b = qAB.b;
@@ -886,8 +886,8 @@ void DfEriEngine::compD(const DfEriEngine::Query& qAB,
 }
 
 
-void DfEriEngine::calc(const DfEriEngine::Query& qAB,
-                       const DfEriEngine::Query& qCD)
+void DfEriEngine::calc(const AngularMomentum2& qAB,
+                       const AngularMomentum2& qCD)
 {
     // this->log_.debug(TlUtils::format("DfEriEngine::calc(): a~=%d, b~=%d, a=%d, b=%d,",
     //                                  qAB.a_bar, qAB.b_bar, qAB.a, qAB.b));
@@ -1002,14 +1002,14 @@ void DfEriEngine::calc(const DfEriEngine::Query& qAB,
 }
 
 
-void DfEriEngine::calcGrad(const DfEriEngine::Query& qAB,
-                           const DfEriEngine::Query& qCD)
+void DfEriEngine::calcGrad(const AngularMomentum2& qAB,
+                           const AngularMomentum2& qCD)
 {
-    const Query qAB10(1, 0, qAB.a, qAB.b);
-    const Query qAB01(0, 1, qAB.a, qAB.b);
-    const Query qAB00(0, 0, qAB.a, qAB.b);
-    const Query qCD10(1, 0, qCD.a, qCD.b);
-    const Query qCD00(0, 0, qCD.a, qCD.b);
+    const AngularMomentum2 qAB10(1, 0, qAB.a, qAB.b);
+    const AngularMomentum2 qAB01(0, 1, qAB.a, qAB.b);
+    const AngularMomentum2 qAB00(0, 0, qAB.a, qAB.b);
+    const AngularMomentum2 qCD10(1, 0, qCD.a, qCD.b);
+    const AngularMomentum2 qCD00(0, 0, qCD.a, qCD.b);
 
     this->calcE4CQ();
     this->calc0m();
@@ -1085,8 +1085,8 @@ void DfEriEngine::calcGrad(const DfEriEngine::Query& qAB,
 }
 
 
-void DfEriEngine::calcGrad_sub(const DfEriEngine::Query& qAB,
-                               const DfEriEngine::Query& qCD)
+void DfEriEngine::calcGrad_sub(const AngularMomentum2& qAB,
+                               const AngularMomentum2& qCD)
 {
     // choice
     const ContractScalesVector bra_contractScales_vtr = this->choice(qAB);
@@ -1328,7 +1328,7 @@ int DfEriEngine::initiativeRM(const TlAngularMomentumVector& amv) const {
 }
 
 DfEriEngine::ContractScalesVector
-DfEriEngine::choice(const DfEriEngine::Query& qAB)
+DfEriEngine::choice(const AngularMomentum2& qAB)
 {
 #ifdef USE_CACHED_ROUTE
     const int index = qAB.index();
@@ -1355,8 +1355,8 @@ DfEriEngine::choice(const DfEriEngine::Query& qAB)
 
 
 DfEriEngine::ContractScalesVector
-DfEriEngine::choice(const DfEriEngine::Query& qAB1,
-                    const DfEriEngine::Query& qAB2)
+DfEriEngine::choice(const AngularMomentum2& qAB1,
+                    const AngularMomentum2& qAB2)
 {
     ContractScalesSet contractList;
     this->choice(qAB1.a_bar, qAB1.b_bar,
@@ -1454,8 +1454,8 @@ DfEriEngine::transContractScales_SetToVector(const ContractScalesSet& contractSc
 }
 
 
-void DfEriEngine::contract(const DfEriEngine::Query& qAB,
-                           const DfEriEngine::Query& qCD,
+void DfEriEngine::contract(const AngularMomentum2& qAB,
+                           const AngularMomentum2& qCD,
                            const ContractScalesVector& bra_contractScales,
                            const ContractScalesVector& ket_contractScales)
 {
@@ -1558,7 +1558,7 @@ void DfEriEngine::contract(const DfEriEngine::Query& qAB,
 
 
 // eq.36
-void DfEriEngine::contract_bra(const DfEriEngine::Query& qAB,
+void DfEriEngine::contract_bra(const AngularMomentum2& qAB,
                                const TlAngularMomentumVector& r,
                                const int a_prime, const int b_prime, const int p_prime,
                                const std::size_t nR_dash_index)
@@ -1662,7 +1662,7 @@ void DfEriEngine::get_contract_ket_coef_numerators(const int c_prime,
 // }
 
 // eq.36
-// void DfEriEngine::contract_ket(const DfEriEngine::Query& qCD,
+// void DfEriEngine::contract_ket(const DfEriEngine::AngularMomentum2& qCD,
 //                                const ContractState& cs, const std::vector<double>& KQ_values)
 // {
 //     const int c = qCD.a;
@@ -1698,8 +1698,8 @@ void DfEriEngine::get_contract_ket_coef_numerators(const int c_prime,
 // }
 
 
-void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
-                         const DfEriEngine::Query& qCD,
+void DfEriEngine::calcPQ(const AngularMomentum2& qAB,
+                         const AngularMomentum2& qCD,
                          const ContractScalesVector& bra_contractScales,
                          const ContractScalesVector& ket_contractScales)
 {
@@ -1837,15 +1837,15 @@ void DfEriEngine::calcPQ(const DfEriEngine::Query& qAB,
 
 std::vector<int> 
 DfEriEngine::get_csindex_for_calcPQ(const int angularMomentumP,
-                                    const DfEriEngine::Query& qAB,
+                                    const AngularMomentum2& qAB,
                                     const int angularMomentumQ,
-                                    const DfEriEngine::Query& qCD,
+                                    const AngularMomentum2& qCD,
                                     const ContractScalesVector& bra_contractScales,
                                     const ContractScalesVector& ket_contractScales)
 {
     // const int index = 
-    //     ((angularMomentumP*Query::maxIndex() + qAB.index())*ERI_P_MAX + angularMomentumQ)*Query::maxIndex() + qCD.index();
-    const int index = qAB.index() * Query::maxIndex() + qCD.index();
+    //     ((angularMomentumP*AngularMomentum2::maxIndex() + qAB.index())*ERI_P_MAX + angularMomentumQ)*AngularMomentum2::maxIndex() + qCD.index();
+    const int index = qAB.index() * AngularMomentum2::maxIndex() + qCD.index();
     if (this->csindeces_forCalcPQ_.find(index) == this->csindeces_forCalcPQ_.end()) {
         std::vector<int> answer;
         
@@ -1894,8 +1894,8 @@ DfEriEngine::get_csindex_for_calcPQ(const int angularMomentumP,
     return this->csindeces_forCalcPQ_[index];
 }
 
-void DfEriEngine::transpose(const DfEriEngine::Query& qAB,
-                            const DfEriEngine::Query& qCD,
+void DfEriEngine::transpose(const AngularMomentum2& qAB,
+                            const AngularMomentum2& qCD,
                             const ContractScalesVector& ket_contractScales)
 {
     this->isCalcdERI_.clear();
