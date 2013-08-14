@@ -30,6 +30,7 @@ libpdf_la_SOURCES = \
 	DfDensityFittingObject.h							\
 	DfDiagonal.h			DfDiagonal.cxx				\
 	DfDmatrix.h				DfDmatrix.cxx				\
+	DfEngineObject.h									\
 	DfJMatrix.h				DfJMatrix.cpp				\
 	DfKMatrix.h				DfKMatrix.cpp				\
 	DfFockMatrix.h			DfFockMatrix.cpp			\

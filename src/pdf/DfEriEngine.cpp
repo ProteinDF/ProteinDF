@@ -75,14 +75,14 @@ DfEriEngine::DfEriEngine()
         const int a_bar = 0;
         const int b_bar = 0;
 
-        const int p_max = A_BAR_MAX + B_BAR_MAX + A_MAX + B_MAX;
+        const int p_max = ERI_A_BAR_MAX + ERI_B_BAR_MAX + ERI_A_MAX + ERI_B_MAX;
         const TlAngularMomentumVectorSet amvs_p_max(p_max);
         const int numOf_amvs_p_max = amvs_p_max.size();
 
-        for (int q_a_bar = 0; q_a_bar <= A_BAR_MAX; ++q_a_bar) {
-            for (int q_b_bar = 0; q_b_bar <= B_BAR_MAX; ++q_b_bar) {
-                for (int q_a = 0; q_a <= A_MAX; ++q_a){ 
-                    for (int q_b = 0; q_b <= B_MAX; ++q_b) {
+        for (int q_a_bar = 0; q_a_bar < ERI_A_BAR_MAX; ++q_a_bar) {
+            for (int q_b_bar = 0; q_b_bar < ERI_B_BAR_MAX; ++q_b_bar) {
+                for (int q_a = 0; q_a < ERI_A_MAX; ++q_a){ 
+                    for (int q_b = 0; q_b < ERI_B_MAX; ++q_b) {
 
                         AngularMomentum2 q(q_a_bar, q_b_bar, q_a, q_b);
                         const int angularMomentumP = q.a + q.b + q.a_bar + q.b_bar;

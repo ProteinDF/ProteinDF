@@ -39,10 +39,10 @@
 ///
 
 /// query上限値
-#define A_BAR_MAX (2) // 2階微分
-#define B_BAR_MAX (2) // 2階微分
-#define A_MAX (2) // s=0, p=1, d=2
-#define B_MAX (2) // s=0, p=1, d=2
+// #define A_BAR_MAX (2) // 2階微分
+// #define B_BAR_MAX (2) // 2階微分
+// #define A_MAX (2) // s=0, p=1, d=2
+// #define B_MAX (2) // s=0, p=1, d=2
 
 /// 本プログラムで扱うことのできる angular momentum の最大値
 #define ERI_L_MAX (13 +1)
@@ -61,13 +61,13 @@
 #define ERI_NUM_OF_RM_KINDS (ERI_NUM_OF_R_KINDS * (ERI_L_MAX +1))
 
 /// a^の最大数 (d(=2)の微分までサポート)
-#define ERI_A_BAR_MAX (3 +1)
+#define ERI_A_BAR_MAX (2 +1)
 /// b^の最大数 (d(=2)の微分までサポート)
-#define ERI_B_BAR_MAX (3 +1)
+#define ERI_B_BAR_MAX (2 +1)
 /// aの最大数 (aのd(=2)とbのd,そしてその2回微分(+2)までサポート)
-#define ERI_A_MAX (7 +1)
+#define ERI_A_MAX (6 +1)
 /// bの最大数 (bのd(=2)をサポート)
-#define ERI_B_MAX (3 +1)
+#define ERI_B_MAX (2 +1)
 /// pの最大数
 #define ERI_P_MAX (7 +1)
 /// a'の最大数
