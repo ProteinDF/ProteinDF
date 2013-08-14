@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <bitset>
+
+#include "DfEngineObject.h"
 #include "TlAngularMomentumVector.h"
 #include "TlPosition.h"
 #include "TlOrbitalInfoObject.h"
@@ -33,8 +35,10 @@
                        * OVP_A_MAX * OVP_B_MAX * OVP_C_MAX * OVP_D_MAX)
 
 /// see. S.Obara and A.Saika, J. Chem. Phys., 84, 3963 (1986)
-class DfOverlapEngine {
+class DfOverlapEngine : public DfEngineObject {
 public:
+    typedef int index_type;
+
     struct Query {
     public:
         Query(int a_bar, int b_bar, int c_bar, int d_bar,
@@ -108,22 +112,29 @@ public:
     
 public:
     DfOverlapEngine();
-    ~DfOverlapEngine();
+    virtual ~DfOverlapEngine();
+    
+    virtual void calc(const int diff1, const TlOrbitalInfoObject& orbInfo1, const index_type shell1,
+                      const int diff2, const TlOrbitalInfoObject& orbInfo2, const index_type shell2,
+                      const int diff3, const TlOrbitalInfoObject& orbInfo3, const index_type shell3,
+                      const int diff4, const TlOrbitalInfoObject& orbInfo4, const index_type shell4);
 
-    void calc(const Query& query,
-              const TlPosition& A,
-              const TlPosition& B,
-              const TlPosition& C,
-              const TlPosition& D,
-              const PGTOs& PGTOs_A,
-              const PGTOs& PGTOs_B,
-              const PGTOs& PGTOs_C,
-              const PGTOs& PGTOs_D);
-
-    static PGTOs getPGTOs(const TlOrbitalInfoObject& orbitalInfo,
-                          const int shellIndex);
+    virtual double value(const index_type index) const;
 
 private:
+    PGTOs getPGTOs(const TlOrbitalInfoObject& orbitalInfo,
+                   const int shellIndex);
+
+    void calc0(const Query& query,
+               const TlPosition& A,
+               const TlPosition& B,
+               const TlPosition& C,
+               const TlPosition& D,
+               const PGTOs& PGTOs_A,
+               const PGTOs& PGTOs_B,
+               const PGTOs& PGTOs_C,
+               const PGTOs& PGTOs_D);
+
     void calc(const int aBar, const int bBar, const int cBar, const int dBar,
               const int a, const int b, const int c, const int d);
 
@@ -205,5 +216,10 @@ private:
     int numOfBatches_;
 };
 
+
+inline double DfOverlapEngine::value(const index_type index) const
+{
+    return this->WORK[index];
+}
 
 #endif // DFOVERLAPENGINE_H

@@ -158,15 +158,19 @@ void calc_eri(DfEriEngine* pEngine,
     const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
     const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
     const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
-    const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
-    const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
-    const DfEriEngine::CGTO_Pair PQ = pEngine->getCGTO_pair(orbitalInfo,
-                                                            shellIndexP, shellIndexQ,
-                                                            0.0);
-    const DfEriEngine::CGTO_Pair RS = pEngine->getCGTO_pair(orbitalInfo,
-                                                            shellIndexR, shellIndexS,
-                                                            0.0);
-    pEngine->calc(queryPQ, queryRS, PQ, RS);
+    // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
+    // const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
+    // const DfEriEngine::CGTO_Pair PQ = pEngine->getCGTO_pair(orbitalInfo,
+    //                                                         shellIndexP, shellIndexQ,
+    //                                                         0.0);
+    // const DfEriEngine::CGTO_Pair RS = pEngine->getCGTO_pair(orbitalInfo,
+    //                                                         shellIndexR, shellIndexS,
+    //                                                         0.0);
+    // pEngine->calc(queryPQ, queryRS, PQ, RS);
+    pEngine->calc(0, orbitalInfo, shellIndexP,
+                  0, orbitalInfo, shellIndexQ,
+                  0, orbitalInfo, shellIndexR,
+                  0, orbitalInfo, shellIndexS);
 
     output(indexP, indexQ, indexR, indexS,
            orbitalInfo,

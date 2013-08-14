@@ -472,13 +472,17 @@ void DfCD::calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
             const int maxStepsP = 2 * shellTypeP + 1;
             const int maxStepsQ = 2 * shellTypeQ + 1;
 
-            const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
-            const DfEriEngine::CGTO_Pair PQ = 
-                this->pEriEngines_[threadID].getCGTO_pair(this->orbitalInfo_,
-                                                          shellIndexP,
-                                                          shellIndexQ,
-                                                          pairwisePGTO_cutoffThreshold);
-            this->pEriEngines_[threadID].calc(queryPQ, queryPQ, PQ, PQ);
+            // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
+            // const DfEriEngine::CGTO_Pair PQ = 
+            //     this->pEriEngines_[threadID].getCGTO_pair(this->orbitalInfo_,
+            //                                               shellIndexP,
+            //                                               shellIndexQ,
+            //                                               pairwisePGTO_cutoffThreshold);
+            //this->pEriEngines_[threadID].calc(queryPQ, queryPQ, PQ, PQ);
+            this->pEriEngines_[threadID].calc(0, this->orbitalInfo_, shellIndexP,
+                                              0, this->orbitalInfo_, shellIndexQ,
+                                              0, this->orbitalInfo_, shellIndexP,
+                                              0, this->orbitalInfo_, shellIndexQ);
                 
             const int maxStepsPQ = maxStepsP * maxStepsQ;
             double maxValue = 0.0;
@@ -734,18 +738,22 @@ void DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
                 const int maxStepsR = 2 * shellTypeR + 1;
                 const int maxStepsS = 2 * shellTypeS + 1;
                 
-                const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(this->orbitalInfo_,
-                                                                                            shellIndexP,
-                                                                                            shellIndexQ,
-                                                                                            pairwisePGTO_cutoffThreshold);
-                const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(this->orbitalInfo_,
-                                                                                            shellIndexR,
-                                                                                            shellIndexS,
-                                                                                            pairwisePGTO_cutoffThreshold);
-                const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
-                const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
+                // const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(this->orbitalInfo_,
+                //                                                                             shellIndexP,
+                //                                                                             shellIndexQ,
+                //                                                                             pairwisePGTO_cutoffThreshold);
+                // const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(this->orbitalInfo_,
+                //                                                                             shellIndexR,
+                //                                                                             shellIndexS,
+                //                                                                             pairwisePGTO_cutoffThreshold);
+                // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
+                // const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
                 
-                this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
+                // this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
+                this->pEriEngines_[threadID].calc(0, this->orbitalInfo_, shellIndexP,
+                                                  0, this->orbitalInfo_, shellIndexQ,
+                                                  0, this->orbitalInfo_, shellIndexR,
+                                                  0, this->orbitalInfo_, shellIndexS);
                 
                 const int steps = maxStepsP * maxStepsQ * maxStepsR * maxStepsS;
                 std::vector<double> buf(steps);

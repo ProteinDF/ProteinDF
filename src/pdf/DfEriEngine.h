@@ -8,6 +8,7 @@
 #include <bitset>
 #include <cmath>
 
+#include "DfEngineObject.h"
 #include "TlPosition.h"
 #include "TlMath.h"
 #include "TlAngularMomentumVector.h"
@@ -86,7 +87,7 @@
 //#define ERI_NUM_OF_AMVS (108 +1)
 #define ERI_MAX_BATCH (1456 +1)
 
-class DfEriEngine {
+class DfEriEngine : public DfEngineObject {
 public:
     typedef int index_type;
     
@@ -434,18 +435,27 @@ private:
     // construct & destruct ----------------------------------------------------
 public:
     DfEriEngine();
-    ~DfEriEngine();
+    virtual ~DfEriEngine();
 
     // double getElapseCalcTime() const;
 
-    static CGTO_Pair getCGTO_pair(const TlOrbitalInfoObject& orbInfoconst,
+    static CGTO_Pair getCGTO_pair(const TlOrbitalInfoObject& orbInfo,
                                   const index_type shellIndexP,
                                   const index_type shellIndexQ = -1,
                                   const double threshold = 1.0E-20);
+    static CGTO_Pair getCGTO_pair(const TlOrbitalInfoObject& orbInfo1,
+                                  const TlOrbitalInfoObject& orbInfo2,
+                                  const index_type shellIndex1,
+                                  const index_type shellIndex2 = -1,
+                                  const double threshold = 1.0E-20);
     
-    void calc(const AngularMomentum2& qAB, const AngularMomentum2& qCD,
-              const CGTO_Pair& IJ, const CGTO_Pair& KL);
+    virtual void calc(const int diff1, const TlOrbitalInfoObject& orbInfo1, const index_type shell1,
+                      const int diff2, const TlOrbitalInfoObject& orbInfo2, const index_type shell2,
+                      const int diff3, const TlOrbitalInfoObject& orbInfo3, const index_type shell3,
+                      const int diff4, const TlOrbitalInfoObject& orbInfo4, const index_type shell4);
 
+    virtual double value(const index_type index) const;
+    
     void calcGrad(const AngularMomentum2& qAB, const AngularMomentum2& qCD,
                   const CGTO_Pair& IJ, const CGTO_Pair& KL);
 
@@ -459,6 +469,9 @@ public:
 private:
     void initialize();
     
+    void calc0(const AngularMomentum2& qAB, const AngularMomentum2& qCD,
+               const CGTO_Pair& IJ, const CGTO_Pair& KL);
+
     void calc(const AngularMomentum2& qAB, const AngularMomentum2& qCD);
 
     void calcGrad(const AngularMomentum2& qAB, const AngularMomentum2& qCD);
@@ -674,6 +687,12 @@ private:
     int maxERI_batch_;
 #endif //
 };
+
+
+inline double DfEriEngine::value(const index_type index) const
+{
+    return this->WORK[index];
+}
 
 
 #endif // DFERIENGINE

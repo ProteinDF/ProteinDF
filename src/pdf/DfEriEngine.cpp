@@ -290,9 +290,111 @@ DfEriEngine::CGTO_Pair DfEriEngine::getCGTO_pair(const TlOrbitalInfoObject& orbI
     return pairPQ;
 }
 
+DfEriEngine::CGTO_Pair DfEriEngine::getCGTO_pair(const TlOrbitalInfoObject& orbInfo1,
+                                                 const TlOrbitalInfoObject& orbInfo2,
+                                                 const index_type shellIndex1,
+                                                 const index_type shellIndex2,
+                                                 const double cutoffThreshold)
+{
+    const TlPosition P = orbInfo1.getPosition(shellIndex1);
+    const int shellTypeP = orbInfo1.getShellType(shellIndex1);
+    int numOfContractionsP = orbInfo1.getCgtoContraction(shellIndex1);
 
-void DfEriEngine::calc(const AngularMomentum2& qAB, const AngularMomentum2& qCD,
-                       const CGTO_Pair& IJ, const CGTO_Pair& KL)
+    TlPosition Q(0.0, 0.0, 0.0);
+    int shellTypeQ = 0;
+    int numOfContractionsQ = 1;
+    if (shellIndex2 >= 0) {
+        Q = orbInfo2.getPosition(shellIndex2);
+        shellTypeQ = orbInfo2.getShellType(shellIndex2);
+        numOfContractionsQ = orbInfo2.getCgtoContraction(shellIndex2);
+    }
+    const TlPosition PQ = Q - P;
+
+    // cutoff
+    // TlOrbitalInfoObjectオブジェクトは指数の大きい順に並んでいるので
+    // Pの1番目(最大)とQを比較すれば良い。
+    // static const double INV_EQ32_COEF = 1.0 / (std::pow(2.0 * TlMath::PI(), 0.25) * TlMath::PI());
+    // const double threshold = cutoffThreshold * INV_EQ32_COEF;
+    // const double distance2 = PQ.squareDistanceFrom();
+    // if (shellIndexQ >= 0) {
+    //     const double exponentQ = orbInfo.getExponent(shellIndexQ, 0);
+    //     for (int i = 0; i < numOfContractionsP; ++i) {
+    //         const double exponentP = orbInfo.getExponent(shellIndexP, i);
+    //         const double zeta = exponentP + exponentQ;
+    //         const double inv_zeta = 1.0 / zeta;
+    //         const double Kab = std::fabs(inv_zeta * std::exp(- exponentP * exponentQ * inv_zeta * distance2));
+    //         if (Kab < threshold) {
+    //             numOfContractionsP = i +1;
+    //             break;
+    //         }
+    //     }
+
+    //     const double exponentP = orbInfo.getExponent(shellIndexP, 0);
+    //     for (int i = 0; i < numOfContractionsQ; ++i) {
+    //         const double exponentQ = orbInfo.getExponent(shellIndexQ, i);
+    //         const double zeta = exponentP + exponentQ;
+    //         const double inv_zeta = 1.0 / zeta;
+    //         const double Kab = std::fabs(inv_zeta * std::exp(- exponentP * exponentQ * inv_zeta * distance2));
+    //         if (Kab < threshold) {
+    //             numOfContractionsQ = i +1;
+    //             break;
+    //         }
+    //     }
+    // }
+
+    // make pair
+    PGTO_Pairs pgtosPQ(numOfContractionsP * numOfContractionsQ);
+    int index = 0;
+    for (int pP = 0; pP < numOfContractionsP; ++pP) {
+        const double coefP = orbInfo1.getCoefficient(shellIndex1, pP);
+        const double expP = orbInfo1.getExponent(shellIndex1, pP);
+        
+        for (int pQ = 0; pQ < numOfContractionsQ; ++pQ) {
+            double coefQ = 1.0;
+            double expQ  = 0.0;
+            if (shellIndex2 >= 0) {
+                coefQ = orbInfo2.getCoefficient(shellIndex2, pQ);
+                expQ = orbInfo2.getExponent(shellIndex2, pQ);
+            }
+            
+            PGTO_Pair pgtoPair(shellTypeP, coefP, expP,
+                               shellTypeQ, coefQ, expQ,
+                               P, Q);
+            pgtosPQ[index] = pgtoPair;
+            ++index;
+        }
+    }
+    CGTO_Pair pairPQ(PQ, pgtosPQ);
+    std::sort(pairPQ.PS.begin(), pairPQ.PS.end(), PGTO_sort_functor_cmp());
+
+    return pairPQ;
+}
+
+void DfEriEngine::calc(const int diff1, const TlOrbitalInfoObject& orbInfo1, const index_type shell1,
+                       const int diff2, const TlOrbitalInfoObject& orbInfo2, const index_type shell2,
+                       const int diff3, const TlOrbitalInfoObject& orbInfo3, const index_type shell3,
+                       const int diff4, const TlOrbitalInfoObject& orbInfo4, const index_type shell4)
+{
+    const int shellType1 = orbInfo1.getShellType(shell1);
+    const int shellType2 = (shell2 >= 0) ? orbInfo2.getShellType(shell2) : 0;
+    const int shellType3 = orbInfo3.getShellType(shell3);
+    const int shellType4 = (shell4 >= 0) ? orbInfo4.getShellType(shell4) : 0;
+
+    const AngularMomentum2 qPQ(diff1, diff2,
+                               shellType1, shellType2);
+    const AngularMomentum2 qRS(diff3, diff4,
+                               shellType3, shellType4);
+
+    const CGTO_Pair PQ = this->getCGTO_pair(orbInfo1, orbInfo2,
+                                            shell1, shell2);
+    const CGTO_Pair RS = this->getCGTO_pair(orbInfo3, orbInfo4,
+                                            shell3, shell4);
+
+    this->calc0(qPQ, qRS, PQ, RS);
+}
+
+void DfEriEngine::calc0(const AngularMomentum2& qAB, const AngularMomentum2& qCD,
+                        const CGTO_Pair& IJ, const CGTO_Pair& KL)
 {
     assert((0 <= qAB.a_bar) && (qAB.a_bar < ERI_A_BAR_MAX));
     assert((0 <= qAB.b_bar) && (qAB.b_bar < ERI_B_BAR_MAX));

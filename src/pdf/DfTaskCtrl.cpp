@@ -1722,11 +1722,15 @@ TlSparseSymmetricMatrix DfTaskCtrl::makeSchwarzTable(const TlOrbitalInfoObject& 
             const int maxStepsQ = 2 * shellTypeQ + 1;
             
             const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
-            const DfEriEngine::CGTO_Pair PQ = engine.getCGTO_pair(orbitalInfo,
-                                                                  shellIndexP,
-                                                                  shellIndexQ,
-                                                                  0.0);
-            pEngine->calc(queryPQ, queryPQ, PQ, PQ);
+            // const DfEriEngine::CGTO_Pair PQ = engine.getCGTO_pair(orbitalInfo,
+            //                                                       shellIndexP,
+            //                                                       shellIndexQ,
+            //                                                       0.0);
+            // pEngine->calc(queryPQ, queryPQ, PQ, PQ);
+            pEngine->calc(0, orbitalInfo, shellIndexP,
+                          0, orbitalInfo, shellIndexQ,
+                          0, orbitalInfo, shellIndexP,
+                          0, orbitalInfo, shellIndexQ);
 
             double maxValue = 0.0;
             const int maxIndex = maxStepsP * maxStepsQ;

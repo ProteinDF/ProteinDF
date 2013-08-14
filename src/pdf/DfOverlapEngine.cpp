@@ -39,15 +39,76 @@ DfOverlapEngine::~DfOverlapEngine()
 }
 
 
-void DfOverlapEngine::calc(const Query& query,
-                           const TlPosition& A,
-                           const TlPosition& B,
-                           const TlPosition& C,
-                           const TlPosition& D,
-                           const PGTOs& PGTOsA,
-                           const PGTOs& PGTOsB,
-                           const PGTOs& PGTOsC,
-                           const PGTOs& PGTOsD)
+void DfOverlapEngine::calc(const int diff1, const TlOrbitalInfoObject& orbInfo1, const index_type shell1,
+                           const int diff2, const TlOrbitalInfoObject& orbInfo2, const index_type shell2,
+                           const int diff3, const TlOrbitalInfoObject& orbInfo3, const index_type shell3,
+                           const int diff4, const TlOrbitalInfoObject& orbInfo4, const index_type shell4)
+{
+    static const PGTO pgto0(1.0, 0.0);
+
+    int shellType1 = 0;
+    TlPosition pos1;
+    PGTOs pgtos1;
+    if (shell1 >= 0) {
+        shellType1 = orbInfo1.getShellType(shell1);
+        pos1 = orbInfo1.getPosition(shell1);
+        pgtos1 = this->getPGTOs(orbInfo1, shell1);
+    } else {
+        pgtos1.resize(1);
+        pgtos1[0] = pgto0;
+    }
+
+    int shellType2 = 0;
+    TlPosition pos2;
+    PGTOs pgtos2;
+    if (shell2 >= 0) {
+        shellType2 = orbInfo2.getShellType(shell2);
+        pos2 = orbInfo2.getPosition(shell2);
+        pgtos2 = this->getPGTOs(orbInfo2, shell2);
+    } else {
+        pgtos2.resize(1);
+        pgtos2[0] = pgto0;
+    }
+
+    int shellType3 = 0;
+    TlPosition pos3;
+    PGTOs pgtos3;
+    if (shell3 >= 0) {
+        shellType3 = orbInfo3.getShellType(shell3);
+        pos3 = orbInfo3.getPosition(shell3);
+        pgtos3 = this->getPGTOs(orbInfo3, shell3);
+    } else {
+        pgtos3.resize(1);
+        pgtos3[0] = pgto0;
+    }
+
+    int shellType4 = 0;
+    TlPosition pos4;
+    PGTOs pgtos4;
+    if (shell4 >= 0) {
+        shellType4 = orbInfo4.getShellType(shell4);
+        pos4 = orbInfo4.getPosition(shell4);
+        pgtos4 = this->getPGTOs(orbInfo4, shell4);
+    } else {
+        pgtos4.resize(1);
+        pgtos4[0] = pgto0;
+    }
+
+    const Query query(diff1, diff2, diff3, diff4,
+                      shellType1, shellType2, shellType3, shellType4);
+    this->calc0(query, pos1, pos2, pos3, pos4,
+                pgtos1, pgtos2, pgtos3, pgtos4);
+}
+
+void DfOverlapEngine::calc0(const Query& query,
+                            const TlPosition& A,
+                            const TlPosition& B,
+                            const TlPosition& C,
+                            const TlPosition& D,
+                            const PGTOs& PGTOsA,
+                            const PGTOs& PGTOsB,
+                            const PGTOs& PGTOsC,
+                            const PGTOs& PGTOsD)
 {
     this->a_bar_ = query.shellTypeA_bar;
     this->b_bar_ = query.shellTypeB_bar;

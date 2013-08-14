@@ -580,20 +580,24 @@ TlSparseSymmetricMatrix DfGridFreeXC::makeSchwarzTable(const TlOrbitalInfoObject
         const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
         const int maxStepsP = 2 * shellTypeP + 1;
         const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
-        const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexP);
+        // const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexP);
 
         for (index_type shellIndexQ = 0; shellIndexQ < maxShellIndex; ) {
             const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
             const int maxStepsQ = 2 * shellTypeQ + 1;
             
             const TlPosition posQ = orbitalInfo.getPosition(shellIndexQ);
-            const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexQ);
-            const DfOverlapEngine::Query query(0, 0, 0, 0,
-                                               shellTypeP, shellTypeQ,
-                                               shellTypeP, shellTypeQ);
+            // const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexQ);
+            // const DfOverlapEngine::Query query(0, 0, 0, 0,
+            //                                    shellTypeP, shellTypeQ,
+            //                                    shellTypeP, shellTypeQ);
 
-            engine.calc(query, posP, posQ, posP, posQ,
-                        pgtosP, pgtosQ, pgtosP, pgtosQ);
+            // engine.calc0(query, posP, posQ, posP, posQ,
+            //              pgtosP, pgtosQ, pgtosP, pgtosQ);
+            engine.calc(0, orbitalInfo, shellIndexP,
+                        0, orbitalInfo, shellIndexQ,
+                        0, orbitalInfo, shellIndexP,
+                        0, orbitalInfo, shellIndexQ);
 
             double maxValue = 0.0;
             const int maxIndex = maxStepsP * maxStepsQ;
@@ -641,22 +645,26 @@ void DfGridFreeXC::getM_part(const TlOrbitalInfoObject& orbitalInfo,
             const int maxStepsQ = 2 * shellTypeQ + 1;
             const int maxStepsR = 2 * shellTypeR + 1;
             const int maxStepsS = 2 * shellTypeS + 1;
-            const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
-            const TlPosition posQ = orbitalInfo.getPosition(shellIndexQ);
-            const TlPosition posR = orbitalInfo.getPosition(shellIndexR);
-            const TlPosition posS = orbitalInfo.getPosition(shellIndexS);
-            const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexP);
-            const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexQ);
-            const DfOverlapEngine::PGTOs pgtosR = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexR);
-            const DfOverlapEngine::PGTOs pgtosS = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexS);
+            // const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
+            // const TlPosition posQ = orbitalInfo.getPosition(shellIndexQ);
+            // const TlPosition posR = orbitalInfo.getPosition(shellIndexR);
+            // const TlPosition posS = orbitalInfo.getPosition(shellIndexS);
+            // const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexP);
+            // const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexQ);
+            // const DfOverlapEngine::PGTOs pgtosR = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexR);
+            // const DfOverlapEngine::PGTOs pgtosS = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexS);
                         
-            const DfOverlapEngine::Query query(0, 0, 0, 0,
-                                               shellTypeP, shellTypeQ,
-                                               shellTypeR, shellTypeS);
+            // const DfOverlapEngine::Query query(0, 0, 0, 0,
+            //                                    shellTypeP, shellTypeQ,
+            //                                    shellTypeR, shellTypeS);
 
-            this->pOvpEngines_[threadID].calc(query,
-                                              posP, posQ, posR, posS,
-                                              pgtosP, pgtosQ, pgtosR, pgtosS);
+            // this->pOvpEngines_[threadID].calc0(query,
+            //                                    posP, posQ, posR, posS,
+            //                                    pgtosP, pgtosQ, pgtosR, pgtosS);
+            this->pOvpEngines_[threadID].calc(0, orbitalInfo, shellIndexP,
+                                              0, orbitalInfo, shellIndexQ,
+                                              0, orbitalInfo, shellIndexR,
+                                              0, orbitalInfo, shellIndexS);
                         
             this->storeM(shellIndexP, maxStepsP,
                          shellIndexQ, maxStepsQ,
@@ -749,22 +757,26 @@ void DfGridFreeXC::getM_part(const TlOrbitalInfoObject& orbitalInfo_PQ,
             const int maxStepsQ = 2 * shellTypeQ + 1;
             const int maxStepsR = 2 * shellTypeR + 1;
             const int maxStepsS = 2 * shellTypeS + 1;
-            const TlPosition posP = orbitalInfo_PQ.getPosition(shellIndexP);
-            const TlPosition posQ = orbitalInfo_PQ.getPosition(shellIndexQ);
-            const TlPosition posR = orbitalInfo_RS.getPosition(shellIndexR);
-            const TlPosition posS = orbitalInfo_RS.getPosition(shellIndexS);
-            const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(orbitalInfo_PQ, shellIndexP);
-            const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(orbitalInfo_PQ, shellIndexQ);
-            const DfOverlapEngine::PGTOs pgtosR = DfOverlapEngine::getPGTOs(orbitalInfo_RS, shellIndexR);
-            const DfOverlapEngine::PGTOs pgtosS = DfOverlapEngine::getPGTOs(orbitalInfo_RS, shellIndexS);
+            // const TlPosition posP = orbitalInfo_PQ.getPosition(shellIndexP);
+            // const TlPosition posQ = orbitalInfo_PQ.getPosition(shellIndexQ);
+            // const TlPosition posR = orbitalInfo_RS.getPosition(shellIndexR);
+            // const TlPosition posS = orbitalInfo_RS.getPosition(shellIndexS);
+            // const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(orbitalInfo_PQ, shellIndexP);
+            // const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(orbitalInfo_PQ, shellIndexQ);
+            // const DfOverlapEngine::PGTOs pgtosR = DfOverlapEngine::getPGTOs(orbitalInfo_RS, shellIndexR);
+            // const DfOverlapEngine::PGTOs pgtosS = DfOverlapEngine::getPGTOs(orbitalInfo_RS, shellIndexS);
                         
-            const DfOverlapEngine::Query query(0, 0, 0, 0,
-                                               shellTypeP, shellTypeQ,
-                                               shellTypeR, shellTypeS);
+            // const DfOverlapEngine::Query query(0, 0, 0, 0,
+            //                                    shellTypeP, shellTypeQ,
+            //                                    shellTypeR, shellTypeS);
 
-            this->pOvpEngines_[threadID].calc(query,
-                                              posP, posQ, posR, posS,
-                                              pgtosP, pgtosQ, pgtosR, pgtosS);
+            // this->pOvpEngines_[threadID].calc0(query,
+            //                                    posP, posQ, posR, posS,
+            //                                    pgtosP, pgtosQ, pgtosR, pgtosS);
+            this->pOvpEngines_[threadID].calc(0, orbitalInfo_PQ, shellIndexP,
+                                              0, orbitalInfo_PQ, shellIndexQ,
+                                              0, orbitalInfo_RS, shellIndexR,
+                                              0, orbitalInfo_RS, shellIndexS);
                         
             this->storeM_pq(shellIndexP, maxStepsP,
                             shellIndexQ, maxStepsQ,
@@ -890,27 +902,31 @@ void DfGridFreeXC::getM_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 
                     for (ShellArray::const_iterator pIt = shellArrayP.begin(); pIt != pItEnd; ++pIt) {
                         const index_type shellIndexP = *pIt;
-                        const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
-                        const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexP);
+                        // const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
+                        // const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexP);
 
                         for (ShellArray::const_iterator qIt = shellArrayQ.begin(); qIt != qItEnd; ++qIt) {
                             const index_type shellIndexQ = *qIt;
-                            const TlPosition posQ = orbitalInfo.getPosition(shellIndexQ);
-                            const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexQ);
+                            // const TlPosition posQ = orbitalInfo.getPosition(shellIndexQ);
+                            // const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexQ);
 
                             for (ShellArray::const_iterator rIt = shellArrayR.begin(); rIt != rItEnd; ++rIt) {
                                 const index_type shellIndexR = *rIt;
-                                const TlPosition posR = orbitalInfo.getPosition(shellIndexR);
-                                const DfOverlapEngine::PGTOs pgtosR = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexR);
+                                // const TlPosition posR = orbitalInfo.getPosition(shellIndexR);
+                                // const DfOverlapEngine::PGTOs pgtosR = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexR);
                                 
                                 for (ShellArray::const_iterator sIt = shellArrayS.begin(); sIt != sItEnd; ++sIt) {
                                     const index_type shellIndexS = *sIt;
-                                    const TlPosition posS = orbitalInfo.getPosition(shellIndexS);
-                                    const DfOverlapEngine::PGTOs pgtosS = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexS);
+                                    // const TlPosition posS = orbitalInfo.getPosition(shellIndexS);
+                                    // const DfOverlapEngine::PGTOs pgtosS = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexS);
 
-                                    engine.calc(query,
-                                                posP, posQ, posR, posS,
-                                                pgtosP, pgtosQ, pgtosR, pgtosS);
+                                    // engine.calc0(query,
+                                    //              posP, posQ, posR, posS,
+                                    //              pgtosP, pgtosQ, pgtosR, pgtosS);
+                                    engine.calc(0, orbitalInfo, shellIndexP,
+                                                0, orbitalInfo, shellIndexQ,
+                                                0, orbitalInfo, shellIndexR,
+                                                0, orbitalInfo, shellIndexS);
 
                                     int index = 0;
                                     for (int i = 0; i < maxStepsP; ++i) {
@@ -1230,17 +1246,21 @@ void DfGridFreeXC::calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& ta
             const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
             const int maxStepsP = 2 * shellTypeP + 1;
             const int maxStepsQ = 2 * shellTypeQ + 1;
-            const TlPosition posP = this->orbitalInfo_.getPosition(shellIndexP);
-            const TlPosition posQ = this->orbitalInfo_.getPosition(shellIndexQ);
-            const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexP);
-            const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexQ);
+            // const TlPosition posP = this->orbitalInfo_.getPosition(shellIndexP);
+            // const TlPosition posQ = this->orbitalInfo_.getPosition(shellIndexQ);
+            // const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexP);
+            // const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexQ);
 
-            const DfOverlapEngine::Query query(0, 0, 0, 0,
-                                               shellTypeP, shellTypeQ,
-                                               shellTypeP, shellTypeQ);
-            this->pOvpEngines_[threadID].calc(query,
-                                              posP, posQ, posP, posQ,
-                                              pgtosP, pgtosQ, pgtosP, pgtosQ);
+            // const DfOverlapEngine::Query query(0, 0, 0, 0,
+            //                                    shellTypeP, shellTypeQ,
+            //                                    shellTypeP, shellTypeQ);
+            // this->pOvpEngines_[threadID].calc0(query,
+            //                                    posP, posQ, posP, posQ,
+            //                                    pgtosP, pgtosQ, pgtosP, pgtosQ);
+            this->pOvpEngines_[threadID].calc(0, this->orbitalInfo_, shellIndexP,
+                                              0, this->orbitalInfo_, shellIndexQ,
+                                              0, this->orbitalInfo_, shellIndexP,
+                                              0, this->orbitalInfo_, shellIndexQ);
                 
             const int maxStepsPQ = maxStepsP * maxStepsQ;
             double maxValue = 0.0;
@@ -1426,14 +1446,18 @@ void DfGridFreeXC::calcElements(const std::vector<IndexPair4>& calcList,
                 const TlPosition posQ = this->orbitalInfo_.getPosition(shellIndexQ);
                 const TlPosition posR = this->orbitalInfo_.getPosition(shellIndexR);
                 const TlPosition posS = this->orbitalInfo_.getPosition(shellIndexS);
-                const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexP);
-                const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexQ);
-                const DfOverlapEngine::PGTOs pgtosR = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexR);
-                const DfOverlapEngine::PGTOs pgtosS = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexS);
+                // const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexP);
+                // const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexQ);
+                // const DfOverlapEngine::PGTOs pgtosR = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexR);
+                // const DfOverlapEngine::PGTOs pgtosS = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexS);
                 
-                this->pOvpEngines_[threadID].calc(query,
-                                                  posP, posQ, posR, posS,
-                                                  pgtosP, pgtosQ, pgtosR, pgtosS);
+                // this->pOvpEngines_[threadID].calc0(query,
+                //                                    posP, posQ, posR, posS,
+                //                                    pgtosP, pgtosQ, pgtosR, pgtosS);
+                this->pOvpEngines_[threadID].calc(0, this->orbitalInfo_, shellIndexP,
+                                                  0, this->orbitalInfo_, shellIndexQ,
+                                                  0, this->orbitalInfo_, shellIndexR,
+                                                  0, this->orbitalInfo_, shellIndexS);
                 
                 const int steps = maxStepsP * maxStepsQ * maxStepsR * maxStepsS;
                 std::vector<double> buf(steps);
