@@ -65,10 +65,42 @@ void DfCD::destroyEngines()
 
 void DfCD::calcCholeskyVectors()
 {
-    this->calcCholeskyVectors_onTheFly();
+    // this->calcCholeskyVectors_onTheFly();
+    {
+        const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
+                                      (*this->pPdfParam_)["basis_sets"]);
+        const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
+                                      (*this->pPdfParam_)["basis_sets"]);
+        // this->getSuperMatrix_TH(orbInfo_p, orbInfo_q);
+        // {
+        //     TlSymmetricMatrix V;
+        //     V.load("fl_Work/V.mat");
+        //     TlMatrix L = this->calcCholeskyVectors(V);
+        // }
+
+        this->calcCholeskyVectors_onTheFly_TH(orbInfo_p, orbInfo_q);
+    }
 }
 
 void DfCD::saveI2PQ(const PQ_PairArray& I2PQ) 
+{
+    std::string filepath = this->getI2pqVtrPath();
+    std::ofstream ofs;
+    ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::binary);
+
+    const std::size_t size = I2PQ.size();
+    ofs.write(reinterpret_cast<const char*>(&size), sizeof(std::size_t));
+    for (std::size_t i = 0; i < size; ++i) {
+        const index_type index1 = I2PQ[i].index1();
+        const index_type index2 = I2PQ[i].index2();
+        ofs.write(reinterpret_cast<const char*>(&index1), sizeof(index_type));
+        ofs.write(reinterpret_cast<const char*>(&index2), sizeof(index_type));
+    }
+
+    ofs.close();
+}
+
+void DfCD::saveI2PQ_TH(const PQ_PairArray_TH& I2PQ) 
 {
     std::string filepath = this->getI2pqVtrPath();
     std::ofstream ofs;
@@ -111,6 +143,30 @@ DfCD::PQ_PairArray DfCD::getI2PQ()
     return answer;
 }
 
+DfCD::PQ_PairArray_TH DfCD::getI2PQ_TH()
+{
+    std::string filepath = this->getI2pqVtrPath();
+    std::ifstream ifs;
+    ifs.open(filepath.c_str(), std::ofstream::in | std::ofstream::binary);
+    if (ifs.fail()) {
+        abort();
+    }
+
+    std::size_t size = 0;
+    ifs.read(reinterpret_cast<char*>(&size), sizeof(std::size_t));
+
+    PQ_PairArray_TH answer(size);
+    index_type shellIndex1 = 0;
+    index_type shellIndex2 = 0;
+    for (std::size_t i = 0; i < size; ++i) {
+        ifs.read(reinterpret_cast<char*>(&shellIndex1), sizeof(index_type));
+        ifs.read(reinterpret_cast<char*>(&shellIndex2), sizeof(index_type));
+        answer[i] = IndexPair2_TH(shellIndex1, shellIndex2);
+    }
+
+    ifs.close();
+    return answer;
+}
 
 void DfCD::saveL(const TlMatrix& L)
 {
@@ -150,12 +206,45 @@ void DfCD::finalize_I2PQ(PQ_PairArray *pI2PQ)
     std::sort(pI2PQ->begin(), pI2PQ->end());
 }
 
+void DfCD::finalize(TlMatrix* pMat)
+{
+    // do nothing
+}
+
+void DfCD::finalize(TlSparseMatrix *pMat) 
+{
+    // do nothing
+}
+
+void DfCD::finalize_I2PQ_TH(PQ_PairArray_TH *pI2PQ)
+{
+    std::sort(pI2PQ->begin(), pI2PQ->end());
+}
 
 TlSymmetricMatrix DfCD::getCholeskyVector(const TlVector& L_col,
                                           const PQ_PairArray& I2PQ)
 {
     const index_type numOfItilde = L_col.getSize();
     TlSymmetricMatrix answer(this->m_nNumOfAOs);
+    for (index_type i = 0; i < numOfItilde; ++i) {
+        answer.set(I2PQ[i].index1(),
+                   I2PQ[i].index2(),
+                   L_col[i]);
+    }
+
+    return answer;
+}
+
+TlMatrix DfCD::getCholeskyVector_TH(const TlOrbitalInfoObject& orbInfo_p,
+                                    const TlOrbitalInfoObject& orbInfo_q,
+                                    const TlVector& L_col,
+                                    const PQ_PairArray_TH& I2PQ)
+{
+    const index_type numOfOrbs_p = orbInfo_p.getNumOfOrbitals();
+    const index_type numOfOrbs_q = orbInfo_q.getNumOfOrbitals();
+
+    const index_type numOfItilde = L_col.getSize();
+    TlMatrix answer(numOfOrbs_p, numOfOrbs_q);
     for (index_type i = 0; i < numOfItilde; ++i) {
         answer.set(I2PQ[i].index1(),
                    I2PQ[i].index2(),
@@ -192,6 +281,38 @@ void DfCD::getJ(TlSymmetricMatrix* pJ)
     this->finalize(pJ);
 }
 
+void DfCD::getJ_TH(TlSymmetricMatrix* pJ)
+{
+    const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
+                                  (*this->pPdfParam_)["basis_sets"]);
+    const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
+                                  (*this->pPdfParam_)["basis_sets"]);
+    const TlSymmetricMatrix P = this->getPMatrix();
+
+    // cholesky vector
+    TlMatrix L = this->getL();
+    const index_type numOfCBs = L.getNumOfCols();
+
+    const PQ_PairArray_TH I2PQ = this->getI2PQ_TH();
+    index_type start_CholeskyBasis = 0;
+    index_type end_CholeskyBasis = 0;
+    this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
+    for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
+        TlMatrix LI = this->getCholeskyVector_TH(orbInfo_p, orbInfo_q,
+                                                 L.getColVector(I), I2PQ);
+        LI.save(TlUtils::format("fl_Work/LI.%d.mat", I));
+        assert(LI.getNumOfRows() == this->m_nNumOfAOs);
+        assert(LI.getNumOfCols() == this->m_nNumOfAOs);
+        
+        TlMatrix QI = LI;
+        QI.dot(P);
+        const double qi = QI.sum();
+
+        *pJ += qi*LI;
+    }
+
+    this->finalize(pJ);
+}
 
 void DfCD::divideCholeskyBasis(const index_type numOfCBs,
                                index_type *pStart, index_type *pEnd)
@@ -216,6 +337,41 @@ void DfCD::getK(const RUN_TYPE runType,
     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
         TlSymmetricMatrix l = this->getCholeskyVector(L.getColVector(I), I2PQ);
+    
+        TlMatrix X = l * C;
+        TlMatrix Xt = X;
+        Xt.transpose();
+        
+        TlSymmetricMatrix XX = X * Xt;
+        *pK += XX;
+    }
+    
+    *pK *= -1.0;
+    this->finalize(pK);
+}
+
+void DfCD::getK_TH(const RUN_TYPE runType,
+                   TlSymmetricMatrix *pK)
+{
+    const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
+                                  (*this->pPdfParam_)["basis_sets"]);
+    const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
+                                  (*this->pPdfParam_)["basis_sets"]);
+
+    TlMatrix L = this->getL();
+    const index_type numOfCBs = L.getNumOfCols();
+    
+    TlSymmetricMatrix P = 0.5 * this->getPMatrix(); // RKS
+    const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
+    
+    const PQ_PairArray_TH I2PQ = this->getI2PQ_TH();
+    index_type start_CholeskyBasis = 0;
+    index_type end_CholeskyBasis = 0;
+    this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
+    for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
+        TlMatrix l = this->getCholeskyVector_TH(orbInfo_p, 
+                                                orbInfo_q,
+                                                L.getColVector(I), I2PQ);
     
         TlMatrix X = l * C;
         TlMatrix Xt = X;
@@ -384,6 +540,173 @@ void DfCD::calcCholeskyVectors_onTheFly()
 }
 
 
+void DfCD::calcCholeskyVectors_onTheFly_TH(const TlOrbitalInfoObject& orbInfo_p,
+                                           const TlOrbitalInfoObject& orbInfo_q)
+{
+    // TlSymmetricMatrix W;
+    // W.load("fl_Work/V.mat");
+
+    const index_type numOfOrbs_p = orbInfo_p.getNumOfOrbitals();
+    const index_type numOfOrbs_q = orbInfo_q.getNumOfOrbitals();
+    const index_type numOfPQs = numOfOrbs_p * numOfOrbs_q;
+
+    this->createEngines();
+    this->initializeCutoffStats();
+
+    this->log_.info(TlUtils::format("# of orb for p: %d", numOfOrbs_p));
+    this->log_.info(TlUtils::format("# of orb for q: %d", numOfOrbs_q));
+    this->log_.info(TlUtils::format("# of PQ dimension: %d", numOfPQs));
+    PQ_PairArray_TH I2PQ;
+    TlSparseMatrix schwartzTable(numOfOrbs_p, numOfOrbs_q);
+    TlVector d; // 対角成分
+    this->calcDiagonals_TH(orbInfo_p, orbInfo_q,
+                           &I2PQ, &schwartzTable, &d);
+
+    this->saveI2PQ_TH(I2PQ);
+    // this->ERI_cache_manager_.setMaxItems(I2PQ.size() * 2);
+
+    const std::size_t N = I2PQ.size();
+    this->log_.info(TlUtils::format("# of I~ dimension: %ld", N));
+    //double error = d.getMaxAbsoluteElement();
+    double error = d.sum();
+    std::vector<TlVector::size_type> pivot(N);
+    for (index_type i = 0; i < N; ++i) {
+        pivot[i] = i;
+    }
+
+    // prepare variables
+    // TlSymmetricMatrix V(N);
+    // for (int i = 0; i < N; ++i) {
+    //     V.set(i, i, d[i]);
+    // }
+    // V.save("fl_Work/onthefly_Vdiag.mat");
+
+    const bool isUsingMemManager = this->isEnableMmap_;
+    TlRowVectorMatrix2 L(N, 1, 1, 0, isUsingMemManager);
+    TlMatrix tmpL(N, N);
+    const double threshold = this->epsilon_;
+    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
+
+    int progress = 0;
+    index_type division =  index_type(N * 0.01);
+    L.reserve_cols(division);
+    index_type m = 0;
+    while (error > threshold) {
+#ifdef DEBUG_CD
+        this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e", m, N, error));
+#endif //DEBUG_CD
+
+        // progress 
+        if (m >= progress * division) {
+            this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e, local mem:%8.1f MB",
+                                            m, error, TlSystem::getMaxRSS()));
+            ++progress;
+
+            // メモリの確保
+            L.reserve_cols(division * progress);
+        }
+        L.resize(N, m+1);
+
+        // pivot
+        {
+            std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+                                                                           pivot.end());
+            const index_type i = it - pivot.begin();
+            std::swap(pivot[m], pivot[i]);
+        }
+
+        const double l_m_pm = std::sqrt(d[pivot[m]]);
+        L.set(pivot[m], m, l_m_pm);
+        tmpL.set(pivot[m], m, l_m_pm);
+        
+        const double inv_l_m_pm = 1.0 / l_m_pm;
+
+        // ERI
+        const index_type pivot_m = pivot[m];
+        std::vector<double> G_pm;
+        const index_type numOf_G_cols = N -(m+1);
+        {
+            std::vector<index_type> G_col_list(numOf_G_cols);
+            for (index_type c = 0; c < numOf_G_cols; ++c) {
+                const index_type pivot_i = pivot[m+1 +c]; // from (m+1) to N
+                G_col_list[c] = pivot_i;
+            }
+            G_pm = this->getSuperMatrixElements_TH(orbInfo_p, orbInfo_q,
+                                                   pivot_m, G_col_list, I2PQ, schwartzTable);
+        }
+        assert(G_pm.size() == numOf_G_cols);
+
+        // {
+        //     for (int i = 0; i < numOf_G_cols; ++i) {
+        //         const index_type row = pivot_m;
+        //         const index_type col = pivot[m+1 +i];
+        //         const double value = G_pm[i];
+        //         V.set(row, col, value);
+        //     }
+        // }
+
+        // CD calc
+        const TlVector L_pm = L.getRowVector(pivot_m);
+        std::vector<double> L_xm(numOf_G_cols);
+#pragma omp parallel for schedule(runtime)
+        for (index_type i = 0; i < numOf_G_cols; ++i) {
+            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+            TlVector L_pi = L.getRowVector(pivot_i);
+            const double sum_ll = (L_pi.dot(L_pm)).sum();
+
+            const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+            // const double l_m_pi = (W.get(pivot_m, pivot_i) - sum_ll) * inv_l_m_pm;
+            // if (std::fabs(G_pm[i] - W.get(pivot_m, pivot_i)) > 1.0E-5) {
+            //     index_type p = I2PQ[pivot_m].index1();
+            //     index_type q = I2PQ[pivot_m].index2();
+            //     index_type r = I2PQ[pivot_i].index1();
+            //     index_type s = I2PQ[pivot_i].index2();
+            //     std::cerr << TlUtils::format("%d, %d: (%d %d| %d %d) %e != %e",
+            //                                  pivot_m, pivot_i,
+            //                                  p, q, r, s,
+            //                                  G_pm[i],
+            //                                  W.get(pivot_m, pivot_i)) << std::endl;
+            // }
+
+
+#pragma omp atomic
+            L_xm[i] += l_m_pi; // for OpenMP
+            
+#pragma omp atomic
+            d[pivot_i] -= l_m_pi * l_m_pi;
+        }
+        for (index_type i = 0; i < numOf_G_cols; ++i) {
+            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+            L.set(pivot_i, m, L_xm[i]);
+            tmpL.set(pivot_i, m, L_xm[i]);
+        }
+
+        // error計算
+        // error = d[pivot[m]];
+        {
+            error = 0.0;
+            for (std::size_t i = m +1; i < N; ++i) {
+                error += d[pivot[i]];
+            }
+        }
+        ++m;
+    }
+    L.resize(N, m);
+    this->log_.info(TlUtils::format("Cholesky Vectors: %d", m));
+
+    this->destroyEngines();
+    this->schwartzCutoffReport();
+
+    this->saveL(L.getTlMatrix());
+    // {
+    //     tmpL.save("fl_Work/onthefly_L.mat");
+    //     TlMatrix LL = tmpL * tmpL;
+    //     LL.save("fl_Work/onthefly_LL.mat");
+    // }
+    // V.save("fl_Work/onthefly_V.mat");
+}
+
+
 void DfCD::calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
                          PQ_PairArray *pI2PQ,
                          TlVector *pDiagonals)
@@ -425,6 +748,71 @@ void DfCD::calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
     // finalize
     this->log_.info("diagonal calculation: finalize");
     this->finalize_I2PQ(pI2PQ);
+    this->finalize(&diagonalMat);
+    this->finalize(pSchwartzTable);
+
+    // set diagonals
+    const index_type numOfI = pI2PQ->size();
+    pDiagonals->resize(numOfI);
+    for (index_type i = 0; i < numOfI; ++i) {
+        const index_type row = (*pI2PQ)[i].index1();
+        const index_type col = (*pI2PQ)[i].index2();
+        const double value = diagonalMat.get(row, col);
+        (*pDiagonals)[i] = value;
+    }
+}
+
+
+void DfCD::calcDiagonals_TH(const TlOrbitalInfoObject& orbInfo_p,
+                            const TlOrbitalInfoObject& orbInfo_q,
+                            PQ_PairArray_TH *pI2PQ,
+                            TlSparseMatrix *pSchwartzTable,
+                            TlVector *pDiagonals)
+{
+    const double tau = this->CDAM_tau_;
+    this->log_.info(TlUtils::format("CDAM tau: %e", tau));
+    this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffEpsilon3_));
+
+    // initialize
+    const index_type numOfOrbs_p = orbInfo_p.getNumOfOrbitals();
+    const index_type numOfOrbs_q = orbInfo_q.getNumOfOrbitals();
+    const index_type numOfPQs = numOfOrbs_p * numOfOrbs_q;
+    pI2PQ->clear();
+    pI2PQ->reserve(numOfPQs);
+    pSchwartzTable->clear();
+    pSchwartzTable->resize(numOfOrbs_p, numOfOrbs_q);
+    TlSparseMatrix diagonalMat(numOfOrbs_p, numOfOrbs_q);
+
+    // TODO: pq のスクリーニング
+
+    // task
+    this->log_.info("diagonal calculation: start");
+    DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+    std::vector<DfTaskCtrl::Task2> taskList;
+    bool hasTask = pDfTaskCtrl->getQueue2(orbInfo_p,
+                                          orbInfo_q,
+                                          true,
+                                          this->grainSize_,
+                                          &taskList, true);
+    while (hasTask == true) {
+        this->calcDiagonals_kernel_TH(orbInfo_p,
+                                      orbInfo_q,
+                                      taskList,
+                                      pI2PQ,
+                                      pSchwartzTable,
+                                      &diagonalMat);
+        hasTask = pDfTaskCtrl->getQueue2(orbInfo_p,
+                                         orbInfo_q,
+                                         true,
+                                         this->grainSize_,
+                                         &taskList);
+    }
+    delete pDfTaskCtrl;
+    pDfTaskCtrl = NULL;
+    
+    // finalize
+    this->log_.info("diagonal calculation: finalize");
+    this->finalize_I2PQ_TH(pI2PQ);
     this->finalize(&diagonalMat);
     this->finalize(pSchwartzTable);
 
@@ -540,13 +928,109 @@ void DfCD::calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
     }
 }
 
+void DfCD::calcDiagonals_kernel_TH(const TlOrbitalInfoObject& orbInfo_p,
+                                   const TlOrbitalInfoObject& orbInfo_q,
+                                   const std::vector<DfTaskCtrl::Task2>& taskList,
+                                   PQ_PairArray_TH *pI2PQ,
+                                   TlSparseMatrix *pSchwartzTable,
+                                   TlSparseMatrix *pDiagonalMat)
+{
+    const index_type numOfOrbs_p = orbInfo_p.getNumOfOrbitals();
+    const index_type numOfOrbs_q = orbInfo_q.getNumOfOrbitals();
+    pDiagonalMat->resize(numOfOrbs_p, numOfOrbs_q);
+
+    const double tau = this->CDAM_tau_;
+    const int taskListSize = taskList.size();
+    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+
+#pragma omp parallel
+    {
+        PQ_PairArray_TH local_I2PQ;
+        TlSparseMatrix local_diagMat(numOfOrbs_p, numOfOrbs_q);
+        TlSparseMatrix local_schwartzTable(numOfOrbs_p, numOfOrbs_q);
+        int threadID = 0;
+#ifdef _OPENMP
+        threadID = omp_get_thread_num();
+#endif // _OPENMP
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        
+#pragma omp for schedule(runtime)
+        for (int i = 0; i < taskListSize; ++i) {
+            const index_type shellIndexP = taskList[i].shellIndex1;
+            const index_type shellIndexQ = taskList[i].shellIndex2;
+            const int shellTypeP = orbInfo_p.getShellType(shellIndexP);
+            const int shellTypeQ = orbInfo_q.getShellType(shellIndexQ);
+            const int maxStepsP = 2 * shellTypeP + 1;
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+
+            this->pEriEngines_[threadID].calc(0, orbInfo_p, shellIndexP,
+                                              0, orbInfo_q, shellIndexQ,
+                                              0, orbInfo_p, shellIndexP,
+                                              0, orbInfo_q, shellIndexQ);
+                
+            const int maxStepsPQ = maxStepsP * maxStepsQ;
+            double maxValue = 0.0;
+            for (int p = 0; p < maxStepsP; ++p) {
+                const index_type indexP = shellIndexP + p;
+                for (int q = 0; q < maxStepsQ; ++q) {
+                    const index_type indexQ = shellIndexQ + q;
+                    
+                    if ((shellIndexP != shellIndexQ) || (indexP >= indexQ)) {
+                        const int pq_index = p * maxStepsQ + q;
+                        const int pqpq_index = pq_index * maxStepsPQ + pq_index;
+                        
+                        const double value = this->pEriEngines_[threadID].WORK[pqpq_index];
+
+                        // for schwartz
+                        maxValue = std::max(maxValue, std::fabs(value));
+                        
+                        // for I~ to pq table
+                        if (std::fabs(value) > tau) {
+                            if (value > 0) {
+                                local_diagMat.set(indexP, indexQ, value);
+                                local_I2PQ.push_back(IndexPair2_TH(indexP, indexQ));
+                            } else {
+                                this->log_.warn(TlUtils::format("pqpq_value: (%d %d)=% e is spoiled.",
+                                                                indexP, indexQ, value));
+                            }
+                        }
+                    }
+                }
+            }
+            local_schwartzTable.set(shellIndexP, shellIndexQ, std::sqrt(maxValue));
+        }
+
+        // add up
+#ifdef _OPENMP
+        {
+            const int numOfThreads = omp_get_num_threads();
+            for (int i = 0; i < numOfThreads; ++i) {
+                if (threadID == i) {
+                    pI2PQ->insert(pI2PQ->end(),
+                                  local_I2PQ.begin(), local_I2PQ.end());
+                    pDiagonalMat->merge(local_diagMat);
+                    pSchwartzTable->merge(local_schwartzTable);
+                }
+#pragma omp barrier                
+            }
+        }
+#else
+        {
+            *pI2PQ = local_I2PQ;
+            *pDiagonalMat = local_diagMat;
+            *pSchwartzTable = local_schwartzTable;
+        }
+#endif // _OPENMP
+    }
+}
+
 
 bool DfCD::isAliveBySchwartzCutoff(const index_type shellIndexP,
                                    const index_type shellIndexQ,
                                    const index_type shellIndexR,
                                    const index_type shellIndexS,
                                    const int shellQuartetType,
-                                   const TlSparseSymmetricMatrix& schwarzTable,
+                                   const TlSparseMatrix& schwarzTable,
                                    const double threshold)
 {
     bool answer = false;
@@ -658,6 +1142,26 @@ DfCD::getSuperMatrixElements(const index_type G_row,
     return answer;
 }
 
+std::vector<double>
+DfCD::getSuperMatrixElements_TH(const TlOrbitalInfoObject& orbInfo_p,
+                                const TlOrbitalInfoObject& orbInfo_q,
+                                const index_type G_row,
+                                const std::vector<index_type>& G_col_list,
+                                const PQ_PairArray_TH& I2PQ,
+                                const TlSparseMatrix& schwartzTable)
+{
+    this->ERI_cache_TH_.clear();
+
+    const std::vector<IndexPair4_TH> calcList = this->getCalcList_TH(orbInfo_p, orbInfo_q,
+                                                                     G_row, G_col_list, I2PQ);
+    this->calcERIs_TH(orbInfo_p, orbInfo_q,
+                      calcList, schwartzTable);
+    const std::vector<double> answer = this->setERIs_TH(orbInfo_p, orbInfo_q,
+                                                        G_row, G_col_list, I2PQ);
+
+    return answer;
+}
+
 
 std::vector<DfCD::IndexPair4> 
 DfCD::getCalcList(const index_type G_row,
@@ -689,6 +1193,43 @@ DfCD::getCalcList(const index_type G_row,
     }
 
     std::vector<IndexPair4> calcList(calcSet.size());
+    std::copy(calcSet.begin(), calcSet.end(), calcList.begin());
+
+    return calcList;
+}
+
+std::vector<DfCD::IndexPair4_TH> 
+DfCD::getCalcList_TH(const TlOrbitalInfoObject& orbInfo_p,
+                     const TlOrbitalInfoObject& orbInfo_q,
+                     const index_type G_row,
+                     const std::vector<index_type>& G_col_list,
+                     const PQ_PairArray_TH& I2PQ)
+{
+    std::set<IndexPair4_TH> calcSet;
+
+    const index_type indexP = I2PQ[G_row].index1();
+    const index_type indexQ = I2PQ[G_row].index2();
+    const index_type shellIndexP = orbInfo_p.getShellIndex(indexP);
+    const index_type shellIndexQ = orbInfo_q.getShellIndex(indexQ);
+
+    const index_type numOf_G_cols = G_col_list.size();
+#pragma omp parallel for schedule(runtime)
+    for (index_type i = 0; i < numOf_G_cols; ++i) {
+        const index_type G_col = G_col_list[i];
+
+        const index_type indexR = I2PQ[G_col].index1();
+        const index_type indexS = I2PQ[G_col].index2();
+        const index_type shellIndexR = orbInfo_p.getShellIndex(indexR);
+        const index_type shellIndexS = orbInfo_q.getShellIndex(indexS);
+
+        IndexPair4_TH indexPair4(shellIndexP, shellIndexQ, shellIndexR, shellIndexS);
+#pragma omp critical(DfCD__getCalcList) 
+        {
+            calcSet.insert(indexPair4);
+        }
+    }
+
+    std::vector<IndexPair4_TH> calcList(calcSet.size());
     std::copy(calcSet.begin(), calcSet.end(), calcList.begin());
 
     return calcList;
@@ -768,6 +1309,74 @@ void DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
 #pragma omp critical(DfCD__calcERIs)
         {
             this->ERI_cache_.insert(local_cache.begin(), local_cache.end());
+        }
+    }
+}
+
+void DfCD::calcERIs_TH(const TlOrbitalInfoObject& orbInfo_p,
+                       const TlOrbitalInfoObject& orbInfo_q,
+                       const std::vector<IndexPair4_TH>& calcList,
+                       const TlSparseMatrix& schwartzTable) 
+{
+    const int maxShellType = orbInfo_p.getMaxShellType();
+    assert(maxShellType == orbInfo_q.getMaxShellType());
+    const double threshold = this->CDAM_tau_;
+    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+
+    const int numOfList = calcList.size();
+#pragma omp parallel
+    {
+        int threadID = 0;
+        ERI_CacheType_TH local_cache;
+
+#ifdef _OPENMP
+        threadID = omp_get_thread_num();
+#endif // _OPENMP
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        
+#pragma omp for schedule(runtime)
+        for (int i = 0; i < numOfList; ++i) {
+            const index_type shellIndexP = calcList[i].index1();
+            const index_type shellIndexQ = calcList[i].index2();
+            const index_type shellIndexR = calcList[i].index3();
+            const index_type shellIndexS = calcList[i].index4();
+            
+            const int shellTypeP = orbInfo_p.getShellType(shellIndexP);
+            const int shellTypeQ = orbInfo_q.getShellType(shellIndexQ);
+            const int shellTypeR = orbInfo_p.getShellType(shellIndexR);
+            const int shellTypeS = orbInfo_q.getShellType(shellIndexS);
+            
+            const int shellQuartetType =
+                ((shellTypeP * maxShellType + shellTypeQ) * maxShellType + shellTypeP) * maxShellType + shellTypeQ;
+            // const bool isAlive = this->isAliveBySchwartzCutoff(shellIndexP, shellIndexQ,
+            //                                                    shellIndexR, shellIndexS,
+            //                                                    shellQuartetType,
+            //                                                    schwartzTable,
+            //                                                    threshold);
+            bool isAlive = true;
+            if (isAlive == true) {
+                const int maxStepsP = 2 * shellTypeP + 1;
+                const int maxStepsQ = 2 * shellTypeQ + 1;
+                const int maxStepsR = 2 * shellTypeR + 1;
+                const int maxStepsS = 2 * shellTypeS + 1;
+                this->pEriEngines_[threadID].calc(0, orbInfo_p, shellIndexP,
+                                                  0, orbInfo_q, shellIndexQ,
+                                                  0, orbInfo_p, shellIndexR,
+                                                  0, orbInfo_q, shellIndexS);
+                
+                const int steps = maxStepsP * maxStepsQ * maxStepsR * maxStepsS;
+                std::vector<double> buf(steps);
+                std::copy(this->pEriEngines_[threadID].WORK, this->pEriEngines_[threadID].WORK + steps,
+                          buf.begin());
+
+                local_cache[calcList[i]] = buf;
+            }
+        }
+
+        // merge cache
+#pragma omp critical(DfCD__calcERIs)
+        {
+            this->ERI_cache_TH_.insert(local_cache.begin(), local_cache.end());
         }
     }
 }
@@ -852,3 +1461,216 @@ DfCD::setERIs(const index_type G_row,
     return answer;
 }
 
+std::vector<double>
+DfCD::setERIs_TH(const TlOrbitalInfoObject& orbInfo_p,
+                 const TlOrbitalInfoObject& orbInfo_q,
+                 const index_type G_row,
+                 const std::vector<index_type> G_col_list,
+                 const PQ_PairArray_TH& I2PQ)
+{
+    const index_type indexP_orig = I2PQ[G_row].index1();
+    const index_type indexQ_orig = I2PQ[G_row].index2();
+    const index_type shellIndexP_orig = orbInfo_p.getShellIndex(indexP_orig);
+    const index_type shellIndexQ_orig = orbInfo_q.getShellIndex(indexQ_orig);
+
+    const index_type numOf_G_cols = G_col_list.size();
+    std::vector<double> answer(numOf_G_cols);
+#pragma omp parallel for
+    for (index_type i = 0; i < numOf_G_cols; ++i) {
+        index_type indexP = indexP_orig;
+        index_type indexQ = indexQ_orig;
+        index_type shellIndexP = shellIndexP_orig;
+        index_type shellIndexQ = shellIndexQ_orig;
+
+        const index_type G_col = G_col_list[i];
+
+        index_type indexR = I2PQ[G_col].index1();
+        index_type indexS = I2PQ[G_col].index2();
+        index_type shellIndexR = orbInfo_p.getShellIndex(indexR);
+        index_type shellIndexS = orbInfo_q.getShellIndex(indexS);
+
+        // swap
+        // if (shellIndexP > shellIndexQ) {
+        //     std::swap(shellIndexP, shellIndexQ);
+        //     std::swap(indexP, indexQ);
+        // }
+        // if (shellIndexR > shellIndexS) {
+        //     std::swap(shellIndexR, shellIndexS);
+        //     std::swap(indexR, indexS);
+        // }
+        // {
+        //     IndexPair2 pq(shellIndexP, shellIndexQ);
+        //     IndexPair2 rs(shellIndexR, shellIndexS);
+        //     if (pq.index() > rs.index()) {
+        //         std::swap(shellIndexP, shellIndexR);
+        //         std::swap(indexP, indexR);
+        //         std::swap(shellIndexQ, shellIndexS);
+        //         std::swap(indexQ, indexS);
+        //     }
+        // }
+
+        std::vector<double> values;
+#pragma omp critical(DfCD__setERIs)
+        {
+            assert(this->ERI_cache_TH_.find(IndexPair4_TH(shellIndexP, shellIndexQ,
+                                                          shellIndexR, shellIndexS)) != this->ERI_cache_TH_.end());
+            values = this->ERI_cache_TH_[IndexPair4_TH(shellIndexP, shellIndexQ,
+                                                       shellIndexR, shellIndexS)];
+        }
+
+        assert(values.empty() != true);
+        {
+            const int basisTypeP = indexP - shellIndexP;
+            const int basisTypeQ = indexQ - shellIndexQ;
+            const int basisTypeR = indexR - shellIndexR;
+            const int basisTypeS = indexS - shellIndexS;
+            
+            const int shellTypeP = orbInfo_p.getShellType(shellIndexP);
+            const int shellTypeQ = orbInfo_q.getShellType(shellIndexQ);
+            const int shellTypeR = orbInfo_p.getShellType(shellIndexR);
+            const int shellTypeS = orbInfo_q.getShellType(shellIndexS);
+            const int maxStepsP = 2 * shellTypeP + 1;
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+            const int maxStepsR = 2 * shellTypeR + 1;
+            const int maxStepsS = 2 * shellTypeS + 1;
+            
+            const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
+            assert(values.size() > index);
+            
+#pragma omp atomic
+            answer[i] += values.at(index);
+        }
+    }
+
+    return answer;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// for DEBUG 
+// 
+////////////////////////////////////////////////////////////////////////////////
+TlMatrix DfCD::getSuperMatrix(const TlOrbitalInfoObject& orbInfo_p,
+                              const TlOrbitalInfoObject& orbInfo_q) 
+{
+    this->createEngines();
+
+    const index_type numOfOrbs_p = orbInfo_p.getNumOfOrbitals();
+    const index_type numOfOrbs_q = orbInfo_q.getNumOfOrbitals();
+    const index_type numOfPQs = numOfOrbs_p * numOfOrbs_q;
+
+    PQ_PairArray_TH I2PQ;
+    TlSparseMatrix schwartzTable(numOfOrbs_p, numOfOrbs_q);
+    TlVector d; // 対角成分
+    this->calcDiagonals_TH(orbInfo_p, orbInfo_q,
+                           &I2PQ, &schwartzTable, &d);
+    this->saveI2PQ_TH(I2PQ);
+    const std::size_t N = I2PQ.size();
+
+    DfEriEngine engine;
+    TlSymmetricMatrix V(N);
+    for (std::size_t i = 0; i < N; ++i) {
+        const index_type indexP = I2PQ[i].index1();
+        const index_type indexQ = I2PQ[i].index2();
+        const index_type shellIndexP = orbInfo_p.getShellIndex(indexP);
+        const index_type shellIndexQ = orbInfo_q.getShellIndex(indexQ);
+        const int basisTypeP = indexP - shellIndexP;
+        const int basisTypeQ = indexQ - shellIndexQ;
+        const int shellTypeP = orbInfo_p.getShellType(shellIndexP);
+        const int shellTypeQ = orbInfo_q.getShellType(shellIndexQ);
+        const int maxStepsP = 2 * shellTypeP + 1;
+        const int maxStepsQ = 2 * shellTypeQ + 1;
+
+        for (std::size_t j = 0; j <= i; ++j) {
+            const index_type indexR = I2PQ[j].index1();
+            const index_type indexS = I2PQ[j].index2();
+            const index_type shellIndexR = orbInfo_p.getShellIndex(indexR);
+            const index_type shellIndexS = orbInfo_q.getShellIndex(indexS);
+            const int basisTypeR = indexR - shellIndexR;
+            const int basisTypeS = indexS - shellIndexS;
+            const int shellTypeR = orbInfo_p.getShellType(shellIndexR);
+            const int shellTypeS = orbInfo_q.getShellType(shellIndexS);
+            const int maxStepsR = 2 * shellTypeR + 1;
+            const int maxStepsS = 2 * shellTypeS + 1;
+
+            engine.calc(0, orbInfo_p, shellIndexP,
+                        0, orbInfo_q, shellIndexQ,
+                        0, orbInfo_p, shellIndexR,
+                        0, orbInfo_q, shellIndexS);
+            const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
+            const double value = engine.WORK[index];
+            V.set(i, j, value);
+        }
+    }
+
+    this->destroyEngines();
+    return V;
+}
+
+TlMatrix DfCD::calcCholeskyVectors(const TlSymmetricMatrix& V)
+{
+    const index_type N = V.getNumOfRows();
+    TlVector d(N); // 対角成分
+    for (index_type i = 0; i < N; ++i) {
+        d[i] = V.get(i, i);
+    }
+    double error = d.sum();
+    std::vector<TlVector::size_type> pivot(N);
+    for (index_type i = 0; i < N; ++i) {
+        pivot[i] = i;
+    }
+
+    TlMatrix L(N, N);
+    const double threshold = this->epsilon_;
+    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
+
+    index_type m = 0;
+    while (error > threshold) {
+        // pivot
+        {
+            std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+                                                                           pivot.end());
+            const index_type i = it - pivot.begin();
+            std::swap(pivot[m], pivot[i]);
+        }
+
+        const double l_m_pm = std::sqrt(d[pivot[m]]);
+        L.set(pivot[m], m, l_m_pm);
+        
+        const double inv_l_m_pm = 1.0 / l_m_pm;
+
+        const index_type pivot_m = pivot[m];
+        const index_type numOf_G_cols = N -(m+1);
+
+        // CD calc
+        const TlVector L_pm = L.getRowVector(pivot_m);
+        std::vector<double> L_xm(numOf_G_cols);
+#pragma omp parallel for schedule(runtime)
+        for (index_type i = 0; i < numOf_G_cols; ++i) {
+            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+            TlVector L_pi = L.getRowVector(pivot_i);
+            const double sum_ll = (L_pi.dot(L_pm)).sum();
+            // const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+            const double l_m_pi = (V.get(pivot_m, pivot[m+1 + i]) - sum_ll) * inv_l_m_pm;
+
+#pragma omp atomic
+            L_xm[i] += l_m_pi; // for OpenMP
+            
+#pragma omp atomic
+            d[pivot_i] -= l_m_pi * l_m_pi;
+        }
+        for (index_type i = 0; i < numOf_G_cols; ++i) {
+            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+            L.set(pivot_i, m, L_xm[i]);
+        }
+
+        error = 0.0;
+        for (int i = m +1; i < N; ++i) {
+            error += d[pivot[i]];
+        }
+
+        ++m;
+    }
+    L.resize(N, m);
+
+    return L;
+}

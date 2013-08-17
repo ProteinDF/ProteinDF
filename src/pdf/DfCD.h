@@ -119,6 +119,8 @@ protected:
 
     virtual void finalize(TlSymmetricMatrix *pMat);
     virtual void finalize(TlSparseSymmetricMatrix *pMat);
+    virtual void finalize(TlMatrix *pMat);
+    virtual void finalize(TlSparseMatrix *pMat);
     virtual void finalize_I2PQ(PQ_PairArray *pI2PQ);
 
 protected:
@@ -138,6 +140,7 @@ protected:
 
 protected:
     virtual void calcCholeskyVectors_onTheFly();
+
     void calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
                        PQ_PairArray *pI2PQ,
                        TlVector *pDiagonals);
@@ -151,7 +154,7 @@ protected:
                                  const index_type shellIndexR,
                                  const index_type shellIndexS,
                                  const int shellQuartetType,
-                                 const TlSparseSymmetricMatrix& schwarzTable,
+                                 const TlSparseMatrix& schwarzTable,
                                  const double threshold);
     void initializeCutoffStats();
     void schwartzCutoffReport();
@@ -280,6 +283,156 @@ protected:
     double cutoffEpsilon3_;
     double CDAM_tau_;
     double epsilon_;
+
+// =====================================================================
+protected:
+    class IndexPair2_TH {
+    public:
+        explicit IndexPair2_TH(index_type i1 =0, index_type i2 =0) : index1_(i1), index2_(i2) {
+        }
+
+        bool operator<(const IndexPair2_TH& rhs) const {
+            if (this->index1_ < rhs.index1_) {
+                return true;
+            } else if (this->index1_ == rhs.index1_) {
+                return (this->index2_ < rhs.index2_);
+            }
+
+            return false;
+        }
+
+        bool operator==(const IndexPair2_TH& rhs) const {
+            return ((this->index1_ == rhs.index1_) &&
+                    (this->index2_ == rhs.index2_));
+        }
+
+        index_type index1() const {
+            return this->index1_;
+        }
+
+        index_type index2() const {
+            return this->index2_;
+        }
+
+    private:
+        index_type index1_;
+        index_type index2_;
+    };
+    typedef std::vector<IndexPair2_TH> PQ_PairArray_TH;
+
+    struct IndexPair4_TH {
+    public:
+        explicit IndexPair4_TH(index_type i1 =0, index_type i2 =0,
+                               index_type i3 =0, index_type i4 =0) 
+            : indexPair1_(i1, i2), indexPair2_(i3, i4) {
+        }
+
+        bool operator<(const IndexPair4_TH& rhs) const {
+            if (this->indexPair1_ < rhs.indexPair1_) {
+                return true;
+            } else if (this->indexPair1_ == rhs.indexPair1_) {
+                return (this->indexPair2_ < rhs.indexPair2_);
+            }
+
+            return false;
+        }
+
+        bool operator==(const IndexPair4_TH& rhs) const {
+            return ((this->indexPair1_ == rhs.indexPair1_) &&
+                    (this->indexPair2_ == rhs.indexPair2_));
+        }
+
+        index_type index1() const {
+            return this->indexPair1_.index1();
+        }
+
+        index_type index2() const {
+            return this->indexPair1_.index2();
+        }
+
+        index_type index3() const {
+            return this->indexPair2_.index1();
+        }
+
+        index_type index4() const {
+            return this->indexPair2_.index2();
+        }
+
+    private:
+        IndexPair2_TH indexPair1_;
+        IndexPair2_TH indexPair2_;
+    };
+
+    /// 2電子積分キャッシュの型
+    typedef std::map<IndexPair4_TH, std::vector<double> > ERI_CacheType_TH;
+    ERI_CacheType_TH ERI_cache_TH_;
+
+    virtual void calcCholeskyVectors_onTheFly_TH(const TlOrbitalInfoObject& orbInfo_p,
+                                                 const TlOrbitalInfoObject& orbInfo_q);
+    void calcDiagonals_TH(const TlOrbitalInfoObject& orbInfo_p,
+                          const TlOrbitalInfoObject& orbInfo_q,
+                          PQ_PairArray_TH *pI2PQ,
+                          TlSparseMatrix *pSchwartzTable,
+                          TlVector *pDiagonals);
+    void calcDiagonals_kernel_TH(const TlOrbitalInfoObject& orbInfo_p,
+                                 const TlOrbitalInfoObject& orbInfo_q,
+                                 const std::vector<DfTaskCtrl::Task2>& taskList,
+                                 PQ_PairArray_TH *pI2PQ,
+                                 TlSparseMatrix *pSchwartzTable,
+                                 TlSparseMatrix *pDiagonalMat);
+
+    void finalize_I2PQ_TH(PQ_PairArray_TH *pI2PQ);
+    virtual void saveI2PQ_TH(const PQ_PairArray_TH& I2PQ);
+
+    virtual std::vector<double>
+    getSuperMatrixElements_TH(const TlOrbitalInfoObject& orbInfo_p,
+                              const TlOrbitalInfoObject& orbInfo_q,
+                              const index_type G_row,
+                              const std::vector<index_type>& G_col_list,
+                              const PQ_PairArray_TH& I2PQ,
+                              const TlSparseMatrix& schwartzTable);
+    std::vector<DfCD::IndexPair4_TH> 
+    getCalcList_TH(const TlOrbitalInfoObject& orbInfo_p,
+                   const TlOrbitalInfoObject& orbInfo_q,
+                   const index_type G_row,
+                   const std::vector<index_type>& G_col_list,
+                   const PQ_PairArray_TH& I2PQ);
+    void calcERIs_TH(const TlOrbitalInfoObject& orbInfo_p,
+                     const TlOrbitalInfoObject& orbInfo_q,
+                     const std::vector<IndexPair4_TH>& calcList,
+                     const TlSparseMatrix& schwartzTable);
+    std::vector<double>
+    setERIs_TH(const TlOrbitalInfoObject& orbInfo_p,
+               const TlOrbitalInfoObject& orbInfo_q,
+               const index_type G_row,
+               const std::vector<index_type> G_col_list,
+               const PQ_PairArray_TH& I2PQ);
+    PQ_PairArray_TH getI2PQ_TH();
+    TlMatrix getCholeskyVector_TH(const TlOrbitalInfoObject& orbInfo_p,
+                                  const TlOrbitalInfoObject& orbInfo_q,
+                                  const TlVector& L_col,
+                                  const PQ_PairArray_TH& I2PQ);
+
+    /// デバッグ用にSuperMatrixを作成します
+    ///
+    /// V_pq,rs = (pq|rs) or (pqrs) 
+    /// @param[in] orbInfo_p pまたはrで示される軌道の軌道情報オブジェクト
+    /// @param[in] orbInfo_q qまたはsで示される軌道の軌道情報オブジェクト
+    /// @retval supermatrix
+    TlMatrix getSuperMatrix(const TlOrbitalInfoObject& orbInfo_p,
+                            const TlOrbitalInfoObject& orbInfo_q);
+
+    /// コレスキー分解を行います(デバッグ用)
+    ///
+    /// V = L * L
+    /// @param[in] V supermatrix
+    /// @retval コレスキーベクトル(L)
+    TlMatrix calcCholeskyVectors(const TlSymmetricMatrix& V);
+
+public:
+    void getJ_TH(TlSymmetricMatrix* pJ);
+    void getK_TH(const RUN_TYPE runType,
+                 TlSymmetricMatrix *pK);
 };
 
 
