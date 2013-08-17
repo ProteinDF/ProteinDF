@@ -128,7 +128,7 @@ void DfJMatrix::getJ_CD_local(TlSymmetricMatrix* pJ)
 {
     DfCD dfCD(this->pPdfParam_);
     // dfCD.getJ(pJ);
-    dfCD.getJ_TH(pJ);
+    dfCD.getJ_A(pJ);
 }
 
 

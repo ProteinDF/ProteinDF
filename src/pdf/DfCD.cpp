@@ -78,7 +78,7 @@ void DfCD::calcCholeskyVectors()
         //     TlMatrix L = this->calcCholeskyVectors(V);
         // }
 
-        this->calcCholeskyVectors_onTheFly_TH(orbInfo_p, orbInfo_q);
+        this->calcCholeskyVectorsA_onTheFly(orbInfo_p, orbInfo_q);
     }
 }
 
@@ -100,7 +100,7 @@ void DfCD::saveI2PQ(const PQ_PairArray& I2PQ)
     ofs.close();
 }
 
-void DfCD::saveI2PQ_TH(const PQ_PairArray_TH& I2PQ) 
+void DfCD::saveI2PQ_A(const PQ_PairArray_A& I2PQ) 
 {
     std::string filepath = this->getI2pqVtrPath();
     std::ofstream ofs;
@@ -143,7 +143,7 @@ DfCD::PQ_PairArray DfCD::getI2PQ()
     return answer;
 }
 
-DfCD::PQ_PairArray_TH DfCD::getI2PQ_TH()
+DfCD::PQ_PairArray_A DfCD::getI2PQ_TH()
 {
     std::string filepath = this->getI2pqVtrPath();
     std::ifstream ifs;
@@ -155,13 +155,13 @@ DfCD::PQ_PairArray_TH DfCD::getI2PQ_TH()
     std::size_t size = 0;
     ifs.read(reinterpret_cast<char*>(&size), sizeof(std::size_t));
 
-    PQ_PairArray_TH answer(size);
+    PQ_PairArray_A answer(size);
     index_type shellIndex1 = 0;
     index_type shellIndex2 = 0;
     for (std::size_t i = 0; i < size; ++i) {
         ifs.read(reinterpret_cast<char*>(&shellIndex1), sizeof(index_type));
         ifs.read(reinterpret_cast<char*>(&shellIndex2), sizeof(index_type));
-        answer[i] = IndexPair2_TH(shellIndex1, shellIndex2);
+        answer[i] = IndexPair2A(shellIndex1, shellIndex2);
     }
 
     ifs.close();
@@ -216,7 +216,7 @@ void DfCD::finalize(TlSparseMatrix *pMat)
     // do nothing
 }
 
-void DfCD::finalize_I2PQ_TH(PQ_PairArray_TH *pI2PQ)
+void DfCD::finalizeI2PQ_A(PQ_PairArray_A *pI2PQ)
 {
     std::sort(pI2PQ->begin(), pI2PQ->end());
 }
@@ -235,10 +235,10 @@ TlSymmetricMatrix DfCD::getCholeskyVector(const TlVector& L_col,
     return answer;
 }
 
-TlMatrix DfCD::getCholeskyVector_TH(const TlOrbitalInfoObject& orbInfo_p,
-                                    const TlOrbitalInfoObject& orbInfo_q,
-                                    const TlVector& L_col,
-                                    const PQ_PairArray_TH& I2PQ)
+TlMatrix DfCD::getCholeskyVectorA(const TlOrbitalInfoObject& orbInfo_p,
+                                  const TlOrbitalInfoObject& orbInfo_q,
+                                  const TlVector& L_col,
+                                  const PQ_PairArray_A& I2PQ)
 {
     const index_type numOfOrbs_p = orbInfo_p.getNumOfOrbitals();
     const index_type numOfOrbs_q = orbInfo_q.getNumOfOrbitals();
@@ -281,7 +281,7 @@ void DfCD::getJ(TlSymmetricMatrix* pJ)
     this->finalize(pJ);
 }
 
-void DfCD::getJ_TH(TlSymmetricMatrix* pJ)
+void DfCD::getJ_A(TlSymmetricMatrix* pJ)
 {
     const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
                                   (*this->pPdfParam_)["basis_sets"]);
@@ -293,13 +293,13 @@ void DfCD::getJ_TH(TlSymmetricMatrix* pJ)
     TlMatrix L = this->getL();
     const index_type numOfCBs = L.getNumOfCols();
 
-    const PQ_PairArray_TH I2PQ = this->getI2PQ_TH();
+    const PQ_PairArray_A I2PQ = this->getI2PQ_TH();
     index_type start_CholeskyBasis = 0;
     index_type end_CholeskyBasis = 0;
     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-        TlMatrix LI = this->getCholeskyVector_TH(orbInfo_p, orbInfo_q,
-                                                 L.getColVector(I), I2PQ);
+        TlMatrix LI = this->getCholeskyVectorA(orbInfo_p, orbInfo_q,
+                                               L.getColVector(I), I2PQ);
         LI.save(TlUtils::format("fl_Work/LI.%d.mat", I));
         assert(LI.getNumOfRows() == this->m_nNumOfAOs);
         assert(LI.getNumOfCols() == this->m_nNumOfAOs);
@@ -350,8 +350,8 @@ void DfCD::getK(const RUN_TYPE runType,
     this->finalize(pK);
 }
 
-void DfCD::getK_TH(const RUN_TYPE runType,
-                   TlSymmetricMatrix *pK)
+void DfCD::getK_A(const RUN_TYPE runType,
+                  TlSymmetricMatrix *pK)
 {
     const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
                                   (*this->pPdfParam_)["basis_sets"]);
@@ -364,14 +364,14 @@ void DfCD::getK_TH(const RUN_TYPE runType,
     TlSymmetricMatrix P = 0.5 * this->getPMatrix(); // RKS
     const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
     
-    const PQ_PairArray_TH I2PQ = this->getI2PQ_TH();
+    const PQ_PairArray_A I2PQ = this->getI2PQ_TH();
     index_type start_CholeskyBasis = 0;
     index_type end_CholeskyBasis = 0;
     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-        TlMatrix l = this->getCholeskyVector_TH(orbInfo_p, 
-                                                orbInfo_q,
-                                                L.getColVector(I), I2PQ);
+        TlMatrix l = this->getCholeskyVectorA(orbInfo_p, 
+                                              orbInfo_q,
+                                              L.getColVector(I), I2PQ);
     
         TlMatrix X = l * C;
         TlMatrix Xt = X;
@@ -540,12 +540,9 @@ void DfCD::calcCholeskyVectors_onTheFly()
 }
 
 
-void DfCD::calcCholeskyVectors_onTheFly_TH(const TlOrbitalInfoObject& orbInfo_p,
-                                           const TlOrbitalInfoObject& orbInfo_q)
+void DfCD::calcCholeskyVectorsA_onTheFly(const TlOrbitalInfoObject& orbInfo_p,
+                                         const TlOrbitalInfoObject& orbInfo_q)
 {
-    // TlSymmetricMatrix W;
-    // W.load("fl_Work/V.mat");
-
     const index_type numOfOrbs_p = orbInfo_p.getNumOfOrbitals();
     const index_type numOfOrbs_q = orbInfo_q.getNumOfOrbitals();
     const index_type numOfPQs = numOfOrbs_p * numOfOrbs_q;
@@ -556,13 +553,13 @@ void DfCD::calcCholeskyVectors_onTheFly_TH(const TlOrbitalInfoObject& orbInfo_p,
     this->log_.info(TlUtils::format("# of orb for p: %d", numOfOrbs_p));
     this->log_.info(TlUtils::format("# of orb for q: %d", numOfOrbs_q));
     this->log_.info(TlUtils::format("# of PQ dimension: %d", numOfPQs));
-    PQ_PairArray_TH I2PQ;
+    PQ_PairArray_A I2PQ;
     TlSparseMatrix schwartzTable(numOfOrbs_p, numOfOrbs_q);
     TlVector d; // 対角成分
-    this->calcDiagonals_TH(orbInfo_p, orbInfo_q,
-                           &I2PQ, &schwartzTable, &d);
+    this->calcDiagonalsA(orbInfo_p, orbInfo_q,
+                         &I2PQ, &schwartzTable, &d);
 
-    this->saveI2PQ_TH(I2PQ);
+    this->saveI2PQ_A(I2PQ);
     // this->ERI_cache_manager_.setMaxItems(I2PQ.size() * 2);
 
     const std::size_t N = I2PQ.size();
@@ -631,19 +628,10 @@ void DfCD::calcCholeskyVectors_onTheFly_TH(const TlOrbitalInfoObject& orbInfo_p,
                 const index_type pivot_i = pivot[m+1 +c]; // from (m+1) to N
                 G_col_list[c] = pivot_i;
             }
-            G_pm = this->getSuperMatrixElements_TH(orbInfo_p, orbInfo_q,
-                                                   pivot_m, G_col_list, I2PQ, schwartzTable);
+            G_pm = this->getSuperMatrixElementsA(orbInfo_p, orbInfo_q,
+                                                 pivot_m, G_col_list, I2PQ, schwartzTable);
         }
         assert(G_pm.size() == numOf_G_cols);
-
-        // {
-        //     for (int i = 0; i < numOf_G_cols; ++i) {
-        //         const index_type row = pivot_m;
-        //         const index_type col = pivot[m+1 +i];
-        //         const double value = G_pm[i];
-        //         V.set(row, col, value);
-        //     }
-        // }
 
         // CD calc
         const TlVector L_pm = L.getRowVector(pivot_m);
@@ -655,19 +643,6 @@ void DfCD::calcCholeskyVectors_onTheFly_TH(const TlOrbitalInfoObject& orbInfo_p,
             const double sum_ll = (L_pi.dot(L_pm)).sum();
 
             const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
-            // const double l_m_pi = (W.get(pivot_m, pivot_i) - sum_ll) * inv_l_m_pm;
-            // if (std::fabs(G_pm[i] - W.get(pivot_m, pivot_i)) > 1.0E-5) {
-            //     index_type p = I2PQ[pivot_m].index1();
-            //     index_type q = I2PQ[pivot_m].index2();
-            //     index_type r = I2PQ[pivot_i].index1();
-            //     index_type s = I2PQ[pivot_i].index2();
-            //     std::cerr << TlUtils::format("%d, %d: (%d %d| %d %d) %e != %e",
-            //                                  pivot_m, pivot_i,
-            //                                  p, q, r, s,
-            //                                  G_pm[i],
-            //                                  W.get(pivot_m, pivot_i)) << std::endl;
-            // }
-
 
 #pragma omp atomic
             L_xm[i] += l_m_pi; // for OpenMP
@@ -698,12 +673,6 @@ void DfCD::calcCholeskyVectors_onTheFly_TH(const TlOrbitalInfoObject& orbInfo_p,
     this->schwartzCutoffReport();
 
     this->saveL(L.getTlMatrix());
-    // {
-    //     tmpL.save("fl_Work/onthefly_L.mat");
-    //     TlMatrix LL = tmpL * tmpL;
-    //     LL.save("fl_Work/onthefly_LL.mat");
-    // }
-    // V.save("fl_Work/onthefly_V.mat");
 }
 
 
@@ -763,11 +732,11 @@ void DfCD::calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
 }
 
 
-void DfCD::calcDiagonals_TH(const TlOrbitalInfoObject& orbInfo_p,
-                            const TlOrbitalInfoObject& orbInfo_q,
-                            PQ_PairArray_TH *pI2PQ,
-                            TlSparseMatrix *pSchwartzTable,
-                            TlVector *pDiagonals)
+void DfCD::calcDiagonalsA(const TlOrbitalInfoObject& orbInfo_p,
+                          const TlOrbitalInfoObject& orbInfo_q,
+                          PQ_PairArray_A *pI2PQ,
+                          TlSparseMatrix *pSchwartzTable,
+                          TlVector *pDiagonals)
 {
     const double tau = this->CDAM_tau_;
     this->log_.info(TlUtils::format("CDAM tau: %e", tau));
@@ -795,12 +764,12 @@ void DfCD::calcDiagonals_TH(const TlOrbitalInfoObject& orbInfo_p,
                                           this->grainSize_,
                                           &taskList, true);
     while (hasTask == true) {
-        this->calcDiagonals_kernel_TH(orbInfo_p,
-                                      orbInfo_q,
-                                      taskList,
-                                      pI2PQ,
-                                      pSchwartzTable,
-                                      &diagonalMat);
+        this->calcDiagonalsA_kernel(orbInfo_p,
+                                    orbInfo_q,
+                                    taskList,
+                                    pI2PQ,
+                                    pSchwartzTable,
+                                    &diagonalMat);
         hasTask = pDfTaskCtrl->getQueue2(orbInfo_p,
                                          orbInfo_q,
                                          true,
@@ -812,7 +781,7 @@ void DfCD::calcDiagonals_TH(const TlOrbitalInfoObject& orbInfo_p,
     
     // finalize
     this->log_.info("diagonal calculation: finalize");
-    this->finalize_I2PQ_TH(pI2PQ);
+    this->finalizeI2PQ_A(pI2PQ);
     this->finalize(&diagonalMat);
     this->finalize(pSchwartzTable);
 
@@ -928,12 +897,12 @@ void DfCD::calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
     }
 }
 
-void DfCD::calcDiagonals_kernel_TH(const TlOrbitalInfoObject& orbInfo_p,
-                                   const TlOrbitalInfoObject& orbInfo_q,
-                                   const std::vector<DfTaskCtrl::Task2>& taskList,
-                                   PQ_PairArray_TH *pI2PQ,
-                                   TlSparseMatrix *pSchwartzTable,
-                                   TlSparseMatrix *pDiagonalMat)
+void DfCD::calcDiagonalsA_kernel(const TlOrbitalInfoObject& orbInfo_p,
+                                 const TlOrbitalInfoObject& orbInfo_q,
+                                 const std::vector<DfTaskCtrl::Task2>& taskList,
+                                 PQ_PairArray_A *pI2PQ,
+                                 TlSparseMatrix *pSchwartzTable,
+                                 TlSparseMatrix *pDiagonalMat)
 {
     const index_type numOfOrbs_p = orbInfo_p.getNumOfOrbitals();
     const index_type numOfOrbs_q = orbInfo_q.getNumOfOrbitals();
@@ -945,7 +914,7 @@ void DfCD::calcDiagonals_kernel_TH(const TlOrbitalInfoObject& orbInfo_p,
 
 #pragma omp parallel
     {
-        PQ_PairArray_TH local_I2PQ;
+        PQ_PairArray_A local_I2PQ;
         TlSparseMatrix local_diagMat(numOfOrbs_p, numOfOrbs_q);
         TlSparseMatrix local_schwartzTable(numOfOrbs_p, numOfOrbs_q);
         int threadID = 0;
@@ -988,7 +957,7 @@ void DfCD::calcDiagonals_kernel_TH(const TlOrbitalInfoObject& orbInfo_p,
                         if (std::fabs(value) > tau) {
                             if (value > 0) {
                                 local_diagMat.set(indexP, indexQ, value);
-                                local_I2PQ.push_back(IndexPair2_TH(indexP, indexQ));
+                                local_I2PQ.push_back(IndexPair2A(indexP, indexQ));
                             } else {
                                 this->log_.warn(TlUtils::format("pqpq_value: (%d %d)=% e is spoiled.",
                                                                 indexP, indexQ, value));
@@ -1143,21 +1112,21 @@ DfCD::getSuperMatrixElements(const index_type G_row,
 }
 
 std::vector<double>
-DfCD::getSuperMatrixElements_TH(const TlOrbitalInfoObject& orbInfo_p,
-                                const TlOrbitalInfoObject& orbInfo_q,
-                                const index_type G_row,
-                                const std::vector<index_type>& G_col_list,
-                                const PQ_PairArray_TH& I2PQ,
-                                const TlSparseMatrix& schwartzTable)
+DfCD::getSuperMatrixElementsA(const TlOrbitalInfoObject& orbInfo_p,
+                              const TlOrbitalInfoObject& orbInfo_q,
+                              const index_type G_row,
+                              const std::vector<index_type>& G_col_list,
+                              const PQ_PairArray_A& I2PQ,
+                              const TlSparseMatrix& schwartzTable)
 {
-    this->ERI_cache_TH_.clear();
+    this->ERI_cache_A_.clear();
 
-    const std::vector<IndexPair4_TH> calcList = this->getCalcList_TH(orbInfo_p, orbInfo_q,
-                                                                     G_row, G_col_list, I2PQ);
-    this->calcERIs_TH(orbInfo_p, orbInfo_q,
-                      calcList, schwartzTable);
-    const std::vector<double> answer = this->setERIs_TH(orbInfo_p, orbInfo_q,
-                                                        G_row, G_col_list, I2PQ);
+    const std::vector<IndexPair4A> calcList = this->getCalcListA(orbInfo_p, orbInfo_q,
+                                                                 G_row, G_col_list, I2PQ);
+    this->calcERIsA(orbInfo_p, orbInfo_q,
+                    calcList, schwartzTable);
+    const std::vector<double> answer = this->setERIsA(orbInfo_p, orbInfo_q,
+                                                      G_row, G_col_list, I2PQ);
 
     return answer;
 }
@@ -1198,14 +1167,14 @@ DfCD::getCalcList(const index_type G_row,
     return calcList;
 }
 
-std::vector<DfCD::IndexPair4_TH> 
-DfCD::getCalcList_TH(const TlOrbitalInfoObject& orbInfo_p,
-                     const TlOrbitalInfoObject& orbInfo_q,
-                     const index_type G_row,
-                     const std::vector<index_type>& G_col_list,
-                     const PQ_PairArray_TH& I2PQ)
+std::vector<DfCD::IndexPair4A> 
+DfCD::getCalcListA(const TlOrbitalInfoObject& orbInfo_p,
+                   const TlOrbitalInfoObject& orbInfo_q,
+                   const index_type G_row,
+                   const std::vector<index_type>& G_col_list,
+                   const PQ_PairArray_A& I2PQ)
 {
-    std::set<IndexPair4_TH> calcSet;
+    std::set<IndexPair4A> calcSet;
 
     const index_type indexP = I2PQ[G_row].index1();
     const index_type indexQ = I2PQ[G_row].index2();
@@ -1222,14 +1191,14 @@ DfCD::getCalcList_TH(const TlOrbitalInfoObject& orbInfo_p,
         const index_type shellIndexR = orbInfo_p.getShellIndex(indexR);
         const index_type shellIndexS = orbInfo_q.getShellIndex(indexS);
 
-        IndexPair4_TH indexPair4(shellIndexP, shellIndexQ, shellIndexR, shellIndexS);
+        IndexPair4A indexPair4(shellIndexP, shellIndexQ, shellIndexR, shellIndexS);
 #pragma omp critical(DfCD__getCalcList) 
         {
             calcSet.insert(indexPair4);
         }
     }
 
-    std::vector<IndexPair4_TH> calcList(calcSet.size());
+    std::vector<IndexPair4A> calcList(calcSet.size());
     std::copy(calcSet.begin(), calcSet.end(), calcList.begin());
 
     return calcList;
@@ -1313,10 +1282,10 @@ void DfCD::calcERIs(const std::vector<IndexPair4>& calcList,
     }
 }
 
-void DfCD::calcERIs_TH(const TlOrbitalInfoObject& orbInfo_p,
-                       const TlOrbitalInfoObject& orbInfo_q,
-                       const std::vector<IndexPair4_TH>& calcList,
-                       const TlSparseMatrix& schwartzTable) 
+void DfCD::calcERIsA(const TlOrbitalInfoObject& orbInfo_p,
+                     const TlOrbitalInfoObject& orbInfo_q,
+                     const std::vector<IndexPair4A>& calcList,
+                     const TlSparseMatrix& schwartzTable) 
 {
     const int maxShellType = orbInfo_p.getMaxShellType();
     assert(maxShellType == orbInfo_q.getMaxShellType());
@@ -1327,7 +1296,7 @@ void DfCD::calcERIs_TH(const TlOrbitalInfoObject& orbInfo_p,
 #pragma omp parallel
     {
         int threadID = 0;
-        ERI_CacheType_TH local_cache;
+        ERI_CacheType_A local_cache;
 
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
@@ -1376,7 +1345,7 @@ void DfCD::calcERIs_TH(const TlOrbitalInfoObject& orbInfo_p,
         // merge cache
 #pragma omp critical(DfCD__calcERIs)
         {
-            this->ERI_cache_TH_.insert(local_cache.begin(), local_cache.end());
+            this->ERI_cache_A_.insert(local_cache.begin(), local_cache.end());
         }
     }
 }
@@ -1462,11 +1431,11 @@ DfCD::setERIs(const index_type G_row,
 }
 
 std::vector<double>
-DfCD::setERIs_TH(const TlOrbitalInfoObject& orbInfo_p,
-                 const TlOrbitalInfoObject& orbInfo_q,
-                 const index_type G_row,
-                 const std::vector<index_type> G_col_list,
-                 const PQ_PairArray_TH& I2PQ)
+DfCD::setERIsA(const TlOrbitalInfoObject& orbInfo_p,
+               const TlOrbitalInfoObject& orbInfo_q,
+               const index_type G_row,
+               const std::vector<index_type> G_col_list,
+               const PQ_PairArray_A& I2PQ)
 {
     const index_type indexP_orig = I2PQ[G_row].index1();
     const index_type indexQ_orig = I2PQ[G_row].index2();
@@ -1489,33 +1458,13 @@ DfCD::setERIs_TH(const TlOrbitalInfoObject& orbInfo_p,
         index_type shellIndexR = orbInfo_p.getShellIndex(indexR);
         index_type shellIndexS = orbInfo_q.getShellIndex(indexS);
 
-        // swap
-        // if (shellIndexP > shellIndexQ) {
-        //     std::swap(shellIndexP, shellIndexQ);
-        //     std::swap(indexP, indexQ);
-        // }
-        // if (shellIndexR > shellIndexS) {
-        //     std::swap(shellIndexR, shellIndexS);
-        //     std::swap(indexR, indexS);
-        // }
-        // {
-        //     IndexPair2 pq(shellIndexP, shellIndexQ);
-        //     IndexPair2 rs(shellIndexR, shellIndexS);
-        //     if (pq.index() > rs.index()) {
-        //         std::swap(shellIndexP, shellIndexR);
-        //         std::swap(indexP, indexR);
-        //         std::swap(shellIndexQ, shellIndexS);
-        //         std::swap(indexQ, indexS);
-        //     }
-        // }
-
         std::vector<double> values;
 #pragma omp critical(DfCD__setERIs)
         {
-            assert(this->ERI_cache_TH_.find(IndexPair4_TH(shellIndexP, shellIndexQ,
-                                                          shellIndexR, shellIndexS)) != this->ERI_cache_TH_.end());
-            values = this->ERI_cache_TH_[IndexPair4_TH(shellIndexP, shellIndexQ,
-                                                       shellIndexR, shellIndexS)];
+            assert(this->ERI_cache_A_.find(IndexPair4A(shellIndexP, shellIndexQ,
+                                                       shellIndexR, shellIndexS)) != this->ERI_cache_A_.end());
+            values = this->ERI_cache_A_[IndexPair4A(shellIndexP, shellIndexQ,
+                                                    shellIndexR, shellIndexS)];
         }
 
         assert(values.empty() != true);
@@ -1558,12 +1507,12 @@ TlMatrix DfCD::getSuperMatrix(const TlOrbitalInfoObject& orbInfo_p,
     const index_type numOfOrbs_q = orbInfo_q.getNumOfOrbitals();
     const index_type numOfPQs = numOfOrbs_p * numOfOrbs_q;
 
-    PQ_PairArray_TH I2PQ;
+    PQ_PairArray_A I2PQ;
     TlSparseMatrix schwartzTable(numOfOrbs_p, numOfOrbs_q);
     TlVector d; // 対角成分
-    this->calcDiagonals_TH(orbInfo_p, orbInfo_q,
-                           &I2PQ, &schwartzTable, &d);
-    this->saveI2PQ_TH(I2PQ);
+    this->calcDiagonalsA(orbInfo_p, orbInfo_q,
+                         &I2PQ, &schwartzTable, &d);
+    this->saveI2PQ_A(I2PQ);
     const std::size_t N = I2PQ.size();
 
     DfEriEngine engine;
