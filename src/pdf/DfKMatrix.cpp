@@ -103,8 +103,8 @@ void DfKMatrix::getK_CD_local(const RUN_TYPE runType,
                               TlSymmetricMatrix *pK)
 {
     DfCD dfCD(this->pPdfParam_);
-    //dfCD.getK(runType, pK);
-    dfCD.getK_A(runType, pK);
+    dfCD.getK(runType, pK);
+    //dfCD.getK_A(runType, pK);
 }
 
 

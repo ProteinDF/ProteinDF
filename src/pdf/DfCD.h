@@ -28,22 +28,31 @@ public:
               TlSymmetricMatrix *pK);
 
 protected:
-    struct IndexPair2 {
+    void getJ_S(TlSymmetricMatrix *pJ);
+    void getK_S(const RUN_TYPE runType,
+                TlSymmetricMatrix *pK);
+
+    bool useSymmetric_;
+
+protected:
+    class Index2 {
     public:
-        explicit IndexPair2(index_type i1 =0, index_type i2 =0) : index1_(i1), index2_(i2) {
-            if (this->index1_ > this->index2_) {
-                std::swap(this->index1_, this->index2_);
+        explicit Index2(index_type i1 =0, index_type i2 =0) : index1_(i1), index2_(i2) {
+        }
+
+        bool operator<(const Index2& rhs) const {
+            if (this->index1_ < rhs.index1_) {
+                return true;
+            } else if (this->index1_ == rhs.index1_) {
+                return (this->index2_ < rhs.index2_);
             }
+
+            return false;
         }
 
-        std::size_t index() const {
-            // 'U' format
-            assert(this->index1_ <= this->index2_);
-            return this->index1_ + this->index2_ * (this->index2_ +1) / 2;
-        }
-
-        bool operator<(const IndexPair2& rhs) const {
-            return (this->index() < rhs.index());
+        bool operator==(const Index2& rhs) const {
+            return ((this->index1_ == rhs.index1_) &&
+                    (this->index2_ == rhs.index2_));
         }
 
         index_type index1() const {
@@ -54,60 +63,57 @@ protected:
             return this->index2_;
         }
 
-    private:
+    protected:
         index_type index1_;
         index_type index2_;
     };
 
-    struct IndexPair4 {
+    class Index4 {
     public:
-        explicit IndexPair4(index_type i1 =0, index_type i2 =0,
-                            index_type i3 =0, index_type i4 =0) 
-            : indexPair1_(i1, i2), indexPair2_(i3, i4) {
-            if (this->indexPair1_.index() > this->indexPair2_.index()) {
-                std::swap(this->indexPair1_, this->indexPair2_);
+        explicit Index4(index_type i1 =0, index_type i2 =0,
+                        index_type i3 =0, index_type i4 =0) 
+            : index2_1_(i1, i2), index2_2_(i3, i4) {
+        }
+
+        bool operator<(const Index4& rhs) const {
+            if (this->index2_1_ < rhs.index2_1_) {
+                return true;
+            } else if (this->index2_1_ == rhs.index2_1_) {
+                return (this->index2_2_ < rhs.index2_2_);
             }
+
+            return false;
         }
 
-        std::size_t index() const {
-            std::size_t pair_index1 = this->indexPair1_.index();
-            std::size_t pair_index2 = this->indexPair2_.index();
-            assert(pair_index1 <= pair_index2);
-            return pair_index1 + pair_index2 * (pair_index2 +1) / 2;
-        }
-
-        bool operator<(const IndexPair4& rhs) const {
-            return (this->index() < rhs.index());
-        }
-
-        bool operator==(const IndexPair4& rhs) const {
-            return (this->index() == rhs.index());
+        bool operator==(const Index4& rhs) const {
+            return ((this->index2_1_ == rhs.index2_1_) &&
+                    (this->index2_2_ == rhs.index2_2_));
         }
 
         index_type index1() const {
-            return this->indexPair1_.index1();
+            return this->index2_1_.index1();
         }
 
         index_type index2() const {
-            return this->indexPair1_.index2();
+            return this->index2_1_.index2();
         }
 
         index_type index3() const {
-            return this->indexPair2_.index1();
+            return this->index2_2_.index1();
         }
 
         index_type index4() const {
-            return this->indexPair2_.index2();
+            return this->index2_2_.index2();
         }
 
     private:
-        IndexPair2 indexPair1_;
-        IndexPair2 indexPair2_;
+        Index2 index2_1_;
+        Index2 index2_2_;
     };
 
 
 protected:
-    typedef std::vector<IndexPair2> PQ_PairArray;
+    typedef std::vector<Index2> PQ_PairArray;
     typedef std::vector<size_type> PQ2I_Type;
 
 protected:
@@ -163,6 +169,68 @@ protected:
 
 protected:
     // 2電子積分キャッシュ -----------------------------------------------------
+    class IndexPair2S : public Index2 {
+     public:
+         IndexPair2S(index_type i1, index_type i2) 
+             : Index2(i1, i2) {
+             if (this->index1_ < this->index2_) {
+                 std::swap(this->index1_, this->index2_);
+             }
+         }
+    };
+
+    class IndexPair4S {
+    public:
+        IndexPair4S(index_type i1, index_type i2, index_type i3, index_type i4) 
+            : ip2_1_(i1, i2), ip2_2_(i3, i4) {
+            if (this->ip2_1_ < this->ip2_2_) {
+                std::swap(this->ip2_1_, this->ip2_2_);
+            }
+        }
+
+        IndexPair4S(const Index4& i4) 
+            : ip2_1_(i4.index1(), i4.index2()), ip2_2_(i4.index3(), i4.index4()) {
+            if (this->ip2_1_ < this->ip2_2_) {
+                std::swap(this->ip2_1_, this->ip2_2_);
+            }
+        }
+
+        bool operator<(const IndexPair4S& rhs) const {
+            if (this->ip2_1_ < rhs.ip2_1_) {
+                return true;
+            } else if (this->ip2_1_ == rhs.ip2_1_) {
+                return (this->ip2_2_ < rhs.ip2_2_);
+            }
+
+            return false;
+        }
+
+        bool operator==(const IndexPair4S& rhs) const {
+            return ((this->ip2_1_ == rhs.ip2_1_) &&
+                    (this->ip2_2_ == rhs.ip2_2_));
+        }
+
+        index_type index1() const {
+            return this->ip2_1_.index1();
+        }
+
+        index_type index2() const {
+            return this->ip2_1_.index2();
+        }
+
+        index_type index3() const {
+            return this->ip2_2_.index1();
+        }
+
+        index_type index4() const {
+            return this->ip2_2_.index2();
+        }
+
+    private:
+        IndexPair2S ip2_1_;
+        IndexPair2S ip2_2_;
+    };
+
     // class ERI_CacheManager {
     // public:
     //     typedef std::map<IndexPair4, std::vector<double> > ERI_CacheType;
@@ -238,7 +306,7 @@ protected:
     // };
 
     /// 2電子積分キャッシュの型
-    typedef std::map<IndexPair4, std::vector<double> > ERI_CacheType;
+    typedef std::map<IndexPair4S, std::vector<double> > ERI_CacheType;
 
     /// 与えられたsuper matrix の要素に対し、2電子積分を計算して代入する。
     /// On-the-Fly時に使用する。
@@ -251,12 +319,12 @@ protected:
     ///
     /// @param G_row 必要なsuper matrixの行要素。
     /// @param G_col_list 必要なsuper matrixの列要素の配列。
-    std::vector<DfCD::IndexPair4> getCalcList(const index_type G_row,
-                                              const std::vector<index_type>& G_col_list,
-                                              const PQ_PairArray& I2PQ);
+    std::vector<DfCD::Index4> getCalcList(const index_type G_row,
+                                          const std::vector<index_type>& G_col_list,
+                                          const PQ_PairArray& I2PQ);
 
     /// 計算リストの2電子積分を求め、キャッシュに代入して返す。
-    void calcERIs(const std::vector<IndexPair4>& calcList,
+    void calcERIs(const std::vector<Index4>& calcList,
                   const TlSparseSymmetricMatrix& schwartzTable);
 
     /// キャッシュから必要な行列要素を代入する。
@@ -331,7 +399,7 @@ protected:
     struct IndexPair4A {
     public:
         explicit IndexPair4A(index_type i1 =0, index_type i2 =0,
-                               index_type i3 =0, index_type i4 =0) 
+                             index_type i3 =0, index_type i4 =0) 
             : indexPair1_(i1, i2), indexPair2_(i3, i4) {
         }
 
@@ -415,7 +483,7 @@ protected:
              const index_type G_row,
              const std::vector<index_type> G_col_list,
              const PQ_PairArray_A& I2PQ);
-    PQ_PairArray_A getI2PQ_TH();
+    PQ_PairArray_A getI2PQ_A();
     TlMatrix getCholeskyVectorA(const TlOrbitalInfoObject& orbInfo_p,
                                 const TlOrbitalInfoObject& orbInfo_q,
                                 const TlVector& L_col,
@@ -427,8 +495,8 @@ protected:
     /// @param[in] orbInfo_p pまたはrで示される軌道の軌道情報オブジェクト
     /// @param[in] orbInfo_q qまたはsで示される軌道の軌道情報オブジェクト
     /// @retval supermatrix
-    TlMatrix getSuperMatrix(const TlOrbitalInfoObject& orbInfo_p,
-                            const TlOrbitalInfoObject& orbInfo_q);
+    TlSymmetricMatrix getSuperMatrix(const TlOrbitalInfoObject& orbInfo_p,
+                                     const TlOrbitalInfoObject& orbInfo_q);
 
     /// コレスキー分解を行います(デバッグ用)
     ///

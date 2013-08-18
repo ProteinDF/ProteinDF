@@ -127,8 +127,7 @@ TlVector DfJMatrix::getRho(const RUN_TYPE runType, const int iteration)
 void DfJMatrix::getJ_CD_local(TlSymmetricMatrix* pJ)
 {
     DfCD dfCD(this->pPdfParam_);
-    // dfCD.getJ(pJ);
-    dfCD.getJ_A(pJ);
+    dfCD.getJ(pJ);
 }
 
 
