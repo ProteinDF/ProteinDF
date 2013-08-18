@@ -281,7 +281,7 @@ void DfIntegrals::createCholeskyVectors()
         ((this->J_engine_ == J_ENGINE_CD) || (this->K_engine_ == K_ENGINE_CD))) {
         this->outputStartTitle("Cholesky Vectors");
         DfCD *pDfCD = this->getDfCDObject();
-        pDfCD->calcCholeskyVectors();
+        pDfCD->calcCholeskyVectorsForJK();
         
         delete pDfCD;
         pDfCD = NULL;

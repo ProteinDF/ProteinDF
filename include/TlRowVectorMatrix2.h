@@ -16,6 +16,7 @@ public:
     explicit TlRowVectorMatrix2(index_type row = 1, index_type col = 1,
                                 int allProcs = 1, int rank = 0,
                                 bool isUsingMemManager = false);
+    TlRowVectorMatrix2(const TlRowVectorMatrix2& rhs);
 
     ~TlRowVectorMatrix2();
         
@@ -47,7 +48,6 @@ public:
     TlMatrix getTlMatrix() const;
 
 private:
-    TlRowVectorMatrix2(const TlRowVectorMatrix2& rhs);
     TlRowVectorMatrix2& operator=(const TlRowVectorMatrix2& rhs);
 
 private:

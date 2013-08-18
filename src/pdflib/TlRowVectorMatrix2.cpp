@@ -12,6 +12,22 @@ TlRowVectorMatrix2::TlRowVectorMatrix2(const index_type row,
     this->resize(row, col);
 }
 
+TlRowVectorMatrix2::TlRowVectorMatrix2(const TlRowVectorMatrix2& rhs)
+    : numOfRows_(0), numOfCols_(0), reserveCols_(0),
+      allProcs_(rhs.allProcs_), rank_(rhs.rank_),
+      numOfLocalRows_(0), isUsingMemManager_(rhs.isUsingMemManager_) {
+
+    this->resize(rhs.getNumOfRows(), rhs.getNumOfCols());
+
+    assert(this->data_.size() == rhs.data_.size());
+    const index_type numOfCols = this->getNumOfCols();
+    const std::size_t size = this->data_.size();
+    for (std::size_t i = 0; i < size; ++i) {
+        assert(this->data_[i] != NULL);
+        std::copy(rhs.data_[i], rhs.data_[i] + numOfCols, this->data_[i]);
+    }
+}
+
 
 TlRowVectorMatrix2::~TlRowVectorMatrix2()
 {
@@ -72,7 +88,7 @@ void TlRowVectorMatrix2::resize(const index_type newRows,
 void TlRowVectorMatrix2::reserve_cols(const index_type newReserves) {
     const index_type prevReserveCols = this->reserveCols_;
     const index_type newReserveCols = std::max(this->getNumOfCols(), newReserves);
-    const index_type numOfCols = this->getNumOfCols();
+    // const index_type numOfCols = this->getNumOfCols();
 
     if (prevReserveCols < newReserveCols) {
         this->reserveCols_ = newReserveCols;

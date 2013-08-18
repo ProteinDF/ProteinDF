@@ -36,8 +36,8 @@ protected:
     virtual void saveI2PQ(const PQ_PairArray& I2PQ);
     virtual PQ_PairArray getI2PQ();
 
-    virtual void saveL(const TlMatrix& L);
-    virtual TlMatrix getL();
+    virtual void saveLjk(const TlMatrix& L);
+    virtual TlMatrix getLjk();
 
     virtual TlSymmetricMatrix getPMatrix();
 
@@ -59,13 +59,15 @@ public:
                 TlDistributeSymmetricMatrix* pK);
     
 protected:
-    virtual void calcCholeskyVectors_onTheFly();
+    virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo);
+
     virtual std::vector<double>
-    getSuperMatrixElements(const index_type G_row,
+    getSuperMatrixElements(const TlOrbitalInfoObject& orbInfo,
+                           const index_type G_row,
                            const std::vector<index_type>& G_col_list,
                            const PQ_PairArray& I2PQ,
                            const TlSparseSymmetricMatrix& schwartzTable);
-    void saveL(const TlRowVectorMatrix2& L);
+    void saveLjk(const TlRowVectorMatrix2& L);
     // TlColVectorMatrix2 getColVector(const TlRowVectorMatrix2& L);
 
     // for debug

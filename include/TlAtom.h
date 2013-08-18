@@ -48,6 +48,22 @@ public:
     void setCharge(double c);
     double getCharge() const;
 
+public:
+    bool operator==(const TlAtom& rhs) const {
+        bool answer = false;
+        if ((this->m_element == rhs.m_element) &&
+            (this->getPosition() == rhs.getPosition()) &&
+            (std::fabs(this->getCharge() - rhs.getCharge()) < 1.0E-5)) {
+            answer = true;
+        }
+
+        return answer;
+    }
+
+    bool operator!=(const TlAtom& rhs) const {
+        return !(this->operator==(rhs));
+    }
+
 private:
     double charge_; /// 電荷を保持する
 

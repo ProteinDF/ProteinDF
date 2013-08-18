@@ -86,7 +86,8 @@ protected:
     std::string getSabInvMatrixPath();
     std::string getSgdInvMatrixPath();
     std::string getI2pqVtrPath();
-    std::string getLMatrixPath();
+    std::string getLjkMatrixPath();
+    std::string getLxcMatrixPath();
     std::string getXMatrixPath();
     std::string getXInvMatrixPath();
     std::string getNalphaPath();
@@ -177,11 +178,14 @@ protected:
     
 
     template <class MatrixType>
-    MatrixType getLMatrix();
+    MatrixType getLjkMatrix();
+    template <class MatrixType>
+    void saveLjkMatrix(const MatrixType& Ljk);
 
     template <class MatrixType>
-    void saveLMatrix(const MatrixType& L);
-
+    MatrixType getLxcMatrix();
+    template <class MatrixType>
+    void saveLxcMatrix(const MatrixType& Lxc);
 
     template <class MatrixType>
     void saveGridMatrix(const int iteration,
@@ -569,21 +573,41 @@ SymmetricMatrixType DfObject::getSpqMatrix()
 
 
 template <class MatrixType>
-MatrixType DfObject::getLMatrix()
+MatrixType DfObject::getLjkMatrix()
 {
-    const std::string path = this->getLMatrixPath();
-    MatrixType L = this->matrixCache_.get<MatrixType>(path);
-    return L;
+    const std::string path = this->getLjkMatrixPath();
+    MatrixType Ljk = this->matrixCache_.get<MatrixType>(path);
+    return Ljk;
 }
 
 template <class MatrixType>
-void DfObject::saveLMatrix(const MatrixType& L)
+void DfObject::saveLjkMatrix(const MatrixType& Ljk)
 {
-    const std::string path = this->getLMatrixPath();
+    const std::string path = this->getLjkMatrixPath();
     if (this->isUseCache_ == true) {
-        this->matrixCache_.set(path, L, true);
+        this->matrixCache_.set(path, Ljk, true);
     } else {
-        L.save(path);
+        Ljk.save(path);
+    }
+}
+
+
+template <class MatrixType>
+MatrixType DfObject::getLxcMatrix()
+{
+    const std::string path = this->getLxcMatrixPath();
+    MatrixType Lxc = this->matrixCache_.get<MatrixType>(path);
+    return Lxc;
+}
+
+template <class MatrixType>
+void DfObject::saveLxcMatrix(const MatrixType& Lxc)
+{
+    const std::string path = this->getLxcMatrixPath();
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, Lxc, true);
+    } else {
+        Lxc.save(path);
     }
 }
 

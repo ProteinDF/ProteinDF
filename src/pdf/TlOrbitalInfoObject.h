@@ -29,6 +29,15 @@ public:
     struct PGTO {
         double dCoefficient;
         double dExponent;
+
+        bool operator==(const PGTO& rhs) const {
+            return ((std::fabs(this->dCoefficient - rhs.dCoefficient) < 1.0E-5) &&
+                    (std::fabs(this->dExponent - rhs.dExponent) < 1.0E-5));
+        }
+
+        bool operator!=(const PGTO& rhs) const {
+            return !(this->operator==(rhs));
+        }
     };
     typedef std::vector<PGTO> PGTOs;
 
@@ -40,10 +49,31 @@ public:
         PGTOs pgtos;
 
         double factor; // sum of exp(-a)
+
+    public:
+        bool operator==(const CGTO& rhs) const {
+            bool answer = false;
+            if ((this->atomSymbol == rhs.atomSymbol) &&
+                (this->shell == rhs.shell)) {
+                const std::size_t size = this->pgtos.size();
+                if (size == rhs.pgtos.size()) {
+                    answer = true;
+                    for (std::size_t i = 0; i < size; ++i) {
+                        if (this->pgtos[i] != rhs.pgtos[i]) {
+                            answer = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            return answer;
+        }
+        
+        bool operator!=(const CGTO& rhs) const {
+            return !(this->operator==(rhs));
+        }
     };
-
     typedef std::vector<CGTO> CGTOs;
-
     
     /// CGTO内のPGTOをソートする関数オブジェクト
     struct cgto_sort_functor {
@@ -55,6 +85,7 @@ public:
 protected:
     /// 軌道の情報を保持する構造体
     struct Orbital {
+    public:
         int shellType;      // 0: s, 1: p, 2:d
         int basisType; // s=0, px=1, py=2, ...
         int atomIndex; // 対応するatoms_のインデックス
@@ -64,6 +95,27 @@ protected:
         double prefactor_gradx;
         double prefactor_grady;
         double prefactor_gradz;
+
+    public:
+        bool operator==(const Orbital& rhs) const {
+            bool answer = false;
+            if ((this->shellType == rhs.shellType) &&
+                (this->basisType == rhs.basisType) &&
+                (this->atomIndex == rhs.atomIndex) &&
+                (this->cgtoIndex == rhs.cgtoIndex) &&
+                (std::fabs(this->prefactor - rhs.prefactor) < 1.0E-5) &&
+                (std::fabs(this->prefactor_gradx - rhs.prefactor_gradx) < 1.0E-5) &&
+                (std::fabs(this->prefactor_grady - rhs.prefactor_grady) < 1.0E-5) &&
+                (std::fabs(this->prefactor_gradz - rhs.prefactor_gradz) < 1.0E-5)) {
+                answer = true;
+            }
+
+            return answer;
+        }
+
+        bool operator!=(const Orbital& rhs) const {
+            return !(this->operator==(rhs));
+        }
     };
 
 public:
@@ -203,7 +255,9 @@ public:
         return this->cgtos_[this->getCgtoIndex(AO)].factor;
     }
     
-    
+public:
+    bool operator==(const TlOrbitalInfoObject& rhs) const;
+    bool operator!=(const TlOrbitalInfoObject& rhs) const;
 
 public:
     // for debug

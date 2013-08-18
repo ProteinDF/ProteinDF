@@ -459,13 +459,6 @@ public:
     void calcGrad(const AngularMomentum2& qAB, const AngularMomentum2& qCD,
                   const CGTO_Pair& IJ, const CGTO_Pair& KL);
 
-    void setPrimitiveLevelThreshold(const double threshold) {
-        this->primitiveLevelThreshold_ = threshold;
-    }
-    double getPrimitiveLevelThreshold() const {
-        return this->primitiveLevelThreshold_;
-    }
-    
 private:
     void initialize();
     
@@ -664,9 +657,6 @@ private:
     
     std::map<ERI_State, bool, ERI_State_cmp> isCalcdERI_;
     int ERI_batch_;
-
-    // see J. Chem. Phys., 105, 2726 (1996), eq33
-    double primitiveLevelThreshold_;
 
     //
     // TlTime time_calc_all_;

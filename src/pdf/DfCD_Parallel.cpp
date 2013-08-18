@@ -146,22 +146,22 @@ DfCD::PQ_PairArray DfCD_Parallel::getI2PQ()
     return I2PQ;
 }
 
-void DfCD_Parallel::saveL(const TlMatrix& L)
+void DfCD_Parallel::saveLjk(const TlMatrix& L)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
-        DfCD::saveL(L);
+        DfCD::saveLjk(L);
     }
 }
 
 
-TlMatrix DfCD_Parallel::getL()
+TlMatrix DfCD_Parallel::getLjk()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
     TlMatrix L;
     if (rComm.isMaster() == true) {
-        L = DfCD::getL();
+        L = DfCD::getLjk();
     }
     rComm.broadcast(L);
 
@@ -204,7 +204,7 @@ void DfCD_Parallel::getJ_distributed(TlDistributeSymmetricMatrix* pJ)
         DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
 
     // cholesky vector
-    TlDistributeMatrix L = DfObject::getLMatrix<TlDistributeMatrix>();
+    TlDistributeMatrix L = DfObject::getLjkMatrix<TlDistributeMatrix>();
     const index_type numOfCBs = L.getNumOfCols();
 
     const PQ_PairArray I2PQ = this->getI2PQ();
@@ -232,7 +232,7 @@ void DfCD_Parallel::getK_distributed(const RUN_TYPE runType,
 {
     this->log_.info("calc K by CD method on distributed matrix.");
 
-    TlDistributeMatrix L = DfObject::getLMatrix<TlDistributeMatrix>();
+    TlDistributeMatrix L = DfObject::getLjkMatrix<TlDistributeMatrix>();
     const index_type numOfCBs = L.getNumOfCols();
     
     // for RKS
@@ -362,7 +362,7 @@ DfCD_Parallel::getCholeskyVector_distribute(const TlVector& L_col,
 // }
 
 // On the Fly method -----------------------------------------------------------
-void DfCD_Parallel::calcCholeskyVectors_onTheFly()
+TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo)
 {
     // timing data
     TlTime CD_all_time;
@@ -376,15 +376,15 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
 
     CD_all_time.start();
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    this->createEngines();
-    this->initializeCutoffStats();
+    this->createEngines<DfEriEngine>();
+    this->initializeCutoffStats(orbInfo.getMaxShellType());
 
     CD_diagonals_time.start();
     this->log_.info(TlUtils::format("# of PQ dimension: %d", int(this->numOfPQs_)));
     TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
     PQ_PairArray I2PQ;
     TlVector global_diagonals; // 対角成分
-    this->calcDiagonals(&schwartzTable, &I2PQ, &global_diagonals);
+    this->calcDiagonals(orbInfo, &schwartzTable, &I2PQ, &global_diagonals);
     this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
     this->saveI2PQ(I2PQ);
     // this->ERI_cache_manager_.setMaxItems(I2PQ.size() * 2);
@@ -476,7 +476,8 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
                 const index_type pivot_i = global_pivot[m+1 +i]; // from (m+1) to N
                 G_col_list[i] = pivot_i;
             }
-            G_pm = this->getSuperMatrixElements(pivot_m, G_col_list, I2PQ, schwartzTable);
+            G_pm = this->getSuperMatrixElements(orbInfo,
+                                                pivot_m, G_col_list, I2PQ, schwartzTable);
         }
         assert(G_pm.size() == numOf_G_cols);
         CD_ERI_time.stop();
@@ -566,10 +567,10 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     this->log_.info(TlUtils::format("Cholesky Vectors: %d", m));
 
     this->destroyEngines();
-    this->schwartzCutoffReport();
+    this->schwartzCutoffReport(orbInfo.getMaxShellType());
 
     CD_save_time.start();
-    this->saveL(L);
+    this->saveLjk(L);
     CD_save_time.stop();
 
     CD_all_time.stop();
@@ -583,11 +584,14 @@ void DfCD_Parallel::calcCholeskyVectors_onTheFly()
     this->log_.info(TlUtils::format("CD calc:      %10.1f sec.", CD_calc_time.getElapseTime()));
     this->log_.info(TlUtils::format("CD d:         %10.1f sec.", CD_d_time.getElapseTime()));
     this->log_.info(TlUtils::format("CD save:      %10.1f sec.", CD_save_time.getElapseTime()));
+
+    return L;
 }
 
 
 std::vector<double>
-DfCD_Parallel::getSuperMatrixElements(const index_type G_row,
+DfCD_Parallel::getSuperMatrixElements(const TlOrbitalInfoObject& orbInfo,
+                                      const index_type G_row,
                                       const std::vector<index_type>& G_col_list,
                                       const PQ_PairArray& I2PQ,
                                       const TlSparseSymmetricMatrix& schwartzTable)
@@ -607,7 +611,8 @@ DfCD_Parallel::getSuperMatrixElements(const index_type G_row,
         std::copy(G_col_list.begin() + start,
                   G_col_list.begin() + end,
                   G_col_list_local.begin());
-        elements = DfCD::getSuperMatrixElements(G_row,
+        elements = DfCD::getSuperMatrixElements(orbInfo, 
+                                                G_row,
                                                 G_col_list_local,
                                                 I2PQ,
                                                 schwartzTable);
@@ -654,7 +659,7 @@ DfCD_Parallel::getSuperMatrixElements(const index_type G_row,
 }
 
 
-void DfCD_Parallel::saveL(const TlRowVectorMatrix2& L)
+void DfCD_Parallel::saveLjk(const TlRowVectorMatrix2& L)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProcs();
@@ -702,7 +707,7 @@ void DfCD_Parallel::saveL(const TlRowVectorMatrix2& L)
         }
     }
     
-    colVecL.save(DfObject::getLMatrixPath());
+    colVecL.save(DfObject::getLjkMatrixPath());
 
     // if (this->isDebugSaveL_ == true) {
     //     {
@@ -788,7 +793,7 @@ void DfCD_Parallel::getJ(TlSymmetricMatrix* pJ)
     // cholesky vector
     const PQ_PairArray I2PQ = this->getI2PQ();
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
-    L.load(DfObject::getLMatrixPath());
+    L.load(DfObject::getLjkMatrixPath());
     assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
     assert(L.getRank() == rComm.getRank());
 
@@ -828,7 +833,7 @@ void DfCD_Parallel::getK(const RUN_TYPE runType,
     // cholesky vector
     const PQ_PairArray I2PQ = this->getI2PQ();
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
-    L.load(DfObject::getLMatrixPath());
+    L.load(DfObject::getLjkMatrixPath());
 
     const index_type cvSize = L.getNumOfRows();
     const index_type numOfCBs = L.getNumOfCols();
@@ -873,7 +878,7 @@ void DfCD_Parallel::getJ_D(TlDistributeSymmetricMatrix* pJ)
     const bool isUsingMemManager = this->isEnableMmap_;
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank(), 
                          isUsingMemManager);
-    L.load(DfObject::getLMatrixPath());
+    L.load(DfObject::getLjkMatrixPath());
     assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
     assert(L.getRank() == rComm.getRank());
 
@@ -915,7 +920,7 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
     const bool isUsingMemManager = this->isEnableMmap_;
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
                          isUsingMemManager);
-    L.load(DfObject::getLMatrixPath());
+    L.load(DfObject::getLjkMatrixPath());
 
     const index_type cvSize = L.getNumOfRows();
     const index_type numOfCVs = L.getNumOfCols();

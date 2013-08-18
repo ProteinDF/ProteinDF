@@ -8,9 +8,10 @@
 #include "TlSparseSymmetricMatrix.h"
 #include "TlSymmetricMatrix.h"
 #include "TlStlUtils.h"
+#include "TlRowVectorMatrix2.h"
 
 class TlOrbitalInfo;
-class DfEriEngine;
+class DfEngineObject;
 
 // #define CHECK_LOOP // 計算ループ構造のチェック
 
@@ -21,7 +22,8 @@ public:
     virtual ~DfCD();
 
 public:
-    void calcCholeskyVectors();
+    void calcCholeskyVectorsForJK();
+    void calcCholeskyVectorsForGridFree();
 
     void getJ(TlSymmetricMatrix *pJ);
     void getK(const RUN_TYPE runType,
@@ -31,8 +33,6 @@ protected:
     void getJ_S(TlSymmetricMatrix *pJ);
     void getK_S(const RUN_TYPE runType,
                 TlSymmetricMatrix *pK);
-
-    bool useSymmetric_;
 
 protected:
     class Index2 {
@@ -117,7 +117,9 @@ protected:
     typedef std::vector<size_type> PQ2I_Type;
 
 protected:
+    template<class EngineClass>
     void createEngines();
+
     void destroyEngines();
     
 protected:
@@ -133,8 +135,8 @@ protected:
     virtual void saveI2PQ(const PQ_PairArray& I2PQ);
     PQ_PairArray getI2PQ();
 
-    virtual void saveL(const TlMatrix& L);
-    virtual TlMatrix getL();
+    virtual void saveLjk(const TlMatrix& Ljk);
+    virtual TlMatrix getLjk();
 
     TlSymmetricMatrix getCholeskyVector(const TlVector& L_col,
                                         const PQ_PairArray& I2PQ);
@@ -145,12 +147,17 @@ protected:
                                      index_type *pStart, index_type *pEnd);
 
 protected:
-    virtual void calcCholeskyVectors_onTheFly();
+    template<class EngineClass>
+    TlRowVectorMatrix2 calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo);
 
-    void calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
+    virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo);
+
+    void calcDiagonals(const TlOrbitalInfoObject& orbInfo,
+                       TlSparseSymmetricMatrix *pSchwartzTable,
                        PQ_PairArray *pI2PQ,
                        TlVector *pDiagonals);
-    void calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
+    void calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
+                              const std::vector<DfTaskCtrl::Task2>& taskList,
                               TlSparseSymmetricMatrix *pSchwartzTable,
                               TlSparseSymmetricMatrix *pDiagonalMat,
                               PQ_PairArray *pI2PQ);
@@ -162,8 +169,8 @@ protected:
                                  const int shellQuartetType,
                                  const TlSparseMatrix& schwarzTable,
                                  const double threshold);
-    void initializeCutoffStats();
-    void schwartzCutoffReport();
+    void initializeCutoffStats(const int maxShellType);
+    void schwartzCutoffReport(const int maxShellType);
     mutable std::vector<unsigned long> cutoffAll_schwartz_;
     mutable std::vector<unsigned long> cutoffAlive_schwartz_;
 
@@ -181,7 +188,7 @@ protected:
 
     class IndexPair4S {
     public:
-        IndexPair4S(index_type i1, index_type i2, index_type i3, index_type i4) 
+        explicit IndexPair4S(index_type i1 =0, index_type i2 =0, index_type i3 =0, index_type i4 =0) 
             : ip2_1_(i1, i2), ip2_2_(i3, i4) {
             if (this->ip2_1_ < this->ip2_2_) {
                 std::swap(this->ip2_1_, this->ip2_2_);
@@ -229,6 +236,58 @@ protected:
     private:
         IndexPair2S ip2_1_;
         IndexPair2S ip2_2_;
+    };
+
+    class IndexPair4A {
+    public:
+        explicit IndexPair4A(index_type i1 =0, index_type i2 =0, index_type i3 =0, index_type i4 =0) 
+            : index2_1_(i1, i2), index2_2_(i3, i4) {
+            if (this->index2_1_ < this->index2_2_) {
+                std::swap(this->index2_1_, this->index2_2_);
+            }
+        }
+
+        IndexPair4A(const Index4& i4) 
+            : index2_1_(i4.index1(), i4.index2()), index2_2_(i4.index3(), i4.index4()) {
+            if (this->index2_1_ < this->index2_2_) {
+                std::swap(this->index2_1_, this->index2_2_);
+            }
+        }
+
+        bool operator<(const IndexPair4A& rhs) const {
+            if (this->index2_1_ < rhs.index2_1_) {
+                return true;
+            } else if (this->index2_1_ == rhs.index2_1_) {
+                return (this->index2_2_ < rhs.index2_2_);
+            }
+
+            return false;
+        }
+
+        bool operator==(const IndexPair4A& rhs) const {
+            return ((this->index2_1_ == rhs.index2_1_) &&
+                    (this->index2_2_ == rhs.index2_2_));
+        }
+
+        index_type index1() const {
+            return this->index2_1_.index1();
+        }
+
+        index_type index2() const {
+            return this->index2_1_.index2();
+        }
+
+        index_type index3() const {
+            return this->index2_2_.index1();
+        }
+
+        index_type index4() const {
+            return this->index2_2_.index2();
+        }
+
+    private:
+        Index2 index2_1_;
+        Index2 index2_2_;
     };
 
     // class ERI_CacheManager {
@@ -310,7 +369,8 @@ protected:
 
     /// 与えられたsuper matrix の要素に対し、2電子積分を計算して代入する。
     /// On-the-Fly時に使用する。
-    virtual std::vector<double> getSuperMatrixElements(const index_type G_row,
+    virtual std::vector<double> getSuperMatrixElements(const TlOrbitalInfoObject& orbInfo,
+                                                       const index_type G_row,
                                                        const std::vector<index_type>& G_col_list,
                                                        const PQ_PairArray& I2PQ,
                                                        const TlSparseSymmetricMatrix& schwartzTable);
@@ -319,16 +379,19 @@ protected:
     ///
     /// @param G_row 必要なsuper matrixの行要素。
     /// @param G_col_list 必要なsuper matrixの列要素の配列。
-    std::vector<DfCD::Index4> getCalcList(const index_type G_row,
+    std::vector<DfCD::Index4> getCalcList(const TlOrbitalInfoObject& orbInfo,
+                                          const index_type G_row,
                                           const std::vector<index_type>& G_col_list,
                                           const PQ_PairArray& I2PQ);
 
     /// 計算リストの2電子積分を求め、キャッシュに代入して返す。
-    void calcERIs(const std::vector<Index4>& calcList,
+    void calcERIs(const TlOrbitalInfoObject& orbInfo,
+                  const std::vector<Index4>& calcList,
                   const TlSparseSymmetricMatrix& schwartzTable);
 
     /// キャッシュから必要な行列要素を代入する。
-    std::vector<double> setERIs(const index_type G_row,
+    std::vector<double> setERIs(const TlOrbitalInfoObject& orbInfo,
+                                const index_type G_row,
                                 const std::vector<index_type> G_col_list,
                                 const PQ_PairArray& I2PQ);
 
@@ -344,8 +407,8 @@ protected:
 protected:
     index_type numOfPQs_;
 
-    DfEriEngine* pEriEngines_;
-    TlOrbitalInfo orbitalInfo_;
+    DfEngineObject* pEngines_;
+    // TlOrbitalInfo orbitalInfo_;
 
     double cutoffThreshold_;
     double cutoffEpsilon3_;
@@ -358,86 +421,86 @@ protected:
     ///
     /// (pq)の組を管理するクラス
     /// pの基底関数とqの基底関数が異なる場合に使用する
-    class IndexPair2A {
-    public:
-        explicit IndexPair2A(index_type i1 =0, index_type i2 =0) : index1_(i1), index2_(i2) {
-        }
+    // class IndexPair2A {
+    // public:
+    //     explicit IndexPair2A(index_type i1 =0, index_type i2 =0) : index1_(i1), index2_(i2) {
+    //     }
 
-        bool operator<(const IndexPair2A& rhs) const {
-            if (this->index1_ < rhs.index1_) {
-                return true;
-            } else if (this->index1_ == rhs.index1_) {
-                return (this->index2_ < rhs.index2_);
-            }
+    //     bool operator<(const IndexPair2A& rhs) const {
+    //         if (this->index1_ < rhs.index1_) {
+    //             return true;
+    //         } else if (this->index1_ == rhs.index1_) {
+    //             return (this->index2_ < rhs.index2_);
+    //         }
 
-            return false;
-        }
+    //         return false;
+    //     }
 
-        bool operator==(const IndexPair2A& rhs) const {
-            return ((this->index1_ == rhs.index1_) &&
-                    (this->index2_ == rhs.index2_));
-        }
+    //     bool operator==(const IndexPair2A& rhs) const {
+    //         return ((this->index1_ == rhs.index1_) &&
+    //                 (this->index2_ == rhs.index2_));
+    //     }
 
-        index_type index1() const {
-            return this->index1_;
-        }
+    //     index_type index1() const {
+    //         return this->index1_;
+    //     }
 
-        index_type index2() const {
-            return this->index2_;
-        }
+    //     index_type index2() const {
+    //         return this->index2_;
+    //     }
 
-    private:
-        index_type index1_;
-        index_type index2_;
-    };
-    typedef std::vector<IndexPair2A> PQ_PairArray_A;
+    // private:
+    //     index_type index1_;
+    //     index_type index2_;
+    // };
+    // typedef std::vector<Index2> PQ_PairArray_A;
 
     /// 非対称形4index管理クラス
     ///
     /// (pq, rs)の組を管理するクラス
     /// p,rの基底関数とq, sの基底関数が異なる場合に使用する
-    struct IndexPair4A {
-    public:
-        explicit IndexPair4A(index_type i1 =0, index_type i2 =0,
-                             index_type i3 =0, index_type i4 =0) 
-            : indexPair1_(i1, i2), indexPair2_(i3, i4) {
-        }
+    // struct IndexPair4A {
+    // public:
+    //     explicit IndexPair4A(index_type i1 =0, index_type i2 =0,
+    //                          index_type i3 =0, index_type i4 =0) 
+    //         : indexPair1_(i1, i2), indexPair2_(i3, i4) {
+    //     }
 
-        bool operator<(const IndexPair4A& rhs) const {
-            if (this->indexPair1_ < rhs.indexPair1_) {
-                return true;
-            } else if (this->indexPair1_ == rhs.indexPair1_) {
-                return (this->indexPair2_ < rhs.indexPair2_);
-            }
+    //     bool operator<(const IndexPair4A& rhs) const {
+    //         if (this->indexPair1_ < rhs.indexPair1_) {
+    //             return true;
+    //         } else if (this->indexPair1_ == rhs.indexPair1_) {
+    //             return (this->indexPair2_ < rhs.indexPair2_);
+    //         }
 
-            return false;
-        }
+    //         return false;
+    //     }
 
-        bool operator==(const IndexPair4A& rhs) const {
-            return ((this->indexPair1_ == rhs.indexPair1_) &&
-                    (this->indexPair2_ == rhs.indexPair2_));
-        }
+    //     bool operator==(const IndexPair4A& rhs) const {
+    //         return ((this->indexPair1_ == rhs.indexPair1_) &&
+    //                 (this->indexPair2_ == rhs.indexPair2_));
+    //     }
 
-        index_type index1() const {
-            return this->indexPair1_.index1();
-        }
+    //     index_type index1() const {
+    //         return this->indexPair1_.index1();
+    //     }
 
-        index_type index2() const {
-            return this->indexPair1_.index2();
-        }
+    //     index_type index2() const {
+    //         return this->indexPair1_.index2();
+    //     }
 
-        index_type index3() const {
-            return this->indexPair2_.index1();
-        }
+    //     index_type index3() const {
+    //         return this->indexPair2_.index1();
+    //     }
 
-        index_type index4() const {
-            return this->indexPair2_.index2();
-        }
+    //     index_type index4() const {
+    //         return this->indexPair2_.index2();
+    //     }
 
-    private:
-        IndexPair2A indexPair1_;
-        IndexPair2A indexPair2_;
-    };
+    // private:
+    //     IndexPair2A indexPair1_;
+    //     IndexPair2A indexPair2_;
+    // };
 
     /// 2電子積分キャッシュの型
     typedef std::map<IndexPair4A, std::vector<double> > ERI_CacheType_A;
@@ -447,32 +510,32 @@ protected:
                                                const TlOrbitalInfoObject& orbInfo_q);
     void calcDiagonalsA(const TlOrbitalInfoObject& orbInfo_p,
                         const TlOrbitalInfoObject& orbInfo_q,
-                        PQ_PairArray_A *pI2PQ,
+                        PQ_PairArray *pI2PQ,
                         TlSparseMatrix *pSchwartzTable,
                         TlVector *pDiagonals);
     void calcDiagonalsA_kernel(const TlOrbitalInfoObject& orbInfo_p,
                                const TlOrbitalInfoObject& orbInfo_q,
                                const std::vector<DfTaskCtrl::Task2>& taskList,
-                               PQ_PairArray_A *pI2PQ,
+                               PQ_PairArray *pI2PQ,
                                TlSparseMatrix *pSchwartzTable,
                                TlSparseMatrix *pDiagonalMat);
 
-    void finalizeI2PQ_A(PQ_PairArray_A *pI2PQ);
-    virtual void saveI2PQ_A(const PQ_PairArray_A& I2PQ);
+    // void finalizeI2PQ_A(PQ_PairArray_A *pI2PQ);
+    // virtual void saveI2PQ_A(const PQ_PairArray_A& I2PQ);
 
     virtual std::vector<double>
     getSuperMatrixElementsA(const TlOrbitalInfoObject& orbInfo_p,
                             const TlOrbitalInfoObject& orbInfo_q,
                             const index_type G_row,
                             const std::vector<index_type>& G_col_list,
-                            const PQ_PairArray_A& I2PQ,
+                            const PQ_PairArray& I2PQ,
                             const TlSparseMatrix& schwartzTable);
     std::vector<DfCD::IndexPair4A> 
     getCalcListA(const TlOrbitalInfoObject& orbInfo_p,
                  const TlOrbitalInfoObject& orbInfo_q,
                  const index_type G_row,
                  const std::vector<index_type>& G_col_list,
-                 const PQ_PairArray_A& I2PQ);
+                 const PQ_PairArray& I2PQ);
     void calcERIsA(const TlOrbitalInfoObject& orbInfo_p,
                    const TlOrbitalInfoObject& orbInfo_q,
                    const std::vector<IndexPair4A>& calcList,
@@ -482,12 +545,12 @@ protected:
              const TlOrbitalInfoObject& orbInfo_q,
              const index_type G_row,
              const std::vector<index_type> G_col_list,
-             const PQ_PairArray_A& I2PQ);
-    PQ_PairArray_A getI2PQ_A();
+             const PQ_PairArray& I2PQ);
+    // PQ_PairArray_A getI2PQ_A();
     TlMatrix getCholeskyVectorA(const TlOrbitalInfoObject& orbInfo_p,
                                 const TlOrbitalInfoObject& orbInfo_q,
                                 const TlVector& L_col,
-                                const PQ_PairArray_A& I2PQ);
+                                const PQ_PairArray& I2PQ);
 
     /// デバッグ用にSuperMatrixを作成します
     ///
@@ -505,11 +568,24 @@ protected:
     /// @retval コレスキーベクトル(L)
     TlMatrix calcCholeskyVectors(const TlSymmetricMatrix& V);
 
-public:
+    /// デバッグ用
     void getJ_A(TlSymmetricMatrix* pJ);
+
+    /// デバッグ用
     void getK_A(const RUN_TYPE runType,
                 TlSymmetricMatrix *pK);
 };
+
+
+template<class EngineClass>
+TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo)
+{
+    this->createEngines<EngineClass>();
+    const TlRowVectorMatrix2 L = this->calcCholeskyVectorsOnTheFlyS(orbInfo);
+    this->destroyEngines();
+
+    return L;
+}
 
 
 #endif // DFCD_H
