@@ -106,16 +106,16 @@ void DfCD_Parallel::finalize_I2PQ(PQ_PairArray* pI2PQ)
 }
 
 
-void DfCD_Parallel::saveI2PQ(const PQ_PairArray& I2PQ)
+void DfCD_Parallel::saveI2PQ(const PQ_PairArray& I2PQ, const std::string& filepath)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
-        DfCD::saveI2PQ(I2PQ);
+        DfCD::saveI2PQ(I2PQ, filepath);
     }
 }
 
 
-DfCD::PQ_PairArray DfCD_Parallel::getI2PQ()
+DfCD::PQ_PairArray DfCD_Parallel::getI2PQ(const std::string& filepath)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     this->log_.info("distribute I2PQ table.");
@@ -123,7 +123,7 @@ DfCD::PQ_PairArray DfCD_Parallel::getI2PQ()
     PQ_PairArray I2PQ;
     std::vector<index_type> shellArray;
     if (rComm.isMaster() == true) {
-        I2PQ = DfCD::getI2PQ();
+        I2PQ = DfCD::getI2PQ(filepath);
 
         const std::size_t I2PQ_size = I2PQ.size(); 
         shellArray.resize(I2PQ_size * 2);
@@ -207,7 +207,7 @@ void DfCD_Parallel::getJ_distributed(TlDistributeSymmetricMatrix* pJ)
     TlDistributeMatrix L = DfObject::getLjkMatrix<TlDistributeMatrix>();
     const index_type numOfCBs = L.getNumOfCols();
 
-    const PQ_PairArray I2PQ = this->getI2PQ();
+    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     index_type start_CholeskyBasis = 0;
     index_type end_CholeskyBasis = numOfCBs;
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
@@ -240,7 +240,7 @@ void DfCD_Parallel::getK_distributed(const RUN_TYPE runType,
                                                                                               this->m_nIteration -1);
     const TlDistributeMatrix C = P.choleskyFactorization(this->epsilon_);
     
-    const PQ_PairArray I2PQ = this->getI2PQ();
+    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     index_type start_CholeskyBasis = 0;
     index_type end_CholeskyBasis = numOfCBs;
     //this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
@@ -376,7 +376,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
 
     CD_all_time.start();
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    this->createEngines<DfEriEngine>();
+    //this->createEngines<DfEriEngine>();
     this->initializeCutoffStats(orbInfo.getMaxShellType());
 
     CD_diagonals_time.start();
@@ -386,7 +386,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
     TlVector global_diagonals; // 対角成分
     this->calcDiagonals(orbInfo, &schwartzTable, &I2PQ, &global_diagonals);
     this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
-    this->saveI2PQ(I2PQ);
+    this->saveI2PQ(I2PQ, this->getI2pqVtrPath());
     // this->ERI_cache_manager_.setMaxItems(I2PQ.size() * 2);
     CD_diagonals_time.stop();
 
@@ -566,7 +566,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
     }
     this->log_.info(TlUtils::format("Cholesky Vectors: %d", m));
 
-    this->destroyEngines();
+//    this->destroyEngines();
     this->schwartzCutoffReport(orbInfo.getMaxShellType());
 
     CD_save_time.start();
@@ -791,7 +791,7 @@ void DfCD_Parallel::getJ(TlSymmetricMatrix* pJ)
     const TlSymmetricMatrix P = this->getPMatrix();
 
     // cholesky vector
-    const PQ_PairArray I2PQ = this->getI2PQ();
+    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
     L.load(DfObject::getLjkMatrixPath());
     assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
@@ -831,7 +831,7 @@ void DfCD_Parallel::getK(const RUN_TYPE runType,
     this->log_.info("calc K by CD method (parallel).");
 
     // cholesky vector
-    const PQ_PairArray I2PQ = this->getI2PQ();
+    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
     L.load(DfObject::getLjkMatrixPath());
 
@@ -874,7 +874,7 @@ void DfCD_Parallel::getJ_D(TlDistributeSymmetricMatrix* pJ)
         DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
 
     // cholesky vector
-    const PQ_PairArray I2PQ = this->getI2PQ();
+    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     const bool isUsingMemManager = this->isEnableMmap_;
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank(), 
                          isUsingMemManager);
@@ -916,7 +916,7 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
 
 
     // cholesky vector
-    const PQ_PairArray I2PQ = this->getI2PQ();
+    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     const bool isUsingMemManager = this->isEnableMmap_;
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
                          isUsingMemManager);

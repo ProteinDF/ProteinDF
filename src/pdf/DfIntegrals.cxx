@@ -298,16 +298,17 @@ void DfIntegrals::prepareGridFree()
 {
     unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-    if (((calcState & DfIntegrals::GRID_FREE) == 0) && 
-        (this->isDualLevelGridFree_ == true)) {
-        this->outputStartTitle("prepare GridFree");
-        DfGridFreeXC *pDfGridFreeXC = this->getDfGridFreeXCObject();
-        pDfGridFreeXC->buildDualLevelOp();
-        
-        delete pDfGridFreeXC;
-        pDfGridFreeXC = NULL;
-
-        this->outputEndTitle();
+    if ((calcState & DfIntegrals::GRID_FREE) == 0) {
+        if (this->isDualLevelGridFree_ == true) {
+            this->outputStartTitle("prepare GridFree");
+            DfGridFreeXC *pDfGridFreeXC = this->getDfGridFreeXCObject();
+            pDfGridFreeXC->buildDualLevelOp();
+            
+            delete pDfGridFreeXC;
+            pDfGridFreeXC = NULL;
+            
+            this->outputEndTitle();
+        }
     }
 
     calcState |= DfIntegrals::GRID_FREE;
@@ -366,9 +367,12 @@ void DfIntegrals::createCholeskyVectors_XC()
         (this->isGridFree_ == true) &&
         (this->XC_engine_ == XC_ENGINE_CD)) {
         this->outputStartTitle("Cholesky Vectors for XC");
-            
-        DfGridFreeXC dfGridFreeXC(this->pPdfParam_);
-        dfGridFreeXC.calcCholeskyVectors_onTheFly();
+        
+        DfCD *pDfCD = this->getDfCDObject();
+        pDfCD->calcCholeskyVectorsForGridFree();
+        
+        delete pDfCD;
+        pDfCD = NULL;
 
         this->outputEndTitle();
     }

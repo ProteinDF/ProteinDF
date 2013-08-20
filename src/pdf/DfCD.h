@@ -28,11 +28,17 @@ public:
     void getJ(TlSymmetricMatrix *pJ);
     void getK(const RUN_TYPE runType,
               TlSymmetricMatrix *pK);
+    void getM(const TlSymmetricMatrix& P,
+              TlSymmetricMatrix* pM);
 
 protected:
     void getJ_S(TlSymmetricMatrix *pJ);
     void getK_S(const RUN_TYPE runType,
                 TlSymmetricMatrix *pK);
+    void getM_S(const TlSymmetricMatrix& P,
+                TlSymmetricMatrix* pM);
+    void getM_A(const TlSymmetricMatrix& P,
+                TlSymmetricMatrix* pM);
 
 protected:
     class Index2 {
@@ -132,11 +138,14 @@ protected:
     virtual void finalize_I2PQ(PQ_PairArray *pI2PQ);
 
 protected:
-    virtual void saveI2PQ(const PQ_PairArray& I2PQ);
-    PQ_PairArray getI2PQ();
+    virtual void saveI2PQ(const PQ_PairArray& I2PQ, const std::string& filepath);
+    PQ_PairArray getI2PQ(const std::string& filepath);
 
     virtual void saveLjk(const TlMatrix& Ljk);
     virtual TlMatrix getLjk();
+
+    virtual void saveLxc(const TlMatrix& Ljk);
+    virtual TlMatrix getLxc();
 
     TlSymmetricMatrix getCholeskyVector(const TlVector& L_col,
                                         const PQ_PairArray& I2PQ);
@@ -151,6 +160,13 @@ protected:
     TlRowVectorMatrix2 calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo);
 
     virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo);
+
+    template<class EngineClass>
+    TlRowVectorMatrix2 calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo_p,
+                                                   const TlOrbitalInfoObject& orbInfo_q);
+
+    virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
+                                                            const TlOrbitalInfoObject& orbInfo_q);
 
     void calcDiagonals(const TlOrbitalInfoObject& orbInfo,
                        TlSparseSymmetricMatrix *pSchwartzTable,
@@ -506,8 +522,6 @@ protected:
     typedef std::map<IndexPair4A, std::vector<double> > ERI_CacheType_A;
     ERI_CacheType_A ERI_cache_A_;
 
-    virtual void calcCholeskyVectorsA_onTheFly(const TlOrbitalInfoObject& orbInfo_p,
-                                               const TlOrbitalInfoObject& orbInfo_q);
     void calcDiagonalsA(const TlOrbitalInfoObject& orbInfo_p,
                         const TlOrbitalInfoObject& orbInfo_q,
                         PQ_PairArray *pI2PQ,
@@ -582,6 +596,19 @@ TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& 
 {
     this->createEngines<EngineClass>();
     const TlRowVectorMatrix2 L = this->calcCholeskyVectorsOnTheFlyS(orbInfo);
+    this->destroyEngines();
+
+    return L;
+}
+
+
+template<class EngineClass>
+TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo_p,
+                                                     const TlOrbitalInfoObject& orbInfo_q)
+{
+    this->createEngines<EngineClass>();
+    const TlRowVectorMatrix2 L = this->calcCholeskyVectorsOnTheFlyA(orbInfo_p,
+                                                                    orbInfo_q);
     this->destroyEngines();
 
     return L;

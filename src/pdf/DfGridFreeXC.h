@@ -101,11 +101,11 @@ public:
     void buildFxc();
 
 protected:
-    void buildFxc0();
+    void buildFxc_LDA();
     void buildFxc1();
     void buildFxc2();
 
-    void buildFxc1_GGA();
+    void buildFxc_GGA();
 
 protected:
     static const int MAX_SHELL_TYPE;
@@ -126,8 +126,8 @@ protected:
     
 protected:
     virtual void getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
-    virtual void getM1(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
-
+    virtual void getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+    
     TlSparseSymmetricMatrix makeSchwarzTable(const TlOrbitalInfoObject& orbitalInfo);
     void getM_part(const TlOrbitalInfoObject& orbitalInfo,
                    const std::vector<DfTaskCtrl::Task4>& taskList,
@@ -143,13 +143,13 @@ protected:
                 const DfOverlapEngine& engine,
                 const TlMatrixObject& P,
                 TlMatrixObject* pM);
-    void storeM_pq(const index_type shellIndexP, const int maxStepsP,
-                   const index_type shellIndexQ, const int maxStepsQ,
-                   const index_type shellIndexR, const int maxStepsR,
-                   const index_type shellIndexS, const int maxStepsS,
-                   const DfOverlapEngine& engine,
-                   const TlMatrixObject& P,
-                   TlMatrixObject* pM);
+    void storeM_A(const index_type shellIndexP, const int maxStepsP,
+                  const index_type shellIndexQ, const int maxStepsQ,
+                  const index_type shellIndexR, const int maxStepsR,
+                  const index_type shellIndexS, const int maxStepsS,
+                  const DfOverlapEngine& engine,
+                  const TlMatrixObject& P,
+                  TlMatrixObject* pM);
 
     virtual void createEngines();
     virtual void destroyEngines();
@@ -174,51 +174,51 @@ protected:
     ShellPairArrayTable getShellPairArrayTable(const ShellArrayTable& shellArrayTable);
 
 public:
-    virtual void calcCholeskyVectors_onTheFly();
+    // virtual void calcCholeskyVectors_onTheFly();
 
 protected:
-    void calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
-                       PQ_PairArray *pI2PQ,
-                       TlVector *pDiagonals);
-    void calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
-                              TlSparseSymmetricMatrix *pSchwartzTable,
-                              TlSparseSymmetricMatrix *pDiagonalMat,
-                              PQ_PairArray *pI2PQ);
-    void saveI2PQ(const PQ_PairArray& I2PQ);
-    void saveL(const TlMatrix& L);
+    // void calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
+    //                    PQ_PairArray *pI2PQ,
+    //                    TlVector *pDiagonals);
+    // void calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
+    //                           TlSparseSymmetricMatrix *pSchwartzTable,
+    //                           TlSparseSymmetricMatrix *pDiagonalMat,
+    //                           PQ_PairArray *pI2PQ);
+    // void saveI2PQ(const PQ_PairArray& I2PQ);
+    // void saveL(const TlMatrix& L);
 
-    std::vector<double>
-    getSuperMatrixElements(const index_type G_row,
-                           const std::vector<index_type>& G_col_list,
-                           const PQ_PairArray& I2PQ,
-                           const TlSparseSymmetricMatrix& schwartzTable);
+    // std::vector<double>
+    // getSuperMatrixElements(const index_type G_row,
+    //                        const std::vector<index_type>& G_col_list,
+    //                        const PQ_PairArray& I2PQ,
+    //                        const TlSparseSymmetricMatrix& schwartzTable);
 
-    std::vector<DfGridFreeXC::IndexPair4> 
-    getCalcList(const index_type G_row,
-                const std::vector<index_type>& G_col_list,
-                const PQ_PairArray& I2PQ);
+    // std::vector<DfGridFreeXC::IndexPair4> 
+    // getCalcList(const index_type G_row,
+    //             const std::vector<index_type>& G_col_list,
+    //             const PQ_PairArray& I2PQ);
 
-    void calcElements(const std::vector<IndexPair4>& calcList,
-                      const TlSparseSymmetricMatrix& schwartzTable);
+    // void calcElements(const std::vector<IndexPair4>& calcList,
+    //                   const TlSparseSymmetricMatrix& schwartzTable);
 
-    bool isAliveBySchwartzCutoff(const index_type shellIndexP,
-                                 const index_type shellIndexQ,
-                                 const index_type shellIndexR,
-                                 const index_type shellIndexS,
-                                 const int shellQuartetType,
-                                 const TlSparseSymmetricMatrix& schwarzTable,
-                                 const double threshold);
-    void initializeCutoffStats();
-    void schwartzCutoffReport();
-    mutable std::vector<unsigned long> cutoffAll_schwartz_;
-    mutable std::vector<unsigned long> cutoffAlive_schwartz_;
+    // bool isAliveBySchwartzCutoff(const index_type shellIndexP,
+    //                              const index_type shellIndexQ,
+    //                              const index_type shellIndexR,
+    //                              const index_type shellIndexS,
+    //                              const int shellQuartetType,
+    //                              const TlSparseSymmetricMatrix& schwarzTable,
+    //                              const double threshold);
+    // void initializeCutoffStats();
+    // void schwartzCutoffReport();
+    // mutable std::vector<unsigned long> cutoffAll_schwartz_;
+    // mutable std::vector<unsigned long> cutoffAlive_schwartz_;
 
-    std::vector<double>
-    setElements(const index_type G_row,
-                const std::vector<index_type> G_col_list,
-                const PQ_PairArray& I2PQ);
+    // std::vector<double>
+    // setElements(const index_type G_row,
+    //             const std::vector<index_type> G_col_list,
+    //             const PQ_PairArray& I2PQ);
 
-    void getM_byCD(TlSymmetricMatrix* pM);
+    // void getM_byCD(TlSymmetricMatrix* pM);
     TlSymmetricMatrix getPMatrix();
     TlMatrix getL();
     PQ_PairArray getI2PQ();

@@ -33,8 +33,8 @@ protected:
     virtual void finalize(TlSparseSymmetricMatrix *pMat);
     virtual void finalize_I2PQ(PQ_PairArray* pI2PQ);
 
-    virtual void saveI2PQ(const PQ_PairArray& I2PQ);
-    virtual PQ_PairArray getI2PQ();
+    virtual void saveI2PQ(const PQ_PairArray& I2PQ, const std::string& filepath);
+    virtual PQ_PairArray getI2PQ(const std::string& filepath);
 
     virtual void saveLjk(const TlMatrix& L);
     virtual TlMatrix getLjk();

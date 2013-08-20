@@ -458,20 +458,32 @@ void TlOrbitalInfoObject::getGradPrefactor_DZZ(const TlPosition& pos, const doub
 
 bool TlOrbitalInfoObject::operator==(const TlOrbitalInfoObject& rhs) const
 {
-    bool answer = false;
-    if ((this->atoms_ == rhs.atoms_) && (this->cgtos_ == rhs.cgtos_)) {
-        const std::size_t orbs = this->orbitals_.size();
-        if (orbs == rhs.orbitals_.size()) {
-            answer = true;
-            for (std::size_t i = 0; i < orbs; ++i) {
-                if (this->orbitals_[i] != rhs.orbitals_[i]) {
-                    answer = false;
-                    break;
-                }
+    if (this->atoms_ != rhs.atoms_) {
+         return false;
+    }
+
+    const std::size_t numOfCgtos = this->cgtos_.size();
+    if (numOfCgtos != rhs.cgtos_.size()) {
+        return false;
+    }
+    for (std::size_t i = 0; i < numOfCgtos; ++i) {
+        bool check = false;
+        for (std::size_t j = 0; j < numOfCgtos; ++j) {
+            if (this->cgtos_[i] == rhs.cgtos_[j]) {
+                check = true;
+                break;
             }
         }
+        if (check == false) {
+            return false;
+        }
     }
-    return answer;
+
+    if (this->getNumOfOrbitals() != rhs.getNumOfOrbitals()) {
+        return false;
+    }
+
+    return true;
 }
 
 bool TlOrbitalInfoObject::operator!=(const TlOrbitalInfoObject& rhs) const

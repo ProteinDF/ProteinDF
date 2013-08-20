@@ -12,6 +12,7 @@
 #include "DfFunctional_B3LYP.h"
 #include "DfOverlapX.h"
 #include "DfXMatrix.h"
+#include "DfCD.h"
 #include "TlTime.h"
 #include "TlRowVectorMatrix2.h"
 #include "TlSystem.h"
@@ -60,6 +61,10 @@ DfGridFreeXC::~DfGridFreeXC()
 // before SCF ==================================================================
 void DfGridFreeXC::buildDualLevelOp()
 {
+    const DfXCFunctional xcFunc(this->pPdfParam_);
+    const DfXCFunctional::FUNCTIONAL_TYPE funcType = xcFunc.getFunctionalType();
+    bool isGGA = (funcType == DfXCFunctional::GGA);
+
     const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
                                        (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
 
@@ -94,7 +99,7 @@ void DfGridFreeXC::buildDualLevelOp()
     }
 
     // for GGA
-    {
+    if (isGGA) {
         TlMatrix Gx, Gy, Gz;
         ovp.getGradient(orbitalInfo_GF, &Gx, &Gy, &Gz);
         Gx.save("gradSx.mat");
@@ -106,61 +111,94 @@ void DfGridFreeXC::buildDualLevelOp()
 // in SCF ======================================================================
 void DfGridFreeXC::buildFxc()
 {
-    switch(this->GF_mode_) {
-    case 1:
-        this->buildFxc1();
+    const DfXCFunctional xcFunc(this->pPdfParam_);
+    const DfXCFunctional::FUNCTIONAL_TYPE funcType = xcFunc.getFunctionalType();
+    switch (funcType) {
+    case DfXCFunctional::LDA:
+        this->buildFxc_LDA();
         break;
 
-    case 2:
-        this->buildFxc2();
-        break;
-
-    case 3:
-        this->buildFxc1_GGA();
+    case DfXCFunctional::GGA:
+        this->buildFxc_GGA();
         break;
 
     default:
-        this->buildFxc0();
+        this->log_.critical("unknown XC functional type. stop.");
+        CnErr.abort();
         break;
     }
+
+    // switch(this->GF_mode_) {
+    // case 1:
+    //     this->buildFxc1();
+    //     break;
+
+    // case 2:
+    //     this->buildFxc2();
+    //     break;
+
+    // case 3:
+    //     this->buildFxc1_GGA();
+    //     break;
+
+    // default:
+    //     this->buildFxc_LDA();
+    //     break;
+    // }
 }
 
-void DfGridFreeXC::buildFxc0()
+void DfGridFreeXC::buildFxc_LDA()
 {
+    this->log_.info("build Fxc by grid-free method: functional type is LDA.");
+
     const index_type numOfAOs = this->m_nNumOfAOs;
     const TlSymmetricMatrix P = 0.5 * DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
-    TlSymmetricMatrix S = DfObject::getSpqMatrix<TlSymmetricMatrix>();
 
     TlSymmetricMatrix M;
     if (this->XC_engine_ == XC_ENGINE_CD) {
         this->log_.info("begin to create M matrix based on CD.");
-        this->getM_byCD(&M);
+        {
+            DfCD dfCD(this->pPdfParam_);
+            dfCD.getM(P, &M);
+        }
     } else {
         this->log_.info("begin to create M matrix using 4-center overlap.");
-        this->getM(P, &M);
+        if (this->isDualLevelGridFree_) {
+            this->getM_A(P, &M);
+        } else {
+            this->getM(P, &M);
+        }
     }
     this->log_.info("begin to generate Fxc using grid-free method.");
     if (this->debugSaveM_) {
-        M.save(TlUtils::format("M.%d.mat", this->m_nIteration));
+        M.save(TlUtils::format("fl_Work/debug_M.%d.mat", this->m_nIteration));
     }
 
-    this->getM_exact(P, &M);
-    M.save("M_exact.mat");
+    // DEBUG
+    // {
+    //     this->getM_exact(P, &M);
+    //     M.save("M_exact.mat");
+    // }
 
     // tV * S * V == I
-    TlMatrix V = DfObject::getXMatrix<TlMatrix>();
+    TlMatrix S;
+    TlMatrix V;
+    if (this->isDualLevelGridFree_) {
+        S = DfObject::getGfStildeMatrix<TlMatrix>();
+        V = DfObject::getGfVMatrix<TlMatrix>();
+    } else {
+        S = DfObject::getSpqMatrix<TlSymmetricMatrix>();
+        V = DfObject::getXMatrix<TlMatrix>();
+    }
     TlMatrix tV = V;
     tV.transpose();
     
     TlSymmetricMatrix M_tilda = tV * M * V;
-    // M_tilda.save("Mtilda.mat");
     const int numOfOrthgonalAOs = M_tilda.getNumOfRows();
     
     TlMatrix U;
     TlVector lamda;
     M_tilda.diagonal(&lamda, &U);
-    // U.save("U.mat");
-    // lamda.save("lamda.vct");
     
     TlSymmetricMatrix F_lamda;
     TlSymmetricMatrix E_lamda;
@@ -170,24 +208,15 @@ void DfGridFreeXC::buildFxc0()
     TlMatrix UVS = SVU;
     UVS.transpose();
     
-    // TlSymmetricMatrix Fxc = S * V * U * F_lamda * tU * tV * S;
-    TlSymmetricMatrix Fxc = SVU * F_lamda * UVS;
-    DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, Fxc);
-    // TlSymmetricMatrix PE = 2.0 * P * Fxc; 
-
-    TlSymmetricMatrix Exc = SVU * E_lamda * UVS;
-    DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, Exc);
-    // this->XC_energy_ = E.dot(P).sum() * 2.0; // rks
-    // this->log_.info(TlUtils::format("Exc = %f", this->XC_energy_));
-
-    // {
-    //     TlMatrix tSVU = S * V * U;
-    //     tSVU.transpose();
-    //     tSVU.save("tSVU.mat");
-
-    //     TlMatrix tUtVS = tU * tV * S;
-    //     tUtVS.save("tUtVS.mat");
-    // }
+    // save
+    {
+        TlSymmetricMatrix Fxc = SVU * F_lamda * UVS;
+        DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, Fxc);
+    }
+    {
+        TlSymmetricMatrix Exc = SVU * E_lamda * UVS;
+        DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, Exc);
+    }
 }
 
 void DfGridFreeXC::buildFxc1()
@@ -204,7 +233,7 @@ void DfGridFreeXC::buildFxc1()
 
     TlSymmetricMatrix M;
     this->log_.info("begin to create M matrix using 4-center overlap.");
-    this->getM1(P, &M);
+    this->getM_A(P, &M);
     // if (this->XC_engine_ == XC_ENGINE_CD) {
     //     this->log_.info("begin to create M matrix based on CD.");
     //     this->getM_byCD(&M);
@@ -215,7 +244,7 @@ void DfGridFreeXC::buildFxc1()
     // }
     assert(M.getNumOfRows() == orbitalInfo_GF.getNumOfOrbitals());
     if (this->debugSaveM_) {
-        M.save(TlUtils::format("M.%d.mat", this->m_nIteration));
+        M.save(TlUtils::format("fl_Work/debug_M.%d.mat", this->m_nIteration));
     }
 
     this->log_.info("begin to generate Fxc using grid-free method.");
@@ -262,7 +291,7 @@ void DfGridFreeXC::buildFxc1()
         Mtilde = V * tmp_Mtilde;
     }
     if (this->debugSaveM_) {
-        M.save(TlUtils::format("Mtilde.%d.mat", this->m_nIteration));
+        M.save(TlUtils::format("fl_Work/debug_Mtilde.%d.mat", this->m_nIteration));
     }
 
     TlMatrix Fxc;
@@ -284,8 +313,8 @@ void DfGridFreeXC::buildFxc1()
                 U.transpose();
                 TlMatrix Fxc_tilde = U * F_lambda * Ut;
                 TlMatrix Exc_tilde = U * E_lambda * Ut;
-                Fxc_tilde.save(TlUtils::format("Fxc_tilde.%d.mat", this->m_nIteration));
-                Exc_tilde.save(TlUtils::format("Exc_tilde.%d.mat", this->m_nIteration));
+                Fxc_tilde.save(TlUtils::format("fl_Work/debug_Fxc_tilde.%d.mat", this->m_nIteration));
+                Exc_tilde.save(TlUtils::format("fl_Work/debug_Exc_tilde.%d.mat", this->m_nIteration));
             }
         }
 
@@ -351,7 +380,11 @@ void DfGridFreeXC::buildFxc2()
     TlSymmetricMatrix M;
     if (this->XC_engine_ == XC_ENGINE_CD) {
         this->log_.info("begin to create M matrix based on CD.");
-        this->getM_byCD(&M);
+        //this->getM_byCD(&M);
+        {
+            DfCD dfCD(this->pPdfParam_);
+            dfCD.getM(P, &M);
+        }
     } else {
         this->log_.info("begin to create M matrix using 4-center overlap.");
         this->getM(P, &M);
@@ -368,7 +401,7 @@ void DfGridFreeXC::buildFxc2()
     }
     assert(M.getNumOfRows() == orbitalInfo_GF.getNumOfOrbitals());
     if (this->debugSaveM_) {
-        M.save(TlUtils::format("M_H.%d.mat", this->m_nIteration));
+        M.save(TlUtils::format("fl_Work/debug_M_H.%d.mat", this->m_nIteration));
     }
     
     this->log_.info("begin to generate Fxc using grid-free method.");
@@ -484,8 +517,9 @@ void DfGridFreeXC::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     this->destroyEngines();
 }
 
-void DfGridFreeXC::getM1(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
+void DfGridFreeXC::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 {
+    this->log_.info("DfGridFreeXC::getM_A() in");
     assert(pM != NULL);
     pM->resize(this->m_nNumOfAOs);
 
@@ -645,22 +679,7 @@ void DfGridFreeXC::getM_part(const TlOrbitalInfoObject& orbitalInfo,
             const int maxStepsQ = 2 * shellTypeQ + 1;
             const int maxStepsR = 2 * shellTypeR + 1;
             const int maxStepsS = 2 * shellTypeS + 1;
-            // const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
-            // const TlPosition posQ = orbitalInfo.getPosition(shellIndexQ);
-            // const TlPosition posR = orbitalInfo.getPosition(shellIndexR);
-            // const TlPosition posS = orbitalInfo.getPosition(shellIndexS);
-            // const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexP);
-            // const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexQ);
-            // const DfOverlapEngine::PGTOs pgtosR = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexR);
-            // const DfOverlapEngine::PGTOs pgtosS = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexS);
-                        
-            // const DfOverlapEngine::Query query(0, 0, 0, 0,
-            //                                    shellTypeP, shellTypeQ,
-            //                                    shellTypeR, shellTypeS);
 
-            // this->pOvpEngines_[threadID].calc0(query,
-            //                                    posP, posQ, posR, posS,
-            //                                    pgtosP, pgtosQ, pgtosR, pgtosS);
             this->pOvpEngines_[threadID].calc(0, orbitalInfo, shellIndexP,
                                               0, orbitalInfo, shellIndexQ,
                                               0, orbitalInfo, shellIndexR,
@@ -757,44 +776,29 @@ void DfGridFreeXC::getM_part(const TlOrbitalInfoObject& orbitalInfo_PQ,
             const int maxStepsQ = 2 * shellTypeQ + 1;
             const int maxStepsR = 2 * shellTypeR + 1;
             const int maxStepsS = 2 * shellTypeS + 1;
-            // const TlPosition posP = orbitalInfo_PQ.getPosition(shellIndexP);
-            // const TlPosition posQ = orbitalInfo_PQ.getPosition(shellIndexQ);
-            // const TlPosition posR = orbitalInfo_RS.getPosition(shellIndexR);
-            // const TlPosition posS = orbitalInfo_RS.getPosition(shellIndexS);
-            // const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(orbitalInfo_PQ, shellIndexP);
-            // const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(orbitalInfo_PQ, shellIndexQ);
-            // const DfOverlapEngine::PGTOs pgtosR = DfOverlapEngine::getPGTOs(orbitalInfo_RS, shellIndexR);
-            // const DfOverlapEngine::PGTOs pgtosS = DfOverlapEngine::getPGTOs(orbitalInfo_RS, shellIndexS);
-                        
-            // const DfOverlapEngine::Query query(0, 0, 0, 0,
-            //                                    shellTypeP, shellTypeQ,
-            //                                    shellTypeR, shellTypeS);
 
-            // this->pOvpEngines_[threadID].calc0(query,
-            //                                    posP, posQ, posR, posS,
-            //                                    pgtosP, pgtosQ, pgtosR, pgtosS);
             this->pOvpEngines_[threadID].calc(0, orbitalInfo_PQ, shellIndexP,
                                               0, orbitalInfo_PQ, shellIndexQ,
                                               0, orbitalInfo_RS, shellIndexR,
                                               0, orbitalInfo_RS, shellIndexS);
                         
-            this->storeM_pq(shellIndexP, maxStepsP,
-                            shellIndexQ, maxStepsQ,
-                            shellIndexR, maxStepsR,
-                            shellIndexS, maxStepsS,
-                            this->pOvpEngines_[threadID], P, pM);
+            this->storeM_A(shellIndexP, maxStepsP,
+                           shellIndexQ, maxStepsQ,
+                           shellIndexR, maxStepsR,
+                           shellIndexS, maxStepsS,
+                           this->pOvpEngines_[threadID], P, pM);
         }
     }
         
 }
 
-void DfGridFreeXC::storeM_pq(const index_type shellIndexP, const int maxStepsP,
-                             const index_type shellIndexQ, const int maxStepsQ,
-                             const index_type shellIndexR, const int maxStepsR,
-                             const index_type shellIndexS, const int maxStepsS,
-                             const DfOverlapEngine& engine,
-                             const TlMatrixObject& P,
-                             TlMatrixObject* pM)
+void DfGridFreeXC::storeM_A(const index_type shellIndexP, const int maxStepsP,
+                            const index_type shellIndexQ, const int maxStepsQ,
+                            const index_type shellIndexR, const int maxStepsR,
+                            const index_type shellIndexS, const int maxStepsS,
+                            const DfOverlapEngine& engine,
+                            const TlMatrixObject& P,
+                            TlMatrixObject* pM)
 {
     int index = 0;
     for (int i = 0; i < maxStepsP; ++i) {
@@ -802,28 +806,31 @@ void DfGridFreeXC::storeM_pq(const index_type shellIndexP, const int maxStepsP,
 
         for (int j = 0; j < maxStepsQ; ++j) {
             const index_type indexQ = shellIndexQ + j;
-            //const double P_pq = P.get(indexP, indexQ);
             
-            for (int k = 0; k < maxStepsR; ++k) {
-                const index_type indexR = shellIndexR + k;
-
-                for (int l = 0; l < maxStepsS; ++l) {
-                    const index_type indexS = shellIndexS + l;
-                    const double P_rs = P.get(indexR, indexS);
+            if (indexP >= indexQ) {
+                double value = 0.0;
+                for (int k = 0; k < maxStepsR; ++k) {
+                    const index_type indexR = shellIndexR + k;
                     
-                    const double value = engine.WORK[index];
-                    //const index_type maxIndexS = indexR;
-                    
-                    if ((indexP >= indexQ) && (indexR >= indexS)) {
-                        const double coefEq1 = (indexR != indexS) ? 2.0 : 1.0;
-                        pM->add(indexP, indexQ, coefEq1 * P_rs * value);
+                    for (int l = 0; l < maxStepsS; ++l) {
+                        const index_type indexS = shellIndexS + l;
+                        
+                        if (indexR >= indexS) {
+                            const double coefEq1 = (indexR != indexS) ? 2.0 : 1.0;
+                            const double P_rs = P.get(indexR, indexS);
+                            value += coefEq1 * P_rs * engine.WORK[index];
+                        }
+                        ++index;
                     }
-                    ++index;
                 }
+                pM->add(indexP, indexQ, value);
+            } else {
+                index += maxStepsR * maxStepsS;
             }
         }
     }
 }
+
 
 void DfGridFreeXC::get_F_lamda(const TlVector lamda,
                                TlSymmetricMatrix* pF_lamda,
@@ -1015,677 +1022,677 @@ DfGridFreeXC::ShellPairArrayTable DfGridFreeXC::getShellPairArrayTable(const She
 }
 
 
-void DfGridFreeXC::calcCholeskyVectors_onTheFly()
-{
-    // timing data
-    TlTime CD_all_time;
-    TlTime CD_diagonals_time;
-    TlTime CD_resizeL_time;
-    TlTime CD_pivot_time;
-    TlTime CD_ERI_time;
-    TlTime CD_calc_time;
-    TlTime CD_save_time;
+// void DfGridFreeXC::calcCholeskyVectors_onTheFly()
+// {
+//     // timing data
+//     TlTime CD_all_time;
+//     TlTime CD_diagonals_time;
+//     TlTime CD_resizeL_time;
+//     TlTime CD_pivot_time;
+//     TlTime CD_ERI_time;
+//     TlTime CD_calc_time;
+//     TlTime CD_save_time;
 
-    CD_all_time.start();
+//     CD_all_time.start();
 
-    this->createEngines();
-    this->initializeCutoffStats();
+//     this->createEngines();
+//     this->initializeCutoffStats();
 
-    // this->log_.info(TlUtils::format("# of PQ dimension: %d", int(this->numOfPQs_)));
-    TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
-    PQ_PairArray I2PQ;
-    TlVector d; // 対角成分
+//     // this->log_.info(TlUtils::format("# of PQ dimension: %d", int(this->numOfPQs_)));
+//     TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
+//     PQ_PairArray I2PQ;
+//     TlVector d; // 対角成分
 
-    CD_diagonals_time.start();
-    this->calcDiagonals(&schwartzTable, &I2PQ, &d);
-    CD_diagonals_time.stop();
+//     CD_diagonals_time.start();
+//     this->calcDiagonals(&schwartzTable, &I2PQ, &d);
+//     CD_diagonals_time.stop();
 
-    this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
-    this->saveI2PQ(I2PQ);
+//     this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
+//     this->saveI2PQ(I2PQ);
 
-    const index_type N = I2PQ.size();
-    double error = d.getMaxAbsoluteElement();
-    std::vector<TlVector::size_type> pivot(N);
-    for (index_type i = 0; i < N; ++i) {
-        pivot[i] = i;
-    }
+//     const index_type N = I2PQ.size();
+//     double error = d.getMaxAbsoluteElement();
+//     std::vector<TlVector::size_type> pivot(N);
+//     for (index_type i = 0; i < N; ++i) {
+//         pivot[i] = i;
+//     }
 
-    // prepare variables
-    const bool isUsingMemManager = this->isEnableMmap_;
-    TlRowVectorMatrix2 L(N, 1, 1, 0, isUsingMemManager);
-    const double threshold = this->epsilon_;
-    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
+//     // prepare variables
+//     const bool isUsingMemManager = this->isEnableMmap_;
+//     TlRowVectorMatrix2 L(N, 1, 1, 0, isUsingMemManager);
+//     const double threshold = this->epsilon_;
+//     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
-    int progress = 0;
-    index_type division =  index_type(N * 0.01);
-    L.reserve_cols(division);
-    index_type m = 0;
-    while (error > threshold) {
-#ifdef DEBUG_CD
-        this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e", m, N, error));
-#endif //DEBUG_CD
+//     int progress = 0;
+//     index_type division =  index_type(N * 0.01);
+//     L.reserve_cols(division);
+//     index_type m = 0;
+//     while (error > threshold) {
+// #ifdef DEBUG_CD
+//         this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 8.3e", m, N, error));
+// #endif //DEBUG_CD
 
-        CD_resizeL_time.start();
-        // progress 
-        if (m >= progress * division) {
-            this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e, local mem:%8.1f MB",
-                                            m, error, TlSystem::getMaxRSS()));
-            ++progress;
+//         CD_resizeL_time.start();
+//         // progress 
+//         if (m >= progress * division) {
+//             this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e, local mem:%8.1f MB",
+//                                             m, error, TlSystem::getMaxRSS()));
+//             ++progress;
 
-            // メモリの確保
-            L.reserve_cols(division * progress);
-        }
-        L.resize(N, m+1);
-        CD_resizeL_time.stop();
+//             // メモリの確保
+//             L.reserve_cols(division * progress);
+//         }
+//         L.resize(N, m+1);
+//         CD_resizeL_time.stop();
 
-        // pivot
-        CD_pivot_time.start();
-        {
-            std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
-                                                                           pivot.end());
-            const index_type i = it - pivot.begin();
-            std::swap(pivot[m], pivot[i]);
-        }
-        CD_pivot_time.stop();
+//         // pivot
+//         CD_pivot_time.start();
+//         {
+//             std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
+//                                                                            pivot.end());
+//             const index_type i = it - pivot.begin();
+//             std::swap(pivot[m], pivot[i]);
+//         }
+//         CD_pivot_time.stop();
 
-        error = d[pivot[m]];
-        const double l_m_pm = std::sqrt(d[pivot[m]]);
-        L.set(pivot[m], m, l_m_pm);
+//         error = d[pivot[m]];
+//         const double l_m_pm = std::sqrt(d[pivot[m]]);
+//         L.set(pivot[m], m, l_m_pm);
         
-        const double inv_l_m_pm = 1.0 / l_m_pm;
+//         const double inv_l_m_pm = 1.0 / l_m_pm;
 
-        // ERI
-        CD_ERI_time.start();
-        const index_type pivot_m = pivot[m];
-        std::vector<double> G_pm;
-        const index_type numOf_G_cols = N -(m+1);
-        {
-            std::vector<index_type> G_col_list(numOf_G_cols);
-            for (index_type c = 0; c < numOf_G_cols; ++c) {
-                const index_type pivot_i = pivot[m+1 +c]; // from (m+1) to N
-                G_col_list[c] = pivot_i;
-            }
-            G_pm = this->getSuperMatrixElements(pivot_m, G_col_list, I2PQ, schwartzTable);
-        }
-        assert(G_pm.size() == numOf_G_cols);
-        CD_ERI_time.stop();
+//         // ERI
+//         CD_ERI_time.start();
+//         const index_type pivot_m = pivot[m];
+//         std::vector<double> G_pm;
+//         const index_type numOf_G_cols = N -(m+1);
+//         {
+//             std::vector<index_type> G_col_list(numOf_G_cols);
+//             for (index_type c = 0; c < numOf_G_cols; ++c) {
+//                 const index_type pivot_i = pivot[m+1 +c]; // from (m+1) to N
+//                 G_col_list[c] = pivot_i;
+//             }
+//             G_pm = this->getSuperMatrixElements(pivot_m, G_col_list, I2PQ, schwartzTable);
+//         }
+//         assert(G_pm.size() == numOf_G_cols);
+//         CD_ERI_time.stop();
 
-        // CD calc
-        CD_calc_time.start();
-        const TlVector L_pm = L.getRowVector(pivot_m);
-        std::vector<double> L_xm(numOf_G_cols);
-#pragma omp parallel for schedule(runtime)
-        for (index_type i = 0; i < numOf_G_cols; ++i) {
-            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
-            TlVector L_pi = L.getRowVector(pivot_i);
-            const double sum_ll = (L_pi.dot(L_pm)).sum();
-            const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+//         // CD calc
+//         CD_calc_time.start();
+//         const TlVector L_pm = L.getRowVector(pivot_m);
+//         std::vector<double> L_xm(numOf_G_cols);
+// #pragma omp parallel for schedule(runtime)
+//         for (index_type i = 0; i < numOf_G_cols; ++i) {
+//             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+//             TlVector L_pi = L.getRowVector(pivot_i);
+//             const double sum_ll = (L_pi.dot(L_pm)).sum();
+//             const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
 
-#pragma omp atomic
-            L_xm[i] += l_m_pi; // for OpenMP
+// #pragma omp atomic
+//             L_xm[i] += l_m_pi; // for OpenMP
             
-#pragma omp atomic
-            d[pivot_i] -= l_m_pi * l_m_pi;
-        }
-        for (index_type i = 0; i < numOf_G_cols; ++i) {
-            const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
-            L.set(pivot_i, m, L_xm[i]);
-        }
-        CD_calc_time.stop();
+// #pragma omp atomic
+//             d[pivot_i] -= l_m_pi * l_m_pi;
+//         }
+//         for (index_type i = 0; i < numOf_G_cols; ++i) {
+//             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
+//             L.set(pivot_i, m, L_xm[i]);
+//         }
+//         CD_calc_time.stop();
 
-        ++m;
-    }
-    L.resize(N, m);
-    this->log_.info(TlUtils::format("Cholesky Vectors: %d", m));
+//         ++m;
+//     }
+//     L.resize(N, m);
+//     this->log_.info(TlUtils::format("Cholesky Vectors: %d", m));
 
-    this->destroyEngines();
-    //this->schwartzCutoffReport();
+//     this->destroyEngines();
+//     //this->schwartzCutoffReport();
 
-    CD_save_time.start();
-    this->saveL(L.getTlMatrix());
-    CD_save_time.stop();
+//     CD_save_time.start();
+//     this->saveL(L.getTlMatrix());
+//     CD_save_time.stop();
 
-    CD_all_time.stop();
+//     CD_all_time.stop();
 
-    // timing data
-    this->log_.info(TlUtils::format("CD all:       %12.2f sec.", CD_all_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD diagonals: %12.2f sec.", CD_diagonals_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD resize L:  %12.2f sec.", CD_resizeL_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD pivot:     %12.2f sec.", CD_pivot_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD ERI:       %12.2f sec.", CD_ERI_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD calc:      %12.2f sec.", CD_calc_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD save:      %12.2f sec.", CD_save_time.getElapseTime()));
-}
+//     // timing data
+//     this->log_.info(TlUtils::format("CD all:       %12.2f sec.", CD_all_time.getElapseTime()));
+//     this->log_.info(TlUtils::format("CD diagonals: %12.2f sec.", CD_diagonals_time.getElapseTime()));
+//     this->log_.info(TlUtils::format("CD resize L:  %12.2f sec.", CD_resizeL_time.getElapseTime()));
+//     this->log_.info(TlUtils::format("CD pivot:     %12.2f sec.", CD_pivot_time.getElapseTime()));
+//     this->log_.info(TlUtils::format("CD ERI:       %12.2f sec.", CD_ERI_time.getElapseTime()));
+//     this->log_.info(TlUtils::format("CD calc:      %12.2f sec.", CD_calc_time.getElapseTime()));
+//     this->log_.info(TlUtils::format("CD save:      %12.2f sec.", CD_save_time.getElapseTime()));
+// }
 
 
-void DfGridFreeXC::calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
-                                 PQ_PairArray *pI2PQ,
-                                 TlVector *pDiagonals)
-{
-    const index_type numOfAOs = this->m_nNumOfAOs;
-    assert(numOfAOs == this->orbitalInfo_.getNumOfOrbitals());
+// void DfGridFreeXC::calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
+//                                  PQ_PairArray *pI2PQ,
+//                                  TlVector *pDiagonals)
+// {
+//     const index_type numOfAOs = this->m_nNumOfAOs;
+//     assert(numOfAOs == this->orbitalInfo_.getNumOfOrbitals());
 
-    const double tau = this->tau_;
-    this->log_.info(TlUtils::format("CDAM tau: %e", tau));
-    // this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffEpsilon3_));
+//     const double tau = this->tau_;
+//     this->log_.info(TlUtils::format("CDAM tau: %e", tau));
+//     // this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffEpsilon3_));
 
-    // initialize
-    pI2PQ->clear();
-    pI2PQ->reserve(this->numOfPQs_);
-    pSchwartzTable->clear();
-    pSchwartzTable->resize(numOfAOs);
-    TlSparseSymmetricMatrix diagonalMat(numOfAOs);
+//     // initialize
+//     pI2PQ->clear();
+//     pI2PQ->reserve(this->numOfPQs_);
+//     pSchwartzTable->clear();
+//     pSchwartzTable->resize(numOfAOs);
+//     TlSparseSymmetricMatrix diagonalMat(numOfAOs);
 
-    // task
-    this->log_.info("diagonal calculation: start");
-    DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
-    std::vector<DfTaskCtrl::Task2> taskList;
-    bool hasTask = pDfTaskCtrl->getQueue2(this->orbitalInfo_,
-                                          true,
-                                          this->grainSize_,
-                                          &taskList, true);
-    while (hasTask == true) {
-        this->calcDiagonals_kernel(taskList,
-                                   pSchwartzTable,
-                                   &diagonalMat, pI2PQ);
-        hasTask = pDfTaskCtrl->getQueue2(this->orbitalInfo_,
-                                         true,
-                                         this->grainSize_,
-                                         &taskList);
-    }
-    delete pDfTaskCtrl;
-    pDfTaskCtrl = NULL;
+//     // task
+//     this->log_.info("diagonal calculation: start");
+//     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
+//     std::vector<DfTaskCtrl::Task2> taskList;
+//     bool hasTask = pDfTaskCtrl->getQueue2(this->orbitalInfo_,
+//                                           true,
+//                                           this->grainSize_,
+//                                           &taskList, true);
+//     while (hasTask == true) {
+//         this->calcDiagonals_kernel(taskList,
+//                                    pSchwartzTable,
+//                                    &diagonalMat, pI2PQ);
+//         hasTask = pDfTaskCtrl->getQueue2(this->orbitalInfo_,
+//                                          true,
+//                                          this->grainSize_,
+//                                          &taskList);
+//     }
+//     delete pDfTaskCtrl;
+//     pDfTaskCtrl = NULL;
     
-    // finalize
-    this->log_.info("diagonal calculation: finalize");
-    // this->finalize_I2PQ(pI2PQ);
-    // this->finalize(&diagonalMat);
-    // this->finalize(pSchwartzTable);
-    std::sort(pI2PQ->begin(), pI2PQ->end());
+//     // finalize
+//     this->log_.info("diagonal calculation: finalize");
+//     // this->finalize_I2PQ(pI2PQ);
+//     // this->finalize(&diagonalMat);
+//     // this->finalize(pSchwartzTable);
+//     std::sort(pI2PQ->begin(), pI2PQ->end());
 
-    // set diagonals
-    const index_type numOfI = pI2PQ->size();
-    pDiagonals->resize(numOfI);
-    for (index_type i = 0; i < numOfI; ++i) {
-        const index_type row = (*pI2PQ)[i].index1();
-        const index_type col = (*pI2PQ)[i].index2();
-        const double value = diagonalMat.get(row, col);
-        (*pDiagonals)[i] = value;
-    }
-}
+//     // set diagonals
+//     const index_type numOfI = pI2PQ->size();
+//     pDiagonals->resize(numOfI);
+//     for (index_type i = 0; i < numOfI; ++i) {
+//         const index_type row = (*pI2PQ)[i].index1();
+//         const index_type col = (*pI2PQ)[i].index2();
+//         const double value = diagonalMat.get(row, col);
+//         (*pDiagonals)[i] = value;
+//     }
+// }
 
 
-void DfGridFreeXC::calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
-                                        TlSparseSymmetricMatrix *pSchwartzTable,
-                                        TlSparseSymmetricMatrix *pDiagonalMat,
-                                        PQ_PairArray *pI2PQ)
-{
-    const index_type numOfAOs = this->orbitalInfo_.getNumOfOrbitals();
-    pDiagonalMat->resize(numOfAOs);
+// void DfGridFreeXC::calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
+//                                         TlSparseSymmetricMatrix *pSchwartzTable,
+//                                         TlSparseSymmetricMatrix *pDiagonalMat,
+//                                         PQ_PairArray *pI2PQ)
+// {
+//     const index_type numOfAOs = this->orbitalInfo_.getNumOfOrbitals();
+//     pDiagonalMat->resize(numOfAOs);
 
-    const double tau = this->tau_;
-    const int taskListSize = taskList.size();
-    // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+//     const double tau = this->tau_;
+//     const int taskListSize = taskList.size();
+//     // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
-#pragma omp parallel
-    {
-        PQ_PairArray local_I2PQ;
-        TlSparseSymmetricMatrix local_diagMat(numOfAOs);
-        TlSparseSymmetricMatrix local_schwartzTable(numOfAOs);
-        int threadID = 0;
-#ifdef _OPENMP
-        threadID = omp_get_thread_num();
-#endif // _OPENMP
-        // this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+// #pragma omp parallel
+//     {
+//         PQ_PairArray local_I2PQ;
+//         TlSparseSymmetricMatrix local_diagMat(numOfAOs);
+//         TlSparseSymmetricMatrix local_schwartzTable(numOfAOs);
+//         int threadID = 0;
+// #ifdef _OPENMP
+//         threadID = omp_get_thread_num();
+// #endif // _OPENMP
+//         // this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
         
-#pragma omp for schedule(runtime)
-        for (int i = 0; i < taskListSize; ++i) {
-            const index_type shellIndexP = taskList[i].shellIndex1;
-            const index_type shellIndexQ = taskList[i].shellIndex2;
-            const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
-            const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
-            const int maxStepsP = 2 * shellTypeP + 1;
-            const int maxStepsQ = 2 * shellTypeQ + 1;
-            // const TlPosition posP = this->orbitalInfo_.getPosition(shellIndexP);
-            // const TlPosition posQ = this->orbitalInfo_.getPosition(shellIndexQ);
-            // const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexP);
-            // const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexQ);
+// #pragma omp for schedule(runtime)
+//         for (int i = 0; i < taskListSize; ++i) {
+//             const index_type shellIndexP = taskList[i].shellIndex1;
+//             const index_type shellIndexQ = taskList[i].shellIndex2;
+//             const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
+//             const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
+//             const int maxStepsP = 2 * shellTypeP + 1;
+//             const int maxStepsQ = 2 * shellTypeQ + 1;
+//             // const TlPosition posP = this->orbitalInfo_.getPosition(shellIndexP);
+//             // const TlPosition posQ = this->orbitalInfo_.getPosition(shellIndexQ);
+//             // const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexP);
+//             // const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexQ);
 
-            // const DfOverlapEngine::Query query(0, 0, 0, 0,
-            //                                    shellTypeP, shellTypeQ,
-            //                                    shellTypeP, shellTypeQ);
-            // this->pOvpEngines_[threadID].calc0(query,
-            //                                    posP, posQ, posP, posQ,
-            //                                    pgtosP, pgtosQ, pgtosP, pgtosQ);
-            this->pOvpEngines_[threadID].calc(0, this->orbitalInfo_, shellIndexP,
-                                              0, this->orbitalInfo_, shellIndexQ,
-                                              0, this->orbitalInfo_, shellIndexP,
-                                              0, this->orbitalInfo_, shellIndexQ);
+//             // const DfOverlapEngine::Query query(0, 0, 0, 0,
+//             //                                    shellTypeP, shellTypeQ,
+//             //                                    shellTypeP, shellTypeQ);
+//             // this->pOvpEngines_[threadID].calc0(query,
+//             //                                    posP, posQ, posP, posQ,
+//             //                                    pgtosP, pgtosQ, pgtosP, pgtosQ);
+//             this->pOvpEngines_[threadID].calc(0, this->orbitalInfo_, shellIndexP,
+//                                               0, this->orbitalInfo_, shellIndexQ,
+//                                               0, this->orbitalInfo_, shellIndexP,
+//                                               0, this->orbitalInfo_, shellIndexQ);
                 
-            const int maxStepsPQ = maxStepsP * maxStepsQ;
-            double maxValue = 0.0;
-            for (int p = 0; p < maxStepsP; ++p) {
-                const index_type indexP = shellIndexP + p;
-                for (int q = 0; q < maxStepsQ; ++q) {
-                    const index_type indexQ = shellIndexQ + q;
+//             const int maxStepsPQ = maxStepsP * maxStepsQ;
+//             double maxValue = 0.0;
+//             for (int p = 0; p < maxStepsP; ++p) {
+//                 const index_type indexP = shellIndexP + p;
+//                 for (int q = 0; q < maxStepsQ; ++q) {
+//                     const index_type indexQ = shellIndexQ + q;
                     
-                    if ((shellIndexP != shellIndexQ) || (indexP >= indexQ)) {
-                        const int pq_index = p * maxStepsQ + q;
-                        const int pqpq_index = pq_index * maxStepsPQ + pq_index;
+//                     if ((shellIndexP != shellIndexQ) || (indexP >= indexQ)) {
+//                         const int pq_index = p * maxStepsQ + q;
+//                         const int pqpq_index = pq_index * maxStepsPQ + pq_index;
                         
-                        const double value = this->pOvpEngines_[threadID].WORK[pqpq_index];
+//                         const double value = this->pOvpEngines_[threadID].WORK[pqpq_index];
 
-                        // for schwartz
-                        maxValue = std::max(maxValue, std::fabs(value));
+//                         // for schwartz
+//                         maxValue = std::max(maxValue, std::fabs(value));
                         
-                        // for I~ to pq table
-                        if (std::fabs(value) > tau) {
-                            if (value > 0) {
-                                local_diagMat.set(indexP, indexQ, value);
-                                local_I2PQ.push_back(IndexPair2(indexP, indexQ));
-                            } else {
-                                this->log_.warn(TlUtils::format("pqpq_value: (%d %d)=% e is spoiled.",
-                                                                indexP, indexQ, value));
-                            }
-                        }
-                    }
-                }
-            }
-            local_schwartzTable.set(shellIndexP, shellIndexQ, std::sqrt(maxValue));
-        }
+//                         // for I~ to pq table
+//                         if (std::fabs(value) > tau) {
+//                             if (value > 0) {
+//                                 local_diagMat.set(indexP, indexQ, value);
+//                                 local_I2PQ.push_back(IndexPair2(indexP, indexQ));
+//                             } else {
+//                                 this->log_.warn(TlUtils::format("pqpq_value: (%d %d)=% e is spoiled.",
+//                                                                 indexP, indexQ, value));
+//                             }
+//                         }
+//                     }
+//                 }
+//             }
+//             local_schwartzTable.set(shellIndexP, shellIndexQ, std::sqrt(maxValue));
+//         }
 
-        // add up
-#ifdef _OPENMP
-        {
-            const int numOfThreads = omp_get_num_threads();
-            for (int i = 0; i < numOfThreads; ++i) {
-                if (threadID == i) {
-                    pI2PQ->insert(pI2PQ->end(),
-                                  local_I2PQ.begin(), local_I2PQ.end());
-                    pDiagonalMat->merge(local_diagMat);
-                    pSchwartzTable->merge(local_schwartzTable);
-                }
-#pragma omp barrier                
-            }
-        }
-#else
-        {
-            *pI2PQ = local_I2PQ;
-            *pDiagonalMat = local_diagMat;
-            *pSchwartzTable = local_schwartzTable;
-        }
-#endif // _OPENMP
-    }
-}
-
-
-void DfGridFreeXC::saveI2PQ(const PQ_PairArray& I2PQ) 
-{
-    std::string filepath = this->getI2pqVtrPath();
-    std::ofstream ofs;
-    ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::binary);
-
-    const std::size_t size = I2PQ.size();
-    ofs.write(reinterpret_cast<const char*>(&size), sizeof(std::size_t));
-    for (std::size_t i = 0; i < size; ++i) {
-        const index_type index1 = I2PQ[i].index1();
-        const index_type index2 = I2PQ[i].index2();
-        ofs.write(reinterpret_cast<const char*>(&index1), sizeof(index_type));
-        ofs.write(reinterpret_cast<const char*>(&index2), sizeof(index_type));
-    }
-
-    ofs.close();
-}
+//         // add up
+// #ifdef _OPENMP
+//         {
+//             const int numOfThreads = omp_get_num_threads();
+//             for (int i = 0; i < numOfThreads; ++i) {
+//                 if (threadID == i) {
+//                     pI2PQ->insert(pI2PQ->end(),
+//                                   local_I2PQ.begin(), local_I2PQ.end());
+//                     pDiagonalMat->merge(local_diagMat);
+//                     pSchwartzTable->merge(local_schwartzTable);
+//                 }
+// #pragma omp barrier                
+//             }
+//         }
+// #else
+//         {
+//             *pI2PQ = local_I2PQ;
+//             *pDiagonalMat = local_diagMat;
+//             *pSchwartzTable = local_schwartzTable;
+//         }
+// #endif // _OPENMP
+//     }
+// }
 
 
-void DfGridFreeXC::saveL(const TlMatrix& L)
-{
-    L.save("GF_L.mat");
-}
+// void DfGridFreeXC::saveI2PQ(const PQ_PairArray& I2PQ) 
+// {
+//     std::string filepath = this->getI2pqVtrPath();
+//     std::ofstream ofs;
+//     ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::binary);
+
+//     const std::size_t size = I2PQ.size();
+//     ofs.write(reinterpret_cast<const char*>(&size), sizeof(std::size_t));
+//     for (std::size_t i = 0; i < size; ++i) {
+//         const index_type index1 = I2PQ[i].index1();
+//         const index_type index2 = I2PQ[i].index2();
+//         ofs.write(reinterpret_cast<const char*>(&index1), sizeof(index_type));
+//         ofs.write(reinterpret_cast<const char*>(&index2), sizeof(index_type));
+//     }
+
+//     ofs.close();
+// }
 
 
-std::vector<double>
-DfGridFreeXC::getSuperMatrixElements(const index_type G_row,
-                                     const std::vector<index_type>& G_col_list,
-                                     const PQ_PairArray& I2PQ,
-                                     const TlSparseSymmetricMatrix& schwartzTable)
-{
-    this->elements_cache_.clear();
-
-    const std::vector<IndexPair4> calcList = this->getCalcList(G_row, G_col_list, I2PQ);
-    this->calcElements(calcList, schwartzTable);
-    const std::vector<double> answer = this->setElements(G_row, G_col_list, I2PQ);
-
-    return answer;
-}
+// void DfGridFreeXC::saveL(const TlMatrix& L)
+// {
+//     L.save("GF_L.mat");
+// }
 
 
-std::vector<DfGridFreeXC::IndexPair4> 
-DfGridFreeXC::getCalcList(const index_type G_row,
-                          const std::vector<index_type>& G_col_list,
-                          const PQ_PairArray& I2PQ)
-{
-    std::set<IndexPair4> calcSet;
+// std::vector<double>
+// DfGridFreeXC::getSuperMatrixElements(const index_type G_row,
+//                                      const std::vector<index_type>& G_col_list,
+//                                      const PQ_PairArray& I2PQ,
+//                                      const TlSparseSymmetricMatrix& schwartzTable)
+// {
+//     this->elements_cache_.clear();
 
-    const index_type indexP = I2PQ[G_row].index1();
-    const index_type indexQ = I2PQ[G_row].index2();
-    const index_type shellIndexP = this->orbitalInfo_.getShellIndex(indexP);
-    const index_type shellIndexQ = this->orbitalInfo_.getShellIndex(indexQ);
+//     const std::vector<IndexPair4> calcList = this->getCalcList(G_row, G_col_list, I2PQ);
+//     this->calcElements(calcList, schwartzTable);
+//     const std::vector<double> answer = this->setElements(G_row, G_col_list, I2PQ);
 
-    const index_type numOf_G_cols = G_col_list.size();
-#pragma omp parallel for schedule(runtime)
-    for (index_type i = 0; i < numOf_G_cols; ++i) {
-        const index_type G_col = G_col_list[i];
-
-        const index_type indexR = I2PQ[G_col].index1();
-        const index_type indexS = I2PQ[G_col].index2();
-        const index_type shellIndexR = this->orbitalInfo_.getShellIndex(indexR);
-        const index_type shellIndexS = this->orbitalInfo_.getShellIndex(indexS);
-
-        IndexPair4 indexPair4(shellIndexP, shellIndexQ, shellIndexR, shellIndexS);
-#pragma omp critical(DfGridFreeXC__getCalcList) 
-        {
-            calcSet.insert(indexPair4);
-        }
-    }
-
-    std::vector<IndexPair4> calcList(calcSet.size());
-    std::copy(calcSet.begin(), calcSet.end(), calcList.begin());
-
-    return calcList;
-}
+//     return answer;
+// }
 
 
-void DfGridFreeXC::calcElements(const std::vector<IndexPair4>& calcList,
-                                const TlSparseSymmetricMatrix& schwartzTable) 
-{
-    const int maxShellType = this->orbitalInfo_.getMaxShellType();
-    const double threshold = this->tau_;
-    // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+// std::vector<DfGridFreeXC::IndexPair4> 
+// DfGridFreeXC::getCalcList(const index_type G_row,
+//                           const std::vector<index_type>& G_col_list,
+//                           const PQ_PairArray& I2PQ)
+// {
+//     std::set<IndexPair4> calcSet;
 
-    const int numOfList = calcList.size();
-#pragma omp parallel
-    {
-        int threadID = 0;
-        ElementsCacheType local_cache;
+//     const index_type indexP = I2PQ[G_row].index1();
+//     const index_type indexQ = I2PQ[G_row].index2();
+//     const index_type shellIndexP = this->orbitalInfo_.getShellIndex(indexP);
+//     const index_type shellIndexQ = this->orbitalInfo_.getShellIndex(indexQ);
 
-#ifdef _OPENMP
-        threadID = omp_get_thread_num();
-#endif // _OPENMP
-        // this->pOvpEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+//     const index_type numOf_G_cols = G_col_list.size();
+// #pragma omp parallel for schedule(runtime)
+//     for (index_type i = 0; i < numOf_G_cols; ++i) {
+//         const index_type G_col = G_col_list[i];
+
+//         const index_type indexR = I2PQ[G_col].index1();
+//         const index_type indexS = I2PQ[G_col].index2();
+//         const index_type shellIndexR = this->orbitalInfo_.getShellIndex(indexR);
+//         const index_type shellIndexS = this->orbitalInfo_.getShellIndex(indexS);
+
+//         IndexPair4 indexPair4(shellIndexP, shellIndexQ, shellIndexR, shellIndexS);
+// #pragma omp critical(DfGridFreeXC__getCalcList) 
+//         {
+//             calcSet.insert(indexPair4);
+//         }
+//     }
+
+//     std::vector<IndexPair4> calcList(calcSet.size());
+//     std::copy(calcSet.begin(), calcSet.end(), calcList.begin());
+
+//     return calcList;
+// }
+
+
+// void DfGridFreeXC::calcElements(const std::vector<IndexPair4>& calcList,
+//                                 const TlSparseSymmetricMatrix& schwartzTable) 
+// {
+//     const int maxShellType = this->orbitalInfo_.getMaxShellType();
+//     const double threshold = this->tau_;
+//     // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+
+//     const int numOfList = calcList.size();
+// #pragma omp parallel
+//     {
+//         int threadID = 0;
+//         ElementsCacheType local_cache;
+
+// #ifdef _OPENMP
+//         threadID = omp_get_thread_num();
+// #endif // _OPENMP
+//         // this->pOvpEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
         
-#pragma omp for schedule(runtime)
-        for (int i = 0; i < numOfList; ++i) {
-            const index_type shellIndexP = calcList[i].index1();
-            const index_type shellIndexQ = calcList[i].index2();
-            const index_type shellIndexR = calcList[i].index3();
-            const index_type shellIndexS = calcList[i].index4();
+// #pragma omp for schedule(runtime)
+//         for (int i = 0; i < numOfList; ++i) {
+//             const index_type shellIndexP = calcList[i].index1();
+//             const index_type shellIndexQ = calcList[i].index2();
+//             const index_type shellIndexR = calcList[i].index3();
+//             const index_type shellIndexS = calcList[i].index4();
             
-            const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
-            const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
-            const int shellTypeR = this->orbitalInfo_.getShellType(shellIndexR);
-            const int shellTypeS = this->orbitalInfo_.getShellType(shellIndexS);
+//             const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
+//             const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
+//             const int shellTypeR = this->orbitalInfo_.getShellType(shellIndexR);
+//             const int shellTypeS = this->orbitalInfo_.getShellType(shellIndexS);
             
-            const int shellQuartetType =
-                ((shellTypeP * maxShellType + shellTypeQ) * maxShellType + shellTypeP) * maxShellType + shellTypeQ;
-            const bool isAlive = this->isAliveBySchwartzCutoff(shellIndexP, shellIndexQ,
-                                                               shellIndexR, shellIndexS,
-                                                               shellQuartetType,
-                                                               schwartzTable,
-                                                               threshold);
-            if (isAlive == true) {
-                const int maxStepsP = 2 * shellTypeP + 1;
-                const int maxStepsQ = 2 * shellTypeQ + 1;
-                const int maxStepsR = 2 * shellTypeR + 1;
-                const int maxStepsS = 2 * shellTypeS + 1;
+//             const int shellQuartetType =
+//                 ((shellTypeP * maxShellType + shellTypeQ) * maxShellType + shellTypeP) * maxShellType + shellTypeQ;
+//             const bool isAlive = this->isAliveBySchwartzCutoff(shellIndexP, shellIndexQ,
+//                                                                shellIndexR, shellIndexS,
+//                                                                shellQuartetType,
+//                                                                schwartzTable,
+//                                                                threshold);
+//             if (isAlive == true) {
+//                 const int maxStepsP = 2 * shellTypeP + 1;
+//                 const int maxStepsQ = 2 * shellTypeQ + 1;
+//                 const int maxStepsR = 2 * shellTypeR + 1;
+//                 const int maxStepsS = 2 * shellTypeS + 1;
                 
-                const DfOverlapEngine::Query query(0, 0, 0, 0,
-                                                   shellTypeP, shellTypeQ, 
-                                                   shellTypeR, shellTypeS);
-                const TlPosition posP = this->orbitalInfo_.getPosition(shellIndexP);
-                const TlPosition posQ = this->orbitalInfo_.getPosition(shellIndexQ);
-                const TlPosition posR = this->orbitalInfo_.getPosition(shellIndexR);
-                const TlPosition posS = this->orbitalInfo_.getPosition(shellIndexS);
-                // const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexP);
-                // const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexQ);
-                // const DfOverlapEngine::PGTOs pgtosR = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexR);
-                // const DfOverlapEngine::PGTOs pgtosS = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexS);
+//                 const DfOverlapEngine::Query query(0, 0, 0, 0,
+//                                                    shellTypeP, shellTypeQ, 
+//                                                    shellTypeR, shellTypeS);
+//                 const TlPosition posP = this->orbitalInfo_.getPosition(shellIndexP);
+//                 const TlPosition posQ = this->orbitalInfo_.getPosition(shellIndexQ);
+//                 const TlPosition posR = this->orbitalInfo_.getPosition(shellIndexR);
+//                 const TlPosition posS = this->orbitalInfo_.getPosition(shellIndexS);
+//                 // const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexP);
+//                 // const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexQ);
+//                 // const DfOverlapEngine::PGTOs pgtosR = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexR);
+//                 // const DfOverlapEngine::PGTOs pgtosS = DfOverlapEngine::getPGTOs(this->orbitalInfo_, shellIndexS);
                 
-                // this->pOvpEngines_[threadID].calc0(query,
-                //                                    posP, posQ, posR, posS,
-                //                                    pgtosP, pgtosQ, pgtosR, pgtosS);
-                this->pOvpEngines_[threadID].calc(0, this->orbitalInfo_, shellIndexP,
-                                                  0, this->orbitalInfo_, shellIndexQ,
-                                                  0, this->orbitalInfo_, shellIndexR,
-                                                  0, this->orbitalInfo_, shellIndexS);
+//                 // this->pOvpEngines_[threadID].calc0(query,
+//                 //                                    posP, posQ, posR, posS,
+//                 //                                    pgtosP, pgtosQ, pgtosR, pgtosS);
+//                 this->pOvpEngines_[threadID].calc(0, this->orbitalInfo_, shellIndexP,
+//                                                   0, this->orbitalInfo_, shellIndexQ,
+//                                                   0, this->orbitalInfo_, shellIndexR,
+//                                                   0, this->orbitalInfo_, shellIndexS);
                 
-                const int steps = maxStepsP * maxStepsQ * maxStepsR * maxStepsS;
-                std::vector<double> buf(steps);
-                std::copy(this->pOvpEngines_[threadID].WORK, this->pOvpEngines_[threadID].WORK + steps,
-                          buf.begin());
+//                 const int steps = maxStepsP * maxStepsQ * maxStepsR * maxStepsS;
+//                 std::vector<double> buf(steps);
+//                 std::copy(this->pOvpEngines_[threadID].WORK, this->pOvpEngines_[threadID].WORK + steps,
+//                           buf.begin());
 
-                local_cache[calcList[i]] = buf;
-            }
-        }
+//                 local_cache[calcList[i]] = buf;
+//             }
+//         }
 
-        // merge cache
-#pragma omp critical(DfGridFreeXC__calcERIs)
-        {
-            this->elements_cache_.insert(local_cache.begin(), local_cache.end());
-        }
-    }
-}
-
-
-bool DfGridFreeXC::isAliveBySchwartzCutoff(const index_type shellIndexP,
-                                           const index_type shellIndexQ,
-                                           const index_type shellIndexR,
-                                           const index_type shellIndexS,
-                                           const int shellQuartetType,
-                                           const TlSparseSymmetricMatrix& schwarzTable,
-                                           const double threshold)
-{
-    bool answer = false;
-
-    const double sqrt_pqpq = schwarzTable.get(shellIndexP, shellIndexQ);
-    const double sqrt_rsrs = schwarzTable.get(shellIndexR, shellIndexS);
-
-    if ((sqrt_pqpq * sqrt_rsrs) >= threshold) {
-        answer = true;
-
-#pragma omp atomic
-        ++(this->cutoffAlive_schwartz_[shellQuartetType]);
-    }
-
-#pragma omp atomic
-    ++(this->cutoffAll_schwartz_[shellQuartetType]);
-
-    return answer;
-}
+//         // merge cache
+// #pragma omp critical(DfGridFreeXC__calcERIs)
+//         {
+//             this->elements_cache_.insert(local_cache.begin(), local_cache.end());
+//         }
+//     }
+// }
 
 
-void DfGridFreeXC::initializeCutoffStats()
-{
-    // clear cutoff stats
-    const int maxShellType = this->orbitalInfo_.getMaxShellType();
-    const int numOfShellPairType = maxShellType* maxShellType;
-    const int numOfShellQuartetType = numOfShellPairType * numOfShellPairType;
-    this->cutoffAll_schwartz_.clear();
-    this->cutoffAlive_schwartz_.clear();
-    this->cutoffAll_schwartz_.resize(numOfShellQuartetType, 0);
-    this->cutoffAlive_schwartz_.resize(numOfShellQuartetType, 0);
-}
+// bool DfGridFreeXC::isAliveBySchwartzCutoff(const index_type shellIndexP,
+//                                            const index_type shellIndexQ,
+//                                            const index_type shellIndexR,
+//                                            const index_type shellIndexS,
+//                                            const int shellQuartetType,
+//                                            const TlSparseSymmetricMatrix& schwarzTable,
+//                                            const double threshold)
+// {
+//     bool answer = false;
+
+//     const double sqrt_pqpq = schwarzTable.get(shellIndexP, shellIndexQ);
+//     const double sqrt_rsrs = schwarzTable.get(shellIndexR, shellIndexS);
+
+//     if ((sqrt_pqpq * sqrt_rsrs) >= threshold) {
+//         answer = true;
+
+// #pragma omp atomic
+//         ++(this->cutoffAlive_schwartz_[shellQuartetType]);
+//     }
+
+// #pragma omp atomic
+//     ++(this->cutoffAll_schwartz_[shellQuartetType]);
+
+//     return answer;
+// }
 
 
-void DfGridFreeXC::schwartzCutoffReport()
-{
-    static const char typeStr4[][5] = {
-        "SSSS", "SSSP", "SSSD", "SSPS", "SSPP", "SSPD", "SSDS", "SSDP", "SSDD",
-        "SPSS", "SPSP", "SPSD", "SPPS", "SPPP", "SPPD", "SPDS", "SPDP", "SPDD",
-        "SDSS", "SDSP", "SDSD", "SDPS", "SDPP", "SDPD", "SDDS", "SDDP", "SDDD",
-        "PSSS", "PSSP", "PSSD", "PSPS", "PSPP", "PSPD", "PSDS", "PSDP", "PSDD",
-        "PPSS", "PPSP", "PPSD", "PPPS", "PPPP", "PPPD", "PPDS", "PPDP", "PPDD",
-        "PDSS", "PDSP", "PDSD", "PDPS", "PDPP", "PDPD", "PDDS", "PDDP", "PDDD",
-        "DSSS", "DSSP", "DSSD", "DSPS", "DSPP", "DSPD", "DSDS", "DSDP", "DSDD",
-        "DPSS", "DPSP", "DPSD", "DPPS", "DPPP", "DPPD", "DPDS", "DPDP", "DPDD",
-        "DDSS", "DDSP", "DDSD", "DDPS", "DDPP", "DDPD", "DDDS", "DDDP", "DDDD",
-    };
-    const int maxShellType = this->orbitalInfo_.getMaxShellType();
+// void DfGridFreeXC::initializeCutoffStats()
+// {
+//     // clear cutoff stats
+//     const int maxShellType = this->orbitalInfo_.getMaxShellType();
+//     const int numOfShellPairType = maxShellType* maxShellType;
+//     const int numOfShellQuartetType = numOfShellPairType * numOfShellPairType;
+//     this->cutoffAll_schwartz_.clear();
+//     this->cutoffAlive_schwartz_.clear();
+//     this->cutoffAll_schwartz_.resize(numOfShellQuartetType, 0);
+//     this->cutoffAlive_schwartz_.resize(numOfShellQuartetType, 0);
+// }
 
-    // cutoff report for schwarz
-    bool hasCutoffSchwarz = false;
-    for (int shellTypeA = 0; shellTypeA < maxShellType; ++shellTypeA) {
-        for (int shellTypeB = 0; shellTypeB < maxShellType; ++shellTypeB) {
-            const int shellTypeAB = shellTypeA * maxShellType + shellTypeB;
-            for (int shellTypeC = 0; shellTypeC < maxShellType; ++shellTypeC) {
-                const int shellTypeABC = shellTypeAB * maxShellType + shellTypeC;
-                for (int shellTypeD = 0; shellTypeD < maxShellType; ++shellTypeD) {
-                    const int shellTypeABCD = shellTypeABC * maxShellType + shellTypeD;
-                    if (this->cutoffAll_schwartz_[shellTypeABCD] != 0) {
-                        hasCutoffSchwarz = true;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    if (hasCutoffSchwarz == true) {
-        this->log_.info("schwarz cutoff report");
-        this->log_.info(TlUtils::format("threshold: %e", this->tau_));
-        this->log_.info("type: alive / all (ratio)");
-        for (int shellTypeA = 0; shellTypeA < maxShellType; ++shellTypeA) {
-            for (int shellTypeB = 0; shellTypeB < maxShellType; ++shellTypeB) {
-                const int shellTypeAB = shellTypeA * maxShellType + shellTypeB;
-                for (int shellTypeC = 0; shellTypeC < maxShellType; ++shellTypeC) {
-                    const int shellTypeABC = shellTypeAB * maxShellType + shellTypeC;
-                    for (int shellTypeD = 0; shellTypeD < maxShellType; ++shellTypeD) {
-                        const int shellTypeABCD = shellTypeABC * maxShellType + shellTypeD;
+
+// void DfGridFreeXC::schwartzCutoffReport()
+// {
+//     static const char typeStr4[][5] = {
+//         "SSSS", "SSSP", "SSSD", "SSPS", "SSPP", "SSPD", "SSDS", "SSDP", "SSDD",
+//         "SPSS", "SPSP", "SPSD", "SPPS", "SPPP", "SPPD", "SPDS", "SPDP", "SPDD",
+//         "SDSS", "SDSP", "SDSD", "SDPS", "SDPP", "SDPD", "SDDS", "SDDP", "SDDD",
+//         "PSSS", "PSSP", "PSSD", "PSPS", "PSPP", "PSPD", "PSDS", "PSDP", "PSDD",
+//         "PPSS", "PPSP", "PPSD", "PPPS", "PPPP", "PPPD", "PPDS", "PPDP", "PPDD",
+//         "PDSS", "PDSP", "PDSD", "PDPS", "PDPP", "PDPD", "PDDS", "PDDP", "PDDD",
+//         "DSSS", "DSSP", "DSSD", "DSPS", "DSPP", "DSPD", "DSDS", "DSDP", "DSDD",
+//         "DPSS", "DPSP", "DPSD", "DPPS", "DPPP", "DPPD", "DPDS", "DPDP", "DPDD",
+//         "DDSS", "DDSP", "DDSD", "DDPS", "DDPP", "DDPD", "DDDS", "DDDP", "DDDD",
+//     };
+//     const int maxShellType = this->orbitalInfo_.getMaxShellType();
+
+//     // cutoff report for schwarz
+//     bool hasCutoffSchwarz = false;
+//     for (int shellTypeA = 0; shellTypeA < maxShellType; ++shellTypeA) {
+//         for (int shellTypeB = 0; shellTypeB < maxShellType; ++shellTypeB) {
+//             const int shellTypeAB = shellTypeA * maxShellType + shellTypeB;
+//             for (int shellTypeC = 0; shellTypeC < maxShellType; ++shellTypeC) {
+//                 const int shellTypeABC = shellTypeAB * maxShellType + shellTypeC;
+//                 for (int shellTypeD = 0; shellTypeD < maxShellType; ++shellTypeD) {
+//                     const int shellTypeABCD = shellTypeABC * maxShellType + shellTypeD;
+//                     if (this->cutoffAll_schwartz_[shellTypeABCD] != 0) {
+//                         hasCutoffSchwarz = true;
+//                         break;
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//     if (hasCutoffSchwarz == true) {
+//         this->log_.info("schwarz cutoff report");
+//         this->log_.info(TlUtils::format("threshold: %e", this->tau_));
+//         this->log_.info("type: alive / all (ratio)");
+//         for (int shellTypeA = 0; shellTypeA < maxShellType; ++shellTypeA) {
+//             for (int shellTypeB = 0; shellTypeB < maxShellType; ++shellTypeB) {
+//                 const int shellTypeAB = shellTypeA * maxShellType + shellTypeB;
+//                 for (int shellTypeC = 0; shellTypeC < maxShellType; ++shellTypeC) {
+//                     const int shellTypeABC = shellTypeAB * maxShellType + shellTypeC;
+//                     for (int shellTypeD = 0; shellTypeD < maxShellType; ++shellTypeD) {
+//                         const int shellTypeABCD = shellTypeABC * maxShellType + shellTypeD;
                         
-                        if (this->cutoffAll_schwartz_[shellTypeABCD] > 0) {
-                            const double ratio = (double)this->cutoffAlive_schwartz_[shellTypeABCD]
-                                / (double)this->cutoffAll_schwartz_[shellTypeABCD]
-                                * 100.0;
-                            this->log_.info(TlUtils::format(" %4s: %12ld / %12ld (%6.2f%%)",
-                                                            typeStr4[shellTypeABCD],
-                                                            this->cutoffAlive_schwartz_[shellTypeABCD],
-                                                            this->cutoffAll_schwartz_[shellTypeABCD],
-                                                            ratio));
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+//                         if (this->cutoffAll_schwartz_[shellTypeABCD] > 0) {
+//                             const double ratio = (double)this->cutoffAlive_schwartz_[shellTypeABCD]
+//                                 / (double)this->cutoffAll_schwartz_[shellTypeABCD]
+//                                 * 100.0;
+//                             this->log_.info(TlUtils::format(" %4s: %12ld / %12ld (%6.2f%%)",
+//                                                             typeStr4[shellTypeABCD],
+//                                                             this->cutoffAlive_schwartz_[shellTypeABCD],
+//                                                             this->cutoffAll_schwartz_[shellTypeABCD],
+//                                                             ratio));
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
 
 
-std::vector<double>
-DfGridFreeXC::setElements(const index_type G_row,
-                          const std::vector<index_type> G_col_list,
-                          const PQ_PairArray& I2PQ)
-{
-    const index_type indexP_orig = I2PQ[G_row].index1();
-    const index_type indexQ_orig = I2PQ[G_row].index2();
-    const index_type shellIndexP_orig = this->orbitalInfo_.getShellIndex(indexP_orig);
-    const index_type shellIndexQ_orig = this->orbitalInfo_.getShellIndex(indexQ_orig);
+// std::vector<double>
+// DfGridFreeXC::setElements(const index_type G_row,
+//                           const std::vector<index_type> G_col_list,
+//                           const PQ_PairArray& I2PQ)
+// {
+//     const index_type indexP_orig = I2PQ[G_row].index1();
+//     const index_type indexQ_orig = I2PQ[G_row].index2();
+//     const index_type shellIndexP_orig = this->orbitalInfo_.getShellIndex(indexP_orig);
+//     const index_type shellIndexQ_orig = this->orbitalInfo_.getShellIndex(indexQ_orig);
 
-    const index_type numOf_G_cols = G_col_list.size();
-    std::vector<double> answer(numOf_G_cols);
-#pragma omp parallel for
-    for (index_type i = 0; i < numOf_G_cols; ++i) {
-        index_type indexP = indexP_orig;
-        index_type indexQ = indexQ_orig;
-        index_type shellIndexP = shellIndexP_orig;
-        index_type shellIndexQ = shellIndexQ_orig;
+//     const index_type numOf_G_cols = G_col_list.size();
+//     std::vector<double> answer(numOf_G_cols);
+// #pragma omp parallel for
+//     for (index_type i = 0; i < numOf_G_cols; ++i) {
+//         index_type indexP = indexP_orig;
+//         index_type indexQ = indexQ_orig;
+//         index_type shellIndexP = shellIndexP_orig;
+//         index_type shellIndexQ = shellIndexQ_orig;
 
-        const index_type G_col = G_col_list[i];
+//         const index_type G_col = G_col_list[i];
 
-        index_type indexR = I2PQ[G_col].index1();
-        index_type indexS = I2PQ[G_col].index2();
-        index_type shellIndexR = this->orbitalInfo_.getShellIndex(indexR);
-        index_type shellIndexS = this->orbitalInfo_.getShellIndex(indexS);
+//         index_type indexR = I2PQ[G_col].index1();
+//         index_type indexS = I2PQ[G_col].index2();
+//         index_type shellIndexR = this->orbitalInfo_.getShellIndex(indexR);
+//         index_type shellIndexS = this->orbitalInfo_.getShellIndex(indexS);
 
-        // swap
-        if (shellIndexP > shellIndexQ) {
-            std::swap(shellIndexP, shellIndexQ);
-            std::swap(indexP, indexQ);
-        }
-        if (shellIndexR > shellIndexS) {
-            std::swap(shellIndexR, shellIndexS);
-            std::swap(indexR, indexS);
-        }
-        {
-            IndexPair2 pq(shellIndexP, shellIndexQ);
-            IndexPair2 rs(shellIndexR, shellIndexS);
-            if (pq.index() > rs.index()) {
-                std::swap(shellIndexP, shellIndexR);
-                std::swap(indexP, indexR);
-                std::swap(shellIndexQ, shellIndexS);
-                std::swap(indexQ, indexS);
-            }
-        }
+//         // swap
+//         if (shellIndexP > shellIndexQ) {
+//             std::swap(shellIndexP, shellIndexQ);
+//             std::swap(indexP, indexQ);
+//         }
+//         if (shellIndexR > shellIndexS) {
+//             std::swap(shellIndexR, shellIndexS);
+//             std::swap(indexR, indexS);
+//         }
+//         {
+//             IndexPair2 pq(shellIndexP, shellIndexQ);
+//             IndexPair2 rs(shellIndexR, shellIndexS);
+//             if (pq.index() > rs.index()) {
+//                 std::swap(shellIndexP, shellIndexR);
+//                 std::swap(indexP, indexR);
+//                 std::swap(shellIndexQ, shellIndexS);
+//                 std::swap(indexQ, indexS);
+//             }
+//         }
 
-        std::vector<double> values;
-#pragma omp critical(DfGridFreeXC__setElements)
-        {
-            values = this->elements_cache_[IndexPair4(shellIndexP, shellIndexQ,
-                                                      shellIndexR, shellIndexS)];
-        }
+//         std::vector<double> values;
+// #pragma omp critical(DfGridFreeXC__setElements)
+//         {
+//             values = this->elements_cache_[IndexPair4(shellIndexP, shellIndexQ,
+//                                                       shellIndexR, shellIndexS)];
+//         }
 
-        if (values.empty() != true) {
-            const int basisTypeP = indexP - shellIndexP;
-            const int basisTypeQ = indexQ - shellIndexQ;
-            const int basisTypeR = indexR - shellIndexR;
-            const int basisTypeS = indexS - shellIndexS;
+//         if (values.empty() != true) {
+//             const int basisTypeP = indexP - shellIndexP;
+//             const int basisTypeQ = indexQ - shellIndexQ;
+//             const int basisTypeR = indexR - shellIndexR;
+//             const int basisTypeS = indexS - shellIndexS;
             
-            const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
-            const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
-            const int shellTypeR = this->orbitalInfo_.getShellType(shellIndexR);
-            const int shellTypeS = this->orbitalInfo_.getShellType(shellIndexS);
-            const int maxStepsP = 2 * shellTypeP + 1;
-            const int maxStepsQ = 2 * shellTypeQ + 1;
-            const int maxStepsR = 2 * shellTypeR + 1;
-            const int maxStepsS = 2 * shellTypeS + 1;
+//             const int shellTypeP = this->orbitalInfo_.getShellType(shellIndexP);
+//             const int shellTypeQ = this->orbitalInfo_.getShellType(shellIndexQ);
+//             const int shellTypeR = this->orbitalInfo_.getShellType(shellIndexR);
+//             const int shellTypeS = this->orbitalInfo_.getShellType(shellIndexS);
+//             const int maxStepsP = 2 * shellTypeP + 1;
+//             const int maxStepsQ = 2 * shellTypeQ + 1;
+//             const int maxStepsR = 2 * shellTypeR + 1;
+//             const int maxStepsS = 2 * shellTypeS + 1;
             
-            const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
-            assert(values.size() > index);
+//             const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
+//             assert(values.size() > index);
             
-#pragma omp atomic
-            answer[i] += values.at(index);
-        }
-    }
+// #pragma omp atomic
+//             answer[i] += values.at(index);
+//         }
+//     }
 
-    return answer;
-}
+//     return answer;
+// }
 
 
-void DfGridFreeXC::getM_byCD(TlSymmetricMatrix* pM)
-{
-    pM->resize(this->m_nNumOfAOs);
-    const TlSymmetricMatrix P = 0.5 * this->getPMatrix();
+// void DfGridFreeXC::getM_byCD(TlSymmetricMatrix* pM)
+// {
+//     pM->resize(this->m_nNumOfAOs);
+//     const TlSymmetricMatrix P = 0.5 * this->getPMatrix();
 
-    // cholesky vector
-    TlMatrix L = this->getL();
-    const index_type numOfCBs = L.getNumOfCols();
+//     // cholesky vector
+//     TlMatrix L = this->getL();
+//     const index_type numOfCBs = L.getNumOfCols();
 
-    const PQ_PairArray I2PQ = this->getI2PQ();
-    index_type start_CholeskyBasis = 0;
-    index_type end_CholeskyBasis = 0;
-    this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
-    for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-        TlSymmetricMatrix LI = this->getCholeskyVector(L.getColVector(I), I2PQ);
-        assert(LI.getNumOfRows() == this->m_nNumOfAOs);
-        assert(LI.getNumOfCols() == this->m_nNumOfAOs);
+//     const PQ_PairArray I2PQ = this->getI2PQ();
+//     index_type start_CholeskyBasis = 0;
+//     index_type end_CholeskyBasis = 0;
+//     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
+//     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
+//         TlSymmetricMatrix LI = this->getCholeskyVector(L.getColVector(I), I2PQ);
+//         assert(LI.getNumOfRows() == this->m_nNumOfAOs);
+//         assert(LI.getNumOfCols() == this->m_nNumOfAOs);
         
-        TlMatrix QI = LI;
-        QI.dot(P);
-        const double qi = QI.sum();
+//         TlMatrix QI = LI;
+//         QI.dot(P);
+//         const double qi = QI.sum();
 
-        *pM += qi*LI;
-    }
+//         *pM += qi*LI;
+//     }
 
-    // this->finalize(pM);
-}
+//     // this->finalize(pM);
+// }
 
 
 TlSymmetricMatrix DfGridFreeXC::getPMatrix()
@@ -1754,7 +1761,7 @@ TlSymmetricMatrix DfGridFreeXC::getCholeskyVector(const TlVector& L_col,
 }
 
 // -----------------------------------------------------------------------------
-void DfGridFreeXC::buildFxc1_GGA()
+void DfGridFreeXC::buildFxc_GGA()
 {
     const index_type numOfAOs = this->m_nNumOfAOs;
 
@@ -1771,30 +1778,50 @@ void DfGridFreeXC::buildFxc1_GGA()
     this->log_.info(TlUtils::format("auxAOs for GF = %d", numOfGfOrbs));
 
     TlSymmetricMatrix M;
-    this->log_.info("begin to create M matrix using 4-center overlap.");
-    this->getM1(PA, &M);
+    if (this->XC_engine_ == XC_ENGINE_CD) {
+        this->log_.info("begin to create M matrix based on CD.");
+        {
+            DfCD dfCD(this->pPdfParam_);
+            dfCD.getM(PA, &M);
+            // M *= 2.0;
+        }
+    } else {
+        this->log_.info("begin to create M matrix using 4-center overlap.");
+        if (this->isDualLevelGridFree_) {
+            this->getM_A(PA, &M);
+        } else {
+            this->getM(PA, &M);
+        }
+    }
     assert(M.getNumOfRows() == numOfGfOrbs);
     if (this->debugSaveM_) {
-        M.save(TlUtils::format("M.%d.mat", this->m_nIteration));
+        M.save(TlUtils::format("fl_Work/debug_M.%d.mat", this->m_nIteration));
     }
 
     this->log_.info("begin to generate Fxc using grid-free method.");
     // M~(=V^t * M * V) および SVU(=SVU, but now only SV)の作成
+    TlMatrix S;
     TlMatrix V;
-    if (this->lowdin_) {
+    if (this->isDualLevelGridFree_) {
+        S = DfObject::getGfStildeMatrix<TlMatrix>();
         V = DfObject::getGfVMatrix<TlMatrix>();
-        V.load("GF_lowdin.mat");
     } else {
-        V = DfObject::getCMatrix<TlMatrix>(RUN_RKS, this->m_nIteration -1);
+        S = DfObject::getSpqMatrix<TlSymmetricMatrix>();
+        V = DfObject::getXMatrix<TlMatrix>();
     }
-    V.save("V.mat");
+    // if (this->lowdin_) {
+    //     V = DfObject::getGfVMatrix<TlMatrix>();
+    //     V.load("GF_lowdin.mat");
+    // } else {
+    //     V = DfObject::getCMatrix<TlMatrix>(RUN_RKS, this->m_nIteration -1);
+    // }
+    // V.save("V.mat");
 
     const index_type numOfGFOrthNormBasis = V.getNumOfCols();
     this->log_.info(TlUtils::format("orthonormal basis = %d", numOfGFOrthNormBasis));
     TlMatrix Vt = V;
     Vt.transpose();
 
-    TlMatrix S = DfObject::getGfStildeMatrix<TlMatrix>();
     TlMatrix St = S;
     St.transpose();
 
@@ -1986,8 +2013,8 @@ void DfGridFreeXC::buildFxc1_GGA()
                 FxcB_tilde += FxcB_tilde_term2;
             }
         }
-        FxcA = S * V * FxcA_tilde * Vt * S;
-        FxcB = S * V * FxcB_tilde * Vt * S;
+        FxcA = S * V * FxcA_tilde * Vt * St;
+        FxcB = S * V * FxcB_tilde * Vt * St;
     }
     DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, TlSymmetricMatrix(FxcA));
 
@@ -2027,8 +2054,8 @@ void DfGridFreeXC::buildFxc1_GGA()
             }
         }
 
-        ExcA = S * V * ExcA_tilde * Vt * S;
-        // ExcB = S * V * ExcB_tilde * Vt * S;
+        ExcA = S * V * ExcA_tilde * Vt * St;
+        // ExcB = S * V * ExcB_tilde * Vt * St;
         // Exc *= 2.0; // means RKS
     }
     DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, TlSymmetricMatrix(ExcA));
