@@ -258,16 +258,16 @@ protected:
     public:
         explicit IndexPair4A(index_type i1 =0, index_type i2 =0, index_type i3 =0, index_type i4 =0) 
             : index2_1_(i1, i2), index2_2_(i3, i4) {
-            if (this->index2_1_ < this->index2_2_) {
-                std::swap(this->index2_1_, this->index2_2_);
-            }
+            // if (this->index2_1_ < this->index2_2_) {
+            //     std::swap(this->index2_1_, this->index2_2_);
+            // }
         }
 
         IndexPair4A(const Index4& i4) 
             : index2_1_(i4.index1(), i4.index2()), index2_2_(i4.index3(), i4.index4()) {
-            if (this->index2_1_ < this->index2_2_) {
-                std::swap(this->index2_1_, this->index2_2_);
-            }
+            // if (this->index2_1_ < this->index2_2_) {
+            //     std::swap(this->index2_1_, this->index2_2_);
+            // }
         }
 
         bool operator<(const IndexPair4A& rhs) const {
