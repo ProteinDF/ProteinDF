@@ -248,7 +248,7 @@ protected:
 
     /// 試験コード
     bool lowdin_;
-    int GF_mode_;
+    // int GF_mode_;
 };
 
 #endif // DFGRIDFREEXC_H

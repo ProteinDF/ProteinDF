@@ -118,37 +118,36 @@ void DfCD::calcCholeskyVectorsForGridFree()
                                   (*this->pPdfParam_)["basis_sets"]);
     const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
                                   (*this->pPdfParam_)["basis_sets_GF"]);
-    // if (orbInfo_p == orbInfo_q) {
-    // const TlRowVectorMatrix2 Lxc = this->calcCholeskyVectorsOnTheFly<DfOverlapEngine>(orbInfo_p);
-    // this->saveLxc(Lxc.getTlMatrix());
-    // } else {
+
+    if (this->isDedicatedBasisForGridFree_) {
+        TlRowVectorMatrix2 Lxc = this->calcCholeskyVectorsOnTheFly<DfOverlapEngine>(orbInfo_p,
+                                                                                    orbInfo_q);
+        this->saveLxc(Lxc.getTlMatrix());
+    } else {
+        TlRowVectorMatrix2 Lxc = this->calcCholeskyVectorsOnTheFly<DfOverlapEngine>(orbInfo_p);
+        this->saveLxc(Lxc.getTlMatrix());
+    }
     
-    const TlRowVectorMatrix2 Lxc = this->calcCholeskyVectorsOnTheFly<DfOverlapEngine>(orbInfo_p,
-                                                                                      orbInfo_q);
-    this->saveLxc(Lxc.getTlMatrix());
-
+    // debug
+    // {
+    // this->log_.info("calc super matrix: start");
+    
+    // this->createEngines<DfOverlapEngine>();
+    // TlSymmetricMatrix V = this->getSuperMatrix(orbInfo_p, orbInfo_q);
+    // this->destroyEngines();
+    // V.save("fl_Work/debug_V.mat");
+    
+    // //TlMatrix L = Lxc.getTlMatrix();
+    // TlMatrix L = this->calcCholeskyVectors(V);
+    // this->saveLxc(L);
+    // //     //L.save("fl_Work/debug_L.mat");
+    
+    //  TlMatrix tL = L;
+    //  tL.transpose();
+    //  TlMatrix LL = L * tL;
+    //  LL.save("fl_Work/debug_LL.mat");
+    //  this->log_.info("calc super matrix: end");
     // }
-        
-        // // debug
-        // {
-             // this->log_.info("calc super matrix: start");
-
-             // this->createEngines<DfOverlapEngine>();
-             // TlSymmetricMatrix V = this->getSuperMatrix(orbInfo_p, orbInfo_q);
-             // this->destroyEngines();
-             // V.save("fl_Work/debug_V.mat");
-            
-             // //TlMatrix L = Lxc.getTlMatrix();
-             // TlMatrix L = this->calcCholeskyVectors(V);
-             // this->saveLxc(L);
-             // //     //L.save("fl_Work/debug_L.mat");
-            
-             //  TlMatrix tL = L;
-             //  tL.transpose();
-             //  TlMatrix LL = L * tL;
-             //  LL.save("fl_Work/debug_LL.mat");
-             //  this->log_.info("calc super matrix: end");
-        // }
 }
 
 
@@ -964,10 +963,13 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
             const int maxStepsP = 2 * shellTypeP + 1;
             const int maxStepsQ = 2 * shellTypeQ + 1;
 
-            this->pEngines_[threadID].calc(0, orbInfo, shellIndexP,
-                                           0, orbInfo, shellIndexQ,
-                                           0, orbInfo, shellIndexP,
-                                           0, orbInfo, shellIndexQ);
+#pragma omp critical(DfCD__calcDiagonals_kernel)
+            {
+                this->pEngines_[threadID].calc(0, orbInfo, shellIndexP,
+                                               0, orbInfo, shellIndexQ,
+                                               0, orbInfo, shellIndexP,
+                                               0, orbInfo, shellIndexQ);
+            }
                 
             const int maxStepsPQ = maxStepsP * maxStepsQ;
             double maxValue = 0.0;

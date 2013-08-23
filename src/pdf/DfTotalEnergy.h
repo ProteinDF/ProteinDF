@@ -183,7 +183,7 @@ void DfTotalEnergy::exec_template()
                 const VectorType Eps = this->getEps<VectorType>(RUN_RKS);
                 this->m_dExc = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, Eps);
             } else {
-                if (this->isGridFree_ == true) {
+                if (this->XC_engine_ != XC_ENGINE_GRID) {
                     this->m_dExc = this->calcExc(RUN_RKS, 0.5 * Ppq) * 2.0;
                 } else {
                     DfXCFunctional dfXCFunctional(this->pPdfParam_);
@@ -205,7 +205,7 @@ void DfTotalEnergy::exec_template()
                     this->m_dExc  = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(PpqA, EpsA);
                     this->m_dExc += this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(PpqB, EpsB);
                 } else {
-                    if (this->isGridFree_ == true) {
+                    if (this->XC_engine_ != XC_ENGINE_GRID) {
                         this->m_dExc  = this->calcExc(RUN_UKS_ALPHA, PpqA);
                         this->m_dExc += this->calcExc(RUN_UKS_BETA,  PpqB);
                     } else {

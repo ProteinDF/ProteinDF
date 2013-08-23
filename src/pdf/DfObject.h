@@ -398,9 +398,14 @@ protected:
         K_ENGINE_CD
     };
 
+    // enum XC_Engine_Type {
+    //     XC_ENGINE_CONVENTIONAL,
+    //     XC_ENGINE_CD,
+    // };
     enum XC_Engine_Type {
-        XC_ENGINE_CONVENTIONAL,
-        XC_ENGINE_CD
+        XC_ENGINE_GRID,
+        XC_ENGINE_GRIDFREE,
+        XC_ENGINE_GRIDFREE_CD
     };
     
 protected:
@@ -466,8 +471,8 @@ protected:
     bool m_bIsXCFitting; /// true => XC項をRI法で計算, false => XC項を直接計算
     bool m_bIsUpdateXC; /// XC項をupdate法で計算する(true)
     bool enableGrimmeDispersion_; /// Grimmeの経験的分散力補正を計算するかどうか
-    bool isGridFree_;  /// Grid-Free法を使用する(true)
-    bool isDualLevelGridFree_; /// Grid-Free法を使用する場合、専用の基底関数を使用する
+
+    bool isDedicatedBasisForGridFree_; /// Grid-Free法を使用する場合、専用の基底関数を使用する
 
     //bool isRI_J_; /// RI_J法を用いる(true)
     bool isRI_K_; /// RI-K法を用いる(true)

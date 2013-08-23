@@ -424,7 +424,6 @@ protected:
     index_type numOfPQs_;
 
     DfEngineObject* pEngines_;
-    // TlOrbitalInfo orbitalInfo_;
 
     double cutoffThreshold_;
     double cutoffEpsilon3_;

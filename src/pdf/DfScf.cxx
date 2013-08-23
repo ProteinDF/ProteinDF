@@ -516,15 +516,11 @@ void DfScf::doThreeIndexIntegral()
 
 void DfScf::buildXcMatrix()
 {
-#ifdef __FUJITSU
-    start_collection("XC");
-#endif // __FUJITSU
-
     if (this->m_bIsXCFitting == false) {
         TlTime timer;
         this->loggerStartTitle("generate XC matrix");
 
-        if (this->isGridFree_ == true) {
+        if (this->XC_engine_ != XC_ENGINE_GRID) {
             this->log_.info("using grid-free method");
             DfGridFreeXC dfGridFreeXC(this->pPdfParam_);
             dfGridFreeXC.buildFxc();
@@ -554,10 +550,6 @@ void DfScf::buildXcMatrix()
         // flush
         this->matrixCache_.flush();
     }
-
-#ifdef __FUJITSU
-    stop_collection("XC");
-#endif // __FUJITSU
 }
 
 

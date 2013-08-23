@@ -182,10 +182,12 @@ void DfObject::setParam(const TlSerializeData& data)
     
     // XC potential
     {
-        this->XC_engine_ = XC_ENGINE_CONVENTIONAL;
+        this->XC_engine_ = XC_ENGINE_GRID;
         const std::string XC_engine = TlUtils::toUpper(data["XC_engine"].getStr());
-        if (XC_engine == "CD") {
-            this->XC_engine_ = XC_ENGINE_CD;
+        if (XC_engine == "GRIDFREE") {
+            this->XC_engine_ = XC_ENGINE_GRIDFREE;
+        } else if (XC_engine == "GRIDFREE_CD") {
+            this->XC_engine_ = XC_ENGINE_GRIDFREE_CD;
         }
     }
 
@@ -195,8 +197,7 @@ void DfObject::setParam(const TlSerializeData& data)
         this->m_bIsXCFitting = (nLastChar == '~') ? true : false;
     }
     this->m_bIsUpdateXC = (TlUtils::toUpper(data["xc-update"].getStr()) == "NO") ? false : true;
-    this->isGridFree_ = data["grid_free"].getBoolean();
-    this->isDualLevelGridFree_ = data["dual_level_grid_free"].getBoolean();
+    this->isDedicatedBasisForGridFree_ = data["gridfree/dedicated_basis"].getBoolean();
 
     // Grimme empirical dispersion check
     {

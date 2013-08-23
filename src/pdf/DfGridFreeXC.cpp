@@ -28,19 +28,19 @@ DfGridFreeXC::DfGridFreeXC(TlSerializeData* pPdfParam)
     this->numOfPQs_ = this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2;
 
     this->tau_ = 1.0E-10;
-    if ((*pPdfParam)["grid_free/CDAM_tau"].getStr().empty() != true) {
+    if ((*pPdfParam)["gridfree/CDAM_tau"].getStr().empty() != true) {
         this->tau_ = (*pPdfParam)["grid_free/CDAM_tau"].getDouble();
     }    
 
     this->epsilon_ = 1.0E-4;
-    if ((*pPdfParam)["grid_free/CD_epsilon"].getStr().empty() != true) {
+    if ((*pPdfParam)["gridfree/CD_epsilon"].getStr().empty() != true) {
         this->epsilon_ = (*pPdfParam)["grid_free/CD_epsilon"].getDouble();
     }
 
-    this->GF_mode_ = 0;
-    if ((*pPdfParam)["GF_mode"].getStr().empty() != true) {
-        this->GF_mode_ = (*pPdfParam)["GF_mode"].getInt();
-    }    
+    // this->GF_mode_ = 0;
+    // if ((*pPdfParam)["GF_mode"].getStr().empty() != true) {
+    //     this->GF_mode_ = (*pPdfParam)["GF_mode"].getInt();
+    // }    
 
     this->lowdin_ = true;
     if ((*pPdfParam)["grid_free/lowdin"].getStr().empty() != true) {
@@ -155,7 +155,7 @@ void DfGridFreeXC::buildFxc_LDA()
     const TlSymmetricMatrix P = 0.5 * DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
 
     TlSymmetricMatrix M;
-    if (this->XC_engine_ == XC_ENGINE_CD) {
+    if (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD) {
         this->log_.info("begin to create M matrix based on CD.");
         {
             DfCD dfCD(this->pPdfParam_);
@@ -163,7 +163,7 @@ void DfGridFreeXC::buildFxc_LDA()
         }
     } else {
         this->log_.info("begin to create M matrix using 4-center overlap.");
-        if (this->isDualLevelGridFree_) {
+        if (this->isDedicatedBasisForGridFree_) {
             this->getM_A(P, &M);
         } else {
             this->getM(P, &M);
@@ -183,7 +183,7 @@ void DfGridFreeXC::buildFxc_LDA()
     // tV * S * V == I
     TlMatrix S;
     TlMatrix V;
-    if (this->isDualLevelGridFree_) {
+    if (this->isDedicatedBasisForGridFree_) {
         S = DfObject::getGfStildeMatrix<TlMatrix>();
         V = DfObject::getGfVMatrix<TlMatrix>();
     } else {
@@ -378,7 +378,7 @@ void DfGridFreeXC::buildFxc2()
         
     // low levelのM行列を求める
     TlSymmetricMatrix M;
-    if (this->XC_engine_ == XC_ENGINE_CD) {
+    if (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD) {
         this->log_.info("begin to create M matrix based on CD.");
         //this->getM_byCD(&M);
         {
@@ -1778,7 +1778,7 @@ void DfGridFreeXC::buildFxc_GGA()
     this->log_.info(TlUtils::format("auxAOs for GF = %d", numOfGfOrbs));
 
     TlSymmetricMatrix M;
-    if (this->XC_engine_ == XC_ENGINE_CD) {
+    if (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD) {
         this->log_.info("begin to create M matrix based on CD.");
         {
             DfCD dfCD(this->pPdfParam_);
@@ -1787,7 +1787,7 @@ void DfGridFreeXC::buildFxc_GGA()
         }
     } else {
         this->log_.info("begin to create M matrix using 4-center overlap.");
-        if (this->isDualLevelGridFree_) {
+        if (this->isDedicatedBasisForGridFree_) {
             this->getM_A(PA, &M);
         } else {
             this->getM(PA, &M);
@@ -1802,7 +1802,7 @@ void DfGridFreeXC::buildFxc_GGA()
     // M~(=V^t * M * V) および SVU(=SVU, but now only SV)の作成
     TlMatrix S;
     TlMatrix V;
-    if (this->isDualLevelGridFree_) {
+    if (this->isDedicatedBasisForGridFree_) {
         S = DfObject::getGfStildeMatrix<TlMatrix>();
         V = DfObject::getGfVMatrix<TlMatrix>();
     } else {
