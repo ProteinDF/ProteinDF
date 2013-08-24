@@ -384,7 +384,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
     TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
     PQ_PairArray I2PQ;
     TlVector global_diagonals; // 対角成分
-    this->calcDiagonals(orbInfo, &schwartzTable, &I2PQ, &global_diagonals);
+    this->calcDiagonals(orbInfo, &I2PQ, &schwartzTable, &global_diagonals);
     this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
     this->saveI2PQ(I2PQ, this->getI2pqVtrPath());
     // this->ERI_cache_manager_.setMaxItems(I2PQ.size() * 2);

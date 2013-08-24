@@ -157,20 +157,24 @@ protected:
 
 protected:
     template<class EngineClass>
-    TlRowVectorMatrix2 calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo);
+    TlRowVectorMatrix2 calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo,
+                                                   const std::string& I2PQ_path);
 
-    virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo);
+    virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
+                                                            const std::string& I2PQ_path);
 
     template<class EngineClass>
     TlRowVectorMatrix2 calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo_p,
-                                                   const TlOrbitalInfoObject& orbInfo_q);
+                                                   const TlOrbitalInfoObject& orbInfo_q,
+                                                   const std::string& I2PQ_path);
 
     virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
-                                                            const TlOrbitalInfoObject& orbInfo_q);
+                                                            const TlOrbitalInfoObject& orbInfo_q,
+                                                            const std::string& I2PQ_path);
 
     void calcDiagonals(const TlOrbitalInfoObject& orbInfo,
-                       TlSparseSymmetricMatrix *pSchwartzTable,
                        PQ_PairArray *pI2PQ,
+                       TlSparseSymmetricMatrix *pSchwartzTable,
                        TlVector *pDiagonals);
     void calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
                               const std::vector<DfTaskCtrl::Task2>& taskList,
@@ -568,6 +572,13 @@ protected:
     /// デバッグ用にSuperMatrixを作成します
     ///
     /// V_pq,rs = (pq|rs) or (pqrs) 
+    /// @param[in] orbInfo 軌道情報オブジェクト
+    /// @retval supermatrix
+    TlSymmetricMatrix getSuperMatrix(const TlOrbitalInfoObject& orbInfo);
+
+    /// デバッグ用にSuperMatrixを作成します
+    ///
+    /// V_pq,rs = (pq|rs) or (pqrs) 
     /// @param[in] orbInfo_p pまたはrで示される軌道の軌道情報オブジェクト
     /// @param[in] orbInfo_q qまたはsで示される軌道の軌道情報オブジェクト
     /// @retval supermatrix
@@ -587,14 +598,19 @@ protected:
     /// デバッグ用
     void getK_A(const RUN_TYPE runType,
                 TlSymmetricMatrix *pK);
+
+protected:
+    bool debugBuildSuperMatrix_;
 };
 
 
 template<class EngineClass>
-TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo)
+TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo,
+                                                     const std::string& I2PQ_path)
 {
     this->createEngines<EngineClass>();
-    const TlRowVectorMatrix2 L = this->calcCholeskyVectorsOnTheFlyS(orbInfo);
+    const TlRowVectorMatrix2 L = this->calcCholeskyVectorsOnTheFlyS(orbInfo,
+                                                                    I2PQ_path);
     this->destroyEngines();
 
     return L;
@@ -603,11 +619,13 @@ TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& 
 
 template<class EngineClass>
 TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo_p,
-                                                     const TlOrbitalInfoObject& orbInfo_q)
+                                                     const TlOrbitalInfoObject& orbInfo_q,
+                                                     const std::string& I2PQ_path)
 {
     this->createEngines<EngineClass>();
     const TlRowVectorMatrix2 L = this->calcCholeskyVectorsOnTheFlyA(orbInfo_p,
-                                                                    orbInfo_q);
+                                                                    orbInfo_q,
+                                                                    I2PQ_path);
     this->destroyEngines();
 
     return L;
