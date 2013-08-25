@@ -97,7 +97,7 @@ public:
     virtual ~DfGridFreeXC();
     
 public:
-    void buildDualLevelOp();
+    void preprocessBeforeSCF();
     void buildFxc();
 
 protected:
@@ -246,8 +246,10 @@ protected:
     ///
     bool debugSaveM_;
 
-    /// 試験コード
-    bool lowdin_;
+    /// 規格直交化ルーチンにCanonical Orthogonalizeを使う
+    /// true: canonical
+    /// false: lowdin
+    bool isCanonicalOrthogonalize_;
     // int GF_mode_;
 };
 

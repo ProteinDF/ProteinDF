@@ -31,8 +31,11 @@ protected:
                  const std::string& savePathPrefix);
 
 protected:
-    /// 一次従属性の判定値
-    double threshold_trancation;
+    /// 一次従属性の判定値(for canonical method)
+    double threshold_trancation_canonical_;
+
+    /// 一次従属性の判定値(for lowdin method)
+    double threshold_trancation_lowdin_;
 
     /// デバッグ用に行列を保存する
     bool debug_save_mat_;
@@ -46,6 +49,8 @@ template<typename SymmetricMatrixType, typename MatrixType>
 void DfXMatrix::canonicalOrthogonalize(const SymmetricMatrixType& S,
                                        MatrixType* pX, MatrixType* pXinv)
 {
+    this->log_.info("orthogonalize by canonical method");
+
     const index_type dim = S.getNumOfRows();
     index_type rest = 0;
 
@@ -60,7 +65,8 @@ void DfXMatrix::canonicalOrthogonalize(const SymmetricMatrixType& S,
 
         this->loggerTime("truncation of linear dependent");
         {
-            const double threshold = this->threshold_trancation;
+            const double threshold = this->threshold_trancation_canonical_;
+            this->log_.info(TlUtils::format("threshold: %f", threshold));
             int cutoffCount = 0;
             for (index_type k = 0; k < dim; ++k) {
                 if (EigVal.get(k) < threshold) {
@@ -132,6 +138,7 @@ template<typename SymmetricMatrixType, typename MatrixType>
 void DfXMatrix::lowdinOrthogonalize(const SymmetricMatrixType& S,
                                     MatrixType* pX, MatrixType* pXinv)
 {
+    this->log_.info("orthogonalize by lowdin method");
     const index_type dim = S.getNumOfRows();
     index_type rest = 0;
 
@@ -146,7 +153,8 @@ void DfXMatrix::lowdinOrthogonalize(const SymmetricMatrixType& S,
 
         this->loggerTime("truncation of linear dependent");
         {
-            const double threshold = this->threshold_trancation;
+            const double threshold = this->threshold_trancation_lowdin_;
+            this->log_.info(TlUtils::format("threshold: %f", threshold));
             int cutoffCount = 0;
             for (index_type k = 0; k < dim; ++k) {
                 if (EigVal.get(k) < threshold) {

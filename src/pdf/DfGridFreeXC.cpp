@@ -37,17 +37,15 @@ DfGridFreeXC::DfGridFreeXC(TlSerializeData* pPdfParam)
         this->epsilon_ = (*pPdfParam)["grid_free/CD_epsilon"].getDouble();
     }
 
-    // this->GF_mode_ = 0;
-    // if ((*pPdfParam)["GF_mode"].getStr().empty() != true) {
-    //     this->GF_mode_ = (*pPdfParam)["GF_mode"].getInt();
-    // }    
-
-    this->lowdin_ = true;
-    if ((*pPdfParam)["grid_free/lowdin"].getStr().empty() != true) {
-        this->lowdin_ = (*pPdfParam)["grid_free/lowdin"].getInt();
+    this->isCanonicalOrthogonalize_ = true;
+    if ((*pPdfParam)["gridfree/orthogonalize_method"].getStr().empty() != true) {
+        const std::string method = TlUtils::toUpper((*pPdfParam)["gridfree/orthogonalize_method"].getStr());
+        if (method == "LOWDIN") {
+            this->isCanonicalOrthogonalize_ = false;
+        }
     }
 
-    this->debugSaveM_ = this->debugSaveM_ = (*pPdfParam)["debug/DfGridFreeXC/saveM"].getBoolean();
+    this->debugSaveM_ = (*pPdfParam)["debug/DfGridFreeXC/saveM"].getBoolean();
     if (this->debugSaveM_) {
         this->log_.info("using GAMESS formula");
     }
@@ -59,7 +57,7 @@ DfGridFreeXC::~DfGridFreeXC()
 }
 
 // before SCF ==================================================================
-void DfGridFreeXC::buildDualLevelOp()
+void DfGridFreeXC::preprocessBeforeSCF()
 {
     const DfXCFunctional xcFunc(this->pPdfParam_);
     const DfXCFunctional::FUNCTIONAL_TYPE funcType = xcFunc.getFunctionalType();
@@ -69,42 +67,58 @@ void DfGridFreeXC::buildDualLevelOp()
                                        (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
 
     DfOverlapX ovp(this->pPdfParam_);
-    {
-        TlSymmetricMatrix gfS;
-        ovp.getOvpMat(orbitalInfo_GF,
-                      &gfS);
-
-        DfXMatrix dfXMat(this->pPdfParam_);
-        TlMatrix gfV;
-        dfXMat.canonicalOrthogonalize<TlSymmetricMatrix, TlMatrix>(gfS, &gfV, NULL);
-        DfObject::saveGfVMatrix(gfV);
-
-        dfXMat.lowdinOrthogonalize<TlSymmetricMatrix, TlMatrix>(gfS, &gfV, NULL);
-        gfV.save("GF_lowdin.mat");
-    }
-
-    {
-        TlMatrix gfStilde;
-        ovp.getTransMat(this->orbitalInfo_,
-                        orbitalInfo_GF,
-                        &gfStilde);
-        DfObject::saveGfStildeMatrix(gfStilde);
-
-        TlSymmetricMatrix Sinv = DfObject::getSpqMatrix<TlSymmetricMatrix>();
-        Sinv.inverse();
+    if (this->isDedicatedBasisForGridFree_) {
+        {
+            this->log_.info("build S_gf matrix");
+            TlSymmetricMatrix gfS;
+            ovp.getOvpMat(orbitalInfo_GF,
+                          &gfS);
+            
+            this->log_.info("build V matrix");
+            DfXMatrix dfXMat(this->pPdfParam_);
+            TlMatrix gfV;
+            if (this->isCanonicalOrthogonalize_) {
+                this->log_.info("orthogonalize method: canoncal");
+                dfXMat.canonicalOrthogonalize<TlSymmetricMatrix, TlMatrix>(gfS, &gfV, NULL);
+            } else {
+                this->log_.info("orthogonalize method: lowdin");
+                dfXMat.lowdinOrthogonalize<TlSymmetricMatrix, TlMatrix>(gfS, &gfV, NULL);
+            }
+            this->log_.info("save V matrix");
+            DfObject::saveGfVMatrix(gfV);
+        }
         
-        gfStilde.transpose();
-        const TlMatrix gfOmega = gfStilde * Sinv;
-        DfObject::saveGfOmegaMatrix(gfOmega);
+        {
+            this->log_.info("build S~ matrix: start");
+            TlMatrix gfStilde;
+            ovp.getTransMat(this->orbitalInfo_,
+                            orbitalInfo_GF,
+                            &gfStilde);
+            this->log_.info("build S~ matrix: save");
+            DfObject::saveGfStildeMatrix(gfStilde);
+            
+            this->log_.info("build (S~)^-1 matrix: start");
+            TlSymmetricMatrix Sinv = DfObject::getSpqMatrix<TlSymmetricMatrix>();
+            Sinv.inverse();
+            
+            gfStilde.transpose();
+            const TlMatrix gfOmega = gfStilde * Sinv;
+            this->log_.info("build (S~)^-1 matrix: save");
+            DfObject::saveGfOmegaMatrix(gfOmega);
+            this->log_.info("build (S~)^-1 matrix: finish");
+        }
     }
 
     // for GGA
     if (isGGA) {
+        this->log_.info("build gradient matrix: start");
         TlMatrix Gx, Gy, Gz;
         ovp.getGradient(orbitalInfo_GF, &Gx, &Gy, &Gz);
+        this->log_.info("build gradient matrix: save");
         Gx.save("gradSx.mat");
         Gy.save("gradSy.mat");
         Gz.save("gradSz.mat");
+        this->log_.info("build gradient matrix: finish");
     }
 }
 
@@ -151,7 +165,18 @@ void DfGridFreeXC::buildFxc_LDA()
 {
     this->log_.info("build Fxc by grid-free method: functional type is LDA.");
 
+    std::string basisset_param = "basis_sets";
+    if (this->isDedicatedBasisForGridFree_) {
+        basisset_param = "basis_sets_GF";
+    }
+    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
+                                       (*(this->pPdfParam_))[basisset_param]);
+
     const index_type numOfAOs = this->m_nNumOfAOs;
+    const index_type numOfGfOrbs = orbitalInfo_GF.getNumOfOrbitals();
+    this->log_.info(TlUtils::format("AOs = %d", numOfAOs));
+    this->log_.info(TlUtils::format("auxAOs for GF = %d", numOfGfOrbs));
+
     const TlSymmetricMatrix P = 0.5 * DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
 
     TlSymmetricMatrix M;
@@ -169,7 +194,6 @@ void DfGridFreeXC::buildFxc_LDA()
             this->getM(P, &M);
         }
     }
-    this->log_.info("begin to generate Fxc using grid-free method.");
     if (this->debugSaveM_) {
         M.save(TlUtils::format("fl_Work/debug_M.%d.mat", this->m_nIteration));
     }
@@ -180,6 +204,7 @@ void DfGridFreeXC::buildFxc_LDA()
     //     M.save("M_exact.mat");
     // }
 
+    this->log_.info("begin to generate Fxc using grid-free method.");
     // tV * S * V == I
     TlMatrix S;
     TlMatrix V;
@@ -194,7 +219,6 @@ void DfGridFreeXC::buildFxc_LDA()
     tV.transpose();
     
     TlSymmetricMatrix M_tilda = tV * M * V;
-    const int numOfOrthgonalAOs = M_tilda.getNumOfRows();
     
     TlMatrix U;
     TlVector lamda;
@@ -1763,19 +1787,22 @@ TlSymmetricMatrix DfGridFreeXC::getCholeskyVector(const TlVector& L_col,
 // -----------------------------------------------------------------------------
 void DfGridFreeXC::buildFxc_GGA()
 {
+    this->log_.info("build Fxc by grid-free method: functional type is GGA.");
+
+    std::string basisset_param = "basis_sets";
+    if (this->isDedicatedBasisForGridFree_) {
+        basisset_param = "basis_sets_GF";
+    }
+    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
+                                       (*(this->pPdfParam_))[basisset_param]);
     const index_type numOfAOs = this->m_nNumOfAOs;
+    const index_type numOfGfOrbs = orbitalInfo_GF.getNumOfOrbitals();
+    this->log_.info(TlUtils::format("AOs = %d", numOfAOs));
+    this->log_.info(TlUtils::format("auxAOs for GF = %d", numOfGfOrbs));
 
     // RKS
     const TlSymmetricMatrix PA = 0.5 * DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
     assert(PA.getNumOfRows() == numOfAOs);
-
-    this->log_.info("generate high level M-matrix by 4-center integrals.");
-    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
-                                       (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
-    const index_type numOfGfOrbs = orbitalInfo_GF.getNumOfOrbitals();
-
-    this->log_.info(TlUtils::format("AOs = %d", numOfAOs));
-    this->log_.info(TlUtils::format("auxAOs for GF = %d", numOfGfOrbs));
 
     TlSymmetricMatrix M;
     if (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD) {
@@ -1793,7 +1820,6 @@ void DfGridFreeXC::buildFxc_GGA()
             this->getM(PA, &M);
         }
     }
-    assert(M.getNumOfRows() == numOfGfOrbs);
     if (this->debugSaveM_) {
         M.save(TlUtils::format("fl_Work/debug_M.%d.mat", this->m_nIteration));
     }
@@ -1907,12 +1933,14 @@ void DfGridFreeXC::buildFxc_GGA()
     TlMatrix Ux2t = Ux2;
     Ux2t.transpose();
 
-
     // ------------------
-    assert(numOfGfOrbs == lambda.getSize());
-    TlVector rhoAs(numOfGfOrbs);
-    TlVector xAs(numOfGfOrbs);
-    for (index_type i = 0; i < numOfGfOrbs; ++i) {
+    assert(lambda.getSize() == numOfGFOrthNormBasis);
+    // TlVector rhoAs(numOfGfOrbs);
+    // TlVector xAs(numOfGfOrbs);
+    TlVector rhoAs(numOfGFOrthNormBasis);
+    TlVector xAs(numOfGFOrthNormBasis);
+    //for (index_type i = 0; i < numOfGfOrbs; ++i) {
+    for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
         const double rho = std::max(lambda[i], 0.0);
         rhoAs[i] = rho;
         

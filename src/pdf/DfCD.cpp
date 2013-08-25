@@ -361,7 +361,7 @@ void DfCD::getJ_S(TlSymmetricMatrix* pJ)
     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
         TlSymmetricMatrix LI = this->getCholeskyVector(L.getColVector(I), I2PQ);
-        LI.save(TlUtils::format("fl_Work/debug_LI_J.%d.mat", I));
+        // LI.save(TlUtils::format("fl_Work/debug_LI_J.%d.mat", I));
         assert(LI.getNumOfRows() == this->m_nNumOfAOs);
         assert(LI.getNumOfCols() == this->m_nNumOfAOs);
         
@@ -394,7 +394,7 @@ void DfCD::getJ_A(TlSymmetricMatrix* pJ)
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
         TlMatrix LI = this->getCholeskyVectorA(orbInfo_p, orbInfo_q,
                                                L.getColVector(I), I2PQ);
-        LI.save(TlUtils::format("fl_Work/debug_LI.%d.mat", I));
+        //LI.save(TlUtils::format("fl_Work/debug_LI.%d.mat", I));
         
         TlMatrix QI = LI;
         QI.dot(P);

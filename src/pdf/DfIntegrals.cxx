@@ -299,16 +299,14 @@ void DfIntegrals::prepareGridFree()
     unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
     if ((calcState & DfIntegrals::GRID_FREE) == 0) {
-        if (this->isDedicatedBasisForGridFree_) {
-            this->outputStartTitle("prepare GridFree");
-            DfGridFreeXC *pDfGridFreeXC = this->getDfGridFreeXCObject();
-            pDfGridFreeXC->buildDualLevelOp();
-            
-            delete pDfGridFreeXC;
-            pDfGridFreeXC = NULL;
-            
-            this->outputEndTitle();
-        }
+        this->outputStartTitle("prepare GridFree");
+        DfGridFreeXC *pDfGridFreeXC = this->getDfGridFreeXCObject();
+        pDfGridFreeXC->preprocessBeforeSCF();
+        
+        delete pDfGridFreeXC;
+        pDfGridFreeXC = NULL;
+        
+        this->outputEndTitle();
     }
 
     calcState |= DfIntegrals::GRID_FREE;
