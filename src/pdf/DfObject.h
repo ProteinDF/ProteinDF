@@ -114,6 +114,10 @@ protected:
     std::string getGfOmegaMatrixPath() const;
     std::string getGfVMatrixPath() const;
 
+    std::string getDipoleVelocityIntegralsXPath() const;
+    std::string getDipoleVelocityIntegralsYPath() const;
+    std::string getDipoleVelocityIntegralsZPath() const;
+
     std::string getRhoPath(RUN_TYPE nRunType, int nIteration) const;
     std::string getMyuPath(RUN_TYPE nRunType, int nIteration) const;
     std::string getNyuPath(RUN_TYPE nRunType, int nIteration) const;
@@ -233,6 +237,26 @@ protected:
     template<class MatrixType>
     MatrixType getGfVMatrix();
 
+    // dipole velocity integral ------------------------------------------------
+    template<class MatrixType>
+    void saveDipoleVelocityIntegralsXMatrix(const MatrixType& dSdx);
+
+    template<class MatrixType>
+    MatrixType getDipoleVelocityIntegralsXMatrix();
+
+    template<class MatrixType>
+    void saveDipoleVelocityIntegralsYMatrix(const MatrixType& dSdx);
+
+    template<class MatrixType>
+    MatrixType getDipoleVelocityIntegralsYMatrix();
+
+    template<class MatrixType>
+    void saveDipoleVelocityIntegralsZMatrix(const MatrixType& dSdx);
+
+    template<class MatrixType>
+    MatrixType getDipoleVelocityIntegralsZMatrix();
+
+    // -------------------------------------------------------------------------
     
     template<class VectorType>
     void saveRho(const RUN_TYPE runType, const int iteration,
@@ -1230,6 +1254,68 @@ MatrixType DfObject::getGfVMatrix()
     gfV = this->matrixCache_.get<MatrixType>(path);
     return gfV;
 }
+
+
+template<class MatrixType>
+void DfObject::saveDipoleVelocityIntegralsXMatrix(const MatrixType& dSdx)
+{
+    const std::string path = this->getDipoleVelocityIntegralsXPath();
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, dSdx, true);
+    } else {
+        dSdx.save(path);
+    }
+}
+
+template<class MatrixType>
+MatrixType DfObject::getDipoleVelocityIntegralsXMatrix() 
+{
+    MatrixType dSdx;
+    const std::string path = this->getDipoleVelocityIntegralsXPath();
+    dSdx = this->matrixCache_.get<MatrixType>(path);
+    return dSdx;
+}
+
+template<class MatrixType>
+void DfObject::saveDipoleVelocityIntegralsYMatrix(const MatrixType& dSdy)
+{
+    const std::string path = this->getDipoleVelocityIntegralsYPath();
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, dSdy, true);
+    } else {
+        dSdy.save(path);
+    }
+}
+
+template<class MatrixType>
+MatrixType DfObject::getDipoleVelocityIntegralsYMatrix() 
+{
+    MatrixType dSdy;
+    const std::string path = this->getDipoleVelocityIntegralsYPath();
+    dSdy = this->matrixCache_.get<MatrixType>(path);
+    return dSdy;
+}
+
+template<class MatrixType>
+void DfObject::saveDipoleVelocityIntegralsZMatrix(const MatrixType& dSdz)
+{
+    const std::string path = this->getDipoleVelocityIntegralsZPath();
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, dSdz, true);
+    } else {
+        dSdz.save(path);
+    }
+}
+
+template<class MatrixType>
+MatrixType DfObject::getDipoleVelocityIntegralsZMatrix() 
+{
+    MatrixType dSdz;
+    const std::string path = this->getDipoleVelocityIntegralsZPath();
+    dSdz = this->matrixCache_.get<MatrixType>(path);
+    return dSdz;
+}
+
 
 template<class VectorType>
 void DfObject::saveNalpha(const VectorType& Na)

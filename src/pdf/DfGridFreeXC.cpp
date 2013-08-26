@@ -115,9 +115,9 @@ void DfGridFreeXC::preprocessBeforeSCF()
         TlMatrix Gx, Gy, Gz;
         ovp.getGradient(orbitalInfo_GF, &Gx, &Gy, &Gz);
         this->log_.info("build gradient matrix: save");
-        Gx.save("gradSx.mat");
-        Gy.save("gradSy.mat");
-        Gz.save("gradSz.mat");
+        this->saveDipoleVelocityIntegralsXMatrix(Gx);
+        this->saveDipoleVelocityIntegralsYMatrix(Gy);
+        this->saveDipoleVelocityIntegralsZMatrix(Gz);
         this->log_.info("build gradient matrix: finish");
     }
 }
@@ -1801,7 +1801,8 @@ void DfGridFreeXC::buildFxc_GGA()
     this->log_.info(TlUtils::format("auxAOs for GF = %d", numOfGfOrbs));
 
     // RKS
-    const TlSymmetricMatrix PA = 0.5 * DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+    const TlSymmetricMatrix PA = 0.5 * DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS,
+                                                                                 this->m_nIteration -1);
     assert(PA.getNumOfRows() == numOfAOs);
 
     TlSymmetricMatrix M;
@@ -1835,13 +1836,6 @@ void DfGridFreeXC::buildFxc_GGA()
         S = DfObject::getSpqMatrix<TlSymmetricMatrix>();
         V = DfObject::getXMatrix<TlMatrix>();
     }
-    // if (this->lowdin_) {
-    //     V = DfObject::getGfVMatrix<TlMatrix>();
-    //     V.load("GF_lowdin.mat");
-    // } else {
-    //     V = DfObject::getCMatrix<TlMatrix>(RUN_RKS, this->m_nIteration -1);
-    // }
-    // V.save("V.mat");
 
     const index_type numOfGFOrthNormBasis = V.getNumOfCols();
     this->log_.info(TlUtils::format("orthonormal basis = %d", numOfGFOrthNormBasis));
@@ -1858,7 +1852,7 @@ void DfGridFreeXC::buildFxc_GGA()
     TlMatrix U;
     Mtilde.diagonal(&lambda, &U);
     //lambda.save("lambda.vct");
-    U.save("U.mat");
+    //U.save("U.mat");
     TlMatrix Ut = U;
     Ut.transpose();
     assert(lambda.getSize() == numOfGFOrthNormBasis);
@@ -1882,10 +1876,9 @@ void DfGridFreeXC::buildFxc_GGA()
     //Mtilde_13.save("Mtilde_13.mat");
 
     // GGA用gradient
-    TlMatrix Gx, Gy, Gz;
-    Gx.load("gradSx.mat");
-    Gy.load("gradSy.mat");
-    Gz.load("gradSz.mat");
+    TlMatrix Gx = this->getDipoleVelocityIntegralsXMatrix<TlMatrix>();
+    TlMatrix Gy = this->getDipoleVelocityIntegralsYMatrix<TlMatrix>();
+    TlMatrix Gz = this->getDipoleVelocityIntegralsZMatrix<TlMatrix>();
     Gx *= -1.0;
     Gy *= -1.0;
     Gz *= -1.0;

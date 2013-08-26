@@ -337,6 +337,16 @@ void DfObject::setParam(const TlSerializeData& data)
         paramFileBaseName["GF_V_matrix"] = "GF_V.mat";
     }
     
+    if (paramFileBaseName["dipoleVelocityIntegrals_x"].getStr().empty() == true) {
+        paramFileBaseName["dipoleVelocityIntegrals_x"] = "dSdx.mat";
+    }
+    if (paramFileBaseName["dipoleVelocityIntegrals_y"].getStr().empty() == true) {
+        paramFileBaseName["dipoleVelocityIntegrals_y"] = "dSdy.mat";
+    }
+    if (paramFileBaseName["dipoleVelocityIntegrals_z"].getStr().empty() == true) {
+        paramFileBaseName["dipoleVelocityIntegrals_z"] = "dSdz.mat";
+    }
+    
     // vectors
     if (paramFileBaseName["rho_vector"].getStr().empty() == true) {
         paramFileBaseName["rho_vector"] = "rho.%s.vtr";
@@ -695,3 +705,17 @@ std::string DfObject::getEigenvaluesPath(const RUN_TYPE runType,
                               DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
+std::string DfObject::getDipoleVelocityIntegralsXPath() const
+{
+    return this->makeFilePath("dipoleVelocityIntegrals_x");
+}
+
+std::string DfObject::getDipoleVelocityIntegralsYPath() const
+{
+    return this->makeFilePath("dipoleVelocityIntegrals_y");
+}
+
+std::string DfObject::getDipoleVelocityIntegralsZPath() const
+{
+    return this->makeFilePath("dipoleVelocityIntegrals_z");
+}
