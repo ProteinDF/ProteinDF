@@ -375,9 +375,9 @@ void DfEriEngine::calc(const int diff1, const TlOrbitalInfoObject& orbInfo1, con
                        const int diff3, const TlOrbitalInfoObject& orbInfo3, const index_type shell3,
                        const int diff4, const TlOrbitalInfoObject& orbInfo4, const index_type shell4)
 {
-    const int shellType1 = orbInfo1.getShellType(shell1);
+    const int shellType1 = (shell1 >= 0) ? orbInfo1.getShellType(shell1) : 0;
     const int shellType2 = (shell2 >= 0) ? orbInfo2.getShellType(shell2) : 0;
-    const int shellType3 = orbInfo3.getShellType(shell3);
+    const int shellType3 = (shell3 >= 0) ? orbInfo3.getShellType(shell3) : 0;
     const int shellType4 = (shell4 >= 0) ? orbInfo4.getShellType(shell4) : 0;
 
     const AngularMomentum2 qPQ(diff1, diff2,

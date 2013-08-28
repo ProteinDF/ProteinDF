@@ -427,7 +427,7 @@ protected:
 protected:
     index_type numOfPQs_;
 
-    DfEngineObject* pEngines_;
+    DfEngineObject** pEngines_;
 
     double cutoffThreshold_;
     double cutoffEpsilon3_;
