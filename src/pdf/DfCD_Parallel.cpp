@@ -365,22 +365,27 @@ DfCD_Parallel::getCholeskyVector_distribute(const TlVector& L_col,
 TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo)
 {
     // timing data
-    TlTime CD_all_time;
-    TlTime CD_diagonals_time;
-    TlTime CD_resizeL_time;
-    TlTime CD_ERI_time;
-    TlTime CD_Lpm_time;
-    TlTime CD_calc_time;
-    TlTime CD_d_time;
-    TlTime CD_save_time;
-
-    CD_all_time.start();
-    TlCommunicate& rComm = TlCommunicate::getInstance();
+    // TlTime CD_all_time;
+    // TlTime CD_diagonals_time;
+    // TlTime CD_resizeL_time;
+    // TlTime CD_ERI_time;
+    // TlTime CD_Lpm_time;
+    // TlTime CD_calc_time;
+    // TlTime CD_d_time;
+    // TlTime CD_save_time;
+    // CD_all_time.start();
     //this->createEngines<DfEriEngine>();
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    this->log_.info("call on-the-fly Cholesky Decomposition routine");
+    assert(this->pEngines_ != NULL);
     this->initializeCutoffStats(orbInfo.getMaxShellType());
 
-    CD_diagonals_time.start();
-    this->log_.info(TlUtils::format("# of PQ dimension: %d", int(this->numOfPQs_)));
+    // CD_diagonals_time.start();
+    const index_type numOfAOs = orbInfo.getNumOfOrbitals();
+    const std::size_t numOfPQs = numOfAOs * (numOfAOs +1) / 2;
+    this->log_.info(TlUtils::format("number of orbitals: %d", numOfAOs));
+    this->log_.info(TlUtils::format("number of pair of orbitals: %ld", numOfPQs));
     TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
     PQ_PairArray I2PQ;
     TlVector global_diagonals; // 対角成分
@@ -388,7 +393,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
     this->log_.info(TlUtils::format("# of I~ dimension: %d", int(I2PQ.size())));
     this->saveI2PQ(I2PQ, this->getI2pqVtrPath());
     // this->ERI_cache_manager_.setMaxItems(I2PQ.size() * 2);
-    CD_diagonals_time.stop();
+    //CD_diagonals_time.stop();
 
     // prepare variables
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
@@ -443,7 +448,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
 #endif // CD_DEBUG
 
         // progress 
-        CD_resizeL_time.start();
+        //CD_resizeL_time.start();
         if (m >= progress * division) {
             this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e",
                                             m, error));
@@ -453,7 +458,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
             L.reserve_cols(progress * division);
         }
         L.resize(N, m+1);
-        CD_resizeL_time.stop();
+        //CD_resizeL_time.stop();
 
         // pivot
         std::swap(global_pivot[m], global_pivot[error_global_loc]);
@@ -466,7 +471,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
         const double inv_l_m_pm = 1.0 / l_m_pm;
 
         // ERI
-        CD_ERI_time.start();
+        //CD_ERI_time.start();
         std::vector<double> G_pm;
         // const index_type numOf_G_cols = N -(m+1);
         const index_type numOf_G_cols = N -(m+1);
@@ -480,10 +485,10 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
                                                 pivot_m, G_col_list, I2PQ, schwartzTable);
         }
         assert(G_pm.size() == numOf_G_cols);
-        CD_ERI_time.stop();
+        //CD_ERI_time.stop();
 
         // CD calc
-        CD_Lpm_time.start();
+        //CD_Lpm_time.start();
         {
             // 全PEに分配
             const int PEinCharge = L.getPEinChargeByRow(pivot_m);
@@ -493,9 +498,9 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
             }
             rComm.broadcast(&(L_pm[0]), m +1, PEinCharge);
         }
-        CD_Lpm_time.stop();
+        //CD_Lpm_time.stop();
 
-        CD_calc_time.start();
+        //CD_calc_time.start();
         error = 0.0;
 #pragma omp parallel
         {
@@ -551,12 +556,12 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
             error_local_loc = my_error_local_loc;
 #endif // _OPENMP
         }
-        CD_calc_time.stop();
+        //CD_calc_time.stop();
 
-        CD_d_time.start();
+        //CD_d_time.start();
         rComm.allReduce_MAXLOC(&error, &error_global_loc);
         global_diagonals[global_pivot[error_global_loc]] = error;
-        CD_d_time.stop();
+        //CD_d_time.stop();
 
         ++m;
         if (error_global_loc == reverse_pivot[local_pivot[error_local_loc]]) {
@@ -569,21 +574,21 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
 //    this->destroyEngines();
     this->schwartzCutoffReport(orbInfo.getMaxShellType());
 
-    CD_save_time.start();
+    //CD_save_time.start();
     this->saveLjk(L);
-    CD_save_time.stop();
+    //CD_save_time.stop();
 
-    CD_all_time.stop();
+    //CD_all_time.stop();
 
     // timing data
-    this->log_.info(TlUtils::format("CD all:       %10.1f sec.", CD_all_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD diagonals: %10.1f sec.", CD_diagonals_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD resize L:  %10.1f sec.", CD_resizeL_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD ERI:       %10.1f sec.", CD_ERI_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD L(m):      %10.1f sec.", CD_Lpm_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD calc:      %10.1f sec.", CD_calc_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD d:         %10.1f sec.", CD_d_time.getElapseTime()));
-    this->log_.info(TlUtils::format("CD save:      %10.1f sec.", CD_save_time.getElapseTime()));
+    // this->log_.info(TlUtils::format("CD all:       %10.1f sec.", CD_all_time.getElapseTime()));
+    // this->log_.info(TlUtils::format("CD diagonals: %10.1f sec.", CD_diagonals_time.getElapseTime()));
+    // this->log_.info(TlUtils::format("CD resize L:  %10.1f sec.", CD_resizeL_time.getElapseTime()));
+    // this->log_.info(TlUtils::format("CD ERI:       %10.1f sec.", CD_ERI_time.getElapseTime()));
+    // this->log_.info(TlUtils::format("CD L(m):      %10.1f sec.", CD_Lpm_time.getElapseTime()));
+    // this->log_.info(TlUtils::format("CD calc:      %10.1f sec.", CD_calc_time.getElapseTime()));
+    // this->log_.info(TlUtils::format("CD d:         %10.1f sec.", CD_d_time.getElapseTime()));
+    // this->log_.info(TlUtils::format("CD save:      %10.1f sec.", CD_save_time.getElapseTime()));
 
     return L;
 }

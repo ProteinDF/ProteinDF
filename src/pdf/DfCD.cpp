@@ -16,7 +16,7 @@
 DfCD::DfCD(TlSerializeData* pPdfParam) 
     : DfObject(pPdfParam), pEngines_(NULL)
 {
-    this->numOfPQs_ = this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2;
+    // this->numOfPQs_ = this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2;
 
     this->cutoffThreshold_ = 1.0E-10;
     if ((*pPdfParam)["cut-value"].getStr().empty() != true) {
@@ -403,8 +403,10 @@ void DfCD::getK_S(const RUN_TYPE runType,
     const index_type numOfCBs = L.getNumOfCols();
     
     TlSymmetricMatrix P = 0.5 * this->getPMatrix(); // RKS
+    this->log_.info("CD: density matrix");
     const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
     
+    this->log_.info("start loop");
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     index_type start_CholeskyBasis = 0;
     index_type end_CholeskyBasis = 0;
@@ -421,6 +423,7 @@ void DfCD::getK_S(const RUN_TYPE runType,
     }
     
     *pK *= -1.0;
+    this->log_.info("finalize");
     this->finalize(pK);
 }
 
@@ -561,25 +564,15 @@ TlSymmetricMatrix DfCD::getPMatrix()
 TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
                                                       const std::string& I2PQ_path)
 {
-    // timing data
-    // TlTime CD_all_time;
-    // TlTime CD_diagonals_time;
-    // TlTime CD_resizeL_time;
-    // TlTime CD_pivot_time;
-    // TlTime CD_ERI_time;
-    // // TlTime CD_Lpm_time;
-    // TlTime CD_calc_time;
-    // // TlTime CD_d_time;
-    // TlTime CD_save_time;
-
-    // CD_all_time.start();
-
     this->log_.info("call on-the-fly Cholesky Decomposition routine");
     assert(this->pEngines_ != NULL);
     this->initializeCutoffStats(orbInfo.getMaxShellType());
 
-    this->log_.info(TlUtils::format("# of PQ dimension: %d", int(this->numOfPQs_)));
-    TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
+    const index_type numOfAOs = orbInfo.getNumOfOrbitals();
+    const std::size_t numOfPQs = numOfAOs * (numOfAOs +1) / 2;
+    this->log_.info(TlUtils::format("number of orbitals: %d", numOfAOs));
+    this->log_.info(TlUtils::format("number of pair of orbitals: %ld", numOfPQs));
+    TlSparseSymmetricMatrix schwartzTable(numOfAOs);
     PQ_PairArray I2PQ;
     TlVector d; // 対角成分
 
@@ -716,15 +709,16 @@ TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject&
                                                       const TlOrbitalInfoObject& orbInfo_q,
                                                       const std::string& I2PQ_path)
 {
-    const index_type numOfOrbs_p = orbInfo_p.getNumOfOrbitals();
-    const index_type numOfOrbs_q = orbInfo_q.getNumOfOrbitals();
-    const index_type numOfPQs = numOfOrbs_p * numOfOrbs_q;
-
+    this->log_.info("call on-the-fly Cholesky Decomposition routine");
+    assert(this->pEngines_ != NULL);
     this->initializeCutoffStats(std::max(orbInfo_p.getMaxShellType(), orbInfo_q.getMaxShellType()));
 
-    this->log_.info(TlUtils::format("# of orb for p: %d", numOfOrbs_p));
-    this->log_.info(TlUtils::format("# of orb for q: %d", numOfOrbs_q));
-    this->log_.info(TlUtils::format("# of PQ dimension: %d", numOfPQs));
+    const index_type numOfOrbs_p = orbInfo_p.getNumOfOrbitals();
+    const index_type numOfOrbs_q = orbInfo_q.getNumOfOrbitals();
+    const std::size_t numOfPQs = numOfOrbs_p * numOfOrbs_q;
+    this->log_.info(TlUtils::format("number of orbitals1: %d", numOfOrbs_p));
+    this->log_.info(TlUtils::format("number of orbitals2: %d", numOfOrbs_q));
+    this->log_.info(TlUtils::format("number of pair of orbitals: %ld", numOfPQs));
     PQ_PairArray I2PQ;
     TlSparseMatrix schwartzTable(numOfOrbs_p, numOfOrbs_q);
     TlVector d; // 対角成分
@@ -846,6 +840,7 @@ void DfCD::calcDiagonals(const TlOrbitalInfoObject& orbInfo,
                          TlVector *pDiagonals)
 {
     const index_type numOfAOs = orbInfo.getNumOfOrbitals();
+    const std::size_t numOfPQs = numOfAOs * (numOfAOs + 1) / 2;
 
     const double tau = this->CDAM_tau_;
     this->log_.info(TlUtils::format("CDAM tau: %e", tau));
@@ -853,7 +848,7 @@ void DfCD::calcDiagonals(const TlOrbitalInfoObject& orbInfo,
 
     // initialize
     pI2PQ->clear();
-    pI2PQ->reserve(this->numOfPQs_);
+    pI2PQ->reserve(numOfPQs);
     pSchwartzTable->clear();
     pSchwartzTable->resize(numOfAOs);
     TlSparseSymmetricMatrix diagonalMat(numOfAOs);

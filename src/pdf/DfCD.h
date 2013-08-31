@@ -425,7 +425,7 @@ protected:
 
 
 protected:
-    index_type numOfPQs_;
+    //index_type numOfPQs_;
 
     DfEngineObject** pEngines_;
 
