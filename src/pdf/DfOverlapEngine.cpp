@@ -36,6 +36,7 @@ DfOverlapEngine::DfOverlapEngine()
 DfOverlapEngine::~DfOverlapEngine()
 {
     delete[] this->WORK;
+    this->WORK = NULL;
 }
 
 
@@ -344,6 +345,8 @@ void DfOverlapEngine::copyResultsToOutputBuffer()
     const OvpState state(a_bar, b_bar, c_bar, d_bar,
                          a, b, c, d);
     const int stateIndex = state.index();
+    assert(0 <= stateIndex);
+    assert(stateIndex < OVP_STATE_MAX);
 
     const TlAngularMomentumVectorSet amvsAbar(a_bar);
     const TlAngularMomentumVectorSet amvsBbar(b_bar);
@@ -382,11 +385,15 @@ void DfOverlapEngine::copyResultsToOutputBuffer()
 
                                     const int stateAmvsIndex = this->index(amvAbar, amvBbar, amvCbar, amvDbar,
                                                                            amvA, amvB, amvC, amvD);
-                            
+                                    assert(0 <= stateAmvsIndex);
+                                    assert(stateAmvsIndex < this->OVP_[stateIndex].size());
+                                    assert(this->OVP_[stateIndex][stateAmvsIndex].size() <= batch);
+
                                     double value = 0.0;
                                     for (int i = 0; i < batch; ++i) {
                                         value += this->OVP_[stateIndex][stateAmvsIndex][i];
                                     }
+                                    assert(index < OUTPUT_BUFFER_SIZE);
                                     this->WORK[index] = value;
                                     ++index;
                                 } // d
@@ -410,14 +417,24 @@ void DfOverlapEngine::transform6Dto5D()
     const int b = this->b_;
     const int c = this->c_;
     const int d = this->d_;
+    assert(0 <= a_bar);
+    assert(0 <= b_bar);
+    assert(0 <= c_bar);
+    assert(0 <= d_bar);
+    assert(0 <= a);
+    assert(0 <= b);
+    assert(0 <= c);
+    assert(0 <= d);
     
     if ((a < 2) && (b < 2) && (c < 2) && (d < 2)) {
         // nothing to do
         return;
     }
 
-    double pBuf[OUTPUT_BUFFER_SIZE];
-    
+    // (OpenMPの)実装によってはヒープに確保しないと動作しないことがある。
+    // double pBuf[OUTPUT_BUFFER_SIZE];
+    double* pBuf = new double[OUTPUT_BUFFER_SIZE];
+
     // 6D ベースの要素数(1, 3, 6, 10, ...)
     // 5D ベースの場合は(2n +1: 1, 3, 5, 7, ...)
     int I_ = a_bar * (a_bar + 3) / 2 + 1;
@@ -433,26 +450,33 @@ void DfOverlapEngine::transform6Dto5D()
         this->transform6Dto5D_i(I_, J_, K_, L_, J, K, L, this->WORK, pBuf);
         I = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
+        assert(end <= OUTPUT_BUFFER_SIZE);
         std::copy(pBuf, pBuf + end, this->WORK);
     }
     if (b == 2) {
         this->transform6Dto5D_j(I_, J_, K_, L_, I, K, L, this->WORK, pBuf);
         J = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
+        assert(end <= OUTPUT_BUFFER_SIZE);
         std::copy(pBuf, pBuf + end, this->WORK);
     }
     if (c == 2) {
         this->transform6Dto5D_k(I_, J_, K_, L_, I, J, L, this->WORK, pBuf);
         K = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
+        assert(end <= OUTPUT_BUFFER_SIZE);
         std::copy(pBuf, pBuf + end, this->WORK);
     }
     if (d == 2) {
         this->transform6Dto5D_l(I_, J_, K_, L_, I, J, K, this->WORK, pBuf);
         L = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
+        assert(end <= OUTPUT_BUFFER_SIZE);
         std::copy(pBuf, pBuf + end, this->WORK);
     }
+
+    delete[] pBuf;
+    pBuf = NULL;
 }
 
 
