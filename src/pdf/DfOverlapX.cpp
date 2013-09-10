@@ -23,18 +23,18 @@ DfOverlapX::~DfOverlapX()
 void DfOverlapX::createEngines()
 {
     assert(this->pEngines_ == NULL);
+    this->log_.info(TlUtils::format("create threads: %d", this->numOfThreads_));
     this->pEngines_ = new DfOverlapEngine[this->numOfThreads_];
 }
 
-
 void DfOverlapX::destroyEngines()
 {
+    this->log_.info("delete threads");
     if (this->pEngines_ != NULL) {
         delete[] this->pEngines_;
         this->pEngines_ = NULL;
     }
 }
-
 
 DfTaskCtrl* DfOverlapX::getDfTaskCtrlObject() const
 {
@@ -326,6 +326,7 @@ void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
+        assert(threadID < this->numOfThreads_);
 
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {
@@ -336,13 +337,7 @@ void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
             const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
             const int maxStepsP = 2 * shellTypeP + 1;
             const int maxStepsQ = 2 * shellTypeQ + 1;
-            // const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
-            // const TlPosition posQ = orbitalInfo.getPosition(shellIndexQ);
-            // const DfOverlapEngine::PGTOs pgtosP = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexP);
-            // const DfOverlapEngine::PGTOs pgtosQ = DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexQ);
-            // const DfOverlapEngine::Query query(0, 0, 0, 0, shellTypeP, shellTypeQ, 0, 0);
             
-            // this->pEngines_[threadID].calc0(query, posP, posQ, posR, posS, pgtosP, pgtosQ, pgtosR, pgtosS);
             this->pEngines_[threadID].calc(0, orbitalInfo, shellIndexP,
                                            0, orbitalInfo, shellIndexQ,
                                            0, orbitalInfo, -1,
@@ -388,6 +383,7 @@ void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo1,
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
+        assert(threadID < this->numOfThreads_);
 
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {
@@ -411,7 +407,6 @@ void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo1,
                                            0, orbitalInfo1, -1);
             
             int index = 0;
-
             for (int stepP = 0; stepP < maxStepsP; ++stepP) {
                 const index_type globalShellIndexP = shellIndexP + stepP;
 

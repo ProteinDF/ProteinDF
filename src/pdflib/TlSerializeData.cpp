@@ -232,6 +232,7 @@ void TlSerializeData::clearChildren()
 
 void TlSerializeData::copyChildren(const TlSerializeData& rhs)
 {
+    assert(this->array_.size() == 0);
     if (rhs.array_.empty() != true) {
         this->array_.reserve(rhs.array_.size());
         for (ArrayContainerType::const_iterator p = rhs.array_.begin(); p != rhs.array_.end(); ++p) {
@@ -240,6 +241,7 @@ void TlSerializeData::copyChildren(const TlSerializeData& rhs)
         }
     }
     
+    assert(this->map_.size() == 0);
     if (rhs.map_.empty() != true) {
         for (MapContainerType::const_iterator p = rhs.map_.begin(); p != rhs.map_.end(); ++p) {
             TlSerializeData* pKey = new TlSerializeData(*(p->first));
