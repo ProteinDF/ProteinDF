@@ -337,6 +337,9 @@ TlSerializeData TlMsgPack::unpack_fixraw(const char in, std::istream& ifs)
 
         const std::string str(pBuf, size);
         ans.set(str);
+        
+        delete[] pBuf;
+        pBuf = NULL;
     }
 
     return ans;
@@ -354,6 +357,9 @@ TlSerializeData TlMsgPack::unpack_raw16(std::istream& ifs)
         
         const std::string str(pBuf, size);
         ans.set(str);
+        
+        delete[] pBuf;
+        pBuf = NULL;
     }
 
     return ans;
