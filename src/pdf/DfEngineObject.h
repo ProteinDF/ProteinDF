@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "TlOrbitalInfoObject.h"
+#include "TlLogging.h"
 
 // s=0, p=1, d=2
 #define AM_LEVEL (2)
@@ -14,6 +15,10 @@ public:
     typedef int index_type;
     
 public:
+    DfEngineObject() 
+        : primitiveLevelThreshold_(0.0), log_(TlLogging::getInstance()) {
+    }
+
     void setPrimitiveLevelThreshold(const double threshold) {
         this->primitiveLevelThreshold_ = threshold;
     }
@@ -36,6 +41,8 @@ public:
 protected:
     // see J. Chem. Phys., 105, 2726 (1996), eq33
     double primitiveLevelThreshold_;
+
+    TlLogging& log_;
 };
 
 #endif // DFENGINEOBJECT_H
