@@ -35,10 +35,10 @@ protected:
     void getJ_S(TlSymmetricMatrix *pJ);
     void getK_S(const RUN_TYPE runType,
                 TlSymmetricMatrix *pK);
-    void getM_S(const TlSymmetricMatrix& P,
-                TlSymmetricMatrix* pM);
-    void getM_A(const TlSymmetricMatrix& P,
-                TlSymmetricMatrix* pM);
+    virtual void getM_S(const TlSymmetricMatrix& P,
+                        TlSymmetricMatrix* pM);
+    virtual void getM_A(const TlSymmetricMatrix& P,
+                        TlSymmetricMatrix* pM);
 
 protected:
     class Index2 {
@@ -139,7 +139,7 @@ protected:
 
 protected:
     virtual void saveI2PQ(const PQ_PairArray& I2PQ, const std::string& filepath);
-    PQ_PairArray getI2PQ(const std::string& filepath);
+    virtual PQ_PairArray getI2PQ(const std::string& filepath);
 
     virtual void saveLjk(const TlMatrix& Ljk);
     virtual TlMatrix getLjk();

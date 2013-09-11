@@ -126,6 +126,11 @@ void DfGridFreeXC::preprocessBeforeSCF()
 void DfGridFreeXC::buildFxc()
 {
     const DfXCFunctional xcFunc(this->pPdfParam_);
+    if (xcFunc.getXcType() == DfXCFunctional::HF) {
+        // need not pure-DFT term
+        return;
+    }
+
     const DfXCFunctional::FUNCTIONAL_TYPE funcType = xcFunc.getFunctionalType();
     switch (funcType) {
     case DfXCFunctional::LDA:
@@ -141,24 +146,6 @@ void DfGridFreeXC::buildFxc()
         CnErr.abort();
         break;
     }
-
-    // switch(this->GF_mode_) {
-    // case 1:
-    //     this->buildFxc1();
-    //     break;
-
-    // case 2:
-    //     this->buildFxc2();
-    //     break;
-
-    // case 3:
-    //     this->buildFxc1_GGA();
-    //     break;
-
-    // default:
-    //     this->buildFxc_LDA();
-    //     break;
-    // }
 }
 
 void DfGridFreeXC::buildFxc_LDA()
@@ -243,261 +230,261 @@ void DfGridFreeXC::buildFxc_LDA()
     }
 }
 
-void DfGridFreeXC::buildFxc1()
-{
-    const TlSymmetricMatrix P = 0.5 * DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
-    assert(P.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
+// void DfGridFreeXC::buildFxc1()
+// {
+//     const TlSymmetricMatrix P = 0.5 * DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+//     assert(P.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
 
-    this->log_.info("generate high level M-matrix by 4-center integrals.");
-    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
-                                       (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
+//     this->log_.info("generate high level M-matrix by 4-center integrals.");
+//     const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
+//                                        (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
 
-    this->log_.info(TlUtils::format("AOs = %d", this->orbitalInfo_.getNumOfOrbitals()));
-    this->log_.info(TlUtils::format("auxAOs for GF = %d", orbitalInfo_GF.getNumOfOrbitals()));
+//     this->log_.info(TlUtils::format("AOs = %d", this->orbitalInfo_.getNumOfOrbitals()));
+//     this->log_.info(TlUtils::format("auxAOs for GF = %d", orbitalInfo_GF.getNumOfOrbitals()));
 
-    TlSymmetricMatrix M;
-    this->log_.info("begin to create M matrix using 4-center overlap.");
-    this->getM_A(P, &M);
-    // if (this->XC_engine_ == XC_ENGINE_CD) {
-    //     this->log_.info("begin to create M matrix based on CD.");
-    //     this->getM_byCD(&M);
-    // } else {
-    //     this->log_.info("begin to create M matrix using 4-center overlap.");
-    //     this->log_.info("use specified basis for grid-free.");
-    //     this->getM1(P, &M);
-    // }
-    assert(M.getNumOfRows() == orbitalInfo_GF.getNumOfOrbitals());
-    if (this->debugSaveM_) {
-        M.save(TlUtils::format("fl_Work/debug_M.%d.mat", this->m_nIteration));
-    }
+//     TlSymmetricMatrix M;
+//     this->log_.info("begin to create M matrix using 4-center overlap.");
+//     this->getM_A(P, &M);
+//     // if (this->XC_engine_ == XC_ENGINE_CD) {
+//     //     this->log_.info("begin to create M matrix based on CD.");
+//     //     this->getM_byCD(&M);
+//     // } else {
+//     //     this->log_.info("begin to create M matrix using 4-center overlap.");
+//     //     this->log_.info("use specified basis for grid-free.");
+//     //     this->getM1(P, &M);
+//     // }
+//     assert(M.getNumOfRows() == orbitalInfo_GF.getNumOfOrbitals());
+//     if (this->debugSaveM_) {
+//         M.save(TlUtils::format("fl_Work/debug_M.%d.mat", this->m_nIteration));
+//     }
 
-    this->log_.info("begin to generate Fxc using grid-free method.");
-    // ----------------------------------
-    // DfOverlapX ovp(this->pPdfParam_);
-    // TlSymmetricMatrix S;
-    // // S = DfObject::getSpqMatrix<TlSymmetricMatrix>();
-    // {
-    //     ovp.getOvpMat(orbitalInfo_GF,
-    //                   &S);
-    // }
-    // TlMatrix S_tilde;
-    // {
-    //     ovp.getTransMat(orbitalInfo_GF,
-    //                     this->orbitalInfo_,
-    //                     &S_tilde);
-    //     S_tilde.save("S_tilde.mat");
-    // }
-    // TlMatrix S_tilde_t = S_tilde;
-    // S_tilde_t.transpose();
+//     this->log_.info("begin to generate Fxc using grid-free method.");
+//     // ----------------------------------
+//     // DfOverlapX ovp(this->pPdfParam_);
+//     // TlSymmetricMatrix S;
+//     // // S = DfObject::getSpqMatrix<TlSymmetricMatrix>();
+//     // {
+//     //     ovp.getOvpMat(orbitalInfo_GF,
+//     //                   &S);
+//     // }
+//     // TlMatrix S_tilde;
+//     // {
+//     //     ovp.getTransMat(orbitalInfo_GF,
+//     //                     this->orbitalInfo_,
+//     //                     &S_tilde);
+//     //     S_tilde.save("S_tilde.mat");
+//     // }
+//     // TlMatrix S_tilde_t = S_tilde;
+//     // S_tilde_t.transpose();
 
-    // TlSymmetricMatrix S_inv = DfObject::getSpqMatrix<TlSymmetricMatrix>();
-    // S_inv.inverse();
-    // TlMatrix omega = S_tilde * S_inv;
-    // TlMatrix omega_t = omega;
-    // omega_t.transpose();
+//     // TlSymmetricMatrix S_inv = DfObject::getSpqMatrix<TlSymmetricMatrix>();
+//     // S_inv.inverse();
+//     // TlMatrix omega = S_tilde * S_inv;
+//     // TlMatrix omega_t = omega;
+//     // omega_t.transpose();
 
-    // DfXMatrix dfXMat(this->pPdfParam_);
-    // TlMatrix V;
-    // dfXMat.canonicalOrthogonalize<TlSymmetricMatrix, TlMatrix>(S, &V, NULL);
-    // ----------------------------------
+//     // DfXMatrix dfXMat(this->pPdfParam_);
+//     // TlMatrix V;
+//     // dfXMat.canonicalOrthogonalize<TlSymmetricMatrix, TlMatrix>(S, &V, NULL);
+//     // ----------------------------------
 
-    this->log_.info("begin to generate Fxc using grid-free method.");
-    // M~(=V^t * M * V) & SVU(=SVU, but now only SV)の作成
-    TlSymmetricMatrix Mtilde;
-    TlMatrix SVU;
-    {
-        TlMatrix V = DfObject::getGfVMatrix<TlMatrix>();
-        TlMatrix gfStilde = DfObject::getGfStildeMatrix<TlMatrix>();
-        TlMatrix tmp_Mtilde = M * V;
-        SVU = gfStilde * V;
+//     this->log_.info("begin to generate Fxc using grid-free method.");
+//     // M~(=V^t * M * V) & SVU(=SVU, but now only SV)の作成
+//     TlSymmetricMatrix Mtilde;
+//     TlMatrix SVU;
+//     {
+//         TlMatrix V = DfObject::getGfVMatrix<TlMatrix>();
+//         TlMatrix gfStilde = DfObject::getGfStildeMatrix<TlMatrix>();
+//         TlMatrix tmp_Mtilde = M * V;
+//         SVU = gfStilde * V;
         
-        V.transpose(); // make V^t
-        Mtilde = V * tmp_Mtilde;
-    }
-    if (this->debugSaveM_) {
-        M.save(TlUtils::format("fl_Work/debug_Mtilde.%d.mat", this->m_nIteration));
-    }
+//         V.transpose(); // make V^t
+//         Mtilde = V * tmp_Mtilde;
+//     }
+//     if (this->debugSaveM_) {
+//         M.save(TlUtils::format("fl_Work/debug_Mtilde.%d.mat", this->m_nIteration));
+//     }
 
-    TlMatrix Fxc;
-    TlMatrix Exc;
-    {
-        TlSymmetricMatrix F_lambda;
-        TlSymmetricMatrix E_lambda;
-        {
-            TlMatrix U;
-            TlVector lambda;
-            Mtilde.diagonal(&lambda, &U);
-            lambda.save("lambda.vct");
+//     TlMatrix Fxc;
+//     TlMatrix Exc;
+//     {
+//         TlSymmetricMatrix F_lambda;
+//         TlSymmetricMatrix E_lambda;
+//         {
+//             TlMatrix U;
+//             TlVector lambda;
+//             Mtilde.diagonal(&lambda, &U);
+//             lambda.save("lambda.vct");
 
-            SVU *= U;
-            this->get_F_lamda(lambda, &F_lambda, &E_lambda);
+//             SVU *= U;
+//             this->get_F_lamda(lambda, &F_lambda, &E_lambda);
 
-            if (this->debugSaveM_) {
-                TlMatrix Ut = U;
-                U.transpose();
-                TlMatrix Fxc_tilde = U * F_lambda * Ut;
-                TlMatrix Exc_tilde = U * E_lambda * Ut;
-                Fxc_tilde.save(TlUtils::format("fl_Work/debug_Fxc_tilde.%d.mat", this->m_nIteration));
-                Exc_tilde.save(TlUtils::format("fl_Work/debug_Exc_tilde.%d.mat", this->m_nIteration));
-            }
-        }
+//             if (this->debugSaveM_) {
+//                 TlMatrix Ut = U;
+//                 U.transpose();
+//                 TlMatrix Fxc_tilde = U * F_lambda * Ut;
+//                 TlMatrix Exc_tilde = U * E_lambda * Ut;
+//                 Fxc_tilde.save(TlUtils::format("fl_Work/debug_Fxc_tilde.%d.mat", this->m_nIteration));
+//                 Exc_tilde.save(TlUtils::format("fl_Work/debug_Exc_tilde.%d.mat", this->m_nIteration));
+//             }
+//         }
 
-        Fxc = SVU * F_lambda;
-        Exc = SVU * E_lambda;
+//         Fxc = SVU * F_lambda;
+//         Exc = SVU * E_lambda;
 
-        SVU.transpose(); // make (SVU)^t = UVS
+//         SVU.transpose(); // make (SVU)^t = UVS
 
-        Fxc *= SVU;
-        Exc *= SVU;
-    }
-    DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, TlSymmetricMatrix(Fxc));
-    DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, TlSymmetricMatrix(Exc));
-}
+//         Fxc *= SVU;
+//         Exc *= SVU;
+//     }
+//     DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, TlSymmetricMatrix(Fxc));
+//     DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, TlSymmetricMatrix(Exc));
+// }
 
-void DfGridFreeXC::buildFxc2()
-{
-    const TlSymmetricMatrix P = 0.5 * DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
-    assert(P.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
+// void DfGridFreeXC::buildFxc2()
+// {
+//     const TlSymmetricMatrix P = 0.5 * DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+//     assert(P.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
 
-    this->log_.info("generate high level M-matrix by translation matrix.");
-    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
-                                       (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
+//     this->log_.info("generate high level M-matrix by translation matrix.");
+//     const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
+//                                        (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
 
-    this->log_.info(TlUtils::format("AOs = %d", this->orbitalInfo_.getNumOfOrbitals()));
-    this->log_.info(TlUtils::format("orbitals for GF = %d", orbitalInfo_GF.getNumOfOrbitals()));
+//     this->log_.info(TlUtils::format("AOs = %d", this->orbitalInfo_.getNumOfOrbitals()));
+//     this->log_.info(TlUtils::format("orbitals for GF = %d", orbitalInfo_GF.getNumOfOrbitals()));
 
-    // ----------------------------------
-    // DfOverlapX ovp(this->pPdfParam_);
-    // TlMatrix S_HL;
-    // {
-    //     ovp.getTransMat(orbitalInfo_GF,
-    //                     this->orbitalInfo_,
-    //                     &S_HL);
-    //     //S_HL.save("S_HL.mat");
-    // }
-    // assert(S_HL.getNumOfRows() == orbitalInfo_GF.getNumOfOrbitals());
-    // assert(S_HL.getNumOfCols() == this->orbitalInfo_.getNumOfOrbitals());
-    // TlMatrix S_LH = S_HL;
-    // S_LH.transpose();
-    // assert(S_LH.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
-    // assert(S_LH.getNumOfCols() == orbitalInfo_GF.getNumOfOrbitals());
+//     // ----------------------------------
+//     // DfOverlapX ovp(this->pPdfParam_);
+//     // TlMatrix S_HL;
+//     // {
+//     //     ovp.getTransMat(orbitalInfo_GF,
+//     //                     this->orbitalInfo_,
+//     //                     &S_HL);
+//     //     //S_HL.save("S_HL.mat");
+//     // }
+//     // assert(S_HL.getNumOfRows() == orbitalInfo_GF.getNumOfOrbitals());
+//     // assert(S_HL.getNumOfCols() == this->orbitalInfo_.getNumOfOrbitals());
+//     // TlMatrix S_LH = S_HL;
+//     // S_LH.transpose();
+//     // assert(S_LH.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
+//     // assert(S_LH.getNumOfCols() == orbitalInfo_GF.getNumOfOrbitals());
 
-    // TlSymmetricMatrix S_H;
-    // TlMatrix omega_LH, omega_LH_t;
-    // {
-    //     ovp.getOvpMat(orbitalInfo_GF,
-    //                   &S_H);
+//     // TlSymmetricMatrix S_H;
+//     // TlMatrix omega_LH, omega_LH_t;
+//     // {
+//     //     ovp.getOvpMat(orbitalInfo_GF,
+//     //                   &S_H);
 
-    //     TlSymmetricMatrix S_H_inv = S_H;
-    //     S_H_inv.inverse();
-    //     omega_LH = S_LH * S_H_inv;
-    //     omega_LH_t = omega_LH;
-    //     omega_LH_t.transpose();
-    // }
-    // assert(omega_LH.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
-    // assert(omega_LH.getNumOfCols() == orbitalInfo_GF.getNumOfOrbitals());
-    // omega_LH.save("omega_LH.mat");
+//     //     TlSymmetricMatrix S_H_inv = S_H;
+//     //     S_H_inv.inverse();
+//     //     omega_LH = S_LH * S_H_inv;
+//     //     omega_LH_t = omega_LH;
+//     //     omega_LH_t.transpose();
+//     // }
+//     // assert(omega_LH.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
+//     // assert(omega_LH.getNumOfCols() == orbitalInfo_GF.getNumOfOrbitals());
+//     // omega_LH.save("omega_LH.mat");
 
-    // ----------------------------------
+//     // ----------------------------------
         
-    // low levelのM行列を求める
-    TlSymmetricMatrix M;
-    if (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD) {
-        this->log_.info("begin to create M matrix based on CD.");
-        //this->getM_byCD(&M);
-        {
-            DfCD dfCD(this->pPdfParam_);
-            dfCD.getM(P, &M);
-        }
-    } else {
-        this->log_.info("begin to create M matrix using 4-center overlap.");
-        this->getM(P, &M);
-    }
-    assert(M.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
+//     // low levelのM行列を求める
+//     TlSymmetricMatrix M;
+//     if (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD) {
+//         this->log_.info("begin to create M matrix based on CD.");
+//         //this->getM_byCD(&M);
+//         {
+//             DfCD dfCD(this->pPdfParam_);
+//             dfCD.getM(P, &M);
+//         }
+//     } else {
+//         this->log_.info("begin to create M matrix using 4-center overlap.");
+//         this->getM(P, &M);
+//     }
+//     assert(M.getNumOfRows() == this->orbitalInfo_.getNumOfOrbitals());
 
-    // high levelのM行列を求める
-    this->log_.info("build high-level M matrix by translation matrix.");
-    {
-        TlMatrix omega_LH = DfObject::getGfOmegaMatrix<TlMatrix>();
-        TlMatrix tmp_M = omega_LH * M;
-        omega_LH.transpose();
-        M = tmp_M * omega_LH;
-    }
-    assert(M.getNumOfRows() == orbitalInfo_GF.getNumOfOrbitals());
-    if (this->debugSaveM_) {
-        M.save(TlUtils::format("fl_Work/debug_M_H.%d.mat", this->m_nIteration));
-    }
+//     // high levelのM行列を求める
+//     this->log_.info("build high-level M matrix by translation matrix.");
+//     {
+//         TlMatrix omega_LH = DfObject::getGfOmegaMatrix<TlMatrix>();
+//         TlMatrix tmp_M = omega_LH * M;
+//         omega_LH.transpose();
+//         M = tmp_M * omega_LH;
+//     }
+//     assert(M.getNumOfRows() == orbitalInfo_GF.getNumOfOrbitals());
+//     if (this->debugSaveM_) {
+//         M.save(TlUtils::format("fl_Work/debug_M_H.%d.mat", this->m_nIteration));
+//     }
     
-    this->log_.info("begin to generate Fxc using grid-free method.");
-    // M~(=V^t * M * V) & SVU(=SVU, but now only SV)の作成
-    TlSymmetricMatrix Mtilde;
-    TlMatrix SVU;
-    {
-        TlMatrix V = DfObject::getGfVMatrix<TlMatrix>();
-        TlMatrix gfStilde = DfObject::getGfStildeMatrix<TlMatrix>();
-        TlMatrix tmp_Mtilde = M * V;
-        SVU = gfStilde * V;
+//     this->log_.info("begin to generate Fxc using grid-free method.");
+//     // M~(=V^t * M * V) & SVU(=SVU, but now only SV)の作成
+//     TlSymmetricMatrix Mtilde;
+//     TlMatrix SVU;
+//     {
+//         TlMatrix V = DfObject::getGfVMatrix<TlMatrix>();
+//         TlMatrix gfStilde = DfObject::getGfStildeMatrix<TlMatrix>();
+//         TlMatrix tmp_Mtilde = M * V;
+//         SVU = gfStilde * V;
         
-        V.transpose(); // make V^t
-        Mtilde = V * tmp_Mtilde;
-    }
+//         V.transpose(); // make V^t
+//         Mtilde = V * tmp_Mtilde;
+//     }
 
-    TlMatrix Fxc;
-    TlMatrix Exc;
-    {
-        TlSymmetricMatrix F_lambda;
-        TlSymmetricMatrix E_lambda;
-        {
-            TlMatrix U;
-            TlVector lambda;
-            Mtilde.diagonal(&lambda, &U);
+//     TlMatrix Fxc;
+//     TlMatrix Exc;
+//     {
+//         TlSymmetricMatrix F_lambda;
+//         TlSymmetricMatrix E_lambda;
+//         {
+//             TlMatrix U;
+//             TlVector lambda;
+//             Mtilde.diagonal(&lambda, &U);
             
-            SVU *= U;
-            this->get_F_lamda(lambda, &F_lambda, &E_lambda);
-        }
+//             SVU *= U;
+//             this->get_F_lamda(lambda, &F_lambda, &E_lambda);
+//         }
 
-        Fxc = SVU * F_lambda;
-        Exc = SVU * E_lambda;
+//         Fxc = SVU * F_lambda;
+//         Exc = SVU * E_lambda;
 
-        SVU.transpose(); // make (SVU)^t = UVS
+//         SVU.transpose(); // make (SVU)^t = UVS
 
-        Fxc *= SVU;
-        Exc *= SVU;
-    }
-    DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, TlSymmetricMatrix(Fxc));
-    DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, TlSymmetricMatrix(Exc));
+//         Fxc *= SVU;
+//         Exc *= SVU;
+//     }
+//     DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, TlSymmetricMatrix(Fxc));
+//     DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, TlSymmetricMatrix(Exc));
 
 
-    // this->log_.info("begin to generate Fxc using grid-free method.");
-    // // tV * S * V == I
-    // TlMatrix V_H, V_H_t;
-    // {
-    //     DfXMatrix dfXMat(this->pPdfParam_);
-    //     dfXMat.canonicalOrthogonalize<TlSymmetricMatrix, TlMatrix>(S_H, &V_H, NULL);
-    //     V_H_t = V_H;
-    //     V_H_t.transpose();
-    // }
+//     // this->log_.info("begin to generate Fxc using grid-free method.");
+//     // // tV * S * V == I
+//     // TlMatrix V_H, V_H_t;
+//     // {
+//     //     DfXMatrix dfXMat(this->pPdfParam_);
+//     //     dfXMat.canonicalOrthogonalize<TlSymmetricMatrix, TlMatrix>(S_H, &V_H, NULL);
+//     //     V_H_t = V_H;
+//     //     V_H_t.transpose();
+//     // }
     
-    // TlSymmetricMatrix M_tilda = V_H_t * M_H * V_H;
+//     // TlSymmetricMatrix M_tilda = V_H_t * M_H * V_H;
     
-    // TlMatrix U;
-    // TlVector lamda;
-    // M_tilda.diagonal(&lamda, &U);
+//     // TlMatrix U;
+//     // TlVector lamda;
+//     // M_tilda.diagonal(&lamda, &U);
     
-    // TlSymmetricMatrix F_lamda;
-    // TlSymmetricMatrix E_lamda;
-    // this->get_F_lamda(lamda, &F_lamda, &E_lamda);
+//     // TlSymmetricMatrix F_lamda;
+//     // TlSymmetricMatrix E_lamda;
+//     // this->get_F_lamda(lamda, &F_lamda, &E_lamda);
     
-    // TlMatrix SVU = S_LH * V_H * U;
-    // TlMatrix UVS = SVU;
-    // UVS.transpose();
+//     // TlMatrix SVU = S_LH * V_H * U;
+//     // TlMatrix UVS = SVU;
+//     // UVS.transpose();
     
-    // TlSymmetricMatrix Fxc = SVU * F_lamda * UVS;
-    // DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, Fxc);
+//     // TlSymmetricMatrix Fxc = SVU * F_lamda * UVS;
+//     // DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, Fxc);
 
-    // TlSymmetricMatrix Exc = SVU * E_lamda * UVS;
-    // DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, Exc);
-}
+//     // TlSymmetricMatrix Exc = SVU * E_lamda * UVS;
+//     // DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, Exc);
+// }
 
 
 void DfGridFreeXC::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)

@@ -322,6 +322,7 @@ void DfCD::getJ(TlSymmetricMatrix* pJ)
 
 void DfCD::getJ_S(TlSymmetricMatrix* pJ)
 {
+    this->log_.info("calc J by CD method (parallel).");
     const TlSymmetricMatrix P = this->getPMatrix();
 
     // cholesky vector
@@ -464,10 +465,6 @@ void DfCD::getK_A(const RUN_TYPE runType,
 
 void DfCD::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 {
-    // const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
-    //                               (*this->pPdfParam_)["basis_sets"]);
-    // const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
-    //                               (*this->pPdfParam_)["basis_sets_GF"]);
     if (this->isDedicatedBasisForGridFree_) {
         this->getM_A(P, pM);
     } else {
@@ -525,9 +522,6 @@ void DfCD::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
     
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrXCPath());
-    // for (int i = 0; i < I2PQ.size(); ++i) {
-    //     std::cerr << TlUtils::format("[%d] %2d, %2d", i, I2PQ[i].index1(), I2PQ[i].index2()) << std::endl;
-    // }
 
     index_type start_CholeskyBasis = 0;
     index_type end_CholeskyBasis = 0;

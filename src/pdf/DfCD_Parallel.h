@@ -14,10 +14,12 @@ public:
     virtual ~DfCD_Parallel();
 
 public:
-    // virtual void calcCholeskyVectors();
-    void getJ_distributed(TlDistributeSymmetricMatrix *pJ);
-    void getK_distributed(const RUN_TYPE runType,
-                          TlDistributeSymmetricMatrix *pK);
+    virtual void getJ(TlSymmetricMatrix* pJ);
+    void getJ_D(TlDistributeSymmetricMatrix* pJ);
+
+    // void getJ_distributed(TlDistributeSymmetricMatrix *pJ);
+    // void getK_distributed(const RUN_TYPE runType,
+    //                       TlDistributeSymmetricMatrix *pK);
 
 protected:
     // void makeSuperMatrix_distribute();
@@ -50,11 +52,13 @@ protected:
 
     // -------------------------------------------------------------------------
 public:
-    virtual void getJ(TlSymmetricMatrix* pJ);
+
     virtual void getK(const RUN_TYPE runType,
                       TlSymmetricMatrix* pK);
 
-    void getJ_D(TlDistributeSymmetricMatrix* pJ);
+    virtual void getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+    virtual void getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+
     void getK_D(const RUN_TYPE runType,
                 TlDistributeSymmetricMatrix* pK);
     

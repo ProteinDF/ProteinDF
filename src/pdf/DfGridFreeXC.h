@@ -102,8 +102,8 @@ public:
 
 protected:
     void buildFxc_LDA();
-    void buildFxc1();
-    void buildFxc2();
+    // void buildFxc1();
+    // void buildFxc2();
 
     void buildFxc_GGA();
 
