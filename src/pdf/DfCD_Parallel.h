@@ -14,6 +14,9 @@ public:
     virtual ~DfCD_Parallel();
 
 public:
+    void calcCholeskyVectorsForJK();
+    void calcCholeskyVectorsForGridFree();
+
     virtual void getJ(TlSymmetricMatrix* pJ);
     void getJ_D(TlDistributeSymmetricMatrix* pJ);
 
@@ -38,8 +41,8 @@ protected:
     virtual void saveI2PQ(const PQ_PairArray& I2PQ, const std::string& filepath);
     virtual PQ_PairArray getI2PQ(const std::string& filepath);
 
-    virtual void saveLjk(const TlMatrix& L);
-    virtual TlMatrix getLjk();
+    // virtual void saveLjk(const TlMatrix& L);
+    // virtual TlMatrix getLjk();
 
     virtual TlSymmetricMatrix getPMatrix();
 
@@ -75,7 +78,8 @@ protected:
                            const std::vector<index_type>& G_col_list,
                            const PQ_PairArray& I2PQ,
                            const TlSparseSymmetricMatrix& schwartzTable);
-    void saveLjk(const TlRowVectorMatrix2& L);
+    void saveL(const TlRowVectorMatrix2& L,
+               const std::string& path);
     // TlColVectorMatrix2 getColVector(const TlRowVectorMatrix2& L);
 
     // for debug

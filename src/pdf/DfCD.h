@@ -22,8 +22,8 @@ public:
     virtual ~DfCD();
 
 public:
-    void calcCholeskyVectorsForJK();
-    void calcCholeskyVectorsForGridFree();
+    virtual void calcCholeskyVectorsForJK();
+    virtual void calcCholeskyVectorsForGridFree();
 
     void getJ(TlSymmetricMatrix *pJ);
     void getK(const RUN_TYPE runType,

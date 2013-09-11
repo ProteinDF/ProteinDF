@@ -6,6 +6,7 @@
 
 #include "DfCD_Parallel.h"
 #include "DfTaskCtrl_Parallel.h"
+#include "DfOverlapEngine.h"
 #include "TlCommunicate.h"
 #include "TlTime.h"
 
@@ -26,6 +27,42 @@ DfCD_Parallel::~DfCD_Parallel()
 {
 }
 
+void DfCD_Parallel::calcCholeskyVectorsForJK()
+{
+    // for J & K
+    const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
+                                (*this->pPdfParam_)["basis_sets"]);
+    // productive code
+    const TlRowVectorMatrix2 Ljk 
+        = this->calcCholeskyVectorsOnTheFly<DfEriEngine>(orbInfo,
+                                                         this->getI2pqVtrPath());
+    this->saveL(Ljk, DfObject::getLjkMatrixPath());
+}
+
+void DfCD_Parallel::calcCholeskyVectorsForGridFree()
+{
+    // for XC(gridfree)
+    const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
+                                  (*this->pPdfParam_)["basis_sets"]);
+
+    if (this->isDedicatedBasisForGridFree_) {
+        const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
+                                      (*this->pPdfParam_)["basis_sets_GF"]);
+        // productive code
+        const TlRowVectorMatrix2 Lxc 
+            = this->calcCholeskyVectorsOnTheFly<DfOverlapEngine>(orbInfo_p,
+                                                                 orbInfo_q,
+                                                                 this->getI2pqVtrXCPath());
+        this->saveL(Lxc, DfObject::getLxcMatrixPath());
+    } else {
+        // productive code
+        this->log_.info("build Lxc matrix by on-the-fly method.");
+        const TlRowVectorMatrix2 Lxc 
+            = this->calcCholeskyVectorsOnTheFly<DfOverlapEngine>(orbInfo_p,
+                                                                 this->getI2pqVtrXCPath());
+        this->saveL(Lxc, DfObject::getLxcMatrixPath());
+    }
+}
 
 DfTaskCtrl* DfCD_Parallel::getDfTaskCtrlObject() const
 {
@@ -146,27 +183,27 @@ DfCD::PQ_PairArray DfCD_Parallel::getI2PQ(const std::string& filepath)
     return I2PQ;
 }
 
-void DfCD_Parallel::saveLjk(const TlMatrix& L)
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        DfCD::saveLjk(L);
-    }
-}
+// void DfCD_Parallel::saveLjk(const TlMatrix& L)
+// {
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+//     if (rComm.isMaster() == true) {
+//         DfCD::saveLjk(L);
+//     }
+// }
 
 
-TlMatrix DfCD_Parallel::getLjk()
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
+// TlMatrix DfCD_Parallel::getLjk()
+// {
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    TlMatrix L;
-    if (rComm.isMaster() == true) {
-        L = DfCD::getLjk();
-    }
-    rComm.broadcast(L);
+//     TlMatrix L;
+//     if (rComm.isMaster() == true) {
+//         L = DfCD::getLjk();
+//     }
+//     rComm.broadcast(L);
 
-    return L;
-}
+//     return L;
+// }
 
 
 TlSymmetricMatrix DfCD_Parallel::getPMatrix()
@@ -690,7 +727,8 @@ DfCD_Parallel::getSuperMatrixElements(const TlOrbitalInfoObject& orbInfo,
 }
 
 
-void DfCD_Parallel::saveLjk(const TlRowVectorMatrix2& L)
+void DfCD_Parallel::saveL(const TlRowVectorMatrix2& L,
+                          const std::string& path)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProcs();
@@ -738,7 +776,7 @@ void DfCD_Parallel::saveLjk(const TlRowVectorMatrix2& L)
         }
     }
     
-    colVecL.save(DfObject::getLjkMatrixPath());
+    colVecL.save(path);
 
     // if (this->isDebugSaveL_ == true) {
     //     {
