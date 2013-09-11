@@ -119,6 +119,8 @@ DfEriEngine::DfEriEngine()
     this->WORK_B = new double[OUTPUT_BUFFER_SIZE];
     this->WORK_C = new double[OUTPUT_BUFFER_SIZE];
     this->WORK_D = new double[OUTPUT_BUFFER_SIZE];
+
+    this->pTransformBuf_ = new double[OUTPUT_BUFFER_SIZE];
     
     // cutoff
     this->primitiveLevelThreshold_ = 1.0E-20;
@@ -190,6 +192,9 @@ DfEriEngine::~DfEriEngine()
     this->WORK_C = NULL;
     delete[] this->WORK_D;
     this->WORK_D = NULL;
+
+    delete[] this->pTransformBuf_;
+    this->pTransformBuf_ = NULL;
 
 #ifdef CHECK_MAX_COUNT
     std::cerr << ">>>> DfEriEngine constants" << std::endl;
@@ -739,8 +744,6 @@ void DfEriEngine::transform6Dto5D(const AngularMomentum2& qAB,
         return;
     }
 
-    double pBuf[OUTPUT_BUFFER_SIZE];
-    
     // 6D ベースの要素数(1, 3, 6, 10, ...)
     // 5D ベースの場合は(2n +1: 1, 3, 5, 7, ...)
     int I_ = a_bar * (a_bar + 3) / 2 + 1;
@@ -757,30 +760,39 @@ void DfEriEngine::transform6Dto5D(const AngularMomentum2& qAB,
                                  a, b, c, d)
               << std::endl;
 #endif // DEBUG_TRANSFORM_6D_TO_5D
-    
+
+    assert(this->pTransformBuf_ != NULL);
     if (a == 2) {
-        this->transform6Dto5D_i(I_, J_, K_, L_, J, K, L, pOutput, pBuf);
+        this->transform6Dto5D_i(I_, J_, K_, L_, J, K, L, pOutput, this->pTransformBuf_);
         I = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
-        std::copy(pBuf, pBuf + end, pOutput);
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  pOutput);
     }
     if (b == 2) {
-        this->transform6Dto5D_j(I_, J_, K_, L_, I, K, L, pOutput, pBuf);
+        this->transform6Dto5D_j(I_, J_, K_, L_, I, K, L, pOutput, this->pTransformBuf_);
         J = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
-        std::copy(pBuf, pBuf + end, pOutput);
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  pOutput);
     }
     if (c == 2) {
-        this->transform6Dto5D_k(I_, J_, K_, L_, I, J, L, pOutput, pBuf);
+        this->transform6Dto5D_k(I_, J_, K_, L_, I, J, L, pOutput, this->pTransformBuf_);
         K = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
-        std::copy(pBuf, pBuf + end, pOutput);
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  pOutput);
     }
     if (d == 2) {
-        this->transform6Dto5D_l(I_, J_, K_, L_, I, J, K, pOutput, pBuf);
+        this->transform6Dto5D_l(I_, J_, K_, L_, I, J, K, pOutput, this->pTransformBuf_);
         L = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
-        std::copy(pBuf, pBuf + end, pOutput);
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  pOutput);
     }
 }
 

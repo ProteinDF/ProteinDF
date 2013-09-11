@@ -658,6 +658,9 @@ private:
     std::map<ERI_State, bool, ERI_State_cmp> isCalcdERI_;
     int ERI_batch_;
 
+    /// 6D->5D変換用バッファ
+    double* pTransformBuf_;
+
     //
     // TlTime time_calc_all_;
     TlLogging& log_;
