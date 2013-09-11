@@ -59,7 +59,11 @@ public:
                 TlDistributeSymmetricMatrix* pK);
     
 protected:
-    virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo);
+    virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
+                                                            const std::string& I2PQ_path);
+    virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
+                                                            const TlOrbitalInfoObject& orbInfo_q,
+                                                            const std::string& I2PQ_path);
 
     virtual std::vector<double>
     getSuperMatrixElements(const TlOrbitalInfoObject& orbInfo,
