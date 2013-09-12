@@ -10,6 +10,20 @@ public:
 
 public:
     virtual void buildX();
+    
+    virtual void canonicalOrthogonalize(const TlSymmetricMatrix& S,
+                                        TlMatrix* pX, TlMatrix* pXinv);
+
+    virtual void lowdinOrthogonalize(const TlSymmetricMatrix& S,
+                                     TlMatrix* pX, TlMatrix* pXinv);
+
+    void canonicalOrthogonalize(const TlDistributeSymmetricMatrix& S,
+                                TlDistributeMatrix* pX,
+                                TlDistributeMatrix* pXinv);
+
+    void lowdinOrthogonalize(const TlDistributeSymmetricMatrix& S,
+                             TlDistributeMatrix* pX,
+                             TlDistributeMatrix* pXinv);
 
 protected:
     void buildX_LAPACK();

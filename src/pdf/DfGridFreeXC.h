@@ -2,6 +2,9 @@
 #define DFGRIDFREEXC_H
 
 #include "DfObject.h"
+#include "DfXCFunctional.h"
+#include "DfOverlapX.h"
+#include "DfXMatrix.h"
 #include "DfOverlapEngine.h"
 #include "DfTaskCtrl.h"
 #include "TlOrbitalInfo.h"
@@ -97,10 +100,19 @@ public:
     virtual ~DfGridFreeXC();
     
 public:
-    void preprocessBeforeSCF();
+    virtual void preprocessBeforeSCF();
     void buildFxc();
 
 protected:
+    DfOverlapX* getDfOverlapObject();
+    DfXMatrix* getDfXMatrixObject();
+
+    template<class DfOverlapClass,
+             class DfXMatrixClass,
+             class SymmetricMatrixType, class MatrixType>
+    void preprocessBeforeSCF_templ();
+
+
     void buildFxc_LDA();
     // void buildFxc1();
     // void buildFxc2();
@@ -252,6 +264,75 @@ protected:
     bool isCanonicalOrthogonalize_;
     // int GF_mode_;
 };
+
+
+template<class DfOverlapClass,
+         class DfXMatrixClass,
+         class SymmetricMatrixType, class MatrixType>
+void DfGridFreeXC::preprocessBeforeSCF_templ()
+{
+    const DfXCFunctional xcFunc(this->pPdfParam_);
+    const DfXCFunctional::FUNCTIONAL_TYPE funcType = xcFunc.getFunctionalType();
+    bool isGGA = (funcType == DfXCFunctional::GGA);
+
+    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
+                                       (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
+
+    DfOverlapClass dfOvp(this->pPdfParam_);
+    if (this->isDedicatedBasisForGridFree_) {
+        {
+            this->log_.info("build S_gf matrix");
+            SymmetricMatrixType gfS;
+            dfOvp.getOvpMat(orbitalInfo_GF, &gfS);
+            
+            this->log_.info("build V matrix");
+            
+            DfXMatrixClass dfXMatrix(this->pPdfParam_);
+            MatrixType gfV;
+            if (this->isCanonicalOrthogonalize_) {
+                this->log_.info("orthogonalize method: canoncal");
+                dfXMatrix.canonicalOrthogonalize(gfS, &gfV, NULL);
+            } else {
+                this->log_.info("orthogonalize method: lowdin");
+                dfXMatrix.lowdinOrthogonalize(gfS, &gfV, NULL);
+            }
+            this->log_.info("save V matrix");
+            DfObject::saveGfVMatrix(gfV);
+        }
+        
+        {
+            this->log_.info("build S~ matrix: start");
+            MatrixType gfStilde;
+            dfOvp.getTransMat(this->orbitalInfo_,
+                              orbitalInfo_GF,
+                              &gfStilde);
+            this->log_.info("build S~ matrix: save");
+            DfObject::saveGfStildeMatrix(gfStilde);
+            
+            this->log_.info("build (S~)^-1 matrix: start");
+            SymmetricMatrixType Sinv = DfObject::getSpqMatrix<SymmetricMatrixType>();
+            Sinv.inverse();
+            
+            gfStilde.transpose();
+            const MatrixType gfOmega = gfStilde * Sinv;
+            this->log_.info("build (S~)^-1 matrix: save");
+            DfObject::saveGfOmegaMatrix(gfOmega);
+            this->log_.info("build (S~)^-1 matrix: finish");
+        }
+    }
+
+    // for GGA
+    if (isGGA) {
+        this->log_.info("build gradient matrix: start");
+        MatrixType Gx, Gy, Gz;
+        dfOvp.getGradient(orbitalInfo_GF, &Gx, &Gy, &Gz);
+        this->log_.info("build gradient matrix: save");
+        this->saveDipoleVelocityIntegralsXMatrix(Gx);
+        this->saveDipoleVelocityIntegralsYMatrix(Gy);
+        this->saveDipoleVelocityIntegralsZMatrix(Gz);
+        this->log_.info("build gradient matrix: finish");
+    }
+}
 
 #endif // DFGRIDFREEXC_H
 

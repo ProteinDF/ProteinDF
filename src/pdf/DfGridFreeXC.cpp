@@ -56,70 +56,23 @@ DfGridFreeXC::~DfGridFreeXC()
 {
 }
 
+DfOverlapX* DfGridFreeXC::getDfOverlapObject()
+{
+    DfOverlapX* pDfOverlapX = new DfOverlapX(this->pPdfParam_);
+    return pDfOverlapX;
+}
+
+DfXMatrix* DfGridFreeXC::getDfXMatrixObject()
+{
+    DfXMatrix* pDfXMatrix = new DfXMatrix(this->pPdfParam_);
+    return pDfXMatrix;
+}
+
 // before SCF ==================================================================
 void DfGridFreeXC::preprocessBeforeSCF()
 {
-    const DfXCFunctional xcFunc(this->pPdfParam_);
-    const DfXCFunctional::FUNCTIONAL_TYPE funcType = xcFunc.getFunctionalType();
-    bool isGGA = (funcType == DfXCFunctional::GGA);
-
-    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
-                                       (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
-
-    DfOverlapX ovp(this->pPdfParam_);
-    if (this->isDedicatedBasisForGridFree_) {
-        {
-            this->log_.info("build S_gf matrix");
-            TlSymmetricMatrix gfS;
-            ovp.getOvpMat(orbitalInfo_GF,
-                          &gfS);
-            
-            this->log_.info("build V matrix");
-            DfXMatrix dfXMat(this->pPdfParam_);
-            TlMatrix gfV;
-            if (this->isCanonicalOrthogonalize_) {
-                this->log_.info("orthogonalize method: canoncal");
-                dfXMat.canonicalOrthogonalize<TlSymmetricMatrix, TlMatrix>(gfS, &gfV, NULL);
-            } else {
-                this->log_.info("orthogonalize method: lowdin");
-                dfXMat.lowdinOrthogonalize<TlSymmetricMatrix, TlMatrix>(gfS, &gfV, NULL);
-            }
-            this->log_.info("save V matrix");
-            DfObject::saveGfVMatrix(gfV);
-        }
-        
-        {
-            this->log_.info("build S~ matrix: start");
-            TlMatrix gfStilde;
-            ovp.getTransMat(this->orbitalInfo_,
-                            orbitalInfo_GF,
-                            &gfStilde);
-            this->log_.info("build S~ matrix: save");
-            DfObject::saveGfStildeMatrix(gfStilde);
-            
-            this->log_.info("build (S~)^-1 matrix: start");
-            TlSymmetricMatrix Sinv = DfObject::getSpqMatrix<TlSymmetricMatrix>();
-            Sinv.inverse();
-            
-            gfStilde.transpose();
-            const TlMatrix gfOmega = gfStilde * Sinv;
-            this->log_.info("build (S~)^-1 matrix: save");
-            DfObject::saveGfOmegaMatrix(gfOmega);
-            this->log_.info("build (S~)^-1 matrix: finish");
-        }
-    }
-
-    // for GGA
-    if (isGGA) {
-        this->log_.info("build gradient matrix: start");
-        TlMatrix Gx, Gy, Gz;
-        ovp.getGradient(orbitalInfo_GF, &Gx, &Gy, &Gz);
-        this->log_.info("build gradient matrix: save");
-        this->saveDipoleVelocityIntegralsXMatrix(Gx);
-        this->saveDipoleVelocityIntegralsYMatrix(Gy);
-        this->saveDipoleVelocityIntegralsZMatrix(Gz);
-        this->log_.info("build gradient matrix: finish");
-    }
+    this->preprocessBeforeSCF_templ<DfOverlapX, DfXMatrix,
+                                    TlSymmetricMatrix, TlMatrix>();
 }
 
 // in SCF ======================================================================

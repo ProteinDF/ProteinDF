@@ -128,7 +128,66 @@ void DfOverlapX_Parallel::get_pqg(const TlDistributeVector& myu,
 
     this->calcOverlap(orbitalInfo_XC, tmpMyu,
                       orbitalInfo, &tmpF);
-    this->loggerTime(" finalize");
+    this->loggerTime("finalize");
     pF->mergeSparseMatrix(tmpF);
 }
 
+void DfOverlapX_Parallel::getOvpMat(const TlOrbitalInfoObject& orbitalInfo,
+                                    TlDistributeSymmetricMatrix* pS)
+{
+    assert(pS != NULL);
+    pS->resize(orbitalInfo.getNumOfOrbitals());
+    TlSparseSymmetricMatrix tmpS(orbitalInfo.getNumOfOrbitals());
+
+    this->calcOverlap(orbitalInfo, &tmpS);
+
+    this->loggerTime("finalize");
+    pS->mergeSparseMatrix(tmpS);
+}
+
+void DfOverlapX_Parallel::getGradient(const TlOrbitalInfoObject& orbitalInfo,
+                                      TlDistributeMatrix* pMatX,
+                                      TlDistributeMatrix* pMatY,
+                                      TlDistributeMatrix* pMatZ)
+{
+    assert(pMatX != NULL);
+    assert(pMatY != NULL);
+    assert(pMatZ != NULL);
+    
+    const index_type numOfAOs = orbitalInfo.getNumOfOrbitals();
+    pMatX->resize(numOfAOs, numOfAOs);
+    pMatY->resize(numOfAOs, numOfAOs);
+    pMatZ->resize(numOfAOs, numOfAOs);
+
+    const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
+
+    this->createEngines();
+    DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
+
+    TlSparseMatrix tmpMatX(numOfAOs, numOfAOs);
+    TlSparseMatrix tmpMatY(numOfAOs, numOfAOs);
+    TlSparseMatrix tmpMatZ(numOfAOs, numOfAOs);
+
+    std::vector<DfTaskCtrl::Task2> taskList;
+    bool hasTask = pTaskCtrl->getQueue2(orbitalInfo,
+                                       true,
+                                       this->grainSize_, &taskList, true);
+    while (hasTask == true) {
+        this->getGradient_partProc(orbitalInfo,
+                                   taskList,
+                                   &tmpMatX, &tmpMatY, &tmpMatZ);
+        
+        hasTask = pTaskCtrl->getQueue2(orbitalInfo,
+                                       true,
+                                       this->grainSize_, &taskList);
+    }
+
+    pTaskCtrl->cutoffReport();
+    delete pTaskCtrl;
+    pTaskCtrl = NULL;
+    this->destroyEngines();
+
+    pMatX->mergeSparseMatrix(tmpMatX);
+    pMatY->mergeSparseMatrix(tmpMatY);
+    pMatZ->mergeSparseMatrix(tmpMatZ);
+}

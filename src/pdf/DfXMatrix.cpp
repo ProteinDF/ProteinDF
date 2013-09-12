@@ -46,3 +46,15 @@ void DfXMatrix::buildX()
 }
 
 
+void DfXMatrix::canonicalOrthogonalize(const TlSymmetricMatrix& S,
+                                       TlMatrix* pX, TlMatrix* pXinv)
+{
+    this->canonicalOrthogonalizeTmpl<TlSymmetricMatrix, TlMatrix>(S, pX, pXinv);
+}
+
+void DfXMatrix::lowdinOrthogonalize(const TlSymmetricMatrix& S,
+                                    TlMatrix* pX, TlMatrix* pXinv)
+{
+    this->lowdinOrthogonalizeTmpl<TlSymmetricMatrix, TlMatrix>(S, pX, pXinv);
+}
+

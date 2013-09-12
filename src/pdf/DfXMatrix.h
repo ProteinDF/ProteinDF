@@ -16,15 +16,21 @@ public:
 public:
     virtual void buildX();
 
-    template<typename SymmetricMatrixType, typename MatrixType>
-    void canonicalOrthogonalize(const SymmetricMatrixType& S,
-                                MatrixType* pX, MatrixType* pXinv);
+    virtual void canonicalOrthogonalize(const TlSymmetricMatrix& S,
+                                        TlMatrix* pX, TlMatrix* pXinv);
 
-    template<typename SymmetricMatrixType, typename MatrixType>
-    void lowdinOrthogonalize(const SymmetricMatrixType& S,
-                             MatrixType* pX, MatrixType* pXinv);
+    virtual void lowdinOrthogonalize(const TlSymmetricMatrix& S,
+                                     TlMatrix* pX, TlMatrix* pXinv);
 
 protected:
+    template<typename SymmetricMatrixType, typename MatrixType>
+    void canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
+                                    MatrixType* pX, MatrixType* pXinv);
+
+    template<typename SymmetricMatrixType, typename MatrixType>
+    void lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
+                                 MatrixType* pX, MatrixType* pXinv);
+
     template<typename MatrixType>
     void check_X(const MatrixType& X,
                  const MatrixType& Xinv,
@@ -46,8 +52,8 @@ protected:
 
 
 template<typename SymmetricMatrixType, typename MatrixType>
-void DfXMatrix::canonicalOrthogonalize(const SymmetricMatrixType& S,
-                                       MatrixType* pX, MatrixType* pXinv)
+void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
+                                           MatrixType* pX, MatrixType* pXinv)
 {
     this->log_.info("orthogonalize by canonical method");
 
@@ -135,8 +141,8 @@ void DfXMatrix::canonicalOrthogonalize(const SymmetricMatrixType& S,
 }
 
 template<typename SymmetricMatrixType, typename MatrixType>
-void DfXMatrix::lowdinOrthogonalize(const SymmetricMatrixType& S,
-                                    MatrixType* pX, MatrixType* pXinv)
+void DfXMatrix::lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
+                                        MatrixType* pX, MatrixType* pXinv)
 {
     this->log_.info("orthogonalize by lowdin method");
     const index_type dim = S.getNumOfRows();

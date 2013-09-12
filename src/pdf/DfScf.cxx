@@ -522,8 +522,11 @@ void DfScf::buildXcMatrix()
 
         if (this->XC_engine_ != XC_ENGINE_GRID) {
             this->log_.info("using grid-free method");
-            DfGridFreeXC dfGridFreeXC(this->pPdfParam_);
-            dfGridFreeXC.buildFxc();
+            DfGridFreeXC* pDfGridFreeXC = this->getDfGridFreeXcObject();
+            pDfGridFreeXC->buildFxc();
+
+            delete pDfGridFreeXC;
+            pDfGridFreeXC = NULL;
         } else {
             this->log_.info("using grid method");
 
@@ -552,6 +555,11 @@ void DfScf::buildXcMatrix()
     }
 }
 
+DfGridFreeXC* DfScf::getDfGridFreeXcObject()
+{
+    DfGridFreeXC* pDfGridFreeXC = new DfGridFreeXC(this->pPdfParam_);
+    return pDfGridFreeXC;
+}
 
 DfXCFunctional* DfScf::getDfXCFunctional()
 {

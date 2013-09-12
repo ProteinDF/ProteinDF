@@ -840,6 +840,10 @@ void DfOverlapX::getGradient(const TlOrbitalInfoObject& orbitalInfo,
     delete pTaskCtrl;
     pTaskCtrl = NULL;
     this->destroyEngines();
+
+    this->finalize(pMatX);
+    this->finalize(pMatY);
+    this->finalize(pMatZ);
 }
 
 
