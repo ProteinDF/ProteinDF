@@ -18,6 +18,11 @@ protected:
 
     void preprocessBeforeSCF_LAPACK();
     void preprocessBeforeSCF_ScaLAPACK();
+
+protected:
+    virtual void buildFxc_LDA();
+    void buildFxc_LDA_LAPACK();
+    void buildFxc_LDA_ScaLAPACK();
 };
 
 #endif // DFGRIDFREEXC_PARALLEL_H

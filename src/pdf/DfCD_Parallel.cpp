@@ -367,7 +367,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
             G_pm = this->getSuperMatrixElements(orbInfo,
                                                 pivot_m, G_col_list, I2PQ, schwartzTable);
         }
-        assert(G_pm.size() == numOf_G_cols);
+        assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
 
         // CD calc
         {
@@ -572,7 +572,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyA(const TlOrbitalIn
             G_pm = this->getSuperMatrixElementsA(orbInfo_p, orbInfo_q,
                                                  pivot_m, G_col_list, I2PQ, schwartzTable);
         }
-        assert(G_pm.size() == numOf_G_cols);
+        assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
 
         // CD calc
         {
@@ -1074,6 +1074,11 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
     this->log_.info(TlUtils::format("K add:       %10.1f sec.", time_add.getElapseTime()));
 }
 
+void DfCD_Parallel::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
+{
+    DfCD::getM(P, pM);
+}
+
 void DfCD_Parallel::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
@@ -1126,7 +1131,7 @@ void DfCD_Parallel::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
                                   (*this->pPdfParam_)["basis_sets"]);
     const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
                                   (*this->pPdfParam_)["basis_sets_GF"]);
-    const index_type numOfAOs = orbInfo_p.getNumOfOrbitals();
+    // const index_type numOfAOs = orbInfo_p.getNumOfOrbitals();
     const index_type dim_M = orbInfo_q.getNumOfOrbitals();
     pM->resize(dim_M);
 
@@ -1162,3 +1167,33 @@ void DfCD_Parallel::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     }
     rComm.allReduce_SUM(*pM);
 }
+
+void DfCD_Parallel::getM(const TlDistributeSymmetricMatrix& P,
+                         TlDistributeSymmetricMatrix* pM)
+{
+    this->log_.critical("sorry, NO IMPLEMENTED!");
+    this->log_.critical("DfCD_Parallel::getM(const TlDistributeSymmetricMatrix&, TlDistributeSymmetricMatrix*)");
+    abort();
+    // if (this->isDedicatedBasisForGridFree_) {
+    //     this->getM_A(P, pM);
+    // } else {
+    //     this->getM_S(P, pM);
+    // }
+}
+
+void DfCD_Parallel::getM_S(const TlDistributeSymmetricMatrix& P,
+                           TlDistributeSymmetricMatrix* pM)
+{
+    this->log_.critical("sorry, NO IMPLEMENTED!");
+    this->log_.critical("DfCD_Parallel::getM_S(const TlDistributeSymmetricMatrix&, TlDistributeSymmetricMatrix*)");
+    abort();
+}
+
+void DfCD_Parallel::getM_A(const TlDistributeSymmetricMatrix& P,
+                           TlDistributeSymmetricMatrix* pM)
+{
+    this->log_.critical("sorry, NO IMPLEMENTED!");
+    this->log_.critical("DfCD_Parallel::getM_A(const TlDistributeSymmetricMatrix&, TlDistributeSymmetricMatrix*)");
+    abort();
+}
+

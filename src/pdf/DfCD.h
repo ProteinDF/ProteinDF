@@ -28,9 +28,9 @@ public:
     void getJ(TlSymmetricMatrix *pJ);
     void getK(const RUN_TYPE runType,
               TlSymmetricMatrix *pK);
-    void getM(const TlSymmetricMatrix& P,
-              TlSymmetricMatrix* pM);
-
+    virtual void getM(const TlSymmetricMatrix& P,
+                      TlSymmetricMatrix* pM);
+    
 protected:
     void getJ_S(TlSymmetricMatrix *pJ);
     void getK_S(const RUN_TYPE runType,

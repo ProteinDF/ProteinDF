@@ -1,6 +1,7 @@
 #include "DfGridFreeXC_Parallel.h"
 #include "DfOverlapX_Parallel.h"
 #include "DfXMatrix_Parallel.h"
+#include "DfCD_Parallel.h"
 
 DfGridFreeXC_Parallel::DfGridFreeXC_Parallel(TlSerializeData* pPdfParam)
     : DfGridFreeXC(pPdfParam) {
@@ -22,6 +23,7 @@ DfXMatrix* DfGridFreeXC_Parallel::getDfXMatrixObject()
     return pDfXMatrix;
 }
 
+// before SCF ==================================================================
 void DfGridFreeXC_Parallel::preprocessBeforeSCF()
 {
 #ifdef HAVE_SCALAPACK
@@ -51,4 +53,38 @@ void DfGridFreeXC_Parallel::preprocessBeforeSCF_ScaLAPACK()
                                     TlDistributeSymmetricMatrix,
                                     TlDistributeMatrix>();
 }
+
+
+// in SCF ======================================================================
+void DfGridFreeXC_Parallel::buildFxc_LDA()
+{
+#ifdef HAVE_SCALAPACK
+    if (this->m_bUsingSCALAPACK == true) {
+        this->buildFxc_LDA_ScaLAPACK();
+    } else {
+        this->buildFxc_LDA_LAPACK();
+    }
+#else
+    {
+        this->buildFxc_LDA_LAPACK();
+    }
+#endif // HAVE_SCALAPACK
+}
+
+void DfGridFreeXC_Parallel::buildFxc_LDA_LAPACK()
+{
+    DfGridFreeXC::buildFxc_LDA_tmpl<DfOverlapX_Parallel,
+                                    DfCD_Parallel,
+                                    TlSymmetricMatrix,
+                                    TlMatrix>();
+}
+
+void DfGridFreeXC_Parallel::buildFxc_LDA_ScaLAPACK()
+{
+    DfGridFreeXC::buildFxc_LDA_tmpl<DfOverlapX_Parallel,
+                                    DfCD_Parallel,
+                                    TlDistributeSymmetricMatrix,
+                                    TlDistributeMatrix>();
+}
+
 

@@ -20,6 +20,12 @@ public:
     virtual void getJ(TlSymmetricMatrix* pJ);
     void getJ_D(TlDistributeSymmetricMatrix* pJ);
 
+    virtual void getM(const TlSymmetricMatrix& P,
+                      TlSymmetricMatrix* pM);
+
+    void getM(const TlDistributeSymmetricMatrix& P,
+              TlDistributeSymmetricMatrix* pM);
+
     // void getJ_distributed(TlDistributeSymmetricMatrix *pJ);
     // void getK_distributed(const RUN_TYPE runType,
     //                       TlDistributeSymmetricMatrix *pK);
@@ -58,12 +64,18 @@ public:
 
     virtual void getK(const RUN_TYPE runType,
                       TlSymmetricMatrix* pK);
+    void getK_D(const RUN_TYPE runType,
+                TlDistributeSymmetricMatrix* pK);
 
+protected:
     virtual void getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
     virtual void getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
 
-    void getK_D(const RUN_TYPE runType,
-                TlDistributeSymmetricMatrix* pK);
+    void getM_S(const TlDistributeSymmetricMatrix& P,
+                TlDistributeSymmetricMatrix* pM);
+    void getM_A(const TlDistributeSymmetricMatrix& P,
+                TlDistributeSymmetricMatrix* pM);
+    
     
 protected:
     virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,

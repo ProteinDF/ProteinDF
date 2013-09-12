@@ -61,6 +61,15 @@ public:
                      TlDistributeMatrix* pMatY,
                      TlDistributeMatrix* pMatZ);
 
+    virtual void getM(const TlSymmetricMatrix& P,
+                      TlSymmetricMatrix* pM);
+    virtual void getM_A(const TlSymmetricMatrix& P,
+                        TlSymmetricMatrix* pM);
+
+    void getM(const TlDistributeSymmetricMatrix& P,
+              TlDistributeSymmetricMatrix* pM);
+    void getM_A(const TlDistributeSymmetricMatrix& P,
+                TlDistributeSymmetricMatrix* pM);
     
 protected:
     virtual void logger(const std::string& str) const;

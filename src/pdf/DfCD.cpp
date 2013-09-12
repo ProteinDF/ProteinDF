@@ -753,7 +753,7 @@ TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject&
             G_pm = this->getSuperMatrixElementsA(orbInfo_p, orbInfo_q,
                                                  pivot_m, G_col_list, I2PQ, schwartzTable);
         }
-        assert(G_pm.size() == numOf_G_cols);
+        assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
 
         // CD calc
         const TlVector L_pm = L.getRowVector(pivot_m);
@@ -931,7 +931,7 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
 
     const double tau = this->CDAM_tau_;
     const int taskListSize = taskList.size();
-    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+    // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
     {
@@ -1510,7 +1510,7 @@ DfCD::setERIs(const TlOrbitalInfoObject& orbInfo,
             const int basisTypeR = indexR - shellIndexR;
             const int basisTypeS = indexS - shellIndexS;
             
-            const int shellTypeP = orbInfo.getShellType(shellIndexP);
+            // const int shellTypeP = orbInfo.getShellType(shellIndexP);
             const int shellTypeQ = orbInfo.getShellType(shellIndexQ);
             const int shellTypeR = orbInfo.getShellType(shellIndexR);
             const int shellTypeS = orbInfo.getShellType(shellIndexS);
@@ -1520,7 +1520,7 @@ DfCD::setERIs(const TlOrbitalInfoObject& orbInfo,
             const int maxStepsS = 2 * shellTypeS + 1;
             
             const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
-            assert(values.size() > index);
+            assert(static_cast<int>(values.size()) > index);
             
 #pragma omp atomic
             answer[i] += values.at(index);
@@ -1574,7 +1574,7 @@ DfCD::setERIsA(const TlOrbitalInfoObject& orbInfo_p,
             const int basisTypeR = indexR - shellIndexR;
             const int basisTypeS = indexS - shellIndexS;
             
-            const int shellTypeP = orbInfo_p.getShellType(shellIndexP);
+            // const int shellTypeP = orbInfo_p.getShellType(shellIndexP);
             const int shellTypeQ = orbInfo_q.getShellType(shellIndexQ);
             const int shellTypeR = orbInfo_p.getShellType(shellIndexR);
             const int shellTypeS = orbInfo_q.getShellType(shellIndexS);
@@ -1584,7 +1584,7 @@ DfCD::setERIsA(const TlOrbitalInfoObject& orbInfo_p,
             const int maxStepsS = 2 * shellTypeS + 1;
             
             const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
-            assert(values.size() > index);
+            assert(static_cast<int>(values.size()) > index);
             
 #pragma omp atomic
             answer[i] += values.at(index);
