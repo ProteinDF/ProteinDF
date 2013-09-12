@@ -1077,7 +1077,7 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
 void DfCD_Parallel::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    this->log_.info("calc M by CD method (parallel).");
+    this->log_.info("calc M by CD method. (symmetric routine; parallel)");
 
     const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
                                 (*this->pPdfParam_)["basis_sets"]);
@@ -1120,7 +1120,7 @@ void DfCD_Parallel::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 void DfCD_Parallel::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    this->log_.info("calc M by CD method (parallel).");
+    this->log_.info("calc M by CD method. (asymmetric routine; parallel)");
 
     const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
                                   (*this->pPdfParam_)["basis_sets"]);

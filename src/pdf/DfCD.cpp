@@ -462,6 +462,8 @@ void DfCD::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 
 void DfCD::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 {
+    this->log_.info("calc M by CD method. (symmetric routine)");
+
     const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
                                 (*this->pPdfParam_)["basis_sets"]);
     const index_type numOfAOs = orbInfo.getNumOfOrbitals();
@@ -494,6 +496,7 @@ void DfCD::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 
 void DfCD::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 {
+    this->log_.info("calc M by CD method. (asymmetric routine)");
     const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
                                   (*this->pPdfParam_)["basis_sets"]);
     const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
