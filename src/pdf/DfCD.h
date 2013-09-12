@@ -632,4 +632,17 @@ TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& 
 }
 
 
+template<class EngineClass>
+void DfCD::createEngines()
+{
+    assert(this->pEngines_ == NULL);
+    const int numOfThreads = this->numOfThreads_;
+    this->log_.info(TlUtils::format("create engine: %d", numOfThreads));
+
+    this->pEngines_ = new DfEngineObject*[numOfThreads];
+    for (int i = 0; i < numOfThreads; ++i) {
+        this->pEngines_[i] = new EngineClass;
+    }
+}
+
 #endif // DFCD_H

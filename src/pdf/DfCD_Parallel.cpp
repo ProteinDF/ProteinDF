@@ -7,6 +7,7 @@
 #include "DfCD_Parallel.h"
 #include "DfTaskCtrl_Parallel.h"
 #include "DfOverlapEngine.h"
+#include "DfEriEngine.h"
 #include "TlCommunicate.h"
 #include "TlTime.h"
 
@@ -34,7 +35,7 @@ void DfCD_Parallel::calcCholeskyVectorsForJK()
                                 (*this->pPdfParam_)["basis_sets"]);
     // productive code
     const TlRowVectorMatrix2 Ljk 
-        = this->calcCholeskyVectorsOnTheFly<DfEriEngine>(orbInfo,
+        = DfCD::calcCholeskyVectorsOnTheFly<DfEriEngine>(orbInfo,
                                                          this->getI2pqVtrPath());
     this->saveL(Ljk, DfObject::getLjkMatrixPath());
 }
@@ -50,7 +51,7 @@ void DfCD_Parallel::calcCholeskyVectorsForGridFree()
                                       (*this->pPdfParam_)["basis_sets_GF"]);
         // productive code
         const TlRowVectorMatrix2 Lxc 
-            = this->calcCholeskyVectorsOnTheFly<DfOverlapEngine>(orbInfo_p,
+            = DfCD::calcCholeskyVectorsOnTheFly<DfOverlapEngine>(orbInfo_p,
                                                                  orbInfo_q,
                                                                  this->getI2pqVtrXCPath());
         this->saveL(Lxc, DfObject::getLxcMatrixPath());
@@ -58,7 +59,7 @@ void DfCD_Parallel::calcCholeskyVectorsForGridFree()
         // productive code
         this->log_.info("build Lxc matrix by on-the-fly method.");
         const TlRowVectorMatrix2 Lxc 
-            = this->calcCholeskyVectorsOnTheFly<DfOverlapEngine>(orbInfo_p,
+            = DfCD::calcCholeskyVectorsOnTheFly<DfOverlapEngine>(orbInfo_p,
                                                                  this->getI2pqVtrXCPath());
         this->saveL(Lxc, DfObject::getLxcMatrixPath());
     }
