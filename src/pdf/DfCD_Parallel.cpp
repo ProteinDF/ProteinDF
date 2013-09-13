@@ -1100,10 +1100,11 @@ void DfCD_Parallel::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
     assert(L.getRank() == rComm.getRank());
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrXCPath());
+    this->log_.info(TlUtils::format("I2PQ size: %ld", I2PQ.size()));
 
     const index_type cvSize = L.getNumOfRows();
     const index_type numOfCBs = L.getNumOfCols();
-    this->log_.debug(TlUtils::format("L size: %d x %d", cvSize, numOfCBs));
+    this->log_.info(TlUtils::format("L size: %d x %d", cvSize, numOfCBs));
 
     std::vector<double> cv(cvSize);
     for (index_type I = 0; I < numOfCBs; ++I) {
@@ -1147,9 +1148,11 @@ void DfCD_Parallel::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
     assert(L.getRank() == rComm.getRank());
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrXCPath());
+    this->log_.info(TlUtils::format("I2PQ size: %ld", I2PQ.size()));
 
     const index_type cvSize = L.getNumOfRows();
     const index_type numOfCBs = L.getNumOfCols();
+    this->log_.info(TlUtils::format("L size: %d x %d", cvSize, numOfCBs));
 
     const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
     
@@ -1160,8 +1163,10 @@ void DfCD_Parallel::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
             const index_type copySize = L.getColVector(I, &(cv[0]), cvSize);
             assert(copySize == cvSize);
 
-            TlSymmetricMatrix l = 
-                this->getCholeskyVector(cv, I2PQ);
+            TlMatrix l = 
+                this->getCholeskyVectorA(orbInfo_p, orbInfo_q,
+                                         cv, I2PQ);
+            l.transpose();
             
             TlMatrix X = l * C;
             TlMatrix Xt = X;
