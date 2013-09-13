@@ -113,11 +113,8 @@ protected:
     void preprocessBeforeSCF_templ();
 
 
-    void buildFxc_LDA();
-    // void buildFxc1();
-    // void buildFxc2();
-
-    void buildFxc_GGA();
+    virtual void buildFxc_LDA();
+    virtual void buildFxc_GGA();
 
 protected:
     static const int MAX_SHELL_TYPE;
@@ -138,7 +135,7 @@ protected:
     
 protected:
     // virtual void getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
-    virtual void getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+    // virtual void getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
     
     // TlSparseSymmetricMatrix makeSchwarzTable(const TlOrbitalInfoObject& orbitalInfo);
     // void getM_part(const TlOrbitalInfoObject& orbitalInfo,

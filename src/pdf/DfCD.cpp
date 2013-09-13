@@ -274,6 +274,8 @@ TlSymmetricMatrix DfCD::getCholeskyVector(const TlVector& L_col,
                                           const PQ_PairArray& I2PQ)
 {
     const index_type numOfItilde = L_col.getSize();
+    assert(numOfItilde == I2PQ.size());
+
     TlSymmetricMatrix answer(this->m_nNumOfAOs);
     for (index_type i = 0; i < numOfItilde; ++i) {
         answer.set(I2PQ[i].index1(),

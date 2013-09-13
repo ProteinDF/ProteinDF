@@ -1076,7 +1076,12 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
 
 void DfCD_Parallel::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 {
-    DfCD::getM(P, pM);
+    this->log_.info("DfCD_Parallel::getM()");
+    if (this->isDedicatedBasisForGridFree_) {
+        this->getM_A(P, pM);
+    } else {
+        this->getM_S(P, pM);
+    }
 }
 
 void DfCD_Parallel::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
@@ -1091,13 +1096,14 @@ void DfCD_Parallel::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 
     // cholesky vector
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
-    L.load(DfObject::getLjkMatrixPath());
+    L.load(DfObject::getLxcMatrixPath());
     assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
     assert(L.getRank() == rComm.getRank());
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrXCPath());
 
     const index_type cvSize = L.getNumOfRows();
     const index_type numOfCBs = L.getNumOfCols();
+    this->log_.debug(TlUtils::format("L size: %d x %d", cvSize, numOfCBs));
 
     std::vector<double> cv(cvSize);
     for (index_type I = 0; I < numOfCBs; ++I) {
@@ -1137,7 +1143,7 @@ void DfCD_Parallel::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 
     // cholesky vector
     TlColVectorMatrix2 L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
-    L.load(DfObject::getLjkMatrixPath());
+    L.load(DfObject::getLxcMatrixPath());
     assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
     assert(L.getRank() == rComm.getRank());
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrXCPath());

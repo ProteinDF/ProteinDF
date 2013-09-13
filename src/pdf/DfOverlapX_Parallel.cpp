@@ -191,3 +191,32 @@ void DfOverlapX_Parallel::getGradient(const TlOrbitalInfoObject& orbitalInfo,
     pMatY->mergeSparseMatrix(tmpMatY);
     pMatZ->mergeSparseMatrix(tmpMatZ);
 }
+
+void DfOverlapX_Parallel::getM(const TlSymmetricMatrix& P,
+                               TlSymmetricMatrix* pM) 
+{
+    this->log_.info("DfOverlapX_Parallel::getM(const TlSymmetricMatrix&, TlSymmetricMatrix* pM)");
+    DfOverlapX::getM(P, pM);
+}
+
+void DfOverlapX_Parallel::getM_A(const TlSymmetricMatrix& P,
+                                 TlSymmetricMatrix* pM)
+{
+    this->log_.info("DfOverlapX_Parallel::getM_A(const TlSymmetricMatrix&, TlSymmetricMatrix* pM)");
+    DfOverlapX::getM_A(P, pM);
+}
+
+void DfOverlapX_Parallel::getM(const TlDistributeSymmetricMatrix& P,
+                               TlDistributeSymmetricMatrix* pM)
+{
+    this->log_.info("DfOverlapX_Parallel::getM(const TlDistSymmetricMatrix&, TlDistSymmetricMatrix* pM)");
+    abort();
+}
+
+void DfOverlapX_Parallel::getM_A(const TlDistributeSymmetricMatrix& P,
+                                 TlDistributeSymmetricMatrix* pM)
+{
+    this->log_.info("DfOverlapX_Parallel::getM_A(const TlDistSymmetricMatrix&, TlDistSymmetricMatrix* pM)");
+    abort();
+}
+

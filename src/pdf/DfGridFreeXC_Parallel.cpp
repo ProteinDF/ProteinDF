@@ -5,6 +5,7 @@
 
 DfGridFreeXC_Parallel::DfGridFreeXC_Parallel(TlSerializeData* pPdfParam)
     : DfGridFreeXC(pPdfParam) {
+    this->log_.info("DfGridFreeXC_Parallel::DfGridFreeXC_Parallel()");
 }
 
 DfGridFreeXC_Parallel::~DfGridFreeXC_Parallel()
@@ -58,6 +59,7 @@ void DfGridFreeXC_Parallel::preprocessBeforeSCF_ScaLAPACK()
 // in SCF ======================================================================
 void DfGridFreeXC_Parallel::buildFxc_LDA()
 {
+    this->log_.info("DfGridFreeXC_Parallel::buildFxc_LDA()");
 #ifdef HAVE_SCALAPACK
     if (this->m_bUsingSCALAPACK == true) {
         this->buildFxc_LDA_ScaLAPACK();
@@ -73,6 +75,7 @@ void DfGridFreeXC_Parallel::buildFxc_LDA()
 
 void DfGridFreeXC_Parallel::buildFxc_LDA_LAPACK()
 {
+    this->log_.info("DfGridFreeXC_Parallel::buildFxc_LDA_LAPACK()");
     DfGridFreeXC::buildFxc_LDA_tmpl<DfOverlapX_Parallel,
                                     DfCD_Parallel,
                                     TlSymmetricMatrix,
@@ -81,6 +84,7 @@ void DfGridFreeXC_Parallel::buildFxc_LDA_LAPACK()
 
 void DfGridFreeXC_Parallel::buildFxc_LDA_ScaLAPACK()
 {
+    this->log_.info("DfGridFreeXC_Parallel::buildFxc_LDA_ScaLAPACK()");
     DfGridFreeXC::buildFxc_LDA_tmpl<DfOverlapX_Parallel,
                                     DfCD_Parallel,
                                     TlDistributeSymmetricMatrix,
