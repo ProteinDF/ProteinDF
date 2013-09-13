@@ -58,6 +58,11 @@ protected:
     TlDistributeSymmetricMatrix 
     getCholeskyVector_distribute(const TlVector& L_col,
                                  const PQ_PairArray& I2PQ);
+    TlDistributeSymmetricMatrix 
+    getCholeskyVectorA_distribute(const TlOrbitalInfoObject& orbInfo_p,
+                                  const TlOrbitalInfoObject& orbInfo_q,
+                                  const TlVector& L_col,
+                                  const PQ_PairArray& I2PQ);
 
     // -------------------------------------------------------------------------
 public:
