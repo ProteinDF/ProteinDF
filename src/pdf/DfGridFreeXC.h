@@ -279,6 +279,8 @@ void DfGridFreeXC::preprocessBeforeSCF_templ()
     const DfXCFunctional::FUNCTIONAL_TYPE funcType = xcFunc.getFunctionalType();
     bool isGGA = (funcType == DfXCFunctional::GGA);
 
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_sets"]); // orbital用
     const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
                                        (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
 
@@ -329,7 +331,11 @@ void DfGridFreeXC::preprocessBeforeSCF_templ()
     if (isGGA) {
         this->log_.info("build gradient matrix: start");
         MatrixType Gx, Gy, Gz;
-        dfOvp.getGradient(orbitalInfo_GF, &Gx, &Gy, &Gz);
+        if (this->isDedicatedBasisForGridFree_) {
+            dfOvp.getGradient(orbitalInfo_GF, &Gx, &Gy, &Gz);
+        } else {
+            dfOvp.getGradient(orbitalInfo, &Gx, &Gy, &Gz);
+        }
         this->log_.info("build gradient matrix: save");
         this->saveDipoleVelocityIntegralsXMatrix(Gx);
         this->saveDipoleVelocityIntegralsYMatrix(Gy);
