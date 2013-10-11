@@ -59,6 +59,63 @@ void DfTaskCtrl_Parallel::cutoffReport_MS()
     }
 }
 
+bool DfTaskCtrl_Parallel::getQueue(const TlOrbitalInfoObject& orbitalInfo,
+                                   const int maxGrainSize,
+                                   std::vector<Task>* pTask,
+                                   bool initialize)
+{
+    bool answer = false;
+    
+    // [TODO] in this version, DC only
+    answer = this->getQueue_DC(orbitalInfo,
+                               maxGrainSize, pTask, initialize);
+
+    // if (this->isMasterSlave_ == true) {
+    //     answer = this->getQueue_MS(orbitalInfo,
+    //                                maxGrainSize, pTask, initialize);
+    // } else {
+    //     answer = this->getQueue_DC(orbitalInfo,
+    //                                maxGrainSize, pTask, initialize);
+    // }
+
+    return answer;
+}
+
+bool DfTaskCtrl_Parallel::getQueue_DC(const TlOrbitalInfoObject& orbitalInfo,
+                                      const int maxGrainSize,
+                                      std::vector<Task>* pTask,
+                                      bool initialize)
+{
+    assert(pTask != NULL);
+    pTask->clear();
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int numOfProcs = rComm.getNumOfProcs();
+    const int globalMaxGrainSize = maxGrainSize * numOfProcs;
+
+    std::vector<Task> globalTask;
+    bool answer = false;
+    answer = DfTaskCtrl::getQueue(orbitalInfo, 
+                                  globalMaxGrainSize,
+                                  &globalTask, initialize);
+    if (answer == true) {
+        const std::size_t grainSize = globalTask.size();
+        const std::size_t localGrainSize = (grainSize + numOfProcs -1) / numOfProcs;
+        
+        const int rank = rComm.getRank();
+        const std::size_t begin = localGrainSize * rank;
+        const std::size_t end = std::min(localGrainSize * (rank +1), grainSize);
+        
+        if (begin < end) {
+            pTask->resize(end - begin);
+            std::copy(globalTask.begin() + begin,
+                      globalTask.begin() + end,
+                      pTask->begin());
+        }
+    }
+
+    return answer;
+}
 
 bool DfTaskCtrl_Parallel::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
                                     const bool isCutoffDistribution,
