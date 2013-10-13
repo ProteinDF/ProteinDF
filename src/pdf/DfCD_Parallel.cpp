@@ -368,7 +368,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
         L.set(pivot_m, m, l_m_pm); // 通信発生せず。関係無いPEは値を捨てる。
         const double inv_l_m_pm = 1.0 / l_m_pm;
 
-        // ERI
+        // calc
         std::vector<double> G_pm;
         // const index_type numOf_G_cols = N -(m+1);
         const index_type numOf_G_cols = N -(m+1);
@@ -416,7 +416,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
 
                 const int G_pm_index = reverse_pivot[pivot_i] - (m+1);
                 const double l_m_pi = (G_pm[G_pm_index] - sum_ll) * inv_l_m_pm;
-#pragma omp critical(DfCD_Parallel__calcCholeskyVectors_onTheFly)
+#pragma omp critical(DfCD_Parallel__calcCholeskyVectorsOnTheFlyS_updateL)
                 {
                     L.set(pivot_i, m, l_m_pi);
                 }
@@ -536,12 +536,11 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyA(const TlOrbitalIn
     int progress = 0;
     index_type division = std::max<index_type>(N * 0.01, 100);
     while (error > threshold) {
-#ifdef CD_DEBUG
+#ifdef DEBUG_CD
         this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
-#endif // CD_DEBUG
+#endif // DEBUG_CD
 
         // progress 
-        //CD_resizeL_time.start();
         if (m >= progress * division) {
             this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e",
                                             m, error));
@@ -608,7 +607,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyA(const TlOrbitalIn
 
                 const int G_pm_index = reverse_pivot[pivot_i] - (m+1);
                 const double l_m_pi = (G_pm[G_pm_index] - sum_ll) * inv_l_m_pm;
-#pragma omp critical(DfCD_Parallel__calcCholeskyVectors_onTheFly)
+#pragma omp critical(DfCD_Parallel__calcCholeskyVectorsOnTheFlyA_updateL)
                 {
                     L.set(pivot_i, m, l_m_pi);
                 }
@@ -624,26 +623,15 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyA(const TlOrbitalIn
                 }
             }
 
-#ifdef _OPENMP
-            const int numOfThreads = omp_get_num_threads();
-            const int myThreadID = omp_get_thread_num();
-            for (int thread = 0; thread < numOfThreads; ++thread) {
-                if (thread == myThreadID) {
-                    if (error < my_error) {
-                        error = my_error;
-                        error_global_loc = my_error_global_loc;
-                        error_local_loc = my_error_local_loc;
-                    }
+#pragma omp critical(DfCD_Parallel__calcCholeskyVectorsOnTheFlyA_update_error)
+            {
+                if (error < my_error) {
+                    error = my_error;
+                    error_global_loc = my_error_global_loc;
+                    error_local_loc = my_error_local_loc;
                 }
-#pragma omp flush(error, error_global_loc)
             }
-#else
-            error = my_error;
-            error_global_loc = my_error_global_loc;
-            error_local_loc = my_error_local_loc;
-#endif // _OPENMP
         }
-
         rComm.allReduce_MAXLOC(&error, &error_global_loc);
         global_diagonals[global_pivot[error_global_loc]] = error;
 
