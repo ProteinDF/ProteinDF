@@ -273,7 +273,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
                                                                const std::string& I2PQ_path)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    this->log_.info("call on-the-fly Cholesky Decomposition routine (MPI parallel)");
+    this->log_.info("call on-the-fly Cholesky Decomposition routine (MPI parallel; symmetric)");
     assert(this->pEngines_ != NULL);
     this->initializeCutoffStats(orbInfo.getMaxShellType());
 
@@ -281,7 +281,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
     const std::size_t numOfPQs = numOfAOs * (numOfAOs +1) / 2;
     this->log_.info(TlUtils::format("number of orbitals: %d", numOfAOs));
     this->log_.info(TlUtils::format("number of pair of orbitals: %ld", numOfPQs));
-    TlSparseSymmetricMatrix schwartzTable(this->m_nNumOfAOs);
+    TlSparseSymmetricMatrix schwartzTable(numOfAOs);
     PQ_PairArray I2PQ;
     TlVector global_diagonals; // 対角成分
 
@@ -343,12 +343,11 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
     int progress = 0;
     index_type division = std::max<index_type>(N * 0.01, 100);
     while (error > threshold) {
-#ifdef CD_DEBUG
+#ifdef DEBUG_CD
         this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
-#endif // CD_DEBUG
+#endif // DEBUG_CD
 
         // progress 
-        //CD_resizeL_time.start();
         if (m >= progress * division) {
             this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e",
                                             m, error));
@@ -358,7 +357,6 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
             L.reserve_cols(progress * division);
         }
         L.resize(N, m+1);
-        //CD_resizeL_time.stop();
 
         // pivot
         std::swap(global_pivot[m], global_pivot[error_global_loc]);
@@ -434,26 +432,15 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
                 }
             }
 
-#ifdef _OPENMP
-            const int numOfThreads = omp_get_num_threads();
-            const int myThreadID = omp_get_thread_num();
-            for (int thread = 0; thread < numOfThreads; ++thread) {
-                if (thread == myThreadID) {
-                    if (error < my_error) {
-                        error = my_error;
-                        error_global_loc = my_error_global_loc;
-                        error_local_loc = my_error_local_loc;
-                    }
+#pragma omp critical(DfCD_Parallel__calcCholeskyVectorsOnTheFlyS_update_error)
+            {
+                if (error < my_error) {
+                    error = my_error;
+                    error_global_loc = my_error_global_loc;
+                    error_local_loc = my_error_local_loc;
                 }
-#pragma omp flush(error, error_global_loc)
             }
-#else
-            error = my_error;
-            error_global_loc = my_error_global_loc;
-            error_local_loc = my_error_local_loc;
-#endif // _OPENMP
         }
-
         rComm.allReduce_MAXLOC(&error, &error_global_loc);
         global_diagonals[global_pivot[error_global_loc]] = error;
 
@@ -476,7 +463,7 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyA(const TlOrbitalIn
                                                                const std::string& I2PQ_path)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    this->log_.info("call on-the-fly Cholesky Decomposition routine (MPI parallel)");
+    this->log_.info("call on-the-fly Cholesky Decomposition routine (MPI parallel; asymmetric)");
     assert(this->pEngines_ != NULL);
     this->initializeCutoffStats(std::max(orbInfo_p.getMaxShellType(), orbInfo_q.getMaxShellType()));
 

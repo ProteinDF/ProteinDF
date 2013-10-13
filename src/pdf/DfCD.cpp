@@ -550,7 +550,7 @@ TlSymmetricMatrix DfCD::getPMatrix()
 TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
                                                       const std::string& I2PQ_path)
 {
-    this->log_.info("call on-the-fly Cholesky Decomposition routine");
+    this->log_.info("call on-the-fly Cholesky Decomposition routine (symmetric)");
     assert(this->pEngines_ != NULL);
     this->initializeCutoffStats(orbInfo.getMaxShellType());
 
