@@ -22,23 +22,23 @@ public:
     virtual ~DfCD();
 
 public:
-    void calcCholeskyVectorsForJK();
-    void calcCholeskyVectorsForGridFree();
+    virtual void calcCholeskyVectorsForJK();
+    virtual void calcCholeskyVectorsForGridFree();
 
     void getJ(TlSymmetricMatrix *pJ);
     void getK(const RUN_TYPE runType,
               TlSymmetricMatrix *pK);
-    void getM(const TlSymmetricMatrix& P,
-              TlSymmetricMatrix* pM);
-
+    virtual void getM(const TlSymmetricMatrix& P,
+                      TlSymmetricMatrix* pM);
+    
 protected:
     void getJ_S(TlSymmetricMatrix *pJ);
     void getK_S(const RUN_TYPE runType,
                 TlSymmetricMatrix *pK);
-    void getM_S(const TlSymmetricMatrix& P,
-                TlSymmetricMatrix* pM);
-    void getM_A(const TlSymmetricMatrix& P,
-                TlSymmetricMatrix* pM);
+    virtual void getM_S(const TlSymmetricMatrix& P,
+                        TlSymmetricMatrix* pM);
+    virtual void getM_A(const TlSymmetricMatrix& P,
+                        TlSymmetricMatrix* pM);
 
 protected:
     class Index2 {
@@ -139,7 +139,7 @@ protected:
 
 protected:
     virtual void saveI2PQ(const PQ_PairArray& I2PQ, const std::string& filepath);
-    PQ_PairArray getI2PQ(const std::string& filepath);
+    virtual PQ_PairArray getI2PQ(const std::string& filepath);
 
     virtual void saveLjk(const TlMatrix& Ljk);
     virtual TlMatrix getLjk();
@@ -631,5 +631,18 @@ TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& 
     return L;
 }
 
+
+template<class EngineClass>
+void DfCD::createEngines()
+{
+    assert(this->pEngines_ == NULL);
+    const int numOfThreads = this->numOfThreads_;
+    this->log_.info(TlUtils::format("create engine: %d", numOfThreads));
+
+    this->pEngines_ = new DfEngineObject*[numOfThreads];
+    for (int i = 0; i < numOfThreads; ++i) {
+        this->pEngines_[i] = new EngineClass;
+    }
+}
 
 #endif // DFCD_H

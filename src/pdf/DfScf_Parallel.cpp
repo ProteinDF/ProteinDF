@@ -4,6 +4,7 @@
 #include "DfDiffDensityMatrix_Parallel.h"
 #include "DfDensityFittingX_Parallel.h"
 #include "DfDensityFittingX_ScaLAPACK.h"
+#include "DfGridFreeXC_Parallel.h"
 #include "DfXCFunctional_Parallel.h"
 #include "DfJMatrix_Parallel.h"
 #include "DfKMatrix_Parallel.h"
@@ -150,6 +151,12 @@ void DfScf_Parallel::doThreeIndexIntegral()
     rComm.barrier();
 }
 
+
+DfGridFreeXC* DfScf_Parallel::getDfGridFreeXcObject()
+{
+    DfGridFreeXC* pDfGridFreeXC = new DfGridFreeXC_Parallel(this->pPdfParam_);
+    return pDfGridFreeXC;
+}
 
 DfXCFunctional* DfScf_Parallel::getDfXCFunctional()
 {

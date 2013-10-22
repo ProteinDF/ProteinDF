@@ -5,6 +5,7 @@
 #include <map>
 
 #include "DfObject.h"
+#include "DfGridFreeXC.h"
 #include "DfXCFunctional.h"
 #include "DfFockMatrix.h"
 #include "DfConverge.h"
@@ -71,6 +72,7 @@ protected:
     virtual void doThreeIndexIntegral();
 
     void buildXcMatrix();
+    virtual DfGridFreeXC* getDfGridFreeXcObject();
     virtual DfXCFunctional* getDfXCFunctional();
 
     void buildJMatrix();

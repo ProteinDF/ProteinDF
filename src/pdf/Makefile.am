@@ -105,6 +105,7 @@ libppdf_la_SOURCES = \
 	DfDensityFittingX_Parallel.h		DfDensityFittingX_Parallel.cpp		\
 	DfDensityFittingX_ScaLAPACK.h		DfDensityFittingX_ScaLAPACK.cpp		\
 	DfFockMatrix_Parallel.h				DfFockMatrix_Parallel.cpp			\
+	DfGridFreeXC_Parallel.h				DfGridFreeXC_Parallel.cpp			\
 	DfXCFunctional_Parallel.h			DfXCFunctional_Parallel.cpp			\
 	DfCalcGridX_Parallel.h				DfCalcGridX_Parallel.cpp			\
 	DfConvcheck_Parallel.h				DfConvcheck_Parallel.cpp			\

@@ -12,6 +12,7 @@ protected:
     virtual void logger(const std::string& str) const;
 
 protected:
+    virtual DfGridFreeXC* getDfGridFreeXcObject();
     virtual DfXCFunctional* getDfXCFunctional();
 
 protected:

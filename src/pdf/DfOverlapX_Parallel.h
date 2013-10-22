@@ -19,6 +19,11 @@ public:
     void getSgd(TlDistributeSymmetricMatrix* pSab);
 
     /// 変換行列を作成する
+    virtual void getTransMat(const TlOrbitalInfoObject& orbInfo1,
+                             const TlOrbitalInfoObject& orbInfo2,
+                             TlMatrix* pS) {
+        DfOverlapX::getTransMat(orbInfo1, orbInfo2, pS);
+    }
     void getTransMat(const TlOrbitalInfoObject& orbInfo1,
                      const TlOrbitalInfoObject& orbInfo2,
                      TlDistributeMatrix* pS);
@@ -34,7 +39,37 @@ public:
     }
     virtual void get_pqg(const TlDistributeVector& myu,
                          TlDistributeSymmetricMatrix* pF);
-    
+
+
+    /// 重なり行列を作成する
+    virtual void getOvpMat(const TlOrbitalInfoObject& orbInfo,
+                           TlSymmetricMatrix* pS) {
+        DfOverlapX::getOvpMat(orbInfo, pS);
+    }
+    void getOvpMat(const TlOrbitalInfoObject& orbitalInfo,
+                   TlDistributeSymmetricMatrix* pS);
+
+    /// <p|nabra|q> を求める
+    virtual void getGradient(const TlOrbitalInfoObject& orbitalInfo,
+                             TlMatrix* pMatX,
+                             TlMatrix* pMatY,
+                             TlMatrix* pMatZ) {
+        DfOverlapX::getGradient(orbitalInfo, pMatX, pMatY, pMatZ);
+    }
+    void getGradient(const TlOrbitalInfoObject& orbitalInfo,
+                     TlDistributeMatrix* pMatX,
+                     TlDistributeMatrix* pMatY,
+                     TlDistributeMatrix* pMatZ);
+
+    virtual void getM(const TlSymmetricMatrix& P,
+                      TlSymmetricMatrix* pM);
+    virtual void getM_A(const TlSymmetricMatrix& P,
+                        TlSymmetricMatrix* pM);
+
+    void getM(const TlDistributeSymmetricMatrix& P,
+              TlDistributeSymmetricMatrix* pM);
+    void getM_A(const TlDistributeSymmetricMatrix& P,
+                TlDistributeSymmetricMatrix* pM);
     
 protected:
     virtual void logger(const std::string& str) const;

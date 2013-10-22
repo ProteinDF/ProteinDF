@@ -30,6 +30,7 @@ DfOverlapEngine::DfOverlapEngine()
     this->OVP_.resize(OVP_STATE_MAX);
 
     this->WORK = new double[OUTPUT_BUFFER_SIZE];
+    this->pTransformBuf_ = new double[OUTPUT_BUFFER_SIZE];
 }
 
 
@@ -37,6 +38,9 @@ DfOverlapEngine::~DfOverlapEngine()
 {
     delete[] this->WORK;
     this->WORK = NULL;
+
+    delete[] this->pTransformBuf_;
+    this->pTransformBuf_ = NULL;
 }
 
 
@@ -431,10 +435,6 @@ void DfOverlapEngine::transform6Dto5D()
         return;
     }
 
-    // (OpenMPの)実装によってはヒープに確保しないと動作しないことがある。
-    // double pBuf[OUTPUT_BUFFER_SIZE];
-    double* pBuf = new double[OUTPUT_BUFFER_SIZE];
-
     // 6D ベースの要素数(1, 3, 6, 10, ...)
     // 5D ベースの場合は(2n +1: 1, 3, 5, 7, ...)
     int I_ = a_bar * (a_bar + 3) / 2 + 1;
@@ -446,37 +446,43 @@ void DfOverlapEngine::transform6Dto5D()
     int K = c * (c + 3) / 2 + 1;
     int L = d * (d + 3) / 2 + 1;
 
+    assert(this->pTransformBuf_ != NULL);
     if (a == 2) {
-        this->transform6Dto5D_i(I_, J_, K_, L_, J, K, L, this->WORK, pBuf);
+        this->transform6Dto5D_i(I_, J_, K_, L_, J, K, L, this->WORK, this->pTransformBuf_);
         I = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
         assert(end <= OUTPUT_BUFFER_SIZE);
-        std::copy(pBuf, pBuf + end, this->WORK);
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  this->WORK);
     }
     if (b == 2) {
-        this->transform6Dto5D_j(I_, J_, K_, L_, I, K, L, this->WORK, pBuf);
+        this->transform6Dto5D_j(I_, J_, K_, L_, I, K, L, this->WORK, this->pTransformBuf_);
         J = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
         assert(end <= OUTPUT_BUFFER_SIZE);
-        std::copy(pBuf, pBuf + end, this->WORK);
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  this->WORK);
     }
     if (c == 2) {
-        this->transform6Dto5D_k(I_, J_, K_, L_, I, J, L, this->WORK, pBuf);
+        this->transform6Dto5D_k(I_, J_, K_, L_, I, J, L, this->WORK, this->pTransformBuf_);
         K = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
         assert(end <= OUTPUT_BUFFER_SIZE);
-        std::copy(pBuf, pBuf + end, this->WORK);
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  this->WORK);
     }
     if (d == 2) {
-        this->transform6Dto5D_l(I_, J_, K_, L_, I, J, K, this->WORK, pBuf);
+        this->transform6Dto5D_l(I_, J_, K_, L_, I, J, K, this->WORK, this->pTransformBuf_);
         L = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
         assert(end <= OUTPUT_BUFFER_SIZE);
-        std::copy(pBuf, pBuf + end, this->WORK);
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  this->WORK);
     }
-
-    delete[] pBuf;
-    pBuf = NULL;
 }
 
 

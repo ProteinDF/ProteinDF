@@ -2,6 +2,9 @@
 #define DFGRIDFREEXC_H
 
 #include "DfObject.h"
+#include "DfXCFunctional.h"
+#include "DfOverlapX.h"
+#include "DfXMatrix.h"
 #include "DfOverlapEngine.h"
 #include "DfTaskCtrl.h"
 #include "TlOrbitalInfo.h"
@@ -97,15 +100,21 @@ public:
     virtual ~DfGridFreeXC();
     
 public:
-    void preprocessBeforeSCF();
+    virtual void preprocessBeforeSCF();
     void buildFxc();
 
 protected:
-    void buildFxc_LDA();
-    void buildFxc1();
-    void buildFxc2();
+    DfOverlapX* getDfOverlapObject();
+    DfXMatrix* getDfXMatrixObject();
 
-    void buildFxc_GGA();
+    template<class DfOverlapClass,
+             class DfXMatrixClass,
+             class SymmetricMatrixType, class MatrixType>
+    void preprocessBeforeSCF_templ();
+
+
+    virtual void buildFxc_LDA();
+    virtual void buildFxc_GGA();
 
 protected:
     static const int MAX_SHELL_TYPE;
@@ -125,24 +134,24 @@ protected:
     typedef std::vector<ShellPairArray> ShellPairArrayTable;
     
 protected:
-    virtual void getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
-    virtual void getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+    // virtual void getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+    // virtual void getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
     
-    TlSparseSymmetricMatrix makeSchwarzTable(const TlOrbitalInfoObject& orbitalInfo);
-    void getM_part(const TlOrbitalInfoObject& orbitalInfo,
-                   const std::vector<DfTaskCtrl::Task4>& taskList,
-                   const TlMatrixObject& P, TlMatrixObject* pM);
+    // TlSparseSymmetricMatrix makeSchwarzTable(const TlOrbitalInfoObject& orbitalInfo);
+    // void getM_part(const TlOrbitalInfoObject& orbitalInfo,
+    //                const std::vector<DfTaskCtrl::Task4>& taskList,
+    //                const TlMatrixObject& P, TlMatrixObject* pM);
     void getM_part(const TlOrbitalInfoObject& orbitalInfo_PQ,
                    const TlOrbitalInfoObject& orbitalInfo_RS,
                    const std::vector<DfTaskCtrl::Task4>& taskList,
                    const TlMatrixObject& P, TlMatrixObject* pM);
-    void storeM(const index_type shellIndexP, const int maxStepsP,
-                const index_type shellIndexQ, const int maxStepsQ,
-                const index_type shellIndexR, const int maxStepsR,
-                const index_type shellIndexS, const int maxStepsS,
-                const DfOverlapEngine& engine,
-                const TlMatrixObject& P,
-                TlMatrixObject* pM);
+    // void storeM(const index_type shellIndexP, const int maxStepsP,
+    //             const index_type shellIndexQ, const int maxStepsQ,
+    //             const index_type shellIndexR, const int maxStepsR,
+    //             const index_type shellIndexS, const int maxStepsS,
+    //             const DfOverlapEngine& engine,
+    //             const TlMatrixObject& P,
+    //             TlMatrixObject* pM);
     void storeM_A(const index_type shellIndexP, const int maxStepsP,
                   const index_type shellIndexQ, const int maxStepsQ,
                   const index_type shellIndexR, const int maxStepsR,
@@ -157,8 +166,8 @@ protected:
     virtual void finalize(TlSymmetricMatrix* pMtx);
 
     void get_F_lamda(const TlVector lamda,
-                     TlSymmetricMatrix* pF_lamda,
-                     TlSymmetricMatrix* pE_lamda);
+                     TlMatrixObject* pF_lamda,
+                     TlMatrixObject* pE_lamda);
 
     // void get_F_lamda_GGA(const TlVector lambda_f,
     //                      const TlVector lambda_g,
@@ -172,6 +181,13 @@ protected:
     void getM_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
     ShellArrayTable makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo);
     ShellPairArrayTable getShellPairArrayTable(const ShellArrayTable& shellArrayTable);
+
+protected:
+    template<class DfOverlapClass,
+             class DfCD_class,
+             class SymmetricMatrixType, class MatrixType>
+    void buildFxc_LDA_tmpl();
+
 
 public:
     // virtual void calcCholeskyVectors_onTheFly();
@@ -252,6 +268,168 @@ protected:
     bool isCanonicalOrthogonalize_;
     // int GF_mode_;
 };
+
+
+template<class DfOverlapClass,
+         class DfXMatrixClass,
+         class SymmetricMatrixType, class MatrixType>
+void DfGridFreeXC::preprocessBeforeSCF_templ()
+{
+    const DfXCFunctional xcFunc(this->pPdfParam_);
+    const DfXCFunctional::FUNCTIONAL_TYPE funcType = xcFunc.getFunctionalType();
+    bool isGGA = (funcType == DfXCFunctional::GGA);
+
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_sets"]); // orbital用
+    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
+                                       (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
+
+    DfOverlapClass dfOvp(this->pPdfParam_);
+    if (this->isDedicatedBasisForGridFree_) {
+        {
+            this->log_.info("build S_gf matrix");
+            SymmetricMatrixType gfS;
+            dfOvp.getOvpMat(orbitalInfo_GF, &gfS);
+            
+            this->log_.info("build V matrix");
+            
+            DfXMatrixClass dfXMatrix(this->pPdfParam_);
+            MatrixType gfV;
+            if (this->isCanonicalOrthogonalize_) {
+                this->log_.info("orthogonalize method: canoncal");
+                dfXMatrix.canonicalOrthogonalize(gfS, &gfV, NULL);
+            } else {
+                this->log_.info("orthogonalize method: lowdin");
+                dfXMatrix.lowdinOrthogonalize(gfS, &gfV, NULL);
+            }
+            this->log_.info("save V matrix");
+            DfObject::saveGfVMatrix(gfV);
+        }
+        
+        {
+            this->log_.info("build S~ matrix: start");
+            MatrixType gfStilde;
+            dfOvp.getTransMat(this->orbitalInfo_,
+                              orbitalInfo_GF,
+                              &gfStilde);
+            this->log_.info("build S~ matrix: save");
+            DfObject::saveGfStildeMatrix(gfStilde);
+            
+            this->log_.info("build (S~)^-1 matrix: start");
+            SymmetricMatrixType Sinv = DfObject::getSpqMatrix<SymmetricMatrixType>();
+            Sinv.inverse();
+            
+            gfStilde.transpose();
+            const MatrixType gfOmega = gfStilde * Sinv;
+            this->log_.info("build (S~)^-1 matrix: save");
+            DfObject::saveGfOmegaMatrix(gfOmega);
+            this->log_.info("build (S~)^-1 matrix: finish");
+        }
+    }
+
+    // for GGA
+    if (isGGA) {
+        this->log_.info("build gradient matrix: start");
+        MatrixType Gx, Gy, Gz;
+        if (this->isDedicatedBasisForGridFree_) {
+            dfOvp.getGradient(orbitalInfo_GF, &Gx, &Gy, &Gz);
+        } else {
+            dfOvp.getGradient(orbitalInfo, &Gx, &Gy, &Gz);
+        }
+        this->log_.info("build gradient matrix: save");
+        this->saveDipoleVelocityIntegralsXMatrix(Gx);
+        this->saveDipoleVelocityIntegralsYMatrix(Gy);
+        this->saveDipoleVelocityIntegralsZMatrix(Gz);
+        this->log_.info("build gradient matrix: finish");
+    }
+}
+
+template<class DfOverlapClass,
+         class DfCD_class,
+         class SymmetricMatrixType, class MatrixType>
+void DfGridFreeXC::buildFxc_LDA_tmpl()
+{
+    this->log_.info("build Fxc by grid-free method: functional type is LDA.");
+
+    std::string basisset_param = "basis_sets";
+    if (this->isDedicatedBasisForGridFree_) {
+        basisset_param = "basis_sets_GF";
+    }
+    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
+                                       (*(this->pPdfParam_))[basisset_param]);
+
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    const index_type numOfGfOrbs = orbitalInfo_GF.getNumOfOrbitals();
+    this->log_.info(TlUtils::format("AOs = %d", numOfAOs));
+    this->log_.info(TlUtils::format("auxAOs for GF = %d", numOfGfOrbs));
+
+    const SymmetricMatrixType P = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration -1);
+
+    SymmetricMatrixType M;
+    if (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD) {
+        this->log_.info("begin to create M matrix based on CD.");
+        {
+            DfCD_class dfCD(this->pPdfParam_);
+            dfCD.getM(P, &M);
+        }
+    } else {
+        this->log_.info("begin to create M matrix using 4-center overlap.");
+        DfOverlapClass dfOvp(this->pPdfParam_);
+        if (this->isDedicatedBasisForGridFree_) {
+            dfOvp.getM_A(P, &M);
+        } else {
+            dfOvp.getM(P, &M);
+        }
+    }
+    if (this->debugSaveM_) {
+        M.save(TlUtils::format("fl_Work/debug_M.%d.mat", this->m_nIteration));
+    }
+
+    // DEBUG
+    // {
+    //     this->getM_exact(P, &M);
+    //     M.save("M_exact.mat");
+    // }
+
+    this->log_.info("begin to generate Fxc using grid-free method.");
+    // tV * S * V == I
+    MatrixType S;
+    MatrixType V;
+    if (this->isDedicatedBasisForGridFree_) {
+        S = DfObject::getGfStildeMatrix<MatrixType>();
+        V = DfObject::getGfVMatrix<MatrixType>();
+    } else {
+        S = DfObject::getSpqMatrix<SymmetricMatrixType>();
+        V = DfObject::getXMatrix<MatrixType>();
+    }
+    MatrixType tV = V;
+    tV.transpose();
+    
+    SymmetricMatrixType M_tilda = tV * M * V;
+    
+    MatrixType U;
+    TlVector lambda;
+    M_tilda.diagonal(&lambda, &U);
+    
+    SymmetricMatrixType F_lambda(lambda.getSize());
+    SymmetricMatrixType E_lambda(lambda.getSize());
+    this->get_F_lamda(lambda, &F_lambda, &E_lambda);
+    
+    MatrixType SVU = S * V * U;
+    MatrixType UVS = SVU;
+    UVS.transpose();
+    
+    // save
+    {
+        SymmetricMatrixType Fxc = SVU * F_lambda * UVS;
+        DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, Fxc);
+    }
+    {
+        SymmetricMatrixType Exc = SVU * E_lambda * UVS;
+        DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, Exc);
+    }
+}
+
 
 #endif // DFGRIDFREEXC_H
 

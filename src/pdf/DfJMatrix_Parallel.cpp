@@ -247,7 +247,7 @@ void DfJMatrix_Parallel::getJ_conventional_local(TlSymmetricMatrix *pJ)
 
 void DfJMatrix_Parallel::getJ_conventional_distributed(TlDistributeSymmetricMatrix *pJ)
 {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
+    // TlCommunicate& rComm = TlCommunicate::getInstance();
     TlDistributeSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {
         P = this->getDiffDensityMatrix<TlDistributeSymmetricMatrix>();

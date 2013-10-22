@@ -214,6 +214,9 @@ private:
     std::vector<double> zetaC_;
     std::vector<double> zetaD_;
     int numOfBatches_;
+
+    /// 6D->5D変換用バッファ
+    double* pTransformBuf_;
 };
 
 
