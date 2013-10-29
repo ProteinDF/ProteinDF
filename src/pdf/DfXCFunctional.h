@@ -184,6 +184,7 @@ void DfXCFunctional::getFxc(const SymmetricMatrixType& P1,
         break;
         
     default:
+        this->log_.critical(TlUtils::format("XC functional: %s", this->m_sXCFunctional.c_str()));
         CnErr.abort("unknown XC functional. STOP. @DfXCFunctional::getFxc()");
     }
 
@@ -246,6 +247,7 @@ void DfXCFunctional::getFxc(const SymmetricMatrixType& PpqA,
         break;
         
     default:
+        this->log_.critical(TlUtils::format("XC functional: %s", this->m_sXCFunctional.c_str()));
         CnErr.abort("unknown XC functional. STOP. @DfXCFunctional::getFxc()");
     }
 }
