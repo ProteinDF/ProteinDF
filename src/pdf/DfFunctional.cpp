@@ -65,6 +65,8 @@ DerivativeFunctionalSets DfFunctional_GGA::getDerivativeFunctional_GF(const TlVe
     const int numOfTerms = this->getNumOfDerivativeFunctionalTerms();
     DerivativeFunctionalSets answer(numOfTerms, dim);
     for (index_type i = 0; i < dim; ++i) {
+        assert(std::fabs(rhoAs[i] - rhoBs[i]) < 1.0E-5);
+        assert(std::fabs(xAs[i] - xBs[i]) < 1.0E-5);
         const TlMatrix dfs = this->getDerivativeFunctionalCore(rhoAs[i], rhoBs[i],
                                                                xAs[i], xBs[i]);
         

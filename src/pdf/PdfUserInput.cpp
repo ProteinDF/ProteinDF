@@ -785,22 +785,22 @@ void PdfUserInput::moleculeBasisSetGridFree(const std::string& str)
 
 void PdfUserInput::alias()
 {
-    // xc-potential
-    {
-        std::string sXcPotential = this->data_["xc-potential"].getStr();
-        std::string sTilde = "";
-        if (sXcPotential[sXcPotential.length() -1] == '~') {
-            sTilde = "~";
-            sXcPotential = sXcPotential.substr(0, sXcPotential.length() -1);
-        }
+    // // xc-potential
+    // {
+    //     std::string sXcPotential = this->data_["xc-potential"].getStr();
+    //     std::string sTilde = "";
+    //     if (sXcPotential[sXcPotential.length() -1] == '~') {
+    //         sTilde = "~";
+    //         sXcPotential = sXcPotential.substr(0, sXcPotential.length() -1);
+    //     }
 
-        if (TlUtils::toUpper(sXcPotential) == "VWN") {
-            sXcPotential = "svwn";
-        }
+    //     if (TlUtils::toUpper(sXcPotential) == "VWN") {
+    //         sXcPotential = "svwn";
+    //     }
 
-        this->param_["SCF"]["xc-potential"] = sXcPotential + sTilde;
-        this->data_["xc-potential"] = sXcPotential + sTilde;
-    }
+    //     this->param_["SCF"]["xc-potential"] = sXcPotential + sTilde;
+    //     this->data_["xc-potential"] = sXcPotential + sTilde;
+    // }
 }
 
 bool PdfUserInput::check()
@@ -809,7 +809,7 @@ bool PdfUserInput::check()
 
     // xc-poteintial
     {
-        std::string sXcPotential = this->data_["xc-potential"].getStr();
+        std::string sXcPotential = this->data_["xc_functional"].getStr();
         std::string sTilde = "";
         if (sXcPotential[sXcPotential.length() -1] == '~') {
             sTilde = "~";

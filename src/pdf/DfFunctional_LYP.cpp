@@ -531,59 +531,62 @@ TlMatrix DfFunctional_LYP::getFunctionalCore(const double rhoA, const double rho
     TlMatrix answer(F_DIM, this->getNumOfFunctionalTerms());
     assert(this->getNumOfFunctionalTerms() == 4);
 
-    const double rho = rhoA + rhoB;
-    const double rhoAB = rhoA * rhoB;
+    if ((rhoA > 1.0E-16) && (xA > 1.0E-16) && 
+        (rhoB > 1.0E-16) && (xB > 1.0E-16)) {
+        const double rho = rhoA + rhoB;
+        const double rhoAB = rhoA * rhoB;
 
-    const double pow_rho_m1_3 = std::pow(rho, - INV_3);
-    const double pow_rhoA_8_3 = std::pow(rhoA, M_8_3);
-    const double pow_rhoB_8_3 = std::pow(rhoB, M_8_3);
+        const double pow_rho_m1_3 = std::pow(rho, - INV_3);
+        const double pow_rhoA_8_3 = std::pow(rhoA, M_8_3);
+        const double pow_rhoB_8_3 = std::pow(rhoB, M_8_3);
 
-    const double omega = this->omega(rho);
-    const double delta = this->delta(rho);
+        const double omega = this->omega(rho);
+        const double delta = this->delta(rho);
 
-    double roundLYP_roundGammaAA, roundLYP_roundGammaAB, roundLYP_roundGammaBB;
-    this->roundLYP_roundGamma(rho, rhoA, rhoB, omega, delta,
-                              roundLYP_roundGammaAA, roundLYP_roundGammaAB, roundLYP_roundGammaBB);
+        double roundLYP_roundGammaAA, roundLYP_roundGammaAB, roundLYP_roundGammaBB;
+        this->roundLYP_roundGamma(rho, rhoA, rhoB, omega, delta,
+                                  roundLYP_roundGammaAA, roundLYP_roundGammaAB, roundLYP_roundGammaBB);
 
-    const double term1 = - 4.0 * LYP_PARAM_A / (1.0 + LYP_PARAM_D * pow_rho_m1_3) * rhoAB / rho;
-    const double term2 = - LYP_COEF * LYP_PARAM_AB * omega * rhoAB * (pow_rhoA_8_3 + pow_rhoB_8_3);
+        const double term1 = - 4.0 * LYP_PARAM_A / (1.0 + LYP_PARAM_D * pow_rho_m1_3) * rhoAB / rho;
+        const double term2 = - LYP_COEF * LYP_PARAM_AB * omega * rhoAB * (pow_rhoA_8_3 + pow_rhoB_8_3);
 
-    const double F0_termR = term1 + term2;
-    const double F0_termX = 1.0;
-    // TODO: 本実装のUKSにおけるLYPエネルギーの割り振り方は見直しが必要
-    answer.set(FA_R, 0, 0.5 * F0_termR);
-    answer.set(FA_X, 0, F0_termX);
-    answer.set(FB_R, 0, 0.5 * F0_termR);
-    answer.set(FB_X, 0, F0_termX);
+        const double F0_termR = term1 + term2;
+        const double F0_termX = 1.0;
+        // TODO: 本実装のUKSにおけるLYPエネルギーの割り振り方は見直しが必要
+        answer.set(FA_R, 0, 0.5 * F0_termR);
+        answer.set(FA_X, 0, F0_termX);
+        answer.set(FB_R, 0, 0.5 * F0_termR);
+        answer.set(FB_X, 0, F0_termX);
 
-    // gamma_AA = (rho^(4/3) * xA)^2
-    const double rhoA_43 = std::pow(rhoA, 4.0/3.0);
-    const double rhoB_43 = std::pow(rhoB, 4.0/3.0);
+        // gamma_AA = (rho^(4/3) * xA)^2
+        const double rhoA_43 = std::pow(rhoA, 4.0/3.0);
+        const double rhoB_43 = std::pow(rhoB, 4.0/3.0);
 
-    // roundLYP_roundGammaAA * gammaAA 
-    // gammaAA = (rhoA * xA)^2
-    const double rFrGAA_R = roundLYP_roundGammaAA * rhoA_43 * rhoA_43;
-    const double rFrGAA_X = xA * xA;
-    answer.set(FA_R, 1, rFrGAA_R);
-    answer.set(FA_X, 1, rFrGAA_X);
-    // answer.set(FB_R, 1, rFrGAA_R);
-    // answer.set(FB_X, 1, rFrGAA_X);
+        // roundLYP_roundGammaAA * gammaAA 
+        // gammaAA = (rhoA * xA)^2
+        const double rFrGAA_R = roundLYP_roundGammaAA * rhoA_43 * rhoA_43;
+        const double rFrGAA_X = xA * xA;
+        answer.set(FA_R, 1, rFrGAA_R);
+        answer.set(FA_X, 1, rFrGAA_X);
+        // answer.set(FB_R, 1, rFrGAA_R);
+        // answer.set(FB_X, 1, rFrGAA_X);
 
-    // roundLYP_roundGammaAB * gammaAB
-    const double rFrGAB_R = roundLYP_roundGammaAB * rhoA_43 * rhoB_43;
-    const double rFrGAB_X = xA * xB;
-    answer.set(FA_R, 2, 0.5 * rFrGAB_R);
-    answer.set(FA_X, 2, rFrGAB_X);
-    answer.set(FB_R, 2, 0.5 * rFrGAB_R);
-    answer.set(FB_X, 2, rFrGAB_X);
+        // roundLYP_roundGammaAB * gammaAB
+        const double rFrGAB_R = roundLYP_roundGammaAB * rhoA_43 * rhoB_43;
+        const double rFrGAB_X = xA * xB;
+        answer.set(FA_R, 2, 0.5 * rFrGAB_R);
+        answer.set(FA_X, 2, rFrGAB_X);
+        answer.set(FB_R, 2, 0.5 * rFrGAB_R);
+        answer.set(FB_X, 2, rFrGAB_X);
 
-    // roundLYP_roundGammaBB * gammaBB
-    const double rFrGBB_R = roundLYP_roundGammaBB * rhoB_43 * rhoB_43;
-    const double rFrGBB_X = xB * xB;
-    // answer.set(FA_R, 3, rFrGBB_R);
-    // answer.set(FA_X, 3, rFrGBB_X);
-    answer.set(FB_R, 3, rFrGBB_R);
-    answer.set(FB_X, 3, rFrGBB_X);
+        // roundLYP_roundGammaBB * gammaBB
+        const double rFrGBB_R = roundLYP_roundGammaBB * rhoB_43 * rhoB_43;
+        const double rFrGBB_X = xB * xB;
+        // answer.set(FA_R, 3, rFrGBB_R);
+        // answer.set(FA_X, 3, rFrGBB_X);
+        answer.set(FB_R, 3, rFrGBB_R);
+        answer.set(FB_X, 3, rFrGBB_X);
+    }
 
     return answer;
 }
@@ -595,121 +598,124 @@ TlMatrix DfFunctional_LYP::getDerivativeFunctionalCore(const double rhoA,
 {
     TlMatrix answer(D_DIM, this->getNumOfDerivativeFunctionalTerms());
 
-    const double rhoA_43 = std::pow(rhoA, 4.0 / 3.0);
-    const double rhoB_43 = std::pow(rhoB, 4.0 / 3.0);
-    
-    const double rho = rhoA + rhoB;
-    const double rhoAB = rhoA * rhoB;
-    const double invRho = 1.0 / rho;
-    const double invRhoA = 1.0 / rhoA;
-    const double invRhoB = 1.0 / rhoB;
-    
-    const double rhoTo1_3 = std::pow(rho, INV_3); // rho^(1/3)
-    const double rhoToM1_3 = 1.0 / rhoTo1_3; // rho^(-1/3)
-    const double rhoToM4_3 = std::pow(rho, - 4.0 / 3.0); // rho^(-4/3)
-    
-    const double rhoATo8_3 = std::pow(rhoA, 8.0 / 3.0); // rhoA^(8/3)
-    const double rhoBTo8_3 = std::pow(rhoB, 8.0 / 3.0); // rhoB^(8/3)
-    
-    const double omega = this->omega(rho);
-    const double ABOmega = LYP_PARAM_AB * omega;
-    const double omegaPrime = this->omega_prime(rho, omega);
-    const double delta = this->delta(rho);
-    const double deltaPrime = this->delta_prime(rho, delta);
-    
-    // roundF_roundRho
-    double roundRoundLYP_roundRhoARoundGammaAA, roundRoundLYP_roundRhoBRoundGammaAA;
-    double roundRoundLYP_roundRhoARoundGammaAB, roundRoundLYP_roundRhoBRoundGammaAB;
-    double roundRoundLYP_roundRhoARoundGammaBB, roundRoundLYP_roundRhoBRoundGammaBB;
-    this->roundRoundLYP_roundRhoRoundGamma(rho, rhoA, rhoB, invRho, rhoAB, omega, omegaPrime, delta, deltaPrime,
-                                           &roundRoundLYP_roundRhoARoundGammaAA, &roundRoundLYP_roundRhoBRoundGammaAA,
-                                           &roundRoundLYP_roundRhoARoundGammaAB, &roundRoundLYP_roundRhoBRoundGammaAB,
-                                           &roundRoundLYP_roundRhoARoundGammaBB, &roundRoundLYP_roundRhoBRoundGammaBB);
-    
-    const double arg1_coef = - 4.0 * LYP_PARAM_A / (1.0 + LYP_PARAM_D * rhoToM1_3) * rhoAB / rho;
-    const double arg1A = arg1_coef * (INV_3 * LYP_PARAM_D * rhoToM4_3 / (1.0 + LYP_PARAM_D * rhoToM1_3) + invRhoA - invRho);
-    const double arg1B = arg1_coef * (INV_3 * LYP_PARAM_D * rhoToM4_3 / (1.0 + LYP_PARAM_D * rhoToM1_3) + invRhoB - invRho);
-    
-    const double arg2A = - LYP_COEF * LYP_PARAM_AB * (omegaPrime * rhoAB * (rhoATo8_3 + rhoBTo8_3)
-                                                      + omega * rhoB * (M_11_3 * rhoATo8_3 + rhoBTo8_3));
-    const double arg2B = - LYP_COEF * LYP_PARAM_AB * (omegaPrime * rhoAB * (rhoBTo8_3 + rhoATo8_3)
-                                                      + omega * rhoA * (M_11_3 * rhoBTo8_3 + rhoATo8_3));
-
-    // calc gamma
-    //const double gammaAA = rhoA^(4/3) * xA * rhoA^(4/3) * xA;
-
-    // alpha spin ======================================================
-    {
-        // roundF_roundRho
-        // *pRoundF_roundRhoA = arg1A + arg2A
-        //     + roundRoundLYP_roundRhoARoundGammaAA * gammaAA
-        //     + roundRoundLYP_roundRhoARoundGammaAB * gammaAB
-        //     + roundRoundLYP_roundRhoARoundGammaBB * gammaBB;
-        const double roundF_roundRhoA_R0 = arg1A + arg2A;
-        const double roundF_roundRhoA_X0 = 1.0;
-        const double roundF_roundRhoA_R1 = roundRoundLYP_roundRhoARoundGammaAA * rhoA_43 * rhoA_43;
-        const double roundF_roundRhoA_X1 = xA * xA;
-        const double roundF_roundRhoA_R2 = roundRoundLYP_roundRhoARoundGammaAB * rhoA_43 * rhoB_43;
-        const double roundF_roundRhoA_X2 = xA * xB;
-        const double roundF_roundRhoA_R3 = roundRoundLYP_roundRhoARoundGammaBB * rhoB_43 * rhoB_43;
-        const double roundF_roundRhoA_X3 = xB * xB;
-        answer.set(RA_R, 0, roundF_roundRhoA_R0);
-        answer.set(RA_X, 0, roundF_roundRhoA_X0);
-        answer.set(RA_R, 1, roundF_roundRhoA_R1);
-        answer.set(RA_X, 1, roundF_roundRhoA_X1);
-        answer.set(RA_R, 2, roundF_roundRhoA_R2);
-        answer.set(RA_X, 2, roundF_roundRhoA_X2);
-        answer.set(RA_R, 3, roundF_roundRhoA_R3);
-        answer.set(RA_X, 3, roundF_roundRhoA_X3);
+    if ((rhoA > 1.0E-16) && (xA > 1.0E-16) && 
+        (rhoB > 1.0E-16) && (xB > 1.0E-16)) {
+        const double rhoA_43 = std::pow(rhoA, 4.0 / 3.0);
+        const double rhoB_43 = std::pow(rhoB, 4.0 / 3.0);
         
-        // roundF_roundGamma
-        //*pRoundF_roundGammaAA = - ABOmega * (INV_9 * rhoAB * (1.0 - 3.0 * delta - (delta - 11.0) * rhoA / rho) - rhoB * rhoB);
-        const double roundF_roundGammaAA_R0 = - ABOmega * (INV_9 * rhoAB * (1.0 - 3.0 * delta - (delta - 11.0) * rhoA / rho) - rhoB * rhoB);
-        const double roundF_roundGammaAA_X0 = 1.0;
-        answer.set(GAA_R, 0, roundF_roundGammaAA_R0);
-        answer.set(GAA_X, 0, roundF_roundGammaAA_X0);
-    }
-    
-    // beta spin =======================================================
-    {
-        // roundF_roundRho
-        // *pRoundF_roundRhoB = arg1B + arg2B
-        //     + roundRoundLYP_roundRhoBRoundGammaAA * gammaAA
-        //     + roundRoundLYP_roundRhoBRoundGammaAB * gammaAB
-        //     + roundRoundLYP_roundRhoBRoundGammaBB * gammaBB;
-        const double roundF_roundRhoB_R0 = arg1B + arg2B;
-        const double roundF_roundRhoB_X0 = 1.0;
-        const double roundF_roundRhoB_R1 = roundRoundLYP_roundRhoBRoundGammaAA * rhoA_43 * rhoA_43;
-        const double roundF_roundRhoB_X1 = xA * xA;
-        const double roundF_roundRhoB_R2 = roundRoundLYP_roundRhoBRoundGammaAB * rhoA_43 * rhoB_43;
-        const double roundF_roundRhoB_X2 = xA * xB;
-        const double roundF_roundRhoB_R3 = roundRoundLYP_roundRhoBRoundGammaBB * rhoB_43 * rhoB_43;
-        const double roundF_roundRhoB_X3 = xB * xB;
-        answer.set(RB_R, 0, roundF_roundRhoB_R0);
-        answer.set(RB_X, 0, roundF_roundRhoB_X0);
-        answer.set(RB_R, 1, roundF_roundRhoB_R1);
-        answer.set(RB_X, 1, roundF_roundRhoB_X1);
-        answer.set(RB_R, 2, roundF_roundRhoB_R2);
-        answer.set(RB_X, 2, roundF_roundRhoB_X2);
-        answer.set(RB_R, 3, roundF_roundRhoB_R3);
-        answer.set(RB_X, 3, roundF_roundRhoB_X3);
+        const double rho = rhoA + rhoB;
+        const double rhoAB = rhoA * rhoB;
+        const double invRho = 1.0 / rho;
+        const double invRhoA = 1.0 / rhoA;
+        const double invRhoB = 1.0 / rhoB;
         
-        // roundF_roundGamma
-        //*pRoundF_roundGammaBB = - ABOmega * (INV_9 * rhoAB * (1.0 - 3.0 * delta - (delta - 11.0) * rhoB / rho) - rhoA * rhoA);
-        const double roundF_roundGammaBB_R0 = - ABOmega * (INV_9 * rhoAB * (1.0 - 3.0 * delta - (delta - 11.0) * rhoB / rho) - rhoA * rhoA);
-        const double roundF_roundGammaBB_X0 = 1.0;
-        answer.set(GBB_R, 0, roundF_roundGammaBB_R0);
-        answer.set(GBB_X, 0, roundF_roundGammaBB_X0);
-    }
-    
-    // both ============================================================
-    {
-        // roundF_roundGamma
-        //*pRoundF_roundGammaAB = - ABOmega * (INV_9 * rhoAB * (47.0 - 7.0 * delta) - M_4_3 * rho * rho);
-        const double roundF_roundGammaAB_R0 = - ABOmega * (INV_9 * rhoAB * (47.0 - 7.0 * delta) - M_4_3 * rho * rho);
+        const double rhoTo1_3 = std::pow(rho, INV_3); // rho^(1/3)
+        const double rhoToM1_3 = 1.0 / rhoTo1_3; // rho^(-1/3)
+        const double rhoToM4_3 = std::pow(rho, - 4.0 / 3.0); // rho^(-4/3)
+        
+        const double rhoATo8_3 = std::pow(rhoA, 8.0 / 3.0); // rhoA^(8/3)
+        const double rhoBTo8_3 = std::pow(rhoB, 8.0 / 3.0); // rhoB^(8/3)
+        
+        const double omega = this->omega(rho);
+        const double ABOmega = LYP_PARAM_AB * omega;
+        const double omegaPrime = this->omega_prime(rho, omega);
+        const double delta = this->delta(rho);
+        const double deltaPrime = this->delta_prime(rho, delta);
+        
+        // roundF_roundRho
+        double roundRoundLYP_roundRhoARoundGammaAA, roundRoundLYP_roundRhoBRoundGammaAA;
+        double roundRoundLYP_roundRhoARoundGammaAB, roundRoundLYP_roundRhoBRoundGammaAB;
+        double roundRoundLYP_roundRhoARoundGammaBB, roundRoundLYP_roundRhoBRoundGammaBB;
+        this->roundRoundLYP_roundRhoRoundGamma(rho, rhoA, rhoB, invRho, rhoAB, omega, omegaPrime, delta, deltaPrime,
+                                               &roundRoundLYP_roundRhoARoundGammaAA, &roundRoundLYP_roundRhoBRoundGammaAA,
+                                               &roundRoundLYP_roundRhoARoundGammaAB, &roundRoundLYP_roundRhoBRoundGammaAB,
+                                               &roundRoundLYP_roundRhoARoundGammaBB, &roundRoundLYP_roundRhoBRoundGammaBB);
+        
+        const double arg1_coef = - 4.0 * LYP_PARAM_A / (1.0 + LYP_PARAM_D * rhoToM1_3) * rhoAB / rho;
+        const double arg1A = arg1_coef * (INV_3 * LYP_PARAM_D * rhoToM4_3 / (1.0 + LYP_PARAM_D * rhoToM1_3) + invRhoA - invRho);
+        const double arg1B = arg1_coef * (INV_3 * LYP_PARAM_D * rhoToM4_3 / (1.0 + LYP_PARAM_D * rhoToM1_3) + invRhoB - invRho);
+        
+        const double arg2A = - LYP_COEF * LYP_PARAM_AB * (omegaPrime * rhoAB * (rhoATo8_3 + rhoBTo8_3)
+                                                          + omega * rhoB * (M_11_3 * rhoATo8_3 + rhoBTo8_3));
+        const double arg2B = - LYP_COEF * LYP_PARAM_AB * (omegaPrime * rhoAB * (rhoBTo8_3 + rhoATo8_3)
+                                                          + omega * rhoA * (M_11_3 * rhoBTo8_3 + rhoATo8_3));
+        
+        // calc gamma
+        //const double gammaAA = rhoA^(4/3) * xA * rhoA^(4/3) * xA;
+        
+        // alpha spin ======================================================
+        {
+            // roundF_roundRho
+            // *pRoundF_roundRhoA = arg1A + arg2A
+            //     + roundRoundLYP_roundRhoARoundGammaAA * gammaAA
+            //     + roundRoundLYP_roundRhoARoundGammaAB * gammaAB
+            //     + roundRoundLYP_roundRhoARoundGammaBB * gammaBB;
+            const double roundF_roundRhoA_R0 = arg1A + arg2A;
+            const double roundF_roundRhoA_X0 = 1.0;
+            const double roundF_roundRhoA_R1 = roundRoundLYP_roundRhoARoundGammaAA * rhoA_43 * rhoA_43;
+            const double roundF_roundRhoA_X1 = xA * xA;
+            const double roundF_roundRhoA_R2 = roundRoundLYP_roundRhoARoundGammaAB * rhoA_43 * rhoB_43;
+            const double roundF_roundRhoA_X2 = xA * xB;
+            const double roundF_roundRhoA_R3 = roundRoundLYP_roundRhoARoundGammaBB * rhoB_43 * rhoB_43;
+            const double roundF_roundRhoA_X3 = xB * xB;
+            answer.set(RA_R, 0, roundF_roundRhoA_R0);
+            answer.set(RA_X, 0, roundF_roundRhoA_X0);
+            answer.set(RA_R, 1, roundF_roundRhoA_R1);
+            answer.set(RA_X, 1, roundF_roundRhoA_X1);
+            answer.set(RA_R, 2, roundF_roundRhoA_R2);
+            answer.set(RA_X, 2, roundF_roundRhoA_X2);
+            answer.set(RA_R, 3, roundF_roundRhoA_R3);
+            answer.set(RA_X, 3, roundF_roundRhoA_X3);
+            
+            // roundF_roundGamma
+            //*pRoundF_roundGammaAA = - ABOmega * (INV_9 * rhoAB * (1.0 - 3.0 * delta - (delta - 11.0) * rhoA / rho) - rhoB * rhoB);
+            const double roundF_roundGammaAA_R0 = - ABOmega * (INV_9 * rhoAB * (1.0 - 3.0 * delta - (delta - 11.0) * rhoA / rho) - rhoB * rhoB);
+            const double roundF_roundGammaAA_X0 = 1.0;
+            answer.set(GAA_R, 0, roundF_roundGammaAA_R0);
+            answer.set(GAA_X, 0, roundF_roundGammaAA_X0);
+        }
+        
+        // beta spin =======================================================
+        {
+            // roundF_roundRho
+            // *pRoundF_roundRhoB = arg1B + arg2B
+            //     + roundRoundLYP_roundRhoBRoundGammaAA * gammaAA
+            //     + roundRoundLYP_roundRhoBRoundGammaAB * gammaAB
+            //     + roundRoundLYP_roundRhoBRoundGammaBB * gammaBB;
+            const double roundF_roundRhoB_R0 = arg1B + arg2B;
+            const double roundF_roundRhoB_X0 = 1.0;
+            const double roundF_roundRhoB_R1 = roundRoundLYP_roundRhoBRoundGammaAA * rhoA_43 * rhoA_43;
+            const double roundF_roundRhoB_X1 = xA * xA;
+            const double roundF_roundRhoB_R2 = roundRoundLYP_roundRhoBRoundGammaAB * rhoA_43 * rhoB_43;
+            const double roundF_roundRhoB_X2 = xA * xB;
+            const double roundF_roundRhoB_R3 = roundRoundLYP_roundRhoBRoundGammaBB * rhoB_43 * rhoB_43;
+            const double roundF_roundRhoB_X3 = xB * xB;
+            answer.set(RB_R, 0, roundF_roundRhoB_R0);
+            answer.set(RB_X, 0, roundF_roundRhoB_X0);
+            answer.set(RB_R, 1, roundF_roundRhoB_R1);
+            answer.set(RB_X, 1, roundF_roundRhoB_X1);
+            answer.set(RB_R, 2, roundF_roundRhoB_R2);
+            answer.set(RB_X, 2, roundF_roundRhoB_X2);
+            answer.set(RB_R, 3, roundF_roundRhoB_R3);
+            answer.set(RB_X, 3, roundF_roundRhoB_X3);
+            
+            // roundF_roundGamma
+            //*pRoundF_roundGammaBB = - ABOmega * (INV_9 * rhoAB * (1.0 - 3.0 * delta - (delta - 11.0) * rhoB / rho) - rhoA * rhoA);
+            const double roundF_roundGammaBB_R0 = - ABOmega * (INV_9 * rhoAB * (1.0 - 3.0 * delta - (delta - 11.0) * rhoB / rho) - rhoA * rhoA);
+            const double roundF_roundGammaBB_X0 = 1.0;
+            answer.set(GBB_R, 0, roundF_roundGammaBB_R0);
+            answer.set(GBB_X, 0, roundF_roundGammaBB_X0);
+        }
+        
+        // both ============================================================
+        {
+            // roundF_roundGamma
+            //*pRoundF_roundGammaAB = - ABOmega * (INV_9 * rhoAB * (47.0 - 7.0 * delta) - M_4_3 * rho * rho);
+            const double roundF_roundGammaAB_R0 = - ABOmega * (INV_9 * rhoAB * (47.0 - 7.0 * delta) - M_4_3 * rho * rho);
         const double roundF_roundGammaAB_X0 = 1.0;
         answer.set(GAB_R, 0, roundF_roundGammaAB_R0);
         answer.set(GAB_X, 0, roundF_roundGammaAB_X0);
+        }
     }
 
     return answer;

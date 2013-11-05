@@ -8,9 +8,9 @@ DfConverge_DIIS::DfConverge_DIIS(TlSerializeData* pPdfParam)
 {
     const TlSerializeData& pdfParam = *pPdfParam;
     this->startIterationOfDIIS_ =
-        std::max(pdfParam["scf-acceleration/DIIS/start"].getInt(), 1);
+        std::max(pdfParam["scf_acceleration/DIIS/start"].getInt(), 1);
     this->numOfLastItems_ =
-        std::max(pdfParam["scf-acceleration/DIIS/last_items"].getInt(), 3);
+        std::max(pdfParam["scf_acceleration/DIIS/last_items"].getInt(), 3);
 
     if (this->pPdfParam_->hasKey("DIIS_e_max_pass_itr") == false) {
         (*this->pPdfParam_)["DIIS_e_max_pass_itr"] = -1;

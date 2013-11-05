@@ -477,7 +477,7 @@ void DfGridFreeXC::buildFxc_GGA()
         for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
             double v_13 = 0.0;
             const double v = lambda.get(i);
-            if (v > 1.0E-50) {
+            if (v > 1.0E-16) {
                 v_13 = std::pow(v, - ONE_THIRD);
             }
             lambda_13.set(i, i, v_13);
@@ -545,10 +545,12 @@ void DfGridFreeXC::buildFxc_GGA()
     TlVector xAs(numOfGFOrthNormBasis);
     //for (index_type i = 0; i < numOfGfOrbs; ++i) {
     for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
-        const double rho = std::max(lambda[i], 0.0);
+        const double rho_value = lambda[i];
+        const double rho = (rho_value > 1.0E-16) ? rho_value : 0.0;
         rhoAs[i] = rho;
         
-        const double x = std::sqrt(std::max(x2.get(i), 0.0));
+        const double x2_value = x2.get(i);
+        const double x = (x2_value > 1.0E-16) ? std::sqrt(x2_value) : 0.0;
         xAs[i] = x;
     }
     const TlVector rhoBs = rhoAs;
@@ -566,11 +568,13 @@ void DfGridFreeXC::buildFxc_GGA()
         TlVector rhoBB43(numOfGFOrthNormBasis);
         for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
             const double rhoA = lambda[i];
-            const double rhoA43 = std::pow(rhoA, 4.0/3.0);
-            const double rhoB43 = rhoA43; // RKS
-            rhoAA43[i] = rhoA43;
-            rhoBB43[i] = rhoB43;
-            rhoAB43[i] = std::sqrt(rhoA43 * rhoB43);
+            if (rhoA > 1.0E-16) {
+                const double rhoA43 = std::pow(rhoA, 4.0/3.0);
+                const double rhoB43 = rhoA43; // RKS
+                rhoAA43[i] = rhoA43;
+                rhoBB43[i] = rhoB43;
+                rhoAB43[i] = std::sqrt(rhoA43 * rhoB43);
+            }
         }
 
         TlMatrix FxcA_tilde(numOfGFOrthNormBasis, numOfGFOrthNormBasis);
@@ -667,11 +671,13 @@ void DfGridFreeXC::buildFxc_GGA()
             for (int term = 0; term < numOfTerms; ++term) {
                 for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
                     const double rho = rhoAs[i] + rhoBs[i];
-                    const double inv_rho = 1.0 / rho;
-                    diag_AR(i, i) = fs.FA_termR(term, i) * inv_rho;
-                    diag_AX(i, i) = fs.FA_termX(term, i);
-                    // diag_BR(i, i) = fs.FB_termR(term, i) * inv_rho;
-                    // diag_BX(i, i) = fs.FB_termX(term, i);
+                    if (rho > 1.0E-16) {
+                        const double inv_rho = 1.0 / rho;
+                        diag_AR(i, i) = fs.FA_termR(term, i) * inv_rho;
+                        diag_AX(i, i) = fs.FA_termX(term, i);
+                        // diag_BR(i, i) = fs.FB_termR(term, i) * inv_rho;
+                        // diag_BX(i, i) = fs.FB_termX(term, i);
+                    }
                 }
                 
                 const TlSymmetricMatrix ExcA_R = U * diag_AR * Ut;

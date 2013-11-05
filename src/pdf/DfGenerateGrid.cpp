@@ -24,7 +24,7 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
       flGeometry_((*pPdfParam)["coordinates"]) {
     const TlSerializeData& pdfParam = *pPdfParam;
     
-    this->xctype   = pdfParam["xc-potential"].getStr();
+    this->xctype   = pdfParam["xc_functional"].getStr();
 
     this->weightCutoff_ = 1.0E-16;
     if (pdfParam["grid-weight-cutoff"].getStr() != "") {

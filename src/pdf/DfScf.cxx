@@ -117,7 +117,7 @@ void DfScf::setScfParam()
     this->m_nScfAcceleration = SCF_ACCELERATION_SIMPLE;
     {
         const std::string sScfAcceleration =
-            TlUtils::toUpper(pdfParam["scf-acceleration"].getStr());
+            TlUtils::toUpper(pdfParam["scf_acceleration"].getStr());
 
         if (sScfAcceleration == "DAMPING") {
             this->m_nScfAcceleration = SCF_ACCELERATION_SIMPLE;
@@ -125,6 +125,8 @@ void DfScf::setScfParam()
             this->m_nScfAcceleration = SCF_ACCELERATION_ANDERSON;
         } else if (sScfAcceleration == "DIIS") {
             this->m_nScfAcceleration = SCF_ACCELERATION_DIIS;
+        } else {
+            this->log_.warn(TlUtils::format("unknown acceleration method: %s", sScfAcceleration.c_str()));
         }
     }
 
@@ -135,7 +137,7 @@ void DfScf::setScfParam()
     }
     {
         const std::string sDampObject =
-            TlUtils::toUpper(pdfParam["scf-acceleration/damping/damping-type"].getStr());
+            TlUtils::toUpper(pdfParam["scf_acceleration/damping/damping_type"].getStr());
         
         if (sDampObject == "DENSITY_MATRIX") {
             this->m_nDampObject = DAMP_DENSITY_MATRIX;
@@ -143,6 +145,8 @@ void DfScf::setScfParam()
             this->m_nDampObject = DAMP_DENSITY;
         } else if (sDampObject == "FOCK") {
             this->m_nDampObject = DAMP_FOCK;
+        } else {
+            this->log_.warn(TlUtils::format("unknown acceleration method: %s", sDampObject.c_str()));
         }
     }
 }
@@ -665,8 +669,8 @@ DfTransFmatrix* DfScf::getDfTransFmatrixObject(bool isExecDiis)
 void DfScf::doLevelShift()
 {
     // add level shift to Kohn-Sham matrix
-    const int start_iter = (*(this->pPdfParam_))["level-shift/start-iteration"].getInt();
-    const bool levelShift = (*(this->pPdfParam_))["level-shift"].getBoolean();
+    const int start_iter = (*(this->pPdfParam_))["level_shift/start_iteration"].getInt();
+    const bool levelShift = (*(this->pPdfParam_))["level_shift"].getBoolean();
     if ((levelShift == true) &&
         (this->m_nIteration >= start_iter)) {
         TlTime timer;
@@ -941,9 +945,9 @@ void DfScf::cleanup()
 bool DfScf::checkMaxIteration()
 {
     bool answer = false;
-    if (this->m_nIteration >= (*this->pPdfParam_)["max-iteration"].getInt()) {
-        const std::string str = TlUtils::format(" max-iteration %d is reached.\n",
-                                                (*this->pPdfParam_)["max-iteration"].getInt());
+    if (this->m_nIteration >= (*this->pPdfParam_)["max_iteration"].getInt()) {
+        const std::string str = TlUtils::format(" max_iteration %d is reached.\n",
+                                                (*this->pPdfParam_)["max_iteration"].getInt());
         this->logger(str);
         std::cout << str;
 
