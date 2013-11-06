@@ -103,7 +103,7 @@ void DfGridFreeXC::buildFxc()
 
 void DfGridFreeXC::buildFxc_LDA()
 {
-    this->buildFxc_LDA_tmpl<DfOverlapX, DfCD, TlSymmetricMatrix, TlMatrix>();
+    this->buildFxc_LDA_method<DfOverlapX, DfCD, TlSymmetricMatrix, TlMatrix>();
 }
 
 void DfGridFreeXC::createEngines()
@@ -329,11 +329,11 @@ DfGridFreeXC::ShellPairArrayTable DfGridFreeXC::getShellPairArrayTable(const She
     return shellPairArrayTable;
 }
 
-TlSymmetricMatrix DfGridFreeXC::getPMatrix()
-{
-    TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
-    return P;
-}
+// TlSymmetricMatrix DfGridFreeXC::getPMatrix()
+// {
+//     TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+//     return P;
+// }
 
 
 TlMatrix DfGridFreeXC::getL()

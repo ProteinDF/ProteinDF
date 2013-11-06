@@ -114,6 +114,7 @@ protected:
 
 
     virtual void buildFxc_LDA();
+
     virtual void buildFxc_GGA();
 
 protected:
@@ -183,10 +184,18 @@ protected:
     ShellPairArrayTable getShellPairArrayTable(const ShellArrayTable& shellArrayTable);
 
 protected:
+    template<class SymmetricMatrixType>
+    SymmetricMatrixType getPMatrix(const RUN_TYPE runType);
+
+    template<class DfOverlapClass,
+             class DfXMatrixClass,
+             class SymmetricMatrixType, class MatrixType>
+    void buildFxc_LDA_method();
+
     template<class DfOverlapClass,
              class DfCD_class,
              class SymmetricMatrixType, class MatrixType>
-    void buildFxc_LDA_tmpl();
+    void buildFxc_LDA_runtype(const RUN_TYPE runType);
 
 
 public:
@@ -235,7 +244,7 @@ protected:
     //             const PQ_PairArray& I2PQ);
 
     // void getM_byCD(TlSymmetricMatrix* pM);
-    TlSymmetricMatrix getPMatrix();
+    //TlSymmetricMatrix getPMatrix();
     TlMatrix getL();
     PQ_PairArray getI2PQ();
     void divideCholeskyBasis(const index_type numOfCBs,
@@ -344,10 +353,50 @@ void DfGridFreeXC::preprocessBeforeSCF_templ()
     }
 }
 
+template<class SymmetricMatrixType>
+SymmetricMatrixType DfGridFreeXC::getPMatrix(const RUN_TYPE runType)
+{
+    SymmetricMatrixType P = DfObject::getPpqMatrix<SymmetricMatrixType>(runType,
+                                                                        this->m_nIteration -1);
+    if (runType ==RUN_RKS) {
+        P *= 0.5;
+    }
+
+    return P;
+}
+
 template<class DfOverlapClass,
          class DfCD_class,
          class SymmetricMatrixType, class MatrixType>
-void DfGridFreeXC::buildFxc_LDA_tmpl()
+void DfGridFreeXC::buildFxc_LDA_method()
+{
+    switch (this->m_nMethodType) {
+    case METHOD_RKS:   
+        this->buildFxc_LDA_runtype<DfOverlapClass, DfCD_class,
+                                   SymmetricMatrixType, MatrixType>(RUN_RKS);
+        break;
+
+    case METHOD_UKS:
+        this->buildFxc_LDA_runtype<DfOverlapClass, DfCD_class,
+                                   SymmetricMatrixType, MatrixType>(RUN_UKS_ALPHA);
+        this->buildFxc_LDA_runtype<DfOverlapClass, DfCD_class,
+                                   SymmetricMatrixType, MatrixType>(RUN_UKS_BETA);
+        break;
+
+    case METHOD_ROKS:
+        this->log_.critical("NOT in support");
+        break;
+
+    default:
+        this->log_.critical("wrong program");
+        break;
+    }
+}
+
+template<class DfOverlapClass,
+         class DfCD_class,
+         class SymmetricMatrixType, class MatrixType>
+void DfGridFreeXC::buildFxc_LDA_runtype(const RUN_TYPE runType)
 {
     this->log_.info("build Fxc by grid-free method: functional type is LDA.");
 
@@ -363,7 +412,7 @@ void DfGridFreeXC::buildFxc_LDA_tmpl()
     this->log_.info(TlUtils::format("AOs = %d", numOfAOs));
     this->log_.info(TlUtils::format("auxAOs for GF = %d", numOfGfOrbs));
 
-    const SymmetricMatrixType P = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration -1);
+    const SymmetricMatrixType P = this->getPMatrix<SymmetricMatrixType>(runType);
 
     SymmetricMatrixType M;
     if (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD) {
@@ -422,11 +471,11 @@ void DfGridFreeXC::buildFxc_LDA_tmpl()
     // save
     {
         SymmetricMatrixType Fxc = SVU * F_lambda * UVS;
-        DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, Fxc);
+        DfObject::saveFxcMatrix(runType, this->m_nIteration, Fxc);
     }
     {
         SymmetricMatrixType Exc = SVU * E_lambda * UVS;
-        DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, Exc);
+        DfObject::saveExcMatrix(runType, this->m_nIteration, Exc);
     }
 }
 

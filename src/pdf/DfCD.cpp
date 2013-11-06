@@ -393,7 +393,12 @@ void DfCD::getK_S(const RUN_TYPE runType,
     this->log_.info(TlUtils::format("L(K): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
     const index_type numOfCBs = L.getNumOfCols();
     
-    TlSymmetricMatrix P = 0.5 * this->getPMatrix(); // RKS
+    TlSymmetricMatrix P;
+    if (runType == RUN_RKS) {
+        P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+    } else {
+        P = this->getPpqMatrix<TlSymmetricMatrix>(runType, this->m_nIteration -1);
+    }
     this->log_.info("CD: density matrix");
     const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
     
@@ -543,7 +548,26 @@ void DfCD::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 
 TlSymmetricMatrix DfCD::getPMatrix()
 {
-    TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+    TlSymmetricMatrix P;
+    switch (this->m_nMethodType) {
+    case METHOD_RKS:
+        P = this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+        break;
+
+    case METHOD_UKS:
+        P  = this->getPpqMatrix<TlSymmetricMatrix>(RUN_UKS_ALPHA, this->m_nIteration -1);
+        P += this->getPpqMatrix<TlSymmetricMatrix>(RUN_UKS_BETA, this->m_nIteration -1);
+        break;
+
+    case METHOD_ROKS:
+        P  = this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_CLOSE, this->m_nIteration -1);
+        P += this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_OPEN, this->m_nIteration -1);
+        break;
+        
+    default:
+        this->log_.critical("program error");
+        break;
+    }
     return P;
 }
 
