@@ -198,6 +198,16 @@ protected:
     void buildFxc_LDA_runtype(const RUN_TYPE runType);
 
 
+    template<class DfOverlapClass,
+             class DfXMatrixClass,
+             class SymmetricMatrixType, class MatrixType>
+    void buildFxc_GGA_method();
+
+    template<class DfOverlapClass,
+             class DfCD_class,
+             class SymmetricMatrixType, class MatrixType>
+    void buildFxc_GGA_runtype(const RUN_TYPE runType);
+
 public:
     // virtual void calcCholeskyVectors_onTheFly();
 
@@ -393,6 +403,7 @@ void DfGridFreeXC::buildFxc_LDA_method()
     }
 }
 
+
 template<class DfOverlapClass,
          class DfCD_class,
          class SymmetricMatrixType, class MatrixType>
@@ -479,6 +490,348 @@ void DfGridFreeXC::buildFxc_LDA_runtype(const RUN_TYPE runType)
     }
 }
 
+
+template<class DfOverlapClass,
+         class DfCD_class,
+         class SymmetricMatrixType, class MatrixType>
+void DfGridFreeXC::buildFxc_GGA_method()
+{
+    switch (this->m_nMethodType) {
+    case METHOD_RKS:   
+        this->buildFxc_GGA_runtype<DfOverlapClass, DfCD_class,
+                                   SymmetricMatrixType, MatrixType>(RUN_RKS);
+        break;
+
+    case METHOD_UKS:
+        this->buildFxc_GGA_runtype<DfOverlapClass, DfCD_class,
+                                   SymmetricMatrixType, MatrixType>(RUN_UKS_ALPHA);
+        this->buildFxc_GGA_runtype<DfOverlapClass, DfCD_class,
+                                   SymmetricMatrixType, MatrixType>(RUN_UKS_BETA);
+        break;
+
+    case METHOD_ROKS:
+        this->log_.critical("NOT in support");
+        break;
+
+    default:
+        this->log_.critical("wrong program");
+        break;
+    }
+}
+
+
+template<class DfOverlapClass,
+         class DfCD_class,
+         class SymmetricMatrixType, class MatrixType>
+void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType)
+{
+    this->log_.info("build Fxc by grid-free method: functional type is GGA.");
+
+    std::string basisset_param = "basis_sets";
+    if (this->isDedicatedBasisForGridFree_) {
+        basisset_param = "basis_sets_GF";
+    }
+    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
+                                       (*(this->pPdfParam_))[basisset_param]);
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    const index_type numOfGfOrbs = orbitalInfo_GF.getNumOfOrbitals();
+    this->log_.info(TlUtils::format("AOs = %d", numOfAOs));
+    this->log_.info(TlUtils::format("auxAOs for GF = %d", numOfGfOrbs));
+
+    // RKS
+    // const SymmetricMatrixType PA = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_RKS,
+    //                                                                              this->m_nIteration -1);
+    const SymmetricMatrixType P = this->getPMatrix<SymmetricMatrixType>(runType);
+    assert(P.getNumOfRows() == numOfAOs);
+
+    SymmetricMatrixType M;
+    if (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD) {
+        this->log_.info("begin to create M matrix based on CD.");
+        {
+            DfCD_class dfCD(this->pPdfParam_);
+            dfCD.getM(P, &M);
+            // M *= 2.0;
+        }
+    } else {
+        this->log_.info("begin to create M matrix using 4-center overlap.");
+        DfOverlapClass dfOvp(this->pPdfParam_);
+        if (this->isDedicatedBasisForGridFree_) {
+            dfOvp.getM_A(P, &M);
+        } else {
+            dfOvp.getM(P, &M);
+        }
+    }
+    if (this->debugSaveM_) {
+        M.save(TlUtils::format("fl_Work/debug_M.%d.mat", this->m_nIteration));
+    }
+
+    this->log_.info("begin to generate Fxc using grid-free method.");
+    // M~(=V^t * M * V) および SVU(=SVU, but now only SV)の作成
+    MatrixType S;
+    MatrixType V;
+    if (this->isDedicatedBasisForGridFree_) {
+        S = DfObject::getGfStildeMatrix<MatrixType>();
+        V = DfObject::getGfVMatrix<MatrixType>();
+    } else {
+        S = DfObject::getSpqMatrix<SymmetricMatrixType>();
+        V = DfObject::getXMatrix<MatrixType>();
+    }
+
+    const index_type numOfGFOrthNormBasis = V.getNumOfCols();
+    this->log_.info(TlUtils::format("orthonormal basis = %d", numOfGFOrthNormBasis));
+    MatrixType Vt = V;
+    Vt.transpose();
+
+    MatrixType St = S;
+    St.transpose();
+
+    SymmetricMatrixType Mtilde = Vt * M * V;
+    //Mtilde.save("Mtilde.mat");
+
+    TlVector lambda;
+    MatrixType U;
+    Mtilde.diagonal(&lambda, &U);
+    //lambda.save("lambda.vct");
+    //U.save("U.mat");
+    MatrixType Ut = U;
+    Ut.transpose();
+    assert(lambda.getSize() == numOfGFOrthNormBasis);
+    assert(U.getNumOfRows() == numOfGFOrthNormBasis);
+    assert(U.getNumOfCols() == numOfGFOrthNormBasis);
+
+    // M[rho^(-1/3)]
+    SymmetricMatrixType Mtilde_13;
+    {
+        SymmetricMatrixType lambda_13(numOfGFOrthNormBasis);
+        for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
+            double v_13 = 0.0;
+            const double v = lambda.get(i);
+            if (v > 1.0E-16) {
+                v_13 = std::pow(v, - ONE_THIRD);
+            }
+            lambda_13.set(i, i, v_13);
+        }
+        Mtilde_13 = U * lambda_13 * Ut;
+    }
+    //Mtilde_13.save("Mtilde_13.mat");
+
+    // GGA用gradient
+    MatrixType Gx = this->getDipoleVelocityIntegralsXMatrix<MatrixType>();
+    MatrixType Gy = this->getDipoleVelocityIntegralsYMatrix<MatrixType>();
+    MatrixType Gz = this->getDipoleVelocityIntegralsZMatrix<MatrixType>();
+    Gx *= -1.0;
+    Gy *= -1.0;
+    Gz *= -1.0;
+    const MatrixType DX = Vt * Gx * V;
+    const MatrixType DY = Vt * Gy * V;
+    const MatrixType DZ = Vt * Gz * V;
+    // DX.save("DX.mat");
+    // DY.save("DY.mat");
+    // DZ.save("DZ.mat");
+
+    MatrixType DXt = DX;
+    DXt.transpose();
+    MatrixType DYt = DY;
+    DYt.transpose();
+    MatrixType DZt = DZ;
+    DZt.transpose();
+    const MatrixType RTX = 3.0*(DXt * Mtilde_13 + Mtilde_13 * DX);
+    const MatrixType RTY = 3.0*(DYt * Mtilde_13 + Mtilde_13 * DY);
+    const MatrixType RTZ = 3.0*(DZt * Mtilde_13 + Mtilde_13 * DZ);
+    MatrixType RTXt = RTX;
+    RTXt.transpose();
+    MatrixType RTYt = RTY;
+    RTYt.transpose();
+    MatrixType RTZt = RTZ;
+    RTZt.transpose();
+
+    // RX2 := M[{nabla rho / rho^(-4/3)}^2]
+    const SymmetricMatrixType RX2 = RTXt*RTX + RTYt*RTY + RTZt*RTZ;
+    // RTX.save("RTX.mat");
+    // RTY.save("RTY.mat");
+    // RTZ.save("RTZ.mat");
+    // RX2.save("RX2.mat");
+
+    // RZ2 := [nabla rho / rho^(4/3)] * (DX + DY + DZ)
+    const MatrixType RZ2 = RTX*DX + RTY*DY + RTZ*DZ;
+    //RZ2.save("RZ2.mat");
+    MatrixType RZ2t = RZ2;
+    RZ2t.transpose();
+
+    TlVector x2;
+    MatrixType Ux2;
+    RX2.diagonal(&x2, &Ux2);
+    //x2.save("x2.vct");
+    //Ux2.save("Ux2.mat");
+    MatrixType Ux2t = Ux2;
+    Ux2t.transpose();
+
+    // ------------------
+    assert(lambda.getSize() == numOfGFOrthNormBasis);
+    // TlVector rhoAs(numOfGfOrbs);
+    // TlVector xAs(numOfGfOrbs);
+    TlVector rhoAs(numOfGFOrthNormBasis);
+    TlVector xAs(numOfGFOrthNormBasis);
+    //for (index_type i = 0; i < numOfGfOrbs; ++i) {
+    for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
+        const double rho_value = lambda[i];
+        const double rho = (rho_value > 1.0E-16) ? rho_value : 0.0;
+        rhoAs[i] = rho;
+        
+        const double x2_value = x2.get(i);
+        const double x = (x2_value > 1.0E-16) ? std::sqrt(x2_value) : 0.0;
+        xAs[i] = x;
+    }
+    const TlVector rhoBs = rhoAs;
+    const TlVector xBs = xAs;
+    
+    DfFunctional_GGA* pFunc = this->getFunctionalGGA();
+    // Fxc -------------------------------------------------------------
+    SymmetricMatrixType FxcA(numOfAOs); // alpha spin
+    SymmetricMatrixType FxcB(numOfAOs); // beta spin
+    {
+        DerivativeFunctionalSets dfs = pFunc->getDerivativeFunctional_GF(rhoAs, rhoBs, xAs, xBs);
+        
+        TlVector rhoAA43(numOfGFOrthNormBasis);
+        TlVector rhoAB43(numOfGFOrthNormBasis);
+        TlVector rhoBB43(numOfGFOrthNormBasis);
+        for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
+            const double rhoA = lambda[i];
+            if (rhoA > 1.0E-16) {
+                const double rhoA43 = std::pow(rhoA, 4.0/3.0);
+                const double rhoB43 = rhoA43; // RKS
+                rhoAA43[i] = rhoA43;
+                rhoBB43[i] = rhoB43;
+                rhoAB43[i] = std::sqrt(rhoA43 * rhoB43);
+            }
+        }
+
+        MatrixType FxcA_tilde(numOfGFOrthNormBasis, numOfGFOrthNormBasis);
+        MatrixType FxcB_tilde(numOfGFOrthNormBasis, numOfGFOrthNormBasis);
+        SymmetricMatrixType diag_RAR(numOfGFOrthNormBasis);
+        SymmetricMatrixType diag_RAX(numOfGFOrthNormBasis);
+        SymmetricMatrixType diag_RBR(numOfGFOrthNormBasis);
+        SymmetricMatrixType diag_RBX(numOfGFOrthNormBasis);
+        SymmetricMatrixType diag_GAAR(numOfGFOrthNormBasis);
+        SymmetricMatrixType diag_GAAX(numOfGFOrthNormBasis);
+        SymmetricMatrixType diag_GABR(numOfGFOrthNormBasis);
+        SymmetricMatrixType diag_GABX(numOfGFOrthNormBasis);
+        SymmetricMatrixType diag_GBBR(numOfGFOrthNormBasis);
+        SymmetricMatrixType diag_GBBX(numOfGFOrthNormBasis);
+        const int numOfTerms = pFunc->getNumOfDerivativeFunctionalTerms();
+        for (int term = 0; term < numOfTerms; ++term) {
+            for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
+                diag_RAR(i, i) = dfs.rFrRhoA_R(term, i);
+                diag_RAX(i, i) = dfs.rFrRhoA_X(term, i);
+                diag_RBR(i, i) = dfs.rFrRhoB_R(term, i);
+                diag_RBX(i, i) = dfs.rFrRhoB_X(term, i);
+
+                diag_GAAR(i, i) = dfs.rFrGAA_R(term, i) * rhoAA43[i];
+                diag_GAAX(i, i) = dfs.rFrGAA_X(term, i);
+                diag_GABR(i, i) = dfs.rFrGAB_R(term, i) * rhoAB43[i];
+                diag_GABX(i, i) = dfs.rFrGAB_X(term, i);
+                diag_GBBR(i, i) = dfs.rFrGBB_R(term, i) * rhoBB43[i];
+                diag_GBBX(i, i) = dfs.rFrGBB_X(term, i);
+            }
+
+            // alpha spin ------------
+            {
+                const SymmetricMatrixType Fxc_RR = U * diag_RAR * Ut;
+                const SymmetricMatrixType Fxc_RX = Ux2 * diag_RAX * Ux2t;
+                MatrixType Fxc_tilde_term1 = 0.5 * (Fxc_RR * Fxc_RX + Fxc_RX * Fxc_RR);
+                FxcA_tilde += Fxc_tilde_term1;
+            }
+
+            MatrixType Fxc_GAA;
+            {
+                const MatrixType Fxc_GAAR = U * diag_GAAR * Ut;
+                const MatrixType Fxc_GAAX = Ux2 * diag_GAAX * Ux2t;
+                Fxc_GAA = 2.0 * 0.5 * (Fxc_GAAR * Fxc_GAAX + Fxc_GAAX * Fxc_GAAR);
+            }
+
+            MatrixType Fxc_GAB;
+            {
+                const SymmetricMatrixType Fxc_GABR = U * diag_GABR * Ut;
+                const SymmetricMatrixType Fxc_GABX = Ux2 * diag_GABX * Ux2t;
+                Fxc_GAB = 0.5 * (Fxc_GABR * Fxc_GABX + Fxc_GABX * Fxc_GABR);
+            }
+
+            MatrixType Fxc_GBB;
+            {
+                const SymmetricMatrixType Fxc_GBBR = U * diag_GBBR * Ut;
+                const SymmetricMatrixType Fxc_GBBX = Ux2 * diag_GBBX * Ux2t;
+                Fxc_GBB = 2.0 * 0.5 * (Fxc_GBBR * Fxc_GBBX + Fxc_GBBX * Fxc_GBBR);
+            }
+
+            {
+                MatrixType FxcA_term2 = Fxc_GAA + Fxc_GAB;
+                MatrixType FxcA_term2t = FxcA_term2;
+                FxcA_term2t.transpose();
+                MatrixType FxcA_tilde_term2 = FxcA_term2t * RZ2 + RZ2t * FxcA_term2;
+                FxcA_tilde += FxcA_tilde_term2;
+            }
+            {
+                MatrixType FxcB_term2 = Fxc_GBB + Fxc_GAB;
+                MatrixType FxcB_term2t = FxcB_term2;
+                FxcB_term2t.transpose();
+                MatrixType FxcB_tilde_term2 = FxcB_term2t * RZ2 + RZ2t * FxcB_term2;
+                FxcB_tilde += FxcB_tilde_term2;
+            }
+        }
+        FxcA = S * V * FxcA_tilde * Vt * St;
+        FxcB = S * V * FxcB_tilde * Vt * St;
+    }
+    //DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration, SymmetricMatrixType(FxcA));
+    DfObject::saveFxcMatrix(runType, this->m_nIteration, SymmetricMatrixType(FxcA));
+
+    // Exc -------------------------------------------------------------
+    SymmetricMatrixType ExcA(numOfAOs);
+    //SymmetricMatrixType ExcB(numOfAOs);
+    {
+        const FunctionalSets fs = pFunc->getFunctional_GF(rhoAs, rhoBs, xAs, xBs);
+
+        MatrixType ExcA_tilde(numOfGFOrthNormBasis, numOfGFOrthNormBasis);
+        //MatrixType ExcB_tilde(numOfGFOrthNormBasis, numOfGFOrthNormBasis);
+        {
+            SymmetricMatrixType diag_AR(numOfGFOrthNormBasis);
+            SymmetricMatrixType diag_AX(numOfGFOrthNormBasis);
+            //SymmetricMatrixType diag_BR(numOfGFOrthNormBasis);
+            //SymmetricMatrixType diag_BX(numOfGFOrthNormBasis);
+            const int numOfTerms = pFunc->getNumOfFunctionalTerms();
+            for (int term = 0; term < numOfTerms; ++term) {
+                for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
+                    const double rho = rhoAs[i] + rhoBs[i];
+                    if (rho > 1.0E-16) {
+                        const double inv_rho = 1.0 / rho;
+                        diag_AR(i, i) = fs.FA_termR(term, i) * inv_rho;
+                        diag_AX(i, i) = fs.FA_termX(term, i);
+                        // diag_BR(i, i) = fs.FB_termR(term, i) * inv_rho;
+                        // diag_BX(i, i) = fs.FB_termX(term, i);
+                    }
+                }
+                
+                const SymmetricMatrixType ExcA_R = U * diag_AR * Ut;
+                const SymmetricMatrixType ExcA_X = Ux2 * diag_AX * Ux2t;
+                const MatrixType ExcA_tilde_term = ExcA_R * ExcA_X + ExcA_X * ExcA_R;
+                // const SymmetricMatrixType ExcB_R = U * diag_BR * Ut;
+                // const SymmetricMatrixType ExcB_X = Ux2 * diag_BX * Ux2t;
+                // const MatrixType ExcB_tilde_term = ExcB_R * ExcB_X + ExcB_X * ExcB_R;
+                
+                ExcA_tilde += ExcA_tilde_term;
+                // ExcB_tilde += ExcB_tilde_term;
+            }
+        }
+
+        ExcA = S * V * ExcA_tilde * Vt * St;
+        // ExcB = S * V * ExcB_tilde * Vt * St;
+        // Exc *= 2.0; // means RKS
+    }
+    //DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration, SymmetricMatrixType(ExcA));
+    DfObject::saveExcMatrix(runType, this->m_nIteration, SymmetricMatrixType(ExcA));
+
+    delete pFunc;
+    pFunc = NULL;
+}
 
 #endif // DFGRIDFREEXC_H
 
