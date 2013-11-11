@@ -191,6 +191,7 @@ int DfScf::execScfLoop()
     };
 
     SCF_STATE nScfState = BEGIN;
+    (*this->pPdfParam_)["control"]["scf_converged"] = false;
     if (this->isRestart_ == true) {
         const std::string respoint = TlUtils::toUpper(pdfParam["control"]["scf_state"].getStr());
 
@@ -369,6 +370,7 @@ int DfScf::execScfLoop()
             if (this->judge() == false) {
                 nScfState = JUDGE_TAIL;
             } else {
+                (*this->pPdfParam_)["control"]["scf_converged"] = true;
                 nScfState = END_OF_SCF_LOOP;
             }
 
