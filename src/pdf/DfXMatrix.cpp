@@ -12,7 +12,7 @@ DfXMatrix::DfXMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
     assert(pPdfParam != NULL);
     const TlSerializeData& pdfParam = *pPdfParam;
-    const double threshold_trancation = pdfParam["orbital-independence-threshold"].getDouble();
+    const double threshold_trancation = pdfParam["orbital_independence_threshold"].getDouble();
 
     this->threshold_trancation_canonical_ = threshold_trancation;
     if (pdfParam["orbital_independence_threshold/canonical"].getStr().empty() != true) {

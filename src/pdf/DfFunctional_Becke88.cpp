@@ -199,7 +199,7 @@ TlMatrix DfFunctional_Becke88::getDerivativeFunctionalCore(const double rhoA,
     // gammaAA = (rhoA^(4/3) * xA) * (rhoA^(4/3) * xA);
     // roundF_roundGammaAA = 0.5 * (1.0 / (rhoA^(4/3) * xA)) * g_primeA;
     //                     = [1.0 / rhoA^(4/3)] * [0.5 * (1.0 / xA) * g_primeA]
-    {
+    if ((rhoA > 1.0E-16) && (xA > 1.0E-16)) {
         const double g_primeA = this->g_prime(xA);
         const double inv_xA = 1.0 / xA;
 
@@ -214,7 +214,7 @@ TlMatrix DfFunctional_Becke88::getDerivativeFunctionalCore(const double rhoA,
         answer.set(GAB_R, 0, roundF_roundGammaAB_termR);
         answer.set(GAB_X, 0, roundF_roundGammaAB_termX);
     }
-    {
+    if ((rhoB > 1.0E-16) && (xB > 1.0E-16)) {
         const double g_primeB = this->g_prime(xB);
         const double inv_xB = 1.0 / xB;
 

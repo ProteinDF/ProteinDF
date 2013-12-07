@@ -180,7 +180,7 @@ void DfObject::setParam(const TlSerializeData& data)
         }
     }
     
-    // XC potential
+    // XC functional
     {
         this->XC_engine_ = XC_ENGINE_GRID;
         const std::string XC_engine = TlUtils::toUpper(data["XC_engine"].getStr());
@@ -191,7 +191,7 @@ void DfObject::setParam(const TlSerializeData& data)
         }
     }
 
-    this->m_sXCFunctional = TlUtils::toUpper(data["xc-potential"].getStr());
+    this->m_sXCFunctional = TlUtils::toUpper(data["xc_functional"].getStr());
     {
         const char nLastChar = this->m_sXCFunctional[this->m_sXCFunctional.length() -1];
         this->m_bIsXCFitting = (nLastChar == '~') ? true : false;

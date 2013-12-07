@@ -104,15 +104,18 @@ void PdfKeyword::convertAlias(TlSerializeData* pData)
         if (it != this->kwdAlias_.end()) {
             const std::string newKeyword = it->second;
 
-            if (pData->hasKey(newKeyword) != true) {
-                (*pData)[newKeyword] = value;
-                pData->erase(keyword);
-                p = pData->beginMap();
-            } else {
-                log.warn(TlUtils::format(" alias keyword \"%s\" could not overwrite to \"%s\".",
-                                         keyword.c_str(), newKeyword.c_str()));
-                ++p;
+            if (pData->hasKey(newKeyword) == true) {
+                log.warn(TlUtils::format(" kwd[%s] overwrite by alias[%s]:",
+                                         newKeyword.c_str(),
+                                         keyword.c_str()));
+                log.warn(TlUtils::format("  from [%s] to [%s]",
+                                         (*pData)[newKeyword].getStr().c_str(),
+                                         value.getStr().c_str()));
             }
+
+            (*pData)[newKeyword] = value;
+            pData->erase(keyword);
+            p = pData->beginMap();
         } else {
             ++p;
         }

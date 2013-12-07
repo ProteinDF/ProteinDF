@@ -76,19 +76,19 @@ void DfGridFreeXC_Parallel::buildFxc_LDA()
 void DfGridFreeXC_Parallel::buildFxc_LDA_LAPACK()
 {
     this->log_.info("DfGridFreeXC_Parallel::buildFxc_LDA_LAPACK()");
-    DfGridFreeXC::buildFxc_LDA_tmpl<DfOverlapX_Parallel,
-                                    DfCD_Parallel,
-                                    TlSymmetricMatrix,
-                                    TlMatrix>();
+    DfGridFreeXC::buildFxc_LDA_method<DfOverlapX_Parallel,
+                                      DfCD_Parallel,
+                                      TlSymmetricMatrix,
+                                      TlMatrix>();
 }
 
 void DfGridFreeXC_Parallel::buildFxc_LDA_ScaLAPACK()
 {
     this->log_.info("DfGridFreeXC_Parallel::buildFxc_LDA_ScaLAPACK()");
-    DfGridFreeXC::buildFxc_LDA_tmpl<DfOverlapX_Parallel,
-                                    DfCD_Parallel,
-                                    TlDistributeSymmetricMatrix,
-                                    TlDistributeMatrix>();
+    DfGridFreeXC::buildFxc_LDA_method<DfOverlapX_Parallel,
+                                      DfCD_Parallel,
+                                      TlDistributeSymmetricMatrix,
+                                      TlDistributeMatrix>();
 }
 
 

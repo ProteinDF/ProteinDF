@@ -308,8 +308,6 @@ void ProteinDF::stepScf()
     DfScf* pDfScf = this->createDfScfInstance();
     pDfScf->dfScfMain();
     
-    this->pdfParam_["control"]["scf_converged"] = true;
-
     delete pDfScf;
     pDfScf = NULL;
     
