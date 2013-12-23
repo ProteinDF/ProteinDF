@@ -2380,6 +2380,21 @@ TlDistributeMatrix operator*(const TlDistributeMatrix& X, const double Y)
     return ans;
 }
 
+TlDistributeMatrix operator+(const TlDistributeMatrix& X, const TlDistributeMatrix& Y)
+{
+    TlDistributeMatrix answer = X;
+    answer += Y;
+
+    return answer;
+}
+
+TlDistributeMatrix operator-(const TlDistributeMatrix& X, const TlDistributeMatrix& Y)
+{
+    TlDistributeMatrix answer = X;
+    answer -= Y;
+
+    return answer;
+}
 
 double TlDistributeMatrix::operator()(const int row, const int col) const
 {

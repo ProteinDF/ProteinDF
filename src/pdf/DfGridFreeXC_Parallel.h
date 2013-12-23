@@ -41,6 +41,10 @@ protected:
     virtual void buildFxc_LDA();
     void buildFxc_LDA_LAPACK();
     void buildFxc_LDA_ScaLAPACK();
+
+    virtual void buildFxc_GGA();
+    void buildFxc_GGA_LAPACK();
+    void buildFxc_GGA_ScaLAPACK();
 };
 
 #endif // DFGRIDFREEXC_PARALLEL_H

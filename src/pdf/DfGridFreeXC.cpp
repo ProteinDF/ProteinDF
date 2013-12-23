@@ -121,6 +121,7 @@ void DfGridFreeXC::buildFxc()
 
 void DfGridFreeXC::buildFxc_LDA()
 {
+    this->log_.info("DfGridFreeXC::buildFxc_LDA()");
     this->buildFxc_LDA_method<DfOverlapX, DfCD, TlSymmetricMatrix, TlMatrix>();
 }
 
@@ -415,6 +416,7 @@ TlSymmetricMatrix DfGridFreeXC::getCholeskyVector(const TlVector& L_col,
 // -----------------------------------------------------------------------------
 void DfGridFreeXC::buildFxc_GGA()
 {
+    this->log_.info("DfGridFreeXC::buildFxc_GGA()");
     this->buildFxc_GGA_method<DfOverlapX, DfCD, TlSymmetricMatrix, TlMatrix>();
 }
 

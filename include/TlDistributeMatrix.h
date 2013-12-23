@@ -499,6 +499,9 @@ protected:
     friend TlDistributeMatrix operator*(double X, const TlDistributeMatrix& Y);
     friend TlDistributeMatrix operator*(const TlDistributeMatrix& X, double Y);
 
+    friend TlDistributeMatrix operator+(const TlDistributeMatrix& X, const TlDistributeMatrix& Y);
+    friend TlDistributeMatrix operator-(const TlDistributeMatrix& X, const TlDistributeMatrix& Y);
+
     friend TlDistributeMatrix multiplicationByScaLapack(const TlDistributeSymmetricMatrix& X,
                                                         const TlDistributeMatrix& Y);
     friend TlDistributeMatrix multiplicationByScaLapack(const TlDistributeMatrix& X,

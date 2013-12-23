@@ -109,4 +109,37 @@ void DfGridFreeXC_Parallel::buildFxc_LDA_ScaLAPACK()
                                       TlDistributeMatrix>();
 }
 
+void DfGridFreeXC_Parallel::buildFxc_GGA()
+{
+    this->log_.info("DfGridFreeXC_Parallel::buildFxc_GGA()");
+#ifdef HAVE_SCALAPACK
+    if (this->m_bUsingSCALAPACK == true) {
+        this->buildFxc_GGA_ScaLAPACK();
+    } else {
+        this->buildFxc_GGA_LAPACK();
+    }
+#else
+    {
+        this->buildFxc_GGA_LAPACK();
+    }
+#endif // HAVE_SCALAPACK
+}
+
+void DfGridFreeXC_Parallel::buildFxc_GGA_LAPACK()
+{
+    this->log_.info("DfGridFreeXC_Parallel::buildFxc_GGA_LAPACK()");
+    DfGridFreeXC::buildFxc_GGA_method<DfOverlapX_Parallel,
+                                      DfCD_Parallel,
+                                      TlSymmetricMatrix,
+                                      TlMatrix>();
+}
+
+void DfGridFreeXC_Parallel::buildFxc_GGA_ScaLAPACK()
+{
+    this->log_.info("DfGridFreeXC_Parallel::buildFxc_GGA_ScaLAPACK()");
+    DfGridFreeXC::buildFxc_GGA_method<DfOverlapX_Parallel,
+                                      DfCD_Parallel,
+                                      TlDistributeSymmetricMatrix,
+                                      TlDistributeMatrix>();
+}
 
