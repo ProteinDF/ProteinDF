@@ -1,5 +1,7 @@
 #!/bin/sh
 
+RM="rm"
+
 check_pdfhome()
 {
     if [ x${PDF_HOME} = x ]; then
@@ -13,7 +15,6 @@ check_pdfhome()
 
 # main
 check_pdfhome
-. ${PDF_HOME}/bin/pdfcommon.sh
 
 FULL_CLEANUP=false
 KEEP_INTEGRALS=true
