@@ -1,6 +1,7 @@
 bin_script_src = \
 	pdf-serial.sh		\
 	pdf-parallel.sh		\
+	pdf-printenv.sh		\
 	pdf-setup.sh		\
 	pdf-clean.sh
 
