@@ -87,7 +87,7 @@ void Fl_Db_Basis::setData()
                 for (int i = 0; i < numOfParts; ++i) {
                     numOfCGTOs[i] = std::atoi(parts[i].c_str());
                 }
-                isReadSets == true;
+                isReadSets = true;
 
 
                 if (auxMode != true) {
@@ -118,7 +118,7 @@ void Fl_Db_Basis::setData()
                         for (int i = 0; i < numOfParts; ++i) {
                             numOfCGTOs[i] = std::atoi(parts[i].c_str());
                         }
-                        isReadSets == true;
+                        isReadSets = true;
                         
                         this->read_cGTOs(numOfCGTOs[0], "s", fi, &(this->myuCgto));
                         this->read_cGTOs(numOfCGTOs[1], "p", fi, &(this->myuCgto));

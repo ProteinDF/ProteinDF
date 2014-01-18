@@ -382,7 +382,7 @@ void PdfUserInput::moleculeBasisSetOrbital(const std::string& str)
 {
     std::istringstream in(str);
 
-    int dNumOfCgto = 0;
+    //int dNumOfCgto = 0;
 
     while (in) {
         std::string sLine;
@@ -492,7 +492,7 @@ void PdfUserInput::moleculeBasisSetDensityAuxiliary(const std::string& str)
 {
     std::istringstream in(str);
 
-    int dNumOfCgto = 0;
+    //int dNumOfCgto = 0;
 
     while (in) {
         std::string sLine;
@@ -595,7 +595,7 @@ void PdfUserInput::moleculeBasisSetExchangeAuxiliary(const std::string& str)
 {
     std::istringstream in(str);
 
-    int dNumOfCgto = 0;
+    //int dNumOfCgto = 0;
 
     while (in) {
         std::string sLine;
@@ -698,7 +698,7 @@ void PdfUserInput::moleculeBasisSetGridFree(const std::string& str)
 {
     // Fl_Gto_Orbital Bas;
     std::istringstream in(str);
-    int dNumOfCgto = 0;
+    // int dNumOfCgto = 0;
 
     while (in) {
         std::string sLine;

@@ -853,7 +853,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
                                  const TlDistributeMatrix& P, TlVector* pRho)
 {
     const int taskListSize = taskList.size();
-    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+    // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
     
 #pragma omp parallel
     {
@@ -884,7 +884,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
             for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
             
-                const int shellTypeS = 0;
+                // const int shellTypeS = 0;
                 // const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
                 
                 const std::size_t numOfShellArrayR = shellArrayTable_Density[shellTypeR].size();

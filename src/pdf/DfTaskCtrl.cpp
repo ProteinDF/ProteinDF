@@ -1106,8 +1106,8 @@ bool DfTaskCtrl::getQueue_Force4(const TlOrbitalInfoObject& orbitalInfo,
     static int shellTypeR = maxShellType -1;
     static int shellTypeS = maxShellType -1;
     static std::size_t prIndex = 0;
-    static std::size_t shellArrayIndexQ = 0;
-    static std::size_t shellArrayIndexS = 0;
+    static index_type shellArrayIndexQ = 0;
+    static index_type shellArrayIndexS = 0;
     
     pTaskList->clear();
     pTaskList->reserve(maxGrainSize);
@@ -1161,7 +1161,7 @@ bool DfTaskCtrl::getQueue_Force4(const TlOrbitalInfoObject& orbitalInfo,
                                                                  shellIndexR,
                                                                  orbitalInfo);
                         ShellArray::const_iterator sItEnd = std::upper_bound(shellArrayS.begin(), shellArrayS.end(), shellIndexR);
-                        const std::size_t shellArraySizeS = std::distance(shellArrayS.begin(), sItEnd);
+                        const index_type shellArraySizeS = std::distance(shellArrayS.begin(), sItEnd);
 
                         for ( ; shellArrayIndexQ < shellArraySizeQ; ) {
                             const index_type shellIndexQ = shellArrayQ[shellArrayIndexQ];
@@ -1288,7 +1288,7 @@ DfTaskCtrl::makeDistributedCutoffTable(const TlOrbitalInfoObject& orbitalInfo)
     static const double INV_EQ32_COEF = 1.0 / (std::pow(2.0 * TlMath::PI(), 0.25) * TlMath::PI());
     const double threshold = this->cutoffEpsilon_distribution_ * INV_EQ32_COEF;
     const int maxShellType = orbitalInfo.getMaxShellType();
-    const index_type numOfAOs = orbitalInfo.getNumOfOrbitals();
+    // const index_type numOfAOs = orbitalInfo.getNumOfOrbitals();
 
     const std::vector<index_type> orbList = orbitalInfo.getStartIndexArrayOfShellGroup();
     const int orbListSize = orbList.size();
@@ -1369,10 +1369,10 @@ DfTaskCtrl::makeDistributedCutoffTable(const TlOrbitalInfoObject& orbitalInfo1,
 {
     static const double INV_EQ32_COEF = 1.0 / (std::pow(2.0 * TlMath::PI(), 0.25) * TlMath::PI());
     const double threshold = this->cutoffEpsilon_distribution_ * INV_EQ32_COEF;
-    const int maxShellType1 = orbitalInfo1.getMaxShellType();
+    // const int maxShellType1 = orbitalInfo1.getMaxShellType();
     const int maxShellType2 = orbitalInfo2.getMaxShellType();
-    const index_type numOfOrbitals1 = orbitalInfo1.getNumOfOrbitals();
-    const index_type numOfOrbitals2 = orbitalInfo2.getNumOfOrbitals();
+    // const index_type numOfOrbitals1 = orbitalInfo1.getNumOfOrbitals();
+    // const index_type numOfOrbitals2 = orbitalInfo2.getNumOfOrbitals();
 
     const std::vector<index_type> orbList1 = orbitalInfo1.getStartIndexArrayOfShellGroup();
     const int orbListSize1 = orbList1.size();
@@ -2039,7 +2039,7 @@ std::size_t DfTaskCtrl::getTotalCalcAmount2(const TlOrbitalInfoObject& orbitalIn
             const int maxStepsQ = 2 * shellTypeQ + 1;
 
             for (std::size_t shellArrayIndexP = 0 ; shellArrayIndexP < shellArraySizeP; ++shellArrayIndexP) {
-                const index_type shellIndexP = shellArrayP[shellArrayIndexP];
+                // const index_type shellIndexP = shellArrayP[shellArrayIndexP];
                 
                 const ShellArray& shellArrayQ = shellArrayTable2[shellTypeQ];
                 const std::size_t shellArraySizeQ = shellArrayQ.size();
