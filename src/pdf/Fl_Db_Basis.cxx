@@ -55,7 +55,6 @@ void Fl_Db_Basis::setData()
 
     bool isNormalTerminate = false;
     bool isNameFound = false;
-    bool isReadSets = false;
     bool isRead_J_part = false;
     std::vector<int> numOfCGTOs(4, 0); // s, p, d, spd
     while (fi) {
@@ -81,57 +80,51 @@ void Fl_Db_Basis::setData()
                 continue;
             }
         } else {
-            if (isReadSets != true) {
-                std::vector<std::string> parts = this->getWords(line);
-                const int numOfParts = std::min<int>(parts.size(), 4);
-                for (int i = 0; i < numOfParts; ++i) {
-                    numOfCGTOs[i] = std::atoi(parts[i].c_str());
-                }
-                isReadSets = true;
-
-
-                if (auxMode != true) {
-                    this->read_cGTOs(numOfCGTOs[0], "s", fi, &(this->cgto));
-                    this->read_cGTOs(numOfCGTOs[1], "p", fi, &(this->cgto));
-                    this->read_cGTOs(numOfCGTOs[2], "d", fi, &(this->cgto));
-                    if (numOfCGTOs[3] > 0) {
-                        // spd
-                        this->read_cGTOs(numOfCGTOs[3], "spd", fi, &(this->cgto));
-                    }
-
-                    isNormalTerminate = true;
-                } else {
-                    if (isRead_J_part != true) {
-                        // J
-                        this->read_cGTOs(numOfCGTOs[0], "s", fi, &(this->rhoCgto));
-                        this->read_cGTOs(numOfCGTOs[1], "p", fi, &(this->rhoCgto));
-                        this->read_cGTOs(numOfCGTOs[2], "d", fi, &(this->rhoCgto));
-                        if (numOfCGTOs[3] > 0) {
-                            // spd
-                            this->read_cGTOs(numOfCGTOs[3], "spd", fi, &(this->rhoCgto));
-                        }
-                        isRead_J_part = true;
-                    } else {
-                        // K
-                        std::vector<std::string> parts = this->getWords(line);
-                        const int numOfParts = std::min<int>(parts.size(), 4);
-                        for (int i = 0; i < numOfParts; ++i) {
-                            numOfCGTOs[i] = std::atoi(parts[i].c_str());
-                        }
-                        isReadSets = true;
-                        
-                        this->read_cGTOs(numOfCGTOs[0], "s", fi, &(this->myuCgto));
-                        this->read_cGTOs(numOfCGTOs[1], "p", fi, &(this->myuCgto));
-                        this->read_cGTOs(numOfCGTOs[2], "d", fi, &(this->myuCgto));
-                        if (numOfCGTOs[3] > 0) {
-                            // spd
-                            this->read_cGTOs(numOfCGTOs[3], "spd", fi, &(this->myuCgto));
-                        }
-
-                        isNormalTerminate = true;
-                    }
+            std::vector<std::string> parts = this->getWords(line);
+            const int numOfParts = std::min<int>(parts.size(), 4);
+            for (int i = 0; i < numOfParts; ++i) {
+                numOfCGTOs[i] = std::atoi(parts[i].c_str());
+            }
+            
+            if (auxMode != true) {
+                this->read_cGTOs(numOfCGTOs[0], "s", fi, &(this->cgto));
+                this->read_cGTOs(numOfCGTOs[1], "p", fi, &(this->cgto));
+                this->read_cGTOs(numOfCGTOs[2], "d", fi, &(this->cgto));
+                if (numOfCGTOs[3] > 0) {
+                    // spd
+                    this->read_cGTOs(numOfCGTOs[3], "spd", fi, &(this->cgto));
                 }
                 
+                isNormalTerminate = true;
+            } else {
+                if (isRead_J_part != true) {
+                    // J
+                    this->read_cGTOs(numOfCGTOs[0], "s", fi, &(this->rhoCgto));
+                    this->read_cGTOs(numOfCGTOs[1], "p", fi, &(this->rhoCgto));
+                    this->read_cGTOs(numOfCGTOs[2], "d", fi, &(this->rhoCgto));
+                    if (numOfCGTOs[3] > 0) {
+                        // spd
+                        this->read_cGTOs(numOfCGTOs[3], "spd", fi, &(this->rhoCgto));
+                    }
+                    isRead_J_part = true;
+                } else {
+                    // K
+                    std::vector<std::string> parts = this->getWords(line);
+                    const int numOfParts = std::min<int>(parts.size(), 4);
+                    for (int i = 0; i < numOfParts; ++i) {
+                        numOfCGTOs[i] = std::atoi(parts[i].c_str());
+                    }
+                    
+                    this->read_cGTOs(numOfCGTOs[0], "s", fi, &(this->myuCgto));
+                    this->read_cGTOs(numOfCGTOs[1], "p", fi, &(this->myuCgto));
+                    this->read_cGTOs(numOfCGTOs[2], "d", fi, &(this->myuCgto));
+                    if (numOfCGTOs[3] > 0) {
+                        // spd
+                        this->read_cGTOs(numOfCGTOs[3], "spd", fi, &(this->myuCgto));
+                    }
+                    
+                    isNormalTerminate = true;
+                }
             }
         }
     }
