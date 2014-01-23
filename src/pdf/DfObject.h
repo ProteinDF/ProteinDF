@@ -883,7 +883,9 @@ SymmetricMatrixType DfObject::getHFxMatrix(const RUN_TYPE runType, const int ite
     SymmetricMatrixType HFx;
     const std::string path = this->getHFxMatrixPath(runType, iteration);
     HFx = this->matrixCache_.get<SymmetricMatrixType>(path);
-    HFx.resize(this->m_nNumOfAOs);
+    //HFx.resize(this->m_nNumOfAOs);
+    assert(HFx.getNumOfRows() == this->m_nNumOfAOs);
+    assert(HFx.getNumOfCols() == this->m_nNumOfAOs);
     return HFx;
 }
 
@@ -929,7 +931,8 @@ SymmetricMatrixType DfObject::getExcMatrix(const RUN_TYPE runType, const int ite
     SymmetricMatrixType Exc;
     const std::string path = this->getExcMatrixPath(runType, iteration);
     Exc = this->matrixCache_.get<SymmetricMatrixType>(path);
-    Exc.resize(this->m_nNumOfAOs);
+    assert(Exc.getNumOfRows() == this->m_nNumOfAOs);
+    assert(Exc.getNumOfCols() == this->m_nNumOfAOs);
     return Exc;
 }
 

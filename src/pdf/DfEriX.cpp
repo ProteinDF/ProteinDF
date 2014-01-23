@@ -237,8 +237,8 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                        const TlMatrixObject& P, TlVector* pRho)
 {
     const int taskListSize = taskList.size();
-    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
-    int numOfThreads = 1;
+    // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+    // int numOfThreads = 1;
     
     // TlTime time_sumup;
     // double elapsetime_calc = 0.0;
@@ -254,7 +254,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
 
         int threadID = 0;
 #ifdef _OPENMP
-        numOfThreads = omp_get_num_threads();
+        // numOfThreads = omp_get_num_threads();
         threadID = omp_get_thread_num();
 #endif // _OPENMP
         this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
@@ -280,7 +280,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
             for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
             
-                const int shellTypeS = 0;
+                // const int shellTypeS = 0;
                 // const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
                 
                 const std::size_t numOfShellArrayR = shellArrayTable_Density[shellTypeR].size();
@@ -421,8 +421,8 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
 
     const int maxShellType = orbitalInfo.getMaxShellType();
     const int taskListSize = taskList.size();
-    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
-    int numOfThreads = 1;
+    // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+    // int numOfThreads = 1;
 
     // double elapsetime_calc     = 0.0;
     // double elapsetime_calc_eri = 0.0;
@@ -442,7 +442,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
 
         int threadID = 0;
 #ifdef _OPENMP
-        numOfThreads = omp_get_num_threads();
+        // numOfThreads = omp_get_num_threads();
         threadID = omp_get_thread_num();
 #endif // _OPENMP
         this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
@@ -468,7 +468,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
             for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
             
-                const int shellTypeS = 0;
+                // const int shellTypeS = 0;
                 // const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
                 
                 const std::size_t numOfShellArrayR = shellArrayTable_Density[shellTypeR].size();
@@ -521,8 +521,8 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
 #pragma omp critical(DfEriX__getJ_rho_to_J)
         {
             const int local_size = local_values.size();
-            assert(local_size == local_indexP.size());
-            assert(local_size == local_indexQ.size());
+            assert(local_size == static_cast<int>(local_indexP.size()));
+            assert(local_size == static_cast<int>(local_indexQ.size()));
             for (int i = 0; i < local_size; ++i) {
                 pJ->add(local_indexP[i], local_indexQ[i], local_values[i]);
             }
@@ -763,7 +763,7 @@ int DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
 {
     int numOfElements = 0;
     const int taskListSize = taskList.size();
-    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+    // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
     {
@@ -818,7 +818,7 @@ int DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                                                            pThreadIndexPairs + numOfThreadElements * 2,
                                                            pThreadValues + numOfThreadElements);
             numOfThreadElements += stores;
-            assert(numOfThreadElements < maxThreadElements);
+            assert(numOfThreadElements < static_cast<int>(maxThreadElements));
         }
 
 #pragma omp critical(DfEriX__getJ_integralDriven_part)
@@ -960,7 +960,7 @@ void DfEriX::getJab_part(const TlOrbitalInfoObject& orbitalInfo,
 {
     //const int maxShellType = orbitalInfo.getMaxShellType();
     const int taskListSize = taskList.size();
-    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+    // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
     {
@@ -1298,7 +1298,7 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
     static const int BUFFER_SIZE = 3 * 5 * 5 * 5; // (xyz) * 5d * 5d * 5d
     const int maxShellType = orbitalInfo.getMaxShellType();
     const int taskListSize = taskList.size();
-    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+    // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
     {
@@ -1485,7 +1485,7 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo_Density,
     //static const int BUFFER_SIZE = 3 * 5 * 5 * 5; // (xyz) * 5d * 5d * 5d
     //const int maxShellType = orbitalInfo.getMaxShellType();
     const int taskListSize = taskList.size();
-    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+    // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
     {
@@ -1802,7 +1802,7 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
 {
     int numOfElements = 0;
     const int taskListSize = taskList.size();
-    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+    // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
     {
@@ -1850,7 +1850,7 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                                               0, orbitalInfo, shellIndexR,
                                               0, orbitalInfo, shellIndexS);
             
-            int numOfStoreElements = 0;
+            // int numOfStoreElements = 0;
             const int stores = this->storeK_integralDriven(shellIndexP, maxStepsP,
                                                            shellIndexQ, maxStepsQ,
                                                            shellIndexR, maxStepsR,
@@ -1859,7 +1859,7 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                                                            pThreadIndexPairs + numOfThreadElements * 2,
                                                            pThreadValues + numOfThreadElements);
             numOfThreadElements += stores;
-            assert(numOfThreadElements < maxThreadElements);
+            assert(numOfThreadElements < static_cast<int>(maxThreadElements));
         }
 
 #pragma omp critical(DfEriX__getK_integralDriven_part)

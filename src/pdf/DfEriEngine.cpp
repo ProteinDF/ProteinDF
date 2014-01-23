@@ -687,10 +687,10 @@ void DfEriEngine::copyResultsToOutputBuffer(const AngularMomentum2& qAB,
     
     int index = 0;
     for (int iAbar = 0; iAbar < numOfAmvsAbar; ++iAbar) {
-        const TlAngularMomentumVector amvAbar = amvsAbar.get(iAbar);
+        // const TlAngularMomentumVector amvAbar = amvsAbar.get(iAbar);
 
         for (int iBbar = 0; iBbar < numOfAmvsBbar; ++iBbar) {
-            const TlAngularMomentumVector amvBbar = amvsBbar.get(iBbar);
+            // const TlAngularMomentumVector amvBbar = amvsBbar.get(iBbar);
 
             for (int iCbar = 0; iCbar < numOfAmvsCbar; ++iCbar) {
                 const TlAngularMomentumVector amvCbar = amvsCbar.get(iCbar);
@@ -699,10 +699,10 @@ void DfEriEngine::copyResultsToOutputBuffer(const AngularMomentum2& qAB,
                     const TlAngularMomentumVector amvDbar = amvsDbar.get(iDbar);
 
                     for (int iA = 0; iA < numOfAmvsA; ++iA) {
-                        const TlAngularMomentumVector amvA = amvsA.get(iA);
+                        // const TlAngularMomentumVector amvA = amvsA.get(iA);
                 
                         for (int iB = 0; iB < numOfAmvsB; ++iB) {
-                            const TlAngularMomentumVector amvB = amvsB.get(iB);
+                            // const TlAngularMomentumVector amvB = amvsB.get(iB);
                             const int bra_index = ((iAbar*numOfAmvsBbar +iBbar)*numOfAmvsA +iA)*numOfAmvsB +iB;
                     
                             for (int iC = 0; iC < numOfAmvsC; ++iC) {
@@ -1897,7 +1897,7 @@ void DfEriEngine::calcPQ(const AngularMomentum2& qAB,
             const TlAngularMomentumVectorSet amvs_p(p);
             const int numOf_amvs_p = amvs_p.size(); // amvs_p の数だけで十分
             assert(braStateIndex < ERI_NUM_OF_ERI_STATES);
-            assert(this->ERI_bra_[braStateIndex].size() > numOf_amvs_p);
+            assert(static_cast<int>(this->ERI_bra_[braStateIndex].size()) > numOf_amvs_p);
 
 #ifdef CHECK_MAX_COUNT
             this->maxNumOfAMVs_ = std::max(this->maxNumOfAMVs_, numOf_amvs_p);
@@ -1997,7 +1997,7 @@ DfEriEngine::get_csindex_for_calcPQ(const int angularMomentumP,
                     const TlAngularMomentumVector amv_p = amvs_p.get(i);
                     
                     // ket ---------------------------------------------------------
-                    int ket_index = 0;
+                    // int ket_index = 0;
                     const int max_ket_cs_index = ket_contractScales.size();
                     for (int ket_cs_index = 0; ket_cs_index < max_ket_cs_index; ++ket_cs_index) {
                         const int c_prime = ket_contractScales[ket_cs_index].a_prime;
@@ -2465,8 +2465,8 @@ void DfEriEngine::ERI_EQ44_00xxx(const ERI_State eriState, EriDataType* pERI)
         const int i = this->initiativeRM(amv_b);
         const double AB_i = this->AB_[i];
         
-        const TlAngularMomentumVector amv_a_bar1 = amv_a_bar - this->E1_[i];
-        const TlAngularMomentumVector amv_b_bar1 = amv_b_bar - this->E1_[i];
+        // const TlAngularMomentumVector amv_a_bar1 = amv_a_bar - this->E1_[i];
+        // const TlAngularMomentumVector amv_b_bar1 = amv_b_bar - this->E1_[i];
         const TlAngularMomentumVector amv_b1 = amv_b - this->E1_[i];
         assert(amv_b1.isExist() == true);
             

@@ -71,7 +71,7 @@ TlMatrix DfPopulation::getAtomPopData(const int iteration)
     case METHOD_UKS:
         {
             const std::size_t dim = this->grossAtomPopA_.getSize();
-            assert(dim == this->grossAtomPopB_.getSize());
+            assert(dim == static_cast<std::size_t>(this->grossAtomPopB_.getSize()));
             answer.resize(dim, 2);
             for (std::size_t atomIndex = 0; atomIndex < dim; ++atomIndex) {
                 const double nucCharge = flGeom.getCharge(atomIndex);

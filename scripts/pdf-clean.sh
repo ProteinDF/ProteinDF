@@ -13,6 +13,8 @@ check_pdfhome()
     fi
 }
 
+PDF_WORK_DIRS="fl_Work fl_Input fl_Table fl_Temp"
+
 # main
 check_pdfhome
 
@@ -31,11 +33,11 @@ if [ `uname` = Linux ]; then
 fi
 for DIR in ${PDF_WORK_DIRS}; do
     if [ -d ${DIR} ]; then
-	if [ x${KEEP_INTEGRALS} = xtrue ]; then
-	    find ${DIR} -regex ".*[0-9]+" -and -type f -print0 | xargs -0 ${XARGS_NO_RUN_IF_EMPTY} ${RM}
-	else
-	    find ${DIR} -maxdepth 1 -name "*" -and -type f -print0 | xargs -0 ${XARGS_NO_RUN_IF_EMPTY} ${RM}
-	fi
+	    if [ x${KEEP_INTEGRALS} = xtrue ]; then
+	        find ${DIR} -regex ".*[0-9]+" -and -type f -print0 | xargs -0 ${XARGS_NO_RUN_IF_EMPTY} ${RM}
+	    else
+	        find ${DIR} -maxdepth 1 -name "*" -and -type f -print0 | xargs -0 ${XARGS_NO_RUN_IF_EMPTY} ${RM}
+	    fi
     fi
 done
 

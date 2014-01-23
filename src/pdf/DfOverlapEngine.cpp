@@ -408,8 +408,8 @@ void DfOverlapEngine::copyResultsToOutputBuffer()
                                     const int stateAmvsIndex = this->index(amvAbar, amvBbar, amvCbar, amvDbar,
                                                                            amvA, amvB, amvC, amvD);
                                     assert(0 <= stateAmvsIndex);
-                                    assert(stateAmvsIndex < this->OVP_[stateIndex].size());
-                                    assert(this->OVP_[stateIndex][stateAmvsIndex].size() <= batch);
+                                    assert(stateAmvsIndex < static_cast<int>(this->OVP_[stateIndex].size()));
+                                    assert(static_cast<int>(this->OVP_[stateIndex][stateAmvsIndex].size()) <= batch);
 
                                     double value = 0.0;
                                     for (int i = 0; i < batch; ++i) {
@@ -469,7 +469,7 @@ void DfOverlapEngine::transform6Dto5D()
         this->transform6Dto5D_i(I_, J_, K_, L_, J, K, L, this->WORK, this->pTransformBuf_);
         I = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
-        assert(end <= OUTPUT_BUFFER_SIZE);
+        assert(end <= static_cast<std::size_t>(OUTPUT_BUFFER_SIZE));
         std::copy(this->pTransformBuf_,
                   this->pTransformBuf_ + end,
                   this->WORK);
@@ -478,7 +478,7 @@ void DfOverlapEngine::transform6Dto5D()
         this->transform6Dto5D_j(I_, J_, K_, L_, I, K, L, this->WORK, this->pTransformBuf_);
         J = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
-        assert(end <= OUTPUT_BUFFER_SIZE);
+        assert(end <= static_cast<std::size_t>(OUTPUT_BUFFER_SIZE));
         std::copy(this->pTransformBuf_,
                   this->pTransformBuf_ + end,
                   this->WORK);
@@ -487,7 +487,7 @@ void DfOverlapEngine::transform6Dto5D()
         this->transform6Dto5D_k(I_, J_, K_, L_, I, J, L, this->WORK, this->pTransformBuf_);
         K = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
-        assert(end <= OUTPUT_BUFFER_SIZE);
+        assert(end <= static_cast<std::size_t>(OUTPUT_BUFFER_SIZE));
         std::copy(this->pTransformBuf_,
                   this->pTransformBuf_ + end,
                   this->WORK);
@@ -496,7 +496,7 @@ void DfOverlapEngine::transform6Dto5D()
         this->transform6Dto5D_l(I_, J_, K_, L_, I, J, K, this->WORK, this->pTransformBuf_);
         L = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
-        assert(end <= OUTPUT_BUFFER_SIZE);
+        assert(end <= static_cast<std::size_t>(OUTPUT_BUFFER_SIZE));
         std::copy(this->pTransformBuf_,
                   this->pTransformBuf_ + end,
                   this->WORK);

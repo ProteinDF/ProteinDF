@@ -48,8 +48,8 @@ void DfKMatrix_Parallel::getK_CD()
 #else
     {
         TlSymmetricMatrix K(this->m_nNumOfAOs);
-        this->getK_CD_local(&K);
-        this->saveKMatrix(K);
+        this->getK_CD_local(RUN_RKS, &K);
+        this->saveKMatrix(RUN_RKS, K);
     }
 #endif // HAVE_SCALAPACK
 }
@@ -70,8 +70,8 @@ void DfKMatrix_Parallel::getK_conventional()
 #else
     {
         TlSymmetricMatrix K(this->m_nNumOfAOs);
-        this->getK_conventional_local(&K);
-        this->saveKMatrix(K);
+        this->getK_conventional_local(RUN_RKS, &K);
+        this->saveKMatrix(RUN_RKS, K);
     }
 #endif // HAVE_SCALAPACK
 }
