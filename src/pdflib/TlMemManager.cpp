@@ -37,6 +37,7 @@
 #include "TlMemManager.h"
 #include "TlFile.h"
 #include "TlUtils.h"
+#include "TlSystem.h"
 
 bool TlMemManager::isSetParam_ = false;
 TlMemManager* TlMemManager::instance_ = NULL;
@@ -52,8 +53,10 @@ void TlMemManager::setParam(const std::size_t needMemSize,
     }
 
     TlMemManager::needMemSize_ = needMemSize;
-    const pid_t pid = getpid();
-    TlMemManager::filePath_ = baseFileName + TlUtils::xtos(pid);
+    TlMemManager::filePath_ = TlUtils::format("%s.%s%d.map",
+                                              baseFileName.c_str(),
+                                              TlSystem::getHostName().c_str(),
+                                              TlSystem::getPID());
     TlMemManager::isSetParam_ = true;
 }
 
@@ -192,7 +195,9 @@ void TlMemManager::memMap()
     if (fd == -1) {
         int errorNo = errno;
         std::string errStr(strerror(errorNo));
-        std::cerr << " open error: " << this->filePath_ << ". " << errStr << std::endl;
+        this->log_.critical(TlUtils::format("open error: %s (%s)",
+                                            this->filePath_.c_str(),
+                                            errStr.c_str()));
         abort();
     }
 
@@ -209,11 +214,9 @@ void TlMemManager::memMap()
     }
 
     // message
-//   std::cerr << TlUtils::format("TlMemManager::memMap() file create.: path=%s, size=%ld",
-//                 filePath.c_str(),
-//                 TlMemManager::mmapLength_)
-//      << std::endl;
-
+    this->log_.info(TlUtils::format("TlMemManager::memMap() file create: path=%s, size=%lu",
+                                    this->filePath_.c_str(),
+                                    TlMemManager::mmapLength_));
 
     TlMemManager::beginMmap_ = (char*)mmap(0, this->mmapLength_,
                                            PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
