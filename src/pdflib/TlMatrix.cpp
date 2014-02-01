@@ -219,7 +219,7 @@ void TlMatrix::clear_usingStandard()
 void TlMatrix::clear_usingMemManager()
 {
     TlMemManager& rMemManager = TlMemManager::getInstance();
-    rMemManager.deallocate((char*)this->data_, sizeof(double) * this->getNumOfElements());
+    rMemManager.deallocate((char*)this->data_);
     this->data_ = NULL;
 }
 

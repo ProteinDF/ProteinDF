@@ -40,7 +40,7 @@ TlColVectorMatrix2::~TlColVectorMatrix2()
         TlMemManager& rMemManager = TlMemManager::getInstance();
         const index_type reserveRows = this->reserveRows_;
         for (index_type i = 0; i < numOfLocalCols; ++i) {
-            rMemManager.deallocate((char*)this->data_[i], sizeof(double)*reserveRows);
+            rMemManager.deallocate((char*)this->data_[i]);
             this->data_[i] = NULL;
         }
     } else {
@@ -71,7 +71,7 @@ void TlColVectorMatrix2::resize(const index_type newRows,
             TlMemManager& rMemManager = TlMemManager::getInstance();
             const index_type reserveRows = this->reserveRows_;
             for (index_type i = newNumOfLocalCols; i < prevNumOfLocalCols; ++i) {
-                rMemManager.deallocate((char*)this->data_[i], sizeof(double)*reserveRows);
+                rMemManager.deallocate((char*)this->data_[i]);
                 this->data_[i] = NULL;
             }
         } else {
@@ -115,7 +115,7 @@ void TlColVectorMatrix2::reserve_rows(const index_type newReserves) {
                 }
                 if (this->isUsingMemManager_ == true) {
                     TlMemManager& rMemManager = TlMemManager::getInstance();
-                    rMemManager.deallocate((char*)this->data_[i], sizeof(double)*prevReserveRows);
+                    rMemManager.deallocate((char*)this->data_[i]);
                 } else {
                     delete[] this->data_[i];
                 }

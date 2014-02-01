@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <map>
+#include "TlLogging.h"
 
 class TlMemManager {
 public:
@@ -55,9 +56,10 @@ public:
     static TlMemManager& getInstance();
 
     char* allocate(std::size_t size);
-    void deallocate(char* p, std::size_t num);
+    void deallocate(char* p);
 
     void debugOutFreeMemList() const;
+    void debugOutUseMemList() const;
 
 private:
     void memMap();
@@ -74,6 +76,8 @@ private:
     const TlMemManager& operator=(const TlMemManager& rhs);
 
 private:
+    TlLogging& log_;
+
     /// パラメータの設定が行われたかどうかを保持するフラグ
     /// setParam() が呼び出されるとtrue
     static bool isSetParam_;
@@ -94,7 +98,7 @@ private:
     char* beginMmap_;
 
     mutable std::vector<MemItem> freeMemList_;
-    mutable std::map<std::size_t, std::size_t> useList_; // for DEBUG
+    mutable std::map<std::size_t, std::size_t> useList_; // deallocate時に返すメモリ量が必要なため
 };
 
 #endif // TLMEMMANAGER_H
