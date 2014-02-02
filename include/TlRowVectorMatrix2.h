@@ -25,6 +25,7 @@
 
 #include "TlMatrixObject.h"
 #include "TlMatrix.h"
+#include "TlLogging.h"
 
 class TlRowVectorMatrix2 {
 public:
@@ -69,6 +70,8 @@ private:
     TlRowVectorMatrix2& operator=(const TlRowVectorMatrix2& rhs);
 
 private:
+    TlLogging& log_;
+
     index_type numOfRows_;
     index_type numOfCols_;
     index_type reserveCols_; // 列数のメモリ確保量

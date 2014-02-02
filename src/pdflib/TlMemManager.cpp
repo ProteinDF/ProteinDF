@@ -123,6 +123,7 @@ char* TlMemManager::allocate(const std::size_t size)
         }
     } else {
         this->log_.critical(TlUtils::format("TlMemManager::allocate(): cannot allocate mem. size=%lu", size));
+        throw std::bad_alloc();
         std::abort();
     }
 

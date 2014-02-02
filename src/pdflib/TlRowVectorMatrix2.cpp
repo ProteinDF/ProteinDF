@@ -17,6 +17,7 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
+#include <new>
 #include "TlRowVectorMatrix2.h"
 #include "TlMemManager.h"
 
@@ -24,14 +25,16 @@ TlRowVectorMatrix2::TlRowVectorMatrix2(const index_type row,
                                        const index_type col,
                                        int allProcs, int rank,
                                        bool isUsingMemManager)
-    : numOfRows_(0), numOfCols_(0), reserveCols_(0),
+    : log_(TlLogging::getInstance()),
+      numOfRows_(0), numOfCols_(0), reserveCols_(0),
       allProcs_(allProcs), rank_(rank),
       numOfLocalRows_(0), isUsingMemManager_(isUsingMemManager) {
     this->resize(row, col);
 }
 
 TlRowVectorMatrix2::TlRowVectorMatrix2(const TlRowVectorMatrix2& rhs)
-    : numOfRows_(0), numOfCols_(0), reserveCols_(0),
+    : log_(TlLogging::getInstance()),
+      numOfRows_(0), numOfCols_(0), reserveCols_(0),
       allProcs_(rhs.allProcs_), rank_(rhs.rank_),
       numOfLocalRows_(0), isUsingMemManager_(rhs.isUsingMemManager_) {
 
@@ -113,12 +116,21 @@ void TlRowVectorMatrix2::reserve_cols(const index_type newReserves) {
         const index_type numOfLocalRows = this->numOfLocalRows_;
         for (index_type i = 0; i < numOfLocalRows; ++i) {
             double* pNew = NULL;
-            if (this->isUsingMemManager_ == true) {
-                TlMemManager& rMemManager = TlMemManager::getInstance();
-                pNew = (double*)rMemManager.allocate(sizeof(double)*newReserveCols);
-            } else {
-                pNew = new double[newReserveCols];
+            try {
+                if (this->isUsingMemManager_ == true) {
+                    TlMemManager& rMemManager = TlMemManager::getInstance();
+                    pNew = (double*)rMemManager.allocate(sizeof(double)*newReserveCols);
+                } else {
+                    pNew = new double[newReserveCols];
+                }
+            } catch (std::bad_alloc& ba) {
+                this->log_.critical(TlUtils::format("bad_alloc caught: %s", ba.what()));
+                throw;
+            } catch (...) {
+                this->log_.critical("unknown error.");
+                throw;
             }
+            assert(pNew != NULL);
 
             for (index_type j = 0; j < newReserveCols; ++j) {
                 pNew[j] = 0.0;
