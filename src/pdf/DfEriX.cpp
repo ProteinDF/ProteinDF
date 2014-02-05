@@ -1047,15 +1047,15 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce)
     pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
     pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
 
-    bool hasTask = pDfTaskCtrl->getQueue_Force4(orbitalInfo,
-                                                schwarzTable,
-                                                this->grainSize_, &taskList, true);
+    bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                          schwarzTable,
+                                          this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getForceJ_part(orbitalInfo, taskList,
                              P, pForce);
-        hasTask = pDfTaskCtrl->getQueue_Force4(orbitalInfo,
-                                               schwarzTable,
-                                               this->grainSize_, &taskList);
+        hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                         schwarzTable,
+                                         this->grainSize_, &taskList);
     }
 
     this->finalize(pForce);
@@ -1189,7 +1189,7 @@ void DfEriX::storeForceJ_integralDriven(const int atomIndexA, const int atomInde
 {
     for (int stepP = 0; stepP < maxStepsP; ++stepP) {
         const index_type indexP = shellIndexP + stepP;
-        const index_type iw = indexP * (indexP -1) / 2;
+        const index_type iw = indexP * (indexP +1) / 2;
 
         for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
             const index_type indexQ = shellIndexQ + stepQ;
@@ -1197,30 +1197,56 @@ void DfEriX::storeForceJ_integralDriven(const int atomIndexA, const int atomInde
             if (indexQ <= indexP) {
                 const double cij = (indexP != indexQ) ? 2.0 : 1.0;
                 const index_type ij = iw + indexQ;
-                const double dcij = P.get(indexP, indexQ);
+                // const double dcij = P.get(indexP, indexQ);
+                const double Ppq = P.get(indexP, indexQ);
                 
                 for (int stepR = 0; stepR < maxStepsR; ++stepR) {
                     const index_type indexR = shellIndexR + stepR;
-                    const index_type kw = indexR * (indexR -1) / 2;
+                    const index_type kw = indexR * (indexR +1) / 2;
                     
                     for (int stepS = 0; stepS < maxStepsS; ++stepS) {
                         const index_type indexS = shellIndexS + stepS;
                         const index_type kl = kw + indexS;
                         
                         if ((indexS <= indexR) && (ij >= kl)) {
-                            double cijkl = cij * ((indexR != indexS) ? 2.0 : 1.0);
-                            cijkl *= (ij != kl) ? 2.0 : 1.0;
-
-                            const double coef = cijkl * dcij * P.get(indexR, indexS);
-                            const double gradIntA = engine.WORK_A[*pIndex];
-                            const double gradIntB = engine.WORK_B[*pIndex];
-                            const double gradIntC = engine.WORK_C[*pIndex];
-                            const double gradIntD = - (gradIntA + gradIntB + gradIntC);
+                            const double Prs = P.get(indexR, indexS);
+                            const double vA = engine.WORK_A[*pIndex];
+                            const double vB = engine.WORK_B[*pIndex];
+                            const double vC = engine.WORK_C[*pIndex];
+                            const double vD = engine.WORK_D[*pIndex];
                             
-                            pForce->add(atomIndexA, target, coef * gradIntA);
-                            pForce->add(atomIndexB, target, coef * gradIntB);
-                            pForce->add(atomIndexC, target, coef * gradIntC);
-                            pForce->add(atomIndexD, target, coef * gradIntD);
+                            // (pq|rs)の8つの対称組を考えるとわかりやすい
+                            {
+                                double coef = 2.0; // Ppq * Prs だけでなく Prs * Ppq があるので2倍
+                                coef *= (indexR != indexS) ? 2.0 : 1.0;
+                                pForce->add(atomIndexA, target, coef * Ppq * Prs * vA);
+                                // std::cerr << TlUtils::format("EQ1:A:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                //                              atomIndexA, target, indexP, indexQ, indexR, indexS, vA, Ppq, Prs, coef)
+                                //           << std::endl;
+                                if (indexP != indexQ) {
+                                    pForce->add(atomIndexB, target, coef * Ppq * Prs * vB);
+                                    // std::cerr << TlUtils::format("EQ1:B:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                    //                              atomIndexB, target, indexP, indexQ, indexR, indexS, vB, Ppq, Prs, coef)
+                                    //           << std::endl;
+                                }
+                            }
+                        
+                            if (ij != kl) { // Eq.1 != Eq.2
+                                double coef = 2.0;
+                                coef *= (indexP != indexQ) ? 2.0 : 1.0;
+                                {
+                                    pForce->add(atomIndexC, target, coef * Ppq * Prs * vC);
+                                    // std::cerr << TlUtils::format("EQ2:C:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                    //                              atomIndexC, target, indexP, indexQ, indexR, indexS, vC, Ppq, Prs, coef)
+                                    //           << std::endl;
+                                    if (indexR != indexS) {
+                                        pForce->add(atomIndexD, target, coef * Ppq * Prs * vD);
+                                        // std::cerr << TlUtils::format("EQ2:D:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                        //                              atomIndexD, target, indexP, indexQ, indexR, indexS, vD, Ppq, Prs, coef)
+                                        //           << std::endl;
+                                    }
+                                }
+                            }
                         }
                         
                         ++(*pIndex);
@@ -2055,15 +2081,15 @@ void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce)
     pDfTaskCtrl->setCutoffEpsilon_density(this->cutoffEpsilon_density_);
     pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
 
-    bool hasTask = pDfTaskCtrl->getQueue_Force4(orbitalInfo,
-                                                schwarzTable,
-                                                this->grainSize_, &taskList, true);
+    bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                          schwarzTable,
+                                          this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getForceK_part(orbitalInfo, taskList,
                              P, pForce);
-        hasTask = pDfTaskCtrl->getQueue_Force4(orbitalInfo,
-                                               schwarzTable,
-                                               this->grainSize_, &taskList);
+        hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                         schwarzTable,
+                                         this->grainSize_, &taskList);
     }
 
     this->finalize(pForce);
@@ -2217,7 +2243,7 @@ void DfEriX::storeForceK_integralDriven(const int atomIndexA, const int atomInde
 {
     for (int stepP = 0; stepP < maxStepsP; ++stepP) {
         const index_type indexP = shellIndexP + stepP;
-        const index_type iw = indexP * (indexP -1) / 2;
+        const index_type iw = indexP * (indexP +1) / 2;
 
         for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
             const index_type indexQ = shellIndexQ + stepQ;
@@ -2228,30 +2254,83 @@ void DfEriX::storeForceK_integralDriven(const int atomIndexA, const int atomInde
                 
                 for (int stepR = 0; stepR < maxStepsR; ++stepR) {
                     const index_type indexR = shellIndexR + stepR;
-                    const index_type kw = indexR * (indexR -1) / 2;
+                    const index_type kw = indexR * (indexR +1) / 2;
                     
-                    const double dcik = P.get(indexP, indexR);
-                    const double dcjk = P.get(indexQ, indexR);
+                    // const double dcik = P.get(indexP, indexR);
+                    // const double dcjk = P.get(indexQ, indexR);
+                    const double Ppr = P.get(indexP, indexR);
+                    const double Pqr = P.get(indexQ, indexR);
                     
                     for (int stepS = 0; stepS < maxStepsS; ++stepS) {
                         const index_type indexS = shellIndexS + stepS;
                         const index_type kl = kw + indexS;
                         
                         if ((indexS <= indexR) && (ij >= kl)) {
-                            double cijkl = cij * ((indexR != indexS) ? 2.0 : 1.0);
-                            cijkl *= (ij != kl) ? 2.0 : 1.0;
+                            const double Pps = P.get(indexP, indexS);
+                            const double Pqs = P.get(indexQ, indexS);
+                            const double vA = engine.WORK_A[*pIndex];
+                            const double vB = engine.WORK_B[*pIndex];
+                            const double vC = engine.WORK_C[*pIndex];
+                            const double vD = engine.WORK_D[*pIndex];
 
-                            const double coef = 0.5 * cijkl * (  dcik * P.get(indexQ, indexS)
-                                                               + dcjk * P.get(indexP, indexS));
-                            const double gradIntA = engine.WORK_A[*pIndex];
-                            const double gradIntB = engine.WORK_B[*pIndex];
-                            const double gradIntC = engine.WORK_C[*pIndex];
-                            const double gradIntD = - (gradIntA + gradIntB + gradIntC);
-                            
-                            pForce->add(atomIndexA, target, coef * gradIntA);
-                            pForce->add(atomIndexB, target, coef * gradIntB);
-                            pForce->add(atomIndexC, target, coef * gradIntC);
-                            pForce->add(atomIndexD, target, coef * gradIntD);
+                            {
+                                double coef = 1.0;
+                                coef *= (indexR != indexS) ? 2.0 : 1.0;
+                                
+                                pForce->add(atomIndexA, target, coef * Ppr * Pqs * vA);
+                                // std::cerr << TlUtils::format("EQ1-1:A:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                //                              atomIndexA, target, indexP, indexQ, indexR, indexS, vA, Ppr, Pqs, coef)
+                                //           << std::endl;
+                                
+                                pForce->add(atomIndexA, target, coef * Pps * Pqr * vA);
+                                // std::cerr << TlUtils::format("EQ1-2:A:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                //                              atomIndexA, target, indexP, indexQ, indexR, indexS, vA, Ppr, Pqs, coef)
+                                //           << std::endl;
+                            }
+
+                            if (indexP != indexQ) {
+                                double coef = 1.0;
+                                coef *= (indexR != indexS) ? 2.0 : 1.0;
+
+                                pForce->add(atomIndexB, target, coef * Ppr * Pqs * vB);
+                                // std::cerr << TlUtils::format("EQ2-1:B:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                //                              atomIndexB, target, indexP, indexQ, indexR, indexS, vB, Ppr, Pqs, coef)
+                                //           << std::endl;
+                                pForce->add(atomIndexB, target, coef * Pps * Pqr * vB);
+                                // std::cerr << TlUtils::format("EQ2-2:B:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                //                              atomIndexB, target, indexP, indexQ, indexR, indexS, vB, Pps, Pqr, coef)
+                                //           << std::endl;                                
+                            }
+
+                            if (ij != kl) {
+                                {
+                                    double coef = 1.0;
+                                    coef *= (indexP != indexQ) ? 2.0 : 1.0;
+                                    
+                                    pForce->add(atomIndexC, target, coef * Ppr * Pqs * vC);
+                                    // std::cerr << TlUtils::format("EQ3-1:C:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                    //                              atomIndexC, target, indexP, indexQ, indexR, indexS, vC, Ppr, Pqs, coef)
+                                    //           << std::endl;
+                                    pForce->add(atomIndexC, target, coef * Pps * Pqr * vC);
+                                    // std::cerr << TlUtils::format("EQ3-2:C:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                    //                              atomIndexC, target, indexP, indexQ, indexR, indexS, vC, Pps, Pqr, coef)
+                                    //           << std::endl;
+                                }
+
+                                if (indexR != indexS) {
+                                    double coef = 1.0;
+                                    coef *= (indexP != indexQ) ? 2.0 : 1.0;
+                                    
+                                    pForce->add(atomIndexD, target, coef * Ppr * Pqs * vD);
+                                    // std::cerr << TlUtils::format("EQ4-1:D:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                    //                              atomIndexD, target, indexP, indexQ, indexR, indexS, vD, Ppr, Pqs, coef)
+                                    //           << std::endl;
+                                    pForce->add(atomIndexD, target, coef * Pps * Pqr * vD);
+                                    // std::cerr << TlUtils::format("EQ4-2:D:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                    //                              atomIndexD, target, indexP, indexQ, indexR, indexS, vD, Pps, Pqr, coef)
+                                    //           << std::endl;                                    
+                                }
+                            }
                         }
                         
                         ++(*pIndex);

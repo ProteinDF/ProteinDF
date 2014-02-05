@@ -75,7 +75,7 @@ void DfForce::calcForce()
 
     this->loggerTime("pureXC");
     this->calcForceFromPureXC(runType);
-    
+
     this->loggerTime("Fock exchange");
     this->calcForceFromK(runType);
 
@@ -261,7 +261,7 @@ void DfForce::calcForceFromCoulomb_exact(RUN_TYPE runType)
     TlMatrix F_J(numOfAtoms, 3);
     dfEri.getForceJ(P, &F_J);
 
-    F_J *= 0.5;
+    //F_J *= 0.5;
     if (this->isDebugOutMatrix_ == true) {
         F_J.save("F_J.mtx");
     }
@@ -406,7 +406,11 @@ void DfForce::calcForceFromK(RUN_TYPE runType)
         DfEriX dfEri(this->pPdfParam_);
         
         TlMatrix F_K(numOfAtoms, 3);
-        dfEri.getForceK(0.5 * P, &F_K);
+        // for RKS
+        dfEri.getForceK(P, &F_K);
+        if (runType == RUN_RKS) {
+            F_K *= 0.5;
+        }
 
         F_K *= -1.0;
         F_K *= dfXCFunctional.getFockExchangeCoefficient(); // for B3LYP
