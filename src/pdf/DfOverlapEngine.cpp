@@ -517,11 +517,11 @@ void DfOverlapEngine::transform6Dto5D_i(const int I_, const int J_, const int K_
                         for (int k = 0; k < K; ++k) {
                             for (int l = 0; l < L; ++l) {
                                 const double xx = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*6 +0)*J +j)*K +k)*L + l];
-                                const double xy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ *l_)*6 +1)*J +j)*K +k)*L + l];
-                                const double xz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ *l_)*6 +2)*J +j)*K +k)*L + l];
-                                const double yy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ *l_)*6 +3)*J +j)*K +k)*L + l];
-                                const double yz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ *l_)*6 +4)*J +j)*K +k)*L + l];
-                                const double zz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ *l_)*6 +5)*J +j)*K +k)*L + l];
+                                const double xy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*6 +1)*J +j)*K +k)*L + l];
+                                const double xz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*6 +2)*J +j)*K +k)*L + l];
+                                const double yy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*6 +3)*J +j)*K +k)*L + l];
+                                const double yz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*6 +4)*J +j)*K +k)*L + l];
+                                const double zz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*6 +5)*J +j)*K +k)*L + l];
                                 
                                 const int xy_5d   = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*5 +0)*J +j)*K +k)*L +l;
                                 const int xz_5d   = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*5 +1)*J +j)*K +k)*L +l;
