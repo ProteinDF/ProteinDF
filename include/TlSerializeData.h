@@ -427,8 +427,8 @@ protected:
 
     DataType type_;
     Scalar scalar_;
-    //std::string str_;
-    std::string* pStr_;
+    std::string str_;
+    //std::string* pStr_;
     std::vector<TlSerializeData*> array_;
     std::map<TlSerializeData*, TlSerializeData*> map_;
 
