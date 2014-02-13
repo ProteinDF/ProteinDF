@@ -345,6 +345,9 @@ void ProteinDF::stepForce()
 
     DfForce* pDfForce = this->getDfForceObject();
     pDfForce->calcForce();
+
+    delete pDfForce;
+    pDfForce = NULL;
     
     this->stepEndTitle();
 }
