@@ -249,8 +249,8 @@ private:
             : a_prime(ap), b_prime(bp), p_prime(pp) {
         }
 
-        unsigned int index() const {
-            const unsigned long v = ((a_prime * ERI_B_PRIME_MAX) + b_prime) * ERI_P_PRIME_MAX + p_prime;
+        int index() const {
+            const int v = ((a_prime * ERI_B_PRIME_MAX) + b_prime) * ERI_P_PRIME_MAX + p_prime;
             return v;
         }
 
