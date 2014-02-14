@@ -96,7 +96,7 @@ private:
             return this->pMatrix_->getMemSize();
         }
 
-        TlMatrixObject const * const getMatPtr() const {
+        TlMatrixObject const * getMatPtr() const {
             return this->pMatrix_;
         }
 
