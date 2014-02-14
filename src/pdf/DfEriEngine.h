@@ -64,46 +64,47 @@
 // #define B_MAX (2) // s=0, p=1, d=2
 
 /// 本プログラムで扱うことのできる angular momentum の最大値
-#define ERI_L_MAX (13 +1)
+#define ERI_L_MAX ((ERI_A_BAR_MAX + ERI_B_BAR_MAX + ERI_A_MAX + ERI_B_MAX)*2)
 
 /// 縮約数(4中心)の積の最大値 
 #define ERI_KPKQ_MAX (100)
 
 /// 最大Angular Momentumのvector数
-#define ERI_NUM_OF_AMVS ((ERI_L_MAX+1)*(ERI_L_MAX+2) / 2)
+#define ERI_NUM_OF_AMVS (((ERI_L_MAX +1) +1)*((ERI_L_MAX +1) +2) / 2)
 
 /// [0](m)から[L](m)までの総要素: (L+1)*(L+2)*(L+3)/6)
 /// 基数が0であるため+1が必要-> (L+1)
-#define ERI_NUM_OF_R_KINDS ((ERI_L_MAX +1)*(ERI_L_MAX +2)*(ERI_L_MAX +2)/6)
+#define ERI_NUM_OF_R_KINDS (((ERI_L_MAX +1) +1)*((ERI_L_MAX +1) +2)*((ERI_L_MAX +1) +3)/6)
 
 /// [0](0)~[L](m)
-#define ERI_NUM_OF_RM_KINDS (ERI_NUM_OF_R_KINDS * (ERI_L_MAX +1))
+#define ERI_NUM_OF_RM_KINDS (ERI_NUM_OF_R_KINDS * ((ERI_L_MAX +1) +1))
 
 /// a^の最大数 (d(=2)の微分までサポート)
-#define ERI_A_BAR_MAX (2 +1)
+#define ERI_A_BAR_MAX (1)
 /// b^の最大数 (d(=2)の微分までサポート)
-#define ERI_B_BAR_MAX (2 +1)
+#define ERI_B_BAR_MAX (1)
 /// aの最大数 (aのd(=2)とbのd,そしてその2回微分(+2)までサポート)
-#define ERI_A_MAX (6 +1)
+#define ERI_A_MAX (5)
 /// bの最大数 (bのd(=2)をサポート)
-#define ERI_B_MAX (2 +1)
+#define ERI_B_MAX (2)
 /// pの最大数
-#define ERI_P_MAX (7 +1)
+#define ERI_P_MAX (5)
 /// a'の最大数
-#define ERI_A_PRIME_MAX (3 +1)
+#define ERI_A_PRIME_MAX (1)
 /// b'の最大数
-#define ERI_B_PRIME_MAX (7 +1)
+#define ERI_B_PRIME_MAX (5)
 /// p'の最大数
-#define ERI_P_PRIME_MAX (7 +1)
+#define ERI_P_PRIME_MAX (5)
 
 /// 制限値を調べるときは CHECK_MAX_COUNTを立てること。
-//#define CHECK_MAX_COUNT
+// #define CHECK_MAX_COUNT
 #define ERI_NR_DASH_SIZE (6820 +1)
-#define ERI_NUM_OF_ERI_STATES (ERI_A_BAR_MAX * ERI_B_BAR_MAX \
-                               * ERI_A_MAX * ERI_B_MAX * ERI_P_MAX \
-                               * ERI_A_PRIME_MAX * ERI_B_PRIME_MAX * ERI_P_PRIME_MAX)
+#define ERI_NUM_OF_ERI_STATES ((ERI_A_BAR_MAX +1) * (ERI_B_BAR_MAX +1)  \
+                               * (ERI_A_MAX +1) * (ERI_B_MAX +1) * (ERI_P_MAX +1) \
+                               * (ERI_A_PRIME_MAX +1) * (ERI_B_PRIME_MAX +1) * (ERI_P_PRIME_MAX +1))
 //#define ERI_NUM_OF_AMVS (108 +1)
-#define ERI_MAX_BATCH (1456 +1)
+// ERI_MAX_BATCH: D'を処理すると1736
+#define ERI_MAX_BATCH (1736 +1)
 
 class DfEriEngine : public DfEngineObject {
 public:
@@ -112,10 +113,10 @@ public:
     struct AngularMomentum2 {
         AngularMomentum2(int ibar =0, int jbar =0, int i =0, int j =0)
             : a_bar(ibar), b_bar(jbar), a(i), b(j) {
-            assert(ibar < ERI_A_BAR_MAX);
-            assert(jbar < ERI_B_BAR_MAX);
-            assert(i < ERI_A_MAX);
-            assert(j < ERI_B_MAX);
+            assert(ibar <= ERI_A_BAR_MAX);
+            assert(jbar <= ERI_B_BAR_MAX);
+            assert(i <= ERI_A_MAX);
+            assert(j <= ERI_B_MAX);
         }
 
         int sum() const {
@@ -123,19 +124,19 @@ public:
         };
 
         int index() const {
-            return ((a_bar*ERI_B_BAR_MAX + b_bar)*ERI_A_MAX + a)*ERI_B_MAX + b;
+            return ((a_bar * (ERI_B_BAR_MAX +1) +b_bar) * (ERI_A_MAX +1) + a) * (ERI_B_MAX +1) + b;
         }
 
         static int maxIndex() {
-            return ERI_A_BAR_MAX * ERI_B_BAR_MAX * ERI_A_MAX * ERI_B_MAX;
+            return (ERI_A_BAR_MAX +1) * (ERI_B_BAR_MAX +1) * (ERI_A_MAX +1) * (ERI_B_MAX +1);
         }
         
     public:
         // 8bitで-31 ~ +32 まで OK
-        int a_bar : 8; // grad i
-        int b_bar : 8; // grad j
-        int a : 8;
-        int b : 8;
+        int a_bar; // grad i
+        int b_bar; // grad j
+        int a;
+        int b;
     };
 
     // for pGTO ----------------------------------------------------------------
@@ -276,8 +277,8 @@ private:
     struct ContractState {
     public:
         explicit ContractState(const TlAngularMomentumVector& R = TlAngularMomentumVector(),
-                               const unsigned int ap =0, const unsigned int bp =0, const unsigned int pp =0,
-                               const unsigned int cp =0, const unsigned int dp =0, const unsigned int qp =0)
+                               const int ap =0, const int bp =0, const int pp =0,
+                               const int cp =0, const int dp =0, const int qp =0)
             : r_index(R.index()), r(R.angularMomentum()),
               a_prime(ap), b_prime(bp), p_prime(pp),
               c_prime(cp), d_prime(dp), q_prime(qp),
@@ -301,14 +302,14 @@ private:
         }
 
     public:
-        void setABP(const unsigned int ap, const unsigned int bp, const unsigned int pp) {
+        void setABP(const int ap, const int bp, const int pp) {
             this->a_prime = ap;
             this->b_prime = bp;
             this->p_prime = pp;
             this->isCached_index_ = false;
         }
 
-        void setCDQ(const unsigned int cp, const unsigned int dp, const unsigned int qp) {
+        void setCDQ(const int cp, const int dp, const int qp) {
             this->c_prime = cp;
             this->d_prime = dp;
             this->q_prime = qp;
@@ -321,13 +322,13 @@ private:
             this->isCached_index_ = false;
         }
 
-        unsigned int getCprime() const {
+        int getCprime() const {
             return this->c_prime;
         }
-        unsigned int getDprime() const {
+        int getDprime() const {
             return this->d_prime;
         }
-        unsigned int getQprime() const {
+        int getQprime() const {
             return this->q_prime;
         }
         
@@ -339,17 +340,17 @@ private:
         }
 
         // TODO: hotspot
-        std::size_t index() const {
+        int index() const {
             if (this->isCached_index_ != true) {
                 this->cached_index_ =
-                    (((((( this->a_prime)*(ERI_B_PRIME_MAX)
-                         + this->b_prime)*(ERI_P_PRIME_MAX)
-                         + this->p_prime)*(ERI_A_PRIME_MAX)
-                         + this->c_prime)*(ERI_B_PRIME_MAX)
-                         + this->d_prime)*(ERI_P_PRIME_MAX)
-                         + this->q_prime)*ERI_NUM_OF_AMVS;
+                    (((((( this->a_prime)*(ERI_B_PRIME_MAX +1)
+                         + this->b_prime)*(ERI_P_PRIME_MAX +1)
+                         + this->p_prime)*(ERI_A_PRIME_MAX +1)
+                         + this->c_prime)*(ERI_B_PRIME_MAX +1)
+                         + this->d_prime)*(ERI_P_PRIME_MAX +1)
+                         + this->q_prime)* ERI_NUM_OF_AMVS;
 
-                const std::size_t r = this->r;
+                const int r = this->r;
                 this->cached_index_ += (r)*(r+1)*(r+2)/6 + this->r_index;
                 this->isCached_index_ = true;
             }
@@ -366,14 +367,14 @@ private:
         // unsigned int c_prime :  6;
         // unsigned int d_prime :  6;
         // unsigned int q_prime :  6;
-        unsigned int r_index;
-        unsigned int r;
-        unsigned int a_prime;
-        unsigned int b_prime;
-        unsigned int p_prime;
-        unsigned int c_prime;
-        unsigned int d_prime;
-        unsigned int q_prime;
+        int r_index;
+        int r;
+        int a_prime;
+        int b_prime;
+        int p_prime;
+        int c_prime;
+        int d_prime;
+        int q_prime;
 
     private:
         // mutable bool isCached_index_abp_;
@@ -383,7 +384,7 @@ private:
         // mutable bool isCached_index_r_;
         // mutable std::size_t cached_index_r_;
         mutable bool isCached_index_;
-        mutable std::size_t cached_index_;
+        mutable int cached_index_;
     };
 
     struct nR_dash {
@@ -417,35 +418,36 @@ private:
                                    a_prime, b_prime, p_prime);
         }
 
-        std::size_t index() const {
+        int index() const {
             const int index =
-                ((((((( this->a_bar)  *(ERI_B_BAR_MAX)
-                      + this->b_bar)  *(ERI_A_MAX)
-                      + this->a)      *(ERI_B_MAX)
-                      + this->b)      *(ERI_P_MAX)
-                      + this->p)      *(ERI_A_PRIME_MAX)
-                      + this->a_prime)*(ERI_B_PRIME_MAX)
-                      + this->b_prime)*(ERI_P_PRIME_MAX)
+                ((((((( this->a_bar)  *(ERI_B_BAR_MAX +1)
+                      + this->b_bar)  *(ERI_A_MAX +1)
+                      + this->a)      *(ERI_B_MAX +1)
+                      + this->b)      *(ERI_P_MAX +1)
+                      + this->p)      *(ERI_A_PRIME_MAX +1)
+                      + this->a_prime)*(ERI_B_PRIME_MAX +1)
+                      + this->b_prime)*(ERI_P_PRIME_MAX +1)
                       + this->p_prime;
+            assert(index < ERI_NUM_OF_ERI_STATES);
             return index;
         }
         
     public:
-        int a_bar : 8;
-        int b_bar : 8;
-        int a : 8;
-        int b : 8;
-        int p : 8;
-        int a_prime : 8;
-        int b_prime : 8;
-        int p_prime : 8;
+        int a_bar;
+        int b_bar;
+        int a;
+        int b;
+        int p;
+        int a_prime;
+        int b_prime;
+        int p_prime;
     };
 
-    struct ERI_State_cmp {
-        bool operator()(const ERI_State& rhs1, const ERI_State& rhs2) const {
-            return (rhs1.index() < rhs2.index());
-        }
-    };
+    // struct ERI_State_cmp {
+    //     bool operator()(const ERI_State& rhs1, const ERI_State& rhs2) const {
+    //         return (rhs1.index() < rhs2.index());
+    //     }
+    // };
 
     typedef std::vector<std::vector<std::vector<double> > > EriDataType;
 
@@ -501,7 +503,7 @@ private:
     // [r]^(0)テーブルを作成する ===============================================
     void calcR0();
     void calcRM(const TlAngularMomentumVector& r, const int m);
-    unsigned int indexRM(const TlAngularMomentumVector& amv, const int m) const;
+    int indexRM(const TlAngularMomentumVector& amv, const int m) const;
     int initiativeRM(const TlAngularMomentumVector& amv) const;
 
     // contract ================================================================
@@ -512,7 +514,7 @@ private:
                 const int a, const int b, const int p,
                 const int a_prime, const int b_prime, const int p_prime,
                 ContractScalesSet* pContractList);
-    unsigned int index_contract(const int a_prime, const int b_prime, const int p_prime) const;
+    // int index_contract(const int a_prime, const int b_prime, const int p_prime) const;
 
     ContractScalesVector transContractScales_SetToVector(const ContractScalesSet& contractScales);
 
@@ -523,7 +525,7 @@ private:
     void contract_bra(const AngularMomentum2& qAB,
                       const TlAngularMomentumVector& r,
                       const int a_prime, const int b_prime, const int p_prime,
-                      const std::size_t nR_dash_index);
+                      const int nR_dash_index);
     // void contract_ket(const AngularMomentum2& qCD,
     //                   const ContractState& cs, const std::vector<double>& KQ_values);
     void get_contract_ket_coef_numerators(const int c_prime,
@@ -673,7 +675,8 @@ private:
     EriDataType ERI_bra_;
     EriDataType ERI_ket_;
     
-    std::map<ERI_State, bool, ERI_State_cmp> isCalcdERI_;
+    // std::map<ERI_State, bool, ERI_State_cmp> isCalcdERI_;
+    std::vector<int> isCalcdERI_;
     int ERI_batch_;
 
     /// 6D->5D変換用バッファ
@@ -693,7 +696,7 @@ private:
     int max_a_prime_;
     int max_b_prime_;
     int max_p_prime_;
-    std::size_t maxSizeOf_nR_dash_;
+    int maxSizeOf_nR_dash_;
     int maxNumOfAMVs_;
     int maxERI_batch_;
 #endif //
