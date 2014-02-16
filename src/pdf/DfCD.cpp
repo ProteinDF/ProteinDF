@@ -629,7 +629,7 @@ TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject&
     index_type division =  std::max<index_type>(N * 0.01, 100);
     L.reserve_cols(division);
     index_type m = 0;
-    while (error > threshold) {
+    while ((error > threshold) && (m < N)) {
 #ifdef DEBUG_CD
         this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
 #endif //DEBUG_CD
