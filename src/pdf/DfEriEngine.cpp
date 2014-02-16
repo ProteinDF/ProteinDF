@@ -32,11 +32,11 @@
 // #define DEBUG_CONTRACT_BRA
 // #define DEBUG_BRA_ERI
 // #define DEBUG_CALC_PQ
-// #define DEBUG_EQ43
 // #define DEBUG_EQ44
 // #define DEBUG_EQ45
-// #define DEBUG_EQ46
+// #define DEBUG_EQ43
 // #define DEBUG_EQ47
+// #define DEBUG_EQ46
 // #define DEBUG_OUTPUT
 // #define DEBUG_TRANSFORM_6D_TO_5D
 // #define DEBUG_CHECK_WORK_D
@@ -573,6 +573,7 @@ void DfEriEngine::calcGrad(const AngularMomentum2& in_qAB, const AngularMomentum
 {
     // initialize
     this->sumOfAngularMomentums_ = in_qAB.a + in_qAB.b + in_qCD.a + in_qCD.b + 1;
+
 #ifdef CHECK_MAX_COUNT
     this->maxSizeOf_sumOfAngularMomentums_ = std::max(this->maxSizeOf_sumOfAngularMomentums_,
                                                       this->sumOfAngularMomentums_);
@@ -1061,16 +1062,16 @@ void DfEriEngine::calc(const AngularMomentum2& qAB,
     // for debug
     {
         int count = 0;
-        for (ContractScalesType::const_iterator p = bra_contractScales_.begin();
-             p != bra_contractScales_.end(); ++p) {
+        for (ContractScalesVector::const_iterator p = bra_contractScales_vtr.begin();
+             p != bra_contractScales_vtr.end(); ++p) {
             std::cerr << TlUtils::format("choice[%d]: (a', b', p')=(%d, %d, %d)",
                                          count, p->a_prime, p->b_prime, p->p_prime)
                       << std::endl;
             ++count;
         }
         count = 0;
-        for (ContractScalesType::const_iterator p = ket_contractScales_.begin();
-             p != ket_contractScales_.end(); ++p) {
+        for (ContractScalesVector::const_iterator p = ket_contractScales_vtr.begin();
+             p != ket_contractScales_vtr.end(); ++p) {
             std::cerr << TlUtils::format("choice[%d]: (c', d', q')=(%d, %d, %d)",
                                          count, p->a_prime, p->b_prime, p->p_prime)
                       << std::endl;
