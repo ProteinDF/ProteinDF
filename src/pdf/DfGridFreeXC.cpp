@@ -758,3 +758,117 @@ DfFunctional_GGA* DfGridFreeXC::getFunctionalGGA()
     return pFunc;
 }
 
+
+TlMatrix DfGridFreeXC::getForce()
+{
+    const RUN_TYPE runType = RUN_RKS;
+    const int itr = this->m_nIteration;
+    //TlSymmetricMatrix P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, itr);
+
+    TlMatrix Gx, Gy, Gz;
+    DfOverlapX dfOvp(this->pPdfParam_);
+    dfOvp.getGradient(orbitalInfo_, &Gx, &Gy, &Gz);
+    Gx.save("GF_force_Gx.mat");
+    Gy.save("GF_force_Gy.mat");
+    Gz.save("GF_force_Gz.mat");
+
+    //TlSymmetricMatrix Exc = this->getExcMatrix<TlSymmetricMatrix>(RUN_RKS, itr);
+    TlSymmetricMatrix Exc = this->getFxcMatrix<TlSymmetricMatrix>(RUN_RKS, itr);
+    //Exc.dot(P);
+    //Exc *= 2.0;
+
+    TlMatrix X = this->getXMatrix<TlMatrix>();
+    TlMatrix Xt = X;
+    Xt.transpose();
+
+    TlMatrix orth_E = Xt * Exc * X;
+    TlMatrix orth_Gx = Xt * Gx * X;
+    TlMatrix orth_Gy = Xt * Gy * X;
+    TlMatrix orth_Gz = Xt * Gz * X;
+    orth_E.save("GF_force_oE.mat");
+    orth_Gx.save("GF_force_oGx.mat");
+    orth_Gy.save("GF_force_oGy.mat");
+    orth_Gz.save("GF_force_oGz.mat");
+
+    TlMatrix GxE = orth_Gx * orth_E;
+    TlMatrix GyE = orth_Gy * orth_E;
+    TlMatrix GzE = orth_Gz * orth_E;
+    GxE.save("GF_force_GxE.mat");
+    GyE.save("GF_force_GyE.mat");
+    GzE.save("GF_force_GzE.mat");
+
+    TlSymmetricMatrix S = this->getSpqMatrix<TlSymmetricMatrix>();
+    TlMatrix SX = S * X;
+    TlMatrix SXt = SX;
+    SXt.transpose();
+
+    TlMatrix fx = SX * GxE * SXt;
+    TlMatrix fy = SX * GyE * SXt;
+    TlMatrix fz = SX * GzE * SXt;
+    fx.save("GF_force_fx.mat");
+    fy.save("GF_force_fy.mat");
+    fz.save("GF_force_fz.mat");
+
+    TlMatrix C = this->getCMatrix<TlMatrix>(runType, itr);
+    {
+        const index_type numOfAOs = C.getNumOfRows();
+        const index_type numOfMOs = C.getNumOfCols();
+
+        TlMatrix e(numOfMOs, numOfAOs);
+        TlVector currOcc;
+        currOcc.load(this->getOccupationPath(runType));
+        index_type max_i = std::min<index_type>(numOfMOs, currOcc.getSize());
+        for (index_type i = 0; i < max_i; ++i) {
+            if (std::fabs(currOcc[i] - 2.0) < 1.0E-5) {
+                e.set(i, i, 1.0);
+            }
+        }
+        C = C * e;
+    }
+    
+    TlMatrix Ct = C;
+    Ct.transpose();
+
+    const int numOfAtoms = this->numOfRealAtoms_;
+    TlMatrix force(numOfAtoms, 3);
+    for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
+        TlMatrix fx_a = this->selectGradMat(fx, atomIndex);
+        TlMatrix fy_a = this->selectGradMat(fy, atomIndex);
+        TlMatrix fz_a = this->selectGradMat(fz, atomIndex);
+
+        TlMatrix C_fx_C = Ct * fx_a * C;
+        TlMatrix C_fy_C = Ct * fy_a * C;
+        TlMatrix C_fz_C = Ct * fz_a * C;
+        C_fx_C.save(TlUtils::format("C_fx_C.%d.mat", atomIndex));
+        C_fy_C.save(TlUtils::format("C_fy_C.%d.mat", atomIndex));
+        C_fz_C.save(TlUtils::format("C_fz_C.%d.mat", atomIndex));
+
+        force.add(atomIndex, 0, C_fx_C.sum());
+        force.add(atomIndex, 1, C_fy_C.sum());
+        force.add(atomIndex, 2, C_fz_C.sum());
+    }
+
+    force *= 4.0;
+
+    return force;
+}
+
+
+TlMatrix DfGridFreeXC::selectGradMat(const TlMatrix& input, const int atomIndex) 
+{
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    assert(input.getNumOfRows() == numOfAOs);
+    assert(input.getNumOfCols() == numOfAOs);
+    TlMatrix output(numOfAOs, numOfAOs);
+    for (index_type p = 0; p < numOfAOs; ++p) {
+        if (this->orbitalInfo_.getAtomIndex(p) == atomIndex) {
+            for (index_type q = 0; q < numOfAOs; ++q) {
+                output.set(p, q, input.get(p, q));
+                // if (this->orbitalInfo_.getAtomIndex(q) == atomIndex) {
+                //     output.set(p, q, input.get(p, q));
+                // }
+            }
+        }
+    }
+    return output;
+}

@@ -23,6 +23,7 @@
 #include "DfEriX.h"
 #include "DfCalcGridX.h"
 #include "DfXCFunctional.h"
+#include "DfGridFreeXC.h"
 
 #include "DfFunctional_SVWN.h"
 #include "DfFunctional_B88LYP.h"
@@ -72,9 +73,22 @@ void DfForce::calcForce()
 
     this->loggerTime("coulomb");
     this->calcForceFromCoulomb(runType);
-
+    
     this->loggerTime("pureXC");
-    this->calcForceFromPureXC(runType);
+    switch (this->XC_engine_) {
+    case XC_ENGINE_GRID: 
+        this->calcForceFromPureXC(runType);
+        break;
+
+    case XC_ENGINE_GRIDFREE:
+    case XC_ENGINE_GRIDFREE_CD:
+        this->calcForceFromPureXC_gridfree(runType);
+        break;
+
+    default:
+        this->log_.critical("program error.");
+        break;
+    } 
 
     this->loggerTime("Fock exchange");
     this->calcForceFromK(runType);
@@ -391,6 +405,16 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
     this->force_ += Fxc;
 }
 
+
+void DfForce::calcForceFromPureXC_gridfree(RUN_TYPE runType)
+{
+    DfGridFreeXC dfGridFreeXC(this->pPdfParam_);
+    TlMatrix force = dfGridFreeXC.getForce();
+    if (this->isDebugOutMatrix_ == true) {
+        force.save("F_xc_gf.mtx");
+    }
+    this->force_ += force;
+}
 
 void DfForce::calcForceFromK(RUN_TYPE runType)
 {
