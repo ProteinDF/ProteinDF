@@ -68,6 +68,7 @@ protected:
 
     virtual void calcForceFromK(RUN_TYPE runType);
     
+    TlMatrix getTransformMatrix(const TlMatrix& force);
    
 protected:
     TlMatrix force_;

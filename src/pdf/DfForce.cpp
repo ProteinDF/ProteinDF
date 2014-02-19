@@ -74,6 +74,9 @@ void DfForce::calcForce()
     this->loggerTime("coulomb");
     this->calcForceFromCoulomb(runType);
     
+    this->loggerTime("Fock exchange");
+    this->calcForceFromK(runType);
+
     this->loggerTime("pureXC");
     switch (this->XC_engine_) {
     case XC_ENGINE_GRID: 
@@ -82,16 +85,18 @@ void DfForce::calcForce()
 
     case XC_ENGINE_GRIDFREE:
     case XC_ENGINE_GRIDFREE_CD:
-        this->calcForceFromPureXC_gridfree(runType);
+        {
+            this->calcForceFromPureXC_gridfree(runType);
+            
+            const TlMatrix T = this->getTransformMatrix(this->force_);
+            this->force_ += T;
+        }
         break;
 
     default:
         this->log_.critical("program error.");
         break;
-    } 
-
-    this->loggerTime("Fock exchange");
-    this->calcForceFromK(runType);
+    }     
 
     this->force_ *= -1.0;
     this->saveForce();
@@ -445,3 +450,128 @@ void DfForce::calcForceFromK(RUN_TYPE runType)
         this->force_ += F_K;
     }
 }
+
+TlMatrix DfForce::getTransformMatrix(const TlMatrix& force)
+{
+    const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
+    const int numOfAtoms = this->numOfRealAtoms_;
+    
+    // 重心
+    std::vector<TlPosition> X(numOfAtoms);
+    {
+        TlPosition center;
+        for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
+            center += flGeom.getCoordinate(atomIndex);
+        }
+        center /= numOfAtoms;
+        this->log_.info(TlUtils::format("center: (% f, % f, % f)",
+                                        center.x(), center.y(), center.z()));
+
+        for (int i = 0; i < numOfAtoms; ++i) {
+            X[i] = flGeom.getCoordinate(i) - center;
+            this->log_.info(TlUtils::format("X[%d] (% e, % e, %e)", X[i].x(), X[i].y(), X[i].z()));
+        }
+    }
+    
+    TlSymmetricMatrix rot(3);
+    for (int i = 0; i < numOfAtoms; ++i) {
+        const TlPosition p = X[i];
+        const double x = p.x();
+        const double y = p.y();
+        const double z = p.z();
+        rot.add(0, 0, y*y + z*z);
+        rot.add(0, 1, - x * y);
+        rot.add(0, 2, - x * z);
+        rot.add(1, 1, x*x + z*z);
+        rot.add(1, 2, - y * z);
+        rot.add(2, 2, x*x + y*y);
+    }
+    // rot.save("force_rot.mat");
+
+    const double chk = rot.get(0, 0) * rot.get(1, 1) * rot.get(2, 2);
+    this->log_.info(TlUtils::format("chk = % 8.3e", chk));
+
+    rot.inverse();
+    // rot.save("force_rotinv.mat");
+
+    // <-- OK
+    int TENS[3][3][3];
+    TENS[0][0][0] =  0;
+    TENS[1][0][0] =  0;
+    TENS[2][0][0] =  0;
+    TENS[0][1][0] =  0;
+    TENS[1][1][0] =  0;
+    TENS[2][1][0] = -1;
+    TENS[0][2][0] =  0;
+    TENS[1][2][0] =  1;
+    TENS[2][2][0] =  0;
+
+    TENS[0][0][1] =  0;
+    TENS[1][0][1] =  0;
+    TENS[2][0][1] =  1;
+    TENS[0][1][1] =  0;
+    TENS[1][1][1] =  0;
+    TENS[2][1][1] =  0;
+    TENS[0][2][1] = -1;
+    TENS[1][2][1] =  0;
+    TENS[2][2][1] =  0;
+
+    TENS[0][0][2] =  0;
+    TENS[1][0][2] = -1;
+    TENS[2][0][2] =  0;
+    TENS[0][1][2] =  1;
+    TENS[1][1][2] =  0;
+    TENS[2][1][2] =  0;
+    TENS[0][2][2] =  0;
+    TENS[1][2][2] =  0;
+    TENS[2][2][2] =  0;
+
+    const double invNumOfAtoms = 1.0 / double(numOfAtoms);
+    TlMatrix answer(numOfAtoms, 3);
+    for (int IP = 0; IP < numOfAtoms; ++IP) {
+        const int KNDX = std::max(IP, 2*IP - numOfAtoms);
+
+        for (int JP = 0; JP <= IP; ++JP) {
+            const int LNDX = std::max(JP, 2*JP - numOfAtoms);
+
+            for (int IC = 0; IC < 3; ++IC) {
+                const int JEND = (JP == IP) ? (IC+1) : 3;
+                for (int JC = 0; JC < JEND; ++JC) {
+                    double sum = 0.0;
+                    for (int IA = 0; IA < 3; ++IA) {
+                        for (int IB = 0; IB < 3; ++IB) {
+                             if (TENS[IA][IB][IC] == 0) {
+                                continue;
+                            }
+                            for (int JA = 0; JA < 3; ++JA) {
+                                for (int JB = 0; JB < 3; ++JB) {
+                                    if (TENS[JA][JB][JC] == 0) {
+                                        continue;
+                                    }
+                                    sum += TENS[IA][IB][IC] * TENS[JA][JB][JC] * rot.get(IA, JA) * X[IP][IB] * X[JP][JB];
+                                    // this->log_.info(TlUtils::format("rot(%d,%d)=% e, X1(%d,%d)=% e, X2(%d,%d)=% e",
+                                    //                                 IA,JA,rot.get(IA, JA), IP,IB,X[IP][IB], JP,JB,X[JP][JB]));
+                                }
+                            }
+                        }
+                    }
+                    // this->log_.info(TlUtils::format("IP=%d, JP=%d, IC=%d, JC=%d, SUM=% e",
+                    //                                 IP, JP, IC, JC, sum));
+
+                    if (IC == JC) {
+                        sum += invNumOfAtoms;
+                    }
+
+                    answer.add(LNDX, JC, - force.get(KNDX, IC) * sum);
+                    if ((3*LNDX + JC) != (3*KNDX + IC)) {
+                        answer.add(KNDX, IC, - force.get(LNDX, JC) * sum);
+                    }
+                }
+            }
+        }
+    }
+
+    return answer;
+}
+
+

@@ -31,6 +31,7 @@
 #include "DfOverlapX.h"
 #include "DfXMatrix.h"
 #include "DfCD.h"
+#include "Fl_Geometry.h"
 #include "TlTime.h"
 #include "TlRowVectorMatrix2.h"
 #include "TlSystem.h"
@@ -763,92 +764,99 @@ TlMatrix DfGridFreeXC::getForce()
 {
     const RUN_TYPE runType = RUN_RKS;
     const int itr = this->m_nIteration;
+
     //TlSymmetricMatrix P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, itr);
-
-    TlMatrix Gx, Gy, Gz;
-    DfOverlapX dfOvp(this->pPdfParam_);
-    dfOvp.getGradient(orbitalInfo_, &Gx, &Gy, &Gz);
-    Gx.save("GF_force_Gx.mat");
-    Gy.save("GF_force_Gy.mat");
-    Gz.save("GF_force_Gz.mat");
-
-    //TlSymmetricMatrix Exc = this->getExcMatrix<TlSymmetricMatrix>(RUN_RKS, itr);
-    TlSymmetricMatrix Exc = this->getFxcMatrix<TlSymmetricMatrix>(RUN_RKS, itr);
-    //Exc.dot(P);
-    //Exc *= 2.0;
-
-    TlMatrix X = this->getXMatrix<TlMatrix>();
-    TlMatrix Xt = X;
-    Xt.transpose();
-
-    TlMatrix orth_E = Xt * Exc * X;
-    TlMatrix orth_Gx = Xt * Gx * X;
-    TlMatrix orth_Gy = Xt * Gy * X;
-    TlMatrix orth_Gz = Xt * Gz * X;
-    orth_E.save("GF_force_oE.mat");
-    orth_Gx.save("GF_force_oGx.mat");
-    orth_Gy.save("GF_force_oGy.mat");
-    orth_Gz.save("GF_force_oGz.mat");
-
-    TlMatrix GxE = orth_Gx * orth_E;
-    TlMatrix GyE = orth_Gy * orth_E;
-    TlMatrix GzE = orth_Gz * orth_E;
-    GxE.save("GF_force_GxE.mat");
-    GyE.save("GF_force_GyE.mat");
-    GzE.save("GF_force_GzE.mat");
-
-    TlSymmetricMatrix S = this->getSpqMatrix<TlSymmetricMatrix>();
-    TlMatrix SX = S * X;
-    TlMatrix SXt = SX;
-    SXt.transpose();
-
-    TlMatrix fx = SX * GxE * SXt;
-    TlMatrix fy = SX * GyE * SXt;
-    TlMatrix fz = SX * GzE * SXt;
-    fx.save("GF_force_fx.mat");
-    fy.save("GF_force_fy.mat");
-    fz.save("GF_force_fz.mat");
-
-    TlMatrix C = this->getCMatrix<TlMatrix>(runType, itr);
-    {
-        const index_type numOfAOs = C.getNumOfRows();
-        const index_type numOfMOs = C.getNumOfCols();
-
-        TlMatrix e(numOfMOs, numOfAOs);
-        TlVector currOcc;
-        currOcc.load(this->getOccupationPath(runType));
-        index_type max_i = std::min<index_type>(numOfMOs, currOcc.getSize());
-        for (index_type i = 0; i < max_i; ++i) {
-            if (std::fabs(currOcc[i] - 2.0) < 1.0E-5) {
-                e.set(i, i, 1.0);
-            }
-        }
-        C = C * e;
-    }
-    
+    const TlMatrix C = this->getCMatrix<TlMatrix>(runType, itr);
     TlMatrix Ct = C;
     Ct.transpose();
 
-    const int numOfAtoms = this->numOfRealAtoms_;
+    TlMatrix Exc = this->getFxcMatrix<TlSymmetricMatrix>(RUN_RKS, itr);
+    TlMatrix CEC = Ct * Exc * C;
+    CEC.save("GF_CFC.mat");
+
+    TlMatrix dx, dy, dz;
+    DfOverlapX dfOvp(this->pPdfParam_);
+    dfOvp.getGradient(orbitalInfo_, &dx, &dy, &dz);
+    // dx.save("GF_dx.mat");
+    // dy.save("GF_dy.mat");
+    // dz.save("GF_dz.mat");
+
+    TlMatrix Cdx = Ct * dx;
+    TlMatrix Cdy = Ct * dy;
+    TlMatrix Cdz = Ct * dz;
+    // Cdx.save("GF_Cdx.mat");
+    // Cdy.save("GF_Cdy.mat");
+    // Cdz.save("GF_Cdz.mat");
+    
+    TlMatrix Cdxt = Cdx;
+    Cdxt.transpose();
+    TlMatrix Cdyt = Cdy;
+    Cdyt.transpose();
+    TlMatrix Cdzt = Cdz;
+    Cdzt.transpose();
+    TlMatrix Cdxt_CEC = Cdxt * CEC;
+    TlMatrix Cdyt_CEC = Cdyt * CEC;
+    TlMatrix Cdzt_CEC = Cdzt * CEC;
+    // Cdxt_CEC.save("GF_Cdxt_CEC.mat");
+    // Cdyt_CEC.save("GF_Cdyt_CEC.mat");
+    // Cdzt_CEC.save("GF_Cdzt_CEC.mat");
+
+    // <-- ここまでOK
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    const index_type numOfMOs = this->m_nNumOfMOs;
+    const index_type numOfAtoms = this->numOfRealAtoms_;
     TlMatrix force(numOfAtoms, 3);
-    for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
-        TlMatrix fx_a = this->selectGradMat(fx, atomIndex);
-        TlMatrix fy_a = this->selectGradMat(fy, atomIndex);
-        TlMatrix fz_a = this->selectGradMat(fz, atomIndex);
-
-        TlMatrix C_fx_C = Ct * fx_a * C;
-        TlMatrix C_fy_C = Ct * fy_a * C;
-        TlMatrix C_fz_C = Ct * fz_a * C;
-        C_fx_C.save(TlUtils::format("C_fx_C.%d.mat", atomIndex));
-        C_fy_C.save(TlUtils::format("C_fy_C.%d.mat", atomIndex));
-        C_fz_C.save(TlUtils::format("C_fz_C.%d.mat", atomIndex));
-
-        force.add(atomIndex, 0, C_fx_C.sum());
-        force.add(atomIndex, 1, C_fy_C.sum());
-        force.add(atomIndex, 2, C_fz_C.sum());
+    TlVector Hx(numOfAOs), Hy(numOfAOs), Hz(numOfAOs);
+    {
+        TlVector currOcc;
+        currOcc.load(this->getOccupationPath(runType));
+        for (int i = 0; i < numOfMOs; ++i) {
+            if (std::fabs(currOcc[i] - 2.0) < 1.0E-5) {
+                for (int j = 0; j < numOfAOs; ++j) {
+                    const double vx = C.get(j, i) * Cdxt_CEC.get(j, i);
+                    Hx.add(j, vx);
+                    const double vy = C.get(j, i) * Cdyt_CEC.get(j, i);
+                    Hy.add(j, vy);
+                    const double vz = C.get(j, i) * Cdzt_CEC.get(j, i);
+                    Hz.add(j, vz);
+                }
+            }
+        }
+        Hx.save("GF_Hx.vct");
+        Hy.save("GF_Hy.vct");
+        Hz.save("GF_Hz.vct");
+    }
+    for (int i = 0; i < numOfAOs; ++i) {
+        const index_type atomIndex = this->orbitalInfo_.getAtomIndex(i);
+        force.add(atomIndex, 0, Hx.get(i));
+        force.add(atomIndex, 1, Hy.get(i));
+        force.add(atomIndex, 2, Hz.get(i));
     }
 
-    force *= 4.0;
+    force *= -4.0;
+    force.save("GF_force.mat");
+
+    // calc center of atoms
+    // const Fl_Geometry flGeom((*(this->pPdfParam_))["coordinates"]);
+    // TlPosition wc;
+    // double sum_w = 0.0;
+    // for (int i = 0; i < numOfAtoms; ++i) {
+    //     const TlAtom atom = flGeom.getAtom(i);
+    //     const TlPosition p = atom.getPosition();
+    //     const double weight = atom.getStdWeight();
+    //     std::cerr << TlUtils::format("(% f, %f, %f), %f", p.x(), p.y(), p.z(), weight) << std::endl;
+    //     wc += weight * p;
+    //     sum_w += weight;
+    // }
+    // wc *= -1.0 / sum_w;
+    // std::cerr << TlUtils::format("wc: % f, % f, % f", wc.x(), wc.y(), wc.z()) << std::endl;
+
+    // for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
+    //     force.add(atomIndex, 0, wc.x());
+    //     force.add(atomIndex, 1, wc.y());
+    //     force.add(atomIndex, 2, wc.z());
+    // }    
+    // force.save("GF_force2.mat");
 
     return force;
 }
