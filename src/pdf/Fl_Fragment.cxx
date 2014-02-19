@@ -231,7 +231,7 @@ void Fl_Fragment::calcDefault(const std::vector<int>& norbcut)
 
         // count electrons in each fragment
         for (int i = 0;  i < natom; ++i) {
-            const std::string element = this->flGeom_.getAtom(i);
+            const std::string element = this->flGeom_.getAtomSymbol(i);
             const int fragindex = atomFragment[i];
             electrons[fragindex] += Prdctbl.getAtomicNumber(element);
         }

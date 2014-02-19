@@ -53,7 +53,7 @@ std::vector<double> TlEspField::makeEspFld(const TlSymmetricMatrix& P,
     const Fl_Geometry flGeom(this->param_["coordinates"]);
     const std::size_t numOfAtoms = flGeom.getNumOfAtoms();
     for (std::size_t atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
-        const std::string atomSymbol = flGeom.getAtom(atomIndex);
+        const std::string atomSymbol = flGeom.getAtomSymbol(atomIndex);
         if (atomSymbol == "X") {
             // not calculate in case of dummy charge
             continue;

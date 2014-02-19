@@ -54,7 +54,7 @@ void DfHpqX_Parallel::getHpqD(TlDistributeSymmetricMatrix* pHpq,
     std::size_t realAtomIndex = 0;
     std::size_t dummyAtomIndex = 0;
     for (int i = 0; i < numOfAtoms; ++i) {
-        const std::string atomName = flGeom.getAtom(i);
+        const std::string atomName = flGeom.getAtomSymbol(i);
         const TlPosition p = flGeom.getCoordinate(i);
         const double charge = flGeom.getCharge(i);
         const TlAtom atom(atomName, p, charge);

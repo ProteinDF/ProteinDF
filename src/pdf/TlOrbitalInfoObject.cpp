@@ -164,10 +164,10 @@ void TlOrbitalInfoObject::setAtoms(const Fl_Geometry& flGeom)
 
     //int basiscount = 0;
     for (int atom = 0; atom < numOfAtoms; ++atom) {
-        const std::string atomName = flGeom.getAtom(atom);
+        const std::string atomName = flGeom.getAtomSymbol(atom);
         const std::string label = flGeom.getLabel(atom);
 
-        this->atoms_[atom].setElement(flGeom.getAtom(atom));
+        this->atoms_[atom].setElement(flGeom.getAtomSymbol(atom));
         this->atoms_[atom].moveTo(flGeom.getCoordinate(atom));
         this->atoms_[atom].setCharge(flGeom.getCharge(atom));
         this->atoms_[atom].setName(label);

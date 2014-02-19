@@ -335,7 +335,7 @@ double DfXCFunctional::getGrimmeDispersionEnergy()
         double E_disp = 0.0;
         for (int i = 0; i < numOfAtoms; ++i) {
             const TlPosition posA = geom.getCoordinate(i);
-            const std::string symbolA = geom.getAtom(i);
+            const std::string symbolA = geom.getAtomSymbol(i);
             if ((C6.find(symbolA) == C6.end()) ||
                 (R0.find(symbolA) == R0.end())) {
                 this->logger(TlUtils::format(" Grimme dispersion parameters in atom(%s) is not regiestered.\n",
@@ -347,7 +347,7 @@ double DfXCFunctional::getGrimmeDispersionEnergy()
             
             for (int j = i + 1; j < numOfAtoms; ++j) {
                 const TlPosition posB = geom.getCoordinate(j);
-                const std::string symbolB = geom.getAtom(j);
+                const std::string symbolB = geom.getAtomSymbol(j);
                 if ((C6.find(symbolA) == C6.end()) ||
                     (R0.find(symbolA) == R0.end())) {
                     continue;
