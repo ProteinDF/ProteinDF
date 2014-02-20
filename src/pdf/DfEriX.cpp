@@ -26,8 +26,8 @@
 #include "TlSparseVector.h"
 #include "TlTime.h"
 
-const int DfEriX::MAX_SHELL_TYPE = 2 + 1; // (s=0, p, d)
-const int DfEriX::FORCE_K_BUFFER_SIZE = 3 * 5 * 5 * 5; // (xyz) * 5d * 5d * 5d
+//const int DfEriX::MAX_SHELL_TYPE = 2 + 1; // (s=0, p, d)
+const int DfEriX::FORCE_K_BUFFER_SIZE = 3 * 7 * 7 * 7; // (xyz) * 7f * 7f * 7f
 
 DfEriX::DfEriX(TlSerializeData* pPdfParam) 
     : DfObject(pPdfParam), pEriEngines_(NULL)
@@ -277,7 +277,8 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
             //                                                                             pairwisePGTO_cutoffThreshold);
             // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
 
-            for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
+            const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
+            for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
             
                 // const int shellTypeS = 0;
@@ -579,25 +580,26 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
                                     (*(this->pPdfParam_))["basis_sets"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellPairArrayTable shellPairArrayTable = this->getShellPairArrayTable(shellArrayTable);
-    
-    for (int shellTypeP = DfEriX::MAX_SHELL_TYPE -1; shellTypeP >= 0; --shellTypeP) {
+
+    const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
+    for (int shellTypeP = maxShellType -1; shellTypeP >= 0; --shellTypeP) {
         const int maxStepsP = 2 * shellTypeP + 1;
         const ShellArray shellArrayP = shellArrayTable[shellTypeP];
         ShellArray::const_iterator pItEnd = shellArrayP.end();
 
-        for (int shellTypeQ = DfEriX::MAX_SHELL_TYPE -1; shellTypeQ >= 0; --shellTypeQ) {
+        for (int shellTypeQ = maxShellType -1; shellTypeQ >= 0; --shellTypeQ) {
             const int maxStepsQ = 2 * shellTypeQ + 1;
             const ShellArray shellArrayQ = shellArrayTable[shellTypeQ];
             ShellArray::const_iterator qItEnd = shellArrayQ.end();
 
             // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
 
-            for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
+            for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
                 const ShellArray shellArrayR = shellArrayTable[shellTypeR];
                 ShellArray::const_iterator rItEnd = shellArrayR.end();
 
-                for (int shellTypeS = DfEriX::MAX_SHELL_TYPE -1; shellTypeS >= 0; --shellTypeS) {
+                for (int shellTypeS = maxShellType -1; shellTypeS >= 0; --shellTypeS) {
                     const int maxStepsS = 2 * shellTypeS + 1;
                     const ShellArray shellArrayS = shellArrayTable[shellTypeS];
                     ShellArray::const_iterator sItEnd = shellArrayS.end();
@@ -1676,24 +1678,25 @@ void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
     DfEriEngine engine;
     engine.setPrimitiveLevelThreshold(0.0);
 
-    for (int shellTypeP = DfEriX::MAX_SHELL_TYPE -1; shellTypeP >= 0; --shellTypeP) {
+    const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
+    for (int shellTypeP = maxShellType -1; shellTypeP >= 0; --shellTypeP) {
         const int maxStepsP = 2 * shellTypeP + 1;
         const ShellArray shellArrayP = shellArrayTable[shellTypeP];
         ShellArray::const_iterator pItEnd = shellArrayP.end();
 
-        for (int shellTypeQ = DfEriX::MAX_SHELL_TYPE -1; shellTypeQ >= 0; --shellTypeQ) {
+        for (int shellTypeQ = maxShellType -1; shellTypeQ >= 0; --shellTypeQ) {
             const int maxStepsQ = 2 * shellTypeQ + 1;
             const ShellArray shellArrayQ = shellArrayTable[shellTypeQ];
             ShellArray::const_iterator qItEnd = shellArrayQ.end();
 
             // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
 
-            for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
+            for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
                 const ShellArray shellArrayR = shellArrayTable[shellTypeR];
                 ShellArray::const_iterator rItEnd = shellArrayR.end();
 
-                for (int shellTypeS = DfEriX::MAX_SHELL_TYPE -1; shellTypeS >= 0; --shellTypeS) {
+                for (int shellTypeS = maxShellType -1; shellTypeS >= 0; --shellTypeS) {
                     const int maxStepsS = 2 * shellTypeS + 1;
                     const ShellArray shellArrayS = shellArrayTable[shellTypeS];
                     ShellArray::const_iterator sItEnd = shellArrayS.end();
@@ -2204,7 +2207,8 @@ void DfEriX::getForceK_part(const TlOrbitalInfoObject& orbitalInfo,
 
 DfEriX::ShellArrayTable DfEriX::makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo)
 {
-    ShellArrayTable shellArrayTable(MAX_SHELL_TYPE);
+    const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
+    ShellArrayTable shellArrayTable(maxShellType);
     const index_type maxShellIndex = orbitalInfo.getNumOfOrbitals();
 
     index_type shellIndex = 0;
@@ -2386,17 +2390,18 @@ void DfEriX::storeForceK_integralDriven(const int atomIndexA, const int atomInde
 
 DfEriX::ShellPairArrayTable DfEriX::getShellPairArrayTable(const ShellArrayTable& shellArrayTable)
 {
-    ShellPairArrayTable shellPairArrayTable(DfEriX::MAX_SHELL_TYPE * DfEriX::MAX_SHELL_TYPE);
+    const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
+    ShellPairArrayTable shellPairArrayTable(maxShellType * maxShellType);
 
-    for (int shellTypeP = DfEriX::MAX_SHELL_TYPE -1; shellTypeP >= 0; --shellTypeP) {
+    for (int shellTypeP = maxShellType -1; shellTypeP >= 0; --shellTypeP) {
         const ShellArray& shellArrayP = shellArrayTable[shellTypeP];
         ShellArray::const_iterator pItEnd = shellArrayP.end();
 
-        for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
+        for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
             const ShellArray& shellArrayR = shellArrayTable[shellTypeR];
             ShellArray::const_iterator rItEnd = shellArrayR.end();
 
-            const int shellPairType_PR = shellTypeP * MAX_SHELL_TYPE + shellTypeR;
+            const int shellPairType_PR = shellTypeP * maxShellType + shellTypeR;
             for (ShellArray::const_iterator pIt = shellArrayP.begin(); pIt != pItEnd; ++pIt) {
                 const index_type indexP = *pIt;
 

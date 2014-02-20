@@ -21,10 +21,9 @@
 #include "TlFmt.h"
 
 /// 結果出力用のサイズ
-/// d軌道の6Dから5Dへの変換領域にも利用するため、
-/// d軌道のサイズを6Dベースとして確保している。
-/// = 6(d) * 6 * 3
-const int DfHpqEngine::OUTPUT_BUFFER_SIZE = 108;
+/// F軌道の10Fから7Fへの変換領域にも利用するため、
+/// F軌道のサイズを10Fベースとして確保している。
+const int DfHpqEngine::OUTPUT_BUFFER_SIZE = 10 * 10 * 3;
 
 const TlAngularMomentumVector DfHpqEngine::E1_[3] = {
     TlAngularMomentumVector(1, 0, 0),
@@ -368,6 +367,19 @@ void DfHpqEngine::transform6Dto5D(double* pBuf)
         const std::size_t end = I_ * J_ * I * J;
         std::copy(pTempBuf, pTempBuf + end, pBuf);
     }
+
+    if (a == 3) {
+        this->transform10Fto7F_i(I_, J_, J, pBuf, pTempBuf);
+        I = 7;
+        const std::size_t end = I_ * J_ * I * J;
+        std::copy(pTempBuf, pTempBuf + end, pBuf);
+    }
+    if (b == 3) {
+        this->transform10Fto7F_j(I_, J_, I, pBuf, pTempBuf);
+        J = 7;
+        const std::size_t end = I_ * J_ * I * J;
+        std::copy(pTempBuf, pTempBuf + end, pBuf);
+    }
 }
 
 
@@ -403,8 +415,8 @@ void DfHpqEngine::transform6Dto5D_i(const int I_, const int J_,
 
 
 void DfHpqEngine::transform6Dto5D_j(const int I_, const int J_,
-                               const int I,
-                               const double* pInput, double* pOutput)
+                                    const int I,
+                                    const double* pInput, double* pOutput)
 {
     for (int i_ = 0; i_ < I_; ++i_) {
         for (int j_ = 0; j_ < J_; ++j_) {
@@ -428,6 +440,92 @@ void DfHpqEngine::transform6Dto5D_j(const int I_, const int J_,
                 pOutput[yz_5d] = yz;
                 pOutput[xxyy_5d] = 0.5*(xx-yy);
                 pOutput[rr_5d] = INV_SQRT3 * (zz - 0.5 * (xx + yy));
+            }
+        }
+    }
+}
+
+void DfHpqEngine::transform10Fto7F_i(const int I_, const int J_,
+                                     const int J,
+                                     const double* pInput, double* pOutput)
+{
+    const double route_23 = std::sqrt(2.0 / 3.0);
+    const double route_25 = std::sqrt(2.0 / 5.0);
+    const double route_1_15 = std::sqrt(1.0/15.0);
+
+    for (int i_ = 0; i_ < I_; ++i_) {
+        for (int j_ = 0; j_ < J_; ++j_) {
+                
+            for (int j = 0; j < J; ++j) {
+                const double xxx = pInput[((i_*J_ +j_)*10 +0)*J +j];
+                const double xxy = pInput[((i_*J_ +j_)*10 +1)*J +j];
+                const double xxz = pInput[((i_*J_ +j_)*10 +2)*J +j];
+                const double xyy = pInput[((i_*J_ +j_)*10 +3)*J +j];
+                const double xyz = pInput[((i_*J_ +j_)*10 +4)*J +j];
+                const double xzz = pInput[((i_*J_ +j_)*10 +5)*J +j];
+                const double yyy = pInput[((i_*J_ +j_)*10 +6)*J +j];
+                const double yyz = pInput[((i_*J_ +j_)*10 +7)*J +j];
+                const double yzz = pInput[((i_*J_ +j_)*10 +8)*J +j];
+                const double zzz = pInput[((i_*J_ +j_)*10 +9)*J +j];
+                
+                const int z3_7f      = ((i_*J_ +j_)*7 +0)*J +j;
+                const int xz2_7f     = ((i_*J_ +j_)*7 +1)*J +j;
+                const int yz2_7f     = ((i_*J_ +j_)*7 +2)*J +j;
+                const int x2y_y3_7f  = ((i_*J_ +j_)*7 +3)*J +j;
+                const int x3_xy2_7f  = ((i_*J_ +j_)*7 +4)*J +j;
+                const int xyz_7f     = ((i_*J_ +j_)*7 +5)*J +j;
+                const int x2z_y2z_7f = ((i_*J_ +j_)*7 +6)*J +j;
+                
+                pOutput[z3_7f]       = 0.5 * route_1_15 * (5*zzz -3*(xxz + yyz + zzz));
+                pOutput[xz2_7f]      = 0.25 * route_25 * (5*xzz -  (xxx + xyy + xzz));
+                pOutput[yz2_7f]      = 0.25 * route_25 * (5*yzz -  (xxy + yyy + yzz));
+                pOutput[x2y_y3_7f]   = 0.25 * route_23 * (3*xxy - yyy);
+                pOutput[x3_xy2_7f]   = 0.25 * route_23 * (xxx - 3*xyy);
+                pOutput[xyz_7f]      = xyz;
+                pOutput[x2z_y2z_7f]  = 0.5 * (xxz - yyz);
+            }
+        }
+    }
+}
+
+void DfHpqEngine::transform10Fto7F_j(const int I_, const int J_,
+                                     const int I,
+                                     const double* pInput, double* pOutput)
+{
+    const double route_23 = std::sqrt(2.0 / 3.0);
+    const double route_25 = std::sqrt(2.0 / 5.0);
+    const double route_1_15 = std::sqrt(1.0/15.0);
+
+    for (int i_ = 0; i_ < I_; ++i_) {
+        for (int j_ = 0; j_ < J_; ++j_) {
+                
+            for (int i = 0; i < I; ++i) {
+                const double xxx = pInput[((i_*J_ +j_)*I +i)*10 +0];
+                const double xxy = pInput[((i_*J_ +j_)*I +i)*10 +1];
+                const double xxz = pInput[((i_*J_ +j_)*I +i)*10 +2];
+                const double xyy = pInput[((i_*J_ +j_)*I +i)*10 +3];
+                const double xyz = pInput[((i_*J_ +j_)*I +i)*10 +4];
+                const double xzz = pInput[((i_*J_ +j_)*I +i)*10 +5];
+                const double yyy = pInput[((i_*J_ +j_)*I +i)*10 +6];
+                const double yyz = pInput[((i_*J_ +j_)*I +i)*10 +7];
+                const double yzz = pInput[((i_*J_ +j_)*I +i)*10 +8];
+                const double zzz = pInput[((i_*J_ +j_)*I +i)*10 +9];
+                
+                const int z3_7f      = ((i_*J_ +j_)*I +i)*7 +0;
+                const int xz2_7f     = ((i_*J_ +j_)*I +i)*7 +1;
+                const int yz2_7f     = ((i_*J_ +j_)*I +i)*7 +2;
+                const int x2y_y3_7f  = ((i_*J_ +j_)*I +i)*7 +3;
+                const int x3_xy2_7f  = ((i_*J_ +j_)*I +i)*7 +4;
+                const int xyz_7f     = ((i_*J_ +j_)*I +i)*7 +5;
+                const int x2z_y2z_7f = ((i_*J_ +j_)*I +i)*7 +6;
+                
+                pOutput[z3_7f]       = 0.5 * route_1_15 * (5*zzz -3*(xxz + yyz + zzz));
+                pOutput[xz2_7f]      = 0.25 * route_25 * (5*xzz -  (xxx + xyy + xzz));
+                pOutput[yz2_7f]      = 0.25 * route_25 * (5*yzz -  (xxy + yyy + yzz));
+                pOutput[x2y_y3_7f]   = 0.25 * route_23 * (3*xxy - yyy);
+                pOutput[x3_xy2_7f]   = 0.25 * route_23 * (xxx - 3*xyy);
+                pOutput[xyz_7f]      = xyz;
+                pOutput[x2z_y2z_7f]  = 0.5 * (xxz - yyz);
             }
         }
     }

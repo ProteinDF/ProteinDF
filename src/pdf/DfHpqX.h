@@ -107,8 +107,6 @@ protected:
     };
 
 protected:
-    static const int MAX_SHELL_TYPE;
-
     DfHpqEngine* pEngines_;
     TlOrbitalInfo orbitalInfo_;
     ShellArrayTable shellArrayTable_;

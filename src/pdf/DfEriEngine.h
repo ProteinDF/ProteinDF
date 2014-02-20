@@ -79,32 +79,31 @@
 /// [0](0)~[L](m)
 #define ERI_NUM_OF_RM_KINDS (ERI_NUM_OF_R_KINDS * ((ERI_L_MAX +1) +1))
 
-/// a^の最大数 (d(=2)の微分までサポート)
+/// a^の最大数 (1回微分までサポート)
 #define ERI_A_BAR_MAX (1)
-/// b^の最大数 (d(=2)の微分までサポート)
+/// b^の最大数 (1回微分までサポート)
 #define ERI_B_BAR_MAX (1)
-/// aの最大数 (aのd(=2)とbのd,そしてその2回微分(+2)までサポート)
-#define ERI_A_MAX (5)
-/// bの最大数 (bのd(=2)をサポート)
-#define ERI_B_MAX (2)
+/// aの最大数 (aのf(=3)とbのf,そしてその1回微分(+1)までサポート)
+#define ERI_A_MAX (7)
+/// bの最大数 (bのf(=3)をサポート)
+#define ERI_B_MAX (3)
 /// pの最大数
-#define ERI_P_MAX (5)
+#define ERI_P_MAX (7)
 /// a'の最大数
 #define ERI_A_PRIME_MAX (1)
 /// b'の最大数
-#define ERI_B_PRIME_MAX (5)
+#define ERI_B_PRIME_MAX (7)
 /// p'の最大数
-#define ERI_P_PRIME_MAX (5)
+#define ERI_P_PRIME_MAX (7)
 
 /// 制限値を調べるときは CHECK_MAX_COUNTを立てること。
-// #define CHECK_MAX_COUNT
-#define ERI_NR_DASH_SIZE (6820 +1)
+#define CHECK_MAX_COUNT
+#define ERI_NR_DASH_SIZE (31360 +1)
 #define ERI_NUM_OF_ERI_STATES ((ERI_A_BAR_MAX +1) * (ERI_B_BAR_MAX +1)  \
                                * (ERI_A_MAX +1) * (ERI_B_MAX +1) * (ERI_P_MAX +1) \
                                * (ERI_A_PRIME_MAX +1) * (ERI_B_PRIME_MAX +1) * (ERI_P_PRIME_MAX +1))
 //#define ERI_NUM_OF_AMVS (108 +1)
-// ERI_MAX_BATCH: D'を処理すると1736
-#define ERI_MAX_BATCH (1736 +1)
+#define ERI_MAX_BATCH (5880 +1)
 
 class DfEriEngine : public DfEngineObject {
 public:
@@ -606,6 +605,19 @@ private:
                            const int I, const int J, const int L,
                            const double* pInput, double* pOutput);
     void transform6Dto5D_l(const int I_, const int J_, const int K_, const int L_,
+                           const int I, const int J, const int K,
+                           const double* pInput, double* pOutput);
+
+    void transform10Fto7F_i(const int I_, const int J_, const int K_, const int L_,
+                           const int J, const int K, const int L,
+                           const double* pInput, double* pOutput);
+    void transform10Fto7F_j(const int I_, const int J_, const int K_, const int L_,
+                           const int I, const int K, const int L,
+                           const double* pInput, double* pOutput);
+    void transform10Fto7F_k(const int I_, const int J_, const int K_, const int L_,
+                           const int I, const int J, const int L,
+                           const double* pInput, double* pOutput);
+    void transform10Fto7F_l(const int I_, const int J_, const int K_, const int L_,
                            const int I, const int J, const int K,
                            const double* pInput, double* pOutput);
 

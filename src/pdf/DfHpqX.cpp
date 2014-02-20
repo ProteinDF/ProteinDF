@@ -21,8 +21,7 @@
 #endif // _OPENMP
 
 #include "DfHpqX.h"
-
-const int DfHpqX::MAX_SHELL_TYPE = 2 +1;
+#include "TlOrbitalInfoObject.h"
 
 DfHpqX::DfHpqX(TlSerializeData* pPdfParam) 
     : DfObject(pPdfParam),
@@ -195,11 +194,12 @@ void DfHpqX::getForce(const TlSymmetricMatrix& P,
 
     this->createEngines();
     
-    for (int shellTypeP = DfHpqX::MAX_SHELL_TYPE -1; shellTypeP >= 0; --shellTypeP) {
+    const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
+    for (int shellTypeP = maxShellType -1; shellTypeP >= 0; --shellTypeP) {
         const ShellArray shellArrayP = this->shellArrayTable_[shellTypeP];
         const std::size_t shellArraySizeP = shellArrayP.size();
         
-        for (int shellTypeQ = DfHpqX::MAX_SHELL_TYPE -1; shellTypeQ >= 0; --shellTypeQ) {
+        for (int shellTypeQ = maxShellType -1; shellTypeQ >= 0; --shellTypeQ) {
             const ShellArray shellArrayQ = this->shellArrayTable_[shellTypeQ];
             // const std::size_t shellArraySizeQ = shellArrayQ.size();
             
@@ -402,7 +402,7 @@ void DfHpqX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
 
 void DfHpqX::makeShellArrayTable()
 {
-    this->shellArrayTable_.resize(MAX_SHELL_TYPE);
+    this->shellArrayTable_.resize(TlOrbitalInfoObject::getMaxShellType());
     const index_type maxShellIndex = this->orbitalInfo_.getNumOfOrbitals();
 
     int shellIndex = 0;

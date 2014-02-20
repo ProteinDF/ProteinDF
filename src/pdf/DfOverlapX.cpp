@@ -25,8 +25,6 @@
 #include "TlOrbitalInfo_Density.h"
 #include "TlOrbitalInfo_XC.h"
 
-const int DfOverlapX::MAX_SHELL_TYPE = 2 + 1;
-
 DfOverlapX::DfOverlapX(TlSerializeData* pPdfParam) 
     : DfObject(pPdfParam), pEngines_(NULL)
 {
@@ -655,12 +653,13 @@ void DfOverlapX::getForce(const TlSymmetricMatrix& W,
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
 
     this->createEngines();
-    
-    for (int shellTypeP = DfOverlapX::MAX_SHELL_TYPE -1; shellTypeP >= 0; --shellTypeP) {
+
+    const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
+    for (int shellTypeP = maxShellType -1; shellTypeP >= 0; --shellTypeP) {
         const ShellArray shellArrayP = shellArrayTable[shellTypeP];
         const index_type shellArraySizeP = shellArrayP.size();
         
-        for (int shellTypeQ = DfOverlapX::MAX_SHELL_TYPE -1; shellTypeQ >= 0; --shellTypeQ) {
+        for (int shellTypeQ = maxShellType -1; shellTypeQ >= 0; --shellTypeQ) {
             const ShellArray shellArrayQ = shellArrayTable[shellTypeQ];
             // const index_type shellArraySizeQ = shellArrayQ.size();
             
@@ -789,7 +788,8 @@ void DfOverlapX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
 
 DfOverlapX::ShellArrayTable DfOverlapX::makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo)
 {
-    ShellArrayTable shellArrayTable(MAX_SHELL_TYPE);
+    const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
+    ShellArrayTable shellArrayTable(maxShellType);
     const int maxShellIndex = orbitalInfo.getNumOfOrbitals();
 
     int shellIndex = 0;

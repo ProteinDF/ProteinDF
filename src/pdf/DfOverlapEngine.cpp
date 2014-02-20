@@ -24,10 +24,10 @@
 const double DfOverlapEngine::MAX_EXPONENT = std::log(std::numeric_limits<double>::max());
 
 /// 結果出力用のサイズ
-/// d軌道の6Dから5Dへの変換領域にも利用するため、
-/// d軌道のサイズを6Dベースとして確保している。
-/// = 3 * 3 * 3 * 3 * 6(d) * 6 * 6 * 6
-const int DfOverlapEngine::OUTPUT_BUFFER_SIZE = 3 * 3 * 3 * 3 * 6 * 6 * 6 * 6;
+/// f軌道の10Fから7Fへの変換領域にも利用するため、
+/// f軌道のサイズを10Fベースとして確保している。
+/// = 3 * 3 * 3 * 3 * 10(f) * 10 * 10 * 10
+const int DfOverlapEngine::OUTPUT_BUFFER_SIZE = 3 * 3 * 3 * 3 * 10 * 10 * 10 * 10 +1;
 
 const TlAngularMomentumVector DfOverlapEngine::E1_[3] = {
     TlAngularMomentumVector(1, 0, 0),
@@ -501,6 +501,43 @@ void DfOverlapEngine::transform6Dto5D()
                   this->pTransformBuf_ + end,
                   this->WORK);
     }
+
+    if (a == 3) {
+        this->transform10Fto7F_i(I_, J_, K_, L_, J, K, L, this->WORK, this->pTransformBuf_);
+        I = 7;
+        const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
+        assert(end <= static_cast<std::size_t>(OUTPUT_BUFFER_SIZE));
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  this->WORK);
+    }
+    if (b == 3) {
+        this->transform10Fto7F_j(I_, J_, K_, L_, I, K, L, this->WORK, this->pTransformBuf_);
+        J = 7;
+        const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
+        assert(end <= static_cast<std::size_t>(OUTPUT_BUFFER_SIZE));
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  this->WORK);
+    }
+    if (c == 3) {
+        this->transform10Fto7F_k(I_, J_, K_, L_, I, J, L, this->WORK, this->pTransformBuf_);
+        K = 7;
+        const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
+        assert(end <= static_cast<std::size_t>(OUTPUT_BUFFER_SIZE));
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  this->WORK);
+    }
+    if (d == 3) {
+        this->transform10Fto7F_l(I_, J_, K_, L_, I, J, K, this->WORK, this->pTransformBuf_);
+        L = 7;
+        const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
+        assert(end <= static_cast<std::size_t>(OUTPUT_BUFFER_SIZE));
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  this->WORK);
+    }
 }
 
 
@@ -660,6 +697,209 @@ void DfOverlapEngine::transform6Dto5D_l(const int I_, const int J_, const int K_
     }
 }
 
+void DfOverlapEngine::transform10Fto7F_i(const int I_, const int J_, const int K_, const int L_,
+                                         const int J, const int K, const int L,
+                                         const double* pInput, double* pOutput)
+{
+    const double route_23 = std::sqrt(2.0 / 3.0);
+    const double route_25 = std::sqrt(2.0 / 5.0);
+    const double route_1_15 = std::sqrt(1.0/15.0);
+
+    for (int i_ = 0; i_ < I_; ++i_) {
+        for (int j_ = 0; j_ < J_; ++j_) {
+            for (int k_ = 0; k_ < K_; ++k_) {
+                for (int l_ = 0; l_ < L_; ++l_) {
+                
+                    for (int j = 0; j < J; ++j) {
+                        for (int k = 0; k < K; ++k) {
+                            for (int l = 0; l < L; ++l) {
+                                const double xxx = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +0)*J +j)*K +k)*L + l];
+                                const double xxy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +1)*J +j)*K +k)*L + l];
+                                const double xxz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +2)*J +j)*K +k)*L + l];
+                                const double xyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +3)*J +j)*K +k)*L + l];
+                                const double xyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +4)*J +j)*K +k)*L + l];
+                                const double xzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +5)*J +j)*K +k)*L + l];
+                                const double yyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +6)*J +j)*K +k)*L + l];
+                                const double yyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +7)*J +j)*K +k)*L + l];
+                                const double yzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +8)*J +j)*K +k)*L + l];
+                                const double zzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +9)*J +j)*K +k)*L + l];
+                                
+                                const int z3_7f      = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*7 +0)*J +j)*K +k)*L +l;
+                                const int xz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*7 +1)*J +j)*K +k)*L +l;
+                                const int yz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*7 +2)*J +j)*K +k)*L +l;
+                                const int x2y_y3_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*7 +3)*J +j)*K +k)*L +l;
+                                const int x3_xy2_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*7 +4)*J +j)*K +k)*L +l;
+                                const int xyz_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*7 +5)*J +j)*K +k)*L +l;
+                                const int x2z_y2z_7f = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*7 +6)*J +j)*K +k)*L +l;
+                                
+                                pOutput[z3_7f]       = 0.5 * route_1_15 * (5*zzz -3*(xxz + yyz + zzz));
+                                pOutput[xz2_7f]      = 0.25 * route_25 * (5*xzz -  (xxx + xyy + xzz));
+                                pOutput[yz2_7f]      = 0.25 * route_25 * (5*yzz -  (xxy + yyy + yzz));
+                                pOutput[x2y_y3_7f]   = 0.25 * route_23 * (3*xxy - yyy);
+                                pOutput[x3_xy2_7f]   = 0.25 * route_23 * (xxx - 3*xyy);
+                                pOutput[xyz_7f]      = xyz;
+                                pOutput[x2z_y2z_7f]  = 0.5 * (xxz - yyz);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void DfOverlapEngine::transform10Fto7F_j(const int I_, const int J_, const int K_, const int L_,
+                                         const int I, const int K, const int L,
+                                         const double* pInput, double* pOutput)
+{
+    const double route_23 = std::sqrt(2.0 / 3.0);
+    const double route_25 = std::sqrt(2.0 / 5.0);
+    const double route_1_15 = std::sqrt(1.0/15.0);
+
+    for (int i_ = 0; i_ < I_; ++i_) {
+        for (int j_ = 0; j_ < J_; ++j_) {
+            for (int k_ = 0; k_ < K_; ++k_) {
+                for (int l_ = 0; l_ < L_; ++l_) {
+                
+                    for (int i = 0; i < I; ++i) {
+                        for (int k = 0; k < K; ++k) {
+                            for (int l = 0; l < L; ++l) {
+                                const double xxx = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +0)*K +k)*L + l];
+                                const double xxy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +1)*K +k)*L + l];
+                                const double xxz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +2)*K +k)*L + l];
+                                const double xyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +3)*K +k)*L + l];
+                                const double xyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +4)*K +k)*L + l];
+                                const double xzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +5)*K +k)*L + l];
+                                const double yyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +6)*K +k)*L + l];
+                                const double yyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +7)*K +k)*L + l];
+                                const double yzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +8)*K +k)*L + l];
+                                const double zzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +9)*K +k)*L + l];
+                                
+                                const int z3_7f      = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*7 +0)*K +k)*L +l;
+                                const int xz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*7 +1)*K +k)*L +l;
+                                const int yz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*7 +2)*K +k)*L +l;
+                                const int x2y_y3_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*7 +3)*K +k)*L +l;
+                                const int x3_xy2_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*7 +4)*K +k)*L +l;
+                                const int xyz_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*7 +5)*K +k)*L +l;
+                                const int x2z_y2z_7f = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*7 +6)*K +k)*L +l;
+                                
+                                pOutput[z3_7f]       = 0.5 * route_1_15 * (5*zzz -3*(xxz + yyz + zzz));
+                                pOutput[xz2_7f]      = 0.25 * route_25 * (5*xzz -  (xxx + xyy + xzz));
+                                pOutput[yz2_7f]      = 0.25 * route_25 * (5*yzz -  (xxy + yyy + yzz));
+                                pOutput[x2y_y3_7f]   = 0.25 * route_23 * (3*xxy - yyy);
+                                pOutput[x3_xy2_7f]   = 0.25 * route_23 * (xxx - 3*xyy);
+                                pOutput[xyz_7f]      = xyz;
+                                pOutput[x2z_y2z_7f]  = 0.5 * (xxz - yyz);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void DfOverlapEngine::transform10Fto7F_k(const int I_, const int J_, const int K_, const int L_,
+                                         const int I, const int J, const int L,
+                                         const double* pInput, double* pOutput)
+{
+    const double route_23 = std::sqrt(2.0 / 3.0);
+    const double route_25 = std::sqrt(2.0 / 5.0);
+    const double route_1_15 = std::sqrt(1.0/15.0);
+
+    for (int i_ = 0; i_ < I_; ++i_) {
+        for (int j_ = 0; j_ < J_; ++j_) {
+            for (int k_ = 0; k_ < K_; ++k_) {
+                for (int l_ = 0; l_ < L_; ++l_) {
+                
+                    for (int i = 0; i < I; ++i) {
+                        for (int j = 0; j < J; ++j) {
+                            for (int l = 0; l < L; ++l) {
+                                const double xxx = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +0)*L + l];
+                                const double xxy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +1)*L + l];
+                                const double xxz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +2)*L + l];
+                                const double xyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +3)*L + l];
+                                const double xyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +4)*L + l];
+                                const double xzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +5)*L + l];
+                                const double yyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +6)*L + l];
+                                const double yyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +7)*L + l];
+                                const double yzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +8)*L + l];
+                                const double zzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +9)*L + l];
+                                
+                                const int z3_7f      = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*7 +0)*L +l;
+                                const int xz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*7 +1)*L +l;
+                                const int yz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*7 +2)*L +l;
+                                const int x2y_y3_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*7 +3)*L +l;
+                                const int x3_xy2_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*7 +4)*L +l;
+                                const int xyz_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*7 +5)*L +l;
+                                const int x2z_y2z_7f = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*7 +6)*L +l;
+                                
+                                pOutput[z3_7f]       = 0.5 * route_1_15 * (5*zzz -3*(xxz + yyz + zzz));
+                                pOutput[xz2_7f]      = 0.25 * route_25 * (5*xzz -  (xxx + xyy + xzz));
+                                pOutput[yz2_7f]      = 0.25 * route_25 * (5*yzz -  (xxy + yyy + yzz));
+                                pOutput[x2y_y3_7f]   = 0.25 * route_23 * (3*xxy - yyy);
+                                pOutput[x3_xy2_7f]   = 0.25 * route_23 * (xxx - 3*xyy);
+                                pOutput[xyz_7f]      = xyz;
+                                pOutput[x2z_y2z_7f]  = 0.5 * (xxz - yyz);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void DfOverlapEngine::transform10Fto7F_l(const int I_, const int J_, const int K_, const int L_,
+                                         const int I, const int J, const int K,
+                                         const double* pInput, double* pOutput)
+{
+    const double route_23 = std::sqrt(2.0 / 3.0);
+    const double route_25 = std::sqrt(2.0 / 5.0);
+    const double route_1_15 = std::sqrt(1.0/15.0);
+
+    for (int i_ = 0; i_ < I_; ++i_) {
+        for (int j_ = 0; j_ < J_; ++j_) {
+            for (int k_ = 0; k_ < K_; ++k_) {
+                for (int l_ = 0; l_ < L_; ++l_) {
+                
+                    for (int i = 0; i < I; ++i) {
+                        for (int j = 0; j < J; ++j) {
+                            for (int k = 0; k < K; ++k) {
+                                const double xxx = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 0];
+                                const double xxy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 1];
+                                const double xxz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 2];
+                                const double xyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 3];
+                                const double xyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 4];
+                                const double xzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 5];
+                                const double yyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 6];
+                                const double yyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 7];
+                                const double yzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 8];
+                                const double zzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 9];
+                                
+                                const int z3_7f      = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*7 +0;
+                                const int xz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*7 +1;
+                                const int yz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*7 +2;
+                                const int x2y_y3_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*7 +3;
+                                const int x3_xy2_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*7 +4;
+                                const int xyz_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*7 +5;
+                                const int x2z_y2z_7f = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*7 +6;
+                               
+                                pOutput[z3_7f]       = 0.5 * route_1_15 * (5*zzz -3*(xxz + yyz + zzz));
+                                pOutput[xz2_7f]      = 0.25 * route_25 * (5*xzz -  (xxx + xyy + xzz));
+                                pOutput[yz2_7f]      = 0.25 * route_25 * (5*yzz -  (xxy + yyy + yzz));
+                                pOutput[x2y_y3_7f]   = 0.25 * route_23 * (3*xxy - yyy);
+                                pOutput[x3_xy2_7f]   = 0.25 * route_23 * (xxx - 3*xyy);
+                                pOutput[xyz_7f]      = xyz;
+                                pOutput[x2z_y2z_7f]  = 0.5 * (xxz - yyz);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 int DfOverlapEngine::initiative(const TlAngularMomentumVector& amv) const {
     //const char x = amv.get(0);

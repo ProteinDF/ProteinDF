@@ -70,7 +70,7 @@ protected:
     void destroyEngines();
    
 protected:
-    static const int MAX_SHELL_TYPE;
+    // static const int MAX_SHELL_TYPE;
     static const int FORCE_K_BUFFER_SIZE;
     
     typedef std::vector<index_type> ShellArray;

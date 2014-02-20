@@ -70,8 +70,6 @@ public:
                          TlSymmetricMatrix* pE);
 
 protected:
-    static const int MAX_SHELL_TYPE;
-    
     enum {
         X = 0,
         Y = 1,

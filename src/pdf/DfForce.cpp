@@ -455,7 +455,8 @@ TlMatrix DfForce::getTransformMatrix(const TlMatrix& force)
 {
     const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
     const int numOfAtoms = this->numOfRealAtoms_;
-    
+    TlMatrix answer(numOfAtoms, 3);
+
     // 重心
     std::vector<TlPosition> X(numOfAtoms);
     {
@@ -491,8 +492,56 @@ TlMatrix DfForce::getTransformMatrix(const TlMatrix& force)
     const double chk = rot.get(0, 0) * rot.get(1, 1) * rot.get(2, 2);
     this->log_.info(TlUtils::format("chk = % 8.3e", chk));
 
-    rot.inverse();
-    // rot.save("force_rotinv.mat");
+    //
+    static const double TOO_SMALL = 1.0E-5;
+    if (chk < TOO_SMALL) {
+        if (rot.get(0, 0) > TOO_SMALL) {
+            if (rot.get(1,1) > TOO_SMALL) {
+                // x, y != 0
+                const double det = rot.get(0,0) * rot.get(1,1) - rot.get(0,1) * rot.get(1,0);
+                const double inv_det = 1.0 / det;
+                const double trp = rot.get(1,1);
+                rot.set(0,0, rot.get(1,1) * inv_det);
+                rot.set(1,1, trp * inv_det);
+                rot.set(0,1, -rot.get(0,1) * inv_det);
+            } else if (rot.get(2,2) > TOO_SMALL) {
+                // x, z != 0
+                const double det = rot.get(0,0) * rot.get(2,2) - rot.get(0,2) * rot.get(2,0);
+                const double inv_det = 1.0 / det;
+                const double trp = rot.get(2,2);
+                rot.set(0,0, rot.get(2,2) * inv_det);
+                rot.set(2,2, trp * inv_det);
+                rot.set(0,2, -rot.get(0,2) * inv_det);
+            } else {
+                // x != 0
+                const double v = rot.get(0,0);
+                rot.set(0, 0, 1.0/v);
+            }
+        } else if (rot.get(1, 1) > TOO_SMALL) {
+            if (rot.get(2, 2) > TOO_SMALL) {
+                // y, z != 0
+                const double det = rot.get(2,2) * rot.get(1,1) - rot.get(2,1) * rot.get(1,2);
+                const double inv_det = 1.0 / det;
+                const double trp = rot.get(2,2);
+                rot.set(2,2, rot.get(1,1) * inv_det);
+                rot.set(1,1, trp * inv_det);
+                rot.set(2,1, -rot.get(2,1) * inv_det);
+            } else {
+                // y != 0
+                const double v = rot.get(1,1);
+                rot.set(1,1, 1.0/v); 
+            }
+        } else if (rot.get(2,2) > TOO_SMALL) {
+                // z != 0
+            const double v = rot.get(2, 2);
+            rot.set(2,2, 1.0/v); 
+        } else {
+            return answer;
+        }
+    } else {
+        rot.inverse();
+        // rot.save("force_rotinv.mat");
+    }
 
     // <-- OK
     int TENS[3][3][3];
@@ -527,7 +576,6 @@ TlMatrix DfForce::getTransformMatrix(const TlMatrix& force)
     TENS[2][2][2] =  0;
 
     const double invNumOfAtoms = 1.0 / double(numOfAtoms);
-    TlMatrix answer(numOfAtoms, 3);
     for (int IP = 0; IP < numOfAtoms; ++IP) {
         const int KNDX = std::max(IP, 2*IP - numOfAtoms);
 
