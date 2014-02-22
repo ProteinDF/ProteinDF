@@ -99,6 +99,21 @@ void DfForce::calcForce()
     }     
 
     this->force_ *= -1.0;
+
+    // output
+    const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
+    this->log_.info("=== FORCE ===");
+    const int numOfAtoms = this->numOfRealAtoms_;
+    for (int atomIndex = 0; atomIndex< numOfAtoms; ++atomIndex) {
+        const TlAtom atom = flGeom.getAtom(atomIndex);
+        this->log_.info(TlUtils::format("%4d:[%-2s] % f, % f, % f",
+                                        atomIndex, atom.getSymbol().c_str(),
+                                        this->force_.get(atomIndex, 0),
+                                        this->force_.get(atomIndex, 1),
+                                        this->force_.get(atomIndex, 2)));
+    }
+    this->log_.info("=============");
+    
     this->saveForce();
 }
 
