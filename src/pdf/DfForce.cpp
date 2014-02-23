@@ -113,6 +113,20 @@ void DfForce::calcForce()
                                         this->force_.get(atomIndex, 2)));
     }
     this->log_.info("=============");
+
+    {
+        TlSerializeData force_dat;
+        force_dat.resize(numOfAtoms);
+        for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
+            TlSerializeData v;
+            v.resize(3);
+            v[0] = this->force_.get(atomIndex, 0);
+            v[1] = this->force_.get(atomIndex, 1);
+            v[2] = this->force_.get(atomIndex, 2);
+            force_dat.setAt(atomIndex, v);
+        }
+        (*this->pPdfParam_)["force"] = force_dat;
+    }
     
     this->saveForce();
 }

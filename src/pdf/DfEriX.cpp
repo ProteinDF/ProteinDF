@@ -2049,7 +2049,7 @@ int DfEriX::storeK_integralDriven(const index_type shellIndexP, const int maxSte
         }
     }
 
-    assert(numOfElements <= 5 * 5 * 5 * 5 * 4); // means (d * d * d * d * 4)
+    // assert(numOfElements <= 5 * 5 * 5 * 5 * 4); // means (d * d * d * d * 4)
     return numOfElements;
 }
 

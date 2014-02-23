@@ -1854,9 +1854,11 @@ void DfTaskCtrl::prescreeningReport()
 {
     const int maxShellType = this->maxShellType_;
     static const char typeStr2[][3] = {
-        "SS", "SP", "SD",
-        "PS", "PP", "PD",
-        "DS", "DP", "DD"
+        "SS", "SP", "SD", "SF", "SG",
+        "PS", "PP", "PD", "PF", "PG",
+        "DS", "DP", "DD", "DF", "DG",
+        "FS", "FP", "FD", "FF", "FG",
+        "GS", "GP", "GD", "GF", "GG"
     };
     
     // cutoff report for Epsilon1
@@ -1933,17 +1935,27 @@ void DfTaskCtrl::prescreeningReport()
 void DfTaskCtrl::cutoffReport()
 {
     const int maxShellType = this->maxShellType_;
-    static const char typeStr4[][5] = {
-        "SSSS", "SSSP", "SSSD", "SSPS", "SSPP", "SSPD", "SSDS", "SSDP", "SSDD",
-        "SPSS", "SPSP", "SPSD", "SPPS", "SPPP", "SPPD", "SPDS", "SPDP", "SPDD",
-        "SDSS", "SDSP", "SDSD", "SDPS", "SDPP", "SDPD", "SDDS", "SDDP", "SDDD",
-        "PSSS", "PSSP", "PSSD", "PSPS", "PSPP", "PSPD", "PSDS", "PSDP", "PSDD",
-        "PPSS", "PPSP", "PPSD", "PPPS", "PPPP", "PPPD", "PPDS", "PPDP", "PPDD",
-        "PDSS", "PDSP", "PDSD", "PDPS", "PDPP", "PDPD", "PDDS", "PDDP", "PDDD",
-        "DSSS", "DSSP", "DSSD", "DSPS", "DSPP", "DSPD", "DSDS", "DSDP", "DSDD",
-        "DPSS", "DPSP", "DPSD", "DPPS", "DPPP", "DPPD", "DPDS", "DPDP", "DPDD",
-        "DDSS", "DDSP", "DDSD", "DDPS", "DDPP", "DDPD", "DDDS", "DDDP", "DDDD",
-    };
+    static const char typeChar[] = "SPDFG";
+    
+    std::vector<std::string> typeStr4(maxShellType * maxShellType * maxShellType * maxShellType);
+    {
+        std::string tmp(4, 'X');
+        int index = 0;
+        for (int i = 0; i < maxShellType; ++i) {
+            tmp[0] = typeChar[i];
+            for (int j = 0; j < maxShellType; ++j) {
+                tmp[1] = typeChar[j];
+                for (int k = 0; k < maxShellType; ++k) {
+                    tmp[2] = typeChar[k];
+                    for (int l = 0; l < maxShellType; ++l) {
+                        tmp[3] = typeChar[l];
+                        typeStr4[index] = tmp;
+                        ++index;
+                    }
+                }
+            }
+        }
+    }
 
     // cutoff report for schwarz
     bool hasCutoffSchwarz = false;

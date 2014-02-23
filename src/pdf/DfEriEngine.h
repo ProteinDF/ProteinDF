@@ -97,7 +97,7 @@
 #define ERI_P_PRIME_MAX (7)
 
 /// 制限値を調べるときは CHECK_MAX_COUNTを立てること。
-#define CHECK_MAX_COUNT
+// #define CHECK_MAX_COUNT
 #define ERI_NR_DASH_SIZE (31360 +1)
 #define ERI_NUM_OF_ERI_STATES ((ERI_A_BAR_MAX +1) * (ERI_B_BAR_MAX +1)  \
                                * (ERI_A_MAX +1) * (ERI_B_MAX +1) * (ERI_P_MAX +1) \
