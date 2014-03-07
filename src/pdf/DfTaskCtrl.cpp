@@ -1991,7 +1991,7 @@ void DfTaskCtrl::cutoffReport()
                                 / (double)this->cutoffAll_schwarz_[shellTypeABCD]
                                 * 100.0;
                             this->log_.info(TlUtils::format(" %4s: %12ld / %12ld (%6.2f%%)",
-                                                            typeStr4[shellTypeABCD],
+                                                            typeStr4[shellTypeABCD].c_str(),
                                                             this->cutoffAlive_schwarz_[shellTypeABCD],
                                                             this->cutoffAll_schwarz_[shellTypeABCD],
                                                             ratio));
