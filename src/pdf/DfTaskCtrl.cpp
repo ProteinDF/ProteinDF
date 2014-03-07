@@ -1935,10 +1935,9 @@ void DfTaskCtrl::prescreeningReport()
 void DfTaskCtrl::cutoffReport()
 {
     const int maxShellType = this->maxShellType_;
-    static const char typeChar[] = "SPDFG";
-    
     std::vector<std::string> typeStr4(maxShellType * maxShellType * maxShellType * maxShellType);
     {
+        static const char typeChar[] = "SPDFG";
         std::string tmp(4, 'X');
         int index = 0;
         for (int i = 0; i < maxShellType; ++i) {
