@@ -765,15 +765,24 @@ TlMatrix DfGridFreeXC::getForce()
     const RUN_TYPE runType = RUN_RKS;
     const int itr = this->m_nIteration;
 
+    const TlSymmetricMatrix S = this->getSpqMatrix<TlSymmetricMatrix>();
+    const TlMatrix X = this->getXMatrix<TlMatrix>();
+    TlMatrix Xt = X;
+    Xt.transpose();
+
     //TlSymmetricMatrix P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, itr);
     const TlMatrix C = this->getCMatrix<TlMatrix>(runType, itr);
     TlMatrix Ct = C;
     Ct.transpose();
 
-    TlMatrix Exc = this->getFxcMatrix<TlSymmetricMatrix>(RUN_RKS, itr);
-    TlMatrix CEC = Ct * Exc * C;
-    CEC.save("GF_CFC.mat");
+    // TlMatrix CCt = C * Ct;
+    // CCt.save("CCt.mat");
 
+    // Exc =====================================================================
+    TlSymmetricMatrix Exc = this->getFxcMatrix<TlSymmetricMatrix>(RUN_RKS, itr);
+    Exc.save("GF_Exc.mat");
+
+    // dS ======================================================================
     TlMatrix dx, dy, dz;
     DfOverlapX dfOvp(this->pPdfParam_);
     dfOvp.getGradient(orbitalInfo_, &dx, &dy, &dz);
@@ -781,29 +790,74 @@ TlMatrix DfGridFreeXC::getForce()
     // dy.save("GF_dy.mat");
     // dz.save("GF_dz.mat");
 
-    TlMatrix Cdx = Ct * dx;
-    TlMatrix Cdy = Ct * dy;
-    TlMatrix Cdz = Ct * dz;
-    // Cdx.save("GF_Cdx.mat");
-    // Cdy.save("GF_Cdy.mat");
-    // Cdz.save("GF_Cdz.mat");
-    
-    TlMatrix Cdxt = Cdx;
-    Cdxt.transpose();
-    TlMatrix Cdyt = Cdy;
-    Cdyt.transpose();
-    TlMatrix Cdzt = Cdz;
-    Cdzt.transpose();
-    TlMatrix Cdxt_CEC = Cdxt * CEC;
-    TlMatrix Cdyt_CEC = Cdyt * CEC;
-    TlMatrix Cdzt_CEC = Cdzt * CEC;
-    // Cdxt_CEC.save("GF_Cdxt_CEC.mat");
-    // Cdyt_CEC.save("GF_Cdyt_CEC.mat");
-    // Cdzt_CEC.save("GF_Cdzt_CEC.mat");
+    // 規格直交化 ==============================================================
+    // TlMatrix o_Exc = Ct * Exc;
+    TlMatrix o_Exc = Xt * Exc * X;
+    o_Exc.save("GF_o_Exc.mat");
 
-    // <-- ここまでOK
+    // TlMatrix o_dx = Ct * dx;
+    // TlMatrix o_dy = Ct * dy;
+    // TlMatrix o_dz = Ct * dz;
+    TlMatrix o_dx = Xt * dx * X;
+    TlMatrix o_dy = Xt * dy * X;
+    TlMatrix o_dz = Xt * dz * X;
+    // TlMatrix o_dx = dx * C;
+    // TlMatrix o_dy = dy * C;
+    // TlMatrix o_dz = dz * C;
+    // o_dx.save("GF_o_dx.mat");
+    // o_dy.save("GF_o_dy.mat");
+    // o_dz.save("GF_o_dz.mat");
+
+    // 積 ======================================================================
+    TlMatrix o_dxt = o_dx;
+    o_dxt.transpose();
+    TlMatrix o_dyt = o_dy;
+    o_dyt.transpose();
+    TlMatrix o_dzt = o_dz;
+    o_dzt.transpose();
+
+    TlMatrix o_dx_Exc = o_dxt * o_Exc;
+    TlMatrix o_dy_Exc = o_dyt * o_Exc;
+    TlMatrix o_dz_Exc = o_dzt * o_Exc;
+    // TlMatrix o_dx_Exc = o_dx * o_Exc;
+    // TlMatrix o_dy_Exc = o_dy * o_Exc;
+    // TlMatrix o_dz_Exc = o_dz * o_Exc;
+    // o_dx_Exc.save("GF_o_dxt_Exc.mat");
+    // o_dy_Exc.save("GF_o_dyt_Exc.mat");
+    // o_dz_Exc.save("GF_o_dzt_Exc.mat");
+
+    // 規格直交化から戻す
+    TlMatrix SX = S * X;
+    TlMatrix SXt = SX;
+    SXt.transpose();
+    o_dx_Exc = SX * o_dx_Exc * SXt;
+    o_dy_Exc = SX * o_dy_Exc * SXt;
+    o_dz_Exc = SX * o_dz_Exc * SXt;
+
     const index_type numOfAOs = this->m_nNumOfAOs;
     const index_type numOfMOs = this->m_nNumOfMOs;
+
+    // 右からCをかける
+    // o_dx_Exc *= C;
+    // o_dy_Exc *= C;
+    // o_dz_Exc *= C;
+    TlMatrix C_mo = C;
+    {
+        TlSymmetricMatrix E(numOfAOs);
+        TlVector currOcc;
+        currOcc.load(this->getOccupationPath(runType));
+        for (index_type i = 0; i < numOfMOs; ++i) {
+            if (std::fabs(currOcc[i] - 2.0) < 1.0E-5) {
+                E.set(i, i, 1.0);
+            }
+        }
+        C_mo *= E;
+    }
+    o_dx_Exc *= C_mo;
+    o_dy_Exc *= C_mo;
+    o_dz_Exc *= C_mo;
+
+    // 左からCをかける
     const index_type numOfAtoms = this->numOfRealAtoms_;
     TlMatrix force(numOfAtoms, 3);
     TlVector Hx(numOfAOs), Hy(numOfAOs), Hz(numOfAOs);
@@ -813,11 +867,11 @@ TlMatrix DfGridFreeXC::getForce()
         for (int i = 0; i < numOfMOs; ++i) {
             if (std::fabs(currOcc[i] - 2.0) < 1.0E-5) {
                 for (int j = 0; j < numOfAOs; ++j) {
-                    const double vx = C.get(j, i) * Cdxt_CEC.get(j, i);
+                    const double vx = C.get(j, i) * o_dx_Exc.get(j, i);
                     Hx.add(j, vx);
-                    const double vy = C.get(j, i) * Cdyt_CEC.get(j, i);
+                    const double vy = C.get(j, i) * o_dy_Exc.get(j, i);
                     Hy.add(j, vy);
-                    const double vz = C.get(j, i) * Cdzt_CEC.get(j, i);
+                    const double vz = C.get(j, i) * o_dz_Exc.get(j, i);
                     Hz.add(j, vz);
                 }
             }

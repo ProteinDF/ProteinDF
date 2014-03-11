@@ -85,12 +85,7 @@ void DfForce::calcForce()
 
     case XC_ENGINE_GRIDFREE:
     case XC_ENGINE_GRIDFREE_CD:
-        {
-            this->calcForceFromPureXC_gridfree(runType);
-            
-            const TlMatrix T = this->getTransformMatrix(this->force_);
-            this->force_ += T;
-        }
+        this->calcForceFromPureXC_gridfree(runType);
         break;
 
     default:
@@ -444,6 +439,10 @@ void DfForce::calcForceFromPureXC_gridfree(RUN_TYPE runType)
 {
     DfGridFreeXC dfGridFreeXC(this->pPdfParam_);
     TlMatrix force = dfGridFreeXC.getForce();
+
+    const TlMatrix T = this->getTransformMatrix(force);
+    force += T;
+
     if (this->isDebugOutMatrix_ == true) {
         force.save("F_xc_gf.mtx");
     }
