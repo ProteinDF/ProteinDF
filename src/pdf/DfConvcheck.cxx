@@ -32,7 +32,7 @@ DfConvcheck::DfConvcheck(TlSerializeData* pPdfParam, int num_iter)
     this->convergence_type = pdfParam["convergence/type"].getStr();
 
     this->threshold_cri     = pdfParam["convergence/threshold"].getDouble();
-    this->threshold_cri_ene = pdfParam["convergence/threshold-energy"].getDouble();
+    this->threshold_cri_ene = pdfParam["convergence/threshold_energy"].getDouble();
 
     this->dev_sd = 0.0;
     this->dev_dm = 0.0;
