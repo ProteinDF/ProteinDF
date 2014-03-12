@@ -21,7 +21,7 @@
 #include <limits>
 #include "TlOrbitalInfoObject.h"
 
-const int TlOrbitalInfoObject::MAX_SHELL_TYPE = 3;
+const int TlOrbitalInfoObject::MAX_SHELL_TYPE = 3 +1;
 const double TlOrbitalInfoObject::INV_SQRT3 = 1.0 / std::sqrt(3.0);
 const double TlOrbitalInfoObject::MAX_EXPONENT = std::log(std::numeric_limits<double>::max());
 const char* TlOrbitalInfoObject::basisTypeNameTbl_[] = {
@@ -70,8 +70,16 @@ void TlOrbitalInfoObject::setCGTO(const Fl_Gto& flGto)
             l = m = 1;
             n = 0;
             break;
+        case 'f':
+            l = m = n = 1;
+            break;
+        case 'g':
+            l = 2;
+            m = 1;
+            n = 1;
+            break;
         default:
-            this->log_.critical(TlUtils::format("Now we support 's' to 'd': input %d.", shell));
+            this->log_.critical(TlUtils::format("Now we support 's' to 'g': input %d.", shell));
             this->log_.critical("stop at TlOrbitalInfoObject::setCGTO().");
             exit(1);
         }
@@ -132,6 +140,14 @@ void TlOrbitalInfoObject::setCGTO_coulomb(const Fl_Gto& flGto)
             l = m = 1;
             n = 0;
             break;
+        case 'f':
+            l = m = n = 1;
+            break;
+        case 'g':
+            l = 2;
+            m = 1;
+            n = 1;
+            break;
         default:
             this->log_.critical(TlUtils::format("Now we support 's' to 'd': input %d.", shell));
             this->log_.critical("stop at TlOrbitalInfoObject::setCGTO_coulomb().");
@@ -164,10 +180,10 @@ void TlOrbitalInfoObject::setAtoms(const Fl_Geometry& flGeom)
 
     //int basiscount = 0;
     for (int atom = 0; atom < numOfAtoms; ++atom) {
-        const std::string atomName = flGeom.getAtom(atom);
+        const std::string atomName = flGeom.getAtomSymbol(atom);
         const std::string label = flGeom.getLabel(atom);
 
-        this->atoms_[atom].setElement(flGeom.getAtom(atom));
+        this->atoms_[atom].setElement(flGeom.getAtomSymbol(atom));
         this->atoms_[atom].moveTo(flGeom.getCoordinate(atom));
         this->atoms_[atom].setCharge(flGeom.getCharge(atom));
         this->atoms_[atom].setName(label);
@@ -217,6 +233,12 @@ void TlOrbitalInfoObject::makeOrbitalTable()
                     break;
                 case 'd':
                     shellType = 2;
+                    break;
+                case 'f':
+                    shellType = 3;
+                    break;
+                case 'g':
+                    shellType = 4;
                     break;
                 default:
                     std::cerr << TlUtils::format("make table error. @ %s:%d\n",__FILE__, __LINE__) << std::endl;

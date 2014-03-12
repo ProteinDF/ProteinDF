@@ -189,7 +189,7 @@ public:
 
     /// 与えられたインデックスのシェルインデックスを返す
     index_type getShellIndex(const index_type AO) const {
-        static const int basisTypeBase[] = {0, 1, 4}; // s, px, dxy
+        static const int basisTypeBase[] = {0, 1, 4, 9, 16}; // s, px, dxy, f, g
         const int shellType = this->getShellType(AO);
         const int basisType = this->getBasisType(AO);
         return AO - (basisType - basisTypeBase[shellType]);

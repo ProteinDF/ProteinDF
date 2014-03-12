@@ -86,7 +86,7 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
     SymmetricMatrixType P_low(numOfAOs_low);
     TlCombineDensityMatrix combineDensMat;
     for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
-        const std::string atomSymbol = flGeom.getAtom(atomIndex);
+        const std::string atomSymbol = flGeom.getAtomSymbol(atomIndex);
         if (atomSymbol == "X") {
             continue;
         }

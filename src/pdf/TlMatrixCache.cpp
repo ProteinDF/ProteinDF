@@ -33,7 +33,10 @@ TlMatrixCache::TlMatrixCache(std::size_t maxMemSize, bool isForceLoadingFromDisk
 
 TlMatrixCache::~TlMatrixCache()
 {
-    this->flush();
+    LRU_List::iterator itEnd = this->lruList_.end();
+    for (LRU_List::iterator it = this->lruList_.begin(); it != itEnd; ) {
+        it = this->erase(it);
+    }
 }
 
 
@@ -61,69 +64,70 @@ void TlMatrixCache::forceLoadingFromDisk(bool flag)
 
 void TlMatrixCache::erase(const std::string& path)
 {
-    assert(this->cache_.size() == this->lruList_.size());
-    CACHE_DATA_TYPE::iterator p = this->cache_.find(path);
-    if (p != this->cache_.end()) {
-        const std::size_t bufSize = p->second.bufSize;
-        this->flush(path);
-
-        if (this->isDebugOut_ == true) {
-            std::cerr << TlUtils::format("TlMatrixCache::erase() from mem: %s",
-                                         path.c_str())
-                      << std::endl;
-        }
-        delete p->second.pBuf;
-        p->second.pBuf = NULL;
-        this->cache_.erase(p);
-        this->usedMemSize_ -= bufSize;
-
-        std::list<std::string>::iterator lruListIt = std::find(this->lruList_.begin(),
-                                                               this->lruList_.end(),
-                                                               path);
-        if (lruListIt != this->lruList_.end()) {
-            this->lruList_.erase(lruListIt);
+    LRU_List::iterator itEnd = this->lruList_.end();
+    for (LRU_List::iterator it = this->lruList_.begin();it != itEnd; ++it) {
+        const std::string it_path = (*it)->getPath();
+        if (it_path == path) {
+            it = this->erase(it);
+            break;
         }
     }
-    assert(this->cache_.size() == this->lruList_.size());
+}
+
+
+TlMatrixCache::LRU_List::iterator TlMatrixCache::erase(const LRU_List::iterator& it)
+{
+    this->flush(it);
+    
+    this->usedMemSize_ -= (*it)->getSize();
+    
+    delete *it;
+    *it = NULL;
+
+    return this->lruList_.erase(it);
 }
 
 
 void TlMatrixCache::cleanOut(const std::size_t needMemSize)
 {
-    assert(this->cache_.size() == this->lruList_.size());
     if (needMemSize < this->maxMemSize_) {
         // 必要量が最大容量を下回っているときにしか、
         // メモリを空ける意味がない。
         while ((this->getFreeMemSize() < needMemSize) ||
                (this->lruList_.size() > 1)) {
-            const std::string path = this->lruList_.front();
-            this->erase(path);
+            LRU_List::iterator it = --(this->lruList_.end());
+            this->erase(it);
         }
     }
-    assert(this->cache_.size() == this->lruList_.size());
 }
 
 
 void TlMatrixCache::flush()
 {
-    CACHE_DATA_TYPE::iterator itEnd = this->cache_.end();
-    for (CACHE_DATA_TYPE::iterator it = this->cache_.begin(); it != itEnd; ++it) {
-        this->flush(it->first);
+    LRU_List::iterator itEnd = this->lruList_.end();
+    for (LRU_List::iterator it = this->lruList_.begin(); it != itEnd; ++it) {
+        this->flush(it);
     }
 }
 
 
 void TlMatrixCache::flush(const std::string& path)
 {
-    CACHE_DATA_TYPE::iterator it = this->cache_.find(path);
-    if (it != this->cache_.end()) {
-        if (it->second.needSave == true) {
-            it->second.pBuf->save(path);
-            it->second.needSave = false;
-
-            // stats
-            ++(this->stats_[it->first].setToDisk);
+    LRU_List::iterator itEnd = this->lruList_.end();
+    for (LRU_List::iterator it = this->lruList_.begin(); it != itEnd; ++it) {
+        if ((*it)->getPath() == path) {
+            this->flush(it);
         }
+    }
+}
+
+
+void TlMatrixCache::flush(LRU_List::iterator it) 
+{
+    if ((*it)->needSave()) {
+        const std::string path = (*it)->getPath();
+        (*it)->save();
+        ++(this->stats_[path].setToDisk);
     }
 }
 

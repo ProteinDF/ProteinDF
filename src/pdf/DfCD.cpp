@@ -629,7 +629,7 @@ TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject&
     index_type division =  std::max<index_type>(N * 0.01, 100);
     L.reserve_cols(division);
     index_type m = 0;
-    while (error > threshold) {
+    while ((error > threshold) && (m < N)) {
 #ifdef DEBUG_CD
         this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
 #endif //DEBUG_CD
@@ -1205,17 +1205,39 @@ void DfCD::initializeCutoffStats(const int maxShellType)
 
 void DfCD::schwartzCutoffReport(const int maxShellType)
 {
-    static const char typeStr4[][5] = {
-        "SSSS", "SSSP", "SSSD", "SSPS", "SSPP", "SSPD", "SSDS", "SSDP", "SSDD",
-        "SPSS", "SPSP", "SPSD", "SPPS", "SPPP", "SPPD", "SPDS", "SPDP", "SPDD",
-        "SDSS", "SDSP", "SDSD", "SDPS", "SDPP", "SDPD", "SDDS", "SDDP", "SDDD",
-        "PSSS", "PSSP", "PSSD", "PSPS", "PSPP", "PSPD", "PSDS", "PSDP", "PSDD",
-        "PPSS", "PPSP", "PPSD", "PPPS", "PPPP", "PPPD", "PPDS", "PPDP", "PPDD",
-        "PDSS", "PDSP", "PDSD", "PDPS", "PDPP", "PDPD", "PDDS", "PDDP", "PDDD",
-        "DSSS", "DSSP", "DSSD", "DSPS", "DSPP", "DSPD", "DSDS", "DSDP", "DSDD",
-        "DPSS", "DPSP", "DPSD", "DPPS", "DPPP", "DPPD", "DPDS", "DPDP", "DPDD",
-        "DDSS", "DDSP", "DDSD", "DDPS", "DDPP", "DDPD", "DDDS", "DDDP", "DDDD",
-    };
+    // const int maxShellType = this->maxShellType_;
+    std::vector<std::string> typeStr4(maxShellType * maxShellType * maxShellType * maxShellType);
+    {
+        static const char typeChar[] = "SPDFG";
+        std::string tmp(4, 'X');
+        int index = 0;
+        for (int i = 0; i < maxShellType; ++i) {
+            tmp[0] = typeChar[i];
+            for (int j = 0; j < maxShellType; ++j) {
+                tmp[1] = typeChar[j];
+                for (int k = 0; k < maxShellType; ++k) {
+                    tmp[2] = typeChar[k];
+                    for (int l = 0; l < maxShellType; ++l) {
+                        tmp[3] = typeChar[l];
+                        typeStr4[index] = tmp;
+                        ++index;
+                    }
+                }
+            }
+        }
+    }
+
+    // static const char typeStr4[][5] = {
+    //     "SSSS", "SSSP", "SSSD", "SSPS", "SSPP", "SSPD", "SSDS", "SSDP", "SSDD",
+    //     "SPSS", "SPSP", "SPSD", "SPPS", "SPPP", "SPPD", "SPDS", "SPDP", "SPDD",
+    //     "SDSS", "SDSP", "SDSD", "SDPS", "SDPP", "SDPD", "SDDS", "SDDP", "SDDD",
+    //     "PSSS", "PSSP", "PSSD", "PSPS", "PSPP", "PSPD", "PSDS", "PSDP", "PSDD",
+    //     "PPSS", "PPSP", "PPSD", "PPPS", "PPPP", "PPPD", "PPDS", "PPDP", "PPDD",
+    //     "PDSS", "PDSP", "PDSD", "PDPS", "PDPP", "PDPD", "PDDS", "PDDP", "PDDD",
+    //     "DSSS", "DSSP", "DSSD", "DSPS", "DSPP", "DSPD", "DSDS", "DSDP", "DSDD",
+    //     "DPSS", "DPSP", "DPSD", "DPPS", "DPPP", "DPPD", "DPDS", "DPDP", "DPDD",
+    //     "DDSS", "DDSP", "DDSD", "DDPS", "DDPP", "DDPD", "DDDS", "DDDP", "DDDD",
+    // };
 
     // cutoff report for schwarz
     bool hasCutoffSchwarz = false;
@@ -1251,7 +1273,7 @@ void DfCD::schwartzCutoffReport(const int maxShellType)
                                 / (double)this->cutoffAll_schwartz_[shellTypeABCD]
                                 * 100.0;
                             this->log_.info(TlUtils::format(" %4s: %12ld / %12ld (%6.2f%%)",
-                                                            typeStr4[shellTypeABCD],
+                                                            typeStr4[shellTypeABCD].c_str(),
                                                             this->cutoffAlive_schwartz_[shellTypeABCD],
                                                             this->cutoffAll_schwartz_[shellTypeABCD],
                                                             ratio));

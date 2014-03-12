@@ -661,7 +661,7 @@ void DfGenerateGrid::generateGrid(const TlMatrix& O,
     std::vector<double> Ps(this->numOfRealAtoms_);
     const int nNumOfAtoms = this->numOfRealAtoms_; //this->m_nNumOfAtoms - this->m_nNumOfDummyAtoms;
     int GPthrnum = 0;
-    const double rM = 0.5 * this->radiusList_[TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtom(iatom))] / BOHR;
+    const double rM = 0.5 * this->radiusList_[TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtomSymbol(iatom))] / BOHR;
 
     for (int radvec = 0; radvec < this->nrgrid; ++radvec) {
         const double r0  = rM * (1.0 + this->xGL_[radvec]) / (1.0 - this->xGL_[radvec]);
@@ -697,7 +697,7 @@ void DfGenerateGrid::generateGrid(const TlMatrix& O,
             for (int mc = 0; mc < nNumOfAtoms; ++mc) {
                 double Psuij = 1.0;
 
-                const int atomnum1 = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtom(mc));
+                const int atomnum1 = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtomSymbol(mc));
                 double radius1  = this->radiusList_[atomnum1];
                 if (atomnum1 == 1) {
                     radius1 = 0.35; // for H
@@ -712,7 +712,7 @@ void DfGenerateGrid::generateGrid(const TlMatrix& O,
                     if (nc != mc) {
                         const double Rij = this->coord_[mc].distanceFrom(this->coord_[nc]);
 
-                        const int atomnum2 = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtom(nc));
+                        const int atomnum2 = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtomSymbol(nc));
                         double radius2  = this->radiusList_[atomnum2];
                         if (atomnum2 == 1) {
                             radius2 = 0.35; // for H
@@ -807,7 +807,7 @@ void DfGenerateGrid::generateGrid_SG1(const TlMatrix& O,
     std::vector<double> Ps(this->numOfRealAtoms_);
     int GPthrnum = 0;
 
-    const int atomnum = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtom(iAtom));
+    const int atomnum = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtomSymbol(iAtom));
     const double rM = this->radiusList_[atomnum];
     const double inv_rM = 1.0 / rM;
 
@@ -1460,7 +1460,7 @@ TlMatrix DfGenerateGrid::getOMatrix()
     TlPosition sum_zr(0.0, 0.0, 0.0);
     double sum_z = 0.0;
     for (int atom = 0; atom < numOfAtoms; ++atom) {
-        const std::string symbol = this->flGeometry_.getAtom(atom);
+        const std::string symbol = this->flGeometry_.getAtomSymbol(atom);
         if (symbol == "X") {
             continue;
         }
@@ -1484,7 +1484,7 @@ TlMatrix DfGenerateGrid::getOMatrix()
     I.set(2, 2, 1.0);
 #pragma omp parallel for
     for (int atom = 0; atom < numOfAtoms; ++atom) {
-        const std::string symbol = this->flGeometry_.getAtom(atom);
+        const std::string symbol = this->flGeometry_.getAtomSymbol(atom);
         if (symbol == "X") {
             continue;
         }

@@ -241,7 +241,7 @@ void DfPopulation::getAtomPopStr(const TlVector& trPS, const bool isCalcNetCharg
         const double nucCharge = flGeom.getCharge(atomIndex);
         out << TlUtils::format(" %6d   %-2s ",
                                atomIndex,
-                               flGeom.getAtom(atomIndex).c_str());
+                               flGeom.getAtomSymbol(atomIndex).c_str());
         
         const double grossAtomPop = trPS.get(atomIndex);
         if (isCalcNetCharge == true) {

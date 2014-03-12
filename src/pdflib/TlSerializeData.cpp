@@ -35,13 +35,13 @@ const TlSerializeData& TlSerializeData::getNullObject()
 }
 
 TlSerializeData::TlSerializeData(DataType dataType) 
-    : type_(dataType), scalar_(0), pStr_(NULL) {
+    : type_(dataType), scalar_(0), str_("") {
     this->array_.clear();
     this->map_.clear();
 }
 
 TlSerializeData::TlSerializeData(const bool value) 
-    : type_(NONE), scalar_(0), pStr_(NULL) {
+    : type_(NONE), scalar_(0), str_("") {
     this->array_.clear();
     this->map_.clear();
 
@@ -49,7 +49,7 @@ TlSerializeData::TlSerializeData(const bool value)
 }
 
 TlSerializeData::TlSerializeData(const char value) 
-    : type_(NONE), scalar_(0), pStr_(NULL) {
+    : type_(NONE), scalar_(0), str_("") {
     this->array_.clear();
     this->map_.clear();
 
@@ -57,7 +57,7 @@ TlSerializeData::TlSerializeData(const char value)
 }
 
 TlSerializeData::TlSerializeData(const unsigned char value) 
-    : type_(NONE), scalar_(0), pStr_(NULL) {
+    : type_(NONE), scalar_(0), str_("") {
     this->array_.clear();
     this->map_.clear();
 
@@ -65,7 +65,7 @@ TlSerializeData::TlSerializeData(const unsigned char value)
 }
 
 TlSerializeData::TlSerializeData(const int value) 
-    : type_(NONE), scalar_(0), pStr_(NULL) {
+    : type_(NONE), scalar_(0), str_("") {
     this->array_.clear();
     this->map_.clear();
 
@@ -73,7 +73,7 @@ TlSerializeData::TlSerializeData(const int value)
 }
 
 TlSerializeData::TlSerializeData(const unsigned int value) 
-    : type_(NONE), scalar_(0), pStr_(NULL) {
+    : type_(NONE), scalar_(0), str_("") {
     this->array_.clear();
     this->map_.clear();
 
@@ -81,7 +81,7 @@ TlSerializeData::TlSerializeData(const unsigned int value)
 }
 
 TlSerializeData::TlSerializeData(const long value) 
-    : type_(NONE), scalar_(0), pStr_(NULL) {
+    : type_(NONE), scalar_(0), str_("") {
     this->array_.clear();
     this->map_.clear();
 
@@ -89,7 +89,7 @@ TlSerializeData::TlSerializeData(const long value)
 }
 
 TlSerializeData::TlSerializeData(const unsigned long value) 
-    : type_(NONE), scalar_(0), pStr_(NULL) {
+    : type_(NONE), scalar_(0), str_("") {
     this->array_.clear();
     this->map_.clear();
 
@@ -97,7 +97,7 @@ TlSerializeData::TlSerializeData(const unsigned long value)
 }
 
 TlSerializeData::TlSerializeData(const double value) 
-    : type_(NONE), scalar_(0), pStr_(NULL) {
+    : type_(NONE), scalar_(0), str_("") {
     this->array_.clear();
     this->map_.clear();
 
@@ -105,7 +105,7 @@ TlSerializeData::TlSerializeData(const double value)
 }
 
 TlSerializeData::TlSerializeData(const char* pStr) 
-    : type_(NONE), scalar_(0), pStr_(NULL) {
+    : type_(NONE), scalar_(0), str_("") {
     this->array_.clear();
     this->map_.clear();
 
@@ -113,7 +113,7 @@ TlSerializeData::TlSerializeData(const char* pStr)
 }
 
 TlSerializeData::TlSerializeData(const char* pStr, const std::size_t size) 
-    : type_(NONE), scalar_(0), pStr_(NULL) {
+    : type_(NONE), scalar_(0), str_("") {
     this->array_.clear();
     this->map_.clear();
 
@@ -121,7 +121,7 @@ TlSerializeData::TlSerializeData(const char* pStr, const std::size_t size)
 }
 
 TlSerializeData::TlSerializeData(const std::string& str) 
-    : type_(NONE), scalar_(0), pStr_(NULL) {
+    : type_(NONE), scalar_(0), str_("") {
     this->array_.clear();
     this->map_.clear();
 
@@ -129,12 +129,7 @@ TlSerializeData::TlSerializeData(const std::string& str)
 }
 
 TlSerializeData::TlSerializeData(const TlSerializeData& rhs) 
-    : type_(rhs.type_), scalar_(rhs.scalar_), pStr_(NULL) {
-
-    if (rhs.pStr_ != NULL) {
-        this->pStr_ = new std::string(*(rhs.pStr_));
-    }
-    
+    : type_(rhs.type_), scalar_(rhs.scalar_), str_(rhs.str_) {
     this->array_.clear();
     this->map_.clear();
     this->copyChildren(rhs);
@@ -142,9 +137,6 @@ TlSerializeData::TlSerializeData(const TlSerializeData& rhs)
 
 TlSerializeData::~TlSerializeData() 
 {
-    delete this->pStr_;
-    this->pStr_ = NULL;
-    
     this->clearChildren();
 }
 
@@ -155,12 +147,7 @@ TlSerializeData& TlSerializeData::operator=(const TlSerializeData& rhs)
 
         this->type_ = rhs.type_;
         this->scalar_ = rhs.scalar_;
-
-        delete this->pStr_;
-        this->pStr_ = NULL;
-        if (rhs.pStr_ != NULL) {
-            this->pStr_ = new std::string(*(rhs.pStr_));
-        }
+        this->str_ = rhs.str_;
 
         this->copyChildren(rhs);
     }
@@ -195,7 +182,7 @@ bool TlSerializeData::operator==(const TlSerializeData& rhs) const
             break;
 
         case STRING:
-            answer = (*(this->pStr_) == *(rhs.pStr_));
+            answer = (this->str_ == rhs.str_);
             break;
 
         case ARRAY:
@@ -227,23 +214,17 @@ bool TlSerializeData::operator==(const TlSerializeData& rhs) const
 void TlSerializeData::clearChildren()
 {
     for (ArrayContainerType::iterator p = this->array_.begin(); p != this->array_.end(); ++p) {
-        if (*p != NULL) {
-            delete *p;
-            *p = NULL;
-        }
+        delete *p;
+        *p = NULL;
     }
     this->array_.clear();
 
     for (MapContainerType::iterator p = this->map_.begin(); p != this->map_.end(); ++p) {
-        if (p->first != NULL) {
-            delete p->first;
-            //p->first = NULL;
-        }
+        delete p->first;
+        // p->first = NULL;
         
-        if (p->second != NULL) {
-            delete p->second;
-            p->second = NULL;
-        }
+        delete p->second;
+        p->second = NULL;
     }
     this->map_.clear();
 }
@@ -264,7 +245,7 @@ void TlSerializeData::copyChildren(const TlSerializeData& rhs)
         for (MapContainerType::const_iterator p = rhs.map_.begin(); p != rhs.map_.end(); ++p) {
             TlSerializeData* pKey = new TlSerializeData(*(p->first));
             TlSerializeData* pValue = new TlSerializeData(*(p->second));
-            this->map_[pKey] = pValue;
+            this->map_.insert(std::pair<TlSerializeData*, TlSerializeData*>(pKey, pValue));
         }
     }
 }
@@ -347,9 +328,7 @@ void TlSerializeData::set(const char* pStr, const std::size_t size)
 void TlSerializeData::set(const std::string& value) 
 {
     this->type_ = STRING;
-
-    delete this->pStr_;
-    this->pStr_ = new std::string(value);
+    this->str_ = value;
 }
 
 // =====================================================================
@@ -530,6 +509,10 @@ void TlSerializeData::erase(const TlSerializeData& key)
     MapContainerType::iterator pEnd = this->map_.end();
     while (p != pEnd) {
         if (*(p->first) == key) {
+            delete p->second;
+            p->second = NULL;
+
+            delete p->first;
             this->map_.erase(p++);
             break;
         } else {
@@ -573,7 +556,7 @@ bool TlSerializeData::getBoolean() const
         
     case STRING:
         {
-            const std::string check = TlUtils::toUpper(*(this->pStr_));
+            const std::string check = TlUtils::toUpper(this->str_);
             if ((check == "TRUE") ||
                 (check == "YES") ||
                 (check == "ON") ||
@@ -620,7 +603,7 @@ int TlSerializeData::getInt() const
         break;
         
     case STRING:
-        answer = std::atoi((*(this->pStr_)).c_str());
+        answer = std::atoi(this->str_.c_str());
         break;
 
 //     case CHAR:
@@ -668,7 +651,7 @@ unsigned int TlSerializeData::getUInt() const
         break;
         
     case STRING:
-        answer = std::atoi(this->pStr_->c_str());
+        answer = std::atoi(this->str_.c_str());
         break;
 
 //     case CHAR:
@@ -716,7 +699,7 @@ long TlSerializeData::getLong() const
         break;
         
     case STRING:
-        answer = std::atol(this->pStr_->c_str());
+        answer = std::atol(this->str_.c_str());
         break;
 
 //     case CHAR:
@@ -764,7 +747,7 @@ unsigned long TlSerializeData::getULong() const
         break;
         
     case STRING:
-        answer = std::atol(this->pStr_->c_str());
+        answer = std::atol(this->str_.c_str());
         break;
 
 //     case CHAR:
@@ -812,7 +795,7 @@ double TlSerializeData::getDouble() const
         break;
         
     case STRING:
-        answer = std::atof(this->pStr_->c_str());
+        answer = std::atof(this->str_.c_str());
         break;
 
 //     case CHAR:
@@ -860,7 +843,7 @@ std::string TlSerializeData::getStr() const
         break;
         
     case STRING:
-        answer = *(this->pStr_);
+        answer = this->str_;
         break;
 
 //     case CHAR:

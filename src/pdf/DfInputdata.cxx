@@ -147,7 +147,7 @@ void DfInputdata::show(const TlSerializeData& data) const
         Fl_Geometry geom(data["coordinates"]);
         const int numOfAtoms = geom.getNumOfAtoms();
         for (int i = 0; i < numOfAtoms; ++i) {
-            const std::string symbol = geom.getAtom(i);
+            const std::string symbol = geom.getAtomSymbol(i);
             const double charge = geom.getCharge(i);
             const std::string label = geom.getLabel(i);
             const TlPosition pos = geom.getCoordinate(i);

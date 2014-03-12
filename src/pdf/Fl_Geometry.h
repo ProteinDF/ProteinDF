@@ -52,8 +52,10 @@ public:
     void clear();
     void pushBack(const AtomData& atomData);
 
+    TlAtom getAtom(int i) const;
+
     /// 原子記号を返す
-    std::string getAtom(int i) const;
+    std::string getAtomSymbol(int i) const;
 
     /// 電荷を返す
     double getCharge(int i) const;

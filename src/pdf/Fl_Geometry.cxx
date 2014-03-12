@@ -254,7 +254,15 @@ int Fl_Geometry::getAtomKindNumber() const
     return atomKind.size();
 }
 
-std::string Fl_Geometry::getAtom(int i) const
+TlAtom Fl_Geometry::getAtom(int i) const
+{
+    assert(0 <= i);
+    assert(i < static_cast<int>(this->atoms_.size()));
+
+    return this->atoms_[i].atom;
+}
+
+std::string Fl_Geometry::getAtomSymbol(int i) const
 {
     assert(0 <= i);
     assert(i < static_cast<int>(this->atoms_.size()));
@@ -296,7 +304,7 @@ int Fl_Geometry::getNumOfDummyAtoms() const
     int count = 0;
     const int numOfAtoms = this->getNumOfAtoms();
     for (int i = 0; i < numOfAtoms; ++i) {
-        if ("X" == this->getAtom(i)) {
+        if ("X" == this->getAtomSymbol(i)) {
             ++count;
         }
     }

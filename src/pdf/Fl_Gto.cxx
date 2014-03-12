@@ -596,13 +596,16 @@ double Fl_Gto::getNormalizedfactor(int s, int l, int m, int n) const
     case 'f':
         maxangular=3;
         break;
+    case 'g':
+        maxangular=4;
+        break;
     default:
-        log.error(" *** Fl_Gto::getNormalizedfactor() not support over f angular momentum, sorry.");
+        log.error(" *** Fl_Gto::getNormalizedfactor() not support over g angular momentum, sorry.");
         CnErr.abort();
         break;
     }
 
-    if (l+m+n>maxangular) {
+    if (l+m+n > maxangular) {
         log.error(" *** Fl_Gto::getNormalizedfactor() illegal angular momentum, inconsistent with shell.");
         CnErr.abort();
     }
@@ -612,7 +615,7 @@ double Fl_Gto::getNormalizedfactor(int s, int l, int m, int n) const
     double pwr = (double)(l+m+n) + 3.0 / 2.0;
     double ans = 0.0;
 
-    const int contractions = getContraction(s);
+    const int contractions = this->getContraction(s);
     for (int a = 0; a < contractions; a++) {
         const double coef_a = this->getCoefficient(s, a);
         const double norm_a = this->getNormalized(s, a, l, m, n);
@@ -669,8 +672,11 @@ double Fl_Gto::getNormalized(const int s, const int p, const int l, const int m,
     case 'f':
         maxangular=3;
         break;
+    case 'g':
+        maxangular=4;
+        break;
     default:
-        log.error(" *** Fl_Gto::getNormalized() not support over f angular momentum, sorry.");
+        log.error(" *** Fl_Gto::getNormalized() not support over g angular momentum, sorry.");
         CnErr.abort();
         break;
     }

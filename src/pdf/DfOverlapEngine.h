@@ -27,11 +27,6 @@
 #include "TlPosition.h"
 #include "TlOrbitalInfoObject.h"
 
-/// 結果出力用のサイズ
-/// d軌道の6Dから5Dへの変換領域にも利用するため、
-/// d軌道のサイズを6Dベースとして確保している。
-//#define OVP_OUTPUT_BUFFER_SIZE (5832) // = 3 * 3 * 3 * 6(d) * 6 * 6
-
 /// a^の最大数
 #define OVP_A_BAR_MAX (2 +1)
 /// b^の最大数
@@ -40,7 +35,7 @@
 #define OVP_C_BAR_MAX (2 +1)
 /// d^の最大数
 #define OVP_D_BAR_MAX (2 +1)
-/// aの最大数 (d) +1次微分(1) +"0スタート"
+/// aの最大数 (f) +1次微分(1) +"0スタート"
 #define OVP_A_MAX (6 +1)
 /// bの最大数
 #define OVP_B_MAX (6 +1)
@@ -180,6 +175,18 @@ private:
     void transform6Dto5D_l(const int I_, const int J_, const int K_, const int L_,
                            const int I, const int J, const int K,
                            const double* pInput, double* pOutput);
+    void transform10Fto7F_i(const int I_, const int J_, const int K_, const int L_,
+                            const int J, const int K, const int L,
+                            const double* pInput, double* pOutput);
+    void transform10Fto7F_j(const int I_, const int J_, const int K_, const int L_,
+                            const int I, const int K, const int L,
+                            const double* pInput, double* pOutput);
+    void transform10Fto7F_k(const int I_, const int J_, const int K_, const int L_,
+                            const int I, const int J, const int L,
+                            const double* pInput, double* pOutput);
+    void transform10Fto7F_l(const int I_, const int J_, const int K_, const int L_,
+                            const int I, const int J, const int K,
+                            const double* pInput, double* pOutput);
 
     int initiative(const TlAngularMomentumVector& amv) const;
 

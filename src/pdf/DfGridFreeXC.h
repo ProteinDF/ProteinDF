@@ -227,9 +227,13 @@ protected:
     void buildFxc_GGA_runtype(const RUN_TYPE runType);
 
 public:
+    TlMatrix getForce();
+
     // virtual void calcCholeskyVectors_onTheFly();
 
 protected:
+    TlMatrix selectGradMat(const TlMatrix& input, const int atomIndex);
+
     // void calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
     //                    PQ_PairArray *pI2PQ,
     //                    TlVector *pDiagonals);
@@ -281,7 +285,7 @@ protected:
                                         const PQ_PairArray& I2PQ);
 
     DfFunctional_GGA* getFunctionalGGA();
-
+    
 protected:
     static const double ONE_THIRD; // = 1.0 / 3.0
 

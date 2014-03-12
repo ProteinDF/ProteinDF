@@ -32,21 +32,21 @@
 // #define DEBUG_CONTRACT_BRA
 // #define DEBUG_BRA_ERI
 // #define DEBUG_CALC_PQ
-// #define DEBUG_EQ43
 // #define DEBUG_EQ44
 // #define DEBUG_EQ45
-// #define DEBUG_EQ46
+// #define DEBUG_EQ43
 // #define DEBUG_EQ47
+// #define DEBUG_EQ46
 // #define DEBUG_OUTPUT
 // #define DEBUG_TRANSFORM_6D_TO_5D
+// #define DEBUG_CHECK_WORK_D
 
 #define USE_CACHED_ROUTE // choice()をキャッシングする
 
 /// 結果出力用のサイズ
-/// d軌道の6Dから5Dへの変換領域にも利用するため、
-/// d軌道のサイズを6Dベースとして確保している。
-/// = 6(d) * 6 * 6 * 6 * 3
-const int DfEriEngine::OUTPUT_BUFFER_SIZE = 3 * 6 * 6 * 6 * 6;
+/// f軌道の10Fから7Fへの変換領域にも利用するため、
+/// f軌道のサイズを10Fベースとして確保している。
+const int DfEriEngine::OUTPUT_BUFFER_SIZE = 3 * 10 * 10 * 10 * 10 +1;
 
 const double DfEriEngine::INV_SQRT3 = 1.0 / sqrt(3.0);
 
@@ -67,8 +67,8 @@ const TlAngularMomentumVector DfEriEngine::E2_[3] = {
 DfEriEngine::DfEriEngine()
     : log_(TlLogging::getInstance())
 {
-    this->p0M_ = new double*[ERI_L_MAX];
-    for (int i = 0; i < ERI_L_MAX; ++i) {
+    this->p0M_ = new double*[ERI_L_MAX +1];
+    for (int i = 0; i < (ERI_L_MAX +1); ++i) {
         this->p0M_[i] = new double[ERI_KPKQ_MAX];
     }
 
@@ -80,8 +80,8 @@ DfEriEngine::DfEriEngine()
     this->pContractBraCoef_ = new double[ERI_KPKQ_MAX];
     
     // abp(r)cdq
-    const std::size_t P_PRIME_MAX3 = ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_P_PRIME_MAX;
-    const std::size_t max_abpRcdq_index = P_PRIME_MAX3 * P_PRIME_MAX3 * ERI_NUM_OF_R_KINDS;
+    const int P_PRIME_MAX3 = ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_P_PRIME_MAX;
+    const int max_abpRcdq_index = P_PRIME_MAX3 * P_PRIME_MAX3 * ERI_NUM_OF_R_KINDS;
     this->p_abpRcdq_ = new double[max_abpRcdq_index];
 
     // ERIメモリ確保
@@ -97,10 +97,10 @@ DfEriEngine::DfEriEngine()
         const TlAngularMomentumVectorSet amvs_p_max(p_max);
         const int numOf_amvs_p_max = amvs_p_max.size();
 
-        for (int q_a_bar = 0; q_a_bar < ERI_A_BAR_MAX; ++q_a_bar) {
-            for (int q_b_bar = 0; q_b_bar < ERI_B_BAR_MAX; ++q_b_bar) {
-                for (int q_a = 0; q_a < ERI_A_MAX; ++q_a){ 
-                    for (int q_b = 0; q_b < ERI_B_MAX; ++q_b) {
+        for (int q_a_bar = 0; q_a_bar < (ERI_A_BAR_MAX +1); ++q_a_bar) {
+            for (int q_b_bar = 0; q_b_bar < (ERI_B_BAR_MAX +1); ++q_b_bar) {
+                for (int q_a = 0; q_a < (ERI_A_MAX +1); ++q_a) { 
+                    for (int q_b = 0; q_b < (ERI_B_MAX +1); ++q_b) {
 
                         AngularMomentum2 q(q_a_bar, q_b_bar, q_a, q_b);
                         const int angularMomentumP = q.a + q.b + q.a_bar + q.b_bar;
@@ -114,11 +114,12 @@ DfEriEngine::DfEriEngine()
                                 const ERI_State bra_state(a_bar, b_bar,
                                                           a, b, p,
                                                           a_prime, b_prime, p_prime);
-                                const std::size_t braStateIndex = bra_state.index();
+                                const int braStateIndex = bra_state.index();
                                 
                                 //const TlAngularMomentumVectorSet amvs_p(p);
                                 //const int numOf_amvs_p = amvs_p.size(); // amvs_p の数だけで十分
                                 this->ERI_bra_[braStateIndex].resize(numOf_amvs_p_max);
+                                this->ERI_ket_[braStateIndex].resize(numOf_amvs_p_max);
                             }
                         }
                     }
@@ -138,6 +139,7 @@ DfEriEngine::DfEriEngine()
     this->WORK_C = new double[OUTPUT_BUFFER_SIZE];
     this->WORK_D = new double[OUTPUT_BUFFER_SIZE];
 
+    this->isCalcdERI_.resize(ERI_NUM_OF_ERI_STATES);
     this->pTransformBuf_ = new double[OUTPUT_BUFFER_SIZE];
     
     // cutoff
@@ -163,7 +165,7 @@ DfEriEngine::DfEriEngine()
 DfEriEngine::~DfEriEngine()
 {
     if (this->p0M_ != NULL) {
-        for (int i = 0; i < ERI_L_MAX; ++i) {
+        for (int i = 0; i < (ERI_L_MAX +1); ++i) {
             if (this->p0M_[i] != NULL) {
                 delete[] this->p0M_[i];
                 this->p0M_[i] = NULL;
@@ -419,10 +421,10 @@ void DfEriEngine::calc(const int diff1, const TlOrbitalInfoObject& orbInfo1, con
 void DfEriEngine::calc0(const AngularMomentum2& qAB, const AngularMomentum2& qCD,
                         const CGTO_Pair& IJ, const CGTO_Pair& KL)
 {
-    assert((0 <= qAB.a_bar) && (qAB.a_bar < ERI_A_BAR_MAX));
-    assert((0 <= qAB.b_bar) && (qAB.b_bar < ERI_B_BAR_MAX));
-    assert((0 <= qAB.a) && (qAB.a < ERI_A_MAX));
-    assert((0 <= qAB.b) && (qAB.b < ERI_B_MAX));
+    assert((0 <= qAB.a_bar) && (qAB.a_bar <= ERI_A_BAR_MAX));
+    assert((0 <= qAB.b_bar) && (qAB.b_bar <= ERI_B_BAR_MAX));
+    assert((0 <= qAB.a) && (qAB.a <= ERI_A_MAX));
+    assert((0 <= qAB.b) && (qAB.b <= ERI_B_MAX));
     
     // this->time_calc_all_.start();
     // initialize
@@ -570,6 +572,7 @@ void DfEriEngine::calcGrad(const AngularMomentum2& in_qAB, const AngularMomentum
 {
     // initialize
     this->sumOfAngularMomentums_ = in_qAB.a + in_qAB.b + in_qCD.a + in_qCD.b + 1;
+
 #ifdef CHECK_MAX_COUNT
     this->maxSizeOf_sumOfAngularMomentums_ = std::max(this->maxSizeOf_sumOfAngularMomentums_,
                                                       this->sumOfAngularMomentums_);
@@ -579,15 +582,22 @@ void DfEriEngine::calcGrad(const AngularMomentum2& in_qAB, const AngularMomentum
     std::fill(this->WORK_A, this->WORK_A + OUTPUT_BUFFER_SIZE, 0.0); 
     std::fill(this->WORK_B, this->WORK_B + OUTPUT_BUFFER_SIZE, 0.0); 
     std::fill(this->WORK_C, this->WORK_C + OUTPUT_BUFFER_SIZE, 0.0); 
+#ifdef DEBUG_CHECK_WORK_D
+    std::fill(this->WORK_D, this->WORK_D + OUTPUT_BUFFER_SIZE, 0.0); 
+#endif // DEBUG_CHECK_WORK_D
     
     const int numOfPGTOs_IJ = IJ.PS.size();
     const int numOfPGTOs_KL = KL.PS.size();
     this->AB_ = IJ.AB;
     this->CD_ = KL.AB;
 
+    const AngularMomentum2 qAB00(0, 0, in_qAB.a, in_qAB.b);
+    const AngularMomentum2 qCD00(0, 0, in_qCD.a, in_qCD.b);
+    const AngularMomentum2 qAB10(1, 0, in_qAB.a, in_qAB.b);
+    const AngularMomentum2 qAB01(0, 1, in_qAB.a, in_qAB.b);
+    const AngularMomentum2 qCD10(1, 0, in_qCD.a, in_qCD.b);
+    const AngularMomentum2 qCD01(0, 1, in_qCD.a, in_qCD.b);
     {
-        const AngularMomentum2 qAB00(0, 0, in_qAB.a, in_qAB.b);
-        const AngularMomentum2 qCD00(0, 0, in_qCD.a, in_qCD.b);
 
         // 一度に計算するbra-ketに切り分ける
         this->bra_ = IJ.PS;
@@ -602,7 +612,6 @@ void DfEriEngine::calcGrad(const AngularMomentum2& in_qAB, const AngularMomentum
             this->ket_ = ket;
             
             this->calcGrad(qAB00, qCD00);
-            //this->copyResultsToOutputBuffer(qAB10, qCD00, this->WORK_A);
         }
         {
             const int base = block_KL * blocks.quot;
@@ -611,22 +620,19 @@ void DfEriEngine::calcGrad(const AngularMomentum2& in_qAB, const AngularMomentum
             this->ket_ = ket;
             
             this->calcGrad(qAB00, qCD00);
-            //this->copyResultsToOutputBuffer(qAB10, qCD00, this->WORK_A);
         }
 
         // transform 6D to 5D
-        const AngularMomentum2 qAB10(1, 0, in_qAB.a, in_qAB.b);
-        const AngularMomentum2 qAB01(0, 1, in_qAB.a, in_qAB.b);
-        const AngularMomentum2 qCD10(1, 0, in_qCD.a, in_qCD.b);
         this->transform6Dto5D(qAB10, qCD00, this->WORK_A);
         this->transform6Dto5D(qAB01, qCD00, this->WORK_B);
         this->transform6Dto5D(qAB00, qCD10, this->WORK_C);
+#ifdef DEBUG_CHECK_WORK_D
+        this->transform6Dto5D(qAB00, qCD01, this->WORK_D);
+#endif // DEBUG_CHECK_WORK_D
     }
     
-    // D'
+    // calculate D' from difference of sum of A', B', and C'.
     {
-        const AngularMomentum2 qAB00(0, 0, in_qAB.a, in_qAB.b);
-        const AngularMomentum2 qCD01(0, 1, in_qCD.a, in_qCD.b);
         this->compD(qAB00, qCD01);
     }
 }
@@ -654,6 +660,7 @@ void DfEriEngine::copyResultsToOutputBuffer(const AngularMomentum2& qAB,
                                             const AngularMomentum2& qCD,
                                             double* pOutput)
 {
+    assert(pOutput != NULL);
     const int a_bar = qAB.a_bar;
     const int b_bar = qAB.b_bar;
     const int a = qAB.a;
@@ -664,7 +671,7 @@ void DfEriEngine::copyResultsToOutputBuffer(const AngularMomentum2& qAB,
     const int d = qCD.b;
 
     const ERI_State ket_state(c_bar, d_bar, c, d, 0, 0, 0, 0);
-    const std::size_t ketStateIndex = ket_state.index();
+    const int ketStateIndex = ket_state.index();
     
     const TlAngularMomentumVectorSet amvsAbar(a_bar);
     const TlAngularMomentumVectorSet amvsBbar(b_bar);
@@ -712,6 +719,10 @@ void DfEriEngine::copyResultsToOutputBuffer(const AngularMomentum2& qAB,
                                     const TlAngularMomentumVector amvD = amvsD.get(iD);
                                     const int ket_index = this->index(amvCbar, amvDbar,
                                                                       amvC, amvD, amvQ);
+                                    assert(ketStateIndex < this->ERI_ket_.size());
+                                    assert(ket_index < this->ERI_ket_[ketStateIndex].size());
+                                    assert(bra_index < this->ERI_ket_[ketStateIndex][ket_index].size());
+                                    assert(index < OUTPUT_BUFFER_SIZE);
                                     pOutput[index] += this->ERI_ket_[ketStateIndex][ket_index][bra_index];
                                     ++index;
 
@@ -783,7 +794,7 @@ void DfEriEngine::transform6Dto5D(const AngularMomentum2& qAB,
     if (a == 2) {
         this->transform6Dto5D_i(I_, J_, K_, L_, J, K, L, pOutput, this->pTransformBuf_);
         I = 5;
-        const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
+        const int end = I_ * J_ * K_ * L_ * I * J * K * L;
         std::copy(this->pTransformBuf_,
                   this->pTransformBuf_ + end,
                   pOutput);
@@ -791,7 +802,7 @@ void DfEriEngine::transform6Dto5D(const AngularMomentum2& qAB,
     if (b == 2) {
         this->transform6Dto5D_j(I_, J_, K_, L_, I, K, L, pOutput, this->pTransformBuf_);
         J = 5;
-        const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
+        const int end = I_ * J_ * K_ * L_ * I * J * K * L;
         std::copy(this->pTransformBuf_,
                   this->pTransformBuf_ + end,
                   pOutput);
@@ -799,7 +810,7 @@ void DfEriEngine::transform6Dto5D(const AngularMomentum2& qAB,
     if (c == 2) {
         this->transform6Dto5D_k(I_, J_, K_, L_, I, J, L, pOutput, this->pTransformBuf_);
         K = 5;
-        const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
+        const int end = I_ * J_ * K_ * L_ * I * J * K * L;
         std::copy(this->pTransformBuf_,
                   this->pTransformBuf_ + end,
                   pOutput);
@@ -807,7 +818,40 @@ void DfEriEngine::transform6Dto5D(const AngularMomentum2& qAB,
     if (d == 2) {
         this->transform6Dto5D_l(I_, J_, K_, L_, I, J, K, pOutput, this->pTransformBuf_);
         L = 5;
-        const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
+        const int end = I_ * J_ * K_ * L_ * I * J * K * L;
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  pOutput);
+    }
+
+    if (a == 3) {
+        this->transform10Fto7F_i(I_, J_, K_, L_, J, K, L, pOutput, this->pTransformBuf_);
+        I = 7;
+        const int end = I_ * J_ * K_ * L_ * I * J * K * L;
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  pOutput);
+    }
+    if (b == 3) {
+        this->transform10Fto7F_j(I_, J_, K_, L_, I, K, L, pOutput, this->pTransformBuf_);
+        J = 7;
+        const int end = I_ * J_ * K_ * L_ * I * J * K * L;
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  pOutput);
+    }
+    if (c == 3) {
+        this->transform10Fto7F_k(I_, J_, K_, L_, I, J, L, pOutput, this->pTransformBuf_);
+        K = 7;
+        const int end = I_ * J_ * K_ * L_ * I * J * K * L;
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  pOutput);
+    }
+    if (d == 3) {
+        this->transform10Fto7F_l(I_, J_, K_, L_, I, J, K, pOutput, this->pTransformBuf_);
+        L = 7;
+        const int end = I_ * J_ * K_ * L_ * I * J * K * L;
         std::copy(this->pTransformBuf_,
                   this->pTransformBuf_ + end,
                   pOutput);
@@ -997,6 +1041,209 @@ void DfEriEngine::transform6Dto5D_l(const int I_, const int J_, const int K_, co
     }
 }
 
+void DfEriEngine::transform10Fto7F_i(const int I_, const int J_, const int K_, const int L_,
+                                         const int J, const int K, const int L,
+                                         const double* pInput, double* pOutput)
+{
+    const double route_23 = std::sqrt(2.0 / 3.0);
+    const double route_25 = std::sqrt(2.0 / 5.0);
+    const double route_1_15 = std::sqrt(1.0/15.0);
+
+    for (int i_ = 0; i_ < I_; ++i_) {
+        for (int j_ = 0; j_ < J_; ++j_) {
+            for (int k_ = 0; k_ < K_; ++k_) {
+                for (int l_ = 0; l_ < L_; ++l_) {
+                
+                    for (int j = 0; j < J; ++j) {
+                        for (int k = 0; k < K; ++k) {
+                            for (int l = 0; l < L; ++l) {
+                                const double xxx = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +0)*J +j)*K +k)*L + l];
+                                const double xxy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +1)*J +j)*K +k)*L + l];
+                                const double xxz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +2)*J +j)*K +k)*L + l];
+                                const double xyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +3)*J +j)*K +k)*L + l];
+                                const double xyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +4)*J +j)*K +k)*L + l];
+                                const double xzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +5)*J +j)*K +k)*L + l];
+                                const double yyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +6)*J +j)*K +k)*L + l];
+                                const double yyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +7)*J +j)*K +k)*L + l];
+                                const double yzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +8)*J +j)*K +k)*L + l];
+                                const double zzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*10 +9)*J +j)*K +k)*L + l];
+                                
+                                const int z3_7f      = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*7 +0)*J +j)*K +k)*L +l;
+                                const int xz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*7 +1)*J +j)*K +k)*L +l;
+                                const int yz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*7 +2)*J +j)*K +k)*L +l;
+                                const int x2y_y3_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*7 +3)*J +j)*K +k)*L +l;
+                                const int x3_xy2_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*7 +4)*J +j)*K +k)*L +l;
+                                const int xyz_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*7 +5)*J +j)*K +k)*L +l;
+                                const int x2z_y2z_7f = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*7 +6)*J +j)*K +k)*L +l;
+                                
+                                pOutput[z3_7f]       = 0.5 * route_1_15 * (5*zzz -3*(xxz + yyz + zzz));
+                                pOutput[xz2_7f]      = 0.25 * route_25 * (5*xzz -  (xxx + xyy + xzz));
+                                pOutput[yz2_7f]      = 0.25 * route_25 * (5*yzz -  (xxy + yyy + yzz));
+                                pOutput[x2y_y3_7f]   = 0.25 * route_23 * (3*xxy - yyy);
+                                pOutput[x3_xy2_7f]   = 0.25 * route_23 * (xxx - 3*xyy);
+                                pOutput[xyz_7f]      = xyz;
+                                pOutput[x2z_y2z_7f]  = 0.5 * (xxz - yyz);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void DfEriEngine::transform10Fto7F_j(const int I_, const int J_, const int K_, const int L_,
+                                         const int I, const int K, const int L,
+                                         const double* pInput, double* pOutput)
+{
+    const double route_23 = std::sqrt(2.0 / 3.0);
+    const double route_25 = std::sqrt(2.0 / 5.0);
+    const double route_1_15 = std::sqrt(1.0/15.0);
+
+    for (int i_ = 0; i_ < I_; ++i_) {
+        for (int j_ = 0; j_ < J_; ++j_) {
+            for (int k_ = 0; k_ < K_; ++k_) {
+                for (int l_ = 0; l_ < L_; ++l_) {
+                
+                    for (int i = 0; i < I; ++i) {
+                        for (int k = 0; k < K; ++k) {
+                            for (int l = 0; l < L; ++l) {
+                                const double xxx = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +0)*K +k)*L + l];
+                                const double xxy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +1)*K +k)*L + l];
+                                const double xxz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +2)*K +k)*L + l];
+                                const double xyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +3)*K +k)*L + l];
+                                const double xyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +4)*K +k)*L + l];
+                                const double xzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +5)*K +k)*L + l];
+                                const double yyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +6)*K +k)*L + l];
+                                const double yyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +7)*K +k)*L + l];
+                                const double yzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +8)*K +k)*L + l];
+                                const double zzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*10 +9)*K +k)*L + l];
+                                
+                                const int z3_7f      = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*7 +0)*K +k)*L +l;
+                                const int xz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*7 +1)*K +k)*L +l;
+                                const int yz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*7 +2)*K +k)*L +l;
+                                const int x2y_y3_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*7 +3)*K +k)*L +l;
+                                const int x3_xy2_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*7 +4)*K +k)*L +l;
+                                const int xyz_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*7 +5)*K +k)*L +l;
+                                const int x2z_y2z_7f = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*7 +6)*K +k)*L +l;
+                                
+                                pOutput[z3_7f]       = 0.5 * route_1_15 * (5*zzz -3*(xxz + yyz + zzz));
+                                pOutput[xz2_7f]      = 0.25 * route_25 * (5*xzz -  (xxx + xyy + xzz));
+                                pOutput[yz2_7f]      = 0.25 * route_25 * (5*yzz -  (xxy + yyy + yzz));
+                                pOutput[x2y_y3_7f]   = 0.25 * route_23 * (3*xxy - yyy);
+                                pOutput[x3_xy2_7f]   = 0.25 * route_23 * (xxx - 3*xyy);
+                                pOutput[xyz_7f]      = xyz;
+                                pOutput[x2z_y2z_7f]  = 0.5 * (xxz - yyz);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void DfEriEngine::transform10Fto7F_k(const int I_, const int J_, const int K_, const int L_,
+                                         const int I, const int J, const int L,
+                                         const double* pInput, double* pOutput)
+{
+    const double route_23 = std::sqrt(2.0 / 3.0);
+    const double route_25 = std::sqrt(2.0 / 5.0);
+    const double route_1_15 = std::sqrt(1.0/15.0);
+
+    for (int i_ = 0; i_ < I_; ++i_) {
+        for (int j_ = 0; j_ < J_; ++j_) {
+            for (int k_ = 0; k_ < K_; ++k_) {
+                for (int l_ = 0; l_ < L_; ++l_) {
+                
+                    for (int i = 0; i < I; ++i) {
+                        for (int j = 0; j < J; ++j) {
+                            for (int l = 0; l < L; ++l) {
+                                const double xxx = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +0)*L + l];
+                                const double xxy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +1)*L + l];
+                                const double xxz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +2)*L + l];
+                                const double xyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +3)*L + l];
+                                const double xyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +4)*L + l];
+                                const double xzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +5)*L + l];
+                                const double yyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +6)*L + l];
+                                const double yyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +7)*L + l];
+                                const double yzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +8)*L + l];
+                                const double zzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*10 +9)*L + l];
+                                
+                                const int z3_7f      = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*7 +0)*L +l;
+                                const int xz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*7 +1)*L +l;
+                                const int yz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*7 +2)*L +l;
+                                const int x2y_y3_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*7 +3)*L +l;
+                                const int x3_xy2_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*7 +4)*L +l;
+                                const int xyz_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*7 +5)*L +l;
+                                const int x2z_y2z_7f = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*7 +6)*L +l;
+                                
+                                pOutput[z3_7f]       = 0.5 * route_1_15 * (5*zzz -3*(xxz + yyz + zzz));
+                                pOutput[xz2_7f]      = 0.25 * route_25 * (5*xzz -  (xxx + xyy + xzz));
+                                pOutput[yz2_7f]      = 0.25 * route_25 * (5*yzz -  (xxy + yyy + yzz));
+                                pOutput[x2y_y3_7f]   = 0.25 * route_23 * (3*xxy - yyy);
+                                pOutput[x3_xy2_7f]   = 0.25 * route_23 * (xxx - 3*xyy);
+                                pOutput[xyz_7f]      = xyz;
+                                pOutput[x2z_y2z_7f]  = 0.5 * (xxz - yyz);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void DfEriEngine::transform10Fto7F_l(const int I_, const int J_, const int K_, const int L_,
+                                     const int I, const int J, const int K,
+                                     const double* pInput, double* pOutput)
+{
+    const double route_23 = std::sqrt(2.0 / 3.0);
+    const double route_25 = std::sqrt(2.0 / 5.0);
+    const double route_1_15 = std::sqrt(1.0/15.0);
+
+    for (int i_ = 0; i_ < I_; ++i_) {
+        for (int j_ = 0; j_ < J_; ++j_) {
+            for (int k_ = 0; k_ < K_; ++k_) {
+                for (int l_ = 0; l_ < L_; ++l_) {
+                
+                    for (int i = 0; i < I; ++i) {
+                        for (int j = 0; j < J; ++j) {
+                            for (int k = 0; k < K; ++k) {
+                                const double xxx = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 0];
+                                const double xxy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 1];
+                                const double xxz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 2];
+                                const double xyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 3];
+                                const double xyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 4];
+                                const double xzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 5];
+                                const double yyy = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 6];
+                                const double yyz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 7];
+                                const double yzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 8];
+                                const double zzz = pInput[((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*10 + 9];
+                                
+                                const int z3_7f      = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*7 +0;
+                                const int xz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*7 +1;
+                                const int yz2_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*7 +2;
+                                const int x2y_y3_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*7 +3;
+                                const int x3_xy2_7f  = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*7 +4;
+                                const int xyz_7f     = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*7 +5;
+                                const int x2z_y2z_7f = ((((((i_*J_ +j_)*K_ +k_)*L_ +l_)*I +i)*J +j)*K +k)*7 +6;
+                               
+                                pOutput[z3_7f]       = 0.5 * route_1_15 * (5*zzz -3*(xxz + yyz + zzz));
+                                pOutput[xz2_7f]      = 0.25 * route_25 * (5*xzz -  (xxx + xyy + xzz));
+                                pOutput[yz2_7f]      = 0.25 * route_25 * (5*yzz -  (xxy + yyy + yzz));
+                                pOutput[x2y_y3_7f]   = 0.25 * route_23 * (3*xxy - yyy);
+                                pOutput[x3_xy2_7f]   = 0.25 * route_23 * (xxx - 3*xyy);
+                                pOutput[xyz_7f]      = xyz;
+                                pOutput[x2z_y2z_7f]  = 0.5 * (xxz - yyz);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 void DfEriEngine::compD(const AngularMomentum2& qAB,
                         const AngularMomentum2& qCD)
@@ -1013,7 +1260,19 @@ void DfEriEngine::compD(const AngularMomentum2& qAB,
 
     const int maxSize = 3 * I * J * K * L;
     for (int i = 0; i < maxSize; ++i) {
-        this->WORK_D[i] = - (this->WORK_A[i] + this->WORK_B[i] + this->WORK_C[i]);
+        const double value_D = - (this->WORK_A[i] + this->WORK_B[i] + this->WORK_C[i]);
+#ifdef DEBUG_CHECK_WORK_D
+        {
+            const double calcd_D = this->WORK_D[i];
+            const double diff = calcd_D - value_D;
+            if (std::fabs(diff) > 1.0E-5) {
+                this->log_.debug(TlUtils::format("DfEriEngine::compD(): wrong D' value %4d-th calcd:% f, val:% f, diff:% f",
+                                                 i, calcd_D, value_D, diff));
+            }
+        }
+#endif // DEBUG_CHECK_WORK_D
+
+        this->WORK_D[i] = value_D;
     }
 }
 
@@ -1038,16 +1297,16 @@ void DfEriEngine::calc(const AngularMomentum2& qAB,
     // for debug
     {
         int count = 0;
-        for (ContractScalesType::const_iterator p = bra_contractScales_.begin();
-             p != bra_contractScales_.end(); ++p) {
+        for (ContractScalesVector::const_iterator p = bra_contractScales_vtr.begin();
+             p != bra_contractScales_vtr.end(); ++p) {
             std::cerr << TlUtils::format("choice[%d]: (a', b', p')=(%d, %d, %d)",
                                          count, p->a_prime, p->b_prime, p->p_prime)
                       << std::endl;
             ++count;
         }
         count = 0;
-        for (ContractScalesType::const_iterator p = ket_contractScales_.begin();
-             p != ket_contractScales_.end(); ++p) {
+        for (ContractScalesVector::const_iterator p = ket_contractScales_vtr.begin();
+             p != ket_contractScales_vtr.end(); ++p) {
             std::cerr << TlUtils::format("choice[%d]: (c', d', q')=(%d, %d, %d)",
                                          count, p->a_prime, p->b_prime, p->p_prime)
                       << std::endl;
@@ -1137,16 +1396,16 @@ void DfEriEngine::calc(const AngularMomentum2& qAB,
 void DfEriEngine::calcGrad(const AngularMomentum2& qAB,
                            const AngularMomentum2& qCD)
 {
+    const AngularMomentum2 qAB00(0, 0, qAB.a, qAB.b);
     const AngularMomentum2 qAB10(1, 0, qAB.a, qAB.b);
     const AngularMomentum2 qAB01(0, 1, qAB.a, qAB.b);
-    const AngularMomentum2 qAB00(0, 0, qAB.a, qAB.b);
-    const AngularMomentum2 qCD10(1, 0, qCD.a, qCD.b);
     const AngularMomentum2 qCD00(0, 0, qCD.a, qCD.b);
+    const AngularMomentum2 qCD10(1, 0, qCD.a, qCD.b);
+    const AngularMomentum2 qCD01(0, 1, qCD.a, qCD.b);
 
     this->calcE4CQ();
     this->calc0m();
     this->calcR0();
-
 
     // AB
     const ContractScalesVector bra_contractScales_vtr = this->choice(qAB10, qAB01);
@@ -1214,6 +1473,12 @@ void DfEriEngine::calcGrad(const AngularMomentum2& qAB,
     // C -----------------------------------------------------
     this->calcGrad_sub(qAB00, qCD10);
     this->copyResultsToOutputBuffer(qAB00, qCD10, this->WORK_C);
+
+    // D -----------------------------------------------------
+#ifdef DEBUG_CHECK_WORK_D
+    this->calcGrad_sub(qAB00, qCD01);
+    this->copyResultsToOutputBuffer(qAB00, qCD01, this->WORK_D);
+#endif // DEBUG_CHECK_WORK_D
 }
 
 
@@ -1223,7 +1488,7 @@ void DfEriEngine::calcGrad_sub(const AngularMomentum2& qAB,
     // choice
     const ContractScalesVector bra_contractScales_vtr = this->choice(qAB);
     const ContractScalesVector ket_contractScales_vtr = this->choice(qCD);
-    
+
     // contract
     this->contract(qAB, qCD,
                    bra_contractScales_vtr,
@@ -1251,7 +1516,6 @@ void DfEriEngine::calcGrad_sub(const AngularMomentum2& qAB,
                   0, 0, 0,
                   &(this->ERI_ket_));
     std::swap(this->AB_, this->CD_); // AB, CDを元に戻す(batchブロック再計算のため)
-
 }
 
 
@@ -1316,7 +1580,7 @@ void DfEriEngine::calcE4CQ()
 void DfEriEngine::calc0m()
 {
     const int sumOfAngularMomentums =  this->sumOfAngularMomentums_;
-    assert(sumOfAngularMomentums < ERI_L_MAX);
+    assert(sumOfAngularMomentums <= ERI_L_MAX);
     
     // Gm(T)を求める
     const TlFmt& fmt = TlFmt::getInstance();
@@ -1397,12 +1661,12 @@ void DfEriEngine::calcR0()
 }
 
 
-unsigned int DfEriEngine::indexRM(const TlAngularMomentumVector& amv, const int m) const
+int DfEriEngine::indexRM(const TlAngularMomentumVector& amv, const int m) const
 {
     const int L = amv.angularMomentum();
-    assert((L + m) < ERI_L_MAX);
-    const unsigned int amvBegin = L*(L+1)*(L+2)/6; // [0](m)から[L-1](m)までが何個あったか
-    const unsigned int index = ERI_NUM_OF_R_KINDS * m + amvBegin + amv.index();
+    assert((L + m) <= ERI_L_MAX);
+    const int amvBegin = L*(L+1)*(L+2)/6; // [0](m)から[L-1](m)までが何個あったか
+    const int index = ERI_NUM_OF_R_KINDS * m + amvBegin + amv.index();
     
     return index;
 }
@@ -1542,17 +1806,17 @@ void DfEriEngine::choice(const int a_bar, const int b_bar,
         this->choice(a_bar+1, b_bar-1, a,   b,   p,   a_prime,   b_prime,   p_prime,   pContractList);
         this->choice(a_bar,   b_bar-1, a-1, b,   p,   a_prime,   b_prime,   p_prime,   pContractList);
         this->choice(a_bar,   b_bar-1, a,   b-1, p,   a_prime,   b_prime,   p_prime,   pContractList);
+    } else if (a_bar > 0) {
+        // use eq.43
+        this->choice(a_bar-1, b_bar,   a+1, b,   p,   a_prime+1, b_prime,   p_prime,   pContractList);
+        this->choice(a_bar-1, b_bar,   a-1, b,   p,   a_prime,   b_prime,   p_prime,   pContractList);
+        this->choice(a_bar-1, b_bar,   a,   b,   p-1, a_prime+1, b_prime,   p_prime,   pContractList);
     } else if (b > 0) {
         // use eq.44
         this->choice(a_bar,   b_bar,   a+1, b-1, p,   a_prime,   b_prime,   p_prime,   pContractList);
         this->choice(a_bar,   b_bar,   a,   b-1, p,   a_prime,   b_prime,   p_prime,   pContractList);
         this->choice(a_bar-1, b_bar,   a,   b-1, p,   a_prime,   b_prime,   p_prime,   pContractList);
         this->choice(a_bar,   b_bar-1, a,   b-1, p,   a_prime,   b_prime,   p_prime,   pContractList);
-    } else if (a_bar > 0) {
-        // use eq.43
-        this->choice(a_bar-1, b_bar,   a+1, b,   p,   a_prime+1, b_prime,   p_prime,   pContractList);
-        this->choice(a_bar-1, b_bar,   a-1, b,   p,   a_prime,   b_prime,   p_prime,   pContractList);
-        this->choice(a_bar-1, b_bar,   a,   b,   p-1, a_prime+1, b_prime,   p_prime,   pContractList);
     } else if (a > 0) {
         // use eq.45 (p -> a)
         this->choice(a_bar,   b_bar,   a-1, b,   p-1, a_prime,   b_prime,   p_prime  , pContractList);
@@ -1572,10 +1836,10 @@ void DfEriEngine::choice(const int a_bar, const int b_bar,
 DfEriEngine::ContractScalesVector
 DfEriEngine::transContractScales_SetToVector(const ContractScalesSet& contractScales)
 {
-    const std::size_t size = contractScales.size();
+    const int size = contractScales.size();
     ContractScalesVector answer(size);
 
-    std::size_t index = 0;
+    int index = 0;
     ContractScalesSet::const_iterator pEnd = contractScales.end();
     for (ContractScalesSet::const_iterator p = contractScales.begin();  p != pEnd; ++p) {
         answer[index] = *p;
@@ -1595,7 +1859,7 @@ void DfEriEngine::contract(const AngularMomentum2& qAB,
     //this->nR_dash_.clear();
     
     // contract bra-
-    std::size_t nR_dash_index = 0;
+    int nR_dash_index = 0;
     const int max_bra_cs_index = bra_contractScales.size();
     for (int bra_cs_index = 0; bra_cs_index < max_bra_cs_index; ++bra_cs_index) {
         const int a_prime = bra_contractScales[bra_cs_index].a_prime;
@@ -1655,12 +1919,12 @@ void DfEriEngine::contract(const AngularMomentum2& qAB,
         this->get_contract_ket_coef_numerators(c_prime, d_prime, zeta_exp,
                                                &coef_numerators);
 
-        for (std::size_t i = 0; i < nR_dash_index; ++i) {
+        for (int i = 0; i < nR_dash_index; ++i) {
             ContractState cs = this->nR_dash_[i].cs;
             cs.setCDQ(c_prime, d_prime, q_prime);
             const std::vector<double>& values = this->nR_dash_[i].values;
 
-            const std::size_t cs_index = cs.index();
+            const int cs_index = cs.index();
             assert(cs_index < (ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_P_PRIME_MAX *
                                ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * 
                                ERI_NUM_OF_R_KINDS));
@@ -1693,7 +1957,7 @@ void DfEriEngine::contract(const AngularMomentum2& qAB,
 void DfEriEngine::contract_bra(const AngularMomentum2& qAB,
                                const TlAngularMomentumVector& r,
                                const int a_prime, const int b_prime, const int p_prime,
-                               const std::size_t nR_dash_index)
+                               const int nR_dash_index)
 {
     const int a = qAB.a;
     const int b = qAB.b;
@@ -1787,7 +2051,7 @@ void DfEriEngine::get_contract_ket_coef_numerators(const int c_prime,
 //         value += coef_numerators[KQ_index] * KQ_values[KQ_index];
 //     }
 
-//     const std::size_t cs_index = cs.index();
+//     const int cs_index = cs.index();
 //     assert(cs_index < (ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_P_PRIME_MAX *
 //                        ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_NUM_OF_R_KINDS));
 //     this->p_abpRcdq_[cs_index] = value;
@@ -1823,7 +2087,7 @@ void DfEriEngine::get_contract_ket_coef_numerators(const int c_prime,
 //         value += coef * KQ_values[KQ_index];
 //     }
 
-//     const std::size_t cs_index = cs.index();
+//     const int cs_index = cs.index();
 //     assert(cs_index < (ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_P_PRIME_MAX *
 //                        ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_P_PRIME_MAX * ERI_NUM_OF_R_KINDS));
 //     this->p_abpRcdq_[cs_index] = value;
@@ -1835,7 +2099,7 @@ void DfEriEngine::calcPQ(const AngularMomentum2& qAB,
                          const ContractScalesVector& bra_contractScales,
                          const ContractScalesVector& ket_contractScales)
 {
-    this->isCalcdERI_.clear();
+    std::fill(this->isCalcdERI_.begin(), this->isCalcdERI_.end(), 0);
     
     const int angularMomentumP =
           qAB.a + qAB.b 
@@ -1884,8 +2148,8 @@ void DfEriEngine::calcPQ(const AngularMomentum2& qAB,
             const ERI_State bra_state(a_bar, b_bar,
                                       a, b, p,
                                       a_prime, b_prime, p_prime);
-            const std::size_t braStateIndex = bra_state.index();
-            this->isCalcdERI_[bra_state] = true;
+            const int braStateIndex = bra_state.index();
+            this->isCalcdERI_[braStateIndex] = 1;
 
 // #ifdef DEBUG_CALC_PQ
 //             // for debug
@@ -1911,8 +2175,10 @@ void DfEriEngine::calcPQ(const AngularMomentum2& qAB,
 
                 // ket ---------------------------------------------------------
                 std::vector<double>& ket = this->ERI_bra_[braStateIndex][bra_index];
-                ket.resize(ERI_MAX_BATCH);
+                //ket.resize(ERI_MAX_BATCH);
+                ket.resize(max_ket_index);
                 int ket_index = 0;
+
                 const int max_ket_cs_index = ket_contractScales.size();
                 for (int ket_cs_index = 0; ket_cs_index < max_ket_cs_index; ++ket_cs_index) {
                     // const int c_prime = ket_contractScales[ket_cs_index].a_prime;
@@ -2030,7 +2296,8 @@ void DfEriEngine::transpose(const AngularMomentum2& qAB,
                             const AngularMomentum2& qCD,
                             const ContractScalesVector& ket_contractScales)
 {
-    this->isCalcdERI_.clear();
+    // this->isCalcdERI_.clear();
+    std::fill(this->isCalcdERI_.begin(), this->isCalcdERI_.end(), 0);
     
     const int angularMomentumQ =
           qCD.a + qCD.b
@@ -2045,7 +2312,7 @@ void DfEriEngine::transpose(const AngularMomentum2& qAB,
     const int b_prime = 0;
     const int p_prime = 0;
     const ERI_State bra_state(a_bar, b_bar, a, b, p, a_prime, b_prime, p_prime);
-    const std::size_t braStateIndex = bra_state.index();
+    const int braStateIndex = bra_state.index();
     assert(braStateIndex < ERI_NUM_OF_ERI_STATES);
     
     const int c = 0;
@@ -2087,8 +2354,8 @@ void DfEriEngine::transpose(const AngularMomentum2& qAB,
 
         for (int q = 0; q <= angularMomentumQ; ++q) {
             const ERI_State ket_state(c_bar, d_bar, c, d, q, c_prime, d_prime, q_prime);
-            const std::size_t ketStateIndex = ket_state.index();
-            this->isCalcdERI_[ket_state] = true;
+            const int ketStateIndex = ket_state.index();
+            this->isCalcdERI_[ketStateIndex] = 1;
 
 #ifdef DEBUG_HGP
             std::cerr << TlUtils::format("DfEriEngine::transpose(): set %s", ket_state.debugOut().c_str())
@@ -2188,7 +2455,7 @@ void DfEriEngine::calcERI(const int a_bar, const int b_bar,
                                      (int)this->isCalcdERI_.size()));
 #endif // DEBUG_HGP
 
-    if (this->isCalcdERI_[eriState] != true) {
+    if (this->isCalcdERI_[eriState.index()] == 0) {
         // recursive
         if (b_bar > 0) {
             // use eq.47
@@ -2233,7 +2500,7 @@ void DfEriEngine::calcERI(const int a_bar, const int b_bar,
             abort();
         }
         
-        this->isCalcdERI_[eriState] = true;
+        this->isCalcdERI_[eriState.index()] = 1;
     }
 }
 
@@ -2292,7 +2559,7 @@ void DfEriEngine::ERI_EQ44(const ERI_State eriState, EriDataType* pERI)
     const int numOfAmv_p = AMVS_p.size();
 
     const int numOfElements = numOfAmv_a_bar * numOfAmv_b_bar * numOfAmv_a * numOfAmv_b * numOfAmv_p;
-    const std::size_t stateIndex = eriState.index();
+    const int stateIndex = eriState.index();
     (*pERI)[stateIndex].resize(numOfElements);
 
 #ifdef CHECK_MAX_COUNT
@@ -2322,7 +2589,7 @@ void DfEriEngine::ERI_EQ44(const ERI_State eriState, EriDataType* pERI)
                     for (int amv_p_index = 0; amv_p_index < numOfAmv_p; ++amv_p_index) {
                         const TlAngularMomentumVector amv_p = AMVS_p.get(amv_p_index);
 
-                        const std::size_t index = this->index(amv_a_bar, amv_b_bar,
+                        const int index = this->index(amv_a_bar, amv_b_bar,
                                                               amv_a, amv_b, amv_p);
                         //(*pERI)[stateIndex][index].resize(this->ERI_batch_);
                         (*pERI)[stateIndex][index].resize(ERI_MAX_BATCH);
@@ -2330,18 +2597,18 @@ void DfEriEngine::ERI_EQ44(const ERI_State eriState, EriDataType* pERI)
                         // batch -----------------------------------------------
                         const ERI_State eriState1(a_bar, b_bar, a +1, b -1, p,
                                                   a_prime, b_prime, p_prime);
-                        const std::size_t eriState1_index = eriState1.index();
-                        const std::size_t index1 = this->index(amv_a_bar, amv_b_bar,
+                        const int eriState1_index = eriState1.index();
+                        const int index1 = this->index(amv_a_bar, amv_b_bar,
                                                                amv_a1p, amv_b1, amv_p);
 
                         const ERI_State eriState2(a_bar, b_bar, a, b -1, p,
                                                   a_prime, b_prime, p_prime);
-                        const std::size_t eriState2_index = eriState2.index();
-                        const std::size_t index2 = this->index(amv_a_bar, amv_b_bar,
+                        const int eriState2_index = eriState2.index();
+                        const int index2 = this->index(amv_a_bar, amv_b_bar,
                                                                amv_a, amv_b1, amv_p);
 
-                        std::size_t eriState3_index = 0;
-                        std::size_t index3 = 0;                        
+                        int eriState3_index = 0;
+                        int index3 = 0;                        
                         if (amv_a_bar1.isExist() == true) {
                             const ERI_State eriState3(a_bar -1, b_bar, a, b -1, p,
                                                       a_prime, b_prime, p_prime);
@@ -2350,8 +2617,8 @@ void DfEriEngine::ERI_EQ44(const ERI_State eriState, EriDataType* pERI)
                                                  amv_a, amv_b1, amv_p);
                         }
 
-                        std::size_t eriState4_index = 0;
-                        std::size_t index4 = 0;
+                        int eriState4_index = 0;
+                        int index4 = 0;
                         if (amv_b_bar1.isExist() == true) {
                             const ERI_State eriState4(a_bar, b_bar -1, a, b -1, p,
                                                       a_prime, b_prime, p_prime);
@@ -2359,8 +2626,10 @@ void DfEriEngine::ERI_EQ44(const ERI_State eriState, EriDataType* pERI)
                             index4 = this->index(amv_a_bar, amv_b_bar1,
                                                  amv_a, amv_b1, amv_p);
                         }
-                        
-                        for (int batch = 0; batch < this->ERI_batch_; ++batch) {
+
+                        const int batchSize = this->ERI_batch_;
+                        assert(batchSize < ERI_MAX_BATCH);
+                        for (int batch = 0; batch < batchSize; ++batch) {
 
                             double answer = 0.0;
                             
@@ -2444,7 +2713,7 @@ void DfEriEngine::ERI_EQ44_00xxx(const ERI_State eriState, EriDataType* pERI)
     const int numOfAmv_p = AMVS_p.size();
 
     const int numOfElements = numOfAmv_a_bar * numOfAmv_b_bar * numOfAmv_a * numOfAmv_b * numOfAmv_p;
-    const std::size_t stateIndex = eriState.index();
+    const int stateIndex = eriState.index();
     (*pERI)[stateIndex].resize(numOfElements);
 
 #ifdef CHECK_MAX_COUNT
@@ -2455,10 +2724,10 @@ void DfEriEngine::ERI_EQ44_00xxx(const ERI_State eriState, EriDataType* pERI)
     static const TlAngularMomentumVector amv_b_bar = AMVS_b_bar.get(0);
     const ERI_State eriState1(a_bar, b_bar, a +1, b -1, p,
                               a_prime, b_prime, p_prime);
-    const std::size_t eriState1_index = eriState1.index();
+    const int eriState1_index = eriState1.index();
     const ERI_State eriState2(a_bar, b_bar, a, b -1, p,
                               a_prime, b_prime, p_prime);
-    const std::size_t eriState2_index = eriState2.index();
+    const int eriState2_index = eriState2.index();
     const int batchSize = this->ERI_batch_;
     for (int amv_b_index = 0; amv_b_index < numOfAmv_b; ++amv_b_index) {
         const TlAngularMomentumVector amv_b = AMVS_b.get(amv_b_index);
@@ -2477,17 +2746,18 @@ void DfEriEngine::ERI_EQ44_00xxx(const ERI_State eriState, EriDataType* pERI)
             for (int amv_p_index = 0; amv_p_index < numOfAmv_p; ++amv_p_index) {
                 const TlAngularMomentumVector amv_p = AMVS_p.get(amv_p_index);
                 
-                const std::size_t index = this->index(amv_a_bar, amv_b_bar,
+                const int index = this->index(amv_a_bar, amv_b_bar,
                                                       amv_a, amv_b, amv_p);
                 (*pERI)[stateIndex][index].resize(ERI_MAX_BATCH);
                 
                 // batch -----------------------------------------------
-                const std::size_t index1 = this->index(amv_a_bar, amv_b_bar,
+                const int index1 = this->index(amv_a_bar, amv_b_bar,
                                                        amv_a1p, amv_b1, amv_p);
-                const std::size_t index2 = this->index(amv_a_bar, amv_b_bar,
+                const int index2 = this->index(amv_a_bar, amv_b_bar,
                                                        amv_a, amv_b1, amv_p);
                 
                 double* const answers = &((*pERI)[stateIndex][index][0]);
+                assert(batchSize < ERI_MAX_BATCH);
                 for (int batch = 0; batch < batchSize; ++batch) {
                     double value = 0.0;
                     
@@ -2538,7 +2808,7 @@ void DfEriEngine::ERI_EQ45(const ERI_State eriState, EriDataType* pERI)
     const int numOfAmv_p = AMVS_p.size();
 
     const int numOfElements = numOfAmv_a_bar * numOfAmv_b_bar * numOfAmv_a * numOfAmv_b * numOfAmv_p;
-    const std::size_t stateIndex = eriState.index();
+    const int stateIndex = eriState.index();
     (*pERI)[stateIndex].resize(numOfElements);
 
 #ifdef CHECK_MAX_COUNT
@@ -2570,14 +2840,14 @@ void DfEriEngine::ERI_EQ45(const ERI_State eriState, EriDataType* pERI)
                         const TlAngularMomentumVector amv_p1 = amv_p - this->E1_[i];
                         const TlAngularMomentumVector amv_p1p = amv_p + this->E1_[i];
                             
-                        const std::size_t index = this->index(amv_a_bar, amv_b_bar,
+                        const int index = this->index(amv_a_bar, amv_b_bar,
                                                               amv_a, amv_b, amv_p);
                         //(*pERI)[stateIndex][index].resize(this->ERI_batch_);
                         (*pERI)[stateIndex][index].resize(ERI_MAX_BATCH);
 
                         // betch -----------------------------------------------
-                        std::size_t eriState1_index = 0;
-                        std::size_t index1 = 0;
+                        int eriState1_index = 0;
+                        int index1 = 0;
                         if (amv_p1.isExist() == true) {
                             const ERI_State eriState1(a_bar, b_bar, a -1, b, p -1,
                                                       a_prime, b_prime, p_prime);
@@ -2589,18 +2859,18 @@ void DfEriEngine::ERI_EQ45(const ERI_State eriState, EriDataType* pERI)
 
                         const ERI_State eriState2(a_bar, b_bar, a -1, b, p +1,
                                                   a_prime, b_prime, p_prime +1);
-                        const std::size_t eriState2_index = eriState2.index();
-                        const std::size_t index2 = this->index(amv_a_bar, amv_b_bar,
+                        const int eriState2_index = eriState2.index();
+                        const int index2 = this->index(amv_a_bar, amv_b_bar,
                                                                amv_a1, amv_b, amv_p1p);
 
                         const ERI_State eriState3(a_bar, b_bar, a -1, b, p,
                                                   a_prime, b_prime +1, p_prime +1);
-                        const std::size_t eriState3_index = eriState3.index();
-                        const std::size_t index3 = this->index(amv_a_bar, amv_b_bar,
+                        const int eriState3_index = eriState3.index();
+                        const int index3 = this->index(amv_a_bar, amv_b_bar,
                                                                amv_a1, amv_b, amv_p);
 
-                        std::size_t eriState4_index = 0;
-                        std::size_t index4 = 0;
+                        int eriState4_index = 0;
+                        int index4 = 0;
                         if (amv_a_bar1.isExist() == true) {
                             const ERI_State eriState4(a_bar -1, b_bar, a -1, b, p,
                                                       a_prime, b_prime +1, p_prime +1);
@@ -2609,8 +2879,8 @@ void DfEriEngine::ERI_EQ45(const ERI_State eriState, EriDataType* pERI)
                                                  amv_a1, amv_b, amv_p);
                         }
 
-                        std::size_t eriState5_index = 0;
-                        std::size_t index5 = 0;
+                        int eriState5_index = 0;
+                        int index5 = 0;
                         if (amv_b_bar1.isExist() == true) {
                             const ERI_State eriState5(a_bar, b_bar -1, a -1, b, p,
                                                       a_prime, b_prime +1, p_prime +1);
@@ -2620,6 +2890,7 @@ void DfEriEngine::ERI_EQ45(const ERI_State eriState, EriDataType* pERI)
                         }
 
                         const int batchSize = this->ERI_batch_;
+                        assert(batchSize < ERI_MAX_BATCH);
                         for (int batch = 0; batch < batchSize; ++batch) {
                             double answer = 0.0;
                             
@@ -2722,7 +2993,7 @@ void DfEriEngine::ERI_EQ45_00x0x(const ERI_State eriState, EriDataType* pERI)
     const int numOfAmv_p = AMVS_p.size();
 
     const int numOfElements = numOfAmv_a_bar * numOfAmv_b_bar * numOfAmv_a * numOfAmv_b * numOfAmv_p;
-    const std::size_t stateIndex = eriState.index();
+    const int stateIndex = eriState.index();
     (*pERI)[stateIndex].resize(numOfElements);
 
 #ifdef CHECK_MAX_COUNT
@@ -2735,10 +3006,10 @@ void DfEriEngine::ERI_EQ45_00x0x(const ERI_State eriState, EriDataType* pERI)
     static const TlAngularMomentumVector amv_b = AMVS_b.get(0);
     const ERI_State eriState2(a_bar, b_bar, a -1, b, p +1,
                               a_prime, b_prime, p_prime +1);
-    const std::size_t eriState2_index = eriState2.index();
+    const int eriState2_index = eriState2.index();
     const ERI_State eriState3(a_bar, b_bar, a -1, b, p,
                               a_prime, b_prime +1, p_prime +1);
-    const std::size_t eriState3_index = eriState3.index();
+    const int eriState3_index = eriState3.index();
     const int batchSize = this->ERI_batch_;
     for (int amv_a_index = 0; amv_a_index < numOfAmv_a; ++amv_a_index) {
         const TlAngularMomentumVector amv_a = AMVS_a.get(amv_a_index);
@@ -2753,25 +3024,26 @@ void DfEriEngine::ERI_EQ45_00x0x(const ERI_State eriState, EriDataType* pERI)
             const TlAngularMomentumVector amv_p1 = amv_p - this->E1_[i];
             const TlAngularMomentumVector amv_p1p = amv_p + this->E1_[i];
             
-            const std::size_t index = this->index(amv_a_bar, amv_b_bar,
+            const int index = this->index(amv_a_bar, amv_b_bar,
                                                   amv_a, amv_b, amv_p);
             (*pERI)[stateIndex][index].resize(ERI_MAX_BATCH);
             
             // betch -----------------------------------------------
-            const std::size_t index2 = this->index(amv_a_bar, amv_b_bar,
+            const int index2 = this->index(amv_a_bar, amv_b_bar,
                                                    amv_a1, amv_b, amv_p1p);
-            const std::size_t index3 = this->index(amv_a_bar, amv_b_bar,
+            const int index3 = this->index(amv_a_bar, amv_b_bar,
                                                    amv_a1, amv_b, amv_p);
             double* const answers = &((*pERI)[stateIndex][index][0]);
 
             if (amv_p1.isExist() == true) {
                 const ERI_State eriState1(a_bar, b_bar, a -1, b, p -1,
                                           a_prime, b_prime, p_prime);
-                const std::size_t eriState1_index = eriState1.index();
-                const std::size_t index1 = this->index(amv_a_bar, amv_b_bar,
+                const int eriState1_index = eriState1.index();
+                const int index1 = this->index(amv_a_bar, amv_b_bar,
                                                        amv_a1, amv_b, amv_p1);
                 const double p_i = amv_p.get(i);
 
+                assert(batchSize < ERI_MAX_BATCH);
                 for (int batch = 0; batch < batchSize; ++batch) {
                     double value = 0.0;
                     
@@ -2791,6 +3063,7 @@ void DfEriEngine::ERI_EQ45_00x0x(const ERI_State eriState, EriDataType* pERI)
                     answers[batch] = value;
                 }
             } else {
+                assert(batchSize < ERI_MAX_BATCH);
                 for (int batch = 0; batch < batchSize; ++batch) {
                     double value = 0.0;
                 
@@ -2838,7 +3111,7 @@ void DfEriEngine::ERI_EQ45_00x00(const ERI_State eriState, EriDataType* pERI)
     static const int numOfAmv_p = 1; // AMVS_p.size();
 
     const int numOfElements = numOfAmv_a_bar * numOfAmv_b_bar * numOfAmv_a * numOfAmv_b * numOfAmv_p;
-    const std::size_t stateIndex = eriState.index();
+    const int stateIndex = eriState.index();
     (*pERI)[stateIndex].resize(numOfElements);
 
 #ifdef CHECK_MAX_COUNT
@@ -2852,11 +3125,13 @@ void DfEriEngine::ERI_EQ45_00x00(const ERI_State eriState, EriDataType* pERI)
     static const TlAngularMomentumVector amv_p = AMVS_p.get(0);
     const ERI_State eriState2(a_bar, b_bar, a -1, b, p +1,
                               a_prime, b_prime, p_prime +1);
-    const std::size_t eriState2_index = eriState2.index();
+    const int eriState2_index = eriState2.index();
     const ERI_State eriState3(a_bar, b_bar, a -1, b, p,
                               a_prime, b_prime +1, p_prime +1);
-    const std::size_t eriState3_index = eriState3.index();
+    const int eriState3_index = eriState3.index();
+
     const int batchSize = this->ERI_batch_;
+    assert(batchSize < ERI_MAX_BATCH);
     for (int amv_a_index = 0; amv_a_index < numOfAmv_a; ++amv_a_index) {
         const TlAngularMomentumVector amv_a = AMVS_a.get(amv_a_index);
         const int i = this->initiativeRM(amv_a);
@@ -2867,14 +3142,14 @@ void DfEriEngine::ERI_EQ45_00x00(const ERI_State eriState, EriDataType* pERI)
 
         const TlAngularMomentumVector amv_p1p = amv_p + this->E1_[i];
             
-        const std::size_t index = this->index(amv_a_bar, amv_b_bar,
+        const int index = this->index(amv_a_bar, amv_b_bar,
                                               amv_a, amv_b, amv_p);
         (*pERI)[stateIndex][index].resize(ERI_MAX_BATCH);
             
         // betch -----------------------------------------------
-        const std::size_t index2 = this->index(amv_a_bar, amv_b_bar,
+        const int index2 = this->index(amv_a_bar, amv_b_bar,
                                                amv_a1, amv_b, amv_p1p);
-        const std::size_t index3 = this->index(amv_a_bar, amv_b_bar,
+        const int index3 = this->index(amv_a_bar, amv_b_bar,
                                                amv_a1, amv_b, amv_p);
         
         double* const answers = &((*pERI)[stateIndex][index][0]);
@@ -2948,13 +3223,15 @@ void DfEriEngine::ERI_EQ46(const ERI_State eriState, EriDataType* pERI)
                     for (int amv_p_index = 0; amv_p_index < numOfAmv_p; ++amv_p_index) {
                         const TlAngularMomentumVector amv_p = AMVS_p.get(amv_p_index);
 
-                        const std::size_t index = this->index(amv_a_bar, amv_b_bar,
+                        const int index = this->index(amv_a_bar, amv_b_bar,
                                                               amv_a, amv_b, amv_p);
                         //(*pERI)[eriState.index()][index].resize(this->ERI_batch_);
                         (*pERI)[eriState.index()][index].resize(ERI_MAX_BATCH);
 
                         // betch -----------------------------------------------
-                        for (int batch = 0; batch < this->ERI_batch_; ++batch) {
+                        const int batchSize = this->ERI_batch_;
+                        assert(batchSize < ERI_MAX_BATCH);
+                        for (int batch = 0; batch < batchSize; ++batch) {
                             double answer = 0.0;
                             
                             const TlAngularMomentumVector amv_a_bar1 = amv_a_bar - this->E1_[i];
@@ -2965,7 +3242,7 @@ void DfEriEngine::ERI_EQ46(const ERI_State eriState, EriDataType* pERI)
                                 const TlAngularMomentumVector amv_p1p = amv_p + this->E1_[i];
                                 const ERI_State eriState1(a_bar -1, b_bar, a, b, p +1,
                                                           a_prime +1, b_prime, p_prime +1);
-                                const std::size_t index1 = this->index(amv_a_bar1, amv_b_bar,
+                                const int index1 = this->index(amv_a_bar1, amv_b_bar,
                                                                        amv_a, amv_b, amv_p1p);
                                 //const double value1 = (*pERI)[eriState1][index1][batch];
                                 const double value1 = (*pERI)[eriState1.index()][index1][batch];
@@ -2988,7 +3265,7 @@ void DfEriEngine::ERI_EQ46(const ERI_State eriState, EriDataType* pERI)
                             if (amv_a1.isExist() == true) {
                                 const ERI_State eriState2(a_bar -1, b_bar, a -1, b, p,
                                                           a_prime, b_prime, p_prime);
-                                const std::size_t index2 = this->index(amv_a_bar1, amv_b_bar,
+                                const int index2 = this->index(amv_a_bar1, amv_b_bar,
                                                                        amv_a1, amv_b, amv_p);
                                 //const double value2 = (*pERI)[eriState2][index2][batch];
                                 const double value2 = (*pERI)[eriState2.index()][index2][batch];
@@ -3010,7 +3287,7 @@ void DfEriEngine::ERI_EQ46(const ERI_State eriState, EriDataType* pERI)
                             {
                                 const ERI_State eriState3(a_bar -1, b_bar, a, b, p,
                                                           a_prime +1, b_prime +1, p_prime +1);
-                                const std::size_t index3 = this->index(amv_a_bar1, amv_b_bar,
+                                const int index3 = this->index(amv_a_bar1, amv_b_bar,
                                                                        amv_a, amv_b, amv_p);
                                 //const double value3 = (*pERI)[eriState3][index3][batch];
                                 const double value3 = (*pERI)[eriState3.index()][index3][batch];
@@ -3033,7 +3310,7 @@ void DfEriEngine::ERI_EQ46(const ERI_State eriState, EriDataType* pERI)
                             if (amv_a_bar2.isExist() == true) {
                                 const ERI_State eriState4(a_bar -2, b_bar, a, b, p,
                                                           a_prime +1, b_prime +1, p_prime +1);
-                                const std::size_t index4 = this->index(amv_a_bar2, amv_b_bar,
+                                const int index4 = this->index(amv_a_bar2, amv_b_bar,
                                                                        amv_a, amv_b, amv_p);
                                 //answer -= (amv_a_bar.get(i) -1.0) * (*pERI)[eriState4][index4][batch];
                                 answer -= (amv_a_bar.get(i) -1.0) * (*pERI)[eriState4.index()][index4][batch];
@@ -3044,7 +3321,7 @@ void DfEriEngine::ERI_EQ46(const ERI_State eriState, EriDataType* pERI)
                             if (amv_b_bar1.isExist() == true) {
                                 const ERI_State eriState5(a_bar -1, b_bar -1, a, b, p,
                                                           a_prime +1, b_prime +1, p_prime +1);
-                                const std::size_t index5 = this->index(amv_a_bar1, amv_b_bar1,
+                                const int index5 = this->index(amv_a_bar1, amv_b_bar1,
                                                                        amv_a, amv_b, amv_p);
                                 //answer += amv_b_bar.get(i) * (*pERI)[eriState5][index5][batch];
                                 answer += amv_b_bar.get(i) * (*pERI)[eriState5.index()][index5][batch];
@@ -3114,13 +3391,15 @@ void DfEriEngine::ERI_EQ43(const ERI_State eriState, EriDataType* pERI)
                     for (int amv_p_index = 0; amv_p_index < numOfAmv_p; ++amv_p_index) {
                         const TlAngularMomentumVector amv_p = AMVS_p.get(amv_p_index);
 
-                        const std::size_t index = this->index(amv_a_bar, amv_b_bar,
+                        const int index = this->index(amv_a_bar, amv_b_bar,
                                                               amv_a, amv_b, amv_p);
                         //(*pERI)[eriState.index()][index].resize(this->ERI_batch_);
                         (*pERI)[eriState.index()][index].resize(ERI_MAX_BATCH);
 
                         // betch -----------------------------------------------
-                        for (int batch = 0; batch < this->ERI_batch_; ++batch) {
+                        const int batchSize = this->ERI_batch_;
+                        assert(batchSize < ERI_MAX_BATCH);
+                        for (int batch = 0; batch < batchSize; ++batch) {
                             double answer = 0.0;
                             
                             const TlAngularMomentumVector amv_a_bar1 = amv_a_bar - this->E1_[i];
@@ -3131,7 +3410,7 @@ void DfEriEngine::ERI_EQ43(const ERI_State eriState, EriDataType* pERI)
                                 const TlAngularMomentumVector amv_a1p = amv_a + this->E1_[i];
                                 const ERI_State eriState1(a_bar -1, b_bar, a +1, b, p,
                                                           a_prime +1, b_prime, p_prime);
-                                const std::size_t index1 = this->index(amv_a_bar1, amv_b_bar,
+                                const int index1 = this->index(amv_a_bar1, amv_b_bar,
                                                                        amv_a1p, amv_b, amv_p);
                                 //const double value1 = (*pERI)[eriState1][index1][batch];
                                 const double value1 = (*pERI)[eriState1.index()][index1][batch];
@@ -3154,7 +3433,7 @@ void DfEriEngine::ERI_EQ43(const ERI_State eriState, EriDataType* pERI)
                             if (amv_a1.isExist() == true) {
                                 const ERI_State eriState2(a_bar -1, b_bar, a -1, b, p,
                                                           a_prime, b_prime, p_prime);
-                                const std::size_t index2 = this->index(amv_a_bar1, amv_b_bar,
+                                const int index2 = this->index(amv_a_bar1, amv_b_bar,
                                                                        amv_a1, amv_b, amv_p);
                                 //const double value2 = (*pERI)[eriState2][index2][batch];
                                 const double value2 = (*pERI)[eriState2.index()][index2][batch];
@@ -3177,7 +3456,7 @@ void DfEriEngine::ERI_EQ43(const ERI_State eriState, EriDataType* pERI)
                             if (amv_p1.isExist() == true) {
                                 const ERI_State eriState3(a_bar -1, b_bar, a, b, p -1,
                                                           a_prime +1, b_prime, p_prime);
-                                const std::size_t index3 = this->index(amv_a_bar1, amv_b_bar,
+                                const int index3 = this->index(amv_a_bar1, amv_b_bar,
                                                                        amv_a, amv_b, amv_p1);
                                 //const double value3 = (*pERI)[eriState3][index3][batch];
                                 const double value3 = (*pERI)[eriState3.index()][index3][batch];
@@ -3259,13 +3538,15 @@ void DfEriEngine::ERI_EQ47(const ERI_State eriState, EriDataType* pERI)
                     for (int amv_p_index = 0; amv_p_index < numOfAmv_p; ++amv_p_index) {
                         const TlAngularMomentumVector amv_p = AMVS_p.get(amv_p_index);
 
-                        const std::size_t index = this->index(amv_a_bar, amv_b_bar,
+                        const int index = this->index(amv_a_bar, amv_b_bar,
                                                               amv_a, amv_b, amv_p);
                         //(*pERI)[eriState.index()][index].resize(this->ERI_batch_);
                         (*pERI)[eriState.index()][index].resize(ERI_MAX_BATCH);
 
                         // betch -----------------------------------------------
-                        for (int batch = 0; batch < this->ERI_batch_; ++batch) {
+                        const int batchSize = this->ERI_batch_;
+                        assert(batchSize < ERI_MAX_BATCH);
+                        for (int batch = 0; batch < batchSize; ++batch) {
                             double answer = 0.0;
                             
                             const TlAngularMomentumVector amv_b_bar1 = amv_b_bar - this->E1_[i];
@@ -3276,7 +3557,7 @@ void DfEriEngine::ERI_EQ47(const ERI_State eriState, EriDataType* pERI)
                                 const TlAngularMomentumVector amv_p1p = amv_p + this->E1_[i];
                                 const ERI_State eriState1(a_bar, b_bar -1, a, b, p +1,
                                                           a_prime, b_prime, p_prime);
-                                const std::size_t index1 = this->index(amv_a_bar, amv_b_bar1,
+                                const int index1 = this->index(amv_a_bar, amv_b_bar1,
                                                                        amv_a, amv_b, amv_p1p);
                                 const double value1 = (*pERI)[eriState1.index()][index1][batch];
 #ifdef DEBUG_EQ47
@@ -3298,7 +3579,7 @@ void DfEriEngine::ERI_EQ47(const ERI_State eriState, EriDataType* pERI)
                             {
                                 const ERI_State eriState2(a_bar +1, b_bar -1, a, b, p,
                                                           a_prime, b_prime, p_prime);
-                                const std::size_t index2 = this->index(amv_a_bar1p, amv_b_bar1,
+                                const int index2 = this->index(amv_a_bar1p, amv_b_bar1,
                                                                        amv_a, amv_b, amv_p);
                                 const double value2 = (*pERI)[eriState2.index()][index2][batch];
 #ifdef DEBUG_EQ47
@@ -3320,7 +3601,7 @@ void DfEriEngine::ERI_EQ47(const ERI_State eriState, EriDataType* pERI)
                             if (amv_a1.isExist() == true) {
                                 const ERI_State eriState3(a_bar, b_bar -1, a -1, b, p,
                                                           a_prime, b_prime, p_prime);
-                                const std::size_t index3 = this->index(amv_a_bar, amv_b_bar1,
+                                const int index3 = this->index(amv_a_bar, amv_b_bar1,
                                                                        amv_a1, amv_b, amv_p);
                                 const double value3 = (*pERI)[eriState3.index()][index3][batch];
 #ifdef DEBUG_EQ47
@@ -3342,7 +3623,7 @@ void DfEriEngine::ERI_EQ47(const ERI_State eriState, EriDataType* pERI)
                             if (amv_b1.isExist() == true) {
                                 const ERI_State eriState4(a_bar, b_bar -1, a, b -1, p,
                                                           a_prime, b_prime, p_prime);
-                                const std::size_t index4 = this->index(amv_a_bar, amv_b_bar1,
+                                const int index4 = this->index(amv_a_bar, amv_b_bar1,
                                                                        amv_a, amv_b1, amv_p);
                                 //answer -= amv_b.get(i) * (*pERI)[eriState4][index4][batch];
                                 answer -= amv_b.get(i) * (*pERI)[eriState4.index()][index4][batch];

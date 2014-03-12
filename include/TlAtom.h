@@ -46,6 +46,8 @@ public:
     /// 原子記号を返す
     inline std::string getSymbol() const;
 
+    double getStdWeight() const;
+
     /// Van der Waals 半径を返す
     double vdwr() const;
 
@@ -96,6 +98,9 @@ private:
 
     // atomic symbols in order of element numbers
     static const char* m_sSymbols[];
+
+    // atomic standard weight
+    static const double stdAtomicWeight_[];
 
     // Van der Waals radii of atoms according to their types
     static const double m_dVdw_radii[];
@@ -185,6 +190,10 @@ inline std::string TlAtom::getSymbol() const
     return std::string(TlAtom::m_sSymbols[this->m_element]);
 }
 
+inline double TlAtom::getStdWeight() const
+{
+    return stdAtomicWeight_[this->m_element];
+}
 
 inline double TlAtom::vdwr() const
 {
