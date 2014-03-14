@@ -90,42 +90,31 @@ void DfInitialGuessHuckel::createGuess()
 
     // P
     switch (this->m_nMethodType) {
-    case METHOD_RKS: {
-        const TlVector occ = this->createOccupation(RUN_RKS);
-        this->saveCMatrix(RUN_RKS, 0, C);
-        this->makeDensityMatrix();
+    case METHOD_RKS: 
+        {
+            const TlVector occ = this->createOccupation(RUN_RKS);
+            this->saveCMatrix(RUN_RKS, 0, C);
+            this->makeDensityMatrix();
+        }
+        break;
 
-        // SymmetricMatrixType P, P1, P2;
-        // this->generatePMatrix(C, occ, P1, P2);
-        // P = 2.0 * P1;
-        // P += P2;
-        // DfObject::savePpqMatrix(RUN_RKS, 0, P);
-    }
-    break;
-
-    case METHOD_UKS: {
-        const TlVector occA = this->createOccupation(RUN_UKS_ALPHA);
-        const TlVector occB = this->createOccupation(RUN_UKS_BETA);
-        this->saveCMatrix(RUN_UKS_ALPHA, 0, C);
-        this->saveCMatrix(RUN_UKS_BETA, 0, C);
-        this->makeDensityMatrix();
-
-        // SymmetricMatrixType P, P1, P2;
-        // this->generatePMatrix(C, occA, P1, P2);
-        // P = 2.0 * P1;
-        // P += P2;
-        // DfObject::savePpqMatrix(RUN_UKS_ALPHA, 0, P);
-
-        // this->generatePMatrix(C, occB, P1, P2);
-        // P = 2.0 * P1;
-        // P += P2;
-        // DfObject::savePpqMatrix(RUN_UKS_BETA, 0, P);
-    }
-    break;
+    case METHOD_UKS: 
+        {
+            const TlVector occA = this->createOccupation(RUN_UKS_ALPHA);
+            const TlVector occB = this->createOccupation(RUN_UKS_BETA);
+            this->saveCMatrix(RUN_UKS_ALPHA, 0, C);
+            this->saveCMatrix(RUN_UKS_BETA, 0, C);
+            this->makeDensityMatrix();
+        }
+        break;
 
     case METHOD_ROKS:
-        this->log_.critical("to implement");
-        abort();
+        {
+            const TlVector occA = this->createOccupation(RUN_ROKS_CLOSED);
+            const TlVector occB = this->createOccupation(RUN_ROKS_OPEN);
+            this->saveCMatrix(RUN_ROKS, 0, C);
+            this->makeDensityMatrix();
+        }
         break;
 
     default:

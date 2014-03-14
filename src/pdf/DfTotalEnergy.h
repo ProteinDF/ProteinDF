@@ -143,15 +143,13 @@ void DfTotalEnergy::exec_template()
     case METHOD_UKS:
         PpqA = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_UKS_ALPHA, this->m_nIteration);
         PpqB = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_UKS_BETA,  this->m_nIteration);
-        Ppq = PpqA;
-        Ppq += PpqB;
+        Ppq = PpqA + PpqB;
         break;
 
     case METHOD_ROKS:
-        PpqA = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSE, this->m_nIteration);
-        PpqB = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN,  this->m_nIteration);
-        Ppq = PpqA;
-        Ppq += PpqB;
+        PpqB = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration);
+        PpqA = PpqB + DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN,  this->m_nIteration);
+        Ppq = PpqA + PpqB;
         break;
 
     default:
@@ -242,25 +240,29 @@ void DfTotalEnergy::exec_template()
             break;
             
         case METHOD_ROKS:
-            if ((this->m_sXCFunctional == "xalpha") || (this->m_sXCFunctional == "gxalpha")) {
-                const VectorType epsa = this->getEps<VectorType>(RUN_UKS_ALPHA);
-                const VectorType epsb = this->getEps<VectorType>(RUN_UKS_BETA);
-                const double E_Exc_alpha =
-                    this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, epsa);
-                const double E_Exc_beta  =
-                    this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, epsb);
-                
-                this->m_dExc = E_Exc_alpha + E_Exc_beta;
-            } else {
+            {
                 if (this->m_bIsXCFitting == true) {
-                    const VectorType eps = this->getEps<VectorType>(RUN_UKS_ALPHA);
-                    this->m_dExc = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, eps);
+                    const VectorType Eps_closed = 0.5 * this->getEps<VectorType>(RUN_ROKS_CLOSED);
+                    const VectorType Eps_open = this->getEps<VectorType>(RUN_ROKS_CLOSED);
+                    const VectorType EpsA = Eps_closed + Eps_open;
+                    const VectorType EpsB = Eps_closed;
+                    this->m_dExc  = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(PpqA, EpsA);
+                    this->m_dExc += this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(PpqB, EpsB);
                 } else {
-                    DfXCFunctional dfXCFunctional(this->pPdfParam_);
-                    this->m_dExc = dfXCFunctional.getEnergy();
-                    if (this->enableGrimmeDispersion_ == true) {
-                        this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
+                    if (this->XC_engine_ != XC_ENGINE_GRID) {
+                        this->m_dExc  = this->calcExc(RUN_ROKS_ALPHA, PpqA);
+                        this->m_dExc += this->calcExc(RUN_ROKS_BETA,  PpqB);
+                    } else {
+                        DfXCFunctional dfXCFunctional(this->pPdfParam_);
+                        this->m_dExc = dfXCFunctional.getEnergy();
+                        if (this->enableGrimmeDispersion_ == true) {
+                            this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
+                        }
                     }
+                    
+                    this->E_KA_ = this->calcK(RUN_ROKS_ALPHA, PpqA);
+                    this->E_KB_ = this->calcK(RUN_ROKS_BETA,  PpqB);
+                    this->K_term_ = this->E_KA_ + this->E_KB_;
                 }
             }
             break;
@@ -314,24 +316,18 @@ SymmetricMatrixType DfTotalEnergy::getPpq(const METHOD_TYPE methodType)
     case METHOD_ROKS:
         {
             SymmetricMatrixType P2pq;
-            // P1pq matrix for alpha spin
             {
-                //Ppq.load(this->getP1pqMatrixPath(RUN_ROKS, this->m_nIteration));
-                Ppq = DfObject::getPCMatrix<SymmetricMatrixType>(this->m_nIteration);
+                Ppq = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration);
                 if (Ppq.getNumOfRows() != this->m_nNumOfAOs || Ppq.getNumOfCols() != this->m_nNumOfAOs) {
                     CnErr.abort("DfTotalEnergy", "DfTotalEnergyMain", "", "program error");
                 }
             }
-            // P2pq matrix for beta spin
             {
-                //P2pq.load(this->getP2pqMatrixPath(RUN_ROKS, this->m_nIteration));
-                P2pq = DfObject::getPOMatrix<SymmetricMatrixType>(this->m_nIteration);
+                P2pq = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, this->m_nIteration);
                 if (P2pq.getNumOfRows() != this->m_nNumOfAOs || P2pq.getNumOfCols() != this->m_nNumOfAOs) {
                     CnErr.abort("DfTotalEnergy", "DfTotalEnergyMain", "", "program error");
                 }
             }
-            // Ppq matrix for alpha + beta spin
-            Ppq *= 2.0;
             Ppq += P2pq;
         }
         break;

@@ -204,219 +204,175 @@ TlVector DfDmatrix::getOccupationUsingOverlap(DfObject::RUN_TYPE runType)
 template<typename MatrixType, typename SymmetricMatrixType>
 TlVector DfDmatrix::getOccupationUsingProjection(const DfObject::RUN_TYPE runType)
 {
-    this->log_.info("orbital_overlap_method is mo-projection\n");
+    this->log_.info("orbital_overlap_method is mo-projection");
 
-    const int nNumOfMOs = this->m_nNumOfMOs;
-    //const int nNumOfAOs = this->m_nNumOfAOs;
+    const index_type numOfMOs = this->m_nNumOfMOs;
 
-    TlVector prevOcc = this->getOccupation(runType);
-    TlVector currOcc(this->m_nNumOfMOs);
+    // read molecular orbital occupation of (n-1) SCF iteration
+    // TlVector prevOcc = this->getOccupation(runType);
+    // {
+    //     int num_mo_closed  = 0;
+    //     int num_mo_open    = 0;
+    //     int num_mo_virtual = 0;
+    //     for (index_type k = 0; k < numOfMOs; ++k) {
+    //         if (std::fabs(prevOcc[k] -2.00) < 1.0e-10) {
+    //             ++num_mo_closed;
+    //         } else if (std::fabs(prevOcc[k] -1.00) < 1.0e-10) {
+    //             ++num_mo_open;
+    //         } else if (std::fabs(prevOcc[k]) < 1.0e-10) {
+    //             ++num_mo_virtual;
+    //         }
+    //     }
+    //     this->log_.info(TlUtils::format(" closed  orbital = %5ld", num_mo_closed));
+    //     this->log_.info(TlUtils::format(" open    orbital = %5ld", num_mo_open));
+    //     this->log_.info(TlUtils::format(" virtual orbital = %5ld", num_mo_virtual));
+    // }
 
-//     if (((this->m_nIteration == 1) &&
-//          !((this->initialGuessType_ == GUESS_LCAO || this->initialGuessType_ == GUESS_HUCKEL) &&
-//            orbital_overlap_first == "on"))) {
-
-//         this->logger(" ... but ( iteration==1 || !(scf_start_guess==\"lcao\" && orbital_overlap_first==\"on\") ) is TRUE, skipping\n");
-//         currOcc = prevOcc;
-//     } else
-    {
-        // read molecular orbital occupation of (n-1) SCF iteration
-        int num_mo_closed  = 0;
-        int num_mo_open    = 0;
-        int num_mo_virtual = 0;
-        for (int k = 0; k < nNumOfMOs; ++k) {
-            if (std::fabs(prevOcc[k] -2.00) < 1.0e-10) {
-                num_mo_closed++;
-            } else if (std::fabs(prevOcc[k] -1.00) < 1.0e-10) {
-                num_mo_open++;
-            } else if (std::fabs(prevOcc[k]) < 1.0e-10) {
-                num_mo_virtual++;
-            }
+    // read molecular orbital ^(n)
+    MatrixType C;
+    C = DfObject::getCMatrix<MatrixType>(runType, this->m_nIteration);
+    
+    MatrixType Ct = C;
+    Ct.transpose();
+    
+    SymmetricMatrixType S;
+    S = DfObject::getSpqMatrix<SymmetricMatrixType>();
+    
+    // calculation of projection diagonal
+    TlVector pd(numOfMOs);
+    
+    // read density matrix of (n-1) SCF iteration
+    const SymmetricMatrixType D = DfObject::getPpqMatrix<SymmetricMatrixType>(runType, this->m_nIteration -1);
+    
+    const MatrixType SDS = S * D * S;
+    
+    // diagonal
+    const MatrixType judge = Ct * SDS * C;
+    for (index_type i = 0; i < numOfMOs; ++i) {
+        pd[i] = judge.get(i, i);
+    }
+    
+    for (index_type i=0; i < numOfMOs; ++i) {
+        if (pd[i] < 0.0) {
+            pd[i] *= -1.0;
         }
-
-        this->log_.info(TlUtils::format(" closed  orbital = %5ld", num_mo_closed));
-        this->log_.info(TlUtils::format(" open    orbital = %5ld", num_mo_open));
-        this->log_.info(TlUtils::format(" virtual orbital = %5ld", num_mo_virtual));
-
-        // read molecular orbital ^(n)
-        MatrixType C;
-        C = DfObject::getCMatrix<MatrixType>(runType, this->m_nIteration);
-
-        MatrixType Ct = C;
-        Ct.transpose();
-        
-        SymmetricMatrixType S;
-        S = DfObject::getSpqMatrix<SymmetricMatrixType>();
-
-        // calculation of projection diagonal
-        // projection diagonal for closed part
-        TlVector pd_c(nNumOfMOs);
-        if (num_mo_closed != 0) {
-            // read density matrix of (n-1) SCF iteration
-            SymmetricMatrixType D = DfObject::getPCMatrix<SymmetricMatrixType>(this->m_nIteration -1);
-
-            // S * Dc * S
-            const MatrixType SDS = S * D * S;
-
-            // diagonal
-            const MatrixType judge = Ct * SDS * C;
-            for (int i = 0; i < nNumOfMOs; ++i) {
-                pd_c[i] = judge.get(i, i);
-            }
-        }
-
-        // projection diagonal for open part
-        TlVector pd_o(this->m_nNumOfMOs);
-        if (num_mo_open != 0) {
-            // read density matrix of (n-1) SCF iteration
-            SymmetricMatrixType D = DfObject::getPOMatrix<SymmetricMatrixType>(this->m_nIteration -1);
-
-            // S * Do * S
-            const MatrixType SDS = S * D * S;
-           
-            // diagonal
-            const MatrixType judge = Ct * SDS * C;
-            for (int i = 0; i < nNumOfMOs; ++i) {
-                pd_o[i] = judge.get(i, i);
-            }
-        }
-
-        for (int i=0; i < nNumOfMOs; ++i) {
-            if (pd_c[i] < 0) {
-                pd_c[i] *= -1;
-            }
-            if (pd_o[i] < 0) {
-                pd_o[i] *= -1;
-            }
-        }
-
-        // set order of MO (0から始まる軌道の番号)
-        TlVector pd_c_ord(nNumOfMOs);
-        for (int k=0; k < nNumOfMOs; ++k) {
-            pd_c_ord[k] = k;
-        }
-
-        TlVector pd_o_ord(nNumOfMOs);
-        for (int k = 0; k < nNumOfMOs; ++k) {
-            pd_o_ord[k] = k;
-        }
-
-        // sort pd_c
-        for (int i = 0; i < nNumOfMOs -1; ++i) {
-            for (int j = i; j < nNumOfMOs; ++j) {
-                if (pd_c[i] < pd_c[j]) {
-                    std::swap(pd_c[i], pd_c[j]);
-                    std::swap(pd_c_ord[i], pd_c_ord[j]);
-                }
-            }
-        }
-        // sort pd_o
-        for (int i = 0; i < nNumOfMOs -1; ++i) {
-            for (int j = i; j < nNumOfMOs; ++j) {
-                if (pd_o[i] < pd_o[j]) {
-                    std::swap(pd_o[i], pd_o[j]);
-                    std::swap(pd_o_ord[i], pd_o_ord[j]);
-                }
-            }
-        }
-
-        if (num_mo_closed != 0) {
-            this->printTwoVectors(pd_c_ord, pd_c, "projection diagonal of closed MO(sorted)", 10);
-        } else {
-            this->log_.info("projection diagonal of closed MO(sorted)");
-            this->log_.info(" .. nothing of closed MO");
-        }
-        if (num_mo_open != 0) {
-            this->printTwoVectors(pd_o_ord, pd_o, "projection diagonal of open   MO(sorted)", 10);
-        } else {
-            this->log_.info("projection diagonal of open   MO(sorted)");
-            this->log_.info(" .. nothing of open MO");
-        }
-
-        // store electrons
-        {
-            currOcc = TlVector(nNumOfMOs);
-            
-            for (int k = 0; k < num_mo_open; ++k) {
-                currOcc[(int)pd_o_ord[k] ] = 1.0;
-            }
-            for (int k = 0; k < num_mo_closed; ++k) {
-                currOcc[(int)pd_c_ord[k] ] = 2.0;
-            }
-        }
-
-        // check
-        {
-            double mustbe = num_mo_closed * 2 + num_mo_open;
-            double ssum = 0.0;
-            for (int k = 0; k < nNumOfMOs; ++k) {
-                ssum += currOcc[k];
-            }
-
-            this->log_.info(TlUtils::format(" sum of electrons (new occupation) = %10.2lf", ssum));
-            this->log_.info(TlUtils::format(" sum of electrons (must be)        = %10.2lf", mustbe));
-
-            if (fabs(mustbe-ssum) > 1.0e-10) {
-                this->log_.info("projection occupation was failed. change program code");
-                CnErr.abort("DfDmatrix", "", "main", "projection occupation was failed");
+    }
+    
+    // set order of MO (0から始まる軌道の番号)
+    TlVector pd_ord(numOfMOs);
+    for (index_type k = 0; k < numOfMOs; ++k) {
+        pd_ord[k] = k;
+    }
+    
+    // sort pd
+    for (index_type i = 0; i < numOfMOs -1; ++i) {
+        for (index_type j = i; j < numOfMOs; ++j) {
+            if (pd[i] < pd[j]) {
+                std::swap(pd[i], pd[j]);
+                std::swap(pd_ord[i], pd_ord[j]);
             }
         }
     }
+    
+    // output
+    double occupation = 0.0;
+    std::string title = "";
+    switch (runType) {
+    case RUN_RKS:
+        occupation = 2.0;
+        title = "projection diagonal of MO";
+        break;
+        
+    case RUN_UKS_ALPHA:
+        occupation = 1.0;
+        title = "projection diagonal of MO(alpha)";
+        break;
+        
+    case RUN_UKS_BETA:
+        occupation = 1.0;
+        title = "projection diagonal of MO(beta)";
+        break;
+        
+    case RUN_ROKS_CLOSED:
+        occupation = 2.0;
+        title = "projection diagonal of MO(closed)";
+        break;
+        
+    case RUN_ROKS_OPEN:
+        occupation = 1.0;
+        title = "projection diagonal of MO(open)";
+        break;
+        
+    default:
+        this->log_.critical("program error.");
+        break;
+    }
+    this->printTwoVectors(pd_ord, pd, title, 10);
+    
+    
+    // store electrons
+    TlVector currOcc = TlVector(numOfMOs);
+    for (index_type k = 0; k < numOfMOs; ++k) {
+        currOcc[static_cast<index_type>(pd_ord[k])] = occupation;
+    }
+    
+    // check
+    {
+        TlVector prevOcc = this->getOccupation(runType);
+        const double sumOfPrevOcc = prevOcc.sum();
+        const double sumOfCurrOcc = currOcc.sum();
 
+        this->log_.info(TlUtils::format("prev occ = %10.2f", sumOfPrevOcc));
+        this->log_.info(TlUtils::format("prev occ = %10.2f", sumOfCurrOcc));
+        if (std::fabs(sumOfPrevOcc - sumOfCurrOcc) > 1.0E-5) {
+            this->log_.info("projection occupation was failed.");
+            CnErr.abort();
+        }
+    }
+    
     return currOcc;
 }
 
 template<typename MatrixType, typename SymmetricMatrixType>
 void DfDmatrix::generateDensityMatrix(const DfObject::RUN_TYPE runType, const TlVector& currOcc)
 {
-    // read current orbital in ao basis
-    MatrixType C = DfObject::getCMatrix<MatrixType>(runType, this->m_nIteration);
-
-    // generate densty matrix in terms of guess lcao and occupation
     switch (runType) {
-    case RUN_RKS: {
-        // closed shell Density Matrix
-        SymmetricMatrixType PC = this->calcDensMatrix<MatrixType, SymmetricMatrixType>(C, currOcc, 2.0); // D1
-
-        // open shell Density Matrix
-        //SymmetricMatrixType PO = this->calcDensMatrix<MatrixType, SymmetricMatrixType>(C, currOcc, 1.0); // D2
-
-        // projection法を書き換えれば不要(?)
-        PC *= 2.0;
-        //PC += PO;
-
-        this->savePpqMatrix(runType, this->m_nIteration, PC);
-    }
-    break;
+    case RUN_RKS: 
+        {
+            MatrixType C = DfObject::getCMatrix<MatrixType>(runType, this->m_nIteration);
+            SymmetricMatrixType P = this->calcDensMatrix<MatrixType, SymmetricMatrixType>(C, currOcc, 2.0);
+            P *= 2.0;
+            
+            this->savePpqMatrix(runType, this->m_nIteration, P);
+        }
+        break;
 
     case RUN_UKS_ALPHA:
-        // go through
-    case RUN_UKS_BETA: {
-        // closed shell Density Matrix
-        SymmetricMatrixType PC = this->calcDensMatrix<MatrixType, SymmetricMatrixType>(C, currOcc, 2.0); // D1
-        //DfObject::savePCMatrix(this->m_nIteration, PC);
+    case RUN_UKS_BETA: 
+        {
+            MatrixType C = DfObject::getCMatrix<MatrixType>(runType, this->m_nIteration);
+            SymmetricMatrixType P = this->calcDensMatrix<MatrixType, SymmetricMatrixType>(C, currOcc, 1.0);
+            this->savePpqMatrix(runType, this->m_nIteration, P);
+        }
+        break;
 
-        // open shell Density Matrix
-        SymmetricMatrixType PO = this->calcDensMatrix<MatrixType, SymmetricMatrixType>(C, currOcc, 1.0); // D2
-        //DfObject::savePOMatrix(this->m_nIteration, PO);
-        
-        PC *= 2.0;
-        PC += PO;
+    case RUN_ROKS_CLOSED: 
+        {
+            MatrixType C = DfObject::getCMatrix<MatrixType>(RUN_ROKS, this->m_nIteration);
+            SymmetricMatrixType P = this->calcDensMatrix<MatrixType, SymmetricMatrixType>(C, currOcc, 2.0); 
+            P *= 2.0;
+            this->savePpqMatrix(runType, this->m_nIteration, P);
+            
+        }
+        break;
 
-        this->savePpqMatrix(runType, this->m_nIteration, PC);
-    }
-    break;
-
-    case RUN_ROKS: {
-        // closed shell Density Matrix
-        SymmetricMatrixType PC = this->calcDensMatrix<MatrixType, SymmetricMatrixType>(C, currOcc, 2.0); // D1
-        DfObject::savePCMatrix(this->m_nIteration, PC);
-
-        // open shell Density Matrix
-        SymmetricMatrixType PO = this->calcDensMatrix<MatrixType, SymmetricMatrixType>(C, currOcc, 1.0); // D2
-        DfObject::savePOMatrix(this->m_nIteration, PO);
-    }
-    break;
+    case RUN_ROKS_OPEN:
+        {
+            MatrixType C = DfObject::getCMatrix<MatrixType>(RUN_ROKS, this->m_nIteration);
+            SymmetricMatrixType P = this->calcDensMatrix<MatrixType, SymmetricMatrixType>(C, currOcc, 1.0);
+            this->savePpqMatrix(runType, this->m_nIteration, P);
+        }
+        break;
 
     default:
         std::cerr << " DfDmatrix::generateDensityMatrix() program error." << __FILE__ << __LINE__ << std::endl;
