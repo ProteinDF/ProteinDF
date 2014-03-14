@@ -138,50 +138,61 @@ void DfConvcheck::main(const int iteration)
     case METHOD_UKS:
         {
             if (this->J_engine_ == J_ENGINE_RI_J) {
-                this->dev_sd_a = dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
-                this->dev_sd_b = dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
+                this->dev_sd_a = this->dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
+                this->dev_sd_b = this->dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
+                this->dev_sd = (dev_sd_a > dev_sd_b) ? dev_sd_a : dev_sd_b;
             }
 
-            this->dev_dm_a = dev_density_matrix<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
-            this->dev_ks_a = dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
-            this->dev_cd_a = dev_cd_coefficient(RUN_UKS_ALPHA, iteration);
-            this->dev_xc_a = dev_xc_coefficient(RUN_UKS_ALPHA, iteration);
-            this->dev_xa_a = dev_xa_coefficient(RUN_UKS_ALPHA, iteration);
-
-            this->dev_dm_b = dev_density_matrix<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
-            this->dev_ks_b = dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
-            this->dev_cd_b = dev_cd_coefficient(RUN_UKS_BETA,  iteration);
-            this->dev_xc_b = dev_xc_coefficient(RUN_UKS_BETA,  iteration);
-            this->dev_xa_b = dev_xa_coefficient(RUN_UKS_BETA,  iteration);
-            
-            this->dev_sd = (dev_sd_a > dev_sd_b) ? dev_sd_a : dev_sd_b;
+            this->dev_dm_a = this->dev_density_matrix<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
+            this->dev_dm_b = this->dev_density_matrix<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
             this->dev_dm = (dev_dm_a > dev_dm_b) ? dev_dm_a : dev_dm_b;
+
+            this->dev_ks_a = this->dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
+            this->dev_ks_b = this->dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
             this->dev_ks = (dev_ks_a > dev_ks_b) ? dev_ks_a : dev_ks_b;
-            this->dev_cd = (dev_cd_a > dev_cd_b) ? dev_cd_a : dev_cd_b;
-            this->dev_xc = (dev_xc_a > dev_xc_b) ? dev_xc_a : dev_xc_b;
-            this->dev_xa = (dev_xa_a > dev_xa_b) ? dev_xa_a : dev_xa_b;
+
+            if (this->m_bIsXCFitting == true) {
+                this->dev_cd_a = dev_cd_coefficient(RUN_UKS_ALPHA, iteration);
+                this->dev_xc_a = dev_xc_coefficient(RUN_UKS_ALPHA, iteration);
+                this->dev_xa_a = dev_xa_coefficient(RUN_UKS_ALPHA, iteration);
+
+                this->dev_cd_b = dev_cd_coefficient(RUN_UKS_BETA,  iteration);
+                this->dev_xc_b = dev_xc_coefficient(RUN_UKS_BETA,  iteration);
+                this->dev_xa_b = dev_xa_coefficient(RUN_UKS_BETA,  iteration);
+
+                this->dev_cd = (dev_cd_a > dev_cd_b) ? dev_cd_a : dev_cd_b;
+                this->dev_xc = (dev_xc_a > dev_xc_b) ? dev_xc_a : dev_xc_b;
+                this->dev_xa = (dev_xa_a > dev_xa_b) ? dev_xa_a : dev_xa_b;
+            }
         }
         break;
 
     case METHOD_ROKS:
         {
-            this->dev_sd_a = dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_ALPHA,  iteration);
-            this->dev_sd_b = dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_BETA,   iteration);
-            this->dev_dm_c = dev_density_matrix<SymmetricMatrixType>(RUN_ROKS_CLOSE, iteration);
-            this->dev_dm_o = dev_density_matrix<SymmetricMatrixType>(RUN_ROKS_OPEN,  iteration);
-            this->dev_ks = this->dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_ROKS,           iteration);
-            this->dev_cd_a = dev_cd_coefficient(RUN_UKS_ALPHA,  iteration);
-            this->dev_xc_a = dev_xc_coefficient(RUN_UKS_ALPHA,  iteration);
-            this->dev_xa_a = dev_xa_coefficient(RUN_UKS_ALPHA,  iteration);
-            this->dev_cd_b = dev_cd_coefficient(RUN_UKS_BETA,   iteration);
-            this->dev_xc_b = dev_xc_coefficient(RUN_UKS_BETA,   iteration);
-            this->dev_xa_b = dev_xa_coefficient(RUN_UKS_BETA,   iteration);
-            
-            this->dev_sd = (dev_sd_a > dev_sd_b) ? dev_sd_a : dev_sd_b;
+            if (this->J_engine_ == J_ENGINE_RI_J) {
+                this->dev_sd_a = this->dev_standard_dev_cd<SymmetricMatrixType>(RUN_ROKS_CLOSED, iteration);
+                this->dev_sd_b = this->dev_standard_dev_cd<SymmetricMatrixType>(RUN_ROKS_OPEN, iteration);
+                this->dev_sd = (dev_sd_a > dev_sd_b) ? dev_sd_a : dev_sd_b;
+            }
+
+            this->dev_dm_c = this->dev_density_matrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, iteration);
+            this->dev_dm_o = this->dev_density_matrix<SymmetricMatrixType>(RUN_ROKS_OPEN, iteration);
             this->dev_dm = (dev_dm_c > dev_dm_o) ? dev_dm_c : dev_dm_o;
-            this->dev_cd = (dev_cd_a > dev_cd_b) ? dev_cd_a : dev_cd_b;
-            this->dev_xc = (dev_xc_a > dev_xc_b) ? dev_xc_a : dev_xc_b;
-            this->dev_xa = (dev_xa_a > dev_xa_b) ? dev_xa_a : dev_xa_b;
+
+            this->dev_ks = this->dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_ROKS, iteration);
+
+            if (this->m_bIsXCFitting == true) {
+                this->dev_cd_a = dev_cd_coefficient(RUN_ROKS_CLOSED, iteration);
+                this->dev_xc_a = dev_xc_coefficient(RUN_ROKS_OPEN,   iteration);
+                this->dev_xa_a = dev_xa_coefficient(RUN_ROKS_CLOSED, iteration);
+                this->dev_cd_b = dev_cd_coefficient(RUN_ROKS_OPEN,   iteration);
+                this->dev_xc_b = dev_xc_coefficient(RUN_ROKS_CLOSED, iteration);
+                this->dev_xa_b = dev_xa_coefficient(RUN_ROKS_OPEN,   iteration);
+
+                this->dev_cd = (dev_cd_a > dev_cd_b) ? dev_cd_a : dev_cd_b;
+                this->dev_xc = (dev_xc_a > dev_xc_b) ? dev_xc_a : dev_xc_b;
+                this->dev_xa = (dev_xa_a > dev_xa_b) ? dev_xa_a : dev_xa_b;
+            }            
         }
         break;
 

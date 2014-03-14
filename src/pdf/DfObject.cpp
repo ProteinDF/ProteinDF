@@ -43,11 +43,13 @@ int DfObject::rank_ = 0;
 const std::string DfObject::m_sRunTypeSuffix[DfObject::RUN_MAXINDEX] = {
     "undefined",
     "rks",
-    "uks-alpha",
-    "uks-beta",
+    "uks_alpha",
+    "uks_beta",
     "roks",
-    "roks_close",
-    "roks_open"
+    "roks_closed",
+    "roks_open",
+    "roks_alpha",
+    "roks_beta"
 };
 
 

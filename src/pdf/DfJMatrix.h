@@ -68,7 +68,7 @@ SymmetricMatrixType DfJMatrix::getDiffDensityMatrix()
         break;
 
     case METHOD_ROKS:
-        diffP  = DfObject::getDiffDensityMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSE, this->m_nIteration);
+        diffP  = DfObject::getDiffDensityMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration);
         diffP += DfObject::getDiffDensityMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN,  this->m_nIteration);
         break;
 
@@ -95,7 +95,7 @@ SymmetricMatrixType DfJMatrix::getDensityMatrix()
         break;
 
     case METHOD_ROKS:
-        P  = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSE, this->m_nIteration -1);
+        P  = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration -1);
         P += DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN,  this->m_nIteration -1);
         break;
 

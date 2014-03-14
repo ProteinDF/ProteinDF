@@ -21,6 +21,7 @@
 #endif // _OPENMP
 
 #include <set>
+#include "CnError.h"
 #include "DfCD.h"
 #include "DfEngineObject.h"
 #include "DfEriEngine.h"
@@ -412,10 +413,32 @@ void DfCD::getK_S(const RUN_TYPE runType,
     const index_type numOfCBs = L.getNumOfCols();
     
     TlSymmetricMatrix P;
-    if (runType == RUN_RKS) {
+    switch (runType) {
+    case RUN_RKS:
         P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
-    } else {
+        break;
+
+    case RUN_UKS_ALPHA:
+    case RUN_UKS_BETA:
         P = this->getPpqMatrix<TlSymmetricMatrix>(runType, this->m_nIteration -1);
+        break;
+
+    case RUN_ROKS_ALPHA:
+        {
+            P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration -1);
+            P += this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_OPEN, this->m_nIteration -1);
+        }
+        break;
+
+    case RUN_ROKS_BETA:
+        {
+            P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration -1);
+        }
+        break;
+
+    default:
+        this->log_.critical(TlUtils::format("Program Error: %s:%d", __FILE__, __LINE__));
+        CnErr.abort();
     }
     this->log_.info("CD: density matrix");
     const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
@@ -547,8 +570,13 @@ void DfCD::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
                                               orbInfo_q,
                                               L.getColVector(I), I2PQ);
         // l.save(TlUtils::format("fl_Work/debug_LI_xc_%d.mat", I));
+<<<<<<< HEAD
         // assert(l.getNumOfRows() == numOfAOs);
         // assert(l.getNumOfCols() == dim_M);
+=======
+        assert(l.getNumOfRows() == orbInfo_p.getNumOfOrbitals());
+        assert(l.getNumOfCols() == dim_M);
+>>>>>>> Fix: support ROKS
         l.transpose();
     
         TlMatrix X = l * C;
@@ -578,7 +606,7 @@ TlSymmetricMatrix DfCD::getPMatrix()
         break;
 
     case METHOD_ROKS:
-        P  = this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_CLOSE, this->m_nIteration -1);
+        P  = this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration -1);
         P += this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_OPEN, this->m_nIteration -1);
         break;
         
@@ -1462,10 +1490,14 @@ void DfCD::calcERIsA(const TlOrbitalInfoObject& orbInfo_p,
                      const std::vector<IndexPair4A>& calcList,
                      const TlSparseMatrix& schwartzTable) 
 {
+<<<<<<< HEAD
     // const int maxShellType = orbInfo_p.getMaxShellType();
     // assert(maxShellType == orbInfo_q.getMaxShellType());
     // const double threshold = this->CDAM_tau_;
     // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+=======
+    assert(orbInfo_p.getMaxShellType() == orbInfo_q.getMaxShellType());
+>>>>>>> Fix: support ROKS
 
     const int numOfList = calcList.size();
 #pragma omp parallel
