@@ -229,26 +229,31 @@ void DfFockMatrix::mainDIRECT_ROKS()
         }
     }
 
-    Fo.save("Fo.mat");
-    Fc.save("Fc.mat");
+    // Fo.save("Fo.mat");
+    // Fc.save("Fc.mat");
 
     // -------------------------------------------------------------------------
     MatrixType SDc, DcS, SDo, DoS;
     {
         const SymmetricMatrixType S = DfObject::getSpqMatrix<SymmetricMatrixType>();
-        const SymmetricMatrixType Dc = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration -1);
+        const SymmetricMatrixType Dc = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration -1);
         const SymmetricMatrixType Do = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN,  this->m_nIteration -1);
+
         SDc = S * Dc;
-        DcS = Dc * S;
+        DcS = SDc;
+        DcS.transpose();
+
         SDo = S * Do;
-        DoS = Do * S;
+        DoS = SDo;
+        DoS.transpose();
+
         // SDc.save("SDc.mat");
         // DcS.save("DcS.mat");
         // SDo.save("SDo.mat");
         // DoS.save("DoS.mat");
     }
 
-    SymmetricMatrixType F(numOfAOs);
+    MatrixType Ftmp(numOfAOs, numOfAOs);
     {
         SymmetricMatrixType E(numOfAOs);
         for (index_type i = 0; i < numOfAOs; ++i) {
@@ -263,19 +268,29 @@ void DfFockMatrix::mainDIRECT_ROKS()
         // E_SDo.save("E_SDo.mat");
         // E_DoS.save("E_DoS.mat");
 
-        const SymmetricMatrixType F1 = E_SDo * Fc * E_DoS;
-        const SymmetricMatrixType F2 = E_SDc * Fo * E_DcS;
+        const MatrixType F1 = E_SDo * Fc * E_DoS;
+        const MatrixType F2 = E_SDc * Fo * E_DcS;
         // F1.save("F1.mat");
         // F2.save("F2.mat");
-        F = F1 + F2;
+        Ftmp = F1 + F2;
+
+        // {
+        //     MatrixType A = E_SDo * E_DoS;
+        //     MatrixType B = E_SDc * E_DcS;
+        //     MatrixType B2 = E_DcS * E_SDc;
+        //     A.save("A.mat");
+        //     B.save("B.mat");
+        //     B.save("B2.mat");
+        // }
     }
 
     {
         const SymmetricMatrixType FcFo = Fc - Fo;
-        F += SDc * FcFo * DoS;
-        F += SDo * FcFo * DcS;
+        Ftmp += SDc * FcFo * DoS;
+        Ftmp += SDo * FcFo * DcS;
     }
 
+    const SymmetricMatrixType F = Ftmp;
     DfObject::saveFpqMatrix(RUN_ROKS, this->m_nIteration, F);
 }
 
