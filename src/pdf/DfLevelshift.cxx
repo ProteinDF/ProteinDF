@@ -109,7 +109,14 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration, const std::string
     TlVector beta(norbcut); // b
     {
         TlVector vOcc;
-        vOcc.load(DfObject::getOccupationPath(runType));
+        if (runType == RUN_ROKS) {
+            vOcc.load(DfObject::getOccupationPath(RUN_ROKS_CLOSED));
+            TlVector occ_open;
+            occ_open.load(DfObject::getOccupationPath(RUN_ROKS_OPEN));
+            vOcc += occ_open;
+        } else {
+            vOcc.load(DfObject::getOccupationPath(runType));
+        }
         assert(vOcc.getSize() == norbcut);
 
         double shift_closed  = 0.0;

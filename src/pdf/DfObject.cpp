@@ -26,6 +26,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include "CnError.h"
 #include "DfObject.h"
 #include "Fl_Geometry.h"
 #include "TlLogging.h"
@@ -177,12 +178,12 @@ void DfObject::setParam(const TlSerializeData& data)
     // J
     {
         this->J_engine_ = J_ENGINE_RI_J;
-        const std::string J_Engine = TlUtils::toUpper(data["J_engine"].getStr());
-        if (J_Engine == "RI_J") {
+        const std::string J_engine = TlUtils::toUpper(data["J_engine"].getStr());
+        if (J_engine == "RI_J") {
             this->J_engine_ = J_ENGINE_RI_J;
-        } else if (J_Engine == "CD") {
+        } else if (J_engine == "CD") {
             this->J_engine_ = J_ENGINE_CD;
-        } else if (J_Engine == "CONVENTIONAL") {
+        } else if (J_engine == "CONVENTIONAL") {
             this->J_engine_ = J_ENGINE_CONVENTIONAL;
         }
     }
@@ -190,13 +191,16 @@ void DfObject::setParam(const TlSerializeData& data)
     // K
     {
         this->K_engine_ = K_ENGINE_CONVENTIONAL;
-        const std::string K_Engine = TlUtils::toUpper(data["K_engine"].getStr());
-        if (K_Engine == "RI_K") {
+        const std::string K_engine = TlUtils::toUpper(data["K_engine"].getStr());
+        if (K_engine == "RI_K") {
             this->K_engine_ = K_ENGINE_RI_K;
-        } else if (K_Engine == "CD") {
+        } else if (K_engine == "CD") {
             this->K_engine_ = K_ENGINE_CD;
-        } else if (K_Engine == "CONVENTIONAL") {
+        } else if (K_engine == "CONVENTIONAL") {
             this->K_engine_ = K_ENGINE_CONVENTIONAL;
+        } else {
+            this->log_.critical(TlUtils::format("unknown parameter: XC_engine=%s", K_engine.c_str()));
+            CnErr.abort();
         }
     }
     
@@ -204,10 +208,15 @@ void DfObject::setParam(const TlSerializeData& data)
     {
         this->XC_engine_ = XC_ENGINE_GRID;
         const std::string XC_engine = TlUtils::toUpper(data["XC_engine"].getStr());
-        if (XC_engine == "GRIDFREE") {
+        if (XC_engine == "GRID") {
+            this->XC_engine_ = XC_ENGINE_GRID;
+        } else if (XC_engine == "GRIDFREE") {
             this->XC_engine_ = XC_ENGINE_GRIDFREE;
         } else if (XC_engine == "GRIDFREE_CD") {
             this->XC_engine_ = XC_ENGINE_GRIDFREE_CD;
+        } else {
+            this->log_.critical(TlUtils::format("unknown parameter: XC_engine=%s", XC_engine.c_str()));
+            CnErr.abort();
         }
     }
 

@@ -19,6 +19,7 @@
 #ifndef DFGRIDFREEXC_H
 #define DFGRIDFREEXC_H
 
+#include "CnError.h"
 #include "DfObject.h"
 #include "DfXCFunctional.h"
 #include "DfOverlapX.h"
@@ -392,10 +393,38 @@ void DfGridFreeXC::preprocessBeforeSCF_templ()
 template<class SymmetricMatrixType>
 SymmetricMatrixType DfGridFreeXC::getPMatrix(const RUN_TYPE runType)
 {
-    SymmetricMatrixType P = DfObject::getPpqMatrix<SymmetricMatrixType>(runType,
-                                                                        this->m_nIteration -1);
-    if (runType ==RUN_RKS) {
-        P *= 0.5;
+    SymmetricMatrixType P;
+    switch(runType) {
+    case RUN_RKS:
+        {
+            P = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration -1);
+        }
+        break;
+        
+    case RUN_UKS_ALPHA:
+    case RUN_UKS_BETA:
+        {
+            P = DfObject::getPpqMatrix<SymmetricMatrixType>(runType, this->m_nIteration -1);
+        }
+        break;
+
+    case RUN_ROKS_ALPHA:
+        {
+            P = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration -1);
+            P += DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, this->m_nIteration -1);
+        }
+        break;
+
+    case RUN_ROKS_BETA:
+        {
+            P = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration -1);
+        }
+        break;
+
+    default:
+        this->log_.critical(TlUtils::format("wrong parameter: %s:%d", __FILE__, __LINE__));
+        CnErr.abort();
+        break;
     }
 
     return P;
@@ -420,7 +449,10 @@ void DfGridFreeXC::buildFxc_LDA_method()
         break;
 
     case METHOD_ROKS:
-        this->log_.critical("NOT in support");
+        this->buildFxc_LDA_runtype<DfOverlapClass, DfCD_class,
+                                   SymmetricMatrixType, MatrixType>(RUN_ROKS_ALPHA);
+        this->buildFxc_LDA_runtype<DfOverlapClass, DfCD_class,
+                                   SymmetricMatrixType, MatrixType>(RUN_ROKS_BETA);
         break;
 
     default:
@@ -547,11 +579,15 @@ void DfGridFreeXC::buildFxc_GGA_method()
         break;
 
     case METHOD_ROKS:
-        this->log_.critical("NOT in support");
+        this->buildFxc_GGA_runtype<DfOverlapClass, DfCD_class,
+                                   SymmetricMatrixType, MatrixType>(RUN_ROKS_ALPHA);
+        this->buildFxc_GGA_runtype<DfOverlapClass, DfCD_class,
+                                   SymmetricMatrixType, MatrixType>(RUN_ROKS_BETA);
         break;
 
     default:
-        this->log_.critical("wrong program");
+        this->log_.critical(TlUtils::format("wrong parameter: %s:%d", __FILE__, __LINE__));
+        CnErr.abort();
         break;
     }
 }
