@@ -62,7 +62,7 @@ DfCD::DfCD(TlSerializeData* pPdfParam)
 
     this->debugBuildSuperMatrix_ = false;
     if ((*pPdfParam)["debug/DfGridFreeXC/build_supermatrix"].getStr().empty() != true) {
-        this->isStoreERIs_ = (*pPdfParam)["debug/DfGridFreeXC/build_supermatrix"].getBoolean();
+        this->debugBuildSuperMatrix_ = (*pPdfParam)["debug/DfGridFreeXC/build_supermatrix"].getBoolean();
     }    
 }
 
