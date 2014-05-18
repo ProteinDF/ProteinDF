@@ -34,14 +34,14 @@ libpdftl_la_SOURCES = \
 	TlFmt.cpp						\
 	TlLogging.cpp					\
 	TlGetopt.cpp
-libpdftl_la_LIBADD = @LAPACK_LIBS@ @BLAS_LIBS@
+#libpdftl_la_LIBADD = @LAPACK_LIBS@ @BLAS_LIBS@
 
 libppdftl_la_SOURCES = \
 	TlCommunicate.cpp				\
 	TlDistributeMatrix.cpp			\
 	TlDistributeSymmetricMatrix.cpp	\
 	TlDistributeVector.cpp		
-libppdftl_la_LIBADD = @SCALAPACK_LIBS@ @LAPACK_LIBS@ @BLAS_LIBS@ @MPILIBS@
+#libppdftl_la_LIBADD = @SCALAPACK_LIBS@ @LAPACK_LIBS@ @BLAS_LIBS@ @MPILIBS@
 
 
 if PARALLEL
@@ -51,6 +51,3 @@ lib_LTLIBRARIES = libpdftl.la
 EXTRA_LTLIBRARIES = libppdftl.la
 endif
 
-
-##	TlSparseHashMatrix.cpp		
-##	TlSparseHashSymmetricMatrix.cpp	
