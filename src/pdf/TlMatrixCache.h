@@ -218,7 +218,7 @@ MatrixType TlMatrixCache::get(const std::string& path)
         LRU_List::iterator itEnd = this->lruList_.end();
         for (LRU_List::iterator it = this->lruList_.begin(); it != itEnd; ++it) {
             if (path == (*it)->getPath()) {
-                matrix = *(dynamic_cast<MatrixType const * const>((*it)->getMatPtr()));
+                matrix = *(dynamic_cast<MatrixType const *>((*it)->getMatPtr()));
                 isPrepareMatrix = true;
                 ++(this->stats_[path].getFromCache);
 
