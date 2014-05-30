@@ -1219,9 +1219,10 @@ bool DfTaskCtrl::getQueue_Force4(const TlOrbitalInfoObject& orbitalInfo,
 
 // J. Chem. Phys.,105,2726 (1996)
 // eq.32
-DfTaskCtrl::ShellArray DfTaskCtrl::selectShellArrayByDistribution(const ShellArray& inShellArray,
-                                                                  const index_type companionShellIndex,
-                                                                  const TlOrbitalInfoObject& orbitalInfo)
+DfTaskCtrl::ShellArray 
+DfTaskCtrl::selectShellArrayByDistribution(const ShellArray& inShellArray,
+                                           const index_type companionShellIndex,
+                                           const TlOrbitalInfoObject& orbitalInfo)
 {
     ShellArray answer;
     answer.reserve(inShellArray.size());
@@ -1251,12 +1252,16 @@ DfTaskCtrl::ShellArray DfTaskCtrl::selectShellArrayByDistribution(const ShellArr
         if (coef * std::exp(exponent) >= threshold) {
             answer.push_back(*it);
 
-//#pragma omp atomic
-            ++(this->cutoffAlive_distribution_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__selectShellArrayByDistribution_alive)
+            {
+                ++(this->cutoffAlive_distribution_[shellPairType]);
+            }
         }
 
-//#pragma omp atomic
-        ++(this->cutoffAll_distribution_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__selectShellArrayByDistribution_all)
+        {
+            ++(this->cutoffAll_distribution_[shellPairType]);
+        }
     }
 
     // swap technique
@@ -1333,12 +1338,16 @@ DfTaskCtrl::makeDistributedCutoffTable(const TlOrbitalInfoObject& orbitalInfo)
                 answer[indexI][shellTypeJ].push_back(indexJ);
                 answer[indexJ][shellTypeI].push_back(indexI);
                 
-#pragma omp atomic
-                ++(this->cutoffAlive_distribution_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__makeDistributedCutoffTable_alive)
+                {
+                    ++(this->cutoffAlive_distribution_[shellPairType]);
+                }
             }
 
-#pragma omp atomic
-        ++(this->cutoffAll_distribution_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__makeDistributedCutoffTable_all)
+            {
+                ++(this->cutoffAll_distribution_[shellPairType]);
+            }
             
         }
         answer[indexI][shellTypeI].push_back(indexI);
@@ -1418,12 +1427,16 @@ DfTaskCtrl::makeDistributedCutoffTable(const TlOrbitalInfoObject& orbitalInfo1,
             if (coef * std::exp(exponent) >= threshold) {
                 answer[indexI][shellTypeJ].push_back(indexJ);
                 
-#pragma omp atomic
-                ++(this->cutoffAlive_distribution_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__makeDistributedCutoffTable_alive)
+                {
+                    ++(this->cutoffAlive_distribution_[shellPairType]);
+                }
             }
 
-#pragma omp atomic
-        ++(this->cutoffAll_distribution_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__makeDistributedCutoffTable_all)
+            {
+                ++(this->cutoffAll_distribution_[shellPairType]);
+            }
         }
     }
 
@@ -1516,7 +1529,8 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::getShellPairArrayTable(const TlOrbit
 // J. Chem. Phys.,105,2726 (1996)
 // eq.31
 // 1/r cutoff
-DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
+DfTaskCtrl::ShellPairArrayTable 
+DfTaskCtrl::selectShellPairArrayTableByDensity(
     const ShellPairArrayTable& inShellPairArrayTable,
     const TlOrbitalInfoObject& orbitalInfo)
 {
@@ -1600,12 +1614,16 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
             if (std::fabs(judge) > cutoffThreshold) {
                 tmp.push_back(shellPairArray[shellPairIndex]);
 
-#pragma omp atomic
-                ++(this->cutoffAlive_density_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__selectShellPairArrayTableByDensity_add_alive)
+                {
+                    ++(this->cutoffAlive_density_[shellPairType]);
+                }
             }
 
-#pragma omp atomic
-            ++(this->cutoffAll_density_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__selectShellPairArrayTableByDensity_add_all)
+            {
+                ++(this->cutoffAll_density_[shellPairType]);
+            }
         }
 
         // swap technique
@@ -1617,7 +1635,8 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
     return answer;
 }
 
-DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
+DfTaskCtrl::ShellPairArrayTable 
+DfTaskCtrl::selectShellPairArrayTableByDensity(
     const ShellPairArrayTable& inShellPairArrayTable,
     const TlOrbitalInfoObject& orbitalInfo1,
     const TlOrbitalInfoObject& orbitalInfo2)
@@ -1703,12 +1722,16 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
             if (std::fabs(judge) > cutoffThreshold) {
                 tmp.push_back(shellPairArray[shellPairIndex]);
 
-#pragma omp atomic
-                ++(this->cutoffAlive_density_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__selectShellPairArrayTableByDensity_add_alive)
+                {
+                    ++(this->cutoffAlive_density_[shellPairType]);
+                }
             }
 
-#pragma omp atomic
-            ++(this->cutoffAll_density_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__selectShellPairArrayTableByDensity_add_all)
+            {
+                ++(this->cutoffAll_density_[shellPairType]);
+            }
         }
 
         // swap technique
@@ -1812,12 +1835,16 @@ bool DfTaskCtrl::isAliveBySchwarzCutoff(const index_type shellIndexP,
     if ((sqrt_pqpq * sqrt_rsrs) >= threshold) {
         answer = true;
 
-#pragma omp atomic
-        ++(this->cutoffAlive_schwarz_[shellQuartetType]);
+#pragma omp critical(DfTaskCtrl__isAliveBySchwarzCutoff_alive)
+        {
+            ++(this->cutoffAlive_schwarz_[shellQuartetType]);
+        }
     }
 
-#pragma omp atomic
-    ++(this->cutoffAll_schwarz_[shellQuartetType]);
+#pragma omp critical(DfTaskCtrl__isAliveBySchwarzCutoff_all)
+    {
+        ++(this->cutoffAll_schwarz_[shellQuartetType]);
+    }
 
     return answer;
 }
@@ -1839,12 +1866,16 @@ bool DfTaskCtrl::isAliveBySchwarzCutoff(const index_type shellIndexP,
     if ((sqrt_pqpq * sqrt_rsrs) >= threshold) {
         answer = true;
 
-#pragma omp atomic
-        ++(this->cutoffAlive_schwarz_[shellQuartetType]);
+#pragma omp critical(DfTaskCtrl__isAliveBySchwarzCutoff_alive)
+        {
+            ++(this->cutoffAlive_schwarz_[shellQuartetType]);
+        }
     }
 
-#pragma omp atomic
-    ++(this->cutoffAll_schwarz_[shellQuartetType]);
+#pragma omp critical(DfTaskCtrl__isAliveBySchwarzCutoff_all)
+    {
+        ++(this->cutoffAll_schwarz_[shellQuartetType]);
+    }
 
     return answer;
 }

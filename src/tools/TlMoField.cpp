@@ -73,8 +73,9 @@ std::vector<double> TlMoField::makeMoFld(const TlVector& MO,
                 buf += value;
             }
 
+            const double tmp = preFactor * buf * MO.get(aoIndex);
 #pragma omp atomic
-            gridValue += preFactor * buf * MO.get(aoIndex);
+            gridValue += tmp;
         }
 
         values[gridIndex] = gridValue;

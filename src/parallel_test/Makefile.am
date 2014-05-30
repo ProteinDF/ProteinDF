@@ -1,5 +1,5 @@
 SERIAL_LIBS = ../pdf/libpdf.la ../pdflib/libpdftl.la @LAPACK_LIBS@ @BLAS_LIBS@
-PARALLEL_LIBS = ../pdf/libppdf.la ../pdf/libpdf.la ../pdflib/libppdftl.la ../pdflib/libpdftl.la @SCALAPACK_LIBS@ @LAPACK_LIBS@ @BLAS_LIBS@ @MPILIBS@
+PARALLEL_LIBS = ../pdf/libppdf.la ../pdf/libpdf.la ../pdflib/libppdftl.la ../pdflib/libpdftl.la @SCALAPACK_LIBS@ @LAPACK_LIBS@ @BLAS_LIBS@ @MPILIBS@ @FLIBS@
 
 TESTS = parallelTest \
 	TlDistributeMatrixTest \

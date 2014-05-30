@@ -288,8 +288,9 @@ DfCD_Parallel::getCholeskyVectorA_distribute(const TlOrbitalInfoObject& orbInfo_
 }
 
 
-TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
-                                                               const std::string& I2PQ_path)
+TlRowVectorMatrix2 
+DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
+                                            const std::string& I2PQ_path)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int myRank = rComm.getRank();
@@ -397,11 +398,15 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalIn
                 const double sum_ll = (L_pi.dot(L_pm)).sum();
                 const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
 
-#pragma omp atomic
-                L_xm[i] += l_m_pi; // for OpenMP
+#pragma omp critical(DfCD_Parallel__calcCholeskyVectorsOnTheFlyS_L)
+                {
+                    L_xm[i] += l_m_pi;
+                }
                 
-#pragma omp atomic
-                update_diagonals[pivot_i] -= l_m_pi * l_m_pi;
+#pragma omp critical(DfCD_Parallel__calcCholeskyVectorsOnTheFlyS_diagonal)
+                {
+                    update_diagonals[pivot_i] -= l_m_pi * l_m_pi;
+                }
             }
         }
         rComm.allReduce_SUM(L_xm);
@@ -739,14 +744,13 @@ TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyA(const TlOrbitalIn
 
                 const int G_pm_index = reverse_pivot[pivot_i] - (m+1);
                 const double l_m_pi = (G_pm[G_pm_index] - sum_ll) * inv_l_m_pm;
+                const double ll = l_m_pi * l_m_pi;
+
 #pragma omp critical(DfCD_Parallel__calcCholeskyVectorsOnTheFlyA_updateL)
                 {
                     L.set(pivot_i, m, l_m_pi);
+                    global_diagonals[pivot_i] -= ll;
                 }
-
-                const double ll = l_m_pi * l_m_pi;
-#pragma omp atomic
-                global_diagonals[pivot_i] -= ll;
 
                 if (global_diagonals[pivot_i] > my_error) {
                     my_error = global_diagonals[pivot_i];

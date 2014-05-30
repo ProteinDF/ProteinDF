@@ -68,8 +68,10 @@ std::vector<double> TlEspField::makeEspFld(const TlSymmetricMatrix& P,
             const double distance = pos.distanceFrom(grid);
             const double esp = charge / distance;
 
-#pragma omp atomic
-            values[gridIndex] += esp;
+#pragma omp critical(TlEspField__makeEspFld)
+            {
+                values[gridIndex] += esp;
+            }
         }
     }
 

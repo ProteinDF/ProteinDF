@@ -515,8 +515,11 @@ void DfHpqX::getESP_part(const TlOrbitalInfoObject& orbitalInfo,
                             ++index;
                         }
                     }
-#pragma omp atomic
-                    (*pValues)[r] += esp;
+
+#pragma omp critical(DfHpqX__getESP_part1)
+                    {
+                        (*pValues)[r] += esp;
+                    }
                 }
 
             } else {
@@ -538,8 +541,11 @@ void DfHpqX::getESP_part(const TlOrbitalInfoObject& orbitalInfo,
                             ++index;
                         }
                     }
-#pragma omp atomic
-                    (*pValues)[r] += esp;
+
+#pragma omp critical(DfHpqX__getESP_part2)
+                    {
+                        (*pValues)[r] += esp;
+                    }
                 }
             }
         }

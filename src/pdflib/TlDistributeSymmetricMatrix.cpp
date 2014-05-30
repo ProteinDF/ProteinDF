@@ -1626,7 +1626,7 @@ TlDistributeSymmetricMatrix::choleskyFactorization(const double threshold) const
 
     TlDistributeMatrix L(N, N);
     index_type m = 0;
-    double sum_ll = 0.0;
+    //double sum_ll = 0.0;
 
     while (error > threshold) {
         std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
@@ -1743,7 +1743,7 @@ TlDistributeSymmetricMatrix::choleskyFactorization_mod(const double threshold) c
 
     TlDistributeMatrix L(N, N);
     index_type m = 0;
-    double sum_ll = 0.0;
+    //double sum_ll = 0.0;
 
     while (error > threshold) {
         std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,
@@ -1949,14 +1949,12 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
 
                 const int G_pm_index = reverse_pivot[pivot_i] - (m+1);
                 const double l_m_pi = (G_pm[G_pm_index] - sum_ll) * inv_l_m_pm;
+                const double ll = l_m_pi * l_m_pi;
 #pragma omp critical(DfCD_Parallel__calcCholeskyVectors_onTheFly)
                 {
                     L.set(pivot_i, m, l_m_pi);
+                    global_diagonals[pivot_i] -= ll;
                 }
-
-                const double ll = l_m_pi * l_m_pi;
-#pragma omp atomic
-                global_diagonals[pivot_i] -= ll;
 
                 if (global_diagonals[pivot_i] > my_error) {
                     my_error = global_diagonals[pivot_i];

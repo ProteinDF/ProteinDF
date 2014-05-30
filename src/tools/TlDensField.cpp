@@ -39,7 +39,7 @@ TlDensField::~TlDensField()
 
 
 std::vector<double> TlDensField::makeDensFld(const TlSymmetricMatrix& P,
-                              const std::vector<TlPosition>& grids)
+                                             const std::vector<TlPosition>& grids)
 {
     const std::size_t numOfGrids = grids.size();
     std::vector<double> values(numOfGrids, 0.0);
@@ -52,8 +52,10 @@ std::vector<double> TlDensField::makeDensFld(const TlSymmetricMatrix& P,
         double rho = 0.0;
         dfCalcGrid.gridDensity(P, grid, &rho);
 
-#pragma omp atomic
-        values[gridIndex] += rho;
+#pragma omp critical(TlDensField__makeDensFld)
+        {
+            values[gridIndex] += rho;
+        }
     }
 
     return values;

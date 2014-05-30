@@ -681,11 +681,11 @@ TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject&
             const double sum_ll = (L_pi.dot(L_pm)).sum();
             const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
 
-#pragma omp atomic
-            L_xm[i] += l_m_pi; // for OpenMP
-            
-#pragma omp atomic
-            diagonals[pivot_i] -= l_m_pi * l_m_pi;
+#pragma omp critical(DfCD__calcCholeskyVectorsOnTheFlyS)
+            {
+                L_xm[i] += l_m_pi;
+                diagonals[pivot_i] -= l_m_pi * l_m_pi;
+            }
         }
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[(numOfCDVcts +1) +i]; // from (m+1) to N
@@ -802,12 +802,13 @@ TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject&
 
             const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
 
-#pragma omp atomic
-            L_xm[i] += l_m_pi; // for OpenMP
-            
-#pragma omp atomic
-            d[pivot_i] -= l_m_pi * l_m_pi;
+#pragma omp critical(DfCD__calcCholeskyVectorsOnTheFlyA)
+            {
+                L_xm[i] += l_m_pi;
+                d[pivot_i] -= l_m_pi * l_m_pi;
+            }
         }
+
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N
             L.set(pivot_i, m, L_xm[i]);
@@ -1580,8 +1581,10 @@ DfCD::setERIs(const TlOrbitalInfoObject& orbInfo,
             const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
             assert(static_cast<int>(values.size()) > index);
             
-#pragma omp atomic
-            answer[i] += values.at(index);
+#pragma omp critical(DfCD__setERIs_set_answer)
+            {
+                answer[i] += values.at(index);
+            }
         }
     }
 
@@ -1644,8 +1647,10 @@ DfCD::setERIsA(const TlOrbitalInfoObject& orbInfo_p,
             const int index = ((basisTypeP * maxStepsQ + basisTypeQ) * maxStepsR + basisTypeR) * maxStepsS + basisTypeS;
             assert(static_cast<int>(values.size()) > index);
             
-#pragma omp atomic
-            answer[i] += values.at(index);
+#pragma omp critical(DfCD__setERIs_set_answer)
+            {
+                answer[i] += values.at(index);
+            }
         }
     }
 
@@ -1824,11 +1829,11 @@ TlMatrix DfCD::calcCholeskyVectors(const TlSymmetricMatrix& V)
             // const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
             const double l_m_pi = (V.get(pivot_m, pivot[m+1 + i]) - sum_ll) * inv_l_m_pm;
 
-#pragma omp atomic
-            L_xm[i] += l_m_pi; // for OpenMP
-            
-#pragma omp atomic
-            d[pivot_i] -= l_m_pi * l_m_pi;
+#pragma omp critical(DfCD__calcCholeskyVectors)
+            {
+                L_xm[i] += l_m_pi; // for OpenMP
+                d[pivot_i] -= l_m_pi * l_m_pi;
+            }
         }
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m+1 +i]; // from (m+1) to N

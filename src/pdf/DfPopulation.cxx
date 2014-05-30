@@ -133,8 +133,11 @@ TlVector DfPopulation::getGrossAtomPop(const TlVector& trPS)
 #pragma omp parallel for
     for (index_type aoIndex= 0; aoIndex < numOfAOs; ++aoIndex) {
         const index_type atomIndex = this->orbitalInfo_.getAtomIndex(aoIndex);
-#pragma omp atomic
-        answer[atomIndex] += trPS.get(aoIndex);
+
+#pragma omp critical(DfPopulation__getGrossAtomPop)
+        {
+            answer[atomIndex] += trPS.get(aoIndex);
+        }
     }
 
     return TlVector(answer);

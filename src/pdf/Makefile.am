@@ -134,10 +134,17 @@ EXTRA_PROGRAMS = PPDF.x
 endif
 
 PDF_x_SOURCES = main.cpp
-PDF_x_LDADD = libpdf.la ../pdflib/libpdftl.la @LAPACK_LIBS@ @BLAS_LIBS@
+PDF_x_LDADD = \
+	libpdf.la \
+	../pdflib/libpdftl.la \
+	@LAPACK_LIBS@ @BLAS_LIBS@ @FLIBS@
 
 PPDF_x_SOURCES = main_Parallel.cpp
-PPDF_x_LDADD = libpdf.la libppdf.la ../pdflib/libppdftl.la ../pdflib/libpdftl.la @SCALAPACK_LIBS@ @LAPACK_LIBS@ @BLAS_LIBS@ @MPILIBS@
+PPDF_x_LDADD = \
+	libpdf.la libppdf.la \
+	../pdflib/libppdftl.la \
+	../pdflib/libpdftl.la \
+	@SCALAPACK_LIBS@ @LAPACK_LIBS@ @BLAS_LIBS@ @MPILIBS@ @FLIBS@
 
 install-exec-hook:
 	cd $(DESTDIR)$(bindir) && \
