@@ -31,8 +31,6 @@ libpdftl_la_SOURCES = \
 	TlVectorMatrixObject.cpp		\
 	TlRowVectorMatrix.cpp 			\
 	TlColVectorMatrix.cpp 			\
-	TlRowVectorMatrix2.cpp 			\
-	TlColVectorMatrix2.cpp 			\
 	TlVector.cpp					\
 	TlFmt.cpp						\
 	TlLogging.cpp					\

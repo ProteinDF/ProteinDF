@@ -26,8 +26,6 @@ pkginclude_HEADERS = \
 	TlVectorMatrixObject.h		\
 	TlRowVectorMatrix.h			\
 	TlColVectorMatrix.h			\
-	TlRowVectorMatrix2.h		\
-	TlColVectorMatrix2.h		\
 	TlMemManager.h				\
 	TlPrdctbl.h					\
 	TlStringTokenizer.h			\

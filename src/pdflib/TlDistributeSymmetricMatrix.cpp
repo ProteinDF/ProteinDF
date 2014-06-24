@@ -1614,7 +1614,7 @@ TlDistributeSymmetricMatrix operator*(const TlDistributeSymmetricMatrix& X, cons
 TlDistributeMatrix 
 TlDistributeSymmetricMatrix::choleskyFactorization(const double threshold) const
 {
-    TlLogging& log = TlLogging::getInstance();
+    // TlLogging& log = TlLogging::getInstance();
 
     const index_type N = this->getNumOfRows();
     TlVector d = this->getDiagonalElements();
@@ -1834,11 +1834,11 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
     const index_type N = this->getNumOfRows();
     assert(N == this->getNumOfCols());
     TlVector global_diagonals = this->getDiagonalElements(); // 対角成分
-    TlRowVectorMatrix2 L(N, 1,
-                         rComm.getNumOfProcs(),
-                         rComm.getRank(),
-                         isEnableMmap); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
-    const index_type local_N = L.getNumOfLocalRows();
+    TlRowVectorMatrix L(N, 1,
+                        rComm.getNumOfProcs(),
+                        rComm.getRank(),
+                        isEnableMmap); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
+    const index_type local_N = L.getNumOfLocalVectors();
     std::vector<double> L_pm(N);
     std::vector<int> global_pivot(N);  // 
     std::vector<int> reverse_pivot(N); // global_pivotの逆引き
@@ -1854,7 +1854,7 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
         for (int global_i = 0; global_i < N; ++global_i) {
             global_pivot[global_i] = global_i;
             reverse_pivot[global_i] = global_i;
-            if (L.getPEinChargeByRow(global_i) == myRank) {
+            if (L.getSubunitID(global_i) == myRank) {
                 local_pivot[local_i] = global_i;
                 local_diagonals[local_i] = global_diagonals[global_i];
                 if (error < local_diagonals[local_i]) {
@@ -1885,7 +1885,7 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
             this->log_.info(TlUtils::format("cd progress %8d/%8d, error=%f",
                                             m, N, error));
             ++progress;
-            L.reserve_cols(progress * division); // メモリの確保
+            L.reserveColSize(progress * division); // メモリの確保
         }
         L.resize(N, m+1);
 
@@ -1919,10 +1919,11 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
         CD_bcast_time.start();
         {
             // 全PEに分配
-            const int PEinCharge = L.getPEinChargeByRow(pivot_m);
+            const int PEinCharge = L.getSubunitID(pivot_m);
             if (PEinCharge == rComm.getRank()) {
-                const index_type copySize = L.getRowVector(pivot_m, &(L_pm[0]), m +1);
-                assert(copySize == m +1);
+                // const index_type copySize = L.getRowVector(pivot_m, &(L_pm[0]), m +1);
+                L_pm = L.getVector(pivot_m);
+                assert(L_pm.size() == m +1);
             }
             rComm.broadcast(&(L_pm[0]), m +1, PEinCharge);
         }
@@ -1940,8 +1941,9 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
 #pragma omp for schedule(runtime)
             for (int i = local_m; i < local_N; ++i) {
                 const int pivot_i = local_pivot[i];
-                const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
-                assert(copySize == m +1);
+                // const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
+                L_pi = L.getVector(pivot_i);
+                assert(L_pi.size() == m +1);
                 double sum_ll = 0.0;
                 for (index_type j = 0; j < m; ++j) {
                     sum_ll += L_pm[j] * L_pi[j];

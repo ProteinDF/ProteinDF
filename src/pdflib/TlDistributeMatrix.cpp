@@ -391,7 +391,7 @@ TlDistributeMatrix::TlDistributeMatrix(const TlDistributeVector& rhs,
 }
 
 
-TlDistributeMatrix::TlDistributeMatrix(const TlRowVectorMatrix2& rhs)
+TlDistributeMatrix::TlDistributeMatrix(const TlRowVectorMatrix& rhs)
     : log_(TlLogging::getInstance()),
       m_nContext(0), m_nRows(rhs.getNumOfRows()), m_nCols(rhs.getNumOfCols()),
       m_nBlockSize(TlDistributeMatrix::systemBlockSize_),
@@ -400,16 +400,17 @@ TlDistributeMatrix::TlDistributeMatrix(const TlRowVectorMatrix2& rhs)
     this->initialize();
 
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    const int numOfProcs = rComm.getNumOfProcs();
+    // const int numOfProcs = rComm.getNumOfProcs();
     const int myRank = rComm.getRank();
 
     const index_type numOfRows = this->getNumOfRows();
     const index_type numOfCols = this->getNumOfCols();
     std::vector<double> rowVec(numOfCols);
     for (index_type row = 0; row < numOfRows; ++row) {
-        const int charge = rhs.getPEinChargeByRow(row);
+        const int charge = rhs.getSubunitID(row);
         if (charge == myRank) {
-            rhs.getRowVector(row, &(rowVec[0]), numOfCols);
+            rowVec = rhs.getVector(row);
+            assert(rowVec.size() == numOfCols);
         }
         rComm.broadcast(&(rowVec[0]), numOfCols, charge);
         

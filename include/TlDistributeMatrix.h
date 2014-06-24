@@ -29,7 +29,7 @@
 #include "TlMatrixObject.h"
 #include "TlVector.h"
 #include "TlSparseMatrix.h"
-#include "TlRowVectorMatrix2.h"
+#include "TlRowVectorMatrix.h"
 #include "TlUtils.h"
 #include "TlLogging.h"
 #include "TlCommunicate.h"
@@ -112,7 +112,7 @@ public:
     TlDistributeMatrix(const TlDistributeVector& rhs,
                        const int row, const int col);
 
-    TlDistributeMatrix(const TlRowVectorMatrix2& rhs);
+    TlDistributeMatrix(const TlRowVectorMatrix& rhs);
 
     virtual ~TlDistributeMatrix();
 
