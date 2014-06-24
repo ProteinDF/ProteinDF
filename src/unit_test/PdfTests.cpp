@@ -19,6 +19,10 @@
 #include "TlSerializeDataTest.h"
 #include "TlStlUtilsTest.h"
 
+#include "TlVectorMatrixObjectTest.h"
+#include "TlRowVectorMatrixTest.h"
+#include "TlColVectorMatrixTest.h"
+
 //#include "Fl_UserinputXTest.h"
 
 #include "DfFunctional_SlaterTest.h"
@@ -54,6 +58,10 @@ int main(int argc, char* argv[]){
     runner.addTest(TlPartialSymmetricMatrixTest::suite());
     runner.addTest(TlStlUtilsTest::suite());
     
+    runner.addTest(TlVectorMatrixObjectTest::suite());
+    runner.addTest(TlRowVectorMatrixTest::suite());
+    runner.addTest(TlColVectorMatrixTest::suite());
+
     // 
     //runner.addTest(Fl_UserinputXTest::suite());
     

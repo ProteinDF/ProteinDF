@@ -28,6 +28,9 @@ libpdftl_la_SOURCES = \
 	TlFileMatrix.cpp				\
 	TlFileSymmetricMatrix.cpp		\
 	TlListMatrix.cpp				\
+	TlVectorMatrixObject.cpp		\
+	TlRowVectorMatrix.cpp 			\
+	TlColVectorMatrix.cpp 			\
 	TlRowVectorMatrix2.cpp 			\
 	TlColVectorMatrix2.cpp 			\
 	TlVector.cpp					\

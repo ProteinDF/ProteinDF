@@ -246,9 +246,7 @@ void TlMatrixTest::testOperatorMul_AX() {
     x[0] = 1.0;
     x[1] = 2.0;
     x[2] = 3.0;
-    std::cerr << "flag1" << std::endl;
     TlVector z = a * x;
-    std::cerr << "flag2" << std::endl;
     
     CPPUNIT_ASSERT_EQUAL(3, (int)z.getSize());
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 8.0, z[0], threshold);

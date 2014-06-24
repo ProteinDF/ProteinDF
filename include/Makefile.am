@@ -23,6 +23,9 @@ pkginclude_HEADERS = \
 	TlSparseSymmetricMatrix.h	\
 	TlSparseVector.h			\
 	TlSparseVectorMatrix.h		\
+	TlVectorMatrixObject.h		\
+	TlRowVectorMatrix.h			\
+	TlColVectorMatrix.h			\
 	TlRowVectorMatrix2.h		\
 	TlColVectorMatrix2.h		\
 	TlMemManager.h				\
