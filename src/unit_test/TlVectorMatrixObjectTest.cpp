@@ -105,3 +105,91 @@ void TlVectorMatrixObjectTest::testContents()
 }
 
 
+void TlVectorMatrixObjectTest::testCopyConstructer()
+{
+    TlVectorMatrixObject A(100, 600, 1, 0);
+    CPPUNIT_ASSERT_EQUAL(100, A.getNumOfVectors());
+    CPPUNIT_ASSERT_EQUAL(600, A.getSizeOfVector());
+    CPPUNIT_ASSERT_EQUAL(  1, A.getNumOfSubunits());
+    CPPUNIT_ASSERT_EQUAL(  0, A.getSubunitID());
+    {
+        const int numOfVectors = A.getNumOfVectors();
+        const int sizeOfVector = A.getSizeOfVector();
+        int count = 0;
+        for (int i = 0; i < numOfVectors; ++i) {
+            for (int j = 0; j < sizeOfVector; ++j) {
+                double v = double(count);
+                A.set(i, j, v);
+                
+                ++count;
+            }
+        }
+    }
+
+    TlVectorMatrixObject B(A);
+    CPPUNIT_ASSERT_EQUAL(100, B.getNumOfVectors());
+    CPPUNIT_ASSERT_EQUAL(600, B.getSizeOfVector());
+    CPPUNIT_ASSERT_EQUAL(  1, B.getNumOfSubunits());
+    CPPUNIT_ASSERT_EQUAL(  0, B.getSubunitID());
+    {
+        const int numOfVectors = B.getNumOfVectors();
+        const int sizeOfVector = B.getSizeOfVector();
+        int count = 0;
+        for (int i = 0; i < numOfVectors; ++i) {
+            for (int j = 0; j < sizeOfVector; ++j) {
+                double v = double(count);
+                double b = B.get(i, j);
+                CPPUNIT_ASSERT_DOUBLES_EQUAL(v, b,
+                                             TlVectorMatrixObjectTest::threshold);
+                
+                ++count;
+            }
+        }
+    }
+}
+
+
+void TlVectorMatrixObjectTest::testSubstitutionOperator()
+{
+    TlVectorMatrixObject A(100, 600, 1, 0);
+    CPPUNIT_ASSERT_EQUAL(100, A.getNumOfVectors());
+    CPPUNIT_ASSERT_EQUAL(600, A.getSizeOfVector());
+    CPPUNIT_ASSERT_EQUAL(  1, A.getNumOfSubunits());
+    CPPUNIT_ASSERT_EQUAL(  0, A.getSubunitID());
+    {
+        const int numOfVectors = A.getNumOfVectors();
+        const int sizeOfVector = A.getSizeOfVector();
+        int count = 0;
+        for (int i = 0; i < numOfVectors; ++i) {
+            for (int j = 0; j < sizeOfVector; ++j) {
+                double v = double(count);
+                A.set(i, j, v);
+                
+                ++count;
+            }
+        }
+    }
+
+    TlVectorMatrixObject B(100, 100);
+    B = A;
+    CPPUNIT_ASSERT_EQUAL(100, B.getNumOfVectors());
+    CPPUNIT_ASSERT_EQUAL(600, B.getSizeOfVector());
+    CPPUNIT_ASSERT_EQUAL(  1, B.getNumOfSubunits());
+    CPPUNIT_ASSERT_EQUAL(  0, B.getSubunitID());
+    {
+        const int numOfVectors = B.getNumOfVectors();
+        const int sizeOfVector = B.getSizeOfVector();
+        int count = 0;
+        for (int i = 0; i < numOfVectors; ++i) {
+            for (int j = 0; j < sizeOfVector; ++j) {
+                double v = double(count);
+                double b = B.get(i, j);
+                CPPUNIT_ASSERT_DOUBLES_EQUAL(v, b,
+                                             TlVectorMatrixObjectTest::threshold);
+                
+                ++count;
+            }
+        }
+    }
+}
+

@@ -40,7 +40,7 @@ void TlRowVectorMatrix::resize(const index_type row,
 }
 
 
-void TlRowVectorMatrix::reserve(const index_type reserveColSize)
+void TlRowVectorMatrix::reserveColSize(const index_type reserveColSize)
 {
     TlVectorMatrixObject::reserveVectorSize(reserveColSize);
 }

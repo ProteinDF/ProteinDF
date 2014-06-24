@@ -35,7 +35,12 @@ public:
                                   index_type sizeOfVector = 1, 
                                   int numOfMembers = 1, int ID = 0,
                                   bool isUsingMemManager = false);
+    TlVectorMatrixObject(const TlVectorMatrixObject& rhs);
+
+
     virtual ~TlVectorMatrixObject();
+
+    TlVectorMatrixObject& operator=(const TlVectorMatrixObject& rhs);
         
 public:
     void resize(index_type newNumOfVectors,
@@ -54,10 +59,6 @@ public:
     void save(const std::string& basename) const;
     void load(const std::string& basename);
 
-protected:
-    /// 前もってvector sizeを設定する
-    void reserveVectorSize(index_type vectorSize);
-
 public:
     index_type getSizeOfVector() const {
         return this->sizeOfVector_;
@@ -67,6 +68,11 @@ public:
         return this->numOfVectors_;
     };
 
+
+    index_type getNumOfLocalVectors() const {
+        return this->numOfLocalVectors_;
+    };
+    
     int getNumOfSubunits() const {
         return this->numOfSubunits_;
     };
@@ -79,13 +85,12 @@ public:
     /// 該当するベクトルを持っているPE番号を返す
     int getSubunitID(const index_type vectorIndex) const;
 
+protected:
+    /// 前もってvector sizeを設定する
+    void reserveVectorSize(index_type vectorSize);
 
-private:
-    /// 暗黙なコピーコンストラクタの作成を防止する
-    TlVectorMatrixObject(const TlVectorMatrixObject& rhs);
-
-    /// 暗黙な代入演算子の作成を防止する
-    TlVectorMatrixObject& operator=(const TlVectorMatrixObject& rhs);
+    /// data_ メンバ変数を破棄する
+    void destroy();
 
 private:
     index_type numOfVectors_;      /// ベクトルの総数(global)

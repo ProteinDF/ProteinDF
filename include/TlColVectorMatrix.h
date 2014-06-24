@@ -39,7 +39,7 @@ public:
 
 public:
     virtual void resize(index_type row, index_type col);
-    void reserve(const index_type reserveRowSize);
+    void reserveRowSize(const index_type reserveRowSize);
 
     index_type getNumOfRows() const {
         return this->getSizeOfVector();

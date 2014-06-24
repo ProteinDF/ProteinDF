@@ -26,7 +26,7 @@
 #include "TlSparseSymmetricMatrix.h"
 #include "TlSymmetricMatrix.h"
 #include "TlStlUtils.h"
-#include "TlRowVectorMatrix2.h"
+#include "TlRowVectorMatrix.h"
 
 class TlOrbitalInfo;
 class DfEngineObject;
@@ -175,18 +175,18 @@ protected:
 
 protected:
     template<class EngineClass>
-    TlRowVectorMatrix2 calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo,
+    TlRowVectorMatrix calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo,
                                                    const std::string& I2PQ_path);
 
-    virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
+    virtual TlRowVectorMatrix calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
                                                             const std::string& I2PQ_path);
 
     template<class EngineClass>
-    TlRowVectorMatrix2 calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo_p,
+    TlRowVectorMatrix calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo_p,
                                                    const TlOrbitalInfoObject& orbInfo_q,
                                                    const std::string& I2PQ_path);
 
-    virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
+    virtual TlRowVectorMatrix calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
                                                             const TlOrbitalInfoObject& orbInfo_q,
                                                             const std::string& I2PQ_path);
 
@@ -623,11 +623,11 @@ protected:
 
 
 template<class EngineClass>
-TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo,
+TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo,
                                                      const std::string& I2PQ_path)
 {
     this->createEngines<EngineClass>();
-    const TlRowVectorMatrix2 L = this->calcCholeskyVectorsOnTheFlyS(orbInfo,
+    const TlRowVectorMatrix L = this->calcCholeskyVectorsOnTheFlyS(orbInfo,
                                                                     I2PQ_path);
     this->destroyEngines();
 
@@ -636,12 +636,12 @@ TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& 
 
 
 template<class EngineClass>
-TlRowVectorMatrix2 DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo_p,
+TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo_p,
                                                      const TlOrbitalInfoObject& orbInfo_q,
                                                      const std::string& I2PQ_path)
 {
     this->createEngines<EngineClass>();
-    const TlRowVectorMatrix2 L = this->calcCholeskyVectorsOnTheFlyA(orbInfo_p,
+    const TlRowVectorMatrix L = this->calcCholeskyVectorsOnTheFlyA(orbInfo_p,
                                                                     orbInfo_q,
                                                                     I2PQ_path);
     this->destroyEngines();

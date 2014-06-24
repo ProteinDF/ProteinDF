@@ -11,6 +11,8 @@ class TlVectorMatrixObjectTest : public CppUnit::TestFixture {
     CPPUNIT_TEST(testConstructer2);
     CPPUNIT_TEST(testResize);
     CPPUNIT_TEST(testContents);
+    CPPUNIT_TEST(testCopyConstructer);
+    CPPUNIT_TEST(testSubstitutionOperator);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -18,6 +20,8 @@ public:
     void testConstructer2();
     void testResize();
     void testContents();
+    void testCopyConstructer();
+    void testSubstitutionOperator();
 
 public:
     TlVectorMatrixObjectTest() {

@@ -38,24 +38,56 @@ TlVectorMatrixObject::TlVectorMatrixObject(const index_type numOfVectors,
 }
 
 
-TlVectorMatrixObject::~TlVectorMatrixObject()
-{
-    const index_type numOfLocalVectors = this->numOfLocalVectors_;
+TlVectorMatrixObject::TlVectorMatrixObject(const TlVectorMatrixObject& rhs)
+    : numOfVectors_(0),
+      sizeOfVector_(0),
+      numOfSubunits_(rhs.numOfSubunits_),
+      subunitID_(rhs.subunitID_),
+      numOfLocalVectors_(0),
+      reservedVectorSize_(0),
+      isUsingMemManager_(rhs.isUsingMemManager_) {
 
-    if (this->isUsingMemManager_ == true) {
-        TlMemManager& rMemManager = TlMemManager::getInstance();
-        const index_type reservedVectorSize = this->reservedVectorSize_;
-        for (index_type i = 0; i < numOfLocalVectors; ++i) {
-            rMemManager.deallocate((char*)this->data_[i], sizeof(double) * reservedVectorSize);
-            this->data_[i] = NULL;
-        }
-    } else {
-        for (index_type i = 0; i < numOfLocalVectors; ++i) {
-            delete[] this->data_[i];
-            this->data_[i] = NULL;
+    this->resize(rhs.numOfVectors_, rhs.sizeOfVector_);
+
+    const index_type numOfLocalVectors = this->numOfLocalVectors_;
+    assert(this->data_.size() == numOfLocalVectors);
+    const index_type sizeOfVector = this->sizeOfVector_;
+    for (index_type i = 0; i < numOfLocalVectors; ++i) {
+        for (index_type j = 0; j < sizeOfVector; ++j) {
+            this->data_[i][j] = rhs.data_[i][j];
         }
     }
-    this->data_.clear();
+}
+
+
+TlVectorMatrixObject::~TlVectorMatrixObject()
+{
+    this->destroy();
+}
+
+
+TlVectorMatrixObject& TlVectorMatrixObject::operator=(const TlVectorMatrixObject& rhs)
+{
+    if (this != &rhs) {
+        this->destroy();
+        
+        this->numOfSubunits_ = rhs.numOfSubunits_;
+        this->subunitID_ = rhs.subunitID_;
+        this->isUsingMemManager_ = rhs.isUsingMemManager_;
+
+        this->resize(rhs.numOfVectors_, rhs.sizeOfVector_);
+    
+        const index_type numOfLocalVectors = this->numOfLocalVectors_;
+        assert(this->data_.size() == numOfLocalVectors);
+        const index_type sizeOfVector = this->sizeOfVector_;
+        for (index_type i = 0; i < numOfLocalVectors; ++i) {
+            for (index_type j = 0; j < sizeOfVector; ++j) {
+                this->data_[i][j] = rhs.data_[i][j];
+            }
+        }
+    }
+
+    return *this;
 }
 
 
@@ -274,6 +306,26 @@ void TlVectorMatrixObject::load(const std::string& basename)
     ifs.close();
 }
 
+
+void TlVectorMatrixObject::destroy()
+{
+    const index_type numOfLocalVectors = this->numOfLocalVectors_;
+    if (this->isUsingMemManager_ == true) {
+        TlMemManager& rMemManager = TlMemManager::getInstance();
+        const index_type reservedVectorSize = this->reservedVectorSize_;
+        for (index_type i = 0; i < numOfLocalVectors; ++i) {
+            rMemManager.deallocate((char*)this->data_[i], sizeof(double) * reservedVectorSize);
+            this->data_[i] = NULL;
+        }
+    } else {
+        for (index_type i = 0; i < numOfLocalVectors; ++i) {
+            delete[] this->data_[i];
+            this->data_[i] = NULL;
+        }
+    }
+
+    this->data_.clear();
+}
 
 
 

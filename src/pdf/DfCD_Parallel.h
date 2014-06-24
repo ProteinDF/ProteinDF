@@ -22,9 +22,8 @@
 #include <cstdlib>
 #include "DfCD.h"
 #include "TlDistributeSymmetricMatrix.h"
-// #include "TlRowVectorMatrix.h"
-#include "TlRowVectorMatrix2.h"
-#include "TlColVectorMatrix2.h"
+#include "TlRowVectorMatrix.h"
+#include "TlColVectorMatrix.h"
 
 class DfCD_Parallel : public DfCD {
 public:
@@ -101,11 +100,11 @@ protected:
     
     
 protected:
-    virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
-                                                            const std::string& I2PQ_path);
-    virtual TlRowVectorMatrix2 calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
-                                                            const TlOrbitalInfoObject& orbInfo_q,
-                                                            const std::string& I2PQ_path);
+    virtual TlRowVectorMatrix calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
+                                                           const std::string& I2PQ_path);
+    virtual TlRowVectorMatrix calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
+                                                           const TlOrbitalInfoObject& orbInfo_q,
+                                                           const std::string& I2PQ_path);
 
     virtual std::vector<double>
     getSuperMatrixElements(const TlOrbitalInfoObject& orbInfo,
@@ -113,13 +112,13 @@ protected:
                            const std::vector<index_type>& G_col_list,
                            const PQ_PairArray& I2PQ,
                            const TlSparseSymmetricMatrix& schwartzTable);
-    void saveL(const TlRowVectorMatrix2& L,
+    void saveL(const TlRowVectorMatrix& L,
                const std::string& path);
-    // TlColVectorMatrix2 getColVector(const TlRowVectorMatrix2& L);
+    // TlColVectorMatrix2 getColVector(const TlRowVectorMatrix& L);
 
     // for debug
-    TlMatrix mergeL(const TlRowVectorMatrix2& L);
-    TlMatrix mergeL(const TlColVectorMatrix2& L);
+    TlMatrix mergeL(const TlRowVectorMatrix& L);
+    TlMatrix mergeL(const TlColVectorMatrix& L);
 
 private:
     bool isDebugSaveL_;
