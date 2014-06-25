@@ -210,6 +210,7 @@ double TlVectorMatrixObject::get(const index_type vectorIndex,
     return answer;
 }
 
+
 std::vector<double> TlVectorMatrixObject::getVector(const index_type vectorIndex) const
 {
     const index_type vectorSize = this->sizeOfVector_;
@@ -227,6 +228,18 @@ std::vector<double> TlVectorMatrixObject::getVector(const index_type vectorIndex
 }
 
 
+void TlVectorMatrixObject::setVector(const index_type vectorIndex, const std::vector<double>& v)
+{
+    assert(v.size() == this->sizeOfVector_);
+
+    const div_t turns = std::div(vectorIndex, this->numOfSubunits_);
+    if (turns.rem == this->subunitID_) {
+        const index_type localVectorIndex = turns.quot;
+        std::copy(v.begin(), v.end(), this->data_[localVectorIndex]);
+    }
+}
+
+
 int TlVectorMatrixObject::getSubunitID(const index_type vectorIndex) const
 {
     assert((0 <= vectorIndex) && (vectorIndex < this->numOfVectors_));
@@ -235,15 +248,21 @@ int TlVectorMatrixObject::getSubunitID(const index_type vectorIndex) const
 }
 
 
+std::string TlVectorMatrixObject::getFileName(const std::string& basename,
+                                              const int subunitID)
+{
+    return TlUtils::format("%s.part%d.mat",
+                           basename.c_str(),
+                           subunitID);
+}
+
 void TlVectorMatrixObject::save(const std::string& basename) const 
 {
     const index_type numOfVectors = this->numOfVectors_;
     const index_type sizeOfVector = this->sizeOfVector_;
 
     std::ofstream ofs;
-    const std::string path = TlUtils::format("%s.part%d.mat",
-                                             basename.c_str(),
-                                             this->subunitID_);
+    const std::string path = TlVectorMatrixObject::getFileName(basename, this->subunitID_);
     ofs.open(path.c_str(), std::ofstream::out | std::ofstream::binary);
 
     // header
@@ -251,10 +270,6 @@ void TlVectorMatrixObject::save(const std::string& basename) const
     ofs.write(reinterpret_cast<const char*>(&sizeOfVector), sizeof(index_type));
     ofs.write(reinterpret_cast<const char*>(&(this->numOfSubunits_)), sizeof(int));
     ofs.write(reinterpret_cast<const char*>(&(this->subunitID_)), sizeof(int));
-    // ofs.write((const char*)&numOfVectors, sizeof(index_type));
-    // ofs.write((const char*)&sizeOfVector, sizeof(index_type));
-    // ofs.write((const char*)&(this->numOfSubunits_), sizeof(int));
-    // ofs.write((const char*)&(this->subunitID_), sizeof(int));
 
     // data
     const index_type numOfLocalVectors = this->data_.size();
@@ -267,32 +282,78 @@ void TlVectorMatrixObject::save(const std::string& basename) const
 }
 
 
-void TlVectorMatrixObject::load(const std::string& basename)
+bool TlVectorMatrixObject::isLoadable(const std::string& filepath,
+                                      index_type* pNumOfVectors, index_type* pSizeOfVector,
+                                      int* pNumOfSubunits, int* pSubunitID) 
+{
+    bool answer = false;
+
+    std::ifstream ifs;
+    ifs.open(filepath.c_str(), std::ifstream::in);
+    if (ifs.good()) {
+        // read header
+        index_type numOfVectors = 0;
+        index_type sizeOfVector = 0;
+        int numOfSubunits = 0;
+        int subunitID = 0;
+        ifs.read((char*)&numOfVectors, sizeof(index_type));
+        ifs.read((char*)&sizeOfVector, sizeof(index_type));
+        ifs.read((char*)&numOfSubunits, sizeof(int));
+        ifs.read((char*)&subunitID, sizeof(int));
+        
+        if ((numOfVectors > 0) && (sizeOfVector > 0) &&
+            (numOfSubunits > 0) && (subunitID >= 0) && (subunitID < numOfSubunits)) {
+
+            if (pNumOfVectors != NULL) {
+                *pNumOfVectors = numOfVectors;
+            }
+            if (pSizeOfVector != NULL) {
+                *pSizeOfVector = sizeOfVector;
+            }
+            if (pNumOfSubunits != NULL) {
+                *pNumOfSubunits = numOfSubunits;
+            }
+            if (pSubunitID != NULL) {
+                *pSubunitID = subunitID;
+            }
+            answer = true;
+        }
+    }
+
+    return answer;
+}
+
+
+void TlVectorMatrixObject::load(const std::string& basename, int subunitID)
 {
     TlLogging& log = TlLogging::getInstance();
 
+    if (subunitID == -1) {
+        subunitID = this->subunitID_;
+    }
+
     std::ifstream ifs;
-    const std::string path = TlUtils::format("%s.part%d.mat",
-                                             basename.c_str(),
-                                             this->subunitID_);
+    const std::string path = TlVectorMatrixObject::getFileName(basename, subunitID);
+
     ifs.open(path.c_str(), std::ifstream::in);
     if (ifs.good()) {
         // header
         index_type numOfVectors = 0;
         index_type sizeOfVector = 0;
-        int allProcs = 0;
-        int rank = 0;
+        int read_numOfSubunits = 0;
+        int read_subunitID = 0;
         ifs.read((char*)&numOfVectors, sizeof(index_type));
         ifs.read((char*)&sizeOfVector, sizeof(index_type));
-        ifs.read((char*)&allProcs, sizeof(int));
-        ifs.read((char*)&rank, sizeof(int));
+        ifs.read((char*)&read_numOfSubunits, sizeof(int));
+        ifs.read((char*)&read_subunitID, sizeof(int));
+        this->numOfSubunits_ = read_numOfSubunits;
+        this->subunitID_ = read_subunitID;
         this->resize(numOfVectors, sizeOfVector);
-        assert((allProcs == this->allProcs_) && (rank == this->rank_));
         
         // data
-        const div_t turns = std::div(numOfVectors, allProcs);
+        const div_t turns = std::div(numOfVectors, this->numOfSubunits_);
         index_type numOfLocalVectors = turns.quot;
-        if (rank < turns.rem) {
+        if (this->subunitID_ < turns.rem) {
             ++numOfLocalVectors;
         }
         

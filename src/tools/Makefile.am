@@ -11,9 +11,9 @@ AM_CPPFLAGS= -I$(top_srcdir)/include -I$(top_srcdir)/src/pdf
 SERIAL_PROGS = 				\
 	pdfdiffmat 				\
 	pdfdiffvtr 				\
-	topPdfMatrix				\
+	topPdfMatrix			\
 	catPdfMatrix 			\
-	combineDensityMatrix 		\
+	combineDensityMatrix 	\
 	pdfMatrixCheck 			\
 	mmap_bench 				\
 	mmap_bench_matrix_calc 	\
@@ -39,7 +39,8 @@ SERIAL_PROGS = 				\
 	pdf-mkfld-esp			\
 	pdf-pop-mulliken		\
 	pdf-show-mat			\
-	pdf-show-vtr
+	pdf-show-vtr			\
+	pdf-reconf-vectormatrix
 
 
 PARALLEL_PROGS = \
@@ -193,7 +194,8 @@ pdf_show_mat_LDADD = $(SERIAL_LIBS)
 pdf_show_vtr_SOURCES = main_show_vtr.cpp
 pdf_show_vtr_LDADD = $(SERIAL_LIBS)
 
-
+pdf_reconf_vectormatrix_SOURCES = main_reconf_vectormatrix.cpp
+pdf_reconf_vectormatrix_LDADD = $(SERIAL_LIBS)
 
 if PARALLEL
 bin_PROGRAMS = $(SERIAL_PROGS) $(PARALLEL_PROGS)

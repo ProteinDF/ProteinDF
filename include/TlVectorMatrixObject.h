@@ -55,9 +55,24 @@ public:
                index_type index) const;
 
     std::vector<double> getVector(index_type vectorIndex) const;
+    void setVector(index_type vectorIndex, const std::vector<double>& v);
+
+public:
+    static std::string getFileName(const std::string& basename,
+                                   const int subunitID);
+
+    /// 指定したファイルがこのクラスで読み込めるかどうかをチェックする。
+    /// 読み込める場合はtrueを返す。
+    /// このとき、pNumOfSubunitsが指定されていれば、全サブユニット数が代入される。
+    /// また、pSubunitIDが指定されていれば、サブユニットIDが代入される。
+    static bool isLoadable(const std::string& filepath,
+                           index_type* pNumOfVectors = NULL,
+                           index_type* pSizeOfVector = NULL,
+                           int* pNumOfSubunits = NULL,
+                           int* pSubunitID = NULL);
 
     void save(const std::string& basename) const;
-    void load(const std::string& basename);
+    void load(const std::string& basename, int subunitID = -1);
 
 public:
     index_type getSizeOfVector() const {
