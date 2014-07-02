@@ -68,6 +68,10 @@ protected:
     UINT16 unpack_uint16(std::istream& ifs);
     UINT32 unpack_uint32(std::istream& ifs);
     UINT64 unpack_uint64(std::istream& ifs);
+
+    TlSerializeData unpack_bin8(std::istream& ifs);
+    TlSerializeData unpack_bin16(std::istream& ifs);
+    TlSerializeData unpack_bin32(std::istream& ifs);
     
     INT8 unpack_int8(std::istream& ifs);
     INT16 unpack_int16(std::istream& ifs);
@@ -78,8 +82,18 @@ protected:
     double unpack_double(std::istream& ifs);
     
     TlSerializeData unpack_fixraw(const char in, std::istream& ifs);
-    TlSerializeData unpack_raw16(std::istream& ifs);
-    TlSerializeData unpack_raw32(std::istream& ifs);
+    TlSerializeData unpack_str8(std::istream& ifs);
+    TlSerializeData unpack_str16(std::istream& ifs);
+    TlSerializeData unpack_str32(std::istream& ifs);
+
+    TlSerializeData unpack_ext8(std::istream& ifs);
+    TlSerializeData unpack_ext16(std::istream& ifs);
+    TlSerializeData unpack_ext32(std::istream& ifs);
+    TlSerializeData unpack_fixext1(std::istream& ifs);
+    TlSerializeData unpack_fixext2(std::istream& ifs);
+    TlSerializeData unpack_fixext4(std::istream& ifs);
+    TlSerializeData unpack_fixext8(std::istream& ifs);
+    TlSerializeData unpack_fixext16(std::istream& ifs);
 
     TlSerializeData unpack_fixarray(const char in, std::istream& ifs);
     TlSerializeData unpack_array16(std::istream& ifs);
@@ -109,6 +123,10 @@ protected:
     void write(std::ostringstream& os, T value) const {
         os.write((char*)&value, sizeof(T));
     }
+
+protected:
+    TlSerializeData unpack_ext(std::istream& ifs,
+                               const std::size_t size);
     
 protected:
     TlSerializeData data_;
