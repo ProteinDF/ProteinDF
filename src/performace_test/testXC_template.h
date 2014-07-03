@@ -16,7 +16,7 @@ void testXC(const TlSerializeData& inParam,
     TlSerializeData param = inParam;
     
     TlOrbitalInfo orbitalInfo(param["coordinates"],
-                              param["basis_sets"]);
+                              param["basis_set"]);
     const int numOfAOs = orbitalInfo.getNumOfOrbitals();
     if (verbose == true) {
         std::cerr << TlUtils::format("number of AOs: %d", numOfAOs)

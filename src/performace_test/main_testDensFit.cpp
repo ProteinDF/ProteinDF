@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     mpac.load(mpacPath);
     TlSerializeData param = mpac.getSerializeData();
     TlOrbitalInfo orbitalInfo(param["coordinates"],
-                              param["basis_sets"]);
+                              param["basis_set"]);
     const int numOfAOs = orbitalInfo.getNumOfOrbitals();
     if (isVerbose == true) {
         std::cerr << TlUtils::format("number of AOs: %d", numOfAOs)

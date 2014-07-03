@@ -81,9 +81,9 @@ TlSerializeData DfInputdata::main()
     // 
     {
         const Fl_Geometry flGeom(param["coordinates"]);
-        const TlOrbitalInfo orbInfo(param["coordinates"], param["basis_sets"]);
-        const TlOrbitalInfo_Density orbInfo_J(param["coordinates"], param["basis_sets_j"]);
-        const TlOrbitalInfo_XC orbInfo_XC(param["coordinates"], param["basis_sets_k"]);
+        const TlOrbitalInfo orbInfo(param["coordinates"], param["basis_set"]);
+        const TlOrbitalInfo_Density orbInfo_J(param["coordinates"], param["basis_set_j"]);
+        const TlOrbitalInfo_XC orbInfo_XC(param["coordinates"], param["basis_set_xc"]);
 
         param["num_of_atoms"] = flGeom.getNumOfAtoms();
         param["num_of_dummy_atoms"] = flGeom.getNumOfDummyAtoms();
@@ -166,10 +166,10 @@ void DfInputdata::show(const TlSerializeData& data) const
     {
         const std::string showOrbitalBasis = TlUtils::toUpper(data["show_orbital_basis"].getStr());
 
-        const Fl_Gto orb(data["basis_sets"]);
-        const Fl_Gto orb_j(data["basis_sets_j"]);
-        const Fl_Gto orb_k(data["basis_sets_k"]);
-        const Fl_Gto orb_GF(data["basis_sets_GF"]);
+        const Fl_Gto orb(data["basis_set"]);
+        const Fl_Gto orb_j(data["basis_set_j"]);
+        const Fl_Gto orb_k(data["basis_set_xc"]);
+        const Fl_Gto orb_GF(data["basis_set_gridfree"]);
         const bool isUseGF = data["grid_free"].getBoolean();
         if (showOrbitalBasis == "GAMESS") {
             log.info(" >>>> Inputted Orbital Basis Set (GAMESS format) <<<<");

@@ -88,7 +88,7 @@ void DfCD::calcCholeskyVectorsForJK()
 {
     // for J & K
     const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
-                                (*this->pPdfParam_)["basis_sets"]);
+                                (*this->pPdfParam_)["basis_set"]);
     if (this->debugBuildSuperMatrix_) {
         // DEBUG code
         this->log_.info("call DEBUG routine:");
@@ -123,11 +123,11 @@ void DfCD::calcCholeskyVectorsForGridFree()
 {
     // for XC(gridfree)
     const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
-                                  (*this->pPdfParam_)["basis_sets"]);
+                                  (*this->pPdfParam_)["basis_set"]);
 
     if (this->isDedicatedBasisForGridFree_) {
         const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
-                                      (*this->pPdfParam_)["basis_sets_GF"]);
+                                      (*this->pPdfParam_)["basis_set_gridfree"]);
         if (this->debugBuildSuperMatrix_) {
             // DEBUG code
             this->log_.info("call DEBUG routine:");
@@ -361,9 +361,9 @@ void DfCD::getJ_S(TlSymmetricMatrix* pJ)
 void DfCD::getJ_A(TlSymmetricMatrix* pJ)
 {
     const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
-                                  (*this->pPdfParam_)["basis_sets"]);
+                                  (*this->pPdfParam_)["basis_set"]);
     const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
-                                  (*this->pPdfParam_)["basis_sets"]);
+                                  (*this->pPdfParam_)["basis_set"]);
     const TlSymmetricMatrix P = this->getPMatrix();
 
     // cholesky vector
@@ -445,9 +445,9 @@ void DfCD::getK_A(const RUN_TYPE runType,
                   TlSymmetricMatrix *pK)
 {
     const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
-                                  (*this->pPdfParam_)["basis_sets"]);
+                                  (*this->pPdfParam_)["basis_set"]);
     const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
-                                  (*this->pPdfParam_)["basis_sets"]);
+                                  (*this->pPdfParam_)["basis_set"]);
 
     TlMatrix L = this->getLjk();
     const index_type numOfCBs = L.getNumOfCols();
@@ -490,7 +490,7 @@ void DfCD::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     this->log_.info("calc M by CD method. (symmetric routine)");
 
     const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
-                                (*this->pPdfParam_)["basis_sets"]);
+                                (*this->pPdfParam_)["basis_set"]);
     const index_type numOfAOs = orbInfo.getNumOfOrbitals();
 
     pM->resize(numOfAOs);
@@ -523,9 +523,9 @@ void DfCD::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
 {
     this->log_.info("calc M by CD method. (asymmetric routine)");
     const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
-                                  (*this->pPdfParam_)["basis_sets"]);
+                                  (*this->pPdfParam_)["basis_set"]);
     const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
-                                  (*this->pPdfParam_)["basis_sets_GF"]);
+                                  (*this->pPdfParam_)["basis_set_gridfree"]);
     // const index_type numOfAOs = orbInfo_p.getNumOfOrbitals();
     const index_type dim_M = orbInfo_q.getNumOfOrbitals();
     pM->resize(dim_M);

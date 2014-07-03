@@ -27,7 +27,7 @@
 
 DfPopulation::DfPopulation(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), orbitalInfo_((*pPdfParam)["coordinates"],
-                                        (*pPdfParam)["basis_sets"])
+                                        (*pPdfParam)["basis_set"])
 {
 }
 

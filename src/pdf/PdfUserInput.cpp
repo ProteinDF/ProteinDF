@@ -266,7 +266,7 @@ void PdfUserInput::load_conventional()
         this->data_["basis-set/gridfree"] = "";
     } else {
         this->log_.info(" use orbital basis-set for gridfree.");
-        this->data_["basis_sets_GF"] = this->data_["basis_sets"];
+        this->data_["basis_set_gridfree"] = this->data_["basis_set"];
 
         this->data_["basis-set/gridfree"] = "";
     }
@@ -444,7 +444,7 @@ void PdfUserInput::moleculeBasisSetOrbital(const std::string& str)
             key += "@" + sLabel;
         }
         const TlSerializeData basisset = this->getBasisInfo(sName);
-        this->data_["basis_sets"][key] = basisset;
+        this->data_["basis_set"][key] = basisset;
     }
 }
 
@@ -573,9 +573,9 @@ void PdfUserInput::moleculeBasisSetDensityAuxiliary(const std::string& str)
                 cGTO["pGTOs"].pushBack(pGTO);
             }
 
-            this->data_["basis_sets_j"][key]["cGTOs"].pushBack(cGTO);
+            this->data_["basis_set_j"][key]["cGTOs"].pushBack(cGTO);
         }
-        this->data_["basis_sets_j"][key]["name"] = sName;
+        this->data_["basis_set_j"][key]["name"] = sName;
     }
 }
 
@@ -676,9 +676,9 @@ void PdfUserInput::moleculeBasisSetExchangeAuxiliary(const std::string& str)
                 cGTO["pGTOs"].pushBack(pGTO);
             }
 
-            this->data_["basis_sets_k"][key]["cGTOs"].pushBack(cGTO);
+            this->data_["basis_set_xc"][key]["cGTOs"].pushBack(cGTO);
         }
-        this->data_["basis_sets_k"][key]["name"] = sName;
+        this->data_["basis_set_xc"][key]["name"] = sName;
     }
 }
 
@@ -785,7 +785,7 @@ void PdfUserInput::moleculeBasisSetGridFree(const std::string& str)
             key += "@" + sLabel;
         }
         const TlSerializeData basisset = this->getBasisInfo(sName);
-        this->data_["basis_sets_GF"][key] = basisset;
+        this->data_["basis_set_gridfree"][key] = basisset;
     }
 }
 
