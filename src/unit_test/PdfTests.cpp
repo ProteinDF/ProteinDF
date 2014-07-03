@@ -3,7 +3,6 @@
 #include <cppunit/extensions/TestFactoryRegistry.h>
 
 #include "TlUtilsTest.h"
-#include "TlParameterTest.h"
 #include "TlStringTokenizerTest.h"
 #include "TlVectorTest.h"
 #include "TlMatrixTest.h"
@@ -41,7 +40,6 @@ int main(int argc, char* argv[]){
     
     // Tl class
     runner.addTest(TlUtilsTest::suite());
-    runner.addTest(TlParameterTest::suite());
     runner.addTest(TlStringTokenizerTest::suite());
     runner.addTest(TlMemManagerTest::suite());
     runner.addTest(TlMsgPackTest::suite());

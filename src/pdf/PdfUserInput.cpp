@@ -28,17 +28,12 @@
 #define BOHR_ANGSTROM (0.52917721092)
 
 PdfUserInput::PdfUserInput(const std::string& filePath)
-    : filePath_(filePath), data_(), param_(), log_(TlLogging::getInstance())
+    : filePath_(filePath), data_(), log_(TlLogging::getInstance())
 {
 }
 
 PdfUserInput::~PdfUserInput()
 {
-}
-
-TlParameter PdfUserInput::getParameter() const
-{
-    return this->param_;
 }
 
 TlSerializeData PdfUserInput::getSerializeData() const
@@ -224,7 +219,6 @@ void PdfUserInput::load_conventional()
                     
                     // store value
                     //std::cerr << "g = " << sGroup << ", k = " << sKeyword << ", v = " << sValue << std::endl;
-                    this->param_[sGroup][sKeyword] = sValue;
                     this->data_[sKeyword] = sValue;
 
                     sKeyword = "";
@@ -242,7 +236,6 @@ void PdfUserInput::load_conventional()
         this->molecule_geometry_cartesian_input(str);
 
         this->data_["geometry/cartesian/input"] = "";
-        this->param_["MOLECULE"]["geometry/cartesian/input"] = "stored";
     }
 
     if (this->data_["basis-set/orbital"].getStr() != "") {
@@ -250,7 +243,6 @@ void PdfUserInput::load_conventional()
         this->moleculeBasisSetOrbital(str);
 
         this->data_["basis-set/orbital"] = "";
-        this->param_["MOLECULE"]["basis-set/orbital"] = "stored";
     }
 
     if (this->data_["basis-set/density-auxiliary"].getStr() != "") {
@@ -258,7 +250,6 @@ void PdfUserInput::load_conventional()
         this->moleculeBasisSetDensityAuxiliary(str);
         
         this->data_["basis-set/density-auxiliary"] = "s";
-        this->param_["MOLECULE"]["basis-set/density-auxiliary"] = "stored";
     }
 
     if (this->data_["basis-set/exchange-auxiliary"].getStr() != "") {
@@ -266,7 +257,6 @@ void PdfUserInput::load_conventional()
         this->moleculeBasisSetExchangeAuxiliary(str);
         
         this->data_["basis-set/exchange-auxiliary"] = "";
-        this->param_["MOLECULE"]["basis-set/exchange-auxiliary"] = "stored";
     }
 
     if (this->data_["basis-set/gridfree"].getStr() != "") {
@@ -274,13 +264,11 @@ void PdfUserInput::load_conventional()
         this->moleculeBasisSetGridFree(str);
         
         this->data_["basis-set/gridfree"] = "";
-        this->param_["MOLECULE"]["basis-set/gridfree"] = "stored";
     } else {
         this->log_.info(" use orbital basis-set for gridfree.");
         this->data_["basis_sets_GF"] = this->data_["basis_sets"];
 
         this->data_["basis-set/gridfree"] = "";
-        this->param_["MOLECULE"]["basis-set/gridfree"] = "stored";
     }
 
     //this->m_param.print(std::cout);
@@ -838,7 +826,6 @@ bool PdfUserInput::check()
             if ((TlUtils::toUpper(this->data_["scf-memory-saving"].getStr()) == "NO")) {
                 std::cout << " 'scf-memory-saving = yes' overridded." << std::endl;
             }
-            this->param_["SCF"]["scf-memory-saving"] = "yes";
             this->data_["scf-memory-saving"] = "yes";
         }
     }

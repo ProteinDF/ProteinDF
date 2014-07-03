@@ -42,7 +42,6 @@ class TlFileMatrix;
 class TlFileSymmetricMatrix;
 class TlMmapMatrix;
 class TlMmapSymmetricMatrix;
-class TlParameter;
 class TlSerializeData;
 
 // シングルトンパターンで実装
@@ -145,7 +144,6 @@ public:
     int broadcast(TlSparseMatrix& rData, int nRoot = 0);
     int broadcast(TlMmapMatrix& data, int root = 0);
     int broadcast(TlMmapSymmetricMatrix& data, int root = 0);
-    int broadcast(TlParameter& rParam);
     int broadcast(TlSerializeData& data);
 
     int broadcast(double* p, const std::size_t size, const int root);

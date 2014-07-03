@@ -29,7 +29,6 @@
 #include "TlSparseSymmetricMatrix.h"
 #include "TlFileMatrix.h"
 #include "TlFileSymmetricMatrix.h"
-#include "TlParameter.h"
 #include "TlSerializeData.h"
 #include "TlMsgPack.h"
 #include "TlDistributeMatrix.h"
@@ -3074,42 +3073,6 @@ int TlCommunicate::broadcast(T* pData, const MPI_Datatype mpiType,
 int TlCommunicate::broadcast(double* pData, const std::size_t size, int root)
 {
     return this->broadcast(pData, MPI_DOUBLE, 0, size, root);
-}
-
-
-int TlCommunicate::broadcast(TlParameter& rParam)
-{
-    std::vector<std::string> aGroups;
-    if (this->isMaster() == true) {
-        aGroups = rParam.getGroups();
-    }
-    this->broadcast(aGroups);
-
-    const int nNumOfGroups = aGroups.size();
-    for (int nGroup = 0; nGroup < nNumOfGroups; ++nGroup) {
-        const std::string sGroup = aGroups[nGroup];
-
-        std::vector<std::string> aKeywords;
-        if (this->isMaster() == true) {
-            aKeywords = rParam[sGroup].getKeywords();
-        }
-        this->broadcast(aKeywords);
-
-        const int nNumOfKeywords = aKeywords.size();
-        for (int nKeyword = 0; nKeyword < nNumOfKeywords; ++nKeyword) {
-            const std::string sKeyword = aKeywords[nKeyword];
-
-            std::string sValue= "";
-            if (this->isMaster() == true) {
-                sValue = rParam[sGroup][sKeyword];
-            }
-            this->broadcast(sValue);
-
-            rParam[sGroup][sKeyword] = sValue;
-        }
-    }
-
-    return 0;
 }
 
 

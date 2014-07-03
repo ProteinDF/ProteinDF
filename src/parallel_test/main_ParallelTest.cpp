@@ -11,7 +11,6 @@
 #include "TlCommunicate.h"
 #include "TlMemManager.h"
 #include "TlFile.h"
-#include "TlParameter.h"
 
 void showResultMessage(const std::string& sFunction, bool bIsPassed);
 void showResultMessageAll(const std::string& sFunction, bool bIsPassed);
@@ -34,7 +33,6 @@ void testBroadcast_string();
 void testBroadcast_vectorString();
 void testBroadcast_valarray();
 void testBroadcast_TlVector();
-void testBroadcast_TlParam();
 void testBroadcast_TlSparseMatrix();
 void testBroadcast_TlMmapSymmetricMatrix();
 
@@ -73,7 +71,6 @@ int main(int argc, char *argv[])
     testBroadcast_vectorString();
     testBroadcast_valarray();
     testBroadcast_TlVector();
-    testBroadcast_TlParam();
     testBroadcast_TlSparseMatrix();
     //testBroadcast_TlMmapSymmetricMatrix();
 
@@ -560,30 +557,6 @@ void testBroadcast_TlVector()
     }
 
     showResultMessageAll("testBroadcast_TlVector", bIsPassed);
-}
-
-void testBroadcast_TlParam()
-{
-    bool bIsPassed = false;
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    // prepare
-    TlParameter param;
-    if (rComm.isMaster() == true) {
-        param["Tokyo"]["Bunkyo"] = "hoge";
-        param["Tokyo"]["Meguro"] = "bar";
-        param["Chiba"]["Matsudo"] = "foo";
-    }
-
-    rComm.broadcast(param);
-
-    if ((param["Tokyo"]["Bunkyo"] == "hoge") &&
-            (param["Tokyo"]["Meguro"] == "bar") &&
-            (param["Chiba"]["Matsudo"] == "foo")) {
-        bIsPassed = true;
-    }
-
-    showResultMessageAll("testBroadcast_TlParam", bIsPassed);
 }
 
 void testBroadcast_TlSparseMatrix()

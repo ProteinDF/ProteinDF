@@ -25,7 +25,6 @@ PdfTests_SOURCES = \
 	PdfTests.cpp 													\
 	TlUtilsTest.h					TlUtilsTest.cpp					\
 	TlPositionTest.h				TlPositionTest.cpp				\
-	TlParameterTest.h				TlParameterTest.cpp				\
 	TlStringTokenizerTest.h			TlStringTokenizerTest.cpp		\
 	TlMatrixTest.h					TlMatrixTest.cpp				\
 	TlSymmetricMatrixTest.h			TlSymmetricMatrixTest.cpp		\
