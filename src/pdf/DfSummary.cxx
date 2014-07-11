@@ -70,7 +70,7 @@ void DfSummary::printAux(const TlVector& rho, const TlVector& myu, const TlVecto
     this->logger("\n");
 
     const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
-                                (*this->pPdfParam_)["basis_sets_k"]);
+                                (*this->pPdfParam_)["basis_set_xc"]);
     const int dim = std::max(rhoSize, std::max(myuSize, nyuSize));
     for (int i = 0; i < dim; ++i) {
         this->logger(TlUtils::format(" %6d %-2s %6s",
@@ -103,7 +103,7 @@ void DfSummary::printAux(const TlVector& rho, const TlVector& myu, const TlVecto
 void DfSummary::printRhoPop(const TlVector& rho)
 {
     const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
-                                (*this->pPdfParam_)["basis_sets_j"]);
+                                (*this->pPdfParam_)["basis_set_j"]);
     const int numOfAux = this->m_nNumOfAux;
 
     this->logger("    GTO    ATOM       SHELL                 RHO\n\n");

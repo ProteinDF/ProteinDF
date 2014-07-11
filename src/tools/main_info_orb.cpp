@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
     }
     mpac.load(pdfparamPath);
     TlSerializeData data = mpac.getSerializeData();
-    TlOrbitalInfo orbInfo(data["coordinates"], data["basis_sets"]);
+    TlOrbitalInfo orbInfo(data["coordinates"], data["basis_set"]);
 
     const std::size_t numOfAOs = orbInfo.getNumOfOrbitals();
     if (isVerbose == true) {

@@ -84,7 +84,7 @@ void DfOverlapX::getSpq(TlSymmetricMatrix* pSpq)
     pSpq->resize(numOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     this->calcOverlap(orbitalInfo, pSpq);
     this->finalize(pSpq);
 }
@@ -97,7 +97,7 @@ void DfOverlapX::getSab(TlSymmetricMatrix* pSab)
     pSab->resize(numOfAuxDens);
 
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
     this->calcOverlap(orbitalInfo_Density, pSab);
     this->finalize(pSab);
 }
@@ -109,7 +109,7 @@ void DfOverlapX::getSgd(TlSymmetricMatrix* pSgd)
     pSgd->resize(numOfAuxXC);
 
     const TlOrbitalInfo_XC orbitalInfo_XC((*(this->pPdfParam_))["coordinates"],
-                                          (*(this->pPdfParam_))["basis_sets_k"]);
+                                          (*(this->pPdfParam_))["basis_set_xc"]);
     this->calcOverlap(orbitalInfo_XC, pSgd);
     this->finalize(pSgd);
 }
@@ -121,7 +121,7 @@ void DfOverlapX::getNalpha(TlVector* pNalpha)
     pNalpha->resize(numOfAuxDens);
     
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
     this->calcOverlap(orbitalInfo_Density, pNalpha);
     this->finalize(pNalpha);
 }
@@ -152,9 +152,9 @@ void DfOverlapX::get_pqg(const TlVector& myu, TlSymmetricMatrix* pF)
 {
     assert(pF != NULL);
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlOrbitalInfo_XC orbitalInfo_XC((*(this->pPdfParam_))["coordinates"],
-                                          (*(this->pPdfParam_))["basis_sets_k"]);
+                                          (*(this->pPdfParam_))["basis_set_xc"]);
     pF->resize(orbitalInfo.getNumOfOrbitals());
     this->calcOverlap(orbitalInfo_XC, myu,
                       orbitalInfo, pF);
@@ -168,9 +168,9 @@ void DfOverlapX::get_pqg(const TlVector& myu, const TlVector& eps,
     assert(pF != NULL);
     assert(pE != NULL);
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlOrbitalInfo_XC orbitalInfo_XC((*(this->pPdfParam_))["coordinates"],
-                                          (*(this->pPdfParam_))["basis_sets_k"]);
+                                          (*(this->pPdfParam_))["basis_set_xc"]);
     pF->resize(orbitalInfo.getNumOfOrbitals());
     this->calcOverlap(orbitalInfo_XC, myu, eps,
                       orbitalInfo, pF, pE);
@@ -649,7 +649,7 @@ void DfOverlapX::getForce(const TlSymmetricMatrix& W,
     pForce->resize(this->m_nNumOfAtoms, 3);
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
 
     this->createEngines();
@@ -971,7 +971,7 @@ void DfOverlapX::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     pM->resize(this->m_nNumOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
 
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
@@ -1156,9 +1156,9 @@ void DfOverlapX::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     pM->resize(this->m_nNumOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
-                                       (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
+                                       (*(this->pPdfParam_))["basis_set_gridfree"]); // GridFree用
     pM->resize(orbitalInfo_GF.getNumOfOrbitals());
     
     const TlSparseSymmetricMatrix schwarzTable_PQ = this->makeSchwarzTable(orbitalInfo_GF);

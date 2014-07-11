@@ -24,7 +24,7 @@
 // #define DELTAG_THRESHOLD (1e-14)
 
 DfLocalize::DfLocalize(TlSerializeData* pPdfParam)
-    : DfObject(pPdfParam), orbInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_sets"])
+    : DfObject(pPdfParam), orbInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"])
 {
     this->maxIteration_ = (*pPdfParam)["max-iteration"].getInt();
     this->threshold_ = 1.0E-7;

@@ -24,7 +24,7 @@
 DfTaskCtrl::DfTaskCtrl(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
     TlOrbitalInfo orbitalInfo((*pPdfParam)["coordinates"],
-                              (*pPdfParam)["basis_sets"]);
+                              (*pPdfParam)["basis_set"]);
     this->maxShellType_ = orbitalInfo.getMaxShellType();
 
     this->lengthScaleParameter_ = 3.0;

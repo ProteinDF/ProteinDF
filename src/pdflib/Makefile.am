@@ -10,7 +10,6 @@ libpdftl_la_SOURCES = \
 	TlPseudoYaml.cpp				\
 	TlMsgPack.cpp					\
 	TlTime.cpp						\
-	TlParameter.cpp					\
 	TlMath.cxx						\
 	TlPosition.cpp	TlAtom.cpp 		\
 	TlPrdctbl.cxx	TlResidue.cxx	\

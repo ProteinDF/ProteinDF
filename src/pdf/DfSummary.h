@@ -220,7 +220,7 @@ template<class MatrixType>
 void DfSummary::printMO(const MatrixType& C)
 {
     const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
-                                (*this->pPdfParam_)["basis_sets"]);
+                                (*this->pPdfParam_)["basis_set"]);
 
     // print out LCAO coefficent
     const int numOfAOs = this->m_nNumOfAOs;

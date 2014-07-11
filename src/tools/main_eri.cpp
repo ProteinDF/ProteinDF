@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
     readMsgPack.load(readParamPath);
     TlSerializeData readData = readMsgPack.getSerializeData();
     const TlOrbitalInfo orbitalInfo(readData["coordinates"],
-                                    readData["basis_sets"]);
+                                    readData["basis_set"]);
     const int numOfAOs = orbitalInfo.getNumOfOrbitals();
 
     // calc ERI

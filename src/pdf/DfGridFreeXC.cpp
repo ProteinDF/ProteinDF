@@ -41,7 +41,7 @@ const double DfGridFreeXC::ONE_THIRD = 1.0 / 3.0;
 
 DfGridFreeXC::DfGridFreeXC(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), pOvpEngines_(NULL),
-      orbitalInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_sets"]) {
+      orbitalInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"]) {
 
     this->numOfPQs_ = this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2;
 
@@ -205,7 +205,7 @@ void DfGridFreeXC::getM_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     DfOverlapEngine engine;
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
 
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     // const ShellPairArrayTable shellPairArrayTable = this->getShellPairArrayTable(shellArrayTable);
@@ -424,9 +424,9 @@ void DfGridFreeXC::buildFxc_GGA()
 // {
 //     this->log_.info("build Fxc by grid-free method: functional type is GGA.");
 
-//     std::string basisset_param = "basis_sets";
+//     std::string basisset_param = "basis_set";
 //     if (this->isDedicatedBasisForGridFree_) {
-//         basisset_param = "basis_sets_GF";
+//         basisset_param = "basis_set_gridfree";
 //     }
 //     const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
 //                                        (*(this->pPdfParam_))[basisset_param]);

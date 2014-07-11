@@ -7,7 +7,6 @@ pkginclude_HEADERS = \
 	TlVector.h					\
 	TlAtom.h					\
 	TlMath.h					\
-	TlParameter.h				\
 	TlSimpleVector.h			\
 	TlVectorObject.h			\
 	TlFmt.h						\

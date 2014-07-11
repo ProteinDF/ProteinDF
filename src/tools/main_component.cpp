@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
     readMsgPack.load(readParamPath);
     TlSerializeData pdfparam = readMsgPack.getSerializeData();
     const TlOrbitalInfo readOrbInfo(pdfparam["coordinates"],
-                                    pdfparam["basis_sets"]);
+                                    pdfparam["basis_set"]);
     const int lastIteration = pdfparam["num_of_iterations"].getInt();
     DfObject dfObj(&pdfparam);
 

@@ -135,7 +135,7 @@ int DfGenerateGrid::dfGrdMain()
 void DfGenerateGrid::makeTable()
 {
     TlOrbitalInfo_Density orbInfoAuxCD((*this->pPdfParam_)["coordinates"],
-                                       (*this->pPdfParam_)["basis_sets_j"]);
+                                       (*this->pPdfParam_)["basis_set_j"]);
     const int maxNumOfAuxCDs = orbInfoAuxCD.getNumOfOrbitals();
     
     double dMaxExpAlpha = 0.0;

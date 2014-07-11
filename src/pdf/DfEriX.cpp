@@ -184,9 +184,9 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
     }
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
     pRho->resize(this->m_nNumOfAux);
@@ -362,9 +362,9 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
     // time_all.start();
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
@@ -577,7 +577,7 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
     engine.setPrimitiveLevelThreshold(0.0);
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellPairArrayTable shellPairArrayTable = this->getShellPairArrayTable(shellArrayTable);
 
@@ -667,7 +667,7 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
     pJ->resize(this->m_nNumOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
 #ifdef DEBUG_J
@@ -922,7 +922,7 @@ void DfEriX::getJab(TlSymmetricMatrix* pJab)
     pJab->resize(numOfAuxDens);
 
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
 
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo_Density);
 
@@ -1038,7 +1038,7 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce)
     pForce->resize(this->m_nNumOfAtoms, 3);
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
     this->createEngines();
@@ -1309,9 +1309,9 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
     pForce->resize(this->m_nNumOfAtoms, 3);
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
@@ -1503,7 +1503,7 @@ void DfEriX::getForceJ(const TlVector& rho, TlMatrix* pForce)
     pForce->resize(this->m_nNumOfAtoms, 3);
     
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
     const ShellArrayTable shellArray_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
     this->createEngines();
@@ -1671,7 +1671,7 @@ void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
     pK->resize(this->m_nNumOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellPairArrayTable shellPairArrayTable = this->getShellPairArrayTable(shellArrayTable);
     
@@ -1767,7 +1767,7 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
     pK->resize(this->m_nNumOfAOs);
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
 #ifdef DEBUG_K
@@ -2103,7 +2103,7 @@ void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce)
     pForce->resize(this->m_nNumOfAtoms, 3);
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
     this->createEngines();

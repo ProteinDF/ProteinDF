@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
     readMsgPack.load(readParamPath);
     TlSerializeData readData = readMsgPack.getSerializeData();
     const TlOrbitalInfo readOrbInfo(readData["coordinates"],
-                                    readData["basis_sets"]);
+                                    readData["basis_set"]);
     const int lastIteration = readData["num_of_iterations"].getInt();
     TlSymmetricMatrix readPpq;
     DfObject refObj(&readData);
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
     targetMsgPack.load(targetParamPath);
     const TlSerializeData targetData = targetMsgPack.getSerializeData();
     const TlOrbitalInfo targetOrbInfo(targetData["coordinates"],
-                                      targetData["basis_sets"]);
+                                      targetData["basis_set"]);
     const int targetNumOfAOs = targetOrbInfo.getNumOfOrbitals();
     if (isVerbose == true) {
         std::cout << "target number Of AOs = " << targetNumOfAOs << std::endl;

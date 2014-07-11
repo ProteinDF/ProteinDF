@@ -321,9 +321,9 @@ void DfGridFreeXC::preprocessBeforeSCF_templ()
     bool isGGA = (funcType == DfXCFunctional::GGA);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]); // orbital用
+                                    (*(this->pPdfParam_))["basis_set"]); // orbital用
     const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
-                                       (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
+                                       (*(this->pPdfParam_))["basis_set_gridfree"]); // GridFree用
 
     DfOverlapClass dfOvp(this->pPdfParam_);
     if (this->isDedicatedBasisForGridFree_) {
@@ -433,9 +433,9 @@ void DfGridFreeXC::buildFxc_LDA_runtype(const RUN_TYPE runType)
 {
     this->log_.info("build Fxc by grid-free method: functional type is LDA.");
 
-    std::string basisset_param = "basis_sets";
+    std::string basisset_param = "basis_set";
     if (this->isDedicatedBasisForGridFree_) {
-        basisset_param = "basis_sets_GF";
+        basisset_param = "basis_set_gridfree";
     }
     const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
                                        (*(this->pPdfParam_))[basisset_param]);
@@ -549,9 +549,9 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType)
 {
     this->log_.info("build Fxc by grid-free method: functional type is GGA.");
 
-    std::string basisset_param = "basis_sets";
+    std::string basisset_param = "basis_set";
     if (this->isDedicatedBasisForGridFree_) {
-        basisset_param = "basis_sets_GF";
+        basisset_param = "basis_set_gridfree";
     }
     const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
                                        (*(this->pPdfParam_))[basisset_param]);

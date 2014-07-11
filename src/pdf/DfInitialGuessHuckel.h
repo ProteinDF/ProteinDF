@@ -139,7 +139,7 @@ template <typename SymmetricMatrixType>
 SymmetricMatrixType DfInitialGuessHuckel::getHuckelMatrix()
 {
     TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
-                          (*this->pPdfParam_)["basis_sets"]);
+                          (*this->pPdfParam_)["basis_set"]);
 
     const int nNumOfOrbs = orbInfo.getNumOfOrbitals();
 
