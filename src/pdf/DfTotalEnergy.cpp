@@ -172,7 +172,7 @@ double DfTotalEnergy::calculate_energy_nuclear_repulsion()
 
 void DfTotalEnergy::write_total_energy(const double E_Total) const
 {
-    (*this->pPdfParam_)["TE"][this->m_nIteration] = E_Total;
+    (*this->pPdfParam_)["TEs"][this->m_nIteration] = E_Total;
 }
 
 // total energy including dummy charge

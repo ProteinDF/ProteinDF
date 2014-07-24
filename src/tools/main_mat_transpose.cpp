@@ -32,7 +32,7 @@ void showHelp()
 
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "hvl:x:");
+    TlGetopt opt(argc, argv, "hv");
     
     if (opt["h"] == "defined") {
         showHelp();

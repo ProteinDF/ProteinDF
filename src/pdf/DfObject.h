@@ -140,6 +140,9 @@ protected:
     std::string getMyuPath(RUN_TYPE nRunType, int nIteration) const;
     std::string getNyuPath(RUN_TYPE nRunType, int nIteration) const;
     std::string getTalphaPath(RUN_TYPE runType, int iteration) const;
+    
+    // LO
+    std::string getCloMatrixPath(RUN_TYPE runType, int itr) const;
 
 protected:
     template <class SymmetricMatrixType>
@@ -415,6 +418,13 @@ protected:
                  const VectorType& nyu);
     template <class VectorType>
     VectorType getNyu(RUN_TYPE runType, int iteration);
+
+    // for LO
+    template<class MatrixType>
+    void saveCloMatrix(const RUN_TYPE runType, const int itr,
+                       const MatrixType& Clo);
+    template <class MatrixType>
+    MatrixType getCloMatrix(RUN_TYPE runType, int itr);
     
 protected:
     virtual void setParam(const TlSerializeData& data);
@@ -1396,5 +1406,26 @@ VectorType DfObject::getNyu(const RUN_TYPE runType, const int iteration)
     return nyu;
 }
 
+
+template<class MatrixType>
+void DfObject::saveCloMatrix(const RUN_TYPE runType, const int itr,
+                   const MatrixType& Clo)
+{
+    const std::string path = this->getCloMatrixPath(runType, itr);
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, Clo, true);
+    } else {
+        Clo.save(path);
+    }
+}
+
+template <class MatrixType>
+MatrixType DfObject::getCloMatrix(RUN_TYPE runType, int itr)
+{
+    MatrixType Clo;
+    const std::string path = this->getCloMatrixPath(runType, itr);
+    Clo = this->matrixCache_.get<MatrixType>(path);
+    return Clo;
+}
 
 #endif // DFOBJECT_H

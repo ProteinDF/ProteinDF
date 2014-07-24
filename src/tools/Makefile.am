@@ -17,14 +17,11 @@ SERIAL_PROGS = 				\
 	pdfMatrixCheck 			\
 	mmap_bench 				\
 	mmap_bench_matrix_calc 	\
-	localize 				\
 	merge 					\
 	transdim				\
 	diagonal				\
 	cholesky				\
 	inverse					\
-	multiple				\
-	transpose				\
 	getMaxValue				\
 	rotateLCAO				\
 	\
@@ -32,8 +29,17 @@ SERIAL_PROGS = 				\
 	pdf-eri					\
 	pdf-info-charge 		\
 	pdf-info-orb			\
+	pdf-init-param			\
 	pdf-kwd					\
+	pdf-lo					\
 	pdf-mat-add				\
+	pdf-mat-dot				\
+	pdf-mat-ext-block		\
+	pdf-mat-mul				\
+	pdf-mat-n2s				\
+	pdf-mat-resize			\
+	pdf-mat-select			\
+	pdf-mat-transpose		\
 	pdf-mkfld-mo			\
 	pdf-mkfld-dens			\
 	pdf-mkfld-esp			\
@@ -80,12 +86,6 @@ mmap_bench_matrix_calc_SOURCES = mmap_bench_matrix_calc.cpp
 mmap_bench_matrix_calc_LDADD = $(SERIAL_LIBS)
 
 
-localize_SOURCES = \
-	DfLocalize.h	DfLocalize.cpp 	\
-	main_localize.cpp
-localize_LDADD = $(SERIAL_LIBS)
-
-
 plocalize_SOURCES = \
 	DfLocalize.h		DfLocalize.cpp	\
 	DfLocalize_Parallel.h	DfLocalize_Parallel.cpp \
@@ -115,16 +115,6 @@ diagonal_LDADD = $(SERIAL_LIBS)
 cholesky_SOURCES = \
 	main_choleskydecompose.cpp
 cholesky_LDADD = $(SERIAL_LIBS)
-
-
-multiple_SOURCES = \
-	main_multiple.cpp
-multiple_LDADD = $(SERIAL_LIBS)
-
-
-transpose_SOURCES = \
-	main_transpose.cpp
-transpose_LDADD = $(SERIAL_LIBS)
 
 
 pdiagonal_SOURCES = main_pdiagonal.cpp
@@ -161,11 +151,40 @@ pdf_info_charge_LDADD = $(SERIAL_LIBS)
 pdf_info_orb_SOURCES = main_info_orb.cpp
 pdf_info_orb_LDADD = $(SERIAL_LIBS)
 
+pdf_init_param_SOURCES = main_init_param.cpp
+pdf_init_param_LDADD = $(SERIAL_LIBS)
+
 pdf_kwd_SOURCES = main_kwd.cpp
 pdf_kwd_LDADD = $(SERIAL_LIBS)
 
+pdf_lo_SOURCES = \
+	DfLocalize.h	DfLocalize.cpp 	\
+	main_localize.cpp
+pdf_lo_LDADD = $(SERIAL_LIBS)
+
 pdf_mat_add_SOURCES = main_mat_add.cpp
 pdf_mat_add_LDADD = $(SERIAL_LIBS)
+
+pdf_mat_dot_SOURCES = main_mat_dot.cpp
+pdf_mat_dot_LDADD = $(SERIAL_LIBS)
+
+pdf_mat_ext_block_SOURCES = main_mat_ext_block.cpp
+pdf_mat_ext_block_LDADD = $(SERIAL_LIBS)
+
+pdf_mat_mul_SOURCES = main_mat_mul.cpp
+pdf_mat_mul_LDADD = $(SERIAL_LIBS)
+
+pdf_mat_n2s_SOURCES = main_mat_n2s.cpp
+pdf_mat_n2s_LDADD = $(SERIAL_LIBS)
+
+pdf_mat_resize_SOURCES = main_mat_resize.cpp
+pdf_mat_resize_LDADD = $(SERIAL_LIBS)
+
+pdf_mat_select_SOURCES = main_mat_select.cpp
+pdf_mat_select_LDADD = $(SERIAL_LIBS)
+
+pdf_mat_transpose_SOURCES = main_mat_transpose.cpp
+pdf_mat_transpose_LDADD = $(SERIAL_LIBS)
 
 pdf_mkfld_mo_SOURCES = \
 	mkfld_common.h	mkfld_common.cpp	\

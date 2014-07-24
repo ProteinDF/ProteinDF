@@ -27,7 +27,7 @@ public:
     virtual ~DfInputdata_Parallel();
     
 public:
-    virtual TlSerializeData main();
+    virtual TlSerializeData main(const bool isReadUserInput =true);
 };
 
 #endif // DFINPUTDATA_PARALLEL_H

@@ -29,7 +29,7 @@ public:
     virtual ~DfInputdata();
     
     // メインルーチン;
-    virtual TlSerializeData main();
+    virtual TlSerializeData main(const bool isReadUserInput =true);
 
 protected:
     void show(const TlSerializeData& data) const;

@@ -20,71 +20,60 @@
 #include <cstdlib>
 
 #include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 #include "TlGetopt.h"
 
 void showHelp()
 {
-    std::cout << "multiple [options] input_file_path1 input_file_path2 output_file_path" << std::endl;
+    std::cout << "pdf-mat-resize [options] input_path output_path" << std::endl;
     std::cout << " OPTIONS:" << std::endl;
+    std::cout << "  -r rows: new number of rows" << std::endl;
+    std::cout << "  -c cols: new number of cols" << std::endl;
     std::cout << "  -h:      show help" << std::endl;
     std::cout << "  -v:      verbose" << std::endl;
 }
 
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "hvl:x:");
+    TlGetopt opt(argc, argv, "r:c:hv");
     
     if (opt["h"] == "defined") {
         showHelp();
         return EXIT_SUCCESS;
     }
-    
-    const bool bVerbose = (opt["v"] == "defined");
 
-    if (opt.getCount() <= 1) {
+    const bool bVerbose = (opt["v"] == "defined");
+    int newNumOfRows = 0;
+    if (! opt["r"].empty()) {
+        newNumOfRows = std::atoi(opt["r"].c_str());
+    }
+    int newNumOfCols = 0;
+    if (! opt["c"].empty()) {
+        newNumOfCols = std::atoi(opt["c"].c_str());
+    }
+
+    if (opt.getCount() <= 2) {
         showHelp();
         return EXIT_FAILURE;
     }
-    const std::string inputMatrixPath1 = opt[1];
-    const std::string inputMatrixPath2 = opt[2];
-    const std::string outputMatrixPath = opt[3];
+    std::string inputMatrixPath = opt[1];
+    std::string outputMatrixPath = opt[2];
 
     if (bVerbose == true) {
-        std::cerr << "load matrix: " << inputMatrixPath1 << std::endl;
-    }
-    if (TlMatrix::isLoadable(inputMatrixPath1) != true) {
-        std::cerr << "can not open file: " << inputMatrixPath1 << std::endl;
-        return EXIT_FAILURE;
+        std::cerr << "load matrix: " << inputMatrixPath << std::endl;
     }
 
     TlMatrix A;
-    A.load(inputMatrixPath1);
+    A.load(inputMatrixPath);
 
-    if (bVerbose == true) {
-        std::cerr << "load matrix: " << inputMatrixPath2 << std::endl;
-    }
-    if (TlMatrix::isLoadable(inputMatrixPath2) != true) {
-        std::cerr << "can not open file: " << inputMatrixPath2 << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    TlMatrix B;
-    B.load(inputMatrixPath2);
-
-    if (bVerbose == true) {
-        std::cerr << "running..." << std::endl;
-    }
-
-    TlMatrix C = A * B;
+    TlMatrix::index_type numOfRows = (newNumOfRows != 0) ? newNumOfRows : A.getNumOfRows();
+    TlMatrix::index_type numOfCols = (newNumOfCols != 0) ? newNumOfCols : A.getNumOfCols();
+    A.resize(numOfRows, numOfCols);
     
     if (bVerbose == true) {
         std::cerr << "save matrix: " << outputMatrixPath << std::endl;
     }
-    if (outputMatrixPath != "") {
-        C.save(outputMatrixPath);
-    }
-
+    A.save(outputMatrixPath);
+    
     return EXIT_SUCCESS;
 }
 

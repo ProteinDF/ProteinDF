@@ -378,6 +378,9 @@ void DfObject::setParam(const TlSerializeData& data)
     if (paramFileBaseName["eigenvalues"].getStr().empty() == true) {
         paramFileBaseName["eigenvalues"] = "eigenvalues.%s.vtr";
     }
+
+    // for lo
+    paramFileBaseName["Clo_matrix"]  = "Clo.%s.mat";
 }
 
 
@@ -737,3 +740,11 @@ std::string DfObject::getDipoleVelocityIntegralsZPath() const
 {
     return this->makeFilePath("dipoleVelocityIntegrals_z");
 }
+
+std::string DfObject::getCloMatrixPath(const RUN_TYPE runType,
+                                       const int iteration) const
+{
+    return this->makeFilePath("Clo_matrix",
+                              DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+}
+
