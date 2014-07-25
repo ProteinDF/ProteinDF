@@ -68,7 +68,7 @@ TlSerializeData DfInputdata::main(const bool isReadUserInput)
     
         // include user input parameters
         std::string mpacFilePath = param["pdf_param_path"].getStr();
-        if (! inputParam["pdf_param_path"].getStr().empty()) {
+        if (inputParam.hasKey("pdf_param_path")) {
             mpacFilePath = inputParam["pdf_param_path"].getStr();
         }
         if (TlFile::isExist(mpacFilePath) == true) {
@@ -100,13 +100,10 @@ TlSerializeData DfInputdata::main(const bool isReadUserInput)
         }
 
         // 表示
-        this->show(this->data_);
+        this->show(param);
     }
 
-    // 保存
-    this->data_ = param;
-
-    return this->data_;
+    return param;
 }
 
 

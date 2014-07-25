@@ -39,6 +39,7 @@
 
 Fl_Geometry::Fl_Geometry(const TlSerializeData& geomData) : isUpdate_(false)
 {
+    this->atoms_.clear();
     this->setup(geomData);
 }
 
@@ -216,12 +217,16 @@ void Fl_Geometry::load()
 
 void Fl_Geometry::setup(const TlSerializeData& geomData)
 {
-    this->atoms_.clear();
-    TlSerializeData::MapConstIterator groupEnd = geomData.endMap();
-    for (TlSerializeData::MapConstIterator group = geomData.beginMap(); group != groupEnd; ++group) {
-        TlSerializeData::ArrayConstIterator atomEnd = group->second.endArray();
-        for (TlSerializeData::ArrayConstIterator atom = group->second.beginArray(); atom != atomEnd; ++atom) {
+    if (geomData.hasKey("groups")) {
+        TlSerializeData::MapConstIterator subGroupEnd = geomData["groups"].endMap();
+        for (TlSerializeData::MapConstIterator subGroup = geomData["groups"].beginMap(); subGroup != subGroupEnd; ++subGroup) {
+            this->setup(subGroup->second);
+        }
+    }
 
+    if (geomData.hasKey("atoms")) {
+        TlSerializeData::ArrayConstIterator atomEnd = geomData["atoms"].endArray();
+        for (TlSerializeData::ArrayConstIterator atom = geomData["atoms"].beginArray(); atom != atomEnd; ++atom) {
             AtomData ad;
             ad.atom.setElement((*atom)["symbol"].getStr());
             ad.atom.setCharge((*atom)["charge"].getDouble());
@@ -231,12 +236,6 @@ void Fl_Geometry::setup(const TlSerializeData& geomData)
             ad.atom.moveTo(x, y, z);
             ad.label = (*atom)["label"].getStr();
 
-//             std::cerr << TlUtils::format("%s (%e, %e, %e)",
-//                                          ad.atom.getSymbol().c_str(),
-//                                          ad.atom.getPosition().x(),
-//                                          ad.atom.getPosition().y(),
-//                                          ad.atom.getPosition().z())
-//                       << std::endl;
             this->atoms_.push_back(ad);
         }
     }

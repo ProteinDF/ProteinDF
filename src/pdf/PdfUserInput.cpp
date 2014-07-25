@@ -362,7 +362,7 @@ void PdfUserInput::molecule_geometry_cartesian_input(const std::string& str)
         xyz.pushBack(position.z());
         atom["xyz"] = xyz;
         atom["label"] = sLabel2;
-        this->data_["coordinates"]["_"].pushBack(atom);
+        this->data_["coordinates"]["atoms"].pushBack(atom);
     }
 }
 

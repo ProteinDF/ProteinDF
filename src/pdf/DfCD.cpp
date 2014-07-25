@@ -544,11 +544,11 @@ void DfCD::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
         TlMatrix l = this->getCholeskyVectorA(orbInfo_p,
-                                                    orbInfo_q,
-                                                    L.getColVector(I), I2PQ);
+                                              orbInfo_q,
+                                              L.getColVector(I), I2PQ);
         // l.save(TlUtils::format("fl_Work/debug_LI_xc_%d.mat", I));
-        assert(l.getNumOfRows() == numOfAOs);
-        assert(l.getNumOfCols() == dim_M);
+        // assert(l.getNumOfRows() == numOfAOs);
+        // assert(l.getNumOfCols() == dim_M);
         l.transpose();
     
         TlMatrix X = l * C;

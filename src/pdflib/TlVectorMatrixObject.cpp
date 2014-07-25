@@ -198,7 +198,7 @@ double TlVectorMatrixObject::get(const index_type vectorIndex,
                                  const index_type index) const
 {
     assert((0 <= vectorIndex) && (vectorIndex < this->numOfVectors_));
-    assert((0 <= index) && (index < this->vectorSize_));
+    assert((0 <= index) && (index < this->sizeOfVector_));
 
     double answer = 0.0;
     const div_t turns = std::div(vectorIndex, this->numOfSubunits_);
@@ -273,7 +273,7 @@ void TlVectorMatrixObject::save(const std::string& basename) const
 
     // data
     const index_type numOfLocalVectors = this->data_.size();
-    assert(numOfLocalVectors = this->numOfLocalVectors_);
+    assert(numOfLocalVectors == this->numOfLocalVectors_);
     for (index_type i = 0; i < numOfLocalVectors; ++i) {
         ofs.write(reinterpret_cast<const char*>(&(this->data_[i][0])), sizeof(double) * sizeOfVector);
     }

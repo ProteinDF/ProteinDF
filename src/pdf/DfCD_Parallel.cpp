@@ -720,7 +720,7 @@ TlRowVectorMatrix DfCD_Parallel::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInf
             if (PEinCharge == rComm.getRank()) {
                 //const index_type copySize = L.getVector(pivot_m, &(L_pm[0]), m +1);
                 L_pm = L.getVector(pivot_m);
-                assert(L_pm[0].size() == m +1);
+                //assert(L_pm[0].size() == m +1);
             }
             rComm.broadcast(&(L_pm[0]), m +1, PEinCharge);
         }
@@ -738,7 +738,7 @@ TlRowVectorMatrix DfCD_Parallel::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInf
                 const int pivot_i = local_pivot[i];
                 //const index_type copySize = L.getVector(pivot_i, &(L_pi[0]), m +1);
                 L_pi = L.getVector(pivot_i);
-                assert(L_pi == m +1);
+                // assert(L_pi == m +1);
                 double sum_ll = 0.0;
                 for (index_type j = 0; j < m; ++j) {
                     sum_ll += L_pm[j] * L_pi[j];
@@ -887,7 +887,7 @@ void DfCD_Parallel::saveL(const TlRowVectorMatrix& L,
                     if (row < numOfRows) {
                         //L.getRowVector(row, &(v[0]), numOfCols);
                         v = L.getVector(row);
-                        assert(v.size() == numOfCols);
+                        // assert(v.size() == numOfCols);
                         std::copy(v.begin(),
                                   v.begin() + numOfCols,
                                   buf.begin() + numOfCols * r);
@@ -993,8 +993,8 @@ void DfCD_Parallel::getJ(TlSymmetricMatrix* pJ)
     // cholesky vector
     TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
     L.load(DfObject::getLjkMatrixPath());
-    assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
-    assert(L.getRank() == rComm.getRank());
+    // assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
+    // assert(L.getRank() == rComm.getRank());
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
 
     const index_type cvSize = L.getNumOfRows();
@@ -1006,7 +1006,7 @@ void DfCD_Parallel::getJ(TlSymmetricMatrix* pJ)
         if (PEinCharge == rComm.getRank()) {
             // const index_type copySize = L.getColVector(I, &(cv[0]), cvSize);
             cv = L.getVector(I);
-            assert(cv.size() == cvSize);
+            // assert(cv.size() == cvSize);
 
             TlSymmetricMatrix LI = 
                 this->getCholeskyVector(cv, I2PQ);
@@ -1034,8 +1034,8 @@ void DfCD_Parallel::getK(const RUN_TYPE runType,
     // cholesky vector
     TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
     L.load(DfObject::getLjkMatrixPath());
-    assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
-    assert(L.getRank() == rComm.getRank());
+    // assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
+    // assert(L.getRank() == rComm.getRank());
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
 
     const index_type cvSize = L.getNumOfRows();
@@ -1083,8 +1083,8 @@ void DfCD_Parallel::getJ_D(TlDistributeSymmetricMatrix* pJ)
     TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank(), 
                          isUsingMemManager);
     L.load(DfObject::getLjkMatrixPath());
-    assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
-    assert(L.getRank() == rComm.getRank());
+    // assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
+    // assert(L.getRank() == rComm.getRank());
 
     const index_type cvSize = L.getNumOfRows();
     const index_type numOfCBs = L.getNumOfCols();
@@ -1232,8 +1232,8 @@ void DfCD_Parallel::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     // cholesky vector
     TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
     L.load(DfObject::getLxcMatrixPath());
-    assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
-    assert(L.getRank() == rComm.getRank());
+    // assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
+    // assert(L.getRank() == rComm.getRank());
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrXCPath());
     this->log_.info(TlUtils::format("I2PQ size: %ld", I2PQ.size()));
 
@@ -1280,8 +1280,8 @@ void DfCD_Parallel::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     // cholesky vector
     TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
     L.load(DfObject::getLxcMatrixPath());
-    assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
-    assert(L.getRank() == rComm.getRank());
+    // assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
+    // assert(L.getRank() == rComm.getRank());
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrXCPath());
     this->log_.info(TlUtils::format("I2PQ size: %ld", I2PQ.size()));
 
@@ -1341,8 +1341,8 @@ void DfCD_Parallel::getM_S(const TlDistributeSymmetricMatrix& P,
     TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank(), 
                          this->isEnableMmap_);
     L.load(DfObject::getLxcMatrixPath());
-    assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
-    assert(L.getRank() == rComm.getRank());
+    // assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
+    // assert(L.getRank() == rComm.getRank());
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     this->log_.info(TlUtils::format("I2PQ size: %ld", I2PQ.size()));
 
@@ -1390,8 +1390,8 @@ void DfCD_Parallel::getM_A(const TlDistributeSymmetricMatrix& P,
     TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
                          this->isEnableMmap_);
     L.load(DfObject::getLxcMatrixPath());
-    assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
-    assert(L.getRank() == rComm.getRank());
+    // assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
+    // assert(L.getRank() == rComm.getRank());
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     this->log_.info(TlUtils::format("I2PQ size: %ld", I2PQ.size()));
 

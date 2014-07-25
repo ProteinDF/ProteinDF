@@ -67,7 +67,7 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
     TlSerializeData pdfParam_low; // for low-level
     
     // set low-lebel geometry
-    pdfParam_low["coordinates"]["_"] = pdfParam["coordinates"]["_"];
+    pdfParam_low["coordinates"]["atoms"] = pdfParam["coordinates"]["atoms"];
     
     // set low-level basis set
     pdfParam_low["basis_set"] = this->pdfParam_harrisDB_["basis_set"];
@@ -92,7 +92,7 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
         }
         
         TlSerializeData coord;
-        coord["_"].pushBack(pdfParam["coordinates"]["_"].getAt(atomIndex));
+        coord["atoms"].pushBack(pdfParam["coordinates"]["atoms"].getAt(atomIndex));
         
         TlOrbitalInfo orbInfo_harrisDB(coord,
                                        this->pdfParam_harrisDB_["basis_set"]);

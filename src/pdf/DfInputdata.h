@@ -34,8 +34,8 @@ public:
 protected:
     void show(const TlSerializeData& data) const;
 
-protected:
-    mutable TlSerializeData data_;
+// protected:
+//     mutable TlSerializeData data_;
 };
 
 #endif // DFINPUTDATA_H
