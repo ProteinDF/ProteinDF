@@ -143,8 +143,8 @@ double DfConvcheck::dev_total_energy(const int iteration)
 {
     assert(iteration >= 2);
 
-    const double TE = (*this->pPdfParam_)["TE"][iteration].getDouble();
-    const double prevTE = (*this->pPdfParam_)["TE"][iteration -1].getDouble();
+    const double TE = (*this->pPdfParam_)["TEs"][iteration].getDouble();
+    const double prevTE = (*this->pPdfParam_)["TEs"][iteration -1].getDouble();
     const double deviation_value = std::fabs(TE - prevTE);
     
     return deviation_value;

@@ -30,7 +30,14 @@
 const double DfTotalEnergy::TOO_SMALL = 1.0E-16;
 double DfTotalEnergy::m_dNuclearRepulsion = 0.0; // 核-核反発
 
-DfTotalEnergy::DfTotalEnergy(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
+DfTotalEnergy::DfTotalEnergy(TlSerializeData* pPdfParam) 
+    : DfObject(pPdfParam),
+      m_dE_OneElectronPart(0.0),
+      J_term_(0.0), m_dE_J_Rho_RhoTilde(0.0), m_dE_J_RhoTilde_RhoTilde(0.0),
+      m_dExc(0.0), K_term_(0.0),
+      E_KA_(0.0), E_KB_(0.0),
+      m_dE_NuclearRepulsion(0.0), m_dE_OEP_JRR_Exc(0.0),
+      E_disp_(0.0)
 {
 }
 

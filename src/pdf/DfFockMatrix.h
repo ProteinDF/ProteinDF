@@ -97,12 +97,12 @@ void DfFockMatrix::mainDIRECT_RKS()
     }
 
     {
-        SymmetricMatrixType Fxc = DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration);
-        F += Fxc;
-    }
-
-    {
         const DfXCFunctional dfXCFunctional(this->pPdfParam_);
+        if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
+            SymmetricMatrixType Fxc = DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration);
+            F += Fxc;
+        }
+
         if (dfXCFunctional.isHybridFunctional() == true) {
             const double coef = dfXCFunctional.getFockExchangeCoefficient();
             this->log_.info(TlUtils::format("coefficient of K: %f", coef));
@@ -141,16 +141,20 @@ void DfFockMatrix::mainDIRECT_UKS()
     }
 
     {
-        SymmetricMatrixType FxcA = DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_UKS_ALPHA, this->m_nIteration);
-        FA += FxcA;
-    }
-    {
-        SymmetricMatrixType FxcB = DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_UKS_BETA, this->m_nIteration);
-        FB += FxcB;
-    }
-
-    {
         const DfXCFunctional dfXCFunctional(this->pPdfParam_);
+        if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
+            {
+                SymmetricMatrixType FxcA = 
+                    DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_UKS_ALPHA, this->m_nIteration);
+                FA += FxcA;
+            }
+            {
+                SymmetricMatrixType FxcB = 
+                    DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_UKS_BETA, this->m_nIteration);
+                FB += FxcB;
+            }
+        }
+
         if (dfXCFunctional.isHybridFunctional() == true) {
             const double coef = dfXCFunctional.getFockExchangeCoefficient();
             this->log_.info(TlUtils::format("coefficient of K: %f", coef));
@@ -199,16 +203,20 @@ void DfFockMatrix::mainDIRECT_ROKS()
     }
 
     {
-        SymmetricMatrixType Fxc_o = DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, this->m_nIteration);
-        Fo += Fxc_o;
-    }
-    {
-        SymmetricMatrixType Fxc_c = DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSE, this->m_nIteration);
-        Fc += Fxc_c;
-    }
-
-    {
         const DfXCFunctional dfXCFunctional(this->pPdfParam_);
+        if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
+            {
+                SymmetricMatrixType Fxc_o = 
+                    DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, this->m_nIteration);
+                Fo += Fxc_o;
+            }
+            {
+                SymmetricMatrixType Fxc_c = 
+                    DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSE, this->m_nIteration);
+                Fc += Fxc_c;
+            }
+        }
+        
         if (dfXCFunctional.isHybridFunctional() == true) {
             const double coef = dfXCFunctional.getFockExchangeCoefficient();
             this->log_.info(TlUtils::format("coefficient of K: %f", coef));

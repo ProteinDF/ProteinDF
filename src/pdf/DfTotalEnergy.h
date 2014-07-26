@@ -195,72 +195,77 @@ void DfTotalEnergy::exec_template()
         // NOT use Threeindexintegrals
         this->m_dE_OneElectronPart = this->calcOneElectronPart(Ppq);
 
+        DfXCFunctional dfXCFunctional(this->pPdfParam_);
         switch (this->m_nMethodType) {
         case METHOD_RKS:
-            if (this->m_bIsXCFitting == true) {
-                const VectorType Eps = this->getEps<VectorType>(RUN_RKS);
-                this->m_dExc = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, Eps);
-            } else {
-                if (this->XC_engine_ != XC_ENGINE_GRID) {
-                    this->m_dExc = this->calcExc(RUN_RKS, 0.5 * Ppq) * 2.0;
-                } else {
-                    DfXCFunctional dfXCFunctional(this->pPdfParam_);
-                    this->m_dExc = dfXCFunctional.getEnergy();
-                    if (this->enableGrimmeDispersion_ == true) {
-                        this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
+            {
+                if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
+                    if (this->m_bIsXCFitting == true) {
+                        const VectorType Eps = this->getEps<VectorType>(RUN_RKS);
+                        this->m_dExc = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, Eps);
+                    } else {
+                        if (this->XC_engine_ != XC_ENGINE_GRID) {
+                            this->m_dExc = this->calcExc(RUN_RKS, 0.5 * Ppq) * 2.0;
+                        } else {
+                            DfXCFunctional dfXCFunctional(this->pPdfParam_);
+                            this->m_dExc = dfXCFunctional.getEnergy();
+                            if (this->enableGrimmeDispersion_ == true) {
+                                this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
+                            }
+                        }
                     }
                 }
-
-                this->K_term_ = this->calcK(RUN_RKS, 0.5 * Ppq) * 2.0;
+                if (dfXCFunctional.isHybridFunctional() == true) {
+                    this->K_term_ = this->calcK(RUN_RKS, 0.5 * Ppq) * 2.0;
+                }
             }
             break;
 
         case METHOD_UKS:
             {
-                if (this->m_bIsXCFitting == true) {
-                    const VectorType EpsA = this->getEps<VectorType>(RUN_UKS_ALPHA);
-                    const VectorType EpsB = this->getEps<VectorType>(RUN_UKS_BETA);
-                    this->m_dExc  = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(PpqA, EpsA);
-                    this->m_dExc += this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(PpqB, EpsB);
-                } else {
-                    if (this->XC_engine_ != XC_ENGINE_GRID) {
-                        this->m_dExc  = this->calcExc(RUN_UKS_ALPHA, PpqA);
-                        this->m_dExc += this->calcExc(RUN_UKS_BETA,  PpqB);
+                if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
+                    if (this->m_bIsXCFitting == true) {
+                        const VectorType EpsA = this->getEps<VectorType>(RUN_UKS_ALPHA);
+                        const VectorType EpsB = this->getEps<VectorType>(RUN_UKS_BETA);
+                        this->m_dExc  = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(PpqA, EpsA);
+                        this->m_dExc += this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(PpqB, EpsB);
                     } else {
-                        DfXCFunctional dfXCFunctional(this->pPdfParam_);
-                        this->m_dExc = dfXCFunctional.getEnergy();
-                        if (this->enableGrimmeDispersion_ == true) {
-                            this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
+                        if (this->XC_engine_ != XC_ENGINE_GRID) {
+                            this->m_dExc  = this->calcExc(RUN_UKS_ALPHA, PpqA);
+                            this->m_dExc += this->calcExc(RUN_UKS_BETA,  PpqB);
+                        } else {
+                            this->m_dExc = dfXCFunctional.getEnergy();
+                            if (this->enableGrimmeDispersion_ == true) {
+                                this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
+                            }
                         }
+                        
+                        this->K_term_ = this->E_KA_ + this->E_KB_;
                     }
-                    
+                }
+                if (dfXCFunctional.isHybridFunctional() == true) {
                     this->E_KA_ = this->calcK(RUN_UKS_ALPHA, PpqA);
                     this->E_KB_ = this->calcK(RUN_UKS_ALPHA, PpqB);
-                    this->K_term_ = this->E_KA_ + this->E_KB_;
                 }
             }
             break;
             
         case METHOD_ROKS:
-            if ((this->m_sXCFunctional == "xalpha") || (this->m_sXCFunctional == "gxalpha")) {
-                const VectorType epsa = this->getEps<VectorType>(RUN_UKS_ALPHA);
-                const VectorType epsb = this->getEps<VectorType>(RUN_UKS_BETA);
-                const double E_Exc_alpha =
-                    this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, epsa);
-                const double E_Exc_beta  =
-                    this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, epsb);
-                
-                this->m_dExc = E_Exc_alpha + E_Exc_beta;
-            } else {
-                if (this->m_bIsXCFitting == true) {
-                    const VectorType eps = this->getEps<VectorType>(RUN_UKS_ALPHA);
-                    this->m_dExc = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, eps);
-                } else {
-                    DfXCFunctional dfXCFunctional(this->pPdfParam_);
-                    this->m_dExc = dfXCFunctional.getEnergy();
-                    if (this->enableGrimmeDispersion_ == true) {
-                        this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
+            {
+                if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
+                    if (this->m_bIsXCFitting == true) {
+                        const VectorType eps = this->getEps<VectorType>(RUN_UKS_ALPHA);
+                        this->m_dExc = this->calcExc_DIRECT<DfOverlapType, SymmetricMatrixType, VectorType>(Ppq, eps);
+                    } else {
+                        this->m_dExc = dfXCFunctional.getEnergy();
+                        if (this->enableGrimmeDispersion_ == true) {
+                            this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
+                        }
                     }
+                }
+                if (dfXCFunctional.isHybridFunctional() == true) {
+                    this->E_KA_ = this->calcK(RUN_UKS_ALPHA, PpqA);
+                    this->E_KB_ = this->calcK(RUN_UKS_ALPHA, PpqB);
                 }
             }
             break;
@@ -560,7 +565,7 @@ void DfTotalEnergy::calcRealEnergy()
 {
     this->logger(" total energy --- Information related with dummy atom:\n\n");
 
-    const double current_energy = (*this->pPdfParam_)["TE"][this->m_nIteration].getDouble();
+    const double current_energy = (*this->pPdfParam_)["TEs"][this->m_nIteration].getDouble();
     
     //check whether dummy atom exists or not
     if (this->m_nNumOfDummyAtoms == 0) {
