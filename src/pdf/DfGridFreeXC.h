@@ -300,14 +300,16 @@ protected:
     typedef std::map<IndexPair4, std::vector<double> > ElementsCacheType;
     ElementsCacheType elements_cache_;
 
-    ///
-    bool debugSaveM_;
-
     /// 規格直交化ルーチンにCanonical Orthogonalizeを使う
     /// true: canonical
     /// false: lowdin
     bool isCanonicalOrthogonalize_;
-    // int GF_mode_;
+
+    /// V の固有値ベクトルの保存先
+    std::string GfVEigvalVtrPath_;
+
+    ///
+    bool debugSaveM_;
 };
 
 
@@ -338,10 +340,12 @@ void DfGridFreeXC::preprocessBeforeSCF_templ()
             MatrixType gfV;
             if (this->isCanonicalOrthogonalize_) {
                 this->log_.info("orthogonalize method: canoncal");
-                dfXMatrix.canonicalOrthogonalize(gfS, &gfV, NULL);
+                dfXMatrix.canonicalOrthogonalize(gfS, &gfV, NULL,
+                                                 this->GfVEigvalVtrPath_);
             } else {
                 this->log_.info("orthogonalize method: lowdin");
-                dfXMatrix.lowdinOrthogonalize(gfS, &gfV, NULL);
+                dfXMatrix.lowdinOrthogonalize(gfS, &gfV, NULL,
+                                              this->GfVEigvalVtrPath_);
             }
             this->log_.info("save V matrix");
             DfObject::saveGfVMatrix(gfV);
@@ -489,9 +493,20 @@ void DfGridFreeXC::buildFxc_LDA_runtype(const RUN_TYPE runType)
     
     SymmetricMatrixType M_tilda = tV * M * V;
     
+    // diagonalize M~
     MatrixType U;
     TlVector lambda;
     M_tilda.diagonal(&lambda, &U);
+
+    // check eigenvalues
+    {
+        if (lambda.getSize() > 0) {
+            double v = lambda[0];
+            if (v < 1.0E-16) {
+                this->log_.warn(TlUtils::format("The eigenvalue of M~ is too small.: % 8.3e", v));
+            }
+        }
+    }
     
     SymmetricMatrixType F_lambda(lambda.getSize());
     SymmetricMatrixType E_lambda(lambda.getSize());
@@ -610,11 +625,23 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType)
     SymmetricMatrixType Mtilde = Vt * M * V;
     //Mtilde.save("Mtilde.mat");
 
+    // diagonalize M~
     TlVector lambda;
     MatrixType U;
     Mtilde.diagonal(&lambda, &U);
+
+    // check eigenvalues
+    {
+        if (lambda.getSize() > 0) {
+            double v = lambda[0];
+            if (v < 1.0E-16) {
+                this->log_.warn(TlUtils::format("The eigenvalue of M~ is too small.: % 8.3e", v));
+            }
+        }
+    }
     //lambda.save("lambda.vct");
     //U.save("U.mat");
+
     MatrixType Ut = U;
     Ut.transpose();
     assert(lambda.getSize() == numOfGFOrthNormBasis);

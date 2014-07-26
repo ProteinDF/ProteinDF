@@ -109,6 +109,7 @@ protected:
     std::string getLxcMatrixPath();
     std::string getXMatrixPath();
     std::string getXInvMatrixPath();
+    std::string getXEigvalVtrPath();
     std::string getNalphaPath();
     std::string getOccupationPath(RUN_TYPE runType);
     std::string getGridDataFilePath() const;
@@ -131,6 +132,7 @@ protected:
     std::string getGfStildeMatrixPath() const;
     std::string getGfOmegaMatrixPath() const;
     std::string getGfVMatrixPath() const;
+    std::string getGfVEigvalVtrPath() const;
 
     std::string getDipoleVelocityIntegralsXPath() const;
     std::string getDipoleVelocityIntegralsYPath() const;

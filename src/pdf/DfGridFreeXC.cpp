@@ -63,6 +63,11 @@ DfGridFreeXC::DfGridFreeXC(TlSerializeData* pPdfParam)
         }
     }
 
+    this->GfVEigvalVtrPath_ = "";
+    if ((*pPdfParam)["gridfree/save_v_eigval"].getBoolean()) {
+        this->GfVEigvalVtrPath_ = DfObject::getGfVEigvalVtrPath();
+    }
+    
     this->debugSaveM_ = (*pPdfParam)["debug/DfGridFreeXC/saveM"].getBoolean();
     if (this->debugSaveM_) {
         this->log_.info("using GAMESS formula");

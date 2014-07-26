@@ -35,19 +35,23 @@ public:
     virtual void buildX();
 
     virtual void canonicalOrthogonalize(const TlSymmetricMatrix& S,
-                                        TlMatrix* pX, TlMatrix* pXinv);
+                                        TlMatrix* pX, TlMatrix* pXinv,
+                                        const std::string& eigvalFilePath ="");
 
     virtual void lowdinOrthogonalize(const TlSymmetricMatrix& S,
-                                     TlMatrix* pX, TlMatrix* pXinv);
+                                     TlMatrix* pX, TlMatrix* pXinv,
+                                     const std::string& eigvalFilePath ="");
 
 protected:
     template<typename SymmetricMatrixType, typename MatrixType>
     void canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
-                                    MatrixType* pX, MatrixType* pXinv);
+                                    MatrixType* pX, MatrixType* pXinv,
+                                    const std::string& eigvalFilePath ="");
 
     template<typename SymmetricMatrixType, typename MatrixType>
     void lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
-                                 MatrixType* pX, MatrixType* pXinv);
+                                 MatrixType* pX, MatrixType* pXinv,
+                                 const std::string& eigvalFilePath ="");
 
     template<typename MatrixType>
     void check_X(const MatrixType& X,
@@ -61,6 +65,9 @@ protected:
     /// 一次従属性の判定値(for lowdin method)
     double threshold_trancation_lowdin_;
 
+    /// X行列作成時に求められた固有値を保存するファイル名
+    std::string XEigvalFilePath_;
+
     /// デバッグ用に行列を保存する
     bool debug_save_mat_;
 
@@ -71,7 +78,8 @@ protected:
 
 template<typename SymmetricMatrixType, typename MatrixType>
 void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
-                                           MatrixType* pX, MatrixType* pXinv)
+                                           MatrixType* pX, MatrixType* pXinv,
+                                           const std::string& eigvalFilePath)
 {
     this->log_.info("orthogonalize by canonical method");
 
@@ -86,6 +94,11 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
         MatrixType EigVec;
         S.diagonal(&EigVal, &EigVec);
         assert(EigVal.getSize() == dim);
+
+        if (! eigvalFilePath.empty()) {
+            this->log_.info(TlUtils::format("save eigvals to %s", eigvalFilePath.c_str()));
+            EigVal.save(eigvalFilePath);
+        }
 
         this->loggerTime("truncation of linear dependent");
         {
@@ -160,7 +173,8 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
 
 template<typename SymmetricMatrixType, typename MatrixType>
 void DfXMatrix::lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
-                                        MatrixType* pX, MatrixType* pXinv)
+                                        MatrixType* pX, MatrixType* pXinv,
+                                        const std::string& eigvalFilePath)
 {
     this->log_.info("orthogonalize by lowdin method");
     const index_type dim = S.getNumOfRows();
@@ -174,6 +188,11 @@ void DfXMatrix::lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
         MatrixType EigVec;
         S.diagonal(&EigVal, &EigVec);
         assert(EigVal.getSize() == dim);
+
+        if (! eigvalFilePath.empty()) {
+            this->log_.info(TlUtils::format("save eigvals to %s", eigvalFilePath.c_str()));
+            EigVal.save(eigvalFilePath);
+        }
 
         this->loggerTime("truncation of linear dependent");
         {

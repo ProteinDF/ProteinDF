@@ -317,6 +317,9 @@ void DfObject::setParam(const TlSerializeData& data)
     if (paramFileBaseName["Xinv_matrix"].getStr().empty() == true) {
         paramFileBaseName["Xinv_matrix"] = "Xinv.mat";
     }
+    if (paramFileBaseName["XEigval_vtr"].getStr().empty() == true) {
+        paramFileBaseName["XEigval_vtr"] = "XEigval.vtr";
+    }
     if (paramFileBaseName["diff_density_matrix"].getStr().empty() == true) {
         paramFileBaseName["diff_density_matrix"] = "dP.%s.mat";
     }
@@ -353,6 +356,9 @@ void DfObject::setParam(const TlSerializeData& data)
     }
     if (paramFileBaseName["GF_V_matrix"].getStr().empty() == true) {
         paramFileBaseName["GF_V_matrix"] = "GF_V.mat";
+    }
+    if (paramFileBaseName["GF_VEigval_vtr"].getStr().empty() == true) {
+        paramFileBaseName["GF_VEigval_vtr"] = "GF_VEigval.vtr";
     }
     
     if (paramFileBaseName["dipoleVelocityIntegrals_x"].getStr().empty() == true) {
@@ -547,6 +553,10 @@ std::string DfObject::getXInvMatrixPath()
     return this->makeFilePath("Xinv_matrix");
 }
 
+std::string DfObject::getXEigvalVtrPath()
+{
+    return this->makeFilePath("XEigval_vtr");
+}
 
 std::string DfObject::getNalphaPath()
 {
@@ -691,6 +701,11 @@ std::string DfObject::getGfOmegaMatrixPath() const
 std::string DfObject::getGfVMatrixPath() const
 {
     return this->makeFilePath("GF_V_matrix");
+}
+
+std::string DfObject::getGfVEigvalVtrPath() const
+{
+    return this->makeFilePath("GF_VEigval_vtr");
 }
 
 std::string DfObject::getRhoPath(const RUN_TYPE nRunType, const int nIteration) const

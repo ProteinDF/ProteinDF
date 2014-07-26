@@ -74,7 +74,9 @@ void DfXMatrix_Parallel::buildX_ScaLAPACK()
     TlDistributeMatrix X;
     TlDistributeMatrix Xinv;
     
-    DfXMatrix::canonicalOrthogonalizeTmpl<TlDistributeSymmetricMatrix, TlDistributeMatrix>(S, &X, &Xinv);
+    DfXMatrix::canonicalOrthogonalizeTmpl<TlDistributeSymmetricMatrix, TlDistributeMatrix>(
+        S, &X, &Xinv,
+        this->XEigvalFilePath_);
 
     (*(this->pPdfParam_))["num_of_MOs"] = X.getNumOfCols();
 
@@ -83,35 +85,39 @@ void DfXMatrix_Parallel::buildX_ScaLAPACK()
 }
 
 void DfXMatrix_Parallel::canonicalOrthogonalize(const TlSymmetricMatrix& S,
-                                                TlMatrix* pX, TlMatrix* pXinv)
+                                                TlMatrix* pX, TlMatrix* pXinv,
+                                                const std::string& eigvalFilePath)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster()) {
-        DfXMatrix::canonicalOrthogonalize(S, pX, pXinv);
+        DfXMatrix::canonicalOrthogonalize(S, pX, pXinv, eigvalFilePath);
     }
 }
 
 
 void DfXMatrix_Parallel::lowdinOrthogonalize(const TlSymmetricMatrix& S,
-                                             TlMatrix* pX, TlMatrix* pXinv)
+                                             TlMatrix* pX, TlMatrix* pXinv,
+                                             const std::string& eigvalFilePath)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster()) {
-        DfXMatrix::lowdinOrthogonalize(S, pX, pXinv);
+        DfXMatrix::lowdinOrthogonalize(S, pX, pXinv, eigvalFilePath);
     }
 }
 
 void DfXMatrix_Parallel::canonicalOrthogonalize(const TlDistributeSymmetricMatrix& S,
                                                 TlDistributeMatrix* pX,
-                                                TlDistributeMatrix* pXinv)
+                                                TlDistributeMatrix* pXinv,
+                                                const std::string& eigvalFilePath)
 {
-    DfXMatrix::canonicalOrthogonalizeTmpl(S, pX, pXinv);
+    DfXMatrix::canonicalOrthogonalizeTmpl(S, pX, pXinv, eigvalFilePath);
 }
 
 
 void DfXMatrix_Parallel::lowdinOrthogonalize(const TlDistributeSymmetricMatrix& S,
                                              TlDistributeMatrix* pX,
-                                             TlDistributeMatrix* pXinv)
+                                             TlDistributeMatrix* pXinv,
+                                             const std::string& eigvalFilePath)
 {
-    DfXMatrix::lowdinOrthogonalizeTmpl(S, pX, pXinv);
+    DfXMatrix::lowdinOrthogonalizeTmpl(S, pX, pXinv, eigvalFilePath);
 }
