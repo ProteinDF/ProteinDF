@@ -222,7 +222,7 @@ void DfFockMatrix::mainDIRECT_ROKS()
             }
             {
                 SymmetricMatrixType Fxc_c = 
-                    DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSE, this->m_nIteration);
+                    DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration);
                 Fc += Fxc_c;
             }
         }

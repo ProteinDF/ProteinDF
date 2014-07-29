@@ -570,13 +570,8 @@ void DfCD::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
                                               orbInfo_q,
                                               L.getColVector(I), I2PQ);
         // l.save(TlUtils::format("fl_Work/debug_LI_xc_%d.mat", I));
-<<<<<<< HEAD
-        // assert(l.getNumOfRows() == numOfAOs);
-        // assert(l.getNumOfCols() == dim_M);
-=======
         assert(l.getNumOfRows() == orbInfo_p.getNumOfOrbitals());
         assert(l.getNumOfCols() == dim_M);
->>>>>>> Fix: support ROKS
         l.transpose();
     
         TlMatrix X = l * C;
@@ -1490,14 +1485,7 @@ void DfCD::calcERIsA(const TlOrbitalInfoObject& orbInfo_p,
                      const std::vector<IndexPair4A>& calcList,
                      const TlSparseMatrix& schwartzTable) 
 {
-<<<<<<< HEAD
-    // const int maxShellType = orbInfo_p.getMaxShellType();
-    // assert(maxShellType == orbInfo_q.getMaxShellType());
-    // const double threshold = this->CDAM_tau_;
-    // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
-=======
     assert(orbInfo_p.getMaxShellType() == orbInfo_q.getMaxShellType());
->>>>>>> Fix: support ROKS
 
     const int numOfList = calcList.size();
 #pragma omp parallel

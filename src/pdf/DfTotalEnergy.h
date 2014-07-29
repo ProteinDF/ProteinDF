@@ -270,6 +270,7 @@ void DfTotalEnergy::exec_template()
                                 this->E_disp_ = dfXCFunctional.getGrimmeDispersionEnergy();
                             }
                         }
+                    }
                 }
 
                 if (dfXCFunctional.isHybridFunctional() == true) {
@@ -344,7 +345,7 @@ SymmetricMatrixType DfTotalEnergy::getPpq(const METHOD_TYPE methodType)
             Ppq += P2pq;
         }
         break;
-
+        
     default:
         CnErr.abort("DfTotalEnergy::getPpq(): unknown method");
         break;
@@ -363,7 +364,7 @@ VectorType DfTotalEnergy::getRho(const METHOD_TYPE methodType)
     case METHOD_RKS:
         rho.load(this->getRhoPath(RUN_RKS, this->m_nIteration));
         break;
-
+        
     case METHOD_UKS: // go down
     case METHOD_ROKS:
         {
@@ -373,7 +374,7 @@ VectorType DfTotalEnergy::getRho(const METHOD_TYPE methodType)
             rho = rho_a + rho_b;
         }
         break;
-
+        
     default:
         CnErr.abort(" DfTotalEnergy::getRho error.\n");
         break;
