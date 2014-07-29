@@ -50,15 +50,8 @@ int main(int argc, char* argv[])
     }
     std::string inputMatrixPath = opt[1];
 
-    std::string eigValPath = "";
-    if (opt["l"].empty() == false) {
-        eigValPath = opt["l"];
-    }
-
-    std::string eigVecPath = "";
-    if (opt["x"].empty() == false) {
-        eigVecPath = opt["x"];
-    }
+    std::string eigValPath = opt["l"];
+    std::string eigVecPath = opt["x"];
     
     if (bVerbose == true) {
         std::cerr << "load matrix: " << inputMatrixPath << std::endl;

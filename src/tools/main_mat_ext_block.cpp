@@ -49,40 +49,45 @@ int main(int argc, char* argv[])
     std::string refMatrixPath = opt[2];
     std::string outputMatrixPath = opt[3];
 
+    TlSymmetricMatrix mat1;
+    TlMatrix::index_type dim1 = 0;
     if (isVerbose == true) {
         std::cerr << "load matrix: " << baseMatrixPath << std::endl;
     }
-
-    TlSymmetricMatrix base;
     if (TlSymmetricMatrix::isLoadable(baseMatrixPath)) {
-        base.load(baseMatrixPath);
+        mat1.load(baseMatrixPath);
+        dim1 = mat1.getNumOfRows();
     } else {
         std::cerr << TlUtils::format("cannot load: %s", baseMatrixPath.c_str()) << std::endl;
         std::cerr << "create new matrix." << std::endl;
     }
 
-    TlSymmetricMatrix ref;
-    if (! TlSymmetricMatrix::isLoadable(refMatrixPath)) {
+    TlSymmetricMatrix mat2;
+    TlMatrix::index_type dim2 = 0;
+    if (isVerbose == true) {
+        std::cerr << "load matrix: " << refMatrixPath << std::endl;
+    }
+    if (TlSymmetricMatrix::isLoadable(refMatrixPath)) {
+        mat2.load(refMatrixPath);
+        dim2 = mat2.getNumOfRows();
+    } else {
         std::cerr << TlUtils::format("cannot load: %s", refMatrixPath.c_str()) << std::endl;
         return EXIT_FAILURE;
     }
-    ref.load(refMatrixPath);
 
-    const TlMatrix::index_type baseDim = base.getNumOfRows();
-    const TlMatrix::index_type refDim = ref.getNumOfRows();
-    const TlMatrix::index_type newDim = baseDim + refDim;
+    const TlMatrix::index_type dim3 = dim1 + dim2;
 
-    base.resize(newDim);
-    for (TlMatrix::index_type r = 0; r < refDim; ++r) {
+    mat1.resize(dim3);
+    for (TlMatrix::index_type r = 0; r < dim2; ++r) {
         for (TlMatrix::index_type c = 0; c <= r; ++c) {
-            base.set(baseDim + r, baseDim + c, ref.get(r, c));
+            mat1.set(dim1 + r, dim1 + c, mat2.get(r, c));
         }
     }
 
     if (isVerbose == true) {
         std::cerr << "save matrix: " << outputMatrixPath << std::endl;
     }
-    base.save(outputMatrixPath);
+    mat1.save(outputMatrixPath);
 
     return EXIT_SUCCESS;
 }
