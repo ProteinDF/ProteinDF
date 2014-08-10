@@ -19,7 +19,6 @@ SERIAL_PROGS = 				\
 	mmap_bench_matrix_calc 	\
 	merge 					\
 	transdim				\
-	diagonal				\
 	cholesky				\
 	inverse					\
 	getMaxValue				\
@@ -35,6 +34,7 @@ SERIAL_PROGS = 				\
 	pdf-lo					\
 	pdf-mat-add				\
 	pdf-mat-dot				\
+	pdf-mat-diagonal		\
 	pdf-mat-ext-block		\
 	pdf-mat-mul				\
 	pdf-mat-n2s				\
@@ -108,11 +108,6 @@ inverse_SOURCES = \
 inverse_LDADD = $(SERIAL_LIBS)
 
 
-diagonal_SOURCES = \
-	main_diagonal.cpp
-diagonal_LDADD = $(SERIAL_LIBS)
-
-
 cholesky_SOURCES = \
 	main_choleskydecompose.cpp
 cholesky_LDADD = $(SERIAL_LIBS)
@@ -171,6 +166,9 @@ pdf_mat_add_LDADD = $(SERIAL_LIBS)
 
 pdf_mat_dot_SOURCES = main_mat_dot.cpp
 pdf_mat_dot_LDADD = $(SERIAL_LIBS)
+
+pdf_mat_diagonal_SOURCES = main_diagonal.cpp
+pdf_mat_diagonal_LDADD = $(SERIAL_LIBS)
 
 pdf_mat_ext_block_SOURCES = main_mat_ext_block.cpp
 pdf_mat_ext_block_LDADD = $(SERIAL_LIBS)

@@ -493,7 +493,7 @@ protected:
 
     int m_nNumOfAtoms;
     int m_nNumOfDummyAtoms;
-    int numOfRealAtoms_;
+    // int numOfRealAtoms_;
     index_type m_nNumOfAOs;
     index_type m_nNumOfMOs;
     size_type m_nNumOfAux;

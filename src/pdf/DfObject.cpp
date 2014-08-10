@@ -125,7 +125,7 @@ void DfObject::setParam(const TlSerializeData& data)
         const Fl_Geometry geom(data["coordinates"]);
         this->m_nNumOfDummyAtoms = geom.getNumOfDummyAtoms();
     }
-    this->numOfRealAtoms_ = this->m_nNumOfAtoms - this->m_nNumOfDummyAtoms;
+    // this->numOfRealAtoms_ = this->m_nNumOfAtoms - this->m_nNumOfDummyAtoms;
     
     this->m_nIteration = data["num_of_iterations"].getInt();
     this->m_nNumOfAOs = data["num_of_AOs"].getInt();
@@ -149,7 +149,7 @@ void DfObject::setParam(const TlSerializeData& data)
             this->initialGuessType_ = GUESS_FILE_RHO;
         } else if ((guess == "LCAO") || (guess == "FILE_LCAO")) {
             this->initialGuessType_ = GUESS_LCAO;
-        } else if ((guess == "DENSITY") || ((guess == "DENSITY_MATRIX"))) {
+        } else if ((guess == "DENSITY") || (guess == "DENSITY_MATRIX")) {
             this->initialGuessType_ = GUESS_DENSITY;
         } else if (guess == "HUCKEL") {
             this->initialGuessType_ = GUESS_HUCKEL;

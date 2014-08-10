@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
         showHelp(opt[0]);
         return EXIT_SUCCESS;
     }
-
+    
     const bool isVerbose = (opt["v"] == "defined");
     if (opt.getCount() <= 2) {
         showHelp(opt[0]);
@@ -49,46 +49,101 @@ int main(int argc, char* argv[])
     std::string refMatrixPath = opt[2];
     std::string outputMatrixPath = opt[3];
 
-    TlSymmetricMatrix mat1;
-    TlMatrix::index_type dim1 = 0;
+    bool copyMode = false;
+
+    TlMatrix* pMat1 = NULL;
+    TlMatrix::index_type row1 = 0;
+    TlMatrix::index_type col1 = 0;
+    bool isSymmetric1 = false;
     if (isVerbose == true) {
         std::cerr << "load matrix: " << baseMatrixPath << std::endl;
     }
     if (TlSymmetricMatrix::isLoadable(baseMatrixPath)) {
-        mat1.load(baseMatrixPath);
-        dim1 = mat1.getNumOfRows();
+        pMat1 = new TlSymmetricMatrix();
+        isSymmetric1 = true;
+        
+        pMat1->load(baseMatrixPath);
+        row1 = pMat1->getNumOfRows();
+        col1 = pMat1->getNumOfCols();
+    } else if (TlMatrix::isLoadable(baseMatrixPath)) {
+        pMat1 = new TlMatrix();
+        
+        pMat1->load(baseMatrixPath);
+        row1 = pMat1->getNumOfRows();
+        col1 = pMat1->getNumOfCols();
     } else {
         std::cerr << TlUtils::format("cannot load: %s", baseMatrixPath.c_str()) << std::endl;
         std::cerr << "create new matrix." << std::endl;
+        
+        copyMode = true;
     }
-
-    TlSymmetricMatrix mat2;
-    TlMatrix::index_type dim2 = 0;
+    
+    
+    TlMatrix* pMat2 = NULL;
+    TlMatrix::index_type row2 = 0;
+    TlMatrix::index_type col2 = 0;
+    bool isSymmetric2 = false;
     if (isVerbose == true) {
         std::cerr << "load matrix: " << refMatrixPath << std::endl;
     }
     if (TlSymmetricMatrix::isLoadable(refMatrixPath)) {
-        mat2.load(refMatrixPath);
-        dim2 = mat2.getNumOfRows();
+        pMat2 = new TlSymmetricMatrix();
+        isSymmetric2 = true;
+    } else if (TlMatrix::isLoadable(refMatrixPath)) {
+        pMat2 = new TlMatrix();
     } else {
         std::cerr << TlUtils::format("cannot load: %s", refMatrixPath.c_str()) << std::endl;
         return EXIT_FAILURE;
     }
+    pMat2->load(refMatrixPath);
+    row2 = pMat2->getNumOfRows();
+    col2 = pMat2->getNumOfCols();
 
-    const TlMatrix::index_type dim3 = dim1 + dim2;
-
-    mat1.resize(dim3);
-    for (TlMatrix::index_type r = 0; r < dim2; ++r) {
-        for (TlMatrix::index_type c = 0; c <= r; ++c) {
-            mat1.set(dim1 + r, dim1 + c, mat2.get(r, c));
+    if (copyMode) {
+        pMat2->save(outputMatrixPath);
+    } else {
+        TlMatrix::index_type newRow = row1 + row2;
+        TlMatrix::index_type newCol = col1 + col2;
+        if ((isSymmetric1 == true) || (isSymmetric2 == true)) {
+            assert(row1 == col1);
+            assert(row2 == col2);
+            assert(newRow == newCol);
+            
+            TlSymmetricMatrix mat3 = *pMat1;
+            mat3.resize(newRow);
+            
+            for (TlMatrix::index_type r = 0; r < row2; ++r) {
+                for (TlMatrix::index_type c = 0; c <= r; ++c) {
+                    mat3.set(row1 + r, col1 + c, pMat2->get(r, c));
+                }
+            }
+            
+            if (isVerbose == true) {
+                std::cerr << "save matrix: " << outputMatrixPath << std::endl;
+            }
+            mat3.save(outputMatrixPath);
+        } else {
+            TlMatrix mat3 = *pMat1;
+            mat3.resize(newRow, newCol);
+            
+            for (TlMatrix::index_type r = 0; r < row2; ++r) {
+                for (TlMatrix::index_type c = 0; c < col2; ++c) {
+                    mat3.set(row1 + r, col1 + c, pMat2->get(r, c));
+                }
+            }
+            
+            if (isVerbose == true) {
+                std::cerr << "save matrix: " << outputMatrixPath << std::endl;
+            }
+            mat3.save(outputMatrixPath);
         }
     }
-
-    if (isVerbose == true) {
-        std::cerr << "save matrix: " << outputMatrixPath << std::endl;
-    }
-    mat1.save(outputMatrixPath);
-
+    
+    delete pMat1;
+    pMat1 = NULL;
+    delete pMat2;
+    pMat2 = NULL;
+    
     return EXIT_SUCCESS;
 }
 

@@ -862,7 +862,7 @@ TlMatrix DfGridFreeXC::getForce()
     o_dz_Exc *= C_mo;
 
     // 左からCをかける
-    const index_type numOfAtoms = this->numOfRealAtoms_;
+    const index_type numOfAtoms = this->m_nNumOfAtoms;
     TlMatrix force(numOfAtoms, 3);
     TlVector Hx(numOfAOs), Hy(numOfAOs), Hz(numOfAOs);
     {

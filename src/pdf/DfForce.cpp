@@ -98,7 +98,7 @@ void DfForce::calcForce()
     // output
     const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
     this->log_.info("=== FORCE ===");
-    const int numOfAtoms = this->numOfRealAtoms_;
+    const int numOfAtoms = this->m_nNumOfAtoms;
     for (int atomIndex = 0; atomIndex< numOfAtoms; ++atomIndex) {
         const TlAtom atom = flGeom.getAtom(atomIndex);
         this->log_.info(TlUtils::format("%4d:[%-2s] % f, % f, % f",
@@ -346,7 +346,6 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
     const int iteration = this->m_nIteration;
     const int numOfAOs = this->m_nNumOfAOs;
     const int numOfAtoms = this->m_nNumOfAtoms;
-    const int numOfRealAtoms = this->numOfRealAtoms_;
     
     const TlSymmetricMatrix P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
 
@@ -401,7 +400,7 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
     }
     
     TlMatrix Fxc(numOfAtoms, 3);
-    for (int mu = 0; mu < numOfRealAtoms; ++mu) {
+    for (int mu = 0; mu < numOfAtoms; ++mu) {
         for (index_type p = 0; p < numOfAOs; ++p) {
             const index_type orbAtomId = this->orbitalInfo_.getAtomIndex(p);
             if (mu != orbAtomId) {
@@ -413,7 +412,7 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
                 Fxc.add(mu, Y, fy);
                 Fxc.add(mu, Z, fz);
             } else {
-                for (int nu = 0; nu < numOfRealAtoms; ++nu) {
+                for (int nu = 0; nu < numOfAtoms; ++nu) {
                     if (mu != nu) {
                         const double fx = Gx.get(p, nu);
                         const double fy = Gy.get(p, nu);
@@ -482,7 +481,7 @@ void DfForce::calcForceFromK(RUN_TYPE runType)
 TlMatrix DfForce::getTransformMatrix(const TlMatrix& force)
 {
     const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
-    const int numOfAtoms = this->numOfRealAtoms_;
+    const int numOfAtoms = this->m_nNumOfAtoms;
     TlMatrix answer(numOfAtoms, 3);
 
     // 重心
