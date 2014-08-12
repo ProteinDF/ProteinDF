@@ -169,8 +169,14 @@ public:
     /// @param[in] ifs 入力ファイルストリーム
     /// @retval true 読み取り可能
     /// @retval false 読み取り不可能
-    static bool isLoadable(std::ifstream& ifs);
     static bool isLoadable(const std::string& rFilePath);
+    static bool isLoadable(std::ifstream& ifs);
+
+    /// ヘッダ情報を読み取る
+    static bool getHeaderInfo(const std::string& filePath,
+                              int* pType = NULL,
+                              index_type* pNumOfRows = NULL,
+                              index_type* pNumOfCols = NULL);
 
     /// 指定されたファイルパス名から行列要素を読み込む
     ///
@@ -278,11 +284,13 @@ protected:
     virtual size_t index(index_type row,
                          index_type col) const;
 
-    static bool getHeaderInfo(std::ifstream& ifs, int* pType = NULL,
-                              int* pNumOfRows = NULL, int* pNumOfCols = NULL);
-
     bool load_RLHD(std::ifstream& ifs);
     bool load_CLHD(std::ifstream& ifs);
+
+    static bool getHeaderInfo(std::ifstream& ifs,
+                              int* pType = NULL,
+                              index_type* pNumOfRows = NULL,
+                              index_type* pNumOfCols = NULL);
 
 #ifdef HAVE_LAPACK
     /// 対称行列の積を求める

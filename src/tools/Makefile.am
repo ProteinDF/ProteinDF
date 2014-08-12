@@ -28,6 +28,7 @@ SERIAL_PROGS = 				\
 	pdf-component			\
 	pdf-eri					\
 	pdf-info-charge 		\
+	pdf-info-mat			\
 	pdf-info-orb			\
 	pdf-init-param			\
 	pdf-kwd					\
@@ -147,6 +148,9 @@ pdf_eri_LDADD = $(SERIAL_LIBS)
 
 pdf_info_charge_SOURCES = main_info_charge.cpp
 pdf_info_charge_LDADD = $(SERIAL_LIBS)
+
+pdf_info_mat_SOURCES = main_info_mat.cpp
+pdf_info_mat_LDADD = $(SERIAL_LIBS)
 
 pdf_info_orb_SOURCES = main_info_orb.cpp
 pdf_info_orb_LDADD = $(SERIAL_LIBS)
