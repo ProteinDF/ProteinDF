@@ -131,10 +131,11 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
     switch (this->m_nMethodType) {
     case METHOD_RKS:
         {
-            double numOfElectrons = 0.0;
+            // double numOfElectrons = 0.0;
             DfPopulationType dfPop(this->pPdfParam_);
-            this->savePpqMatrix(RUN_RKS, 0, P_high); // sumOfElectrons()で必要
-            dfPop.sumOfElectrons(0, &numOfElectrons, NULL);
+            // this->savePpqMatrix(RUN_RKS, 0, P_high); // sumOfElectrons()で必要
+            // dfPop.sumOfElectrons(0, &numOfElectrons, NULL);
+            const double numOfElectrons = dfPop.getSumOfElectrons(P_high);
             const double coef = this->m_nNumOfElectrons / numOfElectrons;
 
             this->savePpqMatrix(RUN_RKS, 0, coef * P_high);
@@ -143,12 +144,9 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
 
     case METHOD_UKS:
         {
-            double numOfAlphaElectrons = 0.0;
-            double numOfBetaElectrons = 0.0;
             DfPopulationType dfPop(this->pPdfParam_);
-            this->savePpqMatrix(RUN_UKS_ALPHA, 0, P_high); // sumOfElectrons()で必要
-            this->savePpqMatrix(RUN_UKS_BETA,  0, P_high);
-            dfPop.sumOfElectrons(0, &numOfAlphaElectrons, &numOfBetaElectrons);
+            double numOfAlphaElectrons = dfPop.getSumOfElectrons(P_high);
+            double numOfBetaElectrons = dfPop.getSumOfElectrons(P_high);
             const double coef_alpha = this->m_nNumOfAlphaElectrons / numOfAlphaElectrons;
             const double coef_beta  = this->m_nNumOfBetaElectrons  / numOfBetaElectrons;
 
@@ -159,8 +157,14 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
 
     case METHOD_ROKS:
         {
-            this->log_.critical(TlUtils::format("sorry not implement. %s %s", __FILE__, __LINE__));
-            abort();
+            DfPopulationType dfPop(this->pPdfParam_);
+            double numOfCloseElectrons = dfPop.getSumOfElectrons(P_high);
+            double numOfOpenElectrons = dfPop.getSumOfElectrons(P_high);
+            const double coef_close = this->numOfClosedShellElectrons_ / numOfCloseElectrons;
+            const double coef_open = this->numOfOpenShellElectrons_  / numOfOpenElectrons;
+
+            this->savePpqMatrix(RUN_ROKS_CLOSE, 0, coef_close * P_high);
+            this->savePpqMatrix(RUN_ROKS_OPEN,  0, coef_open  * P_high);
         }
         break;
 

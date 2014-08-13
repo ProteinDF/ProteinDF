@@ -20,11 +20,17 @@
 #define DFPOPULATION_PARALLEL_H
 
 #include "DfPopulation.h"
+#include "TlDistributeMatrix.h"
 
 class DfPopulation_Parallel : public DfPopulation {
 public:
     DfPopulation_Parallel(TlSerializeData* pPdfParam);
     virtual ~DfPopulation_Parallel();
+
+public:
+    virtual double getSumOfElectrons(const TlSymmetricMatrix& P);
+    double getSumOfElectrons(const TlDistributeSymmetricMatrix& P);
+    
 
 protected:
     virtual void calcPop(const int iteration);

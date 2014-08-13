@@ -37,15 +37,10 @@ DfPopulation::~DfPopulation()
 }
 
 
-void DfPopulation::sumOfElectrons(int iteration, double* pAlpha, double* pBeta)
+double DfPopulation::getSumOfElectrons(const TlSymmetricMatrix& P)
 {
-    this->calcPop(iteration);
-    if (pAlpha != NULL) {
-        *pAlpha = this->grossAtomPopA_.sum();
-    }
-    if (pBeta != NULL) {
-        *pBeta = this->grossAtomPopB_.sum();
-    }
+    const TlVector trPS = this->getPS(P);
+    return trPS.sum();
 }
 
 

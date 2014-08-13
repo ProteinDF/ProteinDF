@@ -136,6 +136,8 @@ void DfObject::setParam(const TlSerializeData& data)
     this->m_nNumOfElectrons = data["method/rks/electrons"].getInt();
     this->m_nNumOfAlphaElectrons = data["method/uks/alpha_electrons"].getInt();
     this->m_nNumOfBetaElectrons = data["method/uks/beta_electrons"].getInt();
+    this->numOfClosedShellElectrons_ = data["method/roks/closed_electrons"].getInt();
+    this->numOfOpenShellElectrons_ = data["method/roks/open_electrons"].getInt();
 
     // guess
     this->initialGuessType_ = GUESS_UNKNOWN;
@@ -147,7 +149,7 @@ void DfObject::setParam(const TlSerializeData& data)
             this->initialGuessType_ = GUESS_FILE_RHO;
         } else if ((guess == "LCAO") || (guess == "FILE_LCAO")) {
             this->initialGuessType_ = GUESS_LCAO;
-        } else if (guess == "DENSITY") {
+        } else if ((guess == "DENSITY") || ((guess == "DENSITY_MATRIX"))) {
             this->initialGuessType_ = GUESS_DENSITY;
         } else if (guess == "HUCKEL") {
             this->initialGuessType_ = GUESS_HUCKEL;

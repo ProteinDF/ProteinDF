@@ -502,6 +502,8 @@ protected:
     int m_nNumOfElectrons;
     int m_nNumOfAlphaElectrons;
     int m_nNumOfBetaElectrons;
+    int numOfClosedShellElectrons_;
+    int numOfOpenShellElectrons_;
 
     GUESS_TYPE initialGuessType_;
 

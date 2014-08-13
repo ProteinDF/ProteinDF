@@ -22,6 +22,7 @@
 #include "DfInitialGuessHuckel.h"
 #include "DfInitialGuessHarris.h"
 #include "DfDmatrix.h"
+#include "DfPopulation.h"
 #include "TlStringTokenizer.h"
 
 DfInitialGuess::DfInitialGuess(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
@@ -47,7 +48,7 @@ void DfInitialGuess::exec()
         break;
 
     case GUESS_DENSITY:
-        this->createOccupation();
+        this->createInitialGuessUsingDensityMatrix();
         break;
 
     case GUESS_LCAO:
@@ -127,7 +128,8 @@ void DfInitialGuess::createInitialGuessUsingLCAO()
         break;
 
     case METHOD_ROKS:
-        this->createInitialGuessUsingLCAO(RUN_ROKS);
+        this->createInitialGuessUsingLCAO(RUN_ROKS_CLOSE);
+        this->createInitialGuessUsingLCAO(RUN_ROKS_OPEN);
         break;
 
     default:
@@ -160,11 +162,57 @@ void DfInitialGuess::createInitialGuessUsingLCAO(const RUN_TYPE runType)
 }
 
 
+void DfInitialGuess::createInitialGuessUsingDensityMatrix()
+{
+    switch (this->m_nMethodType) {
+    case METHOD_RKS:
+        this->createInitialGuessUsingDensityMatrix(RUN_RKS);
+        break;
+
+    case METHOD_UKS:
+        this->createInitialGuessUsingDensityMatrix(RUN_UKS_ALPHA);
+        this->createInitialGuessUsingDensityMatrix(RUN_UKS_BETA);
+        break;
+
+    case METHOD_ROKS:
+        this->createInitialGuessUsingDensityMatrix(RUN_ROKS_CLOSE);
+        this->createInitialGuessUsingDensityMatrix(RUN_ROKS_OPEN);
+        break;
+
+    default:
+        abort();
+        break;
+    }
+
+    this->createOccupation();
+}
+
+
+void DfInitialGuess::createInitialGuessUsingDensityMatrix(const RUN_TYPE runType)
+{
+    // read guess lcao
+    TlSymmetricMatrix P = this->getInitialDensityMatrix<TlSymmetricMatrix>(runType);
+    P = this->normalizeDensityMatrix<TlSymmetricMatrix, DfPopulation>(runType, P);
+    this->savePpqMatrix(runType, 0, P);
+
+    // make occupation data
+    this->createOccupation();
+}
+
+
 TlVector DfInitialGuess::getOccupation(const RUN_TYPE runType)
 {
     TlVector occupation;
-    const std::string sFile = std::string("./guess.occ.") + this->m_sRunTypeSuffix[runType];
-    occupation.loadText(sFile.c_str());
+    const std::string binFile = TlUtils::format("./guess.occ.%s.vct", this->m_sRunTypeSuffix[runType].c_str());
+    const std::string txtFile = TlUtils::format("./guess.occ.%s.txt", this->m_sRunTypeSuffix[runType].c_str());
+
+    if (TlFile::isExist(binFile)) {
+        occupation.load(binFile);
+    } else if (TlFile::isExist(txtFile)) {
+        occupation.loadText(txtFile);
+    } else {
+        this->log_.warn(TlUtils::format("file not found.: %s", binFile.c_str()));
+    }
 
     return occupation;
 }
