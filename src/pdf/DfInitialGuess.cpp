@@ -27,6 +27,10 @@
 
 DfInitialGuess::DfInitialGuess(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
+    this->isNormalizeDensityMatrix_ = true;
+    if ((*this->pPdfParam_)["guess/normalize_density_matrix"].getStr().empty() == false) {
+        this->isNormalizeDensityMatrix_ = (*this->pPdfParam_)["guess/normalize_density_matrix"].getBoolean();
+    }
 }
 
 
@@ -192,7 +196,9 @@ void DfInitialGuess::createInitialGuessUsingDensityMatrix(const RUN_TYPE runType
 {
     // read guess lcao
     TlSymmetricMatrix P = this->getInitialDensityMatrix<TlSymmetricMatrix>(runType);
-    P = this->normalizeDensityMatrix<TlSymmetricMatrix, DfPopulation>(runType, P);
+    if (this->isNormalizeDensityMatrix_) {
+        P = this->normalizeDensityMatrix<TlSymmetricMatrix, DfPopulation>(runType, P);
+    }
     this->savePpqMatrix(runType, 0, P);
 
     // make occupation data

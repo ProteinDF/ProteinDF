@@ -93,6 +93,9 @@ protected:
     template<typename SymmetricMatrixType, class DfPopulationType>
     SymmetricMatrixType normalizeDensityMatrix(const RUN_TYPE runType,
                                                const SymmetricMatrixType& P);
+
+protected:
+    bool isNormalizeDensityMatrix_;
 };
 
 
@@ -163,7 +166,7 @@ template<typename SymmetricMatrixType, class DfPopulationType>
 SymmetricMatrixType DfInitialGuess::normalizeDensityMatrix(const RUN_TYPE runType,
                                                            const SymmetricMatrixType& P)
 {
-    this->logger(" normalize initial density matrix. ");
+    this->log_.info(" normalize initial density matrix. ");
     DfPopulationType dfPop(this->pPdfParam_);
     const double trPS = dfPop.getSumOfElectrons(P);
 
@@ -197,6 +200,11 @@ SymmetricMatrixType DfInitialGuess::normalizeDensityMatrix(const RUN_TYPE runTyp
     }
 
     const double coef = numOfElectrons / trPS;
+
+    this->log_.info(TlUtils::format(" trPS = % 8.3f", trPS));
+    this->log_.info(TlUtils::format(" elec = % 8.3f", numOfElectrons));
+    this->log_.info(TlUtils::format(" coef = % 8.3f", coef));
+
     return coef * P;
 }
 
