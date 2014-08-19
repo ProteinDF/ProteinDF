@@ -35,7 +35,7 @@ SERIAL_PROGS = 				\
 	pdf-mat-add				\
 	pdf-mat-dot				\
 	pdf-mat-diagonal		\
-	pdf-mat-ext-block		\
+	pdf-mat-ext				\
 	pdf-mat-mul				\
 	pdf-mat-n2s				\
 	pdf-mat-resize			\
@@ -170,8 +170,8 @@ pdf_mat_dot_LDADD = $(SERIAL_LIBS)
 pdf_mat_diagonal_SOURCES = main_diagonal.cpp
 pdf_mat_diagonal_LDADD = $(SERIAL_LIBS)
 
-pdf_mat_ext_block_SOURCES = main_mat_ext_block.cpp
-pdf_mat_ext_block_LDADD = $(SERIAL_LIBS)
+pdf_mat_ext_SOURCES = main_mat_ext.cpp
+pdf_mat_ext_LDADD = $(SERIAL_LIBS)
 
 pdf_mat_mul_SOURCES = main_mat_mul.cpp
 pdf_mat_mul_LDADD = $(SERIAL_LIBS)
