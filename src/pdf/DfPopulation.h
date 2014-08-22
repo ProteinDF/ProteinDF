@@ -102,34 +102,6 @@ void DfPopulation::getReport(const int iteration, T& out)
         }
         break;
 
-    case METHOD_ROKS:
-        {
-            const double elecChargeClose = this->grossOrbPopA_.sum();
-            const double elecChargeOpen = this->grossOrbPopB_.sum();
-            const double netCharge = nucleiCharge - (elecChargeClose + elecChargeOpen);
-
-            out << TlUtils::format(" total atomic charge = %7.2lf\n", nucleiCharge);
-            out << TlUtils::format("          Net charge = %7.2lf\n", netCharge);
-            out << "\n";
-            
-            out << " Mulliken Population(close)\n";
-            this->getAtomPopStr(this->grossAtomPopA_, false, out);
-            this->getOrbPopStr(this->grossOrbPopA_, out);
-            
-            out << " Mulliken Population(open)\n";
-            this->getAtomPopStr(this->grossAtomPopB_, false, out);
-            this->getOrbPopStr(this->grossOrbPopB_, out);
-
-            {
-                const TlVector grossOrbPop = this->grossOrbPopA_ + this->grossOrbPopB_;
-                out << " Gross atom population (ROKS total)\n";
-                this->getAtomPopStr(grossOrbPop, false, out);
-                out << " Mulliken population analysis (orbial population; ROKS total)\n";
-                this->getOrbPopStr(grossOrbPop, out);
-            }
-        }
-        break;
-        
     case METHOD_UKS:
         {
             const double elecChargeA = this->grossOrbPopA_.sum();
@@ -213,16 +185,6 @@ void DfPopulation::calcPop(const int iteration)
         }
         break;
 
-    case METHOD_ROKS:
-        {
-            this->grossOrbPopA_ = this->getGrossOrbPop<SymmetricMatrixType>(DfObject::RUN_ROKS_CLOSE, iteration);
-            this->grossAtomPopA_ = this->getGrossAtomPop(this->grossOrbPopA_);
-
-            this->grossOrbPopB_ = this->getGrossOrbPop<SymmetricMatrixType>(DfObject::RUN_ROKS_OPEN, iteration);
-            this->grossAtomPopB_ = this->getGrossAtomPop(this->grossOrbPopB_);
-        }
-        break;
-        
     case METHOD_UKS:
         {
             this->grossOrbPopA_ = this->getGrossOrbPop<SymmetricMatrixType>(DfObject::RUN_UKS_ALPHA, iteration);

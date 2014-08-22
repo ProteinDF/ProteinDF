@@ -123,7 +123,7 @@ void TlVectorMatrixObject::resize(const index_type newNumOfVectors,
             TlMemManager& rMemManager = TlMemManager::getInstance();
             const index_type reservedVectorSize = this->reservedVectorSize_;
             for (index_type i = newNumOfLocalVectors; i < prevNumOfLocalVectors; ++i) {
-                rMemManager.deallocate((char*)this->data_[i], sizeof(double) * reservedVectorSize);
+                rMemManager.deallocate((char*)this->data_[i]);
                 this->data_[i] = NULL;
             }
         } else {
@@ -167,7 +167,7 @@ void TlVectorMatrixObject::reserveVectorSize(index_type newReservedVectorSize) {
                 }
                 if (this->isUsingMemManager_ == true) {
                     TlMemManager& rMemManager = TlMemManager::getInstance();
-                    rMemManager.deallocate((char*)this->data_[i], sizeof(double)*prevReservedVectorSize);
+                    rMemManager.deallocate((char*)this->data_[i]);
                 } else {
                     delete[] this->data_[i];
                 }
@@ -375,7 +375,7 @@ void TlVectorMatrixObject::destroy()
         TlMemManager& rMemManager = TlMemManager::getInstance();
         const index_type reservedVectorSize = this->reservedVectorSize_;
         for (index_type i = 0; i < numOfLocalVectors; ++i) {
-            rMemManager.deallocate((char*)this->data_[i], sizeof(double) * reservedVectorSize);
+            rMemManager.deallocate((char*)this->data_[i]);
             this->data_[i] = NULL;
         }
     } else {

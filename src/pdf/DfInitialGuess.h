@@ -185,7 +185,7 @@ SymmetricMatrixType DfInitialGuess::normalizeDensityMatrix(const RUN_TYPE runTyp
         numOfElectrons = this->m_nNumOfBetaElectrons;
         break;
 
-    case RUN_ROKS_CLOSE:
+    case RUN_ROKS_CLOSED:
         numOfElectrons = this->numOfClosedShellElectrons_;
         break;
 

@@ -132,7 +132,7 @@ void DfInitialGuess::createInitialGuessUsingLCAO()
         break;
 
     case METHOD_ROKS:
-        this->createInitialGuessUsingLCAO(RUN_ROKS_CLOSE);
+        this->createInitialGuessUsingLCAO(RUN_ROKS_CLOSED);
         this->createInitialGuessUsingLCAO(RUN_ROKS_OPEN);
         break;
 
@@ -179,7 +179,7 @@ void DfInitialGuess::createInitialGuessUsingDensityMatrix()
         break;
 
     case METHOD_ROKS:
-        this->createInitialGuessUsingDensityMatrix(RUN_ROKS_CLOSE);
+        this->createInitialGuessUsingDensityMatrix(RUN_ROKS_CLOSED);
         this->createInitialGuessUsingDensityMatrix(RUN_ROKS_OPEN);
         break;
 

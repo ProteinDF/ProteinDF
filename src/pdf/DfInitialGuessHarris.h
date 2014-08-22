@@ -163,8 +163,8 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
             const double coef_close = this->numOfClosedShellElectrons_ / numOfCloseElectrons;
             const double coef_open = this->numOfOpenShellElectrons_  / numOfOpenElectrons;
 
-            this->savePpqMatrix(RUN_ROKS_CLOSE, 0, coef_close * P_high);
-            this->savePpqMatrix(RUN_ROKS_OPEN,  0, coef_open  * P_high);
+            this->savePpqMatrix(RUN_ROKS_CLOSED, 0, coef_close * P_high);
+            this->savePpqMatrix(RUN_ROKS_OPEN,   0, coef_open  * P_high);
         }
         break;
 
