@@ -20,6 +20,10 @@
 #include <limits>
 #include "TlMatrixObject.h"
 
+TlMatrixObject::TlMatrixObject()
+    : log_(TlLogging::getInstance()) {
+}
+
 void TlMatrixObject::addByList(const index_type* pIndexPairs,
                                const double* pValues,
                                const std::size_t size)

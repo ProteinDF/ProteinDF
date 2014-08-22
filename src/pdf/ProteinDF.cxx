@@ -251,10 +251,11 @@ void ProteinDF::manageMemory()
         std::size_t mapFileSize = std::size_t(1024UL * 1024UL * 1024UL); // 少なくとも 1 GBは欲しい。
         std::string mapFileSizeStr = TlUtils::toUpper(this->pdfParam_["mapfile_size"].getStr());
         if (mapFileSizeStr != "AUTO") {
-            // mapfile_sizeはMB単位で指定のこと。
-            mapFileSize = std::max<std::size_t>(mapFileSize, std::atoi(mapFileSizeStr.c_str()));
-            this->log_.info("map file size is calculated automatically.");
+            const std::size_t input_mapFileSize = std::atol(mapFileSizeStr.c_str());
+            this->log_.info(TlUtils::format("input map file size: %lu byte", input_mapFileSize));
+            mapFileSize = std::max<std::size_t>(mapFileSize, input_mapFileSize);
         } else {
+            this->log_.info("map file size is calculated automatically.");
             const std::size_t numOfAOs = this->pdfParam_["num_of_AOs"].getInt();
             const std::size_t numOfAuxDen = this->pdfParam_["num_of_auxCDs"].getInt();
             const std::size_t numOfAuxXC = this->pdfParam_["num_of_auxXCs"].getInt();
@@ -270,7 +271,7 @@ void ProteinDF::manageMemory()
 
         this->pdfParam_["mapfile_size"] = mapFileSize;
         this->pdfParam_["mapfile_basename"] = filePath;
-        this->log_.info(TlUtils::format("map file size: %ld byte", mapFileSize));
+        this->log_.info(TlUtils::format("map file size: %lu byte", mapFileSize));
         this->log_.info(TlUtils::format("map file basename: %s", filePath.c_str()));
 
         this->saveParam();

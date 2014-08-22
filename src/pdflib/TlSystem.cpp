@@ -30,6 +30,8 @@
 
 int TlSystem::pid_ = -1;
 int TlSystem::ppid_ = -1;
+const int TlSystem::MAX_HOSTNAME_LENGTH = 256;
+std::string TlSystem::hostname_ = "";
 
 int TlSystem::getPID()
 {
@@ -61,6 +63,22 @@ std::string TlSystem::getEnv(const std::string& key)
     return ans;
 }
 
+std::string TlSystem::getHostName()
+{
+#ifdef HAVE_UNISTD_H
+    if (TlSystem::hostname_.empty()) {
+        char* pHostName = new char[MAX_HOSTNAME_LENGTH];
+        gethostname(pHostName, MAX_HOSTNAME_LENGTH);
+        
+        TlSystem::hostname_ = std::string(pHostName);
+        
+        delete[] pHostName;
+        pHostName = NULL;
+    }
+#endif // HAVE_UNISTD_H
+
+    return TlSystem::hostname_;
+}
 
 double TlSystem::getMaxRSS()
 {

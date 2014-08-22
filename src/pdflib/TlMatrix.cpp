@@ -173,7 +173,16 @@ void TlMatrix::initialize(bool isZeroClear)
 void TlMatrix::initialize_usingStandard(bool isZeroClear)
 {
     const std::size_t size = this->getNumOfElements();
-    this->data_ = new double[size];
+    try {
+        this->data_ = new double[size];
+    } catch (std::bad_alloc& ba) {
+        this->log_.critical(TlUtils::format("bad_alloc caught: %s", ba.what()));
+        throw;
+    } catch (...) {
+        this->log_.critical("unknown error.");
+        throw;
+    }
+    assert(this->data_ != NULL);
     
     if (isZeroClear == true) {
         std::fill(this->data_, this->data_ + size, 0.0);
@@ -185,7 +194,16 @@ void TlMatrix::initialize_usingMemManager(bool isZeroClear)
 {
     TlMemManager& rMemManager = TlMemManager::getInstance();
     const std::size_t size = this->getNumOfElements();
-    this->data_ = (double*)rMemManager.allocate(sizeof(double) * size);
+    try {
+        this->data_ = (double*)rMemManager.allocate(sizeof(double) * size);
+    } catch (std::bad_alloc& ba) {
+        this->log_.critical(TlUtils::format("bad_alloc caught: %s", ba.what()));
+        throw;
+    } catch (...) {
+        this->log_.critical("unknown error.");
+        throw;
+    }
+    assert(this->data_ != NULL);
 
     if (isZeroClear == true) {
         std::fill(this->data_, this->data_ + size, 0.0);
@@ -219,7 +237,7 @@ void TlMatrix::clear_usingStandard()
 void TlMatrix::clear_usingMemManager()
 {
     TlMemManager& rMemManager = TlMemManager::getInstance();
-    rMemManager.deallocate((char*)this->data_, sizeof(double) * this->getNumOfElements());
+    rMemManager.deallocate((char*)this->data_);
     this->data_ = NULL;
 }
 

@@ -24,6 +24,7 @@
 #endif // HAVE_CONFIG_H
 
 #include "TlVector.h"
+#include "TlLogging.h"
 
 /// MAX_INDEX_BITSが指定するビット数まで行列の次数を確保できる。
 /// 例えばMAX_INDEX_BITS=20であれば、1,048,576まで行列が確保できる。
@@ -36,6 +37,8 @@ public:
     typedef signed long size_type; /// 数値配列の総数を表す整数型(範囲外を示す値として-1を取る場合がある)
     
 public:
+    TlMatrixObject();
+
     /// 仮想デストラクタ
     virtual ~TlMatrixObject() {
     }
@@ -125,6 +128,9 @@ public:
     
 public:
     virtual double getMaxAbsoluteElement(index_type* pOutRow =NULL, index_type* pOutCol =NULL) const;
+
+protected:
+    TlLogging& log_;
 };
 
 #endif // TLMATRIXOBJECT_H
