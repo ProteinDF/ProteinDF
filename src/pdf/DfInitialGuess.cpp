@@ -237,7 +237,8 @@ void DfInitialGuess::createOccupation()
         break;
 
     case METHOD_ROKS:
-        this->createOccupation(RUN_ROKS);
+        this->createOccupation(RUN_ROKS_CLOSED);
+        this->createOccupation(RUN_ROKS_OPEN);
         break;
 
     default:
@@ -258,7 +259,7 @@ TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType)
     case RUN_RKS:
         {
             const std::vector<int> docLevel = this->getLevel(pdfParam["method/rks/occlevel"].getStr());
-            for (std::vector<int>::const_iterator p = docLevel.begin(); p != docLevel.end(); p++) {
+            for (std::vector<int>::const_iterator p = docLevel.begin(); p != docLevel.end(); ++p) {
                 const int level = *p -1;
                 if ((0 <= level) && (level < numOfMOs)) {
                     guess_occ[*p -1] = 2.0;
@@ -270,7 +271,7 @@ TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType)
     case RUN_UKS_ALPHA:
         {
             const std::vector<int> occLevel = this->getLevel(pdfParam["method/uks/alpha_occlevel"].getStr());
-            for (std::vector<int>::const_iterator p = occLevel.begin(); p != occLevel.end(); p++) {
+            for (std::vector<int>::const_iterator p = occLevel.begin(); p != occLevel.end(); ++p) {
                 const int level = *p -1;
                 if ((0 <= level) && (level < numOfMOs)) {
                     guess_occ[level] = 1.0;
@@ -282,7 +283,7 @@ TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType)
     case RUN_UKS_BETA:
         {
             const std::vector<int> occLevel = this->getLevel(pdfParam["method/uks/beta_occlevel"].getStr());
-            for (std::vector<int>::const_iterator p = occLevel.begin(); p != occLevel.end(); p++) {
+            for (std::vector<int>::const_iterator p = occLevel.begin(); p != occLevel.end(); ++p) {
                 const int level = *p -1;
                 if ((0 <= level) && (level < numOfMOs)) {
                     guess_occ[*p -1] = 1.0;
@@ -291,18 +292,22 @@ TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType)
         }
         break;
 
-    case RUN_ROKS:
+    case RUN_ROKS_CLOSED:
         {
             const std::vector<int> occLevel_c = this->getLevel(pdfParam["method/roks/closed_occlevel"].getStr());
-            for (std::vector<int>::const_iterator p = occLevel_c.begin(); p != occLevel_c.end(); p++) {
+            for (std::vector<int>::const_iterator p = occLevel_c.begin(); p != occLevel_c.end(); ++p) {
                 const int level = *p -1;
                 if ((0 <= level) && (level < numOfMOs)) {
                     guess_occ[*p -1] = 2.0;
                 }
             }
+        }
+        break;
 
+    case RUN_ROKS_OPEN:
+        {
             const std::vector<int> occLevel_o = this->getLevel(pdfParam["method/roks/open_occlevel"].getStr());
-            for (std::vector<int>::const_iterator p = occLevel_o.begin(); p != occLevel_o.end(); p++) {
+            for (std::vector<int>::const_iterator p = occLevel_o.begin(); p != occLevel_o.end(); ++p) {
                 const int level = *p -1;
                 if ((0 <= level) && (level < numOfMOs)) {
                     guess_occ[*p -1] = 1.0;

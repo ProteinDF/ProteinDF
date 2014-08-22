@@ -55,8 +55,8 @@ void DfDiffDensityMatrix::exec()
         break;
         
     case METHOD_ROKS:
-        this->calc_ROKS<TlSymmetricMatrix>();
-        abort();
+        this->calc<TlSymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
+        this->calc<TlSymmetricMatrix>(RUN_ROKS_OPEN, this->m_nIteration);
         break;
         
     default:

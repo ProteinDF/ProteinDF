@@ -112,6 +112,9 @@ void DfTotalEnergy::output()
             break;
 
         case METHOD_ROKS:
+            this->log_.info(TlUtils::format(" E_K            = %28.16lf\n", this->K_term_));
+            this->log_.info(TlUtils::format("   E_K(alpha)   = %28.16lf\n", this->E_KA_));
+            this->log_.info(TlUtils::format("   E_K(beta)    = %28.16lf\n", this->E_KB_));
             break;
 
         default:

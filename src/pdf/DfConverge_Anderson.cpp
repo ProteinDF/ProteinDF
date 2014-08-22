@@ -47,8 +47,8 @@ void DfConverge_Anderson::convergeRhoTilde()
         this->convergeRhoTilde<TlVector>(DfObject::RUN_UKS_BETA);
         break;
     case METHOD_ROKS:
-        this->convergeRhoTilde<TlVector>(DfObject::RUN_UKS_ALPHA);
-        this->convergeRhoTilde<TlVector>(DfObject::RUN_UKS_BETA);
+        this->convergeRhoTilde<TlVector>(DfObject::RUN_ROKS_CLOSED);
+        this->convergeRhoTilde<TlVector>(DfObject::RUN_ROKS_OPEN);
         break;
     default:
         std::cerr << "program error. @DfConverge_Anderson::convergeRhoTilde()" << std::endl;
@@ -67,8 +67,8 @@ void DfConverge_Anderson::convergeKSMatrix()
         this->convergeKSMatrix<TlSymmetricMatrix, TlVector>(DfObject::RUN_UKS_BETA);
         break;
     case METHOD_ROKS:
-        this->convergeKSMatrix<TlSymmetricMatrix, TlVector>(DfObject::RUN_UKS_ALPHA);
-        this->convergeKSMatrix<TlSymmetricMatrix, TlVector>(DfObject::RUN_UKS_BETA);
+        this->convergeKSMatrix<TlSymmetricMatrix, TlVector>(DfObject::RUN_ROKS_CLOSED);
+        this->convergeKSMatrix<TlSymmetricMatrix, TlVector>(DfObject::RUN_ROKS_OPEN);
         break;
     default:
         std::cerr << "program error. @DfConverge_Anderson::convergeKSMatrix()" << std::endl;
@@ -87,8 +87,8 @@ void DfConverge_Anderson::convergePMatrix()
         this->convergePMatrix<TlSymmetricMatrix, TlVector>(DfObject::RUN_UKS_BETA);
         break;
     case METHOD_ROKS:
-        this->convergePMatrix<TlSymmetricMatrix, TlVector>(DfObject::RUN_UKS_ALPHA);
-        this->convergePMatrix<TlSymmetricMatrix, TlVector>(DfObject::RUN_UKS_BETA);
+        this->convergePMatrix<TlSymmetricMatrix, TlVector>(DfObject::RUN_ROKS_CLOSED);
+        this->convergePMatrix<TlSymmetricMatrix, TlVector>(DfObject::RUN_ROKS_OPEN);
         break;
     default:
         std::cerr << "program error. @DfConverge_Anderson::convergePMatrix()" << std::endl;

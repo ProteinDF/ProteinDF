@@ -71,7 +71,7 @@ protected:
     /** 密度行列要素の最大のずれを計算する
      */
     template<class SymmetricMatrixType>
-    double dev_density_matrix(RUN_TYPE runType, int iteration);
+    double dev_density_matrix(METHOD_TYPE methodType, int iteration);
     
     template<class SymmetricMatrixType>
     double dev_standard_dev_cd(RUN_TYPE runType, int iteration);
@@ -97,20 +97,20 @@ protected:
 
     int converged_flag; /// 収束判定に関するフラッグ。収束時には0が入る
 
-    double dev_sd_a;
-    double dev_sd_b;
-    double dev_dm_a;
-    double dev_dm_b;
-    double dev_dm_c;
-    double dev_dm_o;
-    double dev_ks_a;
-    double dev_ks_b;
-    double dev_cd_a;
-    double dev_cd_b;
-    double dev_xc_a;
-    double dev_xc_b;
-    double dev_xa_a;
-    double dev_xa_b;
+    // double dev_sd_a;
+    // double dev_sd_b;
+    // double dev_dm_a;
+    // double dev_dm_b;
+    // double dev_dm_c;
+    // double dev_dm_o;
+    // double dev_ks_a;
+    // double dev_ks_b;
+    // double dev_cd_a;
+    // double dev_cd_b;
+    // double dev_xc_a;
+    // double dev_xc_b;
+    // double dev_xa_a;
+    // double dev_xa_b;
 };
 
 
@@ -125,8 +125,10 @@ void DfConvcheck::main(const int iteration)
             if (this->J_engine_ == J_ENGINE_RI_J) {
                 this->dev_sd = this->dev_standard_dev_cd<SymmetricMatrixType>(RUN_RKS, iteration);
             }
-            this->dev_dm = this->dev_density_matrix<SymmetricMatrixType>(RUN_RKS, iteration);
+
+            this->dev_dm = this->dev_density_matrix<SymmetricMatrixType>(METHOD_RKS, iteration);
             this->dev_ks = this->dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_RKS, iteration);
+
             if (this->m_bIsXCFitting == true) {
                 this->dev_cd = dev_cd_coefficient(RUN_RKS, iteration);
                 //this->dev_xc = dev_xc_coefficient  (type, iteration );
@@ -138,50 +140,57 @@ void DfConvcheck::main(const int iteration)
     case METHOD_UKS:
         {
             if (this->J_engine_ == J_ENGINE_RI_J) {
-                this->dev_sd_a = dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
-                this->dev_sd_b = dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
+                const double dev_sd_a = this->dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
+                const double dev_sd_b = this->dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
+                this->dev_sd = std::max(dev_sd_a, dev_sd_b);
             }
 
-            this->dev_dm_a = dev_density_matrix<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
-            this->dev_ks_a = dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
-            this->dev_cd_a = dev_cd_coefficient(RUN_UKS_ALPHA, iteration);
-            this->dev_xc_a = dev_xc_coefficient(RUN_UKS_ALPHA, iteration);
-            this->dev_xa_a = dev_xa_coefficient(RUN_UKS_ALPHA, iteration);
+            this->dev_dm = this->dev_density_matrix<SymmetricMatrixType>(METHOD_UKS, iteration);
 
-            this->dev_dm_b = dev_density_matrix<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
-            this->dev_ks_b = dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
-            this->dev_cd_b = dev_cd_coefficient(RUN_UKS_BETA,  iteration);
-            this->dev_xc_b = dev_xc_coefficient(RUN_UKS_BETA,  iteration);
-            this->dev_xa_b = dev_xa_coefficient(RUN_UKS_BETA,  iteration);
-            
-            this->dev_sd = (dev_sd_a > dev_sd_b) ? dev_sd_a : dev_sd_b;
-            this->dev_dm = (dev_dm_a > dev_dm_b) ? dev_dm_a : dev_dm_b;
-            this->dev_ks = (dev_ks_a > dev_ks_b) ? dev_ks_a : dev_ks_b;
-            this->dev_cd = (dev_cd_a > dev_cd_b) ? dev_cd_a : dev_cd_b;
-            this->dev_xc = (dev_xc_a > dev_xc_b) ? dev_xc_a : dev_xc_b;
-            this->dev_xa = (dev_xa_a > dev_xa_b) ? dev_xa_a : dev_xa_b;
+            const double dev_ks_a = this->dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
+            const double dev_ks_b = this->dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_UKS_BETA,  iteration);
+            this->dev_ks = std::max(dev_ks_a, dev_ks_b);
+
+            if (this->m_bIsXCFitting == true) {
+                const double dev_cd_a = dev_cd_coefficient(RUN_UKS_ALPHA, iteration);
+                const double dev_xc_a = dev_xc_coefficient(RUN_UKS_ALPHA, iteration);
+                const double dev_xa_a = dev_xa_coefficient(RUN_UKS_ALPHA, iteration);
+
+                const double dev_cd_b = dev_cd_coefficient(RUN_UKS_BETA,  iteration);
+                const double dev_xc_b = dev_xc_coefficient(RUN_UKS_BETA,  iteration);
+                const double dev_xa_b = dev_xa_coefficient(RUN_UKS_BETA,  iteration);
+
+                this->dev_cd = std::max(dev_cd_a, dev_cd_b);
+                this->dev_xc = std::max(dev_xc_a, dev_xc_b);
+                this->dev_xa = std::max(dev_xa_a, dev_xa_b);
+            }
         }
         break;
 
     case METHOD_ROKS:
         {
-            this->dev_sd_a = dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_ALPHA,  iteration);
-            this->dev_sd_b = dev_standard_dev_cd<SymmetricMatrixType>(RUN_UKS_BETA,   iteration);
-            this->dev_dm_c = dev_density_matrix<SymmetricMatrixType>(RUN_ROKS_CLOSE, iteration);
-            this->dev_dm_o = dev_density_matrix<SymmetricMatrixType>(RUN_ROKS_OPEN,  iteration);
-            this->dev_ks = this->dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_ROKS,           iteration);
-            this->dev_cd_a = dev_cd_coefficient(RUN_UKS_ALPHA,  iteration);
-            this->dev_xc_a = dev_xc_coefficient(RUN_UKS_ALPHA,  iteration);
-            this->dev_xa_a = dev_xa_coefficient(RUN_UKS_ALPHA,  iteration);
-            this->dev_cd_b = dev_cd_coefficient(RUN_UKS_BETA,   iteration);
-            this->dev_xc_b = dev_xc_coefficient(RUN_UKS_BETA,   iteration);
-            this->dev_xa_b = dev_xa_coefficient(RUN_UKS_BETA,   iteration);
-            
-            this->dev_sd = (dev_sd_a > dev_sd_b) ? dev_sd_a : dev_sd_b;
-            this->dev_dm = (dev_dm_c > dev_dm_o) ? dev_dm_c : dev_dm_o;
-            this->dev_cd = (dev_cd_a > dev_cd_b) ? dev_cd_a : dev_cd_b;
-            this->dev_xc = (dev_xc_a > dev_xc_b) ? dev_xc_a : dev_xc_b;
-            this->dev_xa = (dev_xa_a > dev_xa_b) ? dev_xa_a : dev_xa_b;
+            if (this->J_engine_ == J_ENGINE_RI_J) {
+                const double dev_sd_a = this->dev_standard_dev_cd<SymmetricMatrixType>(RUN_ROKS, iteration);
+                const double dev_sd_b = this->dev_standard_dev_cd<SymmetricMatrixType>(RUN_ROKS_OPEN, iteration);
+                this->dev_sd = std::max(dev_sd_a, dev_sd_b);
+            }
+
+            this->dev_dm = this->dev_density_matrix<SymmetricMatrixType>(METHOD_ROKS, iteration);
+
+            this->dev_ks = this->dev_kohn_sham_matrix<SymmetricMatrixType>(RUN_ROKS, iteration);
+
+            if (this->m_bIsXCFitting == true) {
+                const double dev_cd_a = dev_cd_coefficient(RUN_ROKS_CLOSED, iteration);
+                const double dev_xc_a = dev_xc_coefficient(RUN_ROKS_OPEN,   iteration);
+                const double dev_xa_a = dev_xa_coefficient(RUN_ROKS_CLOSED, iteration);
+                const double dev_cd_b = dev_cd_coefficient(RUN_ROKS_OPEN,   iteration);
+                const double dev_xc_b = dev_xc_coefficient(RUN_ROKS_CLOSED, iteration);
+                const double dev_xa_b = dev_xa_coefficient(RUN_ROKS_OPEN,   iteration);
+
+                this->dev_cd = std::max(dev_cd_a, dev_cd_b);
+                this->dev_xc = std::max(dev_xc_a, dev_xc_b);
+                this->dev_xa = std::max(dev_xa_a, dev_xa_b);
+            }            
         }
         break;
 
@@ -193,11 +202,29 @@ void DfConvcheck::main(const int iteration)
 
 
 template<class SymmetricMatrixType>
-double DfConvcheck::dev_density_matrix(const RUN_TYPE runType, const int iteration)
+double DfConvcheck::dev_density_matrix(const METHOD_TYPE methodType, const int iteration)
 {
-    // density matrix convergence
-    SymmetricMatrixType prevP = DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration -1);
-    SymmetricMatrixType P = DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration);
+    SymmetricMatrixType prevP, P;
+    switch (methodType) {
+    case METHOD_RKS:
+        prevP = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_RKS, iteration -1);
+        P = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_RKS, iteration);
+        break;
+
+    case METHOD_UKS:
+        prevP = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration -1);
+        prevP += DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_UKS_BETA, iteration -1);
+        P = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_UKS_ALPHA, iteration);
+        P += DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_UKS_BETA, iteration);
+        break;
+
+    case METHOD_ROKS:
+        prevP = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, iteration -1);
+        prevP += DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, iteration -1);
+        P = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, iteration);
+        P += DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, iteration);
+        break;
+    }
 
     // get maximum deviation
     P -= prevP;
