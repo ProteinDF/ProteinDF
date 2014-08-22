@@ -25,12 +25,28 @@
 #include "TlGetopt.h"
 #include "TlSerializeData.h"
 #include "TlMsgPack.h"
+#include "TlUtils.h"
 
-void usage();
+void showHelp(const std::string& progname)
+{
+    std::cout << "output ProteinDF keyword" << std::endl;
+    std::cout << TlUtils::format("USAGE: %s [OPTIONS]", progname.c_str()) << std::endl;
+    std::cout << std::endl;
+    std::cout << "  -a:      output hidden parameters" << std::endl;
+    std::cout << "  -c:      output CSV format" << std::endl;
+    std::cout << "  -r:      output ReST format" << std::endl;
+    std::cout << "  -j:      output Japanese" << std::endl;
+    std::cout << "  -m FILE: output MsgPack file" << std::endl;
+}
 
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "acjm:r");
+    TlGetopt opt(argc, argv, "hacjm:r");
+
+    if (opt["h"] == "defined") {
+        showHelp(opt[0]);
+    }
+
     const bool showAll = (opt["a"] == "defined");
     const bool isCSV = (opt["c"] == "defined");
     const bool isJP = (opt["j"] == "defined");
@@ -62,15 +78,4 @@ int main(int argc, char* argv[])
     return EXIT_SUCCESS;
 }
 
-
-void usage()
-{
-    std::cout << "output ProteinDF keyword" << std::endl;
-    std::cout << std::endl;
-    std::cout << "  -a:      output hidden parameters" << std::endl;
-    std::cout << "  -c:      output CSV format" << std::endl;
-    std::cout << "  -r:      output ReST format" << std::endl;
-    std::cout << "  -j:      output Japanese" << std::endl;
-    std::cout << "  -m FILE: output MsgPack file" << std::endl;
-}
 

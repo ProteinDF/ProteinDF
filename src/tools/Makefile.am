@@ -10,7 +10,6 @@ SERIAL_PROGS = 				\
 	pdf-component			\
 	pdf-eri					\
 	pdf-info-charge 		\
-	pdf-info-mat			\
 	pdf-info-orb			\
 	pdf-init-param			\
 	pdf-kwd					\
@@ -21,6 +20,7 @@ SERIAL_PROGS = 				\
 	pdf-mat-diagonal		\
 	pdf-mat-diff			\
 	pdf-mat-ext				\
+	pdf-mat-info			\
 	pdf-mat-inverse			\
 	pdf-mat-mul				\
 	pdf-mat-symmetrize		\
@@ -86,9 +86,6 @@ pdf_eri_LDADD = $(SERIAL_LIBS)
 pdf_info_charge_SOURCES = main_info_charge.cpp
 pdf_info_charge_LDADD = $(SERIAL_LIBS)
 
-pdf_info_mat_SOURCES = main_info_mat.cpp
-pdf_info_mat_LDADD = $(SERIAL_LIBS)
-
 pdf_info_orb_SOURCES = main_info_orb.cpp
 pdf_info_orb_LDADD = $(SERIAL_LIBS)
 
@@ -120,6 +117,9 @@ pdf_mat_diff_LDADD = $(SERIAL_LIBS)
 
 pdf_mat_ext_SOURCES = main_mat_ext.cpp
 pdf_mat_ext_LDADD = $(SERIAL_LIBS)
+
+pdf_mat_info_SOURCES = main_mat_info.cpp
+pdf_mat_info_LDADD = $(SERIAL_LIBS)
 
 pdf_mat_inverse_SOURCES = main_mat_inverse.cpp
 pdf_mat_inverse_LDADD = $(SERIAL_LIBS)
