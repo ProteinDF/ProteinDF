@@ -20,8 +20,18 @@
 
 #include "TlVector.h"
 #include "TlGetopt.h"
+#include "TlUtils.h"
 
-void help();
+void help(const std::string& prgname)
+{
+    std::cout << TlUtils::format("Usage: %s [options]... FILE1 FILE2", prgname.c_str()) << std::endl;
+    std::cout << "compare ProteinDF vector files"
+              << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << " -h           show help message (this)." << std::endl;
+    std::cout << " -v           show message verbosely." << std::endl;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -29,7 +39,7 @@ int main(int argc, char* argv[])
 
     bool bVerbose = (opt["v"] == "defined");
     if (opt.getCount() < 2) {
-        help();
+        help(opt[0]);
         std::exit(1);
     }
 
@@ -56,17 +66,6 @@ int main(int argc, char* argv[])
     v1.print(std::cout);
 
     return nErrorCode;
-}
-
-
-void help()
-{
-    std::cout << "Usage: pdfdiffvtr [options]... FILE1 FILE2" << std::endl;
-    std::cout << "compare ProteinDF vector files"
-              << std::endl;
-    std::cout << "Options:" << std::endl;
-    std::cout << " -h           show help message (this)." << std::endl;
-    std::cout << " -v           show message verbosely." << std::endl;
 }
 
 

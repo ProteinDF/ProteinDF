@@ -22,7 +22,18 @@
 #include "TlVector.h"
 #include "TlGetopt.h"
 
-void help();
+void showHelp(const std::string& progname)
+{
+    std::cout << TlUtils::format("Usage: %s [options]... FILE", progname.c_str()) << std::endl;
+    std::cout << "display ProteinDF vector file"
+              << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << " -g           show guess mode" << std::endl;
+    std::cout << " -l           show list mode" << std::endl;
+    std::cout << " -h           show help message (this)." << std::endl;
+    std::cout << " -v           show message verbosely." << std::endl;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -31,6 +42,10 @@ int main(int argc, char* argv[])
     const bool bGuessMode = (opt["g"] == "defined");
     const bool bListMode = (opt["l"] == "defined");
     const bool bVerbose = (opt["v"] == "defined");
+
+    if (opt["h"] == "defined") {
+        showHelp(opt[0]);
+    }
 
     std::string sPath = opt[1];
     if (bVerbose) {
@@ -56,19 +71,6 @@ int main(int argc, char* argv[])
     }
 
     return EXIT_SUCCESS;
-}
-
-
-void help()
-{
-    std::cout << "Usage: pdfvtr2txt [options]... FILE" << std::endl;
-    std::cout << "display ProteinDF vector file"
-              << std::endl;
-    std::cout << "Options:" << std::endl;
-    std::cout << " -g           show guess mode" << std::endl;
-    std::cout << " -l           show list mode" << std::endl;
-    std::cout << " -h           show help message (this)." << std::endl;
-    std::cout << " -v           show message verbosely." << std::endl;
 }
 
 

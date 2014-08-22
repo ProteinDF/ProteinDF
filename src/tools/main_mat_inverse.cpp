@@ -22,63 +22,72 @@
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
 #include "TlGetopt.h"
+#include "TlUtils.h"
 
-void showHelp()
+void showHelp(const std::string& progname)
 {
-    std::cout << "cholesky [options] input_file_path" << std::endl;
+    std::cout << TlUtils::format("USAGE: %s [options] input_file_path output_file_path", progname.c_str()) << std::endl;
     std::cout << " OPTIONS:" << std::endl;
-    // std::cout << "  -l FILE: save vector for eigen values" << std::endl;
-    // std::cout << "  -x FILE: save matrix for eigen vector" << std::endl;
     std::cout << "  -h:      show help" << std::endl;
     std::cout << "  -v:      verbose" << std::endl;
 }
 
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "hv");
+    TlGetopt opt(argc, argv, "hvl:x:");
     
     if (opt["h"] == "defined") {
-        showHelp();
+        showHelp(opt[0]);
         return EXIT_SUCCESS;
     }
     
     const bool bVerbose = (opt["v"] == "defined");
 
     if (opt.getCount() <= 1) {
-        showHelp();
+        showHelp(opt[0]);
         return EXIT_FAILURE;
     }
-    std::string inputMatrixPath = opt[1];
-    
+    const std::string inputMatrixPath = opt[1];
+    const std::string outputMatrixPath = opt[2];
+
     if (bVerbose == true) {
         std::cerr << "load matrix: " << inputMatrixPath << std::endl;
     }
-    if (TlSymmetricMatrix::isLoadable(inputMatrixPath) != true) {
+    if (TlMatrix::isLoadable(inputMatrixPath) == true) {
+        TlMatrix A;
+        A.load(inputMatrixPath);
+
+        if (bVerbose == true) {
+            std::cerr << "running..." << std::endl;
+        }
+        A.inverse();
+    
+        if (bVerbose == true) {
+            std::cerr << "save inverse matrix: " << outputMatrixPath << std::endl;
+        }
+        if (outputMatrixPath != "") {
+            A.save(outputMatrixPath);
+        }
+    } else if (TlMatrix::isLoadable(inputMatrixPath) != true) {
+        TlSymmetricMatrix A;
+        A.load(inputMatrixPath);
+
+        if (bVerbose == true) {
+            std::cerr << "running..." << std::endl;
+        }
+        A.inverse();
+    
+        if (bVerbose == true) {
+            std::cerr << "save inverse matrix: " << outputMatrixPath << std::endl;
+        }
+        if (outputMatrixPath != "") {
+            A.save(outputMatrixPath);
+        }
+    } else {
         std::cerr << "can not open file: " << inputMatrixPath << std::endl;
         return EXIT_FAILURE;
     }
 
-    TlSymmetricMatrix A;
-    A.load(inputMatrixPath);
-    const int numOfDims = A.getNumOfRows();
-
-    if (bVerbose == true) {
-        std::cerr << "running..." << inputMatrixPath << std::endl;
-    }
-    TlMatrix L = A.choleskyFactorization2(1.0E-16);
-
-    TlMatrix Lt = L;
-    Lt.transpose();
-
-    TlMatrix LL = L * Lt;
-    
-    std::cout << ">>>> L" << std::endl;
-    L.print(std::cout);
-    std::cout << ">>>> A" << std::endl;
-    A.print(std::cout);
-    std::cout << ">>>> LL" << std::endl;
-    LL.print(std::cout);
-    
     return EXIT_SUCCESS;
 }
 

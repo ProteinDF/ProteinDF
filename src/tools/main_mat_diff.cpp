@@ -22,8 +22,19 @@
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
 #include "TlGetopt.h"
+#include "TlUtils.h"
 
-void help();
+void help(const std::string& progname)
+{
+    std::cout << TlUtils::format("Usage: %s [options]... FILE1 FILE2", progname.c_str()) << std::endl;
+    std::cout << "compare ProteinDF matrix files"
+              << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << " -s FILE      save difference matrix" << std::endl;
+    std::cout << " -h           show help message (this)." << std::endl;
+    std::cout << " -v           show message verbosely." << std::endl;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -31,7 +42,7 @@ int main(int argc, char* argv[])
 
     bool bVerbose = (opt["v"] == "defined");
     if (opt.getCount() < 2) {
-        help();
+        help(opt[0]);
         std::exit(1);
     }
     
@@ -101,18 +112,6 @@ int main(int argc, char* argv[])
     }
 
     return errorCode;
-}
-
-
-void help()
-{
-    std::cout << "Usage: pdfdiffmat [options]... FILE1 FILE2" << std::endl;
-    std::cout << "compare ProteinDF matrix files"
-              << std::endl;
-    std::cout << "Options:" << std::endl;
-    std::cout << " -s FILE      save difference matrix" << std::endl;
-    std::cout << " -h           show help message (this)." << std::endl;
-    std::cout << " -v           show message verbosely." << std::endl;
 }
 
 

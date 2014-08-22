@@ -23,9 +23,9 @@
 #include "TlRotateLCAO.h"
 #include "TlMsgPack.h"
 
-void showHelp()
+void showHelp(const std::string& progname)
 {
-    std::cout << "rotateLCAO <TARGET_PDFPARAM>" << std::endl;
+    std::cout << TlUtils::format("USAGE: %s <TARGET_PDFPARAM>", progname.c_str()) << std::endl;
     std::cout << "OPTIONS:" << std::endl;
     std::cout << "  -i <PATH>: define input matrix path. default: rotate_lcao.input" << std::endl;
     std::cout << "  -o <PATH>: define output matrix path. default: rotate_lcao.output" << std::endl;
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 {
     TlGetopt opt(argc, argv, "hi:o:m:v");
     if (opt["h"] == "defined") {
-        showHelp();
+        showHelp(opt[0]);
         return EXIT_SUCCESS;
     }
     const bool verbose = (opt["v"] == "defined");
