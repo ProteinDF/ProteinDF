@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "DfLevelshift.h"
 #include "CnError.h"
 #include "Fl_Tbl_Fragment.h"
@@ -68,13 +86,13 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration, const std::string
     TlSerializeData& pdfParam = *(this->pPdfParam_);
     
     // construct level shift matrix for "F' matrix"
-    const double ls_closed_mo = pdfParam["level-shift/ls-closed-mo"].getDouble();
-    const double ls_open_mo = pdfParam["level-shift/ls-open-mo"].getDouble();
-    const double ls_virtual_mo = pdfParam["level-shift/ls-virtual-mo"].getDouble();
+    const double ls_closed_mo = pdfParam["level_shift/closed_mo"].getDouble();
+    const double ls_open_mo = pdfParam["level_shift/open_mo"].getDouble();
+    const double ls_virtual_mo = pdfParam["level_shift/virtual_mo"].getDouble();
 
-    const double delta_group_closed = pdfParam["level-shift/delta-group-closed"].getDouble();
-    const double delta_group_open = pdfParam["level-shift/delta-group-open"].getDouble();
-    const double delta_group_virtual = pdfParam["level-shift/delta-group-virtual"].getDouble();
+    const double delta_group_closed = pdfParam["level_shift/delta_group_closed"].getDouble();
+    const double delta_group_open = pdfParam["level_shift/delta_group_open"].getDouble();
+    const double delta_group_virtual = pdfParam["level_shift/delta_group_virtual"].getDouble();
 
     this->log_.info("construct Level Shift Operator.");
 

@@ -1,4 +1,23 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <iostream>
+#include <new>
 #include "TlColVectorMatrix2.h"
 #include "TlMemManager.h"
 
@@ -6,13 +25,30 @@ TlColVectorMatrix2::TlColVectorMatrix2(const index_type row,
                                        const index_type col,
                                        int allProcs, int rank,
                                        bool isUsingMemManager)
-    : numOfRows_(0), numOfCols_(0), reserveRows_(0),
+    : log_(TlLogging::getInstance()),
+      numOfRows_(0), numOfCols_(0), reserveRows_(0),
       allProcs_(allProcs), rank_(rank),
       numOfLocalCols_(0),
       isUsingMemManager_(isUsingMemManager) {
     this->resize(row, col);
 }
 
+TlColVectorMatrix2::TlColVectorMatrix2(const TlColVectorMatrix2& rhs)
+    : log_(TlLogging::getInstance()),
+      numOfRows_(0), numOfCols_(0), reserveRows_(0),
+      allProcs_(rhs.allProcs_), rank_(rhs.rank_),
+      numOfLocalCols_(0),
+      isUsingMemManager_(rhs.isUsingMemManager_) {
+    this->resize(rhs.getNumOfRows(), rhs.getNumOfCols());
+
+    assert(this->data_.size() == rhs.data_.size());
+    const index_type numOfRows = this->getNumOfRows();
+    const std::size_t size = this->data_.size();
+    for (std::size_t i = 0; i < size; ++i) {
+        assert(this->data_[i] != NULL);
+        std::copy(rhs.data_[i], rhs.data_[i] + numOfRows, this->data_[i]);
+    }
+}
 
 TlColVectorMatrix2::~TlColVectorMatrix2()
 {
@@ -22,7 +58,7 @@ TlColVectorMatrix2::~TlColVectorMatrix2()
         TlMemManager& rMemManager = TlMemManager::getInstance();
         const index_type reserveRows = this->reserveRows_;
         for (index_type i = 0; i < numOfLocalCols; ++i) {
-            rMemManager.deallocate((char*)this->data_[i], sizeof(double)*reserveRows);
+            rMemManager.deallocate((char*)this->data_[i]);
             this->data_[i] = NULL;
         }
     } else {
@@ -53,7 +89,7 @@ void TlColVectorMatrix2::resize(const index_type newRows,
             TlMemManager& rMemManager = TlMemManager::getInstance();
             const index_type reserveRows = this->reserveRows_;
             for (index_type i = newNumOfLocalCols; i < prevNumOfLocalCols; ++i) {
-                rMemManager.deallocate((char*)this->data_[i], sizeof(double)*reserveRows);
+                rMemManager.deallocate((char*)this->data_[i]);
                 this->data_[i] = NULL;
             }
         } else {
@@ -80,12 +116,21 @@ void TlColVectorMatrix2::reserve_rows(const index_type newReserves) {
         const index_type numOfLocalCols = this->numOfLocalCols_;
         for (index_type i = 0; i < numOfLocalCols; ++i) {
             double* pNew = NULL;
-            if (this->isUsingMemManager_ == true) {
-                TlMemManager& rMemManager = TlMemManager::getInstance();
-                pNew = (double*)rMemManager.allocate(sizeof(double)*newReserveRows);
-            } else {
-                pNew = new double[newReserveRows];
+            try {
+                if (this->isUsingMemManager_ == true) {
+                    TlMemManager& rMemManager = TlMemManager::getInstance();
+                    pNew = (double*)rMemManager.allocate(sizeof(double)*newReserveRows);
+                } else {
+                    pNew = new double[newReserveRows];
+                }
+            } catch (std::bad_alloc& ba) {
+                this->log_.critical(TlUtils::format("bad_alloc caught: %s", ba.what()));
+                std::abort();
+            } catch (...) {
+                this->log_.critical("unknown error.");
+                std::abort();
             }
+            assert(pNew != NULL);
 
             for (index_type j = 0; j < newReserveRows; ++j) {
                 pNew[j] = 0.0;
@@ -97,7 +142,7 @@ void TlColVectorMatrix2::reserve_rows(const index_type newReserves) {
                 }
                 if (this->isUsingMemManager_ == true) {
                     TlMemManager& rMemManager = TlMemManager::getInstance();
-                    rMemManager.deallocate((char*)this->data_[i], sizeof(double)*prevReserveRows);
+                    rMemManager.deallocate((char*)this->data_[i]);
                 } else {
                     delete[] this->data_[i];
                 }

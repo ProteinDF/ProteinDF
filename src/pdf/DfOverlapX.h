@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #ifndef DFOVERLAPX_H
 #define DFOVERLAPX_H
 
@@ -28,17 +46,21 @@ public:
     void getForce(const TlSymmetricMatrix& W, TlMatrix* pForce);
 
     /// 重なり行列を作成する
-    void getOvpMat(const TlOrbitalInfoObject& orbInfo,
-                   TlSymmetricMatrix* pS);
+    virtual void getOvpMat(const TlOrbitalInfoObject& orbInfo,
+                           TlSymmetricMatrix* pS);
 
     /// 変換行列を作成する
-    void getTransMat(const TlOrbitalInfoObject& orbInfo1,
-                     const TlOrbitalInfoObject& orbInfo2,
-                     TlMatrix* pS);
+    virtual void getTransMat(const TlOrbitalInfoObject& orbInfo1,
+                             const TlOrbitalInfoObject& orbInfo2,
+                             TlMatrix* pS);
 
     /// <p|nabra|q> を求める
     void getGradient(const TlOrbitalInfoObject& orbitalInfo,
                      TlMatrix* pMatX, TlMatrix* pMatY, TlMatrix* pMatZ);
+
+    /// M_pq = sum_rs{P_rs <pqrs>}
+    void getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+    void getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
 
 public:
     /// calc <pq gamma>
@@ -132,6 +154,30 @@ protected:
     void getGradient_partProc(const TlOrbitalInfoObject& orbitalInfo,
                               const std::vector<DfTaskCtrl::Task2>& taskList,
                               TlMatrixObject* pMatX, TlMatrixObject* pMatY, TlMatrixObject* pMatZ);
+
+    TlSparseSymmetricMatrix makeSchwarzTable(const TlOrbitalInfoObject& orbitalInfo);
+    void getM_part(const TlOrbitalInfoObject& orbitalInfo,
+                   const std::vector<DfTaskCtrl::Task4>& taskList,
+                   const TlMatrixObject& P, TlMatrixObject* pM);
+    void getM_part(const TlOrbitalInfoObject& orbitalInfo_PQ,
+                   const TlOrbitalInfoObject& orbitalInfo_RS,
+                   const std::vector<DfTaskCtrl::Task4>& taskList,
+                   const TlMatrixObject& P, TlMatrixObject* pM);
+
+    void storeM(const index_type shellIndexP, const int maxStepsP,
+                const index_type shellIndexQ, const int maxStepsQ,
+                const index_type shellIndexR, const int maxStepsR,
+                const index_type shellIndexS, const int maxStepsS,
+                const DfOverlapEngine& engine,
+                const TlMatrixObject& P,
+                TlMatrixObject* pM);
+    void storeM_A(const index_type shellIndexP, const int maxStepsP,
+                  const index_type shellIndexQ, const int maxStepsQ,
+                  const index_type shellIndexR, const int maxStepsR,
+                  const index_type shellIndexS, const int maxStepsS,
+                  const DfOverlapEngine& engine,
+                  const TlMatrixObject& P,
+                  TlMatrixObject* pM);
 
 protected:
     DfOverlapEngine* pEngines_;

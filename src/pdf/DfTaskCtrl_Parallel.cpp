@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "DfTaskCtrl_Parallel.h"
 #include "TlCommunicate.h"
 
@@ -59,6 +77,63 @@ void DfTaskCtrl_Parallel::cutoffReport_MS()
     }
 }
 
+bool DfTaskCtrl_Parallel::getQueue(const TlOrbitalInfoObject& orbitalInfo,
+                                   const int maxGrainSize,
+                                   std::vector<Task>* pTask,
+                                   bool initialize)
+{
+    bool answer = false;
+    
+    // [TODO] in this version, DC only
+    answer = this->getQueue_DC(orbitalInfo,
+                               maxGrainSize, pTask, initialize);
+
+    // if (this->isMasterSlave_ == true) {
+    //     answer = this->getQueue_MS(orbitalInfo,
+    //                                maxGrainSize, pTask, initialize);
+    // } else {
+    //     answer = this->getQueue_DC(orbitalInfo,
+    //                                maxGrainSize, pTask, initialize);
+    // }
+
+    return answer;
+}
+
+bool DfTaskCtrl_Parallel::getQueue_DC(const TlOrbitalInfoObject& orbitalInfo,
+                                      const int maxGrainSize,
+                                      std::vector<Task>* pTask,
+                                      bool initialize)
+{
+    assert(pTask != NULL);
+    pTask->clear();
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int numOfProcs = rComm.getNumOfProcs();
+    const int globalMaxGrainSize = maxGrainSize * numOfProcs;
+
+    std::vector<Task> globalTask;
+    bool answer = false;
+    answer = DfTaskCtrl::getQueue(orbitalInfo, 
+                                  globalMaxGrainSize,
+                                  &globalTask, initialize);
+    if (answer == true) {
+        const std::size_t grainSize = globalTask.size();
+        const std::size_t localGrainSize = (grainSize + numOfProcs -1) / numOfProcs;
+        
+        const int rank = rComm.getRank();
+        const std::size_t begin = localGrainSize * rank;
+        const std::size_t end = std::min(localGrainSize * (rank +1), grainSize);
+        
+        if (begin < end) {
+            pTask->resize(end - begin);
+            std::copy(globalTask.begin() + begin,
+                      globalTask.begin() + end,
+                      pTask->begin());
+        }
+    }
+
+    return answer;
+}
 
 bool DfTaskCtrl_Parallel::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
                                     const bool isCutoffDistribution,

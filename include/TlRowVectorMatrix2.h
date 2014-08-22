@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #ifndef TLROWVECTORMATRIX2_H
 #define TLROWVECTORMATRIX2_H
 
@@ -7,6 +25,7 @@
 
 #include "TlMatrixObject.h"
 #include "TlMatrix.h"
+#include "TlLogging.h"
 
 class TlRowVectorMatrix2 {
 public:
@@ -51,6 +70,8 @@ private:
     TlRowVectorMatrix2& operator=(const TlRowVectorMatrix2& rhs);
 
 private:
+    TlLogging& log_;
+
     index_type numOfRows_;
     index_type numOfCols_;
     index_type reserveCols_; // 列数のメモリ確保量

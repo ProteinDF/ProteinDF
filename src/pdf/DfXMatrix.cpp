@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <cassert>
 #include <fstream>
 #include <string>
@@ -12,7 +30,7 @@ DfXMatrix::DfXMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
     assert(pPdfParam != NULL);
     const TlSerializeData& pdfParam = *pPdfParam;
-    const double threshold_trancation = pdfParam["orbital-independence-threshold"].getDouble();
+    const double threshold_trancation = pdfParam["orbital_independence_threshold"].getDouble();
 
     this->threshold_trancation_canonical_ = threshold_trancation;
     if (pdfParam["orbital_independence_threshold/canonical"].getStr().empty() != true) {
@@ -45,4 +63,16 @@ void DfXMatrix::buildX()
     (*(this->pPdfParam_))["num_of_MOs"] = X.getNumOfCols();
 }
 
+
+void DfXMatrix::canonicalOrthogonalize(const TlSymmetricMatrix& S,
+                                       TlMatrix* pX, TlMatrix* pXinv)
+{
+    this->canonicalOrthogonalizeTmpl<TlSymmetricMatrix, TlMatrix>(S, pX, pXinv);
+}
+
+void DfXMatrix::lowdinOrthogonalize(const TlSymmetricMatrix& S,
+                                    TlMatrix* pX, TlMatrix* pXinv)
+{
+    this->lowdinOrthogonalizeTmpl<TlSymmetricMatrix, TlMatrix>(S, pX, pXinv);
+}
 

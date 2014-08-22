@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif // _OPENMP
@@ -835,7 +853,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
                                  const TlDistributeMatrix& P, TlVector* pRho)
 {
     const int taskListSize = taskList.size();
-    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+    // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
     
 #pragma omp parallel
     {
@@ -866,7 +884,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
             for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
             
-                const int shellTypeS = 0;
+                // const int shellTypeS = 0;
                 // const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
                 
                 const std::size_t numOfShellArrayR = shellArrayTable_Density[shellTypeR].size();

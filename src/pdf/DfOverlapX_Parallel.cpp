@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "DfOverlapX_Parallel.h"
 #include "TlOrbitalInfo.h"
 #include "TlOrbitalInfo_Density.h"
@@ -128,7 +146,95 @@ void DfOverlapX_Parallel::get_pqg(const TlDistributeVector& myu,
 
     this->calcOverlap(orbitalInfo_XC, tmpMyu,
                       orbitalInfo, &tmpF);
-    this->loggerTime(" finalize");
+    this->loggerTime("finalize");
     pF->mergeSparseMatrix(tmpF);
+}
+
+void DfOverlapX_Parallel::getOvpMat(const TlOrbitalInfoObject& orbitalInfo,
+                                    TlDistributeSymmetricMatrix* pS)
+{
+    assert(pS != NULL);
+    pS->resize(orbitalInfo.getNumOfOrbitals());
+    TlSparseSymmetricMatrix tmpS(orbitalInfo.getNumOfOrbitals());
+
+    this->calcOverlap(orbitalInfo, &tmpS);
+
+    this->loggerTime("finalize");
+    pS->mergeSparseMatrix(tmpS);
+}
+
+void DfOverlapX_Parallel::getGradient(const TlOrbitalInfoObject& orbitalInfo,
+                                      TlDistributeMatrix* pMatX,
+                                      TlDistributeMatrix* pMatY,
+                                      TlDistributeMatrix* pMatZ)
+{
+    assert(pMatX != NULL);
+    assert(pMatY != NULL);
+    assert(pMatZ != NULL);
+    
+    const index_type numOfAOs = orbitalInfo.getNumOfOrbitals();
+    pMatX->resize(numOfAOs, numOfAOs);
+    pMatY->resize(numOfAOs, numOfAOs);
+    pMatZ->resize(numOfAOs, numOfAOs);
+
+    const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
+
+    this->createEngines();
+    DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
+
+    TlSparseMatrix tmpMatX(numOfAOs, numOfAOs);
+    TlSparseMatrix tmpMatY(numOfAOs, numOfAOs);
+    TlSparseMatrix tmpMatZ(numOfAOs, numOfAOs);
+
+    std::vector<DfTaskCtrl::Task2> taskList;
+    bool hasTask = pTaskCtrl->getQueue2(orbitalInfo,
+                                       true,
+                                       this->grainSize_, &taskList, true);
+    while (hasTask == true) {
+        this->getGradient_partProc(orbitalInfo,
+                                   taskList,
+                                   &tmpMatX, &tmpMatY, &tmpMatZ);
+        
+        hasTask = pTaskCtrl->getQueue2(orbitalInfo,
+                                       true,
+                                       this->grainSize_, &taskList);
+    }
+
+    pTaskCtrl->cutoffReport();
+    delete pTaskCtrl;
+    pTaskCtrl = NULL;
+    this->destroyEngines();
+
+    pMatX->mergeSparseMatrix(tmpMatX);
+    pMatY->mergeSparseMatrix(tmpMatY);
+    pMatZ->mergeSparseMatrix(tmpMatZ);
+}
+
+void DfOverlapX_Parallel::getM(const TlSymmetricMatrix& P,
+                               TlSymmetricMatrix* pM) 
+{
+    this->log_.info("DfOverlapX_Parallel::getM(const TlSymmetricMatrix&, TlSymmetricMatrix* pM)");
+    DfOverlapX::getM(P, pM);
+}
+
+void DfOverlapX_Parallel::getM_A(const TlSymmetricMatrix& P,
+                                 TlSymmetricMatrix* pM)
+{
+    this->log_.info("DfOverlapX_Parallel::getM_A(const TlSymmetricMatrix&, TlSymmetricMatrix* pM)");
+    DfOverlapX::getM_A(P, pM);
+}
+
+void DfOverlapX_Parallel::getM(const TlDistributeSymmetricMatrix& P,
+                               TlDistributeSymmetricMatrix* pM)
+{
+    this->log_.info("DfOverlapX_Parallel::getM(const TlDistSymmetricMatrix&, TlDistSymmetricMatrix* pM)");
+    abort();
+}
+
+void DfOverlapX_Parallel::getM_A(const TlDistributeSymmetricMatrix& P,
+                                 TlDistributeSymmetricMatrix* pM)
+{
+    this->log_.info("DfOverlapX_Parallel::getM_A(const TlDistSymmetricMatrix&, TlDistSymmetricMatrix* pM)");
+    abort();
 }
 

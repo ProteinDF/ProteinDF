@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #ifndef TLMATRIXOBJECT_H
 #define TLMATRIXOBJECT_H
 
@@ -6,6 +24,7 @@
 #endif // HAVE_CONFIG_H
 
 #include "TlVector.h"
+#include "TlLogging.h"
 
 /// MAX_INDEX_BITSが指定するビット数まで行列の次数を確保できる。
 /// 例えばMAX_INDEX_BITS=20であれば、1,048,576まで行列が確保できる。
@@ -18,6 +37,8 @@ public:
     typedef signed long size_type; /// 数値配列の総数を表す整数型(範囲外を示す値として-1を取る場合がある)
     
 public:
+    TlMatrixObject();
+
     /// 仮想デストラクタ
     virtual ~TlMatrixObject() {
     }
@@ -107,6 +128,9 @@ public:
     
 public:
     virtual double getMaxAbsoluteElement(index_type* pOutRow =NULL, index_type* pOutCol =NULL) const;
+
+protected:
+    TlLogging& log_;
 };
 
 #endif // TLMATRIXOBJECT_H

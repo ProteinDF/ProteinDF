@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #ifdef __FUJITSU
 #include <fjcoll.h>
 #endif // __FUJITSU
@@ -117,7 +135,7 @@ void DfScf::setScfParam()
     this->m_nScfAcceleration = SCF_ACCELERATION_SIMPLE;
     {
         const std::string sScfAcceleration =
-            TlUtils::toUpper(pdfParam["scf-acceleration"].getStr());
+            TlUtils::toUpper(pdfParam["scf_acceleration"].getStr());
 
         if (sScfAcceleration == "DAMPING") {
             this->m_nScfAcceleration = SCF_ACCELERATION_SIMPLE;
@@ -125,6 +143,8 @@ void DfScf::setScfParam()
             this->m_nScfAcceleration = SCF_ACCELERATION_ANDERSON;
         } else if (sScfAcceleration == "DIIS") {
             this->m_nScfAcceleration = SCF_ACCELERATION_DIIS;
+        } else {
+            this->log_.warn(TlUtils::format("unknown acceleration method: %s", sScfAcceleration.c_str()));
         }
     }
 
@@ -135,7 +155,7 @@ void DfScf::setScfParam()
     }
     {
         const std::string sDampObject =
-            TlUtils::toUpper(pdfParam["scf-acceleration/damping/damping-type"].getStr());
+            TlUtils::toUpper(pdfParam["scf_acceleration/damping/damping_type"].getStr());
         
         if (sDampObject == "DENSITY_MATRIX") {
             this->m_nDampObject = DAMP_DENSITY_MATRIX;
@@ -143,6 +163,8 @@ void DfScf::setScfParam()
             this->m_nDampObject = DAMP_DENSITY;
         } else if (sDampObject == "FOCK") {
             this->m_nDampObject = DAMP_FOCK;
+        } else {
+            this->log_.warn(TlUtils::format("unknown acceleration method: %s", sDampObject.c_str()));
         }
     }
 }
@@ -187,6 +209,7 @@ int DfScf::execScfLoop()
     };
 
     SCF_STATE nScfState = BEGIN;
+    (*this->pPdfParam_)["control"]["scf_converged"] = false;
     if (this->isRestart_ == true) {
         const std::string respoint = TlUtils::toUpper(pdfParam["control"]["scf_state"].getStr());
 
@@ -365,6 +388,7 @@ int DfScf::execScfLoop()
             if (this->judge() == false) {
                 nScfState = JUDGE_TAIL;
             } else {
+                (*this->pPdfParam_)["control"]["scf_converged"] = true;
                 nScfState = END_OF_SCF_LOOP;
             }
 
@@ -522,8 +546,11 @@ void DfScf::buildXcMatrix()
 
         if (this->XC_engine_ != XC_ENGINE_GRID) {
             this->log_.info("using grid-free method");
-            DfGridFreeXC dfGridFreeXC(this->pPdfParam_);
-            dfGridFreeXC.buildFxc();
+            DfGridFreeXC* pDfGridFreeXC = this->getDfGridFreeXcObject();
+            pDfGridFreeXC->buildFxc();
+
+            delete pDfGridFreeXC;
+            pDfGridFreeXC = NULL;
         } else {
             this->log_.info("using grid method");
 
@@ -552,6 +579,11 @@ void DfScf::buildXcMatrix()
     }
 }
 
+DfGridFreeXC* DfScf::getDfGridFreeXcObject()
+{
+    DfGridFreeXC* pDfGridFreeXC = new DfGridFreeXC(this->pPdfParam_);
+    return pDfGridFreeXC;
+}
 
 DfXCFunctional* DfScf::getDfXCFunctional()
 {
@@ -657,8 +689,8 @@ DfTransFmatrix* DfScf::getDfTransFmatrixObject(bool isExecDiis)
 void DfScf::doLevelShift()
 {
     // add level shift to Kohn-Sham matrix
-    const int start_iter = (*(this->pPdfParam_))["level-shift/start-iteration"].getInt();
-    const bool levelShift = (*(this->pPdfParam_))["level-shift"].getBoolean();
+    const int start_iter = (*(this->pPdfParam_))["level_shift/start_iteration"].getInt();
+    const bool levelShift = (*(this->pPdfParam_))["level_shift"].getBoolean();
     if ((levelShift == true) &&
         (this->m_nIteration >= start_iter)) {
         TlTime timer;
@@ -933,9 +965,9 @@ void DfScf::cleanup()
 bool DfScf::checkMaxIteration()
 {
     bool answer = false;
-    if (this->m_nIteration >= (*this->pPdfParam_)["max-iteration"].getInt()) {
-        const std::string str = TlUtils::format(" max-iteration %d is reached.\n",
-                                                (*this->pPdfParam_)["max-iteration"].getInt());
+    if (this->m_nIteration >= (*this->pPdfParam_)["max_iteration"].getInt()) {
+        const std::string str = TlUtils::format(" max_iteration %d is reached.\n",
+                                                (*this->pPdfParam_)["max_iteration"].getInt());
         this->logger(str);
         std::cout << str;
 

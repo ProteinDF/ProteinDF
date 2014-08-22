@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <algorithm>
 #include <iostream>
 #include "DfEriEngine.h"
@@ -119,6 +137,8 @@ DfEriEngine::DfEriEngine()
     this->WORK_B = new double[OUTPUT_BUFFER_SIZE];
     this->WORK_C = new double[OUTPUT_BUFFER_SIZE];
     this->WORK_D = new double[OUTPUT_BUFFER_SIZE];
+
+    this->pTransformBuf_ = new double[OUTPUT_BUFFER_SIZE];
     
     // cutoff
     this->primitiveLevelThreshold_ = 1.0E-20;
@@ -190,6 +210,9 @@ DfEriEngine::~DfEriEngine()
     this->WORK_C = NULL;
     delete[] this->WORK_D;
     this->WORK_D = NULL;
+
+    delete[] this->pTransformBuf_;
+    this->pTransformBuf_ = NULL;
 
 #ifdef CHECK_MAX_COUNT
     std::cerr << ">>>> DfEriEngine constants" << std::endl;
@@ -664,10 +687,10 @@ void DfEriEngine::copyResultsToOutputBuffer(const AngularMomentum2& qAB,
     
     int index = 0;
     for (int iAbar = 0; iAbar < numOfAmvsAbar; ++iAbar) {
-        const TlAngularMomentumVector amvAbar = amvsAbar.get(iAbar);
+        // const TlAngularMomentumVector amvAbar = amvsAbar.get(iAbar);
 
         for (int iBbar = 0; iBbar < numOfAmvsBbar; ++iBbar) {
-            const TlAngularMomentumVector amvBbar = amvsBbar.get(iBbar);
+            // const TlAngularMomentumVector amvBbar = amvsBbar.get(iBbar);
 
             for (int iCbar = 0; iCbar < numOfAmvsCbar; ++iCbar) {
                 const TlAngularMomentumVector amvCbar = amvsCbar.get(iCbar);
@@ -676,10 +699,10 @@ void DfEriEngine::copyResultsToOutputBuffer(const AngularMomentum2& qAB,
                     const TlAngularMomentumVector amvDbar = amvsDbar.get(iDbar);
 
                     for (int iA = 0; iA < numOfAmvsA; ++iA) {
-                        const TlAngularMomentumVector amvA = amvsA.get(iA);
+                        // const TlAngularMomentumVector amvA = amvsA.get(iA);
                 
                         for (int iB = 0; iB < numOfAmvsB; ++iB) {
-                            const TlAngularMomentumVector amvB = amvsB.get(iB);
+                            // const TlAngularMomentumVector amvB = amvsB.get(iB);
                             const int bra_index = ((iAbar*numOfAmvsBbar +iBbar)*numOfAmvsA +iA)*numOfAmvsB +iB;
                     
                             for (int iC = 0; iC < numOfAmvsC; ++iC) {
@@ -739,8 +762,6 @@ void DfEriEngine::transform6Dto5D(const AngularMomentum2& qAB,
         return;
     }
 
-    double pBuf[OUTPUT_BUFFER_SIZE];
-    
     // 6D ベースの要素数(1, 3, 6, 10, ...)
     // 5D ベースの場合は(2n +1: 1, 3, 5, 7, ...)
     int I_ = a_bar * (a_bar + 3) / 2 + 1;
@@ -757,30 +778,39 @@ void DfEriEngine::transform6Dto5D(const AngularMomentum2& qAB,
                                  a, b, c, d)
               << std::endl;
 #endif // DEBUG_TRANSFORM_6D_TO_5D
-    
+
+    assert(this->pTransformBuf_ != NULL);
     if (a == 2) {
-        this->transform6Dto5D_i(I_, J_, K_, L_, J, K, L, pOutput, pBuf);
+        this->transform6Dto5D_i(I_, J_, K_, L_, J, K, L, pOutput, this->pTransformBuf_);
         I = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
-        std::copy(pBuf, pBuf + end, pOutput);
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  pOutput);
     }
     if (b == 2) {
-        this->transform6Dto5D_j(I_, J_, K_, L_, I, K, L, pOutput, pBuf);
+        this->transform6Dto5D_j(I_, J_, K_, L_, I, K, L, pOutput, this->pTransformBuf_);
         J = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
-        std::copy(pBuf, pBuf + end, pOutput);
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  pOutput);
     }
     if (c == 2) {
-        this->transform6Dto5D_k(I_, J_, K_, L_, I, J, L, pOutput, pBuf);
+        this->transform6Dto5D_k(I_, J_, K_, L_, I, J, L, pOutput, this->pTransformBuf_);
         K = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
-        std::copy(pBuf, pBuf + end, pOutput);
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  pOutput);
     }
     if (d == 2) {
-        this->transform6Dto5D_l(I_, J_, K_, L_, I, J, K, pOutput, pBuf);
+        this->transform6Dto5D_l(I_, J_, K_, L_, I, J, K, pOutput, this->pTransformBuf_);
         L = 5;
         const std::size_t end = I_ * J_ * K_ * L_ * I * J * K * L;
-        std::copy(pBuf, pBuf + end, pOutput);
+        std::copy(this->pTransformBuf_,
+                  this->pTransformBuf_ + end,
+                  pOutput);
     }
 }
 
@@ -1867,7 +1897,7 @@ void DfEriEngine::calcPQ(const AngularMomentum2& qAB,
             const TlAngularMomentumVectorSet amvs_p(p);
             const int numOf_amvs_p = amvs_p.size(); // amvs_p の数だけで十分
             assert(braStateIndex < ERI_NUM_OF_ERI_STATES);
-            assert(this->ERI_bra_[braStateIndex].size() > numOf_amvs_p);
+            assert(static_cast<int>(this->ERI_bra_[braStateIndex].size()) > numOf_amvs_p);
 
 #ifdef CHECK_MAX_COUNT
             this->maxNumOfAMVs_ = std::max(this->maxNumOfAMVs_, numOf_amvs_p);
@@ -1967,7 +1997,7 @@ DfEriEngine::get_csindex_for_calcPQ(const int angularMomentumP,
                     const TlAngularMomentumVector amv_p = amvs_p.get(i);
                     
                     // ket ---------------------------------------------------------
-                    int ket_index = 0;
+                    // int ket_index = 0;
                     const int max_ket_cs_index = ket_contractScales.size();
                     for (int ket_cs_index = 0; ket_cs_index < max_ket_cs_index; ++ket_cs_index) {
                         const int c_prime = ket_contractScales[ket_cs_index].a_prime;
@@ -2435,8 +2465,8 @@ void DfEriEngine::ERI_EQ44_00xxx(const ERI_State eriState, EriDataType* pERI)
         const int i = this->initiativeRM(amv_b);
         const double AB_i = this->AB_[i];
         
-        const TlAngularMomentumVector amv_a_bar1 = amv_a_bar - this->E1_[i];
-        const TlAngularMomentumVector amv_b_bar1 = amv_b_bar - this->E1_[i];
+        // const TlAngularMomentumVector amv_a_bar1 = amv_a_bar - this->E1_[i];
+        // const TlAngularMomentumVector amv_b_bar1 = amv_b_bar - this->E1_[i];
         const TlAngularMomentumVector amv_b1 = amv_b - this->E1_[i];
         assert(amv_b1.isExist() == true);
             

@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <cmath>
 #include <limits>
 #include "DfFunctional_Becke88.h"
@@ -199,7 +217,7 @@ TlMatrix DfFunctional_Becke88::getDerivativeFunctionalCore(const double rhoA,
     // gammaAA = (rhoA^(4/3) * xA) * (rhoA^(4/3) * xA);
     // roundF_roundGammaAA = 0.5 * (1.0 / (rhoA^(4/3) * xA)) * g_primeA;
     //                     = [1.0 / rhoA^(4/3)] * [0.5 * (1.0 / xA) * g_primeA]
-    {
+    if ((rhoA > 1.0E-16) && (xA > 1.0E-16)) {
         const double g_primeA = this->g_prime(xA);
         const double inv_xA = 1.0 / xA;
 
@@ -214,7 +232,7 @@ TlMatrix DfFunctional_Becke88::getDerivativeFunctionalCore(const double rhoA,
         answer.set(GAB_R, 0, roundF_roundGammaAB_termR);
         answer.set(GAB_X, 0, roundF_roundGammaAB_termX);
     }
-    {
+    if ((rhoB > 1.0E-16) && (xB > 1.0E-16)) {
         const double g_primeB = this->g_prime(xB);
         const double inv_xB = 1.0 / xB;
 

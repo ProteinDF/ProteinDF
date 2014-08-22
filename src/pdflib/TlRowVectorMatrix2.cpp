@@ -1,4 +1,23 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <iostream>
+#include <new>
 #include "TlRowVectorMatrix2.h"
 #include "TlMemManager.h"
 
@@ -6,14 +25,16 @@ TlRowVectorMatrix2::TlRowVectorMatrix2(const index_type row,
                                        const index_type col,
                                        int allProcs, int rank,
                                        bool isUsingMemManager)
-    : numOfRows_(0), numOfCols_(0), reserveCols_(0),
+    : log_(TlLogging::getInstance()),
+      numOfRows_(0), numOfCols_(0), reserveCols_(0),
       allProcs_(allProcs), rank_(rank),
       numOfLocalRows_(0), isUsingMemManager_(isUsingMemManager) {
     this->resize(row, col);
 }
 
 TlRowVectorMatrix2::TlRowVectorMatrix2(const TlRowVectorMatrix2& rhs)
-    : numOfRows_(0), numOfCols_(0), reserveCols_(0),
+    : log_(TlLogging::getInstance()),
+      numOfRows_(0), numOfCols_(0), reserveCols_(0),
       allProcs_(rhs.allProcs_), rank_(rhs.rank_),
       numOfLocalRows_(0), isUsingMemManager_(rhs.isUsingMemManager_) {
 
@@ -37,7 +58,7 @@ TlRowVectorMatrix2::~TlRowVectorMatrix2()
         TlMemManager& rMemManager = TlMemManager::getInstance();
         const index_type reserveCols = this->reserveCols_;
         for (index_type i = 0; i < numOfLocalRows; ++i) {
-            rMemManager.deallocate((char*)this->data_[i], sizeof(double)*reserveCols);
+            rMemManager.deallocate((char*)this->data_[i]);
             this->data_[i] = NULL;
         }
     } else {
@@ -68,7 +89,7 @@ void TlRowVectorMatrix2::resize(const index_type newRows,
             TlMemManager& rMemManager = TlMemManager::getInstance();
             const index_type reserveCols = this->reserveCols_;
             for (index_type i = newNumOfLocalRows; i < prevNumOfLocalRows; ++i) {
-                rMemManager.deallocate((char*)this->data_[i], sizeof(double)*reserveCols);
+                rMemManager.deallocate((char*)this->data_[i]);
                 this->data_[i] = NULL;
             }
         } else {
@@ -95,12 +116,21 @@ void TlRowVectorMatrix2::reserve_cols(const index_type newReserves) {
         const index_type numOfLocalRows = this->numOfLocalRows_;
         for (index_type i = 0; i < numOfLocalRows; ++i) {
             double* pNew = NULL;
-            if (this->isUsingMemManager_ == true) {
-                TlMemManager& rMemManager = TlMemManager::getInstance();
-                pNew = (double*)rMemManager.allocate(sizeof(double)*newReserveCols);
-            } else {
-                pNew = new double[newReserveCols];
+            try {
+                if (this->isUsingMemManager_ == true) {
+                    TlMemManager& rMemManager = TlMemManager::getInstance();
+                    pNew = (double*)rMemManager.allocate(sizeof(double)*newReserveCols);
+                } else {
+                    pNew = new double[newReserveCols];
+                }
+            } catch (std::bad_alloc& ba) {
+                this->log_.critical(TlUtils::format("bad_alloc caught: %s", ba.what()));
+                throw;
+            } catch (...) {
+                this->log_.critical("unknown error.");
+                throw;
             }
+            assert(pNew != NULL);
 
             for (index_type j = 0; j < newReserveCols; ++j) {
                 pNew[j] = 0.0;
@@ -112,7 +142,7 @@ void TlRowVectorMatrix2::reserve_cols(const index_type newReserves) {
                 }
                 if (this->isUsingMemManager_ == true) {
                     TlMemManager& rMemManager = TlMemManager::getInstance();
-                    rMemManager.deallocate((char*)this->data_[i], sizeof(double)*prevReserveCols);
+                    rMemManager.deallocate((char*)this->data_[i]);
                 } else {
                     delete[] this->data_[i];
                 }

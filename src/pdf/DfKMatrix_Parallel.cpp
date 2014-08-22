@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <cassert>
 #include "TlCommunicate.h"
 #include "DfKMatrix_Parallel.h"
@@ -30,8 +48,8 @@ void DfKMatrix_Parallel::getK_CD()
 #else
     {
         TlSymmetricMatrix K(this->m_nNumOfAOs);
-        this->getK_CD_local(&K);
-        this->saveKMatrix(K);
+        this->getK_CD_local(RUN_RKS, &K);
+        this->saveKMatrix(RUN_RKS, K);
     }
 #endif // HAVE_SCALAPACK
 }
@@ -52,8 +70,8 @@ void DfKMatrix_Parallel::getK_conventional()
 #else
     {
         TlSymmetricMatrix K(this->m_nNumOfAOs);
-        this->getK_conventional_local(&K);
-        this->saveKMatrix(K);
+        this->getK_conventional_local(RUN_RKS, &K);
+        this->saveKMatrix(RUN_RKS, K);
     }
 #endif // HAVE_SCALAPACK
 }

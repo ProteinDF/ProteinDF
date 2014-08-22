@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "DfFunctional.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -65,6 +83,8 @@ DerivativeFunctionalSets DfFunctional_GGA::getDerivativeFunctional_GF(const TlVe
     const int numOfTerms = this->getNumOfDerivativeFunctionalTerms();
     DerivativeFunctionalSets answer(numOfTerms, dim);
     for (index_type i = 0; i < dim; ++i) {
+        assert(std::fabs(rhoAs[i] - rhoBs[i]) < 1.0E-5);
+        assert(std::fabs(xAs[i] - xBs[i]) < 1.0E-5);
         const TlMatrix dfs = this->getDerivativeFunctionalCore(rhoAs[i], rhoBs[i],
                                                                xAs[i], xBs[i]);
         

@@ -1,8 +1,27 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #ifndef TLMEMMANAGER_H
 #define TLMEMMANAGER_H
 
 #include <vector>
 #include <map>
+#include "TlLogging.h"
 
 class TlMemManager {
 public:
@@ -37,9 +56,10 @@ public:
     static TlMemManager& getInstance();
 
     char* allocate(std::size_t size);
-    void deallocate(char* p, std::size_t num);
+    void deallocate(char* p);
 
     void debugOutFreeMemList() const;
+    void debugOutUseMemList() const;
 
 private:
     void memMap();
@@ -56,6 +76,8 @@ private:
     const TlMemManager& operator=(const TlMemManager& rhs);
 
 private:
+    TlLogging& log_;
+
     /// パラメータの設定が行われたかどうかを保持するフラグ
     /// setParam() が呼び出されるとtrue
     static bool isSetParam_;
@@ -76,7 +98,7 @@ private:
     char* beginMmap_;
 
     mutable std::vector<MemItem> freeMemList_;
-    mutable std::map<std::size_t, std::size_t> useList_; // for DEBUG
+    mutable std::map<std::size_t, std::size_t> useList_; // deallocate時に返すメモリ量が必要なため
 };
 
 #endif // TLMEMMANAGER_H

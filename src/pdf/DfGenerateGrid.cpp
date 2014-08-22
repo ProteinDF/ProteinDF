@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <cmath>
 
 #include "CnError.h"
@@ -24,7 +42,7 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
       flGeometry_((*pPdfParam)["coordinates"]) {
     const TlSerializeData& pdfParam = *pPdfParam;
     
-    this->xctype   = pdfParam["xc-potential"].getStr();
+    this->xctype   = pdfParam["xc_functional"].getStr();
 
     this->weightCutoff_ = 1.0E-16;
     if (pdfParam["grid-weight-cutoff"].getStr() != "") {

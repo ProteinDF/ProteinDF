@@ -1,3 +1,21 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+// 
+// This file is part of ProteinDF.
+// 
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
 #ifndef DFXMATRIX_H
 #define DFXMATRIX_H
 
@@ -16,15 +34,21 @@ public:
 public:
     virtual void buildX();
 
-    template<typename SymmetricMatrixType, typename MatrixType>
-    void canonicalOrthogonalize(const SymmetricMatrixType& S,
-                                MatrixType* pX, MatrixType* pXinv);
+    virtual void canonicalOrthogonalize(const TlSymmetricMatrix& S,
+                                        TlMatrix* pX, TlMatrix* pXinv);
 
-    template<typename SymmetricMatrixType, typename MatrixType>
-    void lowdinOrthogonalize(const SymmetricMatrixType& S,
-                             MatrixType* pX, MatrixType* pXinv);
+    virtual void lowdinOrthogonalize(const TlSymmetricMatrix& S,
+                                     TlMatrix* pX, TlMatrix* pXinv);
 
 protected:
+    template<typename SymmetricMatrixType, typename MatrixType>
+    void canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
+                                    MatrixType* pX, MatrixType* pXinv);
+
+    template<typename SymmetricMatrixType, typename MatrixType>
+    void lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
+                                 MatrixType* pX, MatrixType* pXinv);
+
     template<typename MatrixType>
     void check_X(const MatrixType& X,
                  const MatrixType& Xinv,
@@ -46,8 +70,8 @@ protected:
 
 
 template<typename SymmetricMatrixType, typename MatrixType>
-void DfXMatrix::canonicalOrthogonalize(const SymmetricMatrixType& S,
-                                       MatrixType* pX, MatrixType* pXinv)
+void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
+                                           MatrixType* pX, MatrixType* pXinv)
 {
     this->log_.info("orthogonalize by canonical method");
 
@@ -135,8 +159,8 @@ void DfXMatrix::canonicalOrthogonalize(const SymmetricMatrixType& S,
 }
 
 template<typename SymmetricMatrixType, typename MatrixType>
-void DfXMatrix::lowdinOrthogonalize(const SymmetricMatrixType& S,
-                                    MatrixType* pX, MatrixType* pXinv)
+void DfXMatrix::lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
+                                        MatrixType* pX, MatrixType* pXinv)
 {
     this->log_.info("orthogonalize by lowdin method");
     const index_type dim = S.getNumOfRows();
