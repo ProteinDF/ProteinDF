@@ -220,7 +220,7 @@ TlVector DfPopulation::getGrossOrbPop(const DfObject::RUN_TYPE runType, const in
     assert((runType == RUN_RKS) ||
            (runType == RUN_UKS_ALPHA) ||
            (runType == RUN_UKS_BETA) ||
-           (runType == RUN_ROKS_CLOSE) ||
+           (runType == RUN_ROKS_CLOSED) ||
            (runType == RUN_ROKS_OPEN));
     P = DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration);
 
