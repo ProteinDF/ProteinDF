@@ -209,8 +209,8 @@ void DfInitialGuess::createInitialGuessUsingDensityMatrix(const RUN_TYPE runType
 TlVector DfInitialGuess::getOccupation(const RUN_TYPE runType)
 {
     TlVector occupation;
-    const std::string binFile = TlUtils::format("./guess.occ.%s.vct", this->m_sRunTypeSuffix[runType].c_str());
-    const std::string txtFile = TlUtils::format("./guess.occ.%s.txt", this->m_sRunTypeSuffix[runType].c_str());
+    const std::string binFile = TlUtils::format("./guess.occ.%s.vtr", this->m_sRunTypeSuffix[runType].c_str());
+    const std::string txtFile = TlUtils::format("./guess.occ.%s.vtr", this->m_sRunTypeSuffix[runType].c_str());
 
     if (TlFile::isExist(binFile)) {
         occupation.load(binFile);
