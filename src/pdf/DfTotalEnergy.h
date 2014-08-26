@@ -482,9 +482,13 @@ double DfTotalEnergy::calcOneElectronPart(const SymmetricMatrixType& D)
         
         SymmetricMatrixType Hpq2;
         Hpq2.load(this->getHpq2MatrixPath());
-        
-        const int rotnum = std::min(this->m_nIteration, (chgextra_number +1));
-        Hpq += (rotnum * Hpq2);
+
+        if (chgextra_number > 1) {
+            const int coef = std::min(this->m_nIteration, chgextra_number);
+            Hpq += Hpq2 * double(coef);
+        } else {
+            Hpq += Hpq2;
+        }
     }
 
     return Hpq.dot(D).sum();
