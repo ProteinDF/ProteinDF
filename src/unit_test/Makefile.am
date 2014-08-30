@@ -1,5 +1,5 @@
 TESTS = PdfTests
-INCLUDES = -I$(top_srcdir)/src/pdf -I$(includedir)
+AM_CPPFLAGS = -I$(top_srcdir)/src/pdf -I$(includedir)
 
 if CPPUNIT
 PDF_TESTS = PdfTests
@@ -25,13 +25,15 @@ PdfTests_SOURCES = \
 	PdfTests.cpp 													\
 	TlUtilsTest.h					TlUtilsTest.cpp					\
 	TlPositionTest.h				TlPositionTest.cpp				\
-	TlParameterTest.h				TlParameterTest.cpp				\
 	TlStringTokenizerTest.h			TlStringTokenizerTest.cpp		\
 	TlMatrixTest.h					TlMatrixTest.cpp				\
 	TlSymmetricMatrixTest.h			TlSymmetricMatrixTest.cpp		\
 	TlSparseMatrixTest.h			TlSparseMatrixTest.cpp			\
 	TlSparseSymmetricMatrixTest.h	TlSparseSymmetricMatrixTest.cpp	\
 	TlSparseVectorTest.h			TlSparseVectorTest.cpp			\
+	TlVectorMatrixObjectTest.h		TlVectorMatrixObjectTest.cpp	\
+	TlRowVectorMatrixTest.h			TlRowVectorMatrixTest.cpp		\
+	TlColVectorMatrixTest.h			TlColVectorMatrixTest.cpp		\
 	TlVectorTest.h					TlVectorTest.cpp				\
 	TlFileMatrixTest.h				TlFileMatrixTest.cpp			\
 	TlFileSymmetricMatrixTest.h		TlFileSymmetricMatrixTest.cpp	\
@@ -48,7 +50,7 @@ PdfTests_SOURCES = \
 	DfFunctional_PW91XTest.h		DfFunctional_PW91XTest.cpp
 
 PdfTests_LDFLAGS = -L$(libdir)
-PdfTests_LDADD   = ../pdf/libpdf.la ../pdflib/libpdftl.la -lcppunit -ldl @LAPACK_LIBS@ @BLAS_LIBS@
+PdfTests_LDADD   = ../pdf/libpdf.la ../pdflib/libpdftl.la -lcppunit -ldl @LAPACK_LIBS@ @BLAS_LIBS@ @FLIBS@
 
 
 

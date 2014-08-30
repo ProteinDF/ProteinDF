@@ -61,16 +61,16 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
 {
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
     const TlOrbitalInfo orbInfo_high(pdfParam["coordinates"],
-                                     pdfParam["basis_sets"]);
+                                     pdfParam["basis_set"]);
     const int numOfAOs_high = orbInfo_high.getNumOfOrbitals();
     
     TlSerializeData pdfParam_low; // for low-level
     
     // set low-lebel geometry
-    pdfParam_low["coordinates"]["_"] = pdfParam["coordinates"]["_"];
+    pdfParam_low["coordinates"]["atoms"] = pdfParam["coordinates"]["atoms"];
     
     // set low-level basis set
-    pdfParam_low["basis_sets"] = this->pdfParam_harrisDB_["basis_sets"];
+    pdfParam_low["basis_set"] = this->pdfParam_harrisDB_["basis_set"];
     const Fl_Geometry flGeom(pdfParam_low["coordinates"]);
     const int numOfAtoms = flGeom.getNumOfAtoms();
     
@@ -81,21 +81,21 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
     
     // create low-level density matrix
     const TlOrbitalInfo orbInfo_low(pdfParam_low["coordinates"],
-                                    pdfParam_low["basis_sets"]);
+                                    pdfParam_low["basis_set"]);
     const int numOfAOs_low = orbInfo_low.getNumOfOrbitals();
     SymmetricMatrixType P_low(numOfAOs_low);
     TlCombineDensityMatrix combineDensMat;
     for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
-        const std::string atomSymbol = flGeom.getAtom(atomIndex);
+        const std::string atomSymbol = flGeom.getAtomSymbol(atomIndex);
         if (atomSymbol == "X") {
             continue;
         }
         
         TlSerializeData coord;
-        coord["_"].pushBack(pdfParam["coordinates"]["_"].getAt(atomIndex));
+        coord["atoms"].pushBack(pdfParam["coordinates"]["atoms"].getAt(atomIndex));
         
         TlOrbitalInfo orbInfo_harrisDB(coord,
-                                       this->pdfParam_harrisDB_["basis_sets"]);
+                                       this->pdfParam_harrisDB_["basis_set"]);
         
         const TlSymmetricMatrix P_DB(this->pdfParam_harrisDB_["density_matrix"][atomSymbol]);
         combineDensMat.make(orbInfo_harrisDB, P_DB,
@@ -131,10 +131,11 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
     switch (this->m_nMethodType) {
     case METHOD_RKS:
         {
-            double numOfElectrons = 0.0;
+            // double numOfElectrons = 0.0;
             DfPopulationType dfPop(this->pPdfParam_);
-            this->savePpqMatrix(RUN_RKS, 0, P_high); // sumOfElectrons()で必要
-            dfPop.sumOfElectrons(0, &numOfElectrons, NULL);
+            // this->savePpqMatrix(RUN_RKS, 0, P_high); // sumOfElectrons()で必要
+            // dfPop.sumOfElectrons(0, &numOfElectrons, NULL);
+            const double numOfElectrons = dfPop.getSumOfElectrons(P_high);
             const double coef = this->m_nNumOfElectrons / numOfElectrons;
 
             this->savePpqMatrix(RUN_RKS, 0, coef * P_high);
@@ -143,12 +144,9 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
 
     case METHOD_UKS:
         {
-            double numOfAlphaElectrons = 0.0;
-            double numOfBetaElectrons = 0.0;
             DfPopulationType dfPop(this->pPdfParam_);
-            this->savePpqMatrix(RUN_UKS_ALPHA, 0, P_high); // sumOfElectrons()で必要
-            this->savePpqMatrix(RUN_UKS_BETA,  0, P_high);
-            dfPop.sumOfElectrons(0, &numOfAlphaElectrons, &numOfBetaElectrons);
+            double numOfAlphaElectrons = dfPop.getSumOfElectrons(P_high);
+            double numOfBetaElectrons = dfPop.getSumOfElectrons(P_high);
             const double coef_alpha = this->m_nNumOfAlphaElectrons / numOfAlphaElectrons;
             const double coef_beta  = this->m_nNumOfBetaElectrons  / numOfBetaElectrons;
 
@@ -159,8 +157,14 @@ void DfInitialGuessHarris::calcInitialDensityMatrix()
 
     case METHOD_ROKS:
         {
-            this->log_.critical(TlUtils::format("sorry not implement. %s %s", __FILE__, __LINE__));
-            abort();
+            DfPopulationType dfPop(this->pPdfParam_);
+            double numOfCloseElectrons = dfPop.getSumOfElectrons(P_high);
+            double numOfOpenElectrons = dfPop.getSumOfElectrons(P_high);
+            const double coef_close = this->numOfClosedShellElectrons_ / numOfCloseElectrons;
+            const double coef_open = this->numOfOpenShellElectrons_  / numOfOpenElectrons;
+
+            this->savePpqMatrix(RUN_ROKS_CLOSED, 0, coef_close * P_high);
+            this->savePpqMatrix(RUN_ROKS_OPEN,   0, coef_open  * P_high);
         }
         break;
 

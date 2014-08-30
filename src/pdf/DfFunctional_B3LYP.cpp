@@ -177,6 +177,8 @@ TlMatrix DfFunctional_B3LYP::getFunctionalCore(const double rhoA,
     const index_type numOfFunctionalTerms_B88 = this->m_B88.getNumOfFunctionalTerms();
     const index_type numOfFunctionalTerms_VWN = this->m_VWN.getNumOfFunctionalTerms();
     const index_type numOfFunctionalTerms_LYP = this->m_LYP.getNumOfFunctionalTerms();
+    assert((numOfFunctionalTerms_LDA + numOfFunctionalTerms_B88 
+            + numOfFunctionalTerms_VWN + numOfFunctionalTerms_LYP) == this->getNumOfFunctionalTerms());
     TlMatrix xc(F_DIM, this->getNumOfFunctionalTerms());
     for (index_type i = 0; i < F_DIM; ++i) {
         index_type base = 0;
@@ -214,6 +216,8 @@ TlMatrix DfFunctional_B3LYP::getDerivativeFunctionalCore(const double rhoA,
     const index_type numOfDerivativeFunctionalTerms_B88 = this->m_B88.getNumOfDerivativeFunctionalTerms();
     const index_type numOfDerivativeFunctionalTerms_VWN = this->m_VWN.getNumOfDerivativeFunctionalTerms();
     const index_type numOfDerivativeFunctionalTerms_LYP = this->m_LYP.getNumOfDerivativeFunctionalTerms();
+    assert((numOfDerivativeFunctionalTerms_LDA + numOfDerivativeFunctionalTerms_B88
+            + numOfDerivativeFunctionalTerms_VWN + numOfDerivativeFunctionalTerms_LYP) == this->getNumOfDerivativeFunctionalTerms());
     TlMatrix xc(D_DIM, this->getNumOfDerivativeFunctionalTerms());
     for (index_type i = 0; i < D_DIM; ++i) {
         index_type base = 0;
@@ -236,4 +240,5 @@ TlMatrix DfFunctional_B3LYP::getDerivativeFunctionalCore(const double rhoA,
 
     return xc;
 }
+
 

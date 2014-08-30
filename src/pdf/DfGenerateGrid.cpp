@@ -77,7 +77,7 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
         CnErr.abort();
     }
 
-    const int dNumOfAtoms = this->numOfRealAtoms_;
+    const int dNumOfAtoms = this->m_nNumOfAtoms;
     this->coord_.resize(dNumOfAtoms);
     for (int i = 0; i < dNumOfAtoms; ++i) {
         this->coord_[i] = this->flGeometry_.getCoordinate(i);
@@ -135,7 +135,7 @@ int DfGenerateGrid::dfGrdMain()
 void DfGenerateGrid::makeTable()
 {
     TlOrbitalInfo_Density orbInfoAuxCD((*this->pPdfParam_)["coordinates"],
-                                       (*this->pPdfParam_)["basis_sets_j"]);
+                                       (*this->pPdfParam_)["basis_set_j"]);
     const int maxNumOfAuxCDs = orbInfoAuxCD.getNumOfOrbitals();
     
     double dMaxExpAlpha = 0.0;
@@ -608,7 +608,7 @@ void DfGenerateGrid::setCellPara()
 void DfGenerateGrid::generateGrid(const TlMatrix& O)
 {
     std::size_t numOfGrids = 0;
-    const int endAtom = this->numOfRealAtoms_;
+    const int endAtom = this->m_nNumOfAtoms;
     for (int atom = 0; atom < endAtom; ++atom) {
         std::vector<double> coordX;
         std::vector<double> coordY;
@@ -656,119 +656,122 @@ void DfGenerateGrid::generateGrid(const TlMatrix& O,
     // 3. generate Omega  grid
     // 4. calculate weight by Fuzzy cell method
 
+    const int nNumOfAtoms = this->m_nNumOfAtoms;
     std::vector<TlPosition> crdpoint(20000);
     std::vector<double> weightvec(20000);
-    std::vector<double> Ps(this->numOfRealAtoms_);
-    const int nNumOfAtoms = this->numOfRealAtoms_; //this->m_nNumOfAtoms - this->m_nNumOfDummyAtoms;
+    std::vector<double> Ps(nNumOfAtoms);
     int GPthrnum = 0;
-    const double rM = 0.5 * this->radiusList_[TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtom(iatom))] / BOHR;
-
-    for (int radvec = 0; radvec < this->nrgrid; ++radvec) {
-        const double r0  = rM * (1.0 + this->xGL_[radvec]) / (1.0 - this->xGL_[radvec]);
-        const double dr0 = 2.0 * rM / ((1.0 - this->xGL_[radvec]) * (1.0 - this->xGL_[radvec]));
-        const double weightpoint = 1.0 / (double) nOgrid;
-        double weight = weightpoint * r0 * r0 * dr0 * this->wGL_[radvec] * 4.0 * M_PI;
-
-        std::vector<TlPosition> grid(nOgrid);
-        std::vector<double> lebWeight(nOgrid);
-        this->points2(nOgrid, r0, this->coord_[iatom], weight, O, grid, lebWeight);
-
-        // Loop for the grid number of Omega vector for normal Grid(Beck\'s Method)
-        for (int Omega = 0; Omega < nOgrid; ++Omega) {
-            weight = lebWeight[Omega];
-            const TlPosition pos_O = grid[Omega];
-
-            // グリッド省略判定
-            int checkp = 1;
-            for (int p = 0; p < this->numOfRealAtoms_; ++p) {
-                const double rp = pos_O.distanceFrom(this->coord_[p]);
-
-                if (rp < this->maxRadii_) {
-                    checkp = 0;
-                    break;
-                }
-            }
-
-            if (checkp == 1) {
-                goto JUMP1;
-            }
-
-            // Loop for the m-center
-            for (int mc = 0; mc < nNumOfAtoms; ++mc) {
-                double Psuij = 1.0;
-
-                const int atomnum1 = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtom(mc));
-                double radius1  = this->radiusList_[atomnum1];
-                if (atomnum1 == 1) {
-                    radius1 = 0.35; // for H
-                }
-
-                const double ri = pos_O.distanceFrom(this->coord_[mc]);
-
-                // Loop for the n-center
-                for (int nc = 0; nc < nNumOfAtoms; ++nc) {
-                    const double rj = pos_O.distanceFrom(this->coord_[nc]);
-
-                    if (nc != mc) {
-                        const double Rij = this->coord_[mc].distanceFrom(this->coord_[nc]);
-
-                        const int atomnum2 = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtom(nc));
-                        double radius2  = this->radiusList_[atomnum2];
-                        if (atomnum2 == 1) {
-                            radius2 = 0.35; // for H
-                        }
-                        const double Kai = radius1 / radius2;
-                        const double uijtmp = (Kai -1.0) / (Kai +1.0);
-                        double aij = uijtmp / (uijtmp * uijtmp - 1.0);
-                        if (aij >= 0.5) {
-                            aij =  0.5;
-                        }
-                        if (aij <= -0.5) {
-                            aij = -0.5;
-                        }
-
-                        // Calculate the Fuzzy Cell
-                        double uij = (ri - rj) / Rij;
-                        uij += aij * (1.0 - uij * uij);
-
-                        double suij = 0.0;
-                        if (uij > 0.9) {
-                            Ps[mc] = 0.0;
-                            goto JUMPMC1;
-                        } else if (uij < -0.9) {
-                            suij = 1.0;
-                        } else {
-                            const double f1u    = 1.5 * uij - 0.5 * uij * uij * uij;
-                            const double f2u    = 1.5 * f1u - 0.5 * f1u * f1u * f1u;
-                            const double f3u    = 1.5 * f2u - 0.5 * f2u * f2u * f2u;
-                            suij = 0.5 * (1.0 - f3u);
-                        }
-                        // Pai suij
-                        Psuij *= suij;
+    const int atomicNumber = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtomSymbol(iatom));
+    if (atomicNumber > 0) {
+        const double rM = 0.5 * this->radiusList_[atomicNumber] / BOHR;
+        
+        for (int radvec = 0; radvec < this->nrgrid; ++radvec) {
+            const double r0  = rM * (1.0 + this->xGL_[radvec]) / (1.0 - this->xGL_[radvec]);
+            const double dr0 = 2.0 * rM / ((1.0 - this->xGL_[radvec]) * (1.0 - this->xGL_[radvec]));
+            const double weightpoint = 1.0 / (double) nOgrid;
+            double weight = weightpoint * r0 * r0 * dr0 * this->wGL_[radvec] * 4.0 * M_PI;
+            
+            std::vector<TlPosition> grid(nOgrid);
+            std::vector<double> lebWeight(nOgrid);
+            this->points2(nOgrid, r0, this->coord_[iatom], weight, O, grid, lebWeight);
+            
+            // Loop for the grid number of Omega vector for normal Grid(Beck\'s Method)
+            for (int Omega = 0; Omega < nOgrid; ++Omega) {
+                weight = lebWeight[Omega];
+                const TlPosition pos_O = grid[Omega];
+                
+                // グリッド省略判定
+                int checkp = 1;
+                for (int p = 0; p < nNumOfAtoms; ++p) {
+                    const double rp = pos_O.distanceFrom(this->coord_[p]);
+                    
+                    if (rp < this->maxRadii_) {
+                        checkp = 0;
+                        break;
                     }
                 }
-
-                Ps[mc] = Psuij;
-JUMPMC1:
-                continue;
-            }
-
-            // Normalization
-            {
-                double Pstotal = 0.0;
-                for (int mc = 0; mc < this->numOfRealAtoms_; ++mc) {
-                    Pstotal += Ps[mc];
+                
+                if (checkp == 1) {
+                    goto JUMP1;
                 }
-
-                weight *= Ps[iatom] / Pstotal;
+                
+                // Loop for the m-center
+                for (int mc = 0; mc < nNumOfAtoms; ++mc) {
+                    double Psuij = 1.0;
+                    
+                    const int atomnum1 = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtomSymbol(mc));
+                    double radius1  = this->radiusList_[atomnum1];
+                    if (atomnum1 == 1) {
+                        radius1 = 0.35; // for H
+                    }
+                    
+                    const double ri = pos_O.distanceFrom(this->coord_[mc]);
+                    
+                    // Loop for the n-center
+                    for (int nc = 0; nc < nNumOfAtoms; ++nc) {
+                        const double rj = pos_O.distanceFrom(this->coord_[nc]);
+                        
+                        if (nc != mc) {
+                            const double Rij = this->coord_[mc].distanceFrom(this->coord_[nc]);
+                            
+                            const int atomnum2 = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtomSymbol(nc));
+                            double radius2  = this->radiusList_[atomnum2];
+                            if (atomnum2 == 1) {
+                                radius2 = 0.35; // for H
+                            }
+                            const double Kai = radius1 / radius2;
+                            const double uijtmp = (Kai -1.0) / (Kai +1.0);
+                            double aij = uijtmp / (uijtmp * uijtmp - 1.0);
+                            if (aij >= 0.5) {
+                                aij =  0.5;
+                            }
+                            if (aij <= -0.5) {
+                                aij = -0.5;
+                            }
+                            
+                            // Calculate the Fuzzy Cell
+                            double uij = (ri - rj) / Rij;
+                            uij += aij * (1.0 - uij * uij);
+                            
+                            double suij = 0.0;
+                            if (uij > 0.9) {
+                                Ps[mc] = 0.0;
+                                goto JUMPMC1;
+                            } else if (uij < -0.9) {
+                                suij = 1.0;
+                            } else {
+                                const double f1u    = 1.5 * uij - 0.5 * uij * uij * uij;
+                                const double f2u    = 1.5 * f1u - 0.5 * f1u * f1u * f1u;
+                                const double f3u    = 1.5 * f2u - 0.5 * f2u * f2u * f2u;
+                                suij = 0.5 * (1.0 - f3u);
+                            }
+                            // Pai suij
+                            Psuij *= suij;
+                        }
+                    }
+                    
+                    Ps[mc] = Psuij;
+                JUMPMC1:
+                    continue;
+                }
+                
+                // Normalization
+                {
+                    double Pstotal = 0.0;
+                    for (int mc = 0; mc < nNumOfAtoms; ++mc) {
+                        Pstotal += Ps[mc];
+                    }
+                    
+                    weight *= Ps[iatom] / Pstotal;
+                }
+                
+                weightvec[GPthrnum] = weight;
+                crdpoint[GPthrnum] = grid[Omega];
+                ++GPthrnum;
+                
+            JUMP1:
+                continue; // グリッド省略でここにJUMPする
             }
-
-            weightvec[GPthrnum] = weight;
-            crdpoint[GPthrnum] = grid[Omega];
-            ++GPthrnum;
-
-JUMP1:
-            continue; // グリッド省略でここにJUMPする
         }
     }
 
@@ -804,143 +807,145 @@ void DfGenerateGrid::generateGrid_SG1(const TlMatrix& O,
     pCoordY->resize(maxGridSize);
     pCoordZ->resize(maxGridSize);
     pWeight->resize(maxGridSize);
-    std::vector<double> Ps(this->numOfRealAtoms_);
+    std::vector<double> Ps(this->m_nNumOfAtoms);
     int GPthrnum = 0;
 
-    const int atomnum = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtom(iAtom));
-    const double rM = this->radiusList_[atomnum];
-    const double inv_rM = 1.0 / rM;
-
-    // Set the partitioning parameters alpha used in the SG-1 grid
-    // set default value; for after atom #18
-    double alpha0 = 0.0;
-    double alpha1 = 0.0;
-    double alpha2 = 0.0;
-    double alpha3 = 10000.0;
-    if ((atomnum == 1) || (atomnum == 2)) {
-        alpha0 = 0.2500;
-        alpha1 = 0.5000;
-        alpha2 = 1.0000;
-        alpha3 = 4.5000;
-    } else if ((3 <= atomnum) && (atomnum <= 10)) {
-        alpha0 = 0.1667;
-        alpha1 = 0.5000;
-        alpha2 = 0.9000;
-        alpha3 = 3.5000;
-    } else if ((11 <= atomnum) && (atomnum <= 18)) {
-        alpha0 = 0.1000;
-        alpha1 = 0.4000;
-        alpha2 = 0.8000;
-        alpha3 = 2.5000;
-    }
-
-    // Loop for the grid number of radial vector
-    const int radvec_max = this->nrgrid;
+    const int atomnum = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtomSymbol(iAtom));
+    if (atomnum != 0) {
+        const double rM = this->radiusList_[atomnum];
+        const double inv_rM = 1.0 / rM;
+        
+        // Set the partitioning parameters alpha used in the SG-1 grid
+        // set default value; for after atom #18
+        double alpha0 = 0.0;
+        double alpha1 = 0.0;
+        double alpha2 = 0.0;
+        double alpha3 = 10000.0;
+        if ((atomnum == 1) || (atomnum == 2)) {
+            alpha0 = 0.2500;
+            alpha1 = 0.5000;
+            alpha2 = 1.0000;
+            alpha3 = 4.5000;
+        } else if ((3 <= atomnum) && (atomnum <= 10)) {
+            alpha0 = 0.1667;
+            alpha1 = 0.5000;
+            alpha2 = 0.9000;
+            alpha3 = 3.5000;
+        } else if ((11 <= atomnum) && (atomnum <= 18)) {
+            alpha0 = 0.1000;
+            alpha1 = 0.4000;
+            alpha2 = 0.8000;
+            alpha3 = 2.5000;
+        }
+        
+        // Loop for the grid number of radial vector
+        const int radvec_max = this->nrgrid;
 //#pragma omp parallel for schedule(runtime)
-    for (int radvec = 0; radvec < radvec_max; ++radvec) {
-        const double r0 = rM * TlMath::pow(radvec + 1.0, 2) * TlMath::pow(radvec_max - radvec, -2);
-        const double weight = 2.0 * rM * rM * rM * (radvec_max + 1.0)
-                              * TlMath::pow(radvec + 1.0, 5)
-                              * TlMath::pow(radvec_max - radvec, -7)
-                              * 4.0 * M_PI;
-
-        // Set the partitioning area
-        int Ogrid = 86;
-        const double judge = r0 * inv_rM;
-        if (judge <= alpha0) {
-            // (0, alpha0)
-            Ogrid = 6;
-        } else if (judge <= alpha1) {
-            // (alpha0, alpha1]
-            Ogrid = 38;
-        } else if (judge <= alpha2) {
-            // (alpha1, alpha2]
-            Ogrid = 86;
-        } else if (judge <= alpha3) {
-            // (alpha2, alpha3]
-            Ogrid = 194;
-        }
-
-        // The coordinates of the atom on which the present grid is centred are put into the array "Ogridr"
-        std::vector<TlPosition> grid(Ogrid);
-        std::vector<double> lebWeight(Ogrid);
-        this->points2(Ogrid, r0, this->coord_[iAtom], weight, O,
-                      grid, lebWeight);
-
-        // Loop for the grid number of Omega vector for SG-1
-        for (int Omega = 0; Omega < Ogrid; ++Omega) {
-            double weight_omega = lebWeight[Omega];
-            const TlPosition pos_O = grid[Omega];
-
-            // グリッド省略判定
-            const int numOfAtoms = this->numOfRealAtoms_;
-            std::vector<double> rr(numOfAtoms);
-            bool bPass = true;
-            for (int p = 0; p < numOfAtoms; ++p) {
-                rr[p] = pos_O.distanceFrom(this->coord_[p]);
-
-                if (rr[p] < this->maxRadii_) {
-                    bPass = false;
+        for (int radvec = 0; radvec < radvec_max; ++radvec) {
+            const double r0 = rM * TlMath::pow(radvec + 1.0, 2) * TlMath::pow(radvec_max - radvec, -2);
+            const double weight = 2.0 * rM * rM * rM * (radvec_max + 1.0)
+                * TlMath::pow(radvec + 1.0, 5)
+                * TlMath::pow(radvec_max - radvec, -7)
+                * 4.0 * M_PI;
+            
+            // Set the partitioning area
+            int Ogrid = 86;
+            const double judge = r0 * inv_rM;
+            if (judge <= alpha0) {
+                // (0, alpha0)
+                Ogrid = 6;
+            } else if (judge <= alpha1) {
+                // (alpha0, alpha1]
+                Ogrid = 38;
+            } else if (judge <= alpha2) {
+                // (alpha1, alpha2]
+                Ogrid = 86;
+            } else if (judge <= alpha3) {
+                // (alpha2, alpha3]
+                Ogrid = 194;
+            }
+            
+            // The coordinates of the atom on which the present grid is centred are put into the array "Ogridr"
+            std::vector<TlPosition> grid(Ogrid);
+            std::vector<double> lebWeight(Ogrid);
+            this->points2(Ogrid, r0, this->coord_[iAtom], weight, O,
+                          grid, lebWeight);
+            
+            // Loop for the grid number of Omega vector for SG-1
+            for (int Omega = 0; Omega < Ogrid; ++Omega) {
+                double weight_omega = lebWeight[Omega];
+                const TlPosition pos_O = grid[Omega];
+                
+                // グリッド省略判定
+                const int numOfAtoms = this->m_nNumOfAtoms;
+                std::vector<double> rr(numOfAtoms);
+                bool bPass = true;
+                for (int p = 0; p < numOfAtoms; ++p) {
+                    rr[p] = pos_O.distanceFrom(this->coord_[p]);
+                    
+                    if (rr[p] < this->maxRadii_) {
+                        bPass = false;
+                    }
                 }
-            }
-            if (bPass == true) {
-                continue;
-            }
-
-            // Loop for the m-center
+                if (bPass == true) {
+                    continue;
+                }
+                
+                // Loop for the m-center
 #pragma omp parallel for schedule(runtime)
-            for (int mc = 0; mc < numOfAtoms; ++mc) {
-                double Psuij = 1.0;
-                for (int n = 0; n < numOfAtoms; ++n) {
-                    // 隣接番号の原子からサーチ
-                    int nc = iAtom + n;
-                    if (nc >= numOfAtoms) {
-                        nc -= numOfAtoms;
-                    }
-
-                    if (nc != mc) {
-                        const double uij = (rr[mc] - rr[nc]) / this->distanceMatrix_(mc, nc);
-
-                        double suij = 0.0;
-                        if (uij > 0.9) {
-                            Psuij = 0.0;
-                            break;
-                        } else if (uij < -0.9) {
-                            suij = 1.0;
-                        } else {
-                            const double f1u = 1.5 * uij - 0.5 * uij * uij * uij;
-                            const double f2u = 1.5 * f1u - 0.5 * f1u * f1u * f1u;
-                            const double f3u = 1.5 * f2u - 0.5 * f2u * f2u * f2u;
-                            suij = 0.5 * (1.0 - f3u);
+                for (int mc = 0; mc < numOfAtoms; ++mc) {
+                    double Psuij = 1.0;
+                    for (int n = 0; n < numOfAtoms; ++n) {
+                        // 隣接番号の原子からサーチ
+                        int nc = iAtom + n;
+                        if (nc >= numOfAtoms) {
+                            nc -= numOfAtoms;
                         }
-
-                        Psuij *= suij;
+                        
+                        if (nc != mc) {
+                            const double uij = (rr[mc] - rr[nc]) / this->distanceMatrix_(mc, nc);
+                            
+                            double suij = 0.0;
+                            if (uij > 0.9) {
+                                Psuij = 0.0;
+                                break;
+                            } else if (uij < -0.9) {
+                                suij = 1.0;
+                            } else {
+                                const double f1u = 1.5 * uij - 0.5 * uij * uij * uij;
+                                const double f2u = 1.5 * f1u - 0.5 * f1u * f1u * f1u;
+                                const double f3u = 1.5 * f2u - 0.5 * f2u * f2u * f2u;
+                                suij = 0.5 * (1.0 - f3u);
+                            }
+                            
+                            Psuij *= suij;
+                        }
                     }
+                    
+                    Ps[mc] = Psuij;
                 }
-
-                Ps[mc] = Psuij;
-            }
-
-            // Normalization
-            double Pstotal = 0.0;
+                
+                // Normalization
+                double Pstotal = 0.0;
 #pragma omp parallel for reduction(+:Pstotal)
-            for (int mc = 0; mc < numOfAtoms; ++mc) {
-                Pstotal += Ps[mc];
-            }
-            weight_omega *= (Ps[iAtom] / Pstotal);
-
-            // weight cutoff
+                for (int mc = 0; mc < numOfAtoms; ++mc) {
+                    Pstotal += Ps[mc];
+                }
+                weight_omega *= (Ps[iAtom] / Pstotal);
+                
+                // weight cutoff
 //#pragma omp critical (generateGrid_SG1)
-            {
-                if (std::fabs(weight_omega) > this->weightCutoff_) {
-                    weightvec[GPthrnum] = weight_omega;
-                    crdpoint[GPthrnum] = grid[Omega];
-                    ++GPthrnum;
+                {
+                    if (std::fabs(weight_omega) > this->weightCutoff_) {
+                        weightvec[GPthrnum] = weight_omega;
+                        crdpoint[GPthrnum] = grid[Omega];
+                        ++GPthrnum;
+                    }
                 }
             }
         }
+        //++GPthrnum;
     }
-    //++GPthrnum;
 
     // save
     pCoordX->resize(GPthrnum);
@@ -1460,7 +1465,7 @@ TlMatrix DfGenerateGrid::getOMatrix()
     TlPosition sum_zr(0.0, 0.0, 0.0);
     double sum_z = 0.0;
     for (int atom = 0; atom < numOfAtoms; ++atom) {
-        const std::string symbol = this->flGeometry_.getAtom(atom);
+        const std::string symbol = this->flGeometry_.getAtomSymbol(atom);
         if (symbol == "X") {
             continue;
         }
@@ -1484,7 +1489,7 @@ TlMatrix DfGenerateGrid::getOMatrix()
     I.set(2, 2, 1.0);
 #pragma omp parallel for
     for (int atom = 0; atom < numOfAtoms; ++atom) {
-        const std::string symbol = this->flGeometry_.getAtom(atom);
+        const std::string symbol = this->flGeometry_.getAtomSymbol(atom);
         if (symbol == "X") {
             continue;
         }

@@ -30,7 +30,14 @@
 const double DfTotalEnergy::TOO_SMALL = 1.0E-16;
 double DfTotalEnergy::m_dNuclearRepulsion = 0.0; // 核-核反発
 
-DfTotalEnergy::DfTotalEnergy(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
+DfTotalEnergy::DfTotalEnergy(TlSerializeData* pPdfParam) 
+    : DfObject(pPdfParam),
+      m_dE_OneElectronPart(0.0),
+      J_term_(0.0), m_dE_J_Rho_RhoTilde(0.0), m_dE_J_RhoTilde_RhoTilde(0.0),
+      m_dExc(0.0), K_term_(0.0),
+      E_KA_(0.0), E_KB_(0.0),
+      m_dE_NuclearRepulsion(0.0), m_dE_OEP_JRR_Exc(0.0),
+      E_disp_(0.0)
 {
 }
 
@@ -105,6 +112,9 @@ void DfTotalEnergy::output()
             break;
 
         case METHOD_ROKS:
+            this->log_.info(TlUtils::format(" E_K            = %28.16lf\n", this->K_term_));
+            this->log_.info(TlUtils::format("   E_K(alpha)   = %28.16lf\n", this->E_KA_));
+            this->log_.info(TlUtils::format("   E_K(beta)    = %28.16lf\n", this->E_KB_));
             break;
 
         default:
@@ -172,7 +182,7 @@ double DfTotalEnergy::calculate_energy_nuclear_repulsion()
 
 void DfTotalEnergy::write_total_energy(const double E_Total) const
 {
-    (*this->pPdfParam_)["TE"][this->m_nIteration] = E_Total;
+    (*this->pPdfParam_)["TEs"][this->m_nIteration] = E_Total;
 }
 
 // total energy including dummy charge

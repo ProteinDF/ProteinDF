@@ -18,50 +18,48 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <string>
 
 #include "TlMatrix.h"
+#include "TlSymmetricMatrix.h"
 #include "TlGetopt.h"
 
-void showHelp()
+void showHelp(const std::string& progname)
 {
-    std::cout << "transpose [options] input_path output_path" << std::endl;
+    std::cout << TlUtils::format("%s [options] MATRIX_FILE", progname.c_str()) 
+              << std::endl;
     std::cout << " OPTIONS:" << std::endl;
     std::cout << "  -h:      show help" << std::endl;
-    std::cout << "  -v:      verbose" << std::endl;
 }
 
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "hvl:x:");
+    TlGetopt opt(argc, argv, "h");
     
     if (opt["h"] == "defined") {
-        showHelp();
+        showHelp(opt[0]);
         return EXIT_SUCCESS;
     }
-    
-    const bool bVerbose = (opt["v"] == "defined");
 
-    if (opt.getCount() <= 2) {
-        showHelp();
+    std::string path = opt[1];
+
+    int type = 0;
+    TlMatrix::index_type numOfRows = 0;
+    TlMatrix::index_type numOfCols = 0;
+    if (TlSymmetricMatrix::isLoadable(path) == true) {
+        TlSymmetricMatrix::getHeaderInfo(path, &type, &numOfRows, &numOfCols);
+        std::cout << "type: symmetric" << std::endl;
+    } else if (TlMatrix::isLoadable(path) == true) {
+        TlMatrix::getHeaderInfo(path, &type, &numOfRows, &numOfCols);
+        std::cout << "type: normal" << std::endl;
+    } else {
+        std::cerr << "can not open file: " << path << std::endl;
         return EXIT_FAILURE;
     }
-    std::string inputMatrixPath = opt[1];
-    std::string outputMatrixPath = opt[2];
 
-    if (bVerbose == true) {
-        std::cerr << "load matrix: " << inputMatrixPath << std::endl;
-    }
+    std::cout << "row: " << numOfRows << std::endl;
+    std::cout << "col: " << numOfCols << std::endl;
 
-    TlMatrix A;
-    A.load(inputMatrixPath);
-
-    A.transpose();
-    
-    if (bVerbose == true) {
-        std::cerr << "save matrix: " << outputMatrixPath << std::endl;
-    }
-    A.save(outputMatrixPath);
-    
     return EXIT_SUCCESS;
 }
 

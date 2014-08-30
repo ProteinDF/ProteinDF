@@ -607,8 +607,29 @@ bool TlSymmetricMatrix::isLoadable(const std::string& rFilePath)
 }
 
 
+bool TlSymmetricMatrix::getHeaderInfo(const std::string& filePath,
+                                      int* pType,
+                                      index_type* pNumOfRows,
+                                      index_type* pNumOfCols)
+{
+    std::ifstream ifs;
+    ifs.open(filePath.c_str());
+    if (ifs.fail()) {
+#ifdef DEBUG
+        std::cerr << "[error] TlMatrix::getHeaderInfo(): could not open file. " << filePath << std::endl;
+#endif // DEBUG
+        return false;
+    }
+
+    const bool answer = TlSymmetricMatrix::getHeaderInfo(ifs, pType, pNumOfRows, pNumOfCols);
+    ifs.close();
+    return answer;
+}
+
+
 bool TlSymmetricMatrix::getHeaderInfo(std::ifstream& ifs, int* pType,
-                                      int* pNumOfRows, int* pNumOfCols)
+                                      index_type* pNumOfRows,
+                                      index_type* pNumOfCols)
 {
     bool bAnswer = true;
 

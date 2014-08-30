@@ -30,18 +30,22 @@ public:
     virtual void buildX();
     
     virtual void canonicalOrthogonalize(const TlSymmetricMatrix& S,
-                                        TlMatrix* pX, TlMatrix* pXinv);
+                                        TlMatrix* pX, TlMatrix* pXinv,
+                                        const std::string& eigvalFilePath ="");
 
     virtual void lowdinOrthogonalize(const TlSymmetricMatrix& S,
-                                     TlMatrix* pX, TlMatrix* pXinv);
+                                     TlMatrix* pX, TlMatrix* pXinv,
+                                     const std::string& eigvalFilePath ="");
 
     void canonicalOrthogonalize(const TlDistributeSymmetricMatrix& S,
                                 TlDistributeMatrix* pX,
-                                TlDistributeMatrix* pXinv);
+                                TlDistributeMatrix* pXinv,
+                                const std::string& eigvalFilePath ="");
 
     void lowdinOrthogonalize(const TlDistributeSymmetricMatrix& S,
                              TlDistributeMatrix* pX,
-                             TlDistributeMatrix* pXinv);
+                             TlDistributeMatrix* pXinv,
+                             const std::string& eigvalFilePath ="");
 
 protected:
     void buildX_LAPACK();

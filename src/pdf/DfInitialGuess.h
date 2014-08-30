@@ -52,6 +52,11 @@ protected:
     void createInitialGuessUsingLCAO();
     virtual void createInitialGuessUsingLCAO(const RUN_TYPE runType);
 
+    /// 初期値として電子密度行列を使用
+    void createInitialGuessUsingDensityMatrix();
+    /// 初期値として電子密度行列を使用(RUN_TYPE毎)
+    void createInitialGuessUsingDensityMatrix(const RUN_TYPE runType);
+
     std::vector<int> getLevel(const std::string& level);
 
     /// 占有軌道情報を取得する
@@ -80,22 +85,38 @@ protected:
 
     /// DfDmatrixクラスオブジェクトを作成して返す
     virtual DfDmatrix* getDfDmatrixObject(TlSerializeData* param);
+
+    /// 初期値用電子密度行列を返す
+    template <typename SymmetricMatrixType>
+    SymmetricMatrixType getInitialDensityMatrix(const RUN_TYPE runType);
     
+    template<typename SymmetricMatrixType, class DfPopulationType>
+    SymmetricMatrixType normalizeDensityMatrix(const RUN_TYPE runType,
+                                               const SymmetricMatrixType& P);
+
+protected:
+    bool isNormalizeDensityMatrix_;
 };
 
 
 template <typename MatrixType>
 MatrixType DfInitialGuess::getLCAO(const RUN_TYPE runType)
 {
-    //MatrixType lcaoMatrix(this->m_nNumOfAOs, this->m_nNumOfMOs);
     MatrixType lcaoMatrix;
-    
-    {
+    const std::string binFile = TlUtils::format("./guess.lcao.%s.mat",
+                                                this->m_sRunTypeSuffix[runType].c_str());
+    const std::string txtFile = TlUtils::format("./guess.lcao.%s.txt", 
+                                                this->m_sRunTypeSuffix[runType].c_str());
+
+    if (TlFile::isExist(binFile)) {
+        // LCAO file is prepared by binary file.
+        lcaoMatrix.load(binFile);
+    } else if (TlFile::isExist(txtFile)) {
+        // LCAO file is prepared by text file.
         std::ifstream fi;
-        const std::string sFile = std::string("./guess.lcao.") + this->m_sRunTypeSuffix[runType];
-        fi.open(sFile.c_str(), std::ios::in);
-        if (fi.rdstate()) {
-            CnErr.abort(TlUtils::format("cannot open file %s.\n", sFile.c_str()));
+        fi.open(txtFile.c_str(), std::ios::in);
+        if ((fi.rdstate() & std::ifstream::failbit) != 0) {
+            CnErr.abort(TlUtils::format("cannot open file %s.\n", txtFile.c_str()));
         }
 
         std::string dummy_line;
@@ -104,7 +125,8 @@ MatrixType DfInitialGuess::getLCAO(const RUN_TYPE runType)
         int row_dimension, col_dimension;
         fi >> row_dimension >> col_dimension;
         if (row_dimension != this->m_nNumOfAOs) {
-            CnErr.abort("DfPreScf", "", "prepare_occupation_and_or_mo", "inputted guess lcao has illegal dimension");
+            CnErr.abort("DfInitialGuess", "", "prepare_occupation_and_or_mo",
+                        "inputted guess lcao has illegal dimension");
         }
         lcaoMatrix.resize(row_dimension, col_dimension);
         
@@ -115,16 +137,84 @@ MatrixType DfInitialGuess::getLCAO(const RUN_TYPE runType)
                 fi >> lcaoMatrix(i, j);
             }
         }
+    } else {
+        this->log_.warn(TlUtils::format("file not found.: %s", binFile.c_str()));
     }
 
     return lcaoMatrix;
 }
+
+
+template <typename SymmetricMatrixType>
+SymmetricMatrixType DfInitialGuess::getInitialDensityMatrix(const RUN_TYPE runType)
+{
+    SymmetricMatrixType lcaoMatrix;
+    const std::string binFile = TlUtils::format("./guess.density.%s.mat",
+                                                this->m_sRunTypeSuffix[runType].c_str());
+
+    if (TlFile::isExist(binFile)) {
+        lcaoMatrix.load(binFile);
+    } else {
+        this->log_.warn(TlUtils::format("file not found.: %s", binFile.c_str()));
+    }
+
+    return lcaoMatrix;
+}
+
+
+template<typename SymmetricMatrixType, class DfPopulationType>
+SymmetricMatrixType DfInitialGuess::normalizeDensityMatrix(const RUN_TYPE runType,
+                                                           const SymmetricMatrixType& P)
+{
+    this->log_.info(" normalize initial density matrix. ");
+    DfPopulationType dfPop(this->pPdfParam_);
+    const double trPS = dfPop.getSumOfElectrons(P);
+
+    double numOfElectrons = 0.0;
+
+    switch (runType) {
+    case RUN_RKS:
+        numOfElectrons = this->m_nNumOfElectrons;
+        break;
+
+    case RUN_UKS_ALPHA:
+        numOfElectrons = this->m_nNumOfAlphaElectrons;
+        break;
+
+    case RUN_UKS_BETA:
+        numOfElectrons = this->m_nNumOfBetaElectrons;
+        break;
+
+    case RUN_ROKS_CLOSED:
+        numOfElectrons = this->numOfClosedShellElectrons_;
+        break;
+
+    case RUN_ROKS_OPEN:
+        numOfElectrons = this->numOfOpenShellElectrons_;
+        break;
+
+    default:
+        this->log_.critical(TlUtils::format("program error: %s %s", __FILE__, __LINE__));
+        abort();
+        break;
+    }
+
+    const double coef = numOfElectrons / trPS;
+
+    this->log_.info(TlUtils::format(" trPS = % 8.3f", trPS));
+    this->log_.info(TlUtils::format(" elec = % 8.3f", numOfElectrons));
+    this->log_.info(TlUtils::format(" coef = % 8.3f", coef));
+
+    return coef * P;
+}
+
 
 template <typename MatrixType>
 void DfInitialGuess::saveC0(const RUN_TYPE runType, const MatrixType& C0)
 {
     DfObject::saveCMatrix(runType, 0, C0);
 }
+
 
 template <typename MatrixType>
 void DfInitialGuess::buildCprime0(const RUN_TYPE runType, const MatrixType& C)

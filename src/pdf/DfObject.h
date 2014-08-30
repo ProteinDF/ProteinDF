@@ -51,8 +51,10 @@ public:
         RUN_UKS_ALPHA,
         RUN_UKS_BETA,
         RUN_ROKS,
-        RUN_ROKS_CLOSE,
+        RUN_ROKS_CLOSED,
         RUN_ROKS_OPEN,
+        RUN_ROKS_ALPHA, // for XC term
+        RUN_ROKS_BETA,  // for XC term
         RUN_MAXINDEX
     };
 
@@ -109,6 +111,7 @@ protected:
     std::string getLxcMatrixPath();
     std::string getXMatrixPath();
     std::string getXInvMatrixPath();
+    std::string getXEigvalVtrPath();
     std::string getNalphaPath();
     std::string getOccupationPath(RUN_TYPE runType);
     std::string getGridDataFilePath() const;
@@ -131,6 +134,7 @@ protected:
     std::string getGfStildeMatrixPath() const;
     std::string getGfOmegaMatrixPath() const;
     std::string getGfVMatrixPath() const;
+    std::string getGfVEigvalVtrPath() const;
 
     std::string getDipoleVelocityIntegralsXPath() const;
     std::string getDipoleVelocityIntegralsYPath() const;
@@ -140,6 +144,9 @@ protected:
     std::string getMyuPath(RUN_TYPE nRunType, int nIteration) const;
     std::string getNyuPath(RUN_TYPE nRunType, int nIteration) const;
     std::string getTalphaPath(RUN_TYPE runType, int iteration) const;
+    
+    // LO
+    std::string getCloMatrixPath(RUN_TYPE runType, int itr) const;
 
 protected:
     template <class SymmetricMatrixType>
@@ -383,18 +390,16 @@ protected:
     SymmetricMatrixType getPpqMatrix(RUN_TYPE runType, int iteration);
 
     
-    template<class SymmetricMatrixType>
-    void savePCMatrix(const int iteration,
-                      const SymmetricMatrixType& PC);
-    template <class SymmetricMatrixType>
-    SymmetricMatrixType getPCMatrix(int iteration);
-
-    
-    template<class SymmetricMatrixType>
-    void savePOMatrix(const int iteration,
-                      const SymmetricMatrixType& PO);
-    template <class SymmetricMatrixType>
-    SymmetricMatrixType getPOMatrix(int iteration);
+    // template<class SymmetricMatrixType>
+    // void savePCMatrix(const int iteration,
+    //                   const SymmetricMatrixType& PC);
+    // template <class SymmetricMatrixType>
+    // SymmetricMatrixType getPCMatrix(int iteration);
+    // template<class SymmetricMatrixType>
+    // void savePOMatrix(const int iteration,
+    //                   const SymmetricMatrixType& PO);
+    // template <class SymmetricMatrixType>
+    // SymmetricMatrixType getPOMatrix(int iteration);
     
 
     template<class VectorType>
@@ -415,6 +420,13 @@ protected:
                  const VectorType& nyu);
     template <class VectorType>
     VectorType getNyu(RUN_TYPE runType, int iteration);
+
+    // for LO
+    template<class MatrixType>
+    void saveCloMatrix(const RUN_TYPE runType, const int itr,
+                       const MatrixType& Clo);
+    template <class MatrixType>
+    MatrixType getCloMatrix(RUN_TYPE runType, int itr);
     
 protected:
     virtual void setParam(const TlSerializeData& data);
@@ -481,7 +493,7 @@ protected:
 
     int m_nNumOfAtoms;
     int m_nNumOfDummyAtoms;
-    int numOfRealAtoms_;
+    // int numOfRealAtoms_;
     index_type m_nNumOfAOs;
     index_type m_nNumOfMOs;
     size_type m_nNumOfAux;
@@ -490,6 +502,8 @@ protected:
     int m_nNumOfElectrons;
     int m_nNumOfAlphaElectrons;
     int m_nNumOfBetaElectrons;
+    int numOfClosedShellElectrons_;
+    int numOfOpenShellElectrons_;
 
     GUESS_TYPE initialGuessType_;
 
@@ -1149,52 +1163,52 @@ SymmetricMatrixType DfObject::getPpqMatrix(const RUN_TYPE runType, const int ite
 }
 
 
-template<class SymmetricMatrixType>
-void DfObject::savePCMatrix(const int iteration,
-                            const SymmetricMatrixType& PC)
-{
-    const std::string path = this->getP1pqMatrixPath(iteration);
-    if (this->isUseCache_ == true) {
-        this->matrixCache_.set(path, PC, true);
-    } else {
-        PC.save(path);
-    }
-}
+// template<class SymmetricMatrixType>
+// void DfObject::savePCMatrix(const int iteration,
+//                             const SymmetricMatrixType& PC)
+// {
+//     const std::string path = this->getP1pqMatrixPath(iteration);
+//     if (this->isUseCache_ == true) {
+//         this->matrixCache_.set(path, PC, true);
+//     } else {
+//         PC.save(path);
+//     }
+// }
 
 
-template<class SymmetricMatrixType>
-SymmetricMatrixType DfObject::getPCMatrix(const int iteration)
-{
-    SymmetricMatrixType PC;
-    const std::string path = this->getP1pqMatrixPath(iteration);
-    PC = this->matrixCache_.get<SymmetricMatrixType>(path);
-    PC.resize(this->m_nNumOfAOs);
-    return PC;
-}
+// template<class SymmetricMatrixType>
+// SymmetricMatrixType DfObject::getPCMatrix(const int iteration)
+// {
+//     SymmetricMatrixType PC;
+//     const std::string path = this->getP1pqMatrixPath(iteration);
+//     PC = this->matrixCache_.get<SymmetricMatrixType>(path);
+//     PC.resize(this->m_nNumOfAOs);
+//     return PC;
+// }
 
 
-template<class SymmetricMatrixType>
-void DfObject::savePOMatrix(const int iteration,
-                            const SymmetricMatrixType& PO)
-{
-    const std::string path = this->getP2pqMatrixPath(iteration);
-    if (this->isUseCache_ == true) {
-        this->matrixCache_.set(path, PO, true);
-    } else {
-        PO.save(path);
-    }
-}
+// template<class SymmetricMatrixType>
+// void DfObject::savePOMatrix(const int iteration,
+//                             const SymmetricMatrixType& PO)
+// {
+//     const std::string path = this->getP2pqMatrixPath(iteration);
+//     if (this->isUseCache_ == true) {
+//         this->matrixCache_.set(path, PO, true);
+//     } else {
+//         PO.save(path);
+//     }
+// }
 
 
-template<class SymmetricMatrixType>
-SymmetricMatrixType DfObject::getPOMatrix(const int iteration)
-{
-    SymmetricMatrixType PO;
-    const std::string path = this->getP2pqMatrixPath(iteration);
-    PO = this->matrixCache_.get<SymmetricMatrixType>(path);
-    PO.resize(this->m_nNumOfAOs);
-    return PO;
-}
+// template<class SymmetricMatrixType>
+// SymmetricMatrixType DfObject::getPOMatrix(const int iteration)
+// {
+//     SymmetricMatrixType PO;
+//     const std::string path = this->getP2pqMatrixPath(iteration);
+//     PO = this->matrixCache_.get<SymmetricMatrixType>(path);
+//     PO.resize(this->m_nNumOfAOs);
+//     return PO;
+// }
 
 template<class SymmetricMatrixType>
 void DfObject::saveGfSMatrix(const SymmetricMatrixType& gfS)
@@ -1396,5 +1410,26 @@ VectorType DfObject::getNyu(const RUN_TYPE runType, const int iteration)
     return nyu;
 }
 
+
+template<class MatrixType>
+void DfObject::saveCloMatrix(const RUN_TYPE runType, const int itr,
+                   const MatrixType& Clo)
+{
+    const std::string path = this->getCloMatrixPath(runType, itr);
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, Clo, true);
+    } else {
+        Clo.save(path);
+    }
+}
+
+template <class MatrixType>
+MatrixType DfObject::getCloMatrix(RUN_TYPE runType, int itr)
+{
+    MatrixType Clo;
+    const std::string path = this->getCloMatrixPath(runType, itr);
+    Clo = this->matrixCache_.get<MatrixType>(path);
+    return Clo;
+}
 
 #endif // DFOBJECT_H

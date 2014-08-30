@@ -21,13 +21,12 @@
 #endif // _OPENMP
 
 #include "DfHpqX.h"
-
-const int DfHpqX::MAX_SHELL_TYPE = 2 +1;
+#include "TlOrbitalInfoObject.h"
 
 DfHpqX::DfHpqX(TlSerializeData* pPdfParam) 
     : DfObject(pPdfParam),
       orbitalInfo_((*pPdfParam)["coordinates"],
-                   (*pPdfParam)["basis_sets"]) {
+                   (*pPdfParam)["basis_set"]) {
     this->makeShellArrayTable();
 }
 
@@ -81,7 +80,7 @@ void DfHpqX::getHpq(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2)
     std::size_t realAtomIndex = 0;
     std::size_t dummyAtomIndex = 0;
     for (int i = 0; i < numOfAtoms; ++i) {
-        const std::string atomName = flGeom.getAtom(i);
+        const std::string atomName = flGeom.getAtomSymbol(i);
         const TlPosition p = flGeom.getCoordinate(i);
         const double charge = flGeom.getCharge(i);
         const TlAtom atom(atomName, p, charge);
@@ -195,11 +194,12 @@ void DfHpqX::getForce(const TlSymmetricMatrix& P,
 
     this->createEngines();
     
-    for (int shellTypeP = DfHpqX::MAX_SHELL_TYPE -1; shellTypeP >= 0; --shellTypeP) {
+    const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
+    for (int shellTypeP = maxShellType -1; shellTypeP >= 0; --shellTypeP) {
         const ShellArray shellArrayP = this->shellArrayTable_[shellTypeP];
         const std::size_t shellArraySizeP = shellArrayP.size();
         
-        for (int shellTypeQ = DfHpqX::MAX_SHELL_TYPE -1; shellTypeQ >= 0; --shellTypeQ) {
+        for (int shellTypeQ = maxShellType -1; shellTypeQ >= 0; --shellTypeQ) {
             const ShellArray shellArrayQ = this->shellArrayTable_[shellTypeQ];
             // const std::size_t shellArraySizeQ = shellArrayQ.size();
             
@@ -320,7 +320,7 @@ void DfHpqX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
             
             // 核-電子反発
             for (index_type atomIndexC = 0; atomIndexC < numOfAtoms; ++atomIndexC) {
-                const std::string atomName = flGeom.getAtom(atomIndexC);
+                const std::string atomName = flGeom.getAtomSymbol(atomIndexC);
                 const TlPosition p = flGeom.getCoordinate(atomIndexC);
                 const double charge = flGeom.getCharge(atomIndexC);
                 const TlAtom C(atomName, p, charge);
@@ -402,7 +402,7 @@ void DfHpqX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
 
 void DfHpqX::makeShellArrayTable()
 {
-    this->shellArrayTable_.resize(MAX_SHELL_TYPE);
+    this->shellArrayTable_.resize(TlOrbitalInfoObject::getMaxShellType());
     const index_type maxShellIndex = this->orbitalInfo_.getNumOfOrbitals();
 
     int shellIndex = 0;
@@ -515,8 +515,11 @@ void DfHpqX::getESP_part(const TlOrbitalInfoObject& orbitalInfo,
                             ++index;
                         }
                     }
-#pragma omp atomic
-                    (*pValues)[r] += esp;
+
+#pragma omp critical(DfHpqX__getESP_part1)
+                    {
+                        (*pValues)[r] += esp;
+                    }
                 }
 
             } else {
@@ -538,8 +541,11 @@ void DfHpqX::getESP_part(const TlOrbitalInfoObject& orbitalInfo,
                             ++index;
                         }
                     }
-#pragma omp atomic
-                    (*pValues)[r] += esp;
+
+#pragma omp critical(DfHpqX__getESP_part2)
+                    {
+                        (*pValues)[r] += esp;
+                    }
                 }
             }
         }

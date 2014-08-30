@@ -231,6 +231,11 @@ public:
     static bool isLoadable(std::ifstream& ifs);
     static bool isLoadable(const std::string& rFilePath);
 
+    /// ヘッダ情報を読み取る
+    static bool getHeaderInfo(const std::string& filePath,
+                              int* pType = NULL,
+                              int* pNumOfRows = NULL, int* pNumOfCols = NULL);
+
     /// 指定されたファイルパス名から行列要素を読み込む
     ///
     /// パスの区切り文字(UNIXなら'/'、windowsなら'\')は、

@@ -50,7 +50,8 @@ void DfDiffDensityMatrix_Parallel::exec()
             break;
 
         case METHOD_ROKS:
-            DfDiffDensityMatrix::calc_ROKS<TlDistributeSymmetricMatrix>();
+            DfDiffDensityMatrix::calc<TlDistributeSymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
+            DfDiffDensityMatrix::calc<TlDistributeSymmetricMatrix>(RUN_ROKS_OPEN, this->m_nIteration);
             break;
 
         default:

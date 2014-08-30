@@ -853,7 +853,7 @@ bool TlMatrix::isLoadable(const std::string& rFilePath)
     ifs.open(rFilePath.c_str());
     if (ifs.fail()) {
 #ifdef DEBUG
-        std::cerr << "[error] TlMatrix::load(): could not open file. " << rFilePath << std::endl;
+        std::cerr << "[error] TlMatrix::isLoadable(): could not open file. " << rFilePath << std::endl;
 #endif // DEBUG
         return false;
     }
@@ -864,8 +864,27 @@ bool TlMatrix::isLoadable(const std::string& rFilePath)
 }
 
 
+bool TlMatrix::getHeaderInfo(const std::string& filePath,
+                             int* pType,
+                             index_type* pNumOfRows, index_type* pNumOfCols)
+{
+    std::ifstream ifs;
+    ifs.open(filePath.c_str());
+    if (ifs.fail()) {
+#ifdef DEBUG
+        std::cerr << "[error] TlMatrix::getHeaderInfo(): could not open file. " << filePath << std::endl;
+#endif // DEBUG
+        return false;
+    }
+
+    const bool answer = TlMatrix::getHeaderInfo(ifs, pType, pNumOfRows, pNumOfCols);
+    ifs.close();
+    return answer;
+}
+
+
 bool TlMatrix::getHeaderInfo(std::ifstream& ifs, int* pType,
-                             int* pNumOfRows, int* pNumOfCols)
+                             index_type* pNumOfRows, index_type* pNumOfCols)
 {
     bool bAnswer = true;
 

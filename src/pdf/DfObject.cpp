@@ -26,6 +26,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include "CnError.h"
 #include "DfObject.h"
 #include "Fl_Geometry.h"
 #include "TlLogging.h"
@@ -43,11 +44,13 @@ int DfObject::rank_ = 0;
 const std::string DfObject::m_sRunTypeSuffix[DfObject::RUN_MAXINDEX] = {
     "undefined",
     "rks",
-    "uks-alpha",
-    "uks-beta",
+    "uks_alpha",
+    "uks_beta",
     "roks",
-    "roks_close",
-    "roks_open"
+    "roks_closed",
+    "roks_open",
+    "roks_alpha",
+    "roks_beta"
 };
 
 
@@ -125,7 +128,7 @@ void DfObject::setParam(const TlSerializeData& data)
         const Fl_Geometry geom(data["coordinates"]);
         this->m_nNumOfDummyAtoms = geom.getNumOfDummyAtoms();
     }
-    this->numOfRealAtoms_ = this->m_nNumOfAtoms - this->m_nNumOfDummyAtoms;
+    // this->numOfRealAtoms_ = this->m_nNumOfAtoms - this->m_nNumOfDummyAtoms;
     
     this->m_nIteration = data["num_of_iterations"].getInt();
     this->m_nNumOfAOs = data["num_of_AOs"].getInt();
@@ -136,6 +139,8 @@ void DfObject::setParam(const TlSerializeData& data)
     this->m_nNumOfElectrons = data["method/rks/electrons"].getInt();
     this->m_nNumOfAlphaElectrons = data["method/uks/alpha_electrons"].getInt();
     this->m_nNumOfBetaElectrons = data["method/uks/beta_electrons"].getInt();
+    this->numOfClosedShellElectrons_ = data["method/roks/closed_electrons"].getInt();
+    this->numOfOpenShellElectrons_ = data["method/roks/open_electrons"].getInt();
 
     // guess
     this->initialGuessType_ = GUESS_UNKNOWN;
@@ -147,7 +152,7 @@ void DfObject::setParam(const TlSerializeData& data)
             this->initialGuessType_ = GUESS_FILE_RHO;
         } else if ((guess == "LCAO") || (guess == "FILE_LCAO")) {
             this->initialGuessType_ = GUESS_LCAO;
-        } else if (guess == "DENSITY") {
+        } else if ((guess == "DENSITY") || (guess == "DENSITY_MATRIX")) {
             this->initialGuessType_ = GUESS_DENSITY;
         } else if (guess == "HUCKEL") {
             this->initialGuessType_ = GUESS_HUCKEL;
@@ -175,12 +180,12 @@ void DfObject::setParam(const TlSerializeData& data)
     // J
     {
         this->J_engine_ = J_ENGINE_RI_J;
-        const std::string J_Engine = TlUtils::toUpper(data["J_engine"].getStr());
-        if (J_Engine == "RI_J") {
+        const std::string J_engine = TlUtils::toUpper(data["J_engine"].getStr());
+        if (J_engine == "RI_J") {
             this->J_engine_ = J_ENGINE_RI_J;
-        } else if (J_Engine == "CD") {
+        } else if (J_engine == "CD") {
             this->J_engine_ = J_ENGINE_CD;
-        } else if (J_Engine == "CONVENTIONAL") {
+        } else if (J_engine == "CONVENTIONAL") {
             this->J_engine_ = J_ENGINE_CONVENTIONAL;
         }
     }
@@ -188,13 +193,16 @@ void DfObject::setParam(const TlSerializeData& data)
     // K
     {
         this->K_engine_ = K_ENGINE_CONVENTIONAL;
-        const std::string K_Engine = TlUtils::toUpper(data["K_engine"].getStr());
-        if (K_Engine == "RI_K") {
+        const std::string K_engine = TlUtils::toUpper(data["K_engine"].getStr());
+        if (K_engine == "RI_K") {
             this->K_engine_ = K_ENGINE_RI_K;
-        } else if (K_Engine == "CD") {
+        } else if (K_engine == "CD") {
             this->K_engine_ = K_ENGINE_CD;
-        } else if (K_Engine == "CONVENTIONAL") {
+        } else if (K_engine == "CONVENTIONAL") {
             this->K_engine_ = K_ENGINE_CONVENTIONAL;
+        } else {
+            this->log_.critical(TlUtils::format("unknown parameter: XC_engine=%s", K_engine.c_str()));
+            CnErr.abort();
         }
     }
     
@@ -202,10 +210,15 @@ void DfObject::setParam(const TlSerializeData& data)
     {
         this->XC_engine_ = XC_ENGINE_GRID;
         const std::string XC_engine = TlUtils::toUpper(data["XC_engine"].getStr());
-        if (XC_engine == "GRIDFREE") {
+        if (XC_engine == "GRID") {
+            this->XC_engine_ = XC_ENGINE_GRID;
+        } else if (XC_engine == "GRIDFREE") {
             this->XC_engine_ = XC_ENGINE_GRIDFREE;
         } else if (XC_engine == "GRIDFREE_CD") {
             this->XC_engine_ = XC_ENGINE_GRIDFREE_CD;
+        } else {
+            this->log_.critical(TlUtils::format("unknown parameter: XC_engine=%s", XC_engine.c_str()));
+            CnErr.abort();
         }
     }
 
@@ -317,6 +330,9 @@ void DfObject::setParam(const TlSerializeData& data)
     if (paramFileBaseName["Xinv_matrix"].getStr().empty() == true) {
         paramFileBaseName["Xinv_matrix"] = "Xinv.mat";
     }
+    if (paramFileBaseName["XEigval_vtr"].getStr().empty() == true) {
+        paramFileBaseName["XEigval_vtr"] = "XEigval.vtr";
+    }
     if (paramFileBaseName["diff_density_matrix"].getStr().empty() == true) {
         paramFileBaseName["diff_density_matrix"] = "dP.%s.mat";
     }
@@ -354,6 +370,9 @@ void DfObject::setParam(const TlSerializeData& data)
     if (paramFileBaseName["GF_V_matrix"].getStr().empty() == true) {
         paramFileBaseName["GF_V_matrix"] = "GF_V.mat";
     }
+    if (paramFileBaseName["GF_VEigval_vtr"].getStr().empty() == true) {
+        paramFileBaseName["GF_VEigval_vtr"] = "GF_VEigval.vtr";
+    }
     
     if (paramFileBaseName["dipoleVelocityIntegrals_x"].getStr().empty() == true) {
         paramFileBaseName["dipoleVelocityIntegrals_x"] = "dSdx.mat";
@@ -378,6 +397,9 @@ void DfObject::setParam(const TlSerializeData& data)
     if (paramFileBaseName["eigenvalues"].getStr().empty() == true) {
         paramFileBaseName["eigenvalues"] = "eigenvalues.%s.vtr";
     }
+
+    // for lo
+    paramFileBaseName["Clo_matrix"]  = "Clo.%s.mat";
 }
 
 
@@ -544,6 +566,10 @@ std::string DfObject::getXInvMatrixPath()
     return this->makeFilePath("Xinv_matrix");
 }
 
+std::string DfObject::getXEigvalVtrPath()
+{
+    return this->makeFilePath("XEigval_vtr");
+}
 
 std::string DfObject::getNalphaPath()
 {
@@ -690,6 +716,11 @@ std::string DfObject::getGfVMatrixPath() const
     return this->makeFilePath("GF_V_matrix");
 }
 
+std::string DfObject::getGfVEigvalVtrPath() const
+{
+    return this->makeFilePath("GF_VEigval_vtr");
+}
+
 std::string DfObject::getRhoPath(const RUN_TYPE nRunType, const int nIteration) const
 {
     return this->makeFilePath("rho_vector",
@@ -737,3 +768,11 @@ std::string DfObject::getDipoleVelocityIntegralsZPath() const
 {
     return this->makeFilePath("dipoleVelocityIntegrals_z");
 }
+
+std::string DfObject::getCloMatrixPath(const RUN_TYPE runType,
+                                       const int iteration) const
+{
+    return this->makeFilePath("Clo_matrix",
+                              DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+}
+

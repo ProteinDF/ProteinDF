@@ -3,7 +3,6 @@
 #include <cppunit/extensions/TestFactoryRegistry.h>
 
 #include "TlUtilsTest.h"
-#include "TlParameterTest.h"
 #include "TlStringTokenizerTest.h"
 #include "TlVectorTest.h"
 #include "TlMatrixTest.h"
@@ -18,6 +17,10 @@
 #include "TlMsgPackTest.h"
 #include "TlSerializeDataTest.h"
 #include "TlStlUtilsTest.h"
+
+#include "TlVectorMatrixObjectTest.h"
+#include "TlRowVectorMatrixTest.h"
+#include "TlColVectorMatrixTest.h"
 
 //#include "Fl_UserinputXTest.h"
 
@@ -37,7 +40,6 @@ int main(int argc, char* argv[]){
     
     // Tl class
     runner.addTest(TlUtilsTest::suite());
-    runner.addTest(TlParameterTest::suite());
     runner.addTest(TlStringTokenizerTest::suite());
     runner.addTest(TlMemManagerTest::suite());
     runner.addTest(TlMsgPackTest::suite());
@@ -54,6 +56,10 @@ int main(int argc, char* argv[]){
     runner.addTest(TlPartialSymmetricMatrixTest::suite());
     runner.addTest(TlStlUtilsTest::suite());
     
+    runner.addTest(TlVectorMatrixObjectTest::suite());
+    runner.addTest(TlRowVectorMatrixTest::suite());
+    runner.addTest(TlColVectorMatrixTest::suite());
+
     // 
     //runner.addTest(Fl_UserinputXTest::suite());
     

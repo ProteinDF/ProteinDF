@@ -99,6 +99,30 @@ TlSerializeData TlMsgPack::loadBinary(std::istream& ifs)
             ans.set(true);
             break;
 
+        case (unsigned char)(0xc4):
+            ans = this->unpack_bin8(ifs);
+            break;
+
+        case (unsigned char)(0xc5):
+            ans = this->unpack_bin16(ifs);
+            break;
+
+        case (unsigned char)(0xc6):
+            ans = this->unpack_bin32(ifs);
+            break;
+
+        case (unsigned char)(0xc7):
+            ans = this->unpack_ext8(ifs);
+            break;
+
+        case (unsigned char)(0xc8):
+            ans = this->unpack_ext16(ifs);
+            break;
+
+        case (unsigned char)(0xc9):
+            ans = this->unpack_ext32(ifs);
+            break;
+
         case (unsigned char)(0xca):
             ans = this->unpack_float(ifs);
             break;
@@ -139,12 +163,36 @@ TlSerializeData TlMsgPack::loadBinary(std::istream& ifs)
             ans = (long)this->unpack_int64(ifs);
             break;
         
+        case (unsigned char)(0xd4):
+            ans = this->unpack_fixext1(ifs);
+            break;
+
+        case (unsigned char)(0xd5):
+            ans = this->unpack_fixext2(ifs);
+            break;
+
+        case (unsigned char)(0xd6):
+            ans = this->unpack_fixext4(ifs);
+            break;
+
+        case (unsigned char)(0xd7):
+            ans = this->unpack_fixext8(ifs);
+            break;
+
+        case (unsigned char)(0xd8):
+            ans = this->unpack_fixext16(ifs);
+            break;
+
+        case (unsigned char)(0xd9):
+            ans = this->unpack_str8(ifs);
+            break;
+
         case (unsigned char)(0xda):
-            ans = this->unpack_raw16(ifs);
+            ans = this->unpack_str16(ifs);
             break;
 
         case (unsigned char)(0xdb):
-            ans = this->unpack_raw32(ifs);
+            ans = this->unpack_str32(ifs);
             break;
 
         case (unsigned char)(0xdc):
@@ -200,6 +248,132 @@ int TlMsgPack::unpack_negativeFixNum(unsigned char c)
     return -(c & 31);
 }
 
+TlSerializeData TlMsgPack::unpack_bin8(std::istream& ifs)
+{
+    const std::size_t size = this->unpack_uint8(ifs);
+
+    TlSerializeData ans;
+    if (size != 0) {
+        char* pBuf = new char[size];
+        ifs.read(pBuf, size);
+        this->debugCurrentPos_ += size;
+        
+        const std::string str(pBuf, size);
+        ans.set(str);
+        
+        delete[] pBuf;
+        pBuf = NULL;
+    }
+
+    return ans;
+}
+
+TlSerializeData TlMsgPack::unpack_bin16(std::istream& ifs)
+{
+    const std::size_t size = this->unpack_uint16(ifs);
+
+    TlSerializeData ans;
+    if (size != 0) {
+        char* pBuf = new char[size];
+        ifs.read(pBuf, size);
+        this->debugCurrentPos_ += size;
+        
+        const std::string str(pBuf, size);
+        ans.set(str);
+        
+        delete[] pBuf;
+        pBuf = NULL;
+    }
+
+    return ans;
+}
+
+TlSerializeData TlMsgPack::unpack_bin32(std::istream& ifs)
+{
+    const std::size_t size = this->unpack_uint32(ifs);
+
+    TlSerializeData ans;
+    if (size != 0) {
+        char* pBuf = new char[size];
+        ifs.read(pBuf, size);
+        this->debugCurrentPos_ += size;
+        
+        const std::string str(pBuf, size);
+        ans.set(str);
+        
+        delete[] pBuf;
+        pBuf = NULL;
+    }
+
+    return ans;
+}
+
+TlSerializeData TlMsgPack::unpack_ext(std::istream& ifs,
+                                      const std::size_t size)
+{
+    const int type = this->unpack_int8(ifs);
+    TlSerializeData data;
+    if (size != 0) {
+        char* pBuf = new char[size];
+        ifs.read(pBuf, size);
+        this->debugCurrentPos_ += size;
+        
+        const std::string str(pBuf, size);
+        data.set(str);
+        
+        delete[] pBuf;
+        pBuf = NULL;
+    }
+
+    TlSerializeData ans;
+    ans.pushBack(type);
+    ans.pushBack(data);
+
+    return ans;
+}
+
+TlSerializeData TlMsgPack::unpack_ext8(std::istream& ifs)
+{
+    const std::size_t size = this->unpack_uint8(ifs);
+    return this->unpack_ext(ifs, size);
+}
+
+TlSerializeData TlMsgPack::unpack_ext16(std::istream& ifs)
+{
+    const std::size_t size = this->unpack_uint16(ifs);
+    return this->unpack_ext(ifs, size);
+}
+
+TlSerializeData TlMsgPack::unpack_ext32(std::istream& ifs)
+{
+    const std::size_t size = this->unpack_uint32(ifs);
+    return this->unpack_ext(ifs, size);
+}
+
+TlSerializeData TlMsgPack::unpack_fixext1(std::istream& ifs)
+{
+    return this->unpack_ext(ifs, 1);
+}
+
+TlSerializeData TlMsgPack::unpack_fixext2(std::istream& ifs)
+{
+    return this->unpack_ext(ifs, 2);
+}
+
+TlSerializeData TlMsgPack::unpack_fixext4(std::istream& ifs)
+{
+    return this->unpack_ext(ifs, 4);
+}
+
+TlSerializeData TlMsgPack::unpack_fixext8(std::istream& ifs)
+{
+    return this->unpack_ext(ifs, 8);
+}
+
+TlSerializeData TlMsgPack::unpack_fixext16(std::istream& ifs)
+{
+    return this->unpack_ext(ifs, 16);
+}
 
 TlMsgPack::UINT8 TlMsgPack::unpack_uint8(std::istream& ifs)
 {
@@ -363,8 +537,30 @@ TlSerializeData TlMsgPack::unpack_fixraw(const char in, std::istream& ifs)
     return ans;
 }
 
-TlSerializeData TlMsgPack::unpack_raw16(std::istream& ifs)
+TlSerializeData TlMsgPack::unpack_str8(std::istream& ifs)
 {
+    // NOT support UTF-8!
+    const std::size_t size = this->unpack_uint8(ifs);
+
+    TlSerializeData ans;
+    if (size != 0) {
+        char* pBuf = new char[size];
+        ifs.read(pBuf, size);
+        this->debugCurrentPos_ += size;
+        
+        const std::string str(pBuf, size);
+        ans.set(str);
+        
+        delete[] pBuf;
+        pBuf = NULL;
+    }
+
+    return ans;
+}
+
+TlSerializeData TlMsgPack::unpack_str16(std::istream& ifs)
+{
+    // NOT support UTF-8!
     const std::size_t size = this->unpack_uint16(ifs);
 
     TlSerializeData ans;
@@ -383,8 +579,9 @@ TlSerializeData TlMsgPack::unpack_raw16(std::istream& ifs)
     return ans;
 }
 
-TlSerializeData TlMsgPack::unpack_raw32(std::istream& ifs)
+TlSerializeData TlMsgPack::unpack_str32(std::istream& ifs)
 {
+    // NOT support UTF-8!
     const std::size_t size = this->unpack_uint32(ifs);
 
     TlSerializeData ans;
@@ -747,7 +944,7 @@ std::string TlMsgPack::pack(const char* pBuf, const int size) const
     std::ostringstream os;
 
     assert(sizeof(int) == 4);
-    this->write(os, char(0xdb)); // raw32
+    this->write(os, char(0xc6)); // bin32
     this->write(os, TlUtils::toBigEndian(size));
     os.write(pBuf, size);
 

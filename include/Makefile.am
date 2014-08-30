@@ -7,7 +7,6 @@ pkginclude_HEADERS = \
 	TlVector.h					\
 	TlAtom.h					\
 	TlMath.h					\
-	TlParameter.h				\
 	TlSimpleVector.h			\
 	TlVectorObject.h			\
 	TlFmt.h						\
@@ -23,8 +22,9 @@ pkginclude_HEADERS = \
 	TlSparseSymmetricMatrix.h	\
 	TlSparseVector.h			\
 	TlSparseVectorMatrix.h		\
-	TlRowVectorMatrix2.h		\
-	TlColVectorMatrix2.h		\
+	TlVectorMatrixObject.h		\
+	TlRowVectorMatrix.h			\
+	TlColVectorMatrix.h			\
 	TlMemManager.h				\
 	TlPrdctbl.h					\
 	TlStringTokenizer.h			\

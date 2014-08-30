@@ -30,9 +30,9 @@
 
 typedef TlMatrixObject::index_type index_type;
 
-void showHelp()
+void showHelp(const std::string& progname)
 {
-    std::cout << "mergeLocalMatrix file... path" << std::endl;
+    std::cout << TlUtils::format("USAGE: %s file... path", progname.c_str()) << std::endl;
     std::cout << "OPTIONS:" << std::endl;
     std::cout << "  -h: show help(this)" << std::endl;
     std::cout << "  -v: verbose" << std::endl;
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     const bool isVerbose = (opt["v"] == "defined");
     const int numOfArgs = opt.getCount();
     if ((numOfArgs < 3) || (opt["h"] == "defined"))  {
-        showHelp();
+        showHelp(opt[0]);
         return EXIT_FAILURE;
     }
 

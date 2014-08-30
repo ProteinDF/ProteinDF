@@ -24,13 +24,23 @@
 
 int main(int argc, char *argv[])
 {
-    TlMsgPack mpac;
-    mpac.load("pdfparam.mpac");
-    TlSerializeData param = mpac.getSerializeData();
+    std::string pdfparam_path = "pdfparam.mpac"; 
+
+    TlSerializeData param;
+    {
+        TlMsgPack mpac;
+        mpac.load(pdfparam_path);
+        param = mpac.getSerializeData();
+    }
     
     DfLocalize lo(&param);
 
     lo.localize();
+
+    {
+        TlMsgPack mpac(param);
+        mpac.save(pdfparam_path);
+    }
 
     return 0;
 }

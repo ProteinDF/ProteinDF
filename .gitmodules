@@ -1,0 +1,3 @@
+[submodule "python"]
+	path = python
+	url = git@bitbucket.org:hiracchi/proteindf_pytools.git

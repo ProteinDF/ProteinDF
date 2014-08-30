@@ -40,6 +40,8 @@
 #include "TlOrbitalInfo_XC.h"
 #include "TlMsgPack.h"
 
+#include "DfObject.h"
+
 DfInputdata::DfInputdata()
 {
 }
@@ -50,57 +52,58 @@ DfInputdata::~DfInputdata()
 }
 
 
-TlSerializeData DfInputdata::main()
+TlSerializeData DfInputdata::main(const bool isReadUserInput)
 {
     // load default parameters
     PdfKeyword pdfKwd;
     TlSerializeData param = pdfKwd.getDefault();
+    DfObject dfObj(&param);
     
-    // include user input parameters
-    const std::string mpacFilePath = "pdfparam.mpac";
-    if (TlFile::isExist(mpacFilePath) == true) {
-        TlMsgPack msgPack;
-        msgPack.load(mpacFilePath);
-        TlSerializeData tmpParam = msgPack.getSerializeData();
-        param.merge(tmpParam);
-    }
-
     // fl_Userinputを読み取る
-    PdfUserInput pdfUserInput;
-    pdfUserInput.load();
-    TlSerializeData inputParam = pdfUserInput.getSerializeData();
-    pdfKwd.convertAlias(&(inputParam));
+    if (isReadUserInput) {
+        PdfUserInput pdfUserInput;
+        pdfUserInput.load();
+        TlSerializeData inputParam = pdfUserInput.getSerializeData();
+        pdfKwd.convertAlias(&(inputParam));
     
-    // default値にユーザー入力値を上書きする
-    param.merge(inputParam);
+        // include user input parameters
+        std::string mpacFilePath = param["pdf_param_path"].getStr();
+        if (inputParam.hasKey("pdf_param_path")) {
+            mpacFilePath = inputParam["pdf_param_path"].getStr();
+        }
+        if (TlFile::isExist(mpacFilePath) == true) {
+            TlMsgPack msgPack;
+            msgPack.load(mpacFilePath);
+            TlSerializeData tmpParam = msgPack.getSerializeData();
+            param.merge(tmpParam);
+        }
 
-    // keyword check
-    pdfKwd.convertAlias(&(param));
-    pdfKwd.checkInputParam(param);
+        // default値にユーザー入力値を上書きする
+        param.merge(inputParam);
 
-    // 
-    {
-        const Fl_Geometry flGeom(param["coordinates"]);
-        const TlOrbitalInfo orbInfo(param["coordinates"], param["basis_sets"]);
-        const TlOrbitalInfo_Density orbInfo_J(param["coordinates"], param["basis_sets_j"]);
-        const TlOrbitalInfo_XC orbInfo_XC(param["coordinates"], param["basis_sets_k"]);
+        // keyword check
+        pdfKwd.convertAlias(&(param));
+        pdfKwd.checkInputParam(param);
+        
+        // 
+        {
+            const Fl_Geometry flGeom(param["coordinates"]);
+            const TlOrbitalInfo orbInfo(param["coordinates"], param["basis_set"]);
+            const TlOrbitalInfo_Density orbInfo_J(param["coordinates"], param["basis_set_j"]);
+            const TlOrbitalInfo_XC orbInfo_XC(param["coordinates"], param["basis_set_xc"]);
+            
+            param["num_of_atoms"] = flGeom.getNumOfAtoms();
+            param["num_of_dummy_atoms"] = flGeom.getNumOfDummyAtoms();
+            param["num_of_AOs"] = orbInfo.getNumOfOrbitals();
+            param["num_of_auxCDs"] = orbInfo_J.getNumOfOrbitals();
+            param["num_of_auxXCs"] = orbInfo_XC.getNumOfOrbitals();
+        }
 
-        param["num_of_atoms"] = flGeom.getNumOfAtoms();
-        param["num_of_dummy_atoms"] = flGeom.getNumOfDummyAtoms();
-        param["num_of_AOs"] = orbInfo.getNumOfOrbitals();
-        param["num_of_auxCDs"] = orbInfo_J.getNumOfOrbitals();
-        param["num_of_auxXCs"] = orbInfo_XC.getNumOfOrbitals();
+        // 表示
+        this->show(param);
     }
 
-    // 保存
-    this->data_ = param;
-    TlMsgPack msgPack(this->data_);
-    msgPack.save(mpacFilePath);
-
-    // 表示
-    this->show(this->data_);
-
-    return this->data_;
+    return param;
 }
 
 
@@ -147,7 +150,7 @@ void DfInputdata::show(const TlSerializeData& data) const
         Fl_Geometry geom(data["coordinates"]);
         const int numOfAtoms = geom.getNumOfAtoms();
         for (int i = 0; i < numOfAtoms; ++i) {
-            const std::string symbol = geom.getAtom(i);
+            const std::string symbol = geom.getAtomSymbol(i);
             const double charge = geom.getCharge(i);
             const std::string label = geom.getLabel(i);
             const TlPosition pos = geom.getCoordinate(i);
@@ -166,10 +169,10 @@ void DfInputdata::show(const TlSerializeData& data) const
     {
         const std::string showOrbitalBasis = TlUtils::toUpper(data["show_orbital_basis"].getStr());
 
-        const Fl_Gto orb(data["basis_sets"]);
-        const Fl_Gto orb_j(data["basis_sets_j"]);
-        const Fl_Gto orb_k(data["basis_sets_k"]);
-        const Fl_Gto orb_GF(data["basis_sets_GF"]);
+        const Fl_Gto orb(data["basis_set"]);
+        const Fl_Gto orb_j(data["basis_set_j"]);
+        const Fl_Gto orb_k(data["basis_set_xc"]);
+        const Fl_Gto orb_GF(data["basis_set_gridfree"]);
         const bool isUseGF = data["grid_free"].getBoolean();
         if (showOrbitalBasis == "GAMESS") {
             log.info(" >>>> Inputted Orbital Basis Set (GAMESS format) <<<<");

@@ -20,7 +20,6 @@
 #define PDFUSERINPUT_H
 
 #include <string>
-#include "TlParameter.h"
 #include "TlSerializeData.h"
 #include "TlLogging.h"
 
@@ -32,7 +31,6 @@ public:
 
 public:
     TlSerializeData getSerializeData() const;
-    TlParameter getParameter() const;
     
     /// aliasの変換を行う
     void alias();
@@ -55,7 +53,6 @@ private:
 private:
     std::string filePath_;
     TlSerializeData data_;
-    TlParameter param_;
 
     TlLogging& log_;
 };

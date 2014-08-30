@@ -24,7 +24,7 @@
 DfTaskCtrl::DfTaskCtrl(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
     TlOrbitalInfo orbitalInfo((*pPdfParam)["coordinates"],
-                              (*pPdfParam)["basis_sets"]);
+                              (*pPdfParam)["basis_set"]);
     this->maxShellType_ = orbitalInfo.getMaxShellType();
 
     this->lengthScaleParameter_ = 3.0;
@@ -1219,9 +1219,10 @@ bool DfTaskCtrl::getQueue_Force4(const TlOrbitalInfoObject& orbitalInfo,
 
 // J. Chem. Phys.,105,2726 (1996)
 // eq.32
-DfTaskCtrl::ShellArray DfTaskCtrl::selectShellArrayByDistribution(const ShellArray& inShellArray,
-                                                                  const index_type companionShellIndex,
-                                                                  const TlOrbitalInfoObject& orbitalInfo)
+DfTaskCtrl::ShellArray 
+DfTaskCtrl::selectShellArrayByDistribution(const ShellArray& inShellArray,
+                                           const index_type companionShellIndex,
+                                           const TlOrbitalInfoObject& orbitalInfo)
 {
     ShellArray answer;
     answer.reserve(inShellArray.size());
@@ -1251,12 +1252,16 @@ DfTaskCtrl::ShellArray DfTaskCtrl::selectShellArrayByDistribution(const ShellArr
         if (coef * std::exp(exponent) >= threshold) {
             answer.push_back(*it);
 
-//#pragma omp atomic
-            ++(this->cutoffAlive_distribution_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__selectShellArrayByDistribution_alive)
+            {
+                ++(this->cutoffAlive_distribution_[shellPairType]);
+            }
         }
 
-//#pragma omp atomic
-        ++(this->cutoffAll_distribution_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__selectShellArrayByDistribution_all)
+        {
+            ++(this->cutoffAll_distribution_[shellPairType]);
+        }
     }
 
     // swap technique
@@ -1333,12 +1338,16 @@ DfTaskCtrl::makeDistributedCutoffTable(const TlOrbitalInfoObject& orbitalInfo)
                 answer[indexI][shellTypeJ].push_back(indexJ);
                 answer[indexJ][shellTypeI].push_back(indexI);
                 
-#pragma omp atomic
-                ++(this->cutoffAlive_distribution_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__makeDistributedCutoffTable_alive)
+                {
+                    ++(this->cutoffAlive_distribution_[shellPairType]);
+                }
             }
 
-#pragma omp atomic
-        ++(this->cutoffAll_distribution_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__makeDistributedCutoffTable_all)
+            {
+                ++(this->cutoffAll_distribution_[shellPairType]);
+            }
             
         }
         answer[indexI][shellTypeI].push_back(indexI);
@@ -1418,12 +1427,16 @@ DfTaskCtrl::makeDistributedCutoffTable(const TlOrbitalInfoObject& orbitalInfo1,
             if (coef * std::exp(exponent) >= threshold) {
                 answer[indexI][shellTypeJ].push_back(indexJ);
                 
-#pragma omp atomic
-                ++(this->cutoffAlive_distribution_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__makeDistributedCutoffTable_alive)
+                {
+                    ++(this->cutoffAlive_distribution_[shellPairType]);
+                }
             }
 
-#pragma omp atomic
-        ++(this->cutoffAll_distribution_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__makeDistributedCutoffTable_all)
+            {
+                ++(this->cutoffAll_distribution_[shellPairType]);
+            }
         }
     }
 
@@ -1516,7 +1529,8 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::getShellPairArrayTable(const TlOrbit
 // J. Chem. Phys.,105,2726 (1996)
 // eq.31
 // 1/r cutoff
-DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
+DfTaskCtrl::ShellPairArrayTable 
+DfTaskCtrl::selectShellPairArrayTableByDensity(
     const ShellPairArrayTable& inShellPairArrayTable,
     const TlOrbitalInfoObject& orbitalInfo)
 {
@@ -1600,12 +1614,16 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
             if (std::fabs(judge) > cutoffThreshold) {
                 tmp.push_back(shellPairArray[shellPairIndex]);
 
-#pragma omp atomic
-                ++(this->cutoffAlive_density_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__selectShellPairArrayTableByDensity_add_alive)
+                {
+                    ++(this->cutoffAlive_density_[shellPairType]);
+                }
             }
 
-#pragma omp atomic
-            ++(this->cutoffAll_density_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__selectShellPairArrayTableByDensity_add_all)
+            {
+                ++(this->cutoffAll_density_[shellPairType]);
+            }
         }
 
         // swap technique
@@ -1617,7 +1635,8 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
     return answer;
 }
 
-DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
+DfTaskCtrl::ShellPairArrayTable 
+DfTaskCtrl::selectShellPairArrayTableByDensity(
     const ShellPairArrayTable& inShellPairArrayTable,
     const TlOrbitalInfoObject& orbitalInfo1,
     const TlOrbitalInfoObject& orbitalInfo2)
@@ -1703,12 +1722,16 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
             if (std::fabs(judge) > cutoffThreshold) {
                 tmp.push_back(shellPairArray[shellPairIndex]);
 
-#pragma omp atomic
-                ++(this->cutoffAlive_density_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__selectShellPairArrayTableByDensity_add_alive)
+                {
+                    ++(this->cutoffAlive_density_[shellPairType]);
+                }
             }
 
-#pragma omp atomic
-            ++(this->cutoffAll_density_[shellPairType]);
+#pragma omp critical(DfTaskCtrl__selectShellPairArrayTableByDensity_add_all)
+            {
+                ++(this->cutoffAll_density_[shellPairType]);
+            }
         }
 
         // swap technique
@@ -1812,12 +1835,16 @@ bool DfTaskCtrl::isAliveBySchwarzCutoff(const index_type shellIndexP,
     if ((sqrt_pqpq * sqrt_rsrs) >= threshold) {
         answer = true;
 
-#pragma omp atomic
-        ++(this->cutoffAlive_schwarz_[shellQuartetType]);
+#pragma omp critical(DfTaskCtrl__isAliveBySchwarzCutoff_alive)
+        {
+            ++(this->cutoffAlive_schwarz_[shellQuartetType]);
+        }
     }
 
-#pragma omp atomic
-    ++(this->cutoffAll_schwarz_[shellQuartetType]);
+#pragma omp critical(DfTaskCtrl__isAliveBySchwarzCutoff_all)
+    {
+        ++(this->cutoffAll_schwarz_[shellQuartetType]);
+    }
 
     return answer;
 }
@@ -1839,12 +1866,16 @@ bool DfTaskCtrl::isAliveBySchwarzCutoff(const index_type shellIndexP,
     if ((sqrt_pqpq * sqrt_rsrs) >= threshold) {
         answer = true;
 
-#pragma omp atomic
-        ++(this->cutoffAlive_schwarz_[shellQuartetType]);
+#pragma omp critical(DfTaskCtrl__isAliveBySchwarzCutoff_alive)
+        {
+            ++(this->cutoffAlive_schwarz_[shellQuartetType]);
+        }
     }
 
-#pragma omp atomic
-    ++(this->cutoffAll_schwarz_[shellQuartetType]);
+#pragma omp critical(DfTaskCtrl__isAliveBySchwarzCutoff_all)
+    {
+        ++(this->cutoffAll_schwarz_[shellQuartetType]);
+    }
 
     return answer;
 }
@@ -1854,9 +1885,11 @@ void DfTaskCtrl::prescreeningReport()
 {
     const int maxShellType = this->maxShellType_;
     static const char typeStr2[][3] = {
-        "SS", "SP", "SD",
-        "PS", "PP", "PD",
-        "DS", "DP", "DD"
+        "SS", "SP", "SD", "SF", "SG",
+        "PS", "PP", "PD", "PF", "PG",
+        "DS", "DP", "DD", "DF", "DG",
+        "FS", "FP", "FD", "FF", "FG",
+        "GS", "GP", "GD", "GF", "GG"
     };
     
     // cutoff report for Epsilon1
@@ -1933,17 +1966,26 @@ void DfTaskCtrl::prescreeningReport()
 void DfTaskCtrl::cutoffReport()
 {
     const int maxShellType = this->maxShellType_;
-    static const char typeStr4[][5] = {
-        "SSSS", "SSSP", "SSSD", "SSPS", "SSPP", "SSPD", "SSDS", "SSDP", "SSDD",
-        "SPSS", "SPSP", "SPSD", "SPPS", "SPPP", "SPPD", "SPDS", "SPDP", "SPDD",
-        "SDSS", "SDSP", "SDSD", "SDPS", "SDPP", "SDPD", "SDDS", "SDDP", "SDDD",
-        "PSSS", "PSSP", "PSSD", "PSPS", "PSPP", "PSPD", "PSDS", "PSDP", "PSDD",
-        "PPSS", "PPSP", "PPSD", "PPPS", "PPPP", "PPPD", "PPDS", "PPDP", "PPDD",
-        "PDSS", "PDSP", "PDSD", "PDPS", "PDPP", "PDPD", "PDDS", "PDDP", "PDDD",
-        "DSSS", "DSSP", "DSSD", "DSPS", "DSPP", "DSPD", "DSDS", "DSDP", "DSDD",
-        "DPSS", "DPSP", "DPSD", "DPPS", "DPPP", "DPPD", "DPDS", "DPDP", "DPDD",
-        "DDSS", "DDSP", "DDSD", "DDPS", "DDPP", "DDPD", "DDDS", "DDDP", "DDDD",
-    };
+    std::vector<std::string> typeStr4(maxShellType * maxShellType * maxShellType * maxShellType);
+    {
+        static const char typeChar[] = "SPDFG";
+        std::string tmp(4, 'X');
+        int index = 0;
+        for (int i = 0; i < maxShellType; ++i) {
+            tmp[0] = typeChar[i];
+            for (int j = 0; j < maxShellType; ++j) {
+                tmp[1] = typeChar[j];
+                for (int k = 0; k < maxShellType; ++k) {
+                    tmp[2] = typeChar[k];
+                    for (int l = 0; l < maxShellType; ++l) {
+                        tmp[3] = typeChar[l];
+                        typeStr4[index] = tmp;
+                        ++index;
+                    }
+                }
+            }
+        }
+    }
 
     // cutoff report for schwarz
     bool hasCutoffSchwarz = false;
@@ -1979,7 +2021,7 @@ void DfTaskCtrl::cutoffReport()
                                 / (double)this->cutoffAll_schwarz_[shellTypeABCD]
                                 * 100.0;
                             this->log_.info(TlUtils::format(" %4s: %12ld / %12ld (%6.2f%%)",
-                                                            typeStr4[shellTypeABCD],
+                                                            typeStr4[shellTypeABCD].c_str(),
                                                             this->cutoffAlive_schwarz_[shellTypeABCD],
                                                             this->cutoffAll_schwarz_[shellTypeABCD],
                                                             ratio));

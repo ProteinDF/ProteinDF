@@ -27,7 +27,7 @@
 
 DfPopulation::DfPopulation(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), orbitalInfo_((*pPdfParam)["coordinates"],
-                                        (*pPdfParam)["basis_sets"])
+                                        (*pPdfParam)["basis_set"])
 {
 }
 
@@ -37,15 +37,10 @@ DfPopulation::~DfPopulation()
 }
 
 
-void DfPopulation::sumOfElectrons(int iteration, double* pAlpha, double* pBeta)
+double DfPopulation::getSumOfElectrons(const TlSymmetricMatrix& P)
 {
-    this->calcPop(iteration);
-    if (pAlpha != NULL) {
-        *pAlpha = this->grossAtomPopA_.sum();
-    }
-    if (pBeta != NULL) {
-        *pBeta = this->grossAtomPopB_.sum();
-    }
+    const TlVector trPS = this->getPS(P);
+    return trPS.sum();
 }
 
 
@@ -133,8 +128,11 @@ TlVector DfPopulation::getGrossAtomPop(const TlVector& trPS)
 #pragma omp parallel for
     for (index_type aoIndex= 0; aoIndex < numOfAOs; ++aoIndex) {
         const index_type atomIndex = this->orbitalInfo_.getAtomIndex(aoIndex);
-#pragma omp atomic
-        answer[atomIndex] += trPS.get(aoIndex);
+
+#pragma omp critical(DfPopulation__getGrossAtomPop)
+        {
+            answer[atomIndex] += trPS.get(aoIndex);
+        }
     }
 
     return TlVector(answer);

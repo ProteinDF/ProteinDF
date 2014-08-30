@@ -22,7 +22,7 @@
 
 void TlMemManagerTest::testAllocate() {
   const std::size_t size = 1024 * 1024 * 1024; // 1 GB
-  const std::string filePath = "temp.map";
+  const std::string filePath = "/tmp/temp.map";
   TlMemManager::setParam(size, filePath);
 
   TlMemManager& rMem = TlMemManager::getInstance();

@@ -32,6 +32,25 @@ DfPopulation_Parallel::~DfPopulation_Parallel()
 }
 
 
+double DfPopulation_Parallel::getSumOfElectrons(const TlSymmetricMatrix& P)
+{
+    double answer = 0.0;
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        answer = DfPopulation::getSumOfElectrons(P);
+    }
+    rComm.broadcast(answer);
+    return answer;
+}
+
+
+double DfPopulation_Parallel::getSumOfElectrons(const TlDistributeSymmetricMatrix& P)
+{
+    const TlVector trPS = this->getPS(P);
+    return trPS.sum();
+}
+
+
 void DfPopulation_Parallel::calcPop(const int iteration)
 {
 #ifdef HAVE_SCALAPACK

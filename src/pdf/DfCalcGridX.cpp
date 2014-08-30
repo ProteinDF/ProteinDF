@@ -32,6 +32,7 @@
 #include "Fl_Geometry.h"
 #include "TlFile.h"
 #include "TlUtils.h"
+#include "TlPrdctbl.h"
 
 ////////////////////////////////////////////////////////////////////////
 // DfCalcGridX
@@ -43,7 +44,7 @@ const double DfCalcGridX::INV_SQRT3 = 1.0 / std::sqrt(3.0);
 const double DfCalcGridX::INV_SQRT12 = 1.0 / std::sqrt(12.0);
 
 DfCalcGridX::DfCalcGridX(TlSerializeData* pPdfParam)
-    : DfObject(pPdfParam), m_tlOrbInfo((*pPdfParam)["coordinates"], (*pPdfParam)["basis_sets"])
+    : DfObject(pPdfParam), m_tlOrbInfo((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"])
 {
     const TlSerializeData& pdfParam = *pPdfParam;
 
@@ -997,9 +998,10 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
     assert(pGZ != NULL);
 
     const double densityCutOffValue = this->m_densityCutOffValueA;
+    const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
     TlMatrix gridMat = this->getGridMatrix<TlMatrix>(this->m_nIteration);
 
-    const int numOfAtoms = this->numOfRealAtoms_;
+    const int numOfAtoms = this->m_nNumOfAtoms;
     const int numOfAOs = this->m_nNumOfAOs;
     
     pGX->resize(numOfAOs, numOfAtoms);
@@ -1007,6 +1009,12 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
     pGZ->resize(numOfAOs, numOfAtoms);
 
     for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
+        const int atomicNumber = TlPrdctbl::getAtomicNumber(flGeom.getAtomSymbol(atomIndex));
+        if (atomicNumber == 0) {
+            // pass for dummy charge(X)
+            continue;
+        }
+        
         // get grid information
         const TlMatrix atomGridMat = this->selectGridMatrixByAtom(gridMat, atomIndex);
         const index_type numOfGrids = atomGridMat.getNumOfRows();
@@ -1125,9 +1133,10 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
     assert(pGZ != NULL);
 
     const double densityCutOffValue = this->m_densityCutOffValueA;
+    const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
     TlMatrix gridMat = this->getGridMatrix<TlMatrix>(this->m_nIteration);
 
-    const int numOfAtoms = this->numOfRealAtoms_;
+    const int numOfAtoms = this->m_nNumOfAtoms;
     const int numOfAOs = this->m_nNumOfAOs;
     
     pGX->resize(numOfAOs, numOfAtoms);
@@ -1135,6 +1144,12 @@ void DfCalcGridX::makeGammaMatrix(const TlSymmetricMatrix& P,
     pGZ->resize(numOfAOs, numOfAtoms);
 
     for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
+        const int atomicNumber = TlPrdctbl::getAtomicNumber(flGeom.getAtomSymbol(atomIndex));
+        if (atomicNumber == 0) {
+            // pass for dummy charge(X)
+            continue;
+        }
+
         // get grid information
         TlMatrix atomGridMat = this->selectGridMatrixByAtom(gridMat, atomIndex);
         const int numOfGrids = atomGridMat.getNumOfRows();

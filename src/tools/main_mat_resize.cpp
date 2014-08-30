@@ -20,64 +20,59 @@
 #include <cstdlib>
 
 #include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 #include "TlGetopt.h"
 
 void showHelp()
 {
-    std::cout << "cholesky [options] input_file_path" << std::endl;
+    std::cout << "pdf-mat-resize [options] input_path output_path" << std::endl;
     std::cout << " OPTIONS:" << std::endl;
-    // std::cout << "  -l FILE: save vector for eigen values" << std::endl;
-    // std::cout << "  -x FILE: save matrix for eigen vector" << std::endl;
+    std::cout << "  -r rows: new number of rows" << std::endl;
+    std::cout << "  -c cols: new number of cols" << std::endl;
     std::cout << "  -h:      show help" << std::endl;
     std::cout << "  -v:      verbose" << std::endl;
 }
 
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "hv");
+    TlGetopt opt(argc, argv, "r:c:hv");
     
     if (opt["h"] == "defined") {
         showHelp();
         return EXIT_SUCCESS;
     }
-    
-    const bool bVerbose = (opt["v"] == "defined");
 
-    if (opt.getCount() <= 1) {
+    const bool bVerbose = (opt["v"] == "defined");
+    int newNumOfRows = 0;
+    if (! opt["r"].empty()) {
+        newNumOfRows = std::atoi(opt["r"].c_str());
+    }
+    int newNumOfCols = 0;
+    if (! opt["c"].empty()) {
+        newNumOfCols = std::atoi(opt["c"].c_str());
+    }
+
+    if (opt.getCount() <= 2) {
         showHelp();
         return EXIT_FAILURE;
     }
     std::string inputMatrixPath = opt[1];
-    
+    std::string outputMatrixPath = opt[2];
+
     if (bVerbose == true) {
         std::cerr << "load matrix: " << inputMatrixPath << std::endl;
     }
-    if (TlSymmetricMatrix::isLoadable(inputMatrixPath) != true) {
-        std::cerr << "can not open file: " << inputMatrixPath << std::endl;
-        return EXIT_FAILURE;
-    }
 
-    TlSymmetricMatrix A;
+    TlMatrix A;
     A.load(inputMatrixPath);
-    const int numOfDims = A.getNumOfRows();
 
-    if (bVerbose == true) {
-        std::cerr << "running..." << inputMatrixPath << std::endl;
-    }
-    TlMatrix L = A.choleskyFactorization2(1.0E-16);
-
-    TlMatrix Lt = L;
-    Lt.transpose();
-
-    TlMatrix LL = L * Lt;
+    TlMatrix::index_type numOfRows = (newNumOfRows != 0) ? newNumOfRows : A.getNumOfRows();
+    TlMatrix::index_type numOfCols = (newNumOfCols != 0) ? newNumOfCols : A.getNumOfCols();
+    A.resize(numOfRows, numOfCols);
     
-    std::cout << ">>>> L" << std::endl;
-    L.print(std::cout);
-    std::cout << ">>>> A" << std::endl;
-    A.print(std::cout);
-    std::cout << ">>>> LL" << std::endl;
-    LL.print(std::cout);
+    if (bVerbose == true) {
+        std::cerr << "save matrix: " << outputMatrixPath << std::endl;
+    }
+    A.save(outputMatrixPath);
     
     return EXIT_SUCCESS;
 }

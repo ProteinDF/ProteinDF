@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "CnError.h"
 #include "DfKMatrix.h"
 #include "DfEriX.h"
 #include "DfCD.h"
@@ -59,9 +60,46 @@ void DfKMatrix::buildK()
 
 void DfKMatrix::getK_CD()
 {
-    TlSymmetricMatrix K(this->m_nNumOfAOs);
-    this->getK_CD_local(RUN_RKS, &K);
-    this->saveKMatrix(RUN_RKS, K);
+    switch (this->m_nMethodType) {
+    case METHOD_RKS:
+        {
+            TlSymmetricMatrix K(this->m_nNumOfAOs);
+            this->getK_CD_local(RUN_RKS, &K);
+            this->saveKMatrix(RUN_RKS, K);
+        }
+        break;
+
+    case METHOD_UKS:
+        {
+            TlSymmetricMatrix K(this->m_nNumOfAOs);
+            this->getK_CD_local(RUN_UKS_ALPHA, &K);
+            this->saveKMatrix(RUN_UKS_ALPHA, K);
+        }
+        {
+            TlSymmetricMatrix K(this->m_nNumOfAOs);
+            this->getK_CD_local(RUN_UKS_BETA, &K);
+            this->saveKMatrix(RUN_UKS_BETA, K);
+        }
+        break;
+
+    case METHOD_ROKS:
+        {
+            TlSymmetricMatrix K(this->m_nNumOfAOs);
+            this->getK_CD_local(RUN_ROKS_ALPHA, &K);
+            this->saveKMatrix(RUN_ROKS_ALPHA, K);
+        }
+        {
+            TlSymmetricMatrix K(this->m_nNumOfAOs);
+            this->getK_CD_local(RUN_ROKS_BETA, &K);
+            this->saveKMatrix(RUN_ROKS_BETA, K);
+        }
+        break;
+
+    default:
+        this->log_.critical("program error.");
+        CnErr.abort();
+        break;
+    }
 }
 
 
@@ -89,8 +127,22 @@ void DfKMatrix::getK_conventional()
         }
         break;
 
+    case METHOD_ROKS:
+        {
+            TlSymmetricMatrix K(this->m_nNumOfAOs);
+            this->getK_conventional_local(RUN_ROKS_ALPHA, &K);
+            this->saveKMatrix(RUN_ROKS_ALPHA, K);
+        }
+        {
+            TlSymmetricMatrix K(this->m_nNumOfAOs);
+            this->getK_conventional_local(RUN_ROKS_BETA, &K);
+            this->saveKMatrix(RUN_ROKS_BETA, K);
+        }
+        break;
+
     default:
         this->log_.critical("program error.");
+        CnErr.abort();
         break;
     }
 }

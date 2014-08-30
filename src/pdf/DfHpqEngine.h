@@ -32,16 +32,16 @@
 //#define HPQ_OUTPUT_BUFFER_SIZE (108) // = 6(d) * 6 * 3
 
 /// a^の最大数
-#define HPQ_A_BAR_MAX (2 +1)
-// /// b^の最大数
-#define HPQ_B_BAR_MAX (2 +1)
-// /// aの最大数
-#define HPQ_A_MAX (4 +1)
-// /// bの最大数
-#define HPQ_B_MAX (4 +1)
-// /// Lの最大値
-#define HPQ_L_MAX (8 +1)
-// ///
+#define HPQ_A_BAR_MAX (1 +1)
+/// b^の最大数
+#define HPQ_B_BAR_MAX (1 +1)
+/// aの最大数
+#define HPQ_A_MAX (5 +1)
+/// bの最大数
+#define HPQ_B_MAX (5 +1)
+/// Lの最大値
+#define HPQ_L_MAX (10 +1)
+///
 #define HPQ_OVP_STATE_MAX (HPQ_A_BAR_MAX * HPQ_B_BAR_MAX * HPQ_A_MAX * HPQ_B_MAX)
 #define HPQ_KIN_STATE_MAX (HPQ_A_BAR_MAX * HPQ_B_BAR_MAX * HPQ_A_MAX * HPQ_B_MAX)
 #define HPQ_NUC_STATE_MAX (HPQ_A_BAR_MAX * HPQ_B_BAR_MAX * HPQ_A_MAX * HPQ_B_MAX * HPQ_L_MAX)
@@ -203,6 +203,12 @@ private:
                            const int J,
                            const double* pInput, double* pOutput);
     void transform6Dto5D_j(const int I_, const int J_,
+                           const int I,
+                           const double* pInput, double* pOutput);
+    void transform10Fto7F_i(const int I_, const int J_,
+                           const int J,
+                           const double* pInput, double* pOutput);
+    void transform10Fto7F_j(const int I_, const int J_,
                            const int I,
                            const double* pInput, double* pOutput);
         

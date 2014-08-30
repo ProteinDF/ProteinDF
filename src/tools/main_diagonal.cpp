@@ -23,9 +23,9 @@
 #include "TlSymmetricMatrix.h"
 #include "TlGetopt.h"
 
-void showHelp()
+void showHelp(const std::string& progname)
 {
-    std::cout << "diagonal [options] input_file_path" << std::endl;
+    std::cout << TlUtils::format("%s [options] input_file_path", progname.c_str()) << std::endl;
     std::cout << " OPTIONS:" << std::endl;
     std::cout << "  -l FILE: save vector for eigen values" << std::endl;
     std::cout << "  -x FILE: save matrix for eigen vector" << std::endl;
@@ -38,27 +38,20 @@ int main(int argc, char* argv[])
     TlGetopt opt(argc, argv, "hvl:x:");
     
     if (opt["h"] == "defined") {
-        showHelp();
+        showHelp(opt[0]);
         return EXIT_SUCCESS;
     }
     
     const bool bVerbose = (opt["v"] == "defined");
 
     if (opt.getCount() <= 1) {
-        showHelp();
+        showHelp(opt[0]);
         return EXIT_FAILURE;
     }
     std::string inputMatrixPath = opt[1];
 
-    std::string eigValPath = "";
-    if (opt["l"].empty() == false) {
-        eigValPath = opt["l"];
-    }
-
-    std::string eigVecPath = "";
-    if (opt["x"].empty() == false) {
-        eigVecPath = opt["x"];
-    }
+    std::string eigValPath = opt["l"];
+    std::string eigVecPath = opt["x"];
     
     if (bVerbose == true) {
         std::cerr << "load matrix: " << inputMatrixPath << std::endl;

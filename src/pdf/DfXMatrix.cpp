@@ -42,6 +42,11 @@ DfXMatrix::DfXMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
         this->threshold_trancation_lowdin_ = pdfParam["orbital_independence_threshold/lowdin"].getDouble();
     }
 
+    this->XEigvalFilePath_ = "";
+    if (pdfParam["XMatrix/save_eigval"].getBoolean()) {
+        this->XEigvalFilePath_ = DfObject::getXEigvalVtrPath();
+    }
+
     this->debug_save_mat_ = pdfParam["debug/DfXMatrix/save_mat"].getBoolean();
     this->debug_check_X_ = pdfParam["debug/DfXMatrix/check_X"].getBoolean();
 }
@@ -55,8 +60,8 @@ void DfXMatrix::buildX()
     TlSymmetricMatrix S = this->getSpqMatrix<TlSymmetricMatrix>();
     TlMatrix X;
     TlMatrix Xinv;
-    
-    this->canonicalOrthogonalize(S, &X, &Xinv);
+
+    this->canonicalOrthogonalize(S, &X, &Xinv, this->XEigvalFilePath_);
 
     DfObject::saveXMatrix(X);
     DfObject::saveXInvMatrix(Xinv);
@@ -65,14 +70,16 @@ void DfXMatrix::buildX()
 
 
 void DfXMatrix::canonicalOrthogonalize(const TlSymmetricMatrix& S,
-                                       TlMatrix* pX, TlMatrix* pXinv)
+                                       TlMatrix* pX, TlMatrix* pXinv,
+                                       const std::string& eigvalFilePath)
 {
-    this->canonicalOrthogonalizeTmpl<TlSymmetricMatrix, TlMatrix>(S, pX, pXinv);
+    this->canonicalOrthogonalizeTmpl<TlSymmetricMatrix, TlMatrix>(S, pX, pXinv, eigvalFilePath);
 }
 
 void DfXMatrix::lowdinOrthogonalize(const TlSymmetricMatrix& S,
-                                    TlMatrix* pX, TlMatrix* pXinv)
+                                    TlMatrix* pX, TlMatrix* pXinv,
+                                    const std::string& eigvalFilePath)
 {
-    this->lowdinOrthogonalizeTmpl<TlSymmetricMatrix, TlMatrix>(S, pX, pXinv);
+    this->lowdinOrthogonalizeTmpl<TlSymmetricMatrix, TlMatrix>(S, pX, pXinv, eigvalFilePath);
 }
 

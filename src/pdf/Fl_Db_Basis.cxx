@@ -56,7 +56,8 @@ void Fl_Db_Basis::setData()
     bool isNormalTerminate = false;
     bool isNameFound = false;
     bool isRead_J_part = false;
-    std::vector<int> numOfCGTOs(4, 0); // s, p, d, spd
+    static const int MAX_SHELL_TYPE = 5; // s, p, d, f, g
+    std::vector<int> numOfCGTOs(MAX_SHELL_TYPE, 0); 
     while (fi) {
         if (isNormalTerminate == true) {
             break;
@@ -81,7 +82,7 @@ void Fl_Db_Basis::setData()
             }
         } else {
             std::vector<std::string> parts = this->getWords(line);
-            const int numOfParts = std::min<int>(parts.size(), 4);
+            const int numOfParts = std::min<int>(parts.size(), MAX_SHELL_TYPE);
             for (int i = 0; i < numOfParts; ++i) {
                 numOfCGTOs[i] = std::atoi(parts[i].c_str());
             }
@@ -90,10 +91,8 @@ void Fl_Db_Basis::setData()
                 this->read_cGTOs(numOfCGTOs[0], "s", fi, &(this->cgto));
                 this->read_cGTOs(numOfCGTOs[1], "p", fi, &(this->cgto));
                 this->read_cGTOs(numOfCGTOs[2], "d", fi, &(this->cgto));
-                if (numOfCGTOs[3] > 0) {
-                    // spd
-                    this->read_cGTOs(numOfCGTOs[3], "spd", fi, &(this->cgto));
-                }
+                this->read_cGTOs(numOfCGTOs[3], "f", fi, &(this->cgto));
+                this->read_cGTOs(numOfCGTOs[4], "g", fi, &(this->cgto));
                 
                 isNormalTerminate = true;
             } else {
@@ -102,10 +101,9 @@ void Fl_Db_Basis::setData()
                     this->read_cGTOs(numOfCGTOs[0], "s", fi, &(this->rhoCgto));
                     this->read_cGTOs(numOfCGTOs[1], "p", fi, &(this->rhoCgto));
                     this->read_cGTOs(numOfCGTOs[2], "d", fi, &(this->rhoCgto));
-                    if (numOfCGTOs[3] > 0) {
-                        // spd
-                        this->read_cGTOs(numOfCGTOs[3], "spd", fi, &(this->rhoCgto));
-                    }
+                    this->read_cGTOs(numOfCGTOs[3], "f", fi, &(this->rhoCgto));
+                    this->read_cGTOs(numOfCGTOs[4], "g", fi, &(this->rhoCgto));
+
                     isRead_J_part = true;
                 } else {
                     // K
@@ -118,10 +116,8 @@ void Fl_Db_Basis::setData()
                     this->read_cGTOs(numOfCGTOs[0], "s", fi, &(this->myuCgto));
                     this->read_cGTOs(numOfCGTOs[1], "p", fi, &(this->myuCgto));
                     this->read_cGTOs(numOfCGTOs[2], "d", fi, &(this->myuCgto));
-                    if (numOfCGTOs[3] > 0) {
-                        // spd
-                        this->read_cGTOs(numOfCGTOs[3], "spd", fi, &(this->myuCgto));
-                    }
+                    this->read_cGTOs(numOfCGTOs[3], "f", fi, &(this->myuCgto));
+                    this->read_cGTOs(numOfCGTOs[4], "g", fi, &(this->myuCgto));
                     
                     isNormalTerminate = true;
                 }
@@ -170,17 +166,8 @@ void Fl_Db_Basis::read_cGTOs(const int numOfCGTOs,
             }
         }
 
-        if (shellType == "spd") {
-            tmp_cgto.shell = 's';
-            pCGTOs->push_back(tmp_cgto);
-            tmp_cgto.shell = 'p';
-            pCGTOs->push_back(tmp_cgto);
-            tmp_cgto.shell = 'd';
-            pCGTOs->push_back(tmp_cgto);
-        } else {
-            tmp_cgto.shell = shellType[0];
-            pCGTOs->push_back(tmp_cgto);
-        }
+        tmp_cgto.shell = shellType[0];
+        pCGTOs->push_back(tmp_cgto);
     }
 }
 

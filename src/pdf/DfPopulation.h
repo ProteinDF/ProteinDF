@@ -19,10 +19,12 @@
 #ifndef DFPOPULATION_H
 #define DFPOPULATION_H
 
+#include "CnError.h"
 #include "DfObject.h"
 #include "TlOrbitalInfo.h"
 #include "TlVector.h"
 #include "TlMatrix.h"
+#include "TlSymmetricMatrix.h"
 
 /** Mulliken Population の計算を行い、電荷情報、スピン情報を出力するクラス
  */
@@ -35,7 +37,7 @@ public:
     template <typename T>
     void getReport(const int iteration, T& out);
 
-    virtual void sumOfElectrons(const int iteration, double* pAlpha, double* pBeta = NULL);
+    virtual double getSumOfElectrons(const TlSymmetricMatrix& P);
     
     TlMatrix getAtomPopData(const int iteration);
     
@@ -50,6 +52,9 @@ protected:
     template<class SymmetricMatrixType>
     TlVector getGrossOrbPop(DfObject::RUN_TYPE runType, int iteration);
 
+    template<class SymmetricMatrixType>
+    TlVector getPS(const SymmetricMatrixType& P);
+
     TlVector getGrossAtomPop(const TlVector& grossOrbPop);
     
     template <typename T>
@@ -58,7 +63,7 @@ protected:
     
     template <typename T>
     void getOrbPopStr(const TlVector& trPS, T& out) const;
-    
+
 protected:
     TlOrbitalInfo orbitalInfo_;
 
@@ -97,24 +102,6 @@ void DfPopulation::getReport(const int iteration, T& out)
         }
         break;
 
-    case METHOD_ROKS:
-        {
-            const double elecCharge = this->grossOrbPopA_.sum();
-            const double netCharge = nucleiCharge - elecCharge;
-
-            out << TlUtils::format(" total atomic charge = %7.2lf\n", nucleiCharge);
-            out << TlUtils::format("          Net charge = %7.2lf\n", netCharge);
-            out << "\n";
-            
-            out << " Gross atom population\n";
-            this->getAtomPopStr(this->grossAtomPopA_, true, out);
-            out << "\n";
-            
-            out << " Mulliken population analysis (orbial population)\n";
-            this->getOrbPopStr(this->grossOrbPopA_, out);
-        }
-        break;
-        
     case METHOD_UKS:
         {
             const double elecChargeA = this->grossOrbPopA_.sum();
@@ -130,8 +117,8 @@ void DfPopulation::getReport(const int iteration, T& out)
             this->getOrbPopStr(this->grossOrbPopA_, out);
             
             out << " Mulliken Population(beta)\n";
-            this->getAtomPopStr(this->grossAtomPopA_, false, out);
-            this->getOrbPopStr(this->grossOrbPopA_, out);
+            this->getAtomPopStr(this->grossAtomPopB_, false, out);
+            this->getOrbPopStr(this->grossOrbPopB_, out);
 
             {
                 const TlVector grossOrbPop = this->grossOrbPopA_ + this->grossOrbPopB_;
@@ -151,6 +138,34 @@ void DfPopulation::getReport(const int iteration, T& out)
         }
         break;
 
+    case METHOD_ROKS:
+        {
+            const double elecChargeA = this->grossOrbPopA_.sum();
+            const double elecChargeB = this->grossOrbPopB_.sum();
+            
+            const double netCharge = nucleiCharge - (elecChargeA + elecChargeB);
+            out << TlUtils::format(" total atomic charge = %7.2lf\n", nucleiCharge);
+            out << TlUtils::format("          Net charge = %7.2lf\n", netCharge);
+            out << "\n";
+            
+            out << " Mulliken Population(closed)\n";
+            this->getAtomPopStr(this->grossAtomPopA_, false, out);
+            this->getOrbPopStr(this->grossOrbPopA_, out);
+            
+            out << " Mulliken Population(open)\n";
+            this->getAtomPopStr(this->grossAtomPopB_, false, out);
+            this->getOrbPopStr(this->grossOrbPopB_, out);
+
+            {
+                const TlVector grossOrbPop = this->grossOrbPopA_ + this->grossOrbPopB_;
+                out << " Gross atom population (ROKS total)\n";
+                this->getAtomPopStr(grossOrbPop, false, out);
+                out << " Mulliken population analysis (orbial population; ROKS total)\n";
+                this->getOrbPopStr(grossOrbPop, out);
+            }
+        }
+        break;
+        
     default:
         // programer error
         std::abort();
@@ -170,25 +185,26 @@ void DfPopulation::calcPop(const int iteration)
         }
         break;
 
-    case METHOD_ROKS:
-        {
-            this->grossOrbPopA_ = this->getGrossOrbPop<SymmetricMatrixType>(DfObject::RUN_ROKS, iteration);
-            this->grossAtomPopA_ = this->getGrossAtomPop(this->grossOrbPopA_);
-        }
-        break;
-        
     case METHOD_UKS:
         {
             this->grossOrbPopA_ = this->getGrossOrbPop<SymmetricMatrixType>(DfObject::RUN_UKS_ALPHA, iteration);
             this->grossAtomPopA_ = this->getGrossAtomPop(this->grossOrbPopA_);
-            //const double elecChargeA = this->grossOrbPopA_.sum();
             
             this->grossOrbPopB_ = this->getGrossOrbPop<SymmetricMatrixType>(DfObject::RUN_UKS_BETA, iteration);
             this->grossAtomPopB_ = this->getGrossAtomPop(this->grossOrbPopB_);
-            //const double elecChargeB = this->grossOrbPopB_.sum();
         }
         break;
 
+    case METHOD_ROKS:
+        {
+            this->grossOrbPopA_ = this->getGrossOrbPop<SymmetricMatrixType>(DfObject::RUN_ROKS_CLOSED, iteration);
+            this->grossAtomPopA_ = this->getGrossAtomPop(this->grossOrbPopA_);
+
+            this->grossOrbPopB_ = this->getGrossOrbPop<SymmetricMatrixType>(DfObject::RUN_ROKS_OPEN, iteration);
+            this->grossAtomPopB_ = this->getGrossAtomPop(this->grossOrbPopB_);
+        }
+        break;
+        
     default:
         // programer error
         std::abort();
@@ -201,22 +217,22 @@ template<class SymmetricMatrixType>
 TlVector DfPopulation::getGrossOrbPop(const DfObject::RUN_TYPE runType, const int iteration)
 {
     SymmetricMatrixType P;
-    if ((runType == DfObject::RUN_RKS) ||
-        (runType == DfObject::RUN_UKS_ALPHA) ||
-        (runType == DfObject::RUN_UKS_BETA)) {
-        P = DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration);
-    } else if (runType == DfObject::RUN_ROKS) {
-        P = DfObject::getPCMatrix<SymmetricMatrixType>(iteration); // close
-        const SymmetricMatrixType Popen  = DfObject::getPOMatrix<SymmetricMatrixType>(iteration); // open
+    assert((runType == RUN_RKS) ||
+           (runType == RUN_UKS_ALPHA) ||
+           (runType == RUN_UKS_BETA) ||
+           (runType == RUN_ROKS_CLOSED) ||
+           (runType == RUN_ROKS_OPEN));
+    P = DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration);
 
-        P *= 2.0;
-        P += Popen;
-    }
+    return this->getPS(P);
+}
 
+
+template<class SymmetricMatrixType>
+TlVector DfPopulation::getPS(const SymmetricMatrixType& P)
+{
     // read AO overlap matrix
     const SymmetricMatrixType S = DfObject::getSpqMatrix<SymmetricMatrixType>();
-
-    // calculate Mulliken Analysis ( P * S )
     const SymmetricMatrixType PS = P * S;
     
     return PS.getDiagonalElements();
@@ -241,7 +257,7 @@ void DfPopulation::getAtomPopStr(const TlVector& trPS, const bool isCalcNetCharg
         const double nucCharge = flGeom.getCharge(atomIndex);
         out << TlUtils::format(" %6d   %-2s ",
                                atomIndex,
-                               flGeom.getAtom(atomIndex).c_str());
+                               flGeom.getAtomSymbol(atomIndex).c_str());
         
         const double grossAtomPop = trPS.get(atomIndex);
         if (isCalcNetCharge == true) {
@@ -283,7 +299,6 @@ void DfPopulation::getOrbPopStr(const TlVector& trPS, T& out) const
         out << TlUtils::format(" %12.6lf\n", trPS.get(aoIndex));
     }
 }
-
 
 #endif // DFPOPULATION_H
 

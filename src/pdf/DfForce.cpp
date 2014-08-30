@@ -23,6 +23,7 @@
 #include "DfEriX.h"
 #include "DfCalcGridX.h"
 #include "DfXCFunctional.h"
+#include "DfGridFreeXC.h"
 
 #include "DfFunctional_SVWN.h"
 #include "DfFunctional_B88LYP.h"
@@ -33,9 +34,9 @@
 DfForce::DfForce(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam),
       orbitalInfo_((*pPdfParam)["coordinates"],
-                   (*pPdfParam)["basis_sets"]),
+                   (*pPdfParam)["basis_set"]),
       orbitalInfoDens_((*pPdfParam)["coordinates"],
-                       (*pPdfParam)["basis_sets_j"]) {
+                       (*pPdfParam)["basis_set_j"]) {
     // initialize
     this->force_.resize(this->m_nNumOfAtoms, 3);
 
@@ -72,14 +73,56 @@ void DfForce::calcForce()
 
     this->loggerTime("coulomb");
     this->calcForceFromCoulomb(runType);
-
-    this->loggerTime("pureXC");
-    this->calcForceFromPureXC(runType);
     
     this->loggerTime("Fock exchange");
     this->calcForceFromK(runType);
 
+    this->loggerTime("pureXC");
+    switch (this->XC_engine_) {
+    case XC_ENGINE_GRID: 
+        this->calcForceFromPureXC(runType);
+        break;
+
+    case XC_ENGINE_GRIDFREE:
+    case XC_ENGINE_GRIDFREE_CD:
+        this->calcForceFromPureXC_gridfree(runType);
+        break;
+
+    default:
+        this->log_.critical("program error.");
+        break;
+    }     
+
     this->force_ *= -1.0;
+
+    // output
+    const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
+    this->log_.info("=== FORCE ===");
+    const int numOfAtoms = this->m_nNumOfAtoms;
+    for (int atomIndex = 0; atomIndex< numOfAtoms; ++atomIndex) {
+        const TlAtom atom = flGeom.getAtom(atomIndex);
+        this->log_.info(TlUtils::format("%4d:[%-2s] % f, % f, % f",
+                                        atomIndex, atom.getSymbol().c_str(),
+                                        this->force_.get(atomIndex, 0),
+                                        this->force_.get(atomIndex, 1),
+                                        this->force_.get(atomIndex, 2)));
+    }
+    this->log_.info("=============");
+
+    {
+        TlSerializeData force_dat;
+        force_dat.resize(numOfAtoms);
+        for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
+            TlSerializeData v;
+            v.resize(3);
+            v[0] = this->force_.get(atomIndex, 0);
+            v[1] = this->force_.get(atomIndex, 1);
+            v[2] = this->force_.get(atomIndex, 2);
+            force_dat.setAt(atomIndex, v);
+        }
+        (*this->pPdfParam_)["force"] = force_dat;
+    }
+    
     this->saveForce();
 }
 
@@ -261,7 +304,7 @@ void DfForce::calcForceFromCoulomb_exact(RUN_TYPE runType)
     TlMatrix F_J(numOfAtoms, 3);
     dfEri.getForceJ(P, &F_J);
 
-    F_J *= 0.5;
+    //F_J *= 0.5;
     if (this->isDebugOutMatrix_ == true) {
         F_J.save("F_J.mtx");
     }
@@ -303,7 +346,6 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
     const int iteration = this->m_nIteration;
     const int numOfAOs = this->m_nNumOfAOs;
     const int numOfAtoms = this->m_nNumOfAtoms;
-    const int numOfRealAtoms = this->numOfRealAtoms_;
     
     const TlSymmetricMatrix P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
 
@@ -358,7 +400,7 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
     }
     
     TlMatrix Fxc(numOfAtoms, 3);
-    for (int mu = 0; mu < numOfRealAtoms; ++mu) {
+    for (int mu = 0; mu < numOfAtoms; ++mu) {
         for (index_type p = 0; p < numOfAOs; ++p) {
             const index_type orbAtomId = this->orbitalInfo_.getAtomIndex(p);
             if (mu != orbAtomId) {
@@ -370,7 +412,7 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
                 Fxc.add(mu, Y, fy);
                 Fxc.add(mu, Z, fz);
             } else {
-                for (int nu = 0; nu < numOfRealAtoms; ++nu) {
+                for (int nu = 0; nu < numOfAtoms; ++nu) {
                     if (mu != nu) {
                         const double fx = Gx.get(p, nu);
                         const double fy = Gy.get(p, nu);
@@ -392,6 +434,20 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
 }
 
 
+void DfForce::calcForceFromPureXC_gridfree(RUN_TYPE runType)
+{
+    DfGridFreeXC dfGridFreeXC(this->pPdfParam_);
+    TlMatrix force = dfGridFreeXC.getForce();
+
+    const TlMatrix T = this->getTransformMatrix(force);
+    force += T;
+
+    if (this->isDebugOutMatrix_ == true) {
+        force.save("F_xc_gf.mtx");
+    }
+    this->force_ += force;
+}
+
 void DfForce::calcForceFromK(RUN_TYPE runType)
 {
     const DfXCFunctional dfXCFunctional(this->pPdfParam_);
@@ -406,7 +462,11 @@ void DfForce::calcForceFromK(RUN_TYPE runType)
         DfEriX dfEri(this->pPdfParam_);
         
         TlMatrix F_K(numOfAtoms, 3);
-        dfEri.getForceK(0.5 * P, &F_K);
+        // for RKS
+        dfEri.getForceK(P, &F_K);
+        if (runType == RUN_RKS) {
+            F_K *= 0.5;
+        }
 
         F_K *= -1.0;
         F_K *= dfXCFunctional.getFockExchangeCoefficient(); // for B3LYP
@@ -417,3 +477,176 @@ void DfForce::calcForceFromK(RUN_TYPE runType)
         this->force_ += F_K;
     }
 }
+
+TlMatrix DfForce::getTransformMatrix(const TlMatrix& force)
+{
+    const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
+    const int numOfAtoms = this->m_nNumOfAtoms;
+    TlMatrix answer(numOfAtoms, 3);
+
+    // 重心
+    std::vector<TlPosition> X(numOfAtoms);
+    {
+        TlPosition center;
+        for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
+            center += flGeom.getCoordinate(atomIndex);
+        }
+        center /= numOfAtoms;
+        this->log_.info(TlUtils::format("center: (% f, % f, % f)",
+                                        center.x(), center.y(), center.z()));
+
+        for (int i = 0; i < numOfAtoms; ++i) {
+            X[i] = flGeom.getCoordinate(i) - center;
+            this->log_.info(TlUtils::format("X[%d] (% e, % e, %e)", X[i].x(), X[i].y(), X[i].z()));
+        }
+    }
+    
+    TlSymmetricMatrix rot(3);
+    for (int i = 0; i < numOfAtoms; ++i) {
+        const TlPosition p = X[i];
+        const double x = p.x();
+        const double y = p.y();
+        const double z = p.z();
+        rot.add(0, 0, y*y + z*z);
+        rot.add(0, 1, - x * y);
+        rot.add(0, 2, - x * z);
+        rot.add(1, 1, x*x + z*z);
+        rot.add(1, 2, - y * z);
+        rot.add(2, 2, x*x + y*y);
+    }
+    // rot.save("force_rot.mat");
+
+    const double chk = rot.get(0, 0) * rot.get(1, 1) * rot.get(2, 2);
+    this->log_.info(TlUtils::format("chk = % 8.3e", chk));
+
+    //
+    static const double TOO_SMALL = 1.0E-5;
+    if (chk < TOO_SMALL) {
+        if (rot.get(0, 0) > TOO_SMALL) {
+            if (rot.get(1,1) > TOO_SMALL) {
+                // x, y != 0
+                const double det = rot.get(0,0) * rot.get(1,1) - rot.get(0,1) * rot.get(1,0);
+                const double inv_det = 1.0 / det;
+                const double trp = rot.get(1,1);
+                rot.set(0,0, rot.get(1,1) * inv_det);
+                rot.set(1,1, trp * inv_det);
+                rot.set(0,1, -rot.get(0,1) * inv_det);
+            } else if (rot.get(2,2) > TOO_SMALL) {
+                // x, z != 0
+                const double det = rot.get(0,0) * rot.get(2,2) - rot.get(0,2) * rot.get(2,0);
+                const double inv_det = 1.0 / det;
+                const double trp = rot.get(2,2);
+                rot.set(0,0, rot.get(2,2) * inv_det);
+                rot.set(2,2, trp * inv_det);
+                rot.set(0,2, -rot.get(0,2) * inv_det);
+            } else {
+                // x != 0
+                const double v = rot.get(0,0);
+                rot.set(0, 0, 1.0/v);
+            }
+        } else if (rot.get(1, 1) > TOO_SMALL) {
+            if (rot.get(2, 2) > TOO_SMALL) {
+                // y, z != 0
+                const double det = rot.get(2,2) * rot.get(1,1) - rot.get(2,1) * rot.get(1,2);
+                const double inv_det = 1.0 / det;
+                const double trp = rot.get(2,2);
+                rot.set(2,2, rot.get(1,1) * inv_det);
+                rot.set(1,1, trp * inv_det);
+                rot.set(2,1, -rot.get(2,1) * inv_det);
+            } else {
+                // y != 0
+                const double v = rot.get(1,1);
+                rot.set(1,1, 1.0/v); 
+            }
+        } else if (rot.get(2,2) > TOO_SMALL) {
+                // z != 0
+            const double v = rot.get(2, 2);
+            rot.set(2,2, 1.0/v); 
+        } else {
+            return answer;
+        }
+    } else {
+        rot.inverse();
+        // rot.save("force_rotinv.mat");
+    }
+
+    // <-- OK
+    int TENS[3][3][3];
+    TENS[0][0][0] =  0;
+    TENS[1][0][0] =  0;
+    TENS[2][0][0] =  0;
+    TENS[0][1][0] =  0;
+    TENS[1][1][0] =  0;
+    TENS[2][1][0] = -1;
+    TENS[0][2][0] =  0;
+    TENS[1][2][0] =  1;
+    TENS[2][2][0] =  0;
+
+    TENS[0][0][1] =  0;
+    TENS[1][0][1] =  0;
+    TENS[2][0][1] =  1;
+    TENS[0][1][1] =  0;
+    TENS[1][1][1] =  0;
+    TENS[2][1][1] =  0;
+    TENS[0][2][1] = -1;
+    TENS[1][2][1] =  0;
+    TENS[2][2][1] =  0;
+
+    TENS[0][0][2] =  0;
+    TENS[1][0][2] = -1;
+    TENS[2][0][2] =  0;
+    TENS[0][1][2] =  1;
+    TENS[1][1][2] =  0;
+    TENS[2][1][2] =  0;
+    TENS[0][2][2] =  0;
+    TENS[1][2][2] =  0;
+    TENS[2][2][2] =  0;
+
+    const double invNumOfAtoms = 1.0 / double(numOfAtoms);
+    for (int IP = 0; IP < numOfAtoms; ++IP) {
+        const int KNDX = std::max(IP, 2*IP - numOfAtoms);
+
+        for (int JP = 0; JP <= IP; ++JP) {
+            const int LNDX = std::max(JP, 2*JP - numOfAtoms);
+
+            for (int IC = 0; IC < 3; ++IC) {
+                const int JEND = (JP == IP) ? (IC+1) : 3;
+                for (int JC = 0; JC < JEND; ++JC) {
+                    double sum = 0.0;
+                    for (int IA = 0; IA < 3; ++IA) {
+                        for (int IB = 0; IB < 3; ++IB) {
+                             if (TENS[IA][IB][IC] == 0) {
+                                continue;
+                            }
+                            for (int JA = 0; JA < 3; ++JA) {
+                                for (int JB = 0; JB < 3; ++JB) {
+                                    if (TENS[JA][JB][JC] == 0) {
+                                        continue;
+                                    }
+                                    sum += TENS[IA][IB][IC] * TENS[JA][JB][JC] * rot.get(IA, JA) * X[IP][IB] * X[JP][JB];
+                                    // this->log_.info(TlUtils::format("rot(%d,%d)=% e, X1(%d,%d)=% e, X2(%d,%d)=% e",
+                                    //                                 IA,JA,rot.get(IA, JA), IP,IB,X[IP][IB], JP,JB,X[JP][JB]));
+                                }
+                            }
+                        }
+                    }
+                    // this->log_.info(TlUtils::format("IP=%d, JP=%d, IC=%d, JC=%d, SUM=% e",
+                    //                                 IP, JP, IC, JC, sum));
+
+                    if (IC == JC) {
+                        sum += invNumOfAtoms;
+                    }
+
+                    answer.add(LNDX, JC, - force.get(KNDX, IC) * sum);
+                    if ((3*LNDX + JC) != (3*KNDX + IC)) {
+                        answer.add(KNDX, IC, - force.get(LNDX, JC) * sum);
+                    }
+                }
+            }
+        }
+    }
+
+    return answer;
+}
+
+

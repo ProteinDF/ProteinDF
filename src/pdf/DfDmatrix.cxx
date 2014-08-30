@@ -68,7 +68,8 @@ void DfDmatrix::DfDmatrixMain()
         break;
 
     case METHOD_ROKS:
-        this->main(RUN_ROKS);
+        this->main(RUN_ROKS_CLOSED);
+        this->main(RUN_ROKS_OPEN);
         break;
 
     default:
@@ -98,11 +99,6 @@ void DfDmatrix::main(const DfObject::RUN_TYPE runType)
     default:
         this->log_.info(" orbital correspondence method: none");
         currOcc.load(this->getOccupationPath(runType));
-        // if (TlFile::isExist(this->getOccupationPath(runType)) == true) {
-        // } else {
-        //     currOcc = this->createOccupation(runType);
-        //     currOcc.save(this->getOccupationPath(runType));
-        // }
         break;
     }
     
@@ -158,16 +154,11 @@ void DfDmatrix::printOccupation(const TlVector& occ)
 void DfDmatrix::printTwoVectors(const TlVector& a, const TlVector& b,
                                 const std::string& title, int pnumcol)
 {
+    assert(a.getSize() == b.getSize());
     this->log_.info(TlUtils::format("\n\n       %s\n\n", title.c_str()));
 
-    if (a.getSize() != b.getSize()) {
-        this->log_.info("DfDmatrix::printTwoVectors() : dimensions of vectors are not much");
-        this->log_.info("                             : omit");
-    }
-
     this->log_.info("       two vectors");
-
-    const int number_of_emt = a.getSize();
+    const index_type number_of_emt = a.getSize();
     for (int ord = 0; ord < number_of_emt; ord += pnumcol) {
         this->log_.info("       ");
         for (int j = ord; ((j < ord + pnumcol) && (j < number_of_emt)); ++j) {

@@ -24,12 +24,14 @@
 // #define DELTAG_THRESHOLD (1e-14)
 
 DfLocalize::DfLocalize(TlSerializeData* pPdfParam)
-    : DfObject(pPdfParam), orbInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_sets"])
+    : DfObject(pPdfParam), orbInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"])
 {
-    this->maxIteration_ = (*pPdfParam)["max-iteration"].getInt();
+    this->maxIteration_ = 100;
+    if ((*pPdfParam)["lo/max_iteration"].getStr().empty() != true) {
+        this->maxIteration_ = (*pPdfParam)["lo/max_iteration"].getInt();
+    }
     this->threshold_ = 1.0E-7;
     
-    //((*pPdfParam)["RKS/electrons"].getInt() +1) / 2;
     this->numOfOcc_ = (this->m_nNumOfElectrons +1) / 2; 
 
     // for OCC
@@ -77,6 +79,8 @@ void DfLocalize::localize()
     }
 
     const int maxIteration = this->maxIteration_;
+    std::cout << TlUtils::format("max iteration = %d", maxIteration) << std::endl;
+    std::cout << TlUtils::format("threshold = %10.5e", this->threshold_) << std::endl;
     for (int num_iteration = 0; num_iteration < maxIteration; ++num_iteration) {
         this->makeQATable();
 
@@ -102,11 +106,13 @@ void DfLocalize::localize()
             }
         }
 
-        std::cout << TlUtils::format("itr: %d sum of delta_g: %10.5e\n", num_iteration +1, sumDeltaG);
-        this->C_.save(TlUtils::format("./lo_Work/fl_Mtr_C.lo.occu.rks%d", num_iteration +1));
+        std::cout << TlUtils::format("%d th: sum of delta_g: %10.5e\n", num_iteration +1, sumDeltaG);
+        DfObject::saveCloMatrix(RUN_RKS, num_iteration +1, this->C_);
 
         if (sumDeltaG < this->threshold_) {
             std::cout << "number of iteration: " << num_iteration +1 << std::endl;
+            (*(this->pPdfParam_))["lo/num_of_iterations"] = num_iteration +1;
+            (*(this->pPdfParam_))["lo/satisfied"] = "yes";
             break;
         }
     }

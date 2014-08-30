@@ -22,10 +22,15 @@
 #include "DfInitialGuessHuckel.h"
 #include "DfInitialGuessHarris.h"
 #include "DfDmatrix.h"
+#include "DfPopulation.h"
 #include "TlStringTokenizer.h"
 
 DfInitialGuess::DfInitialGuess(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
 {
+    this->isNormalizeDensityMatrix_ = true;
+    if ((*this->pPdfParam_)["guess/normalize_density_matrix"].getStr().empty() == false) {
+        this->isNormalizeDensityMatrix_ = (*this->pPdfParam_)["guess/normalize_density_matrix"].getBoolean();
+    }
 }
 
 
@@ -47,7 +52,7 @@ void DfInitialGuess::exec()
         break;
 
     case GUESS_DENSITY:
-        this->createOccupation();
+        this->createInitialGuessUsingDensityMatrix();
         break;
 
     case GUESS_LCAO:
@@ -127,7 +132,8 @@ void DfInitialGuess::createInitialGuessUsingLCAO()
         break;
 
     case METHOD_ROKS:
-        this->createInitialGuessUsingLCAO(RUN_ROKS);
+        this->createInitialGuessUsingLCAO(RUN_ROKS_CLOSED);
+        this->createInitialGuessUsingLCAO(RUN_ROKS_OPEN);
         break;
 
     default:
@@ -160,11 +166,59 @@ void DfInitialGuess::createInitialGuessUsingLCAO(const RUN_TYPE runType)
 }
 
 
+void DfInitialGuess::createInitialGuessUsingDensityMatrix()
+{
+    switch (this->m_nMethodType) {
+    case METHOD_RKS:
+        this->createInitialGuessUsingDensityMatrix(RUN_RKS);
+        break;
+
+    case METHOD_UKS:
+        this->createInitialGuessUsingDensityMatrix(RUN_UKS_ALPHA);
+        this->createInitialGuessUsingDensityMatrix(RUN_UKS_BETA);
+        break;
+
+    case METHOD_ROKS:
+        this->createInitialGuessUsingDensityMatrix(RUN_ROKS_CLOSED);
+        this->createInitialGuessUsingDensityMatrix(RUN_ROKS_OPEN);
+        break;
+
+    default:
+        abort();
+        break;
+    }
+
+    this->createOccupation();
+}
+
+
+void DfInitialGuess::createInitialGuessUsingDensityMatrix(const RUN_TYPE runType)
+{
+    // read guess lcao
+    TlSymmetricMatrix P = this->getInitialDensityMatrix<TlSymmetricMatrix>(runType);
+    if (this->isNormalizeDensityMatrix_) {
+        P = this->normalizeDensityMatrix<TlSymmetricMatrix, DfPopulation>(runType, P);
+    }
+    this->savePpqMatrix(runType, 0, P);
+
+    // make occupation data
+    this->createOccupation();
+}
+
+
 TlVector DfInitialGuess::getOccupation(const RUN_TYPE runType)
 {
     TlVector occupation;
-    const std::string sFile = std::string("./guess.occ.") + this->m_sRunTypeSuffix[runType];
-    occupation.loadText(sFile.c_str());
+    const std::string binFile = TlUtils::format("./guess.occ.%s.vtr", this->m_sRunTypeSuffix[runType].c_str());
+    const std::string txtFile = TlUtils::format("./guess.occ.%s.txt", this->m_sRunTypeSuffix[runType].c_str());
+
+    if (TlFile::isExist(binFile)) {
+        occupation.load(binFile);
+    } else if (TlFile::isExist(txtFile)) {
+        occupation.loadText(txtFile);
+    } else {
+        this->log_.warn(TlUtils::format("file not found.: %s", binFile.c_str()));
+    }
 
     return occupation;
 }
@@ -183,7 +237,8 @@ void DfInitialGuess::createOccupation()
         break;
 
     case METHOD_ROKS:
-        this->createOccupation(RUN_ROKS);
+        this->createOccupation(RUN_ROKS_CLOSED);
+        this->createOccupation(RUN_ROKS_OPEN);
         break;
 
     default:
@@ -204,7 +259,7 @@ TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType)
     case RUN_RKS:
         {
             const std::vector<int> docLevel = this->getLevel(pdfParam["method/rks/occlevel"].getStr());
-            for (std::vector<int>::const_iterator p = docLevel.begin(); p != docLevel.end(); p++) {
+            for (std::vector<int>::const_iterator p = docLevel.begin(); p != docLevel.end(); ++p) {
                 const int level = *p -1;
                 if ((0 <= level) && (level < numOfMOs)) {
                     guess_occ[*p -1] = 2.0;
@@ -216,7 +271,7 @@ TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType)
     case RUN_UKS_ALPHA:
         {
             const std::vector<int> occLevel = this->getLevel(pdfParam["method/uks/alpha_occlevel"].getStr());
-            for (std::vector<int>::const_iterator p = occLevel.begin(); p != occLevel.end(); p++) {
+            for (std::vector<int>::const_iterator p = occLevel.begin(); p != occLevel.end(); ++p) {
                 const int level = *p -1;
                 if ((0 <= level) && (level < numOfMOs)) {
                     guess_occ[level] = 1.0;
@@ -228,7 +283,7 @@ TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType)
     case RUN_UKS_BETA:
         {
             const std::vector<int> occLevel = this->getLevel(pdfParam["method/uks/beta_occlevel"].getStr());
-            for (std::vector<int>::const_iterator p = occLevel.begin(); p != occLevel.end(); p++) {
+            for (std::vector<int>::const_iterator p = occLevel.begin(); p != occLevel.end(); ++p) {
                 const int level = *p -1;
                 if ((0 <= level) && (level < numOfMOs)) {
                     guess_occ[*p -1] = 1.0;
@@ -237,18 +292,22 @@ TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType)
         }
         break;
 
-    case RUN_ROKS:
+    case RUN_ROKS_CLOSED:
         {
             const std::vector<int> occLevel_c = this->getLevel(pdfParam["method/roks/closed_occlevel"].getStr());
-            for (std::vector<int>::const_iterator p = occLevel_c.begin(); p != occLevel_c.end(); p++) {
+            for (std::vector<int>::const_iterator p = occLevel_c.begin(); p != occLevel_c.end(); ++p) {
                 const int level = *p -1;
                 if ((0 <= level) && (level < numOfMOs)) {
                     guess_occ[*p -1] = 2.0;
                 }
             }
+        }
+        break;
 
+    case RUN_ROKS_OPEN:
+        {
             const std::vector<int> occLevel_o = this->getLevel(pdfParam["method/roks/open_occlevel"].getStr());
-            for (std::vector<int>::const_iterator p = occLevel_o.begin(); p != occLevel_o.end(); p++) {
+            for (std::vector<int>::const_iterator p = occLevel_o.begin(); p != occLevel_o.end(); ++p) {
                 const int level = *p -1;
                 if ((0 <= level) && (level < numOfMOs)) {
                     guess_occ[*p -1] = 1.0;

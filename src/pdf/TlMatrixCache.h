@@ -73,25 +73,75 @@ public:
     static std::string reportStats();
 
 private:
-    void cleanOut(const std::size_t needMemSize);
-    void flush(const std::string& path);
-       
-private:
     struct MatrixInfo {
     public:
-        explicit MatrixInfo(TlMatrixObject* buf = NULL, std::size_t size = 0, bool ns = false)
-            : pBuf(buf), bufSize(size), needSave(ns) {
+        template<typename MatrixType>
+        MatrixInfo(const std::string& path, const MatrixType& mat, bool needSave = false)
+            : path_(path), pMatrix_(NULL), needSave_(needSave) {
+
+            this->pMatrix_ = new MatrixType(mat);
         }
-        MatrixInfo(const MatrixInfo& rhs)
-            : pBuf(rhs.pBuf), bufSize(rhs.bufSize), needSave(rhs.needSave) {
+
+        ~MatrixInfo() {
+            delete this->pMatrix_;
+            this->pMatrix_ = NULL;
         }
         
     public:
-        TlMatrixObject* pBuf;
-        std::size_t bufSize;
-        bool needSave;
+        std::string getPath() const {
+            return this->path_;
+        }
+
+        std::size_t getSize() const {
+            return this->pMatrix_->getMemSize();
+        }
+
+        TlMatrixObject const * getMatPtr() const {
+            return this->pMatrix_;
+        }
+
+        bool needSave() const {
+            return this->needSave_;
+        }
+
+        bool save() {
+            this->needSave_ = false;
+            return this->pMatrix_->save(this->path_);
+        }
+
+        bool operator==(const MatrixInfo& rhs) const {
+            return (this->path_ == rhs.path_);
+        }
+
+        bool operator!=(const MatrixInfo& rhs) const {
+            return !(this->operator==(rhs));
+        }
+
+    private:
+        // prohibit copy constructer
+        MatrixInfo(const MatrixInfo& rhs) {
+        }
+
+        // prohibit operator=
+        void operator=(const MatrixInfo& rhs) {
+        }
+
+    private:
+        std::string path_;
+        TlMatrixObject* pMatrix_;
+        bool needSave_;
     };
+
+    typedef std::list<MatrixInfo*> LRU_List;
     
+private:
+    void cleanOut(const std::size_t needMemSize);
+
+    LRU_List::iterator erase(const LRU_List::iterator& it);
+
+    void flush(const std::string& path);
+    void flush(LRU_List::iterator it);
+       
 private:
     bool isDebugOut_;
     std::size_t maxMemSize_;
@@ -100,11 +150,11 @@ private:
     /// 強制的にディスクから読み取る場合はtrue
     bool isForceLoadingFromDisk_;
     
-    typedef std::map<std::string, MatrixInfo> CACHE_DATA_TYPE;
-    CACHE_DATA_TYPE cache_;
+    // typedef std::map<std::string, MatrixInfo*> CACHE_DATA_TYPE;
+    // CACHE_DATA_TYPE cache_;
     
     // LRU方式のリスト
-    std::list<std::string> lruList_;
+    LRU_List lruList_;
 
     static std::map<std::string, Stats> stats_;
 };
@@ -118,9 +168,8 @@ bool TlMatrixCache::set(const std::string& path,
     bool answer = false;
     const std::size_t bufSize = matrix.getMemSize();
     this->cleanOut(bufSize);
-
-    Stats stats = this->stats_[path];
-    ++(stats.setTotal);
+    
+    ++(this->stats_[path].setTotal);
     
     if (bufSize < this->getFreeMemSize()) {
         if (this->isDebugOut_ == true) {
@@ -128,27 +177,14 @@ bool TlMatrixCache::set(const std::string& path,
                                          path.c_str(), bufSize)
                       << std::endl;
         }
-        TlMatrixObject* pNew = new MatrixType(matrix);
-        MatrixInfo info(pNew, bufSize, needSave);
 
-        // 既にキーが存在している場合はメモリ確保容量を返却する
-        if (this->cache_.find(path) != this->cache_.end()) {
-            this->usedMemSize_ -= this->cache_[path].bufSize;
-        }
-        this->cache_[path] = info;
-        this->usedMemSize_ += bufSize;
+        this->erase(path);
 
-        // LRUリストの最後尾に登録する
-        std::list<std::string>::iterator lruListIt = std::find(this->lruList_.begin(),
-                                                               this->lruList_.end(),
-                                                               path);
-        if (lruListIt != this->lruList_.end()) {
-            this->lruList_.erase(lruListIt);
-        }
-        this->lruList_.push_back(path);
-        assert(this->cache_.size() == this->lruList_.size());
-
-        ++(stats.setToCache);
+        MatrixInfo* pMatInfo = new MatrixInfo(path, matrix, needSave);
+        this->lruList_.push_front(pMatInfo);
+        this->usedMemSize_ += pMatInfo->getSize();
+        
+        ++(this->stats_[path].setToCache);
         answer = true;
 
         if (needSave == true) {
@@ -160,13 +196,12 @@ bool TlMatrixCache::set(const std::string& path,
                                          path.c_str())
                       << std::endl;
         }
-        ++(stats.setToDisk);
+
         matrix.save(path);
         needSave = false;
+        ++(this->stats_[path].setToDisk);
     }
 
-    this->stats_[path] = stats;
-    
     return answer;
 }
 
@@ -174,27 +209,25 @@ bool TlMatrixCache::set(const std::string& path,
 template<typename MatrixType>
 MatrixType TlMatrixCache::get(const std::string& path)
 {
-    Stats& stats = this->stats_[path];
-    ++(stats.getTotal);
+    ++(this->stats_[path].getTotal);
     
     MatrixType matrix;
 
     bool isPrepareMatrix = false;
     if (this->isForceLoadingFromDisk_ == false) {
-        CACHE_DATA_TYPE::iterator p = this->cache_.find(path);
-        if (p != this->cache_.end()) {
-            matrix = *(dynamic_cast<MatrixType*>(p->second.pBuf));
-            ++(stats.getFromCache);
-            
-            // LRUリストの最後尾に登録する
-            std::list<std::string>::iterator lruListIt = std::find(this->lruList_.begin(),
-                                                                   this->lruList_.end(),
-                                                                   path);
-            if (lruListIt != this->lruList_.end()) {
-                this->lruList_.erase(lruListIt);
+        LRU_List::iterator itEnd = this->lruList_.end();
+        for (LRU_List::iterator it = this->lruList_.begin(); it != itEnd; ++it) {
+            if (path == (*it)->getPath()) {
+                matrix = *(dynamic_cast<MatrixType const *>((*it)->getMatPtr()));
+                isPrepareMatrix = true;
+                ++(this->stats_[path].getFromCache);
+
+                // listの先頭に移動
+                this->lruList_.insert(this->lruList_.begin(), *it);
+                this->lruList_.erase(it);
+
+                break;
             }
-            this->lruList_.push_back(path);
-            isPrepareMatrix = true;
         }
     }
 
@@ -208,7 +241,7 @@ MatrixType TlMatrixCache::get(const std::string& path)
                               << std::endl;
                 }
                 this->set(path, matrix, false);
-                ++(stats.getFromDisk);
+                ++(this->stats_[path].getFromDisk);
             }
         } else {
             TlLogging& log = TlLogging::getInstance();
@@ -220,7 +253,6 @@ MatrixType TlMatrixCache::get(const std::string& path)
         }
     }
 
-    //this->stats_[path] = stats;
     return matrix;
 }
 

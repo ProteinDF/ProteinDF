@@ -64,9 +64,11 @@ protected:
     virtual void calcForceFromCoulomb_RIJ(const RUN_TYPE runType);
 
     void calcForceFromPureXC(RUN_TYPE runType);
+    void calcForceFromPureXC_gridfree(RUN_TYPE runType);
 
     virtual void calcForceFromK(RUN_TYPE runType);
     
+    TlMatrix getTransformMatrix(const TlMatrix& force);
    
 protected:
     TlMatrix force_;

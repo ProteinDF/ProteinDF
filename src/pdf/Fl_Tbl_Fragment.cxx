@@ -17,7 +17,6 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Fl_Tbl_Fragment.h"
-#include "TlParameter.h"
 #include "TlFile.h"
 #include "TlLogging.h"
 
@@ -75,85 +74,85 @@ Fl_Tbl_Fragment::~Fl_Tbl_Fragment()
 void Fl_Tbl_Fragment::prepare()
 {
     //Fl_Globalinput  GbiScf (">>>>SCF" );
-    TlParameter flGbi;
-    flGbi.load("fl_Input/fl_Globalinput");
+    // TlParameter flGbi;
+    // flGbi.load("fl_Input/fl_Globalinput");
 
-    std::string method = flGbi["SCF"]["method"];
+    // std::string method = flGbi["SCF"]["method"];
 
-    int   qcloindex  = 0;
-    int*  number_occ = new int[ number_fragment ];
+    // int   qcloindex  = 0;
+    // int*  number_occ = new int[ number_fragment ];
 
-    if (method == "nsp" || method == "roks") {
-        for (int i = 0; i < number_fragment; i++) {
-            number_occ[ i ] = FlFrag.getNumOfOccupiedOrbitals(i);
-        }
-        for (int i = 0; i < number_fragment; i++) {
-            for (int j = 0; j < number_occ[ i ]; j++) {
-                FragTbl[ qcloindex ].qclo = qcloindex;
-                FragTbl[ qcloindex ].fragment = i;
-                FragTbl[ qcloindex ].fragment_alpha = i;
-                FragTbl[ qcloindex ].fragment_beta = i;
-                FragTbl[ qcloindex ].fragmentqclo = j;
-                FragTbl[ qcloindex ].fragmentqclo_alpha = j;
-                FragTbl[ qcloindex ].fragmentqclo_beta = j;
-                qcloindex++;
-            }
-        }
-        for (int i = 0; i < number_fragment; i++) {
-            for (int j = number_occ[ i ]; j < number_fragmentqclo[ i ]; j++) {
-                FragTbl[ qcloindex ].qclo = qcloindex;
-                FragTbl[ qcloindex ].fragment = i;
-                FragTbl[ qcloindex ].fragment_alpha = i;
-                FragTbl[ qcloindex ].fragment_beta = i;
-                FragTbl[ qcloindex ].fragmentqclo = j;
-                FragTbl[ qcloindex ].fragmentqclo_alpha = j;
-                FragTbl[ qcloindex ].fragmentqclo_beta = j;
-                qcloindex++;
-            }
-        }
-    }
+    // if (method == "nsp" || method == "roks") {
+    //     for (int i = 0; i < number_fragment; i++) {
+    //         number_occ[ i ] = FlFrag.getNumOfOccupiedOrbitals(i);
+    //     }
+    //     for (int i = 0; i < number_fragment; i++) {
+    //         for (int j = 0; j < number_occ[ i ]; j++) {
+    //             FragTbl[ qcloindex ].qclo = qcloindex;
+    //             FragTbl[ qcloindex ].fragment = i;
+    //             FragTbl[ qcloindex ].fragment_alpha = i;
+    //             FragTbl[ qcloindex ].fragment_beta = i;
+    //             FragTbl[ qcloindex ].fragmentqclo = j;
+    //             FragTbl[ qcloindex ].fragmentqclo_alpha = j;
+    //             FragTbl[ qcloindex ].fragmentqclo_beta = j;
+    //             qcloindex++;
+    //         }
+    //     }
+    //     for (int i = 0; i < number_fragment; i++) {
+    //         for (int j = number_occ[ i ]; j < number_fragmentqclo[ i ]; j++) {
+    //             FragTbl[ qcloindex ].qclo = qcloindex;
+    //             FragTbl[ qcloindex ].fragment = i;
+    //             FragTbl[ qcloindex ].fragment_alpha = i;
+    //             FragTbl[ qcloindex ].fragment_beta = i;
+    //             FragTbl[ qcloindex ].fragmentqclo = j;
+    //             FragTbl[ qcloindex ].fragmentqclo_alpha = j;
+    //             FragTbl[ qcloindex ].fragmentqclo_beta = j;
+    //             qcloindex++;
+    //         }
+    //     }
+    // }
 
-    else if (method == "sp") {
-        for (int i = 0; i < number_fragment; i++) {
-            number_occ[ i ] = FlFrag.getNumOfOccupiedAlphaOrbitals(i);
-        }
-        for (int i = 0; i < number_fragment; i++) {
-            for (int j = 0; j < number_occ[ i ]; j++) {
-                FragTbl[ qcloindex ].qclo = qcloindex;
-                FragTbl[ qcloindex ].fragment_alpha = i;
-                FragTbl[ qcloindex ].fragmentqclo_alpha = j;
-                qcloindex++;
-            }
-        }
-        for (int i = 0; i < number_fragment; i++) {
-            for (int j = number_occ[ i ]; j < number_fragmentqclo[ i ]; j++) {
-                FragTbl[ qcloindex ].qclo = qcloindex;
-                FragTbl[ qcloindex ].fragment_alpha = i;
-                FragTbl[ qcloindex ].fragmentqclo_alpha = j;
-                qcloindex++;
-            }
-        }
+    // else if (method == "sp") {
+    //     for (int i = 0; i < number_fragment; i++) {
+    //         number_occ[ i ] = FlFrag.getNumOfOccupiedAlphaOrbitals(i);
+    //     }
+    //     for (int i = 0; i < number_fragment; i++) {
+    //         for (int j = 0; j < number_occ[ i ]; j++) {
+    //             FragTbl[ qcloindex ].qclo = qcloindex;
+    //             FragTbl[ qcloindex ].fragment_alpha = i;
+    //             FragTbl[ qcloindex ].fragmentqclo_alpha = j;
+    //             qcloindex++;
+    //         }
+    //     }
+    //     for (int i = 0; i < number_fragment; i++) {
+    //         for (int j = number_occ[ i ]; j < number_fragmentqclo[ i ]; j++) {
+    //             FragTbl[ qcloindex ].qclo = qcloindex;
+    //             FragTbl[ qcloindex ].fragment_alpha = i;
+    //             FragTbl[ qcloindex ].fragmentqclo_alpha = j;
+    //             qcloindex++;
+    //         }
+    //     }
 
-        qcloindex = 0;
-        for (int i = 0; i < number_fragment; i++) {
-            number_occ[ i ] = FlFrag.getNumOfOccupiedBetaOrbitals(i);
-        }
-        for (int i = 0; i < number_fragment; i++) {
-            for (int j = 0; j < number_occ[ i ]; j++) {
-                FragTbl[ qcloindex ].fragment_beta = i;
-                FragTbl[ qcloindex ].fragmentqclo_beta = j;
-                qcloindex++;
-            }
-        }
-        for (int i = 0; i < number_fragment; i++) {
-            for (int j = number_occ[ i ]; j < number_fragmentqclo[ i ]; j++) {
-                FragTbl[ qcloindex ].fragment_beta = i;
-                FragTbl[ qcloindex ].fragmentqclo_beta = j;
-                qcloindex++;
-            }
-        }
-    }
-    if (number_occ) delete[] number_occ;
+    //     qcloindex = 0;
+    //     for (int i = 0; i < number_fragment; i++) {
+    //         number_occ[ i ] = FlFrag.getNumOfOccupiedBetaOrbitals(i);
+    //     }
+    //     for (int i = 0; i < number_fragment; i++) {
+    //         for (int j = 0; j < number_occ[ i ]; j++) {
+    //             FragTbl[ qcloindex ].fragment_beta = i;
+    //             FragTbl[ qcloindex ].fragmentqclo_beta = j;
+    //             qcloindex++;
+    //         }
+    //     }
+    //     for (int i = 0; i < number_fragment; i++) {
+    //         for (int j = number_occ[ i ]; j < number_fragmentqclo[ i ]; j++) {
+    //             FragTbl[ qcloindex ].fragment_beta = i;
+    //             FragTbl[ qcloindex ].fragmentqclo_beta = j;
+    //             qcloindex++;
+    //         }
+    //     }
+    // }
+    // if (number_occ) delete[] number_occ;
 }
 
 

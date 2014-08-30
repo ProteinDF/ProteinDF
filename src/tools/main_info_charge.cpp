@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     double chargeWithoutX = 0.0;
     const int numOfAtoms = flGeom.getNumOfAtoms();
     for (int i = 0; i < numOfAtoms; ++i) {
-        const std::string symbol = flGeom.getAtom(i);
+        const std::string symbol = flGeom.getAtomSymbol(i);
         ++(component[symbol]);
         const double currentCharge = flGeom.getCharge(i);
 

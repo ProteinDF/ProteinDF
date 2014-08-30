@@ -31,8 +31,8 @@
 #include "DfOverlapX.h"
 #include "DfXMatrix.h"
 #include "DfCD.h"
+#include "Fl_Geometry.h"
 #include "TlTime.h"
-#include "TlRowVectorMatrix2.h"
 #include "TlSystem.h"
 #include "TlUtils.h"
 
@@ -41,7 +41,7 @@ const double DfGridFreeXC::ONE_THIRD = 1.0 / 3.0;
 
 DfGridFreeXC::DfGridFreeXC(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), pOvpEngines_(NULL),
-      orbitalInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_sets"]) {
+      orbitalInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"]) {
 
     this->numOfPQs_ = this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2;
 
@@ -63,6 +63,11 @@ DfGridFreeXC::DfGridFreeXC(TlSerializeData* pPdfParam)
         }
     }
 
+    this->GfVEigvalVtrPath_ = "";
+    if ((*pPdfParam)["gridfree/save_v_eigval"].getBoolean()) {
+        this->GfVEigvalVtrPath_ = DfObject::getGfVEigvalVtrPath();
+    }
+    
     this->debugSaveM_ = (*pPdfParam)["debug/DfGridFreeXC/saveM"].getBoolean();
     if (this->debugSaveM_) {
         this->log_.info("using GAMESS formula");
@@ -205,7 +210,7 @@ void DfGridFreeXC::getM_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     DfOverlapEngine engine;
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
 
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     // const ShellPairArrayTable shellPairArrayTable = this->getShellPairArrayTable(shellArrayTable);
@@ -424,9 +429,9 @@ void DfGridFreeXC::buildFxc_GGA()
 // {
 //     this->log_.info("build Fxc by grid-free method: functional type is GGA.");
 
-//     std::string basisset_param = "basis_sets";
+//     std::string basisset_param = "basis_set";
 //     if (this->isDedicatedBasisForGridFree_) {
-//         basisset_param = "basis_sets_GF";
+//         basisset_param = "basis_set_gridfree";
 //     }
 //     const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
 //                                        (*(this->pPdfParam_))[basisset_param]);
@@ -758,3 +763,178 @@ DfFunctional_GGA* DfGridFreeXC::getFunctionalGGA()
     return pFunc;
 }
 
+
+TlMatrix DfGridFreeXC::getForce()
+{
+    const RUN_TYPE runType = RUN_RKS;
+    const int itr = this->m_nIteration;
+
+    const TlSymmetricMatrix S = this->getSpqMatrix<TlSymmetricMatrix>();
+    const TlMatrix X = this->getXMatrix<TlMatrix>();
+    TlMatrix Xt = X;
+    Xt.transpose();
+
+    //TlSymmetricMatrix P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, itr);
+    const TlMatrix C = this->getCMatrix<TlMatrix>(runType, itr);
+    TlMatrix Ct = C;
+    Ct.transpose();
+
+    // TlMatrix CCt = C * Ct;
+    // CCt.save("CCt.mat");
+
+    // Exc =====================================================================
+    TlSymmetricMatrix Exc = this->getFxcMatrix<TlSymmetricMatrix>(RUN_RKS, itr);
+    Exc.save("GF_Exc.mat");
+
+    // dS ======================================================================
+    TlMatrix dx, dy, dz;
+    DfOverlapX dfOvp(this->pPdfParam_);
+    dfOvp.getGradient(orbitalInfo_, &dx, &dy, &dz);
+    // dx.save("GF_dx.mat");
+    // dy.save("GF_dy.mat");
+    // dz.save("GF_dz.mat");
+
+    // 規格直交化 ==============================================================
+    // TlMatrix o_Exc = Ct * Exc;
+    TlMatrix o_Exc = Xt * Exc * X;
+    o_Exc.save("GF_o_Exc.mat");
+
+    // TlMatrix o_dx = Ct * dx;
+    // TlMatrix o_dy = Ct * dy;
+    // TlMatrix o_dz = Ct * dz;
+    TlMatrix o_dx = Xt * dx * X;
+    TlMatrix o_dy = Xt * dy * X;
+    TlMatrix o_dz = Xt * dz * X;
+    // TlMatrix o_dx = dx * C;
+    // TlMatrix o_dy = dy * C;
+    // TlMatrix o_dz = dz * C;
+    // o_dx.save("GF_o_dx.mat");
+    // o_dy.save("GF_o_dy.mat");
+    // o_dz.save("GF_o_dz.mat");
+
+    // 積 ======================================================================
+    TlMatrix o_dxt = o_dx;
+    o_dxt.transpose();
+    TlMatrix o_dyt = o_dy;
+    o_dyt.transpose();
+    TlMatrix o_dzt = o_dz;
+    o_dzt.transpose();
+
+    TlMatrix o_dx_Exc = o_dxt * o_Exc;
+    TlMatrix o_dy_Exc = o_dyt * o_Exc;
+    TlMatrix o_dz_Exc = o_dzt * o_Exc;
+    // TlMatrix o_dx_Exc = o_dx * o_Exc;
+    // TlMatrix o_dy_Exc = o_dy * o_Exc;
+    // TlMatrix o_dz_Exc = o_dz * o_Exc;
+    // o_dx_Exc.save("GF_o_dxt_Exc.mat");
+    // o_dy_Exc.save("GF_o_dyt_Exc.mat");
+    // o_dz_Exc.save("GF_o_dzt_Exc.mat");
+
+    // 規格直交化から戻す
+    TlMatrix SX = S * X;
+    TlMatrix SXt = SX;
+    SXt.transpose();
+    o_dx_Exc = SX * o_dx_Exc * SXt;
+    o_dy_Exc = SX * o_dy_Exc * SXt;
+    o_dz_Exc = SX * o_dz_Exc * SXt;
+
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    const index_type numOfMOs = this->m_nNumOfMOs;
+
+    // 右からCをかける
+    // o_dx_Exc *= C;
+    // o_dy_Exc *= C;
+    // o_dz_Exc *= C;
+    TlMatrix C_mo = C;
+    {
+        TlSymmetricMatrix E(numOfAOs);
+        TlVector currOcc;
+        currOcc.load(this->getOccupationPath(runType));
+        for (index_type i = 0; i < numOfMOs; ++i) {
+            if (std::fabs(currOcc[i] - 2.0) < 1.0E-5) {
+                E.set(i, i, 1.0);
+            }
+        }
+        C_mo *= E;
+    }
+    o_dx_Exc *= C_mo;
+    o_dy_Exc *= C_mo;
+    o_dz_Exc *= C_mo;
+
+    // 左からCをかける
+    const index_type numOfAtoms = this->m_nNumOfAtoms;
+    TlMatrix force(numOfAtoms, 3);
+    TlVector Hx(numOfAOs), Hy(numOfAOs), Hz(numOfAOs);
+    {
+        TlVector currOcc;
+        currOcc.load(this->getOccupationPath(runType));
+        for (int i = 0; i < numOfMOs; ++i) {
+            if (std::fabs(currOcc[i] - 2.0) < 1.0E-5) {
+                for (int j = 0; j < numOfAOs; ++j) {
+                    const double vx = C.get(j, i) * o_dx_Exc.get(j, i);
+                    Hx.add(j, vx);
+                    const double vy = C.get(j, i) * o_dy_Exc.get(j, i);
+                    Hy.add(j, vy);
+                    const double vz = C.get(j, i) * o_dz_Exc.get(j, i);
+                    Hz.add(j, vz);
+                }
+            }
+        }
+        Hx.save("GF_Hx.vct");
+        Hy.save("GF_Hy.vct");
+        Hz.save("GF_Hz.vct");
+    }
+    for (int i = 0; i < numOfAOs; ++i) {
+        const index_type atomIndex = this->orbitalInfo_.getAtomIndex(i);
+        force.add(atomIndex, 0, Hx.get(i));
+        force.add(atomIndex, 1, Hy.get(i));
+        force.add(atomIndex, 2, Hz.get(i));
+    }
+
+    force *= -4.0;
+    force.save("GF_force.mat");
+
+    // calc center of atoms
+    // const Fl_Geometry flGeom((*(this->pPdfParam_))["coordinates"]);
+    // TlPosition wc;
+    // double sum_w = 0.0;
+    // for (int i = 0; i < numOfAtoms; ++i) {
+    //     const TlAtom atom = flGeom.getAtom(i);
+    //     const TlPosition p = atom.getPosition();
+    //     const double weight = atom.getStdWeight();
+    //     std::cerr << TlUtils::format("(% f, %f, %f), %f", p.x(), p.y(), p.z(), weight) << std::endl;
+    //     wc += weight * p;
+    //     sum_w += weight;
+    // }
+    // wc *= -1.0 / sum_w;
+    // std::cerr << TlUtils::format("wc: % f, % f, % f", wc.x(), wc.y(), wc.z()) << std::endl;
+
+    // for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
+    //     force.add(atomIndex, 0, wc.x());
+    //     force.add(atomIndex, 1, wc.y());
+    //     force.add(atomIndex, 2, wc.z());
+    // }    
+    // force.save("GF_force2.mat");
+
+    return force;
+}
+
+
+TlMatrix DfGridFreeXC::selectGradMat(const TlMatrix& input, const int atomIndex) 
+{
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    assert(input.getNumOfRows() == numOfAOs);
+    assert(input.getNumOfCols() == numOfAOs);
+    TlMatrix output(numOfAOs, numOfAOs);
+    for (index_type p = 0; p < numOfAOs; ++p) {
+        if (this->orbitalInfo_.getAtomIndex(p) == atomIndex) {
+            for (index_type q = 0; q < numOfAOs; ++q) {
+                output.set(p, q, input.get(p, q));
+                // if (this->orbitalInfo_.getAtomIndex(q) == atomIndex) {
+                //     output.set(p, q, input.get(p, q));
+                // }
+            }
+        }
+    }
+    return output;
+}

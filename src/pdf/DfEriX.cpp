@@ -26,8 +26,8 @@
 #include "TlSparseVector.h"
 #include "TlTime.h"
 
-const int DfEriX::MAX_SHELL_TYPE = 2 + 1; // (s=0, p, d)
-const int DfEriX::FORCE_K_BUFFER_SIZE = 3 * 5 * 5 * 5; // (xyz) * 5d * 5d * 5d
+//const int DfEriX::MAX_SHELL_TYPE = 2 + 1; // (s=0, p, d)
+const int DfEriX::FORCE_K_BUFFER_SIZE = 3 * 7 * 7 * 7; // (xyz) * 7f * 7f * 7f
 
 DfEriX::DfEriX(TlSerializeData* pPdfParam) 
     : DfObject(pPdfParam), pEriEngines_(NULL)
@@ -184,9 +184,9 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
     }
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
     pRho->resize(this->m_nNumOfAux);
@@ -277,7 +277,8 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
             //                                                                             pairwisePGTO_cutoffThreshold);
             // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
 
-            for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
+            const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
+            for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
             
                 // const int shellTypeS = 0;
@@ -361,9 +362,9 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
     // time_all.start();
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
@@ -576,28 +577,29 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
     engine.setPrimitiveLevelThreshold(0.0);
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellPairArrayTable shellPairArrayTable = this->getShellPairArrayTable(shellArrayTable);
-    
-    for (int shellTypeP = DfEriX::MAX_SHELL_TYPE -1; shellTypeP >= 0; --shellTypeP) {
+
+    const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
+    for (int shellTypeP = maxShellType -1; shellTypeP >= 0; --shellTypeP) {
         const int maxStepsP = 2 * shellTypeP + 1;
         const ShellArray shellArrayP = shellArrayTable[shellTypeP];
         ShellArray::const_iterator pItEnd = shellArrayP.end();
 
-        for (int shellTypeQ = DfEriX::MAX_SHELL_TYPE -1; shellTypeQ >= 0; --shellTypeQ) {
+        for (int shellTypeQ = maxShellType -1; shellTypeQ >= 0; --shellTypeQ) {
             const int maxStepsQ = 2 * shellTypeQ + 1;
             const ShellArray shellArrayQ = shellArrayTable[shellTypeQ];
             ShellArray::const_iterator qItEnd = shellArrayQ.end();
 
             // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
 
-            for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
+            for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
                 const ShellArray shellArrayR = shellArrayTable[shellTypeR];
                 ShellArray::const_iterator rItEnd = shellArrayR.end();
 
-                for (int shellTypeS = DfEriX::MAX_SHELL_TYPE -1; shellTypeS >= 0; --shellTypeS) {
+                for (int shellTypeS = maxShellType -1; shellTypeS >= 0; --shellTypeS) {
                     const int maxStepsS = 2 * shellTypeS + 1;
                     const ShellArray shellArrayS = shellArrayTable[shellTypeS];
                     ShellArray::const_iterator sItEnd = shellArrayS.end();
@@ -665,7 +667,7 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
     pJ->resize(this->m_nNumOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
 #ifdef DEBUG_J
@@ -920,7 +922,7 @@ void DfEriX::getJab(TlSymmetricMatrix* pJab)
     pJab->resize(numOfAuxDens);
 
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
 
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo_Density);
 
@@ -1036,7 +1038,7 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce)
     pForce->resize(this->m_nNumOfAtoms, 3);
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
     this->createEngines();
@@ -1047,15 +1049,15 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce)
     pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
     pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
 
-    bool hasTask = pDfTaskCtrl->getQueue_Force4(orbitalInfo,
-                                                schwarzTable,
-                                                this->grainSize_, &taskList, true);
+    bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                          schwarzTable,
+                                          this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getForceJ_part(orbitalInfo, taskList,
                              P, pForce);
-        hasTask = pDfTaskCtrl->getQueue_Force4(orbitalInfo,
-                                               schwarzTable,
-                                               this->grainSize_, &taskList);
+        hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                         schwarzTable,
+                                         this->grainSize_, &taskList);
     }
 
     this->finalize(pForce);
@@ -1102,10 +1104,6 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
             const index_type atomIndexC = orbitalInfo.getAtomIndex(shellIndexR);
             const index_type atomIndexD = orbitalInfo.getAtomIndex(shellIndexS);
 
-            // std::cerr << TlUtils::format("[%d %d|%d %d]",
-            //                              shellIndexP, shellIndexQ, shellIndexR, shellIndexS)
-            //           << std::endl;
-            
             if ((atomIndexA == atomIndexB) && (atomIndexB == atomIndexC) &&
                 (atomIndexC == atomIndexD) && (atomIndexD == atomIndexA)) {
                 continue;
@@ -1124,6 +1122,9 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
                                                           shellIndexS,
                                                           pairwisePGTO_cutoffThreshold);
             
+            // std::cerr << TlUtils::format("*** DfEriX::getForceJ_part() (%d %d|%d %d) ***",
+            //                              shellIndexP, shellIndexQ, shellIndexR, shellIndexS)
+            //           << std::endl;
             this->pEriEngines_[threadID].calcGrad(queryPQ00, queryRS00, PQ, RS);
                         
             this->storeForceJ_integralDriven(atomIndexA, atomIndexB,
@@ -1149,6 +1150,7 @@ void DfEriX::storeForceJ_integralDriven(const int atomIndexA, const int atomInde
                                         TlMatrixObject* pForce)
 {
     int index = 0;
+    //std::cerr << "==== x ====" << std::endl;
     this->storeForceJ_integralDriven(atomIndexA, atomIndexB,
                                      atomIndexC, atomIndexD,
                                      shellIndexP, maxStepsP,
@@ -1157,6 +1159,7 @@ void DfEriX::storeForceJ_integralDriven(const int atomIndexA, const int atomInde
                                      shellIndexS, maxStepsS,
                                      engine, P, pForce,
                                      X, &index);
+    //std::cerr << "==== y ====" << std::endl;
     this->storeForceJ_integralDriven(atomIndexA, atomIndexB,
                                      atomIndexC, atomIndexD,
                                      shellIndexP, maxStepsP,
@@ -1165,6 +1168,7 @@ void DfEriX::storeForceJ_integralDriven(const int atomIndexA, const int atomInde
                                      shellIndexS, maxStepsS,
                                      engine, P, pForce,
                                      Y, &index);
+    //std::cerr << "==== z ====" << std::endl;
     this->storeForceJ_integralDriven(atomIndexA, atomIndexB,
                                      atomIndexC, atomIndexD,
                                      shellIndexP, maxStepsP,
@@ -1187,42 +1191,91 @@ void DfEriX::storeForceJ_integralDriven(const int atomIndexA, const int atomInde
                                         TlMatrixObject* pForce,
                                         const int target, int* pIndex)
 {
+    // double sumA = 0.0;
+    // double sumB = 0.0;
+    // double sumC = 0.0;
+    // double sumD = 0.0;
+
     for (int stepP = 0; stepP < maxStepsP; ++stepP) {
         const index_type indexP = shellIndexP + stepP;
-        const index_type iw = indexP * (indexP -1) / 2;
+        const index_type iw = indexP * (indexP +1) / 2;
 
         for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
             const index_type indexQ = shellIndexQ + stepQ;
 
             if (indexQ <= indexP) {
-                const double cij = (indexP != indexQ) ? 2.0 : 1.0;
                 const index_type ij = iw + indexQ;
-                const double dcij = P.get(indexP, indexQ);
+                const double Ppq = P.get(indexP, indexQ);
                 
                 for (int stepR = 0; stepR < maxStepsR; ++stepR) {
                     const index_type indexR = shellIndexR + stepR;
-                    const index_type kw = indexR * (indexR -1) / 2;
+                    const index_type kw = indexR * (indexR +1) / 2;
                     
                     for (int stepS = 0; stepS < maxStepsS; ++stepS) {
                         const index_type indexS = shellIndexS + stepS;
                         const index_type kl = kw + indexS;
                         
-                        if ((indexS <= indexR) && (ij >= kl)) {
-                            double cijkl = cij * ((indexR != indexS) ? 2.0 : 1.0);
-                            cijkl *= (ij != kl) ? 2.0 : 1.0;
+                        const index_type maxIndexS = (indexP == indexR) ? indexQ : indexR;
+                        //if ((indexS <= indexR) && (ij >= kl)) {
+                        if (indexS <= maxIndexS) {
+                            const double Prs = P.get(indexR, indexS);
+                            const double vA = engine.WORK_A[*pIndex];
+                            const double vB = engine.WORK_B[*pIndex];
+                            const double vC = engine.WORK_C[*pIndex];
+                            const double vD = engine.WORK_D[*pIndex];
 
-                            const double coef = cijkl * dcij * P.get(indexR, indexS);
-                            const double gradIntA = engine.WORK_A[*pIndex];
-                            const double gradIntB = engine.WORK_B[*pIndex];
-                            const double gradIntC = engine.WORK_C[*pIndex];
-                            const double gradIntD = - (gradIntA + gradIntB + gradIntC);
-                            
-                            pForce->add(atomIndexA, target, coef * gradIntA);
-                            pForce->add(atomIndexB, target, coef * gradIntB);
-                            pForce->add(atomIndexC, target, coef * gradIntC);
-                            pForce->add(atomIndexD, target, coef * gradIntD);
+                            // (pq|rs)の8つの対称組を考えるとわかりやすい
+                            if (indexP >= indexQ) {
+                                double coef = 2.0; // Ppq * Prs だけでなく Prs * Ppq があるので2倍
+                                coef *= (indexR != indexS) ? 2.0 : 1.0;
+                                const double v1 = coef * Ppq * Prs * vA;
+                                pForce->add(atomIndexA, target, v1);
+
+                                // if (target == 0) {
+                                //     std::cerr << TlUtils::format("EQ1:A:%d(%d) [%d %d|%d %d]=% f: P=% f, % f, c=% f, v=% f",
+                                //                                  atomIndexA, target, indexP, indexQ, indexR, indexS, vA, Ppq, Prs, coef, v1)
+                                //               << std::endl;
+                                // }
+
+                                if (indexP != indexQ) {
+                                    const double v2 = coef * Ppq * Prs * vB;
+                                    pForce->add(atomIndexB, target, v2);
+                                    //if (target == 0 && std::fabs(v2) > 1.0E-5) {
+                                    // if (target == 0) {
+                                    //     std::cerr << TlUtils::format("EQ1:B:%d(%d) [%d %d|%d %d]=% f: P=% f, % f, c=% f, v=% f",
+                                    //                                  atomIndexB, target, indexP, indexQ, indexR, indexS, vB, Ppq, Prs, coef, v2)
+                                    //               << std::endl;
+                                    // }
+                                }
+
+                                if ((shellIndexP != shellIndexR) || (shellIndexQ != shellIndexS) || (indexP == indexR)) {
+                                    if (ij != kl) { // Eq.1 != Eq.2
+                                        double coef = 2.0;
+                                        coef *= (indexP != indexQ) ? 2.0 : 1.0;
+                                        {
+                                            const double v3 = coef * Ppq * Prs * vC;
+                                            pForce->add(atomIndexC, target, v3);
+                                            //if (target == 0 && std::fabs(v3) > 1.0E-5) {
+                                            // if (target == 0) {
+                                            //     std::cerr << TlUtils::format("EQ2:C:%d(%d) [%d %d|%d %d]=% f: P=% f, % f, c=% f, v=% f",
+                                            //                                  atomIndexC, target, indexP, indexQ, indexR, indexS, vC, Ppq, Prs, coef, v3)
+                                            //           << std::endl;
+                                            // }
+                                            if (indexR != indexS) {
+                                                const double v4 = coef * Ppq * Prs * vD;
+                                                pForce->add(atomIndexD, target, v4);
+                                                //if (target == 0 && std::fabs(v4) > 1.0E-5) {
+                                                // if (target == 0) {
+                                                //     std::cerr << TlUtils::format("EQ2:D:%d(%d) [%d %d|%d %d]=% f: P=% f, % f, c=% f, v=% f",
+                                                //                                  atomIndexD, target, indexP, indexQ, indexR, indexS, vD, Ppq, Prs, coef, v4)
+                                                //               << std::endl;
+                                                // }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
-                        
                         ++(*pIndex);
                     }
                 }
@@ -1231,6 +1284,11 @@ void DfEriX::storeForceJ_integralDriven(const int atomIndexA, const int atomInde
             }
         }
     }
+
+    // std::cerr << "sumA: " << sumA << std::endl;
+    // std::cerr << "sumB: " << sumA << std::endl;
+    // std::cerr << "sumC: " << sumA << std::endl;
+    // std::cerr << "sumD: " << sumA << std::endl;
 }
 
 
@@ -1251,9 +1309,9 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
     pForce->resize(this->m_nNumOfAtoms, 3);
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
@@ -1445,7 +1503,7 @@ void DfEriX::getForceJ(const TlVector& rho, TlMatrix* pForce)
     pForce->resize(this->m_nNumOfAtoms, 3);
     
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
     const ShellArrayTable shellArray_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
     this->createEngines();
@@ -1613,31 +1671,32 @@ void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
     pK->resize(this->m_nNumOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellPairArrayTable shellPairArrayTable = this->getShellPairArrayTable(shellArrayTable);
     
     DfEriEngine engine;
     engine.setPrimitiveLevelThreshold(0.0);
 
-    for (int shellTypeP = DfEriX::MAX_SHELL_TYPE -1; shellTypeP >= 0; --shellTypeP) {
+    const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
+    for (int shellTypeP = maxShellType -1; shellTypeP >= 0; --shellTypeP) {
         const int maxStepsP = 2 * shellTypeP + 1;
         const ShellArray shellArrayP = shellArrayTable[shellTypeP];
         ShellArray::const_iterator pItEnd = shellArrayP.end();
 
-        for (int shellTypeQ = DfEriX::MAX_SHELL_TYPE -1; shellTypeQ >= 0; --shellTypeQ) {
+        for (int shellTypeQ = maxShellType -1; shellTypeQ >= 0; --shellTypeQ) {
             const int maxStepsQ = 2 * shellTypeQ + 1;
             const ShellArray shellArrayQ = shellArrayTable[shellTypeQ];
             ShellArray::const_iterator qItEnd = shellArrayQ.end();
 
             // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
 
-            for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
+            for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
                 const ShellArray shellArrayR = shellArrayTable[shellTypeR];
                 ShellArray::const_iterator rItEnd = shellArrayR.end();
 
-                for (int shellTypeS = DfEriX::MAX_SHELL_TYPE -1; shellTypeS >= 0; --shellTypeS) {
+                for (int shellTypeS = maxShellType -1; shellTypeS >= 0; --shellTypeS) {
                     const int maxStepsS = 2 * shellTypeS + 1;
                     const ShellArray shellArrayS = shellArrayTable[shellTypeS];
                     ShellArray::const_iterator sItEnd = shellArrayS.end();
@@ -1708,7 +1767,7 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
     pK->resize(this->m_nNumOfAOs);
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
 #ifdef DEBUG_K
@@ -1990,7 +2049,7 @@ int DfEriX::storeK_integralDriven(const index_type shellIndexP, const int maxSte
         }
     }
 
-    assert(numOfElements <= 5 * 5 * 5 * 5 * 4); // means (d * d * d * d * 4)
+    // assert(numOfElements <= 5 * 5 * 5 * 5 * 4); // means (d * d * d * d * 4)
     return numOfElements;
 }
 
@@ -2044,7 +2103,7 @@ void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce)
     pForce->resize(this->m_nNumOfAtoms, 3);
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
     this->createEngines();
@@ -2055,15 +2114,15 @@ void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce)
     pDfTaskCtrl->setCutoffEpsilon_density(this->cutoffEpsilon_density_);
     pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
 
-    bool hasTask = pDfTaskCtrl->getQueue_Force4(orbitalInfo,
-                                                schwarzTable,
-                                                this->grainSize_, &taskList, true);
+    bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                          schwarzTable,
+                                          this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getForceK_part(orbitalInfo, taskList,
                              P, pForce);
-        hasTask = pDfTaskCtrl->getQueue_Force4(orbitalInfo,
-                                               schwarzTable,
-                                               this->grainSize_, &taskList);
+        hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
+                                         schwarzTable,
+                                         this->grainSize_, &taskList);
     }
 
     this->finalize(pForce);
@@ -2148,7 +2207,8 @@ void DfEriX::getForceK_part(const TlOrbitalInfoObject& orbitalInfo,
 
 DfEriX::ShellArrayTable DfEriX::makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo)
 {
-    ShellArrayTable shellArrayTable(MAX_SHELL_TYPE);
+    const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
+    ShellArrayTable shellArrayTable(maxShellType);
     const index_type maxShellIndex = orbitalInfo.getNumOfOrbitals();
 
     index_type shellIndex = 0;
@@ -2217,48 +2277,112 @@ void DfEriX::storeForceK_integralDriven(const int atomIndexA, const int atomInde
 {
     for (int stepP = 0; stepP < maxStepsP; ++stepP) {
         const index_type indexP = shellIndexP + stepP;
-        const index_type iw = indexP * (indexP -1) / 2;
+        const index_type iw = indexP * (indexP +1) / 2;
 
         for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
             const index_type indexQ = shellIndexQ + stepQ;
 
-            if (indexQ <= indexP) {
-                const double cij = (indexP != indexQ) ? 2.0 : 1.0;
-                const index_type ij = iw + indexQ;
-                
-                for (int stepR = 0; stepR < maxStepsR; ++stepR) {
-                    const index_type indexR = shellIndexR + stepR;
-                    const index_type kw = indexR * (indexR -1) / 2;
-                    
-                    const double dcik = P.get(indexP, indexR);
-                    const double dcjk = P.get(indexQ, indexR);
-                    
-                    for (int stepS = 0; stepS < maxStepsS; ++stepS) {
-                        const index_type indexS = shellIndexS + stepS;
-                        const index_type kl = kw + indexS;
-                        
-                        if ((indexS <= indexR) && (ij >= kl)) {
-                            double cijkl = cij * ((indexR != indexS) ? 2.0 : 1.0);
-                            cijkl *= (ij != kl) ? 2.0 : 1.0;
+            if (indexP < indexQ) {
+                // bypass
+                *pIndex += (maxStepsR * maxStepsS);
+                continue;
+            }
 
-                            const double coef = 0.5 * cijkl * (  dcik * P.get(indexQ, indexS)
-                                                               + dcjk * P.get(indexP, indexS));
-                            const double gradIntA = engine.WORK_A[*pIndex];
-                            const double gradIntB = engine.WORK_B[*pIndex];
-                            const double gradIntC = engine.WORK_C[*pIndex];
-                            const double gradIntD = - (gradIntA + gradIntB + gradIntC);
-                            
-                            pForce->add(atomIndexA, target, coef * gradIntA);
-                            pForce->add(atomIndexB, target, coef * gradIntB);
-                            pForce->add(atomIndexC, target, coef * gradIntC);
-                            pForce->add(atomIndexD, target, coef * gradIntD);
-                        }
-                        
-                        ++(*pIndex);
+            const index_type ij = iw + indexQ;
+                
+            for (int stepR = 0; stepR < maxStepsR; ++stepR) {
+                const index_type indexR = shellIndexR + stepR;
+                if (shellIndexQ == shellIndexS) {
+                    if (indexP < indexR) {
+                        *pIndex += maxStepsS;
+                        continue;
                     }
                 }
-            } else {
-                *pIndex += (maxStepsR * maxStepsS);
+
+                const index_type kw = indexR * (indexR +1) / 2;
+                const double Ppr = P.get(indexP, indexR);
+                const double Pqr = P.get(indexQ, indexR);
+                
+                for (int stepS = 0; stepS < maxStepsS; ++stepS) {
+                    const index_type indexS = shellIndexS + stepS;
+                    const index_type kl = kw + indexS;
+
+                    const int maxIndexS = (indexP == indexR) ? indexQ : indexR;
+                    if (indexS > maxIndexS) {
+                        ++(*pIndex);
+                        continue;
+                    }
+
+                    //if (ij >= kl) {
+                        const double Pps = P.get(indexP, indexS);
+                        const double Pqs = P.get(indexQ, indexS);
+                        const double vA = engine.WORK_A[*pIndex];
+                        const double vB = engine.WORK_B[*pIndex];
+                        const double vC = engine.WORK_C[*pIndex];
+                        const double vD = engine.WORK_D[*pIndex];
+                        
+                        {
+                            double coef = 1.0;
+                            coef *= (indexR != indexS) ? 2.0 : 1.0;
+                            
+                            pForce->add(atomIndexA, target, coef * Ppr * Pqs * vA);
+                            // std::cerr << TlUtils::format("EQ1-1:A:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                            //                              atomIndexA, target, indexP, indexQ, indexR, indexS, vA, Ppr, Pqs, coef)
+                            //           << std::endl;
+                            
+                            pForce->add(atomIndexA, target, coef * Pps * Pqr * vA);
+                            // std::cerr << TlUtils::format("EQ1-2:A:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                            //                              atomIndexA, target, indexP, indexQ, indexR, indexS, vA, Ppr, Pqs, coef)
+                            //           << std::endl;
+                        }
+                        
+                        if (indexP != indexQ) {
+                            double coef = 1.0;
+                            coef *= (indexR != indexS) ? 2.0 : 1.0;
+                            
+                            pForce->add(atomIndexB, target, coef * Ppr * Pqs * vB);
+                            // std::cerr << TlUtils::format("EQ2-1:B:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                            //                              atomIndexB, target, indexP, indexQ, indexR, indexS, vB, Ppr, Pqs, coef)
+                            //           << std::endl;
+                            pForce->add(atomIndexB, target, coef * Pps * Pqr * vB);
+                            // std::cerr << TlUtils::format("EQ2-2:B:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                            //                              atomIndexB, target, indexP, indexQ, indexR, indexS, vB, Pps, Pqr, coef)
+                            //           << std::endl;                                
+                        }
+                        
+                        if (ij != kl) {
+                            {
+                                double coef = 1.0;
+                                coef *= (indexP != indexQ) ? 2.0 : 1.0;
+                                
+                                pForce->add(atomIndexC, target, coef * Ppr * Pqs * vC);
+                                // std::cerr << TlUtils::format("EQ3-1:C:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                //                              atomIndexC, target, indexP, indexQ, indexR, indexS, vC, Ppr, Pqs, coef)
+                                //           << std::endl;
+                                pForce->add(atomIndexC, target, coef * Pps * Pqr * vC);
+                                // std::cerr << TlUtils::format("EQ3-2:C:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                //                              atomIndexC, target, indexP, indexQ, indexR, indexS, vC, Pps, Pqr, coef)
+                                //           << std::endl;
+                            }
+                            
+                            if (indexR != indexS) {
+                                double coef = 1.0;
+                                coef *= (indexP != indexQ) ? 2.0 : 1.0;
+                                
+                                pForce->add(atomIndexD, target, coef * Ppr * Pqs * vD);
+                                // std::cerr << TlUtils::format("EQ4-1:D:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                //                              atomIndexD, target, indexP, indexQ, indexR, indexS, vD, Ppr, Pqs, coef)
+                                //           << std::endl;
+                                pForce->add(atomIndexD, target, coef * Pps * Pqr * vD);
+                                // std::cerr << TlUtils::format("EQ4-2:D:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
+                                //                              atomIndexD, target, indexP, indexQ, indexR, indexS, vD, Pps, Pqr, coef)
+                                //           << std::endl;                                    
+                            }
+                        }
+                        //}
+                    
+                    ++(*pIndex);
+                }
             }
         }
     }
@@ -2266,17 +2390,18 @@ void DfEriX::storeForceK_integralDriven(const int atomIndexA, const int atomInde
 
 DfEriX::ShellPairArrayTable DfEriX::getShellPairArrayTable(const ShellArrayTable& shellArrayTable)
 {
-    ShellPairArrayTable shellPairArrayTable(DfEriX::MAX_SHELL_TYPE * DfEriX::MAX_SHELL_TYPE);
+    const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
+    ShellPairArrayTable shellPairArrayTable(maxShellType * maxShellType);
 
-    for (int shellTypeP = DfEriX::MAX_SHELL_TYPE -1; shellTypeP >= 0; --shellTypeP) {
+    for (int shellTypeP = maxShellType -1; shellTypeP >= 0; --shellTypeP) {
         const ShellArray& shellArrayP = shellArrayTable[shellTypeP];
         ShellArray::const_iterator pItEnd = shellArrayP.end();
 
-        for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
+        for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
             const ShellArray& shellArrayR = shellArrayTable[shellTypeR];
             ShellArray::const_iterator rItEnd = shellArrayR.end();
 
-            const int shellPairType_PR = shellTypeP * MAX_SHELL_TYPE + shellTypeR;
+            const int shellPairType_PR = shellTypeP * maxShellType + shellTypeR;
             for (ShellArray::const_iterator pIt = shellArrayP.begin(); pIt != pItEnd; ++pIt) {
                 const index_type indexP = *pIt;
 

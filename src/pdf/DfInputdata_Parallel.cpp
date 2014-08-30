@@ -29,18 +29,18 @@ DfInputdata_Parallel::~DfInputdata_Parallel()
 }
 
 
-TlSerializeData DfInputdata_Parallel::main()
+TlSerializeData DfInputdata_Parallel::main(const bool isReadUserInput)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
+    TlSerializeData param;
     if (rComm.isMaster() == true) {
         // masterのthis->data_にデータが格納される
-        DfInputdata::main();
+        param = DfInputdata::main(isReadUserInput);
     }
+    rComm.broadcast(param);
 
-    rComm.broadcast(this->data_);
-
-    return this->data_;
+    return param;
 }
 
 

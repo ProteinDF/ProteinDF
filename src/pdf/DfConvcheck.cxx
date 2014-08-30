@@ -32,15 +32,15 @@ DfConvcheck::DfConvcheck(TlSerializeData* pPdfParam, int num_iter)
     this->convergence_type = pdfParam["convergence/type"].getStr();
 
     this->threshold_cri     = pdfParam["convergence/threshold"].getDouble();
-    this->threshold_cri_ene = pdfParam["convergence/threshold-energy"].getDouble();
+    this->threshold_cri_ene = pdfParam["convergence/threshold_energy"].getDouble();
 
     this->dev_sd = 0.0;
     this->dev_dm = 0.0;
-    this->dev_te = 0.0;
     this->dev_ks = 0.0;
     this->dev_cd = 0.0;
     this->dev_xc = 0.0;
     this->dev_xa = 0.0;
+    this->dev_te = 0.0;
 }
 
 
@@ -80,62 +80,16 @@ void DfConvcheck::DfConvcheckMain()
 
 void DfConvcheck::showResults()
 {
-    switch (this->m_nMethodType) {
-    case METHOD_RKS:
-        this->log_.info(TlUtils::format("+ convergence informations\n"));
-        this->log_.info(TlUtils::format("+     standard deviation of cd               = %14.4le", this->dev_sd));
-        this->log_.info(TlUtils::format("+     maximum  deviation of cd coefficient   = %14.4le", this->dev_cd));
-        this->log_.info(TlUtils::format("+     maximum  deviation of density matrix   = %14.4le", this->dev_dm));
-        this->log_.info(TlUtils::format("+              deviation of total energy     = %14.4le", this->dev_te));
-        this->log_.info(TlUtils::format("+     maximum  deviation of kohn-sham matrix = %14.4le", this->dev_ks));
-        if (this->m_bIsXCFitting == true) {
-            this->log_.info(TlUtils::format("+     maximum  deviation of xc coefficient   = %14.4le", this->dev_xc));
-            this->log_.info(TlUtils::format("+     maximum  deviation of xa coefficient   = %14.4le", this->dev_xa));
-        }
-        break;
-        
-    case METHOD_UKS:
-        this->log_.info("+ convergence informations");
-        this->log_.info(TlUtils::format("+     standard deviation of alpha cd               = %14.4le", this->dev_sd_a));
-        this->log_.info(TlUtils::format("+     standard deviation of beta  cd               = %14.4le", this->dev_sd_b));
-        this->log_.info(TlUtils::format("+     maximum  deviation of alpha density matrix   = %14.4le", this->dev_dm_a));
-        this->log_.info(TlUtils::format("+     maximum  deviation of beta  density matrix   = %14.4le", this->dev_dm_b));
-        this->log_.info(TlUtils::format("+              deviation of total energy           = %14.4le", this->dev_te));
-        this->log_.info(TlUtils::format("+     maximum  deviation of alpha kohn-sham matrix = %14.4le", this->dev_ks_a));
-        this->log_.info(TlUtils::format("+     maximum  deviation of beta  kohn-sham matrix = %14.4le", this->dev_ks_b));
-        this->log_.info(TlUtils::format("+     maximum  deviation of cd alpha coefficient   = %14.4le", this->dev_cd_a));
-        this->log_.info(TlUtils::format("+     maximum  deviation of cd beta  coefficient   = %14.4le", this->dev_cd_b));
-        if (this->m_bIsXCFitting == true) {
-            this->log_.info(TlUtils::format("+     maximum  deviation of xc alpha coefficient   = %14.4le", this->dev_xc_a));
-            this->log_.info(TlUtils::format("+     maximum  deviation of xc beta  coefficient   = %14.4le", this->dev_xc_b));
-            this->log_.info(TlUtils::format("+     maximum  deviation of xa alpha coefficient   = %14.4le", this->dev_xa_a));
-            this->log_.info(TlUtils::format("+     maximum  deviation of xa beta  coefficient   = %14.4le", this->dev_xa_b));
-        }
-        break;
-
-    case METHOD_ROKS:
-        this->log_.info("+ convergence informations");
-        this->log_.info(TlUtils::format("+     standard deviation of alpha cd                     = %14.4le", this->dev_sd_a));
-        this->log_.info(TlUtils::format("+     standard deviation of beta  cd                     = %14.4le", this->dev_sd_b));
-        this->log_.info(TlUtils::format("+     maximum  deviation of closed part density matrix   = %14.4le", this->dev_dm_c));
-        this->log_.info(TlUtils::format("+     maximum  deviation of open   part density matrix   = %14.4le", this->dev_dm_o));
-        this->log_.info(TlUtils::format("+              deviation of total energy                 = %14.4le", this->dev_te));
-        this->log_.info(TlUtils::format("+     maximum  deviation of kohn-sham matrix             = %14.4le", this->dev_ks));
-        this->log_.info(TlUtils::format("+     maximum  deviation of cd alpha coefficient         = %14.4le", this->dev_cd_a));
-        this->log_.info(TlUtils::format("+     maximum  deviation of cd beta  coefficient         = %14.4le", this->dev_cd_b));
-        if (this->m_bIsXCFitting == true) {
-            this->log_.info(TlUtils::format("+     maximum  deviation of xc alpha coefficient         = %14.4le", this->dev_xc_a));
-            this->log_.info(TlUtils::format("+     maximum  deviation of xc beta  coefficient         = %14.4le", this->dev_xc_b));
-            this->log_.info(TlUtils::format("+     maximum  deviation of xa alpha coefficient         = %14.4le", this->dev_xa_a));
-            this->log_.info(TlUtils::format("+     maximum  deviation of xa beta  coefficient         = %14.4le", this->dev_xa_b));
-        }
-        break;
-
-    default:
-        std::cerr << "program error:" << __FILE__ << __LINE__ << std::endl;
-        break;
+    this->log_.info(TlUtils::format("+ convergence informations\n"));
+    this->log_.info(TlUtils::format("+     standard deviation of cd               = %14.4le", this->dev_sd));
+    this->log_.info(TlUtils::format("+     maximum  deviation of cd coefficient   = %14.4le", this->dev_cd));
+    this->log_.info(TlUtils::format("+     maximum  deviation of density matrix   = %14.4le", this->dev_dm));
+    this->log_.info(TlUtils::format("+              deviation of total energy     = %14.4le", this->dev_te));
+    this->log_.info(TlUtils::format("+     maximum  deviation of kohn-sham matrix = %14.4le", this->dev_ks));
+    if (this->m_bIsXCFitting == true) {
+        this->log_.info(TlUtils::format("+     maximum  deviation of xc coefficient   = %14.4le", this->dev_xc));
+        this->log_.info(TlUtils::format("+     maximum  deviation of xa coefficient   = %14.4le", this->dev_xa));
     }
-    
 }
 
 // total energy convergence
@@ -143,8 +97,8 @@ double DfConvcheck::dev_total_energy(const int iteration)
 {
     assert(iteration >= 2);
 
-    const double TE = (*this->pPdfParam_)["TE"][iteration].getDouble();
-    const double prevTE = (*this->pPdfParam_)["TE"][iteration -1].getDouble();
+    const double TE = (*this->pPdfParam_)["TEs"][iteration].getDouble();
+    const double prevTE = (*this->pPdfParam_)["TEs"][iteration -1].getDouble();
     const double deviation_value = std::fabs(TE - prevTE);
     
     return deviation_value;

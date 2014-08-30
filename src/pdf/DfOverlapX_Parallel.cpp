@@ -79,7 +79,7 @@ void DfOverlapX_Parallel::getSpqD(TlDistributeSymmetricMatrix* pSpq)
     TlSparseSymmetricMatrix tmpSpq(numOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     this->calcOverlap(orbitalInfo, &tmpSpq);
 
     this->loggerTime(" finalize");
@@ -95,7 +95,7 @@ void DfOverlapX_Parallel::getSabD(TlDistributeSymmetricMatrix* pSab)
     TlSparseSymmetricMatrix tmpSab(numOfAuxDens);
     
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
     this->calcOverlap(orbitalInfo_Density, &tmpSab);
     
     this->loggerTime(" finalize");
@@ -110,7 +110,7 @@ void DfOverlapX_Parallel::getSgd(TlDistributeSymmetricMatrix* pSgd)
     TlSparseSymmetricMatrix tmpSgd(numOfAuxXC);
     
     const TlOrbitalInfo_XC orbitalInfo_XC((*(this->pPdfParam_))["coordinates"],
-                                          (*(this->pPdfParam_))["basis_sets_k"]);
+                                          (*(this->pPdfParam_))["basis_set_xc"]);
     this->calcOverlap(orbitalInfo_XC, &tmpSgd);
     
     this->loggerTime(" finalize");
@@ -136,9 +136,9 @@ void DfOverlapX_Parallel::get_pqg(const TlDistributeVector& myu,
 {
     assert(pF != NULL);
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlOrbitalInfo_XC orbitalInfo_XC((*(this->pPdfParam_))["coordinates"],
-                                          (*(this->pPdfParam_))["basis_sets_k"]);
+                                          (*(this->pPdfParam_))["basis_set_xc"]);
     pF->resize(orbitalInfo.getNumOfOrbitals());
 
     const TlVector tmpMyu = myu.getVector();

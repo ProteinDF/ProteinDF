@@ -39,6 +39,7 @@
 
 Fl_Geometry::Fl_Geometry(const TlSerializeData& geomData) : isUpdate_(false)
 {
+    this->atoms_.clear();
     this->setup(geomData);
 }
 
@@ -216,12 +217,16 @@ void Fl_Geometry::load()
 
 void Fl_Geometry::setup(const TlSerializeData& geomData)
 {
-    this->atoms_.clear();
-    TlSerializeData::MapConstIterator groupEnd = geomData.endMap();
-    for (TlSerializeData::MapConstIterator group = geomData.beginMap(); group != groupEnd; ++group) {
-        TlSerializeData::ArrayConstIterator atomEnd = group->second.endArray();
-        for (TlSerializeData::ArrayConstIterator atom = group->second.beginArray(); atom != atomEnd; ++atom) {
+    if (geomData.hasKey("groups")) {
+        TlSerializeData::MapConstIterator subGroupEnd = geomData["groups"].endMap();
+        for (TlSerializeData::MapConstIterator subGroup = geomData["groups"].beginMap(); subGroup != subGroupEnd; ++subGroup) {
+            this->setup(subGroup->second);
+        }
+    }
 
+    if (geomData.hasKey("atoms")) {
+        TlSerializeData::ArrayConstIterator atomEnd = geomData["atoms"].endArray();
+        for (TlSerializeData::ArrayConstIterator atom = geomData["atoms"].beginArray(); atom != atomEnd; ++atom) {
             AtomData ad;
             ad.atom.setElement((*atom)["symbol"].getStr());
             ad.atom.setCharge((*atom)["charge"].getDouble());
@@ -231,12 +236,6 @@ void Fl_Geometry::setup(const TlSerializeData& geomData)
             ad.atom.moveTo(x, y, z);
             ad.label = (*atom)["label"].getStr();
 
-//             std::cerr << TlUtils::format("%s (%e, %e, %e)",
-//                                          ad.atom.getSymbol().c_str(),
-//                                          ad.atom.getPosition().x(),
-//                                          ad.atom.getPosition().y(),
-//                                          ad.atom.getPosition().z())
-//                       << std::endl;
             this->atoms_.push_back(ad);
         }
     }
@@ -254,7 +253,15 @@ int Fl_Geometry::getAtomKindNumber() const
     return atomKind.size();
 }
 
-std::string Fl_Geometry::getAtom(int i) const
+TlAtom Fl_Geometry::getAtom(int i) const
+{
+    assert(0 <= i);
+    assert(i < static_cast<int>(this->atoms_.size()));
+
+    return this->atoms_[i].atom;
+}
+
+std::string Fl_Geometry::getAtomSymbol(int i) const
 {
     assert(0 <= i);
     assert(i < static_cast<int>(this->atoms_.size()));
@@ -296,7 +303,7 @@ int Fl_Geometry::getNumOfDummyAtoms() const
     int count = 0;
     const int numOfAtoms = this->getNumOfAtoms();
     for (int i = 0; i < numOfAtoms; ++i) {
-        if ("X" == this->getAtom(i)) {
+        if ("X" == this->getAtomSymbol(i)) {
             ++count;
         }
     }

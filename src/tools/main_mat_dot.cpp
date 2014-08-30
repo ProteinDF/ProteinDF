@@ -23,9 +23,9 @@
 #include "TlSymmetricMatrix.h"
 #include "TlGetopt.h"
 
-void showHelp()
+void showHelp(const std::string& name)
 {
-    std::cout << "multiple [options] input_file_path1 input_file_path2 output_file_path" << std::endl;
+    std::cout << TlUtils::format("%s [options] input_file_path1 input_file_path2 output_file_path", name.c_str()) << std::endl;
     std::cout << " OPTIONS:" << std::endl;
     std::cout << "  -h:      show help" << std::endl;
     std::cout << "  -v:      verbose" << std::endl;
@@ -33,17 +33,17 @@ void showHelp()
 
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "hvl:x:");
+    TlGetopt opt(argc, argv, "hv");
     
     if (opt["h"] == "defined") {
-        showHelp();
+        showHelp(opt[0]);
         return EXIT_SUCCESS;
     }
     
     const bool bVerbose = (opt["v"] == "defined");
 
     if (opt.getCount() <= 1) {
-        showHelp();
+        showHelp(opt[0]);
         return EXIT_FAILURE;
     }
     const std::string inputMatrixPath1 = opt[1];
@@ -53,36 +53,45 @@ int main(int argc, char* argv[])
     if (bVerbose == true) {
         std::cerr << "load matrix: " << inputMatrixPath1 << std::endl;
     }
-    if (TlMatrix::isLoadable(inputMatrixPath1) != true) {
+
+    TlMatrix A;
+    if (TlMatrix::isLoadable(inputMatrixPath1)) {
+        A.load(inputMatrixPath1);
+    } else if (TlSymmetricMatrix::isLoadable(inputMatrixPath1)) {
+        TlSymmetricMatrix tmp;
+        tmp.load(inputMatrixPath1);
+        A = tmp;
+    } else {
         std::cerr << "can not open file: " << inputMatrixPath1 << std::endl;
         return EXIT_FAILURE;
     }
 
-    TlMatrix A;
-    A.load(inputMatrixPath1);
-
     if (bVerbose == true) {
         std::cerr << "load matrix: " << inputMatrixPath2 << std::endl;
     }
-    if (TlMatrix::isLoadable(inputMatrixPath2) != true) {
+    TlMatrix B;
+    if (TlMatrix::isLoadable(inputMatrixPath2)) {
+        B.load(inputMatrixPath2);
+    } else if (TlSymmetricMatrix::isLoadable(inputMatrixPath2)) {
+        TlSymmetricMatrix tmp;
+        tmp.load(inputMatrixPath2);
+        B = tmp;
+    } else {
         std::cerr << "can not open file: " << inputMatrixPath2 << std::endl;
         return EXIT_FAILURE;
     }
-
-    TlMatrix B;
-    B.load(inputMatrixPath2);
 
     if (bVerbose == true) {
         std::cerr << "running..." << std::endl;
     }
 
-    TlMatrix C = A * B;
+    A.dot(B);
     
     if (bVerbose == true) {
         std::cerr << "save matrix: " << outputMatrixPath << std::endl;
     }
     if (outputMatrixPath != "") {
-        C.save(outputMatrixPath);
+        A.save(outputMatrixPath);
     }
 
     return EXIT_SUCCESS;

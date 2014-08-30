@@ -77,9 +77,9 @@ void DfEriX_Parallel::getJ(const TlVector& rho, TlDistributeSymmetricMatrix* pJ)
     assert(pJ != NULL);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
@@ -124,7 +124,7 @@ void DfEriX_Parallel::getJab(TlDistributeSymmetricMatrix* pJab)
     TlSparseSymmetricMatrix tmpJab(numOfAuxDens);
     
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
 
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo_Density);
 
@@ -190,9 +190,9 @@ void DfEriX_Parallel::getJ_D_local(const TlDistributeSymmetricMatrix& P,
     }
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
     TlMatrix localP;
@@ -271,9 +271,9 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
     }
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
-                                                    (*(this->pPdfParam_))["basis_sets_j"]);
+                                                    (*(this->pPdfParam_))["basis_set_j"]);
     const ShellArrayTable shellArrayTable_Density = this->makeShellArrayTable(orbitalInfo_Density);
 
     TlSparseSymmetricMatrix tmpP(this->m_nNumOfAOs);
@@ -376,7 +376,7 @@ void DfEriX_Parallel::getJpq_D(const TlDistributeSymmetricMatrix& P,
     pJ->resize(numOfAOs);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
 
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
@@ -510,7 +510,7 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
     pK->resize(numOfAOs);
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
@@ -641,7 +641,7 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     pK->resize(numOfAOs);
     
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]);
+                                    (*(this->pPdfParam_))["basis_set"]);
     
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
@@ -854,7 +854,8 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
 {
     const int taskListSize = taskList.size();
     // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
-    
+
+    const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
 #pragma omp parallel
     {
         int threadID = 0;
@@ -881,7 +882,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
             //                                                                             pairwisePGTO_cutoffThreshold);
             // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
 
-            for (int shellTypeR = DfEriX::MAX_SHELL_TYPE -1; shellTypeR >= 0; --shellTypeR) {
+            for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
             
                 // const int shellTypeS = 0;

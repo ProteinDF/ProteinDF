@@ -236,6 +236,9 @@ double TlFmt::getFmT0(const int m, const double& t) const
 
 void TlFmt::getFmT(const int m, const double& t, double* pBuf) const
 {
+    assert(0 <= m);
+    assert(m < TlFmt::FMT_M);
+
     if (t <= (2*m + 36)) { // Tf = 2*m + 36
         const int ts = static_cast<int>(0.5 + t * INV_FMT_STEPSIZE);
         const double delta = ts * FMT_STEPSIZE - t;
@@ -258,6 +261,8 @@ void TlFmt::getFmT(const int m, const double& t, double* pBuf) const
 
 void TlFmt::getGmT(const int m, const double& t, double* pBuf) const
 {
+    assert(0 <= m);
+    assert(m < TlFmt::FMT_M);
     static const double COEF = std::sqrt(2.0 / TlFmt::PI);
 
     this->getFmT(m, t, pBuf);

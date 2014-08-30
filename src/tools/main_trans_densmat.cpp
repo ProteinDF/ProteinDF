@@ -28,10 +28,11 @@
 #include "Fl_Geometry.h"
 #include "DfOverlapX.h"
 #include "TlMsgPack.h"
+#include "TlUtils.h"
 
-void usage()
+void usage(const std::string& progname)
 {
-    std::cout << "usage: transdim \"old matrix file\" \"new matrix file\"" << std::endl;
+    std::cout << TlUtils::format("usage: %s \"old matrix file\" \"new matrix file\"", progname.c_str()) << std::endl;
     std::cout << " transform matrix into the different basis." << std::endl;
     std::cout << " default old matrix file is old.mtx, and new matrix file is new.mtx." << std::endl;
     std::cout << std::endl;
@@ -47,7 +48,7 @@ int main(int argc, char* argv[])
     TlGetopt opt(argc, argv, "hn:o:s:S:");
 
     if (opt["h"].empty() == false) {
-        usage();
+        usage(opt[0]);
         return EXIT_SUCCESS;
     }
     
@@ -101,9 +102,9 @@ int main(int argc, char* argv[])
     }
     
     const TlOrbitalInfo orbInfo_old(pdfParamOld["coordinates"],
-                                    pdfParamOld["basis_sets"]);
+                                    pdfParamOld["basis_set"]);
     const TlOrbitalInfo orbInfo_new(pdfParamNew["coordinates"],
-                                    pdfParamNew["basis_sets"]);
+                                    pdfParamNew["basis_set"]);
 
     TlMatrix omega;
     {

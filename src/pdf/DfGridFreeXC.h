@@ -19,6 +19,7 @@
 #ifndef DFGRIDFREEXC_H
 #define DFGRIDFREEXC_H
 
+#include "CnError.h"
 #include "DfObject.h"
 #include "DfXCFunctional.h"
 #include "DfOverlapX.h"
@@ -227,9 +228,13 @@ protected:
     void buildFxc_GGA_runtype(const RUN_TYPE runType);
 
 public:
+    TlMatrix getForce();
+
     // virtual void calcCholeskyVectors_onTheFly();
 
 protected:
+    TlMatrix selectGradMat(const TlMatrix& input, const int atomIndex);
+
     // void calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
     //                    PQ_PairArray *pI2PQ,
     //                    TlVector *pDiagonals);
@@ -281,7 +286,7 @@ protected:
                                         const PQ_PairArray& I2PQ);
 
     DfFunctional_GGA* getFunctionalGGA();
-
+    
 protected:
     static const double ONE_THIRD; // = 1.0 / 3.0
 
@@ -296,14 +301,16 @@ protected:
     typedef std::map<IndexPair4, std::vector<double> > ElementsCacheType;
     ElementsCacheType elements_cache_;
 
-    ///
-    bool debugSaveM_;
-
     /// 規格直交化ルーチンにCanonical Orthogonalizeを使う
     /// true: canonical
     /// false: lowdin
     bool isCanonicalOrthogonalize_;
-    // int GF_mode_;
+
+    /// V の固有値ベクトルの保存先
+    std::string GfVEigvalVtrPath_;
+
+    ///
+    bool debugSaveM_;
 };
 
 
@@ -317,9 +324,9 @@ void DfGridFreeXC::preprocessBeforeSCF_templ()
     bool isGGA = (funcType == DfXCFunctional::GGA);
 
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                    (*(this->pPdfParam_))["basis_sets"]); // orbital用
+                                    (*(this->pPdfParam_))["basis_set"]); // orbital用
     const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
-                                       (*(this->pPdfParam_))["basis_sets_GF"]); // GridFree用
+                                       (*(this->pPdfParam_))["basis_set_gridfree"]); // GridFree用
 
     DfOverlapClass dfOvp(this->pPdfParam_);
     if (this->isDedicatedBasisForGridFree_) {
@@ -334,10 +341,12 @@ void DfGridFreeXC::preprocessBeforeSCF_templ()
             MatrixType gfV;
             if (this->isCanonicalOrthogonalize_) {
                 this->log_.info("orthogonalize method: canoncal");
-                dfXMatrix.canonicalOrthogonalize(gfS, &gfV, NULL);
+                dfXMatrix.canonicalOrthogonalize(gfS, &gfV, NULL,
+                                                 this->GfVEigvalVtrPath_);
             } else {
                 this->log_.info("orthogonalize method: lowdin");
-                dfXMatrix.lowdinOrthogonalize(gfS, &gfV, NULL);
+                dfXMatrix.lowdinOrthogonalize(gfS, &gfV, NULL,
+                                              this->GfVEigvalVtrPath_);
             }
             this->log_.info("save V matrix");
             DfObject::saveGfVMatrix(gfV);
@@ -384,10 +393,38 @@ void DfGridFreeXC::preprocessBeforeSCF_templ()
 template<class SymmetricMatrixType>
 SymmetricMatrixType DfGridFreeXC::getPMatrix(const RUN_TYPE runType)
 {
-    SymmetricMatrixType P = DfObject::getPpqMatrix<SymmetricMatrixType>(runType,
-                                                                        this->m_nIteration -1);
-    if (runType ==RUN_RKS) {
-        P *= 0.5;
+    SymmetricMatrixType P;
+    switch(runType) {
+    case RUN_RKS:
+        {
+            P = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration -1);
+        }
+        break;
+        
+    case RUN_UKS_ALPHA:
+    case RUN_UKS_BETA:
+        {
+            P = DfObject::getPpqMatrix<SymmetricMatrixType>(runType, this->m_nIteration -1);
+        }
+        break;
+
+    case RUN_ROKS_ALPHA:
+        {
+            P = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration -1);
+            P += DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, this->m_nIteration -1);
+        }
+        break;
+
+    case RUN_ROKS_BETA:
+        {
+            P = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration -1);
+        }
+        break;
+
+    default:
+        this->log_.critical(TlUtils::format("wrong parameter: %s:%d", __FILE__, __LINE__));
+        CnErr.abort();
+        break;
     }
 
     return P;
@@ -412,7 +449,10 @@ void DfGridFreeXC::buildFxc_LDA_method()
         break;
 
     case METHOD_ROKS:
-        this->log_.critical("NOT in support");
+        this->buildFxc_LDA_runtype<DfOverlapClass, DfCD_class,
+                                   SymmetricMatrixType, MatrixType>(RUN_ROKS_ALPHA);
+        this->buildFxc_LDA_runtype<DfOverlapClass, DfCD_class,
+                                   SymmetricMatrixType, MatrixType>(RUN_ROKS_BETA);
         break;
 
     default:
@@ -429,9 +469,9 @@ void DfGridFreeXC::buildFxc_LDA_runtype(const RUN_TYPE runType)
 {
     this->log_.info("build Fxc by grid-free method: functional type is LDA.");
 
-    std::string basisset_param = "basis_sets";
+    std::string basisset_param = "basis_set";
     if (this->isDedicatedBasisForGridFree_) {
-        basisset_param = "basis_sets_GF";
+        basisset_param = "basis_set_gridfree";
     }
     const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
                                        (*(this->pPdfParam_))[basisset_param]);
@@ -485,9 +525,20 @@ void DfGridFreeXC::buildFxc_LDA_runtype(const RUN_TYPE runType)
     
     SymmetricMatrixType M_tilda = tV * M * V;
     
+    // diagonalize M~
     MatrixType U;
     TlVector lambda;
     M_tilda.diagonal(&lambda, &U);
+
+    // check eigenvalues
+    {
+        if (lambda.getSize() > 0) {
+            double v = lambda[0];
+            if (v < 1.0E-16) {
+                this->log_.warn(TlUtils::format("The eigenvalue of M~ is too small.: % 8.3e", v));
+            }
+        }
+    }
     
     SymmetricMatrixType F_lambda(lambda.getSize());
     SymmetricMatrixType E_lambda(lambda.getSize());
@@ -528,11 +579,15 @@ void DfGridFreeXC::buildFxc_GGA_method()
         break;
 
     case METHOD_ROKS:
-        this->log_.critical("NOT in support");
+        this->buildFxc_GGA_runtype<DfOverlapClass, DfCD_class,
+                                   SymmetricMatrixType, MatrixType>(RUN_ROKS_ALPHA);
+        this->buildFxc_GGA_runtype<DfOverlapClass, DfCD_class,
+                                   SymmetricMatrixType, MatrixType>(RUN_ROKS_BETA);
         break;
 
     default:
-        this->log_.critical("wrong program");
+        this->log_.critical(TlUtils::format("wrong parameter: %s:%d", __FILE__, __LINE__));
+        CnErr.abort();
         break;
     }
 }
@@ -545,9 +600,9 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType)
 {
     this->log_.info("build Fxc by grid-free method: functional type is GGA.");
 
-    std::string basisset_param = "basis_sets";
+    std::string basisset_param = "basis_set";
     if (this->isDedicatedBasisForGridFree_) {
-        basisset_param = "basis_sets_GF";
+        basisset_param = "basis_set_gridfree";
     }
     const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
                                        (*(this->pPdfParam_))[basisset_param]);
@@ -606,11 +661,23 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType)
     SymmetricMatrixType Mtilde = Vt * M * V;
     //Mtilde.save("Mtilde.mat");
 
+    // diagonalize M~
     TlVector lambda;
     MatrixType U;
     Mtilde.diagonal(&lambda, &U);
+
+    // check eigenvalues
+    {
+        if (lambda.getSize() > 0) {
+            double v = lambda[0];
+            if (v < 1.0E-16) {
+                this->log_.warn(TlUtils::format("The eigenvalue of M~ is too small.: % 8.3e", v));
+            }
+        }
+    }
     //lambda.save("lambda.vct");
     //U.save("U.mat");
+
     MatrixType Ut = U;
     Ut.transpose();
     assert(lambda.getSize() == numOfGFOrthNormBasis);
