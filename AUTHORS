@@ -1,0 +1,20 @@
+# The format of this file was inspired by the Linux kernel CREDITS file.
+# 
+# Authors and contributors are listed alphabetically.
+# 
+#
+# The fields are: name (N), email (E), web-address (W),
+# PGP key ID and fingerprint (P), description (D), and snail-mail address (S).
+
+N: Hiroshi Kashiwagi
+D: author of the original code
+
+N: Toshiyuki Hirano
+E: t-hirano@iis.u-tokyo.ac.jp
+D: developer and maintainer
+
+N: Fumitoshi Sato
+E: satofumi@iis.u-tokyo.ac.jp
+D: author of the original code
+
+
