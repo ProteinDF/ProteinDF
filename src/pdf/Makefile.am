@@ -1,4 +1,8 @@
+if PARALLEL
 lib_LTLIBRARIES = libpdf.la libppdf.la
+else
+lib_LTLIBRARIES = libpdf.la
+endif
 
 libpdf_la_SOURCES = \
 	DfXCFunctional.h		DfXCFunctional.cpp			\
