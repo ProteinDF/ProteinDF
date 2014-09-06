@@ -75,19 +75,6 @@ ACX_BLAS
 ACX_LAPACK
 
 # ====================================================================
-# for MPI
-# ====================================================================
-ACX_MPI
-if test "x$MPICXX" != x; then
-   CXX="$MPICXX"
-fi
-
-# ====================================================================
-# for ScaLAPACK
-# ====================================================================
-ACX_SCALAPACK
-
-# ====================================================================
 # for parallel
 # ====================================================================
 AC_ARG_ENABLE(parallel, [  --enable-parallel  build PPDF.x],
@@ -97,6 +84,23 @@ AC_ARG_ENABLE(parallel, [  --enable-parallel  build PPDF.x],
       *) AC_MSG_ERROR(bad value ${enableval} for --enable-parallel) ;;
 esac], [parallel=false])
 AM_CONDITIONAL(PARALLEL, test x$parallel = xtrue)
+
+# ====================================================================
+# for MPI
+# ====================================================================
+if test x$parallel = xtrue; then
+   ACX_MPI
+   if test "x$MPICXX" != x; then
+      CXX="$MPICXX"
+   fi
+fi
+
+# ====================================================================
+# for ScaLAPACK
+# ====================================================================
+if test x$parallel = xtrue; then
+    ACX_SCALAPACK
+fi
 
 # ====================================================================
 # for DEBUG
