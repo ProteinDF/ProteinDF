@@ -331,8 +331,7 @@ void DfCD::getJ(TlSymmetricMatrix* pJ)
 
 void DfCD::getJ_S(TlSymmetricMatrix* pJ)
 {
-    this->log_.info("calc J by CD method (parallel).");
-    const TlSymmetricMatrix P = this->getPMatrix();
+    this->log_.info("calc J by CD method (serial).");
 
     // cholesky vector
     TlMatrix L = this->getLjk();
@@ -340,24 +339,55 @@ void DfCD::getJ_S(TlSymmetricMatrix* pJ)
     const index_type numOfCBs = L.getNumOfCols();
     
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
+    const TlVector vP = this->getScreenedDensityMatrix(I2PQ);
+
     index_type start_CholeskyBasis = 0;
     index_type end_CholeskyBasis = 0;
     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
-    for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-        TlSymmetricMatrix LI = this->getCholeskyVector(L.getColVector(I), I2PQ);
-        // LI.save(TlUtils::format("fl_Work/debug_LI_J.%d.mat", I));
-        assert(LI.getNumOfRows() == this->m_nNumOfAOs);
-        assert(LI.getNumOfCols() == this->m_nNumOfAOs);
-        
-        TlMatrix QI = LI;
-        QI.dot(P);
-        const double qi = QI.sum();
 
-        *pJ += qi*LI;
+    const index_type numOfI = I2PQ.size();
+    TlVector vJ(numOfI);
+    for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
+        const TlVector LI = L.getColVector(I);
+        assert(LI.getSize() == vJ.getSize());
+
+        TlVector tmpLI = LI;
+        const double qi = tmpLI.dot(vP).sum();
+
+        vJ += qi*LI;
     }
 
+    this->expandJMatrix(vJ, I2PQ, pJ);
     this->finalize(pJ);
 }
+
+TlVector DfCD::getScreenedDensityMatrix(const PQ_PairArray& I2PQ)
+{
+    const TlSymmetricMatrix P = this->getPMatrix();
+    const std::size_t numOfI = I2PQ.size();
+    TlVector answer(numOfI);
+    
+    for (std::size_t i = 0; i < numOfI; ++i) {
+        const Index2& pair = I2PQ[i];
+        const index_type r = pair.index1();
+        const index_type c = pair.index2();
+        const double coef = (r != c) ? 2.0 : 1.0;
+        answer.set(i, coef * P.get(r, c));
+    }
+
+    return answer;
+}
+
+void DfCD::expandJMatrix(const TlVector& vJ, const PQ_PairArray& I2PQ, TlSymmetricMatrix* pJ)
+{
+    assert(pJ != NULL);
+    const index_type numOfI = I2PQ.size();
+    for (index_type i = 0; i < numOfI; ++i) {
+        const Index2& pair = I2PQ[i];
+        pJ->set(pair.index1(), pair.index2(), vJ.get(i));
+    }
+}
+
 
 void DfCD::getJ_A(TlSymmetricMatrix* pJ)
 {

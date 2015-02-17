@@ -51,6 +51,7 @@ public:
     
 protected:
     void getJ_S(TlSymmetricMatrix *pJ);
+    
     void getK_S(const RUN_TYPE runType,
                 TlSymmetricMatrix *pK);
     virtual void getM_S(const TlSymmetricMatrix& P,
@@ -441,6 +442,10 @@ protected:
     // TlCache<IndexPair4, std::vector<double> > ERI_cache_manager_;
     ERI_CacheType ERI_cache_;
 
+protected:
+    void getJ_S_v2(TlSymmetricMatrix* pJ);
+    TlVector getScreenedDensityMatrix(const PQ_PairArray& I2PQ);
+    void expandJMatrix(const TlVector& vJ, const PQ_PairArray& I2PQ, TlSymmetricMatrix* pJ);
 
 protected:
     //index_type numOfPQs_;

@@ -90,6 +90,10 @@ public:
                 TlDistributeSymmetricMatrix* pK);
 
 protected:
+    TlVector getScreenedDensityMatrixD(const PQ_PairArray& I2PQ);
+    void expandJMatrixD(const TlVector& vJ, const PQ_PairArray& I2PQ, TlDistributeSymmetricMatrix* pJ);
+
+protected:
     virtual void getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
     virtual void getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
 
