@@ -19,14 +19,17 @@
 #include <mpi.h>
 #include <iostream>
 #include <cstring>
+#include <cstddef>
 #include <cassert>
+#include <numeric>
+#include <typeinfo>
 
 #include "TlCommunicate.h"
 #include "TlVector.h"
 #include "TlMatrixObject.h"
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
-#include "TlSparseSymmetricMatrix.h"
+#include "TlSparseMatrix.h"
 #include "TlFileMatrix.h"
 #include "TlFileSymmetricMatrix.h"
 #include "TlSerializeData.h"
@@ -86,18 +89,21 @@ std::string TlCommunicate::getReport() const
 {
     std::string answer = TlUtils::format(" #%d:\n",
                                          this->getRank());
-    answer += TlUtils::format(" barrier:    %16.2f sec. %16ld times\n",
+    answer += TlUtils::format(" barrier:     %16.2f sec. %16ld times\n",
                               this->time_barrier_.getElapseTime(),
                               this->counter_barrier_);
-    answer += TlUtils::format(" test:       %16.2f sec. %16ld times\n",
+    answer += TlUtils::format(" test:        %16.2f sec. %16ld times\n",
                               this->time_test_.getElapseTime(),
                               this->counter_test_);
-    answer += TlUtils::format(" wait:       %16.2f sec. %16ld times\n",
+    answer += TlUtils::format(" wait:        %16.2f sec. %16ld times\n",
                               this->time_wait_.getElapseTime(),
                               this->counter_wait_);
-    answer += TlUtils::format(" all_reduce: %16.2f sec. %16ld times\n",
+    answer += TlUtils::format(" all_reduce:  %16.2f sec. %16ld times\n",
                               this->time_allreduce_.getElapseTime(),
                               this->counter_allreduce_);
+    answer += TlUtils::format(" iall_reduce: %16.2f sec. %16ld times\n",
+                              this->time_iallreduce_.getElapseTime(),
+                              this->counter_iallreduce_);
     
     return answer;
 }
@@ -137,12 +143,11 @@ bool TlCommunicate::checkNonBlockingTableCollision(uintptr_t key,
     {
         if (this->nonBlockingCommParamTable_.find(key) != this->nonBlockingCommParamTable_.end()) {
             const char isSendRecv = ((param.property & NonBlockingCommParam::SEND) != 0) ? 'S' : 'R';
-            std::cerr << TlUtils::format("[%5d/%5d WARN] non-blocking table collision(%c) found in TlCommunicate: tag=%d, line=%d",
-                                         this->getRank(), this->getNumOfProcs() -1,
-                                         isSendRecv,
-                                         param.tag,
-                                         line)
-                      << std::endl;
+            this->log_.critical(TlUtils::format("[%5d/%5d WARN] non-blocking table collision(%c) found in TlCommunicate: tag=%d, line=%d",
+                                                this->getRank(), this->getNumOfProcs() -1,
+                                                isSendRecv,
+                                                param.tag,
+                                                line));
             answer = false;
         }
     }
@@ -197,9 +202,7 @@ int TlCommunicate::reduce(T* pData, const MPI_Datatype mpiType,
                                 mpiType, mpiOp, root, MPI_COMM_WORLD);
             std::copy(pBuf, pBuf + bufCount, pData + startIndex);
             if (answer != 0) {
-                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                          << " anwer=" << answer
-                          << std::endl;
+                this->log_.critical(TlUtils::format("MPI error. %s:%d answer=%d", __FILE__,  __LINE__, answer));
             }
         }
         
@@ -211,9 +214,7 @@ int TlCommunicate::reduce(T* pData, const MPI_Datatype mpiType,
                                 mpiType, mpiOp, root, MPI_COMM_WORLD);
             std::copy(pBuf, pBuf + remain, pData + startIndex);
             if (answer != 0) {
-                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                          << " anwer=" << answer
-                          << std::endl;
+                this->log_.critical(TlUtils::format("MPI error. %s:%d answer=%d", __FILE__,  __LINE__, answer));
             }
         }
 
@@ -266,68 +267,6 @@ int TlCommunicate::reduce_MAXLOC(double* pValue, int* pIndex, int root)
 
 
 // =============================================================================
-template<typename T>
-int TlCommunicate::allReduce(T* pData, const MPI_Datatype mpiType,
-                             const std::size_t start, const std::size_t end,
-                             const MPI_Op mpiOp)
-{
-    this->time_allreduce_.start();
-    ++(this->counter_allreduce_);
-    
-    int answer = 0;
-
-#ifdef DIV_COMM
-    {
-        const long length = end - start;
-        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
-        const ldiv_t tmp = std::ldiv(length, bufCount);
-        T* pBuf = new T[bufCount];
-        
-        // 作業用メモリ分のループ
-        for (long i = 0; i < tmp.quot; ++i) {
-            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-            answer = MPI_Allreduce(pData + startIndex, pBuf, bufCount,
-                                   mpiType, mpiOp, MPI_COMM_WORLD);
-            std::copy(pBuf, pBuf + bufCount, pData + startIndex);
-            if (answer != 0) {
-                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                          << " anwer=" << answer
-                          << std::endl;
-            }
-        }
-        
-        // 残り分のループ
-        if (tmp.rem != 0) {
-            const std::size_t remain = tmp.rem;
-            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-            answer = MPI_Allreduce(pData + startIndex, pBuf, remain,
-                                   mpiType, mpiOp, MPI_COMM_WORLD);
-            std::copy(pBuf, pBuf + remain, pData + startIndex);
-            if (answer != 0) {
-                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                          << " anwer=" << answer
-                          << std::endl;
-            }
-        }
-        
-        delete[] pBuf;
-        pBuf = NULL;
-    }
-#else
-    {
-        T* pBuf = new T[end - start];
-        answer = MPI_Allreduce(pData, pBuf, end - start,
-                               mpiType, mpiOp, MPI_COMM_WORLD);
-        std::copy(pBuf, pBuf + (end - start), pData);
-        delete[] pBuf;
-        pBuf = NULL;
-    }
-#endif // DIV_COMM
-
-    this->time_allreduce_.stop();
-    return answer;
-}
-
 
 int TlCommunicate::allReduce_SUM(int& rData)
 {
@@ -472,9 +411,7 @@ int TlCommunicate::allReduce_SUM(std::vector<T>& data, const MPI_Datatype mpiTyp
                                    mpiType, MPI_SUM, MPI_COMM_WORLD);
             std::copy(buf.begin(), buf.end(), data.begin() + startIndex);
             if (answer != 0) {
-                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                          << " anwer=" << answer
-                          << std::endl;
+                this->log_.critical(TlUtils::format("MPI error. %s:%d answer=%d", __FILE__, __LINE__,  answer));
             }
         }
         
@@ -486,9 +423,7 @@ int TlCommunicate::allReduce_SUM(std::vector<T>& data, const MPI_Datatype mpiTyp
                                    mpiType, MPI_SUM, MPI_COMM_WORLD);
             std::copy(buf.begin(), buf.begin() + remain, data.begin() + startIndex);
             if (answer != 0) {
-                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                          << " anwer=" << answer
-                          << std::endl;
+                this->log_.critical(TlUtils::format("MPI error. %s:%d answer=%d", __FILE__,  __LINE__, answer));
             }
         }
     }
@@ -534,9 +469,7 @@ int TlCommunicate::allReduce_SUM(std::valarray<double>& data,
                                    MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             std::copy(pBuf, pBuf + bufCount, &(data[0]) + startIndex);
             if (answer != 0) {
-                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                          << " anwer=" << answer
-                          << std::endl;
+                this->log_.critical(TlUtils::format("MPI error. %s:%d answer=%d", __FILE__, __LINE__, answer));
             }
         }
         
@@ -548,9 +481,7 @@ int TlCommunicate::allReduce_SUM(std::valarray<double>& data,
                                    MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             std::copy(pBuf, pBuf + remain, &(data[0]) + startIndex);
             if (answer != 0) {
-                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-                          << " anwer=" << answer
-                          << std::endl;
+                this->log_.critical(TlUtils::format("MPI error. %s:%d answer=%d", __FILE__,  __LINE__, answer));
             }
         }
         
@@ -573,6 +504,68 @@ int TlCommunicate::allReduce_SUM(std::valarray<double>& data,
 }
 
 
+// =====================================================================
+// All reduce
+//
+template<typename T>
+int TlCommunicate::allReduce(T* pData, const MPI_Datatype mpiType,
+                             const std::size_t start, const std::size_t end,
+                             const MPI_Op mpiOp)
+{
+    this->time_allreduce_.start();
+    ++(this->counter_allreduce_);
+    
+    int answer = 0;
+
+#ifdef DIV_COMM
+    {
+        const long length = end - start;
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        T* pBuf = new T[bufCount];
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Allreduce(pData + startIndex, pBuf, bufCount,
+                                   mpiType, mpiOp, MPI_COMM_WORLD);
+            std::copy(pBuf, pBuf + bufCount, pData + startIndex);
+            if (answer != 0) {
+                this->log_.critical(TlUtils::format("MPI error. %s:%d answer=%d", __FILE__,  __LINE__, answer));
+            }
+        }
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const std::size_t remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Allreduce(pData + startIndex, pBuf, remain,
+                                   mpiType, mpiOp, MPI_COMM_WORLD);
+            std::copy(pBuf, pBuf + remain, pData + startIndex);
+            if (answer != 0) {
+                this->log_.critical(TlUtils::format("MPI error. %s:%d answer=%d", __FILE__, __LINE__,  answer));
+            }
+        }
+        
+        delete[] pBuf;
+        pBuf = NULL;
+    }
+#else
+    {
+        T* pBuf = new T[end - start];
+        answer = MPI_Allreduce(pData, pBuf, end - start,
+                               mpiType, mpiOp, MPI_COMM_WORLD);
+        std::copy(pBuf, pBuf + (end - start), pData);
+        delete[] pBuf;
+        pBuf = NULL;
+    }
+#endif // DIV_COMM
+
+    this->time_allreduce_.stop();
+    return answer;
+}
+
+
 int TlCommunicate::allReduce_SUM(int* pData, std::size_t length)
 {
     return this->allReduce(pData, MPI_INT, 0, length, MPI_SUM);
@@ -583,84 +576,195 @@ int TlCommunicate::allReduce_SUM(double* pData, std::size_t length)
     return this->allReduce(pData, MPI_DOUBLE, 0, length, MPI_SUM);
 }
 
-
-// int TlCommunicate::allReduce_SUM(double* pData,
-//                                  const std::size_t start, const std::size_t end)
-// {
-//     int answer = 0;
-//     const long length = end - start;
-//     const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
-//     const ldiv_t tmp = std::ldiv(length, bufCount);
-//     double* pBuf = new double[bufCount];
-
-//     // 作業用メモリ分のループ
-//     for (long i = 0; i < tmp.quot; ++i) {
-//         std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
-//         answer = MPI_Allreduce(pData + startIndex, pBuf, bufCount,
-//                                MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-//         std::copy(pBuf, pBuf + bufCount, pData + startIndex);
-//         if (answer != 0) {
-//             std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-//                       << " anwer=" << answer
-//                       << std::endl;
-//         }
-//     }
-
-//     // 残り分のループ
-//     if (tmp.rem != 0) {
-//         const std::size_t remain = tmp.rem;
-//         std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
-//         answer = MPI_Allreduce(pData + startIndex, pBuf, remain,
-//                                MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-//         std::copy(pBuf, pBuf + remain, pData + startIndex);
-//         if (answer != 0) {
-//             std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
-//                       << " anwer=" << answer
-//                       << std::endl;
-//         }
-//     }
-
-//     delete[] pBuf;
-//     pBuf = NULL;
-
-//     return answer;
-// }
-
-
 int TlCommunicate::allReduce_SUM(TlVector& rVector)
 {
     return this->allReduce_SUM(rVector.data_, rVector.getSize()); // this class is friend class of TlVector.
 }
 
 
+// =====================================================================
+// MPI_Iallreduce()
+//
+template<typename T>
+int TlCommunicate::iAllReduce(const T* pSendBuf, T* pRecvBuf,
+                              int count,
+                              const MPI_Datatype mpiType,
+                              const MPI_Op mpiOp)
+{
+    this->time_iallreduce_.start();
+    ++(this->counter_iallreduce_);
+
+    int answer = 0;
+
+#ifdef DIV_COMM
+    {
+#error // NO TEST!
+    }
+#else
+    {
+        MPI_Request* pRequest = new MPI_Request;
+        const int tag = 0;
+        answer = MPI_Iallreduce(pSendBuf, pRecvBuf, count,
+                                mpiType, mpiOp, MPI_COMM_WORLD,
+                                pRequest);
+
+        std::vector<uintptr_t> requests;
+        requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest));
+        const uintptr_t key = reinterpret_cast<uintptr_t>((void*)pRecvBuf);
+        const NonBlockingCommParam param(requests, tag,
+                                         NonBlockingCommParam::SEND);
+        this->checkNonBlockingTableCollision(key, param, __LINE__);
+#pragma omp critical (TlCommunicate_nonBlockingCommParamTable_update)
+        {
+            this->nonBlockingCommParamTable_[key] = param;
+        }
+    }
+#endif // DIV_COMM
+
+    this->time_iallreduce_.stop();
+    return answer;
+}
+
+
+int TlCommunicate::iAllReduce_SUM(const double* pSendBuf, double* pRecvBuf, int count)
+{
+    return this->iAllReduce(pSendBuf, pRecvBuf, count, MPI_DOUBLE, MPI_SUM);
+}
+
+
+// =====================================================================
 int TlCommunicate::allReduce_SUM(TlMatrix& rMatrix)
 {
     return this->allReduce_SUM(rMatrix.data_, rMatrix.getNumOfElements());
 }
 
 
-int TlCommunicate::allReduce_SUM(TlSymmetricMatrix& rMatrix)
+int TlCommunicate::allReduce_SUM(TlSparseMatrix& rMatrix)
 {
-    return this->allReduce_SUM(rMatrix.data_, rMatrix.getNumOfElements());
+    int err = this->reduce_SUM(rMatrix);
+    if (err == 0) {
+        err = this->broadcast(rMatrix, 0);
+    }
+
+    return err;
 }
 
 
-// int TlCommunicate::allReduce_SUM(TlMmapMatrix& rMatrix)
-// {
-//     const std::size_t numOfElements = rMatrix.getNumOfRows() * rMatrix.getNumOfCols();
+int TlCommunicate::reduce_SUM(TlSparseMatrix& rMatrix, int root)
+{
+    const int numOfProcs = this->getNumOfProcs();
+    const int myRank = this->getRank();
+    assert(0 <= root);
+    assert(root < numOfProcs);
 
-//     return this->allReduce_SUM(rMatrix.data_, numOfElements);
-// }
+    const int tag_size = TLC_REDUCE_SUM_TLSPARSEMATRIX_SIZE;
+    const int tag_data = TLC_REDUCE_SUM_TLSPARSEMATRIX_DATA;
+
+    if (myRank == root) {
+        std::vector<unsigned long> sizes(numOfProcs);
+        {
+            for (int i = 0; i < numOfProcs -1; ++i) {
+                int src = 0;
+                unsigned long numOfSize = 0;
+                this->receiveDataFromAnySource(numOfSize, &src, tag_size);
+                sizes[src] = numOfSize;
+            }
+        }
+
+        std::vector<std::vector<TlMatrixElement> > bufs(numOfProcs);
+        for (int src = 0; src < numOfProcs; ++src) {
+            if (src != myRank) {
+                bufs[src].resize(sizes[src]);
+                this->iReceiveDataX(&(bufs[src][0]), this->MPI_MATRIXELEMENT, 0, sizes[src], src, tag_data);
+            }
+        }
+
+        std::vector<int> recvd(numOfProcs, 0);
+        recvd[root] = 1; // no communication for root
+        while(true) {
+            for (int src = 0; src < numOfProcs; ++src) {
+                if (recvd[src] == 0) {
+                    if (this->test(&(bufs[src][0]))) {
+                        this->wait(&(bufs[src][0]));
+                        
+                        for (std::size_t i = 0; i < sizes[src]; ++i) {
+                            rMatrix.add(bufs[src][i].row, bufs[src][i].col, bufs[src][i].value);
+                        }
+
+                        recvd[src] = 1;
+                    }
+                }
+
+            }
+
+            // check
+            if (std::accumulate(recvd.begin(), recvd.end(), 0) == numOfProcs) {
+                break;
+            }
+        }
+
+    } else {
+        unsigned long numOfSize = rMatrix.getSize();
+        this->sendData(numOfSize, root, tag_size);
+
+        // prepare
+        TlSparseMatrix::const_iterator itEnd = rMatrix.end();
+        std::size_t count = 0;
+        std::vector<TlMatrixElement> buf(numOfSize);
+        for (TlSparseMatrix::const_iterator it = rMatrix.begin(); it != itEnd; ++it) {
+            buf[count] = TlMatrixElement(it->first.row, it->first.col, it->second);
+            ++count;
+        }
+        assert(count == numOfSize);
+            
+        this->sendDataX(&(buf[0]), this->MPI_MATRIXELEMENT, 0, numOfSize,
+                        root, tag_data);
+    }
+
+    return 0;
+}
 
 
-// int TlCommunicate::allReduce_SUM(TlMmapSymmetricMatrix& rMatrix)
-// {
-//     // rMatrix.getNumOfRows() == rMatrix.getNumOfCols()
-//     const std::size_t dim = rMatrix.getNumOfRows();
-//     const std::size_t numOfElements = dim * (dim +1) / 2;
+int TlCommunicate::broadcast(TlSparseMatrix& rMatrix, const int root)
+{
+    unsigned long header[3];
+    std::size_t numOfSize = 0;
 
-//     return this->allReduce_SUM(rMatrix.data_, numOfElements);
-// }
+    if (this->getRank() == root) {
+        numOfSize = rMatrix.getSize();
+
+        header[0] = rMatrix.getNumOfRows();
+        header[1] = rMatrix.getNumOfCols();
+        header[2] = numOfSize;
+
+        TlSparseMatrix::const_iterator itEnd = rMatrix.end();
+        std::size_t count = 0;
+        std::vector<TlMatrixElement> buf(numOfSize);
+        for (TlSparseMatrix::const_iterator it = rMatrix.begin(); it != itEnd; ++it) {
+            buf[count] = TlMatrixElement(it->first.row, it->first.col, it->second);
+            ++count;
+        }
+        assert(count == numOfSize);
+
+        this->broadcast(header, MPI_UNSIGNED_LONG, 0, 3, root);
+        this->broadcast(&(buf[0]), this->MPI_MATRIXELEMENT, 0, numOfSize, root);
+    } else {
+        this->broadcast(header, MPI_UNSIGNED_LONG, 0, 3, root);
+
+        rMatrix.clear();
+        rMatrix.resize(header[0], header[1]);
+
+        numOfSize = header[2];
+        std::vector<TlMatrixElement> buf(numOfSize);
+        this->broadcast(&(buf[0]), this->MPI_MATRIXELEMENT, 0, numOfSize, root);
+
+        for (std::size_t i = 0; i < numOfSize; ++i) {
+            rMatrix.set(buf[i].row, buf[i].col, buf[i].value);
+        }
+    }
+
+    return 0;
+}
 
 
 int TlCommunicate::allReduce_AND(bool& rData)
@@ -729,61 +833,6 @@ int TlCommunicate::allReduce_MAXLOC(double* pValue, int* pIndex)
 }
 
 
-int TlCommunicate::gatherToMaster(TlSparseMatrix& rMatrix)
-{
-    const int nProc = this->getNumOfProcs();
-    const int nRank = this->getRank();
-
-    int count = 1;
-    int nDiv = 1;
-    while (nDiv < nProc) {
-        nDiv *= 2;
-
-        const div_t d = std::div(nRank, nDiv);
-        const int nReceiver = d.quot * nDiv;
-        const int nSender = nReceiver +(nDiv /2);
-
-        if (nSender < nProc) {
-            const int nTag = nSender;
-            if (nRank == nSender) {
-                // my rank is sender
-                std::vector<unsigned long> indexData;
-                std::vector<double> valData;
-                TlSparseMatrix::const_iterator pEnd = rMatrix.end();
-                for (TlSparseMatrix::const_iterator p = rMatrix.begin(); p != pEnd; ++p) {
-                    //int nRow = p->first.row;
-                    //int nCol = p->first.col;
-                    unsigned long index = p->first;
-                    double dValue = p->second;
-                    indexData.push_back(index);
-                    valData.push_back(dValue);
-                }
-                this->sendData(indexData, nReceiver, nTag);
-                this->sendData(valData, nReceiver, nTag);
-
-            } else if (nRank == nReceiver) {
-                // my rank is receiver
-                std::vector<unsigned long> indexData;
-                std::vector<double> valData;
-                this->receiveData(indexData, nSender, nTag);
-                this->receiveData(valData, nSender, nTag);
-                assert(indexData.size() == valData.size());
-                long nSize = indexData.size();
-                for (long i = 0; i < nSize; ++i) {
-                    rMatrix.m_aMatrix[indexData[i]] += valData[i];
-                    //rMatrix(rowData[i], colData[i]) += valData[i];
-                }
-            }
-        }
-
-        count++;
-        this->barrier();
-    }
-
-    return 0;
-}
-
-
 // 1:1
 int TlCommunicate::sendData(bool data, int destination, int tag)
 {
@@ -801,10 +850,6 @@ int TlCommunicate::sendData(int data, int nDestination, int nTag)
 
 int TlCommunicate::sendData(unsigned int data, int nDestination, int nTag)
 {
-//     if (isDebugOut == true) {
-//         std::cerr << TlUtils::format("[%d] sendData(unsigned int) to [%d] data=%u, using tag=[%d]",
-//                                      this->getRank(), nDestination, data, nTag) << std::endl;
-//     }
     int nErr = MPI_Send((void*)&data, 1, MPI_UNSIGNED, nDestination, nTag, MPI_COMM_WORLD);
     return nErr;
 }
@@ -1056,31 +1101,40 @@ int TlCommunicate::sendData(const TlSymmetricMatrix& data, int nDestination, int
     return nErr;
 }
 
-int TlCommunicate::sendData(const TlSparseSymmetricMatrix& data, int nDestination, int nTag)
-{
-    std::vector<std::size_t> buf(2);
-    buf[0] = data.getNumOfRows(); // == getNumOfCols()
-    buf[1] = data.getSize();
-    int nErr = this->sendData(buf, nDestination, nTag);
 
-    if (nErr == 0) {
-        const std::size_t size = data.getSize();
-        std::vector<unsigned long> index(size);
-        std::vector<double> value(size);
-        int count = 0;
-        for (TlSparseSymmetricMatrix::const_iterator p = data.begin(); p != data.end(); ++p) {
-            index[count] = p->first;
-            value[count] = p->second;
+int TlCommunicate::sendData(const TlSparseMatrix& data, int dest, int tag)
+{
+    const std::size_t numOfSize = data.getSize();
+    const int numOfRows = data.getNumOfRows();
+    const int numOfCols = data.getNumOfCols();
+
+    unsigned long header[3];
+    header[0] = static_cast<unsigned long>(data.getNumOfRows());
+    header[1] = static_cast<unsigned long>(data.getNumOfCols());
+    header[2] = static_cast<unsigned long>(numOfSize);
+    int err = this->sendDataX(&(header[0]), 3, dest, tag);
+
+    if (err == 0) {
+        std::vector<TlMatrixElement> buf(numOfSize);
+
+        TlSparseMatrix::const_iterator itEnd = data.end();
+        std::size_t count = 0;
+        for (TlSparseMatrix::const_iterator it = data.begin(); it != itEnd; ++it) {
+            const int row = it->first.row;
+            const int col = it->first.col;
+            assert((0 <= row) && (row < numOfRows));
+            assert((0 <= col) && (col < numOfCols));
+            buf[count] = TlMatrixElement(row, col, it->second);
             ++count;
         }
-        assert(std::size_t(count) == size);
-
-        nErr = this->sendData(index, nDestination, nTag);
-        nErr = this->sendData(value, nDestination, nTag);
+        assert(count == numOfSize);
+        
+        err = this->sendDataX(&(buf[0]), this->MPI_MATRIXELEMENT, 0, numOfSize, dest, tag);
     }
 
-    return nErr;
+    return err;
 }
+
 
 int TlCommunicate::sendData(const TlPartialSymmetricMatrix& data, int nDestination, int nTag)
 {
@@ -1451,34 +1505,27 @@ int TlCommunicate::receiveData(TlSymmetricMatrix& rData, int nSrc, int nTag)
 }
 
 
-int TlCommunicate::receiveData(TlSparseSymmetricMatrix& rData, int nSrc, int nTag)
+int TlCommunicate::receiveData(TlSparseMatrix& rData, int src, int tag)
 {
-    std::vector<std::size_t> header;
-    int nErr = this->receiveData(header, nSrc, nTag);
+    unsigned long header[3];
+    int err = this->receiveDataX(header, MPI_UNSIGNED_LONG, 0, 3, src, tag);
 
-    if (nErr == 0) {
-        assert(header.size() == 2);
+    if (err == 0) {
+        const std::size_t numOfSize = header[2];
+        std::vector<TlMatrixElement> buf(numOfSize);
 
-        const std::size_t numOfSize = header[0];
-        const std::size_t size = header[1];
+        err = this->receiveDataX(&(buf[0]), this->MPI_MATRIXELEMENT, 0, numOfSize, src, tag);
 
-        std::vector<unsigned long> index;
-        std::vector<double> value;
-        nErr = this->receiveData(index, nSrc, nTag);
-        assert(index.size() == size);
-        if (nErr == 0) {
-            nErr = this->receiveData(value, nSrc, nTag);
-            assert(value.size() == size);
-            rData.clear();
-            rData.resize(numOfSize);
-            for (std::size_t i = 0; i < size; ++i) {
-                rData.set(std::pair<unsigned long, double>(index[i], value[i]));
-            }
+        rData.clear();
+        rData.resize(header[0], header[1]);
+        for (std::size_t i = 0; i < numOfSize; ++i) {
+            rData.set(buf[i].row, buf[i].col, buf[i].value);
         }
     }
 
-    return nErr;
+    return err;
 }
+
 
 int TlCommunicate::receiveData(TlPartialSymmetricMatrix& rData, int nSrc, int nTag)
 {
@@ -1524,6 +1571,14 @@ int TlCommunicate::receiveDataX(double* pData, const std::size_t size,
     return this->receiveDataX(pData, MPI_DOUBLE,
                               0, size, src, tag);
 }
+
+int TlCommunicate::receiveDataX(TlMatrixElement* pData, const std::size_t size,
+                                const int src, const int tag)
+{
+    return this->receiveDataX(pData, this->MPI_MATRIXELEMENT,
+                              0, size, src, tag);
+}
+
 
 template<typename T>
 int TlCommunicate::receiveDataX(T* pData, const MPI_Datatype mpiType,
@@ -1610,6 +1665,13 @@ int TlCommunicate::receiveDataFromAnySource(int& data, int* pSrc, const int tag)
 {
     return this->receiveDataFromAnySource(data, MPI_INT, pSrc, tag);
 }
+
+int TlCommunicate::receiveDataFromAnySource(unsigned long& data, int* pSrc, const int tag)
+{
+    return this->receiveDataFromAnySource(data, MPI_UNSIGNED_LONG, pSrc, tag);
+}
+
+
 
 int TlCommunicate::receiveDataFromAnySource(int& data, int* pSrc, int* pTag)
 {
@@ -1700,42 +1762,78 @@ int TlCommunicate::receiveDataFromAnySource(TlMatrix& data, int* pSrc, int tag)
     return this->receiveDataX(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(), src, tag);
 }
 
-int TlCommunicate::receiveDataFromAnySource(TlSparseSymmetricMatrix& rData, int* pSrc, int* pTag)
+
+int TlCommunicate::receiveDataFromAnySource(TlSparseMatrix* pData, int* pSrc, int tag)
 {
-    std::vector<std::size_t> header;
-    int nSrc = 0;
-    int nTag = 0;
-    int nErr = this->receiveDataFromAnySource(header, &nSrc, &nTag);
+    assert(pData != NULL);
+    int src = 0;
 
+    unsigned long header[3];
+    int err = this->receiveDataFromAnySourceX(header, MPI_UNSIGNED_LONG, 0, 3, &src, tag);
+    
     assert(pSrc != NULL);
-    *pSrc = nSrc;
-    if (pTag != NULL) {
-        *pTag = nTag;
-    }
+    *pSrc = src;
 
-    if (nErr == 0) {
-        assert(header.size() == 2);
+    const int numOfRows = header[0];
+    const int numOfCols = header[1];
+    if (err == 0) {
+        const std::size_t numOfSize = header[2];
+        std::vector<TlMatrixElement> buf(numOfSize);
 
-        const std::size_t numOfSize = header[0];
-        const std::size_t size = header[1];
+        err = this->receiveDataX(&(buf[0]), this->MPI_MATRIXELEMENT, 0, numOfSize, src, tag);
+        assert(err == 0);
 
-        std::vector<unsigned long> index;
-        std::vector<double> value;
-        nErr = this->receiveData(index, nSrc, nTag);
-        assert(index.size() == size);
-        if (nErr == 0) {
-            nErr = this->receiveData(value, nSrc, nTag);
-            assert(value.size() == size);
-            rData.clear();
-            rData.resize(numOfSize);
-            for (std::size_t i = 0; i < size; ++i) {
-                rData.set(std::pair<unsigned long, double>(index[i], value[i]));
-            }
+        pData->clear();
+        pData->resize(numOfRows, numOfCols);
+        for (std::size_t i = 0; i < numOfSize; ++i) {
+            const int r = buf[i].row;
+            const int c = buf[i].col;
+            assert((0 <= r) && (r < numOfRows));
+            assert((0 <= c) && (c < numOfCols));
+            pData->set(r, c, buf[i].value);
         }
     }
 
-    return nErr;
+    return err;
 }
+
+
+// int TlCommunicate::receiveDataFromAnySource(TlSparseSymmetricMatrix& rData, int* pSrc, int* pTag)
+// {
+//     std::vector<std::size_t> header;
+//     int nSrc = 0;
+//     int nTag = 0;
+//     int nErr = this->receiveDataFromAnySource(header, &nSrc, &nTag);
+
+//     assert(pSrc != NULL);
+//     *pSrc = nSrc;
+//     if (pTag != NULL) {
+//         *pTag = nTag;
+//     }
+
+//     if (nErr == 0) {
+//         assert(header.size() == 2);
+
+//         const std::size_t numOfSize = header[0];
+//         const std::size_t size = header[1];
+
+//         std::vector<unsigned long> index;
+//         std::vector<double> value;
+//         nErr = this->receiveData(index, nSrc, nTag);
+//         assert(index.size() == size);
+//         if (nErr == 0) {
+//             nErr = this->receiveData(value, nSrc, nTag);
+//             assert(value.size() == size);
+//             rData.clear();
+//             rData.resize(numOfSize);
+//             for (std::size_t i = 0; i < size; ++i) {
+//                 rData.set(std::pair<unsigned long, double>(index[i], value[i]));
+//             }
+//         }
+//     }
+
+//     return nErr;
+// }
 
 int TlCommunicate::receiveDataFromAnySource(TlPartialSymmetricMatrix& rData, int* pSrc, int* pTag)
 {
@@ -1852,6 +1950,84 @@ int TlCommunicate::receiveDataFromAnySourceX(unsigned long* pData, const std::si
                                              int* pSrc, const int tag)
 {
     return this->receiveDataFromAnySourceX(pData, MPI_UNSIGNED_LONG, 0, size, pSrc, tag);
+}
+
+
+// =============================================================================
+template<typename T>
+int TlCommunicate::receiveDataFromAnySourceAnyTagX(T* pData, const MPI_Datatype mpiType,
+                                                   const std::size_t start, const std::size_t end,
+                                                   int* pSrc, int* pTag)
+{
+    int answer = 0;
+    MPI_Status status;
+    int src = 0;
+    int tag = 0;
+
+#ifdef DIV_COMM
+    {
+        const long length = static_cast<long>(end - start);
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
+        const ldiv_t tmp = std::ldiv(length, bufCount);
+        bool isSrcDefined = false;
+        
+        // 作業用メモリ分のループ
+        for (long i = 0; i < tmp.quot; ++i) {
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            if (isSrcDefined != true) {
+                answer = MPI_Recv((void*)(pData + startIndex), bufCount,
+                                  mpiType, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+                src = status.MPI_SOURCE;
+                tag = status.MPI_TAG;
+                isSrcDefined = true;
+            } else {
+                answer = MPI_Recv((void*)(pData + startIndex), bufCount,
+                                  mpiType, src, tag, MPI_COMM_WORLD, &status);
+            }
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
+        }
+        
+        // 残り分のループ
+        if (tmp.rem != 0) {
+            const int remain = tmp.rem;
+            std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            if (isSrcDefined != true) {
+                answer = MPI_Recv((void*)(pData + startIndex), remain,
+                                  mpiType, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
+                src = status.MPI_SOURCE;
+                isSrcDefined = true;
+            } else {
+                answer = MPI_Recv((void*)(pData + startIndex), remain,
+                                  mpiType, src, tag, MPI_COMM_WORLD, &status);
+            }
+            if (answer != 0) {
+                std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
+                          << " anwer=" << answer
+                          << std::endl;
+            }
+        }
+    }
+#else
+    {
+        answer = MPI_Recv((void*)(pData), end - start,
+                          mpiType, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+        src = status.MPI_SOURCE;
+        tag = status.MPI_TAG;
+    }
+#endif // DIV_COMM
+
+    if (pSrc != NULL) {
+        *pSrc = src;
+    }
+    if (pTag != NULL) {
+        *pTag = tag;
+    }
+
+    return answer;
 }
 
 
@@ -1992,29 +2168,61 @@ int TlCommunicate::iSendData(const std::vector<double>& data, int destination, i
 }
 
 
-// int TlCommunicate::iSendData(const TlVector& data, int dest, int tag)
+
+// int TlCommunicate::iSendData(const TlSparseMatrix& data, int dest, int tag)
 // {
+//     const std::size_t numOfSize = data.getSize();
+//     const int numOfRows = data.getNumOfRows();
+//     const int numOfCols = data.getNumOfCols();
+
+//     //
 //     std::vector<uintptr_t> requests;
 
+//     // header
+//     unsigned long* pHeader = new unsigned long[3];
+//     pHeader[0] = static_cast<unsigned long>(data.getNumOfRows());
+//     pHeader[1] = static_cast<unsigned long>(data.getNumOfCols());
+//     pHeader[2] = static_cast<unsigned long>(numOfSize);
+
 //     MPI_Request* pRequest1 = new MPI_Request;
-//     int answer = MPI_Isend(&(data.size_), 1,
-//                            MPI_UNSIGNED_LONG, dest, tag,
-//                            MPI_COMM_WORLD, pRequest1);
-//     requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest1));
+//     int err = MPI_Isend(pHeader, 3, MPI_UNSIGNED_LONG, dest, tag, MPI_COMM_WORLD, pRequest1);
+   
+//     if (err == 0) {
+//         requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest1));
 
-//     if (answer == 0) {
+//         // body
+//         Datatype_MatrixItem* pBuf = new Datatype_MatrixItem[numOfSize];
+//         TlSparseMatrix::const_iterator itEnd = data.end();
+//         std::size_t count = 0;
+//         for (TlSparseMatrix::const_iterator it = data.begin(); it != itEnd; ++it) {
+//             pBuf[count] = Datatype_MatrixItem(it->first.row,
+//                                               it->first.col,
+//                                               it->second);
+//             ++count;
+//         }
+//         assert(count == numOfSize);
 //         MPI_Request* pRequest2 = new MPI_Request;
-//         answer = MPI_Isend(&(data.data_), data.size_,
-//                            MPI_DOUBLE, dest, tag,
-//                            MPI_COMM_WORLD, pRequest2);
-//         requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest2));
-        
-//         uintptr_t key = reinterpret_cast<uintptr_t>((void*)&data);
-//         this->nonBlockingCommParamTable_[key] = NonBlockingCommParam(NonBlockingCommParam::SEND,
-//                                                                      requests);
-//     }
+//         err = MPI_Isend(pBuf, numOfSize, this->MPI_MATRIXITEM, dest, tag,
+//                         MPI_COMM_WORLD, pRequest2);
 
-//     return answer;
+//         if (err == 0) {
+//             requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest2));
+
+//             // regist
+//             const uintptr_t key = reinterpret_cast<uintptr_t>((void*)&data);
+//             NonBlockingCommParam param(requests, tag,
+//                                        NonBlockingCommParam::SEND);
+
+//             this->checkNonBlockingTableCollision(key, param, __LINE__);
+// #pragma omp critical (TlCommunicate_nonBlockingCommParamTable_update)
+//             {
+//                 this->nonBlockingCommParamTable_[key] = param;
+//             }
+//         }
+//     }
+//     std::cerr << "iSendData() end" << std::endl;
+
+//     return err;
 // }
 
 
@@ -2059,6 +2267,11 @@ int TlCommunicate::iSendDataX(const double* pData, const std::size_t size,
     return this->iSendDataX(pData, MPI_DOUBLE, 0, size, dest, tag);
 }
 
+int TlCommunicate::iSendDataX(const TlMatrixElement* pData, const std::size_t size,
+                              const int dest, const int tag)
+{
+    return this->iSendDataX(pData, this->MPI_MATRIXELEMENT, 0, size, dest, tag);
+}
 
 // =============================================================================
 template<typename T>
@@ -2478,7 +2691,6 @@ int TlCommunicate::wait(void* pData, int* pSrc)
 #pragma omp critical (TlCommunicate_nonBlockingCommParamTable_update)
     {
         it = this->nonBlockingCommParamTable_.find(key);
-
         if (it != this->nonBlockingCommParamTable_.end()) {
             std::vector<uintptr_t>::iterator reqEnd = it->second.requests.end();
             for (std::vector<uintptr_t>::iterator req = it->second.requests.begin(); req != reqEnd; ++req) {
@@ -2489,21 +2701,23 @@ int TlCommunicate::wait(void* pData, int* pSrc)
                     std::cerr << " MPI wait error. " << __FILE__ << ":" << __LINE__
                               << " err=" << err
                               << std::endl;
-                }
+                } 
                 answer |= err;
-                
+
                 delete pRequest;
                 pRequest = NULL;
             }
-            
+
             this->nonBlockingCommParamTable_.erase(it);
             
             if (pSrc != NULL) {
                 *pSrc = status.MPI_SOURCE;
             }
+        } else {
+            this->log_.critical(TlUtils::format("TlCommunicate::wait(): cannot find: %ld", this->getRank(), key));
         }
     }
-    
+
     this->time_wait_.stop();
     return answer;
 }
@@ -2535,6 +2749,9 @@ int TlCommunicate::initialize(int argc, char* argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &(this->m_nProc));
     MPI_Comm_rank(MPI_COMM_WORLD, &(this->m_nRank));
 
+    // register MPI_Datatype
+    this->register_MatrixElement();
+
     this->counter_barrier_ = 0;
     this->counter_test_ = 0;
     this->counter_wait_ = 0;
@@ -2547,14 +2764,14 @@ int TlCommunicate::initialize(int argc, char* argv[])
     this->time_test_.reset();
     this->time_wait_.reset();
     this->time_allreduce_.reset();
-    
+
     return nAnswer;
 }
 
 int TlCommunicate::finalize()
 {
-    //this->barrier();
-    
+    this->unregister_MatrixElement();
+
     TlScalapackContext::finalize();
 
     return MPI_Finalize();
@@ -2591,6 +2808,34 @@ bool TlCommunicate::isSlave() const
 {
     return !(this->isMaster());
 }
+
+// original MPI_Datatype ==============================================
+void TlCommunicate::register_MatrixElement()
+{
+    const int numOfItems = 3;
+    int blocklengths[3] = {1, 1, 1};
+    // MPI_Datatype types[3] = {MPI_UNSIGNED_LONG, MPI_UNSIGNED_LONG, MPI_DOUBLE};
+    MPI_Datatype types[3] = {MPI_INT, MPI_INT, MPI_DOUBLE};
+    MPI_Aint offsets[3];
+    offsets[0] = offsetof(struct TlMatrixElement, row);
+    offsets[1] = offsetof(struct TlMatrixElement, col);
+    offsets[2] = offsetof(struct TlMatrixElement, value);
+
+    int err = MPI_Type_create_struct(numOfItems, blocklengths, offsets, types, &(this->MPI_MATRIXELEMENT));
+
+    if (err != MPI_SUCCESS) {
+        this->log_.critical("cannot register MPI_MATRIXELEMENT.");
+    }
+
+    MPI_Type_commit(&(this->MPI_MATRIXELEMENT));
+}
+
+
+void TlCommunicate::unregister_MatrixElement()
+{
+    MPI_Type_free(&(this->MPI_MATRIXELEMENT));
+}
+
 
 // =====================================================================
 // BROADCAST
@@ -2907,122 +3152,6 @@ int TlCommunicate::broadcast(TlSymmetricMatrix& data, int root)
     return answer;
 }
 
-int TlCommunicate::broadcast(TlSparseMatrix& rData, const int nRoot)
-{
-    std::size_t nRow = 0;
-    std::size_t nCol = 0;
-
-    if (this->getRank() == nRoot) {
-        nRow = rData.getNumOfRows();
-        nCol = rData.getNumOfCols();
-    }
-    this->broadcast(nRow, nRoot);
-    this->broadcast(nCol, nRoot);
-
-    std::vector<unsigned long> indexData;
-    std::vector<double> valData;
-    if (this->getRank() == nRoot) {
-        TlSparseMatrix::const_iterator pEnd = rData.end();
-        for (TlSparseMatrix::const_iterator p = rData.begin(); p != pEnd; ++p) {
-            indexData.push_back(p->first);
-            valData.push_back(p->second);
-        }
-    }
-    this->broadcast(indexData, nRoot);
-    this->broadcast(valData, nRoot);
-
-    //if (this->getRank() == nRoot){
-    TlSparseMatrix m(nRow, nCol);
-    const std::size_t nSize= indexData.size();
-    for (std::size_t i = 0; i < nSize; ++i) {
-        const unsigned long index = indexData[i];
-        const double val = valData[i];
-        //m(row, col) = val;
-        m.m_aMatrix[index] = val;
-    }
-    rData = m;
-    //}
-
-    return 0;
-}
-
-// int TlCommunicate::broadcast(TlSparseHashMatrix& rData, const int nRoot) const{
-//   int nRow = 0;
-//   int nCol = 0;
-
-//   if (this->getRank() == nRoot){
-//     nRow = rData.getNumOfRows();
-//     nCol = rData.getNumOfCols();
-//   }
-//   this->broadcast(nRow, nRoot);
-//   this->broadcast(nCol, nRoot);
-
-//   std::vector<unsigned long> indexData;
-//   std::vector<double> valData;
-//   if (this->getRank() == nRoot){
-//     TlSparseHashMatrix::const_iterator pEnd = rData.end();
-//     for (TlSparseHashMatrix::const_iterator p = rData.begin(); p != pEnd; ++p){
-//       indexData.push_back(p->first);
-//       valData.push_back(p->second);
-//     }
-//   }
-//   this->broadcast(indexData, nRoot);
-//   this->broadcast(valData, nRoot);
-
-//   TlSparseHashMatrix m(nRow, nCol);
-//   const int nSize= static_cast<int>(indexData.size());
-//   for (int i = 0; i < nSize; ++i){
-//     const unsigned long index = indexData[i];
-//     const double val = valData[i];
-//     m.container[index] = val;
-//   }
-//   rData = m;
-
-//   return 0;
-// }
-
-
-// int TlCommunicate::broadcast(TlMmapMatrix& data, int root)
-// {
-//     std::size_t row = 0;
-//     std::size_t col = 0;
-//     if (this->getRank() == root) {
-//         row = data.getNumOfRows();
-//         col = data.getNumOfCols();
-//     }
-//     int answer = 0;
-//     answer = this->broadcast(row, root);
-//     answer = this->broadcast(col, root);
-//     if (this->getRank() != root) {
-//         data.resize(row, col);
-//     }
-
-//     if (answer == 0) {
-//         this->broadcast(data.data_, 0, data.getNumOfElements(), root);
-//     }
-
-//     return answer;
-// }
-
-
-// int TlCommunicate::broadcast(TlMmapSymmetricMatrix& data, int root)
-// {
-//     std::size_t dim = 0;
-//     if (this->getRank() == root) {
-//         dim = data.getNumOfRows();
-//     }
-//     int answer = 0;
-//     answer = this->broadcast(dim, root);
-//     if (this->getRank() != root) {
-//         data.resize(dim);
-//     }
-
-//     if (answer == 0) {
-//         this->broadcast(data.data_, 0, data.getNumOfElements(), root);
-//     }
-
-//     return answer;
-// }
 
 template<typename T>
 int TlCommunicate::broadcast(T* pData, const MPI_Datatype mpiType,

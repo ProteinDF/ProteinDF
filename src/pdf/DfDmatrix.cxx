@@ -105,16 +105,16 @@ void DfDmatrix::main(const DfObject::RUN_TYPE runType)
     this->generateDensityMatrix<TlMatrix, TlSymmetricMatrix>(runType, currOcc);
 }
 
-TlVector DfDmatrix::getOccupation(const DfObject::RUN_TYPE runType)
-{
-    const std::string sFileName = this->getOccupationPath(runType);
+// TlVector DfDmatrix::getOccupation(const DfObject::RUN_TYPE runType)
+// {
+//     const std::string sFileName = this->getOccupationPath(runType);
 
-    TlVector occ;
-    occ.load(sFileName);
-    assert(occ.getSize() == this->m_nNumOfMOs);
+//     TlVector occ;
+//     occ.load(sFileName);
+//     assert(occ.getSize() == this->m_nNumOfMOs);
 
-    return occ;
-}
+//     return occ;
+// }
 
 void DfDmatrix::checkOccupation(const TlVector& prevOcc, const TlVector& currOcc)
 {

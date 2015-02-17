@@ -36,6 +36,7 @@ pkginclude_HEADERS = \
 	TlTime.h					\
 	TlStlUtils.h				\
 	TlLebedevGrid.h				\
+	TlDeleter.h					\
 	\
 	scalapack.h					\
 	TlCommunicate.h				\

@@ -41,6 +41,16 @@ public:
     }
 };
 
+void showHelp(const std::string& progname)
+{
+    std::cout << TlUtils::format("%s [options] MATRIX_FILE", progname.c_str()) 
+              << std::endl;
+    std::cout << "print matrix elements having a large value." << std::endl;
+    std::cout << " OPTIONS:" << std::endl;
+    std::cout << "  -t NUM:  specify the number of elements" << std::endl;
+    std::cout << "  -v:      verbose output" << std::endl;
+    std::cout << "  -h:      show help" << std::endl;
+}
 
 void check(const MatrixElement& me, std::vector<MatrixElement>* pRanking)
 {
@@ -58,6 +68,11 @@ void check(const MatrixElement& me, std::vector<MatrixElement>* pRanking)
 int main(int argc, char* argv[])
 {
     TlGetopt opt(argc, argv, "ht:v");
+
+    if (opt["h"] == "defined") {
+        showHelp(opt[0]);
+        return EXIT_SUCCESS;
+    }
 
     int numOfRanks = 10;
     if (opt["t"].empty() == false) {
@@ -110,7 +125,7 @@ int main(int argc, char* argv[])
     // display
     for (int i = 0; i < numOfRanks; ++i) {
         const MatrixElement me = ranking[i];
-        std::cout << TlUtils::format("No.%2d (%6d, %6d) = % 8.3f",
+        std::cout << TlUtils::format("No.%2d (%6d, %6d) = % 16.10e",
                                      i, me.row, me.col, me.value)
                   << std::endl;
     }

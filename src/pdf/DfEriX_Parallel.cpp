@@ -1128,8 +1128,9 @@ TlSparseSymmetricMatrix DfEriX_Parallel::makeSchwarzTable(const TlOrbitalInfoObj
     }
 
     this->log_.info("make schwartz table: finalize");
-    rComm.gatherToMaster(schwarz);
-    rComm.broadcast(schwarz);
+    // rComm.gatherToMaster(schwarz);
+    // rComm.broadcast(schwarz);
+    rComm.allReduce_SUM(schwarz);
     
     this->log_.info("make Schwartz cutoff table(parallel): end");
     return schwarz;

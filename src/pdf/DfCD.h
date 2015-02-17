@@ -45,16 +45,31 @@ public:
     virtual void calcCholeskyVectorsForGridFree();
 
     void getJ(TlSymmetricMatrix *pJ);
-    void getK(const RUN_TYPE runType,
-              TlSymmetricMatrix *pK);
+    virtual void getK(const RUN_TYPE runType,
+                      TlSymmetricMatrix *pK);
     virtual void getM(const TlSymmetricMatrix& P,
                       TlSymmetricMatrix* pM);
+
+protected:
+    enum FastCDK_MODE {
+        FASTCDK_NONE,
+        FASTCDK_PRODUCTIVE,
+        FASTCDK_PRODUCTIVE_FULL,
+        FASTCDK_DEBUG_FULL_SUPERMATRIX, // V_pr,qs = <pq|rs>
+        FASTCDK_DEBUG_SUPERMATRIX       // V_pr,qs = <pq|rs> + <ps|rq>
+    };
     
 protected:
     void getJ_S(TlSymmetricMatrix *pJ);
+
+    virtual TlSymmetricMatrix getPMatrix(const RUN_TYPE runType, const int iteration);
     
-    void getK_S(const RUN_TYPE runType,
-                TlSymmetricMatrix *pK);
+    virtual void getK_S_woCD(const RUN_TYPE runType,
+                             TlSymmetricMatrix *pK);
+
+    virtual void getK_S_fast(const RUN_TYPE runType,
+                             TlSymmetricMatrix *pK);
+
     virtual void getM_S(const TlSymmetricMatrix& P,
                         TlSymmetricMatrix* pM);
     virtual void getM_A(const TlSymmetricMatrix& P,
@@ -162,8 +177,11 @@ protected:
     virtual PQ_PairArray getI2PQ(const std::string& filepath);
 
     virtual void saveLjk(const TlRowVectorMatrix& Ljk);
+    virtual void saveLk(const TlRowVectorMatrix& Lk);
     virtual void debugOutLjk(const TlMatrix& Ljk);
+    virtual void debugOutLk(const TlMatrix& Lk);
     virtual TlColVectorMatrix getLjk();
+    virtual TlColVectorMatrix getLk();
 
     virtual void saveLxc(const TlRowVectorMatrix& Ljk);
     virtual void debugOutLxc(const TlMatrix& Lxc);
@@ -179,13 +197,6 @@ protected:
 
 protected:
     template<class EngineClass>
-    TlRowVectorMatrix calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo,
-                                                   const std::string& I2PQ_path);
-
-    virtual TlRowVectorMatrix calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
-                                                            const std::string& I2PQ_path);
-
-    template<class EngineClass>
     TlRowVectorMatrix calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo_p,
                                                    const TlOrbitalInfoObject& orbInfo_q,
                                                    const std::string& I2PQ_path);
@@ -194,15 +205,29 @@ protected:
                                                             const TlOrbitalInfoObject& orbInfo_q,
                                                             const std::string& I2PQ_path);
 
+public:
     void calcDiagonals(const TlOrbitalInfoObject& orbInfo,
                        PQ_PairArray *pI2PQ,
-                       TlSparseSymmetricMatrix *pSchwartzTable,
                        TlVector *pDiagonals);
+    void calcDiagonals_K_full(const TlOrbitalInfoObject& orbInfo,
+                              PQ_PairArray *pI2PR,
+                              TlVector *pDiagonals);
+    void calcDiagonals_K_half(const TlOrbitalInfoObject& orbInfo,
+                              PQ_PairArray *pI2PR,
+                              TlVector *pDiagonals);
+protected:
     void calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
                               const std::vector<DfTaskCtrl::Task2>& taskList,
-                              TlSparseSymmetricMatrix *pSchwartzTable,
                               TlSparseSymmetricMatrix *pDiagonalMat,
                               PQ_PairArray *pI2PQ);
+    void calcDiagonals_K_full_kernel(const TlOrbitalInfoObject& orbInfo,
+                                     const std::vector<DfTaskCtrl::Task2>& taskList,
+                                     TlSparseMatrix *pDiagonalMat,
+                                     PQ_PairArray *pI2PR);
+    void calcDiagonals_K_half_kernel(const TlOrbitalInfoObject& orbInfo,
+                                     const std::vector<DfTaskCtrl::Task2>& taskList,
+                                     TlSparseSymmetricMatrix *pDiagonalMat,
+                                     PQ_PairArray *pI2PR);
 
     bool isAliveBySchwartzCutoff(const index_type shellIndexP,
                                  const index_type shellIndexQ,
@@ -409,36 +434,41 @@ protected:
     /// 2電子積分キャッシュの型
     typedef std::map<IndexPair4S, std::vector<double> > ERI_CacheType;
 
+public:
     /// 与えられたsuper matrix の要素に対し、2電子積分を計算して代入する。
     /// On-the-Fly時に使用する。
     virtual std::vector<double> getSuperMatrixElements(const TlOrbitalInfoObject& orbInfo,
                                                        const index_type G_row,
                                                        const std::vector<index_type>& G_col_list,
-                                                       const PQ_PairArray& I2PQ,
-                                                       const TlSparseSymmetricMatrix& schwartzTable);
+                                                       const PQ_PairArray& I2PQ);
 
+protected:
     /// 要求されたsuper matrixの行列要素のうち、必要なshell indexのリストを返す。
     ///
     /// @param G_row 必要なsuper matrixの行要素。
     /// @param G_col_list 必要なsuper matrixの列要素の配列。
-    std::vector<DfCD::Index4> getCalcList(const TlOrbitalInfoObject& orbInfo,
-                                          const index_type G_row,
-                                          const std::vector<index_type>& G_col_list,
-                                          const PQ_PairArray& I2PQ);
+    virtual std::vector<IndexPair4S> 
+    getCalcList(const TlOrbitalInfoObject& orbInfo,
+                const index_type G_row,
+                const std::vector<index_type>& G_col_list,
+                const index_type start,
+                const index_type end,
+                const PQ_PairArray& I2PQ);
 
     /// 計算リストの2電子積分を求め、キャッシュに代入して返す。
     void calcERIs(const TlOrbitalInfoObject& orbInfo,
-                  const std::vector<Index4>& calcList,
-                  const TlSparseSymmetricMatrix& schwartzTable);
+                  const std::vector<IndexPair4S>& calcList);
 
     /// キャッシュから必要な行列要素を代入する。
     std::vector<double> setERIs(const TlOrbitalInfoObject& orbInfo,
                                 const index_type G_row,
                                 const std::vector<index_type> G_col_list,
+                                const index_type start,
+                                const index_type end,
                                 const PQ_PairArray& I2PQ);
 
     /// 2電子積分をキャッシュするかどうか
-    bool isStoreERIs_;
+    // bool isStoreERIs_;
 
     /// 2電子積分キャッシュ
     // ERI_CacheManager ERI_cache_manager_;
@@ -448,7 +478,10 @@ protected:
 protected:
     void getJ_S_v2(TlSymmetricMatrix* pJ);
     TlVector getScreenedDensityMatrix(const PQ_PairArray& I2PQ);
+    TlVector getScreenedDensityMatrix(const RUN_TYPE runTyoe, const PQ_PairArray& I2PQ);
+    // TlVector getScreenedDensityMatrix2(const RUN_TYPE runTyoe, const PQ_PairArray& I2PQ);
     void expandJMatrix(const TlVector& vJ, const PQ_PairArray& I2PQ, TlSymmetricMatrix* pJ);
+    void expandKMatrix(const TlVector& vK, const PQ_PairArray& I2PR, TlSymmetricMatrix* pK);
 
 protected:
     //index_type numOfPQs_;
@@ -459,6 +492,10 @@ protected:
     double cutoffEpsilon3_;
     double CDAM_tau_;
     double epsilon_;
+    double CDAM_tau_K_;
+    double epsilon_K_;
+
+    FastCDK_MODE fastCDK_mode_;
 
 // =====================================================================
 protected:
@@ -600,7 +637,15 @@ protected:
     /// V_pq,rs = (pq|rs) or (pqrs) 
     /// @param[in] orbInfo 軌道情報オブジェクト
     /// @retval supermatrix
-    TlSymmetricMatrix getSuperMatrix(const TlOrbitalInfoObject& orbInfo);
+    TlSymmetricMatrix getSuperMatrix(const TlOrbitalInfoObject& orbInfo, PQ_PairArray* pI2PQ);
+
+    /// デバッグ用にSuperMatrix(交換項用)を作成します
+    ///
+    /// V_pr,qs = (pq|rs) 
+    /// @param[in] orbInfo 軌道情報オブジェクト
+    /// @retval supermatrix
+    TlSymmetricMatrix getSuperMatrix_K_full(const TlOrbitalInfoObject& orbInfo, PQ_PairArray* pI2PR);
+    TlSymmetricMatrix getSuperMatrix_K_half(const TlOrbitalInfoObject& orbInfo, PQ_PairArray* pI2PR);
 
     /// デバッグ用にSuperMatrixを作成します
     ///
@@ -609,7 +654,8 @@ protected:
     /// @param[in] orbInfo_q qまたはsで示される軌道の軌道情報オブジェクト
     /// @retval supermatrix
     TlSymmetricMatrix getSuperMatrix(const TlOrbitalInfoObject& orbInfo_p,
-                                     const TlOrbitalInfoObject& orbInfo_q);
+                                     const TlOrbitalInfoObject& orbInfo_q,
+                                     PQ_PairArray* pI2PQ);
 
     /// コレスキー分解を行います(デバッグ用)
     ///
@@ -627,20 +673,84 @@ protected:
 
 protected:
     bool debugBuildSuperMatrix_;
+    bool debugCheckCD_;
+
+protected:
+    virtual TlRowVectorMatrix calcCholeskyVectorsOnTheFlyS_new(const TlOrbitalInfoObject& orbInfo,
+                                                               const std::string& I2PQ_path,
+                                                               const double epsilon,
+                                                               void(DfCD::*calcDiagonalsFunc)(
+                                                                   const TlOrbitalInfoObject&,
+                                                                   PQ_PairArray*,
+                                                                   TlVector*),
+                                                               std::vector<double>(DfCD::*getSuperMatrixElements)(
+                                                                   const TlOrbitalInfoObject&,
+                                                                   const index_type,
+                                                                   const std::vector<index_type>&,
+                                                                   const PQ_PairArray&));
+
+    // K full ----------------------------------------------------------
+    std::vector<double>
+    getSuperMatrixElements_K_full(const TlOrbitalInfoObject& orbInfo,
+                                  const index_type G_row,
+                                  const std::vector<index_type>& G_col_list,
+                                  const PQ_PairArray& I2PQ);
+    virtual std::vector<DfCD::IndexPair4S> 
+    getCalcList_K_full(const TlOrbitalInfoObject& orbInfo,
+                       const index_type G_row,
+                       const std::vector<index_type>& G_col_list,
+                       const index_type start,
+                       const index_type end,
+                       const PQ_PairArray& I2PQ);
+    std::vector<double>
+    setERIs_K_full(const TlOrbitalInfoObject& orbInfo,
+                   const index_type G_row,
+                   const std::vector<index_type> G_col_list,
+                   const index_type start,
+                   const index_type end,
+                   const PQ_PairArray& I2PQ);
+
+    // K half ----------------------------------------------------------
+    std::vector<double>
+    getSuperMatrixElements_K_half(const TlOrbitalInfoObject& orbInfo,
+                                  const index_type G_row,
+                                  const std::vector<index_type>& G_col_list,
+                                  const PQ_PairArray& I2PQ);
+    
+    virtual std::vector<DfCD::IndexPair4S> 
+    getCalcList_K_half(const TlOrbitalInfoObject& orbInfo,
+                       const index_type G_row,
+                       const std::vector<index_type>& G_col_list,
+                       const index_type start,
+                       const index_type end,
+                       const PQ_PairArray& I2PQ);
+    void calcERIs_K(const TlOrbitalInfoObject& orbInfo,
+                    const std::vector<IndexPair4S>& calcList);
+    std::vector<double>
+    setERIs_K_half(const TlOrbitalInfoObject& orbInfo,
+                   const index_type G_row,
+                   const std::vector<index_type> G_col_list,
+                   const index_type start,
+                   const index_type end,
+                   const PQ_PairArray& I2PQ);
+
+    bool getCachedValue(const TlOrbitalInfoObject& orbInfo,
+                        const index_type indexP,
+                        const index_type indexQ,
+                        const index_type indexR,
+                        const index_type indexS,
+                        const ERI_CacheType& cache,
+                        double* pValue);
+
+    // for debug
+    bool get_I_index(const PQ_PairArray& I2PQ, 
+                     const index_type p, const index_type q,
+                     index_type* pI);
+
+    // debug
+    PQ_PairArray debug_I2PQ_;
+    TlSymmetricMatrix debug_V_;
 };
-
-
-template<class EngineClass>
-TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo,
-                                                     const std::string& I2PQ_path)
-{
-    this->createEngines<EngineClass>();
-    const TlRowVectorMatrix L = this->calcCholeskyVectorsOnTheFlyS(orbInfo,
-                                                                    I2PQ_path);
-    this->destroyEngines();
-
-    return L;
-}
 
 
 template<class EngineClass>

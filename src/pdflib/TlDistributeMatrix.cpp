@@ -713,113 +713,113 @@ double TlDistributeMatrix::getLocalMaxAbsoluteElement(index_type* pOutRow, index
 }
 
 
-TlSparseMatrix TlDistributeMatrix::getPartialMatrix(const double threshold) const
-{
-    const int globalRows = this->m_nRows;
-    const int globalCols = this->m_nCols;
+// TlSparseMatrix TlDistributeMatrix::getPartialMatrix(const double threshold) const
+// {
+//     const int globalRows = this->m_nRows;
+//     const int globalCols = this->m_nCols;
 
-    // 自分のデータのうち、有意なデータを抽出する
-    TlSparseMatrix m(globalRows, globalCols);
-    {
-        const index_type numOfLocalRows = this->m_nMyRows;
-        const index_type numOfLocalCols = this->m_nMyCols;
-        for (int c = 0; c < numOfLocalCols; ++c) {
-            const int globalColIndex = this->m_ColIndexTable[c];
-            const int index_tmp = numOfLocalRows * c;
+//     // 自分のデータのうち、有意なデータを抽出する
+//     TlSparseMatrix m(globalRows, globalCols);
+//     {
+//         const index_type numOfLocalRows = this->m_nMyRows;
+//         const index_type numOfLocalCols = this->m_nMyCols;
+//         for (int c = 0; c < numOfLocalCols; ++c) {
+//             const int globalColIndex = this->m_ColIndexTable[c];
+//             const int index_tmp = numOfLocalRows * c;
 
-            for (int r = 0; r < numOfLocalRows; ++r) {
-                const int index = r + index_tmp;
-                const double value = this->pData_[index];
-                if (std::fabs(value) > threshold) {
-                    const int globalRowIndex = this->m_ColIndexTable[r];
-                    m.set(globalRowIndex, globalColIndex, value);
-                }
-            }
-        }
-    }
+//             for (int r = 0; r < numOfLocalRows; ++r) {
+//                 const int index = r + index_tmp;
+//                 const double value = this->pData_[index];
+//                 if (std::fabs(value) > threshold) {
+//                     const int globalRowIndex = this->m_ColIndexTable[r];
+//                     m.set(globalRowIndex, globalColIndex, value);
+//                 }
+//             }
+//         }
+//     }
 
-    // 集計
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    const int proc = rComm.getNumOfProc();
-    const int rank = rComm.getRank();
+//     // 集計
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+//     const int proc = rComm.getNumOfProc();
+//     const int rank = rComm.getRank();
 
-    int numOfElements = m.getSize();
-    rComm.allReduce_SUM(numOfElements);
-    const int averageNumOfElements = (numOfElements + proc -1) / proc;
+//     int numOfElements = m.getSize();
+//     rComm.allReduce_SUM(numOfElements);
+//     const int averageNumOfElements = (numOfElements + proc -1) / proc;
 
-    // 平均よりも多い要素を持っているSparseMatrixは他に渡す
-    TlSparseMatrix diffM(globalRows, globalCols);
-    const int maxCycle = numOfElements - averageNumOfElements;
-    for (int i = 0; i < maxCycle; ++i) {
-        int row = 0;
-        int col = 0;
-        const double value = m.pop(&row, &col);
-        diffM.set(row, col, value);
-    }
+//     // 平均よりも多い要素を持っているSparseMatrixは他に渡す
+//     TlSparseMatrix diffM(globalRows, globalCols);
+//     const int maxCycle = numOfElements - averageNumOfElements;
+//     for (int i = 0; i < maxCycle; ++i) {
+//         int row = 0;
+//         int col = 0;
+//         const double value = m.pop(&row, &col);
+//         diffM.set(row, col, value);
+//     }
 
-    // diffMの集計
-    int numOfDiffMElements = diffM.getSize();
-    rComm.allReduce_SUM(numOfDiffMElements);
-    const int numOfHolds = (numOfDiffMElements + proc -1) / proc; // この数だけ担当する
+//     // diffMの集計
+//     int numOfDiffMElements = diffM.getSize();
+//     rComm.allReduce_SUM(numOfDiffMElements);
+//     const int numOfHolds = (numOfDiffMElements + proc -1) / proc; // この数だけ担当する
 
-    // diffMの平均化
-    const int myStartCount = numOfHolds * rank;
-    const int myEndCount = numOfHolds * (rank +1);
-    int count = 0;
-    TlSparseMatrix addM(globalRows, globalCols);
-    for (int i = 0; i < proc; ++i) {
-        TlSparseMatrix tmp(globalRows, globalCols);
-        if (i == rank) {
-            tmp = diffM;
-        }
-        rComm.broadcast(diffM, i);
+//     // diffMの平均化
+//     const int myStartCount = numOfHolds * rank;
+//     const int myEndCount = numOfHolds * (rank +1);
+//     int count = 0;
+//     TlSparseMatrix addM(globalRows, globalCols);
+//     for (int i = 0; i < proc; ++i) {
+//         TlSparseMatrix tmp(globalRows, globalCols);
+//         if (i == rank) {
+//             tmp = diffM;
+//         }
+//         rComm.broadcast(diffM, i);
 
-        TlSparseMatrix::const_iterator pEnd = tmp.end();
-        for (TlSparseMatrix::const_iterator p = tmp.begin(); p != pEnd; ++p) {
-            if ((myStartCount <= count) && (count < myEndCount)) {
-                addM.set(*p);
-            }
-            ++count;
-        }
-    }
+//         TlSparseMatrix::const_iterator pEnd = tmp.end();
+//         for (TlSparseMatrix::const_iterator p = tmp.begin(); p != pEnd; ++p) {
+//             if ((myStartCount <= count) && (count < myEndCount)) {
+//                 addM.set(*p);
+//             }
+//             ++count;
+//         }
+//     }
 
-    // 最終成果物
-    m.merge(addM);
+//     // 最終成果物
+//     m.merge(addM);
 
-    return m;
-}
+//     return m;
+// }
 
 
-void TlDistributeMatrix::getPartialMatrix(TlSparseMatrix& ioMatrix) const
-{
-    assert(this->getNumOfRows() == ioMatrix.getNumOfRows());
-    assert(this->getNumOfCols() == ioMatrix.getNumOfCols());
+// void TlDistributeMatrix::getPartialMatrix(TlSparseMatrix& ioMatrix) const
+// {
+//     assert(this->getNumOfRows() == ioMatrix.getNumOfRows());
+//     assert(this->getNumOfCols() == ioMatrix.getNumOfCols());
 
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    const int nProc = rComm.getNumOfProc();
-    const int nRank = rComm.getRank();
-    for (int i = 0; i < nProc; ++i) {
-        TlSparseMatrix tmp;
-        if (i == nRank) {
-            tmp = ioMatrix;
-        }
-        rComm.broadcast(tmp, i);
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+//     const int nProc = rComm.getNumOfProc();
+//     const int nRank = rComm.getRank();
+//     for (int i = 0; i < nProc; ++i) {
+//         TlSparseMatrix tmp;
+//         if (i == nRank) {
+//             tmp = ioMatrix;
+//         }
+//         rComm.broadcast(tmp, i);
 
-        TlSparseMatrix::iterator pEnd = tmp.end();
-        for (TlSparseMatrix::iterator p = tmp.begin(); p != pEnd; ++p) {
-            const unsigned long index = p->first;
-            int nRow = 0;
-            int nCol = 0;
-            tmp.index(index, &nRow, &nCol);
-            const double dValue = this->get(nRow, nCol);
-            p->second = dValue;
-        }
+//         TlSparseMatrix::iterator pEnd = tmp.end();
+//         for (TlSparseMatrix::iterator p = tmp.begin(); p != pEnd; ++p) {
+//             const unsigned long index = p->first;
+//             int nRow = 0;
+//             int nCol = 0;
+//             tmp.index(index, &nRow, &nCol);
+//             const double dValue = this->get(nRow, nCol);
+//             p->second = dValue;
+//         }
 
-        if (i == nRank) {
-            ioMatrix = tmp;
-        }
-    }
-}
+//         if (i == nRank) {
+//             ioMatrix = tmp;
+//         }
+//     }
+// }
 
 
 // 複数スレッドから同時に呼び出さない
@@ -1087,9 +1087,8 @@ void TlDistributeMatrix::getSparseMatrixX_registerTask(TlSparseMatrix* pMatrix) 
             
             // 要求された要素をどのプロセスが持っているかをチェック
             for (TlSparseMatrix::iterator it = pMatrix->begin(); it != pMatrix->end(); ++it) {
-                const TlSparseMatrix::KeyType key = it->first;
-                index_type row, col;
-                pMatrix->index(key, &row, &col);
+                index_type row = it->first.row;
+                index_type col = it->first.col;
                 
                 const int localIndex = this->getIndex(row, col);
                 if (localIndex != -1) {
@@ -1455,9 +1454,8 @@ void TlDistributeMatrix::mergeSparseMatrix(const TlSparseMatrix& M)
 
     TlSparseMatrix::const_iterator itEnd = M.end();
     for (TlSparseMatrix::const_iterator it = M.begin(); it != itEnd; ++it) {
-        TlSparseMatrix::KeyType key = it->first;
-        index_type globalRow, globalCol;
-        M.index(key, &globalRow, &globalCol);
+        index_type globalRow = it->first.row;
+        index_type globalCol = it->first.col;
         const double value = it->second;
 
         const int index = this->getIndex(globalRow, globalCol);
@@ -1701,9 +1699,8 @@ void TlDistributeMatrix::mergeSparseMatrixAsync(const TlSparseMatrix* pMatrix, b
         
         TlSparseMatrix::const_iterator itEnd = pMatrix->end();
         for (TlSparseMatrix::const_iterator it = pMatrix->begin(); it != itEnd; ++it) {
-            TlSparseMatrix::KeyType key = it->first;
-            index_type globalRow, globalCol;
-            pMatrix->index(key, &globalRow, &globalCol);
+            index_type globalRow = it->first.row;
+            index_type globalCol = it->first.col;
             const double value = it->second;
             
             const int index = this->getIndex(globalRow, globalCol);

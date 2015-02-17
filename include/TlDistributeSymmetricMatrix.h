@@ -82,10 +82,10 @@ public:
     virtual TlVector getColumnVector(index_type col) const;
 
     /// 全行列を各プロセスに均等分割された疎行列を返す
-    TlSparseSymmetricMatrix getPartialMatrix(double threshold = 1.0E-16) const;
+    // TlSparseSymmetricMatrix getPartialMatrix(double threshold = 1.0E-16) const;
 
     /// 指定された要素を持つ疎行列を返す
-    void getPartialMatrix(TlSparseSymmetricMatrix& ioMatrix) const;
+    // void getPartialMatrix(TlSparseSymmetricMatrix& ioMatrix) const;
     bool getSparseMatrixX(TlSparseSymmetricMatrix* pMatrix, bool isFinalize = false) const;
     bool getPartialMatrixX(TlPartialSymmetricMatrix* pMatrix, bool isFinalize = false) const;
 

@@ -20,6 +20,7 @@
 #define DFCONVCHECK_H
 
 #include <string>
+#include "CnError.h"
 #include "DfObject.h"
 
 // used for DfConvcheck class
@@ -223,6 +224,10 @@ double DfConvcheck::dev_density_matrix(const METHOD_TYPE methodType, const int i
         prevP += DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, iteration -1);
         P = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, iteration);
         P += DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, iteration);
+        break;
+
+    default:
+        CnErr.abort(TlUtils::format("program error: %s, %d", __FILE__, __LINE__));
         break;
     }
 

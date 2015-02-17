@@ -43,6 +43,21 @@
 #include "TlUtils.h"
 #include "TlVector.h"
 
+
+struct TlMatrixElement {
+    typedef TlMatrixObject::index_type index_type;
+
+public:
+    TlMatrixElement(index_type r =0, index_type c =0, double v =0.0) : row(r), col(c), value(v) {
+    }
+
+public:
+    index_type row;
+    index_type col;
+    double value;
+};
+
+
 /// 疎行列クラス
 class TlSparseMatrix : public TlMatrixObject {
 public:
@@ -59,18 +74,59 @@ public:
     virtual ~TlSparseMatrix();
 
 public:
-    typedef std::size_t KeyType;
+    struct Index2 {
+    public:
+        Index2(index_type r = 0, index_type c = 0) : row(r), col(c) {
+        }
 
-#ifdef HAVE_UNORDERED_MAP
-    typedef std::unordered_map<KeyType, double> SparseMatrixData;
-#elifdef HAVE_TR1_UNORDERED_MAP
-    typedef std::tr1::unordered_map<KeyType, double> SparseMatrixData;
-#elifdef HAVE_GOOGLE_SPARSE_HASH_MAP
-    typedef google::sparse_hash_map<KeyType, double> SparseMatrixData;
-#else
+        bool operator<(const Index2& rhs) const {
+            bool answer = false;
+            if ((this->row < rhs.row) || 
+                ((this->row == rhs.row) && (this->col < rhs.col))) {
+                answer = true;
+            } 
+
+            return answer;
+        }
+
+        bool operator>(const Index2& rhs) const {
+            bool answer = false;
+            if ((this->row > rhs.row) || 
+                ((this->row == rhs.row) && (this->col > rhs.col))) {
+                answer = true;
+            } 
+
+            return answer;
+        }
+
+        bool operator==(const Index2& rhs) const {
+            return ((this->row == rhs.row) && (this->col == rhs.col));
+        }
+
+        bool operator!=(const Index2& rhs) const {
+            return !(this->operator==(rhs));
+        }
+
+    public:
+        index_type row;
+        index_type col;
+    };
+
+public:
+    // typedef std::size_t KeyType;
+    typedef Index2 KeyType;
+
+// #ifdef HAVE_UNORDERED_MAP
+//     typedef std::unordered_map<KeyType, double> SparseMatrixData;
+// #elifdef HAVE_TR1_UNORDERED_MAP
+//     typedef std::tr1::unordered_map<KeyType, double> SparseMatrixData;
+// #elifdef HAVE_GOOGLE_SPARSE_HASH_MAP
+//     typedef google::sparse_hash_map<KeyType, double> SparseMatrixData;
+// #else
+//     typedef std::map<KeyType, double> SparseMatrixData;
+//     #define TSM_DATATYPE_BINTREE 1
+// #endif
     typedef std::map<KeyType, double> SparseMatrixData;
-    #define TSM_DATATYPE_BINTREE 1
-#endif
 
     typedef SparseMatrixData::const_iterator const_iterator;
     typedef SparseMatrixData::iterator iterator;
@@ -159,10 +215,12 @@ public:
      */
     virtual double& operator()(index_type row, index_type col);
     virtual void set(const index_type row, const index_type col, const double value);
-    virtual void set(const std::pair<unsigned long, double>& obj);
+    // virtual void set(const std::pair<unsigned long, double>& obj);
 
     virtual void add(const index_type row, const index_type col, const double value);
-    virtual void add(const std::pair<unsigned long, double>& obj);
+    // virtual void add(const std::pair<unsigned long, double>& obj);
+
+    void add(const std::vector<TlMatrixElement>& elements);
 
     /** 指定された要素が存在すればtrueを返す
      *
@@ -170,8 +228,7 @@ public:
      *  @retval false 要素が存在しない
      */
     virtual bool hasKey(index_type row, index_type col) {
-        //return (this->m_aMatrix.find(TlMatrixIndexPair(row, col)) != this->m_aMatrix.end());
-        return (this->m_aMatrix.find(this->index(row, col)) != this->m_aMatrix.end());
+        return (this->m_aMatrix.find(KeyType(row, col)) != this->m_aMatrix.end());
     }
 
     virtual void merge(const TlSparseMatrix& rhs);
@@ -209,6 +266,8 @@ public:
     std::vector<int> getRowIndexList() const;
     std::vector<int> getColIndexList() const;
 
+    std::vector<TlMatrixElement> getMatrixElements() const;
+
 public:
     /// オブジェクトの内容をテキスト出力する
     ///
@@ -216,9 +275,8 @@ public:
     template <typename T> void print(T& out) const;
 
 public:
-    unsigned long index(const index_type row, const index_type col) const;
-
-    void index(const KeyType i, index_type* pRow, index_type* pCol) const;
+    // unsigned long index(const index_type row, const index_type col) const;
+    // void index(const KeyType& i, index_type* pRow, index_type* pCol) const;
 
 public:
     virtual bool load(const std::string& path);
@@ -233,101 +291,35 @@ protected:
     index_type m_nCols;                  /// 列数
     mutable SparseMatrixData m_aMatrix;   /// 行列要素
 
-    static const int INT_BITS;
-    static const int MAX_INT;
-
     friend class TlCommunicate;
 };
 
 ////////////////////////////////////////////////////////////////////////
 // inline functions
-inline unsigned long TlSparseMatrix::index(const index_type row, const index_type col) const
-{
-    const unsigned int r = static_cast<unsigned int>(row);
-    const unsigned int c = static_cast<unsigned int>(col);
-
-    return ((static_cast<unsigned long>(r) << INT_BITS) + c);
-}
-
-
-inline void TlSparseMatrix::index(const KeyType i, index_type* pRow, index_type* pCol) const
-{
-    assert(pRow != NULL);
-    assert(pCol != NULL);
-
-    const unsigned long r = i >> INT_BITS;
-    const unsigned long c = i & TlSparseMatrix::MAX_INT;
-
-    *pRow = static_cast<index_type>(r);
-    *pCol = static_cast<index_type>(c);
-}
-
 
 inline void TlSparseMatrix::set(const index_type row, const index_type col, const double value)
 {
-    const unsigned long i = this->index(row, col);
-    this->set(std::pair<unsigned long, double>(i, value));
-}
+    assert((0 <= row) && (row < this->getNumOfRows()));
+    assert((0 <= col) && (col < this->getNumOfCols()));
 
-
-inline void TlSparseMatrix::set(const std::pair<unsigned long, double>& obj)
-{
-    const unsigned long index = obj.first;
-
-#pragma omp critical(TlSparseMatrix__update)
-    {
-#ifdef TSM_DATATYPE_BINTREE
-        {
-            iterator p = this->m_aMatrix.lower_bound(index);
-            if ((p != this->m_aMatrix.end()) && (index == p->first)) {
-                p->second = obj.second;
-            } else {
-                this->m_aMatrix.insert(p, obj);
-            }
-        }
-#else
-        {
-            this->m_aMatrix[index] = obj.second;
-        }
-#endif // TSM_DATATYPE_BINTREE
-    }
+    this->m_aMatrix[KeyType(row, col)] = value;
 }
 
 
 inline void TlSparseMatrix::add(const index_type row, const index_type col, const double value)
 {
-    const unsigned long index = this->index(row, col);
-    this->add(std::pair<unsigned long, double>(index, value));
+    assert((0 <= row) && (row < this->getNumOfRows()));
+    assert((0 <= col) && (col < this->getNumOfCols()));
+
+    this->m_aMatrix[KeyType(row, col)] += value;
 }
 
 
-inline void TlSparseMatrix::add(const std::pair<unsigned long, double>& obj)
-{
-    const unsigned long index = obj.first;
-
-#pragma omp critical(TlSparseMatrix__update)
-    {
-#ifdef TSM_DATATYPE_BINTREE
-        {
-            iterator p = this->m_aMatrix.lower_bound(index);
-            if ((p != this->m_aMatrix.end()) && (index == p->first)) {
-                p->second += obj.second;
-            } else {
-                this->m_aMatrix.insert(p, obj);
-            }
-        }
-#else
-        {
-            this->m_aMatrix[index] += obj.second;
-        }
-#endif // TSM_DATATYPE_BINTREE
-    }
-}
-
-
-//
 inline double TlSparseMatrix::operator()(const index_type row, const index_type col) const
 {
+    assert((0 <= row) && (row < this->getNumOfRows()));
+    assert((0 <= col) && (col < this->getNumOfCols()));
+
     return this->get(row, col);
 }
 
@@ -338,7 +330,7 @@ inline double TlSparseMatrix::get(const index_type row, const index_type col) co
     assert((0 <= col) && (col < this->m_nCols));
 
     double answer = 0.0;
-    const_iterator p = this->m_aMatrix.find(this->index(row, col));
+    const_iterator p = this->m_aMatrix.find(KeyType(row, col));
     if (p != this->m_aMatrix.end()) {
         answer = p->second;
     }
@@ -352,7 +344,7 @@ inline double& TlSparseMatrix::operator()(const index_type row, const index_type
     assert((0 <= row) && (row < this->m_nRows));
     assert((0 <= col) && (col < this->m_nCols));
 
-    return this->m_aMatrix[this->index(row, col)];
+    return this->m_aMatrix[KeyType(row, col)];
 }
 
 

@@ -189,6 +189,9 @@ void TlVectorMatrixObject::set_to_vm(const index_type vectorIndex,
     const div_t turns = std::div(vectorIndex, this->numOfSubunits_);
     if (turns.rem == this->subunitID_) {
         const index_type localVectorIndex = turns.quot;
+
+        assert(localVectorIndex < this->data_.size());
+        assert(index < this->sizeOfVector_);
         this->data_[localVectorIndex][index] = value;
     }
 }
@@ -378,23 +381,19 @@ bool TlVectorMatrixObject::isLoadable(const std::string& filepath,
 }
 
 
-bool TlVectorMatrixObject::load(const std::string& basename)
+bool TlVectorMatrixObject::load(const std::string& basename, int subunitID)
 {
-    return this->load(basename, -1);
+    const std::string path = TlVectorMatrixObject::getFileName(basename, subunitID);
+    return this->load(path);
 }
 
-bool TlVectorMatrixObject::load(const std::string& basename, int subunitID)
+
+bool TlVectorMatrixObject::load(const std::string& path)
 {
     bool answer = false;
     TlLogging& log = TlLogging::getInstance();
 
-    if (subunitID == -1) {
-        subunitID = this->subunitID_;
-    }
-
     std::ifstream ifs;
-    const std::string path = TlVectorMatrixObject::getFileName(basename, subunitID);
-
     ifs.open(path.c_str(), std::ifstream::in);
     if (ifs.good()) {
         // header
@@ -410,6 +409,10 @@ bool TlVectorMatrixObject::load(const std::string& basename, int subunitID)
         this->subunitID_ = read_subunitID;
         this->resize(numOfVectors, sizeOfVector);
         
+        this->numOfSubunits_ = read_numOfSubunits;
+        this->subunitID_ = read_subunitID;
+        this->resize(numOfVectors, sizeOfVector);
+
         // data
         const div_t turns = std::div(numOfVectors, this->numOfSubunits_);
         index_type numOfLocalVectors = turns.quot;
@@ -423,6 +426,7 @@ bool TlVectorMatrixObject::load(const std::string& basename, int subunitID)
 
         answer = true;
     } else {
+        std::cerr << TlUtils::format("cannot open file: %s", path.c_str()) << std::endl;
         log.error(TlUtils::format("cannot open file: %s", path.c_str()));
     }
 

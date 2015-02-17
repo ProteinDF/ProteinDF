@@ -22,11 +22,11 @@
 
 #include "TlSparseMatrix.h"
 
-const int TlSparseMatrix::INT_BITS = sizeof(int) * 8;
-const int TlSparseMatrix::MAX_INT = std::numeric_limits<unsigned int>::max();
+// const int TlSparseMatrix::INT_BITS = sizeof(int) * 8;
+// const int TlSparseMatrix::MAX_INT = std::numeric_limits<unsigned int>::max();
 
 TlSparseMatrix::TlSparseMatrix(int row, int col)
-        : m_nRows(row), m_nCols(col)
+    : m_nRows(row), m_nCols(col)
 {
 }
 
@@ -78,7 +78,7 @@ void TlSparseMatrix::erase(int row, int col)
     //const long index = (row << (sizeof(int) * 8)) + col;
 
     //iterator p = this->m_aMatrix.find(TlMatrixIndexPair(row, col));
-    iterator p = this->m_aMatrix.find(this->index(row, col));
+    iterator p = this->m_aMatrix.find(KeyType(row, col));
     if (p != this->m_aMatrix.end()) {
         this->erase(p);
     }
@@ -96,13 +96,12 @@ void TlSparseMatrix::resize(const int row, const int col)
     assert(0 < row);
     assert(0 < col);
 
-    if ((row > this->getNumOfRows()) || (col > this->getNumOfCols())) {
+    if ((row < this->getNumOfRows()) || (col < this->getNumOfCols())) {
         for (iterator p = this->m_aMatrix.begin(); p != this->m_aMatrix.end(); ++p) {
-            int r;
-            int c;
-            this->index(p->first, &r, &c);
+            const int r = p->first.row;
+            const int c = p->first.col;
 
-            if ((r >= row) || (c > col)) {
+            if ((r >= row) || (c >= col)) {
                 this->m_aMatrix.erase(p);
             }
         }
@@ -121,16 +120,28 @@ double TlSparseMatrix::pop(int* pRow, int* pCol)
     double answer = 0.0;
 
     if (this->m_aMatrix.size() > 0) {
-        //iterator p = this->m_aMatrix.end();
-        //--p;
         iterator p = this->m_aMatrix.begin();
-        this->index(p->first, pRow, pCol);
+        *pRow = p->first.row;
+        *pCol = p->first.col;
         answer = p->second;
+
         this->erase(p);
     }
 
     return answer;
 }
+
+
+void TlSparseMatrix::add(const std::vector<TlMatrixElement>& elements)
+{
+    const std::size_t numOfItems = elements.size();
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        this->add(elements[i].row,
+                  elements[i].col,
+                  elements[i].value);
+    }
+}
+
 
 void TlSparseMatrix::merge(const TlSparseMatrix& rhs)
 {
@@ -183,8 +194,8 @@ TlVector TlSparseMatrix::getRowVector(const index_type row) const
     } else {
         const_iterator pEnd = this->end();
         for (const_iterator p = this->begin(); p != pEnd; ++p) {
-            int r, c;
-            this->index(p->first, &r, &c);
+            const int r = p->first.row;
+            const int c = p->first.col;
             if (r == row) {
                 ans[c] = p->second;
             }
@@ -206,8 +217,8 @@ TlVector TlSparseMatrix::getColVector(const int col) const
     } else {
         const_iterator pEnd = this->end();
         for (const_iterator p = this->begin(); p != pEnd; ++p) {
-            int r, c;
-            this->index(p->first, &r, &c);
+            const int r = p->first.row;
+            const int c = p->first.col;
             if (c == col) {
                 ans[r] = p->second;
             }
@@ -225,15 +236,13 @@ const TlSparseMatrix& TlSparseMatrix::dot(const TlSparseMatrix& X)
     const_iterator qEnd = X.end();
 
     while ((p != pEnd) && (q != qEnd)) {
-        const unsigned long p_index = p->first;
-        const unsigned long q_index = q->first;
-        if (p_index < q_index) {
+        if (p->first < q->first) {
             this->m_aMatrix.erase(p++);
-        } else if (p_index > q_index) {
+        } else if (p->first > q->first) {
             ++q;
         } else {
-            // p_index == q_index
-            this->m_aMatrix[p_index] *= X.m_aMatrix[p_index];
+            assert(p->first == q->first);
+            p->second *= q->second;
             ++p;
             ++q;
         }
@@ -261,9 +270,8 @@ std::vector<int> TlSparseMatrix::getRowIndexList() const
 
     const_iterator pEnd = this->m_aMatrix.end();
     for (const_iterator p = this->m_aMatrix.begin(); p != pEnd; ++p) {
-        int row = 0;
-        int col = 0;
-        this->index(p->first, &row, &col);
+        const int row = p->first.row;
+        // const int col = p->first.col;
         rowIndexList.push_back(row);
     }
 
@@ -281,9 +289,8 @@ std::vector<int> TlSparseMatrix::getColIndexList() const
 
     const_iterator pEnd = this->m_aMatrix.end();
     for (const_iterator p = this->m_aMatrix.begin(); p != pEnd; ++p) {
-        int row = 0;
-        int col = 0;
-        this->index(p->first, &row, &col);
+        // const int row = p->first.row;
+        const int col = p->first.col;
         colIndexList.push_back(col);
     }
 
@@ -292,6 +299,25 @@ std::vector<int> TlSparseMatrix::getColIndexList() const
     std::vector<int>(colIndexList).swap(colIndexList); // see effective STL 17.
 
     return colIndexList;
+}
+
+
+std::vector<TlMatrixElement> TlSparseMatrix::getMatrixElements() const
+{
+    const std::size_t numOfSize = this->getSize();
+    std::vector<TlMatrixElement> answer(numOfSize);
+
+    std::size_t count = 0;
+    const_iterator itEnd = this->end();
+    for (const_iterator it = this->begin(); it != itEnd; ++it) {
+        answer[count] = TlMatrixElement(it->first.row,
+                                        it->first.col,
+                                        it->second);
+        ++count;
+    }
+    assert(count == numOfSize);
+
+    return answer;
 }
 
 
@@ -320,7 +346,8 @@ bool TlSparseMatrix::save(std::ofstream& ofs) const
     index_type col = 0;
     SparseMatrixData::const_iterator itEnd = this->m_aMatrix.end();
     for (SparseMatrixData::const_iterator it = this->m_aMatrix.begin(); it != itEnd; ++it) {
-        this->index(it->first, &row, &col);
+        row = it->first.row;
+        col = it->first.col;
         ofs.write(reinterpret_cast<const char*>(&row), sizeof(int));
         ofs.write(reinterpret_cast<const char*>(&col), sizeof(int));
         ofs.write(reinterpret_cast<const char*>(&it->second), sizeof(double));

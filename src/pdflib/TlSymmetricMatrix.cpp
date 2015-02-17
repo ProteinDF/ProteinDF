@@ -1297,7 +1297,7 @@ TlMatrix TlSymmetricMatrix::choleskyFactorization2(const double threshold) const
 
     TlMatrix L(N, N);
     index_type m = 0;
-    double sum_ll = 0.0;
+    // double sum_ll = 0.0;
 
     while (error > threshold) {
         std::vector<TlVector::size_type>::const_iterator it = d.argmax(pivot.begin() + m,

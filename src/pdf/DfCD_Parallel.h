@@ -82,10 +82,17 @@ protected:
                                   const PQ_PairArray& I2PQ);
 
     // -------------------------------------------------------------------------
-public:
+protected:
+    virtual TlSymmetricMatrix getPMatrix(const RUN_TYPE runType, int itr);
 
-    virtual void getK(const RUN_TYPE runType,
-                      TlSymmetricMatrix* pK);
+protected:
+    virtual void getK_S_woCD(const RUN_TYPE runType,
+                             TlSymmetricMatrix* pK);
+
+    virtual void getK_S_fast(const RUN_TYPE runType,
+                             TlSymmetricMatrix *pK);
+
+public:
     void getK_D(const RUN_TYPE runType,
                 TlDistributeSymmetricMatrix* pK);
 
@@ -102,23 +109,55 @@ protected:
     void getM_A(const TlDistributeSymmetricMatrix& P,
                 TlDistributeSymmetricMatrix* pM);
     
+
+protected:
+    virtual TlRowVectorMatrix 
+    calcCholeskyVectorsOnTheFlyS_new(const TlOrbitalInfoObject& orbInfo,
+                                     const std::string& I2PQ_path,
+                                     const double threshold,
+                                     void(DfCD_Parallel::*calcDiagonalsFunc)(
+                                         const TlOrbitalInfoObject&,
+                                         PQ_PairArray*,
+                                         TlVector*),
+                                     void(DfCD_Parallel::*getSuperMatrixElements)(
+                                         const TlOrbitalInfoObject&,
+                                         const index_type,
+                                         const std::vector<index_type>&,
+                                         const PQ_PairArray&,
+                                         std::vector<double>*));
+
     
 protected:
-    virtual TlRowVectorMatrix calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
-                                                           const std::string& I2PQ_path);
     virtual TlRowVectorMatrix calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
                                                            const TlOrbitalInfoObject& orbInfo_q,
                                                            const std::string& I2PQ_path);
 
-    virtual std::vector<double>
-    getSuperMatrixElements(const TlOrbitalInfoObject& orbInfo,
-                           const index_type G_row,
-                           const std::vector<index_type>& G_col_list,
-                           const PQ_PairArray& I2PQ,
-                           const TlSparseSymmetricMatrix& schwartzTable);
+    // JK --------------------------------------------------------------
+    virtual void getSuperMatrixElements(const TlOrbitalInfoObject& orbInfo,
+                                        const index_type G_row,
+                                        const std::vector<index_type>& G_col_list,
+                                        const PQ_PairArray& I2PQ,
+                                        std::vector<double>* pSuperMatrixElements);
+
+    // FastCDK-full ----------------------------------------------------
+    virtual void getSuperMatrixElements_K_full(const TlOrbitalInfoObject& orbInfo,
+                                               const index_type G_row,
+                                               const std::vector<index_type>& G_col_list,
+                                               const PQ_PairArray& I2PR,
+                                               std::vector<double>* pSuperMatrixElements);
+
+    // FastCDK-halt ----------------------------------------------------
+    virtual void getSuperMatrixElements_K_half(const TlOrbitalInfoObject& orbInfo,
+                                               const index_type G_row,
+                                               const std::vector<index_type>& G_col_list,
+                                               const PQ_PairArray& I2PR,
+                                               std::vector<double>* pSuperMatrixElements);
+
+    // save L matrix ---------------------------------------------------
     void saveL(const TlRowVectorMatrix& L,
                const std::string& path);
-    // TlColVectorMatrix2 getColVector(const TlRowVectorMatrix& L);
+
+    TlColVectorMatrix transLMatrix(const TlRowVectorMatrix& rowVectorMatrix);
 
     // for debug
     TlMatrix mergeL(const TlRowVectorMatrix& L);

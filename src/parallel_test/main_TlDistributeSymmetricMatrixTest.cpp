@@ -35,7 +35,7 @@ void testDiagonal();
 void testDot();
 void testSum();
 void testMergePartialMatrix();
-void testGetPartialMatrix();
+// void testGetPartialMatrix();
 void testGetSparseMatrix2();
 void testGetPartialMatrix2();
 
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     testInverse2();
     testDiagonal();
     testMergePartialMatrix();
-    testGetPartialMatrix();
+    // testGetPartialMatrix();
     testGetSparseMatrix2();
     testGetPartialMatrix2();
     // ===================================================================
@@ -724,7 +724,7 @@ void testDiagonal()
 
 void testDot()
 {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
+    // TlCommunicate& rComm = TlCommunicate::getInstance();
     bool bIsPassed = true;
 
     TlDistributeSymmetricMatrix A;
@@ -760,7 +760,7 @@ void testDot()
 
 void testSum()
 {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
+    // TlCommunicate& rComm = TlCommunicate::getInstance();
     bool bIsPassed = true;
 
     TlDistributeSymmetricMatrix A;
@@ -846,37 +846,37 @@ void testMergePartialMatrix()
     showResultMessageAll("testMergePartialMatrix", bIsPassed);
 }
 
-void testGetPartialMatrix()
-{
-    bool bIsPassed = true;
+// void testGetPartialMatrix()
+// {
+//     bool bIsPassed = true;
 
-    TlDistributeSymmetricMatrix A(100);
-    A(3, 17) = -51.0;
-    A(3,  9) = 33.0;
+//     TlDistributeSymmetricMatrix A(100);
+//     A(3, 17) = -51.0;
+//     A(3,  9) = 33.0;
 
-    TlSparseSymmetricMatrix B(100);
-    B(1,  0) = 1.0;
-    B(3, 17) = 2.0;
-    B(3,  9) = 3.0;
-    B(51, 17) = 4.0;
+//     TlSparseSymmetricMatrix B(100);
+//     B(1,  0) = 1.0;
+//     B(3, 17) = 2.0;
+//     B(3,  9) = 3.0;
+//     B(51, 17) = 4.0;
 
-    A.getPartialMatrix(B);
+//     A.getPartialMatrix(B);
 
-    if (fabs(B(1,  0) - 0.0) > 1.0E-10) {
-        bIsPassed = false;
-    }
-    if (fabs(B(3, 17) - (-51.0)) > 1.0E-10) {
-        bIsPassed = false;
-    }
-    if (fabs(B(3,  9) - 33.0) > 1.0E-10) {
-        bIsPassed = false;
-    }
-    if (fabs(B(51, 17) - 0.0) > 1.0E-10) {
-        bIsPassed = false;
-    }
+//     if (fabs(B(1,  0) - 0.0) > 1.0E-10) {
+//         bIsPassed = false;
+//     }
+//     if (fabs(B(3, 17) - (-51.0)) > 1.0E-10) {
+//         bIsPassed = false;
+//     }
+//     if (fabs(B(3,  9) - 33.0) > 1.0E-10) {
+//         bIsPassed = false;
+//     }
+//     if (fabs(B(51, 17) - 0.0) > 1.0E-10) {
+//         bIsPassed = false;
+//     }
 
-    showResultMessageAll("testGetPartialMatrix", bIsPassed);
-}
+//     showResultMessageAll("testGetPartialMatrix", bIsPassed);
+// }
 
 
 void testGetSparseMatrix2()
