@@ -44,10 +44,12 @@ public:
     virtual void main();
 
 protected:
+    void loadHarrisDB();
+
     template<class MatrixType, class SymmetricMatrixType, class DfOverlapType, class DfPopulationType>
     void calcInitialDensityMatrix();
 
-private:
+protected:
     /// debug時はtrueにする
     bool debug_;
 

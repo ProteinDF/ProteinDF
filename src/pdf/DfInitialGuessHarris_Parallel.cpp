@@ -35,8 +35,11 @@ DfInitialGuessHarris_Parallel::~DfInitialGuessHarris_Parallel()
 void DfInitialGuessHarris_Parallel::main()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
+
 #ifdef HAVE_SCALAPACK
     if (this->m_bUsingSCALAPACK) {
+        this->distributeHarrisDB();
+
         DfInitialGuessHarris::calcInitialDensityMatrix<TlDistributeMatrix,
             TlDistributeSymmetricMatrix,
             DfOverlapX_Parallel, 
@@ -51,4 +54,16 @@ void DfInitialGuessHarris_Parallel::main()
         DfInitialGuessHarris::main();
     }
 #endif // HAVE_SCALAPACK
+}
+
+
+void DfInitialGuessHarris_Parallel::distributeHarrisDB()
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    if (rComm.isMaster()) {
+        DfInitialGuessHarris::loadHarrisDB();
+    }
+
+    rComm.broadcast(this->pdfParam_harrisDB_);
 }
