@@ -28,6 +28,9 @@ public:
     virtual ~DfInitialGuessHarris_Parallel();
 
     virtual void main();
+
+protected:
+    void distributeHarrisDB();
 };
 
 #endif // DFINITIALGUESSHARRIS_PARALLEL_H
