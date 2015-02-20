@@ -1134,8 +1134,8 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
     this->log_.info(TlUtils::format("epsilon = %8.3e", this->epsilon_));
     TlDistributeSymmetricMatrix P = 
         0.5 * DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1); // RKS
-    //const TlDistributeMatrix C = P.choleskyFactorization(this->epsilon_);
-    const TlDistributeMatrix C = P.choleskyFactorization_mod2(this->epsilon_);
+    const TlDistributeMatrix C = P.choleskyFactorization(this->epsilon_);
+    //const TlDistributeMatrix C = P.choleskyFactorization_mod2(this->epsilon_);
 
     TlTime time_all;
     TlTime time_bcast;
