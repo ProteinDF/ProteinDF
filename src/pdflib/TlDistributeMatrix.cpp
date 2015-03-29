@@ -405,12 +405,12 @@ TlDistributeMatrix::TlDistributeMatrix(const TlRowVectorMatrix& rhs)
 
     const index_type numOfRows = this->getNumOfRows();
     const index_type numOfCols = this->getNumOfCols();
-    std::vector<double> rowVec(numOfCols);
+    TlVector rowVec(numOfCols);
     for (index_type row = 0; row < numOfRows; ++row) {
         const int charge = rhs.getSubunitID(row);
         if (charge == myRank) {
             rowVec = rhs.getVector(row);
-            assert(rowVec.size() == numOfCols);
+            assert(rowVec.getSize() == numOfCols);
         }
         rComm.broadcast(&(rowVec[0]), numOfCols, charge);
         
@@ -1198,7 +1198,7 @@ bool TlDistributeMatrix::getPartialMatrix_ClientTasks(TlMatrixObject* pMatrix) c
         TlMatrixObject* pMatrix = it->first;
         GPM_ClientTask& task = it->second;
 
-        assert(task.sessionIds.size() == numOfProcs);
+        assert(task.sessionIds.size() == std::size_t(numOfProcs));
 
         for (int proc = 0; proc < numOfProcs; ++proc) {
             if ((task.state[proc] & GPM_CLIENT_COUNT_COMPONENTS) == 0) {
@@ -1842,7 +1842,7 @@ void TlDistributeMatrix::mergeMatrixAsync_recv(bool isFinalize)
         if (((it->state & MM_WAIT_INDECES) != 0) &&
             ((it->state & MM_WAIT_VALUES)  != 0)) {
             const std::size_t numOfContents = it->numOfContents;
-            for (int i = 0; i < numOfContents; ++i) {
+            for (std::size_t i = 0; i < numOfContents; ++i) {
                 const index_type globalRow = it->indeces[i * 2    ];
                 const index_type globalCol = it->indeces[i * 2 + 1];
                 const double value = it->values[i];
@@ -2658,7 +2658,7 @@ bool TlDistributeMatrix::load(std::ifstream& ifs)
             for (std::map<int, std::vector<index_type> >::const_iterator it = tmpRowColLists.begin(); it != itEnd; ++it) {
                 const int proc = it->first;
                 const int numOfContents = it->second.size() / 2;
-                assert(numOfContents == tmpValueLists[proc].size());
+                assert(std::size_t(numOfContents) == tmpValueLists[proc].size());
 
                 if (isSendData[proc] == true) {
                     rComm.wait(sizeLists[proc]);

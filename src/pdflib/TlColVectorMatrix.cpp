@@ -27,6 +27,26 @@ TlColVectorMatrix::TlColVectorMatrix(const index_type row,
     : TlVectorMatrixObject(col, row, numOfSubunits, subunitID, isUsingMemManager) {
 }
 
+TlColVectorMatrix::TlColVectorMatrix(const TlMatrix& rhs,
+                                     const int numOfSubunits,
+                                     const int subunitID,
+                                     bool isUsingMemManager)
+    : TlVectorMatrixObject(rhs.getNumOfCols(), rhs.getNumOfRows(),
+                           numOfSubunits, subunitID, isUsingMemManager)
+{
+    const index_type numOfRows = rhs.getNumOfRows();
+    const index_type numOfCols = rhs.getNumOfCols();
+    for (index_type r = 0; r < numOfRows; ++r) {
+        for (index_type c = 0; c < numOfCols; ++c) {
+            this->set(r, c, rhs.get(r, c));
+        }
+    }
+}
+
+TlColVectorMatrix::TlColVectorMatrix(const TlColVectorMatrix& rhs)
+    : TlVectorMatrixObject(rhs)
+{
+}
 
 TlColVectorMatrix::~TlColVectorMatrix()
 {
@@ -49,16 +69,28 @@ void TlColVectorMatrix::set(const index_type row,
                             const index_type col, 
                             const double value)
 {
-    TlVectorMatrixObject::set(col, row, value);
+    TlVectorMatrixObject::set_to_vm(col, row, value);
+}
+
+
+void TlColVectorMatrix::add(const index_type row,
+                            const index_type col, 
+                            const double value)
+{
+    TlVectorMatrixObject::add_to_vm(col, row, value);
 }
 
 
 double TlColVectorMatrix::get(const index_type row,
                               const index_type col) const
 {
-    return TlVectorMatrixObject::get(col, row);
+    return TlVectorMatrixObject::get_from_vm(col, row);
 }
 
+TlVector TlColVectorMatrix::getColVector(const index_type col) const
+{
+    return TlVectorMatrixObject::getVector(col);
+}
 
 TlMatrix TlColVectorMatrix::getTlMatrixObject() const
 {
@@ -66,10 +98,9 @@ TlMatrix TlColVectorMatrix::getTlMatrixObject() const
     const index_type numOfCols = this->getNumOfCols();
     TlMatrix answer(numOfRows, numOfCols);
 
-    std::vector<double> v;
     for (index_type c = 0; c < numOfCols; ++c) {
-        v = TlVectorMatrixObject::getVector(c);
-        assert(v.size() == numOfRows);
+        const TlVector v = TlVectorMatrixObject::getVector(c);
+        assert(v.getSize() == numOfRows);
         for (index_type r = 0; r < numOfRows; ++r) {
             answer.set(r, c, v[r]);
         }
@@ -77,4 +108,10 @@ TlMatrix TlColVectorMatrix::getTlMatrixObject() const
     
     return answer;
 }
+
+void TlColVectorMatrix::saveByTlRowVectorMatrix(const std::string& basename) const
+{
+    TlVectorMatrixObject::saveByTheOtherType(basename);
+}
+
 

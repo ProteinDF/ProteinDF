@@ -18,7 +18,7 @@
 
 #include <iostream>
 #include "TlMatrixObject.h"
-#include "TlVectorMatrixObject.h"
+#include "TlRowVectorMatrix.h"
 #include "TlUtils.h"
 #include "TlGetopt.h"
 
@@ -83,20 +83,20 @@ int main(int argc, char* argv[])
     }
 
     // load & set
-    std::vector<TlVectorMatrixObject*> outputs(output_numOfSubunits);
+    std::vector<TlRowVectorMatrix*> outputs(output_numOfSubunits);
     for (int i = 0; i < output_numOfSubunits; ++i) {
-        outputs[i] = new TlVectorMatrixObject(numOfVectors, sizeOfVector,
-                                              output_numOfSubunits, i,
-                                              isUsingMemManager);
+        outputs[i] = new TlRowVectorMatrix(numOfVectors, sizeOfVector,
+                                           output_numOfSubunits, i,
+                                           isUsingMemManager);
     }
 
     for (int i = 0; i < input_numOfSubunits; ++i) {
-        TlVectorMatrixObject vm;
+        TlRowVectorMatrix vm;
         vm.load(inputBaseName, i);
         
         for (index_type j = 0; j < numOfVectors; ++j) {
             if (vm.getSubunitID(j) == i) {
-                const std::vector<double> v = vm.getVector(j);
+                const TlVector v = vm.getVector(j);
                 const int output_subunitID = outputs[0]->getSubunitID(j);
                 outputs[output_subunitID]->setVector(j, v);
             }

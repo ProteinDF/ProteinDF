@@ -27,6 +27,7 @@
 #include "TlSymmetricMatrix.h"
 #include "TlStlUtils.h"
 #include "TlRowVectorMatrix.h"
+#include "TlColVectorMatrix.h"
 
 class TlOrbitalInfo;
 class DfEngineObject;
@@ -160,11 +161,13 @@ protected:
     virtual void saveI2PQ(const PQ_PairArray& I2PQ, const std::string& filepath);
     virtual PQ_PairArray getI2PQ(const std::string& filepath);
 
-    virtual void saveLjk(const TlMatrix& Ljk);
-    virtual TlMatrix getLjk();
+    virtual void saveLjk(const TlRowVectorMatrix& Ljk);
+    virtual void debugOutLjk(const TlMatrix& Ljk);
+    virtual TlColVectorMatrix getLjk();
 
-    virtual void saveLxc(const TlMatrix& Ljk);
-    virtual TlMatrix getLxc();
+    virtual void saveLxc(const TlRowVectorMatrix& Ljk);
+    virtual void debugOutLxc(const TlMatrix& Lxc);
+    virtual TlColVectorMatrix getLxc();
 
     TlSymmetricMatrix getCholeskyVector(const TlVector& L_col,
                                         const PQ_PairArray& I2PQ);

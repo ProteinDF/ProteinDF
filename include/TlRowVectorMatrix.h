@@ -23,6 +23,7 @@
 #include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include "TlMatrixObject.h"
 #include "TlVectorMatrixObject.h"
 #include "TlMatrix.h"
 
@@ -34,6 +35,11 @@ public:
                                int numOfSubunits =1,
                                int subunitID =0,
                                bool isUsingMemManager =false);
+    explicit TlRowVectorMatrix(const TlMatrix& rhs,
+                               int numOfSubunits =1,
+                               int subunitID =0,
+                               bool isUsingMemManager =false);
+    TlRowVectorMatrix(const TlRowVectorMatrix& rhs);
 
     virtual ~TlRowVectorMatrix();
 
@@ -50,12 +56,17 @@ public:
     };
 
     virtual void set(index_type row, index_type col, double value);
+    virtual void add(index_type row, index_type col, double value);
     virtual double get(index_type row, index_type col) const;
+
+    virtual TlVector getRowVector(const index_type col) const;
 
 public:
     /// TlMatrixオブジェクトを返す(for debug)
     TlMatrix getTlMatrixObject() const;
 
+    /// TlColVectorMatrix形式で保存
+    void saveByTlColVectorMatrix(const std::string& basename) const;
 };
 
 #endif // TLROWVECTORMATRIX_H

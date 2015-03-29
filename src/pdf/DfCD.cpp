@@ -100,13 +100,14 @@ void DfCD::calcCholeskyVectorsForJK()
         V.save("fl_Work/debug_Vjk.mat");
             
         TlMatrix L = this->calcCholeskyVectors(V);
-        this->saveLjk(L);
+        this->saveLjk(TlRowVectorMatrix(L));
+        this->debugOutLjk(L); // debug
     } else {
         // productive code
         const TlRowVectorMatrix Ljk 
             = this->calcCholeskyVectorsOnTheFly<DfEriEngine>(orbInfo,
                                                              this->getI2pqVtrPath());
-        this->saveLjk(Ljk.getTlMatrixObject());
+        this->saveLjk(Ljk);
     }
 
     // check
@@ -139,14 +140,15 @@ void DfCD::calcCholeskyVectorsForGridFree()
             V.save("fl_Work/debug_Vxc.mat");
             
             TlMatrix L = this->calcCholeskyVectors(V);
-            this->saveLxc(L);
+            this->saveLxc(TlRowVectorMatrix(L));
+            this->debugOutLxc(L); // debug
         } else {
             // productive code
             const TlRowVectorMatrix Lxc 
                 = this->calcCholeskyVectorsOnTheFly<DfOverlapEngine>(orbInfo_p,
                                                                      orbInfo_q,
                                                                      this->getI2pqVtrXCPath());
-            this->saveLxc(Lxc.getTlMatrixObject());
+            this->saveLxc(Lxc);
         }
     } else {
         if (this->debugBuildSuperMatrix_) {
@@ -159,14 +161,15 @@ void DfCD::calcCholeskyVectorsForGridFree()
             V.save("fl_Work/debug_V.mat");
             
             TlMatrix L = this->calcCholeskyVectors(V);
-            this->saveLxc(L);
+            this->saveLxc(TlRowVectorMatrix(L));
+            this->debugOutLxc(L); // debug
         } else {
             // productive code
             this->log_.info("build Lxc matrix by on-the-fly method.");
             const TlRowVectorMatrix Lxc 
                 = this->calcCholeskyVectorsOnTheFly<DfOverlapEngine>(orbInfo_p,
                                                                      this->getI2pqVtrXCPath());
-            this->saveLxc(Lxc.getTlMatrixObject());
+            this->saveLxc(Lxc);
         }
 
         // check
@@ -227,25 +230,39 @@ DfCD::PQ_PairArray DfCD::getI2PQ(const std::string& filepath)
     return answer;
 }
 
-void DfCD::saveLjk(const TlMatrix& Ljk)
+void DfCD::saveLjk(const TlRowVectorMatrix& Ljk)
 {
-    DfObject::saveLjkMatrix(Ljk);
+    const std::string path = DfObject::getLjkMatrixPath();
+    Ljk.saveByTlColVectorMatrix(path);
 }
 
-void DfCD::saveLxc(const TlMatrix& Lxc)
+void DfCD::saveLxc(const TlRowVectorMatrix& Lxc)
 {
-    DfObject::saveLxcMatrix(Lxc);
+    const std::string path = this->getLxcMatrixPath();
+    Lxc.saveByTlColVectorMatrix(path);
 }
 
-TlMatrix DfCD::getLjk()
+void DfCD::debugOutLjk(const TlMatrix& Ljk)
 {
-    TlMatrix Ljk = DfObject::getLjkMatrix<TlMatrix>();
+    const std::string path = TlUtils::format("%s.debug", DfObject::getLjkMatrixPath().c_str());
+    Ljk.save(path);
+}
+
+void DfCD::debugOutLxc(const TlMatrix& Lxc)
+{
+    const std::string path = TlUtils::format("%s.debug", DfObject::getLxcMatrixPath().c_str());
+    Lxc.save(path);
+}
+
+TlColVectorMatrix DfCD::getLjk()
+{
+    TlColVectorMatrix Ljk = DfObject::getLjkMatrix<TlColVectorMatrix>();
     return Ljk;
 }
 
-TlMatrix DfCD::getLxc()
+TlColVectorMatrix DfCD::getLxc()
 {
-    TlMatrix Lxc = DfObject::getLxcMatrix<TlMatrix>();
+    TlColVectorMatrix Lxc = DfObject::getLxcMatrix<TlColVectorMatrix>();
     return Lxc;
 }
 
@@ -334,7 +351,7 @@ void DfCD::getJ_S(TlSymmetricMatrix* pJ)
     this->log_.info("calc J by CD method (serial).");
 
     // cholesky vector
-    TlMatrix L = this->getLjk();
+    const TlColVectorMatrix L = this->getLjk();
     this->log_.info(TlUtils::format("L(J): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
     const index_type numOfCBs = L.getNumOfCols();
     
@@ -398,7 +415,7 @@ void DfCD::getJ_A(TlSymmetricMatrix* pJ)
     const TlSymmetricMatrix P = this->getPMatrix();
 
     // cholesky vector
-    TlMatrix L = this->getLjk();
+    const TlColVectorMatrix L = this->getLjk();
     const index_type numOfCBs = L.getNumOfCols();
 
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrXCPath());
@@ -438,7 +455,7 @@ void DfCD::getK(const RUN_TYPE runType,
 void DfCD::getK_S(const RUN_TYPE runType,
                   TlSymmetricMatrix *pK)
 {
-    TlMatrix L = this->getLjk();
+    const TlColVectorMatrix L = this->getLjk();
     this->log_.info(TlUtils::format("L(K): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
     const index_type numOfCBs = L.getNumOfCols();
     
@@ -502,7 +519,7 @@ void DfCD::getK_A(const RUN_TYPE runType,
     const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
                                   (*this->pPdfParam_)["basis_set"]);
 
-    TlMatrix L = this->getLjk();
+    const TlColVectorMatrix L = this->getLjk();
     const index_type numOfCBs = L.getNumOfCols();
     
     TlSymmetricMatrix P = 0.5 * this->getPMatrix(); // RKS
@@ -549,7 +566,7 @@ void DfCD::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     pM->resize(numOfAOs);
 
     // cholesky vector
-    TlMatrix L = this->getLxc();
+    const TlColVectorMatrix L = this->getLxc();
     this->log_.info(TlUtils::format("L(xc): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
     const index_type numOfCBs = L.getNumOfCols();
 
@@ -584,7 +601,7 @@ void DfCD::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     pM->resize(dim_M);
 
     // cholesky vector
-    TlMatrix L = this->getLxc();
+    const TlColVectorMatrix L = this->getLxc();
     this->log_.info(TlUtils::format("L(xc; A): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
     const index_type numOfCBs = L.getNumOfCols();
     
