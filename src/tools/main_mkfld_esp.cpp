@@ -35,6 +35,7 @@ void help(const std::string& progName)
     std::cout << "OPTIONS:" << std::endl;
     std::cout << " -p PATH      set ProteinDF parameter file. default = pdfparam.mpac" << std::endl;
     std::cout << " -d PATH      set density matrix file. default is presumed by parameter file." << std::endl;
+    std::cout << " -i gridfile  use user-defined grid xyz data by file" << std::endl;
     std::cout << " -f           save AVS field (.fld) file." << std::endl;
     std::cout << " -c           save cube (.cube) file" << std::endl;
     std::cout << " -m           save message pack (.mpac) file." << std::endl;
@@ -45,7 +46,7 @@ void help(const std::string& progName)
 
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "cd:fhmo:p:v");
+    TlGetopt opt(argc, argv, "p:d:i:fcmo:hv");
     
     const bool verbose = (opt["v"] == "defined");
     if ((opt["h"] == "defined")) {
@@ -62,6 +63,14 @@ int main(int argc, char* argv[])
         PMatrixFilePath = opt["d"];
     }
 
+    std::string inputGridFilePath = "";
+    if (opt["i"].empty() != true) {
+        inputGridFilePath = opt["i"];
+        if (verbose) {
+            std::cerr << "user grid coord file: " << inputGridFilePath << std::endl;
+        }
+    }
+
     bool isSaveAvsFieldFile = false;
     if (opt["f"] == "defined") {
         isSaveAvsFieldFile = true;
@@ -75,6 +84,18 @@ int main(int argc, char* argv[])
     bool isSaveMpacFile = false;
     if (opt["m"] == "defined") {
         isSaveMpacFile = true;
+    }
+
+    // check configuration
+    if (! inputGridFilePath.empty()) {
+        if (isSaveAvsFieldFile) {
+            std::cerr << "cannot save AVS field data with user-defined grids." << std::endl;
+            isSaveAvsFieldFile = false;
+        }
+        if (isSaveCubeFile) {
+            std::cerr << "cannot save Cube field data with user-defined grids." << std::endl;
+            isSaveCubeFile = false;
+        }
     }
 
     if ((!isSaveAvsFieldFile) && (!isSaveCubeFile) && (!isSaveMpacFile)) {
@@ -112,8 +133,27 @@ int main(int argc, char* argv[])
 
     const TlPosition gridPitch(GRID_PITCH, GRID_PITCH, GRID_PITCH);
     int numOfGridX, numOfGridY, numOfGridZ;
-    std::vector<TlPosition> grids = makeGrids(startPos, endPos, gridPitch,
-                                              &numOfGridX, &numOfGridY, &numOfGridZ);
+    std::vector<TlPosition> grids;
+    if (inputGridFilePath.empty()) {
+        grids = makeGrids(startPos, endPos, gridPitch,
+                          &numOfGridX, &numOfGridY, &numOfGridZ);
+    } else {
+        TlMsgPack inputGridMsgPack;
+        inputGridMsgPack.load(inputGridFilePath);
+        TlSerializeData inputGridData = inputGridMsgPack.getSerializeData();
+
+        const int numOfInputGrids = inputGridData["num_of_grids"].getInt();
+        grids.resize(numOfInputGrids);
+        const double AU_PER_ANG = 1.0 / ANG_PER_AU;
+        const TlSerializeData& inputGrids = inputGridData["grids"];
+        for (int i = 0; i < numOfInputGrids; ++i) {
+            const TlSerializeData& inputGrid = inputGrids.getAt(i);
+            const double x = inputGrid.getAt(0).getDouble() * AU_PER_ANG;
+            const double y = inputGrid.getAt(1).getDouble() * AU_PER_ANG;
+            const double z = inputGrid.getAt(2).getDouble() * AU_PER_ANG;
+            grids[i] = TlPosition(x, y, z);
+        }
+    } 
     const std::size_t numOfGrids = grids.size();
 
     if (verbose == true) {
@@ -140,7 +180,7 @@ int main(int argc, char* argv[])
         std::cerr << "save message pack file: " << mpacFilePath << std::endl;
 
         TlSerializeData output;
-        output["version"] = "2013.0";
+        output["version"] = "2014.0";
         output["num_of_grids"] = numOfGrids;
         for (std::size_t gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
             TlSerializeData pos;
@@ -153,7 +193,7 @@ int main(int argc, char* argv[])
         output["grid_unit"] = "angstrom";
 
         for (std::size_t i = 0; i < numOfGrids; ++i) {
-            output["data"]["ESP"].setAt(i, values[i]);
+            output["ESP"].setAt(i, values[i]);
         }
 
         TlMsgPack mpac(output);

@@ -927,7 +927,7 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
             for (std::map<int, std::vector<index_type> >::const_iterator it = tmpRowColLists.begin(); it != itEnd; ++it) {
                 const int proc = it->first;
                 const int numOfContents = it->second.size() / 2;
-                assert(numOfContents == tmpValueLists[proc].size());
+                assert(std::size_t(numOfContents) == tmpValueLists[proc].size());
 
                 if (isSendData[proc] == true) {
                     rComm.wait(sizeLists[proc]);
@@ -1839,7 +1839,7 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
                         rComm.getRank(),
                         isEnableMmap); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
     const index_type local_N = L.getNumOfLocalVectors();
-    std::vector<double> L_pm(N);
+    TlVector L_pm(N);
     std::vector<int> global_pivot(N);  // 
     std::vector<int> reverse_pivot(N); // global_pivotの逆引き
     std::vector<int> local_pivot(local_N);
@@ -1923,9 +1923,10 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
             if (PEinCharge == rComm.getRank()) {
                 // const index_type copySize = L.getRowVector(pivot_m, &(L_pm[0]), m +1);
                 L_pm = L.getVector(pivot_m);
-                assert(L_pm.size() == m +1);
+                assert(L_pm.getSize() == m +1);
             }
-            rComm.broadcast(&(L_pm[0]), m +1, PEinCharge);
+            // rComm.broadcast(&(L_pm[0]), m +1, PEinCharge);
+            rComm.broadcast(L_pm, PEinCharge);
         }
         CD_bcast_time.stop();
 
@@ -1933,7 +1934,7 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
         error = 0.0;
 #pragma omp parallel
         {
-            std::vector<double> L_pi(m +1);
+            TlVector L_pi(m +1);
             double my_error = 0.0;
             int my_error_global_loc = 0;
             int my_error_local_loc = 0;
@@ -1943,7 +1944,7 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
                 const int pivot_i = local_pivot[i];
                 // const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
                 L_pi = L.getVector(pivot_i);
-                assert(L_pi.size() == m +1);
+                assert(L_pi.getSize() == m +1);
                 double sum_ll = 0.0;
                 for (index_type j = 0; j < m; ++j) {
                     sum_ll += L_pm[j] * L_pi[j];
