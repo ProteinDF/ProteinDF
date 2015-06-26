@@ -36,6 +36,219 @@ const char* TlPrdctbl::periodicTable[] = {
     "Md", "No", "Lr"
 };
 
+// J. C. Slater, J. Chem. Phys., 41, 3199 (1964).
+// DOI: 10.1063/1.1725697
+const double TlPrdctbl::BraggSlaterRadii[] = {
+    0.00,
+    0.25, // H
+    1.45, // He
+
+    1.05, /// Be
+    0.85, // B
+    0.70, // C
+    0.65, // N
+    0.60, // O
+    0.50, // F
+    0.50, // Ne(undefined)
+
+    1.80, // Na
+    1.50, // Mg
+    1.25, // Al
+    1.10, // Si
+    1.00, // P
+    1.00, // S
+    1.00, // Cl
+    1.00, // Ar(undefined)
+
+    2.20, // K
+    1.80, // Ca
+    1.60, // Sc
+    1.40, // Ti
+    1.35, // V
+    1.40, // Cr
+    1.40, // Mn
+    1.40, // Fe
+    1.35, // Co
+    1.35, // Ni
+    1.35, // Cu
+    1.35, // Zn
+    1.30, // Ga
+    1.25, // Ge
+    1.15, // As
+    1.15, // Se
+    1.15, // Br
+    1.15, // Kr(undefined)
+
+    2.35, // Rb
+    2.00, // Sr
+    1.80, // Y
+    1.55, // Zr
+    1.45, // Nb
+    1.45, // Mo
+    1.35, // Tc
+    1.30, // Ru
+    1.35, // Rh
+    1.40, // Pd
+    1.60, // Ag
+    1.55, // Cd
+    1.55, // In
+    1.45, // Sn
+    1.45, // Sb
+    1.40, // Te
+    1.40, // I
+    1.40, // Xe(undefined)
+    
+    2.60, // Cs
+    2.15, // Ba
+    1.95, // La
+    1.85, // Ce
+    1.85, // Pr
+    1.85, // Nd
+    1.85, // Pm
+    1.85, // Sm
+    1.85, // Eu
+    1.80, // Gd
+    1.75, // Tb
+    1.75, // Dy
+    1.75, // Ho
+    1.75, // Er
+    1.75, // Tu
+    1.75, // Yb
+    1.75, // Lu
+    1.55, // Hf
+    1.45, // Ta
+    1.35, // W
+    1.35, // Re
+    1.30, // Os
+    1.35, // Ir
+    1.35, // Pt
+    1.35, // Au
+    1.50, // Hg
+    1.90, // Ti
+    1.60, // Bi
+    1.90, // Po
+    1.90, // At(undefined)
+    1.90, // Rn(undefined)
+
+    2.15, // Fr(undefined)
+    2.15, // Ra
+    1.95, // Ac
+    1.80, // Th
+    1.80, // Pa
+    1.75, // U
+    1.75, // Np
+    1.75, // Pu
+    1.75  // Am
+};
+
+// B. Cordero, et.al., Dalton. Trans., 2831-2838, 2008.
+// DOI: 10.1039/b801115j
+const double TlPrdctbl::covalentRadii[] = {
+    0.00,
+    0.31, // H
+    0.28, // He
+    
+    1.28, // Li
+    0.96, // Be
+    0.84, // B
+    0.76, // C(sp3)
+    0.71, // N
+    0.66, // O
+    0.57, // F
+    0.58, // Ne
+
+    1.66, // Na
+    1.41, // Mg
+    1.21, // Al
+    1.11, // Si
+    1.07, // P
+    1.05, // S
+    1.02, // Cl
+    1.06, // Ar
+
+    2.03, // K
+    1.76, // Ca
+    1.70, // Sc
+    1.60, // Ti
+    1.53, // V
+    1.39, // Cr
+    1.39, // Mn(LS)
+    1.32, // Fe(LS)
+    1.26, // Co(LS)
+    1.24, // Ni
+    1.32, // Cu
+    1.22, // Zn
+    1.22, // Ga
+    1.20, // Ge
+    1.19, // As
+    1.20, // Se
+    1.20, // Br
+    1.16, // Kr
+
+    2.20, // Rb
+    1.95, // Sr
+    1.90, // Y
+    1.75, // Zr
+    1.64, // Nb
+    1.54, // Mo
+    1.47, // Tc
+    1.46, // Ru
+    1.42, // Rh
+    1.39, // Pd
+    1.45, // Ag
+    1.44, // Cd
+    1.42, // In
+    1.39, // Sn
+    1.39, // Sb
+    1.38, // Te
+    1.39, // I
+    1.40, // Xe
+
+    2.44, // Cs
+    2.15, // Ba
+    2.07, // La
+    2.04, // Ce
+    2.03, // Pr
+    2.01, // Nd
+    1.99, // Pm
+    1.98, // Sm
+    1.98, // Eu
+    1.96, // Gd
+    1.94, // Tb
+    1.92, // Dy
+    1.92, // Ho
+    1.89, // Er
+    1.90, // Tm
+    1.87, // Yb
+    1.87, // Lu
+    1.75, // Hf
+    1.70, // Ta
+    1.62, // W
+    1.51, // Re
+    1.44, // Os
+    1.41, // Ir
+    1.36, // Pt
+    1.36, // Au
+    1.32, // Hg
+    1.45, // Tl
+    1.46, // Pb
+    1.48, // Bi
+    1.40, // Po
+    1.50, // At
+    1.50, // Rn
+    2.60, // Fr
+    2.21, // Ra
+    2.15, // Ac
+    2.06, // Th
+    2.00, // Pa
+    1.96, // U
+    1.90, // Np
+    1.87, // Pu
+    1.80, // Am
+    1.69, // Cm
+};
+
+
 TlPrdctbl::TlPrdctbl()
 {
 }
@@ -61,11 +274,36 @@ int TlPrdctbl::getAtomicNumber(const std::string& str)
 std::string TlPrdctbl::getSymbol(int n)
 {
     std::string answer = "";
-    const int nMaxAtomIndex = sizeof(periodicTable) / sizeof(char*);
-    if ((1 <= n) && (n <= nMaxAtomIndex)) {
+    const int maxAtomIndex = sizeof(periodicTable) / sizeof(char*);
+    if ((1 <= n) && (n < maxAtomIndex)) {
         answer = std::string(periodicTable[n]);
     }
 
     return answer;
 }
+
+double TlPrdctbl::getBraggSlaterRadii(const int atomicNumber)
+{
+    double answer = 0.0;
+
+    const int maxAtomicNumber = sizeof(TlPrdctbl::BraggSlaterRadii) / sizeof(double);
+    if ((1 <= atomicNumber) && (atomicNumber < maxAtomicNumber)) {
+        answer = TlPrdctbl::BraggSlaterRadii[atomicNumber];
+    }
+    
+    return answer;
+}
+
+double TlPrdctbl::getCovalentRadii(const int atomicNumber)
+{
+    double answer = 0.0;
+
+    const int maxAtomicNumber = sizeof(TlPrdctbl::covalentRadii) / sizeof(double);
+    if ((1 <= atomicNumber) && (atomicNumber < maxAtomicNumber)) {
+        answer = TlPrdctbl::covalentRadii[atomicNumber];
+    }
+    
+    return answer;
+}
+
 

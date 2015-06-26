@@ -33,8 +33,8 @@ libpdftl_la_SOURCES = \
 	TlVector.cpp					\
 	TlFmt.cpp						\
 	TlLogging.cpp					\
-	TlGetopt.cpp
-#libpdftl_la_LIBADD = @LAPACK_LIBS@ @BLAS_LIBS@
+	TlGetopt.cpp					\
+	TlLebedevGrid.cpp
 
 libppdftl_la_SOURCES = \
 	TlCommunicate.cpp				\

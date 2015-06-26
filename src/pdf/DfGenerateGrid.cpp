@@ -28,6 +28,7 @@
 #include "TlTime.h"
 #include "TlMath.h"
 #include "TlSymmetricMatrix.h"
+#include "TlPrdctbl.h"
 
 #define SQ2             1.414213562373095049
 #define SQ1_2           0.707106781186547524
@@ -39,14 +40,18 @@
 
 DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam),
-      flGeometry_((*pPdfParam)["coordinates"]) {
+      flGeometry_((*pPdfParam)["coordinates"]),
+      radialGridType_(RG_EularMaclaurin),
+      GC_mappingType_(GC_TA),
+      isAtomicSizeAdjustments_(true),
+      isPruning_(true) {
     const TlSerializeData& pdfParam = *pPdfParam;
     
     this->xctype   = pdfParam["xc_functional"].getStr();
 
     this->weightCutoff_ = 1.0E-16;
-    if (pdfParam["grid-weight-cutoff"].getStr() != "") {
-        this->weightCutoff_ = pdfParam["grid-weight-cutoff"].getDouble();
+    if (pdfParam["grid/weight_cutoff"].getStr() != "") {
+        this->weightCutoff_ = pdfParam["grid/weight_cutoff"].getDouble();
     }
 
     const std::string sGridType = pdfParam["xc-potential/grid-type"].getStr();
@@ -66,17 +71,93 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
         this->m_gridType = FINE;
         this->nrgrid =  64;
         this->nOgrid = 302;
-    } else if (TlUtils::toUpper(sGridType) == "SG-1") {
+    } else if (TlUtils::toUpper(sGridType) == "USER") {
+        this->log_.info("grid type =  UserDefined");
+        this->m_gridType = USER;
+
+        this->nrgrid =  75;
+        if (pdfParam["grid/num_of_radial_shells"].getStr() != "") {
+            this->nrgrid = pdfParam["grid/num_of_radial_shells"].getInt();
+        }
+        
+        this->nOgrid = 302;
+        if (pdfParam["grid/num_of_angular_points"].getStr() != "") {
+            this->nOgrid = pdfParam["grid/num_of_angular_points"].getInt();
+        }
+        
+        this->radialGridType_ = RG_EularMaclaurin;
+        if (pdfParam["grid/radial_quadorature_method"].getStr() != "") {
+            const std::string method = TlUtils::toUpper(pdfParam["grid/radial_quadorature_method"].getStr());
+            if ((method == "GC") || (method == "Gauss-Chebyshev")) {
+                this->radialGridType_ = RG_GaussChebyshev;
+            } else if ((method == "EM") || (method == "Eular-Maclaurin")) {
+                this->radialGridType_ = RG_EularMaclaurin;
+            }
+        }
+
+        this->GC_mappingType_ = GC_TA;
+        if (this->radialGridType_ == RG_GaussChebyshev) {
+            if (pdfParam["grid/GC_mapping_type"].getStr() != "") {
+                const std::string mappingType = TlUtils::toUpper(pdfParam["grid/GC_mapping_type"].getStr());
+                if (mappingType == "BECKE") {
+                    this->GC_mappingType_ = GC_BECKE;
+                } else if (mappingType == "TA") {
+                    this->GC_mappingType_ = GC_TA;
+                } else if (mappingType == "KK") {
+                    this->GC_mappingType_ = GC_KK;
+                }
+            }
+        }
+
+        this->isPruning_ = true;
+        if (pdfParam["grid/pruning"].getStr() != "") {
+            this->isPruning_ = pdfParam["grid/pruning"].getBoolean();
+        }
+
+        this->isAtomicSizeAdjustments_ = true;
+    } else if ((TlUtils::toUpper(sGridType) == "SG-1") || (TlUtils::toUpper(sGridType) == "SG1")) {
         this->log_.info("grid type = SG-1");
         this->m_gridType = SG_1;
         this->nrgrid =  50;
         this->nOgrid = 196;   // 適当
+        this->radialGridType_ = RG_EularMaclaurin;
+        this->isAtomicSizeAdjustments_ = false;
     } else {
         this->logger("Selection of Grid Type is Wrong.\n");
         this->logger("You type in [" + sGridType + "].\n");
         CnErr.abort();
     }
 
+    // report
+    this->log_.info(TlUtils::format("# radial grids  = %d", this->nrgrid));
+    this->log_.info(TlUtils::format("# lebedev grids = %d", this->nOgrid));
+    switch (this->radialGridType_) {
+    case RG_EularMaclaurin:
+        this->log_.info("ragial quadrature type: Eular-Maclaurin");
+        break;
+
+    case RG_GaussChebyshev:
+        this->log_.info("ragial quadrature type: Gauss-Chebyshev");
+        switch(this->GC_mappingType_) {
+        case GC_BECKE:
+            this->log_.info("Gauss-Chebyshev mapping type: Becke");
+            break;
+        case GC_TA:
+            this->log_.info("Gauss-Chebyshev mapping type: TA");
+            break;
+        case GC_KK:
+            this->log_.info("Gauss-Chebyshev mapping type: KK");
+            break;
+        }
+        break;
+    }
+    if (this->isPruning_) {
+        this->log_.info("pruning grids: yes");
+    } else {
+        this->log_.info("pruning grids: no");
+    }
+    
+    
     const int dNumOfAtoms = this->m_nNumOfAtoms;
     this->coord_.resize(dNumOfAtoms);
     for (int i = 0; i < dNumOfAtoms; ++i) {
@@ -84,6 +165,7 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
     }
 
     this->distanceMatrix_.resize(dNumOfAtoms);
+    this->invDistanceMatrix_.resize(dNumOfAtoms);
     for (int mc = 0; mc < dNumOfAtoms; ++mc) {
         const TlPosition pos_mc = this->coord_[mc];
         for (int nc = 0; nc < mc; ++nc) {
@@ -92,6 +174,7 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
                 std::cerr << " distance < 1E-10: " << mc << " th atom and " << nc << " th atom." << std::endl;
             }
             this->distanceMatrix_(mc, nc) = dist;
+            this->invDistanceMatrix_(mc, nc) = 1.0 / dist;
         }
     }
 
@@ -278,7 +361,7 @@ void DfGenerateGrid::setCellPara()
         this->radiusList_[104] = 1.55;
         this->radiusList_[105] = 1.55;
 
-    } else if (this->m_gridType == SG_1) {
+    } else if ((this->m_gridType == SG_1) || (this->m_gridType == USER)) {
         // for SG-1(Slater Atomic Radii)
         this->radiusList_[  1] = 1.0000;   //0.50;
         this->radiusList_[  2] = 0.5882;   //2.00;
@@ -400,7 +483,7 @@ void DfGenerateGrid::setCellPara()
 
     // Set Gauss-Legendre abscissas (xGL) and weights (wGL)
     if ((this->m_gridType == COARSE) ||
-            (this->m_gridType == MEDIUM)) {
+        (this->m_gridType == MEDIUM)) {
 
         this->xGL_[ 0] = -9.9726386184948157e-01;
         this->xGL_[ 1] = -9.8561151154526838e-01;
@@ -615,7 +698,7 @@ void DfGenerateGrid::generateGrid(const TlMatrix& O)
         std::vector<double> coordZ;
         std::vector<double> weight;
 
-        if (this->m_gridType == SG_1) {
+        if ((this->m_gridType == SG_1) || (this->m_gridType == USER)){
             this->generateGrid_SG1(O, atom, &coordX, &coordY, &coordZ, &weight);
         } else {
             this->generateGrid(O, atom, &coordX, &coordY, &coordZ, &weight);
@@ -800,163 +883,138 @@ void DfGenerateGrid::generateGrid_SG1(const TlMatrix& O,
     assert(pCoordZ != NULL);
     assert(pWeight != NULL);
 
-    std::vector<TlPosition> crdpoint(20000);
-    std::vector<double> weightvec(20000);
-    static const size_t maxGridSize = 20000;
-    pCoordX->resize(maxGridSize);
-    pCoordY->resize(maxGridSize);
-    pCoordZ->resize(maxGridSize);
-    pWeight->resize(maxGridSize);
-    std::vector<double> Ps(this->m_nNumOfAtoms);
-    int GPthrnum = 0;
+    std::vector<TlPosition> crdpoint;
+    std::vector<double> weightvec;
 
+    int numOfGrids = 0;
     const int atomnum = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtomSymbol(iAtom));
     if (atomnum != 0) {
-        const double rM = this->radiusList_[atomnum];
+        double rM = 0.0;
+        if (this->m_gridType == SG_1) {
+            rM = this->radiusList_[atomnum];
+        } else {
+            rM = TlPrdctbl::getBraggSlaterRadii(atomnum);
+        }
         const double inv_rM = 1.0 / rM;
         
         // Set the partitioning parameters alpha used in the SG-1 grid
         // set default value; for after atom #18
-        double alpha0 = 0.0;
-        double alpha1 = 0.0;
-        double alpha2 = 0.0;
-        double alpha3 = 10000.0;
+        std::vector<double> alpha(5);
+        alpha[0] = 0.0;
+        alpha[1] = 0.0;
+        alpha[2] = 0.0;
+        alpha[3] = 10000.0;
         if ((atomnum == 1) || (atomnum == 2)) {
-            alpha0 = 0.2500;
-            alpha1 = 0.5000;
-            alpha2 = 1.0000;
-            alpha3 = 4.5000;
+            alpha[0] = 0.2500;
+            alpha[1] = 0.5000;
+            alpha[2] = 1.0000;
+            alpha[3] = 4.5000;
         } else if ((3 <= atomnum) && (atomnum <= 10)) {
-            alpha0 = 0.1667;
-            alpha1 = 0.5000;
-            alpha2 = 0.9000;
-            alpha3 = 3.5000;
+            alpha[0] = 0.1667;
+            alpha[1] = 0.5000;
+            alpha[2] = 0.9000;
+            alpha[3] = 3.5000;
         } else if ((11 <= atomnum) && (atomnum <= 18)) {
-            alpha0 = 0.1000;
-            alpha1 = 0.4000;
-            alpha2 = 0.8000;
-            alpha3 = 2.5000;
+            alpha[0] = 0.1000;
+            alpha[1] = 0.4000;
+            alpha[2] = 0.8000;
+            alpha[3] = 2.5000;
         }
         
         // Loop for the grid number of radial vector
         const int radvec_max = this->nrgrid;
-//#pragma omp parallel for schedule(runtime)
+        const int Nr = this->nrgrid;
         for (int radvec = 0; radvec < radvec_max; ++radvec) {
-            const double r0 = rM * TlMath::pow(radvec + 1.0, 2) * TlMath::pow(radvec_max - radvec, -2);
-            const double weight = 2.0 * rM * rM * rM * (radvec_max + 1.0)
-                * TlMath::pow(radvec + 1.0, 5)
-                * TlMath::pow(radvec_max - radvec, -7)
-                * 4.0 * M_PI;
-            
-            // Set the partitioning area
-            int Ogrid = 86;
-            const double judge = r0 * inv_rM;
-            if (judge <= alpha0) {
-                // (0, alpha0)
-                Ogrid = 6;
-            } else if (judge <= alpha1) {
-                // (alpha0, alpha1]
-                Ogrid = 38;
-            } else if (judge <= alpha2) {
-                // (alpha1, alpha2]
-                Ogrid = 86;
-            } else if (judge <= alpha3) {
-                // (alpha2, alpha3]
-                Ogrid = 194;
+            const int i = radvec +1;
+
+            double ri = 0.0;
+            double wr = 0.0;
+            switch (this->radialGridType_) {
+            case RG_GaussChebyshev:
+                this->getRadialAbscissaAndWeight_GaussChebyshev(
+                    rM, Nr, i, &ri, &wr);
+                break;
+
+            case RG_EularMaclaurin:
+                this->getRadialAbscissaAndWeight_EulerMaclaurin(
+                    rM, Nr, i, &ri, &wr);
+                break;
+
+            default:
+                this->log_.critical("unknown radial grid type.");
+                break;
             }
+
+            // cutoff
+            if (ri > 30.0) {
+                 continue;
+            }
+
+            // // Set the partitioning area
+            int Ogrid = 0;
+            if (this->m_gridType == SG_1) {
+                Ogrid = this->getNumOfPrunedAnglarPoints_SG1(
+                    ri,
+                    inv_rM,
+                    alpha);
+            } else {
+                Ogrid = this->getNumOfPrunedAnglarPoints(
+                    ri,
+                    this->nOgrid,
+                    atomnum);
+            }
+            
+            // this->log_.info(TlUtils::format("radvec=%2d: %4d / %4d: r_i=%e", radvec, Ogrid, numOfGrids, ri));
             
             // The coordinates of the atom on which the present grid is centred are put into the array "Ogridr"
             std::vector<TlPosition> grid(Ogrid);
             std::vector<double> lebWeight(Ogrid);
-            this->points2(Ogrid, r0, this->coord_[iAtom], weight, O,
-                          grid, lebWeight);
-            
-            // Loop for the grid number of Omega vector for SG-1
-            for (int Omega = 0; Omega < Ogrid; ++Omega) {
-                double weight_omega = lebWeight[Omega];
-                const TlPosition pos_O = grid[Omega];
-                
-                // グリッド省略判定
-                const int numOfAtoms = this->m_nNumOfAtoms;
-                std::vector<double> rr(numOfAtoms);
-                bool bPass = true;
-                for (int p = 0; p < numOfAtoms; ++p) {
-                    rr[p] = pos_O.distanceFrom(this->coord_[p]);
-                    
-                    if (rr[p] < this->maxRadii_) {
-                        bPass = false;
-                    }
-                }
-                if (bPass == true) {
-                    continue;
-                }
-                
-                // Loop for the m-center
-#pragma omp parallel for schedule(runtime)
-                for (int mc = 0; mc < numOfAtoms; ++mc) {
-                    double Psuij = 1.0;
-                    for (int n = 0; n < numOfAtoms; ++n) {
-                        // 隣接番号の原子からサーチ
-                        int nc = iAtom + n;
-                        if (nc >= numOfAtoms) {
-                            nc -= numOfAtoms;
-                        }
-                        
-                        if (nc != mc) {
-                            const double uij = (rr[mc] - rr[nc]) / this->distanceMatrix_(mc, nc);
-                            
-                            double suij = 0.0;
-                            if (uij > 0.9) {
-                                Psuij = 0.0;
-                                break;
-                            } else if (uij < -0.9) {
-                                suij = 1.0;
-                            } else {
-                                const double f1u = 1.5 * uij - 0.5 * uij * uij * uij;
-                                const double f2u = 1.5 * f1u - 0.5 * f1u * f1u * f1u;
-                                const double f3u = 1.5 * f2u - 0.5 * f2u * f2u * f2u;
-                                suij = 0.5 * (1.0 - f3u);
-                            }
-                            
-                            Psuij *= suij;
-                        }
-                    }
-                    
-                    Ps[mc] = Psuij;
-                }
-                
-                // Normalization
-                double Pstotal = 0.0;
-#pragma omp parallel for reduction(+:Pstotal)
-                for (int mc = 0; mc < numOfAtoms; ++mc) {
-                    Pstotal += Ps[mc];
-                }
-                weight_omega *= (Ps[iAtom] / Pstotal);
-                
-                // weight cutoff
-//#pragma omp critical (generateGrid_SG1)
-                {
-                    if (std::fabs(weight_omega) > this->weightCutoff_) {
-                        weightvec[GPthrnum] = weight_omega;
-                        crdpoint[GPthrnum] = grid[Omega];
-                        ++GPthrnum;
-                    }
-                }
+            this->getSphericalGrids(Ogrid,
+                                    ri,
+                                    wr,
+                                    this->coord_[iAtom],
+                                    O,
+                                    &grid, &lebWeight);
+            assert(grid.size() == Ogrid);
+            assert(lebWeight.size() == Ogrid);
+
+            this->calcMultiCenterWeight_Becke(iAtom, Ogrid, grid, &lebWeight);
+            //this->calcMultiCenterWeight_SS(iAtom, Ogrid, grid, &lebWeight);
+
+            crdpoint.resize(numOfGrids + Ogrid);
+            weightvec.resize(numOfGrids + Ogrid);
+            for (int i = 0; i < Ogrid; ++i) {
+                // this->log_.info(TlUtils::format("%5d: % 12.8f % 12.8f % 12.8f",
+                //                                 numOfGrids + i, grid[i].x(), grid[i].y(), grid[i].z()));
+                // assert(grid[i].distanceFrom() < 1.0E-10);
+                crdpoint[numOfGrids +i] = grid[i];
+                weightvec[numOfGrids +i] = lebWeight[i];
             }
+            numOfGrids += Ogrid;
         }
-        //++GPthrnum;
     }
 
+    const int numOfGrids_orig = numOfGrids;
+    this->screeningGridsByWeight(&crdpoint, &weightvec);
+    numOfGrids = crdpoint.size();
+    assert(weightvec.size() == numOfGrids);
+    {
+        const int diff = numOfGrids_orig - numOfGrids;
+        const double ratio = double(diff) / double(numOfGrids_orig) * 100.0;
+        this->log_.info(TlUtils::format("screened grids: %d -> %d; (%d; %3.2f%%)",
+                                        numOfGrids_orig, numOfGrids,
+                                        diff, ratio));
+    }
+    
     // save
-    pCoordX->resize(GPthrnum);
-    pCoordY->resize(GPthrnum);
-    pCoordZ->resize(GPthrnum);
-    for (int i = 0; i < GPthrnum; ++i) {
+    pCoordX->resize(numOfGrids);
+    pCoordY->resize(numOfGrids);
+    pCoordZ->resize(numOfGrids);
+    for (int i = 0; i < numOfGrids; ++i) {
         (*pCoordX)[i] = crdpoint[i].x();
         (*pCoordY)[i] = crdpoint[i].y();
         (*pCoordZ)[i] = crdpoint[i].z();
     }
-    weightvec.resize(GPthrnum);
     *pWeight = weightvec;
 }
 
@@ -1445,13 +1503,175 @@ void DfGenerateGrid::points2(const int nOgrid, const double r0, const TlPosition
         v[0] = Ogrid[i][0];
         v[1] = Ogrid[i][1];
         v[2] = Ogrid[i][2];
+
+        // double n1 = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
         v = O * v;
+        // double n2 = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
+        // assert(std::fabs(n1 - n2) < 1.0E-10);
+        
         Ogrid[i][0] = v[0];
         Ogrid[i][1] = v[1];
         Ogrid[i][2] = v[2];
 
         Ogrid[i] *= r0;
         Ogrid[i] += core;
+    }
+}
+
+void DfGenerateGrid::getRadialAbscissaAndWeight_EulerMaclaurin(
+    const double R,
+    const double Nr,
+    const int i,
+    double* p_ri,
+    double* pWeight)
+{
+    assert((1 <= i) && (i <= Nr));
+    const double Nr1i = double(Nr + 1 - i);
+    const double inv_Nr1i = 1.0 / Nr1i;
+
+    const double ri = R * double(i * i) * inv_Nr1i * inv_Nr1i;
+    *p_ri = ri;
+
+    *pWeight = 2.0 * R * R * R * double(Nr + 1)
+        * double(i * i * i * i * i)
+        * inv_Nr1i * inv_Nr1i * inv_Nr1i * inv_Nr1i * inv_Nr1i * inv_Nr1i * inv_Nr1i
+        * 4.0 * M_PI;
+}
+
+void DfGenerateGrid::getRadialAbscissaAndWeight_GaussChebyshev(
+    const double R,
+    const int Nr,
+    const int i,
+    double* p_ri,
+    double* pWeight)
+{
+    assert((1 <= i) && (i <= Nr));
+    static const double invLn2 = 1.0 / std::log(2.0);
+    
+    const double Nr1 = Nr + 1;
+    const double tmp = double(i) * M_PI / Nr1;
+    const double s = std::sin(tmp);
+    const double ss = s * s;
+    const double c = std::cos(tmp);
+    
+    const double t1 = (Nr1 -2.0 * double(i)) / Nr1;
+    const double t2 = (2.0 / M_PI) * (1.0 + (2.0/3.0) * ss) * c * s;
+
+    const double x = t1 + t2;
+
+    double ri = 0.0;
+    double jacobian = 0.0;
+    const double inv_x1 = 1.0 / (x - 1.0);
+    switch(this->GC_mappingType_) {
+    case GC_BECKE:
+        ri = R * (1.0 + x) / (1.0 - x);
+        jacobian = R * ((x + 1.0) *inv_x1 *inv_x1 -inv_x1);
+        break;
+
+    case GC_TA:
+        ri = invLn2 * std::log(2.0 * (-inv_x1)) * R;
+        jacobian = R * invLn2 / (1.0 - x);
+        break;
+
+    case GC_KK:
+        ri = invLn2 * std::log(2.0 * (-inv_x1));
+        jacobian = invLn2 / (1.0 - x);
+        break;
+
+    default:
+        this->log_.critical("unknown GC_MAPPING_TYPE");
+        break;
+    }
+    *p_ri = ri;
+
+    // const double jac = 1.0 / std::log(2.0) / (1.0 - x);
+    *pWeight = (16.0 / (3.0 * Nr1)) * ss * ss * jacobian * ri * ri * 4.0 * M_PI;
+}
+
+// C.W. Murray, N.C. Handy, G.J. Laming, Mol. Phys., 78, 997-1014 (1993).
+int DfGenerateGrid::getNumOfPrunedAnglarPoints(
+    const double r,
+    const int maxNumOfAngGrids,
+    const int atomicNumber)
+{
+    int n_theta = maxNumOfAngGrids;
+    if (this->isPruning_) {
+        static const double K_theta = 5.0; // proposed by the paper.
+        const double r_Bragg = TlPrdctbl::getBraggSlaterRadii(atomicNumber);
+        
+        n_theta = std::min<int>(
+            (K_theta * r / r_Bragg) * maxNumOfAngGrids,
+            maxNumOfAngGrids);
+    }
+    
+    // for Lebedev grid
+    std::vector<int> supportedGrids = this->lebGrd_.getSupportedGridNumber();
+    std::vector<int>::const_iterator it = std::upper_bound(supportedGrids.begin(),
+                                                           supportedGrids.end(),
+                                                           n_theta);
+    int numOfGrid = supportedGrids[0];
+    if (it != supportedGrids.begin()) {
+        numOfGrid = *(--it);
+    }
+
+    if (maxNumOfAngGrids != n_theta) {
+        this->log_.info(TlUtils::format("pruned: %d -> %d", n_theta, numOfGrid));
+    }
+    return numOfGrid;
+}
+
+int DfGenerateGrid::getNumOfPrunedAnglarPoints_SG1(
+    const double r,
+    const double inv_R,
+    const std::vector<double>& alpha)
+{
+    // Set the partitioning area
+    const double judge = r * inv_R; // = (r_i / R)
+
+    int numOfGrid = 86;
+    if (judge < alpha[1]) {
+        if (judge < alpha[0]) {
+            // (0, alpha0)
+            numOfGrid = 6;
+        } else {
+            // [alpha0, alpha1)
+            numOfGrid = 38;
+        }
+    } else {
+        if (judge < alpha[2]) {
+            // [alpha1, alpha2)
+            numOfGrid = 86;
+        } else {
+            if (judge < alpha[3]) {
+                // [alpha2, alpha3)
+                numOfGrid = 194;
+            }
+        }
+    }
+
+    return numOfGrid;
+}
+
+void DfGenerateGrid::getSphericalGrids(const int numOfGrids,
+                                       const double r,
+                                       const double radial_weight,
+                                       const TlPosition& center,
+                                       const TlMatrix& O,
+                                       std::vector<TlPosition>* pGrids,
+                                       std::vector<double>* pWeights)
+{
+    this->lebGrd_.getGrids(numOfGrids, pGrids, pWeights);
+    assert(static_cast<int>(pGrids->size()) == numOfGrids);
+    assert(static_cast<int>(pWeights->size()) == numOfGrids);
+
+    for (int i = 0; i < numOfGrids; ++i) {
+        // for grids
+        (*pGrids)[i] = O * (*pGrids)[i];
+        (*pGrids)[i] *= r;
+        (*pGrids)[i] += center;
+
+        // for weight
+        (*pWeights)[i] *= radial_weight;
     }
 }
 
@@ -1530,4 +1750,197 @@ TlMatrix DfGenerateGrid::getOMatrix()
     return O;
 }
 
+void DfGenerateGrid::calcMultiCenterWeight_Becke(
+    const int iAtom,
+    const int Ogrid,
+    const std::vector<TlPosition>& grids,
+    std::vector<double>* pWeights)
+{
+    const int numOfAtoms = this->m_nNumOfAtoms;
+    const int numOfGrids = grids.size();
+    assert(numOfGrids == static_cast<int>(pWeights->size()));
+    
+    for (int Omega = 0; Omega < numOfGrids; ++Omega) {
+        const TlPosition pos_O = grids[Omega];
+        
+        std::vector<double> rr(numOfAtoms);
+        for (int p = 0; p < numOfAtoms; ++p) {
+            rr[p] = pos_O.distanceFrom(this->coord_[p]);
+        }
+
+        std::vector<double> Ps(numOfAtoms);
+        for (int m = 0; m < numOfAtoms; ++m) {
+            double Psuij = 1.0;
+            const int atomicNumber_m = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(m));
+            const double R_m = this->getCovalentRadiiForBecke(atomicNumber_m);
+            
+            for (int n = 0; n < numOfAtoms; ++n) {
+                if (m != n) {
+                    const int atomicNumber_n = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(n));
+                    const double R_n = this->getCovalentRadiiForBecke(atomicNumber_n);
+                    
+                    double u_ij = (rr[m] - rr[n]) * this->invDistanceMatrix_(m, n);
+
+                    if (this->isAtomicSizeAdjustments_) {
+                        double au_ij = (R_m - R_n) / (R_m + R_n);
+                        double a = au_ij / (au_ij * au_ij - 1.0);
+                            
+                        if (a < -0.50) {
+                            a = -0.50;
+                        } else if (a > 0.50) {
+                            a = 0.50;
+                        }
+                        u_ij = u_ij + a * (1.0 - u_ij * u_ij);
+                    }
+
+                    const double f3 = this->Becke_f3(u_ij);
+                    const double s = 0.5 * (1.0 - f3);
+                    
+                    Psuij *= s;
+                }
+            }
+            
+            Ps[m] = Psuij;
+        }
+        
+        // Normalization
+        const double Ps_A = Ps[iAtom];
+        double Ps_total = 0.0;
+        for (int i = 0; i < numOfAtoms; ++i) {
+            Ps_total += Ps[i];
+        }
+
+        (*pWeights)[Omega] *= (Ps_A / Ps_total);
+    }
+}
+
+void DfGenerateGrid::calcMultiCenterWeight_SS(
+    const int iAtom,
+    const int Ogrid,
+    const std::vector<TlPosition>& grids,
+    std::vector<double>* pWeights)
+{
+    const int numOfAtoms = this->m_nNumOfAtoms;
+    const int numOfGrids = grids.size();
+    assert(numOfGrids == static_cast<int>(pWeights->size()));
+    
+    for (int Omega = 0; Omega < numOfGrids; ++Omega) {
+        const TlPosition pos_O = grids[Omega];
+        
+        std::vector<double> rr(numOfAtoms);
+        for (int p = 0; p < numOfAtoms; ++p) {
+            rr[p] = pos_O.distanceFrom(this->coord_[p]);
+        }
+
+        std::vector<double> Ps(numOfAtoms);
+        for (int m = 0; m < numOfAtoms; ++m) {
+            double Psuij = 1.0;
+            const int atomicNumber_m = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(m));
+            const double R_m = this->getCovalentRadiiForBecke(atomicNumber_m);
+            
+            for (int n = 0; n < numOfAtoms; ++n) {
+                if (m != n) {
+                    const int atomicNumber_n = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(n));
+                    const double R_n = this->getCovalentRadiiForBecke(atomicNumber_n);
+                    
+                    double u_ij = (rr[m] - rr[n]) * this->invDistanceMatrix_(m, n);
+
+                    // if (this->isAtomicSizeAdjustments_) {
+                    //     double au_ij = (R_m - R_n) / (R_m + R_n);
+                    //     double a = au_ij / (au_ij * au_ij - 1.0);
+                            
+                    //     if (a < -0.50) {
+                    //         a = -0.50;
+                    //     } else if (a > 0.50) {
+                    //         a = 0.50;
+                    //     }
+                    //     u_ij = u_ij + a * (1.0 - u_ij * u_ij);
+                    // }
+
+                    // zeta
+                    double g = 0.0;
+                    static const double a = 0.64;
+                    if (u_ij < -a) {
+                        g = -1.0;
+                    } else if (u_ij > a) {
+                        g = 1.0;
+                    } else {
+                        const double ua = u_ij / a;
+                        const double ua2 = ua * ua;
+                        const double ua3 = ua2 * ua;
+                        const double ua5 = ua2 * ua3;
+                        g = (1.0/16.0)*(35.0*ua -35.0*ua3 +21.0*ua5 -5.0*ua5*ua2);
+                    }
+                    const double s = 0.5 * (1.0 - g);
+                    
+                    Psuij *= s;
+                }
+            }
+            
+            Ps[m] = Psuij;
+        }
+        
+        // Normalization
+        const double Ps_A = Ps[iAtom];
+        double Ps_total = 0.0;
+        for (int i = 0; i < numOfAtoms; ++i) {
+            Ps_total += Ps[i];
+        }
+
+        (*pWeights)[Omega] *= (Ps_A / Ps_total);
+    }
+}
+
+
+double DfGenerateGrid::getCovalentRadiiForBecke(const int atomicNumber)
+{
+    double answer = 0.0;
+    if (atomicNumber == 1) {
+        answer = 0.35;
+    } else {
+        answer = TlPrdctbl::getBraggSlaterRadii(atomicNumber);
+        // answer = TlPrdctbl::getCovalentRadii(atomicNumber_n);
+    }
+
+    return answer;
+}
+
+double DfGenerateGrid::Becke_f1(const double x)
+{
+    const double ans = 0.5*x*(3.0 - x*x); 
+    return ans;
+}
+
+double DfGenerateGrid::Becke_f3(const double x) {
+    return this->Becke_f1(this->Becke_f1(this->Becke_f1(x)));
+}
+
+
+void DfGenerateGrid::screeningGridsByWeight(std::vector<TlPosition>* pGrids,
+                                            std::vector<double>* pWeights)
+{
+    const double threshold = this->weightCutoff_;
+    const int numOfGrids = pGrids->size();
+    assert(numOfGrids == static_cast<int>(pWeights->size()));
+    
+    std::vector<TlPosition> tmpGrids(numOfGrids);
+    std::vector<double> tmpWeights(numOfGrids);
+    int count = 0;
+    for (int i = 0; i < numOfGrids; ++i) {
+        const double weight = (*pWeights)[i];
+        if (std::fabs(weight) > threshold) {
+            tmpGrids[count] = (*pGrids)[i];
+            tmpWeights[count] = weight;
+            ++count;
+        }
+    }
+
+    tmpGrids.resize(count);
+    tmpWeights.resize(count);
+    std::vector<TlPosition>(tmpGrids).swap(tmpGrids);
+    std::vector<double>(tmpWeights).swap(tmpWeights);
+
+    *pGrids = tmpGrids;
+    *pWeights = tmpWeights;
+}
 

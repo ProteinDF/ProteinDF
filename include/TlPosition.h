@@ -21,8 +21,8 @@
 
 #include <cmath>
 #include <cassert>
-
-class TlMatrix;
+#include "TlVector.h"
+#include "TlMatrix.h"
 
 /// 3次元座標(カーテシアン)を扱うクラス
 class TlPosition {
@@ -174,6 +174,19 @@ protected:
     friend TlPosition operator/(const TlPosition& rhs1, const double& rhs2) {
         assert(std::fabs(rhs2) > TOO_SMALL);
         return (rhs1 *(1.0 / rhs2));
+    };
+
+    friend TlPosition operator*(const TlMatrix& rot, const TlPosition& pos) {
+        assert(rot.getNumOfRows() == 3);
+        assert(rot.getNumOfCols() == 3);
+
+        TlVector x(3);
+        x[0] = pos.v_[0];
+        x[1] = pos.v_[1];
+        x[2] = pos.v_[2];
+        x = rot * x;
+
+        return TlPosition(x[0], x[1], x[2]);
     };
 };
 
