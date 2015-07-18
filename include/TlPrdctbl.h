@@ -31,9 +31,13 @@ public:
 public:
     static int getAtomicNumber(const std::string& str);
     static std::string getSymbol(int n);
-
+    static double getBraggSlaterRadii(const int atomicNumber);
+    static double getCovalentRadii(const int atomicNumber);
+    
 private:
     static const char* periodicTable[];
+    static const double BraggSlaterRadii[];
+    static const double covalentRadii[];
 };
 
 #endif // TLPERIODICTABLE_H

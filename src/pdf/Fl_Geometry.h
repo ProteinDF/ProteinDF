@@ -85,7 +85,7 @@ private:
 private:
     // translate value[a.u.] to value[angstrom]
     double au2an() {
-        return 0.529177249; // BOHR = 0.529177249
+        return 0.52917721067; // BOHR = 0.529177249
         //return 0.5291772108; // BOHR = 0.529177249
     }
 

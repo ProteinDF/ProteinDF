@@ -723,6 +723,10 @@ TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& 
         }
 
         const index_type pivot_m = pivot[numOfCDVcts];
+        error = diagonals[pivot_m];
+        if (error < threshold) {
+            break;
+        }
         const double l_m_pm = std::sqrt(diagonals[pivot_m]);
         const double inv_l_m_pm = 1.0 / l_m_pm;
         L.set(pivot_m, numOfCDVcts, l_m_pm);

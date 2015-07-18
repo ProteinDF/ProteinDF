@@ -38,7 +38,7 @@ void TlMemManagerTest::testAllocate() {
   CPPUNIT_ASSERT_EQUAL(100, int(p2 - p1));
 
   // 再確保
-  rMem.deallocate(p2, p2_size);
+  rMem.deallocate(p2);
   //rMem.debugOutFreeMemList();
 
   p2 = rMem.allocate(p2_size);
@@ -55,7 +55,7 @@ void TlMemManagerTest::testAllocate() {
   CPPUNIT_ASSERT_EQUAL(200, int(p3 - p1));
 
   // 中間解放 -> 空間内確保
-  rMem.deallocate(p2, p2_size);
+  rMem.deallocate(p2);
   //rMem.debugOutFreeMemList();
 
   const std::size_t p4_size = 50;

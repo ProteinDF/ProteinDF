@@ -31,7 +31,6 @@ PdfTests_SOURCES = \
 	TlSparseMatrixTest.h			TlSparseMatrixTest.cpp			\
 	TlSparseSymmetricMatrixTest.h	TlSparseSymmetricMatrixTest.cpp	\
 	TlSparseVectorTest.h			TlSparseVectorTest.cpp			\
-	TlVectorMatrixObjectTest.h		TlVectorMatrixObjectTest.cpp	\
 	TlRowVectorMatrixTest.h			TlRowVectorMatrixTest.cpp		\
 	TlColVectorMatrixTest.h			TlColVectorMatrixTest.cpp		\
 	TlVectorTest.h					TlVectorTest.cpp				\
