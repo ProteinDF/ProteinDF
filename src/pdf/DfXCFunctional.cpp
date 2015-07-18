@@ -220,23 +220,23 @@ void DfXCFunctional::buildXcMatrix()
 
 void DfXCFunctional::checkGridAccuracy()
 {
-#ifdef CHECK_GRID_ACCURACY
-    DfCalcGridX dfCalcGrid(this->pPdfParam_);
-
-    this->log_.info(" grid accuracy check:");
-    double rhoA = 0.0;
-    double rhoB = 0.0;
-    dfCalcGrid.getWholeDensity(&rhoA, &rhoB);
-    if (this->m_nMethodType == METHOD_RKS) {
-        this->log_.info(TlUtils::format(" number of electrons = % 16.10f (input: %d)",
-                                        rhoA * 2, this->m_nNumOfElectrons));
-    } else {
-        this->log_.info(TlUtils::format(" number of electrons(alpha) = % 16.10f (input: %d)",
-                                        rhoA, this->m_nNumOfAlphaElectrons));
-        this->log_.info(TlUtils::format(" number of electrons(beta ) = % 16.10f (input: %d)",
+    if (this->m_nXCFunctional != HF) {
+        DfCalcGridX dfCalcGrid(this->pPdfParam_);
+        
+        this->log_.info(" grid accuracy check:");
+        double rhoA = 0.0;
+        double rhoB = 0.0;
+        dfCalcGrid.getWholeDensity(&rhoA, &rhoB);
+        if (this->m_nMethodType == METHOD_RKS) {
+            this->log_.info(TlUtils::format(" number of electrons = % 16.10f (input: %d)",
+                                            rhoA * 2, this->m_nNumOfElectrons));
+        } else {
+            this->log_.info(TlUtils::format(" number of electrons(alpha) = % 16.10f (input: %d)",
+                                            rhoA, this->m_nNumOfAlphaElectrons));
+            this->log_.info(TlUtils::format(" number of electrons(beta ) = % 16.10f (input: %d)",
                                         rhoB, this->m_nNumOfBetaElectrons));
+        }
     }
-#endif // CHECK_GRID_ACCURACY
 }
 
 DfEriX* DfXCFunctional::getDfEriXObject()

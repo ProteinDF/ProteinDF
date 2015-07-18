@@ -25,6 +25,7 @@
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
 #include "Fl_Geometry.h"
+#include "TlLebedevGrid.h"
 
 /** グリッドを生成するクラス
  */
@@ -73,15 +74,89 @@ private:
                  const double weight, 
                  const TlMatrix& O,
                  std::vector<TlPosition>& Ogrid, std::vector<double>& w);
+private:
+    enum RADIAL_GRID_TYPE {
+        RG_EularMaclaurin,
+        RG_GaussChebyshev
+    };
 
+    enum GC_MAPPING_TYPE {
+        GC_BECKE,
+        GC_TA,
+        GC_KK
+    };
+    
+private:
+    ///
+    /// @param [in] R atomic size
+    /// @param [in] Nr the number of radial grids
+    /// @param [in] i index (1 <= i <= Nr)
+    /// @param [out] p_ri pointer to grid point(r_i)
+    /// @param [out] p_Weight pointer to weight
+    void getRadialAbscissaAndWeight_EulerMaclaurin(
+        const double R,
+        const double Nr,
+        const int i,
+        double* p_ri,
+        double* pWeight);
+    
+    ///
+    /// @param [in] R atomic size
+    /// @param [in] Nr the number of radial grids
+    /// @param [in] i index (1 <= i <= Nr)
+    /// @param [out] p_ri pointer to grid point(r_i)
+    /// @param [out] p_Weight pointer to weight
+    void getRadialAbscissaAndWeight_GaussChebyshev(
+        const double R,
+        const int Nr,
+        const int i,
+        double* p_ri,
+        double* pWeight);
 
+    int getNumOfPrunedAnglarPoints_SG1(
+        const double r,
+        const double inv_R,
+        const std::vector<double>& alpha);
+    
+    int getNumOfPrunedAnglarPoints(
+        const double r,
+        const int maxNumOfAngGrids,
+        const int atomicNumber);
+
+    void getSphericalGrids(const int numOfGrids,
+                           const double r,
+                           const double radial_weight,
+                           const TlPosition& center,
+                           const TlMatrix& O,
+                           std::vector<TlPosition>* pGrids,
+                           std::vector<double>* pWeights);
+
+    void calcMultiCenterWeight_Becke(
+        const int iAtom,
+        const int Ogrid,
+        const std::vector<TlPosition>& points,
+        std::vector<double>* pWeight);
+    void calcMultiCenterWeight_SS(
+        const int iAtom,
+        const int Ogrid,
+        const std::vector<TlPosition>& points,
+        std::vector<double>* pWeight);
+
+    double getCovalentRadiiForBecke(const int atomicNumber);
+    double Becke_f1(const double x);
+    double Becke_f3(const double x);
+    
+    void screeningGridsByWeight(std::vector<TlPosition>* pGrids,
+                                std::vector<double>* pWeights);
+   
 protected:
     enum GridType {
         COARSE,
         MEDIUM,
         MEDIUM_FINE,
         FINE,
-        SG_1
+        SG_1,
+        USER
     };
 
 protected:
@@ -100,6 +175,7 @@ protected:
     double maxRadii_;
     std::vector<TlPosition> coord_;
     TlSymmetricMatrix distanceMatrix_;
+    TlSymmetricMatrix invDistanceMatrix_;
 
     /// Radius list of each atom
     std::vector<double> radiusList_;
@@ -120,6 +196,19 @@ protected:
 
     /// グリッド情報行列の列数
     int numOfColsOfGrdMat_;
+
+    ///
+    RADIAL_GRID_TYPE radialGridType_;
+    
+    /// Gauss-Chebyshev mapping type
+    GC_MAPPING_TYPE GC_mappingType_;
+    
+    /// using atomic size adjustments in Becke partitioning
+    bool isAtomicSizeAdjustments_;
+
+    bool isPruning_;
+    
+    TlLebedevGrid lebGrd_;
 };
 
 #endif // DFGENERATEGRID_H

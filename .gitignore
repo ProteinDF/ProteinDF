@@ -1,3 +1,5 @@
+*~
+
 # automake & autoconf
 Makefile.in
 Makefile
@@ -19,6 +21,8 @@ install-sh
 
 include/config.h
 include/pdflib-int.h
+
+pdf-*
 
 # Compiled Object files
 *.slo

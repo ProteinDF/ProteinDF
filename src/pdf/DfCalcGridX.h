@@ -102,35 +102,35 @@ protected:
     virtual void defineCutOffValues(const TlSymmetricMatrix& PA,
                                     const TlSymmetricMatrix& PB);
 
-    void buildFock(double dRhoA,
-                   const std::vector<WFGrid>& aPhi,
-                   DfFunctional_LDA* pFunctional, double dWeight,
-                   TlMatrixObject* pF);
+    // void buildFock(double dRhoA,
+    //                const std::vector<WFGrid>& aPhi,
+    //                DfFunctional_LDA* pFunctional, double dWeight,
+    //                TlMatrixObject* pF);
 
-    void buildFock(double dRhoA, double dRhoB,
-                   const std::vector<WFGrid>& aPhi,
-                   DfFunctional_LDA* pFunctional, double dWeight,
-                   TlMatrixObject* pFA, TlMatrixObject* FB);
+    // void buildFock(double dRhoA, double dRhoB,
+    //                const std::vector<WFGrid>& aPhi,
+    //                DfFunctional_LDA* pFunctional, double dWeight,
+    //                TlMatrixObject* pFA, TlMatrixObject* FB);
 
-    void buildFock(double dRhoA,
-                   double dGradRhoAX, double dGradRhoAY, double dGradRhoAZ,
-                   const std::vector<WFGrid>& aPhi,
-                   const std::vector<WFGrid>& aGradPhiX,
-                   const std::vector<WFGrid>& aGradPhiY,
-                   const std::vector<WFGrid>& aGradPhiZ,
-                   DfFunctional_GGA* pFunctional, double dWeight,
-                   TlMatrixObject* pF);
+    // void buildFock(double dRhoA,
+    //                double dGradRhoAX, double dGradRhoAY, double dGradRhoAZ,
+    //                const std::vector<WFGrid>& aPhi,
+    //                const std::vector<WFGrid>& aGradPhiX,
+    //                const std::vector<WFGrid>& aGradPhiY,
+    //                const std::vector<WFGrid>& aGradPhiZ,
+    //                DfFunctional_GGA* pFunctional, double dWeight,
+    //                TlMatrixObject* pF);
 
-    void buildFock(double dRhoA,
-                   double dGradRhoAX, double dGradRhoAY, double dGradRhoAZ,
-                   double dRhoB,
-                   double dGradRhoBX, double dGradRhoBY, double dGradRhoBZ,
-                   const std::vector<WFGrid>& aPhi,
-                   const std::vector<WFGrid>& aGradPhiX,
-                   const std::vector<WFGrid>& aGradPhiY,
-                   const std::vector<WFGrid>& aGradPhiZ,
-                   DfFunctional_GGA* pFunctional, double dWeight,
-                   TlMatrixObject* pFA, TlMatrixObject* pFB);
+    // void buildFock(double dRhoA,
+    //                double dGradRhoAX, double dGradRhoAY, double dGradRhoAZ,
+    //                double dRhoB,
+    //                double dGradRhoBX, double dGradRhoBY, double dGradRhoBZ,
+    //                const std::vector<WFGrid>& aPhi,
+    //                const std::vector<WFGrid>& aGradPhiX,
+    //                const std::vector<WFGrid>& aGradPhiY,
+    //                const std::vector<WFGrid>& aGradPhiZ,
+    //                DfFunctional_GGA* pFunctional, double dWeight,
+    //                TlMatrixObject* pFA, TlMatrixObject* pFB);
 
     /// グリッド点における波動関数値配列(std::vector<WFGrid>)1つから
     /// 交換相関項(Fxc)を求める。
@@ -226,22 +226,22 @@ protected:
                                TlMatrix* pGradWF_X,
                                TlMatrix* pGradWF_Y,
                                TlMatrix* pGradWF_Z);
-    double buildK(const TlMatrix& gridMatrix,
-                  DfFunctional_LDA* pFunctional,
-                  TlSymmetricMatrix* pF);
-    double buildK(const TlMatrix& gridMatrix,
-                  DfFunctional_GGA* pFunctional,
-                  TlSymmetricMatrix* pF);
-    double buildK_2(const TlMatrix& gridMatrix,
-                    const std::vector<index_type>& rowIndexes,
-                    const std::vector<index_type>& colIndexes,
-                    DfFunctional_LDA* pFunctional,
-                    TlSymmetricMatrix* pF);
-    double buildK_2(const TlMatrix& gridMatrix,
-                    const std::vector<index_type>& rowIndexes,
-                    const std::vector<index_type>& colIndexes,
-                    DfFunctional_GGA* pFunctional,
-                    TlMatrix* pF);
+    // double buildK(const TlMatrix& gridMatrix,
+    //               DfFunctional_LDA* pFunctional,
+    //               TlSymmetricMatrix* pF);
+    // double buildK(const TlMatrix& gridMatrix,
+    //               DfFunctional_GGA* pFunctional,
+    //               TlSymmetricMatrix* pF);
+    // double buildK_2(const TlMatrix& gridMatrix,
+    //                 const std::vector<index_type>& rowIndexes,
+    //                 const std::vector<index_type>& colIndexes,
+    //                 DfFunctional_LDA* pFunctional,
+    //                 TlSymmetricMatrix* pF);
+    // double buildK_2(const TlMatrix& gridMatrix,
+    //                 const std::vector<index_type>& rowIndexes,
+    //                 const std::vector<index_type>& colIndexes,
+    //                 DfFunctional_GGA* pFunctional,
+    //                 TlMatrix* pF);
 
     // NEW IMPLIMENT -----------------------------------------------------------
 public:
