@@ -992,19 +992,23 @@ void DfGenerateGrid::generateGrid_SG1(const TlMatrix& O,
             }
             numOfGrids += Ogrid;
         }
+
+        // screening by weight
+        {
+            const int numOfGrids_orig = numOfGrids;
+            this->screeningGridsByWeight(&crdpoint, &weightvec);
+            numOfGrids = crdpoint.size();
+            assert(weightvec.size() == numOfGrids);
+            {
+                const int diff = numOfGrids_orig - numOfGrids;
+                const double ratio = double(diff) / double(numOfGrids_orig) * 100.0;
+                this->log_.info(TlUtils::format("screened grids: %d -> %d; (%d; %3.2f%%)",
+                                                numOfGrids_orig, numOfGrids,
+                                                diff, ratio));
+            }
+        }
     }
 
-    const int numOfGrids_orig = numOfGrids;
-    this->screeningGridsByWeight(&crdpoint, &weightvec);
-    numOfGrids = crdpoint.size();
-    assert(weightvec.size() == numOfGrids);
-    {
-        const int diff = numOfGrids_orig - numOfGrids;
-        const double ratio = double(diff) / double(numOfGrids_orig) * 100.0;
-        this->log_.info(TlUtils::format("screened grids: %d -> %d; (%d; %3.2f%%)",
-                                        numOfGrids_orig, numOfGrids,
-                                        diff, ratio));
-    }
     
     // save
     pCoordX->resize(numOfGrids);
