@@ -27,6 +27,7 @@
 #include "TlSymmetricMatrix.h"
 #include "TlStlUtils.h"
 #include "TlRowVectorMatrix.h"
+#include "TlColVectorMatrix.h"
 
 class TlOrbitalInfo;
 class DfEngineObject;
@@ -51,6 +52,7 @@ public:
     
 protected:
     void getJ_S(TlSymmetricMatrix *pJ);
+    
     void getK_S(const RUN_TYPE runType,
                 TlSymmetricMatrix *pK);
     virtual void getM_S(const TlSymmetricMatrix& P,
@@ -159,11 +161,13 @@ protected:
     virtual void saveI2PQ(const PQ_PairArray& I2PQ, const std::string& filepath);
     virtual PQ_PairArray getI2PQ(const std::string& filepath);
 
-    virtual void saveLjk(const TlMatrix& Ljk);
-    virtual TlMatrix getLjk();
+    virtual void saveLjk(const TlRowVectorMatrix& Ljk);
+    virtual void debugOutLjk(const TlMatrix& Ljk);
+    virtual TlColVectorMatrix getLjk();
 
-    virtual void saveLxc(const TlMatrix& Ljk);
-    virtual TlMatrix getLxc();
+    virtual void saveLxc(const TlRowVectorMatrix& Ljk);
+    virtual void debugOutLxc(const TlMatrix& Lxc);
+    virtual TlColVectorMatrix getLxc();
 
     TlSymmetricMatrix getCholeskyVector(const TlVector& L_col,
                                         const PQ_PairArray& I2PQ);
@@ -441,6 +445,10 @@ protected:
     // TlCache<IndexPair4, std::vector<double> > ERI_cache_manager_;
     ERI_CacheType ERI_cache_;
 
+protected:
+    void getJ_S_v2(TlSymmetricMatrix* pJ);
+    TlVector getScreenedDensityMatrix(const PQ_PairArray& I2PQ);
+    void expandJMatrix(const TlVector& vJ, const PQ_PairArray& I2PQ, TlSymmetricMatrix* pJ);
 
 protected:
     //index_type numOfPQs_;

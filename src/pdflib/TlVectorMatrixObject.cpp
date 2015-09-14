@@ -50,7 +50,7 @@ TlVectorMatrixObject::TlVectorMatrixObject(const TlVectorMatrixObject& rhs)
     this->resize(rhs.numOfVectors_, rhs.sizeOfVector_);
 
     const index_type numOfLocalVectors = this->numOfLocalVectors_;
-    assert(this->data_.size() == numOfLocalVectors);
+    assert(this->data_.size() == std::size_t(numOfLocalVectors));
     const index_type sizeOfVector = this->sizeOfVector_;
     for (index_type i = 0; i < numOfLocalVectors; ++i) {
         for (index_type j = 0; j < sizeOfVector; ++j) {
@@ -78,7 +78,7 @@ TlVectorMatrixObject& TlVectorMatrixObject::operator=(const TlVectorMatrixObject
         this->resize(rhs.numOfVectors_, rhs.sizeOfVector_);
     
         const index_type numOfLocalVectors = this->numOfLocalVectors_;
-        assert(this->data_.size() == numOfLocalVectors);
+        assert(this->data_.size() == std::size_t(numOfLocalVectors));
         const index_type sizeOfVector = this->sizeOfVector_;
         for (index_type i = 0; i < numOfLocalVectors; ++i) {
             for (index_type j = 0; j < sizeOfVector; ++j) {
@@ -121,7 +121,7 @@ void TlVectorMatrixObject::resize(const index_type newNumOfVectors,
         // ベクトル数を縮小
         if (this->isUsingMemManager_ == true) {
             TlMemManager& rMemManager = TlMemManager::getInstance();
-            const index_type reservedVectorSize = this->reservedVectorSize_;
+            // const index_type reservedVectorSize = this->reservedVectorSize_;
             for (index_type i = newNumOfLocalVectors; i < prevNumOfLocalVectors; ++i) {
                 rMemManager.deallocate((char*)this->data_[i]);
                 this->data_[i] = NULL;
@@ -182,9 +182,9 @@ void TlVectorMatrixObject::reserveVectorSize(index_type newReservedVectorSize) {
 }
 
 
-void TlVectorMatrixObject::set(const index_type vectorIndex,
-                               const index_type index,
-                               const double value)
+void TlVectorMatrixObject::set_to_vm(const index_type vectorIndex,
+                                     const index_type index,
+                                     const double value)
 {
     const div_t turns = std::div(vectorIndex, this->numOfSubunits_);
     if (turns.rem == this->subunitID_) {
@@ -194,8 +194,20 @@ void TlVectorMatrixObject::set(const index_type vectorIndex,
 }
 
 
-double TlVectorMatrixObject::get(const index_type vectorIndex,
-                                 const index_type index) const
+void TlVectorMatrixObject::add_to_vm(const index_type vectorIndex,
+                                     const index_type index,
+                                     const double value)
+{
+    const div_t turns = std::div(vectorIndex, this->numOfSubunits_);
+    if (turns.rem == this->subunitID_) {
+        const index_type localVectorIndex = turns.quot;
+        this->data_[localVectorIndex][index] += value;
+    }
+}
+
+
+double TlVectorMatrixObject::get_from_vm(const index_type vectorIndex,
+                                         const index_type index) const
 {
     assert((0 <= vectorIndex) && (vectorIndex < this->numOfVectors_));
     assert((0 <= index) && (index < this->sizeOfVector_));
@@ -211,31 +223,37 @@ double TlVectorMatrixObject::get(const index_type vectorIndex,
 }
 
 
-std::vector<double> TlVectorMatrixObject::getVector(const index_type vectorIndex) const
+TlVector TlVectorMatrixObject::getVector(const index_type vectorIndex) const
 {
     const index_type vectorSize = this->sizeOfVector_;
-    std::vector<double> answer;
+    TlVector answer(vectorSize);
     const div_t turns = std::div(vectorIndex, this->numOfSubunits_);
     if (turns.rem == this->subunitID_) {
         const index_type localVectorIndex = turns.quot;
-        answer.resize(vectorSize);
-        std::copy(this->data_[localVectorIndex],
-                  this->data_[localVectorIndex] + vectorSize,
-                  answer.begin());
+
+        double const * const p = this->data_[localVectorIndex];
+        for (index_type i = 0; i < vectorSize; ++i) {
+            answer[i] = p[i];
+        }
     }
 
     return answer;
 }
 
 
-void TlVectorMatrixObject::setVector(const index_type vectorIndex, const std::vector<double>& v)
+void TlVectorMatrixObject::setVector(const index_type vectorIndex, const TlVector& v)
 {
-    assert(v.size() == this->sizeOfVector_);
+    assert(v.getSize() == this->sizeOfVector_);
 
     const div_t turns = std::div(vectorIndex, this->numOfSubunits_);
     if (turns.rem == this->subunitID_) {
         const index_type localVectorIndex = turns.quot;
-        std::copy(v.begin(), v.end(), this->data_[localVectorIndex]);
+        
+        index_type size = v.getSize();
+        double * const p = this->data_[localVectorIndex];
+        for (index_type i = 0; i < size; ++i) {
+            p[i] = v[i];
+        }
     }
 }
 
@@ -256,7 +274,7 @@ std::string TlVectorMatrixObject::getFileName(const std::string& basename,
                            subunitID);
 }
 
-void TlVectorMatrixObject::save(const std::string& basename) const 
+bool TlVectorMatrixObject::save(const std::string& basename) const 
 {
     const index_type numOfVectors = this->numOfVectors_;
     const index_type sizeOfVector = this->sizeOfVector_;
@@ -279,6 +297,42 @@ void TlVectorMatrixObject::save(const std::string& basename) const
     }
     
     ofs.close();
+
+    return true;
+}
+
+bool TlVectorMatrixObject::saveByTheOtherType(const std::string& basename) const 
+{
+    const index_type numOfVectors = this->numOfVectors_;
+    const index_type sizeOfVector = this->sizeOfVector_;
+
+    std::ofstream ofs;
+    const std::string path = TlVectorMatrixObject::getFileName(basename, this->subunitID_);
+    ofs.open(path.c_str(), std::ofstream::out | std::ofstream::binary);
+
+    // header
+    ofs.write(reinterpret_cast<const char*>(&sizeOfVector), sizeof(index_type)); // swap!
+    ofs.write(reinterpret_cast<const char*>(&numOfVectors), sizeof(index_type)); // swap!
+    ofs.write(reinterpret_cast<const char*>(&(this->numOfSubunits_)), sizeof(int));
+    ofs.write(reinterpret_cast<const char*>(&(this->subunitID_)), sizeof(int));
+
+    // data
+    const index_type numOfLocalVectors = this->data_.size();
+    assert(numOfLocalVectors == this->numOfLocalVectors_);
+
+    double* pBuf = new double[numOfLocalVectors];
+    for (index_type j = 0; j < sizeOfVector; ++j) {
+        for (index_type i = 0; i < numOfLocalVectors; ++i) {
+            pBuf[i] = this->data_[i][j];
+        }
+        ofs.write(reinterpret_cast<const char*>(pBuf), sizeof(double) * numOfLocalVectors);
+    }
+    delete[] pBuf;
+    pBuf = NULL;
+
+    ofs.close();
+
+    return true;
 }
 
 
@@ -324,8 +378,14 @@ bool TlVectorMatrixObject::isLoadable(const std::string& filepath,
 }
 
 
-void TlVectorMatrixObject::load(const std::string& basename, int subunitID)
+bool TlVectorMatrixObject::load(const std::string& basename)
 {
+    return this->load(basename, -1);
+}
+
+bool TlVectorMatrixObject::load(const std::string& basename, int subunitID)
+{
+    bool answer = false;
     TlLogging& log = TlLogging::getInstance();
 
     if (subunitID == -1) {
@@ -360,20 +420,28 @@ void TlVectorMatrixObject::load(const std::string& basename, int subunitID)
         for (int i = 0; i < numOfLocalVectors; ++i) {
             ifs.read((char*)&(this->data_[i][0]), sizeof(double) * sizeOfVector);
         }
+
+        answer = true;
     } else {
         log.error(TlUtils::format("cannot open file: %s", path.c_str()));
     }
 
     ifs.close();
+
+    return answer;
 }
 
+std::size_t TlVectorMatrixObject::getMemSize() const 
+{
+    return this->numOfVectors_ * this->sizeOfVector_;
+}
 
 void TlVectorMatrixObject::destroy()
 {
     const index_type numOfLocalVectors = this->numOfLocalVectors_;
     if (this->isUsingMemManager_ == true) {
         TlMemManager& rMemManager = TlMemManager::getInstance();
-        const index_type reservedVectorSize = this->reservedVectorSize_;
+        // const index_type reservedVectorSize = this->reservedVectorSize_;
         for (index_type i = 0; i < numOfLocalVectors; ++i) {
             rMemManager.deallocate((char*)this->data_[i]);
             this->data_[i] = NULL;

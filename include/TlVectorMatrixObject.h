@@ -26,10 +26,7 @@
 #include "TlMatrixObject.h"
 
 /// 配列の配列として行列を扱うためのコンテナ
-class TlVectorMatrixObject {
-public:
-    typedef TlMatrixObject::index_type index_type;
-
+class TlVectorMatrixObject : public TlMatrixObject {
 public:
     explicit TlVectorMatrixObject(index_type numOfVectors = 1,
                                   index_type sizeOfVector = 1, 
@@ -41,21 +38,43 @@ public:
     virtual ~TlVectorMatrixObject();
 
     TlVectorMatrixObject& operator=(const TlVectorMatrixObject& rhs);
+
+public:
+    virtual index_type getNumOfRows() const =0;
+    virtual index_type getNumOfCols() const =0;
+
+    /// インスタンスのメモリサイズを返す
+    virtual std::size_t getMemSize() const;
+
+private:
+    virtual double get(index_type row, index_type col) const =0;
+    virtual void set(index_type row, index_type col, double value) =0;
+    virtual void add(index_type row, index_type col, double value) =0;
+
+public:
+    virtual bool load(const std::string& path);
+    virtual bool save(const std::string& path) const;
+
+    virtual bool load(const std::string& basename, int subunitID);
         
 public:
     void resize(index_type newNumOfVectors,
                 index_type newVectorSize);
 
     /// 値を代入する
-    void set(index_type vectorIndex,
-             index_type index,
-             double value);
+    void set_to_vm(index_type vectorIndex,
+                   index_type index,
+                   double value);
 
-    double get(index_type vectorIndex,
-               index_type index) const;
+    void add_to_vm(index_type vectorIndex,
+                   index_type index,
+                   double value);
 
-    std::vector<double> getVector(index_type vectorIndex) const;
-    void setVector(index_type vectorIndex, const std::vector<double>& v);
+    double get_from_vm(index_type vectorIndex,
+                       index_type index) const;
+
+    TlVector getVector(index_type vectorIndex) const;
+    void setVector(index_type vectorIndex, const TlVector& v);
 
 public:
     static std::string getFileName(const std::string& basename,
@@ -70,9 +89,6 @@ public:
                            index_type* pSizeOfVector = NULL,
                            int* pNumOfSubunits = NULL,
                            int* pSubunitID = NULL);
-
-    void save(const std::string& basename) const;
-    void load(const std::string& basename, int subunitID = -1);
 
 public:
     index_type getSizeOfVector() const {
@@ -106,6 +122,9 @@ protected:
 
     /// data_ メンバ変数を破棄する
     void destroy();
+
+protected:
+    bool saveByTheOtherType(const std::string& basename) const;
 
 private:
     index_type numOfVectors_;      /// ベクトルの総数(global)

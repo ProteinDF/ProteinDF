@@ -638,7 +638,10 @@ template <class MatrixType>
 MatrixType DfObject::getLjkMatrix()
 {
     const std::string path = this->getLjkMatrixPath();
-    MatrixType Ljk = this->matrixCache_.get<MatrixType>(path);
+    // MatrixType Ljk = this->matrixCache_.get<MatrixType>(path);
+    MatrixType Ljk;
+    Ljk.load(path);
+
     return Ljk;
 }
 
@@ -658,7 +661,10 @@ template <class MatrixType>
 MatrixType DfObject::getLxcMatrix()
 {
     const std::string path = this->getLxcMatrixPath();
-    MatrixType Lxc = this->matrixCache_.get<MatrixType>(path);
+    // MatrixType Lxc = this->matrixCache_.get<MatrixType>(path);
+    MatrixType Lxc;
+    Lxc.load(path);
+
     return Lxc;
 }
 
