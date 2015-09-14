@@ -30,7 +30,6 @@
 #include "TlPartialMatrix.h"
 #include "TlPartialSymmetricMatrix.h"
 #include "TlTime.h"
-#include "TlDeleter.h"
 #include "TlLogging.h"
 
 //#define ANY_TAG_OK
