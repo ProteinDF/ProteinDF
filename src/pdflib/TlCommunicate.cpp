@@ -1105,8 +1105,8 @@ int TlCommunicate::sendData(const TlSymmetricMatrix& data, int nDestination, int
 int TlCommunicate::sendData(const TlSparseMatrix& data, int dest, int tag)
 {
     const std::size_t numOfSize = data.getSize();
-    const int numOfRows = data.getNumOfRows();
-    const int numOfCols = data.getNumOfCols();
+    // const int numOfRows = data.getNumOfRows();
+    // const int numOfCols = data.getNumOfCols();
 
     unsigned long header[3];
     header[0] = static_cast<unsigned long>(data.getNumOfRows());

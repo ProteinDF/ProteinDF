@@ -59,6 +59,8 @@ public:
     /// @return 要素の絶対値の最大値
     virtual double getMaxAbsoluteElement(int* pOutRow =NULL, int* pOutCol =NULL) const;
 
+    virtual double getRMS() const;
+
     // need to call by all processes.
     virtual double get(index_type row, index_type col) const;
     virtual void set(index_type row, index_type col, double value);

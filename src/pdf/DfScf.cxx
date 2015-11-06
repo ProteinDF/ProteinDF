@@ -862,18 +862,12 @@ bool DfScf::judge()
     {
         this->loggerStartTitle("Convergence Check");
 
-        int bJudge = this->checkConverge();
-//     {
-//       DfConvcheck dfConvcheck(this->m_flGbi, niter);
-//       dfConvcheck.DfConvcheckMain();
-//     }
+        const bool bJudge = this->checkConverge();
 
         this->loggerEndTitle();
 
         //  set convergence
-        //if ((convergence = dfConvcheck.judge()) != 0){
-//     if (dfConvcheck.judge() != 0){
-        if (bJudge != 0) {
+        if (bJudge == true) {
             // 収束の閾値をみたすとconv_counterが１増える
             //conv_counter++;
             this->m_nConvergenceCounter++;
@@ -892,7 +886,6 @@ bool DfScf::judge()
             }
 
             // conv_counterとNUMBER_OF_CHECKが一致したら収束とみなす
-            //if(conv_counter == NUMBER_OF_CHECK) {
             if (this->m_nConvergenceCounter == NUMBER_OF_CHECK) {
                 //OUTSCF_FLAG=0;
                 bAnswer = true;
@@ -910,12 +903,11 @@ bool DfScf::judge()
     return bAnswer;
 }
 
-int DfScf::checkConverge()
+bool DfScf::checkConverge()
 {
     DfConvcheck dfConvcheck(this->pPdfParam_, this->m_nIteration);
-    dfConvcheck.DfConvcheckMain();
 
-    return dfConvcheck.judge();
+    return dfConvcheck.isConverged();
 }
 
 

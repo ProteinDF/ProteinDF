@@ -634,7 +634,6 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     this->log_.info("using local matrix for density matrix.");
 
     assert(pK != NULL);
-    TlCommunicate& rComm = TlCommunicate::getInstance();
     assert(rComm.checkNonBlockingCommunications());
     
     const index_type numOfAOs = this->m_nNumOfAOs;

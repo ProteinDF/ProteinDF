@@ -678,8 +678,8 @@ double TlDistributeMatrix::getLocalMaxAbsoluteElement(index_type* pOutRow, index
 {
     double dMaxValue = 0.0;
     std::size_t index = 0;
-    const size_t nMaxIndex = this->getNumOfMyElements();
-    for (size_t i = 0; i < nMaxIndex; ++i) {
+    const size_type nMaxIndex = this->getNumOfMyElements();
+    for (size_type i = 0; i < nMaxIndex; ++i) {
         const double v = std::fabs(this->pData_[i]);
         if (dMaxValue < v) {
             dMaxValue = v;
@@ -710,6 +710,25 @@ double TlDistributeMatrix::getLocalMaxAbsoluteElement(index_type* pOutRow, index
     }
 
     return dMaxValue;
+}
+
+
+double TlDistributeMatrix::getRMS() const
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    double sum2 = 0.0;
+    const size_type maxIndex = this->getNumOfMyElements();
+    for (size_type i = 0; i < maxIndex; ++i) {
+        double tmp = this->pData_[i];
+        sum2 += tmp * tmp;
+    }
+    rComm.allReduce_SUM(sum2);
+
+    const double elements = this->getNumOfRows() * this->getNumOfCols();
+    
+    const double rms = std::sqrt(sum2 / elements);
+    return rms;
 }
 
 

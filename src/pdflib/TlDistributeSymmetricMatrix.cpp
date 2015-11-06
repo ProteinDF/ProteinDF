@@ -702,6 +702,37 @@ double TlDistributeSymmetricMatrix::getMaxAbsoluteElement(int* pOutRow, int* pOu
 }
 
 
+double TlDistributeSymmetricMatrix::getRMS() const
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    double sum2 = 0.0;
+
+    // 対角項と下半分非対角項の二乗和
+    const int numOfLocalRows = this->m_nMyRows;
+    const int numOfLocalCols = this->m_nMyCols;
+    for (int localRowIndex = 0; localRowIndex < numOfLocalRows; ++localRowIndex) {
+        const index_type row = this->m_RowIndexTable[localRowIndex];
+        for (int localColIndex = 0; localColIndex < numOfLocalCols; ++localColIndex) {
+            const index_type col = this->m_ColIndexTable[localColIndex];
+            if (row > col) {
+                const double tmp = this->getLocal(row, col);
+                sum2 += 2.0 * tmp * tmp;
+            } else if (row == col) {
+                const double tmp = this->getLocal(row, col);
+                sum2 += tmp * tmp;
+            }
+        }
+    }
+    
+    rComm.allReduce_SUM(sum2);
+
+    const double elements = this->getNumOfRows() * this->getNumOfCols();
+    
+    const double rms = std::sqrt(sum2 / elements);
+    return rms;
+}
+
 // const TlDistributeSymmetricMatrix& TlDistributeSymmetricMatrix::dot(const TlDistributeSymmetricMatrix& X)
 // {
 //     // 親メンバ関数と同じ

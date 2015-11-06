@@ -1263,6 +1263,22 @@ double TlMatrix::getMaxAbsoluteElement(int* outRow, int* outCol) const
 }
 
 
+double TlMatrix::getRMS() const
+{
+    double sum2 = 0.0;
+    const std::size_t numOfDataSize = this->getNumOfElements();
+    for (std::size_t i = 0; i < numOfDataSize; ++i) {
+        const double tmp = this->data_[i];
+        sum2 += tmp * tmp;
+    }
+    
+    const double elements = this->getNumOfRows() * this->getNumOfCols();
+
+    const double rms = std::sqrt(sum2 / elements);
+    return rms;
+}
+
+
 #ifdef HAVE_LAPACK
 extern "C" {
     void dgemv_(const char* TRANS, const int* M, const int* N,

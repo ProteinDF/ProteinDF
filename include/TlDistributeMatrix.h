@@ -173,6 +173,9 @@ public:
     /// @return 要素の絶対値の最大値
     virtual double getLocalMaxAbsoluteElement(index_type* pOutRow =NULL, index_type* pOutCol =NULL) const;
 
+    /// calc RMS
+    virtual double getRMS() const;
+
     /// 全行列を各プロセスに均等分割された疎行列を返す
     // TlSparseMatrix getPartialMatrix(double threshold = 1.0E-16) const;
 

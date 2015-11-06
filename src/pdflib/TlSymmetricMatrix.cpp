@@ -940,6 +940,34 @@ double TlSymmetricMatrix::getMaxAbsoluteElementByIndex(int index) const
     return dAnswer;
 }
 
+
+double TlSymmetricMatrix::getRMS() const
+{
+    double sum2 = 0.0;
+    const std::size_t numOfDataSize = this->getNumOfElements();
+    for (std::size_t i = 0; i < numOfDataSize; ++i) {
+        const double tmp = this->data_[i];
+        sum2 += tmp * tmp;
+    }
+    sum2 *= 2.0;
+
+    // diagonal
+    double diagonals2 = 0.0;
+    const std::size_t dim = this->getNumOfRows();
+    assert(dim == this->getNumOfCols());
+    for (std::size_t i = 0; i < dim; ++i) {
+        const double tmp = this->get(i, i);
+        diagonals2 += tmp * tmp;
+    }
+    sum2 -= diagonals2;
+
+    const double elements = dim * dim;
+
+    const double rms = std::sqrt(sum2 / elements);
+    return rms;
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 // NOTICE:
 // friend functions
