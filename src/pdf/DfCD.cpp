@@ -36,8 +36,8 @@ DfCD::DfCD(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), pEngines_(NULL)
 {
     this->cutoffThreshold_ = 1.0E-10;
-    if ((*pPdfParam)["cut-value"].getStr().empty() != true) {
-        this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
+    if ((*pPdfParam)["cut_value"].getStr().empty() != true) {
+        this->cutoffThreshold_ = (*pPdfParam)["cut_value"].getDouble();
     }    
     this->cutoffEpsilon3_ = this->cutoffThreshold_ * 0.01;
     if ((*pPdfParam)["cutoff_epsilon3"].getStr().empty() != true) {

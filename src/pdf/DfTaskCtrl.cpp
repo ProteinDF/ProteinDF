@@ -33,8 +33,8 @@ DfTaskCtrl::DfTaskCtrl(TlSerializeData* pPdfParam) : DfObject(pPdfParam)
     }
     
     this->cutoffThreshold_ = 1.0E-10;
-    if ((*pPdfParam)["cut-value"].getStr().empty() != true) {
-        this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
+    if ((*pPdfParam)["cut_value"].getStr().empty() != true) {
+        this->cutoffThreshold_ = (*pPdfParam)["cut_value"].getDouble();
     }    
 
     this->cutoffEpsilon_density_ = this->cutoffThreshold_;

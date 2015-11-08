@@ -38,8 +38,8 @@ DfEriX::DfEriX(TlSerializeData* pPdfParam)
     }
     
     this->cutoffThreshold_ = 1.0E-10;
-    if ((*pPdfParam)["cut-value"].getStr().empty() != true) {
-        this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
+    if ((*pPdfParam)["cut_value"].getStr().empty() != true) {
+        this->cutoffThreshold_ = (*pPdfParam)["cut_value"].getDouble();
     }    
 
     this->cutoffEpsilon_density_ = this->cutoffThreshold_;
@@ -51,10 +51,6 @@ DfEriX::DfEriX(TlSerializeData* pPdfParam)
     if ((*pPdfParam)["cutoff_distribution"].getStr().empty() != true) {
         this->cutoffEpsilon_distribution_ = (*pPdfParam)["cutoff_distribution"].getDouble();
     }    
-    // this->cutoffThreshold_ = 1.0E-10;
-    // if ((*pPdfParam)["cut-value"].getStr().empty() != true) {
-    //     this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
-    // }    
 
     // this->cutoffEpsilon1_ = this->cutoffThreshold_ * 0.01;
     // if ((*pPdfParam)["cutoff_epsilon1"].getStr().empty() != true) {
@@ -417,7 +413,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                        const std::vector<DfTaskCtrl::Task2>& taskList,
                        const TlVector& rho, TlMatrixObject* pJ)
 {
-    const TlMatrixObject::index_type dim = pJ->getNumOfRows();
+    // const TlMatrixObject::index_type dim = pJ->getNumOfRows();
     assert(dim == pJ->getNumOfCols());
 
     const int maxShellType = orbitalInfo.getMaxShellType();

@@ -58,7 +58,7 @@ DfCalcGridX::DfCalcGridX(TlSerializeData* pPdfParam)
     this->m_densityCutOffValueA = this->inputtedDensityCutoffValue_;
     this->m_densityCutOffValueB = this->inputtedDensityCutoffValue_;
 
-    this->m_inputedCutoffThreshold = pdfParam["cut-value"].getDouble();
+    this->m_inputedCutoffThreshold = pdfParam["cut_value"].getDouble();
 
     //this->physicalValues_.clear();
 

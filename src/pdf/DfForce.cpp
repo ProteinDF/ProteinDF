@@ -40,9 +40,9 @@ DfForce::DfForce(TlSerializeData* pPdfParam)
     // initialize
     this->force_.resize(this->m_nNumOfAtoms, 3);
 
-    this->storedCutoffValue_ = (*pPdfParam)["cut-value"].getDouble();
-    if ((*pPdfParam)["force-cut-value"].getStr().empty() != true) {
-        (*pPdfParam)["cut-value"] = (*pPdfParam)["force-cut-value"];
+    this->storedCutoffValue_ = (*pPdfParam)["cut_value"].getDouble();
+    if ((*pPdfParam)["force_cut_value"].getStr().empty() != true) {
+        this->storedCutoffValue_ = (*pPdfParam)["force_cut_value"].getDouble();
     }
     
     // debug
@@ -55,7 +55,6 @@ DfForce::DfForce(TlSerializeData* pPdfParam)
 
 DfForce::~DfForce()
 {
-    (*(this->pPdfParam_))["cut-value"] = this->storedCutoffValue_;
 }
 
 
