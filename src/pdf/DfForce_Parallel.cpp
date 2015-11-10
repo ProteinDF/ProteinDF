@@ -43,6 +43,14 @@ void DfForce_Parallel::logger(const std::string& str) const
 }
 
 
+void DfForce_Parallel::output()
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster()) {
+        DfForce::output();
+    }
+}
+
 void DfForce_Parallel::calcForceFromCoulomb_RIJ(const RUN_TYPE runType)
 {
     this->calcForceFromCoulomb_RIJ_DC(runType);

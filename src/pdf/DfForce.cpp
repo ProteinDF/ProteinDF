@@ -94,10 +94,31 @@ void DfForce::calcForce()
 
     this->force_ *= -1.0;
 
-    // output
+    this->output();
+    this->saveForce();
+}
+
+
+void DfForce::output()
+{
     const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
-    this->log_.info("=== FORCE ===");
     const int numOfAtoms = this->m_nNumOfAtoms;
+
+    // MAX element
+    const double max_val = this->force_.getMaxAbsoluteElement();
+    
+    // calc RMS
+    double rms = 0;
+    {
+        TlMatrix force2 = this->force_;
+        force2.dot(force2);
+        rms = force2.sum();
+        rms = std::sqrt(rms / (double(numOfAtoms) * 3.0));
+    }
+    
+    // output for log
+    this->log_.info("=== FORCE ===");
+
     for (int atomIndex = 0; atomIndex< numOfAtoms; ++atomIndex) {
         const TlAtom atom = flGeom.getAtom(atomIndex);
         this->log_.info(TlUtils::format("%4d:[%-2s] % f, % f, % f",
@@ -106,8 +127,11 @@ void DfForce::calcForce()
                                         this->force_.get(atomIndex, 1),
                                         this->force_.get(atomIndex, 2)));
     }
+    this->log_.info(TlUtils::format("MAX force: % f", max_val));
+    this->log_.info(TlUtils::format("RMS force: % f", rms));
     this->log_.info("=============");
 
+    // output for pdfparam
     {
         TlSerializeData force_dat;
         force_dat.resize(numOfAtoms);
@@ -120,11 +144,11 @@ void DfForce::calcForce()
             force_dat.setAt(atomIndex, v);
         }
         (*this->pPdfParam_)["force"] = force_dat;
-    }
-    
-    this->saveForce();
-}
 
+        (*this->pPdfParam_)["force_max"] = max_val;
+        (*this->pPdfParam_)["force_rms"] = rms;
+    }
+}
 
 void DfForce::saveForce()
 {
