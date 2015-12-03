@@ -1122,8 +1122,8 @@ int TlCommunicate::sendData(const TlSparseMatrix& data, int dest, int tag)
         for (TlSparseMatrix::const_iterator it = data.begin(); it != itEnd; ++it) {
             const int row = it->first.row;
             const int col = it->first.col;
-            assert((0 <= row) && (row < numOfRows));
-            assert((0 <= col) && (col < numOfCols));
+            // assert((0 <= row) && (row < numOfRows));
+            // assert((0 <= col) && (col < numOfCols));
             buf[count] = TlMatrixElement(row, col, it->second);
             ++count;
         }

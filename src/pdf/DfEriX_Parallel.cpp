@@ -634,7 +634,6 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     this->log_.info("using local matrix for density matrix.");
 
     assert(pK != NULL);
-    assert(rComm.checkNonBlockingCommunications());
     
     const index_type numOfAOs = this->m_nNumOfAOs;
     pK->resize(numOfAOs);
@@ -697,7 +696,6 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     pK->mergeSparseMatrix(tmpK);
 
     this->log_.info("finished");
-    assert(rComm.checkNonBlockingCommunications());
 }
 
 

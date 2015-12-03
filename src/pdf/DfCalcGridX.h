@@ -88,6 +88,9 @@ public:
                          DfFunctional_GGA* pFunctional,
                          TlMatrix* pGX, TlMatrix* pGY, TlMatrix* pGZ);
 
+    TlMatrix energyGradient(const TlSymmetricMatrix& P_A,
+                            DfFunctional_LDA* pFunctional);
+    
 protected:
     // void calcForceFromXC(const TlSymmetricMatrix& P,
     //                      DfFunctional_GGA* pFunctional,

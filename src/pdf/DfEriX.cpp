@@ -414,7 +414,6 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                        const TlVector& rho, TlMatrixObject* pJ)
 {
     // const TlMatrixObject::index_type dim = pJ->getNumOfRows();
-    assert(dim == pJ->getNumOfCols());
 
     const int maxShellType = orbitalInfo.getMaxShellType();
     const int taskListSize = taskList.size();

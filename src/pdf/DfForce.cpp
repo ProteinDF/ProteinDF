@@ -369,7 +369,10 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
     const int iteration = this->m_nIteration;
     const int numOfAOs = this->m_nNumOfAOs;
     const int numOfAtoms = this->m_nNumOfAtoms;
-    
+
+    TlMatrix Fxc(numOfAtoms, 3);
+
+    // for RKS
     const TlSymmetricMatrix P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
 
     DfCalcGridX calcGrid(this->pPdfParam_);
@@ -384,8 +387,9 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
     case DfXCFunctional::SVWN:
         {
             DfFunctional_SVWN svwn;
-            calcGrid.makeGammaMatrix(P, &svwn,
-                                     &Gx, &Gy, &Gz);
+            // calcGrid.makeGammaMatrix(P, &svwn,
+            //                          &Gx, &Gy, &Gz);
+            Fxc = calcGrid.energyGradient(P, &svwn);
         }
         break;
 
@@ -422,34 +426,38 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
         Gz.save("Gz.mtx");
     }
     
-    TlMatrix Fxc(numOfAtoms, 3);
-    for (int mu = 0; mu < numOfAtoms; ++mu) {
-        for (index_type p = 0; p < numOfAOs; ++p) {
-            const index_type orbAtomId = this->orbitalInfo_.getAtomIndex(p);
-            if (mu != orbAtomId) {
-                const double fx = Gx.get(p, mu);
-                const double fy = Gy.get(p, mu);
-                const double fz = Gz.get(p, mu);
+    // for (int mu = 0; mu < numOfAtoms; ++mu) {
+    //     for (index_type alpha = 0; alpha < numOfAOs; ++alpha) {
+    //         const index_type orbAtomId = this->orbitalInfo_.getAtomIndex(alpha);
+    //         for (int nu = 0; nu < numOfAtoms; ++nu) {
+    //             if (orbAtomId != nu) {
+    //                 if (mu != nu) {
+    //                     const double fx = Gx.get(alpha, nu);
+    //                     const double fy = Gy.get(alpha, nu);
+    //                     const double fz = Gz.get(alpha, nu);
+                        
+    //                     Fxc.add(mu, X, -fx);
+    //                     Fxc.add(mu, Y, -fy);
+    //                     Fxc.add(mu, Z, -fz);
+    //                 } else {
+    //                     const double fx = Gx.get(alpha, nu);
+    //                     const double fy = Gy.get(alpha, nu);
+    //                     const double fz = Gz.get(alpha, nu);
+                        
+    //                     Fxc.add(mu, X,  fx);
+    //                     Fxc.add(mu, Y,  fy);
+    //                     Fxc.add(mu, Z,  fz);
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
-                Fxc.add(mu, X, fx);
-                Fxc.add(mu, Y, fy);
-                Fxc.add(mu, Z, fz);
-            } else {
-                for (int nu = 0; nu < numOfAtoms; ++nu) {
-                    if (mu != nu) {
-                        const double fx = Gx.get(p, nu);
-                        const double fy = Gy.get(p, nu);
-                        const double fz = Gz.get(p, nu);
-                        Fxc.add(mu, X, -fx);
-                        Fxc.add(mu, Y, -fy);
-                        Fxc.add(mu, Z, -fz);
-                    }
-                }
-            }
-        }
-    }
+    // RKSなので2倍
+    Fxc *= 2.0;
+    
+    // Fxc *= -1.0;
 
-    Fxc *= -1.0;
     if (this->isDebugOutMatrix_ == true) {
         Fxc.save("F_xc.mtx");
     }
