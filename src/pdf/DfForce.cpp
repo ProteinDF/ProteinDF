@@ -377,18 +377,12 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
 
     DfCalcGridX calcGrid(this->pPdfParam_);
 
-    TlMatrix Gx(numOfAOs, numOfAtoms);
-    TlMatrix Gy(numOfAOs, numOfAtoms);
-    TlMatrix Gz(numOfAOs, numOfAtoms);
-
     DfXCFunctional dfXCFunctional(this->pPdfParam_);
     DfXCFunctional::XC_TYPE xcType = dfXCFunctional.getXcType();
     switch (xcType) {
     case DfXCFunctional::SVWN:
         {
             DfFunctional_SVWN svwn;
-            // calcGrid.makeGammaMatrix(P, &svwn,
-            //                          &Gx, &Gy, &Gz);
             Fxc = calcGrid.energyGradient(P, &svwn);
         }
         break;
@@ -396,16 +390,14 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
     case DfXCFunctional::BLYP:
         {
             DfFunctional_B88LYP blyp;
-            calcGrid.makeGammaMatrix(P, &blyp,
-                                     &Gx, &Gy, &Gz);
+            Fxc = calcGrid.energyGradient(P, &blyp);
         }
         break;
 
     case DfXCFunctional::B3LYP:
         {
             DfFunctional_B3LYP b3lyp;
-            calcGrid.makeGammaMatrix(P, &b3lyp,
-                                     &Gx, &Gy, &Gz);
+            Fxc = calcGrid.energyGradient(P, &b3lyp);
         }
         break;
 
@@ -420,39 +412,7 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
         abort();
         break;
     }
-    if (this->isDebugOutMatrix_ == true) {
-        Gx.save("Gx.mtx");
-        Gy.save("Gy.mtx");
-        Gz.save("Gz.mtx");
-    }
     
-    // for (int mu = 0; mu < numOfAtoms; ++mu) {
-    //     for (index_type alpha = 0; alpha < numOfAOs; ++alpha) {
-    //         const index_type orbAtomId = this->orbitalInfo_.getAtomIndex(alpha);
-    //         for (int nu = 0; nu < numOfAtoms; ++nu) {
-    //             if (orbAtomId != nu) {
-    //                 if (mu != nu) {
-    //                     const double fx = Gx.get(alpha, nu);
-    //                     const double fy = Gy.get(alpha, nu);
-    //                     const double fz = Gz.get(alpha, nu);
-                        
-    //                     Fxc.add(mu, X, -fx);
-    //                     Fxc.add(mu, Y, -fy);
-    //                     Fxc.add(mu, Z, -fz);
-    //                 } else {
-    //                     const double fx = Gx.get(alpha, nu);
-    //                     const double fy = Gy.get(alpha, nu);
-    //                     const double fz = Gz.get(alpha, nu);
-                        
-    //                     Fxc.add(mu, X,  fx);
-    //                     Fxc.add(mu, Y,  fy);
-    //                     Fxc.add(mu, Z,  fz);
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
     // RKSなので2倍
     Fxc *= 2.0;
     

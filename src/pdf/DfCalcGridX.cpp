@@ -256,6 +256,162 @@ void DfCalcGridX::getPrefactorForDerivative(const int nType, const double alpha,
     }
 }
 
+
+void DfCalcGridX::getPrefactorForSecondDerivative(const int nType, const double a, const TlPosition& pos,
+                                                  double* pXX, double* pXY, double* pXZ,
+                                                  double* pYY, double* pYZ, double* pZZ)
+{
+    assert(pXX != NULL);
+    assert(pXY != NULL);
+    assert(pXZ != NULL);
+    assert(pYY != NULL);
+    assert(pYZ != NULL);
+    assert(pZZ != NULL);
+
+    const double aa = a * a;
+    const double x = pos.x();
+    const double y = pos.y();
+    const double z = pos.z();
+    
+    switch (nType) {
+    case 0: // s
+        {
+            *pXX = 4.0 * aa * x * x - 2.0 * a;
+            *pXY = 4.0 * aa * x * y;
+            *pXZ = 4.0 * aa * x * z;
+            *pYY = 4.0 * aa * y * y - 2.0 * a;
+            *pYZ = 4.0 * aa * y * z;
+            *pZZ = 4.0 * aa * z * z - 2.0 * a;
+        }
+        break;
+    case 1: // px 
+        {
+            *pXX = 4.0 * aa * x * x * x - 6.0 * a * x;
+            *pXY = 4.0 * aa * x * x * y - 2.0 * a * y;
+            *pXZ = 4.0 * aa * x * x * z - 2.0 * a * z;
+            *pYY = 4.0 * aa * x * y * y - 2.0 * a * x;
+            *pYZ = 4.0 * aa * x * y * z;
+            *pZZ = 4.0 * aa * x * z * z - 2.0 * a * x;
+        }
+        break;
+    case 2: // py
+        {
+            *pXX = 4.0 * aa * x * x * y - 2.0 * a * y;
+            *pXY = 4.0 * aa * x * y * y - 2.0 * a * x;
+            *pXZ = 4.0 * aa * x * y * z;
+            *pYY = 4.0 * aa * y * y * y - 6.0 * a * y;
+            *pYZ = 4.0 * aa * y * y * z - 2.0 * a * z;
+            *pZZ = 4.0 * aa * y * z * z - 2.0 * a * y;
+        }
+        break;
+    case 3: // pz
+        {
+            *pXX = 4.0 * aa * x * x * z - 2.0 * a * z;
+            *pXY = 4.0 * aa * x * y * z;
+            *pXZ = 4.0 * aa * x * z * z - 2.0 * a * x;
+            *pYY = 4.0 * aa * y * y * z - 2.0 * a * z;
+            *pYZ = 4.0 * aa * y * z * z - 2.0 * a * y;
+            *pZZ = 4.0 * aa * z * z * z - 6.0 * a * z;
+        }
+        break;
+    case 4:
+        { // dxy
+            *pXX = 4.0 * aa * x * x * x * y - 6.0 * a * x * y;
+            *pXY = 4.0 * aa * x * x * y * y - 2.0 * a * x * x - 2.0 * a * y * y + 1.0;
+            *pXZ = 4.0 * aa * x * x * y * z - 2.0 * a * y * z;
+            *pYY = 4.0 * aa * x * y * y * y - 6.0 * a * x * y;
+            *pYZ = 4.0 * aa * x * y * y * z - 2.0 * a * x * z;
+            *pZZ = 4.0 * aa * x * y * z * z - 2.0 * a * x * y;
+        }
+        break;
+    case 5: // dxz
+        {
+            *pXX = 4.0 * aa * x * x * x * z - 6.0 * a * x * z;
+            *pXY = 4.0 * aa * x * x * y * z - 2.0 * a * y * z;
+            *pXZ = 4.0 * aa * x * x * z * z - 2.0 * a * x * x - 2.0 * a * z * z + 1.0;
+            *pYY = 4.0 * aa * x * y * y * z - 2.0 * a * x * z;
+            *pYZ = 4.0 * aa * x * y * z * z - 2.0 * a * x * y;
+            *pZZ = 4.0 * aa * x * z * z * z - 6.0 * a * x * z;
+        }
+        break;
+    case 6: // yz
+        {
+            *pXX = 4.0 * aa * x * x * y * z - 2.0 * a * y * z;
+            *pXY = 4.0 * aa * x * y * y * z - 2.0 * a * x * z;
+            *pXZ = 4.0 * aa * x * y * z * z - 2.0 * a * x * y;
+            *pYY = 4.0 * aa * y * y * y * z - 6.0 * a * y * z;
+            *pYZ = 4.0 * aa * y * y * z * z - 2.0 * a * y * y - 2.0 * a * z * z + 1.0;
+            *pZZ = 4.0 * aa * y * z * z * z - 6.0 * a * y * z;
+        }
+        break;
+    case 7: // xx-yy
+        {
+            // xx
+            const double xx_xx = 4.0 * aa * x * x * x * x - 10.0 * a * x * x + 2.0;
+            const double xx_xy = 4.0 * aa * x * x * x * y -  4.0 * a * x * y;
+            const double xx_xz = 4.0 * aa * x * x * x * z -  4.0 * a * x * z;
+            const double xx_yy = 4.0 * aa * x * x * y * y -  2.0 * a * x * x;
+            const double xx_yz = 4.0 * aa * x * x * y * z;
+            const double xx_zz = 4.0 * aa * x * x * z * z -  2.0 * a * x * x;
+
+            // yy
+            const double yy_xx = 4.0 * aa * x * x * y * y -  2.0 * a * y * y;
+            const double yy_xy = 4.0 * aa * x * y * y * y -  4.0 * a * x * y;
+            const double yy_xz = 4.0 * aa * x * y * y * z;
+            const double yy_yy = 4.0 * aa * y * y * y * y - 10.0 * a * y * y + 2.0;
+            const double yy_yz = 4.0 * aa * y * y * y * z -  4.0 * a * y * z;
+            const double yy_zz = 4.0 * aa * y * y * z * z -  2.0 * a * y * y;
+
+            *pXX = 0.5 * (xx_xx - yy_xx);
+            *pXY = 0.5 * (xx_xy - yy_xy);
+            *pXZ = 0.5 * (xx_xz - yy_xz);
+            *pYY = 0.5 * (xx_yy - yy_yy);
+            *pYZ = 0.5 * (xx_yz - yy_yz);
+            *pZZ = 0.5 * (xx_zz - yy_zz);
+        }
+        break;
+    case 8: // r2
+        {
+            // xx
+            const double xx_xx = 4.0 * aa * x * x * x * x - 10.0 * a * x * x + 2.0;
+            const double xx_xy = 4.0 * aa * x * x * x * y -  4.0 * a * x * y;
+            const double xx_xz = 4.0 * aa * x * x * x * z -  4.0 * a * x * z;
+            const double xx_yy = 4.0 * aa * x * x * y * y -  2.0 * a * x * x;
+            const double xx_yz = 4.0 * aa * x * x * y * z;
+            const double xx_zz = 4.0 * aa * x * x * z * z -  2.0 * a * x * x;
+
+            // yy
+            const double yy_xx = 4.0 * aa * x * x * y * y -  2.0 * a * y * y;
+            const double yy_xy = 4.0 * aa * x * y * y * y -  4.0 * a * x * y;
+            const double yy_xz = 4.0 * aa * x * y * y * z;
+            const double yy_yy = 4.0 * aa * y * y * y * y - 10.0 * a * y * y + 2.0;
+            const double yy_yz = 4.0 * aa * y * y * y * z -  4.0 * a * y * z;
+            const double yy_zz = 4.0 * aa * y * y * z * z -  2.0 * a * y * y;
+
+            // zz
+            const double zz_xx = 4.0 * aa * x * x * z * z -  2.0 * a * z * z;
+            const double zz_xy = 4.0 * aa * x * y * z * z;
+            const double zz_xz = 4.0 * aa * x * z * z * z -  4.0 * a * x * z;
+            const double zz_yy = 4.0 * aa * y * y * z * z -  2.0 * a * z * z;
+            const double zz_yz = 4.0 * aa * y * z * z * z -  4.0 * a * y * z;
+            const double zz_zz = 4.0 * aa * z * z * z * z - 10.0 * a * z * z + 2.0;
+
+            *pXX = INV_SQRT3 * (zz_xx - 0.5 * (xx_xx + yy_xx));
+            *pXY = INV_SQRT3 * (zz_xy - 0.5 * (xx_xy + yy_xy));
+            *pXZ = INV_SQRT3 * (zz_xz - 0.5 * (xx_xz + yy_xz));
+            *pYY = INV_SQRT3 * (zz_yy - 0.5 * (xx_yy + yy_yy));
+            *pYZ = INV_SQRT3 * (zz_yz - 0.5 * (xx_yz + yy_yz));
+            *pZZ = INV_SQRT3 * (zz_zz - 0.5 * (xx_zz + yy_zz));
+        }
+        break;
+    default:
+        std::cout << "Basis Type is Wrong." << std::endl;
+        break;
+    }
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////
 
 // φの値を求める
@@ -514,6 +670,118 @@ void DfCalcGridX::getPhiTable(const TlPosition& gridPosition,
         }
     }
 }
+
+
+void DfCalcGridX::getDerivative2AOs(const TlPosition& gridPosition,
+                                    std::vector<WFGrid>* p_d2AO_dxdx_values,
+                                    std::vector<WFGrid>* p_d2AO_dxdy_values,
+                                    std::vector<WFGrid>* p_d2AO_dxdz_values,
+                                    std::vector<WFGrid>* p_d2AO_dydy_values,
+                                    std::vector<WFGrid>* p_d2AO_dydz_values,
+                                    std::vector<WFGrid>* p_d2AO_dzdz_values)
+{
+    this->getDerivative2AOs(gridPosition, 0, this->m_tlOrbInfo.getNumOfOrbitals(),
+                            p_d2AO_dxdx_values, p_d2AO_dxdy_values, p_d2AO_dxdz_values,
+                            p_d2AO_dydy_values, p_d2AO_dydz_values, p_d2AO_dzdz_values);
+}
+
+void DfCalcGridX::getDerivative2AOs(const TlPosition& gridPosition,
+                                    const int start_AO_index,
+                                    const int end_AO_index,
+                                    std::vector<WFGrid>* p_d2AO_dxdx_values,
+                                    std::vector<WFGrid>* p_d2AO_dxdy_values,
+                                    std::vector<WFGrid>* p_d2AO_dxdz_values,
+                                    std::vector<WFGrid>* p_d2AO_dydy_values,
+                                    std::vector<WFGrid>* p_d2AO_dydz_values,
+                                    std::vector<WFGrid>* p_d2AO_dzdz_values)
+{
+    assert(p_d2AO_dxdx_values != NULL);
+    assert(p_d2AO_dxdy_values != NULL);
+    assert(p_d2AO_dxdz_values != NULL);
+    assert(p_d2AO_dydy_values != NULL);
+    assert(p_d2AO_dydz_values != NULL);
+    assert(p_d2AO_dzdz_values != NULL);
+
+    // initialize
+    const double cutOffValue = std::sqrt(std::min(this->m_densityCutOffValueA,
+                                                  this->m_densityCutOffValueB));
+
+    const int AO_ListSize = end_AO_index - start_AO_index +1;
+    p_d2AO_dxdx_values->clear();
+    p_d2AO_dxdx_values->reserve(AO_ListSize);
+    p_d2AO_dxdy_values->clear();
+    p_d2AO_dxdy_values->reserve(AO_ListSize);
+    p_d2AO_dxdz_values->clear();
+    p_d2AO_dxdz_values->reserve(AO_ListSize);
+    p_d2AO_dydy_values->clear();
+    p_d2AO_dydy_values->reserve(AO_ListSize);
+    p_d2AO_dydz_values->clear();
+    p_d2AO_dydz_values->reserve(AO_ListSize);
+
+    // orbital loop
+    for (int AO_index = start_AO_index; AO_index < end_AO_index; ++AO_index) {
+        double d2AO_dxdx = 0.0;
+        double d2AO_dxdy = 0.0;
+        double d2AO_dxdz = 0.0;
+        double d2AO_dydy = 0.0;
+        double d2AO_dydz = 0.0;
+        double d2AO_dzdz = 0.0;
+
+        const TlPosition pos = gridPosition - this->m_tlOrbInfo.getPosition(AO_index);
+        const double distance2 = pos.squareDistanceFrom();
+        const int basisType = this->m_tlOrbInfo.getBasisType(AO_index);
+
+        const int contraction = this->m_tlOrbInfo.getCgtoContraction(AO_index);
+        for (int PGTO = 0; PGTO < contraction; ++PGTO) {
+            double pXX = 0.0;
+            double pXY = 0.0;
+            double pXZ = 0.0;
+            double pYY = 0.0;
+            double pYZ = 0.0;
+            double pZZ = 0.0;
+            const double alpha = this->m_tlOrbInfo.getExponent(AO_index, PGTO);
+            const double shoulder = alpha * distance2;
+
+            if (shoulder <= TOOBIG) {
+                const double g = this->m_tlOrbInfo.getCoefficient(AO_index, PGTO) * std::exp(- shoulder);
+                this->getPrefactorForSecondDerivative(basisType, alpha, pos,
+                                                      &pXX, &pXY, &pXZ, &pYY, &pYZ, &pZZ);
+                d2AO_dxdx += pXX * g;
+                d2AO_dxdy += pXY * g;
+                d2AO_dxdz += pXZ * g;
+                d2AO_dydy += pYY * g;
+                d2AO_dydz += pYZ * g;
+                d2AO_dzdz += pZZ * g;
+            }
+        }
+        
+        if (std::fabs(d2AO_dxdx) > cutOffValue) {
+            const WFGrid wfGrid(AO_index, d2AO_dxdx);
+            p_d2AO_dxdx_values->push_back(wfGrid);
+        }
+        if (std::fabs(d2AO_dxdy) > cutOffValue) {
+            const WFGrid wfGrid(AO_index, d2AO_dxdy);
+            p_d2AO_dxdy_values->push_back(wfGrid);
+        }
+        if (std::fabs(d2AO_dxdz) > cutOffValue) {
+            const WFGrid wfGrid(AO_index, d2AO_dxdz);
+            p_d2AO_dxdz_values->push_back(wfGrid);
+        }
+        if (std::fabs(d2AO_dydy) > cutOffValue) {
+            const WFGrid wfGrid(AO_index, d2AO_dydy);
+            p_d2AO_dydy_values->push_back(wfGrid);
+        }
+        if (std::fabs(d2AO_dydz) > cutOffValue) {
+            const WFGrid wfGrid(AO_index, d2AO_dydz);
+            p_d2AO_dydz_values->push_back(wfGrid);
+        }
+        if (std::fabs(d2AO_dzdz) > cutOffValue) {
+            const WFGrid wfGrid(AO_index, d2AO_dzdz);
+            p_d2AO_dzdz_values->push_back(wfGrid);
+        }
+    }
+}
+
 
 void DfCalcGridX::getRhoAtGridPoint(const TlMatrixObject& P,
                                     const std::vector<WFGrid>& aPhi,
@@ -1347,8 +1615,8 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
         dfGenGrid.getGrids(atomIndexA, &grids, &singleCenterWeights, &partitioningWeights);
 
         const int numOfGrids = grids.size();
-        assert(singleCenterWeights.size() == numOfGrids);
-        assert(partitioningWeights.size() == numOfGrids);
+        assert(static_cast<int>(singleCenterWeights.size()) == numOfGrids);
+        assert(static_cast<int>(partitioningWeights.size()) == numOfGrids);
 
         TlMatrix tmpGammaX(numOfAOs, numOfAOs);
         TlMatrix tmpGammaY(numOfAOs, numOfAOs);
@@ -1380,7 +1648,6 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
                 pFunctional->getDerivativeFunctional(rhoA, &dF_dRhoA);
                 
                 // functional derivative term
-                // std::cerr << TlUtils::format("A=%d, g=%d: part w=% e, center w=% e", atomIndexA, gridIndex, partitioningWeight, singleCenterWeight) << std::endl;
                 const double wAi_dF_dRhoA = partitioningWeight * singleCenterWeight * dF_dRhoA;
                 const int numOf_AO_values = AO_values.size();
                 const int numOf_dAO_dx_values = dAO_dx_values.size();
@@ -1402,6 +1669,327 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
                     for (int j = 0; j < numOf_dAO_dz_values; ++j) {
                         const index_type p = dAO_dz_values[j].index;
                         tmpGammaZ(p, q) += coef * dAO_dz_values[j].value;
+                    }
+                }
+                
+                // weight derivative term
+                for (int atomIndexB = 0; atomIndexB < numOfAtoms; ++atomIndexB) {
+                    if (atomIndexA != atomIndexB) {
+                        const TlVector nablaB_omegaA = dfGenGrid.JGP_nablaB_omegaA(atomIndexA, atomIndexB, gridPosition);
+                        const TlVector E_nablaB_omegaAi = nablaB_omegaA * singleCenterWeight * ene;
+                        
+                        for (int i = 0; i < 3; ++i) {
+                            Fxc1(atomIndexB, i) += E_nablaB_omegaAi[i];
+                        }
+                    }
+                }
+            }
+        }
+
+        // Gamma matrix
+        {
+            tmpGammaX.dot(P_A);
+            tmpGammaY.dot(P_A);
+            tmpGammaZ.dot(P_A);
+            for (index_type p = 0; p < numOfAOs; ++p) {
+                const double x = tmpGammaX.getRowVector(p).sum();
+                const double y = tmpGammaY.getRowVector(p).sum();
+                const double z = tmpGammaZ.getRowVector(p).sum();
+        
+                gammaX(p, atomIndexA) = 2.0 * x;
+                gammaY(p, atomIndexA) = 2.0 * y;
+                gammaZ(p, atomIndexA) = 2.0 * z;
+            }
+        }
+    }
+    this->log_.info(TlUtils::format("XC ene = % 16.10f", ene_xc));
+
+    this->log_.info("DfCalcGridX::energyGradient() Fxc2");
+    TlMatrix Fxc2(numOfAtoms, 3); // functional derivative term formed by GammaMatrix
+    for (int mu = 0; mu < numOfAtoms; ++mu) {
+        for (index_type alpha = 0; alpha < numOfAOs; ++alpha) {
+            const index_type orbAtomId = orbitalInfo.getAtomIndex(alpha);
+            for (int nu = 0; nu < numOfAtoms; ++nu) {
+                if (orbAtomId != nu) {
+                    if (mu != nu) {
+                        const double fx = gammaX.get(alpha, nu);
+                        const double fy = gammaY.get(alpha, nu);
+                        const double fz = gammaZ.get(alpha, nu);
+                        
+                        Fxc2.add(mu, 0, -fx); // 0 means x
+                        Fxc2.add(mu, 1, -fy); // 1 means y
+                        Fxc2.add(mu, 2, -fz); // 2 means z
+                    } else {
+                        const double fx = gammaX.get(alpha, nu);
+                        const double fy = gammaY.get(alpha, nu);
+                        const double fz = gammaZ.get(alpha, nu);
+                        
+                        Fxc2.add(mu, 0,  fx); // 0 means x
+                        Fxc2.add(mu, 1,  fy); // 1 means y
+                        Fxc2.add(mu, 2,  fz); // 2 means z
+                    }
+                }
+            }
+        }
+    }
+
+    this->log_.info("DfCalcGridX::energyGradient() end");
+    // Fxc1.save("Fxc1.mat");
+    // Fxc2.save("Fxc2.mat");
+    return Fxc1 + Fxc2;
+}
+
+TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
+                                     DfFunctional_GGA* pFunctional)
+{
+    this->log_.info("DfCalcGridX::energyGradient() start");
+    const int numOfAtoms = this->m_nNumOfAtoms;
+    const int numOfAOs = this->m_nNumOfAOs;
+    const TlOrbitalInfo orbitalInfo((*this->pPdfParam_)["coordinates"],
+                                    (*this->pPdfParam_)["basis_set"]);
+    const double densityCutOffValue = this->m_densityCutOffValueA;
+    const double cutOffValue = this->m_inputedCutoffThreshold;
+
+    DfGenerateGrid dfGenGrid(this->pPdfParam_);
+
+    TlMatrix gammaX(numOfAOs, numOfAOs);
+    TlMatrix gammaY(numOfAOs, numOfAOs);
+    TlMatrix gammaZ(numOfAOs, numOfAOs);
+
+    double ene_xc = 0.0;
+    this->log_.info("DfCalcGridX::energyGradient() Fxc1");
+    TlMatrix Fxc1(numOfAtoms, 3); // weight derivative term
+    for (int atomIndexA = 0; atomIndexA < numOfAtoms; ++atomIndexA) {
+        std::vector<TlPosition> grids;
+        std::vector<double> singleCenterWeights;
+        std::vector<double> partitioningWeights;
+        dfGenGrid.getGrids(atomIndexA, &grids, &singleCenterWeights, &partitioningWeights);
+
+        const int numOfGrids = grids.size();
+        assert(static_cast<int>(singleCenterWeights.size()) == numOfGrids);
+        assert(static_cast<int>(partitioningWeights.size()) == numOfGrids);
+
+        TlMatrix tmpGammaX(numOfAOs, numOfAOs);
+        TlMatrix tmpGammaY(numOfAOs, numOfAOs);
+        TlMatrix tmpGammaZ(numOfAOs, numOfAOs);
+        this->log_.info(TlUtils::format("DfCalcGridX::energyGradient() atomindex %d/%d", atomIndexA, numOfAtoms));
+        for (int gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
+            const TlPosition gridPosition = grids[gridIndex];
+            const double singleCenterWeight = singleCenterWeights[gridIndex];
+            const double partitioningWeight = partitioningWeights[gridIndex];
+            
+            // calc AO
+            std::vector<WFGrid> AO_values;
+            std::vector<WFGrid> dAO_dx_values;
+            std::vector<WFGrid> dAO_dy_values;
+            std::vector<WFGrid> dAO_dz_values;
+            this->getPhiTable(gridPosition, AO_values, dAO_dx_values, dAO_dy_values, dAO_dz_values);
+
+            std::vector<WFGrid> d2AO_dxdx_values;
+            std::vector<WFGrid> d2AO_dxdy_values;
+            std::vector<WFGrid> d2AO_dxdz_values;
+            std::vector<WFGrid> d2AO_dydy_values;
+            std::vector<WFGrid> d2AO_dydz_values;
+            std::vector<WFGrid> d2AO_dzdz_values;
+            this->getDerivative2AOs(gridPosition,
+                                    &d2AO_dxdx_values, &d2AO_dxdy_values, &d2AO_dxdz_values,
+                                    &d2AO_dydy_values, &d2AO_dydz_values, &d2AO_dzdz_values);
+            
+            // calc rho
+            double rhoA = 0.0;
+            double gradRhoAX = 0.0;
+            double gradRhoAY = 0.0;
+            double gradRhoAZ = 0.0;
+            this->getRhoAtGridPoint(P_A, AO_values, dAO_dx_values, dAO_dy_values, dAO_dz_values,
+                                    &rhoA, &gradRhoAX, &gradRhoAY, &gradRhoAZ);
+            const double& rhoB = rhoA;
+            const double& gradRhoBX = gradRhoAX;
+            const double& gradRhoBY = gradRhoAY;
+            const double& gradRhoBZ = gradRhoAZ;
+            
+            if (rhoA > densityCutOffValue) {
+                const double gammaAA = gradRhoAX*gradRhoAX + gradRhoAY*gradRhoAY + gradRhoAZ*gradRhoAZ;
+                const double& gammaAB = gammaAA;
+                const double& gammaBB = gammaAA;
+
+                // calc energy
+                const double ene = pFunctional->getFunctional(rhoA, rhoB, gammaAA, gammaAB, gammaBB);
+                ene_xc += singleCenterWeight * partitioningWeight * ene;
+            
+                // calc func derivative
+                double dF_dRhoA = 0.0;
+                double dF_dRhoB = 0.0;
+                double dF_dGammaAA = 0.0;
+                double dF_dGammaAB = 0.0;
+                double dF_dGammaBB = 0.0;
+                pFunctional->getDerivativeFunctional(rhoA, rhoB,
+                                                     gammaAA, gammaAB, gammaBB,
+                                                     &dF_dRhoA, &dF_dRhoB,
+                                                     &dF_dGammaAA, &dF_dGammaAB, &dF_dGammaBB);
+                
+                // functional derivative term(LDA)
+                const double w = partitioningWeight * singleCenterWeight;
+
+                const double wAi_dF_dRhoA = w * dF_dRhoA;
+                const int numOf_AO_values = AO_values.size();
+                const int numOf_dAO_dx_values = dAO_dx_values.size();
+                const int numOf_dAO_dy_values = dAO_dy_values.size();
+                const int numOf_dAO_dz_values = dAO_dz_values.size();
+                for (int i = 0; i < numOf_AO_values; ++i) {
+                    const double AO_value = AO_values[i].value;
+                    const index_type q = AO_values[i].index;
+                    const double coef = wAi_dF_dRhoA * AO_value;
+                    
+                    for (int j = 0; j < numOf_dAO_dx_values; ++j) {
+                        const index_type p = dAO_dx_values[j].index;
+                        tmpGammaX(p, q) += coef * dAO_dx_values[j].value;
+                    }
+                    for (int j = 0; j < numOf_dAO_dy_values; ++j) {
+                        const index_type p = dAO_dy_values[j].index;
+                        tmpGammaY(p, q) += coef * dAO_dy_values[j].value;
+                    }
+                    for (int j = 0; j < numOf_dAO_dz_values; ++j) {
+                        const index_type p = dAO_dz_values[j].index;
+                        tmpGammaZ(p, q) += coef * dAO_dz_values[j].value;
+                    }
+                }
+
+                // functional derivative term(GGA) 
+                {
+                    const double coef_ax = 2.0 * dF_dGammaAA * gradRhoAX + dF_dGammaAB * gradRhoBX;
+                    const double coef_ay = 2.0 * dF_dGammaAA * gradRhoAY + dF_dGammaAB * gradRhoBY;
+                    const double coef_az = 2.0 * dF_dGammaAA * gradRhoAZ + dF_dGammaAB * gradRhoBZ;
+
+                    const int numOf_d2AO_dxdx_values = d2AO_dxdx_values.size();
+                    const int numOf_d2AO_dxdy_values = d2AO_dxdy_values.size();
+                    const int numOf_d2AO_dxdz_values = d2AO_dxdz_values.size();
+                    const int numOf_d2AO_dydy_values = d2AO_dydy_values.size();
+                    const int numOf_d2AO_dydz_values = d2AO_dydz_values.size();
+                    const int numOf_d2AO_dzdz_values = d2AO_dzdz_values.size();
+
+                    TlMatrix Xx(numOfAOs, numOfAOs);
+                    TlMatrix Xy(numOfAOs, numOfAOs);
+                    TlMatrix Xz(numOfAOs, numOfAOs);
+                    for (int j = 0; j < numOf_AO_values; ++j) {
+                        const int v = AO_values[j].index;
+                        const double v_v = AO_values[j].value;
+
+                        for (int i = 0; i < numOf_d2AO_dxdx_values; ++i) {
+                            const int u = d2AO_dxdx_values[i].index;
+                            const double v_u = d2AO_dxdx_values[i].value;
+                            Xx(u, v) += coef_ax * v_u * v_v;
+                        }
+                        for (int i = 0; i < numOf_d2AO_dxdy_values; ++i) {
+                            const int u = d2AO_dxdy_values[i].index;
+                            const double v_u = d2AO_dxdy_values[i].value;
+                            Xx(u, v) += coef_ay * v_u * v_v;
+                        }
+                        for (int i = 0; i < numOf_d2AO_dxdz_values; ++i) {
+                            const int u = d2AO_dxdz_values[i].index;
+                            const double v_u = d2AO_dxdz_values[i].value;
+                            Xx(u, v) += coef_az * v_u * v_v;
+                        }
+
+                        for (int i = 0; i < numOf_d2AO_dxdy_values; ++i) {
+                            const int u = d2AO_dxdy_values[i].index;
+                            const double v_u = d2AO_dxdy_values[i].value;
+                            Xy(u, v) += coef_ax * v_u * v_v;
+                        }
+                        for (int i = 0; i < numOf_d2AO_dydy_values; ++i) {
+                            const int u = d2AO_dydy_values[i].index;
+                            const double v_u = d2AO_dydy_values[i].value;
+                            Xy(u, v) += coef_ay * v_u * v_v;
+                        }
+                        for (int i = 0; i < numOf_d2AO_dydz_values; ++i) {
+                            const int u = d2AO_dydz_values[i].index;
+                            const double v_u = d2AO_dydz_values[i].value;
+                            Xy(u, v) += coef_az * v_u * v_v;
+                        }
+
+                        for (int i = 0; i < numOf_d2AO_dxdz_values; ++i) {
+                            const int u = d2AO_dxdz_values[i].index;
+                            const double v_u = d2AO_dxdz_values[i].value;
+                            Xz(u, v) += coef_ax * v_u * v_v;
+                        }
+                        for (int i = 0; i < numOf_d2AO_dydz_values; ++i) {
+                            const int u = d2AO_dydz_values[i].index;
+                            const double v_u = d2AO_dydz_values[i].value;
+                            Xz(u, v) += coef_ay * v_u * v_v;
+                        }
+                        for (int i = 0; i < numOf_d2AO_dzdz_values; ++i) {
+                            const int u = d2AO_dzdz_values[i].index;
+                            const double v_u = d2AO_dzdz_values[i].value;
+                            Xz(u, v) += coef_az * v_u * v_v;
+                        }
+                    }
+
+                    for (int i = 0; i < numOf_dAO_dx_values; ++i) {
+                        const int u = dAO_dx_values[i].index;
+                        const double v_u = dAO_dx_values[i].value;
+
+                        for (int j = 0; j < numOf_dAO_dx_values; ++j) {
+                            const int v = dAO_dx_values[j].index;
+                            const double v_v = dAO_dx_values[j].value;
+                            Xx(u, v) += coef_ax * v_u * v_v;
+                        }
+                        for (int j = 0; j < numOf_dAO_dy_values; ++j) {
+                            const int v = dAO_dy_values[j].index;
+                            const double v_v = dAO_dy_values[j].value;
+                            Xx(u, v) += coef_ay * v_u * v_v;
+                        }
+                        for (int j = 0; j < numOf_dAO_dz_values; ++j) {
+                            const int v = dAO_dz_values[j].index;
+                            const double v_v = dAO_dz_values[j].value;
+                            Xx(u, v) += coef_az * v_u * v_v;
+                        }
+                    }
+
+                    for (int i = 0; i < numOf_dAO_dy_values; ++i) {
+                        const int u = dAO_dy_values[i].index;
+                        const double v_u = dAO_dy_values[i].value;
+
+                        for (int j = 0; j < numOf_dAO_dx_values; ++j) {
+                            const int v = dAO_dx_values[j].index;
+                            const double v_v = dAO_dx_values[j].value;
+                            Xy(u, v) += coef_ax * v_u * v_v;
+                        }
+                        for (int j = 0; j < numOf_dAO_dy_values; ++j) {
+                            const int v = dAO_dy_values[j].index;
+                            const double v_v = dAO_dy_values[j].value;
+                            Xy(u, v) += coef_ay * v_u * v_v;
+                        }
+                        for (int j = 0; j < numOf_dAO_dz_values; ++j) {
+                            const int v = dAO_dz_values[j].index;
+                            const double v_v = dAO_dz_values[j].value;
+                            Xy(u, v) += coef_az * v_u * v_v;
+                        }
+                    }
+
+                    for (int i = 0; i < numOf_dAO_dz_values; ++i) {
+                        const int u = dAO_dz_values[i].index;
+                        const double v_u = dAO_dz_values[i].value;
+
+                        for (int j = 0; j < numOf_dAO_dx_values; ++j) {
+                            const int v = dAO_dx_values[j].index;
+                            const double v_v = dAO_dx_values[j].value;
+                            Xz(u, v) += coef_ax * v_u * v_v;
+                        }
+                        for (int j = 0; j < numOf_dAO_dy_values; ++j) {
+                            const int v = dAO_dy_values[j].index;
+                            const double v_v = dAO_dy_values[j].value;
+                            Xz(u, v) += coef_ay * v_u * v_v;
+                        }
+                        for (int j = 0; j < numOf_dAO_dz_values; ++j) {
+                            const int v = dAO_dz_values[j].index;
+                            const double v_v = dAO_dz_values[j].value;
+                            Xz(u, v) += coef_az * v_u * v_v;
+                        }
+                    }
+
+                    {
+                        tmpGammaX += w * Xx;
+                        tmpGammaY += w * Xy;
+                        tmpGammaZ += w * Xz;
                     }
                 }
                 

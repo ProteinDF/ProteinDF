@@ -90,6 +90,8 @@ public:
 
     TlMatrix energyGradient(const TlSymmetricMatrix& P_A,
                             DfFunctional_LDA* pFunctional);
+    TlMatrix energyGradient(const TlSymmetricMatrix& P_A,
+                            DfFunctional_GGA* pFunctional);
     
 protected:
     // void calcForceFromXC(const TlSymmetricMatrix& P,
@@ -158,12 +160,18 @@ protected:
     double getPrefactor(int nType, const TlPosition& pos);
     void getPrefactorForDerivative(int nType, double alpha, const TlPosition& pos,
                                    double* pPrefactorX, double* pPrefactorY, double* pPrefactorZ);
+    void getPrefactorForSecondDerivative(const int nType, const double alpha, const TlPosition& pos,
+                                         double* pXX, double* pXY, double* pXZ,
+                                         double* pYY, double* pYZ, double* pZZ);
 
     /// グリッド点における波動関数の値、勾配の値を求める
-    void getPhiTable(const TlPosition& pos, std::vector<WFGrid>& aPhi);
+    void getPhiTable(const TlPosition& pos,
+                     std::vector<WFGrid>& aPhi);
 
-    void getPhiTable(const TlPosition& pos, std::vector<WFGrid>& aPhi,
+    void getPhiTable(const TlPosition& pos,
+                     std::vector<WFGrid>& aPhi,
                      std::vector<WFGrid>& aGradPhiX, std::vector<WFGrid>& aGradPhiY, std::vector<WFGrid>& aGradPhiZ);
+
     void getPhiTable(const TlPosition& pos,
                      int startOrbIndex, int endOrbIndex,
                      std::vector<WFGrid>& aPhi);
@@ -184,6 +192,24 @@ protected:
                      std::vector<WFGrid>* pGradPhiXs,
                      std::vector<WFGrid>* pGradPhiYs,
                      std::vector<WFGrid>* pGradPhiZs);
+
+    void getDerivative2AOs(const TlPosition& gridPosition,
+                           std::vector<WFGrid>* p_d2AO_dxdx_values,
+                           std::vector<WFGrid>* p_d2AO_dxdy_values,
+                           std::vector<WFGrid>* p_d2AO_dxdz_values,
+                           std::vector<WFGrid>* p_d2AO_dydy_values,
+                           std::vector<WFGrid>* p_d2AO_dydz_values,
+                           std::vector<WFGrid>* p_d2AO_dzdz_values);
+    void getDerivative2AOs(const TlPosition& gridPosition,
+                           const int start_AO_index,
+                           const int end_AO_index,
+                           std::vector<WFGrid>* p_d2AO_dxdx_values,
+                           std::vector<WFGrid>* p_d2AO_dxdy_values,
+                           std::vector<WFGrid>* p_d2AO_dxdz_values,
+                           std::vector<WFGrid>* p_d2AO_dydy_values,
+                           std::vector<WFGrid>* p_d2AO_dydz_values,
+                           std::vector<WFGrid>* p_d2AO_dzdz_values);
+
 
     
     void getRhoAtGridPoint(const TlMatrixObject& P,
