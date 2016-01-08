@@ -681,7 +681,8 @@ void DfCalcGridX_Parallel::getPhiTable(const TlPosition& gridPosition,
         const TlPosition pos = gridPosition - this->m_tlOrbInfo.getPosition(AO);
         const double distance2 = pos.squareDistanceFrom();
         const int basisType = this->m_tlOrbInfo.getBasisType(AO);
-        const double prefactor = DfCalcGridX::getPrefactor(basisType, pos);
+        double prefactor = 0.0;
+        DfCalcGridX::getPrefactor(basisType, pos, &prefactor);
         const int contraction = this->m_tlOrbInfo.getCgtoContraction(AO);
 
         for (int PGTO = 0; PGTO < contraction; ++PGTO) {
@@ -744,7 +745,8 @@ void DfCalcGridX_Parallel::getPhiTable(const TlPosition& gridPosition,
         const TlPosition pos = gridPosition - this->m_tlOrbInfo.getPosition(AO);
         const double distance2 = pos.squareDistanceFrom();
         const int basisType = this->m_tlOrbInfo.getBasisType(AO);
-        const double prefactor = DfCalcGridX::getPrefactor(basisType, pos);
+        double prefactor = 0.0;
+        DfCalcGridX::getPrefactor(basisType, pos, &prefactor);
         const int contraction = this->m_tlOrbInfo.getCgtoContraction(AO);
 
         for (int PGTO = 0; PGTO < contraction; ++PGTO) {

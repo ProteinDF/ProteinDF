@@ -2213,40 +2213,39 @@ void DfGenerateGrid::getGrids_sub(const int atomIndex,
 TlVector DfGenerateGrid::JGP_nablaB_omegaA(const int atomIndexA, const int atomIndexB,
                                            const TlPosition& gridpoint)
 {
-    // std::cerr << TlUtils::format("DfGenerateGrid::JGP_nablaB_omegaA(%d, %d)", atomIndexA, atomIndexB) << std::endl;
-    const int numOfAtoms = this->m_nNumOfAtoms;
-    double PA = 0.0;
-    double Z = 0.0;
-    for (int i = 0; i < numOfAtoms; ++i) {
-        const double Ps = this->Ps_uij(i, gridpoint);
-        if (i == atomIndexA) {
-            PA = Ps;
+    TlVector nablaB_omegaA(3);
+    if (atomIndexA != atomIndexB) {
+        const int numOfAtoms = this->m_nNumOfAtoms;
+        double PA = 0.0;
+        double Z = 0.0;
+        for (int i = 0; i < numOfAtoms; ++i) {
+            const double Ps = this->Ps_uij(i, gridpoint);
+            if (i == atomIndexA) {
+                PA = Ps;
+            }
+            Z += Ps;
         }
-        Z += Ps;
-    }
-    const double invZ = 1.0 / Z;
-
-    TlVector nablaB_PA(3);
-    if (atomIndexA == atomIndexB) {
-        nablaB_PA = this->JGP_nablaA_PA(atomIndexA, gridpoint);
-    } else {
-        nablaB_PA = this->JGP_nablaB_PA(atomIndexA, atomIndexB, gridpoint);
-    }
-
-    TlVector nablaB_Z(3);
-    for (int i = 0; i < numOfAtoms; ++i) {
-        TlVector nablaB_Pi(3);
-        if (i == atomIndexB) {
-            nablaB_Pi = this->JGP_nablaA_PA(atomIndexB, gridpoint);
-        } else {
-            nablaB_Pi = this->JGP_nablaB_PA(i, atomIndexB, gridpoint);
+        const double invZ = 1.0 / Z;
+        
+        const TlVector nablaB_PA = this->JGP_nablaB_PA(atomIndexA, atomIndexB, gridpoint); 
+        
+        TlVector nablaB_Z(3);
+        for (int i = 0; i < numOfAtoms; ++i) {
+            TlVector nablaB_Pi(3);
+            if (i == atomIndexB) {
+                nablaB_Pi = this->JGP_nablaA_PA(atomIndexB, gridpoint);
+            } else {
+                nablaB_Pi = this->JGP_nablaB_PA(i, atomIndexB, gridpoint);
+            }
+            nablaB_Z += nablaB_Pi;
         }
-        nablaB_Z += nablaB_Pi;
+        
+        nablaB_omegaA = (nablaB_PA - PA * invZ * nablaB_Z) * invZ;
     }
     
-    const TlVector nablaB_omegaA = (nablaB_PA - PA * invZ * nablaB_Z) * invZ;
     return nablaB_omegaA;
 }
+
 
 // B.G.John, et.al., J. Chem. Phys., 98, 5612 (1993).
 // eq. B8
@@ -2306,6 +2305,7 @@ TlVector DfGenerateGrid::JGP_nablaB_PA(const int atomIndexA,
 double DfGenerateGrid::JGP_t(const double myu)
 {
     static const double coef = - 27.0 / 16.0;
+    // static const double coef = - 81.0 / 32.0;
     double answer = 0.0;
 
     const double p1 = this->Becke_f1(myu); 

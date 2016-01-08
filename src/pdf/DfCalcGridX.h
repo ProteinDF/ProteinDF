@@ -157,7 +157,7 @@ protected:
                    const double coef, const double cutoffValue,
                    TlMatrixObject* pF);
 
-    double getPrefactor(int nType, const TlPosition& pos);
+    void getPrefactor(int nType, const TlPosition& pos, double* pPrefactor);
     void getPrefactorForDerivative(int nType, double alpha, const TlPosition& pos,
                                    double* pPrefactorX, double* pPrefactorY, double* pPrefactorZ);
     void getPrefactorForSecondDerivative(const int nType, const double alpha, const TlPosition& pos,
@@ -193,23 +193,38 @@ protected:
                      std::vector<WFGrid>* pGradPhiYs,
                      std::vector<WFGrid>* pGradPhiZs);
 
-    void getDerivative2AOs(const TlPosition& gridPosition,
-                           std::vector<WFGrid>* p_d2AO_dxdx_values,
-                           std::vector<WFGrid>* p_d2AO_dxdy_values,
-                           std::vector<WFGrid>* p_d2AO_dxdz_values,
-                           std::vector<WFGrid>* p_d2AO_dydy_values,
-                           std::vector<WFGrid>* p_d2AO_dydz_values,
-                           std::vector<WFGrid>* p_d2AO_dzdz_values);
-    void getDerivative2AOs(const TlPosition& gridPosition,
-                           const int start_AO_index,
-                           const int end_AO_index,
-                           std::vector<WFGrid>* p_d2AO_dxdx_values,
-                           std::vector<WFGrid>* p_d2AO_dxdy_values,
-                           std::vector<WFGrid>* p_d2AO_dxdz_values,
-                           std::vector<WFGrid>* p_d2AO_dydy_values,
-                           std::vector<WFGrid>* p_d2AO_dydz_values,
-                           std::vector<WFGrid>* p_d2AO_dzdz_values);
-
+    void getAOs(const TlPosition& gridPosition,
+                std::vector<double>* pAO_values);
+    void getAOs(const TlPosition& gridPosition,
+                const int start_AO_index,
+                const int end_AO_index,
+                std::vector<double>* pAO_values);
+    void getDAOs(const TlPosition& gridPosition,
+                 std::vector<double>* p_dAO_dx_values,
+                 std::vector<double>* p_dAO_dy_values,
+                 std::vector<double>* p_dAO_dz_values);
+    void getDAOs(const TlPosition& gridPosition,
+                 const int start_AO_index,
+                 const int end_AO_index,
+                 std::vector<double>* p_dAO_dx_values,
+                 std::vector<double>* p_dAO_dy_values,
+                 std::vector<double>* p_dAO_dz_values);
+    void getD2AOs(const TlPosition& gridPosition,
+                  std::vector<double>* p_d2AO_dxdx_values,
+                  std::vector<double>* p_d2AO_dxdy_values,
+                  std::vector<double>* p_d2AO_dxdz_values,
+                  std::vector<double>* p_d2AO_dydy_values,
+                  std::vector<double>* p_d2AO_dydz_values,
+                  std::vector<double>* p_d2AO_dzdz_values);
+    void getD2AOs(const TlPosition& gridPosition,
+                  const int start_AO_index,
+                  const int end_AO_index,
+                  std::vector<double>* p_d2AO_dxdx_values,
+                  std::vector<double>* p_d2AO_dxdy_values,
+                  std::vector<double>* p_d2AO_dxdz_values,
+                  std::vector<double>* p_d2AO_dydy_values,
+                  std::vector<double>* p_d2AO_dydz_values,
+                  std::vector<double>* p_d2AO_dzdz_values);
 
     
     void getRhoAtGridPoint(const TlMatrixObject& P,
@@ -220,6 +235,17 @@ protected:
                            const std::vector<WFGrid>& aGradPhiZ,
                            double* pRhoA, double* pGradRhoAX, double* pGradRhoAY, double* pGradRhoAZ);
 
+    // new code
+    void getRhoAtGridPoint(const TlMatrixObject& PA,
+                           const std::vector<double>& AO_values,
+                           double* pRhoA);
+    void getGradRhoAtGridPoint(const TlMatrixObject& PA,
+                               const std::vector<double>& AO_values,
+                               const std::vector<double>& dAO_dx_values,
+                               const std::vector<double>& dAO_dy_values,
+                               const std::vector<double>& dAO_dz_values,
+                               double* pGradRhoAX, double* pGradRhoAY, double* pGradRhoAZ);
+    
 protected:
     void build_XC_Matrix(const double roundF_roundRhoA,
                          const std::vector<WFGrid>& phi,

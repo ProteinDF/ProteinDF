@@ -414,7 +414,7 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
     }
     
     // RKSなので2倍
-    Fxc *= 2.0;
+    // Fxc *= 2.0;
     
     // Fxc *= -1.0;
 
