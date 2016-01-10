@@ -367,7 +367,7 @@ void DfForce::calcForceFromCoulomb_RIJ(const RUN_TYPE runType)
 void DfForce::calcForceFromPureXC(RUN_TYPE runType)
 {
     const int iteration = this->m_nIteration;
-    const int numOfAOs = this->m_nNumOfAOs;
+    // const int numOfAOs = this->m_nNumOfAOs;
     const int numOfAtoms = this->m_nNumOfAtoms;
 
     TlMatrix Fxc(numOfAtoms, 3);

@@ -86,10 +86,6 @@ public:
                             DfFunctional_GGA* pFunctional);
     
 protected:
-    // void calcForceFromXC(const TlSymmetricMatrix& P,
-    //                      DfFunctional_GGA* pFunctional,
-    //                      TlVector* pFx, TlVector* pFy, TlVector* pFz);
-
     TlMatrix selectGridMatrixByAtom(const TlMatrix& globalGridMat,
                                     const int atomIndex);
     
@@ -98,36 +94,6 @@ protected:
 
     virtual void defineCutOffValues(const TlSymmetricMatrix& PA,
                                     const TlSymmetricMatrix& PB);
-
-    // void buildFock(double dRhoA,
-    //                const std::vector<WFGrid>& aPhi,
-    //                DfFunctional_LDA* pFunctional, double dWeight,
-    //                TlMatrixObject* pF);
-
-    // void buildFock(double dRhoA, double dRhoB,
-    //                const std::vector<WFGrid>& aPhi,
-    //                DfFunctional_LDA* pFunctional, double dWeight,
-    //                TlMatrixObject* pFA, TlMatrixObject* FB);
-
-    // void buildFock(double dRhoA,
-    //                double dGradRhoAX, double dGradRhoAY, double dGradRhoAZ,
-    //                const std::vector<WFGrid>& aPhi,
-    //                const std::vector<WFGrid>& aGradPhiX,
-    //                const std::vector<WFGrid>& aGradPhiY,
-    //                const std::vector<WFGrid>& aGradPhiZ,
-    //                DfFunctional_GGA* pFunctional, double dWeight,
-    //                TlMatrixObject* pF);
-
-    // void buildFock(double dRhoA,
-    //                double dGradRhoAX, double dGradRhoAY, double dGradRhoAZ,
-    //                double dRhoB,
-    //                double dGradRhoBX, double dGradRhoBY, double dGradRhoBZ,
-    //                const std::vector<WFGrid>& aPhi,
-    //                const std::vector<WFGrid>& aGradPhiX,
-    //                const std::vector<WFGrid>& aGradPhiY,
-    //                const std::vector<WFGrid>& aGradPhiZ,
-    //                DfFunctional_GGA* pFunctional, double dWeight,
-    //                TlMatrixObject* pFA, TlMatrixObject* pFB);
 
     /// グリッド点における波動関数値配列(std::vector<WFGrid>)1つから
     /// 交換相関項(Fxc)を求める。
@@ -156,48 +122,10 @@ protected:
                                          double* pXX, double* pXY, double* pXZ,
                                          double* pYY, double* pYZ, double* pZZ);
 
-    /// グリッド点における波動関数の値、勾配の値を求める
-    void getPhiTable(const TlPosition& pos,
-                     std::vector<WFGrid>& aPhi);
-
-    void getPhiTable(const TlPosition& pos,
-                     std::vector<WFGrid>& aPhi,
-                     std::vector<WFGrid>& aGradPhiX, std::vector<WFGrid>& aGradPhiY, std::vector<WFGrid>& aGradPhiZ);
-
-    void getPhiTable(const TlPosition& pos,
-                     int startOrbIndex, int endOrbIndex,
-                     std::vector<WFGrid>& aPhi);
-    void getPhiTable(const TlPosition& pos,
-                     int startOrbIndex, int endOrbIndex,
-                     std::vector<WFGrid>& aPhi,
-                     std::vector<WFGrid>& aGradPhiX, std::vector<WFGrid>& aGradPhiY, std::vector<WFGrid>& aGradPhiZ);
-
-
-    /// グリッド点における波動関数の値、勾配の値を求める
-    void getPhiTable(const TlPosition& gridPosition,
-                     const std::vector<int>& AO_list,
-                     std::vector<WFGrid>* pPhis);
-    void getPhiTable(const TlPosition& gridPosition,
-                     const index_type* pAO_List,
-                     const std::size_t AO_ListSize,
-                     std::vector<WFGrid>* pPhis,
-                     std::vector<WFGrid>* pGradPhiXs,
-                     std::vector<WFGrid>* pGradPhiYs,
-                     std::vector<WFGrid>* pGradPhiZs);
-
+protected:
     void getAOs(const TlPosition& gridPosition,
                 std::vector<double>* pAO_values);
-    void getAOs(const TlPosition& gridPosition,
-                const int start_AO_index,
-                const int end_AO_index,
-                std::vector<double>* pAO_values);
     void getDAOs(const TlPosition& gridPosition,
-                 std::vector<double>* p_dAO_dx_values,
-                 std::vector<double>* p_dAO_dy_values,
-                 std::vector<double>* p_dAO_dz_values);
-    void getDAOs(const TlPosition& gridPosition,
-                 const int start_AO_index,
-                 const int end_AO_index,
                  std::vector<double>* p_dAO_dx_values,
                  std::vector<double>* p_dAO_dy_values,
                  std::vector<double>* p_dAO_dz_values);
@@ -208,73 +136,57 @@ protected:
                   std::vector<double>* p_d2AO_dydy_values,
                   std::vector<double>* p_d2AO_dydz_values,
                   std::vector<double>* p_d2AO_dzdz_values);
-    void getD2AOs(const TlPosition& gridPosition,
-                  const int start_AO_index,
-                  const int end_AO_index,
-                  std::vector<double>* p_d2AO_dxdx_values,
-                  std::vector<double>* p_d2AO_dxdy_values,
-                  std::vector<double>* p_d2AO_dxdz_values,
-                  std::vector<double>* p_d2AO_dydy_values,
-                  std::vector<double>* p_d2AO_dydz_values,
-                  std::vector<double>* p_d2AO_dzdz_values);
+
+protected:
+    void getAOs_core(const TlPosition& gridPosition,
+                const std::vector<index_type>& AO_indeces,
+                std::vector<double>* pAO_values);
+    void getDAOs_core(const TlPosition& gridPosition,
+                      const std::vector<index_type>& AO_indeces,
+                      std::vector<double>* p_dAO_dx_values,
+                      std::vector<double>* p_dAO_dy_values,
+                      std::vector<double>* p_dAO_dz_values);
+    void getD2AOs_core(const TlPosition& gridPosition,
+                       const std::vector<index_type>& AO_indeces,
+                       std::vector<double>* p_d2AO_dxdx_values,
+                       std::vector<double>* p_d2AO_dxdy_values,
+                       std::vector<double>* p_d2AO_dxdz_values,
+                       std::vector<double>* p_d2AO_dydy_values,
+                       std::vector<double>* p_d2AO_dydz_values,
+                       std::vector<double>* p_d2AO_dzdz_values);
 
     
-    void getRhoAtGridPoint(const TlMatrixObject& P,
-                           const std::vector<WFGrid>& aPhi, double* pGridRhoA);
-
-    void getRhoAtGridPoint(const TlMatrixObject& P, const std::vector<WFGrid>& aPhi,
-                           const std::vector<WFGrid>& aGradPhiX, const std::vector<WFGrid>& aGradPhiY,
-                           const std::vector<WFGrid>& aGradPhiZ,
-                           double* pRhoA, double* pGradRhoAX, double* pGradRhoAY, double* pGradRhoAZ);
-
-    // new code
+protected:
+    // for symmetric density matrix
     void getRhoAtGridPoint(const TlMatrixObject& PA,
                            const std::vector<double>& AO_values,
                            double* pRhoA);
+    // for asymmetric density matrix
+    void getRhoAtGridPoint(const TlMatrixObject& PA,
+                           const std::vector<double>& row_AO_values,
+                           const std::vector<double>& col_AO_values,
+                           double* pRhoA);
+
+    // for symmetric density matrix
     void getGradRhoAtGridPoint(const TlMatrixObject& PA,
                                const std::vector<double>& AO_values,
                                const std::vector<double>& dAO_dx_values,
                                const std::vector<double>& dAO_dy_values,
                                const std::vector<double>& dAO_dz_values,
                                double* pGradRhoAX, double* pGradRhoAY, double* pGradRhoAZ);
+
+    // for asymmetric density matrix
+    void getGradRhoAtGridPoint(const TlMatrixObject& PA,
+                               const std::vector<double>& row_AO_values,
+                               const std::vector<double>& row_dAO_dx_values,
+                               const std::vector<double>& row_dAO_dy_values,
+                               const std::vector<double>& row_dAO_dz_values,
+                               const std::vector<double>& col_AO_values,
+                               const std::vector<double>& col_dAO_dx_values,
+                               const std::vector<double>& col_dAO_dy_values,
+                               const std::vector<double>& col_dAO_dz_values,
+                               double* pGradRhoAX, double* pGradRhoAY, double* pGradRhoAZ);
     
-protected:
-    // void build_XC_Matrix(const double roundF_roundRhoA,
-    //                      const std::vector<WFGrid>& phi,
-    //                      DfFunctional_LDA* pFunctional, const double weight,
-    //                      TlMatrixObject* pF_A);
-    // void build_XC_Matrix(const double roundF_roundRhoA,
-    //                      const double roundF_roundGammaAA,
-    //                      const double roundF_roundGammaAB,
-    //                      const double gradRhoAX, const double gradRhoAY, const double gradRhoAZ,
-    //                      const std::vector<WFGrid>& phi,
-    //                      const std::vector<WFGrid>& gradPhiX,
-    //                      const std::vector<WFGrid>& gradPhiY,
-    //                      const std::vector<WFGrid>& gradPhiZ,
-    //                      DfFunctional_GGA* pFunctional,
-    //                      const double weight,
-    //                      TlMatrixObject* pF_A);
-
-    // experimental code -------------------------------------------------------
-    // void calcRhoVals_LDA(const std::vector<index_type>& P_rowIndexes,
-    //                      const std::vector<index_type>& P_colIndexes,
-    //                      const TlMatrix& P,
-    //                      TlMatrix* pGridMatrix);
-    // void calcRhoVals_GGA(const std::vector<index_type>& P_rowIndexes,
-    //                      const std::vector<index_type>& P_colIndexes,
-    //                      const TlMatrix& P,
-    //                      TlMatrix* pGridMatrix);
-    // void getWaveFunctionValues(const std::vector<index_type>& AO_indexes,
-    //                            const TlPosition& gridPosition,
-    //                            TlMatrix* pWF);
-    // void getWaveFunctionValues(const std::vector<index_type>& AO_indexes,
-    //                            const TlPosition& gridPosition,
-    //                            TlMatrix* pWF,
-    //                            TlMatrix* pGradWF_X,
-    //                            TlMatrix* pGradWF_Y,
-    //                            TlMatrix* pGradWF_Z);
-
-    // NEW IMPLIMENT -----------------------------------------------------------
 public:
     double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
                                        DfFunctional_LDA* pFunctional,
@@ -325,16 +237,16 @@ protected:
     virtual void calcRho_GGA(const TlSymmetricMatrix& P_A,
                              const TlSymmetricMatrix& P_B);
 
-    void calcRho_LDA(const TlSymmetricMatrix& P_A,
-                     TlMatrix* pGridMat);
-    void calcRho_LDA(const TlSymmetricMatrix& P_A,
-                     const TlSymmetricMatrix& P_B,
-                     TlMatrix* pGridMat);
-    void calcRho_GGA(const TlSymmetricMatrix& P_A,
-                     TlMatrix* pGridMat);
-    void calcRho_GGA(const TlSymmetricMatrix& P_A,
-                     const TlSymmetricMatrix& P_B,
-                     TlMatrix* pGridMat);
+    void calcRho_LDA_part(const TlSymmetricMatrix& P_A,
+                          TlMatrix* pGridMat);
+    void calcRho_LDA_part(const TlSymmetricMatrix& P_A,
+                          const TlSymmetricMatrix& P_B,
+                          TlMatrix* pGridMat);
+    void calcRho_GGA_part(const TlSymmetricMatrix& P_A,
+                          TlMatrix* pGridMat);
+    void calcRho_GGA_part(const TlSymmetricMatrix& P_A,
+                          const TlSymmetricMatrix& P_B,
+                          TlMatrix* pGridMat);
 
     virtual double buildVxc(DfFunctional_LDA* pFunctional,
                             TlSymmetricMatrix* pF_A);

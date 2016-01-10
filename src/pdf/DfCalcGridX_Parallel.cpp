@@ -161,32 +161,44 @@ double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix
 void DfCalcGridX_Parallel::calcRho_LDA(const TlSymmetricMatrix& P_A)
 {
     TlMatrix gridMat = this->distributeGridMatrix(this->m_nIteration -1);
-    DfCalcGridX::calcRho_LDA(P_A, &gridMat);
-    this->gatherGridMatrix(gridMat);
+
+    this->calcRho_LDA_part(P_A, &gridMat);
+
+    this->gatherAndSaveGridMatrix(gridMat);
 }
+
 
 void DfCalcGridX_Parallel::calcRho_LDA(const TlSymmetricMatrix& P_A,
                                        const TlSymmetricMatrix& P_B)
 {
     TlMatrix gridMat = this->distributeGridMatrix(this->m_nIteration -1);
-    DfCalcGridX::calcRho_LDA(P_A, P_B, &gridMat);
-    this->gatherGridMatrix(gridMat);
+
+    this->calcRho_LDA_part(P_A, P_B, &gridMat);
+
+    this->gatherAndSaveGridMatrix(gridMat);
 }
+
 
 void DfCalcGridX_Parallel::calcRho_GGA(const TlSymmetricMatrix& P_A)
 {
     TlMatrix gridMat = this->distributeGridMatrix(this->m_nIteration -1);
-    DfCalcGridX::calcRho_GGA(P_A, &gridMat);
-    this->gatherGridMatrix(gridMat);
+
+    this->calcRho_GGA_part(P_A, &gridMat);
+
+    this->gatherAndSaveGridMatrix(gridMat);
 }
+
 
 void DfCalcGridX_Parallel::calcRho_GGA(const TlSymmetricMatrix& P_A,
                                        const TlSymmetricMatrix& P_B)
 {
     TlMatrix gridMat = this->distributeGridMatrix(this->m_nIteration -1);
-    DfCalcGridX::calcRho_GGA(P_A, P_B, &gridMat);
-    this->gatherGridMatrix(gridMat);
+
+    this->calcRho_GGA_part(P_A, P_B, &gridMat);
+
+    this->gatherAndSaveGridMatrix(gridMat);
 }
+
 
 double DfCalcGridX_Parallel::buildVxc(DfFunctional_LDA* pFunctional,
                                       TlSymmetricMatrix* pF_A)
@@ -225,6 +237,7 @@ double DfCalcGridX_Parallel::buildVxc(DfFunctional_GGA* pFunctional,
     return energy;
 }
 
+
 double DfCalcGridX_Parallel::buildVxc(DfFunctional_GGA* pFunctional,
                                       TlSymmetricMatrix* pF_A,
                                       TlSymmetricMatrix* pF_B)
@@ -237,6 +250,7 @@ double DfCalcGridX_Parallel::buildVxc(DfFunctional_GGA* pFunctional,
     rComm.allReduce_SUM(energy);
     return energy;
 }
+
 
 TlMatrix DfCalcGridX_Parallel::distributeGridMatrix(const int iteration)
 {
@@ -296,7 +310,8 @@ TlMatrix DfCalcGridX_Parallel::distributeGridMatrix(const int iteration)
     return gridMat;
 }
 
-void DfCalcGridX_Parallel::gatherGridMatrix(const TlMatrix& gridMat)
+
+void DfCalcGridX_Parallel::gatherAndSaveGridMatrix(const TlMatrix& gridMat)
 {
     this->log_.info("gather grid matrix: start");
     
@@ -364,6 +379,7 @@ double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlDistributeSymme
     return energy;
 }
 
+
 double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlDistributeSymmetricMatrix& P_A,
                                                          const TlDistributeSymmetricMatrix& P_B,
                                                          DfFunctional_LDA* pFunctional,
@@ -384,6 +400,7 @@ double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlDistributeSymme
     return energy;
 }
 
+
 double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlDistributeSymmetricMatrix& P_A,
                                                          const TlDistributeSymmetricMatrix& P_B,
                                                          DfFunctional_GGA* pFunctional,
@@ -394,6 +411,7 @@ double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(const TlDistributeSymme
     double energy = this->buildVxc(pFunctional, pF_A, pF_B);
     return energy;
 }
+
 
 TlMatrix DfCalcGridX_Parallel::getGlobalGridMatrix(const int iteration)
 {
@@ -430,12 +448,10 @@ TlMatrix DfCalcGridX_Parallel::getGlobalGridMatrix(const int iteration)
     return gridMat;
 }
 
+
 void DfCalcGridX_Parallel::allReduceGridMatrix(const TlMatrix& gridMat)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    //const index_type numOfAllGrids = gridMat.getNumOfRows();
-    //const index_type numOfCols = gridMat.getNumOfCols();
-    
     TlMatrix rhoMat = gridMat.getBlockMatrix(0, GM_LDA_RHO_ALPHA,
                                              gridMat.getNumOfRows(),
                                              gridMat.getNumOfCols() - GM_LDA_RHO_ALPHA);
@@ -458,12 +474,14 @@ void DfCalcGridX_Parallel::allReduceGridMatrix(const TlMatrix& gridMat)
     }
 }
 
+
 void DfCalcGridX_Parallel::calcRho_LDA(const TlDistributeSymmetricMatrix& P_A)
 {
     TlMatrix gridMat = this->getGlobalGridMatrix(this->m_nIteration -1);
     this->calcRho_LDA(TlDistributeMatrix(P_A), &gridMat);
     this->allReduceGridMatrix(gridMat);
 }
+
 
 void DfCalcGridX_Parallel::calcRho_LDA(const TlDistributeSymmetricMatrix& P_A,
                                        const TlDistributeSymmetricMatrix& P_B)
@@ -474,12 +492,14 @@ void DfCalcGridX_Parallel::calcRho_LDA(const TlDistributeSymmetricMatrix& P_A,
     this->allReduceGridMatrix(gridMat);
 }
 
+
 void DfCalcGridX_Parallel::calcRho_GGA(const TlDistributeSymmetricMatrix& P_A)
 {
     TlMatrix gridMat = this->getGlobalGridMatrix(this->m_nIteration -1);
     this->calcRho_GGA(TlDistributeMatrix(P_A), &gridMat);
     this->allReduceGridMatrix(gridMat);
 }
+
 
 void DfCalcGridX_Parallel::calcRho_GGA(const TlDistributeSymmetricMatrix& P_A,
                                        const TlDistributeSymmetricMatrix& P_B)
@@ -490,12 +510,13 @@ void DfCalcGridX_Parallel::calcRho_GGA(const TlDistributeSymmetricMatrix& P_A,
     this->allReduceGridMatrix(gridMat);
 }
 
+
 void DfCalcGridX_Parallel::calcRho_LDA(const TlDistributeMatrix& P_A,
                                        TlMatrix* pGridMat)
 {
     const TlMatrix localP_A = P_A.getLocalMatrix();
-    const std::vector<index_type> rowIndexes = P_A.getRowIndexTable();
-    const std::vector<index_type> colIndexes = P_A.getColIndexTable();
+    const std::vector<index_type> rowIndeces = P_A.getRowIndexTable();
+    const std::vector<index_type> colIndeces = P_A.getColIndexTable();
 
     const index_type numOfGrids = pGridMat->getNumOfRows();
 #pragma omp parallel for schedule(runtime)
@@ -505,22 +526,21 @@ void DfCalcGridX_Parallel::calcRho_LDA(const TlDistributeMatrix& P_A,
                                       pGridMat->get(grid, GM_Z));
 
         // calc phi table
-        std::vector<WFGrid> rowPhi;
-        std::vector<WFGrid> colPhi;
-        this->getPhiTable(gridPosition, rowIndexes,
-                          &rowPhi);
-        this->getPhiTable(gridPosition, colIndexes,
-                          &colPhi);
+        std::vector<double> row_AO_values;
+        this->getAOs_core(gridPosition, rowIndeces, &row_AO_values);
+        std::vector<double> col_AO_values;
+        this->getAOs_core(gridPosition, colIndeces, &col_AO_values);
 
         // get rho at grid point
         double rhoA = 0.0;
         this->getRhoAtGridPoint(localP_A,
-                                rowPhi, colPhi,
+                                row_AO_values, col_AO_values,
                                 &rhoA);
 
         pGridMat->add(grid, GM_LDA_RHO_ALPHA, rhoA);
     }
 }
+
 
 void DfCalcGridX_Parallel::calcRho_LDA(const TlDistributeMatrix& P_A,
                                        const TlDistributeMatrix& P_B,
@@ -528,8 +548,8 @@ void DfCalcGridX_Parallel::calcRho_LDA(const TlDistributeMatrix& P_A,
 {
     const TlMatrix localP_A = P_A.getLocalMatrix();
     const TlMatrix localP_B = P_B.getLocalMatrix();
-    const std::vector<index_type> rowIndexes = P_A.getRowIndexTable();
-    const std::vector<index_type> colIndexes = P_A.getColIndexTable();
+    const std::vector<index_type> rowIndeces = P_A.getRowIndexTable();
+    const std::vector<index_type> colIndeces = P_A.getColIndexTable();
     // rowIndexes, colIndexes はP_Bと共通
 
     const index_type numOfGrids = pGridMat->getNumOfRows();
@@ -540,21 +560,19 @@ void DfCalcGridX_Parallel::calcRho_LDA(const TlDistributeMatrix& P_A,
                                       pGridMat->get(grid, GM_Z));
 
         // calc phi table
-        std::vector<WFGrid> rowPhi;
-        std::vector<WFGrid> colPhi;
-        this->getPhiTable(gridPosition, rowIndexes,
-                          &rowPhi);
-        this->getPhiTable(gridPosition, colIndexes,
-                          &colPhi);
+        std::vector<double> row_AO_values;
+        this->getAOs_core(gridPosition, rowIndeces, &row_AO_values);
+        std::vector<double> col_AO_values;
+        this->getAOs_core(gridPosition, colIndeces, &col_AO_values);
 
         // get rho at grid point
         double rhoA = 0.0;
         double rhoB = 0.0;
         this->getRhoAtGridPoint(localP_A,
-                                rowPhi, colPhi,
+                                row_AO_values, col_AO_values,
                                 &rhoA);
         this->getRhoAtGridPoint(localP_B,
-                                rowPhi, colPhi,
+                                row_AO_values, col_AO_values,
                                 &rhoB);
 
         pGridMat->add(grid, GM_LDA_RHO_ALPHA, rhoA);
@@ -562,12 +580,13 @@ void DfCalcGridX_Parallel::calcRho_LDA(const TlDistributeMatrix& P_A,
     }
 }
 
+
 void DfCalcGridX_Parallel::calcRho_GGA(const TlDistributeMatrix& P_A,
                                        TlMatrix* pGridMat)
 {
     const TlMatrix localP_A = P_A.getLocalMatrix();
-    const std::vector<index_type> rowIndexes = P_A.getRowIndexTable();
-    const std::vector<index_type> colIndexes = P_A.getColIndexTable();
+    const std::vector<index_type> rowIndeces = P_A.getRowIndexTable();
+    const std::vector<index_type> colIndeces = P_A.getColIndexTable();
 
     const index_type numOfGrids = pGridMat->getNumOfRows();
 #pragma omp parallel for schedule(runtime)
@@ -577,32 +596,49 @@ void DfCalcGridX_Parallel::calcRho_GGA(const TlDistributeMatrix& P_A,
                                       pGridMat->get(grid, GM_Z));
 
         // calc phi table
-        std::vector<WFGrid> rowPhi;
-        std::vector<WFGrid> colPhi;
-        std::vector<WFGrid> colGradPhiX;
-        std::vector<WFGrid> colGradPhiY;
-        std::vector<WFGrid> colGradPhiZ;
-        this->getPhiTable(gridPosition, rowIndexes,
-                          &rowPhi);
-        this->getPhiTable(gridPosition, colIndexes,
-                          &colPhi, &colGradPhiX, &colGradPhiY, &colGradPhiZ);
+        std::vector<double> row_AO_values;
+        this->getAOs_core(gridPosition, rowIndeces, &row_AO_values);
+        std::vector<double> col_AO_values;
+        this->getAOs_core(gridPosition, colIndeces, &col_AO_values);
 
+        std::vector<double> row_dAO_dx_values;
+        std::vector<double> row_dAO_dy_values;
+        std::vector<double> row_dAO_dz_values;
+        this->getDAOs_core(gridPosition, rowIndeces,
+                           &row_dAO_dx_values,
+                           &row_dAO_dy_values,
+                           &row_dAO_dz_values);
+        std::vector<double> col_dAO_dx_values;
+        std::vector<double> col_dAO_dy_values;
+        std::vector<double> col_dAO_dz_values;
+        this->getDAOs_core(gridPosition, colIndeces,
+                           &col_dAO_dx_values,
+                           &col_dAO_dy_values,
+                           &col_dAO_dz_values);
+        
         // get rho at grid point
         double rhoA = 0.0;
-        double gradRhoXA = 0.0;
-        double gradRhoYA = 0.0;
-        double gradRhoZA = 0.0;
+        double gradRhoAX = 0.0;
+        double gradRhoAY = 0.0;
+        double gradRhoAZ = 0.0;
         this->getRhoAtGridPoint(localP_A,
-                                rowPhi,
-                                colPhi, colGradPhiX, colGradPhiY, colGradPhiZ,
-                                &rhoA, &gradRhoXA, &gradRhoYA, &gradRhoZA);
+                                row_AO_values,
+                                col_AO_values, 
+                                &rhoA);
+        this->getGradRhoAtGridPoint(localP_A,
+                                    row_AO_values,
+                                    row_dAO_dx_values, row_dAO_dy_values, row_dAO_dz_values,
+                                    col_AO_values,
+                                    col_dAO_dx_values, col_dAO_dy_values, col_dAO_dz_values,
+                                    &gradRhoAX, &gradRhoAY, &gradRhoAZ);
 
         pGridMat->add(grid, GM_GGA_RHO_ALPHA, rhoA);
-        pGridMat->add(grid, GM_GGA_GRAD_RHO_X_ALPHA, gradRhoXA);
-        pGridMat->add(grid, GM_GGA_GRAD_RHO_Y_ALPHA, gradRhoYA);
-        pGridMat->add(grid, GM_GGA_GRAD_RHO_Z_ALPHA, gradRhoZA);
+        pGridMat->add(grid, GM_GGA_GRAD_RHO_X_ALPHA, gradRhoAX);
+        pGridMat->add(grid, GM_GGA_GRAD_RHO_Y_ALPHA, gradRhoAY);
+        pGridMat->add(grid, GM_GGA_GRAD_RHO_Z_ALPHA, gradRhoAZ);
     }
 }
+
 
 void DfCalcGridX_Parallel::calcRho_GGA(const TlDistributeMatrix& P_A,
                                        const TlDistributeMatrix& P_B,
@@ -610,8 +646,8 @@ void DfCalcGridX_Parallel::calcRho_GGA(const TlDistributeMatrix& P_A,
 {
     const TlMatrix localP_A = P_A.getLocalMatrix();
     const TlMatrix localP_B = P_B.getLocalMatrix();
-    const std::vector<index_type> rowIndexes = P_A.getRowIndexTable();
-    const std::vector<index_type> colIndexes = P_A.getColIndexTable();
+    const std::vector<index_type> rowIndeces = P_A.getRowIndexTable();
+    const std::vector<index_type> colIndeces = P_A.getColIndexTable();
     // rowIndexes, colIndexes はP_Bと共通
 
     const index_type numOfGrids = pGridMat->getNumOfRows();
@@ -622,321 +658,67 @@ void DfCalcGridX_Parallel::calcRho_GGA(const TlDistributeMatrix& P_A,
                                       pGridMat->get(grid, GM_Z));
 
         // calc phi table
-        std::vector<WFGrid> rowPhi;
-        std::vector<WFGrid> colPhi;
-        std::vector<WFGrid> colGradPhiX;
-        std::vector<WFGrid> colGradPhiY;
-        std::vector<WFGrid> colGradPhiZ;
-        this->getPhiTable(gridPosition, rowIndexes,
-                          &rowPhi);
-        this->getPhiTable(gridPosition, colIndexes,
-                          &colPhi, &colGradPhiX, &colGradPhiY, &colGradPhiZ);
+        std::vector<double> row_AO_values;
+        this->getAOs_core(gridPosition, rowIndeces, &row_AO_values);
+        std::vector<double> col_AO_values;
+        this->getAOs_core(gridPosition, colIndeces, &col_AO_values);
+
+        std::vector<double> row_dAO_dx_values;
+        std::vector<double> row_dAO_dy_values;
+        std::vector<double> row_dAO_dz_values;
+        this->getDAOs_core(gridPosition, rowIndeces,
+                           &row_dAO_dx_values,
+                           &row_dAO_dy_values,
+                           &row_dAO_dz_values);
+        std::vector<double> col_dAO_dx_values;
+        std::vector<double> col_dAO_dy_values;
+        std::vector<double> col_dAO_dz_values;
+        this->getDAOs_core(gridPosition, colIndeces,
+                           &col_dAO_dx_values,
+                           &col_dAO_dy_values,
+                           &col_dAO_dz_values);
 
         // get rho at grid point
         double rhoA = 0.0;
-        double gradRhoXA = 0.0;
-        double gradRhoYA = 0.0;
-        double gradRhoZA = 0.0;
+        double gradRhoAX = 0.0;
+        double gradRhoAY = 0.0;
+        double gradRhoAZ = 0.0;
         double rhoB = 0.0;
-        double gradRhoXB = 0.0;
-        double gradRhoYB = 0.0;
-        double gradRhoZB = 0.0;
+        double gradRhoBX = 0.0;
+        double gradRhoBY = 0.0;
+        double gradRhoBZ = 0.0;
         this->getRhoAtGridPoint(localP_A,
-                                rowPhi,
-                                colPhi, colGradPhiX, colGradPhiY, colGradPhiZ,
-                                &rhoA, &gradRhoXA, &gradRhoYA, &gradRhoZA);
+                                row_AO_values,
+                                col_AO_values, 
+                                &rhoA);
+        this->getGradRhoAtGridPoint(localP_A,
+                                    row_AO_values,
+                                    row_dAO_dx_values, row_dAO_dy_values, row_dAO_dz_values,
+                                    col_AO_values,
+                                    col_dAO_dx_values, col_dAO_dy_values, col_dAO_dz_values,
+                                    &gradRhoAX, &gradRhoAY, &gradRhoAZ);
         this->getRhoAtGridPoint(localP_B,
-                                rowPhi,
-                                colPhi, colGradPhiY, colGradPhiY, colGradPhiZ,
-                                &rhoB, &gradRhoXB, &gradRhoYB, &gradRhoZB);
+                                row_AO_values,
+                                col_AO_values, 
+                                &rhoB);
+        this->getGradRhoAtGridPoint(localP_B,
+                                    row_AO_values,
+                                    row_dAO_dx_values, row_dAO_dy_values, row_dAO_dz_values,
+                                    col_AO_values,
+                                    col_dAO_dx_values, col_dAO_dy_values, col_dAO_dz_values,
+                                    &gradRhoBX, &gradRhoBY, &gradRhoBZ);
 
         pGridMat->add(grid, GM_GGA_RHO_ALPHA, rhoA);
-        pGridMat->add(grid, GM_GGA_GRAD_RHO_X_ALPHA, gradRhoXA);
-        pGridMat->add(grid, GM_GGA_GRAD_RHO_Y_ALPHA, gradRhoYA);
-        pGridMat->add(grid, GM_GGA_GRAD_RHO_Z_ALPHA, gradRhoZA);
+        pGridMat->add(grid, GM_GGA_GRAD_RHO_X_ALPHA, gradRhoAX);
+        pGridMat->add(grid, GM_GGA_GRAD_RHO_Y_ALPHA, gradRhoAY);
+        pGridMat->add(grid, GM_GGA_GRAD_RHO_Z_ALPHA, gradRhoAZ);
         pGridMat->add(grid, GM_GGA_RHO_BETA, rhoB);
-        pGridMat->add(grid, GM_GGA_GRAD_RHO_X_BETA, gradRhoXB);
-        pGridMat->add(grid, GM_GGA_GRAD_RHO_Y_BETA, gradRhoYB);
-        pGridMat->add(grid, GM_GGA_GRAD_RHO_Z_BETA, gradRhoZB);
+        pGridMat->add(grid, GM_GGA_GRAD_RHO_X_BETA, gradRhoBX);
+        pGridMat->add(grid, GM_GGA_GRAD_RHO_Y_BETA, gradRhoBY);
+        pGridMat->add(grid, GM_GGA_GRAD_RHO_Z_BETA, gradRhoBZ);
     }
 }
 
-void DfCalcGridX_Parallel::getPhiTable(const TlPosition& gridPosition,
-                                       const std::vector<index_type>& AO_List,
-                                       std::vector<WFGrid>* pPhis)
-{
-    assert(pPhis != NULL);
-    double densityCutOffValue = 1.0E-16;
-    
-    const std::size_t AO_ListSize = AO_List.size();
-    pPhis->clear();
-    pPhis->reserve(AO_ListSize);
-
-    // orbital loop
-    for (std::size_t AO_index = 0; AO_index < AO_ListSize; ++AO_index) {
-        const index_type AO = AO_List[AO_index];
-
-        double phi = 0.0;
-
-        const TlPosition pos = gridPosition - this->m_tlOrbInfo.getPosition(AO);
-        const double distance2 = pos.squareDistanceFrom();
-        const int basisType = this->m_tlOrbInfo.getBasisType(AO);
-        double prefactor = 0.0;
-        DfCalcGridX::getPrefactor(basisType, pos, &prefactor);
-        const int contraction = this->m_tlOrbInfo.getCgtoContraction(AO);
-
-        for (int PGTO = 0; PGTO < contraction; ++PGTO) {
-            // double prefactorX = 0.0;
-            // double prefactorY = 0.0;
-            // double prefactorZ = 0.0;
-            const double alpha = this->m_tlOrbInfo.getExponent(AO, PGTO);
-            const double shoulder = alpha * distance2;
-
-            if (shoulder <= TOOBIG) {
-                const double g = prefactor
-                    * this->m_tlOrbInfo.getCoefficient(AO, PGTO)
-                    * std::exp(-shoulder);
-                phi += g;
-            }
-        }
-        
-        if (std::fabs(phi) > densityCutOffValue) {
-            //const WFGrid wfGrid(AO, phi);
-            const WFGrid wfGrid(AO_index, phi);
-            pPhis->push_back(wfGrid);
-        }
-    }
-
-    std::sort(pPhis->begin(), pPhis->end(), WFGrid_sort_functional());
-}
-
-void DfCalcGridX_Parallel::getPhiTable(const TlPosition& gridPosition,
-                                       const std::vector<index_type>& AO_List,
-                                       std::vector<WFGrid>* pPhis,
-                                       std::vector<WFGrid>* pGradPhiXs,
-                                       std::vector<WFGrid>* pGradPhiYs,
-                                       std::vector<WFGrid>* pGradPhiZs)
-{
-    assert(pPhis != NULL);
-    assert(pGradPhiXs != NULL);
-    assert(pGradPhiYs != NULL);
-    assert(pGradPhiZs != NULL);
-    const double densityCutOffValue = 1.0E-16;
-    
-    const std::size_t AO_ListSize = AO_List.size();
-    pPhis->clear();
-    pPhis->reserve(AO_ListSize);
-    pGradPhiXs->clear();
-    pGradPhiXs->reserve(AO_ListSize);
-    pGradPhiYs->clear();
-    pGradPhiYs->reserve(AO_ListSize);
-    pGradPhiZs->clear();
-    pGradPhiZs->reserve(AO_ListSize);
-
-    // orbital loop
-    for (std::size_t AO_index = 0; AO_index < AO_ListSize; ++AO_index) {
-        const index_type AO = AO_List[AO_index];
-
-        double phi = 0.0;
-        double gradPhiX = 0.0;
-        double gradPhiY = 0.0;
-        double gradPhiZ = 0.0;
-
-        const TlPosition pos = gridPosition - this->m_tlOrbInfo.getPosition(AO);
-        const double distance2 = pos.squareDistanceFrom();
-        const int basisType = this->m_tlOrbInfo.getBasisType(AO);
-        double prefactor = 0.0;
-        DfCalcGridX::getPrefactor(basisType, pos, &prefactor);
-        const int contraction = this->m_tlOrbInfo.getCgtoContraction(AO);
-
-        for (int PGTO = 0; PGTO < contraction; ++PGTO) {
-            double prefactorX = 0.0;
-            double prefactorY = 0.0;
-            double prefactorZ = 0.0;
-            const double alpha = this->m_tlOrbInfo.getExponent(AO, PGTO);
-            const double shoulder = alpha * distance2;
-
-            if (shoulder <= TOOBIG) {
-                const double g = this->m_tlOrbInfo.getCoefficient(AO, PGTO) * std::exp(-shoulder);
-                phi += prefactor * g;
-                DfCalcGridX::getPrefactorForDerivative(basisType, alpha, pos,
-                                                       &prefactorX, &prefactorY, &prefactorZ);
-                gradPhiX += prefactorX * g;
-                gradPhiY += prefactorY * g;
-                gradPhiZ += prefactorZ * g;
-            }
-        }
-        
-        if (std::fabs(phi) > densityCutOffValue) {
-            //const WFGrid wfGrid(AO, phi);
-            const WFGrid wfGrid(AO_index, phi);
-            pPhis->push_back(wfGrid);
-        }
-
-        if (std::fabs(gradPhiX) > densityCutOffValue) {
-            //const WFGrid wfGrid(AO, gradPhiX);
-            const WFGrid wfGrid(AO_index, gradPhiX);
-            pGradPhiXs->push_back(wfGrid);
-        }
-        if (std::fabs(gradPhiY) > densityCutOffValue) {
-            //const WFGrid wfGrid(AO, gradPhiY);
-            const WFGrid wfGrid(AO_index, gradPhiY);
-            pGradPhiYs->push_back(wfGrid);
-        }
-        if (std::fabs(gradPhiZ) > densityCutOffValue) {
-            //const WFGrid wfGrid(AO, gradPhiZ);
-            const WFGrid wfGrid(AO_index, gradPhiZ);
-            pGradPhiZs->push_back(wfGrid);
-        }
-    }
-
-    std::sort(pPhis->begin(), pPhis->end(), WFGrid_sort_functional());
-    std::sort(pGradPhiXs->begin(), pGradPhiXs->end(), WFGrid_sort_functional());
-    std::sort(pGradPhiYs->begin(), pGradPhiYs->end(), WFGrid_sort_functional());
-    std::sort(pGradPhiZs->begin(), pGradPhiZs->end(), WFGrid_sort_functional());
-}
-
-// 分散行列専用
-void DfCalcGridX_Parallel::getRhoAtGridPoint(const TlMatrix& P,
-                                             const std::vector<WFGrid>& rowPhi,
-                                             const std::vector<WFGrid>& colPhi,
-                                             double* pRhoA)
-{
-    const double densityCutOffValue = this->m_densityCutOffValueA;
-    double dRho = 0.0;
-    // double dGradRhoX = 0.0;
-    // double dGradRhoY = 0.0;
-    // double dGradRhoZ = 0.0;
-
-    // 密度行列のループ(index = p)の最大を求める
-    double value = densityCutOffValue;
-
-    std::vector<WFGrid>::const_iterator pEnd = std::upper_bound(rowPhi.begin(),
-                                                                rowPhi.end(),
-                                                                WFGrid(0, value),
-                                                                WFGrid_sort_functional());
-    const std::size_t max_p = std::distance(rowPhi.begin(), pEnd);
-    for (std::size_t p = 0; p < max_p; ++p) {
-        const std::size_t nOrb_p = rowPhi[p].index;
-        const double phi_p = rowPhi[p].value;
-        const double cutValue = std::fabs(densityCutOffValue / phi_p);
-
-        // 高速化
-        const TlVector P_row = P.getRowVector(nOrb_p);
-
-        std::vector<WFGrid>::const_iterator qEnd = std::upper_bound(colPhi.begin(),
-                                                                    colPhi.end(),
-                                                                    WFGrid(0, cutValue),
-                                                                    WFGrid_sort_functional());
-        const std::size_t max_q = std::distance(colPhi.begin(), qEnd);
-        for (std::size_t q = 0; q < max_q; ++q) {
-            const std::size_t nOrb_q = colPhi[q].index;
-            const double phi_q = colPhi[q].value;
-            dRho += P_row[nOrb_q] * phi_p * phi_q;
-        }
-    }
-
-    *pRhoA = dRho;
-}
-
-
-void DfCalcGridX_Parallel::getRhoAtGridPoint(const TlMatrix& P,
-                                             const std::vector<WFGrid>& rowPhi,
-                                             const std::vector<WFGrid>& colPhi,
-                                             const std::vector<WFGrid>& colGradPhiX,
-                                             const std::vector<WFGrid>& colGradPhiY,
-                                             const std::vector<WFGrid>& colGradPhiZ,
-                                             double* pRhoA,
-                                             double* pGradRhoAX,
-                                             double* pGradRhoAY,
-                                             double* pGradRhoAZ)
-{
-    const double densityCutOffValue = 1.0E-16;
-    double dRho = 0.0;
-    double dGradRhoX = 0.0;
-    double dGradRhoY = 0.0;
-    double dGradRhoZ = 0.0;
-
-    // 密度行列のループ(index = p)の最大を求める
-    //double value = 1.0E-16;
-    // if (aGradPhiX.size() > 0) {
-    //     value = std::min(value, std::fabs(aGradPhiX[0].value));
-    // }
-    // if (aGradPhiY.size() > 0) {
-    //     value = std::min(value, std::fabs(aGradPhiY[0].value));
-    // }
-    // if (aGradPhiZ.size() > 0) {
-    //     value = std::min(value, std::fabs(aGradPhiZ[0].value));
-    // }
-
-    // std::size_t max_q = aPhi.size();
-    // std::size_t max_qx = aGradPhiX.size();
-    // std::size_t max_qy = aGradPhiY.size();
-    // std::size_t max_qz = aGradPhiZ.size();
-
-    std::vector<WFGrid>::const_iterator pEnd = std::upper_bound(rowPhi.begin(),
-                                                                rowPhi.end(),
-                                                                WFGrid(0, densityCutOffValue),
-                                                                WFGrid_sort_functional());
-    const std::size_t max_p = std::distance(rowPhi.begin(), pEnd);
-    for (std::size_t p = 0; p < max_p; ++p) {
-        const index_type nOrb_p = rowPhi[p].index;
-        const double phi_p = rowPhi[p].value;
-        const double cutValue = std::fabs(densityCutOffValue / phi_p);
-
-        // 高速化
-        const TlVector P_row = P.getRowVector(nOrb_p);
-
-        std::vector<WFGrid>::const_iterator qEnd = std::upper_bound(colPhi.begin(),
-                                                                    colPhi.end(),
-                                                                    WFGrid(0, cutValue),
-                                                                    WFGrid_sort_functional());
-        const std::size_t max_q = std::distance(colPhi.begin(), qEnd);
-        for (std::size_t q = 0; q < max_q; ++q) {
-            const std::size_t nOrb_q = colPhi[q].index;
-            const double phi_q = colPhi[q].value;
-            dRho += P_row[nOrb_q] * phi_p * phi_q;
-        }
-        
-        std::vector<WFGrid>::const_iterator qxEnd = std::upper_bound(colGradPhiX.begin(),
-                                                                     colGradPhiX.end(),
-                                                                     WFGrid(0, cutValue),
-                                                                     WFGrid_sort_functional());
-        const std::size_t max_qx = std::distance(colGradPhiX.begin(), qxEnd);
-        for (std::size_t qx = 0; qx < max_qx; ++qx) {
-            const index_type nOrb_q = colGradPhiX[qx].index;
-            const double phi_q = colGradPhiX[qx].value;
-            dGradRhoX += P_row[nOrb_q] * phi_p * phi_q;
-        }
-
-        std::vector<WFGrid>::const_iterator qyEnd = std::upper_bound(colGradPhiY.begin(),
-                                                                     colGradPhiY.end(),
-                                                                     WFGrid(0, cutValue),
-                                                                     WFGrid_sort_functional());
-        const std::size_t max_qy = std::distance(colGradPhiY.begin(), qyEnd);
-        for (std::size_t qy = 0; qy < max_qy; ++qy) {
-            const std::size_t nOrb_q = colGradPhiY[qy].index;
-            const double phi_q = colGradPhiY[qy].value;
-            dGradRhoY += P_row[nOrb_q] * phi_p * phi_q;
-        }
-
-        std::vector<WFGrid>::const_iterator qzEnd = std::upper_bound(colGradPhiZ.begin(),
-                                                                     colGradPhiZ.end(),
-                                                                     WFGrid(0, cutValue),
-                                                                     WFGrid_sort_functional());
-        const std::size_t max_qz = std::distance(colGradPhiZ.begin(), qzEnd);
-        for (std::size_t qz = 0; qz < max_qz; ++qz) {
-            const std::size_t nOrb_q = colGradPhiZ[qz].index;
-            const double phi_q = colGradPhiZ[qz].value;
-            dGradRhoZ += P_row[nOrb_q] * phi_p * phi_q;
-        }
-    }
-
-    *pRhoA = dRho;
-    *pGradRhoAX = dGradRhoX;
-    *pGradRhoAY = dGradRhoY;
-    *pGradRhoAZ = dGradRhoZ;
-}
 
 double DfCalcGridX_Parallel::buildVxc(DfFunctional_LDA* pFunctional,
                                       TlDistributeSymmetricMatrix* pF_A)
