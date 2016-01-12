@@ -998,7 +998,6 @@ void DfCD_Parallel::getJ_D(TlDistributeSymmetricMatrix* pJ)
     const bool isUsingMemManager = this->isEnableMmap_;
     TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank(), 
                         isUsingMemManager);
-    //TlColVectorMatrix L;
     L.load(DfObject::getLjkMatrixPath(), rComm.getRank());
     assert(L.getNumOfSubunits() == rComm.getNumOfProcs());
 
@@ -1059,17 +1058,17 @@ void DfCD_Parallel::expandJMatrixD(const TlVector& vJ, const PQ_PairArray& I2PQ,
 void DfCD_Parallel::getK_D(const RUN_TYPE runType,
                            TlDistributeSymmetricMatrix* pK)
 {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
     this->log_.info("calc K by CD method (parallel; distributed).");
-
+    TlCommunicate& rComm = TlCommunicate::getInstance();
 
     // cholesky vector
-    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     const bool isUsingMemManager = this->isEnableMmap_;
     TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
                          isUsingMemManager);
-    L.load(DfObject::getLjkMatrixPath());
+    L.load(DfObject::getLjkMatrixPath(), rComm.getRank());
+    assert(L.getNumOfSubunits() == rComm.getNumOfProcs());
 
+    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     const index_type cvSize = L.getNumOfRows();
     const index_type numOfCVs = L.getNumOfCols();
 
