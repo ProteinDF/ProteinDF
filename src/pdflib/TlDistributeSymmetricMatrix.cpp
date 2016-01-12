@@ -871,6 +871,7 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     assert(rComm.checkNonBlockingCommunications());
+
     const int numOfProcs = rComm.getNumOfProc();
 
     bool bAnswer = true;
@@ -902,7 +903,7 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
     rComm.broadcast(this->m_nRows);
     rComm.broadcast(this->m_nCols);
     this->initialize();
-    //std::cerr << "TlDistributeSymmetricMatrix::load() init." << std::endl;
+    // std::cerr << "TlDistributeSymmetricMatrix::load() init." << std::endl;
 
     if (rComm.isMaster() == true) {
         static const std::size_t bufferCount = FILE_BUFFER_SIZE / sizeof(double);
@@ -915,9 +916,9 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
         bool isFinished = false;
 
         std::vector<int> sizeLists(numOfProcs, 0);
-        std::vector<bool> isSendData(numOfProcs, false);
         std::vector<std::vector<index_type> > rowColLists(numOfProcs);
         std::vector<std::vector<double> > valueLists(numOfProcs);
+        std::vector<bool> isSendData(numOfProcs, false);
         
         while (isFinished == false) {
             // buffer分を一度に読み込み
@@ -985,18 +986,11 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
                 rComm.wait(sizeLists[proc]);
                 rComm.wait(&(rowColLists[proc][0]));
                 rComm.wait(&(valueLists[proc][0]));
-                sizeLists[proc] = false;
+                isSendData[proc] = false;
             }
         }
         
         // 終了メッセージを全ノードに送る
-        for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
-            if (isSendData[proc] == true) {
-                rComm.wait(sizeLists[proc]);
-                rComm.wait(&(rowColLists[proc][0]));
-                rComm.wait(&(valueLists[proc][0]));
-            }
-        }
         std::vector<int> endMsg(numOfProcs, 0);
         for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
             rComm.iSendData(endMsg[proc], proc, TAG_LOAD_END);
@@ -1049,7 +1043,7 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
             }
         }
     }
-
+    
     // std::cerr << TlUtils::format("[%d] END", rComm.getRank())
     //           << std::endl;
     assert(rComm.checkNonBlockingCommunications());
