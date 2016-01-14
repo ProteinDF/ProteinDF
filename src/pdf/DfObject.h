@@ -697,7 +697,7 @@ MatrixType DfObject::getLxcMatrix()
     const std::string path = this->getLxcMatrixPath();
     // MatrixType Lxc = this->matrixCache_.get<MatrixType>(path);
     MatrixType Lxc;
-    Lxc.load(path);
+    Lxc.load(path, 0);
 
     return Lxc;
 }
