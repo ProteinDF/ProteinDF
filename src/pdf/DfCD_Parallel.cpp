@@ -275,17 +275,17 @@ DfCD::PQ_PairArray DfCD_Parallel::getI2PQ(const std::string& filepath)
 }
 
 
-TlSymmetricMatrix DfCD_Parallel::getPMatrix()
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
+// TlSymmetricMatrix DfCD_Parallel::getPMatrix()
+// {
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    TlMatrix P;
-    if (rComm.isMaster() == true) {
-        P = DfCD::getPMatrix();
-    }
-    rComm.broadcast(P);
-    return P;
-}
+//     TlMatrix P;
+//     if (rComm.isMaster() == true) {
+//         P = DfCD::getPMatrix();
+//     }
+//     rComm.broadcast(P);
+//     return P;
+// }
 
 
 void DfCD_Parallel::divideCholeskyBasis(const index_type numOfCVs,
@@ -793,8 +793,6 @@ void DfCD_Parallel::getSuperMatrixElements_K_half(const TlOrbitalInfoObject& orb
 void DfCD_Parallel::saveL(const TlRowVectorMatrix& L,
                           const std::string& path)
 {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
     this->log_.info("transform the Cholesky vectors.");
     TlColVectorMatrix colVecL = this->transLMatrix(L);
 
@@ -914,18 +912,20 @@ void DfCD_Parallel::getK_S_woCD(const RUN_TYPE runType,
     this->log_.info("calc K by CD method (parallel).");
 
     // cholesky vector
-    // TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
-    TlColVectorMatrix L;
+    const bool isUsingMemManager = this->isEnableMmap_;
+    TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
+                        isUsingMemManager);
     L.load(DfObject::getLjkMatrixPath(), rComm.getRank());
     assert(L.getNumOfSubunits() == rComm.getNumOfProcs());
 
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
-
     const index_type cvSize = L.getNumOfRows();
     const index_type numOfCVs = L.getNumOfCols();
     
+    this->log_.info("load density matrix");
     TlSymmetricMatrix P = this->getPMatrix(runType, this->m_nIteration -1);
     
+    this->log_.info("calc by Cholesky Vectors");
     TlVector cv(cvSize);
     for (index_type I = 0; I < numOfCVs; ++I) {
         const int PEinCharge = L.getSubunitID(I);
@@ -933,11 +933,9 @@ void DfCD_Parallel::getK_S_woCD(const RUN_TYPE runType,
             cv = L.getVector(I);
             assert(cv.getSize() == cvSize);
 
-            TlSymmetricMatrix l = 
-                this->getCholeskyVector(cv, I2PQ);
+            const TlSymmetricMatrix l = this->getCholeskyVector(cv, I2PQ);
             
             TlMatrix X = l * P;
-            l.transpose();
             X *= l;
 
             *pK += X;
@@ -1058,13 +1056,19 @@ void DfCD_Parallel::expandJMatrixD(const TlVector& vJ, const PQ_PairArray& I2PQ,
 void DfCD_Parallel::getK_D(const RUN_TYPE runType,
                            TlDistributeSymmetricMatrix* pK)
 {
+    this->getK_S_woCD_D(runType, pK);
+}
+
+void DfCD_Parallel::getK_S_woCD_D(const RUN_TYPE runType,
+                                  TlDistributeSymmetricMatrix* pK)
+{
     this->log_.info("calc K by CD method (parallel; distributed).");
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
     // cholesky vector
     const bool isUsingMemManager = this->isEnableMmap_;
     TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
-                         isUsingMemManager);
+                        isUsingMemManager);
     L.load(DfObject::getLjkMatrixPath(), rComm.getRank());
     assert(L.getNumOfSubunits() == rComm.getNumOfProcs());
 
@@ -1072,24 +1076,21 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
     const index_type cvSize = L.getNumOfRows();
     const index_type numOfCVs = L.getNumOfCols();
 
-    this->log_.info("calc CD of density matrix");
-    this->log_.info(TlUtils::format("epsilon = %8.3e", this->epsilon_));
-    TlDistributeSymmetricMatrix P = 
-        0.5 * DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1); // RKS
-    const TlDistributeMatrix C = P.choleskyFactorization(this->epsilon_);
-    //const TlDistributeMatrix C = P.choleskyFactorization_mod2(this->epsilon_);
+    this->log_.info("load density matrix");
+    //const TlDistributeSymmetricMatrix P = DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration -1); // RKS
+    // const TlDistributeMatrix P = DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration -1); // RKS
+    const TlDistributeSymmetricMatrix P = 0.5 * DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration -1); // RKS
 
     TlTime time_all;
     TlTime time_bcast;
     TlTime time_translate;
     TlTime time_multimat1;
     TlTime time_multimat2;
-    TlTime time_sym2gen;
     TlTime time_transpose;
     TlTime time_add;
     
     time_all.start();
-    this->log_.info("start loop");
+    this->log_.info("calc by Cholesky Vectors");
     int progress = 0;
     const int division = numOfCVs * 0.1;
     TlVector cv(cvSize);
@@ -1104,7 +1105,6 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
         time_bcast.start();
         const int PEinCharge = L.getSubunitID(I);
         if (PEinCharge == rComm.getRank()) {
-            //const index_type copySize = L.getVector(I, &(cv[0]), cvSize);
             cv = L.getVector(I);
             assert(cv.getSize() == cvSize);
         }
@@ -1112,28 +1112,19 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
         time_bcast.stop();
 
         time_translate.start();
-        TlDistributeSymmetricMatrix l = 
-            this->getCholeskyVector_distribute(cv, I2PQ);
+        const TlDistributeSymmetricMatrix l = this->getCholeskyVector_distribute(cv, I2PQ);
         time_translate.stop();
 
         time_multimat1.start();
-        TlDistributeMatrix X = l * C;
+        TlDistributeMatrix X = l * P;
         time_multimat1.stop();
 
-        time_sym2gen.start();
-        TlDistributeMatrix Xt = X;
-        time_sym2gen.stop();
-
-        time_transpose.start();
-        Xt.transpose();
-        time_transpose.stop();
-        
         time_multimat2.start();
-        TlDistributeSymmetricMatrix XX = X * Xt;
+        X *= l;
         time_multimat2.stop();
 
         time_add.start();
-        *pK += XX;
+        *pK += X;
         time_add.stop();
     }
     
@@ -1146,7 +1137,6 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
     this->log_.info(TlUtils::format("K translate: %10.1f sec.", time_translate.getElapseTime()));
     this->log_.info(TlUtils::format("K multi1:    %10.1f sec.", time_multimat1.getElapseTime()));
     this->log_.info(TlUtils::format("K multi2:    %10.1f sec.", time_multimat2.getElapseTime()));
-    this->log_.info(TlUtils::format("K sym2gen:   %10.1f sec.", time_sym2gen.getElapseTime()));
     this->log_.info(TlUtils::format("K transpose: %10.1f sec.", time_transpose.getElapseTime()));
     this->log_.info(TlUtils::format("K add:       %10.1f sec.", time_add.getElapseTime()));
 }

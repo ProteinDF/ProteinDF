@@ -147,7 +147,6 @@ void DfKMatrix_Parallel::getK_conventional_distributed(const RUN_TYPE runType,
                                                        TlDistributeSymmetricMatrix *pK)
 {
     this->log_.info("build K on distributed parallel method");
-    TlCommunicate& rComm = TlCommunicate::getInstance();
 
     TlDistributeSymmetricMatrix P;
     if (this->isUpdateMethod_ == true) {

@@ -1295,6 +1295,7 @@ bool TlDistributeSymmetricMatrix::inverse()
 #endif // HAVE_SCALAPACK  
 }
 
+// !!!
 TlDistributeMatrix multiplicationByScaLapack(const TlDistributeSymmetricMatrix& X,
                                              const TlDistributeMatrix& Y)
 {
@@ -1353,11 +1354,11 @@ TlDistributeMatrix multiplicationByScaLapack(const TlDistributeMatrix& X, const 
 
     // use SCALAPACK
     const char SIDE = 'R';                  // L means "C := alpha*A*B + beta*C",
-    // R means "C := alpha*B*A + beta*C"
+                                            // R means "C := alpha*B*A + beta*C"
     const char UPLO = 'L';                  // L means the lower triangular part of the symmetric matrix
-    // U means the upper triangular part of the symmetric matrix
-    const int M = Z.getNumOfRows();        // the number of rows of the matrix  C
-    const int N = Z.getNumOfCols();        // the number of columns of the matrix C
+                                            // U means the upper triangular part of the symmetric matrix
+    const int M = Z.getNumOfRows();         // the number of rows of the matrix  C
+    const int N = Z.getNumOfCols();         // the number of columns of the matrix C
     const double ALPHA = 1.0;               // ALPHA specifies the scalar alpha
 
     //const double* A = &(const_cast<TlDistributeMatrix&>(X).m_aMatrix[0]);    // DIMENSION (LDA, ka)

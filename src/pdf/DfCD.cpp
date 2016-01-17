@@ -803,13 +803,12 @@ void DfCD::getK_S_woCD(const RUN_TYPE runType,
     index_type end_CholeskyBasis = 0;
     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-        TlSymmetricMatrix l = this->getCholeskyVector(L.getColVector(I), I2PQ);
+        const TlSymmetricMatrix l = this->getCholeskyVector(L.getColVector(I), I2PQ);
         assert(l.getNumOfRows() == numOfAOs);
 
         TlMatrix X = l * P;
-        l.transpose();
         X *= l;
-        
+
         *pK += X;
     }
     

@@ -67,7 +67,7 @@ protected:
     // virtual void saveLjk(const TlMatrix& L);
     // virtual TlMatrix getLjk();
 
-    virtual TlSymmetricMatrix getPMatrix();
+    // virtual TlSymmetricMatrix getPMatrix();
 
     virtual void divideCholeskyBasis(const index_type numOfCBs,
                                      index_type *pStart, index_type *pEnd);
@@ -96,6 +96,10 @@ public:
     void getK_D(const RUN_TYPE runType,
                 TlDistributeSymmetricMatrix* pK);
 
+protected:
+    void getK_S_woCD_D(const RUN_TYPE runType,
+                       TlDistributeSymmetricMatrix* pK);
+        
 protected:
     TlVector getScreenedDensityMatrixD(const PQ_PairArray& I2PQ);
     void expandJMatrixD(const TlVector& vJ, const PQ_PairArray& I2PQ, TlDistributeSymmetricMatrix* pJ);

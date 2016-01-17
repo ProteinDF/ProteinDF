@@ -2260,6 +2260,16 @@ TlDistributeMatrix& TlDistributeMatrix::operator*=(const TlDistributeMatrix& rhs
     return (*this);
 }
 
+
+TlDistributeMatrix& TlDistributeMatrix::operator*=(const TlDistributeSymmetricMatrix& rhs)
+{
+    TlDistributeMatrix tmp = *this;
+    *this = tmp * rhs;
+
+    return (*this);
+}
+
+
 TlDistributeMatrix& TlDistributeMatrix::operator*=(const double dCoef)
 {
     const std::size_t bufSize = this->getNumOfMyElements();

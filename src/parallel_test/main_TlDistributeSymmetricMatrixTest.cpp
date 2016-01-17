@@ -27,6 +27,7 @@ void testOperatorPlusEqual();
 void testOperatorMultiEqual();
 void testMulti1();
 void testMulti2();
+void testMulti3();
 void testSave();
 void testLoad();
 void testInverse();
@@ -56,6 +57,7 @@ int main(int argc, char *argv[])
     testOperatorMultiEqual();
     testMulti1();
     testMulti2();
+    testMulti3();
     testSave();
     testLoad();
     testDot();
@@ -385,13 +387,14 @@ void testOperatorMultiEqual()
 void testMulti1()
 {
     bool bIsPassed = true;
-
-    TlDistributeSymmetricMatrix A(9);
-    TlSymmetricMatrix exactA(9);
+    const int dim = 100;
+    
+    TlDistributeSymmetricMatrix A(dim);
+    TlSymmetricMatrix exactA(dim);
     {
         double count = 1.0;
-        for (int i = 0; i < 9; ++i) {
-            for (int j = 0; j < i; ++j) {
+        for (int i = 0; i < dim; ++i) {
+            for (int j = 0; j <= i; ++j) {
                 A(i, j) = count;
                 exactA(i, j) = count;
                 count += 1.0 / 100;
@@ -399,12 +402,12 @@ void testMulti1()
         }
     }
 
-    TlDistributeMatrix B(9, 9);
-    TlMatrix exactB(9, 9);
+    TlDistributeSymmetricMatrix B(dim);
+    TlSymmetricMatrix exactB(dim);
     {
         double count = 1.82;
-        for (int i = 0; i < 9; ++i) {
-            for (int j = 0; j < 9; ++j) {
+        for (int i = 0; i < dim; ++i) {
+            for (int j = 0; j <= i; ++j) {
                 B(i, j) = count;
                 exactB(i, j) = count;
                 count -= 1.0 / 100;
@@ -416,12 +419,12 @@ void testMulti1()
     TlMatrix exactC = exactA * exactB;
 
     // judge
-    for (int r = 0; r < 9; ++r) {
-        for (int s = 0; s < 9; ++s) {
+    for (int r = 0; r < dim; ++r) {
+        for (int s = 0; s < dim; ++s) {
             double c = C(r, s);
             double exact_c = exactC(r, s);
 
-            if (fabs(c - exact_c) > 1.0E-12) {
+            if (fabs(c - exact_c) > 1.0E-8) {
                 bIsPassed = false;
                 std::cout << TlUtils::format("(%2d, %2d): actual= %f, expect= %f, err= %e", r, s, c, exact_c, fabs(c - exact_c)) << std::endl;
             }
@@ -431,15 +434,67 @@ void testMulti1()
     showResultMessageAll("testMulti1", bIsPassed);
 }
 
+
 void testMulti2()
 {
     bool bIsPassed = true;
-
-    TlDistributeSymmetricMatrix A(9);
-    TlSymmetricMatrix exactA(9);
+    const int dim = 100;
+    
+    TlDistributeSymmetricMatrix A(dim);
+    TlSymmetricMatrix exactA(dim);
     {
         double count = 1.0;
-        for (int i = 0; i < 9; ++i) {
+        for (int i = 0; i < dim; ++i) {
+            for (int j = 0; j <= i; ++j) {
+                A(i, j) = count;
+                exactA(i, j) = count;
+                count += 1.0 / 100;
+            }
+        }
+    }
+
+    TlDistributeMatrix B(dim, dim);
+    TlMatrix exactB(dim, dim);
+    {
+        double count = 1.82;
+        for (int i = 0; i < dim; ++i) {
+            for (int j = 0; j < dim; ++j) {
+                B(i, j) = count;
+                exactB(i, j) = count;
+                count -= 1.0 / 100;
+            }
+        }
+    }
+
+    TlDistributeMatrix C = A * B;
+    TlMatrix exactC = exactA * exactB;
+
+    // judge
+    for (int r = 0; r < dim; ++r) {
+        for (int s = 0; s < dim; ++s) {
+            double c = C(r, s);
+            double exact_c = exactC(r, s);
+
+            if (fabs(c - exact_c) > 1.0E-8) {
+                bIsPassed = false;
+                std::cout << TlUtils::format("(%2d, %2d): actual= %f, expect= %f, err= %e", r, s, c, exact_c, fabs(c - exact_c)) << std::endl;
+            }
+        }
+    }
+
+    showResultMessageAll("testMulti2", bIsPassed);
+}
+
+void testMulti3()
+{
+    bool bIsPassed = true;
+    const int dim = 100;
+
+    TlDistributeSymmetricMatrix A(dim);
+    TlSymmetricMatrix exactA(dim);
+    {
+        double count = 1.0;
+        for (int i = 0; i < dim; ++i) {
             for (int j = 0; j < i; ++j) {
                 A(i, j) = count;
                 exactA(i, j) = count;
@@ -448,12 +503,12 @@ void testMulti2()
         }
     }
 
-    TlDistributeMatrix B(9, 9);
-    TlMatrix exactB(9, 9);
+    TlDistributeMatrix B(dim, dim);
+    TlMatrix exactB(dim, dim);
     {
         double count = 1.82;
-        for (int i = 0; i < 9; ++i) {
-            for (int j = 0; j < 9; ++j) {
+        for (int i = 0; i < dim; ++i) {
+            for (int j = 0; j < dim; ++j) {
                 B(i, j) = count;
                 exactB(i, j) = count;
                 count -= 1.0 / 100;
@@ -465,19 +520,19 @@ void testMulti2()
     TlMatrix exactC = exactB * exactA;
 
     // judge
-    for (int r = 0; r < 9; ++r) {
-        for (int s = 0; s < 9; ++s) {
+    for (int r = 0; r < dim; ++r) {
+        for (int s = 0; s < dim; ++s) {
             double c = C(r, s);
             double exact_c = exactC(r, s);
 
-            if (fabs(c - exact_c) > 1.0E-12) {
+            if (fabs(c - exact_c) > 1.0E-8) {
                 bIsPassed = false;
                 std::cout << TlUtils::format("(%2d, %2d): actual= %f, expect= %f, err= %e", r, s, c, exact_c, fabs(c - exact_c)) << std::endl;
             }
         }
     }
 
-    showResultMessageAll("testMulti2", bIsPassed);
+    showResultMessageAll("testMulti3", bIsPassed);
 }
 
 void testSave()
