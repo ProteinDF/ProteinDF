@@ -302,7 +302,10 @@ inline void TlSparseMatrix::set(const index_type row, const index_type col, cons
     assert((0 <= row) && (row < this->getNumOfRows()));
     assert((0 <= col) && (col < this->getNumOfCols()));
 
-    this->m_aMatrix[KeyType(row, col)] = value;
+#pragma omp critical(TlSparseMatrix__set)
+    {
+        this->m_aMatrix[KeyType(row, col)] = value;
+    }
 }
 
 
@@ -311,7 +314,11 @@ inline void TlSparseMatrix::add(const index_type row, const index_type col, cons
     assert((0 <= row) && (row < this->getNumOfRows()));
     assert((0 <= col) && (col < this->getNumOfCols()));
 
-    this->m_aMatrix[KeyType(row, col)] += value;
+//#pragma omp atomic
+#pragma omp critical(TlSparseMatrix__add)
+    {
+        this->m_aMatrix[KeyType(row, col)] += value;
+    }
 }
 
 

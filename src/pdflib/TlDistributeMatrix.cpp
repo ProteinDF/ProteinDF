@@ -2260,6 +2260,16 @@ TlDistributeMatrix& TlDistributeMatrix::operator*=(const TlDistributeMatrix& rhs
     return (*this);
 }
 
+
+TlDistributeMatrix& TlDistributeMatrix::operator*=(const TlDistributeSymmetricMatrix& rhs)
+{
+    TlDistributeMatrix tmp = *this;
+    *this = tmp * rhs;
+
+    return (*this);
+}
+
+
 TlDistributeMatrix& TlDistributeMatrix::operator*=(const double dCoef)
 {
     const std::size_t bufSize = this->getNumOfMyElements();
@@ -2641,17 +2651,12 @@ bool TlDistributeMatrix::load(std::ifstream& ifs)
             std::map<int, std::vector<double> > tmpValueLists;
             for (std::size_t i = 0; i < bufferCount; ++i) {
                 const int proc = this->getProcIdForIndex(currentRow, currentCol);
-
                 if (proc == 0) {
                     // masterが持っている
                     const size_type index = this->getIndex(currentRow, currentCol);
                     assert(index != -1);
                     this->pData_[index] = buf[i];
                 } else {
-//                     std::cerr << TlUtils::format("SEND [%d] (%4d, %4d)",
-//                                                  proc, currentRow, currentCol)
-//                               << std::endl;
-
                     tmpRowColLists[proc].push_back(currentRow);
                     tmpRowColLists[proc].push_back(currentCol);
                     tmpValueLists[proc].push_back(buf[i]);
@@ -2708,13 +2713,6 @@ bool TlDistributeMatrix::load(std::ifstream& ifs)
         }
         
         // 終了メッセージを全ノードに送る
-        for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
-            if (isSendData[proc] == true) {
-                rComm.wait(sizeLists[proc]);
-                rComm.wait(&(rowColLists[proc][0]));
-                rComm.wait(&(valueLists[proc][0]));
-            }
-        }
         std::vector<int> endMsg(numOfProcs, 0);
         for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
             rComm.iSendData(endMsg[proc], proc, TAG_LOAD_END);

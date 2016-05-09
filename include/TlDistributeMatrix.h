@@ -216,6 +216,7 @@ public:
     TlDistributeMatrix& operator+=(const TlDistributeMatrix& rhs);
     TlDistributeMatrix& operator-=(const TlDistributeMatrix& rhs);
     TlDistributeMatrix& operator*=(const TlDistributeMatrix& rhs);
+    TlDistributeMatrix& operator*=(const TlDistributeSymmetricMatrix& rhs);
     TlDistributeMatrix& operator*=(double dCoef);
     TlDistributeMatrix& operator/=(double dCoef);
     

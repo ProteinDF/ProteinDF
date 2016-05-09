@@ -871,6 +871,7 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     assert(rComm.checkNonBlockingCommunications());
+
     const int numOfProcs = rComm.getNumOfProc();
 
     bool bAnswer = true;
@@ -902,7 +903,7 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
     rComm.broadcast(this->m_nRows);
     rComm.broadcast(this->m_nCols);
     this->initialize();
-    //std::cerr << "TlDistributeSymmetricMatrix::load() init." << std::endl;
+    // std::cerr << "TlDistributeSymmetricMatrix::load() init." << std::endl;
 
     if (rComm.isMaster() == true) {
         static const std::size_t bufferCount = FILE_BUFFER_SIZE / sizeof(double);
@@ -915,9 +916,9 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
         bool isFinished = false;
 
         std::vector<int> sizeLists(numOfProcs, 0);
-        std::vector<bool> isSendData(numOfProcs, false);
         std::vector<std::vector<index_type> > rowColLists(numOfProcs);
         std::vector<std::vector<double> > valueLists(numOfProcs);
+        std::vector<bool> isSendData(numOfProcs, false);
         
         while (isFinished == false) {
             // buffer分を一度に読み込み
@@ -985,18 +986,11 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
                 rComm.wait(sizeLists[proc]);
                 rComm.wait(&(rowColLists[proc][0]));
                 rComm.wait(&(valueLists[proc][0]));
-                sizeLists[proc] = false;
+                isSendData[proc] = false;
             }
         }
         
         // 終了メッセージを全ノードに送る
-        for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
-            if (isSendData[proc] == true) {
-                rComm.wait(sizeLists[proc]);
-                rComm.wait(&(rowColLists[proc][0]));
-                rComm.wait(&(valueLists[proc][0]));
-            }
-        }
         std::vector<int> endMsg(numOfProcs, 0);
         for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
             rComm.iSendData(endMsg[proc], proc, TAG_LOAD_END);
@@ -1049,7 +1043,7 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
             }
         }
     }
-
+    
     // std::cerr << TlUtils::format("[%d] END", rComm.getRank())
     //           << std::endl;
     assert(rComm.checkNonBlockingCommunications());
@@ -1301,6 +1295,7 @@ bool TlDistributeSymmetricMatrix::inverse()
 #endif // HAVE_SCALAPACK  
 }
 
+// !!!
 TlDistributeMatrix multiplicationByScaLapack(const TlDistributeSymmetricMatrix& X,
                                              const TlDistributeMatrix& Y)
 {
@@ -1359,11 +1354,11 @@ TlDistributeMatrix multiplicationByScaLapack(const TlDistributeMatrix& X, const 
 
     // use SCALAPACK
     const char SIDE = 'R';                  // L means "C := alpha*A*B + beta*C",
-    // R means "C := alpha*B*A + beta*C"
+                                            // R means "C := alpha*B*A + beta*C"
     const char UPLO = 'L';                  // L means the lower triangular part of the symmetric matrix
-    // U means the upper triangular part of the symmetric matrix
-    const int M = Z.getNumOfRows();        // the number of rows of the matrix  C
-    const int N = Z.getNumOfCols();        // the number of columns of the matrix C
+                                            // U means the upper triangular part of the symmetric matrix
+    const int M = Z.getNumOfRows();         // the number of rows of the matrix  C
+    const int N = Z.getNumOfCols();         // the number of columns of the matrix C
     const double ALPHA = 1.0;               // ALPHA specifies the scalar alpha
 
     //const double* A = &(const_cast<TlDistributeMatrix&>(X).m_aMatrix[0]);    // DIMENSION (LDA, ka)
