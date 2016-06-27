@@ -440,9 +440,10 @@ std::vector<double> DfHpqX::getESP(const TlMatrixObject& P,
     this->createEngines();
     DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
 
+    const bool isCutoffByDistribution = true;
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pTaskCtrl->getQueue2(this->orbitalInfo_,
-                                        true,
+                                        isCutoffByDistribution,
                                         this->grainSize_, &taskList, true);
     while (hasTask == true) {
         this->getESP_part(this->orbitalInfo_,
@@ -452,7 +453,7 @@ std::vector<double> DfHpqX::getESP(const TlMatrixObject& P,
                           &values);
         
         hasTask = pTaskCtrl->getQueue2(this->orbitalInfo_,
-                                       true,
+                                       isCutoffByDistribution,
                                        this->grainSize_, &taskList);
     } 
 
@@ -499,55 +500,82 @@ void DfHpqX::getESP_part(const TlOrbitalInfoObject& orbitalInfo,
             const DfHpqEngine::PGTOs pgtosQ = this->getPGTOs(shellIndexQ);
             const DfHpqEngine::Query query(0, 0, shellTypeP, shellTypeQ); 
 
-            if (shellIndexP != shellIndexQ) {
-                for (std::size_t r = 0; r < numOfGrids; ++r) {
-                    const TlPosition& posR = grids[r];
-                    this->pEngines_[threadID].calc(query, posP, posQ, pgtosP, pgtosQ, posR);
+            for (std::size_t r = 0; r < numOfGrids; ++r) {
+                const TlPosition& posR = grids[r];
+                this->pEngines_[threadID].calc(query, posP, posQ, pgtosP, pgtosQ, posR);
 
-                    double esp = 0.0;
-                    int index = 0;
-                    for (int stepP = 0; stepP < maxStepsP; ++stepP) {
-                        const index_type globalShellIndexP = shellIndexP + stepP;
-                        for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
-                            const index_type globalShellIndexQ = shellIndexQ + stepQ;
-                            
-                            esp += 2.0 * P.get(globalShellIndexP, globalShellIndexQ) * this->pEngines_[threadID].WORK_NUC[index];
-                            ++index;
+                double esp = 0.0;
+                int index = 0;
+                for (int stepP = 0; stepP < maxStepsP; ++stepP) {
+                    const index_type globalShellIndexP = shellIndexP + stepP;
+                    for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
+                        const index_type globalShellIndexQ = shellIndexQ + stepQ;
+
+                        if (globalShellIndexP >= globalShellIndexQ) {
+                            const double coef = (globalShellIndexP != globalShellIndexQ) ? 2.0 : 1.0;
+                            esp += coef * P.get(globalShellIndexP, globalShellIndexQ) * this->pEngines_[threadID].WORK_NUC[index];
                         }
-                    }
-
-#pragma omp critical(DfHpqX__getESP_part1)
-                    {
-                        (*pValues)[r] += esp;
+                        ++index;
                     }
                 }
-
-            } else {
-                for (std::size_t r = 0; r < numOfGrids; ++r) {
-                    const TlPosition& posR = grids[r];
-                    this->pEngines_[threadID].calc(query, posP, posQ, pgtosP, pgtosQ, posR);
-
-                    double esp = 0.0;
-                    int index = 0;
-                    for (int stepP = 0; stepP < maxStepsP; ++stepP) {
-                        const index_type globalShellIndexP = shellIndexP + stepP;                    
-                        for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
-                            const index_type globalShellIndexQ = shellIndexQ + stepQ;
-                            
-                            if (globalShellIndexP >= globalShellIndexQ) {
-                                double coef = (globalShellIndexP != globalShellIndexQ) ? 2.0 : 1.0;
-                                esp += coef * P.get(globalShellIndexP, globalShellIndexQ) * this->pEngines_[threadID].WORK_NUC[index];
-                            }
-                            ++index;
-                        }
-                    }
-
-#pragma omp critical(DfHpqX__getESP_part2)
-                    {
-                        (*pValues)[r] += esp;
-                    }
+                
+#pragma omp critical(DfHpqX__getESP)
+                {
+                    (*pValues)[r] += esp;
                 }
             }
+
+
+
+//             if (shellIndexP != shellIndexQ) {
+//                 for (std::size_t r = 0; r < numOfGrids; ++r) {
+//                     const TlPosition& posR = grids[r];
+//                     this->pEngines_[threadID].calc(query, posP, posQ, pgtosP, pgtosQ, posR);
+// 
+//                     double esp = 0.0;
+//                     int index = 0;
+//                     for (int stepP = 0; stepP < maxStepsP; ++stepP) {
+//                         const index_type globalShellIndexP = shellIndexP + stepP;
+//                         for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
+//                             const index_type globalShellIndexQ = shellIndexQ + stepQ;
+//                             
+//                             esp += 2.0 * P.get(globalShellIndexP, globalShellIndexQ) * this->pEngines_[threadID].WORK_NUC[index];
+//                             ++index;
+//                         }
+//                     }
+// 
+// #pragma omp critical(DfHpqX__getESP_part1)
+//                     {
+//                         (*pValues)[r] += esp;
+//                     }
+//                 }
+// 
+//             } else {
+//                 for (std::size_t r = 0; r < numOfGrids; ++r) {
+//                     const TlPosition& posR = grids[r];
+//                     this->pEngines_[threadID].calc(query, posP, posQ, pgtosP, pgtosQ, posR);
+// 
+//                     double esp = 0.0;
+//                     int index = 0;
+//                     for (int stepP = 0; stepP < maxStepsP; ++stepP) {
+//                         const index_type globalShellIndexP = shellIndexP + stepP;                    
+//                         for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
+//                             const index_type globalShellIndexQ = shellIndexQ + stepQ;
+//                             
+//                             if (globalShellIndexP >= globalShellIndexQ) {
+//                                 double coef = (globalShellIndexP != globalShellIndexQ) ? 2.0 : 1.0;
+//                                 esp += coef * P.get(globalShellIndexP, globalShellIndexQ) * this->pEngines_[threadID].WORK_NUC[index];
+//                             }
+//                             ++index;
+//                         }
+//                     }
+// 
+// #pragma omp critical(DfHpqX__getESP_part2)
+//                     {
+//                         (*pValues)[r] += esp;
+//                     }
+//                 }
+//             }
         }
     }
 }

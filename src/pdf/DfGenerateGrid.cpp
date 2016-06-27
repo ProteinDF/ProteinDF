@@ -28,7 +28,6 @@
 #include "TlTime.h"
 #include "TlMath.h"
 #include "TlSymmetricMatrix.h"
-#include "TlPrdctbl.h"
 
 #define SQ2             1.414213562373095049
 #define SQ1_2           0.707106781186547524
