@@ -38,6 +38,7 @@ SERIAL_PROGS = 				\
 	pdf-mkfld-esp			\
 	pdf-pop-mulliken		\
 	pdf-pop-ceem			\
+	pdf-pop-resp			\
 	pdf-rotate-lcao			\
 	pdf-trans-densmat		\
 	pdf-reconf-vectormatrix	\
@@ -185,6 +186,11 @@ pdf_pop_mulliken_LDADD = $(SERIAL_LIBS)
 
 pdf_pop_ceem_SOURCES = main_pop_ceem.cpp
 pdf_pop_ceem_LDADD = $(SERIAL_LIBS)
+
+pdf_pop_resp_SOURCES = \
+	TlEspField.h	TlEspField.cpp		\
+	main_pop_resp.cpp 
+pdf_pop_resp_LDADD = $(SERIAL_LIBS)
 
 pdf_rotate_lcao_SOURCES = \
 	TlRotateLCAO.h		\
