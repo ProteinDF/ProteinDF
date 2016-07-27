@@ -17,7 +17,7 @@
 #include "DfObject.h"
 #include "Fl_Geometry.h"
 
-// #define ANG2AU 0.5291772108
+#define AU2ANG 0.5291772108
 #define ANG2AU 1.889762
 
 // std::vector<TlPosition> getMerzKollmanGrids(const TlSerializeData& param);
@@ -38,34 +38,31 @@ void help(const std::string& progName) {
 }
 
 
-std::vector<TlPosition> getMKGridsOnAtom(const double vdwr)
+// radii: atomic unit
+std::vector<TlPosition> getMKGridsOnAtom(const TlPosition& center, const double radii)
 {
-    static const double layers[] = {1.4, 1.6, 1.8, 2.0};
-    static const int numOfLayers = sizeof(layers)/sizeof(layers[0]);
-    
     TlLebedevGrid lebGrid;
     const std::vector<int> gridList = lebGrid.getSupportedGridNumber();
     
     std::vector<TlPosition> grids;
-    for (int i = 0; i < numOfLayers; ++i) {
-        const double coef = layers[i];
-        const double r = coef * vdwr;
+    const double r = radii * AU2ANG; // to angstroam unit
         
-        const double area = 4.0 * TlMath::PI() * r * r;
-        std::vector<int>::const_iterator it = std::upper_bound(gridList.begin(),
-                                                               gridList.end(),
-                                                               static_cast<int>(area));
-        const int numOfGrids = *it;
-        std::cout << TlUtils::format("atom id=%ld area=%8.3f grids=%d",
-                                     i, area, numOfGrids)
-                  << std::endl;
+    const double area = 4.0 * TlMath::PI() * r * r;
+    std::vector<int>::const_iterator it = std::upper_bound(gridList.begin(),
+                                                           gridList.end(),
+                                                           static_cast<int>(area));
+    const int numOfGrids = *it;
+    std::cout << TlUtils::format("area=%8.3f ANG^2 grids=%d", area, numOfGrids) << std::endl;
         
-        std::vector<TlPosition> layerGrids;
-        std::vector<double> layerWeights;
-        lebGrid.getGrids(numOfGrids, &layerGrids, &layerWeights);
-        
-        grids.insert(grids.end(), layerGrids.begin(), layerGrids.end());
+    std::vector<TlPosition> layerGrids;
+    std::vector<double> layerWeights;
+    lebGrid.getGrids(numOfGrids, &layerGrids, &layerWeights);
+    for (int grid = 0; grid < numOfGrids; ++grid) {
+        layerGrids[grid] *= radii;
+        layerGrids[grid].shiftBy(center);
     }
+        
+    grids.insert(grids.end(), layerGrids.begin(), layerGrids.end());
 
     return grids;
 }
@@ -95,6 +92,8 @@ bool isInMolecule(const TlPosition& p, double coef, const Fl_Geometry& flGeom)
 
 std::vector<TlPosition> getMerzKollmanGrids(const TlSerializeData& param)
 {
+    static const double layers[] = {1.4, 1.6, 1.8, 2.0};
+    static const int numOfLayers = sizeof(layers)/sizeof(layers[0]);
 
     Fl_Geometry flGeom(param["coordinates"]); // 単位はa.u.
 
@@ -106,23 +105,25 @@ std::vector<TlPosition> getMerzKollmanGrids(const TlSerializeData& param)
         const TlAtom atom = flGeom.getAtom(i);
         const std::string symbol = atom.getSymbol();
         if (symbol != "X") {
-            // define the number of grids
             const double vdwr = TlPrdctbl::getVdwRadii(TlPrdctbl::getAtomicNumber(symbol)) * ANG2AU;
-            std::vector<TlPosition> grids = getMKGridsOnAtom(vdwr);
 
-            // check in molecule
-            const TlPosition pos = atom.getPosition();
-            std::vector<TlPosition>::iterator itEnd = grids.end();
-            for (std::vector<TlPosition>::iterator it = grids.begin(); it != itEnd; ++it) {
-                it->shiftBy(pos);
-
-                if (isInMolecule(*it, 1.4, flGeom) != true) {
-                    allGrids.push_back(*it);
-                } else {
-                    ++screened;
+            for (int layer_index = 0; layer_index < numOfLayers; ++layer_index) {
+                const double coef = layers[layer_index];
+                
+                // define the number of grids
+                std::vector<TlPosition> grids = getMKGridsOnAtom(atom.getPosition(), coef * vdwr);
+                
+                // check in molecule
+                std::vector<TlPosition>::iterator itEnd = grids.end();
+                for (std::vector<TlPosition>::iterator it = grids.begin(); it != itEnd; ++it) {
+                    if (isInMolecule(*it, coef, flGeom) != true) {
+                        allGrids.push_back(*it);
+                    } else {
+                        ++screened;
+                    }
+                    ++numOfGrids;
                 }
-                ++numOfGrids;
-            }
+            }            
         }
     }
 
@@ -158,7 +159,8 @@ void makeMat(const TlSerializeData& param,
     
     // make 1/r distance table
     TlMatrix d(numOfRealAtoms, numOfGrids);
-    std::cerr << numOfRealAtoms << ", " << numOfGrids << std::endl;
+    std::cerr << TlUtils::format("# of atoms: %d", numOfRealAtoms) << std::endl;
+    std::cerr << TlUtils::format("# of grids: %d", numOfGrids) << std::endl;
     for (int a = 0; a < numOfRealAtoms; ++a) {
         const TlPosition posA = flGeom.getCoordinate(realAtoms[a]);
         for (std::size_t i = 0; i < numOfGrids; ++i) {
@@ -240,10 +242,13 @@ int main(int argc, char* argv[])
     // 密度行列の読み込み
     TlSymmetricMatrix P;
     if (PMatrixFilePath == "") {
-        const int iteration = param["model"]["iterations"].getInt();
+        const int iteration = param["num_of_iterations"].getInt();
         DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
         DfObject dfObject(&param);
         PMatrixFilePath = dfObject.getPpqMatrixPath(runType, iteration);
+    }
+    if (verbose) {
+        std::cerr << "loading: " << PMatrixFilePath << std::endl;
     }
     P.load(PMatrixFilePath);
 
@@ -255,15 +260,16 @@ int main(int argc, char* argv[])
     TlSymmetricMatrix A;
     TlVector B;
     makeMat(param, grids, esp, &A, &B);
-    A.save("A.mat");
-    B.save("B.vtr");
+    // A.save("A.mat");
+    // B.save("B.vtr");
 
     // solve
     A.inverse();
-    A.save("Ainv.mat");
+    // A.save("Ainv.mat");
 
     TlVector x = A * B;
-    x.save("x.vtr");
+    x.save("resp_x.vtr");
+    x.print(std::cout);
 }
 
 

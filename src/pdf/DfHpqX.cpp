@@ -502,6 +502,7 @@ void DfHpqX::getESP_part(const TlOrbitalInfoObject& orbitalInfo,
 
             for (std::size_t r = 0; r < numOfGrids; ++r) {
                 const TlPosition& posR = grids[r];
+
                 this->pEngines_[threadID].calc(query, posP, posQ, pgtosP, pgtosQ, posR);
 
                 double esp = 0.0;
@@ -511,10 +512,18 @@ void DfHpqX::getESP_part(const TlOrbitalInfoObject& orbitalInfo,
                     for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
                         const index_type globalShellIndexQ = shellIndexQ + stepQ;
 
-                        if (globalShellIndexP >= globalShellIndexQ) {
+                        if ((shellIndexP != shellIndexQ) || (globalShellIndexP >= globalShellIndexQ)) {
+
                             const double coef = (globalShellIndexP != globalShellIndexQ) ? 2.0 : 1.0;
                             esp += coef * P.get(globalShellIndexP, globalShellIndexQ) * this->pEngines_[threadID].WORK_NUC[index];
+                            // std::cout << TlUtils::format("(%d, %d): % f * % f * % f => % f",
+                            //                              globalShellIndexP, globalShellIndexQ,
+                            //                              coef, this->pEngines_[threadID].WORK_NUC[index],
+                            //                              P.get(globalShellIndexP, globalShellIndexQ),
+                            //                              esp)
+                            //           << std::endl;
                         }
+
                         ++index;
                     }
                 }
