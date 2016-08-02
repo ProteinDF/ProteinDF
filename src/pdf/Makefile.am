@@ -40,6 +40,7 @@ libpdf_la_SOURCES = \
 	DfFockMatrix.h			DfFockMatrix.cpp			\
 	DfGenerateGrid.h		DfGenerateGrid.cpp			\
 	DfGridFreeXC.h			DfGridFreeXC.cpp			\
+	DfInfo.h				DfInfo.cpp					\
 	DfInitialGuess.h		DfInitialGuess.cpp			\
 	DfInitialGuessHuckel.h	DfInitialGuessHuckel.cpp	\
 	DfInitialGuessHarris.h	DfInitialGuessHarris.cpp	\

@@ -36,6 +36,7 @@ SERIAL_PROGS = 				\
 	pdf-mkfld-mo			\
 	pdf-mkfld-dens			\
 	pdf-mkfld-esp			\
+	pdf-pop-esp				\
 	pdf-pop-mulliken		\
 	pdf-pop-ceem			\
 	pdf-pop-resp			\
@@ -180,6 +181,11 @@ pdf_mkfld_esp_SOURCES = \
 	TlEspField.h	TlEspField.cpp		\
 	main_mkfld_esp.cpp
 pdf_mkfld_esp_LDADD = $(SERIAL_LIBS)
+
+pdf_pop_esp_SOURCES = \
+	TlEspField.h	TlEspField.cpp		\
+	main_pop_esp.cpp 
+pdf_pop_esp_LDADD = $(SERIAL_LIBS)
 
 pdf_pop_mulliken_SOURCES = main_pop_mulliken.cpp
 pdf_pop_mulliken_LDADD = $(SERIAL_LIBS)

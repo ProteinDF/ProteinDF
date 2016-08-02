@@ -160,6 +160,8 @@ void DfKMatrix_Parallel::getK_conventional_distributed(const RUN_TYPE runType,
             P *= 0.5;
         }
     }
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
     assert(rComm.checkNonBlockingCommunications());
     assert(P.getNumOfRows() == this->m_nNumOfAOs);
     this->log_.info("density matrix loaded.");

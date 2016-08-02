@@ -20,15 +20,9 @@
 #define AU2ANG 0.5291772108
 #define ANG2AU 1.889762
 
-// std::vector<TlPosition> getMerzKollmanGrids(const TlSerializeData& param);
-// std::vector<TlPosition> getMKGridsOnAtom(const double vdwr);
-// void makeMat(const TlSerializeData& param,
-//              const std::vector<TlPosition>& grids,
-//              TlMatrix* pA, TlVector* pB);
-
 void help(const std::string& progName) {
     std::cout << TlUtils::format("%s [options] args...", progName.c_str()) << std::endl;
-    std::cout << "calc population of RESP(ESP)."
+    std::cout << "calc population of ESP (MK) charge."
               << std::endl;
     std::cout << "OPTIONS:" << std::endl;
     std::cout << " -p PATH      set ProteinDF parameter file. default = pdfparam.mpac" << std::endl;
@@ -157,81 +151,6 @@ std::vector<TlPosition> getMerzKollmanGrids(const TlSerializeData& param)
 
 
 
-void makeMat_MK0(const TlSerializeData& param,
-                const std::vector<TlPosition>& grids,
-                const TlVector& esps,
-                TlSymmetricMatrix* pA, TlVector* pB)
-{
-    const std::size_t numOfGrids = grids.size();
-    assert(esps.getSize() == numOfGrids);
-    
-    const Fl_Geometry flGeom(param["coordinates"]); // 単位はa.u.
-    const int numOfAllAtoms = flGeom.getNumOfAtoms();
-    const int numOfRealAtoms = numOfAllAtoms - flGeom.getNumOfDummyAtoms();
-
-    std::vector<int> realAtoms(numOfRealAtoms);
-    {
-        int realAtomIndex = 0;
-        for (int i = 0; i < numOfAllAtoms; ++i) {
-            const TlAtom atom = flGeom.getAtom(i);
-            if (atom.getSymbol() != "X") {
-                realAtoms[realAtomIndex] = i;
-                ++realAtomIndex;
-            }
-        }
-        assert(realAtomIndex == numOfRealAtoms);
-    }
-    
-    // make 1/r distance table
-    TlMatrix d(numOfRealAtoms, numOfGrids);
-    std::cerr << TlUtils::format("# of atoms: %d", numOfRealAtoms) << std::endl;
-    std::cerr << TlUtils::format("# of grids: %d", numOfGrids) << std::endl;
-    for (int a = 0; a < numOfRealAtoms; ++a) {
-        const TlPosition posA = flGeom.getCoordinate(realAtoms[a]);
-        // std::cout << TlUtils::format("MK0> % f, %f , %f", posA.x(), posA.y(), posA.z()) << std::endl;
-        for (std::size_t i = 0; i < numOfGrids; ++i) {
-            const double r_ai = posA.distanceFrom(grids[i]);
-
-            d.set(a, i, 1.0 / r_ai);
-        }
-    }
-    d.save("d0.mat");
-    
-    // make M & b
-    assert(pA != NULL);
-    assert(pB != NULL);
-    pA->resize(numOfRealAtoms +1);
-    pB->resize(numOfRealAtoms +1);
-    for (int a = 0; a < numOfRealAtoms; ++a) {
-        const TlVector r_a = d.getRowVector(a);
-        assert(r_a.getSize() == numOfGrids);
-        
-        // a == b
-        {
-            TlVector r_a2 = r_a;
-            r_a2.dot(r_a);
-            pA->set(a, a, r_a2.sum());
-        }
-
-        // a != b
-        for (int b = 0; b < a; ++b) {
-            TlVector r_b = d.getRowVector(b);
-            r_b.dot(r_a);
-            pA->set(a, b, r_b.sum());
-        }
-
-        // for Lagurange
-        pA->set(a, numOfRealAtoms, 1.0);
-
-        //
-        {
-            TlVector r = r_a;
-            (*pB)[a] = r.dot(esps).sum();
-        }
-    }
-}
-
-
 void makeMat_MK(const std::vector<TlAtom>& realAtoms,
                 const std::vector<TlPosition>& grids,
                 const TlVector& esps,
@@ -292,47 +211,6 @@ void makeMat_MK(const std::vector<TlAtom>& realAtoms,
     }
     py->set(numOfRealAtoms, totalCharge);
 }
-
-
-// void makeMat_linear(const std::vector<TlAtom>& realAtoms,
-//                     const std::vector<TlPosition>& grids,
-//                     const TlVector& esps,
-//                     const double q_total,
-//                     TlMatrix* pA, TlVector* py)
-// {
-//     const int numOfRealAtoms = realAtoms.size();
-//     const int numOfGrids = grids.size();
-//     assert(esps.getSize() == numOfGrids);
-//     
-//     // Ax = y
-//     assert(pA != NULL);
-//     assert(py != NULL);
-//     pA->resize(numOfGrids +1, numOfRealAtoms +1);
-//     py->resize(numOfGrids +1);
-//     std::cerr << numOfGrids << ", " << numOfRealAtoms << std::endl;
-//     for (int i = 0; i < numOfGrids; ++i) {
-//         const TlPosition& g = grids[i];
-//         for (int j = 0; j < numOfRealAtoms; ++j) {
-//             const TlPosition& atomPos = realAtoms[j].getPosition();
-//             const double d = g.distanceFrom(atomPos);
-//             pA->set(i, j, 1.0 / d);
-//         }
-// 
-//         py->set(i, esps[i]);
-//     }
-//     py->set(numOfRealAtoms, q_total);
-//     
-//     // for Lagurange
-//     const int numOfRowsA = pA->getNumOfRows();
-//     const int numOfColsA = pA->getNumOfCols();
-//     for (int i = 0; i < numOfRowsA -1; ++i) {
-//         pA->set(i, numOfColsA -1, 1.0);
-//     }
-//     for (int i = 0; i < numOfColsA -1; ++i) {
-//         pA->set(numOfRowsA -1, i, 1.0);
-//     }
-//     pA->set(numOfRowsA -1, numOfColsA -1, 0.0);
-// }
 
 
 // ---------------------------------------------------------------------
@@ -438,25 +316,7 @@ int main(int argc, char* argv[])
         x.print(std::cout);
     }
 
-    // solve MK0
-    {
-        TlSymmetricMatrix A;
-        TlVector y;
-        makeMat_MK0(param, grids, esp, &A, &y);
-        A.save("MK_A0.mat");
-        y.save("MK_y0.vtr");
-        
-        // solve
-        A.inverse();
-        //A.save("MK_Ainv.mat");
-        
-        TlVector x = A * y;
-        x.save("MK_x-.vtr");
-
-        std::cout << "MK charge" << std::endl;
-        x.print(std::cout);
-    }
-    
+    return EXIT_SUCCESS;
 }
 
 

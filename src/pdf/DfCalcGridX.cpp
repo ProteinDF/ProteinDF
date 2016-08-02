@@ -686,7 +686,7 @@ void DfCalcGridX::getAOs_core(const TlPosition& gridPosition,
                               const std::vector<index_type>& AO_indeces,
                               std::vector<double>* pAO_values)
 {
-    assert(p_AO_values != NULL);
+    assert(pAO_values != NULL);
     const int numOfIndeces = AO_indeces.size();
     pAO_values->resize(numOfIndeces);
 
@@ -969,13 +969,13 @@ void DfCalcGridX::getGradRhoAtGridPoint(const TlMatrixObject& PA,
                                         double* pGradRhoAZ)
 {
     const int numOfRowIndeces = row_AO_values.size();
-    assert(numOfIndeces == static_cast<int>(row_dAO_dx_values.size()));
-    assert(numOfIndeces == static_cast<int>(row_dAO_dy_values.size()));
-    assert(numOfIndeces == static_cast<int>(row_dAO_dz_values.size()));
+    assert(numOfRowIndeces == static_cast<int>(row_dAO_dx_values.size()));
+    assert(numOfRowIndeces == static_cast<int>(row_dAO_dy_values.size()));
+    assert(numOfRowIndeces == static_cast<int>(row_dAO_dz_values.size()));
     const int numOfColIndeces = col_AO_values.size();
-    assert(numOfIndeces == static_cast<int>(col_dAO_dx_values.size()));
-    assert(numOfIndeces == static_cast<int>(col_dAO_dy_values.size()));
-    assert(numOfIndeces == static_cast<int>(col_dAO_dz_values.size()));
+    assert(numOfColIndeces == static_cast<int>(col_dAO_dx_values.size()));
+    assert(numOfColIndeces == static_cast<int>(col_dAO_dy_values.size()));
+    assert(numOfColIndeces == static_cast<int>(col_dAO_dz_values.size()));
 
     double grx = 0.0;
     double gry = 0.0;
