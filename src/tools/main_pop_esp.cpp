@@ -57,7 +57,8 @@ std::vector<TlAtom> getRealAtoms(const TlSerializeData& param)
 
 
 // radii: atomic unit
-std::vector<TlPosition> getMKGridsOnAtom(const TlPosition& center, const double radii)
+std::vector<TlPosition> getMKGridsOnAtom(const TlPosition& center, const double radii,
+                                         bool verbose = false)
 {
     TlLebedevGrid lebGrid;
     const std::vector<int> gridList = lebGrid.getSupportedGridNumber();
@@ -70,8 +71,10 @@ std::vector<TlPosition> getMKGridsOnAtom(const TlPosition& center, const double 
                                                            gridList.end(),
                                                            static_cast<int>(area));
     const int numOfGrids = *it;
-    std::cout << TlUtils::format("area=%8.3f ANG^2 grids=%d", area, numOfGrids) << std::endl;
-        
+    if (verbose) {
+        std::cout << TlUtils::format("area=%8.3f ANG^2 grids=%d", area, numOfGrids) << std::endl;
+    }
+    
     std::vector<TlPosition> layerGrids;
     std::vector<double> layerWeights;
     lebGrid.getGrids(numOfGrids, &layerGrids, &layerWeights);
@@ -108,7 +111,7 @@ bool isInMolecule(const TlPosition& p, double coef, const Fl_Geometry& flGeom)
 }
 
 
-std::vector<TlPosition> getMerzKollmanGrids(const TlSerializeData& param)
+std::vector<TlPosition> getMerzKollmanGrids(const TlSerializeData& param, bool verbose = false)
 {
     static const double layers[] = {1.4, 1.6, 1.8, 2.0};
     static const int numOfLayers = sizeof(layers)/sizeof(layers[0]);
@@ -145,7 +148,10 @@ std::vector<TlPosition> getMerzKollmanGrids(const TlSerializeData& param)
         }
     }
 
-    std::cerr << TlUtils::format("screened %ld/%ld", screened, numOfGrids) << std::endl;
+    if (verbose) {
+        std::cerr << TlUtils::format("screened %ld/%ld", screened, numOfGrids) << std::endl;
+    }
+
     return allGrids;
 }
 
@@ -174,7 +180,7 @@ void makeMat_MK(const std::vector<TlAtom>& realAtoms,
             d.set(i, j, 1.0 / r_ai);
         }
     }
-    d.save("d.mat");
+    // d.save("d.mat");
     
     // make A & y in Ax=y
     assert(pA != NULL);
@@ -233,7 +239,7 @@ int main(int argc, char* argv[])
         PMatrixFilePath = opt["d"];
     }
 
-    std::string mpacFilePath = "";
+    std::string mpacFilePath = "grid-esp.mpac";
     if (opt["m"].empty() != true) {
         mpacFilePath = opt["m"];
     }
@@ -307,13 +313,20 @@ int main(int argc, char* argv[])
         
         // solve
         A.inverse();
-        A.save("MK_Ainv.mat");
+        // A.save("MK_Ainv.mat");
         
         TlVector x = A * y;
         x.save("MK_x.vtr");
 
         std::cout << "MK charge" << std::endl;
-        x.print(std::cout);
+        const int numOfRealAtoms = realAtoms.size();
+        double sum = 0.0;
+        for (int i = 0; i < numOfRealAtoms; ++i) {
+            const double charge = x[i];
+            sum += charge;
+            std::cout << TlUtils::format("[%4d] % 8.3f", i, charge) << std::endl;
+        }
+        std::cout << TlUtils::format("sum = % 8.3f", sum) << std::endl;
     }
 
     return EXIT_SUCCESS;
