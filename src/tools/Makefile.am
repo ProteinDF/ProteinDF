@@ -195,6 +195,7 @@ pdf_pop_ceem_LDADD = $(SERIAL_LIBS)
 
 pdf_pop_resp_SOURCES = \
 	TlEspField.h	TlEspField.cpp		\
+	TlEspPop.h		TlEspPop.cpp		\
 	main_pop_resp.cpp 
 pdf_pop_resp_LDADD = $(SERIAL_LIBS)
 

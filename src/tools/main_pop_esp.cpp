@@ -308,8 +308,8 @@ int main(int argc, char* argv[])
         TlSymmetricMatrix A;
         TlVector y;
         makeMat_MK(realAtoms, grids, esp, totalCharge, &A, &y);
-        A.save("MK_A.mat");
-        y.save("MK_y.vtr");
+        // A.save("MK_A.mat");
+        // y.save("MK_y.vtr");
         
         // solve
         A.inverse();
