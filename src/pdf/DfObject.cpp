@@ -203,8 +203,9 @@ void DfObject::setParam(const TlSerializeData& data)
         } else if (K_engine == "CONVENTIONAL") {
             this->K_engine_ = K_ENGINE_CONVENTIONAL;
         } else {
-            this->log_.critical(TlUtils::format("unknown parameter: K_engine=%s", K_engine.c_str()));
-            CnErr.abort();
+            this->log_.warn(TlUtils::format("unknown parameter: K_engine=%s", K_engine.c_str()));
+            this->log_.warn("use conventional engine for K");
+            this->K_engine_ = K_ENGINE_CONVENTIONAL;
         }
     }
     
@@ -219,8 +220,9 @@ void DfObject::setParam(const TlSerializeData& data)
         } else if (XC_engine == "GRIDFREE_CD") {
             this->XC_engine_ = XC_ENGINE_GRIDFREE_CD;
         } else {
-            this->log_.critical(TlUtils::format("unknown parameter: XC_engine=%s", XC_engine.c_str()));
-            CnErr.abort();
+            this->log_.warn(TlUtils::format("unknown parameter: XC_engine=%s", XC_engine.c_str()));
+            this->log_.warn("use grid engine for XC");
+            this->XC_engine_ = XC_ENGINE_GRID;
         }
     }
 
