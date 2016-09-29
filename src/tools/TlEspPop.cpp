@@ -152,11 +152,17 @@ void TlEspPop::exec(const double totalCharge,
         }
 
         TlMsgPack mpac(output);
-        mpac.save(this->saveMpacFilePath_);
+        if (this->saveMpacFilePath_.empty() != true) {
+            if (this->verbose_) {
+                std::cerr << "output mpac file: " << this->saveMpacFilePath_ << std::endl;
+            }
+            mpac.save(this->saveMpacFilePath_);
+        }
     }
 
     // solve MK
     TlSymmetricMatrix designMat;
+    TlSymmetricMatrix invDesignMat;
     TlVector predicted;
     TlVector modelCoef;
     while (this->itr_ < this->maxItr_) {
@@ -175,23 +181,12 @@ void TlEspPop::exec(const double totalCharge,
             break;
         }
 
-        if (this->saveDesignMatPath_.empty() != true) {
-            designMat.save(this->saveDesignMatPath_);
-        }
-        if (this->savePredictedPath_.empty() != true) {
-            predicted.save(this->savePredictedPath_);
-        }
         
         // solve
-        designMat.inverse();
-        if (this->saveInvDesignMatPath_.empty() != true) {
-            designMat.save(this->saveInvDesignMatPath_);
-        }
+        invDesignMat = designMat;
+        invDesignMat.inverse();
         
-        modelCoef = designMat * predicted;
-        if (this->saveModelCoefPath_.empty() != true) {
-            modelCoef.save(this->saveModelCoefPath_);
-        }
+        modelCoef = invDesignMat * predicted;
 
         if (this->convCheck(modelCoef) == true) {
             break;
@@ -199,7 +194,32 @@ void TlEspPop::exec(const double totalCharge,
 
         ++(this->itr_);
     }
+
     this->output(modelCoef);
+    if (this->saveDesignMatPath_.empty() != true) {
+        if (this->verbose_) {
+            std::cerr << "design mat path: " << this->saveDesignMatPath_ << std::endl;
+        }
+        designMat.save(this->saveDesignMatPath_);
+    }
+    if (this->saveInvDesignMatPath_.empty() != true) {
+        if (this->verbose_) {
+            std::cerr << "inv desing mat path: " << this->saveInvDesignMatPath_ << std::endl;
+        }
+        invDesignMat.save(this->saveInvDesignMatPath_);
+    }
+    if (this->savePredictedPath_.empty() != true) {
+        if (this->verbose_) {
+            std::cerr << "predicetd vtr path: " << this->savePredictedPath_ << std::endl;
+        }
+        predicted.save(this->savePredictedPath_);
+    }
+    if (this->saveModelCoefPath_.empty() != true) {
+        if (this->verbose_) {
+            std::cerr << "model coef path: " << this->saveModelCoefPath_ << std::endl;
+        }
+        modelCoef.save(this->saveModelCoefPath_);
+    }
 }
 
 
@@ -210,6 +230,7 @@ TlEspPop::getRealAtoms()
     const int numOfAllAtoms = this->flGeom_.getNumOfAtoms();
     const int numOfRealAtoms = numOfAllAtoms - this->flGeom_.getNumOfDummyAtoms();
 
+    this->sumOfCounterCharges_ = 0.0;
     std::vector<TlAtom> realAtoms(numOfRealAtoms);
     {
         int realAtomIndex = 0;
@@ -218,6 +239,9 @@ TlEspPop::getRealAtoms()
             if (atom.getSymbol() != "X") {
                 realAtoms[realAtomIndex] = atom;
                 ++realAtomIndex;
+            } else {
+                double charge = atom.getCharge();
+                this->sumOfCounterCharges_ += charge;
             }
         }
         assert(realAtomIndex == numOfRealAtoms);
@@ -390,7 +414,15 @@ void TlEspPop::makeDesignMatrix_MK(TlSymmetricMatrix* pDesignMat,
             (*pPredicted)[a] = r.dot(this->esp_).sum();
         }
     }
-    pPredicted->set(numOfRealAtoms, this->totalCharge_);
+
+    if (this->verbose_) {
+        std::cerr << TlUtils::format("total charge: % 8.2f = % 8.2f - % 8.2f",
+                                     this->totalCharge_ - this->sumOfCounterCharges_,
+                                     this->totalCharge_,
+                                     this->sumOfCounterCharges_)
+                  << std::endl;
+    }
+    pPredicted->set(numOfRealAtoms, this->totalCharge_ - this->sumOfCounterCharges_);
 }
 
 

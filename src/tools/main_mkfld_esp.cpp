@@ -35,6 +35,7 @@ void help(const std::string& progName)
     std::cout << "OPTIONS:" << std::endl;
     std::cout << " -p PATH      set ProteinDF parameter file. default = pdfparam.mpac" << std::endl;
     std::cout << " -d PATH      set density matrix file. default is presumed by parameter file." << std::endl;
+    std::cout << " -a           potential from atoms only " << std::endl;
     std::cout << " -i gridfile  use user-defined grid xyz data by file" << std::endl;
     std::cout << " -f           save AVS field (.fld) file." << std::endl;
     std::cout << " -c           save cube (.cube) file" << std::endl;
@@ -46,7 +47,7 @@ void help(const std::string& progName)
 
 int main(int argc, char* argv[])
 {
-    TlGetopt opt(argc, argv, "p:d:i:fcmo:hv");
+    TlGetopt opt(argc, argv, "ap:d:i:fcmo:hv");
     
     const bool verbose = (opt["v"] == "defined");
     if ((opt["h"] == "defined")) {
@@ -63,6 +64,11 @@ int main(int argc, char* argv[])
         PMatrixFilePath = opt["d"];
     }
 
+    bool isAtomsOnly = false;
+    if (opt["a"] == "defined") {
+        isAtomsOnly = true;
+    }
+    
     std::string inputGridFilePath = "";
     if (opt["i"].empty() != true) {
         inputGridFilePath = opt["i"];
@@ -117,16 +123,20 @@ int main(int argc, char* argv[])
 
     // 密度行列の読み込み
     TlSymmetricMatrix P;
-    if (PMatrixFilePath == "") {
-        const int iteration = param["num_of_iterations"].getInt();
-        DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
-        DfObject dfObject(&param);
-        PMatrixFilePath = dfObject.getPpqMatrixPath(runType, iteration);
+    if (isAtomsOnly != true) {
+        if (PMatrixFilePath == "") {
+            const int iteration = param["num_of_iterations"].getInt();
+            DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
+            DfObject dfObject(&param);
+            PMatrixFilePath = dfObject.getPpqMatrixPath(runType, iteration);
+        }
+        if (verbose) {
+            std::cerr << "loading: " << PMatrixFilePath << std::endl;
+        }
+        P.load(PMatrixFilePath);
+    } else {
+        std::cerr << "skip load density matrix: atom only mode." << std::endl;
     }
-    if (verbose) {
-        std::cerr << "loading: " << PMatrixFilePath << std::endl;
-    }
-    P.load(PMatrixFilePath);
 
     // 計算サイズの決定
     TlPosition startPos;
@@ -170,7 +180,12 @@ int main(int argc, char* argv[])
 
     // ESP計算
     TlEspField espFld(param);
-    const std::vector<double> values = espFld.makeEspFld(P, grids);
+    std::vector<double> values;
+    if (isAtomsOnly != true) {
+        values = espFld.makeEspFld(P, grids);
+    } else {
+        values = espFld.makeEspFld(grids);
+    }
 
     // convert grid unit to angstrom
     // for (std::size_t i = 0; i < numOfGrids; ++i) {

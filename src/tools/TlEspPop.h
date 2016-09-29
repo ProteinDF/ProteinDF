@@ -65,6 +65,7 @@ protected:
     std::vector<TlAtom> realAtoms_;
     std::vector<TlPosition> grids_;
     TlVector esp_;
+    double sumOfCounterCharges_;
     double totalCharge_;
 
     // for RESP

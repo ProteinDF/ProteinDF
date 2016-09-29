@@ -34,6 +34,9 @@ public:
     std::vector<double> makeEspFld(const TlSymmetricMatrix& P,
                                    const std::vector<TlPosition>& grids);
 
+    // atom only
+    std::vector<double> makeEspFld(const std::vector<TlPosition>& grids);
+
 protected:
     TlSerializeData param_;
 };
