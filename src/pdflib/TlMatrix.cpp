@@ -172,11 +172,16 @@ void TlMatrix::initialize(bool isZeroClear)
 
 void TlMatrix::initialize_usingStandard(bool isZeroClear)
 {
+    const index_type row = this->getNumOfRows();
+    const index_type col = this->getNumOfCols();
     const std::size_t size = this->getNumOfElements();
     try {
         this->data_ = new double[size];
     } catch (std::bad_alloc& ba) {
-        this->log_.critical(TlUtils::format("bad_alloc caught: %s", ba.what()));
+        this->log_.critical(TlUtils::format("bad_alloc caught: %s: row=%d, col=%d, size=%ld",
+					    ba.what(),
+					    row, col,
+					    size));
         throw;
     } catch (...) {
         this->log_.critical("unknown error.");
