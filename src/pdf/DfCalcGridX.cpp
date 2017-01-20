@@ -2221,8 +2221,8 @@ double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
         double gradRhoZA = gridMatrix.get(grid, GM_GGA_GRAD_RHO_Z_ALPHA);
         double rhoB = gridMatrix.get(grid, GM_GGA_RHO_BETA);
         double gradRhoXB = gridMatrix.get(grid, GM_GGA_GRAD_RHO_X_BETA);
-        double gradRhoYB = gridMatrix.get(grid, GM_GGA_GRAD_RHO_X_BETA);
-        double gradRhoZB = gridMatrix.get(grid, GM_GGA_GRAD_RHO_X_BETA);
+        double gradRhoYB = gridMatrix.get(grid, GM_GGA_GRAD_RHO_Y_BETA);
+        double gradRhoZB = gridMatrix.get(grid, GM_GGA_GRAD_RHO_Z_BETA);
 
         if ((rhoA > densityCutOffValue) || ((rhoB > densityCutOffValue))) {
             const double gammaAA = gradRhoXA*gradRhoXA + gradRhoYA*gradRhoYA + gradRhoZA*gradRhoZA;
