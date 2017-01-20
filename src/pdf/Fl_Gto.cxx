@@ -343,7 +343,7 @@ void Fl_Gto::show() const
         ss << "    // primitive GTO //\n";
 
         for (int j=0; j<cgto[i].contraction(); j++) {
-            ss << TlUtils::format("      %18.8lE %18.8lE ",
+            ss << TlUtils::format("      %18.8lE %18.8lE \n",
                                    this->cgto[i].pgto[j].exponent, this->cgto[i].pgto[j].coefficient);
             ss << "  <normalized> ";
 
@@ -360,7 +360,7 @@ void Fl_Gto::show() const
                 for (int m=0; m <= angular; m++) {
                     for (int n=0; n <= angular; n++) {
                         if (l +m +n == angular) {
-                            ss << TlUtils::format("  (%1ld,%1ld,%1ld) = %18.8lE %18.8lE",
+                            ss << TlUtils::format("  (%1ld,%1ld,%1ld) = %18.8lE %18.8lE \n",
                                                    l, m, n,
                                                    getNormalized(i,j, l,m,n),
                                                    getCoulombnormalized(i,j, l,m,n)
