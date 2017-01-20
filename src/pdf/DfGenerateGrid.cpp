@@ -846,7 +846,7 @@ void DfGenerateGrid::generateGrid(const TlMatrix& O,
                 // Normalization
                 {
                     double Pstotal = 0.0;
-                    (int mc = 0; mc < nNumOfAtoms; ++mc) {
+                    for (int mc = 0; mc < nNumOfAtoms; ++mc) {
                         Pstotal += Ps[mc];
                     }
                     
