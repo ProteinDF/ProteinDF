@@ -254,10 +254,10 @@ void saveCubeData(const std::vector<TlAtom>& atoms,
                            numOfAtoms, startPos.x(), startPos.y(), startPos.z()); // 開始点
     
     // 4,5,6行目: 各ベクトル方向への分割数およびステップ幅
-    // 各ベクトルが負の値ならばAngstrom単位, 正の値ならBohr単位
-    ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridX, gridPitch.x(), 0.0, 0.0);
-    ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridY, 0.0, gridPitch.y(), 0.0);
-    ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridZ, 0.0, 0.0, gridPitch.z());
+    // 先頭の"number of points"が負の値ならばBohr単位, 正の値ならAngstrom単位
+    ofs << TlUtils::format("% 5d % 12.6f % 12.6f % 12.6f\n", -numOfGridX, gridPitch.x(), 0.0, 0.0);
+    ofs << TlUtils::format("% 5d % 12.6f % 12.6f % 12.6f\n", -numOfGridY, 0.0, gridPitch.y(), 0.0);
+    ofs << TlUtils::format("% 5d % 12.6f % 12.6f % 12.6f\n", -numOfGridZ, 0.0, 0.0, gridPitch.z());
 
     // 7行目以降: 原子の原子番号, 価電子数, x, y, z
     // 

@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
             TlAtom atom(flGeom.getAtom(i));
             atom.setCharge(flGeom.getCharge(i));
             atom.moveTo(flGeom.getCoordinate(i));
-            // atom.moveTo(flGeom.getCoordinate(i) * ANG_PER_AU); // angstroamに変換
+            // atom.moveTo(flGeom.getCoordinate(i) * ANG_PER_AU); // angstromに変換
             atoms[i] = atom;
         }
 
