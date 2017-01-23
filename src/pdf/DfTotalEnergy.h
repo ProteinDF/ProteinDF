@@ -244,7 +244,7 @@ void DfTotalEnergy::exec_template()
 
                 if (dfXCFunctional.isHybridFunctional() == true) {
                     this->E_KA_ = this->calcK(RUN_UKS_ALPHA, PpqA);
-                    this->E_KB_ = this->calcK(RUN_UKS_ALPHA, PpqB);
+                    this->E_KB_ = this->calcK(RUN_UKS_BETA,  PpqB);
                     this->K_term_ = this->E_KA_ + this->E_KB_;
                 }
             }
@@ -275,7 +275,7 @@ void DfTotalEnergy::exec_template()
 
                 if (dfXCFunctional.isHybridFunctional() == true) {
                     this->E_KA_ = this->calcK(RUN_UKS_ALPHA, PpqA);
-                    this->E_KB_ = this->calcK(RUN_UKS_ALPHA, PpqB);
+                    this->E_KB_ = this->calcK(RUN_UKS_BETA,  PpqB);
                     this->K_term_ = this->E_KA_ + this->E_KB_;
                 }
             }
