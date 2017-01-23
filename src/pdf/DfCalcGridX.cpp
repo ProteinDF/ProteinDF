@@ -1985,7 +1985,7 @@ void DfCalcGridX::calcRho_GGA_part(const TlSymmetricMatrix& P_A,
                                     dAO_dx_values, dAO_dy_values, dAO_dz_values,
                                     &gradRhoXA, &gradRhoYA, &gradRhoZA);
         this->getRhoAtGridPoint(P_B, AO_values, &rhoB);
-        this->getGradRhoAtGridPoint(P_A,
+        this->getGradRhoAtGridPoint(P_B,
                                     AO_values,
                                     dAO_dx_values, dAO_dy_values, dAO_dz_values,
                                     &gradRhoXB, &gradRhoYB, &gradRhoZB);
