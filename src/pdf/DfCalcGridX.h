@@ -48,8 +48,8 @@ public:
         GM_GGA_GRAD_RHO_Z_ALPHA =  8,
         GM_GGA_RHO_BETA = 9,
         GM_GGA_GRAD_RHO_X_BETA  = 10,
-        GM_GGA_GRAD_RHO_Y_BETA  = 12,
-        GM_GGA_GRAD_RHO_Z_BETA  = 13
+        GM_GGA_GRAD_RHO_Y_BETA  = 11,
+        GM_GGA_GRAD_RHO_Z_BETA  = 12
     };
     
 public:

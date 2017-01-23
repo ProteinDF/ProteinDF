@@ -97,7 +97,7 @@ void DfGenerateGrid_Parallel::generateGrid_DC(const TlMatrix& O)
         std::vector<double> coordZ;
         std::vector<double> weight;
 
-        if (this->m_gridType == SG_1) {
+        if ((this->m_gridType == SG_1) || (this->m_gridType == USER)) {
             DfGenerateGrid::generateGrid_SG1(O, atom, &coordX, &coordY, &coordZ, &weight);
         } else {
             DfGenerateGrid::generateGrid(O, atom, &coordX, &coordY, &coordZ, &weight);
@@ -131,6 +131,9 @@ void DfGenerateGrid_Parallel::gatherGridData()
     if (rComm.isMaster() == true) {
         const index_type numOfColsOfGlobalGridMatrix = this->grdMat_.getNumOfCols();
         // TODO: use TlFileMatrix instead of TlMatrix because of memory waste.
+	this->log_.info(TlUtils::format("grid matrix size: %d, %d",
+					numOfRowsOfGlobalGridMatrix,
+					numOfRowsOfGlobalGridMatrix));
         TlMatrix grdMat(numOfRowsOfGlobalGridMatrix,
                         numOfColsOfGlobalGridMatrix);
 
@@ -153,7 +156,11 @@ void DfGenerateGrid_Parallel::gatherGridData()
             }
             recvCheck[proc] = true;
             this->log_.debug(TlUtils::format("recv grid data from %d", proc));
-            
+
+	    this->log_.info(TlUtils::format("recv block mat (%d, %d) from %d",
+					    tmpGrdMat.getNumOfRows(),
+					    tmpGrdMat.getNumOfCols(),
+					    proc));
             numOfRowsOfGlobalGridMatrix += tmpGrdMat.getNumOfRows();
             grdMat.resize(numOfRowsOfGlobalGridMatrix,
                           numOfColsOfGlobalGridMatrix);
@@ -163,7 +170,8 @@ void DfGenerateGrid_Parallel::gatherGridData()
             currentNumOfRows += tmpGrdMat.getNumOfRows();
         }
 
-        grdMat.save(this->getGridMatrixPath(0));
+        // grdMat.save(this->getGridMatrixPath(0));
+	this->saveGridMatrix(0, grdMat);
     } else {
         rComm.sendData(this->grdMat_, 0, tag);
         this->log_.debug("send grid data");

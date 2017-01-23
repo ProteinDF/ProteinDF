@@ -28,6 +28,7 @@
 #include "TlTime.h"
 #include "TlMath.h"
 #include "TlSymmetricMatrix.h"
+#include "TlPrdctbl.h"
 
 #define SQ2             1.414213562373095049
 #define SQ1_2           0.707106781186547524
@@ -158,6 +159,7 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
     
     
     const int dNumOfAtoms = this->m_nNumOfAtoms;
+    this->log_.info(TlUtils::format("# atoms: %d", dNumOfAtoms));
     this->coord_.resize(dNumOfAtoms);
     for (int i = 0; i < dNumOfAtoms; ++i) {
         this->coord_[i] = this->flGeometry_.getCoordinate(i);
@@ -2001,31 +2003,33 @@ double DfGenerateGrid::Ps_uij(const int atomIndex_m, const TlPosition& gridpoint
     for (int atomIndex_n = 0; atomIndex_n < numOfAtoms; ++atomIndex_n) {
         if (atomIndex_m != atomIndex_n) {
             const int atomicNumber_n = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(atomIndex_n));
-            const double R_n = this->getCovalentRadiiForBecke(atomicNumber_n);
-            const double rr_n = gridpoint.distanceFrom(this->coord_[atomIndex_n]);
-            
-            double u_ij = (rr_m - rr_n) * this->invDistanceMatrix_(atomIndex_m,
-                                                                   atomIndex_n);
-            
-            if (this->isAtomicSizeAdjustments_) {
-                double au_ij = (R_m - R_n) / (R_m + R_n);
-                double a = au_ij / (au_ij * au_ij - 1.0);
+            if (atomicNumber_n > 0) {
+                const double R_n = this->getCovalentRadiiForBecke(atomicNumber_n);
+                const double rr_n = gridpoint.distanceFrom(this->coord_[atomIndex_n]);
                 
-                if (a < -0.50) {
-                    a = -0.50;
-                } else if (a > 0.50) {
-                    a = 0.50;
+                double u_ij = (rr_m - rr_n) * this->invDistanceMatrix_(atomIndex_m,
+                                                                       atomIndex_n);
+                
+                if (this->isAtomicSizeAdjustments_) {
+                    double au_ij = (R_m - R_n) / (R_m + R_n);
+                    double a = au_ij / (au_ij * au_ij - 1.0);
+                    
+                    if (a < -0.50) {
+                        a = -0.50;
+                    } else if (a > 0.50) {
+                        a = 0.50;
+                    }
+                    u_ij = u_ij + a * (1.0 - u_ij * u_ij);
                 }
-                u_ij = u_ij + a * (1.0 - u_ij * u_ij);
+                
+                const double f3 = this->Becke_f3(u_ij);
+                const double s = 0.5 * (1.0 - f3);
+                
+                Ps_uij *= s;
             }
-            
-            const double f3 = this->Becke_f3(u_ij);
-            const double s = 0.5 * (1.0 - f3);
-            
-            Ps_uij *= s;
         }
     }
-
+    
     return Ps_uij;
 }
 

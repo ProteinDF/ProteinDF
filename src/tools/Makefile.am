@@ -9,6 +9,7 @@ SERIAL_PROGS = 				\
 	pdf-bench-mmap-mat		\
 	pdf-component			\
 	pdf-eri					\
+	pdf-info-basisset		\
 	pdf-info-charge 		\
 	pdf-info-grid			\
 	pdf-info-orb			\
@@ -89,6 +90,9 @@ pdf_component_LDADD = $(SERIAL_LIBS)
 
 pdf_eri_SOURCES = main_eri.cpp
 pdf_eri_LDADD = $(SERIAL_LIBS)
+
+pdf_info_basisset_SOURCES = main_info_basisset.cpp
+pdf_info_basisset_LDADD = $(SERIAL_LIBS)
 
 pdf_info_charge_SOURCES = main_info_charge.cpp
 pdf_info_charge_LDADD = $(SERIAL_LIBS)
