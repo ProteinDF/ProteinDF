@@ -243,7 +243,7 @@ void saveCubeData(const std::vector<TlAtom>& atoms,
     const int numOfAtoms = atoms.size();
     int numOfDummyAtoms = 0;
     for (int i = 0; i < numOfAtoms; ++i) {
-        if (TlAtom::getElementNumber(atoms.[i].getSymbol()) == 0) {
+        if (TlAtom::getElementNumber(atoms[i].getSymbol()) == 0) {
             ++numOfDummyAtoms;
         }
     }
