@@ -26,6 +26,8 @@
 
 DfForce_Parallel::DfForce_Parallel(TlSerializeData* pPdfParam)
     : DfForce(pPdfParam) {
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    rComm.broadcast(this->pdfParamForForce_);
 }
 
 
@@ -78,7 +80,7 @@ void DfForce_Parallel::calcForceFromCoulomb_RIJ_DC(const RUN_TYPE runType)
     }
     rComm.broadcast(P);
 
-    DfEriX_Parallel dfEri(this->pPdfParam_);
+    DfEriX_Parallel dfEri(&(this->pdfParamForForce_));
 
     // ((pq)'|a)
     TlMatrix F_pqa(numOfAtoms, 3);
@@ -111,7 +113,7 @@ void DfForce_Parallel::calcForceFromK_DC(const RUN_TYPE runType)
     this->loggerTime(" calc force from K (RIJ, DC)");
 
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    const DfXCFunctional_Parallel dfXCFunctional(this->pPdfParam_);
+    const DfXCFunctional_Parallel dfXCFunctional(&(this->pdfParamForForce_));
 
     if (dfXCFunctional.isHybridFunctional() == true) {
         const int iteration = this->m_nIteration;
@@ -123,7 +125,7 @@ void DfForce_Parallel::calcForceFromK_DC(const RUN_TYPE runType)
         }
         rComm.broadcast(P);
         
-        DfEriX_Parallel dfEri(this->pPdfParam_);
+        DfEriX_Parallel dfEri(&(this->pdfParamForForce_));
         
         TlMatrix F_K(numOfAtoms, 3);
         dfEri.getForceK(0.5 * P, &F_K);
