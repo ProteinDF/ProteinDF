@@ -860,7 +860,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
         threadID = omp_get_thread_num();
 #endif // _OPENMP
 
-        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
 
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {

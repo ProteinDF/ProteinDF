@@ -39,9 +39,9 @@ DfCD::DfCD(TlSerializeData* pPdfParam)
     if ((*pPdfParam)["cut_value"].getStr().empty() != true) {
         this->cutoffThreshold_ = (*pPdfParam)["cut_value"].getDouble();
     }    
-    this->cutoffEpsilon3_ = this->cutoffThreshold_ * 0.01;
-    if ((*pPdfParam)["cutoff_epsilon3"].getStr().empty() != true) {
-        this->cutoffEpsilon3_ = (*pPdfParam)["cutoff_epsilon3"].getDouble();
+    this->cutoffThreshold_primitive_ = this->cutoffThreshold_ * 0.01;
+    if ((*pPdfParam)["cutoff_threshold_primitive"].getStr().empty() != true) {
+        this->cutoffThreshold_primitive_ = (*pPdfParam)["cutoff_threshold_primitive"].getDouble();
     }    
 
     this->CDAM_tau_ = 1.0E-10;
@@ -789,7 +789,7 @@ void DfCD::getK_S_woCD(const RUN_TYPE runType,
                        TlSymmetricMatrix *pK)
 {
     this->log_.info("calc K by CD method (serial).");
-    const index_type numOfAOs = this->m_nNumOfAOs;
+    //const index_type numOfAOs = this->m_nNumOfAOs;
 
     const TlColVectorMatrix L = this->getLjk();
     this->log_.info(TlUtils::format("L(K): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
@@ -1141,7 +1141,7 @@ void DfCD::calcDiagonals(const TlOrbitalInfoObject& orbInfo,
 
     const double tau = this->CDAM_tau_;
     this->log_.info(TlUtils::format("CDAM tau: %e", tau));
-    this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffEpsilon3_));
+    this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffThreshold_primitive_));
 
     // initialize
     pI2PQ->clear();
@@ -1191,7 +1191,7 @@ void DfCD::calcDiagonals_K_full(const TlOrbitalInfoObject& orbInfo,
 {
     const double tau = this->CDAM_tau_;
     this->log_.info(TlUtils::format("CDAM tau: %e", tau));
-    this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffEpsilon3_));
+    this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffThreshold_primitive_));
 
     // initialize
     const index_type numOfAOs = orbInfo.getNumOfOrbitals();
@@ -1245,7 +1245,7 @@ void DfCD::calcDiagonals_K_half(const TlOrbitalInfoObject& orbInfo,
     // const double tau = this->CDAM_tau_;
     const double tau = this->CDAM_tau_K_;
     this->log_.info(TlUtils::format("CDAM tau(K): %e", tau));
-    this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffEpsilon3_));
+    this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffThreshold_primitive_));
 
     // initialize
     const index_type numOfAOs = orbInfo.getNumOfOrbitals();
@@ -1300,7 +1300,7 @@ void DfCD::calcDiagonalsA(const TlOrbitalInfoObject& orbInfo_p,
 {
     const double tau = this->CDAM_tau_;
     this->log_.info(TlUtils::format("CDAM tau: %e", tau));
-    this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffEpsilon3_));
+    this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffThreshold_primitive_));
 
     // initialize
     const index_type numOfOrbs_p = orbInfo_p.getNumOfOrbitals();
@@ -1382,7 +1382,7 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
         assert(0 <= threadID);
         assert(threadID < this->numOfThreads_);
 
-        this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
         
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {
@@ -1477,7 +1477,7 @@ void DfCD::calcDiagonals_K_full_kernel(const TlOrbitalInfoObject& orbInfo,
 #endif // _OPENMP
         assert(0 <= threadID);
         assert(threadID < this->numOfThreads_);
-        this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
         
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {
@@ -1568,7 +1568,7 @@ void DfCD::calcDiagonals_K_half_kernel(const TlOrbitalInfoObject& orbInfo,
 #endif // _OPENMP
         assert(0 <= threadID);
         assert(threadID < this->numOfThreads_);
-        this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
         
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {
@@ -1704,7 +1704,7 @@ void DfCD::calcDiagonalsA_kernel(const TlOrbitalInfoObject& orbInfo_p,
 #endif // _OPENMP
         assert(0 <= threadID);
         assert(threadID < this->numOfThreads_);
-        this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
         
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {
@@ -2033,7 +2033,7 @@ void DfCD::calcERIs(const TlOrbitalInfoObject& orbInfo,
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
-        this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
         
 #pragma omp for schedule(runtime)
         for (int i = 0; i < numOfList; ++i) {
@@ -2092,7 +2092,7 @@ void DfCD::calcERIsA(const TlOrbitalInfoObject& orbInfo_p,
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
-        this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
         
 #pragma omp for schedule(runtime)
         for (int i = 0; i < numOfList; ++i) {
@@ -2866,7 +2866,7 @@ void DfCD::calcERIs_K(const TlOrbitalInfoObject& orbInfo,
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
-        this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
         
 #pragma omp for schedule(runtime)
         for (int i = 0; i < numOfList; ++i) {

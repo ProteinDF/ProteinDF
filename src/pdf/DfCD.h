@@ -489,7 +489,7 @@ protected:
     DfEngineObject** pEngines_;
 
     double cutoffThreshold_;
-    double cutoffEpsilon3_;
+    double cutoffThreshold_primitive_;
     double CDAM_tau_;
     double epsilon_;
     double CDAM_tau_K_;
