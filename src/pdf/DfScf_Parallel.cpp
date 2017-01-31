@@ -286,7 +286,7 @@ bool DfScf_Parallel::judge()
         }
 
         //  set convergence
-        if (bJudge != 0) {
+        if (bJudge == true) {
             // 収束の閾値をみたすとcounterが１増える
             this->m_nConvergenceCounter++;
 

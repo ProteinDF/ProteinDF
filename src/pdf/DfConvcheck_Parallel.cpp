@@ -42,6 +42,7 @@ void DfConvcheck_Parallel::check()
 
     // no judgement for the first iteration
     if (this->m_nIteration == 1) {
+        this->isConverged_ = false;
         return;
     }
 
