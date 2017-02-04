@@ -168,9 +168,9 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration, const std::string
             if (TlFile::isExist(DfObject::getCprimeMatrixPath(runType, iteration -1)) == true) {
                 Cprime = DfObject::getCprimeMatrix<TlMatrix>(runType, iteration -1);
             } else {
-                TlMatrix C = DfObject::getCMatrix<TlMatrix>(runType, iteration -1);
-                TlMatrix X = DfObject::getXMatrix<TlMatrix>();
-                Cprime = C * X;
+                const TlMatrix C = DfObject::getCMatrix<TlMatrix>(runType, iteration -1);
+                const TlMatrix Xinv = DfObject::getXInvMatrix<TlMatrix>();
+                Cprime = Xinv * C;
             }
 
             if (Cprime.getNumOfRows() != this->m_nNumOfMOs || Cprime.getNumOfCols() != this->m_nNumOfMOs) {
