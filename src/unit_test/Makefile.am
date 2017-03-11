@@ -1,5 +1,5 @@
 TESTS = PdfTests
-AM_CPPFLAGS = -I$(top_srcdir)/src/pdf -I$(includedir)
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/pdf
 
 if CPPUNIT
 PDF_TESTS = PdfTests

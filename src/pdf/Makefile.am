@@ -1,3 +1,5 @@
+AM_CPPFLAGS= -I$(top_srcdir)/include
+
 if PARALLEL
 lib_LTLIBRARIES = libpdf.la libppdf.la
 else

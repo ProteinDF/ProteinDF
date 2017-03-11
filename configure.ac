@@ -2,12 +2,12 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([ProteinDF], [2014.0])
+AC_INIT([ProteinDF], [2017.04])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/pdf/main.cpp])
 AC_CONFIG_MACRO_DIR([m4])
-AC_REVISION([m4_esyscmd_s([git describe --always])])
-AC_DEFINE_UNQUOTED([GIT_DESCRIBE], "[m4_esyscmd_s([git describe --always])]", [git describe])
+# AC_REVISION([m4_esyscmd_s([git describe --always])])
+# AC_DEFINE_UNQUOTED([GIT_DESCRIBE], "[m4_esyscmd_s([git describe --always])]", [git describe])
 
 # ====================================================================
 # config.h
