@@ -144,9 +144,8 @@ void ProteinDF::startlogo(const std::string& version,
                           const std::string& info)
 {
     this->log_.info("************************************************************************");
-    this->log_.info(TlUtils::format("ProteinDF version %s:%s (%s)",
+    this->log_.info(TlUtils::format("ProteinDF version %s (%s)",
                                     VERSION,
-                                    GIT_DESCRIBE,
                                     version.c_str()));
     this->log_.info("\n");
     this->log_.info(info);
