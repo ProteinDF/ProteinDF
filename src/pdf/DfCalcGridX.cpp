@@ -1841,7 +1841,7 @@ void DfCalcGridX::calcRho_LDA_part(const TlSymmetricMatrix& P_A,
 {
     assert(pGridMat != NULL);
     
-    if (this->m_bIsUpdateXC != true) {
+    if ((this->m_nIteration == 1) || (this->m_bIsUpdateXC != true)) {
         // initialize
         TlMatrix zero(pGridMat->getNumOfRows(), 1);
         pGridMat->setBlockMatrix(0, GM_LDA_RHO_ALPHA, zero);
@@ -1872,7 +1872,7 @@ void DfCalcGridX::calcRho_LDA_part(const TlSymmetricMatrix& P_A,
                                    TlMatrix* pGridMat)
 {
 
-    if (this->m_bIsUpdateXC != true) {
+    if ((this->m_nIteration == 1) || (this->m_bIsUpdateXC != true)) {
         // initialize
         TlMatrix zero(pGridMat->getNumOfRows(), 2);
         pGridMat->setBlockMatrix(0, GM_LDA_RHO_ALPHA, zero);
@@ -1904,7 +1904,7 @@ void DfCalcGridX::calcRho_GGA_part(const TlSymmetricMatrix& P_A,
                                    TlMatrix* pGridMat)
 {
     
-    if (this->m_bIsUpdateXC != true) {
+    if ((this->m_nIteration == 1) || (this->m_bIsUpdateXC != true)) {
         // initialize
         TlMatrix zero(pGridMat->getNumOfRows(), 4);
         pGridMat->setBlockMatrix(0, GM_GGA_RHO_ALPHA, zero);
@@ -1948,7 +1948,7 @@ void DfCalcGridX::calcRho_GGA_part(const TlSymmetricMatrix& P_A,
                                    const TlSymmetricMatrix& P_B,
                                    TlMatrix* pGridMat)
 {
-    if (this->m_bIsUpdateXC != true) {
+    if ((this->m_nIteration == 1) || (this->m_bIsUpdateXC != true)) {
         // initialize
         TlMatrix zero(pGridMat->getNumOfRows(), 8);
         pGridMat->setBlockMatrix(0, GM_GGA_RHO_ALPHA, zero);
