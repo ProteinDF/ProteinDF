@@ -42,6 +42,7 @@ public:
 
 public:
     virtual void calcCholeskyVectorsForJK();
+    virtual void calcCholeskyVectorsForK();
     virtual void calcCholeskyVectorsForGridFree();
 
     void getJ(TlSymmetricMatrix *pJ);

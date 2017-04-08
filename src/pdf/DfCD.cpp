@@ -149,6 +149,7 @@ void DfCD::calcCholeskyVectorsForJK()
         this->log_.info("");
     } else {
         // productive code
+        this->log_.info("CD (J) routine: start");
         this->createEngines<DfEriEngine>();
 
         const TlRowVectorMatrix Ljk 
@@ -162,10 +163,19 @@ void DfCD::calcCholeskyVectorsForJK()
         // this->debugOutLjk(Ljk.getTlMatrixObject()); // debug
 
         this->destroyEngines();
-        this->log_.info("");
+        this->log_.info("CD (J) routine: end");
     }
 
-    // K only
+}
+
+
+// K only
+void DfCD::calcCholeskyVectorsForK()
+{
+    this->log_.info("calc CholeskyVectors for K (serial)");
+    const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
+                                (*this->pPdfParam_)["basis_set"]);
+
     switch (this->fastCDK_mode_) {
     case FASTCDK_DEBUG_FULL_SUPERMATRIX:
         {
@@ -259,7 +269,7 @@ void DfCD::calcCholeskyVectorsForJK()
         
     case FASTCDK_PRODUCTIVE:
         {
-            this->log_.info("fast CDK routine.");
+            this->log_.info("CD (K) routine: start");
             this->createEngines<DfEriEngine>();
 
             const TlRowVectorMatrix Lk 
@@ -281,7 +291,7 @@ void DfCD::calcCholeskyVectorsForJK()
             }
 
             this->destroyEngines();
-            this->log_.info("");
+            this->log_.info("CD (K) routine: end");
         }
         break;
         

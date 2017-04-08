@@ -43,11 +43,12 @@ protected:
         Na = 16,
         Sab = 32,
         CD = 64,
-        X = 128,
-        INV = 256,
-        CHOLESKY_VECTORS_XC = 512,
-        GRID_FREE = 1024,
-        GRID = 2048
+        CDK = 128,
+        X = 256,
+        INV = 512,
+        CHOLESKY_VECTORS_XC = 1024,
+        GRID_FREE = 2048,
+        GRID = 4096
     };
 
 public:
@@ -66,6 +67,7 @@ protected:
     virtual void createOverlapMatrix();
     virtual void createERIMatrix();
     void createCholeskyVectors();
+    void createCholeskyVectors_forK();
 
     void createInverseMatrixes();
     void createXMatrix();
