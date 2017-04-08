@@ -1,0 +1,19 @@
+sudo: required
+language: c++
+services:
+  - docker
+before_script:
+  - pwd
+  - docker pull hiracchi/pdf-builder
+script:
+  - pwd
+  - ls -al
+  - docker run -d --name pdf -v "${PWD}:/work" hiracchi/pdf-builder
+  - docker exec -it pdf pdf-py-setup.sh --branch develop --work /tmp
+  - docker exec -it pdf pdf-builder.sh -o /tmp/pdf
+  - docker exec -it pdf pdf-check.sh --branch develop serial_dev
+notifications:
+  on_success: always
+  on_failure: always
+  
+                              
