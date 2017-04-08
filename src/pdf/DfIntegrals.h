@@ -67,7 +67,7 @@ protected:
     virtual void createOverlapMatrix();
     virtual void createERIMatrix();
     void createCholeskyVectors();
-    void createCholeskyVectors_forK();
+    void createCholeskyVectors_K();
 
     void createInverseMatrixes();
     void createXMatrix();
