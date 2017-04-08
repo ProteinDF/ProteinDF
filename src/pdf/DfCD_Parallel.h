@@ -31,8 +31,9 @@ public:
     virtual ~DfCD_Parallel();
 
 public:
-    void calcCholeskyVectorsForJK();
-    void calcCholeskyVectorsForGridFree();
+    virtual void calcCholeskyVectorsForJK();
+    virtual void calcCholeskyVectorsForK();
+    virtual void calcCholeskyVectorsForGridFree();
 
     virtual void getJ(TlSymmetricMatrix* pJ);
     void getJ_D(TlDistributeSymmetricMatrix* pJ);
