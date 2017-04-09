@@ -1383,15 +1383,12 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
     {
         PQ_PairArray local_I2PQ;
         TlSparseSymmetricMatrix local_diagMat(numOfAOs);
-        TlSparseSymmetricMatrix local_schwartzTable(numOfAOs);
         int threadID = 0;
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
-
         assert(0 <= threadID);
         assert(threadID < this->numOfThreads_);
-
         this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
         
 #pragma omp for schedule(runtime)
@@ -1438,7 +1435,6 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
                     }
                 }
             }
-            local_schwartzTable.set(shellIndexP, shellIndexQ, std::sqrt(maxValue));
         }
 
         // add up
@@ -1480,7 +1476,6 @@ void DfCD::calcDiagonals_K_full_kernel(const TlOrbitalInfoObject& orbInfo,
     {
         PQ_PairArray local_I2PR;
         TlSparseMatrix local_diagMat(numOfAOs, numOfAOs);
-        TlSparseMatrix local_schwartzTable(numOfAOs, numOfAOs);
         int threadID = 0;
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
@@ -1532,7 +1527,6 @@ void DfCD::calcDiagonals_K_full_kernel(const TlOrbitalInfoObject& orbInfo,
                     }
                 }
             }
-            local_schwartzTable.set(shellIndexP, shellIndexR, std::sqrt(maxValue));
         }
 
         // add up
