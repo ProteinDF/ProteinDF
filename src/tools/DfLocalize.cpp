@@ -59,7 +59,7 @@ void DfLocalize::makeGroup()
 }
 
 
-void DfLocalize::localize()
+void DfLocalize::localize(const std::string& inputCMatrixPath)
 {
     std::cout << TlUtils::format("number of Atoms = %ld", this->m_nNumOfAtoms) << std::endl;
     std::cout << TlUtils::format("number of AOs   = %ld", this->m_nNumOfAOs) << std::endl;
@@ -72,9 +72,12 @@ void DfLocalize::localize()
         abort();
     }
 
-    const std::string C_path = this->getCMatrixPath(DfObject::RUN_RKS, this->m_nIteration);
-    if (this->C_.load(C_path) == false) {
-        std::cerr << "could not load: " << C_path << std::endl;
+    std::string CMatrixPath = inputCMatrixPath;
+    if (CMatrixPath.empty() == true) {
+        CMatrixPath = this->getCMatrixPath(DfObject::RUN_RKS, this->m_nIteration);
+    }
+    if (this->C_.load(CMatrixPath) == false) {
+        std::cerr << "could not load: " << CMatrixPath << std::endl;
         abort();
     }
 

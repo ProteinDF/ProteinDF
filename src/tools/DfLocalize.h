@@ -60,7 +60,7 @@ public:
     virtual ~DfLocalize();
 
 public:
-    virtual void localize();
+    virtual void localize(const std::string& inputCMatrixPath = "");
 
 protected:
     void makeGroup();

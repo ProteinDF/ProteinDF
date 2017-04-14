@@ -32,7 +32,7 @@ DfLocalize_Parallel::~DfLocalize_Parallel()
 }
 
 
-void DfLocalize_Parallel::localize()
+void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const std::size_t numOfAOs = this->m_nNumOfAOs;
@@ -53,9 +53,12 @@ void DfLocalize_Parallel::localize()
             abort();
         }
 
-        const std::string C_path = this->getCMatrixPath(DfObject::RUN_RKS, this->m_nIteration);
-        if (this->C_.load(C_path) == false) {
-            std::cerr << "could not load: " << C_path << std::endl;
+        std::string CMatrixPath = inputCMatrixPath;
+        if (CMatrixPath.empty() == true) {
+            CMatrixPath = this->getCMatrixPath(DfObject::RUN_RKS, this->m_nIteration);
+        }
+        if (this->C_.load(CMatrixPath) == false) {
+            std::cerr << "could not load: " << CMatrixPath << std::endl;
             abort();
         }
     }
@@ -101,69 +104,73 @@ void DfLocalize_Parallel::localize()
                 rComm.receiveDataFromAnySource(jobRequest, &src);
                 //std::cerr << TlUtils::format("[0] recv %d from=%d", jobRequest, src) << std::endl;
                 switch (jobRequest) {
-                case REQUEST_JOB: {
-                    const int hasJob = this->getJobItem(&jobItem);
-
-                    switch (hasJob) {
-                    case 0:
-                        // finished
+                case REQUEST_JOB:
+                    // slaveが仕事を要求
                     {
-                        rComm.sendData(FINISHED_JOB, src);
-                        ++numOfFinishedProc;
-                        if (numOfFinishedProc == rComm.getNumOfProc() -1) {
-                            isEscapeLoop = true;
+                        const int hasJob = this->getJobItem(&jobItem);
+                        
+                        switch (hasJob) {
+                        case 0:
+                            // finished
+                            {
+                                rComm.sendData(FINISHED_JOB, src);
+                                ++numOfFinishedProc;
+                                if (numOfFinishedProc == rComm.getNumOfProc() -1) {
+                                    isEscapeLoop = true;
+                                }
+                            }
+                            break;
+                        case 1:
+                            // assigned job
+                            {
+                                rComm.sendData(ASSIGNED_JOB, src);
+                                const std::size_t orb_i = jobItem.orb_i;
+                                const std::size_t orb_j = jobItem.orb_j;
+                                rComm.sendData(orb_i, src);
+                                rComm.sendData(orb_j, src);
+                                TlVector vec_i = this->C_.getColVector(orb_i);
+                                TlVector vec_j = this->C_.getColVector(orb_j);
+                                rComm.sendData(vec_i, src);
+                                rComm.sendData(vec_j, src);
+                            }
+                            break;
+                        case 2:
+                            // wait
+                            {
+                                rComm.sendData(WAIT, src);
+                            }
+                            break;
+                            
+                        default:
+                            // something wrong
+                            abort();
+                            break;
                         }
                     }
-                    break;
-                    case 1:
-                        // assigned job
-                    {
-                        rComm.sendData(ASSIGNED_JOB, src);
-                        const std::size_t orb_i = jobItem.orb_i;
-                        const std::size_t orb_j = jobItem.orb_j;
-                        rComm.sendData(orb_i, src);
-                        rComm.sendData(orb_j, src);
-                        TlVector vec_i = this->C_.getColVector(orb_i);
-                        TlVector vec_j = this->C_.getColVector(orb_j);
-                        rComm.sendData(vec_i, src);
-                        rComm.sendData(vec_j, src);
-                    }
-                    break;
-                    case 2:
-                        // wait
-                    {
-                        rComm.sendData(WAIT, src);
-                    }
-                    break;
-
-                    default:
-                        // something wrong
-                        abort();
-                        break;
-                    }
-                }
                 break;
 
-                case SEND_RESULTS: {
-                    rComm.receiveData(orb_i, src);
-                    rComm.receiveData(orb_j, src);
-                    rComm.receiveData(vec_i, src);
-                    rComm.receiveData(vec_j, src);
-                    //std::cerr << TlUtils::format("[0] recv job from=%d", src) << std::endl;
-
-                    // 行列の格納
-                    for (std::size_t row = 0; row < numOfAOs; ++row) {
-                        this->C_.set(row, orb_i, vec_i[row]);
-                        this->C_.set(row, orb_j, vec_j[row]);
+                case SEND_RESULTS:
+                    // slaveが結果を返す
+                    {
+                        rComm.receiveData(orb_i, src);
+                        rComm.receiveData(orb_j, src);
+                        rComm.receiveData(vec_i, src);
+                        rComm.receiveData(vec_j, src);
+                        //std::cerr << TlUtils::format("[0] recv job from=%d", src) << std::endl;
+                        
+                        // 行列の格納
+                        for (std::size_t row = 0; row < numOfAOs; ++row) {
+                            this->C_.set(row, orb_i, vec_i[row]);
+                            this->C_.set(row, orb_j, vec_j[row]);
+                        }
+                        
+                        // 行列ロックの解除
+                        const std::size_t index_i = orb_i - this->startOrb_;
+                        const std::size_t index_j = orb_j - this->startOrb_;
+                        this->jobOccupiedOrb_[index_i] = false;
+                        this->jobOccupiedOrb_[index_j] = false;
                     }
-
-                    // 行列ロックの解除
-                    const std::size_t index_i = orb_i - this->startOrb_;
-                    const std::size_t index_j = orb_j - this->startOrb_;
-                    this->jobOccupiedOrb_[index_i] = false;
-                    this->jobOccupiedOrb_[index_j] = false;
-                }
-                break;
+                    break;
 
                 default:
                     // something wrong...
@@ -237,10 +244,13 @@ void DfLocalize_Parallel::localize()
         bool isBreak = false;
         if (rComm.isMaster() == true) {
             std::cout << TlUtils::format("itr: %d sum of delta_g: %10.5e\n", num_iteration +1, sumDeltaG);
-            this->C_.save(TlUtils::format("./lo_Work/fl_Mtr_C.lo.occu.rks%d", num_iteration +1));
+            // this->C_.save(TlUtils::format("./lo_Work/fl_Mtr_C.lo.occu.rks%d", num_iteration +1));
+            DfObject::saveCloMatrix(RUN_RKS, num_iteration +1, this->C_);
 
             if (sumDeltaG < this->threshold_) {
                 std::cout << "number of iteration: " << num_iteration +1 << std::endl;
+                (*(this->pPdfParam_))["lo/num_of_iterations"] = num_iteration +1;
+                (*(this->pPdfParam_))["lo/satisfied"] = "yes";
                 isBreak = true;
             }
         }
@@ -260,11 +270,11 @@ int DfLocalize_Parallel::getJobItem(DfLocalize::JobItem* pJob, bool isInitialize
 {
     assert(pJob != NULL);
 
-    static std::size_t jobIndex = 0;
+    // static std::size_t jobIndex = 0;
     const std::size_t maxJobIndex = this->jobList_.size();
 
     if (isInitialized == true) {
-        jobIndex = 0;
+        // jobIndex = 0;
         //maxJobIndex = this->jobList_.size();
 
         // for parallel operation
