@@ -54,7 +54,7 @@ DfCD::DfCD(TlSerializeData* pPdfParam)
         this->epsilon_ = (*pPdfParam)["CD_epsilon"].getDouble();
     }    
 
-    this->CDAM_tau_K_ = 1.0E-10;
+    this->CDAM_tau_K_ = 1.0E-4;
     if ((*pPdfParam)["CDAM_tau_K"].getStr().empty() != true) {
         this->CDAM_tau_K_ = (*pPdfParam)["CDAM_tau_K"].getDouble();
     }    
