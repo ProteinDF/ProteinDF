@@ -1199,7 +1199,7 @@ void DfCD::calcDiagonals_K_full(const TlOrbitalInfoObject& orbInfo,
                                 PQ_PairArray *pI2PR,
                                 TlVector *pDiagonals)
 {
-    const double tau = this->CDAM_tau_;
+    const double tau = this->CDAM_tau_K_;
     this->log_.info(TlUtils::format("CDAM tau: %e", tau));
     this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffThreshold_primitive_));
 
@@ -1252,7 +1252,6 @@ void DfCD::calcDiagonals_K_half(const TlOrbitalInfoObject& orbInfo,
                                 PQ_PairArray *pI2PR,
                                 TlVector *pDiagonals)
 {
-    // const double tau = this->CDAM_tau_;
     const double tau = this->CDAM_tau_K_;
     this->log_.info(TlUtils::format("CDAM tau(K): %e", tau));
     this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffThreshold_primitive_));
