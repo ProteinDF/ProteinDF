@@ -1467,7 +1467,7 @@ void DfCD::calcDiagonals_K_full_kernel(const TlOrbitalInfoObject& orbInfo,
     const index_type numOfAOs = orbInfo.getNumOfOrbitals();
     pDiagonalMat->resize(numOfAOs, numOfAOs);
 
-    const double tau = this->CDAM_tau_;
+    const double tau = this->CDAM_tau_K_;
     const int taskListSize = taskList.size();
     // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
@@ -1558,7 +1558,7 @@ void DfCD::calcDiagonals_K_half_kernel(const TlOrbitalInfoObject& orbInfo,
     const index_type numOfAOs = orbInfo.getNumOfOrbitals();
     pDiagonalMat->resize(numOfAOs);
 
-    const double tau = this->CDAM_tau_;
+    const double tau = this->CDAM_tau_K_;
     const int taskListSize = taskList.size();
 
 #pragma omp parallel
