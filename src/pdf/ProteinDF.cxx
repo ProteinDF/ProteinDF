@@ -150,7 +150,7 @@ void ProteinDF::startlogo(const std::string& version,
     this->log_.info("\n");
     this->log_.info(info);
     this->log_.info("\n");
-    this->log_.info("copyright(c) 1997-2012 ProteinDF development team.");
+    this->log_.info("copyright(c) 1997-2017 ProteinDF development team.");
     this->log_.info("\n");
     this->log_.info("PLEASE CITE following:");
     this->log_.info(" F. Sato, Y. Shigemitsu, I. Okazaki, S. Yahiro, M. Fukue, S. Kozuru,");
