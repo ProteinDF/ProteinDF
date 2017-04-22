@@ -67,6 +67,6 @@ void usage(const std::string& name)
     std::cout << "%s [OPTION]" << std::endl;
     std::cout << "initialize ProteinDF parameters" << std::endl;
     std::cout << std::endl;
-    std::cout << "  -m FILE: output MsgPack file" << std::endl;
+    std::cout << "  -o FILE: output MsgPack file" << std::endl;
 }
 

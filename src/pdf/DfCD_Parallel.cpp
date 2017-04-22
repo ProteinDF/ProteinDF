@@ -22,6 +22,7 @@
 #include <omp.h>
 #endif // _OPENMP
 
+#include "CnError.h"
 #include "DfCD_Parallel.h"
 #include "DfTaskCtrl_Parallel.h"
 #include "DfOverlapEngine.h"
@@ -29,6 +30,7 @@
 #include "TlCommunicate.h"
 #include "TlTime.h"
 #include "TlSystem.h"
+#include "TlUtils.h"
 
 #define TRANS_MEM_SIZE (1 * 1024 * 1024 * 1024) // 1GB
 // #define CD_DEBUG
@@ -49,15 +51,84 @@ DfCD_Parallel::~DfCD_Parallel()
 
 void DfCD_Parallel::calcCholeskyVectorsForJK()
 {
+    this->log_.info("calc CholeskyVectors (parallel)");
+
     // for J & K
     const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
                                 (*this->pPdfParam_)["basis_set"]);
-    // productive code
-    const TlRowVectorMatrix Ljk 
-        = DfCD::calcCholeskyVectorsOnTheFly<DfEriEngine>(orbInfo,
-                                                         this->getI2pqVtrPath());
-    this->saveL(Ljk, DfObject::getLjkMatrixPath());
+    // productive code for J
+    {
+        this->createEngines<DfEriEngine>();
+        
+        const TlRowVectorMatrix Ljk 
+            = this->calcCholeskyVectorsOnTheFlyS_new(orbInfo,
+                                                     this->getI2pqVtrPath(),
+                                                     this->epsilon_,
+                                                     &DfCD::calcDiagonals,
+                                                     &DfCD_Parallel::getSuperMatrixElements);
+        this->saveL(Ljk, DfObject::getLjkMatrixPath());
+        
+        this->destroyEngines();
+        this->log_.info("");
+    }
 }
+
+
+// for K
+void DfCD_Parallel::calcCholeskyVectorsForK()
+{
+    this->log_.info("calc CholeskyVectors (K) (parallel)");
+
+    const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
+                                (*this->pPdfParam_)["basis_set"]);
+    switch (this->fastCDK_mode_) {
+    case FASTCDK_PRODUCTIVE_FULL:
+        {
+            this->log_.info("fast CDK routine(parallel; full).");
+            this->createEngines<DfEriEngine>();
+            
+            const TlRowVectorMatrix Lk 
+                = this->calcCholeskyVectorsOnTheFlyS_new(orbInfo,
+                                                         this->getI2prVtrPath(),
+                                                         this->epsilon_K_,
+                                                         &DfCD::calcDiagonals_K_full,
+                                                         &DfCD_Parallel::getSuperMatrixElements_K_full);
+            this->saveL(Lk, DfObject::getLkMatrixPath());
+            
+            this->destroyEngines();
+            this->log_.info("");
+        }
+        break;
+
+    case FASTCDK_PRODUCTIVE:
+        {
+            this->log_.info("fast CDK routine(parallel).");
+            this->createEngines<DfEriEngine>();
+            
+            const TlRowVectorMatrix Lk 
+                = this->calcCholeskyVectorsOnTheFlyS_new(orbInfo,
+                                                         this->getI2prVtrPath(),
+                                                         this->epsilon_K_,
+                                                         &DfCD::calcDiagonals_K_half,
+                                                         &DfCD_Parallel::getSuperMatrixElements_K_half);
+            this->saveL(Lk, DfObject::getLkMatrixPath());
+            
+            this->destroyEngines();
+            this->log_.info("");
+        }
+        break;
+
+    case FASTCDK_NONE:
+        this->log_.info("fast CDK routine is invalided.");
+        break;
+
+    default:
+        this->log_.critical("program error");
+        CnErr.abort();
+        break;
+    }
+}
+
 
 void DfCD_Parallel::calcCholeskyVectorsForGridFree()
 {
@@ -77,10 +148,17 @@ void DfCD_Parallel::calcCholeskyVectorsForGridFree()
     } else {
         // productive code
         this->log_.info("build Lxc matrix by on-the-fly method.");
-        const TlRowVectorMatrix Lxc 
-            = DfCD::calcCholeskyVectorsOnTheFly<DfOverlapEngine>(orbInfo_p,
-                                                                 this->getI2pqVtrXCPath());
+        this->createEngines<DfOverlapEngine>();
+
+        const TlRowVectorMatrix Lxc
+            = this->calcCholeskyVectorsOnTheFlyS_new(orbInfo_p,
+                                                     this->getI2pqVtrXCPath(),
+                                                     this->epsilon_,
+                                                     &DfCD::calcDiagonals,
+                                                     &DfCD_Parallel::getSuperMatrixElements);
+
         this->saveL(Lxc, DfObject::getLxcMatrixPath());
+        this->destroyEngines();
     }
 }
 
@@ -99,8 +177,9 @@ void DfCD_Parallel::finalize(TlSymmetricMatrix *pMat)
 void DfCD_Parallel::finalize(TlSparseSymmetricMatrix *pMat)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    rComm.gatherToMaster(*pMat);
-    rComm.broadcast(*pMat);
+    // rComm.gatherToMaster(*pMat);
+    // rComm.broadcast(*pMat);
+    rComm.allReduce_SUM(*pMat);
 }
 
 
@@ -203,52 +282,30 @@ DfCD::PQ_PairArray DfCD_Parallel::getI2PQ(const std::string& filepath)
     return I2PQ;
 }
 
-// void DfCD_Parallel::saveLjk(const TlMatrix& L)
-// {
-//     TlCommunicate& rComm = TlCommunicate::getInstance();
-//     if (rComm.isMaster() == true) {
-//         DfCD::saveLjk(L);
-//     }
-// }
 
-
-// TlMatrix DfCD_Parallel::getLjk()
+// TlSymmetricMatrix DfCD_Parallel::getPMatrix()
 // {
 //     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-//     TlMatrix L;
+//     TlMatrix P;
 //     if (rComm.isMaster() == true) {
-//         L = DfCD::getLjk();
+//         P = DfCD::getPMatrix();
 //     }
-//     rComm.broadcast(L);
-
-//     return L;
+//     rComm.broadcast(P);
+//     return P;
 // }
 
 
-TlSymmetricMatrix DfCD_Parallel::getPMatrix()
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-    TlMatrix P;
-    if (rComm.isMaster() == true) {
-        P = DfCD::getPMatrix();
-    }
-    rComm.broadcast(P);
-    return P;
-}
-
-
-void DfCD_Parallel::divideCholeskyBasis(const index_type numOfCBs,
+void DfCD_Parallel::divideCholeskyBasis(const index_type numOfCVs,
                                         index_type *pStart, index_type *pEnd)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProcs();
     const int rank = rComm.getRank();
     
-    const index_type range = (numOfCBs + numOfProcs -1) / numOfProcs;
+    const index_type range = (numOfCVs + numOfProcs -1) / numOfProcs;
     *pStart = range * rank;
-    *pEnd = std::min(range * (rank +1), numOfCBs);
+    *pEnd = std::min(range * (rank +1), numOfCVs);
 }
 
 
@@ -289,15 +346,25 @@ DfCD_Parallel::getCholeskyVectorA_distribute(const TlOrbitalInfoObject& orbInfo_
 
 
 TlRowVectorMatrix 
-DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
-                                            const std::string& I2PQ_path)
+DfCD_Parallel::calcCholeskyVectorsOnTheFlyS_new(const TlOrbitalInfoObject& orbInfo,
+                                                const std::string& I2PQ_path,
+                                                const double threshold,
+                                                void (DfCD_Parallel::*calcDiagonalsFunc)(
+                                                    const TlOrbitalInfoObject&,
+                                                    PQ_PairArray*,
+                                                    TlVector*),
+                                                void (DfCD_Parallel::*getSuperMatrixElementsFunc)(
+                                                    const TlOrbitalInfoObject&,
+                                                    const index_type,
+                                                    const std::vector<index_type>&,
+                                                    const PQ_PairArray&,
+                                                    std::vector<double>*))
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int myRank = rComm.getRank();
 
     this->log_.info("call on-the-fly Cholesky Decomposition routine (parallel; symmetric)");
     assert(this->pEngines_ != NULL);
-    this->initializeCutoffStats(orbInfo.getMaxShellType());
 
     const index_type numOfAOs = orbInfo.getNumOfOrbitals();
     const std::size_t numOfPQs = numOfAOs * (numOfAOs +1) / 2;
@@ -306,19 +373,20 @@ DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
 
     // CDAM
     assert(this->pEngines_ != NULL);
-    TlSparseSymmetricMatrix schwartzTable(numOfAOs);
     PQ_PairArray I2PQ;
     TlVector diagonals; // 対角成分
-    this->calcDiagonals(orbInfo, &I2PQ, &schwartzTable, &diagonals);
-    const index_type numOfPQtilde = I2PQ.size();
-    assert(diagonals.getSize() == numOfPQtilde);
+    (this->*calcDiagonalsFunc)(orbInfo, &I2PQ, &diagonals);
+    assert((std::size_t)diagonals.getSize() == I2PQ.size());
 
-    this->log_.info(TlUtils::format("number of screened pairs of orbitals: %ld", numOfPQtilde));
+    this->log_.info(TlUtils::format("number of screened pairs of orbitals: %ld", I2PQ.size()));
     this->saveI2PQ(I2PQ, I2PQ_path);
 
+    // debug
+    // this->debug_I2PQ_ = I2PQ;
+
     // prepare variables
-    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
-    const double threshold = this->epsilon_;
+    this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", threshold));
+    const index_type numOfPQtilde = I2PQ.size();
     TlRowVectorMatrix L(numOfPQtilde, 1,
                         rComm.getNumOfProcs(), myRank,
                         this->isEnableMmap_);
@@ -359,23 +427,30 @@ DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
         }
 
         const index_type pivot_m = pivot[numOfCDVcts];
+        error = diagonals[pivot_m];
+        if (error < threshold) {
+            break;
+        }
+
         const double l_m_pm = std::sqrt(diagonals[pivot_m]);
         const double inv_l_m_pm = 1.0 / l_m_pm;
         L.set(pivot_m, numOfCDVcts, l_m_pm);
 
-        // ERI
-        std::vector<double> G_pm;
+        // get supermatrix elements
         const index_type numOf_G_cols = numOfPQtilde -(numOfCDVcts +1);
+        std::vector<double> G_pm(numOf_G_cols);
         {
             std::vector<index_type> G_col_list(numOf_G_cols);
             for (index_type c = 0; c < numOf_G_cols; ++c) {
                 const index_type pivot_i = pivot[(numOfCDVcts +1) +c]; // from (m+1) to N
                 G_col_list[c] = pivot_i;
             }
-            G_pm = this->getSuperMatrixElements(orbInfo,
-                                                pivot_m, G_col_list, I2PQ, schwartzTable);
+            (this->*getSuperMatrixElementsFunc)(orbInfo,
+                                                pivot_m, G_col_list, I2PQ, &G_pm);
         }
         assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
+        std::vector<double> output_G_pm(numOf_G_cols, 0.0);
+        rComm.iAllReduce_SUM(&(G_pm[0]), &(output_G_pm[0]), numOf_G_cols);
 
         // CD calc
         TlVector L_pm(numOfCDVcts +1);
@@ -387,36 +462,46 @@ DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
             }
             rComm.broadcast(L_pm, PE_in_charge);
         }
+        assert(L_pm.getSize() == numOfCDVcts +1);
 
         std::vector<double> L_xm(numOf_G_cols);
         TlVector update_diagonals(numOfPQtilde);
+        rComm.wait(&(output_G_pm[0]));
 #pragma omp parallel for schedule(runtime)
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[(numOfCDVcts +1) +i]; // from (m+1) to N
             if (L.getSubunitID(pivot_i) == myRank) {
                 TlVector L_pi = L.getVector(pivot_i);
                 const double sum_ll = (L_pi.dot(L_pm)).sum();
-                const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+                // const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+                const double l_m_pi = (output_G_pm[i] - sum_ll) * inv_l_m_pm;
 
-#pragma omp critical(DfCD_Parallel__calcCholeskyVectorsOnTheFlyS_L)
-                {
-                    L_xm[i] += l_m_pi;
-                }
+#pragma omp atomic
+                L_xm[i] += l_m_pi;
                 
-#pragma omp critical(DfCD_Parallel__calcCholeskyVectorsOnTheFlyS_diagonal)
-                {
-                    update_diagonals[pivot_i] -= l_m_pi * l_m_pi;
-                }
+#pragma omp atomic
+                update_diagonals[pivot_i] -= l_m_pi * l_m_pi;
             }
         }
-        rComm.allReduce_SUM(L_xm);
-        rComm.allReduce_SUM(update_diagonals);
-        diagonals += update_diagonals;
 
+        // allReduce_SUM (L_xm)
+        std::vector<double> output_L_xm(numOf_G_cols, 0.0);
+        rComm.iAllReduce_SUM(&(L_xm[0]), &(output_L_xm[0]), numOf_G_cols);
+
+        // allReduce_SUM (update_diagonals)
+        std::vector<double> output_update_diagonals(numOfPQtilde, 0.0);
+        rComm.iAllReduce_SUM(&(update_diagonals[0]), &(output_update_diagonals[0]), numOfPQtilde);
+
+
+        rComm.wait(&(output_L_xm[0]));
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[(numOfCDVcts +1) +i]; // from (m+1) to N
-            L.set(pivot_i, numOfCDVcts, L_xm[i]);
+            L.set(pivot_i, numOfCDVcts, output_L_xm[i]);
         }
+
+        rComm.wait(&(output_update_diagonals[0]));
+        diagonals += output_update_diagonals;
+
 
         error = diagonals[pivot[numOfCDVcts]];
         ++numOfCDVcts;
@@ -424,175 +509,8 @@ DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
     L.resize(numOfPQtilde, numOfCDVcts);
     this->log_.info(TlUtils::format("Cholesky Vectors: %d", numOfCDVcts));
 
-    this->schwartzCutoffReport(orbInfo.getMaxShellType());
-
     return L;
 }
-
-
-// TlRowVectorMatrix2 DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo,
-//                                                                const std::string& I2PQ_path)
-// {
-
-//     // prepare variables (parallel)
-//     TlRowVectorMatrix2 L(N, 1,
-//                          rComm.getNumOfProcs(),
-//                          rComm.getRank(),
-//                          this->isEnableMmap_); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
-//     const index_type local_N = L.getNumOfLocalRows();
-//     std::vector<double> L_pm(N);
-//     std::vector<int> global_pivot(N); // ERI計算リストを作成するために必要
-//     std::vector<int> reverse_pivot(N); // global_pivotの逆引き
-//     std::vector<int> local_pivot(local_N);
-//     std::vector<double> local_diagonals(local_N);
-//     const int myRank = rComm.getRank();
-
-//     double error = 0.0;
-//     index_type error_global_loc = 0;
-//     index_type error_local_loc = 0;
-//     {
-//         int local_i = 0;
-//         for (int global_i = 0; global_i < N; ++global_i) {
-//             global_pivot[global_i] = global_i;
-//             reverse_pivot[global_i] = global_i;
-//             if (L.getPEinChargeByRow(global_i) == myRank) {
-//                 local_pivot[local_i] = global_i;
-//                 local_diagonals[local_i] = global_diagonals[global_i];
-//                 if (error < local_diagonals[local_i]) {
-//                     error_local_loc = local_i;
-//                     error_global_loc = local_pivot[local_i];
-//                     error = local_diagonals[local_i];
-//                 }
-//                 ++local_i;
-//             }
-//         }
-//         assert(local_i == local_N);
-//     }
-//     rComm.allReduce_MAXLOC(&error, &error_global_loc);
-
-//     index_type m = 0;
-//     index_type local_m = 0;
-//     if (error_global_loc == reverse_pivot[local_pivot[error_local_loc]]) {
-//         std::swap(local_pivot[local_m], local_pivot[error_local_loc]);
-//         ++local_m;
-//     }
-
-//     int progress = 0;
-//     index_type division = std::max<index_type>(N * 0.01, 100);
-//     while (error > threshold) {
-// #ifdef DEBUG_CD
-//         this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", m, N, error));
-// #endif // DEBUG_CD
-
-//         // progress 
-//         if (m >= progress * division) {
-//             this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e",
-//                                             m, error));
-//             ++progress;
-
-//             // メモリの確保
-//             L.reserve_cols(progress * division);
-//         }
-//         L.resize(N, m+1);
-
-//         // pivot
-//         std::swap(global_pivot[m], global_pivot[error_global_loc]);
-//         reverse_pivot[global_pivot[m]] = m;
-//         reverse_pivot[global_pivot[error_global_loc]] = error_global_loc;
-
-//         const double l_m_pm = std::sqrt(error);
-//         const index_type pivot_m = global_pivot[m];
-//         L.set(pivot_m, m, l_m_pm); // 通信発生せず。関係無いPEは値を捨てる。
-//         const double inv_l_m_pm = 1.0 / l_m_pm;
-
-//         // calc
-//         std::vector<double> G_pm;
-//         // const index_type numOf_G_cols = N -(m+1);
-//         const index_type numOf_G_cols = N -(m+1);
-//         {
-//             std::vector<index_type> G_col_list(numOf_G_cols);
-//             for (index_type i = 0; i < numOf_G_cols; ++i) {
-//                 const index_type pivot_i = global_pivot[m+1 +i]; // from (m+1) to N
-//                 G_col_list[i] = pivot_i;
-//             }
-//             G_pm = this->getSuperMatrixElements(orbInfo,
-//                                                 pivot_m, G_col_list, I2PQ, schwartzTable);
-//         }
-//         assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
-
-//         // CD calc
-//         {
-//             // 全PEに分配
-//             const int PEinCharge = L.getPEinChargeByRow(pivot_m);
-// #ifndef NDEBUG
-//             if (PEinCharge == rComm.getRank()) {
-//                 const index_type copySize = L.getRowVector(pivot_m, &(L_pm[0]), m +1);
-//                 assert(copySize == m +1);
-//             }
-// #endif // NDEBUG
-//             rComm.broadcast(&(L_pm[0]), m +1, PEinCharge);
-//         }
-
-//         error = 0.0;
-// #pragma omp parallel
-//         {
-//             std::vector<double> L_pi(m +1);
-//             double my_error = 0.0;
-//             int my_error_global_loc = 0;
-//             int my_error_local_loc = 0;
-
-// #pragma omp for schedule(runtime)
-//             for (int i = local_m; i < local_N; ++i) {
-//                 const int pivot_i = local_pivot[i];
-//                 const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
-//                 assert(copySize == m +1);
-//                 double sum_ll = 0.0;
-//                 for (index_type j = 0; j < m; ++j) {
-//                     sum_ll += L_pm[j] * L_pi[j];
-//                 }
-
-//                 const int G_pm_index = reverse_pivot[pivot_i] - (m+1);
-//                 const double l_m_pi = (G_pm[G_pm_index] - sum_ll) * inv_l_m_pm;
-// #pragma omp critical(DfCD_Parallel__calcCholeskyVectorsOnTheFlyS_updateL)
-//                 {
-//                     L.set(pivot_i, m, l_m_pi);
-//                 }
-
-//                 const double ll = l_m_pi * l_m_pi;
-// #pragma omp atomic
-//                 global_diagonals[pivot_i] -= ll;
-
-//                 if (global_diagonals[pivot_i] > my_error) {
-//                     my_error = global_diagonals[pivot_i];
-//                     my_error_global_loc = reverse_pivot[pivot_i]; // == m +1 + i
-//                     my_error_local_loc = i;
-//                 }
-//             }
-
-// #pragma omp critical(DfCD_Parallel__calcCholeskyVectorsOnTheFlyS_update_error)
-//             {
-//                 if (error < my_error) {
-//                     error = my_error;
-//                     error_global_loc = my_error_global_loc;
-//                     error_local_loc = my_error_local_loc;
-//                 }
-//             }
-//         }
-//         rComm.allReduce_MAXLOC(&error, &error_global_loc);
-//         global_diagonals[global_pivot[error_global_loc]] = error;
-
-//         ++m;
-//         if (error_global_loc == reverse_pivot[local_pivot[error_local_loc]]) {
-//             std::swap(local_pivot[local_m], local_pivot[error_local_loc]);
-//             ++local_m;
-//         }
-//     }
-//     this->log_.info(TlUtils::format("Cholesky Vectors: %d", m));
-
-//     this->schwartzCutoffReport(orbInfo.getMaxShellType());
-
-//     return L;
-// }
 
 
 TlRowVectorMatrix DfCD_Parallel::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
@@ -633,7 +551,7 @@ TlRowVectorMatrix DfCD_Parallel::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInf
                         rComm.getRank(),
                         this->isEnableMmap_); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
     const index_type local_N = L.getNumOfLocalVectors();
-    std::vector<double> L_pm(N);
+    TlVector L_pm(N);
     std::vector<int> global_pivot(N); // ERI計算リストを作成するために必要
     std::vector<int> reverse_pivot(N); // global_pivotの逆引き
     std::vector<int> local_pivot(local_N);
@@ -728,7 +646,7 @@ TlRowVectorMatrix DfCD_Parallel::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInf
         error = 0.0;
 #pragma omp parallel
         {
-            std::vector<double> L_pi(m +1);
+            TlVector L_pi(m +1);
             double my_error = 0.0;
             int my_error_global_loc = 0;
             int my_error_local_loc = 0;
@@ -787,146 +705,107 @@ TlRowVectorMatrix DfCD_Parallel::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInf
 }
 
 
-std::vector<double>
-DfCD_Parallel::getSuperMatrixElements(const TlOrbitalInfoObject& orbInfo,
-                                      const index_type G_row,
-                                      const std::vector<index_type>& G_col_list,
-                                      const PQ_PairArray& I2PQ,
-                                      const TlSparseSymmetricMatrix& schwartzTable)
+void DfCD_Parallel::getSuperMatrixElements(const TlOrbitalInfoObject& orbInfo,
+                                           const index_type G_row,
+                                           const std::vector<index_type>& G_col_list,
+                                           const PQ_PairArray& I2PQ,
+                                           std::vector<double>* pSuperMatrixElements)
 {
+    assert(pSuperMatrixElements != NULL);
+
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProcs();
-    const int rank = rComm.getRank();
+    const int myRank = rComm.getRank();
 
-    const std::size_t numOfG_cols = G_col_list.size();
-    const std::size_t range = (numOfG_cols + numOfProcs -1) / numOfProcs;
-    const std::size_t start = std::min(range * rank, numOfG_cols);
-    const std::size_t end = std::min(range * (rank +1), numOfG_cols);
+    this->ERI_cache_.clear();
 
-    std::vector<double> elements;
-    if (end - start > 0) {
-        std::vector<index_type> G_col_list_local(end - start);
-        std::copy(G_col_list.begin() + start,
-                  G_col_list.begin() + end,
-                  G_col_list_local.begin());
-        elements = DfCD::getSuperMatrixElements(orbInfo, 
-                                                G_row,
-                                                G_col_list_local,
-                                                I2PQ,
-                                                schwartzTable);
-    }
-    assert(elements.size() == (end - start));
+    const index_type sizeOfCols = G_col_list.size();
+    const index_type block = (sizeOfCols + numOfProcs -1) / numOfProcs;
+    const index_type start = std::min(block * myRank, sizeOfCols);
+    const index_type end = std::min(block * (myRank +1), sizeOfCols);
 
-    // gather to master
-    const int TAG_SME_HEADER = 1001;
-    const int TAG_SME_DATA   = 1002;
-    std::vector<double> answer(numOfG_cols);
-    std::vector<std::size_t> header(2);
-    if (rank == 0) {
-        // copy from myself
-        std::copy(elements.begin(), elements.end(),
-                  answer.begin());
+    const std::vector<IndexPair4S> calcList = this->getCalcList(orbInfo, G_row,
+                                                                G_col_list, start, end, I2PQ);
+    this->calcERIs(orbInfo, calcList);
+    *pSuperMatrixElements = this->setERIs(orbInfo, G_row,
+                                          G_col_list, start, end, I2PQ);
 
-        // receive data from slaves
-        std::vector<bool> recvCheck(numOfProcs, false);
-        std::vector<double> buf(range);
-        for (int pe = 1; pe < numOfProcs; ++pe) {
-            int src = 0;
-            rComm.receiveDataFromAnySourceX(&(header[0]), 2, &src, TAG_SME_HEADER);
+    assert(static_cast<index_type>(pSuperMatrixElements->size()) == sizeOfCols);
 
-            const std::size_t local_start = header[0];
-            const std::size_t local_end   = header[1];
-            const std::size_t size = local_end - local_start;
-            rComm.receiveDataX(&(buf[0]), size, src, TAG_SME_DATA);
+    // rComm.allReduce_SUM(answer);
+}
 
-            std::copy(buf.begin(), buf.begin() + size,
-                      answer.begin() + local_start);
-        }
 
-    } else {
-        header[0] = start;
-        header[1] = end;
-        rComm.sendDataX(&(header[0]), 2, 0, TAG_SME_HEADER);
-        rComm.sendDataX(&(elements[0]), elements.size(), 0, TAG_SME_DATA);
-    }
+void DfCD_Parallel::getSuperMatrixElements_K_full(const TlOrbitalInfoObject& orbInfo,
+                                                  const index_type G_row,
+                                                  const std::vector<index_type>& G_col_list,
+                                                  const PQ_PairArray& I2PR,
+                                                  std::vector<double>* pSuperMatrixElements)
+{
+    assert(pSuperMatrixElements != NULL);
 
-    //rComm.broadcast(answer);
-    rComm.broadcast(&(answer[0]), numOfG_cols, 0);
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int numOfProcs = rComm.getNumOfProcs();
+    const int myRank = rComm.getRank();
 
-    return answer;
+    this->ERI_cache_.clear();
+
+    const index_type sizeOfCols = G_col_list.size();
+    const index_type block = (sizeOfCols + numOfProcs -1) / numOfProcs;
+    const index_type start = std::min(block * myRank, sizeOfCols);
+    const index_type end = std::min(block * (myRank +1), sizeOfCols);
+
+    const std::vector<IndexPair4S> calcList = DfCD::getCalcList_K_full(orbInfo, G_row,
+                                                                       G_col_list, start, end, I2PR);
+    DfCD::calcERIs_K(orbInfo, calcList);
+    *pSuperMatrixElements = DfCD::setERIs_K_full(orbInfo, G_row,
+                                                 G_col_list, start, end, I2PR);
+
+    assert(static_cast<index_type>(pSuperMatrixElements->size()) == sizeOfCols);
+
+    // rComm.allReduce_SUM(answer);
+}
+
+
+void DfCD_Parallel::getSuperMatrixElements_K_half(const TlOrbitalInfoObject& orbInfo,
+                                                  const index_type G_row,
+                                                  const std::vector<index_type>& G_col_list,
+                                                  const PQ_PairArray& I2PR,
+                                                  std::vector<double>* pSuperMatrixElements)
+{
+    assert(pSuperMatrixElements != NULL);
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int numOfProcs = rComm.getNumOfProcs();
+    const int myRank = rComm.getRank();
+
+    this->ERI_cache_.clear();
+
+    const index_type sizeOfCols = G_col_list.size();
+    const index_type block = (sizeOfCols + numOfProcs -1)/ numOfProcs;
+    const index_type start = std::min(block * myRank, sizeOfCols);
+    const index_type end = std::min(block * (myRank +1), sizeOfCols);
+
+    const std::vector<IndexPair4S> calcList = DfCD::getCalcList_K_half(orbInfo, G_row,
+                                                                       G_col_list, start, end, I2PR);
+    DfCD::calcERIs_K(orbInfo, calcList);
+    *pSuperMatrixElements = DfCD::setERIs_K_half(orbInfo, G_row,
+                                                 G_col_list, start, end, I2PR);
+    
+    assert(static_cast<index_type>(pSuperMatrixElements->size()) == sizeOfCols);
+
+    // rComm.allReduce_SUM(answer);
 }
 
 
 void DfCD_Parallel::saveL(const TlRowVectorMatrix& L,
                           const std::string& path)
 {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    const int numOfProcs = rComm.getNumOfProcs();
-    const int rank = rComm.getRank();
+    this->log_.info("transform the Cholesky vectors.");
+    TlColVectorMatrix colVecL = this->transLMatrix(L);
 
-    const index_type numOfRows = L.getNumOfRows();
-    const index_type numOfCols = L.getNumOfCols();
-    const bool isUsingMemManager = this->isEnableMmap_;
-    TlColVectorMatrix colVecL(numOfRows, numOfCols, numOfProcs, rank,
-                              isUsingMemManager);
-
-    const div_t turns = std::div(numOfRows, numOfProcs);
-    const index_type localRows = turns.quot + 1;
-
-    const std::size_t colMemSize = numOfCols * sizeof(double);
-    const std::size_t transMemSize = TRANS_MEM_SIZE;
-    const int transRowsPerCycle = std::max<int>(transMemSize / colMemSize, 1);
-    const int transCycle = localRows / transRowsPerCycle + 1;
-    std::vector<double> buf(numOfCols * transRowsPerCycle);
-    for (int proc = 0; proc < numOfProcs; ++proc) {
-        for (int cycle = 0; cycle < transCycle; ++cycle) {
-            if (proc == rank) {
-                std::vector<double> v(numOfCols);
-                for (index_type r = 0; r < transRowsPerCycle; ++r) {
-                    const index_type row = (cycle * transRowsPerCycle + r) * numOfProcs + rank;
-                    if (row < numOfRows) {
-                        //L.getRowVector(row, &(v[0]), numOfCols);
-                        v = L.getVector(row);
-                        // assert(v.size() == numOfCols);
-                        std::copy(v.begin(),
-                                  v.begin() + numOfCols,
-                                  buf.begin() + numOfCols * r);
-                    }
-                }
-            }
-            rComm.broadcast(&(buf[0]), transRowsPerCycle * numOfCols, proc);
-            
-            // set
-            for (index_type r = 0; r < transRowsPerCycle; ++r) {
-                index_type row = (cycle * transRowsPerCycle + r) * numOfProcs + proc;
-                if (row < numOfRows) {
-                    for (index_type col = 0; col < numOfCols; ++col) {
-                        colVecL.set(row, col, buf[numOfCols * r + col]);
-                    }
-                }
-            }
-        }
-    }
-    
+    this->log_.info("save the Cholesky vectors.");
     colVecL.save(path);
-
-    // if (this->isDebugSaveL_ == true) {
-    //     {
-    //         TlMatrix tmpL = L.getTlMatrix();
-    //         rComm.allReduce_SUM(tmpL);
-    //         if (rComm.isMaster()) {
-    //             tmpL.save("L.mat");
-    //         }
-    //     }
-
-    //     {
-    //         TlMatrix tmpL = colVecL.getTlMatrix();
-    //         rComm.allReduce_SUM(tmpL);
-    //         if (rComm.isMaster()) {
-    //             tmpL.save("L2.mat");
-    //         }
-    //     }
-    // }
 }
 
 
@@ -988,79 +867,86 @@ void DfCD_Parallel::getJ(TlSymmetricMatrix* pJ)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     this->log_.info("calc J by CD method (parallel).");
-    const TlSymmetricMatrix P = this->getPMatrix();
 
     // cholesky vector
-    TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
-    L.load(DfObject::getLjkMatrixPath());
-    // assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
-    // assert(L.getRank() == rComm.getRank());
+    const bool isUsingMemManager = this->isEnableMmap_;
+    TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
+                        isUsingMemManager);
+    // TlColVectorMatrix L;
+    L.load(DfObject::getLjkMatrixPath(), rComm.getRank());
+    assert(L.getNumOfSubunits() == rComm.getNumOfProcs());
+
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
+    const TlVector vP = this->getScreenedDensityMatrix(I2PQ);
 
     const index_type cvSize = L.getNumOfRows();
-    const index_type numOfCBs = L.getNumOfCols();
+    assert(std::size_t(cvSize) == I2PQ.size());
+    const index_type numOfCVs = L.getNumOfCols();
 
-    std::vector<double> cv(cvSize);
-    for (index_type I = 0; I < numOfCBs; ++I) {
+    TlVector vJ(cvSize);
+    for (index_type I = 0; I < numOfCVs; ++I) {
         const int PEinCharge = L.getSubunitID(I);
         if (PEinCharge == rComm.getRank()) {
-            // const index_type copySize = L.getColVector(I, &(cv[0]), cvSize);
-            cv = L.getVector(I);
-            // assert(cv.size() == cvSize);
-
-            TlSymmetricMatrix LI = 
-                this->getCholeskyVector(cv, I2PQ);
-            assert(LI.getNumOfRows() == this->m_nNumOfAOs);
-            assert(LI.getNumOfCols() == this->m_nNumOfAOs);
-
-            TlSymmetricMatrix QI = LI;
-            QI.dot(P);
-            const double qi = QI.sum();
+            const TlVector LI = L.getVector(I);
             
-            *pJ += qi*LI;
+            TlVector tmpLI = LI;
+            const double qi = tmpLI.dot(vP).sum();
+
+            vJ += qi*LI;
         }
     }
 
-    rComm.allReduce_SUM(*pJ);
+    rComm.allReduce_SUM(vJ);
+    this->expandJMatrix(vJ, I2PQ, pJ);
 }
 
 
-void DfCD_Parallel::getK(const RUN_TYPE runType,
-                         TlSymmetricMatrix* pK)
+TlSymmetricMatrix DfCD_Parallel::getPMatrix(const RUN_TYPE runType, const int itr)
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    TlSymmetricMatrix P;
+    if (rComm.isMaster()) {
+        P = DfCD::getPMatrix(runType, itr);
+    }
+    rComm.broadcast(P);
+    return P;
+}
+
+
+void DfCD_Parallel::getK_S_woCD(const RUN_TYPE runType,
+                                TlSymmetricMatrix* pK)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     this->log_.info("calc K by CD method (parallel).");
 
     // cholesky vector
-    TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
-    L.load(DfObject::getLjkMatrixPath());
-    // assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
-    // assert(L.getRank() == rComm.getRank());
-    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
+    const bool isUsingMemManager = this->isEnableMmap_;
+    TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
+                        isUsingMemManager);
+    L.load(DfObject::getLjkMatrixPath(), rComm.getRank());
+    assert(L.getNumOfSubunits() == rComm.getNumOfProcs());
 
+    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     const index_type cvSize = L.getNumOfRows();
-    const index_type numOfCBs = L.getNumOfCols();
+    const index_type numOfCVs = L.getNumOfCols();
     
-    TlSymmetricMatrix P = 0.5 * this->getPMatrix(); // RKS
-    const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
+    this->log_.info("load density matrix");
+    TlSymmetricMatrix P = this->getPMatrix(runType, this->m_nIteration -1);
     
-    std::vector<double> cv(cvSize);
-    for (index_type I = 0; I < numOfCBs; ++I) {
+    this->log_.info("calc by Cholesky Vectors");
+    TlVector cv(cvSize);
+    for (index_type I = 0; I < numOfCVs; ++I) {
         const int PEinCharge = L.getSubunitID(I);
         if (PEinCharge == rComm.getRank()) {
-            //const index_type copySize = L.getVector(I, &(cv[0]), cvSize);
             cv = L.getVector(I);
-            assert(cv.size() == cvSize);
+            assert(cv.getSize() == cvSize);
 
-            TlSymmetricMatrix l = 
-                this->getCholeskyVector(cv, I2PQ);
+            const TlSymmetricMatrix l = this->getCholeskyVector(cv, I2PQ);
             
-            TlMatrix X = l * C;
-            TlMatrix Xt = X;
-            Xt.transpose();
-            
-            TlSymmetricMatrix XX = X * Xt;
-            *pK += XX;
+            TlMatrix X = l * P;
+            X *= l;
+
+            *pK += X;
         }
     }
     rComm.allReduce_SUM(*pK);
@@ -1069,88 +955,153 @@ void DfCD_Parallel::getK(const RUN_TYPE runType,
 }
 
 
+void DfCD_Parallel::getK_S_fast(const RUN_TYPE runType,
+                                TlSymmetricMatrix* pK)
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    this->log_.info("calc K(fast) by CD method (parallel).");
+
+    // cholesky vector
+    const bool isUsingMemManager = this->isEnableMmap_;
+    TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
+                        isUsingMemManager);
+    // TlColVectorMatrix L;
+    L.load(DfObject::getLkMatrixPath(), rComm.getRank());
+    assert(L.getNumOfSubunits() == rComm.getNumOfProcs());
+
+    const PQ_PairArray I2PR = this->getI2PQ(this->getI2prVtrPath());
+    const TlVector vP = this->getScreenedDensityMatrix(runType, I2PR);
+
+    const index_type cvSize = L.getNumOfRows();
+    assert(std::size_t(cvSize) == I2PR.size());
+    const index_type numOfCVs = L.getNumOfCols();
+
+    TlVector vK(cvSize);
+    for (index_type I = 0; I < numOfCVs; ++I) {
+        const int PEinCharge = L.getSubunitID(I);
+        if (PEinCharge == rComm.getRank()) {
+            const TlVector LI = L.getVector(I);
+            
+            TlVector tmpLI = LI;
+            const double qi = tmpLI.dot(vP).sum();
+
+            vK += qi*LI;
+        }
+    }
+    vK *= -1.0;
+
+    rComm.allReduce_SUM(vK);
+    this->expandKMatrix(vK, I2PR, pK);
+}
+
+
 void DfCD_Parallel::getJ_D(TlDistributeSymmetricMatrix* pJ)
 {
     this->log_.info("calc J by CD method (parallel; distributed).");
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    const TlDistributeSymmetricMatrix P = 
-        DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
-
     // cholesky vector
-    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     const bool isUsingMemManager = this->isEnableMmap_;
     TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank(), 
-                         isUsingMemManager);
-    L.load(DfObject::getLjkMatrixPath());
-    // assert(L.getNumOfAllProcs() == rComm.getNumOfProcs());
-    // assert(L.getRank() == rComm.getRank());
+                        isUsingMemManager);
+    L.load(DfObject::getLjkMatrixPath(), rComm.getRank());
+    assert(L.getNumOfSubunits() == rComm.getNumOfProcs());
+
+    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
+    const TlVector vP = this->getScreenedDensityMatrixD(I2PQ);
 
     const index_type cvSize = L.getNumOfRows();
-    const index_type numOfCBs = L.getNumOfCols();
+    assert(std::size_t(cvSize) == I2PQ.size());
+    const index_type numOfCVs = L.getNumOfCols();
 
-    std::vector<double> cv(cvSize);
-    for (index_type I = 0; I < numOfCBs; ++I) {
+    TlVector vJ(cvSize);
+    for (index_type I = 0; I < numOfCVs; ++I) {
         const int PEinCharge = L.getSubunitID(I);
         if (PEinCharge == rComm.getRank()) {
-            //const index_type copySize = L.getVector(I, &(cv[0]), cvSize);
-            cv = L.getVector(I);
-            assert(cv.size() == cvSize);
-        }
-        rComm.broadcast(&(cv[0]), cvSize, PEinCharge);
+            const TlVector LI = L.getVector(I);
+            
+            TlVector tmpLI = LI;
+            const double qi = tmpLI.dot(vP).sum();
 
-        TlDistributeSymmetricMatrix LI = 
-            this->getCholeskyVector_distribute(cv, I2PQ);
-        assert(LI.getNumOfRows() == this->m_nNumOfAOs);
-        assert(LI.getNumOfCols() == this->m_nNumOfAOs);
-        
-        TlDistributeSymmetricMatrix QI = LI;
-        QI.dot(P);
-        const double qi = QI.sum();
-        
-        *pJ += qi*LI;
+            vJ += qi*LI;
+        }
     }
+
+    rComm.allReduce_SUM(vJ);
+    this->expandJMatrixD(vJ, I2PQ, pJ);
 }
 
+TlVector DfCD_Parallel::getScreenedDensityMatrixD(const PQ_PairArray& I2PQ)
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    const TlDistributeSymmetricMatrix P = DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1);
+    const std::size_t numOfI = I2PQ.size();
+    TlVector answer(numOfI);
+    
+    for (std::size_t i = 0; i < numOfI; ++i) {
+        const Index2& pair = I2PQ[i];
+        const index_type r = pair.index1();
+        const index_type c = pair.index2();
+        const double coef = (r != c) ? 2.0 : 1.0;
+        answer.set(i, coef * P.getLocal(r, c));
+    }
+    rComm.allReduce_SUM(answer);
+
+    return answer;
+}
+
+void DfCD_Parallel::expandJMatrixD(const TlVector& vJ, const PQ_PairArray& I2PQ, TlDistributeSymmetricMatrix* pJ)
+{
+    assert(pJ != NULL);
+    const index_type numOfI = I2PQ.size();
+    for (index_type i = 0; i < numOfI; ++i) {
+        const Index2& pair = I2PQ[i];
+        pJ->set(pair.index1(), pair.index2(), vJ.get(i));
+    }
+}
 
 void DfCD_Parallel::getK_D(const RUN_TYPE runType,
                            TlDistributeSymmetricMatrix* pK)
 {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    this->log_.info("calc K by CD method (parallel; distributed).");
+    this->getK_S_woCD_D(runType, pK);
+}
 
+void DfCD_Parallel::getK_S_woCD_D(const RUN_TYPE runType,
+                                  TlDistributeSymmetricMatrix* pK)
+{
+    this->log_.info("calc K by CD method (parallel; distributed).");
+    TlCommunicate& rComm = TlCommunicate::getInstance();
 
     // cholesky vector
-    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     const bool isUsingMemManager = this->isEnableMmap_;
     TlColVectorMatrix L(1, 1, rComm.getNumOfProcs(), rComm.getRank(),
-                         isUsingMemManager);
-    L.load(DfObject::getLjkMatrixPath());
+                        isUsingMemManager);
+    L.load(DfObject::getLjkMatrixPath(), rComm.getRank());
+    assert(L.getNumOfSubunits() == rComm.getNumOfProcs());
 
+    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
     const index_type cvSize = L.getNumOfRows();
     const index_type numOfCVs = L.getNumOfCols();
 
-    this->log_.info("calc CD of density matrix");
-    this->log_.info(TlUtils::format("epsilon = %8.3e", this->epsilon_));
-    TlDistributeSymmetricMatrix P = 
-        0.5 * DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS, this->m_nIteration -1); // RKS
-    const TlDistributeMatrix C = P.choleskyFactorization(this->epsilon_);
-    //const TlDistributeMatrix C = P.choleskyFactorization_mod2(this->epsilon_);
+    this->log_.info("load density matrix");
+    //const TlDistributeSymmetricMatrix P = DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration -1); // RKS
+    // const TlDistributeMatrix P = DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration -1); // RKS
+    const TlDistributeSymmetricMatrix P = 0.5 * DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(runType, this->m_nIteration -1); // RKS
 
     TlTime time_all;
     TlTime time_bcast;
     TlTime time_translate;
     TlTime time_multimat1;
     TlTime time_multimat2;
-    TlTime time_sym2gen;
     TlTime time_transpose;
     TlTime time_add;
     
     time_all.start();
-    this->log_.info("start loop");
+    this->log_.info("calc by Cholesky Vectors");
     int progress = 0;
     const int division = numOfCVs * 0.1;
-    std::vector<double> cv(cvSize);
+    TlVector cv(cvSize);
     for (index_type I = 0; I < numOfCVs; ++I) {
         // progress
         if (I >= progress * division) {
@@ -1162,36 +1113,26 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
         time_bcast.start();
         const int PEinCharge = L.getSubunitID(I);
         if (PEinCharge == rComm.getRank()) {
-            //const index_type copySize = L.getVector(I, &(cv[0]), cvSize);
             cv = L.getVector(I);
-            assert(cv.size() == cvSize);
+            assert(cv.getSize() == cvSize);
         }
         rComm.broadcast(&(cv[0]), cvSize, PEinCharge);
         time_bcast.stop();
 
         time_translate.start();
-        TlDistributeSymmetricMatrix l = 
-            this->getCholeskyVector_distribute(cv, I2PQ);
+        const TlDistributeSymmetricMatrix l = this->getCholeskyVector_distribute(cv, I2PQ);
         time_translate.stop();
 
         time_multimat1.start();
-        TlDistributeMatrix X = l * C;
+        TlDistributeMatrix X = l * P;
         time_multimat1.stop();
 
-        time_sym2gen.start();
-        TlDistributeMatrix Xt = X;
-        time_sym2gen.stop();
-
-        time_transpose.start();
-        Xt.transpose();
-        time_transpose.stop();
-        
         time_multimat2.start();
-        TlDistributeSymmetricMatrix XX = X * Xt;
+        X *= l;
         time_multimat2.stop();
 
         time_add.start();
-        *pK += XX;
+        *pK += X;
         time_add.stop();
     }
     
@@ -1204,7 +1145,6 @@ void DfCD_Parallel::getK_D(const RUN_TYPE runType,
     this->log_.info(TlUtils::format("K translate: %10.1f sec.", time_translate.getElapseTime()));
     this->log_.info(TlUtils::format("K multi1:    %10.1f sec.", time_multimat1.getElapseTime()));
     this->log_.info(TlUtils::format("K multi2:    %10.1f sec.", time_multimat2.getElapseTime()));
-    this->log_.info(TlUtils::format("K sym2gen:   %10.1f sec.", time_sym2gen.getElapseTime()));
     this->log_.info(TlUtils::format("K transpose: %10.1f sec.", time_transpose.getElapseTime()));
     this->log_.info(TlUtils::format("K add:       %10.1f sec.", time_add.getElapseTime()));
 }
@@ -1238,16 +1178,16 @@ void DfCD_Parallel::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     this->log_.info(TlUtils::format("I2PQ size: %ld", I2PQ.size()));
 
     const index_type cvSize = L.getNumOfRows();
-    const index_type numOfCBs = L.getNumOfCols();
-    this->log_.info(TlUtils::format("L size: %d x %d", cvSize, numOfCBs));
+    const index_type numOfCVs = L.getNumOfCols();
+    this->log_.info(TlUtils::format("L size: %d x %d", cvSize, numOfCVs));
 
-    std::vector<double> cv(cvSize);
-    for (index_type I = 0; I < numOfCBs; ++I) {
+    TlVector cv(cvSize);
+    for (index_type I = 0; I < numOfCVs; ++I) {
         const int PEinCharge = L.getSubunitID(I);
         if (PEinCharge == rComm.getRank()) {
             //const index_type copySize = L.getVector(I, &(cv[0]), cvSize);
             cv = L.getVector(I);
-            assert(cv.size() == cvSize);
+            assert(cv.getSize() == cvSize);
 
             TlSymmetricMatrix LI = 
                 this->getCholeskyVector(cv, I2PQ);
@@ -1286,18 +1226,18 @@ void DfCD_Parallel::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM)
     this->log_.info(TlUtils::format("I2PQ size: %ld", I2PQ.size()));
 
     const index_type cvSize = L.getNumOfRows();
-    const index_type numOfCBs = L.getNumOfCols();
-    this->log_.info(TlUtils::format("L size: %d x %d", cvSize, numOfCBs));
+    const index_type numOfCVs = L.getNumOfCols();
+    this->log_.info(TlUtils::format("L size: %d x %d", cvSize, numOfCVs));
 
     const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
     
-    std::vector<double> cv(cvSize);
-    for (index_type I = 0; I < numOfCBs; ++I) {
+    TlVector cv(cvSize);
+    for (index_type I = 0; I < numOfCVs; ++I) {
         const int PEinCharge = L.getSubunitID(I);
         if (PEinCharge == rComm.getRank()) {
             //const index_type copySize = L.getVector(I, &(cv[0]), cvSize);
             cv = L.getVector(I);
-            assert(cv.size() == cvSize);
+            assert(cv.getSize() == cvSize);
 
             TlMatrix l = 
                 this->getCholeskyVectorA(orbInfo_p, orbInfo_q,
@@ -1347,16 +1287,16 @@ void DfCD_Parallel::getM_S(const TlDistributeSymmetricMatrix& P,
     this->log_.info(TlUtils::format("I2PQ size: %ld", I2PQ.size()));
 
     const index_type cvSize = L.getNumOfRows();
-    const index_type numOfCBs = L.getNumOfCols();
-    this->log_.info(TlUtils::format("L size: %d x %d", cvSize, numOfCBs));
+    const index_type numOfCVs = L.getNumOfCols();
+    this->log_.info(TlUtils::format("L size: %d x %d", cvSize, numOfCVs));
 
-    std::vector<double> cv(cvSize);
-    for (index_type I = 0; I < numOfCBs; ++I) {
+    TlVector cv(cvSize);
+    for (index_type I = 0; I < numOfCVs; ++I) {
         const int PEinCharge = L.getSubunitID(I);
         if (PEinCharge == rComm.getRank()) {
             // const index_type copySize = L.getVector(I, &(cv[0]), cvSize);
             cv = L.getVector(I);
-            assert(cv.size() == cvSize);
+            assert(cv.getSize() == cvSize);
         }
         rComm.broadcast(&(cv[0]), cvSize, PEinCharge);
 
@@ -1408,7 +1348,7 @@ void DfCD_Parallel::getM_A(const TlDistributeSymmetricMatrix& P,
     this->log_.info("start loop");
     int progress = 0;
     const int division = numOfCVs * 0.1;
-    std::vector<double> cv(cvSize);
+    TlVector cv(cvSize);
     for (index_type I = 0; I < numOfCVs; ++I) {
         // progress
         if (I >= progress * division) {
@@ -1421,7 +1361,7 @@ void DfCD_Parallel::getM_A(const TlDistributeSymmetricMatrix& P,
         if (PEinCharge == rComm.getRank()) {
             // const index_type copySize = L.getVector(I, &(cv[0]), cvSize);
             cv = L.getVector(I);
-            assert(cv.size() == cvSize);
+            assert(cv.getSize() == cvSize);
         }
         rComm.broadcast(&(cv[0]), cvSize, PEinCharge);
 
@@ -1437,4 +1377,95 @@ void DfCD_Parallel::getM_A(const TlDistributeSymmetricMatrix& P,
         *pM += XX;
     }
 }
+
+
+TlColVectorMatrix DfCD_Parallel::transLMatrix(const TlRowVectorMatrix& rowVectorMatrix)
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int numOfProcs = rComm.getNumOfProcs();
+    const int myRank = rComm.getRank();
+    const int tag = 12345; // 適当
+
+    const index_type numOfRows = rowVectorMatrix.getNumOfRows();
+    const index_type numOfCols = rowVectorMatrix.getNumOfCols();
+    
+    const bool isUsingMemManager = this->isEnableMmap_;
+    TlColVectorMatrix colVectorMatrix(numOfRows, numOfCols,
+                                      numOfProcs, myRank, isUsingMemManager);
+
+    // prepare partial matrix
+    std::vector<unsigned long> matrixElementsSizes(numOfProcs);
+    std::vector<std::vector<TlMatrixElement> > matrixElements(numOfProcs);
+    {
+        std::vector<TlSparseMatrix> partMat(numOfProcs, TlSparseMatrix(numOfRows, numOfCols));
+        for (index_type row = 0; row < numOfRows; ++row) {
+            if (rowVectorMatrix.getSubunitID(row) == myRank) {
+                for (index_type col = 0; col < numOfCols; ++col) {
+                    const double v = rowVectorMatrix.get(row, col);
+                    
+                    const int unit = colVectorMatrix.getSubunitID(col);
+                    partMat[unit].set(row, col, v); // TODO: ベクトルのアクセスにするべき
+                }
+            }
+        }
+
+        for (int proc = 0; proc < numOfProcs; ++proc) {
+            matrixElementsSizes[proc] = partMat[proc].getSize();
+            matrixElements[proc] = partMat[proc].getMatrixElements();
+        }
+    }
+
+    // send 
+    for (int proc = 0; proc < numOfProcs; ++proc) {
+        if (proc != myRank) {
+            rComm.iSendData(matrixElementsSizes[proc], proc, tag);
+
+            if (matrixElementsSizes[proc] > 0) {
+                rComm.iSendDataX(&(matrixElements[proc][0]),
+                                 matrixElementsSizes[proc],
+                                 proc, tag +1);
+            }
+        }
+    }
+
+    // my partMat
+    {
+        std::vector<TlMatrixElement>::const_iterator itEnd = matrixElements[myRank].end();
+        for (std::vector<TlMatrixElement>::const_iterator it = matrixElements[myRank].begin(); it != itEnd; ++it) {
+            const index_type r = it->row;
+            const index_type c = it->col;
+            colVectorMatrix.set(r, c, it->value);
+        }
+    }
+
+    // recv
+    {
+        for (int i = 0; i < (numOfProcs -1); ++i) {
+            int proc = 0;
+            unsigned long tmp_size = 0;
+            rComm.receiveDataFromAnySource(tmp_size, &proc, tag);
+
+            if (tmp_size > 0) {
+                std::vector<TlMatrixElement> tmp_elements(tmp_size);
+                rComm.receiveDataX(&(tmp_elements[0]), tmp_size, proc, tag +1);
+
+                std::vector<TlMatrixElement>::const_iterator itEnd = tmp_elements.end();
+                for (std::vector<TlMatrixElement>::const_iterator it = tmp_elements.begin(); it != itEnd; ++it) {
+                    colVectorMatrix.set(it->row, it->col, it->value);
+                }
+            }
+        }
+    }
+
+    // wait
+    for (int proc = 0; proc < numOfProcs; ++proc) {
+        if (proc != myRank) {
+            rComm.wait(&(matrixElementsSizes[proc]));
+            rComm.wait(&(matrixElements[proc][0]));
+        }
+    }
+
+    return colVectorMatrix;
+}
+
 

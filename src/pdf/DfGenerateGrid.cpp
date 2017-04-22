@@ -159,6 +159,7 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
     
     
     const int dNumOfAtoms = this->m_nNumOfAtoms;
+    this->log_.info(TlUtils::format("# atoms: %d", dNumOfAtoms));
     this->coord_.resize(dNumOfAtoms);
     for (int i = 0; i < dNumOfAtoms; ++i) {
         this->coord_[i] = this->flGeometry_.getCoordinate(i);
@@ -188,6 +189,16 @@ DfGenerateGrid::DfGenerateGrid(TlSerializeData* pPdfParam)
             this->numOfColsOfGrdMat_ += coef * 4; // rho, gradRhoX, gradRhoY, gradRhoZ
         }
     }
+
+    // initialize 
+    this->logger("make table");
+    this->makeTable();
+
+    this->logger("set Cell Para");
+    this->setCellPara();
+
+    this->log_.info("calc grid origin");
+    this->O_ = this->getOMatrix();
 }
 
 DfGenerateGrid::~DfGenerateGrid()
@@ -198,17 +209,11 @@ int DfGenerateGrid::dfGrdMain()
 {
     this->logger("start");
 
-    this->logger("make table");
-    this->makeTable();
-
-    this->logger("set Cell Para");
-    this->setCellPara();
-
-    this->log_.info("calc grid origin");
-    const TlMatrix O = this->getOMatrix();
+    // this->log_.info("calc grid origin");
+    // const TlMatrix O = this->getOMatrix();
 
     this->logger("generateGrid");
-    this->generateGrid(O);
+    this->generateGrid(this->O_);
 
     this->logger("end");
 
@@ -996,7 +1001,7 @@ void DfGenerateGrid::generateGrid_SG1(const TlMatrix& O,
         // screening by weight
         {
             const int numOfGrids_orig = numOfGrids;
-            this->screeningGridsByWeight(&crdpoint, &weightvec);
+            this->screeningGridsByWeight0(&crdpoint, &weightvec);
             numOfGrids = crdpoint.size();
             assert(weightvec.size() == numOfGrids);
             {
@@ -1767,44 +1772,45 @@ void DfGenerateGrid::calcMultiCenterWeight_Becke(
     for (int Omega = 0; Omega < numOfGrids; ++Omega) {
         const TlPosition pos_O = grids[Omega];
         
-        std::vector<double> rr(numOfAtoms);
-        for (int p = 0; p < numOfAtoms; ++p) {
-            rr[p] = pos_O.distanceFrom(this->coord_[p]);
-        }
+        // std::vector<double> rr(numOfAtoms);
+        // for (int p = 0; p < numOfAtoms; ++p) {
+        //     rr[p] = pos_O.distanceFrom(this->coord_[p]);
+        // }
 
         std::vector<double> Ps(numOfAtoms);
         for (int m = 0; m < numOfAtoms; ++m) {
-            double Psuij = 1.0;
-            const int atomicNumber_m = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(m));
-            const double R_m = this->getCovalentRadiiForBecke(atomicNumber_m);
+            // double Psuij = 1.0;
+            // const int atomicNumber_m = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(m));
+            // const double R_m = this->getCovalentRadiiForBecke(atomicNumber_m);
             
-            for (int n = 0; n < numOfAtoms; ++n) {
-                if (m != n) {
-                    const int atomicNumber_n = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(n));
-                    const double R_n = this->getCovalentRadiiForBecke(atomicNumber_n);
+            // for (int n = 0; n < numOfAtoms; ++n) {
+            //     if (m != n) {
+            //         const int atomicNumber_n = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(n));
+            //         const double R_n = this->getCovalentRadiiForBecke(atomicNumber_n);
                     
-                    double u_ij = (rr[m] - rr[n]) * this->invDistanceMatrix_(m, n);
+            //         double u_ij = (rr[m] - rr[n]) * this->invDistanceMatrix_(m, n);
 
-                    if (this->isAtomicSizeAdjustments_) {
-                        double au_ij = (R_m - R_n) / (R_m + R_n);
-                        double a = au_ij / (au_ij * au_ij - 1.0);
+            //         if (this->isAtomicSizeAdjustments_) {
+            //             double au_ij = (R_m - R_n) / (R_m + R_n);
+            //             double a = au_ij / (au_ij * au_ij - 1.0);
                             
-                        if (a < -0.50) {
-                            a = -0.50;
-                        } else if (a > 0.50) {
-                            a = 0.50;
-                        }
-                        u_ij = u_ij + a * (1.0 - u_ij * u_ij);
-                    }
+            //             if (a < -0.50) {
+            //                 a = -0.50;
+            //             } else if (a > 0.50) {
+            //                 a = 0.50;
+            //             }
+            //             u_ij = u_ij + a * (1.0 - u_ij * u_ij);
+            //         }
 
-                    const double f3 = this->Becke_f3(u_ij);
-                    const double s = 0.5 * (1.0 - f3);
+            //         const double f3 = this->Becke_f3(u_ij);
+            //         const double s = 0.5 * (1.0 - f3);
                     
-                    Psuij *= s;
-                }
-            }
-            
-            Ps[m] = Psuij;
+            //         Psuij *= s;
+            //     }
+            // }
+            // Ps[m] = Psuij;
+
+            Ps[m] = this->Ps_uij(m, pos_O);
         }
         
         // Normalization
@@ -1839,13 +1845,13 @@ void DfGenerateGrid::calcMultiCenterWeight_SS(
         std::vector<double> Ps(numOfAtoms);
         for (int m = 0; m < numOfAtoms; ++m) {
             double Psuij = 1.0;
-            const int atomicNumber_m = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(m));
-            const double R_m = this->getCovalentRadiiForBecke(atomicNumber_m);
+            // const int atomicNumber_m = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(m));
+            // const double R_m = this->getCovalentRadiiForBecke(atomicNumber_m);
             
             for (int n = 0; n < numOfAtoms; ++n) {
                 if (m != n) {
-                    const int atomicNumber_n = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(n));
-                    const double R_n = this->getCovalentRadiiForBecke(atomicNumber_n);
+                    // const int atomicNumber_n = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(n));
+                    // const double R_n = this->getCovalentRadiiForBecke(atomicNumber_n);
                     
                     double u_ij = (rr[m] - rr[n]) * this->invDistanceMatrix_(m, n);
 
@@ -1920,8 +1926,8 @@ double DfGenerateGrid::Becke_f3(const double x) {
 }
 
 
-void DfGenerateGrid::screeningGridsByWeight(std::vector<TlPosition>* pGrids,
-                                            std::vector<double>* pWeights)
+void DfGenerateGrid::screeningGridsByWeight0(std::vector<TlPosition>* pGrids,
+                                             std::vector<double>* pWeights)
 {
     const double threshold = this->weightCutoff_;
     const int numOfGrids = pGrids->size();
@@ -1947,4 +1953,398 @@ void DfGenerateGrid::screeningGridsByWeight(std::vector<TlPosition>* pGrids,
     *pGrids = tmpGrids;
     *pWeights = tmpWeights;
 }
+
+void DfGenerateGrid::screeningGridsByWeight(std::vector<TlPosition>* pGrids,
+                                            std::vector<double>* pSingleCenterWeights,
+                                            std::vector<double>* pPartitioningWeights)
+{
+    const double threshold = this->weightCutoff_;
+    const int numOfGrids = pGrids->size();
+    assert(numOfGrids == static_cast<int>(pSingleCenterWeights->size()));
+    assert(numOfGrids == static_cast<int>(pPartitioningWeights->size()));
+    
+    std::vector<TlPosition> tmpGrids(numOfGrids);
+    std::vector<double> tmpSingleCenterWeights(numOfGrids);
+    std::vector<double> tmpPartitioningWeights(numOfGrids);
+    int count = 0;
+    for (int i = 0; i < numOfGrids; ++i) {
+        const double singleCenterWeight = (*pSingleCenterWeights)[i];
+        const double partitioningWeight = (*pPartitioningWeights)[i];
+        const double weight = singleCenterWeight * partitioningWeight;
+        if (std::fabs(weight) > threshold) {
+            tmpGrids[count] = (*pGrids)[i];
+            tmpSingleCenterWeights[count] = singleCenterWeight;
+            tmpPartitioningWeights[count] = partitioningWeight;
+            ++count;
+        }
+    }
+
+    tmpGrids.resize(count);
+    tmpSingleCenterWeights.resize(count);
+    tmpPartitioningWeights.resize(count);
+    std::vector<TlPosition>(tmpGrids).swap(tmpGrids);
+    std::vector<double>(tmpSingleCenterWeights).swap(tmpSingleCenterWeights);
+    std::vector<double>(tmpPartitioningWeights).swap(tmpPartitioningWeights);
+
+    *pGrids = tmpGrids;
+    *pSingleCenterWeights = tmpSingleCenterWeights;
+    *pPartitioningWeights = tmpPartitioningWeights;
+}
+
+// --------------------------------------------------
+double DfGenerateGrid::Ps_uij(const int atomIndex_m, const TlPosition& gridpoint)
+{
+    const int numOfAtoms = this->m_nNumOfAtoms;
+    const int atomicNumber_m = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(atomIndex_m));
+    const double R_m = this->getCovalentRadiiForBecke(atomicNumber_m);
+    const double rr_m = gridpoint.distanceFrom(this->coord_[atomIndex_m]);
+    
+    double Ps_uij = 1.0;
+    for (int atomIndex_n = 0; atomIndex_n < numOfAtoms; ++atomIndex_n) {
+        if (atomIndex_m != atomIndex_n) {
+            const int atomicNumber_n = TlAtom::getElementNumber(this->flGeometry_.getAtomSymbol(atomIndex_n));
+            if (atomicNumber_n > 0) {
+                const double R_n = this->getCovalentRadiiForBecke(atomicNumber_n);
+                const double rr_n = gridpoint.distanceFrom(this->coord_[atomIndex_n]);
+                
+                double u_ij = (rr_m - rr_n) * this->invDistanceMatrix_(atomIndex_m,
+                                                                       atomIndex_n);
+                
+                if (this->isAtomicSizeAdjustments_) {
+                    double au_ij = (R_m - R_n) / (R_m + R_n);
+                    double a = au_ij / (au_ij * au_ij - 1.0);
+                    
+                    if (a < -0.50) {
+                        a = -0.50;
+                    } else if (a > 0.50) {
+                        a = 0.50;
+                    }
+                    u_ij = u_ij + a * (1.0 - u_ij * u_ij);
+                }
+                
+                const double f3 = this->Becke_f3(u_ij);
+                const double s = 0.5 * (1.0 - f3);
+                
+                Ps_uij *= s;
+            }
+        }
+    }
+    
+    return Ps_uij;
+}
+
+
+// --------------------------------------------------
+// for grid weight derivative
+// --------------------------------------------------
+void DfGenerateGrid::getGrids(const int atomIndex,
+                              std::vector<TlPosition>* pGrids,
+                              std::vector<double>* pSingleCenterWeights,
+                              std::vector<double>* pPartitioningWeights)
+{
+    const int gridType = SG_1;
+    const int numOfRadialGrids = 50;
+    const int radialGridType = RG_EularMaclaurin;
+    const int maxAngularGrids = 196;
+    const PARTITIONING_METHOD partitioningMethod = Paritioning_Becke;
+    this->getGrids_sub(atomIndex,
+                       gridType,
+                       numOfRadialGrids,
+                       radialGridType,
+                       maxAngularGrids,
+                       partitioningMethod,
+                       pGrids,
+                       pSingleCenterWeights,
+                       pPartitioningWeights);
+}
+
+
+void DfGenerateGrid::getGrids_sub(const int atomIndex,
+                                  const int gridType,
+                                  const int numOfRadialGrids,
+                                  const int radialGridType,
+                                  const int maxAngularGrids,
+                                  const PARTITIONING_METHOD partitioningMethod,
+                                  std::vector<TlPosition>* pGrids,
+                                  std::vector<double>* pSingleCenterWeights,
+                                  std::vector<double>* pPartitioningWeights)
+{
+    assert(pGrids != NULL);
+    assert(pSingleCenterWeights != NULL);
+    assert(pPartitioningWeights != NULL);
+
+    const int atomicNumber = TlPrdctbl::getAtomicNumber(this->flGeometry_.getAtomSymbol(atomIndex));
+    if (atomicNumber != 0) {
+        int numOfGrids = 0;
+        {
+            const int maxGrids = numOfRadialGrids * maxAngularGrids;
+            pGrids->resize(maxGrids);
+            pSingleCenterWeights->resize(maxGrids);
+            pPartitioningWeights->resize(maxGrids);
+        }
+
+        double rM = 0.0;
+        if (gridType == SG_1) {
+            rM = this->radiusList_[atomicNumber];
+        } else {
+            rM = TlPrdctbl::getBraggSlaterRadii(atomicNumber);
+        }
+        const double inv_rM = 1.0 / rM;
+        
+        // Set the partitioning parameters alpha used in the SG-1 grid
+        // set default value; for after atom #18
+        std::vector<double> alpha(5);
+        alpha[0] = 0.0;
+        alpha[1] = 0.0;
+        alpha[2] = 0.0;
+        alpha[3] = 10000.0;
+        if ((atomicNumber == 1) || (atomicNumber == 2)) {
+            alpha[0] = 0.2500;
+            alpha[1] = 0.5000;
+            alpha[2] = 1.0000;
+            alpha[3] = 4.5000;
+        } else if ((3 <= atomicNumber) && (atomicNumber <= 10)) {
+            alpha[0] = 0.1667;
+            alpha[1] = 0.5000;
+            alpha[2] = 0.9000;
+            alpha[3] = 3.5000;
+        } else if ((11 <= atomicNumber) && (atomicNumber <= 18)) {
+            alpha[0] = 0.1000;
+            alpha[1] = 0.4000;
+            alpha[2] = 0.8000;
+            alpha[3] = 2.5000;
+        }
+    
+        // Loop for the grid number of radial vector
+        // const int radvec_max = numOfRadialGrids;
+        // const int Nr = numOfRadialGrids;
+        for (int radvec = 0; radvec < numOfRadialGrids; ++radvec) {
+            const int i = radvec +1;
+
+            double ri = 0.0;
+            double wr = 0.0;
+            switch (radialGridType) {
+            case RG_GaussChebyshev:
+                this->getRadialAbscissaAndWeight_GaussChebyshev(
+                    rM, numOfRadialGrids, i, &ri, &wr);
+                break;
+
+            case RG_EularMaclaurin:
+                this->getRadialAbscissaAndWeight_EulerMaclaurin(
+                    rM, numOfRadialGrids, i, &ri, &wr);
+                break;
+
+            default:
+                this->log_.critical("unknown radial grid type.");
+                break;
+            }
+
+            // cutoff
+            if (ri > 30.0) {
+                 continue;
+            }
+
+            int numOfAngularGrids = 0;
+            if (gridType == SG_1) {
+                numOfAngularGrids = this->getNumOfPrunedAnglarPoints_SG1(
+                    ri,
+                    inv_rM,
+                    alpha);
+            } else {
+                numOfAngularGrids = this->getNumOfPrunedAnglarPoints(
+                    ri,
+                    maxAngularGrids,
+                    atomicNumber);
+            }
+            
+            // The coordinates of the atom on which the present grid is centred are put into the array "Ogridr"
+            std::vector<TlPosition> angularGrids(numOfAngularGrids);
+            std::vector<double> lebWeights(numOfAngularGrids);
+            this->getSphericalGrids(numOfAngularGrids,
+                                    ri,
+                                    wr,
+                                    this->coord_[atomIndex],
+                                    this->O_,
+                                    &angularGrids,
+                                    &lebWeights);
+            assert(angularGrids.size() == numOfAngularGrids);
+            assert(lebWeights.size() == numOfAngularGrids);
+
+            std::vector<double> partWeights(numOfAngularGrids, 1.0);
+            switch (partitioningMethod) {
+            case Paritioning_Becke:
+                this->calcMultiCenterWeight_Becke(atomIndex, numOfAngularGrids, angularGrids, &partWeights);
+                break;
+
+            case Partitioning_SSWeight:
+                this->calcMultiCenterWeight_SS(atomIndex, numOfAngularGrids, angularGrids, &partWeights);
+                break;
+
+            default:
+                this->log_.critical("unknown partitioning method type.");
+                break;
+            }
+
+
+            std::copy(angularGrids.begin(), angularGrids.end(), pGrids->begin() + numOfGrids);
+            std::copy(lebWeights.begin(),   lebWeights.end(),   pSingleCenterWeights->begin() + numOfGrids);
+            std::copy(partWeights.begin(),  partWeights.end(),  pPartitioningWeights->begin() + numOfGrids);
+            numOfGrids += numOfAngularGrids;
+        }
+
+        // screening by weight
+        {
+            const int numOfGrids_orig = numOfGrids;
+            this->screeningGridsByWeight(pGrids, pSingleCenterWeights, pPartitioningWeights);
+            numOfGrids = pGrids->size();
+            assert(pSingleCenterWeights->size() == numOfGrids);
+            assert(pPartitioningWeights->size() == numOfGrids);
+            {
+                const int diff = numOfGrids_orig - numOfGrids;
+                const double ratio = double(diff) / double(numOfGrids_orig) * 100.0;
+                this->log_.info(TlUtils::format("screened grids: %d -> %d; (%d; %3.2f%%)",
+                                                numOfGrids_orig, numOfGrids,
+                                                diff, ratio));
+            }
+        }
+    }
+}
+
+
+// B.G.John, et.al., J. Chem. Phys., 98, 5612 (1993).
+// eq. B7
+TlVector DfGenerateGrid::JGP_nablaB_omegaA(const int atomIndexA, const int atomIndexB,
+                                           const TlPosition& gridpoint)
+{
+    TlVector nablaB_omegaA(3);
+    if (atomIndexA != atomIndexB) {
+        const int numOfAtoms = this->m_nNumOfAtoms;
+        double PA = 0.0;
+        double Z = 0.0;
+        for (int i = 0; i < numOfAtoms; ++i) {
+            const double Ps = this->Ps_uij(i, gridpoint);
+            if (i == atomIndexA) {
+                PA = Ps;
+            }
+            Z += Ps;
+        }
+        const double invZ = 1.0 / Z;
+        
+        const TlVector nablaB_PA = this->JGP_nablaB_PA(atomIndexA, atomIndexB, gridpoint); 
+        
+        TlVector nablaB_Z(3);
+        for (int i = 0; i < numOfAtoms; ++i) {
+            TlVector nablaB_Pi(3);
+            if (i == atomIndexB) {
+                nablaB_Pi = this->JGP_nablaA_PA(atomIndexB, gridpoint);
+            } else {
+                nablaB_Pi = this->JGP_nablaB_PA(i, atomIndexB, gridpoint);
+            }
+            nablaB_Z += nablaB_Pi;
+        }
+        
+        nablaB_omegaA = (nablaB_PA - PA * invZ * nablaB_Z) * invZ;
+    }
+    
+    return nablaB_omegaA;
+}
+
+
+// B.G.John, et.al., J. Chem. Phys., 98, 5612 (1993).
+// eq. B8
+TlVector DfGenerateGrid::JGP_nablaA_PA(const int atomIndexA,
+                                       const TlPosition& gridpoint)
+{
+    TlVector nablaA_PA(3);
+    const double PA = this->Ps_uij(atomIndexA, gridpoint);
+
+    if (PA > 1.0E-10) {
+        const int numOfAtoms = this->m_nNumOfAtoms;
+        for (int atomIndexB = 0; atomIndexB < numOfAtoms; ++atomIndexB) {
+            if (atomIndexB != atomIndexA) {
+                const TlVector nablaA_myuAB = this->JGP_nablaA_myuAB(atomIndexA, atomIndexB, gridpoint);
+                
+                const double rr_A = this->coord_[atomIndexA].distanceFrom(gridpoint);
+                const double rr_B = this->coord_[atomIndexB].distanceFrom(gridpoint);
+                const double myu_AB = (rr_A - rr_B) * this->invDistanceMatrix_(atomIndexA, atomIndexB);
+                const double t = this->JGP_t(myu_AB);
+                
+                nablaA_PA += t * nablaA_myuAB;
+            }
+        }
+
+        nablaA_PA *= PA;
+    }
+
+    return nablaA_PA;
+}
+
+// B.G.John, et.al., J. Chem. Phys., 98, 5612 (1993).
+// eq. B8
+TlVector DfGenerateGrid::JGP_nablaB_PA(const int atomIndexA,
+                                       const int atomIndexB,
+                                       const TlPosition& gridpoint)
+{
+    assert(atomIndexA != atomIndexB);
+    TlVector nablaB_PA(3);
+
+    const double PA = this->Ps_uij(atomIndexA, gridpoint);
+    if (PA > 1.0E-10) {
+        const TlVector nablaB_myuBA = this->JGP_nablaA_myuAB(atomIndexB, atomIndexA, gridpoint);
+        
+        const double rr_A = this->coord_[atomIndexA].distanceFrom(gridpoint);
+        const double rr_B = this->coord_[atomIndexB].distanceFrom(gridpoint);
+        const double myu_AB = (rr_A - rr_B) * this->invDistanceMatrix_(atomIndexA, atomIndexB);
+        const double t = this->JGP_t(myu_AB);
+        
+        nablaB_PA = - PA * t * nablaB_myuBA;
+    }
+
+    return nablaB_PA;
+}
+
+// B.G.John, et.al., J. Chem. Phys., 98, 5612 (1993).
+// eq. B9
+double DfGenerateGrid::JGP_t(const double myu)
+{
+    static const double coef = - 27.0 / 16.0;
+    // static const double coef = - 81.0 / 32.0;
+    double answer = 0.0;
+
+    const double p1 = this->Becke_f1(myu); 
+    const double p2 = this->Becke_f1(p1);
+    const double p3 = this->Becke_f1(p2);
+    const double s = 0.5*(1.0 - p3); // B4
+    
+    assert(std::fabs(s) > 1.0E-16);
+    answer = coef * (1.0 - p2*p2) * (1.0 - p1*p1) * (1 - myu*myu) / s;
+
+    return answer;
+}
+
+
+TlVector DfGenerateGrid::JGP_nablaA_myuAB(const int atomIndexA,
+                                          const int atomIndexB,
+                                          const TlPosition& gridpoint)
+{
+    const double inv_R_AB = this->invDistanceMatrix_(atomIndexA, atomIndexB);
+
+    const TlPosition v_rA = this->coord_[atomIndexA] - gridpoint;
+    const double rA = v_rA.distanceFrom();
+    const TlPosition u_A = v_rA / rA;
+    
+    const double rB = this->coord_[atomIndexB].distanceFrom(gridpoint);
+    TlPosition u_AB = this->coord_[atomIndexB] - this->coord_[atomIndexA];
+    u_AB.unit();
+    
+    TlPosition nablaA_myuAB = inv_R_AB * (u_A - ((rA - rB) * inv_R_AB) * u_AB);
+    TlVector answer(3);
+    for (int i = 0; i < 3; ++i) {
+        answer[i] = nablaA_myuAB[i];
+    }
+
+    return answer;
+}
+
+
 

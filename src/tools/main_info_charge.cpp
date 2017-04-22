@@ -18,13 +18,10 @@
 
 #include <iostream>
 #include <cstdlib>
-#include <map>
-#include <string>
-
+#include "DfInfo.h"
 #include "Fl_Geometry.h"
 #include "TlGetopt.h"
 #include "TlMsgPack.h"
-#include "TlSerializeData.h"
 
 int main(int argc, char* argv[])
 {
@@ -40,33 +37,18 @@ int main(int argc, char* argv[])
     mpac.load(paramPath);
     TlSerializeData param = mpac.getSerializeData();
 
-    //Fl_Geometry flGeom(Fl_Geometry::getDefaultFileName());
     Fl_Geometry flGeom(param["coordinates"]);
+    DfInfo dfInfo(&param);
 
-    std::map<std::string, int> component;
-    double charge = 0.0;
-    double chargeWithoutX = 0.0;
-    const int numOfAtoms = flGeom.getNumOfAtoms();
-    for (int i = 0; i < numOfAtoms; ++i) {
-        const std::string symbol = flGeom.getAtomSymbol(i);
-        ++(component[symbol]);
-        const double currentCharge = flGeom.getCharge(i);
-
-        charge += currentCharge;
-        if (symbol != "X") {
-            chargeWithoutX += currentCharge;
-        }
-    }
-
-    std::cout << "charge            = " << charge << std::endl;
-    std::cout << "charge(without X) = " << chargeWithoutX << std::endl;
-
-    for (std::map<std::string, int>::const_iterator p = component.begin();
-         p != component.end(); ++p) {
-        std::cout << p->first << p->second;
-    }
-    std::cout << std::endl;
-
+    const int nuclCharge = flGeom.getTotalCharge();
+    const int elecCharge = - dfInfo.getNumOfElectrons();
+    
+    std::cout << "nucleus charge            = " << nuclCharge << std::endl;
+    std::cout << "nucleus charge(without X) = " << flGeom.getTotalChargeWithoutX() << std::endl;
+    std::cout << "electron charge           = " << elecCharge << std::endl;
+    std::cout << "charge                    = " << nuclCharge + elecCharge << std::endl;
+    std::cout << "formula: " << flGeom.getFormula() << std::endl;
+    
     return EXIT_SUCCESS;
 }
 

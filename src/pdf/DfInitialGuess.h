@@ -108,10 +108,13 @@ MatrixType DfInitialGuess::getLCAO(const RUN_TYPE runType)
     const std::string txtFile = TlUtils::format("./guess.lcao.%s.txt", 
                                                 this->m_sRunTypeSuffix[runType].c_str());
 
+    this->log_.info("get LCAO");
     if (TlFile::isExist(binFile)) {
         // LCAO file is prepared by binary file.
+        this->log_.info(TlUtils::format("LCAO: loading: %s", binFile.c_str()));
         lcaoMatrix.load(binFile);
     } else if (TlFile::isExist(txtFile)) {
+        this->log_.info(TlUtils::format("LCAO: loading: %s", txtFile.c_str()));
         // LCAO file is prepared by text file.
         std::ifstream fi;
         fi.open(txtFile.c_str(), std::ios::in);

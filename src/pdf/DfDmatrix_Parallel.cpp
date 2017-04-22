@@ -119,12 +119,12 @@ void DfDmatrix_Parallel::printOccupation(const TlVector& occ)
 }
 
 
-TlVector DfDmatrix_Parallel::getOccupation(const DfObject::RUN_TYPE runType)
+TlVector DfDmatrix_Parallel::getOccVtr(const DfObject::RUN_TYPE runType)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     TlVector occ;
     if (rComm.isMaster() == true) {
-        occ = DfDmatrix::getOccupation(runType);
+        occ = DfObject::getOccVtr(runType);
     }
     rComm.broadcast(occ);
 

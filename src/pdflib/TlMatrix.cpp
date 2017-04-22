@@ -172,11 +172,16 @@ void TlMatrix::initialize(bool isZeroClear)
 
 void TlMatrix::initialize_usingStandard(bool isZeroClear)
 {
+    const index_type row = this->getNumOfRows();
+    const index_type col = this->getNumOfCols();
     const std::size_t size = this->getNumOfElements();
     try {
         this->data_ = new double[size];
     } catch (std::bad_alloc& ba) {
-        this->log_.critical(TlUtils::format("bad_alloc caught: %s", ba.what()));
+        this->log_.critical(TlUtils::format("bad_alloc caught: %s: row=%d, col=%d, size=%ld",
+					    ba.what(),
+					    row, col,
+					    size));
         throw;
     } catch (...) {
         this->log_.critical("unknown error.");
@@ -1260,6 +1265,22 @@ double TlMatrix::getMaxAbsoluteElement(int* outRow, int* outCol) const
     }
 
     return dAnswer;
+}
+
+
+double TlMatrix::getRMS() const
+{
+    double sum2 = 0.0;
+    const std::size_t numOfDataSize = this->getNumOfElements();
+    for (std::size_t i = 0; i < numOfDataSize; ++i) {
+        const double tmp = this->data_[i];
+        sum2 += tmp * tmp;
+    }
+    
+    const double elements = this->getNumOfRows() * this->getNumOfCols();
+
+    const double rms = std::sqrt(sum2 / elements);
+    return rms;
 }
 
 

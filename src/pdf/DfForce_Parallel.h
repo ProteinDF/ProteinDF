@@ -35,6 +35,8 @@ protected:
 
     virtual void calcForceFromK(const RUN_TYPE runType);
     void calcForceFromK_DC(const RUN_TYPE runType);
+
+    virtual void output();
 };
 
 

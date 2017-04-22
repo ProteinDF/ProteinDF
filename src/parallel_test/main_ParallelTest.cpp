@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 
+#include <iostream>
 #include "ProteinDF.h"
 
 #include "TlSymmetricMatrix.h"
@@ -12,18 +13,32 @@
 #include "TlMemManager.h"
 #include "TlFile.h"
 
+#define ASSERT_EQ(value, expect) \
+    do { \
+        if (std::fabs(value - expect) > 1.0E-5) { \
+            std::cerr << TlUtils::format("ASSERTION ERROR at %s:%d: value=% f, expect=% f", __FILE__, __LINE__, value, expect) << std::endl; \
+        } \
+    } while(0);
+
+#define HOSTNAME_LEN 256
+
+
 void showResultMessage(const std::string& sFunction, bool bIsPassed);
 void showResultMessageAll(const std::string& sFunction, bool bIsPassed);
 
 void checkAllProcess();
 void testTlLog_Parallel();
 void testCommunicate_sendInt();
+void testCommunicate_isend_int();
 void testCommunicate_sendLong();
 void testCommunicate_sendDouble();
 void testCommunicate_sendVectorInt();
 void testCommunicate_sendVectorLong();
 void testCommunicate_sendVectorDouble();
 void testCommunicate_sendString();
+void testCommunicate_send_TlSparseMatrix();
+void testCommunicate_isend_TlSparseMatrix();
+void testCommunicate_recvFronAnySource_TlSparseMatrix();
 
 void testGatherToMaster_TlSparseMatrix();
 
@@ -51,11 +66,41 @@ int main(int argc, char *argv[])
 
     TlMemManager::setParam(1024 * 1024 * 1024, // 1 GB
                            "/tmp/parallelTest");
+    
+    // 
+    {
+        char* pHostName = new char[HOSTNAME_LEN];
+        (void)gethostname(pHostName, HOSTNAME_LEN);
+        const std::string hostname(pHostName);
+        delete []pHostName;
+        pHostName = NULL;
+
+        const int numOfProcs = rComm.getNumOfProcs();
+        for (int i = 0; i < numOfProcs; ++i) {
+            if (i == rComm.getRank()) {
+                std::cerr << TlUtils::format("PID %d on %s as rank %d",
+                                             getpid(), hostname.c_str(), rComm.getRank())
+                          << std::endl;
+            }
+            rComm.barrier();
+        }
+        rComm.barrier();
+
+        const int waitingTime = 4000;
+        rComm.barrier();
+        if (rComm.isMaster() == true) {
+            std::cerr << TlUtils::format("waiting %d msec.", waitingTime) << std::endl;
+        }
+        TlTime::sleep(waitingTime);
+        rComm.barrier();
+    }
+
 
     // ===================================================================
     checkAllProcess();
 
     testCommunicate_sendInt();
+    testCommunicate_isend_int();
     testCommunicate_sendLong();
     testCommunicate_sendDouble();
     testCommunicate_sendVectorInt();
@@ -63,7 +108,10 @@ int main(int argc, char *argv[])
     testCommunicate_sendVectorDouble();
     testCommunicate_sendString();
 
-    //testGatherToMaster_TlSparseMatrix();
+    testCommunicate_send_TlSparseMatrix();
+    testCommunicate_isend_TlSparseMatrix();
+    testCommunicate_recvFronAnySource_TlSparseMatrix();
+    testGatherToMaster_TlSparseMatrix();
 
     testBroadcast_bool();
     testBroadcast_int();
@@ -167,6 +215,30 @@ void testCommunicate_sendInt()
 
     showResultMessage("testCommunicate_sendInt", bIsPassed);
 }
+
+void testCommunicate_isend_int()
+{
+    bool bIsPassed = true;
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    // const int proc = rComm.getNumOfProc();
+    const int rank = rComm.getRank();
+    const int tag = 999;
+
+    if (rank == 1) {
+        int msg = 123;
+        rComm.iSendData(msg, 0, tag);
+        rComm.wait(&msg);
+    } else if (rank == 0) {
+        int msg = 0;
+        rComm.receiveData(msg, 1, tag);
+
+        ASSERT_EQ(msg, 123);
+    }
+
+    showResultMessage("testCommunicate_isend_int", bIsPassed);
+}
+
 
 void testCommunicate_sendLong()
 {
@@ -358,6 +430,114 @@ void testCommunicate_sendVectorDouble()
     showResultMessage("testCommunicate_sendVectorDouble", bIsPassed);
 }
 
+
+void testCommunicate_send_TlSparseMatrix()
+{
+    bool bIsPassed = true;
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int proc = rComm.getNumOfProc();
+    const int rank = rComm.getRank();
+
+    for (int i = 1; i < proc; i++) {
+        if (rank == i) {
+            TlSparseMatrix m(100, 200);
+            m.set(rank, rank *2, 1.23 * rank);
+            rComm.sendData(m);
+        } else if (rComm.isMaster()) {
+            TlSparseMatrix m;
+            rComm.receiveData(m, i);
+
+            ASSERT_EQ(m.getNumOfRows(), 100);
+            ASSERT_EQ(m.getNumOfCols(),  200);
+
+            ASSERT_EQ(m.get(i, i*2), 1.23*i);
+        }
+
+        rComm.barrier();
+    }
+
+    showResultMessage("testCommunicate_send_TlSparseMatrix", bIsPassed);
+}
+
+
+void testCommunicate_isend_TlSparseMatrix()
+{
+    bool bIsPassed = true;
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    // const int proc = rComm.getNumOfProc();
+    const int rank = rComm.getRank();
+    const int tag = 999;
+
+    if (rank == 1) {
+        TlSparseMatrix m(10, 10);
+        m.set(1, 1, 1.0);
+        m.set(2, 2, 2.0);
+        m.set(3, 3, 3.0);
+
+        const std::size_t numOfSize = m.getSize();
+        const std::vector<TlMatrixElement> elements = m.getMatrixElements();
+
+        rComm.iSendData(numOfSize, 0, tag);
+        rComm.iSendDataX(&(elements[0]), numOfSize, 0, tag);
+
+        rComm.wait(&numOfSize);
+        rComm.wait(&(elements[0]));
+    } else if (rank == 0) {
+        TlSparseMatrix m(10, 10);
+        std::size_t numOfSize = 0;
+        std::vector<TlMatrixElement> elements;
+
+        rComm.receiveData(numOfSize, 1, tag);
+        elements.resize(numOfSize);
+        rComm.receiveDataX(&(elements[0]), numOfSize, 1, tag);
+        
+        m.add(elements);
+        ASSERT_EQ(m.getNumOfRows(), 10);
+        ASSERT_EQ(m.getNumOfCols(), 10);
+        ASSERT_EQ(m.get(1, 1), 1.0);
+        ASSERT_EQ(m.get(2, 2), 2.0);
+        ASSERT_EQ(m.get(3, 3), 3.0);
+    }
+
+    showResultMessage("testCommunicate_isend_TlSparseMatrix", bIsPassed);
+}
+
+
+void testCommunicate_recvFronAnySource_TlSparseMatrix()
+{
+    bool bIsPassed = true;
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int proc = rComm.getNumOfProc();
+    const int rank = rComm.getRank();
+
+    const int tag = 12345;
+    for (int i = 1; i < proc; i++) {
+        if (rank == i) {
+            TlSparseMatrix m(100, 200);
+            m.set(rank, rank *2, 1.23 * rank);
+            rComm.sendData(m, 0, tag);
+        } else if (rComm.isMaster()) {
+            TlSparseMatrix m;
+            int src = 0;
+            rComm.receiveDataFromAnySource(&m, &src, tag);
+
+            ASSERT_EQ(m.getNumOfRows(), 100);
+            ASSERT_EQ(m.getNumOfCols(),  200);
+            ASSERT_EQ(m.get(src, src*2), 1.23*src);
+        }
+
+        rComm.barrier();
+    }
+
+    showResultMessage("testCommunicate_sendTlSparseMatrix", bIsPassed);
+}
+
+
+
+
 void testGatherToMaster_TlSparseMatrix()
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
@@ -369,7 +549,7 @@ void testGatherToMaster_TlSparseMatrix()
     sm(rank, rank) = rank +1;
 
     // test
-    rComm.gatherToMaster(sm);
+    rComm.allReduce_SUM(sm);
 
     bool bIsPassed = true;
     if (rComm.isMaster() == true) {
@@ -640,7 +820,7 @@ void testAllreduceSum_double()
         exact += i;
     }
     
-    bool check = true;
+    // bool check = true;
     if (std::fabs(value - exact) > 1.0E-12) {
         std::cout << TlUtils::format("testAllreduceSum_double: value=%f, exact=%f",
                                      value, exact)

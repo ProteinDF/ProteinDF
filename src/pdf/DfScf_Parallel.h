@@ -69,7 +69,7 @@ protected:
     virtual DfSummary* getDfSummaryObject();
 
     virtual bool judge();
-    virtual int checkConverge();
+    virtual bool checkConverge();
 
     virtual DfConverge* getDfConverge();
 

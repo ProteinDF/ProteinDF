@@ -60,6 +60,9 @@ public:
     /// 電荷を返す
     double getCharge(int i) const;
 
+    double getTotalCharge() const;
+    double getTotalChargeWithoutX() const;
+
     /// return distinct label of atom for basis set.
     std::string getLabel(int i) const;
 
@@ -74,9 +77,13 @@ public:
     /// ダミー原子(X)の数を返す。
     int getNumOfDummyAtoms() const;
 
+    std::string getFormula() const;
+
     TlSerializeData getSerializeData() const;
     
 private:
+    void calcTotalCharge() const;
+    
     void load();
     void save() const;
 
@@ -98,6 +105,11 @@ private:
     std::string filePath_;
     bool isUpdate_;
     std::vector<AtomData> atoms_;
+
+
+    mutable bool isCalcdTotalCharge_;
+    mutable double totalCharge_;
+    mutable double totalChargeWithoutX_;
 };
 
 #endif // FL_GEOMETRY_H

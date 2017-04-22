@@ -25,7 +25,7 @@ void testTranspose();
 void testTranspose2();
 void testInverse();
 void testGetMaxAbsoluteElement();
-void testGetPartialMatrix();
+// void testGetPartialMatrix();
 void testGetPartialMatrix2();
 
 int main(int argc, char *argv[])
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     testTranspose2();
     testInverse();
     testGetMaxAbsoluteElement();
-    testGetPartialMatrix();
+    // testGetPartialMatrix();
     testGetPartialMatrix2();
     // ===================================================================
 
@@ -623,37 +623,37 @@ void testGetMaxAbsoluteElement()
     showResultMessageAll("testGetMaxAbsoluteValue", bIsPassed);
 }
 
-void testGetPartialMatrix()
-{
-    bool bIsPassed = true;
+// void testGetPartialMatrix()
+// {
+//     bool bIsPassed = true;
 
-    TlDistributeMatrix A(100, 100);
-    A(3, 17) = -51.0;
-    A(3,  9) = 33.0;
+//     TlDistributeMatrix A(100, 100);
+//     A(3, 17) = -51.0;
+//     A(3,  9) = 33.0;
 
-    TlSparseMatrix B(100, 100);
-    B(1,  0) = 1.0;
-    B(3, 17) = 2.0;
-    B(3,  9) = 3.0;
-    B(51, 17) = 4.0;
+//     TlSparseMatrix B(100, 100);
+//     B(1,  0) = 1.0;
+//     B(3, 17) = 2.0;
+//     B(3,  9) = 3.0;
+//     B(51, 17) = 4.0;
 
-    A.getPartialMatrix(B);
+//     A.getPartialMatrix(B);
 
-    if (fabs(B(1,  0) - 0.0) > 1.0E-10) {
-        bIsPassed = false;
-    }
-    if (fabs(B(3, 17) - (-51.0)) > 1.0E-10) {
-        bIsPassed = false;
-    }
-    if (fabs(B(3,  9) - 33.0) > 1.0E-10) {
-        bIsPassed = false;
-    }
-    if (fabs(B(51, 17) - 0.0) > 1.0E-10) {
-        bIsPassed = false;
-    }
+//     if (fabs(B(1,  0) - 0.0) > 1.0E-10) {
+//         bIsPassed = false;
+//     }
+//     if (fabs(B(3, 17) - (-51.0)) > 1.0E-10) {
+//         bIsPassed = false;
+//     }
+//     if (fabs(B(3,  9) - 33.0) > 1.0E-10) {
+//         bIsPassed = false;
+//     }
+//     if (fabs(B(51, 17) - 0.0) > 1.0E-10) {
+//         bIsPassed = false;
+//     }
 
-    showResultMessageAll("testPartialMatrix", bIsPassed);
-}
+//     showResultMessageAll("testPartialMatrix", bIsPassed);
+// }
 
 
 void testGetPartialMatrix2()

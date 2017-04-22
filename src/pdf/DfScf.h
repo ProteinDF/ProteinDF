@@ -128,7 +128,7 @@ protected:
     void summarize();
 
     virtual bool judge();
-    virtual int checkConverge();
+    virtual bool checkConverge();
 
     void converge();
     virtual DfConverge* getDfConverge();

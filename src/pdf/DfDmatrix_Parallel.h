@@ -34,7 +34,7 @@ protected:
     virtual void checkOccupation(const TlVector& prevOcc, const TlVector& currOcc);
     virtual void printOccupation(const TlVector& occ);
 
-    virtual TlVector getOccupation(DfObject::RUN_TYPE runType);
+    virtual TlVector getOccVtr(DfObject::RUN_TYPE runType);
 };
 
 #endif // DFDMATRIX_PARALLEL_H

@@ -38,8 +38,8 @@ DfEriX::DfEriX(TlSerializeData* pPdfParam)
     }
     
     this->cutoffThreshold_ = 1.0E-10;
-    if ((*pPdfParam)["cut-value"].getStr().empty() != true) {
-        this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
+    if ((*pPdfParam)["cut_value"].getStr().empty() != true) {
+        this->cutoffThreshold_ = (*pPdfParam)["cut_value"].getDouble();
     }    
 
     this->cutoffEpsilon_density_ = this->cutoffThreshold_;
@@ -51,10 +51,6 @@ DfEriX::DfEriX(TlSerializeData* pPdfParam)
     if ((*pPdfParam)["cutoff_distribution"].getStr().empty() != true) {
         this->cutoffEpsilon_distribution_ = (*pPdfParam)["cutoff_distribution"].getDouble();
     }    
-    // this->cutoffThreshold_ = 1.0E-10;
-    // if ((*pPdfParam)["cut-value"].getStr().empty() != true) {
-    //     this->cutoffThreshold_ = (*pPdfParam)["cut-value"].getDouble();
-    // }    
 
     // this->cutoffEpsilon1_ = this->cutoffThreshold_ * 0.01;
     // if ((*pPdfParam)["cutoff_epsilon1"].getStr().empty() != true) {
@@ -66,9 +62,9 @@ DfEriX::DfEriX(TlSerializeData* pPdfParam)
     //     this->cutoffEpsilon2_ = (*pPdfParam)["cutoff_epsilon2"].getDouble();
     // }    
 
-    this->cutoffEpsilon3_ = this->cutoffThreshold_ * 0.01;
-    if ((*pPdfParam)["cutoff_epsilon3"].getStr().empty() != true) {
-        this->cutoffEpsilon3_ = (*pPdfParam)["cutoff_epsilon3"].getDouble();
+    this->cutoffThreshold_primitive_ = this->cutoffThreshold_ * 0.01;
+    if ((*pPdfParam)["cutoff_threshold_primitive"].getStr().empty() != true) {
+        this->cutoffThreshold_primitive_ = (*pPdfParam)["cutoff_threshold_primitive"].getDouble();
     }    
 
     // debug ===========================================================
@@ -257,7 +253,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
         // numOfThreads = omp_get_num_threads();
         threadID = omp_get_thread_num();
 #endif // _OPENMP
-        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
 
         // time_calc.start();
 #pragma omp for schedule(runtime)
@@ -417,8 +413,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                        const std::vector<DfTaskCtrl::Task2>& taskList,
                        const TlVector& rho, TlMatrixObject* pJ)
 {
-    const TlMatrixObject::index_type dim = pJ->getNumOfRows();
-    assert(dim == pJ->getNumOfCols());
+    // const TlMatrixObject::index_type dim = pJ->getNumOfRows();
 
     const int maxShellType = orbitalInfo.getMaxShellType();
     const int taskListSize = taskList.size();
@@ -446,7 +441,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
         // numOfThreads = omp_get_num_threads();
         threadID = omp_get_thread_num();
 #endif // _OPENMP
-        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
 
         // time_calc.start();
 #pragma omp for schedule(runtime)
@@ -773,7 +768,7 @@ int DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
-        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
 
         const std::size_t maxThreadElements = taskListSize * 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4-type)
         index_type* pThreadIndexPairs = new index_type[maxThreadElements * 2];
@@ -971,7 +966,7 @@ void DfEriX::getJab_part(const TlOrbitalInfoObject& orbitalInfo,
         threadID = omp_get_thread_num();
 #endif // _OPENMP
 
-        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
         
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {
@@ -1074,7 +1069,7 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
                             const TlMatrixObject& P, TlMatrixObject* pForce)
 {
     const int taskListSize = taskList.size();
-    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+    const double pairwisePGTO_cutoffThreshold = this->cutoffThreshold_primitive_;
     
 #pragma omp parallel
     {
@@ -1083,7 +1078,7 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
         threadID = omp_get_thread_num();
 #endif // _OPENMP
         
-        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
 
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {
@@ -1365,7 +1360,7 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
         threadID = omp_get_thread_num();
 #endif // _OPENMP
 
-        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
 
         double* p_dJdA = new double[BUFFER_SIZE];
         double* p_dJdB = new double[BUFFER_SIZE];
@@ -1552,7 +1547,7 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo_Density,
         threadID = omp_get_thread_num();
 #endif // _OPENMP
 
-        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
 
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {
@@ -1869,7 +1864,7 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
-        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
 
         const std::size_t maxThreadElements = taskListSize * 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4-type)
         index_type* pThreadIndexPairs = new index_type[maxThreadElements * 2];
@@ -2139,7 +2134,7 @@ void DfEriX::getForceK_part(const TlOrbitalInfoObject& orbitalInfo,
                             const TlMatrixObject& P, TlMatrixObject* pForce)
 {
     const int taskListSize = taskList.size();
-    const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+    const double pairwisePGTO_cutoffThreshold = this->cutoffThreshold_primitive_;
     
 #pragma omp parallel
     {
@@ -2148,7 +2143,7 @@ void DfEriX::getForceK_part(const TlOrbitalInfoObject& orbitalInfo,
         threadID = omp_get_thread_num();
 #endif // _OPENMP
         
-        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
 
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {

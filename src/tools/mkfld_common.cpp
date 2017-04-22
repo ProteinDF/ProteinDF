@@ -241,6 +241,12 @@ void saveCubeData(const std::vector<TlAtom>& atoms,
 {
     const std::size_t numOfGrids = data.size();
     const int numOfAtoms = atoms.size();
+    int numOfDummyAtoms = 0;
+    for (int i = 0; i < numOfAtoms; ++i) {
+        if (TlAtom::getElementNumber(atoms[i].getSymbol()) == 0) {
+            ++numOfDummyAtoms;
+        }
+    }
     
     std::ofstream ofs;
     ofs.open(filePath.c_str(), std::ios::out | std::ios::trunc);
@@ -251,21 +257,26 @@ void saveCubeData(const std::vector<TlAtom>& atoms,
     
     // 3行目: 原子数, 原点(x, y, z)
     ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n",
-                           numOfAtoms, startPos.x(), startPos.y(), startPos.z()); // 開始点
+                           numOfAtoms - numOfDummyAtoms,
+                           startPos.x(), startPos.y(), startPos.z()); // 開始点
     
     // 4,5,6行目: 各ベクトル方向への分割数およびステップ幅
-    // 各ベクトルが負の値ならばAngstrom単位, 正の値ならBohr単位
-    ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridX, gridPitch.x(), 0.0, 0.0);
-    ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridY, 0.0, gridPitch.y(), 0.0);
-    ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", numOfGridZ, 0.0, 0.0, gridPitch.z());
+    // 各ベクトルが正の値ならBohr単位, 負の値ならばAngstrom単位
+    // (see. http://www.gaussian.com/g_tech/g_ur/u_cubegen.htm)
+    ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", -numOfGridX, gridPitch.x(), 0.0, 0.0);
+    ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", -numOfGridY, 0.0, gridPitch.y(), 0.0);
+    ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f\n", -numOfGridZ, 0.0, 0.0, gridPitch.z());
 
     // 7行目以降: 原子の原子番号, 価電子数, x, y, z
     // 
     for (int i = 0; i < numOfAtoms; ++i) {
-        ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f % 12.6f\n",
-                               TlAtom::getElementNumber(atoms[i].getSymbol()),
-                               atoms[i].getCharge(),
-                               atoms[i].getPosition().x(), atoms[i].getPosition().y(), atoms[i].getPosition().z());
+        const int atomicNumber = TlAtom::getElementNumber(atoms[i].getSymbol());
+        if (atomicNumber > 0) {
+            ofs << TlUtils::format("%5d % 12.6f % 12.6f % 12.6f % 12.6f\n",
+                                   atomicNumber,
+                                   atoms[i].getCharge(),
+                                   atoms[i].getPosition().x(), atoms[i].getPosition().y(), atoms[i].getPosition().z());
+        }
     }
 
     // 物理量

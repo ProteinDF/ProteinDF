@@ -173,14 +173,17 @@ public:
     /// @return 要素の絶対値の最大値
     virtual double getLocalMaxAbsoluteElement(index_type* pOutRow =NULL, index_type* pOutCol =NULL) const;
 
+    /// calc RMS
+    virtual double getRMS() const;
+
     /// 全行列を各プロセスに均等分割された疎行列を返す
-    TlSparseMatrix getPartialMatrix(double threshold = 1.0E-16) const;
+    // TlSparseMatrix getPartialMatrix(double threshold = 1.0E-16) const;
 
     bool getSparseMatrixX(TlSparseMatrix* pMatrix, bool isFinalize = false) const;
     bool getPartialMatrixX(TlPartialMatrix* pMatrix, bool isFinalize = false) const;
 
     /// 指定された要素を持つ疎行列を返す
-    void getPartialMatrix(TlSparseMatrix& ioMatrix) const;
+    // void getPartialMatrix(TlSparseMatrix& ioMatrix) const;
 
     /// 各ノードが与えた疎行列を大域行列に加算する。
     /// 
@@ -213,6 +216,7 @@ public:
     TlDistributeMatrix& operator+=(const TlDistributeMatrix& rhs);
     TlDistributeMatrix& operator-=(const TlDistributeMatrix& rhs);
     TlDistributeMatrix& operator*=(const TlDistributeMatrix& rhs);
+    TlDistributeMatrix& operator*=(const TlDistributeSymmetricMatrix& rhs);
     TlDistributeMatrix& operator*=(double dCoef);
     TlDistributeMatrix& operator/=(double dCoef);
     
@@ -466,8 +470,8 @@ protected:
     
     struct MergeMatrixRecvTask {
     public:
-        MergeMatrixRecvTask(int src, int id)
-            : srcProc(src), sessionId(id), state(0) {
+        MergeMatrixRecvTask(int src = -1, int id = -1)
+            : srcProc(src), sessionId(id), state(0), numOfContents(0) {
         }
         
     public:

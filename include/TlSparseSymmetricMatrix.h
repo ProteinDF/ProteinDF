@@ -81,14 +81,14 @@ public:
     /// @return 要素
     virtual double& operator()(index_type row, index_type col);
     virtual void set(index_type row, index_type col, double value);
-    virtual void set(const std::pair<unsigned long, double>& obj) {
-        TlSparseMatrix::set(obj);
-    }
+    // virtual void set(const std::pair<unsigned long, double>& obj) {
+    //     TlSparseMatrix::set(obj);
+    // }
 
     virtual void add(index_type row, index_type col, double value);
-    virtual void add(const std::pair<unsigned long, double>& obj) {
-        TlSparseMatrix::add(obj);
-    }
+    // virtual void add(const std::pair<unsigned long, double>& obj) {
+    //     TlSparseMatrix::add(obj);
+    // }
 
     /** 指定された要素が存在すればtrueを返す
      *
@@ -99,7 +99,7 @@ public:
         if (row < col) {
             std::swap(row, col);
         }
-        return (this->m_aMatrix.find(this->index(row, col)) != this->m_aMatrix.end());
+        return (this->m_aMatrix.find(KeyType(row, col)) != this->m_aMatrix.end());
     }
 
     /// 指定した行の要素から構成されるベクトルを返す
@@ -113,7 +113,7 @@ public:
     virtual TlVector getColVector(int nCol) const;
 
     /// Hadamard product
-    const TlSparseSymmetricMatrix& dot(const TlSparseSymmetricMatrix& X);
+    // const TlSparseSymmetricMatrix& dot(const TlSparseSymmetricMatrix& X);
 
 public:
     /// オブジェクトの内容をテキスト出力する

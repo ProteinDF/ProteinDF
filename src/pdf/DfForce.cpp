@@ -36,13 +36,13 @@ DfForce::DfForce(TlSerializeData* pPdfParam)
       orbitalInfo_((*pPdfParam)["coordinates"],
                    (*pPdfParam)["basis_set"]),
       orbitalInfoDens_((*pPdfParam)["coordinates"],
-                       (*pPdfParam)["basis_set_j"]) {
+                       (*pPdfParam)["basis_set_j"]),
+      pdfParamForForce_(*pPdfParam) {
     // initialize
     this->force_.resize(this->m_nNumOfAtoms, 3);
-
-    this->storedCutoffValue_ = (*pPdfParam)["cut-value"].getDouble();
-    if ((*pPdfParam)["force-cut-value"].getStr().empty() != true) {
-        (*pPdfParam)["cut-value"] = (*pPdfParam)["force-cut-value"];
+    
+    if ((*pPdfParam)["force_cut_value"].getStr().empty() != true) {
+        this->pdfParamForForce_["cut_value"] = (*pPdfParam)["force_cut_value"].getDouble();
     }
     
     // debug
@@ -55,7 +55,6 @@ DfForce::DfForce(TlSerializeData* pPdfParam)
 
 DfForce::~DfForce()
 {
-    (*(this->pPdfParam_))["cut-value"] = this->storedCutoffValue_;
 }
 
 
@@ -95,10 +94,31 @@ void DfForce::calcForce()
 
     this->force_ *= -1.0;
 
-    // output
+    this->output();
+    this->saveForce();
+}
+
+
+void DfForce::output()
+{
     const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
-    this->log_.info("=== FORCE ===");
     const int numOfAtoms = this->m_nNumOfAtoms;
+
+    // MAX element
+    const double max_val = this->force_.getMaxAbsoluteElement();
+    
+    // calc RMS
+    double rms = 0;
+    {
+        TlMatrix force2 = this->force_;
+        force2.dot(force2);
+        rms = force2.sum();
+        rms = std::sqrt(rms / (double(numOfAtoms) * 3.0));
+    }
+    
+    // output for log
+    this->log_.info("=== FORCE ===");
+
     for (int atomIndex = 0; atomIndex< numOfAtoms; ++atomIndex) {
         const TlAtom atom = flGeom.getAtom(atomIndex);
         this->log_.info(TlUtils::format("%4d:[%-2s] % f, % f, % f",
@@ -107,8 +127,11 @@ void DfForce::calcForce()
                                         this->force_.get(atomIndex, 1),
                                         this->force_.get(atomIndex, 2)));
     }
+    this->log_.info(TlUtils::format("MAX force: % f", max_val));
+    this->log_.info(TlUtils::format("RMS force: % f", rms));
     this->log_.info("=============");
 
+    // output for pdfparam
     {
         TlSerializeData force_dat;
         force_dat.resize(numOfAtoms);
@@ -121,11 +144,11 @@ void DfForce::calcForce()
             force_dat.setAt(atomIndex, v);
         }
         (*this->pPdfParam_)["force"] = force_dat;
-    }
-    
-    this->saveForce();
-}
 
+        (*this->pPdfParam_)["force_max"] = max_val;
+        (*this->pPdfParam_)["force_rms"] = rms;
+    }
+}
 
 void DfForce::saveForce()
 {
@@ -206,7 +229,7 @@ void DfForce::calcForceFromHpq(const TlSymmetricMatrix& P)
 {
     // const index_type numOfAOs = this->m_nNumOfAOs;
     
-    DfHpqX dfHpqX(this->pPdfParam_);
+    DfHpqX dfHpqX(&(this->pdfParamForForce_));
     TlMatrix force_Hpq(this->m_nNumOfAtoms, 3);
     dfHpqX.getForce(P, &force_Hpq);
 
@@ -221,7 +244,7 @@ void DfForce::calcForceFromWS(RUN_TYPE runType)
 {
     // const index_type numOfAOs = this->m_nNumOfAOs;
     
-    DfOverlapX dfOvpX(this->pPdfParam_);
+    DfOverlapX dfOvpX(&(this->pdfParamForForce_));
 
     const TlSymmetricMatrix W = this->getEnergyWeightedDensityMatrix(runType);
     if (this->isDebugOutMatrix_ == true) {
@@ -298,7 +321,7 @@ void DfForce::calcForceFromCoulomb_exact(RUN_TYPE runType)
     
     const TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
 
-    DfEriX dfEri(this->pPdfParam_);
+    DfEriX dfEri(&(this->pdfParamForForce_));
 
     // ((pq)'|(rs))
     TlMatrix F_J(numOfAtoms, 3);
@@ -321,7 +344,7 @@ void DfForce::calcForceFromCoulomb_RIJ(const RUN_TYPE runType)
     const TlVector rho = this->getRho<TlVector>(runType, iteration);
     const TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
 
-    DfEriX dfEri(this->pPdfParam_);
+    DfEriX dfEri(&(this->pdfParamForForce_));
 
     // ((pq)'|a)
     TlMatrix F_pqa(numOfAtoms, 3);
@@ -344,41 +367,37 @@ void DfForce::calcForceFromCoulomb_RIJ(const RUN_TYPE runType)
 void DfForce::calcForceFromPureXC(RUN_TYPE runType)
 {
     const int iteration = this->m_nIteration;
-    const int numOfAOs = this->m_nNumOfAOs;
+    // const int numOfAOs = this->m_nNumOfAOs;
     const int numOfAtoms = this->m_nNumOfAtoms;
-    
+
+    TlMatrix Fxc(numOfAtoms, 3);
+
+    // for RKS
     const TlSymmetricMatrix P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
 
-    DfCalcGridX calcGrid(this->pPdfParam_);
+    DfCalcGridX calcGrid(&(this->pdfParamForForce_));
 
-    TlMatrix Gx(numOfAOs, numOfAtoms);
-    TlMatrix Gy(numOfAOs, numOfAtoms);
-    TlMatrix Gz(numOfAOs, numOfAtoms);
-
-    DfXCFunctional dfXCFunctional(this->pPdfParam_);
+    DfXCFunctional dfXCFunctional(&(this->pdfParamForForce_));
     DfXCFunctional::XC_TYPE xcType = dfXCFunctional.getXcType();
     switch (xcType) {
     case DfXCFunctional::SVWN:
         {
             DfFunctional_SVWN svwn;
-            calcGrid.makeGammaMatrix(P, &svwn,
-                                     &Gx, &Gy, &Gz);
+            Fxc = calcGrid.energyGradient(P, &svwn);
         }
         break;
 
     case DfXCFunctional::BLYP:
         {
             DfFunctional_B88LYP blyp;
-            calcGrid.makeGammaMatrix(P, &blyp,
-                                     &Gx, &Gy, &Gz);
+            Fxc = calcGrid.energyGradient(P, &blyp);
         }
         break;
 
     case DfXCFunctional::B3LYP:
         {
             DfFunctional_B3LYP b3lyp;
-            calcGrid.makeGammaMatrix(P, &b3lyp,
-                                     &Gx, &Gy, &Gz);
+            Fxc = calcGrid.energyGradient(P, &b3lyp);
         }
         break;
 
@@ -393,40 +412,12 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
         abort();
         break;
     }
-    if (this->isDebugOutMatrix_ == true) {
-        Gx.save("Gx.mtx");
-        Gy.save("Gy.mtx");
-        Gz.save("Gz.mtx");
-    }
     
-    TlMatrix Fxc(numOfAtoms, 3);
-    for (int mu = 0; mu < numOfAtoms; ++mu) {
-        for (index_type p = 0; p < numOfAOs; ++p) {
-            const index_type orbAtomId = this->orbitalInfo_.getAtomIndex(p);
-            if (mu != orbAtomId) {
-                const double fx = Gx.get(p, mu);
-                const double fy = Gy.get(p, mu);
-                const double fz = Gz.get(p, mu);
+    // RKSなので2倍
+    // Fxc *= 2.0;
+    
+    // Fxc *= -1.0;
 
-                Fxc.add(mu, X, fx);
-                Fxc.add(mu, Y, fy);
-                Fxc.add(mu, Z, fz);
-            } else {
-                for (int nu = 0; nu < numOfAtoms; ++nu) {
-                    if (mu != nu) {
-                        const double fx = Gx.get(p, nu);
-                        const double fy = Gy.get(p, nu);
-                        const double fz = Gz.get(p, nu);
-                        Fxc.add(mu, X, -fx);
-                        Fxc.add(mu, Y, -fy);
-                        Fxc.add(mu, Z, -fz);
-                    }
-                }
-            }
-        }
-    }
-
-    Fxc *= -1.0;
     if (this->isDebugOutMatrix_ == true) {
         Fxc.save("F_xc.mtx");
     }
@@ -436,7 +427,7 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
 
 void DfForce::calcForceFromPureXC_gridfree(RUN_TYPE runType)
 {
-    DfGridFreeXC dfGridFreeXC(this->pPdfParam_);
+    DfGridFreeXC dfGridFreeXC(&(this->pdfParamForForce_));
     TlMatrix force = dfGridFreeXC.getForce();
 
     const TlMatrix T = this->getTransformMatrix(force);
@@ -450,7 +441,7 @@ void DfForce::calcForceFromPureXC_gridfree(RUN_TYPE runType)
 
 void DfForce::calcForceFromK(RUN_TYPE runType)
 {
-    const DfXCFunctional dfXCFunctional(this->pPdfParam_);
+    const DfXCFunctional dfXCFunctional(&(this->pdfParamForForce_));
 
     if (dfXCFunctional.isHybridFunctional() == true) {
         const int iteration = this->m_nIteration;
@@ -459,7 +450,7 @@ void DfForce::calcForceFromK(RUN_TYPE runType)
         
         const TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
         
-        DfEriX dfEri(this->pPdfParam_);
+        DfEriX dfEri(&(this->pdfParamForForce_));
         
         TlMatrix F_K(numOfAtoms, 3);
         // for RKS

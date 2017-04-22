@@ -18,8 +18,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits>
 #include "TlPrdctbl.h"
 #include "TlUtils.h"
+
+const double TlPrdctbl::UNDEFINED = std::numeric_limits<double>::quiet_NaN();
 
 const char* TlPrdctbl::periodicTable[] = {
     "X",
@@ -36,14 +39,125 @@ const char* TlPrdctbl::periodicTable[] = {
     "Md", "No", "Lr"
 };
 
+// https://en.wikipedia.org/wiki/Atomic_radii_of_the_elements_(data_page)
+const double TlPrdctbl::vdwRadii[] = {
+    0.00,
+    1.20, // H
+    1.40, // He
+    
+    1.82, // Li
+    1.53, // Be
+    1.92, // B
+    1.70, // C
+    1.55, // N
+    1.52, // O
+    1.47, // F
+    1.54, // Ne
+
+    2.27, // Na
+    1.73, // Mg
+    1.84, // Al
+    2.10, // Si
+    1.80, // P
+    1.80, // S
+    1.75, // Cl
+    1.88, // Ar
+    2.75, // K
+    2.31, // Ca
+    2.11, //Sc
+    UNDEFINED, // Ti
+    UNDEFINED, // V
+    UNDEFINED, // Cr
+    UNDEFINED, // Mn
+    UNDEFINED, // Fe
+    UNDEFINED, // Co
+    1.63, // Ni
+    1.40, // Cu
+    1.39, // Zn
+    1.87, // Ga
+    2.11, // Ge
+    1.85, // As
+    1.90, // Se
+    1.85, // Br
+    2.02, // Kr
+    3.03, // Rb
+    2.49, // Sr
+    UNDEFINED, // Y
+    UNDEFINED, // Zr
+    UNDEFINED, // Nb 
+    UNDEFINED, // Mo
+    UNDEFINED, // Tc
+    UNDEFINED, // Ru
+    UNDEFINED, // Rh
+    1.63, // Pd
+    1.72, // Ag
+    1.58, // Cd
+    1.93, // Id
+    2.17, // Sn
+    2.06, // Sb
+    2.06, // Te
+    1.98, // I
+    2.16, // Xe
+    3.43, // Cs
+    2.68, // Ba
+    UNDEFINED, // La
+    UNDEFINED, // Ce
+    UNDEFINED, // Pr
+    UNDEFINED, // Nd
+    UNDEFINED, // Pm
+    UNDEFINED, // Sm
+    UNDEFINED, // Eu
+    UNDEFINED, // Gd
+    UNDEFINED, // Tb
+    UNDEFINED, // Dy
+    UNDEFINED, // Ho
+    UNDEFINED, // Er
+    UNDEFINED, // Tm
+    UNDEFINED, // Yb
+    UNDEFINED, // Lu
+    UNDEFINED, // Hf
+    UNDEFINED, // Ta
+    UNDEFINED, // W
+    UNDEFINED, // Re
+    UNDEFINED, // Os
+    UNDEFINED, // Ir
+    1.75, // Pt
+    1.66, // Au
+    1.55, // Hg
+    1.96, // Tl
+    2.02, // Pb
+    2.07, // Bi
+    1.97, // Po
+    2.02, // At
+    2.20, // Rn
+    3.48, // Fr
+    2.83, // Ra
+    UNDEFINED, // Ac
+    UNDEFINED, // Th
+    UNDEFINED, // Pa
+    1.86, // U
+    UNDEFINED, // Np
+    UNDEFINED, // Pu
+    UNDEFINED, // Am
+    UNDEFINED, // Cm
+    UNDEFINED, // Bk
+    UNDEFINED, // Cf
+    UNDEFINED, // Es
+    UNDEFINED, // Fm
+    UNDEFINED, // Md
+    UNDEFINED, // No
+    UNDEFINED, // Lr
+};
+
 // J. C. Slater, J. Chem. Phys., 41, 3199 (1964).
 // DOI: 10.1063/1.1725697
 const double TlPrdctbl::BraggSlaterRadii[] = {
     0.00,
     0.25, // H
-    1.45, // He
+    0.50, // He(undefined)
 
-    1.05, /// Be
+    1.45, // Li
+    1.05, // Be
     0.85, // B
     0.70, // C
     0.65, // N
@@ -279,6 +393,18 @@ std::string TlPrdctbl::getSymbol(int n)
         answer = std::string(periodicTable[n]);
     }
 
+    return answer;
+}
+
+double TlPrdctbl::getVdwRadii(const int atomicNumber)
+{
+    double answer = UNDEFINED;
+
+    const int maxAtomicNumber = sizeof(TlPrdctbl::vdwRadii) / sizeof(double);
+    if ((1 <= atomicNumber) && (atomicNumber < maxAtomicNumber)) {
+        answer = TlPrdctbl::vdwRadii[atomicNumber];
+    }
+    
     return answer;
 }
 

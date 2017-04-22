@@ -44,7 +44,7 @@ public:
 protected:
     virtual void main(DfObject::RUN_TYPE runType);
 
-    virtual TlVector getOccupation(DfObject::RUN_TYPE runType);
+    // virtual TlVector getOccupation(DfObject::RUN_TYPE runType);
 
     template<typename MatrixType>
     TlVector getOccupationUsingOverlap(DfObject::RUN_TYPE runType);
@@ -125,7 +125,7 @@ TlVector DfDmatrix::getOccupationUsingOverlap(DfObject::RUN_TYPE runType)
         prevCprime *= Cprime;
     }
 
-    TlVector prevOcc = this->getOccupation(runType);
+    TlVector prevOcc = this->getOccVtr(runType);
 
     // construct occupation number of current orbital with MO overlap matrix
     // 旧MO(pre)がどの新MO(crr)との重なりが一番大きいかを探す
@@ -318,7 +318,7 @@ TlVector DfDmatrix::getOccupationUsingProjection(const DfObject::RUN_TYPE runTyp
     
     // check
     {
-        TlVector prevOcc = this->getOccupation(runType);
+        TlVector prevOcc = this->getOccVtr(runType);
         const double sumOfPrevOcc = prevOcc.sum();
         const double sumOfCurrOcc = currOcc.sum();
 

@@ -204,132 +204,132 @@ TlVector TlDistributeSymmetricMatrix::getColumnVector(const index_type col) cons
 }
 
 
-TlSparseSymmetricMatrix TlDistributeSymmetricMatrix::getPartialMatrix(const double threshold) const
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    const int proc = rComm.getNumOfProc();
-    const int rank = rComm.getRank();
+// TlSparseSymmetricMatrix TlDistributeSymmetricMatrix::getPartialMatrix(const double threshold) const
+// {
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+//     const int proc = rComm.getNumOfProc();
+//     const int rank = rComm.getRank();
 
-    const index_type globalSize = this->m_nRows;
-    assert(this->m_nRows == this->m_nCols);
+//     const index_type globalSize = this->m_nRows;
+//     assert(this->m_nRows == this->m_nCols);
 
-    // 自分のデータのうち、有意なデータを抽出する
-    TlSparseSymmetricMatrix m(globalSize);
-    {
-        const index_type numOfLocalRows = this->m_nMyRows;
-        const index_type numOfLocalCols = this->m_nMyCols;
-        for (index_type c = 0; c < numOfLocalCols; ++c) {
-            const index_type globalColIndex = this->m_ColIndexTable[c];
-            const size_type index_tmp = numOfLocalRows * c;
+//     // 自分のデータのうち、有意なデータを抽出する
+//     TlSparseSymmetricMatrix m(globalSize);
+//     {
+//         const index_type numOfLocalRows = this->m_nMyRows;
+//         const index_type numOfLocalCols = this->m_nMyCols;
+//         for (index_type c = 0; c < numOfLocalCols; ++c) {
+//             const index_type globalColIndex = this->m_ColIndexTable[c];
+//             const size_type index_tmp = numOfLocalRows * c;
 
-            for (index_type r = 0; r < numOfLocalRows; ++r) {
-                const index_type globalRowIndex = this->m_RowIndexTable[r];
-                if (globalRowIndex < globalColIndex) {
-                    // for symmetry
-                    continue;
-                }
+//             for (index_type r = 0; r < numOfLocalRows; ++r) {
+//                 const index_type globalRowIndex = this->m_RowIndexTable[r];
+//                 if (globalRowIndex < globalColIndex) {
+//                     // for symmetry
+//                     continue;
+//                 }
 
-                const size_type index = r + index_tmp;
-                const double value = this->pData_[index];
-                if (std::fabs(value) > threshold) {
-                    m.set(globalRowIndex, globalColIndex, value);
-                }
-            }
-        }
-    }
-
-    // 集計
-    std::size_t numOfElements = m.getSize();
-    rComm.allReduce_SUM(numOfElements);
-    const std::size_t averageNumOfElements = (numOfElements + proc -1) / proc;
-
-
-//   // 平均よりも多い要素を持っているSparseMatrixは他に渡す
-//   std::vector<int> sendProcList(proc, 0);
-//   std::vector<int> recvProcList(proc, 0);
-//   TlSparseSymmetricMatrix diffM(globalSize);
-//   const int maxCycle = m.getSize() - averageNumOfElements;
-//   if (maxCycle > 0) {
-//     sendProcList[rank] = maxCycle;
-//   } else if (maxCycle < 0) {
-//     recvProcList[rank] = - maxCycle;
-//   }
-//   for (int i = 0; i < maxCycle; ++i) {
-//     int row = 0;
-//     int col = 0;
-//     const double value = m.pop(&row, &col);
-//     diffM.set(row, col, value);
-//   }
-
-//   // diffMの集計
-//   int numOfDiffMElements = diffM.getSize();
-//   rComm.allReduce_SUM(numOfDiffMElements);
-//   const int numOfHolds = (numOfDiffMElements + proc -1) / proc; // この数だけ担当する
-//   rComm.allReduce_SUM(sendProcList);
-//   rComm.allReduce_SUM(recvProcList);
-//   int numOfTransportCycle = std::accumulate(sendProcList.begin(), sendProcList.end(), 0);
-//   assert(numOfTransportCycle == std::accumulate(recvProcList.begin(), recvProcList.end(), 0));
-
-    // diffMの平均化
-    const std::size_t myStartCount = averageNumOfElements * rank;
-    const std::size_t myEndCount = std::min(averageNumOfElements * (rank +1), numOfElements);
-//   std::cout << TlUtils::format("[%d] (%d ~ %d)", rank, myStartCount, myEndCount) << std::endl;
-
-    std::size_t count = 0;
-    //int c2 = 0;
-    TlSparseSymmetricMatrix ans(globalSize);
-    for (int i = 0; i < proc; ++i) {
-        TlSparseSymmetricMatrix tmp(globalSize);
-        if (i == rank) {
-            tmp = m;
-
-            // for debug
-//       {
-//  for (TlSparseSymmetricMatrix::const_iterator p = tmp.begin(); p != tmp.end(); ++p){
-//    int row, col;
-//    tmp.index(p->first, &row, &col);
-//    std::cout << TlUtils::format("<<<<[%d] count=%d (%d, %d)", rank, c2, row, col) << std::endl;
-//    c2++;
-//  }
-//       }
-
-        }
-        rComm.broadcast(tmp, i);
-
-        TlSparseSymmetricMatrix::const_iterator pEnd = tmp.end();
-        for (TlSparseSymmetricMatrix::const_iterator p = tmp.begin(); p != pEnd; ++p) {
-            if ((myStartCount <= count) && (count < myEndCount)) {
-                ans.set(*p);
-
-//  int row, col;
-//  ans.index(p->first, &row, &col);
-//  std::cout << TlUtils::format(">>>>[%d] count=%d (%d, %d)", rank, count, row, col) << std::endl;
-            }
-            ++count;
-        }
-
-        rComm.barrier();
-    }
-    assert(count == numOfElements);
-
-    // 最終成果物
-    //m.merge(addM);
-
-    // debug
-//   {
-//     rComm.barrier();
-//     for (int i = 0; i < rComm.getNumOfProc(); ++i) {
-//       if (i == rComm.getRank()) {
-//  std::cout <<  i << " th matrix >>>>" << std::endl;
-//  ans.print(std::cout);
-//  std::cout << "<<<<\n" << std::endl;
-//       }
-//       rComm.barrier();
+//                 const size_type index = r + index_tmp;
+//                 const double value = this->pData_[index];
+//                 if (std::fabs(value) > threshold) {
+//                     m.set(globalRowIndex, globalColIndex, value);
+//                 }
+//             }
+//         }
 //     }
-//   }
 
-    return ans;
-}
+//     // 集計
+//     std::size_t numOfElements = m.getSize();
+//     rComm.allReduce_SUM(numOfElements);
+//     const std::size_t averageNumOfElements = (numOfElements + proc -1) / proc;
+
+
+// //   // 平均よりも多い要素を持っているSparseMatrixは他に渡す
+// //   std::vector<int> sendProcList(proc, 0);
+// //   std::vector<int> recvProcList(proc, 0);
+// //   TlSparseSymmetricMatrix diffM(globalSize);
+// //   const int maxCycle = m.getSize() - averageNumOfElements;
+// //   if (maxCycle > 0) {
+// //     sendProcList[rank] = maxCycle;
+// //   } else if (maxCycle < 0) {
+// //     recvProcList[rank] = - maxCycle;
+// //   }
+// //   for (int i = 0; i < maxCycle; ++i) {
+// //     int row = 0;
+// //     int col = 0;
+// //     const double value = m.pop(&row, &col);
+// //     diffM.set(row, col, value);
+// //   }
+
+// //   // diffMの集計
+// //   int numOfDiffMElements = diffM.getSize();
+// //   rComm.allReduce_SUM(numOfDiffMElements);
+// //   const int numOfHolds = (numOfDiffMElements + proc -1) / proc; // この数だけ担当する
+// //   rComm.allReduce_SUM(sendProcList);
+// //   rComm.allReduce_SUM(recvProcList);
+// //   int numOfTransportCycle = std::accumulate(sendProcList.begin(), sendProcList.end(), 0);
+// //   assert(numOfTransportCycle == std::accumulate(recvProcList.begin(), recvProcList.end(), 0));
+
+//     // diffMの平均化
+//     const std::size_t myStartCount = averageNumOfElements * rank;
+//     const std::size_t myEndCount = std::min(averageNumOfElements * (rank +1), numOfElements);
+// //   std::cout << TlUtils::format("[%d] (%d ~ %d)", rank, myStartCount, myEndCount) << std::endl;
+
+//     std::size_t count = 0;
+//     //int c2 = 0;
+//     TlSparseSymmetricMatrix ans(globalSize);
+//     for (int i = 0; i < proc; ++i) {
+//         TlSparseSymmetricMatrix tmp(globalSize);
+//         if (i == rank) {
+//             tmp = m;
+
+//             // for debug
+// //       {
+// //  for (TlSparseSymmetricMatrix::const_iterator p = tmp.begin(); p != tmp.end(); ++p){
+// //    int row, col;
+// //    tmp.index(p->first, &row, &col);
+// //    std::cout << TlUtils::format("<<<<[%d] count=%d (%d, %d)", rank, c2, row, col) << std::endl;
+// //    c2++;
+// //  }
+// //       }
+
+//         }
+//         rComm.broadcast(tmp, i);
+
+//         TlSparseSymmetricMatrix::const_iterator pEnd = tmp.end();
+//         for (TlSparseSymmetricMatrix::const_iterator p = tmp.begin(); p != pEnd; ++p) {
+//             if ((myStartCount <= count) && (count < myEndCount)) {
+//                 ans.set(*p);
+
+// //  int row, col;
+// //  ans.index(p->first, &row, &col);
+// //  std::cout << TlUtils::format(">>>>[%d] count=%d (%d, %d)", rank, count, row, col) << std::endl;
+//             }
+//             ++count;
+//         }
+
+//         rComm.barrier();
+//     }
+//     assert(count == numOfElements);
+
+//     // 最終成果物
+//     //m.merge(addM);
+
+//     // debug
+// //   {
+// //     rComm.barrier();
+// //     for (int i = 0; i < rComm.getNumOfProc(); ++i) {
+// //       if (i == rComm.getRank()) {
+// //  std::cout <<  i << " th matrix >>>>" << std::endl;
+// //  ans.print(std::cout);
+// //  std::cout << "<<<<\n" << std::endl;
+// //       }
+// //       rComm.barrier();
+// //     }
+// //   }
+
+//     return ans;
+// }
 
 
 TlVector TlDistributeSymmetricMatrix::getPartialMatrix(int* pStartRow, int* pEndRow, int* pStartCol, int* pEndCol) const
@@ -412,42 +412,42 @@ TlVector TlDistributeSymmetricMatrix::getPartialMatrix(int* pStartRow, int* pEnd
 }
 
 
-void TlDistributeSymmetricMatrix::getPartialMatrix(TlSparseSymmetricMatrix& ioMatrix) const
-{
-    assert(this->getNumOfRows() == ioMatrix.getNumOfRows());
-    assert(this->getNumOfCols() == ioMatrix.getNumOfCols());
+// void TlDistributeSymmetricMatrix::getPartialMatrix(TlSparseSymmetricMatrix& ioMatrix) const
+// {
+//     assert(this->getNumOfRows() == ioMatrix.getNumOfRows());
+//     assert(this->getNumOfCols() == ioMatrix.getNumOfCols());
 
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    const int nProc = rComm.getNumOfProc();
-    const int nRank = rComm.getRank();
-    for (int i = 0; i < nProc; ++i) {
-        TlSparseSymmetricMatrix tmp;
-        if (i == nRank) {
-            tmp = ioMatrix;
-        }
-        rComm.broadcast(tmp, i);
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+//     const int nProc = rComm.getNumOfProc();
+//     const int nRank = rComm.getRank();
+//     for (int i = 0; i < nProc; ++i) {
+//         TlSparseSymmetricMatrix tmp;
+//         if (i == nRank) {
+//             tmp = ioMatrix;
+//         }
+//         rComm.broadcast(tmp, i);
 
-        TlSparseSymmetricMatrix::iterator pEnd = tmp.end();
-        for (TlSparseSymmetricMatrix::iterator p = tmp.begin(); p != pEnd; ++p) {
-            //int nGlobalRow = p->first.row;
-            //int nGlobalCol = p->first.col;
-            unsigned long globalIndex = p->first;
-            int nGlobalRow = 0;
-            int nGlobalCol = 0;
-            tmp.index(globalIndex, &nGlobalRow, &nGlobalCol);
+//         TlSparseSymmetricMatrix::iterator pEnd = tmp.end();
+//         for (TlSparseSymmetricMatrix::iterator p = tmp.begin(); p != pEnd; ++p) {
+//             //int nGlobalRow = p->first.row;
+//             //int nGlobalCol = p->first.col;
+//             unsigned long globalIndex = p->first;
+//             int nGlobalRow = 0;
+//             int nGlobalCol = 0;
+//             tmp.index(globalIndex, &nGlobalRow, &nGlobalCol);
 
-            if (nGlobalRow < nGlobalCol) {
-                std::swap(nGlobalRow, nGlobalCol);
-            }
-            const double dValue = this->get(nGlobalRow, nGlobalCol);
-            p->second = dValue;
-        }
+//             if (nGlobalRow < nGlobalCol) {
+//                 std::swap(nGlobalRow, nGlobalCol);
+//             }
+//             const double dValue = this->get(nGlobalRow, nGlobalCol);
+//             p->second = dValue;
+//         }
 
-        if (i == nRank) {
-            ioMatrix = tmp;
-        }
-    }
-}
+//         if (i == nRank) {
+//             ioMatrix = tmp;
+//         }
+//     }
+// }
 
 
 // 複数スレッドから同時に呼び出さない
@@ -549,9 +549,8 @@ void TlDistributeSymmetricMatrix::mergeSparseMatrix(const TlSparseSymmetricMatri
 
     TlSparseMatrix::const_iterator itEnd = M.end();
     for (TlSparseMatrix::const_iterator it = M.begin(); it != itEnd; ++it) {
-        TlSparseMatrix::KeyType key = it->first;
-        index_type globalRow, globalCol;
-        M.index(key, &globalRow, &globalCol);
+        index_type globalRow = it->first.row;
+        index_type globalCol = it->first.col;
         if (globalRow < globalCol) {
             std::swap(globalRow, globalCol);
         }
@@ -671,9 +670,8 @@ void TlDistributeSymmetricMatrix::mergeSparseMatrixAsync(const TlSparseMatrix* p
         
         TlSparseSymmetricMatrix::const_iterator itEnd = pMatrix->end();
         for (TlSparseSymmetricMatrix::const_iterator it = pMatrix->begin(); it != itEnd; ++it) {
-            TlSparseSymmetricMatrix::KeyType key = it->first;
-            index_type globalRow, globalCol;
-            pMatrix->index(key, &globalRow, &globalCol);
+            index_type globalRow = it->first.row;
+            index_type globalCol = it->first.col;
             const double value = it->second;
 
             if (globalRow < globalCol) {
@@ -703,6 +701,37 @@ double TlDistributeSymmetricMatrix::getMaxAbsoluteElement(int* pOutRow, int* pOu
     return TlDistributeMatrix::getMaxAbsoluteElement(pOutRow, pOutCol);
 }
 
+
+double TlDistributeSymmetricMatrix::getRMS() const
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    double sum2 = 0.0;
+
+    // 対角項と下半分非対角項の二乗和
+    const int numOfLocalRows = this->m_nMyRows;
+    const int numOfLocalCols = this->m_nMyCols;
+    for (int localRowIndex = 0; localRowIndex < numOfLocalRows; ++localRowIndex) {
+        const index_type row = this->m_RowIndexTable[localRowIndex];
+        for (int localColIndex = 0; localColIndex < numOfLocalCols; ++localColIndex) {
+            const index_type col = this->m_ColIndexTable[localColIndex];
+            if (row > col) {
+                const double tmp = this->getLocal(row, col);
+                sum2 += 2.0 * tmp * tmp;
+            } else if (row == col) {
+                const double tmp = this->getLocal(row, col);
+                sum2 += tmp * tmp;
+            }
+        }
+    }
+    
+    rComm.allReduce_SUM(sum2);
+
+    const double elements = this->getNumOfRows() * this->getNumOfCols();
+    
+    const double rms = std::sqrt(sum2 / elements);
+    return rms;
+}
 
 // const TlDistributeSymmetricMatrix& TlDistributeSymmetricMatrix::dot(const TlDistributeSymmetricMatrix& X)
 // {
@@ -842,6 +871,7 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     assert(rComm.checkNonBlockingCommunications());
+
     const int numOfProcs = rComm.getNumOfProc();
 
     bool bAnswer = true;
@@ -873,7 +903,7 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
     rComm.broadcast(this->m_nRows);
     rComm.broadcast(this->m_nCols);
     this->initialize();
-    //std::cerr << "TlDistributeSymmetricMatrix::load() init." << std::endl;
+    // std::cerr << "TlDistributeSymmetricMatrix::load() init." << std::endl;
 
     if (rComm.isMaster() == true) {
         static const std::size_t bufferCount = FILE_BUFFER_SIZE / sizeof(double);
@@ -886,9 +916,9 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
         bool isFinished = false;
 
         std::vector<int> sizeLists(numOfProcs, 0);
-        std::vector<bool> isSendData(numOfProcs, false);
         std::vector<std::vector<index_type> > rowColLists(numOfProcs);
         std::vector<std::vector<double> > valueLists(numOfProcs);
+        std::vector<bool> isSendData(numOfProcs, false);
         
         while (isFinished == false) {
             // buffer分を一度に読み込み
@@ -927,7 +957,7 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
             for (std::map<int, std::vector<index_type> >::const_iterator it = tmpRowColLists.begin(); it != itEnd; ++it) {
                 const int proc = it->first;
                 const int numOfContents = it->second.size() / 2;
-                assert(numOfContents == tmpValueLists[proc].size());
+                assert(std::size_t(numOfContents) == tmpValueLists[proc].size());
 
                 if (isSendData[proc] == true) {
                     rComm.wait(sizeLists[proc]);
@@ -956,18 +986,11 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
                 rComm.wait(sizeLists[proc]);
                 rComm.wait(&(rowColLists[proc][0]));
                 rComm.wait(&(valueLists[proc][0]));
-                sizeLists[proc] = false;
+                isSendData[proc] = false;
             }
         }
         
         // 終了メッセージを全ノードに送る
-        for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
-            if (isSendData[proc] == true) {
-                rComm.wait(sizeLists[proc]);
-                rComm.wait(&(rowColLists[proc][0]));
-                rComm.wait(&(valueLists[proc][0]));
-            }
-        }
         std::vector<int> endMsg(numOfProcs, 0);
         for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
             rComm.iSendData(endMsg[proc], proc, TAG_LOAD_END);
@@ -1020,7 +1043,7 @@ bool TlDistributeSymmetricMatrix::load(std::ifstream& ifs)
             }
         }
     }
-
+    
     // std::cerr << TlUtils::format("[%d] END", rComm.getRank())
     //           << std::endl;
     assert(rComm.checkNonBlockingCommunications());
@@ -1272,6 +1295,7 @@ bool TlDistributeSymmetricMatrix::inverse()
 #endif // HAVE_SCALAPACK  
 }
 
+// !!!
 TlDistributeMatrix multiplicationByScaLapack(const TlDistributeSymmetricMatrix& X,
                                              const TlDistributeMatrix& Y)
 {
@@ -1330,11 +1354,11 @@ TlDistributeMatrix multiplicationByScaLapack(const TlDistributeMatrix& X, const 
 
     // use SCALAPACK
     const char SIDE = 'R';                  // L means "C := alpha*A*B + beta*C",
-    // R means "C := alpha*B*A + beta*C"
+                                            // R means "C := alpha*B*A + beta*C"
     const char UPLO = 'L';                  // L means the lower triangular part of the symmetric matrix
-    // U means the upper triangular part of the symmetric matrix
-    const int M = Z.getNumOfRows();        // the number of rows of the matrix  C
-    const int N = Z.getNumOfCols();        // the number of columns of the matrix C
+                                            // U means the upper triangular part of the symmetric matrix
+    const int M = Z.getNumOfRows();         // the number of rows of the matrix  C
+    const int N = Z.getNumOfCols();         // the number of columns of the matrix C
     const double ALPHA = 1.0;               // ALPHA specifies the scalar alpha
 
     //const double* A = &(const_cast<TlDistributeMatrix&>(X).m_aMatrix[0]);    // DIMENSION (LDA, ka)
@@ -1839,7 +1863,7 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
                         rComm.getRank(),
                         isEnableMmap); // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
     const index_type local_N = L.getNumOfLocalVectors();
-    std::vector<double> L_pm(N);
+    TlVector L_pm(N);
     std::vector<int> global_pivot(N);  // 
     std::vector<int> reverse_pivot(N); // global_pivotの逆引き
     std::vector<int> local_pivot(local_N);
@@ -1923,9 +1947,10 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
             if (PEinCharge == rComm.getRank()) {
                 // const index_type copySize = L.getRowVector(pivot_m, &(L_pm[0]), m +1);
                 L_pm = L.getVector(pivot_m);
-                assert(L_pm.size() == m +1);
+                assert(L_pm.getSize() == m +1);
             }
-            rComm.broadcast(&(L_pm[0]), m +1, PEinCharge);
+            // rComm.broadcast(&(L_pm[0]), m +1, PEinCharge);
+            rComm.broadcast(L_pm, PEinCharge);
         }
         CD_bcast_time.stop();
 
@@ -1933,7 +1958,7 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
         error = 0.0;
 #pragma omp parallel
         {
-            std::vector<double> L_pi(m +1);
+            TlVector L_pi(m +1);
             double my_error = 0.0;
             int my_error_global_loc = 0;
             int my_error_local_loc = 0;
@@ -1943,7 +1968,7 @@ TlDistributeMatrix TlDistributeSymmetricMatrix::choleskyFactorization_mod2(const
                 const int pivot_i = local_pivot[i];
                 // const index_type copySize = L.getRowVector(pivot_i, &(L_pi[0]), m +1);
                 L_pi = L.getVector(pivot_i);
-                assert(L_pi.size() == m +1);
+                assert(L_pi.getSize() == m +1);
                 double sum_ll = 0.0;
                 for (index_type j = 0; j < m; ++j) {
                     sum_ll += L_pm[j] * L_pi[j];

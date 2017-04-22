@@ -26,11 +26,8 @@ public:
     DfConvcheck_Parallel(TlSerializeData* pPdfParam, int num_iter);
     virtual ~DfConvcheck_Parallel();
 
-public:
-    virtual void DfConvcheckMain();
-
 protected:
-    void main_ScaLAPACK();
+    virtual void check();
 };
 
 #endif // DFCONVCHECK_PARALLEL_H

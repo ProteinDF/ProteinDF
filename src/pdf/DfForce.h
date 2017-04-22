@@ -22,6 +22,7 @@
 #include "DfObject.h"
 #include "TlMatrix.h"
 #include "TlVector.h"
+#include "TlSerializeData.h"
 #include "TlOrbitalInfo.h"
 #include "TlOrbitalInfo_Density.h"
 
@@ -69,7 +70,9 @@ protected:
     virtual void calcForceFromK(RUN_TYPE runType);
     
     TlMatrix getTransformMatrix(const TlMatrix& force);
-   
+
+    virtual void output();
+    
 protected:
     TlMatrix force_;
     TlOrbitalInfo orbitalInfo_;
@@ -78,7 +81,7 @@ protected:
     /// 全ての行列を出力するかどうか(debug用)
     bool isDebugOutMatrix_;
 
-    double storedCutoffValue_;
+    TlSerializeData pdfParamForForce_;
 };
 
 #endif // DFFORCE_H

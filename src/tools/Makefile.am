@@ -9,6 +9,7 @@ SERIAL_PROGS = 				\
 	pdf-bench-mmap-mat		\
 	pdf-component			\
 	pdf-eri					\
+	pdf-info-basisset		\
 	pdf-info-charge 		\
 	pdf-info-grid			\
 	pdf-info-orb			\
@@ -21,6 +22,7 @@ SERIAL_PROGS = 				\
 	pdf-mat-diagonal		\
 	pdf-mat-diff			\
 	pdf-mat-ext				\
+	pdf-mat-format			\
 	pdf-mat-info			\
 	pdf-mat-inverse			\
 	pdf-mat-mul				\
@@ -28,12 +30,17 @@ SERIAL_PROGS = 				\
 	pdf-mat-resize			\
 	pdf-mat-select			\
 	pdf-mat-show			\
+	pdf-mat-sum				\
 	pdf-mat-top				\
+	pdf-i2pq-show			\
 	pdf-mat-transpose		\
 	pdf-mkfld-mo			\
 	pdf-mkfld-dens			\
 	pdf-mkfld-esp			\
+	pdf-pop-esp				\
 	pdf-pop-mulliken		\
+	pdf-pop-ceem			\
+	pdf-pop-resp			\
 	pdf-rotate-lcao			\
 	pdf-trans-densmat		\
 	pdf-reconf-vectormatrix	\
@@ -84,6 +91,9 @@ pdf_component_LDADD = $(SERIAL_LIBS)
 pdf_eri_SOURCES = main_eri.cpp
 pdf_eri_LDADD = $(SERIAL_LIBS)
 
+pdf_info_basisset_SOURCES = main_info_basisset.cpp
+pdf_info_basisset_LDADD = $(SERIAL_LIBS)
+
 pdf_info_charge_SOURCES = main_info_charge.cpp
 pdf_info_charge_LDADD = $(SERIAL_LIBS)
 
@@ -122,6 +132,9 @@ pdf_mat_diff_LDADD = $(SERIAL_LIBS)
 pdf_mat_ext_SOURCES = main_mat_ext.cpp
 pdf_mat_ext_LDADD = $(SERIAL_LIBS)
 
+pdf_mat_format_SOURCES = main_mat_format.cpp
+pdf_mat_format_LDADD = $(SERIAL_LIBS)
+
 pdf_mat_info_SOURCES = main_mat_info.cpp
 pdf_mat_info_LDADD = $(SERIAL_LIBS)
 
@@ -137,6 +150,9 @@ pdf_mat_symmetrize_LDADD = $(SERIAL_LIBS)
 pdf_mat_show_SOURCES = main_mat_show.cpp
 pdf_mat_show_LDADD = $(SERIAL_LIBS)
 
+pdf_mat_sum_SOURCES = main_mat_sum.cpp
+pdf_mat_sum_LDADD = $(SERIAL_LIBS)
+
 pdf_mat_resize_SOURCES = main_mat_resize.cpp
 pdf_mat_resize_LDADD = $(SERIAL_LIBS)
 
@@ -148,6 +164,9 @@ pdf_mat_top_LDADD = $(SERIAL_LIBS)
 
 pdf_mat_transpose_SOURCES = main_mat_transpose.cpp
 pdf_mat_transpose_LDADD = $(SERIAL_LIBS)
+
+pdf_i2pq_show_SOURCES = main_i2pq_show.cpp
+pdf_i2pq_show_LDADD = $(SERIAL_LIBS)
 
 pdf_mkfld_mo_SOURCES = \
 	mkfld_common.h	mkfld_common.cpp	\
@@ -167,8 +186,22 @@ pdf_mkfld_esp_SOURCES = \
 	main_mkfld_esp.cpp
 pdf_mkfld_esp_LDADD = $(SERIAL_LIBS)
 
+pdf_pop_esp_SOURCES = \
+	TlEspField.h	TlEspField.cpp		\
+	main_pop_esp.cpp 
+pdf_pop_esp_LDADD = $(SERIAL_LIBS)
+
 pdf_pop_mulliken_SOURCES = main_pop_mulliken.cpp
 pdf_pop_mulliken_LDADD = $(SERIAL_LIBS)
+
+pdf_pop_ceem_SOURCES = main_pop_ceem.cpp
+pdf_pop_ceem_LDADD = $(SERIAL_LIBS)
+
+pdf_pop_resp_SOURCES = \
+	TlEspField.h	TlEspField.cpp		\
+	TlEspPop.h		TlEspPop.cpp		\
+	main_pop_resp.cpp 
+pdf_pop_resp_LDADD = $(SERIAL_LIBS)
 
 pdf_rotate_lcao_SOURCES = \
 	TlRotateLCAO.h		\

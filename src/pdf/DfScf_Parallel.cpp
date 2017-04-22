@@ -277,7 +277,7 @@ bool DfScf_Parallel::judge()
             this->loggerStartTitle("DfConvcheck(parallel)");
         }
 
-        int bJudge = this->checkConverge();
+        const bool bJudge = this->checkConverge();
 
         if (rComm.isMaster() == true) {
             //TlLogX& Log = TlLogX::getInstance();
@@ -286,7 +286,7 @@ bool DfScf_Parallel::judge()
         }
 
         //  set convergence
-        if (bJudge != 0) {
+        if (bJudge == true) {
             // 収束の閾値をみたすとcounterが１増える
             this->m_nConvergenceCounter++;
 
@@ -314,12 +314,11 @@ bool DfScf_Parallel::judge()
     return bAnswer;
 }
 
-int DfScf_Parallel::checkConverge()
+bool DfScf_Parallel::checkConverge()
 {
     DfConvcheck_Parallel dfConvcheck(this->pPdfParam_, this->m_nIteration);
-    dfConvcheck.DfConvcheckMain();
 
-    return dfConvcheck.judge();
+    return dfConvcheck.isConverged();
 }
 
 

@@ -21,25 +21,60 @@
 #include "DfLocalize.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
+#include "TlGetopt.h"
+
+
+void showHelp(const std::string& progname)
+{
+    std::cout << TlUtils::format("%s [OPTIONS] basisset_name ...", progname.c_str()) << std::endl;
+    std::cout << std::endl;
+    std::cout << " localize C matrix" << std::endl;
+    std::cout << " -p PATH       set ProteinDF parameter file. default = pdfparam.mpac" << std::endl;
+    std::cout << " -c PATH       set C matrix path" << std::endl;
+    std::cout << " -h            show help" << std::endl;
+    std::cout << " -v            verbose output" << std::endl;
+}
+
 
 int main(int argc, char *argv[])
 {
-    std::string pdfparam_path = "pdfparam.mpac"; 
+    TlGetopt opt(argc, argv, "c:hp:v");
+    const bool isVerbose = (opt["v"] == "defined");
+    const bool isShowHelp = (opt["h"] == "defined");
 
+    if (isShowHelp) {
+        showHelp(opt[0]);
+        return EXIT_SUCCESS;
+    }
+
+    std::string pdfParamPath = "pdfparam.mpac";
+    if (opt["p"].empty() != true) {
+        pdfParamPath = opt["p"];
+    }
+
+    std::string inputCMatrixPath = "";
+    if (opt["c"].empty() != true) {
+        inputCMatrixPath = opt["c"];
+    }
+    
+    if (isVerbose) {
+        std::cerr << "parameter path: " << pdfParamPath << std::endl;
+    }
+
+    
     TlSerializeData param;
     {
         TlMsgPack mpac;
-        mpac.load(pdfparam_path);
+        mpac.load(pdfParamPath);
         param = mpac.getSerializeData();
     }
     
     DfLocalize lo(&param);
-
-    lo.localize();
+    lo.localize(inputCMatrixPath);
 
     {
         TlMsgPack mpac(param);
-        mpac.save(pdfparam_path);
+        mpac.save(pdfParamPath);
     }
 
     return 0;

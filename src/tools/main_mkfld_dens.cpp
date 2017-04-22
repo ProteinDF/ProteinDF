@@ -98,10 +98,13 @@ int main(int argc, char* argv[])
     // 密度行列の読み込み
     TlSymmetricMatrix P;
     if (PMatrixFilePath == "") {
-        const int iteration = param["model"]["iterations"].getInt();
+        const int iteration = param["num_of_iterations"].getInt();
         DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
         DfObject dfObject(&param);
         PMatrixFilePath = dfObject.getPpqMatrixPath(runType, iteration);
+    }
+    if (verbose) {
+        std::cerr << "loading: " << PMatrixFilePath << std::endl;
     }
     P.load(PMatrixFilePath);
 
@@ -187,7 +190,7 @@ int main(int argc, char* argv[])
             TlAtom atom(flGeom.getAtom(i));
             atom.setCharge(flGeom.getCharge(i));
             atom.moveTo(flGeom.getCoordinate(i));
-            // atom.moveTo(flGeom.getCoordinate(i) * ANG_PER_AU); // angstroamに変換
+            // atom.moveTo(flGeom.getCoordinate(i) * ANG_PER_AU); // angstromに変換
             atoms[i] = atom;
         }
 

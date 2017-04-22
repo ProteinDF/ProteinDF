@@ -19,6 +19,7 @@
 #include <iostream>
 #include "DfConvcheck_Parallel.h"
 #include "TlCommunicate.h"
+#include "TlSymmetricMatrix.h"
 #include "TlDistributeSymmetricMatrix.h"
 
 DfConvcheck_Parallel::DfConvcheck_Parallel(TlSerializeData* pPdfParam, int num_iter)
@@ -35,54 +36,44 @@ DfConvcheck_Parallel::~DfConvcheck_Parallel()
 }
 
 
-void DfConvcheck_Parallel::DfConvcheckMain()
+void DfConvcheck_Parallel::check()
 {
-#ifdef HAVE_SCALAPACK
-    if (this->m_bUsingSCALAPACK == true) {
-        this->log_.info("convergence check using SCALAPACK.");
-        this->main_ScaLAPACK();
-        return;
-    }
-#endif // HAVE_SCALAPACK
-
-    // LAPACK
-    this->log_.info("convergence check using LAPACK.");
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        DfConvcheck::DfConvcheckMain();
-    }
-    rComm.broadcast(this->converged_flag);
-}
-
-
-void DfConvcheck_Parallel::main_ScaLAPACK() {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    
-    this->converged_flag = 0;
 
     // no judgement for the first iteration
     if (this->m_nIteration == 1) {
+        this->isConverged_ = false;
         return;
     }
-    this->main<TlDistributeSymmetricMatrix>(this->m_nIteration);
 
-    // check for convergence
-    double return_threshold = 0.0;
-    if (this->convergence_type == "fock") {
-        return_threshold = this->dev_ks;
-    } else if (this->convergence_type == "density") {
-        return_threshold = this->dev_dm;
-    } else if (this->convergence_type == "energy") {
-        return_threshold = this->dev_te;
+#ifdef HAVE_SCALAPACK
+    if (this->m_bUsingSCALAPACK) {
+        this->log_.info("convgergence check (parallel) using ScaLAPACK");
+        DfConvcheck::check<TlDistributeSymmetricMatrix>(this->m_nIteration);
     } else {
-        return_threshold = this->dev_cd;
+        this->log_.info("convgergence check (parallel) using LAPACK");
+        if (rComm.isMaster()) {
+            DfConvcheck::check<TlSymmetricMatrix>(this->m_nIteration);
+        }
     }
+#else
+    {
+        this->log_.info("convgergence check (parallel) using LAPACK");
+        if (rComm.isMaster()) {
+            DfConvcheck::check<TlSymmetricMatrix>(this->m_nIteration);
+        }
+    }
+#endif // HAVE_SCALAPACK
+    
+    // check for convergence
+    if (rComm.isMaster()) {
+        this->isConverged_ = ((this->judgeRmsMatrixA_) && (this->judgeRmsMatrixB_) &&
+                              (this->judgeMaxMatrixA_) && (this->judgeMaxMatrixB_) && 
+                              (this->judgeTotalEnergy_));
+    }
+    rComm.broadcast(this->isConverged_);
 
-    if ((return_threshold < this->threshold_cri) && (dev_te < this->threshold_cri_ene)) {
-        this->converged_flag = 1;
-    }
-
-    if (rComm.isMaster() == true) {
-        this->showResults();
-    }
+    this->showResults();
 }
+
+

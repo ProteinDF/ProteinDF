@@ -38,6 +38,11 @@ public:
      */
     int dfGrdMain();
 
+    void getGrids(const int atomIndex,
+                  std::vector<TlPosition>* pGrids,
+                  std::vector<double>* pSingleCenterWeights,
+                  std::vector<double>* pPartitioningWeights);
+    
 protected:
     virtual void makeTable();
 
@@ -86,6 +91,11 @@ private:
         GC_KK
     };
     
+    enum PARTITIONING_METHOD {
+        Paritioning_Becke,
+        Partitioning_SSWeight
+    };
+
 private:
     ///
     /// @param [in] R atomic size
@@ -146,9 +156,36 @@ private:
     double Becke_f1(const double x);
     double Becke_f3(const double x);
     
+    void screeningGridsByWeight0(std::vector<TlPosition>* pGrids,
+                                 std::vector<double>* pWeights);
     void screeningGridsByWeight(std::vector<TlPosition>* pGrids,
-                                std::vector<double>* pWeights);
-   
+                                std::vector<double>* pSingleCenterWeights,
+                                std::vector<double>* pPartitioningWeights);
+
+    double Ps_uij(const int atomIndex_m, const TlPosition& gridpoint);
+public:
+    TlVector JGP_nablaB_omegaA(const int atomIndexA, const int atomIndexB,
+                               const TlPosition& gridpoint);
+private:
+    TlVector JGP_nablaA_PA(const int atomIndexA,
+                           const TlPosition& gridpoint);
+    TlVector JGP_nablaB_PA(const int atomIndexA,
+                           const int atonIndexB,
+                           const TlPosition& gridpoint);
+    double JGP_t(const double myu);
+    TlVector JGP_nablaA_myuAB(const int atomIndexA,
+                              const int atomIndexB,
+                              const TlPosition& gridpoint);
+
+    void getGrids_sub(const int atomIndex,
+                      const int gridType,
+                      const int numOfRadialGrids,
+                      const int radialGridType,
+                      const int maxAngularGrids,
+                      const PARTITIONING_METHOD partitioningMethod,
+                      std::vector<TlPosition>* pGrids,
+                      std::vector<double>* pSingleCenterWeights,
+                      std::vector<double>* pPartitioningWeights);
 protected:
     enum GridType {
         COARSE,
@@ -209,6 +246,9 @@ protected:
     bool isPruning_;
     
     TlLebedevGrid lebGrd_;
+
+    /// rotation matrix
+    TlMatrix O_;
 };
 
 #endif // DFGENERATEGRID_H

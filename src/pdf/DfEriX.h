@@ -301,7 +301,7 @@ protected:
 
     /// カットオフ用閾値
     /// J. Chem. Phys.,105,2726 (1996) : eq.33
-    double cutoffEpsilon3_;
+    double cutoffThreshold_primitive_;
     
     // mutable std::vector<unsigned long> cutoffAll_E1_;
     // mutable std::vector<unsigned long> cutoffAlive_E1_;

@@ -39,6 +39,7 @@ void DfKMatrix::buildK()
     //     this->getK_RI();
     //     break;
     case K_ENGINE_CD:
+    case K_ENGINE_FASTCDK:
         this->log_.info("use CD method");
         this->getK_CD();
         break;

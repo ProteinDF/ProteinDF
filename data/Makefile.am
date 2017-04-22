@@ -31,3 +31,5 @@ guessdbdatadir=$(prefix)/data/fl_GuessDB
 dist_guessdbdata_DATA = $(guessdbdata)
 guessdbdata_DATA = $(guessdbdata)
 
+basis2:
+	cat basis2.* >> basis2

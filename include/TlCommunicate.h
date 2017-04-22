@@ -26,6 +26,7 @@
 #include <map>
 #include <string>
 
+#include "TlSparseMatrix.h"
 #include "TlPartialMatrix.h"
 #include "TlPartialSymmetricMatrix.h"
 #include "TlTime.h"
@@ -36,8 +37,6 @@
 class TlVector;
 class TlMatrix;
 class TlSymmetricMatrix;
-class TlSparseMatrix;
-class TlSparseSymmetricMatrix;
 class TlFileMatrix;
 class TlFileSymmetricMatrix;
 class TlMmapMatrix;
@@ -62,7 +61,7 @@ public:
     ///
     /// @param workMemSize [in] 作業用メモリサイズ(byte単位)
     void setWorkMemSize(std::size_t workMemSize);
-
+    
     /// 作業用メモリサイズを返す
     ///
     /// @return 作業用メモリサイズ(byte単位)
@@ -94,6 +93,7 @@ public:
     // 集団通信
     int reduce_SUM(unsigned int* pData, std::size_t size, int root = 0);
     int reduce_SUM(unsigned long* pData, std::size_t size, int root = 0);
+    int reduce_SUM(TlSparseMatrix& rData, int root = 0);
     int reduce_MAXLOC(double* pValue, int* pIndex, int root = 0);
     
     int allReduce_SUM(int& rData);
@@ -111,7 +111,7 @@ public:
     int allReduce_SUM(double* pData, std::size_t length);
     int allReduce_SUM(TlVector& rVector);
     int allReduce_SUM(TlMatrix& rMatrix);
-    int allReduce_SUM(TlSymmetricMatrix& rMatrix);
+    int allReduce_SUM(TlSparseMatrix& rMatrix);
     int allReduce_SUM(TlMmapMatrix& rMatrix);
     int allReduce_SUM(TlMmapSymmetricMatrix& rMatrix);
     int allReduce_AND(bool& rData);
@@ -119,8 +119,18 @@ public:
     int allReduce_MIN(int& rData);
     int allReduce_MAXLOC(double* pValue, int* pIndex);
 
-    int gatherToMaster(TlSparseMatrix& rMatrix);
+public:
+    int iAllReduce_SUM(const double* pSendBuf, double* pRecvBuf, int count);
 
+protected:
+template<typename T>
+    int iAllReduce(const T* pSendBuf, T* pRecvBuf,
+                   int count,
+                   const MPI_Datatype mpiType,
+                   const MPI_Op mpiOp);
+
+
+public:
     /** master に保存されたデータをslaveにコピーします
      *
      *  @param[in/out] rData 送信(master)・受信(slave)オブジェクトの参照
@@ -165,7 +175,8 @@ public:
     int sendData(const TlVector& data, int destination = 0, int tag = 0);
     int sendData(const TlMatrix& data, int destination = 0, int tag = 0);
     int sendData(const TlSymmetricMatrix& rData, int nDestination = 0, int nTag = 0);
-    int sendData(const TlSparseSymmetricMatrix& rData, int nDestination = 0, int nTag = 0);
+    int sendData(const TlSparseMatrix& data, int dest = 0, int tag = 0);
+    // int sendData(const TlSparseSymmetricMatrix& rData, int nDestination = 0, int nTag = 0);
     int sendData(const TlPartialSymmetricMatrix& rData, int nDestination = 0, int nTag = 0);
 
     int receiveData(bool& data, int src, int tag = 0);
@@ -184,10 +195,11 @@ public:
     int receiveData(TlVector& data, int src, int tag = 0);
     int receiveData(TlMatrix& data, int src, int tag = 0);
     int receiveData(TlSymmetricMatrix& rData, int nSrc, int nTag = 0);
-    int receiveData(TlSparseSymmetricMatrix& rData, int nSrc, int nTag = 0);
+    int receiveData(TlSparseMatrix& rData, int src, int tag = 0);
     int receiveData(TlPartialSymmetricMatrix& rData, int nSrc, int nTag = 0);
 
     int receiveDataFromAnySource(int& data, int* pSrc, const int tag);
+    int receiveDataFromAnySource(unsigned long& data, int* pSrc, int tag);
 
     int receiveDataFromAnySource(int& data, int* pSrc, int* pTag = NULL);
     int receiveDataFromAnySource(unsigned int& data, int* pSrc, int* pTag = NULL);
@@ -198,7 +210,7 @@ public:
     int receiveDataFromAnySource(std::vector<long>& rData, int* pSrc, int* pTag = NULL);
     int receiveDataFromAnySource(std::vector<unsigned long>& rData, int* pSrc, int* pTag = NULL);
     int receiveDataFromAnySource(std::vector<double>& rData, int* pSrc, int* pTag = NULL);
-    int receiveDataFromAnySource(TlSparseSymmetricMatrix& rData, int* pSrc, int* pTag = NULL);
+    int receiveDataFromAnySource(TlSparseMatrix* pData, int* pSrc, int tag = 0);
     int receiveDataFromAnySource(TlPartialSymmetricMatrix& rData, int* pSrc, int* pTag = NULL);
 
     // タグ付き
@@ -241,6 +253,8 @@ public:
                      const int src, const int tag = 0);
     int receiveDataX(double* pData, const std::size_t size,
                      const int src, const int tag = 0);
+    int receiveDataX(TlMatrixElement* pData, const std::size_t size,
+                     const int src, const int tag = 0);
     
     int receiveDataFromAnySourceX(int* pData, std::size_t size, int* pSrc, int tag = 0);
     int receiveDataFromAnySourceX(unsigned long* pData, std::size_t size, int* pSrc, int tag = 0);
@@ -249,6 +263,8 @@ public:
                    const int dest, const int tag = 0);
     int iSendDataX(const double* pData, const std::size_t size,
                    const int dest, const int tag = 0);
+    int iSendDataX(const TlMatrixElement* pData, const std::size_t size,
+                   int dest, int tag = 0);
     
     int iReceiveDataX(int* pData, const std::size_t size,
                       const int src, const int tag = 0);
@@ -399,6 +415,11 @@ protected:
                                   const std::size_t start, const std::size_t end,
                                   int* pSrc, const int tag);
 
+    template<typename T>
+    int receiveDataFromAnySourceAnyTagX(T* pData, const MPI_Datatype mpiType,
+                                        const std::size_t start, const std::size_t end,
+                                        int* pSrc, int* pTag);
+
     
     template<typename T>
     int iSendData(const T& data, const MPI_Datatype mpiType,
@@ -454,6 +475,11 @@ private:
     bool cancel(void* pData);
 
 private:
+    void register_MatrixElement();
+    void unregister_MatrixElement();
+    
+
+private:
     template<typename T>
     int broadcast(T& data, const MPI_Datatype mpiType, const int root);
 
@@ -486,18 +512,23 @@ private:
     mutable unsigned long counter_test_;
     mutable unsigned long counter_wait_;
     mutable unsigned long counter_allreduce_;
+    mutable unsigned long counter_iallreduce_;
     
     /// 時間計測用変数(MPI_Barrier)
     mutable TlTime time_barrier_;
     mutable TlTime time_test_;
     mutable TlTime time_wait_;
     mutable TlTime time_allreduce_;
+    mutable TlTime time_iallreduce_;
+
+    /// original data type
+    MPI_Datatype MPI_MATRIXELEMENT;
 
     TlLogging& log_;
     
 private:
     // for non-blocking communication
-    struct NonBlockingCommParam {
+    class NonBlockingCommParam {
     public:
         NonBlockingCommParam()
             : requests(std::vector<uintptr_t>()), requestStates(),
@@ -524,6 +555,7 @@ private:
         unsigned int property;
         int source;
     };
+
     typedef std::map<uintptr_t, NonBlockingCommParam> NonBlockingCommParamTableType;
     static NonBlockingCommParamTableType nonBlockingCommParamTable_;
 
@@ -532,6 +564,14 @@ private:
     bool checkNonBlockingTableCollision(uintptr_t key,
                                         const NonBlockingCommParam& param,
                                         int line) const;
+
+private:                   
+    // 通信用タグ
+    enum {
+        TLC_REDUCE_SUM_TLSPARSEMATRIX_SIZE = 50001,
+        TLC_REDUCE_SUM_TLSPARSEMATRIX_DATA = 50002
+    };
+                   
 };
 
 

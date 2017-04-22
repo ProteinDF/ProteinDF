@@ -94,6 +94,7 @@ void DfIntegrals::main()
 
     // Cholesky Vector
     this->createCholeskyVectors();
+    this->createCholeskyVectors_K();
 
     // X matrix
     this->createXMatrix();
@@ -309,6 +310,28 @@ void DfIntegrals::createCholeskyVectors()
         }
 
         calcState |= DfIntegrals::CD;
+        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+        this->saveParam();
+    }
+}
+
+void DfIntegrals::createCholeskyVectors_K()
+{
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+
+    if ((calcState & DfIntegrals::CDK) == 0) {
+        if (this->K_engine_ == K_ENGINE_FASTCDK) {
+            this->outputStartTitle("Cholesky Vectors (for K)");
+            DfCD *pDfCD = this->getDfCDObject();
+            pDfCD->calcCholeskyVectorsForK();
+            
+            delete pDfCD;
+            pDfCD = NULL;
+
+            this->outputEndTitle();
+        }
+
+        calcState |= DfIntegrals::CDK;
         (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
         this->saveParam();
     }

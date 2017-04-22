@@ -106,8 +106,10 @@ protected:
     std::string getSabInvMatrixPath();
     std::string getSgdInvMatrixPath();
     std::string getI2pqVtrPath();
+    std::string getI2prVtrPath();
     std::string getI2pqVtrXCPath();
     std::string getLjkMatrixPath();
+    std::string getLkMatrixPath();
     std::string getLxcMatrixPath();
     std::string getXMatrixPath();
     std::string getXInvMatrixPath();
@@ -211,6 +213,11 @@ protected:
     MatrixType getLjkMatrix();
     template <class MatrixType>
     void saveLjkMatrix(const MatrixType& Ljk);
+
+    template <class MatrixType>
+    MatrixType getLkMatrix();
+    template <class MatrixType>
+    void saveLkMatrix(const MatrixType& Lk);
 
     template <class MatrixType>
     MatrixType getLxcMatrix();
@@ -427,7 +434,11 @@ protected:
                        const MatrixType& Clo);
     template <class MatrixType>
     MatrixType getCloMatrix(RUN_TYPE runType, int itr);
-    
+
+
+    /// return occupation vector
+    virtual TlVector getOccVtr(const RUN_TYPE runType);
+
 protected:
     virtual void setParam(const TlSerializeData& data);
 
@@ -449,7 +460,8 @@ protected:
     enum K_Engine_Type {
         K_ENGINE_CONVENTIONAL,
         K_ENGINE_RI_K,
-        K_ENGINE_CD
+        K_ENGINE_CD,
+        K_ENGINE_FASTCDK
     };
 
     // enum XC_Engine_Type {
@@ -638,7 +650,10 @@ template <class MatrixType>
 MatrixType DfObject::getLjkMatrix()
 {
     const std::string path = this->getLjkMatrixPath();
-    MatrixType Ljk = this->matrixCache_.get<MatrixType>(path);
+    // MatrixType Ljk = this->matrixCache_.get<MatrixType>(path);
+    MatrixType Ljk;
+    Ljk.load(path, 0);
+
     return Ljk;
 }
 
@@ -649,7 +664,29 @@ void DfObject::saveLjkMatrix(const MatrixType& Ljk)
     if (this->isUseCache_ == true) {
         this->matrixCache_.set(path, Ljk, true);
     } else {
-        Ljk.save(path);
+        Ljk.save(path, 0);
+    }
+}
+
+
+template <class MatrixType>
+MatrixType DfObject::getLkMatrix()
+{
+    const std::string path = this->getLkMatrixPath();
+    MatrixType Lk;
+    Lk.load(path, 0);
+
+    return Lk;
+}
+
+template <class MatrixType>
+void DfObject::saveLkMatrix(const MatrixType& Lk)
+{
+    const std::string path = this->getLkMatrixPath();
+    if (this->isUseCache_ == true) {
+        this->matrixCache_.set(path, Lk, true);
+    } else {
+        Lk.save(path, 0);
     }
 }
 
@@ -658,7 +695,10 @@ template <class MatrixType>
 MatrixType DfObject::getLxcMatrix()
 {
     const std::string path = this->getLxcMatrixPath();
-    MatrixType Lxc = this->matrixCache_.get<MatrixType>(path);
+    // MatrixType Lxc = this->matrixCache_.get<MatrixType>(path);
+    MatrixType Lxc;
+    Lxc.load(path, 0);
+
     return Lxc;
 }
 

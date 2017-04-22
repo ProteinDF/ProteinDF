@@ -19,6 +19,7 @@
 #include <iostream>
 #include <string>
 #include <set>
+#include <map>
 #include <fstream>
 
 #include "Fl_Geometry.h"
@@ -37,7 +38,8 @@
 // }
 
 
-Fl_Geometry::Fl_Geometry(const TlSerializeData& geomData) : isUpdate_(false)
+Fl_Geometry::Fl_Geometry(const TlSerializeData& geomData)
+    : isUpdate_(false), isCalcdTotalCharge_(false)
 {
     this->atoms_.clear();
     this->setup(geomData);
@@ -45,7 +47,7 @@ Fl_Geometry::Fl_Geometry(const TlSerializeData& geomData) : isUpdate_(false)
 
 
 Fl_Geometry::Fl_Geometry(const Fl_Geometry& rhs)
-        : filePath_(rhs.filePath_), isUpdate_(false), atoms_(rhs.atoms_)
+    : filePath_(rhs.filePath_), isUpdate_(false), atoms_(rhs.atoms_), isCalcdTotalCharge_(false)
 {
 }
 
@@ -61,8 +63,9 @@ Fl_Geometry::~Fl_Geometry()
 void Fl_Geometry::clear()
 {
     this->atoms_.clear();
-
+    
     this->isUpdate_ = true;
+    this->isCalcdTotalCharge_ = false;
 }
 
 void Fl_Geometry::pushBack(const Fl_Geometry::AtomData& atomData)
@@ -70,6 +73,7 @@ void Fl_Geometry::pushBack(const Fl_Geometry::AtomData& atomData)
     this->atoms_.push_back(atomData);
 
     this->isUpdate_ = true;
+    this->isCalcdTotalCharge_ = false;
 }
 
 
@@ -212,6 +216,8 @@ void Fl_Geometry::load()
             ++atomCount;
         }
     }
+
+    this->isCalcdTotalCharge_ = false;
 }
 
 
@@ -239,6 +245,8 @@ void Fl_Geometry::setup(const TlSerializeData& geomData)
             this->atoms_.push_back(ad);
         }
     }
+
+    this->isCalcdTotalCharge_ = false;
 }
 
 
@@ -277,6 +285,43 @@ double Fl_Geometry::getCharge(int i) const
     return this->atoms_[i].atom.getCharge();
 }
 
+
+double Fl_Geometry::getTotalCharge() const
+{
+    if (this->isCalcdTotalCharge_ == false) {
+        this->calcTotalCharge();
+    }
+
+    return this->totalCharge_;
+}
+
+double Fl_Geometry::getTotalChargeWithoutX() const
+{
+    if (this->isCalcdTotalCharge_ == false) {
+        this->calcTotalCharge();
+    }
+
+    return this->totalChargeWithoutX_;
+}
+
+void Fl_Geometry::calcTotalCharge() const
+{
+    double totalCharge = 0.0;
+    double totalChargeWithoutX = 0.0;
+    const int numOfAtoms = this->atoms_.size();
+    for (int i = 0; i < numOfAtoms; ++i) {
+        const double charge = this->getCharge(i);
+        totalCharge += charge;
+        if (this->getAtomSymbol(i) != "X") {
+            totalChargeWithoutX += charge;
+        }
+    }
+
+    this->totalCharge_ = totalCharge;
+    this->totalChargeWithoutX_ = totalChargeWithoutX;
+    this->isCalcdTotalCharge_ = true;
+}
+
 std::string Fl_Geometry::getLabel(int i) const
 {
     assert(0 <= i);
@@ -310,3 +355,20 @@ int Fl_Geometry::getNumOfDummyAtoms() const
     return count;
 }
 
+std::string Fl_Geometry::getFormula() const
+{
+    std::map<std::string, int> component;
+    const int numOfAtoms = this->getNumOfAtoms();
+    for (int i = 0; i < numOfAtoms; ++i) {
+        const std::string symbol = this->getAtomSymbol(i);
+        ++(component[symbol]);
+    }
+
+    std::string formula = "";
+    for (std::map<std::string, int>::const_iterator p = component.begin();
+         p != component.end(); ++p) {
+        formula += TlUtils::format("%s%d", p->first.c_str(), p->second);
+    }
+
+    return formula;
+}

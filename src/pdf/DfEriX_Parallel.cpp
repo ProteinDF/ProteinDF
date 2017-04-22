@@ -634,8 +634,6 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     this->log_.info("using local matrix for density matrix.");
 
     assert(pK != NULL);
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    assert(rComm.checkNonBlockingCommunications());
     
     const index_type numOfAOs = this->m_nNumOfAOs;
     pK->resize(numOfAOs);
@@ -698,7 +696,6 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     pK->mergeSparseMatrix(tmpK);
 
     this->log_.info("finished");
-    assert(rComm.checkNonBlockingCommunications());
 }
 
 
@@ -863,7 +860,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
         threadID = omp_get_thread_num();
 #endif // _OPENMP
 
-        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffEpsilon3_);
+        this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
 
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {
@@ -1128,8 +1125,9 @@ TlSparseSymmetricMatrix DfEriX_Parallel::makeSchwarzTable(const TlOrbitalInfoObj
     }
 
     this->log_.info("make schwartz table: finalize");
-    rComm.gatherToMaster(schwarz);
-    rComm.broadcast(schwarz);
+    // rComm.gatherToMaster(schwarz);
+    // rComm.broadcast(schwarz);
+    rComm.allReduce_SUM(schwarz);
     
     this->log_.info("make Schwartz cutoff table(parallel): end");
     return schwarz;

@@ -892,6 +892,8 @@ TlMatrix DfGridFreeXC::getForce()
     }
 
     force *= -4.0;
+    force *= 2.0; // rks
+    
     force.save("GF_force.mat");
 
     // calc center of atoms

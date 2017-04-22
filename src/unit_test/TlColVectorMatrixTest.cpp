@@ -111,7 +111,7 @@ void TlColVectorMatrixTest::testSaveLoad()
 
     // load
     TlColVectorMatrix vecB;
-    vecB.load("/tmp/vecA.mat");
+    vecB.load("/tmp/vecA.mat", 0);
 
     // test
     for (int r = 0; r < maxRow; ++r) {

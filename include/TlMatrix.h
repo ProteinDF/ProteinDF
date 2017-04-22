@@ -293,6 +293,9 @@ public:
     /// @return 要素の絶対値の最大値
     virtual double getMaxAbsoluteElement(int* pOutRow =NULL, int* pOutCol =NULL) const;
 
+    /// calc RMS
+    virtual double getRMS() const;
+
     virtual bool inverse();
 
     /// 対角成分をベクトルとして抽出する

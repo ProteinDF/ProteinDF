@@ -241,6 +241,8 @@ public:
     /// @return 要素の絶対値の最大値
     double getMaxAbsoluteElementByIndex(int index) const;
 
+    /// calc RMS
+    virtual double getRMS() const;
 
     /// 固有値を求める
     ///

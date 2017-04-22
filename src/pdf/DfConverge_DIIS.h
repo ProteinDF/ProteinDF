@@ -295,7 +295,7 @@ void DfConverge_DIIS::convergeKSMatrix(const DfObject::RUN_TYPE runType)
 template <class MatrixType, class SymmetricMatrixType>
 void DfConverge_DIIS::convergePMatrix(const DfObject::RUN_TYPE runType)
 {
-    this->log_.info(TlUtils::format("converge dennsity matrix using DIIS. #%d", this->m_nIteration));
+    this->log_.info(TlUtils::format("converge dennsity matrix using DIIS. #%d/%d", this->m_nIteration, this->startIterationOfDIIS_));
     const int itr = this->m_nIteration;
 
     bool updateByDIIS = false;
@@ -343,8 +343,11 @@ void DfConverge_DIIS::convergePMatrix(const DfObject::RUN_TYPE runType)
             DfObject::savePpqMatrix(runType, itr -1, newP);
             updateByDIIS = true;
         } else {
+            this->log_.info("e_max has not been satisfited.");
             (*this->pPdfParam_)["DIIS_e_max_pass_itr"] = -1;
         }
+    } else {
+        this->log_.info(TlUtils::format("the iteration, %d, is lower than start number, %d.", itr, this->startIterationOfDIIS_));
     }
 
     if (!updateByDIIS) {

@@ -48,8 +48,8 @@ TlVector TlSparseSymmetricMatrix::getRowVector(const index_type row) const
     } else {
         const_iterator pEnd = this->end();
         for (const_iterator p = this->begin(); p != pEnd; ++p) {
-            int r, c;
-            this->index(p->first, &r, &c);
+            const int r = p->first.row;
+            const int c = p->first.col;
             if (r == row) {
                 ans[c] = p->second;
             } else if (c == row) {
@@ -74,8 +74,8 @@ TlVector TlSparseSymmetricMatrix::getColVector(const index_type col) const
     } else {
         const_iterator pEnd = this->end();
         for (const_iterator p = this->begin(); p != pEnd; ++p) {
-            int r, c;
-            this->index(p->first, &r, &c);
+            const int r = p->first.row;
+            const int c = p->first.col;
             if (c == col) {
                 ans[r] = p->second;
             } else if (r == col) {
@@ -87,29 +87,29 @@ TlVector TlSparseSymmetricMatrix::getColVector(const index_type col) const
     return ans;
 }
 
-const TlSparseSymmetricMatrix& TlSparseSymmetricMatrix::dot(const TlSparseSymmetricMatrix& X)
-{
-    iterator p = this->begin();
-    iterator pEnd = this->end();
-    const_iterator q = X.begin();
-    const_iterator qEnd = X.end();
+// const TlSparseSymmetricMatrix& TlSparseSymmetricMatrix::dot(const TlSparseSymmetricMatrix& X)
+// {
+//     iterator p = this->begin();
+//     iterator pEnd = this->end();
+//     const_iterator q = X.begin();
+//     const_iterator qEnd = X.end();
 
-    while ((p != pEnd) && (q != qEnd)) {
-        const unsigned long p_index = p->first;
-        const unsigned long q_index = q->first;
-        if (p_index < q_index) {
-            ++p;
-        } else if (p_index > q_index) {
-            ++q;
-        } else {
-            // p_index == q_index
-            this->m_aMatrix[p_index] *= X.m_aMatrix[p_index];
-            ++p;
-            ++q;
-        }
-    }
+//     while ((p != pEnd) && (q != qEnd)) {
+//         const unsigned long p_index = p->first;
+//         const unsigned long q_index = q->first;
+//         if (p_index < q_index) {
+//             ++p;
+//         } else if (p_index > q_index) {
+//             ++q;
+//         } else {
+//             // p_index == q_index
+//             this->m_aMatrix[p_index] *= X.m_aMatrix[p_index];
+//             ++p;
+//             ++q;
+//         }
+//     }
 
-    return (*this);
-}
+//     return (*this);
+// }
 
 
