@@ -54,7 +54,7 @@ DfCD::DfCD(TlSerializeData* pPdfParam)
         this->epsilon_ = (*pPdfParam)["CD_epsilon"].getDouble();
     }    
 
-    this->CDAM_tau_K_ = 1.0E-10;
+    this->CDAM_tau_K_ = 1.0E-4;
     if ((*pPdfParam)["CDAM_tau_K"].getStr().empty() != true) {
         this->CDAM_tau_K_ = (*pPdfParam)["CDAM_tau_K"].getDouble();
     }    
@@ -149,6 +149,7 @@ void DfCD::calcCholeskyVectorsForJK()
         this->log_.info("");
     } else {
         // productive code
+        this->log_.info("CD (J) routine: start");
         this->createEngines<DfEriEngine>();
 
         const TlRowVectorMatrix Ljk 
@@ -162,10 +163,19 @@ void DfCD::calcCholeskyVectorsForJK()
         // this->debugOutLjk(Ljk.getTlMatrixObject()); // debug
 
         this->destroyEngines();
-        this->log_.info("");
+        this->log_.info("CD (J) routine: end");
     }
 
-    // K only
+}
+
+
+// K only
+void DfCD::calcCholeskyVectorsForK()
+{
+    this->log_.info("calc CholeskyVectors for K (serial)");
+    const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
+                                (*this->pPdfParam_)["basis_set"]);
+
     switch (this->fastCDK_mode_) {
     case FASTCDK_DEBUG_FULL_SUPERMATRIX:
         {
@@ -259,7 +269,7 @@ void DfCD::calcCholeskyVectorsForJK()
         
     case FASTCDK_PRODUCTIVE:
         {
-            this->log_.info("fast CDK routine.");
+            this->log_.info("CD (K) routine: start");
             this->createEngines<DfEriEngine>();
 
             const TlRowVectorMatrix Lk 
@@ -281,7 +291,7 @@ void DfCD::calcCholeskyVectorsForJK()
             }
 
             this->destroyEngines();
-            this->log_.info("");
+            this->log_.info("CD (K) routine: end");
         }
         break;
         
@@ -1189,7 +1199,7 @@ void DfCD::calcDiagonals_K_full(const TlOrbitalInfoObject& orbInfo,
                                 PQ_PairArray *pI2PR,
                                 TlVector *pDiagonals)
 {
-    const double tau = this->CDAM_tau_;
+    const double tau = this->CDAM_tau_K_;
     this->log_.info(TlUtils::format("CDAM tau: %e", tau));
     this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffThreshold_primitive_));
 
@@ -1242,7 +1252,6 @@ void DfCD::calcDiagonals_K_half(const TlOrbitalInfoObject& orbInfo,
                                 PQ_PairArray *pI2PR,
                                 TlVector *pDiagonals)
 {
-    // const double tau = this->CDAM_tau_;
     const double tau = this->CDAM_tau_K_;
     this->log_.info(TlUtils::format("CDAM tau(K): %e", tau));
     this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e", this->cutoffThreshold_primitive_));
@@ -1373,15 +1382,12 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
     {
         PQ_PairArray local_I2PQ;
         TlSparseSymmetricMatrix local_diagMat(numOfAOs);
-        TlSparseSymmetricMatrix local_schwartzTable(numOfAOs);
         int threadID = 0;
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
-
         assert(0 <= threadID);
         assert(threadID < this->numOfThreads_);
-
         this->pEngines_[threadID]->setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
         
 #pragma omp for schedule(runtime)
@@ -1428,7 +1434,6 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
                     }
                 }
             }
-            local_schwartzTable.set(shellIndexP, shellIndexQ, std::sqrt(maxValue));
         }
 
         // add up
@@ -1462,7 +1467,7 @@ void DfCD::calcDiagonals_K_full_kernel(const TlOrbitalInfoObject& orbInfo,
     const index_type numOfAOs = orbInfo.getNumOfOrbitals();
     pDiagonalMat->resize(numOfAOs, numOfAOs);
 
-    const double tau = this->CDAM_tau_;
+    const double tau = this->CDAM_tau_K_;
     const int taskListSize = taskList.size();
     // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
@@ -1470,7 +1475,6 @@ void DfCD::calcDiagonals_K_full_kernel(const TlOrbitalInfoObject& orbInfo,
     {
         PQ_PairArray local_I2PR;
         TlSparseMatrix local_diagMat(numOfAOs, numOfAOs);
-        TlSparseMatrix local_schwartzTable(numOfAOs, numOfAOs);
         int threadID = 0;
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
@@ -1522,7 +1526,6 @@ void DfCD::calcDiagonals_K_full_kernel(const TlOrbitalInfoObject& orbInfo,
                     }
                 }
             }
-            local_schwartzTable.set(shellIndexP, shellIndexR, std::sqrt(maxValue));
         }
 
         // add up
@@ -1555,7 +1558,7 @@ void DfCD::calcDiagonals_K_half_kernel(const TlOrbitalInfoObject& orbInfo,
     const index_type numOfAOs = orbInfo.getNumOfOrbitals();
     pDiagonalMat->resize(numOfAOs);
 
-    const double tau = this->CDAM_tau_;
+    const double tau = this->CDAM_tau_K_;
     const int taskListSize = taskList.size();
 
 #pragma omp parallel

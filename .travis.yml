@@ -15,5 +15,4 @@ script:
 notifications:
   on_success: always
   on_failure: always
-  
-                              
+

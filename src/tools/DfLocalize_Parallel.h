@@ -27,7 +27,7 @@ public:
     DfLocalize_Parallel(TlSerializeData* pPdfParam);
     virtual ~DfLocalize_Parallel();
 
-    virtual void localize();
+    virtual void localize(const std::string& inputCMatrixPath = "");
 
 protected:
     virtual int getJobItem(DfLocalize::JobItem* pJob, bool isInitialized = false);

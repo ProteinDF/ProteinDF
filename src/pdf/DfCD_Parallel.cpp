@@ -71,8 +71,16 @@ void DfCD_Parallel::calcCholeskyVectorsForJK()
         this->destroyEngines();
         this->log_.info("");
     }
+}
 
-    // for K
+
+// for K
+void DfCD_Parallel::calcCholeskyVectorsForK()
+{
+    this->log_.info("calc CholeskyVectors (K) (parallel)");
+
+    const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
+                                (*this->pPdfParam_)["basis_set"]);
     switch (this->fastCDK_mode_) {
     case FASTCDK_PRODUCTIVE_FULL:
         {

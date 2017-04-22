@@ -9,7 +9,7 @@ TESTS = parallelTest \
 	comm_mpi_test \
 	comm_msgpack_test \
 	scabench
-AM_CPPFLAGS = -I$(top_srcdir)/src/pdf -I$(includedir)
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/pdf
 
 if PARALLEL
 PPDF_TESTS = $(TESTS)
