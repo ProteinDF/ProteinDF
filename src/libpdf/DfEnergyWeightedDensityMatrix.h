@@ -16,38 +16,19 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <cassert>
-#include <TlListMatrix.h>
+#ifndef DFENEGYWEIGHTEDDENSITYMATRIX_H
+#define DFENEGYWEIGHTEDDENSITYMATRIX_H
 
-TlListMatrix::TlListMatrix(const std::size_t reserveSize) : size_(0)
-{
-    this->elements_.clear();
-}
+#include "DfObject.h"
 
-TlListMatrix::~TlListMatrix()
-{
-}
+class DfEnergyWeightedDensityMatrix : public DfObject {
+public:
+    DfEnergyWeightedDensityMatrix();
+    virtual ~DfEnergyWeightedDensityMatrix();
 
-void TlListMatrix::clear()
-{
-    this->size_ = 0;
-    this->elements_.clear();
-}
+public:
+    void calc(RUN_TYPE runType);
+    
+};
 
-void TlListMatrix::add(const int row, const int col, const double value)
-{
-    this->elements_.push_back(Element(row, col, value));
-    ++this->size_;
-}
-
-TlListMatrix::Element TlListMatrix::pop()
-{
-    Element answer(-1, -1, 0.0);
-    if (this->size() > 0) {
-        answer = this->elements_.front();
-        this->elements_.pop_front();
-        --this->size_;
-    }
-
-    return answer;
-}
+#endif // DFENEGYWEIGHTEDDENSITYMATRIX_H

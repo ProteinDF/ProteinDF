@@ -25,8 +25,12 @@
 
 #include <string>
 #include <sstream>
-#include "pdflib-int.h"
 #include "TlSerializeData.h"
+
+//#include "pdflib-int.h"
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif // HAVE_STDINT_H
 
 class TlMsgPack {
 public:

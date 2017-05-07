@@ -1,63 +1,64 @@
 #include <limits>
 #include <iostream>
-#include "TlRowVectorMatrixTest.h"
+#include "gtest/gtest.h"
+#include "TlRowVectorMatrix.h"
 #include "TlMatrix.h"
 
-const double TlRowVectorMatrixTest::threshold = std::numeric_limits<double>::epsilon();
+static const double EPS = 1.0E-10; // std::numeric_limits<double>::epsilon();
 
 
-void TlRowVectorMatrixTest::testConstructer()
+TEST(TlRowVectorMatrix, constructer)
 {
     TlRowVectorMatrix A(100, 600);
     
-    CPPUNIT_ASSERT_EQUAL(100, A.getNumOfRows());
-    CPPUNIT_ASSERT_EQUAL(600, A.getNumOfCols());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, A.get(0, 0), threshold);
+    EXPECT_EQ(100, A.getNumOfRows());
+    EXPECT_EQ(600, A.getNumOfCols());
+    EXPECT_NEAR(0.0, A.get(0, 0), EPS);
 }
 
 
-void TlRowVectorMatrixTest::testConstructer2()
+TEST(TlRowVectorMatrix, constructer2)
 {
     TlRowVectorMatrix A0(100, 600, 10, 0);
     TlRowVectorMatrix A1(100, 600, 10, 1);
     
-    CPPUNIT_ASSERT_EQUAL(100, A0.getNumOfRows());
-    CPPUNIT_ASSERT_EQUAL(600, A0.getNumOfCols());
-    CPPUNIT_ASSERT_EQUAL( 10, A0.getNumOfSubunits());
-    CPPUNIT_ASSERT_EQUAL(  0, A0.getSubunitID());
+    EXPECT_EQ(100, A0.getNumOfRows());
+    EXPECT_EQ(600, A0.getNumOfCols());
+    EXPECT_EQ( 10, A0.getNumOfSubunits());
+    EXPECT_EQ(  0, A0.getSubunitID());
 
-    CPPUNIT_ASSERT_EQUAL(100, A1.getNumOfRows());
-    CPPUNIT_ASSERT_EQUAL(600, A1.getNumOfCols());
-    CPPUNIT_ASSERT_EQUAL( 10, A1.getNumOfSubunits());
-    CPPUNIT_ASSERT_EQUAL(  1, A1.getSubunitID());
+    EXPECT_EQ(100, A1.getNumOfRows());
+    EXPECT_EQ(600, A1.getNumOfCols());
+    EXPECT_EQ( 10, A1.getNumOfSubunits());
+    EXPECT_EQ(  1, A1.getSubunitID());
 }
 
 
-void TlRowVectorMatrixTest::testResize()
+TEST(TlRowVectorMatrix, resize)
 {
     TlRowVectorMatrix A(100, 100);
     A.resize(200, 100);
-    CPPUNIT_ASSERT_EQUAL(200, A.getNumOfRows());
-    CPPUNIT_ASSERT_EQUAL(100, A.getNumOfCols());
+    EXPECT_EQ(200, A.getNumOfRows());
+    EXPECT_EQ(100, A.getNumOfCols());
 
     TlRowVectorMatrix B(100, 100);
     B.resize(100, 200);
-    CPPUNIT_ASSERT_EQUAL(100, B.getNumOfRows());
-    CPPUNIT_ASSERT_EQUAL(200, B.getNumOfCols());
+    EXPECT_EQ(100, B.getNumOfRows());
+    EXPECT_EQ(200, B.getNumOfCols());
 
     TlRowVectorMatrix C(50, 100);
     C.resize(50, 100);
-    CPPUNIT_ASSERT_EQUAL( 50, C.getNumOfRows());
-    CPPUNIT_ASSERT_EQUAL(100, C.getNumOfCols());
+    EXPECT_EQ( 50, C.getNumOfRows());
+    EXPECT_EQ(100, C.getNumOfCols());
 
     TlRowVectorMatrix D(100, 50);
     D.resize(100, 50);
-    CPPUNIT_ASSERT_EQUAL(100, D.getNumOfRows());
-    CPPUNIT_ASSERT_EQUAL( 50, D.getNumOfCols());
+    EXPECT_EQ(100, D.getNumOfRows());
+    EXPECT_EQ( 50, D.getNumOfCols());
 }
 
 
-void TlRowVectorMatrixTest::testContents()
+TEST(TlRowVectorMatrix, contents)
 {
     const int maxRow = 100;
     const int maxCol = 80;
@@ -79,15 +80,15 @@ void TlRowVectorMatrixTest::testContents()
     // test
     for (int r = 0; r < maxRow; ++r) {
         for (int c = 0; c < maxCol; ++c) {
-            CPPUNIT_ASSERT_DOUBLES_EQUAL(matA.get(r, c),
-                                         vecA.get(r, c),
-                                         TlRowVectorMatrixTest::threshold);
+            EXPECT_NEAR(matA.get(r, c),
+                        vecA.get(r, c),
+                        EPS);
         }
     }
 }
 
 
-void TlRowVectorMatrixTest::testSaveLoad()
+TEST(TlRowVectorMatrix, save_load)
 {
     const int maxRow = 100;
     const int maxCol = 80;
@@ -116,15 +117,15 @@ void TlRowVectorMatrixTest::testSaveLoad()
     // test
     for (int r = 0; r < maxRow; ++r) {
         for (int c = 0; c < maxCol; ++c) {
-            CPPUNIT_ASSERT_DOUBLES_EQUAL(matA.get(r, c),
-                                         vecB.get(r, c),
-                                         TlRowVectorMatrixTest::threshold);
+            EXPECT_NEAR(matA.get(r, c),
+                        vecB.get(r, c),
+                        EPS);
         }
     }
 }
 
 
-void TlRowVectorMatrixTest::testToTlMatrix()
+TEST(TlRowVectorMatrix, toTlMatrix)
 {
     const int maxRow = 100;
     const int maxCol = 80;
@@ -148,9 +149,10 @@ void TlRowVectorMatrixTest::testToTlMatrix()
     // test
     for (int r = 0; r < maxRow; ++r) {
         for (int c = 0; c < maxCol; ++c) {
-            CPPUNIT_ASSERT_DOUBLES_EQUAL(matA.get(r, c),
-                                         matB.get(r, c),
-                                         TlRowVectorMatrixTest::threshold);
+            EXPECT_NEAR(matA.get(r, c),
+                        matB.get(r, c),
+                        EPS);
         }
     }
 }
+

@@ -1,0 +1,9 @@
+#cmakedefine HAVE_SYS_RESOURCE_H
+#cmakedefine HAVE_SYS_TIME_H
+#cmakedefine HAVE_UNISTD_H
+#cmakedefine HAVE_STDINT_H
+
+#cmakedefine HAVE_BLAS
+#cmakedefine HAVE_LAPACK
+#cmakedefine HAVE_SCALAPACK
+
