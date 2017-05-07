@@ -1,37 +1,13 @@
 #include <vector>
 #include <string>
-#include "digit.h"
-#include "DfFunctional_B3LYPTest.h"
+#include "gtest/gtest.h"
+#include "DfFunctional_B3LYP.h"
 
-#define EFFCTIVE_DIGITS 12
-#define ED_CHECK(x) (std::pow(10.0, -EFFCTIVE_DIGITS + digit(x)))
-const double DfFunctional_B3LYPTest::EPS = 1.0E-10;
-
-// CPPUNIT_ASSERT( condition );
-// conditionが偽(false,0)であったとき、失敗します。
-//
-// CPPUNIT_ASSERT_MESSAGE( message, condition );
-// conditionが偽であったとき、失敗します。このときmessageを出力します。
-//
-// CPPUNIT_FAIL( message );
-// 必ず失敗します。messageを出力します。
-//
-// CPPUNIT_ASSERT_EQUAL( expected, actual );
-// 得られた結果actualが期待する値expectedでなかったとき、すなわちexpected != actualのときに失敗します。
-//
-// CPPUNIT_ASSERT_EQUAL_MESSAGE( message, expected, actual );
-// 得られた結果actualが期待する値expectedでなかったとき、すなわちexpected != actualのときに失敗します。このときmessageを出力します。
-//
-// CPPUNIT_ASSERT_DOUBLES_EQUAL( expected, actual, delta );
-// 得られた結果actualと期待する値expectedとの差がdeltaより大きいとき、失敗します。
+static const double EPS = 1.0E-10;
 
 // =====================================================================
 // data used from: http://www.cse.scitech.ac.uk/ccg/dft/data_pt_x_lda.html
 //
-
-void DfFunctional_B3LYPTest::testConstructer(){
-  DfFunctional_B3LYP a;
-}
 
 // test1
 //  rhoa= 0.17E+01 rhob= 0.17E+01 sigmaaa= 0.81E-11 sigmaab= 0.81E-11 sigmabb= 0.81E-11
@@ -59,75 +35,79 @@ void DfFunctional_B3LYPTest::testConstructer(){
 //  v2sigmaab2    =  0.000000000000E+00
 //  v2sigmaabbb   =  0.000000000000E+00
 //  v2sigmabb2    =  0.182480573750E-04
-void DfFunctional_B3LYPTest::testPointwise1(){
-  // input
-  const double dRhoA = 0.17E+01;
-  const double dRhoB = 0.17E+01;
-  const double dGammaAA = 0.81E-11;
-  const double dGammaAB = 0.81E-11;
-  const double dGammaBB = 0.81E-11;
-
-  // expected value
-  const double zk = -0.323236848314E+01;
-  const double vRhoA = -0.125186680903E+01;
-  const double vRhoB = -0.125186680903E+01;
-  const double vGammaAA = -0.144159896521E-02;
-  const double vGammaAB =  0.455761547380E-04;
-  const double vGammaBB = -0.144159896521E-02;
-
-  // execute test
-  DfFunctional_B3LYP f;
-  
-  double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
-
-  double dRoundF_roundRhoA, dRoundF_roundRhoB;
-  double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
-  f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
-			    &dRoundF_roundRhoA, &dRoundF_roundRhoB,
-			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
-
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+TEST(DfFunctional_B3LYP, pointwise1)
+{
+    // input
+    const double dRhoA = 0.17E+01;
+    const double dRhoB = 0.17E+01;
+    const double dGammaAA = 0.81E-11;
+    const double dGammaAB = 0.81E-11;
+    const double dGammaBB = 0.81E-11;
+    
+    // expected value
+    const double zk = -0.323236848314E+01;
+    const double vRhoA = -0.125186680903E+01;
+    const double vRhoB = -0.125186680903E+01;
+    const double vGammaAA = -0.144159896521E-02;
+    const double vGammaAB =  0.455761547380E-04;
+    const double vGammaBB = -0.144159896521E-02;
+    
+    // execute test
+    DfFunctional_B3LYP f;
+    
+    double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
+    EXPECT_NEAR(zk, dFunctionalValue, EPS);
+    
+    double dRoundF_roundRhoA, dRoundF_roundRhoB;
+    double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
+    f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
+                              &dRoundF_roundRhoA, &dRoundF_roundRhoB,
+                              &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
+    
+    EXPECT_NEAR(vRhoA, dRoundF_roundRhoA, EPS);
+    EXPECT_NEAR(vRhoB, dRoundF_roundRhoB, EPS);
+    EXPECT_NEAR(vGammaAA, dRoundF_roundGammaAA, EPS);
+    EXPECT_NEAR(vGammaAB, dRoundF_roundGammaAB, EPS);
+  EXPECT_NEAR(vGammaBB, dRoundF_roundGammaBB, EPS);
 }
 
-void DfFunctional_B3LYPTest::testPointwise1_RKS(){
-  // input
-  const double dRhoA = 0.17E+01;
-  //const double dRhoB = 0.17E+01;
-  const double dGammaAA = 0.81E-11;
-  //const double dGammaAB = 0.81E-11;
-  //const double dGammaBB = 0.81E-11;
 
-  // expected value
-  const double zk = -0.323236848314E+01;
-  const double vRhoA = -0.125186680903E+01;
-  //const double vRhoB = -0.125186680903E+01;
-  const double vGammaAA = -0.144159896521E-02;
-  const double vGammaAB =  0.455761547380E-04;
-  //const double vGammaBB = -0.144159896521E-02;
-
-  // execute test
-  DfFunctional_B3LYP f;
-  
-  double dFunctionalValue = f.getFunctional(dRhoA, dGammaAA);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
-
-  double dRoundF_roundRhoA;
-  double dRoundF_roundGammaAA, dRoundF_roundGammaAB;
-  f.getDerivativeFunctional(dRhoA, dGammaAA,
-			    &dRoundF_roundRhoA,
-			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB);
-
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
-  //CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-  //CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+TEST(DfFunctional_B3LYP, pointwise1_RKS)
+{
+    // input
+    const double dRhoA = 0.17E+01;
+    //const double dRhoB = 0.17E+01;
+    const double dGammaAA = 0.81E-11;
+    //const double dGammaAB = 0.81E-11;
+    //const double dGammaBB = 0.81E-11;
+    
+    // expected value
+    const double zk = -0.323236848314E+01;
+    const double vRhoA = -0.125186680903E+01;
+    //const double vRhoB = -0.125186680903E+01;
+    const double vGammaAA = -0.144159896521E-02;
+    const double vGammaAB =  0.455761547380E-04;
+    //const double vGammaBB = -0.144159896521E-02;
+    
+    // execute test
+    DfFunctional_B3LYP f;
+    
+    double dFunctionalValue = f.getFunctional(dRhoA, dGammaAA);
+    EXPECT_NEAR(zk, dFunctionalValue, EPS);
+    
+    double dRoundF_roundRhoA;
+    double dRoundF_roundGammaAA, dRoundF_roundGammaAB;
+    f.getDerivativeFunctional(dRhoA, dGammaAA,
+                              &dRoundF_roundRhoA,
+                              &dRoundF_roundGammaAA, &dRoundF_roundGammaAB);
+    
+    EXPECT_NEAR(vRhoA, dRoundF_roundRhoA, EPS);
+    //EXPECT_NEAR(vRhoB, dRoundF_roundRhoB, EPS);
+    EXPECT_NEAR(vGammaAA, dRoundF_roundGammaAA, EPS);
+    EXPECT_NEAR(vGammaAB, dRoundF_roundGammaAB, EPS);
+    //EXPECT_NEAR(vGammaBB, dRoundF_roundGammaBB, EPS);
 }
+
 
 // test2
 //  rhoa= 0.17E+01 rhob= 0.17E+01 sigmaaa= 0.17E+01 sigmaab= 0.17E+01 sigmabb= 0.17E+01
@@ -155,75 +135,79 @@ void DfFunctional_B3LYPTest::testPointwise1_RKS(){
 //  v2sigmaab2    =  0.000000000000E+00
 //  v2sigmaabbb   =  0.000000000000E+00
 //  v2sigmabb2    =  0.150310955024E-04
-void DfFunctional_B3LYPTest::testPointwise2(){
-  // input
-  const double dRhoA = 0.17E+01;
-  const double dRhoB = 0.17E+01;
-  const double dGammaAA = 0.17E+01;
-  const double dGammaAB = 0.17E+01;
-  const double dGammaBB = 0.17E+01;
-
-  // expected value
-  const double zk = -0.323714327026E+01;
-  const double vRhoA = -0.125005562910E+01;
-  const double vRhoB = -0.125005562910E+01;
-  const double vGammaAA = -0.141357814083E-02;
-  const double vGammaAB =  0.455761547380E-04;
-  const double vGammaBB = -0.141357814083E-02;
-
-  // execute test
-  DfFunctional_B3LYP f;
-  
-  double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
-
-  double dRoundF_roundRhoA, dRoundF_roundRhoB;
-  double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
-  f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
-			    &dRoundF_roundRhoA, &dRoundF_roundRhoB,
-			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
-
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+TEST(DfFunctional_B3LYP, pointwise2)
+{
+    // input
+    const double dRhoA = 0.17E+01;
+    const double dRhoB = 0.17E+01;
+    const double dGammaAA = 0.17E+01;
+    const double dGammaAB = 0.17E+01;
+    const double dGammaBB = 0.17E+01;
+    
+    // expected value
+    const double zk = -0.323714327026E+01;
+    const double vRhoA = -0.125005562910E+01;
+    const double vRhoB = -0.125005562910E+01;
+    const double vGammaAA = -0.141357814083E-02;
+    const double vGammaAB =  0.455761547380E-04;
+    const double vGammaBB = -0.141357814083E-02;
+    
+    // execute test
+    DfFunctional_B3LYP f;
+    
+    double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
+    EXPECT_NEAR(zk, dFunctionalValue, EPS);
+    
+    double dRoundF_roundRhoA, dRoundF_roundRhoB;
+    double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
+    f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
+                              &dRoundF_roundRhoA, &dRoundF_roundRhoB,
+                              &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
+    
+    EXPECT_NEAR(vRhoA, dRoundF_roundRhoA, EPS);
+    EXPECT_NEAR(vRhoB, dRoundF_roundRhoB, EPS);
+    EXPECT_NEAR(vGammaAA, dRoundF_roundGammaAA, EPS);
+    EXPECT_NEAR(vGammaAB, dRoundF_roundGammaAB, EPS);
+    EXPECT_NEAR(vGammaBB, dRoundF_roundGammaBB, EPS);
 }
 
-void DfFunctional_B3LYPTest::testPointwise2_RKS(){
-  // input
-  const double dRhoA = 0.17E+01;
-  //const double dRhoB = 0.17E+01;
-  const double dGammaAA = 0.17E+01;
-  //const double dGammaAB = 0.17E+01;
-  //const double dGammaBB = 0.17E+01;
 
-  // expected value
-  const double zk = -0.323714327026E+01;
-  const double vRhoA = -0.125005562910E+01;
-  //const double vRhoB = -0.125005562910E+01;
-  const double vGammaAA = -0.141357814083E-02;
-  const double vGammaAB =  0.455761547380E-04;
-  //const double vGammaBB = -0.141357814083E-02;
-
-  // execute test
-  DfFunctional_B3LYP f;
-  
-  double dFunctionalValue = f.getFunctional(dRhoA, dGammaAA);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
-
-  double dRoundF_roundRhoA;
-  double dRoundF_roundGammaAA, dRoundF_roundGammaAB;
-  f.getDerivativeFunctional(dRhoA, dGammaAA,
-			    &dRoundF_roundRhoA,
-			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB);
-
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
-  //CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-  //CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+TEST(DfFunctional_B3LYP, pointwise2_RKS)
+{
+    // input
+    const double dRhoA = 0.17E+01;
+    //const double dRhoB = 0.17E+01;
+    const double dGammaAA = 0.17E+01;
+    //const double dGammaAB = 0.17E+01;
+    //const double dGammaBB = 0.17E+01;
+    
+    // expected value
+    const double zk = -0.323714327026E+01;
+    const double vRhoA = -0.125005562910E+01;
+    //const double vRhoB = -0.125005562910E+01;
+    const double vGammaAA = -0.141357814083E-02;
+    const double vGammaAB =  0.455761547380E-04;
+    //const double vGammaBB = -0.141357814083E-02;
+    
+    // execute test
+    DfFunctional_B3LYP f;
+    
+    double dFunctionalValue = f.getFunctional(dRhoA, dGammaAA);
+    EXPECT_NEAR(zk, dFunctionalValue, EPS);
+    
+    double dRoundF_roundRhoA;
+    double dRoundF_roundGammaAA, dRoundF_roundGammaAB;
+    f.getDerivativeFunctional(dRhoA, dGammaAA,
+                              &dRoundF_roundRhoA,
+                              &dRoundF_roundGammaAA, &dRoundF_roundGammaAB);
+    
+    EXPECT_NEAR(vRhoA, dRoundF_roundRhoA, EPS);
+    //EXPECT_NEAR(vRhoB, dRoundF_roundRhoB, EPS);
+    EXPECT_NEAR(vGammaAA, dRoundF_roundGammaAA, EPS);
+    EXPECT_NEAR(vGammaAB, dRoundF_roundGammaAB, EPS);
+    //EXPECT_NEAR(vGammaBB, dRoundF_roundGammaBB, EPS);
 }
+
 
 // test3
 //  rhoa= 0.15E+01 rhob= 0.15E+01 sigmaaa= 0.36E+02 sigmaab= 0.36E+02 sigmabb= 0.36E+02
@@ -251,74 +235,78 @@ void DfFunctional_B3LYPTest::testPointwise2_RKS(){
 //  v2sigmaab2    =  0.000000000000E+00
 //  v2sigmaabbb   =  0.000000000000E+00
 //  v2sigmabb2    =  0.667366853939E-05
-void DfFunctional_B3LYPTest::testPointwise3(){
-  // input
-  const double dRhoA = 0.15E+01;
-  const double dRhoB = 0.15E+01;
-  const double dGammaAA = 0.36E+02;
-  const double dGammaAB = 0.36E+02;
-  const double dGammaBB = 0.36E+02;
-
-  // expected value
-  const double zk = -0.284301452788E+01;
-  const double vRhoA = -0.116897854637E+01;
-  const double vRhoB = -0.116897854637E+01;
-  const double vGammaAA = -0.127654157835E-02;
-  const double vGammaAB =  0.568120340362E-04;
-  const double vGammaBB = -0.127654157835E-02;
-
-  // execute test
-  DfFunctional_B3LYP f;
+TEST(DfFunctional_B3LYP, pointwise3)
+{
+    // input
+    const double dRhoA = 0.15E+01;
+    const double dRhoB = 0.15E+01;
+    const double dGammaAA = 0.36E+02;
+    const double dGammaAB = 0.36E+02;
+    const double dGammaBB = 0.36E+02;
+    
+    // expected value
+    const double zk = -0.284301452788E+01;
+    const double vRhoA = -0.116897854637E+01;
+    const double vRhoB = -0.116897854637E+01;
+    const double vGammaAA = -0.127654157835E-02;
+    const double vGammaAB =  0.568120340362E-04;
+    const double vGammaBB = -0.127654157835E-02;
+    
+    // execute test
+    DfFunctional_B3LYP f;
   
-  double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
-
-  double dRoundF_roundRhoA, dRoundF_roundRhoB;
-  double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
-  f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
-			    &dRoundF_roundRhoA, &dRoundF_roundRhoB,
-			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
-
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+    double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
+    EXPECT_NEAR(zk, dFunctionalValue, EPS);
+    
+    double dRoundF_roundRhoA, dRoundF_roundRhoB;
+    double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
+    f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
+                              &dRoundF_roundRhoA, &dRoundF_roundRhoB,
+                              &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
+    
+    EXPECT_NEAR(vRhoA, dRoundF_roundRhoA, EPS);
+    EXPECT_NEAR(vRhoB, dRoundF_roundRhoB, EPS);
+    EXPECT_NEAR(vGammaAA, dRoundF_roundGammaAA, EPS);
+    EXPECT_NEAR(vGammaAB, dRoundF_roundGammaAB, EPS);
+    EXPECT_NEAR(vGammaBB, dRoundF_roundGammaBB, EPS);
 }
 
-void DfFunctional_B3LYPTest::testPointwise3_RKS(){
-  // input
-  const double dRhoA = 0.15E+01;
-  //const double dRhoB = 0.15E+01;
-  const double dGammaAA = 0.36E+02;
-  //const double dGammaAB = 0.36E+02;
-  //const double dGammaBB = 0.36E+02;
 
-  // expected value
-  const double zk = -0.284301452788E+01;
-  const double vRhoA = -0.116897854637E+01;
-  //const double vRhoB = -0.116897854637E+01;
-  const double vGammaAA = -0.127654157835E-02;
-  const double vGammaAB =  0.568120340362E-04;
-  //const double vGammaBB = -0.127654157835E-02;
-
-  // execute test
-  DfFunctional_B3LYP f;
-  
-  double dFunctionalValue = f.getFunctional(dRhoA, dGammaAA);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
-
-  double dRoundF_roundRhoA;
-  double dRoundF_roundGammaAA, dRoundF_roundGammaAB;
-  f.getDerivativeFunctional(dRhoA, dGammaAA,
-			    &dRoundF_roundRhoA, &dRoundF_roundGammaAA, &dRoundF_roundGammaAB);
-
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
-  //CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-  //CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+TEST(DfFunctional_B3LYP, pointwise3_RKS)
+{
+    // input
+    const double dRhoA = 0.15E+01;
+    //const double dRhoB = 0.15E+01;
+    const double dGammaAA = 0.36E+02;
+    //const double dGammaAB = 0.36E+02;
+    //const double dGammaBB = 0.36E+02;
+    
+    // expected value
+    const double zk = -0.284301452788E+01;
+    const double vRhoA = -0.116897854637E+01;
+    //const double vRhoB = -0.116897854637E+01;
+    const double vGammaAA = -0.127654157835E-02;
+    const double vGammaAB =  0.568120340362E-04;
+    //const double vGammaBB = -0.127654157835E-02;
+    
+    // execute test
+    DfFunctional_B3LYP f;
+    
+    double dFunctionalValue = f.getFunctional(dRhoA, dGammaAA);
+    EXPECT_NEAR(zk, dFunctionalValue, EPS);
+    
+    double dRoundF_roundRhoA;
+    double dRoundF_roundGammaAA, dRoundF_roundGammaAB;
+    f.getDerivativeFunctional(dRhoA, dGammaAA,
+                              &dRoundF_roundRhoA, &dRoundF_roundGammaAA, &dRoundF_roundGammaAB);
+    
+    EXPECT_NEAR(vRhoA, dRoundF_roundRhoA, EPS);
+    //EXPECT_NEAR(vRhoB, dRoundF_roundRhoB, EPS);
+    EXPECT_NEAR(vGammaAA, dRoundF_roundGammaAA, EPS);
+    EXPECT_NEAR(vGammaAB, dRoundF_roundGammaAB, EPS);
+    //EXPECT_NEAR(vGammaBB, dRoundF_roundGammaBB, EPS);
 }
+
 
 // test4
 //  rhoa= 0.88E-01 rhob= 0.88E-01 sigmaaa= 0.87E-01 sigmaab= 0.87E-01 sigmabb= 0.87E-01
@@ -346,74 +334,78 @@ void DfFunctional_B3LYPTest::testPointwise3_RKS(){
 //  v2sigmaab2    =  0.000000000000E+00
 //  v2sigmaabbb   =  0.000000000000E+00
 //  v2sigmabb2    =  0.159379207669E+00
-void DfFunctional_B3LYPTest::testPointwise4(){
-  // input
-  const double dRhoA = 0.88E-01;
-  const double dRhoB = 0.88E-01;
-  const double dGammaAA = 0.87E-01;
-  const double dGammaAB = 0.87E-01;
-  const double dGammaBB = 0.87E-01;
-
-  // expected value
-  const double zk = -0.734765385895E-01;
-  const double vRhoA = -0.471179307798E+00;
-  const double vRhoB = -0.471179307798E+00;
-  const double vGammaAA = -0.335031909041E-01;
-  const double vGammaAB =  0.709874878725E-02;
-  const double vGammaBB = -0.335031909041E-01;
-
-  // execute test
-  DfFunctional_B3LYP f;
-  
-  double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
-
-  double dRoundF_roundRhoA, dRoundF_roundRhoB;
-  double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
-  f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
-			    &dRoundF_roundRhoA, &dRoundF_roundRhoB,
-			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
-
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+TEST(DfFunctional_B3LYP, pointwise4)
+{
+    // input
+    const double dRhoA = 0.88E-01;
+    const double dRhoB = 0.88E-01;
+    const double dGammaAA = 0.87E-01;
+    const double dGammaAB = 0.87E-01;
+    const double dGammaBB = 0.87E-01;
+    
+    // expected value
+    const double zk = -0.734765385895E-01;
+    const double vRhoA = -0.471179307798E+00;
+    const double vRhoB = -0.471179307798E+00;
+    const double vGammaAA = -0.335031909041E-01;
+    const double vGammaAB =  0.709874878725E-02;
+    const double vGammaBB = -0.335031909041E-01;
+    
+    // execute test
+    DfFunctional_B3LYP f;
+    
+    double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
+    EXPECT_NEAR(zk, dFunctionalValue, EPS);
+    
+    double dRoundF_roundRhoA, dRoundF_roundRhoB;
+    double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
+    f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
+                              &dRoundF_roundRhoA, &dRoundF_roundRhoB,
+                              &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
+    
+    EXPECT_NEAR(vRhoA, dRoundF_roundRhoA, EPS);
+    EXPECT_NEAR(vRhoB, dRoundF_roundRhoB, EPS);
+    EXPECT_NEAR(vGammaAA, dRoundF_roundGammaAA, EPS);
+    EXPECT_NEAR(vGammaAB, dRoundF_roundGammaAB, EPS);
+    EXPECT_NEAR(vGammaBB, dRoundF_roundGammaBB, EPS);
 }
 
-void DfFunctional_B3LYPTest::testPointwise4_RKS(){
-  // input
-  const double dRhoA = 0.88E-01;
-  //const double dRhoB = 0.88E-01;
-  const double dGammaAA = 0.87E-01;
-  //const double dGammaAB = 0.87E-01;
-  //const double dGammaBB = 0.87E-01;
 
-  // expected value
-  const double zk = -0.734765385895E-01;
-  const double vRhoA = -0.471179307798E+00;
-  //const double vRhoB = -0.471179307798E+00;
-  const double vGammaAA = -0.335031909041E-01;
-  const double vGammaAB =  0.709874878725E-02;
-  //const double vGammaBB = -0.335031909041E-01;
-
-  // execute test
-  DfFunctional_B3LYP f;
-  
-  double dFunctionalValue = f.getFunctional(dRhoA, dGammaAA);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
-
-  double dRoundF_roundRhoA;
-  double dRoundF_roundGammaAA, dRoundF_roundGammaAB;
-  f.getDerivativeFunctional(dRhoA, dGammaAA,
-			    &dRoundF_roundRhoA, &dRoundF_roundGammaAA, &dRoundF_roundGammaAB);
-
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
-  //CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-  //CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+TEST(DfFunctional_B3LYP, pointwise4_RKS)
+{
+    // input
+    const double dRhoA = 0.88E-01;
+    //const double dRhoB = 0.88E-01;
+    const double dGammaAA = 0.87E-01;
+    //const double dGammaAB = 0.87E-01;
+    //const double dGammaBB = 0.87E-01;
+    
+    // expected value
+    const double zk = -0.734765385895E-01;
+    const double vRhoA = -0.471179307798E+00;
+    //const double vRhoB = -0.471179307798E+00;
+    const double vGammaAA = -0.335031909041E-01;
+    const double vGammaAB =  0.709874878725E-02;
+    //const double vGammaBB = -0.335031909041E-01;
+    
+    // execute test
+    DfFunctional_B3LYP f;
+    
+    double dFunctionalValue = f.getFunctional(dRhoA, dGammaAA);
+    EXPECT_NEAR(zk, dFunctionalValue, EPS);
+    
+    double dRoundF_roundRhoA;
+    double dRoundF_roundGammaAA, dRoundF_roundGammaAB;
+    f.getDerivativeFunctional(dRhoA, dGammaAA,
+                              &dRoundF_roundRhoA, &dRoundF_roundGammaAA, &dRoundF_roundGammaAB);
+    
+    EXPECT_NEAR(vRhoA, dRoundF_roundRhoA, EPS);
+    //EXPECT_NEAR(vRhoB, dRoundF_roundRhoB, EPS);
+    EXPECT_NEAR(vGammaAA, dRoundF_roundGammaAA, EPS);
+    EXPECT_NEAR(vGammaAB, dRoundF_roundGammaAB, EPS);
+    //EXPECT_NEAR(vGammaBB, dRoundF_roundGammaBB, EPS);
 }
+
 
 //  rhoa= 0.18E+04 rhob= 0.18E+04 sigmaaa= 0.55E+00 sigmaab= 0.55E+00 sigmabb= 0.55E+00
 //  zk            = -0.329091638490E+05
@@ -623,39 +615,40 @@ void DfFunctional_B3LYPTest::testPointwise4_RKS(){
 //  v2sigmaab2    =  0.000000000000E+00
 //  v2sigmaabbb   =  0.000000000000E+00
 //  v2sigmabb2    =  0.000000000000E+00
-void DfFunctional_B3LYPTest::testPointwise12(){
-  // input
-  const double dRhoA = 0.35E+01;
-  const double dRhoB = 0.00E+00;
-  const double dGammaAA = 0.46E-10;
-  const double dGammaAB = 0.00E+00;
-  const double dGammaBB = 0.00E+00;
-
-  // expected value
-  const double zk = -0.399892263115E+01;
-  const double vRhoA = -0.152022926953E+01;
-  const double vRhoB =  0.000000000000E+00;
-  const double vGammaAA = -0.569059565191E-03;
-  const double vGammaAB =  0.000000000000E+00;
-  const double vGammaBB =  0.000000000000E+00;
-
-  // execute test
-  DfFunctional_B3LYP f;
-  
-  double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
-
-  double dRoundF_roundRhoA, dRoundF_roundRhoB;
-  double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
-  f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
-			    &dRoundF_roundRhoA, &dRoundF_roundRhoB,
-			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
-
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+TEST(DfFunctional_B3LYP, pointwise12)
+{
+    // input
+    const double dRhoA = 0.35E+01;
+    const double dRhoB = 0.00E+00;
+    const double dGammaAA = 0.46E-10;
+    const double dGammaAB = 0.00E+00;
+    const double dGammaBB = 0.00E+00;
+    
+    // expected value
+    const double zk = -0.399892263115E+01;
+    const double vRhoA = -0.152022926953E+01;
+    const double vRhoB =  0.000000000000E+00;
+    const double vGammaAA = -0.569059565191E-03;
+    const double vGammaAB =  0.000000000000E+00;
+    const double vGammaBB =  0.000000000000E+00;
+    
+    // execute test
+    DfFunctional_B3LYP f;
+    
+    double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
+    EXPECT_NEAR(zk, dFunctionalValue, EPS);
+    
+    double dRoundF_roundRhoA, dRoundF_roundRhoB;
+    double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
+    f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
+                              &dRoundF_roundRhoA, &dRoundF_roundRhoB,
+                              &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
+    
+    EXPECT_NEAR(vRhoA, dRoundF_roundRhoA, EPS);
+    EXPECT_NEAR(vRhoB, dRoundF_roundRhoB, EPS);
+    EXPECT_NEAR(vGammaAA, dRoundF_roundGammaAA, EPS);
+    EXPECT_NEAR(vGammaAB, dRoundF_roundGammaAB, EPS);
+    EXPECT_NEAR(vGammaBB, dRoundF_roundGammaBB, EPS);
 }
 
 // test13
@@ -684,40 +677,42 @@ void DfFunctional_B3LYPTest::testPointwise12(){
 //  v2sigmaab2    =  0.000000000000E+00
 //  v2sigmaabbb   =  0.000000000000E+00
 //  v2sigmabb2    =  0.000000000000E+00
-void DfFunctional_B3LYPTest::testPointwise13(){
-  // input
-  const double dRhoA = 0.35E+01;
-  const double dRhoB = 0.00E+00;
-  const double dGammaAA = 0.34E+01;
-  const double dGammaAB = 0.00E+00;
-  const double dGammaBB = 0.00E+00;
-
-  // expected value
-  const double zk = -0.400085169220E+01;
-  const double vRhoA = -0.151949867012E+01;
-  const double vRhoB =  0.000000000000E+00;
-  const double vGammaAA = -0.565718309854E-03;
-  const double vGammaAB =  0.000000000000E+00;
-  const double vGammaBB =  0.000000000000E+00;
-
-  // execute test
-  DfFunctional_B3LYP f;
-  
-  double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
-
-  double dRoundF_roundRhoA, dRoundF_roundRhoB;
-  double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
-  f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
-			    &dRoundF_roundRhoA, &dRoundF_roundRhoB,
-			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
-
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+TEST(DfFunctional_B3LYP, pointwise13)
+{
+    // input
+    const double dRhoA = 0.35E+01;
+    const double dRhoB = 0.00E+00;
+    const double dGammaAA = 0.34E+01;
+    const double dGammaAB = 0.00E+00;
+    const double dGammaBB = 0.00E+00;
+    
+    // expected value
+    const double zk = -0.400085169220E+01;
+    const double vRhoA = -0.151949867012E+01;
+    const double vRhoB =  0.000000000000E+00;
+    const double vGammaAA = -0.565718309854E-03;
+    const double vGammaAB =  0.000000000000E+00;
+    const double vGammaBB =  0.000000000000E+00;
+    
+    // execute test
+    DfFunctional_B3LYP f;
+    
+    double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
+    EXPECT_NEAR(zk, dFunctionalValue, EPS);
+    
+    double dRoundF_roundRhoA, dRoundF_roundRhoB;
+    double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
+    f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
+                              &dRoundF_roundRhoA, &dRoundF_roundRhoB,
+                              &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
+    
+    EXPECT_NEAR(vRhoA, dRoundF_roundRhoA, EPS);
+    EXPECT_NEAR(vRhoB, dRoundF_roundRhoB, EPS);
+    EXPECT_NEAR(vGammaAA, dRoundF_roundGammaAA, EPS);
+    EXPECT_NEAR(vGammaAB, dRoundF_roundGammaAB, EPS);
+    EXPECT_NEAR(vGammaBB, dRoundF_roundGammaBB, EPS);
 }
+
 
 //  rhoa= 0.30E+01 rhob= 0.00E+00 sigmaaa= 0.20E+03 sigmaab= 0.00E+00 sigmabb= 0.00E+00
 //  zk            = -0.337825554312E+01

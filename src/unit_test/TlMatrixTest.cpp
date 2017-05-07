@@ -1,15 +1,18 @@
 #include <limits>
 #include <iostream>
-#include "TlMatrixTest.h"
+#include "gtest/gtest.h"
+#include "TlMatrix.h"
 
-const double TlMatrixTest::threshold = std::numeric_limits<double>::epsilon();
+static const double EPS = 1.0E-10; // std::numeric_limits<double>::epsilon();
+static const std::string mat_path = "temp.mat";
 
 
 // 以下の要素を設定した行列を返す
 // [ 0  1  2 ]
 // [ 3  4  5 ]
 // [ 6  7  8 ]
-TlMatrix TlMatrixTest::getMatrixA(){
+TlMatrix getMatrixA()
+{
     TlMatrix a(3, 3);
     a(0, 0) = 0.0;
     a(0, 1) = 1.0;
@@ -24,11 +27,13 @@ TlMatrix TlMatrixTest::getMatrixA(){
     return a;
 }
 
+
 // 以下の要素を設定した行列を返す
 // [ 0  3  6 ]
 // [ 1  4  7 ]
 // [ 2  5  8 ]
-TlMatrix TlMatrixTest::getMatrixB(){
+TlMatrix getMatrixB()
+{
     TlMatrix b(3, 3);
     b(0, 0) = 0.0;
     b(1, 0) = 1.0;
@@ -43,11 +48,13 @@ TlMatrix TlMatrixTest::getMatrixB(){
     return b;
 }
 
+
 // 以下の要素を設定した行列を返す
 // [ 1   2  3 ]
 // [ 2  -1  1 ]
 // [ 4   3  2 ]
-TlMatrix TlMatrixTest::getMatrixC(){
+TlMatrix getMatrixC()
+{
     TlMatrix b(3, 3);
     b(0, 0) = 1.0;
     b(1, 0) = 2.0;
@@ -62,144 +69,136 @@ TlMatrix TlMatrixTest::getMatrixC(){
     return b;
 }
 
-void TlMatrixTest::testConstructer(){
+
+TEST(TlMatrix, constructer)
+{
     TlMatrix a(3, 3);
     
-    CPPUNIT_ASSERT_EQUAL(3, a.getNumOfRows());
-    CPPUNIT_ASSERT_EQUAL(3, a.getNumOfCols());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(0, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(0, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(0, 2), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(1, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(1, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(1, 2), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(2, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(2, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(2, 2), threshold);
+    EXPECT_EQ(3, a.getNumOfRows());
+    EXPECT_EQ(3, a.getNumOfCols());
+    EXPECT_NEAR(0.0, a(0, 0), EPS);
+    EXPECT_NEAR(0.0, a(0, 1), EPS);
+    EXPECT_NEAR(0.0, a(0, 2), EPS);
+    EXPECT_NEAR(0.0, a(1, 0), EPS);
+    EXPECT_NEAR(0.0, a(1, 1), EPS);
+    EXPECT_NEAR(0.0, a(1, 2), EPS);
+    EXPECT_NEAR(0.0, a(2, 0), EPS);
+    EXPECT_NEAR(0.0, a(2, 1), EPS);
+    EXPECT_NEAR(0.0, a(2, 2), EPS);
 }
 
-void TlMatrixTest::testCopyConstructer(){
-    TlMatrix a = this->getMatrixA();
+
+TEST(TlMatrix, copyConstructer)
+{
+    TlMatrix a = getMatrixA();
     TlMatrix c(a);
     
-    CPPUNIT_ASSERT_EQUAL(3, c.getNumOfRows());
-    CPPUNIT_ASSERT_EQUAL(3, c.getNumOfCols());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, c(0, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, c(0, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, c(0, 2), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0, c(1, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(4.0, c(1, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(5.0, c(1, 2), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(6.0, c(2, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(7.0, c(2, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(8.0, c(2, 2), threshold);
+    EXPECT_EQ(3, c.getNumOfRows());
+    EXPECT_EQ(3, c.getNumOfCols());
+    EXPECT_NEAR(0.0, c(0, 0), EPS);
+    EXPECT_NEAR(1.0, c(0, 1), EPS);
+    EXPECT_NEAR(2.0, c(0, 2), EPS);
+    EXPECT_NEAR(3.0, c(1, 0), EPS);
+    EXPECT_NEAR(4.0, c(1, 1), EPS);
+    EXPECT_NEAR(5.0, c(1, 2), EPS);
+    EXPECT_NEAR(6.0, c(2, 0), EPS);
+    EXPECT_NEAR(7.0, c(2, 1), EPS);
+    EXPECT_NEAR(8.0, c(2, 2), EPS);
 }
 
-// void TlMatrixTest::testConvertFromVector(){
-//   TlMatrix A(2, 2);
-  
-//   // b =
-//   // { 0 1 2 3 4 5 6 7 8 }
-//   TlVector b(9);
-//   for (int i = 0; i < 9; ++i){
-//     b[i] = i;
-//   }
 
-//   A.convertFromVector(3, 3, b);
-  
-//   // column oriented
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, A(0, 0), threshold);
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, A(1, 0), threshold);
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, A(2, 0), threshold);
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0, A(0, 1), threshold);
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(4.0, A(1, 1), threshold);
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(5.0, A(2, 1), threshold);
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(6.0, A(0, 2), threshold);
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(7.0, A(1, 2), threshold);
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(8.0, A(2, 2), threshold);
-// }
-
-void TlMatrixTest::testOperatorEqual(){
-  TlMatrix a = this->getMatrixA();
-  TlMatrix c;
-
-  c = a;
-
-  CPPUNIT_ASSERT_EQUAL(3, c.getNumOfRows());
-  CPPUNIT_ASSERT_EQUAL(3, c.getNumOfCols());
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, c(0, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, c(0, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, c(0, 2), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0, c(1, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(4.0, c(1, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(5.0, c(1, 2), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(6.0, c(2, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(7.0, c(2, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(8.0, c(2, 2), threshold);
+TEST(TlMatrix, operator_eq)
+{
+    TlMatrix a = getMatrixA();
+    TlMatrix c;
+    
+    c = a;
+    
+    EXPECT_EQ(3, c.getNumOfRows());
+    EXPECT_EQ(3, c.getNumOfCols());
+    EXPECT_NEAR(0.0, c(0, 0), EPS);
+    EXPECT_NEAR(1.0, c(0, 1), EPS);
+    EXPECT_NEAR(2.0, c(0, 2), EPS);
+    EXPECT_NEAR(3.0, c(1, 0), EPS);
+    EXPECT_NEAR(4.0, c(1, 1), EPS);
+    EXPECT_NEAR(5.0, c(1, 2), EPS);
+    EXPECT_NEAR(6.0, c(2, 0), EPS);
+    EXPECT_NEAR(7.0, c(2, 1), EPS);
+    EXPECT_NEAR(8.0, c(2, 2), EPS);
 }
 
-void TlMatrixTest::testOperatorPlus(){
-  TlMatrix a = this->getMatrixA();
-  TlMatrix b = this->getMatrixB();
 
-  TlMatrix c = a + b;
-
-  CPPUNIT_ASSERT_EQUAL(3, c.getNumOfRows());
-  CPPUNIT_ASSERT_EQUAL(3, c.getNumOfCols());
-  CPPUNIT_ASSERT_DOUBLES_EQUAL( 0.0, c(0, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL( 4.0, c(0, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL( 8.0, c(0, 2), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL( 4.0, c(1, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL( 8.0, c(1, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(12.0, c(1, 2), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL( 8.0, c(2, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(12.0, c(2, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(16.0, c(2, 2), threshold);
+TEST(TlMatrix, operator_add)
+{
+    TlMatrix a = getMatrixA();
+    TlMatrix b = getMatrixB();
+    
+    TlMatrix c = a + b;
+    
+    EXPECT_EQ(3, c.getNumOfRows());
+    EXPECT_EQ(3, c.getNumOfCols());
+    EXPECT_NEAR( 0.0, c(0, 0), EPS);
+    EXPECT_NEAR( 4.0, c(0, 1), EPS);
+    EXPECT_NEAR( 8.0, c(0, 2), EPS);
+    EXPECT_NEAR( 4.0, c(1, 0), EPS);
+    EXPECT_NEAR( 8.0, c(1, 1), EPS);
+    EXPECT_NEAR(12.0, c(1, 2), EPS);
+    EXPECT_NEAR( 8.0, c(2, 0), EPS);
+    EXPECT_NEAR(12.0, c(2, 1), EPS);
+    EXPECT_NEAR(16.0, c(2, 2), EPS);
 }
 
-void TlMatrixTest::testOperatorPlusEqual(){
-  TlMatrix a = this->getMatrixA();
-  TlMatrix b = this->getMatrixB();
 
-  b += a;
-
-  CPPUNIT_ASSERT_EQUAL(3, b.getNumOfRows());
-  CPPUNIT_ASSERT_EQUAL(3, b.getNumOfCols());
-  CPPUNIT_ASSERT_DOUBLES_EQUAL( 0.0, b(0, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL( 4.0, b(0, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL( 8.0, b(0, 2), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL( 4.0, b(1, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL( 8.0, b(1, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(12.0, b(1, 2), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL( 8.0, b(2, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(12.0, b(2, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(16.0, b(2, 2), threshold);
+TEST(TlMatrix, operator_iadd)
+{
+    TlMatrix a = getMatrixA();
+    TlMatrix b = getMatrixB();
+    
+    b += a;
+    
+    EXPECT_EQ(3, b.getNumOfRows());
+    EXPECT_EQ(3, b.getNumOfCols());
+    EXPECT_NEAR( 0.0, b(0, 0), EPS);
+    EXPECT_NEAR( 4.0, b(0, 1), EPS);
+    EXPECT_NEAR( 8.0, b(0, 2), EPS);
+    EXPECT_NEAR( 4.0, b(1, 0), EPS);
+    EXPECT_NEAR( 8.0, b(1, 1), EPS);
+    EXPECT_NEAR(12.0, b(1, 2), EPS);
+    EXPECT_NEAR( 8.0, b(2, 0), EPS);
+    EXPECT_NEAR(12.0, b(2, 1), EPS);
+    EXPECT_NEAR(16.0, b(2, 2), EPS);
 }
 
-void TlMatrixTest::testSave(){
-  TlMatrix a = this->getMatrixA();
-  a.save("normal_matrix.a");
+
+TEST(TlMatrix, save)
+{
+    TlMatrix a = getMatrixA();
+    a.save(mat_path);
 }
 
-void TlMatrixTest::testLoad(){
-  TlMatrix a;
-  a.load("normal_matrix.a");
 
-  CPPUNIT_ASSERT_EQUAL(3, a.getNumOfRows());
-  CPPUNIT_ASSERT_EQUAL(3, a.getNumOfCols());
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a(0, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, a(0, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, a(0, 2), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0, a(1, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(4.0, a(1, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(5.0, a(1, 2), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(6.0, a(2, 0), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(7.0, a(2, 1), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(8.0, a(2, 2), threshold);
+TEST(TlMatrix, load)
+{
+    TlMatrix a;
+    a.load(mat_path);
+    
+    EXPECT_EQ(3, a.getNumOfRows());
+    EXPECT_EQ(3, a.getNumOfCols());
+    EXPECT_NEAR(0.0, a(0, 0), EPS);
+    EXPECT_NEAR(1.0, a(0, 1), EPS);
+    EXPECT_NEAR(2.0, a(0, 2), EPS);
+    EXPECT_NEAR(3.0, a(1, 0), EPS);
+    EXPECT_NEAR(4.0, a(1, 1), EPS);
+    EXPECT_NEAR(5.0, a(1, 2), EPS);
+    EXPECT_NEAR(6.0, a(2, 0), EPS);
+    EXPECT_NEAR(7.0, a(2, 1), EPS);
+    EXPECT_NEAR(8.0, a(2, 2), EPS);
 }
 
-void TlMatrixTest::testInverse(){
-    TlMatrix a = this->getMatrixC();
+
+TEST(TlMatrix, inverse)
+{
+    TlMatrix a = getMatrixC();
     TlMatrix b = a;
     
     b.inverse();
@@ -211,91 +210,98 @@ void TlMatrixTest::testInverse(){
 
     //c.print(std::cout);
     
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, c(0, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, c(0, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, c(0, 2), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, c(1, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, c(1, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, c(1, 2), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, c(2, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, c(2, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, c(2, 2), threshold);
+    EXPECT_NEAR(1.0, c(0, 0), EPS);
+    EXPECT_NEAR(0.0, c(0, 1), EPS);
+    EXPECT_NEAR(0.0, c(0, 2), EPS);
+    EXPECT_NEAR(0.0, c(1, 0), EPS);
+    EXPECT_NEAR(1.0, c(1, 1), EPS);
+    EXPECT_NEAR(0.0, c(1, 2), EPS);
+    EXPECT_NEAR(0.0, c(2, 0), EPS);
+    EXPECT_NEAR(0.0, c(2, 1), EPS);
+    EXPECT_NEAR(1.0, c(2, 2), EPS);
 }
 
-void TlMatrixTest::testOperatorMul_AB() {
-    TlMatrix a = this->getMatrixA();
-    TlMatrix b = this->getMatrixB();
+
+TEST(TlMatrix, operator_mul_AB)
+{
+    TlMatrix a = getMatrixA();
+    TlMatrix b = getMatrixB();
     TlMatrix c  = a * b;
-
-    CPPUNIT_ASSERT_EQUAL(3, c.getNumOfRows());
-    CPPUNIT_ASSERT_EQUAL(3, c.getNumOfCols());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( 5.0, c(0, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(14.0, c(0, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(23.0, c(0, 2), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(14.0, c(1, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(50.0, c(1, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(86.0, c(1, 2), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(23.0, c(2, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(86.0, c(2, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(149.0, c(2, 2), threshold);
+    
+    EXPECT_EQ(3, c.getNumOfRows());
+    EXPECT_EQ(3, c.getNumOfCols());
+    EXPECT_NEAR( 5.0, c(0, 0), EPS);
+    EXPECT_NEAR(14.0, c(0, 1), EPS);
+    EXPECT_NEAR(23.0, c(0, 2), EPS);
+    EXPECT_NEAR(14.0, c(1, 0), EPS);
+    EXPECT_NEAR(50.0, c(1, 1), EPS);
+    EXPECT_NEAR(86.0, c(1, 2), EPS);
+    EXPECT_NEAR(23.0, c(2, 0), EPS);
+    EXPECT_NEAR(86.0, c(2, 1), EPS);
+    EXPECT_NEAR(149.0, c(2, 2), EPS);
 }
 
-void TlMatrixTest::testOperatorMul_AX() {
-    TlMatrix a = this->getMatrixA();
+
+TEST(TlMatrix, operator_mul_AX)
+{
+    TlMatrix a = getMatrixA();
     TlVector x(3);
     x[0] = 1.0;
     x[1] = 2.0;
     x[2] = 3.0;
     TlVector z = a * x;
     
-    CPPUNIT_ASSERT_EQUAL(3, (int)z.getSize());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( 8.0, z[0], threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(26.0, z[1], threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(44.0, z[2], threshold);
+    EXPECT_EQ(3, (int)z.getSize());
+    EXPECT_NEAR( 8.0, z[0], EPS);
+    EXPECT_NEAR(26.0, z[1], EPS);
+    EXPECT_NEAR(44.0, z[2], EPS);
 }
 
 
-void TlMatrixTest::testOperatorMul_XA() {
-    TlMatrix a = this->getMatrixA();
+TEST(TlMatrix, operator_mul_X)
+{
+    TlMatrix a = getMatrixA();
     TlVector x(3);
     x[0] = 1.0;
     x[1] = 2.0;
     x[2] = 3.0;
     TlVector z = x * a;
     
-    CPPUNIT_ASSERT_EQUAL(3, (int)z.getSize());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(24.0, z[0], threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(30.0, z[1], threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(36.0, z[2], threshold);
+    EXPECT_EQ(3, (int)z.getSize());
+    EXPECT_NEAR(24.0, z[0], EPS);
+    EXPECT_NEAR(30.0, z[1], EPS);
+    EXPECT_NEAR(36.0, z[2], EPS);
 }
 
 
-void TlMatrixTest::testDot() {
-    TlMatrix a = this->getMatrixA();
-    TlMatrix b = this->getMatrixB();
+TEST(TlMatrix, dot)
+{
+    TlMatrix a = getMatrixA();
+    TlMatrix b = getMatrixB();
     a.dot(b);
     
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( 0.0, a(0, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( 3.0, a(1, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(12.0, a(2, 0), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL( 3.0, a(0, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(16.0, a(1, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(35.0, a(2, 1), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(12.0, a(0, 2), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(35.0, a(1, 2), threshold);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(64.0, a(2, 2), threshold);
+    EXPECT_NEAR( 0.0, a(0, 0), EPS);
+    EXPECT_NEAR( 3.0, a(1, 0), EPS);
+    EXPECT_NEAR(12.0, a(2, 0), EPS);
+    EXPECT_NEAR( 3.0, a(0, 1), EPS);
+    EXPECT_NEAR(16.0, a(1, 1), EPS);
+    EXPECT_NEAR(35.0, a(2, 1), EPS);
+    EXPECT_NEAR(12.0, a(0, 2), EPS);
+    EXPECT_NEAR(35.0, a(1, 2), EPS);
+    EXPECT_NEAR(64.0, a(2, 2), EPS);
 }
 
 
-void TlMatrixTest::testSum() {
-    TlMatrix a = this->getMatrixA();
+TEST(TlMatrix, sum)
+{
+    TlMatrix a = getMatrixA();
     double s = a.sum();
     
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(36.0, s, threshold);
+    EXPECT_NEAR(36.0, s, EPS);
 }
 
 
-void TlMatrixTest::testsolveLinearLeastSquaresProblem()
+TEST(TlMatrix, solveLinearLeastSquaresProblem)
 {
     TlMatrix A(6, 5);
     A(0, 0) = -0.09;
@@ -343,11 +349,11 @@ void TlMatrixTest::testsolveLinearLeastSquaresProblem()
     TlMatrix AX = A * X;
     //AX.print(std::cout);
 
-    CPPUNIT_ASSERT_EQUAL(5, X.getNumOfRows());
-    CPPUNIT_ASSERT_EQUAL(1, X.getNumOfCols());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(B(0, 0), AX(0, 0), 0.1);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(B(1, 0), AX(1, 0), 0.1);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(B(2, 0), AX(2, 0), 0.1);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(B(3, 0), AX(3, 0), 0.1);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(B(4, 0), AX(4, 0), 0.1);
+    EXPECT_EQ(5, X.getNumOfRows());
+    EXPECT_EQ(1, X.getNumOfCols());
+    EXPECT_NEAR(B(0, 0), AX(0, 0), 0.1);
+    EXPECT_NEAR(B(1, 0), AX(1, 0), 0.1);
+    EXPECT_NEAR(B(2, 0), AX(2, 0), 0.1);
+    EXPECT_NEAR(B(3, 0), AX(3, 0), 0.1);
+    EXPECT_NEAR(B(4, 0), AX(4, 0), 0.1);
 }

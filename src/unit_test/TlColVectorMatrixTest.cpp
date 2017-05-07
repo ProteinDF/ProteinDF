@@ -1,63 +1,64 @@
 #include <limits>
 #include <iostream>
-#include "TlColVectorMatrixTest.h"
+#include "gtest/gtest.h"
+#include "TlColVectorMatrix.h"
 #include "TlMatrix.h"
 
-const double TlColVectorMatrixTest::threshold = std::numeric_limits<double>::epsilon();
+static const double EPS = 1.0E-10; // std::numeric_limits<double>::epsilon();
 
 
-void TlColVectorMatrixTest::testConstructer()
+TEST(TlColVectorMatrix, constructer)
 {
     TlColVectorMatrix A(100, 600);
     
-    CPPUNIT_ASSERT_EQUAL(100, A.getSizeOfVector());
-    CPPUNIT_ASSERT_EQUAL(600, A.getNumOfVectors());
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, A.get(0, 0), threshold);
+    EXPECT_EQ(100, A.getSizeOfVector());
+    EXPECT_EQ(600, A.getNumOfVectors());
+    EXPECT_NEAR(0.0, A.get(0, 0), EPS);
 }
 
 
-void TlColVectorMatrixTest::testConstructer2()
+TEST(TlColVectorMatrix, constructer2)
 {
     TlColVectorMatrix A0(100, 600, 10, 0);
     TlColVectorMatrix A1(100, 600, 10, 1);
     
-    CPPUNIT_ASSERT_EQUAL(100, A0.getSizeOfVector());
-    CPPUNIT_ASSERT_EQUAL(600, A0.getNumOfVectors());
-    CPPUNIT_ASSERT_EQUAL( 10, A0.getNumOfSubunits());
-    CPPUNIT_ASSERT_EQUAL(  0, A0.getSubunitID());
+    EXPECT_EQ(100, A0.getSizeOfVector());
+    EXPECT_EQ(600, A0.getNumOfVectors());
+    EXPECT_EQ( 10, A0.getNumOfSubunits());
+    EXPECT_EQ(  0, A0.getSubunitID());
 
-    CPPUNIT_ASSERT_EQUAL(100, A1.getSizeOfVector());
-    CPPUNIT_ASSERT_EQUAL(600, A1.getNumOfVectors());
-    CPPUNIT_ASSERT_EQUAL( 10, A1.getNumOfSubunits());
-    CPPUNIT_ASSERT_EQUAL(  1, A1.getSubunitID());
+    EXPECT_EQ(100, A1.getSizeOfVector());
+    EXPECT_EQ(600, A1.getNumOfVectors());
+    EXPECT_EQ( 10, A1.getNumOfSubunits());
+    EXPECT_EQ(  1, A1.getSubunitID());
 }
 
 
-void TlColVectorMatrixTest::testResize()
+TEST(TlColVectorMatrix, resize)
 {
     TlColVectorMatrix A(100, 100);
     A.resize(200, 100);
-    CPPUNIT_ASSERT_EQUAL(200, A.getSizeOfVector());
-    CPPUNIT_ASSERT_EQUAL(100, A.getNumOfVectors());
+    EXPECT_EQ(200, A.getSizeOfVector());
+    EXPECT_EQ(100, A.getNumOfVectors());
 
     TlColVectorMatrix B(100, 100);
     B.resize(100, 200);
-    CPPUNIT_ASSERT_EQUAL(100, B.getSizeOfVector());
-    CPPUNIT_ASSERT_EQUAL(200, B.getNumOfVectors());
+    EXPECT_EQ(100, B.getSizeOfVector());
+    EXPECT_EQ(200, B.getNumOfVectors());
 
     TlColVectorMatrix C(50, 100);
     C.resize(50, 100);
-    CPPUNIT_ASSERT_EQUAL( 50, C.getSizeOfVector());
-    CPPUNIT_ASSERT_EQUAL(100, C.getNumOfVectors());
+    EXPECT_EQ( 50, C.getSizeOfVector());
+    EXPECT_EQ(100, C.getNumOfVectors());
 
     TlColVectorMatrix D(100, 50);
     D.resize(100, 50);
-    CPPUNIT_ASSERT_EQUAL(100, D.getSizeOfVector());
-    CPPUNIT_ASSERT_EQUAL( 50, D.getNumOfVectors());
+    EXPECT_EQ(100, D.getSizeOfVector());
+    EXPECT_EQ( 50, D.getNumOfVectors());
 }
 
 
-void TlColVectorMatrixTest::testContents()
+TEST(TlColVectorMatrix, contents)
 {
     const int maxRow = 100;
     const int maxCol = 80;
@@ -79,15 +80,15 @@ void TlColVectorMatrixTest::testContents()
     // test
     for (int r = 0; r < maxRow; ++r) {
         for (int c = 0; c < maxCol; ++c) {
-            CPPUNIT_ASSERT_DOUBLES_EQUAL(matA.get(r, c),
-                                         vecA.get(r, c),
-                                         TlColVectorMatrixTest::threshold);
+            EXPECT_NEAR(matA.get(r, c),
+                        vecA.get(r, c),
+                        EPS);
         }
     }
 }
 
 
-void TlColVectorMatrixTest::testSaveLoad()
+TEST(TlColVectorMatrix, save_load)
 {
     const int maxRow = 100;
     const int maxCol = 80;
@@ -116,15 +117,15 @@ void TlColVectorMatrixTest::testSaveLoad()
     // test
     for (int r = 0; r < maxRow; ++r) {
         for (int c = 0; c < maxCol; ++c) {
-            CPPUNIT_ASSERT_DOUBLES_EQUAL(matA.get(r, c),
-                                         vecB.get(r, c),
-                                         TlColVectorMatrixTest::threshold);
+            EXPECT_NEAR(matA.get(r, c),
+                        vecB.get(r, c),
+                        EPS);
         }
     }
 }
 
 
-void TlColVectorMatrixTest::testToTlMatrix()
+TEST(TlColVectorMatrix, toTlMatrix)
 {
     const int maxRow = 100;
     const int maxCol = 80;
@@ -148,9 +149,9 @@ void TlColVectorMatrixTest::testToTlMatrix()
     // test
     for (int r = 0; r < maxRow; ++r) {
         for (int c = 0; c < maxCol; ++c) {
-            CPPUNIT_ASSERT_DOUBLES_EQUAL(matA.get(r, c),
-                                         matB.get(r, c),
-                                         TlColVectorMatrixTest::threshold);
+            EXPECT_NEAR(matA.get(r, c),
+                        matB.get(r, c),
+                        EPS);
         }
     }
 }

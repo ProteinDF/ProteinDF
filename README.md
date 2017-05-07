@@ -16,23 +16,24 @@ on any of the systems.
 
 ### Prerequisites
 
-In order to build ProteinDF, you must have LAPACK, ScaLAPACK, MPI 
+In order to build ProteinDF, you must have CMake, LAPACK, ScaLAPACK, MPI 
 and any related dev packages installed.
 
 
-### Configuring ProteinDF
+### build ProteinDF
 
-To configure ProteinDF simply run:
-
-```
-./configure
-```
-
-If you want to specify a library installed in a non-standard location run,
-you can see help message:
+Making building directory:
 
 ```
-./configure --help
+mkdir build
+cd build
+cmake ..
+```
+
+If you want to specify install path, you can run as following:
+
+```
+cmake -DCMAKE_INSTALL_PREFIX=[PATH] ..
 ```
 
 

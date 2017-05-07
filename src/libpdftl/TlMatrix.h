@@ -390,8 +390,8 @@ protected:
                                                        TlMatrix* pX);
 #else
     // cause compile error
-#error NOT found algebra package: need LAPACK library
-#endif // HAVE_LAPACK
+#error NOT found algebra package: need BLAS/LAPACK library
+#endif // BLAS_FOUND
 };
 
 
