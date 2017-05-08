@@ -1,6 +1,7 @@
 ProteinDF
 =========
 
+[![Build Status](https://www.travis-ci.org/ProteinDF/ProteinDF.svg?branch=develop)](https://www.travis-ci.org/ProteinDF/ProteinDF)
 
 How to install ProteinDF
 ------------------------
@@ -55,7 +56,7 @@ make install
 License
 -------
 
-Copyright (C) 2002-2014 ProteinDF developers.
+Copyright (C) 2002-2017 ProteinDF developers.
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
 
