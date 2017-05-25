@@ -30,8 +30,11 @@ DfLocalize::DfLocalize(TlSerializeData* pPdfParam)
     if ((*pPdfParam)["lo/max_iteration"].getStr().empty() != true) {
         this->maxIteration_ = (*pPdfParam)["lo/max_iteration"].getInt();
     }
-    this->threshold_ = 1.0E-7;
     
+    this->threshold_ = 1.0E-4;
+    if ((*pPdfParam)["lo/threshold"].getStr().empty() != true) {
+        this->threshold_ = (*pPdfParam)["lo/threshold"].getDouble();
+    }    
     this->numOfOcc_ = (this->m_nNumOfElectrons +1) / 2; 
 
     // for OCC
@@ -109,7 +112,7 @@ void DfLocalize::localize(const std::string& inputCMatrixPath)
             }
         }
 
-        std::cout << TlUtils::format("%d th: sum of delta_g: %10.5e\n", num_iteration +1, sumDeltaG);
+        std::cout << TlUtils::format("%d th: sum of delta_g: %10.5e", num_iteration +1, sumDeltaG) << std::endl;
         DfObject::saveCloMatrix(RUN_RKS, num_iteration +1, this->C_);
 
         if (sumDeltaG < this->threshold_) {
