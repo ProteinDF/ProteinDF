@@ -1437,24 +1437,15 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
         }
 
         // add up
-#ifdef _OPENMP
-        {
 #pragma omp critical(DfCD__calcDiagonals_kernel_1)
-            {
-                pI2PQ->insert(pI2PQ->end(),
-                              local_I2PQ.begin(), local_I2PQ.end());
-            }
-#pragma omp critical(DfCD__calcDiagonals_kernel_2)
-            {
-                pDiagonalMat->merge(local_diagMat);
-            }
-        }
-#else
         {
-            *pI2PQ = local_I2PQ;
-            *pDiagonalMat = local_diagMat;
+            pI2PQ->insert(pI2PQ->end(),
+                          local_I2PQ.begin(), local_I2PQ.end());
         }
-#endif // _OPENMP
+#pragma omp critical(DfCD__calcDiagonals_kernel_2)
+        {
+            pDiagonalMat->merge(local_diagMat);
+        }
     }
 }
 
@@ -1529,24 +1520,15 @@ void DfCD::calcDiagonals_K_full_kernel(const TlOrbitalInfoObject& orbInfo,
         }
 
         // add up
-#ifdef _OPENMP
-        {
 #pragma omp critical(DfCD__calcDiagonals_kernel_1)
-            {
-                pI2PR->insert(pI2PR->end(),
-                              local_I2PR.begin(), local_I2PR.end());
-            }
-#pragma omp critical(DfCD__calcDiagonals_kernel_2)
-            {
-                pDiagonalMat->merge(local_diagMat);
-            }
-        }
-#else
         {
-            *pI2PR = local_I2PR;
-            *pDiagonalMat = local_diagMat;
+            pI2PR->insert(pI2PR->end(),
+                          local_I2PR.begin(), local_I2PR.end());
         }
-#endif // _OPENMP
+#pragma omp critical(DfCD__calcDiagonals_kernel_2)
+        {
+            pDiagonalMat->merge(local_diagMat);
+        }
     }
 }
 
@@ -1659,24 +1641,15 @@ void DfCD::calcDiagonals_K_half_kernel(const TlOrbitalInfoObject& orbInfo,
         }
 
         // add up
-#ifdef _OPENMP
-        {
 #pragma omp critical(DfCD__calcDiagonals_kernel_1)
-            {
-                pI2PR->insert(pI2PR->end(),
-                              local_I2PR.begin(), local_I2PR.end());
-            }
-#pragma omp critical(DfCD__calcDiagonals_kernel_2)
-            {
-                pDiagonalMat->merge(local_diagMat);
-            }
-        }
-#else
         {
-            *pI2PR = local_I2PR;
-            *pDiagonalMat = local_diagMat;
+            pI2PR->insert(pI2PR->end(),
+                          local_I2PR.begin(), local_I2PR.end());
         }
-#endif // _OPENMP
+#pragma omp critical(DfCD__calcDiagonals_kernel_2)
+        {
+            pDiagonalMat->merge(local_diagMat);
+        }
     }
 }
 
@@ -1755,29 +1728,19 @@ void DfCD::calcDiagonalsA_kernel(const TlOrbitalInfoObject& orbInfo_p,
         }
 
         // add up
-#ifdef _OPENMP
-        {
 #pragma omp critical(DfCD__calcDiagonalsA_kernel_1)
-            {
-                pI2PQ->insert(pI2PQ->end(),
-                              local_I2PQ.begin(), local_I2PQ.end());
-            }
-#pragma omp critical(DfCD__calcDiagonalsA_kernel_2)
-            {
-                pDiagonalMat->merge(local_diagMat);
-            }
-#pragma omp critical(DfCD__calcDiagonalsA_kernel_3)
-            {
-                pSchwartzTable->merge(local_schwartzTable);
-            }
-        }
-#else
         {
-            *pI2PQ = local_I2PQ;
-            *pDiagonalMat = local_diagMat;
-            *pSchwartzTable = local_schwartzTable;
+            pI2PQ->insert(pI2PQ->end(),
+                          local_I2PQ.begin(), local_I2PQ.end());
         }
-#endif // _OPENMP
+#pragma omp critical(DfCD__calcDiagonalsA_kernel_2)
+        {
+            pDiagonalMat->merge(local_diagMat);
+        }
+#pragma omp critical(DfCD__calcDiagonalsA_kernel_3)
+        {
+            pSchwartzTable->merge(local_schwartzTable);
+        }
     }
 }
 
