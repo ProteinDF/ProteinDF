@@ -1,7 +1,7 @@
 ProteinDF
 =========
 
-[![Build Status](https://www.travis-ci.org/ProteinDF/ProteinDF.svg?branch=develop)](https://www.travis-ci.org/ProteinDF/ProteinDF)
+[![Build Status](https://www.travis-ci.org/ProteinDF/ProteinDF.svg?branch=master)](https://www.travis-ci.org/ProteinDF/ProteinDF)
 
 How to install ProteinDF
 ------------------------
