@@ -45,10 +45,12 @@ protected:
     virtual void saveOccupation(const RUN_TYPE runType, const TlVector& rOccupation);
 
 protected:
-    void createInitialGuessUsingLCAO_onScaLAPACK(const RUN_TYPE runType);
     void createInitialGuessUsingLCAO_onLAPACK(const RUN_TYPE runType);
+    void createInitialGuessUsingLCAO_onScaLAPACK(const RUN_TYPE runType);
 
     TlDistributeMatrix getLCAO_onScaLAPACK(const RUN_TYPE runType);
+    TlDistributeMatrix getLCAO_onScaLAPACK_txt(const RUN_TYPE runType);
+    TlDistributeMatrix getLCAO_onScaLAPACK_bin(const RUN_TYPE runType);
 
     virtual DfDmatrix* getDfDmatrixObject(TlSerializeData* param);
 };
