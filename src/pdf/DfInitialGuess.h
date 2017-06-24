@@ -67,9 +67,14 @@ protected:
 
 protected:
     /// LCAO行列を取得する
-    template <typename MatrixType>
-    MatrixType getLCAO(const RUN_TYPE runType);
+    // template <typename MatrixType>
+    // MatrixType getLCAO(const RUN_TYPE runType);
 
+    TlMatrix getLCAO_LAPACK(const RUN_TYPE runType);
+    static std::string getLcaoPath_txt(const RUN_TYPE runType);
+    static std::string getLcaoPath_bin(const RUN_TYPE runType);
+    
+    
     /// 行列C0を保存する
     template <typename MatrixType>
     void saveC0(const RUN_TYPE runType, const MatrixType& C0);
@@ -99,53 +104,53 @@ protected:
 };
 
 
-template <typename MatrixType>
-MatrixType DfInitialGuess::getLCAO(const RUN_TYPE runType)
-{
-    MatrixType lcaoMatrix;
-    const std::string binFile = TlUtils::format("./guess.lcao.%s.mat",
-                                                this->m_sRunTypeSuffix[runType].c_str());
-    const std::string txtFile = TlUtils::format("./guess.lcao.%s.txt", 
-                                                this->m_sRunTypeSuffix[runType].c_str());
-
-    this->log_.info("get LCAO");
-    if (TlFile::isExist(binFile)) {
-        // LCAO file is prepared by binary file.
-        this->log_.info(TlUtils::format("LCAO: loading: %s", binFile.c_str()));
-        lcaoMatrix.load(binFile);
-    } else if (TlFile::isExist(txtFile)) {
-        this->log_.info(TlUtils::format("LCAO: loading: %s", txtFile.c_str()));
-        // LCAO file is prepared by text file.
-        std::ifstream fi;
-        fi.open(txtFile.c_str(), std::ios::in);
-        if ((fi.rdstate() & std::ifstream::failbit) != 0) {
-            CnErr.abort(TlUtils::format("cannot open file %s.\n", txtFile.c_str()));
-        }
-
-        std::string dummy_line;
-        fi >> dummy_line;
-
-        int row_dimension, col_dimension;
-        fi >> row_dimension >> col_dimension;
-        if (row_dimension != this->m_nNumOfAOs) {
-            CnErr.abort("DfInitialGuess", "", "prepare_occupation_and_or_mo",
-                        "inputted guess lcao has illegal dimension");
-        }
-        lcaoMatrix.resize(row_dimension, col_dimension);
-        
-        const int maxRows = row_dimension;
-        const int maxCols = col_dimension;
-        for (int i = 0; i < maxRows; ++i) {
-            for (int j = 0; j < maxCols; ++j) {
-                fi >> lcaoMatrix(i, j);
-            }
-        }
-    } else {
-        this->log_.warn(TlUtils::format("file not found.: %s", binFile.c_str()));
-    }
-
-    return lcaoMatrix;
-}
+// template <typename MatrixType>
+// MatrixType DfInitialGuess::getLCAO(const RUN_TYPE runType)
+// {
+//     MatrixType lcaoMatrix;
+//     const std::string binFile = TlUtils::format("./guess.lcao.%s.mat",
+//                                                 this->m_sRunTypeSuffix[runType].c_str());
+//     const std::string txtFile = TlUtils::format("./guess.lcao.%s.txt", 
+//                                                 this->m_sRunTypeSuffix[runType].c_str());
+// 
+//     this->log_.info("get LCAO");
+//     if (TlFile::isExist(binFile)) {
+//         // LCAO file is prepared by binary file.
+//         this->log_.info(TlUtils::format("LCAO: loading: %s", binFile.c_str()));
+//         lcaoMatrix.load(binFile);
+//     } else if (TlFile::isExist(txtFile)) {
+//         this->log_.info(TlUtils::format("LCAO: loading: %s", txtFile.c_str()));
+//         // LCAO file is prepared by text file.
+//         std::ifstream fi;
+//         fi.open(txtFile.c_str(), std::ios::in);
+//         if ((fi.rdstate() & std::ifstream::failbit) != 0) {
+//             CnErr.abort(TlUtils::format("cannot open file %s.\n", txtFile.c_str()));
+//         }
+// 
+//         std::string dummy_line;
+//         fi >> dummy_line;
+// 
+//         int row_dimension, col_dimension;
+//         fi >> row_dimension >> col_dimension;
+//         if (row_dimension != this->m_nNumOfAOs) {
+//             CnErr.abort("DfInitialGuess", "", "prepare_occupation_and_or_mo",
+//                         "inputted guess lcao has illegal dimension");
+//         }
+//         lcaoMatrix.resize(row_dimension, col_dimension);
+//         
+//         const int maxRows = row_dimension;
+//         const int maxCols = col_dimension;
+//         for (int i = 0; i < maxRows; ++i) {
+//             for (int j = 0; j < maxCols; ++j) {
+//                 fi >> lcaoMatrix(i, j);
+//             }
+//         }
+//     } else {
+//         this->log_.warn(TlUtils::format("file not found.: %s", binFile.c_str()));
+//     }
+// 
+//     return lcaoMatrix;
+// }
 
 
 template <typename SymmetricMatrixType>
