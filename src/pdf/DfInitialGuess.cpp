@@ -119,6 +119,7 @@ void DfInitialGuess::createInitialGuessUsingHarris()
 }
 
 
+// LCAO ================================================================
 void DfInitialGuess::createInitialGuessUsingLCAO()
 {
     switch (this->m_nMethodType) {
@@ -146,7 +147,7 @@ void DfInitialGuess::createInitialGuessUsingLCAO()
 void DfInitialGuess::createInitialGuessUsingLCAO(const RUN_TYPE runType)
 {
     // read guess lcao
-    const TlMatrix LCAO = this->getLCAO<TlMatrix>(runType);
+    const TlMatrix LCAO = this->getLCAO_LAPACK(runType);    
     this->saveC0(runType, LCAO);
 
     // read guess occupation
@@ -166,6 +167,67 @@ void DfInitialGuess::createInitialGuessUsingLCAO(const RUN_TYPE runType)
 }
 
 
+TlMatrix DfInitialGuess::getLCAO_LAPACK(const RUN_TYPE runType)
+{
+    TlMatrix lcaoMatrix;
+    const std::string binFile = DfInitialGuess::getLcaoPath_bin(runType);
+    const std::string txtFile = DfInitialGuess::getLcaoPath_txt(runType);
+
+    this->log_.info("get LCAO");
+    if (TlFile::isExist(binFile)) {
+        // LCAO file is prepared by binary file.
+        this->log_.info(TlUtils::format("LCAO: loading: %s", binFile.c_str()));
+        lcaoMatrix.load(binFile);
+    } else if (TlFile::isExist(txtFile)) {
+        this->log_.info(TlUtils::format("LCAO: loading: %s", txtFile.c_str()));
+        // LCAO file is prepared by text file.
+        std::ifstream fi;
+        fi.open(txtFile.c_str(), std::ios::in);
+        if ((fi.rdstate() & std::ifstream::failbit) != 0) {
+            CnErr.abort(TlUtils::format("cannot open file %s.\n", txtFile.c_str()));
+        }
+
+        std::string dummy_line;
+        fi >> dummy_line;
+
+        int row_dimension, col_dimension;
+        fi >> row_dimension >> col_dimension;
+        if (row_dimension != this->m_nNumOfAOs) {
+            CnErr.abort("DfInitialGuess", "", "prepare_occupation_and_or_mo",
+                        "inputted guess lcao has illegal dimension");
+        }
+        lcaoMatrix.resize(row_dimension, col_dimension);
+        
+        const int maxRows = row_dimension;
+        const int maxCols = col_dimension;
+        for (int i = 0; i < maxRows; ++i) {
+            for (int j = 0; j < maxCols; ++j) {
+                fi >> lcaoMatrix(i, j);
+            }
+        }
+    } else {
+        this->log_.warn(TlUtils::format("file not found.: %s", binFile.c_str()));
+    }
+
+    return lcaoMatrix;
+}
+
+
+std::string DfInitialGuess::getLcaoPath_txt(const RUN_TYPE runType)
+{
+    return TlUtils::format("./guess.lcao.%s.txt",
+                           DfObject::m_sRunTypeSuffix[runType].c_str());
+}
+
+
+std::string DfInitialGuess::getLcaoPath_bin(const RUN_TYPE runType)
+{
+    return TlUtils::format("./guess.lcao.%s.mat",
+                           DfObject::m_sRunTypeSuffix[runType].c_str());
+}
+
+
+// density matrix ======================================================
 void DfInitialGuess::createInitialGuessUsingDensityMatrix()
 {
     switch (this->m_nMethodType) {

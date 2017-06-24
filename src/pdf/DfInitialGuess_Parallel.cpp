@@ -74,7 +74,7 @@ void DfInitialGuess_Parallel::createInitialGuessUsingLCAO_onLAPACK(const RUN_TYP
      TlCommunicate& rComm = TlCommunicate::getInstance();
      if (rComm.isMaster() == true) {
          // read guess lcao
-         const TlMatrix LCAO = DfInitialGuess::getLCAO<TlMatrix>(runType);
+         const TlMatrix LCAO = DfInitialGuess::getLCAO_LAPACK(runType);         
          this->saveC0(runType, LCAO);
 
          // read guess occupation
@@ -98,6 +98,32 @@ void DfInitialGuess_Parallel::createInitialGuessUsingLCAO_onLAPACK(const RUN_TYP
 TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK(const RUN_TYPE runType)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    int isBinMode = 0;
+    if (rComm.isMaster() == true) {
+        const std::string binFile = DfInitialGuess::getLcaoPath_bin(runType);
+        if (TlFile::isExist(binFile) == true) {
+            isBinMode = 1;
+        }
+    }
+    rComm.broadcast(isBinMode);
+
+    TlDistributeMatrix lcaoMatrix;
+    if (isBinMode == 0) {
+        lcaoMatrix = this->getLCAO_onScaLAPACK_txt(runType);
+    } else if (isBinMode == 1) {
+        lcaoMatrix = this->getLCAO_onScaLAPACK_bin(runType);
+    } else {
+        CnErr.abort(TlUtils::format("program error: l.%d, %s",__LINE__, __FILE__));
+    }
+
+    return lcaoMatrix;
+}
+
+
+TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK_txt(const RUN_TYPE runType)
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
     TlDistributeMatrix lcaoMatrix(this->m_nNumOfAOs, this->m_nNumOfMOs);
 
     const int numOfRows = this->m_nNumOfAOs;
@@ -106,7 +132,7 @@ TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK(const RUN_TYPE r
     if (rComm.isMaster() == true) {
         // for MASTER
         std::ifstream fi;
-        const std::string sFile = std::string("./guess.lcao.") + this->m_sRunTypeSuffix[runType];
+        const std::string sFile = DfInitialGuess::getLcaoPath_txt(runType);
         fi.open(sFile.c_str(), std::ios::in);
         if (fi.rdstate()) {
             CnErr.abort(TlUtils::format("cannot open file %s.\n", sFile.c_str()));
@@ -118,7 +144,8 @@ TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK(const RUN_TYPE r
         int row_dimension, col_dimension;
         fi >> row_dimension >> col_dimension;
         if (row_dimension != this->m_nNumOfAOs) {
-            CnErr.abort("DfPreScf", "", "prepare_occupation_and_or_mo", "inputted guess lcao has illegal dimension");
+            CnErr.abort("DfPreScf", "", "prepare_occupation_and_or_mo",
+                        "inputted guess lcao has illegal dimension");
         }
 
         if (this->m_nNumOfMOs < col_dimension) {
@@ -158,6 +185,24 @@ TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK(const RUN_TYPE r
         }
     }
 
+    return lcaoMatrix;
+}
+
+
+TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK_bin(const RUN_TYPE runType)
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    TlDistributeMatrix lcaoMatrix(this->m_nNumOfAOs, this->m_nNumOfMOs);
+
+    const int numOfRows = this->m_nNumOfAOs;
+    const int numOfCols = this->m_nNumOfMOs;
+
+    lcaoMatrix.load(DfInitialGuess::getLcaoPath_bin(runType));
+    if (lcaoMatrix.getNumOfRows() != this->m_nNumOfAOs) {
+        CnErr.abort("DfPreScf", "", "prepare_occupation_and_or_mo",
+                    "inputted guess lcao has illegal dimension");
+    }
+    
     return lcaoMatrix;
 }
 
