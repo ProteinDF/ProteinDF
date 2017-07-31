@@ -1,12 +1,26 @@
 # 
 set(SCALAPACK_FOUND FALSE)
 
+
+# use variable 
 IF (SCALAPACK_LIBRARIES)
-  set(SCALAPACK_FOUND  TRUE)
-  message(STATUS "set ScaLAPACK libraries: ${SCALAPACK_LIBRARIES}")
+  set(SCALAPACK_FOUND TRUE)
+  message(STATUS "set ScaLAPACK libraries from cmake variable: ${SCALAPACK_LIBRARIES}")
   return()
 endif()
 
+
+# use ENV
+set(HAVE_ENV_SCALAPACK_LIBRARIES $ENV{SCALAPACK_LIBRARIES})
+if (HAVE_ENV_SCALAPACK_LIBRARIES)
+  set(SCALAPACK_FOUND TRUE)
+  set(SCALAPACK_LIBRARIES $ENV{SCALAPACK_LIBRARIES})
+  message(STATUS "set ScaLAPACK libraries from ENV: ${SCALAPACK_LIBRARIES}")
+  return()
+endif()
+
+
+# find libraries
 message(STATUS "Finding ScaLAPACK")
 
 set(SCALAPACK_LIBRARIES_PATH
@@ -26,7 +40,7 @@ set(SCALAPACK_LIBRARIES_PATH
 find_library(
   SCALAPACK_LIBRARIES
   NAMES "scalapack" "scalapck-mpi" "scalapack-mpich" "scalapack-mpich2" "scalapack-openmpi" "scalapack-lam" "scalapack-pvm"
-  PATHS ${SCALAPACK_LIBRARIES_PATH}
+  PATHS "${SCALAPACK_LIBRARIES_PATH}"
   )
 
 if (SCALAPACK_LIBRARIES)
