@@ -22,6 +22,7 @@
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
 #include "TlGetopt.h"
+#include "TlUtils.h"
 
 enum ExtendMode {
     EXTEND_UNDEFINED,
@@ -174,6 +175,13 @@ int extend_diagonal_block(const TlMatrix* pMat1, const TlMatrix* pMat2,
 
     const TlMatrix::index_type newRow = row1 + row2;
     const TlMatrix::index_type newCol = col1 + col2;
+
+    if ((newRow == 0) || (newCol == 0)) {
+        std::cerr << TlUtils::format("need not resize matrix, because the size of new matrix is (%d x %d)", newRow, newCol)
+                  << std::endl;
+        return EXIT_SUCCESS;
+    }
+    
     if (isSaveSymmetric) {
         assert(row1 == col1);
         assert(row2 == col2);
@@ -232,6 +240,12 @@ int extend_row_wise(const TlMatrix* pMat1, const TlMatrix* pMat2,
     const TlMatrix::index_type newCol = col1;
     assert(col1 == col2);
     
+    if ((newRow == 0) || (newCol == 0)) {
+        std::cerr << TlUtils::format("need not resize matrix, because the size of new matrix is (%d x %d)", newRow, newCol)
+                  << std::endl;
+        return EXIT_SUCCESS;
+    }
+    
     TlMatrix mat3 = *pMat1;
     mat3.resize(newRow, newCol);
     for (TlMatrix::index_type r = 0; r < row2; ++r) {
@@ -264,6 +278,12 @@ int extend_column_wise(const TlMatrix* pMat1, const TlMatrix* pMat2,
     const TlMatrix::index_type newRow = row1;
     assert(row1 == row2);
     const TlMatrix::index_type newCol = col1 + col2;
+    
+    if ((newRow == 0) || (newCol == 0)) {
+        std::cerr << TlUtils::format("need not resize matrix, because the size of new matrix is (%d x %d)", newRow, newCol)
+                  << std::endl;
+        return EXIT_SUCCESS;
+    }
     
     TlMatrix mat3 = *pMat1;
     mat3.resize(newRow, newCol);
