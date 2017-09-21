@@ -536,6 +536,7 @@ protected:
     XC_Engine_Type XC_engine_;
 
     std::string m_sXCFunctional;
+    bool isDFT_; /// XC項にpure DFTを含む場合はtrue
     bool m_bIsXCFitting; /// true => XC項をRI法で計算, false => XC項を直接計算
     bool m_bIsUpdateXC; /// XC項をupdate法で計算する(true)
     bool enableGrimmeDispersion_; /// Grimmeの経験的分散力補正を計算するかどうか
