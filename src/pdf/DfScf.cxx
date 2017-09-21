@@ -515,7 +515,8 @@ DfDensityFittingObject* DfScf::getDfDensityFittingObject()
 
 void DfScf::doXCIntegral()
 {
-    if (this->m_bIsXCFitting == true) {
+    if ((this->isDFT_ == true) &&
+        (this->m_bIsXCFitting == true)) {
         this->loggerStartTitle("Grid fitting Myu");
         
         DfCalcGrid dg(this->pPdfParam_, this->m_nIteration);
@@ -528,7 +529,8 @@ void DfScf::doXCIntegral()
 
 void DfScf::doThreeIndexIntegral()
 {
-    if ((this->m_bMemorySave != true) &&
+    if ((this->isDFT_ == true) &&
+        (this->m_bMemorySave != true) &&
         (this->m_bIsXCFitting == true)) {
         this->loggerStartTitle("DfThreeindexintegrals");
         DfThreeindexintegrals dfThreeindexintegrals(this->pPdfParam_);
@@ -540,7 +542,8 @@ void DfScf::doThreeIndexIntegral()
 
 void DfScf::buildXcMatrix()
 {
-    if (this->m_bIsXCFitting == false) {
+    if ((this->isDFT_ == true) &&
+        (this->m_bIsXCFitting == false)) {
         TlTime timer;
         this->loggerStartTitle("generate XC matrix");
 
