@@ -231,6 +231,12 @@ void DfObject::setParam(const TlSerializeData& data)
         const char nLastChar = this->m_sXCFunctional[this->m_sXCFunctional.length() -1];
         this->m_bIsXCFitting = (nLastChar == '~') ? true : false;
     }
+    {
+        this->isDFT_ = true;
+        if (this->m_sXCFunctional == "HF") {
+            this->isDFT_ = false;
+        }
+    }
     this->m_bIsUpdateXC = (TlUtils::toUpper(data["xc-update"].getStr()) == "NO") ? false : true;
     this->isDedicatedBasisForGridFree_ = data["gridfree/dedicated_basis"].getBoolean();
 

@@ -103,9 +103,11 @@ void DfIntegrals::main()
     this->createInverseMatrixes();
 
     // XC
-    this->createCholeskyVectors_XC();
-    this->prepareGridFree();
-    this->createGrids();
+    if (this->isDFT_ == true) {
+        this->createCholeskyVectors_XC();
+        this->prepareGridFree();
+        this->createGrids();
+    }
 
     // flush
     this->matrixCache_.flush();

@@ -76,21 +76,23 @@ void DfForce::calcForce()
     this->loggerTime("Fock exchange");
     this->calcForceFromK(runType);
 
-    this->loggerTime("pureXC");
-    switch (this->XC_engine_) {
-    case XC_ENGINE_GRID: 
-        this->calcForceFromPureXC(runType);
-        break;
-
-    case XC_ENGINE_GRIDFREE:
-    case XC_ENGINE_GRIDFREE_CD:
-        this->calcForceFromPureXC_gridfree(runType);
-        break;
-
-    default:
-        this->log_.critical("program error.");
-        break;
-    }     
+    if (this->isDFT_ == true) {
+        this->loggerTime("pureXC");
+        switch (this->XC_engine_) {
+        case XC_ENGINE_GRID: 
+            this->calcForceFromPureXC(runType);
+            break;
+            
+        case XC_ENGINE_GRIDFREE:
+        case XC_ENGINE_GRIDFREE_CD:
+            this->calcForceFromPureXC_gridfree(runType);
+            break;
+            
+        default:
+            this->log_.critical("program error.");
+            break;
+        }
+    }
 
     this->force_ *= -1.0;
 
