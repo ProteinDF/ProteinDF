@@ -1521,7 +1521,7 @@ void DfOverlapEngine::gradA(const OvpState& state)
     const int numOfAmvsA = amvsA.size();
     const int numOfAmvsB = amvsB.size();
     const int numOfAmvsC = amvsC.size();
-    const int numOfAmvsD = amvsC.size();
+    const int numOfAmvsD = amvsD.size();
     this->OVP_[stateIndex].resize(numOfAmvsAbar * numOfAmvsBbar * numOfAmvsCbar * numOfAmvsDbar
                                   * numOfAmvsA * numOfAmvsB * numOfAmvsC * numOfAmvsD);
     
