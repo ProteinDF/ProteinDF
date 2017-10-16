@@ -186,11 +186,13 @@ void DfHpqX::getHpq_part(const TlOrbitalInfoObject& orbitalInfo,
 
 
 void DfHpqX::getForce(const TlSymmetricMatrix& P,
-                      TlMatrix* pForce)
+                      TlMatrix* pForce, TlMatrix* pForce_Xonly)
 {
     assert(pForce != NULL);
-    assert(pForce->getNumOfRows() == this->m_nNumOfAtoms);
-    assert(pForce->getNumOfCols() == 3);
+    pForce->resize(this->m_nNumOfAtoms, 3);
+
+    assert(pForce_Xonly != NULL);
+    pForce_Xonly->resize(this->m_nNumOfAtoms, 3);
 
     this->createEngines();
     
@@ -210,11 +212,13 @@ void DfHpqX::getForce(const TlSymmetricMatrix& P,
                                         shellTypeP, shellTypeQ,
                                         shellIndexP,
                                         shellArrayQ,
-                                        P, pForce);
+                                        P, pForce, pForce_Xonly);
             }
         }
     }
 
+    *pForce += *pForce_Xonly;
+    
     this->destroyEngines();
 }
 
@@ -224,7 +228,8 @@ void DfHpqX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
                                const index_type shellIndexP,
                                const ShellArray& shellArrayQ,
                                const TlMatrixObject& P,
-                               TlMatrix* pForce)
+                               TlMatrix* pForce_woX,
+                               TlMatrix* pForce_Xonly)
 {
     static const int BUFFER_SIZE_NUC = 3 * 5 * 5 * 5; // (xyz) * 5d * 5d * 5d
     const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
@@ -278,8 +283,8 @@ void DfHpqX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
                         const double dKin_dB = - dKin_dA;
 #pragma omp critical(DfHpqX__getForce_partProc)
                         {
-                            pForce->add(atomIndexA, X, coef * dKin_dA);
-                            pForce->add(atomIndexB, X, coef * dKin_dB);
+                            pForce_woX->add(atomIndexA, X, coef * dKin_dA);
+                            pForce_woX->add(atomIndexB, X, coef * dKin_dB);
                         }
                         ++index;
                     }
@@ -294,8 +299,8 @@ void DfHpqX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
                         const double dKin_dB = - dKin_dA;
 #pragma omp critical(DfHpqX__getForce_partProc)
                         {
-                            pForce->add(atomIndexA, Y, coef * dKin_dA);
-                            pForce->add(atomIndexB, Y, coef * dKin_dB);
+                            pForce_woX->add(atomIndexA, Y, coef * dKin_dA);
+                            pForce_woX->add(atomIndexB, Y, coef * dKin_dB);
                         }
                         ++index;
                     }
@@ -310,8 +315,8 @@ void DfHpqX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
                         const double dKin_dB = - dKin_dA;
 #pragma omp critical(DfHpqX__getForce_partProc)
                         {
-                            pForce->add(atomIndexA, Z, coef * dKin_dA);
-                            pForce->add(atomIndexB, Z, coef * dKin_dB);
+                            pForce_woX->add(atomIndexA, Z, coef * dKin_dA);
+                            pForce_woX->add(atomIndexB, Z, coef * dKin_dB);
                         }
                         ++index;
                     }
@@ -333,6 +338,11 @@ void DfHpqX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
                 this->pEngines_[threadID].calcNuclearAttractionPart(queryPQ01, posP, posQ, pgtosP, pgtosQ, Cs);
                 std::copy(this->pEngines_[threadID].WORK_NUC,
                           this->pEngines_[threadID].WORK_NUC + BUFFER_SIZE_NUC, p_dNuc_dB);
+
+                TlMatrix* pForce = pForce_woX;
+                if (C.getSymbol() == "X") {
+                    pForce = pForce_Xonly;
+                }
                 
                 int index = 0;
                 for (int stepP = 0; stepP < maxStepsP; ++stepP) {

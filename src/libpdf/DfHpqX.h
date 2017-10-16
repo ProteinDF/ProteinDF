@@ -47,8 +47,9 @@ public:
     ///
     /// @param [in] P 密度行列
     /// @param [out] pForce 原子数(dummy chargeを含む)×3(x, y, z成分)の行列
+    /// @param [out] pForce_Xonly 原子数(dummy chargeを含む)×3(x, y, z成分)の行列(dummy charge由来)
     void getForce(const TlSymmetricMatrix& P,
-                  TlMatrix* pForce);
+                  TlMatrix* pForce, TlMatrix* pForce_Xonly);
 
     /// ESP を求める
     ///
@@ -87,7 +88,7 @@ protected:
                            const index_type shellIndexP,
                            const ShellArray& shellArrayQ,
                            const TlMatrixObject& P,
-                           TlMatrix* pForce);
+                           TlMatrix* pForce, TlMatrix* pForceX);
     
     void getESP_part(const TlOrbitalInfoObject& orbitalInfo,
                      const std::vector<DfTaskCtrl::Task2>& taskList,

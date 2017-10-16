@@ -119,20 +119,46 @@ void DfForce::output()
     }
     
     // output for log
-    this->log_.info("=== FORCE ===");
-
-    for (int atomIndex = 0; atomIndex< numOfAtoms; ++atomIndex) {
-        const TlAtom atom = flGeom.getAtom(atomIndex);
-        this->log_.info(TlUtils::format("%4d:[%-2s] % f, % f, % f",
-                                        atomIndex, atom.getSymbol().c_str(),
-                                        this->force_.get(atomIndex, 0),
-                                        this->force_.get(atomIndex, 1),
-                                        this->force_.get(atomIndex, 2)));
+    {
+        this->log_.info("=== FORCE ===");
+    
+        for (int atomIndex = 0; atomIndex< numOfAtoms; ++atomIndex) {
+            const TlAtom atom = flGeom.getAtom(atomIndex);
+            this->log_.info(TlUtils::format("%4d:[%-2s] % f, % f, % f",
+                                            atomIndex, atom.getSymbol().c_str(),
+                                            this->force_.get(atomIndex, 0),
+                                            this->force_.get(atomIndex, 1),
+                                            this->force_.get(atomIndex, 2)));
+        }
+        this->log_.info(TlUtils::format("MAX force: % f", max_val));
+        this->log_.info(TlUtils::format("RMS force: % f", rms));
+        this->log_.info("=============");
     }
-    this->log_.info(TlUtils::format("MAX force: % f", max_val));
-    this->log_.info(TlUtils::format("RMS force: % f", rms));
-    this->log_.info("=============");
+    {
+        this->log_.info("=== FORCE (without X) ===");
+        TlMatrix force_woX = this->force_;
+        force_woX -= this->force_Xonly_;
 
+        double max_val_woX = force_woX.getMaxAbsoluteElement();
+        TlMatrix force_woX2 = force_woX;
+        force_woX2.dot(force_woX2);
+        double rms_woX = force_woX2.sum();
+        rms_woX = std::sqrt(rms_woX / (double(numOfAtoms) * 3.0));
+        
+        for (int atomIndex = 0; atomIndex< numOfAtoms; ++atomIndex) {
+            const TlAtom atom = flGeom.getAtom(atomIndex);
+            this->log_.info(TlUtils::format("%4d:[%-2s] % f, % f, % f",
+                                            atomIndex, atom.getSymbol().c_str(),
+                                            force_woX.get(atomIndex, 0),
+                                            force_woX.get(atomIndex, 1),
+                                            force_woX.get(atomIndex, 2)));
+        }
+        this->log_.info(TlUtils::format("MAX force: % f", max_val_woX));
+        this->log_.info(TlUtils::format("RMS force: % f", rms_woX));
+        this->log_.info("=============");
+    }
+
+    
     // output for pdfparam
     {
         TlSerializeData force_dat;
@@ -233,12 +259,16 @@ void DfForce::calcForceFromHpq(const TlSymmetricMatrix& P)
     
     DfHpqX dfHpqX(&(this->pdfParamForForce_));
     TlMatrix force_Hpq(this->m_nNumOfAtoms, 3);
-    dfHpqX.getForce(P, &force_Hpq);
+    TlMatrix force_Hpq_Xonly(this->m_nNumOfAtoms, 3);
+    dfHpqX.getForce(P, &force_Hpq, &force_Hpq_Xonly);
 
     if (this->isDebugOutMatrix_ == true) {
         force_Hpq.save("F_h.mtx");
+        force_Hpq_Xonly.save("F_h_Xonly.mtx");
     }
+
     this->force_ += force_Hpq;
+    this->force_Xonly_ = force_Hpq_Xonly;
 }
 
 

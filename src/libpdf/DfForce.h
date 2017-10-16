@@ -75,6 +75,8 @@ protected:
     
 protected:
     TlMatrix force_;
+    TlMatrix force_Xonly_; // X由来のみ
+    
     TlOrbitalInfo orbitalInfo_;
     TlOrbitalInfo_Density orbitalInfoDens_;
 
