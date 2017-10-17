@@ -30,8 +30,10 @@
 #include "TlMatrix.h"
 #include "TlVector.h"
 
-// default cache size (16 MB)
-#define DEFAULT_CACHE_SIZE (16 * 1024 * 1024)
+// #define CACHE_GROUP_BIT (20) //  1048576 (2^20)個のローカルインデックス (=8MB)
+#define CACHE_GROUP_BIT (24)    // 16777216 (2^24)個のローカルインデックス (=128MB for double)
+// #define DEFAULT_CACHE_SIZE (1 * 1024 * 1024 * 1024) // 1 GB
+#define DEFAULT_CACHE_SIZE (2147483648) // 2 GB = 2 * 1073741824
 
 class TlFileMatrix : public TlMatrixObject {
     friend class TlCommunicate;
@@ -39,54 +41,64 @@ class TlFileMatrix : public TlMatrixObject {
 protected:
     // for cache
     struct CacheUnit {
-public:
+    public:
         CacheUnit(unsigned long g) : group(g), isUpdate(false) {
         }
-
-public:
+        
+    public:
         unsigned long group;
         bool isUpdate;
         std::vector<double> data;
-
+        
         friend bool operator==(const CacheUnit& x, const CacheUnit& y) {
             return (x.group == y.group);
         }
     };
 
     struct CacheUnitComp : public std::unary_function<const CacheUnit&, bool> {
-public:
+    public:
         CacheUnitComp(unsigned long group) : group_(group) {
         }
-
+        
         bool operator()(const CacheUnit& cu) {
             return (group_ == cu.group);
         }
-
-private:
+        
+    private:
         unsigned long group_;
     };
 
+    
 public:
-    explicit TlFileMatrix(const std::string& filePath, int row = 0, int col = 0, size_t cacheSize = DEFAULT_CACHE_SIZE);
+    explicit TlFileMatrix(const std::string& filePath, index_type row = 0, index_type col = 0,
+                          size_t cacheSize = DEFAULT_CACHE_SIZE);
     virtual ~TlFileMatrix();
 
 protected:
-    TlFileMatrix(const std::string& filePath, int row, int col, bool initialize, size_t cacheSize = DEFAULT_CACHE_SIZE);
+    /// subclass用コンストラクタ
+    ///
+    /// ファイルをsubclassで作成する場合には、`doOpen = false` にすること。
+    TlFileMatrix(const std::string& filePath, index_type row, index_type col,
+                 bool doOpen, std::size_t cacheSize);
+
+    void initializeCache();
+    
+    /// cacheに残ったデータの書き込みなど、終了処理を行う
+    void finalize() const;
 
 public:
-    int getNumOfRows() const {
-        return this->numOfRows_;
-    }
-
-    int getNumOfCols() const {
-        return this->numOfCols_;
-    }
+    index_type getNumOfRows() const;
+    index_type getNumOfCols() const;
 
     virtual std::size_t getMemSize() const;
+
+public:
+    virtual void resize(index_type row, index_type col);
     
-    virtual void set(int row, int col, double value);
-    virtual double get(int row, int col) const;
-    virtual void add(int row, int col, double value);
+public:
+    virtual void set(index_type row, index_type col, double value);
+    virtual double get(index_type row, index_type col) const;
+    virtual void add(index_type row, index_type col, double value);
 
     virtual TlFileMatrix& operator*=(double coef);
     virtual TlFileMatrix& operator/=(double coef) {
@@ -96,13 +108,17 @@ public:
     /// 指定した行の要素から構成されるベクトルを返す
     ///
     /// @param[in] nRow 指定する行
-    virtual TlVector getRowVector(int nRow) const;
+    virtual TlVector getRowVector(index_type row) const;
 
     /// 指定した列の要素から構成されるベクトルを返す
     ///
     /// @param[in] nCol 指定する列
-    virtual TlVector getColumnVector(int nCol) const;
+    virtual TlVector getColumnVector(index_type col) const;
 
+
+    virtual void setRowVector(const index_type row, const TlVector& v);
+    virtual void setColVector(const index_type col, const TlVector& v);
+    
     /// ブロック行列を返す
     ///
     /// @param[in] row 始点となる行
@@ -121,27 +137,17 @@ public:
     virtual void setBlockMatrix(index_type row, index_type col,
                                 const TlMatrix& matrix);
 protected:
+    virtual void open();
     virtual bool readHeader();
 
-    virtual std::size_t index(const int row, const int col) const {
-        assert(0 <= row);
-        assert(row < this->numOfRows_);
-        assert(0 <= col);
-        assert(col < this->numOfCols_);
-
-        return (std::size_t(row) * std::size_t(this->numOfCols_) + std::size_t(col));
-    }
-
-    virtual std::size_t maxIndex() const {
-        return (std::size_t(this->getNumOfRows()) * std::size_t(this->getNumOfCols()));
-    }
+    virtual size_type getIndex(const index_type row, const index_type col) const;
+    virtual size_type getNumOfElements() const;
 
     double* getCachedData(const int row, const int col);
     double getCachedData(const int row, const int col) const;
     void updateCache(size_t index) const;
 
 protected:
-    virtual void open();
     void writeDisk(const CacheUnit& cu) const;
 
 protected:
@@ -160,7 +166,6 @@ protected:
 
     mutable std::fstream fs_;
     std::fstream::pos_type startPos_;
-    std::fstream::pos_type endPos_;
 
     mutable std::list<CacheUnit> cache_;
     mutable size_t cacheCount_; // == cache_.size()

@@ -142,6 +142,11 @@ public:
     /// @retval false 出力失敗
     virtual bool save(std::ofstream& ofs) const;
 
+#ifdef HAVE_HDF5
+    bool saveHdf5(const std::string& filepath, const std::string& h5path) const;
+    bool loadHdf5(const std::string& filepath, const std::string& h5path);
+#endif // HAVE_HDF5
+    
     virtual void outputText(std::ostream& os) const;
 
 public:

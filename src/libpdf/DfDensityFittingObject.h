@@ -297,7 +297,7 @@ SymmetricMatrix DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getP
     SymmetricMatrix P(this->m_nNumOfAOs);
     const std::string sFileName = TlUtils::format("fl_Work/fl_Mtr_P1pq.matrix.roks%d", nIteration);
 
-    if (TlFile::isExist(sFileName) == true) {
+    if (TlFile::isExistFile(sFileName) == true) {
         P.load(sFileName);
     }
 
@@ -311,7 +311,7 @@ SymmetricMatrix DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getP
     SymmetricMatrix P(this->m_nNumOfAOs);
     const std::string sFileName = TlUtils::format("fl_Work/fl_Mtr_P2pq.matrix.roks%d", nIteration);
 
-    if (TlFile::isExist(sFileName) == true) {
+    if (TlFile::isExistFile(sFileName) == true) {
         P.load(sFileName);
     }
 

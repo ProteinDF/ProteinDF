@@ -18,6 +18,9 @@
 
 #include <iostream>
 #include "TlRowVectorMatrix.h"
+#include "TlFile.h"
+#include "TlMmapMatrix_CSFD.h"
+#include "TlUtils.h"
 
 TlRowVectorMatrix::TlRowVectorMatrix(const index_type row,
                                      const index_type col,
@@ -92,6 +95,13 @@ TlVector TlRowVectorMatrix::getRowVector(const index_type row) const
     return TlVectorMatrixObject::getVector(row);
 }
 
+
+void TlRowVectorMatrix::getRowVector(const index_type row, double* pBuf, const index_type length) const
+{
+    TlVectorMatrixObject::getVector(row, pBuf, length);
+}
+
+
 TlMatrix TlRowVectorMatrix::getTlMatrixObject() const
 {
     const index_type numOfRows = this->getNumOfRows();
@@ -112,4 +122,75 @@ TlMatrix TlRowVectorMatrix::getTlMatrixObject() const
 void TlRowVectorMatrix::saveByTlColVectorMatrix(const std::string& basename) const
 {
     TlVectorMatrixObject::saveByTheOtherType(basename);
+}
+
+
+bool RowVectorMatrix2CSFD(const std::string& rvmBasePath, const std::string& csfdPath,
+                          bool verbose, bool showProgress)
+{
+    // check
+    TlMatrixObject::index_type numOfRows = 0;
+    TlMatrixObject::index_type numOfCols = 0;
+    int numOfSubunits = 0;
+    {
+        int subunitID = 0;
+        const std::string inputPath0 = TlVectorMatrixObject::getFileName(rvmBasePath, subunitID);
+        TlMatrixObject::index_type sizeOfVector, numOfVectors;
+        const bool isLoadable = TlVectorMatrixObject::isLoadable(inputPath0,
+                                                                 &numOfVectors, &sizeOfVector, 
+                                                                 &numOfSubunits, &subunitID);
+        if (isLoadable != true) {
+            std::cerr << "can not open file: " << inputPath0 << std::endl;
+            return false;
+        }
+
+        // row-vector matrix
+        numOfRows = numOfVectors;
+        numOfCols = sizeOfVector;
+        
+        if (verbose) {
+            std::cerr << "rows: " << numOfRows << std::endl;
+            std::cerr << "cols: " << numOfCols << std::endl;
+            std::cerr << "units: " << numOfSubunits << std::endl;
+        }
+    }
+
+    // prepare output
+    if (TlFile::isExistFile(csfdPath)) {
+        if (verbose) {
+            std::cerr << "file overwrite: " << csfdPath << std::endl;
+        }
+        TlFile::remove(csfdPath);
+    }
+    TlMmapMatrix_CSFD fileMat(csfdPath, numOfRows, numOfCols);
+    
+    // load & set
+    for (int i = 0; i < numOfSubunits; ++i) {
+        if (verbose) {
+            std::cerr << TlUtils::format("%d / %d", i +1, numOfSubunits) << std::endl;
+        }
+    
+        TlRowVectorMatrix m;
+        m.load(rvmBasePath, i);
+
+        std::vector<double> vtr(numOfCols);
+        for (TlMatrixObject::index_type r = i; r < numOfRows; r += numOfSubunits) {
+            m.getVector(r, &(vtr[0]), numOfCols);
+            fileMat.setRowVector(r, vtr);
+
+            if (showProgress) {
+                TlUtils::progressbar(float(r) / numOfRows);
+            }
+        }
+        if (showProgress) {
+            TlUtils::progressbar(1.0);
+            std::cout << std::endl;
+        }
+    }
+
+    if (verbose) {
+        std::cerr << "end." << std::endl;
+    }
+
+    return true;
 }

@@ -92,6 +92,13 @@ TlVector TlColVectorMatrix::getColVector(const index_type col) const
     return TlVectorMatrixObject::getVector(col);
 }
 
+
+void TlColVectorMatrix::getColVector(const index_type col, double* pBuf, const index_type length) const
+{
+    TlVectorMatrixObject::getVector(col, pBuf, length);
+}
+
+
 TlMatrix TlColVectorMatrix::getTlMatrixObject() const
 {
     const index_type numOfRows = this->getNumOfRows();

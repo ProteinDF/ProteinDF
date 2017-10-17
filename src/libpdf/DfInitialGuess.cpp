@@ -174,11 +174,11 @@ TlMatrix DfInitialGuess::getLCAO_LAPACK(const RUN_TYPE runType)
     const std::string txtFile = DfInitialGuess::getLcaoPath_txt(runType);
 
     this->log_.info("get LCAO");
-    if (TlFile::isExist(binFile)) {
+    if (TlFile::isExistFile(binFile)) {
         // LCAO file is prepared by binary file.
         this->log_.info(TlUtils::format("LCAO: loading: %s", binFile.c_str()));
         lcaoMatrix.load(binFile);
-    } else if (TlFile::isExist(txtFile)) {
+    } else if (TlFile::isExistFile(txtFile)) {
         this->log_.info(TlUtils::format("LCAO: loading: %s", txtFile.c_str()));
         // LCAO file is prepared by text file.
         std::ifstream fi;
@@ -274,9 +274,9 @@ TlVector DfInitialGuess::getOccupation(const RUN_TYPE runType)
     const std::string binFile = TlUtils::format("./guess.occ.%s.vtr", this->m_sRunTypeSuffix[runType].c_str());
     const std::string txtFile = TlUtils::format("./guess.occ.%s.txt", this->m_sRunTypeSuffix[runType].c_str());
 
-    if (TlFile::isExist(binFile)) {
+    if (TlFile::isExistFile(binFile)) {
         occupation.load(binFile);
-    } else if (TlFile::isExist(txtFile)) {
+    } else if (TlFile::isExistFile(txtFile)) {
         occupation.loadText(txtFile);
     } else {
         this->log_.warn(TlUtils::format("file not found.: %s", binFile.c_str()));

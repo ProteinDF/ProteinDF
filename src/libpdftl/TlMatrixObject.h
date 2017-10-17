@@ -31,24 +31,63 @@
 #define MAX_INDEX_BITS (20) 
 
 /// 行列クラスのインターフェースを規定する
+///
 class TlMatrixObject {
 public:
     typedef signed int index_type; /// 行数、列数を表す整数型(範囲外を示す値として-1を取る場合がある)
     typedef signed long size_type; /// 数値配列の総数を表す整数型(範囲外を示す値として-1を取る場合がある)
+
+    /// 行列要素を格納するための構造体
+    ///
+    /// TlCommunicate で通信可能
+    struct MatrixElement {
+        typedef TlMatrixObject::index_type index_type;
+
+    public:
+        MatrixElement(index_type r =0, index_type c =0, double v =0.0)
+            : row(r), col(c), value(v) {
+        }
+
+    public:
+        index_type row;
+        index_type col;
+        double value;
+    };
+
+
+public:
+    enum MatrixType {
+        RSFD = 0, /// RSFD: Row-oriented Standard Full Dens-matrix
+        CSFD = 1, /// Coulmn-oriented Standard Full Dens-matrix
+        RLHD = 2, /// Row-oriented Lower Half Dens matrix
+        RUHD = 3, /// Row-oriented Upper Half Dens matrix
+        CLHD = 4, /// Coulmn-oriented Lower Half Dens matrix
+        CUHD = 5, /// Coulmn-oriented Upper Half Dens matrix
+    };
     
 public:
-    TlMatrixObject();
+    TlMatrixObject(const MatrixType matrixType);
 
     /// 仮想デストラクタ
     virtual ~TlMatrixObject() {
     }
 
 public:
+    MatrixType getType() const;
     virtual index_type getNumOfRows() const =0;
     virtual index_type getNumOfCols() const =0;
 
     /// インスタンスのメモリサイズを返す
     virtual std::size_t getMemSize() const =0;
+
+protected:
+    size_type getNumOfElements_RSFD() const;
+    size_type getNumOfElements_RLHD() const;
+
+protected:
+    size_type getIndex_RSFD(index_type row, index_type col) const;
+    size_type getIndex_CSFD(index_type row, index_type col) const;
+    size_type getIndex_RLHD(index_type row, index_type col) const;
     
 public:
     /** 要素を返す(読み取り専用)
@@ -129,6 +168,9 @@ public:
 public:
     virtual double getMaxAbsoluteElement(index_type* pOutRow =NULL, index_type* pOutCol =NULL) const;
 
+protected:
+    MatrixType matrixType_;
+    
 protected:
     TlLogging& log_;
 };

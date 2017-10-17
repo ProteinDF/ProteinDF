@@ -20,7 +20,7 @@
 #define TLSPARSEHASHMATRIX_H
 
 #include <cassert>
-#include <ext/hash_map>
+#include <ext/hash_map> // -> std::unordered_map (C++11)
 //#include "TlHashMap.h"
 
 class TlSparseHashMatrix {

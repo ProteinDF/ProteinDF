@@ -18,11 +18,86 @@
 
 #include <cmath>
 #include <limits>
+#include <iostream>
+
 #include "TlMatrixObject.h"
 
-TlMatrixObject::TlMatrixObject()
-    : log_(TlLogging::getInstance()) {
+TlMatrixObject::TlMatrixObject(const MatrixType matrixType)
+    : matrixType_(matrixType), log_(TlLogging::getInstance()) {
 }
+
+
+TlMatrixObject::MatrixType TlMatrixObject::getType() const
+{
+    return this->matrixType_;
+}
+
+
+TlMatrixObject::size_type TlMatrixObject::getNumOfElements_RSFD() const
+{
+    const size_type row = static_cast<size_type>(this->getNumOfRows());
+    const size_type col = static_cast<size_type>(this->getNumOfCols());
+    
+    const size_type elements = row * col;
+    return elements;
+}
+
+
+TlMatrixObject::size_type TlMatrixObject::getNumOfElements_RLHD() const
+{
+    const size_type dim = static_cast<size_type>(this->getNumOfRows());
+    assert(dim ==static_cast<size_type>( this->getNumOfCols()));
+    
+    const size_type elements = dim * (dim +1) / 2;
+    return elements;
+}
+
+
+TlMatrixObject::size_type TlMatrixObject::getIndex_RSFD(index_type row, index_type col) const
+{
+    assert(0 <= row);
+    assert(row < this->getNumOfRows());
+    assert(0 <= col);
+    assert(col < this->getNumOfCols());
+
+    const size_type r = static_cast<size_type>(row);
+    const size_type c = static_cast<size_type>(col);
+    const size_type maxC = static_cast<size_type>(this->getNumOfCols());
+
+    const size_type addr = r * maxC + c;
+    return addr;
+}
+
+
+TlMatrixObject::size_type TlMatrixObject::getIndex_CSFD(index_type row, index_type col) const
+{
+    assert(0 <= row);
+    assert(row < this->getNumOfRows());
+    assert(0 <= col);
+    assert(col < this->getNumOfCols());
+
+    const size_type r = static_cast<size_type>(row);
+    const size_type c = static_cast<size_type>(col);
+    const size_type maxR = static_cast<size_type>(this->getNumOfRows());
+
+    const size_type addr = c * maxR + r;
+    return addr;
+}
+
+
+TlMatrixObject::size_type TlMatrixObject::getIndex_RLHD(index_type row, index_type col) const
+{
+    if (row < col) {
+        std::swap(row, col);
+    }
+
+    const size_type r = static_cast<size_type>(row);
+    const size_type c = static_cast<size_type>(col);
+
+    const size_type addr = r * (r+1) / 2 + c;
+    return addr;
+}
+
 
 void TlMatrixObject::addByList(const index_type* pIndexPairs,
                                const double* pValues,

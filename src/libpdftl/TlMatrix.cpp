@@ -34,6 +34,10 @@
 #include "TlMemManager.h"
 #include "TlLogging.h"
 
+#ifdef HAVE_HDF5
+#include "TlHdf5Utils.h"
+#endif // HAVE_HDF5
+
 const TlMatrix::size_type TlMatrix::MAX_LOOP = std::numeric_limits<int>::max();
 bool TlMatrix::isUsingMemManagerDefault_ = false;
 
@@ -45,7 +49,7 @@ void TlMatrix::useMemManager(bool isUsingMemManager)
 }
 
 TlMatrix::TlMatrix(const index_type nRow, const index_type nCol)
-    : TlMatrixObject(), m_nRows(nRow), m_nCols(nCol), data_(NULL),
+    : TlMatrixObject(CSFD), m_nRows(nRow), m_nCols(nCol), data_(NULL),
       isUsingMemManager_(TlMatrix::isUsingMemManagerDefault_)
 {
     assert((0 <= nRow) && (0 <= nCol));
@@ -55,14 +59,14 @@ TlMatrix::TlMatrix(const index_type nRow, const index_type nCol)
 
 // for sub-class
 TlMatrix::TlMatrix(const index_type nRow, const index_type nCol, double* pData)
-    : TlMatrixObject(), m_nRows(nRow), m_nCols(nCol), data_(pData),
+    : TlMatrixObject(CSFD), m_nRows(nRow), m_nCols(nCol), data_(pData),
       isUsingMemManager_(TlMatrix::isUsingMemManagerDefault_)
 {
 }
 
 
 TlMatrix::TlMatrix(const TlMatrix& rhs)
-    : m_nRows(rhs.getNumOfRows()), m_nCols(rhs.getNumOfCols()), data_(NULL),
+    : TlMatrixObject(CSFD), m_nRows(rhs.getNumOfRows()), m_nCols(rhs.getNumOfCols()), data_(NULL),
       isUsingMemManager_(TlMatrix::isUsingMemManagerDefault_)
 {
 
@@ -73,7 +77,7 @@ TlMatrix::TlMatrix(const TlMatrix& rhs)
 
 
 TlMatrix::TlMatrix(const TlSymmetricMatrix& rhs)
-    : m_nRows(rhs.getNumOfRows()), m_nCols(rhs.getNumOfCols()), data_(NULL),
+    : TlMatrixObject(CSFD), m_nRows(rhs.getNumOfRows()), m_nCols(rhs.getNumOfCols()), data_(NULL),
       isUsingMemManager_(TlMatrix::isUsingMemManagerDefault_)
 {
 
@@ -98,7 +102,7 @@ TlMatrix::TlMatrix(const TlSymmetricMatrix& rhs)
 
 
 TlMatrix::TlMatrix(const TlSerializeData& data)
-    : m_nRows(1), m_nCols(1), data_(NULL),
+    : TlMatrixObject(CSFD), m_nRows(1), m_nCols(1), data_(NULL),
       isUsingMemManager_(TlMatrix::isUsingMemManagerDefault_)
 {
     this->m_nRows = std::max(data["row"].getInt(), 1);
@@ -119,7 +123,7 @@ TlMatrix::TlMatrix(const TlSerializeData& data)
 
 TlMatrix::TlMatrix(const TlVector& vct,
                    const index_type row, const index_type col)
-    : TlMatrixObject(), m_nRows(row), m_nCols(col), data_(NULL),
+    : TlMatrixObject(CSFD), m_nRows(row), m_nCols(col), data_(NULL),
       isUsingMemManager_(TlMatrix::isUsingMemManagerDefault_)
 {
     assert((0 <= row) && (0 <= col));
@@ -158,6 +162,8 @@ int TlMatrix::getNumOfCols() const
 
 void TlMatrix::initialize(bool isZeroClear)
 {
+    this->matrixType_ = CSFD;
+    
 #ifdef HAVE_MMAP
     if (this->isUsingMemManager_ == true) {
         this->initialize_usingMemManager(isZeroClear);
@@ -269,13 +275,14 @@ void TlMatrix::resize(const int nRow, const int nCol)
 }
 
 
-std::size_t TlMatrix::index(index_type row,
-                            index_type col) const
+TlMatrixObject::size_type TlMatrix::index(index_type row,
+                                          index_type col) const
 {
     assert((0 <= row) && (row < this->m_nRows));
     assert((0 <= col) && (col < this->m_nCols));
 
-    return (row  + (this->m_nRows * col));
+    const size_type index = row  + this->m_nRows * col;
+    return index;
 }
 
 
@@ -290,7 +297,7 @@ void TlMatrix::set(const index_type row,
                    const index_type col,
                    const double value)
 {
-    const std::size_t index = this->index(row, col);
+    const size_type index = this->index(row, col);
     
 #pragma omp critical(TlMatrix__set)
     {
@@ -303,7 +310,7 @@ void TlMatrix::add(const index_type row,
                    const index_type col,
                    const double value)
 {
-    const std::size_t index = this->index(row, col);
+    const size_type index = this->index(row, col);
 
 #pragma omp atomic
     this->data_[index] += value;
@@ -405,12 +412,10 @@ void TlMatrix::addBlockMatrix(const int row, const int col, const TlMatrix& matr
 
 double TlMatrix::trace() const
 {
-    assert(this->m_nRows == this->m_nCols);
-
-    const int dim = this->m_nRows;
+    const index_type dim = std::min<index_type>(this->getNumOfRows(), this->getNumOfCols());
     double answer = 0.0;
 #pragma omp parallel for reduction(+:answer)
-    for (int i = 0; i < dim; ++i) {
+    for (index_type i = 0; i < dim; ++i) {
         answer += this->get(i, i);
     }
 
@@ -834,16 +839,14 @@ bool TlMatrix::isLoadable(std::ifstream& ifs)
         return false;
     }
 
-    enum {RSFD, CSFD, RLHD, CLHD, RUHD, CUHD, RSFS, CSFS, RLHS, CLHS, RUHS, CUHS, LHSC};
-    int nType = 0;
-
+    int matrixType = 0;
     ifs.seekg(0, std::ios::beg);
-    const bool bHeader = TlMatrix::getHeaderInfo(ifs, &nType);
+    const bool bHeader = TlMatrix::getHeaderInfo(ifs, &matrixType);
     ifs.seekg(0, std::ios::beg);
 
     bool bJudge = false;
     if (bHeader == true) {
-        if (nType == RSFD) {
+        if ((matrixType == TlMatrixObject::RSFD) || (matrixType == TlMatrixObject::CSFD)) {
             bJudge =  true;
         }
     }
@@ -870,59 +873,67 @@ bool TlMatrix::isLoadable(const std::string& rFilePath)
 
 
 bool TlMatrix::getHeaderInfo(const std::string& filePath,
-                             int* pType,
+                             int* pMatrixType,
                              index_type* pNumOfRows, index_type* pNumOfCols)
 {
+    bool answer = false;
+    
     std::ifstream ifs;
     ifs.open(filePath.c_str());
-    if (ifs.fail()) {
-#ifdef DEBUG
-        std::cerr << "[error] TlMatrix::getHeaderInfo(): could not open file. " << filePath << std::endl;
-#endif // DEBUG
-        return false;
+    if (! ifs.fail()) {
+        answer = TlMatrix::getHeaderInfo(ifs, pMatrixType, pNumOfRows, pNumOfCols);
     }
-
-    const bool answer = TlMatrix::getHeaderInfo(ifs, pType, pNumOfRows, pNumOfCols);
     ifs.close();
+
     return answer;
 }
 
 
-bool TlMatrix::getHeaderInfo(std::ifstream& ifs, int* pType,
+bool TlMatrix::getHeaderInfo(std::fstream& fs, int* pMatrixType,
                              index_type* pNumOfRows, index_type* pNumOfCols)
 {
-    bool bAnswer = true;
+    return TlMatrix::getHeaderInfo_tmpl<std::fstream>(fs, pMatrixType, pNumOfRows, pNumOfCols);
+}
+
+
+bool TlMatrix::getHeaderInfo(std::ifstream& ifs, int* pMatrixType,
+                             index_type* pNumOfRows, index_type* pNumOfCols)
+{
+    return TlMatrix::getHeaderInfo_tmpl<std::ifstream>(ifs, pMatrixType, pNumOfRows, pNumOfCols);
+}
+
+
+template<typename StreamType>
+bool TlMatrix::getHeaderInfo_tmpl(StreamType& s, int* pMatrixType,
+                                  index_type* pNumOfRows, index_type* pNumOfCols)
+{
+    bool answer = false;
 
     // get file size
-    std::ifstream::pos_type nFileSize = 0;
+    std::streampos fileSize = 0;
     {
-        ifs.seekg(0, std::ios_base::beg);
-        std::ifstream::pos_type begin = ifs.tellg();
-        ifs.seekg(0, std::ios_base::end);
-        std::ifstream::pos_type end = ifs.tellg();
-
-        nFileSize = end - begin;
+        s.seekg(0, std::ios_base::end);
+        fileSize = s.tellg();
     }
-
-    int  nType = 0;
-    bool bCheckVariableType = false;
-    std::ifstream::pos_type nStartContentPos = 0;
 
     // int case:
     {
+        int matrixType = 0;
         int nRows = 0;
         int nCols = 0;
-        ifs.seekg(0, std::ios_base::beg);
-        ifs.read((char*)&(nType), sizeof(int));
-        ifs.read((char*)&(nRows), sizeof(int));
-        ifs.read((char*)&(nCols), sizeof(int));
-
-        const std::ifstream::pos_type nEstimatedFileSize =
-            std::ifstream::pos_type(sizeof(int) *3)
-            + (std::ifstream::pos_type(nRows) * std::ifstream::pos_type(nCols) * std::ifstream::pos_type(sizeof(double)));
-        if (nEstimatedFileSize == nFileSize) {
-            if (pType != NULL) {
-                *pType = nType;
+        s.seekg(0, std::ios_base::beg);
+        s.read((char*)&(matrixType), sizeof(int));
+        s.read((char*)&(nRows), sizeof(int));
+        s.read((char*)&(nCols), sizeof(int));
+        
+        const std::streampos estimatedFileSize = sizeof(int) *3 + sizeof(double) * nRows * nCols;
+        
+        if (estimatedFileSize == fileSize) {
+            assert(s.tellg() == sizeof(int) * 3);
+            answer = true;
+            
+            if (pMatrixType != NULL) {
+                *pMatrixType = matrixType;
             }
             if (pNumOfRows != NULL) {
                 *pNumOfRows = nRows;
@@ -930,46 +941,39 @@ bool TlMatrix::getHeaderInfo(std::ifstream& ifs, int* pType,
             if (pNumOfCols != NULL) {
                 *pNumOfCols = nCols;
             }
-            bCheckVariableType = true;
-            nStartContentPos = sizeof(int) * 3;
         }
     }
 
     // long case:
-    {
+    if (answer != true) {
+        int matrixType = 0;
         long nRows = 0;
         long nCols = 0;
-        ifs.seekg(0, std::ios_base::beg);
-        ifs.read((char*)&(nType), sizeof(int));
-        ifs.read((char*)&(nRows), sizeof(long));
-        ifs.read((char*)&(nCols), sizeof(long));
+        s.seekg(0, std::ios_base::beg);
+        s.read((char*)&(matrixType), sizeof(int));
+        s.read((char*)&(nRows), sizeof(long));
+        s.read((char*)&(nCols), sizeof(long));
 
-        const std::ifstream::pos_type nEstimatedFileSize =
-            std::ifstream::pos_type(sizeof(int) + sizeof(long) * 2)
-            + (std::ifstream::pos_type(nRows) * std::ifstream::pos_type(nCols) * std::ifstream::pos_type(sizeof(double)));
-        if (nEstimatedFileSize == nFileSize) {
-            if (pType != NULL) {
-                *pType = nType;
+        const std::streampos estimatedFileSize =
+            (sizeof(int) + sizeof(long) * 2) + sizeof(double) * nRows * nCols;
+        
+        if (estimatedFileSize == fileSize) {
+            assert(s.tellg() == sizeof(int) + sizeof(long) * 2);
+            answer = true;
+            
+            if (pMatrixType != NULL) {
+                *pMatrixType = matrixType;
             }
             if (pNumOfRows != NULL) {
-                *pNumOfRows = static_cast<int>(nRows);
+                *pNumOfRows = static_cast<index_type>(nRows);
             }
             if (pNumOfCols != NULL) {
-                *pNumOfCols = static_cast<int>(nCols);
+                *pNumOfCols = static_cast<index_type>(nCols);
             }
-            bCheckVariableType = true;
-            nStartContentPos = sizeof(int) + sizeof(long) * 2;
         }
     }
 
-    if (bCheckVariableType == true) {
-        ifs.seekg(nStartContentPos, std::ios_base::beg);
-    } else {
-        //std::cerr << "file size mismatch." << std::endl;
-        bAnswer = false;
-    }
-
-    return bAnswer;
+    return answer;
 }
 
 
@@ -979,9 +983,7 @@ bool TlMatrix::load(const std::string& sFilePath)
 
     ifs.open(sFilePath.c_str());
     if (ifs.fail()) {
-#ifdef DEBUG
-        std::cerr << "[error] TlMatrix::load(): could not open file. " << sFilePath << std::endl;
-#endif // DEBUG
+        this->log_.critical(TlUtils::format("[error] TlMatrix::load(): could not open file: %s.", sFilePath.c_str()));
         return false;
     }
 
@@ -1001,44 +1003,56 @@ bool TlMatrix::load(std::ifstream& ifs)
 {
     bool bAnswer = true;
 
+    // enum {RSFD, CSFD, RLHD, CLHD, RUHD, CUHD, RSFS, CSFS, RLHS, CLHS, RUHS, CUHS, LHSC};
     // binary mode
     {
-        enum {RSFD, CSFD, RLHD, CLHD, RUHD, CUHD, RSFS, CSFS, RLHS, CLHS, RUHS, CUHS, LHSC};
-
         // read header
-        int nType = 0;
-        int nRows = 0;
-        int nCols = 0;
+        int matrixType = 0;
+        index_type nRows = 0;
+        index_type nCols = 0;
 
-        bAnswer = TlMatrix::getHeaderInfo(ifs, &nType, &nRows, &nCols);
-        switch (nType) {
-        case RSFD:
-            //     std::cerr << "load RSFD" << std::endl;
-            break;
-
-        default:
-            std::cerr << "this matrix type is not supported." << std::endl;
-            bAnswer = false;
-            break;
-        }
-
-        if (bAnswer == true) {
+        bAnswer = TlMatrix::getHeaderInfo(ifs, &matrixType, &nRows, &nCols);
+        
+        switch (matrixType) {
+        case TlMatrixObject::RSFD:
             this->clear();
             this->m_nRows = nRows;
             this->m_nCols = nCols;
             this->initialize();
-
-            // 本当は大きめのバッファで読み取りたいが、row oriented だから変換しないといけない
-            //const int nMatrixSize = this->m_nRows * this->m_nCols;
-            //ifs.read(reinterpret_cast<char*>(&(this->m_aMatrix[0])), sizeof(double) * nMatrixSize);
-            for (int row = 0; row < nRows; ++row) {
-                for (int col = 0; col < nCols; ++col) {
-                    double tmp;
-                    ifs.read((char*)&tmp, sizeof(double));
-                    (*this)(row, col) = tmp;
-                }
+            {
+                std::vector<double> readBuf(this->getNumOfElements());
+                ifs.read(reinterpret_cast<char*>(&readBuf[0]), this->getNumOfElements() * sizeof(double));
+                this->RSFD2CSFD(&(readBuf[0]), this->data_);
             }
+            break;
+
+        case TlMatrixObject::CSFD:
+            this->clear();
+            this->m_nRows = nRows;
+            this->m_nCols = nCols;
+            this->initialize();
+            ifs.read(reinterpret_cast<char*>(this->data_), this->getNumOfElements() * sizeof(double));
+            break;
+            
+        default:
+            std::cerr << TlUtils::format("this matrix type is not supported. type=%d", matrixType) << std::endl;
+            bAnswer = false;
+            break;
         }
+
+        // if (bAnswer == true) {
+        // 
+        //     // 本当は大きめのバッファで読み取りたいが、row oriented だから変換しないといけない
+        //     //const int nMatrixSize = this->m_nRows * this->m_nCols;
+        //     //ifs.read(reinterpret_cast<char*>(&(this->m_aMatrix[0])), sizeof(double) * nMatrixSize);
+        //     for (int row = 0; row < nRows; ++row) {
+        //         for (int col = 0; col < nCols; ++col) {
+        //             double tmp;
+        //             ifs.read((char*)&tmp, sizeof(double));
+        //             (*this)(row, col) = tmp;
+        //         }
+        //     }
+        // }
     }
 
     return bAnswer;
@@ -1060,25 +1074,32 @@ bool TlMatrix::save(const std::string& sFilePath) const
 }
 
 
-bool TlMatrix::save(std::ofstream& ofs) const
+bool TlMatrix::save(std::ofstream& ofs, const MatrixType saveType) const
 {
     bool bAnswer = true;
 
-    const int nType = 0; // means RSFD
-    ofs.write(reinterpret_cast<const char*>(&nType), sizeof(int));
-    ofs.write(reinterpret_cast<const char*>(&this->m_nRows), sizeof(int));
-    ofs.write(reinterpret_cast<const char*>(&this->m_nCols), sizeof(int));
+    ofs.write(reinterpret_cast<const char*>(&saveType), sizeof(int));
+    ofs.write(reinterpret_cast<const char*>(&this->m_nRows), sizeof(index_type));
+    ofs.write(reinterpret_cast<const char*>(&this->m_nCols), sizeof(index_type));
 
-    // 本当は大きめのバッファで書き込みたいが、RSFD(row oriented)だから変換しないといけない
-    const index_type maxRow = this->m_nRows;
-    const index_type maxCol = this->m_nCols;
-    for (index_type row = 0; row < maxRow; ++row) {
-        for (index_type col = 0; col < maxCol; ++col) {
-            const double tmp = this->get(row, col);
-            ofs.write(reinterpret_cast<const char*>(&tmp), sizeof(double));
+    switch(saveType) {
+    case RSFD:
+        {
+            std::vector<double> buf(this->getNumOfElements());
+            this->CSFD2RSFD(this->data_, &(buf[0]));
+            ofs.write(reinterpret_cast<char*>(&(buf[0])), this->getNumOfElements() * sizeof(double));
         }
-    }
+        break;
+            
+    case CSFD:
+        ofs.write(reinterpret_cast<char*>(this->data_), this->getNumOfElements() * sizeof(double));
+        break;
 
+    default:
+        this->log_.critical("TlMatrix::save() wrong parameter.");
+        break;
+    }
+    
     return bAnswer;
 }
 
@@ -1123,6 +1144,57 @@ bool TlMatrix::saveText(std::ostream& os) const
 
     return bAnswer;
 }
+
+
+#ifdef HAVE_HDF5
+bool TlMatrix::saveHdf5(const std::string& filepath, const std::string& h5path) const
+{
+    TlHdf5Utils h5(filepath);
+
+    assert(this->matrixType_ == CSFD);
+    h5.write(h5path, this->data_, this->getNumOfElements());
+    h5.setAttr(h5path, "type", static_cast<int>(this->matrixType_));
+    h5.setAttr(h5path, "row", this->getNumOfRows());
+    h5.setAttr(h5path, "col", this->getNumOfCols());
+    
+    return true;
+}
+
+
+bool TlMatrix::loadHdf5(const std::string& filepath, const std::string& h5path)
+{
+    TlHdf5Utils h5(filepath);
+
+    int matrixType;
+    h5.getAttr(h5path, "type", &matrixType);
+    
+    index_type row = 0;
+    index_type col = 0;
+    h5.getAttr(h5path, "row", &row);
+    h5.getAttr(h5path, "col", &col);
+    this->resize(row, col);
+
+    switch (matrixType) {
+    case RSFD:
+        {
+            std::vector<double> readBuf(this->getNumOfElements());
+            h5.get(h5path, &(readBuf[0]), this->getNumOfElements());
+            this->RSFD2CSFD(&(readBuf[0]), this->data_);
+        }
+        break;
+
+    case CSFD:
+        h5.get(h5path, this->data_, this->getNumOfElements());
+        break;
+        
+    default:
+        this->log_.critical(TlUtils::format("illegal matrix type for TlMatrix: %d", matrixType));
+        break;
+    }
+    
+    return true;
+}
+#endif // HAVE_HDF5
 
 
 TlSerializeData TlMatrix::getSerialize() const
@@ -1170,6 +1242,36 @@ std::string TlMatrix::getCsv() const
     return out.str();
 }
 
+
+void TlMatrix::CSFD2RSFD(const double* pBufIn, double* pBufOut) const
+{
+    const index_type row = this->getNumOfRows();
+    const index_type col = this->getNumOfCols();
+    for (index_type c = 0; c < col; ++c) {
+        for (index_type r = 0; r < row; ++r) {
+            const std::size_t rsfd_index = c + col * r;
+            pBufOut[rsfd_index] = pBufIn[r + row * c];
+        }
+    }
+}
+
+
+void TlMatrix::RSFD2CSFD(const double* pBufIn, double* pBufOut) const
+{
+    const index_type row = this->getNumOfRows();
+    const index_type col = this->getNumOfCols();
+    for (index_type c = 0; c < col; ++c) {
+        for (index_type r = 0; r < row; ++r) {
+            const std::size_t rsfd_index = c + col * r;
+            pBufOut[r + row * c] = pBufIn[rsfd_index];
+        }
+    }
+}
+
+
+// -----------------------------------------------------------------------------
+// computation
+// -----------------------------------------------------------------------------
 // 転置
 // TODO: 高速化できる？
 const TlMatrix& TlMatrix::transpose()
@@ -1213,6 +1315,16 @@ bool TlMatrix::inverse()
 }
 
 
+TlMatrix TlMatrix::solveLinearLeastSquaresProblem(const TlMatrix& inB) const
+{
+    TlMatrix X;
+    const bool answer = solveLinearLeastSquaresProblemByLapack(*this, inB, &X);
+    assert(answer == true);
+    
+    return X;
+}
+
+
 TlVector TlMatrix::getDiagonalElements() const
 {
     const index_type dim = std::min(this->getNumOfRows(), this->getNumOfCols());
@@ -1223,16 +1335,6 @@ TlVector TlMatrix::getDiagonalElements() const
     }
 
     return answer;
-}
-
-
-TlMatrix TlMatrix::solveLinearLeastSquaresProblem(const TlMatrix& inB) const
-{
-    TlMatrix X;
-    const bool answer = solveLinearLeastSquaresProblemByLapack(*this, inB, &X);
-    assert(answer == true);
-    
-    return X;
 }
 
 

@@ -34,6 +34,10 @@
 #include "TlLogging.h"
 #include "TlCommunicate.h"
 
+#ifdef HAVE_HDF5
+#include "TlHdf5Utils.h"
+#endif // HAVE_HDF5
+
 #define MAX_SESSION_ID (100)
 
 class TlDistributeSymmetricMatrix;
@@ -132,13 +136,17 @@ public:
     index_type getNumOfCols() const;
 
 
+    /// サイズを変更する
+    void resize(index_type row, index_type col);
+
+protected:
+    virtual size_type getNumOfElements() const;
+    
     /// ブロックサイズを返す
     int getBlockSize() const;
 
 
-    /// サイズを変更する
-    void resize(index_type row, index_type col);
-
+public:
     /// 行列要素をベクトルにして返す
     ///
     /// 要素全体を返すのではなく、このプロセスが保持しているデータを返すことに注意
@@ -166,6 +174,7 @@ public:
     /// @return 要素の絶対値の最大値
     virtual double getMaxAbsoluteElement(index_type* pOutRow =NULL, index_type* pOutCol =NULL) const;
 
+protected:
     /// ローカル行列における要素の絶対値の最大値を返す
     ///
     /// @param[out] outRow 該当要素の行
@@ -173,6 +182,7 @@ public:
     /// @return 要素の絶対値の最大値
     virtual double getLocalMaxAbsoluteElement(index_type* pOutRow =NULL, index_type* pOutCol =NULL) const;
 
+public:
     /// calc RMS
     virtual double getRMS() const;
 
@@ -180,7 +190,6 @@ public:
     // TlSparseMatrix getPartialMatrix(double threshold = 1.0E-16) const;
 
     bool getSparseMatrixX(TlSparseMatrix* pMatrix, bool isFinalize = false) const;
-    bool getPartialMatrixX(TlPartialMatrix* pMatrix, bool isFinalize = false) const;
 
     /// 指定された要素を持つ疎行列を返す
     // void getPartialMatrix(TlSparseMatrix& ioMatrix) const;
@@ -190,10 +199,6 @@ public:
     /// 全ノードがこの関数を呼び出す必要がある。
     void mergeSparseMatrix(const TlSparseMatrix& M);
 
-    /// 各ノードが与えた部分行列を大域行列に加算する。
-    /// 
-    /// 全ノードがこの関数を呼び出す必要がある。
-    void mergePartialMatrix(const TlPartialMatrix& M);
 
     /// dot積を返す
     const TlDistributeMatrix& dot(const TlDistributeMatrix& X);
@@ -233,9 +238,26 @@ public:
     virtual bool load(std::ifstream& ifs);
     virtual bool save(const std::string& sFilePath) const;
 
+#ifdef HAVE_HDF5
+public:
+    virtual bool saveHdf5(const std::string& filepath, const std::string& h5path) const;
+    virtual bool loadHdf5(const std::string& filepath, const std::string& h5path);
+
+protected:
+    bool saveHdf5(const std::string& filepath, const std::string& h5path, const int saveMatType) const;
+    virtual size_type getArrayIndex(const index_type row, const index_type col) const;
+    void saveElements(TlHdf5Utils* pH5, const std::string& path,
+                      const std::vector<TlMatrixObject::MatrixElement>& elements) const;
+#endif // HAVE_HDF5
+
+public:
     virtual bool saveText(const std::string& sFilePath) const;
     virtual bool saveText(std::ofstream& ofs) const;
 
+protected:
+    virtual std::vector<TlMatrixObject::MatrixElement> getMatrixElementsInLocal() const;
+    virtual void saveElements(TlFileMatrix* pFileMatrix, const std::vector<TlMatrixObject::MatrixElement>& elements) const;
+    
 public:
     /// 使用しているメモリのサイズを返す
     virtual std::size_t getMemSize() const;
@@ -247,23 +269,22 @@ public:
     // need to call by all processes.
     virtual void set(index_type row, index_type col, double dValue);
 
+    // need to call by all processes.
+    virtual double operator()(index_type row, index_type col) const;
+    virtual double& operator()(index_type row, index_type col);
+
     virtual void add(index_type row, index_type col, double value);
 
     virtual void addByList(const index_type* pIndexPairs,
                            const double* pValues,
                            const std::size_t size);
 
+public:
     /// ローカルから該当する要素があれば値を返す
     ///
     /// 範囲外であれば0.0を返す
     /// すべてのプロセスが同時に呼ぶ必要はない
     double getLocal(index_type row, index_type col) const;
-
-    // double getDirect(index_type row, index_type col) const;
-
-    // need to call by all processes.
-    virtual double operator()(index_type row, index_type col) const;
-    virtual double& operator()(index_type row, index_type col);
 
 public:
     virtual bool inverse();
@@ -289,12 +310,12 @@ protected:
     
     /// 必要な行列要素の数を返す。
     /// initialize()などから呼び出される。
-    virtual std::size_t getNumOfMyElements() const;
+    virtual index_type getNumOfMyElements() const;
 
 
     /// ローカル行列のインデックスを返す。
     /// 保持していない場合は-1を返す。
-    virtual int getIndex(index_type globalRow, index_type globalCol) const;
+    virtual size_type getIndex(index_type globalRow, index_type globalCol) const;
 
 
     /// 各ノードに配列保持された行列要素をマージする
@@ -414,7 +435,6 @@ protected:
 
     bool getPartialMatrix_ClientTasks(TlMatrixObject* pMatrix) const;
     void getSparseMatrixX_registerTask(TlSparseMatrix* pMatrix) const;
-    virtual void getPartialMatrixX_registerTask(TlPartialMatrix* pMatrix) const;
     int getPartialMatrix_getSessionId(const int proc) const;
     void getPartialMatrix_ServerTasks(bool isFinalize) const;
     

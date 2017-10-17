@@ -35,7 +35,7 @@
 Fl_Gto::Fl_Gto(const std::string& str) : m_sFileName(str), m_isUpdate(false)
 {
     if ((this->m_sFileName != "") &&
-        (TlFile::isExist(this->m_sFileName) == true)) {
+        (TlFile::isExistFile(this->m_sFileName) == true)) {
         this->load();
     }
 }
@@ -379,7 +379,7 @@ void Fl_Gto::show() const
 
 void Fl_Gto::load()
 {
-    if (TlFile::isExist(this->m_sFileName) == false) {
+    if (TlFile::isExistFile(this->m_sFileName) == false) {
         std::cerr << this->m_sFileName << " is not found." << std::endl;
         //return false;
         return;

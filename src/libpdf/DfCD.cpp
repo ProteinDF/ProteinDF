@@ -28,6 +28,7 @@
 #include "DfOverlapEngine.h"
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
+#include "TlMmapMatrix_CSFD.h"
 #include "TlTime.h"
 #include "TlUtils.h"
 #include "TlSystem.h"
@@ -83,6 +84,11 @@ DfCD::DfCD(TlSerializeData* pPdfParam)
         }    
     }
     
+    this->useMmapMatrix_ = true;
+    if (! (*this->pPdfParam_)["CD/use_mmap_matrix"].getStr().empty()) {
+        this->useMmapMatrix_ = (*this->pPdfParam_)["CD/use_mmap_matrix"].getBoolean();
+    }
+
     this->debugBuildSuperMatrix_ = false;
     if ((*pPdfParam)["debug/DfCD/build_supermatrix"].getStr().empty() != true) {
         this->debugBuildSuperMatrix_ = (*pPdfParam)["debug/DfCD/build_supermatrix"].getBoolean();
@@ -436,9 +442,16 @@ DfCD::PQ_PairArray DfCD::getI2PQ(const std::string& filepath)
 
 void DfCD::saveLjk(const TlRowVectorMatrix& Ljk)
 {
-    this->log_.info("save Ljk");
     const std::string path = DfObject::getLjkMatrixPath();
-    Ljk.saveByTlColVectorMatrix(path);
+
+    Ljk.save(path + ".rvm");
+
+    this->log_.info("save Ljk");
+    if (this->useMmapMatrix_) {
+        RowVectorMatrix2CSFD(path + ".rvm", path);
+    } else { 
+        Ljk.saveByTlColVectorMatrix(path);
+    }    
 }
 
 void DfCD::saveLk(const TlRowVectorMatrix& Lk)
@@ -566,10 +579,16 @@ TlMatrix DfCD::getCholeskyVectorA(const TlOrbitalInfoObject& orbInfo_p,
     return answer;
 }
 
+
 void DfCD::getJ(TlSymmetricMatrix* pJ)
 {
-    this->getJ_S(pJ);
+    if (this->useMmapMatrix_) {
+        this->getJ_S_mmap(pJ);
+    } else {
+        this->getJ_S(pJ);
+    }
 }
+
 
 void DfCD::getJ_S(TlSymmetricMatrix* pJ)
 {
@@ -602,6 +621,40 @@ void DfCD::getJ_S(TlSymmetricMatrix* pJ)
     this->expandJMatrix(vJ, I2PQ, pJ);
     this->finalize(pJ);
 }
+
+
+void DfCD::getJ_S_mmap(TlSymmetricMatrix* pJ)
+{
+    this->log_.info("calc J by CD method (serial).");
+
+    // cholesky vector
+    const TlMmapMatrix_CSFD L(DfObject::getLjkMatrixPath());
+    this->log_.info(TlUtils::format("L(J): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
+    const index_type numOfCBs = L.getNumOfCols();
+    
+    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
+    const TlVector vP = this->getScreenedDensityMatrix(I2PQ);
+
+    index_type start_CholeskyBasis = 0;
+    index_type end_CholeskyBasis = 0;
+    this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
+
+    const index_type numOfI = I2PQ.size();
+    TlVector vJ(numOfI);
+    for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
+        const TlVector LI = L.getColVector(I);
+        assert(LI.getSize() == vJ.getSize());
+
+        TlVector tmpLI = LI;
+        const double qi = tmpLI.dot(vP).sum();
+
+        vJ += qi*LI;
+    }
+
+    this->expandJMatrix(vJ, I2PQ, pJ);
+    this->finalize(pJ);
+}
+
 
 TlVector DfCD::getScreenedDensityMatrix(const PQ_PairArray& I2PQ)
 {
@@ -740,7 +793,11 @@ void DfCD::getK(const RUN_TYPE runType,
 {
     switch(this->fastCDK_mode_) {
     case FASTCDK_NONE:
-        this->getK_S_woCD(runType, pK);
+        if (this->useMmapMatrix_) {
+            this->getK_S_woCD_mmap(runType, pK);
+        } else {
+            this->getK_S_woCD(runType, pK);
+        }
         break;
         
     case FASTCDK_DEBUG_FULL_SUPERMATRIX:
@@ -795,13 +852,45 @@ TlSymmetricMatrix DfCD::getPMatrix(const RUN_TYPE runType, int itr)
     return P;
 }
 
+
 void DfCD::getK_S_woCD(const RUN_TYPE runType,
                        TlSymmetricMatrix *pK)
 {
     this->log_.info("calc K by CD method (serial).");
-    //const index_type numOfAOs = this->m_nNumOfAOs;
 
     const TlColVectorMatrix L = this->getLjk();
+    this->log_.info(TlUtils::format("L(K): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
+    const index_type numOfCBs = L.getNumOfCols();
+
+    const TlSymmetricMatrix P = this->getPMatrix(runType, this->m_nIteration -1);
+
+    this->log_.info("start loop");
+    const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
+    index_type start_CholeskyBasis = 0;
+    index_type end_CholeskyBasis = 0;
+    this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
+    for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
+        const TlSymmetricMatrix l = this->getCholeskyVector(L.getColVector(I), I2PQ);
+        assert(l.getNumOfRows() == this->m_nNumOfAOs);
+
+        TlMatrix X = l * P;
+        X *= l;
+
+        *pK += X;
+    }
+    
+    *pK *= -1.0;
+    this->log_.info("finalize");
+    this->finalize(pK);
+}
+
+
+void DfCD::getK_S_woCD_mmap(const RUN_TYPE runType,
+                            TlSymmetricMatrix *pK)
+{
+    this->log_.info("calc K by CD method (serial; mmap).");
+
+    const TlMmapMatrix_CSFD L(DfObject::getLjkMatrixPath());
     this->log_.info(TlUtils::format("L(K): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
     const index_type numOfCBs = L.getNumOfCols();
 

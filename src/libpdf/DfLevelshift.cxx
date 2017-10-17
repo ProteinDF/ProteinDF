@@ -165,7 +165,7 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration, const std::string
             }
         } else {
             // "read previous C' matrix"
-            if (TlFile::isExist(DfObject::getCprimeMatrixPath(runType, iteration -1)) == true) {
+            if (TlFile::isExistFile(DfObject::getCprimeMatrixPath(runType, iteration -1)) == true) {
                 Cprime = DfObject::getCprimeMatrix<TlMatrix>(runType, iteration -1);
             } else {
                 const TlMatrix C = DfObject::getCMatrix<TlMatrix>(runType, iteration -1);

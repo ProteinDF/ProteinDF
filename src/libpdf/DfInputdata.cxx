@@ -71,7 +71,7 @@ TlSerializeData DfInputdata::main(const bool isReadUserInput)
         if (inputParam.hasKey("pdf_param_path")) {
             mpacFilePath = inputParam["pdf_param_path"].getStr();
         }
-        if (TlFile::isExist(mpacFilePath) == true) {
+        if (TlFile::isExistFile(mpacFilePath) == true) {
             TlMsgPack msgPack;
             msgPack.load(mpacFilePath);
             TlSerializeData tmpParam = msgPack.getSerializeData();

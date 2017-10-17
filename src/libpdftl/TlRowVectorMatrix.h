@@ -59,8 +59,9 @@ public:
     virtual void add(index_type row, index_type col, double value);
     virtual double get(index_type row, index_type col) const;
 
-    virtual TlVector getRowVector(const index_type col) const;
-
+    virtual TlVector getRowVector(const index_type row) const;
+    virtual void getRowVector(const index_type row, double* pBuf, const index_type length) const;
+    
 public:
     /// TlMatrixオブジェクトを返す(for debug)
     TlMatrix getTlMatrixObject() const;
@@ -68,5 +69,10 @@ public:
     /// TlColVectorMatrix形式で保存
     void saveByTlColVectorMatrix(const std::string& basename) const;
 };
+
+
+bool RowVectorMatrix2CSFD(const std::string& rvmBasePath, const std::string& csfdPath,
+                          bool verbose = false, bool showProgress = false);
+
 
 #endif // TLROWVECTORMATRIX_H

@@ -160,7 +160,7 @@ SymmetricMatrixType DfInitialGuess::getInitialDensityMatrix(const RUN_TYPE runTy
     const std::string binFile = TlUtils::format("./guess.density.%s.mat",
                                                 this->m_sRunTypeSuffix[runType].c_str());
 
-    if (TlFile::isExist(binFile)) {
+    if (TlFile::isExistFile(binFile)) {
         lcaoMatrix.load(binFile);
     } else {
         this->log_.warn(TlUtils::format("file not found.: %s", binFile.c_str()));

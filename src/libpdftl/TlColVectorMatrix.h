@@ -60,6 +60,7 @@ public:
     virtual double get(index_type row, index_type col) const;
 
     virtual TlVector getColVector(const index_type col) const;
+    virtual void getColVector(const index_type col, double* pBuf, const index_type length) const;
 
 public:
     /// TlMatrixオブジェクトを返す(for debug)

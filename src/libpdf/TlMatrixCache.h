@@ -233,7 +233,7 @@ MatrixType TlMatrixCache::get(const std::string& path)
 
     if (isPrepareMatrix == false) {
         // cacheに無いのでloadしてくる
-        if (TlFile::isExist(path) == true) {
+        if (TlFile::isExistFile(path) == true) {
             if (matrix.load(path) == true) {
                 if (this->isDebugOut_ == true) {
                     std::cerr << TlUtils::format("TlMatrixCache::get() from disk: %s",

@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     if (isVerbose == true) {
         std::cout << "read parmeter file: " << readParamPath << std::endl;
     }
-    if (TlFile::isExist(readParamPath) == false) {
+    if (TlFile::isExistFile(readParamPath) == false) {
         std::cerr << "file not found: " << readParamPath << std::endl;
         return 1;
     }
