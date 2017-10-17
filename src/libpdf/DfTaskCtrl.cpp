@@ -251,6 +251,8 @@ bool DfTaskCtrl::getQueue2(const TlOrbitalInfoObject& orbitalInfo,
             division = progress_all * 0.1;
         }
 
+        this->log_.info(TlUtils::format("progress_all: %ld", progress_all));
+        
         return true;
     }
 
