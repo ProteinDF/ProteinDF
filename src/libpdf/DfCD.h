@@ -62,11 +62,14 @@ protected:
     
 protected:
     void getJ_S(TlSymmetricMatrix *pJ);
+    void getJ_S_mmap(TlSymmetricMatrix* pJ);
 
     virtual TlSymmetricMatrix getPMatrix(const RUN_TYPE runType, const int iteration);
     
     virtual void getK_S_woCD(const RUN_TYPE runType,
                              TlSymmetricMatrix *pK);
+    virtual void getK_S_woCD_mmap(const RUN_TYPE runType,
+                                  TlSymmetricMatrix *pK);
 
     virtual void getK_S_fast(const RUN_TYPE runType,
                              TlSymmetricMatrix *pK);
@@ -497,6 +500,8 @@ protected:
     double epsilon_K_;
 
     FastCDK_MODE fastCDK_mode_;
+
+    bool useMmapMatrix_;
 
 // =====================================================================
 protected:

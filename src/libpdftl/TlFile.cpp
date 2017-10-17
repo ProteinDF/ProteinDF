@@ -16,29 +16,38 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif // HAVE_CONFIG_H
+
 #include <cstdio>
 #include <fstream>
+#include <ostream>
+
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "TlFile.h"
 
 std::size_t TlFile::BUFFER_SIZE = 4096;
 
-bool TlFile::isExist(const std::string& rFilePath)
+bool TlFile::isExistFile(const std::string& filePath)
 {
-    bool bAnswer = true;
+    bool answer = true;
     std::ifstream fs;
-    fs.open(rFilePath.c_str());
+    fs.open(filePath.c_str());
 
     if (fs.is_open()) {
-        bAnswer = true;
+        answer = true;
     } else {
-        bAnswer = false;
+        answer = false;
     }
 
     fs.close();
-    return bAnswer;
+    return answer;
 }
 
 
@@ -46,7 +55,7 @@ int TlFile::copy(const std::string& fromFilePath, const std::string& destFilePat
 {
     int answer = 0;
 
-    if (TlFile::isExist(fromFilePath) == true) {
+    if (TlFile::isExistFile(fromFilePath) == true) {
         std::ifstream in(fromFilePath.c_str(), std::ios_base::in | std::ios_base::binary);
         std::ofstream out(destFilePath.c_str(), std::ios_base::out | std::ios_base::binary);
         
@@ -71,7 +80,7 @@ int TlFile::copy(const std::string& fromFilePath, const std::string& destFilePat
 int TlFile::remove(const std::string& filePath)
 {
     int ans = 0;
-    if (TlFile::isExist(filePath) == true) {
+    if (TlFile::isExistFile(filePath) == true) {
         ans = std::remove(filePath.c_str());
     }
 
@@ -82,7 +91,7 @@ int TlFile::remove(const std::string& filePath)
 int TlFile::rename(const std::string& oldName, const std::string& newName)
 {
     int ans = 0;
-    if (TlFile::isExist(oldName) == true) {
+    if (TlFile::isExistFile(oldName) == true) {
         ans = std::rename(oldName.c_str(), newName.c_str());
     }
 
@@ -90,14 +99,39 @@ int TlFile::rename(const std::string& oldName, const std::string& newName)
 }
 
 
-size_t TlFile::getSize(const std::string& filePath)
+std::size_t TlFile::getFileSize(const std::string& filePath)
 {
     size_t answer = 0;
 
-    struct stat fileInfo;
-    if (stat(filePath.c_str(), &fileInfo) == 0) {
-        answer = fileInfo.st_size;
+    std::fstream fs;
+    fs.open(filePath.c_str(), std::ios::in | std::ios::binary);
+    fs.seekg(0, std::ios_base::end);
+    std::streampos length = fs.tellg();
+    if (length != -1) {
+        answer = static_cast<std::size_t>(length);
     }
+    fs.close();        
 
     return answer;
 }
+
+
+std::string TlFile::getTempFilePath(const std::string& tmpdir)
+{
+    std::string baseName = tmpdir + std::string("pdftmp.XXXXXX");
+    char* pFileName = new char[baseName.size() +1];
+    strncpy(pFileName, baseName.c_str(), baseName.size() +1);
+
+    int fd = mkstemp(pFileName);
+    close(fd);
+    
+    const std::string fileName(pFileName);
+    TlFile::remove(fileName);
+
+    delete[] pFileName;
+    pFileName = NULL;
+    
+    return fileName;
+}
+
+

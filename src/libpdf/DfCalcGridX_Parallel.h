@@ -24,7 +24,6 @@
 #include "DfCalcGridX.h"
 #include "TlCommunicate.h"
 #include "TlDistributeSymmetricMatrix.h"
-#include "TlPartialSymmetricMatrix.h"
 #include "TlSparseVectorMatrix.h"
 
 class DfCalcGridX_Parallel : public DfCalcGridX {
@@ -153,23 +152,6 @@ protected:
 	TAG_CALCGRID_GATHER = 9006
     };
 
-
-    struct DensityCalcJob {
-    public:
-        DensityCalcJob(index_type globalDim,
-                       index_type start_row, index_type start_col,
-                       index_type end_row, index_type end_col)
-            : startRow(start_row), startCol(start_col), endRow(end_row), endCol(end_col),
-              partialMatrix(globalDim, start_row, start_col,
-                            std::max((end_row - start_row), (end_col - start_col))) {
-        }
-    public:
-        index_type startRow;
-        index_type startCol;
-        index_type endRow;
-        index_type endCol;
-        TlPartialSymmetricMatrix partialMatrix;
-    };
 
 protected:
     int assignAtomRange_;

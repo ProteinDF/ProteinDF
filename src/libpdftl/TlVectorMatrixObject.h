@@ -74,6 +74,7 @@ public:
                        index_type index) const;
 
     TlVector getVector(index_type vectorIndex) const;
+    void getVector(const index_type vectorIndex, double* pBuf, const index_type length) const;
     void setVector(index_type vectorIndex, const TlVector& v);
 
 public:

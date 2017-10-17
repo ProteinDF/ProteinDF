@@ -22,13 +22,13 @@
 
 TlSparseVectorMatrix::TlSparseVectorMatrix(index_type row, index_type col,
                                            std::size_t cacheMemSize)
-    : numOfRows_(row), numOfCols_(col), cacheMemSize_(cacheMemSize) {
+    : TlMatrixObject(RSFD), numOfRows_(row), numOfCols_(col), cacheMemSize_(cacheMemSize) {
     this->data_.clear();
 }
 
 
 TlSparseVectorMatrix::TlSparseVectorMatrix(const TlSparseVectorMatrix& rhs)
-    : numOfRows_(rhs.numOfRows_), numOfCols_(rhs.numOfCols_), data_(rhs.data_) {
+    : TlMatrixObject(RSFD), numOfRows_(rhs.numOfRows_), numOfCols_(rhs.numOfCols_), data_(rhs.data_) {
 }
 
 

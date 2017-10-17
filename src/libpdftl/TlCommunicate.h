@@ -26,9 +26,7 @@
 #include <map>
 #include <string>
 
-#include "TlSparseMatrix.h"
-#include "TlPartialMatrix.h"
-#include "TlPartialSymmetricMatrix.h"
+#include "TlMatrixObject.h"
 #include "TlTime.h"
 #include "TlLogging.h"
 
@@ -39,6 +37,7 @@ class TlMatrix;
 class TlSymmetricMatrix;
 class TlFileMatrix;
 class TlFileSymmetricMatrix;
+class TlSparseMatrix;
 class TlMmapMatrix;
 class TlMmapSymmetricMatrix;
 class TlSerializeData;
@@ -156,7 +155,8 @@ public:
     int broadcast(TlMmapSymmetricMatrix& data, int root = 0);
     int broadcast(TlSerializeData& data);
 
-    int broadcast(double* p, const std::size_t size, const int root);
+    int broadcast(int* buf, const std::size_t size, const int root);
+    int broadcast(double* buf, const std::size_t size, const int root);
 
     // 1:1通信
     int sendData(bool data, int destination = 0, int tag = 0);
@@ -177,7 +177,6 @@ public:
     int sendData(const TlSymmetricMatrix& rData, int nDestination = 0, int nTag = 0);
     int sendData(const TlSparseMatrix& data, int dest = 0, int tag = 0);
     // int sendData(const TlSparseSymmetricMatrix& rData, int nDestination = 0, int nTag = 0);
-    int sendData(const TlPartialSymmetricMatrix& rData, int nDestination = 0, int nTag = 0);
 
     int receiveData(bool& data, int src, int tag = 0);
     int receiveData(int& rData, int nSrc, int nTag = 0);
@@ -196,7 +195,6 @@ public:
     int receiveData(TlMatrix& data, int src, int tag = 0);
     int receiveData(TlSymmetricMatrix& rData, int nSrc, int nTag = 0);
     int receiveData(TlSparseMatrix& rData, int src, int tag = 0);
-    int receiveData(TlPartialSymmetricMatrix& rData, int nSrc, int nTag = 0);
 
     int receiveDataFromAnySource(int& data, int* pSrc, const int tag);
     int receiveDataFromAnySource(unsigned long& data, int* pSrc, int tag);
@@ -211,7 +209,6 @@ public:
     int receiveDataFromAnySource(std::vector<unsigned long>& rData, int* pSrc, int* pTag = NULL);
     int receiveDataFromAnySource(std::vector<double>& rData, int* pSrc, int* pTag = NULL);
     int receiveDataFromAnySource(TlSparseMatrix* pData, int* pSrc, int tag = 0);
-    int receiveDataFromAnySource(TlPartialSymmetricMatrix& rData, int* pSrc, int* pTag = NULL);
 
     // タグ付き
     int receiveDataFromAnySource(TlMatrix& rData, int* pSrc, int tag = 0);
@@ -238,6 +235,9 @@ public:
     int iReceiveDataFromAnySource(std::vector<int>& data, int tag = 0);
     int iReceiveDataFromAnySource(std::vector<double>& data, int tag = 0);
 
+    int iReceiveDataFromAnySourceAnyTag(double* pData, const int count);
+    
+
     int sendDataX(const int* pData, const std::size_t size,
                   const int dest, const int tag = 0);
     int sendDataX(const unsigned int* pData, const std::size_t size,
@@ -253,7 +253,7 @@ public:
                      const int src, const int tag = 0);
     int receiveDataX(double* pData, const std::size_t size,
                      const int src, const int tag = 0);
-    int receiveDataX(TlMatrixElement* pData, const std::size_t size,
+    int receiveDataX(TlMatrixObject::MatrixElement* pData, const std::size_t size,
                      const int src, const int tag = 0);
     
     int receiveDataFromAnySourceX(int* pData, std::size_t size, int* pSrc, int tag = 0);
@@ -263,7 +263,7 @@ public:
                    const int dest, const int tag = 0);
     int iSendDataX(const double* pData, const std::size_t size,
                    const int dest, const int tag = 0);
-    int iSendDataX(const TlMatrixElement* pData, const std::size_t size,
+    int iSendDataX(const TlMatrixObject::MatrixElement* pData, const std::size_t size,
                    int dest, int tag = 0);
     
     int iReceiveDataX(int* pData, const std::size_t size,
@@ -303,15 +303,15 @@ public:
         return this->test((void*)&(data[0]), pSrc);
     }
 
-    /// wait
+    /// wait ===================================================================
     template<typename T>
     int wait(const T& data, int* pSrc = NULL) {
         return this->wait((void*)&data, pSrc);
     }
 
     template<typename T>
-    int wait(T* pData, int* pSrc = NULL) {
-        return this->wait((void*)pData, pSrc);
+    int wait(T* pData, int* pSrc = NULL, int* pTag = NULL) {
+        return this->wait((void*)pData, pSrc, pTag);
     }
 
     template<typename T>
@@ -319,11 +319,11 @@ public:
         return this->wait((void*)&(data[0]), pSrc);
     }
 
-    // 集計
+    /// 集計 ===================================================================
     int allReduce_SUM(const TlFileMatrix& fromLocalMatrix,
                       const std::string& toMatrixFilePath);
     int allReduce_SUM(const TlFileSymmetricMatrix& fromLocalMatrix,
-                      const std::string& toMatrixFilePath);
+                     const std::string& toMatrixFilePath);
 
     // 終了処理
     // プログラム終了時は必ず呼ぶこと
@@ -463,6 +463,10 @@ protected:
                                    const std::size_t start, const std::size_t end,
                                    const int tag);
 
+    template<typename T>
+    int iReceiveDataFromAnySourceAnyTag(T* pData, const MPI_Datatype mpiType,
+                                        const int start, const int end);
+
     int broadcast(std::valarray<double>& data,
                   const std::size_t start, const std::size_t end,
                   int root);
@@ -471,7 +475,7 @@ private:
     int initialize(int argc, char* argv[]);
 
     bool test(void* pData, int* pSrc = NULL);
-    int wait(void* pData, int* pSrc = NULL);
+    int wait(void* pData, int* pSrc = NULL, int* pTag = NULL);
     bool cancel(void* pData);
 
 private:

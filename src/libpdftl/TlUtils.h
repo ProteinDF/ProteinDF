@@ -183,6 +183,8 @@ public:
         }
         return value;
     }
+
+    static void progressbar(const float progress);
     
 private:
     template<typename T, typename F>

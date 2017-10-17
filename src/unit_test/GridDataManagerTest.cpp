@@ -21,7 +21,7 @@
 // 得られた結果actualと期待する値expectedとの差がdeltaより大きいとき、失敗します。
 
 void GridDataManagerTest::testConstructer() {
-  if (TlFile::isExist("GridDataManager.dat") == true) {
+  if (TlFile::isExistFile("GridDataManager.dat") == true) {
     TlFile::remove("GridDataManager.dat");
   }
   GridDataManager gdm("GridDataManager.dat");

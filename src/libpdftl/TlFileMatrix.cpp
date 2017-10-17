@@ -21,46 +21,106 @@
 #include <iostream>
 #include "TlFileMatrix.h"
 #include "TlFile.h"
+#include "TlMatrix.h"
 
-#define CACHE_GROUP_BIT (12)
 
 TlFileMatrix::TlFileMatrix(const std::string& filePath, const int row, const int col, const size_t cacheSize)
-        : filePath_(filePath), numOfRows_(row), numOfCols_(col), cacheCount_(0), cacheSize_(cacheSize)
+    : TlMatrixObject(RSFD), filePath_(filePath), numOfRows_(row), numOfCols_(col), cacheCount_(0), cacheSize_(cacheSize)
 {
-    this->cache_.clear();
-    if (this->cacheSize_ < 5 * 1024 * 1024) {
-        this->cacheSize_ = 5 * 1024 * 1024;
-    }
+    this->initializeCache();
     this->open();
 }
 
 // called from sub-class only!
 TlFileMatrix::TlFileMatrix(const std::string& filePath, const int row, const int col,
-                           bool initialize, const size_t cacheSize)
-        : filePath_(filePath), numOfRows_(row), numOfCols_(col), cacheCount_(0), cacheSize_(cacheSize)
+                           bool doOpen, const size_t cacheSize)
+    : TlMatrixObject(RSFD), filePath_(filePath), numOfRows_(row), numOfCols_(col), cacheCount_(0), cacheSize_(cacheSize)
 {
-    this->cache_.clear();
-    if (this->cacheSize_ < 5 * 1024 * 1024) {
-        this->cacheSize_ = 5 * 1024 * 1024;
-    }
-    if (initialize == true) {
+    this->initializeCache();
+    if (doOpen == true) {
         this->open();
     }
 }
 
 TlFileMatrix::~TlFileMatrix()
 {
+    this->finalize();
+}
+
+
+void TlFileMatrix::initializeCache()
+{
+    this->cache_.clear();
+    if (this->cacheSize_ < DEFAULT_CACHE_SIZE) {
+        this->cacheSize_ = DEFAULT_CACHE_SIZE;
+    }
+}
+
+
+void TlFileMatrix::finalize() const
+{
     std::list<CacheUnit>::const_iterator pEnd = this->cache_.end();
     for (std::list<CacheUnit>::const_iterator p = this->cache_.begin();
-            p != pEnd; ++p) {
+         p != pEnd; ++p) {
         if (p->isUpdate == true) {
             this->writeDisk(*p);
         }
     }
-
+    
     this->fs_.flush();
     this->fs_.close();
 }
+
+
+void TlFileMatrix::resize(const index_type newRow, const index_type newCol)
+{
+    assert(0 < newRow);
+    assert(0 < newCol);
+    
+    const index_type oldRow = this->getNumOfRows();
+    const index_type oldCol = this->getNumOfCols();
+
+    // rename(move) this object file
+    std::string tempFilePath = TlFile::getTempFilePath();
+    {
+        this->finalize();
+        TlFile::rename(this->filePath_, tempFilePath);
+    }
+
+    // create new file matrix
+    this->numOfRows_ = newRow;
+    this->numOfCols_ = newCol;
+    this->initializeCache();
+    this->open();
+
+    // copy elements
+    {
+        const TlFileMatrix refMatrix(tempFilePath);
+        const index_type maxRow = std::min(oldRow, newRow);
+        const index_type maxCol = std::min(oldCol, newCol);
+        for (index_type r = 0; r < maxRow; ++r) {
+            for (index_type c = 0; c < maxCol; ++c) {
+                this->set(r, c, refMatrix.get(r, c));
+            }
+        }
+    }
+
+    // delete temp file
+    TlFile::remove(tempFilePath);    
+}
+
+
+TlMatrixObject::index_type TlFileMatrix::getNumOfRows() const
+{
+    return this->numOfRows_;
+}
+
+
+TlMatrixObject::index_type TlFileMatrix::getNumOfCols() const
+{
+    return this->numOfCols_;
+}
+
 
 
 std::size_t TlFileMatrix::getMemSize() const
@@ -73,7 +133,7 @@ std::size_t TlFileMatrix::getMemSize() const
 
 void TlFileMatrix::open()
 {
-    if (TlFile::isExist(this->filePath_) == false) {
+    if (TlFile::isExistFile(this->filePath_) == false) {
         // create new file
         this->fs_.open(this->filePath_.c_str(), std::ios::binary | std::ios::trunc | std::ios::out);
 
@@ -124,98 +184,81 @@ void TlFileMatrix::open()
     this->readHeader();
 }
 
+
 bool TlFileMatrix::readHeader()
 {
-    bool bAnswer = true;
+    int matrixType = 0;
+    index_type row = 0;
+    index_type col = 0;
+    bool answer = TlMatrix::getHeaderInfo(this->fs_, &matrixType, &row, &col);
 
-    // get file size
-    std::fstream::pos_type nFileSize = 0;
-    {
-        this->fs_.seekg(0, std::ios_base::beg);
-        std::fstream::pos_type begin = this->fs_.tellg();
-        this->fs_.seekg(0, std::ios_base::end);
-        this->endPos_ = this->fs_.tellg();
+    this->numOfRows_ = row;
+    this->numOfCols_ = col;
 
-        nFileSize = this->endPos_ - begin;
-    }
-
-    bool bCheckVariableType = false;
-    this->startPos_ = 0;
-
-    // int case:
-    {
-        int nType = 0;
-        int nRows = 0;
-        int nCols = 0;
-        this->fs_.seekg(0, std::ios_base::beg);
-        this->fs_.read((char*)&(nType), sizeof(int));
-        this->fs_.read((char*)&(nRows), sizeof(int));
-        this->fs_.read((char*)&(nCols), sizeof(int));
-
-        const std::ifstream::pos_type nEstimatedFileSize =
-            std::ifstream::pos_type(sizeof(int) *3)
-            + (std::ifstream::pos_type(nRows) * std::ifstream::pos_type(nCols)
-               * std::ifstream::pos_type(sizeof(double)));
-        if (nEstimatedFileSize == nFileSize) {
-            this->numOfRows_ = nRows;
-            this->numOfCols_ = nCols;
-            bCheckVariableType = true;
-            this->startPos_ = sizeof(int) * 3;
-        }
-    }
-
-    // long case:
-    {
-        int nType = 0;
-        long nRows = 0;
-        long nCols = 0;
-        this->fs_.seekg(0, std::ios_base::beg);
-        this->fs_.read((char*)&(nType), sizeof(int));
-        this->fs_.read((char*)&(nRows), sizeof(long));
-        this->fs_.read((char*)&(nCols), sizeof(long));
-
-        const std::ifstream::pos_type nEstimatedFileSize =
-            std::ifstream::pos_type(sizeof(int) + sizeof(long) * 2)
-            + (std::ifstream::pos_type(nRows) * std::ifstream::pos_type(nCols)
-               * std::ifstream::pos_type(sizeof(double)));
-        if (nEstimatedFileSize == nFileSize) {
-            this->numOfRows_ = nRows;
-            this->numOfCols_ = nCols;
-            bCheckVariableType = true;
-            this->startPos_ = sizeof(int) + sizeof(long) * 2;
-        }
-    }
-
-    if (bCheckVariableType == true) {
-        this->fs_.seekg(this->startPos_, std::ios_base::beg);
-    } else {
-        std::cerr << "file size mismatch: " << this->filePath_ << std::endl;
-        bAnswer = false;
-    }
-
-    return bAnswer;
+    this->startPos_ = this->fs_.tellg();
+    
+    return answer;
 }
 
-void TlFileMatrix::set(const int row, const int col, const double value)
+
+TlMatrixObject::size_type TlFileMatrix::getIndex(const index_type row, const index_type col) const
 {
-    *(this->getCachedData(row, col)) = value;
+    return TlMatrixObject::getIndex_RSFD(row, col);
 }
 
-void TlFileMatrix::add(const int row, const int col, const double value)
+
+TlMatrixObject::size_type TlFileMatrix::getNumOfElements() const
+{
+    return TlMatrixObject::getNumOfElements_RSFD();
+}
+
+
+void TlFileMatrix::set(const index_type row, const index_type col, const double value)
+{
+    double* const pBuf = this->getCachedData(row, col);
+    *pBuf = value;
+}
+
+
+void TlFileMatrix::add(const index_type row, const index_type col, const double value)
 {
     const double tmp = this->get(row, col) + value;
-    *(this->getCachedData(row, col)) = tmp;
+    double* const pBuf = this->getCachedData(row, col);
+    *pBuf = tmp;
 }
 
-double TlFileMatrix::get(const int row, const int col) const
+
+double TlFileMatrix::get(const index_type row, const index_type col) const
 {
     return this->getCachedData(row, col);
 }
 
 
-TlVector TlFileMatrix::getRowVector(const int nRow) const
+void TlFileMatrix::setRowVector(const index_type row, const TlVector& v)
 {
-    assert((0 <= nRow) && (nRow < this->getNumOfCols()));
+    const index_type numOfCols = this->getNumOfCols();
+    assert(v.getSize() == numOfCols);
+    
+    for (index_type i = 0; i < numOfCols; ++i) {
+        this->set(row, i, v[i]);
+    }
+}
+
+
+void TlFileMatrix::setColVector(const index_type col, const TlVector& v)
+{
+    const index_type numOfRows = this->getNumOfRows();
+    assert(v.getSize() == numOfRows);
+
+    for (index_type i = 0; i < numOfRows; ++i) {
+        this->set(i, col, v[i]);
+    }
+}
+
+
+TlVector TlFileMatrix::getRowVector(const index_type nRow) const
+{
+    assert((0 <= nRow) && (nRow < this->getNumOfRows()));
 
     const int nNumOfCols = this->getNumOfCols();
     TlVector answer(nNumOfCols);
@@ -227,7 +270,8 @@ TlVector TlFileMatrix::getRowVector(const int nRow) const
     return answer;
 }
 
-TlVector TlFileMatrix::getColumnVector(const int nCol) const
+
+TlVector TlFileMatrix::getColumnVector(const index_type nCol) const
 {
     assert((0 <= nCol) && (nCol < this->getNumOfCols()));
 
@@ -241,11 +285,12 @@ TlVector TlFileMatrix::getColumnVector(const int nCol) const
     return answer;
 }
 
-double* TlFileMatrix::getCachedData(const int row, const int col)
+
+double* TlFileMatrix::getCachedData(const index_type row, const index_type col)
 {
     static const unsigned long localIndexBit = (static_cast<unsigned long>(1) << CACHE_GROUP_BIT) -1;
 
-    const size_t index = this->index(row, col);
+    const size_t index = this->getIndex(row, col);
     const size_t localIndex = (index & localIndexBit);
     this->updateCache(index);
 
@@ -253,16 +298,18 @@ double* TlFileMatrix::getCachedData(const int row, const int col)
     return &(this->cache_.front().data[localIndex]);
 }
 
-double TlFileMatrix::getCachedData(const int row, const int col) const
+
+double TlFileMatrix::getCachedData(const index_type row, const index_type col) const
 {
     static const unsigned long localIndexBit = (static_cast<unsigned long>(1) << CACHE_GROUP_BIT) -1;
 
-    const size_t index = this->index(row, col);
+    const size_t index = this->getIndex(row, col);
     const size_t localIndex = (index & localIndexBit);
     this->updateCache(index);
 
     return this->cache_.front().data[localIndex];
 }
+
 
 void TlFileMatrix::updateCache(const size_t index) const
 {
@@ -284,7 +331,7 @@ void TlFileMatrix::updateCache(const size_t index) const
         this->fs_.seekg(pos, std::ios_base::beg);
 
         const size_t groupCount = (1 << CACHE_GROUP_BIT);
-        const size_t count = std::min(groupCount, (this->maxIndex() - group * groupCount));
+        const size_t count = std::min(groupCount, (this->getNumOfElements() - group * groupCount));
 
         CacheUnit cu(group);
         cu.data.resize(count, 0.0);
@@ -304,6 +351,7 @@ void TlFileMatrix::updateCache(const size_t index) const
         --(this->cacheCount_);
     }
 }
+
 
 void TlFileMatrix::writeDisk(const TlFileMatrix::CacheUnit& cu) const
 {
@@ -339,6 +387,7 @@ TlFileMatrix& TlFileMatrix::operator*=(const double coef)
     return *this;
 }
 
+
 TlMatrix TlFileMatrix::getBlockMatrix(const index_type row, const index_type col,
                                       const index_type rowDistance,
                                       const index_type colDistance) const
@@ -364,6 +413,7 @@ TlMatrix TlFileMatrix::getBlockMatrix(const index_type row, const index_type col
 
     return answer;
 }
+
 
 void TlFileMatrix::setBlockMatrix(const index_type row,
                                   const index_type col,

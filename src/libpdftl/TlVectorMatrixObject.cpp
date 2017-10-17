@@ -17,6 +17,7 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
+#include <algorithm>
 #include "TlVectorMatrixObject.h"
 #include "TlMemManager.h"
 #include "TlLogging.h"
@@ -27,7 +28,8 @@ TlVectorMatrixObject::TlVectorMatrixObject(const index_type numOfVectors,
                                            const int numOfSubunits,
                                            const int subunitID,
                                            const bool isUsingMemManager)
-    : numOfVectors_(0),
+    : TlMatrixObject(RSFD),
+      numOfVectors_(0),
       sizeOfVector_(0),
       numOfSubunits_(numOfSubunits),
       subunitID_(subunitID),
@@ -39,7 +41,8 @@ TlVectorMatrixObject::TlVectorMatrixObject(const index_type numOfVectors,
 
 
 TlVectorMatrixObject::TlVectorMatrixObject(const TlVectorMatrixObject& rhs)
-    : numOfVectors_(0),
+    : TlMatrixObject(RSFD),
+      numOfVectors_(0),
       sizeOfVector_(0),
       numOfSubunits_(rhs.numOfSubunits_),
       subunitID_(rhs.subunitID_),
@@ -241,6 +244,21 @@ TlVector TlVectorMatrixObject::getVector(const index_type vectorIndex) const
     }
 
     return answer;
+}
+
+
+void TlVectorMatrixObject::getVector(const index_type vectorIndex, double* pBuf, const index_type length) const
+{
+    const index_type vectorSize = this->sizeOfVector_;
+    const index_type copySize = std::min(length, vectorSize);
+
+    const div_t turns = std::div(vectorIndex, this->numOfSubunits_);
+    if (turns.rem == this->subunitID_) {
+        const index_type localVectorIndex = turns.quot;
+
+        double const * const p = this->data_[localVectorIndex];
+        std::copy(p, p +copySize, pBuf);
+    }
 }
 
 

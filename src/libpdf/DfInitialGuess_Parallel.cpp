@@ -102,7 +102,7 @@ TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK(const RUN_TYPE r
     int isBinMode = 0;
     if (rComm.isMaster() == true) {
         const std::string binFile = DfInitialGuess::getLcaoPath_bin(runType);
-        if (TlFile::isExist(binFile) == true) {
+        if (TlFile::isExistFile(binFile) == true) {
             isBinMode = 1;
         }
     }

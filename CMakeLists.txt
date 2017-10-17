@@ -40,6 +40,7 @@ message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 # check system
 check_include_file("sys/resource.h" HAVE_SYS_RESOURCE_H)
 check_include_file("sys/time.h" HAVE_SYS_TIME_H)
+check_include_file("sys/types.h" HAVE_SYS_TYPES_H)
 check_include_file("unistd.h" HAVE_UNISTD_H)
 check_include_file("stdint.h" HAVE_STDINT_H)
 
@@ -94,6 +95,14 @@ else(MPI_FOUND)
   message("Not Found MPI compiler")
 endif(MPI_FOUND)
 
+  # check ScaLAPACK
+  find_package(ScaLAPACK)
+  if (SCALAPACK_FOUND)
+    # message("ScaLAPACK information:")
+    # message("  SCALAPACK_LIBRARIES: ${SCALAPACK_LIBRARIES}")
+    set(HAVE_SCALAPACK 1) # for config.h
+  endif(SCALAPACK_FOUND)
+endif(MPI_FOUND)
 
 # check ScaLAPACK
 find_package(ScaLAPACK)
@@ -107,6 +116,14 @@ else(SCALAPACK_FOUND)
   message("Not Found ScaLAPACK")
 endif(SCALAPACK_FOUND)
 
+# check HDF5
+find_package(HDF5 COMPONENTS C CXX)
+if (HDF5_FOUND)
+  include_directories(${HDF5_INCLUDE_DIRS})
+  set(HAVE_HDF5 1)
+  message("HDF5 information:")
+  message("  HDF5_LIBRARIES: ${HDF5_LIBRARIES}")
+endif(HDF5_FOUND)
 
 # check threads
 set(CMAKE_THREAD_PREFER_PTHREAD ON)

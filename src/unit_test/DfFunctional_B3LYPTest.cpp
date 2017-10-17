@@ -68,7 +68,7 @@ TEST(DfFunctional_B3LYP, pointwise1)
     EXPECT_NEAR(vRhoB, dRoundF_roundRhoB, EPS);
     EXPECT_NEAR(vGammaAA, dRoundF_roundGammaAA, EPS);
     EXPECT_NEAR(vGammaAB, dRoundF_roundGammaAB, EPS);
-  EXPECT_NEAR(vGammaBB, dRoundF_roundGammaBB, EPS);
+    EXPECT_NEAR(vGammaBB, dRoundF_roundGammaBB, EPS);
 }
 
 

@@ -44,8 +44,8 @@ int main(int argc, char* argv[])
     std::string path = opt[1];
 
     int type = 0;
-    TlMatrix::index_type numOfRows = 0;
-    TlMatrix::index_type numOfCols = 0;
+    TlMatrixObject::index_type numOfRows = 0;
+    TlMatrixObject::index_type numOfCols = 0;
     if (TlSymmetricMatrix::isLoadable(path) == true) {
         TlSymmetricMatrix::getHeaderInfo(path, &type, &numOfRows, &numOfCols);
         std::cout << "type: symmetric" << std::endl;

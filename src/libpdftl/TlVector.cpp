@@ -32,6 +32,11 @@
 #include "TlMatrix.h"
 #include "TlSymmetricMatrix.h"
 
+#ifdef HAVE_HDF5
+#include "TlHdf5Utils.h"
+#endif // HAVE_HDF5
+
+
 TlVector::TlVector(size_type size)
         : size_(size), data_(NULL)
 {
@@ -498,6 +503,37 @@ bool TlVector::save(std::ofstream& ofs) const
 }
 
 
+#ifdef HAVE_HDF5
+bool TlVector::saveHdf5(const std::string& filepath, const std::string& h5path) const
+{
+    TlHdf5Utils h5(filepath);
+
+    const index_type size = this->getSize();
+    h5.write(h5path, this->data_, size);
+    h5.setAttr(h5path, "size", size);
+
+    return true;
+}
+
+
+bool TlVector::loadHdf5(const std::string& filepath, const std::string& h5path)
+{
+    TlHdf5Utils h5(filepath);
+
+    index_type size;
+    h5.getAttr(h5path, "size", &size);
+
+    this->destroy();
+    this->size_ = size;
+    this->initialize();
+    h5.get(h5path, reinterpret_cast<double*>(this->data_), size);
+
+    return true;
+}
+
+
+#endif // HAVE_HDF5
+
 void TlVector::outputText(std::ostream& os) const
 {
     const size_type nSize = this->getSize();
@@ -515,3 +551,4 @@ void TlVector::outputText(std::ostream& os) const
     }
     os << std::endl;
 }
+

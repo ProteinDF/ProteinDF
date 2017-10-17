@@ -52,7 +52,6 @@ public:
     double value;
 };
 
-
 /// 疎行列クラス
 class TlSparseMatrix : public TlMatrixObject {
 public:
@@ -215,7 +214,7 @@ public:
     virtual void add(const index_type row, const index_type col, const double value);
     // virtual void add(const std::pair<unsigned long, double>& obj);
 
-    void add(const std::vector<TlMatrixElement>& elements);
+    void add(const std::vector<MatrixElement>& elements);
 
     /** 指定された要素が存在すればtrueを返す
      *
@@ -261,7 +260,7 @@ public:
     std::vector<int> getRowIndexList() const;
     std::vector<int> getColIndexList() const;
 
-    std::vector<TlMatrixElement> getMatrixElements() const;
+    std::vector<MatrixElement> getMatrixElements() const;
 
 public:
     /// オブジェクトの内容をテキスト出力する

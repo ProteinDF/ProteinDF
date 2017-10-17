@@ -39,6 +39,13 @@ class TlCommunicate; // 通信クラス
 /// 行列は正方行列
 /// 要素の格納方法はLapackでいうところの'U'
 /// AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j;
+///
+// Packed Storage
+// Symmetric, Hermitian or triangular matrices may be stored more compactly,
+// if the relevant triangle (again as specified by UPLO) is packed by columns in a one-dimensional array.
+// In LAPACK, arrays that hold matrices in packed storage, have names ending in `P'. So:
+//    if UPLO = `U', aij is stored in AP(i+j(j-1)/2) for $i \leq j$;
+//    if UPLO = `L', aij is stored in AP( i+(2n-j)(j-1)/2) for  $j \leq i$.
 class TlSymmetricMatrix : public TlMatrix {
     // friend
     friend class TlCommunicate;
@@ -92,9 +99,9 @@ public:
 //   /// ベクトルから行列に変換する
 //   void convertFromVector(int dim, const TlVector& vector);
 
-    static std::size_t vtr_index(index_type row,
-                                 index_type col,
-                                 index_type dim);
+    // static std::size_t vtr_index(index_type row,
+    //                              index_type col,
+    //                              index_type dim);
 
 
     /// 全要素の和を返す
@@ -178,6 +185,24 @@ public:
                               index_type* pNumOfRows = NULL,
                               index_type* pNumOfCols = NULL);
 
+    /// ヘッダ情報を読み取る
+    /// 正常に読み取れた場合、ファイルポインタはデータ領域の先頭(ヘッダのすぐ後)を指す
+    static bool getHeaderInfo(std::fstream& fs,
+                              int* pType = NULL,
+                              index_type* pNumOfRows = NULL,
+                              index_type* pNumOfCols = NULL);
+    static bool getHeaderInfo(std::ifstream& ifs,
+                              int* pType = NULL,
+                              index_type* pNumOfRows = NULL,
+                              index_type* pNumOfCols = NULL);
+protected:
+    template<typename StreamType>
+    static bool getHeaderInfo_tmpl(StreamType& s, int* pMatrixType = NULL,
+                                   index_type* pNumOfRows = NULL,
+                                   index_type* pNumOfCols = NULL);
+
+    
+public:
     /// 指定されたファイルパス名から行列要素を読み込む
     ///
     /// パスの区切り文字(UNIXなら'/'、windowsなら'\')は、
@@ -219,6 +244,12 @@ public:
     virtual bool save(std::ofstream& ofs) const;
 
     virtual TlSerializeData getSerialize() const;
+
+#ifdef HAVE_HDF5
+    virtual bool saveHdf5(const std::string& filepath, const std::string& h5path) const;
+    virtual bool loadHdf5(const std::string& filepath, const std::string& h5path);
+#endif // HAVE_HDF5
+    
     
 public:
     /// 転置行列にする
@@ -274,25 +305,16 @@ protected:
 
     /// 必要な行列要素の数を返す。
     /// initialize()などから呼び出される。
-    virtual std::size_t getNumOfElements() const {
-        assert(this->getNumOfRows() == this->getNumOfCols());
-        std::size_t dim = this->getNumOfRows();
-        return (dim *(dim +1) / 2);
-    }
+    virtual size_type getNumOfElements() const;
 
     /// オブジェクトの内容を破棄する
     //virtual void clear();
 
-    virtual size_t index(index_type row,
-                         index_type col) const;
-
+    virtual size_type index(index_type row,
+                            index_type col) const;
+    
     bool load_RLHD(std::ifstream& ifs);
     bool load_CLHD(std::ifstream& ifs);
-
-    static bool getHeaderInfo(std::ifstream& ifs,
-                              int* pType = NULL,
-                              index_type* pNumOfRows = NULL,
-                              index_type* pNumOfCols = NULL);
 
 #ifdef HAVE_LAPACK
     /// 対称行列の積を求める
@@ -328,7 +350,7 @@ private:
     /// このメンバ関数は下位互換性のために用意されている。
     /// @param[in] row 行数
     /// @param[in] col 列数
-    virtual void resize(int row, int col) {
+    virtual void resize(index_type row, index_type col) {
         assert(row == col);
         this->resize(row);
     }

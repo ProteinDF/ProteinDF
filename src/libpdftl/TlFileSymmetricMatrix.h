@@ -20,7 +20,6 @@
 #define TLFILESYMMETRICMATRIX_H
 
 #include "TlFileMatrix.h"
-#include "TlPartialSymmetricMatrix.h"
 
 class TlFileSymmetricMatrix : public TlFileMatrix {
 public:
@@ -28,33 +27,23 @@ public:
     virtual ~TlFileSymmetricMatrix();
 
 public:
-    void add(int row, int col, double value);
-    void add(const TlPartialSymmetricMatrix& psm);
+    void resize(index_type dim);
+private:
+    void resize(index_type newRow, index_type newCol) {}; // access forbidden
 
+    
+public:
     virtual TlFileSymmetricMatrix& operator*=(double coef);
     virtual TlFileSymmetricMatrix& operator/=(double coef) {
         return this->operator*=(1.0 / coef);
     }
 
-    TlPartialSymmetricMatrix getPartialMatrix(const int startRow, const int startCol, const int range) const;
-
 protected:
     virtual void open();
-
-protected:
     virtual bool readHeader();
 
-    virtual size_t index(int row, int col) const {
-        if (row < col) {
-            std::swap(row, col);
-        }
-
-        return (std::size_t(col) + (std::size_t(row +1) * std::size_t(row)) / std::size_t(2));
-    }
-
-    virtual size_t maxIndex() const {
-        return (std::size_t(this->getNumOfRows()) * std::size_t(this->getNumOfCols() +1) / std::size_t(2));
-    }
+    virtual size_type getIndex(index_type row, index_type col) const;
+    virtual size_type getNumOfElements() const;
 };
 
 #endif // TLFILESYMMETRICMATRIX_H

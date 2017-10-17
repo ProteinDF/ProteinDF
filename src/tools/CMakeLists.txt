@@ -251,9 +251,45 @@ install(TARGETS pdf-vtr-diff RUNTIME DESTINATION bin)
 set(PDF_VTR_SHOW_SOURCES
   main_vtr_show.cpp
   )
-add_executable(pdf-vtr-show ${PDF_VTR_DIFF_SOURCES})
+add_executable(pdf-vtr-show ${PDF_VTR_SHOW_SOURCES})
 target_link_libraries(pdf-vtr-show libpdf libpdftl)
 install(TARGETS pdf-vtr-show RUNTIME DESTINATION bin)
+
+# ================
+set(PDF_CVM2RSFD_SOURCES
+  main_cvm2rsfd.cpp
+  )
+add_executable(pdf-cvm2rsfd ${PDF_CVM2RSFD_SOURCES})
+target_link_libraries(pdf-cvm2rsfd libpdf libpdftl)
+install(TARGETS pdf-cvm2rsfd RUNTIME DESTINATION bin)
+
+
+set(PDF_CVM2CSFD_SOURCES
+  main_cvm2csfd.cpp
+  )
+add_executable(pdf-cvm2csfd ${PDF_CVM2CSFD_SOURCES})
+target_link_libraries(pdf-cvm2csfd libpdf libpdftl)
+install(TARGETS pdf-cvm2csfd RUNTIME DESTINATION bin)
+
+
+set(PDF_RVM2CSFD_SOURCES
+  main_rvm2csfd.cpp
+  )
+add_executable(pdf-rvm2csfd ${PDF_RVM2CSFD_SOURCES})
+target_link_libraries(pdf-rvm2csfd libpdf libpdftl)
+install(TARGETS pdf-rvm2csfd RUNTIME DESTINATION bin)
+
+
+# ================
+
+if (HDF5_FOUND)
+  set(PDF_MAT2H5_SOURCES
+    main_mat2h5.cpp
+    )
+  add_executable(pdf-mat2h5 ${PDF_MAT2H5_SOURCES})
+  target_link_libraries(pdf-mat2h5 libpdf libpdftl)
+  install(TARGETS pdf-mat2h5 RUNTIME DESTINATION bin)
+endif (HDF5_FOUND)
 
 
 if (MPI_FOUND)

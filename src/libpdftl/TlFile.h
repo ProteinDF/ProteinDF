@@ -19,18 +19,20 @@
 #ifndef TLFILE_H
 #define TLFILE_H
 
+#include <cstdio>
 #include <string>
 
 class TlFile {
 public:
-    /// rFilePathが存在していればtrue、なければfalseを返す。
-    static bool isExist(const std::string& rFilePath);
+    /// filePathが存在していればtrue、なければfalseを返す。
+    static bool isExistFile(const std::string& filePath);
 
     /// ファイルをコピーする。
     ///
     /// ファイルが存在しなかった場合は何もしない。
     static int copy(const std::string& fromFilePath, const std::string& destFilePath);
 
+    
     /// 指定したパスのファイルを削除する。
     ///
     /// ファイルが存在しなかった場合は何もしない。
@@ -47,8 +49,12 @@ public:
     /// @retval 0以外 エラー
     static int rename(const std::string& oldName, const std::string& newName);
 
-    static size_t getSize(const std::string& filePath);
+    /// get file size (bytes).
+    static size_t getFileSize(const std::string& filePath);
 
+    /// return temporary file path
+    static std::string getTempFilePath(const std::string& tmpdir ="/tmp/");
+    
 private:
     static std::size_t BUFFER_SIZE;
 };

@@ -26,12 +26,12 @@
 // const int TlSparseMatrix::MAX_INT = std::numeric_limits<unsigned int>::max();
 
 TlSparseMatrix::TlSparseMatrix(int row, int col)
-    : m_nRows(row), m_nCols(col)
+    : TlMatrixObject(RSFD), m_nRows(row), m_nCols(col)
 {
 }
 
 TlSparseMatrix::TlSparseMatrix(const TlSparseMatrix& rhs)
-        : m_nRows(rhs.m_nRows), m_nCols(rhs.m_nCols), m_aMatrix(rhs.m_aMatrix)
+    : TlMatrixObject(RSFD), m_nRows(rhs.m_nRows), m_nCols(rhs.m_nCols), m_aMatrix(rhs.m_aMatrix)
 {
 }
 
@@ -132,7 +132,7 @@ double TlSparseMatrix::pop(int* pRow, int* pCol)
 }
 
 
-void TlSparseMatrix::add(const std::vector<TlMatrixElement>& elements)
+void TlSparseMatrix::add(const std::vector<TlMatrixObject::MatrixElement>& elements)
 {
     const std::size_t numOfItems = elements.size();
     for (std::size_t i = 0; i < numOfItems; ++i) {
@@ -302,10 +302,10 @@ std::vector<int> TlSparseMatrix::getColIndexList() const
 }
 
 
-std::vector<TlMatrixElement> TlSparseMatrix::getMatrixElements() const
+std::vector<TlMatrixObject::MatrixElement> TlSparseMatrix::getMatrixElements() const
 {
     const std::size_t numOfSize = this->getSize();
-    std::vector<TlMatrixElement> answer(numOfSize);
+    std::vector<TlMatrixObject::MatrixElement> answer(numOfSize);
 
     std::size_t count = 0;
     const_iterator itEnd = this->end();

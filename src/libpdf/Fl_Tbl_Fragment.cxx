@@ -52,7 +52,7 @@ Fl_Tbl_Fragment::Fl_Tbl_Fragment(const Fl_Geometry& flGeom)
     if (flag == 0) {            // If the table was not written, write table.
         prepare();
 
-        if (TlFile::isExist("fl_Table/FragmentTable") == false) {
+        if (TlFile::isExistFile("fl_Table/FragmentTable") == false) {
             this->makeTable();
         }
 

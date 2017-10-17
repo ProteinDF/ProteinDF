@@ -28,6 +28,11 @@
 #include "TlDistributeVector.h"
 #include "TlSparseSymmetricMatrix.h"
 
+#ifdef HAVE_HDF5
+#include "TlHdf5Utils.h"
+#endif // HAVE_HDF5
+
+
 class TlDistributeSymmetricMatrix : public TlDistributeMatrix {
 public:
     enum DIAGONAL_METHOD {
@@ -44,6 +49,9 @@ public:
 
     virtual ~TlDistributeSymmetricMatrix();
 
+protected:
+    virtual size_type getNumOfElements() const;
+    
 public:
     void resize(int nSize);
 
@@ -89,7 +97,6 @@ public:
     /// 指定された要素を持つ疎行列を返す
     // void getPartialMatrix(TlSparseSymmetricMatrix& ioMatrix) const;
     bool getSparseMatrixX(TlSparseSymmetricMatrix* pMatrix, bool isFinalize = false) const;
-    bool getPartialMatrixX(TlPartialSymmetricMatrix* pMatrix, bool isFinalize = false) const;
 
     TlVector getPartialMatrix(int* pStartRow, int* pEndRow, int* pStartCol, int* pEndCol) const;
 
@@ -98,11 +105,6 @@ public:
     /// 全ノードがこの関数を呼び出す必要がある。
     void mergeSparseMatrix(const TlSparseSymmetricMatrix& M);
 
-    /// 各ノードが与えた部分行列を大域行列に加算する。
-    /// 
-    /// 全ノードがこの関数を呼び出す必要がある。
-    void mergePartialMatrix(const TlPartialSymmetricMatrix& M);
-    void mergePartialMatrix(const std::list<TlPartialSymmetricMatrix>& M);
 
     virtual void mergeSparseMatrixAsync(const TlSparseMatrix* pMatrix,
                                         bool isFinalize = false);
@@ -125,19 +127,9 @@ public:
     virtual double sum() const;
 
     /// 指定された要素(グローバル)がどのプロセスが所有しているかを返す
-    virtual int getProcIdForIndex(index_type globalRow, index_type globalCol) const {
-        if (globalRow < globalCol) {
-            std::swap(globalRow, globalCol);
-        }
-        return TlDistributeMatrix::getProcIdForIndex(globalRow, globalCol);
-    }
+    virtual int getProcIdForIndex(index_type globalRow, index_type globalCol) const;
 
-    virtual int getIndex(index_type globalRow, index_type globalCol) const {
-        if (globalRow < globalCol) {
-            std::swap(globalRow, globalCol);
-        }
-        return TlDistributeMatrix::getIndex(globalRow, globalCol);
-    }
+    virtual size_type getIndex(index_type globalRow, index_type globalCol) const;
 
     TlDistributeMatrix choleskyFactorization(const double threshold = 1.0E-16) const;
     TlDistributeMatrix choleskyFactorization_mod(const double threshold = 1.0E-16) const;
@@ -155,18 +147,32 @@ public:
     virtual bool load(const std::string& sFilePath);
     virtual bool load(std::ifstream& ifs);
     virtual bool save(const std::string& sFilePath) const;
-    //virtual bool save(std::ofstream& ofs) const;
-//   bool saveText(const std::string& sFilePath) const;
-//   bool saveText(std::ofstream& ofs) const;
 
+// protected:
+//     virtual void saveElements(TlFileMatrix* pFileMatrix, const std::vector<TlMatrixObject::MatrixElement>& elements) const;
+    
+#ifdef HAVE_HDF5
+public:
+    virtual bool saveHdf5(const std::string& filepath, const std::string& h5path) const;
+    virtual bool loadHdf5(const std::string& filepath, const std::string& h5path);
+
+protected:
+    // bool saveHdf5(const std::string& filepath, const std::string& h5path, int saveMatType) const;
+    virtual size_type getArrayIndex(const index_type row, const index_type col) const;    
+    // void saveElements(TlHdf5Utils* pH5, const std::string& path,
+    //                   const std::vector<TlMatrixObject::MatrixElement>& elements) const;
+#endif // HAVE_HDF5
+
+
+protected:
+    virtual std::vector<TlMatrixObject::MatrixElement> getMatrixElementsInLocal() const;
+
+    
 public:
     // need to call by all processes.
     template <typename T>
     void print(T& out) const;
 
-protected:
-    virtual void getPartialMatrixX_registerTask(TlPartialMatrix* pMatrix) const;
-    
 protected:
     bool load_RLHD(std::ifstream& ifs);
     bool load_CLHD(std::ifstream& ifs);
@@ -245,6 +251,38 @@ void TlDistributeSymmetricMatrix::print(T& out) const
             if (rComm.isMaster() == true) {
                 out << TlUtils::format(" %5d  ", i+1);
             }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             for (int j = ord; ((j < ord+10) && (j < nNumOfDim)); ++j) {
                 if (j > i) {

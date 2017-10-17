@@ -30,11 +30,16 @@
 #include "scalapack.h"
 #include "TlMath.h"
 #include "TlVector.h"
+#include "TlMatrixObject.h"
 #include "TlMatrix.h"
 #include "TlDistributeMatrix.h"
 #include "TlDistributeSymmetricMatrix.h"
 #include "TlFileMatrix.h"
 #include "TlCommunicate.h"
+
+#ifdef HAVE_HDF5
+#include "TlHdf5Utils.h"
+#endif // HAVE_HDF5
 
 //#define DEBUGOUT_GET_PARTIAL_MATRIX
 
@@ -90,8 +95,7 @@ TlScalapackContext::TlScalapackContext()
         TlScalapackContext::m_nProcGridCol = c;
     }
 
-    //   Cblacs_gridinit(&(TlScalapackContext::m_nContext), "Col",
-    //          TlScalapackContext::m_nProcGridRow, TlScalapackContext::m_nProcGridCol);
+    // "Row-major" is default
     Cblacs_gridinit(&(TlScalapackContext::m_nContext), "Row-major",
                     TlScalapackContext::m_nProcGridRow, TlScalapackContext::m_nProcGridCol);
 }
@@ -163,7 +167,7 @@ void TlDistributeMatrix::LocalMatrixHeader::save(std::ofstream* pOs)
 
 ////////////////////////////////////////////////////////////////////////
 TlDistributeMatrix::TlDistributeMatrix(const index_type row, const index_type col)
-    : log_(TlLogging::getInstance()),
+    : TlMatrixObject(CSFD), log_(TlLogging::getInstance()),
       m_nContext(0), m_nRows(row), m_nCols(col), m_nBlockSize(TlDistributeMatrix::systemBlockSize_),
       pData_(NULL)
 {
@@ -172,22 +176,26 @@ TlDistributeMatrix::TlDistributeMatrix(const index_type row, const index_type co
 
 
 TlDistributeMatrix::TlDistributeMatrix(const TlDistributeMatrix& rhs)
-    : log_(TlLogging::getInstance()),
+    : TlMatrixObject(CSFD), log_(TlLogging::getInstance()),
       m_nContext(0), m_nRows(rhs.m_nRows), m_nCols(rhs.m_nCols), m_nBlockSize(rhs.m_nBlockSize),
       pData_(NULL)
 {
     this->initialize();
-    std::copy(rhs.pData_, rhs.pData_ + rhs.getNumOfMyElements(), this->pData_);
+    if (rhs.getNumOfMyElements() > 0) {
+        std::copy(rhs.pData_, rhs.pData_ + rhs.getNumOfMyElements(), this->pData_);
+    }
 }
 
 
 TlDistributeMatrix::TlDistributeMatrix(const TlDistributeSymmetricMatrix& rhs)
-    : log_(TlLogging::getInstance()),
+    : TlMatrixObject(CSFD), log_(TlLogging::getInstance()),
       m_nContext(0), m_nRows(rhs.m_nRows), m_nCols(rhs.m_nCols), m_nBlockSize(rhs.m_nBlockSize),
       pData_(NULL)
 {
     this->initialize();
-    std::copy(rhs.pData_, rhs.pData_ + rhs.getNumOfMyElements(), this->pData_);
+    if (rhs.getNumOfMyElements() > 0) {
+        std::copy(rhs.pData_, rhs.pData_ + rhs.getNumOfMyElements(), this->pData_);
+    }
     
     TlCommunicate& rComm = TlCommunicate::getInstance();
     assert(rComm.checkNonBlockingCommunications());
@@ -380,7 +388,7 @@ TlDistributeMatrix::TlDistributeMatrix(const TlDistributeSymmetricMatrix& rhs)
 
 TlDistributeMatrix::TlDistributeMatrix(const TlDistributeVector& rhs,
                                        const index_type row, const index_type col)
-    : log_(TlLogging::getInstance()),
+    : TlMatrixObject(CSFD), log_(TlLogging::getInstance()),
       m_nContext(0), m_nRows(row), m_nCols(col), m_nBlockSize(TlDistributeMatrix::systemBlockSize_),
       pData_(NULL)
 {
@@ -393,7 +401,7 @@ TlDistributeMatrix::TlDistributeMatrix(const TlDistributeVector& rhs,
 
 
 TlDistributeMatrix::TlDistributeMatrix(const TlRowVectorMatrix& rhs)
-    : log_(TlLogging::getInstance()),
+    : TlMatrixObject(CSFD), log_(TlLogging::getInstance()),
       m_nContext(0), m_nRows(rhs.getNumOfRows()), m_nCols(rhs.getNumOfCols()),
       m_nBlockSize(TlDistributeMatrix::systemBlockSize_),
       pData_(NULL)
@@ -443,6 +451,12 @@ void TlDistributeMatrix::setUsingPartialIO(bool isUsePIO)
 }
 
 
+TlMatrixObject::size_type TlDistributeMatrix::getNumOfElements() const
+{
+    return TlMatrixObject::getNumOfElements_RSFD();
+}
+
+
 std::size_t TlDistributeMatrix::getMemSize() const
 {
 //     std::size_t answer = sizeof(TlDistributeMatrix);
@@ -462,8 +476,7 @@ void TlDistributeMatrix::resize(const index_type row, const index_type col)
 {
     assert(row > 0);
     assert(col > 0);
-    if ((row == this->getNumOfRows()) &&
-        (col == this->getNumOfCols())) {
+    if ((row == this->getNumOfRows()) && (col == this->getNumOfCols())) {
         // do not need operation.
         return;
     }
@@ -479,86 +492,31 @@ void TlDistributeMatrix::resize(const index_type row, const index_type col)
     // copy
     const int copyMaxRows = std::min(row, tmp.getNumOfRows());
     const int copyMaxCols = std::min(col, tmp.getNumOfCols());
-    if (this->getBlockSize() == tmp.getBlockSize()) {
+    assert(this->getBlockSize() == tmp.getBlockSize());
+    {
         // ブロックサイズが同じでプロセスグリッドが同一なら
         // ローカルコピーで十分。
-        std::vector<int>::const_iterator rEnd = tmp.m_RowIndexTable.end();
-        std::vector<int>::const_iterator cEnd = tmp.m_ColIndexTable.end();
-        int index = 0;
-        for (std::vector<int>::const_iterator c = tmp.m_ColIndexTable.begin(); c != cEnd; ++c) {
-            const int col = *c;
-            
-            for (std::vector<int>::const_iterator r = tmp.m_RowIndexTable.begin(); r != rEnd; ++r) {
-                const int row = *r;
-                
-                if ((row < copyMaxRows) && (col < copyMaxCols)) {
-                    const double value = tmp.pData_[index];
-                    const int l = this->getIndex(row, col);
-                    if (l != -1) {
-                        this->pData_[l] = value;
-                    }
-                }
-                ++index;
+        std::vector<index_type>::const_iterator rBegin = tmp.m_RowIndexTable.begin();
+        std::vector<index_type>::const_iterator cBegin = tmp.m_ColIndexTable.begin();
+        std::vector<index_type>::const_iterator rEnd = std::lower_bound(tmp.m_RowIndexTable.begin(),
+                                                                        tmp.m_RowIndexTable.end(),
+                                                                        copyMaxRows);
+        std::vector<index_type>::const_iterator cEnd = std::lower_bound(tmp.m_ColIndexTable.begin(),
+                                                                        tmp.m_ColIndexTable.end(),
+                                                                        copyMaxCols);
+        for (std::vector<index_type>::const_iterator r = rBegin; r != rEnd; ++r) {
+            const index_type row = *r;
+            for (std::vector<index_type>::const_iterator c = cBegin; c != cEnd; ++c) {
+                const index_type col = *c;
+                const index_type oldIndex = std::distance(rBegin, r) + std::distance(cBegin, c) * tmp.m_nMyRows;
+                assert(0 <= oldIndex);
+                assert(oldIndex < tmp.getNumOfMyElements());
+    
+                const double value = tmp.pData_[oldIndex];
+                this->set(row, col, value);
             }
         }
-    } else {
-        // 全通信を行う: too slow
-        TlCommunicate& rComm = TlCommunicate::getInstance();
-        const int nProc = rComm.getNumOfProc();
-        const int nRank = rComm.getRank();
-        for (int i = 0; i < nProc; ++i) {
-            index_type numOfLocalRows;
-            index_type numOfLocalCols;
-            std::vector<index_type> rowIndexTable;
-            std::vector<index_type> colIndexTable;
-            double* pBuf = NULL;
-            
-            if (i == nRank) {
-                numOfLocalRows = this->m_nMyRows;
-                numOfLocalCols = this->m_nMyCols;
-                rowIndexTable = tmp.m_RowIndexTable;
-                colIndexTable = tmp.m_ColIndexTable;
-                const std::size_t bufSize = numOfLocalRows * numOfLocalCols;
-                pBuf = new double[bufSize];
-                std::copy(this->pData_, this->pData_ + bufSize, pBuf);
-            }
-            rComm.broadcast(numOfLocalRows, i);
-            rComm.broadcast(numOfLocalCols, i);
-            rComm.broadcast(rowIndexTable, i);
-            rComm.broadcast(colIndexTable, i);
-            const std::size_t bufSize = numOfLocalRows * numOfLocalCols;
-            if (i != nRank) {
-                pBuf = new double[bufSize];
-            }
-            rComm.broadcast(pBuf, bufSize, i);
-            
-            std::vector<int>::const_iterator rEnd = rowIndexTable.end();
-            std::vector<int>::const_iterator cEnd = colIndexTable.end();
-            int index = 0;
-            for (std::vector<int>::const_iterator c = colIndexTable.begin(); c != cEnd; ++c) {
-                const int col = *c;
-                
-                for (std::vector<int>::const_iterator r = rowIndexTable.begin(); r != rEnd; ++r) {
-                    const int row = *r;
-                    
-                    if ((row < copyMaxRows) && (col < copyMaxCols)) {
-                        const double value = pBuf[index];
-                        const int l = this->getIndex(row, col);
-                        if (l != -1) {
-                            this->pData_[l] = value;
-                        }
-                    }
-                    ++index;
-                }
-            }
-
-            if (pBuf != NULL) {
-                delete[] pBuf;
-                pBuf = NULL;
-            }
-            rComm.barrier();
-        }
-    }
+    } 
 }
 
 
@@ -874,36 +832,6 @@ bool TlDistributeMatrix::getSparseMatrixX(TlSparseMatrix* pMatrix, bool isFinali
 }
 
 
-// 複数スレッドから同時に呼び出さない
-bool TlDistributeMatrix::getPartialMatrixX(TlPartialMatrix* pMatrix, bool isFinalize) const
-{
-    bool answer = false;
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
-#pragma omp critical (TlDistributeMatrix__getPartialMatrixX)
-    {
-        // Client task通信処理
-        this->getPartialMatrixX_registerTask(pMatrix);
-
-        answer = this->getPartialMatrix_ClientTasks(pMatrix);
-
-        // Server処理
-        this->getPartialMatrix_ServerTasks(isFinalize);
-    }
-
-    if (isFinalize == true) {
-        rComm.checkNonBlockingCommunications();
-        assert(this->gpmClientTasks_.size() == 0);
-#pragma omp critical (TlDistributeMatrix_gpmClientTasks_)
-        {
-            this->gpmClientTasks_.clear();
-        }
-    }
-
-    return answer;
-}
-
-
 void TlDistributeMatrix::getPartialMatrix_ServerTasks(const bool isFinalize) const
 {
 #pragma omp critical (TlDistributeMatrix__getPartialMatrix_ServerTasks)
@@ -1124,59 +1052,6 @@ void TlDistributeMatrix::getSparseMatrixX_registerTask(TlSparseMatrix* pMatrix) 
                     task.components[proc].push_back(col);
                 }
             }
-#pragma omp critical (TlDistributeMatrix_gpmClientTasks_)
-            {
-                this->gpmClientTasks_[pMatrix] = task;
-            }
-        }
-    }
-}
-
-
-void TlDistributeMatrix::getPartialMatrixX_registerTask(TlPartialMatrix* pMatrix) const
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    const int numOfProcs = rComm.getNumOfProc();
-
-    // Client task登録処理
-    if (pMatrix != NULL) {
-        // 受信処理
-        assert(this->getNumOfRows() == pMatrix->getNumOfRows());
-        assert(this->getNumOfCols() == pMatrix->getNumOfCols());
-        if (this->gpmClientTasks_.find(pMatrix) == this->gpmClientTasks_.end()) {
-            // タスクを初期化
-            GPM_ClientTask task;
-            task.state.resize(numOfProcs, 0);
-            task.sessionIds.resize(numOfProcs, 0);
-            for (int proc = 0; proc < numOfProcs; ++proc) {
-                task.sessionIds[proc] = this->getPartialMatrix_getSessionId(proc);
-            }
-            task.components.resize(numOfProcs, std::vector<index_type>());
-            task.numOfComponents.resize(numOfProcs);
-            task.elementValues.resize(numOfProcs);
-            task.isFinished = false;
-            
-            // 要求された要素をどのプロセスが持っているかをチェック
-            const index_type startRow = pMatrix->getStartRow();
-            const index_type startCol = pMatrix->getStartCol();
-            const index_type endRow = startRow + pMatrix->getRowRange();
-            const index_type endCol = startCol + pMatrix->getColRange();
-            for (index_type row = startRow; row < endRow; ++row) {
-                for (index_type col = startCol; col < endCol; ++col) {
-                    
-                    const int localIndex = this->getIndex(row, col);
-                    if (localIndex != -1) {
-                        // 自分が持っていれば格納すべき行列に値を代入する
-                        pMatrix->set(row, col, this->getLocal(row, col));
-                    } else {
-                        // 他プロセスが持っていれば、そのプロセスに要求するためのリストを作成する
-                        const int proc = this->getProcIdForIndex(row, col);
-                        task.components[proc].push_back(row);
-                        task.components[proc].push_back(col);
-                    }
-                }
-            }
-            
 #pragma omp critical (TlDistributeMatrix_gpmClientTasks_)
             {
                 this->gpmClientTasks_[pMatrix] = task;
@@ -1486,43 +1361,6 @@ void TlDistributeMatrix::mergeSparseMatrix(const TlSparseMatrix& M)
             indexArrays[targetProc].push_back(globalRow);
             indexArrays[targetProc].push_back(globalCol);
             values[targetProc].push_back(value);
-        }
-    }
-
-    this->mergeMatrix_common(indexArrays, values);
-    rComm.checkNonBlockingCommunications();
-}
-
-
-void TlDistributeMatrix::mergePartialMatrix(const TlPartialMatrix& M)
-{
-    assert(M.getNumOfRows() == this->getNumOfRows());
-    assert(M.getNumOfCols() == this->getNumOfCols());
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    rComm.checkNonBlockingCommunications();
-    const int numOfProcs = rComm.getNumOfProc();
-
-    // 送信すべきインデックスリストの作成
-    std::vector<std::vector<index_type> > indexArrays(numOfProcs);
-    std::vector<std::vector<double> > values(numOfProcs);
-
-    const index_type startRow = M.getStartRow();
-    const index_type startCol = M.getStartCol();
-    const index_type endRow = startRow + M.getRowRange();
-    const index_type endCol = startCol + M.getColRange();
-
-    for (index_type globalRow = startRow; globalRow < endRow; ++globalRow) {
-        for (index_type globalCol = startCol; globalCol < endCol; ++globalCol) {
-            const double value = M.get(globalRow, globalCol);
-            const size_type index = this->getIndex(globalRow, globalCol);
-            if (index != -1) {
-                this->pData_[index] += value;
-            } else {
-                const int targetProc = this->getProcIdForIndex(globalRow, globalCol);
-                indexArrays[targetProc].push_back(globalRow);
-                indexArrays[targetProc].push_back(globalCol);
-                values[targetProc].push_back(value);
-            }
         }
     }
 
@@ -1892,7 +1730,7 @@ void TlDistributeMatrix::mergeMatrixAsync_recv(bool isFinalize)
 
 double TlDistributeMatrix::trace() const
 {
-    assert(this->m_nRows == this->m_nCols);
+    const index_type dim = std::min<index_type>(this->getNumOfRows(), this->getNumOfCols());
 
     double answer = 0.0;
     const int nGlobalCols = this->m_nCols;
@@ -1978,6 +1816,7 @@ void TlDistributeMatrix::initialize()
     }
     this->pData_ = new double[this->getNumOfMyElements()];
     std::fill(this->pData_, this->pData_ + this->getNumOfMyElements(), 0.0);
+
     
     // 行方向のglobal_index v.s. local_indexのリストを作成
     {
@@ -2047,7 +1886,7 @@ void TlDistributeMatrix::initialize()
 }
 
 
-std::size_t TlDistributeMatrix::getNumOfMyElements() const {
+TlMatrixObject::index_type TlDistributeMatrix::getNumOfMyElements() const {
     return (this->m_nMyRows * this->m_nMyCols);
 }
 
@@ -2070,23 +1909,23 @@ int TlDistributeMatrix::getBlockSize() const {
 }
 
 
-int TlDistributeMatrix::getIndex(const index_type nGlobalRow, const index_type nGlobalCol) const
+TlMatrixObject::size_type TlDistributeMatrix::getIndex(const index_type nGlobalRow, const index_type nGlobalCol) const
 {
-    int nAnswer = -1;
+    size_type answer = -1;
 
-    std::vector<int>::const_iterator pRow = std::lower_bound(this->m_RowIndexTable.begin(), this->m_RowIndexTable.end(), nGlobalRow);
+    std::vector<index_type>::const_iterator pRow = std::lower_bound(this->m_RowIndexTable.begin(), this->m_RowIndexTable.end(), nGlobalRow);
     if ((pRow != this->m_RowIndexTable.end()) && (*pRow == nGlobalRow)) {
-        std::vector<int>::const_iterator pCol = std::lower_bound(this->m_ColIndexTable.begin(), this->m_ColIndexTable.end(), nGlobalCol);
+        std::vector<index_type>::const_iterator pCol = std::lower_bound(this->m_ColIndexTable.begin(), this->m_ColIndexTable.end(), nGlobalCol);
 
         if ((pCol != this->m_ColIndexTable.end()) && (*pCol == nGlobalCol)) {
-            const int localRow = pRow - this->m_RowIndexTable.begin();
-            const int localCol = pCol - this->m_ColIndexTable.begin();
+            const std::size_t localRow = pRow - this->m_RowIndexTable.begin();
+            const std::size_t localCol = pCol - this->m_ColIndexTable.begin();
 
-            nAnswer = localRow + localCol * (this->m_nMyRows);
+            answer = localRow + localCol * (this->m_nMyRows);
         }
     }
 
-    return nAnswer;
+    return answer;
 }
 
 
@@ -2108,6 +1947,9 @@ int TlDistributeMatrix::getProcIdForIndex(const index_type globalRow, const inde
 
 double TlDistributeMatrix::get(const index_type row, const index_type col) const
 {
+    assert((0 <= row) && (row < this->m_nRows));
+    assert((0 <= col) && (col < this->m_nCols));
+
     // this const_cast is requiered for PGI compiler
     // "error: expression must be an lvalue or a function designator"
     //DataType& data_tmp = const_cast<DataType&>(this->data_);
@@ -2601,117 +2443,119 @@ bool TlDistributeMatrix::load(std::ifstream& ifs)
 
     const int numOfProcs = rComm.getNumOfProc();
 
-    bool bAnswer = true;
-    enum {RSFD, CSFD, RLHD, CLHD, RUHD, CUHD, RSFS, CSFS, RLHS, CLHS, RUHS, CUHS, LHSC};
-
     // read header
-    int nType = 0;
+    bool answer = true;
+    int matType = 0;
+    std::vector<index_type> rowcol(2);
     if (rComm.isMaster() == true) {
-        ifs.read((char*)&(nType),         sizeof(int));
-        ifs.read((char*)&(this->m_nRows), sizeof(int));
-        ifs.read((char*)&(this->m_nCols), sizeof(int));
+        TlMatrix::getHeaderInfo(ifs, &matType, &(rowcol[0]), &(rowcol[1]));
     }
-    rComm.broadcast(bAnswer);
-    rComm.broadcast(nType);
+    rComm.broadcast(matType);
+    rComm.broadcast(&(rowcol[0]), 2, 0);
 
-    switch (nType) {
+    switch (matType) {
     case RSFD:
-        //     std::cerr << "load RSFD" << std::endl;
         break;
+
+    case CSFD:
+        break;
+        
     default:
         std::cerr << "this matrix type is not supported. stop." << std::endl;
-        bAnswer = false;
+        answer = false;
         break;
     }
 
-    rComm.broadcast(this->m_nRows);
-    rComm.broadcast(this->m_nCols);
+    this->m_nRows = rowcol[0];
+    this->m_nCols = rowcol[1];
     this->initialize();
-
+    
     if (rComm.isMaster() == true) {
         static const std::size_t bufferCount = FILE_BUFFER_SIZE / sizeof(double);
         std::vector<double> buf(bufferCount, 0.0);
 
-        index_type currentRow = 0;
-        index_type currentCol = 0;
-        const index_type maxRow = this->m_nRows;
-        const index_type maxCol = this->m_nCols;
+        index_type row = 0;
+        index_type col = 0;
+        size_type count = 0;
+        const size_type maxCount = this->getNumOfRows() * this->getNumOfCols();
         bool isFinished = false;
 
-        std::vector<int> sizeLists(numOfProcs, 0);
-        std::vector<std::vector<index_type> > rowColLists(numOfProcs);
-        std::vector<std::vector<double> > valueLists(numOfProcs);
+        std::vector<index_type> sizeLists(numOfProcs, 0);
+        std::vector<std::vector<TlMatrixObject::MatrixElement> > elementsBuf(numOfProcs);
         std::vector<bool> isSendData(numOfProcs, false);
-        
+
         while (isFinished == false) {
             // buffer分を一度に読み込み
             ifs.read((char*)(&buf[0]), sizeof(double) * bufferCount);
 
             // 各プロセスのバッファに振り分ける
-            std::map<int, std::vector<index_type> > tmpRowColLists;
-            std::map<int, std::vector<double> > tmpValueLists;
-            for (std::size_t i = 0; i < bufferCount; ++i) {
-                const int proc = this->getProcIdForIndex(currentRow, currentCol);
-                if (proc == 0) {
-                    // masterが持っている
-                    const size_type index = this->getIndex(currentRow, currentCol);
-                    assert(index != -1);
-                    this->pData_[index] = buf[i];
+            std::vector<std::vector<TlMatrixObject::MatrixElement> > elements(numOfProcs);
+            for (size_type i = 0; i < bufferCount; ++i) {
+                if (matType == RSFD) {
+                    const std::ldiv_t d = std::ldiv(count, this->getNumOfCols());
+                    row = d.quot;
+                    col = d.rem;
                 } else {
-                    tmpRowColLists[proc].push_back(currentRow);
-                    tmpRowColLists[proc].push_back(currentCol);
-                    tmpValueLists[proc].push_back(buf[i]);
+                    assert(matType == CSFD);
+                    const std::ldiv_t d = std::ldiv(count, this->getNumOfRows());
+                    col = d.quot;
+                    row = d.rem;
                 }
-                
-                // count up
-                ++currentCol;
-                if (currentCol >= maxCol) {
-                    currentCol = 0;
-                    ++currentRow;
-                    if (currentRow >= maxRow) {
-                        isFinished = true;
-                        break;
-                    }
-                }
+                const int proc = this->getProcIdForIndex(row, col);
+                elements[proc].push_back(TlMatrixObject::MatrixElement(row, col, buf[i]));
+
+                ++count;
+                if (count >= maxCount) {
+                    isFinished = true;
+                    break;
+                }                
             }
-
+            
+            
             // データを送信
-            std::map<int, std::vector<index_type> >::const_iterator itEnd = tmpRowColLists.end();
-            for (std::map<int, std::vector<index_type> >::const_iterator it = tmpRowColLists.begin(); it != itEnd; ++it) {
-                const int proc = it->first;
-                const int numOfContents = it->second.size() / 2;
-                assert(std::size_t(numOfContents) == tmpValueLists[proc].size());
-
+            for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
                 if (isSendData[proc] == true) {
                     rComm.wait(sizeLists[proc]);
                     if (sizeLists[proc] > 0) {
-                        rComm.wait(&(rowColLists[proc][0]));
-                        rComm.wait(&(valueLists[proc][0]));
+                        rComm.wait(&(elementsBuf[proc][0]));
                     }
                     isSendData[proc] = false;
                 }
                 
-                sizeLists[proc] = numOfContents;
-                rowColLists[proc] = tmpRowColLists[proc];
-                valueLists[proc] = tmpValueLists[proc];
+                sizeLists[proc] = elements[proc].size();
+                elementsBuf[proc] = elements[proc];
                 
                 rComm.iSendData(sizeLists[proc], proc, TAG_LOAD_SIZE);
                 if (sizeLists[proc] > 0) {
-                    rComm.iSendDataX(&(rowColLists[proc][0]), (sizeLists[proc] * 2), proc, TAG_LOAD_ROWCOLS);
-                    rComm.iSendDataX(&(valueLists[proc][0]), sizeLists[proc], proc, TAG_LOAD_VALUES);
+                    rComm.iSendDataX(&(elementsBuf[proc][0]), sizeLists[proc], proc, TAG_LOAD_VALUES);
                 }
                 isSendData[proc] = true;
             }
+
+            // proc=0分データの書き込み
+            {
+                const index_type sizeList = elements[0].size();
+                for (index_type i = 0; i < sizeList; ++i) {
+                    const index_type r = elements[0][i].row;
+                    const index_type c = elements[0][i].col;
+                    const size_type index = this->getIndex(r, c);
+                    assert(index != -1);
+                    this->pData_[index] = elements[0][i].value;
+                }
+            }   
         } // end while
 
         for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
             if (isSendData[proc] == true) {
                 rComm.wait(sizeLists[proc]);
-                rComm.wait(&(rowColLists[proc][0]));
-                rComm.wait(&(valueLists[proc][0]));
+                if (sizeLists[proc] > 0) {
+                    rComm.wait(&(elementsBuf[proc][0]));
+                }
                 isSendData[proc] = false;
             }
         }
+
+        assert(rComm.checkNonBlockingCommunications());
         
         // 終了メッセージを全ノードに送る
         std::vector<int> endMsg(numOfProcs, 0);
@@ -2720,13 +2564,12 @@ bool TlDistributeMatrix::load(std::ifstream& ifs)
         }      
         for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
             rComm.wait(endMsg[proc]);
-        }      
+        }
     } else {
         // slave
         const int root = 0;
-        int sizeList = 0;
-        std::vector<index_type> rowColList;
-        std::vector<double> valueList;
+        index_type sizeList = 0;
+        std::vector<TlMatrixObject::MatrixElement> elements;
         int endMsg = 0;
         
         rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
@@ -2735,160 +2578,431 @@ bool TlDistributeMatrix::load(std::ifstream& ifs)
         while (isLoopBreak == false) {
             if (rComm.test(sizeList) == true) {
                 rComm.wait(sizeList);
-//                 std::cerr << TlUtils::format("RECV [%d] size=%d",
-//                                              rComm.getRank(),
-//                                              sizeList)
-//                           << std::endl;
                 if (sizeList > 0) {
-                    rowColList.resize(sizeList * 2);
-                    valueList.resize(sizeList);
-                    rComm.receiveDataX(&(rowColList[0]), sizeList * 2, root, TAG_LOAD_ROWCOLS);
-                    rComm.receiveDataX(&(valueList[0]), sizeList, root, TAG_LOAD_VALUES);
+                    elements.resize(sizeList);
+                    rComm.receiveDataX(&(elements[0]), sizeList, root, TAG_LOAD_VALUES);
 
-                    for (int i = 0; i < sizeList; ++i) {
-                        const index_type row = rowColList[i * 2    ];
-                        const index_type col = rowColList[i * 2 + 1];
+                    for (index_type i = 0; i < sizeList; ++i) {
+                        const index_type row = elements[i].row;
+                        const index_type col = elements[i].col;
                         const size_type index = this->getIndex(row, col);
-                        
-//                         std::cerr << TlUtils::format("RECV [%d] (%4d, %4d)",
-//                                                      rComm.getRank(),
-//                                                      row, col) << std::endl;
-                        
                         assert(index != -1);
-                        if (index == -1) {
-                            abort();
-                        }
-                        this->pData_[index] = valueList[i];
+                        this->pData_[index] = elements[i].value;
                     }
                 }
-
                 rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
             }
 
             if (rComm.test(endMsg) == true) {
                 rComm.wait(endMsg);
                 rComm.cancel(sizeList);
-//                 std::cerr << TlUtils::format("RECV [%d] END",
-//                                                  rComm.getRank())
-//                               << std::endl;
                 isLoopBreak = true;
             }
         }
     }
 
     assert(rComm.checkNonBlockingCommunications());
-    return bAnswer;
+    return answer;
 }
+
+
+// std::vector<std::vector<TlMatrixObject::MatrixElement> >
+// TlDistributeMatrix::load_RSFD_master(index_type* pRow, index_type* pCol)
+// {
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+//     const int numOfProcs = rComm.getNumOfProcs();
+// 
+//     std::vector<std::vector<TlMatrixObject::MatrixElement> > answer(numOfProcs);
+//     
+//     const index_type maxRow = this->m_nRows;
+//     const index_type maxCol = this->m_nCols;
+//     for (std::size_t i = 0; i < bufferCount; ++i) {
+//         const int proc = this->getProcIdForIndex(*pRow, *pCol);
+//         answer[proc].push_back(TlMatrixObject::MatrixElement(currentRow, currentCol, buf[i]));
+//         // if (proc == 0) {
+//         //     // masterが担当
+//         //     const index_type index = this->getIndex(currentRow, currentCol);
+//         //     assert(index != -1);
+//         //     this->pData_[index] = buf[i];
+//         // } else {
+//         // }
+//                 
+//         // count up
+//         ++(*pCol);
+//         if ((*pCol) >= maxCol) {
+//             *pCol = 0;
+//             ++(*pRow);
+//             if (*pRow >= maxRow) {
+//                 isFinished = true;
+//                 break;
+//             }
+//         }
+//     }
+// 
+//     return isFinished;
+// }
 
 
 bool TlDistributeMatrix::save(const std::string& sFilePath) const
 {
-    //std::cerr << "TlDistributeMatrix::save() file=" << sFilePath << std::endl;
     if (TlDistributeMatrix::isUsingPartialIO == true) {
         return this->saveLocal(sFilePath);
     }
     
-    bool bAnswer = true;
+    bool answer = true;
 
     TlCommunicate& rComm = TlCommunicate::getInstance();
     assert(rComm.checkNonBlockingCommunications());
 
     if (rComm.isMaster() == true) {
         // master
-        const int nGlobalRows = this->m_nRows;
-        const int nGlobalCols = this->m_nCols;
-        TlFileMatrix fm(sFilePath, nGlobalRows, nGlobalCols);
+        const index_type globalRows = this->getNumOfRows();
+        const index_type globalCols = this->getNumOfCols();
+        TlFileMatrix fm(sFilePath, globalRows, globalCols);
 
         // store local matrix
         {
-            const int nRows = this->m_nMyRows;
-            const int nCols = this->m_nMyCols;
-            for (int r = 0; r < nRows; ++r) {
-                const int nGlobalRowIndex = this->m_RowIndexTable[r];
-                if (nGlobalRowIndex >= nGlobalRows) {
-                    continue;
-                }
-
-                for (int c = 0; c < nCols; ++c) {
-                    const int nGlobalColIndex = this->m_ColIndexTable[c];
-                    if (nGlobalColIndex >= nGlobalCols) {
-                        continue;
-                    }
-
-                    const int index = r +  nRows * c; // row-major
-                    fm.set(nGlobalRowIndex, nGlobalColIndex, this->pData_[index]);
-                }
-            }
+            const std::vector<TlMatrixObject::MatrixElement> buf = this->getMatrixElementsInLocal();
+            this->saveElements(&fm, buf);
         }
-
+        
         // recive submatrix & write
         const int numOfSlaves = rComm.getNumOfProc() -1;
         for (int i = 0; i < numOfSlaves; ++i) {
-//       std::cerr << "TlDistributeMatrix::save() loop i = " << i << std::endl;
-            int msg = 0;
             int src = 0;
-            rComm.receiveDataFromAnySource(msg, &src, TAG_SAVE_HANDSHAKE); // どのプロセスから依頼があったかを調査
-            assert(msg == 0);
-//       std::cerr << "request from " << src << std::endl;
-            msg = 0;
-            rComm.sendData(msg, src, TAG_SAVE_HANDSHAKE_OK); // そのプロセスにデータ送信を依頼
+            int tag = TAG_SAVE_HANDSHAKE;
+            size_type bufSize = 0;            
+            rComm.iReceiveDataFromAnySource(bufSize, tag);
+            rComm.wait(&bufSize, &src);
+            
+            std::vector<TlMatrixObject::MatrixElement> buf(bufSize);
+            rComm.receiveDataX(&(buf[0]), bufSize, src, TAG_SAVE_DATA);
 
-            index_type nRows;
-            index_type nCols;
-            std::vector<index_type> rowIndexTable;
-            std::vector<index_type> colIndexTable;
-
-            rComm.receiveData(nRows, src, TAG_SAVE_DATA_ROWS);
-            rComm.receiveData(nCols, src, TAG_SAVE_DATA_COLS);
-            rComm.receiveData(rowIndexTable, src, TAG_SAVE_DATA_ROWINDEX);
-            rComm.receiveData(colIndexTable, src, TAG_SAVE_DATA_COLINDEX);
-            const std::size_t bufSize = nRows * nCols;
-            double* pBuf = new double[bufSize];
-            rComm.iReceiveDataX(pBuf, bufSize, src, TAG_SAVE_DATA);
-            rComm.wait(pBuf);
-
-            const int nMaxRows = rowIndexTable.size();
-            const int nMaxCols = colIndexTable.size();
-            for (int r = 0; r < nMaxRows; ++r) {
-                const int nGlobalRowIndex = rowIndexTable[r];
-                if (nGlobalRowIndex >= nGlobalRows) {
-                    continue;
-                }
-
-                for (int c = 0; c < nMaxCols; ++c) {
-                    const int nGlobalColIndex = colIndexTable[c];
-                    if (nGlobalColIndex >= nGlobalCols) {
-                        continue;
-                    }
-
-                    const int index = r + nRows * c; // row-major
-                    fm.set(nGlobalRowIndex, nGlobalColIndex, pBuf[index]);
-                }
-            }
-
-            delete[] pBuf;
-            pBuf = NULL;
+            this->saveElements(&fm, buf);
         }
     } else {
         // slave: send submatrix
-        int msg = 0;
         const int root = 0;
-        rComm.sendData(msg, root, TAG_SAVE_HANDSHAKE);
-        rComm.receiveData(msg, root, TAG_SAVE_HANDSHAKE_OK);
-        assert(msg == 0);
-
-        rComm.sendData(this->m_nMyRows, root, TAG_SAVE_DATA_ROWS);
-        rComm.sendData(this->m_nMyCols, root, TAG_SAVE_DATA_COLS);
-        rComm.sendData(this->m_RowIndexTable, root, TAG_SAVE_DATA_ROWINDEX);
-        rComm.sendData(this->m_ColIndexTable, root, TAG_SAVE_DATA_COLINDEX);
-        rComm.iSendDataX(this->pData_, this->getNumOfMyElements(), root, TAG_SAVE_DATA);
-        rComm.wait(this->pData_);
+        const std::vector<TlMatrixObject::MatrixElement> buf = this->getMatrixElementsInLocal();
+        const size_type bufSize = buf.size();
+        rComm.sendData(bufSize, root, TAG_SAVE_HANDSHAKE);
+        rComm.iSendDataX(&(buf[0]), buf.size(), root, TAG_SAVE_DATA);
+        rComm.wait(&(buf[0]));
     }
 
-    rComm.broadcast(bAnswer);
+    rComm.broadcast(answer);
     assert(rComm.checkNonBlockingCommunications());
-    return bAnswer;
+    return answer;
 }
+
+
+std::vector<TlMatrixObject::MatrixElement> TlDistributeMatrix::getMatrixElementsInLocal() const
+{
+    const size_type numOfMyElements = this->getNumOfMyElements();
+    std::vector<TlMatrixObject::MatrixElement> answer(numOfMyElements);
+
+    size_type count = 0;
+    const index_type numOfRowIndeces = this->m_RowIndexTable.size();
+    const index_type numOfColIndeces = this->m_ColIndexTable.size();
+    for (index_type i = 0; i < numOfRowIndeces; ++i) {
+        const index_type globalRow = this->m_RowIndexTable[i];
+        
+        for (index_type j = 0; j < numOfColIndeces; ++j) {
+            const index_type globalCol = this->m_ColIndexTable[j];
+            
+            answer[count] = TlMatrixObject::MatrixElement(globalRow, globalCol,
+                                                          this->getLocal(globalRow, globalCol));
+            ++count;
+        }
+    }
+    assert(numOfMyElements == count);
+
+    return answer;
+}
+
+
+void TlDistributeMatrix::saveElements(TlFileMatrix* pFileMatrix, const std::vector<TlMatrixObject::MatrixElement>& elements) const
+{
+    std::vector<TlMatrixObject::MatrixElement>::const_iterator itEnd = elements.end();
+    for (std::vector<TlMatrixObject::MatrixElement>::const_iterator it = elements.begin();
+         it != itEnd; ++it) {
+        pFileMatrix->set(it->row, it->col, it->value);
+    }
+}
+
+
+// HDF5 ------------------------------------------------------------------------
+#ifdef HAVE_HDF5
+bool TlDistributeMatrix::saveHdf5(const std::string& filepath, const std::string& h5path) const
+{
+    this->saveHdf5(filepath, h5path, TlMatrixObject::CSFD);
+}
+
+
+bool TlDistributeMatrix::saveHdf5(const std::string& filepath, const std::string& h5path, const int saveMatType) const
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    if (rComm.isMaster() == true) {
+        TlHdf5Utils h5(filepath);
+
+        const size_type numOfAllElements = this->getNumOfElements();
+        h5.createDataSet_double(h5path, numOfAllElements);
+
+        // const int matType = this->getType();
+        h5.setAttr(h5path, "type", saveMatType);
+        h5.setAttr(h5path, "row", this->getNumOfRows());
+        h5.setAttr(h5path, "col", this->getNumOfCols());
+
+        // save local matrix
+        {
+            const std::vector<TlMatrixObject::MatrixElement> buf = this->getMatrixElementsInLocal();
+            this->saveElements(&h5, h5path, buf);
+        }
+        // recive submatrix & write
+        const int numOfSlaves = rComm.getNumOfProc() -1;
+        for (int i = 0; i < numOfSlaves; ++i) {
+            int src = 0;
+            int tag = TAG_SAVE_HANDSHAKE;
+            size_type bufSize = 0;
+            rComm.iReceiveDataFromAnySource(bufSize, tag);
+            rComm.wait(&bufSize, &src);
+            
+            std::vector<TlMatrixObject::MatrixElement> buf(bufSize);
+            rComm.receiveDataX(&(buf[0]), bufSize, src, TAG_SAVE_DATA);
+
+            this->saveElements(&h5, h5path, buf);
+        }
+    } else {
+        // slave: send submatrix
+        const int root = 0;
+        const std::vector<TlMatrixObject::MatrixElement> buf = this->getMatrixElementsInLocal();
+        const size_type bufSize = buf.size();
+        rComm.sendData(bufSize, root, TAG_SAVE_HANDSHAKE);
+        rComm.iSendDataX(&(buf[0]), buf.size(), root, TAG_SAVE_DATA);
+        rComm.wait(&(buf[0]));
+    }
+
+    rComm.barrier();
+    return true;
+}
+
+
+void TlDistributeMatrix::saveElements(TlHdf5Utils* pH5, const std::string& path,
+                                      const std::vector<TlMatrixObject::MatrixElement>& elements) const
+{
+    std::size_t numOfElements = elements.size();
+    const index_type numOfRows = this->getNumOfRows();
+    // const index_type numOfCols = this->getNumOfCols();
+    
+    std::vector<TlHdf5Utils::size_type> coord(numOfElements);
+    std::vector<double> values(numOfElements);
+    for (std::size_t i = 0; i < numOfElements; ++i) {
+        const index_type row = elements[i].row;
+        const index_type col = elements[i].col;
+        coord[i] = this->getArrayIndex(row, col);
+        values[i] = elements[i].value;
+    }
+
+    pH5->setSelectedElements(path, coord, values);
+}
+
+
+TlMatrixObject::size_type TlDistributeMatrix::getArrayIndex(const index_type row, const index_type col) const
+{
+    // RSFD
+    // const size_type numOfCols = this->getNumOfCols();
+    // const size_type index = numOfCols * row + col;
+    
+    // CSFD
+    const size_type numOfRows = this->getNumOfRows();
+    const size_type index = numOfRows * col + row;
+
+    return index;
+}
+
+
+bool TlDistributeMatrix::loadHdf5(const std::string& filepath, const std::string& h5path)
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    assert(rComm.checkNonBlockingCommunications());
+
+    const int numOfProcs = rComm.getNumOfProc();
+
+    // read header
+    bool answer = true;
+    int matType = 0;
+    std::vector<index_type> rowcol(2);
+    if (rComm.isMaster() == true) {
+        TlHdf5Utils h5(filepath);
+        h5.getAttr(h5path, "type", &matType);
+        h5.getAttr(h5path, "row", &(rowcol[0]));
+        h5.getAttr(h5path, "col", &(rowcol[1]));
+    }
+    rComm.broadcast(matType);
+    rComm.broadcast(&(rowcol[0]), 2, 0);
+
+    switch (matType) {
+    case RSFD:
+        break;
+
+    case CSFD:
+        break;
+        
+    default:
+        std::cerr << "this matrix type is not supported. stop." << std::endl;
+        answer = false;
+        break;
+    }
+
+    this->m_nRows = rowcol[0];
+    this->m_nCols = rowcol[1];
+    this->initialize();
+    
+    if (rComm.isMaster() == true) {
+        TlHdf5Utils h5(filepath);
+    
+        static const std::size_t bufferCount = FILE_BUFFER_SIZE / sizeof(double);
+        std::vector<double> buf(bufferCount, 0.0);
+        
+        index_type row = 0;
+        index_type col = 0;
+        size_type count = 0;
+        bool isFinished = false;
+    
+        std::vector<index_type> sizeLists(numOfProcs, 0);
+        std::vector<std::vector<TlMatrixObject::MatrixElement> > elementsBuf(numOfProcs);
+        std::vector<bool> isSendData(numOfProcs, false);
+    
+        const size_type numOfAllElements = this->getNumOfRows() * this->getNumOfCols();
+        int cycle = 0; 
+        while (isFinished == false) {
+            // buffer分を一度に読み込み
+            const size_type numOfLoadItems = std::min<size_type>((cycle +1) * bufferCount , numOfAllElements);
+            std::vector<TlHdf5Utils::size_type> coord(numOfLoadItems);
+            for (size_type i = 0; i < numOfLoadItems; ++i) {
+                coord[i] = cycle * bufferCount + i;
+            }
+            h5.getSelectedElements(h5path, coord, &buf);
+            ++cycle;
+    
+            // 各プロセスのバッファに振り分ける
+            std::vector<std::vector<TlMatrixObject::MatrixElement> > elements(numOfProcs);
+            for (size_type i = 0; i < numOfLoadItems; ++i) {
+                if (matType == RSFD) {
+                    const std::ldiv_t d = std::ldiv(count, this->getNumOfCols());
+                    row = d.quot;
+                    col = d.rem;
+                } else {
+                    assert(matType == CSFD);
+                    const std::ldiv_t d = std::ldiv(count, this->getNumOfRows());
+                    col = d.quot;
+                    row = d.rem;
+                }
+                const int proc = this->getProcIdForIndex(row, col);
+                elements[proc].push_back(TlMatrixObject::MatrixElement(row, col, buf[i]));
+    
+                ++count;
+                if (count >= numOfAllElements) {
+                    isFinished = true;
+                    break;
+                }                
+            }
+            
+            
+            // データを送信
+            for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
+                if (isSendData[proc] == true) {
+                    rComm.wait(sizeLists[proc]);
+                    if (sizeLists[proc] > 0) {
+                        rComm.wait(&(elementsBuf[proc][0]));
+                    }
+                    isSendData[proc] = false;
+                }
+                
+                sizeLists[proc] = elements[proc].size();
+                elementsBuf[proc] = elements[proc];
+                
+                rComm.iSendData(sizeLists[proc], proc, TAG_LOAD_SIZE);
+                if (sizeLists[proc] > 0) {
+                    rComm.iSendDataX(&(elementsBuf[proc][0]), sizeLists[proc], proc, TAG_LOAD_VALUES);
+                }
+                isSendData[proc] = true;
+            }
+    
+            // proc=0分データの書き込み
+            {
+                const index_type sizeList = elements[0].size();
+                for (index_type i = 0; i < sizeList; ++i) {
+                    const index_type r = elements[0][i].row;
+                    const index_type c = elements[0][i].col;
+                    const size_type index = this->getIndex(r, c);
+                    assert(index != -1);
+                    this->pData_[index] = elements[0][i].value;
+                }
+            }   
+        } // end while
+    
+        for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
+            if (isSendData[proc] == true) {
+                rComm.wait(sizeLists[proc]);
+                if (sizeLists[proc] > 0) {
+                    rComm.wait(&(elementsBuf[proc][0]));
+                }
+                isSendData[proc] = false;
+            }
+        }
+    
+        assert(rComm.checkNonBlockingCommunications());
+        
+        // 終了メッセージを全ノードに送る
+        std::vector<int> endMsg(numOfProcs, 0);
+        for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
+            rComm.iSendData(endMsg[proc], proc, TAG_LOAD_END);
+        }      
+        for (int proc = 1; proc < numOfProcs; ++proc) { // proc == 0 は送信しない
+            rComm.wait(endMsg[proc]);
+        }
+    } else {
+        // slave
+        const int root = 0;
+        index_type sizeList = 0;
+        std::vector<TlMatrixObject::MatrixElement> elements;
+        int endMsg = 0;
+        
+        rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
+        rComm.iReceiveData(endMsg, root, TAG_LOAD_END);
+        bool isLoopBreak = false;
+        while (isLoopBreak == false) {
+            if (rComm.test(sizeList) == true) {
+                rComm.wait(sizeList);
+                if (sizeList > 0) {
+                    elements.resize(sizeList);
+                    rComm.receiveDataX(&(elements[0]), sizeList, root, TAG_LOAD_VALUES);
+    
+                    for (index_type i = 0; i < sizeList; ++i) {
+                        const index_type row = elements[i].row;
+                        const index_type col = elements[i].col;
+                        const size_type index = this->getIndex(row, col);
+                        assert(index != -1);
+                        this->pData_[index] = elements[i].value;
+                    }
+                }
+                rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
+            }
+    
+            if (rComm.test(endMsg) == true) {
+                rComm.wait(endMsg);
+                rComm.cancel(sizeList);
+                isLoopBreak = true;
+            }
+        }
+    }
+
+    assert(rComm.checkNonBlockingCommunications());
+    return answer;
+}
+#endif // HAVE_HDF5
 
 
 bool TlDistributeMatrix::saveLocal(const std::string& filePath) const

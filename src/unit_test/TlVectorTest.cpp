@@ -1,9 +1,12 @@
-#include <limits>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif // HAVE_CONFIG_H
+
 #include "gtest/gtest.h"
 #include "TlVector.h"
 
-static const double EPS = 1.0E-10; // std::numeric_limits<double>::epsilon();
 static const std::string vct_path = "temp.vct";
+static const std::string h5_path = "temp.vct.h5";
 
 // {  0, 1, 2 } を返す
 TlVector getVectorA()
@@ -34,9 +37,9 @@ TEST(TlVector, constructer)
     TlVector a(3);
     
     EXPECT_EQ(TlVector::size_type(3), a.getSize());
-    EXPECT_NEAR(0.0, a[0], EPS);
-    EXPECT_NEAR(0.0, a[1], EPS);
-    EXPECT_NEAR(0.0, a[2], EPS);
+    EXPECT_DOUBLE_EQ(0.0, a[0]);
+    EXPECT_DOUBLE_EQ(0.0, a[1]);
+    EXPECT_DOUBLE_EQ(0.0, a[2]);
 }
 
 
@@ -50,9 +53,9 @@ TEST(TlVector, copyConstructer)
 
     TlVector b = a;
     EXPECT_EQ(TlVector::size_type(3), b.getSize());
-    EXPECT_NEAR( 0.0, b[0], EPS);
-    EXPECT_NEAR( 1.0, b[1], EPS);
-    EXPECT_NEAR( 2.0, b[2], EPS);
+    EXPECT_DOUBLE_EQ( 0.0, b[0]);
+    EXPECT_DOUBLE_EQ( 1.0, b[1]);
+    EXPECT_DOUBLE_EQ( 2.0, b[2]);
 }
 
 
@@ -68,9 +71,9 @@ TEST(TlVector, operatorCopy)
     b = a;
 
     EXPECT_EQ(TlVector::size_type(3), b.getSize());
-    EXPECT_NEAR( 0.0, b[0], EPS);
-    EXPECT_NEAR( 1.0, b[1], EPS);
-    EXPECT_NEAR( 2.0, b[2], EPS);
+    EXPECT_DOUBLE_EQ( 0.0, b[0]);
+    EXPECT_DOUBLE_EQ( 1.0, b[1]);
+    EXPECT_DOUBLE_EQ( 2.0, b[2]);
 }
 
 
@@ -80,16 +83,16 @@ TEST(TlVector, resize)
     
     a.resize(5);
     EXPECT_EQ(TlVector::size_type(5), a.getSize());
-    EXPECT_NEAR( 0.0, a[0], EPS);
-    EXPECT_NEAR( 1.0, a[1], EPS);
-    EXPECT_NEAR( 2.0, a[2], EPS);
-    EXPECT_NEAR( 0.0, a[3], EPS);
-    EXPECT_NEAR( 0.0, a[4], EPS);
+    EXPECT_DOUBLE_EQ( 0.0, a[0]);
+    EXPECT_DOUBLE_EQ( 1.0, a[1]);
+    EXPECT_DOUBLE_EQ( 2.0, a[2]);
+    EXPECT_DOUBLE_EQ( 0.0, a[3]);
+    EXPECT_DOUBLE_EQ( 0.0, a[4]);
     
     a.resize(2);
     EXPECT_EQ(TlVector::size_type(2), a.getSize());
-    EXPECT_NEAR( 0.0, a[0], EPS);
-    EXPECT_NEAR( 1.0, a[1], EPS);
+    EXPECT_DOUBLE_EQ( 0.0, a[0]);
+    EXPECT_DOUBLE_EQ( 1.0, a[1]);
 }
 
 
@@ -101,9 +104,9 @@ TEST(TlVector, operator_add)
     TlVector c = a + b;
     
     EXPECT_EQ(TlVector::size_type(3), c.getSize());
-    EXPECT_NEAR( 2.0, c[0], EPS);
-    EXPECT_NEAR( 5.0, c[1], EPS);
-    EXPECT_NEAR( 8.0, c[2], EPS);
+    EXPECT_DOUBLE_EQ( 2.0, c[0]);
+    EXPECT_DOUBLE_EQ( 5.0, c[1]);
+    EXPECT_DOUBLE_EQ( 8.0, c[2]);
 }
 
 
@@ -114,9 +117,9 @@ TEST(TlVector, operator_iadd)
     
     b += a;
     
-    EXPECT_NEAR( 2.0, b[0], EPS);
-    EXPECT_NEAR( 5.0, b[1], EPS);
-    EXPECT_NEAR( 8.0, b[2], EPS);
+    EXPECT_DOUBLE_EQ( 2.0, b[0]);
+    EXPECT_DOUBLE_EQ( 5.0, b[1]);
+    EXPECT_DOUBLE_EQ( 8.0, b[2]);
 }
 
 
@@ -131,9 +134,9 @@ TEST(TlVector, operator_sub)
     TlVector c = a - b;
     
     EXPECT_EQ(TlVector::size_type(3), c.getSize());
-    EXPECT_NEAR( -2.0, c[0], EPS);
-    EXPECT_NEAR( -3.0, c[1], EPS);
-    EXPECT_NEAR( -4.0, c[2], EPS);
+    EXPECT_DOUBLE_EQ( -2.0, c[0]);
+    EXPECT_DOUBLE_EQ( -3.0, c[1]);
+    EXPECT_DOUBLE_EQ( -4.0, c[2]);
 }
 
 
@@ -143,43 +146,39 @@ TEST(TlVector, operator_isub)
     TlVector b = getVectorB();
     
     b -= a;
-    
-    EXPECT_NEAR(  2.0, b[0], EPS);
-    EXPECT_NEAR(  3.0, b[1], EPS);
-    EXPECT_NEAR(  4.0, b[2], EPS);
+    EXPECT_DOUBLE_EQ(  2.0, b[0]);
+    EXPECT_DOUBLE_EQ(  3.0, b[1]);
+    EXPECT_DOUBLE_EQ(  4.0, b[2]);
 }
 
 
 TEST(TlVector, operator_mul_double)
 {
     TlVector a = getVectorA();
-    
+
     TlVector b = a * 2.0;
-    
     EXPECT_EQ(TlVector::size_type(3), b.getSize());
-    EXPECT_NEAR( 0.0, b[0], EPS);
-    EXPECT_NEAR( 2.0, b[1], EPS);
-    EXPECT_NEAR( 4.0, b[2], EPS);
+    EXPECT_DOUBLE_EQ( 0.0, b[0]);
+    EXPECT_DOUBLE_EQ( 2.0, b[1]);
+    EXPECT_DOUBLE_EQ( 4.0, b[2]);
     
     TlVector c = 3.0 * a;
-    
     EXPECT_EQ(TlVector::size_type(3), c.getSize());
-    EXPECT_NEAR( 0.0, c[0], EPS);
-    EXPECT_NEAR( 3.0, c[1], EPS);
-    EXPECT_NEAR( 6.0, c[2], EPS);
+    EXPECT_DOUBLE_EQ( 0.0, c[0]);
+    EXPECT_DOUBLE_EQ( 3.0, c[1]);
+    EXPECT_DOUBLE_EQ( 6.0, c[2]);
 }
 
 
 TEST(TlVector, operator_imul_double)
 {
     TlVector a = getVectorA();
-    
     a *= 2.0;
     
     EXPECT_EQ(TlVector::size_type(3), a.getSize());
-    EXPECT_NEAR( 0.0, a[0], EPS);
-    EXPECT_NEAR( 2.0, a[1], EPS);
-    EXPECT_NEAR( 4.0, a[2], EPS);
+    EXPECT_DOUBLE_EQ( 0.0, a[0]);
+    EXPECT_DOUBLE_EQ( 2.0, a[1]);
+    EXPECT_DOUBLE_EQ( 4.0, a[2]);
 }
 
 
@@ -192,16 +191,15 @@ TEST(TlVector, operator_mul_TlVector)
     // {  2, 4, 6 }
     
     double c = a * b;
-    EXPECT_NEAR( 16.0, c, EPS);
+    EXPECT_DOUBLE_EQ( 16.0, c);
 }
 
 
 TEST(TlVector, getMaxAbsoluteElement)
 {
     TlVector a = getVectorA();
-    
-    double c = a.getMaxAbsoluteElement();
-    EXPECT_NEAR( 2.0, c, EPS);
+    const double c = a.getMaxAbsoluteElement();
+    EXPECT_DOUBLE_EQ( 2.0, c);
 }
 
 
@@ -212,17 +210,16 @@ TEST(TlVector, push_back)
   a.push_back(3.0);
 
   EXPECT_EQ(TlVector::size_type(4), a.getSize());
-  EXPECT_NEAR( 0.0, a[0], EPS);
-  EXPECT_NEAR( 1.0, a[1], EPS);
-  EXPECT_NEAR( 2.0, a[2], EPS);
-  EXPECT_NEAR( 3.0, a[3], EPS);
+  EXPECT_DOUBLE_EQ( 0.0, a[0]);
+  EXPECT_DOUBLE_EQ( 1.0, a[1]);
+  EXPECT_DOUBLE_EQ( 2.0, a[2]);
+  EXPECT_DOUBLE_EQ( 3.0, a[3]);
 }
 
 
 TEST(TlVector, save)
 {
     TlVector a = getVectorA();
-    
     a.save(vct_path);
 }
 
@@ -233,8 +230,28 @@ TEST(TlVector, load)
     a.load(vct_path);
     
     EXPECT_EQ(TlVector::size_type(3), a.getSize());
-    EXPECT_NEAR( 0.0, a[0], EPS);
-    EXPECT_NEAR( 1.0, a[1], EPS);
-    EXPECT_NEAR( 2.0, a[2], EPS);
+    EXPECT_DOUBLE_EQ( 0.0, a[0]);
+    EXPECT_DOUBLE_EQ( 1.0, a[1]);
+    EXPECT_DOUBLE_EQ( 2.0, a[2]);
 }
 
+
+#ifdef HAVE_HDF5
+TEST(TlVector, saveHdf5)
+{
+    TlVector a = getVectorA();
+    a.saveHdf5(h5_path, "vector");
+}
+
+
+TEST(TlVector, loadHdf5)
+{
+    TlVector a;
+    a.loadHdf5(h5_path, "vector");
+    
+    EXPECT_EQ(TlVector::size_type(3), a.getSize());
+    EXPECT_DOUBLE_EQ( 0.0, a[0]);
+    EXPECT_DOUBLE_EQ( 1.0, a[1]);
+    EXPECT_DOUBLE_EQ( 2.0, a[2]);
+}
+#endif // HAVE_HDF5

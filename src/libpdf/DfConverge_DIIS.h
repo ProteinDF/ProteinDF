@@ -71,7 +71,7 @@ MatrixType DfConverge_DIIS::getResidual(const RUN_TYPE runType,
     const std::string r_path = TlUtils::format("fl_Work/r_rks.%d.mat", itr);
 
     MatrixType r;    
-    if (TlFile::isExist(r_path)) {
+    if (TlFile::isExistFile(r_path)) {
         r.load(r_path);
     } else {
         MatrixType FPS, SPF;
@@ -270,7 +270,7 @@ void DfConverge_DIIS::convergeKSMatrix(const DfObject::RUN_TYPE runType)
             SymmetricMatrixType Fi;
             for (int i = 0; i < last; ++i) {
                 const std::string inFilePath = DfObject::getFpqMatrixPath(runType, startItr +i) + ".diis";
-                assert(TlFile::isExist(inFilePath));
+                assert(TlFile::isExistFile(inFilePath));
                 Fi.load(inFilePath);
                 
                 const double coef = c.get(i, 0);
@@ -330,7 +330,7 @@ void DfConverge_DIIS::convergePMatrix(const DfObject::RUN_TYPE runType)
             SymmetricMatrixType Pi;
             for (int i = 0; i < last; ++i) {
                 const std::string inFilePath = DfObject::getPpqMatrixPath(runType, startItr +i -1);
-                assert(TlFile::isExist(inFilePath));
+                assert(TlFile::isExistFile(inFilePath));
                 Pi.load(inFilePath);
                 
                 const double coef = c.get(i, 0);

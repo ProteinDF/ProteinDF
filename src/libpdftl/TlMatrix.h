@@ -73,7 +73,6 @@ public:
     TlMatrix(const TlMatrix& rhs);
 
     /// 対称行列オブジェクトからTlMatrixオブジェクトを作成する
-
     TlMatrix(const TlSymmetricMatrix& rhs);
 
     virtual ~TlMatrix();
@@ -234,8 +233,23 @@ public:
     /// ヘッダ情報を読み取る
     static bool getHeaderInfo(const std::string& filePath,
                               int* pType = NULL,
-                              int* pNumOfRows = NULL, int* pNumOfCols = NULL);
+                              index_type* pNumOfRows = NULL, index_type* pNumOfCols = NULL);
 
+    /// ヘッダ情報を読み取る
+    /// 正常に読み取れた場合、ファイルポインタはデータ領域の先頭(ヘッダのすぐ後)を指す
+    static bool getHeaderInfo(std::fstream& fs, int* pMatrixType = NULL,
+                              index_type* pNumOfRows = NULL,
+                              index_type* pNumOfCols = NULL);
+    static bool getHeaderInfo(std::ifstream& ifs, int* pMatrixType = NULL,
+                              index_type* pNumOfRows = NULL,
+                              index_type* pNumOfCols = NULL);
+protected:
+    template<typename stream>
+    static bool getHeaderInfo_tmpl(stream& s, int* pType = NULL,
+                                   index_type* pNumOfRows = NULL,
+                                   index_type* pNumOfCols = NULL);
+    
+public:
     /// 指定されたファイルパス名から行列要素を読み込む
     ///
     /// パスの区切り文字(UNIXなら'/'、windowsなら'\')は、
@@ -274,13 +288,24 @@ public:
     /// @param[in,out] ofs 出力ストリーム
     /// @retval true 書き込み成功
     /// @retval false 書き込み失敗
-    virtual bool save(std::ofstream& ofs) const;
+    virtual bool save(std::ofstream& ofs, const MatrixType saveType = RSFD) const;
 
     virtual bool saveText(const std::string& sFilePath) const;
     virtual bool saveText(std::ostream& os) const;
 
+#ifdef HAVE_HDF5
+    virtual bool saveHdf5(const std::string& filepath, const std::string& h5path) const;
+    virtual bool loadHdf5(const std::string& filepath, const std::string& h5path);
+#endif // HAVE_HDF5
+    
     virtual TlSerializeData getSerialize() const;
-   
+
+protected:
+    void CSFD2RSFD(const double* pBufIn, double* pBufOut) const;
+    void RSFD2CSFD(const double* pBufIn, double* pBufOut) const;
+    
+    
+public:
     /// 転置行列にする
     ///
     /// @return 転置行列となったこのオブジェクト
@@ -325,7 +350,7 @@ protected:
     
     /// 必要な行列要素の数を返す。
     /// initialize()などから呼び出される。
-    virtual std::size_t getNumOfElements() const {
+    virtual size_type getNumOfElements() const {
         return (this->getNumOfRows() * this->getNumOfCols());
     }
 
@@ -335,11 +360,8 @@ protected:
     void clear_usingStandard();
     void clear_usingMemManager();
     
-    virtual std::size_t index(index_type row,
-                              index_type col) const;
-
-    static bool getHeaderInfo(std::ifstream& ifs, int* pType = NULL,
-                              int* pNumOfRows = NULL, int* pNumOfCols = NULL);
+    virtual size_type index(index_type row,
+                            index_type col) const;
 
 protected:
     // variables
@@ -354,7 +376,7 @@ protected:
     /// TlMemManagerオブジェクトを使うか否か、デフォルトを規定する
     /// @see useMemManager()
     static bool isUsingMemManagerDefault_; 
-    
+
 #ifdef HAVE_LAPACK
 protected:
     friend TlVector multiplicationByLapack(const TlMatrix& A, const TlVector& X);

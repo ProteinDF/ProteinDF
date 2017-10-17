@@ -84,11 +84,18 @@ protected:
 
     // -------------------------------------------------------------------------
 protected:
+    void getJ_cvm(TlSymmetricMatrix* pJ);
+    void getJ_mmap_DC(TlSymmetricMatrix* pJ);    
+    
+protected:
     virtual TlSymmetricMatrix getPMatrix(const RUN_TYPE runType, int itr);
+
 
 protected:
     virtual void getK_S_woCD(const RUN_TYPE runType,
                              TlSymmetricMatrix* pK);
+    virtual void getK_S_woCD_mmap_DC(const RUN_TYPE runType,
+                                     TlSymmetricMatrix* pK);
 
     virtual void getK_S_fast(const RUN_TYPE runType,
                              TlSymmetricMatrix *pK);
@@ -163,7 +170,8 @@ protected:
                const std::string& path);
 
     TlColVectorMatrix transLMatrix(const TlRowVectorMatrix& rowVectorMatrix);
-
+    void transLMatrix2mmap(const TlRowVectorMatrix& rowVectorMatrix, const std::string& savePath);
+    
     // for debug
     TlMatrix mergeL(const TlRowVectorMatrix& L);
     TlMatrix mergeL(const TlColVectorMatrix& L);

@@ -671,7 +671,7 @@ int TlCommunicate::reduce_SUM(TlSparseMatrix& rMatrix, int root)
             }
         }
 
-        std::vector<std::vector<TlMatrixElement> > bufs(numOfProcs);
+        std::vector<std::vector<TlMatrixObject::MatrixElement> > bufs(numOfProcs);
         for (int src = 0; src < numOfProcs; ++src) {
             if (src != myRank) {
                 bufs[src].resize(sizes[src]);
@@ -710,7 +710,7 @@ int TlCommunicate::reduce_SUM(TlSparseMatrix& rMatrix, int root)
         // prepare
         TlSparseMatrix::const_iterator itEnd = rMatrix.end();
         std::size_t count = 0;
-        std::vector<TlMatrixElement> buf(numOfSize);
+        std::vector<TlMatrixObject::MatrixElement> buf(numOfSize);
         for (TlSparseMatrix::const_iterator it = rMatrix.begin(); it != itEnd; ++it) {
             // buf[count] = TlMatrixElement(it->first.row, it->first.col, it->second);
             const TlMatrixElement tmp = {it->first.row, it->first.col, it->second};
@@ -741,7 +741,7 @@ int TlCommunicate::broadcast(TlSparseMatrix& rMatrix, const int root)
 
         TlSparseMatrix::const_iterator itEnd = rMatrix.end();
         std::size_t count = 0;
-        std::vector<TlMatrixElement> buf(numOfSize);
+        std::vector<TlMatrixObject::MatrixElement> buf(numOfSize);
         for (TlSparseMatrix::const_iterator it = rMatrix.begin(); it != itEnd; ++it) {
             // buf[count] = TlMatrixElement(it->first.row, it->first.col, it->second);
             const TlMatrixElement tmp = {it->first.row, it->first.col, it->second};
@@ -759,7 +759,7 @@ int TlCommunicate::broadcast(TlSparseMatrix& rMatrix, const int root)
         rMatrix.resize(header[0], header[1]);
 
         numOfSize = header[2];
-        std::vector<TlMatrixElement> buf(numOfSize);
+        std::vector<TlMatrixObject::MatrixElement> buf(numOfSize);
         this->broadcast(&(buf[0]), this->MPI_MATRIXELEMENT, 0, numOfSize, root);
 
         for (std::size_t i = 0; i < numOfSize; ++i) {
@@ -1119,7 +1119,7 @@ int TlCommunicate::sendData(const TlSparseMatrix& data, int dest, int tag)
     int err = this->sendDataX(&(header[0]), 3, dest, tag);
 
     if (err == 0) {
-        std::vector<TlMatrixElement> buf(numOfSize);
+        std::vector<TlMatrixObject::MatrixElement> buf(numOfSize);
 
         TlSparseMatrix::const_iterator itEnd = data.end();
         std::size_t count = 0;
@@ -1139,25 +1139,6 @@ int TlCommunicate::sendData(const TlSparseMatrix& data, int dest, int tag)
     return err;
 }
 
-
-int TlCommunicate::sendData(const TlPartialSymmetricMatrix& data, int nDestination, int nTag)
-{
-    std::vector<std::size_t> buf(6);
-    buf[0] = data.getNumOfRows();
-    buf[1] = data.getNumOfCols();
-    buf[2] = data.getStartRow();
-    buf[3] = data.getStartCol();
-    buf[4] = data.getRowRange();
-    buf[5] = data.getColRange();
-    int nErr = this->sendData(buf, nDestination, nTag);
-
-    if (nErr == 0) {
-        const std::size_t bufCount = data.getRowRange() * data.getColRange();
-        nErr = this->sendDataX(data.pData_, MPI_DOUBLE, 0, bufCount, nDestination, nTag);
-    }
-
-    return nErr;
-}
 
 // sendDataX ===================================================================
 int TlCommunicate::sendDataX(const int* pData, const std::size_t size,
@@ -1516,7 +1497,7 @@ int TlCommunicate::receiveData(TlSparseMatrix& rData, int src, int tag)
 
     if (err == 0) {
         const std::size_t numOfSize = header[2];
-        std::vector<TlMatrixElement> buf(numOfSize);
+        std::vector<TlMatrixObject::MatrixElement> buf(numOfSize);
 
         err = this->receiveDataX(&(buf[0]), this->MPI_MATRIXELEMENT, 0, numOfSize, src, tag);
 
@@ -1530,29 +1511,6 @@ int TlCommunicate::receiveData(TlSparseMatrix& rData, int src, int tag)
     return err;
 }
 
-
-int TlCommunicate::receiveData(TlPartialSymmetricMatrix& rData, int nSrc, int nTag)
-{
-    std::vector<std::size_t> header;
-    int nErr = this->receiveData(header, nSrc, nTag);
-
-    if (nErr == 0) {
-        assert(header.size() == 6);
-        const std::size_t globalNumOfRows = header[0];
-        //const std::size_t globalNumOfCols = header[1];
-        const std::size_t startRow = header[2];
-        const std::size_t startCol = header[3];
-        const std::size_t rowRange = header[4];
-        const std::size_t colRange = header[5];
-
-        TlPartialSymmetricMatrix tmp(globalNumOfRows, startRow, startCol, rowRange, colRange);
-        const std::size_t bufCount = tmp.getRowRange() * tmp.getColRange();
-        nErr = this->receiveDataX(tmp.pData_, MPI_DOUBLE, 0, bufCount, nSrc, nTag);
-        rData = tmp;
-    }
-
-    return nErr;
-}
 
 // =============================================================================
 int TlCommunicate::receiveDataX(int* pData, const std::size_t size,
@@ -1576,7 +1534,7 @@ int TlCommunicate::receiveDataX(double* pData, const std::size_t size,
                               0, size, src, tag);
 }
 
-int TlCommunicate::receiveDataX(TlMatrixElement* pData, const std::size_t size,
+int TlCommunicate::receiveDataX(TlMatrixObject::MatrixElement* pData, const std::size_t size,
                                 const int src, const int tag)
 {
     return this->receiveDataX(pData, this->MPI_MATRIXELEMENT,
@@ -1782,7 +1740,7 @@ int TlCommunicate::receiveDataFromAnySource(TlSparseMatrix* pData, int* pSrc, in
     const int numOfCols = header[1];
     if (err == 0) {
         const std::size_t numOfSize = header[2];
-        std::vector<TlMatrixElement> buf(numOfSize);
+        std::vector<TlMatrixObject::MatrixElement> buf(numOfSize);
 
         err = this->receiveDataX(&(buf[0]), this->MPI_MATRIXELEMENT, 0, numOfSize, src, tag);
         assert(err == 0);
@@ -1839,36 +1797,6 @@ int TlCommunicate::receiveDataFromAnySource(TlSparseMatrix* pData, int* pSrc, in
 //     return nErr;
 // }
 
-int TlCommunicate::receiveDataFromAnySource(TlPartialSymmetricMatrix& rData, int* pSrc, int* pTag)
-{
-    std::vector<std::size_t> header;
-    int nSrc = 0;
-    int nTag = 0;
-    int nErr = this->receiveDataFromAnySource(header, &nSrc, &nTag);
-
-    if (nErr == 0) {
-        assert(header.size() == 6);
-        const std::size_t globalNumOfRows = header[0];
-        //const std::size_t globalNumOfCols = header[1];
-        const std::size_t startRow = header[2];
-        const std::size_t startCol = header[3];
-        const std::size_t rowRange = header[4];
-        const std::size_t colRange = header[5];
-
-        TlPartialSymmetricMatrix tmp(globalNumOfRows, startRow, startCol, rowRange, colRange);
-        const std::size_t bufCount = tmp.getRowRange() * tmp.getColRange();
-        nErr = this->receiveDataX(tmp.pData_, MPI_DOUBLE, 0, bufCount, nSrc, nTag);
-        rData = tmp;
-
-        assert(pSrc != NULL);
-        *pSrc = nSrc;
-        if (pTag != NULL) {
-            *pTag = nTag;
-        }
-    }
-
-    return nErr;
-}
 
 // =============================================================================
 
@@ -2271,7 +2199,7 @@ int TlCommunicate::iSendDataX(const double* pData, const std::size_t size,
     return this->iSendDataX(pData, MPI_DOUBLE, 0, size, dest, tag);
 }
 
-int TlCommunicate::iSendDataX(const TlMatrixElement* pData, const std::size_t size,
+int TlCommunicate::iSendDataX(const TlMatrixObject::MatrixElement* pData, const std::size_t size,
                               const int dest, const int tag)
 {
     return this->iSendDataX(pData, this->MPI_MATRIXELEMENT, 0, size, dest, tag);
@@ -2586,6 +2514,42 @@ int TlCommunicate::iReceiveDataFromAnySourceX(int* pData, const std::size_t size
 
 
 // =============================================================================
+template<typename T>
+int TlCommunicate::iReceiveDataFromAnySourceAnyTag(T* pData, const MPI_Datatype mpiType,
+                                                   const int start, const int end)
+{
+    int answer = 0;
+
+    MPI_Request* pRequest = new MPI_Request;
+    answer = MPI_Irecv((void*)(pData + start), (end - start), mpiType,
+                       MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, pRequest);
+
+    if (answer == 0) {
+        std::vector<uintptr_t> requests;
+        requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest));
+        const uintptr_t key = reinterpret_cast<uintptr_t>((void*)pData);
+        const NonBlockingCommParam param(requests, MPI_ANY_TAG,
+                                         NonBlockingCommParam::RECV);
+        this->checkNonBlockingTableCollision(key, param, __LINE__);
+#pragma omp critical (TlCommunicate_nonBlockingCommParamTable_update)
+        {
+            this->nonBlockingCommParamTable_[key] = param;
+        }
+    }
+
+    return answer;
+}
+
+
+int TlCommunicate::iReceiveDataFromAnySourceAnyTag(double* pData, const int count)
+{
+    return this->iReceiveDataFromAnySourceAnyTag<double>(pData, MPI_DOUBLE, 0, count);
+}
+
+
+
+
+// =============================================================================
 bool TlCommunicate::cancel(void* pData)
 {
     bool answer = false;
@@ -2681,7 +2645,7 @@ bool TlCommunicate::test(void* pData, int* pSrc)
 }
 
 
-int TlCommunicate::wait(void* pData, int* pSrc)
+int TlCommunicate::wait(void* pData, int* pSrc, int* pTag)
 {
     this->time_wait_.start();
     ++(this->counter_wait_);
@@ -2717,6 +2681,11 @@ int TlCommunicate::wait(void* pData, int* pSrc)
             if (pSrc != NULL) {
                 *pSrc = status.MPI_SOURCE;
             }
+
+            if (pTag != NULL) {
+                *pTag = status.MPI_TAG;
+            }
+
         } else {
             this->log_.critical(TlUtils::format("TlCommunicate::wait(): cannot find: %ld", this->getRank(), key));
         }
@@ -2778,7 +2747,11 @@ int TlCommunicate::finalize()
 
     TlScalapackContext::finalize();
 
-    return MPI_Finalize();
+    const int retcode = MPI_Finalize();
+
+    // std::cerr << TlUtils::format("TlCommunicate::finalize(): rank=%d", this->getRank()) << std::endl;
+
+    return retcode;
 }
 
 
@@ -2821,9 +2794,9 @@ void TlCommunicate::register_MatrixElement()
     // MPI_Datatype types[3] = {MPI_UNSIGNED_LONG, MPI_UNSIGNED_LONG, MPI_DOUBLE};
     MPI_Datatype types[3] = {MPI_INT, MPI_INT, MPI_DOUBLE};
     MPI_Aint offsets[3];
-    offsets[0] = offsetof(struct TlMatrixElement, row);
-    offsets[1] = offsetof(struct TlMatrixElement, col);
-    offsets[2] = offsetof(struct TlMatrixElement, value);
+    offsets[0] = offsetof(struct TlMatrixObject::MatrixElement, row);
+    offsets[1] = offsetof(struct TlMatrixObject::MatrixElement, col);
+    offsets[2] = offsetof(struct TlMatrixObject::MatrixElement, value);
 
     int err = MPI_Type_create_struct(numOfItems, blocklengths, offsets, types, &(this->MPI_MATRIXELEMENT));
 
@@ -3203,9 +3176,15 @@ int TlCommunicate::broadcast(T* pData, const MPI_Datatype mpiType,
 }
 
 
-int TlCommunicate::broadcast(double* pData, const std::size_t size, int root)
+int TlCommunicate::broadcast(int* pBuf, const std::size_t size, int root)
 {
-    return this->broadcast(pData, MPI_DOUBLE, 0, size, root);
+    return this->broadcast(pBuf, MPI_INT, 0, size, root);
+}
+
+
+int TlCommunicate::broadcast(double* pBuf, const std::size_t size, int root)
+{
+    return this->broadcast(pBuf, MPI_DOUBLE, 0, size, root);
 }
 
 

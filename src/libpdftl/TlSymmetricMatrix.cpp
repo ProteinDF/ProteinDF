@@ -30,6 +30,10 @@
 #include "TlUtils.h"
 #include "TlLogging.h"
 
+#ifdef HAVE_HDF5
+#include "TlHdf5Utils.h"
+#endif // HAVE_HDF5
+
 ////////////////////////////////////////////////////////////////////////
 //
 TlSymmetricMatrix::TlSymmetricMatrix(int dim)
@@ -134,42 +138,57 @@ void TlSymmetricMatrix::resize(const index_type dim)
 }
 
 
-std::size_t TlSymmetricMatrix::index(index_type row,
-                                     index_type col) const
+TlMatrixObject::size_type TlSymmetricMatrix::getNumOfElements() const
 {
-    assert((0 <= row) && (row < this->m_nRows));
-    assert((0 <= col) && (col < this->m_nCols));
+    return TlMatrixObject::getNumOfElements_RLHD();
+}
+
+
+TlMatrixObject::size_type TlSymmetricMatrix::index(index_type row,
+                                                   index_type col) const
+{
+    assert((0 <= row) && (row < this->getNumOfRows()));
+    assert((0 <= col) && (col < this->getNumOfCols()));
     
     // This class treats 'U' type matrix.
     // if UPLO = 'U', AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j; in Fortran
     // index = row + col * (col +1) /2; // in C/C++
     
-    if (row > col) {
+    // if (row > col) {
+    //     std::swap(row, col);
+    // }
+    // unsigned int t = col * (col +1);
+    // t = t >> 1; // == 't /= 2'
+    // return row + t;
+
+    if (row < col) {
         std::swap(row, col);
     }
-    unsigned int t = col * (col +1);
-    t = t >> 1; // == 't /= 2'
-    return row + t;
-}
-
-std::size_t TlSymmetricMatrix::vtr_index(index_type row,
-                                         index_type col,
-                                         index_type dim) 
-{
-    assert((0 <= row) && (row < dim));
-    assert((0 <= col) && (col < dim));
-
-    // This class treats 'U' type matrix.
-    // if UPLO = 'U', AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j; in Fortran
-    // index = row + col * (col +1) /2; // in C/C++
+    assert(row >= col);
+    const size_type index = row * (row +1) / 2 + col;
+    assert(index < this->getNumOfElements());
     
-    if (row > col) {
-        std::swap(row, col);
-    }
-    unsigned int t = col * (col +1);
-    t = t >> 1; // == 't /= 2'
-    return row + t;
+    return index;
 }
+
+// std::size_t TlSymmetricMatrix::vtr_index(index_type row,
+//                                          index_type col,
+//                                          index_type dim) 
+// {
+//     assert((0 <= row) && (row < dim));
+//     assert((0 <= col) && (col < dim));
+// 
+//     // This class treats 'U' type matrix.
+//     // if UPLO = 'U', AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j; in Fortran
+//     // index = row + col * (col +1) /2; // in C/C++
+//     
+//     if (row > col) {
+//         std::swap(row, col);
+//     }
+//     unsigned int t = col * (col +1);
+//     t = t >> 1; // == 't /= 2'
+//     return row + t;
+// }
 
 
 double TlSymmetricMatrix::sum() const
@@ -627,89 +646,90 @@ bool TlSymmetricMatrix::getHeaderInfo(const std::string& filePath,
 }
 
 
-bool TlSymmetricMatrix::getHeaderInfo(std::ifstream& ifs, int* pType,
-                                      index_type* pNumOfRows,
-                                      index_type* pNumOfCols)
+bool TlSymmetricMatrix::getHeaderInfo(std::fstream& fs, int* pMatrixType,
+                                      index_type* pNumOfRows, index_type* pNumOfCols)
 {
-    bool bAnswer = true;
+    return TlSymmetricMatrix::getHeaderInfo_tmpl<std::fstream>(fs, pMatrixType, pNumOfRows, pNumOfCols);
+}
+
+
+bool TlSymmetricMatrix::getHeaderInfo(std::ifstream& ifs, int* pMatrixType,
+                                      index_type* pNumOfRows, index_type* pNumOfCols)
+{
+    return TlSymmetricMatrix::getHeaderInfo_tmpl<std::ifstream>(ifs, pMatrixType, pNumOfRows, pNumOfCols);
+}
+
+
+template<typename StreamType>
+bool TlSymmetricMatrix::getHeaderInfo_tmpl(StreamType& s, int* pMatrixType,
+                                           index_type* pNumOfRows, index_type* pNumOfCols)
+{
+    bool answer = false;
 
     // get file size
-    std::ifstream::pos_type nFileSize = 0;
+    std::streampos fileSize = 0;
     {
-        ifs.seekg(0, std::ios_base::beg);
-        std::ifstream::pos_type begin = ifs.tellg();
-        ifs.seekg(0, std::ios_base::end);
-        std::ifstream::pos_type end = ifs.tellg();
-
-        nFileSize = end - begin;
+        s.seekg(0, std::ios_base::end);
+        fileSize = s.tellg();
     }
-
-    int  nType = 0;
-    bool bCheckVariableType = false;
-    std::ifstream::pos_type nStartContentPos = 0;
 
     // int case:
     {
-        int nRows = 0;
-        int nCols = 0;
-        ifs.seekg(0, std::ios_base::beg);
-        ifs.read((char*)&nType, sizeof(int));
-        ifs.read((char*)&nRows, sizeof(int));
-        ifs.read((char*)&nCols, sizeof(int));
+        int matrixType = 0;
+        int row = 0;
+        int col = 0;
+        s.seekg(0, std::ios_base::beg);
+        s.read((char*)&matrixType, sizeof(int));
+        s.read((char*)&row, sizeof(int));
+        s.read((char*)&col, sizeof(int));
 
-        const std::ifstream::pos_type nEstimatedFileSize =
-            std::ifstream::pos_type(sizeof(int) *3)
-            + (std::ifstream::pos_type(nRows) * std::ifstream::pos_type(nCols +1)
-               * std::ifstream::pos_type(sizeof(double) / 2));
-        if ((nRows == nCols) && (nEstimatedFileSize == nFileSize)) {
-            if (pType != NULL) {
-                *pType = nType;
+        const std::streampos estimatedFileSize = sizeof(int) *3 + sizeof(double) * row * (col +1) / 2;
+        if ((row == col) && (estimatedFileSize == fileSize)) {
+            assert(s.tellg() == sizeof(int) * 3);
+            answer = true;
+            
+            if (pMatrixType != NULL) {
+                *pMatrixType = matrixType;
             }
             if (pNumOfRows != NULL) {
-                *pNumOfRows = nRows;
+                *pNumOfRows = static_cast<index_type>(row);
             }
             if (pNumOfCols != NULL) {
-                *pNumOfCols = nCols;
+                *pNumOfCols = static_cast<index_type>(col);
             }
-            bCheckVariableType = true;
-            nStartContentPos = sizeof(int) * 3;
         }
     }
 
     // long case:
-    {
-        long nRows = 0;
-        long nCols = 0;
-        ifs.seekg(0, std::ios_base::beg);
-        ifs.read((char*)&nType, sizeof(int));
-        ifs.read((char*)&nRows, sizeof(long));
-        ifs.read((char*)&nCols, sizeof(long));
+    if (answer != true) {
+        int matrixType = 0;
+        long row = 0;
+        long col = 0;
+        s.seekg(0, std::ios_base::beg);
+        s.read((char*)&matrixType, sizeof(int));
+        s.read((char*)&row, sizeof(long));
+        s.read((char*)&col, sizeof(long));
 
-        const std::ifstream::pos_type nEstimatedFileSize = (sizeof(int) + sizeof(long) * 2) + (nRows * (nCols +1) * sizeof(double) / 2);
-        if ((nRows == nCols) && (nEstimatedFileSize == nFileSize)) {
-            if (pType != NULL) {
-                *pType = nType;
+        const std::streampos estimatedFileSize = (sizeof(int) + sizeof(long) * 2) + sizeof(double) * row * (col +1) / 2;
+        if ((row == col) && (estimatedFileSize == fileSize)) {
+            assert(s.tellg() == sizeof(int) + sizeof(long) * 2);
+            answer = true;
+            
+            if (pMatrixType != NULL) {
+                *pMatrixType = matrixType;
             }
             if (pNumOfRows != NULL) {
-                *pNumOfRows = static_cast<int>(nRows);
+                *pNumOfRows = static_cast<index_type>(row);
             }
             if (pNumOfCols != NULL) {
-                *pNumOfCols = static_cast<int>(nCols);
+                *pNumOfCols = static_cast<index_type>(col);
             }
-            bCheckVariableType = true;
-            nStartContentPos = sizeof(int) + sizeof(long) * 2;
         }
     }
 
-    if (bCheckVariableType == true) {
-        ifs.seekg(nStartContentPos, std::ios_base::beg);
-    } else {
-        //std::cerr << "file size mismatch." << std::endl;
-        bAnswer = false;
-    }
-
-    return bAnswer;
+    return answer;
 }
+
 
 bool TlSymmetricMatrix::load(const std::string& sFilePath)
 {
@@ -747,10 +767,10 @@ bool TlSymmetricMatrix::load(std::ifstream& ifs)
 
     // read header
     int nType = 0;
-    int nRows = 0;
-    int nCols = 0;
+    index_type numOfRows = 0;
+    index_type numOfCols = 0;
 
-    bAnswer = TlSymmetricMatrix::getHeaderInfo(ifs, &nType, &nRows, &nCols);
+    bAnswer = TlSymmetricMatrix::getHeaderInfo(ifs, &nType, &numOfRows, &numOfCols);
 
     switch (nType) {
     case RLHD:
@@ -764,12 +784,10 @@ bool TlSymmetricMatrix::load(std::ifstream& ifs)
     }
 
     // const int nMatrixSize = this->m_nRows + (this->m_nRows * (this->m_nRows -1)) / 2;
-    // ifs.read(reinterpret_cast<char*>(&(this->m_aMatrix[0])), nMatrixSize);
     if (bAnswer == true) {
-        assert(nRows == nCols);
         this->clear();
-        this->m_nRows = nRows;
-        this->m_nCols = nCols;
+        this->m_nRows = numOfRows;
+        this->m_nCols = numOfCols;
         this->initialize();
 
         const int numOfRows = this->getNumOfRows();
@@ -794,8 +812,6 @@ bool TlSymmetricMatrix::save(const std::string& sFilePath) const
     bAnswer = this->save(ofs);
     ofs.close();
 
-//   std::cerr << "TlSymmetricMatrix::save() sFilePath = " << sFilePath << std::endl;
-
     return bAnswer;
 }
 
@@ -805,8 +821,8 @@ bool TlSymmetricMatrix::save(std::ofstream& ofs) const
 
     const int nType = 2; // means RLHD
     ofs.write(reinterpret_cast<const char*>(&nType), sizeof(int));
-    ofs.write(reinterpret_cast<const char*>(&this->m_nRows), sizeof(int));
-    ofs.write(reinterpret_cast<const char*>(&this->m_nCols), sizeof(int));
+    ofs.write(reinterpret_cast<const char*>(&this->m_nRows), sizeof(index_type));
+    ofs.write(reinterpret_cast<const char*>(&this->m_nCols), sizeof(index_type));
 
     assert(this->m_nRows == this->m_nCols);
 // const int nMatrixSize = this->m_nRows + (this->m_nRows * (this->m_nRows -1)) / 2;
@@ -839,6 +855,55 @@ TlSerializeData TlSymmetricMatrix::getSerialize() const
 
     return data;
 }
+
+
+#ifdef HAVE_HDF5
+bool TlSymmetricMatrix::saveHdf5(const std::string& filepath, const std::string& h5path) const
+{
+    TlHdf5Utils h5(filepath);
+
+    // assert((this->type_ == RLHD) || (this->type_ == CUHD));
+    const index_type row = this->getNumOfRows();
+    const index_type col = this->getNumOfCols();
+    h5.write(h5path, this->data_, this->getNumOfElements());
+    h5.setAttr(h5path, "type", static_cast<int>(RLHD));
+    h5.setAttr(h5path, "row", row);
+    h5.setAttr(h5path, "col", col);
+    
+    return true;
+}
+
+
+bool TlSymmetricMatrix::loadHdf5(const std::string& filepath, const std::string& h5path)
+{
+    TlHdf5Utils h5(filepath);
+
+    int mat_type;
+    h5.getAttr(h5path, "type", &mat_type);
+
+    index_type row = 0;
+    index_type col = 0;
+    h5.getAttr(h5path, "row", &row);
+    h5.getAttr(h5path, "col", &col);
+    if (row != col) {
+        this->log_.critical(TlUtils::format("illegal parameter in TlSymmetricMatrix::loadHdf5() row(%ld) != col(%ld)", row, col));
+    }
+    this->resize(row);
+
+    switch (mat_type) {
+    case RLHD:
+    case CUHD:
+        h5.get(h5path, this->data_, this->getNumOfElements());
+        break;
+
+    default:
+        this->log_.critical(TlUtils::format("illegal matrix type for TlSymmetricMatrix: %d", mat_type));
+        break;
+    }
+
+    return true;
+}
+#endif // HAVE_HDF5
 
 
 /**

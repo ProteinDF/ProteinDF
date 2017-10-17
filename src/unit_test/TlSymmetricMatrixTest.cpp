@@ -1,14 +1,17 @@
 #include <limits>
+
+#include "config.h"
 #include "gtest/gtest.h"
 #include "TlSymmetricMatrix.h"
 
 static const double EPS = 1.0E-10; //std::numeric_limits<double>::epsilon();
-static const std::string smat_path = "temp_s.vct";
+static const std::string mat_path = "temp.sym.mat";
+static const std::string mat_h5 = "temp.sym.h5";
 
 // 以下の要素を設定した行列を返す
 // [ 0  1  3 ]
-// [ -  2  4 ]
-// [ -  -  5 ]
+// [ 1  2  4 ]
+// [ 3  4  5 ]
 TlSymmetricMatrix getSymMatrixA()
 {
     TlSymmetricMatrix a(3);
@@ -70,15 +73,15 @@ TEST(TlSymmetricMatrix, constructer)
     
     ASSERT_EQ(3, a.getNumOfRows());
     ASSERT_EQ(3, a.getNumOfCols());
-    EXPECT_NEAR(0.0, a(0, 0), EPS);
-    EXPECT_NEAR(0.0, a(0, 1), EPS);
-    EXPECT_NEAR(0.0, a(0, 2), EPS);
-    EXPECT_NEAR(0.0, a(1, 0), EPS);
-    EXPECT_NEAR(0.0, a(1, 1), EPS);
-    EXPECT_NEAR(0.0, a(1, 2), EPS);
-    EXPECT_NEAR(0.0, a(2, 0), EPS);
-    EXPECT_NEAR(0.0, a(2, 1), EPS);
-    EXPECT_NEAR(0.0, a(2, 2), EPS);
+    EXPECT_DOUBLE_EQ(0.0, a(0, 0));
+    EXPECT_DOUBLE_EQ(0.0, a(0, 1));
+    EXPECT_DOUBLE_EQ(0.0, a(0, 2));
+    EXPECT_DOUBLE_EQ(0.0, a(1, 0));
+    EXPECT_DOUBLE_EQ(0.0, a(1, 1));
+    EXPECT_DOUBLE_EQ(0.0, a(1, 2));
+    EXPECT_DOUBLE_EQ(0.0, a(2, 0));
+    EXPECT_DOUBLE_EQ(0.0, a(2, 1));
+    EXPECT_DOUBLE_EQ(0.0, a(2, 2));
 }
 
 
@@ -97,15 +100,15 @@ TEST(TlSymmetricMatrix, pperaterRoundBracket)
         }
     }
     
-    EXPECT_NEAR(0.0, a(0, 0), EPS);
-    EXPECT_NEAR(1.0, a(0, 1), EPS);
-    EXPECT_NEAR(3.0, a(0, 2), EPS);
-    EXPECT_NEAR(1.0, a(1, 0), EPS);
-    EXPECT_NEAR(2.0, a(1, 1), EPS);
-    EXPECT_NEAR(4.0, a(1, 2), EPS);
-    EXPECT_NEAR(3.0, a(2, 0), EPS);
-    EXPECT_NEAR(4.0, a(2, 1), EPS);
-    EXPECT_NEAR(5.0, a(2, 2), EPS);
+    EXPECT_DOUBLE_EQ(0.0, a(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, a(0, 1));
+    EXPECT_DOUBLE_EQ(3.0, a(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, a(1, 0));
+    EXPECT_DOUBLE_EQ(2.0, a(1, 1));
+    EXPECT_DOUBLE_EQ(4.0, a(1, 2));
+    EXPECT_DOUBLE_EQ(3.0, a(2, 0));
+    EXPECT_DOUBLE_EQ(4.0, a(2, 1));
+    EXPECT_DOUBLE_EQ(5.0, a(2, 2));
 }
 
 
@@ -116,15 +119,15 @@ TEST(TlSymmetricMatrix, copyConstructer)
     
     ASSERT_EQ(3, c.getNumOfRows());
     ASSERT_EQ(3, c.getNumOfCols());
-    EXPECT_NEAR(0.0, c(0, 0), EPS);
-    EXPECT_NEAR(1.0, c(0, 1), EPS);
-    EXPECT_NEAR(3.0, c(0, 2), EPS);
-    EXPECT_NEAR(1.0, c(1, 0), EPS);
-    EXPECT_NEAR(2.0, c(1, 1), EPS);
-    EXPECT_NEAR(4.0, c(1, 2), EPS);
-    EXPECT_NEAR(3.0, c(2, 0), EPS);
-    EXPECT_NEAR(4.0, c(2, 1), EPS);
-    EXPECT_NEAR(5.0, c(2, 2), EPS);
+    EXPECT_DOUBLE_EQ(0.0, c(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, c(0, 1));
+    EXPECT_DOUBLE_EQ(3.0, c(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, c(1, 0));
+    EXPECT_DOUBLE_EQ(2.0, c(1, 1));
+    EXPECT_DOUBLE_EQ(4.0, c(1, 2));
+    EXPECT_DOUBLE_EQ(3.0, c(2, 0));
+    EXPECT_DOUBLE_EQ(4.0, c(2, 1));
+    EXPECT_DOUBLE_EQ(5.0, c(2, 2));
 }
 
 
@@ -140,12 +143,12 @@ TEST(TlSymmetricMatrix, convertFromTlVector1)
     TlSymmetricMatrix A(b, 3);
     
     // column oriented
-    EXPECT_NEAR(0.0, A(0, 0), EPS);
-    EXPECT_NEAR(1.0, A(0, 1), EPS);
-    EXPECT_NEAR(2.0, A(1, 1), EPS);
-    EXPECT_NEAR(3.0, A(0, 2), EPS);
-    EXPECT_NEAR(4.0, A(1, 2), EPS);
-    EXPECT_NEAR(5.0, A(2, 2), EPS);
+    EXPECT_DOUBLE_EQ(0.0, A(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, A(0, 1));
+    EXPECT_DOUBLE_EQ(2.0, A(1, 1));
+    EXPECT_DOUBLE_EQ(3.0, A(0, 2));
+    EXPECT_DOUBLE_EQ(4.0, A(1, 2));
+    EXPECT_DOUBLE_EQ(5.0, A(2, 2));
 }
 
 
@@ -155,24 +158,24 @@ TEST(TlSymmetricMatrix, convertFromTlVector2)
     
     TlVector v = a.getVector();
     
-    EXPECT_NEAR(0.0, v[0], EPS);
-    EXPECT_NEAR(1.0, v[1], EPS);
-    EXPECT_NEAR(2.0, v[2], EPS);
-    EXPECT_NEAR(3.0, v[3], EPS);
-    EXPECT_NEAR(4.0, v[4], EPS);
-    EXPECT_NEAR(5.0, v[5], EPS);
+    EXPECT_DOUBLE_EQ(0.0, v[0]);
+    EXPECT_DOUBLE_EQ(1.0, v[1]);
+    EXPECT_DOUBLE_EQ(2.0, v[2]);
+    EXPECT_DOUBLE_EQ(3.0, v[3]);
+    EXPECT_DOUBLE_EQ(4.0, v[4]);
+    EXPECT_DOUBLE_EQ(5.0, v[5]);
     
     TlSymmetricMatrix c(v, 3);
     
-    EXPECT_NEAR(0.0, c(0, 0), EPS);
-    EXPECT_NEAR(1.0, c(0, 1), EPS);
-    EXPECT_NEAR(3.0, c(0, 2), EPS);
-    EXPECT_NEAR(1.0, c(1, 0), EPS);
-    EXPECT_NEAR(2.0, c(1, 1), EPS);
-    EXPECT_NEAR(4.0, c(1, 2), EPS);
-    EXPECT_NEAR(3.0, c(2, 0), EPS);
-    EXPECT_NEAR(4.0, c(2, 1), EPS);
-    EXPECT_NEAR(5.0, c(2, 2), EPS);
+    EXPECT_DOUBLE_EQ(0.0, c(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, c(0, 1));
+    EXPECT_DOUBLE_EQ(3.0, c(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, c(1, 0));
+    EXPECT_DOUBLE_EQ(2.0, c(1, 1));
+    EXPECT_DOUBLE_EQ(4.0, c(1, 2));
+    EXPECT_DOUBLE_EQ(3.0, c(2, 0));
+    EXPECT_DOUBLE_EQ(4.0, c(2, 1));
+    EXPECT_DOUBLE_EQ(5.0, c(2, 2));
 }
 
 
@@ -185,15 +188,15 @@ TEST(TlSymmetricMatrix, operator_eq)
     
     ASSERT_EQ(3, c.getNumOfRows());
     ASSERT_EQ(3, c.getNumOfCols());
-    EXPECT_NEAR(0.0, c(0, 0), EPS);
-    EXPECT_NEAR(1.0, c(0, 1), EPS);
-    EXPECT_NEAR(3.0, c(0, 2), EPS);
-    EXPECT_NEAR(1.0, c(1, 0), EPS);
-    EXPECT_NEAR(2.0, c(1, 1), EPS);
-    EXPECT_NEAR(4.0, c(1, 2), EPS);
-    EXPECT_NEAR(3.0, c(2, 0), EPS);
-    EXPECT_NEAR(4.0, c(2, 1), EPS);
-    EXPECT_NEAR(5.0, c(2, 2), EPS);
+    EXPECT_DOUBLE_EQ(0.0, c(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, c(0, 1));
+    EXPECT_DOUBLE_EQ(3.0, c(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, c(1, 0));
+    EXPECT_DOUBLE_EQ(2.0, c(1, 1));
+    EXPECT_DOUBLE_EQ(4.0, c(1, 2));
+    EXPECT_DOUBLE_EQ(3.0, c(2, 0));
+    EXPECT_DOUBLE_EQ(4.0, c(2, 1));
+    EXPECT_DOUBLE_EQ(5.0, c(2, 2));
 }
 
 
@@ -214,15 +217,15 @@ TEST(TlSymmetricMatrix, operator_add)
 
     ASSERT_EQ(3, c.getNumOfRows());
     ASSERT_EQ(3, c.getNumOfCols());
-    EXPECT_NEAR( 0.0, c(0, 0), EPS);
-    EXPECT_NEAR( 2.0, c(0, 1), EPS);
-    EXPECT_NEAR( 5.0, c(0, 2), EPS);
-    EXPECT_NEAR( 2.0, c(1, 0), EPS);
-    EXPECT_NEAR( 5.0, c(1, 1), EPS);
-    EXPECT_NEAR( 8.0, c(1, 2), EPS);
-    EXPECT_NEAR( 5.0, c(2, 0), EPS);
-    EXPECT_NEAR( 8.0, c(2, 1), EPS);
-    EXPECT_NEAR(10.0, c(2, 2), EPS);
+    EXPECT_DOUBLE_EQ( 0.0, c(0, 0));
+    EXPECT_DOUBLE_EQ( 2.0, c(0, 1));
+    EXPECT_DOUBLE_EQ( 5.0, c(0, 2));
+    EXPECT_DOUBLE_EQ( 2.0, c(1, 0));
+    EXPECT_DOUBLE_EQ( 5.0, c(1, 1));
+    EXPECT_DOUBLE_EQ( 8.0, c(1, 2));
+    EXPECT_DOUBLE_EQ( 5.0, c(2, 0));
+    EXPECT_DOUBLE_EQ( 8.0, c(2, 1));
+    EXPECT_DOUBLE_EQ(10.0, c(2, 2));
 }
 
 
@@ -235,15 +238,15 @@ TEST(TlSymmetricMatrix, operator_iadd)
     
     ASSERT_EQ(3, b.getNumOfRows());
     ASSERT_EQ(3, b.getNumOfCols());
-    EXPECT_NEAR( 0.0, b(0, 0), EPS);
-    EXPECT_NEAR( 2.0, b(0, 1), EPS);
-    EXPECT_NEAR( 5.0, b(0, 2), EPS);
-    EXPECT_NEAR( 2.0, b(1, 0), EPS);
-    EXPECT_NEAR( 5.0, b(1, 1), EPS);
-    EXPECT_NEAR( 8.0, b(1, 2), EPS);
-    EXPECT_NEAR( 5.0, b(2, 0), EPS);
-    EXPECT_NEAR( 8.0, b(2, 1), EPS);
-    EXPECT_NEAR(10.0, b(2, 2), EPS);
+    EXPECT_DOUBLE_EQ( 0.0, b(0, 0));
+    EXPECT_DOUBLE_EQ( 2.0, b(0, 1));
+    EXPECT_DOUBLE_EQ( 5.0, b(0, 2));
+    EXPECT_DOUBLE_EQ( 2.0, b(1, 0));
+    EXPECT_DOUBLE_EQ( 5.0, b(1, 1));
+    EXPECT_DOUBLE_EQ( 8.0, b(1, 2));
+    EXPECT_DOUBLE_EQ( 5.0, b(2, 0));
+    EXPECT_DOUBLE_EQ( 8.0, b(2, 1));
+    EXPECT_DOUBLE_EQ(10.0, b(2, 2));
 }
 
 
@@ -257,40 +260,66 @@ TEST(TlSymmetricMatrix, operator_mul)
     
     ASSERT_EQ(3, c.getNumOfRows());
     ASSERT_EQ(3, c.getNumOfCols());
-    EXPECT_NEAR( 7.0, c(0, 0), EPS);
-    EXPECT_NEAR(15.0, c(0, 1), EPS);
-    EXPECT_NEAR(19.0, c(0, 2), EPS);
-    EXPECT_NEAR(10.0, c(1, 0), EPS);
-    EXPECT_NEAR(23.0, c(1, 1), EPS);
-    EXPECT_NEAR(30.0, c(1, 2), EPS);
-    EXPECT_NEAR(14.0, c(2, 0), EPS);
-    EXPECT_NEAR(35.0, c(2, 1), EPS);
-    EXPECT_NEAR(47.0, c(2, 2), EPS);
+    EXPECT_DOUBLE_EQ( 7.0, c(0, 0));
+    EXPECT_DOUBLE_EQ(15.0, c(0, 1));
+    EXPECT_DOUBLE_EQ(19.0, c(0, 2));
+    EXPECT_DOUBLE_EQ(10.0, c(1, 0));
+    EXPECT_DOUBLE_EQ(23.0, c(1, 1));
+    EXPECT_DOUBLE_EQ(30.0, c(1, 2));
+    EXPECT_DOUBLE_EQ(14.0, c(2, 0));
+    EXPECT_DOUBLE_EQ(35.0, c(2, 1));
+    EXPECT_DOUBLE_EQ(47.0, c(2, 2));
 }
 
 
 TEST(TlSymmetricMatrix, save)
 {
     TlSymmetricMatrix a = getSymMatrixA();
-    a.save("symmetric_matrix.a");
+    a.save(mat_path);
 }
 
 
 TEST(TlSymmetricMatrix, load)
 {
     TlSymmetricMatrix a;
-    a.load("symmetric_matrix.a");
+    a.load(mat_path);
     
-    EXPECT_NEAR(0.0, a(0, 0), EPS);
-    EXPECT_NEAR(1.0, a(0, 1), EPS);
-    EXPECT_NEAR(3.0, a(0, 2), EPS);
-    EXPECT_NEAR(1.0, a(1, 0), EPS);
-    EXPECT_NEAR(2.0, a(1, 1), EPS);
-    EXPECT_NEAR(4.0, a(1, 2), EPS);
-    EXPECT_NEAR(3.0, a(2, 0), EPS);
-    EXPECT_NEAR(4.0, a(2, 1), EPS);
-    EXPECT_NEAR(5.0, a(2, 2), EPS);
+    EXPECT_DOUBLE_EQ(0.0, a(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, a(0, 1));
+    EXPECT_DOUBLE_EQ(3.0, a(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, a(1, 0));
+    EXPECT_DOUBLE_EQ(2.0, a(1, 1));
+    EXPECT_DOUBLE_EQ(4.0, a(1, 2));
+    EXPECT_DOUBLE_EQ(3.0, a(2, 0));
+    EXPECT_DOUBLE_EQ(4.0, a(2, 1));
+    EXPECT_DOUBLE_EQ(5.0, a(2, 2));
 }
+
+
+#ifdef HAVE_HDF5
+TEST(TlSymmetricMatrix, save_hdf5)
+{
+    TlSymmetricMatrix a = getSymMatrixA();
+    a.saveHdf5(mat_h5, "matrix_A");
+}
+
+
+TEST(TlSymmetricMatrix, load_hdf5)
+{
+    TlSymmetricMatrix a;
+    a.loadHdf5(mat_h5, "matrix_A");
+    
+    EXPECT_DOUBLE_EQ(0.0, a(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, a(0, 1));
+    EXPECT_DOUBLE_EQ(3.0, a(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, a(1, 0));
+    EXPECT_DOUBLE_EQ(2.0, a(1, 1));
+    EXPECT_DOUBLE_EQ(4.0, a(1, 2));
+    EXPECT_DOUBLE_EQ(3.0, a(2, 0));
+    EXPECT_DOUBLE_EQ(4.0, a(2, 1));
+    EXPECT_DOUBLE_EQ(5.0, a(2, 2));
+}
+#endif // HAVE_HDF5
 
 
 TEST(TlSymmetricMatrix, inverse)
@@ -334,15 +363,15 @@ TEST(TlSymmetricMatrix, operator_mul1)
     
     TlMatrix C = A * B;
     
-    EXPECT_NEAR(21.0, C(0, 0), EPS);
-    EXPECT_NEAR(25.0, C(0, 1), EPS);
-    EXPECT_NEAR(29.0, C(0, 2), EPS);
-    EXPECT_NEAR(30.0, C(1, 0), EPS);
-    EXPECT_NEAR(37.0, C(1, 1), EPS);
-    EXPECT_NEAR(44.0, C(1, 2), EPS);
-    EXPECT_NEAR(42.0, C(2, 0), EPS);
-    EXPECT_NEAR(54.0, C(2, 1), EPS);
-    EXPECT_NEAR(66.0, C(2, 2), EPS);
+    EXPECT_DOUBLE_EQ(21.0, C(0, 0));
+    EXPECT_DOUBLE_EQ(25.0, C(0, 1));
+    EXPECT_DOUBLE_EQ(29.0, C(0, 2));
+    EXPECT_DOUBLE_EQ(30.0, C(1, 0));
+    EXPECT_DOUBLE_EQ(37.0, C(1, 1));
+    EXPECT_DOUBLE_EQ(44.0, C(1, 2));
+    EXPECT_DOUBLE_EQ(42.0, C(2, 0));
+    EXPECT_DOUBLE_EQ(54.0, C(2, 1));
+    EXPECT_DOUBLE_EQ(66.0, C(2, 2));
 }
 
 
@@ -366,15 +395,15 @@ TEST(TlSymmetricMatrix, operator_multi2)
     
     TlMatrix C = B * A;
     
-    EXPECT_NEAR( 7.0, C(0, 0), EPS);
-    EXPECT_NEAR(10.0, C(0, 1), EPS);
-    EXPECT_NEAR(14.0, C(0, 2), EPS);
-    EXPECT_NEAR(19.0, C(1, 0), EPS);
-    EXPECT_NEAR(31.0, C(1, 1), EPS);
-    EXPECT_NEAR(50.0, C(1, 2), EPS);
-    EXPECT_NEAR(31.0, C(2, 0), EPS);
-    EXPECT_NEAR(52.0, C(2, 1), EPS);
-    EXPECT_NEAR(86.0, C(2, 2), EPS);
+    EXPECT_DOUBLE_EQ( 7.0, C(0, 0));
+    EXPECT_DOUBLE_EQ(10.0, C(0, 1));
+    EXPECT_DOUBLE_EQ(14.0, C(0, 2));
+    EXPECT_DOUBLE_EQ(19.0, C(1, 0));
+    EXPECT_DOUBLE_EQ(31.0, C(1, 1));
+    EXPECT_DOUBLE_EQ(50.0, C(1, 2));
+    EXPECT_DOUBLE_EQ(31.0, C(2, 0));
+    EXPECT_DOUBLE_EQ(52.0, C(2, 1));
+    EXPECT_DOUBLE_EQ(86.0, C(2, 2));
 }
 
 
@@ -399,15 +428,15 @@ TEST(TlSymmetricMatrix, imul1)
     TlMatrix C = A;
     C *= B;
     
-    EXPECT_NEAR(21.0, C(0, 0), EPS);
-    EXPECT_NEAR(25.0, C(0, 1), EPS);
-    EXPECT_NEAR(29.0, C(0, 2), EPS);
-    EXPECT_NEAR(30.0, C(1, 0), EPS);
-    EXPECT_NEAR(37.0, C(1, 1), EPS);
-    EXPECT_NEAR(44.0, C(1, 2), EPS);
-    EXPECT_NEAR(42.0, C(2, 0), EPS);
-    EXPECT_NEAR(54.0, C(2, 1), EPS);
-    EXPECT_NEAR(66.0, C(2, 2), EPS);
+    EXPECT_DOUBLE_EQ(21.0, C(0, 0));
+    EXPECT_DOUBLE_EQ(25.0, C(0, 1));
+    EXPECT_DOUBLE_EQ(29.0, C(0, 2));
+    EXPECT_DOUBLE_EQ(30.0, C(1, 0));
+    EXPECT_DOUBLE_EQ(37.0, C(1, 1));
+    EXPECT_DOUBLE_EQ(44.0, C(1, 2));
+    EXPECT_DOUBLE_EQ(42.0, C(2, 0));
+    EXPECT_DOUBLE_EQ(54.0, C(2, 1));
+    EXPECT_DOUBLE_EQ(66.0, C(2, 2));
 }
 
 
@@ -432,15 +461,15 @@ TEST(TlSymmetricMatrix, testMultiEqual2)
     TlMatrix C = B;
     C *= A;
 
-    EXPECT_NEAR( 7.0, C(0, 0), EPS);
-    EXPECT_NEAR(10.0, C(0, 1), EPS);
-    EXPECT_NEAR(14.0, C(0, 2), EPS);
-    EXPECT_NEAR(19.0, C(1, 0), EPS);
-    EXPECT_NEAR(31.0, C(1, 1), EPS);
-    EXPECT_NEAR(50.0, C(1, 2), EPS);
-    EXPECT_NEAR(31.0, C(2, 0), EPS);
-    EXPECT_NEAR(52.0, C(2, 1), EPS);
-    EXPECT_NEAR(86.0, C(2, 2), EPS);
+    EXPECT_DOUBLE_EQ( 7.0, C(0, 0));
+    EXPECT_DOUBLE_EQ(10.0, C(0, 1));
+    EXPECT_DOUBLE_EQ(14.0, C(0, 2));
+    EXPECT_DOUBLE_EQ(19.0, C(1, 0));
+    EXPECT_DOUBLE_EQ(31.0, C(1, 1));
+    EXPECT_DOUBLE_EQ(50.0, C(1, 2));
+    EXPECT_DOUBLE_EQ(31.0, C(2, 0));
+    EXPECT_DOUBLE_EQ(52.0, C(2, 1));
+    EXPECT_DOUBLE_EQ(86.0, C(2, 2));
 }
 
 
@@ -450,15 +479,15 @@ TEST(TlSymmetricMatrix, dot)
     TlSymmetricMatrix B = getSymMatrixB();
     A.dot(B);
     
-    EXPECT_NEAR( 0.0, A(0, 0), EPS);
-    EXPECT_NEAR( 1.0, A(0, 1), EPS);
-    EXPECT_NEAR( 6.0, A(0, 2), EPS);
-    EXPECT_NEAR( 1.0, A(1, 0), EPS);
-    EXPECT_NEAR( 6.0, A(1, 1), EPS);
-    EXPECT_NEAR(16.0, A(1, 2), EPS);
-    EXPECT_NEAR( 6.0, A(2, 0), EPS);
-    EXPECT_NEAR(16.0, A(2, 1), EPS);
-    EXPECT_NEAR(25.0, A(2, 2), EPS);
+    EXPECT_DOUBLE_EQ( 0.0, A(0, 0));
+    EXPECT_DOUBLE_EQ( 1.0, A(0, 1));
+    EXPECT_DOUBLE_EQ( 6.0, A(0, 2));
+    EXPECT_DOUBLE_EQ( 1.0, A(1, 0));
+    EXPECT_DOUBLE_EQ( 6.0, A(1, 1));
+    EXPECT_DOUBLE_EQ(16.0, A(1, 2));
+    EXPECT_DOUBLE_EQ( 6.0, A(2, 0));
+    EXPECT_DOUBLE_EQ(16.0, A(2, 1));
+    EXPECT_DOUBLE_EQ(25.0, A(2, 2));
 }
 
 
@@ -467,7 +496,7 @@ TEST(TlSymmetricMatrixTest, sum)
     TlSymmetricMatrix A = getSymMatrixA();
     double s = A.sum();
     
-    EXPECT_NEAR(23.0, s, EPS);
+    EXPECT_DOUBLE_EQ(23.0, s);
 }
 
 
@@ -486,20 +515,20 @@ TEST(TlSymmetricMatrix, choleskyDecomposition)
     TlMatrix LL = L * Lt;
     //LL.print(std::cout);
 
-    EXPECT_NEAR(A(0, 0), LL(0, 0), EPS);
-    EXPECT_NEAR(A(0, 1), LL(0, 1), EPS);
-    EXPECT_NEAR(A(0, 2), LL(0, 2), EPS);
-    EXPECT_NEAR(A(0, 3), LL(0, 3), EPS);
-    EXPECT_NEAR(A(1, 0), LL(1, 0), EPS);
-    EXPECT_NEAR(A(1, 1), LL(1, 1), EPS);
-    EXPECT_NEAR(A(1, 2), LL(1, 2), EPS);
-    EXPECT_NEAR(A(1, 3), LL(1, 3), EPS);
-    EXPECT_NEAR(A(2, 0), LL(2, 0), EPS);
-    EXPECT_NEAR(A(2, 1), LL(2, 1), EPS);
-    EXPECT_NEAR(A(2, 2), LL(2, 2), EPS);
-    EXPECT_NEAR(A(2, 3), LL(2, 3), EPS);
-    EXPECT_NEAR(A(3, 0), LL(3, 0), EPS);
-    EXPECT_NEAR(A(3, 1), LL(3, 1), EPS);
-    EXPECT_NEAR(A(3, 2), LL(3, 2), EPS);
-    EXPECT_NEAR(A(3, 3), LL(3, 3), EPS);
+    EXPECT_DOUBLE_EQ(A(0, 0), LL(0, 0));
+    EXPECT_DOUBLE_EQ(A(0, 1), LL(0, 1));
+    EXPECT_DOUBLE_EQ(A(0, 2), LL(0, 2));
+    EXPECT_DOUBLE_EQ(A(0, 3), LL(0, 3));
+    EXPECT_DOUBLE_EQ(A(1, 0), LL(1, 0));
+    EXPECT_DOUBLE_EQ(A(1, 1), LL(1, 1));
+    EXPECT_DOUBLE_EQ(A(1, 2), LL(1, 2));
+    EXPECT_DOUBLE_EQ(A(1, 3), LL(1, 3));
+    EXPECT_DOUBLE_EQ(A(2, 0), LL(2, 0));
+    EXPECT_DOUBLE_EQ(A(2, 1), LL(2, 1));
+    EXPECT_DOUBLE_EQ(A(2, 2), LL(2, 2));
+    EXPECT_DOUBLE_EQ(A(2, 3), LL(2, 3));
+    EXPECT_DOUBLE_EQ(A(3, 0), LL(3, 0));
+    EXPECT_DOUBLE_EQ(A(3, 1), LL(3, 1));
+    EXPECT_DOUBLE_EQ(A(3, 2), LL(3, 2));
+    EXPECT_DOUBLE_EQ(A(3, 3), LL(3, 3));
 }
