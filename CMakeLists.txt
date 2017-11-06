@@ -89,3 +89,21 @@ add_subdirectory(src)
 add_subdirectory(data)
 add_subdirectory(scripts)
 
+# package
+set(CPACK_PACKAGE_VERSION_MAJOR 2017)
+set(CPACK_PACKAGE_VERSION_MINOR 10)
+set(CPACK_PACKAGE_VERSION_PATCH 0)
+set(CPACK_PACKAGE_VENDOR "ProteinDF development team")
+set(CPACK_SOURCE_GENERATOR TGZ)
+set(CPACK_SOURCE_IGNORE_FILES
+  "~$"
+  "\.gitignore$"
+  "\.git/*"
+  "^${PROJECT_SOURCE_DIR}/build"
+  "^${PROJECT_SOURCE_DIR}/temp*"
+  "^${PROJECT_SOURCE_DIR}/tmp*"
+  "^${PROJECT_SOURCE_DIR}/out\.*"
+)
+include(CPack)
+
+
