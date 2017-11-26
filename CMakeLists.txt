@@ -28,9 +28,13 @@ include(CheckIncludeFile)
 #set(CMAKE_VERBOSE_MAKEFILE 1)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake-modules")
 
-# set(CMAKE_C_FLAGS "-Wall")
-# set(CMAKE_CXX_FLAGS "-Wall")
-# message(STATUS "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+
+# check compiler flags
+message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+#message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
+#message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
+#message(STATUS "CMAKE_CXX_FLAGS_RELWITHDEBINFO: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+#message(STATUS "CMAKE_CXX_FLAGS_MINSIZEREL: ${CMAKE_CXX_FLAGS_MINSIZEREL}")
 
 
 # check system
@@ -55,7 +59,8 @@ if (BLAS_FOUND)
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
 
-  add_definitions(-DHAVE_BLAS)
+  # add_definitions(-DHAVE_BLAS)
+  set(HAVE_BLAS 1) # for config.h
 endif(BLAS_FOUND)
 
 find_package(LAPACK REQUIRED)
@@ -64,22 +69,27 @@ if (LAPACK_FOUND)
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
 
-  add_definitions(-DHAVE_LAPACK)
+  # add_definitions(-DHAVE_LAPACK)
+  set(HAVE_LAPACK 1) # for config.h
 endif(LAPACK_FOUND)
 
 
 # check MPI
 find_package(MPI)
+message("MPI information:")
+message("  MPI_INCLUDE_PATH: ${MPI_INCLUDE_PATH}")
+message("  MPI_LIBRARY: ${MPI_LIBRARY}")
+message("  MPI_LIBRARIES: ${MPI_LIBRARIES}")
+message("  MPIEXEC: ${MPIEXEC}")
+message("  MPI_CXX_COMPILER: ${MPI_CXX_COMPILER}")
+message("  MPI_CXX_LIBRARIES: ${MPI_CXX_LIBRARIES}")
+message("  MPI_CXX_INCLUDE_PATH: ${MPI_CXX_INCLUDE_PATH}")
+message("  MPI_CXX_FOUND: ${MPI_CXX_FOUND}")
 if (MPI_FOUND)
-  message("MPI information:")
-  message("  MPI_INCLUDE_PATH: ${MPI_INCLUDE_PATH}")
-  message("  MPI_LIBRARY: ${MPI_LIBRARY}")
-  message("  MPI_LIBRARIES: ${MPI_LIBRARIES}")
-  message("  MPIEXEC: ${MPIEXEC}")
-  message("  MPI_C_COMPILER: ${MPI_C_COMPILER}")
-  message("  MPI_CXX_COMPILER: ${MPI_CXX_COMPILER}")
-
+  message("overwrite: CMAKE_CXX_COMPILER = ${MPI_CXX_COMPILER}")
   set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
+else(MPI_FOUND)
+  message("Not Found MPI compiler")
 endif(MPI_FOUND)
 
 
@@ -89,7 +99,10 @@ if (SCALAPACK_FOUND)
   message("ScaLAPACK information")
   message("  SCALAPACK_LIBRARIES: ${SCALAPACK_LIBRARIES}")
 
-  add_definitions(-DHAVE_SCALAPACK)
+  # add_definitions(-DHAVE_SCALAPACK)
+  set(HAVE_SCALAPACK 1) # for config.h
+else(SCALAPACK_FOUND)
+  message("Not Found ScaLAPACK")
 endif(SCALAPACK_FOUND)
 
 
