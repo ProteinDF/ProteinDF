@@ -1,18 +1,18 @@
 // Copyright (C) 2002-2014 The ProteinDF project
 // see also AUTHORS and README.
-// 
+//
 // This file is part of ProteinDF.
-// 
+//
 // ProteinDF is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProteinDF is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -43,7 +43,7 @@ public:
 
     /// J([pq | rs])
     void getJpq(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJpq);
-    
+
     /// J([alpha | beta])
     virtual void getJab(TlSymmetricMatrix* pJab);
 
@@ -68,11 +68,11 @@ protected:
 
     /// DfEriEngineオブジェクトを破棄する
     void destroyEngines();
-   
+
 protected:
     // static const int MAX_SHELL_TYPE;
     static const int FORCE_K_BUFFER_SIZE;
-    
+
     typedef std::vector<index_type> ShellArray;
     typedef std::vector<ShellArray> ShellArrayTable;
 
@@ -80,21 +80,21 @@ protected:
     public:
         ShellPair(index_type index1 =0, index_type index2 =0) : shellIndex1(index1), shellIndex2(index2) {
         }
-        
+
     public:
         index_type shellIndex1;
         index_type shellIndex2;
     };
     typedef std::vector<ShellPair> ShellPairArray;
     typedef std::vector<ShellPairArray> ShellPairArrayTable;
-    
+
 protected:
     virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
     virtual void finalize(TlMatrix* pMtx);
     virtual void finalize(TlSymmetricMatrix* pMtx);
     virtual void finalize(TlVector* pVct);
-    
+
 protected:
     /// カットオフ用統計変数を初期化する
     //void clearCutoffStats();
@@ -114,7 +114,7 @@ protected:
     ///
     /// integral-driven法を用いる。
     void getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ);
-    
+
     int getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                                  const std::vector<DfTaskCtrl::Task4>& taskList,
                                  const TlMatrixObject& P,
@@ -133,7 +133,7 @@ protected:
     void getJab_part(const TlOrbitalInfoObject& orbitalInfo_Density,
                      const std::vector<DfTaskCtrl::Task2>& taskList,
                      TlMatrixObject* pJab);
-    
+
     void getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK);
     void getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK);
     int storeK_integralDriven(const index_type shellIndexP, const int maxStepsP,
@@ -144,9 +144,9 @@ protected:
                               const TlMatrixObject& P,
                               index_type* pIndexPairs,
                               double* pValues);
-                              
+
     void debugoutK_integralDriven() const;
-    
+
     ShellPairArrayTable getShellPairArrayTable(const ShellArrayTable& shellArrayTable);
 
     // 入力された原子軌道群から、対となる原子軌道と有効な大きさを持つ原子軌道群を抽出し、返す
@@ -181,7 +181,7 @@ protected:
                    const std::vector<DfTaskCtrl::Task2>& taskList,
                    const TlVector& rho, TlMatrixObject* pP);
 
-    /// 
+    ///
     /// @param [out] pIndexPQ K行列の行、列インデックスを格納する。総数はtaskListのサイズの2倍
     /// @param [out] pValues  K行列の要素を格納する。総数はtaskListのサイズ
     int getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
@@ -189,7 +189,7 @@ protected:
                                  const TlMatrixObject& P,
                                  index_type* pIndexPairs,
                                  double* pValues);
-    
+
     void getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
                         const TlOrbitalInfoObject& orbitalInfo_Density,
                         const ShellArrayTable& shellArrayTable_Density,
@@ -208,12 +208,12 @@ protected:
                      const TlVectorObject& rho,
                      TlMatrixObject* pForce,
                      const int target, int* pIndex);
-    
+
     void getForceJ_part(const TlOrbitalInfoObject& orbitalInfo_Density,
                         std::vector<DfTaskCtrl::Task2>& taskList,
                         const TlVector& rho,
                         TlMatrix* pForce);
-    
+
     void storeForceJ(const index_type atomIndexA,
                      const index_type atomIndexC,
                      const index_type shellIndexP, const int maxStepsP,
@@ -222,7 +222,7 @@ protected:
                      const TlVectorObject& rho,
                      TlMatrixObject* pForce,
                      const int target, int* pIndex);
-    
+
     void getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
                         const std::vector<DfTaskCtrl::Task4>& taskList,
                         const TlMatrixObject& P, TlMatrixObject* pForce);
@@ -272,7 +272,7 @@ protected:
                                     const TlMatrixObject& P,
                                     TlMatrixObject* pForce,
                                     const int target, int* pIndex);
-    
+
 protected:
     enum {
         X = 0,
@@ -285,7 +285,7 @@ protected:
     double cutoffThreshold_;
     double cutoffEpsilon_density_;
     double cutoffEpsilon_distribution_;
-    
+
     // std::vector<unsigned long> cutoffAll_schwarz_;
     // std::vector<unsigned long> cutoffAlive_schwarz_;
 
@@ -302,16 +302,19 @@ protected:
     /// カットオフ用閾値
     /// J. Chem. Phys.,105,2726 (1996) : eq.33
     double cutoffThreshold_primitive_;
-    
+
     // mutable std::vector<unsigned long> cutoffAll_E1_;
     // mutable std::vector<unsigned long> cutoffAlive_E1_;
     // mutable std::vector<unsigned long> cutoffAll_E2_;
     // mutable std::vector<unsigned long> cutoffAlive_E2_;
 
+    /// cutoff threshold of the density matrix (P) element for gradient
+    double cutoffThreshold_P_grad_;
+
     DfEriEngine* pEriEngines_;
     std::vector<index_type>* pThreadIndexPairs_;
     std::vector<double>* pThreadValues_;
-    
+
     // statics
     // double elapsetime_calc_;
     // double elapsetime_makepair_;
@@ -340,7 +343,7 @@ protected:
                 this->value_[i].resize(size, 0);
             }
         }
-        
+
         int countUp(index_type i, index_type j,
                     index_type k, index_type l,
                     int value) {
@@ -359,7 +362,7 @@ protected:
             const std::size_t klKey = k + (2 * this->maxIndex_ - (l + 1)) * l / 2;
             //const std::size_t ijKey = this->maxIndex_ * i + j;
             //const std::size_t klKey = this->maxIndex_ * k + l;
-            
+
             //assert(ijKey < (this->maxIndex_ * (this->maxIndex_ + 1) / 2));
             //assert(klKey < (this->maxIndex_ * (this->maxIndex_ + 1) / 2));
             // std::cerr << TlUtils::format("(%2d %2d %2d %2d)=(%2d %2d)",
@@ -418,7 +421,7 @@ protected:
     IntegralAggregater IA_K_ID3_;
     IntegralAggregater IA_K_ID4_;
 #endif // DEBUG_K
-    
+
     /// 4中心積分によるクーロン項(J)を求める(デバッグ用)
     bool isDebugExactJ_;
 

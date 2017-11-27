@@ -1,18 +1,18 @@
 // Copyright (C) 2002-2014 The ProteinDF project
 // see also AUTHORS and README.
-// 
+//
 // This file is part of ProteinDF.
-// 
+//
 // ProteinDF is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProteinDF is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -52,7 +52,7 @@ DfCalcGridX::DfCalcGridX(TlSerializeData* pPdfParam)
 
     DfXCFunctional dfXcFunc(pPdfParam);
     this->functionalType_ = dfXcFunc.getFunctionalType();
-    
+
     this->inputtedDensityCutoffValue_ = 1.0E-16;
     if (!(pdfParam["xc-density-threshold"].getStr().empty())) {
         this->inputtedDensityCutoffValue_ = pdfParam["xc-density-threshold"].getDouble();
@@ -151,7 +151,7 @@ void DfCalcGridX::getPrefactorForDerivative(const int nType, const double alpha,
     const double x = pos.x();
     const double y = pos.y();
     const double z = pos.z();
-    
+
     switch (nType) {
     case 0:
         {
@@ -184,15 +184,15 @@ void DfCalcGridX::getPrefactorForDerivative(const int nType, const double alpha,
     case 4:
         {
             const double xy = x * y;
-            *pPrefactorX = - alpha2 * xy * x + y; 
-            *pPrefactorY = - alpha2 * xy * y + x; 
-            *pPrefactorZ = - alpha2 * xy * z; 
+            *pPrefactorX = - alpha2 * xy * x + y;
+            *pPrefactorY = - alpha2 * xy * y + x;
+            *pPrefactorZ = - alpha2 * xy * z;
         }
         break;
     case 5:
         {
             const double xz = x * z;
-            *pPrefactorX = - alpha2 * xz * x + z; 
+            *pPrefactorX = - alpha2 * xz * x + z;
             *pPrefactorY = - alpha2 * xz * y;
             *pPrefactorZ = - alpha2 * xz * z + x;
         }
@@ -200,7 +200,7 @@ void DfCalcGridX::getPrefactorForDerivative(const int nType, const double alpha,
     case 6:
         {
             const double yz = y * z;
-            *pPrefactorX = - alpha2 * yz * x; 
+            *pPrefactorX = - alpha2 * yz * x;
             *pPrefactorY = - alpha2 * yz * y + z;
             *pPrefactorZ = - alpha2 * yz * z + y;
         }
@@ -216,7 +216,7 @@ void DfCalcGridX::getPrefactorForDerivative(const int nType, const double alpha,
             const double yy_X = - alpha2 * yy * x;
             const double yy_Y = - alpha2 * yy * y + 2.0 * y;
             const double yy_Z = - alpha2 * yy * z;
-            
+
             *pPrefactorX = 0.5 * (xx_X - yy_X);
             *pPrefactorY = 0.5 * (xx_Y - yy_Y);
             *pPrefactorZ = 0.5 * (xx_Z - yy_Z);
@@ -266,7 +266,7 @@ void DfCalcGridX::getPrefactorForSecondDerivative(const int nType, const double 
     const double x = pos.x();
     const double y = pos.y();
     const double z = pos.z();
-    
+
     switch (nType) {
     case 0: // s
         {
@@ -278,7 +278,7 @@ void DfCalcGridX::getPrefactorForSecondDerivative(const int nType, const double 
             *pZZ = 4.0 * aa * z * z - 2.0 * a;
         }
         break;
-    case 1: // px 
+    case 1: // px
         {
             *pXX = 4.0 * aa * x * x * x - 6.0 * a * x;
             *pXY = 4.0 * aa * x * x * y - 2.0 * a * y;
@@ -476,7 +476,7 @@ void DfCalcGridX::getPrefactorForSecondDerivative(const int nType, const double 
 // {
 //     // initialize
 //     const double densityCutOffValue = std::min(this->m_densityCutOffValueA, this->m_densityCutOffValueB);
-    
+
 //     const int range = endOrbIndex - startOrbIndex;
 //     aPhi.clear();
 //     aPhi.reserve(range);
@@ -517,7 +517,7 @@ void DfCalcGridX::getPrefactorForSecondDerivative(const int nType, const double 
 //                 dGradPhiZ += prefactorZ * gtmp;
 //             }
 //         }
-        
+
 //         if (std::fabs(dPhi) > densityCutOffValue) {
 //             const WFGrid wfGrid(nOrb, dPhi);
 //             aPhi.push_back(wfGrid);
@@ -577,7 +577,7 @@ void DfCalcGridX::getPrefactorForSecondDerivative(const int nType, const double 
 //                 phi += g;
 //             }
 //         }
-        
+
 //         if (fabs(phi) > densityCutOffValue) {
 //             const WFGrid wfGrid(AO, phi);
 //             pPhis->push_back(wfGrid);
@@ -647,7 +647,7 @@ void DfCalcGridX::getPrefactorForSecondDerivative(const int nType, const double 
 //                 gradPhiZ += prefactorZ * g;
 //             }
 //         }
-        
+
 //         if (fabs(phi) > densityCutOffValue) {
 //             const WFGrid wfGrid(AO, phi);
 //             pPhis->push_back(wfGrid);
@@ -677,7 +677,7 @@ void DfCalcGridX::getAOs(const TlPosition& gridPosition,
     for (int i = 0; i < numOfAOs; ++i) {
         AO_indeces[i] = i;
     }
-    
+
     this->getAOs_core(gridPosition, AO_indeces, pAO_values);
 }
 
@@ -729,7 +729,7 @@ void DfCalcGridX::getDAOs(const TlPosition& gridPosition,
     for (int i = 0; i < numOfAOs; ++i) {
         AO_indeces[i] = i;
     }
-    
+
     this->getDAOs_core(gridPosition, AO_indeces,
                        p_dAO_dx_values, p_dAO_dy_values, p_dAO_dz_values);
 }
@@ -799,7 +799,7 @@ void DfCalcGridX::getD2AOs(const TlPosition& gridPosition,
     for (int i = 0; i < numOfAOs; ++i) {
         AO_indeces[i] = i;
     }
-    
+
     this->getD2AOs_core(gridPosition, AO_indeces,
                         p_d2AO_dxdx_values, p_d2AO_dxdy_values, p_d2AO_dxdz_values,
                         p_d2AO_dydy_values, p_d2AO_dydz_values, p_d2AO_dzdz_values);
@@ -933,7 +933,7 @@ void DfCalcGridX::getGradRhoAtGridPoint(const TlMatrixObject& PA,
     assert(numOfIndeces == static_cast<int>(dAO_dx_values.size()));
     assert(numOfIndeces == static_cast<int>(dAO_dy_values.size()));
     assert(numOfIndeces == static_cast<int>(dAO_dz_values.size()));
-    
+
     double grx = 0.0;
     double gry = 0.0;
     double grz = 0.0;
@@ -942,7 +942,7 @@ void DfCalcGridX::getGradRhoAtGridPoint(const TlMatrixObject& PA,
 
         for (int j = 0; j < numOfIndeces; ++j) {
             const double Pij = PA.get(i, j);
-            
+
             grx += Pij * AO_i * dAO_dx_values[j];
             gry += Pij * AO_i * dAO_dy_values[j];
             grz += Pij * AO_i * dAO_dz_values[j];
@@ -985,7 +985,7 @@ void DfCalcGridX::getGradRhoAtGridPoint(const TlMatrixObject& PA,
         const double dAO_dx_i = row_dAO_dx_values[i];
         const double dAO_dy_i = row_dAO_dy_values[i];
         const double dAO_dz_i = row_dAO_dz_values[i];
-        
+
         for (int j = 0; j < numOfColIndeces; ++j) {
             const double AO_j = col_AO_values[j];
             const double dAO_dx_j = col_dAO_dx_values[j];
@@ -993,7 +993,7 @@ void DfCalcGridX::getGradRhoAtGridPoint(const TlMatrixObject& PA,
             const double dAO_dz_j = col_dAO_dz_values[j];
 
             const double Pij = PA.get(i, j);
-            
+
             grx += Pij * AO_i * dAO_dx_j;
             gry += Pij * AO_i * dAO_dy_j;
             grz += Pij * AO_i * dAO_dz_j;
@@ -1111,22 +1111,47 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
                                      DfFunctional_LDA* pFunctional)
 {
     this->log_.info("pure DFT XC energy (LDA) gradient by grid method");
-    const int numOfAtoms = this->m_nNumOfAtoms;
     const int numOfAOs = this->m_nNumOfAOs;
-    const TlOrbitalInfo orbitalInfo((*this->pPdfParam_)["coordinates"],
-                                    (*this->pPdfParam_)["basis_set"]);
-    const double densityCutOffValue = this->m_densityCutOffValueA;
-
-    DfGenerateGrid dfGenGrid(this->pPdfParam_);
+    const int numOfAtoms = this->m_nNumOfAtoms;
 
     TlMatrix gammaX(numOfAOs, numOfAOs);
     TlMatrix gammaY(numOfAOs, numOfAOs);
     TlMatrix gammaZ(numOfAOs, numOfAOs);
 
-    double ene_xc = 0.0;
-    TlMatrix Fxc_w(numOfAtoms, 3); // weight derivative term
     TlMatrix Fxc_f(numOfAtoms, 3); // func derivative term
-    for (int atomIndexA = 0; atomIndexA < numOfAtoms; ++atomIndexA) {
+    TlMatrix Fxc_w(numOfAtoms, 3); // weight derivative term
+    const double ene_xc = this->energyGradient_part(P_A, pFunctional, 0, numOfAtoms, &Fxc_f, &Fxc_w);
+
+    this->log_.info(TlUtils::format("XC ene = % 16.10f", ene_xc));
+
+    Fxc_f *= 2.0; // rks
+
+    // debug
+    if (this->isSaveGrad_) {
+        Fxc_w.save("Fxc_w.mat");
+        Fxc_f.save("Fxc_f.mat");
+    }
+
+    return Fxc_w + Fxc_f;
+}
+
+
+double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
+                                        DfFunctional_LDA* pFunctional,
+                                        const int startAtomIndex, const int endAtomIndex,
+                                        TlMatrix* pFxc_f, TlMatrix* pFxc_w)
+{
+    assert(pFxc_w != NULL);
+    assert(pFxc_f != NULL);
+
+    const int numOfAOs = this->m_nNumOfAOs;
+    const int numOfAtoms = this->m_nNumOfAtoms;
+    const double densityCutOffValue = this->m_densityCutOffValueA;
+    const TlOrbitalInfo orbitalInfo((*this->pPdfParam_)["coordinates"],
+                                    (*this->pPdfParam_)["basis_set"]);
+    DfGenerateGrid dfGenGrid(this->pPdfParam_);
+    double ene_xc = 0.0;
+    for (int atomIndexA = startAtomIndex; atomIndexA < endAtomIndex; ++atomIndexA) {
         std::vector<TlPosition> grids;
         std::vector<double> singleCenterWeights;
         std::vector<double> partitioningWeights;
@@ -1140,11 +1165,11 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
             const TlPosition gridPosition = grids[gridIndex];
             const double singleCenterWeight = singleCenterWeights[gridIndex];
             const double partitioningWeight = partitioningWeights[gridIndex];
-            
+
             // calc AO
             std::vector<double> AO_values;
             this->getAOs(gridPosition, &AO_values);
-            
+
             std::vector<double> dAO_dx_values;
             std::vector<double> dAO_dy_values;
             std::vector<double> dAO_dz_values;
@@ -1155,19 +1180,19 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
             double rhoA = 0.0;
             this->getRhoAtGridPoint(P_A, AO_values, &rhoA);
             const double& rhoB = rhoA;
-            
+
             if (rhoA > densityCutOffValue) {
                 const double w = partitioningWeight * singleCenterWeight;
 
                 // calc energy
                 const double ene = pFunctional->getFunctional(rhoA, rhoA);
                 ene_xc += w * ene;
-            
+
                 // calc func derivative
                 double dF_dRhoA = 0.0;
                 double dF_dRhoB = 0.0;
                 pFunctional->getDerivativeFunctional(rhoA, rhoB, &dF_dRhoA, &dF_dRhoB);
-                
+
                 // functional derivative term
                 for (int i = 0; i < numOfAOs; ++i) {
                     const double dx = dAO_dx_values[i];
@@ -1179,7 +1204,7 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
                         const double Pij = P_A(i, j);
                         rao += Pij * AO_values[j];
                     }
-                    
+
                     // LDA
                     double gradx = dF_dRhoA * dx * rao;
                     double grady = dF_dRhoA * dy * rao;
@@ -1190,29 +1215,49 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
                     gradz *= -2.0 * w;
 
                     const int atomIndexB = orbitalInfo.getAtomIndex(i);
-                    Fxc_f(atomIndexB, 0) += gradx;
-                    Fxc_f(atomIndexA, 0) -= gradx;
-                    Fxc_f(atomIndexB, 1) += grady;
-                    Fxc_f(atomIndexA, 1) -= grady;
-                    Fxc_f(atomIndexB, 2) += gradz;
-                    Fxc_f(atomIndexA, 2) -= gradz;
-                }                
+                    (*pFxc_f)(atomIndexB, 0) += gradx;
+                    (*pFxc_f)(atomIndexA, 0) -= gradx;
+                    (*pFxc_f)(atomIndexB, 1) += grady;
+                    (*pFxc_f)(atomIndexA, 1) -= grady;
+                    (*pFxc_f)(atomIndexB, 2) += gradz;
+                    (*pFxc_f)(atomIndexA, 2) -= gradz;
+                }
 
                 // weight derivative term
                 for (int atomIndexB = 0; atomIndexB < numOfAtoms; ++atomIndexB) {
                     if (atomIndexA != atomIndexB) {
                         const TlVector nablaB_omegaA = dfGenGrid.JGP_nablaB_omegaA(atomIndexA, atomIndexB, gridPosition);
                         const TlVector E_nablaB_omegaAi = nablaB_omegaA * singleCenterWeight * ene;
-                        
+
                         for (int i = 0; i < 3; ++i) {
-                            Fxc_w(atomIndexB, i) += E_nablaB_omegaAi[i];
-                            Fxc_w(atomIndexA, i) -= E_nablaB_omegaAi[i]; // 作用反作用
+                            (*pFxc_w)(atomIndexB, i) += E_nablaB_omegaAi[i];
+                            (*pFxc_w)(atomIndexA, i) -= E_nablaB_omegaAi[i]; // 作用反作用
                         }
                     }
                 }
             }
         }
     }
+
+    return ene_xc;
+}
+
+
+TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
+                                     DfFunctional_GGA* pFunctional)
+{
+    this->log_.info("pure DFT XC energy (GGA) gradient by grid method");
+    const int numOfAOs = this->m_nNumOfAOs;
+    const int numOfAtoms = this->m_nNumOfAtoms;
+
+    TlMatrix gammaX(numOfAOs, numOfAOs);
+    TlMatrix gammaY(numOfAOs, numOfAOs);
+    TlMatrix gammaZ(numOfAOs, numOfAOs);
+
+    TlMatrix Fxc_w(numOfAtoms, 3); // weight derivative term
+    TlMatrix Fxc_f(numOfAtoms, 3); // func term
+    const double ene_xc = this->energyGradient_part(P_A, pFunctional, 0, numOfAtoms, &Fxc_f, &Fxc_w);
+
     this->log_.info(TlUtils::format("XC ene = % 16.10f", ene_xc));
 
     Fxc_f *= 2.0; // rks
@@ -1222,30 +1267,27 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
         Fxc_w.save("Fxc_w.mat");
         Fxc_f.save("Fxc_f.mat");
     }
-    
-    return Fxc_w + Fxc_f;
+
+    return Fxc_w + Fxc_f; // rks
 }
 
-TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
-                                     DfFunctional_GGA* pFunctional)
+
+double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
+                                        DfFunctional_GGA* pFunctional,
+                                        const int startAtomIndex, const int endAtomIndex,
+                                        TlMatrix* pFxc_f, TlMatrix* pFxc_w)
 {
-    this->log_.info("pure DFT XC energy (GGA) gradient by grid method");
-    const int numOfAtoms = this->m_nNumOfAtoms;
+    assert(pFxc_w != NULL);
+    assert(pFxc_f != NULL);
+
     const int numOfAOs = this->m_nNumOfAOs;
+    const int numOfAtoms = this->m_nNumOfAtoms;
+    const double densityCutOffValue = this->m_densityCutOffValueA;
     const TlOrbitalInfo orbitalInfo((*this->pPdfParam_)["coordinates"],
                                     (*this->pPdfParam_)["basis_set"]);
-    const double densityCutOffValue = this->m_densityCutOffValueA;
-
     DfGenerateGrid dfGenGrid(this->pPdfParam_);
-
-    TlMatrix gammaX(numOfAOs, numOfAOs);
-    TlMatrix gammaY(numOfAOs, numOfAOs);
-    TlMatrix gammaZ(numOfAOs, numOfAOs);
-
     double ene_xc = 0.0;
-    TlMatrix Fxc_w(numOfAtoms, 3); // weight derivative term
-    TlMatrix Fxc_f(numOfAtoms, 3); // func term
-    for (int atomIndexA = 0; atomIndexA < numOfAtoms; ++atomIndexA) {
+    for (int atomIndexA = startAtomIndex; atomIndexA < endAtomIndex; ++atomIndexA) {
         std::vector<TlPosition> grids;
         std::vector<double> singleCenterWeights;
         std::vector<double> partitioningWeights;
@@ -1259,7 +1301,7 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
             const TlPosition gridPosition = grids[gridIndex];
             const double singleCenterWeight = singleCenterWeights[gridIndex];
             const double partitioningWeight = partitioningWeights[gridIndex];
-            
+
             // calc AO
             std::vector<double> AO_values;
             this->getAOs(gridPosition, &AO_values);
@@ -1269,7 +1311,7 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
             std::vector<double> dAO_dz_values;
             this->getDAOs(gridPosition,
                           &dAO_dx_values, &dAO_dy_values, &dAO_dz_values);
-            
+
             std::vector<double> d2AO_dxdx_values;
             std::vector<double> d2AO_dxdy_values;
             std::vector<double> d2AO_dxdz_values;
@@ -1279,7 +1321,7 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
             this->getD2AOs(gridPosition,
                            &d2AO_dxdx_values, &d2AO_dxdy_values, &d2AO_dxdz_values,
                            &d2AO_dydy_values, &d2AO_dydz_values, &d2AO_dzdz_values);
-            
+
             // calc rho
             double rhoA = 0.0;
             this->getRhoAtGridPoint(P_A, AO_values, &rhoA);
@@ -1293,7 +1335,7 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
             const double& gradRhoBX = gradRhoAX;
             const double& gradRhoBY = gradRhoAY;
             const double& gradRhoBZ = gradRhoAZ;
-            
+
             if (rhoA > densityCutOffValue) {
                 const double w = partitioningWeight * singleCenterWeight;
                 const double gammaAA = gradRhoAX*gradRhoAX + gradRhoAY*gradRhoAY + gradRhoAZ*gradRhoAZ;
@@ -1303,7 +1345,7 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
                 // calc energy
                 const double ene = pFunctional->getFunctional(rhoA, rhoB, gammaAA, gammaAB, gammaBB);
                 ene_xc += w * ene;
-            
+
                 // calc func derivative
                 double dF_dRhoA = 0.0;
                 double dF_dRhoB = 0.0;
@@ -1314,7 +1356,7 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
                                                      gammaAA, gammaAB, gammaBB,
                                                      &dF_dRhoA, &dF_dRhoB,
                                                      &dF_dGammaAA, &dF_dGammaAB, &dF_dGammaBB);
-                
+
                 const double coef_ax = 2.0 * dF_dGammaAA * gradRhoAX + dF_dGammaAB * gradRhoBX;
                 const double coef_ay = 2.0 * dF_dGammaAA * gradRhoAY + dF_dGammaAB * gradRhoBY;
                 const double coef_az = 2.0 * dF_dGammaAA * gradRhoAZ + dF_dGammaAB * gradRhoBZ;
@@ -1342,20 +1384,20 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
                         rdy += Pij * dAO_dy_values[j];
                         rdz += Pij * dAO_dz_values[j];
                     }
-                    
+
                     // LDA
                     double gradx = dF_dRhoA * dx * rao;
                     double grady = dF_dRhoA * dy * rao;
                     double gradz = dF_dRhoA * dz * rao;
 
                     // GGA
-                    gradx += coef_ax * (dxdx * rao + dx * rdx) 
+                    gradx += coef_ax * (dxdx * rao + dx * rdx)
                            + coef_ay * (dxdy * rao + dx * rdy)
                            + coef_az * (dxdz * rao + dx * rdz);
-                    grady += coef_ax * (dxdy * rao + dy * rdx) 
+                    grady += coef_ax * (dxdy * rao + dy * rdx)
                            + coef_ay * (dydy * rao + dy * rdy)
                            + coef_az * (dydz * rao + dy * rdz);
-                    gradz += coef_ax * (dxdz * rao + dz * rdx) 
+                    gradz += coef_ax * (dxdz * rao + dz * rdx)
                            + coef_ay * (dydz * rao + dz * rdy)
                            + coef_az * (dzdz * rao + dz * rdz);
 
@@ -1364,12 +1406,12 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
                     gradz *= -2.0 * w;
 
                     const int atomIndexB = orbitalInfo.getAtomIndex(i);
-                    Fxc_f(atomIndexB, 0) += gradx;
-                    Fxc_f(atomIndexA, 0) -= gradx;
-                    Fxc_f(atomIndexB, 1) += grady;
-                    Fxc_f(atomIndexA, 1) -= grady;
-                    Fxc_f(atomIndexB, 2) += gradz;
-                    Fxc_f(atomIndexA, 2) -= gradz;
+                    (*pFxc_f)(atomIndexB, 0) += gradx;
+                    (*pFxc_f)(atomIndexA, 0) -= gradx;
+                    (*pFxc_f)(atomIndexB, 1) += grady;
+                    (*pFxc_f)(atomIndexA, 1) -= grady;
+                    (*pFxc_f)(atomIndexB, 2) += gradz;
+                    (*pFxc_f)(atomIndexA, 2) -= gradz;
                 }
 
                 // weight derivative term
@@ -1377,28 +1419,18 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
                     if (atomIndexA != atomIndexB) {
                         const TlVector nablaB_omegaA = dfGenGrid.JGP_nablaB_omegaA(atomIndexA, atomIndexB, gridPosition);
                         const TlVector E_nablaB_omegaAi = nablaB_omegaA * singleCenterWeight * ene;
-                        
+
                         for (int i = 0; i < 3; ++i) {
-                            Fxc_w(atomIndexB, i) += E_nablaB_omegaAi[i];
-                            Fxc_w(atomIndexA, i) -= E_nablaB_omegaAi[i]; // 作用反作用
+                            (*pFxc_w)(atomIndexB, i) += E_nablaB_omegaAi[i];
+                            (*pFxc_w)(atomIndexA, i) -= E_nablaB_omegaAi[i]; // 作用反作用
                         }
                     }
                 }
             }
         }
-
     }
-    this->log_.info(TlUtils::format("XC ene = % 16.10f", ene_xc));
 
-    Fxc_f *= 2.0; // rks
-
-    // debug
-    if (this->isSaveGrad_) {
-        Fxc_w.save("Fxc_w.mat");
-        Fxc_f.save("Fxc_f.mat");
-    }
-    
-    return Fxc_w + Fxc_f; // rks
+    return ene_xc;
 }
 
 // experimental code -----------------------------------------------------------
@@ -1408,13 +1440,13 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
 //                                   TlMatrix* pGridMatrix)
 // {
 //     assert(pGridMatrix != NULL);
-    
+
 //     // const std::size_t numOfRows = P.getNumOfRows();
 //     // const std::size_t numOfCols = P.getNumOfCols();
 //     assert((index_type)P_rowIndexes.size() == P.getNumOfRows());
 //     assert((index_type)P_colIndexes.size() == P.getNumOfCols());
 //     // const int calcMode = pGridMatrix->getNumOfCols();
-    
+
 //     const index_type numOfGrids = pGridMatrix->getNumOfRows();
 // #pragma omp parallel for schedule(runtime)
 //     for (int grid = 0; grid < numOfGrids; ++grid) {
@@ -1422,7 +1454,7 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
 //         const double y = pGridMatrix->get(grid, 1);
 //         const double z = pGridMatrix->get(grid, 2);
 //         const TlPosition r(x, y, z);
-        
+
 //         TlMatrix wf_row;
 //         this->getWaveFunctionValues(P_rowIndexes, r, &wf_row);
 //         {
@@ -1445,13 +1477,13 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
 //                                   TlMatrix* pGridMatrix)
 // {
 //     assert(pGridMatrix != NULL);
-    
+
 //     // const std::size_t numOfRows = P.getNumOfRows();
 //     // const std::size_t numOfCols = P.getNumOfCols();
 //     assert((index_type)P_rowIndexes.size() == P.getNumOfRows());
 //     assert((index_type)P_colIndexes.size() == P.getNumOfCols());
 //     // const int calcMode = pGridMatrix->getNumOfCols();
-    
+
 //     const index_type numOfGrids = pGridMatrix->getNumOfRows();
 // #pragma omp parallel for schedule(runtime)
 //     for (int grid = 0; grid < numOfGrids; ++grid) {
@@ -1459,7 +1491,7 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
 //         const double y = pGridMatrix->get(grid, 1);
 //         const double z = pGridMatrix->get(grid, 2);
 //         const TlPosition r(x, y, z);
-        
+
 //         TlMatrix wf_row;
 //         this->getWaveFunctionValues(P_rowIndexes, r, &wf_row);
 
@@ -1643,18 +1675,18 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
 //             this->getWaveFunctionValues(colIndexes, r,
 //                                         &wf_col);
 //             wf_col.transpose();
-            
+
 //             // build K
 //             double roundF_roundRhoA;
 //             pFunctional->getDerivativeFunctional(rhoA, &roundF_roundRhoA);
-            
+
 //             const double coef1_A = w * roundF_roundRhoA;
 //             {
 //                 TlMatrix wf_rc = wf_row * wf_col;
 //                 wf_rc *= coef1_A;
 //                 tmpF += wf_rc;
 //             }
-            
+
 //             // energy
 //             energy += w * pFunctional->getFunctional(rhoA); // RKS code
 //         }
@@ -1741,7 +1773,7 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
 //             dfdx_c.transpose();
 //             dfdy_c.transpose();
 //             dfdz_c.transpose();
-            
+
 //             const double gammaAA =  gradRhoX_A*gradRhoX_A + gradRhoY_A*gradRhoY_A + gradRhoZ_A*gradRhoZ_A;
 //             // build K
 //             double rF_rR_A;
@@ -1750,7 +1782,7 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
 //                                                  &rF_rR_A,
 //                                                  &rF_rG_AA,
 //                                                  &rF_rG_AB);
-            
+
 //             const double coef1_A = w * rF_rR_A;
 //             const double rF_rG_AA2 = 2.0 * rF_rG_AA;
 //             const double coef2_AX = w * (rF_rG_AA2 * gradRhoX_A + rF_rG_AB * gradRhoX_A);
@@ -1783,7 +1815,7 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
 //                 wf_cr *= coef2_AZ;
 //                 *pF += (wf_rc + wf_cr);
 //             }
-            
+
 //             // energy
 //             energy += w * pFunctional->getFunctional(rhoA, gammaAA); // RKS code
 //         }
@@ -1840,7 +1872,7 @@ void DfCalcGridX::calcRho_LDA_part(const TlSymmetricMatrix& P_A,
                                    TlMatrix* pGridMat)
 {
     assert(pGridMat != NULL);
-    
+
     if ((this->m_nIteration == 1) || (this->m_bIsUpdateXC != true)) {
         // initialize
         TlMatrix zero(pGridMat->getNumOfRows(), 1);
@@ -1857,7 +1889,7 @@ void DfCalcGridX::calcRho_LDA_part(const TlSymmetricMatrix& P_A,
         // calc phi table
         std::vector<double> AO_values;
         this->getAOs(gridPosition, &AO_values);
-        
+
         // get rho at grid point
         double rhoA = 0.0;
         this->getRhoAtGridPoint(P_A, AO_values, &rhoA);
@@ -1877,7 +1909,7 @@ void DfCalcGridX::calcRho_LDA_part(const TlSymmetricMatrix& P_A,
         TlMatrix zero(pGridMat->getNumOfRows(), 2);
         pGridMat->setBlockMatrix(0, GM_LDA_RHO_ALPHA, zero);
     }
-    
+
     const index_type numOfGrids = pGridMat->getNumOfRows();
 #pragma omp parallel for schedule(runtime)
     for (index_type grid = 0; grid < numOfGrids; ++grid) {
@@ -1888,7 +1920,7 @@ void DfCalcGridX::calcRho_LDA_part(const TlSymmetricMatrix& P_A,
         // calc phi table
         std::vector<double> AO_values;
         this->getAOs(gridPosition, &AO_values);
-        
+
         // get rho at grid point
         double rhoA = 0.0;
         double rhoB = 0.0;
@@ -1903,13 +1935,13 @@ void DfCalcGridX::calcRho_LDA_part(const TlSymmetricMatrix& P_A,
 void DfCalcGridX::calcRho_GGA_part(const TlSymmetricMatrix& P_A,
                                    TlMatrix* pGridMat)
 {
-    
+
     if ((this->m_nIteration == 1) || (this->m_bIsUpdateXC != true)) {
         // initialize
         TlMatrix zero(pGridMat->getNumOfRows(), 4);
         pGridMat->setBlockMatrix(0, GM_GGA_RHO_ALPHA, zero);
     }
-    
+
     const index_type numOfGrids = pGridMat->getNumOfRows();
 #pragma omp parallel for schedule(runtime)
     for (index_type grid = 0; grid < numOfGrids; ++grid) {
@@ -1925,7 +1957,7 @@ void DfCalcGridX::calcRho_GGA_part(const TlSymmetricMatrix& P_A,
         std::vector<double> dAO_dz_values;
         this->getDAOs(gridPosition,
                       &dAO_dx_values, &dAO_dy_values, &dAO_dz_values);
-        
+
         // get rho at grid point
         double rhoA = 0.0;
         double gradRhoXA = 0.0;
@@ -1953,7 +1985,7 @@ void DfCalcGridX::calcRho_GGA_part(const TlSymmetricMatrix& P_A,
         TlMatrix zero(pGridMat->getNumOfRows(), 8);
         pGridMat->setBlockMatrix(0, GM_GGA_RHO_ALPHA, zero);
     }
-    
+
     const index_type numOfGrids = pGridMat->getNumOfRows();
 #pragma omp parallel for schedule(runtime)
     for (index_type grid = 0; grid < numOfGrids; ++grid) {
@@ -2045,7 +2077,7 @@ double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
     double energy = 0.0;
     const double densityCutOffValue = this->m_densityCutOffValueA;
     const index_type numOfGrids = gridMatrix.getNumOfRows();
-    
+
 #pragma omp parallel for schedule(runtime) reduction(+:energy)
     for (index_type grid = 0; grid < numOfGrids; ++grid) {
         const TlPosition gridPosition(gridMatrix.get(grid, GM_X),
@@ -2065,7 +2097,7 @@ double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
         if (rhoA > densityCutOffValue) {
             pFunctional->getDerivativeFunctional(rhoA,
                                                  &roundF_roundRhoA);
-            
+
             // this->build_XC_Matrix(roundF_roundRhoA, phi, pFunctional, weight, pF_A);
             this->build_XC_Matrix(roundF_roundRhoA, AO_values, pFunctional, weight, pF_A);
             energy += weight * pFunctional->getFunctional(rhoA, rhoA);
@@ -2084,7 +2116,7 @@ double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
     const double densityCutOffValue = std::min(this->m_densityCutOffValueA,
                                                this->m_densityCutOffValueB);
     const index_type numOfGrids = gridMatrix.getNumOfRows();
-    
+
 #pragma omp parallel for schedule(runtime) reduction(+:energy)
     for (index_type grid = 0; grid < numOfGrids; ++grid) {
         const TlPosition gridPosition(gridMatrix.get(grid, GM_X),
@@ -2106,7 +2138,7 @@ double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
         if ((rhoA > densityCutOffValue) || (rhoB > densityCutOffValue)) {
             pFunctional->getDerivativeFunctional(rhoA, rhoB,
                                                  &roundF_roundRhoA, &roundF_roundRhoB);
-            
+
             // this->build_XC_Matrix(roundF_roundRhoA, phi, pFunctional, weight, pF_A);
             // this->build_XC_Matrix(roundF_roundRhoB, phi, pFunctional, weight, pF_B);
             this->build_XC_Matrix(roundF_roundRhoA, AO_values, pFunctional, weight, pF_A);
@@ -2132,7 +2164,7 @@ double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
                                       gridMatrix.get(grid, GM_Y),
                                       gridMatrix.get(grid, GM_Z));
         const double weight = gridMatrix.get(grid, GM_WEIGHT);
-        
+
         // calc phi table
         std::vector<double> AO_values;
         this->getAOs(gridPosition, &AO_values);
@@ -2158,7 +2190,7 @@ double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
                                                  &roundF_roundRhoA,
                                                  &roundF_roundGammaAA,
                                                  &roundF_roundGammaAB);
-            
+
             // this->build_XC_Matrix(roundF_roundRhoA,
             //                       roundF_roundGammaAA,
             //                       roundF_roundGammaAB,
@@ -2198,7 +2230,7 @@ double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
                                       gridMatrix.get(grid, GM_Y),
                                       gridMatrix.get(grid, GM_Z));
         const double weight = gridMatrix.get(grid, GM_WEIGHT);
-        
+
         // calc phi table
         // std::vector<WFGrid> phi;
         // std::vector<WFGrid> gradPhiX;
@@ -2228,7 +2260,7 @@ double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
             const double gammaAA = gradRhoXA*gradRhoXA + gradRhoYA*gradRhoYA + gradRhoZA*gradRhoZA;
             const double gammaAB = gradRhoXA*gradRhoXB + gradRhoYA*gradRhoYB + gradRhoZA*gradRhoZB;
             const double gammaBB = gradRhoXB*gradRhoXB + gradRhoYB*gradRhoYB + gradRhoZB*gradRhoZB;
-            
+
             double roundF_roundRhoA, roundF_roundRhoB;
             double roundF_roundGammaAA, roundF_roundGammaAB, roundF_roundGammaBB;
             pFunctional->getDerivativeFunctional(rhoA, rhoB, gammaAA, gammaAB, gammaBB,
@@ -2236,7 +2268,7 @@ double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
                                                  &roundF_roundGammaAA,
                                                  &roundF_roundGammaAB,
                                                  &roundF_roundGammaBB);
-            
+
             // this->build_XC_Matrix(roundF_roundRhoA, roundF_roundGammaAA, roundF_roundGammaAB,
             //                       gradRhoXA, gradRhoYA, gradRhoZA,
             //                       phi, gradPhiX, gradPhiY, gradPhiZ,
@@ -2500,7 +2532,7 @@ void DfCalcGridX::getWholeDensity(double* pRhoA, double* pRhoB) const
     TlMatrix gridMat;
     gridMat.load(this->getGridMatrixPath(this->m_nIteration));
     const index_type numOfGrids = gridMat.getNumOfRows();
-    
+
     TlMatrix weightMat = gridMat.getBlockMatrix(0, GM_WEIGHT,
                                                 numOfGrids, 1);
 
@@ -2531,11 +2563,10 @@ void DfCalcGridX::getWholeDensity(double* pRhoA, double* pRhoB) const
             rhoMat_B = gridMat.getBlockMatrix(0, GM_GGA_RHO_BETA,
                                               numOfGrids, 1);
         }
-        
+
         assert(pRhoA != NULL);
         assert(pRhoB != NULL);
         *pRhoA = weightMat.dot(rhoMat_A).sum();
         *pRhoB = weightMat.dot(rhoMat_B).sum();
     }
 }
-

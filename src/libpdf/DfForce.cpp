@@ -1,18 +1,18 @@
 // Copyright (C) 2002-2014 The ProteinDF project
 // see also AUTHORS and README.
-// 
+//
 // This file is part of ProteinDF.
-// 
+//
 // ProteinDF is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProteinDF is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -40,11 +40,11 @@ DfForce::DfForce(TlSerializeData* pPdfParam)
       pdfParamForForce_(*pPdfParam) {
     // initialize
     this->force_.resize(this->m_nNumOfAtoms, 3);
-    
+
     if ((*pPdfParam)["force_cut_value"].getStr().empty() != true) {
         this->pdfParamForForce_["cut_value"] = (*pPdfParam)["force_cut_value"].getDouble();
     }
-    
+
     // debug
     this->isDebugOutMatrix_ = false;
     if ((*pPdfParam)["debug/save_forces"].getStr().empty() != true) {
@@ -62,32 +62,28 @@ void DfForce::calcForce()
 {
     RUN_TYPE runType = RUN_RKS;
     const int iteration = this->m_nIteration;
-    
+
     this->calcForceFromNuclei();
     this->calcForceFromWS(runType);
-    
+
     TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
-    this->loggerTime("core H");
     this->calcForceFromHpq(P);
 
-    this->loggerTime("coulomb");
     this->calcForceFromCoulomb(runType);
-    
-    this->loggerTime("Fock exchange");
+
     this->calcForceFromK(runType);
 
     if (this->isDFT_ == true) {
-        this->loggerTime("pureXC");
         switch (this->XC_engine_) {
-        case XC_ENGINE_GRID: 
+        case XC_ENGINE_GRID:
             this->calcForceFromPureXC(runType);
             break;
-            
+
         case XC_ENGINE_GRIDFREE:
         case XC_ENGINE_GRIDFREE_CD:
             this->calcForceFromPureXC_gridfree(runType);
             break;
-            
+
         default:
             this->log_.critical("program error.");
             break;
@@ -108,7 +104,7 @@ void DfForce::output()
 
     // MAX element
     const double max_val = this->force_.getMaxAbsoluteElement();
-    
+
     // calc RMS
     double rms = 0;
     {
@@ -117,11 +113,11 @@ void DfForce::output()
         rms = force2.sum();
         rms = std::sqrt(rms / (double(numOfAtoms) * 3.0));
     }
-    
+
     // output for log
     {
         this->log_.info("=== FORCE ===");
-    
+
         for (int atomIndex = 0; atomIndex< numOfAtoms; ++atomIndex) {
             const TlAtom atom = flGeom.getAtom(atomIndex);
             this->log_.info(TlUtils::format("%4d:[%-2s] % f, % f, % f",
@@ -144,7 +140,7 @@ void DfForce::output()
         force_woX2.dot(force_woX2);
         double rms_woX = force_woX2.sum();
         rms_woX = std::sqrt(rms_woX / (double(numOfAtoms) * 3.0));
-        
+
         for (int atomIndex = 0; atomIndex< numOfAtoms; ++atomIndex) {
             const TlAtom atom = flGeom.getAtom(atomIndex);
             this->log_.info(TlUtils::format("%4d:[%-2s] % f, % f, % f",
@@ -158,7 +154,7 @@ void DfForce::output()
         this->log_.info("=============");
     }
 
-    
+
     // output for pdfparam
     {
         TlSerializeData force_dat;
@@ -212,8 +208,9 @@ void DfForce::outputEndTitle(const std::string& stepName, const char lineChar)
 
 void DfForce::calcForceFromNuclei()
 {
-    const int numOfAtoms = this->m_nNumOfAtoms;
+    this->logger("E grad in Nuclei");
 
+    const int numOfAtoms = this->m_nNumOfAtoms;
     const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
 
     TlMatrix F_nuc(this->m_nNumOfAtoms, 3);
@@ -255,8 +252,8 @@ void DfForce::calcForceFromNuclei()
 
 void DfForce::calcForceFromHpq(const TlSymmetricMatrix& P)
 {
-    // const index_type numOfAOs = this->m_nNumOfAOs;
-    
+    this->loggerTime("calc core-H");
+
     DfHpqX dfHpqX(&(this->pdfParamForForce_));
     TlMatrix force_Hpq(this->m_nNumOfAtoms, 3);
     TlMatrix force_Hpq_Xonly(this->m_nNumOfAtoms, 3);
@@ -274,8 +271,8 @@ void DfForce::calcForceFromHpq(const TlSymmetricMatrix& P)
 
 void DfForce::calcForceFromWS(RUN_TYPE runType)
 {
-    // const index_type numOfAOs = this->m_nNumOfAOs;
-    
+    this->logger("calc WS");
+
     DfOverlapX dfOvpX(&(this->pdfParamForForce_));
 
     const TlSymmetricMatrix W = this->getEnergyWeightedDensityMatrix(runType);
@@ -347,10 +344,11 @@ void DfForce::calcForceFromCoulomb(RUN_TYPE runType)
 
 void DfForce::calcForceFromCoulomb_exact(RUN_TYPE runType)
 {
+    this->loggerTime("calc force from J");
+
     const int iteration = this->m_nIteration;
-    // const int numOfAOs = this->m_nNumOfAOs;
     const int numOfAtoms = this->m_nNumOfAtoms;
-    
+
     const TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
 
     DfEriX dfEri(&(this->pdfParamForForce_));
@@ -370,9 +368,11 @@ void DfForce::calcForceFromCoulomb_exact(RUN_TYPE runType)
 
 void DfForce::calcForceFromCoulomb_RIJ(const RUN_TYPE runType)
 {
+    this->loggerTime("calc force from RI_J");
+
     const int iteration = this->m_nIteration;
     const int numOfAtoms = this->m_nNumOfAtoms;
-    
+
     const TlVector rho = this->getRho<TlVector>(runType, iteration);
     const TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
 
@@ -396,10 +396,20 @@ void DfForce::calcForceFromCoulomb_RIJ(const RUN_TYPE runType)
 }
 
 
-void DfForce::calcForceFromPureXC(RUN_TYPE runType)
+DfCalcGridX* DfForce::getCalcGridObj()
 {
+    this->logger("create calc-grid engine");
+    DfCalcGridX* pDfCalcGrid = new DfCalcGridX(&(this->pdfParamForForce_));
+
+    return pDfCalcGrid;
+}
+
+
+void DfForce::calcForceFromPureXC(const RUN_TYPE runType)
+{
+    this->loggerTime("calc XC(grid)");
+
     const int iteration = this->m_nIteration;
-    // const int numOfAOs = this->m_nNumOfAOs;
     const int numOfAtoms = this->m_nNumOfAtoms;
 
     TlMatrix Fxc(numOfAtoms, 3);
@@ -407,7 +417,7 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
     // for RKS
     const TlSymmetricMatrix P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
 
-    DfCalcGridX calcGrid(&(this->pdfParamForForce_));
+    DfCalcGridX* pCalcGrid = this->getCalcGridObj();
 
     DfXCFunctional dfXCFunctional(&(this->pdfParamForForce_));
     DfXCFunctional::XC_TYPE xcType = dfXCFunctional.getXcType();
@@ -415,21 +425,21 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
     case DfXCFunctional::SVWN:
         {
             DfFunctional_SVWN svwn;
-            Fxc = calcGrid.energyGradient(P, &svwn);
+            Fxc = pCalcGrid->energyGradient(P, &svwn);
         }
         break;
 
     case DfXCFunctional::BLYP:
         {
             DfFunctional_B88LYP blyp;
-            Fxc = calcGrid.energyGradient(P, &blyp);
+            Fxc = pCalcGrid->energyGradient(P, &blyp);
         }
         break;
 
     case DfXCFunctional::B3LYP:
         {
             DfFunctional_B3LYP b3lyp;
-            Fxc = calcGrid.energyGradient(P, &b3lyp);
+            Fxc = pCalcGrid->energyGradient(P, &b3lyp);
         }
         break;
 
@@ -444,11 +454,9 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
         abort();
         break;
     }
-    
-    // RKSなので2倍
-    // Fxc *= 2.0;
-    
-    // Fxc *= -1.0;
+
+    delete pCalcGrid;
+    pCalcGrid = NULL;
 
     if (this->isDebugOutMatrix_ == true) {
         Fxc.save("F_xc.mtx");
@@ -459,6 +467,8 @@ void DfForce::calcForceFromPureXC(RUN_TYPE runType)
 
 void DfForce::calcForceFromPureXC_gridfree(RUN_TYPE runType)
 {
+    this->loggerTime("calc XC(gridfree)");
+
     DfGridFreeXC dfGridFreeXC(&(this->pdfParamForForce_));
     TlMatrix force = dfGridFreeXC.getForce();
 
@@ -473,17 +483,18 @@ void DfForce::calcForceFromPureXC_gridfree(RUN_TYPE runType)
 
 void DfForce::calcForceFromK(RUN_TYPE runType)
 {
+    this->loggerTime("calc K");
+
     const DfXCFunctional dfXCFunctional(&(this->pdfParamForForce_));
 
     if (dfXCFunctional.isHybridFunctional() == true) {
         const int iteration = this->m_nIteration;
-        // const int numOfAOs = this->m_nNumOfAOs;
         const int numOfAtoms = this->m_nNumOfAtoms;
-        
+
         const TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
-        
+
         DfEriX dfEri(&(this->pdfParamForForce_));
-        
+
         TlMatrix F_K(numOfAtoms, 3);
         // for RKS
         dfEri.getForceK(P, &F_K);
@@ -523,7 +534,7 @@ TlMatrix DfForce::getTransformMatrix(const TlMatrix& force)
             this->log_.info(TlUtils::format("X[%d] (% e, % e, %e)", X[i].x(), X[i].y(), X[i].z()));
         }
     }
-    
+
     TlSymmetricMatrix rot(3);
     for (int i = 0; i < numOfAtoms; ++i) {
         const TlPosition p = X[i];
@@ -579,12 +590,12 @@ TlMatrix DfForce::getTransformMatrix(const TlMatrix& force)
             } else {
                 // y != 0
                 const double v = rot.get(1,1);
-                rot.set(1,1, 1.0/v); 
+                rot.set(1,1, 1.0/v);
             }
         } else if (rot.get(2,2) > TOO_SMALL) {
                 // z != 0
             const double v = rot.get(2, 2);
-            rot.set(2,2, 1.0/v); 
+            rot.set(2,2, 1.0/v);
         } else {
             return answer;
         }
@@ -671,5 +682,3 @@ TlMatrix DfForce::getTransformMatrix(const TlMatrix& force)
 
     return answer;
 }
-
-

@@ -1,18 +1,18 @@
 // Copyright (C) 2002-2014 The ProteinDF project
 // see also AUTHORS and README.
-// 
+//
 // This file is part of ProteinDF.
-// 
+//
 // ProteinDF is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProteinDF is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -51,7 +51,7 @@ public:
         GM_GGA_GRAD_RHO_Y_BETA  = 11,
         GM_GGA_GRAD_RHO_Z_BETA  = 12
     };
-    
+
 public:
     // the value of wave function on the grid
     struct WFGrid {
@@ -80,15 +80,15 @@ public:
 
 public:
     // for derivative
-    TlMatrix energyGradient(const TlSymmetricMatrix& P_A,
-                            DfFunctional_LDA* pFunctional);
-    TlMatrix energyGradient(const TlSymmetricMatrix& P_A,
-                            DfFunctional_GGA* pFunctional);
-    
+    virtual TlMatrix energyGradient(const TlSymmetricMatrix& P_A,
+                                    DfFunctional_LDA* pFunctional);
+    virtual TlMatrix energyGradient(const TlSymmetricMatrix& P_A,
+                                    DfFunctional_GGA* pFunctional);
+
 protected:
     TlMatrix selectGridMatrixByAtom(const TlMatrix& globalGridMat,
                                     const int atomIndex);
-    
+
 protected:
     virtual void defineCutOffValues(const TlSymmetricMatrix& P);
 
@@ -155,7 +155,7 @@ protected:
                        std::vector<double>* p_d2AO_dydz_values,
                        std::vector<double>* p_d2AO_dzdz_values);
 
-    
+
 protected:
     // for symmetric density matrix
     void getRhoAtGridPoint(const TlMatrixObject& PA,
@@ -186,7 +186,7 @@ protected:
                                const std::vector<double>& col_dAO_dy_values,
                                const std::vector<double>& col_dAO_dz_values,
                                double* pGradRhoAX, double* pGradRhoAY, double* pGradRhoAZ);
-    
+
 public:
     double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
                                        DfFunctional_LDA* pFunctional,
@@ -206,7 +206,7 @@ public:
                                        TlSymmetricMatrix* pF_B);
 
     virtual void getWholeDensity(double* pRhoA, double* pRhoB) const;
-    
+
 protected:
     double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
                                        DfFunctional_LDA* pFunctional,
@@ -228,7 +228,7 @@ protected:
                                        TlSymmetricMatrix* pF_A,
                                        TlSymmetricMatrix* pF_B,
                                        TlMatrix* pGridMatrix);
-    
+
 protected:
     virtual void calcRho_LDA(const TlSymmetricMatrix& P_A);
     virtual void calcRho_LDA(const TlSymmetricMatrix& P_A,
@@ -289,7 +289,18 @@ protected:
                          DfFunctional_GGA* pFunctional,
                          const double weight,
                          TlMatrixObject* pF_A);
-    
+
+protected:
+    double energyGradient_part(const TlSymmetricMatrix& P_A,
+                               DfFunctional_LDA* pFunctional,
+                               const int startAtomIndex, const int endAtomIndex,
+                               TlMatrix* pFxc_f, TlMatrix* pFxc_w);
+    double energyGradient_part(const TlSymmetricMatrix& P_A,
+                               DfFunctional_GGA* pFunctional,
+                               const int startAtomIndex, const int endAtomIndex,
+                               TlMatrix* pFxc_f, TlMatrix* pFxc_w);
+
+
 protected:
     static const double TOOBIG;
     static const double EPS;
@@ -297,7 +308,7 @@ protected:
     static const double INV_SQRT12; // = 1.0 / sqrt(12.0);
 
     DfXCFunctional::FUNCTIONAL_TYPE functionalType_;
-    
+
     /// 入力された電子密度・勾配のカットオフ値
     double inputtedDensityCutoffValue_;
 

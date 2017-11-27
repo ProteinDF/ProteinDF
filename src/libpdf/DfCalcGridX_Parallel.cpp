@@ -1,18 +1,18 @@
 // Copyright (C) 2002-2014 The ProteinDF project
 // see also AUTHORS and README.
-// 
+//
 // This file is part of ProteinDF.
-// 
+//
 // ProteinDF is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProteinDF is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -56,7 +56,7 @@ DfCalcGridX_Parallel::DfCalcGridX_Parallel(TlSerializeData* pPdfParam)
     if (pdfParam["xc_ms_job_per_proc"].getStr().empty() != true) {
         this->assignJobsPerProc_ = pdfParam["xc_ms_job_per_proc"].getInt();
     }
-    
+
     this->densityMatrixCacheMemSize_ = 100 * 1024UL * 1024UL; // 100MB
 
     this->calcMode_ = pdfParam["grid_calcmode"].getInt();
@@ -90,7 +90,7 @@ void DfCalcGridX_Parallel::defineCutOffValues(const TlDistributeSymmetricMatrix&
     }
     this->log_.info(TlUtils::format("density cutoff value = %e",
                                     this->m_densityCutOffValueA));
-    
+
     TlCommunicate& rComm = TlCommunicate::getInstance();
     rComm.broadcast(this->m_densityCutOffValueA);
 }
@@ -271,7 +271,7 @@ TlMatrix DfCalcGridX_Parallel::distributeGridMatrix(const int iteration)
 #endif // USE_FILE_MATRIX
         this->numOfRows_gridMatrix_ = globalGridMat.getNumOfRows();
         this->numOfCols_gridMatrix_ = globalGridMat.getNumOfCols();
-        
+
         const index_type range = (this->numOfRows_gridMatrix_ + numOfProcs -1) / numOfProcs;
 
         // for self(master)
@@ -286,7 +286,7 @@ TlMatrix DfCalcGridX_Parallel::distributeGridMatrix(const int iteration)
                                              gridMat.getNumOfRows(),
                                              gridMat.getNumOfCols()));
         }
-        
+
         // for slave
         for (int i = 1; i < numOfProcs; ++i) {
             const index_type startGrid = range * i;
@@ -314,11 +314,11 @@ TlMatrix DfCalcGridX_Parallel::distributeGridMatrix(const int iteration)
 void DfCalcGridX_Parallel::gatherAndSaveGridMatrix(const TlMatrix& gridMat)
 {
     this->log_.info("gather grid matrix: start");
-    
+
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProc();
     const int tag = TAG_CALCGRID_GATHER;
-    
+
     if (rComm.isMaster() == true) {
 #ifdef USE_FILE_MATRIX
         TlFileMatrix globalGridMat(DfObject::getGridMatrixPath(this->m_nIteration),
@@ -336,7 +336,7 @@ void DfCalcGridX_Parallel::gatherAndSaveGridMatrix(const TlMatrix& gridMat)
         index_type currentGridIndex = gridMat.getNumOfRows();
         this->log_.debug(TlUtils::format("currentGridIndex=%d",
                                          currentGridIndex));
-        
+
         std::vector<bool> recvCheck(numOfProcs, false);
         for (int i = 1; i < numOfProcs; ++i) {
             int proc = 0;
@@ -351,7 +351,7 @@ void DfCalcGridX_Parallel::gatherAndSaveGridMatrix(const TlMatrix& gridMat)
                                              proc,
                                              tmpMat.getNumOfRows(),
                                              tmpMat.getNumOfCols()));
-            
+
             assert(globalGridMat.getNumOfCols() == gridMat.getNumOfCols());
             globalGridMat.setBlockMatrix(currentGridIndex, 0,
                                          tmpMat);
@@ -359,7 +359,7 @@ void DfCalcGridX_Parallel::gatherAndSaveGridMatrix(const TlMatrix& gridMat)
             this->log_.debug(TlUtils::format("currentGridIndex=%d",
                                              currentGridIndex));
         }
-        
+
 #ifndef USE_FILE_MATRIX
         globalGridMat.save(DfObject::getGridMatrixPath(this->m_nIteration));
 #endif // USE_FILE_MATRIX
@@ -444,7 +444,7 @@ TlMatrix DfCalcGridX_Parallel::getGlobalGridMatrix(const int iteration)
                                    rhoMat);
         }
     }
-    
+
     return gridMat;
 }
 
@@ -463,7 +463,7 @@ void DfCalcGridX_Parallel::allReduceGridMatrix(const TlMatrix& gridMat)
                                    gridMat.getNumOfCols());
         assert(globalGridMat.getNumOfRows() == gridMat.getNumOfRows());
         assert(globalGridMat.getNumOfCols() == gridMat.getNumOfCols());
-        
+
         const TlMatrix crdMat = gridMat.getBlockMatrix(0, 0,
                                                        gridMat.getNumOfRows(),
                                                        GM_LDA_RHO_ALPHA);
@@ -615,7 +615,7 @@ void DfCalcGridX_Parallel::calcRho_GGA(const TlDistributeMatrix& P_A,
                            &col_dAO_dx_values,
                            &col_dAO_dy_values,
                            &col_dAO_dz_values);
-        
+
         // get rho at grid point
         double rhoA = 0.0;
         double gradRhoAX = 0.0;
@@ -623,7 +623,7 @@ void DfCalcGridX_Parallel::calcRho_GGA(const TlDistributeMatrix& P_A,
         double gradRhoAZ = 0.0;
         this->getRhoAtGridPoint(localP_A,
                                 row_AO_values,
-                                col_AO_values, 
+                                col_AO_values,
                                 &rhoA);
         this->getGradRhoAtGridPoint(localP_A,
                                     row_AO_values,
@@ -689,7 +689,7 @@ void DfCalcGridX_Parallel::calcRho_GGA(const TlDistributeMatrix& P_A,
         double gradRhoBZ = 0.0;
         this->getRhoAtGridPoint(localP_A,
                                 row_AO_values,
-                                col_AO_values, 
+                                col_AO_values,
                                 &rhoA);
         this->getGradRhoAtGridPoint(localP_A,
                                     row_AO_values,
@@ -699,7 +699,7 @@ void DfCalcGridX_Parallel::calcRho_GGA(const TlDistributeMatrix& P_A,
                                     &gradRhoAX, &gradRhoAY, &gradRhoAZ);
         this->getRhoAtGridPoint(localP_B,
                                 row_AO_values,
-                                col_AO_values, 
+                                col_AO_values,
                                 &rhoB);
         this->getGradRhoAtGridPoint(localP_B,
                                     row_AO_values,
@@ -786,3 +786,84 @@ void DfCalcGridX_Parallel::getWholeDensity(double* pRhoA, double* pRhoB) const
     }
 }
 
+
+TlMatrix DfCalcGridX_Parallel::energyGradient(const TlSymmetricMatrix& P_A,
+                                              DfFunctional_LDA* pFunctional)
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    this->log_.info("pure DFT XC energy (LDA) gradient by grid method (parallel)");
+    const int numOfAOs = this->m_nNumOfAOs;
+    const int numOfAtoms = this->m_nNumOfAtoms;
+
+    TlMatrix gammaX(numOfAOs, numOfAOs);
+    TlMatrix gammaY(numOfAOs, numOfAOs);
+    TlMatrix gammaZ(numOfAOs, numOfAOs);
+
+    TlMatrix Fxc_f(numOfAtoms, 3); // func derivative term
+    TlMatrix Fxc_w(numOfAtoms, 3); // weight derivative term
+
+    const int myRank = rComm.getRank();
+    const int numOfProcs = rComm.getNumOfProcs();
+    const int range = (numOfAtoms + numOfProcs) / numOfProcs;
+    const int startIndex = range * myRank;
+    const int endIndex = std::min(range * (myRank +1), numOfAtoms);
+    double ene_xc = this->energyGradient_part(P_A, pFunctional, startIndex, endIndex, &Fxc_f, &Fxc_w);
+    rComm.allReduce_SUM(ene_xc);
+    rComm.allReduce_SUM(Fxc_f);
+    rComm.allReduce_SUM(Fxc_w);
+
+    this->log_.info(TlUtils::format("XC ene = % 16.10f", ene_xc));
+
+    Fxc_f *= 2.0; // rks
+
+    // debug
+    if (this->isSaveGrad_) {
+        if (rComm.isMaster()) {
+            Fxc_w.save("Fxc_w.mat");
+            Fxc_f.save("Fxc_f.mat");
+        }
+    }
+
+    return Fxc_w + Fxc_f;
+}
+
+
+TlMatrix DfCalcGridX_Parallel::energyGradient(const TlSymmetricMatrix& P_A,
+                                              DfFunctional_GGA* pFunctional)
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    this->log_.info("pure DFT XC energy (LDA) gradient by grid method (parallel)");
+    const int numOfAOs = this->m_nNumOfAOs;
+    const int numOfAtoms = this->m_nNumOfAtoms;
+
+    TlMatrix gammaX(numOfAOs, numOfAOs);
+    TlMatrix gammaY(numOfAOs, numOfAOs);
+    TlMatrix gammaZ(numOfAOs, numOfAOs);
+
+    TlMatrix Fxc_f(numOfAtoms, 3); // func derivative term
+    TlMatrix Fxc_w(numOfAtoms, 3); // weight derivative term
+
+    const int myRank = rComm.getRank();
+    const int numOfProcs = rComm.getNumOfProcs();
+    const int range = (numOfAtoms + numOfProcs) / numOfProcs;
+    const int startIndex = range * myRank;
+    const int endIndex = std::min(range * (myRank +1), numOfAtoms);
+    double ene_xc = this->energyGradient_part(P_A, pFunctional, startIndex, endIndex, &Fxc_f, &Fxc_w);
+    rComm.allReduce_SUM(ene_xc);
+    rComm.allReduce_SUM(Fxc_f);
+    rComm.allReduce_SUM(Fxc_w);
+
+    this->log_.info(TlUtils::format("XC ene = % 16.10f", ene_xc));
+
+    Fxc_f *= 2.0; // rks
+
+    // debug
+    if (this->isSaveGrad_) {
+        if (rComm.isMaster()) {
+            Fxc_w.save("Fxc_w.mat");
+            Fxc_f.save("Fxc_f.mat");
+        }
+    }
+
+    return Fxc_w + Fxc_f;
+}
