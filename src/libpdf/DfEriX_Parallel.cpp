@@ -1,18 +1,18 @@
 // Copyright (C) 2002-2014 The ProteinDF project
 // see also AUTHORS and README.
-// 
+//
 // This file is part of ProteinDF.
-// 
+//
 // ProteinDF is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProteinDF is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -25,7 +25,7 @@
 #include "TlCommunicate.h"
 #include "TlSparseSymmetricMatrix.h"
 
-DfEriX_Parallel::DfEriX_Parallel(TlSerializeData* pPdfParam) 
+DfEriX_Parallel::DfEriX_Parallel(TlSerializeData* pPdfParam)
     : DfEriX(pPdfParam) {
 
     this->calcMode_ = CalcMode_UsingLocalMatrix;
@@ -35,7 +35,7 @@ DfEriX_Parallel::DfEriX_Parallel(TlSerializeData* pPdfParam)
 }
 
 
-DfEriX_Parallel::~DfEriX_Parallel() 
+DfEriX_Parallel::~DfEriX_Parallel()
 {
 }
 
@@ -99,12 +99,12 @@ void DfEriX_Parallel::getJ(const TlVector& rho, TlDistributeSymmetricMatrix* pJ)
                         shellArrayTable_Density,
                         taskList,
                         rho, &tmpJ);
-        
+
         hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
                                          true,
                                          this->grainSize_, &taskList);
     }
-    
+
     //this->finalize(pJ);
 
     pJ->mergeSparseMatrix(tmpJ);
@@ -122,7 +122,7 @@ void DfEriX_Parallel::getJab(TlDistributeSymmetricMatrix* pJab)
     const index_type numOfAuxDens = this->m_nNumOfAux;
     pJab->resize(numOfAuxDens);
     TlSparseSymmetricMatrix tmpJab(numOfAuxDens);
-    
+
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
                                                     (*(this->pPdfParam_))["basis_set_j"]);
 
@@ -163,7 +163,7 @@ void DfEriX_Parallel::getJ(const TlDistributeSymmetricMatrix& P,
         this->log_.info(" ERI calc mode: Local Matrix");
         this->getJ_D_local(P, pRho);
         break;
-        
+
     default:
         this->log_.info(" ERI calc mode: Background Comm.");
         this->getJ_D_BG(P, pRho);
@@ -175,12 +175,12 @@ void DfEriX_Parallel::getJ_D_local(const TlDistributeSymmetricMatrix& P,
                                    TlDistributeVector* pRho)
 {
     this->log_.info(" using local matrix for density matrix.");
-        
+
     assert(pRho != NULL);
     //this->clearCutoffStats();
     TlCommunicate& rComm = TlCommunicate::getInstance();
     assert(rComm.checkNonBlockingCommunications());
-    
+
     // カットオフ値の設定
     const double maxDeltaP = P.getMaxAbsoluteElement();
     if (maxDeltaP < 1.0) {
@@ -215,7 +215,7 @@ void DfEriX_Parallel::getJ_D_local(const TlDistributeSymmetricMatrix& P,
         for (index_type q = 0; q < numOfColIndexes; ) {
             const index_type shellIndexQ = colIndexes[q];
             if (shellIndexP >= shellIndexQ) {
-                // prepare 
+                // prepare
                 const double exponentQ = orbitalInfo.getExponent(shellIndexQ, 0);
                 const double zetaPQ = exponentP + exponentQ;
                 const double zeta = exponentP * exponentQ / zetaPQ;
@@ -245,7 +245,7 @@ void DfEriX_Parallel::getJ_D_local(const TlDistributeSymmetricMatrix& P,
                      TlDistributeMatrix(P), &tmpRho);
     this->log_.info("ERI end: waiting all process tasks");
     this->destroyEngines();
-    
+
     // finalize
     rComm.allReduce_SUM(tmpRho);
     *pRho = TlDistributeVector(tmpRho);
@@ -257,11 +257,11 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
                                 TlDistributeVector* pRho)
 {
     this->log_.info(" background transportation for density matrix.");
-    
+
     assert(pRho != NULL);
     //this->clearCutoffStats();
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    
+
     // カットオフ値の設定
     const double maxDeltaP = P.getMaxAbsoluteElement();
     if (maxDeltaP < 1.0) {
@@ -313,7 +313,7 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
                             shellArrayTable_Density,
                             taskList,
                             tmpP, &tmpRho);
-            
+
             tmpP.zeroClear();
             isSetTempP = false;
 
@@ -339,7 +339,7 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
     //     rComm.iReceiveData(allProcFinished, 0, TAG_ALL_PROC_FINISHED);
     //     while (true) {
     //         P.getSparseMatrixX(NULL, false);
-            
+
     //         if (rComm.test(&allProcFinished) == true) {
     //             rComm.wait(&allProcFinished);
     //             break;
@@ -357,7 +357,7 @@ void DfEriX_Parallel::getJ_D_BG(const TlDistributeSymmetricMatrix& P,
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
-    
+
     // finalize
     //this->finalize(pRho);
     rComm.allReduce_SUM(tmpRho);
@@ -452,21 +452,21 @@ void DfEriX_Parallel::getJpq_D(const TlDistributeSymmetricMatrix& P,
                 }
                 tmpP.zeroClear();
                 isSetTempP = false;
-            
+
                 hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                                  schwarzTable,
                                                  this->grainSize_,
                                                  &taskList);
             }
-            
+
             P.getSparseMatrixX(NULL, false);
         }
-        
+
         delete[] pTaskIndexPairs;
         pTaskIndexPairs = NULL;
         delete[] pTaskValues;
         pTaskValues = NULL;
-    }            
+    }
     this->log_.warn("DfEriX_Parallel::getJ_D() loop end");
 
     // waiting another proc
@@ -492,7 +492,7 @@ void DfEriX_Parallel::getK_D(const TlDistributeSymmetricMatrix& P,
     case CalcMode_UsingLocalMatrix:
         this->getK_D_local(P, pK);
         break;
-        
+
     default:
         this->getK_D_BG(P, pK);
         break;
@@ -508,10 +508,10 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
     assert(pK != NULL);
     const index_type numOfAOs = this->m_nNumOfAOs;
     pK->resize(numOfAOs);
-    
+
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_set"]);
-    
+
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
     TlSparseSymmetricMatrix tmpP(this->m_nNumOfAOs);
@@ -594,7 +594,7 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
                 }
                 tmpP.zeroClear();
                 isSetTempP = false;
-                
+
                 hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                                  schwarzTable,
                                                  this->grainSize_,
@@ -610,7 +610,7 @@ void DfEriX_Parallel::getK_D_BG(const TlDistributeSymmetricMatrix& P,
         pTaskValues = NULL;
     }
     this->log_.warn("DfEriX_Parallel::getK_D() loop end");
-    
+
     // waiting another proc
     this->waitAnotherProcs(P);
     P.getSparseMatrixX(NULL, true);
@@ -634,13 +634,13 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     this->log_.info("using local matrix for density matrix.");
 
     assert(pK != NULL);
-    
+
     const index_type numOfAOs = this->m_nNumOfAOs;
     pK->resize(numOfAOs);
-    
+
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_set"]);
-    
+
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
 
     // TODO:
@@ -648,7 +648,7 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
     std::vector<index_type> rowIndexes;
     std::vector<index_type> colIndexes;
     this->expandLocalDensityMatrix(P, orbitalInfo, &localP, &rowIndexes, &colIndexes);
-    
+
     this->log_.info("ERI start");
     const TlDistributeMatrix tmpP(P);
     DfTaskCtrl dfTaskCtrl(this->pPdfParam_);
@@ -681,12 +681,12 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
                                           rowIndexes, colIndexes,
                                           this->grainSize_, &taskList);
     }
-    
+
     delete[] pTaskIndexPairs;
     pTaskIndexPairs = NULL;
     delete[] pTaskValues;
     pTaskValues = NULL;
-    
+
     this->log_.info("ERI end: waiting all process tasks");
 
     dfTaskCtrl.cutoffReport();
@@ -702,7 +702,7 @@ void DfEriX_Parallel::getK_D_local(const TlDistributeSymmetricMatrix& P,
 void DfEriX_Parallel::waitAnotherProcs(const TlDistributeSymmetricMatrix& P)
 {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    
+
     int allProcFinished = 0;
     if (rComm.isMaster() == true) {
         const int numOfProcs = rComm.getNumOfProcs();
@@ -740,7 +740,7 @@ void DfEriX_Parallel::waitAnotherProcs(const TlDistributeSymmetricMatrix& P)
         rComm.iReceiveData(allProcFinished, 0, TAG_ALL_PROC_FINISHED);
         while (true) {
             P.getSparseMatrixX(NULL, false);
-            
+
             if (rComm.test(&allProcFinished) == true) {
                 rComm.wait(&allProcFinished);
                 break;
@@ -806,7 +806,7 @@ void DfEriX_Parallel::expandLocalDensityMatrix(const TlDistributeSymmetricMatrix
                 }
             }
         }
-        
+
     }
 }
 
@@ -868,7 +868,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
             const index_type shellIndexQ = taskList[i].shellIndex2;
             const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
             const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
-            
+
             const int maxStepsP = 2 * shellTypeP + 1;
             const int maxStepsQ = 2 * shellTypeQ + 1;
             // const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
@@ -881,14 +881,14 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
 
             for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
-            
+
                 // const int shellTypeS = 0;
                 // const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
-                
+
                 const std::size_t numOfShellArrayR = shellArrayTable_Density[shellTypeR].size();
                 for (std::size_t indexR = 0; indexR < numOfShellArrayR; ++indexR) {
                     const index_type shellIndexR = shellArrayTable_Density[shellTypeR][indexR];
-                
+
                     // const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo_Density,
                     //                                                                             shellIndexR,
                     //                                                                             -1,
@@ -898,21 +898,21 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
                                                       0, orbitalInfo, shellIndexQ,
                                                       0, orbitalInfo_Density, shellIndexR,
                                                       0, orbitalInfo_Density, -1);
-                
+
                     int index = 0;
                     for (int i = 0; i < maxStepsP; ++i) {
                         const index_type indexP = shellIndexP + i;
-                        
+
                         for (int j = 0; j < maxStepsQ; ++j) {
                             const index_type indexQ = shellIndexQ + j;
-                            
+
                             if ((shellIndexP != shellIndexQ) || (indexP >= indexQ)) {
                                 const double coef = (indexP != indexQ) ? 2.0 : 1.0;
                                 const double P_pq = coef * P.getLocal(indexP, indexQ);
-                                
+
                                 for (int k = 0; k < maxStepsR; ++k) {
                                     const index_type indexR = shellIndexR + k;
-                                    
+
                                     const double value = this->pEriEngines_[threadID].WORK[index];
                                     pRho->add(indexR, P_pq * value);
                                     ++index;
@@ -958,7 +958,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
 //             const int maxStepsQ = 2 * shellTypeQ + 1;
 //             const int maxStepsR = 2 * shellTypeR + 1;
 //             const int maxStepsS = 2 * shellTypeS + 1;
-                        
+
 //             const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
 //                                                                                         shellIndexP,
 //                                                                                         shellIndexQ,
@@ -971,7 +971,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
 //             const DfEriEngine::Query queryRS(0, 0, shellTypeR, shellTypeS);
 
 //             this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
-                        
+
 //             this->storeK_integralDriven2(shellIndexP, maxStepsP,
 //                                          shellIndexQ, maxStepsQ,
 //                                          shellIndexR, maxStepsR,
@@ -994,7 +994,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
 //     int index = 0;
 //     for (int i = 0; i < maxStepsP; ++i) {
 //         const index_type indexP = shellIndexP + i;
-                                    
+
 //         for (int j = 0; j < maxStepsQ; ++j) {
 //             const index_type indexQ = shellIndexQ + j;
 //             if (indexP < indexQ) {
@@ -1002,7 +1002,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
 //                 index += (maxStepsR * maxStepsS);
 //                 continue;
 //             }
-                                        
+
 //             for (int k = 0; k < maxStepsR; ++k) {
 //                 const index_type indexR = shellIndexR + k;
 //                 if (shellIndexQ == shellIndexS) {
@@ -1011,7 +1011,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
 //                         continue;
 //                     }
 //                 }
-                                            
+
 //                 for (int l = 0; l < maxStepsS; ++l) {
 //                     const index_type indexS = shellIndexS + l;
 //                     if (indexS > ((indexP == indexR) ? indexQ : indexR)) {
@@ -1019,16 +1019,16 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
 //                         ++index;
 //                         continue;
 //                     }
-                                                
+
 //                     const double value = engine.WORK[index];
-                                                
+
 //                     // Eq.1 : (indexP, indexR) <= (indexQ, indexS)
 //                     const double coefEq1 = ((indexP == indexR) && (indexQ != indexS)) ? 2.0 : 1.0;
 //                     pK->add(indexP, indexR, - coefEq1 * P.getLocal(indexQ, indexS) * value);
 // #ifdef DEBUG_K
 //                     this->IA_K_ID1_.countUp(indexP, indexR, indexQ, indexS, coefEq1);
 // #endif // DEBUG_K
-                    
+
 //                     if (indexR != indexS) { // Eq.1 != Eq.2
 //                         // Eq.2 : (indexP, indexS) <= (indexQ, indexR)
 //                         const double coefEq2 = ((indexP == indexS) && (indexQ != indexR)) ? 2.0 : 1.0;
@@ -1037,7 +1037,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
 //                         this->IA_K_ID2_.countUp(indexP, indexS, indexQ, indexR, coefEq2);
 // #endif // DEBUG_K
 //                     }
-                                                
+
 //                     if (indexP != indexQ) { // (Eq.1, Eq.2) != (Eq.3, Eq.4)
 //                         // Eq.3 : (indexQ, indexR) <= (indexP, indexS)
 //                         if ((indexP != indexR) || (indexQ != indexS)) { // Eq.2 != Eq.3 : !((indexP, indexS) == (indexQ, indexR))
@@ -1047,7 +1047,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
 //                             this->IA_K_ID3_.countUp(indexQ, indexR, indexP, indexS, coefEq3);
 // #endif // DEBUG_K
 //                         }
-                                                    
+
 //                         if (indexR != indexS) { // Eq.3 != Eq.4
 //                             // Eq.4 : (indexQ, indexS) <= (indexP, indexR)
 //                             const double coefEq4 = ((indexQ == indexS) && (indexP != indexR)) ? 2.0 : 1.0;
@@ -1066,7 +1066,7 @@ void DfEriX_Parallel::getJ_part2(const TlOrbitalInfo& orbitalInfo,
 //                     ++index;
 //                 }
 //             }
-                                        
+
 //         }
 //     }
 // }
@@ -1078,7 +1078,7 @@ TlSparseSymmetricMatrix DfEriX_Parallel::makeSchwarzTable(const TlOrbitalInfoObj
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProcs();
     const int rank = rComm.getRank();
-    
+
     const index_type maxShellIndex = orbitalInfo.getNumOfOrbitals();
     TlSparseSymmetricMatrix schwarz(maxShellIndex);
 
@@ -1093,7 +1093,7 @@ TlSparseSymmetricMatrix DfEriX_Parallel::makeSchwarzTable(const TlOrbitalInfoObj
         for (index_type shellIndexQ = 0; shellIndexQ < maxShellIndex; ) {
             const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
             const int maxStepsQ = 2 * shellTypeQ + 1;
-                
+
             if (counter == rank) {
                 // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
                 // const DfEriEngine::CGTO_Pair PQ = engine.getCGTO_pair(orbitalInfo,
@@ -1105,17 +1105,17 @@ TlSparseSymmetricMatrix DfEriX_Parallel::makeSchwarzTable(const TlOrbitalInfoObj
                             0, orbitalInfo, shellIndexQ,
                             0, orbitalInfo, shellIndexP,
                             0, orbitalInfo, shellIndexQ);
-                
+
                 double maxValue = 0.0;
                 const int maxIndex = maxStepsP * maxStepsQ;
                 for (int index = 0; index < maxIndex; ++index) {
                     maxValue = std::max(maxValue, std::fabs(engine.WORK[index]));
                 }
                 schwarz.set(shellIndexP, shellIndexQ, std::sqrt(maxValue));
-            }    
+            }
 
             shellIndexQ += maxStepsQ;
-            
+
             ++counter;
             if (counter >= numOfProcs) {
                 counter = 0;
@@ -1128,7 +1128,10 @@ TlSparseSymmetricMatrix DfEriX_Parallel::makeSchwarzTable(const TlOrbitalInfoObj
     // rComm.gatherToMaster(schwarz);
     // rComm.broadcast(schwarz);
     rComm.allReduce_SUM(schwarz);
-    
+
     this->log_.info("make Schwartz cutoff table(parallel): end");
     return schwarz;
 }
+
+
+// -----------------------------------------------------------------------------

@@ -1,18 +1,18 @@
 // Copyright (C) 2002-2014 The ProteinDF project
 // see also AUTHORS and README.
-// 
+//
 // This file is part of ProteinDF.
-// 
+//
 // ProteinDF is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProteinDF is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -29,43 +29,46 @@
 //const int DfEriX::MAX_SHELL_TYPE = 2 + 1; // (s=0, p, d)
 const int DfEriX::FORCE_K_BUFFER_SIZE = 3 * 7 * 7 * 7; // (xyz) * 7f * 7f * 7f
 
-DfEriX::DfEriX(TlSerializeData* pPdfParam) 
+DfEriX::DfEriX(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), pEriEngines_(NULL)
 {
     this->lengthScaleParameter_ = 1.0;
     if ((*pPdfParam)["length_scale_parameter"].getStr() != "") {
         this->lengthScaleParameter_ = (*pPdfParam)["length_scale_parameter"].getDouble();
     }
-    
+
     this->cutoffThreshold_ = 1.0E-10;
     if ((*pPdfParam)["cut_value"].getStr().empty() != true) {
         this->cutoffThreshold_ = (*pPdfParam)["cut_value"].getDouble();
-    }    
+    }
 
     this->cutoffEpsilon_density_ = this->cutoffThreshold_;
     if ((*pPdfParam)["cutoff_density"].getStr().empty() != true) {
         this->cutoffEpsilon_density_ = (*pPdfParam)["cutoff_density"].getDouble();
-    }    
+    }
 
     this->cutoffEpsilon_distribution_ = this->cutoffThreshold_;
     if ((*pPdfParam)["cutoff_distribution"].getStr().empty() != true) {
         this->cutoffEpsilon_distribution_ = (*pPdfParam)["cutoff_distribution"].getDouble();
-    }    
+    }
 
     // this->cutoffEpsilon1_ = this->cutoffThreshold_ * 0.01;
     // if ((*pPdfParam)["cutoff_epsilon1"].getStr().empty() != true) {
     //     this->cutoffEpsilon1_ = (*pPdfParam)["cutoff_epsilon1"].getDouble();
-    // }    
+    // }
 
     // this->cutoffEpsilon2_ = this->cutoffThreshold_;
     // if ((*pPdfParam)["cutoff_epsilon2"].getStr().empty() != true) {
     //     this->cutoffEpsilon2_ = (*pPdfParam)["cutoff_epsilon2"].getDouble();
-    // }    
+    // }
 
     this->cutoffThreshold_primitive_ = this->cutoffThreshold_ * 0.01;
     if ((*pPdfParam)["cutoff_threshold_primitive"].getStr().empty() != true) {
         this->cutoffThreshold_primitive_ = (*pPdfParam)["cutoff_threshold_primitive"].getDouble();
-    }    
+    }
+
+    this->cutoffThreshold_P_grad_ = 1.0E-5;
+
 
     // debug ===========================================================
     this->isDebugOutJ_ = false;
@@ -104,10 +107,10 @@ DfEriX::~DfEriX()
 void DfEriX::createEngines()
 {
     assert(this->pEriEngines_ == NULL);
-    
+
     static const int maxSizeOfElement = 5 * 5 * 5 * 5 * 4; // means (d * d * d * d * 4)
     const int numOfThreads = this->numOfThreads_;
-    
+
     this->log_.info(TlUtils::format("create ERI engine: %d", numOfThreads));
     this->pEriEngines_ = new DfEriEngine[numOfThreads];
 
@@ -170,7 +173,7 @@ void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho)
     assert(pRho != NULL);
     // TlTime time_all;
     // time_all.start();
-    
+
     // カットオフ値の設定
     const double maxDeltaP = P.getMaxAbsoluteElement();
     if (maxDeltaP < 1.0) {
@@ -235,7 +238,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
     const int taskListSize = taskList.size();
     // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
     // int numOfThreads = 1;
-    
+
     // TlTime time_sumup;
     // double elapsetime_calc = 0.0;
     // double elapsetime_calc_eri = 0.0;
@@ -262,7 +265,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
             const index_type shellIndexQ = taskList[i].shellIndex2;
             const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
             const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
-            
+
             const int maxStepsP = 2 * shellTypeP + 1;
             const int maxStepsQ = 2 * shellTypeQ + 1;
             // const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
@@ -276,15 +279,15 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
             const int maxShellType = TlOrbitalInfoObject::getMaxShellType();
             for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
-            
+
                 // const int shellTypeS = 0;
                 // const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
-                
+
                 const std::size_t numOfShellArrayR = shellArrayTable_Density[shellTypeR].size();
                 for (std::size_t indexR = 0; indexR < numOfShellArrayR; ++indexR) {
                     const index_type shellIndexR = shellArrayTable_Density[shellTypeR][indexR];
-                
-                    // const DfEriEngine::CGTO_Pair RS = 
+
+                    // const DfEriEngine::CGTO_Pair RS =
                     //     this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo_Density,
                     //                                               shellIndexR,
                     //                                               -1,
@@ -294,23 +297,23 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                                                       0, orbitalInfo, shellIndexQ,
                                                       0, orbitalInfo_Density, shellIndexR,
                                                       0, orbitalInfo_Density, -1);
-                    
+
                     // time_store.start();
                     int index = 0;
                     for (int i = 0; i < maxStepsP; ++i) {
                         const index_type indexP = shellIndexP + i;
-                        
+
                         for (int j = 0; j < maxStepsQ; ++j) {
                             const index_type indexQ = shellIndexQ + j;
-                            
+
                             if ((shellIndexP != shellIndexQ) || (indexP >= indexQ)) {
                                 const double coef = (indexP != indexQ) ? 2.0 : 1.0;
                                 //const double coef = 2.0;
                                 const double P_pq = coef * P.get(indexP, indexQ);
-                                
+
                                 for (int k = 0; k < maxStepsR; ++k) {
                                     const index_type indexR = shellIndexR + k;
-                                    
+
                                     const double value = this->pEriEngines_[threadID].WORK[index];
                                     //pRho->add(indexR, P_pq * value);
                                     local_rho[indexR] += P_pq * value;
@@ -368,10 +371,10 @@ void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ)
 
     pJ->resize(this->m_nNumOfAOs);
     //pJ->zeroClear();
-    
+
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
-    
+
     std::vector<DfTaskCtrl::Task2> taskList;
     bool hasTask = pDfTaskCtrl->getQueue2(orbitalInfo,
                                           true,
@@ -450,7 +453,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
             const index_type shellIndexQ = taskList[i].shellIndex2;
             const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
             const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
-            
+
             const int maxStepsP = 2 * shellTypeP + 1;
             const int maxStepsQ = 2 * shellTypeQ + 1;
             // const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
@@ -463,15 +466,15 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
 
             for (int shellTypeR = maxShellType -1; shellTypeR >= 0; --shellTypeR) {
                 const int maxStepsR = 2 * shellTypeR + 1;
-            
+
                 // const int shellTypeS = 0;
                 // const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
-                
+
                 const std::size_t numOfShellArrayR = shellArrayTable_Density[shellTypeR].size();
                 for (std::size_t indexR = 0; indexR < numOfShellArrayR; ++indexR) {
                     const index_type shellIndexR = shellArrayTable_Density[shellTypeR][indexR];
-                    
-                    // const DfEriEngine::CGTO_Pair RS = 
+
+                    // const DfEriEngine::CGTO_Pair RS =
                     //     this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo_Density,
                     //                                               shellIndexR,
                     //                                               -1,
@@ -481,19 +484,19 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                                                       0, orbitalInfo, shellIndexQ,
                                                       0, orbitalInfo_Density, shellIndexR,
                                                       0, orbitalInfo_Density, -1);
-                    
+
                     int index = 0;
                     for (int i = 0; i < maxStepsP; ++i) {
                         const index_type indexP = shellIndexP + i;
-                        
+
                         for (int j = 0; j < maxStepsQ; ++j) {
                             const index_type indexQ = shellIndexQ + j;
-                            
+
                             if ((shellIndexP != shellIndexQ) || (indexP >= indexQ)) {
                                 double value = 0.0;
                                 for (int k = 0; k < maxStepsR; ++k) {
                                     const index_type indexR = shellIndexR + k;
-                                    
+
                                     value += rho.get(indexR) * this->pEriEngines_[threadID].WORK[index];
                                     ++index;
                                 }
@@ -539,7 +542,7 @@ void DfEriX::getJpq(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
 {
     assert(pJ != NULL);
     //this->clearCutoffStats();
-    
+
     // カットオフ値の設定
     const double maxDeltaP = P.getMaxAbsoluteElement();
     if ((maxDeltaP > 0.0) && (maxDeltaP < 1.0)) {
@@ -567,10 +570,10 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
 
     assert(pJ != NULL);
     pJ->resize(this->m_nNumOfAOs);
-    
+
     DfEriEngine engine;
     engine.setPrimitiveLevelThreshold(0.0);
-    
+
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_set"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
@@ -600,7 +603,7 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
                     ShellArray::const_iterator sItEnd = shellArrayS.end();
 
                     // const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
-        
+
                     for (ShellArray::const_iterator pIt = shellArrayP.begin(); pIt != pItEnd; ++pIt) {
                         const index_type shellIndexP = *pIt;
                         for (ShellArray::const_iterator qIt = shellArrayQ.begin(); qIt != qItEnd; ++qIt) {
@@ -609,7 +612,7 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
                             // const DfEriEngine::CGTO_Pair PQ = engine.getCGTO_pair(orbitalInfo,
                             //                                                       shellIndexP, shellIndexQ,
                             //                                                       0.0);
-                            
+
                             for (ShellArray::const_iterator rIt = shellArrayR.begin(); rIt != rItEnd; ++rIt) {
                                 const index_type shellIndexR = *rIt;
                                 for (ShellArray::const_iterator sIt = shellArrayS.begin(); sIt != sItEnd; ++sIt) {
@@ -629,12 +632,12 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ)
                                         const int indexP = shellIndexP + i;
                                         for (int j = 0; j < maxStepsQ; ++j) {
                                             const int indexQ = shellIndexQ + j;
-                                            
+
                                             for (int k = 0; k < maxStepsR; ++k) {
                                                 const int indexR = shellIndexR + k;
                                                 for (int l = 0; l < maxStepsS; ++l) {
                                                     const int indexS = shellIndexS + l;
-                                                    
+
                                                     if (indexP >= indexQ) {
                                                         const double P_rs = P.get(indexR, indexS);
                                                         const double value = engine.WORK[index];
@@ -670,7 +673,7 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
     this->IA_J_ID1_.resize(numOfAOs);
     this->IA_J_ID2_.resize(numOfAOs);
 #endif // DEBUG_J
-    
+
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
     pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
@@ -689,21 +692,21 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
                                           true);
 
     std::vector<DfTaskCtrl::Task4> taskList;
-    
+
     while (hasTask) {
         const int numOfTaskElements = this->getJ_integralDriven_part(orbitalInfo,
                                                                      taskList,
                                                                      P,
                                                                      pIndexPairs, pValues);
         assert(numOfTaskElements <= (maxElements * this->grainSize_));
-        
+
         // update J
         for (int i = 0; i < numOfTaskElements; ++i) {
             const index_type p = pIndexPairs[i*2   ];
             const index_type q = pIndexPairs[i*2 +1];
             pJ->add(p, q, pValues[i]);
         }
-        
+
         hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                          schwarzTable,
                                          this->grainSize_,
@@ -721,13 +724,13 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
-    
+
     // debug
 #ifdef DEBUG_J
     if (this->isDebugOutJ_ == true) {
         for (index_type i = 0; i < numOfAOs; ++i) {
             for (index_type j = 0; j <= i; ++j) {
-                
+
                 std::cerr << TlUtils::format(">>>>J(%2d,%2d)", i, j)
                           << std::endl;
                 for (index_type k = 0; k < numOfAOs; ++k) {
@@ -789,7 +792,7 @@ int DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
             const int maxStepsQ = 2 * shellTypeQ + 1;
             const int maxStepsR = 2 * shellTypeR + 1;
             const int maxStepsS = 2 * shellTypeS + 1;
-            
+
             // const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
             //                                                                             shellIndexP,
             //                                                                             shellIndexQ,
@@ -800,13 +803,13 @@ int DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
             //                                                                             pairwisePGTO_cutoffThreshold);
             // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
             // const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
-            
+
             //this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
             this->pEriEngines_[threadID].calc(0, orbitalInfo, shellIndexP,
                                               0, orbitalInfo, shellIndexQ,
                                               0, orbitalInfo, shellIndexR,
                                               0, orbitalInfo, shellIndexS);
-            
+
             const int stores = this->storeJ_integralDriven(shellIndexP, maxStepsP,
                                                            shellIndexQ, maxStepsQ,
                                                            shellIndexR, maxStepsR,
@@ -834,7 +837,7 @@ int DfEriX::getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
         pThreadValues = NULL;
     }
     assert(numOfElements < (this->grainSize_ * 5 * 5 * 5 * 5 * 4));
-    
+
     return numOfElements;
 }
 
@@ -859,17 +862,17 @@ int DfEriX::storeJ_integralDriven(const index_type shellIndexP, const int maxSte
         for (int j = 0; j < maxStepsQ; ++j) {
             const index_type indexQ = shellIndexQ + j;
             const double P_pq = P.get(indexP, indexQ);
-            
+
             for (int k = 0; k < maxStepsR; ++k) {
                 const index_type indexR = shellIndexR + k;
 
                 for (int l = 0; l < maxStepsS; ++l) {
                     const index_type indexS = shellIndexS + l;
                     const double P_rs = P.get(indexR, indexS);
-                    
+
                     const double value = engine.WORK[index];
                     const index_type maxIndexS = (indexP == indexR) ? indexQ : indexR;
-                    
+
                     if ((indexP >= indexQ) && (maxIndexS >= indexS)) {
                         // Eq.1 : (indexP, indexQ) <= (indexR, indexS)
                         const double coefEq1 = (indexR != indexS) ? 2.0 : 1.0;
@@ -881,13 +884,13 @@ int DfEriX::storeJ_integralDriven(const index_type shellIndexP, const int maxSte
 #ifdef DEBUG_J
                         this->IA_J_ID1_.countUp(indexP, indexQ, indexR, indexS, coefEq1);
 #endif // DEBUG_J
-                        
+
                         // Eq.2 : (indexR, indexS) <= (indexP, indexQ)
                         if ((shellIndexP != shellIndexR) || (shellIndexQ != shellIndexS) || (indexP == indexR)) {
                             if (((indexP + indexQ) != (indexR + indexS)) ||
                                 ((indexP * indexQ) != (indexR * indexS))) {
                                 // Eq.1の条件と重複しないようにするための措置
-                                            
+
                                 const double coefEq2 = (indexP != indexQ) ? 2.0 : 1.0;
                                 // pJ->add(indexR, indexS, coefEq2 * P_pq * value);
                                 pIndexPairs[numOfElements*2   ] = indexR;
@@ -943,7 +946,7 @@ void DfEriX::getJab(TlSymmetricMatrix* pJab)
     }
 
     this->finalize(pJab);
-    
+
     pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
@@ -967,7 +970,7 @@ void DfEriX::getJab_part(const TlOrbitalInfoObject& orbitalInfo,
 #endif // _OPENMP
 
         this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
-        
+
 #pragma omp for schedule(runtime)
         for (int i = 0; i < taskListSize; ++i) {
             const index_type shellIndexP = taskList[i].shellIndex1;
@@ -1007,11 +1010,11 @@ void DfEriX::getJab_part(const TlOrbitalInfoObject& orbitalInfo,
                                               0, orbitalInfo, -1,
                                               0, orbitalInfo, shellIndexR,
                                               0, orbitalInfo, -1);
-                
+
             int index = 0;
             for (int p = 0; p < maxStepsP; ++p) {
                 const index_type indexP = shellIndexP + p;
-                
+
                 for (int r = 0; r < maxStepsR; ++r) {
                     const index_type indexR = shellIndexR + r;
 
@@ -1031,7 +1034,7 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce)
 {
     assert(pForce != NULL);
     pForce->resize(this->m_nNumOfAtoms, 3);
-    
+
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
@@ -1070,14 +1073,14 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
 {
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffThreshold_primitive_;
-    
+
 #pragma omp parallel
     {
         int threadID = 0;
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
-        
+
         this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
 
 #pragma omp for schedule(runtime)
@@ -1103,7 +1106,7 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
                 (atomIndexC == atomIndexD) && (atomIndexD == atomIndexA)) {
                 continue;
             }
-            
+
             const DfEriEngine::AngularMomentum2 queryPQ00(0, 0, shellTypeP, shellTypeQ);
             const DfEriEngine::AngularMomentum2 queryRS00(0, 0, shellTypeR, shellTypeS);
             const DfEriEngine::CGTO_Pair PQ =
@@ -1116,12 +1119,12 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
                                                           shellIndexR,
                                                           shellIndexS,
                                                           pairwisePGTO_cutoffThreshold);
-            
+
             // std::cerr << TlUtils::format("*** DfEriX::getForceJ_part() (%d %d|%d %d) ***",
             //                              shellIndexP, shellIndexQ, shellIndexR, shellIndexS)
             //           << std::endl;
             this->pEriEngines_[threadID].calcGrad(queryPQ00, queryRS00, PQ, RS);
-                        
+
             this->storeForceJ_integralDriven(atomIndexA, atomIndexB,
                                              atomIndexC, atomIndexD,
                                              shellIndexP, maxStepsP,
@@ -1186,34 +1189,28 @@ void DfEriX::storeForceJ_integralDriven(const int atomIndexA, const int atomInde
                                         TlMatrixObject* pForce,
                                         const int target, int* pIndex)
 {
-    // double sumA = 0.0;
-    // double sumB = 0.0;
-    // double sumC = 0.0;
-    // double sumD = 0.0;
-
     for (int stepP = 0; stepP < maxStepsP; ++stepP) {
         const index_type indexP = shellIndexP + stepP;
         const index_type iw = indexP * (indexP +1) / 2;
 
         for (int stepQ = 0; stepQ < maxStepsQ; ++stepQ) {
             const index_type indexQ = shellIndexQ + stepQ;
+            const double Ppq = P.get(indexP, indexQ);
 
-            if (indexQ <= indexP) {
+            if ((indexP >= indexQ) && (std::fabs(Ppq) > this->cutoffThreshold_P_grad_)) {
                 const index_type ij = iw + indexQ;
-                const double Ppq = P.get(indexP, indexQ);
-                
+
                 for (int stepR = 0; stepR < maxStepsR; ++stepR) {
                     const index_type indexR = shellIndexR + stepR;
                     const index_type kw = indexR * (indexR +1) / 2;
-                    
+
                     for (int stepS = 0; stepS < maxStepsS; ++stepS) {
                         const index_type indexS = shellIndexS + stepS;
-                        const index_type kl = kw + indexS;
-                        
+                        const double Prs = P.get(indexR, indexS);
+                        const double PpqPrs = Ppq * Prs;
+
                         const index_type maxIndexS = (indexP == indexR) ? indexQ : indexR;
-                        //if ((indexS <= indexR) && (ij >= kl)) {
-                        if (indexS <= maxIndexS) {
-                            const double Prs = P.get(indexR, indexS);
+                        if ((indexS <= maxIndexS) && (std::fabs(PpqPrs) > this->cutoffThreshold_P_grad_)) {
                             const double vA = engine.WORK_A[*pIndex];
                             const double vB = engine.WORK_B[*pIndex];
                             const double vC = engine.WORK_C[*pIndex];
@@ -1223,48 +1220,25 @@ void DfEriX::storeForceJ_integralDriven(const int atomIndexA, const int atomInde
                             if (indexP >= indexQ) {
                                 double coef = 2.0; // Ppq * Prs だけでなく Prs * Ppq があるので2倍
                                 coef *= (indexR != indexS) ? 2.0 : 1.0;
-                                const double v1 = coef * Ppq * Prs * vA;
+                                const double v1 = coef * PpqPrs * vA;
                                 pForce->add(atomIndexA, target, v1);
 
-                                // if (target == 0) {
-                                //     std::cerr << TlUtils::format("EQ1:A:%d(%d) [%d %d|%d %d]=% f: P=% f, % f, c=% f, v=% f",
-                                //                                  atomIndexA, target, indexP, indexQ, indexR, indexS, vA, Ppq, Prs, coef, v1)
-                                //               << std::endl;
-                                // }
-
                                 if (indexP != indexQ) {
-                                    const double v2 = coef * Ppq * Prs * vB;
+                                    const double v2 = coef * PpqPrs * vB;
                                     pForce->add(atomIndexB, target, v2);
-                                    //if (target == 0 && std::fabs(v2) > 1.0E-5) {
-                                    // if (target == 0) {
-                                    //     std::cerr << TlUtils::format("EQ1:B:%d(%d) [%d %d|%d %d]=% f: P=% f, % f, c=% f, v=% f",
-                                    //                                  atomIndexB, target, indexP, indexQ, indexR, indexS, vB, Ppq, Prs, coef, v2)
-                                    //               << std::endl;
-                                    // }
                                 }
 
                                 if ((shellIndexP != shellIndexR) || (shellIndexQ != shellIndexS) || (indexP == indexR)) {
+                                    const index_type kl = kw + indexS;
                                     if (ij != kl) { // Eq.1 != Eq.2
                                         double coef = 2.0;
                                         coef *= (indexP != indexQ) ? 2.0 : 1.0;
                                         {
-                                            const double v3 = coef * Ppq * Prs * vC;
+                                            const double v3 = coef * PpqPrs * vC;
                                             pForce->add(atomIndexC, target, v3);
-                                            //if (target == 0 && std::fabs(v3) > 1.0E-5) {
-                                            // if (target == 0) {
-                                            //     std::cerr << TlUtils::format("EQ2:C:%d(%d) [%d %d|%d %d]=% f: P=% f, % f, c=% f, v=% f",
-                                            //                                  atomIndexC, target, indexP, indexQ, indexR, indexS, vC, Ppq, Prs, coef, v3)
-                                            //           << std::endl;
-                                            // }
                                             if (indexR != indexS) {
-                                                const double v4 = coef * Ppq * Prs * vD;
+                                                const double v4 = coef * PpqPrs * vD;
                                                 pForce->add(atomIndexD, target, v4);
-                                                //if (target == 0 && std::fabs(v4) > 1.0E-5) {
-                                                // if (target == 0) {
-                                                //     std::cerr << TlUtils::format("EQ2:D:%d(%d) [%d %d|%d %d]=% f: P=% f, % f, c=% f, v=% f",
-                                                //                                  atomIndexD, target, indexP, indexQ, indexR, indexS, vD, Ppq, Prs, coef, v4)
-                                                //               << std::endl;
-                                                // }
                                             }
                                         }
                                     }
@@ -1279,11 +1253,6 @@ void DfEriX::storeForceJ_integralDriven(const int atomIndexA, const int atomInde
             }
         }
     }
-
-    // std::cerr << "sumA: " << sumA << std::endl;
-    // std::cerr << "sumB: " << sumA << std::endl;
-    // std::cerr << "sumC: " << sumA << std::endl;
-    // std::cerr << "sumD: " << sumA << std::endl;
 }
 
 
@@ -1300,9 +1269,9 @@ void DfEriX::getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
         this->log_.info(TlUtils::format(" new cutoff threshold = % e",
                                         this->cutoffThreshold_));
     }
-    
+
     pForce->resize(this->m_nNumOfAtoms, 3);
-    
+
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_set"]);
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
@@ -1398,7 +1367,7 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
                         (atomIndexC == atomIndexA)) {
                         continue;
                     }
-                    
+
                     // const DfEriEngine::CGTO_Pair RS = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo_Density,
                     //                                                                             shellIndexR,
                     //                                                                             -1,
@@ -1418,7 +1387,7 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
                                                       0, orbitalInfo_Density, -1);
                     std::copy(this->pEriEngines_[threadID].WORK,
                               this->pEriEngines_[threadID].WORK + BUFFER_SIZE, p_dJdB);
-                    
+
                     int index = 0;
                     this->storeForceJ(atomIndexA, atomIndexB, atomIndexC,
                                       shellIndexP, maxStepsP,
@@ -1496,7 +1465,7 @@ void DfEriX::getForceJ(const TlVector& rho, TlMatrix* pForce)
 {
     assert(pForce != NULL);
     pForce->resize(this->m_nNumOfAtoms, 3);
-    
+
     const TlOrbitalInfo_Density orbitalInfo_Density((*(this->pPdfParam_))["coordinates"],
                                                     (*(this->pPdfParam_))["basis_set_j"]);
     const ShellArrayTable shellArray_Density = this->makeShellArrayTable(orbitalInfo_Density);
@@ -1616,7 +1585,7 @@ void DfEriX::storeForceJ(const index_type atomIndexA,
     for (int stepP = 0; stepP < maxStepsP; ++stepP) {
         const index_type indexP = shellIndexP + stepP;
         const double coef_P = rho[indexP];
-        
+
         for (int stepR = 0; stepR < maxStepsR; ++stepR) {
             const index_type indexR = shellIndexR + stepR;
 
@@ -1625,7 +1594,7 @@ void DfEriX::storeForceJ(const index_type atomIndexA,
                 coef *= (indexP != indexR) ? 2.0 : 1.0;
                 const double gradA = engine.WORK[*pIndex];
                 const double gradC = - gradA;
-                
+
                 pForce->add(atomIndexA, target, coef * gradA);
                 pForce->add(atomIndexC, target, coef * gradC);
             }
@@ -1669,7 +1638,7 @@ void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
                                     (*(this->pPdfParam_))["basis_set"]);
     const ShellArrayTable shellArrayTable = this->makeShellArrayTable(orbitalInfo);
     const ShellPairArrayTable shellPairArrayTable = this->getShellPairArrayTable(shellArrayTable);
-    
+
     DfEriEngine engine;
     engine.setPrimitiveLevelThreshold(0.0);
 
@@ -1697,7 +1666,7 @@ void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
                     ShellArray::const_iterator sItEnd = shellArrayS.end();
 
                     // const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
-        
+
                     for (ShellArray::const_iterator pIt = shellArrayP.begin(); pIt != pItEnd; ++pIt) {
                         const index_type shellIndexP = *pIt;
                         for (ShellArray::const_iterator qIt = shellArrayQ.begin(); qIt != qItEnd; ++qIt) {
@@ -1719,7 +1688,7 @@ void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
                                     //                                                       0.0);
                                     // engine.calc(queryPQ, queryRS, PQ, RS);
                                     engine.calc(0, orbitalInfo, shellIndexP,
-                                                0, orbitalInfo, shellIndexQ, 
+                                                0, orbitalInfo, shellIndexQ,
                                                 0, orbitalInfo, shellIndexR,
                                                 0, orbitalInfo, shellIndexS);
 
@@ -1728,12 +1697,12 @@ void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK)
                                         const int indexP = shellIndexP + i;
                                         for (int j = 0; j < maxStepsQ; ++j) {
                                             const int indexQ = shellIndexQ + j;
-                                            
+
                                             for (int k = 0; k < maxStepsR; ++k) {
                                                 const int indexR = shellIndexR + k;
                                                 for (int l = 0; l < maxStepsS; ++l) {
                                                     const int indexS = shellIndexS + l;
-                                                    
+
                                                     if (indexP >= indexR) {
                                                         const double P_qs = P.get(indexQ, indexS);
                                                         const double value = engine.WORK[index];
@@ -1760,7 +1729,7 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
 {
     assert(pK != NULL);
     pK->resize(this->m_nNumOfAOs);
-    
+
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
@@ -1797,14 +1766,14 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
                                                                      P,
                                                                      pIndexPairs, pValues);
         assert(numOfTaskElements <= (maxElements * this->grainSize_));
-            
+
         // update K
         for (int i = 0; i < numOfTaskElements; ++i) {
             const index_type p = pIndexPairs[i*2   ];
             const index_type q = pIndexPairs[i*2 +1];
             pK->add(p, q, pValues[i]);
         }
-        
+
         hasTask = pDfTaskCtrl->getQueue4(orbitalInfo,
                                          schwarzTable,
                                          this->grainSize_,
@@ -1817,12 +1786,12 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
     delete[] pValues;
     pIndexPairs = NULL;
     pValues = NULL;
-    
+
     pDfTaskCtrl->cutoffReport();
     delete pDfTaskCtrl;
     pDfTaskCtrl = NULL;
     this->destroyEngines();
-    
+
     // debug
 #ifdef DEBUG_K
     if (this->isDebugOutK_ == true) {
@@ -1838,7 +1807,7 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* 
     // this->elapsetime_calc_eri_ *= perNumOfThreads;
     // this->elapsetime_store_    *= perNumOfThreads;
     // this->elapsetime_sumup_    *= perNumOfThreads;
-    
+
     // this->log_.info(TlUtils::format("all time:       %16.1f sec.", time_all.getElapseTime()));
     // this->log_.info(TlUtils::format(" prepare time:  %16.1f sec.", time_prepare.getElapseTime()));
     // this->log_.info(TlUtils::format(" calc(ave.):    %16.1f sec.", this->elapsetime_calc_));
@@ -1877,7 +1846,7 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
             const index_type shellIndexQ = taskList[i].shellIndex2;
             const index_type shellIndexR = taskList[i].shellIndex3;
             const index_type shellIndexS = taskList[i].shellIndex4;
-            
+
             const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
             const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
             const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
@@ -1886,7 +1855,7 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
             const int maxStepsQ = 2 * shellTypeQ + 1;
             const int maxStepsR = 2 * shellTypeR + 1;
             const int maxStepsS = 2 * shellTypeS + 1;
-            
+
             // const DfEriEngine::CGTO_Pair PQ = this->pEriEngines_[threadID].getCGTO_pair(orbitalInfo,
             //                                                                             shellIndexP,
             //                                                                             shellIndexQ,
@@ -1897,13 +1866,13 @@ int DfEriX::getK_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
             //                                                                             pairwisePGTO_cutoffThreshold);
             // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
             // const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
-            
+
             // this->pEriEngines_[threadID].calc(queryPQ, queryRS, PQ, RS);
             this->pEriEngines_[threadID].calc(0, orbitalInfo, shellIndexP,
                                               0, orbitalInfo, shellIndexQ,
                                               0, orbitalInfo, shellIndexR,
                                               0, orbitalInfo, shellIndexS);
-            
+
             // int numOfStoreElements = 0;
             const int stores = this->storeK_integralDriven(shellIndexP, maxStepsP,
                                                            shellIndexQ, maxStepsQ,
@@ -1953,7 +1922,7 @@ int DfEriX::storeK_integralDriven(const index_type shellIndexP, const int maxSte
     int index = 0;
     for (int i = 0; i < maxStepsP; ++i) {
         const index_type indexP = shellIndexP + i;
-                                    
+
         for (int j = 0; j < maxStepsQ; ++j) {
             const index_type indexQ = shellIndexQ + j;
             if (indexP < indexQ) {
@@ -1961,7 +1930,7 @@ int DfEriX::storeK_integralDriven(const index_type shellIndexP, const int maxSte
                 index += (maxStepsR * maxStepsS);
                 continue;
             }
-                                        
+
             for (int k = 0; k < maxStepsR; ++k) {
                 const index_type indexR = shellIndexR + k;
                 if (shellIndexQ == shellIndexS) {
@@ -1970,7 +1939,7 @@ int DfEriX::storeK_integralDriven(const index_type shellIndexP, const int maxSte
                         continue;
                     }
                 }
-                                            
+
                 for (int l = 0; l < maxStepsS; ++l) {
                     const index_type indexS = shellIndexS + l;
                     if (indexS > ((indexP == indexR) ? indexQ : indexR)) {
@@ -1978,9 +1947,9 @@ int DfEriX::storeK_integralDriven(const index_type shellIndexP, const int maxSte
                         ++index;
                         continue;
                     }
-                                                
+
                     const double value = engine.WORK[index];
-                                                
+
                     // Eq.1 : (indexP, indexR) <= (indexQ, indexS)
                     const double coefEq1 = ((indexP == indexR) && (indexQ != indexS)) ? 2.0 : 1.0;
                     // pK->add(indexP, indexR, - coefEq1 * P.getLocal(indexQ, indexS) * value);
@@ -1991,7 +1960,7 @@ int DfEriX::storeK_integralDriven(const index_type shellIndexP, const int maxSte
 #ifdef DEBUG_K
                     this->IA_K_ID1_.countUp(indexP, indexR, indexQ, indexS, coefEq1);
 #endif // DEBUG_K
-                    
+
                     if (indexR != indexS) { // Eq.1 != Eq.2
                         // Eq.2 : (indexP, indexS) <= (indexQ, indexR)
                         const double coefEq2 = ((indexP == indexS) && (indexQ != indexR)) ? 2.0 : 1.0;
@@ -2004,7 +1973,7 @@ int DfEriX::storeK_integralDriven(const index_type shellIndexP, const int maxSte
                         this->IA_K_ID2_.countUp(indexP, indexS, indexQ, indexR, coefEq2);
 #endif // DEBUG_K
                     }
-                                                
+
                     if (indexP != indexQ) { // (Eq.1, Eq.2) != (Eq.3, Eq.4)
                         // Eq.3 : (indexQ, indexR) <= (indexP, indexS)
                         if ((indexP != indexR) || (indexQ != indexS)) { // Eq.2 != Eq.3 : !((indexP, indexS) == (indexQ, indexR))
@@ -2018,7 +1987,7 @@ int DfEriX::storeK_integralDriven(const index_type shellIndexP, const int maxSte
                             this->IA_K_ID3_.countUp(indexQ, indexR, indexP, indexS, coefEq3);
 #endif // DEBUG_K
                         }
-                                                    
+
                         if (indexR != indexS) { // Eq.3 != Eq.4
                             // Eq.4 : (indexQ, indexS) <= (indexP, indexR)
                             const double coefEq4 = ((indexQ == indexS) && (indexP != indexR)) ? 2.0 : 1.0;
@@ -2049,7 +2018,7 @@ int DfEriX::storeK_integralDriven(const index_type shellIndexP, const int maxSte
 }
 
 
-void DfEriX::debugoutK_integralDriven() const 
+void DfEriX::debugoutK_integralDriven() const
 {
 #ifdef DEBUG_K
     const index_type numOfAOs = this->m_nNumOfAOs;
@@ -2085,7 +2054,7 @@ void DfEriX::debugoutK_integralDriven() const
 void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce)
 {
     assert(pForce != NULL);
-    //this->clearCutoffStats();
+    pForce->resize(this->m_nNumOfAtoms, 3);
 
     // カットオフ値の設定
     const double maxDeltaP = P.getMaxAbsoluteElement();
@@ -2095,8 +2064,6 @@ void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce)
                                         this->cutoffThreshold_));
     }
 
-    pForce->resize(this->m_nNumOfAtoms, 3);
-    
     const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                     (*(this->pPdfParam_))["basis_set"]);
     const TlSparseSymmetricMatrix schwarzTable = this->makeSchwarzTable(orbitalInfo);
@@ -2135,14 +2102,14 @@ void DfEriX::getForceK_part(const TlOrbitalInfoObject& orbitalInfo,
 {
     const int taskListSize = taskList.size();
     const double pairwisePGTO_cutoffThreshold = this->cutoffThreshold_primitive_;
-    
+
 #pragma omp parallel
     {
         int threadID = 0;
 #ifdef _OPENMP
         threadID = omp_get_thread_num();
 #endif // _OPENMP
-        
+
         this->pEriEngines_[threadID].setPrimitiveLevelThreshold(this->cutoffThreshold_primitive_);
 
 #pragma omp for schedule(runtime)
@@ -2164,15 +2131,11 @@ void DfEriX::getForceK_part(const TlOrbitalInfoObject& orbitalInfo,
             const index_type atomIndexC = orbitalInfo.getAtomIndex(shellIndexR);
             const index_type atomIndexD = orbitalInfo.getAtomIndex(shellIndexS);
 
-            // std::cerr << TlUtils::format("[%d %d|%d %d]",
-            //                              shellIndexP, shellIndexQ, shellIndexR, shellIndexS)
-            //           << std::endl;
-            
             if ((atomIndexA == atomIndexB) && (atomIndexB == atomIndexC) &&
                 (atomIndexC == atomIndexD) && (atomIndexD == atomIndexA)) {
                 continue;
             }
-            
+
             const DfEriEngine::AngularMomentum2 queryRS00(0, 0, shellTypeR, shellTypeS);
             const DfEriEngine::AngularMomentum2 queryPQ00(0, 0, shellTypeP, shellTypeQ);
             const DfEriEngine::CGTO_Pair PQ =
@@ -2185,9 +2148,9 @@ void DfEriX::getForceK_part(const TlOrbitalInfoObject& orbitalInfo,
                                                           shellIndexR,
                                                           shellIndexS,
                                                           pairwisePGTO_cutoffThreshold);
-            
+
             this->pEriEngines_[threadID].calcGrad(queryPQ00, queryRS00, PQ, RS);
-                        
+
             this->storeForceK_integralDriven(atomIndexA, atomIndexB,
                                              atomIndexC, atomIndexD,
                                              shellIndexP, maxStepsP,
@@ -2213,7 +2176,7 @@ DfEriX::ShellArrayTable DfEriX::makeShellArrayTable(const TlOrbitalInfoObject& o
         const int steps = 2 * shellType +1;
 
         shellArrayTable[shellType].push_back(shellIndex);
-        
+
         shellIndex += steps;
     }
 
@@ -2284,7 +2247,7 @@ void DfEriX::storeForceK_integralDriven(const int atomIndexA, const int atomInde
             }
 
             const index_type ij = iw + indexQ;
-                
+
             for (int stepR = 0; stepR < maxStepsR; ++stepR) {
                 const index_type indexR = shellIndexR + stepR;
                 if (shellIndexQ == shellIndexS) {
@@ -2297,7 +2260,7 @@ void DfEriX::storeForceK_integralDriven(const int atomIndexA, const int atomInde
                 const index_type kw = indexR * (indexR +1) / 2;
                 const double Ppr = P.get(indexP, indexR);
                 const double Pqr = P.get(indexQ, indexR);
-                
+
                 for (int stepS = 0; stepS < maxStepsS; ++stepS) {
                     const index_type indexS = shellIndexS + stepS;
                     const index_type kl = kw + indexS;
@@ -2315,26 +2278,26 @@ void DfEriX::storeForceK_integralDriven(const int atomIndexA, const int atomInde
                         const double vB = engine.WORK_B[*pIndex];
                         const double vC = engine.WORK_C[*pIndex];
                         const double vD = engine.WORK_D[*pIndex];
-                        
+
                         {
                             double coef = 1.0;
                             coef *= (indexR != indexS) ? 2.0 : 1.0;
-                            
+
                             pForce->add(atomIndexA, target, coef * Ppr * Pqs * vA);
                             // std::cerr << TlUtils::format("EQ1-1:A:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
                             //                              atomIndexA, target, indexP, indexQ, indexR, indexS, vA, Ppr, Pqs, coef)
                             //           << std::endl;
-                            
+
                             pForce->add(atomIndexA, target, coef * Pps * Pqr * vA);
                             // std::cerr << TlUtils::format("EQ1-2:A:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
                             //                              atomIndexA, target, indexP, indexQ, indexR, indexS, vA, Ppr, Pqs, coef)
                             //           << std::endl;
                         }
-                        
+
                         if (indexP != indexQ) {
                             double coef = 1.0;
                             coef *= (indexR != indexS) ? 2.0 : 1.0;
-                            
+
                             pForce->add(atomIndexB, target, coef * Ppr * Pqs * vB);
                             // std::cerr << TlUtils::format("EQ2-1:B:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
                             //                              atomIndexB, target, indexP, indexQ, indexR, indexS, vB, Ppr, Pqs, coef)
@@ -2342,14 +2305,14 @@ void DfEriX::storeForceK_integralDriven(const int atomIndexA, const int atomInde
                             pForce->add(atomIndexB, target, coef * Pps * Pqr * vB);
                             // std::cerr << TlUtils::format("EQ2-2:B:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
                             //                              atomIndexB, target, indexP, indexQ, indexR, indexS, vB, Pps, Pqr, coef)
-                            //           << std::endl;                                
+                            //           << std::endl;
                         }
-                        
+
                         if (ij != kl) {
                             {
                                 double coef = 1.0;
                                 coef *= (indexP != indexQ) ? 2.0 : 1.0;
-                                
+
                                 pForce->add(atomIndexC, target, coef * Ppr * Pqs * vC);
                                 // std::cerr << TlUtils::format("EQ3-1:C:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
                                 //                              atomIndexC, target, indexP, indexQ, indexR, indexS, vC, Ppr, Pqs, coef)
@@ -2359,11 +2322,11 @@ void DfEriX::storeForceK_integralDriven(const int atomIndexA, const int atomInde
                                 //                              atomIndexC, target, indexP, indexQ, indexR, indexS, vC, Pps, Pqr, coef)
                                 //           << std::endl;
                             }
-                            
+
                             if (indexR != indexS) {
                                 double coef = 1.0;
                                 coef *= (indexP != indexQ) ? 2.0 : 1.0;
-                                
+
                                 pForce->add(atomIndexD, target, coef * Ppr * Pqs * vD);
                                 // std::cerr << TlUtils::format("EQ4-1:D:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
                                 //                              atomIndexD, target, indexP, indexQ, indexR, indexS, vD, Ppr, Pqs, coef)
@@ -2371,11 +2334,11 @@ void DfEriX::storeForceK_integralDriven(const int atomIndexA, const int atomInde
                                 pForce->add(atomIndexD, target, coef * Pps * Pqr * vD);
                                 // std::cerr << TlUtils::format("EQ4-2:D:%d(%d) [%d %d|%d %d]=% f: P=%f, %f, c=%f",
                                 //                              atomIndexD, target, indexP, indexQ, indexR, indexS, vD, Pps, Pqr, coef)
-                                //           << std::endl;                                    
+                                //           << std::endl;
                             }
                         }
                         //}
-                    
+
                     ++(*pIndex);
                 }
             }
@@ -2424,13 +2387,13 @@ DfEriX::ShellPairArrayTable DfEriX::getShellPairArrayTable(const ShellArrayTable
 // {
 //     ShellArray answer;
 //     answer.reserve(inShellArray.size());
-    
+
 //     const TlPosition posB = orbitalInfo.getPosition(companionShellIndex);
 //     const int shellTypeB = orbitalInfo.getShellType(companionShellIndex);
 //     // orbitalInfoのPGTOリストは指数が小さい順にソートされているため、
 //     // 最初(index=0)の指数のみをチェックすれば良い。
 //     const double exponentB = orbitalInfo.getExponent(companionShellIndex, 0);
-    
+
 //     // check
 //     static const double INV_EQ32_COEF = 1.0 / (std::pow(2.0 * TlMath::PI(), 0.25) * TlMath::PI());
 //     const double threshold = this->cutoffEpsilon2_ * INV_EQ32_COEF;
@@ -2459,7 +2422,7 @@ DfEriX::ShellPairArrayTable DfEriX::getShellPairArrayTable(const ShellArrayTable
 
 //     // swap technique
 //     ShellArray(answer).swap(answer);
-    
+
 //     return answer;
 // }
 
@@ -2472,10 +2435,10 @@ DfEriX::ShellPairArrayTable DfEriX::getShellPairArrayTable(const ShellArrayTable
 //     const TlOrbitalInfoObject& orbitalInfo)
 // {
 //     assert(inShellPairArrayTable.size() == (DfEriX::MAX_SHELL_TYPE * DfEriX::MAX_SHELL_TYPE));
-    
+
 //     const double cutoffThreshold = this->cutoffEpsilon1_;
 //     const double CONTRIBUTE_COEF = 2.0 * std::pow(TlMath::PI(), 2.5);
-    
+
 //     TlFmt& FmT = TlFmt::getInstance();
 //     static const double coef[6] = {
 //         -0.017450254,
@@ -2510,7 +2473,7 @@ DfEriX::ShellPairArrayTable DfEriX::getShellPairArrayTable(const ShellArrayTable
 //         const std::size_t shellPairArraySize = shellPairArray.size();
 //         ShellPairArray tmp;
 //         tmp.reserve(shellPairArraySize);
-        
+
 //         for (std::size_t shellPairIndex = 0; shellPairIndex < shellPairArraySize; ++shellPairIndex) {
 //             const index_type shellIndexA = shellPairArray[shellPairIndex].shellIndex1;
 //             const index_type shellIndexB = shellPairArray[shellPairIndex].shellIndex2;
@@ -2520,16 +2483,16 @@ DfEriX::ShellPairArrayTable DfEriX::getShellPairArrayTable(const ShellArrayTable
 //             const TlPosition posB = orbitalInfo.getPosition(shellIndexB);
 //             const int numOfContractionsB = orbitalInfo.getCgtoContraction(shellIndexB);
 //             const double AB2 = posB.squareDistanceFrom(posA);
-        
+
 //             double judge = 0.0;
 //             for (int pgtoIndexA = 0; pgtoIndexA < numOfContractionsA; ++pgtoIndexA) {
 //                 const double coefA = orbitalInfo.getCoefficient(shellIndexA, pgtoIndexA);
 //                 const double zetaA = orbitalInfo.getExponent(shellIndexA, pgtoIndexA);
-                
+
 //                 for (int pgtoIndexB = 0; pgtoIndexB < numOfContractionsB; ++pgtoIndexB) {
 //                     const double coefB = orbitalInfo.getCoefficient(shellIndexB, pgtoIndexB);
 //                     const double zetaB = orbitalInfo.getExponent(shellIndexB, pgtoIndexB);
-                    
+
 //                     const double coefAB = coefA * coefB;
 //                     const double zetaAB = zetaA * zetaB;
 //                     const double zetaA_B = zetaA + zetaB;
@@ -2563,7 +2526,7 @@ DfEriX::ShellPairArrayTable DfEriX::getShellPairArrayTable(const ShellArrayTable
 
 //         answer[shellPairType] = tmp;
 //     }
-    
+
 //     return answer;
 // }
 
@@ -2576,7 +2539,7 @@ TlSparseSymmetricMatrix DfEriX::makeSchwarzTable(const TlOrbitalInfoObject& orbi
 
     DfEriEngine engine;
     engine.setPrimitiveLevelThreshold(0.0);
-    
+
     for (index_type shellIndexP = 0; shellIndexP < maxShellIndex; ) {
         const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
         const int maxStepsP = 2 * shellTypeP + 1;
@@ -2584,7 +2547,7 @@ TlSparseSymmetricMatrix DfEriX::makeSchwarzTable(const TlOrbitalInfoObject& orbi
         for (index_type shellIndexQ = 0; shellIndexQ < maxShellIndex; ) {
             const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
             const int maxStepsQ = 2 * shellTypeQ + 1;
-            
+
             // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
             // const DfEriEngine::CGTO_Pair PQ = engine.getCGTO_pair(orbitalInfo,
             //                                                       shellIndexP,
@@ -2602,7 +2565,7 @@ TlSparseSymmetricMatrix DfEriX::makeSchwarzTable(const TlOrbitalInfoObject& orbi
                 maxValue = std::max(maxValue, std::fabs(engine.WORK[index]));
             }
             schwarz.set(shellIndexP, shellIndexQ, std::sqrt(maxValue));
-            
+
             shellIndexQ += maxStepsQ;
         }
         shellIndexP += maxStepsP;
@@ -2638,4 +2601,3 @@ TlSparseSymmetricMatrix DfEriX::makeSchwarzTable(const TlOrbitalInfoObject& orbi
 
 //     return answer;
 // }
-

@@ -144,6 +144,7 @@ add_subdirectory(data)
 add_subdirectory(scripts)
 
 # package
+#   use: `make package_source` to make tarball
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_REVISION}")
