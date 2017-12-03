@@ -14,7 +14,6 @@ install(TARGETS PDF.x RUNTIME DESTINATION bin)
 
 if (MPI_FOUND)
   add_executable(PPDF.x ${PPDF_SOURCES})
-  target_link_libraries(PPDF.x libppdf libppdftl libpdf libpdftl)
+  target_link_libraries(PPDF.x libppdf libppdftl libpdf libpdftl ${MPI_CXX_LIBRARIES})
   install(TARGETS PPDF.x RUNTIME DESTINATION bin)
 endif()
-
