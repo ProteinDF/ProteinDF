@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <numeric>
 
+#include "config.h"
 #include "scalapack.h"
 #include "TlMath.h"
 #include "TlVector.h"

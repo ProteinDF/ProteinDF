@@ -1,18 +1,18 @@
 // Copyright (C) 2002-2014 The ProteinDF project
 // see also AUTHORS and README.
-// 
+//
 // This file is part of ProteinDF.
-// 
+//
 // ProteinDF is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProteinDF is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -43,13 +43,8 @@
 #include "TlUtils.h"
 #include "TlVector.h"
 
-
 struct TlMatrixElement {
     typedef TlMatrixObject::index_type index_type;
-
-public:
-    TlMatrixElement(index_type r =0, index_type c =0, double v =0.0) : row(r), col(c), value(v) {
-    }
 
 public:
     index_type row;
@@ -81,20 +76,20 @@ public:
 
         bool operator<(const Index2& rhs) const {
             bool answer = false;
-            if ((this->row < rhs.row) || 
+            if ((this->row < rhs.row) ||
                 ((this->row == rhs.row) && (this->col < rhs.col))) {
                 answer = true;
-            } 
+            }
 
             return answer;
         }
 
         bool operator>(const Index2& rhs) const {
             bool answer = false;
-            if ((this->row > rhs.row) || 
+            if ((this->row > rhs.row) ||
                 ((this->row == rhs.row) && (this->col > rhs.col))) {
                 answer = true;
-            } 
+            }
 
             return answer;
         }
@@ -159,7 +154,7 @@ public:
     virtual void zeroClear() {
         this->clear();
     }
-    
+
     /// 要素を削除する
     virtual void erase(index_type row, index_type col);
     virtual void erase(iterator p);
@@ -180,7 +175,7 @@ public:
     virtual size_type getSize() const;
 
     virtual std::size_t getMemSize() const;
-    
+
     /// 行列のサイズを変更する
     ///
     /// 行列を大きくする場合、追加される要素は0で初期化される。
@@ -285,7 +280,7 @@ public:
 protected:
     bool load(std::ifstream& ifs);
     bool save(std::ofstream& ofs) const;
-    
+
 protected:
     index_type m_nRows;                  /// 行数
     index_type m_nCols;                  /// 列数
@@ -387,4 +382,3 @@ template <typename T> void TlSparseMatrix::print(T& out) const
 }
 
 #endif // TLMATRIX_SPARSE_H
-
