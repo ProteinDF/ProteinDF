@@ -1,18 +1,18 @@
 // Copyright (C) 2002-2014 The ProteinDF project
 // see also AUTHORS and README.
-// 
+//
 // This file is part of ProteinDF.
-// 
+//
 // ProteinDF is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProteinDF is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -104,7 +104,7 @@ std::string TlCommunicate::getReport() const
     answer += TlUtils::format(" iall_reduce: %16.2f sec. %16ld times\n",
                               this->time_iallreduce_.getElapseTime(),
                               this->counter_iallreduce_);
-    
+
     return answer;
 }
 
@@ -113,7 +113,7 @@ int TlCommunicate::barrier(bool isDebugOut) const
 {
     this->time_barrier_.start();
     ++(this->counter_barrier_);
-    
+
     if (isDebugOut == true) {
         this->log_.debug(TlUtils::format("barrier called. times=%ld",
                                          this->counter_barrier_));
@@ -122,7 +122,7 @@ int TlCommunicate::barrier(bool isDebugOut) const
     const int answer = MPI_Barrier(MPI_COMM_WORLD);
 
     this->time_barrier_.stop();
-    return answer; 
+    return answer;
 }
 
 
@@ -151,7 +151,7 @@ bool TlCommunicate::checkNonBlockingTableCollision(uintptr_t key,
             answer = false;
         }
     }
-    
+
     return answer;
 }
 
@@ -194,7 +194,7 @@ int TlCommunicate::reduce(T* pData, const MPI_Datatype mpiType,
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
         const ldiv_t tmp = std::ldiv(length, bufCount);
         T* pBuf = new T[bufCount];
-        
+
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
             std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
@@ -205,7 +205,7 @@ int TlCommunicate::reduce(T* pData, const MPI_Datatype mpiType,
                 this->log_.critical(TlUtils::format("MPI error. %s:%d answer=%d", __FILE__,  __LINE__, answer));
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const std::size_t remain = tmp.rem;
@@ -403,7 +403,7 @@ int TlCommunicate::allReduce_SUM(std::vector<T>& data, const MPI_Datatype mpiTyp
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
         std::vector<T> buf(bufCount);
         const ldiv_t tmp = std::ldiv(length, bufCount);
-        
+
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
             std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
@@ -414,7 +414,7 @@ int TlCommunicate::allReduce_SUM(std::vector<T>& data, const MPI_Datatype mpiTyp
                 this->log_.critical(TlUtils::format("MPI error. %s:%d answer=%d", __FILE__, __LINE__,  answer));
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
@@ -461,7 +461,7 @@ int TlCommunicate::allReduce_SUM(std::valarray<double>& data,
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
         const ldiv_t tmp = std::ldiv(length, bufCount);
         double* pBuf = new double[bufCount];
-        
+
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
             std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
@@ -472,7 +472,7 @@ int TlCommunicate::allReduce_SUM(std::valarray<double>& data,
                 this->log_.critical(TlUtils::format("MPI error. %s:%d answer=%d", __FILE__, __LINE__, answer));
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
@@ -484,7 +484,7 @@ int TlCommunicate::allReduce_SUM(std::valarray<double>& data,
                 this->log_.critical(TlUtils::format("MPI error. %s:%d answer=%d", __FILE__,  __LINE__, answer));
             }
         }
-        
+
         delete[] pBuf;
         pBuf = NULL;
     }
@@ -514,7 +514,7 @@ int TlCommunicate::allReduce(T* pData, const MPI_Datatype mpiType,
 {
     this->time_allreduce_.start();
     ++(this->counter_allreduce_);
-    
+
     int answer = 0;
 
 #ifdef DIV_COMM
@@ -523,7 +523,7 @@ int TlCommunicate::allReduce(T* pData, const MPI_Datatype mpiType,
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
         const ldiv_t tmp = std::ldiv(length, bufCount);
         T* pBuf = new T[bufCount];
-        
+
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
             std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
@@ -534,7 +534,7 @@ int TlCommunicate::allReduce(T* pData, const MPI_Datatype mpiType,
                 this->log_.critical(TlUtils::format("MPI error. %s:%d answer=%d", __FILE__,  __LINE__, answer));
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const std::size_t remain = tmp.rem;
@@ -546,7 +546,7 @@ int TlCommunicate::allReduce(T* pData, const MPI_Datatype mpiType,
                 this->log_.critical(TlUtils::format("MPI error. %s:%d answer=%d", __FILE__, __LINE__,  answer));
             }
         }
-        
+
         delete[] pBuf;
         pBuf = NULL;
     }
@@ -686,7 +686,7 @@ int TlCommunicate::reduce_SUM(TlSparseMatrix& rMatrix, int root)
                 if (recvd[src] == 0) {
                     if (this->test(&(bufs[src][0]))) {
                         this->wait(&(bufs[src][0]));
-                        
+
                         for (std::size_t i = 0; i < sizes[src]; ++i) {
                             rMatrix.add(bufs[src][i].row, bufs[src][i].col, bufs[src][i].value);
                         }
@@ -712,11 +712,13 @@ int TlCommunicate::reduce_SUM(TlSparseMatrix& rMatrix, int root)
         std::size_t count = 0;
         std::vector<TlMatrixElement> buf(numOfSize);
         for (TlSparseMatrix::const_iterator it = rMatrix.begin(); it != itEnd; ++it) {
-            buf[count] = TlMatrixElement(it->first.row, it->first.col, it->second);
+            // buf[count] = TlMatrixElement(it->first.row, it->first.col, it->second);
+            const TlMatrixElement tmp = {it->first.row, it->first.col, it->second};
+            buf[count] = tmp;
             ++count;
         }
         assert(count == numOfSize);
-            
+
         this->sendDataX(&(buf[0]), this->MPI_MATRIXELEMENT, 0, numOfSize,
                         root, tag_data);
     }
@@ -741,7 +743,9 @@ int TlCommunicate::broadcast(TlSparseMatrix& rMatrix, const int root)
         std::size_t count = 0;
         std::vector<TlMatrixElement> buf(numOfSize);
         for (TlSparseMatrix::const_iterator it = rMatrix.begin(); it != itEnd; ++it) {
-            buf[count] = TlMatrixElement(it->first.row, it->first.col, it->second);
+            // buf[count] = TlMatrixElement(it->first.row, it->first.col, it->second);
+            const TlMatrixElement tmp = {it->first.row, it->first.col, it->second};
+            buf[count] = tmp;
             ++count;
         }
         assert(count == numOfSize);
@@ -886,7 +890,7 @@ int TlCommunicate::sendData(const std::vector<T>& data, const MPI_Datatype mpiTy
         const long length = static_cast<long>(end - start);
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
         const ldiv_t tmp = std::ldiv(length, bufCount);
-        
+
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
             std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
@@ -898,7 +902,7 @@ int TlCommunicate::sendData(const std::vector<T>& data, const MPI_Datatype mpiTy
                           << std::endl;
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
@@ -1005,7 +1009,7 @@ int TlCommunicate::sendData(const std::valarray<double>& data,
         const long length = static_cast<long>(end - start);
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
         const ldiv_t tmp = std::ldiv(length, bufCount);
-        
+
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
             std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
@@ -1017,7 +1021,7 @@ int TlCommunicate::sendData(const std::valarray<double>& data,
                           << std::endl;
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
@@ -1120,15 +1124,15 @@ int TlCommunicate::sendData(const TlSparseMatrix& data, int dest, int tag)
         TlSparseMatrix::const_iterator itEnd = data.end();
         std::size_t count = 0;
         for (TlSparseMatrix::const_iterator it = data.begin(); it != itEnd; ++it) {
-            const int row = it->first.row;
-            const int col = it->first.col;
             // assert((0 <= row) && (row < numOfRows));
             // assert((0 <= col) && (col < numOfCols));
-            buf[count] = TlMatrixElement(row, col, it->second);
+            // buf[count] = TlMatrixElement(row, col, it->second);
+            const TlMatrixElement tmp = {it->first.row, it->first.col, it->second};
+            buf[count] = tmp;
             ++count;
         }
         assert(count == numOfSize);
-        
+
         err = this->sendDataX(&(buf[0]), this->MPI_MATRIXELEMENT, 0, numOfSize, dest, tag);
     }
 
@@ -1261,7 +1265,7 @@ int TlCommunicate::receiveData(std::vector<T>& data, const MPI_Datatype mpiType,
         const long length = static_cast<long>(end - start);
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
         const ldiv_t tmp = std::ldiv(length, bufCount);
-        
+
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
             std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
@@ -1273,7 +1277,7 @@ int TlCommunicate::receiveData(std::vector<T>& data, const MPI_Datatype mpiType,
                           << std::endl;
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
@@ -1392,7 +1396,7 @@ int TlCommunicate::receiveData(std::valarray<double>& data,
         const long length = static_cast<long>(end - start);
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
         const ldiv_t tmp = std::ldiv(length, bufCount);
-        
+
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
             std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
@@ -1404,7 +1408,7 @@ int TlCommunicate::receiveData(std::valarray<double>& data,
                           << std::endl;
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
@@ -1477,18 +1481,18 @@ int TlCommunicate::receiveData(TlMatrix& data, const int src, const int tag)
     const TlMatrixObject::index_type numOfCols = pHeader[1];
     this->log_.debug(TlUtils::format("TlCommunicate::recvData(TlMatrix): src=%d, tag=%d, row=%d, col=%d, err=%d.",
                                      src, tag, numOfRows, numOfCols, err));
-    
+
     delete[] pHeader;
     pHeader = NULL;
     if (err != 0) {
         return err;
     }
-    
+
     data.resize(numOfRows, numOfCols);
     err = this->receiveDataX(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(), src, tag);
     this->log_.debug(TlUtils::format("TlCommunicate::recvData(TlMatrix): src=%d, tag=%d, size=%ld, err=%d.",
                                      src, tag, data.getNumOfElements(), err));
-    
+
     return err;
 }
 
@@ -1593,7 +1597,7 @@ int TlCommunicate::receiveDataX(T* pData, const MPI_Datatype mpiType,
         const long length = static_cast<long>(end - start);
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
         const ldiv_t tmp = std::ldiv(length, bufCount);
-        
+
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
             std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
@@ -1605,7 +1609,7 @@ int TlCommunicate::receiveDataX(T* pData, const MPI_Datatype mpiType,
                           << std::endl;
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
@@ -1619,7 +1623,7 @@ int TlCommunicate::receiveDataX(T* pData, const MPI_Datatype mpiType,
             }
         }
     }
-#else 
+#else
     {
         answer = MPI_Recv((void*)(pData), end - start,
                           mpiType, src, tag, MPI_COMM_WORLD, &status);
@@ -1750,14 +1754,14 @@ int TlCommunicate::receiveDataFromAnySource(TlMatrix& data, int* pSrc, int tag)
     if (err != 0) {
         return err;
     }
-    
+
     *pSrc = src;
 
     const TlMatrixObject::index_type numOfRows = pHeader[0];
     const TlMatrixObject::index_type numOfCols = pHeader[1];
     delete[] pHeader;
     pHeader = NULL;
-    
+
     data.resize(numOfRows, numOfCols);
     return this->receiveDataX(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(), src, tag);
 }
@@ -1770,7 +1774,7 @@ int TlCommunicate::receiveDataFromAnySource(TlSparseMatrix* pData, int* pSrc, in
 
     unsigned long header[3];
     int err = this->receiveDataFromAnySourceX(header, MPI_UNSIGNED_LONG, 0, 3, &src, tag);
-    
+
     assert(pSrc != NULL);
     *pSrc = src;
 
@@ -1883,7 +1887,7 @@ int TlCommunicate::receiveDataFromAnySourceX(T* pData, const MPI_Datatype mpiTyp
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
         const ldiv_t tmp = std::ldiv(length, bufCount);
         bool isSrcDefined = false;
-        
+
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
             std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
@@ -1902,7 +1906,7 @@ int TlCommunicate::receiveDataFromAnySourceX(T* pData, const MPI_Datatype mpiTyp
                           << std::endl;
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
@@ -1934,7 +1938,7 @@ int TlCommunicate::receiveDataFromAnySourceX(T* pData, const MPI_Datatype mpiTyp
     if (pSrc != NULL) {
         *pSrc = src;
     }
-    
+
     return answer;
 }
 
@@ -1970,7 +1974,7 @@ int TlCommunicate::receiveDataFromAnySourceAnyTagX(T* pData, const MPI_Datatype 
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T));
         const ldiv_t tmp = std::ldiv(length, bufCount);
         bool isSrcDefined = false;
-        
+
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
             std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
@@ -1990,7 +1994,7 @@ int TlCommunicate::receiveDataFromAnySourceAnyTagX(T* pData, const MPI_Datatype 
                           << std::endl;
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
@@ -2053,7 +2057,7 @@ int TlCommunicate::iSendData(const T& data, const MPI_Datatype mpiType,
 
     // don't call "delete pRequest"
     // because the object which is pointed will be deleted on calling wait().
-    
+
     return answer;
 }
 
@@ -2092,7 +2096,7 @@ int TlCommunicate::iSendData(const std::vector<T>& data, const MPI_Datatype mpiT
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
         std::vector<T> buf(bufCount);
         const ldiv_t tmp = std::ldiv(length, bufCount);
-        
+
         // 作業用メモリ分のループ
         if (tmp.quot != 0) {
             for (long i = 0; i < tmp.quot; ++i) {
@@ -2109,7 +2113,7 @@ int TlCommunicate::iSendData(const std::vector<T>& data, const MPI_Datatype mpiT
                 // don't delete pRequest!
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
@@ -2186,7 +2190,7 @@ int TlCommunicate::iSendData(const std::vector<double>& data, int destination, i
 
 //     MPI_Request* pRequest1 = new MPI_Request;
 //     int err = MPI_Isend(pHeader, 3, MPI_UNSIGNED_LONG, dest, tag, MPI_COMM_WORLD, pRequest1);
-   
+
 //     if (err == 0) {
 //         requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest1));
 
@@ -2236,7 +2240,7 @@ int TlCommunicate::iSendDataX(const T* pData, const MPI_Datatype mpiType,
     const int answer = MPI_Isend((void*)(pData + start), (end - start),
                                  mpiType, dest, tag,
                                  MPI_COMM_WORLD, pRequest);
-    
+
     if (answer == 0) {
         std::vector<uintptr_t> requests;
         requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest));
@@ -2333,7 +2337,7 @@ int TlCommunicate::iReceiveData(std::vector<T>& data, const MPI_Datatype mpiType
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
         std::vector<T> buf(bufCount);
         const ldiv_t tmp = std::ldiv(length, bufCount);
-        
+
         // 作業用メモリ分のループ
         if (tmp.quot != 0) {
             for (long i = 0; i < tmp.quot; ++i) {
@@ -2350,7 +2354,7 @@ int TlCommunicate::iReceiveData(std::vector<T>& data, const MPI_Datatype mpiType
                 // don't delete pRequest
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
@@ -2427,7 +2431,7 @@ int TlCommunicate::iReceiveData(std::vector<double>& data, int src, int tag)
 //                            MPI_DOUBLE, dest, tag,
 //                            MPI_COMM_WORLD, pRequest2);
 //         requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest2));
-        
+
 //         uintptr_t key = reinterpret_cast<uintptr_t>((void*)&data);
 //         this->nonBlockingCommParamTable_[key] = NonBlockingCommParam(NonBlockingCommParam::SEND,
 //                                                                      requests);
@@ -2447,7 +2451,7 @@ int TlCommunicate::iReceiveDataX(T* pData, const MPI_Datatype mpiType,
     const int answer = MPI_Irecv((void*)(pData + start), (end - start),
                                  mpiType, src, tag,
                                  MPI_COMM_WORLD, pRequest);
-    
+
     if (answer == 0) {
         std::vector<uintptr_t> requests;
         requests.push_back(reinterpret_cast<uintptr_t>((void*)pRequest));
@@ -2536,7 +2540,7 @@ int TlCommunicate::iReceiveDataFromAnySource(std::vector<T>& data,
     int src = 0;
     this->wait(size, &src);
     data.resize(size);
-    
+
     return this->iReceiveData(data, mpiType, 0, size, src, tag);
 }
 
@@ -2569,7 +2573,7 @@ int TlCommunicate::iReceiveDataFromAnySourceX(T* pData, const MPI_Datatype mpiTy
             this->nonBlockingCommParamTable_[key] = param;
         }
     }
-    
+
     return answer;
 }
 
@@ -2585,7 +2589,7 @@ int TlCommunicate::iReceiveDataFromAnySourceX(int* pData, const std::size_t size
 bool TlCommunicate::cancel(void* pData)
 {
     bool answer = false;
-    
+
     uintptr_t key = reinterpret_cast<uintptr_t>(pData);
 #pragma omp critical (TlCommunicate_nonBlockingCommParamTable_update)
     {
@@ -2610,7 +2614,7 @@ bool TlCommunicate::cancel(void* pData)
     if (answer == true) {
         this->wait(pData);
     }
-    
+
     return answer;
 }
 
@@ -2621,7 +2625,7 @@ bool TlCommunicate::test(void* pData, int* pSrc)
     ++(this->counter_test_);
 
     bool answer = false;
-    
+
     uintptr_t key = reinterpret_cast<uintptr_t>(pData);
 
     NonBlockingCommParamTableType::iterator it;
@@ -2656,7 +2660,7 @@ bool TlCommunicate::test(void* pData, int* pSrc)
                         }
                     }
                 }
-                
+
                 if (isComplete == true) {
                     it->second.property |= NonBlockingCommParam::COMPLETE;
                     it->second.source = source;
@@ -2695,13 +2699,13 @@ int TlCommunicate::wait(void* pData, int* pSrc)
             std::vector<uintptr_t>::iterator reqEnd = it->second.requests.end();
             for (std::vector<uintptr_t>::iterator req = it->second.requests.begin(); req != reqEnd; ++req) {
                 MPI_Request* pRequest = reinterpret_cast<MPI_Request*>(*req);
-                
+
                 int err = MPI_Wait(pRequest, &status);
                 if (err != 0) {
                     std::cerr << " MPI wait error. " << __FILE__ << ":" << __LINE__
                               << " err=" << err
                               << std::endl;
-                } 
+                }
                 answer |= err;
 
                 delete pRequest;
@@ -2709,7 +2713,7 @@ int TlCommunicate::wait(void* pData, int* pSrc)
             }
 
             this->nonBlockingCommParamTable_.erase(it);
-            
+
             if (pSrc != NULL) {
                 *pSrc = status.MPI_SOURCE;
             }
@@ -2927,7 +2931,7 @@ int TlCommunicate::broadcast(std::vector<T>& data, const MPI_Datatype mpiType,
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(T)); // T型配列の配列数
         std::vector<T> buf(bufCount);
         const ldiv_t tmp = std::ldiv(length, bufCount);
-        
+
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
             std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
@@ -2939,7 +2943,7 @@ int TlCommunicate::broadcast(std::vector<T>& data, const MPI_Datatype mpiType,
                           << std::endl;
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
@@ -3023,7 +3027,7 @@ int TlCommunicate::broadcast(std::valarray<double>& data,
         const long length = static_cast<long>(end - start);
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
         const ldiv_t tmp = std::ldiv(length, bufCount);
-        
+
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
             const std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
@@ -3034,7 +3038,7 @@ int TlCommunicate::broadcast(std::valarray<double>& data,
                           << std::endl;
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
@@ -3165,7 +3169,7 @@ int TlCommunicate::broadcast(T* pData, const MPI_Datatype mpiType,
         const long length = static_cast<long>(end - start);
         const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
         const ldiv_t tmp = std::ldiv(length, bufCount);
-        
+
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
             const std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
@@ -3176,7 +3180,7 @@ int TlCommunicate::broadcast(T* pData, const MPI_Datatype mpiType,
                           << std::endl;
             }
         }
-        
+
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
@@ -3311,4 +3315,3 @@ int TlCommunicate::allReduce_SUM(const TlFileSymmetricMatrix& fromLocalMatrix,
 
     return 0;
 }
-
