@@ -265,7 +265,6 @@ if (MPI_FOUND)
     DfLocalize_Parallel.cpp
     )
   add_executable(pdf-lo-mpi ${PDF_LO_MPI_SOURCES})
-  target_link_libraries(pdf-lo-mpi libppdf libppdftl libpdf libpdftl)
+  target_link_libraries(pdf-lo-mpi libppdf libppdftl libpdf libpdftl ${MPI_CXX_LIBRARIES})
   install(TARGETS pdf-lo-mpi RUNTIME DESTINATION bin)
 endif(MPI_FOUND)
-
