@@ -95,14 +95,13 @@ else(MPI_FOUND)
   message("Not Found MPI compiler")
 endif(MPI_FOUND)
 
-  # check ScaLAPACK
-  find_package(ScaLAPACK)
-  if (SCALAPACK_FOUND)
-    # message("ScaLAPACK information:")
-    # message("  SCALAPACK_LIBRARIES: ${SCALAPACK_LIBRARIES}")
-    set(HAVE_SCALAPACK 1) # for config.h
-  endif(SCALAPACK_FOUND)
-endif(MPI_FOUND)
+# check ScaLAPACK
+find_package(ScaLAPACK)
+if (SCALAPACK_FOUND)
+  # message("ScaLAPACK information:")
+  # message("  SCALAPACK_LIBRARIES: ${SCALAPACK_LIBRARIES}")
+  set(HAVE_SCALAPACK 1) # for config.h
+endif(SCALAPACK_FOUND)
 
 # check ScaLAPACK
 find_package(ScaLAPACK)
