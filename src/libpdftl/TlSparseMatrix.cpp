@@ -310,8 +310,9 @@ std::vector<TlMatrixObject::MatrixElement> TlSparseMatrix::getMatrixElements() c
     std::size_t count = 0;
     const_iterator itEnd = this->end();
     for (const_iterator it = this->begin(); it != itEnd; ++it) {
-        const TlMatrixElement tmp = {it->first.row, it->first.col, it->second};
-        answer[count] = tmp;
+        answer[count].row = it->first.row;
+        answer[count].col = it->first.col;
+        answer[count].value = it->second;
         ++count;
     }
     assert(count == numOfSize);

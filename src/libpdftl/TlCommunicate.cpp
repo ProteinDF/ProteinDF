@@ -713,8 +713,10 @@ int TlCommunicate::reduce_SUM(TlSparseMatrix& rMatrix, int root)
         std::vector<TlMatrixObject::MatrixElement> buf(numOfSize);
         for (TlSparseMatrix::const_iterator it = rMatrix.begin(); it != itEnd; ++it) {
             // buf[count] = TlMatrixElement(it->first.row, it->first.col, it->second);
-            const TlMatrixElement tmp = {it->first.row, it->first.col, it->second};
-            buf[count] = tmp;
+            buf[count].row = it->first.row;
+            buf[count].col = it->first.col;
+            buf[count].value = it->second;
+
             ++count;
         }
         assert(count == numOfSize);
@@ -744,8 +746,10 @@ int TlCommunicate::broadcast(TlSparseMatrix& rMatrix, const int root)
         std::vector<TlMatrixObject::MatrixElement> buf(numOfSize);
         for (TlSparseMatrix::const_iterator it = rMatrix.begin(); it != itEnd; ++it) {
             // buf[count] = TlMatrixElement(it->first.row, it->first.col, it->second);
-            const TlMatrixElement tmp = {it->first.row, it->first.col, it->second};
-            buf[count] = tmp;
+            buf[count].row = it->first.row;
+            buf[count].col = it->first.col;
+            buf[count].value = it->second;
+
             ++count;
         }
         assert(count == numOfSize);
@@ -1127,8 +1131,10 @@ int TlCommunicate::sendData(const TlSparseMatrix& data, int dest, int tag)
             // assert((0 <= row) && (row < numOfRows));
             // assert((0 <= col) && (col < numOfCols));
             // buf[count] = TlMatrixElement(row, col, it->second);
-            const TlMatrixElement tmp = {it->first.row, it->first.col, it->second};
-            buf[count] = tmp;
+            buf[count].row = it->first.row;
+            buf[count].col = it->first.col;
+            buf[count].value = it->second;
+
             ++count;
         }
         assert(count == numOfSize);
