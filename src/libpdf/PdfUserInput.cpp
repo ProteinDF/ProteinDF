@@ -1,18 +1,18 @@
 // Copyright (C) 2002-2014 The ProteinDF project
 // see also AUTHORS and README.
-// 
+//
 // This file is part of ProteinDF.
-// 
+//
 // ProteinDF is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProteinDF is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -25,7 +25,7 @@
 #include "TlResidue.h"
 #include "TlLogging.h"
 
-#define BOHR_ANGSTROM (0.52917721092)
+#define BOHR_ANGSTROM (0.52917721067)
 
 PdfUserInput::PdfUserInput(const std::string& filePath)
     : filePath_(filePath), data_(), log_(TlLogging::getInstance())
@@ -145,7 +145,7 @@ void PdfUserInput::load_conventional()
                                 sValue = sLine.substr(1, nEndBracket -1);
                                 //this->m_param[sGroup][sKeyword] = sValue;
                                 sLine = sLine.substr(nEndBracket +1);
-                                
+
                                 // 次のキーワード、グループを読み込むための後始末
                                 //sKeyword = "";
                                 //bNextValue = false;
@@ -173,11 +173,11 @@ void PdfUserInput::load_conventional()
                                         // "}end"の場合も終端記号としてOKにする<-互換のため
                                         sLine = sLine.substr(3);
                                     }
-                                    
+
                                     // 次のキーワード、グループを読み込むための後始末
                                     //sKeyword = "";
                                     bFoundEndBracket = true;
-                                    
+
                                     break; // while を抜ける
                                 }
 
@@ -187,7 +187,7 @@ void PdfUserInput::load_conventional()
                                 sLine += ("\n" + sTmp);
                                 nNumOfLine++;
                             } while (!ifs.eof());
-                            
+
                             if (bFoundEndBracket == false) {
                                 // error
                                 // 終端記号が見つからないままファイルの終わりまで来てしまった
@@ -216,7 +216,7 @@ void PdfUserInput::load_conventional()
                         }
                         break;
                     }
-                    
+
                     // store value
                     //std::cerr << "g = " << sGroup << ", k = " << sKeyword << ", v = " << sValue << std::endl;
                     this->data_[sKeyword] = sValue;
@@ -248,21 +248,21 @@ void PdfUserInput::load_conventional()
     if (this->data_["basis-set/density-auxiliary"].getStr() != "") {
         const std::string str = this->data_["basis-set/density-auxiliary"].getStr();
         this->moleculeBasisSetDensityAuxiliary(str);
-        
+
         this->data_["basis-set/density-auxiliary"] = "s";
     }
 
     if (this->data_["basis-set/exchange-auxiliary"].getStr() != "") {
         const std::string str = this->data_["basis-set/exchange-auxiliary"].getStr();
         this->moleculeBasisSetExchangeAuxiliary(str);
-        
+
         this->data_["basis-set/exchange-auxiliary"] = "";
     }
 
     if (this->data_["basis-set/gridfree"].getStr() != "") {
         const std::string str = this->data_["basis-set/gridfree"].getStr();
         this->moleculeBasisSetGridFree(str);
-        
+
         this->data_["basis-set/gridfree"] = "";
     } else {
         this->log_.info(" use orbital basis-set for gridfree.");
@@ -453,7 +453,7 @@ TlSerializeData PdfUserInput::getBasisInfo(const std::string& basisName)
 {
     TlSerializeData data;
     data["name"] = basisName;
-    
+
     Fl_Db_Basis flDbBasis(basisName);
     const int numOfCGTOs = flDbBasis.getTotalcgto();
     for (int i = 0; i < numOfCGTOs; ++i) {
@@ -832,6 +832,3 @@ bool PdfUserInput::check()
 
     return bAnswer;
 }
-
-
-
