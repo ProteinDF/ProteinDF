@@ -1,56 +1,56 @@
 cmake_minimum_required(VERSION 3.0)
 
 set(LIBPDFTL_HEADERS
-  TlAtom.h                     
-  TlColVectorMatrix.h          
-  TlFile.h                     
-  TlFileMatrix.h               
-  TlFileSymmetricMatrix.h      
-  TlFmt.h                      
-  TlGetopt.h                   
-  TlIntVector.h                
-  TlLebedevGrid.h              
-  TlListMatrix.h               
-  TlLogging.h                  
-  TlMath.h                     
-  TlMatrix.h                   
-  TlMatrixObject.h             
-  TlMemManager.h               
+  TlAtom.h
+  TlColVectorMatrix.h
+  TlFile.h
+  TlFileMatrix.h
+  TlFileSymmetricMatrix.h
+  TlFmt.h
+  TlGetopt.h
+  TlIntVector.h
+  TlLebedevGrid.h
+  TlListMatrix.h
+  TlLogging.h
+  TlMath.h
+  TlMatrix.h
+  TlMatrixObject.h
+  TlMemManager.h
   TlMmapAllocater.h
   #  TlMmapMatrix.h
   TlMmapMatrix_CSFD.h
   TlMmapMatrix_RSFD.h
   TlMmapMatrixObject.h
-  TlMsgPack.h                  
-#  TlPartialMatrix.h            
-#  TlPartialSymmetricMatrix.h   
-  TlPosition.h                 
-  TlPrdctbl.h                  
-  TlPseudoYaml.h               
-  TlResidue.h                  
-  TlRowVectorMatrix.h          
-  TlSerializeData.h            
-  TlSharedPointer.h            
-  TlSimpleVector.h             
-  TlSparseHashMatrix.h         
+  TlMsgPack.h
+#  TlPartialMatrix.h
+#  TlPartialSymmetricMatrix.h
+  TlPosition.h
+  TlPrdctbl.h
+  TlPseudoYaml.h
+  TlResidue.h
+  TlRowVectorMatrix.h
+  TlSerializeData.h
+  TlSharedPointer.h
+  TlSimpleVector.h
+  TlSparseHashMatrix.h
   TlSparseHashSymmetricMatrix.h
-  TlSparseMatrix.h         
+  TlSparseMatrix.h
   TlSparseSymmetricMatrix.h
   TlSparseVector.h
   TlSparseVectorMatrix.h
-  TlStlUtils.h          
-  TlStringTokenizer.h   
-  TlSymmetricMatrix.h   
-  TlSystem.h            
-  TlTime.h              
-  TlUtils.h             
-  TlVector.h            
+  TlStlUtils.h
+  TlStringTokenizer.h
+  TlSymmetricMatrix.h
+  TlSystem.h
+  TlTime.h
+  TlUtils.h
+  TlVector.h
   TlVectorMatrixObject.h
   TlVectorObject.h
   )
 
 
-set(LIBPDFTL_SOURCES 
+set(LIBPDFTL_SOURCES
   TlAtom.cpp
   TlColVectorMatrix.cpp
   TlFile.cpp
@@ -87,7 +87,7 @@ set(LIBPDFTL_SOURCES
   TlSparseVectorMatrix.cpp
   TlStringTokenizer.cpp
   TlSystem.cpp
-  TlSymmetricMatrix.cpp  
+  TlSymmetricMatrix.cpp
   TlTime.cpp
   TlUtils.cpp
   TlVector.cpp
@@ -143,7 +143,7 @@ install(FILES ${LIBPDFTL_HEADERS} DESTINATION include)
 
 if (MPI_FOUND)
   add_library(libppdftl ${LIBPPDFTL_HEADERS} ${LIBPPDFTL_SOURCES})
-  target_link_libraries(libppdftl ${SCALAPACK_LIBRARIES})
+  target_link_libraries(libppdftl ${SCALAPACK_LIBRARIES} ${BLACS_LIBRARIES} ${BLACS_CINIT_LIBRARIES} ${BLACS_F77INIT_LIBRARIES})
   set_target_properties(libppdftl PROPERTIES OUTPUT_NAME "ppdftl")
 
   install(TARGETS libppdftl

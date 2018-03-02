@@ -103,13 +103,24 @@ else(MPI_FOUND)
 endif(MPI_FOUND)
 
 
+# check BLACS
+find_package(BLACS)
+if (BLACS_FOUND)
+  message("BLACS information")
+  message("  BLACS_LIBRARIES: ${BLACS_LIBRARIES}")
+  message("  BLACS_CINIT_LIBRARIES: ${BLACS_CINIT_LIBRARIES}")
+  message("  BLACS_F77INIT_LIBRARIES: ${BLACS_F77INIT_LIBRARIES}")
+else(BLACS_FOUND)
+  message("Not Found BLACS")
+endif (BLACS_FOUND)
+
+
 # check ScaLAPACK
 find_package(ScaLAPACK)
 if (SCALAPACK_FOUND)
   message("ScaLAPACK information")
   message("  SCALAPACK_LIBRARIES: ${SCALAPACK_LIBRARIES}")
 
-  # add_definitions(-DHAVE_SCALAPACK)
   set(HAVE_SCALAPACK 1) # for config.h
 else(SCALAPACK_FOUND)
   message("Not Found ScaLAPACK")
