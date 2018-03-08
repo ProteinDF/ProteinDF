@@ -18,10 +18,9 @@ public:
         REST_QUADRIC,
         REST_HYPERBOLIC
     };
-    
+
 public:
-    void exec(double totalCharge =0.0,
-              std::string PMatrixFilePath ="");
+    void exec(std::string PMatrixFilePath ="");
 
     RESP_RESTRICTION getRespRestriction() const;
     void setRespRestriction(TlEspPop::RESP_RESTRICTION v);
@@ -29,14 +28,14 @@ public:
     void setRestrictionParameterA(double a);
     double getRestrictionParameterB() const;
     void setRestrictionParameterB(double b);
-    
+
     void verbose(bool yn);
     void saveMpacFilePath(const std::string& path);
     void saveDesignMatrixPath(const std::string& path);
     void savePredictedVectorPath(const std::string& path);
     void saveInvDesignMatrixPath(const std::string& path);
     void saveModelCoefVectorPath(const std::string& path);
-    
+
 protected:
     std::vector<TlAtom> getRealAtoms();
 
@@ -54,14 +53,14 @@ protected:
 
     bool convCheck(const TlVector& modelCoef);
     void output(const TlVector& modelCoef);
-    
+
 protected:
     static const double AU2ANG;
     static const double ANG2AU;
-    
+
     TlSerializeData param_;
     Fl_Geometry flGeom_;
-    
+
     std::vector<TlAtom> realAtoms_;
     std::vector<TlPosition> grids_;
     TlVector esp_;
@@ -80,7 +79,7 @@ protected:
     double maxErrorThreshold_;
     double rmsErrorThreshold_;
     TlVector prevModelCoef_;
-    
+
     // debug
     bool verbose_;
     std::string saveMpacFilePath_;
@@ -92,4 +91,3 @@ protected:
 };
 
 #endif // TLESPPOP_H
-

@@ -18,7 +18,7 @@ void help(const std::string& progName) {
     std::cout << " -d PATH      set density matrix file. default is presumed by parameter file." << std::endl;
     std::cout << " -m PATH      save messagepack file for grids and ESPs" << std::endl;
     std::cout << " -A PATH      save design matrix" << std::endl;
-    std::cout << " -y PATH      save predicted vector" << std::endl;
+    std::cout << " -y PATH      save target vector" << std::endl;
     std::cout << " -x PATH      save model coef vector" << std::endl;
     std::cout << " -r [Q, H]    RESP restriction function" << std::endl;
     std::cout << " -a value     RESP parameter a" << std::endl;
@@ -32,7 +32,7 @@ void help(const std::string& progName) {
 int main(int argc, char* argv[])
 {
     TlGetopt opt(argc, argv, "A:a:b:d:hm:p:r:vx:y:");
-    
+
     const bool verbose = (opt["v"] == "defined");
     if ((opt["h"] == "defined")) {
         help(opt[0]);
@@ -53,25 +53,26 @@ int main(int argc, char* argv[])
         mpacFilePath = opt["m"];
     }
 
-    std::string designMatrixPath = "MK_design.mat";
+    std::string designMatrixPath = "resp_design.mat";
     if (opt["A"].empty() != true) {
         designMatrixPath = opt["A"];
     }
 
-    std::string predictedPath = "MK_predicted.vtr";
+    std::string targetVectorPath = "resp_target.vtr";
     if (opt["y"].empty() != true) {
-        predictedPath = opt["y"];
+        targetVectorPath = opt["y"];
     }
-    std::string modelCoefPath = "MK_model.vtr";
+
+    std::string modelCoefPath = "resp_model.vtr";
     if (opt["x"].empty() != true) {
         modelCoefPath = opt["x"];
     }
-    
+
     double param_a = 0.0005;
     if (opt["a"].empty() != true) {
         param_a = std::atof(opt["a"].c_str());
     }
-    
+
     double param_b = 0.1;
     if (opt["b"].empty() != true) {
         param_a = std::atof(opt["b"].c_str());
@@ -95,7 +96,7 @@ int main(int argc, char* argv[])
             break;
         }
     }
-    
+
     // パラメータファイルの読み込み
     TlSerializeData param;
     {
@@ -112,11 +113,10 @@ int main(int argc, char* argv[])
     espPop.verbose(verbose);
     espPop.saveMpacFilePath(mpacFilePath);
     espPop.saveDesignMatrixPath(designMatrixPath);
-    espPop.savePredictedVectorPath(predictedPath);
+    espPop.savePredictedVectorPath(targetVectorPath);
     espPop.saveModelCoefVectorPath(modelCoefPath);
 
-    const double totalCharge = 0.0;
-    espPop.exec(totalCharge, PMatrixFilePath);
+    espPop.exec(PMatrixFilePath);
+
+    return EXIT_SUCCESS;
 }
-
-
