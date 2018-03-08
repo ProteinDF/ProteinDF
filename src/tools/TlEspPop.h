@@ -33,7 +33,6 @@ public:
     void saveMpacFilePath(const std::string& path);
     void saveDesignMatrixPath(const std::string& path);
     void savePredictedVectorPath(const std::string& path);
-    void saveInvDesignMatrixPath(const std::string& path);
     void saveModelCoefVectorPath(const std::string& path);
 
 protected:
@@ -46,9 +45,13 @@ protected:
     TlMatrix getInvDistanceMatrix();
     void makeDesignMatrix_MK(TlSymmetricMatrix* pDesignMat,
                              TlVector* pPredicted);
-    void makeDesignMatrix_quadric(TlSymmetricMatrix* pDesignMat,
+    void makeDesignMatrix_quadric(const TlSymmetricMatrix& MK_designMat,
+                                  const TlVector& MK_predicted,
+                                  TlSymmetricMatrix* pDesignMat,
                                   TlVector* pPredicted);
-    void makeDesignMatrix_hyperbolic(TlSymmetricMatrix* pDesignMat,
+    void makeDesignMatrix_hyperbolic(const TlSymmetricMatrix& MK_designMat,
+                                     const TlVector& MK_predicted,
+                                     TlSymmetricMatrix* pDesignMat,
                                      TlVector* pPredicted);
 
     bool convCheck(const TlVector& modelCoef);
@@ -85,7 +88,6 @@ protected:
     std::string saveMpacFilePath_;
     std::string saveDesignMatPath_;
     std::string savePredictedPath_;
-    std::string saveInvDesignMatPath_;
     std::string saveModelCoefPath_;
 
 };
