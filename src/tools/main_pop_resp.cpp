@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
         param_a = std::atof(opt["b"].c_str());
     }
 
-    TlEspPop::RESP_RESTRICTION rest = TlEspPop::REST_NONE;
+    TlEspPop::RESP_RESTRICTION rest = TlEspPop::REST_HYPERBOLIC;
     if (opt["r"].empty() != true) {
         std::string value = opt["r"];
         value = TlUtils::toUpper(value);
