@@ -1,18 +1,18 @@
 // Copyright (C) 2002-2014 The ProteinDF project
 // see also AUTHORS and README.
-// 
+//
 // This file is part of ProteinDF.
-// 
+//
 // ProteinDF is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProteinDF is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -21,12 +21,12 @@
 
 #include "TlSparseHashMatrix.h"
 
-class TlSparseHashSymmetricMatrix : public TlSparseHashMatrix { 
-public:
+class TlSparseHashSymmetricMatrix : public TlSparseHashMatrix {
+ public:
   /// 行列オブジェクトを作成する
   ///
   /// @param[in] size 作成する行列の次元数
-  explicit TlSparseHashSymmetricMatrix(int size =1);
+  explicit TlSparseHashSymmetricMatrix(int size = 1);
 
   /// コピーコンストラクタ
   TlSparseHashSymmetricMatrix(const TlSparseHashSymmetricMatrix& rhs);
@@ -41,7 +41,7 @@ public:
   ///
   /// @param[in] row 行数
   /// @param[in] col 列数
-  virtual void resize(int row, int col){
+  virtual void resize(int row, int col) {
     assert(row == col);
     this->resize(row);
   }
@@ -63,15 +63,14 @@ public:
   /// @param[in] col 列数
   /// @return 要素
   virtual double& operator()(int row, int col);
-
 };
 
 inline double& TlSparseHashSymmetricMatrix::operator()(int row, int col) {
-  if (row < col){
+  if (row < col) {
     std::swap(row, col);
   }
 
   return TlSparseHashMatrix::operator()(row, col);
 }
 
-#endif // TLSPARSEHASHSYMMETRICMATRIX_H
+#endif  // TLSPARSEHASHSYMMETRICMATRIX_H

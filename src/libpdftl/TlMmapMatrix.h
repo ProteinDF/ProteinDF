@@ -4,53 +4,49 @@
 #include <string>
 #include "TlMatrixObject.h"
 
-class TlMmapMatrix : public TlMatrixObject
-{
-public:
-    explicit TlMmapMatrix(const std::string& filePath, index_type row =1, index_type col =1);
-    virtual ~TlMmapMatrix();
+class TlMmapMatrix : public TlMatrixObject {
+ public:
+  explicit TlMmapMatrix(const std::string& filePath, index_type row = 1,
+                        index_type col = 1);
+  virtual ~TlMmapMatrix();
 
-    void resize(const index_type newRow, const index_type newCol);
+  void resize(const index_type newRow, const index_type newCol);
 
-    
-public:
-    virtual index_type getNumOfRows() const;
-    virtual index_type getNumOfCols() const;
-    virtual std::size_t getMemSize() const;
-    
-    virtual double get(index_type row, index_type col) const;
-    virtual void set(index_type row, index_type col, double value);
-    virtual void add(index_type row, index_type col, double value);
+ public:
+  virtual index_type getNumOfRows() const;
+  virtual index_type getNumOfCols() const;
+  virtual std::size_t getMemSize() const;
 
-    virtual void setRowVector(const index_type row, const TlVector& v);
-    virtual void setColVector(const index_type col, const TlVector& v);
-    virtual TlVector getRowVector(const index_type row) const;
-    virtual TlVector getColVector(const index_type col) const;
+  virtual double get(index_type row, index_type col) const;
+  virtual void set(index_type row, index_type col, double value);
+  virtual void add(index_type row, index_type col, double value);
 
-    
-private:
-    virtual bool load(const std::string& path);
-    virtual bool save(const std::string& path) const;
+  virtual void setRowVector(const index_type row, const TlVector& v);
+  virtual void setColVector(const index_type col, const TlVector& v);
+  virtual TlVector getRowVector(const index_type row) const;
+  virtual TlVector getColVector(const index_type col) const;
 
-    
-protected:
-    void initialize();
-    void createFile();
-    void getHeaderInfo();
-    void newMmap();
-    void syncMmap();
-    void deleteMmap();
+ private:
+  virtual bool load(const std::string& path);
+  virtual bool save(const std::string& path) const;
 
-protected:
-    index_type numOfRows_;
-    index_type numOfCols_;
-    
-    std::string filePath_;
+ protected:
+  void initialize();
+  void createFile();
+  void getHeaderInfo();
+  void newMmap();
+  void syncMmap();
+  void deleteMmap();
 
-    char* mmapBegin_;
-    double* dataBegin_;
-    std::size_t fileSize_;
+ protected:
+  index_type numOfRows_;
+  index_type numOfCols_;
+
+  std::string filePath_;
+
+  char* mmapBegin_;
+  double* dataBegin_;
+  std::size_t fileSize_;
 };
 
-
-#endif // TLMMAPMATRIX_H
+#endif  // TLMMAPMATRIX_H

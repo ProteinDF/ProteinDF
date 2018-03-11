@@ -20,8 +20,8 @@
 #define TLSPARSEMATRIX_H
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"    // this file created by autotools
-#endif // HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
 
 #include <cassert>
 #include <functional>
@@ -44,340 +44,322 @@
 #include "TlVector.h"
 
 struct TlMatrixElement {
-    typedef TlMatrixObject::index_type index_type;
+  typedef TlMatrixObject::index_type index_type;
 
-public:
-    index_type row;
-    index_type col;
-    double value;
+ public:
+  index_type row;
+  index_type col;
+  double value;
 };
 
 /// 疎行列クラス
 class TlSparseMatrix : public TlMatrixObject {
-public:
-    /// 行列オブジェクトを作成する
-    ///
-    /// @param[in] row 作成する行列の行数
-    /// @param[in] col 作成する行列の列数
-    explicit TlSparseMatrix(index_type row =1, index_type col =1);
+ public:
+  /// 行列オブジェクトを作成する
+  ///
+  /// @param[in] row 作成する行列の行数
+  /// @param[in] col 作成する行列の列数
+  explicit TlSparseMatrix(index_type row = 1, index_type col = 1);
 
-    /// コピーコンストラクタ
-    TlSparseMatrix(const TlSparseMatrix& rhs);
+  /// コピーコンストラクタ
+  TlSparseMatrix(const TlSparseMatrix& rhs);
 
-    /// デストラクタ
-    virtual ~TlSparseMatrix();
+  /// デストラクタ
+  virtual ~TlSparseMatrix();
 
-public:
-    struct Index2 {
-    public:
-        Index2(index_type r = 0, index_type c = 0) : row(r), col(c) {
-        }
+ public:
+  struct Index2 {
+   public:
+    Index2(index_type r = 0, index_type c = 0) : row(r), col(c) {}
 
-        bool operator<(const Index2& rhs) const {
-            bool answer = false;
-            if ((this->row < rhs.row) ||
-                ((this->row == rhs.row) && (this->col < rhs.col))) {
-                answer = true;
-            }
+    bool operator<(const Index2& rhs) const {
+      bool answer = false;
+      if ((this->row < rhs.row) ||
+          ((this->row == rhs.row) && (this->col < rhs.col))) {
+        answer = true;
+      }
 
-            return answer;
-        }
-
-        bool operator>(const Index2& rhs) const {
-            bool answer = false;
-            if ((this->row > rhs.row) ||
-                ((this->row == rhs.row) && (this->col > rhs.col))) {
-                answer = true;
-            }
-
-            return answer;
-        }
-
-        bool operator==(const Index2& rhs) const {
-            return ((this->row == rhs.row) && (this->col == rhs.col));
-        }
-
-        bool operator!=(const Index2& rhs) const {
-            return !(this->operator==(rhs));
-        }
-
-    public:
-        index_type row;
-        index_type col;
-    };
-
-public:
-    // typedef std::size_t KeyType;
-    typedef Index2 KeyType;
-
-// #ifdef HAVE_UNORDERED_MAP
-//     typedef std::unordered_map<KeyType, double> SparseMatrixData;
-// #elifdef HAVE_TR1_UNORDERED_MAP
-//     typedef std::tr1::unordered_map<KeyType, double> SparseMatrixData;
-// #elifdef HAVE_GOOGLE_SPARSE_HASH_MAP
-//     typedef google::sparse_hash_map<KeyType, double> SparseMatrixData;
-// #else
-//     typedef std::map<KeyType, double> SparseMatrixData;
-//     #define TSM_DATATYPE_BINTREE 1
-// #endif
-    typedef std::map<KeyType, double> SparseMatrixData;
-
-    typedef SparseMatrixData::const_iterator const_iterator;
-    typedef SparseMatrixData::iterator iterator;
-
-    // operator
-public:
-    /// 最初のイテレータを返す
-    const_iterator begin() const {
-        return m_aMatrix.begin();
+      return answer;
     }
 
-    /// 最初のイテレータを返す
-    iterator begin() {
-        return m_aMatrix.begin();
+    bool operator>(const Index2& rhs) const {
+      bool answer = false;
+      if ((this->row > rhs.row) ||
+          ((this->row == rhs.row) && (this->col > rhs.col))) {
+        answer = true;
+      }
+
+      return answer;
     }
 
-    /// 最後のイテレータを返す
-    const_iterator end() const {
-        return m_aMatrix.end();
+    bool operator==(const Index2& rhs) const {
+      return ((this->row == rhs.row) && (this->col == rhs.col));
     }
 
-    /// 最後のイテレータを返す
-    iterator end() {
-        return m_aMatrix.end();
+    bool operator!=(const Index2& rhs) const {
+      return !(this->operator==(rhs));
     }
 
-    /// オブジェクトの内容を破棄する
-    virtual void clear();
+   public:
+    index_type row;
+    index_type col;
+  };
 
-    virtual void zeroClear() {
-        this->clear();
-    }
+ public:
+  // typedef std::size_t KeyType;
+  typedef Index2 KeyType;
 
-    /// 要素を削除する
-    virtual void erase(index_type row, index_type col);
-    virtual void erase(iterator p);
+  // #ifdef HAVE_UNORDERED_MAP
+  //     typedef std::unordered_map<KeyType, double> SparseMatrixData;
+  // #elifdef HAVE_TR1_UNORDERED_MAP
+  //     typedef std::tr1::unordered_map<KeyType, double> SparseMatrixData;
+  // #elifdef HAVE_GOOGLE_SPARSE_HASH_MAP
+  //     typedef google::sparse_hash_map<KeyType, double> SparseMatrixData;
+  // #else
+  //     typedef std::map<KeyType, double> SparseMatrixData;
+  //     #define TSM_DATATYPE_BINTREE 1
+  // #endif
+  typedef std::map<KeyType, double> SparseMatrixData;
 
-    /// 行数を返す
-    ///
-    /// @return 行数
-    virtual index_type getNumOfRows() const;
+  typedef SparseMatrixData::const_iterator const_iterator;
+  typedef SparseMatrixData::iterator iterator;
 
-    /// 列数を返す
-    ///
-    /// @return 列数
-    virtual index_type getNumOfCols() const;
+  // operator
+ public:
+  /// 最初のイテレータを返す
+  const_iterator begin() const { return m_aMatrix.begin(); }
 
-    /// 要素の数を返す
-    ///
-    /// @return 要素の数
-    virtual size_type getSize() const;
+  /// 最初のイテレータを返す
+  iterator begin() { return m_aMatrix.begin(); }
 
-    virtual std::size_t getMemSize() const;
+  /// 最後のイテレータを返す
+  const_iterator end() const { return m_aMatrix.end(); }
 
-    /// 行列のサイズを変更する
-    ///
-    /// 行列を大きくする場合、追加される要素は0で初期化される。
-    /// 行列を小さくする場合、切り詰められる要素は破棄される。
-    /// @param[in] row 行数
-    /// @param[in] col 列数
-    virtual void resize(index_type row, index_type col);
+  /// 最後のイテレータを返す
+  iterator end() { return m_aMatrix.end(); }
 
-    double pop(index_type* pRow, index_type* pCol);
+  /// オブジェクトの内容を破棄する
+  virtual void clear();
 
-    /// 要素を返す(読み取り専用)
-    ///
-    /// 内部では、行列要素を(2次元配列ではなく)
-    /// 1次元配列として保持しているので、
-    /// 他のメンバ関数内でもこのメンバ関数が呼ばれる。
-    ///
-    /// @param[in] row 行数
-    /// @param[in] col 列数
-    /// @return 要素
-    virtual double operator()(index_type row, index_type col) const;
-    virtual double get(index_type row, index_type col) const;
+  virtual void zeroClear() { this->clear(); }
 
-    /** 要素を返す(代入可能)
-     *
-     *  内部では、行列要素を(2次元配列ではなく)
-     *  1次元配列として保持しているので、
-     *  他のメンバ関数内でもこのメンバ関数が呼ばれる。
-     *
-     *  @param[in] row 行数
-     *  @param[in] col 列数
-     *  @return 要素
-     */
-    virtual double& operator()(index_type row, index_type col);
-    virtual void set(const index_type row, const index_type col, const double value);
-    // virtual void set(const std::pair<unsigned long, double>& obj);
+  /// 要素を削除する
+  virtual void erase(index_type row, index_type col);
+  virtual void erase(iterator p);
 
-    virtual void add(const index_type row, const index_type col, const double value);
-    // virtual void add(const std::pair<unsigned long, double>& obj);
+  /// 行数を返す
+  ///
+  /// @return 行数
+  virtual index_type getNumOfRows() const;
 
-    void add(const std::vector<MatrixElement>& elements);
+  /// 列数を返す
+  ///
+  /// @return 列数
+  virtual index_type getNumOfCols() const;
 
-    /** 指定された要素が存在すればtrueを返す
-     *
-     *  @retval true 要素が存在する
-     *  @retval false 要素が存在しない
-     */
-    virtual bool hasKey(index_type row, index_type col) {
-        return (this->m_aMatrix.find(KeyType(row, col)) != this->m_aMatrix.end());
-    }
+  /// 要素の数を返す
+  ///
+  /// @return 要素の数
+  virtual size_type getSize() const;
 
-    virtual void merge(const TlSparseMatrix& rhs);
+  virtual std::size_t getMemSize() const;
 
-    /// 代入演算子
-    TlSparseMatrix& operator =(const TlSparseMatrix& rhs);
+  /// 行列のサイズを変更する
+  ///
+  /// 行列を大きくする場合、追加される要素は0で初期化される。
+  /// 行列を小さくする場合、切り詰められる要素は破棄される。
+  /// @param[in] row 行数
+  /// @param[in] col 列数
+  virtual void resize(index_type row, index_type col);
 
-    /// 行列を定数倍する
-    ///
-    /// @param[in] rhs 定数倍の値
-    /// @return 計算後のオブジェクト
-    TlSparseMatrix& operator*=(const double& rhs);
+  double pop(index_type* pRow, index_type* pCol);
 
-    /// 行列を定数で割る
-    ///
-    /// @param[in] rhs 割る定数の値
-    /// @return 計算後のオブジェクト
-    TlSparseMatrix& operator/=(const double& rhs);
+  /// 要素を返す(読み取り専用)
+  ///
+  /// 内部では、行列要素を(2次元配列ではなく)
+  /// 1次元配列として保持しているので、
+  /// 他のメンバ関数内でもこのメンバ関数が呼ばれる。
+  ///
+  /// @param[in] row 行数
+  /// @param[in] col 列数
+  /// @return 要素
+  virtual double operator()(index_type row, index_type col) const;
+  virtual double get(index_type row, index_type col) const;
 
-    /// 指定した行の要素から構成されるベクトルを返す
-    ///
-    /// @param[in] row 指定する行
-    virtual TlVector getRowVector(index_type row) const;
+  /** 要素を返す(代入可能)
+   *
+   *  内部では、行列要素を(2次元配列ではなく)
+   *  1次元配列として保持しているので、
+   *  他のメンバ関数内でもこのメンバ関数が呼ばれる。
+   *
+   *  @param[in] row 行数
+   *  @param[in] col 列数
+   *  @return 要素
+   */
+  virtual double& operator()(index_type row, index_type col);
+  virtual void set(const index_type row, const index_type col,
+                   const double value);
+  // virtual void set(const std::pair<unsigned long, double>& obj);
 
-    /// 指定した列の要素から構成されるベクトルを返す
-    ///
-    /// @param[in] col 指定する列
-    virtual TlVector getColVector(index_type col) const;
+  virtual void add(const index_type row, const index_type col,
+                   const double value);
+  // virtual void add(const std::pair<unsigned long, double>& obj);
 
-    /// Hadamard product
-    const TlSparseMatrix& dot(const TlSparseMatrix& X);
+  void add(const std::vector<MatrixElement>& elements);
 
-    double sum() const;
+  /** 指定された要素が存在すればtrueを返す
+   *
+   *  @retval true 要素が存在する
+   *  @retval false 要素が存在しない
+   */
+  virtual bool hasKey(index_type row, index_type col) {
+    return (this->m_aMatrix.find(KeyType(row, col)) != this->m_aMatrix.end());
+  }
 
-    std::vector<int> getRowIndexList() const;
-    std::vector<int> getColIndexList() const;
+  virtual void merge(const TlSparseMatrix& rhs);
 
-    std::vector<MatrixElement> getMatrixElements() const;
+  /// 代入演算子
+  TlSparseMatrix& operator=(const TlSparseMatrix& rhs);
 
-public:
-    /// オブジェクトの内容をテキスト出力する
-    ///
-    /// @param[in] out 出力用の<< 演算子を持つオブジェクト
-    template <typename T> void print(T& out) const;
+  /// 行列を定数倍する
+  ///
+  /// @param[in] rhs 定数倍の値
+  /// @return 計算後のオブジェクト
+  TlSparseMatrix& operator*=(const double& rhs);
 
-public:
-    // unsigned long index(const index_type row, const index_type col) const;
-    // void index(const KeyType& i, index_type* pRow, index_type* pCol) const;
+  /// 行列を定数で割る
+  ///
+  /// @param[in] rhs 割る定数の値
+  /// @return 計算後のオブジェクト
+  TlSparseMatrix& operator/=(const double& rhs);
 
-public:
-    virtual bool load(const std::string& path);
-    virtual bool save(const std::string& path) const;
+  /// 指定した行の要素から構成されるベクトルを返す
+  ///
+  /// @param[in] row 指定する行
+  virtual TlVector getRowVector(index_type row) const;
 
-protected:
-    bool load(std::ifstream& ifs);
-    bool save(std::ofstream& ofs) const;
+  /// 指定した列の要素から構成されるベクトルを返す
+  ///
+  /// @param[in] col 指定する列
+  virtual TlVector getColVector(index_type col) const;
 
-protected:
-    index_type m_nRows;                  /// 行数
-    index_type m_nCols;                  /// 列数
-    mutable SparseMatrixData m_aMatrix;   /// 行列要素
+  /// Hadamard product
+  const TlSparseMatrix& dot(const TlSparseMatrix& X);
 
-    friend class TlCommunicate;
+  double sum() const;
+
+  std::vector<int> getRowIndexList() const;
+  std::vector<int> getColIndexList() const;
+
+  std::vector<MatrixElement> getMatrixElements() const;
+
+ public:
+  /// オブジェクトの内容をテキスト出力する
+  ///
+  /// @param[in] out 出力用の<< 演算子を持つオブジェクト
+  template <typename T>
+  void print(T& out) const;
+
+ public:
+  // unsigned long index(const index_type row, const index_type col) const;
+  // void index(const KeyType& i, index_type* pRow, index_type* pCol) const;
+
+ public:
+  virtual bool load(const std::string& path);
+  virtual bool save(const std::string& path) const;
+
+ protected:
+  bool load(std::ifstream& ifs);
+  bool save(std::ofstream& ofs) const;
+
+ protected:
+  index_type m_nRows;                  /// 行数
+  index_type m_nCols;                  /// 列数
+  mutable SparseMatrixData m_aMatrix;  /// 行列要素
+
+  friend class TlCommunicate;
 };
 
 ////////////////////////////////////////////////////////////////////////
 // inline functions
 
-inline void TlSparseMatrix::set(const index_type row, const index_type col, const double value)
-{
-    assert((0 <= row) && (row < this->getNumOfRows()));
-    assert((0 <= col) && (col < this->getNumOfCols()));
+inline void TlSparseMatrix::set(const index_type row, const index_type col,
+                                const double value) {
+  assert((0 <= row) && (row < this->getNumOfRows()));
+  assert((0 <= col) && (col < this->getNumOfCols()));
 
 #pragma omp critical(TlSparseMatrix__set)
-    {
-        this->m_aMatrix[KeyType(row, col)] = value;
-    }
+  { this->m_aMatrix[KeyType(row, col)] = value; }
 }
 
-
-inline void TlSparseMatrix::add(const index_type row, const index_type col, const double value)
-{
-    assert((0 <= row) && (row < this->getNumOfRows()));
-    assert((0 <= col) && (col < this->getNumOfCols()));
+inline void TlSparseMatrix::add(const index_type row, const index_type col,
+                                const double value) {
+  assert((0 <= row) && (row < this->getNumOfRows()));
+  assert((0 <= col) && (col < this->getNumOfCols()));
 
 //#pragma omp atomic
 #pragma omp critical(TlSparseMatrix__add)
-    {
-        this->m_aMatrix[KeyType(row, col)] += value;
+  { this->m_aMatrix[KeyType(row, col)] += value; }
+}
+
+inline double TlSparseMatrix::operator()(const index_type row,
+                                         const index_type col) const {
+  assert((0 <= row) && (row < this->getNumOfRows()));
+  assert((0 <= col) && (col < this->getNumOfCols()));
+
+  return this->get(row, col);
+}
+
+inline double TlSparseMatrix::get(const index_type row,
+                                  const index_type col) const {
+  assert((0 <= row) && (row < this->m_nRows));
+  assert((0 <= col) && (col < this->m_nCols));
+
+  double answer = 0.0;
+  const_iterator p = this->m_aMatrix.find(KeyType(row, col));
+  if (p != this->m_aMatrix.end()) {
+    answer = p->second;
+  }
+
+  return answer;
+}
+
+inline double& TlSparseMatrix::operator()(const index_type row,
+                                          const index_type col) {
+  assert((0 <= row) && (row < this->m_nRows));
+  assert((0 <= col) && (col < this->m_nCols));
+
+  return this->m_aMatrix[KeyType(row, col)];
+}
+
+template <typename T>
+void TlSparseMatrix::print(T& out) const {
+  const int nNumOfRows = this->getNumOfRows();
+  const int nNumOfCols = this->getNumOfCols();
+
+  for (int ord = 0; ord < nNumOfCols; ord += 10) {
+    out << "       ";
+    for (int j = ord; j < ord + 10 && j < nNumOfCols; j++) {
+      out << TlUtils::format("   %5d th", j + 1);
     }
-}
+    out << "\n ----";
 
-
-inline double TlSparseMatrix::operator()(const index_type row, const index_type col) const
-{
-    assert((0 <= row) && (row < this->getNumOfRows()));
-    assert((0 <= col) && (col < this->getNumOfCols()));
-
-    return this->get(row, col);
-}
-
-
-inline double TlSparseMatrix::get(const index_type row, const index_type col) const
-{
-    assert((0 <= row) && (row < this->m_nRows));
-    assert((0 <= col) && (col < this->m_nCols));
-
-    double answer = 0.0;
-    const_iterator p = this->m_aMatrix.find(KeyType(row, col));
-    if (p != this->m_aMatrix.end()) {
-        answer = p->second;
+    for (int j = ord; ((j < ord + 10) && (j < nNumOfCols)); j++) {
+      out << "-----------";
     }
+    out << "----\n";
 
-    return answer;
-}
+    for (int i = 0; i < nNumOfRows; i++) {
+      out << TlUtils::format(" %5d  ", i + 1);
 
-
-inline double& TlSparseMatrix::operator()(const index_type row, const index_type col)
-{
-    assert((0 <= row) && (row < this->m_nRows));
-    assert((0 <= col) && (col < this->m_nCols));
-
-    return this->m_aMatrix[KeyType(row, col)];
-}
-
-
-template <typename T> void TlSparseMatrix::print(T& out) const
-{
-    const int nNumOfRows = this->getNumOfRows();
-    const int nNumOfCols = this->getNumOfCols();
-
-    for (int ord = 0; ord < nNumOfCols; ord += 10) {
-        out << "       ";
-        for (int j = ord; j < ord+10 && j < nNumOfCols; j++) {
-            out << TlUtils::format("   %5d th", j+1);
-        }
-        out << "\n ----";
-
-        for (int j = ord; ((j < ord+10) && (j < nNumOfCols)); j++) {
-            out << "-----------";
-        }
-        out << "----\n";
-
-        for (int i = 0; i < nNumOfRows; i++) {
-            out << TlUtils::format(" %5d  ", i+1);
-
-            for (int j = ord; ((j < ord+10) && (j < nNumOfCols)); j++) {
-                out << TlUtils::format(" %10.6lf", (*this)(i, j));
-            }
-            out << "\n";
-        }
-        out << "\n\n";
+      for (int j = ord; ((j < ord + 10) && (j < nNumOfCols)); j++) {
+        out << TlUtils::format(" %10.6lf", (*this)(i, j));
+      }
+      out << "\n";
     }
-    out.flush();
-
+    out << "\n\n";
+  }
+  out.flush();
 }
 
-#endif // TLMATRIX_SPARSE_H
+#endif  // TLMATRIX_SPARSE_H

@@ -6,25 +6,21 @@
 #include "TlMsgPack.h"
 
 class TlMsgPackTest : public CppUnit::TestFixture {
-    CPPUNIT_TEST_SUITE(TlMsgPackTest);
-    CPPUNIT_TEST(testLoad);
-    CPPUNIT_TEST(testDumpAndPack);
-    CPPUNIT_TEST_SUITE_END();
-    
-public:
-    void testLoad();
-    void testDumpAndPack();
+  CPPUNIT_TEST_SUITE(TlMsgPackTest);
+  CPPUNIT_TEST(testLoad);
+  CPPUNIT_TEST(testDumpAndPack);
+  CPPUNIT_TEST_SUITE_END();
 
-public:
-    TlMsgPackTest(){
-    }
+ public:
+  void testLoad();
+  void testDumpAndPack();
 
-    void setUp(){
-    }
-    
-    void tearDown(){
-    }
+ public:
+  TlMsgPackTest() {}
+
+  void setUp() {}
+
+  void tearDown() {}
 };
 
-#endif // TLMSGPACKTEST_H
-
+#endif  // TLMSGPACKTEST_H

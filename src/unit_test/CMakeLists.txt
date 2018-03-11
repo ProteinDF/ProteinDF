@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.5)
-
 set(PDF_XTEST_SOURCES
   common.h
   common.cpp
@@ -16,7 +14,6 @@ set(PDF_XTEST_SOURCES
   TlMemManagerTest.cpp
   TlMmapMatrix_CSFD_Test.cpp
   TlMmapMatrix_RSFD_Test.cpp
-  #  TlMsgPackTest.cpp
   TlPositionTest.cpp
   TlRowVectorMatrixTest.cpp
   TlSparseMatrixTest.cpp
@@ -60,3 +57,4 @@ if (MPI_FOUND)
   target_link_libraries(pdf-xtest.MPI libppdf libppdftl libpdf libpdftl Threads::Threads)
 endif(MPI_FOUND)
 
+#  TlMsgPackTest.cpp
