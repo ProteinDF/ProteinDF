@@ -13,22 +13,18 @@ class GridDataManagerTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testUpdate);
   CPPUNIT_TEST_SUITE_END();
 
-public:
+ public:
   void testConstructer();
   void testSetDensity();
   void testGetDensity();
   void testUpdate();
 
-public:
-  GridDataManagerTest() {
-  }
+ public:
+  GridDataManagerTest() {}
 
-  void setUp() {
-  }
-  
-  void tearDown() {
-  }
+  void setUp() {}
+
+  void tearDown() {}
 };
 
-#endif // GRIDDATAMANAGERTEST_H
-
+#endif  // GRIDDATAMANAGERTEST_H

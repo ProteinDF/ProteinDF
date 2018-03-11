@@ -1,18 +1,18 @@
 // Copyright (C) 2002-2014 The ProteinDF project
 // see also AUTHORS and README.
-// 
+//
 // This file is part of ProteinDF.
-// 
+//
 // ProteinDF is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProteinDF is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -22,60 +22,60 @@
 #include "DfScf.h"
 
 class DfScf_Parallel : public DfScf {
-public:
-    DfScf_Parallel(TlSerializeData* pPdfParam);
-    virtual ~DfScf_Parallel();
+ public:
+  DfScf_Parallel(TlSerializeData* pPdfParam);
+  virtual ~DfScf_Parallel();
 
-protected:
-    virtual void logger(const std::string& str) const;
+ protected:
+  virtual void logger(const std::string& str) const;
 
-protected:
-    virtual DfGridFreeXC* getDfGridFreeXcObject();
-    virtual DfXCFunctional* getDfXCFunctional();
+ protected:
+  virtual DfGridFreeXC* getDfGridFreeXcObject();
+  virtual DfXCFunctional* getDfXCFunctional();
 
-protected:
-    virtual void saveParam() const;
-    virtual void setScfParam();
+ protected:
+  virtual void saveParam() const;
+  virtual void setScfParam();
 
-protected:
-    virtual void diffDensityMatrix();
+ protected:
+  virtual void diffDensityMatrix();
 
-    virtual DfDensityFittingObject* getDfDensityFittingObject();
+  virtual DfDensityFittingObject* getDfDensityFittingObject();
 
-    virtual void doXCIntegral();
+  virtual void doXCIntegral();
 
-    virtual void doThreeIndexIntegral();
+  virtual void doThreeIndexIntegral();
 
-    virtual DfJMatrix* getDfJMatrixObject();
-    
-    virtual DfKMatrix* getDfKMatrixObject();
+  virtual DfJMatrix* getDfJMatrixObject();
 
-    virtual DfFockMatrix* getDfFockMatrixObject();
+  virtual DfKMatrix* getDfKMatrixObject();
 
-    virtual DfTransFmatrix* getDfTransFmatrixObject(bool isExecDiis);
+  virtual DfFockMatrix* getDfFockMatrixObject();
 
-    virtual void doLevelShift();
+  virtual DfTransFmatrix* getDfTransFmatrixObject(bool isExecDiis);
 
-    virtual DfDiagonal* getDfDiagonalObject();
+  virtual void doLevelShift();
 
-    virtual DfTransatob* getDfTransatobObject();
+  virtual DfDiagonal* getDfDiagonalObject();
 
-    virtual DfDmatrix* getDfDmatrixObject();
+  virtual DfTransatob* getDfTransatobObject();
 
-    virtual DfTotalEnergy* getDfTotalEnergyObject();
+  virtual DfDmatrix* getDfDmatrixObject();
 
-    virtual DfPopulation* getDfPopulationObject();
+  virtual DfTotalEnergy* getDfTotalEnergyObject();
 
-    virtual DfSummary* getDfSummaryObject();
+  virtual DfPopulation* getDfPopulationObject();
 
-    virtual bool judge();
-    virtual bool checkConverge();
+  virtual DfSummary* getDfSummaryObject();
 
-    virtual DfConverge* getDfConverge();
+  virtual bool judge();
+  virtual bool checkConverge();
 
-    virtual void cleanup();
+  virtual DfConverge* getDfConverge();
 
-    virtual bool checkMaxIteration();
+  virtual void cleanup();
+
+  virtual bool checkMaxIteration();
 };
 
-#endif // DFSCF_PARALLEL_H
+#endif  // DFSCF_PARALLEL_H

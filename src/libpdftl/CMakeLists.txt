@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.0)
-
 set(LIBPDFTL_HEADERS
   TlAtom.h
   TlColVectorMatrix.h
@@ -17,13 +15,10 @@ set(LIBPDFTL_HEADERS
   TlMatrixObject.h
   TlMemManager.h
   TlMmapAllocater.h
-  #  TlMmapMatrix.h
   TlMmapMatrix_CSFD.h
   TlMmapMatrix_RSFD.h
   TlMmapMatrixObject.h
   TlMsgPack.h
-#  TlPartialMatrix.h
-#  TlPartialSymmetricMatrix.h
   TlPosition.h
   TlPrdctbl.h
   TlPseudoYaml.h
@@ -57,26 +52,23 @@ set(LIBPDFTL_SOURCES
   TlFileMatrix.cpp
   TlFileSymmetricMatrix.cpp
   TlFmt.cpp
-  TlFname.cxx
+  TlFname.cpp
   TlGetopt.cpp
   TlLebedevGrid.cpp
   TlListMatrix.cpp
   TlLogging.cpp
-  TlMath.cxx
+  TlMath.cpp
   TlMatrix.cpp
   TlMatrixObject.cpp
   TlMemManager.cpp
   TlMmapMatrix_CSFD.cpp
   TlMmapMatrix_RSFD.cpp
   TlMmapMatrixObject.cpp
-#  TlMmapMatrix.cpp
   TlMsgPack.cpp
-#  TlPartialMatrix.cpp
-#  TlPartialSymmetricMatrix.cpp
   TlPosition.cpp
-  TlPrdctbl.cxx
+  TlPrdctbl.cpp
   TlPseudoYaml.cpp
-  TlResidue.cxx
+  TlResidue.cpp
   TlRowVectorMatrix.cpp
   TlSerializeData.cpp
   TlSparseHashMatrix.cpp
@@ -128,7 +120,7 @@ set(LIBPPDFTL_SOURCES
 
 add_library(libpdftl ${LIBPDFTL_HEADERS} ${LIBPDFTL_SOURCES})
 if (HDF5_FOUND)
-  target_link_libraries(libpdftl ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES})
+  target_link_libraries(libpdftl ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_CPP_LIBRARIES})
 else(HDF5_FOUND)
   target_link_libraries(libpdftl ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif(HDF5_FOUND)
@@ -151,3 +143,11 @@ if (MPI_FOUND)
     LIBRARY DESTINATION lib)
   install(FILES ${LIBPPDFTL_HEADERS} DESTINATION include)
 endif(MPI_FOUND)
+
+
+#  TlMmapMatrix.h
+#  TlPartialMatrix.h
+#  TlPartialSymmetricMatrix.h
+#  TlMmapMatrix.cpp
+#  TlPartialMatrix.cpp
+#  TlPartialSymmetricMatrix.cpp

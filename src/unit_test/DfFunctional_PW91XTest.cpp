@@ -1,7 +1,7 @@
-#include <vector>
-#include <string>
-#include "digit.h"
 #include "DfFunctional_PW91XTest.h"
+#include <string>
+#include <vector>
+#include "digit.h"
 
 #define EFFCTIVE_DIGITS 12
 #define ED_CHECK(x) (std::pow(10.0, -EFFCTIVE_DIGITS + digit(x)))
@@ -18,10 +18,12 @@ const double DfFunctional_PW91XTest::EPS = 1.0E-10;
 // 必ず失敗します。messageを出力します。
 //
 // CPPUNIT_ASSERT_EQUAL( expected, actual );
-// 得られた結果actualが期待する値expectedでなかったとき、すなわちexpected != actualのときに失敗します。
+// 得られた結果actualが期待する値expectedでなかったとき、すなわちexpected
+// != actualのときに失敗します。
 //
 // CPPUNIT_ASSERT_EQUAL_MESSAGE( message, expected, actual );
-// 得られた結果actualが期待する値expectedでなかったとき、すなわちexpected != actualのときに失敗します。このときmessageを出力します。
+// 得られた結果actualが期待する値expectedでなかったとき、すなわちexpected
+// != actualのときに失敗します。このときmessageを出力します。
 //
 // CPPUNIT_ASSERT_DOUBLES_EQUAL( expected, actual, delta );
 // 得られた結果actualと期待する値expectedとの差がdeltaより大きいとき、失敗します。
@@ -30,18 +32,14 @@ const double DfFunctional_PW91XTest::EPS = 1.0E-10;
 // data used from: http://www.cse.scitech.ac.uk/ccg/dft/data_pt_x_lda.html
 //
 
-void DfFunctional_PW91XTest::testConstructer(){
-  DfFunctional_PW91X a;
-}
+void DfFunctional_PW91XTest::testConstructer() { DfFunctional_PW91X a; }
 
 // test1
-//  rhoa= 0.17E+01 rhob= 0.17E+01 sigmaaa= 0.81E-11 sigmaab= 0.81E-11 sigmabb= 0.81E-11
-//  zk            = -0.377592720836E+01
-//  vrhoa         = -0.148075576798E+01
-//  vrhob         = -0.148075576798E+01
-//  vsigmaaa      = -0.932043387995E-03
-//  vsigmaab      =  0.000000000000E+00
-//  vsigmabb      = -0.932043387995E-03
+//  rhoa= 0.17E+01 rhob= 0.17E+01 sigmaaa= 0.81E-11 sigmaab= 0.81E-11 sigmabb=
+//  0.81E-11 zk            = -0.377592720836E+01 vrhoa         =
+//  -0.148075576798E+01 vrhob         = -0.148075576798E+01 vsigmaaa      =
+//  -0.932043387995E-03 vsigmaab      =  0.000000000000E+00 vsigmabb      =
+//  -0.932043387995E-03
 
 //  v2rhoa2       = -0.290344268232E+00
 //  v2rhoab       =  0.000000000000E+00
@@ -60,7 +58,7 @@ void DfFunctional_PW91XTest::testConstructer(){
 //  v2sigmaab2    =  0.000000000000E+00
 //  v2sigmaabbb   =  0.000000000000E+00
 //  v2sigmabb2    = -0.898210267526E-03
-void DfFunctional_PW91XTest::testPointwise1(){
+void DfFunctional_PW91XTest::testPointwise1() {
   // input
   const double dRhoA = 0.17E+01;
   const double dRhoB = 0.17E+01;
@@ -78,59 +76,68 @@ void DfFunctional_PW91XTest::testPointwise1(){
 
   // execute test
   DfFunctional_PW91X f;
-  
-  double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
+
+  double dFunctionalValue =
+      f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
   CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
 
   double dRoundF_roundRhoA, dRoundF_roundRhoB;
   double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
   f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
-			    &dRoundF_roundRhoA, &dRoundF_roundRhoB,
-			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
+                            &dRoundF_roundRhoA, &dRoundF_roundRhoB,
+                            &dRoundF_roundGammaAA, &dRoundF_roundGammaAB,
+                            &dRoundF_roundGammaBB);
 
   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA,
+                               ED_CHECK(vGammaAA));
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB,
+                               ED_CHECK(vGammaAB));
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB,
+                               ED_CHECK(vGammaBB));
 }
 
-void DfFunctional_PW91XTest::testPointwise1_RKS(){
+void DfFunctional_PW91XTest::testPointwise1_RKS() {
   // input
   const double dRhoA = 0.17E+01;
-  //const double dRhoB = 0.17E+01;
+  // const double dRhoB = 0.17E+01;
   const double dGammaAA = 0.81E-11;
-  //const double dGammaAB = 0.81E-11;
-  //const double dGammaBB = 0.81E-11;
+  // const double dGammaAB = 0.81E-11;
+  // const double dGammaBB = 0.81E-11;
 
   // expected value
   const double zk = -0.377592720836E+01;
   const double vRhoA = -0.148075576798E+01;
-  //const double vRhoB = -0.148075576798E+01;
+  // const double vRhoB = -0.148075576798E+01;
   const double vGammaAA = -0.932043387995E-03;
   const double vGammaAB = 0.000000000000E+00;
-  //const double vGammaBB = -0.932043387995E-03;
+  // const double vGammaBB = -0.932043387995E-03;
 
   // execute test
   DfFunctional_PW91X f;
-  
+
   double dFunctionalValue = f.getFunctional(dRhoA, dGammaAA);
   CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
 
   double dRoundF_roundRhoA;
   double dRoundF_roundGammaAA, dRoundF_roundGammaAB;
-  f.getDerivativeFunctional(dRhoA, dGammaAA,
-			    &dRoundF_roundRhoA, &dRoundF_roundGammaAA, &dRoundF_roundGammaAB);
+  f.getDerivativeFunctional(dRhoA, dGammaAA, &dRoundF_roundRhoA,
+                            &dRoundF_roundGammaAA, &dRoundF_roundGammaAB);
 
   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
-  //CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-  //CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+  // CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA,
+                               ED_CHECK(vGammaAA));
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB,
+                               ED_CHECK(vGammaAB));
+  // CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB,
+  // ED_CHECK(vGammaBB));
 }
 
 // // test2
-// //  rhoa= 0.17E+01 rhob= 0.17E+01 sigmaaa= 0.17E+01 sigmaab= 0.17E+01 sigmabb= 0.17E+01
+// //  rhoa= 0.17E+01 rhob= 0.17E+01 sigmaaa= 0.17E+01 sigmaab= 0.17E+01
+// sigmabb= 0.17E+01
 // //  zk            = -0.378289713911E+01
 // //  vrhoa         = -0.147807268065E+01
 // //  vrhob         = -0.147807268065E+01
@@ -173,21 +180,25 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 
 //   // execute test
 //   DfFunctional_Becke88 f;
-  
-//   double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
+
+//   double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB,
+//   dGammaBB); CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue,
+//   ED_CHECK(zk));
 
 //   double dRoundF_roundRhoA, dRoundF_roundRhoB;
 //   double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
 //   f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
 // 			    &dRoundF_roundRhoA, &dRoundF_roundRhoB,
-// 			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
+// 			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB,
+// &dRoundF_roundGammaBB);
 
 //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
 //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA,
+//   ED_CHECK(vGammaAA)); CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB,
+//   dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
+//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB,
+//   ED_CHECK(vGammaBB));
 // }
 
 // void DfFunctional_PW91XTest::testPointwise2_RKS(){
@@ -208,24 +219,28 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 
 //   // execute test
 //   DfFunctional_Becke88 f;
-  
+
 //   double dFunctionalValue = f.getFunctional(dRhoA, dGammaAA);
 //   CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
 
 //   double dRoundF_roundRhoA;
 //   double dRoundF_roundGammaAA, dRoundF_roundGammaAB;
 //   f.getDerivativeFunctional(dRhoA, dGammaAA,
-// 			    &dRoundF_roundRhoA, &dRoundF_roundGammaAA, &dRoundF_roundGammaAB);
+// 			    &dRoundF_roundRhoA, &dRoundF_roundGammaAA,
+// &dRoundF_roundGammaAB);
 
 //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
 // //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-// //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA,
+//   ED_CHECK(vGammaAA)); CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB,
+//   dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
+// //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB,
+// ED_CHECK(vGammaBB));
 // }
 
 // // test3
-// //  rhoa= 0.88E-01 rhob= 0.88E-01 sigmaaa= 0.87E-01 sigmaab= 0.87E-01 sigmabb= 0.87E-01
+// //  rhoa= 0.88E-01 rhob= 0.88E-01 sigmaaa= 0.87E-01 sigmaab= 0.87E-01
+// sigmabb= 0.87E-01
 // //  zk            = -0.851611545044E-01
 // //  vrhoa         = -0.501899165865E+00
 // //  vrhob         = -0.501899165865E+00
@@ -268,21 +283,25 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 
 //   // execute test
 //   DfFunctional_Becke88 f;
-  
-//   double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
+
+//   double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB,
+//   dGammaBB); CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue,
+//   ED_CHECK(zk));
 
 //   double dRoundF_roundRhoA, dRoundF_roundRhoB;
 //   double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
 //   f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
 // 			    &dRoundF_roundRhoA, &dRoundF_roundRhoB,
-// 			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
+// 			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB,
+// &dRoundF_roundGammaBB);
 
 //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
 //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA,
+//   ED_CHECK(vGammaAA)); CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB,
+//   dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
+//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB,
+//   ED_CHECK(vGammaBB));
 // }
 
 // void DfFunctional_PW91XTest::testPointwise3_RKS(){
@@ -303,24 +322,28 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 
 //   // execute test
 //   DfFunctional_Becke88 f;
-  
+
 //   double dFunctionalValue = f.getFunctional(dRhoA, dGammaAA);
 //   CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
 
 //   double dRoundF_roundRhoA;
 //   double dRoundF_roundGammaAA, dRoundF_roundGammaAB;
 //   f.getDerivativeFunctional(dRhoA, dGammaAA,
-// 			    &dRoundF_roundRhoA, &dRoundF_roundGammaAA, &dRoundF_roundGammaAB);
+// 			    &dRoundF_roundRhoA, &dRoundF_roundGammaAA,
+// &dRoundF_roundGammaAB);
 
 //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
 // //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-// //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA,
+//   ED_CHECK(vGammaAA)); CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB,
+//   dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
+// //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB,
+// ED_CHECK(vGammaBB));
 // }
 
 // // test4
-// //  rhoa= 0.18E+04 rhob= 0.18E+04 sigmaaa= 0.55E+00 sigmaab= 0.55E+00 sigmabb= 0.55E+00
+// //  rhoa= 0.18E+04 rhob= 0.18E+04 sigmaaa= 0.55E+00 sigmaab= 0.55E+00
+// sigmabb= 0.55E+00
 // //  zk            = -0.407494475322E+05
 // //  vrhoa         = -0.150923879747E+02
 // //  vrhob         = -0.150923879747E+02
@@ -363,25 +386,30 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 
 //   // execute test
 //   DfFunctional_Becke88 f;
-  
-//   double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
+
+//   double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB,
+//   dGammaBB); CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue,
+//   ED_CHECK(zk));
 
 //   double dRoundF_roundRhoA, dRoundF_roundRhoB;
 //   double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
 //   f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
 // 			    &dRoundF_roundRhoA, &dRoundF_roundRhoB,
-// 			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
+// 			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB,
+// &dRoundF_roundGammaBB);
 
 //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
 //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA,
+//   ED_CHECK(vGammaAA)); CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB,
+//   dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
+//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB,
+//   ED_CHECK(vGammaBB));
 // }
 
 // // test5
-// //  rhoa= 0.18E+04 rhob= 0.18E+04 sigmaaa= 0.86E+04 sigmaab= 0.86E+04 sigmabb= 0.86E+04
+// //  rhoa= 0.18E+04 rhob= 0.18E+04 sigmaaa= 0.86E+04 sigmaab= 0.86E+04
+// sigmabb= 0.86E+04
 // //  zk            = -0.407494508312E+05
 // //  vrhoa         = -0.150923867529E+02
 // //  vrhob         = -0.150923867529E+02
@@ -408,7 +436,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmabb2    =  0.201644008560E-16
 
 // // test6
-// //  rhoa= 0.16E+04 rhob= 0.16E+04 sigmaaa= 0.37E+10 sigmaab= 0.37E+10 sigmabb= 0.37E+10
+// //  rhoa= 0.16E+04 rhob= 0.16E+04 sigmaaa= 0.37E+10 sigmaab= 0.37E+10
+// sigmabb= 0.37E+10
 // //  zk            = -0.362648637930E+05
 // //  vrhoa         = -0.140333722784E+02
 // //  vrhob         = -0.140333722784E+02
@@ -435,7 +464,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmabb2    =  0.785386351399E-17
 
 // // test7
-// //  rhoa= 0.26E+00 rhob= 0.26E+00 sigmaaa= 0.28E+00 sigmaab= 0.28E+00 sigmabb= 0.28E+00
+// //  rhoa= 0.26E+00 rhob= 0.26E+00 sigmaaa= 0.28E+00 sigmaab= 0.28E+00
+// sigmabb= 0.28E+00
 // //  zk            = -0.321148637763E+00
 // //  vrhoa         = -0.766539815464E+00
 // //  vrhob         = -0.766539815464E+00
@@ -462,7 +492,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmabb2    =  0.115351801846E-01
 
 // //test8
-// //  rhoa= 0.53E+05 rhob= 0.53E+05 sigmaaa= 0.96E+05 sigmaab= 0.96E+05 sigmabb= 0.96E+05
+// //  rhoa= 0.53E+05 rhob= 0.53E+05 sigmaaa= 0.96E+05 sigmaab= 0.96E+05
+// sigmabb= 0.96E+05
 // //  zk            = -0.370503980183E+07
 // //  vrhoa         = -0.466042742267E+02
 // //  vrhob         = -0.466042742267E+02
@@ -489,7 +520,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmabb2    =  0.268272614874E-22
 
 // // test9
-// //  rhoa= 0.47E+05 rhob= 0.47E+05 sigmaaa= 0.29E+14 sigmaab= 0.29E+14 sigmabb= 0.29E+14
+// //  rhoa= 0.47E+05 rhob= 0.47E+05 sigmaaa= 0.29E+14 sigmaab= 0.29E+14
+// sigmabb= 0.29E+14
 // //  zk            = -0.328152696735E+07
 // //  vrhoa         = -0.433514250199E+02
 // //  vrhob         = -0.433514250199E+02
@@ -516,7 +548,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmabb2    =  0.108604300970E-22
 
 // //test10
-// //  rhoa= 0.15E+00 rhob= 0.15E+00 sigmaaa= 0.16E+00 sigmaab= 0.16E+00 sigmabb= 0.16E+00
+// //  rhoa= 0.15E+00 rhob= 0.15E+00 sigmaaa= 0.16E+00 sigmaab= 0.16E+00
+// sigmabb= 0.16E+00
 // //  zk            = -0.161367392847E+00
 // //  vrhoa         = -0.619947650806E+00
 // //  vrhob         = -0.619947650806E+00
@@ -543,7 +576,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmabb2    =  0.547109233247E-01
 
 // //test11
-// //  rhoa= 0.35E+01 rhob= 0.00E+00 sigmaaa= 0.46E-10 sigmaab= 0.00E+00 sigmabb= 0.00E+00
+// //  rhoa= 0.35E+01 rhob= 0.00E+00 sigmaaa= 0.46E-10 sigmaab= 0.00E+00
+// sigmabb= 0.00E+00
 // //  zk            = -0.494484233083E+01
 // //  vrhoa         = -0.188374945936E+01
 // //  vrhob         =  0.000000000000E+00
@@ -586,25 +620,30 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 
 //   // execute test
 //   DfFunctional_Becke88 f;
-  
-//   double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
+
+//   double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB,
+//   dGammaBB); CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue,
+//   ED_CHECK(zk));
 
 //   double dRoundF_roundRhoA, dRoundF_roundRhoB;
 //   double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
 //   f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
 // 			    &dRoundF_roundRhoA, &dRoundF_roundRhoB,
-// 			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
+// 			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB,
+// &dRoundF_roundGammaBB);
 
 //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
 //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA,
+//   ED_CHECK(vGammaAA)); CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB,
+//   dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
+//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB,
+//   ED_CHECK(vGammaBB));
 // }
 
 // // test12
-// //  rhoa= 0.35E+01 rhob= 0.00E+00 sigmaaa= 0.34E+01 sigmaab= 0.00E+00 sigmabb= 0.00E+00
+// //  rhoa= 0.35E+01 rhob= 0.00E+00 sigmaaa= 0.34E+01 sigmaab= 0.00E+00
+// sigmabb= 0.00E+00
 // //  zk            = -0.494752158228E+01
 // //  vrhoa         = -0.188273473796E+01
 // //  vrhob         =  0.000000000000E+00
@@ -647,25 +686,29 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 
 //   // execute test
 //   DfFunctional_Becke88 f;
-  
-//   double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue, ED_CHECK(zk));
+
+//   double dFunctionalValue = f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB,
+//   dGammaBB); CPPUNIT_ASSERT_DOUBLES_EQUAL(zk, dFunctionalValue,
+//   ED_CHECK(zk));
 
 //   double dRoundF_roundRhoA, dRoundF_roundRhoB;
 //   double dRoundF_roundGammaAA, dRoundF_roundGammaAB, dRoundF_roundGammaBB;
 //   f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
 // 			    &dRoundF_roundRhoA, &dRoundF_roundRhoB,
-// 			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB, &dRoundF_roundGammaBB);
+// 			    &dRoundF_roundGammaAA, &dRoundF_roundGammaAB,
+// &dRoundF_roundGammaBB);
 
 //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoA, dRoundF_roundRhoA, ED_CHECK(vRhoA));
 //   CPPUNIT_ASSERT_DOUBLES_EQUAL(vRhoB, dRoundF_roundRhoB, ED_CHECK(vRhoB));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA, ED_CHECK(vGammaAA));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB, dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
-//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB, ED_CHECK(vGammaBB));
+//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAA, dRoundF_roundGammaAA,
+//   ED_CHECK(vGammaAA)); CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaAB,
+//   dRoundF_roundGammaAB, ED_CHECK(vGammaAB));
+//   CPPUNIT_ASSERT_DOUBLES_EQUAL(vGammaBB, dRoundF_roundGammaBB,
+//   ED_CHECK(vGammaBB));
 // }
 
-
-// //  rhoa= 0.30E+01 rhob= 0.00E+00 sigmaaa= 0.20E+03 sigmaab= 0.00E+00 sigmabb= 0.00E+00
+// //  rhoa= 0.30E+01 rhob= 0.00E+00 sigmaaa= 0.20E+03 sigmaab= 0.00E+00
+// sigmabb= 0.00E+00
 // //  zk            = -0.419401965265E+01
 // //  vrhoa         = -0.172996985225E+01
 // //  vrhob         =  0.000000000000E+00
@@ -691,7 +734,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmaabbb   =  0.000000000000E+00
 // //  v2sigmabb2    =  0.000000000000E+00
 
-// //  rhoa= 0.58E-01 rhob= 0.00E+00 sigmaaa= 0.47E-01 sigmaab= 0.00E+00 sigmabb= 0.00E+00
+// //  rhoa= 0.58E-01 rhob= 0.00E+00 sigmaaa= 0.47E-01 sigmaab= 0.00E+00
+// sigmabb= 0.00E+00
 // //  zk            = -0.259998774808E-01
 // //  vrhoa         = -0.428541964579E+00
 // //  vrhob         =  0.000000000000E+00
@@ -717,7 +761,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmaabbb   =  0.000000000000E+00
 // //  v2sigmabb2    =  0.000000000000E+00
 
-// //  rhoa= 0.82E+02 rhob= 0.81E+02 sigmaaa= 0.49E+07 sigmaab= 0.49E+07 sigmabb= 0.49E+07
+// //  rhoa= 0.82E+02 rhob= 0.81E+02 sigmaaa= 0.49E+07 sigmaab= 0.49E+07
+// sigmabb= 0.49E+07
 // //  zk            = -0.740814331850E+03
 // //  vrhoa         = -0.498247046111E+01
 // //  vrhob         = -0.495532429311E+01
@@ -743,7 +788,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmaabbb   =  0.000000000000E+00
 // //  v2sigmabb2    =  0.432961117719E-12
 
-// //  rhoa= 0.39E+02 rhob= 0.38E+02 sigmaaa= 0.81E+06 sigmaab= 0.82E+06 sigmabb= 0.82E+06
+// //  rhoa= 0.39E+02 rhob= 0.38E+02 sigmaaa= 0.81E+06 sigmaab= 0.82E+06
+// sigmabb= 0.82E+06
 // //  zk            = -0.277987329958E+03
 // //  vrhoa         = -0.385951846654E+01
 // //  vrhob         = -0.381309494319E+01
@@ -769,7 +815,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmaabbb   =  0.000000000000E+00
 // //  v2sigmabb2    =  0.718678968862E-11
 
-// //  rhoa= 0.13E+00 rhob= 0.95E-01 sigmaaa= 0.15E+00 sigmaab= 0.18E+00 sigmabb= 0.22E+00
+// //  rhoa= 0.13E+00 rhob= 0.95E-01 sigmaaa= 0.15E+00 sigmaab= 0.18E+00
+// sigmabb= 0.22E+00
 // //  zk            = -0.120208982576E+00
 // //  vrhoa         = -0.583637510333E+00
 // //  vrhob         = -0.501672871724E+00
@@ -795,7 +842,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmaabbb   =  0.000000000000E+00
 // //  v2sigmabb2    =  0.737150455275E-01
 
-// //  rhoa= 0.78E-01 rhob= 0.31E-01 sigmaaa= 0.41E-02 sigmaab= 0.38E-02 sigmabb= 0.36E-02
+// //  rhoa= 0.78E-01 rhob= 0.31E-01 sigmaaa= 0.41E-02 sigmaab= 0.38E-02
+// sigmabb= 0.36E-02
 // //  zk            = -0.416730804241E-01
 // //  vrhoa         = -0.522700471817E+00
 // //  vrhob         = -0.360524872778E+00
@@ -821,7 +869,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmaabbb   =  0.000000000000E+00
 // //  v2sigmabb2    =  0.211148438264E+02
 
-// //  rhoa= 0.50E+02 rhob= 0.49E+02 sigmaaa= 0.11E+06 sigmaab= 0.11E+06 sigmabb= 0.11E+06
+// //  rhoa= 0.50E+02 rhob= 0.49E+02 sigmaaa= 0.11E+06 sigmaab= 0.11E+06
+// sigmabb= 0.11E+06
 // //  zk            = -0.343037899309E+03
 // //  vrhoa         = -0.451375531283E+01
 // //  vrhob         = -0.448071957650E+01
@@ -847,7 +896,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmaabbb   =  0.000000000000E+00
 // //  v2sigmabb2    =  0.162083837575E-10
 
-// //  rhoa= 0.40E+02 rhob= 0.40E+02 sigmaaa= 0.99E+05 sigmaab= 0.98E+05 sigmabb= 0.98E+05
+// //  rhoa= 0.40E+02 rhob= 0.40E+02 sigmaaa= 0.99E+05 sigmaab= 0.98E+05
+// sigmabb= 0.98E+05
 // //  zk            = -0.260133861611E+03
 // //  vrhoa         = -0.416254426190E+01
 // //  vrhob         = -0.416322526434E+01
@@ -873,7 +923,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmaabbb   =  0.000000000000E+00
 // //  v2sigmabb2    =  0.298552512045E-10
 
-// //  rhoa= 0.12E+00 rhob= 0.10E+00 sigmaaa= 0.12E+00 sigmaab= 0.13E+00 sigmabb= 0.14E+00
+// //  rhoa= 0.12E+00 rhob= 0.10E+00 sigmaaa= 0.12E+00 sigmaab= 0.13E+00
+// sigmabb= 0.14E+00
 // //  zk            = -0.112603177863E+00
 // //  vrhoa         = -0.568498809942E+00
 // //  vrhob         = -0.520860206545E+00
@@ -899,7 +950,8 @@ void DfFunctional_PW91XTest::testPointwise1_RKS(){
 // //  v2sigmaabbb   =  0.000000000000E+00
 // //  v2sigmabb2    =  0.115652366462E+00
 
-// //  rhoa= 0.48E-01 rhob= 0.25E-01 sigmaaa= 0.46E-02 sigmaab= 0.44E-02 sigmabb= 0.41E-02
+// //  rhoa= 0.48E-01 rhob= 0.25E-01 sigmaaa= 0.46E-02 sigmaab= 0.44E-02
+// sigmabb= 0.41E-02
 // //  zk            = -0.253983617946E-01
 // //  vrhoa         = -0.431645138108E+00
 // //  vrhob         = -0.325991019475E+00

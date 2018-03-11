@@ -3,7 +3,6 @@
 
 #include "TlMatrix.h"
 
-
 // 以下の要素を設定した行列を返す
 // [ 0  1  2 ]
 // [ 3  4  5 ]
@@ -13,5 +12,4 @@ TlMatrix getTlMatrixA();
 /// ランダムな行列を返す
 TlMatrix getTlMatrix(int row, int col);
 
-
-#endif // COMMON_H
+#endif  // COMMON_H

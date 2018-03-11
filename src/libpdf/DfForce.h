@@ -21,71 +21,67 @@
 
 #include "DfObject.h"
 #include "TlMatrix.h"
-#include "TlVector.h"
-#include "TlSerializeData.h"
 #include "TlOrbitalInfo.h"
 #include "TlOrbitalInfo_Density.h"
+#include "TlSerializeData.h"
+#include "TlVector.h"
 
 class DfCalcGridX;
 
 class DfForce : public DfObject {
-protected:
-    enum {
-        X = 0,
-        Y = 1,
-        Z = 2
-    };
+ protected:
+  enum { X = 0, Y = 1, Z = 2 };
 
-public:
-    DfForce(TlSerializeData* pPdfParam);
-    virtual ~DfForce();
+ public:
+  DfForce(TlSerializeData* pPdfParam);
+  virtual ~DfForce();
 
-public:
-    void calcForce();
+ public:
+  void calcForce();
 
-protected:
-    /// 力を保存する
-    void saveForce();
+ protected:
+  /// 力を保存する
+  void saveForce();
 
-    void outputStartTitle(const std::string& stepName, const char lineChar = '-');
+  void outputStartTitle(const std::string& stepName, const char lineChar = '-');
 
-    void outputEndTitle(const std::string& stepName, const char lineChar = '-');
+  void outputEndTitle(const std::string& stepName, const char lineChar = '-');
 
-    /// 核-核反発の力を計算する
-    virtual void calcForceFromNuclei();
+  /// 核-核反発の力を計算する
+  virtual void calcForceFromNuclei();
 
-    /// Weighted ...
-    virtual void calcForceFromWS(RUN_TYPE runType);
-    TlMatrix getEnergyWeightedDensityMatrix(RUN_TYPE runType);
+  /// Weighted ...
+  virtual void calcForceFromWS(RUN_TYPE runType);
+  TlMatrix getEnergyWeightedDensityMatrix(RUN_TYPE runType);
 
-    virtual void calcForceFromHpq(const TlSymmetricMatrix& P);
+  virtual void calcForceFromHpq(const TlSymmetricMatrix& P);
 
-    ///
-    void calcForceFromCoulomb(const RUN_TYPE runType);
-    virtual void calcForceFromCoulomb_exact(const RUN_TYPE runType);
-    virtual void calcForceFromCoulomb_RIJ(const RUN_TYPE runType);
+  ///
+  void calcForceFromCoulomb(const RUN_TYPE runType);
+  virtual void calcForceFromCoulomb_exact(const RUN_TYPE runType);
+  virtual void calcForceFromCoulomb_RIJ(const RUN_TYPE runType);
 
-    virtual void calcForceFromK(RUN_TYPE runType);
+  virtual void calcForceFromK(RUN_TYPE runType);
 
-    void calcForceFromPureXC(RUN_TYPE runType);
-    void calcForceFromPureXC_gridfree(RUN_TYPE runType);
-    virtual DfCalcGridX* getCalcGridObj();
+  void calcForceFromPureXC(RUN_TYPE runType);
+  void calcForceFromPureXC_gridfree(RUN_TYPE runType);
+  virtual DfCalcGridX* getCalcGridObj();
 
-    TlMatrix getTransformMatrix(const TlMatrix& force);
+  TlMatrix getTransformMatrix(const TlMatrix& force);
 
-    virtual void output();
+  virtual void output();
 
-protected:
-    TlMatrix force_;
-    TlMatrix force_Xonly_; // X由来のみ
+ protected:
+  TlMatrix force_;
+  TlMatrix force_Xonly_;  // X由来のみ
 
-    TlOrbitalInfo orbitalInfo_;
-    TlOrbitalInfo_Density orbitalInfoDens_;
+  TlOrbitalInfo orbitalInfo_;
+  TlOrbitalInfo_Density orbitalInfoDens_;
 
-    /// 全ての行列を出力するかどうか(debug用)
-    bool isDebugOutMatrix_;
+  /// 全ての行列を出力するかどうか(debug用)
+  bool isDebugOutMatrix_;
 
-    TlSerializeData pdfParamForForce_;
+  TlSerializeData pdfParamForForce_;
 };
 
-#endif // DFFORCE_H
+#endif  // DFFORCE_H
