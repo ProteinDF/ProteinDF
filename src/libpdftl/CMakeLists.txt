@@ -120,7 +120,7 @@ set(LIBPPDFTL_SOURCES
 
 add_library(libpdftl ${LIBPDFTL_HEADERS} ${LIBPDFTL_SOURCES})
 if (HDF5_FOUND)
-  target_link_libraries(libpdftl ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_CPP_LIBRARIES})
+  target_link_libraries(libpdftl ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_CPP_LIBRARIES} ${HDF5_LIBRARIES})
 else(HDF5_FOUND)
   target_link_libraries(libpdftl ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif(HDF5_FOUND)
