@@ -137,6 +137,8 @@ if (HDF5_FOUND)
   set(HAVE_HDF5 1)
   message("HDF5 information:")
   message("  HDF5_LIBRARIES: ${HDF5_LIBRARIES}")
+  message("  HDF5_HL_LIBRARIES: ${HDF5_HL_LIBRARIES}")
+  message("  HDF5_CPP_LIBRARIES: ${HDF5_CPP_LIBRARIES}")
 endif(HDF5_FOUND)
 
 
