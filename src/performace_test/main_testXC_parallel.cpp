@@ -70,8 +70,8 @@ int main(int argc, char* argv[]) {
   TlSerializeData param = mpac.getSerializeData();
 
   // exec
-  testXC<TlSymmetricMatrix, DfCalcGridX_Parallel>(param, densityMatrixPath,
-                                                  KMatrixPath, verbose);
+  testXC<TlDenseSymmetricMatrix_BLAS_Old, DfCalcGridX_Parallel>(
+      param, densityMatrixPath, KMatrixPath, verbose);
 
   rComm.finalize();
   return EXIT_SUCCESS;

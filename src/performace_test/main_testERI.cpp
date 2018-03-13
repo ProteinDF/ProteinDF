@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
                                  densityMatrixPath.c_str())
               << std::endl;
   }
-  TlSymmetricMatrix P;
+  TlDenseSymmetricMatrix_BLAS_Old P;
   P.load(densityMatrixPath);
   if (isVerbose == true) {
     std::cerr << TlUtils::format("dimensions of density matrix: %d",
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
   // calc
   loggerTime("ERI start");
   DfEriX dfEri(&param);
-  TlSymmetricMatrix K(numOfAOs);
+  TlDenseSymmetricMatrix_BLAS_Old K(numOfAOs);
   dfEri.getK(P, &K);
   loggerTime("ERI end");
 

@@ -1489,7 +1489,8 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
     const ShellPairArrayTable& inShellPairArrayTable,
     const TlOrbitalInfoObject& orbitalInfo) {
   const int maxShellType = this->maxShellType_;
-  assert(inShellPairArrayTable.size() == (maxShellType * maxShellType));
+  assert(inShellPairArrayTable.size() ==
+         static_cast<std::size_t>(maxShellType * maxShellType));
 
   const double cutoffThreshold = this->cutoffEpsilon_density_;
   const double CONTRIBUTE_COEF = 2.0 * std::pow(TlMath::PI(), 2.5);
@@ -1586,7 +1587,8 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
     const TlOrbitalInfoObject& orbitalInfo2) {
   const int maxShellType1 = orbitalInfo1.getMaxShellType();
   const int maxShellType2 = orbitalInfo2.getMaxShellType();
-  assert(inShellPairArrayTable.size() == (maxShellType1 * maxShellType2));
+  assert(inShellPairArrayTable.size() ==
+         static_cast<std::size_t>(maxShellType1 * maxShellType2));
 
   const double cutoffThreshold = this->cutoffEpsilon_density_;
   const double CONTRIBUTE_COEF = 2.0 * std::pow(TlMath::PI(), 2.5);

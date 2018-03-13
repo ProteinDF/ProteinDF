@@ -22,7 +22,9 @@
 #include "TlOrbitalInfo.h"
 #include "TlOrbitalInfo_Density.h"
 #include "TlOrbitalInfo_XC.h"
-#include "TlSparseSymmetricMatrix.h"
+#include "tl_dense_general_matrix_blacs.h"
+#include "tl_dense_symmetric_matrix_blacs.h"
+#include "tl_sparse_symmetric_matrix.h"
 
 DfOverlapX_Parallel::DfOverlapX_Parallel(TlSerializeData* pPdfParam)
     : DfOverlapX(pPdfParam) {}
@@ -41,22 +43,22 @@ DfTaskCtrl* DfOverlapX_Parallel::getDfTaskCtrlObject() const {
   return pDfTaskCtrl;
 }
 
-void DfOverlapX_Parallel::finalize(TlMatrix* pMtx) {
+void DfOverlapX_Parallel::finalize(TlDenseGeneralMatrix_BLAS_old* pMtx) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
   rComm.allReduce_SUM(*pMtx);
 }
 
-void DfOverlapX_Parallel::finalize(TlSymmetricMatrix* pMtx) {
+void DfOverlapX_Parallel::finalize(TlDenseSymmetricMatrix_BLAS_Old* pMtx) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
   rComm.allReduce_SUM(*pMtx);
 }
 
-void DfOverlapX_Parallel::finalize(TlVector* pVct) {
+void DfOverlapX_Parallel::finalize(TlVector_BLAS* pVct) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
   rComm.allReduce_SUM(*pVct);
 }
 
-void DfOverlapX_Parallel::getSpqD(TlDistributeSymmetricMatrix* pSpq) {
+void DfOverlapX_Parallel::getSpqD(TlDenseSymmetricMatrix_blacs* pSpq) {
   assert(pSpq != NULL);
   const index_type numOfAOs = this->m_nNumOfAOs;
   pSpq->resize(numOfAOs);
@@ -70,7 +72,7 @@ void DfOverlapX_Parallel::getSpqD(TlDistributeSymmetricMatrix* pSpq) {
   pSpq->mergeSparseMatrix(tmpSpq);
 }
 
-void DfOverlapX_Parallel::getSabD(TlDistributeSymmetricMatrix* pSab) {
+void DfOverlapX_Parallel::getSabD(TlDenseSymmetricMatrix_blacs* pSab) {
   assert(pSab != NULL);
   const index_type numOfAuxDens = this->m_nNumOfAux;
   pSab->resize(numOfAuxDens);
@@ -85,7 +87,7 @@ void DfOverlapX_Parallel::getSabD(TlDistributeSymmetricMatrix* pSab) {
   pSab->mergeSparseMatrix(tmpSab);
 }
 
-void DfOverlapX_Parallel::getSgd(TlDistributeSymmetricMatrix* pSgd) {
+void DfOverlapX_Parallel::getSgd(TlDenseSymmetricMatrix_blacs* pSgd) {
   assert(pSgd != NULL);
   const index_type numOfAuxXC = this->numOfAuxXC_;
   pSgd->resize(numOfAuxXC);
@@ -101,7 +103,7 @@ void DfOverlapX_Parallel::getSgd(TlDistributeSymmetricMatrix* pSgd) {
 
 void DfOverlapX_Parallel::getTransMat(const TlOrbitalInfoObject& orbitalInfo1,
                                       const TlOrbitalInfoObject& orbitalInfo2,
-                                      TlDistributeMatrix* pTransMat) {
+                                      TlDenseGeneralMatrix_blacs* pTransMat) {
   assert(pTransMat != NULL);
   pTransMat->resize(orbitalInfo1.getNumOfOrbitals(),
                     orbitalInfo2.getNumOfOrbitals());
@@ -112,8 +114,8 @@ void DfOverlapX_Parallel::getTransMat(const TlOrbitalInfoObject& orbitalInfo1,
   pTransMat->mergeSparseMatrix(tmpTransMat);
 }
 
-void DfOverlapX_Parallel::get_pqg(const TlDistributeVector& myu,
-                                  TlDistributeSymmetricMatrix* pF) {
+void DfOverlapX_Parallel::get_pqg(const TlDistributedVector& myu,
+                                  TlDenseSymmetricMatrix_blacs* pF) {
   assert(pF != NULL);
   const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                   (*(this->pPdfParam_))["basis_set"]);
@@ -121,7 +123,7 @@ void DfOverlapX_Parallel::get_pqg(const TlDistributeVector& myu,
                                         (*(this->pPdfParam_))["basis_set_xc"]);
   pF->resize(orbitalInfo.getNumOfOrbitals());
 
-  const TlVector tmpMyu = myu.getVector();
+  const TlVector_BLAS tmpMyu = myu.getVector();
   TlSparseSymmetricMatrix tmpF(orbitalInfo.getNumOfOrbitals());
 
   this->calcOverlap(orbitalInfo_XC, tmpMyu, orbitalInfo, &tmpF);
@@ -130,7 +132,7 @@ void DfOverlapX_Parallel::get_pqg(const TlDistributeVector& myu,
 }
 
 void DfOverlapX_Parallel::getOvpMat(const TlOrbitalInfoObject& orbitalInfo,
-                                    TlDistributeSymmetricMatrix* pS) {
+                                    TlDenseSymmetricMatrix_blacs* pS) {
   assert(pS != NULL);
   pS->resize(orbitalInfo.getNumOfOrbitals());
   TlSparseSymmetricMatrix tmpS(orbitalInfo.getNumOfOrbitals());
@@ -142,9 +144,9 @@ void DfOverlapX_Parallel::getOvpMat(const TlOrbitalInfoObject& orbitalInfo,
 }
 
 void DfOverlapX_Parallel::getGradient(const TlOrbitalInfoObject& orbitalInfo,
-                                      TlDistributeMatrix* pMatX,
-                                      TlDistributeMatrix* pMatY,
-                                      TlDistributeMatrix* pMatZ) {
+                                      TlDenseGeneralMatrix_blacs* pMatX,
+                                      TlDenseGeneralMatrix_blacs* pMatY,
+                                      TlDenseGeneralMatrix_blacs* pMatZ) {
   assert(pMatX != NULL);
   assert(pMatY != NULL);
   assert(pMatZ != NULL);
@@ -185,32 +187,33 @@ void DfOverlapX_Parallel::getGradient(const TlOrbitalInfoObject& orbitalInfo,
   pMatZ->mergeSparseMatrix(tmpMatZ);
 }
 
-void DfOverlapX_Parallel::getM(const TlSymmetricMatrix& P,
-                               TlSymmetricMatrix* pM) {
+void DfOverlapX_Parallel::getM(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                               TlDenseSymmetricMatrix_BLAS_Old* pM) {
   this->log_.info(
-      "DfOverlapX_Parallel::getM(const TlSymmetricMatrix&, TlSymmetricMatrix* "
+      "DfOverlapX_Parallel::getM(const TlDenseSymmetricMatrix_BLAS_Old&, "
+      "TlDenseSymmetricMatrix_BLAS_Old* "
       "pM)");
   DfOverlapX::getM(P, pM);
 }
 
-void DfOverlapX_Parallel::getM_A(const TlSymmetricMatrix& P,
-                                 TlSymmetricMatrix* pM) {
+void DfOverlapX_Parallel::getM_A(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                                 TlDenseSymmetricMatrix_BLAS_Old* pM) {
   this->log_.info(
-      "DfOverlapX_Parallel::getM_A(const TlSymmetricMatrix&, "
-      "TlSymmetricMatrix* pM)");
+      "DfOverlapX_Parallel::getM_A(const TlDenseSymmetricMatrix_BLAS_Old&, "
+      "TlDenseSymmetricMatrix_BLAS_Old* pM)");
   DfOverlapX::getM_A(P, pM);
 }
 
-void DfOverlapX_Parallel::getM(const TlDistributeSymmetricMatrix& P,
-                               TlDistributeSymmetricMatrix* pM) {
+void DfOverlapX_Parallel::getM(const TlDenseSymmetricMatrix_blacs& P,
+                               TlDenseSymmetricMatrix_blacs* pM) {
   this->log_.info(
       "DfOverlapX_Parallel::getM(const TlDistSymmetricMatrix&, "
       "TlDistSymmetricMatrix* pM)");
   abort();
 }
 
-void DfOverlapX_Parallel::getM_A(const TlDistributeSymmetricMatrix& P,
-                                 TlDistributeSymmetricMatrix* pM) {
+void DfOverlapX_Parallel::getM_A(const TlDenseSymmetricMatrix_blacs& P,
+                                 TlDenseSymmetricMatrix_blacs* pM) {
   this->log_.info(
       "DfOverlapX_Parallel::getM_A(const TlDistSymmetricMatrix&, "
       "TlDistSymmetricMatrix* pM)");

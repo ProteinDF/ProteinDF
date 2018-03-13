@@ -89,7 +89,7 @@ void DfTransFmatrix::main(const RUN_TYPE runType, const std::string& fragname,
   // F.save("FX.mtx");
 
   // make X^dagger
-  X.transpose();
+  X.transposeInPlace();
   // X.save("trX.mtx");
 
   // calculate X^dagger * (F*X)

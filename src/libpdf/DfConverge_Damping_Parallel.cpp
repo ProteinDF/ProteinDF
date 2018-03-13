@@ -17,8 +17,8 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfConverge_Damping_Parallel.h"
-#include "TlDistributeSymmetricMatrix.h"
-#include "TlDistributeVector.h"
+#include "tl_dense_symmetric_matrix_blacs.h"
+#include "tl_dense_vector_blacs.h"
 
 DfConverge_Damping_Parallel::DfConverge_Damping_Parallel(
     TlSerializeData* pPdfParam)
@@ -48,19 +48,19 @@ void DfConverge_Damping_Parallel::convergeRhoTilde_LAPACK() {
 void DfConverge_Damping_Parallel::convergeRhoTilde_ScaLAPACK() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      DfConverge_Damping::convergeRhoTilde<TlDistributeVector>(
+      DfConverge_Damping::convergeRhoTilde<TlDistributedVector>(
           DfObject::RUN_RKS);
       break;
     case METHOD_UKS:
-      DfConverge_Damping::convergeRhoTilde<TlDistributeVector>(
+      DfConverge_Damping::convergeRhoTilde<TlDistributedVector>(
           DfObject::RUN_UKS_ALPHA);
-      DfConverge_Damping::convergeRhoTilde<TlDistributeVector>(
+      DfConverge_Damping::convergeRhoTilde<TlDistributedVector>(
           DfObject::RUN_UKS_BETA);
       break;
     case METHOD_ROKS:
-      DfConverge_Damping::convergeRhoTilde<TlDistributeVector>(
+      DfConverge_Damping::convergeRhoTilde<TlDistributedVector>(
           DfObject::RUN_UKS_ALPHA);
-      DfConverge_Damping::convergeRhoTilde<TlDistributeVector>(
+      DfConverge_Damping::convergeRhoTilde<TlDistributedVector>(
           DfObject::RUN_UKS_BETA);
       break;
     default:
@@ -93,19 +93,19 @@ void DfConverge_Damping_Parallel::convergeKSMatrix_LAPACK() {
 void DfConverge_Damping_Parallel::convergeKSMatrix_ScaLAPACK() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      DfConverge_Damping::convergeKSMatrix<TlDistributeSymmetricMatrix>(
+      DfConverge_Damping::convergeKSMatrix<TlDenseSymmetricMatrix_blacs>(
           DfObject::RUN_RKS);
       break;
     case METHOD_UKS:
-      DfConverge_Damping::convergeKSMatrix<TlDistributeSymmetricMatrix>(
+      DfConverge_Damping::convergeKSMatrix<TlDenseSymmetricMatrix_blacs>(
           DfObject::RUN_UKS_ALPHA);
-      DfConverge_Damping::convergeKSMatrix<TlDistributeSymmetricMatrix>(
+      DfConverge_Damping::convergeKSMatrix<TlDenseSymmetricMatrix_blacs>(
           DfObject::RUN_UKS_BETA);
       break;
     case METHOD_ROKS:
-      DfConverge_Damping::convergeKSMatrix<TlDistributeSymmetricMatrix>(
+      DfConverge_Damping::convergeKSMatrix<TlDenseSymmetricMatrix_blacs>(
           DfObject::RUN_UKS_ALPHA);
-      DfConverge_Damping::convergeKSMatrix<TlDistributeSymmetricMatrix>(
+      DfConverge_Damping::convergeKSMatrix<TlDenseSymmetricMatrix_blacs>(
           DfObject::RUN_UKS_BETA);
       break;
     default:
@@ -139,19 +139,19 @@ void DfConverge_Damping_Parallel::convergePMatrix_LAPACK() {
 void DfConverge_Damping_Parallel::convergePMatrix_ScaLAPACK() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      DfConverge_Damping::convergePMatrix<TlDistributeSymmetricMatrix>(
+      DfConverge_Damping::convergePMatrix<TlDenseSymmetricMatrix_blacs>(
           DfObject::RUN_RKS);
       break;
     case METHOD_UKS:
-      DfConverge_Damping::convergePMatrix<TlDistributeSymmetricMatrix>(
+      DfConverge_Damping::convergePMatrix<TlDenseSymmetricMatrix_blacs>(
           DfObject::RUN_UKS_ALPHA);
-      DfConverge_Damping::convergePMatrix<TlDistributeSymmetricMatrix>(
+      DfConverge_Damping::convergePMatrix<TlDenseSymmetricMatrix_blacs>(
           DfObject::RUN_UKS_BETA);
       break;
     case METHOD_ROKS:
-      DfConverge_Damping::convergePMatrix<TlDistributeSymmetricMatrix>(
+      DfConverge_Damping::convergePMatrix<TlDenseSymmetricMatrix_blacs>(
           DfObject::RUN_UKS_ALPHA);
-      DfConverge_Damping::convergePMatrix<TlDistributeSymmetricMatrix>(
+      DfConverge_Damping::convergePMatrix<TlDenseSymmetricMatrix_blacs>(
           DfObject::RUN_UKS_BETA);
       break;
     default:

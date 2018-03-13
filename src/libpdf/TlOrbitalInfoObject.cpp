@@ -249,7 +249,7 @@ void TlOrbitalInfoObject::makeOrbitalTable() {
                           atom, symbol.c_str(), label.c_str()));
     }
   }
-  assert((index_type)this->orbitals_.size() == numOfOrbitals);
+  assert((index_type) this->orbitals_.size() == numOfOrbitals);
 }
 
 std::vector<TlOrbitalInfoObject::index_type>

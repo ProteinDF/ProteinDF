@@ -1,6 +1,6 @@
+#include "TlUtils.h"
 #include <string>
 #include <vector>
-#include "TlUtils.h"
 #include "gtest/gtest.h"
 
 TEST(TlUtils, pad) {

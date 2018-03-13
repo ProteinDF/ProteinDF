@@ -20,6 +20,8 @@
 #include "DfOverlapX_Parallel.h"
 #include "DfPopulation_Parallel.h"
 #include "TlCommunicate.h"
+#include "tl_dense_general_matrix_blacs.h"
+#include "tl_dense_symmetric_matrix_blacs.h"
 
 DfInitialGuessHarris_Parallel::DfInitialGuessHarris_Parallel(
     TlSerializeData* pPdfParam)
@@ -35,8 +37,8 @@ void DfInitialGuessHarris_Parallel::main() {
     this->distributeHarrisDB();
 
     DfInitialGuessHarris::calcInitialDensityMatrix<
-        TlDistributeMatrix, TlDistributeSymmetricMatrix, DfOverlapX_Parallel,
-        DfPopulation_Parallel>();
+        TlDenseGeneralMatrix_blacs, TlDenseSymmetricMatrix_blacs,
+        DfOverlapX_Parallel, DfPopulation_Parallel>();
   } else {
     if (rComm.isMaster()) {
       DfInitialGuessHarris::main();

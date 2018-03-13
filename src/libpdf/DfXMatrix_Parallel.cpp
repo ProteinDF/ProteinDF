@@ -22,8 +22,8 @@
 
 #include "DfXMatrix_Parallel.h"
 #include "TlCommunicate.h"
-#include "TlDistributeMatrix.h"
-#include "TlDistributeSymmetricMatrix.h"
+#include "tl_dense_general_matrix_blacs.h"
+#include "tl_dense_symmetric_matrix_blacs.h"
 
 #define FAST_TRANCATE
 
@@ -61,13 +61,13 @@ void DfXMatrix_Parallel::buildX_LAPACK() {
 }
 
 void DfXMatrix_Parallel::buildX_ScaLAPACK() {
-  TlDistributeSymmetricMatrix S =
-      this->getSpqMatrix<TlDistributeSymmetricMatrix>();
-  TlDistributeMatrix X;
-  TlDistributeMatrix Xinv;
+  TlDenseSymmetricMatrix_blacs S =
+      this->getSpqMatrix<TlDenseSymmetricMatrix_blacs>();
+  TlDenseGeneralMatrix_blacs X;
+  TlDenseGeneralMatrix_blacs Xinv;
 
-  DfXMatrix::canonicalOrthogonalizeTmpl<TlDistributeSymmetricMatrix,
-                                        TlDistributeMatrix>(
+  DfXMatrix::canonicalOrthogonalizeTmpl<TlDenseSymmetricMatrix_blacs,
+                                        TlDenseGeneralMatrix_blacs>(
       S, &X, &Xinv, this->XEigvalFilePath_);
 
   (*(this->pPdfParam_))["num_of_MOs"] = X.getNumOfCols();
@@ -77,8 +77,8 @@ void DfXMatrix_Parallel::buildX_ScaLAPACK() {
 }
 
 void DfXMatrix_Parallel::canonicalOrthogonalize(
-    const TlSymmetricMatrix& S, TlMatrix* pX, TlMatrix* pXinv,
-    const std::string& eigvalFilePath) {
+    const TlDenseSymmetricMatrix_BLAS_Old& S, TlDenseGeneralMatrix_BLAS_old* pX,
+    TlDenseGeneralMatrix_BLAS_old* pXinv, const std::string& eigvalFilePath) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
   if (rComm.isMaster()) {
     DfXMatrix::canonicalOrthogonalize(S, pX, pXinv, eigvalFilePath);
@@ -86,8 +86,8 @@ void DfXMatrix_Parallel::canonicalOrthogonalize(
 }
 
 void DfXMatrix_Parallel::lowdinOrthogonalize(
-    const TlSymmetricMatrix& S, TlMatrix* pX, TlMatrix* pXinv,
-    const std::string& eigvalFilePath) {
+    const TlDenseSymmetricMatrix_BLAS_Old& S, TlDenseGeneralMatrix_BLAS_old* pX,
+    TlDenseGeneralMatrix_BLAS_old* pXinv, const std::string& eigvalFilePath) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
   if (rComm.isMaster()) {
     DfXMatrix::lowdinOrthogonalize(S, pX, pXinv, eigvalFilePath);
@@ -95,13 +95,13 @@ void DfXMatrix_Parallel::lowdinOrthogonalize(
 }
 
 void DfXMatrix_Parallel::canonicalOrthogonalize(
-    const TlDistributeSymmetricMatrix& S, TlDistributeMatrix* pX,
-    TlDistributeMatrix* pXinv, const std::string& eigvalFilePath) {
+    const TlDenseSymmetricMatrix_blacs& S, TlDenseGeneralMatrix_blacs* pX,
+    TlDenseGeneralMatrix_blacs* pXinv, const std::string& eigvalFilePath) {
   DfXMatrix::canonicalOrthogonalizeTmpl(S, pX, pXinv, eigvalFilePath);
 }
 
 void DfXMatrix_Parallel::lowdinOrthogonalize(
-    const TlDistributeSymmetricMatrix& S, TlDistributeMatrix* pX,
-    TlDistributeMatrix* pXinv, const std::string& eigvalFilePath) {
+    const TlDenseSymmetricMatrix_blacs& S, TlDenseGeneralMatrix_blacs* pX,
+    TlDenseGeneralMatrix_blacs* pXinv, const std::string& eigvalFilePath) {
   DfXMatrix::lowdinOrthogonalizeTmpl(S, pX, pXinv, eigvalFilePath);
 }

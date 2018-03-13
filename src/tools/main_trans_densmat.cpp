@@ -27,7 +27,6 @@
 #include "TlMatrix.h"
 #include "TlMsgPack.h"
 #include "TlOrbitalInfo.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
 
 void usage(const std::string& progname) {
@@ -125,7 +124,7 @@ int main(int argc, char* argv[]) {
       S_tilde.save(sTildePath);
     }
 
-    TlSymmetricMatrix S_inv;
+    TlDenseSymmetricMatrix_BLAS_Old S_inv;
     S_inv.load(spqMatrixPath);
     S_inv.inverse();
 
@@ -135,9 +134,9 @@ int main(int argc, char* argv[]) {
   TlMatrix omega_t = omega;
   omega_t.transpose();
 
-  TlSymmetricMatrix D;
+  TlDenseSymmetricMatrix_BLAS_Old D;
   D.load(oldMatrixPath);
-  TlSymmetricMatrix newD = omega_t * D * omega;
+  TlDenseSymmetricMatrix_BLAS_Old newD = omega_t * D * omega;
   newD.save(newMatrixPath);
 
   return EXIT_SUCCESS;

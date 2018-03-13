@@ -1,6 +1,6 @@
+#include "TlSerializeData.h"
 #include <string>
 #include <vector>
-#include "TlSerializeData.h"
 #include "gtest/gtest.h"
 
 TEST(TlSerializeData, constructor) {

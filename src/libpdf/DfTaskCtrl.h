@@ -22,9 +22,9 @@
 #include <vector>
 #include "DfEriEngine.h"
 #include "DfObject.h"
-#include "TlMatrixObject.h"
 #include "TlOrbitalInfoObject.h"
-#include "TlSparseSymmetricMatrix.h"
+#include "tl_matrix_object.h"
+#include "tl_sparse_symmetric_matrix.h"
 
 class DfTaskCtrl : public DfObject {
  public:

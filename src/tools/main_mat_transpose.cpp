@@ -20,7 +20,7 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "TlMatrix.h"
+#include "tl_dense_general_matrix_blas_old.h"
 
 void showHelp() {
   std::cout << "transpose [options] input_path output_path" << std::endl;
@@ -50,10 +50,10 @@ int main(int argc, char* argv[]) {
     std::cerr << "load matrix: " << inputMatrixPath << std::endl;
   }
 
-  TlMatrix A;
+  TlDenseGeneralMatrix_BLAS_old A;
   A.load(inputMatrixPath);
 
-  A.transpose();
+  A.transposeInPlace();
 
   if (bVerbose == true) {
     std::cerr << "save matrix: " << outputMatrixPath << std::endl;

@@ -24,7 +24,7 @@
 #include "CnError.h"
 #include "DfObject.h"
 #include "TlOrbitalInfo.h"
-#include "TlVector.h"
+#include "tl_dense_vector_blas.h"
 
 /** 計算結果の出力を行うクラス
  */
@@ -56,11 +56,12 @@ class DfSummary : public DfObject {
 
   /** 密度行列展開係数、交換相関ポテンシャル展開係数を出力する
    */
-  void printAux(const TlVector& rho, const TlVector& myu, const TlVector& nyu);
+  void printAux(const TlVector_BLAS& rho, const TlVector_BLAS& myu,
+                const TlVector_BLAS& nyu);
 
   /** rho population を出力する
    */
-  void printRhoPop(const TlVector& rho);
+  void printRhoPop(const TlVector_BLAS& rho);
 
  private:
 };
@@ -84,15 +85,15 @@ void DfSummary::exec() {
       // this->logger("output guess.lcao.rks and guess.occ.rks");
       this->saveGuessFile(DfObject::RUN_RKS, C, "rks");
 
-      const TlVector rho =
-          this->getRho<TlVector>(DfObject::RUN_RKS, this->m_nIteration);
+      const TlVector_BLAS rho =
+          this->getRho<TlVector_BLAS>(DfObject::RUN_RKS, this->m_nIteration);
 
-      TlVector myu;
+      TlVector_BLAS myu;
       if (this->m_bIsXCFitting == true) {
         myu.load(this->getMyuPath(DfObject::RUN_RKS, this->m_nIteration));
       }
 
-      TlVector nyu;
+      TlVector_BLAS nyu;
       if (this->m_sXCFunctional == "xalpha") {
         nyu.load(this->getNyuPath(DfObject::RUN_RKS, this->m_nIteration));
       }
@@ -120,15 +121,15 @@ void DfSummary::exec() {
       // this->loggerStartTitle("output guess.lcao.roks and guess.occ.roks");
       this->saveGuessFile(DfObject::RUN_ROKS, C, "roks");
 
-      const TlVector rho =
-          this->getRho<TlVector>(DfObject::RUN_ROKS, this->m_nIteration);
+      const TlVector_BLAS rho =
+          this->getRho<TlVector_BLAS>(DfObject::RUN_ROKS, this->m_nIteration);
 
-      TlVector myu;
+      TlVector_BLAS myu;
       if (this->m_bIsXCFitting == true) {
         myu.load(this->getMyuPath(DfObject::RUN_ROKS, this->m_nIteration));
       }
 
-      TlVector nyu;
+      TlVector_BLAS nyu;
       if (this->m_sXCFunctional == "xalpha") {
         nyu.load(this->getNyuPath(DfObject::RUN_ROKS, this->m_nIteration));
       }
@@ -170,30 +171,30 @@ void DfSummary::exec() {
       // guess.occ.uks-beta");
       this->saveGuessFile(DfObject::RUN_UKS_BETA, CB, "uks-beta");
 
-      const TlVector rhoA =
-          this->getRho<TlVector>(DfObject::RUN_UKS_ALPHA, this->m_nIteration);
+      const TlVector_BLAS rhoA = this->getRho<TlVector_BLAS>(
+          DfObject::RUN_UKS_ALPHA, this->m_nIteration);
 
-      TlVector myuA;
+      TlVector_BLAS myuA;
       if (this->m_bIsXCFitting == true) {
         myuA.load(
             this->getMyuPath(DfObject::RUN_UKS_ALPHA, this->m_nIteration));
       }
 
-      TlVector nyuA;
+      TlVector_BLAS nyuA;
       if (this->m_sXCFunctional == "xalpha") {
         nyuA.load(
             this->getNyuPath(DfObject::RUN_UKS_ALPHA, this->m_nIteration));
       }
 
-      const TlVector rhoB =
-          this->getRho<TlVector>(DfObject::RUN_UKS_BETA, this->m_nIteration);
+      const TlVector_BLAS rhoB = this->getRho<TlVector_BLAS>(
+          DfObject::RUN_UKS_BETA, this->m_nIteration);
 
-      TlVector myuB;
+      TlVector_BLAS myuB;
       if (this->m_bIsXCFitting == true) {
         myuB.load(this->getMyuPath(DfObject::RUN_UKS_BETA, this->m_nIteration));
       }
 
-      TlVector nyuB;
+      TlVector_BLAS nyuB;
       if (this->m_sXCFunctional == "xalpha") {
         nyuB.load(this->getNyuPath(DfObject::RUN_UKS_BETA, this->m_nIteration));
       }
@@ -245,7 +246,7 @@ void DfSummary::printMO(const MatrixType& C) {
           TlOrbitalInfoObject::basisTypeNameTbl_[orbInfo.getBasisType(i)]));
 
       for (int j = orderMO; (j < orderMO + 10) && (j < numOfMOs); ++j) {
-        this->logger(TlUtils::format(" %10.6lf", C(i, j)));
+        this->logger(TlUtils::format(" %10.6lf", C.get(i, j)));
       }
       this->logger("\n");
     }
@@ -260,7 +261,7 @@ void DfSummary::saveGuessFile(const DfObject::RUN_TYPE runType,
   C.saveText(std::string("result.guess.lcao." + suffix));
 
   // occupation file
-  TlVector occ;
+  TlVector_BLAS occ;
   occ.load(this->getOccupationPath(runType));
 
   std::ofstream ofs;

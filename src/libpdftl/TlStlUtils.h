@@ -58,7 +58,7 @@ class TlCache {
 
  public:
   // デフォルトのキャッシュ個数は10,000個
-  TlCache(const std::size_t maxItems = 10000)
+  explicit TlCache(const std::size_t maxItems = 10000)
       : maxItems_(maxItems), numOfItems_(0) {}
   ~TlCache() {}
 
@@ -142,8 +142,8 @@ class TlCache {
   CacheTable cacheTbl_;
   KeyList reqHistory_;
 
-  std::size_t numOfItems_;
   std::size_t maxItems_;
+  std::size_t numOfItems_;
 };
 
 #endif  // TLSTLUTILS_H

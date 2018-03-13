@@ -19,10 +19,10 @@
 #include "DfLevelshift.h"
 #include "CnError.h"
 #include "Fl_Tbl_Fragment.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_vector_blas.h"
 
 DfLevelshift::DfLevelshift(TlSerializeData* pPdfParam, int num_iter)
     : DfObject(pPdfParam) {}
@@ -109,12 +109,12 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration,
 
   // prepear "beta" vector (level-shift values)
   const int norbcut = this->m_nNumOfMOs;
-  TlVector beta(norbcut);  // b
+  TlVector_BLAS beta(norbcut);  // b
   {
-    TlVector vOcc;
+    TlVector_BLAS vOcc;
     if (runType == RUN_ROKS) {
       vOcc.load(DfObject::getOccupationPath(RUN_ROKS_CLOSED));
-      TlVector occ_open;
+      TlVector_BLAS occ_open;
       occ_open.load(DfObject::getOccupationPath(RUN_ROKS_OPEN));
       vOcc += occ_open;
     } else {
@@ -154,7 +154,7 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration,
   }
 
   // prepar "C'" matrix
-  TlMatrix Cprime(this->m_nNumOfMOs, this->m_nNumOfMOs);
+  TlDenseGeneralMatrix_BLAS_old Cprime(this->m_nNumOfMOs, this->m_nNumOfMOs);
   {
     if (iteration == 1 && ((this->initialGuessType_ != GUESS_LCAO) &&
                            (this->initialGuessType_ != GUESS_HUCKEL))) {
@@ -167,17 +167,20 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration,
       // construct "C'" matrix for initial Rou
       const int numOfMOs = this->m_nNumOfMOs;
       for (int k = 0; k < numOfMOs; ++k) {
-        Cprime(k, k) = 1.0;
+        Cprime.set(k, k, 1.0);
       }
     } else {
       // "read previous C' matrix"
       if (TlFile::isExistFile(
               DfObject::getCprimeMatrixPath(runType, iteration - 1)) == true) {
-        Cprime = DfObject::getCprimeMatrix<TlMatrix>(runType, iteration - 1);
+        Cprime = DfObject::getCprimeMatrix<TlDenseGeneralMatrix_BLAS_old>(
+            runType, iteration - 1);
       } else {
-        const TlMatrix C =
-            DfObject::getCMatrix<TlMatrix>(runType, iteration - 1);
-        const TlMatrix Xinv = DfObject::getXInvMatrix<TlMatrix>();
+        const TlDenseGeneralMatrix_BLAS_old C =
+            DfObject::getCMatrix<TlDenseGeneralMatrix_BLAS_old>(runType,
+                                                            iteration - 1);
+        const TlDenseGeneralMatrix_BLAS_old Xinv =
+            DfObject::getXInvMatrix<TlDenseGeneralMatrix_BLAS_old>();
         Cprime = Xinv * C;
       }
 
@@ -199,24 +202,25 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration,
   {
     // calc. "C' * beta"
     const int numOfMOs = this->m_nNumOfMOs;
-    TlMatrix Cprime_beta(numOfMOs, numOfMOs);
+    TlDenseGeneralMatrix_BLAS_old Cprime_beta(numOfMOs, numOfMOs);
     for (int i = 0; i < numOfMOs; ++i) {
       for (int j = 0; j < numOfMOs; ++j) {
-        Cprime_beta(i, j) = Cprime(i, j) * beta[j];
+        Cprime_beta.set(i, j, Cprime.get(i, j) * beta[j]);
       }
     }
 
     // (C' * beta)^dagger
-    Cprime_beta.transpose();
+    Cprime_beta.transposeInPlace();
 
     // calc. "C' * (C'*beta)^dagger"
     Cprime *= Cprime_beta;
   }
 
   // "read F' matrix"
-  TlSymmetricMatrix Fprime;
+  TlDenseSymmetricMatrix_BLAS_Old Fprime;
   {
-    Fprime = DfObject::getFprimeMatrix<TlSymmetricMatrix>(runType, iteration);
+    Fprime = DfObject::getFprimeMatrix<TlDenseSymmetricMatrix_BLAS_Old>(runType,
+                                                                    iteration);
 
     if (Fprime.getNumOfRows() != this->m_nNumOfMOs ||
         Fprime.getNumOfCols() != this->m_nNumOfMOs) {

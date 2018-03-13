@@ -5,7 +5,7 @@
 #include "Fl_Geometry.h"
 #include "TlAtom.h"
 #include "TlPosition.h"
-#include "TlVector.h"
+#include "tl_dense_vector_blas.h"
 
 class TlEspPop {
  public:
@@ -38,19 +38,20 @@ class TlEspPop {
                                            const double radii);
   bool isInMolecule(const TlPosition& p, double coef);
 
-  TlMatrix getInvDistanceMatrix();
-  void makeDesignMatrix_MK(TlSymmetricMatrix* pDesignMat, TlVector* pPredicted);
-  void makeDesignMatrix_quadric(const TlSymmetricMatrix& MK_designMat,
-                                const TlVector& MK_predicted,
-                                TlSymmetricMatrix* pDesignMat,
-                                TlVector* pPredicted);
-  void makeDesignMatrix_hyperbolic(const TlSymmetricMatrix& MK_designMat,
-                                   const TlVector& MK_predicted,
-                                   TlSymmetricMatrix* pDesignMat,
-                                   TlVector* pPredicted);
+  TlDenseGeneralMatrix_BLAS_old getInvDistanceMatrix();
+  void makeDesignMatrix_MK(TlDenseSymmetricMatrix_BLAS_Old* pDesignMat,
+                           TlVector_BLAS* pPredicted);
+  void makeDesignMatrix_quadric(const TlDenseSymmetricMatrix_BLAS_Old& MK_designMat,
+                                const TlVector_BLAS& MK_predicted,
+                                TlDenseSymmetricMatrix_BLAS_Old* pDesignMat,
+                                TlVector_BLAS* pPredicted);
+  void makeDesignMatrix_hyperbolic(
+      const TlDenseSymmetricMatrix_BLAS_Old& MK_designMat,
+      const TlVector_BLAS& MK_predicted,
+      TlDenseSymmetricMatrix_BLAS_Old* pDesignMat, TlVector_BLAS* pPredicted);
 
-  bool convCheck(const TlVector& modelCoef);
-  void output(const TlVector& modelCoef);
+  bool convCheck(const TlVector_BLAS& modelCoef);
+  void output(const TlVector_BLAS& modelCoef);
 
  protected:
   static const double AU2ANG;
@@ -61,7 +62,7 @@ class TlEspPop {
 
   std::vector<TlAtom> realAtoms_;
   std::vector<TlPosition> grids_;
-  TlVector esp_;
+  TlVector_BLAS esp_;
   double sumOfCounterCharges_;
   double totalCharge_;
 
@@ -69,14 +70,14 @@ class TlEspPop {
   RESP_RESTRICTION resp_restriction_;
   double param_a_;
   double param_b_;
-  TlVector expected_;
+  TlVector_BLAS expected_;
 
   // convcheck
   int itr_;
   int maxItr_;
   double maxErrorThreshold_;
   double rmsErrorThreshold_;
-  TlVector prevModelCoef_;
+  TlVector_BLAS prevModelCoef_;
 
   // debug
   bool verbose_;

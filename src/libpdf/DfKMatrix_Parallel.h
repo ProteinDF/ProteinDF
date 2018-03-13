@@ -21,6 +21,8 @@
 
 #include "DfKMatrix.h"
 
+class TlDenseSymmetricMatrix_blacs;
+
 class DfKMatrix_Parallel : public DfKMatrix {
  public:
   DfKMatrix_Parallel(TlSerializeData* pPdfParam);
@@ -31,27 +33,32 @@ class DfKMatrix_Parallel : public DfKMatrix {
   virtual void getK_CD();
   virtual void getK_conventional();
 
-  // virtual void getK_RI_local(const RUN_TYPE runType, TlSymmetricMatrix* pJ);
+  // virtual void getK_RI_local(const RUN_TYPE runType,
+  // TlDenseSymmetricMatrix_BLAS_Old*
+  // pJ);
   // void getK_RI_distributed(const RUN_TYPE runType,
-  // TlDistributeSymmetricMatrix *pJ);
+  // TlDenseSymmetricMatrix_blacs *pJ);
 
-  virtual void getK_CD_local(const RUN_TYPE runType, TlSymmetricMatrix* pJ);
+  virtual void getK_CD_local(const RUN_TYPE runType,
+                             TlDenseSymmetricMatrix_BLAS_Old* pJ);
   void getK_CD_distributed(const RUN_TYPE runType,
-                           TlDistributeSymmetricMatrix* pJ);
+                           TlDenseSymmetricMatrix_blacs* pJ);
 
   virtual void getK_conventional_local(const RUN_TYPE runType,
-                                       TlSymmetricMatrix* pJ);
+                                       TlDenseSymmetricMatrix_BLAS_Old* pJ);
   void getK_conventional_distributed(const RUN_TYPE runType,
-                                     TlDistributeSymmetricMatrix* pJ);
+                                     TlDenseSymmetricMatrix_blacs* pJ);
 
  protected:
-  // virtual TlSymmetricMatrix getPMatrix(const RUN_TYPE runType,
+  // virtual TlDenseSymmetricMatrix_BLAS_Old getPMatrix(const RUN_TYPE runType,
   //                                      const int iteration);
-  // virtual TlSymmetricMatrix getDiffDensityMatrix(const RUN_TYPE runType);
+  // virtual TlDenseSymmetricMatrix_BLAS_Old getDiffDensityMatrix(const RUN_TYPE
+  // runType);
 
-  virtual TlSymmetricMatrix getKMatrix(const RUN_TYPE runType,
-                                       const int iteration);
-  virtual void saveKMatrix(const RUN_TYPE runType, const TlSymmetricMatrix& K);
+  virtual TlDenseSymmetricMatrix_BLAS_Old getKMatrix(const RUN_TYPE runType,
+                                                 const int iteration);
+  virtual void saveKMatrix(const RUN_TYPE runType,
+                           const TlDenseSymmetricMatrix_BLAS_Old& K);
 };
 
 #endif  // DFKMATRIX_PARALLEL_H

@@ -26,12 +26,12 @@
 #include "DfEngineObject.h"
 #include "DfEriEngine.h"
 #include "DfOverlapEngine.h"
-#include "TlMatrix.h"
-#include "TlMmapMatrix_CSFD.h"
-#include "TlSymmetricMatrix.h"
 #include "TlSystem.h"
 #include "TlTime.h"
 #include "TlUtils.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_general_matrix_mmap.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
 
 DfCD::DfCD(TlSerializeData* pPdfParam) : DfObject(pPdfParam), pEngines_(NULL) {
   this->cutoffThreshold_ = 1.0E-10;
@@ -127,7 +127,7 @@ void DfCD::calcCholeskyVectorsForJK() {
     this->log_.info("call DEBUG routine:");
     this->log_.info("build L matrix by supermatrix.");
 
-    TlSymmetricMatrix V;
+    TlDenseSymmetricMatrix_BLAS_Old V;
     {
       PQ_PairArray I2PQ;
       this->createEngines<DfEriEngine>();
@@ -137,17 +137,17 @@ void DfCD::calcCholeskyVectorsForJK() {
       this->saveI2PQ(I2PQ, this->getI2pqVtrPath());
     }
 
-    TlMatrix L = this->calcCholeskyVectors(V);
+    TlDenseGeneralMatrix_BLAS_old L = this->calcCholeskyVectors(V);
 
     // check CD
     if (this->debugCheckCD_) {
-      TlMatrix tL = L;
-      tL.transpose();
-      TlMatrix LL = L * tL;
+      TlDenseGeneralMatrix_BLAS_old tL = L;
+      tL.transposeInPlace();
+      TlDenseGeneralMatrix_BLAS_old LL = L * tL;
       LL.save("fl_Work/debug_LL.mat");
     }
 
-    this->saveLjk(TlRowVectorMatrix(L));
+    this->saveLjk(TlDenseGeneralMatrix_arrays_RowOriented(L));
     this->debugOutLjk(L);  // debug
     this->log_.info("");
   } else {
@@ -155,9 +155,10 @@ void DfCD::calcCholeskyVectorsForJK() {
     this->log_.info("CD (J) routine: start");
     this->createEngines<DfEriEngine>();
 
-    const TlRowVectorMatrix Ljk = this->calcCholeskyVectorsOnTheFlyS_new(
-        orbInfo, this->getI2pqVtrPath(), this->epsilon_, &DfCD::calcDiagonals,
-        &DfCD::getSuperMatrixElements);
+    const TlDenseGeneralMatrix_arrays_RowOriented Ljk =
+        this->calcCholeskyVectorsOnTheFlyS_new(
+            orbInfo, this->getI2pqVtrPath(), this->epsilon_,
+            &DfCD::calcDiagonals, &DfCD::getSuperMatrixElements);
 
     this->saveLjk(Ljk);
     // this->debugOutLjk(Ljk.getTlMatrixObject()); // debug
@@ -178,7 +179,7 @@ void DfCD::calcCholeskyVectorsForK() {
       this->log_.info(
           "fast CDK routine (using debug FULL supermatrix) is valided.");
 
-      TlSymmetricMatrix V;
+      TlDenseSymmetricMatrix_BLAS_Old V;
       {
         PQ_PairArray I2PQ;
 
@@ -190,24 +191,24 @@ void DfCD::calcCholeskyVectorsForK() {
         this->saveI2PQ(I2PQ, this->getI2prVtrPath());
       }
 
-      TlMatrix L = this->calcCholeskyVectors(V);
+      TlDenseGeneralMatrix_BLAS_old L = this->calcCholeskyVectors(V);
 
       // check CD
       if (this->debugCheckCD_) {
-        TlMatrix tL = L;
-        tL.transpose();
-        TlMatrix LL = L * tL;
+        TlDenseGeneralMatrix_BLAS_old tL = L;
+        tL.transposeInPlace();
+        TlDenseGeneralMatrix_BLAS_old LL = L * tL;
         LL.save("fl_Work/debug_LL_K.mat");
       }
 
-      this->saveLk(TlRowVectorMatrix(L));
+      this->saveLk(TlDenseGeneralMatrix_arrays_RowOriented(L));
       this->debugOutLk(L);  // debug
       this->log_.info("");
     } break;
 
     case FASTCDK_DEBUG_SUPERMATRIX: {
       this->log_.info("fast CDK routine (using debug supermatrix) is valided.");
-      TlSymmetricMatrix V;
+      TlDenseSymmetricMatrix_BLAS_Old V;
       {
         PQ_PairArray I2PQ;
         this->createEngines<DfEriEngine>();
@@ -218,17 +219,17 @@ void DfCD::calcCholeskyVectorsForK() {
         this->saveI2PQ(I2PQ, this->getI2prVtrPath());
       }
 
-      TlMatrix L = this->calcCholeskyVectors(V);
+      TlDenseGeneralMatrix_BLAS_old L = this->calcCholeskyVectors(V);
 
       if (this->debugCheckCD_) {
         // check CD
-        TlMatrix tL = L;
-        tL.transpose();
-        TlMatrix LL = L * tL;
+        TlDenseGeneralMatrix_BLAS_old tL = L;
+        tL.transposeInPlace();
+        TlDenseGeneralMatrix_BLAS_old LL = L * tL;
         LL.save("fl_Work/debug_LL_K.mat");
       }
 
-      this->saveLk(TlRowVectorMatrix(L));
+      this->saveLk(TlDenseGeneralMatrix_arrays_RowOriented(L));
       this->debugOutLk(L);  // debug
       this->log_.info("");
     } break;
@@ -237,18 +238,20 @@ void DfCD::calcCholeskyVectorsForK() {
       this->log_.info("fast CDK routine(full).");
       this->createEngines<DfEriEngine>();
 
-      const TlRowVectorMatrix Lk = this->calcCholeskyVectorsOnTheFlyS_new(
-          orbInfo, this->getI2prVtrPath(), this->epsilon_K_,
-          &DfCD::calcDiagonals_K_full, &DfCD::getSuperMatrixElements_K_full);
+      const TlDenseGeneralMatrix_arrays_RowOriented Lk =
+          this->calcCholeskyVectorsOnTheFlyS_new(
+              orbInfo, this->getI2prVtrPath(), this->epsilon_K_,
+              &DfCD::calcDiagonals_K_full,
+              &DfCD::getSuperMatrixElements_K_full);
       this->saveLk(Lk);
       // this->debugOutLk(Lk.getTlMatrixObject()); // debug
 
       if (this->debugCheckCD_) {
         // check CD
-        TlMatrix mLk = Lk.getTlMatrixObject();
-        TlMatrix tmLk = mLk;
-        tmLk.transpose();
-        TlMatrix LL = mLk * tmLk;
+        TlDenseGeneralMatrix_BLAS_old mLk = Lk.getTlMatrixObject();
+        TlDenseGeneralMatrix_BLAS_old tmLk = mLk;
+        tmLk.transposeInPlace();
+        TlDenseGeneralMatrix_BLAS_old LL = mLk * tmLk;
         LL.save("fl_Work/debug_LL_K.mat");
       }
 
@@ -260,18 +263,20 @@ void DfCD::calcCholeskyVectorsForK() {
       this->log_.info("CD (K) routine: start");
       this->createEngines<DfEriEngine>();
 
-      const TlRowVectorMatrix Lk = this->calcCholeskyVectorsOnTheFlyS_new(
-          orbInfo, this->getI2prVtrPath(), this->epsilon_K_,
-          &DfCD::calcDiagonals_K_half, &DfCD::getSuperMatrixElements_K_half);
+      const TlDenseGeneralMatrix_arrays_RowOriented Lk =
+          this->calcCholeskyVectorsOnTheFlyS_new(
+              orbInfo, this->getI2prVtrPath(), this->epsilon_K_,
+              &DfCD::calcDiagonals_K_half,
+              &DfCD::getSuperMatrixElements_K_half);
       this->saveLk(Lk);
       // this->debugOutLk(Lk.getTlMatrixObject()); // debug
 
       if (this->debugCheckCD_) {
         // check CD
-        TlMatrix mLk = Lk.getTlMatrixObject();
-        TlMatrix tmLk = mLk;
-        tmLk.transpose();
-        TlMatrix LL = mLk * tmLk;
+        TlDenseGeneralMatrix_BLAS_old mLk = Lk.getTlMatrixObject();
+        TlDenseGeneralMatrix_BLAS_old tmLk = mLk;
+        tmLk.transposeInPlace();
+        TlDenseGeneralMatrix_BLAS_old LL = mLk * tmLk;
         LL.save("fl_Work/debug_LL_K.mat");
       }
 
@@ -303,7 +308,7 @@ void DfCD::calcCholeskyVectorsForGridFree() {
       this->log_.info("call DEBUG routine:");
       this->log_.info("build Lxc matrix by supermatrix.");
 
-      TlSymmetricMatrix V;
+      TlDenseSymmetricMatrix_BLAS_Old V;
       {
         PQ_PairArray I2PQ;
         this->createEngines<DfOverlapEngine>();
@@ -313,12 +318,12 @@ void DfCD::calcCholeskyVectorsForGridFree() {
         this->saveI2PQ(I2PQ, this->getI2pqVtrXCPath());
       }
 
-      TlMatrix L = this->calcCholeskyVectors(V);
-      this->saveLxc(TlRowVectorMatrix(L));
+      TlDenseGeneralMatrix_BLAS_old L = this->calcCholeskyVectors(V);
+      this->saveLxc(TlDenseGeneralMatrix_arrays_RowOriented(L));
       this->debugOutLxc(L);  // debug
     } else {
       // productive code
-      const TlRowVectorMatrix Lxc =
+      const TlDenseGeneralMatrix_arrays_RowOriented Lxc =
           this->calcCholeskyVectorsOnTheFly<DfOverlapEngine>(
               orbInfo_p, orbInfo_q, this->getI2pqVtrXCPath());
       this->saveLxc(Lxc);
@@ -329,7 +334,7 @@ void DfCD::calcCholeskyVectorsForGridFree() {
       this->log_.info("call DEBUG routine:");
       this->log_.info("build Lxc matrix by supermatrix.");
 
-      TlSymmetricMatrix V;
+      TlDenseSymmetricMatrix_BLAS_Old V;
       {
         PQ_PairArray I2PQ;
         this->createEngines<DfOverlapEngine>();
@@ -339,17 +344,18 @@ void DfCD::calcCholeskyVectorsForGridFree() {
         this->saveI2PQ(I2PQ, this->getI2pqVtrXCPath());
       }
 
-      TlMatrix L = this->calcCholeskyVectors(V);
-      this->saveLxc(TlRowVectorMatrix(L));
+      TlDenseGeneralMatrix_BLAS_old L = this->calcCholeskyVectors(V);
+      this->saveLxc(TlDenseGeneralMatrix_arrays_RowOriented(L));
       this->debugOutLxc(L);  // debug
     } else {
       // productive code
       this->log_.info("build Lxc matrix by on-the-fly method.");
       this->createEngines<DfOverlapEngine>();
 
-      const TlRowVectorMatrix Lxc = this->calcCholeskyVectorsOnTheFlyS_new(
-          orbInfo_p, this->getI2pqVtrXCPath(), this->epsilon_,
-          &DfCD::calcDiagonals, &DfCD::getSuperMatrixElements);
+      const TlDenseGeneralMatrix_arrays_RowOriented Lxc =
+          this->calcCholeskyVectorsOnTheFlyS_new(
+              orbInfo_p, this->getI2pqVtrXCPath(), this->epsilon_,
+              &DfCD::calcDiagonals, &DfCD::getSuperMatrixElements);
 
       this->saveLxc(Lxc);
       this->destroyEngines();
@@ -358,10 +364,10 @@ void DfCD::calcCholeskyVectorsForGridFree() {
     // check
     // {
     //     this->log_.info("check: LL = L * L^t");
-    //     TlMatrix L = this->getLxc();
-    //     TlMatrix tL = L;
-    //     tL.transpose();
-    //     TlMatrix LL = L * tL;
+    //     TlDenseGeneralMatrix_BLAS_old L = this->getLxc();
+    //     TlDenseGeneralMatrix_BLAS_old tL = L;
+    //     tL.transposeInPlace();
+    //     TlDenseGeneralMatrix_BLAS_old LL = L * tL;
     //     LL.save("fl_Work/debug_LL.mat");
     // }
   }
@@ -410,7 +416,7 @@ DfCD::PQ_PairArray DfCD::getI2PQ(const std::string& filepath) {
   return answer;
 }
 
-void DfCD::saveLjk(const TlRowVectorMatrix& Ljk) {
+void DfCD::saveLjk(const TlDenseGeneralMatrix_arrays_RowOriented& Ljk) {
   const std::string path = DfObject::getLjkMatrixPath();
 
   Ljk.save(path + ".rvm");
@@ -419,52 +425,55 @@ void DfCD::saveLjk(const TlRowVectorMatrix& Ljk) {
   if (this->useMmapMatrix_) {
     RowVectorMatrix2CSFD(path + ".rvm", path);
   } else {
-    Ljk.saveByTlColVectorMatrix(path);
+    Ljk.saveByTlDenseGeneralMatrix_arrays_ColOriented(path);
   }
 }
 
-void DfCD::saveLk(const TlRowVectorMatrix& Lk) {
+void DfCD::saveLk(const TlDenseGeneralMatrix_arrays_RowOriented& Lk) {
   this->log_.info("save Lk");
   const std::string path = DfObject::getLkMatrixPath();
-  Lk.saveByTlColVectorMatrix(path);
+  Lk.saveByTlDenseGeneralMatrix_arrays_ColOriented(path);
 }
 
-void DfCD::saveLxc(const TlRowVectorMatrix& Lxc) {
+void DfCD::saveLxc(const TlDenseGeneralMatrix_arrays_RowOriented& Lxc) {
   this->log_.info("save Lxc");
   const std::string path = this->getLxcMatrixPath();
-  Lxc.saveByTlColVectorMatrix(path);
+  Lxc.saveByTlDenseGeneralMatrix_arrays_ColOriented(path);
 }
 
-void DfCD::debugOutLjk(const TlMatrix& Ljk) {
+void DfCD::debugOutLjk(const TlDenseGeneralMatrix_BLAS_old& Ljk) {
   const std::string path =
       TlUtils::format("%s.debug", DfObject::getLjkMatrixPath().c_str());
   Ljk.save(path);
 }
 
-void DfCD::debugOutLk(const TlMatrix& Lk) {
+void DfCD::debugOutLk(const TlDenseGeneralMatrix_BLAS_old& Lk) {
   const std::string path =
       TlUtils::format("%s.debug", DfObject::getLkMatrixPath().c_str());
   Lk.save(path);
 }
 
-void DfCD::debugOutLxc(const TlMatrix& Lxc) {
+void DfCD::debugOutLxc(const TlDenseGeneralMatrix_BLAS_old& Lxc) {
   const std::string path =
       TlUtils::format("%s.debug", DfObject::getLxcMatrixPath().c_str());
   Lxc.save(path);
 }
 
-TlColVectorMatrix DfCD::getLjk() {
-  TlColVectorMatrix Ljk = DfObject::getLjkMatrix<TlColVectorMatrix>();
+TlDenseGeneralMatrix_arrays_ColOriented DfCD::getLjk() {
+  TlDenseGeneralMatrix_arrays_ColOriented Ljk =
+      DfObject::getLjkMatrix<TlDenseGeneralMatrix_arrays_ColOriented>();
   return Ljk;
 }
 
-TlColVectorMatrix DfCD::getLk() {
-  TlColVectorMatrix Lk = DfObject::getLkMatrix<TlColVectorMatrix>();
+TlDenseGeneralMatrix_arrays_ColOriented DfCD::getLk() {
+  TlDenseGeneralMatrix_arrays_ColOriented Lk =
+      DfObject::getLkMatrix<TlDenseGeneralMatrix_arrays_ColOriented>();
   return Lk;
 }
 
-TlColVectorMatrix DfCD::getLxc() {
-  TlColVectorMatrix Lxc = DfObject::getLxcMatrix<TlColVectorMatrix>();
+TlDenseGeneralMatrix_arrays_ColOriented DfCD::getLxc() {
+  TlDenseGeneralMatrix_arrays_ColOriented Lxc =
+      DfObject::getLxcMatrix<TlDenseGeneralMatrix_arrays_ColOriented>();
   return Lxc;
 }
 
@@ -477,7 +486,7 @@ DfTaskCtrl* DfCD::getDfTaskCtrlObject() const {
   return pDfTaskCtrl;
 }
 
-void DfCD::finalize(TlSymmetricMatrix* pMat) {
+void DfCD::finalize(TlDenseSymmetricMatrix_BLAS_Old* pMat) {
   // do nothing
 }
 
@@ -489,7 +498,7 @@ void DfCD::finalize_I2PQ(PQ_PairArray* pI2PQ) {
   std::sort(pI2PQ->begin(), pI2PQ->end());
 }
 
-void DfCD::finalize(TlMatrix* pMat) {
+void DfCD::finalize(TlDenseGeneralMatrix_BLAS_old* pMat) {
   // do nothing
 }
 
@@ -502,12 +511,12 @@ void DfCD::finalize(TlSparseMatrix* pMat) {
 //     std::sort(pI2PQ->begin(), pI2PQ->end());
 // }
 
-TlSymmetricMatrix DfCD::getCholeskyVector(const TlVector& L_col,
-                                          const PQ_PairArray& I2PQ) {
+TlDenseSymmetricMatrix_BLAS_Old DfCD::getCholeskyVector(const TlVector_BLAS& L_col,
+                                                    const PQ_PairArray& I2PQ) {
   const index_type numOfItilde = L_col.getSize();
   assert(static_cast<std::size_t>(numOfItilde) == I2PQ.size());
 
-  TlSymmetricMatrix answer(this->m_nNumOfAOs);
+  TlDenseSymmetricMatrix_BLAS_Old answer(this->m_nNumOfAOs);
   for (index_type i = 0; i < numOfItilde; ++i) {
     answer.set(I2PQ[i].index1(), I2PQ[i].index2(), L_col[i]);
   }
@@ -515,15 +524,14 @@ TlSymmetricMatrix DfCD::getCholeskyVector(const TlVector& L_col,
   return answer;
 }
 
-TlMatrix DfCD::getCholeskyVectorA(const TlOrbitalInfoObject& orbInfo_p,
-                                  const TlOrbitalInfoObject& orbInfo_q,
-                                  const TlVector& L_col,
-                                  const PQ_PairArray& I2PQ) {
+TlDenseGeneralMatrix_BLAS_old DfCD::getCholeskyVectorA(
+    const TlOrbitalInfoObject& orbInfo_p, const TlOrbitalInfoObject& orbInfo_q,
+    const TlVector_BLAS& L_col, const PQ_PairArray& I2PQ) {
   const index_type numOfOrbs_p = orbInfo_p.getNumOfOrbitals();
   const index_type numOfOrbs_q = orbInfo_q.getNumOfOrbitals();
 
   const index_type numOfItilde = L_col.getSize();
-  TlMatrix answer(numOfOrbs_p, numOfOrbs_q);
+  TlDenseGeneralMatrix_BLAS_old answer(numOfOrbs_p, numOfOrbs_q);
   for (index_type i = 0; i < numOfItilde; ++i) {
     answer.set(I2PQ[i].index1(), I2PQ[i].index2(), L_col[i]);
   }
@@ -531,7 +539,7 @@ TlMatrix DfCD::getCholeskyVectorA(const TlOrbitalInfoObject& orbInfo_p,
   return answer;
 }
 
-void DfCD::getJ(TlSymmetricMatrix* pJ) {
+void DfCD::getJ(TlDenseSymmetricMatrix_BLAS_Old* pJ) {
   if (this->useMmapMatrix_) {
     this->getJ_S_mmap(pJ);
   } else {
@@ -539,30 +547,30 @@ void DfCD::getJ(TlSymmetricMatrix* pJ) {
   }
 }
 
-void DfCD::getJ_S(TlSymmetricMatrix* pJ) {
+void DfCD::getJ_S(TlDenseSymmetricMatrix_BLAS_Old* pJ) {
   this->log_.info("calc J by CD method (serial).");
 
   // cholesky vector
-  const TlColVectorMatrix L = this->getLjk();
+  const TlDenseGeneralMatrix_arrays_ColOriented L = this->getLjk();
   this->log_.info(
       TlUtils::format("L(J): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
   const index_type numOfCBs = L.getNumOfCols();
 
   const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
-  const TlVector vP = this->getScreenedDensityMatrix(I2PQ);
+  const TlVector_BLAS vP = this->getScreenedDensityMatrix(I2PQ);
 
   index_type start_CholeskyBasis = 0;
   index_type end_CholeskyBasis = 0;
   this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
 
   const index_type numOfI = I2PQ.size();
-  TlVector vJ(numOfI);
+  TlVector_BLAS vJ(numOfI);
   for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-    const TlVector LI = L.getColVector(I);
+    const TlVector_BLAS LI = L.getColVector(I);
     assert(LI.getSize() == vJ.getSize());
 
-    TlVector tmpLI = LI;
-    const double qi = tmpLI.dot(vP).sum();
+    TlVector_BLAS tmpLI = LI;
+    const double qi = tmpLI.dotInPlace(vP).sum();
 
     vJ += qi * LI;
   }
@@ -571,30 +579,30 @@ void DfCD::getJ_S(TlSymmetricMatrix* pJ) {
   this->finalize(pJ);
 }
 
-void DfCD::getJ_S_mmap(TlSymmetricMatrix* pJ) {
+void DfCD::getJ_S_mmap(TlDenseSymmetricMatrix_BLAS_Old* pJ) {
   this->log_.info("calc J by CD method (serial).");
 
   // cholesky vector
-  const TlMmapMatrix_CSFD L(DfObject::getLjkMatrixPath());
+  const TlDenseGeneralMatrix_mmap L(DfObject::getLjkMatrixPath());
   this->log_.info(
       TlUtils::format("L(J): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
   const index_type numOfCBs = L.getNumOfCols();
 
   const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
-  const TlVector vP = this->getScreenedDensityMatrix(I2PQ);
+  const TlVector_BLAS vP = this->getScreenedDensityMatrix(I2PQ);
 
   index_type start_CholeskyBasis = 0;
   index_type end_CholeskyBasis = 0;
   this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
 
   const index_type numOfI = I2PQ.size();
-  TlVector vJ(numOfI);
+  TlVector_BLAS vJ(numOfI);
   for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-    const TlVector LI = L.getColVector(I);
+    const TlVector_BLAS LI = L.getColVector(I);
     assert(LI.getSize() == vJ.getSize());
 
-    TlVector tmpLI = LI;
-    const double qi = tmpLI.dot(vP).sum();
+    TlVector_BLAS tmpLI = LI;
+    const double qi = tmpLI.dotInPlace(vP).sum();
 
     vJ += qi * LI;
   }
@@ -603,10 +611,10 @@ void DfCD::getJ_S_mmap(TlSymmetricMatrix* pJ) {
   this->finalize(pJ);
 }
 
-TlVector DfCD::getScreenedDensityMatrix(const PQ_PairArray& I2PQ) {
-  const TlSymmetricMatrix P = this->getPMatrix();
+TlVector_BLAS DfCD::getScreenedDensityMatrix(const PQ_PairArray& I2PQ) {
+  const TlDenseSymmetricMatrix_BLAS_Old P = this->getPMatrix();
   const std::size_t numOfI = I2PQ.size();
-  TlVector answer(numOfI);
+  TlVector_BLAS answer(numOfI);
 
   for (std::size_t i = 0; i < numOfI; ++i) {
     const Index2& pair = I2PQ[i];
@@ -619,31 +627,34 @@ TlVector DfCD::getScreenedDensityMatrix(const PQ_PairArray& I2PQ) {
   return answer;
 }
 
-TlVector DfCD::getScreenedDensityMatrix(const RUN_TYPE runType,
-                                        const PQ_PairArray& I2PR) {
-  TlSymmetricMatrix P;
+TlVector_BLAS DfCD::getScreenedDensityMatrix(const RUN_TYPE runType,
+                                             const PQ_PairArray& I2PR) {
+  TlDenseSymmetricMatrix_BLAS_Old P;
   switch (runType) {
     case RUN_RKS:
-      P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS,
-                                                      this->m_nIteration - 1);
+      P = 0.5 *
+          this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+              RUN_RKS, this->m_nIteration - 1);
       break;
 
     case RUN_UKS_ALPHA:
     case RUN_UKS_BETA:
-      P = this->getPpqMatrix<TlSymmetricMatrix>(runType,
-                                                this->m_nIteration - 1);
+      P = this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          runType, this->m_nIteration - 1);
       break;
 
     case RUN_ROKS_ALPHA: {
-      P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_CLOSED,
-                                                      this->m_nIteration - 1);
-      P += this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_OPEN,
-                                                 this->m_nIteration - 1);
+      P = 0.5 *
+          this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+              RUN_ROKS_CLOSED, this->m_nIteration - 1);
+      P += this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_ROKS_OPEN, this->m_nIteration - 1);
     } break;
 
     case RUN_ROKS_BETA: {
-      P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_CLOSED,
-                                                      this->m_nIteration - 1);
+      P = 0.5 *
+          this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+              RUN_ROKS_CLOSED, this->m_nIteration - 1);
     } break;
 
     default:
@@ -653,7 +664,7 @@ TlVector DfCD::getScreenedDensityMatrix(const RUN_TYPE runType,
   }
 
   const std::size_t numOfI = I2PR.size();
-  TlVector answer(numOfI);
+  TlVector_BLAS answer(numOfI);
 
   for (std::size_t i = 0; i < numOfI; ++i) {
     const Index2& pair = I2PR[i];
@@ -668,8 +679,8 @@ TlVector DfCD::getScreenedDensityMatrix(const RUN_TYPE runType,
   return answer;
 }
 
-void DfCD::expandJMatrix(const TlVector& vJ, const PQ_PairArray& I2PQ,
-                         TlSymmetricMatrix* pJ) {
+void DfCD::expandJMatrix(const TlVector_BLAS& vJ, const PQ_PairArray& I2PQ,
+                         TlDenseSymmetricMatrix_BLAS_Old* pJ) {
   assert(pJ != NULL);
   const index_type numOfI = I2PQ.size();
   for (index_type i = 0; i < numOfI; ++i) {
@@ -680,8 +691,8 @@ void DfCD::expandJMatrix(const TlVector& vJ, const PQ_PairArray& I2PQ,
   }
 }
 
-void DfCD::expandKMatrix(const TlVector& vK, const PQ_PairArray& I2PR,
-                         TlSymmetricMatrix* pK) {
+void DfCD::expandKMatrix(const TlVector_BLAS& vK, const PQ_PairArray& I2PR,
+                         TlDenseSymmetricMatrix_BLAS_Old* pK) {
   assert(pK != NULL);
   const index_type numOfI = I2PR.size();
   for (index_type i = 0; i < numOfI; ++i) {
@@ -693,15 +704,15 @@ void DfCD::expandKMatrix(const TlVector& vK, const PQ_PairArray& I2PR,
   }
 }
 
-void DfCD::getJ_A(TlSymmetricMatrix* pJ) {
+void DfCD::getJ_A(TlDenseSymmetricMatrix_BLAS_Old* pJ) {
   const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
                                 (*this->pPdfParam_)["basis_set"]);
   const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
                                 (*this->pPdfParam_)["basis_set"]);
-  const TlSymmetricMatrix P = this->getPMatrix();
+  const TlDenseSymmetricMatrix_BLAS_Old P = this->getPMatrix();
 
   // cholesky vector
-  const TlColVectorMatrix L = this->getLjk();
+  const TlDenseGeneralMatrix_arrays_ColOriented L = this->getLjk();
   const index_type numOfCBs = L.getNumOfCols();
 
   const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrXCPath());
@@ -709,12 +720,12 @@ void DfCD::getJ_A(TlSymmetricMatrix* pJ) {
   index_type end_CholeskyBasis = 0;
   this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
   for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-    TlMatrix LI =
+    TlDenseGeneralMatrix_BLAS_old LI =
         this->getCholeskyVectorA(orbInfo_p, orbInfo_q, L.getColVector(I), I2PQ);
     // LI.save(TlUtils::format("fl_Work/debug_LI.%d.mat", I));
 
-    TlMatrix QI = LI;
-    QI.dot(P);
+    TlDenseGeneralMatrix_BLAS_old QI = LI;
+    QI.dotInPlace(P);
     const double qi = QI.sum();
     this->log_.info(TlUtils::format("qi [%d] = % f", I, qi));
 
@@ -730,7 +741,7 @@ void DfCD::divideCholeskyBasis(const index_type numOfCBs, index_type* pStart,
   *pEnd = numOfCBs;
 }
 
-void DfCD::getK(const RUN_TYPE runType, TlSymmetricMatrix* pK) {
+void DfCD::getK(const RUN_TYPE runType, TlDenseSymmetricMatrix_BLAS_Old* pK) {
   switch (this->fastCDK_mode_) {
     case FASTCDK_NONE:
       if (this->useMmapMatrix_) {
@@ -754,27 +765,32 @@ void DfCD::getK(const RUN_TYPE runType, TlSymmetricMatrix* pK) {
   }
 }
 
-TlSymmetricMatrix DfCD::getPMatrix(const RUN_TYPE runType, int itr) {
-  TlSymmetricMatrix P;
+TlDenseSymmetricMatrix_BLAS_Old DfCD::getPMatrix(const RUN_TYPE runType, int itr) {
+  TlDenseSymmetricMatrix_BLAS_Old P;
   {
     this->log_.info("use density matrix.");
     switch (runType) {
       case RUN_RKS:
-        P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, itr);
+        P = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(RUN_RKS, itr);
         break;
 
       case RUN_UKS_ALPHA:
       case RUN_UKS_BETA:
-        P = this->getPpqMatrix<TlSymmetricMatrix>(runType, itr);
+        P = this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(runType, itr);
         break;
 
       case RUN_ROKS_ALPHA: {
-        P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_CLOSED, itr);
-        P += this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_OPEN, itr);
+        P = 0.5 *
+            this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(RUN_ROKS_CLOSED,
+                                                            itr);
+        P +=
+            this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(RUN_ROKS_OPEN, itr);
       } break;
 
       case RUN_ROKS_BETA: {
-        P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_CLOSED, itr);
+        P = 0.5 *
+            this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(RUN_ROKS_CLOSED,
+                                                            itr);
       } break;
 
       default:
@@ -788,15 +804,17 @@ TlSymmetricMatrix DfCD::getPMatrix(const RUN_TYPE runType, int itr) {
   return P;
 }
 
-void DfCD::getK_S_woCD(const RUN_TYPE runType, TlSymmetricMatrix* pK) {
+void DfCD::getK_S_woCD(const RUN_TYPE runType,
+                       TlDenseSymmetricMatrix_BLAS_Old* pK) {
   this->log_.info("calc K by CD method (serial).");
 
-  const TlColVectorMatrix L = this->getLjk();
+  const TlDenseGeneralMatrix_arrays_ColOriented L = this->getLjk();
   this->log_.info(
       TlUtils::format("L(K): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
   const index_type numOfCBs = L.getNumOfCols();
 
-  const TlSymmetricMatrix P = this->getPMatrix(runType, this->m_nIteration - 1);
+  const TlDenseSymmetricMatrix_BLAS_Old P =
+      this->getPMatrix(runType, this->m_nIteration - 1);
 
   this->log_.info("start loop");
   const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
@@ -804,11 +822,11 @@ void DfCD::getK_S_woCD(const RUN_TYPE runType, TlSymmetricMatrix* pK) {
   index_type end_CholeskyBasis = 0;
   this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
   for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-    const TlSymmetricMatrix l =
+    const TlDenseSymmetricMatrix_BLAS_Old l =
         this->getCholeskyVector(L.getColVector(I), I2PQ);
     assert(l.getNumOfRows() == this->m_nNumOfAOs);
 
-    TlMatrix X = l * P;
+    TlDenseGeneralMatrix_BLAS_old X = l * P;
     X *= l;
 
     *pK += X;
@@ -819,15 +837,17 @@ void DfCD::getK_S_woCD(const RUN_TYPE runType, TlSymmetricMatrix* pK) {
   this->finalize(pK);
 }
 
-void DfCD::getK_S_woCD_mmap(const RUN_TYPE runType, TlSymmetricMatrix* pK) {
+void DfCD::getK_S_woCD_mmap(const RUN_TYPE runType,
+                            TlDenseSymmetricMatrix_BLAS_Old* pK) {
   this->log_.info("calc K by CD method (serial; mmap).");
 
-  const TlMmapMatrix_CSFD L(DfObject::getLjkMatrixPath());
+  const TlDenseGeneralMatrix_mmap L(DfObject::getLjkMatrixPath());
   this->log_.info(
       TlUtils::format("L(K): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
   const index_type numOfCBs = L.getNumOfCols();
 
-  const TlSymmetricMatrix P = this->getPMatrix(runType, this->m_nIteration - 1);
+  const TlDenseSymmetricMatrix_BLAS_Old P =
+      this->getPMatrix(runType, this->m_nIteration - 1);
 
   this->log_.info("start loop");
   const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
@@ -835,11 +855,11 @@ void DfCD::getK_S_woCD_mmap(const RUN_TYPE runType, TlSymmetricMatrix* pK) {
   index_type end_CholeskyBasis = 0;
   this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
   for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-    const TlSymmetricMatrix l =
+    const TlDenseSymmetricMatrix_BLAS_Old l =
         this->getCholeskyVector(L.getColVector(I), I2PQ);
     assert(l.getNumOfRows() == this->m_nNumOfAOs);
 
-    TlMatrix X = l * P;
+    TlDenseGeneralMatrix_BLAS_old X = l * P;
     X *= l;
 
     *pK += X;
@@ -850,30 +870,31 @@ void DfCD::getK_S_woCD_mmap(const RUN_TYPE runType, TlSymmetricMatrix* pK) {
   this->finalize(pK);
 }
 
-void DfCD::getK_S_fast(const RUN_TYPE runType, TlSymmetricMatrix* pK) {
+void DfCD::getK_S_fast(const RUN_TYPE runType,
+                       TlDenseSymmetricMatrix_BLAS_Old* pK) {
   this->log_.info("calc K(fast) by CD method (serial).");
 
   // cholesky vector
-  const TlColVectorMatrix L = this->getLk();
+  const TlDenseGeneralMatrix_arrays_ColOriented L = this->getLk();
   this->log_.info(
       TlUtils::format("L(J): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
   const index_type numOfCBs = L.getNumOfCols();
 
   const PQ_PairArray I2PR = this->getI2PQ(this->getI2prVtrPath());
-  const TlVector vP = this->getScreenedDensityMatrix(runType, I2PR);
+  const TlVector_BLAS vP = this->getScreenedDensityMatrix(runType, I2PR);
 
   index_type start_CholeskyBasis = 0;
   index_type end_CholeskyBasis = 0;
   this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
 
   const index_type numOfI = I2PR.size();
-  TlVector vK(numOfI);
+  TlVector_BLAS vK(numOfI);
   for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-    const TlVector LI = L.getColVector(I);
+    const TlVector_BLAS LI = L.getColVector(I);
     assert(LI.getSize() == vK.getSize());
 
-    TlVector tmpLI = LI;
-    const double qi = tmpLI.dot(vP).sum();
+    TlVector_BLAS tmpLI = LI;
+    const double qi = tmpLI.dotInPlace(vP).sum();
 
     vK += qi * LI;
   }
@@ -883,31 +904,31 @@ void DfCD::getK_S_fast(const RUN_TYPE runType, TlSymmetricMatrix* pK) {
   this->finalize(pK);
 }
 
-void DfCD::getK_A(const RUN_TYPE runType, TlSymmetricMatrix* pK) {
+void DfCD::getK_A(const RUN_TYPE runType, TlDenseSymmetricMatrix_BLAS_Old* pK) {
   const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
                                 (*this->pPdfParam_)["basis_set"]);
   const TlOrbitalInfo orbInfo_q((*this->pPdfParam_)["coordinates"],
                                 (*this->pPdfParam_)["basis_set"]);
 
-  const TlColVectorMatrix L = this->getLjk();
+  const TlDenseGeneralMatrix_arrays_ColOriented L = this->getLjk();
   const index_type numOfCBs = L.getNumOfCols();
 
-  TlSymmetricMatrix P = 0.5 * this->getPMatrix();  // RKS
-  const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
+  TlDenseSymmetricMatrix_BLAS_Old P = 0.5 * this->getPMatrix();  // RKS
+  const TlDenseGeneralMatrix_BLAS_old C = P.choleskyFactorization2(this->epsilon_);
 
   const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrXCPath());
   index_type start_CholeskyBasis = 0;
   index_type end_CholeskyBasis = 0;
   this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
   for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-    TlMatrix l =
+    TlDenseGeneralMatrix_BLAS_old l =
         this->getCholeskyVectorA(orbInfo_p, orbInfo_q, L.getColVector(I), I2PQ);
 
-    TlMatrix X = l * C;
-    TlMatrix Xt = X;
-    Xt.transpose();
+    TlDenseGeneralMatrix_BLAS_old X = l * C;
+    TlDenseGeneralMatrix_BLAS_old Xt = X;
+    Xt.transposeInPlace();
 
-    TlSymmetricMatrix XX = X * Xt;
+    TlDenseSymmetricMatrix_BLAS_Old XX = X * Xt;
     *pK += XX;
   }
 
@@ -915,7 +936,8 @@ void DfCD::getK_A(const RUN_TYPE runType, TlSymmetricMatrix* pK) {
   this->finalize(pK);
 }
 
-void DfCD::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM) {
+void DfCD::getM(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                TlDenseSymmetricMatrix_BLAS_Old* pM) {
   if (this->isDedicatedBasisForGridFree_) {
     this->getM_A(P, pM);
   } else {
@@ -923,7 +945,8 @@ void DfCD::getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM) {
   }
 }
 
-void DfCD::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM) {
+void DfCD::getM_S(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                  TlDenseSymmetricMatrix_BLAS_Old* pM) {
   this->log_.info("calc M by CD method. (symmetric routine)");
 
   const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
@@ -933,7 +956,7 @@ void DfCD::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM) {
   pM->resize(numOfAOs);
 
   // cholesky vector
-  const TlColVectorMatrix L = this->getLxc();
+  const TlDenseGeneralMatrix_arrays_ColOriented L = this->getLxc();
   this->log_.info(
       TlUtils::format("L(xc): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
   const index_type numOfCBs = L.getNumOfCols();
@@ -943,12 +966,13 @@ void DfCD::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM) {
   index_type end_CholeskyBasis = 0;
   this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
   for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-    TlSymmetricMatrix LI = this->getCholeskyVector(L.getColVector(I), I2PQ);
+    TlDenseSymmetricMatrix_BLAS_Old LI =
+        this->getCholeskyVector(L.getColVector(I), I2PQ);
     assert(LI.getNumOfRows() == numOfAOs);
     assert(LI.getNumOfCols() == numOfAOs);
 
-    TlMatrix QI = LI;
-    QI.dot(P);
+    TlDenseGeneralMatrix_BLAS_old QI = LI;
+    QI.dotInPlace(P);
     const double qi = QI.sum();
 
     *pM += qi * LI;
@@ -957,7 +981,8 @@ void DfCD::getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM) {
   this->finalize(pM);
 }
 
-void DfCD::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM) {
+void DfCD::getM_A(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                  TlDenseSymmetricMatrix_BLAS_Old* pM) {
   this->log_.info("calc M by CD method. (asymmetric routine)");
   const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
                                 (*this->pPdfParam_)["basis_set"]);
@@ -968,12 +993,12 @@ void DfCD::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM) {
   pM->resize(dim_M);
 
   // cholesky vector
-  const TlColVectorMatrix L = this->getLxc();
+  const TlDenseGeneralMatrix_arrays_ColOriented L = this->getLxc();
   this->log_.info(
       TlUtils::format("L(xc; A): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
   const index_type numOfCBs = L.getNumOfCols();
 
-  const TlMatrix C = P.choleskyFactorization2(this->epsilon_);
+  const TlDenseGeneralMatrix_BLAS_old C = P.choleskyFactorization2(this->epsilon_);
 
   const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrXCPath());
 
@@ -981,18 +1006,18 @@ void DfCD::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM) {
   index_type end_CholeskyBasis = 0;
   this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
   for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-    TlMatrix l =
+    TlDenseGeneralMatrix_BLAS_old l =
         this->getCholeskyVectorA(orbInfo_p, orbInfo_q, L.getColVector(I), I2PQ);
     // l.save(TlUtils::format("fl_Work/debug_LI_xc_%d.mat", I));
     assert(l.getNumOfRows() == orbInfo_p.getNumOfOrbitals());
     assert(l.getNumOfCols() == dim_M);
-    l.transpose();
+    l.transposeInPlace();
 
-    TlMatrix X = l * C;
-    TlMatrix Xt = X;
-    Xt.transpose();
+    TlDenseGeneralMatrix_BLAS_old X = l * C;
+    TlDenseGeneralMatrix_BLAS_old Xt = X;
+    Xt.transposeInPlace();
 
-    TlSymmetricMatrix XX = X * Xt;
+    TlDenseSymmetricMatrix_BLAS_Old XX = X * Xt;
     assert(XX.getNumOfRows() == dim_M);
     *pM += XX;
   }
@@ -1000,26 +1025,26 @@ void DfCD::getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM) {
   this->finalize(pM);
 }
 
-TlSymmetricMatrix DfCD::getPMatrix() {
-  TlSymmetricMatrix P;
+TlDenseSymmetricMatrix_BLAS_Old DfCD::getPMatrix() {
+  TlDenseSymmetricMatrix_BLAS_Old P;
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      P = this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS,
-                                                this->m_nIteration - 1);
+      P = this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_RKS, this->m_nIteration - 1);
       break;
 
     case METHOD_UKS:
-      P = this->getPpqMatrix<TlSymmetricMatrix>(RUN_UKS_ALPHA,
-                                                this->m_nIteration - 1);
-      P += this->getPpqMatrix<TlSymmetricMatrix>(RUN_UKS_BETA,
-                                                 this->m_nIteration - 1);
+      P = this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_UKS_ALPHA, this->m_nIteration - 1);
+      P += this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_UKS_BETA, this->m_nIteration - 1);
       break;
 
     case METHOD_ROKS:
-      P = this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_CLOSED,
-                                                this->m_nIteration - 1);
-      P += this->getPpqMatrix<TlSymmetricMatrix>(RUN_ROKS_OPEN,
-                                                 this->m_nIteration - 1);
+      P = this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_ROKS_CLOSED, this->m_nIteration - 1);
+      P += this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_ROKS_OPEN, this->m_nIteration - 1);
       break;
 
     default:
@@ -1029,7 +1054,7 @@ TlSymmetricMatrix DfCD::getPMatrix() {
   return P;
 }
 
-TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFlyA(
+TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFlyA(
     const TlOrbitalInfoObject& orbInfo_p, const TlOrbitalInfoObject& orbInfo_q,
     const std::string& I2PQ_path) {
   this->log_.info("call on-the-fly Cholesky Decomposition routine");
@@ -1045,7 +1070,7 @@ TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFlyA(
   this->log_.info(TlUtils::format("number of pair of orbitals: %ld", numOfPQs));
   PQ_PairArray I2PQ;
   TlSparseMatrix schwartzTable(numOfOrbs_p, numOfOrbs_q);
-  TlVector d;  // 対角成分
+  TlVector_BLAS d;  // 対角成分
   this->calcDiagonalsA(orbInfo_p, orbInfo_q, &I2PQ, &schwartzTable, &d);
 
   this->log_.info(TlUtils::format("number of screened pairs of orbitals: %ld",
@@ -1053,18 +1078,18 @@ TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFlyA(
   this->saveI2PQ(I2PQ, I2PQ_path);
   // this->ERI_cache_manager_.setMaxItems(I2PQ.size() * 2);
 
-  const TlVector::size_type N = I2PQ.size();
+  const TlVector_BLAS::size_type N = I2PQ.size();
 
-  TlRowVectorMatrix L(N, 1, 1, 0, this->isEnableMmap_);
-  // TlMatrix tmpL(N, N);
+  TlDenseGeneralMatrix_arrays_RowOriented L(N, 1, 1, 0);
+  // TlDenseGeneralMatrix_BLAS_old tmpL(N, N);
   const double threshold = this->epsilon_;
   this->log_.info(
       TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
 
   double error = d.getMaxAbsoluteElement();
   // double error = d.sum();
-  std::vector<TlVector::size_type> pivot(N);
-  for (TlVector::size_type i = 0; i < N; ++i) {
+  std::vector<TlVector_BLAS::size_type> pivot(N);
+  for (TlVector_BLAS::size_type i = 0; i < N; ++i) {
     pivot[i] = i;
   }
 
@@ -1092,7 +1117,7 @@ TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFlyA(
 
     // pivot
     {
-      std::vector<TlVector::size_type>::const_iterator it =
+      std::vector<TlVector_BLAS::size_type>::const_iterator it =
           d.argmax(pivot.begin() + m, pivot.end());
       const index_type i = it - pivot.begin();
       std::swap(pivot[m], pivot[i]);
@@ -1120,13 +1145,13 @@ TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFlyA(
     assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
 
     // CD calc
-    const TlVector L_pm = L.getVector(pivot_m);
+    const TlVector_BLAS L_pm = L.getVector(pivot_m);
     std::vector<double> L_xm(numOf_G_cols);
 #pragma omp parallel for schedule(runtime)
     for (index_type i = 0; i < numOf_G_cols; ++i) {
       const index_type pivot_i = pivot[m + 1 + i];  // from (m+1) to N
-      TlVector L_pi = L.getVector(pivot_i);
-      const double sum_ll = (L_pi.dot(L_pm)).sum();
+      TlVector_BLAS L_pi = L.getVector(pivot_i);
+      const double sum_ll = (L_pi.dotInPlace(L_pm)).sum();
 
       const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
 
@@ -1163,7 +1188,7 @@ TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFlyA(
 }
 
 void DfCD::calcDiagonals(const TlOrbitalInfoObject& orbInfo,
-                         PQ_PairArray* pI2PQ, TlVector* pDiagonals) {
+                         PQ_PairArray* pI2PQ, TlVector_BLAS* pDiagonals) {
   const index_type numOfAOs = orbInfo.getNumOfOrbitals();
   const std::size_t numOfPQs = numOfAOs * (numOfAOs + 1) / 2;
 
@@ -1208,7 +1233,8 @@ void DfCD::calcDiagonals(const TlOrbitalInfoObject& orbInfo,
 }
 
 void DfCD::calcDiagonals_K_full(const TlOrbitalInfoObject& orbInfo,
-                                PQ_PairArray* pI2PR, TlVector* pDiagonals) {
+                                PQ_PairArray* pI2PR,
+                                TlVector_BLAS* pDiagonals) {
   const double tau = this->CDAM_tau_K_;
   this->log_.info(TlUtils::format("CDAM tau: %e", tau));
   this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e",
@@ -1252,7 +1278,8 @@ void DfCD::calcDiagonals_K_full(const TlOrbitalInfoObject& orbInfo,
 }
 
 void DfCD::calcDiagonals_K_half(const TlOrbitalInfoObject& orbInfo,
-                                PQ_PairArray* pI2PR, TlVector* pDiagonals) {
+                                PQ_PairArray* pI2PR,
+                                TlVector_BLAS* pDiagonals) {
   const double tau = this->CDAM_tau_K_;
   this->log_.info(TlUtils::format("CDAM tau(K): %e", tau));
   this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e",
@@ -1299,7 +1326,7 @@ void DfCD::calcDiagonals_K_half(const TlOrbitalInfoObject& orbInfo,
 void DfCD::calcDiagonalsA(const TlOrbitalInfoObject& orbInfo_p,
                           const TlOrbitalInfoObject& orbInfo_q,
                           PQ_PairArray* pI2PQ, TlSparseMatrix* pSchwartzTable,
-                          TlVector* pDiagonals) {
+                          TlVector_BLAS* pDiagonals) {
   const double tau = this->CDAM_tau_;
   this->log_.info(TlUtils::format("CDAM tau: %e", tau));
   this->log_.info(TlUtils::format("primitive GTO quartet threshold: %e",
@@ -1358,7 +1385,7 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
 
   const double tau = this->CDAM_tau_;
   const int taskListSize = taskList.size();
-  // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+// const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
   {
@@ -1419,7 +1446,7 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
       }
     }
 
-      // add up
+// add up
 #pragma omp critical(DfCD__calcDiagonals_kernel_1)
     { pI2PQ->insert(pI2PQ->end(), local_I2PQ.begin(), local_I2PQ.end()); }
 #pragma omp critical(DfCD__calcDiagonals_kernel_2)
@@ -1436,7 +1463,7 @@ void DfCD::calcDiagonals_K_full_kernel(
 
   const double tau = this->CDAM_tau_K_;
   const int taskListSize = taskList.size();
-  // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+// const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
   {
@@ -1496,7 +1523,7 @@ void DfCD::calcDiagonals_K_full_kernel(
       }
     }
 
-      // add up
+// add up
 #pragma omp critical(DfCD__calcDiagonals_kernel_1)
     { pI2PR->insert(pI2PR->end(), local_I2PR.begin(), local_I2PR.end()); }
 #pragma omp critical(DfCD__calcDiagonals_kernel_2)
@@ -1611,7 +1638,7 @@ void DfCD::calcDiagonals_K_half_kernel(
       }
     }
 
-      // add up
+// add up
 #pragma omp critical(DfCD__calcDiagonals_kernel_1)
     { pI2PR->insert(pI2PR->end(), local_I2PR.begin(), local_I2PR.end()); }
 #pragma omp critical(DfCD__calcDiagonals_kernel_2)
@@ -1631,7 +1658,7 @@ void DfCD::calcDiagonalsA_kernel(const TlOrbitalInfoObject& orbInfo_p,
 
   const double tau = this->CDAM_tau_;
   const int taskListSize = taskList.size();
-  // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+// const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
   {
@@ -1692,7 +1719,7 @@ void DfCD::calcDiagonalsA_kernel(const TlOrbitalInfoObject& orbInfo_p,
       local_schwartzTable.set(shellIndexP, shellIndexQ, std::sqrt(maxValue));
     }
 
-      // add up
+// add up
 #pragma omp critical(DfCD__calcDiagonalsA_kernel_1)
     { pI2PQ->insert(pI2PQ->end(), local_I2PQ.begin(), local_I2PQ.end()); }
 #pragma omp critical(DfCD__calcDiagonalsA_kernel_2)
@@ -1964,7 +1991,7 @@ void DfCD::calcERIs(const TlOrbitalInfoObject& orbInfo,
       }
     }
 
-      // merge cache
+// merge cache
 #pragma omp critical(DfCD__calcERIs)
     { this->ERI_cache_.insert(local_cache.begin(), local_cache.end()); }
   }
@@ -2030,7 +2057,7 @@ void DfCD::calcERIsA(const TlOrbitalInfoObject& orbInfo_p,
       }
     }
 
-      // merge cache
+// merge cache
 #pragma omp critical(DfCD__calcERIs)
     { this->ERI_cache_A_.insert(local_cache.begin(), local_cache.end()); }
   }
@@ -2140,19 +2167,19 @@ std::vector<double> DfCD::setERIsA(const TlOrbitalInfoObject& orbInfo_p,
 // for DEBUG
 //
 ////////////////////////////////////////////////////////////////////////////////
-TlSymmetricMatrix DfCD::getSuperMatrix(const TlOrbitalInfoObject& orbInfo,
-                                       PQ_PairArray* pI2PQ) {
+TlDenseSymmetricMatrix_BLAS_Old DfCD::getSuperMatrix(
+    const TlOrbitalInfoObject& orbInfo, PQ_PairArray* pI2PQ) {
   // const index_type numOfOrbs = orbInfo.getNumOfOrbitals();
 
   PQ_PairArray I2PQ;
-  TlVector d;  // 対角成分
+  TlVector_BLAS d;  // 対角成分
   this->calcDiagonals(orbInfo, &I2PQ, &d);
   if (pI2PQ != NULL) {
     *pI2PQ = I2PQ;
   }
   const std::size_t N = I2PQ.size();
 
-  TlSymmetricMatrix V(N);
+  TlDenseSymmetricMatrix_BLAS_Old V(N);
 
 #pragma omp parallel
   {
@@ -2202,22 +2229,22 @@ TlSymmetricMatrix DfCD::getSuperMatrix(const TlOrbitalInfoObject& orbInfo,
   return V;
 }
 
-TlSymmetricMatrix DfCD::getSuperMatrix_K_full(
+TlDenseSymmetricMatrix_BLAS_Old DfCD::getSuperMatrix_K_full(
     const TlOrbitalInfoObject& orbInfo, PQ_PairArray* pI2PR) {
   const index_type numOfOrbs = orbInfo.getNumOfOrbitals();
 
   PQ_PairArray I2PR;
-  TlVector d;  // 対角成分
+  TlVector_BLAS d;  // 対角成分
   this->calcDiagonals_K_full(orbInfo, &I2PR, &d);
   if (pI2PR != NULL) {
     *pI2PR = I2PR;
   }
   const std::size_t N = I2PR.size();
 
-  TlSymmetricMatrix V(N);
+  TlDenseSymmetricMatrix_BLAS_Old V(N);
 
   const int v2size = numOfOrbs * (numOfOrbs + 1) / 2;
-  TlSymmetricMatrix V2(v2size);
+  TlDenseSymmetricMatrix_BLAS_Old V2(v2size);
 
 #pragma omp parallel
   {
@@ -2295,19 +2322,19 @@ TlSymmetricMatrix DfCD::getSuperMatrix_K_full(
   return V;
 }
 
-TlSymmetricMatrix DfCD::getSuperMatrix_K_half(
+TlDenseSymmetricMatrix_BLAS_Old DfCD::getSuperMatrix_K_half(
     const TlOrbitalInfoObject& orbInfo, PQ_PairArray* pI2PR) {
   // const index_type numOfOrbs = orbInfo.getNumOfOrbitals();
 
   PQ_PairArray I2PR;
-  TlVector d;  // 対角成分
+  TlVector_BLAS d;  // 対角成分
   this->calcDiagonals_K_half(orbInfo, &I2PR, &d);
   if (pI2PR != NULL) {
     *pI2PR = I2PR;
   }
   const std::size_t N = I2PR.size();
 
-  TlSymmetricMatrix V(N);
+  TlDenseSymmetricMatrix_BLAS_Old V(N);
 
 #pragma omp parallel
   {
@@ -2411,22 +2438,22 @@ TlSymmetricMatrix DfCD::getSuperMatrix_K_half(
   return V;
 }
 
-TlSymmetricMatrix DfCD::getSuperMatrix(const TlOrbitalInfoObject& orbInfo_p,
-                                       const TlOrbitalInfoObject& orbInfo_q,
-                                       PQ_PairArray* pI2PQ) {
+TlDenseSymmetricMatrix_BLAS_Old DfCD::getSuperMatrix(
+    const TlOrbitalInfoObject& orbInfo_p, const TlOrbitalInfoObject& orbInfo_q,
+    PQ_PairArray* pI2PQ) {
   const index_type numOfOrbs_p = orbInfo_p.getNumOfOrbitals();
   const index_type numOfOrbs_q = orbInfo_q.getNumOfOrbitals();
 
   PQ_PairArray I2PQ;
   TlSparseMatrix schwartzTable(numOfOrbs_p, numOfOrbs_q);
-  TlVector d;  // 対角成分
+  TlVector_BLAS d;  // 対角成分
   this->calcDiagonalsA(orbInfo_p, orbInfo_q, &I2PQ, &schwartzTable, &d);
   if (pI2PQ != NULL) {
     *pI2PQ = I2PQ;
   }
   const std::size_t N = I2PQ.size();
 
-  TlSymmetricMatrix V(N);
+  TlDenseSymmetricMatrix_BLAS_Old V(N);
 
 #pragma omp parallel
   {
@@ -2476,19 +2503,20 @@ TlSymmetricMatrix DfCD::getSuperMatrix(const TlOrbitalInfoObject& orbInfo_p,
   return V;
 }
 
-TlMatrix DfCD::calcCholeskyVectors(const TlSymmetricMatrix& V) {
+TlDenseGeneralMatrix_BLAS_old DfCD::calcCholeskyVectors(
+    const TlDenseSymmetricMatrix_BLAS_Old& V) {
   const index_type N = V.getNumOfRows();
-  TlVector d(N);  // 対角成分
+  TlVector_BLAS d(N);  // 対角成分
   for (index_type i = 0; i < N; ++i) {
     d[i] = V.get(i, i);
   }
   double error = d.sum();
-  std::vector<TlVector::size_type> pivot(N);
+  std::vector<TlVector_BLAS::size_type> pivot(N);
   for (index_type i = 0; i < N; ++i) {
     pivot[i] = i;
   }
 
-  TlMatrix L(N, N);
+  TlDenseGeneralMatrix_BLAS_old L(N, N);
   const double threshold = this->epsilon_;
   this->log_.info(
       TlUtils::format("Cholesky Decomposition: epsilon=%e", this->epsilon_));
@@ -2497,7 +2525,7 @@ TlMatrix DfCD::calcCholeskyVectors(const TlSymmetricMatrix& V) {
   while (error > threshold) {
     // pivot
     {
-      std::vector<TlVector::size_type>::const_iterator it =
+      std::vector<TlVector_BLAS::size_type>::const_iterator it =
           d.argmax(pivot.begin() + m, pivot.end());
       const index_type i = it - pivot.begin();
       std::swap(pivot[m], pivot[i]);
@@ -2512,13 +2540,13 @@ TlMatrix DfCD::calcCholeskyVectors(const TlSymmetricMatrix& V) {
     const index_type numOf_G_cols = N - (m + 1);
 
     // CD calc
-    const TlVector L_pm = L.getRowVector(pivot_m);
+    const TlVector_BLAS L_pm = L.getRowVector(pivot_m);
     std::vector<double> L_xm(numOf_G_cols);
 #pragma omp parallel for schedule(runtime)
     for (index_type i = 0; i < numOf_G_cols; ++i) {
       const index_type pivot_i = pivot[m + 1 + i];  // from (m+1) to N
-      TlVector L_pi = L.getRowVector(pivot_i);
-      const double sum_ll = (L_pi.dot(L_pm)).sum();
+      TlVector_BLAS L_pi = L.getRowVector(pivot_i);
+      const double sum_ll = (L_pi.dotInPlace(L_pm)).sum();
       // const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
       const double l_m_pi =
           (V.get(pivot_m, pivot[m + 1 + i]) - sum_ll) * inv_l_m_pm;
@@ -2550,14 +2578,14 @@ TlMatrix DfCD::calcCholeskyVectors(const TlSymmetricMatrix& V) {
 // void DfCD::calcDiagonals_J(const TlOrbitalInfoObject& orbInfo,
 //                            PQ_PairArray* pI2PQ,
 //                            SparseSymmetricMatrix* pSchwartzTable,
-//                            TlVector* pDiagonals)
+//                            TlVector_BLAS* pDiagonals)
 // {
 // }
 
 // void DfCD::calcDiagonals_K(const TlOrbitalInfoObject& orbInfo,
 //                            PQ_PairArray* pI2PQ,
 //                            SparseSymmetricMatrix* pSchwartzTable,
-//                            TlVector* pDiagonals)
+//                            TlVector_BLAS* pDiagonals)
 // {
 // }
 
@@ -2767,7 +2795,7 @@ void DfCD::calcERIs_K(const TlOrbitalInfoObject& orbInfo,
       }
     }
 
-      // merge cache
+// merge cache
 #pragma omp critical(DfCD__calcERIs)
     { this->ERI_cache_.insert(local_cache.begin(), local_cache.end()); }
   }
@@ -2935,11 +2963,11 @@ bool DfCD::getCachedValue(const TlOrbitalInfoObject& orbInfo, index_type indexP,
   return answer;
 }
 
-TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFlyS_new(
+TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFlyS_new(
     const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path,
     const double threshold,
     void (DfCD::*calcDiagonalsFunc)(const TlOrbitalInfoObject&, PQ_PairArray*,
-                                    TlVector*),
+                                    TlVector_BLAS*),
     std::vector<double> (DfCD::*getSuperMatrixElements)(
         const TlOrbitalInfoObject&, const index_type,
         const std::vector<index_type>&, const PQ_PairArray&)) {
@@ -2954,7 +2982,7 @@ TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFlyS_new(
   // CDAM
   assert(this->pEngines_ != NULL);
   PQ_PairArray I2PQ;
-  TlVector diagonals;  // 対角成分
+  TlVector_BLAS diagonals;  // 対角成分
   (this->*calcDiagonalsFunc)(orbInfo, &I2PQ, &diagonals);
   assert((std::size_t)diagonals.getSize() == I2PQ.size());
 
@@ -2969,10 +2997,10 @@ TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFlyS_new(
   this->log_.info(
       TlUtils::format("Cholesky Decomposition: epsilon=%e", threshold));
   const index_type numOfPQtilde = I2PQ.size();
-  TlRowVectorMatrix L(numOfPQtilde, 1, 1, 0, this->isEnableMmap_);
+  TlDenseGeneralMatrix_arrays_RowOriented L(numOfPQtilde, 1, 1, 0);
 
   double error = diagonals.getMaxAbsoluteElement();
-  std::vector<TlVector::size_type> pivot(numOfPQtilde);
+  std::vector<TlVector_BLAS::size_type> pivot(numOfPQtilde);
   for (index_type i = 0; i < numOfPQtilde; ++i) {
     pivot[i] = i;
   }
@@ -3002,7 +3030,7 @@ TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFlyS_new(
 
     // pivot
     {
-      std::vector<TlVector::size_type>::const_iterator it =
+      std::vector<TlVector_BLAS::size_type>::const_iterator it =
           diagonals.argmax(pivot.begin() + numOfCDVcts, pivot.end());
       const index_type i = it - pivot.begin();
       std::swap(pivot[numOfCDVcts], pivot[i]);
@@ -3034,7 +3062,7 @@ TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFlyS_new(
     assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
 
     // CD calc
-    const TlVector L_pm = L.getVector(pivot_m);
+    const TlVector_BLAS L_pm = L.getVector(pivot_m);
     assert(L_pm.getSize() == numOfCDVcts + 1);
 
     std::vector<double> L_xm(numOf_G_cols);
@@ -3042,8 +3070,8 @@ TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFlyS_new(
     for (index_type i = 0; i < numOf_G_cols; ++i) {
       const index_type pivot_i =
           pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
-      TlVector L_pi = L.getVector(pivot_i);
-      const double sum_ll = (L_pi.dot(L_pm)).sum();
+      TlVector_BLAS L_pi = L.getVector(pivot_i);
+      const double sum_ll = (L_pi.dotInPlace(L_pm)).sum();
       const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
 
 #pragma omp atomic

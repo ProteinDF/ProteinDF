@@ -1,6 +1,6 @@
+#include "DfFunctional_Slater.h"
 #include <string>
 #include <vector>
-#include "DfFunctional_Slater.h"
 #include "gtest/gtest.h"
 
 const double EPS = 1.0E-8;

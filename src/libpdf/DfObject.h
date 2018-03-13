@@ -28,8 +28,9 @@
 
 #include "TlLogging.h"
 #include "TlMatrixCache.h"
-#include "TlMatrixObject.h"
 #include "TlSerializeData.h"
+#include "tl_matrix_object.h"
+#include "tl_vector_utils.h"
 
 /// Dfクラスの親クラス
 class DfObject {
@@ -429,7 +430,7 @@ class DfObject {
   MatrixType getCloMatrix(RUN_TYPE runType, int itr);
 
   /// return occupation vector
-  virtual TlVector getOccVtr(const RUN_TYPE runType);
+  virtual TlVector_BLAS getOccVtr(const RUN_TYPE runType);
 
  protected:
   virtual void setParam(const TlSerializeData& data);
@@ -477,14 +478,13 @@ class DfObject {
 
   // system parameters -------------------------------------------------------
   /// プロセスあたりの最大メモリ容量(byte)
-  std::size_t procMaxMemSize_;
+  // std::size_t procMaxMemSize_;
 
   /// OpenMPスレッド数
   int numOfThreads_;
 
-  bool isEnableMmap_;  /// mmap使用可(true)
-
-  bool isWorkOnDisk_;
+  // bool isEnableMmap_;  /// mmap使用可(true)
+  // bool isWorkOnDisk_;
   std::string localTempDir_;
 
   bool isRestart_;
@@ -563,7 +563,7 @@ class DfObject {
   bool enableExperimentalCode_;  /// 実験コードを有効にする
 
   // matrix memory cache
-  bool isUseCache_;
+  // bool isUseCache_;
   static int objectCount_;  // DfObjectの存在個数(派生クラスを含む)
   static TlMatrixCache matrixCache_;
 };
@@ -572,11 +572,11 @@ class DfObject {
 template <class SymmetricMatrixType>
 void DfObject::saveHpqMatrix(const SymmetricMatrixType& Hpq) {
   const std::string path = this->getHpqMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Hpq, true);
-  } else {
-    Hpq.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Hpq, true);
+  // } else {
+  Hpq.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -591,11 +591,11 @@ SymmetricMatrixType DfObject::getHpqMatrix() {
 template <class SymmetricMatrixType>
 void DfObject::saveHpq2Matrix(const SymmetricMatrixType& Hpq2) {
   const std::string path = this->getHpq2MatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Hpq2, true);
-  } else {
-    Hpq2.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Hpq2, true);
+  // } else {
+  Hpq2.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -610,11 +610,11 @@ SymmetricMatrixType DfObject::getHpq2Matrix() {
 template <class SymmetricMatrixType>
 void DfObject::saveSpqMatrix(const SymmetricMatrixType& Spq) {
   const std::string path = this->getSpqMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Spq, true);
-  } else {
-    Spq.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Spq, true);
+  // } else {
+  Spq.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -639,11 +639,11 @@ MatrixType DfObject::getLjkMatrix() {
 template <class MatrixType>
 void DfObject::saveLjkMatrix(const MatrixType& Ljk) {
   const std::string path = this->getLjkMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Ljk, true);
-  } else {
-    Ljk.save(path, 0);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Ljk, true);
+  // } else {
+  Ljk.save(path, 0);
+  // }
 }
 
 template <class MatrixType>
@@ -658,11 +658,11 @@ MatrixType DfObject::getLkMatrix() {
 template <class MatrixType>
 void DfObject::saveLkMatrix(const MatrixType& Lk) {
   const std::string path = this->getLkMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Lk, true);
-  } else {
-    Lk.save(path, 0);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Lk, true);
+  // } else {
+  Lk.save(path, 0);
+  // }
 }
 
 template <class MatrixType>
@@ -678,21 +678,21 @@ MatrixType DfObject::getLxcMatrix() {
 template <class MatrixType>
 void DfObject::saveLxcMatrix(const MatrixType& Lxc) {
   const std::string path = this->getLxcMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Lxc, true);
-  } else {
-    Lxc.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Lxc, true);
+  // } else {
+  Lxc.save(path);
+  // }
 }
 
 template <class MatrixType>
 void DfObject::saveXInvMatrix(const MatrixType& XInv) {
   const std::string path = this->getXInvMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, XInv, true);
-  } else {
-    XInv.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, XInv, true);
+  // } else {
+  XInv.save(path);
+  // }
 }
 
 template <class MatrixType>
@@ -706,11 +706,11 @@ MatrixType DfObject::getXInvMatrix() {
 template <class SymmetricMatrixType>
 void DfObject::saveSabMatrix(const SymmetricMatrixType& Sab) {
   const std::string path = this->getSabMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Sab, true);
-  } else {
-    Sab.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Sab, true);
+  // } else {
+  Sab.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -725,11 +725,11 @@ SymmetricMatrixType DfObject::getSabMatrix() {
 template <class SymmetricMatrixType>
 void DfObject::saveSab2Matrix(const SymmetricMatrixType& Sab2) {
   const std::string path = this->getSab2MatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Sab2, true);
-  } else {
-    Sab2.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Sab2, true);
+  // } else {
+  Sab2.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -744,11 +744,11 @@ SymmetricMatrixType DfObject::getSab2Matrix() {
 template <class SymmetricMatrixType>
 void DfObject::saveSgdMatrix(const SymmetricMatrixType& Sgd) {
   const std::string path = this->getSgdMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Sgd, true);
-  } else {
-    Sgd.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Sgd, true);
+  // } else {
+  Sgd.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -763,11 +763,11 @@ SymmetricMatrixType DfObject::getSgdMatrix() {
 template <class SymmetricMatrixType>
 void DfObject::saveSabInvMatrix(const SymmetricMatrixType& SabInv) {
   const std::string path = this->getSabInvMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, SabInv, true);
-  } else {
-    SabInv.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, SabInv, true);
+  // } else {
+  SabInv.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -782,11 +782,11 @@ SymmetricMatrixType DfObject::getSabInvMatrix() {
 template <class SymmetricMatrixType>
 void DfObject::saveSgdInvMatrix(const SymmetricMatrixType& SgdInv) {
   const std::string path = this->getSgdInvMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, SgdInv, true);
-  } else {
-    SgdInv.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, SgdInv, true);
+  // } else {
+  SgdInv.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -802,11 +802,11 @@ template <class MatrixType>
 void DfObject::saveGridMatrix(const int iteration,
                               const MatrixType& gridMatrix) {
   const std::string path = this->getGridMatrixPath(iteration);
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, gridMatrix, true);
-  } else {
-    gridMatrix.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, gridMatrix, true);
+  // } else {
+  gridMatrix.save(path);
+  // }
 }
 
 template <class MatrixType>
@@ -822,11 +822,11 @@ void DfObject::saveDiffDensityMatrix(const RUN_TYPE runType,
                                      const int iteration,
                                      const SymmetricMatrixType& deltaP) {
   const std::string path = this->getDiffDensityMatrixPath(runType, iteration);
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, deltaP, true);
-  } else {
-    deltaP.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, deltaP, true);
+  // } else {
+  deltaP.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -859,11 +859,11 @@ template <class SymmetricMatrixType>
 void DfObject::saveHFxMatrix(const RUN_TYPE runType, const int iteration,
                              const SymmetricMatrixType& HFx) {
   const std::string path = this->getHFxMatrixPath(runType, iteration);
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, HFx, true);
-  } else {
-    HFx.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, HFx, true);
+  // } else {
+  HFx.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -882,11 +882,11 @@ template <class SymmetricMatrixType>
 void DfObject::saveFxcMatrix(const RUN_TYPE runType, const int iteration,
                              const SymmetricMatrixType& Fxc) {
   const std::string path = this->getFxcMatrixPath(runType, iteration);
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Fxc, true);
-  } else {
-    Fxc.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Fxc, true);
+  // } else {
+  Fxc.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -903,11 +903,11 @@ template <class SymmetricMatrixType>
 void DfObject::saveExcMatrix(const RUN_TYPE runType, const int iteration,
                              const SymmetricMatrixType& Exc) {
   const std::string path = this->getExcMatrixPath(runType, iteration);
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Exc, true);
-  } else {
-    Exc.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Exc, true);
+  // } else {
+  Exc.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -925,11 +925,11 @@ template <class SymmetricMatrixType>
 void DfObject::saveFxcPureMatrix(const RUN_TYPE runType, const int iteration,
                                  const SymmetricMatrixType& FxcPure) {
   const std::string path = this->getFxcPureMatrixPath(runType, iteration);
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, FxcPure, true);
-  } else {
-    FxcPure.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, FxcPure, true);
+  // } else {
+  FxcPure.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -945,11 +945,11 @@ SymmetricMatrixType DfObject::getFxcPureMatrix(const RUN_TYPE runType,
 template <class SymmetricMatrixType>
 void DfObject::saveJMatrix(const int iteration, const SymmetricMatrixType& J) {
   const std::string path = this->getJMatrixPath(iteration);
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, J, true);
-  } else {
-    J.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, J, true);
+  // } else {
+  J.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -988,11 +988,11 @@ template <class SymmetricMatrixType>
 void DfObject::saveFpqMatrix(const RUN_TYPE runType, const int iteration,
                              const SymmetricMatrixType& Fpq) {
   const std::string path = this->getFpqMatrixPath(runType, iteration);
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Fpq, true);
-  } else {
-    Fpq.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Fpq, true);
+  // } else {
+  Fpq.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -1008,11 +1008,11 @@ SymmetricMatrixType DfObject::getFpqMatrix(const RUN_TYPE runType,
 template <class MatrixType>
 void DfObject::saveXMatrix(const MatrixType& X) {
   const std::string path = this->getXMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, X, true);
-  } else {
-    X.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, X, true);
+  // } else {
+  X.save(path);
+  // }
 }
 
 template <class MatrixType>
@@ -1030,11 +1030,11 @@ void DfObject::saveFprimeMatrix(RUN_TYPE runType, int iteration,
                                 const std::string& fragment) {
   const std::string path =
       this->getFprimeMatrixPath(runType, iteration, fragment);
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Fprime, true);
-  } else {
-    Fprime.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Fprime, true);
+  // } else {
+  Fprime.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -1055,11 +1055,11 @@ void DfObject::saveCprimeMatrix(const RUN_TYPE runType, const int iteration,
                                 const MatrixType& Cprime) {
   const std::string path =
       this->getCprimeMatrixPath(runType, iteration, fragment);
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Cprime, true);
-  } else {
-    Cprime.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Cprime, true);
+  // } else {
+  Cprime.save(path);
+  // }
 }
 
 template <class MatrixType>
@@ -1078,11 +1078,11 @@ template <class MatrixType>
 void DfObject::saveCMatrix(const RUN_TYPE runType, const int iteration,
                            const MatrixType& C) {
   const std::string path = this->getCMatrixPath(runType, iteration);
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, C, true);
-  } else {
-    C.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, C, true);
+  // } else {
+  C.save(path);
+  // }
 }
 
 template <class MatrixType>
@@ -1099,11 +1099,11 @@ template <class SymmetricMatrixType>
 void DfObject::savePpqMatrix(const RUN_TYPE runType, const int iteration,
                              const SymmetricMatrixType& Ppq) {
   const std::string path = this->getPpqMatrixPath(runType, iteration);
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Ppq, true);
-  } else {
-    Ppq.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Ppq, true);
+  // } else {
+  Ppq.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -1163,11 +1163,11 @@ SymmetricMatrixType DfObject::getPpqMatrix(const RUN_TYPE runType,
 template <class SymmetricMatrixType>
 void DfObject::saveGfSMatrix(const SymmetricMatrixType& gfS) {
   const std::string path = this->getGfSMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, gfS, true);
-  } else {
-    gfS.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, gfS, true);
+  // } else {
+  gfS.save(path);
+  // }
 }
 
 template <class SymmetricMatrixType>
@@ -1181,11 +1181,11 @@ SymmetricMatrixType DfObject::getGfSMatrix() {
 template <class MatrixType>
 void DfObject::saveGfStildeMatrix(const MatrixType& gfStilde) {
   const std::string path = this->getGfStildeMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, gfStilde, true);
-  } else {
-    gfStilde.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, gfStilde, true);
+  // } else {
+  gfStilde.save(path);
+  // }
 }
 
 template <class MatrixType>
@@ -1199,11 +1199,11 @@ MatrixType DfObject::getGfStildeMatrix() {
 template <class MatrixType>
 void DfObject::saveGfOmegaMatrix(const MatrixType& gfOmega) {
   const std::string path = this->getGfOmegaMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, gfOmega, true);
-  } else {
-    gfOmega.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, gfOmega, true);
+  // } else {
+  gfOmega.save(path);
+  // }
 }
 
 template <class MatrixType>
@@ -1217,11 +1217,11 @@ MatrixType DfObject::getGfOmegaMatrix() {
 template <class MatrixType>
 void DfObject::saveGfVMatrix(const MatrixType& gfV) {
   const std::string path = this->getGfVMatrixPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, gfV, true);
-  } else {
-    gfV.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, gfV, true);
+  // } else {
+  gfV.save(path);
+  // }
 }
 
 template <class MatrixType>
@@ -1235,11 +1235,11 @@ MatrixType DfObject::getGfVMatrix() {
 template <class MatrixType>
 void DfObject::saveDipoleVelocityIntegralsXMatrix(const MatrixType& dSdx) {
   const std::string path = this->getDipoleVelocityIntegralsXPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, dSdx, true);
-  } else {
-    dSdx.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, dSdx, true);
+  // } else {
+  dSdx.save(path);
+  // }
 }
 
 template <class MatrixType>
@@ -1253,11 +1253,11 @@ MatrixType DfObject::getDipoleVelocityIntegralsXMatrix() {
 template <class MatrixType>
 void DfObject::saveDipoleVelocityIntegralsYMatrix(const MatrixType& dSdy) {
   const std::string path = this->getDipoleVelocityIntegralsYPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, dSdy, true);
-  } else {
-    dSdy.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, dSdy, true);
+  // } else {
+  dSdy.save(path);
+  // }
 }
 
 template <class MatrixType>
@@ -1271,11 +1271,11 @@ MatrixType DfObject::getDipoleVelocityIntegralsYMatrix() {
 template <class MatrixType>
 void DfObject::saveDipoleVelocityIntegralsZMatrix(const MatrixType& dSdz) {
   const std::string path = this->getDipoleVelocityIntegralsZPath();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, dSdz, true);
-  } else {
-    dSdz.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, dSdz, true);
+  // } else {
+  dSdz.save(path);
+  // }
 }
 
 template <class MatrixType>
@@ -1296,7 +1296,7 @@ template <class VectorType>
 VectorType DfObject::getNalpha() {
   VectorType Na(this->m_nNumOfAux);
   const std::string path = this->getNalphaPath();
-  if (VectorType::isLoadable(path) == true) {
+  if (TlVectorUtils::isLoadable(path) == true) {
     Na.load(path);
   }
   return Na;
@@ -1313,7 +1313,7 @@ template <class VectorType>
 VectorType DfObject::getMyu(const RUN_TYPE runType, const int iteration) {
   VectorType myu(this->numOfAuxXC_);
   const std::string path = this->getMyuPath(runType, iteration);
-  if (VectorType::isLoadable(path) == true) {
+  if (TlVectorUtils::isLoadable(path) == true) {
     myu.load(path);
   }
   return myu;
@@ -1330,7 +1330,7 @@ template <class VectorType>
 VectorType DfObject::getNyu(const RUN_TYPE runType, const int iteration) {
   VectorType nyu(this->numOfAuxXC_);
   const std::string path = this->getNyuPath(runType, iteration);
-  if (VectorType::isLoadable(path) == true) {
+  if (TlVectorUtils::isLoadable(path) == true) {
     nyu.load(path);
   }
   return nyu;
@@ -1340,11 +1340,11 @@ template <class MatrixType>
 void DfObject::saveCloMatrix(const RUN_TYPE runType, const int itr,
                              const MatrixType& Clo) {
   const std::string path = this->getCloMatrixPath(runType, itr);
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.set(path, Clo, true);
-  } else {
-    Clo.save(path);
-  }
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.set(path, Clo, true);
+  // } else {
+  Clo.save(path);
+  // }
 }
 
 template <class MatrixType>

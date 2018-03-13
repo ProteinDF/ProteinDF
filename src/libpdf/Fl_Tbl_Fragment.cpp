@@ -20,7 +20,7 @@
 #include "TlFile.h"
 #include "TlLogging.h"
 
-int Fl_Tbl_Fragment ::flag = 0;  // flag for Constructor
+int Fl_Tbl_Fragment::flag = 0;  // flag for Constructor
 // first : flag = 0
 // after : flag = 1
 
@@ -193,7 +193,7 @@ void Fl_Tbl_Fragment::setData() {
   fi.close();
 }
 
-int Fl_Tbl_Fragment ::getQclo(int fragindex, int fragqcloindex) {
+int Fl_Tbl_Fragment::getQclo(int fragindex, int fragqcloindex) {
   for (int i = 0; i < number_qclo; i++) {
     if (FragTbl[i].fragment == fragindex &&
         FragTbl[i].fragmentqclo == fragqcloindex)
@@ -203,7 +203,7 @@ int Fl_Tbl_Fragment ::getQclo(int fragindex, int fragqcloindex) {
   return -1;
 }
 
-int Fl_Tbl_Fragment ::getQcloAlpha(int fragindex, int fragqcloindex) {
+int Fl_Tbl_Fragment::getQcloAlpha(int fragindex, int fragqcloindex) {
   for (int i = 0; i < number_qclo; i++) {
     if (FragTbl[i].fragment_alpha == fragindex &&
         FragTbl[i].fragmentqclo_alpha == fragqcloindex)
@@ -213,7 +213,7 @@ int Fl_Tbl_Fragment ::getQcloAlpha(int fragindex, int fragqcloindex) {
   return -1;
 }
 
-int Fl_Tbl_Fragment ::getQcloBeta(int fragindex, int fragqcloindex) {
+int Fl_Tbl_Fragment::getQcloBeta(int fragindex, int fragqcloindex) {
   for (int i = 0; i < number_qclo; i++) {
     if (FragTbl[i].fragment_beta == fragindex &&
         FragTbl[i].fragmentqclo_beta == fragqcloindex)
@@ -223,31 +223,31 @@ int Fl_Tbl_Fragment ::getQcloBeta(int fragindex, int fragqcloindex) {
   return -1;
 }
 
-int Fl_Tbl_Fragment ::getFragment(int qcloindex) {
+int Fl_Tbl_Fragment::getFragment(int qcloindex) {
   return FragTbl[qcloindex].fragment;
 }
 
-int Fl_Tbl_Fragment ::getFragmentAlpha(int qcloindex) {
+int Fl_Tbl_Fragment::getFragmentAlpha(int qcloindex) {
   return FragTbl[qcloindex].fragment_alpha;
 }
 
-int Fl_Tbl_Fragment ::getFragmentBeta(int qcloindex) {
+int Fl_Tbl_Fragment::getFragmentBeta(int qcloindex) {
   return FragTbl[qcloindex].fragment_beta;
 }
 
-int Fl_Tbl_Fragment ::getFragmentqclo(int qcloindex) {
+int Fl_Tbl_Fragment::getFragmentqclo(int qcloindex) {
   return FragTbl[qcloindex].fragmentqclo;
 }
 
-int Fl_Tbl_Fragment ::getFragmentqcloAlpha(int qcloindex) {
+int Fl_Tbl_Fragment::getFragmentqcloAlpha(int qcloindex) {
   return FragTbl[qcloindex].fragmentqclo_alpha;
 }
 
-int Fl_Tbl_Fragment ::getFragmentqcloBeta(int qcloindex) {
+int Fl_Tbl_Fragment::getFragmentqcloBeta(int qcloindex) {
   return FragTbl[qcloindex].fragmentqclo_beta;
 }
 
-int Fl_Tbl_Fragment ::getNumberFragmentqclo(int fragindex) {
+int Fl_Tbl_Fragment::getNumberFragmentqclo(int fragindex) {
   return number_fragmentqclo[fragindex];
 }
 
