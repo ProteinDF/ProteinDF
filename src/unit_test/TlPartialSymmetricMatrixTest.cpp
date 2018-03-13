@@ -1,7 +1,7 @@
 #include "TlPartialSymmetricMatrixTest.h"
 #include <limits>
 #include "TlFile.h"
-#include "TlSymmetricMatrix.h"
+#include "TlMatrix_RLHD.h"
 
 const double TlPartialSymmetricMatrixTest::threshold =
     std::numeric_limits<double>::epsilon();

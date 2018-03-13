@@ -23,7 +23,6 @@
 #include "DfEriX.h"
 #include "TlFmt.h"
 #include "TlMath.h"
-#include "TlSparseVector.h"
 #include "TlTime.h"
 
 // const int DfEriX::MAX_SHELL_TYPE = 2 + 1; // (s=0, p, d)
@@ -144,19 +143,19 @@ DfTaskCtrl* DfEriX::getDfTaskCtrlObject() const {
   return pDfTaskCtrl;
 }
 
-void DfEriX::finalize(TlMatrix* pMtx) {
+void DfEriX::finalize(TlDenseGeneralMatrix_BLAS_old* pMtx) {
   // do nothing
 }
 
-void DfEriX::finalize(TlSymmetricMatrix* pMtx) {
+void DfEriX::finalize(TlDenseSymmetricMatrix_BLAS_Old* pMtx) {
   // do nothing
 }
 
-void DfEriX::finalize(TlVector* pVct) {
+void DfEriX::finalize(TlVector_BLAS* pVct) {
   // do nothing
 }
 
-void DfEriX::getJ(const TlSymmetricMatrix& P, TlVector* pRho) {
+void DfEriX::getJ(const TlDenseSymmetricMatrix_BLAS_Old& P, TlVector_BLAS* pRho) {
   assert(pRho != NULL);
   // TlTime time_all;
   // time_all.start();
@@ -218,15 +217,15 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                        const TlOrbitalInfo_Density& orbitalInfo_Density,
                        const ShellArrayTable& shellArrayTable_Density,
                        const std::vector<DfTaskCtrl::Task2>& taskList,
-                       const TlMatrixObject& P, TlVector* pRho) {
+                       const TlMatrixObject& P, TlVector_BLAS* pRho) {
   const int taskListSize = taskList.size();
-  // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
-  // int numOfThreads = 1;
+// const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+// int numOfThreads = 1;
 
-  // TlTime time_sumup;
-  // double elapsetime_calc = 0.0;
-  // double elapsetime_calc_eri = 0.0;
-  // double elapsetime_store = 0.0;
+// TlTime time_sumup;
+// double elapsetime_calc = 0.0;
+// double elapsetime_calc_eri = 0.0;
+// double elapsetime_store = 0.0;
 #pragma omp parallel
   {
     // TlTime time_calc;
@@ -243,7 +242,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
     this->pEriEngines_[threadID].setPrimitiveLevelThreshold(
         this->cutoffThreshold_primitive_);
 
-    // time_calc.start();
+// time_calc.start();
 #pragma omp for schedule(runtime)
     for (int i = 0; i < taskListSize; ++i) {
       const index_type shellIndexP = taskList[i].shellIndex1;
@@ -317,9 +316,9 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
         }
       }
     }
-      // time_calc.stop();
+// time_calc.stop();
 
-      // time_sumup.start();
+// time_sumup.start();
 #pragma omp critical(DfEriX__getJ_P_to_rho)
     {
       const int numOfAux = this->m_nNumOfAux;
@@ -340,7 +339,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
   // this->elapsetime_sumup_ += time_sumup.getElapseTime();
 }
 
-void DfEriX::getJ(const TlVector& rho, TlSymmetricMatrix* pJ) {
+void DfEriX::getJ(const TlVector_BLAS& rho, TlDenseSymmetricMatrix_BLAS_Old* pJ) {
   assert(pJ != NULL);
   // this->elapsetime_calc_ = 0.0;
   // this->elapsetime_store_ = 0.0;
@@ -401,17 +400,17 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                        const TlOrbitalInfo_Density& orbitalInfo_Density,
                        const ShellArrayTable& shellArrayTable_Density,
                        const std::vector<DfTaskCtrl::Task2>& taskList,
-                       const TlVector& rho, TlMatrixObject* pJ) {
+                       const TlVector_BLAS& rho, TlMatrixObject* pJ) {
   // const TlMatrixObject::index_type dim = pJ->getNumOfRows();
 
   const int maxShellType = orbitalInfo.getMaxShellType();
   const int taskListSize = taskList.size();
-  // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
-  // int numOfThreads = 1;
+// const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+// int numOfThreads = 1;
 
-  // double elapsetime_calc     = 0.0;
-  // double elapsetime_calc_eri = 0.0;
-  // double elapsetime_store    = 0.0;
+// double elapsetime_calc     = 0.0;
+// double elapsetime_calc_eri = 0.0;
+// double elapsetime_store    = 0.0;
 #pragma omp parallel
   {
     // TlTime time_calc;
@@ -433,7 +432,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
     this->pEriEngines_[threadID].setPrimitiveLevelThreshold(
         this->cutoffThreshold_primitive_);
 
-    // time_calc.start();
+// time_calc.start();
 #pragma omp for schedule(runtime)
     for (int i = 0; i < taskListSize; ++i) {
       const index_type shellIndexP = taskList[i].shellIndex1;
@@ -507,7 +506,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
         }
       }
     }
-      // time_calc.stop();
+// time_calc.stop();
 
 #pragma omp critical(DfEriX__getJ_rho_to_J)
     {
@@ -528,7 +527,8 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
   // this->elapsetime_store_    += elapsetime_store / double(numOfThreads);
 }
 
-void DfEriX::getJpq(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ) {
+void DfEriX::getJpq(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                    TlDenseSymmetricMatrix_BLAS_Old* pJ) {
   assert(pJ != NULL);
   // this->clearCutoffStats();
 
@@ -551,7 +551,8 @@ void DfEriX::getJpq(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ) {
   // this->cutoffReport();
 }
 
-void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ) {
+void DfEriX::getJpq_exact(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                          TlDenseSymmetricMatrix_BLAS_Old* pJ) {
   assert(pJ != NULL);
   // const index_type numOfAOs = this->m_nNumOfAOs;
 
@@ -656,8 +657,8 @@ void DfEriX::getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ) {
   }
 }
 
-void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P,
-                                   TlSymmetricMatrix* pJ) {
+void DfEriX::getJpq_integralDriven(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                                   TlDenseSymmetricMatrix_BLAS_Old* pJ) {
   assert(pJ != NULL);
   pJ->resize(this->m_nNumOfAOs);
 
@@ -717,7 +718,7 @@ void DfEriX::getJpq_integralDriven(const TlSymmetricMatrix& P,
   pDfTaskCtrl = NULL;
   this->destroyEngines();
 
-  // debug
+// debug
 #ifdef DEBUG_J
   if (this->isDebugOutJ_ == true) {
     for (index_type i = 0; i < numOfAOs; ++i) {
@@ -751,7 +752,7 @@ int DfEriX::getJ_integralDriven_part(
     index_type* pIndexPairs, double* pValues) {
   int numOfElements = 0;
   const int taskListSize = taskList.size();
-  // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+// const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
   {
@@ -901,7 +902,7 @@ int DfEriX::storeJ_integralDriven(
   return numOfElements;
 }
 
-void DfEriX::getJab(TlSymmetricMatrix* pJab) {
+void DfEriX::getJab(TlDenseSymmetricMatrix_BLAS_Old* pJab) {
   assert(pJab != NULL);
   const index_type numOfAuxDens = this->m_nNumOfAux;
   pJab->resize(numOfAuxDens);
@@ -943,7 +944,7 @@ void DfEriX::getJab_part(const TlOrbitalInfoObject& orbitalInfo,
                          TlMatrixObject* pJab) {
   // const int maxShellType = orbitalInfo.getMaxShellType();
   const int taskListSize = taskList.size();
-  // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+// const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
   {
@@ -1017,7 +1018,8 @@ void DfEriX::getJab_part(const TlOrbitalInfoObject& orbitalInfo,
   }
 }
 
-void DfEriX::getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce) {
+void DfEriX::getForceJ(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                       TlDenseGeneralMatrix_BLAS_old* pForce) {
   assert(pForce != NULL);
   pForce->resize(this->m_nNumOfAtoms, 3);
 
@@ -1222,8 +1224,9 @@ void DfEriX::storeForceJ_integralDriven(
   }
 }
 
-void DfEriX::getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
-                       TlMatrix* pForce) {
+void DfEriX::getForceJ(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                       const TlVector_BLAS& rho,
+                       TlDenseGeneralMatrix_BLAS_old* pForce) {
   assert(pForce != NULL);
   // this->clearCutoffStats();
 
@@ -1276,12 +1279,13 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
                             const TlOrbitalInfoObject& orbitalInfo_Density,
                             const ShellArrayTable& shellArrayTable_Density,
                             std::vector<DfTaskCtrl::Task2>& taskList,
-                            const TlSymmetricMatrix& P, const TlVector& rho,
-                            TlMatrix* pForce) {
+                            const TlDenseSymmetricMatrix_BLAS_Old& P,
+                            const TlVector_BLAS& rho,
+                            TlDenseGeneralMatrix_BLAS_old* pForce) {
   static const int BUFFER_SIZE = 3 * 5 * 5 * 5;  // (xyz) * 5d * 5d * 5d
   const int maxShellType = orbitalInfo.getMaxShellType();
   const int taskListSize = taskList.size();
-  // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+// const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
   {
@@ -1381,7 +1385,7 @@ void DfEriX::storeForceJ(
     const index_type atomIndexC, const index_type shellIndexP,
     const int maxStepsP, const index_type shellIndexQ, const int maxStepsQ,
     const index_type shellIndexR, const int maxStepsR, const double* p_dJdA,
-    const double* p_dJdB, const TlMatrixObject& P, const TlVectorObject& rho,
+    const double* p_dJdB, const TlMatrixObject& P, const TlVectorAbstract& rho,
     TlMatrixObject* pForce, const int target, int* pIndex) {
   for (int stepP = 0; stepP < maxStepsP; ++stepP) {
     const index_type indexP = shellIndexP + stepP;
@@ -1411,7 +1415,8 @@ void DfEriX::storeForceJ(
   }
 }
 
-void DfEriX::getForceJ(const TlVector& rho, TlMatrix* pForce) {
+void DfEriX::getForceJ(const TlVector_BLAS& rho,
+                       TlDenseGeneralMatrix_BLAS_old* pForce) {
   assert(pForce != NULL);
   pForce->resize(this->m_nNumOfAtoms, 3);
 
@@ -1447,11 +1452,12 @@ void DfEriX::getForceJ(const TlVector& rho, TlMatrix* pForce) {
 
 void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo_Density,
                             std::vector<DfTaskCtrl::Task2>& taskList,
-                            const TlVector& rho, TlMatrix* pForce) {
+                            const TlVector_BLAS& rho,
+                            TlDenseGeneralMatrix_BLAS_old* pForce) {
   // static const int BUFFER_SIZE = 3 * 5 * 5 * 5; // (xyz) * 5d * 5d * 5d
   // const int maxShellType = orbitalInfo.getMaxShellType();
   const int taskListSize = taskList.size();
-  // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+// const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
   {
@@ -1515,7 +1521,7 @@ void DfEriX::storeForceJ(const index_type atomIndexA,
                          const index_type atomIndexC,
                          const index_type shellIndexP, const int maxStepsP,
                          const index_type shellIndexR, const int maxStepsR,
-                         const DfEriEngine& engine, const TlVectorObject& rho,
+                         const DfEriEngine& engine, const TlVectorAbstract& rho,
                          TlMatrixObject* pForce, const int target,
                          int* pIndex) {
   for (int stepP = 0; stepP < maxStepsP; ++stepP) {
@@ -1539,7 +1545,8 @@ void DfEriX::storeForceJ(const index_type atomIndexA,
   }
 }
 
-void DfEriX::getK(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK) {
+void DfEriX::getK(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                  TlDenseSymmetricMatrix_BLAS_Old* pK) {
   // this->clearCutoffStats();
 
   // カットオフ値の設定
@@ -1561,7 +1568,8 @@ void DfEriX::getK(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK) {
   // this->cutoffReport();
 }
 
-void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK) {
+void DfEriX::getK_exact(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                        TlDenseSymmetricMatrix_BLAS_Old* pK) {
   assert(pK != NULL);
   // const index_type numOfAOs = this->m_nNumOfAOs;
   pK->resize(this->m_nNumOfAOs);
@@ -1664,8 +1672,8 @@ void DfEriX::getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK) {
   }
 }
 
-void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P,
-                                 TlSymmetricMatrix* pK) {
+void DfEriX::getK_integralDriven(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                                 TlDenseSymmetricMatrix_BLAS_Old* pK) {
   assert(pK != NULL);
   pK->resize(this->m_nNumOfAOs);
 
@@ -1726,7 +1734,7 @@ void DfEriX::getK_integralDriven(const TlSymmetricMatrix& P,
   pDfTaskCtrl = NULL;
   this->destroyEngines();
 
-  // debug
+// debug
 #ifdef DEBUG_K
   if (this->isDebugOutK_ == true) {
     this->debugoutK_integralDriven();
@@ -1761,7 +1769,7 @@ int DfEriX::getK_integralDriven_part(
     index_type* pIndexPairs, double* pValues) {
   int numOfElements = 0;
   const int taskListSize = taskList.size();
-  // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+// const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
   {
@@ -1947,15 +1955,15 @@ int DfEriX::storeK_integralDriven(
               ++numOfElements;
 #ifdef DEBUG_K
               this->IA_K_ID4_.countUp(indexQ, indexS, indexP, indexR, coefEq4);
-              // std::cerr << TlUtils::format("K_EQ4 <%2d %2d %2d %2d>: (%2d %2d
-              // %2d %2d), coef=%d, value=%d",
-              //                              shellIndexP, shellIndexQ,
-              //                              shellIndexR, shellIndexS, indexQ,
-              //                              indexS, indexP, indexR,
-              //                              (int)coefEq4,
-              //                              this->IA_K_ID4_.getCount(indexQ,
-              //                              indexS, indexP, indexR))
-              //           << std::endl;
+// std::cerr << TlUtils::format("K_EQ4 <%2d %2d %2d %2d>: (%2d %2d
+// %2d %2d), coef=%d, value=%d",
+//                              shellIndexP, shellIndexQ,
+//                              shellIndexR, shellIndexS, indexQ,
+//                              indexS, indexP, indexR,
+//                              (int)coefEq4,
+//                              this->IA_K_ID4_.getCount(indexQ,
+//                              indexS, indexP, indexR))
+//           << std::endl;
 #endif  // DEBUG_K
             }
           }
@@ -1999,7 +2007,8 @@ void DfEriX::debugoutK_integralDriven() const {
 #endif  // DEBUG_K
 }
 
-void DfEriX::getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce) {
+void DfEriX::getForceK(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                       TlDenseGeneralMatrix_BLAS_old* pForce) {
   assert(pForce != NULL);
   pForce->resize(this->m_nNumOfAtoms, 3);
 

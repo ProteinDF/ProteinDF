@@ -73,25 +73,25 @@ class DfCalcGridX : public DfObject {
 
  public:
   // for density field data
-  void gridDensity(const TlSymmetricMatrix& P, const TlPosition& gridPosition,
-                   double* pRho);
+  void gridDensity(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                   const TlPosition& gridPosition, double* pRho);
 
  public:
   // for derivative
-  virtual TlMatrix energyGradient(const TlSymmetricMatrix& P_A,
-                                  DfFunctional_LDA* pFunctional);
-  virtual TlMatrix energyGradient(const TlSymmetricMatrix& P_A,
-                                  DfFunctional_GGA* pFunctional);
+  virtual TlDenseGeneralMatrix_BLAS_old energyGradient(
+      const TlDenseSymmetricMatrix_BLAS_Old& P_A, DfFunctional_LDA* pFunctional);
+  virtual TlDenseGeneralMatrix_BLAS_old energyGradient(
+      const TlDenseSymmetricMatrix_BLAS_Old& P_A, DfFunctional_GGA* pFunctional);
 
  protected:
-  TlMatrix selectGridMatrixByAtom(const TlMatrix& globalGridMat,
-                                  const int atomIndex);
+  TlDenseGeneralMatrix_BLAS_old selectGridMatrixByAtom(
+      const TlDenseGeneralMatrix_BLAS_old& globalGridMat, const int atomIndex);
 
  protected:
-  virtual void defineCutOffValues(const TlSymmetricMatrix& P);
+  virtual void defineCutOffValues(const TlDenseSymmetricMatrix_BLAS_Old& P);
 
-  virtual void defineCutOffValues(const TlSymmetricMatrix& PA,
-                                  const TlSymmetricMatrix& PB);
+  virtual void defineCutOffValues(const TlDenseSymmetricMatrix_BLAS_Old& PA,
+                                  const TlDenseSymmetricMatrix_BLAS_Old& PB);
 
   /// グリッド点における波動関数値配列(std::vector<WFGrid>)1つから
   /// 交換相関項(Fxc)を求める。
@@ -187,79 +187,87 @@ class DfCalcGridX : public DfObject {
                              double* pGradRhoAZ);
 
  public:
-  double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+  double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
                                      DfFunctional_LDA* pFunctional,
-                                     TlSymmetricMatrix* pF_A);
-  double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-                                     const TlSymmetricMatrix& P_B,
+                                     TlDenseSymmetricMatrix_BLAS_Old* pF_A);
+  double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                                     const TlDenseSymmetricMatrix_BLAS_Old& P_B,
                                      DfFunctional_LDA* pFunctional,
-                                     TlSymmetricMatrix* pF_A,
-                                     TlSymmetricMatrix* pF_B);
-  double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                     TlDenseSymmetricMatrix_BLAS_Old* pF_A,
+                                     TlDenseSymmetricMatrix_BLAS_Old* pF_B);
+  double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
                                      DfFunctional_GGA* pFunctional,
-                                     TlSymmetricMatrix* pF_A);
-  double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-                                     const TlSymmetricMatrix& P_B,
+                                     TlDenseSymmetricMatrix_BLAS_Old* pF_A);
+  double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                                     const TlDenseSymmetricMatrix_BLAS_Old& P_B,
                                      DfFunctional_GGA* pFunctional,
-                                     TlSymmetricMatrix* pF_A,
-                                     TlSymmetricMatrix* pF_B);
+                                     TlDenseSymmetricMatrix_BLAS_Old* pF_A,
+                                     TlDenseSymmetricMatrix_BLAS_Old* pF_B);
 
   virtual void getWholeDensity(double* pRhoA, double* pRhoB) const;
 
  protected:
-  double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+  double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
                                      DfFunctional_LDA* pFunctional,
-                                     TlSymmetricMatrix* pF_A,
-                                     TlMatrix* pGridMatrix);
-  double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-                                     const TlSymmetricMatrix& P_B,
+                                     TlDenseSymmetricMatrix_BLAS_Old* pF_A,
+                                     TlDenseGeneralMatrix_BLAS_old* pGridMatrix);
+  double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                                     const TlDenseSymmetricMatrix_BLAS_Old& P_B,
                                      DfFunctional_LDA* pFunctional,
-                                     TlSymmetricMatrix* pF_A,
-                                     TlSymmetricMatrix* pF_B,
-                                     TlMatrix* pGridMatrix);
-  double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
+                                     TlDenseSymmetricMatrix_BLAS_Old* pF_A,
+                                     TlDenseSymmetricMatrix_BLAS_Old* pF_B,
+                                     TlDenseGeneralMatrix_BLAS_old* pGridMatrix);
+  double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
                                      DfFunctional_GGA* pFunctional,
-                                     TlSymmetricMatrix* pF_A,
-                                     TlMatrix* pGridMatrix);
-  double calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-                                     const TlSymmetricMatrix& P_B,
+                                     TlDenseSymmetricMatrix_BLAS_Old* pF_A,
+                                     TlDenseGeneralMatrix_BLAS_old* pGridMatrix);
+  double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                                     const TlDenseSymmetricMatrix_BLAS_Old& P_B,
                                      DfFunctional_GGA* pFunctional,
-                                     TlSymmetricMatrix* pF_A,
-                                     TlSymmetricMatrix* pF_B,
-                                     TlMatrix* pGridMatrix);
+                                     TlDenseSymmetricMatrix_BLAS_Old* pF_A,
+                                     TlDenseSymmetricMatrix_BLAS_Old* pF_B,
+                                     TlDenseGeneralMatrix_BLAS_old* pGridMatrix);
 
  protected:
-  virtual void calcRho_LDA(const TlSymmetricMatrix& P_A);
-  virtual void calcRho_LDA(const TlSymmetricMatrix& P_A,
-                           const TlSymmetricMatrix& P_B);
-  virtual void calcRho_GGA(const TlSymmetricMatrix& P_A);
-  virtual void calcRho_GGA(const TlSymmetricMatrix& P_A,
-                           const TlSymmetricMatrix& P_B);
+  virtual void calcRho_LDA(const TlDenseSymmetricMatrix_BLAS_Old& P_A);
+  virtual void calcRho_LDA(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                           const TlDenseSymmetricMatrix_BLAS_Old& P_B);
+  virtual void calcRho_GGA(const TlDenseSymmetricMatrix_BLAS_Old& P_A);
+  virtual void calcRho_GGA(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                           const TlDenseSymmetricMatrix_BLAS_Old& P_B);
 
-  void calcRho_LDA_part(const TlSymmetricMatrix& P_A, TlMatrix* pGridMat);
-  void calcRho_LDA_part(const TlSymmetricMatrix& P_A,
-                        const TlSymmetricMatrix& P_B, TlMatrix* pGridMat);
-  void calcRho_GGA_part(const TlSymmetricMatrix& P_A, TlMatrix* pGridMat);
-  void calcRho_GGA_part(const TlSymmetricMatrix& P_A,
-                        const TlSymmetricMatrix& P_B, TlMatrix* pGridMat);
+  void calcRho_LDA_part(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                        TlDenseGeneralMatrix_BLAS_old* pGridMat);
+  void calcRho_LDA_part(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                        const TlDenseSymmetricMatrix_BLAS_Old& P_B,
+                        TlDenseGeneralMatrix_BLAS_old* pGridMat);
+  void calcRho_GGA_part(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                        TlDenseGeneralMatrix_BLAS_old* pGridMat);
+  void calcRho_GGA_part(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                        const TlDenseSymmetricMatrix_BLAS_Old& P_B,
+                        TlDenseGeneralMatrix_BLAS_old* pGridMat);
 
   virtual double buildVxc(DfFunctional_LDA* pFunctional,
-                          TlSymmetricMatrix* pF_A);
+                          TlDenseSymmetricMatrix_BLAS_Old* pF_A);
   virtual double buildVxc(DfFunctional_LDA* pFunctional,
-                          TlSymmetricMatrix* pF_A, TlSymmetricMatrix* pF_B);
+                          TlDenseSymmetricMatrix_BLAS_Old* pF_A,
+                          TlDenseSymmetricMatrix_BLAS_Old* pF_B);
   virtual double buildVxc(DfFunctional_GGA* pFunctional,
-                          TlSymmetricMatrix* pF_A);
+                          TlDenseSymmetricMatrix_BLAS_Old* pF_A);
   virtual double buildVxc(DfFunctional_GGA* pFunctional,
-                          TlSymmetricMatrix* pF_A, TlSymmetricMatrix* pF_B);
+                          TlDenseSymmetricMatrix_BLAS_Old* pF_A,
+                          TlDenseSymmetricMatrix_BLAS_Old* pF_B);
 
-  double buildVxc(const TlMatrix& gridMatrix, DfFunctional_LDA* pFunctional,
-                  TlMatrixObject* pF_A);
-  double buildVxc(const TlMatrix& gridMatrix, DfFunctional_LDA* pFunctional,
-                  TlMatrixObject* pF_A, TlMatrixObject* pF_B);
-  double buildVxc(const TlMatrix& gridMatrix, DfFunctional_GGA* pFunctional,
-                  TlMatrixObject* pF_A);
-  double buildVxc(const TlMatrix& gridMatrix, DfFunctional_GGA* pFunctional,
-                  TlMatrixObject* pF_A, TlMatrixObject* pF_B);
+  double buildVxc(const TlDenseGeneralMatrix_BLAS_old& gridMatrix,
+                  DfFunctional_LDA* pFunctional, TlMatrixObject* pF_A);
+  double buildVxc(const TlDenseGeneralMatrix_BLAS_old& gridMatrix,
+                  DfFunctional_LDA* pFunctional, TlMatrixObject* pF_A,
+                  TlMatrixObject* pF_B);
+  double buildVxc(const TlDenseGeneralMatrix_BLAS_old& gridMatrix,
+                  DfFunctional_GGA* pFunctional, TlMatrixObject* pF_A);
+  double buildVxc(const TlDenseGeneralMatrix_BLAS_old& gridMatrix,
+                  DfFunctional_GGA* pFunctional, TlMatrixObject* pF_A,
+                  TlMatrixObject* pF_B);
 
   void build_XC_Matrix(const double roundF_roundRhoA,
                        const std::vector<double>& AO_values,
@@ -277,14 +285,16 @@ class DfCalcGridX : public DfObject {
                        TlMatrixObject* pF_A);
 
  protected:
-  double energyGradient_part(const TlSymmetricMatrix& P_A,
+  double energyGradient_part(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
                              DfFunctional_LDA* pFunctional,
                              const int startAtomIndex, const int endAtomIndex,
-                             TlMatrix* pFxc_f, TlMatrix* pFxc_w);
-  double energyGradient_part(const TlSymmetricMatrix& P_A,
+                             TlDenseGeneralMatrix_BLAS_old* pFxc_f,
+                             TlDenseGeneralMatrix_BLAS_old* pFxc_w);
+  double energyGradient_part(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
                              DfFunctional_GGA* pFunctional,
                              const int startAtomIndex, const int endAtomIndex,
-                             TlMatrix* pFxc_f, TlMatrix* pFxc_w);
+                             TlDenseGeneralMatrix_BLAS_old* pFxc_f,
+                             TlDenseGeneralMatrix_BLAS_old* pFxc_w);
 
  protected:
   static const double TOOBIG;

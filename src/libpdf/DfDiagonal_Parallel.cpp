@@ -23,12 +23,10 @@
 #include "CnError.h"
 #include "DfDiagonal_Parallel.h"
 #include "TlCommunicate.h"
-#include "TlDistributeMatrix.h"
-#include "TlDistributeSymmetricMatrix.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_blacs.h"
+#include "tl_dense_symmetric_matrix_blacs.h"
+#include "tl_dense_vector_blas.h"
 
 DfDiagonal_Parallel::DfDiagonal_Parallel(TlSerializeData* pPdfParam)
     : DfDiagonal(pPdfParam) {}
@@ -76,17 +74,20 @@ void DfDiagonal_Parallel::DfDiagQclo(const DfObject::RUN_TYPE runType,
 void DfDiagonal_Parallel::DfDiagMain_SCALAPACK() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      this->main<TlDistributeMatrix, TlDistributeSymmetricMatrix>(RUN_RKS);
+      this->main<TlDenseGeneralMatrix_blacs, TlDenseSymmetricMatrix_blacs>(
+          RUN_RKS);
       break;
 
     case METHOD_UKS:
-      this->main<TlDistributeMatrix, TlDistributeSymmetricMatrix>(
+      this->main<TlDenseGeneralMatrix_blacs, TlDenseSymmetricMatrix_blacs>(
           RUN_UKS_ALPHA);
-      this->main<TlDistributeMatrix, TlDistributeSymmetricMatrix>(RUN_UKS_BETA);
+      this->main<TlDenseGeneralMatrix_blacs, TlDenseSymmetricMatrix_blacs>(
+          RUN_UKS_BETA);
       break;
 
     case METHOD_ROKS:
-      this->main<TlDistributeMatrix, TlDistributeSymmetricMatrix>(RUN_ROKS);
+      this->main<TlDenseGeneralMatrix_blacs, TlDenseSymmetricMatrix_blacs>(
+          RUN_ROKS);
       break;
 
     default:
@@ -100,6 +101,6 @@ void DfDiagonal_Parallel::DfDiagQclo_SCALAPACK(const DfObject::RUN_TYPE runType,
                                                const std::string& fragname,
                                                int norbcut) {
   this->m_nNumOfMOs = norbcut;
-  this->main<TlDistributeMatrix, TlDistributeSymmetricMatrix>(runType, fragname,
-                                                              true);
+  this->main<TlDenseGeneralMatrix_blacs, TlDenseSymmetricMatrix_blacs>(
+      runType, fragname, true);
 }

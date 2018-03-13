@@ -20,8 +20,9 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_matrix_utils.h"
 
 void showHelp(const std::string& name) {
   std::cout << TlUtils::format("%s [options] input_path output_path",
@@ -56,11 +57,11 @@ int main(int argc, char* argv[]) {
     std::cerr << "load matrix: " << inputMatrixPath << std::endl;
   }
 
-  TlMatrix A;
-  if (TlMatrix::isLoadable(inputMatrixPath)) {
+  TlDenseGeneralMatrix_BLAS_old A;
+  if (TlMatrixUtils::isLoadable(inputMatrixPath, TlMatrixObject::CSFD)) {
     A.load(inputMatrixPath);
-  } else if (TlSymmetricMatrix::isLoadable(inputMatrixPath)) {
-    TlSymmetricMatrix tmp;
+  } else if (TlMatrixUtils::isLoadable(inputMatrixPath, TlMatrixObject::RLHD)) {
+    TlDenseSymmetricMatrix_BLAS_Old tmp;
     tmp.load(inputMatrixPath);
     A = tmp;
   } else {
@@ -69,7 +70,7 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  TlMatrix::index_type top = 0;
+  TlDenseGeneralMatrix_BLAS_old::index_type top = 0;
   if (!opt["t"].empty()) {
     top = std::atoi(opt["t"].c_str());
     if ((top < 0) || (A.getNumOfRows() <= top)) {
@@ -80,7 +81,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  TlMatrix::index_type bottom = A.getNumOfRows();
+  TlDenseGeneralMatrix_BLAS_old::index_type bottom = A.getNumOfRows();
   if (!opt["t"].empty()) {
     bottom = std::atoi(opt["b"].c_str());
     if ((bottom < 0) || (A.getNumOfRows() <= bottom)) {
@@ -98,7 +99,7 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  TlMatrix::index_type left = 0;
+  TlDenseGeneralMatrix_BLAS_old::index_type left = 0;
   if (!opt["l"].empty()) {
     left = std::atoi(opt["l"].c_str());
     if ((left < 0) || (A.getNumOfCols() <= left)) {
@@ -109,7 +110,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  TlMatrix::index_type right = A.getNumOfCols();
+  TlDenseGeneralMatrix_BLAS_old::index_type right = A.getNumOfCols();
   if (!opt["t"].empty()) {
     right = std::atoi(opt["r"].c_str());
     if ((right < 0) || (A.getNumOfCols() <= right)) {
@@ -127,11 +128,11 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  TlMatrix::index_type numOfRows = bottom - top + 1;
-  TlMatrix::index_type numOfCols = right - left + 1;
-  TlMatrix answer(numOfRows, numOfCols);
-  for (TlMatrix::index_type r = 0; r < numOfRows; ++r) {
-    for (TlMatrix::index_type c = 0; c < numOfCols; ++c) {
+  TlDenseGeneralMatrix_BLAS_old::index_type numOfRows = bottom - top + 1;
+  TlDenseGeneralMatrix_BLAS_old::index_type numOfCols = right - left + 1;
+  TlDenseGeneralMatrix_BLAS_old answer(numOfRows, numOfCols);
+  for (TlDenseGeneralMatrix_BLAS_old::index_type r = 0; r < numOfRows; ++r) {
+    for (TlDenseGeneralMatrix_BLAS_old::index_type c = 0; c < numOfCols; ++c) {
       double v = A.get(top + r, left + c);
       answer.set(r, c, v);
     }

@@ -555,7 +555,7 @@ void DfEriEngine::calc0(const AngularMomentum2& qAB,
   // transform 6D to 5D
   this->transform6Dto5D(qAB, qCD, this->WORK);
 
-  // this->time_calc_all_.stop();
+// this->time_calc_all_.stop();
 #ifdef DEBUG_HGP
   std::cerr << "<<<<END\n" << std::endl;
 #endif  // DEBUG_HGP
@@ -711,9 +711,11 @@ void DfEriEngine::copyResultsToOutputBuffer(const AngularMomentum2& qAB,
                   const TlAngularMomentumVector amvD = amvsD.get(iD);
                   const int ket_index =
                       this->index(amvCbar, amvDbar, amvC, amvD, amvQ);
-                  assert(ketStateIndex < this->ERI_ket_.size());
-                  assert(ket_index < this->ERI_ket_[ketStateIndex].size());
-                  assert(bra_index <
+                  assert(static_cast<std::size_t>(ketStateIndex) <
+                         this->ERI_ket_.size());
+                  assert(static_cast<std::size_t>(ket_index) <
+                         this->ERI_ket_[ketStateIndex].size());
+                  assert(static_cast<std::size_t>(bra_index) <
                          this->ERI_ket_[ketStateIndex][ket_index].size());
                   assert(index < OUTPUT_BUFFER_SIZE);
                   pOutput[index] +=
@@ -2179,7 +2181,7 @@ void DfEriEngine::calcGrad(const AngularMomentum2& qAB,
   this->calcGrad_sub(qAB00, qCD10);
   this->copyResultsToOutputBuffer(qAB00, qCD10, this->WORK_C);
 
-  // D -----------------------------------------------------
+// D -----------------------------------------------------
 #ifdef DEBUG_CHECK_WORK_D
   this->calcGrad_sub(qAB00, qCD01);
   this->copyResultsToOutputBuffer(qAB00, qCD01, this->WORK_D);
@@ -2569,12 +2571,12 @@ void DfEriEngine::contract(const AngularMomentum2& qAB,
     }
   }
 
-    // for profile
+// for profile
 #ifdef CHECK_MAX_COUNT
   this->maxSizeOf_nR_dash_ = std::max(this->maxSizeOf_nR_dash_, nR_dash_index);
 #endif  // SHOW_MAX_COUNT
 
-  // for debug
+// for debug
 #ifdef CHECK_R_DASH
   for (n_R_dash_Type::const_iterator p = this->n_R_dash_.begin();
        p != this->n_R_dash_.end(); ++p) {
@@ -3111,10 +3113,12 @@ void DfEriEngine::transpose(const AngularMomentum2& qAB,
     }
   }
 
+#ifndef NDEBUG
   const int max_ket_index = ket_contractScales.size() *
                             ((angularMomentumQ + 1) * (angularMomentumQ + 2) *
                              (angularMomentumQ + 3) / 6);
   assert(ket_index == max_ket_index);
+#endif  // NDEBUG
 
 #ifdef DEBUG_HGP
   std::cerr << "transpose() end:: isCalcdERI_.size()="
@@ -3382,7 +3386,7 @@ void DfEriEngine::ERI_EQ44(const ERI_State eriState, EriDataType* pERI) {
                                  p_prime, batch, value2)
                           << std::endl;
 #endif  // DEBUG_EQ44
-        // answer -= this->AB_[i] * value2;
+                // answer -= this->AB_[i] * value2;
                 answer -= AB_i * value2;
               }
 
@@ -3663,7 +3667,7 @@ void DfEriEngine::ERI_EQ45(const ERI_State eriState, EriDataType* pERI) {
                                  p_prime + 1, batch, value3)
                           << std::endl;
 #endif  // DEBUG_EQ45
-        // answer += this->AB_[i] * value3;
+                // answer += this->AB_[i] * value3;
                 answer += AB_i * value3;
               }
 

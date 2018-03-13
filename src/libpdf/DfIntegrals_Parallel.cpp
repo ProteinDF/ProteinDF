@@ -17,18 +17,16 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfIntegrals_Parallel.h"
-#include "DfEriX_Parallel.h"
-#include "DfOverlapX_Parallel.h"
-
 #include "DfCD_Parallel.h"
+#include "DfEriX_Parallel.h"
 #include "DfGenerateGrid_Parallel.h"
 #include "DfHpqX_Parallel.h"
 #include "DfInvMatrix_Parallel.h"
+#include "DfOverlapX_Parallel.h"
 #include "DfXMatrix_Parallel.h"
-
 #include "Fl_Geometry.h"
 #include "TlCommunicate.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
 
 DfIntegrals_Parallel::DfIntegrals_Parallel(TlSerializeData* pParam)
     : DfIntegrals(pParam) {
@@ -77,7 +75,7 @@ DfGenerateGrid* DfIntegrals_Parallel::getDfGenerateGridObject() {
   return pDfGenerateGrid;
 }
 
-void saveInvSquareVMatrix(const TlSymmetricMatrix& v) {
+void saveInvSquareVMatrix(const TlDenseSymmetricMatrix_BLAS_Old& v) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
   if (rComm.isMaster()) {
@@ -118,17 +116,17 @@ void DfIntegrals_Parallel::createHpqMatrix() {
 void DfIntegrals_Parallel::createHpqMatrix_LAPACK() {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  const std::size_t needMem =
-      this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) * sizeof(double);
-  if ((this->isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
-    this->logger(" H_pq is build up on disk.\n");
-    TlMatrix::useMemManager(true);
-  } else {
-    this->logger(" H_pq is build up on memory.\n");
-    TlMatrix::useMemManager(false);
-  }
-  TlSymmetricMatrix Hpq(this->m_nNumOfAOs);
-  TlSymmetricMatrix Hpq2(this->m_nNumOfAOs);
+  // const std::size_t needMem =
+  //     this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) * sizeof(double);
+  // if (this->procMaxMemSize_ < needMem) {
+  //   this->logger(" H_pq is build up on disk.\n");
+  //   TlMatrix::useMemManager(true);
+  // } else {
+  //   this->logger(" H_pq is build up on memory.\n");
+  //   TlMatrix::useMemManager(false);
+  // }
+  TlDenseSymmetricMatrix_BLAS_Old Hpq(this->m_nNumOfAOs);
+  TlDenseSymmetricMatrix_BLAS_Old Hpq2(this->m_nNumOfAOs);
 
   DfHpqX_Parallel dfHpq(this->pPdfParam_);
   dfHpq.getHpq(&Hpq, &Hpq2);
@@ -148,8 +146,8 @@ void DfIntegrals_Parallel::createHpqMatrix_LAPACK() {
 }
 
 void DfIntegrals_Parallel::createHpqMatrix_ScaLAPACK() {
-  TlDistributeSymmetricMatrix Hpq(this->m_nNumOfAOs);
-  TlDistributeSymmetricMatrix Hpq2(this->m_nNumOfAOs);
+  TlDenseSymmetricMatrix_blacs Hpq(this->m_nNumOfAOs);
+  TlDenseSymmetricMatrix_blacs Hpq2(this->m_nNumOfAOs);
 
   this->logger(" Hpq build using distribute matrix.\n");
   DfHpqX_Parallel dfHpq(this->pPdfParam_);
@@ -191,15 +189,15 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK() {
     std::size_t needMem =
         this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2 * sizeof(double);
     needMem += rComm.getWorkMemSize();
-    if ((this->isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
-      this->logger(" S_(p q) is build on disk.\n");
-      TlMatrix::useMemManager(true);
-    } else {
-      TlMatrix::useMemManager(false);
-      this->logger(" S_(p q) is build on memory.\n");
-    }
+    // if (this->procMaxMemSize_ < needMem) {
+    //   this->logger(" S_(p q) is build on disk.\n");
+    //   TlMatrix::useMemManager(true);
+    // } else {
+    //   TlMatrix::useMemManager(false);
+    //   this->logger(" S_(p q) is build on memory.\n");
+    // }
 
-    TlSymmetricMatrix Spq(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_BLAS_Old Spq(this->m_nNumOfAOs);
     dfOverlapX.getSpq(&Spq);
     // if (this->isUseNewEngine_ == true) {
     //     this->logger(" use new engine.\n");
@@ -226,17 +224,17 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK() {
       if (this->m_bIsXCFitting == true) {
         this->outputStartTitle("Sgd");
 
-        const std::size_t needMem =
-            this->numOfAuxXC_ * (this->numOfAuxXC_ + 1) / 2 * sizeof(double);
-        if ((isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
-          this->logger(" S_(gamma delta) is build on disk.\n");
-          TlMatrix::useMemManager(true);
-        } else {
-          this->logger(" S_(gamma delta) is build on memory.\n");
-          TlMatrix::useMemManager(false);
-        }
+        // const std::size_t needMem =
+        //     this->numOfAuxXC_ * (this->numOfAuxXC_ + 1) / 2 * sizeof(double);
+        // if (this->procMaxMemSize_ < needMem) {
+        //   this->logger(" S_(gamma delta) is build on disk.\n");
+        //   TlMatrix::useMemManager(true);
+        // } else {
+        //   this->logger(" S_(gamma delta) is build on memory.\n");
+        //   TlMatrix::useMemManager(false);
+        // }
 
-        TlSymmetricMatrix Sgd(this->numOfAuxXC_);
+        TlDenseSymmetricMatrix_BLAS_Old Sgd(this->numOfAuxXC_);
         dfOverlapX.getSgd(&Sgd);
 
         if (rComm.isMaster() == true) {
@@ -258,17 +256,17 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK() {
     if ((calcState & DfIntegrals::Sab2) == 0) {
       this->outputStartTitle("Sab2");
 
-      const std::size_t needMem =
-          this->m_nNumOfAux * (this->m_nNumOfAux + 1) / 2 * sizeof(double);
-      if ((this->isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
-        this->logger(" S_(alpha beta) is build on disk.\n");
-        TlMatrix::useMemManager(true);
-      } else {
-        this->logger(" S_(alpha beta) is build on memory.\n");
-        TlMatrix::useMemManager(false);
-      }
+      // const std::size_t needMem =
+      //     this->m_nNumOfAux * (this->m_nNumOfAux + 1) / 2 * sizeof(double);
+      // if (this->procMaxMemSize_ < needMem) {
+      //   this->logger(" S_(alpha beta) is build on disk.\n");
+      //   TlMatrix::useMemManager(true);
+      // } else {
+      //   this->logger(" S_(alpha beta) is build on memory.\n");
+      //   TlMatrix::useMemManager(false);
+      // }
 
-      TlSymmetricMatrix Sab2(this->m_nNumOfAux);
+      TlDenseSymmetricMatrix_BLAS_Old Sab2(this->m_nNumOfAux);
       dfOverlapX.getSab(&Sab2);
       // if (this->isUseNewEngine_ == true) {
       //     this->logger(" use new engine.\n");
@@ -293,16 +291,16 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK() {
     if ((calcState & DfIntegrals::Na) == 0) {
       this->outputStartTitle("N_alpha");
 
-      const std::size_t needMem = this->m_nNumOfAux * sizeof(double);
-      if ((this->isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
-        this->logger(" [alpha] is build on disk.\n");
-        TlMatrix::useMemManager(true);
-      } else {
-        this->logger(" [alpha] is build on memory.\n");
-        TlMatrix::useMemManager(false);
-      }
+      // const std::size_t needMem = this->m_nNumOfAux * sizeof(double);
+      // if (this->procMaxMemSize_ < needMem) {
+      //   this->logger(" [alpha] is build on disk.\n");
+      //   TlMatrix::useMemManager(true);
+      // } else {
+      //   this->logger(" [alpha] is build on memory.\n");
+      //   TlMatrix::useMemManager(false);
+      // }
 
-      TlVector Na(this->m_nNumOfAux);
+      TlVector_BLAS Na(this->m_nNumOfAux);
       dfOverlapX.getNalpha(&Na);
       this->saveNalpha(Na);
 
@@ -326,7 +324,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK() {
     this->outputStartTitle("Spq");
 
     this->logger(" S_(p q) is build using distribute matrix.\n");
-    TlDistributeSymmetricMatrix Spq(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_blacs Spq(this->m_nNumOfAOs);
     dfOverlapX.getSpqD(&Spq);
     // if (this->isUseNewEngine_ == true) {
     //     this->logger(" use new engine.\n");
@@ -349,7 +347,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK() {
       if (this->m_bIsXCFitting == true) {
         this->outputStartTitle("Sgd");
 
-        TlDistributeSymmetricMatrix Sgd(this->numOfAuxXC_);
+        TlDenseSymmetricMatrix_blacs Sgd(this->numOfAuxXC_);
         dfOverlapX.getSgd(&Sgd);
         this->saveSgdMatrix(Sgd);
 
@@ -368,7 +366,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK() {
       this->outputStartTitle("Sab2");
 
       this->logger(" S_(alpha beta) is build using on distribute matrix.\n");
-      TlDistributeSymmetricMatrix Sab2(this->m_nNumOfAux);
+      TlDenseSymmetricMatrix_blacs Sab2(this->m_nNumOfAux);
       dfOverlapX.getSabD(&Sab2);
       // if (this->isUseNewEngine_ == true) {
       //     this->logger(" use new engine.\n");
@@ -389,16 +387,16 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK() {
     if ((calcState & DfIntegrals::Na) == 0) {
       this->outputStartTitle("N_alpha");
 
-      const std::size_t needMem = this->m_nNumOfAux * sizeof(double);
-      if ((this->isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
-        this->logger(" [alpha] is build on disk.\n");
-        TlMatrix::useMemManager(true);
-      } else {
-        this->logger(" [alpha] is build on memory.\n");
-        TlMatrix::useMemManager(false);
-      }
+      // const std::size_t needMem = this->m_nNumOfAux * sizeof(double);
+      // if (this->procMaxMemSize_ < needMem) {
+      //   this->logger(" [alpha] is build on disk.\n");
+      //   TlMatrix::useMemManager(true);
+      // } else {
+      //   this->logger(" [alpha] is build on memory.\n");
+      //   TlMatrix::useMemManager(false);
+      // }
 
-      TlVector Na(this->m_nNumOfAux);
+      TlVector_BLAS Na(this->m_nNumOfAux);
       dfOverlapX.getNalpha(&Na);
       this->saveNalpha(Na);
 
@@ -430,17 +428,17 @@ void DfIntegrals_Parallel::createERIMatrix_LAPACK() {
     if ((calcState & DfIntegrals::Sab) == 0) {
       this->outputStartTitle("Sab");
 
-      const std::size_t needMem =
-          this->m_nNumOfAux * (this->m_nNumOfAux + 1) / 2 * sizeof(double);
-      if ((this->isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
-        this->logger(" <alpha|beta> is build on disk.\n");
-        TlMatrix::useMemManager(true);
-      } else {
-        this->logger(" <alpha|beta> is build on memory.\n");
-        TlMatrix::useMemManager(false);
-      }
+      // const std::size_t needMem =
+      //     this->m_nNumOfAux * (this->m_nNumOfAux + 1) / 2 * sizeof(double);
+      // if (this->procMaxMemSize_ < needMem) {
+      //   this->logger(" <alpha|beta> is build on disk.\n");
+      //   TlMatrix::useMemManager(true);
+      // } else {
+      //   this->logger(" <alpha|beta> is build on memory.\n");
+      //   TlMatrix::useMemManager(false);
+      // }
 
-      TlSymmetricMatrix Sab(this->m_nNumOfAux);
+      TlDenseSymmetricMatrix_BLAS_Old Sab(this->m_nNumOfAux);
 
       DfEriX_Parallel dfEri(this->pPdfParam_);
       dfEri.getJab(&Sab);
@@ -476,7 +474,7 @@ void DfIntegrals_Parallel::createERIMatrix_ScaLAPACK() {
       this->outputStartTitle("Sab");
 
       DfEriX_Parallel dfEri(this->pPdfParam_);
-      TlDistributeSymmetricMatrix Jab(this->m_nNumOfAux);
+      TlDenseSymmetricMatrix_blacs Jab(this->m_nNumOfAux);
       dfEri.getJab(&Jab);
       this->saveSabMatrix(Jab);
 

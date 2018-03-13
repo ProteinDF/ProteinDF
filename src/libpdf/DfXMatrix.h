@@ -20,8 +20,8 @@
 #define DFXMATRIX_H
 
 #include "DfObject.h"
-#include "TlMatrix.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_vector_blas.h"
 
 /// X行列を求めるクラス
 /// S行列から、固有値, 固有ベクトルを求め、X 行列および−1 X 行列の計算を行い、
@@ -34,12 +34,14 @@ class DfXMatrix : public DfObject {
  public:
   virtual void buildX();
 
-  virtual void canonicalOrthogonalize(const TlSymmetricMatrix& S, TlMatrix* pX,
-                                      TlMatrix* pXinv,
+  virtual void canonicalOrthogonalize(const TlDenseSymmetricMatrix_BLAS_Old& S,
+                                      TlDenseGeneralMatrix_BLAS_old* pX,
+                                      TlDenseGeneralMatrix_BLAS_old* pXinv,
                                       const std::string& eigvalFilePath = "");
 
-  virtual void lowdinOrthogonalize(const TlSymmetricMatrix& S, TlMatrix* pX,
-                                   TlMatrix* pXinv,
+  virtual void lowdinOrthogonalize(const TlDenseSymmetricMatrix_BLAS_Old& S,
+                                   TlDenseGeneralMatrix_BLAS_old* pX,
+                                   TlDenseGeneralMatrix_BLAS_old* pXinv,
                                    const std::string& eigvalFilePath = "");
 
  protected:
@@ -83,11 +85,11 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
   const index_type dim = S.getNumOfRows();
   index_type rest = 0;
 
-  TlVector sqrt_s;  // Sの固有値の平方根
-  MatrixType U;     // Sの固有ベクトル
+  TlVector_BLAS sqrt_s;  // Sの固有値の平方根
+  MatrixType U;          // Sの固有ベクトル
   {
     this->loggerTime("diagonalization of S matrix");
-    TlVector EigVal;
+    TlVector_BLAS EigVal;
     MatrixType EigVec;
     S.diagonal(&EigVal, &EigVec);
     assert(EigVal.getSize() == dim);
@@ -157,7 +159,7 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
       S12.set(i, i, sqrt_s.get(i));
     }
 
-    U.transpose();
+    U.transposeInPlace();
     *pXinv = S12 * U;
   }
 
@@ -177,11 +179,11 @@ void DfXMatrix::lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
   const index_type dim = S.getNumOfRows();
   index_type rest = 0;
 
-  TlVector sqrt_s;  // Sの固有値の平方根
-  MatrixType U;     // Sの固有ベクトル
+  TlVector_BLAS sqrt_s;  // Sの固有値の平方根
+  MatrixType U;          // Sの固有ベクトル
   {
     this->loggerTime("diagonalization of S matrix");
-    TlVector EigVal;
+    TlVector_BLAS EigVal;
     MatrixType EigVec;
     S.diagonal(&EigVal, &EigVec);
     assert(EigVal.getSize() == dim);
@@ -243,7 +245,7 @@ void DfXMatrix::lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
     *pX = U * S12;
 
     MatrixType Ut = U;
-    Ut.transpose();
+    Ut.transposeInPlace();
 
     *pX *= Ut;
   }

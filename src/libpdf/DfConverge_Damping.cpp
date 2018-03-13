@@ -18,8 +18,8 @@
 
 #include "DfConverge_Damping.h"
 #include <cassert>
-#include "TlSymmetricMatrix.h"
 #include "TlTime.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
 
 DfConverge_Damping::DfConverge_Damping(TlSerializeData* pPdfParam)
     : DfConverge(pPdfParam) {
@@ -35,15 +35,15 @@ DfConverge_Damping::~DfConverge_Damping() {}
 void DfConverge_Damping::convergeRhoTilde() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      this->convergeRhoTilde<TlVector>(DfObject::RUN_RKS);
+      this->convergeRhoTilde<TlVector_BLAS>(DfObject::RUN_RKS);
       break;
     case METHOD_UKS:
-      this->convergeRhoTilde<TlVector>(DfObject::RUN_UKS_ALPHA);
-      this->convergeRhoTilde<TlVector>(DfObject::RUN_UKS_BETA);
+      this->convergeRhoTilde<TlVector_BLAS>(DfObject::RUN_UKS_ALPHA);
+      this->convergeRhoTilde<TlVector_BLAS>(DfObject::RUN_UKS_BETA);
       break;
     case METHOD_ROKS:
-      this->convergeRhoTilde<TlVector>(DfObject::RUN_ROKS_CLOSED);
-      this->convergeRhoTilde<TlVector>(DfObject::RUN_ROKS_OPEN);
+      this->convergeRhoTilde<TlVector_BLAS>(DfObject::RUN_ROKS_CLOSED);
+      this->convergeRhoTilde<TlVector_BLAS>(DfObject::RUN_ROKS_OPEN);
       break;
     default:
       std::cerr << "program error. @DfConverge_Damping::convergeRhoTilde()"
@@ -55,15 +55,19 @@ void DfConverge_Damping::convergeRhoTilde() {
 void DfConverge_Damping::convergeKSMatrix() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      this->convergeKSMatrix<TlSymmetricMatrix>(DfObject::RUN_RKS);
+      this->convergeKSMatrix<TlDenseSymmetricMatrix_BLAS_Old>(DfObject::RUN_RKS);
       break;
     case METHOD_UKS:
-      this->convergeKSMatrix<TlSymmetricMatrix>(DfObject::RUN_UKS_ALPHA);
-      this->convergeKSMatrix<TlSymmetricMatrix>(DfObject::RUN_UKS_BETA);
+      this->convergeKSMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          DfObject::RUN_UKS_ALPHA);
+      this->convergeKSMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          DfObject::RUN_UKS_BETA);
       break;
     case METHOD_ROKS:
-      this->convergeKSMatrix<TlSymmetricMatrix>(DfObject::RUN_ROKS_CLOSED);
-      this->convergeKSMatrix<TlSymmetricMatrix>(DfObject::RUN_ROKS_OPEN);
+      this->convergeKSMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          DfObject::RUN_ROKS_CLOSED);
+      this->convergeKSMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          DfObject::RUN_ROKS_OPEN);
       break;
     default:
       std::cerr << "program error. @DfConverge_Damping::convergeKSMatrix()"
@@ -75,15 +79,19 @@ void DfConverge_Damping::convergeKSMatrix() {
 void DfConverge_Damping::convergePMatrix() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      this->convergePMatrix<TlSymmetricMatrix>(DfObject::RUN_RKS);
+      this->convergePMatrix<TlDenseSymmetricMatrix_BLAS_Old>(DfObject::RUN_RKS);
       break;
     case METHOD_UKS:
-      this->convergePMatrix<TlSymmetricMatrix>(DfObject::RUN_UKS_ALPHA);
-      this->convergePMatrix<TlSymmetricMatrix>(DfObject::RUN_UKS_BETA);
+      this->convergePMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          DfObject::RUN_UKS_ALPHA);
+      this->convergePMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          DfObject::RUN_UKS_BETA);
       break;
     case METHOD_ROKS:
-      this->convergePMatrix<TlSymmetricMatrix>(DfObject::RUN_ROKS_CLOSED);
-      this->convergePMatrix<TlSymmetricMatrix>(DfObject::RUN_ROKS_OPEN);
+      this->convergePMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          DfObject::RUN_ROKS_CLOSED);
+      this->convergePMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+          DfObject::RUN_ROKS_OPEN);
       break;
     default:
       std::cerr << "program error. @DfConverge_Damping::convergePMatrix()"

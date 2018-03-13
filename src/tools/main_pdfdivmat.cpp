@@ -25,7 +25,6 @@
 #include "TlDistributeVector.h"
 #include "TlGetopt.h"
 #include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 
 void showHelp() {
   std::cout << "pdfdivmat [options] row col path" << std::endl;
@@ -67,7 +66,7 @@ int main(int argc, char* argv[]) {
   TlDistributeMatrix::setSystemBlockSize(scalapackBlockSize);
   TlDistributeVector::setSystemBlockSize(scalapackBlockSize);
 
-  if (TlSymmetricMatrix::isLoadable(loadFilePath) == true) {
+  if (TlDenseSymmetricMatrix_BLAS_Old::isLoadable(loadFilePath) == true) {
     TlDistributeSymmetricMatrix M;
     TlDistributeMatrix::setUsingPartialIO(false);
     if (isVerbose) {

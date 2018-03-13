@@ -36,10 +36,10 @@ DfFunctional_GGA::DfFunctional_GGA() {
 DfFunctional_GGA::~DfFunctional_GGA() {}
 
 // for grid-free
-FunctionalSets DfFunctional_GGA::getFunctional_GF(const TlVector& rhoAs,
-                                                  const TlVector& rhoBs,
-                                                  const TlVector& xAs,
-                                                  const TlVector& xBs) {
+FunctionalSets DfFunctional_GGA::getFunctional_GF(const TlVector_BLAS& rhoAs,
+                                                  const TlVector_BLAS& rhoBs,
+                                                  const TlVector_BLAS& xAs,
+                                                  const TlVector_BLAS& xBs) {
   const index_type dim = rhoAs.getSize();
   assert(dim == rhoBs.getSize());
   assert(dim == xAs.getSize());
@@ -48,7 +48,7 @@ FunctionalSets DfFunctional_GGA::getFunctional_GF(const TlVector& rhoAs,
   const int numOfTerms = this->getNumOfFunctionalTerms();
   FunctionalSets answer(numOfTerms, dim);
   for (index_type i = 0; i < dim; ++i) {
-    const TlMatrix fs =
+    const TlDenseGeneralMatrix_BLAS_old fs =
         this->getFunctionalCore(rhoAs[i], rhoBs[i], xAs[i], xBs[i]);
 
     for (int term = 0; term < numOfTerms; ++term) {
@@ -63,8 +63,8 @@ FunctionalSets DfFunctional_GGA::getFunctional_GF(const TlVector& rhoAs,
 }
 
 DerivativeFunctionalSets DfFunctional_GGA::getDerivativeFunctional_GF(
-    const TlVector& rhoAs, const TlVector& rhoBs, const TlVector& xAs,
-    const TlVector& xBs) {
+    const TlVector_BLAS& rhoAs, const TlVector_BLAS& rhoBs,
+    const TlVector_BLAS& xAs, const TlVector_BLAS& xBs) {
   const index_type dim = rhoAs.getSize();
   assert(dim == rhoBs.getSize());
   assert(dim == xAs.getSize());
@@ -75,7 +75,7 @@ DerivativeFunctionalSets DfFunctional_GGA::getDerivativeFunctional_GF(
   for (index_type i = 0; i < dim; ++i) {
     assert(std::fabs(rhoAs[i] - rhoBs[i]) < 1.0E-5);
     assert(std::fabs(xAs[i] - xBs[i]) < 1.0E-5);
-    const TlMatrix dfs =
+    const TlDenseGeneralMatrix_BLAS_old dfs =
         this->getDerivativeFunctionalCore(rhoAs[i], rhoBs[i], xAs[i], xBs[i]);
 
     for (int term = 0; term < numOfTerms; ++term) {

@@ -20,9 +20,10 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_matrix_utils.h"
 
 void help(const std::string& progname) {
   std::cout << TlUtils::format("Usage: %s [options]... FILE1 FILE2",
@@ -72,9 +73,9 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  if (TlSymmetricMatrix::isLoadable(ifs1) == true) {
-    if (TlSymmetricMatrix::isLoadable(ifs2) == true) {
-      TlSymmetricMatrix m1, m2;
+  if (TlMatrixUtils::isLoadable(sPath1, TlMatrixObject::RLHD) == true) {
+    if (TlMatrixUtils::isLoadable(sPath2, TlMatrixObject::RLHD) == true) {
+      TlDenseSymmetricMatrix_BLAS_Old m1, m2;
       m1.load(sPath1);
       m2.load(sPath2);
 
@@ -88,9 +89,9 @@ int main(int argc, char* argv[]) {
       std::cerr << "could not open: " << sPath2 << std::endl;
       errorCode = 1;
     }
-  } else if (TlMatrix::isLoadable(ifs1) == true) {
-    if (TlMatrix::isLoadable(ifs2) == true) {
-      TlMatrix m1, m2;
+  } else if (TlMatrixUtils::isLoadable(sPath1, TlMatrixObject::CSFD) == true) {
+    if (TlMatrixUtils::isLoadable(sPath2, TlMatrixObject::CSFD) == true) {
+      TlDenseGeneralMatrix_BLAS_old m1, m2;
       m1.load(sPath1);
       m2.load(sPath2);
 

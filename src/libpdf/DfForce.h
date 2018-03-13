@@ -20,11 +20,11 @@
 #define DFFORCE_H
 
 #include "DfObject.h"
-#include "TlMatrix.h"
 #include "TlOrbitalInfo.h"
 #include "TlOrbitalInfo_Density.h"
 #include "TlSerializeData.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_vector_blas.h"
 
 class DfCalcGridX;
 
@@ -52,9 +52,9 @@ class DfForce : public DfObject {
 
   /// Weighted ...
   virtual void calcForceFromWS(RUN_TYPE runType);
-  TlMatrix getEnergyWeightedDensityMatrix(RUN_TYPE runType);
+  TlDenseGeneralMatrix_BLAS_old getEnergyWeightedDensityMatrix(RUN_TYPE runType);
 
-  virtual void calcForceFromHpq(const TlSymmetricMatrix& P);
+  virtual void calcForceFromHpq(const TlDenseSymmetricMatrix_BLAS_Old& P);
 
   ///
   void calcForceFromCoulomb(const RUN_TYPE runType);
@@ -67,13 +67,14 @@ class DfForce : public DfObject {
   void calcForceFromPureXC_gridfree(RUN_TYPE runType);
   virtual DfCalcGridX* getCalcGridObj();
 
-  TlMatrix getTransformMatrix(const TlMatrix& force);
+  TlDenseGeneralMatrix_BLAS_old getTransformMatrix(
+      const TlDenseGeneralMatrix_BLAS_old& force);
 
   virtual void output();
 
  protected:
-  TlMatrix force_;
-  TlMatrix force_Xonly_;  // X由来のみ
+  TlDenseGeneralMatrix_BLAS_old force_;
+  TlDenseGeneralMatrix_BLAS_old force_Xonly_;  // X由来のみ
 
   TlOrbitalInfo orbitalInfo_;
   TlOrbitalInfo_Density orbitalInfoDens_;

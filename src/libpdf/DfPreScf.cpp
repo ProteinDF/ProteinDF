@@ -22,9 +22,8 @@
 #include "DfInitialGuessHarris.h"
 #include "DfInitialGuessHuckel.h"
 #include "DfPreScf.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_vector_blas.h"
 
 #include "CnError.h"
 #include "DfDmatrix.h"
@@ -124,11 +123,12 @@ void DfPreScf::prepareGuess() {
 // case of "scf-start-guess = lcao"
 void DfPreScf::createInitialGuessUsingLCAO(const RUN_TYPE runType) {
   // read guess lcao
-  const TlMatrix LCAO = this->getLCAO<TlMatrix>(runType);
+  const TlDenseGeneralMatrix_BLAS_old LCAO =
+      this->getLCAO<TlDenseGeneralMatrix_BLAS_old>(runType);
   this->saveC0(runType, LCAO);
 
   // read guess occupation
-  const TlVector aOccupation = this->getOccupation(runType);
+  const TlVector_BLAS aOccupation = this->getOccupation(runType);
   this->saveOccupation(runType, aOccupation);
 
   // output guess lcao in orthonormal basis to a files in fl_Work directory
@@ -197,8 +197,8 @@ std::vector<int> DfPreScf::getLevel(std::string sLevel) {
 
 // memo
 // vectorクラスを使っているので、書き換える
-TlVector DfPreScf::getOccupation(const RUN_TYPE runType) {
-  TlVector occupation;
+TlVector_BLAS DfPreScf::getOccupation(const RUN_TYPE runType) {
+  TlVector_BLAS occupation;
   const std::string sFile =
       std::string("./guess.occ.") + this->m_sRunTypeSuffix[runType];
   occupation.loadText(sFile.c_str());
@@ -211,7 +211,7 @@ TlVector DfPreScf::getOccupation(const RUN_TYPE runType) {
 }
 
 void DfPreScf::saveOccupation(const RUN_TYPE runType,
-                              const TlVector& rOccupation) {
+                              const TlVector_BLAS& rOccupation) {
   const std::string sOccFileName = this->getOccupationPath(runType);
   rOccupation.save(sOccFileName);
 }
@@ -221,7 +221,7 @@ void DfPreScf::createOccupation(const RUN_TYPE runType) {
   const TlSerializeData& pdfParam = *(this->pPdfParam_);
 
   // construct guess occupations
-  TlVector guess_occ(this->m_nNumOfMOs);
+  TlVector_BLAS guess_occ(this->m_nNumOfMOs);
   switch (runType) {
     case RUN_RKS: {
       std::vector<int> docLevel =

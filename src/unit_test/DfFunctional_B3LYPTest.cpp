@@ -1,6 +1,6 @@
+#include "DfFunctional_B3LYP.h"
 #include <string>
 #include <vector>
-#include "DfFunctional_B3LYP.h"
 #include "gtest/gtest.h"
 
 static const double EPS = 1.0E-10;

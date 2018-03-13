@@ -79,7 +79,7 @@ void DfIntegrals::main() {
   //     this->outputStartTitle("V^-1/2");
   //     {
   //       DfEri2 dfEri2(this->flGlobalinput_);
-  //       TlSymmetricMatrix V = dfEri2.generateInvSquareVMatrix();
+  //       TlDenseSymmetricMatrix_BLAS_Old V = dfEri2.generateInvSquareVMatrix();
 
   //       this->saveInvSquareVMatrix(V);
   //     }
@@ -136,8 +136,8 @@ DfGenerateGrid* DfIntegrals::getDfGenerateGridObject() {
 }
 
 void DfIntegrals::createHpqMatrix() {
-  TlSymmetricMatrix Hpq(this->m_nNumOfAOs);
-  TlSymmetricMatrix Hpq2(this->m_nNumOfAOs);
+  TlDenseSymmetricMatrix_BLAS_Old Hpq(this->m_nNumOfAOs);
+  TlDenseSymmetricMatrix_BLAS_Old Hpq2(this->m_nNumOfAOs);
 
   DfHpqX dfHpqX = DfHpqX(this->pPdfParam_);
   dfHpqX.getHpq(&Hpq, &Hpq2);
@@ -164,7 +164,7 @@ void DfIntegrals::createOverlapMatrix() {
   if ((calcState & DfIntegrals::Spq) == 0) {
     this->outputStartTitle("Spq");
 
-    TlSymmetricMatrix Spq(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_BLAS_Old Spq(this->m_nNumOfAOs);
     dfOverlapX.getSpq(&Spq);
     // if (this->isUseNewEngine_ == true) {
     //     this->logger(" use new engine.\n");
@@ -187,7 +187,7 @@ void DfIntegrals::createOverlapMatrix() {
       if (this->m_bIsXCFitting == true) {
         this->outputStartTitle("Sgd");
 
-        TlSymmetricMatrix Sgd(this->numOfAuxXC_);
+        TlDenseSymmetricMatrix_BLAS_Old Sgd(this->numOfAuxXC_);
         dfOverlapX.getSgd(&Sgd);
         this->saveSgdMatrix(Sgd);
 
@@ -205,7 +205,7 @@ void DfIntegrals::createOverlapMatrix() {
     if ((calcState & DfIntegrals::Sab2) == 0) {
       this->outputStartTitle("Sab2");
 
-      TlSymmetricMatrix Sab2(this->m_nNumOfAux);
+      TlDenseSymmetricMatrix_BLAS_Old Sab2(this->m_nNumOfAux);
       dfOverlapX.getSab(&Sab2);
       // if (this->isUseNewEngine_ == true) {
       //     this->logger(" use new engine.\n");
@@ -226,7 +226,7 @@ void DfIntegrals::createOverlapMatrix() {
     if ((calcState & DfIntegrals::Na) == 0) {
       this->outputStartTitle("N_alpha");
 
-      TlVector Na(this->m_nNumOfAux);
+      TlVector_BLAS Na(this->m_nNumOfAux);
       dfOverlapX.getNalpha(&Na);
       // if (this->isUseNewEngine_ == true) {
       //     this->logger(" use new engine.\n");
@@ -253,7 +253,7 @@ void DfIntegrals::createERIMatrix() {
     if ((calcState & DfIntegrals::Sab) == 0) {
       this->outputStartTitle("Sab");
 
-      TlSymmetricMatrix Sab(this->m_nNumOfAux);
+      TlDenseSymmetricMatrix_BLAS_Old Sab(this->m_nNumOfAux);
       // DfEri dfEri(this->pPdfParam_);
       DfEriX dfEriX(this->pPdfParam_);
 
@@ -428,7 +428,7 @@ void DfIntegrals::createGrids() {
   }
 }
 
-void DfIntegrals::saveInvSquareVMatrix(const TlSymmetricMatrix& v) {
+void DfIntegrals::saveInvSquareVMatrix(const TlDenseSymmetricMatrix_BLAS_Old& v) {
   v.save("fl_Work/fl_Mtr_invSquareV.matrix");
 }
 

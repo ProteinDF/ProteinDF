@@ -23,8 +23,6 @@
 #include "DfDmatrix_Parallel.h"
 #include "DfPreScf_Parallel.h"
 #include "TlCommunicate.h"
-#include "TlDistributeMatrix.h"
-#include "TlFileMatrix.h"
 
 DfPreScf_Parallel::DfPreScf_Parallel(TlSerializeData* pPdfParam)
     : DfPreScf(pPdfParam) {}
@@ -64,12 +62,13 @@ void DfPreScf_Parallel::createInitialGuessUsingLCAO(const RUN_TYPE runType) {
 void DfPreScf_Parallel::createInitialGuessUsingLCAO_onScaLAPACK(
     const RUN_TYPE runType) {
   // read guess lcao
-  // const TlDistributeMatrix LCAO = this->getLCAO<TlDistributeMatrix>(runType);
-  const TlDistributeMatrix LCAO = this->getLCAO_onScaLAPACK(runType);
+  // const TlDenseGeneralMatrix_blacs LCAO =
+  // this->getLCAO<TlDenseGeneralMatrix_blacs>(runType);
+  const TlDenseGeneralMatrix_blacs LCAO = this->getLCAO_onScaLAPACK(runType);
   this->saveC0(runType, LCAO);
 
   // read guess occupation
-  const TlVector aOccupation = this->getOccupation(runType);
+  const TlVector_BLAS aOccupation = this->getOccupation(runType);
   this->saveOccupation(runType, aOccupation);
 
   // output guess lcao in orthonormal basis to a files in fl_Work directory
@@ -86,13 +85,13 @@ void DfPreScf_Parallel::createInitialGuessUsingLCAO_onScaLAPACK(
 
 void DfPreScf_Parallel::createInitialGuessUsingLCAO_onDisk(
     const RUN_TYPE runType) {
-  TlMatrix::useMemManager(true);
   // read guess lcao
-  const TlMatrix LCAO = this->getLCAO<TlMatrix>(runType);
+  const TlDenseGeneralMatrix_BLAS_old LCAO =
+      this->getLCAO<TlDenseGeneralMatrix_BLAS_old>(runType);
   this->saveC0(runType, LCAO);
 
   // read guess occupation
-  const TlVector aOccupation = this->getOccupation(runType);
+  const TlVector_BLAS aOccupation = this->getOccupation(runType);
   this->saveOccupation(runType, aOccupation);
 
   // output guess lcao in orthonormal basis to a files in fl_Work directory
@@ -107,10 +106,10 @@ void DfPreScf_Parallel::createInitialGuessUsingLCAO_onDisk(
   }
 }
 
-TlDistributeMatrix DfPreScf_Parallel::getLCAO_onScaLAPACK(
+TlDenseGeneralMatrix_blacs DfPreScf_Parallel::getLCAO_onScaLAPACK(
     const RUN_TYPE runType) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  TlDistributeMatrix lcaoMatrix(this->m_nNumOfAOs, this->m_nNumOfMOs);
+  TlDenseGeneralMatrix_blacs lcaoMatrix(this->m_nNumOfAOs, this->m_nNumOfMOs);
 
   const int numOfRows = this->m_nNumOfAOs;
   const int numOfCols = this->m_nNumOfMOs;

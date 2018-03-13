@@ -20,7 +20,7 @@
 #define DFFUNCTIONAL_BECKE88_H
 
 #include "DfFunctional.h"
-#include "TlMatrix.h"
+#include "tl_dense_general_matrix_blas_old.h"
 
 class DfFunctional_Becke88 : public DfFunctional_GGA {
  public:
@@ -44,13 +44,13 @@ class DfFunctional_Becke88 : public DfFunctional_GGA {
 
  public:
   // for Grid-Free ===================================================
-  virtual TlMatrix getFunctionalCore(const double rhoA, const double rhoB,
-                                     const double xA, const double xB);
+  virtual TlDenseGeneralMatrix_BLAS_old getFunctionalCore(const double rhoA,
+                                                      const double rhoB,
+                                                      const double xA,
+                                                      const double xB);
 
-  virtual TlMatrix getDerivativeFunctionalCore(const double rhoA,
-                                               const double rhoB,
-                                               const double xA,
-                                               const double xB);
+  virtual TlDenseGeneralMatrix_BLAS_old getDerivativeFunctionalCore(
+      const double rhoA, const double rhoB, const double xA, const double xB);
 
  protected:
   double x(double dRho, double dGamma);

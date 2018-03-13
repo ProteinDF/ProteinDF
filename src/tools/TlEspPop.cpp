@@ -7,9 +7,9 @@
 #include "TlMath.h"
 #include "TlMsgPack.h"
 #include "TlPrdctbl.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
-#include "TlVector.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_vector_blas.h"
 
 const double TlEspPop::AU2ANG = 0.5291772108;
 const double TlEspPop::ANG2AU = 1.889762;
@@ -29,7 +29,7 @@ TlEspPop::TlEspPop(const TlSerializeData& param)
   // set real atoms
   this->realAtoms_ = this->getRealAtoms();
 
-  this->expected_ = TlVector(this->realAtoms_.size());
+  this->expected_ = TlVector_BLAS(this->realAtoms_.size());
 }
 
 TlEspPop::~TlEspPop() {}
@@ -77,7 +77,7 @@ void TlEspPop::exec(std::string PMatrixFilePath) {
   }
 
   // 密度行列の読み込み
-  TlSymmetricMatrix P;
+  TlDenseSymmetricMatrix_BLAS_Old P;
   if (PMatrixFilePath.empty()) {
     const int iteration = this->param_["num_of_iterations"].getInt();
     DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
@@ -123,21 +123,21 @@ void TlEspPop::exec(std::string PMatrixFilePath) {
   }
 
   // solve MK
-  TlSymmetricMatrix designMat;
-  TlVector predicted;
-  TlVector modelCoef;
+  TlDenseSymmetricMatrix_BLAS_Old designMat;
+  TlVector_BLAS predicted;
+  TlVector_BLAS modelCoef;
   // setup MK data
   this->makeDesignMatrix_MK(&designMat, &predicted);
 
   if (this->resp_restriction_ == REST_NONE) {
     // solve
-    TlSymmetricMatrix invDesignMat = designMat;
+    TlDenseSymmetricMatrix_BLAS_Old invDesignMat = designMat;
     invDesignMat.inverse();
 
     modelCoef = invDesignMat * predicted;
   } else {
-    TlSymmetricMatrix MK_designMat = designMat;
-    TlVector MK_predicted = predicted;
+    TlDenseSymmetricMatrix_BLAS_Old MK_designMat = designMat;
+    TlVector_BLAS MK_predicted = predicted;
 
     while (this->itr_ < this->maxItr_) {
       switch (this->resp_restriction_) {
@@ -156,7 +156,7 @@ void TlEspPop::exec(std::string PMatrixFilePath) {
       }
 
       // solve
-      TlSymmetricMatrix invDesignMat = designMat;
+      TlDenseSymmetricMatrix_BLAS_Old invDesignMat = designMat;
       invDesignMat.inverse();
 
       modelCoef = invDesignMat * predicted;
@@ -315,11 +315,11 @@ std::vector<TlPosition> TlEspPop::getMerzKollmanGrids() {
   return allGrids;
 }
 
-TlMatrix TlEspPop::getInvDistanceMatrix() {
+TlDenseGeneralMatrix_BLAS_old TlEspPop::getInvDistanceMatrix() {
   // make 1/r distance table
   const int numOfRealAtoms = this->realAtoms_.size();
   const int numOfGrids = this->grids_.size();
-  TlMatrix d(numOfRealAtoms, numOfGrids);
+  TlDenseGeneralMatrix_BLAS_old d(numOfRealAtoms, numOfGrids);
   if (this->verbose_) {
     std::cerr << TlUtils::format("# of atoms: %d", numOfRealAtoms) << std::endl;
     std::cerr << TlUtils::format("# of grids: %d", numOfGrids) << std::endl;
@@ -340,32 +340,32 @@ TlMatrix TlEspPop::getInvDistanceMatrix() {
   return d;
 }
 
-void TlEspPop::makeDesignMatrix_MK(TlSymmetricMatrix* pDesignMat,
-                                   TlVector* pPredicted) {
+void TlEspPop::makeDesignMatrix_MK(TlDenseSymmetricMatrix_BLAS_Old* pDesignMat,
+                                   TlVector_BLAS* pPredicted) {
   assert(pDesignMat != NULL);
   assert(pPredicted != NULL);
   assert(this->esp_.getSize() == static_cast<int>(this->grids_.size()));
 
-  const TlMatrix d = this->getInvDistanceMatrix();
+  const TlDenseGeneralMatrix_BLAS_old d = this->getInvDistanceMatrix();
 
   const int numOfRealAtoms = this->realAtoms_.size();
   pDesignMat->resize(numOfRealAtoms + 1);
   pPredicted->resize(numOfRealAtoms + 1);
   for (int a = 0; a < numOfRealAtoms; ++a) {
-    const TlVector r_a = d.getRowVector(a);
+    const TlVector_BLAS r_a = d.getRowVector(a);
     assert(r_a.getSize() == static_cast<int>(this->grids_.size()));
 
     // a == b
     {
-      TlVector r_a2 = r_a;
-      r_a2.dot(r_a);
+      TlVector_BLAS r_a2 = r_a;
+      r_a2.dotInPlace(r_a);
       pDesignMat->set(a, a, r_a2.sum());
     }
 
     // a != b
     for (int b = 0; b < a; ++b) {
-      TlVector r_b = d.getRowVector(b);
-      r_b.dot(r_a);
+      TlVector_BLAS r_b = d.getRowVector(b);
+      r_b.dotInPlace(r_a);
       pDesignMat->set(a, b, r_b.sum());
     }
 
@@ -375,8 +375,8 @@ void TlEspPop::makeDesignMatrix_MK(TlSymmetricMatrix* pDesignMat,
 
     //
     {
-      TlVector r = r_a;
-      (*pPredicted)[a] = r.dot(this->esp_).sum();
+      TlVector_BLAS r = r_a;
+      (*pPredicted)[a] = r.dotInPlace(this->esp_).sum();
     }
   }
 
@@ -391,15 +391,15 @@ void TlEspPop::makeDesignMatrix_MK(TlSymmetricMatrix* pDesignMat,
                   this->totalCharge_ - this->sumOfCounterCharges_);
 }
 
-void TlEspPop::makeDesignMatrix_quadric(const TlSymmetricMatrix& MK_designMat,
-                                        const TlVector& MK_predicted,
-                                        TlSymmetricMatrix* pDesignMat,
-                                        TlVector* pPredicted) {
+void TlEspPop::makeDesignMatrix_quadric(
+    const TlDenseSymmetricMatrix_BLAS_Old& MK_designMat,
+    const TlVector_BLAS& MK_predicted, TlDenseSymmetricMatrix_BLAS_Old* pDesignMat,
+    TlVector_BLAS* pPredicted) {
   *pDesignMat = MK_designMat;
   *pPredicted = MK_predicted;
 
   const double param_a = this->param_a_;
-  const TlVector& q = this->expected_;
+  const TlVector_BLAS& q = this->expected_;
   const double target = 0.0;  // TODO
 
   const int numOfRealAtoms = this->realAtoms_.size();
@@ -412,14 +412,15 @@ void TlEspPop::makeDesignMatrix_quadric(const TlSymmetricMatrix& MK_designMat,
 }
 
 void TlEspPop::makeDesignMatrix_hyperbolic(
-    const TlSymmetricMatrix& MK_designMat, const TlVector& MK_predicted,
-    TlSymmetricMatrix* pDesignMat, TlVector* pPredicted) {
+    const TlDenseSymmetricMatrix_BLAS_Old& MK_designMat,
+    const TlVector_BLAS& MK_predicted, TlDenseSymmetricMatrix_BLAS_Old* pDesignMat,
+    TlVector_BLAS* pPredicted) {
   *pDesignMat = MK_designMat;
   *pPredicted = MK_predicted;
 
   const double param_a = this->param_a_;
   const double param_b2 = this->param_b_ * this->param_b_;
-  const TlVector& q = this->expected_;
+  const TlVector_BLAS& q = this->expected_;
   const double target = 0.0;  // TODO
 
   const int numOfRealAtoms = this->realAtoms_.size();
@@ -434,14 +435,14 @@ void TlEspPop::makeDesignMatrix_hyperbolic(
                   this->totalCharge_ - this->sumOfCounterCharges_);
 }
 
-bool TlEspPop::convCheck(const TlVector& modelCoef) {
+bool TlEspPop::convCheck(const TlVector_BLAS& modelCoef) {
   bool judge = false;
   if (this->itr_ > 1) {
-    TlVector diff = modelCoef - this->prevModelCoef_;
+    TlVector_BLAS diff = modelCoef - this->prevModelCoef_;
 
     const double maxErr = diff.getMaxAbsoluteElement();
     const int numOfSize = modelCoef.getSize();
-    const double rmsErr = diff.dot(diff).sum() / double(numOfSize);
+    const double rmsErr = diff.dotInPlace(diff).sum() / double(numOfSize);
 
     std::cerr << TlUtils::format("#%3d: MAX: % e RMS: % e", this->itr_, maxErr,
                                  rmsErr)
@@ -459,7 +460,7 @@ bool TlEspPop::convCheck(const TlVector& modelCoef) {
   return judge;
 }
 
-void TlEspPop::output(const TlVector& modelCoef) {
+void TlEspPop::output(const TlVector_BLAS& modelCoef) {
   const int numOfRealAtoms = this->realAtoms_.size();
   assert(modelCoef.getSize() == numOfRealAtoms + 1);
 

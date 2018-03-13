@@ -21,14 +21,15 @@
 
 #include "TlPosition.h"
 #include "TlSerializeData.h"
-#include "TlSymmetricMatrix.h"
+
+class TlDenseSymmetricMatrix_BLAS_Old;
 
 class TlDensField {
  public:
   TlDensField(const TlSerializeData& param);
   ~TlDensField();
 
-  std::vector<double> makeDensFld(const TlSymmetricMatrix& P,
+  std::vector<double> makeDensFld(const TlDenseSymmetricMatrix_BLAS_Old& P,
                                   const std::vector<TlPosition>& grids);
 
  protected:

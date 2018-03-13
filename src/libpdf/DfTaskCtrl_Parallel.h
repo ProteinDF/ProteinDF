@@ -83,6 +83,14 @@ class DfTaskCtrl_Parallel : public DfTaskCtrl {
       NUM_OF_REQUEST_STATES
     };
 
+    Request()
+        : rank(0),
+          sessionID(0),
+          taskSize(0),
+          unpackTaskList(std::vector<index_type>()),
+          finish(0),
+          state(0){};
+
     int rank;
     int sessionID;
     std::size_t taskSize;

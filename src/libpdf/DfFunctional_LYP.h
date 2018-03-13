@@ -82,12 +82,12 @@ class DfFunctional_LYP : public DfFunctional_GGA {
   double delta_prime(const double dRho, const double dDelta);
 
  public:
-  virtual TlMatrix getFunctionalCore(const double rhoA, const double rhoB,
-                                     const double xA, const double xB);
-  virtual TlMatrix getDerivativeFunctionalCore(const double rhoA,
-                                               const double rhoB,
-                                               const double xA,
-                                               const double xB);
+  virtual TlDenseGeneralMatrix_BLAS_old getFunctionalCore(const double rhoA,
+                                                      const double rhoB,
+                                                      const double xA,
+                                                      const double xB);
+  virtual TlDenseGeneralMatrix_BLAS_old getDerivativeFunctionalCore(
+      const double rhoA, const double rhoB, const double xA, const double xB);
 
  private:
   static const double TOLERANCE;

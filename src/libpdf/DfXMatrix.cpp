@@ -22,9 +22,9 @@
 #include <string>
 
 #include "DfXMatrix.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_vector_blas.h"
 
 DfXMatrix::DfXMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
   assert(pPdfParam != NULL);
@@ -58,9 +58,10 @@ DfXMatrix::DfXMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
 DfXMatrix::~DfXMatrix() {}
 
 void DfXMatrix::buildX() {
-  TlSymmetricMatrix S = this->getSpqMatrix<TlSymmetricMatrix>();
-  TlMatrix X;
-  TlMatrix Xinv;
+  TlDenseSymmetricMatrix_BLAS_Old S =
+      this->getSpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>();
+  TlDenseGeneralMatrix_BLAS_old X;
+  TlDenseGeneralMatrix_BLAS_old Xinv;
 
   this->canonicalOrthogonalize(S, &X, &Xinv, this->XEigvalFilePath_);
 
@@ -69,16 +70,20 @@ void DfXMatrix::buildX() {
   (*(this->pPdfParam_))["num_of_MOs"] = X.getNumOfCols();
 }
 
-void DfXMatrix::canonicalOrthogonalize(const TlSymmetricMatrix& S, TlMatrix* pX,
-                                       TlMatrix* pXinv,
+void DfXMatrix::canonicalOrthogonalize(const TlDenseSymmetricMatrix_BLAS_Old& S,
+                                       TlDenseGeneralMatrix_BLAS_old* pX,
+                                       TlDenseGeneralMatrix_BLAS_old* pXinv,
                                        const std::string& eigvalFilePath) {
-  this->canonicalOrthogonalizeTmpl<TlSymmetricMatrix, TlMatrix>(S, pX, pXinv,
-                                                                eigvalFilePath);
+  this->canonicalOrthogonalizeTmpl<TlDenseSymmetricMatrix_BLAS_Old,
+                                   TlDenseGeneralMatrix_BLAS_old>(S, pX, pXinv,
+                                                              eigvalFilePath);
 }
 
-void DfXMatrix::lowdinOrthogonalize(const TlSymmetricMatrix& S, TlMatrix* pX,
-                                    TlMatrix* pXinv,
+void DfXMatrix::lowdinOrthogonalize(const TlDenseSymmetricMatrix_BLAS_Old& S,
+                                    TlDenseGeneralMatrix_BLAS_old* pX,
+                                    TlDenseGeneralMatrix_BLAS_old* pXinv,
                                     const std::string& eigvalFilePath) {
-  this->lowdinOrthogonalizeTmpl<TlSymmetricMatrix, TlMatrix>(S, pX, pXinv,
-                                                             eigvalFilePath);
+  this->lowdinOrthogonalizeTmpl<TlDenseSymmetricMatrix_BLAS_Old,
+                                TlDenseGeneralMatrix_BLAS_old>(S, pX, pXinv,
+                                                           eigvalFilePath);
 }

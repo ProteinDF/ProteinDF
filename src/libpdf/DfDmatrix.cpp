@@ -21,11 +21,11 @@
 
 #include "DfDmatrix.h"
 #include "TlFile.h"
-#include "TlMatrix.h"
 #include "TlStringTokenizer.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_vector_blas.h"
 
 /*********************************************************
 MO_OVERLAP_ITER:
@@ -77,17 +77,19 @@ void DfDmatrix::DfDmatrixMain() {
 
 void DfDmatrix::main(const DfObject::RUN_TYPE runType) {
   // occupation
-  TlVector currOcc;
+  TlVector_BLAS currOcc;
   switch (this->orbitalCorrespondenceMethod_) {
     case OCM_OVERLAP:
       this->log_.info(" orbital correspondence method: MO-overlap");
-      currOcc = this->getOccupationUsingOverlap<TlMatrix>(runType);
+      currOcc =
+          this->getOccupationUsingOverlap<TlDenseGeneralMatrix_BLAS_old>(runType);
       currOcc.save(this->getOccupationPath(runType));
       break;
 
     case OCM_PROJECTION:
       this->log_.info(" orbital correspondence method: MO-projection");
-      currOcc = this->getOccupationUsingProjection<TlMatrix, TlSymmetricMatrix>(
+      currOcc = this->getOccupationUsingProjection<TlDenseGeneralMatrix_BLAS_old,
+                                                   TlDenseSymmetricMatrix_BLAS_Old>(
           runType);
       currOcc.save(this->getOccupationPath(runType));
       break;
@@ -98,22 +100,23 @@ void DfDmatrix::main(const DfObject::RUN_TYPE runType) {
       break;
   }
 
-  this->generateDensityMatrix<TlMatrix, TlSymmetricMatrix>(runType, currOcc);
+  this->generateDensityMatrix<TlDenseGeneralMatrix_BLAS_old,
+                              TlDenseSymmetricMatrix_BLAS_Old>(runType, currOcc);
 }
 
-// TlVector DfDmatrix::getOccupation(const DfObject::RUN_TYPE runType)
+// TlVector_BLAS DfDmatrix::getOccupation(const DfObject::RUN_TYPE runType)
 // {
 //     const std::string sFileName = this->getOccupationPath(runType);
 
-//     TlVector occ;
+//     TlVector_BLAS occ;
 //     occ.load(sFileName);
 //     assert(occ.getSize() == this->m_nNumOfMOs);
 
 //     return occ;
 // }
 
-void DfDmatrix::checkOccupation(const TlVector& prevOcc,
-                                const TlVector& currOcc) {
+void DfDmatrix::checkOccupation(const TlVector_BLAS& prevOcc,
+                                const TlVector_BLAS& currOcc) {
   const double xx = prevOcc.sum();
   const double yy = currOcc.sum();
 
@@ -138,14 +141,14 @@ void DfDmatrix::checkOccupation(const TlVector& prevOcc,
   }
 }
 
-void DfDmatrix::printOccupation(const TlVector& occ) {
+void DfDmatrix::printOccupation(const TlVector_BLAS& occ) {
   std::stringstream ss;
   occ.print(ss);
   this->log_.info(ss.str());
 }
 
 // print out Two Vectors' elements
-void DfDmatrix::printTwoVectors(const TlVector& a, const TlVector& b,
+void DfDmatrix::printTwoVectors(const TlVector_BLAS& a, const TlVector_BLAS& b,
                                 const std::string& title, int pnumcol) {
   assert(a.getSize() == b.getSize());
   this->log_.info(TlUtils::format("\n\n       %s\n\n", title.c_str()));
@@ -178,12 +181,12 @@ void DfDmatrix::printTwoVectors(const TlVector& a, const TlVector& b,
   }
 }
 
-// TlVector DfDmatrix::createOccupation(const DfObject::RUN_TYPE runType)
+// TlVector_BLAS DfDmatrix::createOccupation(const DfObject::RUN_TYPE runType)
 // {
 //     const TlSerializeData& pdfParam = *(this->pPdfParam_);
 
 //     // construct guess occupations
-//     TlVector occ(this->m_nNumOfMOs);
+//     TlVector_BLAS occ(this->m_nNumOfMOs);
 //     switch (runType) {
 //     case RUN_RKS: {
 //         std::vector<int> docLevel =

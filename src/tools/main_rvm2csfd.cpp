@@ -1,9 +1,9 @@
 #include <iostream>
 #include "TlFile.h"
 #include "TlGetopt.h"
-#include "TlMmapMatrix_CSFD.h"
-#include "TlRowVectorMatrix.h"
 #include "TlUtils.h"
+#include "tl_dense_general_matrix_arrays_roworiented.h"
+#include "tl_dense_general_matrix_mmap.h"
 
 typedef TlMatrixObject::index_type index_type;
 
@@ -43,9 +43,9 @@ int main(int argc, char* argv[]) {
   {
     int subunitID = 0;
     const std::string inputPath0 =
-        TlVectorMatrixObject::getFileName(inputBaseName, subunitID);
+        TlDenseMatrix_arrays_Object::getFileName(inputBaseName, subunitID);
     index_type sizeOfVector, numOfVectors;
-    const bool isLoadable = TlVectorMatrixObject::isLoadable(
+    const bool isLoadable = TlDenseMatrix_arrays_Object::isLoadable(
         inputPath0, &numOfVectors, &sizeOfVector, &numOfSubunits, &subunitID);
     if (isLoadable != true) {
       std::cerr << "can not open file: " << inputPath0 << std::endl;
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
     }
     TlFile::remove(outputPath);
   }
-  TlMmapMatrix_CSFD fileMat(outputPath, numOfRows, numOfCols);
+  TlDenseGeneralMatrix_mmap fileMat(outputPath, numOfRows, numOfCols);
 
   // load & set
   for (int i = 0; i < numOfSubunits; ++i) {
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
                 << std::endl;
     }
 
-    TlRowVectorMatrix m;
+    TlDenseGeneralMatrix_arrays_RowOriented m;
     m.load(inputBaseName, i);
 
     std::vector<double> vtr(numOfCols);

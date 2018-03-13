@@ -21,9 +21,9 @@
 #include "DfCalcGridX_Parallel.h"
 #include "DfEriX_Parallel.h"
 #include "TlCommunicate.h"
-#include "TlTime.h"
-
 #include "TlMemManager.h"
+#include "TlTime.h"
+#include "tl_dense_symmetric_matrix_blacs.h"
 
 DfXCFunctional_Parallel::DfXCFunctional_Parallel(TlSerializeData* pPdfParam)
     : DfXCFunctional(pPdfParam) {}
@@ -42,15 +42,15 @@ void DfXCFunctional_Parallel::logger(const std::string& str) const {
 }
 
 void DfXCFunctional_Parallel::buildXcMatrix() {
-  const std::size_t needMem =
-      this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) * sizeof(double);
-  if ((isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
-    this->logger(" build XC matrix on disk.\n");
-    TlMatrix::useMemManager(true);
-  } else {
-    this->logger(" build XC matrix on memory.\n");
-    TlMatrix::useMemManager(false);
-  }
+  // const std::size_t needMem =
+  //     this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) * sizeof(double);
+  // if ((isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
+  //   this->logger(" build XC matrix on disk.\n");
+  //   TlMatrix::useMemManager(true);
+  // } else {
+  //   this->logger(" build XC matrix on memory.\n");
+  //   TlMatrix::useMemManager(false);
+  // }
 
   if (this->m_bUsingSCALAPACK == true) {
     this->buildXC_ScaLAPACK();
@@ -65,19 +65,21 @@ void DfXCFunctional_Parallel::buildXC_LAPACK() {
 
   switch (this->m_nMethodType) {
     case METHOD_RKS: {
-      TlSymmetricMatrix Ppq;
+      TlDenseSymmetricMatrix_BLAS_Old Ppq;
       if (rComm.isMaster() == true) {
         if (this->m_bIsUpdateXC == true) {
-          Ppq = 0.5 * this->getDiffDensityMatrix<TlSymmetricMatrix>(
-                          RUN_RKS, this->m_nIteration);
+          Ppq = 0.5 *
+                this->getDiffDensityMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+                    RUN_RKS, this->m_nIteration);
         } else {
-          Ppq = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(
-                          RUN_RKS, this->m_nIteration - 1);
+          Ppq = 0.5 *
+                this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+                    RUN_RKS, this->m_nIteration - 1);
         }
       }
       rComm.broadcast(Ppq);
 
-      TlSymmetricMatrix Fxc(this->m_nNumOfAOs);
+      TlDenseSymmetricMatrix_BLAS_Old Fxc(this->m_nNumOfAOs);
       DfXCFunctional::getFxc(Ppq, &dfCalcGrid, &Fxc);
       if (this->isSaveFxcPure_ == true) {
         if (rComm.isMaster() == true) {
@@ -92,31 +94,31 @@ void DfXCFunctional_Parallel::buildXC_LAPACK() {
       // }
 
       if (rComm.isMaster() == true) {
-        this->saveFxcMatrix<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration,
-                                               Fxc);
+        this->saveFxcMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+            RUN_RKS, this->m_nIteration, Fxc);
       }
     } break;
 
     case METHOD_UKS: {
-      TlSymmetricMatrix PApq, PBpq;
+      TlDenseSymmetricMatrix_BLAS_Old PApq, PBpq;
       if (rComm.isMaster() == true) {
         if (this->m_bIsUpdateXC == true) {
-          PApq = this->getDiffDensityMatrix<TlSymmetricMatrix>(
+          PApq = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
               RUN_UKS_ALPHA, this->m_nIteration);
-          PBpq = this->getDiffDensityMatrix<TlSymmetricMatrix>(
+          PBpq = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
               RUN_UKS_BETA, this->m_nIteration);
         } else {
-          PApq = this->getPpqMatrix<TlSymmetricMatrix>(RUN_UKS_ALPHA,
-                                                       this->m_nIteration - 1);
-          PBpq = this->getPpqMatrix<TlSymmetricMatrix>(RUN_UKS_BETA,
-                                                       this->m_nIteration - 1);
+          PApq = this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+              RUN_UKS_ALPHA, this->m_nIteration - 1);
+          PBpq = this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+              RUN_UKS_BETA, this->m_nIteration - 1);
         }
       }
       rComm.broadcast(PApq);
       rComm.broadcast(PBpq);
 
-      TlSymmetricMatrix FxcA(this->m_nNumOfAOs);
-      TlSymmetricMatrix FxcB(this->m_nNumOfAOs);
+      TlDenseSymmetricMatrix_BLAS_Old FxcA(this->m_nNumOfAOs);
+      TlDenseSymmetricMatrix_BLAS_Old FxcB(this->m_nNumOfAOs);
       DfXCFunctional::getFxc(PApq, PBpq, &dfCalcGrid, &FxcA, &FxcB);
       if (this->isSaveFxcPure_ == true) {
         if (rComm.isMaster() == true) {
@@ -135,10 +137,10 @@ void DfXCFunctional_Parallel::buildXC_LAPACK() {
       // }
 
       if (rComm.isMaster() == true) {
-        this->saveFxcMatrix<TlSymmetricMatrix>(RUN_UKS_ALPHA,
-                                               this->m_nIteration, FxcA);
-        this->saveFxcMatrix<TlSymmetricMatrix>(RUN_UKS_BETA, this->m_nIteration,
-                                               FxcB);
+        this->saveFxcMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+            RUN_UKS_ALPHA, this->m_nIteration, FxcA);
+        this->saveFxcMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
+            RUN_UKS_BETA, this->m_nIteration, FxcB);
       }
     } break;
 
@@ -157,16 +159,18 @@ void DfXCFunctional_Parallel::buildXC_ScaLAPACK() {
 
   switch (this->m_nMethodType) {
     case METHOD_RKS: {
-      TlDistributeSymmetricMatrix Ppq;
+      TlDenseSymmetricMatrix_blacs Ppq;
       if (this->m_bIsUpdateXC == true) {
-        Ppq = 0.5 * this->getDiffDensityMatrix<TlDistributeSymmetricMatrix>(
-                        RUN_RKS, this->m_nIteration);
+        Ppq = 0.5 *
+              this->getDiffDensityMatrix<TlDenseSymmetricMatrix_blacs>(
+                  RUN_RKS, this->m_nIteration);
       } else {
-        Ppq = 0.5 * this->getPpqMatrix<TlDistributeSymmetricMatrix>(
-                        RUN_RKS, this->m_nIteration - 1);
+        Ppq = 0.5 *
+              this->getPpqMatrix<TlDenseSymmetricMatrix_blacs>(
+                  RUN_RKS, this->m_nIteration - 1);
       }
 
-      TlDistributeSymmetricMatrix Fxc(this->m_nNumOfAOs);
+      TlDenseSymmetricMatrix_blacs Fxc(this->m_nNumOfAOs);
       DfXCFunctional::getFxc(Ppq, &dfCalcGrid, &Fxc);
       if (this->isSaveFxcPure_ == true) {
         this->saveFxcPureMatrix(RUN_RKS, this->m_nIteration, Fxc);
@@ -178,26 +182,26 @@ void DfXCFunctional_Parallel::buildXC_ScaLAPACK() {
       //     DfXCFunctional::m_dFockExchangeEnergyAlpha;
       // }
 
-      this->saveFxcMatrix<TlDistributeSymmetricMatrix>(RUN_RKS,
-                                                       this->m_nIteration, Fxc);
+      this->saveFxcMatrix<TlDenseSymmetricMatrix_blacs>(
+          RUN_RKS, this->m_nIteration, Fxc);
     } break;
 
     case METHOD_UKS: {
-      TlDistributeSymmetricMatrix PApq, PBpq;
+      TlDenseSymmetricMatrix_blacs PApq, PBpq;
       if (this->m_bIsUpdateXC == true) {
-        PApq = this->getDiffDensityMatrix<TlDistributeSymmetricMatrix>(
+        PApq = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_blacs>(
             RUN_UKS_ALPHA, this->m_nIteration);
-        PBpq = this->getDiffDensityMatrix<TlDistributeSymmetricMatrix>(
+        PBpq = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_blacs>(
             RUN_UKS_BETA, this->m_nIteration);
       } else {
-        PApq = this->getPpqMatrix<TlDistributeSymmetricMatrix>(
+        PApq = this->getPpqMatrix<TlDenseSymmetricMatrix_blacs>(
             RUN_UKS_ALPHA, this->m_nIteration - 1);
-        PBpq = this->getPpqMatrix<TlDistributeSymmetricMatrix>(
+        PBpq = this->getPpqMatrix<TlDenseSymmetricMatrix_blacs>(
             RUN_UKS_BETA, this->m_nIteration - 1);
       }
 
-      TlDistributeSymmetricMatrix FxcA(this->m_nNumOfAOs);
-      TlDistributeSymmetricMatrix FxcB(this->m_nNumOfAOs);
+      TlDenseSymmetricMatrix_blacs FxcA(this->m_nNumOfAOs);
+      TlDenseSymmetricMatrix_blacs FxcB(this->m_nNumOfAOs);
       DfXCFunctional::getFxc(PApq, PBpq, &dfCalcGrid, &FxcA, &FxcB);
       if (this->isSaveFxcPure_ == true) {
         this->saveFxcPureMatrix(RUN_UKS_ALPHA, this->m_nIteration, FxcA);
@@ -213,9 +217,9 @@ void DfXCFunctional_Parallel::buildXC_ScaLAPACK() {
       //     DfXCFunctional::m_dFockExchangeEnergyBeta);
       // }
 
-      this->saveFxcMatrix<TlDistributeSymmetricMatrix>(
+      this->saveFxcMatrix<TlDenseSymmetricMatrix_blacs>(
           RUN_UKS_ALPHA, this->m_nIteration, FxcA);
-      this->saveFxcMatrix<TlDistributeSymmetricMatrix>(
+      this->saveFxcMatrix<TlDenseSymmetricMatrix_blacs>(
           RUN_UKS_BETA, this->m_nIteration, FxcB);
     } break;
 

@@ -36,9 +36,10 @@ class DfFunctional_Slater : public DfFunctional_LDA {
   virtual void getDerivativeFunctional(double dRhoA, double* pRoundF_roundRhoA);
 
  public:
-  virtual TlMatrix getFunctionalCore(const double rhoA, const double rhoB);
-  virtual TlMatrix getDerivativeFunctionalCore(const double rhoA,
-                                               const double rhoB);
+  virtual TlDenseGeneralMatrix_BLAS_old getFunctionalCore(const double rhoA,
+                                                      const double rhoB);
+  virtual TlDenseGeneralMatrix_BLAS_old getDerivativeFunctionalCore(
+      const double rhoA, const double rhoB);
 
  private:
   static const double INV_3;

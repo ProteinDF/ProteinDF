@@ -22,10 +22,10 @@
 
 #include "DfDmatrix_Parallel.h"
 #include "TlCommunicate.h"
-#include "TlDistributeMatrix.h"
-#include "TlDistributeSymmetricMatrix.h"
 #include "TlFile.h"
 #include "TlTime.h"
+#include "tl_dense_general_matrix_blacs.h"
+#include "tl_dense_symmetric_matrix_blacs.h"
 
 DfDmatrix_Parallel::DfDmatrix_Parallel(TlSerializeData* pPdfParam)
     : DfDmatrix(pPdfParam) {}
@@ -59,11 +59,12 @@ void DfDmatrix_Parallel::main_SCALAPACK(const DfObject::RUN_TYPE runType) {
   this->log_.info("build density matrix using ScaLAPACK.");
 
   // occupation
-  TlVector currOcc;
+  TlVector_BLAS currOcc;
   switch (this->orbitalCorrespondenceMethod_) {
     case OCM_OVERLAP:
       this->log_.info(" orbital correspondence method: MO-overlap");
-      currOcc = this->getOccupationUsingOverlap<TlDistributeMatrix>(runType);
+      currOcc =
+          this->getOccupationUsingOverlap<TlDenseGeneralMatrix_blacs>(runType);
       if (rComm.isMaster() == true) {
         currOcc.save(this->getOccupationPath(runType));
       }
@@ -71,9 +72,8 @@ void DfDmatrix_Parallel::main_SCALAPACK(const DfObject::RUN_TYPE runType) {
 
     case OCM_PROJECTION:
       this->log_.info(" orbital correspondence method: MO-projection");
-      currOcc = this->getOccupationUsingProjection<TlDistributeMatrix,
-                                                   TlDistributeSymmetricMatrix>(
-          runType);
+      currOcc = this->getOccupationUsingProjection<
+          TlDenseGeneralMatrix_blacs, TlDenseSymmetricMatrix_blacs>(runType);
       if (rComm.isMaster() == true) {
         currOcc.save(this->getOccupationPath(runType));
       }
@@ -89,12 +89,12 @@ void DfDmatrix_Parallel::main_SCALAPACK(const DfObject::RUN_TYPE runType) {
   }
 
   rComm.barrier();
-  this->generateDensityMatrix<TlDistributeMatrix, TlDistributeSymmetricMatrix>(
-      runType, currOcc);
+  this->generateDensityMatrix<TlDenseGeneralMatrix_blacs,
+                              TlDenseSymmetricMatrix_blacs>(runType, currOcc);
 }
 
-void DfDmatrix_Parallel::checkOccupation(const TlVector& prevOcc,
-                                         const TlVector& currOcc) {
+void DfDmatrix_Parallel::checkOccupation(const TlVector_BLAS& prevOcc,
+                                         const TlVector_BLAS& currOcc) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
   if (rComm.isMaster() == true) {
@@ -102,7 +102,7 @@ void DfDmatrix_Parallel::checkOccupation(const TlVector& prevOcc,
   }
 }
 
-void DfDmatrix_Parallel::printOccupation(const TlVector& occ) {
+void DfDmatrix_Parallel::printOccupation(const TlVector_BLAS& occ) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
   if (rComm.isMaster() == true) {
@@ -110,9 +110,9 @@ void DfDmatrix_Parallel::printOccupation(const TlVector& occ) {
   }
 }
 
-TlVector DfDmatrix_Parallel::getOccVtr(const DfObject::RUN_TYPE runType) {
+TlVector_BLAS DfDmatrix_Parallel::getOccVtr(const DfObject::RUN_TYPE runType) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  TlVector occ;
+  TlVector_BLAS occ;
   if (rComm.isMaster() == true) {
     occ = DfObject::getOccVtr(runType);
   }

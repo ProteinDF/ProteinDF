@@ -154,10 +154,9 @@ void DfFunctional_LYP::getDerivativeFunctional(
 
       // roundF_roundGamma
       *pRoundF_roundGammaAA =
-          -ABOmega *
-          (INV_9 * dRhoAB *
-               (1.0 - 3.0 * dDelta - (dDelta - 11.0) * dRhoA / dRho) -
-           dRhoB * dRhoB);
+          -ABOmega * (INV_9 * dRhoAB * (1.0 - 3.0 * dDelta -
+                                        (dDelta - 11.0) * dRhoA / dRho) -
+                      dRhoB * dRhoB);
     }
 
     // beta spin =======================================================
@@ -170,10 +169,9 @@ void DfFunctional_LYP::getDerivativeFunctional(
 
       // roundF_roundGamma
       *pRoundF_roundGammaBB =
-          -ABOmega *
-          (INV_9 * dRhoAB *
-               (1.0 - 3.0 * dDelta - (dDelta - 11.0) * dRhoB / dRho) -
-           dRhoA * dRhoA);
+          -ABOmega * (INV_9 * dRhoAB * (1.0 - 3.0 * dDelta -
+                                        (dDelta - 11.0) * dRhoB / dRho) -
+                      dRhoA * dRhoA);
     }
 
     // both ============================================================
@@ -510,22 +508,20 @@ void DfFunctional_LYP::roundRoundLYP_roundRhoRoundGamma(
   {
     // for alpha spin
     const double term1A = dOmegaPrime_Omega * dRoundLYP_roundGammaAA;
-    const double term2A_1 =
-        INV_9 * dRhoB *
-        (1.0 - 3.0 * dDelta - (dDelta - 11.0) * dRhoA * dInvRho);
-    const double term2A_2 = -INV_9 * dRhoAB *
-                            ((3.0 + dRhoA * dInvRho) * dDeltaPrime +
-                             (dDelta - 11.0) * dRhoB * dInvRho * dInvRho);
+    const double term2A_1 = INV_9 * dRhoB * (1.0 - 3.0 * dDelta -
+                                             (dDelta - 11.0) * dRhoA * dInvRho);
+    const double term2A_2 =
+        -INV_9 * dRhoAB * ((3.0 + dRhoA * dInvRho) * dDeltaPrime +
+                           (dDelta - 11.0) * dRhoB * dInvRho * dInvRho);
     const double term2A = -ABOmega * (term2A_1 + term2A_2);
 
     // for beta spin
     const double term1B = dOmegaPrime_Omega * dRoundLYP_roundGammaBB;
-    const double term2B_1 =
-        INV_9 * dRhoA *
-        (1.0 - 3.0 * dDelta - (dDelta - 11.0) * dRhoB * dInvRho);
-    const double term2B_2 = -INV_9 * dRhoAB *
-                            ((3.0 + dRhoB * dInvRho) * dDeltaPrime +
-                             (dDelta - 11.0) * dRhoA * dInvRho * dInvRho);
+    const double term2B_1 = INV_9 * dRhoA * (1.0 - 3.0 * dDelta -
+                                             (dDelta - 11.0) * dRhoB * dInvRho);
+    const double term2B_2 =
+        -INV_9 * dRhoAB * ((3.0 + dRhoB * dInvRho) * dDeltaPrime +
+                           (dDelta - 11.0) * dRhoA * dInvRho * dInvRho);
     const double term2B = -ABOmega * (term2B_1 + term2B_2);
 
     *pRoundRoundLYP_roundRhoARoundGammaAA = term1A + term2A;
@@ -548,22 +544,20 @@ void DfFunctional_LYP::roundRoundLYP_roundRhoRoundGamma(
   // dRoundRoundLYP_roundRhoXRoundGammaBB
   {
     const double term1A = dOmegaPrime_Omega * dRoundLYP_roundGammaBB;
-    const double term2A_1 =
-        INV_9 * dRhoB *
-        (1.0 - 3.0 * dDelta - (dDelta - 11.0) * dRhoB * dInvRho);
-    const double term2A_2 = -INV_9 * dRhoAB *
-                            ((3.0 + dRhoB * dInvRho) * dDeltaPrime -
-                             (dDelta - 11.0) * dRhoB * dInvRho * dInvRho);
+    const double term2A_1 = INV_9 * dRhoB * (1.0 - 3.0 * dDelta -
+                                             (dDelta - 11.0) * dRhoB * dInvRho);
+    const double term2A_2 =
+        -INV_9 * dRhoAB * ((3.0 + dRhoB * dInvRho) * dDeltaPrime -
+                           (dDelta - 11.0) * dRhoB * dInvRho * dInvRho);
     const double term2A_3 = -2.0 * dRhoA;
     const double term2A = -ABOmega * (term2A_1 + term2A_2 + term2A_3);
 
     const double term1B = dOmegaPrime_Omega * dRoundLYP_roundGammaAA;
-    const double term2B_1 =
-        INV_9 * dRhoA *
-        (1.0 - 3.0 * dDelta - (dDelta - 11.0) * dRhoA * dInvRho);
-    const double term2B_2 = -INV_9 * dRhoAB *
-                            ((3.0 + dRhoA * dInvRho) * dDeltaPrime -
-                             (dDelta - 11.0) * dRhoA * dInvRho * dInvRho);
+    const double term2B_1 = INV_9 * dRhoA * (1.0 - 3.0 * dDelta -
+                                             (dDelta - 11.0) * dRhoA * dInvRho);
+    const double term2B_2 =
+        -INV_9 * dRhoAB * ((3.0 + dRhoA * dInvRho) * dDeltaPrime -
+                           (dDelta - 11.0) * dRhoA * dInvRho * dInvRho);
     const double term2B_3 = -2.0 * dRhoB;
     const double term2B = -ABOmega * (term2B_1 + term2B_2 + term2B_3);
 
@@ -595,12 +589,11 @@ void DfFunctional_LYP::roundRoundLYP_roundRhoRoundGamma(
     const double term1 = dOmegaPrime_Omega * dRoundLYP_roundGammaAA;
 
     // for alpha spin
-    const double term2A_1 =
-        INV_9 * dRhoA *
-        (1.0 - 3.0 * dDelta - (dDelta - 11.0) * dRhoA * dInvRho);
-    const double term2A_2 = -INV_9 * dRhoAB *
-                            ((3.0 + dRhoA * dInvRho) * dDeltaPrime +
-                             (dDelta - 11.0) * dRhoA * dInvRho * dInvRho);
+    const double term2A_1 = INV_9 * dRhoA * (1.0 - 3.0 * dDelta -
+                                             (dDelta - 11.0) * dRhoA * dInvRho);
+    const double term2A_2 =
+        -INV_9 * dRhoAB * ((3.0 + dRhoA * dInvRho) * dDeltaPrime +
+                           (dDelta - 11.0) * dRhoA * dInvRho * dInvRho);
     const double term2A = -ABOmega * (term2A_1 + term2A_2);
 
     // for beta spin
@@ -655,10 +648,11 @@ double DfFunctional_LYP::delta_prime(const double dRho, const double dDelta) {
 // xAA := sqrt(gamma_AA) / rhoA^(4/3)
 // xBB := sqrt(gamma_AA) / rhoA^(4/3)
 // xAB := sqrt(gamma_AB) / rhoA^(4/3)
-TlMatrix DfFunctional_LYP::getFunctionalCore(const double rhoA,
-                                             const double rhoB, const double xA,
-                                             const double xB) {
-  TlMatrix answer(F_DIM, this->getNumOfFunctionalTerms());
+TlDenseGeneralMatrix_BLAS_old DfFunctional_LYP::getFunctionalCore(const double rhoA,
+                                                              const double rhoB,
+                                                              const double xA,
+                                                              const double xB) {
+  TlDenseGeneralMatrix_BLAS_old answer(F_DIM, this->getNumOfFunctionalTerms());
   assert(this->getNumOfFunctionalTerms() == 4);
 
   if ((rhoA > 1.0E-16) && (xA > 1.0E-16) && (rhoB > 1.0E-16) &&
@@ -724,11 +718,10 @@ TlMatrix DfFunctional_LYP::getFunctionalCore(const double rhoA,
   return answer;
 }
 
-TlMatrix DfFunctional_LYP::getDerivativeFunctionalCore(const double rhoA,
-                                                       const double rhoB,
-                                                       const double xA,
-                                                       const double xB) {
-  TlMatrix answer(D_DIM, this->getNumOfDerivativeFunctionalTerms());
+TlDenseGeneralMatrix_BLAS_old DfFunctional_LYP::getDerivativeFunctionalCore(
+    const double rhoA, const double rhoB, const double xA, const double xB) {
+  TlDenseGeneralMatrix_BLAS_old answer(D_DIM,
+                                   this->getNumOfDerivativeFunctionalTerms());
 
   if ((rhoA > 1.0E-16) && (xA > 1.0E-16) && (rhoB > 1.0E-16) &&
       (xB > 1.0E-16)) {

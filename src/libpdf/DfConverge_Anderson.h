@@ -232,7 +232,7 @@ VectorType DfConverge_Anderson::anderson(const VectorType& X1,
 
   const double theta_rest = 1.0 - theta;
   // U^(n-1) = (1-theta)*X^(n-1) + theta * X^(n-2)
-  // const TlVector U1 = theta_rest * X1 + theta * Y0;
+  // const TlVector_BLAS U1 = theta_rest * X1 + theta * Y0;
   const VectorType U1 = theta_rest * X1 + theta * X2;
 
   // V^(n) = (1-theta)*Y^(n) + theta*Y^(n-1)

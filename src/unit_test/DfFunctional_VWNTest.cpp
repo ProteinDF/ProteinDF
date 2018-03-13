@@ -1,6 +1,6 @@
+#include "DfFunctional_VWN.h"
 #include <string>
 #include <vector>
-#include "DfFunctional_VWN.h"
 #include "digit.h"
 #include "gtest/gtest.h"
 
