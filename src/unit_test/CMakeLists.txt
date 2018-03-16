@@ -26,8 +26,6 @@ set(PDF_XTEST_SOURCES
   TlUtilsTest.cpp
   TlVectorTest.cpp
   main.cpp
-  gtest/gtest-all.cc
-  gtest/gtest.h
   )
 
 set(PDF_XTEST_MPI_SOURCES
@@ -35,8 +33,6 @@ set(PDF_XTEST_MPI_SOURCES
   TlDistributeMatrixTest.cpp
   TlDistributeSymmetricMatrixTest.cpp
   main_MPI.cpp
-  gtest/gtest-all.cc
-  gtest/gtest.h
   )
 
 
@@ -49,12 +45,24 @@ endif(HDF5_FOUND)
 
 
 add_executable(pdf-xtest ${PDF_XTEST_SOURCES})
-target_link_libraries(pdf-xtest libpdf libpdftl Threads::Threads)
+target_link_libraries(pdf-xtest libpdf libpdftl ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} Threads::Threads)
 
+add_test(
+  NAME xtest
+  COMMAND $<TARGET_FILE:pdf-xtest>)
+#set_property(
+#  TEST pdf-xtest
+#  PROPERTY LABELS lib pdf-xtest
+#  )
 
 if (MPI_FOUND)
   add_executable(pdf-xtest.MPI ${PDF_XTEST_MPI_SOURCES})
-  target_link_libraries(pdf-xtest.MPI libppdf libppdftl libpdf libpdftl Threads::Threads)
+  target_link_libraries(pdf-xtest.MPI libppdf libppdftl libpdf libpdftl ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} Threads::Threads)
+
+  add_test(
+    NAME xtest.mpi
+    COMMAND mpiexec ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 $<TARGET_FILE:pdf-xtest.MPI>
+    )
 endif(MPI_FOUND)
 
 #  TlMsgPackTest.cpp
