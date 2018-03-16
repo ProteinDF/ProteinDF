@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(ProteinDF)
 enable_language(CXX)
+enable_testing()
 
 # Project Version
 set(PROJECT_VERSION_MAJOR "2018")
@@ -85,17 +86,15 @@ endif(LAPACK_FOUND)
 
 # check MPI
 find_package(MPI)
-message("MPI information:")
-message("  MPI_VERSION: ${MPI_VERSION}")
-message("  MPI_INCLUDE_PATH: ${MPI_INCLUDE_PATH}")
-message("  MPI_LIBRARY: ${MPI_LIBRARY}")
-message("  MPI_LIBRARIES: ${MPI_LIBRARIES}")
-message("  MPIEXEC: ${MPIEXEC}")
-message("  MPI_CXX_COMPILER: ${MPI_CXX_COMPILER}")
-message("  MPI_CXX_LIBRARIES: ${MPI_CXX_LIBRARIES}")
-message("  MPI_CXX_INCLUDE_PATH: ${MPI_CXX_INCLUDE_PATH}")
-message("  MPI_CXX_FOUND: ${MPI_CXX_FOUND}")
 if (MPI_FOUND)
+  message("MPI information:")
+  message("  MPI_VERSION: ${MPI_VERSION}")
+  message("  MPIEXEC_EXECUTABLE: ${MPIEXEC_EXECUTABLE}")
+  message("  MPIEXEC_NUMPROC_FLAG: ${MPIEXEC_NUMPROC_FLAG}")
+  message("  MPI_CXX_COMPILER: ${MPI_CXX_COMPILER}")
+  message("  MPI_CXX_LIBRARIES: ${MPI_CXX_LIBRARIES}")
+  message("  MPI_CXX_INCLUDE_PATH: ${MPI_CXX_INCLUDE_PATH}")
+  message("  MPI_CXX_FOUND: ${MPI_CXX_FOUND}")
   message("overwrite: CMAKE_CXX_COMPILER = ${MPI_CXX_COMPILER}")
   set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
 else(MPI_FOUND)
@@ -146,6 +145,18 @@ endif(HDF5_FOUND)
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
+
+
+# check Google Test
+#   ref.) env param: `GTEST_ROOT`
+find_package(GTest)
+if (GTEST_FOUND)
+  include_directories(${GTEST_INCLUDE_DIRS})
+  message("Google Test information:")
+  message("  GTEST_INCLUDE_DIRS: ${GTEST_INCLUDE_DIRS}")
+  message("  GTEST_LIBRARIES: ${GTEST_LIBRARIES}")
+  message("  GTEST_MAIN_LIBRARIES: ${GTEST_MAIN_LIBRARIES}")
+endif (GTEST_FOUND)
 
 
 # make config.h
