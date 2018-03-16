@@ -9,7 +9,7 @@ add_subdirectory(pdf)
 add_subdirectory(tools)
 
 
-if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/unit_test/gtest/gtest.h)
+if (GTEST_FOUND)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/unit_test)
   add_subdirectory(unit_test)
-endif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/unit_test/gtest/gtest.h)
+endif (GTEST_FOUND)
