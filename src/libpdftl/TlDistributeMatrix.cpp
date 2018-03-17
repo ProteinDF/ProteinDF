@@ -804,7 +804,7 @@ bool TlDistributeMatrix::getSparseMatrixX(TlSparseMatrix* pMatrix,
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
   if (pMatrix != NULL) {
-  // Client task通信処理
+    // Client task通信処理
 #pragma omp critical(TlDistributeMatrix__getSparseMatrixX)
     {
       this->getSparseMatrixX_registerTask(pMatrix);
@@ -2677,7 +2677,7 @@ void TlDistributeMatrix::saveElements(
 #ifdef HAVE_HDF5
 bool TlDistributeMatrix::saveHdf5(const std::string& filepath,
                                   const std::string& h5path) const {
-  this->saveHdf5(filepath, h5path, TlMatrixObject::CSFD);
+  return this->saveHdf5(filepath, h5path, TlMatrixObject::CSFD);
 }
 
 bool TlDistributeMatrix::saveHdf5(const std::string& filepath,

@@ -50,10 +50,6 @@ target_link_libraries(pdf-xtest libpdf libpdftl ${GTEST_LIBRARIES} ${GTEST_MAIN_
 add_test(
   NAME xtest
   COMMAND $<TARGET_FILE:pdf-xtest>)
-#set_property(
-#  TEST pdf-xtest
-#  PROPERTY LABELS lib pdf-xtest
-#  )
 
 if (MPI_FOUND)
   add_executable(pdf-xtest.MPI ${PDF_XTEST_MPI_SOURCES})
@@ -61,8 +57,6 @@ if (MPI_FOUND)
 
   add_test(
     NAME xtest.mpi
-    COMMAND mpiexec ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 $<TARGET_FILE:pdf-xtest.MPI>
+    COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 $<TARGET_FILE:pdf-xtest.MPI>
     )
 endif(MPI_FOUND)
-
-#  TlMsgPackTest.cpp
