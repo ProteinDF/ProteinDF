@@ -772,7 +772,7 @@ bool TlDistributeSymmetricMatrix::save(const std::string& sFilePath) const {
 #ifdef HAVE_HDF5
 bool TlDistributeSymmetricMatrix::saveHdf5(const std::string& filepath,
                                            const std::string& h5path) const {
-  TlDistributeMatrix::saveHdf5(filepath, h5path, TlMatrixObject::RLHD);
+  return TlDistributeMatrix::saveHdf5(filepath, h5path, TlMatrixObject::RLHD);
 }
 
 TlMatrixObject::size_type TlDistributeSymmetricMatrix::getArrayIndex(
@@ -1204,8 +1204,8 @@ TlDistributeMatrix multiplicationByScaLapack(
   const int JA = 1;
 
   // const double* B =
-  // &(const_cast<TlDistributeSymmetricMatrix&>(Y).m_aMatrix[0]);    // DIMENSION
-  // (LDB, n)
+  // &(const_cast<TlDistributeSymmetricMatrix&>(Y).m_aMatrix[0]);    //
+  // DIMENSION (LDB, n)
   const double* B = X.pData_;  // DIMENSION (LDB, n)
   const int IB = 1;
   const int JB = 1;
