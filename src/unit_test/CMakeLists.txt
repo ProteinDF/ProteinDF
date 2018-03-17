@@ -57,6 +57,6 @@ if (MPI_FOUND)
 
   add_test(
     NAME xtest.mpi
-    COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 $<TARGET_FILE:pdf-xtest.MPI>
+    COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 $<TARGET_FILE:pdf-xtest.MPI>
     )
 endif(MPI_FOUND)
