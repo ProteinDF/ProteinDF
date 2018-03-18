@@ -20,12 +20,21 @@
 #define TLSPARSEHASHMATRIX_H
 
 #include <cassert>
-// #include <ext/hash_map>  // -> std::unordered_map (C++11)
-#include <unordered_map> // C++11
+
+#if __cplusplus <= 199711L
+#include <ext/hash_map>
+#elif __cplusplus >= 201103L
+#include <unordered_map>
+#endif  // __cplusplus
 
 class TlSparseHashMatrix {
  public:
+#if __cplusplus <= 199711L
+  typedef __gnu_cxx::hash_map<unsigned long, double> ContainerType;
+#elif __cplusplus >= 201103L
   typedef std::unordered_map<unsigned long, double> ContainerType;
+#endif  // __cplusplus
+
   typedef ContainerType::const_iterator const_iterator;
   typedef ContainerType::iterator iterator;
 
