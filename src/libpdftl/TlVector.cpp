@@ -149,7 +149,7 @@ double TlVector::norm2() const {
   return answer;
 }
 
-double TlVector::norm() const { return std::sqrt(this->norm()); }
+double TlVector::norm() const { return std::sqrt(this->norm2()); }
 
 TlVector& TlVector::operator=(const TlVector& rhs) {
   if (this != &rhs) {
