@@ -1713,9 +1713,6 @@ void TlDistributeMatrix::mergeMatrixAsync_recv(bool isFinalize) {
 }
 
 double TlDistributeMatrix::trace() const {
-  const index_type dim =
-      std::min<index_type>(this->getNumOfRows(), this->getNumOfCols());
-
   double answer = 0.0;
   const int nGlobalCols = this->m_nCols;
   const int nRows = this->m_nMyRows;
@@ -2735,8 +2732,6 @@ void TlDistributeMatrix::saveElements(
     TlHdf5Utils* pH5, const std::string& path,
     const std::vector<TlMatrixObject::MatrixElement>& elements) const {
   std::size_t numOfElements = elements.size();
-  const index_type numOfRows = this->getNumOfRows();
-  // const index_type numOfCols = this->getNumOfCols();
 
   std::vector<TlHdf5Utils::size_type> coord(numOfElements);
   std::vector<double> values(numOfElements);
