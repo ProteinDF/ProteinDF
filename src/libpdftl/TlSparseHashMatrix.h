@@ -20,12 +20,12 @@
 #define TLSPARSEHASHMATRIX_H
 
 #include <cassert>
-#include <ext/hash_map>  // -> std::unordered_map (C++11)
-//#include "TlHashMap.h"
+// #include <ext/hash_map>  // -> std::unordered_map (C++11)
+#include <unordered_map> // C++11
 
 class TlSparseHashMatrix {
  public:
-  typedef __gnu_cxx::hash_map<unsigned long, double> ContainerType;
+  typedef std::unordered_map<unsigned long, double> ContainerType;
   typedef ContainerType::const_iterator const_iterator;
   typedef ContainerType::iterator iterator;
 
@@ -81,9 +81,6 @@ class TlSparseHashMatrix {
   int numOfRows;
   int numOfCols;
 
-  // TlHashMap container;
-  //__gnu_cxx::hash_map<unsigned long, int, std::tr1::hash<unsigned long> >
-  //container;
   ContainerType container;
 
   static const int INT_BITS;

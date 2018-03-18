@@ -124,7 +124,7 @@ const double TlAtom::m_dVdw_radii[] = {
 
 //
 TlAtom::TlAtom(const std::string& symbol, const TlPosition& pos, double charge)
-    : charge_(charge), m_dAsa(0), m_position(pos), m_element(0) {
+    : charge_(charge), m_position(pos), m_element(0) {
   this->m_properties.reset();
   this->m_sPcClass = TlAtom::UNDEFINED;
 

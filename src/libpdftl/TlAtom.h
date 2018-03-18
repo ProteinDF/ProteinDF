@@ -91,7 +91,7 @@ class TlAtom {
   unsigned char m_sPcClass;
 
   // solvent-accessible surface area
-  double m_dAsa;
+  // double sasa_;
 
   // atomic symbols in order of element numbers
   static const char* m_sSymbols[];
