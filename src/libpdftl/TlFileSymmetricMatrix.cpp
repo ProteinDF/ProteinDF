@@ -40,18 +40,22 @@ void TlFileSymmetricMatrix::resize(const index_type newDim) {
 
   const index_type oldDim = this->getNumOfRows();
 
-  // rename(move) this object file
-  std::string tempFilePath = TlFile::getTempFilePath();
-  {
-    this->finalize();
-    TlFile::rename(this->filePath_, tempFilePath);
-  }
+  // finalize this object
+  this->finalize();
+
+  // copy
+  const std::string tempFilePath = TlFile::getTempFilePath();
+  TlFile::copy(this->filePath_, tempFilePath);
+  TlFile::remove(this->filePath_);
+  assert(TlFile::isExistFile(this->filePath_) == false);
 
   // create new file matrix
   this->numOfRows_ = newDim;
   this->numOfCols_ = newDim;
   this->initializeCache();
   this->open();
+  assert(this->getNumOfRows() == newDim);
+  assert(this->getNumOfCols() == newDim);
 
   // copy elements
   {

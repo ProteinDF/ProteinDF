@@ -79,18 +79,22 @@ void TlFileMatrix::resize(const index_type newRow, const index_type newCol) {
   const index_type oldRow = this->getNumOfRows();
   const index_type oldCol = this->getNumOfCols();
 
-  // rename(move) this object file
-  std::string tempFilePath = TlFile::getTempFilePath();
-  {
-    this->finalize();
-    TlFile::rename(this->filePath_, tempFilePath);
-  }
+  // finalize this object
+  this->finalize();
+
+  // copy
+  const std::string tempFilePath = TlFile::getTempFilePath();
+  TlFile::copy(this->filePath_, tempFilePath);
+  TlFile::remove(this->filePath_);
+  assert(TlFile::isExistFile(this->filePath_) == false);
 
   // create new file matrix
   this->numOfRows_ = newRow;
   this->numOfCols_ = newCol;
   this->initializeCache();
   this->open();
+  assert(this->getNumOfRows() == newRow);
+  assert(this->getNumOfCols() == newCol);
 
   // copy elements
   {
@@ -123,6 +127,8 @@ std::size_t TlFileMatrix::getMemSize() const {
 }
 
 void TlFileMatrix::open() {
+  // std::cout << "open() : " << this->filePath_ << std::endl;
+
   if (TlFile::isExistFile(this->filePath_) == false) {
     // create new file
     this->fs_.open(this->filePath_.c_str(),
