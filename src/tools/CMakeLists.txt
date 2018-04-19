@@ -112,12 +112,12 @@ target_link_libraries(pdf-mat-dot libpdf libpdftl)
 install(TARGETS pdf-mat-dot RUNTIME DESTINATION bin)
 
 
-set(PDF_MAT_EXTENT_SOURCES
-  main_mat_extent.cpp
+set(PDF_MAT_EXTEND_SOURCES
+  main_mat_extend.cpp
   )
-add_executable(pdf-mat-extent ${PDF_MAT_EXTENT_SOURCES})
-target_link_libraries(pdf-mat-extent libpdf libpdftl)
-install(TARGETS pdf-mat-extent RUNTIME DESTINATION bin)
+add_executable(pdf-mat-extend ${PDF_MAT_EXTEND_SOURCES})
+target_link_libraries(pdf-mat-extend libpdf libpdftl)
+install(TARGETS pdf-mat-extend RUNTIME DESTINATION bin)
 
 
 set(PDF_MAT_INFO_SOURCES
