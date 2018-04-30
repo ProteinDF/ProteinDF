@@ -1,65 +1,46 @@
-#include <vector>
-#include <string>
 #include <limits>
-#include "TlPositionTest.h"
+#include <string>
+#include <vector>
+#include "TlPosition.h"
+#include "gtest/gtest.h"
 
-// CPPUNIT_ASSERT( condition );
-// conditionが偽(false,0)であったとき、失敗します。
-//
-// CPPUNIT_ASSERT_MESSAGE( message, condition );
-// conditionが偽であったとき、失敗します。このときmessageを出力します。
-//
-// CPPUNIT_FAIL( message );
-// 必ず失敗します。messageを出力します。
-//
-// CPPUNIT_ASSERT_EQUAL( expected, actual );
-// 得られた結果actualが期待する値expectedでなかったとき、すなわちexpected != actualのときに失敗します。
-//
-// CPPUNIT_ASSERT_EQUAL_MESSAGE( message, expected, actual );
-// 得られた結果actualが期待する値expectedでなかったとき、すなわちexpected != actualのときに失敗します。このときmessageを出力します。
-//
-// CPPUNIT_ASSERT_DOUBLES_EQUAL( expected, actual, delta );
-// 得られた結果actualと期待する値expectedとの差がdeltaより大きいとき、失敗します。
+static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 
-const double TlPositionTest::threshold = std::numeric_limits<double>::epsilon();
-
-void TlPositionTest::testConstructer(){
+TEST(TlPosition, constructer) {
   TlPosition a;
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a.x(), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a.y(), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, a.z(), threshold);
+  EXPECT_NEAR(0.0, a.x(), EPS);
+  EXPECT_NEAR(0.0, a.y(), EPS);
+  EXPECT_NEAR(0.0, a.z(), EPS);
 
   TlPosition b(1.0, 2.0, 3.0);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, b.x(), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, b.y(), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0, b.z(), threshold);
+  EXPECT_NEAR(1.0, b.x(), EPS);
+  EXPECT_NEAR(2.0, b.y(), EPS);
+  EXPECT_NEAR(3.0, b.z(), EPS);
 }
 
-void TlPositionTest::testCopyConstructer(){
+TEST(TlPosition, copyConstructer) {
   TlPosition a(1.0, 2.0, 3.0);
   TlPosition b(a);
 
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, b.x(), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, b.y(), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0, b.z(), threshold);
+  EXPECT_NEAR(1.0, b.x(), EPS);
+  EXPECT_NEAR(2.0, b.y(), EPS);
+  EXPECT_NEAR(3.0, b.z(), EPS);
 }
 
-void TlPositionTest::testOperatorEqual(){
+TEST(TlPositionTest, pperator_eq) {
   TlPosition a(1.0, 2.0, 3.0);
   TlPosition b(2.0, 3.0, 4.0);
 
   b = a;
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, b.x(), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, b.y(), threshold);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0, b.z(), threshold);
+  EXPECT_NEAR(1.0, b.x(), EPS);
+  EXPECT_NEAR(2.0, b.y(), EPS);
+  EXPECT_NEAR(3.0, b.z(), EPS);
 }
 
-void TlPositionTest::testSquareDistanceFrom(){
+TEST(TlPosition, squareDistanceFrom) {
   TlPosition a(1.0, 2.0, 3.0);
   TlPosition b(4.0, 5.0, 6.0);
 
   double squareDistance = a.squareDistanceFrom(b);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(155.0, squareDistance, threshold);
+  EXPECT_NEAR(27.0, squareDistance, EPS);
 }
-
-

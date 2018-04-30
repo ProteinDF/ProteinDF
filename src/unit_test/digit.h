@@ -3,4 +3,4 @@
 
 int digit(int c);
 
-#endif // DIGIT_H
+#endif  // DIGIT_H

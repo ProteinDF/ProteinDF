@@ -2,17 +2,22 @@ sudo: required
 language: c++
 services:
   - docker
+env:
+  global:
+    - PDF_BUILDER_VER=develop
+    - BRANCH=develop
 before_script:
-  - pwd
-  - docker pull hiracchi/pdf-builder
+  - docker pull hiracchi/pdf-builder:${PDF_BUILDER_VER}
 script:
-  - pwd
-  - ls -al
-  - docker run -d --name pdf -v "${PWD}:/work" hiracchi/pdf-builder
-  - docker exec -it pdf pdf-py-setup.sh --branch develop --work /tmp
-  - docker exec -it pdf pdf-builder.sh -o /tmp/pdf
-  - docker exec -it pdf pdf-check.sh --branch develop serial_dev
+  - docker run -d --name pdf hiracchi/pdf-builder:${PDF_BUILDER_VER}
+  - docker exec -it pdf pdf-checkout.sh --branch ${BRANCH} ProteinDF
+  - docker exec -it pdf pdf-checkout.sh --branch ${BRANCH} ProteinDF_bridge
+  - docker exec -it pdf pdf-checkout.sh --branch ${BRANCH} ProteinDF_pytools
+  - docker exec -it pdf pdf-build.sh --srcdir /work/ProteinDF
+  - docker exec -it pdf pdf-build.sh --srcdir /work/ProteinDF_bridge
+  - docker exec -it pdf pdf-build.sh --srcdir /work/ProteinDF_pytools
+  - "travis_wait 30 sleep 1800 &"
+  - docker exec -it pdf pdf-check.sh --workdir /work/pdf-test --branch develop serial
 notifications:
-  on_success: always
-  on_failure: always
-
+  slack:
+    secure: laNE+4pVB2WG6qk9H7VOBPOznKBL9+pHiaNX7l3Qgoh7L6PtHWmy915rd8oSZ48A7jcLOPon+KGWjnYXJHSyfx14K2CKYMhEFi7ZbFgEYKSwrP3R+E2Y/A0RDCCDI3aYhMFDjTvof9jrWG/xc6F4hCXhE/zzOkdKvqcBzOfn6eW8oY1+F7rfeIYkiju/W533OqXWpxCWhsVngw50XdAJKwmN0mt4nJtkJylgR62GFWzFnqKgk/akAYgVOwMDWYxyrKDzTPEytYQrY3hOdLUwKHkVyOh3yIadgArtjfx3VWMjbVGnlNYLwk36axmqU1ItHC2Zvty3dC233WwCWmQXiu1glunD8zYdNs3k4hgrxUqhHYwHS9yJDdcUzMolBxlhirIfBCE3sSDeC/C2f5TDT0laZjmvL77p8B7mXsKIastD57dBmzgjaScER3DAOoYVg3d65SiBNMkNSZT2Yu+eKIuSZU2OwfwNqTf9ho/3CedNchm1i2PVEq6GgD2fCPTxAMv1UMWbLVwAkSDZHygAYI2OLGX9gb1HsG/WJPfOfidviLF1nCCqrl8geMqRr34BS/IusCQG71AELHJWS2RY7dYRB+hnb38qrSbetcL1SYZbVhsL374lH6FxCSxyvJ75g7tMPZeTRYtGhk7NxRv1Ddyz6HRVslmQumFh91QgOFY=

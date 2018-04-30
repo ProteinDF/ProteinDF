@@ -1,4 +1,5 @@
 *~
+build/*
 
 # automake & autoconf
 Makefile.in
@@ -8,7 +9,7 @@ configure
 config.guess
 config.status
 config.sub
-config.h.in
+# config.h.in
 
 autom4te.cache
 aclocal.m4
