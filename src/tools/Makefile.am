@@ -49,22 +49,22 @@ SERIAL_PROGS = 				\
 
 
 PARALLEL_PROGS = \
-	pdiagonal 				\
-	plocalize 				\
+	pdf-lo-mpi 				\
+	pdf-mat-diagonal-mpi	\
 	mergeLocalMatrix 		\
 	divideGlobalMatrix 		\
 	pdfdivmat
 
 
-plocalize_SOURCES = \
-	DfLocalize.h		DfLocalize.cpp	\
+pdf_lo_mpi_SOURCES = \
+	DfLocalize.h			DfLocalize.cpp	\
 	DfLocalize_Parallel.h	DfLocalize_Parallel.cpp \
 	main_plocalize.cpp
-plocalize_LDADD = $(PARALLEL_LIBS)
+pdf_lo_mpi_LDADD = $(PARALLEL_LIBS)
 
 
-pdiagonal_SOURCES = main_pdiagonal.cpp
-pdiagonal_LDADD = $(PARALLEL_LIBS)
+pdf_mat_diagonal_mpi_SOURCES = main_pdiagonal.cpp
+pdf_mat_diagonal_mpi_LDADD = $(PARALLEL_LIBS)
 
 
 mergeLocalMatrix_SOURCES = main_mergeLocalMatrix.cpp

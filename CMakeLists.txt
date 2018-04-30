@@ -1,0 +1,191 @@
+cmake_minimum_required(VERSION 3.5)
+project(ProteinDF)
+enable_language(CXX)
+enable_testing()
+
+# Project Version
+set(PROJECT_VERSION_MAJOR "2018")
+set(PROJECT_VERSION_MINOR "3")
+set(PROJECT_VERSION_REVISION "0")
+set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_REVISION}")
+
+set(PROJECT_VERSION_BUILD "")
+execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE BUILD_GIT_REV OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND date +%Y%m%d OUTPUT_VARIABLE BUILD_DATE OUTPUT_STRIP_TRAILING_WHITESPACE)
+if (DEFINED BUILD_GIT_REV)
+  set(PROJECT_VERSION_BUILD "${BUILD_GIT_REV}")
+else()
+  set(PROJECT_VERSION_BUILD "${BUILD_DATE}")
+endif()
+#message("BUILD_GIT_REV: ${BUILD_GIT_REV}")
+#message("BUILD_DATE: ${BUILD_DATE}")
+#message("PROJECT_VERSION_BUILD: ${PROJECT_VERSION_BUILD}")
+
+#
+include(CheckTypeSize)
+include(CheckIncludeFile)
+
+
+#set(CMAKE_VERBOSE_MAKEFILE 1)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake-modules")
+
+
+# check compiler flags
+set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG "-Wall -g")
+message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
+message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
+#message(STATUS "CMAKE_CXX_FLAGS_RELWITHDEBINFO: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+#message(STATUS "CMAKE_CXX_FLAGS_MINSIZEREL: ${CMAKE_CXX_FLAGS_MINSIZEREL}")
+
+
+# check system
+check_include_file("sys/resource.h" HAVE_SYS_RESOURCE_H)
+check_include_file("sys/time.h" HAVE_SYS_TIME_H)
+check_include_file("sys/types.h" HAVE_SYS_TYPES_H)
+check_include_file("sys/mman.h" HAVE_SYS_MMAN_H)
+check_include_file("sys/stat.h" HAVE_SYS_STAT_H)
+check_include_file("unistd.h" HAVE_UNISTD_H)
+check_include_file("stdint.h" HAVE_STDINT_H)
+
+
+# check OpenMP
+find_package(OpenMP)
+if (OPENMP_FOUND)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif(OPENMP_FOUND)
+
+
+# check linear algebra package
+find_package(BLAS REQUIRED)
+if (BLAS_FOUND)
+  #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
+  #set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
+  #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
+
+  message("BLAS information:")
+  message("  BLA_VENDOR: ${BLA_VENDOR}")
+  message("  BLA_STATIC: ${BLA_STATIC}")
+  message("  BLAS_LINKER_FLAGS: ${BLAS_LINKER_FLAGS}")
+  message("  BLAS_LIBRARIES: ${BLAS_LIBRARIES}")
+  set(HAVE_BLAS 1) # for config.h
+endif(BLAS_FOUND)
+
+find_package(LAPACK REQUIRED)
+if (LAPACK_FOUND)
+  #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
+  #set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
+  #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
+
+  message("LAPACK information:")
+  message("  LAPACK_LINKER_FLAGS: ${LAPACK_LINKER_FLAGS}")
+  message("  LAPACK_LIBRARIES: ${LAPACK_LIBRARIES}")
+  set(HAVE_LAPACK 1) # for config.h
+endif(LAPACK_FOUND)
+
+
+# check MPI
+find_package(MPI)
+if (MPI_FOUND)
+  message("MPI information:")
+  message("  MPI_VERSION: ${MPI_VERSION}")
+  message("  MPIEXEC_EXECUTABLE: ${MPIEXEC_EXECUTABLE}")
+  message("  MPIEXEC_NUMPROC_FLAG: ${MPIEXEC_NUMPROC_FLAG}")
+  message("  MPI_CXX_COMPILER: ${MPI_CXX_COMPILER}")
+  message("  MPI_CXX_LIBRARIES: ${MPI_CXX_LIBRARIES}")
+  message("  MPI_CXX_INCLUDE_PATH: ${MPI_CXX_INCLUDE_PATH}")
+  message("  MPI_CXX_FOUND: ${MPI_CXX_FOUND}")
+  message("overwrite: CMAKE_CXX_COMPILER = ${MPI_CXX_COMPILER}")
+  set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
+else(MPI_FOUND)
+  message("Not Found MPI compiler")
+endif(MPI_FOUND)
+
+
+# check BLACS
+find_package(BLACS)
+if (BLACS_FOUND)
+  message("BLACS information")
+  message("  BLACS_LIBRARIES: ${BLACS_LIBRARIES}")
+  message("  BLACS_CINIT_LIBRARIES: ${BLACS_CINIT_LIBRARIES}")
+  message("  BLACS_F77INIT_LIBRARIES: ${BLACS_F77INIT_LIBRARIES}")
+else(BLACS_FOUND)
+  message("Not Found BLACS")
+  set(BLACS_LIBRARIES "")
+  set(BLACS_CINIT_LIBRARIES "")
+  set(BLACS_F77INIT_LIBRARIES "")
+endif (BLACS_FOUND)
+
+
+# check ScaLAPACK
+find_package(ScaLAPACK)
+if (SCALAPACK_FOUND)
+  message("ScaLAPACK information")
+  message("  SCALAPACK_LIBRARIES: ${SCALAPACK_LIBRARIES}")
+
+  set(HAVE_SCALAPACK 1) # for config.h
+else(SCALAPACK_FOUND)
+  message("Not Found ScaLAPACK")
+endif(SCALAPACK_FOUND)
+
+
+# check HDF5
+find_package(HDF5 COMPONENTS C CXX)
+if (HDF5_FOUND)
+  include_directories(${HDF5_INCLUDE_DIRS})
+  set(HAVE_HDF5 1)
+  message("HDF5 information:")
+  message("  HDF5_LIBRARIES: ${HDF5_LIBRARIES}")
+  message("  HDF5_HL_LIBRARIES: ${HDF5_HL_LIBRARIES}")
+  message("  HDF5_CPP_LIBRARIES: ${HDF5_CPP_LIBRARIES}")
+endif(HDF5_FOUND)
+
+
+# check threads
+set(CMAKE_THREAD_PREFER_PTHREAD ON)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+
+# check Google Test
+#   ref.) env param: `GTEST_ROOT`
+find_package(GTest)
+if (GTEST_FOUND)
+  include_directories(${GTEST_INCLUDE_DIRS})
+  message("Google Test information:")
+  message("  GTEST_INCLUDE_DIRS: ${GTEST_INCLUDE_DIRS}")
+  message("  GTEST_LIBRARIES: ${GTEST_LIBRARIES}")
+  message("  GTEST_MAIN_LIBRARIES: ${GTEST_MAIN_LIBRARIES}")
+endif (GTEST_FOUND)
+
+
+# make config.h
+configure_file(${CMAKE_SOURCE_DIR}/config.h.in ${CMAKE_BINARY_DIR}/config.h @ONLY)
+include_directories(${CMAKE_BINARY_DIR})
+add_definitions(-DHAVE_CONFIG_H)
+
+
+# do subdirectories
+add_subdirectory(src)
+add_subdirectory(data)
+add_subdirectory(scripts)
+
+# package
+#   use: `make package_source` to make tarball
+set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_REVISION}")
+set(CPACK_PACKAGE_VENDOR "ProteinDF development team")
+set(CPACK_SOURCE_GENERATOR TGZ)
+set(CPACK_SOURCE_IGNORE_FILES
+  "~$"
+  "\.gitignore$"
+  "\.git/*"
+  "^${PROJECT_SOURCE_DIR}/build"
+  "^${PROJECT_SOURCE_DIR}/temp*"
+  "^${PROJECT_SOURCE_DIR}/tmp*"
+  "^${PROJECT_SOURCE_DIR}/out\.*"
+)
+include(CPack)

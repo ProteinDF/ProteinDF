@@ -3,6 +3,7 @@ ProteinDF
 
 [![Build Status](https://www.travis-ci.org/ProteinDF/ProteinDF.svg?branch=master)](https://www.travis-ci.org/ProteinDF/ProteinDF)
 
+
 How to install ProteinDF
 ------------------------
 
@@ -11,28 +12,28 @@ refer to documents provided with ProteinDF.
 
 
 ProteinDF works and has been tested on Linux system.
-The standard configure scripts given will work for building it 
-on any of the systems.
+The standard configure scripts given will work for building it on any of the systems.
 
 ### Prerequisites
 
-In order to build ProteinDF, you must have LAPACK, ScaLAPACK, MPI 
+In order to build ProteinDF, you must have CMake, LAPACK, ScaLAPACK, MPI
 and any related dev packages installed.
 
 
-### Configuring ProteinDF
+### build ProteinDF
 
-To configure ProteinDF simply run:
-
-```
-./configure
-```
-
-If you want to specify a library installed in a non-standard location run,
-you can see help message:
+Making building directory:
 
 ```
-./configure --help
+mkdir build
+cd build
+cmake ..
+```
+
+If you want to specify install path, you can run as following:
+
+```
+cmake -DCMAKE_INSTALL_PREFIX=[PATH] ..
 ```
 
 
@@ -45,6 +46,51 @@ make
 ```
 
 
+#### OPTIONS for cmake
+
+- CXXFLAGS
+
+```
+-DCMAKE_CXX_FLAGS="${CXX_FLAGS}"
+```
+
+The `-O3 -DNDEBUG` flag is usually recommended in order to improve performance.
+
+- BLAS
+
+```
+-DBLAS_LIBRARIES="xxx"
+```
+
+- LAPACK
+
+```
+-DLAPACK_LIBRARIES="xxx"
+```
+
+- MPI
+
+If you would like to specify MPI compiler, then
+
+```
+-DMPI_CXX_COMPILER="XXX"
+```
+
+otherwise,
+
+```
+-DMPI_CXX_COMPILER="xxx" \
+-DMPI_CXX_INCLUDE_PATH="xxx" \
+-DMPI_CXX_LIBRARIES="xxx"
+```
+
+- ScaLAPACK
+
+```
+-DSCALAPACK_LIBRARIES="xxx"
+```
+
+
 ### Installing ProteinDF
 
 To install ProteinDF, run:
@@ -52,6 +98,13 @@ To install ProteinDF, run:
 ```
 make install
 ```
+
+If you check the making progress, run:
+
+```
+make DO_VERBOSE=1
+```
+
 
 License
 -------
@@ -70,4 +123,3 @@ Bugs
 
 If you find any bugs, please let me know.
 And if you have a suggestion for improvement, please let me know.
-
