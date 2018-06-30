@@ -259,7 +259,7 @@ TlDenseVector_ImplViennaCL operator*(
 TlDenseVector_ImplViennaCL operator*(
     const TlDenseVector_ImplViennaCL& vec,
     const TlDenseGeneralMatrix_ImplViennaCL& mat) {
-  assert(mat.getNumOfRow() == vec.getSize());
+  assert(mat.getNumOfRows() == vec.getSize());
   TlDenseVector_ImplViennaCL answer(mat.getNumOfCols());
   answer.vector_ =
       viennacl::linalg::prod(viennacl::trans(mat.matrix_), vec.vector_);
