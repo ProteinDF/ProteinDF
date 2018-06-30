@@ -204,9 +204,9 @@ double DfFunctional_PW91X::pw91x_roundGamma(const double r, const double s) {
   const double term2 = CC * term2_1 / term2_b;
   const double term3 = 50.0 * sCC * CC * term2_e / (M_2_1_3 * r_16_3 * AAAA);
   const double term4 = C * Dasinh / (2.0 * M_2_1_3 * r_4_3 * sqrt(s) * A);
-  const double term5 = CC * D * E /
-                       (2.0 * M_2_2_3 * r_8_3 * AA *
-                        sqrt(sCC * E * E / (M_2_2_3 * r_8_3 * AA) + 1.0));
+  const double term5 =
+      CC * D * E / (2.0 * M_2_2_3 * r_8_3 * AA *
+                    sqrt(sCC * E * E / (M_2_2_3 * r_8_3 * AA) + 1.0));
 
   const double term6 = sCC * sCC * H / (2.0 * M_2_1_3 * r_16_3 * AAAA);
   const double term7 = sqrt(s) * C * D * Dasinh / (M_2_1_3 * r_4_3 * A);
@@ -221,9 +221,9 @@ double DfFunctional_PW91X::pw91x_roundGamma(const double r, const double s) {
   const double term11 =
       2.0 * pow(2.0, -4.0 / 3.0) * sCC * CC * H / (r_16_3 * AAAA);
   const double term12 = C * Dasinh / (2.0 * M_2_1_3 * r_4_3 * sqrt(s) * A);
-  const double term13 = CC * D * E /
-                        (2.0 * M_2_2_3 * r_8_3 * AA *
-                         sqrt(sCC * E * E / (M_2_2_3 * r_8_3 * AA) + 1.0));
+  const double term13 =
+      CC * D * E / (2.0 * M_2_2_3 * r_8_3 * AA *
+                    sqrt(sCC * E * E / (M_2_2_3 * r_8_3 * AA) + 1.0));
 
   const double term14 = sCC * sCC * H / (2.0 * M_2_1_3 * r_16_3 * AAAA);
   const double term15 = sqrt(s) * C * Dasinh / (M_2_1_3 * r_4_3 * A);

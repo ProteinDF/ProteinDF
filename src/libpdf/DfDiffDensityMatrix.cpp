@@ -18,6 +18,7 @@
 
 #include "DfDiffDensityMatrix.h"
 #include "TlFile.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
 
 DfDiffDensityMatrix::DfDiffDensityMatrix(TlSerializeData* pPdfData)
     : DfObject(pPdfData) {
@@ -30,29 +31,32 @@ DfDiffDensityMatrix::~DfDiffDensityMatrix() {}
 
 void DfDiffDensityMatrix::exec() {
   // check memory
-  const std::size_t needMem =
-      this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) * sizeof(double);
-  if ((this->isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
-    this->log_.info(" The differencial density matrix is build on disk.");
-    TlMatrix::useMemManager(true);
-  } else {
-    this->log_.info(" The differencial density matrix is build on memory.");
-    TlMatrix::useMemManager(false);
-  }
+  // const std::size_t needMem =
+  //     this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) * sizeof(double);
+  // if ((this->isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
+  //   this->log_.info(" The differencial density matrix is build on disk.");
+  //   TlMatrix::useMemManager(true);
+  // } else {
+  //   this->log_.info(" The differencial density matrix is build on memory.");
+  //   TlMatrix::useMemManager(false);
+  // }
 
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      this->calc<TlSymmetricMatrix>(RUN_RKS, this->m_nIteration);
+      this->calc<TlDenseSymmetricMatrix_BLAS_Old>(RUN_RKS, this->m_nIteration);
       break;
 
     case METHOD_UKS:
-      this->calc<TlSymmetricMatrix>(RUN_UKS_ALPHA, this->m_nIteration);
-      this->calc<TlSymmetricMatrix>(RUN_UKS_BETA, this->m_nIteration);
+      this->calc<TlDenseSymmetricMatrix_BLAS_Old>(RUN_UKS_ALPHA,
+                                              this->m_nIteration);
+      this->calc<TlDenseSymmetricMatrix_BLAS_Old>(RUN_UKS_BETA, this->m_nIteration);
       break;
 
     case METHOD_ROKS:
-      this->calc<TlSymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
-      this->calc<TlSymmetricMatrix>(RUN_ROKS_OPEN, this->m_nIteration);
+      this->calc<TlDenseSymmetricMatrix_BLAS_Old>(RUN_ROKS_CLOSED,
+                                              this->m_nIteration);
+      this->calc<TlDenseSymmetricMatrix_BLAS_Old>(RUN_ROKS_OPEN,
+                                              this->m_nIteration);
       break;
 
     default:

@@ -22,11 +22,11 @@
 #include <string>
 #include "DfObject.h"
 #include "TlCombineDensityMatrix.h"
-#include "TlMatrix.h"
 #include "TlMsgPack.h"
 #include "TlOrbitalInfo.h"
-#include "TlSymmetricMatrix.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_vector_blas.h"
 
 /// Harrisの汎関数による初期値を作成する
 class DfInitialGuessHarris : public DfObject {
@@ -94,7 +94,7 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
     TlOrbitalInfo orbInfo_harrisDB(coord,
                                    this->pdfParam_harrisDB_["basis_set"]);
 
-    const TlSymmetricMatrix P_DB(
+    const TlDenseSymmetricMatrix_BLAS_Old P_DB(
         this->pdfParam_harrisDB_["density_matrix"][atomSymbol]);
     combineDensMat.make(orbInfo_harrisDB, P_DB, orbInfo_low, &P_low);
   }
@@ -116,7 +116,7 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
 
     MatrixType omega = S_tilde * S_inv;
     MatrixType omega_t = omega;
-    omega_t.transpose();
+    omega_t.transposeInPlace();
 
     if (this->debug_) {
       omega.save("omega.mtx");

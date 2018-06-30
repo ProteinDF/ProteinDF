@@ -21,7 +21,7 @@
 
 #include "TlGetopt.h"
 #include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
 
 void showHelp(const std::string& progname) {
   std::cout << "cholesky [options] input_file_path" << std::endl;
@@ -51,12 +51,12 @@ int main(int argc, char* argv[]) {
   if (bVerbose == true) {
     std::cerr << "load matrix: " << inputMatrixPath << std::endl;
   }
-  if (TlSymmetricMatrix::isLoadable(inputMatrixPath) != true) {
+  if (TlDenseSymmetricMatrix_BLAS_Old::isLoadable(inputMatrixPath) != true) {
     std::cerr << "can not open file: " << inputMatrixPath << std::endl;
     return EXIT_FAILURE;
   }
 
-  TlSymmetricMatrix A;
+  TlDenseSymmetricMatrix_BLAS_Old A;
   A.load(inputMatrixPath);
   const int numOfDims = A.getNumOfRows();
 

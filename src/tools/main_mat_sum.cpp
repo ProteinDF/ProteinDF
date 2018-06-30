@@ -3,7 +3,7 @@
 
 #include "TlGetopt.h"
 #include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
 
 int main(int argc, char* argv[]) {
   TlGetopt opt(argc, argv, "dhv");
@@ -17,8 +17,8 @@ int main(int argc, char* argv[]) {
   }
 
   double sum = 0.0;
-  if (TlSymmetricMatrix::isLoadable(sPath) == true) {
-    TlSymmetricMatrix M;
+  if (TlDenseSymmetricMatrix_BLAS_Old::isLoadable(sPath) == true) {
+    TlDenseSymmetricMatrix_BLAS_Old M;
     M.load(sPath);
 
     TlMatrix::index_type dim = M.getNumOfRows();

@@ -554,13 +554,13 @@ int TlSerializeData::getInt() const {
       answer = std::atoi(this->str_.c_str());
       break;
 
-      //     case CHAR:
-      //         answer = this->scalar_.char_;
-      //         break;
+    //     case CHAR:
+    //         answer = this->scalar_.char_;
+    //         break;
 
-      //     case UCHAR:
-      //         answer = this->scalar_.uchar_;
-      //         break;
+    //     case UCHAR:
+    //         answer = this->scalar_.uchar_;
+    //         break;
 
     case INT:
       answer = this->scalar_.int_;
@@ -601,13 +601,13 @@ unsigned int TlSerializeData::getUInt() const {
       answer = std::atoi(this->str_.c_str());
       break;
 
-      //     case CHAR:
-      //         answer = (unsigned int)this->scalar_.char_;
-      //         break;
+    //     case CHAR:
+    //         answer = (unsigned int)this->scalar_.char_;
+    //         break;
 
-      //     case UCHAR:
-      //         answer = this->scalar_.uchar_;
-      //         break;
+    //     case UCHAR:
+    //         answer = this->scalar_.uchar_;
+    //         break;
 
     case INT:
       answer = (unsigned int)this->scalar_.int_;
@@ -648,13 +648,13 @@ long TlSerializeData::getLong() const {
       answer = std::atol(this->str_.c_str());
       break;
 
-      //     case CHAR:
-      //         answer = this->scalar_.char_;
-      //         break;
+    //     case CHAR:
+    //         answer = this->scalar_.char_;
+    //         break;
 
-      //     case UCHAR:
-      //         answer = this->scalar_.uchar_;
-      //         break;
+    //     case UCHAR:
+    //         answer = this->scalar_.uchar_;
+    //         break;
 
     case INT:
       answer = (long)this->scalar_.int_;
@@ -695,13 +695,13 @@ unsigned long TlSerializeData::getULong() const {
       answer = std::atol(this->str_.c_str());
       break;
 
-      //     case CHAR:
-      //         answer = (unsigned long)this->scalar_.char_;
-      //         break;
+    //     case CHAR:
+    //         answer = (unsigned long)this->scalar_.char_;
+    //         break;
 
-      //     case UCHAR:
-      //         answer = this->scalar_.uchar_;
-      //         break;
+    //     case UCHAR:
+    //         answer = this->scalar_.uchar_;
+    //         break;
 
     case INT:
       answer = (unsigned long)this->scalar_.int_;
@@ -742,13 +742,13 @@ double TlSerializeData::getDouble() const {
       answer = std::atof(this->str_.c_str());
       break;
 
-      //     case CHAR:
-      //         answer = (double)this->scalar_.char_;
-      //         break;
+    //     case CHAR:
+    //         answer = (double)this->scalar_.char_;
+    //         break;
 
-      //     case UCHAR:
-      //         answer = (double)this->scalar_.uchar_;
-      //         break;
+    //     case UCHAR:
+    //         answer = (double)this->scalar_.uchar_;
+    //         break;
 
     case INT:
       answer = (double)this->scalar_.int_;
@@ -789,13 +789,13 @@ std::string TlSerializeData::getStr() const {
       answer = this->str_;
       break;
 
-      //     case CHAR:
-      //         answer = TlUtils::xtos(this->scalar_.char_);
-      //         break;
+    //     case CHAR:
+    //         answer = TlUtils::xtos(this->scalar_.char_);
+    //         break;
 
-      //     case UCHAR:
-      //         answer = TlUtils::xtos(this->scalar_.uchar_);
-      //         break;
+    //     case UCHAR:
+    //         answer = TlUtils::xtos(this->scalar_.uchar_);
+    //         break;
 
     case INT:
       answer = TlUtils::xtos(this->scalar_.int_);

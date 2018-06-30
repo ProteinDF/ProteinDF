@@ -87,8 +87,8 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
       int numOfFinishedProc = 0;
       std::size_t orb_i = 0;
       std::size_t orb_j = 0;
-      TlVector vec_i(numOfAOs);
-      TlVector vec_j(numOfAOs);
+      TlVector_BLAS vec_i(numOfAOs);
+      TlVector_BLAS vec_j(numOfAOs);
       do {
         rComm.receiveDataFromAnySource(jobRequest, &src);
         // std::cerr << TlUtils::format("[0] recv %d from=%d", jobRequest, src)
@@ -118,8 +118,8 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
                     const std::size_t orb_j = jobItem.orb_j;
                     rComm.sendData(orb_i, src);
                     rComm.sendData(orb_j, src);
-                    TlVector vec_i = this->C_.getColVector(orb_i);
-                    TlVector vec_j = this->C_.getColVector(orb_j);
+                    TlVector_BLAS vec_i = this->C_.getColVector(orb_i);
+                    TlVector_BLAS vec_j = this->C_.getColVector(orb_j);
                     rComm.sendData(vec_i, src);
                     rComm.sendData(vec_j, src);
                   }
@@ -178,9 +178,9 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
 
       std::size_t orb_i = 0;
       std::size_t orb_j = 0;
-      TlVector vec_i(numOfAOs);
-      TlVector vec_j(numOfAOs);
-      TlMatrix rot(2, 2);
+      TlVector_BLAS vec_i(numOfAOs);
+      TlVector_BLAS vec_j(numOfAOs);
+      TlDenseGeneralMatrix_BLAS_old rot(2, 2);
       while (hasJob != FINISHED_JOB) {
         if (hasJob == ASSIGNED_JOB) {
           const std::size_t numOfAOs = this->m_nNumOfAOs;
@@ -191,8 +191,10 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
           // std::cerr << TlUtils::format("[%d] recv job", rComm.getRank()) <<
           // std::endl;
 
-          assert(vec_i.getSize() == static_cast<TlVector::size_type>(numOfAOs));
-          assert(vec_j.getSize() == static_cast<TlVector::size_type>(numOfAOs));
+          assert(vec_i.getSize() ==
+                 static_cast<TlVectorAbstract::size_type>(numOfAOs));
+          assert(vec_j.getSize() ==
+                 static_cast<TlVectorAbstract::size_type>(numOfAOs));
           for (std::size_t row = 0; row < numOfAOs; ++row) {
             this->C_.set(row, orb_i, vec_i[row]);
             this->C_.set(row, orb_j, vec_j[row]);

@@ -54,6 +54,16 @@ target_link_libraries(pdf-info-orb libpdf libpdftl)
 install(TARGETS pdf-info-orb RUNTIME DESTINATION bin)
 
 
+if (VIENNACL_FOUND)
+set(PDF_INFO_VIENNACL_SOURCES
+  main_info_viennacl.cc
+  )
+add_executable(pdf-info-viennacl ${PDF_INFO_VIENNACL_SOURCES})
+target_include_directories(pdf-info-viennacl PUBLIC ${VIENNACL_INCLUDE_DIR})
+target_link_libraries(pdf-info-viennacl ${OpenCL_LIBRARIES})
+install(TARGETS pdf-info-viennacl RUNTIME DESTINATION bin)
+endif (VIENNACL_FOUND)
+
 set(PDF_INIT_PARAM_SOURCES
   main_init_param.cpp
   )
@@ -113,7 +123,7 @@ install(TARGETS pdf-mat-dot RUNTIME DESTINATION bin)
 
 
 set(PDF_MAT_EXTEND_SOURCES
-  main_mat_extend.cpp
+  main_mat_extend.cc
   )
 add_executable(pdf-mat-extend ${PDF_MAT_EXTEND_SOURCES})
 target_link_libraries(pdf-mat-extend libpdf libpdftl)
@@ -288,6 +298,16 @@ set(PDF_RVM2CSFD_SOURCES
 add_executable(pdf-rvm2csfd ${PDF_RVM2CSFD_SOURCES})
 target_link_libraries(pdf-rvm2csfd libpdf libpdftl)
 install(TARGETS pdf-rvm2csfd RUNTIME DESTINATION bin)
+
+# ------------------------------------------------------------------------------
+# benchmark
+# ------------------------------------------------------------------------------
+set(PDF_BENCH_MAT_SOURCES
+  main_bench_mat.cpp
+  )
+add_executable(pdf-bench-mat ${PDF_BENCH_MAT_SOURCES})
+target_link_libraries(pdf-bench-mat libpdf libpdftl ${OpenCL_LIBRARIES})
+install(TARGETS pdf-bench-mat RUNTIME DESTINATION bin)
 
 
 # ================

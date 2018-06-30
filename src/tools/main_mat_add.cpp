@@ -20,8 +20,9 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_matrix_utils.h"
 
 void showHelp() {
   std::cout << "pdf-mat-add [options] MATRIX_FILE1 MATRIX_FILE2 OUTPUT"
@@ -38,9 +39,9 @@ int main(int argc, char* argv[]) {
   std::string path3 = opt[3];
 
   bool isSymMat1 = false;
-  if (TlSymmetricMatrix::isLoadable(path1) == true) {
+  if (TlMatrixUtils::isLoadable(path1, TlMatrixObject::RLHD) == true) {
     isSymMat1 = true;
-  } else if (TlMatrix::isLoadable(path1) == true) {
+  } else if (TlMatrixUtils::isLoadable(path1, TlMatrixObject::CSFD) == true) {
     isSymMat1 = false;
   } else {
     std::cerr << "can not open file: " << path1 << std::endl;
@@ -48,9 +49,9 @@ int main(int argc, char* argv[]) {
   }
 
   bool isSymMat2 = false;
-  if (TlSymmetricMatrix::isLoadable(path2) == true) {
+  if (TlMatrixUtils::isLoadable(path2, TlMatrixObject::RLHD) == true) {
     isSymMat2 = true;
-  } else if (TlMatrix::isLoadable(path2) == true) {
+  } else if (TlMatrixUtils::isLoadable(path2, TlMatrixObject::CSFD) == true) {
     isSymMat2 = false;
   } else {
     std::cerr << "can not open file: " << path2 << std::endl;
@@ -58,10 +59,10 @@ int main(int argc, char* argv[]) {
   }
 
   if ((isSymMat1 == true) && (isSymMat2 == true)) {
-    TlSymmetricMatrix M1;
+    TlDenseSymmetricMatrix_BLAS_Old M1;
     M1.load(path1);
 
-    TlSymmetricMatrix M2;
+    TlDenseSymmetricMatrix_BLAS_Old M2;
     M2.load(path2);
 
     if ((M1.getNumOfRows() != M2.getNumOfRows()) ||
@@ -77,18 +78,18 @@ int main(int argc, char* argv[]) {
     M1 += M2;
     M1.save(path3);
   } else {
-    TlMatrix M1;
+    TlDenseGeneralMatrix_BLAS_old M1;
     if (isSymMat1 == true) {
-      TlSymmetricMatrix tmp;
+      TlDenseSymmetricMatrix_BLAS_Old tmp;
       tmp.load(path1);
       M1 = tmp;
     } else {
       M1.load(path1);
     }
 
-    TlMatrix M2;
+    TlDenseGeneralMatrix_BLAS_old M2;
     if (isSymMat2 == true) {
-      TlSymmetricMatrix tmp;
+      TlDenseSymmetricMatrix_BLAS_Old tmp;
       tmp.load(path2);
       M2 = tmp;
     } else {

@@ -30,7 +30,7 @@ class DfInvMatrix;
 class DfCD;
 class DfGridFreeXC;
 class DfGenerateGrid;
-class TlSymmetricMatrix;
+class TlDenseSymmetricMatrix_BLAS_Old;
 
 /// 1 電子ハミルトニアン, 2 中心積分、1 中心積分(Na)を計算するクラス
 class DfIntegrals : public DfObject {
@@ -83,7 +83,7 @@ class DfIntegrals : public DfObject {
   virtual DfGenerateGrid* getDfGenerateGridObject();
 
  protected:
-  virtual void saveInvSquareVMatrix(const TlSymmetricMatrix& v);
+  virtual void saveInvSquareVMatrix(const TlDenseSymmetricMatrix_BLAS_Old& v);
 
  protected:
   virtual void outputStartTitle(const std::string& stepName,

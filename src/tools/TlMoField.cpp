@@ -23,7 +23,6 @@
 #include "TlOrbitalInfo.h"
 #include "TlPosition.h"
 #include "TlSerializeData.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
 
 #define AU_PER_ANG 1.889762
@@ -34,7 +33,7 @@ TlMoField::TlMoField(const TlSerializeData& param)
 
 TlMoField::~TlMoField() {}
 
-std::vector<double> TlMoField::makeMoFld(const TlVector& MO,
+std::vector<double> TlMoField::makeMoFld(const TlVector_BLAS& MO,
                                          const std::vector<TlPosition>& grids) {
   const std::size_t numOfGrids = grids.size();
   std::vector<double> values(numOfGrids, 0.0);

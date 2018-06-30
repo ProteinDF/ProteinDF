@@ -18,7 +18,7 @@
 
 #include "TlPosition.h"
 #include <cassert>
-#include "TlMatrix.h"
+#include "tl_dense_general_matrix_blas_old.h"
 
 const double TlPosition::TOO_SMALL = 1.0E-20;
 const double TlPosition::EQUIV_POSITION_RANGE = 1.0E-6;
@@ -58,16 +58,16 @@ void TlPosition::clear() {
   this->m_bHasDistance = false;
 }
 
-TlPosition& TlPosition::rotateBy(const TlMatrix& rot) {
+TlPosition& TlPosition::rotateBy(const TlDenseGeneralMatrix_BLAS_old& rot) {
   assert(rot.getNumOfRows() == 3);
   assert(rot.getNumOfCols() == 3);
 
-  const double x =
-      rot(0, 0) * this->x() + rot(0, 1) * this->y() + rot(0, 2) * this->z();
-  const double y =
-      rot(1, 0) * this->x() + rot(1, 1) * this->y() + rot(1, 2) * this->z();
-  const double z =
-      rot(2, 0) * this->x() + rot(2, 1) * this->y() + rot(2, 2) * this->z();
+  const double x = rot.get(0, 0) * this->x() + rot.get(0, 1) * this->y() +
+                   rot.get(0, 2) * this->z();
+  const double y = rot.get(1, 0) * this->x() + rot.get(1, 1) * this->y() +
+                   rot.get(1, 2) * this->z();
+  const double z = rot.get(2, 0) * this->x() + rot.get(2, 1) * this->y() +
+                   rot.get(2, 2) * this->z();
 
   this->v_[0] = x;
   this->v_[1] = y;

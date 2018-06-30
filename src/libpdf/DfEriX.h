@@ -26,8 +26,8 @@
 #include "TlOrbitalInfo.h"
 #include "TlOrbitalInfoObject.h"
 #include "TlOrbitalInfo_Density.h"
-#include "TlSparseSymmetricMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_sparse_symmetric_matrix.h"
 
 //#define DEBUG_J
 //#deinfe DEBUG_K
@@ -38,24 +38,28 @@ class DfEriX : public DfObject {
   virtual ~DfEriX();
 
  public:
-  virtual void getJ(const TlSymmetricMatrix& P, TlVector* pRho);
-  void getJ(const TlVector& rho, TlSymmetricMatrix* pP);
+  virtual void getJ(const TlDenseSymmetricMatrix_BLAS_Old& P, TlVector_BLAS* pRho);
+  void getJ(const TlVector_BLAS& rho, TlDenseSymmetricMatrix_BLAS_Old* pP);
 
   /// J([pq | rs])
-  void getJpq(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJpq);
+  void getJpq(const TlDenseSymmetricMatrix_BLAS_Old& P,
+              TlDenseSymmetricMatrix_BLAS_Old* pJpq);
 
   /// J([alpha | beta])
-  virtual void getJab(TlSymmetricMatrix* pJab);
+  virtual void getJab(TlDenseSymmetricMatrix_BLAS_Old* pJab);
 
-  void getForceJ(const TlSymmetricMatrix& P, TlMatrix* pForce);
-  void getForceJ(const TlSymmetricMatrix& P, const TlVector& rho,
-                 TlMatrix* pForce);
+  void getForceJ(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                 TlDenseGeneralMatrix_BLAS_old* pForce);
+  void getForceJ(const TlDenseSymmetricMatrix_BLAS_Old& P, const TlVector_BLAS& rho,
+                 TlDenseGeneralMatrix_BLAS_old* pForce);
 
-  void getForceJ(const TlVector& rho, TlMatrix* pForce);
+  void getForceJ(const TlVector_BLAS& rho, TlDenseGeneralMatrix_BLAS_old* pForce);
 
-  void getK(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK);
+  void getK(const TlDenseSymmetricMatrix_BLAS_Old& P,
+            TlDenseSymmetricMatrix_BLAS_Old* pK);
 
-  void getForceK(const TlSymmetricMatrix& P, TlMatrix* pForce);
+  void getForceK(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                 TlDenseGeneralMatrix_BLAS_old* pForce);
 
  protected:
   /// DfEriEngineオブジェクトを作成する
@@ -90,9 +94,9 @@ class DfEriX : public DfObject {
  protected:
   virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
-  virtual void finalize(TlMatrix* pMtx);
-  virtual void finalize(TlSymmetricMatrix* pMtx);
-  virtual void finalize(TlVector* pVct);
+  virtual void finalize(TlDenseGeneralMatrix_BLAS_old* pMtx);
+  virtual void finalize(TlDenseSymmetricMatrix_BLAS_Old* pMtx);
+  virtual void finalize(TlVector_BLAS* pVct);
 
  protected:
   /// カットオフ用統計変数を初期化する
@@ -107,12 +111,14 @@ class DfEriX : public DfObject {
   /// クーロン項の計算を行う
   ///
   /// 高速化無しに、式に書かれた通りに実装されている。
-  void getJpq_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ);
+  void getJpq_exact(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                    TlDenseSymmetricMatrix_BLAS_Old* pJ);
 
   /// クーロン項の計算を行う
   ///
   /// integral-driven法を用いる。
-  void getJpq_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pJ);
+  void getJpq_integralDriven(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                             TlDenseSymmetricMatrix_BLAS_Old* pJ);
 
   int getJ_integralDriven_part(const TlOrbitalInfoObject& orbitalInfo,
                                const std::vector<DfTaskCtrl::Task4>& taskList,
@@ -130,8 +136,10 @@ class DfEriX : public DfObject {
                    const std::vector<DfTaskCtrl::Task2>& taskList,
                    TlMatrixObject* pJab);
 
-  void getK_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK);
-  void getK_integralDriven(const TlSymmetricMatrix& P, TlSymmetricMatrix* pK);
+  void getK_exact(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                  TlDenseSymmetricMatrix_BLAS_Old* pK);
+  void getK_integralDriven(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                           TlDenseSymmetricMatrix_BLAS_Old* pK);
   int storeK_integralDriven(const index_type shellIndexP, const int maxStepsP,
                             const index_type shellIndexQ, const int maxStepsQ,
                             const index_type shellIndexR, const int maxStepsR,
@@ -171,13 +179,13 @@ class DfEriX : public DfObject {
                  const TlOrbitalInfo_Density& orbitalInfo_Density,
                  const ShellArrayTable& shellArrayTable_Density,
                  const std::vector<DfTaskCtrl::Task2>& taskList,
-                 const TlMatrixObject& P, TlVector* pRho);
+                 const TlMatrixObject& P, TlVector_BLAS* pRho);
 
   void getJ_part(const TlOrbitalInfo& orbitalInfo,
                  const TlOrbitalInfo_Density& orbitalInfo_Density,
                  const ShellArrayTable& shellArrayTable_Density,
                  const std::vector<DfTaskCtrl::Task2>& taskList,
-                 const TlVector& rho, TlMatrixObject* pP);
+                 const TlVector_BLAS& rho, TlMatrixObject* pP);
 
   ///
   /// @param [out] pIndexPQ
@@ -192,8 +200,9 @@ class DfEriX : public DfObject {
                       const TlOrbitalInfoObject& orbitalInfo_Density,
                       const ShellArrayTable& shellArrayTable_Density,
                       std::vector<DfTaskCtrl::Task2>& taskList,
-                      const TlSymmetricMatrix& P, const TlVector& rho,
-                      TlMatrix* pForce);
+                      const TlDenseSymmetricMatrix_BLAS_Old& P,
+                      const TlVector_BLAS& rho,
+                      TlDenseGeneralMatrix_BLAS_old* pForce);
 
   void storeForceJ(const index_type atomIndexA, const index_type atomIndexB,
                    const index_type atomIndexC, const index_type shellIndexP,
@@ -201,17 +210,18 @@ class DfEriX : public DfObject {
                    const int maxStepsQ, const index_type shellIndexR,
                    const int maxStepsR, const double* p_dJdA,
                    const double* p_dJdB, const TlMatrixObject& P,
-                   const TlVectorObject& rho, TlMatrixObject* pForce,
+                   const TlVectorAbstract& rho, TlMatrixObject* pForce,
                    const int target, int* pIndex);
 
   void getForceJ_part(const TlOrbitalInfoObject& orbitalInfo_Density,
                       std::vector<DfTaskCtrl::Task2>& taskList,
-                      const TlVector& rho, TlMatrix* pForce);
+                      const TlVector_BLAS& rho,
+                      TlDenseGeneralMatrix_BLAS_old* pForce);
 
   void storeForceJ(const index_type atomIndexA, const index_type atomIndexC,
                    const index_type shellIndexP, const int maxStepsP,
                    const index_type shellIndexR, const int maxStepsR,
-                   const DfEriEngine& engine, const TlVectorObject& rho,
+                   const DfEriEngine& engine, const TlVectorAbstract& rho,
                    TlMatrixObject* pForce, const int target, int* pIndex);
 
   void getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,

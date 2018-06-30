@@ -19,7 +19,7 @@
 #include "DfXcenefitting.h"
 #include <cassert>
 #include "TlTime.h"
-#include "TlVector.h"
+#include "tl_dense_vector_blas.h"
 
 DfXcenefitting::DfXcenefitting(TlSerializeData* pPdfParam, int nItr)
     : DfObject(pPdfParam) {
@@ -53,7 +53,7 @@ int DfXcenefitting::dfXceMain() {
 // File out EpsilonGamma.
 int DfXcenefitting::calcEpsilon() {
   if (this->m_nMethodType == METHOD_RKS) {
-    TlVector myu;
+    TlVector_BLAS myu;
     myu.load("fl_Work/fl_Vct_Myu" + TlUtils::xtos(this->m_nIteration));
 
     // temporal print ==> to fl_Globaloutput
@@ -65,7 +65,7 @@ int DfXcenefitting::calcEpsilon() {
     //             Log << "\n";
     //         }
 
-    TlVector eps = 0.75 * myu;
+    TlVector_BLAS eps = 0.75 * myu;
 
     if (this->m_bMemorySave == false) {
       eps.save("fl_Work/fl_Vct_Epsilon" + TlUtils::xtos(this->m_nIteration));
@@ -81,10 +81,10 @@ int DfXcenefitting::calcEpsilon() {
     //             Log << "\n";
     //         }
   } else {
-    TlVector myuA;
+    TlVector_BLAS myuA;
     myuA.load("fl_Work/fl_Vct_Myua" + TlUtils::xtos(this->m_nIteration));
 
-    TlVector myuB;
+    TlVector_BLAS myuB;
     myuB.load("fl_Work/fl_Vct_Myub" + TlUtils::xtos(this->m_nIteration));
 
     // temporal print ==> to fl_Globaloutput
@@ -102,8 +102,8 @@ int DfXcenefitting::calcEpsilon() {
     //             Log << "\n";
     //         }
 
-    TlVector epsA = 0.75 * myuA;
-    TlVector epsB = 0.75 * myuB;
+    TlVector_BLAS epsA = 0.75 * myuA;
+    TlVector_BLAS epsB = 0.75 * myuB;
 
     //     if(this->bMemorySave == false){
     //       epsA.save("fl_Work/fl_Vct_Epsilona" + TlUtils::xtos(niteration));

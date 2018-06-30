@@ -18,9 +18,9 @@
 
 #include <iostream>
 #include "TlGetopt.h"
-#include "TlMatrixObject.h"
-#include "TlRowVectorMatrix.h"
 #include "TlUtils.h"
+#include "tl_dense_general_matrix_arrays_roworiented.h"
+#include "tl_matrix_object.h"
 
 typedef TlMatrixObject::index_type index_type;
 
@@ -70,8 +70,8 @@ int main(int argc, char* argv[]) {
 
     int subunitID = 0;
     const std::string inputPath0 =
-        TlVectorMatrixObject::getFileName(inputBaseName, subunitID);
-    bool isLoadable = TlVectorMatrixObject::isLoadable(
+        TlDenseMatrix_arrays_Object::getFileName(inputBaseName, subunitID);
+    bool isLoadable = TlDenseMatrix_arrays_Object::isLoadable(
         inputPath0, &numOfVectors, &sizeOfVector, &input_numOfSubunits,
         &subunitID);
     if (isLoadable != true) {
@@ -88,19 +88,20 @@ int main(int argc, char* argv[]) {
   }
 
   // load & set
-  std::vector<TlRowVectorMatrix*> outputs(output_numOfSubunits);
+  std::vector<TlDenseGeneralMatrix_arrays_RowOriented*> outputs(
+      output_numOfSubunits);
   for (int i = 0; i < output_numOfSubunits; ++i) {
-    outputs[i] = new TlRowVectorMatrix(
+    outputs[i] = new TlDenseGeneralMatrix_arrays_RowOriented(
         numOfVectors, sizeOfVector, output_numOfSubunits, i, isUsingMemManager);
   }
 
   for (int i = 0; i < input_numOfSubunits; ++i) {
-    TlRowVectorMatrix vm;
+    TlDenseGeneralMatrix_arrays_RowOriented vm;
     vm.load(inputBaseName, i);
 
     for (index_type j = 0; j < numOfVectors; ++j) {
       if (vm.getSubunitID(j) == i) {
-        const TlVector v = vm.getVector(j);
+        const TlVector_BLAS v = vm.getVector(j);
         const int output_subunitID = outputs[0]->getSubunitID(j);
         outputs[output_subunitID]->setVector(j, v);
       }

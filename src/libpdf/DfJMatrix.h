@@ -20,8 +20,8 @@
 #define DFJMATRIX_H
 
 #include "DfObject.h"
-#include "TlSymmetricMatrix.h"
-#include "TlVector.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_vector_blas.h"
 
 class DfJMatrix : public DfObject {
  public:
@@ -36,15 +36,15 @@ class DfJMatrix : public DfObject {
   virtual void getJ_CD();
   virtual void getJ_conventional();
 
-  virtual void getJ_RI_local(TlSymmetricMatrix* pJ);
-  virtual void getJ_CD_local(TlSymmetricMatrix* pJ);
-  virtual void getJ_conventional_local(TlSymmetricMatrix* pJ);
+  virtual void getJ_RI_local(TlDenseSymmetricMatrix_BLAS_Old* pJ);
+  virtual void getJ_CD_local(TlDenseSymmetricMatrix_BLAS_Old* pJ);
+  virtual void getJ_conventional_local(TlDenseSymmetricMatrix_BLAS_Old* pJ);
 
  protected:
-  virtual void saveJMatrix(const TlSymmetricMatrix& J);
-  virtual TlSymmetricMatrix getJMatrix(const int iteration);
+  virtual void saveJMatrix(const TlDenseSymmetricMatrix_BLAS_Old& J);
+  virtual TlDenseSymmetricMatrix_BLAS_Old getJMatrix(const int iteration);
 
-  virtual TlVector getRho(const RUN_TYPE runType, const int iteration);
+  virtual TlVector_BLAS getRho(const RUN_TYPE runType, const int iteration);
 
   template <class SymmetricMatrixType>
   SymmetricMatrixType getDiffDensityMatrix();

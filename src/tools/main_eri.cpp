@@ -158,10 +158,10 @@ void calc_eri(DfEriEngine* pEngine, const int indexP, const int indexQ,
   const int shellIndexQ = orbitalInfo.getShellIndex(indexQ);
   const int shellIndexR = orbitalInfo.getShellIndex(indexR);
   const int shellIndexS = orbitalInfo.getShellIndex(indexS);
-  const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
-  const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
-  const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
-  const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
+  // const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+  // const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+  // const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
+  // const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
   // const DfEriEngine::AngularMomentum2 queryPQ(0, 0, shellTypeP, shellTypeQ);
   // const DfEriEngine::AngularMomentum2 queryRS(0, 0, shellTypeR, shellTypeS);
   // const DfEriEngine::CGTO_Pair PQ = pEngine->getCGTO_pair(orbitalInfo,

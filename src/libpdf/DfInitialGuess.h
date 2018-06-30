@@ -29,7 +29,7 @@
 #include "TlUtils.h"
 
 class DfDmatrix;
-class TlVector;
+class TlVector_BLAS;
 
 /// 初期電子密度を求めるクラス
 class DfInitialGuess : public DfObject {
@@ -43,7 +43,7 @@ class DfInitialGuess : public DfObject {
   // virtual void createRho();
 
   void createOccupation();
-  virtual TlVector createOccupation(const RUN_TYPE runType);
+  virtual TlVector_BLAS createOccupation(const RUN_TYPE runType);
 
   virtual void createInitialGuessUsingHuckel();
   virtual void createInitialGuessUsingCore();
@@ -60,18 +60,18 @@ class DfInitialGuess : public DfObject {
   std::vector<int> getLevel(const std::string& level);
 
   /// 占有軌道情報を取得する
-  virtual TlVector getOccupation(const RUN_TYPE runType);
+  virtual TlVector_BLAS getOccupation(const RUN_TYPE runType);
 
   /// 占有軌道情報を保存する
   virtual void saveOccupation(const RUN_TYPE runType,
-                              const TlVector& rOccupation);
+                              const TlVector_BLAS& rOccupation);
 
  protected:
   /// LCAO行列を取得する
   // template <typename MatrixType>
   // MatrixType getLCAO(const RUN_TYPE runType);
 
-  TlMatrix getLCAO_LAPACK(const RUN_TYPE runType);
+  TlDenseGeneralMatrix_BLAS_old getLCAO_LAPACK(const RUN_TYPE runType);
   static std::string getLcaoPath_txt(const RUN_TYPE runType);
   static std::string getLcaoPath_bin(const RUN_TYPE runType);
 

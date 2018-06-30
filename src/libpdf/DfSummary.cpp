@@ -22,17 +22,16 @@
 #include "Fl_Geometry.h"
 
 #include "TlMath.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
 
 DfSummary::DfSummary(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {}
 
 DfSummary::~DfSummary() {}
 
-void DfSummary::exec() { this->exec<TlMatrix>(); }
+void DfSummary::exec() { this->exec<TlDenseGeneralMatrix_BLAS_old>(); }
 
 void DfSummary::printEigen(DfObject::RUN_TYPE runType) {
-  TlVector eigval;
+  TlVector_BLAS eigval;
   eigval.load(this->getEigenvaluesPath(runType, this->m_nIteration));
 
   std::stringstream ss;
@@ -40,8 +39,8 @@ void DfSummary::printEigen(DfObject::RUN_TYPE runType) {
   this->log_.info(ss.str());
 }
 
-void DfSummary::printAux(const TlVector& rho, const TlVector& myu,
-                         const TlVector& nyu) {
+void DfSummary::printAux(const TlVector_BLAS& rho, const TlVector_BLAS& myu,
+                         const TlVector_BLAS& nyu) {
   const int rhoSize = rho.getSize();
   const int myuSize = myu.getSize();
   const int nyuSize = nyu.getSize();
@@ -86,7 +85,7 @@ void DfSummary::printAux(const TlVector& rho, const TlVector& myu,
   }
 }
 
-void DfSummary::printRhoPop(const TlVector& rho) {
+void DfSummary::printRhoPop(const TlVector_BLAS& rho) {
   const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
                               (*this->pPdfParam_)["basis_set_j"]);
   const int numOfAux = this->m_nNumOfAux;

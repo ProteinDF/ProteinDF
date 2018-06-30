@@ -18,9 +18,9 @@
 
 #include "DfTransFmatrix.h"
 #include "CnError.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
 
 DfTransFmatrix::DfTransFmatrix(TlSerializeData* pPdfParam, bool bExecDiis)
     : DfObject(pPdfParam), m_bExecDiis(bExecDiis) {}
@@ -30,16 +30,20 @@ DfTransFmatrix::~DfTransFmatrix() {}
 void DfTransFmatrix::DfTrsFmatMain() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      this->main<TlMatrix, TlSymmetricMatrix>(RUN_RKS);
+      this->main<TlDenseGeneralMatrix_BLAS_old, TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_RKS);
       break;
 
     case METHOD_UKS:
-      this->main<TlMatrix, TlSymmetricMatrix>(RUN_UKS_ALPHA);
-      this->main<TlMatrix, TlSymmetricMatrix>(RUN_UKS_BETA);
+      this->main<TlDenseGeneralMatrix_BLAS_old, TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_UKS_ALPHA);
+      this->main<TlDenseGeneralMatrix_BLAS_old, TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_UKS_BETA);
       break;
 
     case METHOD_ROKS:
-      this->main<TlMatrix, TlSymmetricMatrix>(RUN_ROKS);
+      this->main<TlDenseGeneralMatrix_BLAS_old, TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_ROKS);
       break;
 
     default:
@@ -53,16 +57,20 @@ void DfTransFmatrix::DfTrsFmatQclo(const std::string& fragname, int norbcut) {
 
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      this->main<TlMatrix, TlSymmetricMatrix>(RUN_RKS, fragname, true);
+      this->main<TlDenseGeneralMatrix_BLAS_old, TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_RKS, fragname, true);
       break;
 
     case METHOD_UKS:
-      this->main<TlMatrix, TlSymmetricMatrix>(RUN_UKS_ALPHA, fragname, true);
-      this->main<TlMatrix, TlSymmetricMatrix>(RUN_UKS_BETA, fragname, true);
+      this->main<TlDenseGeneralMatrix_BLAS_old, TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_UKS_ALPHA, fragname, true);
+      this->main<TlDenseGeneralMatrix_BLAS_old, TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_UKS_BETA, fragname, true);
       break;
 
     case METHOD_ROKS:
-      this->main<TlMatrix, TlSymmetricMatrix>(RUN_ROKS, fragname, true);
+      this->main<TlDenseGeneralMatrix_BLAS_old, TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_ROKS, fragname, true);
       break;
 
     default:

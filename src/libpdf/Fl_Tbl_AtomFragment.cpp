@@ -26,7 +26,7 @@ Fl_Tbl_AtomFragment::Fl_Tbl_AtomFragment() {
   this->number_atom = 0;
 }
 
-Fl_Tbl_AtomFragment ::~Fl_Tbl_AtomFragment() {
+Fl_Tbl_AtomFragment::~Fl_Tbl_AtomFragment() {
   if (this->m_pAtomFragTbl != NULL) {
     delete[](this->m_pAtomFragTbl);
   }

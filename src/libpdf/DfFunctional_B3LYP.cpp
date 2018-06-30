@@ -175,14 +175,16 @@ void DfFunctional_B3LYP::getDerivativeFunctional(const double dRhoA,
       B88_COEF * dRoundF_roundGammaAB_B88 + LYP_COEF * dRoundF_roundGammaAB_LYP;
 }
 
-TlMatrix DfFunctional_B3LYP::getFunctionalCore(const double rhoA,
-                                               const double rhoB,
-                                               const double xA,
-                                               const double xB) {
-  const TlMatrix x_lda = this->m_LDA.getFunctionalCore(rhoA, rhoB);
-  const TlMatrix x_b88 = this->m_B88.getFunctionalCore(rhoA, rhoB, xA, xB);
-  const TlMatrix c_vwn = this->m_VWN.getFunctionalCore(rhoA, rhoB);
-  const TlMatrix c_lyp = this->m_LYP.getFunctionalCore(rhoA, rhoB, xA, xB);
+TlDenseGeneralMatrix_BLAS_old DfFunctional_B3LYP::getFunctionalCore(
+    const double rhoA, const double rhoB, const double xA, const double xB) {
+  const TlDenseGeneralMatrix_BLAS_old x_lda =
+      this->m_LDA.getFunctionalCore(rhoA, rhoB);
+  const TlDenseGeneralMatrix_BLAS_old x_b88 =
+      this->m_B88.getFunctionalCore(rhoA, rhoB, xA, xB);
+  const TlDenseGeneralMatrix_BLAS_old c_vwn =
+      this->m_VWN.getFunctionalCore(rhoA, rhoB);
+  const TlDenseGeneralMatrix_BLAS_old c_lyp =
+      this->m_LYP.getFunctionalCore(rhoA, rhoB, xA, xB);
 
   const index_type numOfFunctionalTerms_LDA =
       this->m_LDA.getNumOfFunctionalTerms();
@@ -195,38 +197,38 @@ TlMatrix DfFunctional_B3LYP::getFunctionalCore(const double rhoA,
   assert((numOfFunctionalTerms_LDA + numOfFunctionalTerms_B88 +
           numOfFunctionalTerms_VWN + numOfFunctionalTerms_LYP) ==
          this->getNumOfFunctionalTerms());
-  TlMatrix xc(F_DIM, this->getNumOfFunctionalTerms());
+  TlDenseGeneralMatrix_BLAS_old xc(F_DIM, this->getNumOfFunctionalTerms());
   for (index_type i = 0; i < F_DIM; ++i) {
     index_type base = 0;
     for (index_type j = 0; j < numOfFunctionalTerms_LDA; ++j) {
-      xc(i, j) = DfFunctional_B3LYP::LDA_COEF * x_lda(i, j);
+      xc.set(i, j, DfFunctional_B3LYP::LDA_COEF * x_lda.get(i, j));
     }
     base += numOfFunctionalTerms_LDA;
     for (index_type j = 0; j < numOfFunctionalTerms_B88; ++j) {
-      xc(i, base + j) = DfFunctional_B3LYP::B88_COEF * x_b88(i, j);
+      xc.set(i, base + j, DfFunctional_B3LYP::B88_COEF * x_b88.get(i, j));
     }
     base += numOfFunctionalTerms_B88;
     for (index_type j = 0; j < numOfFunctionalTerms_VWN; ++j) {
-      xc(i, base + j) = DfFunctional_B3LYP::VWN_COEF * c_vwn(i, j);
+      xc.set(i, base + j, DfFunctional_B3LYP::VWN_COEF * c_vwn.get(i, j));
     }
     base += numOfFunctionalTerms_VWN;
     for (index_type j = 0; j < numOfFunctionalTerms_LYP; ++j) {
-      xc(i, base + j) = DfFunctional_B3LYP::LYP_COEF * c_lyp(i, j);
+      xc.set(i, base + j, DfFunctional_B3LYP::LYP_COEF * c_lyp.get(i, j));
     }
   }
 
   return xc;
 }
 
-TlMatrix DfFunctional_B3LYP::getDerivativeFunctionalCore(const double rhoA,
-                                                         const double rhoB,
-                                                         const double xA,
-                                                         const double xB) {
-  const TlMatrix x_lda = this->m_LDA.getDerivativeFunctionalCore(rhoA, rhoB);
-  const TlMatrix x_b88 =
+TlDenseGeneralMatrix_BLAS_old DfFunctional_B3LYP::getDerivativeFunctionalCore(
+    const double rhoA, const double rhoB, const double xA, const double xB) {
+  const TlDenseGeneralMatrix_BLAS_old x_lda =
+      this->m_LDA.getDerivativeFunctionalCore(rhoA, rhoB);
+  const TlDenseGeneralMatrix_BLAS_old x_b88 =
       this->m_B88.getDerivativeFunctionalCore(rhoA, rhoB, xA, xB);
-  const TlMatrix c_vwn = this->m_VWN.getDerivativeFunctionalCore(rhoA, rhoB);
-  const TlMatrix c_lyp =
+  const TlDenseGeneralMatrix_BLAS_old c_vwn =
+      this->m_VWN.getDerivativeFunctionalCore(rhoA, rhoB);
+  const TlDenseGeneralMatrix_BLAS_old c_lyp =
       this->m_LYP.getDerivativeFunctionalCore(rhoA, rhoB, xA, xB);
 
   const index_type numOfDerivativeFunctionalTerms_LDA =
@@ -242,23 +244,24 @@ TlMatrix DfFunctional_B3LYP::getDerivativeFunctionalCore(const double rhoA,
           numOfDerivativeFunctionalTerms_VWN +
           numOfDerivativeFunctionalTerms_LYP) ==
          this->getNumOfDerivativeFunctionalTerms());
-  TlMatrix xc(D_DIM, this->getNumOfDerivativeFunctionalTerms());
+  TlDenseGeneralMatrix_BLAS_old xc(D_DIM,
+                               this->getNumOfDerivativeFunctionalTerms());
   for (index_type i = 0; i < D_DIM; ++i) {
     index_type base = 0;
     for (index_type j = 0; j < numOfDerivativeFunctionalTerms_LDA; ++j) {
-      xc(i, j) = DfFunctional_B3LYP::LDA_COEF * x_lda(i, j);
+      xc.set(i, j, DfFunctional_B3LYP::LDA_COEF * x_lda.get(i, j));
     }
     base += numOfDerivativeFunctionalTerms_LDA;
     for (index_type j = 0; j < numOfDerivativeFunctionalTerms_B88; ++j) {
-      xc(i, base + j) = DfFunctional_B3LYP::B88_COEF * x_b88(i, j);
+      xc.set(i, base + j, DfFunctional_B3LYP::B88_COEF * x_b88.get(i, j));
     }
     base += numOfDerivativeFunctionalTerms_B88;
     for (index_type j = 0; j < numOfDerivativeFunctionalTerms_VWN; ++j) {
-      xc(i, base + j) = DfFunctional_B3LYP::VWN_COEF * c_vwn(i, j);
+      xc.set(i, base + j, DfFunctional_B3LYP::VWN_COEF * c_vwn.get(i, j));
     }
     base += numOfDerivativeFunctionalTerms_VWN;
     for (index_type j = 0; j < numOfDerivativeFunctionalTerms_LYP; ++j) {
-      xc(i, base + j) = DfFunctional_B3LYP::LYP_COEF * c_lyp(i, j);
+      xc.set(i, base + j, DfFunctional_B3LYP::LYP_COEF * c_lyp.get(i, j));
     }
   }
 

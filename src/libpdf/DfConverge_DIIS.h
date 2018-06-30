@@ -20,6 +20,7 @@
 #define DFCONVERGE_DIIS
 
 #include "DfConverge_Damping.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
 
 class DfConverge_DIIS : public DfConverge_Damping {
  public:
@@ -46,10 +47,12 @@ class DfConverge_DIIS : public DfConverge_Damping {
   MatrixType getResidual(const RUN_TYPE runType, const int itr);
 
   template <class MatrixType, class SymmetricMatrixType>
-  TlMatrix buildBMatrix(const RUN_TYPE runType, const int itr, int last);
+  TlDenseGeneralMatrix_BLAS_old buildBMatrix(const RUN_TYPE runType, const int itr,
+                                         int last);
 
   template <class MatrixType, class SymmetricMatrixType>
-  TlMatrix getCoef(const RUN_TYPE runType, const int itr, int last);
+  TlDenseGeneralMatrix_BLAS_old getCoef(const RUN_TYPE runType, const int itr,
+                                    int last);
 
  protected:
   int startIterationOfDIIS_;
@@ -98,9 +101,10 @@ MatrixType DfConverge_DIIS::getResidual(const RUN_TYPE runType, const int itr) {
 
 /// B行列を作成する
 template <class MatrixType, class SymmetricMatrixType>
-TlMatrix DfConverge_DIIS::buildBMatrix(const RUN_TYPE runType,
-                                       const int startItr, const int cycles) {
-  TlMatrix B(cycles + 1, cycles + 1);
+TlDenseGeneralMatrix_BLAS_old DfConverge_DIIS::buildBMatrix(const RUN_TYPE runType,
+                                                        const int startItr,
+                                                        const int cycles) {
+  TlDenseGeneralMatrix_BLAS_old B(cycles + 1, cycles + 1);
   for (int i = 0; i < cycles; ++i) {
     this->log_.info(TlUtils::format("B[%d] -> itr %d", i, startItr + i));
     MatrixType r_i = this->getResidual<MatrixType, SymmetricMatrixType>(
@@ -111,11 +115,11 @@ TlMatrix DfConverge_DIIS::buildBMatrix(const RUN_TYPE runType,
           runType, startItr + j);
 
       MatrixType tmp = r_i;
-      const double v = tmp.dot(r_j).sum();
+      const double v = tmp.dotInPlace(r_j).sum();
       B.set(i, j, v);
       B.set(j, i, v);
     }
-    B.set(i, i, r_i.dot(r_i).sum());
+    B.set(i, i, r_i.dotInPlace(r_i).sum());
   }
 
   for (int i = 0; i < cycles; ++i) {
@@ -131,13 +135,15 @@ TlMatrix DfConverge_DIIS::buildBMatrix(const RUN_TYPE runType,
 
 /// 係数cを求める
 template <class MatrixType, class SymmetricMatrixType>
-TlMatrix DfConverge_DIIS::getCoef(const RUN_TYPE runType, const int startItr,
-                                  int cycles) {
-  const TlMatrix B = this->buildBMatrix<MatrixType, SymmetricMatrixType>(
-      runType, startItr, cycles);
+TlDenseGeneralMatrix_BLAS_old DfConverge_DIIS::getCoef(const RUN_TYPE runType,
+                                                   const int startItr,
+                                                   int cycles) {
+  const TlDenseGeneralMatrix_BLAS_old B =
+      this->buildBMatrix<MatrixType, SymmetricMatrixType>(runType, startItr,
+                                                          cycles);
   assert(B.getNumOfCols() == cycles + 1);
 
-  TlMatrix y(cycles + 1, 1);
+  TlDenseGeneralMatrix_BLAS_old y(cycles + 1, 1);
   for (int i = 0; i < cycles; ++i) {
     y.set(i, 0, 0.0);
   }
@@ -185,7 +191,7 @@ TlMatrix DfConverge_DIIS::getCoef(const RUN_TYPE runType, const int startItr,
 //                                             itr, startItr, last));
 
 //             // 係数行列の取得
-//             const TlMatrix c = this->getCoef<MatrixType,
+//             const TlDenseGeneralMatrix_BLAS_old c = this->getCoef<MatrixType,
 //             SymmetricMatrixType>(runType, startItr -1, last);
 //             assert(c.getNumOfRows() == last +1); // +1
 //             はラグランジュ未定乗数法のため
@@ -260,8 +266,9 @@ void DfConverge_DIIS::convergeKSMatrix(const DfObject::RUN_TYPE runType) {
           TlUtils::format("itr=%d, start=%d, last=%d", itr, startItr, last));
 
       // 係数行列の取得
-      const TlMatrix c = this->getCoef<MatrixType, SymmetricMatrixType>(
-          runType, startItr, last);
+      const TlDenseGeneralMatrix_BLAS_old c =
+          this->getCoef<MatrixType, SymmetricMatrixType>(runType, startItr,
+                                                         last);
       assert(c.getNumOfRows() ==
              last + 1);  // +1 はラグランジュ未定乗数法のため
 
@@ -328,8 +335,9 @@ void DfConverge_DIIS::convergePMatrix(const DfObject::RUN_TYPE runType) {
           TlUtils::format("itr=%d, start=%d, last=%d", itr, startItr, last));
 
       // 係数行列の取得
-      const TlMatrix c = this->getCoef<MatrixType, SymmetricMatrixType>(
-          runType, startItr - 1, last);
+      const TlDenseGeneralMatrix_BLAS_old c =
+          this->getCoef<MatrixType, SymmetricMatrixType>(runType, startItr - 1,
+                                                         last);
       assert(c.getNumOfRows() ==
              last + 1);  // +1 はラグランジュ未定乗数法のため
 

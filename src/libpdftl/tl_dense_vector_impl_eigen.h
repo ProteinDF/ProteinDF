@@ -1,0 +1,90 @@
+#ifndef TL_DENSE_VECTOR_IMPL_EIGEN_H
+#define TL_DENSE_VECTOR_IMPL_EIGEN_H
+
+#include <Eigen/Core>
+#include "tl_dense_vector_impl_object.h"
+
+#if __cplusplus >= 201103L
+#include <mutex>
+#endif  // __cplusplus
+
+class TlDenseGeneralMatrix_ImplEigen;
+
+class TlDenseVector_ImplEigen : public TlDenseVector_ImplObject {
+ public:
+  typedef Eigen::VectorXd VectorDataType;  // Matrix<double, Dynamic, 1>
+  typedef Eigen::Map<VectorDataType> MapType;
+  typedef Eigen::Map<const VectorDataType> MapTypeConst;
+
+  // ---------------------------------------------------------------------------
+  // constructor & destructor
+  // ---------------------------------------------------------------------------
+ public:
+  explicit TlDenseVector_ImplEigen(
+      const TlDenseVectorObject::index_type size = 0);
+  TlDenseVector_ImplEigen(const TlDenseVector_ImplEigen& rhs);
+  TlDenseVector_ImplEigen(const double* p,
+                          const TlDenseVectorObject::index_type size);
+  TlDenseVector_ImplEigen(const VectorDataType& rhs);
+  virtual ~TlDenseVector_ImplEigen();
+
+  // ---------------------------------------------------------------------------
+  // properties
+  // ---------------------------------------------------------------------------
+ public:
+  virtual TlDenseVectorObject::size_type getSize() const;
+  virtual void resize(const TlDenseVectorObject::index_type newSize);
+
+  virtual double get(const TlDenseVectorObject::index_type i) const;
+  virtual void set(const TlDenseVectorObject::index_type i, const double value);
+  virtual void add(const TlDenseVectorObject::index_type i, const double value);
+
+  // ---------------------------------------------------------------------------
+  // operators
+  // ---------------------------------------------------------------------------
+ public:
+  TlDenseVector_ImplEigen& operator=(const TlDenseVector_ImplEigen& rhs);
+
+  TlDenseVector_ImplEigen& operator+=(const TlDenseVector_ImplEigen& rhs);
+  TlDenseVector_ImplEigen& operator-=(const TlDenseVector_ImplEigen& rhs);
+  TlDenseVector_ImplEigen& operator*=(const double rhs);
+  TlDenseVector_ImplEigen& operator/=(const double rhs);
+
+  // ---------------------------------------------------------------------------
+  // operations
+  // ---------------------------------------------------------------------------
+ public:
+  double sum() const;
+  void sortByGreater();
+  TlDenseVector_ImplEigen& dotInPlace(const TlDenseVector_ImplEigen& rhs);
+
+  // ---------------------------------------------------------------------------
+  // variables
+  // ---------------------------------------------------------------------------
+ protected:
+  VectorDataType vector_;
+
+  // ---------------------------------------------------------------------------
+  // others
+  // ---------------------------------------------------------------------------
+  friend TlDenseVector_ImplEigen operator+(const TlDenseVector_ImplEigen& rhs1,
+                                           const TlDenseVector_ImplEigen& rhs2);
+  friend TlDenseVector_ImplEigen operator-(const TlDenseVector_ImplEigen& rhs1,
+                                           const TlDenseVector_ImplEigen& rhs2);
+
+  friend TlDenseVector_ImplEigen operator*(const TlDenseVector_ImplEigen& rhs1,
+                                           const double rhs2);
+  friend TlDenseVector_ImplEigen operator*(const double rhs1,
+                                           const TlDenseVector_ImplEigen& rhs2);
+  friend TlDenseVector_ImplEigen operator*(
+      const TlDenseGeneralMatrix_ImplEigen& mat,
+      const TlDenseVector_ImplEigen& vec);
+  friend TlDenseVector_ImplEigen operator*(
+      const TlDenseVector_ImplEigen& vec,
+      const TlDenseGeneralMatrix_ImplEigen& mat);
+
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // Eigen macro
+};
+
+#endif  // TL_DENSE_VECTOR_IMPL_EIGEN_H

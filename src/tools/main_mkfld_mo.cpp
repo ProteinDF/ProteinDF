@@ -28,7 +28,6 @@
 #include "TlMoField.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
-#include "TlSymmetricMatrix.h"
 #include "mkfld_common.h"
 
 void help(const std::string& progName) {
@@ -101,7 +100,7 @@ int main(int argc, char* argv[]) {
   }
 
   // LCAO行列の読み込み
-  TlMatrix C;
+  TlDenseGeneralMatrix_BLAS_old C;
   if (lcaoMatrixPath.empty()) {
     const int iteration = param["num_of_iterations"].getInt();
     DfObject::RUN_TYPE runType = DfObject::RUN_RKS;

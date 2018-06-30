@@ -45,7 +45,7 @@ void DfKMatrix::buildK() {
 
 // void DfKMatrix::getK_RI()
 // {
-//     TlSymmetricMatrix K(this->m_nNumOfAOs);
+//     TlDenseSymmetricMatrix_BLAS_Old K(this->m_nNumOfAOs);
 //     this->getK_RI_local(RUN_RKS, &K);
 //     this->saveKMatrix(RUN_RKS, K);
 // }
@@ -53,30 +53,30 @@ void DfKMatrix::buildK() {
 void DfKMatrix::getK_CD() {
   switch (this->m_nMethodType) {
     case METHOD_RKS: {
-      TlSymmetricMatrix K(this->m_nNumOfAOs);
+      TlDenseSymmetricMatrix_BLAS_Old K(this->m_nNumOfAOs);
       this->getK_CD_local(RUN_RKS, &K);
       this->saveKMatrix(RUN_RKS, K);
     } break;
 
     case METHOD_UKS: {
-      TlSymmetricMatrix K(this->m_nNumOfAOs);
+      TlDenseSymmetricMatrix_BLAS_Old K(this->m_nNumOfAOs);
       this->getK_CD_local(RUN_UKS_ALPHA, &K);
       this->saveKMatrix(RUN_UKS_ALPHA, K);
     }
       {
-        TlSymmetricMatrix K(this->m_nNumOfAOs);
+        TlDenseSymmetricMatrix_BLAS_Old K(this->m_nNumOfAOs);
         this->getK_CD_local(RUN_UKS_BETA, &K);
         this->saveKMatrix(RUN_UKS_BETA, K);
       }
       break;
 
     case METHOD_ROKS: {
-      TlSymmetricMatrix K(this->m_nNumOfAOs);
+      TlDenseSymmetricMatrix_BLAS_Old K(this->m_nNumOfAOs);
       this->getK_CD_local(RUN_ROKS_ALPHA, &K);
       this->saveKMatrix(RUN_ROKS_ALPHA, K);
     }
       {
-        TlSymmetricMatrix K(this->m_nNumOfAOs);
+        TlDenseSymmetricMatrix_BLAS_Old K(this->m_nNumOfAOs);
         this->getK_CD_local(RUN_ROKS_BETA, &K);
         this->saveKMatrix(RUN_ROKS_BETA, K);
       }
@@ -92,30 +92,30 @@ void DfKMatrix::getK_CD() {
 void DfKMatrix::getK_conventional() {
   switch (this->m_nMethodType) {
     case METHOD_RKS: {
-      TlSymmetricMatrix K(this->m_nNumOfAOs);
+      TlDenseSymmetricMatrix_BLAS_Old K(this->m_nNumOfAOs);
       this->getK_conventional_local(RUN_RKS, &K);
       this->saveKMatrix(RUN_RKS, K);
     } break;
 
     case METHOD_UKS: {
-      TlSymmetricMatrix K(this->m_nNumOfAOs);
+      TlDenseSymmetricMatrix_BLAS_Old K(this->m_nNumOfAOs);
       this->getK_conventional_local(RUN_UKS_ALPHA, &K);
       this->saveKMatrix(RUN_UKS_ALPHA, K);
     }
       {
-        TlSymmetricMatrix K(this->m_nNumOfAOs);
+        TlDenseSymmetricMatrix_BLAS_Old K(this->m_nNumOfAOs);
         this->getK_conventional_local(RUN_UKS_BETA, &K);
         this->saveKMatrix(RUN_UKS_BETA, K);
       }
       break;
 
     case METHOD_ROKS: {
-      TlSymmetricMatrix K(this->m_nNumOfAOs);
+      TlDenseSymmetricMatrix_BLAS_Old K(this->m_nNumOfAOs);
       this->getK_conventional_local(RUN_ROKS_ALPHA, &K);
       this->saveKMatrix(RUN_ROKS_ALPHA, K);
     }
       {
-        TlSymmetricMatrix K(this->m_nNumOfAOs);
+        TlDenseSymmetricMatrix_BLAS_Old K(this->m_nNumOfAOs);
         this->getK_conventional_local(RUN_ROKS_BETA, &K);
         this->saveKMatrix(RUN_ROKS_BETA, K);
       }
@@ -129,9 +129,9 @@ void DfKMatrix::getK_conventional() {
 }
 
 // void DfKMatrix::getK_RI_local(const RUN_TYPE runType,
-//                               TlSymmetricMatrix *pK)
+//                               TlDenseSymmetricMatrix_BLAS_Old *pK)
 // {
-//     TlSymmetricMatrix P;
+//     TlDenseSymmetricMatrix_BLAS_Old P;
 //     if (this->isUpdateMethod_ == true) {
 //         P = this->getDiffDensityMatrix(runType);
 //     } else {
@@ -143,26 +143,27 @@ void DfKMatrix::getK_conventional() {
 
 //     if (this->isUpdateMethod_ == true) {
 //         if (this->m_nIteration > 1) {
-//             const TlSymmetricMatrix prevK =
-//             DfObject::getHFxMatrix<TlSymmetricMatrix>(runType,
+//             const TlDenseSymmetricMatrix_BLAS_Old prevK =
+//             DfObject::getHFxMatrix<TlDenseSymmetricMatrix_BLAS_Old>(runType,
 //             this->m_nIteration -1); *pK += prevK;
 //         }
 //     }
 // }
 
-void DfKMatrix::getK_CD_local(const RUN_TYPE runType, TlSymmetricMatrix* pK) {
+void DfKMatrix::getK_CD_local(const RUN_TYPE runType,
+                              TlDenseSymmetricMatrix_BLAS_Old* pK) {
   DfCD dfCD(this->pPdfParam_);
   dfCD.getK(runType, pK);
   // dfCD.getK_A(runType, pK);
 }
 
 void DfKMatrix::getK_conventional_local(const RUN_TYPE runType,
-                                        TlSymmetricMatrix* pK) {
-  TlSymmetricMatrix P;
+                                        TlDenseSymmetricMatrix_BLAS_Old* pK) {
+  TlDenseSymmetricMatrix_BLAS_Old P;
   if (this->isUpdateMethod_ == true) {
-    P = this->getDiffDensityMatrix<TlSymmetricMatrix>(runType);
+    P = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_BLAS_Old>(runType);
   } else {
-    P = this->getDensityMatrix<TlSymmetricMatrix>(runType);
+    P = this->getDensityMatrix<TlDenseSymmetricMatrix_BLAS_Old>(runType);
   }
 
   DfEriX dfEri(this->pPdfParam_);
@@ -170,21 +171,21 @@ void DfKMatrix::getK_conventional_local(const RUN_TYPE runType,
 
   if (this->isUpdateMethod_ == true) {
     if (this->m_nIteration > 1) {
-      const TlSymmetricMatrix prevK =
+      const TlDenseSymmetricMatrix_BLAS_Old prevK =
           this->getKMatrix(runType, this->m_nIteration - 1);
       *pK += prevK;
     }
   }
 }
 
-TlSymmetricMatrix DfKMatrix::getKMatrix(const RUN_TYPE runType,
-                                        const int iteration) {
-  const TlSymmetricMatrix K =
-      DfObject::getHFxMatrix<TlSymmetricMatrix>(runType, iteration);
+TlDenseSymmetricMatrix_BLAS_Old DfKMatrix::getKMatrix(const RUN_TYPE runType,
+                                                  const int iteration) {
+  const TlDenseSymmetricMatrix_BLAS_Old K =
+      DfObject::getHFxMatrix<TlDenseSymmetricMatrix_BLAS_Old>(runType, iteration);
   return K;
 }
 
 void DfKMatrix::saveKMatrix(const RUN_TYPE runType,
-                            const TlSymmetricMatrix& K) {
+                            const TlDenseSymmetricMatrix_BLAS_Old& K) {
   DfObject::saveHFxMatrix(runType, this->m_nIteration, K);
 }

@@ -91,9 +91,9 @@ void DfFunctional_B88LYP::getDerivativeFunctional(
   //   std::cerr << std::endl;
 }
 
-TlVector DfFunctional_B88LYP::getFunctionalTermCoef_GF() {
+TlVector_BLAS DfFunctional_B88LYP::getFunctionalTermCoef_GF() {
   const int dim = this->getNumOfFunctionalTerms();
-  TlVector coef(dim);
+  TlVector_BLAS coef(dim);
   for (int i = 0; i < dim; ++i) {
     coef[i] = 1.0;
   }
@@ -101,9 +101,9 @@ TlVector DfFunctional_B88LYP::getFunctionalTermCoef_GF() {
   return coef;
 }
 
-TlVector DfFunctional_B88LYP::getDerivativeFunctionalTermCoef_GF() {
+TlVector_BLAS DfFunctional_B88LYP::getDerivativeFunctionalTermCoef_GF() {
   const int dim = this->getNumOfDerivativeFunctionalTerms();
-  TlVector coef(dim);
+  TlVector_BLAS coef(dim);
   for (int i = 0; i < dim; ++i) {
     coef[i] = 1.0;
   }
@@ -111,50 +111,49 @@ TlVector DfFunctional_B88LYP::getDerivativeFunctionalTermCoef_GF() {
   return coef;
 }
 
-TlMatrix DfFunctional_B88LYP::getFunctionalCore(const double rhoA,
-                                                const double rhoB,
-                                                const double xA,
-                                                const double xB) {
-  const TlMatrix x = this->m_Becke88.getFunctionalCore(rhoA, rhoB, xA, xB);
-  const TlMatrix c = this->m_LYP.getFunctionalCore(rhoA, rhoB, xA, xB);
+TlDenseGeneralMatrix_BLAS_old DfFunctional_B88LYP::getFunctionalCore(
+    const double rhoA, const double rhoB, const double xA, const double xB) {
+  const TlDenseGeneralMatrix_BLAS_old x =
+      this->m_Becke88.getFunctionalCore(rhoA, rhoB, xA, xB);
+  const TlDenseGeneralMatrix_BLAS_old c =
+      this->m_LYP.getFunctionalCore(rhoA, rhoB, xA, xB);
 
   const index_type numOfFunctionalTerms_X =
       this->m_Becke88.getNumOfFunctionalTerms();
   const index_type numOfFunctionalTerms_C =
       this->m_LYP.getNumOfFunctionalTerms();
-  TlMatrix xc(F_DIM, this->getNumOfFunctionalTerms());
+  TlDenseGeneralMatrix_BLAS_old xc(F_DIM, this->getNumOfFunctionalTerms());
   for (index_type i = 0; i < F_DIM; ++i) {
     for (index_type j = 0; j < numOfFunctionalTerms_X; ++j) {
-      xc(i, j) = x(i, j);
+      xc.set(i, j, x.get(i, j));
     }
     for (index_type j = 0; j < numOfFunctionalTerms_C; ++j) {
-      xc(i, numOfFunctionalTerms_X + j) = c(i, j);
+      xc.set(i, numOfFunctionalTerms_X + j, c.get(i, j));
     }
   }
 
   return xc;
 }
 
-TlMatrix DfFunctional_B88LYP::getDerivativeFunctionalCore(const double rhoA,
-                                                          const double rhoB,
-                                                          const double xA,
-                                                          const double xB) {
-  const TlMatrix x =
+TlDenseGeneralMatrix_BLAS_old DfFunctional_B88LYP::getDerivativeFunctionalCore(
+    const double rhoA, const double rhoB, const double xA, const double xB) {
+  const TlDenseGeneralMatrix_BLAS_old x =
       this->m_Becke88.getDerivativeFunctionalCore(rhoA, rhoB, xA, xB);
-  const TlMatrix c =
+  const TlDenseGeneralMatrix_BLAS_old c =
       this->m_LYP.getDerivativeFunctionalCore(rhoA, rhoB, xA, xB);
 
   const index_type numOfDerivativeFunctionalTerms_X =
       this->m_Becke88.getNumOfDerivativeFunctionalTerms();
   const index_type numOfDerivativeFunctionalTerms_C =
       this->m_LYP.getNumOfDerivativeFunctionalTerms();
-  TlMatrix xc(D_DIM, this->getNumOfDerivativeFunctionalTerms());
+  TlDenseGeneralMatrix_BLAS_old xc(D_DIM,
+                               this->getNumOfDerivativeFunctionalTerms());
   for (index_type i = 0; i < D_DIM; ++i) {
     for (index_type j = 0; j < numOfDerivativeFunctionalTerms_X; ++j) {
-      xc(i, j) = x(i, j);
+      xc.set(i, j, x.get(i, j));
     }
     for (index_type j = 0; j < numOfDerivativeFunctionalTerms_C; ++j) {
-      xc(i, numOfDerivativeFunctionalTerms_X + j) = c(i, j);
+      xc.set(i, numOfDerivativeFunctionalTerms_X + j, c.get(i, j));
     }
   }
 

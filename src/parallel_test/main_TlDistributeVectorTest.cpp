@@ -2,12 +2,12 @@
 #include <iostream>
 #include <string>
 
-#include "TlTime.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
-#include "TlDistributeVector.h"
-#include "TlVector.h"
 #include "TlCommunicate.h"
+#include "TlDenseSymmetricMatrix_BLAS_Old.h"
+#include "TlDistributeVector.h"
+#include "TlMatrix.h"
+#include "TlTime.h"
+#include "tl_dense_vector_blas.h"
 
 void showResultMessage(const std::string& sFunction, bool bIsPassed);
 void showResultMessageAll(const std::string& sFunction, bool bIsPassed);
@@ -23,322 +23,296 @@ void testMatrixVectorOperation();
 void testVectorVectorOperation();
 
 bool check(double actual, double expect, double range,
-           const std::string& fileStr, int line)
-{
-    if (std::fabs(actual - expect) > range) {
-        std::string str = TlUtils::format("[FAIL] %s:%d actual=%f, expect=%f",
-                                          fileStr.c_str(), line,
-                                          actual, expect);
-        std::cerr << str << std::endl;
-        return false;
-    } else {
-        return true;
-    }
+           const std::string& fileStr, int line) {
+  if (std::fabs(actual - expect) > range) {
+    std::string str = TlUtils::format("[FAIL] %s:%d actual=%f, expect=%f",
+                                      fileStr.c_str(), line, actual, expect);
+    std::cerr << str << std::endl;
+    return false;
+  } else {
+    return true;
+  }
 }
 
-int main(int argc, char *argv[])
-{
-    // initialize
-    TlCommunicate& rComm = TlCommunicate::getInstance(argc, argv);
-    TlDistributeVector::setSystemBlockSize(10);
-    
-    // ===================================================================
-    testConstructer();
-    testCopyConstructer();
-    testSet();
-    testOperatorPlusEqual();
-    testOperatorMultiEqual();
-    testSave();
-    testLoad();
-    testMatrixVectorOperation();
-    testVectorVectorOperation();
-    // ===================================================================
+int main(int argc, char* argv[]) {
+  // initialize
+  TlCommunicate& rComm = TlCommunicate::getInstance(argc, argv);
+  TlDistributeVector::setSystemBlockSize(10);
 
-    // finalize
-    rComm.finalize();
-    return EXIT_SUCCESS;
+  // ===================================================================
+  testConstructer();
+  testCopyConstructer();
+  testSet();
+  testOperatorPlusEqual();
+  testOperatorMultiEqual();
+  testSave();
+  testLoad();
+  testMatrixVectorOperation();
+  testVectorVectorOperation();
+  // ===================================================================
+
+  // finalize
+  rComm.finalize();
+  return EXIT_SUCCESS;
 }
 
+void showResultMessage(const std::string& sFunction, bool bIsPassed) {
+  TlCommunicate& rComm = TlCommunicate::getInstance();
+  if (rComm.isMaster() == true) {
+    std::cout << "TEST: " << sFunction << "() ";
+    std::cout << ((bIsPassed == true) ? "." : "F") << std::endl;
+  }
+  rComm.barrier();
+}
 
-void showResultMessage(const std::string& sFunction, bool bIsPassed)
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        std::cout << "TEST: " << sFunction << "() ";
-        std::cout << ((bIsPassed == true) ? "." : "F") << std::endl;
+void showResultMessageAll(const std::string& sFunction, bool bIsPassed) {
+  TlCommunicate& rComm = TlCommunicate::getInstance();
+  int nProc = rComm.getNumOfProc();
+  int nRank = rComm.getRank();
+
+  rComm.barrier();
+  if (rComm.isMaster() == true) {
+    std::cout << "TEST: " << sFunction << "() ";
+  }
+  for (int i = 0; i < nProc; ++i) {
+    if (i == nRank) {
+      std::cout << ((bIsPassed == true) ? "." : "F");
+      std::cout.flush();
     }
     rComm.barrier();
+  }
+  if (rComm.isMaster() == true) {
+    std::cout << std::endl;
+  }
+
+  rComm.barrier();
 }
 
+void testConstructer() {
+  TlDistributeVector v(100);
 
-void showResultMessageAll(const std::string& sFunction, bool bIsPassed)
-{
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    int nProc = rComm.getNumOfProc();
-    int nRank = rComm.getRank();
+  std::size_t size = v.getSize();
 
-    rComm.barrier();
-    if (rComm.isMaster() == true) {
-        std::cout << "TEST: " << sFunction << "() ";
-    }
-    for (int i = 0; i < nProc; ++i) {
-        if (i == nRank) {
-            std::cout << ((bIsPassed == true) ? "." : "F");
-            std::cout.flush();
-        }
-        rComm.barrier();
-    }
-    if (rComm.isMaster() == true) {
-        std::cout << std::endl;
-    }
+  bool bIsPassed = (size == 100) ? true : false;
 
-    rComm.barrier();
+  showResultMessageAll("testConstructer", bIsPassed);
 }
 
+void testCopyConstructer() {
+  TlDistributeVector v(100);
+  v[10] = 10.0;
+  v[17] = 56.0;
+  v[21] = -2.5;
+  v[90] = 12.0;
 
-void testConstructer()
-{
-    TlDistributeVector v(100);
+  const TlDistributeVector w(v);
 
-    std::size_t size = v.getSize();
+  bool bIsPassed = true;
+  if (w.getSize() != 100) {
+    bIsPassed = false;
+  }
+  if (std::fabs(w.get(10) - 10.0) > 1.0E-16) {
+    bIsPassed = false;
+  }
+  if (std::fabs(w.get(17) - 56.0) > 1.0E-16) {
+    bIsPassed = false;
+  }
+  if (std::fabs(w.get(21) - (-2.5)) > 1.0E-16) {
+    bIsPassed = false;
+  }
+  if (std::fabs(w.get(90) - 12.0) > 1.0E-16) {
+    bIsPassed = false;
+  }
 
-    bool bIsPassed = (size == 100) ? true : false;
-
-    showResultMessageAll("testConstructer", bIsPassed);
+  showResultMessageAll("testCopyConstructer", bIsPassed);
 }
 
+void testSet() {
+  const int size = 100;
+  TlDistributeVector v(size);
 
-void testCopyConstructer()
-{
-    TlDistributeVector v(100);
-    v[10] =  10.0;
-    v[17] =  56.0;
-    v[21] = - 2.5;
-    v[90] =  12.0;
+  for (int i = 0; i < size; ++i) {
+    v.set(i, rand());
+  }
 
-    const TlDistributeVector w(v);
+  v[10] = 10.0;
+  v[17] = 56.0;
+  v[21] = -2.5;
+  v[90] = 12.0;
 
-    bool bIsPassed = true;
-    if (w.getSize() != 100) {
-        bIsPassed = false;
-    }
-    if (std::fabs(w.get(10) -  10.0) > 1.0E-16) {
-        bIsPassed = false;
-    }
-    if (std::fabs(w.get(17) -  56.0) > 1.0E-16) {
-        bIsPassed = false;
-    }
-    if (std::fabs(w.get(21) - (-2.5)) > 1.0E-16) {
-        bIsPassed = false;
-    }
-    if (std::fabs(w.get(90) -   12.0) > 1.0E-16) {
-        bIsPassed = false;
-    }
+  bool bIsPassed = true;
+  if (v.getSize() != size) {
+    bIsPassed = false;
+  }
+  if (std::fabs(v[10] - 10.0) > 1.0E-16) {
+    bIsPassed = false;
+  }
+  if (std::fabs(v[17] - 56.0) > 1.0E-16) {
+    bIsPassed = false;
+  }
+  if (std::fabs(v[21] - (-2.5)) > 1.0E-16) {
+    bIsPassed = false;
+  }
+  if (std::fabs(v[90] - 12.0) > 1.0E-16) {
+    bIsPassed = false;
+  }
 
-    showResultMessageAll("testCopyConstructer", bIsPassed);
+  showResultMessageAll("testSet", bIsPassed);
 }
 
+void testOperatorPlusEqual() {
+  TlDistributeVector v(100);
+  v[10] = 10.0;
+  v[17] = 56.0;
+  v[21] = -2.5;
+  v[90] = 12.0;
 
-void testSet()
-{
-    const int size = 100;
-    TlDistributeVector v(size);
+  TlDistributeVector w(100);
+  w[10] = 5.0;
+  w[20] = -12.0;
+  w[30] = 51.0;
 
-    for (int i = 0; i < size; ++i) {
-        v.set(i, rand());
-    }
+  v += w;
 
-    v[10] = 10.0;
-    v[17] = 56.0;
-    v[21] =- 2.5;
-    v[90] = 12.0;
+  bool bIsPassed = true;
+  if (v.getSize() != 100) {
+    bIsPassed = false;
+  }
+  if (std::fabs(v[10] - 15.0) > 1.0E-16) {
+    bIsPassed = false;
+  }
+  if (std::fabs(v[17] - 56.0) > 1.0E-16) {
+    bIsPassed = false;
+  }
+  if (std::fabs(v[20] - (-12.0)) > 1.0E-16) {
+    bIsPassed = false;
+  }
+  if (std::fabs(v[21] - (-2.5)) > 1.0E-16) {
+    bIsPassed = false;
+  }
+  if (std::fabs(v[30] - 51.0) > 1.0E-16) {
+    bIsPassed = false;
+  }
+  if (std::fabs(v[90] - 12.0) > 1.0E-16) {
+    bIsPassed = false;
+  }
 
-    bool bIsPassed = true;
-    if (v.getSize() != size) {
-        bIsPassed = false;
-    }
-    if (std::fabs(v[10] -  10.0) > 1.0E-16) {
-        bIsPassed = false;
-    }
-    if (std::fabs(v[17] -  56.0) > 1.0E-16) {
-        bIsPassed = false;
-    }
-    if (std::fabs(v[21] - (-2.5)) > 1.0E-16) {
-        bIsPassed = false;
-    }
-    if (std::fabs(v[90] -  12.0) > 1.0E-16) {
-        bIsPassed = false;
-    }
-
-    showResultMessageAll("testSet", bIsPassed);
+  showResultMessageAll("testOperatorPlusEqual", bIsPassed);
 }
 
+void testOperatorMultiEqual() {
+  TlDistributeVector v(100);
+  v[10] = 10.0;
+  v[17] = 56.0;
+  v[21] = -2.5;
+  v[90] = 12.0;
 
-void testOperatorPlusEqual()
-{
-    TlDistributeVector v(100);
-    v[10] = 10.0;
-    v[17] = 56.0;
-    v[21] =- 2.5;
-    v[90] = 12.0;
+  v *= 3.0;
 
-    TlDistributeVector w(100);
-    w[10] =   5.0;
-    w[20] = -12.0;
-    w[30] =  51.0;
+  bool bIsPassed = true;
+  if (v.getSize() != 100) {
+    bIsPassed = false;
+  }
 
-    v += w;
+  bIsPassed &= check(v[10], 10.0 * 3.0, 1.0E-16, __FILE__, __LINE__);
+  bIsPassed &= check(v[17], 56.0 * 3.0, 1.0E-16, __FILE__, __LINE__);
+  bIsPassed &= check(v[21], -2.5 * 3.0, 1.0E-16, __FILE__, __LINE__);
+  bIsPassed &= check(v[90], 12.0 * 3.0, 1.0E-16, __FILE__, __LINE__);
 
-    bool bIsPassed = true;
-    if (v.getSize() != 100) {
-        bIsPassed = false;
-    }
-    if (std::fabs(v[10] -  15.0) > 1.0E-16) {
-        bIsPassed = false;
-    }
-    if (std::fabs(v[17] -  56.0) > 1.0E-16) {
-        bIsPassed = false;
-    }
-    if (std::fabs(v[20] - (-12.0)) > 1.0E-16) {
-        bIsPassed = false;
-    }
-    if (std::fabs(v[21] - (-2.5)) > 1.0E-16) {
-        bIsPassed = false;
-    }
-    if (std::fabs(v[30] -  51.0) > 1.0E-16) {
-        bIsPassed = false;
-    }
-    if (std::fabs(v[90] -  12.0) > 1.0E-16) {
-        bIsPassed = false;
-    }
-
-    showResultMessageAll("testOperatorPlusEqual", bIsPassed);
+  showResultMessageAll("testOperatorMultiEqual", bIsPassed);
 }
 
+void testSave() {
+  bool bIsPassed = true;
 
-void testOperatorMultiEqual()
-{
-    TlDistributeVector v(100);
-    v[10] = 10.0;
-    v[17] = 56.0;
-    v[21] =- 2.5;
-    v[90] = 12.0;
+  const int size = 1000;
+  TlDistributeVector v(size);
+  TlVector w(size);
 
-    v *= 3.0;
-    
-    bool bIsPassed = true;
-    if (v.getSize() != 100) {
-        bIsPassed = false;
-    }
+  int count = 0;
+  for (int i = 0; i < size; ++i) {
+    double d = double(count);
+    v[i] = d;
+    w[i] = d;
+    ++count;
+  }
 
-    bIsPassed &= check(v[10], 10.0*3.0, 1.0E-16, __FILE__, __LINE__);
-    bIsPassed &= check(v[17], 56.0*3.0, 1.0E-16, __FILE__, __LINE__);
-    bIsPassed &= check(v[21], -2.5*3.0, 1.0E-16, __FILE__, __LINE__);
-    bIsPassed &= check(v[90], 12.0*3.0, 1.0E-16, __FILE__, __LINE__);
+  v.save("test.vector");
+  TlCommunicate& rComm = TlCommunicate::getInstance();
+  if (rComm.isMaster() == true) {
+    w.save("test.TlVector.vector");
+  }
 
-    showResultMessageAll("testOperatorMultiEqual", bIsPassed);
+  showResultMessageAll("testSave", bIsPassed);
+  rComm.barrier();
 }
 
+void testLoad() {
+  bool bIsPassed = true;
 
-void testSave()
-{
-    bool bIsPassed = true;
+  TlDistributeVector v;
+  v.load("test.vector");
+  TlVector w;
+  w.load("test.TlVector.vector");
 
-    const int size = 1000;
-    TlDistributeVector v(size);
-    TlVector w(size);
+  if (v.getSize() != w.getSize()) {
+    std::cout << "size = " << v.getSize() << std::endl;
+    bIsPassed = false;
+  }
 
-    int count = 0;
-    for (int i = 0; i < size; ++i) {
-        double d = double(count);
-        v[i] = d;
-        w[i] = d;
-        ++count;
+  const int size = v.getSize();
+  for (int i = 0; i < size; ++i) {
+    bIsPassed &= check(v[i], w[i], 1.0E-16, __FILE__, __LINE__);
+    if (bIsPassed == false) {
+      break;
     }
+  }
 
-    v.save("test.vector");
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    if (rComm.isMaster() == true) {
-        w.save("test.TlVector.vector");
-    }
-    
-    showResultMessageAll("testSave", bIsPassed);
-    rComm.barrier();
+  showResultMessageAll("testLoad", bIsPassed);
 }
 
+void testMatrixVectorOperation() {
+  bool bIsPassed = true;
 
-void testLoad()
-{
-    bool bIsPassed = true;
+  TlDenseSymmetricMatrix_BLAS_Old S;
+  S.load("Sab.mtx");
+  TlVector R;
+  R.load("rho.vct");
 
-    TlDistributeVector v;
-    v.load("test.vector");
-    TlVector w;
-    w.load("test.TlVector.vector");
+  TlVector A = S * R;
 
-    if (v.getSize() != w.getSize()) {
-        std::cout << "size = " << v.getSize() << std::endl;
-        bIsPassed = false;
+  TlDistributeSymmetricMatrix s;
+  s.load("Sab.mtx");
+  TlDistributeVector r;
+  r.load("rho.vct");
+
+  TlDistributeVector a = s * r;
+
+  const int size = A.getSize();
+  for (int i = 0; i < size; ++i) {
+    bIsPassed &= check(a[i], A[i], 1.0E-10, __FILE__, __LINE__);
+    if (bIsPassed == false) {
+      break;
     }
+  }
 
-    const int size = v.getSize();
-    for (int i = 0; i < size; ++i) {
-        bIsPassed &= check(v[i], w[i], 1.0E-16, __FILE__, __LINE__);
-        if (bIsPassed == false) {
-            break;
-        }
-    }
-
-    showResultMessageAll("testLoad", bIsPassed);
+  showResultMessageAll("MatrixVectorOperation", bIsPassed);
 }
 
+void testVectorVectorOperation() {
+  bool bIsPassed = true;
 
-void testMatrixVectorOperation()
-{
-    bool bIsPassed = true;
+  TlVector R;
+  R.load("rho.vct");
 
-    TlSymmetricMatrix S;
-    S.load("Sab.mtx");
-    TlVector R;
-    R.load("rho.vct");
+  double A = R * R;
 
-    TlVector A = S * R;
+  TlDistributeVector r;
+  r.load("rho.vct");
 
-    TlDistributeSymmetricMatrix s;
-    s.load("Sab.mtx");
-    TlDistributeVector r;
-    r.load("rho.vct");
+  double a = r * r;
 
-    TlDistributeVector a = s * r;
+  bIsPassed &= check(a, A, 1.0E-10, __FILE__, __LINE__);
 
-    const int size = A.getSize();
-    for (int i = 0; i < size; ++i) {
-        bIsPassed &= check(a[i], A[i], 1.0E-10, __FILE__, __LINE__);
-        if (bIsPassed == false) {
-            break;
-        }
-    }
-
-    showResultMessageAll("MatrixVectorOperation", bIsPassed);
+  showResultMessageAll("VectorVectorOperation", bIsPassed);
 }
-
-
-void testVectorVectorOperation()
-{
-    bool bIsPassed = true;
-
-    TlVector R;
-    R.load("rho.vct");
-
-    double A = R * R;
-
-    TlDistributeVector r;
-    r.load("rho.vct");
-
-    double a = r * r;
-
-    bIsPassed &= check(a, A, 1.0E-10, __FILE__, __LINE__);
-
-    showResultMessageAll("VectorVectorOperation", bIsPassed);
-}
-
