@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cmath>
 #include "tl_dense_vector_impl_object.h"
 #include "TlUtils.h"
 #include "tl_vector_utils.h"

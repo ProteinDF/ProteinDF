@@ -1,6 +1,7 @@
 #include "tl_dense_vector_impl_lapack.h"
 #include <algorithm>
 #include <cassert>
+#include <numeric>
 #include <functional>
 #include "TlUtils.h"
 

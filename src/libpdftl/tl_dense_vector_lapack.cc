@@ -35,6 +35,8 @@ TlDenseVector_Lapack& TlDenseVector_Lapack::operator=(
     this->pImpl_ = new TlDenseVector_ImplLapack(
         *dynamic_cast<const TlDenseVector_ImplLapack*>(rhs.pImpl_));
   }
+
+  return *this;
 }
 
 TlDenseVector_Lapack& TlDenseVector_Lapack::operator+=(

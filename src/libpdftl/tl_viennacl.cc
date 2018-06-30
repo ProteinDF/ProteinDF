@@ -26,11 +26,17 @@ void TlViennaCL::setupAllAvailableDevices() {
                       NULL, NULL, &err);
   VIENNACL_ERR_CHECK(err);
 
-  cl_queue_properties properties[] = {0};
   std::vector<cl_command_queue> queues(devices.size());
   for (std::size_t i = 0; i < devices.size(); ++i) {
-    //queues[i] = clCreateCommandQueue(my_context, devices[i].id(), 0, &err);
-    queues[i] = clCreateCommandQueueWithProperties(my_context, devices[i].id(), properties, &err);
+#if OpenCL_VERSION_MAJOR >= 2
+    {
+      cl_queue_properties properties[] = {0};
+      queues[i] = clCreateCommandQueueWithProperties(
+          my_context, devices[i].id(), properties, &err);
+    }
+#else
+    queues[i] = clCreateCommandQueue(my_context, devices[i].id(), 0, &err);
+#endif
     VIENNACL_ERR_CHECK(err);
   }
 
