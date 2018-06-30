@@ -18,7 +18,6 @@
 
 #include "DfRLMO.h"
 #include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 
 DfRLMO::DfRLMO(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {}
 
@@ -27,14 +26,14 @@ DfRLMO::~DfRLMO() {}
 void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   const int iteration = this->m_nIteration;
 
-  const TlSymmetricMatrix D_AO =
-      this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS, iteration);
+  const TlDenseSymmetricMatrix_BLAS_Old D_AO =
+      this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(RUN_RKS, iteration);
   const index_type numOfAOs = D_AO.getNumOfRows();
   // D_AO.save("D_AO.mat");
 
   // CD
   {
-    TlSymmetricMatrix CD = 0.5 * D_AO;
+    TlDenseSymmetricMatrix_BLAS_Old CD = 0.5 * D_AO;
     std::vector<int> pivot;
     int b = choleskyFactorization(&CD, &pivot);
     std::cerr << "CD=" << b << std::endl;
@@ -88,7 +87,8 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   C_CMO_AO.save("C_CMO_AO.mat");
 
   // {
-  //     const TlSymmetricMatrix S = this->getSpqMatrix<TlSymmetricMatrix>();
+  //     const TlDenseSymmetricMatrix_BLAS_Old S =
+  //     this->getSpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>();
   //     TlMatrix tC_CMO_AO = C_CMO_AO;
   //     tC_CMO_AO.transpose();
   //     TlMatrix CSC = tC_CMO_AO * S * C_CMO_AO;
@@ -96,7 +96,7 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   // }
 
   // make X
-  const TlSymmetricMatrix X = this->getX();
+  const TlDenseSymmetricMatrix_BLAS_Old X = this->getX();
   // check
   // {
   //     // XX == Spq
@@ -104,7 +104,7 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   //     XX.save("XX.mtx");
   // }
 
-  TlSymmetricMatrix Xinv = X;
+  TlDenseSymmetricMatrix_BLAS_Old Xinv = X;
   Xinv.inverse();
   Xinv.save("Xinv.mat");
   // check
@@ -119,7 +119,7 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   //     XC.save("XC.mat");
   // }
 
-  const TlSymmetricMatrix D_OAO = X * D_AO * X;
+  const TlDenseSymmetricMatrix_BLAS_Old D_OAO = X * D_AO * X;
   // D_OAO.save("D_OAO.mtx");
 
   // check
@@ -127,7 +127,7 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   //     // D_OAO2 == _2D_OAO
   //     TlMatrix D_OAO2 = D_OAO * D_OAO;
   //     D_OAO2.save("D_OAO2.mtx");
-  //     TlSymmetricMatrix _2D_OAO = 2.0 * D_OAO;
+  //     TlDenseSymmetricMatrix_BLAS_Old _2D_OAO = 2.0 * D_OAO;
   //     _2D_OAO.save("_2D_OAO.mtx");
   // }
 
@@ -147,7 +147,7 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   //     TtT.save("TtT.mtx");
   // }
 
-  const TlSymmetricMatrix D_RO = Tt * D_OAO * T;
+  const TlDenseSymmetricMatrix_BLAS_Old D_RO = Tt * D_OAO * T;
   D_RO.save("D_RO.mat");
 
   const TlMatrix C_CMO_RO = Tt * X * C_CMO_AO;
@@ -221,8 +221,9 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   // C_TH.save("C_TH.mtx");
 }
 
-TlSymmetricMatrix DfRLMO::getX() {
-  const TlSymmetricMatrix S = this->getSpqMatrix<TlSymmetricMatrix>();
+TlDenseSymmetricMatrix_BLAS_Old DfRLMO::getX() {
+  const TlDenseSymmetricMatrix_BLAS_Old S =
+      this->getSpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>();
   TlVector e;
   TlMatrix V;
   S.diagonal(&e, &V);
@@ -237,20 +238,20 @@ TlSymmetricMatrix DfRLMO::getX() {
     E.set(i, i, std::sqrt(e[i]));
   }
 
-  TlSymmetricMatrix X = V * E * V_dagger;
+  TlDenseSymmetricMatrix_BLAS_Old X = V * E * V_dagger;
   X.save("X.mat");
 
   return X;
 }
 
-TlMatrix DfRLMO::getT(const TlSymmetricMatrix& D,
+TlMatrix DfRLMO::getT(const TlDenseSymmetricMatrix_BLAS_Old& D,
                       const std::vector<index_type>& startBlockAOs) {
   const index_type numOfAOs = this->m_nNumOfAOs;
   const std::size_t numOfBlocks = startBlockAOs.size();
   std::vector<index_type> startBlockAOs_mod = startBlockAOs;  // 番兵用
   startBlockAOs_mod.push_back(numOfAOs);
 
-  std::vector<TlSymmetricMatrix> D_subblocks(numOfBlocks);
+  std::vector<TlDenseSymmetricMatrix_BLAS_Old> D_subblocks(numOfBlocks);
 
   index_type numOfOccupied = 0;
   index_type numOfVacant = 0;
@@ -263,7 +264,7 @@ TlMatrix DfRLMO::getT(const TlSymmetricMatrix& D,
               << std::endl;
     const index_type distance = endAO - startAO;
 
-    const TlSymmetricMatrix Dsub =
+    const TlDenseSymmetricMatrix_BLAS_Old Dsub =
         D.getBlockMatrix(startAO, startAO, distance, distance);
     std::cerr << TlUtils::format("Dsub size = %d x %d", Dsub.getNumOfRows(),
                                  Dsub.getNumOfCols())

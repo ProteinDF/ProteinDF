@@ -25,8 +25,8 @@
 #include "TlDistributeSymmetricMatrix.h"
 #include "TlFile.h"
 #include "TlGetopt.h"
-#include "TlMatrixObject.h"
 #include "TlUtils.h"
+#include "tl_matrix_object.h"
 
 typedef TlMatrixObject::index_type index_type;
 

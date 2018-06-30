@@ -20,7 +20,6 @@
 
 #include "TlGetopt.h"
 #include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 
 enum FileType { FT_NONE, FT_SYMMAT, FT_MAT };
 
@@ -80,7 +79,7 @@ int main(int argc, char* argv[]) {
   TlMatrix* pMat = NULL;
   switch (fileType) {
     case FT_SYMMAT:
-      pMat = new TlSymmetricMatrix();
+      pMat = new TlDenseSymmetricMatrix_BLAS_Old();
       break;
 
     case FT_MAT:
@@ -157,7 +156,7 @@ void showHelp() {
 
 FileType getFileType(const std::string& filePath) {
   FileType fileType = FT_NONE;
-  if (TlSymmetricMatrix::isLoadable(filePath) == true) {
+  if (TlDenseSymmetricMatrix_BLAS_Old::isLoadable(filePath) == true) {
     fileType = FT_SYMMAT;
   } else if (TlMatrix::isLoadable(filePath) == true) {
     fileType = FT_MAT;

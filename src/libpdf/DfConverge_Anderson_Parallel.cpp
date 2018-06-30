@@ -18,8 +18,8 @@
 
 #include "DfConverge_Anderson_Parallel.h"
 #include "TlCommunicate.h"
-#include "TlDistributeSymmetricMatrix.h"
-#include "TlDistributeVector.h"
+#include "tl_dense_symmetric_matrix_blacs.h"
+#include "tl_dense_vector_blacs.h"
 
 DfConverge_Anderson_Parallel::DfConverge_Anderson_Parallel(
     TlSerializeData* pPdfParam)
@@ -49,19 +49,19 @@ void DfConverge_Anderson_Parallel::convergeRhoTilde_LAPACK() {
 void DfConverge_Anderson_Parallel::convergeRhoTilde_ScaLAPACK() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      DfConverge_Anderson::convergeRhoTilde<TlDistributeVector>(
+      DfConverge_Anderson::convergeRhoTilde<TlDistributedVector>(
           DfObject::RUN_RKS);
       break;
     case METHOD_UKS:
-      DfConverge_Anderson::convergeRhoTilde<TlDistributeVector>(
+      DfConverge_Anderson::convergeRhoTilde<TlDistributedVector>(
           DfObject::RUN_UKS_ALPHA);
-      DfConverge_Anderson::convergeRhoTilde<TlDistributeVector>(
+      DfConverge_Anderson::convergeRhoTilde<TlDistributedVector>(
           DfObject::RUN_UKS_BETA);
       break;
     case METHOD_ROKS:
-      DfConverge_Anderson::convergeRhoTilde<TlDistributeVector>(
+      DfConverge_Anderson::convergeRhoTilde<TlDistributedVector>(
           DfObject::RUN_UKS_ALPHA);
-      DfConverge_Anderson::convergeRhoTilde<TlDistributeVector>(
+      DfConverge_Anderson::convergeRhoTilde<TlDistributedVector>(
           DfObject::RUN_UKS_BETA);
       break;
     default:
@@ -94,24 +94,24 @@ void DfConverge_Anderson_Parallel::convergeKSMatrix_LAPACK() {
 void DfConverge_Anderson_Parallel::convergeKSMatrix_ScaLAPACK() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      DfConverge_Anderson::convergeKSMatrix<TlDistributeSymmetricMatrix,
-                                            TlDistributeVector>(
+      DfConverge_Anderson::convergeKSMatrix<TlDenseSymmetricMatrix_blacs,
+                                            TlDistributedVector>(
           DfObject::RUN_RKS);
       break;
     case METHOD_UKS:
-      DfConverge_Anderson::convergeKSMatrix<TlDistributeSymmetricMatrix,
-                                            TlDistributeVector>(
+      DfConverge_Anderson::convergeKSMatrix<TlDenseSymmetricMatrix_blacs,
+                                            TlDistributedVector>(
           DfObject::RUN_UKS_ALPHA);
-      DfConverge_Anderson::convergeKSMatrix<TlDistributeSymmetricMatrix,
-                                            TlDistributeVector>(
+      DfConverge_Anderson::convergeKSMatrix<TlDenseSymmetricMatrix_blacs,
+                                            TlDistributedVector>(
           DfObject::RUN_UKS_BETA);
       break;
     case METHOD_ROKS:
-      DfConverge_Anderson::convergeKSMatrix<TlDistributeSymmetricMatrix,
-                                            TlDistributeVector>(
+      DfConverge_Anderson::convergeKSMatrix<TlDenseSymmetricMatrix_blacs,
+                                            TlDistributedVector>(
           DfObject::RUN_UKS_ALPHA);
-      DfConverge_Anderson::convergeKSMatrix<TlDistributeSymmetricMatrix,
-                                            TlDistributeVector>(
+      DfConverge_Anderson::convergeKSMatrix<TlDenseSymmetricMatrix_blacs,
+                                            TlDistributedVector>(
           DfObject::RUN_UKS_BETA);
       break;
     default:
@@ -144,24 +144,24 @@ void DfConverge_Anderson_Parallel::convergePMatrix_LAPACK() {
 void DfConverge_Anderson_Parallel::convergePMatrix_ScaLAPACK() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      DfConverge_Anderson::convergePMatrix<TlDistributeSymmetricMatrix,
-                                           TlDistributeVector>(
+      DfConverge_Anderson::convergePMatrix<TlDenseSymmetricMatrix_blacs,
+                                           TlDistributedVector>(
           DfObject::RUN_RKS);
       break;
     case METHOD_UKS:
-      DfConverge_Anderson::convergePMatrix<TlDistributeSymmetricMatrix,
-                                           TlDistributeVector>(
+      DfConverge_Anderson::convergePMatrix<TlDenseSymmetricMatrix_blacs,
+                                           TlDistributedVector>(
           DfObject::RUN_UKS_ALPHA);
-      DfConverge_Anderson::convergePMatrix<TlDistributeSymmetricMatrix,
-                                           TlDistributeVector>(
+      DfConverge_Anderson::convergePMatrix<TlDenseSymmetricMatrix_blacs,
+                                           TlDistributedVector>(
           DfObject::RUN_UKS_BETA);
       break;
     case METHOD_ROKS:
-      DfConverge_Anderson::convergePMatrix<TlDistributeSymmetricMatrix,
-                                           TlDistributeVector>(
+      DfConverge_Anderson::convergePMatrix<TlDenseSymmetricMatrix_blacs,
+                                           TlDistributedVector>(
           DfObject::RUN_UKS_ALPHA);
-      DfConverge_Anderson::convergePMatrix<TlDistributeSymmetricMatrix,
-                                           TlDistributeVector>(
+      DfConverge_Anderson::convergePMatrix<TlDenseSymmetricMatrix_blacs,
+                                           TlDistributedVector>(
           DfObject::RUN_UKS_BETA);
       break;
     default:

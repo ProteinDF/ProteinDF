@@ -1,7 +1,7 @@
+#include "TlPosition.h"
 #include <limits>
 #include <string>
 #include <vector>
-#include "TlPosition.h"
 #include "gtest/gtest.h"
 
 static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();

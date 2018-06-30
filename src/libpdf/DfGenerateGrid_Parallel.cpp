@@ -20,7 +20,6 @@
 #include <cassert>
 #include "DfXCFunctional.h"
 #include "TlCommunicate.h"
-#include "TlFileMatrix.h"
 #include "TlUtils.h"
 
 DfGenerateGrid_Parallel::DfGenerateGrid_Parallel(TlSerializeData* pPdfParam)
@@ -45,10 +44,10 @@ void DfGenerateGrid_Parallel::makeTable() {
   rComm.broadcast(this->maxRadii_);
 }
 
-TlMatrix DfGenerateGrid_Parallel::getOMatrix() {
+TlDenseGeneralMatrix_BLAS_old DfGenerateGrid_Parallel::getOMatrix() {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  TlMatrix O;
+  TlDenseGeneralMatrix_BLAS_old O;
   if (rComm.isMaster() == true) {
     O = DfGenerateGrid::getOMatrix();
   }
@@ -57,7 +56,7 @@ TlMatrix DfGenerateGrid_Parallel::getOMatrix() {
   return O;
 }
 
-void DfGenerateGrid_Parallel::generateGrid(const TlMatrix& O) {
+void DfGenerateGrid_Parallel::generateGrid(const TlDenseGeneralMatrix_BLAS_old& O) {
   // if (this->isMasterSlave_ == true) {
   //     this->generateGrid_MS();
   // } else {
@@ -67,7 +66,8 @@ void DfGenerateGrid_Parallel::generateGrid(const TlMatrix& O) {
   this->gatherGridData();
 }
 
-void DfGenerateGrid_Parallel::generateGrid_DC(const TlMatrix& O) {
+void DfGenerateGrid_Parallel::generateGrid_DC(
+    const TlDenseGeneralMatrix_BLAS_old& O) {
   this->logger("generate grid by DC");
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
@@ -120,11 +120,14 @@ void DfGenerateGrid_Parallel::gatherGridData() {
   const int tag = TAG_GENGRID_GATHER_GRID_DATA;
   if (rComm.isMaster() == true) {
     const index_type numOfColsOfGlobalGridMatrix = this->grdMat_.getNumOfCols();
-    // TODO: use TlFileMatrix instead of TlMatrix because of memory waste.
+    // TODO: use TlMatrixFile instead of TlDenseGeneralMatrix_BLAS_old because of
+    // memory
+    // waste.
     this->log_.info(TlUtils::format("grid matrix size: %d, %d",
                                     numOfRowsOfGlobalGridMatrix,
                                     numOfRowsOfGlobalGridMatrix));
-    TlMatrix grdMat(numOfRowsOfGlobalGridMatrix, numOfColsOfGlobalGridMatrix);
+    TlDenseGeneralMatrix_BLAS_old grdMat(numOfRowsOfGlobalGridMatrix,
+                                     numOfColsOfGlobalGridMatrix);
 
     index_type currentNumOfRows = 0;
 
@@ -136,7 +139,7 @@ void DfGenerateGrid_Parallel::gatherGridData() {
     std::vector<bool> recvCheck(numOfProcs, false);
     for (int i = 1; i < numOfProcs; ++i) {
       int proc = 0;
-      TlMatrix tmpGrdMat;
+      TlDenseGeneralMatrix_BLAS_old tmpGrdMat;
       rComm.receiveDataFromAnySource(tmpGrdMat, &proc, tag);
       if (recvCheck[proc] != false) {
         this->log_.warn(

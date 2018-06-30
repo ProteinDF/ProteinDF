@@ -1,6 +1,6 @@
+#include "DfFunctional_LYP.h"
 #include <string>
 #include <vector>
-#include "DfFunctional_LYP.h"
 #include "gtest/gtest.h"
 
 const double EPS = 1.0E-10;

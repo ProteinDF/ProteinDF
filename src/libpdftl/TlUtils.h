@@ -257,21 +257,21 @@ void TlUtils::rtrim(std::basic_string<T>& s, T c) {
   s.erase(p, s.end());
 }
 
-  // template<typename T, typename F>
-  // void rTrimWs(std::basic_string<T>& s, F f){
-  //   if (s.empty()){
-  //     return;
-  //   }
+// template<typename T, typename F>
+// void rTrimWs(std::basic_string<T>& s, F f){
+//   if (s.empty()){
+//     return;
+//   }
 
-  //   typename std::basic_string<T>::iterator p;
-  //   for (p = s.end(); p != s.begin() && f(*--p); ){
-  //   }
+//   typename std::basic_string<T>::iterator p;
+//   for (p = s.end(); p != s.begin() && f(*--p); ){
+//   }
 
-  //   if (!f(*p)){
-  //     p++;
-  //   }
+//   if (!f(*p)){
+//     p++;
+//   }
 
-  //   s.erase(p, s.end());
-  // }
+//   s.erase(p, s.end());
+// }
 
 #endif  // TLUTILS_H

@@ -20,8 +20,9 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_matrix_utils.h"
 
 void showHelp(const std::string& progname) {
   std::cout << TlUtils::format("%s [options] input_file_path", progname.c_str())
@@ -55,18 +56,19 @@ int main(int argc, char* argv[]) {
   if (bVerbose == true) {
     std::cerr << "load matrix: " << inputMatrixPath << std::endl;
   }
-  if (TlSymmetricMatrix::isLoadable(inputMatrixPath) != true) {
+  if (TlMatrixUtils::isLoadable(inputMatrixPath, TlMatrixObject::RLHD) !=
+      true) {
     std::cerr << "can not open file: " << inputMatrixPath << std::endl;
     return EXIT_FAILURE;
   }
 
-  TlSymmetricMatrix A;
+  TlDenseSymmetricMatrix_BLAS_Old A;
   A.load(inputMatrixPath);
   const int numOfDims = A.getNumOfRows();
   // const int numOfCols = A.getNumOfCols();
 
-  TlMatrix eigVec(numOfDims, numOfDims);
-  TlVector eigVal(numOfDims);
+  TlDenseGeneralMatrix_BLAS_old eigVec(numOfDims, numOfDims);
+  TlVector_BLAS eigVal(numOfDims);
 
   if (bVerbose == true) {
     std::cerr << "running..." << inputMatrixPath << std::endl;

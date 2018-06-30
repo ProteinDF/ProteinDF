@@ -1,6 +1,6 @@
+#include "TlHdf5Utils.h"
 #include <string>
 #include <vector>
-#include "TlHdf5Utils.h"
 #include "gtest/gtest.h"
 
 static const std::string h5_path = "temp.h5";

@@ -23,10 +23,10 @@
 #include <vector>
 
 #include "DfObject.h"
-#include "TlMatrix.h"
 #include "TlOrbitalInfo.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
 
 class DfLocalize : public DfObject {
  protected:
@@ -68,8 +68,9 @@ class DfLocalize : public DfObject {
               double* pB_ij);
 
   void getRotatingMatrix(const double A_ij, const double B_ij,
-                         const double normAB, TlMatrix* pRot);
-  void rotateCmatrix(std::size_t orb_i, std::size_t orb_j, const TlMatrix& rot);
+                         const double normAB, TlDenseGeneralMatrix_BLAS_old* pRot);
+  void rotateCmatrix(std::size_t orb_i, std::size_t orb_j,
+                     const TlDenseGeneralMatrix_BLAS_old& rot);
 
  protected:
   double calcQA(const std::size_t orb_i);
@@ -91,8 +92,8 @@ class DfLocalize : public DfObject {
   std::string CMatrixPath_;
 
   std::vector<std::vector<std::size_t> > group_;
-  TlSymmetricMatrix S_;
-  TlMatrix C_;
+  TlDenseSymmetricMatrix_BLAS_Old S_;
+  TlDenseGeneralMatrix_BLAS_old C_;
 
   std::vector<Orb_QA_Item> orb_QA_table_;
   std::vector<JobItem> jobList_;

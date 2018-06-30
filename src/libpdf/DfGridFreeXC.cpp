@@ -89,8 +89,9 @@ DfXMatrix* DfGridFreeXC::getDfXMatrixObject() {
 
 // before SCF ==================================================================
 void DfGridFreeXC::preprocessBeforeSCF() {
-  this->preprocessBeforeSCF_templ<DfOverlapX, DfXMatrix, TlSymmetricMatrix,
-                                  TlMatrix>();
+  this->preprocessBeforeSCF_templ<DfOverlapX, DfXMatrix,
+                                  TlDenseSymmetricMatrix_BLAS_Old,
+                                  TlDenseGeneralMatrix_BLAS_old>();
 }
 
 // in SCF ======================================================================
@@ -120,7 +121,8 @@ void DfGridFreeXC::buildFxc() {
 
 void DfGridFreeXC::buildFxc_LDA() {
   this->log_.info("DfGridFreeXC::buildFxc_LDA()");
-  this->buildFxc_LDA_method<DfOverlapX, DfCD, TlSymmetricMatrix, TlMatrix>();
+  this->buildFxc_LDA_method<DfOverlapX, DfCD, TlDenseSymmetricMatrix_BLAS_Old,
+                            TlDenseGeneralMatrix_BLAS_old>();
 }
 
 void DfGridFreeXC::createEngines() {
@@ -144,11 +146,12 @@ DfTaskCtrl* DfGridFreeXC::getDfTaskCtrlObject() const {
   return pDfTaskCtrl;
 }
 
-void DfGridFreeXC::finalize(TlSymmetricMatrix* pMtx) {
+void DfGridFreeXC::finalize(TlDenseSymmetricMatrix_BLAS_Old* pMtx) {
   // do nothing
 }
 
-void DfGridFreeXC::get_F_lamda(const TlVector lamda, TlMatrixObject* pF_lamda,
+void DfGridFreeXC::get_F_lamda(const TlVector_BLAS lamda,
+                               TlMatrixObject* pF_lamda,
                                TlMatrixObject* pE_lamda) {
   const int dim = lamda.getSize();
   assert(pF_lamda->getNumOfRows() == dim);
@@ -185,10 +188,10 @@ void DfGridFreeXC::get_F_lamda(const TlVector lamda, TlMatrixObject* pF_lamda,
   pFunc = NULL;
 }
 
-void DfGridFreeXC::getM_exact(const TlSymmetricMatrix& P,
-                              TlSymmetricMatrix* pM) {
+void DfGridFreeXC::getM_exact(const TlDenseSymmetricMatrix_BLAS_Old& P,
+                              TlDenseSymmetricMatrix_BLAS_Old* pM) {
   assert(pM != NULL);
-  TlMatrix M(this->m_nNumOfAOs, this->m_nNumOfAOs);
+  TlDenseGeneralMatrix_BLAS_old M(this->m_nNumOfAOs, this->m_nNumOfAOs);
   pM->resize(this->m_nNumOfAOs);
 
   DfOverlapEngine engine;
@@ -347,15 +350,17 @@ DfGridFreeXC::ShellPairArrayTable DfGridFreeXC::getShellPairArrayTable(
   return shellPairArrayTable;
 }
 
-// TlSymmetricMatrix DfGridFreeXC::getPMatrix()
+// TlDenseSymmetricMatrix_BLAS_Old DfGridFreeXC::getPMatrix()
 // {
-//     TlSymmetricMatrix P = this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS,
+//     TlDenseSymmetricMatrix_BLAS_Old P =
+//     this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(RUN_RKS,
 //     this->m_nIteration -1); return P;
 // }
 
-TlMatrix DfGridFreeXC::getL() {
-  // TlMatrix L = DfObject::getLMatrix<TlMatrix>();
-  TlMatrix L;
+TlDenseGeneralMatrix_BLAS_old DfGridFreeXC::getL() {
+  // TlDenseGeneralMatrix_BLAS_old L =
+  // DfObject::getLMatrix<TlDenseGeneralMatrix_BLAS_old>();
+  TlDenseGeneralMatrix_BLAS_old L;
   L.load("GF_L.mat");
 
   return L;
@@ -391,10 +396,10 @@ void DfGridFreeXC::divideCholeskyBasis(const index_type numOfCBs,
   *pEnd = numOfCBs;
 }
 
-TlSymmetricMatrix DfGridFreeXC::getCholeskyVector(const TlVector& L_col,
-                                                  const PQ_PairArray& I2PQ) {
+TlDenseSymmetricMatrix_BLAS_Old DfGridFreeXC::getCholeskyVector(
+    const TlVector_BLAS& L_col, const PQ_PairArray& I2PQ) {
   const index_type numOfItilde = L_col.getSize();
-  TlSymmetricMatrix answer(this->m_nNumOfAOs);
+  TlDenseSymmetricMatrix_BLAS_Old answer(this->m_nNumOfAOs);
   for (index_type i = 0; i < numOfItilde; ++i) {
     answer.set(I2PQ[i].index1(), I2PQ[i].index2(), L_col[i]);
   }
@@ -405,7 +410,8 @@ TlSymmetricMatrix DfGridFreeXC::getCholeskyVector(const TlVector& L_col,
 // -----------------------------------------------------------------------------
 void DfGridFreeXC::buildFxc_GGA() {
   this->log_.info("DfGridFreeXC::buildFxc_GGA()");
-  this->buildFxc_GGA_method<DfOverlapX, DfCD, TlSymmetricMatrix, TlMatrix>();
+  this->buildFxc_GGA_method<DfOverlapX, DfCD, TlDenseSymmetricMatrix_BLAS_Old,
+                            TlDenseGeneralMatrix_BLAS_old>();
 }
 
 // void DfGridFreeXC::buildFxc_GGA()
@@ -425,12 +431,12 @@ void DfGridFreeXC::buildFxc_GGA() {
 //     this->log_.info(TlUtils::format("auxAOs for GF = %d", numOfGfOrbs));
 
 //     // RKS
-//     const TlSymmetricMatrix PA = 0.5 *
-//     DfObject::getPpqMatrix<TlSymmetricMatrix>(RUN_RKS,
+//     const TlDenseSymmetricMatrix_BLAS_Old PA = 0.5 *
+//     DfObject::getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(RUN_RKS,
 //                                                                                  this->m_nIteration -1);
 //     assert(PA.getNumOfRows() == numOfAOs);
 
-//     TlSymmetricMatrix M;
+//     TlDenseSymmetricMatrix_BLAS_Old M;
 //     if (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD) {
 //         this->log_.info("begin to create M matrix based on CD.");
 //         {
@@ -454,41 +460,42 @@ void DfGridFreeXC::buildFxc_GGA() {
 
 //     this->log_.info("begin to generate Fxc using grid-free method.");
 //     // M~(=V^t * M * V) および SVU(=SVU, but now only SV)の作成
-//     TlMatrix S;
-//     TlMatrix V;
+//     TlDenseGeneralMatrix_BLAS_old S;
+//     TlDenseGeneralMatrix_BLAS_old V;
 //     if (this->isDedicatedBasisForGridFree_) {
-//         S = DfObject::getGfStildeMatrix<TlMatrix>();
-//         V = DfObject::getGfVMatrix<TlMatrix>();
+//         S = DfObject::getGfStildeMatrix<TlDenseGeneralMatrix_BLAS_old>();
+//         V = DfObject::getGfVMatrix<TlDenseGeneralMatrix_BLAS_old>();
 //     } else {
-//         S = DfObject::getSpqMatrix<TlSymmetricMatrix>();
-//         V = DfObject::getXMatrix<TlMatrix>();
+//         S = DfObject::getSpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>();
+//         V = DfObject::getXMatrix<TlDenseGeneralMatrix_BLAS_old>();
 //     }
 
 //     const index_type numOfGFOrthNormBasis = V.getNumOfCols();
 //     this->log_.info(TlUtils::format("orthonormal basis = %d",
-//     numOfGFOrthNormBasis)); TlMatrix Vt = V; Vt.transpose();
+//     numOfGFOrthNormBasis)); TlDenseGeneralMatrix_BLAS_old Vt = V;
+//     Vt.transposeInPlace();
 
-//     TlMatrix St = S;
-//     St.transpose();
+//     TlDenseGeneralMatrix_BLAS_old St = S;
+//     St.transposeInPlace();
 
-//     TlSymmetricMatrix Mtilde = Vt * M * V;
+//     TlDenseSymmetricMatrix_BLAS_Old Mtilde = Vt * M * V;
 //     //Mtilde.save("Mtilde.mat");
 
-//     TlVector lambda;
-//     TlMatrix U;
+//     TlVector_BLAS lambda;
+//     TlDenseGeneralMatrix_BLAS_old U;
 //     Mtilde.diagonal(&lambda, &U);
 //     //lambda.save("lambda.vct");
 //     //U.save("U.mat");
-//     TlMatrix Ut = U;
-//     Ut.transpose();
+//     TlDenseGeneralMatrix_BLAS_old Ut = U;
+//     Ut.transposeInPlace();
 //     assert(lambda.getSize() == numOfGFOrthNormBasis);
 //     assert(U.getNumOfRows() == numOfGFOrthNormBasis);
 //     assert(U.getNumOfCols() == numOfGFOrthNormBasis);
 
 //     // M[rho^(-1/3)]
-//     TlSymmetricMatrix Mtilde_13;
+//     TlDenseSymmetricMatrix_BLAS_Old Mtilde_13;
 //     {
-//         TlSymmetricMatrix lambda_13(numOfGFOrthNormBasis);
+//         TlDenseSymmetricMatrix_BLAS_Old lambda_13(numOfGFOrthNormBasis);
 //         for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
 //             double v_13 = 0.0;
 //             const double v = lambda.get(i);
@@ -502,62 +509,70 @@ void DfGridFreeXC::buildFxc_GGA() {
 //     //Mtilde_13.save("Mtilde_13.mat");
 
 //     // GGA用gradient
-//     TlMatrix Gx = this->getDipoleVelocityIntegralsXMatrix<TlMatrix>();
-//     TlMatrix Gy = this->getDipoleVelocityIntegralsYMatrix<TlMatrix>();
-//     TlMatrix Gz = this->getDipoleVelocityIntegralsZMatrix<TlMatrix>();
-//     Gx *= -1.0;
-//     Gy *= -1.0;
-//     Gz *= -1.0;
-//     const TlMatrix DX = Vt * Gx * V;
-//     const TlMatrix DY = Vt * Gy * V;
-//     const TlMatrix DZ = Vt * Gz * V;
+//     TlDenseGeneralMatrix_BLAS_old Gx =
+//     this->getDipoleVelocityIntegralsXMatrix<TlDenseGeneralMatrix_BLAS_old>();
+//     TlDenseGeneralMatrix_BLAS_old
+//     Gy =
+//     this->getDipoleVelocityIntegralsYMatrix<TlDenseGeneralMatrix_BLAS_old>();
+//     TlDenseGeneralMatrix_BLAS_old Gz =
+//     this->getDipoleVelocityIntegralsZMatrix<TlDenseGeneralMatrix_BLAS_old>(); Gx
+//     *=
+//     -1.0; Gy
+//     *= -1.0; Gz *= -1.0; const TlDenseGeneralMatrix_BLAS_old DX = Vt * Gx * V;
+//     const
+//     TlDenseGeneralMatrix_BLAS_old DY = Vt * Gy * V; const
+//     TlDenseGeneralMatrix_BLAS_old DZ = Vt *
+//     Gz * V;
 //     // DX.save("DX.mat");
 //     // DY.save("DY.mat");
 //     // DZ.save("DZ.mat");
 
-//     TlMatrix DXt = DX;
-//     DXt.transpose();
-//     TlMatrix DYt = DY;
-//     DYt.transpose();
-//     TlMatrix DZt = DZ;
-//     DZt.transpose();
-//     const TlMatrix RTX = 3.0*(DXt * Mtilde_13 + Mtilde_13 * DX);
-//     const TlMatrix RTY = 3.0*(DYt * Mtilde_13 + Mtilde_13 * DY);
-//     const TlMatrix RTZ = 3.0*(DZt * Mtilde_13 + Mtilde_13 * DZ);
-//     TlMatrix RTXt = RTX;
-//     RTXt.transpose();
-//     TlMatrix RTYt = RTY;
-//     RTYt.transpose();
-//     TlMatrix RTZt = RTZ;
-//     RTZt.transpose();
+//     TlDenseGeneralMatrix_BLAS_old DXt = DX;
+//     DXt.transposeInPlace();
+//     TlDenseGeneralMatrix_BLAS_old DYt = DY;
+//     DYt.transposeInPlace();
+//     TlDenseGeneralMatrix_BLAS_old DZt = DZ;
+//     DZt.transposeInPlace();
+//     const TlDenseGeneralMatrix_BLAS_old RTX = 3.0*(DXt * Mtilde_13 + Mtilde_13 *
+//     DX);
+//     const TlDenseGeneralMatrix_BLAS_old RTY = 3.0*(DYt * Mtilde_13 + Mtilde_13 *
+//     DY);
+//     const TlDenseGeneralMatrix_BLAS_old RTZ = 3.0*(DZt * Mtilde_13 + Mtilde_13 *
+//     DZ);
+//     TlDenseGeneralMatrix_BLAS_old RTXt = RTX;
+//     RTXt.transposeInPlace();
+//     TlDenseGeneralMatrix_BLAS_old RTYt = RTY;
+//     RTYt.transposeInPlace();
+//     TlDenseGeneralMatrix_BLAS_old RTZt = RTZ;
+//     RTZt.transposeInPlace();
 
 //     // RX2 := M[{nabla rho / rho^(-4/3)}^2]
-//     const TlSymmetricMatrix RX2 = RTXt*RTX + RTYt*RTY + RTZt*RTZ;
+//     const TlDenseSymmetricMatrix_BLAS_Old RX2 = RTXt*RTX + RTYt*RTY + RTZt*RTZ;
 //     // RTX.save("RTX.mat");
 //     // RTY.save("RTY.mat");
 //     // RTZ.save("RTZ.mat");
 //     // RX2.save("RX2.mat");
 
 //     // RZ2 := [nabla rho / rho^(4/3)] * (DX + DY + DZ)
-//     const TlMatrix RZ2 = RTX*DX + RTY*DY + RTZ*DZ;
+//     const TlDenseGeneralMatrix_BLAS_old RZ2 = RTX*DX + RTY*DY + RTZ*DZ;
 //     //RZ2.save("RZ2.mat");
-//     TlMatrix RZ2t = RZ2;
-//     RZ2t.transpose();
+//     TlDenseGeneralMatrix_BLAS_old RZ2t = RZ2;
+//     RZ2t.transposeInPlace();
 
-//     TlVector x2;
-//     TlMatrix Ux2;
+//     TlVector_BLAS x2;
+//     TlDenseGeneralMatrix_BLAS_old Ux2;
 //     RX2.diagonal(&x2, &Ux2);
 //     //x2.save("x2.vct");
 //     //Ux2.save("Ux2.mat");
-//     TlMatrix Ux2t = Ux2;
-//     Ux2t.transpose();
+//     TlDenseGeneralMatrix_BLAS_old Ux2t = Ux2;
+//     Ux2t.transposeInPlace();
 
 //     // ------------------
 //     assert(lambda.getSize() == numOfGFOrthNormBasis);
-//     // TlVector rhoAs(numOfGfOrbs);
-//     // TlVector xAs(numOfGfOrbs);
-//     TlVector rhoAs(numOfGFOrthNormBasis);
-//     TlVector xAs(numOfGFOrthNormBasis);
+//     // TlVector_BLAS rhoAs(numOfGfOrbs);
+//     // TlVector_BLAS xAs(numOfGfOrbs);
+//     TlVector_BLAS rhoAs(numOfGFOrthNormBasis);
+//     TlVector_BLAS xAs(numOfGFOrthNormBasis);
 //     //for (index_type i = 0; i < numOfGfOrbs; ++i) {
 //     for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
 //         const double rho_value = lambda[i];
@@ -568,20 +583,20 @@ void DfGridFreeXC::buildFxc_GGA() {
 //         const double x = (x2_value > 1.0E-16) ? std::sqrt(x2_value) : 0.0;
 //         xAs[i] = x;
 //     }
-//     const TlVector rhoBs = rhoAs;
-//     const TlVector xBs = xAs;
+//     const TlVector_BLAS rhoBs = rhoAs;
+//     const TlVector_BLAS xBs = xAs;
 
 //     DfFunctional_GGA* pFunc = this->getFunctionalGGA();
 //     // Fxc -------------------------------------------------------------
-//     TlSymmetricMatrix FxcA(numOfAOs); // alpha spin
-//     TlSymmetricMatrix FxcB(numOfAOs); // beta spin
+//     TlDenseSymmetricMatrix_BLAS_Old FxcA(numOfAOs); // alpha spin
+//     TlDenseSymmetricMatrix_BLAS_Old FxcB(numOfAOs); // beta spin
 //     {
 //         DerivativeFunctionalSets dfs =
 //         pFunc->getDerivativeFunctional_GF(rhoAs, rhoBs, xAs, xBs);
 
-//         TlVector rhoAA43(numOfGFOrthNormBasis);
-//         TlVector rhoAB43(numOfGFOrthNormBasis);
-//         TlVector rhoBB43(numOfGFOrthNormBasis);
+//         TlVector_BLAS rhoAA43(numOfGFOrthNormBasis);
+//         TlVector_BLAS rhoAB43(numOfGFOrthNormBasis);
+//         TlVector_BLAS rhoBB43(numOfGFOrthNormBasis);
 //         for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
 //             const double rhoA = lambda[i];
 //             if (rhoA > 1.0E-16) {
@@ -593,18 +608,20 @@ void DfGridFreeXC::buildFxc_GGA() {
 //             }
 //         }
 
-//         TlMatrix FxcA_tilde(numOfGFOrthNormBasis, numOfGFOrthNormBasis);
-//         TlMatrix FxcB_tilde(numOfGFOrthNormBasis, numOfGFOrthNormBasis);
-//         TlSymmetricMatrix diag_RAR(numOfGFOrthNormBasis);
-//         TlSymmetricMatrix diag_RAX(numOfGFOrthNormBasis);
-//         TlSymmetricMatrix diag_RBR(numOfGFOrthNormBasis);
-//         TlSymmetricMatrix diag_RBX(numOfGFOrthNormBasis);
-//         TlSymmetricMatrix diag_GAAR(numOfGFOrthNormBasis);
-//         TlSymmetricMatrix diag_GAAX(numOfGFOrthNormBasis);
-//         TlSymmetricMatrix diag_GABR(numOfGFOrthNormBasis);
-//         TlSymmetricMatrix diag_GABX(numOfGFOrthNormBasis);
-//         TlSymmetricMatrix diag_GBBR(numOfGFOrthNormBasis);
-//         TlSymmetricMatrix diag_GBBX(numOfGFOrthNormBasis);
+//         TlDenseGeneralMatrix_BLAS_old FxcA_tilde(numOfGFOrthNormBasis,
+//         numOfGFOrthNormBasis);
+//         TlDenseGeneralMatrix_BLAS_old FxcB_tilde(numOfGFOrthNormBasis,
+//         numOfGFOrthNormBasis);
+//         TlDenseSymmetricMatrix_BLAS_Old diag_RAR(numOfGFOrthNormBasis);
+//         TlDenseSymmetricMatrix_BLAS_Old diag_RAX(numOfGFOrthNormBasis);
+//         TlDenseSymmetricMatrix_BLAS_Old diag_RBR(numOfGFOrthNormBasis);
+//         TlDenseSymmetricMatrix_BLAS_Old diag_RBX(numOfGFOrthNormBasis);
+//         TlDenseSymmetricMatrix_BLAS_Old diag_GAAR(numOfGFOrthNormBasis);
+//         TlDenseSymmetricMatrix_BLAS_Old diag_GAAX(numOfGFOrthNormBasis);
+//         TlDenseSymmetricMatrix_BLAS_Old diag_GABR(numOfGFOrthNormBasis);
+//         TlDenseSymmetricMatrix_BLAS_Old diag_GABX(numOfGFOrthNormBasis);
+//         TlDenseSymmetricMatrix_BLAS_Old diag_GBBR(numOfGFOrthNormBasis);
+//         TlDenseSymmetricMatrix_BLAS_Old diag_GBBX(numOfGFOrthNormBasis);
 //         const int numOfTerms = pFunc->getNumOfDerivativeFunctionalTerms();
 //         for (int term = 0; term < numOfTerms; ++term) {
 //             for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
@@ -623,47 +640,62 @@ void DfGridFreeXC::buildFxc_GGA() {
 
 //             // alpha spin ------------
 //             {
-//                 const TlSymmetricMatrix Fxc_RR = U * diag_RAR * Ut;
-//                 const TlSymmetricMatrix Fxc_RX = Ux2 * diag_RAX * Ux2t;
-//                 TlMatrix Fxc_tilde_term1 = 0.5 * (Fxc_RR * Fxc_RX + Fxc_RX *
-//                 Fxc_RR); FxcA_tilde += Fxc_tilde_term1;
+//                 const TlDenseSymmetricMatrix_BLAS_Old Fxc_RR = U * diag_RAR * Ut;
+//                 const TlDenseSymmetricMatrix_BLAS_Old Fxc_RX = Ux2 * diag_RAX *
+//                 Ux2t;
+//                 TlDenseGeneralMatrix_BLAS_old Fxc_tilde_term1 = 0.5 * (Fxc_RR *
+//                 Fxc_RX
+//                 +
+//                 Fxc_RX * Fxc_RR); FxcA_tilde += Fxc_tilde_term1;
 //             }
 
-//             TlMatrix Fxc_GAA;
+//             TlDenseGeneralMatrix_BLAS_old Fxc_GAA;
 //             {
-//                 const TlMatrix Fxc_GAAR = U * diag_GAAR * Ut;
-//                 const TlMatrix Fxc_GAAX = Ux2 * diag_GAAX * Ux2t;
+//                 const TlDenseGeneralMatrix_BLAS_old Fxc_GAAR = U * diag_GAAR *
+//                 Ut;
+//                 const TlDenseGeneralMatrix_BLAS_old Fxc_GAAX = Ux2 * diag_GAAX *
+//                 Ux2t;
 //                 Fxc_GAA = 2.0 * 0.5 * (Fxc_GAAR * Fxc_GAAX + Fxc_GAAX *
 //                 Fxc_GAAR);
 //             }
 
-//             TlMatrix Fxc_GAB;
+//             TlDenseGeneralMatrix_BLAS_old Fxc_GAB;
 //             {
-//                 const TlSymmetricMatrix Fxc_GABR = U * diag_GABR * Ut;
-//                 const TlSymmetricMatrix Fxc_GABX = Ux2 * diag_GABX * Ux2t;
+//                 const TlDenseSymmetricMatrix_BLAS_Old Fxc_GABR = U * diag_GABR *
+//                 Ut;
+//                 const TlDenseSymmetricMatrix_BLAS_Old Fxc_GABX = Ux2 * diag_GABX
+//                 *
+//                 Ux2t;
 //                 Fxc_GAB = 0.5 * (Fxc_GABR * Fxc_GABX + Fxc_GABX * Fxc_GABR);
 //             }
 
-//             TlMatrix Fxc_GBB;
+//             TlDenseGeneralMatrix_BLAS_old Fxc_GBB;
 //             {
-//                 const TlSymmetricMatrix Fxc_GBBR = U * diag_GBBR * Ut;
-//                 const TlSymmetricMatrix Fxc_GBBX = Ux2 * diag_GBBX * Ux2t;
+//                 const TlDenseSymmetricMatrix_BLAS_Old Fxc_GBBR = U * diag_GBBR *
+//                 Ut;
+//                 const TlDenseSymmetricMatrix_BLAS_Old Fxc_GBBX = Ux2 * diag_GBBX
+//                 *
+//                 Ux2t;
 //                 Fxc_GBB = 2.0 * 0.5 * (Fxc_GBBR * Fxc_GBBX + Fxc_GBBX *
 //                 Fxc_GBBR);
 //             }
 
 //             {
-//                 TlMatrix FxcA_term2 = Fxc_GAA + Fxc_GAB;
-//                 TlMatrix FxcA_term2t = FxcA_term2;
-//                 FxcA_term2t.transpose();
-//                 TlMatrix FxcA_tilde_term2 = FxcA_term2t * RZ2 + RZ2t *
+//                 TlDenseGeneralMatrix_BLAS_old FxcA_term2 = Fxc_GAA + Fxc_GAB;
+//                 TlDenseGeneralMatrix_BLAS_old FxcA_term2t = FxcA_term2;
+//                 FxcA_term2t.transposeInPlace();
+//                 TlDenseGeneralMatrix_BLAS_old FxcA_tilde_term2 = FxcA_term2t *
+//                 RZ2 +
+//                 RZ2t *
 //                 FxcA_term2; FxcA_tilde += FxcA_tilde_term2;
 //             }
 //             {
-//                 TlMatrix FxcB_term2 = Fxc_GBB + Fxc_GAB;
-//                 TlMatrix FxcB_term2t = FxcB_term2;
-//                 FxcB_term2t.transpose();
-//                 TlMatrix FxcB_tilde_term2 = FxcB_term2t * RZ2 + RZ2t *
+//                 TlDenseGeneralMatrix_BLAS_old FxcB_term2 = Fxc_GBB + Fxc_GAB;
+//                 TlDenseGeneralMatrix_BLAS_old FxcB_term2t = FxcB_term2;
+//                 FxcB_term2t.transposeInPlace();
+//                 TlDenseGeneralMatrix_BLAS_old FxcB_tilde_term2 = FxcB_term2t *
+//                 RZ2 +
+//                 RZ2t *
 //                 FxcB_term2; FxcB_tilde += FxcB_tilde_term2;
 //             }
 //         }
@@ -671,22 +703,24 @@ void DfGridFreeXC::buildFxc_GGA() {
 //         FxcB = S * V * FxcB_tilde * Vt * St;
 //     }
 //     DfObject::saveFxcMatrix(RUN_RKS, this->m_nIteration,
-//     TlSymmetricMatrix(FxcA));
+//     TlDenseSymmetricMatrix_BLAS_Old(FxcA));
 
 //     // Exc -------------------------------------------------------------
-//     TlSymmetricMatrix ExcA(numOfAOs);
-//     //TlSymmetricMatrix ExcB(numOfAOs);
+//     TlDenseSymmetricMatrix_BLAS_Old ExcA(numOfAOs);
+//     //TlDenseSymmetricMatrix_BLAS_Old ExcB(numOfAOs);
 //     {
 //         const FunctionalSets fs = pFunc->getFunctional_GF(rhoAs, rhoBs, xAs,
 //         xBs);
 
-//         TlMatrix ExcA_tilde(numOfGFOrthNormBasis, numOfGFOrthNormBasis);
-//         //TlMatrix ExcB_tilde(numOfGFOrthNormBasis, numOfGFOrthNormBasis);
+//         TlDenseGeneralMatrix_BLAS_old ExcA_tilde(numOfGFOrthNormBasis,
+//         numOfGFOrthNormBasis);
+//         //TlDenseGeneralMatrix_BLAS_old ExcB_tilde(numOfGFOrthNormBasis,
+//         numOfGFOrthNormBasis);
 //         {
-//             TlSymmetricMatrix diag_AR(numOfGFOrthNormBasis);
-//             TlSymmetricMatrix diag_AX(numOfGFOrthNormBasis);
-//             //TlSymmetricMatrix diag_BR(numOfGFOrthNormBasis);
-//             //TlSymmetricMatrix diag_BX(numOfGFOrthNormBasis);
+//             TlDenseSymmetricMatrix_BLAS_Old diag_AR(numOfGFOrthNormBasis);
+//             TlDenseSymmetricMatrix_BLAS_Old diag_AX(numOfGFOrthNormBasis);
+//             //TlDenseSymmetricMatrix_BLAS_Old diag_BR(numOfGFOrthNormBasis);
+//             //TlDenseSymmetricMatrix_BLAS_Old diag_BX(numOfGFOrthNormBasis);
 //             const int numOfTerms = pFunc->getNumOfFunctionalTerms();
 //             for (int term = 0; term < numOfTerms; ++term) {
 //                 for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
@@ -700,13 +734,19 @@ void DfGridFreeXC::buildFxc_GGA() {
 //                     }
 //                 }
 
-//                 const TlSymmetricMatrix ExcA_R = U * diag_AR * Ut;
-//                 const TlSymmetricMatrix ExcA_X = Ux2 * diag_AX * Ux2t;
-//                 const TlMatrix ExcA_tilde_term = ExcA_R * ExcA_X + ExcA_X *
-//                 ExcA_R;
-//                 // const TlSymmetricMatrix ExcB_R = U * diag_BR * Ut;
-//                 // const TlSymmetricMatrix ExcB_X = Ux2 * diag_BX * Ux2t;
-//                 // const TlMatrix ExcB_tilde_term = ExcB_R * ExcB_X + ExcB_X
+//                 const TlDenseSymmetricMatrix_BLAS_Old ExcA_R = U * diag_AR * Ut;
+//                 const TlDenseSymmetricMatrix_BLAS_Old ExcA_X = Ux2 * diag_AX *
+//                 Ux2t;
+//                 const TlDenseGeneralMatrix_BLAS_old ExcA_tilde_term = ExcA_R *
+//                 ExcA_X +
+//                 ExcA_X * ExcA_R;
+//                 // const TlDenseSymmetricMatrix_BLAS_Old ExcB_R = U * diag_BR *
+//                 Ut;
+//                 // const TlDenseSymmetricMatrix_BLAS_Old ExcB_X = Ux2 * diag_BX *
+//                 Ux2t;
+//                 // const TlDenseGeneralMatrix_BLAS_old ExcB_tilde_term = ExcB_R *
+//                 ExcB_X +
+//                 ExcB_X
 //                 * ExcB_R;
 
 //                 ExcA_tilde += ExcA_tilde_term;
@@ -719,11 +759,11 @@ void DfGridFreeXC::buildFxc_GGA() {
 //         // Exc *= 2.0; // means RKS
 //     }
 //     DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration,
-//     TlSymmetricMatrix(ExcA));
+//     TlDenseSymmetricMatrix_BLAS_Old(ExcA));
 //     // DfObject::saveExcMatrix(RUN_UKS_ALPHA, this->m_nIteration,
-//     TlSymmetricMatrix(ExcA));
+//     TlDenseSymmetricMatrix_BLAS_Old(ExcA));
 //     // DfObject::saveExcMatrix(RUN_UKS_BETA,  this->m_nIteration,
-//     TlSymmetricMatrix(ExcB));
+//     TlDenseSymmetricMatrix_BLAS_Old(ExcB));
 
 //     delete pFunc;
 //     pFunc = NULL;
@@ -757,30 +797,35 @@ DfFunctional_GGA* DfGridFreeXC::getFunctionalGGA() {
   return pFunc;
 }
 
-TlMatrix DfGridFreeXC::getForce() {
+TlDenseGeneralMatrix_BLAS_old DfGridFreeXC::getForce() {
   const RUN_TYPE runType = RUN_RKS;
   const int itr = this->m_nIteration;
 
-  const TlSymmetricMatrix S = this->getSpqMatrix<TlSymmetricMatrix>();
-  const TlMatrix X = this->getXMatrix<TlMatrix>();
-  TlMatrix Xt = X;
-  Xt.transpose();
+  const TlDenseSymmetricMatrix_BLAS_Old S =
+      this->getSpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>();
+  const TlDenseGeneralMatrix_BLAS_old X =
+      this->getXMatrix<TlDenseGeneralMatrix_BLAS_old>();
+  TlDenseGeneralMatrix_BLAS_old Xt = X;
+  Xt.transposeInPlace();
 
-  // TlSymmetricMatrix P = 0.5 * this->getPpqMatrix<TlSymmetricMatrix>(RUN_RKS,
+  // TlDenseSymmetricMatrix_BLAS_Old P = 0.5 *
+  // this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(RUN_RKS,
   // itr);
-  const TlMatrix C = this->getCMatrix<TlMatrix>(runType, itr);
-  TlMatrix Ct = C;
-  Ct.transpose();
+  const TlDenseGeneralMatrix_BLAS_old C =
+      this->getCMatrix<TlDenseGeneralMatrix_BLAS_old>(runType, itr);
+  TlDenseGeneralMatrix_BLAS_old Ct = C;
+  Ct.transposeInPlace();
 
-  // TlMatrix CCt = C * Ct;
+  // TlDenseGeneralMatrix_BLAS_old CCt = C * Ct;
   // CCt.save("CCt.mat");
 
   // Exc =====================================================================
-  TlSymmetricMatrix Exc = this->getFxcMatrix<TlSymmetricMatrix>(RUN_RKS, itr);
+  TlDenseSymmetricMatrix_BLAS_Old Exc =
+      this->getFxcMatrix<TlDenseSymmetricMatrix_BLAS_Old>(RUN_RKS, itr);
   Exc.save("GF_Exc.mat");
 
   // dS ======================================================================
-  TlMatrix dx, dy, dz;
+  TlDenseGeneralMatrix_BLAS_old dx, dy, dz;
   DfOverlapX dfOvp(this->pPdfParam_);
   dfOvp.getGradient(orbitalInfo_, &dx, &dy, &dz);
   // dx.save("GF_dx.mat");
@@ -788,45 +833,45 @@ TlMatrix DfGridFreeXC::getForce() {
   // dz.save("GF_dz.mat");
 
   // 規格直交化 ==============================================================
-  // TlMatrix o_Exc = Ct * Exc;
-  TlMatrix o_Exc = Xt * Exc * X;
+  // TlDenseGeneralMatrix_BLAS_old o_Exc = Ct * Exc;
+  TlDenseGeneralMatrix_BLAS_old o_Exc = Xt * Exc * X;
   o_Exc.save("GF_o_Exc.mat");
 
-  // TlMatrix o_dx = Ct * dx;
-  // TlMatrix o_dy = Ct * dy;
-  // TlMatrix o_dz = Ct * dz;
-  TlMatrix o_dx = Xt * dx * X;
-  TlMatrix o_dy = Xt * dy * X;
-  TlMatrix o_dz = Xt * dz * X;
-  // TlMatrix o_dx = dx * C;
-  // TlMatrix o_dy = dy * C;
-  // TlMatrix o_dz = dz * C;
+  // TlDenseGeneralMatrix_BLAS_old o_dx = Ct * dx;
+  // TlDenseGeneralMatrix_BLAS_old o_dy = Ct * dy;
+  // TlDenseGeneralMatrix_BLAS_old o_dz = Ct * dz;
+  TlDenseGeneralMatrix_BLAS_old o_dx = Xt * dx * X;
+  TlDenseGeneralMatrix_BLAS_old o_dy = Xt * dy * X;
+  TlDenseGeneralMatrix_BLAS_old o_dz = Xt * dz * X;
+  // TlDenseGeneralMatrix_BLAS_old o_dx = dx * C;
+  // TlDenseGeneralMatrix_BLAS_old o_dy = dy * C;
+  // TlDenseGeneralMatrix_BLAS_old o_dz = dz * C;
   // o_dx.save("GF_o_dx.mat");
   // o_dy.save("GF_o_dy.mat");
   // o_dz.save("GF_o_dz.mat");
 
   // 積 ======================================================================
-  TlMatrix o_dxt = o_dx;
-  o_dxt.transpose();
-  TlMatrix o_dyt = o_dy;
-  o_dyt.transpose();
-  TlMatrix o_dzt = o_dz;
-  o_dzt.transpose();
+  TlDenseGeneralMatrix_BLAS_old o_dxt = o_dx;
+  o_dxt.transposeInPlace();
+  TlDenseGeneralMatrix_BLAS_old o_dyt = o_dy;
+  o_dyt.transposeInPlace();
+  TlDenseGeneralMatrix_BLAS_old o_dzt = o_dz;
+  o_dzt.transposeInPlace();
 
-  TlMatrix o_dx_Exc = o_dxt * o_Exc;
-  TlMatrix o_dy_Exc = o_dyt * o_Exc;
-  TlMatrix o_dz_Exc = o_dzt * o_Exc;
-  // TlMatrix o_dx_Exc = o_dx * o_Exc;
-  // TlMatrix o_dy_Exc = o_dy * o_Exc;
-  // TlMatrix o_dz_Exc = o_dz * o_Exc;
+  TlDenseGeneralMatrix_BLAS_old o_dx_Exc = o_dxt * o_Exc;
+  TlDenseGeneralMatrix_BLAS_old o_dy_Exc = o_dyt * o_Exc;
+  TlDenseGeneralMatrix_BLAS_old o_dz_Exc = o_dzt * o_Exc;
+  // TlDenseGeneralMatrix_BLAS_old o_dx_Exc = o_dx * o_Exc;
+  // TlDenseGeneralMatrix_BLAS_old o_dy_Exc = o_dy * o_Exc;
+  // TlDenseGeneralMatrix_BLAS_old o_dz_Exc = o_dz * o_Exc;
   // o_dx_Exc.save("GF_o_dxt_Exc.mat");
   // o_dy_Exc.save("GF_o_dyt_Exc.mat");
   // o_dz_Exc.save("GF_o_dzt_Exc.mat");
 
   // 規格直交化から戻す
-  TlMatrix SX = S * X;
-  TlMatrix SXt = SX;
-  SXt.transpose();
+  TlDenseGeneralMatrix_BLAS_old SX = S * X;
+  TlDenseGeneralMatrix_BLAS_old SXt = SX;
+  SXt.transposeInPlace();
   o_dx_Exc = SX * o_dx_Exc * SXt;
   o_dy_Exc = SX * o_dy_Exc * SXt;
   o_dz_Exc = SX * o_dz_Exc * SXt;
@@ -838,10 +883,10 @@ TlMatrix DfGridFreeXC::getForce() {
   // o_dx_Exc *= C;
   // o_dy_Exc *= C;
   // o_dz_Exc *= C;
-  TlMatrix C_mo = C;
+  TlDenseGeneralMatrix_BLAS_old C_mo = C;
   {
-    TlSymmetricMatrix E(numOfAOs);
-    TlVector currOcc;
+    TlDenseSymmetricMatrix_BLAS_Old E(numOfAOs);
+    TlVector_BLAS currOcc;
     currOcc.load(this->getOccupationPath(runType));
     for (index_type i = 0; i < numOfMOs; ++i) {
       if (std::fabs(currOcc[i] - 2.0) < 1.0E-5) {
@@ -856,10 +901,10 @@ TlMatrix DfGridFreeXC::getForce() {
 
   // 左からCをかける
   const index_type numOfAtoms = this->m_nNumOfAtoms;
-  TlMatrix force(numOfAtoms, 3);
-  TlVector Hx(numOfAOs), Hy(numOfAOs), Hz(numOfAOs);
+  TlDenseGeneralMatrix_BLAS_old force(numOfAtoms, 3);
+  TlVector_BLAS Hx(numOfAOs), Hy(numOfAOs), Hz(numOfAOs);
   {
-    TlVector currOcc;
+    TlVector_BLAS currOcc;
     currOcc.load(this->getOccupationPath(runType));
     for (int i = 0; i < numOfMOs; ++i) {
       if (std::fabs(currOcc[i] - 2.0) < 1.0E-5) {
@@ -914,12 +959,12 @@ TlMatrix DfGridFreeXC::getForce() {
   return force;
 }
 
-TlMatrix DfGridFreeXC::selectGradMat(const TlMatrix& input,
-                                     const int atomIndex) {
+TlDenseGeneralMatrix_BLAS_old DfGridFreeXC::selectGradMat(
+    const TlDenseGeneralMatrix_BLAS_old& input, const int atomIndex) {
   const index_type numOfAOs = this->m_nNumOfAOs;
   assert(input.getNumOfRows() == numOfAOs);
   assert(input.getNumOfCols() == numOfAOs);
-  TlMatrix output(numOfAOs, numOfAOs);
+  TlDenseGeneralMatrix_BLAS_old output(numOfAOs, numOfAOs);
   for (index_type p = 0; p < numOfAOs; ++p) {
     if (this->orbitalInfo_.getAtomIndex(p) == atomIndex) {
       for (index_type q = 0; q < numOfAOs; ++q) {

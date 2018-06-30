@@ -26,8 +26,8 @@
 #include "TlMsgPack.h"
 #include "TlOrbitalInfo.h"
 #include "TlSerializeData.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
 
 #define AU_BOHR 1.889762
 
@@ -79,7 +79,8 @@ void showHelp(const std::string& name) {
 
 /// MO モード
 /// topに-1が指定された場合は、全軌道が出力される
-int exec_MO_mode(const TlMatrix& SC, const TlMatrix& C,
+int exec_MO_mode(const TlDenseGeneralMatrix_BLAS_old& SC,
+                 const TlDenseGeneralMatrix_BLAS_old& C,
                  const TlOrbitalInfo& readOrbInfo, int level, int top,
                  bool isVerbose = false) {
   // MO mode -------------------------------------------------------------
@@ -99,7 +100,7 @@ int exec_MO_mode(const TlMatrix& SC, const TlMatrix& C,
   }
 
   // MO
-  const TlVector MO = C.getColVector(level);
+  const TlVector_BLAS MO = C.getColVector(level);
   std::vector<LCAO> AOs(numOfAOs);
   double sum = 0.0;
   for (int i = 0; i < numOfAOs; ++i) {
@@ -146,7 +147,8 @@ int exec_MO_mode(const TlMatrix& SC, const TlMatrix& C,
   return EXIT_SUCCESS;
 }
 
-int exec_atom_mode(const TlMatrix& SC, const TlMatrix& C,
+int exec_atom_mode(const TlDenseGeneralMatrix_BLAS_old& SC,
+                   const TlDenseGeneralMatrix_BLAS_old& C,
                    const TlOrbitalInfo& readOrbInfo, int inputAtomIndex,
                    const double threshold, bool isVerbose = false) {
   const int numOfAOs = C.getNumOfRows();
@@ -158,7 +160,7 @@ int exec_atom_mode(const TlMatrix& SC, const TlMatrix& C,
 
   std::vector<int> pickupMO;
   for (int MO = 0; MO < numOfMOs; ++MO) {
-    const TlVector MO_vec = C.getColVector(MO);
+    const TlVector_BLAS MO_vec = C.getColVector(MO);
 
     if (isVerbose) {
       std::cerr << TlUtils::format("check %5dth MO ...", MO) << std::endl;
@@ -185,14 +187,15 @@ int exec_atom_mode(const TlMatrix& SC, const TlMatrix& C,
   return EXIT_SUCCESS;
 }
 
-int exec_save_mode(const TlMatrix& SC, const TlMatrix& C,
+int exec_save_mode(const TlDenseGeneralMatrix_BLAS_old& SC,
+                   const TlDenseGeneralMatrix_BLAS_old& C,
                    const std::string& savePath, bool isVerbose = false) {
   if (isVerbose) {
     std::cerr << "calc matrix..." << std::endl;
   }
 
-  TlMatrix CSC = SC;
-  CSC.dot(C);
+  TlDenseGeneralMatrix_BLAS_old CSC = SC;
+  CSC.dotInPlace(C);
 
   if (isVerbose) {
     std::cerr << TlUtils::format("save matrix: %s", savePath.c_str())
@@ -275,7 +278,7 @@ int main(int argc, char* argv[]) {
   if (Spq_path.empty()) {
     Spq_path = dfObj.getSpqMatrixPath();
   }
-  TlSymmetricMatrix S;
+  TlDenseSymmetricMatrix_BLAS_Old S;
   if (isVerbose == true) {
     std::cout << TlUtils::format("read Spq: %s", Spq_path.c_str()) << std::endl;
   }
@@ -285,7 +288,7 @@ int main(int argc, char* argv[]) {
   if (LCAO_path.empty()) {
     LCAO_path = dfObj.getCMatrixPath(DfObject::RUN_RKS, lastIteration);
   }
-  TlMatrix C;
+  TlDenseGeneralMatrix_BLAS_old C;
   if (isVerbose == true) {
     std::cout << TlUtils::format("read LCAO: %s", LCAO_path.c_str())
               << std::endl;
@@ -297,7 +300,7 @@ int main(int argc, char* argv[]) {
               << std::endl;
   }
 
-  const TlMatrix SC = S * C;
+  const TlDenseGeneralMatrix_BLAS_old SC = S * C;
 
   int answer = 0;
   switch (execMode) {

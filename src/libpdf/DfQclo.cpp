@@ -24,9 +24,9 @@
 #include "DfTransatob.h"
 #include "Fl_Fragment.h"
 #include "Fl_Tbl_Fragment.h"
-#include "TlMatrix.h"
 #include "TlUtils.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_vector_blas.h"
 
 DfQclo::DfQclo(TlSerializeData* pPdfParam, int num_iter, bool bExecDiis)
     : DfObject(pPdfParam),
@@ -149,11 +149,11 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration) {
   }
 
   // combine Cqclo matrix of each matrix
-  TlMatrix A(this->m_nNumOfAOs, number_dimension_mo);
+  TlDenseGeneralMatrix_BLAS_old A(this->m_nNumOfAOs, number_dimension_mo);
   for (int frag = 0; frag < this->number_fragment; frag++) {
     const std::string fname = "fl_Mtr_C.matrix.frag" + TlUtils::xtos(frag) +
                               "." + runtype + TlUtils::xtos(iteration);
-    TlMatrix B;
+    TlDenseGeneralMatrix_BLAS_old B;
     B.load(fname);
 
     if (B.getNumOfRows() != this->m_nNumOfAOs ||
@@ -180,7 +180,7 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration) {
         mo = Tfrag.getQcloBeta(frag, qclo);
       }
       for (int basis = 0; basis < this->m_nNumOfAOs; ++basis) {
-        A(basis, mo) = B(basis, qclo);
+        A.set(basis, mo, B.get(basis, qclo));
       }
     }
   }
@@ -195,7 +195,7 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration) {
   A.save("fl_Mtr_C.matrix." + runtype + TlUtils::xtos(iteration));
 
   // read eigenvalue of each fragment
-  std::vector<TlVector> eigval_frag(this->number_fragment);
+  std::vector<TlVector_BLAS> eigval_frag(this->number_fragment);
   {
     for (int frag = 0; frag < this->number_fragment; frag++) {
       eigval_frag[frag].load("fl_Work/fl_Vct_Eigval.frag" +
@@ -207,7 +207,7 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration) {
   }
 
   // merge eigenvalue
-  TlVector eigval(number_dimension_mo);
+  TlVector_BLAS eigval(number_dimension_mo);
   {
     int mo = 0;
     for (int frag = 0; frag < this->number_fragment; frag++) {
@@ -224,7 +224,10 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration) {
       if (eigval[j] > eigval[j + 1]) {
         std::swap(eigval[j], eigval[j + 1]);
         for (int k = 0; k < this->m_nNumOfAOs; ++k) {
-          std::swap(A(k, j), A(k, j + 1));
+          // swap
+          double tmp = A.get(k, j);
+          A.set(k, j, A.get(k, j + 1));
+          A.set(k, j + 1, tmp);
         }
       }
     }
@@ -262,7 +265,7 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration) {
 
   for (int i = 0; i < this->m_nNumOfAOs; ++i) {
     for (int j = 0; j < number_dimension_mo; j++) {
-      fo << TlUtils::format(" %10.6lf", A(i, j));
+      fo << TlUtils::format(" %10.6lf", A.get(i, j));
     }
     fo << "\n";
   }

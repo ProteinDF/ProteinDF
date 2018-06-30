@@ -20,8 +20,9 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_matrix_utils.h"
 
 void showHelp() {
   std::cout
@@ -54,11 +55,12 @@ int main(int argc, char* argv[]) {
     std::cerr << "load matrix: " << inputMatrixPath1 << std::endl;
   }
 
-  TlMatrix A;
-  if (TlMatrix::isLoadable(inputMatrixPath1)) {
+  TlDenseGeneralMatrix_BLAS_old A;
+  if (TlMatrixUtils::isLoadable(inputMatrixPath1, TlMatrixObject::CSFD)) {
     A.load(inputMatrixPath1);
-  } else if (TlSymmetricMatrix::isLoadable(inputMatrixPath1)) {
-    TlSymmetricMatrix tmp;
+  } else if (TlMatrixUtils::isLoadable(inputMatrixPath1,
+                                       TlMatrixObject::RLHD)) {
+    TlDenseSymmetricMatrix_BLAS_Old tmp;
     tmp.load(inputMatrixPath1);
     A = tmp;
   } else {
@@ -69,11 +71,12 @@ int main(int argc, char* argv[]) {
   if (bVerbose == true) {
     std::cerr << "load matrix: " << inputMatrixPath2 << std::endl;
   }
-  TlMatrix B;
-  if (TlMatrix::isLoadable(inputMatrixPath2)) {
+  TlDenseGeneralMatrix_BLAS_old B;
+  if (TlMatrixUtils::isLoadable(inputMatrixPath2, TlMatrixObject::CSFD)) {
     B.load(inputMatrixPath2);
-  } else if (TlSymmetricMatrix::isLoadable(inputMatrixPath2)) {
-    TlSymmetricMatrix tmp;
+  } else if (TlMatrixUtils::isLoadable(inputMatrixPath2,
+                                       TlMatrixObject::RLHD)) {
+    TlDenseSymmetricMatrix_BLAS_Old tmp;
     tmp.load(inputMatrixPath2);
     B = tmp;
   } else {
@@ -85,7 +88,7 @@ int main(int argc, char* argv[]) {
     std::cerr << "running..." << std::endl;
   }
 
-  TlMatrix C = A * B;
+  TlDenseGeneralMatrix_BLAS_old C = A * B;
 
   if (bVerbose == true) {
     std::cerr << "save matrix: " << outputMatrixPath << std::endl;

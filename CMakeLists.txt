@@ -29,6 +29,10 @@ include(CheckIncludeFile)
 #set(CMAKE_VERBOSE_MAKEFILE 1)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake-modules")
 
+# C++ compiler
+if(NOT "${CMAKE_CXX_STANDARD}")
+  set(CMAKE_CXX_STANDARD 11)
+endif()
 
 # check compiler flags
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
@@ -55,10 +59,20 @@ find_package(OpenMP)
 if (OPENMP_FOUND)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  add_definitions(-DVIENNACL_WITH_OPENMP)
 endif(OPENMP_FOUND)
 
 
 # check linear algebra package
+find_package(Eigen3)
+if (EIGEN3_FOUND)
+  message("Eigen3 information:")
+  message("  EIGEN3_INCLUDE_DIR: ${EIGEN3_INCLUDE_DIR}")
+  message("  EIGEN3_VERSION: ${EIGEN3_VERSION}")
+
+  set(HAVE_EIGEN3 1) # for config.h
+endif(EIGEN3_FOUND)
+
 find_package(BLAS REQUIRED)
 if (BLAS_FOUND)
   #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
@@ -70,6 +84,7 @@ if (BLAS_FOUND)
   message("  BLA_STATIC: ${BLA_STATIC}")
   message("  BLAS_LINKER_FLAGS: ${BLAS_LINKER_FLAGS}")
   message("  BLAS_LIBRARIES: ${BLAS_LIBRARIES}")
+
   set(HAVE_BLAS 1) # for config.h
 endif(BLAS_FOUND)
 
@@ -82,8 +97,29 @@ if (LAPACK_FOUND)
   message("LAPACK information:")
   message("  LAPACK_LINKER_FLAGS: ${LAPACK_LINKER_FLAGS}")
   message("  LAPACK_LIBRARIES: ${LAPACK_LIBRARIES}")
+
   set(HAVE_LAPACK 1) # for config.h
 endif(LAPACK_FOUND)
+
+
+# check ViennaCL
+find_package(ViennaCL)
+if (VIENNACL_FOUND)
+  message("ViennaCL information:")
+  message("  VIENNACL_INCLUDE_DIR: ${VIENNACL_INCLUDE_DIR}")
+
+  add_definitions(-DVIENNACL_WITH_OPENCL)
+  set(HAVE_VIENNACL 1) # for config.h
+endif(VIENNACL_FOUND)
+
+
+# for OpenCL
+find_package(OpenCL)
+if (OpenCL_FOUND)
+  include_directories(${OpenCL_INCLUDE_DIRS})
+
+  set(HAVE_OPENCL 1) # for config.h
+endif (OpenCL_FOUND)
 
 
 # check MPI
@@ -135,11 +171,12 @@ endif(SCALAPACK_FOUND)
 find_package(HDF5 COMPONENTS C CXX)
 if (HDF5_FOUND)
   include_directories(${HDF5_INCLUDE_DIRS})
-  set(HAVE_HDF5 1)
   message("HDF5 information:")
   message("  HDF5_LIBRARIES: ${HDF5_LIBRARIES}")
   message("  HDF5_HL_LIBRARIES: ${HDF5_HL_LIBRARIES}")
   message("  HDF5_CPP_LIBRARIES: ${HDF5_CPP_LIBRARIES}")
+
+  set(HAVE_HDF5 1) # for config.h
 endif(HDF5_FOUND)
 
 

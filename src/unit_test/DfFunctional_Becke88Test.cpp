@@ -1,6 +1,6 @@
+#include "DfFunctional_Becke88.h"
 #include <string>
 #include <vector>
-#include "DfFunctional_Becke88.h"
 #include "gtest/gtest.h"
 
 const double EPS = 1.0E-5;

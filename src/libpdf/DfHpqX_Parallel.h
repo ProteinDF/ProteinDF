@@ -20,7 +20,8 @@
 #define DFHPQX_PARALLEL_H
 
 #include "DfHpqX.h"
-#include "TlDistributeSymmetricMatrix.h"
+
+class TlDenseSymmetricMatrix_blacs;
 
 class DfHpqX_Parallel : public DfHpqX {
  public:
@@ -28,15 +29,16 @@ class DfHpqX_Parallel : public DfHpqX {
   virtual ~DfHpqX_Parallel();
 
  public:
-  void getHpqD(TlDistributeSymmetricMatrix* pHpq,
-               TlDistributeSymmetricMatrix* pHpq2);
+  void getHpqD(TlDenseSymmetricMatrix_blacs* pHpq,
+               TlDenseSymmetricMatrix_blacs* pHpq2);
 
  protected:
   virtual void logger(const std::string& str) const;
 
   virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
-  virtual void finalize(TlSymmetricMatrix* pHpq, TlSymmetricMatrix* pHpq2);
+  virtual void finalize(TlDenseSymmetricMatrix_BLAS_Old* pHpq,
+                        TlDenseSymmetricMatrix_BLAS_Old* pHpq2);
 };
 
 #endif  // DFHPQX_PARALLEL_H

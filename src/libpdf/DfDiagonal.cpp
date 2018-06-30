@@ -22,8 +22,8 @@
 
 #include "CnError.h"
 #include "DfDiagonal.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
 
 DfDiagonal::DfDiagonal(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {}
 
@@ -33,16 +33,20 @@ void DfDiagonal::DfDiagMain() {
   // output informations
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      this->main<TlMatrix, TlSymmetricMatrix>(RUN_RKS);
+      this->main<TlDenseGeneralMatrix_BLAS_old, TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_RKS);
       break;
 
     case METHOD_UKS:
-      this->main<TlMatrix, TlSymmetricMatrix>(RUN_UKS_ALPHA);
-      this->main<TlMatrix, TlSymmetricMatrix>(RUN_UKS_BETA);
+      this->main<TlDenseGeneralMatrix_BLAS_old, TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_UKS_ALPHA);
+      this->main<TlDenseGeneralMatrix_BLAS_old, TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_UKS_BETA);
       break;
 
     case METHOD_ROKS:
-      this->main<TlMatrix, TlSymmetricMatrix>(RUN_ROKS);
+      this->main<TlDenseGeneralMatrix_BLAS_old, TlDenseSymmetricMatrix_BLAS_Old>(
+          RUN_ROKS);
       break;
 
     default:
@@ -56,5 +60,6 @@ void DfDiagonal::DfDiagMain() {
 void DfDiagonal::DfDiagQclo(DfObject::RUN_TYPE runType,
                             const std::string& fragname, int norbcut) {
   this->m_nNumOfMOs = norbcut;
-  this->main<TlMatrix, TlSymmetricMatrix>(runType, fragname, true);
+  this->main<TlDenseGeneralMatrix_BLAS_old, TlDenseSymmetricMatrix_BLAS_Old>(
+      runType, fragname, true);
 }

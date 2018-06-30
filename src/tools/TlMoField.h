@@ -23,7 +23,7 @@
 #include "TlOrbitalInfo.h"
 #include "TlPosition.h"
 #include "TlSerializeData.h"
-#include "TlVector.h"
+#include "tl_dense_vector_blas.h"
 
 class TlFieldData_Uniform;
 
@@ -32,7 +32,7 @@ class TlMoField {
   TlMoField(const TlSerializeData& param);
   ~TlMoField();
 
-  std::vector<double> makeMoFld(const TlVector& MO,
+  std::vector<double> makeMoFld(const TlVector_BLAS& MO,
                                 const std::vector<TlPosition>& grids);
 
  protected:

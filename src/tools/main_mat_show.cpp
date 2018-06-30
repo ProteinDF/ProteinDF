@@ -20,8 +20,9 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_matrix_utils.h"
 
 int main(int argc, char* argv[]) {
   TlGetopt opt(argc, argv, "ghv");
@@ -34,8 +35,8 @@ int main(int argc, char* argv[]) {
     std::cerr << "loading... " << sPath << std::endl;
   }
 
-  if (TlSymmetricMatrix::isLoadable(sPath) == true) {
-    TlSymmetricMatrix M;
+  if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::RLHD) == true) {
+    TlDenseSymmetricMatrix_BLAS_Old M;
     M.load(sPath);
 
     if (bGuessMode == true) {
@@ -43,8 +44,8 @@ int main(int argc, char* argv[]) {
     } else {
       M.print(std::cout);
     }
-  } else if (TlMatrix::isLoadable(sPath) == true) {
-    TlMatrix M;
+  } else if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::CSFD) == true) {
+    TlDenseGeneralMatrix_BLAS_old M;
     M.load(sPath);
 
     if (bGuessMode == true) {

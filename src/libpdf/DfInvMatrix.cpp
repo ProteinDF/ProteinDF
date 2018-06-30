@@ -17,7 +17,7 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfInvMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
 
 DfInvMatrix::DfInvMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
   const TlSerializeData& pdfParam = *pPdfParam;
@@ -29,4 +29,4 @@ DfInvMatrix::DfInvMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
 
 DfInvMatrix::~DfInvMatrix() {}
 
-void DfInvMatrix::DfInvMain() { this->exec<TlSymmetricMatrix>(); }
+void DfInvMatrix::DfInvMain() { this->exec<TlDenseSymmetricMatrix_BLAS_Old>(); }

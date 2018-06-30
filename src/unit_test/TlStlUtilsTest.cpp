@@ -1,6 +1,6 @@
+#include "TlStlUtils.h"
 #include <string>
 #include <vector>
-#include "TlStlUtils.h"
 #include "gtest/gtest.h"
 
 TEST(TlStlUtils, cache) {

@@ -21,12 +21,11 @@
 
 #include "DfDensityFittingObject.h"
 #include "DfEriX_Parallel.h"
-#include "TlDistributeSymmetricMatrix.h"
-#include "TlDistributeVector.h"
+#include "tl_dense_vector_blacs.h"
 
 // LAPACK版
 class DfDensityFittingX_Parallel
-    : public DfDensityFittingTmpl<TlSymmetricMatrix, TlVector,
+    : public DfDensityFittingTmpl<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS,
                                   DfEriX_Parallel> {
  public:
   DfDensityFittingX_Parallel(TlSerializeData* pPdfParam);
@@ -35,17 +34,20 @@ class DfDensityFittingX_Parallel
   void exec();
 
  protected:
-  virtual TlVector getNalpha();
-  virtual TlSymmetricMatrix getSabinv();
-  virtual TlVector calcTAlpha_DIRECT(const TlSymmetricMatrix& P);
-  virtual TlVector getTalpha(RUN_TYPE runType, const int iteration);
-  virtual void getTalpha_ROKS(TlVector* pT_alphaA, TlVector* pT_alphaB);
-  virtual TlSymmetricMatrix getDiffDensityMatrix(RUN_TYPE runType);
-  virtual TlSymmetricMatrix getP1pq(const int nIteration);
-  virtual TlSymmetricMatrix getP2pq(const int nIteration);
-  virtual double getLamda(const TlVector& SabinvN, const TlVector& t_alpha,
-                          const TlVector& N_alpha, const double dNumOfElec);
-  virtual void saveRho(const TlVector& rRho, RUN_TYPE runType);
+  virtual TlVector_BLAS getNalpha();
+  virtual TlDenseSymmetricMatrix_BLAS_Old getSabinv();
+  virtual TlVector_BLAS calcTAlpha_DIRECT(const TlDenseSymmetricMatrix_BLAS_Old& P);
+  virtual TlVector_BLAS getTalpha(RUN_TYPE runType, const int iteration);
+  virtual void getTalpha_ROKS(TlVector_BLAS* pT_alphaA,
+                              TlVector_BLAS* pT_alphaB);
+  virtual TlDenseSymmetricMatrix_BLAS_Old getDiffDensityMatrix(RUN_TYPE runType);
+  virtual TlDenseSymmetricMatrix_BLAS_Old getP1pq(const int nIteration);
+  virtual TlDenseSymmetricMatrix_BLAS_Old getP2pq(const int nIteration);
+  virtual double getLamda(const TlVector_BLAS& SabinvN,
+                          const TlVector_BLAS& t_alpha,
+                          const TlVector_BLAS& N_alpha,
+                          const double dNumOfElec);
+  virtual void saveRho(const TlVector_BLAS& rRho, RUN_TYPE runType);
 };
 
 #endif  // DFDENSITYFITTINGX_PARALLEL_H

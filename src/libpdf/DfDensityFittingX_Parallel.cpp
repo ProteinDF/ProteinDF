@@ -20,28 +20,26 @@
 
 #include "DfDensityFittingX_Parallel.h"
 #include "TlCommunicate.h"
-
-#include "TlDistributeSymmetricMatrix.h"
-#include "TlDistributeVector.h"
 #include "TlFile.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_vector_blacs.h"
 
 // LAPACK ==============================================================
 DfDensityFittingX_Parallel::DfDensityFittingX_Parallel(
     TlSerializeData* pPdfParam)
-    : DfDensityFittingTmpl<TlSymmetricMatrix, TlVector, DfEriX_Parallel>(
-          pPdfParam) {}
+    : DfDensityFittingTmpl<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS,
+                           DfEriX_Parallel>(pPdfParam) {}
 
 DfDensityFittingX_Parallel::~DfDensityFittingX_Parallel() {}
 
 void DfDensityFittingX_Parallel::exec() { this->calc(); }
 
-TlVector DfDensityFittingX_Parallel::getNalpha() {
+TlVector_BLAS DfDensityFittingX_Parallel::getNalpha() {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  TlVector Nalpha;
+  TlVector_BLAS Nalpha;
   if (rComm.isMaster() == true) {
-    Nalpha = DfDensityFittingTmpl<TlSymmetricMatrix, TlVector,
+    Nalpha = DfDensityFittingTmpl<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS,
                                   DfEriX_Parallel>::getNalpha();
   }
   rComm.broadcast(Nalpha);
@@ -49,12 +47,12 @@ TlVector DfDensityFittingX_Parallel::getNalpha() {
   return Nalpha;
 }
 
-TlSymmetricMatrix DfDensityFittingX_Parallel::getSabinv() {
+TlDenseSymmetricMatrix_BLAS_Old DfDensityFittingX_Parallel::getSabinv() {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  TlSymmetricMatrix Sabinv;
+  TlDenseSymmetricMatrix_BLAS_Old Sabinv;
   if (rComm.isMaster() == true) {
-    Sabinv = DfDensityFittingTmpl<TlSymmetricMatrix, TlVector,
+    Sabinv = DfDensityFittingTmpl<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS,
                                   DfEriX_Parallel>::getSabinv();
   }
   rComm.broadcast(Sabinv);
@@ -62,20 +60,20 @@ TlSymmetricMatrix DfDensityFittingX_Parallel::getSabinv() {
   return Sabinv;
 }
 
-TlVector DfDensityFittingX_Parallel::calcTAlpha_DIRECT(
-    const TlSymmetricMatrix& P) {
-  return DfDensityFittingTmpl<TlSymmetricMatrix, TlVector,
+TlVector_BLAS DfDensityFittingX_Parallel::calcTAlpha_DIRECT(
+    const TlDenseSymmetricMatrix_BLAS_Old& P) {
+  return DfDensityFittingTmpl<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS,
                               DfEriX_Parallel>::calcTAlpha_DIRECT(P);
 }
 
-TlVector DfDensityFittingX_Parallel::getTalpha(const RUN_TYPE runType,
-                                               const int iteration) {
+TlVector_BLAS DfDensityFittingX_Parallel::getTalpha(const RUN_TYPE runType,
+                                                    const int iteration) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  TlVector flVctTalpha;
+  TlVector_BLAS flVctTalpha;
   if (rComm.isMaster() == true) {
     flVctTalpha =
-        DfDensityFittingTmpl<TlSymmetricMatrix, TlVector,
+        DfDensityFittingTmpl<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS,
                              DfEriX_Parallel>::getTalpha(runType, iteration);
   }
   rComm.broadcast(flVctTalpha);
@@ -83,12 +81,12 @@ TlVector DfDensityFittingX_Parallel::getTalpha(const RUN_TYPE runType,
   return flVctTalpha;
 }
 
-void DfDensityFittingX_Parallel::getTalpha_ROKS(TlVector* pT_alphaA,
-                                                TlVector* pT_alphaB) {
+void DfDensityFittingX_Parallel::getTalpha_ROKS(TlVector_BLAS* pT_alphaA,
+                                                TlVector_BLAS* pT_alphaB) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
   if (rComm.isMaster() == true) {
-    DfDensityFittingTmpl<TlSymmetricMatrix, TlVector,
+    DfDensityFittingTmpl<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS,
                          DfEriX_Parallel>::getTalpha_ROKS(pT_alphaA, pT_alphaB);
   }
 
@@ -96,13 +94,13 @@ void DfDensityFittingX_Parallel::getTalpha_ROKS(TlVector* pT_alphaA,
   rComm.broadcast(*pT_alphaB);
 }
 
-TlSymmetricMatrix DfDensityFittingX_Parallel::getDiffDensityMatrix(
+TlDenseSymmetricMatrix_BLAS_Old DfDensityFittingX_Parallel::getDiffDensityMatrix(
     RUN_TYPE runType) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  TlSymmetricMatrix diffP;
+  TlDenseSymmetricMatrix_BLAS_Old diffP;
   if (rComm.isMaster() == true) {
-    diffP = DfObject::getDiffDensityMatrix<TlSymmetricMatrix>(
+    diffP = DfObject::getDiffDensityMatrix<TlDenseSymmetricMatrix_BLAS_Old>(
         runType, this->m_nIteration);
   }
   rComm.broadcast(diffP);
@@ -110,12 +108,13 @@ TlSymmetricMatrix DfDensityFittingX_Parallel::getDiffDensityMatrix(
   return diffP;
 }
 
-TlSymmetricMatrix DfDensityFittingX_Parallel::getP1pq(const int nIteration) {
+TlDenseSymmetricMatrix_BLAS_Old DfDensityFittingX_Parallel::getP1pq(
+    const int nIteration) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  TlSymmetricMatrix P;
+  TlDenseSymmetricMatrix_BLAS_Old P;
   if (rComm.isMaster() == true) {
-    P = DfDensityFittingTmpl<TlSymmetricMatrix, TlVector,
+    P = DfDensityFittingTmpl<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS,
                              DfEriX_Parallel>::getP1pq(nIteration);
   }
   rComm.broadcast(P);
@@ -123,12 +122,13 @@ TlSymmetricMatrix DfDensityFittingX_Parallel::getP1pq(const int nIteration) {
   return P;
 }
 
-TlSymmetricMatrix DfDensityFittingX_Parallel::getP2pq(const int nIteration) {
+TlDenseSymmetricMatrix_BLAS_Old DfDensityFittingX_Parallel::getP2pq(
+    const int nIteration) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  TlSymmetricMatrix P;
+  TlDenseSymmetricMatrix_BLAS_Old P;
   if (rComm.isMaster() == true) {
-    P = DfDensityFittingTmpl<TlSymmetricMatrix, TlVector,
+    P = DfDensityFittingTmpl<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS,
                              DfEriX_Parallel>::getP2pq(nIteration);
   }
   rComm.broadcast(P);
@@ -136,16 +136,16 @@ TlSymmetricMatrix DfDensityFittingX_Parallel::getP2pq(const int nIteration) {
   return P;
 }
 
-double DfDensityFittingX_Parallel::getLamda(const TlVector& SabinvN,
-                                            const TlVector& t_alpha,
-                                            const TlVector& N_alpha,
+double DfDensityFittingX_Parallel::getLamda(const TlVector_BLAS& SabinvN,
+                                            const TlVector_BLAS& t_alpha,
+                                            const TlVector_BLAS& N_alpha,
                                             const double dNumOfElec) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
   double dAnswer;
   if (rComm.isMaster() == true) {
     dAnswer =
-        DfDensityFittingTmpl<TlSymmetricMatrix, TlVector,
+        DfDensityFittingTmpl<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS,
                              DfEriX_Parallel>::getLamda(SabinvN, t_alpha,
                                                         N_alpha, dNumOfElec);
   }
@@ -154,13 +154,13 @@ double DfDensityFittingX_Parallel::getLamda(const TlVector& SabinvN,
   return dAnswer;
 }
 
-void DfDensityFittingX_Parallel::saveRho(const TlVector& rRho,
+void DfDensityFittingX_Parallel::saveRho(const TlVector_BLAS& rRho,
                                          const RUN_TYPE runType) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
   if (rComm.isMaster() == true) {
-    DfDensityFittingTmpl<TlSymmetricMatrix, TlVector, DfEriX_Parallel>::saveRho(
-        rRho, runType);
+    DfDensityFittingTmpl<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS,
+                         DfEriX_Parallel>::saveRho(rRho, runType);
   }
   rComm.barrier();
 }

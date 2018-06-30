@@ -85,9 +85,9 @@ void DfFunctional_Slater::getDerivativeFunctional(const double dRhoA,
 }
 
 // -------
-TlMatrix DfFunctional_Slater::getFunctionalCore(const double rhoA,
-                                                const double rhoB) {
-  TlMatrix answer(F_DIM, this->getNumOfFunctionalTerms());
+TlDenseGeneralMatrix_BLAS_old DfFunctional_Slater::getFunctionalCore(
+    const double rhoA, const double rhoB) {
+  TlDenseGeneralMatrix_BLAS_old answer(F_DIM, this->getNumOfFunctionalTerms());
   assert(this->getNumOfFunctionalTerms() == 1);
 
   const double rhoA43 = std::pow(rhoA, M_4_3);
@@ -107,9 +107,10 @@ TlMatrix DfFunctional_Slater::getFunctionalCore(const double rhoA,
   return answer;
 }
 
-TlMatrix DfFunctional_Slater::getDerivativeFunctionalCore(const double rhoA,
-                                                          const double rhoB) {
-  TlMatrix answer(D_DIM, this->getNumOfDerivativeFunctionalTerms());
+TlDenseGeneralMatrix_BLAS_old DfFunctional_Slater::getDerivativeFunctionalCore(
+    const double rhoA, const double rhoB) {
+  TlDenseGeneralMatrix_BLAS_old answer(D_DIM,
+                                   this->getNumOfDerivativeFunctionalTerms());
   assert(this->getNumOfFunctionalTerms() == 1);
 
   // roundF_roundRho =========================================================

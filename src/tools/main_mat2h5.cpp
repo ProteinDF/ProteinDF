@@ -4,8 +4,7 @@
 
 #include "TlGetopt.h"
 #include "TlHdf5Utils.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_general_matrix_blas_old.h"
 
 void showHelp(const std::string& progname) {
   std::cout << TlUtils::format("%s [options] MATRIX_FILE HDF5_FILE",
@@ -26,7 +25,7 @@ int main(int argc, char* argv[]) {
   std::string mat_path = opt[1];
   std::string hdf5_path = opt[2];
 
-  TlMatrix mat;
+  TlDenseGeneralMatrix_BLAS_old mat;
   mat.load(mat_path);
 
   TlHdf5Utils h5(hdf5_path);

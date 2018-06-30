@@ -1,6 +1,6 @@
+#include "TlStringTokenizer.h"
 #include <string>
 #include <vector>
-#include "TlStringTokenizer.h"
 #include "gtest/gtest.h"
 
 TEST(TlStringTokenizer, countTokens) {

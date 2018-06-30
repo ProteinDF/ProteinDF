@@ -76,7 +76,7 @@ DfCalcGridX::DfCalcGridX(TlSerializeData* pPdfParam)
 
 DfCalcGridX::~DfCalcGridX() {}
 
-void DfCalcGridX::defineCutOffValues(const TlSymmetricMatrix& P) {
+void DfCalcGridX::defineCutOffValues(const TlDenseSymmetricMatrix_BLAS_Old& P) {
   const double maxValueOfP = std::max(P.getMaxAbsoluteElement(), 1.0E-16);
   if (maxValueOfP < 1.0) {
     this->m_densityCutOffValueA /= maxValueOfP;
@@ -85,8 +85,8 @@ void DfCalcGridX::defineCutOffValues(const TlSymmetricMatrix& P) {
                                   this->m_densityCutOffValueA));
 }
 
-void DfCalcGridX::defineCutOffValues(const TlSymmetricMatrix& PA,
-                                     const TlSymmetricMatrix& PB) {
+void DfCalcGridX::defineCutOffValues(const TlDenseSymmetricMatrix_BLAS_Old& PA,
+                                     const TlDenseSymmetricMatrix_BLAS_Old& PB) {
   const double maxValueOfPA = std::max(PA.getMaxAbsoluteElement(), 1.0E-16);
   const double maxValueOfPB = std::max(PB.getMaxAbsoluteElement(), 1.0E-16);
   if (maxValueOfPA < 1.0) {
@@ -1022,7 +1022,7 @@ void DfCalcGridX::buildFock(std::vector<WFGrid>::const_iterator pBegin,
   }
 }
 
-void DfCalcGridX::gridDensity(const TlSymmetricMatrix& PA,
+void DfCalcGridX::gridDensity(const TlDenseSymmetricMatrix_BLAS_Old& PA,
                               const TlPosition& gridPosition, double* pRhoA) {
   std::vector<double> AO_values;
   this->getAOs(gridPosition, &AO_values);
@@ -1030,8 +1030,8 @@ void DfCalcGridX::gridDensity(const TlSymmetricMatrix& PA,
   this->getRhoAtGridPoint(PA, AO_values, pRhoA);
 }
 
-TlMatrix DfCalcGridX::selectGridMatrixByAtom(const TlMatrix& globalGridMat,
-                                             const int atomIndex) {
+TlDenseGeneralMatrix_BLAS_old DfCalcGridX::selectGridMatrixByAtom(
+    const TlDenseGeneralMatrix_BLAS_old& globalGridMat, const int atomIndex) {
   const index_type numOfGrids = globalGridMat.getNumOfRows();
   const double atomIndex_real = double(atomIndex);
   std::vector<index_type> finder;
@@ -1045,7 +1045,7 @@ TlMatrix DfCalcGridX::selectGridMatrixByAtom(const TlMatrix& globalGridMat,
 
   const index_type numOfFinds = finder.size();
   const index_type numOfCols = globalGridMat.getNumOfCols();
-  TlMatrix answer(numOfFinds, numOfCols);
+  TlDenseGeneralMatrix_BLAS_old answer(numOfFinds, numOfCols);
   for (index_type i = 0; i < numOfFinds; ++i) {
     const index_type globalRow = finder[i];
     for (index_type col = 0; col < numOfCols; ++col) {
@@ -1057,18 +1057,18 @@ TlMatrix DfCalcGridX::selectGridMatrixByAtom(const TlMatrix& globalGridMat,
   return answer;
 }
 
-TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
-                                     DfFunctional_LDA* pFunctional) {
+TlDenseGeneralMatrix_BLAS_old DfCalcGridX::energyGradient(
+    const TlDenseSymmetricMatrix_BLAS_Old& P_A, DfFunctional_LDA* pFunctional) {
   this->log_.info("pure DFT XC energy (LDA) gradient by grid method");
   const int numOfAOs = this->m_nNumOfAOs;
   const int numOfAtoms = this->m_nNumOfAtoms;
 
-  TlMatrix gammaX(numOfAOs, numOfAOs);
-  TlMatrix gammaY(numOfAOs, numOfAOs);
-  TlMatrix gammaZ(numOfAOs, numOfAOs);
+  TlDenseGeneralMatrix_BLAS_old gammaX(numOfAOs, numOfAOs);
+  TlDenseGeneralMatrix_BLAS_old gammaY(numOfAOs, numOfAOs);
+  TlDenseGeneralMatrix_BLAS_old gammaZ(numOfAOs, numOfAOs);
 
-  TlMatrix Fxc_f(numOfAtoms, 3);  // func derivative term
-  TlMatrix Fxc_w(numOfAtoms, 3);  // weight derivative term
+  TlDenseGeneralMatrix_BLAS_old Fxc_f(numOfAtoms, 3);  // func derivative term
+  TlDenseGeneralMatrix_BLAS_old Fxc_w(numOfAtoms, 3);  // weight derivative term
   const double ene_xc = this->energyGradient_part(P_A, pFunctional, 0,
                                                   numOfAtoms, &Fxc_f, &Fxc_w);
 
@@ -1085,11 +1085,12 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
   return Fxc_w + Fxc_f;
 }
 
-double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
+double DfCalcGridX::energyGradient_part(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
                                         DfFunctional_LDA* pFunctional,
                                         const int startAtomIndex,
                                         const int endAtomIndex,
-                                        TlMatrix* pFxc_f, TlMatrix* pFxc_w) {
+                                        TlDenseGeneralMatrix_BLAS_old* pFxc_f,
+                                        TlDenseGeneralMatrix_BLAS_old* pFxc_w) {
   assert(pFxc_w != NULL);
   assert(pFxc_f != NULL);
 
@@ -1152,7 +1153,7 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 
           double rao = 0.0;
           for (int j = 0; j < numOfAOs; ++j) {
-            const double Pij = P_A(i, j);
+            const double Pij = P_A.get(i, j);
             rao += Pij * AO_values[j];
           }
 
@@ -1166,25 +1167,25 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
           gradz *= -2.0 * w;
 
           const int atomIndexB = orbitalInfo.getAtomIndex(i);
-          (*pFxc_f)(atomIndexB, 0) += gradx;
-          (*pFxc_f)(atomIndexA, 0) -= gradx;
-          (*pFxc_f)(atomIndexB, 1) += grady;
-          (*pFxc_f)(atomIndexA, 1) -= grady;
-          (*pFxc_f)(atomIndexB, 2) += gradz;
-          (*pFxc_f)(atomIndexA, 2) -= gradz;
+          pFxc_f->add(atomIndexB, 0, gradx);
+          pFxc_f->add(atomIndexA, 0, -gradx);
+          pFxc_f->add(atomIndexB, 1, grady);
+          pFxc_f->add(atomIndexA, 1, -grady);
+          pFxc_f->add(atomIndexB, 2, gradz);
+          pFxc_f->add(atomIndexA, 2, -gradz);
         }
 
         // weight derivative term
         for (int atomIndexB = 0; atomIndexB < numOfAtoms; ++atomIndexB) {
           if (atomIndexA != atomIndexB) {
-            const TlVector nablaB_omegaA = dfGenGrid.JGP_nablaB_omegaA(
+            const TlVector_BLAS nablaB_omegaA = dfGenGrid.JGP_nablaB_omegaA(
                 atomIndexA, atomIndexB, gridPosition);
-            const TlVector E_nablaB_omegaAi =
+            const TlVector_BLAS E_nablaB_omegaAi =
                 nablaB_omegaA * singleCenterWeight * ene;
 
             for (int i = 0; i < 3; ++i) {
-              (*pFxc_w)(atomIndexB, i) += E_nablaB_omegaAi[i];
-              (*pFxc_w)(atomIndexA, i) -= E_nablaB_omegaAi[i];  // 作用反作用
+              pFxc_w->add(atomIndexB, i, E_nablaB_omegaAi[i]);
+              pFxc_w->add(atomIndexA, i, -E_nablaB_omegaAi[i]);  // 作用反作用
             }
           }
         }
@@ -1195,18 +1196,18 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
   return ene_xc;
 }
 
-TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
-                                     DfFunctional_GGA* pFunctional) {
+TlDenseGeneralMatrix_BLAS_old DfCalcGridX::energyGradient(
+    const TlDenseSymmetricMatrix_BLAS_Old& P_A, DfFunctional_GGA* pFunctional) {
   this->log_.info("pure DFT XC energy (GGA) gradient by grid method");
   const int numOfAOs = this->m_nNumOfAOs;
   const int numOfAtoms = this->m_nNumOfAtoms;
 
-  TlMatrix gammaX(numOfAOs, numOfAOs);
-  TlMatrix gammaY(numOfAOs, numOfAOs);
-  TlMatrix gammaZ(numOfAOs, numOfAOs);
+  TlDenseGeneralMatrix_BLAS_old gammaX(numOfAOs, numOfAOs);
+  TlDenseGeneralMatrix_BLAS_old gammaY(numOfAOs, numOfAOs);
+  TlDenseGeneralMatrix_BLAS_old gammaZ(numOfAOs, numOfAOs);
 
-  TlMatrix Fxc_w(numOfAtoms, 3);  // weight derivative term
-  TlMatrix Fxc_f(numOfAtoms, 3);  // func term
+  TlDenseGeneralMatrix_BLAS_old Fxc_w(numOfAtoms, 3);  // weight derivative term
+  TlDenseGeneralMatrix_BLAS_old Fxc_f(numOfAtoms, 3);  // func term
   const double ene_xc = this->energyGradient_part(P_A, pFunctional, 0,
                                                   numOfAtoms, &Fxc_f, &Fxc_w);
 
@@ -1223,11 +1224,12 @@ TlMatrix DfCalcGridX::energyGradient(const TlSymmetricMatrix& P_A,
   return Fxc_w + Fxc_f;  // rks
 }
 
-double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
+double DfCalcGridX::energyGradient_part(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
                                         DfFunctional_GGA* pFunctional,
                                         const int startAtomIndex,
                                         const int endAtomIndex,
-                                        TlMatrix* pFxc_f, TlMatrix* pFxc_w) {
+                                        TlDenseGeneralMatrix_BLAS_old* pFxc_f,
+                                        TlDenseGeneralMatrix_BLAS_old* pFxc_w) {
   assert(pFxc_w != NULL);
   assert(pFxc_f != NULL);
 
@@ -1336,7 +1338,7 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
           double rdy = 0.0;
           double rdz = 0.0;
           for (int j = 0; j < numOfAOs; ++j) {
-            const double Pij = P_A(i, j);
+            const double Pij = P_A.get(i, j);
             rao += Pij * AO_values[j];
             rdx += Pij * dAO_dx_values[j];
             rdy += Pij * dAO_dy_values[j];
@@ -1364,25 +1366,25 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
           gradz *= -2.0 * w;
 
           const int atomIndexB = orbitalInfo.getAtomIndex(i);
-          (*pFxc_f)(atomIndexB, 0) += gradx;
-          (*pFxc_f)(atomIndexA, 0) -= gradx;
-          (*pFxc_f)(atomIndexB, 1) += grady;
-          (*pFxc_f)(atomIndexA, 1) -= grady;
-          (*pFxc_f)(atomIndexB, 2) += gradz;
-          (*pFxc_f)(atomIndexA, 2) -= gradz;
+          pFxc_f->add(atomIndexB, 0, gradx);
+          pFxc_f->add(atomIndexA, 0, -gradx);
+          pFxc_f->add(atomIndexB, 1, grady);
+          pFxc_f->add(atomIndexA, 1, -grady);
+          pFxc_f->add(atomIndexB, 2, gradz);
+          pFxc_f->add(atomIndexA, 2, -gradz);
         }
 
         // weight derivative term
         for (int atomIndexB = 0; atomIndexB < numOfAtoms; ++atomIndexB) {
           if (atomIndexA != atomIndexB) {
-            const TlVector nablaB_omegaA = dfGenGrid.JGP_nablaB_omegaA(
+            const TlVector_BLAS nablaB_omegaA = dfGenGrid.JGP_nablaB_omegaA(
                 atomIndexA, atomIndexB, gridPosition);
-            const TlVector E_nablaB_omegaAi =
+            const TlVector_BLAS E_nablaB_omegaAi =
                 nablaB_omegaA * singleCenterWeight * ene;
 
             for (int i = 0; i < 3; ++i) {
-              (*pFxc_w)(atomIndexB, i) += E_nablaB_omegaAi[i];
-              (*pFxc_w)(atomIndexA, i) -= E_nablaB_omegaAi[i];  // 作用反作用
+              pFxc_w->add(atomIndexB, i, E_nablaB_omegaAi[i]);
+              pFxc_w->add(atomIndexA, i, -E_nablaB_omegaAi[i]);  // 作用反作用
             }
           }
         }
@@ -1397,8 +1399,9 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 // void DfCalcGridX::calcRhoVals_LDA(const std::vector<index_type>&
 // P_rowIndexes,
 //                                   const std::vector<index_type>&
-//                                   P_colIndexes, const TlMatrix& P, TlMatrix*
-//                                   pGridMatrix)
+//                                   P_colIndexes, const
+//                                   TlDenseGeneralMatrix_BLAS_old& P,
+//                                   TlDenseGeneralMatrix_BLAS_old* pGridMatrix)
 // {
 //     assert(pGridMatrix != NULL);
 
@@ -1416,13 +1419,13 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 //         const double z = pGridMatrix->get(grid, 2);
 //         const TlPosition r(x, y, z);
 
-//         TlMatrix wf_row;
+//         TlDenseGeneralMatrix_BLAS_old wf_row;
 //         this->getWaveFunctionValues(P_rowIndexes, r, &wf_row);
 //         {
-//             TlMatrix wf_col;
+//             TlDenseGeneralMatrix_BLAS_old wf_col;
 //             this->getWaveFunctionValues(P_colIndexes, r, &wf_col);
 //             wf_col.transpose();
-//             TlMatrix coefMatrix = wf_row * wf_col;
+//             TlDenseGeneralMatrix_BLAS_old coefMatrix = wf_row * wf_col;
 //             assert(coefMatrix.getNumOfRows() == P.getNumOfRows());
 //             assert(coefMatrix.getNumOfCols() == P.getNumOfCols());
 //             coefMatrix.dot(P);
@@ -1434,8 +1437,9 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 // void DfCalcGridX::calcRhoVals_GGA(const std::vector<index_type>&
 // P_rowIndexes,
 //                                   const std::vector<index_type>&
-//                                   P_colIndexes, const TlMatrix& P, TlMatrix*
-//                                   pGridMatrix)
+//                                   P_colIndexes, const
+//                                   TlDenseGeneralMatrix_BLAS_old& P,
+//                                   TlDenseGeneralMatrix_BLAS_old* pGridMatrix)
 // {
 //     assert(pGridMatrix != NULL);
 
@@ -1453,10 +1457,10 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 //         const double z = pGridMatrix->get(grid, 2);
 //         const TlPosition r(x, y, z);
 
-//         TlMatrix wf_row;
+//         TlDenseGeneralMatrix_BLAS_old wf_row;
 //         this->getWaveFunctionValues(P_rowIndexes, r, &wf_row);
 
-//         TlMatrix wf_col, wf_dX, wf_dY, wf_dZ;
+//         TlDenseGeneralMatrix_BLAS_old wf_col, wf_dX, wf_dY, wf_dZ;
 //         this->getWaveFunctionValues(P_colIndexes, r,
 //                                         &wf_col, &wf_dX, &wf_dY, &wf_dZ);
 //         wf_col.transpose();
@@ -1464,28 +1468,28 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 //         wf_dY.transpose();
 //         wf_dZ.transpose();
 //         {
-//             TlMatrix wf_rc = wf_row * wf_col;
+//             TlDenseGeneralMatrix_BLAS_old wf_rc = wf_row * wf_col;
 //             assert(wf_rc.getNumOfRows() == P.getNumOfRows());
 //             assert(wf_rc.getNumOfCols() == P.getNumOfCols());
 //             wf_rc.dot(P);
 //             pGridMatrix->add(grid, 4, wf_rc.sum());
 //         }
 //         {
-//             TlMatrix wf_rc = wf_row * wf_dX;
+//             TlDenseGeneralMatrix_BLAS_old wf_rc = wf_row * wf_dX;
 //             assert(wf_rc.getNumOfRows() == P.getNumOfRows());
 //             assert(wf_rc.getNumOfCols() == P.getNumOfCols());
 //             wf_rc.dot(P);
 //             pGridMatrix->add(grid, 5, 2.0 * wf_rc.sum());
 //         }
 //         {
-//             TlMatrix wf_rc = wf_row * wf_dY;
+//             TlDenseGeneralMatrix_BLAS_old wf_rc = wf_row * wf_dY;
 //             assert(wf_rc.getNumOfRows() == P.getNumOfRows());
 //             assert(wf_rc.getNumOfCols() == P.getNumOfCols());
 //             wf_rc.dot(P);
 //             pGridMatrix->add(grid, 6, 2.0 * wf_rc.sum());
 //         }
 //         {
-//             TlMatrix wf_rc = wf_row * wf_dZ;
+//             TlDenseGeneralMatrix_BLAS_old wf_rc = wf_row * wf_dZ;
 //             assert(wf_rc.getNumOfRows() == P.getNumOfRows());
 //             assert(wf_rc.getNumOfCols() == P.getNumOfCols());
 //             wf_rc.dot(P);
@@ -1497,7 +1501,7 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 // void DfCalcGridX::getWaveFunctionValues(const std::vector<index_type>&
 // AO_indexes,
 //                                         const TlPosition& gridPosition,
-//                                         TlMatrix* pWF)
+//                                         TlDenseGeneralMatrix_BLAS_old* pWF)
 // {
 //     assert(pWF != NULL);
 //     const index_type size = AO_indexes.size();
@@ -1527,10 +1531,10 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 // void DfCalcGridX::getWaveFunctionValues(const std::vector<index_type>&
 // AO_indexes,
 //                                         const TlPosition& gridPosition,
-//                                         TlMatrix* pWF,
-//                                         TlMatrix* pGradWF_X,
-//                                         TlMatrix* pGradWF_Y,
-//                                         TlMatrix* pGradWF_Z)
+//                                         TlDenseGeneralMatrix_BLAS_old* pWF,
+//                                         TlDenseGeneralMatrix_BLAS_old* pGradWF_X,
+//                                         TlDenseGeneralMatrix_BLAS_old* pGradWF_Y,
+//                                         TlDenseGeneralMatrix_BLAS_old* pGradWF_Z)
 // {
 //     const index_type size = AO_indexes.size();
 //     pWF->resize(size, 1);
@@ -1576,9 +1580,9 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 //     }
 // }
 
-// double DfCalcGridX::buildK(const TlMatrix& gridMatrix,
+// double DfCalcGridX::buildK(const TlDenseGeneralMatrix_BLAS_old& gridMatrix,
 //                            DfFunctional_LDA* pFunctional,
-//                            TlSymmetricMatrix* pF)
+//                            TlDenseSymmetricMatrix_BLAS_Old* pF)
 // {
 //     const index_type numOfAOs = this->m_nNumOfAOs;
 //     const double densityCutOffValue = this->m_densityCutOffValueA;
@@ -1608,15 +1612,15 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 //     return energy;
 // }
 
-// double DfCalcGridX::buildK_2(const TlMatrix& gridMatrix,
+// double DfCalcGridX::buildK_2(const TlDenseGeneralMatrix_BLAS_old& gridMatrix,
 //                              const std::vector<index_type>& rowIndexes,
 //                              const std::vector<index_type>& colIndexes,
 //                              DfFunctional_LDA* pFunctional,
-//                              TlSymmetricMatrix* pF)
+//                              TlDenseSymmetricMatrix_BLAS_Old* pF)
 // {
 //     const double densityCutOffValue = this->m_densityCutOffValueA;
 
-//     TlMatrix tmpF(*pF);
+//     TlDenseGeneralMatrix_BLAS_old tmpF(*pF);
 //     double energy = 0.0;
 //     const std::size_t numOfAllGrids = gridMatrix.getNumOfRows();
 //     for (std::size_t grid = 0; grid < numOfAllGrids; ++grid) {
@@ -1628,10 +1632,10 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 //         const double rhoA = gridMatrix.get(grid, 4);
 
 //         if (rhoA > densityCutOffValue) {
-//             TlMatrix wf_row;
+//             TlDenseGeneralMatrix_BLAS_old wf_row;
 //             this->getWaveFunctionValues(rowIndexes, r,
 //                                         &wf_row);
-//             TlMatrix wf_col;
+//             TlDenseGeneralMatrix_BLAS_old wf_col;
 //             this->getWaveFunctionValues(colIndexes, r,
 //                                         &wf_col);
 //             wf_col.transpose();
@@ -1642,7 +1646,7 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 
 //             const double coef1_A = w * roundF_roundRhoA;
 //             {
-//                 TlMatrix wf_rc = wf_row * wf_col;
+//                 TlDenseGeneralMatrix_BLAS_old wf_rc = wf_row * wf_col;
 //                 wf_rc *= coef1_A;
 //                 tmpF += wf_rc;
 //             }
@@ -1657,9 +1661,9 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 //     return energy;
 // }
 
-// double DfCalcGridX::buildK(const TlMatrix& gridMatrix,
+// double DfCalcGridX::buildK(const TlDenseGeneralMatrix_BLAS_old& gridMatrix,
 //                            DfFunctional_GGA* pFunctional,
-//                            TlSymmetricMatrix* pF)
+//                            TlDenseSymmetricMatrix_BLAS_Old* pF)
 // {
 //     //const index_type numOfAOs = this->m_nNumOfAOs;
 //     const double densityCutOffValue = this->m_densityCutOffValueA;
@@ -1697,15 +1701,15 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 //     return energy;
 // }
 
-// double DfCalcGridX::buildK_2(const TlMatrix& gridMatrix,
+// double DfCalcGridX::buildK_2(const TlDenseGeneralMatrix_BLAS_old& gridMatrix,
 //                              const std::vector<index_type>& rowIndexes,
 //                              const std::vector<index_type>& colIndexes,
 //                              DfFunctional_GGA* pFunctional,
-//                              TlMatrix* pF)
+//                              TlDenseGeneralMatrix_BLAS_old* pF)
 // {
 //     const double densityCutOffValue = this->m_densityCutOffValueA;
 
-//     TlMatrix tmpF(*pF);
+//     TlDenseGeneralMatrix_BLAS_old tmpF(*pF);
 //     double energy = 0.0;
 //     const index_type numOfAllGrids = gridMatrix.getNumOfRows();
 // #pragma omp parallel for schedule(runtime) reduction(+:energy)
@@ -1722,10 +1726,10 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 //             const double gradRhoY_A = gridMatrix.get(grid, 6);
 //             const double gradRhoZ_A = gridMatrix.get(grid, 7);
 
-//             TlMatrix wf_r, dfdx_r, dfdy_r, dfdz_r;
+//             TlDenseGeneralMatrix_BLAS_old wf_r, dfdx_r, dfdy_r, dfdz_r;
 //             this->getWaveFunctionValues(rowIndexes, r,
 //                                         &wf_r, &dfdx_r, &dfdy_r, &dfdz_r);
-//             TlMatrix wf_c, dfdx_c, dfdy_c, dfdz_c;
+//             TlDenseGeneralMatrix_BLAS_old wf_c, dfdx_c, dfdy_c, dfdz_c;
 //             this->getWaveFunctionValues(colIndexes, r,
 //                                         &wf_c, &dfdx_c, &dfdy_c, &dfdz_c);
 //             wf_c.transpose();
@@ -1751,27 +1755,27 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 //             * gradRhoZ_A + rF_rG_AB * gradRhoZ_A);
 
 //             {
-//                 TlMatrix wf_rc = wf_r * wf_c;
+//                 TlDenseGeneralMatrix_BLAS_old wf_rc = wf_r * wf_c;
 //                 wf_rc *= coef1_A;
 //                 *pF += wf_rc;
 //             }
 //             {
-//                 TlMatrix wf_rc = wf_r * dfdx_c;
-//                 TlMatrix wf_cr = dfdx_r * wf_c;
+//                 TlDenseGeneralMatrix_BLAS_old wf_rc = wf_r * dfdx_c;
+//                 TlDenseGeneralMatrix_BLAS_old wf_cr = dfdx_r * wf_c;
 //                 wf_rc *= coef2_AX;
 //                 wf_cr *= coef2_AX;
 //                 *pF += (wf_rc + wf_cr);
 //             }
 //             {
-//                 TlMatrix wf_rc = wf_r * dfdy_c;
-//                 TlMatrix wf_cr = dfdy_r * wf_c;
+//                 TlDenseGeneralMatrix_BLAS_old wf_rc = wf_r * dfdy_c;
+//                 TlDenseGeneralMatrix_BLAS_old wf_cr = dfdy_r * wf_c;
 //                 wf_rc *= coef2_AY;
 //                 wf_cr *= coef2_AY;
 //                 *pF += (wf_rc + wf_cr);
 //             }
 //             {
-//                 TlMatrix wf_rc = wf_r * dfdz_c;
-//                 TlMatrix wf_cr = dfdz_r * wf_c;
+//                 TlDenseGeneralMatrix_BLAS_old wf_rc = wf_r * dfdz_c;
+//                 TlDenseGeneralMatrix_BLAS_old wf_cr = dfdz_r * wf_c;
 //                 wf_rc *= coef2_AZ;
 //                 wf_cr *= coef2_AZ;
 //                 *pF += (wf_rc + wf_cr);
@@ -1787,8 +1791,10 @@ double DfCalcGridX::energyGradient_part(const TlSymmetricMatrix& P_A,
 // }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-void DfCalcGridX::calcRho_LDA(const TlSymmetricMatrix& P_A) {
-  TlMatrix gridMat = DfObject::getGridMatrix<TlMatrix>(this->m_nIteration - 1);
+void DfCalcGridX::calcRho_LDA(const TlDenseSymmetricMatrix_BLAS_Old& P_A) {
+  TlDenseGeneralMatrix_BLAS_old gridMat =
+      DfObject::getGridMatrix<TlDenseGeneralMatrix_BLAS_old>(this->m_nIteration -
+                                                         1);
   assert(gridMat.getNumOfCols() == GM_LDA_RHO_ALPHA + 1);
 
   this->calcRho_LDA_part(P_A, &gridMat);
@@ -1796,9 +1802,11 @@ void DfCalcGridX::calcRho_LDA(const TlSymmetricMatrix& P_A) {
   DfObject::saveGridMatrix(this->m_nIteration, gridMat);
 }
 
-void DfCalcGridX::calcRho_LDA(const TlSymmetricMatrix& P_A,
-                              const TlSymmetricMatrix& P_B) {
-  TlMatrix gridMat = DfObject::getGridMatrix<TlMatrix>(this->m_nIteration - 1);
+void DfCalcGridX::calcRho_LDA(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                              const TlDenseSymmetricMatrix_BLAS_Old& P_B) {
+  TlDenseGeneralMatrix_BLAS_old gridMat =
+      DfObject::getGridMatrix<TlDenseGeneralMatrix_BLAS_old>(this->m_nIteration -
+                                                         1);
   assert(gridMat.getNumOfCols() == GM_LDA_RHO_BETA + 1);
 
   this->calcRho_LDA_part(P_A, P_B, &gridMat);
@@ -1806,8 +1814,10 @@ void DfCalcGridX::calcRho_LDA(const TlSymmetricMatrix& P_A,
   DfObject::saveGridMatrix(this->m_nIteration, gridMat);
 }
 
-void DfCalcGridX::calcRho_GGA(const TlSymmetricMatrix& P_A) {
-  TlMatrix gridMat = DfObject::getGridMatrix<TlMatrix>(this->m_nIteration - 1);
+void DfCalcGridX::calcRho_GGA(const TlDenseSymmetricMatrix_BLAS_Old& P_A) {
+  TlDenseGeneralMatrix_BLAS_old gridMat =
+      DfObject::getGridMatrix<TlDenseGeneralMatrix_BLAS_old>(this->m_nIteration -
+                                                         1);
   assert(gridMat.getNumOfCols() == GM_GGA_GRAD_RHO_Z_ALPHA + 1);
 
   this->calcRho_GGA_part(P_A, &gridMat);
@@ -1815,9 +1825,11 @@ void DfCalcGridX::calcRho_GGA(const TlSymmetricMatrix& P_A) {
   DfObject::saveGridMatrix(this->m_nIteration, gridMat);
 }
 
-void DfCalcGridX::calcRho_GGA(const TlSymmetricMatrix& P_A,
-                              const TlSymmetricMatrix& P_B) {
-  TlMatrix gridMat = DfObject::getGridMatrix<TlMatrix>(this->m_nIteration - 1);
+void DfCalcGridX::calcRho_GGA(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                              const TlDenseSymmetricMatrix_BLAS_Old& P_B) {
+  TlDenseGeneralMatrix_BLAS_old gridMat =
+      DfObject::getGridMatrix<TlDenseGeneralMatrix_BLAS_old>(this->m_nIteration -
+                                                         1);
   assert(gridMat.getNumOfCols() == GM_GGA_GRAD_RHO_Z_BETA + 1);
 
   this->calcRho_GGA_part(P_A, P_B, &gridMat);
@@ -1825,13 +1837,13 @@ void DfCalcGridX::calcRho_GGA(const TlSymmetricMatrix& P_A,
   DfObject::saveGridMatrix(this->m_nIteration, gridMat);
 }
 
-void DfCalcGridX::calcRho_LDA_part(const TlSymmetricMatrix& P_A,
-                                   TlMatrix* pGridMat) {
+void DfCalcGridX::calcRho_LDA_part(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                                   TlDenseGeneralMatrix_BLAS_old* pGridMat) {
   assert(pGridMat != NULL);
 
   if ((this->m_nIteration == 1) || (this->m_bIsUpdateXC != true)) {
     // initialize
-    TlMatrix zero(pGridMat->getNumOfRows(), 1);
+    TlDenseGeneralMatrix_BLAS_old zero(pGridMat->getNumOfRows(), 1);
     pGridMat->setBlockMatrix(0, GM_LDA_RHO_ALPHA, zero);
   }
 
@@ -1855,12 +1867,12 @@ void DfCalcGridX::calcRho_LDA_part(const TlSymmetricMatrix& P_A,
   }
 }
 
-void DfCalcGridX::calcRho_LDA_part(const TlSymmetricMatrix& P_A,
-                                   const TlSymmetricMatrix& P_B,
-                                   TlMatrix* pGridMat) {
+void DfCalcGridX::calcRho_LDA_part(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                                   const TlDenseSymmetricMatrix_BLAS_Old& P_B,
+                                   TlDenseGeneralMatrix_BLAS_old* pGridMat) {
   if ((this->m_nIteration == 1) || (this->m_bIsUpdateXC != true)) {
     // initialize
-    TlMatrix zero(pGridMat->getNumOfRows(), 2);
+    TlDenseGeneralMatrix_BLAS_old zero(pGridMat->getNumOfRows(), 2);
     pGridMat->setBlockMatrix(0, GM_LDA_RHO_ALPHA, zero);
   }
 
@@ -1886,11 +1898,11 @@ void DfCalcGridX::calcRho_LDA_part(const TlSymmetricMatrix& P_A,
   }
 }
 
-void DfCalcGridX::calcRho_GGA_part(const TlSymmetricMatrix& P_A,
-                                   TlMatrix* pGridMat) {
+void DfCalcGridX::calcRho_GGA_part(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                                   TlDenseGeneralMatrix_BLAS_old* pGridMat) {
   if ((this->m_nIteration == 1) || (this->m_bIsUpdateXC != true)) {
     // initialize
-    TlMatrix zero(pGridMat->getNumOfRows(), 4);
+    TlDenseGeneralMatrix_BLAS_old zero(pGridMat->getNumOfRows(), 4);
     pGridMat->setBlockMatrix(0, GM_GGA_RHO_ALPHA, zero);
   }
 
@@ -1926,12 +1938,12 @@ void DfCalcGridX::calcRho_GGA_part(const TlSymmetricMatrix& P_A,
   }
 }
 
-void DfCalcGridX::calcRho_GGA_part(const TlSymmetricMatrix& P_A,
-                                   const TlSymmetricMatrix& P_B,
-                                   TlMatrix* pGridMat) {
+void DfCalcGridX::calcRho_GGA_part(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+                                   const TlDenseSymmetricMatrix_BLAS_Old& P_B,
+                                   TlDenseGeneralMatrix_BLAS_old* pGridMat) {
   if ((this->m_nIteration == 1) || (this->m_bIsUpdateXC != true)) {
     // initialize
-    TlMatrix zero(pGridMat->getNumOfRows(), 8);
+    TlDenseGeneralMatrix_BLAS_old zero(pGridMat->getNumOfRows(), 8);
     pGridMat->setBlockMatrix(0, GM_GGA_RHO_ALPHA, zero);
   }
 
@@ -1980,34 +1992,40 @@ void DfCalcGridX::calcRho_GGA_part(const TlSymmetricMatrix& P_A,
 }
 
 double DfCalcGridX::buildVxc(DfFunctional_LDA* pFunctional,
-                             TlSymmetricMatrix* pF_A) {
-  TlMatrix gridMat = DfObject::getGridMatrix<TlMatrix>(this->m_nIteration);
+                             TlDenseSymmetricMatrix_BLAS_Old* pF_A) {
+  TlDenseGeneralMatrix_BLAS_old gridMat =
+      DfObject::getGridMatrix<TlDenseGeneralMatrix_BLAS_old>(this->m_nIteration);
   double energy = this->buildVxc(gridMat, pFunctional, pF_A);
   return energy;
 }
 
 double DfCalcGridX::buildVxc(DfFunctional_LDA* pFunctional,
-                             TlSymmetricMatrix* pF_A, TlSymmetricMatrix* pF_B) {
-  TlMatrix gridMat = DfObject::getGridMatrix<TlMatrix>(this->m_nIteration);
+                             TlDenseSymmetricMatrix_BLAS_Old* pF_A,
+                             TlDenseSymmetricMatrix_BLAS_Old* pF_B) {
+  TlDenseGeneralMatrix_BLAS_old gridMat =
+      DfObject::getGridMatrix<TlDenseGeneralMatrix_BLAS_old>(this->m_nIteration);
   double energy = this->buildVxc(gridMat, pFunctional, pF_A, pF_B);
   return energy;
 }
 
 double DfCalcGridX::buildVxc(DfFunctional_GGA* pFunctional,
-                             TlSymmetricMatrix* pF_A) {
-  TlMatrix gridMat = DfObject::getGridMatrix<TlMatrix>(this->m_nIteration);
+                             TlDenseSymmetricMatrix_BLAS_Old* pF_A) {
+  TlDenseGeneralMatrix_BLAS_old gridMat =
+      DfObject::getGridMatrix<TlDenseGeneralMatrix_BLAS_old>(this->m_nIteration);
   double energy = this->buildVxc(gridMat, pFunctional, pF_A);
   return energy;
 }
 
 double DfCalcGridX::buildVxc(DfFunctional_GGA* pFunctional,
-                             TlSymmetricMatrix* pF_A, TlSymmetricMatrix* pF_B) {
-  TlMatrix gridMat = DfObject::getGridMatrix<TlMatrix>(this->m_nIteration);
+                             TlDenseSymmetricMatrix_BLAS_Old* pF_A,
+                             TlDenseSymmetricMatrix_BLAS_Old* pF_B) {
+  TlDenseGeneralMatrix_BLAS_old gridMat =
+      DfObject::getGridMatrix<TlDenseGeneralMatrix_BLAS_old>(this->m_nIteration);
   double energy = this->buildVxc(gridMat, pFunctional, pF_A, pF_B);
   return energy;
 }
 
-double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
+double DfCalcGridX::buildVxc(const TlDenseGeneralMatrix_BLAS_old& gridMatrix,
                              DfFunctional_LDA* pFunctional,
                              TlMatrixObject* pF_A) {
   double energy = 0.0;
@@ -2044,7 +2062,7 @@ double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
   return energy;
 }
 
-double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
+double DfCalcGridX::buildVxc(const TlDenseGeneralMatrix_BLAS_old& gridMatrix,
                              DfFunctional_LDA* pFunctional,
                              TlMatrixObject* pF_A, TlMatrixObject* pF_B) {
   double energy = 0.0;
@@ -2088,7 +2106,7 @@ double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
   return energy;
 }
 
-double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
+double DfCalcGridX::buildVxc(const TlDenseGeneralMatrix_BLAS_old& gridMatrix,
                              DfFunctional_GGA* pFunctional,
                              TlMatrixObject* pF_A) {
   double energy = 0.0;
@@ -2144,7 +2162,7 @@ double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
   return energy;
 }
 
-double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
+double DfCalcGridX::buildVxc(const TlDenseGeneralMatrix_BLAS_old& gridMatrix,
                              DfFunctional_GGA* pFunctional,
                              TlMatrixObject* pF_A, TlMatrixObject* pF_B) {
   double energy = 0.0;
@@ -2216,17 +2234,18 @@ double DfCalcGridX::buildVxc(const TlMatrix& gridMatrix,
                             roundF_roundGammaAB, gradRhoXB, gradRhoYB,
                             gradRhoZB, AO_values, dAO_dx_values, dAO_dy_values,
                             dAO_dz_values, pFunctional, weight, pF_B);
-      energy += weight * pFunctional->getFunctional(rhoA, rhoB, gammaAA,
-                                                    gammaAB, gammaBB);
+      energy +=
+          weight *
+          pFunctional->getFunctional(rhoA, rhoB, gammaAA, gammaAB, gammaBB);
     }
   }
 
   return energy;
 }
 
-double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-                                                DfFunctional_LDA* pFunctional,
-                                                TlSymmetricMatrix* pF_A) {
+double DfCalcGridX::calcXCIntegForFockAndEnergy(
+    const TlDenseSymmetricMatrix_BLAS_Old& P_A, DfFunctional_LDA* pFunctional,
+    TlDenseSymmetricMatrix_BLAS_Old* pF_A) {
   assert(pFunctional != NULL);
   assert(pF_A != NULL);
 
@@ -2236,11 +2255,10 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
   return energy;
 }
 
-double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-                                                const TlSymmetricMatrix& P_B,
-                                                DfFunctional_LDA* pFunctional,
-                                                TlSymmetricMatrix* pF_A,
-                                                TlSymmetricMatrix* pF_B) {
+double DfCalcGridX::calcXCIntegForFockAndEnergy(
+    const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+    const TlDenseSymmetricMatrix_BLAS_Old& P_B, DfFunctional_LDA* pFunctional,
+    TlDenseSymmetricMatrix_BLAS_Old* pF_A, TlDenseSymmetricMatrix_BLAS_Old* pF_B) {
   assert(pFunctional != NULL);
   assert(pF_A != NULL);
   assert(pF_B != NULL);
@@ -2250,9 +2268,9 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
   return energy;
 }
 
-double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-                                                DfFunctional_GGA* pFunctional,
-                                                TlSymmetricMatrix* pF_A) {
+double DfCalcGridX::calcXCIntegForFockAndEnergy(
+    const TlDenseSymmetricMatrix_BLAS_Old& P_A, DfFunctional_GGA* pFunctional,
+    TlDenseSymmetricMatrix_BLAS_Old* pF_A) {
   assert(pFunctional != NULL);
   assert(pF_A != NULL);
 
@@ -2262,11 +2280,10 @@ double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
   return energy;
 }
 
-double DfCalcGridX::calcXCIntegForFockAndEnergy(const TlSymmetricMatrix& P_A,
-                                                const TlSymmetricMatrix& P_B,
-                                                DfFunctional_GGA* pFunctional,
-                                                TlSymmetricMatrix* pF_A,
-                                                TlSymmetricMatrix* pF_B) {
+double DfCalcGridX::calcXCIntegForFockAndEnergy(
+    const TlDenseSymmetricMatrix_BLAS_Old& P_A,
+    const TlDenseSymmetricMatrix_BLAS_Old& P_B, DfFunctional_GGA* pFunctional,
+    TlDenseSymmetricMatrix_BLAS_Old* pF_A, TlDenseSymmetricMatrix_BLAS_Old* pF_B) {
   assert(pFunctional != NULL);
   assert(pF_A != NULL);
   assert(pF_B != NULL);
@@ -2449,15 +2466,16 @@ void DfCalcGridX::build_XC_Matrix(
 }
 
 void DfCalcGridX::getWholeDensity(double* pRhoA, double* pRhoB) const {
-  TlMatrix gridMat;
+  TlDenseGeneralMatrix_BLAS_old gridMat;
   gridMat.load(this->getGridMatrixPath(this->m_nIteration));
   const index_type numOfGrids = gridMat.getNumOfRows();
 
-  TlMatrix weightMat = gridMat.getBlockMatrix(0, GM_WEIGHT, numOfGrids, 1);
+  TlDenseGeneralMatrix_BLAS_old weightMat =
+      gridMat.getBlockMatrix(0, GM_WEIGHT, numOfGrids, 1);
 
   const DfXCFunctional dfXcFunc(this->pPdfParam_);
   if (this->m_nMethodType == METHOD_RKS) {
-    TlMatrix rhoMat_A;
+    TlDenseGeneralMatrix_BLAS_old rhoMat_A;
     if (dfXcFunc.getFunctionalType() == DfXCFunctional::LDA) {
       rhoMat_A = gridMat.getBlockMatrix(0, GM_LDA_RHO_ALPHA, numOfGrids, 1);
     } else {
@@ -2465,10 +2483,10 @@ void DfCalcGridX::getWholeDensity(double* pRhoA, double* pRhoB) const {
     }
 
     assert(pRhoA != NULL);
-    *pRhoA = weightMat.dot(rhoMat_A).sum();
+    *pRhoA = weightMat.dotInPlace(rhoMat_A).sum();
   } else {
-    TlMatrix rhoMat_A;
-    TlMatrix rhoMat_B;
+    TlDenseGeneralMatrix_BLAS_old rhoMat_A;
+    TlDenseGeneralMatrix_BLAS_old rhoMat_B;
     if (dfXcFunc.getFunctionalType() == DfXCFunctional::LDA) {
       rhoMat_A = gridMat.getBlockMatrix(0, GM_LDA_RHO_ALPHA, numOfGrids, 1);
       rhoMat_B = gridMat.getBlockMatrix(0, GM_LDA_RHO_BETA, numOfGrids, 1);
@@ -2479,7 +2497,7 @@ void DfCalcGridX::getWholeDensity(double* pRhoA, double* pRhoB) const {
 
     assert(pRhoA != NULL);
     assert(pRhoB != NULL);
-    *pRhoA = weightMat.dot(rhoMat_A).sum();
-    *pRhoB = weightMat.dot(rhoMat_B).sum();
+    *pRhoA = weightMat.dotInPlace(rhoMat_A).sum();
+    *pRhoB = weightMat.dotInPlace(rhoMat_B).sum();
   }
 }

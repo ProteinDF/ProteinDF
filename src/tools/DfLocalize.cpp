@@ -103,7 +103,7 @@ void DfLocalize::localize(const std::string& inputCMatrixPath) {
 
       if (std::fabs(deltaG) > 1.0E-16) {
         sumDeltaG += deltaG;
-        TlMatrix rot(2, 2);
+        TlDenseGeneralMatrix_BLAS_old rot(2, 2);
         this->getRotatingMatrix(A_ij, B_ij, normAB, &rot);
         this->rotateCmatrix(orb_i, orb_j, rot);
       }
@@ -142,15 +142,15 @@ void DfLocalize::makeQATable() {
 }
 
 void DfLocalize::rotateCmatrix(std::size_t orb_i, std::size_t orb_j,
-                               const TlMatrix& rot) {
+                               const TlDenseGeneralMatrix_BLAS_old& rot) {
   const std::size_t numOfAOs = this->m_nNumOfAOs;
-  TlMatrix A(2, numOfAOs);
+  TlDenseGeneralMatrix_BLAS_old A(2, numOfAOs);
   for (std::size_t i = 0; i < numOfAOs; ++i) {
     A.set(0, i, this->C_.get(i, orb_i));
     A.set(1, i, this->C_.get(i, orb_j));
   }
 
-  const TlMatrix B = rot * A;  // rotate A to form B
+  const TlDenseGeneralMatrix_BLAS_old B = rot * A;  // rotate A to form B
 
   for (std::size_t i = 0; i < numOfAOs; ++i) {
     this->C_.set(i, orb_i, B.get(0, i));
@@ -159,7 +159,8 @@ void DfLocalize::rotateCmatrix(std::size_t orb_i, std::size_t orb_j,
 }
 
 void DfLocalize::getRotatingMatrix(const double A_ij, const double B_ij,
-                                   const double normAB, TlMatrix* pRot) {
+                                   const double normAB,
+                                   TlDenseGeneralMatrix_BLAS_old* pRot) {
   assert(pRot != NULL);
   pRot->resize(2, 2);
 
@@ -198,20 +199,20 @@ void DfLocalize::calcQA(const std::size_t orb_i, const std::size_t orb_j,
       continue;
     }
 
-    TlMatrix C_i(dim, 1);
-    TlMatrix C_j(dim, 1);
+    TlDenseGeneralMatrix_BLAS_old C_i(dim, 1);
+    TlDenseGeneralMatrix_BLAS_old C_j(dim, 1);
     for (std::size_t i = 0; i < dim; ++i) {
       const std::size_t orb = orbList[i];
       C_i.set(i, 0, this->C_.get(orb, orb_i));
       C_j.set(i, 0, this->C_.get(orb, orb_j));
     }
 
-    TlMatrix Ci_ = C_i;
-    Ci_.transpose();
-    TlMatrix Cj_ = C_j;
-    Cj_.transpose();
+    TlDenseGeneralMatrix_BLAS_old Ci_ = C_i;
+    Ci_.transposeInPlace();
+    TlDenseGeneralMatrix_BLAS_old Cj_ = C_j;
+    Cj_.transposeInPlace();
 
-    TlSymmetricMatrix partS(dim);
+    TlDenseSymmetricMatrix_BLAS_Old partS(dim);
     for (std::size_t i = 0; i < dim; ++i) {
       const std::size_t orb1 = orbList[i];
       partS.set(i, i, this->S_.get(orb1, orb1));
@@ -221,18 +222,18 @@ void DfLocalize::calcQA(const std::size_t orb_i, const std::size_t orb_j,
       }
     }
 
-    const TlMatrix QAiiMat = Ci_ * partS * C_i;
+    const TlDenseGeneralMatrix_BLAS_old QAiiMat = Ci_ * partS * C_i;
     assert(QAiiMat.getNumOfRows() == 1);
     assert(QAiiMat.getNumOfCols() == 1);
     const double QAii = QAiiMat.get(0, 0);
 
-    const TlMatrix QAjjMat = Cj_ * partS * C_j;
+    const TlDenseGeneralMatrix_BLAS_old QAjjMat = Cj_ * partS * C_j;
     assert(QAjjMat.getNumOfRows() == 1);
     assert(QAjjMat.getNumOfCols() == 1);
     const double QAjj = QAjjMat.get(0, 0);
 
-    const TlMatrix QAijMat = Ci_ * partS * C_j;
-    const TlMatrix QAjiMat = Cj_ * partS * C_i;
+    const TlDenseGeneralMatrix_BLAS_old QAijMat = Ci_ * partS * C_j;
+    const TlDenseGeneralMatrix_BLAS_old QAjiMat = Cj_ * partS * C_i;
     assert(QAijMat.getNumOfRows() == 1);
     assert(QAijMat.getNumOfCols() == 1);
     assert(QAjiMat.getNumOfRows() == 1);
@@ -258,16 +259,16 @@ double DfLocalize::calcQA(const std::size_t orb_i) {
       continue;
     }
 
-    TlMatrix C_i(dim, 1);
+    TlDenseGeneralMatrix_BLAS_old C_i(dim, 1);
     for (std::size_t i = 0; i < dim; ++i) {
       const std::size_t orb = orbList[i];
       C_i.set(i, 0, this->C_.get(orb, orb_i));
     }
 
-    TlMatrix Ci_ = C_i;
-    Ci_.transpose();
+    TlDenseGeneralMatrix_BLAS_old Ci_ = C_i;
+    Ci_.transposeInPlace();
 
-    TlSymmetricMatrix partS(dim);
+    TlDenseSymmetricMatrix_BLAS_Old partS(dim);
     for (std::size_t i = 0; i < dim; ++i) {
       const std::size_t orb1 = orbList[i];
       partS.set(i, i, this->S_.get(orb1, orb1));
@@ -277,7 +278,7 @@ double DfLocalize::calcQA(const std::size_t orb_i) {
       }
     }
 
-    const TlMatrix QAiiMat = Ci_ * partS * C_i;
+    const TlDenseGeneralMatrix_BLAS_old QAiiMat = Ci_ * partS * C_i;
     assert(QAiiMat.getNumOfRows() == 1);
     assert(QAiiMat.getNumOfCols() == 1);
     const double QAii = QAiiMat.get(0, 0);

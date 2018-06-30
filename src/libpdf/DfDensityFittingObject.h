@@ -290,9 +290,8 @@ SymmetricMatrix DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::
 }
 
 template <class SymmetricMatrix, class Vector, class DfERI_Class>
-SymmetricMatrix
-DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getP1pq(
-    const int nIteration) {
+SymmetricMatrix DfDensityFittingTmpl<
+    SymmetricMatrix, Vector, DfERI_Class>::getP1pq(const int nIteration) {
   SymmetricMatrix P(this->m_nNumOfAOs);
   const std::string sFileName =
       TlUtils::format("fl_Work/fl_Mtr_P1pq.matrix.roks%d", nIteration);
@@ -305,9 +304,8 @@ DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getP1pq(
 }
 
 template <class SymmetricMatrix, class Vector, class DfERI_Class>
-SymmetricMatrix
-DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getP2pq(
-    const int nIteration) {
+SymmetricMatrix DfDensityFittingTmpl<
+    SymmetricMatrix, Vector, DfERI_Class>::getP2pq(const int nIteration) {
   SymmetricMatrix P(this->m_nNumOfAOs);
   const std::string sFileName =
       TlUtils::format("fl_Work/fl_Mtr_P2pq.matrix.roks%d", nIteration);

@@ -18,14 +18,13 @@
 
 #include "DfCalcGrid.h"
 #include <cmath>
-#include "Fl_Geometry.h"
-
 #include "CnError.h"
+#include "Fl_Geometry.h"
 #include "TlMath.h"
 #include "TlPosition.h"
-#include "TlSymmetricMatrix.h"
 #include "TlTime.h"
 #include "TlUtils.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
 
 #define SQ2 1.414213562373095049
 #define SQ1_2 0.707106781186547524
@@ -194,7 +193,7 @@ int DfCalcGrid::dfGrdMain() {
   this->log_.info("start");
 
   // call readGrid
-  TlVector tmpVectorA, tmpVectorB, eTmpVector;
+  TlVector_BLAS tmpVectorA, tmpVectorB, eTmpVector;
   this->calcXCInteg(tmpVectorA, tmpVectorB, eTmpVector);
   this->log_.info("calcXCInteg");
 
@@ -218,13 +217,14 @@ int DfCalcGrid::dfGrdMain() {
   return 0;
 }
 
-void DfCalcGrid::calcXCInteg(TlVector& tmpVectorA, TlVector& tmpVectorB,
-                             TlVector& eTmpVector) {
-  tmpVectorA = TlVector(this->numOfAuxXC_);
-  tmpVectorB = TlVector(this->numOfAuxXC_);
-  eTmpVector = TlVector(this->numOfAuxXC_);
+void DfCalcGrid::calcXCInteg(TlVector_BLAS& tmpVectorA,
+                             TlVector_BLAS& tmpVectorB,
+                             TlVector_BLAS& eTmpVector) {
+  tmpVectorA = TlVector_BLAS(this->numOfAuxXC_);
+  tmpVectorB = TlVector_BLAS(this->numOfAuxXC_);
+  eTmpVector = TlVector_BLAS(this->numOfAuxXC_);
 
-  TlVector RhoAlphaA, RhoAlphaB;
+  TlVector_BLAS RhoAlphaA, RhoAlphaB;
   {
     switch (this->m_nMethodType) {
       case METHOD_RKS:
@@ -243,7 +243,9 @@ void DfCalcGrid::calcXCInteg(TlVector& tmpVectorA, TlVector& tmpVectorB,
     }
   }
 
-  TlMatrix gridMat = DfObject::getGridMatrix<TlMatrix>(this->m_nIteration - 1);
+  TlDenseGeneralMatrix_BLAS_old gridMat =
+      DfObject::getGridMatrix<TlDenseGeneralMatrix_BLAS_old>(this->m_nIteration -
+                                                         1);
   switch (this->m_nMethodType) {
     case METHOD_RKS:
       this->calcXCIntegRhoTilde_RKS(RhoAlphaA, &gridMat);
@@ -385,8 +387,8 @@ void DfCalcGrid::getPrefactorForDerivative(int nType, double alpha,
   }
 }
 
-void DfCalcGrid::calcXCIntegRhoTilde_RKS(const TlVector& RhoAlphaA,
-                                         TlMatrix* pGridMat) {
+void DfCalcGrid::calcXCIntegRhoTilde_RKS(const TlVector_BLAS& RhoAlphaA,
+                                         TlDenseGeneralMatrix_BLAS_old* pGridMat) {
   const index_type numOfGrids = pGridMat->getNumOfRows();
   for (index_type i = 0; i < numOfGrids; ++i) {
     const TlPosition crdPoint(pGridMat->get(i, 0), pGridMat->get(i, 1),
@@ -430,9 +432,9 @@ void DfCalcGrid::calcXCIntegRhoTilde_RKS(const TlVector& RhoAlphaA,
   }
 }
 
-void DfCalcGrid::calcXCIntegRhoTilde_UKS(const TlVector& RhoAlphaA,
-                                         const TlVector& RhoAlphaB,
-                                         TlMatrix* pGridMat) {
+void DfCalcGrid::calcXCIntegRhoTilde_UKS(const TlVector_BLAS& RhoAlphaA,
+                                         const TlVector_BLAS& RhoAlphaB,
+                                         TlDenseGeneralMatrix_BLAS_old* pGridMat) {
   const index_type numOfGrids = pGridMat->getNumOfRows();
   for (index_type i = 0; i < numOfGrids; ++i) {
     const TlPosition crdPoint(pGridMat->get(i, 0), pGridMat->get(i, 1),
@@ -481,9 +483,9 @@ void DfCalcGrid::calcXCIntegRhoTilde_UKS(const TlVector& RhoAlphaA,
   }
 }
 
-void DfCalcGrid::calcXCIntegMyuEpsilon_RKS(const TlMatrix& gridMat,
-                                           TlVector& tmpVectorA,
-                                           TlVector& eTmpVector) {
+void DfCalcGrid::calcXCIntegMyuEpsilon_RKS(
+    const TlDenseGeneralMatrix_BLAS_old& gridMat, TlVector_BLAS& tmpVectorA,
+    TlVector_BLAS& eTmpVector) {
   double Coef = 0.0;
   if (xc == 0) {
     // case of Xalpha Myu
@@ -590,10 +592,9 @@ void DfCalcGrid::calcXCIntegMyuEpsilon_RKS(const TlMatrix& gridMat,
   }
 }
 
-void DfCalcGrid::calcXCIntegMyuEpsilon_UKS(const TlMatrix& gridMat,
-                                           TlVector& tmpVectorA,
-                                           TlVector& tmpVectorB,
-                                           TlVector& eTmpVector) {
+void DfCalcGrid::calcXCIntegMyuEpsilon_UKS(
+    const TlDenseGeneralMatrix_BLAS_old& gridMat, TlVector_BLAS& tmpVectorA,
+    TlVector_BLAS& tmpVectorB, TlVector_BLAS& eTmpVector) {
   double Coef = 0.0;
   if (xc == 0) {
     // case of Xalpha Myu
@@ -749,18 +750,19 @@ void DfCalcGrid::calcXCIntegMyuEpsilon_UKS(const TlMatrix& gridMat,
 //    We must support the case which cannot be read at once.
 // 3. calculate product between them.
 
-void DfCalcGrid::calcXCcoef_RKS(const TlVector& tmpVector,
-                                const TlVector& eTmpVector) {
-  TlSymmetricMatrix Sgdinv = DfObject::getSgdInvMatrix<TlSymmetricMatrix>();
+void DfCalcGrid::calcXCcoef_RKS(const TlVector_BLAS& tmpVector,
+                                const TlVector_BLAS& eTmpVector) {
+  TlDenseSymmetricMatrix_BLAS_Old Sgdinv =
+      DfObject::getSgdInvMatrix<TlDenseSymmetricMatrix_BLAS_Old>();
   assert(Sgdinv.getNumOfRows() == this->numOfAuxXC_);
 
   {
-    TlVector myuGamma = Sgdinv * tmpVector;
+    TlVector_BLAS myuGamma = Sgdinv * tmpVector;
     myuGamma.save(this->getMyuPath(RUN_RKS, this->m_nIteration));
   }
 
   if (xc > 0) {
-    TlVector epsGamma = Sgdinv * eTmpVector;
+    TlVector_BLAS epsGamma = Sgdinv * eTmpVector;
     if ((this->m_bMemorySave == false) && (this->m_bDiskUtilization == false)) {
       epsGamma.save("fl_Work/fl_Vct_Epsilon" +
                     TlUtils::xtos(this->m_nIteration));
@@ -770,21 +772,22 @@ void DfCalcGrid::calcXCcoef_RKS(const TlVector& tmpVector,
   }
 }
 
-void DfCalcGrid::calcXCcoef_UKS(const TlVector& tmpVectorA,
-                                const TlVector& tmpVectorB,
-                                const TlVector& eTmpVector) {
-  TlSymmetricMatrix Sgdinv = DfObject::getSgdInvMatrix<TlSymmetricMatrix>();
+void DfCalcGrid::calcXCcoef_UKS(const TlVector_BLAS& tmpVectorA,
+                                const TlVector_BLAS& tmpVectorB,
+                                const TlVector_BLAS& eTmpVector) {
+  TlDenseSymmetricMatrix_BLAS_Old Sgdinv =
+      DfObject::getSgdInvMatrix<TlDenseSymmetricMatrix_BLAS_Old>();
   assert(Sgdinv.getNumOfRows() == this->numOfAuxXC_);
 
   {
-    TlVector myuGammaA = Sgdinv * tmpVectorA;
+    TlVector_BLAS myuGammaA = Sgdinv * tmpVectorA;
     myuGammaA.save(this->getMyuPath(RUN_UKS_ALPHA, this->m_nIteration));
-    TlVector myuGammaB = Sgdinv * tmpVectorB;
+    TlVector_BLAS myuGammaB = Sgdinv * tmpVectorB;
     myuGammaB.save(this->getMyuPath(RUN_UKS_BETA, this->m_nIteration));
   }
 
   if (xc > 0) {
-    TlVector epsGamma = Sgdinv * eTmpVector;
+    TlVector_BLAS epsGamma = Sgdinv * eTmpVector;
     if ((this->m_bMemorySave == false) && (this->m_bDiskUtilization == false)) {
       epsGamma.save("fl_Work/fl_Vct_Epsilona" +
                     TlUtils::xtos(this->m_nIteration));

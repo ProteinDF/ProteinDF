@@ -66,24 +66,24 @@ void DfObject::setParam(const TlSerializeData& data) {
 #endif  // _OPENMP
 
   // computational resource
-  this->procMaxMemSize_ = 1024UL * 1024UL * 1024UL;
-  {
-    const std::string memSizeStr =
-        TlUtils::toUpper(data["memory_size"].getStr());
-    if (memSizeStr.empty() == false) {
-      std::size_t value = std::atol(memSizeStr.c_str());
-      if (memSizeStr.rfind("MB") != std::string::npos) {
-        value *= (1024UL * 1024UL);
-      } else if (memSizeStr.rfind("GB") != std::string::npos) {
-        value *= (1024UL * 1024UL * 1024UL);
-      }
+  // this->procMaxMemSize_ = 1024UL * 1024UL * 1024UL;
+  // {
+  //   const std::string memSizeStr =
+  //       TlUtils::toUpper(data["memory_size"].getStr());
+  //   if (memSizeStr.empty() == false) {
+  //     std::size_t value = std::atol(memSizeStr.c_str());
+  //     if (memSizeStr.rfind("MB") != std::string::npos) {
+  //       value *= (1024UL * 1024UL);
+  //     } else if (memSizeStr.rfind("GB") != std::string::npos) {
+  //       value *= (1024UL * 1024UL * 1024UL);
+  //     }
+  //
+  //     this->procMaxMemSize_ = value;
+  //   }
+  // }
 
-      this->procMaxMemSize_ = value;
-    }
-  }
-
-  this->isEnableMmap_ = data["use_mapfile"].getBoolean();
-  this->isWorkOnDisk_ = data["work_on_disk"].getBoolean();
+  // this->isEnableMmap_ = data["use_mapfile"].getBoolean();
+  // this->isWorkOnDisk_ = data["work_on_disk"].getBoolean();
   this->localTempDir_ = data["local_temp_dir"].getStr();
   if (this->localTempDir_ == "") {
     this->localTempDir_ = "/tmp/";
@@ -298,12 +298,12 @@ void DfObject::setParam(const TlSerializeData& data) {
   this->enableExperimentalCode_ = data["experimental_code"].getBoolean();
 
   // for memory ==============================================================
-  this->isUseCache_ = (*(this->pPdfParam_))["use_matrix_cache"].getBoolean();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.setMaxMemSize(this->procMaxMemSize_);
-  } else {
-    this->matrixCache_.setMaxMemSize(0);
-  }
+  // this->isUseCache_ = (*(this->pPdfParam_))["use_matrix_cache"].getBoolean();
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.setMaxMemSize(this->procMaxMemSize_);
+  // } else {
+  this->matrixCache_.setMaxMemSize(0);
+  // }
   const bool isForceLoadingFromDisk =
       (*(this->pPdfParam_))["force_loading_from_disk"].getBoolean();
   this->matrixCache_.forceLoadingFromDisk(isForceLoadingFromDisk);
@@ -740,10 +740,10 @@ std::string DfObject::getCloMatrixPath(const RUN_TYPE runType,
                                               TlUtils::xtos(iteration));
 }
 
-TlVector DfObject::getOccVtr(const RUN_TYPE runType) {
+TlVector_BLAS DfObject::getOccVtr(const RUN_TYPE runType) {
   const std::string fileName = this->getOccupationPath(runType);
 
-  TlVector occ;
+  TlVector_BLAS occ;
   occ.load(fileName);
   assert(occ.getSize() == this->m_nNumOfMOs);
 

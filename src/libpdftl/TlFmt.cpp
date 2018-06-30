@@ -141,7 +141,7 @@ void TlFmt::makeFmtTable() {
     this->m_FmtTable[j][m] =
         expt *
         func;  // 0からTf(=2m+36)までをFMT_INV_D分割したうちのj番目のFm(T)の値
-               // (T = FMT_STEPSIZE*j)
+    // (T = FMT_STEPSIZE*j)
 
     // (*)
     // Fm(T) が求まれば、

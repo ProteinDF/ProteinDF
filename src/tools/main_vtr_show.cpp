@@ -20,7 +20,8 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "TlVector.h"
+#include "tl_dense_vector_blas.h"
+#include "tl_vector_utils.h"
 
 void showHelp(const std::string& progname) {
   std::cout << TlUtils::format("Usage: %s [options]... FILE", progname.c_str())
@@ -49,8 +50,8 @@ int main(int argc, char* argv[]) {
     std::cerr << "loading... " << sPath << std::endl;
   }
 
-  TlVector v;
-  bool bIsLoadable = TlVector::isLoadable(sPath);
+  TlVector_BLAS v;
+  bool bIsLoadable = TlVectorUtils::isLoadable(sPath);
   if (bIsLoadable == false) {
     std::cerr << "could not open: " << sPath << std::endl;
     return EXIT_FAILURE;

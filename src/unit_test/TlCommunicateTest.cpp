@@ -1,11 +1,7 @@
 #include "TlCommunicate.h"
 #include "gtest/gtest.h"
 
-static void SetUp() { std::cerr << "TlCommunicate setup() ----" << std::endl; }
-
 TEST(TlCommunicate, sendrecv_int) {
-  bool bIsPassed = true;
-
   TlCommunicate& rComm = TlCommunicate::getInstance();
   const int proc = rComm.getNumOfProc();
   const int rank = rComm.getRank();

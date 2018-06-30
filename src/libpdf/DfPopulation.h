@@ -21,10 +21,11 @@
 
 #include "CnError.h"
 #include "DfObject.h"
-#include "TlMatrix.h"
 #include "TlOrbitalInfo.h"
-#include "TlSymmetricMatrix.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_vector_blas.h"
+
+class TlDenseSymmetricMatrix_BLAS_Old;
 
 /** Mulliken Population の計算を行い、電荷情報、スピン情報を出力するクラス
  */
@@ -37,9 +38,9 @@ class DfPopulation : public DfObject {
   template <typename T>
   void getReport(const int iteration, T& out);
 
-  virtual double getSumOfElectrons(const TlSymmetricMatrix& P);
+  virtual double getSumOfElectrons(const TlDenseSymmetricMatrix_BLAS_Old& P);
 
-  TlMatrix getAtomPopData(const int iteration);
+  TlDenseGeneralMatrix_BLAS_old getAtomPopData(const int iteration);
 
  protected:
   virtual void calcPop(const int iteration);
@@ -50,28 +51,28 @@ class DfPopulation : public DfObject {
   double getNucleiCharge();
 
   template <class SymmetricMatrixType>
-  TlVector getGrossOrbPop(DfObject::RUN_TYPE runType, int iteration);
+  TlVector_BLAS getGrossOrbPop(DfObject::RUN_TYPE runType, int iteration);
 
   template <class SymmetricMatrixType>
-  TlVector getPS(const SymmetricMatrixType& P);
+  TlVector_BLAS getPS(const SymmetricMatrixType& P);
 
-  TlVector getGrossAtomPop(const TlVector& grossOrbPop);
+  TlVector_BLAS getGrossAtomPop(const TlVector_BLAS& grossOrbPop);
 
   template <typename T>
-  void getAtomPopStr(const TlVector& trPS, const bool isCalcNetCharge,
+  void getAtomPopStr(const TlVector_BLAS& trPS, const bool isCalcNetCharge,
                      T& out) const;
 
   template <typename T>
-  void getOrbPopStr(const TlVector& trPS, T& out) const;
+  void getOrbPopStr(const TlVector_BLAS& trPS, T& out) const;
 
  protected:
   TlOrbitalInfo orbitalInfo_;
 
-  TlVector grossOrbPopA_;
-  TlVector grossOrbPopB_;
+  TlVector_BLAS grossOrbPopA_;
+  TlVector_BLAS grossOrbPopB_;
 
-  TlVector grossAtomPopA_;
-  TlVector grossAtomPopB_;
+  TlVector_BLAS grossAtomPopA_;
+  TlVector_BLAS grossAtomPopB_;
 };
 
 template <typename T>
@@ -116,7 +117,8 @@ void DfPopulation::getReport(const int iteration, T& out) {
       this->getOrbPopStr(this->grossOrbPopB_, out);
 
       {
-        const TlVector grossOrbPop = this->grossOrbPopA_ + this->grossOrbPopB_;
+        const TlVector_BLAS grossOrbPop =
+            this->grossOrbPopA_ + this->grossOrbPopB_;
         out << " Gross atom population (UKS total)\n";
         this->getAtomPopStr(grossOrbPop, false, out);
         out << " Mulliken population analysis (orbial population; UKS total)\n";
@@ -124,7 +126,7 @@ void DfPopulation::getReport(const int iteration, T& out) {
       }
 
       {
-        const TlVector grossOrbPopSpin =
+        const TlVector_BLAS grossOrbPopSpin =
             this->grossOrbPopA_ - this->grossOrbPopB_;
         out << " Spin density analysis for atom (alpha - beta)\n";
         this->getAtomPopStr(grossOrbPopSpin, false, out);
@@ -151,7 +153,8 @@ void DfPopulation::getReport(const int iteration, T& out) {
       this->getOrbPopStr(this->grossOrbPopB_, out);
 
       {
-        const TlVector grossOrbPop = this->grossOrbPopA_ + this->grossOrbPopB_;
+        const TlVector_BLAS grossOrbPop =
+            this->grossOrbPopA_ + this->grossOrbPopB_;
         out << " Gross atom population (ROKS total)\n";
         this->getAtomPopStr(grossOrbPop, false, out);
         out << " Mulliken population analysis (orbial population; ROKS "
@@ -204,8 +207,8 @@ void DfPopulation::calcPop(const int iteration) {
 }
 
 template <class SymmetricMatrixType>
-TlVector DfPopulation::getGrossOrbPop(const DfObject::RUN_TYPE runType,
-                                      const int iteration) {
+TlVector_BLAS DfPopulation::getGrossOrbPop(const DfObject::RUN_TYPE runType,
+                                           const int iteration) {
   SymmetricMatrixType P;
   assert((runType == RUN_RKS) || (runType == RUN_UKS_ALPHA) ||
          (runType == RUN_UKS_BETA) || (runType == RUN_ROKS_CLOSED) ||
@@ -216,7 +219,7 @@ TlVector DfPopulation::getGrossOrbPop(const DfObject::RUN_TYPE runType,
 }
 
 template <class SymmetricMatrixType>
-TlVector DfPopulation::getPS(const SymmetricMatrixType& P) {
+TlVector_BLAS DfPopulation::getPS(const SymmetricMatrixType& P) {
   // read AO overlap matrix
   const SymmetricMatrixType S = DfObject::getSpqMatrix<SymmetricMatrixType>();
   const SymmetricMatrixType PS = P * S;
@@ -225,7 +228,7 @@ TlVector DfPopulation::getPS(const SymmetricMatrixType& P) {
 }
 
 template <typename T>
-void DfPopulation::getAtomPopStr(const TlVector& trPS,
+void DfPopulation::getAtomPopStr(const TlVector_BLAS& trPS,
                                  const bool isCalcNetCharge, T& out) const {
   const index_type numOfAtoms = this->m_nNumOfAtoms;
   assert(trPS.getSize() == numOfAtoms);
@@ -254,7 +257,7 @@ void DfPopulation::getAtomPopStr(const TlVector& trPS,
 
 // print out Mulliken Analysis (Orbital Population)
 template <typename T>
-void DfPopulation::getOrbPopStr(const TlVector& trPS, T& out) const {
+void DfPopulation::getOrbPopStr(const TlVector_BLAS& trPS, T& out) const {
   const index_type numOfAOs = this->m_nNumOfAOs;
   assert(trPS.getSize() == numOfAOs);
 

@@ -1,0 +1,1375 @@
+// Copyright (C) 2002-2014 The ProteinDF project
+// see also AUTHORS and README.
+//
+// This file is part of ProteinDF.
+//
+// ProteinDF is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// ProteinDF is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
+
+#include <algorithm>
+#include <cmath>
+#include <iostream>
+#include <limits>
+#include <numeric>
+
+#include "TlLogging.h"
+#include "TlUtils.h"
+#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_matrix_utils.h"
+
+#ifdef HAVE_HDF5
+#include "TlHdf5Utils.h"
+#endif  // HAVE_HDF5
+
+////////////////////////////////////////////////////////////////////////
+//
+TlDenseSymmetricMatrix_BLAS_Old::TlDenseSymmetricMatrix_BLAS_Old(int dim)
+    : TlDenseGeneralMatrix_BLAS_old(dim, dim, NULL) {
+  assert(dim >= 0);
+
+  this->initialize();
+}
+
+TlDenseSymmetricMatrix_BLAS_Old::TlDenseSymmetricMatrix_BLAS_Old(
+    const TlDenseSymmetricMatrix_BLAS_Old& rhs)
+    : TlDenseGeneralMatrix_BLAS_old(rhs.getNumOfRows(), rhs.getNumOfCols(), NULL) {
+  this->initialize(false);
+  std::copy(rhs.data_, rhs.data_ + rhs.getNumOfElements(), this->data_);
+}
+
+TlDenseSymmetricMatrix_BLAS_Old::TlDenseSymmetricMatrix_BLAS_Old(
+    const TlDenseGeneralMatrix_BLAS_old& rhs)
+    : TlDenseGeneralMatrix_BLAS_old(rhs.getNumOfRows(), rhs.getNumOfCols(), NULL) {
+  assert(rhs.getNumOfRows() == rhs.getNumOfCols());
+
+  this->initialize(false);
+
+  // std::cerr << "Full matrix is converted to Symmetric matrix..." <<
+  // std::endl;
+  const int dim = this->getNumOfRows();
+#pragma omp parallel for
+  for (int row = 0; row < dim; ++row) {
+    for (int col = 0; col <= row; ++col) {
+      this->set(row, col, rhs.get(row, col));
+    }
+  }
+}
+
+TlDenseSymmetricMatrix_BLAS_Old::TlDenseSymmetricMatrix_BLAS_Old(
+    const TlSerializeData& data)
+    : TlDenseGeneralMatrix_BLAS_old(1, 1, NULL) {
+  this->row_ = std::max(data["row"].getInt(), 1);
+  this->col_ = std::max(data["col"].getInt(), 1);
+  assert(this->getNumOfRows() == this->getNumOfCols());
+  this->initialize(false);
+
+  size_type index = 0;
+  const index_type maxRow = this->getNumOfRows();
+  for (index_type row = 0; row < maxRow; ++row) {
+    for (index_type col = 0; col <= row; ++col) {
+      this->set(row, col, data["data"].getAt(index).getDouble());
+      ++index;
+    }
+  }
+}
+
+TlDenseSymmetricMatrix_BLAS_Old::TlDenseSymmetricMatrix_BLAS_Old(
+    const TlVector_BLAS& vct, index_type dim)
+    : TlDenseGeneralMatrix_BLAS_old(dim, dim, NULL) {
+  assert(0 <= dim);
+
+  const size_type size = this->getNumOfElements();
+  assert(vct.getSize() == size);
+
+  this->initialize(false);
+
+#ifndef __FUJITSU  // cannot use OpenMP in constructor
+#pragma omp parallel for
+#endif  // __FUJITSU
+  for (size_type index = 0; index < size; ++index) {
+    this->data_[index] = vct[index];
+  }
+}
+
+TlDenseSymmetricMatrix_BLAS_Old::~TlDenseSymmetricMatrix_BLAS_Old() {
+  // バッファの削除は親クラスで行う。
+  // this->clear();
+}
+
+void TlDenseSymmetricMatrix_BLAS_Old::resize(const index_type dim) {
+  assert(dim > 0);
+
+  TlDenseSymmetricMatrix_BLAS_Old oldMatrix(*this);
+
+  this->clear();
+  this->row_ = dim;
+  this->col_ = dim;
+  this->initialize(true);
+
+  const index_type nMaxDimForCopy =
+      std::min<index_type>(oldMatrix.getNumOfRows(), dim);
+
+#pragma omp parallel for
+  for (index_type i = 0; i < nMaxDimForCopy; ++i) {
+    for (index_type j = 0; j <= i; ++j) {
+      this->set(i, j, oldMatrix.get(i, j));
+    }
+  }
+}
+
+TlMatrixObject::size_type TlDenseSymmetricMatrix_BLAS_Old::getNumOfElements()
+    const {
+  return TlMatrixObject::getNumOfElements_RLHD();
+}
+
+TlMatrixObject::size_type TlDenseSymmetricMatrix_BLAS_Old::index(
+    index_type row, index_type col) const {
+  assert((0 <= row) && (row < this->getNumOfRows()));
+  assert((0 <= col) && (col < this->getNumOfCols()));
+
+  // This class treats 'U' type matrix.
+  // if UPLO = 'U', AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j; in Fortran
+  // index = row + col * (col +1) /2; // in C/C++
+
+  // if (row > col) {
+  //     std::swap(row, col);
+  // }
+  // unsigned int t = col * (col +1);
+  // t = t >> 1; // == 't /= 2'
+  // return row + t;
+
+  if (row < col) {
+    std::swap(row, col);
+  }
+  assert(row >= col);
+  const size_type index = row * (row + 1) / 2 + col;
+  assert(index < this->getNumOfElements());
+
+  return index;
+}
+
+// std::size_t TlDenseSymmetricMatrix_BLAS_Old::vtr_index(index_type row,
+//                                          index_type col,
+//                                          index_type dim)
+// {
+//     assert((0 <= row) && (row < dim));
+//     assert((0 <= col) && (col < dim));
+//
+//     // This class treats 'U' type matrix.
+//     // if UPLO = 'U', AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j; in Fortran
+//     // index = row + col * (col +1) /2; // in C/C++
+//
+//     if (row > col) {
+//         std::swap(row, col);
+//     }
+//     unsigned int t = col * (col +1);
+//     t = t >> 1; // == 't /= 2'
+//     return row + t;
+// }
+
+double TlDenseSymmetricMatrix_BLAS_Old::sum() const {
+  double answer =
+      std::accumulate(this->data_, this->data_ + this->getNumOfElements(), 0.0);
+  answer *= 2.0;
+  answer -= this->trace();
+
+  return answer;
+}
+
+TlDenseSymmetricMatrix_BLAS_Old& TlDenseSymmetricMatrix_BLAS_Old::operator=(
+    const TlDenseSymmetricMatrix_BLAS_Old& rhs) {
+  if (&rhs != this) {
+    this->clear();
+    this->row_ = rhs.getNumOfRows();
+    this->col_ = rhs.getNumOfCols();
+    this->initialize(false);
+
+    const std::size_t size = this->getNumOfElements();
+    std::copy(rhs.data_, rhs.data_ + size, this->data_);
+  }
+
+  return *this;
+}
+
+TlDenseSymmetricMatrix_BLAS_Old& TlDenseSymmetricMatrix_BLAS_Old::operator+=(
+    const TlDenseSymmetricMatrix_BLAS_Old& rhs) {
+  assert(this->row_ == rhs.getNumOfRows());
+  assert(this->col_ == rhs.getNumOfCols());
+
+  const size_type size = this->getNumOfElements();
+
+#ifdef _OPENMP
+  const size_type quot = size / MAX_LOOP;
+  const int rem = size - quot * MAX_LOOP;
+#pragma omp parallel
+  {
+    for (size_type block = 0; block < quot; ++block) {
+      const size_type index_base = block * MAX_LOOP;
+#pragma omp for
+      for (int i = 0; i < MAX_LOOP; ++i) {
+        const size_type index = index_base + i;
+        this->data_[index] += rhs.data_[index];
+      }
+    }
+
+    const size_type index_base = quot * MAX_LOOP;
+#pragma omp for
+    for (int i = 0; i < rem; ++i) {
+      const size_type index = index_base + i;
+      this->data_[index] += rhs.data_[index];
+    }
+  }
+#else
+  for (size_type index = 0; index < size; ++index) {
+    this->data_[index] += rhs.data_[index];
+  }
+#endif  // _OPENMP
+  return (*this);
+}
+
+// TlDenseSymmetricMatrix_BLAS_Old& TlDenseSymmetricMatrix_BLAS_Old::operator+=(const
+// TlSparseSymmetricMatrix& rhs)
+// {
+//     std::cerr << "call TlDenseSymmetricMatrix_BLAS_Old::operator+=(const
+//     TlSparseSymmetricMatrix&)" << std::endl; assert(this->getNumOfRows() ==
+//     rhs.getNumOfRows()); assert(this->getNumOfCols() == rhs.getNumOfCols());
+
+//     index_type row = 0;
+//     index_type col = 0;
+//     TlSparseSymmetricMatrix::const_iterator itEnd = rhs.end();
+//     for (TlSparseSymmetricMatrix::const_iterator it = rhs.begin(); it !=
+//     itEnd; ++it) {
+//         rhs.index(it->first, &row, &col);
+//         this->add(row, col, it->second);
+//     }
+
+//     return *this;
+// }
+
+TlDenseSymmetricMatrix_BLAS_Old& TlDenseSymmetricMatrix_BLAS_Old::operator-=(
+    const TlDenseSymmetricMatrix_BLAS_Old& rhs) {
+  assert(this->row_ == rhs.getNumOfRows());
+  assert(this->col_ == rhs.getNumOfCols());
+
+  const size_type size = this->getNumOfElements();
+
+#ifdef _OPENMP
+  const size_type quot = size / MAX_LOOP;
+  const int rem = size - quot * MAX_LOOP;
+#pragma omp parallel
+  {
+    for (size_type block = 0; block < quot; ++block) {
+      const size_type index_base = block * MAX_LOOP;
+#pragma omp for
+      for (int i = 0; i < MAX_LOOP; ++i) {
+        const size_type index = index_base + i;
+        this->data_[index] -= rhs.data_[index];
+      }
+    }
+
+    const size_type index_base = quot * MAX_LOOP;
+#pragma omp for
+    for (int i = 0; i < rem; ++i) {
+      const size_type index = index_base + i;
+      this->data_[index] -= rhs.data_[index];
+    }
+  }
+#else
+  for (size_type index = 0; index < size; ++index) {
+    this->data_[index] -= rhs.data_[index];
+  }
+#endif  // _OPENMP
+
+  return (*this);
+}
+
+TlDenseSymmetricMatrix_BLAS_Old& TlDenseSymmetricMatrix_BLAS_Old::operator*=(
+    const double& rhs) {
+  const size_type size = this->getNumOfElements();
+
+#ifdef _OPENMP
+  const size_type quot = size / MAX_LOOP;
+  const int rem = size - quot * MAX_LOOP;
+#pragma omp parallel
+  {
+    for (size_type block = 0; block < quot; ++block) {
+      const size_type index_base = block * MAX_LOOP;
+#pragma omp for
+      for (int i = 0; i < MAX_LOOP; ++i) {
+        const size_type index = index_base + i;
+        this->data_[index] *= rhs;
+      }
+    }
+
+    const size_type index_base = quot * MAX_LOOP;
+#pragma omp for
+    for (int i = 0; i < rem; ++i) {
+      const size_type index = index_base + i;
+      this->data_[index] *= rhs;
+    }
+  }
+#else
+  for (size_type index = 0; index < size; ++index) {
+    this->data_[index] *= rhs;
+  }
+#endif  // _OPENMP
+
+  return (*this);
+}
+
+TlDenseSymmetricMatrix_BLAS_Old& TlDenseSymmetricMatrix_BLAS_Old::operator/=(
+    const double& rhs) {
+  return (this->operator*=(1.0 / rhs));
+}
+
+TlDenseSymmetricMatrix_BLAS_Old operator+(const TlDenseSymmetricMatrix_BLAS_Old& X,
+                                      const TlDenseSymmetricMatrix_BLAS_Old& Y) {
+  assert(X.getNumOfRows() == Y.getNumOfCols());
+  assert(X.getNumOfCols() == Y.getNumOfCols());
+
+  TlDenseSymmetricMatrix_BLAS_Old answer(X);
+  answer += Y;
+
+  return answer;
+}
+
+TlDenseGeneralMatrix_BLAS_old operator+(const TlDenseGeneralMatrix_BLAS_old& X,
+                                    const TlDenseSymmetricMatrix_BLAS_Old& Y) {
+  assert(X.getNumOfRows() == Y.getNumOfRows());
+  assert(X.getNumOfCols() == Y.getNumOfCols());
+
+  TlDenseGeneralMatrix_BLAS_old answer(X);
+  const int numOfRows = Y.getNumOfRows();
+#pragma omp parallel for
+  for (int row = 0; row < numOfRows; ++row) {
+    // col != row
+    for (int col = 0; col < row; ++col) {
+      const double tmp = Y.get(row, col);
+      answer.add(row, col, tmp);
+      answer.add(col, row, tmp);
+    }
+    // col == row
+    answer.add(row, row, Y.get(row, row));
+  }
+
+  return answer;
+}
+
+TlDenseSymmetricMatrix_BLAS_Old operator-(const TlDenseSymmetricMatrix_BLAS_Old& X,
+                                      const TlDenseSymmetricMatrix_BLAS_Old& Y) {
+  assert(X.getNumOfRows() == Y.getNumOfRows());
+  assert(X.getNumOfCols() == Y.getNumOfCols());
+
+  TlDenseSymmetricMatrix_BLAS_Old answer(X);
+  answer -= Y;
+
+  return answer;
+}
+
+TlDenseGeneralMatrix_BLAS_old operator-(const TlDenseGeneralMatrix_BLAS_old& X,
+                                    const TlDenseSymmetricMatrix_BLAS_Old& Y) {
+  return (X + (-1.0 * Y));
+}
+
+TlDenseGeneralMatrix_BLAS_old operator-(const TlDenseSymmetricMatrix_BLAS_Old& X,
+                                    const TlDenseGeneralMatrix_BLAS_old& Y) {
+  return ((-1.0 * Y) + X);
+}
+
+// X x Y
+TlDenseGeneralMatrix_BLAS_old operator*(const TlDenseSymmetricMatrix_BLAS_Old& X,
+                                    const TlDenseSymmetricMatrix_BLAS_Old& Y) {
+  assert(X.getNumOfCols() == Y.getNumOfRows());
+
+  TlDenseGeneralMatrix_BLAS_old answer(X.getNumOfRows(), Y.getNumOfCols());
+
+#ifdef HAVE_LAPACK
+  // use LAPACK
+  TlDenseGeneralMatrix_BLAS_old tmpY = Y;
+  answer = multiplicationByLapack(TlDenseGeneralMatrix_BLAS_old(X), tmpY);
+#else
+  // not use LAPACK
+  {
+    for (index_type row = 0; row < X.getNumOfRows(); row++) {
+      for (index_type col = 0; col < Y.getNumOfCols(); col++) {
+        for (index_type t = 0; t < X.getNumOfCols(); t++) {
+          answer(row, col) += X(row, t) * Y(t, col);
+        }
+      }
+    }
+  }
+#endif  // HAVE_LAPACK
+
+  return answer;
+}
+
+TlDenseGeneralMatrix_BLAS_old operator*(const TlDenseGeneralMatrix_BLAS_old& X,
+                                    const TlDenseSymmetricMatrix_BLAS_Old& Y) {
+  assert(X.getNumOfCols() == Y.getNumOfRows());
+  TlDenseGeneralMatrix_BLAS_old answer(X.getNumOfRows(), Y.getNumOfCols());
+
+#ifdef HAVE_LAPACK
+  answer = multiplicationByLapack(X, Y);
+#else
+  // not use LAPACK
+  const int nMaxNumOfRows = X.getNumOfRows();
+  const int nMaxNumOfCols = Y.getNumOfCols();
+  const int nMaxNumOfTemp = X.getNumOfCols();
+  for (int row = 0; row < nMaxNumOfRows; ++row) {
+    for (int col = 0; col < nMaxNumOfCols; ++col) {
+      for (int t = 0; t < nMaxNumOfTemp; ++t) {
+        answer(row, col) += X(row, t) * Y(t, col);
+      }
+    }
+  }
+#endif  // HAVE_LAPACK
+
+  return answer;
+}
+
+TlDenseGeneralMatrix_BLAS_old operator*(const TlDenseSymmetricMatrix_BLAS_Old& X,
+                                    const TlDenseGeneralMatrix_BLAS_old& Y) {
+  assert(X.getNumOfCols() == Y.getNumOfRows());
+  TlDenseGeneralMatrix_BLAS_old answer(X.getNumOfRows(), Y.getNumOfCols());
+
+#ifdef HAVE_LAPACK
+  answer = multiplicationByLapack(X, Y);
+#else
+  // not use LAPACK
+  for (int row = 0; row < X.getNumOfRows(); row++) {
+    for (int col = 0; col < Y.getNumOfCols(); col++) {
+      for (int t = 0; t < X.getNumOfCols(); t++) {
+        answer(row, col) += X(row, t) * Y(t, col);
+      }
+    }
+  }
+#endif  // HAVE_LAPACK
+
+  return answer;
+}
+
+TlVector_BLAS operator*(const TlDenseSymmetricMatrix_BLAS_Old& A,
+                        const TlVector_BLAS& X) {
+  assert(A.getNumOfCols() == X.getSize());
+  TlVector_BLAS answer(A.getNumOfRows());
+
+#ifdef HAVE_LAPACK
+  answer = multiplicationByLapack(A, X);
+#else
+  // not use LAPACK
+  for (int row = 0; row < X.getNumOfRows(); ++row) {
+    double tmp = 0.0;
+    for (int col = 0; col < Y.getNumOfCols(); ++col) {
+      tmp += A.get(row, col) * X.get(col);
+    }
+    answer.set(row, tmp);
+  }
+#endif  // HAVE_LAPACK
+
+  return answer;
+}
+
+TlVector_BLAS operator*(const TlVector_BLAS& X,
+                        const TlDenseSymmetricMatrix_BLAS_Old& A) {
+  return (A * X);
+}
+
+TlDenseSymmetricMatrix_BLAS_Old operator*(const TlDenseSymmetricMatrix_BLAS_Old& X,
+                                      double Y) {
+  TlDenseSymmetricMatrix_BLAS_Old answer(X);
+  answer *= Y;
+
+  return answer;
+}
+
+TlDenseSymmetricMatrix_BLAS_Old operator*(double X,
+                                      const TlDenseSymmetricMatrix_BLAS_Old& Y) {
+  return (Y * X);
+}
+
+const TlDenseSymmetricMatrix_BLAS_Old& TlDenseSymmetricMatrix_BLAS_Old::dotInPlace(
+    const TlDenseSymmetricMatrix_BLAS_Old& X) {
+  assert(X.getNumOfRows() == this->getNumOfRows());
+  assert(X.getNumOfCols() == this->getNumOfCols());
+
+  const std::size_t size = this->getNumOfElements();
+
+#ifdef _OPENMP
+  // use OpenMP
+  const size_type quot = size / MAX_LOOP;
+  const int rem = size - quot * MAX_LOOP;
+#pragma omp parallel
+  {
+    for (size_type block = 0; block < quot; ++block) {
+      const size_type index_base = block * MAX_LOOP;
+#pragma omp for
+      for (int i = 0; i < MAX_LOOP; ++i) {
+        const size_type index = index_base + i;
+        this->data_[index] *= X.data_[index];
+      }
+    }
+
+    const size_type index_base = quot * MAX_LOOP;
+#pragma omp for
+    for (int i = 0; i < rem; ++i) {
+      const size_type index = index_base + i;
+      this->data_[index] *= X.data_[index];
+    }
+  }
+#else
+  // not use OpenMP
+  for (std::size_t i = 0; i < size; ++i) {
+    this->data_[i] *= X.data_[i];
+  }
+#endif  // _OPENMP
+
+  return (*this);
+}
+
+TlDenseSymmetricMatrix_BLAS_Old dot(const TlDenseSymmetricMatrix_BLAS_Old& X,
+                                const TlDenseSymmetricMatrix_BLAS_Old& Y) {
+  assert(X.getNumOfRows() == Y.getNumOfRows());
+  assert(X.getNumOfCols() == Y.getNumOfCols());
+
+  TlDenseSymmetricMatrix_BLAS_Old Z = X;
+  Z.dotInPlace(Y);
+
+  return Z;
+}
+
+bool TlDenseSymmetricMatrix_BLAS_Old::load(const std::string& sFilePath) {
+  std::fstream fs;
+  fs.open(sFilePath.c_str(), std::fstream::binary | std::fstream::in);
+  if (fs.fail()) {
+#ifdef DEBUG
+    std::cerr
+        << "[error] TlDenseSymmetricMatrix_BLAS_Old::load(): could not open file. "
+        << sFilePath << std::endl;
+#endif  // DEBUG
+    return false;
+  }
+
+  bool bAnswer = this->load(fs);
+  fs.close();
+
+  if (bAnswer == false) {
+    TlLogging& log = TlLogging::getInstance();
+    log.critical(TlUtils::format(
+        "TlDenseSymmetricMatrix_BLAS_Old::load() is not supported: %s",
+        sFilePath.c_str()));
+    std::abort();
+
+    return false;
+  }
+
+  return true;
+}
+
+bool TlDenseSymmetricMatrix_BLAS_Old::load(std::fstream& fs) {
+  bool bAnswer = true;
+
+  // read header
+  TlMatrixObject::MatrixType matrixType;
+  index_type numOfRows = 0;
+  index_type numOfCols = 0;
+
+  bAnswer = (TlMatrixUtils::getHeaderInfo(fs, &matrixType, &numOfRows,
+                                          &numOfCols) > 0);
+
+  switch (matrixType) {
+    case RLHD:
+      // std::cerr << "load RLHD" << std::endl;
+      break;
+
+    default:
+      std::cerr << "unknown matrix type(" << matrixType << ")." << std::endl;
+      bAnswer = false;
+      break;
+  }
+
+  if (bAnswer == true) {
+    this->clear();
+    this->row_ = numOfRows;
+    this->col_ = numOfCols;
+    this->initialize();
+
+    const index_type numOfRows = this->getNumOfRows();
+    for (index_type row = 0; row < numOfRows; ++row) {
+      for (index_type col = 0; col <= row; ++col) {
+        double tmp;
+        fs.read((char*)&tmp, sizeof(double));
+        this->set(row, col, tmp);
+      }
+    }
+  }
+
+  return bAnswer;
+}
+
+bool TlDenseSymmetricMatrix_BLAS_Old::save(const std::string& sFilePath) const {
+  bool bAnswer = true;
+
+  std::ofstream ofs;
+  ofs.open(sFilePath.c_str(), std::ofstream::out | std::ofstream::binary);
+  bAnswer = this->save(ofs);
+  ofs.close();
+
+  return bAnswer;
+}
+
+bool TlDenseSymmetricMatrix_BLAS_Old::save(std::ofstream& ofs) const {
+  bool bAnswer = true;
+
+  const int nType = 2;  // means RLHD
+  ofs.write(reinterpret_cast<const char*>(&nType), sizeof(int));
+  ofs.write(reinterpret_cast<const char*>(&this->row_), sizeof(index_type));
+  ofs.write(reinterpret_cast<const char*>(&this->col_), sizeof(index_type));
+
+  assert(this->row_ == this->col_);
+  const index_type maxRow = this->getNumOfRows();
+  for (index_type row = 0; row < maxRow; ++row) {
+    for (index_type col = 0; col <= row; ++col) {
+      const double tmp = this->get(row, col);
+      ofs.write(reinterpret_cast<const char*>(&tmp), sizeof(double));
+    }
+  }
+
+  return bAnswer;
+}
+
+TlSerializeData TlDenseSymmetricMatrix_BLAS_Old::getSerialize() const {
+  TlSerializeData data;
+  data["row"] = this->getNumOfRows();
+  data["col"] = this->getNumOfCols();
+  data["type"] = "RLHD";
+
+  TlSerializeData tmp;
+  const size_type size = this->getNumOfElements();
+  for (size_type index = 0; index < size; ++index) {
+    tmp.pushBack(this->data_[index]);
+  }
+  data["data"] = tmp;
+
+  return data;
+}
+
+#ifdef HAVE_HDF5
+bool TlDenseSymmetricMatrix_BLAS_Old::saveHdf5(const std::string& filepath,
+                                           const std::string& h5path) const {
+  TlHdf5Utils h5(filepath);
+
+  // assert((this->type_ == RLHD) || (this->type_ == CUHD));
+  const index_type row = this->getNumOfRows();
+  const index_type col = this->getNumOfCols();
+  h5.write(h5path, this->data_, this->getNumOfElements());
+  h5.setAttr(h5path, "type", static_cast<int>(RLHD));
+  h5.setAttr(h5path, "row", row);
+  h5.setAttr(h5path, "col", col);
+
+  return true;
+}
+
+bool TlDenseSymmetricMatrix_BLAS_Old::loadHdf5(const std::string& filepath,
+                                           const std::string& h5path) {
+  TlHdf5Utils h5(filepath);
+
+  int mat_type;
+  h5.getAttr(h5path, "type", &mat_type);
+
+  index_type row = 0;
+  index_type col = 0;
+  h5.getAttr(h5path, "row", &row);
+  h5.getAttr(h5path, "col", &col);
+  if (row != col) {
+    this->log_.critical(TlUtils::format(
+        "illegal parameter in TlDenseSymmetricMatrix_BLAS_Old::loadHdf5() "
+        "row(%ld) != col(%ld)",
+        row, col));
+  }
+  this->resize(row);
+
+  switch (mat_type) {
+    case RLHD:
+    case CUHD:
+      h5.get(h5path, this->data_, this->getNumOfElements());
+      break;
+
+    default:
+      this->log_.critical(TlUtils::format(
+          "illegal matrix type for TlDenseSymmetricMatrix_BLAS_Old: %d", mat_type));
+      break;
+  }
+
+  return true;
+}
+#endif  // HAVE_HDF5
+
+/**
+ *  出力ストリーム
+ */
+std::ostream& operator<<(std::ostream& out,
+                         const TlDenseSymmetricMatrix_BLAS_Old& rhs) {
+  rhs.print(out);
+  return out;
+}
+
+bool TlDenseSymmetricMatrix_BLAS_Old::diagonal(
+    TlVector_BLAS* pEigVal, TlDenseGeneralMatrix_BLAS_old* pEigVec) const {
+#ifdef HAVE_LAPACK
+  return diagonalByLapack(*this, pEigVal, pEigVec);
+#else
+  std::cerr << "please WRITE diagnal argorithm. stop." << std::endl;
+  abort();
+#endif  // HAVE_LAPACK
+}
+
+bool TlDenseSymmetricMatrix_BLAS_Old::inverse() {
+#ifdef HAVE_LAPACK
+  // using LAPACK
+  return inverseByLapack(*this);
+#else
+  // without LAPACK
+  std::cerr << "sorry. this code is not implemented." << std::endl;
+  abort();
+  return false;
+#endif  // HAVE_LAPACK
+}
+
+TlDenseSymmetricMatrix_BLAS_Old& TlDenseSymmetricMatrix_BLAS_Old::transposeInPlace() {
+  return (*this);
+}
+
+TlVector_BLAS TlDenseSymmetricMatrix_BLAS_Old::getMaxAbsoluteVectorOnEachRow()
+    const {
+  const int nSize = this->getNumOfRows();
+
+  TlVector_BLAS v(nSize);
+
+  for (int row = 0; row < nSize; ++row) {
+    // たいていの場合、対角要素が大きいので、これを最初にもってくる
+    double dMax = std::fabs(this->get(row, row));
+
+    for (int col = (row - 1); col >= 0; --col) {
+      dMax = std::max(dMax, std::fabs(this->get(row, col)));
+    }
+
+    v[row] = dMax;
+  }
+
+  return v;
+}
+
+// 要素の絶対値の最大値を返す
+// int* outRow, outCol にはその要素がある行と列を返す
+double TlDenseSymmetricMatrix_BLAS_Old::getMaxAbsoluteElement(int* outRow,
+                                                          int* outCol) const {
+  // std::cout << "TlDenseSymmetricMatrix_BLAS_Old::getMaxAbsoluteElement()" <<
+  // std::endl;
+  double dAnswer = -1.0;
+  int nMaxRow = 0;
+  int nMaxCol = 0;
+
+  for (int row = 0; row < this->getNumOfRows(); row++) {
+    for (int col = 0; col <= row; col++) {
+      const double val = std::fabs(this->get(row, col));
+      if (dAnswer < val) {
+        dAnswer = val;
+        nMaxRow = row;
+        nMaxCol = col;
+      }
+    }
+  }
+
+  if (outRow != NULL) {
+    *outRow = nMaxRow;
+  }
+  if (outCol != NULL) {
+    *outCol = nMaxCol;
+  }
+
+  return dAnswer;
+}
+
+double TlDenseSymmetricMatrix_BLAS_Old::getMaxAbsoluteElementByIndex(
+    int index) const {
+  double dAnswer = 0.0;
+
+  for (int row = 0; row < this->getNumOfRows(); ++row) {
+    const double val = std::fabs(this->get(row, index));
+    dAnswer = std::max(dAnswer, val);
+  }
+
+  return dAnswer;
+}
+
+double TlDenseSymmetricMatrix_BLAS_Old::getRMS() const {
+  double sum2 = 0.0;
+  const std::size_t numOfDataSize = this->getNumOfElements();
+  for (std::size_t i = 0; i < numOfDataSize; ++i) {
+    const double tmp = this->data_[i];
+    sum2 += tmp * tmp;
+  }
+  sum2 *= 2.0;
+
+  // diagonal
+  double diagonals2 = 0.0;
+  const TlMatrixObject::index_type dim = this->getNumOfRows();
+  assert(dim == this->getNumOfCols());
+  for (TlMatrixObject::index_type i = 0; i < dim; ++i) {
+    const double tmp = this->get(i, i);
+    diagonals2 += tmp * tmp;
+  }
+  sum2 -= diagonals2;
+
+  const double elements = dim * dim;
+
+  const double rms = std::sqrt(sum2 / elements);
+  return rms;
+}
+
+////////////////////////////////////////////////////////////////////////
+// NOTICE:
+// friend functions
+#ifdef HAVE_LAPACK
+// for LAPACK
+extern "C" {
+// dspmv
+// DSPMV  performs the matrix-vector operation
+//  y := alpha*A*x + beta*y,
+// where alpha and beta are scalars, x and y are n element vectors and
+// A is an n by n symmetric matrix, supplied in packed form.
+void dspmv_(const char* UPLO, const int* N, const double* ALPHA,
+            const double* AP, const double* X, const int* INCX, double* BETA,
+            double* Y, const int* INCY);
+
+// performs one of the matrix-matrix operations
+//    C := alpha*A*B + beta*C,
+// or
+//    C := alpha*B*A + beta*C,
+// where alpha and beta are scalars,  A is a symmetric matrix and  B and
+// C are  m by n matrices.
+void dsymm_(const char* SIDE, const char* UPLO, const int* M, const int* N,
+            const double* ALPHA, const double* A, const int* LDA,
+            const double* B, const int* LDB, const double* BETA, double* C,
+            const int* LDC);
+
+// DSPEV
+void dspev_(const char* JOBZ, const char* UPLO, const int* N, double* AP,
+            double* W, double* Z, const int* LDZ, double* WORK, int* INFO);
+// DSPEVD
+// void dspevd_(const char* JOBZ, const char* UPLO,
+//              const int* N, double* AP, double* W,
+//              double* Z, const int* LDZ, double* WORK, int* LWORK,
+//              int* IWORK, int* LIWORK, int* INFO);
+
+// DSPTRF computes the factorization of a real symmetric matrix A stored
+// in packed format using the Bunch-Kaufman diagonal pivoting method:
+//    A = U*D*U**T  or  A = L*D*L**T
+// where U (or L) is a product of permutation and unit upper (lower)
+// triangular matrices, and D is symmetric and block diagonal with
+// 1-by-1 and 2-by-2 diagonal blocks.
+void dsptrf_(const char* UPLO, const int* N, double* PA, int* IPIV, int* INFO);
+
+// DSPTRI computes the inverse of a real symmetric indefinite matrix
+// A in packed storage using the factorization A = U*D*U**T or
+// A = L*D*L**T computed by DSPTRF.
+void dsptri_(const char* UPLO, const int* N, double* PA, int* IPIV,
+             double* WORK, int* INFO);
+}
+
+TlDenseGeneralMatrix_BLAS_old multiplicationByLapack(
+    const TlDenseSymmetricMatrix_BLAS_Old& A, const TlDenseGeneralMatrix_BLAS_old& B) {
+  assert(A.getNumOfCols() == B.getNumOfRows());
+
+  TlDenseGeneralMatrix_BLAS_old C(A.getNumOfRows(), B.getNumOfCols());
+
+  // use LAPACK
+  const char SIDE = 'L';  // L means "C := alpha*A*B + beta*C",
+                          // R means "C := alpha*B*A + beta*C"
+  const char UPLO =
+      'U';  // L means the lower triangular part of the symmetric matrix
+            // U means the upper triangular part of the symmetric matrix
+  const int M = C.getNumOfRows();  // the number of rows of the matrix  C
+  const int N = C.getNumOfCols();  // the number of columns of the matrix C
+  const double ALPHA = 1.0;        // ALPHA specifies the scalar alpha
+  const int LDA = M;  // When  SIDE = 'L' or 'l'  then LDA must be at least
+                      // max(1, M), otherwise  LDA must be at least  max(1, N).
+
+  double* pA = new double[M * M];
+  for (int c = 0; c < M; ++c) {
+    const int base = c * M;
+    for (int r = 0; r <= c; ++r) {
+      pA[base + r] = A.get(r, c);
+    }
+  }
+
+  const double* pB =
+      const_cast<TlDenseGeneralMatrix_BLAS_old&>(B).data_;  // DIMENSION (LDB, N)
+  const int LDB = M;                                    // max(1, M)
+  const double BETA = 0.0;  // BETA  specifies the scalar  beta
+  double* pC = C.data_;     // DIMENSION (LDC, N)
+  const int LDC = M;        // max(1, M)
+
+  dsymm_(&SIDE, &UPLO, &M, &N, &ALPHA, pA, &LDA, pB, &LDB, &BETA, pC, &LDC);
+
+  delete[] pA;
+  pA = NULL;
+
+  return C;
+}
+
+TlDenseGeneralMatrix_BLAS_old multiplicationByLapack(
+    const TlDenseGeneralMatrix_BLAS_old& B, const TlDenseSymmetricMatrix_BLAS_Old& A) {
+  assert(B.getNumOfCols() == A.getNumOfRows());
+
+  TlDenseGeneralMatrix_BLAS_old C(B.getNumOfRows(), A.getNumOfCols());
+
+  // use LAPACK
+  const char SIDE = 'R';  // L means "C := alpha*A*B + beta*C",
+                          // R means "C := alpha*B*A + beta*C"
+  const char UPLO =
+      'U';  // L means the lower triangular part of the symmetric matrix
+            // U means the upper triangular part of the symmetric matrix
+  const int M = C.getNumOfRows();  // the number of rows of the matrix  C
+  const int N = C.getNumOfCols();  // the number of columns of the matrix C
+  const double ALPHA = 1.0;        // ALPHA specifies the scalar alpha
+  const int LDA = N;  // When  SIDE = 'L' or 'l'  then LDA must be at least
+                      // max(1, M), otherwise  LDA must be at least  max(1, N).
+  double* pA = new double[N * N];
+  for (int c = 0; c < N; ++c) {
+    const int base = c * N;
+    for (int r = 0; r <= c; ++r) {
+      pA[base + r] = A.get(r, c);
+    }
+  }
+
+  const double* pB =
+      const_cast<TlDenseGeneralMatrix_BLAS_old&>(B).data_;  // DIMENSION (LDB, N)
+  const int LDB = M;                                    // max(1, M)
+  const double BETA = 0.0;  // BETA  specifies the scalar  beta
+  double* pC = C.data_;     // DIMENSION (LDC, N)
+  const int LDC = M;        // max(1, M)
+
+  dsymm_(&SIDE, &UPLO, &M, &N, &ALPHA, pA, &LDA, pB, &LDB, &BETA, pC, &LDC);
+
+  delete[] pA;
+  pA = NULL;
+
+  return C;
+}
+
+TlVector_BLAS multiplicationByLapack(const TlDenseSymmetricMatrix_BLAS_Old& A,
+                                     const TlVector_BLAS& X) {
+  assert(A.getNumOfCols() == X.getSize());
+
+  // use LAPACK
+  const char UPLO =
+      'U';  // L means the lower triangular part of the symmetric matrix
+            // U means the upper triangular part of the symmetric matrix
+  const int N = A.getNumOfRows();
+  const double ALPHA = 1.0;  // ALPHA specifies the scalar alpha
+  const double* AP = A.data_;
+  const double* pX = X.data_;
+  const int INCX = 1;
+  double BETA = 1.0;
+  TlVector_BLAS answer(N);
+  double* Y = answer.data_;
+  const int INCY = 1;
+
+  dspmv_(&UPLO, &N, &ALPHA, AP, pX, &INCX, &BETA, Y, &INCY);
+
+  return answer;
+}
+
+bool diagonalByLapack(const TlDenseSymmetricMatrix_BLAS_Old& inMatrix,
+                      TlVector_BLAS* outEigVal,
+                      TlDenseGeneralMatrix_BLAS_old* outEigVec) {
+  assert(outEigVal != NULL);
+  assert(outEigVec != NULL);
+  assert(inMatrix.getNumOfRows() == inMatrix.getNumOfCols());
+  assert(inMatrix.getNumOfRows() >= 2);
+
+  bool bAnswer = false;
+
+  const char JOBZ = 'V';  // 固有値と固有ベクトルを計算する。
+  const char UPLO = 'U';
+  const int N = inMatrix.getNumOfRows();  // 行列Aの次数(N>=0)
+  double* AP = new double[N * (N + 1) / 2];
+  std::copy(inMatrix.data_, inMatrix.data_ + (N * (N + 1) / 2), AP);
+
+  outEigVal->resize(N);
+  double* W =
+      outEigVal
+          ->data_;  // (出力用) INFO=0のとき, Wに固有値が昇順で入る。大きさN
+
+  const int LDZ = N;
+  outEigVec->resize(LDZ, N);
+  double* Z = outEigVec->data_;
+
+  double* WORK = new double[3 * N];  // (作業/出力用)
+  int INFO = 0;  // (出力用) =0: 正常終了, >0: 収束しなかった
+
+  dspev_(&JOBZ, &UPLO, &N, AP, W, Z, &LDZ, WORK, &INFO);
+
+  delete[] WORK;
+  WORK = NULL;
+  delete[] AP;
+  AP = NULL;
+
+  if (INFO == 0) {
+    bAnswer = true;
+  } else {
+#ifdef DEBUG
+    std::cerr << "[error] INFO != 0 at "
+                 "TlDenseSymmetricMatrix_BLAS_Old::diagonalByLapack(). abort."
+              << std::endl;
+#endif  // DEBUG
+    abort();
+  }
+
+  return bAnswer;
+}
+
+bool inverseByLapack(TlDenseSymmetricMatrix_BLAS_Old& X) {
+  // (input)
+  // 'U':  Upper triangle of A is stored
+  // 'L':  Lower triangle of A is stored.
+  char UPLO = 'U';
+
+  //(input) The order of the matrix A.  N >= 0.
+  const int N = X.getNumOfRows();
+
+  // (input/output) The order of the matrix A.  N >= 0.
+  // if UPLO = 'U', AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j;
+  // if UPLO = 'L', AP(i + (j-1)*(2n-j)/2) = A(i,j) for j<=i<=n.
+  // On exit, if INFO = 0, the triangular factor U or L from the
+  // Cholesky factorization A = U**T*U or A = L*L**T, in the same
+  // storage format as A.
+  double* AP = X.data_;
+
+  // (output) for dsptrf_
+  // INTEGER array, dimension (N)
+  // Details of the interchanges and the block structure of D.
+  // If IPIV(k) > 0, then rows and columns k and IPIV(k) were
+  // interchanged and D(k,k) is a 1-by-1 diagonal block.
+  // If UPLO = 'U' and IPIV(k) = IPIV(k-1) < 0, then rows and
+  // columns k-1 and -IPIV(k) were interchanged and D(k-1:k,k-1:k)
+  // is a 2-by-2 diagonal block.  If UPLO = 'L' and IPIV(k) =
+  // IPIV(k+1) < 0, then rows and columns k+1 and -IPIV(k) were
+  // interchanged and D(k:k+1,k:k+1) is a 2-by-2 diagonal block.
+  //
+  // (input)  for dsptri_
+  // INTEGER array, dimension (N)
+  // Details of the interchanges and the block structure of D
+  // as determined by DSPTRF.
+  int* IPIV = new int[N];
+
+  // (workspace) DOUBLE PRECISION array, dimension (N)
+  double* WORK = new double[N];
+
+  // (output)
+  // = 0:  successful exit
+  // < 0:  if INFO = -i, the i-th argument had an illegal value
+  // > 0:  if INFO = i, the leading minor of order i is not
+  // positive definite, and the factorization could not be completed.
+  int INFO = 0;
+
+  // execute LAPACK
+  bool bAnswer = false;
+  dsptrf_(&UPLO, &N, AP, IPIV, &INFO);
+  if (INFO == 0) {
+    dsptri_(&UPLO, &N, AP, IPIV, WORK, &INFO);
+    if (INFO == 0) {
+      bAnswer = true;
+    } else {
+      std::cerr << "inverseByLapack() failed.: dsptri() return code = " << INFO
+                << std::endl;
+      abort();
+    }
+  } else {
+    std::cerr << "inverseByLapack() failed.: dsptrf() return code = " << INFO
+              << std::endl;
+    abort();
+  }
+
+  // finalize
+  delete[] IPIV;
+  IPIV = NULL;
+  delete[] WORK;
+  WORK = NULL;
+
+  return bAnswer;
+}
+
+// int choleskyFactorization(TlDenseSymmetricMatrix_BLAS_Old* A,
+//                           std::vector<int>* pPivot)
+// {
+//     // *  UPLO    (input) CHARACTER*1
+//     // *          = 'U':  Upper triangle of A is stored;
+//     // *          = 'L':  Lower triangle of A is stored.
+//     char UPLO = 'L';
+
+//     // *  N       (input) INTEGER
+//     // *          The order of the matrix A.  N >= 0.
+//     const int N = A->getNumOfRows();
+
+//     // (input/output) The order of the matrix A.  N >= 0.
+//     // if UPLO = 'U', AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j;
+//     // if UPLO = 'L', AP(i + (j-1)*(2n-j)/2) = A(i,j) for j<=i<=n.
+//     // On exit, if INFO = 0, the triangular factor U or L from the
+//     // Cholesky factorization A = U**T*U or A = L*L**T, in the same
+//     // storage format as A.
+//     double* AP = A->data_;
+
+//     // INTEGER array, dimension (N)
+//     // Details of the interchanges and the block structure of D
+//     // as determined by DSPTRF.
+//     //int* IPIV = new int[N];
+//     pPivot->resize(N);
+//     int* IPIV = &((*pPivot)[0]);
+
+//     int INFO = 0;
+
+//     dsptrf_(&UPLO, &N, AP, IPIV, &INFO);
+
+//     //bool answer = (INFO == 0);
+//     // if (INFO < 0) {
+//     //     std::cerr << (-INFO) << "th argument had an illegal value." <<
+//     std::endl;
+//     // } else if (INFO > 0) {
+//     //     std::cerr << "the leading mirror of order " << INFO << " is not
+//     positive definite."
+//     //               << std::endl;
+//     // }
+
+//     return INFO;
+// }
+
+TlDenseGeneralMatrix_BLAS_old TlDenseSymmetricMatrix_BLAS_Old::choleskyFactorization() {
+  const index_type dim = this->getNumOfRows();
+  TlDenseGeneralMatrix_BLAS_old L(dim, dim);
+  for (index_type j = 0; j < dim; ++j) {
+    // calc L_jj
+    double s = this->get(j, j);
+    for (index_type k = 0; k < j; ++k) {
+      s -= L.get(j, k) * L.get(j, k);
+    }
+    if (s < 0.0) {
+      std::cerr << "CholeskyFactorization() s < 0" << std::endl;
+      abort();
+    }
+    L.set(j, j, std::sqrt(s));
+
+    // calc L_ij (i > j)
+    const double L_jj = L.get(j, j);
+    for (index_type i = j + 1; i < dim; ++i) {
+      double s = this->get(i, j);
+      for (index_type k = 0; k < j; ++k) {
+        s -= L.get(i, k) * L.get(j, k);
+      }
+      L.set(i, j, s / L_jj);
+    }
+  }
+
+  return L;
+}
+
+// Harbrecht, Peter, Schneider, 2011
+TlDenseGeneralMatrix_BLAS_old TlDenseSymmetricMatrix_BLAS_Old::choleskyFactorization2(
+    const double threshold) const {
+  const index_type N = this->getNumOfRows();
+  TlVector_BLAS d = this->getDiagonalElements();
+  double error = d.sum();
+  std::vector<TlVector_BLAS::size_type> pivot(N);
+  for (index_type i = 0; i < N; ++i) {
+    pivot[i] = i;
+  }
+
+  TlDenseGeneralMatrix_BLAS_old L(N, N);
+  index_type m = 0;
+  // double sum_ll = 0.0;
+
+  while (error > threshold) {
+    std::vector<TlVector_BLAS::size_type>::const_iterator it =
+        d.argmax(pivot.begin() + m, pivot.end());
+    const index_type i = it - pivot.begin();
+    std::swap(pivot[m], pivot[i]);
+
+    const double l_m_pm = std::sqrt(d[pivot[m]]);
+    L.set(m, pivot[m], l_m_pm);
+
+    const double inv_l_m_pm = 1.0 / l_m_pm;
+
+    for (index_type i = m + 1; i < N; ++i) {
+      double sum_ll = 0.0;
+      for (index_type j = 0; j < m; ++j) {
+        sum_ll += L.get(j, pivot[m]) * L.get(j, pivot[i]);
+      }
+      const double l_m_pi =
+          (this->get(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
+      L.set(m, pivot[i], l_m_pi);
+
+      d[pivot[i]] -= l_m_pi * l_m_pi;
+    }
+
+    error = 0.0;
+    for (index_type i = m + 1; i < N; ++i) {
+      error += d[pivot[i]];
+    }
+    ++m;
+  }
+
+  L.transposeInPlace();
+  L.resize(N, m);
+
+  return L;
+}
+
+TlDenseGeneralMatrix_BLAS_old
+TlDenseSymmetricMatrix_BLAS_Old::choleskyFactorization2omp(
+    const double threshold) const {
+  const index_type N = this->getNumOfRows();
+  TlVector_BLAS d = this->getDiagonalElements();
+  double error = d.sum();
+  std::vector<TlVectorAbstract::size_type> pivot(N);
+  for (index_type i = 0; i < N; ++i) {
+    pivot[i] = i;
+  }
+
+  TlDenseGeneralMatrix_BLAS_old L(N, N);
+  index_type m = 0;
+  double sum_ll = 0.0;
+  double inv_l_m_pm = 0.0;
+
+#pragma omp parallel
+  {
+    while (error > threshold) {
+#pragma omp single
+      {
+        std::vector<TlVectorAbstract::size_type>::const_iterator it =
+            d.argmax(pivot.begin() + m, pivot.end());
+        const index_type i = it - pivot.begin();
+        std::swap(pivot[m], pivot[i]);
+
+        const double l_m_pm = std::sqrt(d[pivot[m]]);
+        L.set(m, pivot[m], l_m_pm);
+
+        // const double inv_l_m_pm = 1.0 / l_m_pm;
+        inv_l_m_pm = 1.0 / l_m_pm;
+      }
+
+#pragma omp single  // この箇所をOpenMP並列にすると遅くなる。要調査
+      {
+        for (index_type i = m + 1; i < N; ++i) {
+          sum_ll = 0.0;
+          for (index_type j = 0; j < m; ++j) {
+            sum_ll += L.get(j, pivot[m]) * L.get(j, pivot[i]);
+          }
+          const double l_m_pi =
+              (this->get(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
+          L.set(m, pivot[i], l_m_pi);
+
+          d[pivot[i]] -= l_m_pi * l_m_pi;
+        }
+      }
+
+#pragma omp single
+      {
+        ++m;
+        error = 0.0;
+      }
+#pragma omp for schedule(runtime) reduction(+ : error)
+      for (index_type i = m + 1; i < N; ++i) {
+        error += d[pivot[i]];
+      }
+    }
+  }
+
+  L.transposeInPlace();
+  L.resize(N, m);
+
+  return L;
+}
+
+// TlDenseGeneralMatrix_BLAS_old
+// TlDenseSymmetricMatrix_BLAS_Old::choleskyFactorization2omp(const
+// double
+// threshold) const
+// {
+//     const index_type N = this->getNumOfRows();
+//     TlVector_BLAS d = this->getDiagonalElements();
+//     double error = d.sum();
+//     std::vector<TlVector::size_type> pivot(N);
+//     for (index_type i = 0; i < N; ++i) {
+//         pivot[i] = i;
+//     }
+
+//     TlDenseGeneralMatrix_BLAS_old L(N, N);
+//     index_type m = 0;
+//     double sum_ll = 0.0;
+//     double inv_l_m_pm = 0.0;
+
+// #pragma omp parallel
+//     {
+//         while (error > threshold) {
+// #pragma omp single
+//             {
+//                 std::vector<TlVector::size_type>::const_iterator it =
+//                 d.argmax(pivot.begin() + m,
+//                                                                                pivot.end());
+//                 const index_type i = it - pivot.begin();
+//                 std::swap(pivot[m], pivot[i]);
+
+//                 const double l_m_pm = std::sqrt(d[pivot[m]]);
+//                 L.set(m, pivot[m], l_m_pm);
+
+//                 //const double inv_l_m_pm = 1.0 / l_m_pm;
+//                 inv_l_m_pm = 1.0 / l_m_pm;
+//             }
+
+// #pragma omp single
+//             {
+//                 for (index_type i = m +1; i < N; ++i) {
+//                     sum_ll = 0.0;
+//                     for (index_type j = 0; j < m; ++j) {
+//                         sum_ll += L.get(j, pivot[m]) * L.get(j, pivot[i]);
+//                     }
+//                     const double l_m_pi = (this->get(pivot[m], pivot[i]) -
+//                     sum_ll) * inv_l_m_pm; L.set(m, pivot[i], l_m_pi);
+
+//                     d[pivot[i]] -= l_m_pi * l_m_pi;
+//                 }
+//             }
+
+// #pragma omp single
+//             {
+//                 error = 0.0;
+//                 for (index_type i = m +1; i < N; ++i) {
+//                     error += d[pivot[i]];
+//                 }
+//                 ++m;
+//             }
+//         }
+//     }
+
+//     L.transpose();
+//     L.resize(N, m);
+
+//     return L;
+// }
+
+#endif  // HAVE_LAPACK

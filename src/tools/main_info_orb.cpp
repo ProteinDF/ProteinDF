@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
   TlSerializeData data = mpac.getSerializeData();
   TlOrbitalInfo orbInfo(data["coordinates"], data["basis_set"]);
 
-  const std::size_t numOfAOs = orbInfo.getNumOfOrbitals();
+  const int numOfAOs = orbInfo.getNumOfOrbitals();
   if (isVerbose == true) {
     std::cerr << "total atoms: " << orbInfo.getNumOfAtoms() << std::endl;
     std::cerr << "total orbitals: " << numOfAOs << std::endl;

@@ -21,6 +21,8 @@
 
 #include "DfFockMatrix.h"
 
+class TlDenseSymmetricMatrix_blacs;
+
 class DfFockMatrix_Parallel : public DfFockMatrix {
  public:
   DfFockMatrix_Parallel(TlSerializeData* pPdfParam);
@@ -37,18 +39,21 @@ class DfFockMatrix_Parallel : public DfFockMatrix {
   virtual void mainDIRECT_UKS();
   virtual void mainDIRECT_ROKS();
 
-  virtual void setXC_RI(RUN_TYPE nRunType, TlSymmetricMatrix& F);
-  virtual void setXC_DIRECT(RUN_TYPE nRunType, TlSymmetricMatrix& F);
+  virtual void setXC_RI(RUN_TYPE nRunType, TlDenseSymmetricMatrix_BLAS_Old& F);
+  virtual void setXC_DIRECT(RUN_TYPE nRunType, TlDenseSymmetricMatrix_BLAS_Old& F);
 
-  virtual void setCoulomb(METHOD_TYPE nRunType, TlSymmetricMatrix& F);
+  virtual void setCoulomb(METHOD_TYPE nRunType, TlDenseSymmetricMatrix_BLAS_Old& F);
   void setCoulomb(const METHOD_TYPE nMethodType,
-                  TlDistributeSymmetricMatrix& F);
+                  TlDenseSymmetricMatrix_blacs& F);
 
-  virtual TlSymmetricMatrix getFpqMatrix(RUN_TYPE nRunType, int nIteration);
+  virtual TlDenseSymmetricMatrix_BLAS_Old getFpqMatrix(RUN_TYPE nRunType,
+                                                   int nIteration);
 
-  virtual TlVector getRho(RUN_TYPE nRunType, int nIteration);
-  virtual TlVector getMyu(RUN_TYPE nRunType, int nIteration);
-  // virtual void saveFpqMatrix(RUN_TYPE nRunType, const TlSymmetricMatrix& F);
+  virtual TlVector_BLAS getRho(RUN_TYPE nRunType, int nIteration);
+  virtual TlVector_BLAS getMyu(RUN_TYPE nRunType, int nIteration);
+  // virtual void saveFpqMatrix(RUN_TYPE nRunType, const
+  // TlDenseSymmetricMatrix_BLAS_Old&
+  // F);
 };
 
 #endif  // DFFOCKMATRIX_PARALLEL_H
