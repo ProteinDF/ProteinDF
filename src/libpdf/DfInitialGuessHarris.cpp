@@ -31,13 +31,13 @@
 
 #include "DfOverlapX.h"
 #include "TlSerializeData.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 DfInitialGuessHarris::DfInitialGuessHarris(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), debug_(false) {
   // if (this->isWorkOnDisk_ == true) {
   //   this->logger(" initial guess by harris functional is built on disk.\n");
-  //   TlDenseGeneralMatrix_BLAS_old::useMemManager(true);
+  //   TlDenseGeneralMatrix_Lapack::useMemManager(true);
   // }
 }
 
@@ -46,8 +46,8 @@ DfInitialGuessHarris::~DfInitialGuessHarris() {}
 void DfInitialGuessHarris::main() {
   this->loadHarrisDB();
 
-  DfInitialGuessHarris::calcInitialDensityMatrix<TlDenseGeneralMatrix_BLAS_old,
-                                                 TlDenseSymmetricMatrix_BLAS_Old,
+  DfInitialGuessHarris::calcInitialDensityMatrix<TlDenseGeneralMatrix_Lapack,
+                                                 TlDenseSymmetricMatrix_Lapack,
                                                  DfOverlapX, DfPopulation>();
 }
 

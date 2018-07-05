@@ -1,9 +1,11 @@
-#include "tl_dense_vector_impl_lapack.h"
 #include <algorithm>
 #include <cassert>
-#include <numeric>
 #include <functional>
+#include <numeric>
+
 #include "TlUtils.h"
+#include "lapack.h"
+#include "tl_dense_vector_impl_lapack.h"
 
 TlDenseVector_ImplLapack::TlDenseVector_ImplLapack(
     const TlDenseVectorObject::index_type size)
@@ -16,6 +18,13 @@ TlDenseVector_ImplLapack::TlDenseVector_ImplLapack(
     : size_(rhs.getSize()), vector_(NULL) {
   this->initialize(false);
   std::copy(rhs.vector_, rhs.vector_ + rhs.getSize(), this->vector_);
+}
+
+TlDenseVector_ImplLapack::TlDenseVector_ImplLapack(
+    const std::vector<double>& rhs)
+    : size_(rhs.size()), vector_(NULL) {
+  this->initialize(false);
+  std::copy(rhs.begin(), rhs.end(), this->vector_);
 }
 
 TlDenseVector_ImplLapack::~TlDenseVector_ImplLapack() {
@@ -67,6 +76,12 @@ void TlDenseVector_ImplLapack::add(const TlDenseVectorObject::index_type i,
                                    const double value) {
 #pragma omp atomic
   this->vector_[i] += value;
+}
+
+void TlDenseVector_ImplLapack::mul(const TlDenseVectorObject::index_type i,
+                                   const double value) {
+#pragma omp atomic
+  this->vector_[i] *= value;
 }
 
 // ---------------------------------------------------------------------------
@@ -124,9 +139,23 @@ TlDenseVector_ImplLapack& TlDenseVector_ImplLapack::operator/=(
   return this->operator*=(1.0 / rhs);
 }
 
+double TlDenseVector_ImplLapack::operator*(
+    const TlDenseVector_ImplLapack& rhs) const {
+  const int N = this->getSize();
+  const int incX = 1;
+  const int incY = 1;
+
+  const double v = ddot_(&N, this->vector_, &incX, rhs.vector_, &incY);
+  return v;
+}
+
 // ---------------------------------------------------------------------------
 // operations
 // ---------------------------------------------------------------------------
+double* TlDenseVector_ImplLapack::data() { return this->vector_; }
+
+const double* TlDenseVector_ImplLapack::data() const { return this->vector_; }
+
 double TlDenseVector_ImplLapack::sum() const {
   return std::accumulate(this->vector_, this->vector_ + this->getSize(), 0.0);
 }

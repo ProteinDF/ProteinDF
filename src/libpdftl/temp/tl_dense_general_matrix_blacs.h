@@ -26,13 +26,14 @@
 #include <bitset>
 #include <list>
 #include <vector>
+
+#include "tl_dense_general_matrix_object.h"
 #include "TlCommunicate.h"
 #include "TlLogging.h"
 #include "TlUtils.h"
 #include "tl_dense_general_matrix_arrays_roworiented.h"
-#include "tl_matrix_object.h"
+#include "tl_dense_vector_lapack.h"
 #include "tl_sparse_matrix.h"
-#include "tl_dense_vector_blas.h"
 
 #ifdef HAVE_HDF5
 #include "TlHdf5Utils.h"
@@ -43,25 +44,26 @@
 class TlDenseMatrix_IO_object;
 class TlDenseSymmetricMatrix_blacs;
 class TlDistributedVector;
+class TlDenseVectorObject;
 
-class TlScalapackContext {
- public:
-  static void getData(int& rContext, int& rProc, int& rRank, int& rProcGridRow,
-                      int& rProcGridCol);
-  static void finalize();
-
- private:
-  TlScalapackContext();
-  ~TlScalapackContext();
-
- private:
-  static TlScalapackContext* m_pTlScalapackContextInstance;
-  static int m_nContext;
-  static int m_nProc;
-  static int m_nRank;
-  static int m_nProcGridRow;
-  static int m_nProcGridCol;
-};
+// class TlScalapackContext {
+//  public:
+//   static void getData(int& rContext, int& rProc, int& rRank, int& rProcGridRow,
+//                       int& rProcGridCol);
+//   static void finalize();
+//
+//  private:
+//   TlScalapackContext();
+//   ~TlScalapackContext();
+//
+//  private:
+//   static TlScalapackContext* m_pTlScalapackContextInstance;
+//   static int m_nContext;
+//   static int m_nProc;
+//   static int m_nRank;
+//   static int m_nProcGridRow;
+//   static int m_nProcGridCol;
+// };
 
 /// 分散クラス
 class TlDenseGeneralMatrix_blacs : public TlMatrixObject {
@@ -159,12 +161,13 @@ class TlDenseGeneralMatrix_blacs : public TlMatrixObject {
   /// 指定した行の要素から構成されるベクトルを返す
   ///
   /// @param[in] nRow 指定する行
-  virtual TlVector_BLAS getRowVector(index_type row) const;
+  template <class DenseVectorType>
+  DenseVectorType getRowVector(const index_type row) const;
 
   /// 指定した列の要素から構成されるベクトルを返す
   ///
   /// @param[in] nCol 指定する列
-  virtual TlVector_BLAS getColumnVector(index_type col) const;
+  virtual TlDenseVector_Lapack getColumnVector(index_type col) const;
 
   /// 対角要素の和を返す
   ///
@@ -219,7 +222,7 @@ class TlDenseGeneralMatrix_blacs : public TlMatrixObject {
   std::vector<index_type> getRowIndexTable() const;
   std::vector<index_type> getColIndexTable() const;
 
-  TlDenseGeneralMatrix_BLAS_old getLocalMatrix() const;
+  TlDenseGeneralMatrix_Lapack getLocalMatrix() const;
 
   // need to call by all processes.
   TlDenseGeneralMatrix_blacs& operator=(const TlDenseGeneralMatrix_blacs& rhs);
@@ -302,9 +305,10 @@ class TlDenseGeneralMatrix_blacs : public TlMatrixObject {
   double getLocal(index_type row, index_type col) const;
 
  public:
-  virtual bool inverse();
+  TlDenseGeneralMatrix_blacs inverse() const;
 
-  virtual TlVector_BLAS getDiagonalElements() const;
+  virtual TlDenseVector_Lapack getDiagonalElements() const;
+    virtual std::vector<double> diagonals() const;
 
   /// 転置行列にする
   ///
@@ -557,14 +561,14 @@ class TlDenseGeneralMatrix_blacs : public TlMatrixObject {
       const TlDenseSymmetricMatrix_blacs& Y);
 
   friend bool diagonalByScaLapack_QR(
-      const TlDenseSymmetricMatrix_blacs& inMatrix, TlVector_BLAS* outEigVal,
-      TlDenseGeneralMatrix_blacs* outEigVec);
+      const TlDenseSymmetricMatrix_blacs& inMatrix,
+      TlDenseVector_Lapack* outEigVal, TlDenseGeneralMatrix_blacs* outEigVec);
   friend bool diagonalByScaLapack_DC(
-      const TlDenseSymmetricMatrix_blacs& inMatrix, TlVector_BLAS* outEigVal,
-      TlDenseGeneralMatrix_blacs* outEigVec);
+      const TlDenseSymmetricMatrix_blacs& inMatrix,
+      TlDenseVector_Lapack* outEigVal, TlDenseGeneralMatrix_blacs* outEigVec);
 
-  friend bool inverseByScaLapack(TlDenseGeneralMatrix_blacs& X);
-  friend bool inverseByScaLapack(TlDenseSymmetricMatrix_blacs& X);
+  friend TlDenseGeneralMatrix_blacs inverseByScaLapack(const TlDenseGeneralMatrix_blacs& X);
+    // friend bool inverseByScaLapack(TlDenseSymmetricMatrix_blacs& X);
 };
 
 // =============================================================================
@@ -577,6 +581,35 @@ class TlDenseGeneralMatrix_blacs : public TlMatrixObject {
 
 //     return this->pData_[index];
 // }
+
+template <class DenseVectorType>
+DenseVectorType TlDenseGeneralMatrix_blacs::getRowVector(
+    const index_type nRow) const {
+  assert((0 <= nRow) && (nRow < this->m_nRows));
+
+  const int nGlobalCols = this->m_nCols;
+  DenseVectorType answer(nGlobalCols);
+
+  if (std::binary_search(this->m_RowIndexTable.begin(),
+                         this->m_RowIndexTable.end(), nRow) == true) {
+    std::vector<int>::const_iterator pEnd = this->m_ColIndexTable.end();
+    for (std::vector<int>::const_iterator p = this->m_ColIndexTable.begin();
+         p != pEnd; ++p) {
+      const int nCol = *p;
+      if (nCol < nGlobalCols) {
+        const TlMatrixObject::size_type local_index =
+            this->getIndex(nRow, nCol);
+        assert(local_index != -1);
+        answer.set(nCol, this->pData_[local_index]);
+      }
+    }
+  }
+
+  TlCommunicate& rComm = TlCommunicate::getInstance();
+  rComm.allReduce_SUM(&answer);
+
+  return answer;
+}
 
 template <typename T>
 void TlDenseGeneralMatrix_blacs::print(T& out) const {

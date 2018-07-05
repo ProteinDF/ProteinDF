@@ -34,6 +34,8 @@ TlDenseSymmetricMatrix_Eigen& TlDenseSymmetricMatrix_Eigen::operator=(
   delete this->pImpl_;
   this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigen(
       *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(rhs.pImpl_)));
+
+  return *this;
 }
 
 const TlDenseSymmetricMatrix_Eigen TlDenseSymmetricMatrix_Eigen::operator+(
@@ -61,28 +63,38 @@ TlDenseSymmetricMatrix_Eigen& TlDenseSymmetricMatrix_Eigen::operator+=(
     const TlDenseSymmetricMatrix_Eigen& rhs) {
   *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(this->pImpl_)) +=
       *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(rhs.pImpl_));
+
+  return *this;
 }
 
 TlDenseSymmetricMatrix_Eigen& TlDenseSymmetricMatrix_Eigen::operator-=(
     const TlDenseSymmetricMatrix_Eigen& rhs) {
   *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(this->pImpl_)) -=
       *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(rhs.pImpl_));
+
+  return *this;
 }
 
 TlDenseSymmetricMatrix_Eigen& TlDenseSymmetricMatrix_Eigen::operator*=(
     const double coef) {
   *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(this->pImpl_)) *= coef;
+
+  return *this;
 }
 
 TlDenseSymmetricMatrix_Eigen& TlDenseSymmetricMatrix_Eigen::operator/=(
     const double coef) {
   *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(this->pImpl_)) /= coef;
+
+  return *this;
 }
 
 TlDenseSymmetricMatrix_Eigen& TlDenseSymmetricMatrix_Eigen::operator*=(
     const TlDenseSymmetricMatrix_Eigen& rhs) {
   *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(this->pImpl_)) *=
       *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(rhs.pImpl_));
+
+  return *this;
 }
 
 // ---------------------------------------------------------------------------

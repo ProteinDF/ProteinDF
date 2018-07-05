@@ -26,14 +26,14 @@ DfRLMO::~DfRLMO() {}
 void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   const int iteration = this->m_nIteration;
 
-  const TlDenseSymmetricMatrix_BLAS_Old D_AO =
-      this->getPpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(RUN_RKS, iteration);
+  const TlDenseSymmetricMatrix_Lapack D_AO =
+      this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, iteration);
   const index_type numOfAOs = D_AO.getNumOfRows();
   // D_AO.save("D_AO.mat");
 
   // CD
   {
-    TlDenseSymmetricMatrix_BLAS_Old CD = 0.5 * D_AO;
+    TlDenseSymmetricMatrix_Lapack CD = 0.5 * D_AO;
     std::vector<int> pivot;
     int b = choleskyFactorization(&CD, &pivot);
     std::cerr << "CD=" << b << std::endl;
@@ -87,8 +87,8 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   C_CMO_AO.save("C_CMO_AO.mat");
 
   // {
-  //     const TlDenseSymmetricMatrix_BLAS_Old S =
-  //     this->getSpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>();
+  //     const TlDenseSymmetricMatrix_Lapack S =
+  //     this->getSpqMatrix<TlDenseSymmetricMatrix_Lapack>();
   //     TlMatrix tC_CMO_AO = C_CMO_AO;
   //     tC_CMO_AO.transpose();
   //     TlMatrix CSC = tC_CMO_AO * S * C_CMO_AO;
@@ -96,7 +96,7 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   // }
 
   // make X
-  const TlDenseSymmetricMatrix_BLAS_Old X = this->getX();
+  const TlDenseSymmetricMatrix_Lapack X = this->getX();
   // check
   // {
   //     // XX == Spq
@@ -104,7 +104,7 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   //     XX.save("XX.mtx");
   // }
 
-  TlDenseSymmetricMatrix_BLAS_Old Xinv = X;
+  TlDenseSymmetricMatrix_Lapack Xinv = X;
   Xinv.inverse();
   Xinv.save("Xinv.mat");
   // check
@@ -119,7 +119,7 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   //     XC.save("XC.mat");
   // }
 
-  const TlDenseSymmetricMatrix_BLAS_Old D_OAO = X * D_AO * X;
+  const TlDenseSymmetricMatrix_Lapack D_OAO = X * D_AO * X;
   // D_OAO.save("D_OAO.mtx");
 
   // check
@@ -127,7 +127,7 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   //     // D_OAO2 == _2D_OAO
   //     TlMatrix D_OAO2 = D_OAO * D_OAO;
   //     D_OAO2.save("D_OAO2.mtx");
-  //     TlDenseSymmetricMatrix_BLAS_Old _2D_OAO = 2.0 * D_OAO;
+  //     TlDenseSymmetricMatrix_Lapack _2D_OAO = 2.0 * D_OAO;
   //     _2D_OAO.save("_2D_OAO.mtx");
   // }
 
@@ -147,7 +147,7 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   //     TtT.save("TtT.mtx");
   // }
 
-  const TlDenseSymmetricMatrix_BLAS_Old D_RO = Tt * D_OAO * T;
+  const TlDenseSymmetricMatrix_Lapack D_RO = Tt * D_OAO * T;
   D_RO.save("D_RO.mat");
 
   const TlMatrix C_CMO_RO = Tt * X * C_CMO_AO;
@@ -221,9 +221,9 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
   // C_TH.save("C_TH.mtx");
 }
 
-TlDenseSymmetricMatrix_BLAS_Old DfRLMO::getX() {
-  const TlDenseSymmetricMatrix_BLAS_Old S =
-      this->getSpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>();
+TlDenseSymmetricMatrix_Lapack DfRLMO::getX() {
+  const TlDenseSymmetricMatrix_Lapack S =
+      this->getSpqMatrix<TlDenseSymmetricMatrix_Lapack>();
   TlVector e;
   TlMatrix V;
   S.diagonal(&e, &V);
@@ -238,20 +238,20 @@ TlDenseSymmetricMatrix_BLAS_Old DfRLMO::getX() {
     E.set(i, i, std::sqrt(e[i]));
   }
 
-  TlDenseSymmetricMatrix_BLAS_Old X = V * E * V_dagger;
+  TlDenseSymmetricMatrix_Lapack X = V * E * V_dagger;
   X.save("X.mat");
 
   return X;
 }
 
-TlMatrix DfRLMO::getT(const TlDenseSymmetricMatrix_BLAS_Old& D,
+TlMatrix DfRLMO::getT(const TlDenseSymmetricMatrix_Lapack& D,
                       const std::vector<index_type>& startBlockAOs) {
   const index_type numOfAOs = this->m_nNumOfAOs;
   const std::size_t numOfBlocks = startBlockAOs.size();
   std::vector<index_type> startBlockAOs_mod = startBlockAOs;  // 番兵用
   startBlockAOs_mod.push_back(numOfAOs);
 
-  std::vector<TlDenseSymmetricMatrix_BLAS_Old> D_subblocks(numOfBlocks);
+  std::vector<TlDenseSymmetricMatrix_Lapack> D_subblocks(numOfBlocks);
 
   index_type numOfOccupied = 0;
   index_type numOfVacant = 0;
@@ -264,7 +264,7 @@ TlMatrix DfRLMO::getT(const TlDenseSymmetricMatrix_BLAS_Old& D,
               << std::endl;
     const index_type distance = endAO - startAO;
 
-    const TlDenseSymmetricMatrix_BLAS_Old Dsub =
+    const TlDenseSymmetricMatrix_Lapack Dsub =
         D.getBlockMatrix(startAO, startAO, distance, distance);
     std::cerr << TlUtils::format("Dsub size = %d x %d", Dsub.getNumOfRows(),
                                  Dsub.getNumOfCols())

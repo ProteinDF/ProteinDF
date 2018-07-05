@@ -8,8 +8,8 @@
 #include "TlMsgPack.h"
 #include "TlPrdctbl.h"
 #include "TlUtils.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 const double TlEspPop::AU2ANG = 0.5291772108;
 const double TlEspPop::ANG2AU = 1.889762;
@@ -29,7 +29,7 @@ TlEspPop::TlEspPop(const TlSerializeData& param)
   // set real atoms
   this->realAtoms_ = this->getRealAtoms();
 
-  this->expected_ = TlVector_BLAS(this->realAtoms_.size());
+  this->expected_ = TlDenseVector_Lapack(this->realAtoms_.size());
 }
 
 TlEspPop::~TlEspPop() {}
@@ -77,7 +77,7 @@ void TlEspPop::exec(std::string PMatrixFilePath) {
   }
 
   // 密度行列の読み込み
-  TlDenseSymmetricMatrix_BLAS_Old P;
+  TlDenseSymmetricMatrix_Lapack P;
   if (PMatrixFilePath.empty()) {
     const int iteration = this->param_["num_of_iterations"].getInt();
     DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
@@ -109,7 +109,7 @@ void TlEspPop::exec(std::string PMatrixFilePath) {
     output["grid_unit"] = "angstrom";
 
     for (std::size_t i = 0; i < numOfGrids; ++i) {
-      output["ESP"].setAt(i, this->esp_[i]);
+      output["ESP"].setAt(i, this->esp_.get(i));
     }
 
     TlMsgPack mpac(output);
@@ -123,21 +123,21 @@ void TlEspPop::exec(std::string PMatrixFilePath) {
   }
 
   // solve MK
-  TlDenseSymmetricMatrix_BLAS_Old designMat;
-  TlVector_BLAS predicted;
-  TlVector_BLAS modelCoef;
+  TlDenseSymmetricMatrix_Lapack designMat;
+  TlDenseVector_Lapack predicted;
+  TlDenseVector_Lapack modelCoef;
   // setup MK data
   this->makeDesignMatrix_MK(&designMat, &predicted);
 
   if (this->resp_restriction_ == REST_NONE) {
     // solve
-    TlDenseSymmetricMatrix_BLAS_Old invDesignMat = designMat;
+    TlDenseSymmetricMatrix_Lapack invDesignMat = designMat;
     invDesignMat.inverse();
 
     modelCoef = invDesignMat * predicted;
   } else {
-    TlDenseSymmetricMatrix_BLAS_Old MK_designMat = designMat;
-    TlVector_BLAS MK_predicted = predicted;
+    TlDenseSymmetricMatrix_Lapack MK_designMat = designMat;
+    TlDenseVector_Lapack MK_predicted = predicted;
 
     while (this->itr_ < this->maxItr_) {
       switch (this->resp_restriction_) {
@@ -156,7 +156,7 @@ void TlEspPop::exec(std::string PMatrixFilePath) {
       }
 
       // solve
-      TlDenseSymmetricMatrix_BLAS_Old invDesignMat = designMat;
+      TlDenseSymmetricMatrix_Lapack invDesignMat = designMat;
       invDesignMat.inverse();
 
       modelCoef = invDesignMat * predicted;
@@ -315,11 +315,11 @@ std::vector<TlPosition> TlEspPop::getMerzKollmanGrids() {
   return allGrids;
 }
 
-TlDenseGeneralMatrix_BLAS_old TlEspPop::getInvDistanceMatrix() {
+TlDenseGeneralMatrix_Lapack TlEspPop::getInvDistanceMatrix() {
   // make 1/r distance table
   const int numOfRealAtoms = this->realAtoms_.size();
   const int numOfGrids = this->grids_.size();
-  TlDenseGeneralMatrix_BLAS_old d(numOfRealAtoms, numOfGrids);
+  TlDenseGeneralMatrix_Lapack d(numOfRealAtoms, numOfGrids);
   if (this->verbose_) {
     std::cerr << TlUtils::format("# of atoms: %d", numOfRealAtoms) << std::endl;
     std::cerr << TlUtils::format("# of grids: %d", numOfGrids) << std::endl;
@@ -340,31 +340,31 @@ TlDenseGeneralMatrix_BLAS_old TlEspPop::getInvDistanceMatrix() {
   return d;
 }
 
-void TlEspPop::makeDesignMatrix_MK(TlDenseSymmetricMatrix_BLAS_Old* pDesignMat,
-                                   TlVector_BLAS* pPredicted) {
+void TlEspPop::makeDesignMatrix_MK(TlDenseSymmetricMatrix_Lapack* pDesignMat,
+                                   TlDenseVector_Lapack* pPredicted) {
   assert(pDesignMat != NULL);
   assert(pPredicted != NULL);
   assert(this->esp_.getSize() == static_cast<int>(this->grids_.size()));
 
-  const TlDenseGeneralMatrix_BLAS_old d = this->getInvDistanceMatrix();
+  const TlDenseGeneralMatrix_Lapack d = this->getInvDistanceMatrix();
 
   const int numOfRealAtoms = this->realAtoms_.size();
   pDesignMat->resize(numOfRealAtoms + 1);
   pPredicted->resize(numOfRealAtoms + 1);
   for (int a = 0; a < numOfRealAtoms; ++a) {
-    const TlVector_BLAS r_a = d.getRowVector(a);
+    const TlDenseVector_Lapack r_a = d.getRowVector<TlDenseVector_Lapack>(a);
     assert(r_a.getSize() == static_cast<int>(this->grids_.size()));
 
     // a == b
     {
-      TlVector_BLAS r_a2 = r_a;
+      TlDenseVector_Lapack r_a2 = r_a;
       r_a2.dotInPlace(r_a);
       pDesignMat->set(a, a, r_a2.sum());
     }
 
     // a != b
     for (int b = 0; b < a; ++b) {
-      TlVector_BLAS r_b = d.getRowVector(b);
+      TlDenseVector_Lapack r_b = d.getRowVector<TlDenseVector_Lapack>(b);
       r_b.dotInPlace(r_a);
       pDesignMat->set(a, b, r_b.sum());
     }
@@ -375,8 +375,8 @@ void TlEspPop::makeDesignMatrix_MK(TlDenseSymmetricMatrix_BLAS_Old* pDesignMat,
 
     //
     {
-      TlVector_BLAS r = r_a;
-      (*pPredicted)[a] = r.dotInPlace(this->esp_).sum();
+      TlDenseVector_Lapack r = r_a;
+      pPredicted->set(a, r.dotInPlace(this->esp_).sum());
     }
   }
 
@@ -392,53 +392,55 @@ void TlEspPop::makeDesignMatrix_MK(TlDenseSymmetricMatrix_BLAS_Old* pDesignMat,
 }
 
 void TlEspPop::makeDesignMatrix_quadric(
-    const TlDenseSymmetricMatrix_BLAS_Old& MK_designMat,
-    const TlVector_BLAS& MK_predicted, TlDenseSymmetricMatrix_BLAS_Old* pDesignMat,
-    TlVector_BLAS* pPredicted) {
+    const TlDenseSymmetricMatrix_Lapack& MK_designMat,
+    const TlDenseVector_Lapack& MK_predicted,
+    TlDenseSymmetricMatrix_Lapack* pDesignMat,
+    TlDenseVector_Lapack* pPredicted) {
   *pDesignMat = MK_designMat;
   *pPredicted = MK_predicted;
 
   const double param_a = this->param_a_;
-  const TlVector_BLAS& q = this->expected_;
+  const TlDenseVector_Lapack& q = this->expected_;
   const double target = 0.0;  // TODO
 
   const int numOfRealAtoms = this->realAtoms_.size();
   for (int a = 0; a < numOfRealAtoms; ++a) {
-    const double rest = -2.0 * param_a * (target - q[a]);
+    const double rest = -2.0 * param_a * (target - q.get(a));
 
     pDesignMat->add(a, a, rest);
-    (*pPredicted)[a] += target * rest;
+    pPredicted->add(a, target * rest);
   }
 }
 
 void TlEspPop::makeDesignMatrix_hyperbolic(
-    const TlDenseSymmetricMatrix_BLAS_Old& MK_designMat,
-    const TlVector_BLAS& MK_predicted, TlDenseSymmetricMatrix_BLAS_Old* pDesignMat,
-    TlVector_BLAS* pPredicted) {
+    const TlDenseSymmetricMatrix_Lapack& MK_designMat,
+    const TlDenseVector_Lapack& MK_predicted,
+    TlDenseSymmetricMatrix_Lapack* pDesignMat,
+    TlDenseVector_Lapack* pPredicted) {
   *pDesignMat = MK_designMat;
   *pPredicted = MK_predicted;
 
   const double param_a = this->param_a_;
   const double param_b2 = this->param_b_ * this->param_b_;
-  const TlVector_BLAS& q = this->expected_;
+  const TlDenseVector_Lapack& q = this->expected_;
   const double target = 0.0;  // TODO
 
   const int numOfRealAtoms = this->realAtoms_.size();
   for (int a = 0; a < numOfRealAtoms; ++a) {
-    const double ya = q[a];
+    const double ya = q.get(a);
     const double rest = param_a * ya * (1.0 / std::sqrt(ya * ya + param_b2));
 
     pDesignMat->add(a, a, rest);
-    (*pPredicted)[a] += target * rest;
+    pPredicted->add(a, target * rest);
   }
   pPredicted->set(numOfRealAtoms,
                   this->totalCharge_ - this->sumOfCounterCharges_);
 }
 
-bool TlEspPop::convCheck(const TlVector_BLAS& modelCoef) {
+bool TlEspPop::convCheck(const TlDenseVector_Lapack& modelCoef) {
   bool judge = false;
   if (this->itr_ > 1) {
-    TlVector_BLAS diff = modelCoef - this->prevModelCoef_;
+    TlDenseVector_Lapack diff = modelCoef - this->prevModelCoef_;
 
     const double maxErr = diff.getMaxAbsoluteElement();
     const int numOfSize = modelCoef.getSize();
@@ -460,7 +462,7 @@ bool TlEspPop::convCheck(const TlVector_BLAS& modelCoef) {
   return judge;
 }
 
-void TlEspPop::output(const TlVector_BLAS& modelCoef) {
+void TlEspPop::output(const TlDenseVector_Lapack& modelCoef) {
   const int numOfRealAtoms = this->realAtoms_.size();
   assert(modelCoef.getSize() == numOfRealAtoms + 1);
 
@@ -484,7 +486,7 @@ void TlEspPop::output(const TlVector_BLAS& modelCoef) {
   }
   double totalCharge = 0.0;
   for (int i = 0; i < numOfRealAtoms; ++i) {
-    const double charge = modelCoef[i];
+    const double charge = modelCoef.get(i);
     totalCharge += charge;
     std::cout << TlUtils::format("[%4d] % 8.3f", i, charge) << std::endl;
   }

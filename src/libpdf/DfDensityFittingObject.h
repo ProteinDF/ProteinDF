@@ -284,7 +284,9 @@ SymmetricMatrix DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::
   SymmetricMatrix diffP;
   diffP = DfObject::getDiffDensityMatrix<SymmetricMatrix>(runType,
                                                           this->m_nIteration);
+  diffP.save("dP0.mat");
   diffP.resize(this->m_nNumOfAOs);
+  diffP.save("dP1.mat");
 
   return diffP;
 }

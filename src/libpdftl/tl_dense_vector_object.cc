@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "tl_dense_vector_object.h"
 #include "TlUtils.h"
 #include "tl_dense_vector_impl_object.h"
@@ -38,9 +40,33 @@ void TlDenseVectorObject::add(const index_type index, const double value) {
   this->pImpl_->add(index, value);
 }
 
+void TlDenseVectorObject::mul(const index_type index, const double value) {
+  this->pImpl_->mul(index, value);
+}
+
 // ---------------------------------------------------------------------------
 // operations
 // ---------------------------------------------------------------------------
+double TlDenseVectorObject::getMaxAbsoluteElement(
+    TlDenseVectorObject::index_type* index) const {
+  double maxVal = 0.0;
+  TlDenseVectorObject::index_type argmax = -1;
+  const TlDenseVectorObject::index_type size = this->getSize();
+  for (TlDenseVectorObject::index_type i = 0; i < size; ++i) {
+    const double v = std::fabs(this->get(i));
+    if (maxVal < v) {
+      maxVal = v;
+      argmax = i;
+    }
+  }
+
+  if (index != NULL) {
+    *index = argmax;
+  }
+
+  return maxVal;
+}
+
 double TlDenseVectorObject::sum() const { return this->pImpl_->sum(); }
 
 double TlDenseVectorObject::norm() const { return this->pImpl_->norm(); }
@@ -71,13 +97,16 @@ bool TlDenseVectorObject::load(const std::string& filePath) {
 
     std::fstream fs;
     fs.open(filePath.c_str(), std::ios::in | std::ios::binary);
+    if (!fs.fail()) {
+      fs.seekg(headerSize);
 
-    double v;
-    for (TlDenseVectorObject::index_type i = 0; i < size; ++i) {
-      fs.read(reinterpret_cast<char*>(&v), sizeof(double));
-      this->set(i, v);
+      double v;
+      for (TlDenseVectorObject::index_type i = 0; i < size; ++i) {
+        fs.read(reinterpret_cast<char*>(&v), sizeof(double));
+        this->set(i, v);
+      }
+      answer = true;
     }
-    answer = true;
 
     fs.close();
   } else {
@@ -146,6 +175,24 @@ bool TlDenseVectorObject::loadText(const std::string& filePath) {
   ifs.close();
 
   return answer;
+}
+
+void TlDenseVectorObject::outputText(std::ostream& os) const {
+  const TlDenseVectorObject::size_type nSize = this->getSize();
+
+  os << "TEXT\n";
+  os << nSize << "\n";
+  os << nSize << "\n";
+  os << "0\n";
+
+  for (TlDenseVectorObject::size_type j = 0; j < nSize; j += 10) {
+    for (TlDenseVectorObject::size_type i = j; ((i < j + 10) && (i < nSize));
+         ++i) {
+      os << TlUtils::format("  %10.4lf", this->get(i));
+    }
+    os << std::endl;
+  }
+  os << std::endl;
 }
 
 #ifdef HAVE_HDF5

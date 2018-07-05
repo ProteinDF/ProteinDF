@@ -84,10 +84,12 @@ class TlDenseGeneralMatrix_ImplViennaCL : public TlDenseMatrix_ImplObject {
   // ---------------------------------------------------------------------------
  public:
   virtual double sum() const;
+  // virtual double trace() const;
   virtual double getRMS() const;
   virtual double getMaxAbsoluteElement(
       TlMatrixObject::index_type* outRow,
       TlMatrixObject::index_type* outCol) const;
+  virtual void transposeInPlace();
 
   TlDenseGeneralMatrix_ImplViennaCL& dotInPlace(
       const TlDenseGeneralMatrix_ImplViennaCL& rhs);

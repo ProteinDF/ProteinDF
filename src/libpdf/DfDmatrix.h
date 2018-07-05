@@ -21,13 +21,12 @@
 
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "CnError.h"
 #include "DfObject.h"
 #include "TlTime.h"
-
-class TlVector_BLAS;
-class TlDenseGeneralMatrix_BLAS_old;
+#include "tl_dense_vector_lapack.h"
 
 /// 分子軌道の占有数の決定と密度行列の作成を行うクラス
 ///
@@ -43,31 +42,33 @@ class DfDmatrix : public DfObject {
  protected:
   virtual void main(DfObject::RUN_TYPE runType);
 
-  // virtual TlVector_BLAS getOccupation(DfObject::RUN_TYPE runType);
+  // virtual TlDenseVector_Lapack getOccupation(DfObject::RUN_TYPE runType);
 
   template <typename MatrixType>
-  TlVector_BLAS getOccupationUsingOverlap(DfObject::RUN_TYPE runType);
+  TlDenseVector_Lapack getOccupationUsingOverlap(DfObject::RUN_TYPE runType);
 
   template <typename MatrixType, typename SymmetricMatrixType>
-  TlVector_BLAS getOccupationUsingProjection(DfObject::RUN_TYPE runType);
+  TlDenseVector_Lapack getOccupationUsingProjection(DfObject::RUN_TYPE runType);
 
-  virtual void checkOccupation(const TlVector_BLAS& prevOcc,
-                               const TlVector_BLAS& currOcc);
-  virtual void printOccupation(const TlVector_BLAS& occ);
+  virtual void checkOccupation(const TlDenseVector_Lapack& prevOcc,
+                               const TlDenseVector_Lapack& currOcc);
+  virtual void printOccupation(const TlDenseVector_Lapack& occ);
 
   template <typename MatrixType, typename SymmetricMatrixType>
   void generateDensityMatrix(DfObject::RUN_TYPE runType,
-                             const TlVector_BLAS& currOcc);
+                             const TlDenseVector_Lapack& currOcc);
 
   template <typename MatrixType, typename SymmetricMatrixType>
   SymmetricMatrixType calcDensMatrix(const MatrixType& inputC,
-                                     const TlVector_BLAS& f, double base);
+                                     const TlDenseVector_Lapack& f,
+                                     double base);
 
-  void printTwoVectors(const TlVector_BLAS& a, const TlVector_BLAS& b,
-                       const std::string& title, int pnumcol);
+  void printTwoVectors(const TlDenseVector_Lapack& a,
+                       const TlDenseVector_Lapack& b, const std::string& title,
+                       int pnumcol);
 
   // for simple
-  // TlVector_BLAS createOccupation(DfObject::RUN_TYPE runType);
+  // TlDenseVector_Lapack createOccupation(DfObject::RUN_TYPE runType);
   // std::vector<int> getLevel(std::string sLevel);
 
  protected:
@@ -95,7 +96,8 @@ class DfDmatrix : public DfObject {
 
 // 軌道の重なりの対応のルーチン ====================================
 template <typename MatrixType>
-TlVector_BLAS DfDmatrix::getOccupationUsingOverlap(DfObject::RUN_TYPE runType) {
+TlDenseVector_Lapack DfDmatrix::getOccupationUsingOverlap(
+    DfObject::RUN_TYPE runType) {
   const int nNumOfMOs = this->m_nNumOfMOs;
 
   this->log_.info(" MO overlap method is started.\n");
@@ -123,24 +125,25 @@ TlVector_BLAS DfDmatrix::getOccupationUsingOverlap(DfObject::RUN_TYPE runType) {
     prevCprime *= Cprime;
   }
 
-  TlVector_BLAS prevOcc = this->getOccVtr(runType);
+  TlDenseVector_Lapack prevOcc = this->getOccVtr(runType);
 
   // construct occupation number of current orbital with MO overlap matrix
   // 旧MO(pre)がどの新MO(crr)との重なりが一番大きいかを探す
   this->log_.info(" check overlap");
-  TlVector_BLAS currOcc(nNumOfMOs);
+  TlDenseVector_Lapack currOcc(nNumOfMOs);
   {
     std::vector<bool> g(nNumOfMOs, false);
     bool bListHeaderOutput = false;
     for (int pre = 0; pre < nNumOfMOs; ++pre) {
-      const double dPrevOcc = prevOcc[pre];
+      const double dPrevOcc = prevOcc.get(pre);
       if ((std::fabs(dPrevOcc - 1.00) < 1.0e-10) ||  // 占有数が 1 or 2 の時
           (std::fabs(dPrevOcc - 2.00) < 1.0e-10)) {
-        const TlVector_BLAS prevCprimeRowVector = prevCprime.getRowVector(pre);
+        const TlDenseVector_Lapack prevCprimeRowVector =
+            prevCprime.template getRowVector<TlDenseVector_Lapack>(pre);
         double xval = 0.0;
         int xord = -1;
         for (int crr = 0; crr < nNumOfMOs; ++crr) {
-          const double val = std::fabs(prevCprimeRowVector[crr]);
+          const double val = std::fabs(prevCprimeRowVector.get(crr));
           if ((g[crr] == false) && (val > xval)) {
             xval = val;  // fabs(prevCprime(pre, crr));
             xord = crr;
@@ -162,7 +165,7 @@ TlVector_BLAS DfDmatrix::getOccupationUsingOverlap(DfObject::RUN_TYPE runType) {
               TlUtils::format("pre MO %6d th -> crr MO %6d th %12.8lf\n",
                               (pre + 1), (xord + 1), xval));
         }
-        currOcc[xord] = dPrevOcc;
+        currOcc.set(xord, dPrevOcc);
         g[xord] = true;
       }
     }
@@ -203,14 +206,14 @@ TlVector_BLAS DfDmatrix::getOccupationUsingOverlap(DfObject::RUN_TYPE runType) {
 
 // 射影演算子法 ====================================================
 template <typename MatrixType, typename SymmetricMatrixType>
-TlVector_BLAS DfDmatrix::getOccupationUsingProjection(
+TlDenseVector_Lapack DfDmatrix::getOccupationUsingProjection(
     const DfObject::RUN_TYPE runType) {
   this->log_.info("orbital_overlap_method is mo-projection");
 
   const index_type numOfMOs = this->m_nNumOfMOs;
 
   // read molecular orbital occupation of (n-1) SCF iteration
-  // TlVector_BLAS prevOcc = this->getOccupation(runType);
+  // TlDenseVector_Lapack prevOcc = this->getOccupation(runType);
   // {
   //     int num_mo_closed  = 0;
   //     int num_mo_open    = 0;
@@ -241,7 +244,7 @@ TlVector_BLAS DfDmatrix::getOccupationUsingProjection(
   S = DfObject::getSpqMatrix<SymmetricMatrixType>();
 
   // calculation of projection diagonal
-  TlVector_BLAS pd(numOfMOs);
+  std::vector<double> pd(numOfMOs);
 
   // read density matrix of (n-1) SCF iteration
   const SymmetricMatrixType D = DfObject::getPpqMatrix<SymmetricMatrixType>(
@@ -262,7 +265,7 @@ TlVector_BLAS DfDmatrix::getOccupationUsingProjection(
   }
 
   // set order of MO (0から始まる軌道の番号)
-  TlVector_BLAS pd_ord(numOfMOs);
+  std::vector<double> pd_ord(numOfMOs);
   for (index_type k = 0; k < numOfMOs; ++k) {
     pd_ord[k] = k;
   }
@@ -313,14 +316,14 @@ TlVector_BLAS DfDmatrix::getOccupationUsingProjection(
   this->printTwoVectors(pd_ord, pd, title, 10);
 
   // store electrons
-  TlVector_BLAS currOcc = TlVector_BLAS(numOfMOs);
+  TlDenseVector_Lapack currOcc(numOfMOs);
   for (index_type k = 0; k < numOfMOs; ++k) {
-    currOcc[static_cast<index_type>(pd_ord[k])] = occupation;
+    currOcc.set(static_cast<index_type>(pd_ord[k]), occupation);
   }
 
   // check
   {
-    TlVector_BLAS prevOcc = this->getOccVtr(runType);
+    TlDenseVector_Lapack prevOcc = this->getOccVtr(runType);
     const double sumOfPrevOcc = prevOcc.sum();
     const double sumOfCurrOcc = currOcc.sum();
 
@@ -337,7 +340,7 @@ TlVector_BLAS DfDmatrix::getOccupationUsingProjection(
 
 template <typename MatrixType, typename SymmetricMatrixType>
 void DfDmatrix::generateDensityMatrix(const DfObject::RUN_TYPE runType,
-                                      const TlVector_BLAS& currOcc) {
+                                      const TlDenseVector_Lapack& currOcc) {
   switch (runType) {
     case RUN_RKS: {
       MatrixType C =
@@ -389,7 +392,7 @@ void DfDmatrix::generateDensityMatrix(const DfObject::RUN_TYPE runType,
 
 template <typename MatrixType, typename SymmetricMatrixType>
 SymmetricMatrixType DfDmatrix::calcDensMatrix(const MatrixType& inputC,
-                                              const TlVector_BLAS& f,
+                                              const TlDenseVector_Lapack& f,
                                               double base) {
   const std::size_t nNumOfAOs = inputC.getNumOfRows();
   const std::size_t nNumOfMOs = inputC.getNumOfCols();
@@ -400,7 +403,7 @@ SymmetricMatrixType DfDmatrix::calcDensMatrix(const MatrixType& inputC,
 
     std::size_t max_k = std::min<std::size_t>(nNumOfMOs, f.getSize());
     for (std::size_t k = 0; k < max_k; ++k) {
-      if (std::fabs(f[k] - base) < 1.0e-10) {
+      if (std::fabs(f.get(k) - base) < 1.0e-10) {
         E.set(k, k, 1.0);
       }
     }

@@ -71,6 +71,7 @@ class TlDenseGeneralMatrix_ImplEigen : public TlDenseMatrix_ImplObject {
   virtual double getMaxAbsoluteElement(
       TlMatrixObject::index_type* outRow,
       TlMatrixObject::index_type* outCol) const;
+  virtual void transposeInPlace();
 
   const TlDenseGeneralMatrix_ImplEigen& dotInPlace(
       const TlDenseGeneralMatrix_ImplEigen& rhs);

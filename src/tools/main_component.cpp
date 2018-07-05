@@ -27,7 +27,7 @@
 #include "TlOrbitalInfo.h"
 #include "TlSerializeData.h"
 #include "TlUtils.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 #define AU_BOHR 1.889762
 
@@ -79,8 +79,8 @@ void showHelp(const std::string& name) {
 
 /// MO モード
 /// topに-1が指定された場合は、全軌道が出力される
-int exec_MO_mode(const TlDenseGeneralMatrix_BLAS_old& SC,
-                 const TlDenseGeneralMatrix_BLAS_old& C,
+int exec_MO_mode(const TlDenseGeneralMatrix_Lapack& SC,
+                 const TlDenseGeneralMatrix_Lapack& C,
                  const TlOrbitalInfo& readOrbInfo, int level, int top,
                  bool isVerbose = false) {
   // MO mode -------------------------------------------------------------
@@ -100,12 +100,12 @@ int exec_MO_mode(const TlDenseGeneralMatrix_BLAS_old& SC,
   }
 
   // MO
-  const TlVector_BLAS MO = C.getColVector(level);
+  const TlDenseVector_Lapack MO = C.getColVector<TlDenseVector_Lapack>(level);
   std::vector<LCAO> AOs(numOfAOs);
   double sum = 0.0;
   for (int i = 0; i < numOfAOs; ++i) {
     AOs[i].index = i;
-    const double w = std::fabs(MO[i] * SC.get(i, level));
+    const double w = std::fabs(MO.get(i) * SC.get(i, level));
     sum += w;
     AOs[i].value = w;
   }
@@ -147,8 +147,8 @@ int exec_MO_mode(const TlDenseGeneralMatrix_BLAS_old& SC,
   return EXIT_SUCCESS;
 }
 
-int exec_atom_mode(const TlDenseGeneralMatrix_BLAS_old& SC,
-                   const TlDenseGeneralMatrix_BLAS_old& C,
+int exec_atom_mode(const TlDenseGeneralMatrix_Lapack& SC,
+                   const TlDenseGeneralMatrix_Lapack& C,
                    const TlOrbitalInfo& readOrbInfo, int inputAtomIndex,
                    const double threshold, bool isVerbose = false) {
   const int numOfAOs = C.getNumOfRows();
@@ -160,7 +160,8 @@ int exec_atom_mode(const TlDenseGeneralMatrix_BLAS_old& SC,
 
   std::vector<int> pickupMO;
   for (int MO = 0; MO < numOfMOs; ++MO) {
-    const TlVector_BLAS MO_vec = C.getColVector(MO);
+    const TlDenseVector_Lapack MO_vec =
+        C.getColVector<TlDenseVector_Lapack>(MO);
 
     if (isVerbose) {
       std::cerr << TlUtils::format("check %5dth MO ...", MO) << std::endl;
@@ -168,7 +169,7 @@ int exec_atom_mode(const TlDenseGeneralMatrix_BLAS_old& SC,
     double sum = 0.0;
     double w_atom = 0.0;
     for (int i = 0; i < numOfAOs; ++i) {
-      const double w = std::fabs(MO_vec[i] * SC.get(i, MO));
+      const double w = std::fabs(MO_vec.get(i) * SC.get(i, MO));
       sum += w;
 
       const int atomIndex = readOrbInfo.getAtomIndex(i);
@@ -187,14 +188,14 @@ int exec_atom_mode(const TlDenseGeneralMatrix_BLAS_old& SC,
   return EXIT_SUCCESS;
 }
 
-int exec_save_mode(const TlDenseGeneralMatrix_BLAS_old& SC,
-                   const TlDenseGeneralMatrix_BLAS_old& C,
+int exec_save_mode(const TlDenseGeneralMatrix_Lapack& SC,
+                   const TlDenseGeneralMatrix_Lapack& C,
                    const std::string& savePath, bool isVerbose = false) {
   if (isVerbose) {
     std::cerr << "calc matrix..." << std::endl;
   }
 
-  TlDenseGeneralMatrix_BLAS_old CSC = SC;
+  TlDenseGeneralMatrix_Lapack CSC = SC;
   CSC.dotInPlace(C);
 
   if (isVerbose) {
@@ -278,7 +279,7 @@ int main(int argc, char* argv[]) {
   if (Spq_path.empty()) {
     Spq_path = dfObj.getSpqMatrixPath();
   }
-  TlDenseSymmetricMatrix_BLAS_Old S;
+  TlDenseSymmetricMatrix_Lapack S;
   if (isVerbose == true) {
     std::cout << TlUtils::format("read Spq: %s", Spq_path.c_str()) << std::endl;
   }
@@ -288,7 +289,7 @@ int main(int argc, char* argv[]) {
   if (LCAO_path.empty()) {
     LCAO_path = dfObj.getCMatrixPath(DfObject::RUN_RKS, lastIteration);
   }
-  TlDenseGeneralMatrix_BLAS_old C;
+  TlDenseGeneralMatrix_Lapack C;
   if (isVerbose == true) {
     std::cout << TlUtils::format("read LCAO: %s", LCAO_path.c_str())
               << std::endl;
@@ -300,7 +301,7 @@ int main(int argc, char* argv[]) {
               << std::endl;
   }
 
-  const TlDenseGeneralMatrix_BLAS_old SC = S * C;
+  const TlDenseGeneralMatrix_Lapack SC = S * C;
 
   int answer = 0;
   switch (execMode) {

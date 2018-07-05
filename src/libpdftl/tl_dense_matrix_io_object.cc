@@ -21,6 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include "tl_matrix_utils.h"
+#include "TlUtils.h"
 
 TlDenseMatrix_IO_object::TlDenseMatrix_IO_object(
     const TlMatrixObject::MatrixType matrixType, const std::string& filePath,
@@ -173,48 +174,48 @@ double TlDenseMatrix_IO_object::get(const index_type row,
 }
 
 void TlDenseMatrix_IO_object::setRowVector(const index_type row,
-                                           const TlVector_BLAS& v) {
+                                           const TlDenseVector_Lapack& v) {
   const index_type numOfCols = this->getNumOfCols();
   assert(v.getSize() == numOfCols);
 
   for (index_type i = 0; i < numOfCols; ++i) {
-    this->set(row, i, v[i]);
+    this->set(row, i, v.get(i));
   }
 }
 
 void TlDenseMatrix_IO_object::setColVector(const index_type col,
-                                           const TlVector_BLAS& v) {
+                                           const TlDenseVector_Lapack& v) {
   const index_type numOfRows = this->getNumOfRows();
   assert(v.getSize() == numOfRows);
 
   for (index_type i = 0; i < numOfRows; ++i) {
-    this->set(i, col, v[i]);
+    this->set(i, col, v.get(i));
   }
 }
 
-TlVector_BLAS TlDenseMatrix_IO_object::getRowVector(
+TlDenseVector_Lapack TlDenseMatrix_IO_object::getRowVector(
     const index_type nRow) const {
   assert((0 <= nRow) && (nRow < this->getNumOfRows()));
 
   const int nNumOfCols = this->getNumOfCols();
-  TlVector_BLAS answer(nNumOfCols);
+  TlDenseVector_Lapack answer(nNumOfCols);
 
   for (int i = 0; i < nNumOfCols; ++i) {
-    answer[i] = this->get(nRow, i);
+    answer.set(i, this->get(nRow, i));
   }
 
   return answer;
 }
 
-TlVector_BLAS TlDenseMatrix_IO_object::getColumnVector(
+TlDenseVector_Lapack TlDenseMatrix_IO_object::getColumnVector(
     const index_type nCol) const {
   assert((0 <= nCol) && (nCol < this->getNumOfCols()));
 
   const int nNumOfRows = this->getNumOfRows();
-  TlVector_BLAS answer(nNumOfRows);
+  TlDenseVector_Lapack answer(nNumOfRows);
 
   for (int i = 0; i < nNumOfRows; ++i) {
-    answer[i] = this->get(i, nCol);
+    answer.set(i, this->get(i, nCol));
   }
 
   return answer;
@@ -324,7 +325,7 @@ TlDenseMatrix_IO_object& TlDenseMatrix_IO_object::operator*=(
   return *this;
 }
 
-TlDenseGeneralMatrix_BLAS_old TlDenseMatrix_IO_object::getBlockMatrix(
+TlDenseGeneralMatrix_Lapack TlDenseMatrix_IO_object::getBlockMatrix(
     const index_type row, const index_type col, const index_type rowDistance,
     const index_type colDistance) const {
   assert((0 <= row) && (row < this->getNumOfRows()));
@@ -337,7 +338,7 @@ TlDenseGeneralMatrix_BLAS_old TlDenseMatrix_IO_object::getBlockMatrix(
   assert(0 <= (col + colDistance) &&
          (col + colDistance) <= this->getNumOfCols());
 
-  TlDenseGeneralMatrix_BLAS_old answer(rowDistance, colDistance);
+  TlDenseGeneralMatrix_Lapack answer(rowDistance, colDistance);
 #pragma omp parallel for
   for (index_type dr = 0; dr < rowDistance; ++dr) {
     const index_type r = row + dr;
@@ -351,9 +352,9 @@ TlDenseGeneralMatrix_BLAS_old TlDenseMatrix_IO_object::getBlockMatrix(
   return answer;
 }
 
-void TlDenseMatrix_IO_object::setBlockMatrix(
-    const index_type row, const index_type col,
-    const TlDenseGeneralMatrix_BLAS_old& matrix) {
+void TlDenseMatrix_IO_object::block(const TlMatrixObject::index_type row,
+                                    const TlMatrixObject::index_type col,
+                                    const TlDenseGeneralMatrixObject& matrix) {
   const index_type row_distance = matrix.getNumOfRows();
   const index_type col_distance = matrix.getNumOfCols();
 
@@ -365,10 +366,10 @@ void TlDenseMatrix_IO_object::setBlockMatrix(
          (col + col_distance) <= this->getNumOfCols());
 
   // this->set()はスレッドセーフではないのでOpenMPでは注意すること
-  for (index_type dr = 0; dr < row_distance; ++dr) {
-    const index_type r = row + dr;
-    for (index_type dc = 0; dc < col_distance; ++dc) {
-      const index_type c = col + dc;
+  for (TlMatrixObject::index_type dr = 0; dr < row_distance; ++dr) {
+    const TlMatrixObject::index_type r = row + dr;
+    for (TlMatrixObject::index_type dc = 0; dc < col_distance; ++dc) {
+      const TlMatrixObject::index_type c = col + dc;
 
       this->set(r, c, matrix.get(dr, dc));
     }

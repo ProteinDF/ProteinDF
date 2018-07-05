@@ -16,6 +16,9 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <cassert>
+#include <cmath>
+
 #include "DfFunctional_LYP.h"
 #include "TlUtils.h"
 
@@ -648,11 +651,9 @@ double DfFunctional_LYP::delta_prime(const double dRho, const double dDelta) {
 // xAA := sqrt(gamma_AA) / rhoA^(4/3)
 // xBB := sqrt(gamma_AA) / rhoA^(4/3)
 // xAB := sqrt(gamma_AB) / rhoA^(4/3)
-TlDenseGeneralMatrix_BLAS_old DfFunctional_LYP::getFunctionalCore(const double rhoA,
-                                                              const double rhoB,
-                                                              const double xA,
-                                                              const double xB) {
-  TlDenseGeneralMatrix_BLAS_old answer(F_DIM, this->getNumOfFunctionalTerms());
+TlDenseGeneralMatrix_Lapack DfFunctional_LYP::getFunctionalCore(
+    const double rhoA, const double rhoB, const double xA, const double xB) {
+  TlDenseGeneralMatrix_Lapack answer(F_DIM, this->getNumOfFunctionalTerms());
   assert(this->getNumOfFunctionalTerms() == 4);
 
   if ((rhoA > 1.0E-16) && (xA > 1.0E-16) && (rhoB > 1.0E-16) &&
@@ -718,10 +719,10 @@ TlDenseGeneralMatrix_BLAS_old DfFunctional_LYP::getFunctionalCore(const double r
   return answer;
 }
 
-TlDenseGeneralMatrix_BLAS_old DfFunctional_LYP::getDerivativeFunctionalCore(
+TlDenseGeneralMatrix_Lapack DfFunctional_LYP::getDerivativeFunctionalCore(
     const double rhoA, const double rhoB, const double xA, const double xB) {
-  TlDenseGeneralMatrix_BLAS_old answer(D_DIM,
-                                   this->getNumOfDerivativeFunctionalTerms());
+  TlDenseGeneralMatrix_Lapack answer(D_DIM,
+                                     this->getNumOfDerivativeFunctionalTerms());
 
   if ((rhoA > 1.0E-16) && (xA > 1.0E-16) && (rhoB > 1.0E-16) &&
       (xB > 1.0E-16)) {

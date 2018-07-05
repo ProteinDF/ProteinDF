@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "TlFile.h"
-#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
 #include "tl_matrix_mmap_row_major.h"
 
 static const std::string matPath = "temp.mmap.rsfd.mat";
@@ -21,7 +21,7 @@ TEST(TlMatrixMmapRowMajor, construct) {
   }
 
   {
-    TlDenseGeneralMatrix_BLAS_old a;
+    TlDenseGeneralMatrix_Lapack a;
     a.load(matPath);
 
     EXPECT_EQ(row, a.getNumOfRows());
@@ -33,7 +33,7 @@ TEST(TlMatrixMmapRowMajor, construct) {
 //   cleanup();
 //   const int row = 100;
 //   const int col = 200;
-//   TlDenseGeneralMatrix_BLAS_old_rsfd ref = getTlMatrix(row, col);
+//   TlDenseGeneralMatrix_Lapack_rsfd ref = getTlMatrix(row, col);
 //   ref.save(matPath);
 //   TlMatrixMmapRowMajor a(matPath);
 //
@@ -55,7 +55,7 @@ TEST(TlMatrixMmapRowMajor, construct) {
 //   cleanup();
 //   const int row = 100;
 //   const int col = 200;
-//   TlDenseGeneralMatrix_BLAS_old ref = getTlMatrix(row, col);
+//   TlDenseGeneralMatrix_Lapack ref = getTlMatrix(row, col);
 //
 //   {
 //     TlMatrixMmapRowMajor m(matPath, ref.getNumOfRows(), ref.getNumOfCols());
@@ -67,7 +67,7 @@ TEST(TlMatrixMmapRowMajor, construct) {
 //   }
 //
 //   {
-//     TlDenseGeneralMatrix_BLAS_old a;
+//     TlDenseGeneralMatrix_Lapack a;
 //     a.load(matPath);
 //
 //     EXPECT_EQ(ref.getNumOfRows(), a.getNumOfRows());
@@ -84,7 +84,7 @@ TEST(TlMatrixMmapRowMajor, construct) {
 //   cleanup();
 //   const int row = 200;
 //   const int col = 100;
-//   TlDenseGeneralMatrix_BLAS_old ref = getTlMatrix(row, col);
+//   TlDenseGeneralMatrix_Lapack ref = getTlMatrix(row, col);
 //   ref.save(matPath);
 //
 //   {

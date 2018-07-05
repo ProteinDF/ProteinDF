@@ -2,6 +2,9 @@
 #define LAPACK_H
 
 extern "C" {
+double ddot_(const int* n, const double* X, const int* incX, const double* Y,
+             const int* incY);
+
 void daxpy_(const int* n, const double* alpha, const double* x, const int* incx,
             double* y, const int* incy);
 void dscal_(const int* n, const double* a, double* x, const int* incx);
@@ -34,6 +37,8 @@ void dsymm_(const char* SIDE, const char* UPLO, const int* M, const int* N,
             const double* ALPHA, const double* A, const int* LDA,
             const double* B, const int* LDB, const double* BETA, double* C,
             const int* LDC);
+void dtrmm_(const char *side, const char *uplo, const char *trans, const char *diag, const int *m, const int *n,
+            const double *alpha, const double *A, const int *ldA, double *B, const int *ldB);
 
 void dspmv_(const char* UPLO, const int* N, const double* ALPHA,
             const double* AP, const double* X, const int* INCX,

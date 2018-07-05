@@ -16,11 +16,13 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "mkfld_common.h"
 #include <fstream>
 #include <iostream>
+
+#include "mkfld_common.h"
 #include "Fl_Geometry.h"
 #include "TlSerializeData.h"
+#include "TlUtils.h"
 
 void getDefaultSize(const TlSerializeData& param, TlPosition* pStartPos,
                     TlPosition* pEndPos) {

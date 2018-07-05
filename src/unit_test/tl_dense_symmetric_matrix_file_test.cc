@@ -1,7 +1,7 @@
 #include "TlFile.h"
 #include "gtest/gtest.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
 #include "tl_dense_symmetric_matrix_io.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 // const double EPS = 1.0E-10; // std::numeric_limits<double>::epsilon();
 static const std::string mat_path = "temp.filesymmat.mat";
@@ -19,7 +19,7 @@ TEST(TlFileSymmetricMatrix, constructer) {
   }
 
   {
-    TlDenseSymmetricMatrix_BLAS_Old a;
+    TlDenseSymmetricMatrix_Lapack a;
     a.load(mat_path);
     EXPECT_EQ(100, a.getNumOfRows());
     EXPECT_EQ(100, a.getNumOfCols());
@@ -32,7 +32,7 @@ TEST(TlFileSymmetricMatrix, constructer) {
 }
 
 TEST(TlFileSymmetricMatrix, constructer_by_existed) {
-  TlDenseSymmetricMatrix_BLAS_Old sm(100);
+  TlDenseSymmetricMatrix_Lapack sm(100);
   {
     sm.set(3, 17, 51.0);
     sm.set(0, 28, -1.0);
@@ -43,7 +43,7 @@ TEST(TlFileSymmetricMatrix, constructer_by_existed) {
 }
 
 TEST(TlFileSymmetricMatrix, get) {
-  TlDenseSymmetricMatrix_BLAS_Old sm(100);
+  TlDenseSymmetricMatrix_Lapack sm(100);
   sm.set(3, 17, 51.0);
   sm.set(0, 28, -1.0);
   sm.save(mat_path);
@@ -67,7 +67,7 @@ TEST(TlFileSymmetricMatrix, set) {
     fsm.set(0, 28, -1.0);
   }
 
-  TlDenseSymmetricMatrix_BLAS_Old sm;
+  TlDenseSymmetricMatrix_Lapack sm;
   sm.load(mat_path);
 
   EXPECT_EQ(100, sm.getNumOfRows());
@@ -82,7 +82,7 @@ TEST(TlFileSymmetricMatrix, set) {
 
 TEST(TlFileSymmetricMatrix, add) {
   {
-    TlDenseSymmetricMatrix_BLAS_Old sm(100);
+    TlDenseSymmetricMatrix_Lapack sm(100);
     sm.set(3, 17, 51.0);
     sm.set(0, 28, -1.0);
     sm.save(mat_path);
@@ -93,7 +93,7 @@ TEST(TlFileSymmetricMatrix, add) {
     fsm.add(3, 17, 12.3);
   }
 
-  TlDenseSymmetricMatrix_BLAS_Old sm;
+  TlDenseSymmetricMatrix_Lapack sm;
   sm.load(mat_path);
   EXPECT_EQ(100, sm.getNumOfRows());
   EXPECT_EQ(100, sm.getNumOfCols());

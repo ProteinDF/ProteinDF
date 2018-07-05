@@ -20,9 +20,10 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_matrix_utils.h"
+#include "TlUtils.h"
 
 void showHelp() {
   std::cout << "pdf-mat-add [options] MATRIX_FILE1 MATRIX_FILE2 OUTPUT"
@@ -59,10 +60,10 @@ int main(int argc, char* argv[]) {
   }
 
   if ((isSymMat1 == true) && (isSymMat2 == true)) {
-    TlDenseSymmetricMatrix_BLAS_Old M1;
+    TlDenseSymmetricMatrix_Lapack M1;
     M1.load(path1);
 
-    TlDenseSymmetricMatrix_BLAS_Old M2;
+    TlDenseSymmetricMatrix_Lapack M2;
     M2.load(path2);
 
     if ((M1.getNumOfRows() != M2.getNumOfRows()) ||
@@ -78,18 +79,18 @@ int main(int argc, char* argv[]) {
     M1 += M2;
     M1.save(path3);
   } else {
-    TlDenseGeneralMatrix_BLAS_old M1;
+    TlDenseGeneralMatrix_Lapack M1;
     if (isSymMat1 == true) {
-      TlDenseSymmetricMatrix_BLAS_Old tmp;
+      TlDenseSymmetricMatrix_Lapack tmp;
       tmp.load(path1);
       M1 = tmp;
     } else {
       M1.load(path1);
     }
 
-    TlDenseGeneralMatrix_BLAS_old M2;
+    TlDenseGeneralMatrix_Lapack M2;
     if (isSymMat2 == true) {
-      TlDenseSymmetricMatrix_BLAS_Old tmp;
+      TlDenseSymmetricMatrix_Lapack tmp;
       tmp.load(path2);
       M2 = tmp;
     } else {

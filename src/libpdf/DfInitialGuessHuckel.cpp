@@ -20,8 +20,7 @@
 #include <iostream>
 #include <limits>
 #include "CnError.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 const double DfInitialGuessHuckel::EPS = std::numeric_limits<double>::epsilon();
 
@@ -48,7 +47,8 @@ void DfInitialGuessHuckel::initialize() {
 }
 
 void DfInitialGuessHuckel::createGuess() {
-  this->createGuess<TlDenseSymmetricMatrix_BLAS_Old, TlDenseGeneralMatrix_BLAS_old>();
+  this->createGuess<TlDenseSymmetricMatrix_Lapack,
+                    TlDenseGeneralMatrix_Lapack>();
 }
 
 double DfInitialGuessHuckel::getHii(const std::string& sAtomName,

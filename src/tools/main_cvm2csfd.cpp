@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
     m.load(inputBaseName, i);
 
     for (index_type c = i; c < numOfCols; c += numOfSubunits) {
-      const TlVector_BLAS vtr = m.getVector(c);
+      const TlDenseVector_Lapack vtr = m.getVector(c);
       fileMat.setColVector(c, vtr);
 
       TlUtils::progressbar(float(c) / numOfCols);

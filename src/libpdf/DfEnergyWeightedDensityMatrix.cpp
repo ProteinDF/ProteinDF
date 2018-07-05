@@ -26,11 +26,11 @@ void DfEnergyWeightedDensityMatrix::calc(RUN_TYPE runType) {
   const int itr = this->numOfIterations_;
   const int numOfMOs = this->getNumOfMOs_;
 
-  TlVector_BLAS eps;
+  TlDenseVector_Lapack eps;
   eps.load(this->getOccupationPath(runType));
   assert(occ.getSize() == numOfMOs);
   {
-    TlVector_BLAS eig;
+    TlDenseVector_Lapack eig;
     eig.load(this->getEigvalPath(runType, itr));
     assert(eig.getSize() == numOfMOs);
 

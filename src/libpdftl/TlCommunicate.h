@@ -32,11 +32,14 @@
 
 //#define ANY_TAG_OK
 
-class TlDenseGeneralMatrix_BLAS_old;
+//class TlDenseGeneralMatrix_BLAS_old;
+class TlDenseGeneralMatrix_Lapack;
+class TlDenseSymmetricMatrix_Lapack;
+class TlDenseVector_Lapack;
 class TlMatrixFile;
-class TlVector_BLAS;
-class TlDenseSymmetricMatrix_BLAS_Old;
-class TlDenseSymmetricMatrix_BLAS_OldFile;
+//class TlVector_BLAS;
+//class TlDenseSymmetricMatrix_BLAS_Old;
+//class TlDenseSymmetricMatrix_BLAS_OldFile;
 class TlSparseMatrix;
 class TlSerializeData;
 
@@ -104,8 +107,11 @@ class TlCommunicate {
   int allReduce_SUM(std::valarray<double>& rData);
   int allReduce_SUM(int* pData, std::size_t length);
   int allReduce_SUM(double* pData, std::size_t length);
-  int allReduce_SUM(TlVector_BLAS& rVector);
-  int allReduce_SUM(TlDenseGeneralMatrix_BLAS_old& rMatrix);
+//  int allReduce_SUM(TlVector_BLAS& rVector);
+//  int allReduce_SUM(TlDenseGeneralMatrix_BLAS_old& rMatrix);
+  int allReduce_SUM(TlDenseGeneralMatrix_Lapack* pMatrix);
+  int allReduce_SUM(TlDenseSymmetricMatrix_Lapack* pMatrix);
+  int allReduce_SUM(TlDenseVector_Lapack* pVector);
   int allReduce_SUM(TlSparseMatrix& rMatrix);
   int allReduce_AND(bool& rData);
   int allReduce_MAX(int& rData);
@@ -138,9 +144,12 @@ class TlCommunicate {
   int broadcast(std::vector<double>& rData, int nRoot = 0);
   int broadcast(std::valarray<double>& rData, int nRoot = 0);
   int broadcast(std::vector<std::string>& rData);
-  int broadcast(TlVector_BLAS& rData, int root = 0);
-  int broadcast(TlDenseGeneralMatrix_BLAS_old& rData, int root = 0);
-  int broadcast(TlDenseSymmetricMatrix_BLAS_Old& rData, int root = 0);
+//  int broadcast(TlVector_BLAS& rData, int root = 0);
+//  int broadcast(TlDenseGeneralMatrix_BLAS_old& rData, int root = 0);
+//  int broadcast(TlDenseSymmetricMatrix_BLAS_Old& rData, int root = 0);
+  int broadcast(TlDenseGeneralMatrix_Lapack* pMatrix, int root = 0);
+  int broadcast(TlDenseSymmetricMatrix_Lapack* pMatrix, int root = 0);
+  int broadcast(TlDenseVector_Lapack* pMatrix, int root = 0);
   int broadcast(TlSparseMatrix& rData, int nRoot = 0);
   int broadcast(TlSerializeData& data);
 
@@ -167,11 +176,16 @@ class TlCommunicate {
   int sendData(const std::valarray<double>& data, int nDestination = 0,
                int nTag = 0);
   int sendData(const std::string& data, int nDestination = 0, int nTag = 0);
-  int sendData(const TlVector_BLAS& data, int destination = 0, int tag = 0);
-  int sendData(const TlDenseGeneralMatrix_BLAS_old& data, int destination = 0,
+//  int sendData(const TlVector_BLAS& data, int destination = 0, int tag = 0);
+//  int sendData(const TlDenseGeneralMatrix_BLAS_old& data, int destination = 0,
+//               int tag = 0);
+//  int sendData(const TlDenseSymmetricMatrix_BLAS_Old& rData,
+//               int nDestination = 0, int nTag = 0);
+  int sendData(const TlDenseGeneralMatrix_Lapack& data, int destination = 0,
                int tag = 0);
-  int sendData(const TlDenseSymmetricMatrix_BLAS_Old& rData, int nDestination = 0,
-               int nTag = 0);
+  int sendData(const TlDenseSymmetricMatrix_Lapack& rData,
+               int nDestination = 0, int nTag = 0);
+  int sendData(const TlDenseVector_Lapack& data, int destination = 0, int tag = 0);
   int sendData(const TlSparseMatrix& data, int dest = 0, int tag = 0);
   // int sendData(const TlSparseSymmetricMatrix& rData, int nDestination = 0,
   // int nTag = 0);
@@ -189,9 +203,14 @@ class TlCommunicate {
   int receiveData(std::vector<double>& rData, int nSrc, int nTag = 0);
   int receiveData(std::valarray<double>& rData, int nSrc, int nTag = 0);
   int receiveData(std::string& pData, int nSrc, int nTag = 0);
-  int receiveData(TlVector_BLAS& data, int src, int tag = 0);
-  int receiveData(TlDenseGeneralMatrix_BLAS_old& data, int src, int tag = 0);
-  int receiveData(TlDenseSymmetricMatrix_BLAS_Old& rData, int nSrc, int nTag = 0);
+//  int receiveData(TlVector_BLAS& data, int src, int tag = 0);
+//  int receiveData(TlDenseGeneralMatrix_BLAS_old& data, int src, int tag = 0);
+//  int receiveData(TlDenseSymmetricMatrix_BLAS_Old& rData, int nSrc,
+//                  int nTag = 0);
+  int receiveData(TlDenseGeneralMatrix_Lapack& data, int src, int tag = 0);
+  int receiveData(TlDenseSymmetricMatrix_Lapack& rData, int nSrc,
+                  int nTag = 0);
+  int receiveData(TlDenseVector_Lapack& data, int src, int tag = 0);
   int receiveData(TlSparseMatrix& rData, int src, int tag = 0);
 
   int receiveDataFromAnySource(int& data, int* pSrc, const int tag);
@@ -215,7 +234,9 @@ class TlCommunicate {
   int receiveDataFromAnySource(TlSparseMatrix* pData, int* pSrc, int tag = 0);
 
   // タグ付き
-  int receiveDataFromAnySource(TlDenseGeneralMatrix_BLAS_old& rData, int* pSrc,
+//  int receiveDataFromAnySource(TlDenseGeneralMatrix_BLAS_old& rData, int* pSrc,
+//                               int tag = 0);
+  int receiveDataFromAnySource(TlDenseGeneralMatrix_Lapack& rData, int* pSrc,
                                int tag = 0);
 
   // 1:1通信 非ブロッキング
@@ -329,7 +350,8 @@ class TlCommunicate {
   /// 集計 ===================================================================
   // int allReduce_SUM(const TlMatrixFile& fromLocalMatrix,
   //                   const std::string& toMatrixFilePath);
-  // int allReduce_SUM(const TlDenseSymmetricMatrix_BLAS_OldFile& fromLocalMatrix,
+  // int allReduce_SUM(const TlDenseSymmetricMatrix_BLAS_OldFile&
+  // fromLocalMatrix,
   //                   const std::string& toMatrixFilePath);
 
   // 終了処理

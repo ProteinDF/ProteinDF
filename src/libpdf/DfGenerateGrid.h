@@ -24,8 +24,9 @@
 #include "Fl_Geometry.h"
 #include "TlLebedevGrid.h"
 #include "TlPosition.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 /** グリッドを生成するクラス
  */
@@ -45,11 +46,11 @@ class DfGenerateGrid : public DfObject {
  protected:
   virtual void makeTable();
 
-  void generateGrid(const TlDenseGeneralMatrix_BLAS_old& O, const int iatom,
+  void generateGrid(const TlDenseGeneralMatrix_Lapack& O, const int iatom,
                     std::vector<double>* pCoordX, std::vector<double>* pCoordY,
                     std::vector<double>* pCoordZ, std::vector<double>* pWeight);
 
-  void generateGrid_SG1(const TlDenseGeneralMatrix_BLAS_old& O, const int iatom,
+  void generateGrid_SG1(const TlDenseGeneralMatrix_Lapack& O, const int iatom,
                         std::vector<double>* pCoordX,
                         std::vector<double>* pCoordY,
                         std::vector<double>* pCoordZ,
@@ -58,7 +59,7 @@ class DfGenerateGrid : public DfObject {
   /// rotation invariant用行列を求める
   /// ref) B. G. Johnson, P. M. W. Gill, J. A. Pople, Chem. Phys. Lett., 220,
   /// 377, (1994).
-  virtual TlDenseGeneralMatrix_BLAS_old getOMatrix();
+  virtual TlDenseGeneralMatrix_Lapack getOMatrix();
 
  private:
   /** 各原子の半径またはGauss-Legendre abscissas とGauss-Legendre weights
@@ -69,11 +70,11 @@ class DfGenerateGrid : public DfObject {
   /**
    * ファジーセル法を用いて、各グリッドの中心座標とそのグリッドにおける重みベクトルを計算する。
    */
-  virtual void generateGrid(const TlDenseGeneralMatrix_BLAS_old& O);
+  virtual void generateGrid(const TlDenseGeneralMatrix_Lapack& O);
 
   /// 球面方向のグリッドを生成する
   void points2(const int nOgrid, const double r0, const TlPosition& core,
-               const double weight, const TlDenseGeneralMatrix_BLAS_old& O,
+               const double weight, const TlDenseGeneralMatrix_Lapack& O,
                std::vector<TlPosition>& Ogrid, std::vector<double>& w);
 
  private:
@@ -112,7 +113,7 @@ class DfGenerateGrid : public DfObject {
 
   void getSphericalGrids(const int numOfGrids, const double r,
                          const double radial_weight, const TlPosition& center,
-                         const TlDenseGeneralMatrix_BLAS_old& O,
+                         const TlDenseGeneralMatrix_Lapack& O,
                          std::vector<TlPosition>* pGrids,
                          std::vector<double>* pWeights);
 
@@ -136,17 +137,19 @@ class DfGenerateGrid : public DfObject {
   double Ps_uij(const int atomIndex_m, const TlPosition& gridpoint);
 
  public:
-  TlVector_BLAS JGP_nablaB_omegaA(const int atomIndexA, const int atomIndexB,
-                                  const TlPosition& gridpoint);
+  TlDenseVector_Lapack JGP_nablaB_omegaA(const int atomIndexA,
+                                         const int atomIndexB,
+                                         const TlPosition& gridpoint);
 
  private:
-  TlVector_BLAS JGP_nablaA_PA(const int atomIndexA,
-                              const TlPosition& gridpoint);
-  TlVector_BLAS JGP_nablaB_PA(const int atomIndexA, const int atonIndexB,
-                              const TlPosition& gridpoint);
+  TlDenseVector_Lapack JGP_nablaA_PA(const int atomIndexA,
+                                     const TlPosition& gridpoint);
+  TlDenseVector_Lapack JGP_nablaB_PA(const int atomIndexA, const int atonIndexB,
+                                     const TlPosition& gridpoint);
   double JGP_t(const double myu);
-  TlVector_BLAS JGP_nablaA_myuAB(const int atomIndexA, const int atomIndexB,
-                                 const TlPosition& gridpoint);
+  TlDenseVector_Lapack JGP_nablaA_myuAB(const int atomIndexA,
+                                        const int atomIndexB,
+                                        const TlPosition& gridpoint);
 
   void getGrids_sub(const int atomIndex, const int gridType,
                     const int numOfRadialGrids, const int radialGridType,
@@ -174,8 +177,8 @@ class DfGenerateGrid : public DfObject {
 
   double maxRadii_;
   std::vector<TlPosition> coord_;
-  TlDenseSymmetricMatrix_BLAS_Old distanceMatrix_;
-  TlDenseSymmetricMatrix_BLAS_Old invDistanceMatrix_;
+  TlDenseSymmetricMatrix_Lapack distanceMatrix_;
+  TlDenseSymmetricMatrix_Lapack invDistanceMatrix_;
 
   /// Radius list of each atom
   std::vector<double> radiusList_;
@@ -192,7 +195,7 @@ class DfGenerateGrid : public DfObject {
   /// 行方向: grid
   /// 0, 1, 2列: x, y, z
   /// 3列: weight
-  TlDenseGeneralMatrix_BLAS_old grdMat_;
+  TlDenseGeneralMatrix_Lapack grdMat_;
 
   /// グリッド情報行列の列数
   int numOfColsOfGrdMat_;
@@ -211,7 +214,7 @@ class DfGenerateGrid : public DfObject {
   TlLebedevGrid lebGrd_;
 
   /// rotation matrix
-  TlDenseGeneralMatrix_BLAS_old O_;
+  TlDenseGeneralMatrix_Lapack O_;
 };
 
 #endif  // DFGENERATEGRID_H

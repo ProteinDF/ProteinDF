@@ -21,7 +21,7 @@
 
 #include <string>
 #include "DfObject.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_vector_lapack.h"
 
 /// KS行列の対角化を行う
 class DfDiagonal : public DfObject {
@@ -49,9 +49,9 @@ void DfDiagonal::main(const DfObject::RUN_TYPE runType,
       runType, this->m_nIteration, fragname);
 
   // diagonal
-  TlVector_BLAS* pEigVal = new TlVector_BLAS();
+  TlDenseVector_Lapack* pEigVal = new TlDenseVector_Lapack();
   MatrixType* pEigVec = new MatrixType();
-  Fprime.diagonal(pEigVal, pEigVec);
+  Fprime.eig(pEigVal, pEigVec);
 
   // save eigval
   pEigVal->save(this->getEigenvaluesPath(runType, this->m_nIteration));

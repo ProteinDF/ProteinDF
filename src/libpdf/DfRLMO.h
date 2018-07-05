@@ -32,9 +32,9 @@ class DfRLMO : public DfObject {
   void exec(const std::vector<index_type>& startBlockAOs);
 
  protected:
-  TlDenseSymmetricMatrix_BLAS_Old getX();
+  TlDenseSymmetricMatrix_Lapack getX();
 
-  TlMatrix getT(const TlDenseSymmetricMatrix_BLAS_Old& D,
+  TlMatrix getT(const TlDenseSymmetricMatrix_Lapack& D,
                 const std::vector<index_type>& startBlockAOs);
 };
 

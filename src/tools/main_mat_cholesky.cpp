@@ -20,8 +20,9 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "TlMatrix.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_matrix_utils.h"
 
 void showHelp(const std::string& progname) {
   std::cout << "cholesky [options] input_file_path" << std::endl;
@@ -51,31 +52,33 @@ int main(int argc, char* argv[]) {
   if (bVerbose == true) {
     std::cerr << "load matrix: " << inputMatrixPath << std::endl;
   }
-  if (TlDenseSymmetricMatrix_BLAS_Old::isLoadable(inputMatrixPath) != true) {
+  if (TlMatrixUtils::isLoadable(inputMatrixPath, TlMatrixObject::RLHD) !=
+      true) {
     std::cerr << "can not open file: " << inputMatrixPath << std::endl;
     return EXIT_FAILURE;
   }
 
-  TlDenseSymmetricMatrix_BLAS_Old A;
+  TlDenseSymmetricMatrix_Lapack A;
   A.load(inputMatrixPath);
-  const int numOfDims = A.getNumOfRows();
 
   if (bVerbose == true) {
     std::cerr << "running..." << inputMatrixPath << std::endl;
   }
-  TlMatrix L = A.choleskyFactorization2(1.0E-16);
+  TlDenseGeneralMatrix_Lapack L;
+  A.pivotedCholeskyDecomposition(&L, 1.0E-16);
 
-  TlMatrix Lt = L;
+  TlDenseGeneralMatrix_Lapack Lt = L;
   Lt.transpose();
 
-  TlMatrix LL = L * Lt;
+  TlDenseGeneralMatrix_Lapack LL = L * Lt;
 
   std::cout << ">>>> L" << std::endl;
-  L.print(std::cout);
+  std::cout << L << std::endl;
   std::cout << ">>>> A" << std::endl;
-  A.print(std::cout);
+  std::cout << A << std::endl;
+  ;
   std::cout << ">>>> LL" << std::endl;
-  LL.print(std::cout);
+  std::cout << LL << std::endl;
 
   return EXIT_SUCCESS;
 }

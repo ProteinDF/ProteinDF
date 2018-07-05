@@ -23,7 +23,7 @@
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
-#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_matrix_arrays_object.h"
 #include "tl_matrix_object.h"
 
@@ -36,7 +36,7 @@ class TlDenseGeneralMatrix_arrays_RowOriented
       index_type row = 1, index_type col = 1, int numOfSubunits = 1,
       int subunitID = 0, bool isUsingMemManager = false);
   explicit TlDenseGeneralMatrix_arrays_RowOriented(
-      const TlDenseGeneralMatrix_BLAS_old& rhs, int numOfSubunits = 1,
+      const TlDenseGeneralMatrix_Lapack& rhs, int numOfSubunits = 1,
       int subunitID = 0, bool isUsingMemManager = false);
   TlDenseGeneralMatrix_arrays_RowOriented(
       const TlDenseGeneralMatrix_arrays_RowOriented& rhs);
@@ -55,13 +55,13 @@ class TlDenseGeneralMatrix_arrays_RowOriented
   virtual void add(index_type row, index_type col, double value);
   virtual double get(index_type row, index_type col) const;
 
-  virtual TlVector_BLAS getRowVector(const index_type row) const;
+  virtual TlDenseVector_Lapack getRowVector(const index_type row) const;
   virtual void getRowVector(const index_type row, double* pBuf,
                             const index_type length) const;
 
  public:
-  /// TlDenseGeneralMatrix_BLAS_oldオブジェクトを返す(for debug)
-  TlDenseGeneralMatrix_BLAS_old getTlMatrixObject() const;
+  /// TlDenseGeneralMatrix_Lapackオブジェクトを返す(for debug)
+  TlDenseGeneralMatrix_Lapack getTlMatrixObject() const;
 
   /// TlDenseGeneralMatrix_arrays_ColOriented形式で保存
   void saveByTlDenseGeneralMatrix_arrays_ColOriented(

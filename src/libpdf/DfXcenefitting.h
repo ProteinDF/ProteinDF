@@ -22,8 +22,6 @@
 #include <string>
 #include "DfObject.h"
 
-class TlVector;
-
 /**
  * 交換相関ポテンシャルとしてX-alpha法を使用時における交換相関ポテンシャルの展開係数を求めるクラス
  */

@@ -1,8 +1,12 @@
 #ifndef TL_DENSE_MATRIX_IMPL_OBJECT_H
 #define TL_DENSE_MATRIX_IMPL_OBJECT_H
 
+#include <vector>
+
 #include "TlLogging.h"
 #include "tl_matrix_object.h"
+
+class TlDenseVectorObject;
 
 class TlDenseMatrix_ImplObject {
   // ---------------------------------------------------------------------------
@@ -34,17 +38,24 @@ class TlDenseMatrix_ImplObject {
   // operations
   // ---------------------------------------------------------------------------
  public:
+  virtual std::vector<double> diagonals() const;
   virtual double sum() const;
   virtual double trace() const;
   virtual double getRMS() const;
   virtual double getMaxAbsoluteElement(
       TlMatrixObject::index_type* outRow,
       TlMatrixObject::index_type* outCol) const;
-
+  virtual void transposeInPlace() = 0;
   // const TlDenseGeneralMatrix_ImplEigen& dotInPlace(
   //     const TlDenseGeneralMatrix_ImplEigen& rhs);
-  // TlDenseGeneralMatrix_ImplEigen transpose() const;
   // TlDenseGeneralMatrix_ImplEigen inverse() const;
+
+  // ---------------------------------------------------------------------------
+  // I/O
+  // ---------------------------------------------------------------------------
+ public:
+  void dump(double* buf, const std::size_t size) const;
+  void restore(const double* buf, const std::size_t size);
 
   // ---------------------------------------------------------------------------
   // variables
@@ -52,5 +63,8 @@ class TlDenseMatrix_ImplObject {
  protected:
   TlLogging& log_;
 };
+
+std::ostream& operator<<(std::ostream& stream,
+                         const TlDenseMatrix_ImplObject& mat);
 
 #endif  // TL_DENSE_MATRIX_IMPL_OBJECT_H

@@ -3,11 +3,12 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif // HAVE_CONFIG_H
+#endif  // HAVE_CONFIG_H
 
 #include <string>
 #include "gtest/gtest.h"
 #include "matrix_common.h"
+#include "tl_matrix_object.h"
 
 template <typename T>
 class DenseGeneralMatrixTest : public ::testing::Test {};
@@ -173,6 +174,42 @@ TYPED_TEST_P(DenseGeneralMatrixTest, doesSum) {
   EXPECT_DOUBLE_EQ(36.0, sum);
 }
 
+TYPED_TEST_P(DenseGeneralMatrixTest, doesTrace) {
+  TypeParam a = getMatrixA<TypeParam>();
+
+  double trace = a.trace();
+
+  EXPECT_DOUBLE_EQ(12.0, trace);
+}
+
+TYPED_TEST_P(DenseGeneralMatrixTest, doesMaxAbsoluteElement) {
+  TypeParam a = getMatrixA<TypeParam>();
+
+  TlMatrixObject::index_type row;
+  TlMatrixObject::index_type col;
+  double maxAbsoluteElement = a.getMaxAbsoluteElement(&row, &col);
+
+  EXPECT_DOUBLE_EQ(8.0, maxAbsoluteElement);
+  EXPECT_EQ(2, row);
+  EXPECT_EQ(2, col);
+}
+
+TYPED_TEST_P(DenseGeneralMatrixTest, doesTransposeInPlace) {
+  TypeParam a = getMatrixA<TypeParam>();
+
+  a.transposeInPlace();
+
+  EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
+  EXPECT_DOUBLE_EQ(1.0, a.get(1, 0));
+  EXPECT_DOUBLE_EQ(2.0, a.get(2, 0));
+  EXPECT_DOUBLE_EQ(3.0, a.get(0, 1));
+  EXPECT_DOUBLE_EQ(4.0, a.get(1, 1));
+  EXPECT_DOUBLE_EQ(5.0, a.get(2, 1));
+  EXPECT_DOUBLE_EQ(6.0, a.get(0, 2));
+  EXPECT_DOUBLE_EQ(7.0, a.get(1, 2));
+  EXPECT_DOUBLE_EQ(8.0, a.get(2, 2));
+}
+
 TYPED_TEST_P(DenseGeneralMatrixTest, doesDotInPlace) {
   TypeParam a = getMatrixA<TypeParam>();
   TypeParam b = getMatrixB<TypeParam>();
@@ -235,13 +272,15 @@ TYPED_TEST_P(DenseGeneralMatrixTest, doesSaveAndLoadToHdf5) {
   EXPECT_DOUBLE_EQ(8.0, a.get(2, 2));
 #else
   std::cerr << "HDF5 is not supported in this build." << std::endl;
-#endif // HAVE_HDF5
+#endif  // HAVE_HDF5
 }
 
 REGISTER_TYPED_TEST_CASE_P(DenseGeneralMatrixTest, doesConstructor,
                            doesCopyConstructor, doesResize, doesOperatorEq,
                            doesOperatorAdd, doesOperatorIAdd,
-                           doesOperatorMultiMatrixAB, doesSum, doesDotInPlace,
-                           doesSaveAndLoad, doesSaveAndLoadToHdf5);
+                           doesOperatorMultiMatrixAB, doesSum, doesTrace,
+                           doesMaxAbsoluteElement, doesTransposeInPlace,
+                           doesDotInPlace, doesSaveAndLoad,
+                           doesSaveAndLoadToHdf5);
 
 #endif  // DENSE_GENERAL_MATRIX_TEST_TEMPLATE_H

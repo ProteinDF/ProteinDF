@@ -2,20 +2,48 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
+    "options": {
+        "cwd": "${workspaceRoot}/build"
+    },
     "tasks": [
         {
             "label": "clean up",
             "type": "shell",
-            "command": "rm -rf build",
-            "problemMatcher": "" 
-        }
+            "command": "rm -rf build && mkdir -p build",
+            "options": {
+                "cwd": "${workspaceRoot}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "cmake",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "-DCMAKE_BUILD_TYPE=Debug",
+                 ".."
+                ],
+            "options": {
+                "CMAKE_CXX_COMPILER": "/usr/local/bin/g++-8"
+            },
+            "problemMatcher": []
+        },
         {
             "label": "build",
             "type": "shell",
-            "command": "mkdir -p build && cd build && cmake .. && make",
-            "options": {
-                "env": {
-                   "PDF_HOME": "${HOME}/local/ProteinDF"
+            "osx": {
+                "command": "mkdir -p build && cd build && cmake .. && make",
+                "options": {
+                    "env": {
+                        "PATH": "${HOME}/local/openmpi/bin:/usr/local/bin:${env:PATH}",
+                        "PDF_HOME": "${env:HOME}/local/ProteinDF",
+                        "CMAKE_BUILD_TYPE": "Debug",
+                        "CMAKE_CXX_FLAGS": "-O3 -mtune=native -march=native -mfpmath=both",
+                        "MPI_C_COMPILER": "${env:HOME}/local/openmpi/bin/mpicc",
+                        "MPI_CXX_COMPILER": "${env:HOME}/local/openmpi/bin/mpicxx",
+                        "SCALAPACK_LIBRARIES": "${env:HOME}/local/openmpi/lib/libscalapack.a",
+                        "LDFLAGS": "-lgfortran"
+                    }
                 }
             },
             "presentation": {

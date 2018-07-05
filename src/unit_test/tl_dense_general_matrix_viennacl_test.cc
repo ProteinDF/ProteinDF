@@ -3,10 +3,10 @@
 #include "config.h"
 #include "gtest/gtest.h"
 #include "matrix_common.h"
-#include "vector_common.h"
+#include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_general_matrix_viennacl.h"
-// #include "tl_dense_general_matrix_blas_old.h"
 #include "tl_dense_vector_viennacl.h"
+#include "vector_common.h"
 
 static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 static const double EPS2 = 1.0E-2;
@@ -16,6 +16,19 @@ static const std::string mat_load_path = "temp.gen.viennacl.load.mat";
 // -----------------------------------------------------------------------------
 // test
 // -----------------------------------------------------------------------------
+TEST(TlDenseGeneralMatrix_ViennaCL, copyFromEigen) {
+  TlDenseGeneralMatrix_Eigen a = getMatrixA<TlDenseGeneralMatrix_Eigen>();
+  TlDenseGeneralMatrix_ViennaCL b = a;
+
+  EXPECT_EQ(a.getNumOfRows(), b.getNumOfRows());
+  EXPECT_EQ(a.getNumOfCols(), b.getNumOfCols());
+  for (int i = 0; i < a.getNumOfRows(); ++i) {
+    for (int j = 0; j < a.getNumOfCols(); ++j) {
+      EXPECT_DOUBLE_EQ(a.get(i, j), b.get(i, j));
+    }
+  }
+}
+
 // TEST(TlDenseGeneralMatrix_ViennaCL, constructByTlSerializedData) {
 //   // TODO
 // }
@@ -23,7 +36,6 @@ static const std::string mat_load_path = "temp.gen.viennacl.load.mat";
 // TEST(TlDenseGeneralMatrix_ViennaCL, vtr2mat) {
 //   // TODO
 // }
-
 
 #ifdef HAVE_HDF5
 // TEST(TlDenseGeneralMatrix_ViennaCL, hdf5) {
@@ -68,8 +80,10 @@ static const std::string mat_load_path = "temp.gen.viennacl.load.mat";
 // }
 //
 // TEST(TlDenseGeneralMatrix_ViennaCL, operator_mul_AB) {
-//   TlDenseGeneralMatrix_ViennaCL a = getMatrixA<TlDenseGeneralMatrix_ViennaCL>();
-//   TlDenseGeneralMatrix_ViennaCL b = getMatrixB<TlDenseGeneralMatrix_ViennaCL>();
+//   TlDenseGeneralMatrix_ViennaCL a =
+//   getMatrixA<TlDenseGeneralMatrix_ViennaCL>();
+//   TlDenseGeneralMatrix_ViennaCL b =
+//   getMatrixB<TlDenseGeneralMatrix_ViennaCL>();
 //   TlDenseGeneralMatrix_ViennaCL c = a * b;
 //
 //   EXPECT_EQ(3, c.getNumOfRows());
@@ -89,8 +103,7 @@ static const std::string mat_load_path = "temp.gen.viennacl.load.mat";
 // [3 4 5] x [1] = [14]
 // [6 7 8]   [2]   [23]
 TEST(TlDenseGeneralMatrix_ViennaCL, operator_mul_mat_vec) {
-  TlDenseGeneralMatrix_ViennaCL a =
-      getMatrixA<TlDenseGeneralMatrix_ViennaCL>();
+  TlDenseGeneralMatrix_ViennaCL a = getMatrixA<TlDenseGeneralMatrix_ViennaCL>();
   TlDenseVector_ViennaCL v = getVectorA<TlDenseVector_ViennaCL>();
 
   TlDenseVector_ViennaCL z = a * v;
@@ -105,8 +118,7 @@ TEST(TlDenseGeneralMatrix_ViennaCL, operator_mul_mat_vec) {
 // [0 1 2 ] * [3 4 5] = [15 18 21]
 //            [6 7 8]
 TEST(TlDenseGeneralMatrix_ViennaCL, operator_mul_vec_mat) {
-  TlDenseGeneralMatrix_ViennaCL a =
-      getMatrixA<TlDenseGeneralMatrix_ViennaCL>();
+  TlDenseGeneralMatrix_ViennaCL a = getMatrixA<TlDenseGeneralMatrix_ViennaCL>();
   TlDenseVector_ViennaCL v = getVectorA<TlDenseVector_ViennaCL>();
 
   TlDenseVector_ViennaCL z = v * a;

@@ -46,11 +46,11 @@ class DfFunctional_B3LYP : public DfFunctional_GGA {
                                        double* pRoundF_roundGammaAB);
 
  protected:
-  virtual TlDenseGeneralMatrix_BLAS_old getFunctionalCore(const double rhoA,
-                                                      const double rhoB,
-                                                      const double xA,
-                                                      const double xB);
-  virtual TlDenseGeneralMatrix_BLAS_old getDerivativeFunctionalCore(
+  virtual TlDenseGeneralMatrix_Lapack getFunctionalCore(const double rhoA,
+                                                        const double rhoB,
+                                                        const double xA,
+                                                        const double xB);
+  virtual TlDenseGeneralMatrix_Lapack getDerivativeFunctionalCore(
       const double rhoA, const double rhoB, const double xA, const double xB);
 
  protected:

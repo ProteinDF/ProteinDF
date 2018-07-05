@@ -152,9 +152,9 @@ TlSparseMatrix& TlSparseMatrix::operator/=(const double& rhs) {
   return this->operator*=(v);
 }
 
-TlVector_BLAS TlSparseMatrix::getRowVector(const index_type row) const {
+TlDenseVector_Lapack TlSparseMatrix::getRowVector(const index_type row) const {
   const index_type numOfCols = this->getNumOfCols();
-  TlVector_BLAS ans(numOfCols);
+  TlDenseVector_Lapack ans(numOfCols);
 
   if (this->m_aMatrix.size() > (std::size_t)(numOfCols / 2)) {
     for (index_type i = 0; i < numOfCols; ++i) {
@@ -166,7 +166,7 @@ TlVector_BLAS TlSparseMatrix::getRowVector(const index_type row) const {
       const int r = p->first.row;
       const int c = p->first.col;
       if (r == row) {
-        ans[c] = p->second;
+        ans.set(c, p->second);
       }
     }
   }
@@ -174,9 +174,9 @@ TlVector_BLAS TlSparseMatrix::getRowVector(const index_type row) const {
   return ans;
 }
 
-TlVector_BLAS TlSparseMatrix::getColVector(const int col) const {
+TlDenseVector_Lapack TlSparseMatrix::getColVector(const int col) const {
   const int numOfRows = this->getNumOfRows();
-  TlVector_BLAS ans(numOfRows);
+  TlDenseVector_Lapack ans(numOfRows);
 
   if (this->m_aMatrix.size() > (std::size_t)(numOfRows / 2)) {
     for (index_type i = 0; i < numOfRows; ++i) {
@@ -188,7 +188,7 @@ TlVector_BLAS TlSparseMatrix::getColVector(const int col) const {
       const int r = p->first.row;
       const int c = p->first.col;
       if (c == col) {
-        ans[r] = p->second;
+        ans.set(r, p->second);
       }
     }
   }

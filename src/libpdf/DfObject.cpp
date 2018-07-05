@@ -740,10 +740,10 @@ std::string DfObject::getCloMatrixPath(const RUN_TYPE runType,
                                               TlUtils::xtos(iteration));
 }
 
-TlVector_BLAS DfObject::getOccVtr(const RUN_TYPE runType) {
+TlDenseVector_Lapack DfObject::getOccVtr(const RUN_TYPE runType) {
   const std::string fileName = this->getOccupationPath(runType);
 
-  TlVector_BLAS occ;
+  TlDenseVector_Lapack occ;
   occ.load(fileName);
   assert(occ.getSize() == this->m_nNumOfMOs);
 
