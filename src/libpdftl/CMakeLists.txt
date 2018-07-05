@@ -12,17 +12,18 @@ set(LIBPDFTL_HEADERS
   tl_matrix_utils.h
   TlMemManager.h
   TlMmapAllocater.h
-  tl_dense_general_matrix_blas_old.h
+
+  # tl_dense_general_matrix_blas_old.h
   tl_dense_general_matrix_abstract.h
   tl_dense_symmetric_matrix_abstract.h
   tl_dense_general_matrix_io.h
   tl_dense_matrix_io_object.h
   tl_dense_general_matrix_mmap.h
-  tl_dense_symmetric_matrix_blas_old.h
+  # tl_dense_symmetric_matrix_blas_old.h
   tl_dense_symmetric_matrix_io.h
   tl_dense_matrix_mmap_object.h
   tl_matrix_mmap_row_major.h
-  tl_matrix_blas_row_major.h
+  # tl_matrix_blas_row_major.h
   tl_symmetric_matrix_object.h
   TlMsgPack.h
   TlPosition.h
@@ -40,7 +41,7 @@ set(LIBPDFTL_HEADERS
   TlSystem.h
   TlTime.h
   TlUtils.h
-  tl_dense_vector_blas.h
+  # tl_dense_vector_blas.h
   tl_dense_matrix_arrays_object.h
   tl_vector_abstract.h
   tl_vector_utils.h
@@ -75,18 +76,19 @@ set(LIBPDFTL_SOURCES
   tl_matrix_object.cc
   tl_matrix_utils.cc
   TlMemManager.cpp
-  tl_dense_general_matrix_blas_old.cc
+
+  # tl_dense_general_matrix_blas_old.cc
   tl_dense_general_matrix_io.cc
   tl_dense_general_matrix_mmap.cc
   tl_dense_general_matrix_abstract.cc
   tl_dense_symmetric_matrix_abstract.cc
-  tl_dense_symmetric_matrix_blas_old.cc
+  # tl_dense_symmetric_matrix_blas_old.cc
   tl_dense_symmetric_matrix_io.cc
   tl_dense_matrix_mmap_object.cc
   #tl_matrix_blas_column_major.cc
   tl_dense_matrix_io_object.cc
   tl_matrix_mmap_row_major.cc
-  tl_matrix_blas_row_major.cc
+  #tl_matrix_blas_row_major.cc
   TlMsgPack.cpp
   TlPosition.cpp
   TlPrdctbl.cpp
@@ -101,7 +103,7 @@ set(LIBPDFTL_SOURCES
   TlSystem.cpp
   TlTime.cpp
   TlUtils.cpp
-  tl_dense_vector_blas.cc
+  # tl_dense_vector_blas.cc
   tl_dense_matrix_arrays_object.cc
   tl_vector_utils.cc
 
@@ -185,18 +187,38 @@ endif(HDF5_FOUND)
 
 set(LIBPPDFTL_HEADERS
   TlCommunicate.h
-  tl_dense_general_matrix_blacs.h
-  tl_dense_symmetric_matrix_blacs.h
-  tl_dense_vector_blacs.h
+  tl_scalapack_context.h
+
+  tl_dense_general_matrix_scalapack.h
+  tl_dense_symmetric_matrix_scalapack.h
+  tl_dense_vector_scalapack.h
+
+  tl_dense_general_matrix_impl_scalapack.h
+  tl_dense_symmetric_matrix_impl_scalapack.h
+  tl_dense_vector_impl_scalapack.h
+
+  #tl_dense_general_matrix_blacs.h
+  #tl_dense_symmetric_matrix_blacs.h
+  # tl_dense_vector_blacs.h
   scalapack.h
   )
 
 
 set(LIBPPDFTL_SOURCES
   TlCommunicate.cpp
-  tl_dense_general_matrix_blacs.cc
-  tl_dense_symmetric_matrix_blacs.cc
-  tl_dense_vector_blacs.cc
+  tl_scalapack_context.cc
+
+  tl_dense_general_matrix_scalapack.cc
+  tl_dense_symmetric_matrix_scalapack.cc
+  tl_dense_vector_scalapack.cc
+
+  tl_dense_general_matrix_impl_scalapack.cc
+  tl_dense_symmetric_matrix_impl_scalapack.cc
+  tl_dense_vector_impl_scalapack.cc
+
+  #tl_dense_general_matrix_blacs.cc
+  #tl_dense_symmetric_matrix_blacs.cc
+  # tl_dense_vector_blacs.cc
   )
 
 

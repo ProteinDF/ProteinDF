@@ -19,6 +19,7 @@
 #include "tl_dense_matrix_arrays_object.h"
 #include <algorithm>
 #include <iostream>
+#include <cassert>
 #include "TlLogging.h"
 #include "TlMemManager.h"
 #include "TlUtils.h"
@@ -217,10 +218,10 @@ double TlDenseMatrix_arrays_Object::get_from_vm(const index_type vectorIndex,
   return answer;
 }
 
-TlVector_BLAS TlDenseMatrix_arrays_Object::getVector(
+std::vector<double> TlDenseMatrix_arrays_Object::getVector(
     const index_type vectorIndex) const {
   const index_type vectorSize = this->sizeOfVector_;
-  TlVector_BLAS answer(vectorSize);
+  std::vector<double> answer(vectorSize);
   const div_t turns = std::div(vectorIndex, this->numOfSubunits_);
   if (turns.rem == this->subunitID_) {
     const index_type localVectorIndex = turns.quot;
@@ -250,7 +251,7 @@ void TlDenseMatrix_arrays_Object::getVector(const index_type vectorIndex,
 }
 
 void TlDenseMatrix_arrays_Object::setVector(const index_type vectorIndex,
-                                            const TlVector_BLAS& v) {
+                                            const TlDenseVector_Lapack& v) {
   assert(v.getSize() == this->sizeOfVector_);
 
   const div_t turns = std::div(vectorIndex, this->numOfSubunits_);
@@ -260,7 +261,7 @@ void TlDenseMatrix_arrays_Object::setVector(const index_type vectorIndex,
     index_type size = v.getSize();
     double* const p = this->data_[localVectorIndex];
     for (index_type i = 0; i < size; ++i) {
-      p[i] = v[i];
+      p[i] = v.get(i);
     }
   }
 }

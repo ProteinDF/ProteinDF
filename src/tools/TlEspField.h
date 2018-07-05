@@ -22,7 +22,7 @@
 #include <vector>
 #include "TlPosition.h"
 #include "TlSerializeData.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 class TlFieldData_Uniform;
 
@@ -31,7 +31,7 @@ class TlEspField {
   TlEspField(const TlSerializeData& param);
   ~TlEspField();
 
-  std::vector<double> makeEspFld(const TlDenseSymmetricMatrix_BLAS_Old& P,
+  std::vector<double> makeEspFld(const TlDenseSymmetricMatrix_Lapack& P,
                                  const std::vector<TlPosition>& grids);
 
   // atom only

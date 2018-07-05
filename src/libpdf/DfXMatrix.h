@@ -19,9 +19,13 @@
 #ifndef DFXMATRIX_H
 #define DFXMATRIX_H
 
+#include <cassert>
+#include <cmath>
+
 #include "DfObject.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 /// X行列を求めるクラス
 /// S行列から、固有値, 固有ベクトルを求め、X 行列および−1 X 行列の計算を行い、
@@ -34,14 +38,14 @@ class DfXMatrix : public DfObject {
  public:
   virtual void buildX();
 
-  virtual void canonicalOrthogonalize(const TlDenseSymmetricMatrix_BLAS_Old& S,
-                                      TlDenseGeneralMatrix_BLAS_old* pX,
-                                      TlDenseGeneralMatrix_BLAS_old* pXinv,
+  virtual void canonicalOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
+                                      TlDenseGeneralMatrix_Lapack* pX,
+                                      TlDenseGeneralMatrix_Lapack* pXinv,
                                       const std::string& eigvalFilePath = "");
 
-  virtual void lowdinOrthogonalize(const TlDenseSymmetricMatrix_BLAS_Old& S,
-                                   TlDenseGeneralMatrix_BLAS_old* pX,
-                                   TlDenseGeneralMatrix_BLAS_old* pXinv,
+  virtual void lowdinOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
+                                   TlDenseGeneralMatrix_Lapack* pX,
+                                   TlDenseGeneralMatrix_Lapack* pXinv,
                                    const std::string& eigvalFilePath = "");
 
  protected:
@@ -81,17 +85,19 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
                                            MatrixType* pX, MatrixType* pXinv,
                                            const std::string& eigvalFilePath) {
   this->log_.info("orthogonalize by canonical method");
+  this->log_.info(
+      TlUtils::format("S: %d x %d", S.getNumOfRows(), S.getNumOfCols()));
 
-  const index_type dim = S.getNumOfRows();
-  index_type rest = 0;
+  const TlMatrixObject::index_type dim = S.getNumOfRows();
+  TlMatrixObject::index_type rest = 0;
 
-  TlVector_BLAS sqrt_s;  // Sの固有値の平方根
-  MatrixType U;          // Sの固有ベクトル
+  TlDenseVector_Lapack sqrt_s;  // Sの固有値の平方根
+  MatrixType U;                 // Sの固有ベクトル
   {
     this->loggerTime("diagonalization of S matrix");
-    TlVector_BLAS EigVal;
+    TlDenseVector_Lapack EigVal;
     MatrixType EigVec;
-    S.diagonal(&EigVal, &EigVec);
+    S.eig(&EigVal, &EigVec);
     assert(EigVal.getSize() == dim);
 
     if (!eigvalFilePath.empty()) {
@@ -117,7 +123,7 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
     }
 
     this->loggerTime(" generation of U matrix");
-    const index_type cutoffBasis = dim - rest;
+    const TlMatrixObject::index_type cutoffBasis = dim - rest;
 
     {
       MatrixType trans(dim, rest);
@@ -155,11 +161,13 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
     this->loggerTime("generate X^-1 matrix");
 
     SymmetricMatrixType S12(rest);
-    for (index_type i = 0; i < rest; ++i) {
+    for (TlMatrixObject::index_type i = 0; i < rest; ++i) {
       S12.set(i, i, sqrt_s.get(i));
     }
 
+    this->loggerTime("transpose U matrix");
     U.transposeInPlace();
+
     *pXinv = S12 * U;
   }
 
@@ -179,13 +187,13 @@ void DfXMatrix::lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
   const index_type dim = S.getNumOfRows();
   index_type rest = 0;
 
-  TlVector_BLAS sqrt_s;  // Sの固有値の平方根
-  MatrixType U;          // Sの固有ベクトル
+  TlDenseVector_Lapack sqrt_s;  // Sの固有値の平方根
+  MatrixType U;                 // Sの固有ベクトル
   {
     this->loggerTime("diagonalization of S matrix");
-    TlVector_BLAS EigVal;
+    TlDenseVector_Lapack EigVal;
     MatrixType EigVec;
-    S.diagonal(&EigVal, &EigVec);
+    S.eig(&EigVal, &EigVec);
     assert(EigVal.getSize() == dim);
 
     if (!eigvalFilePath.empty()) {

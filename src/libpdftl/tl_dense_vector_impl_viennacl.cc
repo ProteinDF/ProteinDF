@@ -47,6 +47,11 @@ void TlDenseVector_ImplViennaCL::add(const TlDenseVectorObject::index_type i,
   this->vector_[i] += value;
 }
 
+void TlDenseVector_ImplViennaCL::mul(const TlDenseVectorObject::index_type i,
+                                     const double value) {
+  this->vector_[i] *= value;
+}
+
 // ---------------------------------------------------------------------------
 // operators
 // ---------------------------------------------------------------------------
@@ -55,6 +60,8 @@ TlDenseVector_ImplViennaCL& TlDenseVector_ImplViennaCL::operator=(
   if (this != &rhs) {
     this->vector_ = rhs.vector_;
   }
+
+  return *this;
 }
 
 TlDenseVector_ImplViennaCL& TlDenseVector_ImplViennaCL::operator+=(

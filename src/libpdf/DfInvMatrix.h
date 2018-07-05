@@ -71,7 +71,7 @@ void DfInvMatrix::exec() {
       " construct Sabinv with three full matrix in term of diagonalization");
   {
     SymmetricMatrixType Sab = DfObject::getSabMatrix<SymmetricMatrixType>();
-    Sab.inverse();
+    Sab = Sab.inverse();
     DfObject::saveSabInvMatrix(Sab);
   }
 
@@ -80,7 +80,7 @@ void DfInvMatrix::exec() {
     this->logger(
         " construct Sgdinv with three full matrix in term of diagonalization");
     SymmetricMatrixType Sgd = DfObject::getSgdMatrix<SymmetricMatrixType>();
-    Sgd.inverse();
+    Sgd = Sgd.inverse();
     DfObject::saveSgdInvMatrix(Sgd);
   }
 }

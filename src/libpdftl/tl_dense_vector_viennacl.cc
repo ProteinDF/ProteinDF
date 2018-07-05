@@ -30,6 +30,8 @@ TlDenseVector_ViennaCL& TlDenseVector_ViennaCL::operator=(
     this->pImpl_ = new TlDenseVector_ImplViennaCL(
         *dynamic_cast<const TlDenseVector_ImplViennaCL*>(rhs.pImpl_));
   }
+
+  return *this;
 }
 
 TlDenseVector_ViennaCL& TlDenseVector_ViennaCL::operator+=(
@@ -69,6 +71,8 @@ TlDenseVector_ViennaCL& TlDenseVector_ViennaCL::dotInPlace(
     const TlDenseVector_ViennaCL& rhs) {
   dynamic_cast<TlDenseVector_ImplViennaCL*>(this->pImpl_)
       ->dotInPlace(*dynamic_cast<TlDenseVector_ImplViennaCL*>(rhs.pImpl_));
+
+  return *this;
 }
 
 // ---------------------------------------------------------------------------

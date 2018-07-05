@@ -168,11 +168,12 @@ double TlDenseGeneralMatrix_ImplViennaCL::getRMS() const {
 double TlDenseGeneralMatrix_ImplViennaCL::getMaxAbsoluteElement(
     TlMatrixObject::index_type* outRow,
     TlMatrixObject::index_type* outCol) const {
-  TlMatrixObject::index_type max_row, max_col;
+  TlMatrixObject::index_type max_row = 0, max_col = 0;
   double answer = 0.0;
   const unsigned int numOfRows = this->getNumOfRows();
+  const unsigned int numOfCols = this->getNumOfCols();
   for (unsigned int r = 0; r < numOfRows; ++r) {
-    VectorDataType vec_col;
+    VectorDataType vec_col(numOfCols);
     viennacl::linalg::matrix_row(this->matrix_, r, vec_col);
     const unsigned int col = viennacl::linalg::index_norm_inf(vec_col);
     double value = vec_col[col];
@@ -190,7 +191,11 @@ double TlDenseGeneralMatrix_ImplViennaCL::getMaxAbsoluteElement(
     *outCol = max_col;
   }
 
-  return 0.0;
+  return answer;
+}
+
+void TlDenseGeneralMatrix_ImplViennaCL::transposeInPlace() {
+  this->matrix_ = viennacl::trans(this->matrix_);
 }
 
 TlDenseGeneralMatrix_ImplViennaCL&
@@ -218,13 +223,13 @@ TlDenseGeneralMatrix_ImplViennaCL TlDenseGeneralMatrix_ImplViennaCL::inverse()
 
   TlDenseGeneralMatrix_ImplViennaCL answer(this->getNumOfCols(),
                                            this->getNumOfRows());
-  // answer.matrix_ = viennacl::linalg::solve(this->matrix_, E,
-  // viennacl::linalg::cg_tag());
+// answer.matrix_ = viennacl::linalg::solve(this->matrix_, E,
+// viennacl::linalg::cg_tag());
 
-  // LU factorization
-  // MatrixDataType tmp = this->matrix_;
-  // viennacl::linalg::lu_factorize(tmp);
-  // viennacl::linalg::lu_substitute(tmp, E);
+// LU factorization
+// MatrixDataType tmp = this->matrix_;
+// viennacl::linalg::lu_factorize(tmp);
+// viennacl::linalg::lu_substitute(tmp, E);
 
 #ifdef HAVE_EIGEN3
   {

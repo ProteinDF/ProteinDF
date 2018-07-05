@@ -34,8 +34,8 @@
 #include "tl_dense_symmetric_matrix_blacs.h"
 #include "tl_dense_symmetric_matrix_blas_old.h"
 #include "tl_dense_symmetric_matrix_io.h"
-#include "tl_matrix_utils.h"
 #include "tl_dense_vector_blas.h"
+#include "tl_matrix_utils.h"
 
 TlDenseSymmetricMatrix_blacs::TlDenseSymmetricMatrix_blacs(const index_type dim)
     : TlDenseGeneralMatrix_blacs(dim, dim) {}
@@ -180,7 +180,7 @@ double TlDenseSymmetricMatrix_blacs::getLocal(index_type row,
   return TlDenseGeneralMatrix_blacs::getLocal(row, col);
 }
 
-TlVector_BLAS TlDenseSymmetricMatrix_blacs::getRowVector(
+TlDenseVector_Lapack TlDenseSymmetricMatrix_blacs::getRowVector(
     const index_type inRow) const {
   assert((0 <= inRow) && (inRow < this->getNumOfRows()));
   const index_type numOfGlobalRows = this->getNumOfRows();
@@ -226,15 +226,15 @@ TlVector_BLAS TlDenseSymmetricMatrix_blacs::getRowVector(
   TlCommunicate& rComm = TlCommunicate::getInstance();
   rComm.allReduce_SUM(&(v[0]), numOfGlobalCols);
 
-  return TlVector_BLAS(v);
+  return TlDenseVector_Lapack(v);
 }
 
-TlVector_BLAS TlDenseSymmetricMatrix_blacs::getColumnVector(
+TlDenseVector_Lapack TlDenseSymmetricMatrix_blacs::getColumnVector(
     const index_type col) const {
   return this->getRowVector(col);
 }
 
-TlVector_BLAS TlDenseSymmetricMatrix_blacs::getPartialMatrix(
+TlDenseVector_Lapack TlDenseSymmetricMatrix_blacs::getPartialMatrix(
     int* pStartRow, int* pEndRow, int* pStartCol, int* pEndCol) const {
   assert(pStartRow != NULL);
   assert(pEndRow != NULL);
@@ -253,7 +253,7 @@ TlVector_BLAS TlDenseSymmetricMatrix_blacs::getPartialMatrix(
   const int localStart = interval * rank;
   const int localEnd = localStart + interval - 1;
 
-  TlVector_BLAS P(interval);
+  TlDenseVector_Lapack P(interval);
   for (int i = 0; i < proc; ++i) {
     index_type numOfLocalRows = 0;
     index_type numOfLocalCols = 0;
@@ -301,7 +301,7 @@ TlVector_BLAS TlDenseSymmetricMatrix_blacs::getPartialMatrix(
         if ((localStart <= globalIndex) && (globalIndex <= localEnd)) {
           const std::size_t index = r + numOfLocalRows * c;  // row-major
           const double value = pBuf[index];
-          P[(globalIndex - localStart)] = value;
+          P.set((globalIndex - localStart), value);
         }
       }
     }
@@ -1089,8 +1089,8 @@ TlDenseSymmetricMatrix_blacs::getMatrixElementsInLocal() const {
 // =============================================================================
 // matrix operation
 // =============================================================================
-bool TlDenseSymmetricMatrix_blacs::diagonal(
-    TlVector_BLAS* pEigVal, TlDenseGeneralMatrix_blacs* pEigVec,
+bool TlDenseSymmetricMatrix_blacs::eig(
+    TlDenseVector_Lapack* pEigVal, TlDenseGeneralMatrix_blacs* pEigVec,
     TlDenseSymmetricMatrix_blacs::DIAGONAL_METHOD method) const {
 #ifdef HAVE_SCALAPACK
   if (method == DIVIDE_AND_CONQUER) {
@@ -1104,7 +1104,7 @@ bool TlDenseSymmetricMatrix_blacs::diagonal(
 #endif  // HAVE_SCALAPACK
 }
 
-bool TlDenseSymmetricMatrix_blacs::inverse() {
+TlDenseSymmetricMatrix_blacs TlDenseSymmetricMatrix_blacs::inverse() const {
 #ifdef HAVE_SCALAPACK
   // using SCALAPACK
   return inverseByScaLapack(*this);
@@ -1214,7 +1214,7 @@ TlDenseGeneralMatrix_blacs multiplicationByScaLapack(
 }
 
 bool diagonalByScaLapack_QR(const TlDenseSymmetricMatrix_blacs& inMatrix,
-                            TlVector_BLAS* outEigVal,
+                            TlDenseVector_Lapack* outEigVal,
                             TlDenseGeneralMatrix_blacs* outEigVec) {
   assert(outEigVal != NULL);
   assert(outEigVec != NULL);
@@ -1232,7 +1232,7 @@ bool diagonalByScaLapack_QR(const TlDenseSymmetricMatrix_blacs& inMatrix,
   const int* DESCA = inMatrix.m_pDESC;
 
   outEigVal->resize(N);
-  double* W = outEigVal->data_;
+  double* W = outEigVal->data();
 
   outEigVec->resize(N, N);
   double* Z = outEigVec->pData_;
@@ -1273,7 +1273,7 @@ bool diagonalByScaLapack_QR(const TlDenseSymmetricMatrix_blacs& inMatrix,
 
 // Divide-and-Conquer Algorithm
 bool diagonalByScaLapack_DC(const TlDenseSymmetricMatrix_blacs& inMatrix,
-                            TlVector_BLAS* outEigVal,
+                            TlDenseVector_Lapack* outEigVal,
                             TlDenseGeneralMatrix_blacs* outEigVec) {
   assert(outEigVal != NULL);
   assert(outEigVec != NULL);
@@ -1291,7 +1291,7 @@ bool diagonalByScaLapack_DC(const TlDenseSymmetricMatrix_blacs& inMatrix,
   const int* DESCA = inMatrix.m_pDESC;
 
   outEigVal->resize(N);
-  double* W = outEigVal->data_;
+  double* W = outEigVal->data();
 
   outEigVec->resize(N, N);
   double* Z = outEigVec->pData_;
@@ -1337,16 +1337,10 @@ bool diagonalByScaLapack_DC(const TlDenseSymmetricMatrix_blacs& inMatrix,
   return ((info == 0) ? true : false);
 }
 
-bool inverseByScaLapack(TlDenseSymmetricMatrix_blacs& X) {
-  TlDenseGeneralMatrix_blacs Y(X);
-  bool bAnswer = Y.inverse();
-  if (bAnswer == true) {
-    X = Y;
-  } else {
-    std::cout << "inverseByScaLapack return false." << std::endl;
-    abort();
-  }
-
+TlDenseSymmetricMatrix_blacs inverseByScaLapack(const TlDenseSymmetricMatrix_blacs& X) {
+  TlDenseGeneralMatrix_blacs Y = X;
+  TlDenseSymmetricMatrix_blacs answer = Y.inverse();
+  return answer;
   // 以下のルーチンは正の対称行列でなければならない
   //   const int N = X.getNumOfRows();
   //   const int IA = 1;
@@ -1364,10 +1358,6 @@ bool inverseByScaLapack(TlDenseSymmetricMatrix_blacs& X) {
   //     std::cout << "pdpotri_ returns " << info << std::endl;
   //     return false;
   //   }
-
-  //   return true;
-
-  return bAnswer;
 }
 
 // void TlDenseSymmetricMatrix_blacs::symmetrize() const {
@@ -1457,9 +1447,9 @@ TlDenseSymmetricMatrix_blacs operator*(const TlDenseSymmetricMatrix_blacs& X,
 //   // TlLogging& log = TlLogging::getInstance();
 //
 //   const index_type N = this->getNumOfRows();
-//   TlVector_BLAS d = this->getDiagonalElements();
+//   TlDenseVector_Lapack d = this->getDiagonalElements();
 //   double error = d.sum();
-//   std::vector<TlVector_BLAS::size_type> pivot(N);
+//   std::vector<TlDenseVector_Lapack::size_type> pivot(N);
 //   for (index_type i = 0; i < N; ++i) {
 //     pivot[i] = i;
 //   }
@@ -1469,7 +1459,7 @@ TlDenseSymmetricMatrix_blacs operator*(const TlDenseSymmetricMatrix_blacs& X,
 //   // double sum_ll = 0.0;
 //
 //   while (error > threshold) {
-//     std::vector<TlVector_BLAS::size_type>::const_iterator it =
+//     std::vector<TlDenseVector_Lapack::size_type>::const_iterator it =
 //         d.argmax(pivot.begin() + m, pivot.end());
 //     const index_type i = it - pivot.begin();
 //     std::swap(pivot[m], pivot[i]);
@@ -1513,9 +1503,9 @@ TlDenseSymmetricMatrix_blacs operator*(const TlDenseSymmetricMatrix_blacs& X,
 //   TlLogging& log = TlLogging::getInstance();
 //
 //   const index_type N = this->getNumOfRows();
-//   TlVector_BLAS d = this->getDiagonalElements();
+//   TlDenseVector_Lapack d = this->getDiagonalElements();
 //   double error = d.sum();
-//   std::vector<TlVector_BLAS::size_type> pivot(N);
+//   std::vector<TlDenseVector_Lapack::size_type> pivot(N);
 //   for (index_type i = 0; i < N; ++i) {
 //     pivot[i] = i;
 //   }
@@ -1525,7 +1515,7 @@ TlDenseSymmetricMatrix_blacs operator*(const TlDenseSymmetricMatrix_blacs& X,
 //   // double sum_ll = 0.0;
 //
 //   while (error > threshold) {
-//     std::vector<TlVector_BLAS::size_type>::const_iterator it =
+//     std::vector<TlDenseVector_Lapack::size_type>::const_iterator it =
 //         d.argmax(pivot.begin() + m, pivot.end());
 //     const index_type i = it - pivot.begin();
 //     std::swap(pivot[m], pivot[i]);
@@ -1536,7 +1526,7 @@ TlDenseSymmetricMatrix_blacs operator*(const TlDenseSymmetricMatrix_blacs& X,
 //     const double inv_l_m_pm = 1.0 / l_m_pm;
 //
 //     // L(0:m, pivot[m])を一時保管
-//     const TlVector_BLAS L_x_pm =
+//     const TlDenseVector_Lapack L_x_pm =
 //         L.getColVector(pivot[m]);  // TODO: バッファの取り過ぎ
 //
 //     for (index_type i = m + 1; i < N; ++i) {
@@ -1619,12 +1609,13 @@ TlDenseSymmetricMatrix_blacs::choleskyFactorization_mod2(
   // prepare variables
   const index_type N = this->getNumOfRows();
   assert(N == this->getNumOfCols());
-  TlVector_BLAS global_diagonals = this->getDiagonalElements();  // 対角成分
+  TlDenseVector_Lapack global_diagonals =
+      this->getDiagonalElements();  // 対角成分
   TlDenseGeneralMatrix_arrays_RowOriented L(
       N, 1, rComm.getNumOfProcs(), rComm.getRank(),
       isEnableMmap);  // 答えとなる行列Lは各PEに行毎に短冊状(行ベクトル)で分散して持たせる
   const index_type local_N = L.getNumOfLocalVectors();
-  TlVector_BLAS L_pm(N);
+  TlDenseVector_Lapack L_pm(N);
   std::vector<int> global_pivot(N);   //
   std::vector<int> reverse_pivot(N);  // global_pivotの逆引き
   std::vector<int> local_pivot(local_N);
@@ -1641,7 +1632,7 @@ TlDenseSymmetricMatrix_blacs::choleskyFactorization_mod2(
       reverse_pivot[global_i] = global_i;
       if (L.getSubunitID(global_i) == myRank) {
         local_pivot[local_i] = global_i;
-        local_diagonals[local_i] = global_diagonals[global_i];
+        local_diagonals[local_i] = global_diagonals.get(global_i);
         if (error < local_diagonals[local_i]) {
           error_local_loc = local_i;
           error_global_loc = local_pivot[local_i];
@@ -1690,13 +1681,13 @@ TlDenseSymmetricMatrix_blacs::choleskyFactorization_mod2(
     std::vector<double> G_pm(N - (m + 1));
     // const index_type numOf_G_cols = N -(m+1);
     {
-      const TlVector_BLAS Gm = this->getRowVector(pivot_m);
+      const TlDenseVector_Lapack Gm = this->getRowVector(pivot_m);
       assert(Gm.getSize() == N);
       for (index_type i = 0; i < numOf_G_cols; ++i) {
         const index_type pivot_i = global_pivot[m + 1 + i];  // from (m+1) to N
         assert(0 <= pivot_i);
         assert(pivot_i < N);
-        G_pm[i] = Gm[pivot_i];
+        G_pm[i] = Gm.get(pivot_i);
       }
     }
     CD_rowvec_time.stop();
@@ -1712,7 +1703,7 @@ TlDenseSymmetricMatrix_blacs::choleskyFactorization_mod2(
         assert(L_pm.getSize() == m + 1);
       }
       // rComm.broadcast(&(L_pm[0]), m +1, PEinCharge);
-      rComm.broadcast(L_pm, PEinCharge);
+      rComm.broadcast(&L_pm, PEinCharge);
     }
     CD_bcast_time.stop();
 
@@ -1720,7 +1711,7 @@ TlDenseSymmetricMatrix_blacs::choleskyFactorization_mod2(
     error = 0.0;
 #pragma omp parallel
     {
-      TlVector_BLAS L_pi(m + 1);
+      TlDenseVector_Lapack L_pi(m + 1);
       double my_error = 0.0;
       int my_error_global_loc = 0;
       int my_error_local_loc = 0;
@@ -1734,7 +1725,7 @@ TlDenseSymmetricMatrix_blacs::choleskyFactorization_mod2(
         assert(L_pi.getSize() == m + 1);
         double sum_ll = 0.0;
         for (index_type j = 0; j < m; ++j) {
-          sum_ll += L_pm[j] * L_pi[j];
+          sum_ll += L_pm.get(j) * L_pi.get(j);
         }
 
         const int G_pm_index = reverse_pivot[pivot_i] - (m + 1);
@@ -1743,11 +1734,11 @@ TlDenseSymmetricMatrix_blacs::choleskyFactorization_mod2(
 #pragma omp critical(DfCD_Parallel__calcCholeskyVectors_onTheFly)
         {
           L.set(pivot_i, m, l_m_pi);
-          global_diagonals[pivot_i] -= ll;
+          global_diagonals.add(pivot_i, -ll);
         }
 
-        if (global_diagonals[pivot_i] > my_error) {
-          my_error = global_diagonals[pivot_i];
+        if (global_diagonals.get(pivot_i) > my_error) {
+          my_error = global_diagonals.get(pivot_i);
           my_error_global_loc = reverse_pivot[pivot_i];  // == m +1 + i
           my_error_local_loc = i;
         }
@@ -1776,7 +1767,7 @@ TlDenseSymmetricMatrix_blacs::choleskyFactorization_mod2(
 
     CD_allreduce_time.start();
     rComm.allReduce_MAXLOC(&error, &error_global_loc);
-    global_diagonals[global_pivot[error_global_loc]] = error;
+    global_diagonals.set(global_pivot[error_global_loc], error);
 
     ++m;
     if (error_global_loc == reverse_pivot[local_pivot[error_local_loc]]) {

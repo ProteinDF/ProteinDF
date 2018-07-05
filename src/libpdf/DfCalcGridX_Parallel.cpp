@@ -30,9 +30,10 @@
 #include "TlCommunicate.h"
 #include "TlTime.h"
 #include "TlUtils.h"
-#include "tl_dense_general_matrix_blacs.h"
 #include "tl_dense_general_matrix_io.h"
-#include "tl_dense_symmetric_matrix_blacs.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_general_matrix_scalapack.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
 #include "tl_sparse_symmetric_matrix.h"
 
 //#define USE_FILE_MATRIX
@@ -65,20 +66,20 @@ DfCalcGridX_Parallel::DfCalcGridX_Parallel(TlSerializeData* pPdfParam)
 DfCalcGridX_Parallel::~DfCalcGridX_Parallel() {}
 
 void DfCalcGridX_Parallel::defineCutOffValues(
-    const TlDenseSymmetricMatrix_BLAS_Old& P) {
+    const TlDenseSymmetricMatrix_Lapack& P) {
   // TODO: 並列化
   DfCalcGridX::defineCutOffValues(P);
 }
 
 void DfCalcGridX_Parallel::defineCutOffValues(
-    const TlDenseSymmetricMatrix_BLAS_Old& PA,
-    const TlDenseSymmetricMatrix_BLAS_Old& PB) {
+    const TlDenseSymmetricMatrix_Lapack& PA,
+    const TlDenseSymmetricMatrix_Lapack& PB) {
   // TODO: 並列化
   DfCalcGridX::defineCutOffValues(PA, PB);
 }
 
 void DfCalcGridX_Parallel::defineCutOffValues(
-    const TlDenseSymmetricMatrix_blacs& P) {
+    const TlDenseSymmetricMatrix_Scalapack& P) {
   const double maxValueOfP = std::max(P.getMaxAbsoluteElement(), 1.0E-16);
   if (maxValueOfP < 1.0) {
     this->m_densityCutOffValueA /= maxValueOfP;
@@ -91,8 +92,8 @@ void DfCalcGridX_Parallel::defineCutOffValues(
 }
 
 void DfCalcGridX_Parallel::defineCutOffValues(
-    const TlDenseSymmetricMatrix_blacs& PA,
-    const TlDenseSymmetricMatrix_blacs& PB) {
+    const TlDenseSymmetricMatrix_Scalapack& PA,
+    const TlDenseSymmetricMatrix_Scalapack& PB) {
   const double maxValueOfPA = std::max(PA.getMaxAbsoluteElement(), 1.0E-16);
   const double maxValueOfPB = std::max(PB.getMaxAbsoluteElement(), 1.0E-16);
   if (maxValueOfPA < 1.0) {
@@ -112,41 +113,42 @@ void DfCalcGridX_Parallel::defineCutOffValues(
 }
 
 double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(
-    const TlDenseSymmetricMatrix_BLAS_Old& P_A, DfFunctional_LDA* pFunctional,
-    TlDenseSymmetricMatrix_BLAS_Old* pF_A) {
+    const TlDenseSymmetricMatrix_Lapack& P_A, DfFunctional_LDA* pFunctional,
+    TlDenseSymmetricMatrix_Lapack* pF_A) {
   this->calcRho_LDA(P_A);
   double energy = this->buildVxc(pFunctional, pF_A);
   return energy;
 }
 
 double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(
-    const TlDenseSymmetricMatrix_BLAS_Old& P_A,
-    const TlDenseSymmetricMatrix_BLAS_Old& P_B, DfFunctional_LDA* pFunctional,
-    TlDenseSymmetricMatrix_BLAS_Old* pF_A, TlDenseSymmetricMatrix_BLAS_Old* pF_B) {
+    const TlDenseSymmetricMatrix_Lapack& P_A,
+    const TlDenseSymmetricMatrix_Lapack& P_B, DfFunctional_LDA* pFunctional,
+    TlDenseSymmetricMatrix_Lapack* pF_A, TlDenseSymmetricMatrix_Lapack* pF_B) {
   this->calcRho_LDA(P_A, P_B);
   double energy = this->buildVxc(pFunctional, pF_A, pF_B);
   return energy;
 }
 
 double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(
-    const TlDenseSymmetricMatrix_BLAS_Old& P_A, DfFunctional_GGA* pFunctional,
-    TlDenseSymmetricMatrix_BLAS_Old* pF_A) {
+    const TlDenseSymmetricMatrix_Lapack& P_A, DfFunctional_GGA* pFunctional,
+    TlDenseSymmetricMatrix_Lapack* pF_A) {
   this->calcRho_GGA(P_A);
   double energy = this->buildVxc(pFunctional, pF_A);
   return energy;
 }
 
 double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(
-    const TlDenseSymmetricMatrix_BLAS_Old& P_A,
-    const TlDenseSymmetricMatrix_BLAS_Old& P_B, DfFunctional_GGA* pFunctional,
-    TlDenseSymmetricMatrix_BLAS_Old* pF_A, TlDenseSymmetricMatrix_BLAS_Old* pF_B) {
+    const TlDenseSymmetricMatrix_Lapack& P_A,
+    const TlDenseSymmetricMatrix_Lapack& P_B, DfFunctional_GGA* pFunctional,
+    TlDenseSymmetricMatrix_Lapack* pF_A, TlDenseSymmetricMatrix_Lapack* pF_B) {
   this->calcRho_GGA(P_A, P_B);
   double energy = this->buildVxc(pFunctional, pF_A, pF_B);
   return energy;
 }
 
-void DfCalcGridX_Parallel::calcRho_LDA(const TlDenseSymmetricMatrix_BLAS_Old& P_A) {
-  TlDenseGeneralMatrix_BLAS_old gridMat =
+void DfCalcGridX_Parallel::calcRho_LDA(
+    const TlDenseSymmetricMatrix_Lapack& P_A) {
+  TlDenseGeneralMatrix_Lapack gridMat =
       this->distributeGridMatrix(this->m_nIteration - 1);
 
   this->calcRho_LDA_part(P_A, &gridMat);
@@ -154,9 +156,10 @@ void DfCalcGridX_Parallel::calcRho_LDA(const TlDenseSymmetricMatrix_BLAS_Old& P_
   this->gatherAndSaveGridMatrix(gridMat);
 }
 
-void DfCalcGridX_Parallel::calcRho_LDA(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
-                                       const TlDenseSymmetricMatrix_BLAS_Old& P_B) {
-  TlDenseGeneralMatrix_BLAS_old gridMat =
+void DfCalcGridX_Parallel::calcRho_LDA(
+    const TlDenseSymmetricMatrix_Lapack& P_A,
+    const TlDenseSymmetricMatrix_Lapack& P_B) {
+  TlDenseGeneralMatrix_Lapack gridMat =
       this->distributeGridMatrix(this->m_nIteration - 1);
 
   this->calcRho_LDA_part(P_A, P_B, &gridMat);
@@ -164,8 +167,9 @@ void DfCalcGridX_Parallel::calcRho_LDA(const TlDenseSymmetricMatrix_BLAS_Old& P_
   this->gatherAndSaveGridMatrix(gridMat);
 }
 
-void DfCalcGridX_Parallel::calcRho_GGA(const TlDenseSymmetricMatrix_BLAS_Old& P_A) {
-  TlDenseGeneralMatrix_BLAS_old gridMat =
+void DfCalcGridX_Parallel::calcRho_GGA(
+    const TlDenseSymmetricMatrix_Lapack& P_A) {
+  TlDenseGeneralMatrix_Lapack gridMat =
       this->distributeGridMatrix(this->m_nIteration - 1);
 
   this->calcRho_GGA_part(P_A, &gridMat);
@@ -173,9 +177,10 @@ void DfCalcGridX_Parallel::calcRho_GGA(const TlDenseSymmetricMatrix_BLAS_Old& P_
   this->gatherAndSaveGridMatrix(gridMat);
 }
 
-void DfCalcGridX_Parallel::calcRho_GGA(const TlDenseSymmetricMatrix_BLAS_Old& P_A,
-                                       const TlDenseSymmetricMatrix_BLAS_Old& P_B) {
-  TlDenseGeneralMatrix_BLAS_old gridMat =
+void DfCalcGridX_Parallel::calcRho_GGA(
+    const TlDenseSymmetricMatrix_Lapack& P_A,
+    const TlDenseSymmetricMatrix_Lapack& P_B) {
+  TlDenseGeneralMatrix_Lapack gridMat =
       this->distributeGridMatrix(this->m_nIteration - 1);
 
   this->calcRho_GGA_part(P_A, P_B, &gridMat);
@@ -184,56 +189,56 @@ void DfCalcGridX_Parallel::calcRho_GGA(const TlDenseSymmetricMatrix_BLAS_Old& P_
 }
 
 double DfCalcGridX_Parallel::buildVxc(DfFunctional_LDA* pFunctional,
-                                      TlDenseSymmetricMatrix_BLAS_Old* pF_A) {
-  TlDenseGeneralMatrix_BLAS_old gridMat =
+                                      TlDenseSymmetricMatrix_Lapack* pF_A) {
+  TlDenseGeneralMatrix_Lapack gridMat =
       this->distributeGridMatrix(this->m_nIteration);
   double energy = DfCalcGridX::buildVxc(gridMat, pFunctional, pF_A);
 
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.allReduce_SUM(*pF_A);
+  rComm.allReduce_SUM(pF_A);
   rComm.allReduce_SUM(energy);
   return energy;
 }
 
 double DfCalcGridX_Parallel::buildVxc(DfFunctional_LDA* pFunctional,
-                                      TlDenseSymmetricMatrix_BLAS_Old* pF_A,
-                                      TlDenseSymmetricMatrix_BLAS_Old* pF_B) {
-  TlDenseGeneralMatrix_BLAS_old gridMat =
+                                      TlDenseSymmetricMatrix_Lapack* pF_A,
+                                      TlDenseSymmetricMatrix_Lapack* pF_B) {
+  TlDenseGeneralMatrix_Lapack gridMat =
       this->distributeGridMatrix(this->m_nIteration);
   double energy = DfCalcGridX::buildVxc(gridMat, pFunctional, pF_A, pF_B);
 
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.allReduce_SUM(*pF_A);
+  rComm.allReduce_SUM(pF_A);
   rComm.allReduce_SUM(energy);
   return energy;
 }
 
 double DfCalcGridX_Parallel::buildVxc(DfFunctional_GGA* pFunctional,
-                                      TlDenseSymmetricMatrix_BLAS_Old* pF_A) {
-  TlDenseGeneralMatrix_BLAS_old gridMat =
+                                      TlDenseSymmetricMatrix_Lapack* pF_A) {
+  TlDenseGeneralMatrix_Lapack gridMat =
       this->distributeGridMatrix(this->m_nIteration);
   double energy = DfCalcGridX::buildVxc(gridMat, pFunctional, pF_A);
 
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.allReduce_SUM(*pF_A);
+  rComm.allReduce_SUM(pF_A);
   rComm.allReduce_SUM(energy);
   return energy;
 }
 
 double DfCalcGridX_Parallel::buildVxc(DfFunctional_GGA* pFunctional,
-                                      TlDenseSymmetricMatrix_BLAS_Old* pF_A,
-                                      TlDenseSymmetricMatrix_BLAS_Old* pF_B) {
-  TlDenseGeneralMatrix_BLAS_old gridMat =
+                                      TlDenseSymmetricMatrix_Lapack* pF_A,
+                                      TlDenseSymmetricMatrix_Lapack* pF_B) {
+  TlDenseGeneralMatrix_Lapack gridMat =
       this->distributeGridMatrix(this->m_nIteration);
   double energy = DfCalcGridX::buildVxc(gridMat, pFunctional, pF_A, pF_B);
 
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.allReduce_SUM(*pF_A);
+  rComm.allReduce_SUM(pF_A);
   rComm.allReduce_SUM(energy);
   return energy;
 }
 
-TlDenseGeneralMatrix_BLAS_old DfCalcGridX_Parallel::distributeGridMatrix(
+TlDenseGeneralMatrix_Lapack DfCalcGridX_Parallel::distributeGridMatrix(
     const int iteration) {
   this->log_.info("distribute grid matrix: start");
 
@@ -242,13 +247,13 @@ TlDenseGeneralMatrix_BLAS_old DfCalcGridX_Parallel::distributeGridMatrix(
   // const int rank = rComm.getRank();
 
   const int tag = TAG_CALC_GRID_DISTRIBUTE;
-  TlDenseGeneralMatrix_BLAS_old gridMat;
+  TlDenseGeneralMatrix_Lapack gridMat;
   if (rComm.isMaster() == true) {
     // #ifdef USE_FILE_MATRIX
     //     TlMatrixFile
     //     globalGridMat(DfObject::getGridMatrixPath(iteration));
     // #else
-    TlDenseGeneralMatrix_BLAS_old globalGridMat;
+    TlDenseGeneralMatrix_Lapack globalGridMat;
     globalGridMat.load(DfObject::getGridMatrixPath(iteration));
     // #endif  // USE_FILE_MATRIX
     this->numOfRows_gridMatrix_ = globalGridMat.getNumOfRows();
@@ -262,8 +267,8 @@ TlDenseGeneralMatrix_BLAS_old DfCalcGridX_Parallel::distributeGridMatrix(
       const index_type startGrid = 0;
       const index_type endGrid =
           std::min<index_type>(startGrid + range, this->numOfRows_gridMatrix_);
-      gridMat = globalGridMat.getBlockMatrix(startGrid, 0, endGrid - startGrid,
-                                             globalGridMat.getNumOfCols());
+      globalGridMat.block(startGrid, 0, endGrid - startGrid,
+                          globalGridMat.getNumOfCols(), &gridMat);
       this->log_.debug(TlUtils::format("send grid data to 0 (%d, %d)",
                                        gridMat.getNumOfRows(),
                                        gridMat.getNumOfCols()));
@@ -274,8 +279,9 @@ TlDenseGeneralMatrix_BLAS_old DfCalcGridX_Parallel::distributeGridMatrix(
       const index_type startGrid = range * i;
       const index_type endGrid =
           std::min<index_type>(startGrid + range, this->numOfRows_gridMatrix_);
-      TlDenseGeneralMatrix_BLAS_old tmpMat = globalGridMat.getBlockMatrix(
-          startGrid, 0, endGrid - startGrid, globalGridMat.getNumOfCols());
+      TlDenseGeneralMatrix_Lapack tmpMat;
+      globalGridMat.block(startGrid, 0, endGrid - startGrid,
+                          globalGridMat.getNumOfCols(), &tmpMat);
       this->log_.debug(TlUtils::format("send grid data to %d (%d, %d)", i,
                                        tmpMat.getNumOfRows(),
                                        tmpMat.getNumOfCols()));
@@ -291,7 +297,7 @@ TlDenseGeneralMatrix_BLAS_old DfCalcGridX_Parallel::distributeGridMatrix(
 }
 
 void DfCalcGridX_Parallel::gatherAndSaveGridMatrix(
-    const TlDenseGeneralMatrix_BLAS_old& gridMat) {
+    const TlDenseGeneralMatrix_Lapack& gridMat) {
   this->log_.info("gather grid matrix: start");
 
   TlCommunicate& rComm = TlCommunicate::getInstance();
@@ -304,20 +310,20 @@ void DfCalcGridX_Parallel::gatherAndSaveGridMatrix(
     //         DfObject::getGridMatrixPath(this->m_nIteration),
     //         this->numOfRows_gridMatrix_, this->numOfCols_gridMatrix_);
     // #else
-    TlDenseGeneralMatrix_BLAS_old globalGridMat(this->numOfRows_gridMatrix_,
-                                            this->numOfCols_gridMatrix_);
+    TlDenseGeneralMatrix_Lapack globalGridMat(this->numOfRows_gridMatrix_,
+                                              this->numOfCols_gridMatrix_);
     // #endif  // USE_FILE_MATRIX
     this->log_.debug(TlUtils::format("recv grid data from 0 (%d, %d)",
                                      gridMat.getNumOfRows(),
                                      gridMat.getNumOfCols()));
-    globalGridMat.setBlockMatrix(0, 0, gridMat);
+    globalGridMat.block(0, 0, gridMat);
     index_type currentGridIndex = gridMat.getNumOfRows();
     this->log_.debug(TlUtils::format("currentGridIndex=%d", currentGridIndex));
 
     std::vector<bool> recvCheck(numOfProcs, false);
     for (int i = 1; i < numOfProcs; ++i) {
       int proc = 0;
-      TlDenseGeneralMatrix_BLAS_old tmpMat;
+      TlDenseGeneralMatrix_Lapack tmpMat;
       rComm.receiveDataFromAnySource(tmpMat, &proc, tag);
       if (recvCheck[proc] != false) {
         this->log_.warn(
@@ -329,7 +335,7 @@ void DfCalcGridX_Parallel::gatherAndSaveGridMatrix(
                                        tmpMat.getNumOfCols()));
 
       assert(globalGridMat.getNumOfCols() == gridMat.getNumOfCols());
-      globalGridMat.setBlockMatrix(currentGridIndex, 0, tmpMat);
+      globalGridMat.block(currentGridIndex, 0, tmpMat);
       currentGridIndex += tmpMat.getNumOfRows();
       this->log_.debug(
           TlUtils::format("currentGridIndex=%d", currentGridIndex));
@@ -345,65 +351,67 @@ void DfCalcGridX_Parallel::gatherAndSaveGridMatrix(
 }
 
 double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(
-    const TlDenseSymmetricMatrix_blacs& P_A, DfFunctional_LDA* pFunctional,
-    TlDenseSymmetricMatrix_blacs* pF_A) {
+    const TlDenseSymmetricMatrix_Scalapack& P_A, DfFunctional_LDA* pFunctional,
+    TlDenseSymmetricMatrix_Scalapack* pF_A) {
   this->calcRho_LDA(P_A);
   double energy = this->buildVxc(pFunctional, pF_A);
   return energy;
 }
 
 double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(
-    const TlDenseSymmetricMatrix_blacs& P_A,
-    const TlDenseSymmetricMatrix_blacs& P_B, DfFunctional_LDA* pFunctional,
-    TlDenseSymmetricMatrix_blacs* pF_A, TlDenseSymmetricMatrix_blacs* pF_B) {
+    const TlDenseSymmetricMatrix_Scalapack& P_A,
+    const TlDenseSymmetricMatrix_Scalapack& P_B, DfFunctional_LDA* pFunctional,
+    TlDenseSymmetricMatrix_Scalapack* pF_A,
+    TlDenseSymmetricMatrix_Scalapack* pF_B) {
   this->calcRho_LDA(P_A, P_B);
   double energy = this->buildVxc(pFunctional, pF_A, pF_B);
   return energy;
 }
 
 double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(
-    const TlDenseSymmetricMatrix_blacs& P_A, DfFunctional_GGA* pFunctional,
-    TlDenseSymmetricMatrix_blacs* pF_A) {
+    const TlDenseSymmetricMatrix_Scalapack& P_A, DfFunctional_GGA* pFunctional,
+    TlDenseSymmetricMatrix_Scalapack* pF_A) {
   this->calcRho_GGA(P_A);
   double energy = this->buildVxc(pFunctional, pF_A);
   return energy;
 }
 
 double DfCalcGridX_Parallel::calcXCIntegForFockAndEnergy(
-    const TlDenseSymmetricMatrix_blacs& P_A,
-    const TlDenseSymmetricMatrix_blacs& P_B, DfFunctional_GGA* pFunctional,
-    TlDenseSymmetricMatrix_blacs* pF_A, TlDenseSymmetricMatrix_blacs* pF_B) {
+    const TlDenseSymmetricMatrix_Scalapack& P_A,
+    const TlDenseSymmetricMatrix_Scalapack& P_B, DfFunctional_GGA* pFunctional,
+    TlDenseSymmetricMatrix_Scalapack* pF_A,
+    TlDenseSymmetricMatrix_Scalapack* pF_B) {
   this->calcRho_GGA(P_A, P_B);
   double energy = this->buildVxc(pFunctional, pF_A, pF_B);
   return energy;
 }
 
-TlDenseGeneralMatrix_BLAS_old DfCalcGridX_Parallel::getGlobalGridMatrix(
+TlDenseGeneralMatrix_Lapack DfCalcGridX_Parallel::getGlobalGridMatrix(
     const int iteration) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  TlDenseGeneralMatrix_BLAS_old gridMat;
-  TlDenseGeneralMatrix_BLAS_old rhoMat;
+  TlDenseGeneralMatrix_Lapack gridMat;
+  TlDenseGeneralMatrix_Lapack rhoMat;
   index_type numOfGrids = 0;
   index_type numOfCols = 0;
   if (rComm.isMaster() == true) {
-    gridMat = DfObject::getGridMatrix<TlDenseGeneralMatrix_BLAS_old>(iteration);
+    gridMat = DfObject::getGridMatrix<TlDenseGeneralMatrix_Lapack>(iteration);
     numOfGrids = gridMat.getNumOfRows();
     numOfCols = gridMat.getNumOfCols();
 
-    TlDenseGeneralMatrix_BLAS_old crdMat =
-        gridMat.getBlockMatrix(0, 0, numOfGrids, GM_ATOM_INDEX + 1);
-    rhoMat = gridMat.getBlockMatrix(0, GM_ATOM_INDEX + 1, numOfGrids,
-                                    numOfCols - (GM_ATOM_INDEX + 1));
+    TlDenseGeneralMatrix_Lapack crdMat;
+    gridMat.block(0, 0, numOfGrids, GM_ATOM_INDEX + 1, &crdMat);
+    gridMat.block(0, GM_ATOM_INDEX + 1, numOfGrids,
+                  numOfCols - (GM_ATOM_INDEX + 1), &rhoMat);
     gridMat = crdMat;
   }
   rComm.broadcast(numOfGrids);
   rComm.broadcast(numOfCols);
-  rComm.broadcast(gridMat);
+  rComm.broadcast(&gridMat);
   gridMat.resize(numOfGrids, numOfCols);
 
   if (this->m_bIsUpdateXC == true) {
     if (rComm.isMaster() == true) {
-      gridMat.setBlockMatrix(0, GM_ATOM_INDEX + 1, rhoMat);
+      gridMat.block(0, GM_ATOM_INDEX + 1, rhoMat);
     }
   }
 
@@ -411,12 +419,12 @@ TlDenseGeneralMatrix_BLAS_old DfCalcGridX_Parallel::getGlobalGridMatrix(
 }
 
 void DfCalcGridX_Parallel::allReduceGridMatrix(
-    const TlDenseGeneralMatrix_BLAS_old& gridMat) {
+    const TlDenseGeneralMatrix_Lapack& gridMat) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  TlDenseGeneralMatrix_BLAS_old rhoMat =
-      gridMat.getBlockMatrix(0, GM_LDA_RHO_ALPHA, gridMat.getNumOfRows(),
-                             gridMat.getNumOfCols() - GM_LDA_RHO_ALPHA);
-  rComm.allReduce_SUM(rhoMat);
+  TlDenseGeneralMatrix_Lapack rhoMat;
+  gridMat.block(0, GM_LDA_RHO_ALPHA, gridMat.getNumOfRows(),
+                gridMat.getNumOfCols() - GM_LDA_RHO_ALPHA, &rhoMat);
+  rComm.allReduce_SUM(&rhoMat);
 
   if (rComm.isMaster() == true) {
     TlFileGenericMatrix globalGridMat(
@@ -425,52 +433,54 @@ void DfCalcGridX_Parallel::allReduceGridMatrix(
     assert(globalGridMat.getNumOfRows() == gridMat.getNumOfRows());
     assert(globalGridMat.getNumOfCols() == gridMat.getNumOfCols());
 
-    const TlDenseGeneralMatrix_BLAS_old crdMat =
-        gridMat.getBlockMatrix(0, 0, gridMat.getNumOfRows(), GM_LDA_RHO_ALPHA);
-    globalGridMat.setBlockMatrix(0, 0, crdMat);
-    globalGridMat.setBlockMatrix(0, GM_LDA_RHO_ALPHA, rhoMat);
+    TlDenseGeneralMatrix_Lapack crdMat;
+    gridMat.block(0, 0, gridMat.getNumOfRows(), GM_LDA_RHO_ALPHA, &crdMat);
+    globalGridMat.block(0, 0, crdMat);
+    globalGridMat.block(0, GM_LDA_RHO_ALPHA, rhoMat);
   }
 }
 
 void DfCalcGridX_Parallel::calcRho_LDA(
-    const TlDenseSymmetricMatrix_blacs& P_A) {
-  TlDenseGeneralMatrix_BLAS_old gridMat =
+    const TlDenseSymmetricMatrix_Scalapack& P_A) {
+  TlDenseGeneralMatrix_Lapack gridMat =
       this->getGlobalGridMatrix(this->m_nIteration - 1);
-  this->calcRho_LDA(TlDenseGeneralMatrix_blacs(P_A), &gridMat);
+  this->calcRho_LDA(TlDenseGeneralMatrix_Scalapack(P_A), &gridMat);
   this->allReduceGridMatrix(gridMat);
 }
 
 void DfCalcGridX_Parallel::calcRho_LDA(
-    const TlDenseSymmetricMatrix_blacs& P_A,
-    const TlDenseSymmetricMatrix_blacs& P_B) {
-  TlDenseGeneralMatrix_BLAS_old gridMat =
+    const TlDenseSymmetricMatrix_Scalapack& P_A,
+    const TlDenseSymmetricMatrix_Scalapack& P_B) {
+  TlDenseGeneralMatrix_Lapack gridMat =
       this->getGlobalGridMatrix(this->m_nIteration - 1);
-  this->calcRho_LDA(TlDenseGeneralMatrix_blacs(P_A),
-                    TlDenseGeneralMatrix_blacs(P_B), &gridMat);
+  this->calcRho_LDA(TlDenseGeneralMatrix_Scalapack(P_A),
+                    TlDenseGeneralMatrix_Scalapack(P_B), &gridMat);
   this->allReduceGridMatrix(gridMat);
 }
 
 void DfCalcGridX_Parallel::calcRho_GGA(
-    const TlDenseSymmetricMatrix_blacs& P_A) {
-  TlDenseGeneralMatrix_BLAS_old gridMat =
+    const TlDenseSymmetricMatrix_Scalapack& P_A) {
+  TlDenseGeneralMatrix_Lapack gridMat =
       this->getGlobalGridMatrix(this->m_nIteration - 1);
-  this->calcRho_GGA(TlDenseGeneralMatrix_blacs(P_A), &gridMat);
+  this->calcRho_GGA(TlDenseGeneralMatrix_Scalapack(P_A), &gridMat);
   this->allReduceGridMatrix(gridMat);
 }
 
 void DfCalcGridX_Parallel::calcRho_GGA(
-    const TlDenseSymmetricMatrix_blacs& P_A,
-    const TlDenseSymmetricMatrix_blacs& P_B) {
-  TlDenseGeneralMatrix_BLAS_old gridMat =
+    const TlDenseSymmetricMatrix_Scalapack& P_A,
+    const TlDenseSymmetricMatrix_Scalapack& P_B) {
+  TlDenseGeneralMatrix_Lapack gridMat =
       this->getGlobalGridMatrix(this->m_nIteration - 1);
-  this->calcRho_GGA(TlDenseGeneralMatrix_blacs(P_A),
-                    TlDenseGeneralMatrix_blacs(P_B), &gridMat);
+  this->calcRho_GGA(TlDenseGeneralMatrix_Scalapack(P_A),
+                    TlDenseGeneralMatrix_Scalapack(P_B), &gridMat);
   this->allReduceGridMatrix(gridMat);
 }
 
-void DfCalcGridX_Parallel::calcRho_LDA(const TlDenseGeneralMatrix_blacs& P_A,
-                                       TlDenseGeneralMatrix_BLAS_old* pGridMat) {
-  const TlDenseGeneralMatrix_BLAS_old localP_A = P_A.getLocalMatrix();
+void DfCalcGridX_Parallel::calcRho_LDA(
+    const TlDenseGeneralMatrix_Scalapack& P_A,
+    TlDenseGeneralMatrix_Lapack* pGridMat) {
+  TlDenseGeneralMatrix_Lapack localP_A;
+  P_A.getLocalMatrix(&localP_A);
   const std::vector<index_type> rowIndeces = P_A.getRowIndexTable();
   const std::vector<index_type> colIndeces = P_A.getColIndexTable();
 
@@ -495,11 +505,14 @@ void DfCalcGridX_Parallel::calcRho_LDA(const TlDenseGeneralMatrix_blacs& P_A,
   }
 }
 
-void DfCalcGridX_Parallel::calcRho_LDA(const TlDenseGeneralMatrix_blacs& P_A,
-                                       const TlDenseGeneralMatrix_blacs& P_B,
-                                       TlDenseGeneralMatrix_BLAS_old* pGridMat) {
-  const TlDenseGeneralMatrix_BLAS_old localP_A = P_A.getLocalMatrix();
-  const TlDenseGeneralMatrix_BLAS_old localP_B = P_B.getLocalMatrix();
+void DfCalcGridX_Parallel::calcRho_LDA(
+    const TlDenseGeneralMatrix_Scalapack& P_A,
+    const TlDenseGeneralMatrix_Scalapack& P_B,
+    TlDenseGeneralMatrix_Lapack* pGridMat) {
+  TlDenseGeneralMatrix_Lapack localP_A;
+  P_A.getLocalMatrix(&localP_A);
+  TlDenseGeneralMatrix_Lapack localP_B;
+  P_B.getLocalMatrix(&localP_B);
   const std::vector<index_type> rowIndeces = P_A.getRowIndexTable();
   const std::vector<index_type> colIndeces = P_A.getColIndexTable();
   // rowIndexes, colIndexes はP_Bと共通
@@ -528,9 +541,11 @@ void DfCalcGridX_Parallel::calcRho_LDA(const TlDenseGeneralMatrix_blacs& P_A,
   }
 }
 
-void DfCalcGridX_Parallel::calcRho_GGA(const TlDenseGeneralMatrix_blacs& P_A,
-                                       TlDenseGeneralMatrix_BLAS_old* pGridMat) {
-  const TlDenseGeneralMatrix_BLAS_old localP_A = P_A.getLocalMatrix();
+void DfCalcGridX_Parallel::calcRho_GGA(
+    const TlDenseGeneralMatrix_Scalapack& P_A,
+    TlDenseGeneralMatrix_Lapack* pGridMat) {
+  TlDenseGeneralMatrix_Lapack localP_A;
+  P_A.getLocalMatrix(&localP_A);
   const std::vector<index_type> rowIndeces = P_A.getRowIndexTable();
   const std::vector<index_type> colIndeces = P_A.getColIndexTable();
 
@@ -576,11 +591,14 @@ void DfCalcGridX_Parallel::calcRho_GGA(const TlDenseGeneralMatrix_blacs& P_A,
   }
 }
 
-void DfCalcGridX_Parallel::calcRho_GGA(const TlDenseGeneralMatrix_blacs& P_A,
-                                       const TlDenseGeneralMatrix_blacs& P_B,
-                                       TlDenseGeneralMatrix_BLAS_old* pGridMat) {
-  const TlDenseGeneralMatrix_BLAS_old localP_A = P_A.getLocalMatrix();
-  const TlDenseGeneralMatrix_BLAS_old localP_B = P_B.getLocalMatrix();
+void DfCalcGridX_Parallel::calcRho_GGA(
+    const TlDenseGeneralMatrix_Scalapack& P_A,
+    const TlDenseGeneralMatrix_Scalapack& P_B,
+    TlDenseGeneralMatrix_Lapack* pGridMat) {
+  TlDenseGeneralMatrix_Lapack localP_A;
+  P_A.getLocalMatrix(&localP_A);
+  TlDenseGeneralMatrix_Lapack localP_B;
+  P_B.getLocalMatrix(&localP_B);
   const std::vector<index_type> rowIndeces = P_A.getRowIndexTable();
   const std::vector<index_type> colIndeces = P_A.getColIndexTable();
   // rowIndexes, colIndexes はP_Bと共通
@@ -641,8 +659,8 @@ void DfCalcGridX_Parallel::calcRho_GGA(const TlDenseGeneralMatrix_blacs& P_A,
 }
 
 double DfCalcGridX_Parallel::buildVxc(DfFunctional_LDA* pFunctional,
-                                      TlDenseSymmetricMatrix_blacs* pF_A) {
-  const TlDenseGeneralMatrix_BLAS_old gridMat =
+                                      TlDenseSymmetricMatrix_Scalapack* pF_A) {
+  const TlDenseGeneralMatrix_Lapack gridMat =
       this->distributeGridMatrix(this->m_nIteration);
   TlSparseSymmetricMatrix tmpF_A(this->m_nNumOfAOs);
   double energy = DfCalcGridX::buildVxc(gridMat, pFunctional, &tmpF_A);
@@ -654,9 +672,9 @@ double DfCalcGridX_Parallel::buildVxc(DfFunctional_LDA* pFunctional,
 }
 
 double DfCalcGridX_Parallel::buildVxc(DfFunctional_LDA* pFunctional,
-                                      TlDenseSymmetricMatrix_blacs* pF_A,
-                                      TlDenseSymmetricMatrix_blacs* pF_B) {
-  const TlDenseGeneralMatrix_BLAS_old gridMat =
+                                      TlDenseSymmetricMatrix_Scalapack* pF_A,
+                                      TlDenseSymmetricMatrix_Scalapack* pF_B) {
+  const TlDenseGeneralMatrix_Lapack gridMat =
       this->distributeGridMatrix(this->m_nIteration);
   TlSparseSymmetricMatrix tmpF_A(this->m_nNumOfAOs);
   TlSparseSymmetricMatrix tmpF_B(this->m_nNumOfAOs);
@@ -670,8 +688,8 @@ double DfCalcGridX_Parallel::buildVxc(DfFunctional_LDA* pFunctional,
 }
 
 double DfCalcGridX_Parallel::buildVxc(DfFunctional_GGA* pFunctional,
-                                      TlDenseSymmetricMatrix_blacs* pF_A) {
-  const TlDenseGeneralMatrix_BLAS_old gridMat =
+                                      TlDenseSymmetricMatrix_Scalapack* pF_A) {
+  const TlDenseGeneralMatrix_Lapack gridMat =
       this->distributeGridMatrix(this->m_nIteration);
   TlSparseSymmetricMatrix tmpF_A(this->m_nNumOfAOs);
   double energy = DfCalcGridX::buildVxc(gridMat, pFunctional, &tmpF_A);
@@ -683,9 +701,9 @@ double DfCalcGridX_Parallel::buildVxc(DfFunctional_GGA* pFunctional,
 }
 
 double DfCalcGridX_Parallel::buildVxc(DfFunctional_GGA* pFunctional,
-                                      TlDenseSymmetricMatrix_blacs* pF_A,
-                                      TlDenseSymmetricMatrix_blacs* pF_B) {
-  const TlDenseGeneralMatrix_BLAS_old gridMat =
+                                      TlDenseSymmetricMatrix_Scalapack* pF_A,
+                                      TlDenseSymmetricMatrix_Scalapack* pF_B) {
+  const TlDenseGeneralMatrix_Lapack gridMat =
       this->distributeGridMatrix(this->m_nIteration);
   TlSparseSymmetricMatrix tmpF_A(this->m_nNumOfAOs);
   TlSparseSymmetricMatrix tmpF_B(this->m_nNumOfAOs);
@@ -705,20 +723,20 @@ void DfCalcGridX_Parallel::getWholeDensity(double* pRhoA, double* pRhoB) const {
   }
 }
 
-TlDenseGeneralMatrix_BLAS_old DfCalcGridX_Parallel::energyGradient(
-    const TlDenseSymmetricMatrix_BLAS_Old& P_A, DfFunctional_LDA* pFunctional) {
+TlDenseGeneralMatrix_Lapack DfCalcGridX_Parallel::energyGradient(
+    const TlDenseSymmetricMatrix_Lapack& P_A, DfFunctional_LDA* pFunctional) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
   this->log_.info(
       "pure DFT XC energy (LDA) gradient by grid method (parallel)");
   const int numOfAOs = this->m_nNumOfAOs;
   const int numOfAtoms = this->m_nNumOfAtoms;
 
-  TlDenseGeneralMatrix_BLAS_old gammaX(numOfAOs, numOfAOs);
-  TlDenseGeneralMatrix_BLAS_old gammaY(numOfAOs, numOfAOs);
-  TlDenseGeneralMatrix_BLAS_old gammaZ(numOfAOs, numOfAOs);
+  TlDenseGeneralMatrix_Lapack gammaX(numOfAOs, numOfAOs);
+  TlDenseGeneralMatrix_Lapack gammaY(numOfAOs, numOfAOs);
+  TlDenseGeneralMatrix_Lapack gammaZ(numOfAOs, numOfAOs);
 
-  TlDenseGeneralMatrix_BLAS_old Fxc_f(numOfAtoms, 3);  // func derivative term
-  TlDenseGeneralMatrix_BLAS_old Fxc_w(numOfAtoms, 3);  // weight derivative term
+  TlDenseGeneralMatrix_Lapack Fxc_f(numOfAtoms, 3);  // func derivative term
+  TlDenseGeneralMatrix_Lapack Fxc_w(numOfAtoms, 3);  // weight derivative term
 
   const int myRank = rComm.getRank();
   const int numOfProcs = rComm.getNumOfProcs();
@@ -728,8 +746,8 @@ TlDenseGeneralMatrix_BLAS_old DfCalcGridX_Parallel::energyGradient(
   double ene_xc = this->energyGradient_part(P_A, pFunctional, startIndex,
                                             endIndex, &Fxc_f, &Fxc_w);
   rComm.allReduce_SUM(ene_xc);
-  rComm.allReduce_SUM(Fxc_f);
-  rComm.allReduce_SUM(Fxc_w);
+  rComm.allReduce_SUM(&Fxc_f);
+  rComm.allReduce_SUM(&Fxc_w);
 
   this->log_.info(TlUtils::format("XC ene = % 16.10f", ene_xc));
 
@@ -746,20 +764,20 @@ TlDenseGeneralMatrix_BLAS_old DfCalcGridX_Parallel::energyGradient(
   return Fxc_w + Fxc_f;
 }
 
-TlDenseGeneralMatrix_BLAS_old DfCalcGridX_Parallel::energyGradient(
-    const TlDenseSymmetricMatrix_BLAS_Old& P_A, DfFunctional_GGA* pFunctional) {
+TlDenseGeneralMatrix_Lapack DfCalcGridX_Parallel::energyGradient(
+    const TlDenseSymmetricMatrix_Lapack& P_A, DfFunctional_GGA* pFunctional) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
   this->log_.info(
       "pure DFT XC energy (LDA) gradient by grid method (parallel)");
   const int numOfAOs = this->m_nNumOfAOs;
   const int numOfAtoms = this->m_nNumOfAtoms;
 
-  TlDenseGeneralMatrix_BLAS_old gammaX(numOfAOs, numOfAOs);
-  TlDenseGeneralMatrix_BLAS_old gammaY(numOfAOs, numOfAOs);
-  TlDenseGeneralMatrix_BLAS_old gammaZ(numOfAOs, numOfAOs);
+  TlDenseGeneralMatrix_Lapack gammaX(numOfAOs, numOfAOs);
+  TlDenseGeneralMatrix_Lapack gammaY(numOfAOs, numOfAOs);
+  TlDenseGeneralMatrix_Lapack gammaZ(numOfAOs, numOfAOs);
 
-  TlDenseGeneralMatrix_BLAS_old Fxc_f(numOfAtoms, 3);  // func derivative term
-  TlDenseGeneralMatrix_BLAS_old Fxc_w(numOfAtoms, 3);  // weight derivative term
+  TlDenseGeneralMatrix_Lapack Fxc_f(numOfAtoms, 3);  // func derivative term
+  TlDenseGeneralMatrix_Lapack Fxc_w(numOfAtoms, 3);  // weight derivative term
 
   const int myRank = rComm.getRank();
   const int numOfProcs = rComm.getNumOfProcs();
@@ -769,8 +787,8 @@ TlDenseGeneralMatrix_BLAS_old DfCalcGridX_Parallel::energyGradient(
   double ene_xc = this->energyGradient_part(P_A, pFunctional, startIndex,
                                             endIndex, &Fxc_f, &Fxc_w);
   rComm.allReduce_SUM(ene_xc);
-  rComm.allReduce_SUM(Fxc_f);
-  rComm.allReduce_SUM(Fxc_w);
+  rComm.allReduce_SUM(&Fxc_f);
+  rComm.allReduce_SUM(&Fxc_w);
 
   this->log_.info(TlUtils::format("XC ene = % 16.10f", ene_xc));
 

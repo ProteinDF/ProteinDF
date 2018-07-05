@@ -21,8 +21,8 @@
 
 #include "TlGetopt.h"
 #include "TlUtils.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_matrix_utils.h"
 
 void help(const std::string& progname) {
@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
 
   if (TlMatrixUtils::isLoadable(sPath1, TlMatrixObject::RLHD) == true) {
     if (TlMatrixUtils::isLoadable(sPath2, TlMatrixObject::RLHD) == true) {
-      TlDenseSymmetricMatrix_BLAS_Old m1, m2;
+      TlDenseSymmetricMatrix_Lapack m1, m2;
       m1.load(sPath1);
       m2.load(sPath2);
 
@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
       if (savePath.empty() == false) {
         m1.save(savePath);
       } else {
-        m1.print(std::cout);
+        std::cout << m1 << std::endl;
       }
     } else {
       std::cerr << "could not open: " << sPath2 << std::endl;
@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
     }
   } else if (TlMatrixUtils::isLoadable(sPath1, TlMatrixObject::CSFD) == true) {
     if (TlMatrixUtils::isLoadable(sPath2, TlMatrixObject::CSFD) == true) {
-      TlDenseGeneralMatrix_BLAS_old m1, m2;
+      TlDenseGeneralMatrix_Lapack m1, m2;
       m1.load(sPath1);
       m2.load(sPath2);
 
@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
       if (savePath.empty() == false) {
         m1.save(savePath);
       } else {
-        m1.print(std::cout);
+        std::cout << m1 << std::endl;
       }
     } else {
       std::cerr << "could not open: " << sPath2 << std::endl;

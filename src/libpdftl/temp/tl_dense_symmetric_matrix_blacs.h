@@ -26,6 +26,7 @@
 #include <list>
 #include "tl_dense_general_matrix_blacs.h"
 #include "tl_dense_vector_blacs.h"
+#include "tl_dense_vector_lapack.h"
 #include "tl_sparse_symmetric_matrix.h"
 
 #ifdef HAVE_HDF5
@@ -83,12 +84,12 @@ class TlDenseSymmetricMatrix_blacs : public TlDenseGeneralMatrix_blacs {
   /// 指定した行の要素から構成されるベクトルを返す
   ///
   /// @param[in] nRow 指定する行
-  virtual TlVector_BLAS getRowVector(index_type row) const;
+  virtual TlDenseVector_Lapack getRowVector(index_type row) const;
 
   /// 指定した列の要素から構成されるベクトルを返す
   ///
   /// @param[in] nCol 指定する列
-  virtual TlVector_BLAS getColumnVector(index_type col) const;
+  virtual TlDenseVector_Lapack getColumnVector(index_type col) const;
 
   /// 全行列を各プロセスに均等分割された疎行列を返す
   // TlSparseSymmetricMatrix getPartialMatrix(double threshold = 1.0E-16) const;
@@ -98,8 +99,8 @@ class TlDenseSymmetricMatrix_blacs : public TlDenseGeneralMatrix_blacs {
   bool getSparseMatrixX(TlSparseSymmetricMatrix* pMatrix,
                         bool isFinalize = false) const;
 
-  TlVector_BLAS getPartialMatrix(int* pStartRow, int* pEndRow, int* pStartCol,
-                                 int* pEndCol) const;
+  TlDenseVector_Lapack getPartialMatrix(int* pStartRow, int* pEndRow,
+                                        int* pStartCol, int* pEndCol) const;
 
   /// 各ノードが与えた疎行列を大域行列に加算する。
   ///
@@ -115,11 +116,11 @@ class TlDenseSymmetricMatrix_blacs : public TlDenseGeneralMatrix_blacs {
   /// @param[out] pEigVec 固有値ベクトルが格納された行列
   /// @retval true 固有値が求められた
   /// @retval false エラーが発生した
-  virtual bool diagonal(TlVector_BLAS* pEigVal,
-                        TlDenseGeneralMatrix_blacs* pEigVec,
-                        DIAGONAL_METHOD method = DIVIDE_AND_CONQUER) const;
+  virtual bool eig(TlDenseVector_Lapack* pEigVal,
+                   TlDenseGeneralMatrix_blacs* pEigVec,
+                   DIAGONAL_METHOD method = DIVIDE_AND_CONQUER) const;
 
-  virtual bool inverse();
+  TlDenseSymmetricMatrix_blacs inverse() const;
 
   // const TlDenseSymmetricMatrix_blacs& dot(const TlDenseSymmetricMatrix_blacs&
   // X);
@@ -230,8 +231,8 @@ class TlDenseSymmetricMatrix_blacs : public TlDenseGeneralMatrix_blacs {
   /// @retval true 固有値が求められた
   /// @retval false エラーが発生した
   friend bool diagonalByScaLapack_QR(
-      const TlDenseSymmetricMatrix_blacs& inMatrix, TlVector_BLAS* outEigVal,
-      TlDenseGeneralMatrix_blacs* outEigVec);
+      const TlDenseSymmetricMatrix_blacs& inMatrix,
+      TlDenseVector_Lapack* outEigVal, TlDenseGeneralMatrix_blacs* outEigVec);
 
   /// 対称行列の固有値を求める(Divide&Conquer)
   ///
@@ -241,10 +242,10 @@ class TlDenseSymmetricMatrix_blacs : public TlDenseGeneralMatrix_blacs {
   /// @retval true 固有値が求められた
   /// @retval false エラーが発生した
   friend bool diagonalByScaLapack_DC(
-      const TlDenseSymmetricMatrix_blacs& inMatrix, TlVector_BLAS* outEigVal,
-      TlDenseGeneralMatrix_blacs* outEigVec);
+      const TlDenseSymmetricMatrix_blacs& inMatrix,
+      TlDenseVector_Lapack* outEigVal, TlDenseGeneralMatrix_blacs* outEigVec);
 
-  friend bool inverseByScaLapack(TlDenseSymmetricMatrix_blacs& inoutMatrix);
+  friend TlDenseSymmetricMatrix_blacs inverseByScaLapack(const TlDenseSymmetricMatrix_blacs& inoutMatrix);
 #endif  // HAVE_SCALAPACK
 };
 

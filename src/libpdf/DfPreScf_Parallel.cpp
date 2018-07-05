@@ -23,6 +23,7 @@
 #include "DfDmatrix_Parallel.h"
 #include "DfPreScf_Parallel.h"
 #include "TlCommunicate.h"
+#include "tl_dense_general_matrix_lapack.h"
 
 DfPreScf_Parallel::DfPreScf_Parallel(TlSerializeData* pPdfParam)
     : DfPreScf(pPdfParam) {}
@@ -62,13 +63,14 @@ void DfPreScf_Parallel::createInitialGuessUsingLCAO(const RUN_TYPE runType) {
 void DfPreScf_Parallel::createInitialGuessUsingLCAO_onScaLAPACK(
     const RUN_TYPE runType) {
   // read guess lcao
-  // const TlDenseGeneralMatrix_blacs LCAO =
-  // this->getLCAO<TlDenseGeneralMatrix_blacs>(runType);
-  const TlDenseGeneralMatrix_blacs LCAO = this->getLCAO_onScaLAPACK(runType);
+  // const TlDenseGeneralMatrix_Scalapack LCAO =
+  // this->getLCAO<TlDenseGeneralMatrix_Scalapack>(runType);
+  const TlDenseGeneralMatrix_Scalapack LCAO =
+      this->getLCAO_onScaLAPACK(runType);
   this->saveC0(runType, LCAO);
 
   // read guess occupation
-  const TlVector_BLAS aOccupation = this->getOccupation(runType);
+  const TlDenseVector_Lapack aOccupation = this->getOccupation(runType);
   this->saveOccupation(runType, aOccupation);
 
   // output guess lcao in orthonormal basis to a files in fl_Work directory
@@ -86,12 +88,12 @@ void DfPreScf_Parallel::createInitialGuessUsingLCAO_onScaLAPACK(
 void DfPreScf_Parallel::createInitialGuessUsingLCAO_onDisk(
     const RUN_TYPE runType) {
   // read guess lcao
-  const TlDenseGeneralMatrix_BLAS_old LCAO =
-      this->getLCAO<TlDenseGeneralMatrix_BLAS_old>(runType);
+  const TlDenseGeneralMatrix_Lapack LCAO =
+      this->getLCAO<TlDenseGeneralMatrix_Lapack>(runType);
   this->saveC0(runType, LCAO);
 
   // read guess occupation
-  const TlVector_BLAS aOccupation = this->getOccupation(runType);
+  const TlDenseVector_Lapack aOccupation = this->getOccupation(runType);
   this->saveOccupation(runType, aOccupation);
 
   // output guess lcao in orthonormal basis to a files in fl_Work directory
@@ -106,10 +108,11 @@ void DfPreScf_Parallel::createInitialGuessUsingLCAO_onDisk(
   }
 }
 
-TlDenseGeneralMatrix_blacs DfPreScf_Parallel::getLCAO_onScaLAPACK(
+TlDenseGeneralMatrix_Scalapack DfPreScf_Parallel::getLCAO_onScaLAPACK(
     const RUN_TYPE runType) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  TlDenseGeneralMatrix_blacs lcaoMatrix(this->m_nNumOfAOs, this->m_nNumOfMOs);
+  TlDenseGeneralMatrix_Scalapack lcaoMatrix(this->m_nNumOfAOs,
+                                            this->m_nNumOfMOs);
 
   const int numOfRows = this->m_nNumOfAOs;
   const int numOfCols = this->m_nNumOfMOs;

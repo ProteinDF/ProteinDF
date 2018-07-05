@@ -17,13 +17,13 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfDensityFittingX_ScaLAPACK.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
 
 // SCALAPACK ===========================================================
 DfDensityFittingX_ScaLAPACK::DfDensityFittingX_ScaLAPACK(
     TlSerializeData* pPdfParam)
-    : DfDensityFittingTmpl<TlDenseSymmetricMatrix_blacs, TlDistributedVector,
-                           DfEriX_Parallel>(pPdfParam) {}
+    : DfDensityFittingTmpl<TlDenseSymmetricMatrix_Scalapack,
+                           TlDenseVector_Scalapack, DfEriX_Parallel>(
+          pPdfParam) {}
 
 DfDensityFittingX_ScaLAPACK::~DfDensityFittingX_ScaLAPACK() {}
 

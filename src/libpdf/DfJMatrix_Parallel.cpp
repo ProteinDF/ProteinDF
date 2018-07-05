@@ -22,7 +22,8 @@
 #include "DfCD_Parallel.h"
 #include "DfEriX_Parallel.h"
 #include "TlCommunicate.h"
-#include "tl_dense_symmetric_matrix_blacs.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
 
 DfJMatrix_Parallel::DfJMatrix_Parallel(TlSerializeData* pPdfParam)
     : DfJMatrix(pPdfParam) {}
@@ -32,17 +33,17 @@ DfJMatrix_Parallel::~DfJMatrix_Parallel() {}
 void DfJMatrix_Parallel::getJ_RI() {
 #ifdef HAVE_SCALAPACK
   if (this->m_bUsingSCALAPACK == true) {
-    TlDenseSymmetricMatrix_blacs J(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_Scalapack J(this->m_nNumOfAOs);
     this->getJ_RI_distributed(&J);
     DfObject::saveJMatrix(this->m_nIteration, J);
   } else {
-    TlDenseSymmetricMatrix_BLAS_Old J(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_Lapack J(this->m_nNumOfAOs);
     this->getJ_RI_local(&J);
     this->saveJMatrix(J);
   }
 #else
   {
-    TlDenseSymmetricMatrix_BLAS_Old J(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_Lapack J(this->m_nNumOfAOs);
     this->getJ_RI_local(&J);
     this->saveJMatrix(J);
   }
@@ -52,17 +53,17 @@ void DfJMatrix_Parallel::getJ_RI() {
 void DfJMatrix_Parallel::getJ_CD() {
 #ifdef HAVE_SCALAPACK
   if (this->m_bUsingSCALAPACK == true) {
-    TlDenseSymmetricMatrix_blacs J(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_Scalapack J(this->m_nNumOfAOs);
     this->getJ_CD_distributed(&J);
     DfObject::saveJMatrix(this->m_nIteration, J);
   } else {
-    TlDenseSymmetricMatrix_BLAS_Old J(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_Lapack J(this->m_nNumOfAOs);
     this->getJ_CD_local(&J);
     this->saveJMatrix(J);
   }
 #else
   {
-    TlDenseSymmetricMatrix_BLAS_Old J(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_Lapack J(this->m_nNumOfAOs);
     this->getJ_CD_local(&J);
     this->saveJMatrix(J);
   }
@@ -72,32 +73,32 @@ void DfJMatrix_Parallel::getJ_CD() {
 void DfJMatrix_Parallel::getJ_conventional() {
 #ifdef HAVE_SCALAPACK
   if (this->m_bUsingSCALAPACK == true) {
-    TlDenseSymmetricMatrix_blacs J(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_Scalapack J(this->m_nNumOfAOs);
     this->getJ_conventional_distributed(&J);
     DfObject::saveJMatrix(this->m_nIteration, J);
   } else {
-    TlDenseSymmetricMatrix_BLAS_Old J(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_Lapack J(this->m_nNumOfAOs);
     this->getJ_conventional_local(&J);
     this->saveJMatrix(J);
   }
 #else
   {
-    TlDenseSymmetricMatrix_BLAS_Old J(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_Lapack J(this->m_nNumOfAOs);
     this->getJ_conventional_local(&J);
     this->saveJMatrix(J);
   }
 #endif  // HAVE_SCALAPACK
 }
 
-void DfJMatrix_Parallel::saveJMatrix(const TlDenseSymmetricMatrix_BLAS_Old& J) {
+void DfJMatrix_Parallel::saveJMatrix(const TlDenseSymmetricMatrix_Lapack& J) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
   if (rComm.isMaster() == true) {
     DfObject::saveJMatrix(this->m_nIteration, J);
   }
 }
 
-void DfJMatrix_Parallel::getJ_RI_local(TlDenseSymmetricMatrix_BLAS_Old* pJ) {
-  TlVector_BLAS rho;
+void DfJMatrix_Parallel::getJ_RI_local(TlDenseSymmetricMatrix_Lapack* pJ) {
+  TlDenseVector_Lapack rho;
   switch (this->m_nMethodType) {
     case METHOD_RKS:
       rho = this->getRho(RUN_RKS, this->m_nIteration);
@@ -114,7 +115,7 @@ void DfJMatrix_Parallel::getJ_RI_local(TlDenseSymmetricMatrix_BLAS_Old* pJ) {
 
   if (this->isUpdateMethod_ == true) {
     if (this->m_nIteration > 1) {
-      TlVector_BLAS prevRho;
+      TlDenseVector_Lapack prevRho;
       switch (this->m_nMethodType) {
         case METHOD_RKS:
           prevRho = this->getRho(RUN_RKS, this->m_nIteration - 1);
@@ -138,27 +139,28 @@ void DfJMatrix_Parallel::getJ_RI_local(TlDenseSymmetricMatrix_BLAS_Old* pJ) {
 
   if (this->isUpdateMethod_ == true) {
     if (this->m_nIteration > 1) {
-      TlDenseSymmetricMatrix_BLAS_Old prevJ =
+      TlDenseSymmetricMatrix_Lapack prevJ =
           this->getJMatrix(this->m_nIteration - 1);
       *pJ += prevJ;
     }
   }
 }
 
-TlVector_BLAS DfJMatrix_Parallel::getRho(const RUN_TYPE runType,
-                                         const int iteration) {
+TlDenseVector_Lapack DfJMatrix_Parallel::getRho(const RUN_TYPE runType,
+                                                const int iteration) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  TlVector_BLAS rho;
+  TlDenseVector_Lapack rho;
   if (rComm.isMaster() == true) {
-    rho = DfObject::getRho<TlVector_BLAS>(runType, iteration);
+    rho = DfObject::getRho<TlDenseVector_Lapack>(runType, iteration);
   }
-  rComm.broadcast(rho);
+  rComm.broadcast(&rho);
 
   return rho;
 }
 
-void DfJMatrix_Parallel::getJ_RI_distributed(TlDenseSymmetricMatrix_blacs* pJ) {
-  TlVector_BLAS rho;
+void DfJMatrix_Parallel::getJ_RI_distributed(
+    TlDenseSymmetricMatrix_Scalapack* pJ) {
+  TlDenseVector_Lapack rho;
   switch (this->m_nMethodType) {
     case METHOD_RKS:
       rho = this->getRho(RUN_RKS, this->m_nIteration);
@@ -175,7 +177,7 @@ void DfJMatrix_Parallel::getJ_RI_distributed(TlDenseSymmetricMatrix_blacs* pJ) {
 
   if (this->isUpdateMethod_ == true) {
     if (this->m_nIteration > 1) {
-      TlVector_BLAS prevRho;
+      TlDenseVector_Lapack prevRho;
       switch (this->m_nMethodType) {
         case METHOD_RKS:
           prevRho = this->getRho(RUN_RKS, this->m_nIteration - 1);
@@ -199,37 +201,38 @@ void DfJMatrix_Parallel::getJ_RI_distributed(TlDenseSymmetricMatrix_blacs* pJ) {
 
   if (this->isUpdateMethod_ == true) {
     if (this->m_nIteration > 1) {
-      TlDenseSymmetricMatrix_blacs prevJ =
-          DfObject::getJMatrix<TlDenseSymmetricMatrix_blacs>(
+      TlDenseSymmetricMatrix_Scalapack prevJ =
+          DfObject::getJMatrix<TlDenseSymmetricMatrix_Scalapack>(
               this->m_nIteration - 1);
       *pJ += prevJ;
     }
   }
 }
 
-void DfJMatrix_Parallel::getJ_CD_local(TlDenseSymmetricMatrix_BLAS_Old* pJ) {
+void DfJMatrix_Parallel::getJ_CD_local(TlDenseSymmetricMatrix_Lapack* pJ) {
   DfCD_Parallel dfCD(this->pPdfParam_);
   dfCD.getJ(pJ);
 }
 
-void DfJMatrix_Parallel::getJ_CD_distributed(TlDenseSymmetricMatrix_blacs* pJ) {
+void DfJMatrix_Parallel::getJ_CD_distributed(
+    TlDenseSymmetricMatrix_Scalapack* pJ) {
   DfCD_Parallel dfCD(this->pPdfParam_);
   dfCD.getJ_D(pJ);
 }
 
 void DfJMatrix_Parallel::getJ_conventional_local(
-    TlDenseSymmetricMatrix_BLAS_Old* pJ) {
+    TlDenseSymmetricMatrix_Lapack* pJ) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  TlDenseSymmetricMatrix_BLAS_Old P;
+  TlDenseSymmetricMatrix_Lapack P;
   if (rComm.isMaster() == true) {
     if (this->isUpdateMethod_ == true) {
-      P = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_BLAS_Old>();
+      P = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>();
     } else {
-      P = this->getDensityMatrix<TlDenseSymmetricMatrix_BLAS_Old>();
+      P = this->getDensityMatrix<TlDenseSymmetricMatrix_Lapack>();
     }
   }
-  rComm.broadcast(P);
+  rComm.broadcast(&P);
   assert(P.getNumOfRows() == this->m_nNumOfAOs);
 
   DfEriX_Parallel dfEri(this->pPdfParam_);
@@ -237,7 +240,7 @@ void DfJMatrix_Parallel::getJ_conventional_local(
 
   if (this->isUpdateMethod_ == true) {
     if (this->m_nIteration > 1) {
-      const TlDenseSymmetricMatrix_BLAS_Old prevJ =
+      const TlDenseSymmetricMatrix_Lapack prevJ =
           this->getJMatrix(this->m_nIteration - 1);
       *pJ += prevJ;
     }
@@ -245,13 +248,13 @@ void DfJMatrix_Parallel::getJ_conventional_local(
 }
 
 void DfJMatrix_Parallel::getJ_conventional_distributed(
-    TlDenseSymmetricMatrix_blacs* pJ) {
+    TlDenseSymmetricMatrix_Scalapack* pJ) {
   // TlCommunicate& rComm = TlCommunicate::getInstance();
-  TlDenseSymmetricMatrix_blacs P;
+  TlDenseSymmetricMatrix_Scalapack P;
   if (this->isUpdateMethod_ == true) {
-    P = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_blacs>();
+    P = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_Scalapack>();
   } else {
-    P = DfObject::getPpqMatrix<TlDenseSymmetricMatrix_blacs>(
+    P = DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(
         RUN_RKS, this->m_nIteration - 1);
   }
   assert(P.getNumOfRows() == this->m_nNumOfAOs);
@@ -262,8 +265,8 @@ void DfJMatrix_Parallel::getJ_conventional_distributed(
   if (this->isUpdateMethod_ == true) {
     if (this->m_nIteration > 1) {
       this->log_.info("update J matrix: start");
-      const TlDenseSymmetricMatrix_blacs prevJ =
-          DfObject::getJMatrix<TlDenseSymmetricMatrix_blacs>(
+      const TlDenseSymmetricMatrix_Scalapack prevJ =
+          DfObject::getJMatrix<TlDenseSymmetricMatrix_Scalapack>(
               this->m_nIteration - 1);
       *pJ += prevJ;
       this->log_.info("update J matrix: end");
@@ -271,15 +274,15 @@ void DfJMatrix_Parallel::getJ_conventional_distributed(
   }
 }
 
-TlDenseSymmetricMatrix_BLAS_Old DfJMatrix_Parallel::getJMatrix(
+TlDenseSymmetricMatrix_Lapack DfJMatrix_Parallel::getJMatrix(
     const int iteration) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  TlDenseSymmetricMatrix_BLAS_Old J;
+  TlDenseSymmetricMatrix_Lapack J;
   if (rComm.isMaster() == true) {
     J = DfJMatrix::getJMatrix(iteration);
   }
-  rComm.broadcast(J);
+  rComm.broadcast(&J);
 
   return J;
 }

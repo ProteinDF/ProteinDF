@@ -160,9 +160,9 @@ double DfFunctional_Becke88::g_prime(const double x) {
 }
 
 // ----------
-TlDenseGeneralMatrix_BLAS_old DfFunctional_Becke88::getFunctionalCore(
+TlDenseGeneralMatrix_Lapack DfFunctional_Becke88::getFunctionalCore(
     const double rhoA, const double rhoB, const double xA, const double xB) {
-  TlDenseGeneralMatrix_BLAS_old answer(F_DIM, this->getNumOfFunctionalTerms());
+  TlDenseGeneralMatrix_Lapack answer(F_DIM, this->getNumOfFunctionalTerms());
   assert(this->getNumOfFunctionalTerms() == 1);
 
   // termA = std::pow(rhoA, M_4_3) * this->g(xA);
@@ -183,10 +183,10 @@ TlDenseGeneralMatrix_BLAS_old DfFunctional_Becke88::getFunctionalCore(
   return answer;
 }
 
-TlDenseGeneralMatrix_BLAS_old DfFunctional_Becke88::getDerivativeFunctionalCore(
+TlDenseGeneralMatrix_Lapack DfFunctional_Becke88::getDerivativeFunctionalCore(
     const double rhoA, const double rhoB, const double xA, const double xB) {
-  TlDenseGeneralMatrix_BLAS_old answer(D_DIM,
-                                   this->getNumOfDerivativeFunctionalTerms());
+  TlDenseGeneralMatrix_Lapack answer(D_DIM,
+                                     this->getNumOfDerivativeFunctionalTerms());
   assert(this->getNumOfFunctionalTerms() == 1);
 
   const double gA = this->g(xA);

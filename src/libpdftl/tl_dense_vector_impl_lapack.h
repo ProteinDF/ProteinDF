@@ -1,6 +1,7 @@
 #ifndef TL_DENSE_VECTOR_IMPL_LAPACK_H
 #define TL_DENSE_VECTOR_IMPL_LAPACK_H
 
+#include <vector>
 #include "tl_dense_vector_impl_object.h"
 
 class TlDenseGeneralMatrix_ImplLapack;
@@ -14,6 +15,7 @@ class TlDenseVector_ImplLapack : public TlDenseVector_ImplObject {
   explicit TlDenseVector_ImplLapack(
       const TlDenseVectorObject::index_type size = 0);
   TlDenseVector_ImplLapack(const TlDenseVector_ImplLapack& rhs);
+  TlDenseVector_ImplLapack(const std::vector<double>& rhs);
   virtual ~TlDenseVector_ImplLapack();
 
   // ---------------------------------------------------------------------------
@@ -26,6 +28,7 @@ class TlDenseVector_ImplLapack : public TlDenseVector_ImplObject {
   virtual double get(const TlDenseVectorObject::index_type i) const;
   virtual void set(const TlDenseVectorObject::index_type i, const double value);
   virtual void add(const TlDenseVectorObject::index_type i, const double value);
+  virtual void mul(const TlDenseVectorObject::index_type i, const double value);
 
   // ---------------------------------------------------------------------------
   // operators
@@ -38,9 +41,14 @@ class TlDenseVector_ImplLapack : public TlDenseVector_ImplObject {
   TlDenseVector_ImplLapack& operator*=(const double rhs);
   TlDenseVector_ImplLapack& operator/=(const double rhs);
 
+  double operator*(const TlDenseVector_ImplLapack& rhs) const;
   // ---------------------------------------------------------------------------
   // operations
   // ---------------------------------------------------------------------------
+ public:
+  double* data();
+  const double* data() const;
+
   virtual double sum() const;
   virtual void sortByGreater();
 
@@ -60,9 +68,11 @@ class TlDenseVector_ImplLapack : public TlDenseVector_ImplObject {
   double* vector_;
 
   // ---------------------------------------------------------------------------
-  // others
+  // friend
   // ---------------------------------------------------------------------------
-  friend TlDenseSymmetricMatrix_ImplLapack;
+  friend class TlCommunicate;
+  friend class TlDenseGeneralMatrix_ImplLapack;
+  friend class TlDenseSymmetricMatrix_ImplLapack;
 
   friend TlDenseVector_ImplLapack operator+(
       const TlDenseVector_ImplLapack& rhs1,

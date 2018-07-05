@@ -18,7 +18,8 @@
 
 #include "DfTransatob_Parallel.h"
 #include "CnError.h"
-#include "tl_dense_general_matrix_blacs.h"
+#include "tl_dense_general_matrix_scalapack.h"
+#include "TlCommunicate.h"
 
 DfTransatob_Parallel::DfTransatob_Parallel(TlSerializeData* pPdfParam)
     : DfTransatob(pPdfParam) {}
@@ -53,16 +54,18 @@ void DfTransatob_Parallel::DfTrsatobMain() {
 void DfTransatob_Parallel::DfTrsatobMain_SCALAPACK() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      this->main<TlDenseGeneralMatrix_blacs>(RUN_RKS);  // RKS
+      this->main<TlDenseGeneralMatrix_Scalapack>(RUN_RKS);  // RKS
       break;
 
     case METHOD_UKS:
-      this->main<TlDenseGeneralMatrix_blacs>(RUN_UKS_ALPHA);  // UKS alpha spin
-      this->main<TlDenseGeneralMatrix_blacs>(RUN_UKS_BETA);   // UKS beta spin
+      this->main<TlDenseGeneralMatrix_Scalapack>(
+          RUN_UKS_ALPHA);  // UKS alpha spin
+      this->main<TlDenseGeneralMatrix_Scalapack>(
+          RUN_UKS_BETA);  // UKS beta spin
       break;
 
     case METHOD_ROKS:
-      this->main<TlDenseGeneralMatrix_blacs>(RUN_ROKS);
+      this->main<TlDenseGeneralMatrix_Scalapack>(RUN_ROKS);
       break;
 
     default:
@@ -96,18 +99,19 @@ void DfTransatob_Parallel::DfTrsatobQclo_SCALAPACK(const std::string& fragname,
 
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      this->main<TlDenseGeneralMatrix_blacs>(RUN_RKS, fragname, true);  // RKS
+      this->main<TlDenseGeneralMatrix_Scalapack>(RUN_RKS, fragname,
+                                                 true);  // RKS
       break;
 
     case METHOD_UKS:
-      this->main<TlDenseGeneralMatrix_blacs>(RUN_UKS_ALPHA, fragname,
-                                             true);  // UKS alpha spin
-      this->main<TlDenseGeneralMatrix_blacs>(RUN_UKS_BETA, fragname,
-                                             true);  // UKS beta spin
+      this->main<TlDenseGeneralMatrix_Scalapack>(RUN_UKS_ALPHA, fragname,
+                                                 true);  // UKS alpha spin
+      this->main<TlDenseGeneralMatrix_Scalapack>(RUN_UKS_BETA, fragname,
+                                                 true);  // UKS beta spin
       break;
 
     case METHOD_ROKS:
-      this->main<TlDenseGeneralMatrix_blacs>(RUN_ROKS, fragname, true);
+      this->main<TlDenseGeneralMatrix_Scalapack>(RUN_ROKS, fragname, true);
       break;
 
     default:

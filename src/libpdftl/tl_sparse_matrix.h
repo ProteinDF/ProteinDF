@@ -40,8 +40,8 @@
 // -------------------------------------
 
 #include "TlUtils.h"
+#include "tl_dense_vector_lapack.h"
 #include "tl_matrix_object.h"
-#include "tl_dense_vector_blas.h"
 
 struct TlMatrixElement {
   typedef TlMatrixObject::index_type index_type;
@@ -234,12 +234,12 @@ class TlSparseMatrix : public TlMatrixObject {
   /// 指定した行の要素から構成されるベクトルを返す
   ///
   /// @param[in] row 指定する行
-  virtual TlVector_BLAS getRowVector(index_type row) const;
+  virtual TlDenseVector_Lapack getRowVector(index_type row) const;
 
   /// 指定した列の要素から構成されるベクトルを返す
   ///
   /// @param[in] col 指定する列
-  virtual TlVector_BLAS getColVector(index_type col) const;
+  virtual TlDenseVector_Lapack getColVector(index_type col) const;
 
   /// Hadamard product
   const TlSparseMatrix& dot(const TlSparseMatrix& X);

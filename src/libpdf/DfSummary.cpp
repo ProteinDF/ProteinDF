@@ -20,7 +20,7 @@
 #include <cmath>
 #include "CnError.h"
 #include "Fl_Geometry.h"
-
+#include "tl_dense_general_matrix_lapack.h"
 #include "TlMath.h"
 #include "TlUtils.h"
 
@@ -28,19 +28,20 @@ DfSummary::DfSummary(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {}
 
 DfSummary::~DfSummary() {}
 
-void DfSummary::exec() { this->exec<TlDenseGeneralMatrix_BLAS_old>(); }
+void DfSummary::exec() { this->exec<TlDenseGeneralMatrix_Lapack>(); }
 
 void DfSummary::printEigen(DfObject::RUN_TYPE runType) {
-  TlVector_BLAS eigval;
+  TlDenseVector_Lapack eigval;
   eigval.load(this->getEigenvaluesPath(runType, this->m_nIteration));
 
   std::stringstream ss;
-  eigval.print(ss);
+  ss << eigval;
   this->log_.info(ss.str());
 }
 
-void DfSummary::printAux(const TlVector_BLAS& rho, const TlVector_BLAS& myu,
-                         const TlVector_BLAS& nyu) {
+void DfSummary::printAux(const TlDenseVector_Lapack& rho,
+                         const TlDenseVector_Lapack& myu,
+                         const TlDenseVector_Lapack& nyu) {
   const int rhoSize = rho.getSize();
   const int myuSize = myu.getSize();
   const int nyuSize = nyu.getSize();
@@ -65,19 +66,19 @@ void DfSummary::printAux(const TlVector_BLAS& rho, const TlVector_BLAS& myu,
         TlOrbitalInfoObject::basisTypeNameTbl_[orbInfo.getBasisType(i)]));
 
     if (i < rhoSize) {
-      this->logger(TlUtils::format(" %18.6lf", rho[i]));
+      this->logger(TlUtils::format(" %18.6lf", rho.get(i)));
     } else {
       this->logger("                   ");
     }
 
     if (i < myuSize) {
-      this->logger(TlUtils::format(" %18.6lf", myu[i]));
+      this->logger(TlUtils::format(" %18.6lf", myu.get(i)));
     } else {
       this->logger("                   ");
     }
 
     if (i < nyuSize) {
-      this->logger(TlUtils::format(" %18.6lf", nyu[i]));
+      this->logger(TlUtils::format(" %18.6lf", nyu.get(i)));
     } else {
       this->logger("                   ");
     }
@@ -85,7 +86,7 @@ void DfSummary::printAux(const TlVector_BLAS& rho, const TlVector_BLAS& myu,
   }
 }
 
-void DfSummary::printRhoPop(const TlVector_BLAS& rho) {
+void DfSummary::printRhoPop(const TlDenseVector_Lapack& rho) {
   const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
                               (*this->pPdfParam_)["basis_set_j"]);
   const int numOfAux = this->m_nNumOfAux;
@@ -99,7 +100,7 @@ void DfSummary::printRhoPop(const TlVector_BLAS& rho) {
     // const double popu = std::pow((M_PI / (2.0 *
     // RGTO.getExponent(Tdens.getcgtonum(k),0))), 0.25) * rho[i];
     const double popu =
-        std::pow((M_PI / (2.0 * orbInfo.getExponent(i, 0))), 0.25) * rho[i];
+        std::pow((M_PI / (2.0 * orbInfo.getExponent(i, 0))), 0.25) * rho.get(i);
     this->logger(TlUtils::format(" %18.6lf\n", popu));
   }
   this->logger("\n");

@@ -24,7 +24,7 @@
 #include "TlPosition.h"
 #include "TlTime.h"
 #include "TlUtils.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 #define SQ2 1.414213562373095049
 #define SQ1_2 0.707106781186547524
@@ -193,7 +193,7 @@ int DfCalcGrid::dfGrdMain() {
   this->log_.info("start");
 
   // call readGrid
-  TlVector_BLAS tmpVectorA, tmpVectorB, eTmpVector;
+  TlDenseVector_Lapack tmpVectorA, tmpVectorB, eTmpVector;
   this->calcXCInteg(tmpVectorA, tmpVectorB, eTmpVector);
   this->log_.info("calcXCInteg");
 
@@ -217,14 +217,14 @@ int DfCalcGrid::dfGrdMain() {
   return 0;
 }
 
-void DfCalcGrid::calcXCInteg(TlVector_BLAS& tmpVectorA,
-                             TlVector_BLAS& tmpVectorB,
-                             TlVector_BLAS& eTmpVector) {
-  tmpVectorA = TlVector_BLAS(this->numOfAuxXC_);
-  tmpVectorB = TlVector_BLAS(this->numOfAuxXC_);
-  eTmpVector = TlVector_BLAS(this->numOfAuxXC_);
+void DfCalcGrid::calcXCInteg(TlDenseVector_Lapack& tmpVectorA,
+                             TlDenseVector_Lapack& tmpVectorB,
+                             TlDenseVector_Lapack& eTmpVector) {
+  tmpVectorA = TlDenseVector_Lapack(this->numOfAuxXC_);
+  tmpVectorB = TlDenseVector_Lapack(this->numOfAuxXC_);
+  eTmpVector = TlDenseVector_Lapack(this->numOfAuxXC_);
 
-  TlVector_BLAS RhoAlphaA, RhoAlphaB;
+  TlDenseVector_Lapack RhoAlphaA, RhoAlphaB;
   {
     switch (this->m_nMethodType) {
       case METHOD_RKS:
@@ -243,9 +243,9 @@ void DfCalcGrid::calcXCInteg(TlVector_BLAS& tmpVectorA,
     }
   }
 
-  TlDenseGeneralMatrix_BLAS_old gridMat =
-      DfObject::getGridMatrix<TlDenseGeneralMatrix_BLAS_old>(this->m_nIteration -
-                                                         1);
+  TlDenseGeneralMatrix_Lapack gridMat =
+      DfObject::getGridMatrix<TlDenseGeneralMatrix_Lapack>(this->m_nIteration -
+                                                           1);
   switch (this->m_nMethodType) {
     case METHOD_RKS:
       this->calcXCIntegRhoTilde_RKS(RhoAlphaA, &gridMat);
@@ -387,8 +387,9 @@ void DfCalcGrid::getPrefactorForDerivative(int nType, double alpha,
   }
 }
 
-void DfCalcGrid::calcXCIntegRhoTilde_RKS(const TlVector_BLAS& RhoAlphaA,
-                                         TlDenseGeneralMatrix_BLAS_old* pGridMat) {
+void DfCalcGrid::calcXCIntegRhoTilde_RKS(
+    const TlDenseVector_Lapack& RhoAlphaA,
+    TlDenseGeneralMatrix_Lapack* pGridMat) {
   const index_type numOfGrids = pGridMat->getNumOfRows();
   for (index_type i = 0; i < numOfGrids; ++i) {
     const TlPosition crdPoint(pGridMat->get(i, 0), pGridMat->get(i, 1),
@@ -425,16 +426,17 @@ void DfCalcGrid::calcXCIntegRhoTilde_RKS(const TlVector_BLAS& RhoAlphaA,
         }
 
         gAlpha *= prefactor * coef;
-        gridRhoA += RhoAlphaA[ialpha] * gAlpha;
+        gridRhoA += RhoAlphaA.get(ialpha) * gAlpha;
       }
     }
     pGridMat->set(i, 5, gridRhoA);
   }
 }
 
-void DfCalcGrid::calcXCIntegRhoTilde_UKS(const TlVector_BLAS& RhoAlphaA,
-                                         const TlVector_BLAS& RhoAlphaB,
-                                         TlDenseGeneralMatrix_BLAS_old* pGridMat) {
+void DfCalcGrid::calcXCIntegRhoTilde_UKS(
+    const TlDenseVector_Lapack& RhoAlphaA,
+    const TlDenseVector_Lapack& RhoAlphaB,
+    TlDenseGeneralMatrix_Lapack* pGridMat) {
   const index_type numOfGrids = pGridMat->getNumOfRows();
   for (index_type i = 0; i < numOfGrids; ++i) {
     const TlPosition crdPoint(pGridMat->get(i, 0), pGridMat->get(i, 1),
@@ -473,8 +475,8 @@ void DfCalcGrid::calcXCIntegRhoTilde_UKS(const TlVector_BLAS& RhoAlphaA,
         }
 
         gAlpha *= prefactor * coef;
-        gridRhoA += RhoAlphaA[ialpha] * gAlpha;
-        gridRhoB += RhoAlphaB[ialpha] * gAlpha;  // for SP and ROKS case
+        gridRhoA += RhoAlphaA.get(ialpha) * gAlpha;
+        gridRhoB += RhoAlphaB.get(ialpha) * gAlpha;  // for SP and ROKS case
       }
     }
 
@@ -484,8 +486,8 @@ void DfCalcGrid::calcXCIntegRhoTilde_UKS(const TlVector_BLAS& RhoAlphaA,
 }
 
 void DfCalcGrid::calcXCIntegMyuEpsilon_RKS(
-    const TlDenseGeneralMatrix_BLAS_old& gridMat, TlVector_BLAS& tmpVectorA,
-    TlVector_BLAS& eTmpVector) {
+    const TlDenseGeneralMatrix_Lapack& gridMat,
+    TlDenseVector_Lapack& tmpVectorA, TlDenseVector_Lapack& eTmpVector) {
   double Coef = 0.0;
   if (xc == 0) {
     // case of Xalpha Myu
@@ -546,7 +548,7 @@ void DfCalcGrid::calcXCIntegMyuEpsilon_RKS(
         switch (xc) {
           case 0:
             // Xalpha
-            tmpVectorA[idelta] += Coef * rsA * gDweight;
+            tmpVectorA.add(idelta, Coef * rsA * gDweight);
             break;
           case 2:
             // vBH
@@ -584,17 +586,18 @@ void DfCalcGrid::calcXCIntegMyuEpsilon_RKS(
         }
 
         // for NSP
-        eTmpVector[idelta] += EpsilonXP + EpsilonCP;
-        tmpVectorA[idelta] +=
-            4.0 * F13 * EpsilonXP + EpsilonCP + RouDeltaEpsilonCP;
+        eTmpVector.add(idelta, EpsilonXP + EpsilonCP);
+        tmpVectorA.add(idelta,
+                       4.0 * F13 * EpsilonXP + EpsilonCP + RouDeltaEpsilonCP);
       }
     }
   }
 }
 
 void DfCalcGrid::calcXCIntegMyuEpsilon_UKS(
-    const TlDenseGeneralMatrix_BLAS_old& gridMat, TlVector_BLAS& tmpVectorA,
-    TlVector_BLAS& tmpVectorB, TlVector_BLAS& eTmpVector) {
+    const TlDenseGeneralMatrix_Lapack& gridMat,
+    TlDenseVector_Lapack& tmpVectorA, TlDenseVector_Lapack& tmpVectorB,
+    TlDenseVector_Lapack& eTmpVector) {
   double Coef = 0.0;
   if (xc == 0) {
     // case of Xalpha Myu
@@ -673,8 +676,8 @@ void DfCalcGrid::calcXCIntegMyuEpsilon_UKS(
         switch (xc) {
           case 0:
             // Xalpha
-            tmpVectorA[idelta] += Coef * rsA * gDweight;
-            tmpVectorB[idelta] += Coef * rsB * gDweight;
+            tmpVectorA.add(idelta, Coef * rsA * gDweight);
+            tmpVectorB.add(idelta, Coef * rsB * gDweight);
             break;
           case 2:
             // vBH
@@ -727,18 +730,18 @@ void DfCalcGrid::calcXCIntegMyuEpsilon_UKS(
         }
 
         // for SP and ROKS
-        eTmpVector[idelta] +=
-            Csp * EpsilonXP + mfTheta * EpsilonCP + fTheta * EpsilonCF;
-        tmpVectorA[idelta] += 4.0 * F13 * pTheta13 * EpsilonXP +
-                              (mfTheta - fdTheta * mTheta) * EpsilonCP +
-                              (fTheta + fdTheta * mTheta) * EpsilonCF +
-                              mfTheta * RouDeltaEpsilonCP +
-                              fTheta * RouDeltaEpsilonCF;
-        tmpVectorB[idelta] += 4.0 * F13 * mTheta13 * EpsilonXP +
-                              (mfTheta + fdTheta * pTheta) * EpsilonCP +
-                              (fTheta - fdTheta * pTheta) * EpsilonCF +
-                              mfTheta * RouDeltaEpsilonCP +
-                              fTheta * RouDeltaEpsilonCF;
+        eTmpVector.add(
+            idelta, Csp * EpsilonXP + mfTheta * EpsilonCP + fTheta * EpsilonCF);
+        tmpVectorA.add(idelta, 4.0 * F13 * pTheta13 * EpsilonXP +
+                                   (mfTheta - fdTheta * mTheta) * EpsilonCP +
+                                   (fTheta + fdTheta * mTheta) * EpsilonCF +
+                                   mfTheta * RouDeltaEpsilonCP +
+                                   fTheta * RouDeltaEpsilonCF);
+        tmpVectorB.add(idelta, 4.0 * F13 * mTheta13 * EpsilonXP +
+                                   (mfTheta + fdTheta * pTheta) * EpsilonCP +
+                                   (fTheta - fdTheta * pTheta) * EpsilonCF +
+                                   mfTheta * RouDeltaEpsilonCP +
+                                   fTheta * RouDeltaEpsilonCF);
       }
     }
   }
@@ -750,19 +753,19 @@ void DfCalcGrid::calcXCIntegMyuEpsilon_UKS(
 //    We must support the case which cannot be read at once.
 // 3. calculate product between them.
 
-void DfCalcGrid::calcXCcoef_RKS(const TlVector_BLAS& tmpVector,
-                                const TlVector_BLAS& eTmpVector) {
-  TlDenseSymmetricMatrix_BLAS_Old Sgdinv =
-      DfObject::getSgdInvMatrix<TlDenseSymmetricMatrix_BLAS_Old>();
+void DfCalcGrid::calcXCcoef_RKS(const TlDenseVector_Lapack& tmpVector,
+                                const TlDenseVector_Lapack& eTmpVector) {
+  TlDenseSymmetricMatrix_Lapack Sgdinv =
+      DfObject::getSgdInvMatrix<TlDenseSymmetricMatrix_Lapack>();
   assert(Sgdinv.getNumOfRows() == this->numOfAuxXC_);
 
   {
-    TlVector_BLAS myuGamma = Sgdinv * tmpVector;
+    TlDenseVector_Lapack myuGamma = Sgdinv * tmpVector;
     myuGamma.save(this->getMyuPath(RUN_RKS, this->m_nIteration));
   }
 
   if (xc > 0) {
-    TlVector_BLAS epsGamma = Sgdinv * eTmpVector;
+    TlDenseVector_Lapack epsGamma = Sgdinv * eTmpVector;
     if ((this->m_bMemorySave == false) && (this->m_bDiskUtilization == false)) {
       epsGamma.save("fl_Work/fl_Vct_Epsilon" +
                     TlUtils::xtos(this->m_nIteration));
@@ -772,22 +775,22 @@ void DfCalcGrid::calcXCcoef_RKS(const TlVector_BLAS& tmpVector,
   }
 }
 
-void DfCalcGrid::calcXCcoef_UKS(const TlVector_BLAS& tmpVectorA,
-                                const TlVector_BLAS& tmpVectorB,
-                                const TlVector_BLAS& eTmpVector) {
-  TlDenseSymmetricMatrix_BLAS_Old Sgdinv =
-      DfObject::getSgdInvMatrix<TlDenseSymmetricMatrix_BLAS_Old>();
+void DfCalcGrid::calcXCcoef_UKS(const TlDenseVector_Lapack& tmpVectorA,
+                                const TlDenseVector_Lapack& tmpVectorB,
+                                const TlDenseVector_Lapack& eTmpVector) {
+  TlDenseSymmetricMatrix_Lapack Sgdinv =
+      DfObject::getSgdInvMatrix<TlDenseSymmetricMatrix_Lapack>();
   assert(Sgdinv.getNumOfRows() == this->numOfAuxXC_);
 
   {
-    TlVector_BLAS myuGammaA = Sgdinv * tmpVectorA;
+    TlDenseVector_Lapack myuGammaA = Sgdinv * tmpVectorA;
     myuGammaA.save(this->getMyuPath(RUN_UKS_ALPHA, this->m_nIteration));
-    TlVector_BLAS myuGammaB = Sgdinv * tmpVectorB;
+    TlDenseVector_Lapack myuGammaB = Sgdinv * tmpVectorB;
     myuGammaB.save(this->getMyuPath(RUN_UKS_BETA, this->m_nIteration));
   }
 
   if (xc > 0) {
-    TlVector_BLAS epsGamma = Sgdinv * eTmpVector;
+    TlDenseVector_Lapack epsGamma = Sgdinv * eTmpVector;
     if ((this->m_bMemorySave == false) && (this->m_bDiskUtilization == false)) {
       epsGamma.save("fl_Work/fl_Vct_Epsilona" +
                     TlUtils::xtos(this->m_nIteration));

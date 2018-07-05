@@ -20,7 +20,7 @@
 #define DFDMATRIX_PARALLEL_H
 
 #include "DfDmatrix.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_vector_lapack.h"
 
 class DfDmatrix_Parallel : public DfDmatrix {
  public:
@@ -31,11 +31,11 @@ class DfDmatrix_Parallel : public DfDmatrix {
   virtual void main(DfObject::RUN_TYPE runType);
   void main_SCALAPACK(DfObject::RUN_TYPE runType);
 
-  virtual void checkOccupation(const TlVector_BLAS& prevOcc,
-                               const TlVector_BLAS& currOcc);
-  virtual void printOccupation(const TlVector_BLAS& occ);
+  virtual void checkOccupation(const TlDenseVector_Lapack& prevOcc,
+                               const TlDenseVector_Lapack& currOcc);
+  virtual void printOccupation(const TlDenseVector_Lapack& occ);
 
-  virtual TlVector_BLAS getOccVtr(DfObject::RUN_TYPE runType);
+  virtual TlDenseVector_Lapack getOccVtr(DfObject::RUN_TYPE runType);
 };
 
 #endif  // DFDMATRIX_PARALLEL_H

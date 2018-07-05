@@ -3,10 +3,12 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif // HAVE_CONFIG_H
+#endif  // HAVE_CONFIG_H
 
-#include "tl_dense_matrix_impl_object.h"
+#include "TlSerializeData.h"
 #include "tl_matrix_object.h"
+class TlDenseMatrix_ImplObject;
+class TlDenseGeneralMatrixObject;
 
 class TlDenseSymmetricMatrixObject : public TlMatrixObject {
  public:
@@ -36,6 +38,13 @@ class TlDenseSymmetricMatrixObject : public TlMatrixObject {
   // ---------------------------------------------------------------------------
   virtual double sum() const;
   virtual double trace() const;
+  virtual double getRMS() const;
+  virtual double getMaxAbsoluteElement(
+      TlMatrixObject::index_type* outRow = NULL,
+      TlMatrixObject::index_type* outCol = NULL) const;
+
+  void pivotedCholeskyDecomposition(TlDenseGeneralMatrixObject* pL,
+                                    const double threshold) const;
 
   // ---------------------------------------------------------------------------
   // I/O
@@ -43,11 +52,17 @@ class TlDenseSymmetricMatrixObject : public TlMatrixObject {
   virtual bool load(const std::string& filePath);
   virtual bool save(const std::string& filePath) const;
 
+  virtual bool saveText(const std::string& filePath) const;
+  virtual void saveText(std::ostream& os) const;
+
 #ifdef HAVE_HDF5
   virtual bool loadHdf5(const std::string& filepath, const std::string& h5path);
   virtual bool saveHdf5(const std::string& filepath,
                         const std::string& h5path) const;
 #endif  // HAVE_HDF5
+
+  void loadSerializeData(const TlSerializeData& data);
+  TlSerializeData getSerializeData() const;
 
   // ---------------------------------------------------------------------------
   // variables

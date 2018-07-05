@@ -38,6 +38,7 @@ class TlDenseVector_ImplEigen : public TlDenseVector_ImplObject {
   virtual double get(const TlDenseVectorObject::index_type i) const;
   virtual void set(const TlDenseVectorObject::index_type i, const double value);
   virtual void add(const TlDenseVectorObject::index_type i, const double value);
+  virtual void mul(const TlDenseVectorObject::index_type i, const double value);
 
   // ---------------------------------------------------------------------------
   // operators

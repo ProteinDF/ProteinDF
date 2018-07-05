@@ -27,9 +27,10 @@
 #include "CnError.h"
 #include "DfObject.h"
 #include "TlUtils.h"
+#include "tl_dense_general_matrix_lapack.h"
 
 class DfDmatrix;
-class TlVector_BLAS;
+class TlDenseVector_Lapack;
 
 /// 初期電子密度を求めるクラス
 class DfInitialGuess : public DfObject {
@@ -43,7 +44,7 @@ class DfInitialGuess : public DfObject {
   // virtual void createRho();
 
   void createOccupation();
-  virtual TlVector_BLAS createOccupation(const RUN_TYPE runType);
+  virtual TlDenseVector_Lapack createOccupation(const RUN_TYPE runType);
 
   virtual void createInitialGuessUsingHuckel();
   virtual void createInitialGuessUsingCore();
@@ -60,18 +61,18 @@ class DfInitialGuess : public DfObject {
   std::vector<int> getLevel(const std::string& level);
 
   /// 占有軌道情報を取得する
-  virtual TlVector_BLAS getOccupation(const RUN_TYPE runType);
+  virtual TlDenseVector_Lapack getOccupation(const RUN_TYPE runType);
 
   /// 占有軌道情報を保存する
   virtual void saveOccupation(const RUN_TYPE runType,
-                              const TlVector_BLAS& rOccupation);
+                              const TlDenseVector_Lapack& rOccupation);
 
  protected:
   /// LCAO行列を取得する
   // template <typename MatrixType>
   // MatrixType getLCAO(const RUN_TYPE runType);
 
-  TlDenseGeneralMatrix_BLAS_old getLCAO_LAPACK(const RUN_TYPE runType);
+  TlDenseGeneralMatrix_Lapack getLCAO_LAPACK(const RUN_TYPE runType);
   static std::string getLcaoPath_txt(const RUN_TYPE runType);
   static std::string getLcaoPath_bin(const RUN_TYPE runType);
 

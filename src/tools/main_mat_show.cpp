@@ -20,8 +20,8 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_matrix_utils.h"
 
 int main(int argc, char* argv[]) {
@@ -36,22 +36,22 @@ int main(int argc, char* argv[]) {
   }
 
   if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::RLHD) == true) {
-    TlDenseSymmetricMatrix_BLAS_Old M;
+    TlDenseSymmetricMatrix_Lapack M;
     M.load(sPath);
 
     if (bGuessMode == true) {
       M.saveText(std::cout);
     } else {
-      M.print(std::cout);
+        std::cout << M << std::endl;
     }
   } else if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::CSFD) == true) {
-    TlDenseGeneralMatrix_BLAS_old M;
+    TlDenseGeneralMatrix_Lapack M;
     M.load(sPath);
 
     if (bGuessMode == true) {
       M.saveText(std::cout);
     } else {
-      M.print(std::cout);
+        std::cout << M << std::endl;
     }
   } else {
     std::cerr << "unknown file type: " << sPath << std::endl;

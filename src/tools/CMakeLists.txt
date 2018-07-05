@@ -98,6 +98,14 @@ target_link_libraries(pdf-mat-add libpdf libpdftl)
 install(TARGETS pdf-mat-add RUNTIME DESTINATION bin)
 
 
+set(PDF_MAT_CHOLESKY_SOURCES
+  main_mat_cholesky.cpp
+  )
+add_executable(pdf-mat-cholesky ${PDF_MAT_CHOLESKY_SOURCES})
+target_link_libraries(pdf-mat-cholesky libpdf libpdftl)
+install(TARGETS pdf-mat-cholesky RUNTIME DESTINATION bin)
+
+
 set(PDF_MAT_DIAGONAL_SOURCES
   main_mat_diagonal.cpp
   )
@@ -168,6 +176,14 @@ set(PDF_MAT_SHOW_SOURCES
 add_executable(pdf-mat-show ${PDF_MAT_SHOW_SOURCES})
 target_link_libraries(pdf-mat-show libpdf libpdftl)
 install(TARGETS pdf-mat-show RUNTIME DESTINATION bin)
+
+
+set(PDF_MAT_SUM_SOURCES
+  main_mat_sum.cpp
+  )
+add_executable(pdf-mat-sum ${PDF_MAT_SUM_SOURCES})
+target_link_libraries(pdf-mat-sum libpdf libpdftl)
+install(TARGETS pdf-mat-sum RUNTIME DESTINATION bin)
 
 
 set(PDF_MAT_SYMMETRIZE_SOURCES

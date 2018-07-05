@@ -3,8 +3,8 @@
 
 #include "TlFile.h"
 #include "gtest/gtest.h"
-#include "tl_dense_general_matrix_blas_old.h"
 #include "tl_dense_general_matrix_io.h"
+#include "tl_dense_general_matrix_lapack.h"
 
 static const std::string mat_path = "temp.filemat.mat";
 
@@ -14,8 +14,8 @@ static void cleanup() {
   }
 }
 
-TlDenseGeneralMatrix_BLAS_old getMatrix(int row, int col) {
-  TlDenseGeneralMatrix_BLAS_old m(row, col);
+TlDenseGeneralMatrix_Lapack getMatrix(int row, int col) {
+  TlDenseGeneralMatrix_Lapack m(row, col);
 
   std::srand((unsigned int)time(NULL));
   for (int r = 0; r < row; ++r) {
@@ -40,7 +40,7 @@ TEST(TlFileGenericMatrix, construct) {
   EXPECT_EQ(true, TlFile::isExistFile(mat_path));
 
   {
-    TlDenseGeneralMatrix_BLAS_old a;
+    TlDenseGeneralMatrix_Lapack a;
     a.load(mat_path);
 
     EXPECT_EQ(row, a.getNumOfRows());
@@ -51,7 +51,7 @@ TEST(TlFileGenericMatrix, construct) {
 TEST(TlFileGenericMatrix, construct_by_existed) {
   cleanup();
 
-  TlDenseGeneralMatrix_BLAS_old m(100, 200);
+  TlDenseGeneralMatrix_Lapack m(100, 200);
   {
     m.set(3, 17, 51.0);
     m.set(0, 28, -1.0);
@@ -80,7 +80,7 @@ TEST(TlFileGenericMatrix, set) {
   }
 
   {
-    TlDenseGeneralMatrix_BLAS_old m;
+    TlDenseGeneralMatrix_Lapack m;
     m.load(mat_path);
 
     EXPECT_EQ(100, m.getNumOfRows());
@@ -99,7 +99,7 @@ TEST(TlFileGenericMatrix, add) {
 
   // prepare
   {
-    TlDenseGeneralMatrix_BLAS_old m(100, 200);
+    TlDenseGeneralMatrix_Lapack m(100, 200);
     m.set(3, 17, 51.0);
     m.set(0, 28, -1.0);
     m.save(mat_path);
@@ -112,7 +112,7 @@ TEST(TlFileGenericMatrix, add) {
 
   // check
   {
-    TlDenseGeneralMatrix_BLAS_old m;
+    TlDenseGeneralMatrix_Lapack m;
     m.load(mat_path);
     EXPECT_EQ(100, m.getNumOfRows());
     EXPECT_EQ(200, m.getNumOfCols());
@@ -147,7 +147,7 @@ TEST(TlFileGenericMatrix, resize) {
 //   // prepare
 //   const int row = 1000;
 //   const int col = 2000;
-//   TlDenseGeneralMatrix_BLAS_old m = getMatrix(row, col);
+//   TlDenseGeneralMatrix_Lapack m = getMatrix(row, col);
 //   m.save(mat_path);
 //
 //   TlFileGenericMatrix fm(mat_path);
@@ -170,7 +170,7 @@ TEST(TlFileGenericMatrix, resize) {
 //   // prepare
 //   const int row = 1000;
 //   const int col = 2000;
-//   TlDenseGeneralMatrix_BLAS_old m = getMatrix(row, col);
+//   TlDenseGeneralMatrix_Lapack m = getMatrix(row, col);
 //   m.save(mat_path);
 //
 //   TlFileGenericMatrix fm(mat_path);
@@ -193,7 +193,7 @@ TEST(TlFileGenericMatrix, resize) {
 //   // prepare
 //   const int row = 1000;
 //   const int col = 2000;
-//   TlDenseGeneralMatrix_BLAS_old m = getMatrix(row, col);
+//   TlDenseGeneralMatrix_Lapack m = getMatrix(row, col);
 //
 //   TlFileGenericMatrix fm(mat_path, row, col);
 //   for (int i = 0; i < row; ++i) {
@@ -217,7 +217,7 @@ TEST(TlFileGenericMatrix, resize) {
 //   // prepare
 //   const int row = 1000;
 //   const int col = 2000;
-//   TlDenseGeneralMatrix_BLAS_old m = getMatrix(row, col);
+//   TlDenseGeneralMatrix_Lapack m = getMatrix(row, col);
 //
 //   TlFileGenericMatrix fm(mat_path, row, col);
 //   for (int i = 0; i < col; ++i) {

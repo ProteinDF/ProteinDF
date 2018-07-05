@@ -1,5 +1,7 @@
 #include "tl_dense_symmetric_matrix_abstract.h"
 #include "tl_matrix_utils.h"
+#include <cassert>
+#include "TlUtils.h"
 
 bool TlDenseSymmetricMatrixAbstract::load(
     const std::string& filePath, double* pBuf,

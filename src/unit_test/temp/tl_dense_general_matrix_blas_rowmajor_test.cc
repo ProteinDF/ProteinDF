@@ -3,7 +3,7 @@
 #include "config.h"
 #include "gtest/gtest.h"
 #include "matrix_common.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_matrix_blas_row_major.h"
 
 static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();

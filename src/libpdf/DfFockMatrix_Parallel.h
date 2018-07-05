@@ -20,8 +20,9 @@
 #define DFFOCKMATRIX_PARALLEL_H
 
 #include "DfFockMatrix.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
-class TlDenseSymmetricMatrix_blacs;
+class TlDenseSymmetricMatrix_Scalapack;
 
 class DfFockMatrix_Parallel : public DfFockMatrix {
  public:
@@ -39,20 +40,20 @@ class DfFockMatrix_Parallel : public DfFockMatrix {
   virtual void mainDIRECT_UKS();
   virtual void mainDIRECT_ROKS();
 
-  virtual void setXC_RI(RUN_TYPE nRunType, TlDenseSymmetricMatrix_BLAS_Old& F);
-  virtual void setXC_DIRECT(RUN_TYPE nRunType, TlDenseSymmetricMatrix_BLAS_Old& F);
+  virtual void setXC_RI(RUN_TYPE nRunType, TlDenseSymmetricMatrix_Lapack& F);
+  virtual void setXC_DIRECT(RUN_TYPE nRunType, TlDenseSymmetricMatrix_Lapack& F);
 
-  virtual void setCoulomb(METHOD_TYPE nRunType, TlDenseSymmetricMatrix_BLAS_Old& F);
+  virtual void setCoulomb(METHOD_TYPE nRunType, TlDenseSymmetricMatrix_Lapack& F);
   void setCoulomb(const METHOD_TYPE nMethodType,
-                  TlDenseSymmetricMatrix_blacs& F);
+                  TlDenseSymmetricMatrix_Scalapack& F);
 
-  virtual TlDenseSymmetricMatrix_BLAS_Old getFpqMatrix(RUN_TYPE nRunType,
+  virtual TlDenseSymmetricMatrix_Lapack getFpqMatrix(RUN_TYPE nRunType,
                                                    int nIteration);
 
-  virtual TlVector_BLAS getRho(RUN_TYPE nRunType, int nIteration);
-  virtual TlVector_BLAS getMyu(RUN_TYPE nRunType, int nIteration);
+  virtual TlDenseVector_Lapack getRho(RUN_TYPE nRunType, int nIteration);
+  virtual TlDenseVector_Lapack getMyu(RUN_TYPE nRunType, int nIteration);
   // virtual void saveFpqMatrix(RUN_TYPE nRunType, const
-  // TlDenseSymmetricMatrix_BLAS_Old&
+  // TlDenseSymmetricMatrix_Lapack&
   // F);
 };
 

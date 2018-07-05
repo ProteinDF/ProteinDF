@@ -18,11 +18,13 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <cassert>
 
 #include "TlGetopt.h"
 #include "TlUtils.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_matrix_object.h"
 #include "tl_matrix_utils.h"
 
 enum ExtendMode {
@@ -32,18 +34,224 @@ enum ExtendMode {
   EXTEND_DIAGONAL_BLOCK
 };
 
-int extend_diagonal_block(const TlDenseGeneralMatrix_BLAS_old* pMat1,
-                          const TlDenseGeneralMatrix_BLAS_old* pMat2,
-                          const std::string& outputMatrixPath,
-                          const bool isSaveSymmetric, const bool isVerbose);
-int extend_row_wise(const TlDenseGeneralMatrix_BLAS_old* pMat1,
-                    const TlDenseGeneralMatrix_BLAS_old* pMat2,
-                    const std::string& outputMatrixPath, const bool isVerbose);
-int extend_column_wise(const TlDenseGeneralMatrix_BLAS_old* pMat1,
-                       const TlDenseGeneralMatrix_BLAS_old* pMat2,
+template <class OutputMatrixType>
+int extend_diagonal_block_generalType(const TlMatrixObject* pMat1,
+                                      const TlMatrixObject* pMat2,
+                                      const std::string& outputMatrixPath,
+                                      const bool isVerbose) {
+  const TlMatrixObject::index_type row1 = pMat1->getNumOfRows();
+  const TlMatrixObject::index_type col1 = pMat1->getNumOfCols();
+  const TlMatrixObject::index_type row2 = pMat2->getNumOfRows();
+  const TlMatrixObject::index_type col2 = pMat2->getNumOfCols();
+
+  const TlMatrixObject::index_type newRow = row1 + row2;
+  const TlMatrixObject::index_type newCol = col1 + col2;
+
+  if ((newRow == 0) || (newCol == 0)) {
+    std::cerr << TlUtils::format(
+                     "need not resize matrix, because the size of new matrix "
+                     "is (%d x %d)",
+                     newRow, newCol)
+              << std::endl;
+    return EXIT_SUCCESS;
+  }
+
+  {
+    OutputMatrixType mat3(newRow, newCol);
+
+    // input1
+    for (TlMatrixObject::index_type r = 0; r < row1; ++r) {
+      for (TlMatrixObject::index_type c = 0; c < col1; ++c) {
+        mat3.set(r, c, pMat1->get(r, c));
+      }
+    }
+
+    // input2
+    for (TlMatrixObject::index_type r = 0; r < row2; ++r) {
+      for (TlMatrixObject::index_type c = 0; c < col2; ++c) {
+        mat3.set(row1 + r, col1 + c, pMat2->get(r, c));
+      }
+    }
+
+    if (isVerbose == true) {
+      std::cerr << "save matrix: " << outputMatrixPath << std::endl;
+    }
+    mat3.save(outputMatrixPath);
+  }
+
+  return EXIT_SUCCESS;
+}
+
+template <class OutputMatrixType>
+int extend_diagonal_block_symmetricType(const TlMatrixObject* pMat1,
+                                        const TlMatrixObject* pMat2,
+                                        const std::string& outputMatrixPath,
+                                        const bool isVerbose) {
+  const TlMatrixObject::index_type row1 = pMat1->getNumOfRows();
+  const TlMatrixObject::index_type col1 = pMat1->getNumOfCols();
+  const TlMatrixObject::index_type row2 = pMat2->getNumOfRows();
+  const TlMatrixObject::index_type col2 = pMat2->getNumOfCols();
+
+  const TlMatrixObject::index_type newRow = row1 + row2;
+  const TlMatrixObject::index_type newCol = col1 + col2;
+
+  if ((newRow == 0) || (newCol == 0)) {
+    std::cerr << TlUtils::format(
+                     "need not resize matrix, because the size of new matrix "
+                     "is (%d x %d)",
+                     newRow, newCol)
+              << std::endl;
+    return EXIT_SUCCESS;
+  }
+
+  {
+    assert(row1 == col1);
+    assert(row2 == col2);
+    assert(newRow == newCol);
+
+    OutputMatrixType mat3(newRow);
+
+    // inpt1
+    for (TlMatrixObject::index_type r = 0; r < row1; ++r) {
+      for (TlMatrixObject::index_type c = 0; c <= r; ++c) {
+        mat3.set(r, c, pMat1->get(r, c));
+      }
+    }
+
+    // input2
+    for (TlMatrixObject::index_type r = 0; r < row2; ++r) {
+      for (TlMatrixObject::index_type c = 0; c <= r; ++c) {
+        mat3.set(row1 + r, col1 + c, pMat2->get(r, c));
+      }
+    }
+
+    if (isVerbose == true) {
+      std::cerr << "save matrix: " << outputMatrixPath << std::endl;
+    }
+    mat3.save(outputMatrixPath);
+  }
+
+  return EXIT_SUCCESS;
+}
+
+template <class OutputMatrixType>
+int extend_row_wise(const TlMatrixObject* pMat1, const TlMatrixObject* pMat2,
+                    const std::string& outputMatrixPath, const bool isVerbose) {
+  const TlMatrixObject::index_type row1 = pMat1->getNumOfRows();
+  const TlMatrixObject::index_type col1 = pMat1->getNumOfCols();
+  const TlMatrixObject::index_type row2 = pMat2->getNumOfRows();
+  const TlMatrixObject::index_type col2 = pMat2->getNumOfCols();
+
+  if (col1 != col2) {
+    std::cerr << TlUtils::format("The two col dims are mismatch. %d != %d",
+                                 col1, col2)
+              << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  const TlMatrixObject::index_type newRow = row1 + row2;
+  const TlMatrixObject::index_type newCol = col1;
+  assert(col1 == col2);
+
+  if ((newRow == 0) || (newCol == 0)) {
+    std::cerr << TlUtils::format(
+                     "need not resize matrix, because the size of new matrix "
+                     "is (%d x %d)",
+                     newRow, newCol)
+              << std::endl;
+    return EXIT_SUCCESS;
+  }
+
+  OutputMatrixType mat3(newRow, newCol);
+  // input1
+  for (TlMatrixObject::index_type r = 0; r < row1; ++r) {
+    for (TlMatrixObject::index_type c = 0; c < col1; ++c) {
+      const double v = pMat1->get(r, c);
+      mat3.set(r, c, v);
+    }
+  }
+
+  // input2
+  for (TlMatrixObject::index_type r = 0; r < row2; ++r) {
+    for (TlMatrixObject::index_type c = 0; c < newCol; ++c) {
+      const double v = pMat2->get(r, c);
+      mat3.set(row1 + r, c, v);
+    }
+  }
+
+  mat3.save(outputMatrixPath);
+  return EXIT_SUCCESS;
+}
+
+template <class OutputMatrixType>
+int extend_column_wise(const TlMatrixObject* pMat1, const TlMatrixObject* pMat2,
                        const std::string& outputMatrixPath,
-                       const bool isVerbose);
-void showHelp(const std::string& name);
+                       const bool isVerbose) {
+  const TlMatrixObject::index_type row1 = pMat1->getNumOfRows();
+  const TlMatrixObject::index_type col1 = pMat1->getNumOfCols();
+  const TlMatrixObject::index_type row2 = pMat2->getNumOfRows();
+  const TlMatrixObject::index_type col2 = pMat2->getNumOfCols();
+
+  if (row1 != row2) {
+    std::cerr << TlUtils::format("The two row dims are mismatch. %d != %d",
+                                 row1, row2)
+              << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  const TlMatrixObject::index_type newRow = row1;
+  assert(row1 == row2);
+  const TlMatrixObject::index_type newCol = col1 + col2;
+
+  if ((newRow == 0) || (newCol == 0)) {
+    std::cerr << TlUtils::format(
+                     "need not resize matrix, because the size of new matrix "
+                     "is (%d x %d)",
+                     newRow, newCol)
+              << std::endl;
+    return EXIT_SUCCESS;
+  }
+
+  OutputMatrixType mat3(newRow, newCol);
+
+  // input1
+  for (TlMatrixObject::index_type r = 0; r < row1; ++r) {
+    for (TlMatrixObject::index_type c = 0; c < col1; ++c) {
+      const double v = pMat1->get(r, c);
+      mat3.set(r, c, v);
+    }
+  }
+
+  // input2
+  for (TlMatrixObject::index_type c = 0; c < col2; ++c) {
+    for (TlMatrixObject::index_type r = 0; r < newRow; ++r) {
+      const double v = pMat2->get(r, c);
+      mat3.set(r, col1 + c, v);
+    }
+  }
+
+  mat3.save(outputMatrixPath);
+  return EXIT_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Main
+// -----------------------------------------------------------------------------
+void showHelp(const std::string& name) {
+  std::cout << TlUtils::format(
+                   "%s extend mode [options] base_matrix_path "
+                   "reference_matrix_path  output_path",
+                   name.c_str())
+            << std::endl;
+  std::cout << " OPTIONS:" << std::endl;
+  std::cout << "extend mode" << std::endl;
+  std::cout << "  -d:      extend diagonal block" << std::endl;
+  std::cout << "  -r:      extend row-wise" << std::endl;
+  std::cout << "  -c:      extend coloumn-wise" << std::endl;
+  std::cout << std::endl;
+  std::cout << "  -h:      show help" << std::endl;
+  std::cout << "  -v:      verbose" << std::endl;
+}
 
 int main(int argc, char* argv[]) {
   TlGetopt opt(argc, argv, "drchv");
@@ -78,26 +286,21 @@ int main(int argc, char* argv[]) {
 
   bool copyMode = false;
 
-  TlDenseGeneralMatrix_BLAS_old* pMat1 = NULL;
-  // TlMatrixObject::index_type row1 = 0;
-  // TlMatrixObject::index_type col1 = 0;
+  TlMatrixObject* pMat1 = NULL;
   bool isSymmetric1 = false;
   if (isVerbose == true) {
     std::cerr << "load matrix: " << baseMatrixPath << std::endl;
   }
   if (TlMatrixUtils::isLoadable(baseMatrixPath, TlMatrixObject::RLHD)) {
-    pMat1 = new TlDenseSymmetricMatrix_BLAS_Old();
+    // TlDenseSymmetricMatrix_Lapack tmp;
+    // tmp.load(baseMatrixPath);
+    // pMat1 = new TlDenseGeneralMatrix_Lapack(tmp);
+    pMat1 = new TlDenseSymmetricMatrix_Lapack();
+    pMat1->load(baseMatrixPath);
     isSymmetric1 = true;
-
-    pMat1->load(baseMatrixPath);
-    // row1 = pMat1->getNumOfRows();
-    // col1 = pMat1->getNumOfCols();
   } else if (TlMatrixUtils::isLoadable(baseMatrixPath, TlMatrixObject::CSFD)) {
-    pMat1 = new TlDenseGeneralMatrix_BLAS_old();
-
+    pMat1 = new TlDenseGeneralMatrix_Lapack();
     pMat1->load(baseMatrixPath);
-    // row1 = pMat1->getNumOfRows();
-    // col1 = pMat1->getNumOfCols();
   } else {
     std::cerr << TlUtils::format("cannot load: %s", baseMatrixPath.c_str())
               << std::endl;
@@ -106,26 +309,25 @@ int main(int argc, char* argv[]) {
     copyMode = true;
   }
 
-  TlDenseGeneralMatrix_BLAS_old* pMat2 = NULL;
-  // TlMatrixObject::index_type row2 = 0;
-  // TlMatrixObject::index_type col2 = 0;
+  TlMatrixObject* pMat2 = NULL;
   bool isSymmetric2 = false;
   if (isVerbose == true) {
     std::cerr << "load matrix: " << refMatrixPath << std::endl;
   }
   if (TlMatrixUtils::isLoadable(refMatrixPath, TlMatrixObject::RLHD)) {
-    pMat2 = new TlDenseSymmetricMatrix_BLAS_Old();
+    // TlDenseSymmetricMatrix_Lapack tmp;
+    // tmp.load(refMatrixPath);
+    pMat2 = new TlDenseSymmetricMatrix_Lapack();
+    pMat2->load(refMatrixPath);
     isSymmetric2 = true;
   } else if (TlMatrixUtils::isLoadable(refMatrixPath, TlMatrixObject::CSFD)) {
-    pMat2 = new TlDenseGeneralMatrix_BLAS_old();
+    pMat2 = new TlDenseGeneralMatrix_Lapack();
+    pMat2->load(refMatrixPath);
   } else {
     std::cerr << TlUtils::format("cannot load: %s", refMatrixPath.c_str())
               << std::endl;
     return EXIT_FAILURE;
   }
-  pMat2->load(refMatrixPath);
-  // row2 = pMat2->getNumOfRows();
-  // col2 = pMat2->getNumOfCols();
 
   int retval = EXIT_FAILURE;
   if (copyMode) {
@@ -134,18 +336,26 @@ int main(int argc, char* argv[]) {
   } else {
     switch (extendMode) {
       case EXTEND_ROW_WISE:
-        retval = extend_row_wise(pMat1, pMat2, outputMatrixPath, isVerbose);
+        retval = extend_row_wise<TlDenseGeneralMatrix_Lapack>(
+            pMat1, pMat2, outputMatrixPath, isVerbose);
         break;
 
       case EXTEND_COL_WISE:
-        retval = extend_column_wise(pMat1, pMat2, outputMatrixPath, isVerbose);
+        retval = extend_column_wise<TlDenseGeneralMatrix_Lapack>(
+            pMat1, pMat2, outputMatrixPath, isVerbose);
         break;
 
-      case EXTEND_DIAGONAL_BLOCK:
-        retval = extend_diagonal_block(
-            pMat1, pMat2, outputMatrixPath,
-            ((isSymmetric1 == true) && (isSymmetric2 == true)), isVerbose);
-        break;
+      case EXTEND_DIAGONAL_BLOCK: {
+        if ((isSymmetric1 == true) && (isSymmetric2 == true)) {
+          retval = extend_diagonal_block_symmetricType<
+              TlDenseSymmetricMatrix_Lapack>(pMat1, pMat2, outputMatrixPath,
+                                             isVerbose);
+        } else {
+          retval =
+              extend_diagonal_block_generalType<TlDenseGeneralMatrix_Lapack>(
+                  pMat1, pMat2, outputMatrixPath, isVerbose);
+        }
+      } break;
 
       default:
         std::cerr << "program error. " << __FILE__ << __LINE__ << std::endl;
@@ -159,161 +369,4 @@ int main(int argc, char* argv[]) {
   pMat2 = NULL;
 
   return retval;
-}
-
-int extend_diagonal_block(const TlDenseGeneralMatrix_BLAS_old* pMat1,
-                          const TlDenseGeneralMatrix_BLAS_old* pMat2,
-                          const std::string& outputMatrixPath,
-                          const bool isSaveSymmetric, const bool isVerbose) {
-  const TlDenseGeneralMatrix_BLAS_old::index_type row1 = pMat1->getNumOfRows();
-  const TlDenseGeneralMatrix_BLAS_old::index_type col1 = pMat1->getNumOfCols();
-  const TlDenseGeneralMatrix_BLAS_old::index_type row2 = pMat2->getNumOfRows();
-  const TlDenseGeneralMatrix_BLAS_old::index_type col2 = pMat2->getNumOfCols();
-
-  const TlDenseGeneralMatrix_BLAS_old::index_type newRow = row1 + row2;
-  const TlDenseGeneralMatrix_BLAS_old::index_type newCol = col1 + col2;
-
-  if ((newRow == 0) || (newCol == 0)) {
-    std::cerr << TlUtils::format(
-                     "need not resize matrix, because the size of new matrix "
-                     "is (%d x %d)",
-                     newRow, newCol)
-              << std::endl;
-    return EXIT_SUCCESS;
-  }
-
-  if (isSaveSymmetric) {
-    assert(row1 == col1);
-    assert(row2 == col2);
-    assert(newRow == newCol);
-
-    TlDenseSymmetricMatrix_BLAS_Old mat3 = *pMat1;
-    mat3.resize(newRow);
-
-    for (TlDenseGeneralMatrix_BLAS_old::index_type r = 0; r < row2; ++r) {
-      for (TlDenseGeneralMatrix_BLAS_old::index_type c = 0; c <= r; ++c) {
-        mat3.set(row1 + r, col1 + c, pMat2->get(r, c));
-      }
-    }
-
-    if (isVerbose == true) {
-      std::cerr << "save matrix: " << outputMatrixPath << std::endl;
-    }
-    mat3.save(outputMatrixPath);
-  } else {
-    TlDenseGeneralMatrix_BLAS_old mat3 = *pMat1;
-    mat3.resize(newRow, newCol);
-
-    for (TlDenseGeneralMatrix_BLAS_old::index_type r = 0; r < row2; ++r) {
-      for (TlDenseGeneralMatrix_BLAS_old::index_type c = 0; c < col2; ++c) {
-        mat3.set(row1 + r, col1 + c, pMat2->get(r, c));
-      }
-    }
-
-    if (isVerbose == true) {
-      std::cerr << "save matrix: " << outputMatrixPath << std::endl;
-    }
-    mat3.save(outputMatrixPath);
-  }
-
-  return EXIT_SUCCESS;
-}
-
-int extend_row_wise(const TlDenseGeneralMatrix_BLAS_old* pMat1,
-                    const TlDenseGeneralMatrix_BLAS_old* pMat2,
-                    const std::string& outputMatrixPath, const bool isVerbose) {
-  const TlDenseGeneralMatrix_BLAS_old::index_type row1 = pMat1->getNumOfRows();
-  const TlDenseGeneralMatrix_BLAS_old::index_type col1 = pMat1->getNumOfCols();
-  const TlDenseGeneralMatrix_BLAS_old::index_type row2 = pMat2->getNumOfRows();
-  const TlDenseGeneralMatrix_BLAS_old::index_type col2 = pMat2->getNumOfCols();
-
-  if (col1 != col2) {
-    std::cerr << TlUtils::format("The two col dims are mismatch. %d != %d",
-                                 col1, col2)
-              << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  const TlDenseGeneralMatrix_BLAS_old::index_type newRow = row1 + row2;
-  const TlDenseGeneralMatrix_BLAS_old::index_type newCol = col1;
-  assert(col1 == col2);
-
-  if ((newRow == 0) || (newCol == 0)) {
-    std::cerr << TlUtils::format(
-                     "need not resize matrix, because the size of new matrix "
-                     "is (%d x %d)",
-                     newRow, newCol)
-              << std::endl;
-    return EXIT_SUCCESS;
-  }
-
-  TlDenseGeneralMatrix_BLAS_old mat3 = *pMat1;
-  mat3.resize(newRow, newCol);
-  for (TlDenseGeneralMatrix_BLAS_old::index_type r = 0; r < row2; ++r) {
-    for (TlDenseGeneralMatrix_BLAS_old::index_type c = 0; c < newCol; ++c) {
-      const double v = pMat2->get(r, c);
-      mat3.set(row1 + r, c, v);
-    }
-  }
-
-  mat3.save(outputMatrixPath);
-  return EXIT_SUCCESS;
-}
-
-int extend_column_wise(const TlDenseGeneralMatrix_BLAS_old* pMat1,
-                       const TlDenseGeneralMatrix_BLAS_old* pMat2,
-                       const std::string& outputMatrixPath,
-                       const bool isVerbose) {
-  const TlDenseGeneralMatrix_BLAS_old::index_type row1 = pMat1->getNumOfRows();
-  const TlDenseGeneralMatrix_BLAS_old::index_type col1 = pMat1->getNumOfCols();
-  const TlDenseGeneralMatrix_BLAS_old::index_type row2 = pMat2->getNumOfRows();
-  const TlDenseGeneralMatrix_BLAS_old::index_type col2 = pMat2->getNumOfCols();
-
-  if (row1 != row2) {
-    std::cerr << TlUtils::format("The two row dims are mismatch. %d != %d",
-                                 row1, row2)
-              << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  const TlDenseGeneralMatrix_BLAS_old::index_type newRow = row1;
-  assert(row1 == row2);
-  const TlDenseGeneralMatrix_BLAS_old::index_type newCol = col1 + col2;
-
-  if ((newRow == 0) || (newCol == 0)) {
-    std::cerr << TlUtils::format(
-                     "need not resize matrix, because the size of new matrix "
-                     "is (%d x %d)",
-                     newRow, newCol)
-              << std::endl;
-    return EXIT_SUCCESS;
-  }
-
-  TlDenseGeneralMatrix_BLAS_old mat3 = *pMat1;
-  mat3.resize(newRow, newCol);
-  for (TlDenseGeneralMatrix_BLAS_old::index_type c = 0; c < col2; ++c) {
-    for (TlDenseGeneralMatrix_BLAS_old::index_type r = 0; r < newRow; ++r) {
-      const double v = pMat2->get(r, c);
-      mat3.set(r, col1 + c, v);
-    }
-  }
-
-  mat3.save(outputMatrixPath);
-  return EXIT_SUCCESS;
-}
-
-void showHelp(const std::string& name) {
-  std::cout << TlUtils::format(
-                   "%s extend mode [options] base_matrix_path "
-                   "reference_matrix_path  output_path",
-                   name.c_str())
-            << std::endl;
-  std::cout << " OPTIONS:" << std::endl;
-  std::cout << "extend mode" << std::endl;
-  std::cout << "  -d:      extend diagonal block" << std::endl;
-  std::cout << "  -r:      extend row-wise" << std::endl;
-  std::cout << "  -c:      extend coloumn-wise" << std::endl;
-  std::cout << std::endl;
-  std::cout << "  -h:      show help" << std::endl;
-  std::cout << "  -v:      verbose" << std::endl;
 }

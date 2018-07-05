@@ -33,7 +33,7 @@ TlMoField::TlMoField(const TlSerializeData& param)
 
 TlMoField::~TlMoField() {}
 
-std::vector<double> TlMoField::makeMoFld(const TlVector_BLAS& MO,
+std::vector<double> TlMoField::makeMoFld(const TlDenseVector_Lapack& MO,
                                          const std::vector<TlPosition>& grids) {
   const std::size_t numOfGrids = grids.size();
   std::vector<double> values(numOfGrids, 0.0);

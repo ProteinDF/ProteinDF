@@ -2,7 +2,7 @@
 #include <limits>
 #include "gtest/gtest.h"
 #include "tl_dense_general_matrix_arrays_roworiented.h"
-#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
 
 static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 
@@ -55,7 +55,7 @@ TEST(TlDenseGeneralMatrix_arrays_RowOriented, contents) {
   const int maxRow = 100;
   const int maxCol = 80;
   TlDenseGeneralMatrix_arrays_RowOriented vecA(maxRow, maxCol);
-  TlDenseGeneralMatrix_BLAS_old matA(maxRow, maxCol);
+  TlDenseGeneralMatrix_Lapack matA(maxRow, maxCol);
 
   // setup
   int count = 0;
@@ -81,7 +81,7 @@ TEST(TlDenseGeneralMatrix_arrays_RowOriented, save_load) {
   const int maxRow = 100;
   const int maxCol = 80;
   TlDenseGeneralMatrix_arrays_RowOriented vecA(maxRow, maxCol);
-  TlDenseGeneralMatrix_BLAS_old matA(maxRow, maxCol);
+  TlDenseGeneralMatrix_Lapack matA(maxRow, maxCol);
 
   // setup
   int count = 0;
@@ -114,7 +114,7 @@ TEST(TlDenseGeneralMatrix_arrays_RowOriented, toTlMatrix) {
   const int maxRow = 100;
   const int maxCol = 80;
   TlDenseGeneralMatrix_arrays_RowOriented vecA(maxRow, maxCol);
-  TlDenseGeneralMatrix_BLAS_old matA(maxRow, maxCol);
+  TlDenseGeneralMatrix_Lapack matA(maxRow, maxCol);
 
   // setup
   int count = 0;
@@ -128,7 +128,7 @@ TEST(TlDenseGeneralMatrix_arrays_RowOriented, toTlMatrix) {
     }
   }
 
-  TlDenseGeneralMatrix_BLAS_old matB = vecA.getTlMatrixObject();
+  TlDenseGeneralMatrix_Lapack matB = vecA.getTlMatrixObject();
 
   // test
   for (int r = 0; r < maxRow; ++r) {

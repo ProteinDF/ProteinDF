@@ -24,7 +24,7 @@
 #endif  // HAVE_CONFIG_H
 
 #include "TlLogging.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_vector_lapack.h"
 
 /// MAX_INDEX_BITSが指定するビット数まで行列の次数を確保できる。
 /// 例えばMAX_INDEX_BITS=20であれば、1,048,576まで行列が確保できる。
@@ -172,5 +172,7 @@ class TlMatrixObject {
  protected:
   TlLogging& log_;
 };
+
+std::ostream& operator<<(std::ostream& stream, const TlMatrixObject& mat);
 
 #endif  // TL_MATRIX_OBJECT_H

@@ -24,6 +24,8 @@ class TlDenseVector_ImplObject {
                    const double value) = 0;
   virtual void add(const TlDenseVectorObject::index_type i,
                    const double value) = 0;
+  virtual void mul(const TlDenseVectorObject::index_type i,
+                   const double value) = 0;
 
   // ---------------------------------------------------------------------------
   // operations

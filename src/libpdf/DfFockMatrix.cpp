@@ -20,9 +20,9 @@
 #include "DfEriX.h"
 #include "DfOverlapX.h"
 #include "Fl_Geometry.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 DfFockMatrix::DfFockMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
   this->isUseNewEngine_ = (*pPdfParam)["new_engine"].getBoolean();
@@ -70,63 +70,64 @@ void DfFockMatrix::DfFockMatrixMain() {
 }
 
 void DfFockMatrix::mainDIRECT_RKS() {
-  this->mainDIRECT_RKS<TlDenseSymmetricMatrix_BLAS_Old>();
+  this->mainDIRECT_RKS<TlDenseSymmetricMatrix_Lapack>();
 }
 
 void DfFockMatrix::mainDIRECT_UKS() {
-  this->mainDIRECT_UKS<TlDenseSymmetricMatrix_BLAS_Old>();
+  this->mainDIRECT_UKS<TlDenseSymmetricMatrix_Lapack>();
 }
 
 void DfFockMatrix::mainDIRECT_ROKS() {
-  this->mainDIRECT_ROKS<TlDenseGeneralMatrix_BLAS_old, TlDenseSymmetricMatrix_BLAS_Old,
-                        TlVector_BLAS, DfEriX, DfOverlapX>();
+  this->mainDIRECT_ROKS<TlDenseGeneralMatrix_Lapack,
+                        TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack,
+                        DfEriX, DfOverlapX>();
 }
 
 void DfFockMatrix::setXC_RI(const RUN_TYPE nRunType,
-                            TlDenseSymmetricMatrix_BLAS_Old& F) {
-  this->setXC_RI<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS, DfOverlapX>(
-      nRunType, F);
+                            TlDenseSymmetricMatrix_Lapack& F) {
+  this->setXC_RI<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack,
+                 DfOverlapX>(nRunType, F);
 }
 
 void DfFockMatrix::setXC_DIRECT(const RUN_TYPE nRunType,
-                                TlDenseSymmetricMatrix_BLAS_Old& F) {
-  this->setXC_DIRECT<TlDenseSymmetricMatrix_BLAS_Old>(nRunType, F);
+                                TlDenseSymmetricMatrix_Lapack& F) {
+  this->setXC_DIRECT<TlDenseSymmetricMatrix_Lapack>(nRunType, F);
 }
 
 void DfFockMatrix::setCoulomb(const METHOD_TYPE nMethodType,
-                              TlDenseSymmetricMatrix_BLAS_Old& F) {
-  TlDenseSymmetricMatrix_BLAS_Old J(this->m_nNumOfAOs);
+                              TlDenseSymmetricMatrix_Lapack& F) {
+  TlDenseSymmetricMatrix_Lapack J(this->m_nNumOfAOs);
   if (this->J_engine_ == J_ENGINE_RI_J) {
-    this->setCoulomb<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS, DfEriX>(
-        nMethodType, J);
+    this->setCoulomb<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack,
+                     DfEriX>(nMethodType, J);
     // if (this->isUseNewEngine_ == true) {
     //     this->logger(" use new engine\n");
-    //     this->setCoulomb<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS,
+    //     this->setCoulomb<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack,
     //     DfEriX>(nMethodType,
     //     J);
     // } else {
-    //     this->setCoulomb<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS,
+    //     this->setCoulomb<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack,
     //     DfEri>(nMethodType, J);
     // }
     F += J;
 
     // update method
     if (this->m_nIteration > 1) {
-      const TlDenseSymmetricMatrix_BLAS_Old prevJ =
-          DfObject::getJMatrix<TlDenseSymmetricMatrix_BLAS_Old>(this->m_nIteration -
-                                                            1);
+      const TlDenseSymmetricMatrix_Lapack prevJ =
+          DfObject::getJMatrix<TlDenseSymmetricMatrix_Lapack>(
+              this->m_nIteration - 1);
       J += prevJ;
     }
 
     this->saveJMatrix(this->m_nIteration, J);
   } else {
-    J = this->getJMatrix<TlDenseSymmetricMatrix_BLAS_Old>(this->m_nIteration);
+    J = this->getJMatrix<TlDenseSymmetricMatrix_Lapack>(this->m_nIteration);
 
     // update method
     if (this->m_nIteration > 1) {
-      const TlDenseSymmetricMatrix_BLAS_Old prevJ =
-          DfObject::getJMatrix<TlDenseSymmetricMatrix_BLAS_Old>(this->m_nIteration -
-                                                            1);
+      const TlDenseSymmetricMatrix_Lapack prevJ =
+          DfObject::getJMatrix<TlDenseSymmetricMatrix_Lapack>(
+              this->m_nIteration - 1);
       J -= prevJ;
     }
 
@@ -134,26 +135,26 @@ void DfFockMatrix::setCoulomb(const METHOD_TYPE nMethodType,
   }
 }
 
-TlDenseSymmetricMatrix_BLAS_Old DfFockMatrix::getFpqMatrix(const RUN_TYPE nRunType,
-                                                       const int nIteration) {
-  return (DfObject::getFpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(nRunType,
-                                                              nIteration));
+TlDenseSymmetricMatrix_Lapack DfFockMatrix::getFpqMatrix(
+    const RUN_TYPE nRunType, const int nIteration) {
+  return (DfObject::getFpqMatrix<TlDenseSymmetricMatrix_Lapack>(nRunType,
+                                                                nIteration));
 }
 
-TlVector_BLAS DfFockMatrix::getRho(const RUN_TYPE nRunType,
-                                   const int nIteration) {
-  return (DfObject::getRho<TlVector_BLAS>(nRunType, nIteration));
+TlDenseVector_Lapack DfFockMatrix::getRho(const RUN_TYPE nRunType,
+                                          const int nIteration) {
+  return (DfObject::getRho<TlDenseVector_Lapack>(nRunType, nIteration));
 }
 
-TlVector_BLAS DfFockMatrix::getMyu(const RUN_TYPE nRunType,
-                                   const int nIteration) {
-  return (DfObject::getMyu<TlVector_BLAS>(nRunType, nIteration));
+TlDenseVector_Lapack DfFockMatrix::getMyu(const RUN_TYPE nRunType,
+                                          const int nIteration) {
+  return (DfObject::getMyu<TlDenseVector_Lapack>(nRunType, nIteration));
 }
 
 // void DfFockMatrix::saveFpqMatrix(const RUN_TYPE nRunType, const
-// TlDenseSymmetricMatrix_BLAS_Old& F)
+// TlDenseSymmetricMatrix_Lapack& F)
 // {
-//     DfObject::saveFpqMatrix<TlDenseSymmetricMatrix_BLAS_Old>(nRunType,
+//     DfObject::saveFpqMatrix<TlDenseSymmetricMatrix_Lapack>(nRunType,
 //     this->m_nIteration,
 //     F);
 // }

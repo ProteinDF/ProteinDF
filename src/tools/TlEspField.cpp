@@ -24,7 +24,7 @@
 #include "TlPosition.h"
 #include "TlSerializeData.h"
 #include "TlUtils.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 #define AU_PER_ANG 1.889762
 
@@ -33,7 +33,7 @@ TlEspField::TlEspField(const TlSerializeData& param) : param_(param) {}
 TlEspField::~TlEspField() {}
 
 std::vector<double> TlEspField::makeEspFld(
-    const TlDenseSymmetricMatrix_BLAS_Old& P,
+    const TlDenseSymmetricMatrix_Lapack& P,
     const std::vector<TlPosition>& grids) {
   DfHpqX dfHpq(&this->param_);
 
