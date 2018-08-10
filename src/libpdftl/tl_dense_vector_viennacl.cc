@@ -22,7 +22,6 @@ TlDenseVector_ViennaCL::~TlDenseVector_ViennaCL() {
 // ---------------------------------------------------------------------------
 TlDenseVector_ViennaCL& TlDenseVector_ViennaCL::operator=(
     const TlDenseVector_ViennaCL& rhs) {
-  std::cerr << "TlDenseVector_ViennaCL::operator=()" << std::endl;
   if (this != &rhs) {
     delete this->pImpl_;
     this->pImpl_ = NULL;

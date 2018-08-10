@@ -253,6 +253,22 @@ void DfObject::setParam(const TlSerializeData& data) {
   this->isRI_K_ = data["RI_K"].getBoolean();
 
   // matrix operation
+  this->linearAlgebraPackage_ = DfObject::LAP_LAPACK;
+  {
+    const std::string linearAlgebraPackage = TlUtils::toUpper(data["linear_algebra_package"].getStr());
+    if (linearAlgebraPackage == "EIGEN") {
+      this->linearAlgebraPackage_ = DfObject::LAP_EIGEN;
+    }
+    if (linearAlgebraPackage == "VIENNACL") {
+      this->linearAlgebraPackage_ = DfObject::LAP_VIENNACL;
+    }
+#ifdef HAVE_SCALAPACK
+    if (linearAlgebraPackage == "SCALAPACK") {
+      this->linearAlgebraPackage_ = DfObject::LAP_SCALAPACK;
+    }
+#endif // HAVE_SCALAPACK
+  }
+
   this->m_bUsingSCALAPACK = false;
 #ifdef HAVE_SCALAPACK
   this->m_bUsingSCALAPACK =

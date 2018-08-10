@@ -322,7 +322,7 @@ set(PDF_BENCH_MAT_SOURCES
   main_bench_mat.cpp
   )
 add_executable(pdf-bench-mat ${PDF_BENCH_MAT_SOURCES})
-target_link_libraries(pdf-bench-mat libpdf libpdftl ${OpenCL_LIBRARIES})
+target_link_libraries(pdf-bench-mat libpdf libpdftl "${OpenCL_LIBRARIES}")
 install(TARGETS pdf-bench-mat RUNTIME DESTINATION bin)
 
 
@@ -333,7 +333,7 @@ if (HDF5_FOUND)
     main_mat2h5.cpp
     )
   add_executable(pdf-mat2h5 ${PDF_MAT2H5_SOURCES})
-  target_link_libraries(pdf-mat2h5 libpdf libpdftl)
+  target_link_libraries(pdf-mat2h5 libpdf libpdftl "${HDF5_CXX_LIBRARIES}")
   install(TARGETS pdf-mat2h5 RUNTIME DESTINATION bin)
 endif (HDF5_FOUND)
 

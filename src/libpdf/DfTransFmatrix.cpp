@@ -19,20 +19,64 @@
 #include "DfTransFmatrix.h"
 #include "CnError.h"
 #include "TlUtils.h"
-#include "tl_dense_general_matrix_lapack.h"
-#include "tl_dense_symmetric_matrix_lapack.h"
+#include "common_matrix.h"
 
 DfTransFmatrix::DfTransFmatrix(TlSerializeData* pPdfParam, bool bExecDiis)
-    : DfObject(pPdfParam), m_bExecDiis(bExecDiis) {}
+    : DfObject(pPdfParam), m_bExecDiis(bExecDiis) {
+  {
+    const std::string linearAlgebraPackage = TlUtils::toUpper(
+        (*(this->pPdfParam_))["linear_algebra_package/trans_F"].getStr());
+#ifdef HAVE_EINGEN3
+    if (linearAlgebraPackage == "EIGEN") {
+      this->linearAlgebraPackage_ = DfObject::LAP_EIGEN;
+    }
+#endif  // HAVE_EIGEN3
+#ifdef HAVE_LAPACK
+    if (linearAlgebraPackage == "LAPACK") {
+      this->linearAlgebraPackage_ = DfObject::LAP_LAPACK;
+    }
+#endif  // HAVE_LAPACK
+#ifdef HAVE_VIENNACL
+    if (linearAlgebraPackage == "VIENNACL") {
+      this->linearAlgebraPackage_ = DfObject::LAP_VIENNACL;
+    }
+#endif  // HAVE_VIENNACL
+  }
+}
 
 DfTransFmatrix::~DfTransFmatrix() {}
 
 void DfTransFmatrix::DfTrsFmatMain() {
   switch (this->m_nMethodType) {
-    case METHOD_RKS:
-      this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-          RUN_RKS);
-      break;
+    case METHOD_RKS: {
+      switch (this->linearAlgebraPackage_) {
+#ifdef HAVE_LAPACK
+        case LAP_LAPACK:
+          this->main<TlDenseGeneralMatrix_Lapack,
+                     TlDenseSymmetricMatrix_Lapack>(RUN_RKS);
+          break;
+#endif // HAVE_LAPACK
+
+#ifdef HAVE_EIGEN3
+        case LAP_EIGEN:
+          this->main<TlDenseGeneralMatrix_Eigen, TlDenseSymmetricMatrix_Eigen>(
+              RUN_RKS);
+          break;
+#endif // HAVE_EIGEN3
+
+#ifdef HAVE_VIENNACL
+        case LAP_VIENNACL:
+          this->main<TlDenseGeneralMatrix_ViennaCL,
+                     TlDenseSymmetricMatrix_ViennaCL>(RUN_RKS);
+          break;
+#endif // HAVE_VIENNACL
+
+        default:
+          this->main<TlDenseGeneralMatrix_Lapack,
+                     TlDenseSymmetricMatrix_Lapack>(RUN_RKS);
+          break;
+      }
+    } break;
 
     case METHOD_UKS:
       this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(

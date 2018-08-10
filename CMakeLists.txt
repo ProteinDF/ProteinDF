@@ -5,8 +5,8 @@ enable_testing()
 
 # Project Version
 set(PROJECT_VERSION_MAJOR "2018")
-set(PROJECT_VERSION_MINOR "4")
-set(PROJECT_VERSION_REVISION "1")
+set(PROJECT_VERSION_MINOR "10")
+set(PROJECT_VERSION_REVISION "a")
 set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_REVISION}")
 
 set(PROJECT_VERSION_BUILD "")
@@ -37,9 +37,9 @@ endif()
 # check compiler flags
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall -g")
-message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
-message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
+#message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+#message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
+#message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
 #message(STATUS "CMAKE_CXX_FLAGS_RELWITHDEBINFO: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 #message(STATUS "CMAKE_CXX_FLAGS_MINSIZEREL: ${CMAKE_CXX_FLAGS_MINSIZEREL}")
 
@@ -75,10 +75,6 @@ endif(EIGEN3_FOUND)
 
 find_package(BLAS REQUIRED)
 if (BLAS_FOUND)
-  #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
-  #set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
-  #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
-
   message("BLAS information:")
   message("  BLA_VENDOR: ${BLA_VENDOR}")
   message("  BLA_STATIC: ${BLA_STATIC}")
@@ -90,10 +86,6 @@ endif(BLAS_FOUND)
 
 find_package(LAPACK REQUIRED)
 if (LAPACK_FOUND)
-  #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
-  #set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
-  #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
-
   message("LAPACK information:")
   message("  LAPACK_LINKER_FLAGS: ${LAPACK_LINKER_FLAGS}")
   message("  LAPACK_LIBRARIES: ${LAPACK_LIBRARIES}")
@@ -102,24 +94,30 @@ if (LAPACK_FOUND)
 endif(LAPACK_FOUND)
 
 
+# for OpenCL
+find_package(OpenCL)
+if (OpenCL_FOUND)
+  message("OpenCL information:")
+  message("  OpenCL_VERSION_STRING: ${OpenCL_VERSION_STRING}")
+  message("  OpenCL_INCLUDE_DIRS: ${OpenCL_INCLUDE_DIRS}")
+  message("  OpenCL_LIBRARIES: ${OpenCL_LIBRARIES}")
+
+  include_directories(${OpenCL_INCLUDE_DIRS})
+  set(HAVE_OPENCL 1) # for config.h
+endif (OpenCL_FOUND)
+
 # check ViennaCL
 find_package(ViennaCL)
 if (VIENNACL_FOUND)
   message("ViennaCL information:")
   message("  VIENNACL_INCLUDE_DIR: ${VIENNACL_INCLUDE_DIR}")
 
-  add_definitions(-DVIENNACL_WITH_OPENCL)
+  if (OpenCL_FOUND)
+    add_definitions(-DVIENNACL_WITH_OPENCL)
+  endif (OpenCL_FOUND)
+  
   set(HAVE_VIENNACL 1) # for config.h
 endif(VIENNACL_FOUND)
-
-
-# for OpenCL
-find_package(OpenCL)
-if (OpenCL_FOUND)
-  include_directories(${OpenCL_INCLUDE_DIRS})
-
-  set(HAVE_OPENCL 1) # for config.h
-endif (OpenCL_FOUND)
 
 
 # check MPI
@@ -133,8 +131,9 @@ if (MPI_FOUND)
   message("  MPI_CXX_LIBRARIES: ${MPI_CXX_LIBRARIES}")
   message("  MPI_CXX_INCLUDE_PATH: ${MPI_CXX_INCLUDE_PATH}")
   message("  MPI_CXX_FOUND: ${MPI_CXX_FOUND}")
-  message("overwrite: CMAKE_CXX_COMPILER = ${MPI_CXX_COMPILER}")
+
   set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
+  message("overwrite: CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER}")
 else(MPI_FOUND)
   message("Not Found MPI compiler")
 endif(MPI_FOUND)
@@ -172,9 +171,13 @@ find_package(HDF5 COMPONENTS C CXX)
 if (HDF5_FOUND)
   include_directories(${HDF5_INCLUDE_DIRS})
   message("HDF5 information:")
+  message("  HDF5_VERSION: ${HDF5_VERSION}")
+  message("  HDF5_IS_PARALLEL: ${HDF5_IS_PARALLEL}")
+  message("  HDF5_INCLUDE_DIRS: ${HDF5_INCLUDE_DIRS}")
+  message("  HDF5_CXX_INCLUDE_DIRS: ${HDF5_CXX_INCLUDE_DIRS}")
   message("  HDF5_LIBRARIES: ${HDF5_LIBRARIES}")
   message("  HDF5_HL_LIBRARIES: ${HDF5_HL_LIBRARIES}")
-  message("  HDF5_CPP_LIBRARIES: ${HDF5_CPP_LIBRARIES}")
+  message("  HDF5_CXX_LIBRARIES: ${HDF5_CXX_LIBRARIES}")
 
   set(HAVE_HDF5 1) # for config.h
 endif(HDF5_FOUND)

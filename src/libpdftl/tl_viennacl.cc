@@ -1,8 +1,12 @@
 #include "tl_viennacl.h"
 #include <iostream>
 #include <vector>
-#include "config.h"
 #include "viennacl/ocl/backend.hpp"
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif // HAVE_CONFIG_H
+
 
 void TlViennaCL::setupAllAvailableDevices() {
   viennacl::ocl::platform pf;
