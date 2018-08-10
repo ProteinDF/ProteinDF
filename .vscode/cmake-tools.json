@@ -1,0 +1,9 @@
+[
+    {
+      "name": "g++-8",
+      "compilers": {
+        "C": "/usr/local/bin/gcc-8",
+        "CXX": "/usr/local/bin/g++-8"
+      }
+    }
+  ]

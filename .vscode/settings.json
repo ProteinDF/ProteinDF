@@ -1,10 +1,15 @@
 {
-    "files.associations": {
-        "istream": "cpp"
-    },
     "C_Cpp.dimInactiveRegions": true,
+    "cmake.cmakePath": "/usr/local/bin/cmake",
     "cmake.configureOnOpen": true,
-    "terminal.integrated.env.osx": {
-        "PATH": "/usr/local/bin:${env:PATH}"
-    }
+    "cmake.environment": {
+        "PATH": "${env:HOME}/local/openmpi/bin:/usr/local/bin:${env:PATH}",
+        "PDF_HOME": "${env:HOME}/local/ProteinDF",
+        "CMAKE_CXX_FLAGS": "-O3 -mtune=native -march=native -mfpmath=both",
+        "CMAKE_CXX_COMPILER": "/usr/local/bin/g++-8",
+        "MPI_C_COMPILER": "${env:HOME}/local/openmpi/bin/mpicc",
+        "MPI_CXX_COMPILER": "${env:HOME}/local/openmpi/bin/mpicxx",
+        "SCALAPACK_LIBRARIES": "${env:HOME}/local/openmpi/lib/libscalapack.a",
+        "LDFLAGS": "-lgfortran"
+    },
 }
