@@ -7,14 +7,15 @@
 #include "TlHdf5Utils.h"
 #include "TlUtils.h"
 
+const int TlHdf5Utils::initStrLength_ = 256;
 const char TlHdf5Utils::delim_ = '/';
 
 TlHdf5Utils::TlHdf5Utils(const std::string& path) : file_() {
   if (TlFile::isExistFile(path)) {
-    this->file_ = H5::H5File(path, H5F_ACC_RDWR | H5F_ACC_DEBUG);
+    this->file_ = H5::H5File(path.c_str(), H5F_ACC_RDWR | H5F_ACC_DEBUG);
     // this->file_ = H5::H5File(path, H5F_ACC_TRUNC | H5F_ACC_DEBUG);
   } else {
-    this->file_ = H5::H5File(path, H5F_ACC_EXCL | H5F_ACC_DEBUG);
+    this->file_ = H5::H5File(path.c_str(), H5F_ACC_EXCL | H5F_ACC_DEBUG);
   }
 }
 
@@ -46,7 +47,7 @@ void TlHdf5Utils::createDataSet_common(const std::string& path,
   const hsize_t dims = size;
   H5::DataSpace memSpace(rank, &dims);
 
-  H5::DataSet dataSet = this->file_.createDataSet(path, memType, memSpace);
+  H5::DataSet dataSet = this->file_.createDataSet(path.c_str(), memType, memSpace);
 }
 
 // =====================================================================
@@ -62,7 +63,7 @@ void TlHdf5Utils::write_common(const std::string& path, const T value,
   const hsize_t dims = 1;
   H5::DataSpace memSpace(rank, &dims);
 
-  H5::DataSet dataSet = this->file_.createDataSet(path, memType, memSpace);
+  H5::DataSet dataSet = this->file_.createDataSet(path.c_str(), memType, memSpace);
   dataSet.write(&value, memType);
 
   this->flush();
@@ -71,7 +72,7 @@ void TlHdf5Utils::write_common(const std::string& path, const T value,
 void TlHdf5Utils::prepareToWrite(const std::string& path) {
   this->createGroup(this->getDirName(path));
   if (this->hasDataSet(path)) {
-    this->removeObject(&(this->file_), path);
+    this->removeObject(path);
   }
 }
 
@@ -110,12 +111,14 @@ void TlHdf5Utils::write(const std::string& path, const double value) {
 void TlHdf5Utils::write(const std::string& path, const std::string& values) {
   this->prepareToWrite(path);
 
-  H5::StrType dataType(H5::PredType::C_S1, H5T_VARIABLE);
+  // H5::StrType dataType(H5::PredType::C_S1, H5T_VARIABLE);
+  H5::StrType dataType(H5::PredType::C_S1, values.size());
+
   const int rank = 1;
   const hsize_t dims = 1;
   H5::DataSpace dataSpace(rank, &dims);
-  H5::DataSet dataSet = this->file_.createDataSet(path, dataType, dataSpace);
-  dataSet.write(values, dataType);
+  H5::DataSet dataSet = this->file_.createDataSet(path.c_str(), dataType, dataSpace);
+  dataSet.write(values.c_str(), dataType);
 }
 
 template <typename T>
@@ -129,7 +132,7 @@ void TlHdf5Utils::write_common(const std::string& path, const T* pValues,
   const hsize_t dims = size;
   H5::DataSpace memSpace(rank, &dims);
 
-  H5::DataSet dataSet = this->file_.createDataSet(path, memType, memSpace);
+  H5::DataSet dataSet = this->file_.createDataSet(path.c_str(), memType, memSpace);
   dataSet.write(pValues, memType);
 
   this->flush();
@@ -222,7 +225,7 @@ void TlHdf5Utils::write(const std::string& path,
   const int rank = 1;
   const hsize_t dims = values.size();
   H5::DataSpace dataSpace(rank, &dims);
-  H5::DataSet dataSet = this->file_.createDataSet(path, dataType, dataSpace);
+  H5::DataSet dataSet = this->file_.createDataSet(path.c_str(), dataType, dataSpace);
 
   std::vector<const char*> pBuf(dims);
   for (hsize_t i = 0; i < dims; ++i) {
@@ -239,7 +242,7 @@ template <typename T>
 void TlHdf5Utils::get(const std::string& path, const H5::PredType& predType,
                       T* pOut) const {
   assert(pOut != NULL);
-  const H5::DataSet dataSet = this->file_.openDataSet(path);
+  const H5::DataSet dataSet = this->file_.openDataSet(path.c_str());
 
   H5::DataType memType(predType);
   const int rank = 1;
@@ -283,22 +286,46 @@ void TlHdf5Utils::get(const std::string& path, double* pOut) const {
 
 void TlHdf5Utils::get(const std::string& path, std::string* pOut) const {
   assert(pOut != NULL);
-  const H5::DataSet dataSet = this->file_.openDataSet(path);
+  const H5::DataSet dataSet = this->file_.openDataSet(path.c_str());
 
-  H5::StrType memType(H5::PredType::C_S1, H5T_VARIABLE);
+  H5::DataSpace dataSpace = dataSet.getSpace();
+  const int rank = dataSpace.getSimpleExtentNdims();
+  assert(rank > 0);
 
-  const int rank = 1;
-  const hsize_t dims = 1;
-  H5::DataSpace memSpace(rank, &dims);
+  // std::vector<hsize_t> dims(rank);
+  // const int nDims = dataSpace.getSimpleExtentDims(dims.data(), NULL);
+  // assert(rank == nDims);
+  // hsize_t bufferSize = 1;
+  // for (int dim = 0; dim < nDims; ++dim) {
+  //   bufferSize *= dims[dim];
+  // }
 
-  dataSet.read(*pOut, memType, memSpace);
+  H5::DataSpace memSpace(dataSpace);
+  hsize_t count =  1; // bufferSize;
+  hsize_t offset = 0;
+  memSpace.selectHyperslab(H5S_SELECT_SET, &count, &offset);
+  dataSpace.selectHyperslab(H5S_SELECT_SET, &count, &offset);
+
+  const std::size_t dataSize = dataSet.getInMemDataSize();
+
+  // H5::StrType memType(H5::PredType::C_S1, H5T_VARIABLE);
+  H5::StrType memType(H5::PredType::C_S1, dataSize);
+
+  char* pBuf = new char[dataSize +1];
+
+  dataSet.read(pBuf, memType, memSpace);
+  *pOut = std::string(pBuf);
+
+  delete[] pBuf;
+  pBuf = NULL;
 }
+
 
 template <typename T>
 void TlHdf5Utils::get_common(const std::string& path,
                              const H5::PredType& predType, T* pOut,
                              const std::size_t size) const {
-  const H5::DataSet dataSet = this->file_.openDataSet(path);
+  const H5::DataSet dataSet = this->file_.openDataSet(path.c_str());
 
   H5::DataSpace dataSpace = dataSet.getSpace();
   const int rank = dataSpace.getSimpleExtentNdims();
@@ -331,7 +358,7 @@ void TlHdf5Utils::get(const std::string& path, double* pOut,
 template <typename T>
 void TlHdf5Utils::get(const std::string& path, const H5::PredType& predType,
                       std::vector<T>* pOut) const {
-  const H5::DataSet dataSet = this->file_.openDataSet(path);
+  const H5::DataSet dataSet = this->file_.openDataSet(path.c_str());
 
   H5::DataSpace dataSpace = dataSet.getSpace();
   const int rank = dataSpace.getSimpleExtentNdims();
@@ -389,7 +416,7 @@ void TlHdf5Utils::get(const std::string& path,
 
 void TlHdf5Utils::get(const std::string& path,
                       std::vector<std::string>* pOut) const {
-  const H5::DataSet dataSet = this->file_.openDataSet(path);
+  const H5::DataSet dataSet = this->file_.openDataSet(path.c_str());
 
   H5::DataSpace dataSpace = dataSet.getSpace();
   const int rank = dataSpace.getSimpleExtentNdims();
@@ -421,7 +448,7 @@ void TlHdf5Utils::setSelectedElements(const std::string& path,
                                       const std::vector<T>& data) {
   assert(coord.size() == data.size());
 
-  const H5::DataSet dataSet = this->file_.openDataSet(path);
+  const H5::DataSet dataSet = this->file_.openDataSet(path.c_str());
 
   H5::DataSpace dataSpace = dataSet.getSpace();
 
@@ -493,7 +520,7 @@ void TlHdf5Utils::getSelectedElements(const std::string& path,
                                       const std::vector<hsize_t>& coord,
                                       const H5::PredType& predType,
                                       std::vector<T>* pOut) {
-  const H5::DataSet dataSet = this->file_.openDataSet(path);
+  const H5::DataSet dataSet = this->file_.openDataSet(path.c_str());
 
   H5::DataSpace dataSpace = dataSet.getSpace();
 
@@ -571,8 +598,8 @@ void TlHdf5Utils::setAttr(const std::string& path, const std::string& attrName,
   const hsize_t dims[] = {1};
   H5::DataSpace memSpace(rank, dims);
 
-  H5::DataSet dataSet = this->file_.openDataSet(path);
-  H5::Attribute attr = dataSet.createAttribute(attrName, memType, memSpace);
+  H5::DataSet dataSet = this->file_.openDataSet(path.c_str());
+  H5::Attribute attr = dataSet.createAttribute(attrName.c_str(), memType, memSpace);
   attr.write(memType, &value);
 }
 
@@ -621,8 +648,8 @@ void TlHdf5Utils::getAttr(const std::string& path, const std::string& attrName,
                           const H5::PredType& predType, T* pValue) {
   assert(pValue != NULL);
 
-  H5::DataSet dataSet = this->file_.openDataSet(path);
-  H5::Attribute attr = dataSet.openAttribute(attrName);
+  H5::DataSet dataSet = this->file_.openDataSet(path.c_str());
+  H5::Attribute attr = dataSet.openAttribute(attrName.c_str());
 
   H5::DataType memType(predType);
   // const int rank = 1;
@@ -683,7 +710,7 @@ void TlHdf5Utils::createGroup(const std::string& path) {
     }
 
     if (this->hasGroup(path) != true) {
-      H5::Group group = this->file_.createGroup(path);
+      H5::Group group = this->file_.createGroup(path.c_str());
     }
   }
 }
@@ -698,17 +725,17 @@ bool TlHdf5Utils::hasDataSet(const std::string& path) {
   return this->hasObject(&(this->file_), path, H5O_TYPE_DATASET);
 }
 
-bool TlHdf5Utils::hasGroup(const H5::CommonFG* pParent,
+bool TlHdf5Utils::hasGroup(const H5::Group* pParent,
                            const std::string& name) {
   return this->hasObject(pParent, name, H5O_TYPE_GROUP);
 }
 
-bool TlHdf5Utils::hasDataSet(const H5::CommonFG* pParent,
+bool TlHdf5Utils::hasDataSet(const H5::Group* pParent,
                              const std::string& name) {
   return this->hasObject(pParent, name, H5O_TYPE_DATASET);
 }
 
-bool TlHdf5Utils::hasObject(const H5::CommonFG* pParent,
+bool TlHdf5Utils::hasObject(const H5::Group* pParent,
                             const std::string& name,
                             const H5O_type_t requestType) {
   bool answer = false;
@@ -734,15 +761,16 @@ bool TlHdf5Utils::hasObject(const H5::CommonFG* pParent,
   return answer;
 }
 
-bool TlHdf5Utils::hasChildObject(const H5::CommonFG* pParent,
+bool TlHdf5Utils::hasChildObject(const H5::Group* pParent,
                                  const std::string& name,
                                  const H5O_type_t requestType) {
   bool answer = false;
   const hsize_t numOfObjs = pParent->getNumObjs();
   for (hsize_t i = 0; i < numOfObjs; ++i) {
-    const std::string objName = pParent->getObjnameByIdx(i);
+    // const std::string objName = pParent->getObjnameByIdx(i);
+    const std::string objName = this->getObjnameByIdx(pParent, i, TlHdf5Utils::initStrLength_);
     if (objName == name) {
-      const H5O_type_t objType = pParent->childObjType(objName);
+      const H5O_type_t objType = pParent->childObjType(objName.c_str());
       if (objType == requestType) {
         answer = true;
       }
@@ -753,17 +781,35 @@ bool TlHdf5Utils::hasChildObject(const H5::CommonFG* pParent,
   return answer;
 }
 
-// ---------------------------------------------------------------------------
-H5::Group TlHdf5Utils::getGroup(const H5::CommonFG* pParent,
-                                const std::string& name) {
-  assert(this->hasGroup(pParent, name));
+std::string TlHdf5Utils::getObjnameByIdx(const H5::Group* pParent, const hsize_t index, const std::size_t size) {
+  std::string answer;
+  char* pBuf = new char[size +1];
 
-  return pParent->openGroup(name);
+  const std::size_t copied = pParent->getObjnameByIdx(index, pBuf, size);
+  if (copied < size) {
+    answer = std::string(pBuf);
+    delete[] pBuf;
+    pBuf = NULL;
+  } else {
+    delete[] pBuf;
+    pBuf = NULL;
+    answer = this->getObjnameByIdx(pParent, index, size * 2);
+  }
+
+  return answer;
 }
 
 // ---------------------------------------------------------------------------
-void TlHdf5Utils::removeObject(H5::CommonFG* pParent, const std::string& name) {
-  pParent->unlink(name);
+H5::Group TlHdf5Utils::getGroup(const H5::Group* pParent,
+                                const std::string& name) {
+  assert(this->hasGroup(pParent, name));
+
+  return pParent->openGroup(name.c_str());
+}
+
+// ---------------------------------------------------------------------------
+void TlHdf5Utils::removeObject(const std::string& name) {
+  this->file_.unlink(name.c_str());
 }
 
 // ---------------------------------------------------------------------------

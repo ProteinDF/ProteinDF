@@ -456,14 +456,17 @@ class DfObject {
     K_ENGINE_FASTCDK
   };
 
-  // enum XC_Engine_Type {
-  //     XC_ENGINE_CONVENTIONAL,
-  //     XC_ENGINE_CD,
-  // };
   enum XC_Engine_Type {
     XC_ENGINE_GRID,
     XC_ENGINE_GRIDFREE,
     XC_ENGINE_GRIDFREE_CD
+  };
+
+  enum LinearAlgebraPackageType {
+    LAP_LAPACK,
+    LAP_EIGEN,
+    LAP_VIENNACL,
+    LAP_SCALAPACK
   };
 
  protected:
@@ -539,7 +542,10 @@ class DfObject {
   // bool isRI_J_; /// RI_J法を用いる(true)
   bool isRI_K_;  /// RI-K法を用いる(true)
 
-  /// ScaLAPACKを使用する(true)かどうかを表すフラグ
+  //
+  LinearAlgebraPackageType linearAlgebraPackage_;
+
+  /// ScaLAPACKを使用する(true)かどうかを表すフラグ (deprecated)
   bool m_bUsingSCALAPACK;
 
   /// ScaLAPACKのブロックサイズを指定する

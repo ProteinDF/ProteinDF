@@ -235,20 +235,21 @@ class TlHdf5Utils {
 
   // -----------------------------------------------------------------
  protected:
-  bool hasGroup(const H5::CommonFG* pParent, const std::string& name);
+  bool hasGroup(const H5::Group* pParent, const std::string& name);
 
  protected:
-  bool hasDataSet(const H5::CommonFG* pParent, const std::string& name);
+  bool hasDataSet(const H5::Group* pParent, const std::string& name);
 
  protected:
-  bool hasObject(const H5::CommonFG* pParent, const std::string& name,
+  bool hasObject(const H5::Group* pParent, const std::string& name,
                  const H5O_type_t requestType);
-  bool hasChildObject(const H5::CommonFG* pParent, const std::string& name,
+  bool hasChildObject(const H5::Group* pParent, const std::string& name,
                       const H5O_type_t requestType);
+  std::string getObjnameByIdx(const H5::Group* pParent, const hsize_t index, const std::size_t size);
 
-  H5::Group getGroup(const H5::CommonFG* pParent, const std::string& name);
+  H5::Group getGroup(const H5::Group* pParent, const std::string& name);
 
-  void removeObject(H5::CommonFG* pParent, const std::string& name);
+  void removeObject(const std::string& name);
 
   static std::string getChildName(const std::string& path, std::string* pRest);
 
@@ -259,6 +260,7 @@ class TlHdf5Utils {
                              std::string* pBaseName);
 
  private:
+  static const int initStrLength_;
   static const char delim_;
   H5::H5File file_;
 };
