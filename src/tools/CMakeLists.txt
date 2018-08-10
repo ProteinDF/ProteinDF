@@ -322,7 +322,7 @@ set(PDF_BENCH_MAT_SOURCES
   main_bench_mat.cpp
   )
 add_executable(pdf-bench-mat ${PDF_BENCH_MAT_SOURCES})
-target_link_libraries(pdf-bench-mat libpdf libpdftl "${OpenCL_LIBRARIES}")
+target_link_libraries(pdf-bench-mat libpdf libpdftl)
 install(TARGETS pdf-bench-mat RUNTIME DESTINATION bin)
 
 
@@ -333,7 +333,7 @@ if (HDF5_FOUND)
     main_mat2h5.cpp
     )
   add_executable(pdf-mat2h5 ${PDF_MAT2H5_SOURCES})
-  target_link_libraries(pdf-mat2h5 libpdf libpdftl "${HDF5_CXX_LIBRARIES}")
+  target_link_libraries(pdf-mat2h5 libpdf libpdftl)
   install(TARGETS pdf-mat2h5 RUNTIME DESTINATION bin)
 endif (HDF5_FOUND)
 
@@ -347,6 +347,6 @@ if (MPI_FOUND)
     DfLocalize_Parallel.cpp
     )
   add_executable(pdf-lo-mpi ${PDF_LO_MPI_SOURCES})
-  target_link_libraries(pdf-lo-mpi libppdf libppdftl libpdf libpdftl ${MPI_CXX_LIBRARIES})
+  target_link_libraries(pdf-lo-mpi libppdf libppdftl libpdf libpdftl)
   install(TARGETS pdf-lo-mpi RUNTIME DESTINATION bin)
 endif(MPI_FOUND)

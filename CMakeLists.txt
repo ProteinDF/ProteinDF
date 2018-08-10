@@ -54,6 +54,26 @@ check_include_file("unistd.h" HAVE_UNISTD_H)
 check_include_file("stdint.h" HAVE_STDINT_H)
 
 
+# check MPI
+find_package(MPI)
+if (MPI_FOUND)
+  message("MPI information:")
+  message("  MPI_VERSION: ${MPI_VERSION}")
+  message("  MPIEXEC_EXECUTABLE: ${MPIEXEC_EXECUTABLE}")
+  message("  MPIEXEC_NUMPROC_FLAG: ${MPIEXEC_NUMPROC_FLAG}")
+  message("  MPI_CXX_COMPILER: ${MPI_CXX_COMPILER}")
+  message("  MPI_CXX_LINK_FLAGS: ${MPI_CXX_LINK_FLAGS}")
+  message("  MPI_CXX_LIBRARIES: ${MPI_CXX_LIBRARIES}")
+  message("  MPI_CXX_INCLUDE_PATH: ${MPI_CXX_INCLUDE_PATH}")
+  message("  MPI_CXX_FOUND: ${MPI_CXX_FOUND}")
+
+  set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
+  message("overwrite: CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER}")
+else(MPI_FOUND)
+  message("Not Found MPI compiler")
+endif(MPI_FOUND)
+
+
 # check OpenMP
 find_package(OpenMP)
 if (OPENMP_FOUND)
@@ -118,25 +138,6 @@ if (VIENNACL_FOUND)
   
   set(HAVE_VIENNACL 1) # for config.h
 endif(VIENNACL_FOUND)
-
-
-# check MPI
-find_package(MPI)
-if (MPI_FOUND)
-  message("MPI information:")
-  message("  MPI_VERSION: ${MPI_VERSION}")
-  message("  MPIEXEC_EXECUTABLE: ${MPIEXEC_EXECUTABLE}")
-  message("  MPIEXEC_NUMPROC_FLAG: ${MPIEXEC_NUMPROC_FLAG}")
-  message("  MPI_CXX_COMPILER: ${MPI_CXX_COMPILER}")
-  message("  MPI_CXX_LIBRARIES: ${MPI_CXX_LIBRARIES}")
-  message("  MPI_CXX_INCLUDE_PATH: ${MPI_CXX_INCLUDE_PATH}")
-  message("  MPI_CXX_FOUND: ${MPI_CXX_FOUND}")
-
-  set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
-  message("overwrite: CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER}")
-else(MPI_FOUND)
-  message("Not Found MPI compiler")
-endif(MPI_FOUND)
 
 
 # check BLACS

@@ -231,6 +231,7 @@ target_link_libraries(libpdftl INTERFACE
   ${HDF5_LIBRARIES} 
   ${LAPACK_LIBRARIES} 
   ${BLAS_LIBRARIES}
+  ${OpenCL_LIBRARIES}
   )
 set_target_properties(libpdftl PROPERTIES OUTPUT_NAME "pdftl")
 
@@ -260,6 +261,7 @@ if (MPI_FOUND)
     ${BLACS_LIBRARIES} 
     ${BLACS_CINIT_LIBRARIES} 
     ${BLACS_F77INIT_LIBRARIES}
+    ${MPI_CXX_LIBRARIES}
     )
   set_target_properties(libppdftl PROPERTIES OUTPUT_NAME "ppdftl")
 
