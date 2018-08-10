@@ -2,14 +2,30 @@
     "C_Cpp.dimInactiveRegions": true,
     "cmake.cmakePath": "/usr/local/bin/cmake",
     "cmake.configureOnOpen": true,
+    "cmake.parallelJobs": 4,
+    "cmake.ctest.parallelJobs": 1,
+    "cmake.installPrefix": "${env:HOME}/local/ProteinDF.dev",
     "cmake.environment": {
-        "PATH": "${env:HOME}/local/openmpi/bin:/usr/local/bin:${env:PATH}",
+        // "PATH": "${env:HOME}/local/openmpi/bin:/usr/local/bin:${env:PATH}",
         "PDF_HOME": "${env:HOME}/local/ProteinDF",
+        "LDFLAGS": "-L${env:HOME}/local/openmpi/lib -lmpi -lgfortran"
+    },
+    "cmake.configureSettings": {
+        "CMAKE_VERBOSE_MAKEFILE": "1",
         "CMAKE_CXX_FLAGS": "-O3 -mtune=native -march=native -mfpmath=both",
         "CMAKE_CXX_COMPILER": "/usr/local/bin/g++-8",
-        "MPI_C_COMPILER": "${env:HOME}/local/openmpi/bin/mpicc",
-        "MPI_CXX_COMPILER": "${env:HOME}/local/openmpi/bin/mpicxx",
-        "SCALAPACK_LIBRARIES": "${env:HOME}/local/openmpi/lib/libscalapack.a",
-        "LDFLAGS": "-lgfortran"
+        //"CMAKE_EXE_LINKER_FLAGS": "-L${env:HOME}/local/openmpi/lib -lmpi -lgfortran",
+
+        "MPI_C_COMPILER": "/usr/local/bin/gcc-8",
+        "MPI_C_INCLUDE_PATH": "${env:HOME}/local/openmpi/include",
+        "MPI_C_LIBRARIES": "-L${env:HOME}/local/openmpi/lib -lmpi",
+        "MPI_CXX_COMPILER": "/usr/local/bin/g++-8",
+        "MPI_CXX_INCLUDE_PATH": "${env:HOME}/local/openmpi/include",
+        "MPI_CXX_LIBRARIES": "-L${env:HOME}/local/openmpi/lib -lmpi",
+        //"MPI_SKIP_COMPILER_WRAPPER": "1",
+        //"MPI_SKIP_GUESSING": "1",
+        // "MPI_CXX_SKIP_MPICXX": "1",
+
+        "SCALAPACK_LIBRARIES": "-L${env:HOME}/local/openmpi/lib -lscalapack",
     },
 }

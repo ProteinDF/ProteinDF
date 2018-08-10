@@ -9,7 +9,6 @@ add_executable(PDF.x ${PDF_SOURCES})
 target_link_libraries(PDF.x 
   libpdf 
   libpdftl
-  ${OpenCL_LIBRARIES}
   )
 install(TARGETS PDF.x RUNTIME DESTINATION bin)
 
@@ -28,8 +27,6 @@ if (MPI_FOUND)
     libppdftl 
     libpdf 
     libpdftl
-    ${HDF5_CXX_LIBRARIES}  
-    ${MPI_CXX_LIBRARIES} 
-    ${OpenCL_LIBRARIES})
+    )
   install(TARGETS PPDF.x RUNTIME DESTINATION bin)
 endif()
