@@ -27,5 +27,6 @@
         // "MPI_CXX_SKIP_MPICXX": "1",
 
         "SCALAPACK_LIBRARIES": "-L${env:HOME}/local/openmpi/lib -lscalapack",
+        "GTEST_ROOT": "${env:HOME}/local/googletest",
     },
 }

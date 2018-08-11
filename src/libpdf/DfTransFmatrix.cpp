@@ -26,7 +26,7 @@ DfTransFmatrix::DfTransFmatrix(TlSerializeData* pPdfParam, bool bExecDiis)
   {
     const std::string linearAlgebraPackage = TlUtils::toUpper(
         (*(this->pPdfParam_))["linear_algebra_package/trans_F"].getStr());
-#ifdef HAVE_EINGEN3
+#ifdef HAVE_EIGEN3
     if (linearAlgebraPackage == "EIGEN") {
       this->linearAlgebraPackage_ = DfObject::LAP_EIGEN;
     }
@@ -48,50 +48,57 @@ DfTransFmatrix::~DfTransFmatrix() {}
 
 void DfTransFmatrix::DfTrsFmatMain() {
   switch (this->m_nMethodType) {
-    case METHOD_RKS: {
-      switch (this->linearAlgebraPackage_) {
-#ifdef HAVE_LAPACK
-        case LAP_LAPACK:
-          this->main<TlDenseGeneralMatrix_Lapack,
-                     TlDenseSymmetricMatrix_Lapack>(RUN_RKS);
-          break;
-#endif // HAVE_LAPACK
-
-#ifdef HAVE_EIGEN3
-        case LAP_EIGEN:
-          this->main<TlDenseGeneralMatrix_Eigen, TlDenseSymmetricMatrix_Eigen>(
-              RUN_RKS);
-          break;
-#endif // HAVE_EIGEN3
-
-#ifdef HAVE_VIENNACL
-        case LAP_VIENNACL:
-          this->main<TlDenseGeneralMatrix_ViennaCL,
-                     TlDenseSymmetricMatrix_ViennaCL>(RUN_RKS);
-          break;
-#endif // HAVE_VIENNACL
-
-        default:
-          this->main<TlDenseGeneralMatrix_Lapack,
-                     TlDenseSymmetricMatrix_Lapack>(RUN_RKS);
-          break;
-      }
-    } break;
+    case METHOD_RKS: 
+      this->calcF2Fprime(RUN_RKS);
+      break;
 
     case METHOD_UKS:
-      this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-          RUN_UKS_ALPHA);
-      this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-          RUN_UKS_BETA);
+      this->calcF2Fprime(RUN_UKS_ALPHA);
+      this->calcF2Fprime(RUN_UKS_BETA);
       break;
 
     case METHOD_ROKS:
-      this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-          RUN_ROKS);
+      this->calcF2Fprime(RUN_ROKS);
       break;
 
     default:
       CnErr.abort();
+      break;
+  }
+}
+
+void DfTransFmatrix::calcF2Fprime(const RUN_TYPE runType) {
+  switch (this->linearAlgebraPackage_) {
+#ifdef HAVE_LAPACK
+    case LAP_LAPACK:
+      this->log_.info("linear algebra package: LAPACK");
+      this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
+          runType);
+      break;
+#endif  // HAVE_LAPACK
+
+#ifdef HAVE_EIGEN3
+    case LAP_EIGEN:
+      this->log_.info("linear algebra package: Eigen3");
+      this->main<TlDenseGeneralMatrix_Eigen, TlDenseSymmetricMatrix_Eigen>(
+          runType);
+      break;
+#endif  // HAVE_EIGEN3
+
+#ifdef HAVE_VIENNACL
+    case LAP_VIENNACL:
+      this->log_.info("linear algebra package: ViennaCL");
+      this->main<TlDenseGeneralMatrix_ViennaCL,
+                 TlDenseSymmetricMatrix_ViennaCL>(runType);
+      break;
+#endif  // HAVE_VIENNACL
+
+    default:
+    {
+      this->log_.critical(TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
+      this->log_.critical(TlUtils::format("linear algebra package: %d", this->linearAlgebraPackage_));
+      CnErr.abort();
+    }
       break;
   }
 }
