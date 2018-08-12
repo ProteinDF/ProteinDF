@@ -22,7 +22,7 @@
 #include <bitset>
 #include <string>
 #include "TlPosition.h"
-#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
 
 /// 原子情報を保持するクラス
 class TlAtom {
@@ -59,7 +59,7 @@ class TlAtom {
   void moveTo(const double& x, const double& y, const double& z);
   void shiftBy(const TlPosition& position);
   void shiftBy(const double& x, const double& y, const double& z);
-  void rotateBy(const TlDenseGeneralMatrix_BLAS_old& rot);
+  void rotateBy(const TlDenseGeneralMatrix_Lapack& rot);
 
   std::string getName() const;
   void setName(const std::string& name);
@@ -251,7 +251,7 @@ inline void TlAtom::shiftBy(const double& x, const double& y, const double& z) {
   this->m_position.shiftBy(x, y, z);
 }
 
-inline void TlAtom::rotateBy(const TlDenseGeneralMatrix_BLAS_old& rot) {
+inline void TlAtom::rotateBy(const TlDenseGeneralMatrix_Lapack& rot) {
   this->m_position.rotateBy(rot);
 }
 

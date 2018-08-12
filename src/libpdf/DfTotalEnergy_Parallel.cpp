@@ -27,7 +27,8 @@
 #include "DfXCFunctional_Parallel.h"
 #include "Fl_Geometry.h"
 #include "TlCommunicate.h"
-#include "tl_dense_symmetric_matrix_blacs.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
+#include "tl_dense_vector_scalapack.h"
 
 DfTotalEnergy_Parallel::DfTotalEnergy_Parallel(TlSerializeData* pPdfParam)
     : DfTotalEnergy(pPdfParam) {
@@ -72,8 +73,8 @@ void DfTotalEnergy_Parallel::exec_LAPACK() {
 
 void DfTotalEnergy_Parallel::exec_ScaLAPACK() {
   DfTotalEnergy::exec_template<DfOverlapX_Parallel, DfEriX_Parallel,
-                               TlDenseSymmetricMatrix_blacs,
-                               TlDistributedVector>();
+                               TlDenseSymmetricMatrix_Scalapack,
+                               TlDenseVector_Scalapack>();
 }
 
 // total energy including dummy charge
@@ -81,7 +82,7 @@ void DfTotalEnergy_Parallel::calculate_real_energy() {
 #ifdef HAVE_SCALAPACK
   if (this->m_bUsingSCALAPACK == true) {
     // ScaLAPACK
-    this->calcRealEnergy<TlDenseSymmetricMatrix_blacs>();
+    this->calcRealEnergy<TlDenseSymmetricMatrix_Scalapack>();
     return;
   }
 #endif  // HAVE_SCALAPACK

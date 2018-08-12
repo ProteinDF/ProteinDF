@@ -1,9 +1,13 @@
-#include "tl_dense_general_matrix_impl_lapack.h"
+#include <cassert>
 #include <iostream>
+
+#include "tl_dense_general_matrix_impl_lapack.h"
 #include "lapack.h"
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_impl_lapack.h"
 #include "tl_dense_vector_impl_lapack.h"
+#include "tl_dense_vector_impl_scalapack.h"
+#include "TlUtils.h"
 
 TlDenseGeneralMatrix_ImplLapack::TlDenseGeneralMatrix_ImplLapack(
     const TlMatrixObject::index_type row, const TlMatrixObject::index_type col)
@@ -53,7 +57,7 @@ TlDenseGeneralMatrix_ImplLapack::~TlDenseGeneralMatrix_ImplLapack() {
 TlDenseGeneralMatrix_ImplLapack TlDenseGeneralMatrix_ImplLapack::E(
     const TlMatrixObject::index_type dim) {
   assert(dim > 0);
-  TlDenseGeneralMatrix_ImplLapack E(dim);
+  TlDenseGeneralMatrix_ImplLapack E(dim, dim);
   for (TlMatrixObject::index_type i = 0; i < dim; ++i) {
     E.set(i, i, 1.0);
   }
@@ -64,11 +68,13 @@ TlDenseGeneralMatrix_ImplLapack TlDenseGeneralMatrix_ImplLapack::E(
 // ---------------------------------------------------------------------------
 // properties
 // ---------------------------------------------------------------------------
-TlMatrixObject::index_type TlDenseGeneralMatrix_ImplLapack::getNumOfRows() const {
+TlMatrixObject::index_type TlDenseGeneralMatrix_ImplLapack::getNumOfRows()
+    const {
   return this->row_;
 }
 
-TlMatrixObject::index_type TlDenseGeneralMatrix_ImplLapack::getNumOfCols() const {
+TlMatrixObject::index_type TlDenseGeneralMatrix_ImplLapack::getNumOfCols()
+    const {
   return this->col_;
 }
 
@@ -107,8 +113,8 @@ double TlDenseGeneralMatrix_ImplLapack::get(
 }
 
 void TlDenseGeneralMatrix_ImplLapack::set(const TlMatrixObject::index_type row,
-                                        const TlMatrixObject::index_type col,
-                                        const double value) {
+                                          const TlMatrixObject::index_type col,
+                                          const double value) {
   const TlMatrixObject::size_type index = this->index(row, col);
 
 #pragma omp critical(TlDenseGeneralMatrix_ImplLapack__set)
@@ -116,8 +122,8 @@ void TlDenseGeneralMatrix_ImplLapack::set(const TlMatrixObject::index_type row,
 }
 
 void TlDenseGeneralMatrix_ImplLapack::add(const TlMatrixObject::index_type row,
-                                        const TlMatrixObject::index_type col,
-                                        const double value) {
+                                          const TlMatrixObject::index_type col,
+                                          const double value) {
   const TlMatrixObject::size_type index = this->index(row, col);
 
 #pragma omp atomic
@@ -215,7 +221,6 @@ TlDenseGeneralMatrix_ImplLapack& TlDenseGeneralMatrix_ImplLapack::operator-=(
 TlDenseGeneralMatrix_ImplLapack& TlDenseGeneralMatrix_ImplLapack::operator*=(
     const double coef) {
   const int n = this->getNumOfElements();
-  const double a = -1.0;
   const int incx = 1;
   dscal_(&n, &coef, this->matrix_, &incx);
 
@@ -238,7 +243,44 @@ TlDenseGeneralMatrix_ImplLapack& TlDenseGeneralMatrix_ImplLapack::operator*=(
 // ---------------------------------------------------------------------------
 // operations
 // ---------------------------------------------------------------------------
-const TlDenseGeneralMatrix_ImplLapack& TlDenseGeneralMatrix_ImplLapack::dotInPlace(
+double* TlDenseGeneralMatrix_ImplLapack::data() { return this->matrix_; }
+
+const double* TlDenseGeneralMatrix_ImplLapack::data() const {
+  return this->matrix_;
+}
+
+TlDenseGeneralMatrix_ImplLapack TlDenseGeneralMatrix_ImplLapack::transpose()
+    const {
+  const TlMatrixObject::index_type row = this->getNumOfRows();
+  const TlMatrixObject::index_type col = this->getNumOfCols();
+
+  TlDenseGeneralMatrix_ImplLapack E = TlDenseGeneralMatrix_ImplLapack::E(row);
+
+  TlDenseGeneralMatrix_ImplLapack answer(col, row);
+  const char transa = 'T';
+  const char transb = 'N';
+  const int m = col;
+  const int n = row;
+  const int k = row;
+  const double alpha = 1.0;
+  const int ldA = k;
+  const int ldB = k;
+  const double beta = 0.0;
+  const int ldC = m;
+
+  dgemm_(&transa, &transb, &m, &n, &k, &alpha, this->matrix_, &ldA, E.matrix_,
+         &ldB, &beta, answer.matrix_, &ldC);
+
+  return answer;
+}
+
+void TlDenseGeneralMatrix_ImplLapack::transposeInPlace() {
+  TlDenseGeneralMatrix_ImplLapack tmp = this->transpose();
+  std::swap(*this, tmp);
+}
+
+const TlDenseGeneralMatrix_ImplLapack&
+TlDenseGeneralMatrix_ImplLapack::dotInPlace(
     const TlDenseGeneralMatrix_ImplLapack& rhs) {
   assert(this->getNumOfRows() == rhs.getNumOfRows());
   assert(this->getNumOfCols() == rhs.getNumOfCols());
@@ -251,31 +293,8 @@ const TlDenseGeneralMatrix_ImplLapack& TlDenseGeneralMatrix_ImplLapack::dotInPla
   return *this;
 }
 
-TlDenseGeneralMatrix_ImplLapack TlDenseGeneralMatrix_ImplLapack::transpose() const {
-  const TlMatrixObject::index_type row = this->getNumOfRows();
-  const TlMatrixObject::index_type col = this->getNumOfCols();
-
-  TlDenseGeneralMatrix_ImplLapack E = TlDenseGeneralMatrix_ImplLapack::E(row);
-
-  TlDenseGeneralMatrix_ImplLapack answer(col, row);
-  const char transa = 'N';
-  const char transb = 'T';
-  const int m = row;
-  const int n = col;
-  const int k = row;
-  const double alpha = 1.0;
-  const int ldA = m;
-  const int ldB = k;
-  const double beta = 0.0;
-  const int ldC = col;
-
-  dgemm_(&transa, &transb, &m, &n, &k, &alpha, E.matrix_, &ldA, this->matrix_,
-         &ldB, &beta, answer.matrix_, &ldC);
-
-  return answer;
-}
-
-TlDenseGeneralMatrix_ImplLapack TlDenseGeneralMatrix_ImplLapack::inverse() const {
+TlDenseGeneralMatrix_ImplLapack TlDenseGeneralMatrix_ImplLapack::inverse()
+    const {
   TlDenseGeneralMatrix_ImplLapack answer = *this;
   const int M = answer.getNumOfRows();
   const int N = answer.getNumOfCols();
@@ -312,6 +331,79 @@ TlDenseGeneralMatrix_ImplLapack TlDenseGeneralMatrix_ImplLapack::inverse() const
   IPIV = NULL;
 
   return answer;
+}
+
+// Ax = B
+TlDenseGeneralMatrix_ImplLapack
+TlDenseGeneralMatrix_ImplLapack::getLeastSquaresSolution(
+    const TlDenseGeneralMatrix_ImplLapack& B) const {
+  const int M = this->getNumOfRows();
+  // if (M != B.getNumOfRows()) {
+  //   this->log_.critical(
+  //       TlUtils::format("the numbers are not consistent: %d != %d @%s.%d", M,
+  //                       B.getNumOfRows(), __FILE__, __LINE__));
+  // }
+  const int N = this->getNumOfCols();
+  const int NRHS = B.getNumOfCols();
+
+  double* A = new double[M * N];
+  std::copy(this->matrix_, this->matrix_ + (M * N), A);
+  const int LDA = std::max(1, M);
+
+  TlDenseGeneralMatrix_ImplLapack X = B;
+  const int LDB = std::max(1, std::max(M, N));
+  X.resize(LDB, NRHS);  // size extended.
+
+  double* S = new double[std::min(M, N)];
+
+  // If RCOND < 0, machine precision is used instead.
+  const double RCOND = -1.0;
+
+  int RANK = 0;
+  const int LWORK =
+      3 * std::min(M, N) +
+      std::max(std::max(2 * std::min(M, N), std::max(M, N)), NRHS);
+  double* WORK = new double[std::max(1, LWORK)];
+  int INFO = 0;
+
+  dgelss_(&M, &N, &NRHS, A, &LDA, X.matrix_, &LDB, S, &RCOND, &RANK, WORK,
+          &LWORK, &INFO);
+  if (INFO != 0) {
+    if (INFO > 0) {
+      this->log_.critical(
+          TlUtils::format("%d-th argument had an illegal value. @%s.%d", -INFO,
+                          __FILE__, __LINE__));
+    } else {
+      this->log_.critical(
+          TlUtils::format("%d-th off-diagonal elements of an intermediate "
+                          "bidiagonal form did not converge to zero. @%s.%d",
+                          INFO, __FILE__, __LINE__));
+    }
+  }
+
+  delete[] S;
+  S = NULL;
+  delete[] A;
+  A = NULL;
+
+  X.resize(N, NRHS);
+  return X;
+}
+
+// ---------------------------------------------------------------------------
+// I/O
+// ---------------------------------------------------------------------------
+void TlDenseGeneralMatrix_ImplLapack::dump(TlDenseVector_ImplLapack* v) const {
+  v->resize(this->getNumOfElements());
+  std::copy(this->matrix_, this->matrix_ + this->getNumOfElements(),
+            v->vector_);
+}
+
+void TlDenseGeneralMatrix_ImplLapack::restore(
+    const TlDenseVector_ImplLapack& v) {
+  const std::size_t copySize =
+      std::min<std::size_t>(this->getNumOfElements(), v.getSize());
+  std::copy(v.vector_, v.vector_ + copySize, this->matrix_);
 }
 
 // ---------------------------------------------------------------------------

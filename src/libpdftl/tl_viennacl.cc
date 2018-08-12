@@ -1,8 +1,12 @@
 #include "tl_viennacl.h"
 #include <iostream>
 #include <vector>
-#include "config.h"
 #include "viennacl/ocl/backend.hpp"
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif // HAVE_CONFIG_H
+
 
 void TlViennaCL::setupAllAvailableDevices() {
   viennacl::ocl::platform pf;
@@ -50,7 +54,8 @@ void TlViennaCL::showDevices() {
       viennacl::ocl::current_context().devices();
 
   std::cout << "# devices: " << devices.size() << std::endl;
-  for (int i = 0; i < devices.size(); ++i) {
+  const int numOfDevices = devices.size();
+  for (int i = 0; i < numOfDevices; ++i) {
     std::cout << i << ":" << devices[i].name() << std::endl;
   }
 }

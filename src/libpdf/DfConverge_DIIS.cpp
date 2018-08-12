@@ -19,7 +19,6 @@
 #include "DfConverge_DIIS.h"
 #include <cassert>
 #include "TlTime.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
 
 DfConverge_DIIS::DfConverge_DIIS(TlSerializeData* pPdfParam)
     : DfConverge_Damping(pPdfParam) {
@@ -41,22 +40,24 @@ void DfConverge_DIIS::convergeRhoTilde() {
 
   // switch (this->m_nMethodType) {
   // case METHOD_RKS:
-  //     this->convergeRhoTilde<TlDenseGeneralMatrix_BLAS_old,
-  //     TlDenseSymmetricMatrix_BLAS_Old,
-  //     TlVector_BLAS>(DfObject::RUN_RKS); break;
+  //     this->convergeRhoTilde<TlDenseGeneralMatrix_Lapack,
+  //     TlDenseSymmetricMatrix_Lapack,
+  //     TlDenseVector_Lapack>(DfObject::RUN_RKS); break;
   // case METHOD_UKS:
-  //     this->convergeRhoTilde<TlDenseGeneralMatrix_BLAS_old,
-  //     TlDenseSymmetricMatrix_BLAS_Old,
-  //     TlVector_BLAS>(DfObject::RUN_UKS_ALPHA);
-  //     this->convergeRhoTilde<TlDenseGeneralMatrix_BLAS_old,
-  //     TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS>(DfObject::RUN_UKS_BETA);
+  //     this->convergeRhoTilde<TlDenseGeneralMatrix_Lapack,
+  //     TlDenseSymmetricMatrix_Lapack,
+  //     TlDenseVector_Lapack>(DfObject::RUN_UKS_ALPHA);
+  //     this->convergeRhoTilde<TlDenseGeneralMatrix_Lapack,
+  //     TlDenseSymmetricMatrix_Lapack,
+  //     TlDenseVector_Lapack>(DfObject::RUN_UKS_BETA);
   //     break;
   // case METHOD_ROKS:
-  //     this->convergeRhoTilde<TlDenseGeneralMatrix_BLAS_old,
-  //     TlDenseSymmetricMatrix_BLAS_Old,
-  //     TlVector_BLAS>(DfObject::RUN_UKS_ALPHA);
-  //     this->convergeRhoTilde<TlDenseGeneralMatrix_BLAS_old,
-  //     TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS>(DfObject::RUN_UKS_BETA);
+  //     this->convergeRhoTilde<TlDenseGeneralMatrix_Lapack,
+  //     TlDenseSymmetricMatrix_Lapack,
+  //     TlDenseVector_Lapack>(DfObject::RUN_UKS_ALPHA);
+  //     this->convergeRhoTilde<TlDenseGeneralMatrix_Lapack,
+  //     TlDenseSymmetricMatrix_Lapack,
+  //     TlDenseVector_Lapack>(DfObject::RUN_UKS_BETA);
   //     break;
   // default:
   //     std::cerr << "program error. @DfConverge_Damping::convergeRhoTilde()"
@@ -67,23 +68,23 @@ void DfConverge_DIIS::convergeRhoTilde() {
 void DfConverge_DIIS::convergeKSMatrix() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      this->convergeKSMatrix<TlDenseGeneralMatrix_BLAS_old,
-                             TlDenseSymmetricMatrix_BLAS_Old>(DfObject::RUN_RKS);
+      this->convergeKSMatrix<TlDenseGeneralMatrix_Lapack,
+                             TlDenseSymmetricMatrix_Lapack>(DfObject::RUN_RKS);
       break;
     case METHOD_UKS:
-      this->convergeKSMatrix<TlDenseGeneralMatrix_BLAS_old,
-                             TlDenseSymmetricMatrix_BLAS_Old>(
+      this->convergeKSMatrix<TlDenseGeneralMatrix_Lapack,
+                             TlDenseSymmetricMatrix_Lapack>(
           DfObject::RUN_UKS_ALPHA);
-      this->convergeKSMatrix<TlDenseGeneralMatrix_BLAS_old,
-                             TlDenseSymmetricMatrix_BLAS_Old>(
+      this->convergeKSMatrix<TlDenseGeneralMatrix_Lapack,
+                             TlDenseSymmetricMatrix_Lapack>(
           DfObject::RUN_UKS_BETA);
       break;
     case METHOD_ROKS:
-      this->convergeKSMatrix<TlDenseGeneralMatrix_BLAS_old,
-                             TlDenseSymmetricMatrix_BLAS_Old>(
+      this->convergeKSMatrix<TlDenseGeneralMatrix_Lapack,
+                             TlDenseSymmetricMatrix_Lapack>(
           DfObject::RUN_ROKS_CLOSED);
-      this->convergeKSMatrix<TlDenseGeneralMatrix_BLAS_old,
-                             TlDenseSymmetricMatrix_BLAS_Old>(
+      this->convergeKSMatrix<TlDenseGeneralMatrix_Lapack,
+                             TlDenseSymmetricMatrix_Lapack>(
           DfObject::RUN_ROKS_OPEN);
       break;
     default:
@@ -96,23 +97,23 @@ void DfConverge_DIIS::convergeKSMatrix() {
 void DfConverge_DIIS::convergePMatrix() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      this->convergePMatrix<TlDenseGeneralMatrix_BLAS_old,
-                            TlDenseSymmetricMatrix_BLAS_Old>(DfObject::RUN_RKS);
+      this->convergePMatrix<TlDenseGeneralMatrix_Lapack,
+                            TlDenseSymmetricMatrix_Lapack>(DfObject::RUN_RKS);
       break;
     case METHOD_UKS:
-      this->convergePMatrix<TlDenseGeneralMatrix_BLAS_old,
-                            TlDenseSymmetricMatrix_BLAS_Old>(
+      this->convergePMatrix<TlDenseGeneralMatrix_Lapack,
+                            TlDenseSymmetricMatrix_Lapack>(
           DfObject::RUN_UKS_ALPHA);
-      this->convergePMatrix<TlDenseGeneralMatrix_BLAS_old,
-                            TlDenseSymmetricMatrix_BLAS_Old>(
+      this->convergePMatrix<TlDenseGeneralMatrix_Lapack,
+                            TlDenseSymmetricMatrix_Lapack>(
           DfObject::RUN_UKS_BETA);
       break;
     case METHOD_ROKS:
-      this->convergePMatrix<TlDenseGeneralMatrix_BLAS_old,
-                            TlDenseSymmetricMatrix_BLAS_Old>(
+      this->convergePMatrix<TlDenseGeneralMatrix_Lapack,
+                            TlDenseSymmetricMatrix_Lapack>(
           DfObject::RUN_ROKS_CLOSED);
-      this->convergePMatrix<TlDenseGeneralMatrix_BLAS_old,
-                            TlDenseSymmetricMatrix_BLAS_Old>(
+      this->convergePMatrix<TlDenseGeneralMatrix_Lapack,
+                            TlDenseSymmetricMatrix_Lapack>(
           DfObject::RUN_ROKS_OPEN);
       break;
     default:

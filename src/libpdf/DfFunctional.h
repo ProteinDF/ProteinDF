@@ -20,22 +20,22 @@
 #define DFFUNCTIONAL_H
 
 #include <vector>
-#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
 
 //
 enum { FA_R = 0, FA_X = 1, FB_R = 2, FB_X = 3, F_DIM = 4 };
 
 struct FunctionalSets {
-  FunctionalSets(int numOfTerms, TlDenseGeneralMatrix_BLAS_old::index_type dim)
+  FunctionalSets(int numOfTerms, TlDenseGeneralMatrix_Lapack::index_type dim)
       : FA_termR(numOfTerms, dim),
         FA_termX(numOfTerms, dim),
         FB_termR(numOfTerms, dim),
         FB_termX(numOfTerms, dim){};
 
-  TlDenseGeneralMatrix_BLAS_old FA_termR;
-  TlDenseGeneralMatrix_BLAS_old FA_termX;
-  TlDenseGeneralMatrix_BLAS_old FB_termR;
-  TlDenseGeneralMatrix_BLAS_old FB_termX;
+  TlDenseGeneralMatrix_Lapack FA_termR;
+  TlDenseGeneralMatrix_Lapack FA_termX;
+  TlDenseGeneralMatrix_Lapack FB_termR;
+  TlDenseGeneralMatrix_Lapack FB_termX;
 };
 
 enum {
@@ -54,7 +54,7 @@ enum {
 
 struct DerivativeFunctionalSets {
   DerivativeFunctionalSets(int numOfTerms,
-                           TlDenseGeneralMatrix_BLAS_old::index_type dim)
+                           TlDenseGeneralMatrix_Lapack::index_type dim)
       : rFrRhoA_R(numOfTerms, dim),
         rFrRhoA_X(numOfTerms, dim),
         rFrRhoB_R(numOfTerms, dim),
@@ -66,16 +66,16 @@ struct DerivativeFunctionalSets {
         rFrGBB_R(numOfTerms, dim),
         rFrGBB_X(numOfTerms, dim){};
 
-  TlDenseGeneralMatrix_BLAS_old rFrRhoA_R;  // roundF_roundRhoA_termR
-  TlDenseGeneralMatrix_BLAS_old rFrRhoA_X;  // roundF_roundRhoA_termX
-  TlDenseGeneralMatrix_BLAS_old rFrRhoB_R;  // roundF_roundRhoB_termR
-  TlDenseGeneralMatrix_BLAS_old rFrRhoB_X;  // roundF_roundRhoB_termX
-  TlDenseGeneralMatrix_BLAS_old rFrGAA_R;   // roundF_roundGammaAA_termR
-  TlDenseGeneralMatrix_BLAS_old rFrGAA_X;   // roundF_roundGammaAA_termX
-  TlDenseGeneralMatrix_BLAS_old rFrGAB_R;   // roundF_roundGammaAB_termR
-  TlDenseGeneralMatrix_BLAS_old rFrGAB_X;   // roundF_roundGammaAB_termX
-  TlDenseGeneralMatrix_BLAS_old rFrGBB_R;   // roundF_roundGammaBB_termR
-  TlDenseGeneralMatrix_BLAS_old rFrGBB_X;   // roundF_roundGammaBB_termX
+  TlDenseGeneralMatrix_Lapack rFrRhoA_R;  // roundF_roundRhoA_termR
+  TlDenseGeneralMatrix_Lapack rFrRhoA_X;  // roundF_roundRhoA_termX
+  TlDenseGeneralMatrix_Lapack rFrRhoB_R;  // roundF_roundRhoB_termR
+  TlDenseGeneralMatrix_Lapack rFrRhoB_X;  // roundF_roundRhoB_termX
+  TlDenseGeneralMatrix_Lapack rFrGAA_R;   // roundF_roundGammaAA_termR
+  TlDenseGeneralMatrix_Lapack rFrGAA_X;   // roundF_roundGammaAA_termX
+  TlDenseGeneralMatrix_Lapack rFrGAB_R;   // roundF_roundGammaAB_termR
+  TlDenseGeneralMatrix_Lapack rFrGAB_X;   // roundF_roundGammaAB_termX
+  TlDenseGeneralMatrix_Lapack rFrGBB_R;   // roundF_roundGammaBB_termR
+  TlDenseGeneralMatrix_Lapack rFrGBB_X;   // roundF_roundGammaBB_termX
 };
 
 /** 局所汎関数を扱うインターフェースクラス
@@ -83,7 +83,7 @@ struct DerivativeFunctionalSets {
  */
 class DfFunctional_LDA {
  public:
-  typedef TlDenseGeneralMatrix_BLAS_old::index_type index_type;
+  typedef TlDenseGeneralMatrix_Lapack::index_type index_type;
 
  public:
   DfFunctional_LDA();
@@ -131,11 +131,11 @@ class DfFunctional_LDA {
 
   // for Grid-Free ===================================================
  public:
-  FunctionalSets getFunctional_GF(const TlVector_BLAS& rhoAs,
-                                  const TlVector_BLAS& rhoBs);
+  FunctionalSets getFunctional_GF(const TlDenseVector_Lapack& rhoAs,
+                                  const TlDenseVector_Lapack& rhoBs);
 
   DerivativeFunctionalSets getDerivativeFunctional_GF(
-      const TlVector_BLAS& rhoAs, const TlVector_BLAS& rhoBs);
+      const TlDenseVector_Lapack& rhoAs, const TlDenseVector_Lapack& rhoBs);
 
   int getNumOfFunctionalTerms() const { return this->numOfFunctionalTerms_; }
 
@@ -144,14 +144,14 @@ class DfFunctional_LDA {
   }
 
  public:
-  virtual TlDenseGeneralMatrix_BLAS_old getFunctionalCore(const double rhoA,
-                                                      const double rhoB) {
-    return TlDenseGeneralMatrix_BLAS_old();
+  virtual TlDenseGeneralMatrix_Lapack getFunctionalCore(const double rhoA,
+                                                        const double rhoB) {
+    return TlDenseGeneralMatrix_Lapack();
   }
 
-  virtual TlDenseGeneralMatrix_BLAS_old getDerivativeFunctionalCore(
+  virtual TlDenseGeneralMatrix_Lapack getDerivativeFunctionalCore(
       const double rhoA, const double rhoB) {
-    return TlDenseGeneralMatrix_BLAS_old();
+    return TlDenseGeneralMatrix_Lapack();
   }
 
  protected:
@@ -164,7 +164,7 @@ class DfFunctional_LDA {
  */
 class DfFunctional_GGA {
  public:
-  typedef TlDenseGeneralMatrix_BLAS_old::index_type index_type;
+  typedef TlDenseGeneralMatrix_Lapack::index_type index_type;
 
  public:
   DfFunctional_GGA();
@@ -233,14 +233,14 @@ class DfFunctional_GGA {
 
   // for Grid-Free ===================================================
  public:
-  FunctionalSets getFunctional_GF(const TlVector_BLAS& rhoAs,
-                                  const TlVector_BLAS& rhoBs,
-                                  const TlVector_BLAS& xAs,
-                                  const TlVector_BLAS& xBs);
+  FunctionalSets getFunctional_GF(const TlDenseVector_Lapack& rhoAs,
+                                  const TlDenseVector_Lapack& rhoBs,
+                                  const TlDenseVector_Lapack& xAs,
+                                  const TlDenseVector_Lapack& xBs);
 
   DerivativeFunctionalSets getDerivativeFunctional_GF(
-      const TlVector_BLAS& rhoAs, const TlVector_BLAS& rhoBs,
-      const TlVector_BLAS& xAs, const TlVector_BLAS& xBs);
+      const TlDenseVector_Lapack& rhoAs, const TlDenseVector_Lapack& rhoBs,
+      const TlDenseVector_Lapack& xAs, const TlDenseVector_Lapack& xBs);
 
   int getNumOfFunctionalTerms() const { return this->numOfFunctionalTerms_; }
 
@@ -249,16 +249,16 @@ class DfFunctional_GGA {
   }
 
  public:
-  virtual TlDenseGeneralMatrix_BLAS_old getFunctionalCore(const double rhoA,
-                                                      const double rhoB,
-                                                      const double xA,
-                                                      const double xB) {
-    return TlDenseGeneralMatrix_BLAS_old();
+  virtual TlDenseGeneralMatrix_Lapack getFunctionalCore(const double rhoA,
+                                                        const double rhoB,
+                                                        const double xA,
+                                                        const double xB) {
+    return TlDenseGeneralMatrix_Lapack();
   }
 
-  virtual TlDenseGeneralMatrix_BLAS_old getDerivativeFunctionalCore(
+  virtual TlDenseGeneralMatrix_Lapack getDerivativeFunctionalCore(
       const double rhoA, const double rhoB, const double xA, const double xB) {
-    return TlDenseGeneralMatrix_BLAS_old();
+    return TlDenseGeneralMatrix_Lapack();
   }
 
  protected:

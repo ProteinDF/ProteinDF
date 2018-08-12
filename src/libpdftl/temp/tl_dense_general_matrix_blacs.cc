@@ -32,10 +32,12 @@
 #include "scalapack.h"
 #include "tl_dense_general_matrix_blacs.h"
 #include "tl_dense_general_matrix_io.h"
+#include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_blacs.h"
+#include "tl_dense_vector_blas.h"
 #include "tl_matrix_object.h"
 #include "tl_matrix_utils.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_scalapack_context.h"
 
 #ifdef HAVE_HDF5
 #include "TlHdf5Utils.h"
@@ -57,77 +59,77 @@ const TlDenseGeneralMatrix_blacs::size_type
     TlDenseGeneralMatrix_blacs::MAX_LOOP = std::numeric_limits<int>::max();
 bool TlDenseGeneralMatrix_blacs::isUsingPartialIO = false;
 
-TlScalapackContext* TlScalapackContext::m_pTlScalapackContextInstance = NULL;
-int TlScalapackContext::m_nContext = 0;
-int TlScalapackContext::m_nProc = 0;
-int TlScalapackContext::m_nRank = 0;
-int TlScalapackContext::m_nProcGridRow = 0;
-int TlScalapackContext::m_nProcGridCol = 0;
+// TlScalapackContext* TlScalapackContext::m_pTlScalapackContextInstance = NULL;
+// int TlScalapackContext::m_nContext = 0;
+// int TlScalapackContext::m_nProc = 0;
+// int TlScalapackContext::m_nRank = 0;
+// int TlScalapackContext::m_nProcGridRow = 0;
+// int TlScalapackContext::m_nProcGridCol = 0;
 
-TlScalapackContext::TlScalapackContext() {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-
-  // initialize
-  Cblacs_pinfo(&(this->m_nRank), &(this->m_nProc));
-  if (this->m_nProc < 1) {
-    if (this->m_nRank == 0) {
-      this->m_nProc = rComm.getNumOfProc();
-    }
-    Cblacs_setup(&(this->m_nRank), &(this->m_nProc));
-  }
-  Cblacs_get(-1, 0, &(this->m_nContext));
-
-  // // process grid
-  TlScalapackContext::m_nProc = rComm.getNumOfProc();
-  {
-    std::vector<int> f = TlMath::factor(TlScalapackContext::m_nProc);
-    int r = 1;
-    int c = 1;
-    int f_size = f.size();
-    for (int i = 0; i < f_size; ++i) {
-      if ((i % 2) == 0) {
-        c *= f[i];
-      } else {
-        r *= f[i];
-      }
-    }
-    TlScalapackContext::m_nProcGridRow = r;
-    TlScalapackContext::m_nProcGridCol = c;
-  }
-
-  // "Row-major" is default
-  Cblacs_gridinit(&(TlScalapackContext::m_nContext), "Row-major",
-                  TlScalapackContext::m_nProcGridRow,
-                  TlScalapackContext::m_nProcGridCol);
-}
-
-TlScalapackContext::~TlScalapackContext() {
-  Cblacs_gridexit(TlScalapackContext::m_nContext);
-  TlScalapackContext::m_nContext = 0;
-  Cblacs_exit(1);
-}
-
-void TlScalapackContext::getData(int& rContext, int& rProc, int& rRank,
-                                 int& rProcGridRow, int& rProcGridCol) {
-  if (TlScalapackContext::m_pTlScalapackContextInstance == NULL) {
-    TlScalapackContext::m_pTlScalapackContextInstance =
-        new TlScalapackContext();
-  }
-  assert(TlScalapackContext::m_pTlScalapackContextInstance != NULL);
-
-  rContext = TlScalapackContext::m_nContext;
-  rProc = TlScalapackContext::m_nProc;
-  rRank = TlScalapackContext::m_nRank;
-  rProcGridRow = TlScalapackContext::m_nProcGridRow;
-  rProcGridCol = TlScalapackContext::m_nProcGridCol;
-}
-
-void TlScalapackContext::finalize() {
-  if (TlScalapackContext::m_pTlScalapackContextInstance != NULL) {
-    delete TlScalapackContext::m_pTlScalapackContextInstance;
-    TlScalapackContext::m_pTlScalapackContextInstance = NULL;
-  }
-}
+// TlScalapackContext::TlScalapackContext() {
+//   TlCommunicate& rComm = TlCommunicate::getInstance();
+//
+//   // initialize
+//   Cblacs_pinfo(&(this->m_nRank), &(this->m_nProc));
+//   if (this->m_nProc < 1) {
+//     if (this->m_nRank == 0) {
+//       this->m_nProc = rComm.getNumOfProc();
+//     }
+//     Cblacs_setup(&(this->m_nRank), &(this->m_nProc));
+//   }
+//   Cblacs_get(-1, 0, &(this->m_nContext));
+//
+//   // // process grid
+//   TlScalapackContext::m_nProc = rComm.getNumOfProc();
+//   {
+//     std::vector<int> f = TlMath::factor(TlScalapackContext::m_nProc);
+//     int r = 1;
+//     int c = 1;
+//     int f_size = f.size();
+//     for (int i = 0; i < f_size; ++i) {
+//       if ((i % 2) == 0) {
+//         c *= f[i];
+//       } else {
+//         r *= f[i];
+//       }
+//     }
+//     TlScalapackContext::m_nProcGridRow = r;
+//     TlScalapackContext::m_nProcGridCol = c;
+//   }
+//
+//   // "Row-major" is default
+//   Cblacs_gridinit(&(TlScalapackContext::m_nContext), "Row-major",
+//                   TlScalapackContext::m_nProcGridRow,
+//                   TlScalapackContext::m_nProcGridCol);
+// }
+//
+// TlScalapackContext::~TlScalapackContext() {
+//   Cblacs_gridexit(TlScalapackContext::m_nContext);
+//   TlScalapackContext::m_nContext = 0;
+//   Cblacs_exit(1);
+// }
+//
+// void TlScalapackContext::getData(int& rContext, int& rProc, int& rRank,
+//                                  int& rProcGridRow, int& rProcGridCol) {
+//   if (TlScalapackContext::m_pTlScalapackContextInstance == NULL) {
+//     TlScalapackContext::m_pTlScalapackContextInstance =
+//         new TlScalapackContext();
+//   }
+//   assert(TlScalapackContext::m_pTlScalapackContextInstance != NULL);
+//
+//   rContext = TlScalapackContext::m_nContext;
+//   rProc = TlScalapackContext::m_nProc;
+//   rRank = TlScalapackContext::m_nRank;
+//   rProcGridRow = TlScalapackContext::m_nProcGridRow;
+//   rProcGridCol = TlScalapackContext::m_nProcGridCol;
+// }
+//
+// void TlScalapackContext::finalize() {
+//   if (TlScalapackContext::m_pTlScalapackContextInstance != NULL) {
+//     delete TlScalapackContext::m_pTlScalapackContextInstance;
+//     TlScalapackContext::m_pTlScalapackContextInstance = NULL;
+//   }
+// }
 
 ////////////////////////////////////////////////////////////////////////
 void TlDenseGeneralMatrix_blacs::LocalMatrixHeader::load(std::ifstream* pIs) {
@@ -428,17 +430,17 @@ TlDenseGeneralMatrix_blacs::TlDenseGeneralMatrix_blacs(
 
   const index_type numOfRows = this->getNumOfRows();
   const index_type numOfCols = this->getNumOfCols();
-  TlVector_BLAS rowVec(numOfCols);
+  TlDenseVector_Lapack rowVec(numOfCols);
   for (index_type row = 0; row < numOfRows; ++row) {
     const int charge = rhs.getSubunitID(row);
     if (charge == myRank) {
       rowVec = rhs.getVector(row);
       assert(rowVec.getSize() == numOfCols);
     }
-    rComm.broadcast(&(rowVec[0]), numOfCols, charge);
+    rComm.broadcast(rowVec.data(), numOfCols, charge);
 
     for (index_type col = 0; col < numOfCols; ++col) {
-      this->set(row, col, rowVec[col]);
+      this->set(row, col, rowVec.get(col));
     }
   }
 }
@@ -538,40 +540,12 @@ TlDistributedVector TlDenseGeneralMatrix_blacs::getVector() const {
                              this->getNumOfRows() * this->getNumOfCols());
 }
 
-TlVector_BLAS TlDenseGeneralMatrix_blacs::getRowVector(
-    const index_type nRow) const {
-  assert((0 <= nRow) && (nRow < this->m_nRows));
-
-  const int nGlobalCols = this->m_nCols;
-  TlVector_BLAS answer(nGlobalCols);
-
-  if (std::binary_search(this->m_RowIndexTable.begin(),
-                         this->m_RowIndexTable.end(), nRow) == true) {
-    std::vector<int>::const_iterator pEnd = this->m_ColIndexTable.end();
-    for (std::vector<int>::const_iterator p = this->m_ColIndexTable.begin();
-         p != pEnd; ++p) {
-      const int nCol = *p;
-      if (nCol < nGlobalCols) {
-        const TlMatrixObject::size_type local_index =
-            this->getIndex(nRow, nCol);
-        assert(local_index != -1);
-        answer[nCol] = this->pData_[local_index];
-      }
-    }
-  }
-
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.allReduce_SUM(answer);
-
-  return answer;
-}
-
-TlVector_BLAS TlDenseGeneralMatrix_blacs::getColumnVector(
+TlDenseVector_Lapack TlDenseGeneralMatrix_blacs::getColumnVector(
     const index_type nCol) const {
   assert((0 <= nCol) && (nCol < this->m_nCols));
 
   const int nGlobalRows = this->m_nRows;
-  TlVector_BLAS answer(nGlobalRows);
+  TlDenseVector_Lapack answer(nGlobalRows);
 
   if (std::binary_search(this->m_ColIndexTable.begin(),
                          this->m_ColIndexTable.end(), nCol) == true) {
@@ -583,13 +557,13 @@ TlVector_BLAS TlDenseGeneralMatrix_blacs::getColumnVector(
         const TlMatrixObject::size_type local_index =
             this->getIndex(nRow, nCol);
         assert(local_index != -1);
-        answer[nRow] = this->pData_[local_index];
+        answer.set(nRow, this->pData_[local_index]);
       }
     }
   }
 
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.allReduce_SUM(answer);
+  rComm.allReduce_SUM(&answer);
 
   return answer;
 }
@@ -2032,12 +2006,12 @@ TlDenseGeneralMatrix_blacs::getColIndexTable() const {
   return this->m_ColIndexTable;
 }
 
-TlDenseGeneralMatrix_BLAS_old TlDenseGeneralMatrix_blacs::getLocalMatrix() const {
+TlDenseGeneralMatrix_Lapack TlDenseGeneralMatrix_blacs::getLocalMatrix() const {
   const std::vector<index_type> rowIndexes = this->getRowIndexTable();
   const std::vector<index_type> colIndexes = this->getColIndexTable();
   const int numOfRowIndexes = rowIndexes.size();
   const int numOfColIndexes = colIndexes.size();
-  TlDenseGeneralMatrix_BLAS_old answer(numOfRowIndexes, numOfColIndexes);
+  TlDenseGeneralMatrix_Lapack answer(numOfRowIndexes, numOfColIndexes);
 
   for (int rowIndex = 0; rowIndex < numOfRowIndexes; ++rowIndex) {
     const index_type row = rowIndexes[rowIndex];
@@ -2260,7 +2234,7 @@ TlDenseGeneralMatrix_blacs operator-(const TlDenseGeneralMatrix_blacs& X,
 //   }
 // }
 
-bool TlDenseGeneralMatrix_blacs::inverse() {
+TlDenseGeneralMatrix_blacs TlDenseGeneralMatrix_blacs::inverse() const {
 #ifdef HAVE_SCALAPACK
   // using SCALAPACK
   return inverseByScaLapack(*this);
@@ -2270,9 +2244,9 @@ bool TlDenseGeneralMatrix_blacs::inverse() {
 #endif  // HAVE_SCALAPACK
 }
 
-TlVector_BLAS TlDenseGeneralMatrix_blacs::getDiagonalElements() const {
+TlDenseVector_Lapack TlDenseGeneralMatrix_blacs::getDiagonalElements() const {
   const index_type dim = std::min(this->getNumOfRows(), this->getNumOfCols());
-  TlVector_BLAS answer(dim);
+  TlDenseVector_Lapack answer(dim);
 
   for (index_type i = 0; i < dim; ++i) {
     const double value = this->getLocal(i, i);
@@ -2280,11 +2254,27 @@ TlVector_BLAS TlDenseGeneralMatrix_blacs::getDiagonalElements() const {
   }
 
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.allReduce_SUM(answer);
+  rComm.allReduce_SUM(&answer);
 
   return answer;
 }
 
+std::vector<double> TlDenseGeneralMatrix_blacs::diagonals() const {
+  const index_type dim = std::min(this->getNumOfRows(), this->getNumOfCols());
+  std::vector<double> answer(dim, 0.0);
+
+  for (index_type i = 0; i < dim; ++i) {
+    const double value = this->getLocal(i, i);
+    answer[i] = value;
+  }
+
+  TlCommunicate& rComm = TlCommunicate::getInstance();
+  rComm.allReduce_SUM(&(answer[0]), dim);
+
+  return answer;
+}
+
+// pddot?
 // pddot?
 const TlDenseGeneralMatrix_blacs& TlDenseGeneralMatrix_blacs::dotInPlace(
     const TlDenseGeneralMatrix_blacs& X) {
@@ -3140,55 +3130,47 @@ bool TlDenseGeneralMatrix_blacs::saveText(std::ofstream& ofs) const {
 }
 
 ////////////////////////////////////////////////////////////////////////
-bool inverseByScaLapack(TlDenseGeneralMatrix_blacs& X) {
-  // TlCommunicate& rComm = TlCommunicate::getInstance();
-  // const double dStartTime = rComm.getTime();
+TlDenseGeneralMatrix_blacs inverseByScaLapack(
+    const TlDenseGeneralMatrix_blacs& X) {
+  TlDenseGeneralMatrix_blacs A = X;
 
-  // X.print(std::cout);
-
-  bool bAnswer = true;
-
-  const int M = X.getNumOfRows();
-  const int N = X.getNumOfCols();
+  const int M = A.getNumOfRows();
+  const int N = A.getNumOfCols();
   const int IA = 1;
   const int JA = 1;
   const int zero = 0;
   int info = 0;
-  const int sizeOf_IPIV = numroc_(&X.m_nRows, &X.m_nBlockSize, &X.m_nMyProcRow,
-                                  &zero, &X.m_nProcGridRow) +
-                          X.m_nBlockSize;
-  // std::cout << "IPIV=" << sizeOf_IPIV << std::endl;
+  const int sizeOf_IPIV = numroc_(&A.m_nRows, &A.m_nBlockSize, &A.m_nMyProcRow,
+                                  &zero, &A.m_nProcGridRow) +
+                          A.m_nBlockSize;
 
   int* IPIV = new int[sizeOf_IPIV];
-  //   std::fill_n(IPIV, sizeOf_IPIV, 0);
 
-  pdgetrf_(&M, &N, X.pData_, &IA, &JA, X.m_pDESC, IPIV, &info);
+  pdgetrf_(&M, &N, A.pData_, &IA, &JA, X.m_pDESC, IPIV, &info);
 
   if (info == 0) {
     int LWORK = -1;
     int LIWORK = -1;
     double* WORK_SIZE = new double[1];
     int* IWORK_SIZE = new int[1];
-    pdgetri_(&M, X.pData_, &IA, &JA, X.m_pDESC, IPIV, WORK_SIZE, &LWORK,
+    pdgetri_(&M, A.pData_, &IA, &JA, A.m_pDESC, IPIV, WORK_SIZE, &LWORK,
              IWORK_SIZE, &LIWORK, &info);
 
     LWORK = static_cast<int>(WORK_SIZE[0]);
-    // std::cout << "LWORK=" << LWORK << std::endl;
     double* WORK = new double[LWORK];
     LIWORK = IWORK_SIZE[0];
-    // std::cout << "LIWORK=" << LIWORK << std::endl;
     int* IWORK = new int[LIWORK];
     delete[] WORK_SIZE;
     WORK_SIZE = NULL;
     delete[] IWORK_SIZE;
     IWORK_SIZE = NULL;
 
-    pdgetri_(&M, X.pData_, &IA, &JA, X.m_pDESC, IPIV, WORK, &LWORK, IWORK,
+    pdgetri_(&M, A.pData_, &IA, &JA, A.m_pDESC, IPIV, WORK, &LWORK, IWORK,
              &LIWORK, &info);
 
     if (info != 0) {
       std::cout << "pdgetri_ returns " << info << std::endl;
-      bAnswer = false;
+      throw;
     }
 
     delete[] IWORK;
@@ -3198,21 +3180,13 @@ bool inverseByScaLapack(TlDenseGeneralMatrix_blacs& X) {
     WORK = NULL;
   } else {
     std::cout << "pdgetrf_ returns " << info << std::endl;
-    bAnswer = false;
+    throw;
   }
 
   delete[] IPIV;
   IPIV = NULL;
 
-  //   const double dEndTime = rComm.getTime();
-  //   if (rComm.isMaster() == true){
-  //     std::cout << "TlDenseGeneralMatrix_blacs::inverseMatrix() time:" <<
-  //     (dEndTime
-  //     -
-  //     dStartTime) << std::endl;
-  //   }
-
-  return bAnswer;
+  return A;
 }
 
 const TlDenseGeneralMatrix_blacs&

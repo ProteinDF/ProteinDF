@@ -22,7 +22,7 @@
 #include <fstream>
 #include "CnError.h"
 #include "TlUtils.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 DfConvcheck::DfConvcheck(TlSerializeData* pPdfParam, int num_iter)
     : DfObject(pPdfParam) {
@@ -52,7 +52,7 @@ void DfConvcheck::check() {
   }
 
   this->log_.info("convgergence check (serial) using LAPACK");
-  this->check<TlDenseSymmetricMatrix_BLAS_Old>(this->m_nIteration);
+  this->check<TlDenseSymmetricMatrix_Lapack>(this->m_nIteration);
 
   // check for convergence
   this->isConverged_ = ((this->judgeRmsMatrixA_) && (this->judgeRmsMatrixB_) &&

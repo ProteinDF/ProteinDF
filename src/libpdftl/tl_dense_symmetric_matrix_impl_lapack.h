@@ -20,14 +20,17 @@ class TlDenseSymmetricMatrix_ImplLapack
   // ---------------------------------------------------------------------------
   // properties
   // ---------------------------------------------------------------------------
+ public:
+  virtual void resize(TlMatrixObject::index_type row,
+                      TlMatrixObject::index_type col);
 
   // ---------------------------------------------------------------------------
   // operators
   // ---------------------------------------------------------------------------
  public:
   TlDenseSymmetricMatrix_ImplLapack& operator*=(const double coef);
-  const TlDenseGeneralMatrix_ImplLapack operator*=(
-      const TlDenseSymmetricMatrix_ImplLapack& rhs);
+  // const TlDenseGeneralMatrix_ImplLapack operator*=(
+  //   const TlDenseSymmetricMatrix_ImplLapack& rhs);
 
   // ---------------------------------------------------------------------------
   // operations
@@ -48,10 +51,18 @@ class TlDenseSymmetricMatrix_ImplLapack
            TlDenseGeneralMatrix_ImplLapack* pEigVec) const;
 
   // ---------------------------------------------------------------------------
+  // I/O
+  // ---------------------------------------------------------------------------
+ public:
+  // virtual void dump(double* buf, const std::size_t size) const;
+  // virtual void restore(const double* buf, const std::size_t size);
+
+  // ---------------------------------------------------------------------------
   // protected
   // ---------------------------------------------------------------------------
  protected:
   virtual TlMatrixObject::size_type getNumOfElements() const;
+
   virtual TlMatrixObject::size_type index(TlMatrixObject::index_type row,
                                           TlMatrixObject::index_type col) const;
 
@@ -60,8 +71,17 @@ class TlDenseSymmetricMatrix_ImplLapack
   // ---------------------------------------------------------------------------
 
   // ---------------------------------------------------------------------------
-  // others
+  // friends
   // ---------------------------------------------------------------------------
+  friend class TlDenseSymmetricMatrix_Lapack;
+
+  friend TlDenseGeneralMatrix_ImplLapack operator*(
+      const TlDenseSymmetricMatrix_ImplLapack& rhs1,
+      const TlDenseGeneralMatrix_ImplLapack& rhs2);
+  friend TlDenseGeneralMatrix_ImplLapack operator*(
+      const TlDenseGeneralMatrix_ImplLapack& rhs1,
+      const TlDenseSymmetricMatrix_ImplLapack& rhs2);
+
   friend TlDenseVector_ImplLapack operator*(
       const TlDenseSymmetricMatrix_ImplLapack& mat,
       const TlDenseVector_ImplLapack& vec);

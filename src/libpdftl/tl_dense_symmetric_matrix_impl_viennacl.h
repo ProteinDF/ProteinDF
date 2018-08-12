@@ -9,6 +9,7 @@
 
 class TlDenseGeneralMatrix_ImplViennaCL;
 class TlDenseVector_ImplViennaCL;
+class TlDenseSymmetricMatrix_ImplEigen;
 
 class TlDenseSymmetricMatrix_ImplViennaCL
     : public TlDenseGeneralMatrix_ImplViennaCL {
@@ -22,6 +23,8 @@ class TlDenseSymmetricMatrix_ImplViennaCL
       const TlDenseSymmetricMatrix_ImplViennaCL& rhs);
   TlDenseSymmetricMatrix_ImplViennaCL(
       const TlDenseGeneralMatrix_ImplViennaCL& rhs);
+  TlDenseSymmetricMatrix_ImplViennaCL(
+      const TlDenseSymmetricMatrix_ImplEigen& rhs);
   virtual ~TlDenseSymmetricMatrix_ImplViennaCL();
 
   // ---------------------------------------------------------------------------
@@ -52,6 +55,8 @@ class TlDenseSymmetricMatrix_ImplViennaCL
   TlDenseSymmetricMatrix_ImplViennaCL inverse() const;
   bool eig(TlDenseVector_ImplViennaCL* pEigval,
            TlDenseGeneralMatrix_ImplViennaCL* pEigvec) const;
+  bool eig_QR(TlDenseVector_ImplViennaCL* pEigval,
+              TlDenseGeneralMatrix_ImplViennaCL* pEigvec) const;
 
   // ---------------------------------------------------------------------------
   // private

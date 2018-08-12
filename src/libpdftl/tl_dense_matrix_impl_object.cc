@@ -1,4 +1,23 @@
+#include <cmath>
+
 #include "tl_dense_matrix_impl_object.h"
+#include "tl_dense_vector_object.h"
+#include "TlUtils.h"
+
+// ---------------------------------------------------------------------------
+// operations
+// ---------------------------------------------------------------------------
+std::vector<double> TlDenseMatrix_ImplObject::diagonals() const {
+  const TlMatrixObject::index_type dim =
+      std::min(this->getNumOfRows(), this->getNumOfCols());
+
+  std::vector<double> answer(dim, 0.0);
+  for (TlMatrixObject::index_type i = 0; i < dim; ++i) {
+    answer[i] = this->get(i, i);
+  }
+
+  return answer;
+}
 
 double TlDenseMatrix_ImplObject::sum() const {
   const TlMatrixObject::index_type rows = this->getNumOfRows();
@@ -19,10 +38,8 @@ double TlDenseMatrix_ImplObject::trace() const {
       std::min(this->getNumOfRows(), this->getNumOfCols());
 
   double answer = 0.0;
-  for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
-    for (TlMatrixObject::index_type c = 0; c < dim; ++c) {
-      answer += this->get(r, c);
-    }
+  for (TlMatrixObject::index_type i = 0; i < dim; ++i) {
+    answer += this->get(i, i);
   }
 
   return answer;
@@ -74,4 +91,77 @@ double TlDenseMatrix_ImplObject::getMaxAbsoluteElement(
   }
 
   return answer;
+}
+
+// ---------------------------------------------------------------------------
+// I/O
+// ---------------------------------------------------------------------------
+void TlDenseMatrix_ImplObject::dump(double* buf, const std::size_t size) const {
+  const TlMatrixObject::index_type rows = this->getNumOfRows();
+  const TlMatrixObject::index_type cols = this->getNumOfCols();
+
+  std::size_t count = 0;
+  for (TlMatrixObject::index_type r = 0; r < rows; ++r) {
+    for (TlMatrixObject::index_type c = 0; c < cols; ++c) {
+      if (count > size) {
+        return;
+      }
+
+      buf[count] = this->get(r, c);
+      ++count;
+    }
+  }
+}
+
+void TlDenseMatrix_ImplObject::restore(const double* buf,
+                                       const std::size_t size) {
+  const TlMatrixObject::index_type rows = this->getNumOfRows();
+  const TlMatrixObject::index_type cols = this->getNumOfCols();
+
+  std::size_t count = 0;
+  for (TlMatrixObject::index_type r = 0; r < rows; ++r) {
+    for (TlMatrixObject::index_type c = 0; c < cols; ++c) {
+      if (count > size) {
+        return;
+      }
+
+      this->set(r, c, buf[count]);
+      ++count;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+std::ostream& operator<<(std::ostream& stream,
+                         const TlDenseMatrix_ImplObject& mat) {
+  const TlMatrixObject::index_type numOfRows = mat.getNumOfRows();
+  const TlMatrixObject::index_type numOfCols = mat.getNumOfCols();
+
+  for (TlMatrixObject::index_type ord = 0; ord < numOfCols; ord += 10) {
+    stream << "       ";
+    for (TlMatrixObject::index_type j = ord;
+         ((j < ord + 10) && (j < numOfCols)); ++j) {
+      stream << TlUtils::format("   %5d th", j + 1);
+    }
+    stream << "\n ----";
+
+    for (TlMatrixObject::index_type j = ord;
+         ((j < ord + 10) && (j < numOfCols)); ++j) {
+      stream << "-----------";
+    }
+    stream << "----\n";
+
+    for (TlMatrixObject::index_type i = 0; i < numOfRows; ++i) {
+      stream << TlUtils::format(" %5d  ", i + 1);
+
+      for (TlMatrixObject::index_type j = ord;
+           ((j < ord + 10) && (j < numOfCols)); ++j) {
+        stream << TlUtils::format(" %10.6lf", mat.get(i, j));
+      }
+      stream << "\n";
+    }
+    stream << "\n\n";
+  }
+
+  return stream;
 }

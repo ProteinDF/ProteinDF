@@ -28,8 +28,8 @@
 #include "DfObject.h"
 #include "DfTaskCtrl.h"
 #include "TlOrbitalInfo.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 class DfHpqX : public DfObject {
  public:
@@ -41,8 +41,8 @@ class DfHpqX : public DfObject {
   virtual ~DfHpqX();
 
  public:
-  void getHpq(TlDenseSymmetricMatrix_BLAS_Old* pHpq,
-              TlDenseSymmetricMatrix_BLAS_Old* pHpq2);
+  void getHpq(TlDenseSymmetricMatrix_Lapack* pHpq,
+              TlDenseSymmetricMatrix_Lapack* pHpq2);
 
   /// Hpq由来の力成分を求める
   ///
@@ -50,9 +50,9 @@ class DfHpqX : public DfObject {
   /// @param [out] pForce 原子数(dummy chargeを含む)×3(x, y, z成分)の行列
   /// @param [out] pForce_Xonly 原子数(dummy chargeを含む)×3(x, y,
   /// z成分)の行列(dummy charge由来)
-  void getForce(const TlDenseSymmetricMatrix_BLAS_Old& P,
-                TlDenseGeneralMatrix_BLAS_old* pForce,
-                TlDenseGeneralMatrix_BLAS_old* pForce_Xonly);
+  void getForce(const TlDenseSymmetricMatrix_Lapack& P,
+                TlDenseGeneralMatrix_Lapack* pForce,
+                TlDenseGeneralMatrix_Lapack* pForce_Xonly);
 
   /// ESP を求める
   ///
@@ -75,8 +75,8 @@ class DfHpqX : public DfObject {
 
   virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
-  virtual void finalize(TlDenseSymmetricMatrix_BLAS_Old* pHpq,
-                        TlDenseSymmetricMatrix_BLAS_Old* pHpq2);
+  virtual void finalize(TlDenseSymmetricMatrix_Lapack* pHpq,
+                        TlDenseSymmetricMatrix_Lapack* pHpq2);
   virtual void finalize(std::vector<double>* pValues);
 
  protected:
@@ -89,8 +89,8 @@ class DfHpqX : public DfObject {
                          const int shellTypeP, const int shellTypeQ,
                          const index_type shellIndexP,
                          const ShellArray& shellArrayQ, const TlMatrixObject& P,
-                         TlDenseGeneralMatrix_BLAS_old* pForce,
-                         TlDenseGeneralMatrix_BLAS_old* pForceX);
+                         TlDenseGeneralMatrix_Lapack* pForce,
+                         TlDenseGeneralMatrix_Lapack* pForceX);
 
   void getESP_part(const TlOrbitalInfoObject& orbitalInfo,
                    const std::vector<DfTaskCtrl::Task2>& taskList,

@@ -50,10 +50,12 @@ class TlDenseGeneralMatrix_ViennaCL : public TlDenseGeneralMatrixObject {
   // operations
   // ---------------------------------------------------------------------------
  public:
-  double sum() const;
-  double getRMS() const;
-  double getMaxAbsoluteElement(TlMatrixObject::index_type* outRow,
-                               TlMatrixObject::index_type* outCol) const;
+  virtual double sum() const;
+  // virtual double trace() const;
+  virtual double getRMS() const;
+  // virtual double getMaxAbsoluteElement(
+  //  TlMatrixObject::index_type* outRow,
+  //  TlMatrixObject::index_type* outCol) const;
 
   const TlDenseGeneralMatrix_ViennaCL& dotInPlace(
       const TlDenseGeneralMatrix_ViennaCL& rhs);

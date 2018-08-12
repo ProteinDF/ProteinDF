@@ -16,11 +16,12 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "tl_matrix_object.h"
+#include <cassert>
 #include <cmath>
 #include <iostream>
 #include <limits>
-
-#include "tl_matrix_object.h"
+#include "TlUtils.h"
 
 TlMatrixObject::TlMatrixObject(const MatrixType matrixType,
                                const index_type row, const index_type col)
@@ -118,3 +119,36 @@ TlMatrixObject::size_type TlMatrixObject::getIndex_RLHD(index_type row,
 //
 //   return answer;
 // }
+
+std::ostream& operator<<(std::ostream& stream, const TlMatrixObject& mat) {
+  const TlMatrixObject::index_type numOfRows = mat.getNumOfRows();
+  const TlMatrixObject::index_type numOfCols = mat.getNumOfCols();
+
+  for (TlMatrixObject::index_type ord = 0; ord < numOfCols; ord += 10) {
+    stream << "       ";
+    for (TlMatrixObject::index_type j = ord;
+         ((j < ord + 10) && (j < numOfCols)); ++j) {
+      stream << TlUtils::format("   %5d th", j + 1);
+    }
+    stream << "\n ----";
+
+    for (TlMatrixObject::index_type j = ord;
+         ((j < ord + 10) && (j < numOfCols)); ++j) {
+      stream << "-----------";
+    }
+    stream << "----\n";
+
+    for (TlMatrixObject::index_type i = 0; i < numOfRows; ++i) {
+      stream << TlUtils::format(" %5d  ", i + 1);
+
+      for (TlMatrixObject::index_type j = ord;
+           ((j < ord + 10) && (j < numOfCols)); ++j) {
+        stream << TlUtils::format(" %10.6lf", mat.get(i, j));
+      }
+      stream << "\n";
+    }
+    stream << "\n\n";
+  }
+
+  return stream;
+}

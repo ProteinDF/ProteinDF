@@ -54,6 +54,7 @@ class TlDenseSymmetricMatrix_ImplEigen : public TlDenseGeneralMatrix_ImplEigen {
   // others
   // ---------------------------------------------------------------------------
   friend class TlDenseGeneralMatrix_ImplEigen;
+  friend class TlDenseSymmetricMatrix_ImplViennaCL;
 
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // Eigen macro

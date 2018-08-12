@@ -45,8 +45,6 @@ class TlDenseGeneralMatrix_Eigen : public TlDenseGeneralMatrixObject {
  public:
   double sum() const;
   double getRMS() const;
-  double getMaxAbsoluteElement(TlMatrixObject::index_type* outRow,
-                               TlMatrixObject::index_type* outCol) const;
 
   const TlDenseGeneralMatrix_Eigen& dotInPlace(
       const TlDenseGeneralMatrix_Eigen& rhs);

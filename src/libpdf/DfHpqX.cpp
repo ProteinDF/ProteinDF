@@ -47,8 +47,8 @@ DfTaskCtrl* DfHpqX::getDfTaskCtrlObject() const {
   return pDfTaskCtrl;
 }
 
-void DfHpqX::finalize(TlDenseSymmetricMatrix_BLAS_Old* pHpq,
-                      TlDenseSymmetricMatrix_BLAS_Old* pHpq2) {
+void DfHpqX::finalize(TlDenseSymmetricMatrix_Lapack* pHpq,
+                      TlDenseSymmetricMatrix_Lapack* pHpq2) {
   // do nothing
 }
 
@@ -56,8 +56,8 @@ void DfHpqX::finalize(std::vector<double>* pValues) {
   // do nothing
 }
 
-void DfHpqX::getHpq(TlDenseSymmetricMatrix_BLAS_Old* pHpq,
-                    TlDenseSymmetricMatrix_BLAS_Old* pHpq2) {
+void DfHpqX::getHpq(TlDenseSymmetricMatrix_Lapack* pHpq,
+                    TlDenseSymmetricMatrix_Lapack* pHpq2) {
   const int numOfAOs = this->m_nNumOfAOs;
 
   // make coordinates
@@ -170,9 +170,9 @@ void DfHpqX::getHpq_part(const TlOrbitalInfoObject& orbitalInfo,
   }
 }
 
-void DfHpqX::getForce(const TlDenseSymmetricMatrix_BLAS_Old& P,
-                      TlDenseGeneralMatrix_BLAS_old* pForce,
-                      TlDenseGeneralMatrix_BLAS_old* pForce_Xonly) {
+void DfHpqX::getForce(const TlDenseSymmetricMatrix_Lapack& P,
+                      TlDenseGeneralMatrix_Lapack* pForce,
+                      TlDenseGeneralMatrix_Lapack* pForce_Xonly) {
   assert(pForce != NULL);
   pForce->resize(this->m_nNumOfAtoms, 3);
 
@@ -210,8 +210,8 @@ void DfHpqX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
                                const index_type shellIndexP,
                                const ShellArray& shellArrayQ,
                                const TlMatrixObject& P,
-                               TlDenseGeneralMatrix_BLAS_old* pForce_woX,
-                               TlDenseGeneralMatrix_BLAS_old* pForce_Xonly) {
+                               TlDenseGeneralMatrix_Lapack* pForce_woX,
+                               TlDenseGeneralMatrix_Lapack* pForce_Xonly) {
   static const int BUFFER_SIZE_NUC = 3 * 5 * 5 * 5;  // (xyz) * 5d * 5d * 5d
   const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
 
@@ -325,7 +325,7 @@ void DfHpqX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
                   this->pEngines_[threadID].WORK_NUC + BUFFER_SIZE_NUC,
                   p_dNuc_dB);
 
-        TlDenseGeneralMatrix_BLAS_old* pForce = pForce_woX;
+        TlDenseGeneralMatrix_Lapack* pForce = pForce_woX;
         if (C.getSymbol() == "X") {
           pForce = pForce_Xonly;
         }

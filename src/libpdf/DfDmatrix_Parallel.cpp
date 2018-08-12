@@ -24,8 +24,8 @@
 #include "TlCommunicate.h"
 #include "TlFile.h"
 #include "TlTime.h"
-#include "tl_dense_general_matrix_blacs.h"
-#include "tl_dense_symmetric_matrix_blacs.h"
+#include "tl_dense_general_matrix_scalapack.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
 
 DfDmatrix_Parallel::DfDmatrix_Parallel(TlSerializeData* pPdfParam)
     : DfDmatrix(pPdfParam) {}
@@ -59,12 +59,12 @@ void DfDmatrix_Parallel::main_SCALAPACK(const DfObject::RUN_TYPE runType) {
   this->log_.info("build density matrix using ScaLAPACK.");
 
   // occupation
-  TlVector_BLAS currOcc;
+  TlDenseVector_Lapack currOcc;
   switch (this->orbitalCorrespondenceMethod_) {
     case OCM_OVERLAP:
       this->log_.info(" orbital correspondence method: MO-overlap");
-      currOcc =
-          this->getOccupationUsingOverlap<TlDenseGeneralMatrix_blacs>(runType);
+      currOcc = this->getOccupationUsingOverlap<TlDenseGeneralMatrix_Scalapack>(
+          runType);
       if (rComm.isMaster() == true) {
         currOcc.save(this->getOccupationPath(runType));
       }
@@ -72,8 +72,10 @@ void DfDmatrix_Parallel::main_SCALAPACK(const DfObject::RUN_TYPE runType) {
 
     case OCM_PROJECTION:
       this->log_.info(" orbital correspondence method: MO-projection");
-      currOcc = this->getOccupationUsingProjection<
-          TlDenseGeneralMatrix_blacs, TlDenseSymmetricMatrix_blacs>(runType);
+      currOcc =
+          this->getOccupationUsingProjection<TlDenseGeneralMatrix_Scalapack,
+                                             TlDenseSymmetricMatrix_Scalapack>(
+              runType);
       if (rComm.isMaster() == true) {
         currOcc.save(this->getOccupationPath(runType));
       }
@@ -84,17 +86,18 @@ void DfDmatrix_Parallel::main_SCALAPACK(const DfObject::RUN_TYPE runType) {
         this->log_.info(" orbital correspondence method: none");
         currOcc.load(this->getOccupationPath(runType));
       }
-      rComm.broadcast(currOcc);
+      rComm.broadcast(&currOcc);
       break;
   }
 
   rComm.barrier();
-  this->generateDensityMatrix<TlDenseGeneralMatrix_blacs,
-                              TlDenseSymmetricMatrix_blacs>(runType, currOcc);
+  this->generateDensityMatrix<TlDenseGeneralMatrix_Scalapack,
+                              TlDenseSymmetricMatrix_Scalapack>(runType,
+                                                                currOcc);
 }
 
-void DfDmatrix_Parallel::checkOccupation(const TlVector_BLAS& prevOcc,
-                                         const TlVector_BLAS& currOcc) {
+void DfDmatrix_Parallel::checkOccupation(const TlDenseVector_Lapack& prevOcc,
+                                         const TlDenseVector_Lapack& currOcc) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
   if (rComm.isMaster() == true) {
@@ -102,7 +105,7 @@ void DfDmatrix_Parallel::checkOccupation(const TlVector_BLAS& prevOcc,
   }
 }
 
-void DfDmatrix_Parallel::printOccupation(const TlVector_BLAS& occ) {
+void DfDmatrix_Parallel::printOccupation(const TlDenseVector_Lapack& occ) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
   if (rComm.isMaster() == true) {
@@ -110,13 +113,14 @@ void DfDmatrix_Parallel::printOccupation(const TlVector_BLAS& occ) {
   }
 }
 
-TlVector_BLAS DfDmatrix_Parallel::getOccVtr(const DfObject::RUN_TYPE runType) {
+TlDenseVector_Lapack DfDmatrix_Parallel::getOccVtr(
+    const DfObject::RUN_TYPE runType) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  TlVector_BLAS occ;
+  TlDenseVector_Lapack occ;
   if (rComm.isMaster() == true) {
     occ = DfObject::getOccVtr(runType);
   }
-  rComm.broadcast(occ);
+  rComm.broadcast(&occ);
 
   return occ;
 }

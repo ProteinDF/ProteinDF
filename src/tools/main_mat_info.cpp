@@ -21,9 +21,8 @@
 #include <string>
 
 #include "TlGetopt.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
 #include "tl_matrix_utils.h"
+#include "TlUtils.h"
 
 void showHelp(const std::string& progname) {
   std::cout << TlUtils::format("%s [options] MATRIX_FILE", progname.c_str())

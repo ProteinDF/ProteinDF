@@ -1,7 +1,7 @@
-#include <iostream>
 #include "tl_dense_general_matrix_impl_eigen.h"
 #include <Eigen/Core>
 #include <Eigen/LU>
+#include <iostream>
 #include "tl_dense_symmetric_matrix_impl_eigen.h"
 #include "tl_dense_vector_impl_eigen.h"
 
@@ -66,6 +66,8 @@ void TlDenseGeneralMatrix_ImplEigen::add(const TlMatrixObject::index_type row,
 TlDenseGeneralMatrix_ImplEigen& TlDenseGeneralMatrix_ImplEigen::operator=(
     const TlDenseGeneralMatrix_ImplEigen& rhs) {
   this->matrix_ = rhs.matrix_;
+
+  return *this;
 }
 
 TlDenseGeneralMatrix_ImplEigen& TlDenseGeneralMatrix_ImplEigen::operator+=(
@@ -168,6 +170,11 @@ double TlDenseGeneralMatrix_ImplEigen::getMaxAbsoluteElement(
   }
 
   return answer;
+}
+
+void TlDenseGeneralMatrix_ImplEigen::transposeInPlace() {
+  TlDenseGeneralMatrix_ImplEigen tmp = this->transpose();
+  std::swap(*this, tmp);
 }
 
 const TlDenseGeneralMatrix_ImplEigen&

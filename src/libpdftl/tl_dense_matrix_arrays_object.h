@@ -23,7 +23,9 @@
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
+#include <vector>
 #include "tl_matrix_object.h"
+#include "tl_dense_vector_lapack.h"
 
 /// 配列の配列として行列を扱うためのコンテナ
 class TlDenseMatrix_arrays_Object : public TlMatrixObject {
@@ -67,10 +69,10 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
 
   double get_from_vm(index_type vectorIndex, index_type index) const;
 
-  TlVector_BLAS getVector(index_type vectorIndex) const;
+    std::vector<double> getVector(index_type vectorIndex) const;
   void getVector(const index_type vectorIndex, double* pBuf,
                  const index_type length) const;
-  void setVector(index_type vectorIndex, const TlVector_BLAS& v);
+  void setVector(index_type vectorIndex, const TlDenseVector_Lapack& v);
 
  public:
   static std::string getFileName(const std::string& basename,

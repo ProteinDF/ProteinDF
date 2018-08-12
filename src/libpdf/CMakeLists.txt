@@ -1,4 +1,5 @@
 set(LIBPDF_HEADERS
+  common_matrix.h
   CnError.h
   DfCD.h
   DfCalcGrid.h
@@ -253,12 +254,25 @@ set(LIBPPDF_SOURCES
   )
 
 
-add_library(libpdf ${LIBPDF_HEADERS} ${LIBPDF_SOURCES})
+add_library(libpdf 
+  ${LIBPDF_HEADERS} 
+  ${LIBPDF_SOURCES}
+  )
+target_link_libraries(libpdf INTERFACE
+  libpdftl
+  )
 set_target_properties(libpdf PROPERTIES OUTPUT_NAME "pdf")
 
 if (MPI_FOUND)
-  add_library(libppdf ${LIBPPDF_HEADERS} ${LIBPPDF_SOURCES})
-  set_target_properties(libppdf PROPERTIES OUTPUT_NAME "ppdf")
+  add_library(libppdf 
+    ${LIBPPDF_HEADERS} 
+    ${LIBPPDF_SOURCES}
+    )
+  target_link_libraries(libppdf INTERFACE
+    libpdftl
+    libppdftl
+    )
+    set_target_properties(libppdf PROPERTIES OUTPUT_NAME "ppdf")
 endif()
 
 #  DfEnergyWeightedDensityMatrix.h

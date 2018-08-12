@@ -20,6 +20,8 @@
 #define DFCONVCHECK_H
 
 #include <string>
+#include <cassert>
+
 #include "CnError.h"
 #include "DfObject.h"
 

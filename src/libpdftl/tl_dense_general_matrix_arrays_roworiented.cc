@@ -17,6 +17,7 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "tl_dense_general_matrix_arrays_roworiented.h"
+#include <cassert>
 #include <iostream>
 #include "TlFile.h"
 #include "TlUtils.h"
@@ -33,7 +34,7 @@ TlDenseGeneralMatrix_arrays_RowOriented::
 
 TlDenseGeneralMatrix_arrays_RowOriented::
     TlDenseGeneralMatrix_arrays_RowOriented(
-        const TlDenseGeneralMatrix_BLAS_old& rhs, const int numOfSubunits,
+        const TlDenseGeneralMatrix_Lapack& rhs, const int numOfSubunits,
         const int subunitID, bool isUsingMemManager)
     : TlDenseMatrix_arrays_Object(rhs.getNumOfRows(), rhs.getNumOfCols(),
                                   numOfSubunits, subunitID, isUsingMemManager) {
@@ -81,7 +82,7 @@ double TlDenseGeneralMatrix_arrays_RowOriented::get(
   return TlDenseMatrix_arrays_Object::get_from_vm(row, col);
 }
 
-TlVector_BLAS TlDenseGeneralMatrix_arrays_RowOriented::getRowVector(
+TlDenseVector_Lapack TlDenseGeneralMatrix_arrays_RowOriented::getRowVector(
     const index_type row) const {
   return TlDenseMatrix_arrays_Object::getVector(row);
 }
@@ -91,17 +92,17 @@ void TlDenseGeneralMatrix_arrays_RowOriented::getRowVector(
   TlDenseMatrix_arrays_Object::getVector(row, pBuf, length);
 }
 
-TlDenseGeneralMatrix_BLAS_old
+TlDenseGeneralMatrix_Lapack
 TlDenseGeneralMatrix_arrays_RowOriented::getTlMatrixObject() const {
   const index_type numOfRows = this->getNumOfRows();
   const index_type numOfCols = this->getNumOfCols();
-  TlDenseGeneralMatrix_BLAS_old answer(numOfRows, numOfCols);
+  TlDenseGeneralMatrix_Lapack answer(numOfRows, numOfCols);
 
   for (index_type r = 0; r < numOfRows; ++r) {
-    TlVector_BLAS v = TlDenseMatrix_arrays_Object::getVector(r);
+    TlDenseVector_Lapack v = TlDenseMatrix_arrays_Object::getVector(r);
     assert(v.getSize() == numOfCols);
     for (index_type c = 0; c < numOfCols; ++c) {
-      answer.set(r, c, v[c]);
+      answer.set(r, c, v.get(c));
     }
   }
 

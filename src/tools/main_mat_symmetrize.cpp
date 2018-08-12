@@ -18,9 +18,11 @@
 
 #include <cstdlib>
 #include <iostream>
+
+#include "TlUtils.h"
 #include "TlGetopt.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_matrix_utils.h"
 
 void showHelp(const std::string& name) {
@@ -47,7 +49,7 @@ int main(int argc, char* argv[]) {
               << std::endl;
     return EXIT_FAILURE;
   }
-  TlDenseGeneralMatrix_BLAS_old in;
+  TlDenseGeneralMatrix_Lapack in;
   in.load(input_path);
 
   if (in.getNumOfRows() != in.getNumOfCols()) {
@@ -57,7 +59,7 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  TlDenseSymmetricMatrix_BLAS_Old out(in);
+  TlDenseSymmetricMatrix_Lapack out(in);
   out.save(output_path);
 
   return EXIT_SUCCESS;

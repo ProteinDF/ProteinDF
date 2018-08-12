@@ -1,5 +1,3 @@
-
-
 set(PDF_XTEST_SOURCES
   matrix_common.h
   vector_common.h
@@ -12,20 +10,16 @@ set(PDF_XTEST_SOURCES
   TlFileTest.cpp
   TlMemManagerTest.cpp
 
-  tl_dense_general_matrix_blas_old_test.cc
-  # tl_matrix_blas_column_major_test.cc
-  tl_dense_general_matrix_blas_rowmajor_test.cc
   tl_dense_general_matrix_mmap_test.cc
   tl_dense_general_matrix_mmap_rowmajor_test.cc
   tl_dense_general_matrix_file_test.cc
-  tl_dense_symmetric_matrix_blas_old_test.cc
   tl_dense_symmetric_matrix_file_test.cc
 
   tl_dense_general_matrix_colvector_test.cc
   tl_dense_general_matrix_rowvector_test.cc
 
-  tl_dense_general_matrix_blas_new_test.cc
-  tl_dense_symmetric_matrix_blas_new_test.cc
+  tl_dense_general_matrix_lapack_test.cc
+  tl_dense_symmetric_matrix_lapack_test.cc
 
   tl_sparse_matrix_test.cc
   tl_sparse_symmetric_matrix_test.cc
@@ -51,8 +45,8 @@ set(PDF_XTEST_SOURCES
 
 set(PDF_XTEST_MPI_SOURCES
   TlCommunicateTest.cpp
-  tl_distribute_matrix_test.cc
-  tl_distribute_symmetric_matrix_test.cc
+  tl_dense_general_matrix_scalapack_test.cc
+  tl_dense_symmetric_matrix_scalapack_test.cc
   main_MPI.cpp
   )
 
@@ -70,8 +64,8 @@ endif(HDF5_FOUND)
 if (EIGEN3_FOUND)
   set(PDF_XTEST_SOURCES
     ${PDF_XTEST_SOURCES}
-    tl_dense_general_matrix_eigen_new_test.cc
-    tl_dense_symmetric_matrix_eigen_new_test.cc
+    tl_dense_general_matrix_eigen_test.cc
+    tl_dense_symmetric_matrix_eigen_test.cc
     )
 endif(EIGEN3_FOUND)
 

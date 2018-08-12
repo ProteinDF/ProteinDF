@@ -2,7 +2,7 @@
 
 #include "TlFile.h"
 #include "matrix_common.h"
-#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_general_matrix_mmap.h"
 
 static const std::string matPath = "temp.mmap.csfd.mat";
@@ -22,7 +22,7 @@ TEST(TlDenseGeneralMatrix_mmap, construct) {
   }
 
   {
-    TlDenseGeneralMatrix_BLAS_old a;
+    TlDenseGeneralMatrix_Lapack a;
     a.load(matPath);
 
     EXPECT_EQ(row, a.getNumOfRows());
@@ -34,8 +34,8 @@ TEST(TlDenseGeneralMatrix_mmap, construct_by_file) {
   cleanup();
   const int row = 100;
   const int col = 200;
-  TlDenseGeneralMatrix_BLAS_old ref =
-      getTlMatrix<TlDenseGeneralMatrix_BLAS_old>(row, col);
+  TlDenseGeneralMatrix_Lapack ref =
+      getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
   ref.save(matPath);
   TlDenseGeneralMatrix_mmap a(matPath);
 
@@ -52,8 +52,8 @@ TEST(TlDenseGeneralMatrix_mmap, resize) {
   cleanup();
   const int row = 100;
   const int col = 200;
-  TlDenseGeneralMatrix_BLAS_old ref =
-      getTlMatrix<TlDenseGeneralMatrix_BLAS_old>(row, col);
+  TlDenseGeneralMatrix_Lapack ref =
+      getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
   ref.save(matPath);
   TlDenseGeneralMatrix_mmap a(matPath);
 
@@ -75,8 +75,8 @@ TEST(TlDenseGeneralMatrix_mmap, get_set_matrix) {
   cleanup();
   const int row = 100;
   const int col = 200;
-  TlDenseGeneralMatrix_BLAS_old ref =
-      getTlMatrix<TlDenseGeneralMatrix_BLAS_old>(row, col);
+  TlDenseGeneralMatrix_Lapack ref =
+      getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
 
   TlDenseGeneralMatrix_mmap m(matPath, ref.getNumOfRows(), ref.getNumOfCols());
   for (int r = 0; r < ref.getNumOfRows(); ++r) {

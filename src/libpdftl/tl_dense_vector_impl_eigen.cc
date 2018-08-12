@@ -49,6 +49,11 @@ void TlDenseVector_ImplEigen::add(const TlDenseVectorObject::index_type i,
   this->vector_.coeffRef(i) += value;
 }
 
+void TlDenseVector_ImplEigen::mul(const TlDenseVectorObject::index_type i,
+                                  const double value) {
+  this->vector_.coeffRef(i) *= value;
+}
+
 // ---------------------------------------------------------------------------
 // operators
 // ---------------------------------------------------------------------------
@@ -76,7 +81,6 @@ TlDenseVector_ImplEigen& TlDenseVector_ImplEigen::operator-=(
 }
 
 TlDenseVector_ImplEigen& TlDenseVector_ImplEigen::operator*=(const double rhs) {
-  const TlDenseVectorObject::size_type size = this->getSize();
   this->vector_ *= rhs;
 
   return *this;

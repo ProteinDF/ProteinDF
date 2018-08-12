@@ -51,15 +51,15 @@ class DfFunctional_B88LYP : public DfFunctional_GGA {
 
   // for Grid-Free =======================================================
  protected:
-  virtual TlVector_BLAS getFunctionalTermCoef_GF();
-  virtual TlVector_BLAS getDerivativeFunctionalTermCoef_GF();
+  virtual TlDenseVector_Lapack getFunctionalTermCoef_GF();
+  virtual TlDenseVector_Lapack getDerivativeFunctionalTermCoef_GF();
 
-  virtual TlDenseGeneralMatrix_BLAS_old getFunctionalCore(const double rhoA,
-                                                      const double rhoB,
-                                                      const double xA,
-                                                      const double xB);
+  virtual TlDenseGeneralMatrix_Lapack getFunctionalCore(const double rhoA,
+                                                        const double rhoB,
+                                                        const double xA,
+                                                        const double xB);
 
-  virtual TlDenseGeneralMatrix_BLAS_old getDerivativeFunctionalCore(
+  virtual TlDenseGeneralMatrix_Lapack getDerivativeFunctionalCore(
       const double rhoA, const double rhoB, const double xA, const double xB);
 
  protected:

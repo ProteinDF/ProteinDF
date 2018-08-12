@@ -49,19 +49,19 @@ DfTaskCtrl* DfOverlapX::getDfTaskCtrlObject() const {
   return pDfTaskCtrl;
 }
 
-void DfOverlapX::finalize(TlDenseGeneralMatrix_BLAS_old* pMtx) {
+void DfOverlapX::finalize(TlDenseGeneralMatrix_Lapack* pMtx) {
   // do nothing
 }
 
-void DfOverlapX::finalize(TlDenseSymmetricMatrix_BLAS_Old* pMtx) {
+void DfOverlapX::finalize(TlDenseSymmetricMatrix_Lapack* pMtx) {
   // do nothing
 }
 
-void DfOverlapX::finalize(TlVector_BLAS* pVct) {
+void DfOverlapX::finalize(TlDenseVector_Lapack* pVct) {
   // do nothing
 }
 
-void DfOverlapX::getSpq(TlDenseSymmetricMatrix_BLAS_Old* pSpq) {
+void DfOverlapX::getSpq(TlDenseSymmetricMatrix_Lapack* pSpq) {
   assert(pSpq != NULL);
   const index_type numOfAOs = this->m_nNumOfAOs;
   pSpq->resize(numOfAOs);
@@ -72,7 +72,7 @@ void DfOverlapX::getSpq(TlDenseSymmetricMatrix_BLAS_Old* pSpq) {
   this->finalize(pSpq);
 }
 
-void DfOverlapX::getSab(TlDenseSymmetricMatrix_BLAS_Old* pSab) {
+void DfOverlapX::getSab(TlDenseSymmetricMatrix_Lapack* pSab) {
   assert(pSab != NULL);
   const index_type numOfAuxDens = this->m_nNumOfAux;
   pSab->resize(numOfAuxDens);
@@ -84,7 +84,7 @@ void DfOverlapX::getSab(TlDenseSymmetricMatrix_BLAS_Old* pSab) {
   this->finalize(pSab);
 }
 
-void DfOverlapX::getSgd(TlDenseSymmetricMatrix_BLAS_Old* pSgd) {
+void DfOverlapX::getSgd(TlDenseSymmetricMatrix_Lapack* pSgd) {
   assert(pSgd != NULL);
   const index_type numOfAuxXC = this->numOfAuxXC_;
   pSgd->resize(numOfAuxXC);
@@ -95,7 +95,7 @@ void DfOverlapX::getSgd(TlDenseSymmetricMatrix_BLAS_Old* pSgd) {
   this->finalize(pSgd);
 }
 
-void DfOverlapX::getNalpha(TlVector_BLAS* pNalpha) {
+void DfOverlapX::getNalpha(TlDenseVector_Lapack* pNalpha) {
   assert(pNalpha != NULL);
   const index_type numOfAuxDens = this->m_nNumOfAux;
   pNalpha->resize(numOfAuxDens);
@@ -108,7 +108,7 @@ void DfOverlapX::getNalpha(TlVector_BLAS* pNalpha) {
 }
 
 void DfOverlapX::getOvpMat(const TlOrbitalInfoObject& orbitalInfo,
-                           TlDenseSymmetricMatrix_BLAS_Old* pS) {
+                           TlDenseSymmetricMatrix_Lapack* pS) {
   assert(pS != NULL);
   pS->resize(orbitalInfo.getNumOfOrbitals());
 
@@ -118,7 +118,7 @@ void DfOverlapX::getOvpMat(const TlOrbitalInfoObject& orbitalInfo,
 
 void DfOverlapX::getTransMat(const TlOrbitalInfoObject& orbitalInfo1,
                              const TlOrbitalInfoObject& orbitalInfo2,
-                             TlDenseGeneralMatrix_BLAS_old* pTransMat) {
+                             TlDenseGeneralMatrix_Lapack* pTransMat) {
   assert(pTransMat != NULL);
   pTransMat->resize(orbitalInfo1.getNumOfOrbitals(),
                     orbitalInfo2.getNumOfOrbitals());
@@ -127,8 +127,8 @@ void DfOverlapX::getTransMat(const TlOrbitalInfoObject& orbitalInfo1,
   this->finalize(pTransMat);
 }
 
-void DfOverlapX::get_pqg(const TlVector_BLAS& myu,
-                         TlDenseSymmetricMatrix_BLAS_Old* pF) {
+void DfOverlapX::get_pqg(const TlDenseVector_Lapack& myu,
+                         TlDenseSymmetricMatrix_Lapack* pF) {
   assert(pF != NULL);
   const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                   (*(this->pPdfParam_))["basis_set"]);
@@ -139,9 +139,10 @@ void DfOverlapX::get_pqg(const TlVector_BLAS& myu,
   this->finalize(pF);
 }
 
-void DfOverlapX::get_pqg(const TlVector_BLAS& myu, const TlVector_BLAS& eps,
-                         TlDenseSymmetricMatrix_BLAS_Old* pF,
-                         TlDenseSymmetricMatrix_BLAS_Old* pE) {
+void DfOverlapX::get_pqg(const TlDenseVector_Lapack& myu,
+                         const TlDenseVector_Lapack& eps,
+                         TlDenseSymmetricMatrix_Lapack* pF,
+                         TlDenseSymmetricMatrix_Lapack* pE) {
   assert(pF != NULL);
   assert(pE != NULL);
   const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
@@ -198,7 +199,7 @@ void DfOverlapX::calcOverlap(const TlOrbitalInfoObject& orbitalInfo1,
 }
 
 void DfOverlapX::calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
-                             TlVectorAbstract* pVector) {
+                             TlDenseVectorObject* pVector) {
   this->createEngines();
   DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
 
@@ -218,7 +219,7 @@ void DfOverlapX::calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
 }
 
 void DfOverlapX::calcOverlap(const TlOrbitalInfoObject& orbitalInfo_XC,
-                             const TlVector_BLAS& myu,
+                             const TlDenseVector_Lapack& myu,
                              const TlOrbitalInfoObject& orbitalInfo,
                              TlMatrixObject* pF) {
   this->createEngines();
@@ -241,7 +242,8 @@ void DfOverlapX::calcOverlap(const TlOrbitalInfoObject& orbitalInfo_XC,
 }
 
 void DfOverlapX::calcOverlap(const TlOrbitalInfoObject& orbitalInfo_XC,
-                             const TlVector_BLAS& myu, const TlVector_BLAS& eps,
+                             const TlDenseVector_Lapack& myu,
+                             const TlDenseVector_Lapack& eps,
                              const TlOrbitalInfoObject& orbitalInfo,
                              TlMatrixObject* pF, TlMatrixObject* pE) {
   this->createEngines();
@@ -384,7 +386,7 @@ void DfOverlapX::calcOverlap_part(
 }
 
 void DfOverlapX::calcOverlap_part(
-    const TlOrbitalInfoObject& orbitalInfo_XC, const TlVector_BLAS& myu,
+    const TlOrbitalInfoObject& orbitalInfo_XC, const TlDenseVector_Lapack& myu,
     const TlOrbitalInfoObject& orbitalInfo,
     const std::vector<DfTaskCtrl::Task2>& taskList, TlMatrixObject* pMatrix) {
   // 第四中心点の固定値を設定
@@ -462,8 +464,8 @@ void DfOverlapX::calcOverlap_part(
 }
 
 void DfOverlapX::calcOverlap_part(
-    const TlOrbitalInfoObject& orbitalInfo_XC, const TlVector_BLAS& myu,
-    const TlVector_BLAS& eps, const TlOrbitalInfoObject& orbitalInfo,
+    const TlOrbitalInfoObject& orbitalInfo_XC, const TlDenseVector_Lapack& myu,
+    const TlDenseVector_Lapack& eps, const TlOrbitalInfoObject& orbitalInfo,
     const std::vector<DfTaskCtrl::Task2>& taskList, TlMatrixObject* pF,
     TlMatrixObject* pE) {
   // 第四中心点の固定値を設定
@@ -544,7 +546,7 @@ void DfOverlapX::calcOverlap_part(
 
 void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
                                   const std::vector<DfTaskCtrl::Task>& taskList,
-                                  TlVectorAbstract* pVector) {
+                                  TlDenseVectorObject* pVector) {
   // 第2, 第3, 第4中心点の固定値を設定
   // static const TlPosition posQ(0.0, 0.0, 0.0);
   // static DfOverlapEngine::PGTO pgtoQ(1.0, 0.0);
@@ -596,8 +598,8 @@ void DfOverlapX::calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
   }
 }
 
-void DfOverlapX::getForce(const TlDenseSymmetricMatrix_BLAS_Old& W,
-                          TlDenseGeneralMatrix_BLAS_old* pForce) {
+void DfOverlapX::getForce(const TlDenseSymmetricMatrix_Lapack& W,
+                          TlDenseGeneralMatrix_Lapack* pForce) {
   assert(pForce != NULL);
   pForce->resize(this->m_nNumOfAtoms, 3);
 
@@ -633,8 +635,8 @@ void DfOverlapX::getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
                                    const int shellTypeP, const int shellTypeQ,
                                    const index_type shellIndexP,
                                    const ShellArray& shellArrayQ,
-                                   const TlDenseSymmetricMatrix_BLAS_Old& W,
-                                   TlDenseGeneralMatrix_BLAS_old* pForce) {
+                                   const TlDenseSymmetricMatrix_Lapack& W,
+                                   TlDenseGeneralMatrix_Lapack* pForce) {
   // 第3,第4中心点の固定値を設定
   // static const TlPosition posR(0.0, 0.0, 0.0);
   // static const DfOverlapEngine::PGTO pgtoR(1.0, 0.0);
@@ -776,9 +778,9 @@ DfOverlapX::ShellArrayTable DfOverlapX::makeShellArrayTable(
 // }
 
 void DfOverlapX::getGradient(const TlOrbitalInfoObject& orbitalInfo,
-                             TlDenseGeneralMatrix_BLAS_old* pMatX,
-                             TlDenseGeneralMatrix_BLAS_old* pMatY,
-                             TlDenseGeneralMatrix_BLAS_old* pMatZ) {
+                             TlDenseGeneralMatrix_Lapack* pMatX,
+                             TlDenseGeneralMatrix_Lapack* pMatY,
+                             TlDenseGeneralMatrix_Lapack* pMatZ) {
   assert(pMatX != NULL);
   assert(pMatY != NULL);
   assert(pMatZ != NULL);
@@ -918,8 +920,8 @@ void DfOverlapX::getGradient_partProc(
   }
 }
 
-void DfOverlapX::getM(const TlDenseSymmetricMatrix_BLAS_Old& P,
-                      TlDenseSymmetricMatrix_BLAS_Old* pM) {
+void DfOverlapX::getM(const TlDenseSymmetricMatrix_Lapack& P,
+                      TlDenseSymmetricMatrix_Lapack* pM) {
   assert(pM != NULL);
   pM->resize(this->m_nNumOfAOs);
 
@@ -1090,11 +1092,10 @@ void DfOverlapX::storeM(const index_type shellIndexP, const int maxStepsP,
   }
 }
 
-void DfOverlapX::getM_A(const TlDenseSymmetricMatrix_BLAS_Old& P,
-                        TlDenseSymmetricMatrix_BLAS_Old* pM) {
+void DfOverlapX::getM_A(const TlDenseSymmetricMatrix_Lapack& P,
+                        TlDenseSymmetricMatrix_Lapack* pM) {
   this->log_.info("DfGridFreeXC::getM_A() in");
   assert(pM != NULL);
-  pM->resize(this->m_nNumOfAOs);
 
   const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
                                   (*(this->pPdfParam_))["basis_set"]);

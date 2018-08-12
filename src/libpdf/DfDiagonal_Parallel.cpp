@@ -24,9 +24,8 @@
 #include "DfDiagonal_Parallel.h"
 #include "TlCommunicate.h"
 #include "TlUtils.h"
-#include "tl_dense_general_matrix_blacs.h"
-#include "tl_dense_symmetric_matrix_blacs.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_general_matrix_scalapack.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
 
 DfDiagonal_Parallel::DfDiagonal_Parallel(TlSerializeData* pPdfParam)
     : DfDiagonal(pPdfParam) {}
@@ -74,20 +73,20 @@ void DfDiagonal_Parallel::DfDiagQclo(const DfObject::RUN_TYPE runType,
 void DfDiagonal_Parallel::DfDiagMain_SCALAPACK() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      this->main<TlDenseGeneralMatrix_blacs, TlDenseSymmetricMatrix_blacs>(
-          RUN_RKS);
+      this->main<TlDenseGeneralMatrix_Scalapack,
+                 TlDenseSymmetricMatrix_Scalapack>(RUN_RKS);
       break;
 
     case METHOD_UKS:
-      this->main<TlDenseGeneralMatrix_blacs, TlDenseSymmetricMatrix_blacs>(
-          RUN_UKS_ALPHA);
-      this->main<TlDenseGeneralMatrix_blacs, TlDenseSymmetricMatrix_blacs>(
-          RUN_UKS_BETA);
+      this->main<TlDenseGeneralMatrix_Scalapack,
+                 TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_ALPHA);
+      this->main<TlDenseGeneralMatrix_Scalapack,
+                 TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_BETA);
       break;
 
     case METHOD_ROKS:
-      this->main<TlDenseGeneralMatrix_blacs, TlDenseSymmetricMatrix_blacs>(
-          RUN_ROKS);
+      this->main<TlDenseGeneralMatrix_Scalapack,
+                 TlDenseSymmetricMatrix_Scalapack>(RUN_ROKS);
       break;
 
     default:
@@ -101,6 +100,6 @@ void DfDiagonal_Parallel::DfDiagQclo_SCALAPACK(const DfObject::RUN_TYPE runType,
                                                const std::string& fragname,
                                                int norbcut) {
   this->m_nNumOfMOs = norbcut;
-  this->main<TlDenseGeneralMatrix_blacs, TlDenseSymmetricMatrix_blacs>(
+  this->main<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack>(
       runType, fragname, true);
 }

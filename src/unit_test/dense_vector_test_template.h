@@ -152,11 +152,29 @@ TYPED_TEST_P(DenseVectorTest, doesDotInPlace) {
   EXPECT_DOUBLE_EQ(12.0, a.get(2));
 }
 
+TYPED_TEST_P(DenseVectorTest, doesSaveAndLoad) {
+  static const std::string vtr_save_load_path = "temp.dens.save_load.vtr";
+
+  TypeParam v = getVectorA<TypeParam>();
+  const bool isSaved = v.save(vtr_save_load_path);
+  EXPECT_EQ(isSaved, true);
+
+  TypeParam a;
+  const bool isLoaded = a.load(vtr_save_load_path);
+  EXPECT_EQ(isLoaded, true);
+
+  EXPECT_EQ(3, a.getSize());
+  EXPECT_DOUBLE_EQ(0.0, a.get(0));
+  EXPECT_DOUBLE_EQ(1.0, a.get(1));
+  EXPECT_DOUBLE_EQ(2.0, a.get(2));
+}
+
 REGISTER_TYPED_TEST_CASE_P(DenseVectorTest, doesConstructor,
                            doesCopyConstructor, doesOperator_eq,
                            doesOperator_iadd, doesOperator_isub,
                            doesOperator_imul, doesOperator_add,
                            doesOperator_sub, doesSum, doesNorm, doesNorm2,
-                           doesArgmax, doesSortByGreater, doesDotInPlace);
+                           doesArgmax, doesSortByGreater, doesDotInPlace,
+                           doesSaveAndLoad);
 
 #endif  // DENSE_VECTOR_TEST_TEMPLATE_H

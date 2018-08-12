@@ -20,7 +20,7 @@
 #define DFTOTALENERGY_H
 
 #include "DfObject.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_vector_lapack.h"
 
 #include "CnError.h"
 #include "DfXCFunctional.h"

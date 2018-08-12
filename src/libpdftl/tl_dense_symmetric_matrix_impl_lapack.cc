@@ -1,10 +1,16 @@
-#include "tl_dense_symmetric_matrix_impl_lapack.h"
 #include <iostream>
+#include <cassert>
+
+#include "tl_dense_symmetric_matrix_impl_lapack.h"
 #include "lapack.h"
 #include "lapack.h"
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_vector_impl_lapack.h"
+#include "TlUtils.h"
 
+// ---------------------------------------------------------------------------
+// constructor & destructor
+// ---------------------------------------------------------------------------
 TlDenseSymmetricMatrix_ImplLapack::TlDenseSymmetricMatrix_ImplLapack(
     const TlMatrixObject::index_type dim)
     : TlDenseGeneralMatrix_ImplLapack(dim, dim) {}
@@ -35,39 +41,54 @@ TlDenseSymmetricMatrix_ImplLapack::TlDenseSymmetricMatrix_ImplLapack(
 TlDenseSymmetricMatrix_ImplLapack::~TlDenseSymmetricMatrix_ImplLapack() {}
 
 // ---------------------------------------------------------------------------
+// properties
+// ---------------------------------------------------------------------------
+void TlDenseSymmetricMatrix_ImplLapack::resize(TlMatrixObject::index_type row,
+                                               TlMatrixObject::index_type col) {
+  const TlMatrixObject::index_type& dim = row;
+  assert(row == col);
+  assert(dim > 0);
+
+  TlDenseSymmetricMatrix_ImplLapack oldMatrix(*this);
+
+  this->row_ = row;
+  this->col_ = col;
+  this->initialize(true);
+
+  const TlMatrixObject::index_type dimForCopy =
+      std::min<TlMatrixObject::index_type>(oldMatrix.getNumOfRows(), dim);
+
+#pragma omp parallel for
+  for (TlMatrixObject::index_type i = 0; i < dimForCopy; ++i) {
+    for (TlMatrixObject::index_type j = 0; j <= i; ++j) {
+      this->set(i, j, oldMatrix.get(i, j));
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // operators
 // ---------------------------------------------------------------------------
-TlDenseSymmetricMatrix_ImplLapack& TlDenseSymmetricMatrix_ImplLapack::operator*=(
-    const double coef) {
+TlDenseSymmetricMatrix_ImplLapack& TlDenseSymmetricMatrix_ImplLapack::
+operator*=(const double coef) {
   const int n = this->getNumOfElements();
-  const double a = -1.0;
   const int incx = 1;
   dscal_(&n, &coef, this->matrix_, &incx);
 
   return *this;
 }
 
-const TlDenseGeneralMatrix_ImplLapack TlDenseSymmetricMatrix_ImplLapack::operator*=(
-    const TlDenseSymmetricMatrix_ImplLapack& rhs) {
-  std::cout << ">>>> TlDenseSymmetricMatrix_ImplLapack::operator*=()"
-            << std::endl;
-  TlDenseGeneralMatrix_ImplLapack answer = *this;
-  std::cout << TlDenseGeneralMatrix_Lapack(answer) << std::endl;
-
-  TlDenseGeneralMatrix_ImplLapack tmp = rhs;
-  std::cout << TlDenseGeneralMatrix_Lapack(tmp) << std::endl;
-  // tmp *= TlDenseGeneralMatrix_ImplLapack(rhs);
-  answer *= tmp;
-
-  std::cout << TlDenseGeneralMatrix_Lapack(answer) << std::endl;
-  std::cout << "<<<< TlDenseSymmetricMatrix_ImplLapack::operator*=()"
-            << std::endl;
-
-  // *this = tmp;
-  // return *this;
-  return answer;
-}
-// TlDenseSymmetricMatrix_ImplLapack TlDenseSymmetricMatrix_ImplLapack::operator*(
+// const TlDenseGeneralMatrix_ImplLapack
+// TlDenseSymmetricMatrix_ImplLapack::operator*=(
+//     const TlDenseSymmetricMatrix_ImplLapack& rhs) {
+//   TlDenseGeneralMatrix_ImplLapack answer = *this;
+//   TlDenseGeneralMatrix_ImplLapack tmp = rhs;
+//   answer *= tmp;
+//
+//   return answer;
+// }
+// TlDenseSymmetricMatrix_ImplLapack
+// TlDenseSymmetricMatrix_ImplLapack::operator*(
 //     const TlDenseSymmetricMatrix_ImplLapack& rhs) const {
 //   const TlMatrixObject::index_type row1 = this->getNumOfRows();
 //   const TlMatrixObject::index_type col1 = this->getNumOfCols();
@@ -229,6 +250,25 @@ bool TlDenseSymmetricMatrix_ImplLapack::eig(
 }
 
 // ---------------------------------------------------------------------------
+// I/O
+// ---------------------------------------------------------------------------
+// void TlDenseSymmetricMatrix_ImplLapack::dump(double* buf, const std::size_t
+// size) const {
+//     const std::size_t copySize = std::min<std::size_t>(size,
+//     this->getNumOfElements());
+//
+//     std::copy(this->matrix_, this->matrix_ + copySize, buf);
+// }
+//
+// void TlDenseSymmetricMatrix_ImplLapack::restore(const double* buf, const
+// std::size_t size) {
+//     const std::size_t copySize = std::min<std::size_t>(size,
+//     this->getNumOfElements());
+//
+//     std::copy(buf, buf + copySize, this->matrix_);
+// }
+
+// ---------------------------------------------------------------------------
 // protected
 // ---------------------------------------------------------------------------
 TlMatrixObject::size_type TlDenseSymmetricMatrix_ImplLapack::getNumOfElements()
@@ -262,17 +302,32 @@ TlMatrixObject::size_type TlDenseSymmetricMatrix_ImplLapack::index(
 // private
 // ---------------------------------------------------------------------------
 
-
 // ---------------------------------------------------------------------------
 // others
 // ---------------------------------------------------------------------------
+TlDenseGeneralMatrix_ImplLapack operator*(
+    const TlDenseSymmetricMatrix_ImplLapack& rhs1,
+    const TlDenseGeneralMatrix_ImplLapack& rhs2) {
+  TlDenseGeneralMatrix_ImplLapack gen_rhs1 = rhs1;
+
+  return gen_rhs1 * rhs2;
+}
+
+TlDenseGeneralMatrix_ImplLapack operator*(
+    const TlDenseGeneralMatrix_ImplLapack& rhs1,
+    const TlDenseSymmetricMatrix_ImplLapack& rhs2) {
+  TlDenseGeneralMatrix_ImplLapack gen_rhs2 = rhs2;
+
+  return rhs1 * gen_rhs2;
+}
+
 TlDenseVector_ImplLapack operator*(const TlDenseSymmetricMatrix_ImplLapack& mat,
                                    const TlDenseVector_ImplLapack& vec) {
   TlLogging& logger = TlLogging::getInstance();
   if (mat.getNumOfCols() != vec.getSize()) {
     logger.critical(TlUtils::format("size mismatch: %d != %d (%d@%s)",
-                                        mat.getNumOfCols(), vec.getSize(),
-                                        __LINE__, __FILE__));
+                                    mat.getNumOfCols(), vec.getSize(), __LINE__,
+                                    __FILE__));
   }
 
   TlDenseVector_ImplLapack answer(vec.getSize());

@@ -31,10 +31,10 @@ void TlSparseSymmetricMatrix::resize(const int size) {
   TlSparseMatrix::resize(size, size);
 }
 
-TlVector_BLAS TlSparseSymmetricMatrix::getRowVector(
+TlDenseVector_Lapack TlSparseSymmetricMatrix::getRowVector(
     const index_type row) const {
   const int numOfCols = this->getNumOfCols();
-  TlVector_BLAS ans(numOfCols);
+  TlDenseVector_Lapack ans(numOfCols);
 
   if (this->m_aMatrix.size() > (std::size_t)(numOfCols / 2)) {
     for (index_type i = 0; i < numOfCols; ++i) {
@@ -46,9 +46,9 @@ TlVector_BLAS TlSparseSymmetricMatrix::getRowVector(
       const int r = p->first.row;
       const int c = p->first.col;
       if (r == row) {
-        ans[c] = p->second;
+        ans.set(c, p->second);
       } else if (c == row) {
-        ans[r] = p->second;
+        ans.set(r, p->second);
       }
     }
   }
@@ -56,10 +56,10 @@ TlVector_BLAS TlSparseSymmetricMatrix::getRowVector(
   return ans;
 }
 
-TlVector_BLAS TlSparseSymmetricMatrix::getColVector(
+TlDenseVector_Lapack TlSparseSymmetricMatrix::getColVector(
     const index_type col) const {
   const int numOfRows = this->getNumOfRows();
-  TlVector_BLAS ans(numOfRows);
+  TlDenseVector_Lapack ans(numOfRows);
 
   if (this->m_aMatrix.size() > (std::size_t)(numOfRows / 2)) {
     for (index_type i = 0; i < numOfRows; ++i) {
@@ -71,9 +71,9 @@ TlVector_BLAS TlSparseSymmetricMatrix::getColVector(
       const int r = p->first.row;
       const int c = p->first.col;
       if (c == col) {
-        ans[r] = p->second;
+        ans.set(r, p->second);
       } else if (r == col) {
-        ans[c] = p->second;
+        ans.set(c, p->second);
       }
     }
   }

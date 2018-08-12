@@ -253,6 +253,22 @@ void DfObject::setParam(const TlSerializeData& data) {
   this->isRI_K_ = data["RI_K"].getBoolean();
 
   // matrix operation
+  this->linearAlgebraPackage_ = DfObject::LAP_LAPACK;
+  {
+    const std::string linearAlgebraPackage = TlUtils::toUpper(data["linear_algebra_package"].getStr());
+    if (linearAlgebraPackage == "EIGEN") {
+      this->linearAlgebraPackage_ = DfObject::LAP_EIGEN;
+    }
+    if (linearAlgebraPackage == "VIENNACL") {
+      this->linearAlgebraPackage_ = DfObject::LAP_VIENNACL;
+    }
+#ifdef HAVE_SCALAPACK
+    if (linearAlgebraPackage == "SCALAPACK") {
+      this->linearAlgebraPackage_ = DfObject::LAP_SCALAPACK;
+    }
+#endif // HAVE_SCALAPACK
+  }
+
   this->m_bUsingSCALAPACK = false;
 #ifdef HAVE_SCALAPACK
   this->m_bUsingSCALAPACK =
@@ -740,10 +756,10 @@ std::string DfObject::getCloMatrixPath(const RUN_TYPE runType,
                                               TlUtils::xtos(iteration));
 }
 
-TlVector_BLAS DfObject::getOccVtr(const RUN_TYPE runType) {
+TlDenseVector_Lapack DfObject::getOccVtr(const RUN_TYPE runType) {
   const std::string fileName = this->getOccupationPath(runType);
 
-  TlVector_BLAS occ;
+  TlDenseVector_Lapack occ;
   occ.load(fileName);
   assert(occ.getSize() == this->m_nNumOfMOs);
 

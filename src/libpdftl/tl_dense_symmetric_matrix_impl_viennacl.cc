@@ -1,5 +1,6 @@
 #include "tl_dense_symmetric_matrix_impl_viennacl.h"
 #include "tl_dense_general_matrix_impl_viennacl.h"
+#include "tl_dense_symmetric_matrix_impl_eigen.h"
 #include "tl_dense_vector_impl_viennacl.h"
 #include "viennacl/linalg/power_iter.hpp"
 #include "viennacl/linalg/qr-method.hpp"
@@ -26,6 +27,11 @@ TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(
       this->set(r, c, rhs.get(r, c));
     }
   }
+}
+
+TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(
+    const TlDenseSymmetricMatrix_ImplEigen& rhs) {
+  viennacl::copy(rhs.matrix_, this->matrix_);
 }
 
 TlDenseSymmetricMatrix_ImplViennaCL::~TlDenseSymmetricMatrix_ImplViennaCL() {}
@@ -84,6 +90,20 @@ bool TlDenseSymmetricMatrix_ImplViennaCL::eig(
   // QR method
   // viennacl::linalg::qr_method_sym(this->matrix_, pEigvec->matrix_,
   //                                 pEigval->vector_);
+
+  return true;
+}
+
+bool TlDenseSymmetricMatrix_ImplViennaCL::eig_QR(
+    TlDenseVector_ImplViennaCL* pEigval,
+    TlDenseGeneralMatrix_ImplViennaCL* pEigvec) const {
+  const TlMatrixObject::index_type dim = this->getNumOfRows();
+  pEigvec->resize(dim, dim);
+  pEigval->resize(dim);
+
+  // QR method
+  MatrixDataType A = this->matrix_;
+  viennacl::linalg::qr_method_sym(A, pEigvec->matrix_, pEigval->vector_);
 
   return true;
 }

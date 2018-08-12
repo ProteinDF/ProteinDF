@@ -27,7 +27,7 @@
 #include "TlOrbitalInfo_Density.h"
 #include "TlOrbitalInfo_XC.h"
 #include "TlPosition.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_vector_lapack.h"
 
 /** 作成されたグリッドから交換相関ポテンシャル計算を行うクラス
  */
@@ -43,21 +43,22 @@ class DfCalcGrid : DfObject {
  private:
   /** rhoとrhoの微分を計算し、グリッド積分の計算を行い
    */
-  void calcXCInteg(TlVector_BLAS& tmpVectorA, TlVector_BLAS& tmpVectorB,
-                   TlVector_BLAS& eTmpVector);
+  void calcXCInteg(TlDenseVector_Lapack& tmpVectorA,
+                   TlDenseVector_Lapack& tmpVectorB,
+                   TlDenseVector_Lapack& eTmpVector);
 
   /** calcXCInteg()の結果に<gamma delta>-1
    * をかけて交換相関ポテンシャルの展開係数を求める(RKS版)
    */
-  void calcXCcoef_RKS(const TlVector_BLAS& tmpVector,
-                      const TlVector_BLAS& eTmpVector);
+  void calcXCcoef_RKS(const TlDenseVector_Lapack& tmpVector,
+                      const TlDenseVector_Lapack& eTmpVector);
 
   /** calcXCInteg()の結果に<gamma delta>-1
    * をかけて交換相関ポテンシャルの展開係数を求める(UKS版)
    */
-  void calcXCcoef_UKS(const TlVector_BLAS& tmpVectorA,
-                      const TlVector_BLAS& tmpVectorB,
-                      const TlVector_BLAS& eTmpVector);
+  void calcXCcoef_UKS(const TlDenseVector_Lapack& tmpVectorA,
+                      const TlDenseVector_Lapack& tmpVectorB,
+                      const TlDenseVector_Lapack& eTmpVector);
 
  private:
   double getPrefactor(int nType, const TlPosition& pos);
@@ -66,19 +67,19 @@ class DfCalcGrid : DfObject {
                                  double* pPrefactorZ);
 
  private:
-  void calcXCIntegRhoTilde_RKS(const TlVector_BLAS& RhoAlphaA,
-                               TlDenseGeneralMatrix_BLAS_old* pGridMat);
-  void calcXCIntegRhoTilde_UKS(const TlVector_BLAS& RhoAlphaA,
-                               const TlVector_BLAS& RhoAlphaB,
-                               TlDenseGeneralMatrix_BLAS_old* pGridMat);
+  void calcXCIntegRhoTilde_RKS(const TlDenseVector_Lapack& RhoAlphaA,
+                               TlDenseGeneralMatrix_Lapack* pGridMat);
+  void calcXCIntegRhoTilde_UKS(const TlDenseVector_Lapack& RhoAlphaA,
+                               const TlDenseVector_Lapack& RhoAlphaB,
+                               TlDenseGeneralMatrix_Lapack* pGridMat);
 
-  void calcXCIntegMyuEpsilon_RKS(const TlDenseGeneralMatrix_BLAS_old& gridMat,
-                                 TlVector_BLAS& tmpVectorA,
-                                 TlVector_BLAS& eTmpVector);
-  void calcXCIntegMyuEpsilon_UKS(const TlDenseGeneralMatrix_BLAS_old& gridMat,
-                                 TlVector_BLAS& tmpVectorA,
-                                 TlVector_BLAS& tmpVectorB,
-                                 TlVector_BLAS& eTmpVector);
+  void calcXCIntegMyuEpsilon_RKS(const TlDenseGeneralMatrix_Lapack& gridMat,
+                                 TlDenseVector_Lapack& tmpVectorA,
+                                 TlDenseVector_Lapack& eTmpVector);
+  void calcXCIntegMyuEpsilon_UKS(const TlDenseGeneralMatrix_Lapack& gridMat,
+                                 TlDenseVector_Lapack& tmpVectorA,
+                                 TlDenseVector_Lapack& tmpVectorB,
+                                 TlDenseVector_Lapack& eTmpVector);
 
  private:
   double polfunc(double z);

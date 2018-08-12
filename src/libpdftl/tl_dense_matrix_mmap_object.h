@@ -2,7 +2,9 @@
 #define TLMATRIX_MMAP_OBJECT_H
 
 #include <string>
+#include <vector>
 #include "tl_matrix_object.h"
+#include "tl_dense_vector_lapack.h"
 
 class TlDenseMatrixMmapObject : public TlMatrixObject {
  public:
@@ -22,10 +24,11 @@ class TlDenseMatrixMmapObject : public TlMatrixObject {
   virtual void set(index_type row, index_type col, double value);
   virtual void add(index_type row, index_type col, double value);
 
-  virtual void setRowVector(const index_type row, const TlVector_BLAS& v);
-  virtual void setColVector(const index_type col, const TlVector_BLAS& v);
-  virtual TlVector_BLAS getRowVector(const index_type row) const;
-  virtual TlVector_BLAS getColVector(const index_type col) const;
+  virtual void setRowVector(const index_type row, const TlDenseVector_Lapack& v);
+  virtual void setColVector(const index_type col,
+                            const TlDenseVector_Lapack& v);
+  virtual std::vector<double> getRowVector(const index_type row) const;
+  virtual std::vector<double> getColVector(const index_type col) const;
 
  protected:
   virtual TlDenseMatrixMmapObject* copy(const std::string& path) const = 0;

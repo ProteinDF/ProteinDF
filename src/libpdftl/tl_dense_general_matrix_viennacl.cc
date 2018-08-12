@@ -49,6 +49,8 @@ TlDenseGeneralMatrix_ViennaCL& TlDenseGeneralMatrix_ViennaCL::operator=(
   delete this->pImpl_;
   this->pImpl_ = new TlDenseGeneralMatrix_ImplViennaCL(
       *(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(rhs.pImpl_)));
+
+  return *this;
 }
 
 // TlDenseGeneralMatrix_ViennaCL& TlDenseGeneralMatrix_ViennaCL::operator=(const
@@ -81,28 +83,38 @@ TlDenseGeneralMatrix_ViennaCL& TlDenseGeneralMatrix_ViennaCL::operator+=(
     const TlDenseGeneralMatrix_ViennaCL& rhs) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(this->pImpl_)) +=
       *(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(rhs.pImpl_));
+
+  return *this;
 }
 
 TlDenseGeneralMatrix_ViennaCL& TlDenseGeneralMatrix_ViennaCL::operator-=(
     const TlDenseGeneralMatrix_ViennaCL& rhs) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(this->pImpl_)) -=
       *(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(rhs.pImpl_));
+
+  return *this;
 }
 
 TlDenseGeneralMatrix_ViennaCL& TlDenseGeneralMatrix_ViennaCL::operator*=(
     const double coef) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(this->pImpl_)) *= coef;
+
+  return *this;
 }
 
 TlDenseGeneralMatrix_ViennaCL& TlDenseGeneralMatrix_ViennaCL::operator/=(
     const double coef) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(this->pImpl_)) /= coef;
+
+  return *this;
 }
 
 TlDenseGeneralMatrix_ViennaCL& TlDenseGeneralMatrix_ViennaCL::operator*=(
     const TlDenseGeneralMatrix_ViennaCL& rhs) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(this->pImpl_)) *=
       *(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(rhs.pImpl_));
+
+  return *this;
 }
 
 // ---------------------------------------------------------------------------
@@ -114,12 +126,6 @@ double TlDenseGeneralMatrix_ViennaCL::sum() const {
 
 double TlDenseGeneralMatrix_ViennaCL::getRMS() const {
   return this->pImpl_->getRMS();
-}
-
-double TlDenseGeneralMatrix_ViennaCL::getMaxAbsoluteElement(
-    TlMatrixObject::index_type* outRow,
-    TlMatrixObject::index_type* outCol) const {
-  return this->pImpl_->getMaxAbsoluteElement(outRow, outCol);
 }
 
 const TlDenseGeneralMatrix_ViennaCL& TlDenseGeneralMatrix_ViennaCL::dotInPlace(

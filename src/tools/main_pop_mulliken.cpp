@@ -25,7 +25,7 @@
 #include "TlGetopt.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_vector_lapack.h"
 
 void usage();
 
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
   DfPopulation dfPop(&param);
 
   if (savePath.empty() != true) {
-    const TlDenseGeneralMatrix_BLAS_old mtx = dfPop.getAtomPopData(iteration);
+    const TlDenseGeneralMatrix_Lapack mtx = dfPop.getAtomPopData(iteration);
     if (isVerbose == true) {
       std::cerr << "save Mulliken Data as " << savePath << std::endl;
     }
