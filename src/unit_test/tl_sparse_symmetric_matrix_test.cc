@@ -4,7 +4,7 @@
 
 static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 
-TEST(TlSparseSymmetricMatrixTest, constructer) {
+TEST(TlSparseSymmetricMatrix, constructer) {
   TlSparseSymmetricMatrix a(3);
 
   EXPECT_NEAR(0.0, a.get(0, 0), EPS);

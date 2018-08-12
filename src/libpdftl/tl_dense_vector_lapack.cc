@@ -22,6 +22,10 @@ TlDenseVector_Lapack::TlDenseVector_Lapack(const std::vector<double>& rhs) {
 //   this->pImpl_ = new TlDenseVector_ImplLapack(p, size);
 // }
 
+TlDenseVector_Lapack::operator std::vector<double>() const {
+  return std::vector<double>(*(dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)));
+}
+
 TlDenseVector_Lapack::~TlDenseVector_Lapack() {
   delete this->pImpl_;
   this->pImpl_ = NULL;

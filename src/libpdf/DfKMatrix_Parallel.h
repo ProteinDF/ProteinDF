@@ -40,10 +40,8 @@ class DfKMatrix_Parallel : public DfKMatrix {
   // void getK_RI_distributed(const RUN_TYPE runType,
   // TlDenseSymmetricMatrix_Scalapack *pJ);
 
-  virtual void getK_CD_local(const RUN_TYPE runType,
-                             TlDenseSymmetricMatrix_Lapack* pJ);
-  void getK_CD_distributed(const RUN_TYPE runType,
-                           TlDenseSymmetricMatrix_Scalapack* pJ);
+  virtual void getK_CD_replica(const RUN_TYPE runType);
+  void getK_CD_distributed(const RUN_TYPE runType);
 
   virtual void getK_conventional_local(const RUN_TYPE runType,
                                        TlDenseSymmetricMatrix_Lapack* pJ);

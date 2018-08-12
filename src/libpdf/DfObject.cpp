@@ -254,20 +254,7 @@ void DfObject::setParam(const TlSerializeData& data) {
 
   // matrix operation
   this->linearAlgebraPackage_ = DfObject::LAP_LAPACK;
-  {
-    const std::string linearAlgebraPackage = TlUtils::toUpper(data["linear_algebra_package"].getStr());
-    if (linearAlgebraPackage == "EIGEN") {
-      this->linearAlgebraPackage_ = DfObject::LAP_EIGEN;
-    }
-    if (linearAlgebraPackage == "VIENNACL") {
-      this->linearAlgebraPackage_ = DfObject::LAP_VIENNACL;
-    }
-#ifdef HAVE_SCALAPACK
-    if (linearAlgebraPackage == "SCALAPACK") {
-      this->linearAlgebraPackage_ = DfObject::LAP_SCALAPACK;
-    }
-#endif // HAVE_SCALAPACK
-  }
+  this->updateLinearAlgebraPackageParam(data["linear_algebra_package"].getStr());
 
   this->m_bUsingSCALAPACK = false;
 #ifdef HAVE_SCALAPACK
@@ -370,6 +357,9 @@ void DfObject::setParam(const TlSerializeData& data) {
   if (paramFileBaseName["diff_density_matrix"].getStr().empty() == true) {
     paramFileBaseName["diff_density_matrix"] = "dP.%s.mat";
   }
+  if (paramFileBaseName["spin_density_matrix"].getStr().empty() == true) {
+    paramFileBaseName["spin_density_matrix"] = "spin_density.%s.mat";
+  }
 
   if (paramFileBaseName["occupation_vtr"].getStr().empty() == true) {
     paramFileBaseName["occupation_vtr"] = "occupation.%s.vtr";
@@ -435,6 +425,26 @@ void DfObject::setParam(const TlSerializeData& data) {
   // for lo
   paramFileBaseName["Clo_matrix"] = "Clo.%s.mat";
 }
+
+void DfObject::updateLinearAlgebraPackageParam(const std::string& keyword) {
+    const std::string linearAlgebraPackage = TlUtils::toUpper(keyword);
+#ifdef HAVE_EIGEN
+    if (linearAlgebraPackage == "EIGEN") {
+      this->linearAlgebraPackage_ = DfObject::LAP_EIGEN;
+    }
+#endif  // HAVE_EIGEN
+#ifdef HAVE_LAPACK
+    if (linearAlgebraPackage == "LAPACK") {
+      this->linearAlgebraPackage_ = DfObject::LAP_LAPACK;
+    }
+#endif  // HAVE_LAPACK
+#ifdef HAVE_VIENNACL
+    if (linearAlgebraPackage == "VIENNACL") {
+      this->linearAlgebraPackage_ = DfObject::LAP_VIENNACL;
+    }
+#endif  // HAVE_VIENNACL
+}
+
 
 void DfObject::logger(const std::string& str) const {
   // TlLogX& log = TlLogX::getInstance();
@@ -608,6 +618,13 @@ std::string DfObject::getDiffDensityMatrixPath(const RUN_TYPE runType,
       DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
+std::string DfObject::getSpinDensityMatrixPath(const RUN_TYPE runType,
+                                               const int iteration) const {
+  return this->makeFilePath(
+      "spin_density_matrix",
+      DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+}
+
 std::string DfObject::getPpqMatrixPath(const RUN_TYPE nRunType,
                                        const int nIteration) const {
   return this->makeFilePath("Ppq_matrix", DfObject::m_sRunTypeSuffix[nRunType] +
@@ -756,12 +773,3 @@ std::string DfObject::getCloMatrixPath(const RUN_TYPE runType,
                                               TlUtils::xtos(iteration));
 }
 
-TlDenseVector_Lapack DfObject::getOccVtr(const RUN_TYPE runType) {
-  const std::string fileName = this->getOccupationPath(runType);
-
-  TlDenseVector_Lapack occ;
-  occ.load(fileName);
-  assert(occ.getSize() == this->m_nNumOfMOs);
-
-  return occ;
-}

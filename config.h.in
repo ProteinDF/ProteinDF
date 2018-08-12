@@ -7,7 +7,7 @@
 #cmakedefine HAVE_UNISTD_H
 #cmakedefine HAVE_STDINT_H
 
-#cmakedefine HAVE_EIGEN3
+#cmakedefine HAVE_EIGEN
 #cmakedefine HAVE_BLAS
 #cmakedefine HAVE_LAPACK
 #cmakedefine HAVE_SCALAPACK

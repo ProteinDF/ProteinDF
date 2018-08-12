@@ -1,12 +1,13 @@
-#include "tl_viennacl.h"
-#include <iostream>
-#include <vector>
-#include "viennacl/ocl/backend.hpp"
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <iostream>
+#include <vector>
+#include "viennacl/ocl/backend.hpp"
+
+#include "tl_viennacl.h"
+#include "TlUtils.h"
 
 void TlViennaCL::setupAllAvailableDevices() {
   viennacl::ocl::platform pf;
@@ -49,28 +50,34 @@ void TlViennaCL::setupAllAvailableDevices() {
                                      // with context-id not equal to zero)
 }
 
-void TlViennaCL::showDevices() {
+std::string TlViennaCL::listDevices() {
+  std::string answer = "";
+  
   const std::vector<viennacl::ocl::device> devices =
       viennacl::ocl::current_context().devices();
 
-  std::cout << "# devices: " << devices.size() << std::endl;
+  answer += TlUtils::format("the number of devices: %d\n", devices.size());
   const int numOfDevices = devices.size();
   for (int i = 0; i < numOfDevices; ++i) {
-    std::cout << i << ":" << devices[i].name() << std::endl;
+    answer += TlUtils::format("[%d] %s\n", i, devices[i].name().c_str());
   }
+
+  return answer;
 }
 
 void TlViennaCL::switchDevice(const int id) {
   viennacl::ocl::current_context().switch_device(id);
 }
 
-void TlViennaCL::showCurrentDevice() {
-  std::cout << "current Device Name: " << viennacl::ocl::current_device().name()
-            << std::endl;
+std::string TlViennaCL::listCurrentDevice() {
+  std::string answer = "";
+  answer += TlUtils::format("current Device Name: %s\n", viennacl::ocl::current_device().name().c_str());
 
   if (viennacl::ocl::current_device().double_support()) {
-      std::cout << "this device supports double precision." << std::endl;
+      answer += "this device supports double precision.\n";
   } else {
-      std::cout << "this device does NOT support double precision." << std::endl;
+      answer += "this device does NOT support double precision.\n";
   }
+
+  return answer;
 }

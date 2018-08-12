@@ -37,6 +37,14 @@ T getVectorC() {
   return c;
 }
 
+template<typename T>
+T getVector(int size) {
+  T v(size);
+  for (int i = 0; i < size; ++i) {
+    v.set(i, double(i) * 0.01);
+  }
 
+  return v;
+}
 
 #endif  // VECTOR_COMMON_H

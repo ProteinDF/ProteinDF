@@ -1,11 +1,17 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif // HAVE_CONFIG_H
+
 #include "tl_dense_general_matrix_viennacl.h"
 #include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_general_matrix_impl_eigen.h"
 #include "tl_dense_general_matrix_impl_viennacl.h"
 #include "tl_dense_symmetric_matrix_impl_viennacl.h"
 #include "tl_dense_symmetric_matrix_viennacl.h"
-#include "tl_dense_vector_viennacl.h"
 #include "tl_dense_vector_impl_viennacl.h"
+#include "tl_dense_vector_viennacl.h"
+#include "tl_sparse_general_matrix_viennacl.h"
+#include "tl_sparse_general_matrix_impl_viennacl.h"
 
 TlDenseGeneralMatrix_ViennaCL::TlDenseGeneralMatrix_ViennaCL(
     const TlMatrixObject::index_type row,
@@ -30,11 +36,22 @@ TlDenseGeneralMatrix_ViennaCL::TlDenseGeneralMatrix_ViennaCL(
   this->pImpl_ = new TlDenseGeneralMatrix_ImplViennaCL(rhs);
 }
 
+TlDenseGeneralMatrix_ViennaCL::TlDenseGeneralMatrix_ViennaCL(const TlSparseGeneralMatrix_ViennaCL& rhs) {
+  this->pImpl_ = new TlDenseGeneralMatrix_ImplViennaCL(*(dynamic_cast<TlSparseGeneralMatrix_ImplViennaCL*>(rhs.pImpl_)));
+}
+
+#ifdef HAVE_EIGEN
 TlDenseGeneralMatrix_ViennaCL::TlDenseGeneralMatrix_ViennaCL(
     const TlDenseGeneralMatrix_Eigen& rhs) {
   this->pImpl_ = new TlDenseGeneralMatrix_ImplViennaCL(
       *dynamic_cast<const TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_));
 }
+#endif // HAVE_EIGEN
+
+void TlDenseGeneralMatrix_ViennaCL::vtr2mat(const std::vector<double>& vtr) {
+  dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(this->pImpl_)->vtr2mat(vtr);
+}
+
 
 TlDenseGeneralMatrix_ViennaCL::~TlDenseGeneralMatrix_ViennaCL() {
   delete this->pImpl_;
@@ -148,6 +165,13 @@ TlDenseGeneralMatrix_ViennaCL TlDenseGeneralMatrix_ViennaCL::inverse() const {
           ->inverse());
 }
 
+TlDenseGeneralMatrix_ViennaCL& TlDenseGeneralMatrix_ViennaCL::reverseColumns() {
+  dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(this->pImpl_)
+      ->reverseColumns();
+
+  return *this;
+}
+
 // ---------------------------------------------------------------------------
 // friend functions
 // ---------------------------------------------------------------------------
@@ -168,5 +192,11 @@ TlDenseVector_ViennaCL operator*(const TlDenseVector_ViennaCL& rhs1,
       *(dynamic_cast<TlDenseVector_ImplViennaCL*>(rhs1.pImpl_)) *
       *(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(rhs2.pImpl_));
 
+  return answer;
+}
+
+TlDenseGeneralMatrix_ViennaCL operator*(const double coef, const TlDenseGeneralMatrix_ViennaCL& DM) {
+  TlDenseGeneralMatrix_ViennaCL answer = DM;
+  answer *= coef;
   return answer;
 }

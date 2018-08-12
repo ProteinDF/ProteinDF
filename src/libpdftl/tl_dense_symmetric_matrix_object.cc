@@ -19,6 +19,25 @@ TlDenseSymmetricMatrixObject::TlDenseSymmetricMatrixObject(
 
 TlDenseSymmetricMatrixObject::~TlDenseSymmetricMatrixObject() {}
 
+void TlDenseSymmetricMatrixObject::vtr2mat(const std::vector<double>& vtr) {
+  const TlMatrixObject::index_type dim = this->getNumOfRows();
+  assert(dim == this->getNumOfCols());
+  assert(vtr.size() == dim * (dim +1) / 2);
+
+  std::size_t i = 0;
+  // column-major
+  for (TlMatrixObject::index_type c = 0; c < dim; ++c) {
+    for (TlMatrixObject::index_type r = 0; r <= c; ++r) {
+      double v = vtr[i];
+      this->set(r, c, v);
+      ++i;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------
 TlMatrixObject::index_type TlDenseSymmetricMatrixObject::getNumOfRows() const {
   return this->pImpl_->getNumOfRows();
 }
@@ -411,6 +430,7 @@ TlSerializeData TlDenseSymmetricMatrixObject::getSerializeData() const {
   return data;
 }
 
+// ----------------------------------------------------------------------------
 std::ostream& operator<<(std::ostream& stream,
                          const TlDenseSymmetricMatrixObject& mat) {
   const TlMatrixObject::index_type nNumOfDim =

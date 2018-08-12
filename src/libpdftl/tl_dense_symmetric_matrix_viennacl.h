@@ -6,8 +6,15 @@
 class TlDenseGeneralMatrix_ViennaCL;
 class TlDenseVector_ViennaCL;
 class TlDenseSymmetricMatrix_Eigen;
+class TlSparseSymmetricMatrix_ViennaCL;
 
 class TlDenseSymmetricMatrix_ViennaCL : public TlDenseSymmetricMatrixObject {
+  // ---------------------------------------------------------------------------
+  //
+  // ---------------------------------------------------------------------------
+ public:
+  enum EIG_METHOD { EIG_QR, EIG_POWERITERATION };
+
   // ---------------------------------------------------------------------------
   // constructor & destructor
   // ---------------------------------------------------------------------------
@@ -16,7 +23,11 @@ class TlDenseSymmetricMatrix_ViennaCL : public TlDenseSymmetricMatrixObject {
       const TlMatrixObject::index_type dim = 1);
   TlDenseSymmetricMatrix_ViennaCL(const TlDenseSymmetricMatrix_ViennaCL& rhs);
   TlDenseSymmetricMatrix_ViennaCL(const TlDenseGeneralMatrix_ViennaCL& rhs);
+  TlDenseSymmetricMatrix_ViennaCL(const TlSparseSymmetricMatrix_ViennaCL& rhs);
+#ifdef HAVE_EIGEN
   TlDenseSymmetricMatrix_ViennaCL(const TlDenseSymmetricMatrix_Eigen& rhs);
+#endif  // HAVE_EIGEN
+
   virtual ~TlDenseSymmetricMatrix_ViennaCL();
 
   // ---------------------------------------------------------------------------
@@ -51,16 +62,33 @@ class TlDenseSymmetricMatrix_ViennaCL : public TlDenseSymmetricMatrixObject {
       const TlDenseSymmetricMatrix_ViennaCL& rhs);
 
   bool eig(TlDenseVector_ViennaCL* pEigVal,
-           TlDenseGeneralMatrix_ViennaCL* pEigVec) const;
+           TlDenseGeneralMatrix_ViennaCL* pEigVec,
+           EIG_METHOD eigMethod = EIG_QR) const;
+  TlDenseSymmetricMatrix_ViennaCL inverse() const;
+
+  // ---------------------------------------------------------------------------
+  // protected
+  // ---------------------------------------------------------------------------
+ protected:
+  bool eig_powerIteration(TlDenseVector_ViennaCL* pEigVal,
+                          TlDenseGeneralMatrix_ViennaCL* pEigVec) const;
+
   bool eig_QR(TlDenseVector_ViennaCL* pEigVal,
               TlDenseGeneralMatrix_ViennaCL* pEigVec) const;
-
-  TlDenseSymmetricMatrix_ViennaCL inverse() const;
 
   // ---------------------------------------------------------------------------
   // Others
   // ---------------------------------------------------------------------------
   friend class TlDenseGeneralMatrix_ViennaCL;
+  friend class TlDenseSymmetricMatrix_Eigen;
+  friend class TlSparseSymmetricMatrix_ViennaCL;
+
+  friend TlDenseGeneralMatrix_ViennaCL operator*(
+      const TlDenseGeneralMatrix_ViennaCL& mat1,
+      const TlDenseSymmetricMatrix_ViennaCL& mat2);
+  friend TlDenseGeneralMatrix_ViennaCL operator*(
+      const TlDenseSymmetricMatrix_ViennaCL& mat1,
+      const TlDenseGeneralMatrix_ViennaCL& mat2);
 };
 
 #endif  // TL_DENSE_SYMMETRIC_MATRIX_VIENNACL_H

@@ -889,18 +889,18 @@ void TlDenseGeneralMatrix_ImplScalapack::setUsingPartialIO(bool isUsePIO) {
   TlDenseGeneralMatrix_ImplScalapack::isUsingPartialIO = isUsePIO;
 }
 
-void TlDenseGeneralMatrix_ImplScalapack::dump(
-    TlDenseVector_ImplScalapack* v) const {
-  v->resize(this->getNumOfRows() * this->getNumOfCols());
-  std::copy(this->pData_, this->pData_ + this->getNumOfMyElements(),
-            v->vector_);
-}
+// void TlDenseGeneralMatrix_ImplScalapack::dump(
+//     TlDenseVector_ImplScalapack* v) const {
+//   v->resize(this->getNumOfRows() * this->getNumOfCols());
+//   std::copy(this->pData_, this->pData_ + this->getNumOfMyElements(),
+//             v->vector_);
+// }
 
-void TlDenseGeneralMatrix_ImplScalapack::restore(
-    const TlDenseVector_ImplScalapack& v) {
-  const std::size_t bufSize = this->getNumOfMyElements();
-  std::copy(v.vector_, v.vector_ + bufSize, this->pData_);
-}
+// void TlDenseGeneralMatrix_ImplScalapack::restore(
+//     const TlDenseVector_ImplScalapack& v) {
+//   const std::size_t bufSize = this->getNumOfMyElements();
+//   std::copy(v.vector_, v.vector_ + bufSize, this->pData_);
+// }
 
 // ---------------------------------------------------------------------------
 // protected
@@ -2012,8 +2012,8 @@ TlDenseVector_ImplScalapack operator*(
   const int JY = 1;
   const int INCY = 1;
 
-  pdgemv_(&TRANS, &M, &N, &alpha, A.pData_, &IA, &JA, A.pDESC_, Xtmp.vector_,
-          &IX, &JX, Xtmp.m_pDESC, &INCX, &beta, Y.vector_, &IY, &JY, Y.m_pDESC,
+  pdgemv_(&TRANS, &M, &N, &alpha, A.pData_, &IA, &JA, A.pDESC_, Xtmp.pData_,
+          &IX, &JX, Xtmp.pDESC_, &INCX, &beta, Y.pData_, &IY, &JY, Y.pDESC_,
           &INCY);
 
   return Y;
@@ -2048,8 +2048,8 @@ TlDenseVector_ImplScalapack operator*(
   const int JY = 1;
   const int INCY = 1;
 
-  pdgemv_(&TRANS, &M, &N, &alpha, A.pData_, &IA, &JA, A.pDESC_, Xtmp.vector_,
-          &IX, &JX, Xtmp.m_pDESC, &INCX, &beta, Y.vector_, &IY, &JY, Y.m_pDESC,
+  pdgemv_(&TRANS, &M, &N, &alpha, A.pData_, &IA, &JA, A.pDESC_, Xtmp.pData_,
+          &IX, &JX, Xtmp.pDESC_, &INCX, &beta, Y.pData_, &IY, &JY, Y.pDESC_,
           &INCY);
 
   return Y;

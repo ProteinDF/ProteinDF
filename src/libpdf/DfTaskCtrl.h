@@ -91,6 +91,13 @@ class DfTaskCtrl : public DfObject {
   // double getCutoffEpsilon_primitive() const;
 
  public:
+  ///
+  virtual bool getQueue(const std::size_t maxIndeces,
+                        const std::size_t maxGrainSize,
+                        std::vector<std::size_t>* pTask,
+                        bool initialize = false);
+
+  /// get queue in the 1 orbital tasks
   virtual bool getQueue(const TlOrbitalInfoObject& orbitalInfo,
                         const int maxGrainSize, std::vector<Task>* pTask,
                         bool initialize = false);

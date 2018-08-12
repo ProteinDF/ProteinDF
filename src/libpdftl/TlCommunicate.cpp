@@ -39,6 +39,7 @@
 #include "tl_dense_vector_lapack.h"
 #include "tl_dense_vector_impl_lapack.h"
 #include "tl_matrix_object.h"
+#include "tl_vector_object.h"
 #include "tl_scalapack_context.h"
 #include "tl_sparse_matrix.h"
 
@@ -1609,6 +1610,12 @@ int TlCommunicate::receiveDataX(TlMatrixObject::MatrixElement* pData,
   return this->receiveDataX(pData, this->MPI_MATRIXELEMENT, 0, size, src, tag);
 }
 
+int TlCommunicate::receiveDataX(TlVectorObject::VectorElement* pData,
+                                const std::size_t size, const int src,
+                                const int tag) {
+  return this->receiveDataX(pData, this->MPI_VECTORELEMENT, 0, size, src, tag);
+}
+
 template <typename T>
 int TlCommunicate::receiveDataX(T* pData, const MPI_Datatype mpiType,
                                 const std::size_t start, const std::size_t end,
@@ -2271,6 +2278,12 @@ int TlCommunicate::iSendDataX(const TlMatrixObject::MatrixElement* pData,
   return this->iSendDataX(pData, this->MPI_MATRIXELEMENT, 0, size, dest, tag);
 }
 
+int TlCommunicate::iSendDataX(const TlVectorObject::VectorElement* pData,
+                              const std::size_t size, const int dest,
+                              const int tag) {
+  return this->iSendDataX(pData, this->MPI_VECTORELEMENT, 0, size, dest, tag);
+}
+
 // =============================================================================
 template <typename T>
 int TlCommunicate::iReceiveData(T& data, const MPI_Datatype mpiType,
@@ -2741,6 +2754,7 @@ int TlCommunicate::initialize(int argc, char* argv[]) {
 
   // register MPI_Datatype
   this->register_MatrixElement();
+  this->register_VectorElement();
 
   this->counter_barrier_ = 0;
   this->counter_test_ = 0;
@@ -2760,6 +2774,7 @@ int TlCommunicate::initialize(int argc, char* argv[]) {
 
 int TlCommunicate::finalize() {
   this->unregister_MatrixElement();
+  this->unregister_VectorElement();
 
   TlScalapackContext::finalize();
 
@@ -2812,6 +2827,31 @@ void TlCommunicate::register_MatrixElement() {
 void TlCommunicate::unregister_MatrixElement() {
   MPI_Type_free(&(this->MPI_MATRIXELEMENT));
 }
+
+void TlCommunicate::register_VectorElement() {
+  const int numOfItems = 2;
+  int blocklengths[2] = {1, 1};
+  // MPI_Datatype types[3] = {MPI_UNSIGNED_LONG, MPI_UNSIGNED_LONG, MPI_DOUBLE};
+  MPI_Datatype types[2] = {MPI_INT, MPI_DOUBLE};
+  MPI_Aint offsets[2];
+  offsets[0] = offsetof(struct TlVectorObject::VectorElement, index);
+  offsets[1] = offsetof(struct TlVectorObject::VectorElement, value);
+
+  int err = MPI_Type_create_struct(numOfItems, blocklengths, offsets, types,
+                                   &(this->MPI_VECTORELEMENT));
+
+  if (err != MPI_SUCCESS) {
+    this->log_.critical("cannot register MPI_VECTORELEMENT.");
+  }
+
+  MPI_Type_commit(&(this->MPI_VECTORELEMENT));
+}
+
+void TlCommunicate::unregister_VectorElement() {
+  MPI_Type_free(&(this->MPI_VECTORELEMENT));
+}
+
+
 
 // =====================================================================
 // BROADCAST

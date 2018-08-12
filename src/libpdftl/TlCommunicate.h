@@ -281,6 +281,8 @@ class TlCommunicate {
                    const int tag = 0);
   int receiveDataX(TlMatrixObject::MatrixElement* pData, const std::size_t size,
                    const int src, const int tag = 0);
+  int receiveDataX(TlVectorObject::VectorElement* pData, const std::size_t size,
+                   const int src, const int tag = 0);
 
   int receiveDataFromAnySourceX(int* pData, std::size_t size, int* pSrc,
                                 int tag = 0);
@@ -292,6 +294,8 @@ class TlCommunicate {
   int iSendDataX(const double* pData, const std::size_t size, const int dest,
                  const int tag = 0);
   int iSendDataX(const TlMatrixObject::MatrixElement* pData,
+                 const std::size_t size, int dest, int tag = 0);
+  int iSendDataX(const TlVectorObject::VectorElement* pData,
                  const std::size_t size, int dest, int tag = 0);
 
   int iReceiveDataX(int* pData, const std::size_t size, const int src,
@@ -503,6 +507,9 @@ class TlCommunicate {
   void register_MatrixElement();
   void unregister_MatrixElement();
 
+  void register_VectorElement();
+  void unregister_VectorElement();
+
  private:
   template <typename T>
   int broadcast(T& data, const MPI_Datatype mpiType, const int root);
@@ -545,6 +552,7 @@ class TlCommunicate {
 
   /// original data type
   MPI_Datatype MPI_MATRIXELEMENT;
+  MPI_Datatype MPI_VECTORELEMENT;
 
   TlLogging& log_;
 

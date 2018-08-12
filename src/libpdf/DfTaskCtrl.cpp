@@ -135,6 +135,37 @@ DfTaskCtrl::ShellArrayTable DfTaskCtrl::makeShellArrayTable(
   return shellArrayTable;
 }
 
+// ----------------------------------------------------------------------------
+// queue
+// ----------------------------------------------------------------------------
+bool DfTaskCtrl::getQueue(const std::size_t maxIndeces,
+                          const std::size_t maxGrainSize,
+                          std::vector<std::size_t>* pTasks,
+                          bool initialize) {
+  assert(pTasks != NULL);
+  static std::size_t currentIndex = 0;
+
+  if (initialize == true) {
+    currentIndex = 0;
+    
+    return true;
+  }
+
+  pTasks->clear();
+  pTasks->reserve(maxGrainSize);
+  std::size_t numOfTasks = 0;
+  for (; currentIndex < maxIndeces; ++currentIndex) {
+    pTasks->push_back(currentIndex);
+    ++numOfTasks;
+
+    if (numOfTasks > maxGrainSize) {
+      break;
+    }
+  }
+
+  return (pTasks->empty() != true);
+}
+
 bool DfTaskCtrl::getQueue(const TlOrbitalInfoObject& orbitalInfo,
                           const int maxGrainSize, std::vector<Task>* pTaskList,
                           bool initialize) {

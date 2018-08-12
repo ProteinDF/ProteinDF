@@ -1,3 +1,6 @@
+#include<cassert>
+#include<vector>
+
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_impl_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
@@ -28,6 +31,11 @@ TlDenseGeneralMatrix_Lapack::TlDenseGeneralMatrix_Lapack(
 TlDenseGeneralMatrix_Lapack::TlDenseGeneralMatrix_Lapack(
     const TlDenseGeneralMatrix_ImplLapack& rhs) {
   this->pImpl_ = new TlDenseGeneralMatrix_ImplLapack(rhs);
+}
+
+void TlDenseGeneralMatrix_Lapack::vtr2mat(const std::vector<double>& vtr) {
+  assert(vtr.size() == this->getNumOfRows() * this->getNumOfCols());
+  dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->vtr2mat(vtr);
 }
 
 TlDenseGeneralMatrix_Lapack::~TlDenseGeneralMatrix_Lapack() {

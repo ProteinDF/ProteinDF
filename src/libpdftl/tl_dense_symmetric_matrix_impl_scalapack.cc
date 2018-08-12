@@ -34,11 +34,11 @@ TlDenseSymmetricMatrix_ImplScalapack::TlDenseSymmetricMatrix_ImplScalapack(
   // コピーされたバッファの下半分しか使わない
 }
 
-TlDenseSymmetricMatrix_ImplScalapack::TlDenseSymmetricMatrix_ImplScalapack(
-    const TlDenseVector_ImplScalapack& v, const TlMatrixObject::index_type dim)
-    : TlDenseGeneralMatrix_ImplScalapack(dim, dim) {
-  this->restore(v);
-}
+// TlDenseSymmetricMatrix_ImplScalapack::TlDenseSymmetricMatrix_ImplScalapack(
+//     const TlDenseVector_ImplScalapack& v, const TlMatrixObject::index_type dim)
+//     : TlDenseGeneralMatrix_ImplScalapack(dim, dim) {
+//   this->restore(v);
+// }
 
 TlDenseSymmetricMatrix_ImplScalapack::~TlDenseSymmetricMatrix_ImplScalapack() {}
 

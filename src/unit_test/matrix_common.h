@@ -15,6 +15,45 @@ T getTlMatrix(int row, int col) {
   return m;
 }
 
+template <typename T>
+T getGeneralMatrix(int row, int col) {
+  T m(row, col);
+  int count = 1;
+  for (int i = 0; i < row; ++i) {
+    for (int j = 0; j < col; ++j) {
+      m.set(i, j, double(count));
+      ++count;
+    }
+  }
+  return m;
+}
+
+template <typename T>
+T getGeneralSparseMatrix(int row, int col, int base = 7) {
+  T m(row, col);
+  int count = 1;
+  for (int i = 0; i < row; ++i) {
+    for (int j = 0; j < col; ++j) {
+      if ((count % base) == 0) {
+        m.set(i, j, double(count));
+      }
+      ++count;
+    }
+  }
+  return m;
+}
+
+template <typename T>
+T getSymmetricMatrix(int dim) {
+  T m(dim);
+  for (int i = 0; i < dim; ++i) {
+    for (int j = 0; j <= i; ++j) {
+      m.set(i, j, double(i+1));
+    }
+  }
+  return m;
+}
+
 //          1 th       2 th       3 th
 // -----------------------------------------
 // 1     0.000000   1.000000   2.000000
@@ -71,6 +110,28 @@ T getMatrixC() {
   return b;
 }
 
+// [ 1  2  3  4]
+// [ 5  6  7  8]
+// [ 9 10 11 12]
+template <typename T>
+T getMatrixD() {
+  T d(3, 4);
+  d.set(0, 0, 1.0);  
+  d.set(0, 1, 2.0);  
+  d.set(0, 2, 3.0);  
+  d.set(0, 3, 4.0);  
+  d.set(1, 0, 5.0);  
+  d.set(1, 1, 6.0);  
+  d.set(1, 2, 7.0);  
+  d.set(1, 3, 8.0);  
+  d.set(2, 0, 9.0);  
+  d.set(2, 1, 10.0);  
+  d.set(2, 2, 11.0);  
+  d.set(2, 3, 12.0);  
+
+  return d;
+}
+
 // [ 0  1  3 ]
 // [ -  2  4 ]
 // [ -  -  5 ]
@@ -124,5 +185,23 @@ T getSymMatrixC() {
 
   return c;
 }
+
+template <typename T>
+T getSymMatrixD() {
+  T d(4);
+  d.set(0, 0, 1.0);
+  d.set(1, 0, 2.0);
+  d.set(1, 1, 2.0);
+  d.set(2, 0, 3.0);
+  d.set(2, 1, 3.0);
+  d.set(2, 2, 3.0);
+  d.set(3, 0, 4.0);
+  d.set(3, 1, 4.0);
+  d.set(3, 2, 4.0);
+  d.set(3, 3, 4.0);
+
+  return d;
+}
+
 
 #endif  // MATRIX_COMMON_H

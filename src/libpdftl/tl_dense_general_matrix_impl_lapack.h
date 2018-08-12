@@ -108,6 +108,9 @@ class TlDenseGeneralMatrix_ImplLapack : public TlDenseMatrix_ImplObject {
   virtual TlMatrixObject::size_type index(TlMatrixObject::index_type row,
                                           TlMatrixObject::index_type col) const;
 
+  // column-major
+  // a11, a21, a31, a41, ..., am1, a12, a22, a32, ...                                          
+  virtual void vtr2mat(const std::vector<double>& vtr);
   // ---------------------------------------------------------------------------
   // variables
   // ---------------------------------------------------------------------------

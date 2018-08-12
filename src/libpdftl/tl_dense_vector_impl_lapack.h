@@ -16,6 +16,9 @@ class TlDenseVector_ImplLapack : public TlDenseVector_ImplObject {
       const TlDenseVectorObject::index_type size = 0);
   TlDenseVector_ImplLapack(const TlDenseVector_ImplLapack& rhs);
   TlDenseVector_ImplLapack(const std::vector<double>& rhs);
+
+  operator std::vector<double>() const;
+
   virtual ~TlDenseVector_ImplLapack();
 
   // ---------------------------------------------------------------------------
