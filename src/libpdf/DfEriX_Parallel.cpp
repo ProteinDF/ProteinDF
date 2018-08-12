@@ -23,10 +23,13 @@
 #include "DfEriX_Parallel.h"
 #include "DfTaskCtrl_Parallel.h"
 #include "TlCommunicate.h"
-#include "tl_dense_general_matrix_blacs.h"
-#include "tl_dense_symmetric_matrix_blacs.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_general_matrix_scalapack.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
+#include "tl_dense_vector_lapack.h"
 #include "tl_matrix_utils.h"
 #include "tl_sparse_symmetric_matrix.h"
+#include "tl_dense_vector_scalapack.h"
 
 DfEriX_Parallel::DfEriX_Parallel(TlSerializeData* pPdfParam)
     : DfEriX(pPdfParam) {
@@ -43,27 +46,27 @@ DfTaskCtrl* DfEriX_Parallel::getDfTaskCtrlObject() const {
   return pDfTaskCtrl;
 }
 
-void DfEriX_Parallel::finalize(TlDenseGeneralMatrix_BLAS_old* pMtx) {
+void DfEriX_Parallel::finalize(TlDenseGeneralMatrix_Lapack* pMtx) {
   this->log_.info("finalize Matrix: start");
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.allReduce_SUM(*pMtx);
+  rComm.allReduce_SUM(pMtx);
   this->log_.info("finalize Matrix: end");
 }
 
-void DfEriX_Parallel::finalize(TlDenseSymmetricMatrix_BLAS_Old* pMtx) {
+void DfEriX_Parallel::finalize(TlDenseSymmetricMatrix_Lapack* pMtx) {
   this->log_.info("finalize SymmetricMatrix: start");
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.allReduce_SUM(*pMtx);
+  rComm.allReduce_SUM(pMtx);
   this->log_.info("finalize SymmetricMatrix: end");
 }
 
-void DfEriX_Parallel::finalize(TlVector_BLAS* pVct) {
+void DfEriX_Parallel::finalize(TlDenseVector_Lapack* pVct) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.allReduce_SUM(*pVct);
+  rComm.allReduce_SUM(pVct);
 }
 
-void DfEriX_Parallel::getJ(const TlVector_BLAS& rho,
-                           TlDenseSymmetricMatrix_blacs* pJ) {
+void DfEriX_Parallel::getJ(const TlDenseVector_Lapack& rho,
+                           TlDenseSymmetricMatrix_Scalapack* pJ) {
   assert(pJ != NULL);
 
   const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
@@ -103,7 +106,7 @@ void DfEriX_Parallel::getJ(const TlVector_BLAS& rho,
   this->destroyEngines();
 }
 
-void DfEriX_Parallel::getJab(TlDenseSymmetricMatrix_blacs* pJab) {
+void DfEriX_Parallel::getJab(TlDenseSymmetricMatrix_Scalapack* pJab) {
   assert(pJab != NULL);
   const index_type numOfAuxDens = this->m_nNumOfAux;
   pJab->resize(numOfAuxDens);
@@ -138,8 +141,8 @@ void DfEriX_Parallel::getJab(TlDenseSymmetricMatrix_blacs* pJab) {
   this->destroyEngines();
 }
 
-void DfEriX_Parallel::getJ(const TlDenseSymmetricMatrix_blacs& P,
-                           TlDistributedVector* pRho) {
+void DfEriX_Parallel::getJ(const TlDenseSymmetricMatrix_Scalapack& P,
+                           TlDenseVector_Scalapack* pRho) {
   switch (this->calcMode_) {
     case CalcMode_UsingLocalMatrix:
       this->log_.info(" ERI calc mode: Local Matrix");
@@ -153,8 +156,8 @@ void DfEriX_Parallel::getJ(const TlDenseSymmetricMatrix_blacs& P,
   }
 }
 
-void DfEriX_Parallel::getJ_D_local(const TlDenseSymmetricMatrix_blacs& P,
-                                   TlDistributedVector* pRho) {
+void DfEriX_Parallel::getJ_D_local(const TlDenseSymmetricMatrix_Scalapack& P,
+                                   TlDenseVector_Scalapack* pRho) {
   this->log_.info(" using local matrix for density matrix.");
 
   assert(pRho != NULL);
@@ -178,7 +181,7 @@ void DfEriX_Parallel::getJ_D_local(const TlDenseSymmetricMatrix_blacs& P,
   const ShellArrayTable shellArrayTable_Density =
       this->makeShellArrayTable(orbitalInfo_Density);
 
-  TlDenseGeneralMatrix_BLAS_old localP;
+  TlDenseGeneralMatrix_Lapack localP;
   std::vector<index_type> rowIndexes;
   std::vector<index_type> colIndexes;
   this->expandLocalDensityMatrix(P, orbitalInfo, &localP, &rowIndexes,
@@ -220,22 +223,22 @@ void DfEriX_Parallel::getJ_D_local(const TlDenseSymmetricMatrix_blacs& P,
   }
 
   this->createEngines();
-  TlVector_BLAS tmpRho(this->m_nNumOfAux);
+  TlDenseVector_Lapack tmpRho(this->m_nNumOfAux);
   this->log_.info("ERI start");
   this->getJ_part2(orbitalInfo, orbitalInfo_Density, shellArrayTable_Density,
-                   taskList, TlDenseGeneralMatrix_blacs(P), &tmpRho);
+                   taskList, TlDenseGeneralMatrix_Scalapack(P), &tmpRho);
   this->log_.info("ERI end: waiting all process tasks");
   this->destroyEngines();
 
   // finalize
-  rComm.allReduce_SUM(tmpRho);
-  *pRho = TlDistributedVector(tmpRho);
+  rComm.allReduce_SUM(&tmpRho);
+  *pRho = TlDenseVector_Scalapack(tmpRho);
   this->log_.info("finished");
   assert(rComm.checkNonBlockingCommunications());
 }
 
-void DfEriX_Parallel::getJ_D_BG(const TlDenseSymmetricMatrix_blacs& P,
-                                TlDistributedVector* pRho) {
+void DfEriX_Parallel::getJ_D_BG(const TlDenseSymmetricMatrix_Scalapack& P,
+                                TlDenseVector_Scalapack* pRho) {
   this->log_.info(" background transportation for density matrix.");
 
   assert(pRho != NULL);
@@ -260,7 +263,7 @@ void DfEriX_Parallel::getJ_D_BG(const TlDenseSymmetricMatrix_blacs& P,
 
   TlSparseSymmetricMatrix tmpP(this->m_nNumOfAOs);
   bool isSetTempP = false;
-  TlVector_BLAS tmpRho(this->m_nNumOfAux);
+  TlDenseVector_Lapack tmpRho(this->m_nNumOfAux);
 
   this->createEngines();
   DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
@@ -288,7 +291,7 @@ void DfEriX_Parallel::getJ_D_BG(const TlDenseSymmetricMatrix_blacs& P,
       isSetTempP = true;
     }
 
-    if (P.getSparseMatrixX(&tmpP, false) == true) {
+    if (P.getSparseMatrix(&tmpP, false) == true) {
       this->getJ_part(orbitalInfo, orbitalInfo_Density, shellArrayTable_Density,
                       taskList, tmpP, &tmpRho);
 
@@ -303,7 +306,7 @@ void DfEriX_Parallel::getJ_D_BG(const TlDenseSymmetricMatrix_blacs& P,
       //                                 TF.c_str()));
     }
 
-    P.getSparseMatrixX(NULL, false);
+    P.getSparseMatrix(NULL, false);
   }
 
   // int allProcFinished = 0;
@@ -324,7 +327,7 @@ void DfEriX_Parallel::getJ_D_BG(const TlDenseSymmetricMatrix_blacs& P,
   //     }
   // }
   this->waitAnotherProcs(P);
-  P.getSparseMatrixX(NULL, true);
+  P.getSparseMatrix(NULL, true);
 
   // std::cerr << TlUtils::format("[%d] DfEriX_Parallel::getJ_D() end",
   //                              rComm.getRank())
@@ -337,13 +340,13 @@ void DfEriX_Parallel::getJ_D_BG(const TlDenseSymmetricMatrix_blacs& P,
 
   // finalize
   // this->finalize(pRho);
-  rComm.allReduce_SUM(tmpRho);
-  *pRho = TlDistributedVector(tmpRho);
+  rComm.allReduce_SUM(&tmpRho);
+  *pRho = TlDenseVector_Scalapack(tmpRho);
 }
 
 // BG?
-void DfEriX_Parallel::getJpq_D(const TlDenseSymmetricMatrix_blacs& P,
-                               TlDenseSymmetricMatrix_blacs* pJ) {
+void DfEriX_Parallel::getJpq_D(const TlDenseSymmetricMatrix_Scalapack& P,
+                               TlDenseSymmetricMatrix_Scalapack* pJ) {
   this->log_.info("background transportation for density matrix.");
 
   assert(pJ != NULL);
@@ -409,7 +412,7 @@ void DfEriX_Parallel::getJpq_D(const TlDenseSymmetricMatrix_blacs& P,
         isSetTempP = true;
       }
 
-      if (P.getSparseMatrixX(&tmpP, false) == true) {
+      if (P.getSparseMatrix(&tmpP, false) == true) {
         const int numOfTaskElements = this->getJ_integralDriven_part(
             orbitalInfo, taskList, tmpP, pTaskIndexPairs, pTaskValues);
         {
@@ -429,7 +432,7 @@ void DfEriX_Parallel::getJpq_D(const TlDenseSymmetricMatrix_blacs& P,
                                          this->grainSize_, &taskList);
       }
 
-      P.getSparseMatrixX(NULL, false);
+      P.getSparseMatrix(NULL, false);
     }
 
     delete[] pTaskIndexPairs;
@@ -441,7 +444,7 @@ void DfEriX_Parallel::getJpq_D(const TlDenseSymmetricMatrix_blacs& P,
 
   // waiting another proc
   this->waitAnotherProcs(P);
-  P.getSparseMatrixX(NULL, true);
+  P.getSparseMatrix(NULL, true);
 
   this->log_.info("finalize");
   TlMatrixUtils::addByList(&(procIndexPQ[0]), &(procValues[0]),
@@ -453,8 +456,8 @@ void DfEriX_Parallel::getJpq_D(const TlDenseSymmetricMatrix_blacs& P,
   pDfTaskCtrl = NULL;
 }
 
-void DfEriX_Parallel::getK_D(const TlDenseSymmetricMatrix_blacs& P,
-                             TlDenseSymmetricMatrix_blacs* pK) {
+void DfEriX_Parallel::getK_D(const TlDenseSymmetricMatrix_Scalapack& P,
+                             TlDenseSymmetricMatrix_Scalapack* pK) {
   switch (this->calcMode_) {
     case CalcMode_UsingLocalMatrix:
       this->getK_D_local(P, pK);
@@ -466,8 +469,8 @@ void DfEriX_Parallel::getK_D(const TlDenseSymmetricMatrix_blacs& P,
   }
 }
 
-void DfEriX_Parallel::getK_D_BG(const TlDenseSymmetricMatrix_blacs& P,
-                                TlDenseSymmetricMatrix_blacs* pK) {
+void DfEriX_Parallel::getK_D_BG(const TlDenseSymmetricMatrix_Scalapack& P,
+                                TlDenseSymmetricMatrix_Scalapack* pK) {
   this->log_.info("background transportation for density matrix.");
 
   assert(pK != NULL);
@@ -541,7 +544,7 @@ void DfEriX_Parallel::getK_D_BG(const TlDenseSymmetricMatrix_blacs& P,
         isSetTempP = true;
       }
 
-      if (P.getSparseMatrixX(&tmpP, false) == true) {
+      if (P.getSparseMatrix(&tmpP, false) == true) {
         const int numOfTaskElements = this->getK_integralDriven_part(
             orbitalInfo, taskList, tmpP, pTaskIndexPairs, pTaskValues);
         {
@@ -561,7 +564,7 @@ void DfEriX_Parallel::getK_D_BG(const TlDenseSymmetricMatrix_blacs& P,
                                          this->grainSize_, &taskList);
       }
 
-      P.getSparseMatrixX(NULL, false);
+      P.getSparseMatrix(NULL, false);
     }
 
     delete[] pTaskIndexPairs;
@@ -573,7 +576,7 @@ void DfEriX_Parallel::getK_D_BG(const TlDenseSymmetricMatrix_blacs& P,
 
   // waiting another proc
   this->waitAnotherProcs(P);
-  P.getSparseMatrixX(NULL, true);
+  P.getSparseMatrix(NULL, true);
 
   this->log_.info("finalize");
   TlMatrixUtils::addByList(&(procIndexPQ[0]), &(procValues[0]),
@@ -585,8 +588,8 @@ void DfEriX_Parallel::getK_D_BG(const TlDenseSymmetricMatrix_blacs& P,
   pDfTaskCtrl = NULL;
 }
 
-void DfEriX_Parallel::getK_D_local(const TlDenseSymmetricMatrix_blacs& P,
-                                   TlDenseSymmetricMatrix_blacs* pK) {
+void DfEriX_Parallel::getK_D_local(const TlDenseSymmetricMatrix_Scalapack& P,
+                                   TlDenseSymmetricMatrix_Scalapack* pK) {
   this->log_.info("using local matrix for density matrix.");
 
   assert(pK != NULL);
@@ -601,14 +604,14 @@ void DfEriX_Parallel::getK_D_local(const TlDenseSymmetricMatrix_blacs& P,
       this->makeSchwarzTable(orbitalInfo);
 
   // TODO:
-  TlDenseGeneralMatrix_BLAS_old localP;
+  TlDenseGeneralMatrix_Lapack localP;
   std::vector<index_type> rowIndexes;
   std::vector<index_type> colIndexes;
   this->expandLocalDensityMatrix(P, orbitalInfo, &localP, &rowIndexes,
                                  &colIndexes);
 
   this->log_.info("ERI start");
-  const TlDenseGeneralMatrix_blacs tmpP(P);
+  const TlDenseGeneralMatrix_Scalapack tmpP(P);
   DfTaskCtrl dfTaskCtrl(this->pPdfParam_);
 
   std::vector<DfTaskCtrl::Task4> taskList;
@@ -652,7 +655,8 @@ void DfEriX_Parallel::getK_D_local(const TlDenseSymmetricMatrix_blacs& P,
   this->log_.info("finished");
 }
 
-void DfEriX_Parallel::waitAnotherProcs(const TlDenseSymmetricMatrix_blacs& P) {
+void DfEriX_Parallel::waitAnotherProcs(
+    const TlDenseSymmetricMatrix_Scalapack& P) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
   int allProcFinished = 0;
@@ -663,7 +667,7 @@ void DfEriX_Parallel::waitAnotherProcs(const TlDenseSymmetricMatrix_blacs& P) {
     bool isWaitingMsg = false;
     int proc = 0;
     while (true) {
-      P.getSparseMatrixX(NULL, false);
+      P.getSparseMatrix(NULL, false);
       if (isWaitingMsg != true) {
         rComm.iReceiveDataFromAnySource(allProcFinished, TAG_ALL_PROC_FINISHED);
         isWaitingMsg = true;
@@ -691,7 +695,7 @@ void DfEriX_Parallel::waitAnotherProcs(const TlDenseSymmetricMatrix_blacs& P) {
     // recv
     rComm.iReceiveData(allProcFinished, 0, TAG_ALL_PROC_FINISHED);
     while (true) {
-      P.getSparseMatrixX(NULL, false);
+      P.getSparseMatrix(NULL, false);
 
       if (rComm.test(&allProcFinished) == true) {
         rComm.wait(&allProcFinished);
@@ -705,15 +709,16 @@ void DfEriX_Parallel::waitAnotherProcs(const TlDenseSymmetricMatrix_blacs& P) {
 }
 
 void DfEriX_Parallel::expandLocalDensityMatrix(
-    const TlDenseSymmetricMatrix_blacs& P, const TlOrbitalInfo& orbInfo,
-    TlDenseGeneralMatrix_BLAS_old* pLocalP, std::vector<index_type>* pRowIndexes,
+    const TlDenseSymmetricMatrix_Scalapack& P, const TlOrbitalInfo& orbInfo,
+    TlDenseGeneralMatrix_Lapack* pLocalP, std::vector<index_type>* pRowIndexes,
     std::vector<index_type>* pColIndexes) {
   assert(pLocalP != NULL);
 
-  const TlDenseGeneralMatrix_BLAS_old refP =
-      TlDenseGeneralMatrix_blacs(P).getLocalMatrix();
-  const std::vector<index_type> refRowIndexes = P.getRowIndexTable();
-  const std::vector<index_type> refColIndexes = P.getColIndexTable();
+  TlDenseGeneralMatrix_Lapack refP;
+  // TlDenseGeneralMatrix_Scalapack(P).getLocalMatrix(&refP);
+  P.getLocalMatrix(&refP);
+  const std::vector<TlMatrixObject::index_type> refRowIndexes = P.getRowIndexTable();
+  const std::vector<TlMatrixObject::index_type> refColIndexes = P.getColIndexTable();
   const index_type numOfRefRowIndexes = refRowIndexes.size();
   const index_type numOfRefColIndexes = refColIndexes.size();
 
@@ -798,7 +803,7 @@ void DfEriX_Parallel::getJ_part2(
     const TlOrbitalInfo_Density& orbitalInfo_Density,
     const ShellArrayTable& shellArrayTable_Density,
     const std::vector<DfTaskCtrl::Task2>& taskList,
-    const TlDenseGeneralMatrix_blacs& P, TlVector_BLAS* pRho) {
+    const TlDenseGeneralMatrix_Scalapack& P, TlDenseVector_Lapack* pRho) {
   const int taskListSize = taskList.size();
   // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
@@ -889,7 +894,7 @@ void DfEriX_Parallel::getJ_part2(
 //                                                 const
 //                                                 std::vector<DfTaskCtrl::Task4>&
 //                                                 taskList, const
-//                                                 TlDenseGeneralMatrix_blacs&
+//                                                 TlDenseGeneralMatrix_Scalapack&
 //                                                 P,
 //                                                 TlMatrixObject* pK)
 // {
@@ -954,7 +959,8 @@ void DfEriX_Parallel::getJ_part2(
 //                                              shellIndexS, const int
 //                                              maxStepsS, const DfEriEngine&
 //                                              engine, const
-//                                              TlDenseGeneralMatrix_blacs& P,
+//                                              TlDenseGeneralMatrix_Scalapack&
+//                                              P,
 //                                              TlMatrixObject* pK)
 // {
 //     assert(pK != NULL);

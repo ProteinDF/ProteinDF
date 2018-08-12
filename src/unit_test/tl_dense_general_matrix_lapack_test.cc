@@ -3,9 +3,9 @@
 #include "config.h"
 #include "gtest/gtest.h"
 #include "matrix_common.h"
-#include "vector_common.h"
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_vector_lapack.h"
+#include "vector_common.h"
 
 static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 static const double EPS2 = 1.0E-2;
@@ -288,8 +288,7 @@ TEST(TlDenseGeneralMatrix_Lapack, save_and_load) {
 // [3 4 5] x [1] = [14]
 // [6 7 8]   [2]   [23]
 TEST(TlDenseGeneralMatrix_Lapack, operator_mul_mat_vec) {
-  TlDenseGeneralMatrix_Lapack a =
-      getMatrixA<TlDenseGeneralMatrix_Lapack>();
+  TlDenseGeneralMatrix_Lapack a = getMatrixA<TlDenseGeneralMatrix_Lapack>();
   TlDenseVector_Lapack v = getVectorA<TlDenseVector_Lapack>();
 
   TlDenseVector_Lapack z = a * v;
@@ -304,14 +303,13 @@ TEST(TlDenseGeneralMatrix_Lapack, operator_mul_mat_vec) {
 // [0 1 2 ] * [3 4 5] = [15 18 21]
 //            [6 7 8]
 TEST(TlDenseGeneralMatrix_Lapack, operator_mul_vec_mat) {
-  TlDenseGeneralMatrix_Lapack a =
-      getMatrixA<TlDenseGeneralMatrix_Lapack>();
+  TlDenseGeneralMatrix_Lapack a = getMatrixA<TlDenseGeneralMatrix_Lapack>();
   TlDenseVector_Lapack v = getVectorA<TlDenseVector_Lapack>();
-  std::cout << a << std::endl;
-  std::cout << v << std::endl;
+  // std::cout << a << std::endl;
+  // std::cout << v << std::endl;
 
   TlDenseVector_Lapack z = v * a;
-  std::cout << z << std::endl;
+  // std::cout << z << std::endl;
 
   EXPECT_EQ(3, z.getSize());
   EXPECT_DOUBLE_EQ(15.0, z.get(0));

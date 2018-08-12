@@ -41,6 +41,8 @@ TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::operator=(
   delete this->pImpl_;
   this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(
       *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_)));
+
+  return *this;
 }
 
 const TlDenseGeneralMatrix_Eigen TlDenseGeneralMatrix_Eigen::operator+(
@@ -68,49 +70,50 @@ TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::operator+=(
     const TlDenseGeneralMatrix_Eigen& rhs) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) +=
       *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_));
+
+  return *this;
 }
 
 TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::operator-=(
     const TlDenseGeneralMatrix_Eigen& rhs) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) -=
       *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_));
+
+  return *this;
 }
 
 TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::operator*=(
     const double coef) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) *= coef;
+
+  return *this;
 }
 
 TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::operator/=(
     const double coef) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) /= coef;
+
+  return *this;
 }
 
 TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::operator*=(
     const TlDenseGeneralMatrix_Eigen& rhs) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) *=
       *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_));
+
+  return *this;
 }
 
 // ---------------------------------------------------------------------------
 // operations
 // ---------------------------------------------------------------------------
-double TlDenseGeneralMatrix_Eigen::sum() const {
-  return this->pImpl_->sum();
-}
+double TlDenseGeneralMatrix_Eigen::sum() const { return this->pImpl_->sum(); }
 
 double TlDenseGeneralMatrix_Eigen::getRMS() const {
   return this->pImpl_->getRMS();
 }
 
-double TlDenseGeneralMatrix_Eigen::getMaxAbsoluteElement(
-    TlMatrixObject::index_type* outRow,
-    TlMatrixObject::index_type* outCol) const {
-  return this->pImpl_->getMaxAbsoluteElement(outRow, outCol);
-}
-
-const TlDenseGeneralMatrix_Eigen&
-TlDenseGeneralMatrix_Eigen::dotInPlace(
+const TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::dotInPlace(
     const TlDenseGeneralMatrix_Eigen& rhs) {
   dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)
       ->dotInPlace(
@@ -118,8 +121,7 @@ TlDenseGeneralMatrix_Eigen::dotInPlace(
   return *this;
 }
 
-TlDenseGeneralMatrix_Eigen TlDenseGeneralMatrix_Eigen::transpose()
-    const {
+TlDenseGeneralMatrix_Eigen TlDenseGeneralMatrix_Eigen::transpose() const {
   return TlDenseGeneralMatrix_Eigen(
       dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)->transpose());
 }

@@ -21,10 +21,11 @@
 
 #include "DfEriX.h"
 
-class TlDenseSymmetricMatrix_BLAS_Old;
-class TlDenseGeneralMatrix_blacs;
-class TlDenseSymmetricMatrix_blacs;
-class TlDistributedVector;
+class TlDenseSymmetricMatrix_Lapack;
+class TlDenseGeneralMatrix_Scalapack;
+class TlDenseSymmetricMatrix_Scalapack;
+class TlDenseVector_Scalapack;
+class TlDenseVector_Lapack;
 
 class DfEriX_Parallel : public DfEriX {
  public:
@@ -32,66 +33,72 @@ class DfEriX_Parallel : public DfEriX {
   virtual ~DfEriX_Parallel();
 
  public:
-  virtual void getJ(const TlDenseSymmetricMatrix_BLAS_Old& P, TlVector_BLAS* pRho) {
+  virtual void getJ(const TlDenseSymmetricMatrix_Lapack& P,
+                    TlDenseVector_Lapack* pRho) {
     DfEriX::getJ(P, pRho);
   }
-  void getJ(const TlDenseSymmetricMatrix_blacs& P, TlDistributedVector* pRho);
+  void getJ(const TlDenseSymmetricMatrix_Scalapack& P,
+            TlDenseVector_Scalapack* pRho);
 
-  virtual void getJ(const TlVector_BLAS& rho, TlDenseSymmetricMatrix_BLAS_Old* pJ) {
+  virtual void getJ(const TlDenseVector_Lapack& rho,
+                    TlDenseSymmetricMatrix_Lapack* pJ) {
     DfEriX::getJ(rho, pJ);
   }
-  void getJ(const TlVector_BLAS& rho, TlDenseSymmetricMatrix_blacs* pJ);
+  void getJ(const TlDenseVector_Lapack& rho,
+            TlDenseSymmetricMatrix_Scalapack* pJ);
 
   /// J([pq | rs])
-  void getJpq_D(const TlDenseSymmetricMatrix_blacs& P,
-                TlDenseSymmetricMatrix_blacs* pJpq);
+  void getJpq_D(const TlDenseSymmetricMatrix_Scalapack& P,
+                TlDenseSymmetricMatrix_Scalapack* pJpq);
 
   /// J([alpha | beta])
-  virtual void getJab(TlDenseSymmetricMatrix_BLAS_Old* pJab) {
+  virtual void getJab(TlDenseSymmetricMatrix_Lapack* pJab) {
     DfEriX::getJab(pJab);
   }
-  void getJab(TlDenseSymmetricMatrix_blacs* pJab);
+  void getJab(TlDenseSymmetricMatrix_Scalapack* pJab);
 
   /// K
-  void getK_D(const TlDenseSymmetricMatrix_blacs& P,
-              TlDenseSymmetricMatrix_blacs* pK);
+  void getK_D(const TlDenseSymmetricMatrix_Scalapack& P,
+              TlDenseSymmetricMatrix_Scalapack* pK);
 
  protected:
   virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
-  virtual void finalize(TlDenseGeneralMatrix_BLAS_old* pMtx);
-  virtual void finalize(TlDenseSymmetricMatrix_BLAS_Old* pMtx);
-  virtual void finalize(TlVector_BLAS* pVct);
+  virtual void finalize(TlDenseGeneralMatrix_Lapack* pMtx);
+  virtual void finalize(TlDenseSymmetricMatrix_Lapack* pMtx);
+  virtual void finalize(TlDenseVector_Lapack* pVct);
 
   virtual TlSparseSymmetricMatrix makeSchwarzTable(
       const TlOrbitalInfoObject& orbitalInfo);
 
-  void waitAnotherProcs(const TlDenseSymmetricMatrix_blacs& P);
+  void waitAnotherProcs(const TlDenseSymmetricMatrix_Scalapack& P);
 
  protected:
   // 非同期通信により電子密度行列を送受信する
-  void getJ_D_BG(const TlDenseSymmetricMatrix_blacs& P,
-                 TlDistributedVector* pRho);
+  void getJ_D_BG(const TlDenseSymmetricMatrix_Scalapack& P,
+                 TlDenseVector_Scalapack* pRho);
 
-  void getJ_D_local(const TlDenseSymmetricMatrix_blacs& P,
-                    TlDistributedVector* pRho);
+  void getJ_D_local(const TlDenseSymmetricMatrix_Scalapack& P,
+                    TlDenseVector_Scalapack* pRho);
 
   void getJ_part2(const TlOrbitalInfo& orbitalInfo,
                   const TlOrbitalInfo_Density& orbitalInfo_Density,
                   const ShellArrayTable& shellArrayTable_Density,
                   const std::vector<DfTaskCtrl::Task2>& taskList,
                   // const TlSparseSymmetricMatrix& schwarzTable,
-                  const TlDenseGeneralMatrix_blacs& P, TlVector_BLAS* pRho);
+                  const TlDenseGeneralMatrix_Scalapack& P,
+                  TlDenseVector_Lapack* pRho);
 
-  void getK_D_BG(const TlDenseSymmetricMatrix_blacs& P,
-                 TlDenseSymmetricMatrix_blacs* pK);
+  void getK_D_BG(const TlDenseSymmetricMatrix_Scalapack& P,
+                 TlDenseSymmetricMatrix_Scalapack* pK);
 
-  void getK_D_local(const TlDenseSymmetricMatrix_blacs& P,
-                    TlDenseSymmetricMatrix_blacs* pK);
+  void getK_D_local(const TlDenseSymmetricMatrix_Scalapack& P,
+                    TlDenseSymmetricMatrix_Scalapack* pK);
 
   // void getK_integralDriven_part2(const TlOrbitalInfoObject& orbitalInfo,
   //                                const std::vector<DfTaskCtrl::Task4>&
-  //                                taskList, const TlDenseGeneralMatrix_blacs&
+  //                                taskList, const
+  //                                TlDenseGeneralMatrix_Scalapack&
   //                                P,
   //                                TlMatrixObject* pK);
 
@@ -101,12 +108,12 @@ class DfEriX_Parallel : public DfEriX {
   //                             maxStepsQ, const index_type shellIndexR, const
   //                             int maxStepsR, const index_type shellIndexS,
   //                             const int maxStepsS, const DfEriEngine& engine,
-  //                             const TlDenseGeneralMatrix_blacs& P,
+  //                             const TlDenseGeneralMatrix_Scalapack& P,
   //                             TlMatrixObject* pK);
 
-  void expandLocalDensityMatrix(const TlDenseSymmetricMatrix_blacs& P,
+  void expandLocalDensityMatrix(const TlDenseSymmetricMatrix_Scalapack& P,
                                 const TlOrbitalInfo& orbInfo,
-                                TlDenseGeneralMatrix_BLAS_old* pLocalP,
+                                TlDenseGeneralMatrix_Lapack* pLocalP,
                                 std::vector<index_type>* pRowIndexes,
                                 std::vector<index_type>* pColIndexes);
   std::vector<index_type> getExpandIndexes(

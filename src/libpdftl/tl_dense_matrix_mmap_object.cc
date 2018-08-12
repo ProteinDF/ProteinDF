@@ -10,10 +10,12 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <cassert>
 
 #include "TlFile.h"
 #include "tl_dense_matrix_mmap_object.h"
 #include "tl_matrix_utils.h"
+#include "TlUtils.h"
 
 #define CLEAR_BUFSIZE (4096)
 
@@ -197,31 +199,31 @@ void TlDenseMatrixMmapObject::add(const index_type row, const index_type col,
 }
 
 void TlDenseMatrixMmapObject::setRowVector(const index_type row,
-                                           const TlVector_BLAS& v) {
+                                           const TlDenseVector_Lapack& v) {
   const index_type numOfCols = this->getNumOfCols();
   assert(v.getSize() == numOfCols);
 
   for (index_type i = 0; i < numOfCols; ++i) {
-    this->set(row, i, v[i]);
+      this->set(row, i, v.get(i));
   }
 }
 
 void TlDenseMatrixMmapObject::setColVector(const index_type col,
-                                           const TlVector_BLAS& v) {
+                                           const TlDenseVector_Lapack& v) {
   const index_type numOfRows = this->getNumOfRows();
   assert(v.getSize() == numOfRows);
 
   for (index_type i = 0; i < numOfRows; ++i) {
-    this->set(i, col, v[i]);
+    this->set(i, col, v.get(i));
   }
 }
 
-TlVector_BLAS TlDenseMatrixMmapObject::getRowVector(
+std::vector<double> TlDenseMatrixMmapObject::getRowVector(
     const index_type row) const {
   assert((0 <= row) && (row < this->getNumOfRows()));
 
   const index_type numOfCols = this->getNumOfCols();
-  TlVector_BLAS answer(numOfCols);
+  std::vector<double> answer(numOfCols);
 
   for (index_type i = 0; i < numOfCols; ++i) {
     answer[i] = this->get(row, i);
@@ -230,12 +232,12 @@ TlVector_BLAS TlDenseMatrixMmapObject::getRowVector(
   return answer;
 }
 
-TlVector_BLAS TlDenseMatrixMmapObject::getColVector(
+std::vector<double> TlDenseMatrixMmapObject::getColVector(
     const index_type col) const {
   assert((0 <= col) && (col < this->getNumOfCols()));
 
   const index_type numOfRows = this->getNumOfRows();
-  TlVector_BLAS answer(numOfRows);
+  std::vector<double> answer(numOfRows);
 
   for (index_type i = 0; i < numOfRows; ++i) {
     answer[i] = this->get(i, col);

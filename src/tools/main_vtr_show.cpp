@@ -20,7 +20,8 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "tl_dense_vector_blas.h"
+#include "TlUtils.h"
+#include "tl_dense_vector_lapack.h"
 #include "tl_vector_utils.h"
 
 void showHelp(const std::string& progname) {
@@ -50,7 +51,7 @@ int main(int argc, char* argv[]) {
     std::cerr << "loading... " << sPath << std::endl;
   }
 
-  TlVector_BLAS v;
+  TlDenseVector_Lapack v;
   bool bIsLoadable = TlVectorUtils::isLoadable(sPath);
   if (bIsLoadable == false) {
     std::cerr << "could not open: " << sPath << std::endl;
@@ -59,14 +60,14 @@ int main(int argc, char* argv[]) {
   v.load(sPath);
 
   if (bGuessMode == true) {
-    v.outputText(std::cout);
+      v.outputText(std::cout);
   } else if (bListMode == true) {
     const int nSize = v.getSize();
     for (int i = 0; i < nSize; ++i) {
-      std::cout << v[i] << std::endl;
+      std::cout << v.get(i) << std::endl;
     }
   } else {
-    v.print(std::cout);
+      std::cout << v << std::endl;
   }
 
   return EXIT_SUCCESS;

@@ -74,7 +74,7 @@ class TlMatrixUtils {
 
   /// header情報を読み取れた場合はヘッダサイズを返す
   /// 読み取れなかった場合は0を返す
-  template <typename StreamType, typename MatrixType>
+    template <typename StreamType, typename MatrixType, typename IndexType>
   static FileSize getHeaderSize_templ2(StreamType& s, MatrixType* pMatrixType,
                                        TlMatrixObject::index_type* pNumOfRows,
                                        TlMatrixObject::index_type* pNumOfCols);

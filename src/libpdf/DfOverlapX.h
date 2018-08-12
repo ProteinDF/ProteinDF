@@ -24,8 +24,8 @@
 #include "DfOverlapEngine.h"
 #include "DfTaskCtrl.h"
 
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 class TlOrbitalInfoObject;
 
@@ -39,41 +39,42 @@ class DfOverlapX : public DfObject {
   virtual ~DfOverlapX();
 
  public:
-  void getSpq(TlDenseSymmetricMatrix_BLAS_Old* pSpq);
-  void getSab(TlDenseSymmetricMatrix_BLAS_Old* pSab);
-  virtual void getSgd(TlDenseSymmetricMatrix_BLAS_Old* pSgd);
-  void getNalpha(TlVector_BLAS* pNalpha);
-  void getForce(const TlDenseSymmetricMatrix_BLAS_Old& W,
-                TlDenseGeneralMatrix_BLAS_old* pForce);
+  void getSpq(TlDenseSymmetricMatrix_Lapack* pSpq);
+  void getSab(TlDenseSymmetricMatrix_Lapack* pSab);
+  virtual void getSgd(TlDenseSymmetricMatrix_Lapack* pSgd);
+  void getNalpha(TlDenseVector_Lapack* pNalpha);
+  void getForce(const TlDenseSymmetricMatrix_Lapack& W,
+                TlDenseGeneralMatrix_Lapack* pForce);
 
   /// 重なり行列を作成する
   virtual void getOvpMat(const TlOrbitalInfoObject& orbInfo,
-                         TlDenseSymmetricMatrix_BLAS_Old* pS);
+                         TlDenseSymmetricMatrix_Lapack* pS);
 
   /// 変換行列を作成する
   virtual void getTransMat(const TlOrbitalInfoObject& orbInfo1,
                            const TlOrbitalInfoObject& orbInfo2,
-                           TlDenseGeneralMatrix_BLAS_old* pS);
+                           TlDenseGeneralMatrix_Lapack* pS);
 
   /// <p|nabra|q> を求める
   void getGradient(const TlOrbitalInfoObject& orbitalInfo,
-                   TlDenseGeneralMatrix_BLAS_old* pMatX,
-                   TlDenseGeneralMatrix_BLAS_old* pMatY,
-                   TlDenseGeneralMatrix_BLAS_old* pMatZ);
+                   TlDenseGeneralMatrix_Lapack* pMatX,
+                   TlDenseGeneralMatrix_Lapack* pMatY,
+                   TlDenseGeneralMatrix_Lapack* pMatZ);
 
   /// M_pq = sum_rs{P_rs <pqrs>}
-  void getM(const TlDenseSymmetricMatrix_BLAS_Old& P,
-            TlDenseSymmetricMatrix_BLAS_Old* pM);
-  void getM_A(const TlDenseSymmetricMatrix_BLAS_Old& P,
-              TlDenseSymmetricMatrix_BLAS_Old* pM);
+  void getM(const TlDenseSymmetricMatrix_Lapack& P,
+            TlDenseSymmetricMatrix_Lapack* pM);
+  void getM_A(const TlDenseSymmetricMatrix_Lapack& P,
+              TlDenseSymmetricMatrix_Lapack* pM);
 
  public:
   /// calc <pq gamma>
-  virtual void get_pqg(const TlVector_BLAS& myu,
-                       TlDenseSymmetricMatrix_BLAS_Old* pF);
-  virtual void get_pqg(const TlVector_BLAS& myu, const TlVector_BLAS& epsilon,
-                       TlDenseSymmetricMatrix_BLAS_Old* pF,
-                       TlDenseSymmetricMatrix_BLAS_Old* pE);
+  virtual void get_pqg(const TlDenseVector_Lapack& myu,
+                       TlDenseSymmetricMatrix_Lapack* pF);
+  virtual void get_pqg(const TlDenseVector_Lapack& myu,
+                       const TlDenseVector_Lapack& epsilon,
+                       TlDenseSymmetricMatrix_Lapack* pF,
+                       TlDenseSymmetricMatrix_Lapack* pE);
 
  protected:
   enum { X = 0, Y = 1, Z = 2 };
@@ -91,9 +92,9 @@ class DfOverlapX : public DfObject {
 
   virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
-  virtual void finalize(TlDenseGeneralMatrix_BLAS_old* pMtx);
-  virtual void finalize(TlDenseSymmetricMatrix_BLAS_Old* pMtx);
-  virtual void finalize(TlVector_BLAS* pVct);
+  virtual void finalize(TlDenseGeneralMatrix_Lapack* pMtx);
+  virtual void finalize(TlDenseSymmetricMatrix_Lapack* pMtx);
+  virtual void finalize(TlDenseVector_Lapack* pVct);
 
  protected:
   void calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
@@ -111,30 +112,32 @@ class DfOverlapX : public DfObject {
                         TlMatrixObject* pMatrix);
   // <pq gamma>
   void calcOverlap(const TlOrbitalInfoObject& orbitalInfo_XC,
-                   const TlVector_BLAS& myu,
+                   const TlDenseVector_Lapack& myu,
                    const TlOrbitalInfoObject& orbitalInfo, TlMatrixObject* pF);
   void calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo_XC,
-                        const TlVector_BLAS& myu,
+                        const TlDenseVector_Lapack& myu,
                         const TlOrbitalInfoObject& orbitalInfo,
                         const std::vector<DfTaskCtrl::Task2>& taskList,
                         TlMatrixObject* pMatrix);
 
   void calcOverlap(const TlOrbitalInfoObject& orbitalInfo_XC,
-                   const TlVector_BLAS& myu, const TlVector_BLAS& epsilon,
+                   const TlDenseVector_Lapack& myu,
+                   const TlDenseVector_Lapack& epsilon,
                    const TlOrbitalInfoObject& orbitalInfo, TlMatrixObject* pF,
                    TlMatrixObject* pE);
   void calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo_XC,
-                        const TlVector_BLAS& myu, const TlVector_BLAS& epsilon,
+                        const TlDenseVector_Lapack& myu,
+                        const TlDenseVector_Lapack& epsilon,
                         const TlOrbitalInfoObject& orbitalInfo,
                         const std::vector<DfTaskCtrl::Task2>& taskList,
                         TlMatrixObject* pF, TlMatrixObject* pE);
 
   // <alpha>
   void calcOverlap(const TlOrbitalInfoObject& orbitalInfo,
-                   TlVectorAbstract* pVector);
+                   TlDenseVectorObject* pVector);
   void calcOverlap_part(const TlOrbitalInfoObject& orbitalInfo,
                         const std::vector<DfTaskCtrl::Task>& taskList,
-                        TlVectorAbstract* pVector);
+                        TlDenseVectorObject* pVector);
 
   ShellArrayTable makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo);
 
@@ -142,8 +145,8 @@ class DfOverlapX : public DfObject {
                          const int shellTypeP, const int shellTypeQ,
                          const index_type shellIndexP,
                          const ShellArray& shellArrayQ,
-                         const TlDenseSymmetricMatrix_BLAS_Old& W,
-                         TlDenseGeneralMatrix_BLAS_old* pForce);
+                         const TlDenseSymmetricMatrix_Lapack& W,
+                         TlDenseGeneralMatrix_Lapack* pForce);
 
   void getGradient_partProc(const TlOrbitalInfoObject& orbitalInfo,
                             const std::vector<DfTaskCtrl::Task2>& taskList,

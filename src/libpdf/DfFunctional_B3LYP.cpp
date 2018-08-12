@@ -16,6 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <cassert>
+
 #include "DfFunctional_B3LYP.h"
 #include "TlUtils.h"
 
@@ -175,15 +177,15 @@ void DfFunctional_B3LYP::getDerivativeFunctional(const double dRhoA,
       B88_COEF * dRoundF_roundGammaAB_B88 + LYP_COEF * dRoundF_roundGammaAB_LYP;
 }
 
-TlDenseGeneralMatrix_BLAS_old DfFunctional_B3LYP::getFunctionalCore(
+TlDenseGeneralMatrix_Lapack DfFunctional_B3LYP::getFunctionalCore(
     const double rhoA, const double rhoB, const double xA, const double xB) {
-  const TlDenseGeneralMatrix_BLAS_old x_lda =
+  const TlDenseGeneralMatrix_Lapack x_lda =
       this->m_LDA.getFunctionalCore(rhoA, rhoB);
-  const TlDenseGeneralMatrix_BLAS_old x_b88 =
+  const TlDenseGeneralMatrix_Lapack x_b88 =
       this->m_B88.getFunctionalCore(rhoA, rhoB, xA, xB);
-  const TlDenseGeneralMatrix_BLAS_old c_vwn =
+  const TlDenseGeneralMatrix_Lapack c_vwn =
       this->m_VWN.getFunctionalCore(rhoA, rhoB);
-  const TlDenseGeneralMatrix_BLAS_old c_lyp =
+  const TlDenseGeneralMatrix_Lapack c_lyp =
       this->m_LYP.getFunctionalCore(rhoA, rhoB, xA, xB);
 
   const index_type numOfFunctionalTerms_LDA =
@@ -197,7 +199,7 @@ TlDenseGeneralMatrix_BLAS_old DfFunctional_B3LYP::getFunctionalCore(
   assert((numOfFunctionalTerms_LDA + numOfFunctionalTerms_B88 +
           numOfFunctionalTerms_VWN + numOfFunctionalTerms_LYP) ==
          this->getNumOfFunctionalTerms());
-  TlDenseGeneralMatrix_BLAS_old xc(F_DIM, this->getNumOfFunctionalTerms());
+  TlDenseGeneralMatrix_Lapack xc(F_DIM, this->getNumOfFunctionalTerms());
   for (index_type i = 0; i < F_DIM; ++i) {
     index_type base = 0;
     for (index_type j = 0; j < numOfFunctionalTerms_LDA; ++j) {
@@ -220,15 +222,15 @@ TlDenseGeneralMatrix_BLAS_old DfFunctional_B3LYP::getFunctionalCore(
   return xc;
 }
 
-TlDenseGeneralMatrix_BLAS_old DfFunctional_B3LYP::getDerivativeFunctionalCore(
+TlDenseGeneralMatrix_Lapack DfFunctional_B3LYP::getDerivativeFunctionalCore(
     const double rhoA, const double rhoB, const double xA, const double xB) {
-  const TlDenseGeneralMatrix_BLAS_old x_lda =
+  const TlDenseGeneralMatrix_Lapack x_lda =
       this->m_LDA.getDerivativeFunctionalCore(rhoA, rhoB);
-  const TlDenseGeneralMatrix_BLAS_old x_b88 =
+  const TlDenseGeneralMatrix_Lapack x_b88 =
       this->m_B88.getDerivativeFunctionalCore(rhoA, rhoB, xA, xB);
-  const TlDenseGeneralMatrix_BLAS_old c_vwn =
+  const TlDenseGeneralMatrix_Lapack c_vwn =
       this->m_VWN.getDerivativeFunctionalCore(rhoA, rhoB);
-  const TlDenseGeneralMatrix_BLAS_old c_lyp =
+  const TlDenseGeneralMatrix_Lapack c_lyp =
       this->m_LYP.getDerivativeFunctionalCore(rhoA, rhoB, xA, xB);
 
   const index_type numOfDerivativeFunctionalTerms_LDA =
@@ -244,8 +246,8 @@ TlDenseGeneralMatrix_BLAS_old DfFunctional_B3LYP::getDerivativeFunctionalCore(
           numOfDerivativeFunctionalTerms_VWN +
           numOfDerivativeFunctionalTerms_LYP) ==
          this->getNumOfDerivativeFunctionalTerms());
-  TlDenseGeneralMatrix_BLAS_old xc(D_DIM,
-                               this->getNumOfDerivativeFunctionalTerms());
+  TlDenseGeneralMatrix_Lapack xc(D_DIM,
+                                 this->getNumOfDerivativeFunctionalTerms());
   for (index_type i = 0; i < D_DIM; ++i) {
     index_type base = 0;
     for (index_type j = 0; j < numOfDerivativeFunctionalTerms_LDA; ++j) {

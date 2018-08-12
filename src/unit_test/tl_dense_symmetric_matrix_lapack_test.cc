@@ -5,6 +5,8 @@
 #include "matrix_common.h"
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
+#include "TlSystem.h"
+#include "TlUtils.h"
 
 static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 static const std::string mat_save_load_path = "temp.sym.blas.save_load.mat";
@@ -129,6 +131,52 @@ TEST(TlDenseSymmetricMatrix_Lapack, save_and_load) {
   EXPECT_DOUBLE_EQ(3.0, b.get(2, 0));
   EXPECT_DOUBLE_EQ(4.0, b.get(2, 1));
   EXPECT_DOUBLE_EQ(5.0, b.get(2, 2));
+}
+
+TEST(TlDenseSymmetricMatrix_Lapack, multiplication_MV) {
+  const std::string PDF_HOME = TlSystem::getEnv("PDF_HOME");
+
+  TlDenseSymmetricMatrix_Lapack M;
+  TlDenseGeneralMatrix_Lapack V;
+  M.load(TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str()));
+  V.load(TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str()));
+
+  TlDenseGeneralMatrix_Lapack mv = M * V;
+
+  TlDenseGeneralMatrix_Lapack MV;
+  MV.load(TlUtils::format("%s/data/unit_test/MV.mat", PDF_HOME.c_str()));
+
+  const int rows = M.getNumOfRows();
+  const int cols = V.getNumOfCols();
+  for (int i = 0; i < rows; ++i) {
+    for (int j = 0; j < cols; ++j) {
+      EXPECT_NEAR(MV.get(i, j), mv.get(i, j), 1.0E-5);
+    }
+  }
+}
+
+TEST(TlDenseSymmetricMatrix_Lapack, multiplication_VMV) {
+  const std::string PDF_HOME = TlSystem::getEnv("PDF_HOME");
+
+  TlDenseSymmetricMatrix_Lapack M;
+  TlDenseGeneralMatrix_Lapack V;
+  M.load(TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str()));
+  V.load(TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str()));
+
+  TlDenseGeneralMatrix_Lapack tV = V;
+  tV.transposeInPlace();
+
+  TlDenseGeneralMatrix_Lapack vmv = tV * M * V;
+
+  TlDenseSymmetricMatrix_Lapack VMV;
+  VMV.load(TlUtils::format("%s/data/unit_test/VMV.mat", PDF_HOME.c_str()));
+
+  const int dim = V.getNumOfCols();
+  for (int i = 0; i < dim; ++i) {
+    for (int j = 0; j < dim; ++j) {
+      EXPECT_NEAR(VMV.get(i, j), vmv.get(i, j), 1.0E-5);
+    }
+  }
 }
 
 // #ifdef HAVE_HDF5

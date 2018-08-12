@@ -30,6 +30,10 @@
 #include "TlLogging.h"
 #include "TlSerializeData.h"
 
+#ifdef HAVE_VIENNACL
+#include "tl_viennacl.h"
+#endif // HAVE_VIENNACL
+
 #ifdef __FUJITSU
 #define PDF_MAIN MAIN__
 #else
@@ -38,7 +42,7 @@
 
 int PDF_MAIN(int argc, char* argv[]) {
   // setup parameters
-  TlGetopt opt(argc, argv, "dro:");
+  TlGetopt opt(argc, argv, "a:dro:");
 
   bool isRestart = false;
   if (opt["r"] == "defined") {
@@ -55,6 +59,23 @@ int PDF_MAIN(int argc, char* argv[]) {
   if (opt["d"] == "defined") {
     log.setLevel(TlLogging::DEBUG);
   }
+
+  // ViennaCL
+#ifdef HAVE_VIENNACL
+  {
+    int deviceId = 0;
+    if (!opt["a"].empty()) {
+      deviceId = std::atoi(opt["a"].c_str());
+    }
+
+    TlViennaCL vcl;
+    vcl.setupAllAvailableDevices();
+    vcl.showDevices();
+
+    vcl.switchDevice(deviceId);
+    vcl.showCurrentDevice();
+  }
+#endif  // HAVE_VIENNACL
 
   // do ProteinDF
   ProteinDF PDF;

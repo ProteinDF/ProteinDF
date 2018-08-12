@@ -20,8 +20,10 @@
 #include "DfCD_Parallel.h"
 #include "DfOverlapX_Parallel.h"
 #include "DfXMatrix_Parallel.h"
-#include "tl_dense_general_matrix_blacs.h"
-#include "tl_dense_symmetric_matrix_blacs.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_general_matrix_scalapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
 
 DfGridFreeXC_Parallel::DfGridFreeXC_Parallel(TlSerializeData* pPdfParam)
     : DfGridFreeXC(pPdfParam) {
@@ -55,14 +57,14 @@ void DfGridFreeXC_Parallel::preprocessBeforeSCF() {
 
 void DfGridFreeXC_Parallel::preprocessBeforeSCF_LAPACK() {
   this->preprocessBeforeSCF_templ<DfOverlapX_Parallel, DfXMatrix_Parallel,
-                                  TlDenseSymmetricMatrix_BLAS_Old,
-                                  TlDenseGeneralMatrix_BLAS_old>();
+                                  TlDenseSymmetricMatrix_Lapack,
+                                  TlDenseGeneralMatrix_Lapack>();
 }
 
 void DfGridFreeXC_Parallel::preprocessBeforeSCF_ScaLAPACK() {
   this->preprocessBeforeSCF_templ<DfOverlapX_Parallel, DfXMatrix_Parallel,
-                                  TlDenseSymmetricMatrix_blacs,
-                                  TlDenseGeneralMatrix_blacs>();
+                                  TlDenseSymmetricMatrix_Scalapack,
+                                  TlDenseGeneralMatrix_Scalapack>();
 }
 
 // in SCF ======================================================================
@@ -82,15 +84,15 @@ void DfGridFreeXC_Parallel::buildFxc_LDA() {
 void DfGridFreeXC_Parallel::buildFxc_LDA_LAPACK() {
   this->log_.info("DfGridFreeXC_Parallel::buildFxc_LDA_LAPACK()");
   DfGridFreeXC::buildFxc_LDA_method<DfOverlapX_Parallel, DfCD_Parallel,
-                                    TlDenseSymmetricMatrix_BLAS_Old,
-                                    TlDenseGeneralMatrix_BLAS_old>();
+                                    TlDenseSymmetricMatrix_Lapack,
+                                    TlDenseGeneralMatrix_Lapack>();
 }
 
 void DfGridFreeXC_Parallel::buildFxc_LDA_ScaLAPACK() {
   this->log_.info("DfGridFreeXC_Parallel::buildFxc_LDA_ScaLAPACK()");
   DfGridFreeXC::buildFxc_LDA_method<DfOverlapX_Parallel, DfCD_Parallel,
-                                    TlDenseSymmetricMatrix_blacs,
-                                    TlDenseGeneralMatrix_blacs>();
+                                    TlDenseSymmetricMatrix_Scalapack,
+                                    TlDenseGeneralMatrix_Scalapack>();
 }
 
 void DfGridFreeXC_Parallel::buildFxc_GGA() {
@@ -109,13 +111,13 @@ void DfGridFreeXC_Parallel::buildFxc_GGA() {
 void DfGridFreeXC_Parallel::buildFxc_GGA_LAPACK() {
   this->log_.info("DfGridFreeXC_Parallel::buildFxc_GGA_LAPACK()");
   DfGridFreeXC::buildFxc_GGA_method<DfOverlapX_Parallel, DfCD_Parallel,
-                                    TlDenseSymmetricMatrix_BLAS_Old,
-                                    TlDenseGeneralMatrix_BLAS_old>();
+                                    TlDenseSymmetricMatrix_Lapack,
+                                    TlDenseGeneralMatrix_Lapack>();
 }
 
 void DfGridFreeXC_Parallel::buildFxc_GGA_ScaLAPACK() {
   this->log_.info("DfGridFreeXC_Parallel::buildFxc_GGA_ScaLAPACK()");
   DfGridFreeXC::buildFxc_GGA_method<DfOverlapX_Parallel, DfCD_Parallel,
-                                    TlDenseSymmetricMatrix_blacs,
-                                    TlDenseGeneralMatrix_blacs>();
+                                    TlDenseSymmetricMatrix_Scalapack,
+                                    TlDenseGeneralMatrix_Scalapack>();
 }

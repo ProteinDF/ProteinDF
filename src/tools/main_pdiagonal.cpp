@@ -23,7 +23,7 @@
 #include "TlDistributeMatrix.h"
 #include "TlDistributeSymmetricMatrix.h"
 #include "TlGetopt.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_vector_lapack.h"
 
 void showHelp() {
   std::cout << "diagonal [options] input_file_path" << std::endl;
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
   // const int numOfCols = A.getNumOfCols();
 
   TlDistributeMatrix eigVec(numOfDims, numOfDims);
-  TlVector_BLAS eigVal(numOfDims);
+  TlDenseVector_Lapack eigVal(numOfDims);
 
   if ((bVerbose == true) && (rComm.isMaster() == true)) {
     std::cerr << "running..." << inputMatrixPath << std::endl;

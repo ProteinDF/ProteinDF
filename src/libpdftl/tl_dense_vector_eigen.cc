@@ -34,6 +34,8 @@ TlDenseVector_Eigen& TlDenseVector_Eigen::operator=(
     this->pImpl_ = new TlDenseVector_ImplEigen(
         *dynamic_cast<const TlDenseVector_ImplEigen*>(rhs.pImpl_));
   }
+
+  return *this;
 }
 
 TlDenseVector_Eigen& TlDenseVector_Eigen::operator+=(
@@ -73,6 +75,8 @@ TlDenseVector_Eigen& TlDenseVector_Eigen::dotInPlace(
     const TlDenseVector_Eigen& rhs) {
   dynamic_cast<TlDenseVector_ImplEigen*>(this->pImpl_)
       ->dotInPlace(*dynamic_cast<TlDenseVector_ImplEigen*>(rhs.pImpl_));
+
+  return *this;
 }
 
 // ---------------------------------------------------------------------------

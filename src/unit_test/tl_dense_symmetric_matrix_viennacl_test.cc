@@ -3,12 +3,27 @@
 #include "config.h"
 #include "gtest/gtest.h"
 #include "matrix_common.h"
-#include "tl_dense_symmetric_matrix_viennacl.h"
 #include "tl_dense_general_matrix_viennacl.h"
+#include "tl_dense_symmetric_matrix_eigen.h"
+#include "tl_dense_symmetric_matrix_viennacl.h"
 
 static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 static const std::string mat_save_load_path = "temp.sym.viennacl.save_load.mat";
 static const std::string mat_h5 = "temp.sym.h5";
+
+TEST(TlDenseSymmetricMatrix_ViennaCL, copyFromEigen) {
+  TlDenseSymmetricMatrix_Eigen a =
+      getSymMatrixA<TlDenseSymmetricMatrix_Eigen>();
+  TlDenseSymmetricMatrix_ViennaCL b = a;
+
+  EXPECT_EQ(a.getNumOfRows(), b.getNumOfRows());
+  EXPECT_EQ(a.getNumOfCols(), b.getNumOfCols());
+  for (int i = 0; i < a.getNumOfRows(); ++i) {
+    for (int j = 0; j < a.getNumOfCols(); ++j) {
+      EXPECT_DOUBLE_EQ(a.get(i, j), b.get(i, j));
+    }
+  }
+}
 
 TEST(TlDenseSymmetricMatrix_ViennaCL, doesSym2gen) {
   TlDenseSymmetricMatrix_ViennaCL a =
@@ -29,8 +44,7 @@ TEST(TlDenseSymmetricMatrix_ViennaCL, doesSym2gen) {
 }
 
 TEST(TlDenseSymmetricMatrix_ViennaCL, doesGen2sym) {
-  TlDenseGeneralMatrix_ViennaCL a =
-      getMatrixA<TlDenseGeneralMatrix_ViennaCL>();
+  TlDenseGeneralMatrix_ViennaCL a = getMatrixA<TlDenseGeneralMatrix_ViennaCL>();
   TlDenseSymmetricMatrix_ViennaCL b = a;
 
   ASSERT_EQ(3, b.getNumOfRows());

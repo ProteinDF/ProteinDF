@@ -22,11 +22,11 @@
 #include "DfDensityFittingObject.h"
 #include "DfEriX.h"
 #include "DfObject.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 class DfDensityFittingX
-    : public DfDensityFittingTmpl<TlDenseSymmetricMatrix_BLAS_Old, TlVector_BLAS,
+    : public DfDensityFittingTmpl<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack,
                                   DfEriX> {
  public:
   DfDensityFittingX(TlSerializeData* pPdfParam);

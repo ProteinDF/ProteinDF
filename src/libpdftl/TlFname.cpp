@@ -19,8 +19,8 @@
 #include <cstring>
 #include <iostream>
 #include <string>
-#include "tl_dense_symmetric_matrix_blas_old.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 void reverse(char* s)  // make reverse string s
 {
@@ -139,7 +139,7 @@ void spmtrprd(double* densPpq, int npqA, int nA, int* inA, int* npq, int* inp,
 
 // }
 
-void spmtrprd(const TlDenseSymmetricMatrix_BLAS_Old& Ppq, int npqA, int nA,
+void spmtrprd(const TlDenseSymmetricMatrix_Lapack& Ppq, int npqA, int nA,
               int* inA, int* npq, int* inp, int* inq, double* pqA, int naux,
               double* tA) {
   // common though-index of pqAlpha is thrown into inp[i]
@@ -165,14 +165,14 @@ void spmtrprd(const TlDenseSymmetricMatrix_BLAS_Old& Ppq, int npqA, int nA,
   }
 }
 
-void spmtrprd(const TlDenseSymmetricMatrix_BLAS_Old& Ppq, int npqA, int nA,
+void spmtrprd(const TlDenseSymmetricMatrix_Lapack& Ppq, int npqA, int nA,
               int* inA, int* npq, int* inp, int* inq, double* pqA, int naux,
-              TlVector_BLAS* ptA) {
+              TlDenseVector_Lapack* ptA) {
   // common though-index of pqAlpha is thrown into inp[i]
   // if the values are something wrong, check here (for example, inp <-> inq)
 
   for (int i = 0; i < naux; ++i) {
-    (*ptA)[i] = 0.0;
+    ptA->set(i, 0.0);
   }
 
   int point = 0;  // index point
@@ -181,13 +181,13 @@ void spmtrprd(const TlDenseSymmetricMatrix_BLAS_Old& Ppq, int npqA, int nA,
     for (int j = 0; j < npq[i]; ++j) {
       int indp = inp[point];
       int indq = inq[point];
-      (*ptA)[inA[i]] += Ppq.get(indp, indq) * pqA[point];
+      ptA->add(inA[i], Ppq.get(indp, indq) * pqA[point]);
       point += 1;
     }
   }
 
   for (int i = 0; i < naux; ++i) {
-    (*ptA)[i] *= 2.0;
+    ptA->mul(i, 2.0);
   }
 }
 
@@ -239,9 +239,9 @@ void spvctprd(double* MyuGamma, int nGDS, int nS, int* indexS, int* nGD,
   }
 }
 
-void spvctprd(const TlVector_BLAS& MyuGamma, int nGDS, int nS, int* indexS,
-              int* nGD, int* indexG, int* indexD, double* GDS, int na,
-              double* tS) {
+void spvctprd(const TlDenseVector_Lapack& MyuGamma, int nGDS, int nS,
+              int* indexS, int* nGD, int* indexG, int* indexD, double* GDS,
+              int na, double* tS) {
   // calculate inner-product between MyuGamma * MyuDelta and GDS
   // for diagonal part * 1, and for off-diagonal part * 2
 
@@ -261,8 +261,8 @@ void spvctprd(const TlVector_BLAS& MyuGamma, int nGDS, int nS, int* indexS,
 
   for (int i = 0; i < nS; ++i) {
     for (int j = 0; j < nGD[i]; ++j) {
-      const double Gamma = MyuGamma[indexG[point]];
-      const double Delta = MyuGamma[indexD[point]];
+      const double Gamma = MyuGamma.get(indexG[point]);
+      const double Delta = MyuGamma.get(indexD[point]);
       const double Integ = GDS[point];
       tS[indexS[i]] += Gamma * Delta * Integ;
 
@@ -311,8 +311,8 @@ double spvctprd2(double* NyuGamma, int num, int* inp, int* inq, double* SGS) {
   return 2.0 * total;
 }
 
-double spvctprd2(const TlVector_BLAS& NyuGamma,
-                 const TlDenseSymmetricMatrix_BLAS_Old& SGS) {
+double spvctprd2(const TlDenseVector_Lapack& NyuGamma,
+                 const TlDenseSymmetricMatrix_Lapack& SGS) {
   // calculate inner-product between NyuGamma * NyuSigma and SGS
   // for diagonal part * 1, and for off-diagonal part * 2
 
@@ -323,8 +323,8 @@ double spvctprd2(const TlVector_BLAS& NyuGamma,
 
   for (int i = 0; i < SGS.getNumOfRows(); ++i) {
     for (int j = 0; j <= i; j++) {
-      const double Gamma = NyuGamma[i];
-      const double Sigma = NyuGamma[j];
+      const double Gamma = NyuGamma.get(i);
+      const double Sigma = NyuGamma.get(j);
 
       if (i == j) {
         total += Gamma * Sigma * SGS.get(i, j) * 0.5;
@@ -379,9 +379,10 @@ void spvctprd3(double* MyuGamma, double* NyuGamma, int nGDS, int nS,
   }
 }
 
-void spvctprd3(const TlVector_BLAS& MyuGamma, const TlVector_BLAS& NyuGamma,
-               int nGDS, int nS, int* indexS, int* nGD, int* indexG,
-               int* indexD, double* GDS, int na, double* tS) {
+void spvctprd3(const TlDenseVector_Lapack& MyuGamma,
+               const TlDenseVector_Lapack& NyuGamma, int nGDS, int nS,
+               int* indexS, int* nGD, int* indexG, int* indexD, double* GDS,
+               int na, double* tS) {
   // calculate inner-product between MyuGamma * NyuGamma and GDS
   // for diagonal part * 1, and for off-diagonal part * 2
 
@@ -397,12 +398,12 @@ void spvctprd3(const TlVector_BLAS& MyuGamma, const TlVector_BLAS& NyuGamma,
   int point = 0;  // index point
 
   for (int i = 0; i < nS; ++i) {
-    const double Sigma = NyuGamma[indexS[i]];
+    const double Sigma = NyuGamma.get(indexS[i]);
     for (int j = 0; j < nGD[i]; ++j) {
       const int Delta1 = indexG[point];
       const int Delta2 = indexD[point];
-      const double Myu1 = MyuGamma[Delta2];
-      const double Myu2 = MyuGamma[Delta1];
+      const double Myu1 = MyuGamma.get(Delta2);
+      const double Myu2 = MyuGamma.get(Delta1);
       const double Integ = GDS[point];
       tS[Delta1] += Myu1 * Sigma * Integ;
       tS[Delta2] += Myu2 * Sigma * Integ;
@@ -451,8 +452,8 @@ void spvctprd4(double* NyuGamma, int num, int* inp, int* inq, double* SGD,
   }
 }
 
-void spvctprd4(const TlVector_BLAS& NyuGamma,
-               const TlDenseSymmetricMatrix_BLAS_Old& SGD, int naux, double* tS) {
+void spvctprd4(const TlDenseVector_Lapack& NyuGamma,
+               const TlDenseSymmetricMatrix_Lapack& SGD, int naux, double* tS) {
   // calculate inner-product between NyuGamma and SGD
   // for diagonal part * 1, and for off-diagonal part * 2
 
@@ -481,8 +482,8 @@ void spvctprd4(const TlVector_BLAS& NyuGamma,
     for (int j = 0; i <= j; j++) {
       const int Sigma1 = i;
       const int Sigma2 = j;
-      const double Nyu1 = NyuGamma[Sigma2];
-      const double Nyu2 = NyuGamma[Sigma1];
+      const double Nyu1 = NyuGamma.get(Sigma2);
+      const double Nyu2 = NyuGamma.get(Sigma1);
 
       if (Sigma1 == Sigma2) {
         tS[Sigma1] += Nyu1 * SGD.get(i, j) * 0.5;

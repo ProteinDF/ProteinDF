@@ -32,10 +32,11 @@
 
 #include "TlCommunicate.h"
 #include "TlUtils.h"
-#include "tl_dense_general_matrix_blacs.h"
 
 #ifdef HAVE_SCALAPACK
-#include "tl_dense_vector_blacs.h"
+#include "tl_scalapack_context.h"
+#include "tl_dense_general_matrix_scalapack.h"
+#include "tl_dense_vector_scalapack.h"
 #endif  // HAVE_SCALAPACK
 
 ProteinDF_Parallel::ProteinDF_Parallel() {}
@@ -82,8 +83,9 @@ void ProteinDF_Parallel::setupGlobalCondition_extra() {
       }
       this->log_.info(
           TlUtils::format("ScaLAPACK block size: %d", scalapackBlockSize));
-      TlDenseGeneralMatrix_blacs::setSystemBlockSize(scalapackBlockSize);
-      TlDistributedVector::setSystemBlockSize(scalapackBlockSize);
+      //TlDenseGeneralMatrix_Scalapack::setSystemBlockSize(scalapackBlockSize);
+      //TlDenseVector_Scalapack::setSystemBlockSize(scalapackBlockSize);
+      TlScalapackContext::setBlockSize(scalapackBlockSize);
 
       bool isUsingPartialIO = false;
       if (this->pdfParam_.hasKey("save_distributed_matrix_to_local_disk") ==
@@ -96,7 +98,7 @@ void ProteinDF_Parallel::setupGlobalCondition_extra() {
           (isUsingPartialIO == true) ? "YES" : "NO ";
       this->log_.info(TlUtils::format("partial I/O mode = %s\n",
                                       isUsingPartialIO_YN.c_str()));
-      TlDenseGeneralMatrix_blacs::setUsingPartialIO(isUsingPartialIO);
+      TlDenseGeneralMatrix_Scalapack::setUsingPartialIO(isUsingPartialIO);
 
       // experimental
       this->log_.info("[experimental parameters]");

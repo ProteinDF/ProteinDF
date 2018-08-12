@@ -18,6 +18,7 @@
 
 #include "tl_dense_general_matrix_arrays_coloriented.h"
 #include <iostream>
+#include <cassert>
 
 TlDenseGeneralMatrix_arrays_ColOriented::
     TlDenseGeneralMatrix_arrays_ColOriented(const index_type row,
@@ -30,7 +31,7 @@ TlDenseGeneralMatrix_arrays_ColOriented::
 
 TlDenseGeneralMatrix_arrays_ColOriented::
     TlDenseGeneralMatrix_arrays_ColOriented(
-        const TlDenseGeneralMatrix_BLAS_old& rhs, const int numOfSubunits,
+        const TlDenseGeneralMatrix_Lapack& rhs, const int numOfSubunits,
         const int subunitID, bool isUsingMemManager)
     : TlDenseMatrix_arrays_Object(rhs.getNumOfCols(), rhs.getNumOfRows(),
                                   numOfSubunits, subunitID, isUsingMemManager) {
@@ -78,7 +79,7 @@ double TlDenseGeneralMatrix_arrays_ColOriented::get(
   return TlDenseMatrix_arrays_Object::get_from_vm(col, row);
 }
 
-TlVector_BLAS TlDenseGeneralMatrix_arrays_ColOriented::getColVector(
+TlDenseVector_Lapack TlDenseGeneralMatrix_arrays_ColOriented::getColVector(
     const index_type col) const {
   return TlDenseMatrix_arrays_Object::getVector(col);
 }
@@ -88,17 +89,17 @@ void TlDenseGeneralMatrix_arrays_ColOriented::getColVector(
   TlDenseMatrix_arrays_Object::getVector(col, pBuf, length);
 }
 
-TlDenseGeneralMatrix_BLAS_old
+TlDenseGeneralMatrix_Lapack
 TlDenseGeneralMatrix_arrays_ColOriented::getTlMatrixObject() const {
   const index_type numOfRows = this->getNumOfRows();
   const index_type numOfCols = this->getNumOfCols();
-  TlDenseGeneralMatrix_BLAS_old answer(numOfRows, numOfCols);
+  TlDenseGeneralMatrix_Lapack answer(numOfRows, numOfCols);
 
   for (index_type c = 0; c < numOfCols; ++c) {
-    const TlVector_BLAS v = TlDenseMatrix_arrays_Object::getVector(c);
+    const TlDenseVector_Lapack v = TlDenseMatrix_arrays_Object::getVector(c);
     assert(v.getSize() == numOfRows);
     for (index_type r = 0; r < numOfRows; ++r) {
-      answer.set(r, c, v[r]);
+      answer.set(r, c, v.get(r));
     }
   }
 

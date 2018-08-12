@@ -20,9 +20,11 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 #include "tl_matrix_utils.h"
+#include "TlUtils.h"
 
 void showHelp(const std::string& progname) {
   std::cout << TlUtils::format("%s [options] input_file_path", progname.c_str())
@@ -62,18 +64,18 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  TlDenseSymmetricMatrix_BLAS_Old A;
+  TlDenseSymmetricMatrix_Lapack A;
   A.load(inputMatrixPath);
   const int numOfDims = A.getNumOfRows();
   // const int numOfCols = A.getNumOfCols();
 
-  TlDenseGeneralMatrix_BLAS_old eigVec(numOfDims, numOfDims);
-  TlVector_BLAS eigVal(numOfDims);
+  TlDenseGeneralMatrix_Lapack eigVec(numOfDims, numOfDims);
+  TlDenseVector_Lapack eigVal(numOfDims);
 
   if (bVerbose == true) {
     std::cerr << "running..." << inputMatrixPath << std::endl;
   }
-  A.diagonal(&eigVal, &eigVec);
+  A.eig(&eigVal, &eigVec);
 
   if (bVerbose == true) {
     std::cerr << "save eigen values: " << eigValPath << std::endl;

@@ -22,8 +22,8 @@
 #include "DfPopulation.h"
 #include "Fl_Geometry.h"
 #include "TlUtils.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 DfPopulation::DfPopulation(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam),
@@ -31,17 +31,19 @@ DfPopulation::DfPopulation(TlSerializeData* pPdfParam)
 
 DfPopulation::~DfPopulation() {}
 
-double DfPopulation::getSumOfElectrons(const TlDenseSymmetricMatrix_BLAS_Old& P) {
-  const TlVector_BLAS trPS = this->getPS(P);
+double DfPopulation::getSumOfElectrons(const TlDenseSymmetricMatrix_Lapack& P) {
+  const TlDenseVector_Lapack trPS =
+      this->getPS<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
+          P);
   return trPS.sum();
 }
 
-TlDenseGeneralMatrix_BLAS_old DfPopulation::getAtomPopData(const int iteration) {
+TlDenseGeneralMatrix_Lapack DfPopulation::getAtomPopData(const int iteration) {
   this->calcPop(iteration);
 
   const Fl_Geometry flGeom((*(this->pPdfParam_))["coordinates"]);
 
-  TlDenseGeneralMatrix_BLAS_old answer;
+  TlDenseGeneralMatrix_Lapack answer;
   switch (this->m_nMethodType) {
     case METHOD_RKS: {
       const std::size_t dim = this->grossAtomPopA_.getSize();
@@ -84,7 +86,8 @@ TlDenseGeneralMatrix_BLAS_old DfPopulation::getAtomPopData(const int iteration) 
 }
 
 void DfPopulation::calcPop(const int iteration) {
-  this->calcPop<TlDenseSymmetricMatrix_BLAS_Old>(iteration);
+  this->calcPop<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
+      iteration);
 }
 
 double DfPopulation::getNucleiCharge() {
@@ -100,7 +103,8 @@ double DfPopulation::getNucleiCharge() {
 }
 
 // Mulliken Analysis (Gross Atom Population)
-TlVector_BLAS DfPopulation::getGrossAtomPop(const TlVector_BLAS& trPS) {
+TlDenseVector_Lapack DfPopulation::getGrossAtomPop(
+    const TlDenseVector_Lapack& trPS) {
   std::string output = "";
 
   const index_type numOfAtoms = this->m_nNumOfAtoms;
@@ -116,5 +120,5 @@ TlVector_BLAS DfPopulation::getGrossAtomPop(const TlVector_BLAS& trPS) {
     { answer[atomIndex] += trPS.get(aoIndex); }
   }
 
-  return TlVector_BLAS(answer);
+  return TlDenseVector_Lapack(answer);
 }

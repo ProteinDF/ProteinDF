@@ -22,8 +22,7 @@
 #include "DfInitialGuessHarris.h"
 #include "DfInitialGuessHuckel.h"
 #include "DfPreScf.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_general_matrix_lapack.h"
 
 #include "CnError.h"
 #include "DfDmatrix.h"
@@ -123,12 +122,12 @@ void DfPreScf::prepareGuess() {
 // case of "scf-start-guess = lcao"
 void DfPreScf::createInitialGuessUsingLCAO(const RUN_TYPE runType) {
   // read guess lcao
-  const TlDenseGeneralMatrix_BLAS_old LCAO =
-      this->getLCAO<TlDenseGeneralMatrix_BLAS_old>(runType);
+  const TlDenseGeneralMatrix_Lapack LCAO =
+      this->getLCAO<TlDenseGeneralMatrix_Lapack>(runType);
   this->saveC0(runType, LCAO);
 
   // read guess occupation
-  const TlVector_BLAS aOccupation = this->getOccupation(runType);
+  const TlDenseVector_Lapack aOccupation = this->getOccupation(runType);
   this->saveOccupation(runType, aOccupation);
 
   // output guess lcao in orthonormal basis to a files in fl_Work directory
@@ -197,8 +196,8 @@ std::vector<int> DfPreScf::getLevel(std::string sLevel) {
 
 // memo
 // vectorクラスを使っているので、書き換える
-TlVector_BLAS DfPreScf::getOccupation(const RUN_TYPE runType) {
-  TlVector_BLAS occupation;
+TlDenseVector_Lapack DfPreScf::getOccupation(const RUN_TYPE runType) {
+  TlDenseVector_Lapack occupation;
   const std::string sFile =
       std::string("./guess.occ.") + this->m_sRunTypeSuffix[runType];
   occupation.loadText(sFile.c_str());
@@ -211,7 +210,7 @@ TlVector_BLAS DfPreScf::getOccupation(const RUN_TYPE runType) {
 }
 
 void DfPreScf::saveOccupation(const RUN_TYPE runType,
-                              const TlVector_BLAS& rOccupation) {
+                              const TlDenseVector_Lapack& rOccupation) {
   const std::string sOccFileName = this->getOccupationPath(runType);
   rOccupation.save(sOccFileName);
 }
@@ -221,14 +220,14 @@ void DfPreScf::createOccupation(const RUN_TYPE runType) {
   const TlSerializeData& pdfParam = *(this->pPdfParam_);
 
   // construct guess occupations
-  TlVector_BLAS guess_occ(this->m_nNumOfMOs);
+  TlDenseVector_Lapack guess_occ(this->m_nNumOfMOs);
   switch (runType) {
     case RUN_RKS: {
       std::vector<int> docLevel =
           this->getLevel(pdfParam["method/nsp/occlevel"].getStr());
       for (std::vector<int>::const_iterator p = docLevel.begin();
            p != docLevel.end(); p++) {
-        guess_occ[*p - 1] = 2.0;
+        guess_occ.set(*p - 1, 2.0);
       }
     } break;
 
@@ -237,7 +236,7 @@ void DfPreScf::createOccupation(const RUN_TYPE runType) {
           this->getLevel(pdfParam["method/sp/alpha-spin-occlevel"].getStr());
       for (std::vector<int>::const_iterator p = aoocLevel.begin();
            p != aoocLevel.end(); p++) {
-        guess_occ[*p - 1] = 1.0;
+        guess_occ.set(*p - 1, 1.0);
       }
     } break;
 
@@ -246,7 +245,7 @@ void DfPreScf::createOccupation(const RUN_TYPE runType) {
           this->getLevel(pdfParam["method/sp/beta-spin-occlevel"].getStr());
       for (std::vector<int>::const_iterator p = boocLevel.begin();
            p != boocLevel.end(); p++) {
-        guess_occ[*p - 1] = 1.0;
+        guess_occ.set(*p - 1, 1.0);
       }
     } break;
 
@@ -255,7 +254,7 @@ void DfPreScf::createOccupation(const RUN_TYPE runType) {
           this->getLevel(pdfParam["method/roks/closed-shell"].getStr());
       for (std::vector<int>::const_iterator p = docLevel.begin();
            p != docLevel.end(); p++) {
-        guess_occ[*p - 1] = 2.0;
+        guess_occ.set(*p - 1, 2.0);
       }
 
       std::vector<int> socLevel =
@@ -263,7 +262,7 @@ void DfPreScf::createOccupation(const RUN_TYPE runType) {
       for (std::vector<int>::const_iterator p = socLevel.begin();
            p != socLevel.end(); p++) {
         // nsoc
-        guess_occ[*p - 1] = 1.0;
+        guess_occ.set(*p - 1, 1.0);
       }
     } break;
 

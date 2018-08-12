@@ -29,7 +29,7 @@
 
 class TlDenseGeneralMatrix_blacs;
 class TlDenseSymmetricMatrix_blacs;
-class TlVector_BLAS;
+class TlDenseVector_Lapack;
 
 class TlDistributedVector : public TlVectorAbstract {
  protected:
@@ -40,7 +40,7 @@ class TlDistributedVector : public TlVectorAbstract {
   TlDistributedVector(const TlDistributedVector& rhs);
   explicit TlDistributedVector(const std::vector<double>& rhs,
                                TlVectorAbstract::size_type globalSize);
-  explicit TlDistributedVector(const TlVector_BLAS& rhs);
+  explicit TlDistributedVector(const TlDenseVector_Lapack& rhs);
 
   virtual ~TlDistributedVector();
 
@@ -50,7 +50,7 @@ class TlDistributedVector : public TlVectorAbstract {
   virtual void resize(const TlVectorAbstract::index_type newSize);
 
   TlDistributedVector& operator=(const TlDistributedVector& rhs);
-  TlDistributedVector& operator=(const TlVector_BLAS& rhs);
+  TlDistributedVector& operator=(const TlDenseVector_Lapack& rhs);
 
   TlVectorAbstract::size_type getSize() const;
 

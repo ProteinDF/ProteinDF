@@ -18,7 +18,7 @@
 
 #include "DfDiffDensityMatrix.h"
 #include "TlFile.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 DfDiffDensityMatrix::DfDiffDensityMatrix(TlSerializeData* pPdfData)
     : DfObject(pPdfData) {
@@ -43,20 +43,21 @@ void DfDiffDensityMatrix::exec() {
 
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      this->calc<TlDenseSymmetricMatrix_BLAS_Old>(RUN_RKS, this->m_nIteration);
+      this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, this->m_nIteration);
       break;
 
     case METHOD_UKS:
-      this->calc<TlDenseSymmetricMatrix_BLAS_Old>(RUN_UKS_ALPHA,
-                                              this->m_nIteration);
-      this->calc<TlDenseSymmetricMatrix_BLAS_Old>(RUN_UKS_BETA, this->m_nIteration);
+      this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA,
+                                                this->m_nIteration);
+      this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA,
+                                                this->m_nIteration);
       break;
 
     case METHOD_ROKS:
-      this->calc<TlDenseSymmetricMatrix_BLAS_Old>(RUN_ROKS_CLOSED,
-                                              this->m_nIteration);
-      this->calc<TlDenseSymmetricMatrix_BLAS_Old>(RUN_ROKS_OPEN,
-                                              this->m_nIteration);
+      this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED,
+                                                this->m_nIteration);
+      this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN,
+                                                this->m_nIteration);
       break;
 
     default:

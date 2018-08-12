@@ -222,7 +222,7 @@ TEST(TlHdf5Utils, getset_vector_int) {
   std::vector<int> vec_out;
   h5.get("/vct/int", &vec_out);
 
-  EXPECT_EQ(size, vec_out.size());
+  EXPECT_EQ(size, static_cast<int>(vec_out.size()));
   for (int i = 0; i < size; ++i) {
     EXPECT_EQ(vec_in[i], vec_out[i]);
   }

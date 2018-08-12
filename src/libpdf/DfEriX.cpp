@@ -143,19 +143,20 @@ DfTaskCtrl* DfEriX::getDfTaskCtrlObject() const {
   return pDfTaskCtrl;
 }
 
-void DfEriX::finalize(TlDenseGeneralMatrix_BLAS_old* pMtx) {
+void DfEriX::finalize(TlDenseGeneralMatrix_Lapack* pMtx) {
   // do nothing
 }
 
-void DfEriX::finalize(TlDenseSymmetricMatrix_BLAS_Old* pMtx) {
+void DfEriX::finalize(TlDenseSymmetricMatrix_Lapack* pMtx) {
   // do nothing
 }
 
-void DfEriX::finalize(TlVector_BLAS* pVct) {
+void DfEriX::finalize(TlDenseVector_Lapack* pVct) {
   // do nothing
 }
 
-void DfEriX::getJ(const TlDenseSymmetricMatrix_BLAS_Old& P, TlVector_BLAS* pRho) {
+void DfEriX::getJ(const TlDenseSymmetricMatrix_Lapack& P,
+                  TlDenseVector_Lapack* pRho) {
   assert(pRho != NULL);
   // TlTime time_all;
   // time_all.start();
@@ -176,8 +177,7 @@ void DfEriX::getJ(const TlDenseSymmetricMatrix_BLAS_Old& P, TlVector_BLAS* pRho)
   const ShellArrayTable shellArrayTable_Density =
       this->makeShellArrayTable(orbitalInfo_Density);
 
-  pRho->resize(this->m_nNumOfAux);
-  pRho->zeroClear();
+  *pRho = TlDenseVector_Lapack(this->m_nNumOfAux);
 
   this->createEngines();
   DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
@@ -211,13 +211,16 @@ void DfEriX::getJ(const TlDenseSymmetricMatrix_BLAS_Old& P, TlVector_BLAS* pRho)
     // this->elapsetime_store_)); this->log_.info(TlUtils::format(" sumup(ave.):
     // %16.1f sec.", this->elapsetime_sumup_));
   }
+  P.save("dP.mat");
+  pRho->save("rho.vtr");
+
 }
 
 void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                        const TlOrbitalInfo_Density& orbitalInfo_Density,
                        const ShellArrayTable& shellArrayTable_Density,
                        const std::vector<DfTaskCtrl::Task2>& taskList,
-                       const TlMatrixObject& P, TlVector_BLAS* pRho) {
+                       const TlMatrixObject& P, TlDenseVector_Lapack* pRho) {
   const int taskListSize = taskList.size();
 // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 // int numOfThreads = 1;
@@ -323,7 +326,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
     {
       const int numOfAux = this->m_nNumOfAux;
       for (int i = 0; i < numOfAux; ++i) {
-        (*pRho)[i] += local_rho[i];
+        pRho->add(i, local_rho[i]);
       }
       // elapsetime_calc     += time_calc.getElapseTime();
       // elapsetime_calc_eri += time_calc_eri.getElapseTime();
@@ -339,7 +342,8 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
   // this->elapsetime_sumup_ += time_sumup.getElapseTime();
 }
 
-void DfEriX::getJ(const TlVector_BLAS& rho, TlDenseSymmetricMatrix_BLAS_Old* pJ) {
+void DfEriX::getJ(const TlDenseVector_Lapack& rho,
+                  TlDenseSymmetricMatrix_Lapack* pJ) {
   assert(pJ != NULL);
   // this->elapsetime_calc_ = 0.0;
   // this->elapsetime_store_ = 0.0;
@@ -400,7 +404,7 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
                        const TlOrbitalInfo_Density& orbitalInfo_Density,
                        const ShellArrayTable& shellArrayTable_Density,
                        const std::vector<DfTaskCtrl::Task2>& taskList,
-                       const TlVector_BLAS& rho, TlMatrixObject* pJ) {
+                       const TlDenseVector_Lapack& rho, TlMatrixObject* pJ) {
   // const TlMatrixObject::index_type dim = pJ->getNumOfRows();
 
   const int maxShellType = orbitalInfo.getMaxShellType();
@@ -527,8 +531,8 @@ void DfEriX::getJ_part(const TlOrbitalInfo& orbitalInfo,
   // this->elapsetime_store_    += elapsetime_store / double(numOfThreads);
 }
 
-void DfEriX::getJpq(const TlDenseSymmetricMatrix_BLAS_Old& P,
-                    TlDenseSymmetricMatrix_BLAS_Old* pJ) {
+void DfEriX::getJpq(const TlDenseSymmetricMatrix_Lapack& P,
+                    TlDenseSymmetricMatrix_Lapack* pJ) {
   assert(pJ != NULL);
   // this->clearCutoffStats();
 
@@ -551,8 +555,8 @@ void DfEriX::getJpq(const TlDenseSymmetricMatrix_BLAS_Old& P,
   // this->cutoffReport();
 }
 
-void DfEriX::getJpq_exact(const TlDenseSymmetricMatrix_BLAS_Old& P,
-                          TlDenseSymmetricMatrix_BLAS_Old* pJ) {
+void DfEriX::getJpq_exact(const TlDenseSymmetricMatrix_Lapack& P,
+                          TlDenseSymmetricMatrix_Lapack* pJ) {
   assert(pJ != NULL);
   // const index_type numOfAOs = this->m_nNumOfAOs;
 
@@ -657,8 +661,8 @@ void DfEriX::getJpq_exact(const TlDenseSymmetricMatrix_BLAS_Old& P,
   }
 }
 
-void DfEriX::getJpq_integralDriven(const TlDenseSymmetricMatrix_BLAS_Old& P,
-                                   TlDenseSymmetricMatrix_BLAS_Old* pJ) {
+void DfEriX::getJpq_integralDriven(const TlDenseSymmetricMatrix_Lapack& P,
+                                   TlDenseSymmetricMatrix_Lapack* pJ) {
   assert(pJ != NULL);
   pJ->resize(this->m_nNumOfAOs);
 
@@ -902,7 +906,7 @@ int DfEriX::storeJ_integralDriven(
   return numOfElements;
 }
 
-void DfEriX::getJab(TlDenseSymmetricMatrix_BLAS_Old* pJab) {
+void DfEriX::getJab(TlDenseSymmetricMatrix_Lapack* pJab) {
   assert(pJab != NULL);
   const index_type numOfAuxDens = this->m_nNumOfAux;
   pJab->resize(numOfAuxDens);
@@ -1018,8 +1022,8 @@ void DfEriX::getJab_part(const TlOrbitalInfoObject& orbitalInfo,
   }
 }
 
-void DfEriX::getForceJ(const TlDenseSymmetricMatrix_BLAS_Old& P,
-                       TlDenseGeneralMatrix_BLAS_old* pForce) {
+void DfEriX::getForceJ(const TlDenseSymmetricMatrix_Lapack& P,
+                       TlDenseGeneralMatrix_Lapack* pForce) {
   assert(pForce != NULL);
   pForce->resize(this->m_nNumOfAtoms, 3);
 
@@ -1224,9 +1228,9 @@ void DfEriX::storeForceJ_integralDriven(
   }
 }
 
-void DfEriX::getForceJ(const TlDenseSymmetricMatrix_BLAS_Old& P,
-                       const TlVector_BLAS& rho,
-                       TlDenseGeneralMatrix_BLAS_old* pForce) {
+void DfEriX::getForceJ(const TlDenseSymmetricMatrix_Lapack& P,
+                       const TlDenseVector_Lapack& rho,
+                       TlDenseGeneralMatrix_Lapack* pForce) {
   assert(pForce != NULL);
   // this->clearCutoffStats();
 
@@ -1279,9 +1283,9 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
                             const TlOrbitalInfoObject& orbitalInfo_Density,
                             const ShellArrayTable& shellArrayTable_Density,
                             std::vector<DfTaskCtrl::Task2>& taskList,
-                            const TlDenseSymmetricMatrix_BLAS_Old& P,
-                            const TlVector_BLAS& rho,
-                            TlDenseGeneralMatrix_BLAS_old* pForce) {
+                            const TlDenseSymmetricMatrix_Lapack& P,
+                            const TlDenseVector_Lapack& rho,
+                            TlDenseGeneralMatrix_Lapack* pForce) {
   static const int BUFFER_SIZE = 3 * 5 * 5 * 5;  // (xyz) * 5d * 5d * 5d
   const int maxShellType = orbitalInfo.getMaxShellType();
   const int taskListSize = taskList.size();
@@ -1380,13 +1384,16 @@ void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo,
   }
 }
 
-void DfEriX::storeForceJ(
-    const index_type atomIndexA, const index_type atomIndexB,
-    const index_type atomIndexC, const index_type shellIndexP,
-    const int maxStepsP, const index_type shellIndexQ, const int maxStepsQ,
-    const index_type shellIndexR, const int maxStepsR, const double* p_dJdA,
-    const double* p_dJdB, const TlMatrixObject& P, const TlVectorAbstract& rho,
-    TlMatrixObject* pForce, const int target, int* pIndex) {
+void DfEriX::storeForceJ(const index_type atomIndexA,
+                         const index_type atomIndexB,
+                         const index_type atomIndexC,
+                         const index_type shellIndexP, const int maxStepsP,
+                         const index_type shellIndexQ, const int maxStepsQ,
+                         const index_type shellIndexR, const int maxStepsR,
+                         const double* p_dJdA, const double* p_dJdB,
+                         const TlMatrixObject& P,
+                         const TlDenseVectorObject& rho, TlMatrixObject* pForce,
+                         const int target, int* pIndex) {
   for (int stepP = 0; stepP < maxStepsP; ++stepP) {
     const index_type indexP = shellIndexP + stepP;
 
@@ -1401,7 +1408,7 @@ void DfEriX::storeForceJ(
           const double gradIntA = p_dJdA[*pIndex];
           const double gradIntB = p_dJdB[*pIndex];
           const double gradIntC = -(gradIntA + gradIntB);
-          const double coef_PQR = coef_PQ * rho[shellIndexR + stepR];
+          const double coef_PQR = coef_PQ * rho.get(shellIndexR + stepR);
 
           pForce->add(atomIndexA, target, coef_PQR * gradIntA);
           pForce->add(atomIndexB, target, coef_PQR * gradIntB);
@@ -1415,8 +1422,8 @@ void DfEriX::storeForceJ(
   }
 }
 
-void DfEriX::getForceJ(const TlVector_BLAS& rho,
-                       TlDenseGeneralMatrix_BLAS_old* pForce) {
+void DfEriX::getForceJ(const TlDenseVector_Lapack& rho,
+                       TlDenseGeneralMatrix_Lapack* pForce) {
   assert(pForce != NULL);
   pForce->resize(this->m_nNumOfAtoms, 3);
 
@@ -1452,8 +1459,8 @@ void DfEriX::getForceJ(const TlVector_BLAS& rho,
 
 void DfEriX::getForceJ_part(const TlOrbitalInfoObject& orbitalInfo_Density,
                             std::vector<DfTaskCtrl::Task2>& taskList,
-                            const TlVector_BLAS& rho,
-                            TlDenseGeneralMatrix_BLAS_old* pForce) {
+                            const TlDenseVector_Lapack& rho,
+                            TlDenseGeneralMatrix_Lapack* pForce) {
   // static const int BUFFER_SIZE = 3 * 5 * 5 * 5; // (xyz) * 5d * 5d * 5d
   // const int maxShellType = orbitalInfo.getMaxShellType();
   const int taskListSize = taskList.size();
@@ -1521,18 +1528,18 @@ void DfEriX::storeForceJ(const index_type atomIndexA,
                          const index_type atomIndexC,
                          const index_type shellIndexP, const int maxStepsP,
                          const index_type shellIndexR, const int maxStepsR,
-                         const DfEriEngine& engine, const TlVectorAbstract& rho,
-                         TlMatrixObject* pForce, const int target,
-                         int* pIndex) {
+                         const DfEriEngine& engine,
+                         const TlDenseVectorObject& rho, TlMatrixObject* pForce,
+                         const int target, int* pIndex) {
   for (int stepP = 0; stepP < maxStepsP; ++stepP) {
     const index_type indexP = shellIndexP + stepP;
-    const double coef_P = rho[indexP];
+    const double coef_P = rho.get(indexP);
 
     for (int stepR = 0; stepR < maxStepsR; ++stepR) {
       const index_type indexR = shellIndexR + stepR;
 
       if ((shellIndexP != shellIndexR) || (indexP >= indexR)) {
-        double coef = coef_P * rho[indexR];
+        double coef = coef_P * rho.get(indexR);
         coef *= (indexP != indexR) ? 2.0 : 1.0;
         const double gradA = engine.WORK[*pIndex];
         const double gradC = -gradA;
@@ -1545,8 +1552,8 @@ void DfEriX::storeForceJ(const index_type atomIndexA,
   }
 }
 
-void DfEriX::getK(const TlDenseSymmetricMatrix_BLAS_Old& P,
-                  TlDenseSymmetricMatrix_BLAS_Old* pK) {
+void DfEriX::getK(const TlDenseSymmetricMatrix_Lapack& P,
+                  TlDenseSymmetricMatrix_Lapack* pK) {
   // this->clearCutoffStats();
 
   // カットオフ値の設定
@@ -1568,8 +1575,8 @@ void DfEriX::getK(const TlDenseSymmetricMatrix_BLAS_Old& P,
   // this->cutoffReport();
 }
 
-void DfEriX::getK_exact(const TlDenseSymmetricMatrix_BLAS_Old& P,
-                        TlDenseSymmetricMatrix_BLAS_Old* pK) {
+void DfEriX::getK_exact(const TlDenseSymmetricMatrix_Lapack& P,
+                        TlDenseSymmetricMatrix_Lapack* pK) {
   assert(pK != NULL);
   // const index_type numOfAOs = this->m_nNumOfAOs;
   pK->resize(this->m_nNumOfAOs);
@@ -1672,8 +1679,8 @@ void DfEriX::getK_exact(const TlDenseSymmetricMatrix_BLAS_Old& P,
   }
 }
 
-void DfEriX::getK_integralDriven(const TlDenseSymmetricMatrix_BLAS_Old& P,
-                                 TlDenseSymmetricMatrix_BLAS_Old* pK) {
+void DfEriX::getK_integralDriven(const TlDenseSymmetricMatrix_Lapack& P,
+                                 TlDenseSymmetricMatrix_Lapack* pK) {
   assert(pK != NULL);
   pK->resize(this->m_nNumOfAOs);
 
@@ -2007,8 +2014,8 @@ void DfEriX::debugoutK_integralDriven() const {
 #endif  // DEBUG_K
 }
 
-void DfEriX::getForceK(const TlDenseSymmetricMatrix_BLAS_Old& P,
-                       TlDenseGeneralMatrix_BLAS_old* pForce) {
+void DfEriX::getForceK(const TlDenseSymmetricMatrix_Lapack& P,
+                       TlDenseGeneralMatrix_Lapack* pForce) {
   assert(pForce != NULL);
   pForce->resize(this->m_nNumOfAtoms, 3);
 

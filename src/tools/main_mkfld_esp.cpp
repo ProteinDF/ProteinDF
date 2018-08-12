@@ -25,7 +25,7 @@
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
 #include "mkfld_common.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 void help(const std::string& progName) {
   std::cout << TlUtils::format("%s [options] args...", progName.c_str())
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
   }
 
   // 密度行列の読み込み
-  TlDenseSymmetricMatrix_BLAS_Old P;
+  TlDenseSymmetricMatrix_Lapack P;
   if (isAtomsOnly != true) {
     if (PMatrixFilePath == "") {
       const int iteration = param["num_of_iterations"].getInt();

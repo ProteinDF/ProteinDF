@@ -21,14 +21,14 @@
 
 #include "DfDensityFittingObject.h"
 #include "DfEriX_Parallel.h"
-#include "tl_dense_symmetric_matrix_blacs.h"
-#include "tl_dense_vector_blacs.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
+#include "tl_dense_vector_scalapack.h"
 
 // 特殊化
 // template<>
-// TlDistributedVector DfDensityFittingTmpl<TlDenseSymmetricMatrix_blacs,
+// TlDistributedVector DfDensityFittingTmpl<TlDenseSymmetricMatrix_Scalapack,
 // TlDistributedVector, DfEriX_Parallel>::calcTAlpha_DIRECT (const
-// TlDenseSymmetricMatrix_blacs& P)
+// TlDenseSymmetricMatrix_Scalapack& P)
 // {
 //     TlDistributedVector t_alpha(this->m_nNumOfAux);
 
@@ -40,8 +40,8 @@
 
 // ScaLAPACK版
 class DfDensityFittingX_ScaLAPACK
-    : public DfDensityFittingTmpl<TlDenseSymmetricMatrix_blacs,
-                                  TlDistributedVector, DfEriX_Parallel> {
+    : public DfDensityFittingTmpl<TlDenseSymmetricMatrix_Scalapack,
+                                  TlDenseVector_Scalapack, DfEriX_Parallel> {
  public:
   DfDensityFittingX_ScaLAPACK(TlSerializeData* pPdfParam);
   virtual ~DfDensityFittingX_ScaLAPACK();

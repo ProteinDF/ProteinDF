@@ -27,14 +27,20 @@
 #include "TlCommunicate.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
-#include "tl_dense_general_matrix_blacs.h"
-#include "tl_dense_general_matrix_blas_old.h"
+//#include "tl_dense_general_matrix_blacs.h"
+//#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_matrix_io_object.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+//#include "tl_dense_symmetric_matrix_blas_old.h"
 #include "tl_dense_symmetric_matrix_io.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+//#include "tl_dense_vector_blas.h"
+#include "tl_dense_vector_lapack.h"
+#include "tl_dense_vector_impl_lapack.h"
 #include "tl_matrix_object.h"
+#include "tl_scalapack_context.h"
 #include "tl_sparse_matrix.h"
-#include "tl_dense_vector_blas.h"
 
 // minimum work memory size is 400 MB
 #define DEFAULT_WORK_MEM_SIZE (400UL * 1024UL * 1024UL)
@@ -550,11 +556,11 @@ int TlCommunicate::allReduce_SUM(double* pData, std::size_t length) {
   return this->allReduce(pData, MPI_DOUBLE, 0, length, MPI_SUM);
 }
 
-int TlCommunicate::allReduce_SUM(TlVector_BLAS& rVector) {
-  return this->allReduce_SUM(
-      rVector.data_,
-      rVector.getSize());  // this class is friend class of TlVector_BLAS.
-}
+// int TlCommunicate::allReduce_SUM(TlVector_BLAS& rVector) {
+//   return this->allReduce_SUM(
+//       rVector.data_,
+//       rVector.getSize());  // this class is friend class of TlVector_BLAS.
+// }
 
 // =====================================================================
 // MPI_Iallreduce()
@@ -598,8 +604,22 @@ int TlCommunicate::iAllReduce_SUM(const double* pSendBuf, double* pRecvBuf,
 }
 
 // =====================================================================
-int TlCommunicate::allReduce_SUM(TlDenseGeneralMatrix_BLAS_old& rMatrix) {
-  return this->allReduce_SUM(rMatrix.data_, rMatrix.getNumOfElements());
+// int TlCommunicate::allReduce_SUM(TlDenseGeneralMatrix_BLAS_old& rMatrix) {
+//   return this->allReduce_SUM(rMatrix.data_, rMatrix.getNumOfElements());
+// }
+
+int TlCommunicate::allReduce_SUM(TlDenseGeneralMatrix_Lapack* pMatrix) {
+  return this->allReduce_SUM(pMatrix->data(), pMatrix->getNumOfElements());
+}
+
+int TlCommunicate::allReduce_SUM(TlDenseSymmetricMatrix_Lapack* pMatrix) {
+  return this->allReduce_SUM(pMatrix->data(), pMatrix->getNumOfElements());
+}
+
+int TlCommunicate::allReduce_SUM(TlDenseVector_Lapack* pVector) {
+  return this->allReduce_SUM(
+      pVector->data(),
+      pVector->getSize());  // this class is friend class of TlVector_BLAS.
 }
 
 int TlCommunicate::allReduce_SUM(TlSparseMatrix& rMatrix) {
@@ -1013,18 +1033,59 @@ int TlCommunicate::sendData(const std::string& data, int nDestination,
   return nErr;
 }
 
-int TlCommunicate::sendData(const TlVector_BLAS& data, int destination,
-                            int nTag) {
-  const std::size_t dim = data.getSize();
-  int nErr = this->sendData(dim, destination, nTag);
-  if (nErr == 0) {
-    nErr = this->sendDataX(data.data_, MPI_DOUBLE, 0, dim, destination, nTag);
-  }
+// int TlCommunicate::sendData(const TlVector_BLAS& data, int destination,
+//                             int nTag) {
+//   const std::size_t dim = data.getSize();
+//   int nErr = this->sendData(dim, destination, nTag);
+//   if (nErr == 0) {
+//     nErr = this->sendDataX(data.data_, MPI_DOUBLE, 0, dim, destination, nTag);
+//   }
+//
+//   return nErr;
+// }
 
-  return nErr;
-}
+// int TlCommunicate::sendData(const TlDenseGeneralMatrix_BLAS_old& data,
+//                             const int destination, const int tag) {
+//   const int headerSize = 2;
+//   TlMatrixObject::index_type* pHeader =
+//       new TlMatrixObject::index_type[headerSize];
+//   pHeader[0] = data.getNumOfRows();
+//   pHeader[1] = data.getNumOfCols();
+//   int err = this->sendDataX(pHeader, headerSize, destination, tag);
+//   this->log_.debug(TlUtils::format(
+//       "TlCommunicate::sendData(TlDenseGeneralMatrix_BLAS_old): dest=%d, "
+//       "tag=%d, "
+//       "row=%d, "
+//       "col=%d, "
+//       "err=%d.",
+//       destination, tag, data.getNumOfRows(), data.getNumOfCols(), err));
+//   delete[] pHeader;
+//   pHeader = NULL;
+//   if (err != 0) {
+//     return err;
+//   }
+//
+//   err = this->sendDataX(data.data_, data.getNumOfElements(), destination, tag);
+//   this->log_.debug(TlUtils::format(
+//       "TlCommunicate::sendData(TlDenseGeneralMatrix_BLAS_old): dest=%d, "
+//       "tag=%d, size=%ld, err=%d.",
+//       destination, tag, data.getNumOfElements(), err));
+//   return err;
+// }
 
-int TlCommunicate::sendData(const TlDenseGeneralMatrix_BLAS_old& data,
+// int TlCommunicate::sendData(const TlDenseSymmetricMatrix_BLAS_Old& data,
+//                             int nDestination, int nTag) {
+//   const std::size_t dim = data.getNumOfRows();
+//   int nErr = this->sendData(dim, nDestination, nTag);
+//   if (nErr == 0) {
+//     nErr = this->sendDataX(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(),
+//                            nDestination, nTag);
+//   }
+//
+//   return nErr;
+// }
+
+int TlCommunicate::sendData(const TlDenseGeneralMatrix_Lapack& data,
                             const int destination, const int tag) {
   const int headerSize = 2;
   TlMatrixObject::index_type* pHeader =
@@ -1033,7 +1094,8 @@ int TlCommunicate::sendData(const TlDenseGeneralMatrix_BLAS_old& data,
   pHeader[1] = data.getNumOfCols();
   int err = this->sendDataX(pHeader, headerSize, destination, tag);
   this->log_.debug(TlUtils::format(
-      "TlCommunicate::sendData(TlDenseGeneralMatrix_BLAS_old): dest=%d, tag=%d, "
+      "TlCommunicate::sendData(TlDenseGeneralMatrix_Lapack): dest=%d, "
+      "tag=%d, "
       "row=%d, "
       "col=%d, "
       "err=%d.",
@@ -1044,21 +1106,33 @@ int TlCommunicate::sendData(const TlDenseGeneralMatrix_BLAS_old& data,
     return err;
   }
 
-  err = this->sendDataX(data.data_, data.getNumOfElements(), destination, tag);
+  err = this->sendDataX(data.data(), data.getNumOfElements(), destination, tag);
   this->log_.debug(TlUtils::format(
-      "TlCommunicate::sendData(TlDenseGeneralMatrix_BLAS_old): dest=%d, "
+      "TlCommunicate::sendData(TlDenseGeneralMatrix_Lapack): dest=%d, "
       "tag=%d, size=%ld, err=%d.",
       destination, tag, data.getNumOfElements(), err));
   return err;
 }
 
-int TlCommunicate::sendData(const TlDenseSymmetricMatrix_BLAS_Old& data,
+int TlCommunicate::sendData(const TlDenseSymmetricMatrix_Lapack& data,
                             int nDestination, int nTag) {
   const std::size_t dim = data.getNumOfRows();
   int nErr = this->sendData(dim, nDestination, nTag);
   if (nErr == 0) {
-    nErr = this->sendDataX(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(),
+    nErr = this->sendDataX(data.data(), MPI_DOUBLE, 0, data.getNumOfElements(),
                            nDestination, nTag);
+  }
+
+  return nErr;
+}
+
+int TlCommunicate::sendData(const TlDenseVector_Lapack& data, int destination,
+                            int nTag) {
+  const std::size_t dim = data.getSize();
+  int nErr = this->sendData(dim, destination, nTag);
+  if (nErr == 0) {
+      const double* buf = dynamic_cast<TlDenseVector_ImplLapack*>(data.pImpl_)->vector_;
+    nErr = this->sendDataX(buf, MPI_DOUBLE, 0, dim, destination, nTag);
   }
 
   return nErr;
@@ -1383,18 +1457,61 @@ int TlCommunicate::receiveData(std::string& rData, int nSrc, int nTag) {
   return nErr;
 }
 
-int TlCommunicate::receiveData(TlVector_BLAS& rData, int src, int tag) {
-  std::size_t dim = 0;
-  int nErr = this->receiveData(dim, src, tag);
-  if (nErr == 0) {
-    rData.resize(dim);
-    nErr = this->receiveDataX(rData.data_, MPI_DOUBLE, 0, dim, src, tag);
-  }
+// int TlCommunicate::receiveData(TlVector_BLAS& rData, int src, int tag) {
+//   std::size_t dim = 0;
+//   int nErr = this->receiveData(dim, src, tag);
+//   if (nErr == 0) {
+//     rData.resize(dim);
+//     nErr = this->receiveDataX(rData.data_, MPI_DOUBLE, 0, dim, src, tag);
+//   }
+//
+//   return nErr;
+// }
 
-  return nErr;
-}
+// int TlCommunicate::receiveData(TlDenseGeneralMatrix_BLAS_old& data,
+//                                const int src, const int tag) {
+//   const int headerSize = 2;
+//   TlMatrixObject::index_type* pHeader =
+//       new TlMatrixObject::index_type[headerSize];
+//   int err = this->receiveDataX(pHeader, headerSize, src, tag);
+//   const TlMatrixObject::index_type numOfRows = pHeader[0];
+//   const TlMatrixObject::index_type numOfCols = pHeader[1];
+//   this->log_.debug(TlUtils::format(
+//       "TlCommunicate::recvData(TlDenseGeneralMatrix_BLAS_old): src=%d, tag=%d, "
+//       "row=%d, col=%d, err=%d.",
+//       src, tag, numOfRows, numOfCols, err));
+//
+//   delete[] pHeader;
+//   pHeader = NULL;
+//   if (err != 0) {
+//     return err;
+//   }
+//
+//   data.resize(numOfRows, numOfCols);
+//   err = this->receiveDataX(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(),
+//                            src, tag);
+//   this->log_.debug(TlUtils::format(
+//       "TlCommunicate::recvData(TlDenseGeneralMatrix_BLAS_old): src=%d, tag=%d, "
+//       "size=%ld, err=%d.",
+//       src, tag, data.getNumOfElements(), err));
+//
+//   return err;
+// }
 
-int TlCommunicate::receiveData(TlDenseGeneralMatrix_BLAS_old& data, const int src,
+// int TlCommunicate::receiveData(TlDenseSymmetricMatrix_BLAS_Old& rData, int nSrc,
+//                                int nTag) {
+//   std::size_t dim = 0;
+//   int nErr = this->receiveData(dim, nSrc, nTag);
+//   if (nErr == 0) {
+//     rData.resize(dim);
+//     nErr = this->receiveDataX(rData.data_, MPI_DOUBLE, 0,
+//                               rData.getNumOfElements(), nSrc, nTag);
+//   }
+//
+//   return nErr;
+// }
+
+int TlCommunicate::receiveData(TlDenseGeneralMatrix_Lapack& data, const int src,
                                const int tag) {
   const int headerSize = 2;
   TlMatrixObject::index_type* pHeader =
@@ -1403,7 +1520,7 @@ int TlCommunicate::receiveData(TlDenseGeneralMatrix_BLAS_old& data, const int sr
   const TlMatrixObject::index_type numOfRows = pHeader[0];
   const TlMatrixObject::index_type numOfCols = pHeader[1];
   this->log_.debug(TlUtils::format(
-      "TlCommunicate::recvData(TlDenseGeneralMatrix_BLAS_old): src=%d, tag=%d, "
+      "TlCommunicate::recvData(TlDenseGeneralMatrix_Lapack): src=%d, tag=%d, "
       "row=%d, col=%d, err=%d.",
       src, tag, numOfRows, numOfCols, err));
 
@@ -1414,24 +1531,36 @@ int TlCommunicate::receiveData(TlDenseGeneralMatrix_BLAS_old& data, const int sr
   }
 
   data.resize(numOfRows, numOfCols);
-  err = this->receiveDataX(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(),
+  err = this->receiveDataX(data.data(), MPI_DOUBLE, 0, data.getNumOfElements(),
                            src, tag);
   this->log_.debug(TlUtils::format(
-      "TlCommunicate::recvData(TlDenseGeneralMatrix_BLAS_old): src=%d, tag=%d, "
+      "TlCommunicate::recvData(TlDenseGeneralMatrix_Lapack): src=%d, tag=%d, "
       "size=%ld, err=%d.",
       src, tag, data.getNumOfElements(), err));
 
   return err;
 }
 
-int TlCommunicate::receiveData(TlDenseSymmetricMatrix_BLAS_Old& rData, int nSrc,
+int TlCommunicate::receiveData(TlDenseSymmetricMatrix_Lapack& rData, int nSrc,
                                int nTag) {
   std::size_t dim = 0;
   int nErr = this->receiveData(dim, nSrc, nTag);
   if (nErr == 0) {
     rData.resize(dim);
-    nErr = this->receiveDataX(rData.data_, MPI_DOUBLE, 0,
+    nErr = this->receiveDataX(rData.data(), MPI_DOUBLE, 0,
                               rData.getNumOfElements(), nSrc, nTag);
+  }
+
+  return nErr;
+}
+
+int TlCommunicate::receiveData(TlDenseVector_Lapack& rData, int src, int tag) {
+  std::size_t dim = 0;
+  int nErr = this->receiveData(dim, src, tag);
+  if (nErr == 0) {
+    rData.resize(dim);
+    double* buf = dynamic_cast<TlDenseVector_ImplLapack*>(rData.pImpl_)->vector_;
+    nErr = this->receiveDataX(buf, MPI_DOUBLE, 0, dim, src, tag);
   }
 
   return nErr;
@@ -1631,7 +1760,32 @@ int TlCommunicate::receiveDataFromAnySource(std::vector<double>& data,
   return this->receiveDataFromAnySource(data, MPI_DOUBLE, pSrc, pTag);
 }
 
-int TlCommunicate::receiveDataFromAnySource(TlDenseGeneralMatrix_BLAS_old& data,
+// int TlCommunicate::receiveDataFromAnySource(TlDenseGeneralMatrix_BLAS_old& data,
+//                                             int* pSrc, int tag) {
+//   assert(pSrc != NULL);
+//
+//   const int headerSize = 2;
+//   TlMatrixObject::index_type* pHeader =
+//       new TlMatrixObject::index_type[headerSize];
+//   int src = 0;
+//   int err = this->receiveDataFromAnySourceX(pHeader, headerSize, &src, tag);
+//   if (err != 0) {
+//     return err;
+//   }
+//
+//   *pSrc = src;
+//
+//   const TlMatrixObject::index_type numOfRows = pHeader[0];
+//   const TlMatrixObject::index_type numOfCols = pHeader[1];
+//   delete[] pHeader;
+//   pHeader = NULL;
+//
+//   data.resize(numOfRows, numOfCols);
+//   return this->receiveDataX(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(),
+//                             src, tag);
+// }
+
+int TlCommunicate::receiveDataFromAnySource(TlDenseGeneralMatrix_Lapack& data,
                                             int* pSrc, int tag) {
   assert(pSrc != NULL);
 
@@ -1652,7 +1806,7 @@ int TlCommunicate::receiveDataFromAnySource(TlDenseGeneralMatrix_BLAS_old& data,
   pHeader = NULL;
 
   data.resize(numOfRows, numOfCols);
-  return this->receiveDataX(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(),
+  return this->receiveDataX(data.data(), MPI_DOUBLE, 0, data.getNumOfElements(),
                             src, tag);
 }
 
@@ -2908,53 +3062,115 @@ int TlCommunicate::broadcast(std::vector<std::string>& rData) {
   return 0;
 }
 
-int TlCommunicate::broadcast(TlVector_BLAS& data, const int root) {
-  std::size_t size = 0;
-  if (this->getRank() == root) {
-    size = data.getSize();
-  }
-  int answer = this->broadcast(size, root);
-  data.resize(size);
+// int TlCommunicate::broadcast(TlVector_BLAS& data, const int root) {
+//   std::size_t size = 0;
+//   if (this->getRank() == root) {
+//     size = data.getSize();
+//   }
+//   int answer = this->broadcast(size, root);
+//   data.resize(size);
+//
+//   if (answer == 0) {
+//     answer = this->broadcast(data.data_, MPI_DOUBLE, 0, data.getSize(), root);
+//   }
+//
+//   return answer;
+// }
 
-  if (answer == 0) {
-    answer = this->broadcast(data.data_, MPI_DOUBLE, 0, data.getSize(), root);
-  }
+// int TlCommunicate::broadcast(TlDenseGeneralMatrix_BLAS_old& data,
+//                              const int root) {
+//   TlMatrixObject::index_type row = 0;
+//   TlMatrixObject::index_type col = 0;
+//
+//   if (this->getRank() == root) {
+//     row = data.getNumOfRows();
+//     col = data.getNumOfCols();
+//   }
+//   int answer = 0;
+//   answer = this->broadcast(row, root);
+//   answer = this->broadcast(col, root);
+//   data.resize(row, col);
+//
+//   if (answer == 0) {
+//     this->broadcast(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(), root);
+//   }
+//
+//   return answer;
+// }
 
-  return answer;
-}
+// int TlCommunicate::broadcast(TlDenseSymmetricMatrix_BLAS_Old& data, int root) {
+//   TlMatrixObject::index_type dim = 0;
+//
+//   if (this->getRank() == root) {
+//     dim = data.getNumOfRows();
+//   }
+//   int answer = this->broadcast(dim, root);
+//   data.resize(dim);
+//
+//   if (answer == 0) {
+//     answer = this->broadcast(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(),
+//                              root);
+//   }
+//
+//   return answer;
+// }
 
-int TlCommunicate::broadcast(TlDenseGeneralMatrix_BLAS_old& data, const int root) {
+int TlCommunicate::broadcast(TlDenseGeneralMatrix_Lapack* pMatrix,
+                             const int root) {
   TlMatrixObject::index_type row = 0;
   TlMatrixObject::index_type col = 0;
 
   if (this->getRank() == root) {
-    row = data.getNumOfRows();
-    col = data.getNumOfCols();
+    row = pMatrix->getNumOfRows();
+    col = pMatrix->getNumOfCols();
   }
   int answer = 0;
   answer = this->broadcast(row, root);
   answer = this->broadcast(col, root);
-  data.resize(row, col);
 
   if (answer == 0) {
-    this->broadcast(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(), root);
+    if (this->getRank() != root) {
+      pMatrix->resize(row, col);
+    }
+    this->broadcast(pMatrix->data(), MPI_DOUBLE, 0, pMatrix->getNumOfElements(),
+                    root);
   }
 
   return answer;
 }
 
-int TlCommunicate::broadcast(TlDenseSymmetricMatrix_BLAS_Old& data, int root) {
+int TlCommunicate::broadcast(TlDenseSymmetricMatrix_Lapack* pMatrix, int root) {
   TlMatrixObject::index_type dim = 0;
 
   if (this->getRank() == root) {
-    dim = data.getNumOfRows();
+    dim = pMatrix->getNumOfRows();
   }
   int answer = this->broadcast(dim, root);
-  data.resize(dim);
 
   if (answer == 0) {
-    answer = this->broadcast(data.data_, MPI_DOUBLE, 0, data.getNumOfElements(),
-                             root);
+    if (this->getRank() != root) {
+      pMatrix->resize(dim);
+    }
+    answer = this->broadcast(pMatrix->data(), MPI_DOUBLE, 0,
+                             pMatrix->getNumOfElements(), root);
+  }
+
+  return answer;
+}
+
+int TlCommunicate::broadcast(TlDenseVector_Lapack* pVector, int root) {
+  TlDenseVectorObject::index_type dim = 0;
+
+  if (this->getRank() == root) {
+    dim = pVector->getSize();
+  }
+  int answer = this->broadcast(dim, root);
+
+  if (answer == 0) {
+    if (this->getRank() != root) {
+      pVector->resize(dim);
+    }
+    answer = this->broadcast(pVector->data(), MPI_DOUBLE, 0, dim, root);
   }
 
   return answer;
@@ -3100,7 +3316,8 @@ int TlCommunicate::broadcast(TlSerializeData& data) {
 //   if (this->isMaster() == true) {
 //     // master用ルーチン
 //     // 書き込みルーチンが含まれている点がslaveと異なる
-//     TlDenseSymmetricMatrix_BLAS_OldFile toMatrix(toMatrixFilePath, numOfDims);
+//     TlDenseSymmetricMatrix_BLAS_OldFile toMatrix(toMatrixFilePath,
+//     numOfDims);
 //     const std::size_t startToPos = toMatrix.startPos_;
 //     toMatrix.fs_.seekp(static_cast<std::fstream::pos_type>(startToPos),
 //                        std::ios_base::beg);

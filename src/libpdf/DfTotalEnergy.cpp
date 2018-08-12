@@ -26,7 +26,7 @@
 #include "CnError.h"
 #include "Fl_Geometry.h"
 #include "TlUtils.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 const double DfTotalEnergy::TOO_SMALL = 1.0E-16;
 double DfTotalEnergy::m_dNuclearRepulsion = 0.0;  // 核-核反発
@@ -48,8 +48,8 @@ DfTotalEnergy::DfTotalEnergy(TlSerializeData* pPdfParam)
 DfTotalEnergy::~DfTotalEnergy() {}
 
 void DfTotalEnergy::exec() {
-  this->exec_template<DfOverlapX, DfEriX, TlDenseSymmetricMatrix_BLAS_Old,
-                      TlVector_BLAS>();
+  this->exec_template<DfOverlapX, DfEriX, TlDenseSymmetricMatrix_Lapack,
+                      TlDenseVector_Lapack>();
 }
 
 void DfTotalEnergy::output() {
@@ -206,7 +206,7 @@ void DfTotalEnergy::write_total_energy(const double E_Total) const {
 
 // total energy including dummy charge
 void DfTotalEnergy::calculate_real_energy() {
-  this->calcRealEnergy<TlDenseSymmetricMatrix_BLAS_Old>();
+  this->calcRealEnergy<TlDenseSymmetricMatrix_Lapack>();
 }
 
 DfEriX* DfTotalEnergy::getDfEriX() const {

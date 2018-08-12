@@ -6,7 +6,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif // HAVE_CONFIG_H
+#endif  // HAVE_CONFIG_H
 
 class TlDenseVector_ImplObject;
 
@@ -32,6 +32,7 @@ class TlDenseVectorObject {
   virtual double get(const index_type index) const;
   virtual void set(const index_type index, const double value);
   virtual void add(const index_type index, const double value);
+  virtual void mul(const index_type index, const double value);
 
   // ---------------------------------------------------------------------------
   // operators
@@ -41,7 +42,8 @@ class TlDenseVectorObject {
   // operations
   // ---------------------------------------------------------------------------
   // virtual void push_back(const double value);
-  // double getMaxAbsoluteElement() const;
+  virtual double getMaxAbsoluteElement(
+      TlDenseVectorObject::index_type* index = NULL) const;
   virtual double sum() const;
   virtual double norm() const;
   virtual double norm2() const;
@@ -60,8 +62,11 @@ class TlDenseVectorObject {
   virtual bool save(const std::string& filePath) const;
   virtual bool loadText(const std::string& filePath);
 
+  virtual void outputText(std::ostream& os) const;
+
 #ifdef HAVE_HDF5
-  virtual bool saveHdf5(const std::string& filepath, const std::string& h5path) const;
+  virtual bool saveHdf5(const std::string& filepath,
+                        const std::string& h5path) const;
   virtual bool loadHdf5(const std::string& filepath, const std::string& h5path);
 #endif  // HAVE_HDF5
 

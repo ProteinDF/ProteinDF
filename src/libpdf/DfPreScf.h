@@ -21,6 +21,7 @@
 
 #include <string>
 #include <vector>
+#include <cassert>
 
 #include "CnError.h"
 #include "DfObject.h"
@@ -48,10 +49,11 @@ class DfPreScf : public DfObject {
   void saveC0(const RUN_TYPE runType, const MatrixType& C0);
 
   /// 占有軌道情報を取得する
-  virtual TlVector_BLAS getOccupation(const RUN_TYPE runType);
+  virtual TlDenseVector_Lapack getOccupation(const RUN_TYPE runType);
 
   /// 占有軌道情報を保存する
-  void saveOccupation(const RUN_TYPE runType, const TlVector_BLAS& rOccupation);
+  void saveOccupation(const RUN_TYPE runType,
+                      const TlDenseVector_Lapack& rOccupation);
 
   /// Cprime0 を作成し、保存する
   template <typename MatrixType>

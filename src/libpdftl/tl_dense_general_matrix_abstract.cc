@@ -1,6 +1,7 @@
 #include "tl_dense_general_matrix_abstract.h"
 #include <iostream>
 #include "tl_matrix_utils.h"
+#include "TlUtils.h"
 
 bool TlDenseGeneralMatrixAbstract::load(const std::string& filePath) {
   bool answer = false;
@@ -83,6 +84,8 @@ bool TlDenseGeneralMatrixAbstract::save(const std::string& filePath) const {
     answer = true;
   }
   fs.close();
+
+  return answer;
 }
 
 bool TlDenseGeneralMatrixAbstract::load(const std::string& filePath, double* pBuf,

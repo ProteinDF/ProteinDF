@@ -412,9 +412,9 @@ double DfFunctional_VWN::epsilonCPrime_ANTI(const double x) {
 }
 
 // ----------------
-TlDenseGeneralMatrix_BLAS_old DfFunctional_VWN::getFunctionalCore(
+TlDenseGeneralMatrix_Lapack DfFunctional_VWN::getFunctionalCore(
     const double rhoA, const double rhoB) {
-  TlDenseGeneralMatrix_BLAS_old answer(F_DIM, this->getNumOfFunctionalTerms());
+  TlDenseGeneralMatrix_Lapack answer(F_DIM, this->getNumOfFunctionalTerms());
   assert(this->getNumOfFunctionalTerms() == 1);
 
   // (A10)
@@ -440,10 +440,10 @@ TlDenseGeneralMatrix_BLAS_old DfFunctional_VWN::getFunctionalCore(
   return answer;
 }
 
-TlDenseGeneralMatrix_BLAS_old DfFunctional_VWN::getDerivativeFunctionalCore(
+TlDenseGeneralMatrix_Lapack DfFunctional_VWN::getDerivativeFunctionalCore(
     const double rhoA, const double rhoB) {
-  TlDenseGeneralMatrix_BLAS_old answer(D_DIM,
-                                   this->getNumOfDerivativeFunctionalTerms());
+  TlDenseGeneralMatrix_Lapack answer(D_DIM,
+                                     this->getNumOfDerivativeFunctionalTerms());
   assert(this->getNumOfFunctionalTerms() == 1);
 
   // roundF_roundRho =========================================================

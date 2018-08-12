@@ -21,8 +21,8 @@
 
 #include "DfXMatrix.h"
 
-class TlDenseGeneralMatrix_blacs;
-class TlDenseSymmetricMatrix_blacs;
+class TlDenseGeneralMatrix_Scalapack;
+class TlDenseSymmetricMatrix_Scalapack;
 
 class DfXMatrix_Parallel : public DfXMatrix {
  public:
@@ -32,24 +32,24 @@ class DfXMatrix_Parallel : public DfXMatrix {
  public:
   virtual void buildX();
 
-  virtual void canonicalOrthogonalize(const TlDenseSymmetricMatrix_BLAS_Old& S,
-                                      TlDenseGeneralMatrix_BLAS_old* pX,
-                                      TlDenseGeneralMatrix_BLAS_old* pXinv,
+  virtual void canonicalOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
+                                      TlDenseGeneralMatrix_Lapack* pX,
+                                      TlDenseGeneralMatrix_Lapack* pXinv,
                                       const std::string& eigvalFilePath = "");
 
-  virtual void lowdinOrthogonalize(const TlDenseSymmetricMatrix_BLAS_Old& S,
-                                   TlDenseGeneralMatrix_BLAS_old* pX,
-                                   TlDenseGeneralMatrix_BLAS_old* pXinv,
+  virtual void lowdinOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
+                                   TlDenseGeneralMatrix_Lapack* pX,
+                                   TlDenseGeneralMatrix_Lapack* pXinv,
                                    const std::string& eigvalFilePath = "");
 
-  void canonicalOrthogonalize(const TlDenseSymmetricMatrix_blacs& S,
-                              TlDenseGeneralMatrix_blacs* pX,
-                              TlDenseGeneralMatrix_blacs* pXinv,
+  void canonicalOrthogonalize(const TlDenseSymmetricMatrix_Scalapack& S,
+                              TlDenseGeneralMatrix_Scalapack* pX,
+                              TlDenseGeneralMatrix_Scalapack* pXinv,
                               const std::string& eigvalFilePath = "");
 
-  void lowdinOrthogonalize(const TlDenseSymmetricMatrix_blacs& S,
-                           TlDenseGeneralMatrix_blacs* pX,
-                           TlDenseGeneralMatrix_blacs* pXinv,
+  void lowdinOrthogonalize(const TlDenseSymmetricMatrix_Scalapack& S,
+                           TlDenseGeneralMatrix_Scalapack* pX,
+                           TlDenseGeneralMatrix_Scalapack* pXinv,
                            const std::string& eigvalFilePath = "");
 
  protected:

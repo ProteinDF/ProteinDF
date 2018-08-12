@@ -22,7 +22,7 @@
 #include <string>
 
 #include "DfObject.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 /**
  * フォック行列計算および全エネルギー計算における3中心積分部分の計算を行うクラス
@@ -41,7 +41,7 @@ class DfThreeindexintegrals : public DfObject {
   void mainDIRECT_ROKS(int iteration);
 
  private:
-  TlDenseSymmetricMatrix_BLAS_Old getPMatrix(RUN_TYPE runType, int iteration);
+  TlDenseSymmetricMatrix_Lapack getPMatrix(RUN_TYPE runType, int iteration);
 };
 
 #endif  // DFTHREEINDEXINTEGRALS_H

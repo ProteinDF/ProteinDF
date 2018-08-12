@@ -24,9 +24,9 @@
 #include "TlCombineDensityMatrix.h"
 #include "TlMsgPack.h"
 #include "TlOrbitalInfo.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 /// Harrisの汎関数による初期値を作成する
 class DfInitialGuessHarris : public DfObject {
@@ -94,8 +94,10 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
     TlOrbitalInfo orbInfo_harrisDB(coord,
                                    this->pdfParam_harrisDB_["basis_set"]);
 
-    const TlDenseSymmetricMatrix_BLAS_Old P_DB(
+    TlDenseSymmetricMatrix_Lapack P_DB;
+    P_DB.loadSerializeData(
         this->pdfParam_harrisDB_["density_matrix"][atomSymbol]);
+
     combineDensMat.make(orbInfo_harrisDB, P_DB, orbInfo_low, &P_low);
   }
   if (this->debug_) {
@@ -108,11 +110,18 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
     DfOverlapType ovp(this->pPdfParam_);
     MatrixType S_tilde;
     ovp.getTransMat(orbInfo_low, orbInfo_high, &S_tilde);
-    // S_tilde.save("S_tilde.mat");
+    if ((*this->pPdfParam_)["debug/DfInitialGuessHarris/save_S_tilde"]
+            .getBoolean()) {
+      S_tilde.save("S_tilde.mat");
+    }
 
     SymmetricMatrixType S_inv;
     S_inv.load(this->getSpqMatrixPath());
-    S_inv.inverse();
+    S_inv = S_inv.inverse();
+    if ((*this->pPdfParam_)["debug/DfInitialGuessHarris/save_S_inv"]
+            .getBoolean()) {
+      S_inv.save("Sinv.mat");
+    }
 
     MatrixType omega = S_tilde * S_inv;
     MatrixType omega_t = omega;
@@ -122,6 +131,10 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
       omega.save("omega.mtx");
     }
     P_high = omega_t * P_low * omega;
+  }
+  if ((*this->pPdfParam_)["debug/DfInitialGuessHarris/save_P_high"]
+          .getBoolean()) {
+    P_high.save("P_high.mat");
   }
 
   // normalize

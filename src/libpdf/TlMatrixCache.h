@@ -162,7 +162,8 @@ template <typename MatrixType>
 bool TlMatrixCache::set(const std::string& path, const MatrixType& matrix,
                         bool needSave) {
   bool answer = false;
-  const std::size_t bufSize = matrix.getMemSize();
+  // const std::size_t bufSize = matrix.getMemSize();
+  const std::size_t bufSize = matrix.getNumOfRows() * matrix.getNumOfCols() * sizeof(double);
   this->cleanOut(bufSize);
 
   ++(this->stats_[path].setTotal);

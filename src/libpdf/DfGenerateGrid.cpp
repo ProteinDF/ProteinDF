@@ -27,7 +27,6 @@
 #include "TlPrdctbl.h"
 #include "TlTime.h"
 #include "TlUtils.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
 
 #define SQ2 1.414213562373095049
 #define SQ1_2 0.707106781186547524
@@ -209,7 +208,7 @@ int DfGenerateGrid::dfGrdMain() {
   this->logger("start");
 
   // this->log_.info("calc grid origin");
-  // const TlDenseGeneralMatrix_BLAS_old O = this->getOMatrix();
+  // const TlDenseGeneralMatrix_Lapack O = this->getOMatrix();
 
   this->logger("generateGrid");
   this->generateGrid(this->O_);
@@ -681,7 +680,7 @@ void DfGenerateGrid::setCellPara() {
   }
 }
 
-void DfGenerateGrid::generateGrid(const TlDenseGeneralMatrix_BLAS_old& O) {
+void DfGenerateGrid::generateGrid(const TlDenseGeneralMatrix_Lapack& O) {
   std::size_t numOfGrids = 0;
   const int endAtom = this->m_nNumOfAtoms;
   for (int atom = 0; atom < endAtom; ++atom) {
@@ -712,7 +711,7 @@ void DfGenerateGrid::generateGrid(const TlDenseGeneralMatrix_BLAS_old& O) {
   this->saveGridMatrix(0, this->grdMat_);
 }
 
-void DfGenerateGrid::generateGrid(const TlDenseGeneralMatrix_BLAS_old& O,
+void DfGenerateGrid::generateGrid(const TlDenseGeneralMatrix_Lapack& O,
                                   const int iatom, std::vector<double>* pCoordX,
                                   std::vector<double>* pCoordY,
                                   std::vector<double>* pCoordZ,
@@ -868,7 +867,7 @@ void DfGenerateGrid::generateGrid(const TlDenseGeneralMatrix_BLAS_old& O,
   *pWeight = weightvec;
 }
 
-void DfGenerateGrid::generateGrid_SG1(const TlDenseGeneralMatrix_BLAS_old& O,
+void DfGenerateGrid::generateGrid_SG1(const TlDenseGeneralMatrix_Lapack& O,
                                       const int iAtom,
                                       std::vector<double>* pCoordX,
                                       std::vector<double>* pCoordY,
@@ -1013,7 +1012,7 @@ void DfGenerateGrid::generateGrid_SG1(const TlDenseGeneralMatrix_BLAS_old& O,
 // Get atom core coordinates
 void DfGenerateGrid::points2(const int nOgrid, const double r0,
                              const TlPosition& core, const double weight,
-                             const TlDenseGeneralMatrix_BLAS_old& O,
+                             const TlDenseGeneralMatrix_Lapack& O,
                              std::vector<TlPosition>& Ogrid,
                              std::vector<double>& w) {
   double bm[4];
@@ -1488,19 +1487,19 @@ void DfGenerateGrid::points2(const int nOgrid, const double r0,
 
   // Scale and Shift
   for (int i = 0; i < nOgrid; ++i) {
-    TlVector_BLAS v(3);
-    v[0] = Ogrid[i][0];
-    v[1] = Ogrid[i][1];
-    v[2] = Ogrid[i][2];
+    TlDenseVector_Lapack v(3);
+    v.set(0, Ogrid[i][0]);
+    v.set(1, Ogrid[i][1]);
+    v.set(2, Ogrid[i][2]);
 
     // double n1 = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
     v = O * v;
     // double n2 = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
     // assert(std::fabs(n1 - n2) < 1.0E-10);
 
-    Ogrid[i][0] = v[0];
-    Ogrid[i][1] = v[1];
-    Ogrid[i][2] = v[2];
+    Ogrid[i][0] = v.get(0);
+    Ogrid[i][1] = v.get(1);
+    Ogrid[i][2] = v.get(2);
 
     Ogrid[i] *= r0;
     Ogrid[i] += core;
@@ -1627,7 +1626,7 @@ int DfGenerateGrid::getNumOfPrunedAnglarPoints_SG1(
 void DfGenerateGrid::getSphericalGrids(const int numOfGrids, const double r,
                                        const double radial_weight,
                                        const TlPosition& center,
-                                       const TlDenseGeneralMatrix_BLAS_old& O,
+                                       const TlDenseGeneralMatrix_Lapack& O,
                                        std::vector<TlPosition>* pGrids,
                                        std::vector<double>* pWeights) {
   this->lebGrd_.getGrids(numOfGrids, pGrids, pWeights);
@@ -1648,7 +1647,7 @@ void DfGenerateGrid::getSphericalGrids(const int numOfGrids, const double r,
 //
 // ref) B. G. Johnson, P. M. W. Gill, J. A. Pople, Chem. Phys. Lett., 220, 377,
 // (1994).
-TlDenseGeneralMatrix_BLAS_old DfGenerateGrid::getOMatrix() {
+TlDenseGeneralMatrix_Lapack DfGenerateGrid::getOMatrix() {
   const int numOfAtoms = this->flGeometry_.getNumOfAtoms();
 
   // calc T-matrix
@@ -1666,14 +1665,14 @@ TlDenseGeneralMatrix_BLAS_old DfGenerateGrid::getOMatrix() {
     sum_z += z;
   }
   sum_zr /= sum_z;
-  TlVector_BLAS T(3);
-  T[0] = sum_zr[0];
-  T[1] = sum_zr[1];
-  T[2] = sum_zr[2];
+  TlDenseVector_Lapack T(3);
+  T.set(0, sum_zr[0]);
+  T.set(1, sum_zr[1]);
+  T.set(2, sum_zr[2]);
 
   // build M
-  TlDenseSymmetricMatrix_BLAS_Old M(3);
-  TlDenseSymmetricMatrix_BLAS_Old I(3);
+  TlDenseSymmetricMatrix_Lapack M(3);
+  TlDenseSymmetricMatrix_Lapack I(3);
   I.set(0, 0, 1.0);
   I.set(1, 1, 1.0);
   I.set(2, 2, 1.0);
@@ -1686,21 +1685,21 @@ TlDenseGeneralMatrix_BLAS_old DfGenerateGrid::getOMatrix() {
 
     const double z = this->flGeometry_.getCharge(atom);
     const TlPosition p = this->flGeometry_.getCoordinate(atom);
-    TlVector_BLAS R(3);
-    R[0] = p[0];
-    R[1] = p[1];
-    R[2] = p[2];
+    TlDenseVector_Lapack R(3);
+    R.set(0, p[0]);
+    R.set(1, p[1]);
+    R.set(2, p[2]);
 
-    const TlVector_BLAS RT = R - T;
+    const TlDenseVector_Lapack RT = R - T;
     const double RT2 = RT.norm2();
 
-    TlDenseGeneralMatrix_BLAS_old mRT(3, 1);
+    TlDenseGeneralMatrix_Lapack mRT(3, 1);
     mRT.set(0, 0, RT.get(0));
     mRT.set(1, 0, RT.get(1));
     mRT.set(2, 0, RT.get(2));
-    TlDenseGeneralMatrix_BLAS_old mRTt = mRT;
+    TlDenseGeneralMatrix_Lapack mRTt = mRT;
     mRTt.transposeInPlace();
-    const TlDenseSymmetricMatrix_BLAS_Old RTRT = mRT * mRTt;
+    const TlDenseSymmetricMatrix_Lapack RTRT = mRT * mRTt;
     assert(RTRT.getNumOfRows() == 3);
     assert(RTRT.getNumOfCols() == 3);
 
@@ -1708,9 +1707,9 @@ TlDenseGeneralMatrix_BLAS_old DfGenerateGrid::getOMatrix() {
   }
 
   // diagonal
-  TlDenseGeneralMatrix_BLAS_old O;
-  TlVector_BLAS lambda;
-  M.diagonal(&lambda, &O);
+  TlDenseGeneralMatrix_Lapack O;
+  TlDenseVector_Lapack lambda;
+  M.eig(&lambda, &O);
 
   // T.save("T.vct");
   // M.save("M.mat");
@@ -2160,10 +2159,9 @@ void DfGenerateGrid::getGrids_sub(const int atomIndex, const int gridType,
 
 // B.G.John, et.al., J. Chem. Phys., 98, 5612 (1993).
 // eq. B7
-TlVector_BLAS DfGenerateGrid::JGP_nablaB_omegaA(const int atomIndexA,
-                                                const int atomIndexB,
-                                                const TlPosition& gridpoint) {
-  TlVector_BLAS nablaB_omegaA(3);
+TlDenseVector_Lapack DfGenerateGrid::JGP_nablaB_omegaA(
+    const int atomIndexA, const int atomIndexB, const TlPosition& gridpoint) {
+  TlDenseVector_Lapack nablaB_omegaA(3);
   if (atomIndexA != atomIndexB) {
     const int numOfAtoms = this->m_nNumOfAtoms;
     double PA = 0.0;
@@ -2177,12 +2175,12 @@ TlVector_BLAS DfGenerateGrid::JGP_nablaB_omegaA(const int atomIndexA,
     }
     const double invZ = 1.0 / Z;
 
-    const TlVector_BLAS nablaB_PA =
+    const TlDenseVector_Lapack nablaB_PA =
         this->JGP_nablaB_PA(atomIndexA, atomIndexB, gridpoint);
 
-    TlVector_BLAS nablaB_Z(3);
+    TlDenseVector_Lapack nablaB_Z(3);
     for (int i = 0; i < numOfAtoms; ++i) {
-      TlVector_BLAS nablaB_Pi(3);
+      TlDenseVector_Lapack nablaB_Pi(3);
       if (i == atomIndexB) {
         nablaB_Pi = this->JGP_nablaA_PA(atomIndexB, gridpoint);
       } else {
@@ -2199,16 +2197,16 @@ TlVector_BLAS DfGenerateGrid::JGP_nablaB_omegaA(const int atomIndexA,
 
 // B.G.John, et.al., J. Chem. Phys., 98, 5612 (1993).
 // eq. B8
-TlVector_BLAS DfGenerateGrid::JGP_nablaA_PA(const int atomIndexA,
-                                            const TlPosition& gridpoint) {
-  TlVector_BLAS nablaA_PA(3);
+TlDenseVector_Lapack DfGenerateGrid::JGP_nablaA_PA(
+    const int atomIndexA, const TlPosition& gridpoint) {
+  TlDenseVector_Lapack nablaA_PA(3);
   const double PA = this->Ps_uij(atomIndexA, gridpoint);
 
   if (PA > 1.0E-10) {
     const int numOfAtoms = this->m_nNumOfAtoms;
     for (int atomIndexB = 0; atomIndexB < numOfAtoms; ++atomIndexB) {
       if (atomIndexB != atomIndexA) {
-        const TlVector_BLAS nablaA_myuAB =
+        const TlDenseVector_Lapack nablaA_myuAB =
             this->JGP_nablaA_myuAB(atomIndexA, atomIndexB, gridpoint);
 
         const double rr_A = this->coord_[atomIndexA].distanceFrom(gridpoint);
@@ -2230,15 +2228,14 @@ TlVector_BLAS DfGenerateGrid::JGP_nablaA_PA(const int atomIndexA,
 
 // B.G.John, et.al., J. Chem. Phys., 98, 5612 (1993).
 // eq. B8
-TlVector_BLAS DfGenerateGrid::JGP_nablaB_PA(const int atomIndexA,
-                                            const int atomIndexB,
-                                            const TlPosition& gridpoint) {
+TlDenseVector_Lapack DfGenerateGrid::JGP_nablaB_PA(
+    const int atomIndexA, const int atomIndexB, const TlPosition& gridpoint) {
   assert(atomIndexA != atomIndexB);
-  TlVector_BLAS nablaB_PA(3);
+  TlDenseVector_Lapack nablaB_PA(3);
 
   const double PA = this->Ps_uij(atomIndexA, gridpoint);
   if (PA > 1.0E-10) {
-    const TlVector_BLAS nablaB_myuBA =
+    const TlDenseVector_Lapack nablaB_myuBA =
         this->JGP_nablaA_myuAB(atomIndexB, atomIndexA, gridpoint);
 
     const double rr_A = this->coord_[atomIndexA].distanceFrom(gridpoint);
@@ -2271,9 +2268,8 @@ double DfGenerateGrid::JGP_t(const double myu) {
   return answer;
 }
 
-TlVector_BLAS DfGenerateGrid::JGP_nablaA_myuAB(const int atomIndexA,
-                                               const int atomIndexB,
-                                               const TlPosition& gridpoint) {
+TlDenseVector_Lapack DfGenerateGrid::JGP_nablaA_myuAB(
+    const int atomIndexA, const int atomIndexB, const TlPosition& gridpoint) {
   const double inv_R_AB = this->invDistanceMatrix_.get(atomIndexA, atomIndexB);
 
   const TlPosition v_rA = this->coord_[atomIndexA] - gridpoint;
@@ -2285,9 +2281,9 @@ TlVector_BLAS DfGenerateGrid::JGP_nablaA_myuAB(const int atomIndexA,
   u_AB.unit();
 
   TlPosition nablaA_myuAB = inv_R_AB * (u_A - ((rA - rB) * inv_R_AB) * u_AB);
-  TlVector_BLAS answer(3);
+  TlDenseVector_Lapack answer(3);
   for (int i = 0; i < 3; ++i) {
-    answer[i] = nablaA_myuAB[i];
+    answer.set(i, nablaA_myuAB[i]);
   }
 
   return answer;

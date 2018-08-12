@@ -26,7 +26,6 @@
 #include "DfXMatrix_Parallel.h"
 #include "Fl_Geometry.h"
 #include "TlCommunicate.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
 
 DfIntegrals_Parallel::DfIntegrals_Parallel(TlSerializeData* pParam)
     : DfIntegrals(pParam) {
@@ -75,7 +74,7 @@ DfGenerateGrid* DfIntegrals_Parallel::getDfGenerateGridObject() {
   return pDfGenerateGrid;
 }
 
-void saveInvSquareVMatrix(const TlDenseSymmetricMatrix_BLAS_Old& v) {
+void saveInvSquareVMatrix(const TlDenseSymmetricMatrix_Lapack& v) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
   if (rComm.isMaster()) {
@@ -125,8 +124,8 @@ void DfIntegrals_Parallel::createHpqMatrix_LAPACK() {
   //   this->logger(" H_pq is build up on memory.\n");
   //   TlMatrix::useMemManager(false);
   // }
-  TlDenseSymmetricMatrix_BLAS_Old Hpq(this->m_nNumOfAOs);
-  TlDenseSymmetricMatrix_BLAS_Old Hpq2(this->m_nNumOfAOs);
+  TlDenseSymmetricMatrix_Lapack Hpq(this->m_nNumOfAOs);
+  TlDenseSymmetricMatrix_Lapack Hpq2(this->m_nNumOfAOs);
 
   DfHpqX_Parallel dfHpq(this->pPdfParam_);
   dfHpq.getHpq(&Hpq, &Hpq2);
@@ -146,8 +145,8 @@ void DfIntegrals_Parallel::createHpqMatrix_LAPACK() {
 }
 
 void DfIntegrals_Parallel::createHpqMatrix_ScaLAPACK() {
-  TlDenseSymmetricMatrix_blacs Hpq(this->m_nNumOfAOs);
-  TlDenseSymmetricMatrix_blacs Hpq2(this->m_nNumOfAOs);
+  TlDenseSymmetricMatrix_Scalapack Hpq(this->m_nNumOfAOs);
+  TlDenseSymmetricMatrix_Scalapack Hpq2(this->m_nNumOfAOs);
 
   this->logger(" Hpq build using distribute matrix.\n");
   DfHpqX_Parallel dfHpq(this->pPdfParam_);
@@ -197,7 +196,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK() {
     //   this->logger(" S_(p q) is build on memory.\n");
     // }
 
-    TlDenseSymmetricMatrix_BLAS_Old Spq(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_Lapack Spq(this->m_nNumOfAOs);
     dfOverlapX.getSpq(&Spq);
     // if (this->isUseNewEngine_ == true) {
     //     this->logger(" use new engine.\n");
@@ -234,7 +233,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK() {
         //   TlMatrix::useMemManager(false);
         // }
 
-        TlDenseSymmetricMatrix_BLAS_Old Sgd(this->numOfAuxXC_);
+        TlDenseSymmetricMatrix_Lapack Sgd(this->numOfAuxXC_);
         dfOverlapX.getSgd(&Sgd);
 
         if (rComm.isMaster() == true) {
@@ -266,7 +265,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK() {
       //   TlMatrix::useMemManager(false);
       // }
 
-      TlDenseSymmetricMatrix_BLAS_Old Sab2(this->m_nNumOfAux);
+      TlDenseSymmetricMatrix_Lapack Sab2(this->m_nNumOfAux);
       dfOverlapX.getSab(&Sab2);
       // if (this->isUseNewEngine_ == true) {
       //     this->logger(" use new engine.\n");
@@ -300,7 +299,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK() {
       //   TlMatrix::useMemManager(false);
       // }
 
-      TlVector_BLAS Na(this->m_nNumOfAux);
+      TlDenseVector_Lapack Na(this->m_nNumOfAux);
       dfOverlapX.getNalpha(&Na);
       this->saveNalpha(Na);
 
@@ -324,7 +323,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK() {
     this->outputStartTitle("Spq");
 
     this->logger(" S_(p q) is build using distribute matrix.\n");
-    TlDenseSymmetricMatrix_blacs Spq(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_Scalapack Spq(this->m_nNumOfAOs);
     dfOverlapX.getSpqD(&Spq);
     // if (this->isUseNewEngine_ == true) {
     //     this->logger(" use new engine.\n");
@@ -347,7 +346,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK() {
       if (this->m_bIsXCFitting == true) {
         this->outputStartTitle("Sgd");
 
-        TlDenseSymmetricMatrix_blacs Sgd(this->numOfAuxXC_);
+        TlDenseSymmetricMatrix_Scalapack Sgd(this->numOfAuxXC_);
         dfOverlapX.getSgd(&Sgd);
         this->saveSgdMatrix(Sgd);
 
@@ -366,7 +365,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK() {
       this->outputStartTitle("Sab2");
 
       this->logger(" S_(alpha beta) is build using on distribute matrix.\n");
-      TlDenseSymmetricMatrix_blacs Sab2(this->m_nNumOfAux);
+      TlDenseSymmetricMatrix_Scalapack Sab2(this->m_nNumOfAux);
       dfOverlapX.getSabD(&Sab2);
       // if (this->isUseNewEngine_ == true) {
       //     this->logger(" use new engine.\n");
@@ -396,7 +395,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK() {
       //   TlMatrix::useMemManager(false);
       // }
 
-      TlVector_BLAS Na(this->m_nNumOfAux);
+      TlDenseVector_Lapack Na(this->m_nNumOfAux);
       dfOverlapX.getNalpha(&Na);
       this->saveNalpha(Na);
 
@@ -438,7 +437,7 @@ void DfIntegrals_Parallel::createERIMatrix_LAPACK() {
       //   TlMatrix::useMemManager(false);
       // }
 
-      TlDenseSymmetricMatrix_BLAS_Old Sab(this->m_nNumOfAux);
+      TlDenseSymmetricMatrix_Lapack Sab(this->m_nNumOfAux);
 
       DfEriX_Parallel dfEri(this->pPdfParam_);
       dfEri.getJab(&Sab);
@@ -474,7 +473,7 @@ void DfIntegrals_Parallel::createERIMatrix_ScaLAPACK() {
       this->outputStartTitle("Sab");
 
       DfEriX_Parallel dfEri(this->pPdfParam_);
-      TlDenseSymmetricMatrix_blacs Jab(this->m_nNumOfAux);
+      TlDenseSymmetricMatrix_Scalapack Jab(this->m_nNumOfAux);
       dfEri.getJab(&Jab);
       this->saveSabMatrix(Jab);
 

@@ -26,9 +26,10 @@
 #include <string>
 #include <vector>
 #include "TlFile.h"
-#include "tl_dense_general_matrix_blas_old.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_general_matrix_object.h"
+#include "tl_dense_vector_lapack.h"
 #include "tl_matrix_object.h"
-#include "tl_dense_vector_blas.h"
 
 // #define CACHE_GROUP_BIT (20) //  1048576 (2^20)個のローカルインデックス
 // (=8MB)
@@ -109,15 +110,17 @@ class TlDenseMatrix_IO_object : public TlMatrixObject {
   /// 指定した行の要素から構成されるベクトルを返す
   ///
   /// @param[in] nRow 指定する行
-  virtual TlVector_BLAS getRowVector(index_type row) const;
+  virtual TlDenseVector_Lapack getRowVector(index_type row) const;
 
   /// 指定した列の要素から構成されるベクトルを返す
   ///
   /// @param[in] nCol 指定する列
-  virtual TlVector_BLAS getColumnVector(index_type col) const;
+  virtual TlDenseVector_Lapack getColumnVector(index_type col) const;
 
-  virtual void setRowVector(const index_type row, const TlVector_BLAS& v);
-  virtual void setColVector(const index_type col, const TlVector_BLAS& v);
+  virtual void setRowVector(const index_type row,
+                            const TlDenseVector_Lapack& v);
+  virtual void setColVector(const index_type col,
+                            const TlDenseVector_Lapack& v);
 
   /// ブロック行列を返す
   ///
@@ -126,7 +129,7 @@ class TlDenseMatrix_IO_object : public TlMatrixObject {
   /// @param[in] row_distance 取得する行数
   /// @param[in] col_distance 取得する列数
   /// @return row_distance × col_distance 次元のブロック行列
-  virtual TlDenseGeneralMatrix_BLAS_old getBlockMatrix(
+  virtual TlDenseGeneralMatrix_Lapack getBlockMatrix(
       index_type row, index_type col, index_type rowDistance,
       index_type colDistance) const;
 
@@ -135,8 +138,9 @@ class TlDenseMatrix_IO_object : public TlMatrixObject {
   /// @param[in] row 始点となる行
   /// @param[in] col 始点となる列
   /// @param[in] matrix 行列要素
-  virtual void setBlockMatrix(index_type row, index_type col,
-                              const TlDenseGeneralMatrix_BLAS_old& matrix);
+  virtual void block(const TlMatrixObject::index_type row,
+                     const TlMatrixObject::index_type col,
+                     const TlDenseGeneralMatrixObject& matrix);
 
  protected:
   void createNewFile();

@@ -33,8 +33,8 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderInfo(
     headerSize =
         TlMatrixUtils::getHeaderInfo(fs, pMatrixType, pNumOfRows, pNumOfCols);
   } else {
-    std::cerr << TlUtils::format("could not open file. @%s(%d)", __FILE__,
-                                 __LINE__)
+    std::cerr << TlUtils::format("could not open file. %s @%s,%d",
+                                 filepath.c_str(), __FILE__, __LINE__)
               << std::endl;
   }
 
@@ -114,24 +114,51 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ1(
   // char case:
   {
     char type = 0;
-    headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, char>(
+    headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, char, int>(
         s, &type, &rows, &cols);
+    // std::cout << TlUtils::format("%s: %d (%d, %d)", "ci", type, rows, cols)
+    //           << std::endl;
+
+    if (headerSize == 0) {
+      headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, char, long>(
+          s, &type, &rows, &cols);
+      // std::cout << TlUtils::format("%s: %d (%d, %d)", "cl", type, rows, cols)
+      //           << std::endl;
+    }
     matrixType = static_cast<TlMatrixObject::MatrixType>(type);
   }
 
   // int case:
   if (headerSize == 0) {
     int type = 0;
-    headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, int>(
+    headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, int, int>(
         s, &type, &rows, &cols);
+    // std::cout << TlUtils::format("%s: %d (%d, %d)", "ii", type, rows, cols)
+    //           << std::endl;
+
+    if (headerSize == 0) {
+      headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, int, long>(
+          s, &type, &rows, &cols);
+      // std::cout << TlUtils::format("%s: %d (%d, %d)", "il", type, rows, cols)
+      //           << std::endl;
+    }
     matrixType = static_cast<TlMatrixObject::MatrixType>(type);
   }
 
   // long case:
   if (headerSize == 0) {
     long type = 0;
-    headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, long>(
+    headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, long, int>(
         s, &type, &rows, &cols);
+    // std::cout << TlUtils::format("%s: %d (%d, %d)", "li", type, rows, cols)
+    //           << std::endl;
+
+    if (headerSize == 0) {
+      headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, long, long>(
+          s, &type, &rows, &cols);
+      // std::cout << TlUtils::format("%s: %d (%d, %d)", "ll", type, rows, cols)
+      //           << std::endl;
+    }
     matrixType = static_cast<TlMatrixObject::MatrixType>(type);
   }
 
@@ -150,14 +177,14 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ1(
   return headerSize;
 }
 
-template <typename StreamType, typename MatrixType>
+template <typename StreamType, typename MatrixType, typename IndexType>
 TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ2(
     StreamType& s, MatrixType* pMatrixType,
     TlMatrixObject::index_type* pNumOfRows,
     TlMatrixObject::index_type* pNumOfCols) {
   MatrixType matrixType = 0;
-  TlMatrixObject::index_type rows = 0;
-  TlMatrixObject::index_type cols = 0;
+  IndexType rows = 0;
+  IndexType cols = 0;
 
   // get file size
   FileSize fileSize = 0;
@@ -168,11 +195,10 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ2(
 
   s.seekg(0, std::ios_base::beg);
   s.read((char*)&(matrixType), sizeof(MatrixType));
-  s.read((char*)&(rows), sizeof(TlMatrixObject::index_type));
-  s.read((char*)&(cols), sizeof(TlMatrixObject::index_type));
+  s.read((char*)&(rows), sizeof(IndexType));
+  s.read((char*)&(cols), sizeof(IndexType));
 
-  const FileSize headerSize =
-      sizeof(MatrixType) + sizeof(TlMatrixObject::index_type) * 2;
+  const FileSize headerSize = sizeof(MatrixType) + sizeof(IndexType) * 2;
   const FileSize estimatedFileSize =
       headerSize +
       TlMatrixUtils::estimateFileSize(

@@ -24,7 +24,8 @@
 #include "TlLogging.h"
 #include "scalapack.h"
 #include "tl_dense_general_matrix_blacs.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_vector_lapack.h"
+#include "tl_scalapack_context.h"
 
 int TlDistributedVector::systemBlockSize_ = 64;
 const std::size_t TlDistributedVector::FILE_BUFFER_SIZE =
@@ -58,7 +59,7 @@ TlDistributedVector::TlDistributedVector(
   std::memcpy(&(this->data_[0]), &(rhs[0]), copySize);
 }
 
-TlDistributedVector::TlDistributedVector(const TlVector_BLAS& rhs)
+TlDistributedVector::TlDistributedVector(const TlDenseVector_Lapack& rhs)
     : m_nContext(0),
       m_nRows(rhs.getSize()),
       m_nCols(1),
@@ -170,7 +171,7 @@ TlDistributedVector& TlDistributedVector::operator=(
   return *this;
 }
 
-TlDistributedVector& TlDistributedVector::operator=(const TlVector_BLAS& rhs) {
+TlDistributedVector& TlDistributedVector::operator=(const TlDenseVector_Lapack& rhs) {
   this->m_nRows = rhs.getSize();
   this->m_nCols = 1;
   this->initialize();

@@ -1,6 +1,8 @@
 #include "tl_dense_general_matrix_object.h"
 #include <fstream>
 #include <iostream>
+#include <cassert>
+#include "TlUtils.h"
 #include "tl_matrix_utils.h"
 
 #ifdef HAVE_HDF5
@@ -50,13 +52,92 @@ void TlDenseGeneralMatrixObject::add(const TlMatrixObject::index_type row,
   this->pImpl_->add(row, col, value);
 }
 
+void TlDenseGeneralMatrixObject::block(TlMatrixObject::index_type row,
+                                       TlMatrixObject::index_type col,
+                                       TlMatrixObject::index_type rowDistance,
+                                       TlMatrixObject::index_type colDistance,
+                                       TlDenseGeneralMatrixObject* pOut) const {
+  assert((0 <= row) && (row < this->getNumOfRows()));
+  assert((0 <= col) && (col < this->getNumOfCols()));
+  assert(0 < rowDistance);
+  assert(0 < colDistance);
+  assert(0 <= (row + rowDistance) &&
+         (row + rowDistance) <= this->getNumOfRows());
+  assert(0 <= (col + colDistance) &&
+         (col + colDistance) <= this->getNumOfCols());
+
+  pOut->resize(rowDistance, colDistance);
+#pragma omp parallel for
+  for (TlMatrixObject::index_type dr = 0; dr < rowDistance; ++dr) {
+    const TlMatrixObject::index_type r = row + dr;
+    for (TlMatrixObject::index_type dc = 0; dc < colDistance; ++dc) {
+      const TlMatrixObject::index_type c = col + dc;
+
+      pOut->set(dr, dc, this->get(r, c));
+    }
+  }
+}
+
+void TlDenseGeneralMatrixObject::block(const TlMatrixObject::index_type row,
+                                       const TlMatrixObject::index_type col,
+                                       const TlDenseGeneralMatrixObject& ref) {
+  const TlMatrixObject::index_type rowDistance = ref.getNumOfRows();
+  const TlMatrixObject::index_type colDistance = ref.getNumOfCols();
+
+  if (!((0 <= row && row < this->getNumOfRows()) &&
+        (0 <= col && col < this->getNumOfCols()) &&
+        (0 < (row + rowDistance) &&
+         (row + rowDistance) <= this->getNumOfRows()) &&
+        (0 < (col + colDistance) &&
+         (col + colDistance) <= this->getNumOfCols()))) {
+    this->log_.critical(TlUtils::format(
+        "setBlockMatrix() start(%d, %d) mat(%d, %d) -> (%d, %d)", row, col,
+        ref.getNumOfRows(), ref.getNumOfCols(), this->getNumOfRows(),
+        this->getNumOfCols()));
+  }
+  assert(0 <= row && row < this->getNumOfRows());
+  assert(0 <= col && col < this->getNumOfCols());
+  assert(0 < (row + rowDistance) &&
+         (row + rowDistance) <= this->getNumOfRows());
+  assert(0 < (col + colDistance) &&
+         (col + colDistance) <= this->getNumOfCols());
+
+#pragma omp parallel for
+  for (TlMatrixObject::index_type dr = 0; dr < rowDistance; ++dr) {
+    const TlMatrixObject::index_type r = row + dr;
+    for (TlMatrixObject::index_type dc = 0; dc < colDistance; ++dc) {
+      const TlMatrixObject::index_type c = col + dc;
+
+      this->set(r, c, ref.get(dr, dc));
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Operations
 // ---------------------------------------------------------------------------
+std::vector<double> TlDenseGeneralMatrixObject::diagonals() const {
+  return this->pImpl_->diagonals();
+}
+
 double TlDenseGeneralMatrixObject::sum() const { return this->pImpl_->sum(); }
 
 double TlDenseGeneralMatrixObject::trace() const {
   return this->pImpl_->trace();
+}
+
+double TlDenseGeneralMatrixObject::getRMS() const {
+  return this->pImpl_->getRMS();
+}
+
+double TlDenseGeneralMatrixObject::getMaxAbsoluteElement(
+    TlMatrixObject::index_type* outRow,
+    TlMatrixObject::index_type* outCol) const {
+  return this->pImpl_->getMaxAbsoluteElement(outRow, outCol);
+}
+
+void TlDenseGeneralMatrixObject::transposeInPlace() {
+  this->pImpl_->transposeInPlace();
 }
 
 // ---------------------------------------------------------------------------
@@ -102,20 +183,24 @@ bool TlDenseGeneralMatrixObject::load(const std::string& filePath) {
         } break;
 
         default:
-          this->log_.critical(TlUtils::format("not supported format: @%s.%d",
-                                              __FILE__, __LINE__));
+          this->log_.critical(TlUtils::format(
+              "not supported format: %s(%d) @%s.%d", filePath.c_str(),
+              int(matrixType), __FILE__, __LINE__));
+          throw;
           break;
       }
     } else {
       this->log_.critical(
           TlUtils::format("cannnot open matrix file: %s @(%s:%d)",
                           filePath.c_str(), __FILE__, __LINE__));
+      throw;
     }
 
     fs.close();
   } else {
     this->log_.critical(TlUtils::format("illegal matrix format: %s @(%s:%d)",
                                         filePath.c_str(), __FILE__, __LINE__));
+    throw;
   }
 
   return answer;
@@ -151,6 +236,39 @@ bool TlDenseGeneralMatrixObject::save(const std::string& filePath) const {
   fs.close();
 
   return answer;
+}
+
+bool TlDenseGeneralMatrixObject::saveText(const std::string& filePath) const {
+  bool answer = true;
+
+  std::ofstream ofs;
+  ofs.open(filePath.c_str(), std::ofstream::out);
+
+  if (ofs.good()) {
+    this->saveText(ofs);
+  }
+
+  ofs.close();
+
+  return answer;
+}
+
+void TlDenseGeneralMatrixObject::saveText(std::ostream& os) const {
+  const TlMatrixObject::index_type rows = this->getNumOfRows();
+  const TlMatrixObject::index_type cols = this->getNumOfCols();
+
+  os << "TEXT\n";
+  os << rows << "\n";
+  os << cols << "\n";
+
+  // print out LCAO coefficent
+  for (TlMatrixObject::index_type i = 0; i < rows; ++i) {
+    for (TlMatrixObject::index_type j = 0; j < cols; ++j) {
+      os << TlUtils::format(" %10.6lf", this->get(i, j));
+    }
+    os << "\n";
+  }
+  os << "\n";
 }
 
 #ifdef HAVE_HDF5
@@ -228,6 +346,15 @@ bool TlDenseGeneralMatrixObject::saveHdf5(const std::string& filepath,
 }
 
 #endif  // HAVE_HDF5
+
+void TlDenseGeneralMatrixObject::dump(double* buf, const std::size_t size) const {
+    this->pImpl_->dump(buf, size);
+}
+
+void TlDenseGeneralMatrixObject::restore(const double* buf, const std::size_t size) {
+    this->pImpl_->restore(buf, size);
+}
+
 
 // -----------------------------------------------------------------------------
 std::ostream& operator<<(std::ostream& stream,

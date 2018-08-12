@@ -20,7 +20,6 @@
 #define DFCONVERGE_H
 
 #include "DfObject.h"
-#include "tl_dense_vector_blas.h"
 
 class DfConverge : public DfObject {
  protected:

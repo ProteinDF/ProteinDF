@@ -1,9 +1,12 @@
 #include "tl_dense_general_matrix_lapack.h"
-#include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_impl_lapack.h"
-#include "tl_dense_vector_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_dense_vector_impl_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
+// ---------------------------------------------------------------------------
+// constructor & destructor
+// ---------------------------------------------------------------------------
 TlDenseGeneralMatrix_Lapack::TlDenseGeneralMatrix_Lapack(
     const TlMatrixObject::index_type row,
     const TlMatrixObject::index_type col) {
@@ -33,6 +36,15 @@ TlDenseGeneralMatrix_Lapack::~TlDenseGeneralMatrix_Lapack() {
 }
 
 // ---------------------------------------------------------------------------
+// properties
+// ---------------------------------------------------------------------------
+TlMatrixObject::size_type TlDenseGeneralMatrix_Lapack::getNumOfElements()
+    const {
+  return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)
+      ->getNumOfElements();
+}
+
+// ---------------------------------------------------------------------------
 // operators
 // ---------------------------------------------------------------------------
 TlDenseGeneralMatrix_Lapack& TlDenseGeneralMatrix_Lapack::operator=(
@@ -40,6 +52,8 @@ TlDenseGeneralMatrix_Lapack& TlDenseGeneralMatrix_Lapack::operator=(
   delete this->pImpl_;
   this->pImpl_ = new TlDenseGeneralMatrix_ImplLapack(
       *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(rhs.pImpl_)));
+
+  return *this;
 }
 
 const TlDenseGeneralMatrix_Lapack TlDenseGeneralMatrix_Lapack::operator+(
@@ -57,6 +71,13 @@ const TlDenseGeneralMatrix_Lapack TlDenseGeneralMatrix_Lapack::operator-(
 }
 
 const TlDenseGeneralMatrix_Lapack TlDenseGeneralMatrix_Lapack::operator*(
+    const double coef) const {
+  TlDenseGeneralMatrix_Lapack answer = *this;
+  answer *= coef;
+  return answer;
+}
+
+const TlDenseGeneralMatrix_Lapack TlDenseGeneralMatrix_Lapack::operator*(
     const TlDenseGeneralMatrix_Lapack& rhs) const {
   TlDenseGeneralMatrix_Lapack answer = *this;
   answer *= rhs;
@@ -67,51 +88,54 @@ TlDenseGeneralMatrix_Lapack& TlDenseGeneralMatrix_Lapack::operator+=(
     const TlDenseGeneralMatrix_Lapack& rhs) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)) +=
       *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(rhs.pImpl_));
+
+  return *this;
 }
 
 TlDenseGeneralMatrix_Lapack& TlDenseGeneralMatrix_Lapack::operator-=(
     const TlDenseGeneralMatrix_Lapack& rhs) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)) -=
       *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(rhs.pImpl_));
+
+  return *this;
 }
 
 TlDenseGeneralMatrix_Lapack& TlDenseGeneralMatrix_Lapack::operator*=(
     const double coef) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)) *= coef;
+
+  return *this;
 }
 
 TlDenseGeneralMatrix_Lapack& TlDenseGeneralMatrix_Lapack::operator/=(
     const double coef) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)) /= coef;
+
+  return *this;
 }
 
 TlDenseGeneralMatrix_Lapack& TlDenseGeneralMatrix_Lapack::operator*=(
     const TlDenseGeneralMatrix_Lapack& rhs) {
   *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)) *=
       *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(rhs.pImpl_));
+
+  return *this;
 }
 
 // ---------------------------------------------------------------------------
 // operations
 // ---------------------------------------------------------------------------
-double TlDenseGeneralMatrix_Lapack::sum() const {
-  return this->pImpl_->sum();
-}
+double TlDenseGeneralMatrix_Lapack::sum() const { return this->pImpl_->sum(); }
 
 double TlDenseGeneralMatrix_Lapack::getRMS() const {
   return this->pImpl_->getRMS();
 }
 
-double TlDenseGeneralMatrix_Lapack::getMaxAbsoluteElement(
-    TlMatrixObject::index_type* outRow,
-    TlMatrixObject::index_type* outCol) const {
-  return this->pImpl_->getMaxAbsoluteElement(outRow, outCol);
-}
-
 const TlDenseGeneralMatrix_Lapack& TlDenseGeneralMatrix_Lapack::dotInPlace(
     const TlDenseGeneralMatrix_Lapack& rhs) {
   dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)
-      ->dotInPlace(*(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(rhs.pImpl_)));
+      ->dotInPlace(
+          *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(rhs.pImpl_)));
 
   return *this;
 }
@@ -126,6 +150,36 @@ TlDenseGeneralMatrix_Lapack TlDenseGeneralMatrix_Lapack::inverse() const {
   return TlDenseGeneralMatrix_Lapack(
       dynamic_cast<const TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)
           ->inverse());
+}
+
+TlDenseGeneralMatrix_Lapack
+TlDenseGeneralMatrix_Lapack::getLeastSquaresSolution(
+    const TlDenseGeneralMatrix_Lapack& B) const {
+  return TlDenseGeneralMatrix_Lapack(
+      dynamic_cast<const TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)
+          ->getLeastSquaresSolution(*(
+              dynamic_cast<const TlDenseGeneralMatrix_ImplLapack*>(B.pImpl_))));
+}
+
+double* TlDenseGeneralMatrix_Lapack::data() {
+  return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->data();
+}
+
+const double* TlDenseGeneralMatrix_Lapack::data() const {
+  return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->data();
+}
+
+// ---------------------------------------------------------------------------
+// I/O
+// ---------------------------------------------------------------------------
+void TlDenseGeneralMatrix_Lapack::dump(TlDenseVector_Lapack* v) const {
+  dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)
+      ->dump(dynamic_cast<TlDenseVector_ImplLapack*>(v->pImpl_));
+}
+
+void TlDenseGeneralMatrix_Lapack::restore(const TlDenseVector_Lapack& v) {
+  dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)
+      ->restore(*(dynamic_cast<TlDenseVector_ImplLapack*>(v.pImpl_)));
 }
 
 // ---------------------------------------------------------------------------

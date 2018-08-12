@@ -100,12 +100,12 @@ class TlSparseSymmetricMatrix : public TlSparseMatrix {
   /// 指定した行の要素から構成されるベクトルを返す
   ///
   /// @param[in] nRow 指定する行
-  virtual TlVector_BLAS getRowVector(int nRow) const;
+  virtual TlDenseVector_Lapack getRowVector(int nRow) const;
 
   /// 指定した列の要素から構成されるベクトルを返す
   ///
   /// @param[in] nCol 指定する列
-  virtual TlVector_BLAS getColVector(int nCol) const;
+  virtual TlDenseVector_Lapack getColVector(int nCol) const;
 
   /// Hadamard product
   // const TlSparseSymmetricMatrix& dot(const TlSparseSymmetricMatrix& X);

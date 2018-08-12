@@ -25,8 +25,8 @@
 #include "Fl_Fragment.h"
 #include "Fl_Tbl_Fragment.h"
 #include "TlUtils.h"
-#include "tl_dense_general_matrix_blas_old.h"
-#include "tl_dense_vector_blas.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 DfQclo::DfQclo(TlSerializeData* pPdfParam, int num_iter, bool bExecDiis)
     : DfObject(pPdfParam),
@@ -149,11 +149,11 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration) {
   }
 
   // combine Cqclo matrix of each matrix
-  TlDenseGeneralMatrix_BLAS_old A(this->m_nNumOfAOs, number_dimension_mo);
+  TlDenseGeneralMatrix_Lapack A(this->m_nNumOfAOs, number_dimension_mo);
   for (int frag = 0; frag < this->number_fragment; frag++) {
     const std::string fname = "fl_Mtr_C.matrix.frag" + TlUtils::xtos(frag) +
                               "." + runtype + TlUtils::xtos(iteration);
-    TlDenseGeneralMatrix_BLAS_old B;
+    TlDenseGeneralMatrix_Lapack B;
     B.load(fname);
 
     if (B.getNumOfRows() != this->m_nNumOfAOs ||
@@ -195,7 +195,7 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration) {
   A.save("fl_Mtr_C.matrix." + runtype + TlUtils::xtos(iteration));
 
   // read eigenvalue of each fragment
-  std::vector<TlVector_BLAS> eigval_frag(this->number_fragment);
+  std::vector<TlDenseVector_Lapack> eigval_frag(this->number_fragment);
   {
     for (int frag = 0; frag < this->number_fragment; frag++) {
       eigval_frag[frag].load("fl_Work/fl_Vct_Eigval.frag" +
@@ -207,12 +207,12 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration) {
   }
 
   // merge eigenvalue
-  TlVector_BLAS eigval(number_dimension_mo);
+  TlDenseVector_Lapack eigval(number_dimension_mo);
   {
     int mo = 0;
     for (int frag = 0; frag < this->number_fragment; frag++) {
       for (int qclo = 0; qclo < number_dimension_qclo[frag]; qclo++) {
-        eigval[mo] = eigval_frag[frag][qclo];
+        eigval.set(mo, eigval_frag[frag].get(qclo));
         mo++;
       }
     }
@@ -221,8 +221,14 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration) {
   // sort eigenvalue, eigen vector
   for (int i = 0; i < number_dimension_mo - 1; i++) {
     for (int j = 0; j < number_dimension_mo - 1; j++) {
-      if (eigval[j] > eigval[j + 1]) {
-        std::swap(eigval[j], eigval[j + 1]);
+      if (eigval.get(j) > eigval.get(j + 1)) {
+        // swap
+        // std::swap(eigval[j], eigval[j + 1]);
+        {
+          const double tmp = eigval.get(j);
+          eigval.set(j, eigval.get(j + 1));
+          eigval.set(j + 1, tmp);
+        }
         for (int k = 0; k < this->m_nNumOfAOs; ++k) {
           // swap
           double tmp = A.get(k, j);
@@ -235,7 +241,7 @@ void DfQclo::combineCqclo(const std::string& runtype, int iteration) {
 
   // for debug
   for (int i = 0; i < number_dimension_mo; i++) {
-    this->log_.debug(TlUtils::format("%d th Eigval = %f", i, eigval[i]));
+    this->log_.debug(TlUtils::format("%d th Eigval = %f", i, eigval.get(i)));
   }
 
   // write merged eigenvalue

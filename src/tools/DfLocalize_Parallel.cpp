@@ -58,7 +58,7 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
       abort();
     }
   }
-  rComm.broadcast(this->S_);
+  rComm.broadcast(&(this->S_));
 
   enum { REQUEST_JOB = 0, SEND_RESULTS = 1 };
 
@@ -87,8 +87,8 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
       int numOfFinishedProc = 0;
       std::size_t orb_i = 0;
       std::size_t orb_j = 0;
-      TlVector_BLAS vec_i(numOfAOs);
-      TlVector_BLAS vec_j(numOfAOs);
+      TlDenseVector_Lapack vec_i(numOfAOs);
+      TlDenseVector_Lapack vec_j(numOfAOs);
       do {
         rComm.receiveDataFromAnySource(jobRequest, &src);
         // std::cerr << TlUtils::format("[0] recv %d from=%d", jobRequest, src)
@@ -118,8 +118,10 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
                     const std::size_t orb_j = jobItem.orb_j;
                     rComm.sendData(orb_i, src);
                     rComm.sendData(orb_j, src);
-                    TlVector_BLAS vec_i = this->C_.getColVector(orb_i);
-                    TlVector_BLAS vec_j = this->C_.getColVector(orb_j);
+                    TlDenseVector_Lapack vec_i =
+                        this->C_.getColVector<TlDenseVector_Lapack>(orb_i);
+                    TlDenseVector_Lapack vec_j =
+                        this->C_.getColVector<TlDenseVector_Lapack>(orb_j);
                     rComm.sendData(vec_i, src);
                     rComm.sendData(vec_j, src);
                   }
@@ -149,8 +151,8 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
 
               // 行列の格納
               for (std::size_t row = 0; row < numOfAOs; ++row) {
-                this->C_.set(row, orb_i, vec_i[row]);
-                this->C_.set(row, orb_j, vec_j[row]);
+                this->C_.set(row, orb_i, vec_i.get(row));
+                this->C_.set(row, orb_j, vec_j.get(row));
               }
 
               // 行列ロックの解除
@@ -178,9 +180,9 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
 
       std::size_t orb_i = 0;
       std::size_t orb_j = 0;
-      TlVector_BLAS vec_i(numOfAOs);
-      TlVector_BLAS vec_j(numOfAOs);
-      TlDenseGeneralMatrix_BLAS_old rot(2, 2);
+      TlDenseVector_Lapack vec_i(numOfAOs);
+      TlDenseVector_Lapack vec_j(numOfAOs);
+      TlDenseGeneralMatrix_Lapack rot(2, 2);
       while (hasJob != FINISHED_JOB) {
         if (hasJob == ASSIGNED_JOB) {
           const std::size_t numOfAOs = this->m_nNumOfAOs;
@@ -196,8 +198,8 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
           assert(vec_j.getSize() ==
                  static_cast<TlVectorAbstract::size_type>(numOfAOs));
           for (std::size_t row = 0; row < numOfAOs; ++row) {
-            this->C_.set(row, orb_i, vec_i[row]);
-            this->C_.set(row, orb_j, vec_j[row]);
+            this->C_.set(row, orb_i, vec_i.get(row));
+            this->C_.set(row, orb_j, vec_j.get(row));
           }
 
           double A_ij = 0.0;
@@ -211,8 +213,8 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
             this->rotateCmatrix(orb_i, orb_j, rot);
           }
 
-          vec_i = this->C_.getColVector(orb_i);
-          vec_j = this->C_.getColVector(orb_j);
+          vec_i = this->C_.getColVector<TlDenseVector_Lapack>(orb_i);
+          vec_j = this->C_.getColVector<TlDenseVector_Lapack>(orb_j);
 
           request = SEND_RESULTS;
           rComm.sendData(request, root);

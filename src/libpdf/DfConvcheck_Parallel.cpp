@@ -19,8 +19,8 @@
 #include "DfConvcheck_Parallel.h"
 #include <iostream>
 #include "TlCommunicate.h"
-#include "tl_dense_symmetric_matrix_blacs.h"
-#include "tl_dense_symmetric_matrix_blas_old.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 DfConvcheck_Parallel::DfConvcheck_Parallel(TlSerializeData* pPdfParam,
                                            int num_iter)
@@ -48,18 +48,18 @@ void DfConvcheck_Parallel::check() {
 #ifdef HAVE_SCALAPACK
   if (this->m_bUsingSCALAPACK) {
     this->log_.info("convgergence check (parallel) using ScaLAPACK");
-    DfConvcheck::check<TlDenseSymmetricMatrix_blacs>(this->m_nIteration);
+    DfConvcheck::check<TlDenseSymmetricMatrix_Scalapack>(this->m_nIteration);
   } else {
     this->log_.info("convgergence check (parallel) using LAPACK");
     if (rComm.isMaster()) {
-      DfConvcheck::check<TlDenseSymmetricMatrix_BLAS_Old>(this->m_nIteration);
+      DfConvcheck::check<TlDenseSymmetricMatrix_Lapack>(this->m_nIteration);
     }
   }
 #else
   {
     this->log_.info("convgergence check (parallel) using LAPACK");
     if (rComm.isMaster()) {
-      DfConvcheck::check<TlDenseSymmetricMatrix_BLAS_Old>(this->m_nIteration);
+      DfConvcheck::check<TlDenseSymmetricMatrix_Lapack>(this->m_nIteration);
     }
   }
 #endif  // HAVE_SCALAPACK

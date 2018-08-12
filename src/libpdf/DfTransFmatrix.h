@@ -38,6 +38,8 @@ class DfTransFmatrix : public DfObject {
   virtual void DfTrsFmatQclo(const std::string& fragname, int norbcut);
 
  protected:
+  void calcF2Fprime(const RUN_TYPE runType);
+
   template <typename MatrixType, typename SymmetricMatrixType>
   void main(RUN_TYPE runType, const std::string& fragname = "",
             bool bPdfQcloMode = false);

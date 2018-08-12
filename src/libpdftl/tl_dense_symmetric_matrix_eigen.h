@@ -60,6 +60,7 @@ class TlDenseSymmetricMatrix_Eigen : public TlDenseSymmetricMatrixObject {
   // others
   // ---------------------------------------------------------------------------
   friend class TlDenseGeneralMatrix_Eigen;
+  friend class TlDenseSymmetricMatrix_ViennaCL;
 };
 
 #endif  // TL_DENSE_SYMMETRIC_MATRIX_EIGEN_H
