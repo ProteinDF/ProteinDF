@@ -84,7 +84,7 @@ void DfInitialGuess_Parallel::createInitialGuessUsingLCAO_onLAPACK(
 
       // 密度行列の作成
       DfDmatrix dfDmatrix(&tmpParam);
-      dfDmatrix.DfDmatrixMain();  // RKS only?
+      dfDmatrix.run();  // RKS only?
     }
   }
 }

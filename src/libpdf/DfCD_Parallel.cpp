@@ -20,6 +20,7 @@
 #endif  // _OPENMP
 
 #include "CnError.h"
+#include "CnFile_parallel.h"
 #include "DfCD_Parallel.h"
 #include "DfEriEngine.h"
 #include "DfOverlapEngine.h"
@@ -36,14 +37,19 @@
 #define TRANS_MEM_SIZE (1 * 1024 * 1024 * 1024)  // 1GB
 // #define CD_DEBUG
 
-DfCD_Parallel::DfCD_Parallel(TlSerializeData* pPdfParam) : DfCD(pPdfParam) {
+DfCD_Parallel::DfCD_Parallel(TlSerializeData* pPdfParam) : DfCD(pPdfParam, false) {
+  this->file_ = new CnFile_parallel();
+
   this->isDebugSaveL_ = false;
   if (!(*this->pPdfParam_)["debug/saveL"].getStr().empty()) {
     this->isDebugSaveL_ = (*this->pPdfParam_)["debug/saveL"].getBoolean();
   }
 }
 
-DfCD_Parallel::~DfCD_Parallel() {}
+DfCD_Parallel::~DfCD_Parallel() {
+  delete this->file_;
+  this->file_ = NULL;
+}
 
 void DfCD_Parallel::calcCholeskyVectorsForJK() {
   this->log_.info("calc CholeskyVectors (parallel)");
@@ -988,7 +994,7 @@ void DfCD_Parallel::getK_S_woCD_mmap_DC(const RUN_TYPE runType,
   *pK *= -1.0;
 }
 
-void DfCD_Parallel::getK_S_fast(const RUN_TYPE runType,
+void DfCD_Parallel::getK_byLk(const RUN_TYPE runType,
                                 TlDenseSymmetricMatrix_Lapack* pK) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
   this->log_.info("calc K(fast) by CD method (parallel).");
@@ -1095,9 +1101,11 @@ void DfCD_Parallel::expandJMatrixD(const TlDenseVector_Lapack& vJ,
   }
 }
 
-void DfCD_Parallel::getK_D(const RUN_TYPE runType,
-                           TlDenseSymmetricMatrix_Scalapack* pK) {
-  this->getK_S_woCD_D(runType, pK);
+void DfCD_Parallel::getK_D(const RUN_TYPE runType) {
+  TlDenseSymmetricMatrix_Scalapack K(this->m_nNumOfAOs);
+  this->getK_S_woCD_D(runType, &K);
+
+  this->file_->saveMatrix(DfObject::getHFxMatrixPath(runType, this->m_nIteration), K);
 }
 
 void DfCD_Parallel::getK_S_woCD_D(const RUN_TYPE runType,

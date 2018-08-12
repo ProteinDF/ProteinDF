@@ -3,6 +3,7 @@
 #endif  // HAVE_CONFIG_H
 
 #include "gtest/gtest.h"
+#include "tl_dense_vector_eigen.h"
 #include "tl_dense_vector_viennacl.h"
 #include "vector_common.h"
 
@@ -21,15 +22,15 @@ TEST(TlDenseVector_ViennaCL, constructer) {
 TEST(TlDenseVector_ViennaCL, copyConstructer) {
   // a = {  0, 1, 2 }
   TlDenseVector_ViennaCL a(3);
-  a[0] = 0.0;
-  a[1] = 1.0;
-  a[2] = 2.0;
+  a.set(0, 0.0);
+  a.set(1, 1.0);
+  a.set(2, 2.0);
 
   TlDenseVector_ViennaCL b = a;
   EXPECT_EQ(TlDenseVector_ViennaCL::size_type(3), b.getSize());
-  EXPECT_DOUBLE_EQ(0.0, b[0]);
-  EXPECT_DOUBLE_EQ(1.0, b[1]);
-  EXPECT_DOUBLE_EQ(2.0, b[2]);
+  EXPECT_DOUBLE_EQ(0.0, b.get(0));
+  EXPECT_DOUBLE_EQ(1.0, b.get(1));
+  EXPECT_DOUBLE_EQ(2.0, b.get(2));
 }
 
 // TEST(TlDenseVector_ViennaCL, operatorCopy) {
@@ -168,6 +169,18 @@ TEST(TlDenseVector_ViennaCL, copyConstructer) {
 //   EXPECT_DOUBLE_EQ(3.0, a[3]);
 // }
 //
+TEST(TlDenseVector_ViennaCL, reverse) {
+  const int dim = 100;
+  TlDenseVector_Eigen ref = getVector<TlDenseVector_Eigen>(dim);
+  TlDenseVector_ViennaCL a = ref;
+  a.reverse();
+
+  EXPECT_EQ(dim, a.getSize());
+  for (int i = 0; i < dim; ++i) {
+    EXPECT_DOUBLE_EQ(ref.get(dim - i - 1), a.get(i));
+  }
+}
+
 // TEST(TlDenseVector_ViennaCL, save) {
 //   TlDenseVector_ViennaCL a = getVectorA<TlDenseVector_ViennaCL>();
 //   a.save(vct_path);

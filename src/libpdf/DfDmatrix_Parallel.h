@@ -27,9 +27,11 @@ class DfDmatrix_Parallel : public DfDmatrix {
   DfDmatrix_Parallel(TlSerializeData* pPdfParam);
   virtual ~DfDmatrix_Parallel();
 
+ public:
+  virtual void run();
+
  protected:
-  virtual void main(DfObject::RUN_TYPE runType);
-  void main_SCALAPACK(DfObject::RUN_TYPE runType);
+  void run_Scalapack();
 
   virtual void checkOccupation(const TlDenseVector_Lapack& prevOcc,
                                const TlDenseVector_Lapack& currOcc);

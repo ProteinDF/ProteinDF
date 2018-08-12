@@ -22,6 +22,10 @@ TlDenseSymmetricMatrix_Lapack::TlDenseSymmetricMatrix_Lapack(
       *(dynamic_cast<const TlDenseGeneralMatrix_ImplLapack*>(rhs.pImpl_)));
 }
 
+void TlDenseSymmetricMatrix_Lapack::vtr2mat(const std::vector<double>& vtr){
+    dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)->vtr2mat(vtr);
+}
+
 TlDenseSymmetricMatrix_Lapack::~TlDenseSymmetricMatrix_Lapack() {
   delete this->pImpl_;
   this->pImpl_ = NULL;

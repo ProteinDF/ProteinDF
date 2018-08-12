@@ -4,6 +4,8 @@
 #include "tl_dense_general_matrix_impl_eigen.h"
 
 class TlDenseVector_ImplEigen;
+class TlSparseSymmetricMatrix_ImplEigen;
+class TlDenseSymmetricMatrix_ImplViennaCL;
 
 class TlDenseSymmetricMatrix_ImplEigen : public TlDenseGeneralMatrix_ImplEigen {
   // ---------------------------------------------------------------------------
@@ -14,6 +16,12 @@ class TlDenseSymmetricMatrix_ImplEigen : public TlDenseGeneralMatrix_ImplEigen {
       const TlMatrixObject::index_type dim = 0);
   TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplEigen& rhs);
   TlDenseSymmetricMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplEigen& rhs);
+  TlDenseSymmetricMatrix_ImplEigen(const TlSparseSymmetricMatrix_ImplEigen& sm);
+
+#ifdef HAVE_VIENNACL
+TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplViennaCL& rhs);
+#endif // HAVE_VIENNACL
+
   virtual ~TlDenseSymmetricMatrix_ImplEigen();
 
   // ---------------------------------------------------------------------------
@@ -54,7 +62,28 @@ class TlDenseSymmetricMatrix_ImplEigen : public TlDenseGeneralMatrix_ImplEigen {
   // others
   // ---------------------------------------------------------------------------
   friend class TlDenseGeneralMatrix_ImplEigen;
+  friend class TlSparseSymmetricMatrix_ImplEigen;
   friend class TlDenseSymmetricMatrix_ImplViennaCL;
+
+  // DM(G) * DM(S)
+  friend TlDenseGeneralMatrix_ImplEigen operator*(
+      const TlDenseGeneralMatrix_ImplEigen& mat1,
+      const TlDenseSymmetricMatrix_ImplEigen& mat2);
+  // DM(S) * DM(G)
+  friend TlDenseGeneralMatrix_ImplEigen operator*(
+      const TlDenseSymmetricMatrix_ImplEigen& mat1,
+      const TlDenseGeneralMatrix_ImplEigen& mat2);
+
+  // DM(S) * DV
+  friend TlDenseVector_ImplEigen operator*(
+      const TlDenseSymmetricMatrix_ImplEigen& dms,
+      const TlDenseVector_ImplEigen& dv
+  );
+  // DV * DM(S)
+  friend TlDenseVector_ImplEigen operator*(
+      const TlDenseVector_ImplEigen& dv,
+      const TlDenseSymmetricMatrix_ImplEigen& dms
+  );
 
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // Eigen macro

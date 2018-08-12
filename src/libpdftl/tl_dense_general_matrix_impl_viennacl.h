@@ -3,33 +3,34 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif // HAVE_CONFIG_H
+#endif  // HAVE_CONFIG_H
 
 // IMPORTANT: Must be set prior to any ViennaCL includes if you want to use
 // ViennaCL algorithms on Eigen objects
 #define VIENNACL_WITH_EIGEN 1
 
 #include "tl_dense_matrix_impl_object.h"
-#include "viennacl/matrix.hpp"
+#include <viennacl/matrix.hpp>
 
-#ifdef HAVE_EIGEN3
+#ifdef HAVE_EIGEN
 #include <Eigen/Core>
-#endif // HAVE_EIGEN3
+#endif  // HAVE_EIGEN
 
 class TlDenseSymmetricMatrix_ImplViennaCL;
 class TlDenseVector_ImplViennaCL;
 class TlDenseGeneralMatrix_ImplEigen;
+class TlSparseGeneralMatrix_ImplViennaCL;
 
 class TlDenseGeneralMatrix_ImplViennaCL : public TlDenseMatrix_ImplObject {
  public:
   typedef viennacl::vector<double> VectorDataType;
   typedef viennacl::matrix<double> MatrixDataType;
 
-#ifdef HAVE_EIGEN3
+#ifdef HAVE_EIGEN
   typedef Eigen::MatrixXd EigenMatrixDataType;
   typedef Eigen::Map<MatrixDataType> EigenMapType;
   typedef Eigen::Map<const MatrixDataType> EigenMapTypeConst;
-#endif // HAVE_EIGEN3
+#endif  // HAVE_EIGEN
 
   // ---------------------------------------------------------------------------
   // constructor & destructor
@@ -42,7 +43,13 @@ class TlDenseGeneralMatrix_ImplViennaCL : public TlDenseMatrix_ImplObject {
       const TlDenseGeneralMatrix_ImplViennaCL& rhs);
   TlDenseGeneralMatrix_ImplViennaCL(
       const TlDenseSymmetricMatrix_ImplViennaCL& rhs);
+  TlDenseGeneralMatrix_ImplViennaCL(const TlSparseGeneralMatrix_ImplViennaCL& rhs);
+#ifdef HAVE_EIGEN
   TlDenseGeneralMatrix_ImplViennaCL(const TlDenseGeneralMatrix_ImplEigen& rhs);
+#endif  // HAVE_EIGEN
+
+    void vtr2mat(const std::vector<double>& vtr);
+
   virtual ~TlDenseGeneralMatrix_ImplViennaCL();
 
   // ---------------------------------------------------------------------------
@@ -96,6 +103,8 @@ class TlDenseGeneralMatrix_ImplViennaCL : public TlDenseMatrix_ImplObject {
   TlDenseGeneralMatrix_ImplViennaCL transpose() const;
   TlDenseGeneralMatrix_ImplViennaCL inverse() const;
 
+  TlDenseGeneralMatrix_ImplViennaCL& reverseColumns();
+
   // ---------------------------------------------------------------------------
   // protected
   // ---------------------------------------------------------------------------
@@ -110,13 +119,28 @@ class TlDenseGeneralMatrix_ImplViennaCL : public TlDenseMatrix_ImplObject {
   // others
   // ---------------------------------------------------------------------------
   friend class TlDenseSymmetricMatrix_ImplViennaCL;
+  friend class TlDenseGeneralMatrix_ImplEigen;
 
+  // DM(G) = DM(G) * DM(S)
+  friend TlDenseGeneralMatrix_ImplViennaCL operator*(
+      const TlDenseGeneralMatrix_ImplViennaCL& mat1,
+      const TlDenseSymmetricMatrix_ImplViennaCL& mat2);
+  // DM(G) = DM(S) * DM(G)
+  friend TlDenseGeneralMatrix_ImplViennaCL operator*(
+      const TlDenseSymmetricMatrix_ImplViennaCL& mat1,
+      const TlDenseGeneralMatrix_ImplViennaCL& mat2);
+  
+  // DV = DM(G) * DV
   friend TlDenseVector_ImplViennaCL operator*(
       const TlDenseGeneralMatrix_ImplViennaCL& mat,
       const TlDenseVector_ImplViennaCL& vec);
+  // DV = DV * DM(G)
   friend TlDenseVector_ImplViennaCL operator*(
       const TlDenseVector_ImplViennaCL& vec,
       const TlDenseGeneralMatrix_ImplViennaCL& mat);
 };
+
+// DM(G) = double * DM(G)
+TlDenseGeneralMatrix_ImplViennaCL operator*(const double coef, const TlDenseGeneralMatrix_ImplViennaCL& dm);
 
 #endif  // TL_DENSE_GENERAL_MATRIX_IMPL_VIENNACL_H

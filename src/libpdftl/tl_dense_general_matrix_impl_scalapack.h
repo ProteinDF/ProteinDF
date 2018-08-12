@@ -142,8 +142,8 @@ class TlDenseGeneralMatrix_ImplScalapack : public TlDenseMatrix_ImplObject {
   static void setUsingPartialIO(bool isUsePIO);
 
  public:
-  void dump(TlDenseVector_ImplScalapack* v) const;
-  void restore(const TlDenseVector_ImplScalapack& v);
+//   void dump(TlDenseVector_ImplScalapack* v) const;
+//   void restore(const TlDenseVector_ImplScalapack& v);
 
   // ---------------------------------------------------------------------------
   // protected

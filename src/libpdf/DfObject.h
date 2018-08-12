@@ -25,6 +25,7 @@
 
 #include <iostream>
 #include <string>
+#include <cassert>
 
 #include "TlLogging.h"
 #include "TlMatrixCache.h"
@@ -32,6 +33,21 @@
 #include "tl_matrix_object.h"
 #include "tl_vector_utils.h"
 #include "tl_dense_vector_lapack.h"
+
+#ifdef HAVE_EIGEN
+#include "tl_dense_general_matrix_eigen.h"
+#include "tl_dense_symmetric_matrix_eigen.h"
+#endif // HAVE_EIGEN
+
+#ifdef HAVE_LAPACK
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#endif // HAVE_LAPACK
+
+#ifdef HAVE_VIENNACL
+#include "tl_dense_general_matrix_viennacl.h"
+#include "tl_dense_symmetric_matrix_viennacl.h"
+#endif // HAVE_VIENNACL
 
 /// Dfクラスの親クラス
 class DfObject {
@@ -122,6 +138,7 @@ class DfObject {
   std::string getGridMatrixPath(const int iteration) const;
 
   std::string getDiffDensityMatrixPath(RUN_TYPE runType, int iteration) const;
+  std::string getSpinDensityMatrixPath(RUN_TYPE runType, int iteration) const;
   std::string getP1pqMatrixPath(int iteration);
   std::string getP2pqMatrixPath(int iteration);
   std::string getHFxMatrixPath(RUN_TYPE runType, int iteration);
@@ -236,6 +253,14 @@ class DfObject {
 
   template <class SymmetricMatrixType>
   SymmetricMatrixType getDiffDensityMatrix(const RUN_TYPE runType,
+                                           const int iteration);
+
+  template <class SymmetricMatrixType>
+  void saveSpinDensityMatrix(const RUN_TYPE runType, const int iteration,
+                             const SymmetricMatrixType& P);
+
+  template <class SymmetricMatrixType>
+  SymmetricMatrixType getSpinDensityMatrix(const RUN_TYPE runType,
                                            const int iteration);
 
   // GridFree S matrix -------------------------------------------------------
@@ -431,10 +456,20 @@ class DfObject {
   MatrixType getCloMatrix(RUN_TYPE runType, int itr);
 
   /// return occupation vector
-  virtual TlDenseVector_Lapack getOccVtr(const RUN_TYPE runType);
+  template <typename Vector>
+  Vector getOccVtr(const RUN_TYPE runType);
 
+  // --------------------------------------------------------------------------
+  // parameters
+  // --------------------------------------------------------------------------
  protected:
   virtual void setParam(const TlSerializeData& data);
+  void updateLinearAlgebraPackageParam(const std::string& keyword);
+
+  // --------------------------------------------------------------------------
+  // logger
+  // --------------------------------------------------------------------------
+protected:
 
   virtual void logger(const std::string& str) const;
   void loggerTime(const std::string& str) const;
@@ -865,6 +900,24 @@ SymmetricMatrixType DfObject::getDiffDensityMatrix(const RUN_TYPE runType,
   deltaP.load(path);
 
   return deltaP;
+}
+
+template <class SymmetricMatrixType>
+void DfObject::saveSpinDensityMatrix(const RUN_TYPE runType,
+                                     const int iteration,
+                                     const SymmetricMatrixType& P) {
+  const std::string path = this->getSpinDensityMatrixPath(runType, iteration);
+  P.save(path);
+}
+
+template <class SymmetricMatrixType>
+SymmetricMatrixType DfObject::getSpinDensityMatrix(const RUN_TYPE runType,
+                                                   const int iteration) {
+  SymmetricMatrixType P;
+  const std::string path = this->getSpinDensityMatrixPath(runType, iteration);
+  P.load(path);
+
+  return P;
 }
 
 template <class VectorType>
@@ -1419,6 +1472,17 @@ MatrixType DfObject::getCloMatrix(RUN_TYPE runType, int itr) {
   Clo.load(path);
 
   return Clo;
+}
+
+template <typename Vector>
+Vector DfObject::getOccVtr(const RUN_TYPE runType) {
+  const std::string fileName = this->getOccupationPath(runType);
+
+  Vector occ;
+  occ.load(fileName);
+  assert(occ.getSize() == this->m_nNumOfMOs);
+
+  return occ;
 }
 
 #endif  // DFOBJECT_H

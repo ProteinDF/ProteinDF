@@ -4,7 +4,9 @@
 #include "tl_dense_symmetric_matrix_object.h"
 
 class TlDenseGeneralMatrix_Eigen;
+class TlSparseSymmetricMatrix_Eigen;
 class TlDenseVector_Eigen;
+class TlDenseSymmetricMatrix_ViennaCL;
 
 class TlDenseSymmetricMatrix_Eigen : public TlDenseSymmetricMatrixObject {
   // ---------------------------------------------------------------------------
@@ -15,6 +17,12 @@ class TlDenseSymmetricMatrix_Eigen : public TlDenseSymmetricMatrixObject {
       const TlMatrixObject::index_type dim = 1);
   TlDenseSymmetricMatrix_Eigen(const TlDenseSymmetricMatrix_Eigen& rhs);
   TlDenseSymmetricMatrix_Eigen(const TlDenseGeneralMatrix_Eigen& rhs);
+  TlDenseSymmetricMatrix_Eigen(const TlSparseSymmetricMatrix_Eigen& sm);
+
+#ifdef HAVE_VIENNACL
+  TlDenseSymmetricMatrix_Eigen(const TlDenseSymmetricMatrix_ViennaCL& rhs);
+#endif  // HAVE_VIENNACL
+
   virtual ~TlDenseSymmetricMatrix_Eigen();
 
   // ---------------------------------------------------------------------------
@@ -60,7 +68,25 @@ class TlDenseSymmetricMatrix_Eigen : public TlDenseSymmetricMatrixObject {
   // others
   // ---------------------------------------------------------------------------
   friend class TlDenseGeneralMatrix_Eigen;
+  friend class TlSparseSymmetricMatrix_Eigen;
   friend class TlDenseSymmetricMatrix_ViennaCL;
+
+  // DM(G) * DM(S)
+  friend TlDenseGeneralMatrix_Eigen operator*(
+      const TlDenseGeneralMatrix_Eigen& mat1,
+      const TlDenseSymmetricMatrix_Eigen& mat2);
+  // DM(S) * DM(G)
+  friend TlDenseGeneralMatrix_Eigen operator*(
+      const TlDenseSymmetricMatrix_Eigen& mat1,
+      const TlDenseGeneralMatrix_Eigen& mat2);
+
+  // DM(S) * DV
+  friend TlDenseVector_Eigen operator*(const TlDenseSymmetricMatrix_Eigen& rhs1,
+                                       const TlDenseVector_Eigen& rhs2);
+  // DV * DM(S)
+  friend TlDenseVector_Eigen operator*(
+      const TlDenseVector_Eigen& rhs1,
+      const TlDenseSymmetricMatrix_Eigen& rhs2);
 };
 
 #endif  // TL_DENSE_SYMMETRIC_MATRIX_EIGEN_H

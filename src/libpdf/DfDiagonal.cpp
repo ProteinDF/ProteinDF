@@ -23,44 +23,45 @@
 #include "CnError.h"
 #include "DfDiagonal.h"
 #include "TlUtils.h"
-#include "tl_dense_general_matrix_lapack.h"
-#include "tl_dense_symmetric_matrix_lapack.h"
+#include "common.h"
 
-DfDiagonal::DfDiagonal(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {}
+DfDiagonal::DfDiagonal(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
+    this->updateLinearAlgebraPackageParam(
+      (*(this->pPdfParam_))["linear_algebra_package/diagonal"].getStr());
+}
 
 DfDiagonal::~DfDiagonal() {}
 
-void DfDiagonal::DfDiagMain() {
-  // output informations
-  switch (this->m_nMethodType) {
-    case METHOD_RKS:
-      this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-          RUN_RKS);
-      break;
+void DfDiagonal::run() {
+  switch (this->linearAlgebraPackage_) {
+    case LAP_LAPACK: {
+      this->log_.info("Linear Algebra Package: LAPACK");
+      this->run_impl<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack>();
+    } break;
 
-    case METHOD_UKS:
-      this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-          RUN_UKS_ALPHA);
-      this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-          RUN_UKS_BETA);
-      break;
+#ifdef HAVE_EIGEN
+    case LAP_EIGEN: {
+      this->log_.info("Linear Algebra Package: Eigen");
+      this->run_impl<TlDenseGeneralMatrix_Eigen, TlDenseSymmetricMatrix_Eigen, TlDenseVector_Eigen>();
+    } break;
+#endif // HAVE_EIGEN
 
-    case METHOD_ROKS:
-      this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-          RUN_ROKS);
-      break;
+#ifdef HAVE_VIENNACL
+    case LAP_VIENNACL: {
+      this->log_.info("Linear Algebra Package: ViennaCL");
+      this->run_impl<TlDenseGeneralMatrix_ViennaCL, TlDenseSymmetricMatrix_ViennaCL, TlDenseVector_ViennaCL>();
+    } break;
+#endif // HAVE_VIENNACL
 
     default:
-      CnErr.abort("DfDiagonal", "", "DfDiagMain",
-                  "the value of scftype is illegal");
-      break;
+      CnErr.abort(TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
   }
 }
 
 // for extended QCLO method
-void DfDiagonal::DfDiagQclo(DfObject::RUN_TYPE runType,
+void DfDiagonal::runQclo(DfObject::RUN_TYPE runType,
                             const std::string& fragname, int norbcut) {
   this->m_nNumOfMOs = norbcut;
-  this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
+  this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack>(
       runType, fragname, true);
 }

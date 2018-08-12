@@ -21,10 +21,10 @@ int main(int argc, char **argv) {
 
     TlViennaCL vcl;
     vcl.setupAllAvailableDevices();
-    vcl.showDevices();
+    std::cout << vcl.listDevices() << std::endl;
 
     vcl.switchDevice(deviceId);
-    vcl.showCurrentDevice();
+    std::cout << vcl.listCurrentDevice() << std::endl;
   }
 #endif  // HAVE_VIENNACL
 

@@ -50,6 +50,12 @@ TlDenseGeneralMatrix_arrays_ColOriented::
     : TlDenseMatrix_arrays_Object(rhs) {}
 
 TlDenseGeneralMatrix_arrays_ColOriented::
+    TlDenseGeneralMatrix_arrays_ColOriented(const std::string& path)
+    : TlDenseMatrix_arrays_Object() {
+  this->load(path);
+}
+
+TlDenseGeneralMatrix_arrays_ColOriented::
     ~TlDenseGeneralMatrix_arrays_ColOriented() {}
 
 void TlDenseGeneralMatrix_arrays_ColOriented::resize(const index_type row,
@@ -79,7 +85,7 @@ double TlDenseGeneralMatrix_arrays_ColOriented::get(
   return TlDenseMatrix_arrays_Object::get_from_vm(col, row);
 }
 
-TlDenseVector_Lapack TlDenseGeneralMatrix_arrays_ColOriented::getColVector(
+std::vector<double> TlDenseGeneralMatrix_arrays_ColOriented::getColVector(
     const index_type col) const {
   return TlDenseMatrix_arrays_Object::getVector(col);
 }

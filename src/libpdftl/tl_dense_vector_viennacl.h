@@ -1,10 +1,15 @@
 #ifndef TL_DENSE_VECTOR_VIENNACL_H
 #define TL_DENSE_VECTOR_VIENNACL_H
 
+#include <vector>
+
 #include "tl_dense_vector_object.h"
 
 class TlDenseGeneralMatrix_ViennaCL;
 class TlDenseSymmetricMatrix_ViennaCL;
+class TlDenseVector_Eigen;
+class TlSparseGeneralMatrix_ViennaCL;
+class TlSparseSymmetricMatrix_ViennaCL;
 
 class TlDenseVector_ViennaCL : public TlDenseVectorObject {
   // ---------------------------------------------------------------------------
@@ -14,6 +19,14 @@ class TlDenseVector_ViennaCL : public TlDenseVectorObject {
   explicit TlDenseVector_ViennaCL(
       const TlDenseVectorObject::index_type size = 0);
   TlDenseVector_ViennaCL(const TlDenseVector_ViennaCL& rhs);
+  TlDenseVector_ViennaCL(const std::vector<double>& rhs);
+
+#ifdef HAVE_EIGEN
+  TlDenseVector_ViennaCL(const TlDenseVector_Eigen& rhs);
+#endif // HAVE_EIGEN
+
+  operator std::vector<double>() const;
+
   virtual ~TlDenseVector_ViennaCL();
 
   // ---------------------------------------------------------------------------
@@ -31,6 +44,8 @@ class TlDenseVector_ViennaCL : public TlDenseVectorObject {
   // operations
   // ---------------------------------------------------------------------------
   TlDenseVector_ViennaCL& dotInPlace(const TlDenseVector_ViennaCL& rhs);
+
+  TlDenseVector_ViennaCL& reverse();
 
   // ---------------------------------------------------------------------------
   // others
@@ -52,6 +67,9 @@ class TlDenseVector_ViennaCL : public TlDenseVectorObject {
   friend TlDenseVector_ViennaCL operator*(
       const TlDenseVector_ViennaCL& rhs1,
       const TlDenseGeneralMatrix_ViennaCL& rhs2);
+
+  friend TlDenseVector_ViennaCL operator*(const TlSparseGeneralMatrix_ViennaCL& mat, const TlDenseVector_ViennaCL& vtr);
+  friend TlDenseVector_ViennaCL operator*(const TlSparseSymmetricMatrix_ViennaCL& mat, const TlDenseVector_ViennaCL& vtr);
 };
 
 #endif  // TL_DENSE_VECTOR_VIENNACL_H

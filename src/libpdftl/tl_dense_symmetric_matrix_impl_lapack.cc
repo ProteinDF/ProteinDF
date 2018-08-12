@@ -298,6 +298,12 @@ TlMatrixObject::size_type TlDenseSymmetricMatrix_ImplLapack::index(
   return index;
 }
 
+void TlDenseSymmetricMatrix_ImplLapack::vtr2mat(const std::vector<double>& vtr) {
+  assert(vtr.size() == this->getNumOfElements());
+  std::copy(vtr.begin(), vtr.end(), this->matrix_);
+}
+
+
 // ---------------------------------------------------------------------------
 // private
 // ---------------------------------------------------------------------------
@@ -305,6 +311,7 @@ TlMatrixObject::size_type TlDenseSymmetricMatrix_ImplLapack::index(
 // ---------------------------------------------------------------------------
 // others
 // ---------------------------------------------------------------------------
+// DM(G) = DM(S) * DM(G)
 TlDenseGeneralMatrix_ImplLapack operator*(
     const TlDenseSymmetricMatrix_ImplLapack& rhs1,
     const TlDenseGeneralMatrix_ImplLapack& rhs2) {
@@ -313,6 +320,7 @@ TlDenseGeneralMatrix_ImplLapack operator*(
   return gen_rhs1 * rhs2;
 }
 
+// DM(G) = DM(G) * DM(S)
 TlDenseGeneralMatrix_ImplLapack operator*(
     const TlDenseGeneralMatrix_ImplLapack& rhs1,
     const TlDenseSymmetricMatrix_ImplLapack& rhs2) {
@@ -321,6 +329,7 @@ TlDenseGeneralMatrix_ImplLapack operator*(
   return rhs1 * gen_rhs2;
 }
 
+// DV = DM(S) * DV
 TlDenseVector_ImplLapack operator*(const TlDenseSymmetricMatrix_ImplLapack& mat,
                                    const TlDenseVector_ImplLapack& vec) {
   TlLogging& logger = TlLogging::getInstance();

@@ -20,7 +20,8 @@ class TlMatrixUtils {
   static FileSize getHeaderInfo(const std::string& filePath,
                                 TlMatrixObject::MatrixType* pMatrixType = NULL,
                                 TlMatrixObject::index_type* pNumOfRows = NULL,
-                                TlMatrixObject::index_type* pNumOfCols = NULL);
+                                TlMatrixObject::index_type* pNumOfCols = NULL,
+                                std::size_t* pNumOfItems = NULL);
 
   /// ヘッダ情報を読み取る
   /// header情報を読み取れた場合はヘッダサイズを返す
@@ -29,7 +30,8 @@ class TlMatrixUtils {
   static FileSize getHeaderInfo(std::fstream& fs,
                                 TlMatrixObject::MatrixType* pMatrixType = NULL,
                                 TlMatrixObject::index_type* pNumOfRows = NULL,
-                                TlMatrixObject::index_type* pNumOfCols = NULL);
+                                TlMatrixObject::index_type* pNumOfCols = NULL,
+                                std::size_t* pNumOfItems = NULL);
 
  public:
   // static TlMatrixObject::size_type loadMatrix(
@@ -70,18 +72,21 @@ class TlMatrixUtils {
   static FileSize getHeaderSize_templ1(
       stream& s, TlMatrixObject::MatrixType* pMatrixType = NULL,
       TlMatrixObject::index_type* pNumOfRows = NULL,
-      TlMatrixObject::index_type* pNumOfCols = NULL);
+      TlMatrixObject::index_type* pNumOfCols = NULL,
+      std::size_t* pNumOfItems = NULL);
 
   /// header情報を読み取れた場合はヘッダサイズを返す
   /// 読み取れなかった場合は0を返す
     template <typename StreamType, typename MatrixType, typename IndexType>
   static FileSize getHeaderSize_templ2(StreamType& s, MatrixType* pMatrixType,
                                        TlMatrixObject::index_type* pNumOfRows,
-                                       TlMatrixObject::index_type* pNumOfCols);
+                                       TlMatrixObject::index_type* pNumOfCols,
+                                       std::size_t* pNumOfItems);
 
   static std::size_t estimateFileSize(TlMatrixObject::MatrixType matrixType,
                                       TlMatrixObject::index_type row,
-                                      TlMatrixObject::index_type col);
+                                      TlMatrixObject::index_type col,
+                                      std::size_t numOfItems);
 };
 
 template <class MatrixClass>

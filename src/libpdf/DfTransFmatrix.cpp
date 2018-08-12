@@ -19,36 +19,18 @@
 #include "DfTransFmatrix.h"
 #include "CnError.h"
 #include "TlUtils.h"
-#include "common_matrix.h"
 
 DfTransFmatrix::DfTransFmatrix(TlSerializeData* pPdfParam, bool bExecDiis)
     : DfObject(pPdfParam), m_bExecDiis(bExecDiis) {
-  {
-    const std::string linearAlgebraPackage = TlUtils::toUpper(
-        (*(this->pPdfParam_))["linear_algebra_package/trans_F"].getStr());
-#ifdef HAVE_EIGEN3
-    if (linearAlgebraPackage == "EIGEN") {
-      this->linearAlgebraPackage_ = DfObject::LAP_EIGEN;
-    }
-#endif  // HAVE_EIGEN3
-#ifdef HAVE_LAPACK
-    if (linearAlgebraPackage == "LAPACK") {
-      this->linearAlgebraPackage_ = DfObject::LAP_LAPACK;
-    }
-#endif  // HAVE_LAPACK
-#ifdef HAVE_VIENNACL
-    if (linearAlgebraPackage == "VIENNACL") {
-      this->linearAlgebraPackage_ = DfObject::LAP_VIENNACL;
-    }
-#endif  // HAVE_VIENNACL
-  }
+  this->updateLinearAlgebraPackageParam(
+      (*(this->pPdfParam_))["linear_algebra_package/trans_F"].getStr());
 }
 
 DfTransFmatrix::~DfTransFmatrix() {}
 
 void DfTransFmatrix::DfTrsFmatMain() {
   switch (this->m_nMethodType) {
-    case METHOD_RKS: 
+    case METHOD_RKS:
       this->calcF2Fprime(RUN_RKS);
       break;
 
@@ -77,13 +59,13 @@ void DfTransFmatrix::calcF2Fprime(const RUN_TYPE runType) {
       break;
 #endif  // HAVE_LAPACK
 
-#ifdef HAVE_EIGEN3
+#ifdef HAVE_EIGEN
     case LAP_EIGEN:
       this->log_.info("linear algebra package: Eigen3");
       this->main<TlDenseGeneralMatrix_Eigen, TlDenseSymmetricMatrix_Eigen>(
           runType);
       break;
-#endif  // HAVE_EIGEN3
+#endif  // HAVE_EIGEN
 
 #ifdef HAVE_VIENNACL
     case LAP_VIENNACL:
@@ -93,13 +75,13 @@ void DfTransFmatrix::calcF2Fprime(const RUN_TYPE runType) {
       break;
 #endif  // HAVE_VIENNACL
 
-    default:
-    {
-      this->log_.critical(TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
-      this->log_.critical(TlUtils::format("linear algebra package: %d", this->linearAlgebraPackage_));
+    default: {
+      this->log_.critical(
+          TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
+      this->log_.critical(TlUtils::format("linear algebra package: %d",
+                                          this->linearAlgebraPackage_));
       CnErr.abort();
-    }
-      break;
+    } break;
   }
 }
 

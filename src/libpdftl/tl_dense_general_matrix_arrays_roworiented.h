@@ -55,7 +55,7 @@ class TlDenseGeneralMatrix_arrays_RowOriented
   virtual void add(index_type row, index_type col, double value);
   virtual double get(index_type row, index_type col) const;
 
-  virtual TlDenseVector_Lapack getRowVector(const index_type row) const;
+  virtual std::vector<double> getRowVector(const index_type row) const;
   virtual void getRowVector(const index_type row, double* pBuf,
                             const index_type length) const;
 
