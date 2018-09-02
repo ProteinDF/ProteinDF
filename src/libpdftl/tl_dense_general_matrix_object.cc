@@ -184,21 +184,21 @@ bool TlDenseGeneralMatrixObject::load(const std::string& filePath) {
 
         default:
           this->log_.critical(TlUtils::format(
-              "not supported format: %s(%d) @%s.%d", filePath.c_str(),
+              "not supported format: %s(%d) @%s:%d", filePath.c_str(),
               int(matrixType), __FILE__, __LINE__));
           throw;
           break;
       }
     } else {
       this->log_.critical(
-          TlUtils::format("cannnot open matrix file: %s @(%s:%d)",
+          TlUtils::format("cannnot open matrix file: %s @%s:%d",
                           filePath.c_str(), __FILE__, __LINE__));
       throw;
     }
 
     fs.close();
   } else {
-    this->log_.critical(TlUtils::format("illegal matrix format: %s @(%s:%d)",
+    this->log_.critical(TlUtils::format("illegal matrix format: %s @%s:%d",
                                         filePath.c_str(), __FILE__, __LINE__));
     throw;
   }
@@ -230,7 +230,7 @@ bool TlDenseGeneralMatrixObject::save(const std::string& filePath) const {
     fs.flush();
     answer = true;
   } else {
-    this->log_.critical(TlUtils::format("cannot write matrix: %s @(%s:%d)",
+    this->log_.critical(TlUtils::format("cannot write matrix: %s @%s:%d",
                                         filePath.c_str(), __FILE__, __LINE__));
   }
   fs.close();

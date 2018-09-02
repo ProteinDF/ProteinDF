@@ -46,6 +46,7 @@ TlSparseGeneralMatrix_Eigen::TlSparseGeneralMatrix_Eigen(
 
 #ifdef HAVE_VIENNACL
 TlSparseGeneralMatrix_Eigen::TlSparseGeneralMatrix_Eigen(const TlSparseGeneralMatrix_ViennaCL& rhs) {
+    std::cout << "TlSparseGeneralMatrix_Eigen::TlSparseGeneralMatrix_Eigen(const TlSparseGeneralMatrix_ViennaCL& rhs)" << std::endl;
     this->pImpl_ = new TlSparseGeneralMatrix_ImplEigen(*(dynamic_cast<TlSparseGeneralMatrix_ImplViennaCL*>(rhs.pImpl_)));
 }
 #endif // HAVE_VIENNACL

@@ -3,12 +3,12 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif // HAVE_CONFIG_H
+#endif  // HAVE_CONFIG_H
 
 #ifdef HAVE_EIGEN
 #define VIENNACL_WITH_EIGEN 1
 #include <Eigen/Sparse>
-#endif // HAVE_EIGEN
+#endif  // HAVE_EIGEN
 
 #include <viennacl/compressed_matrix.hpp>
 #include "tl_sparse_matrix_impl_object.h"
@@ -26,9 +26,9 @@ class TlSparseGeneralMatrix_ImplEigen;
 class TlSparseGeneralMatrix_ImplViennaCL : public TlSparseMatrix_ImplObject {
  public:
   typedef viennacl::compressed_matrix<double> MatrixDataType;
-  #ifdef HAVE_EIGEN
+#ifdef HAVE_EIGEN
   typedef Eigen::SparseMatrix<double> EigenMatrixDataType;
-  #endif // HAVE_EIGEN
+#endif  // HAVE_EIGEN
 
   // ---------------------------------------------------------------------------
   // constructor & destructor
@@ -42,11 +42,13 @@ class TlSparseGeneralMatrix_ImplViennaCL : public TlSparseMatrix_ImplObject {
   TlSparseGeneralMatrix_ImplViennaCL(
       const TlSparseSymmetricMatrix_ImplViennaCL& rhs);
   TlSparseGeneralMatrix_ImplViennaCL(const MatrixDataType& rhs);
-  TlSparseGeneralMatrix_ImplViennaCL(const TlDenseGeneralMatrix_ImplViennaCL& rhs);
+  TlSparseGeneralMatrix_ImplViennaCL(
+      const TlDenseGeneralMatrix_ImplViennaCL& rhs);
 
-  #ifdef HAVE_EIGEN
-  TlSparseGeneralMatrix_ImplViennaCL(const TlSparseGeneralMatrix_ImplEigen& rhs);
-  #endif // HAVE_EIGEN
+#ifdef HAVE_EIGEN
+  TlSparseGeneralMatrix_ImplViennaCL(
+      const TlSparseGeneralMatrix_ImplEigen& rhs);
+#endif  // HAVE_EIGEN
 
   virtual ~TlSparseGeneralMatrix_ImplViennaCL();
 
@@ -86,8 +88,8 @@ class TlSparseGeneralMatrix_ImplViennaCL : public TlSparseMatrix_ImplObject {
   // ---------------------------------------------------------------------------
   // I/O
   // ---------------------------------------------------------------------------
-//   bool load(const std::string& path);
-//   bool save(const std::string& path) const;
+  //   bool load(const std::string& path);
+  //   bool save(const std::string& path) const;
 
   // ---------------------------------------------------------------------------
   // variables
@@ -107,13 +109,18 @@ class TlSparseGeneralMatrix_ImplViennaCL : public TlSparseMatrix_ImplObject {
   friend TlSparseGeneralMatrix_ImplEigen;
 
   // SM(G) = SM(G) * SM(G)
-  friend TlSparseGeneralMatrix_ImplViennaCL operator*(const TlSparseGeneralMatrix_ImplViennaCL& sm1, 
-  const TlSparseGeneralMatrix_ImplViennaCL& sm2);
+  friend TlSparseGeneralMatrix_ImplViennaCL operator*(
+      const TlSparseGeneralMatrix_ImplViennaCL& sm1,
+      const TlSparseGeneralMatrix_ImplViennaCL& sm2);
 
   // DV = SM(G) * DV
   friend TlDenseVector_ImplViennaCL operator*(
       const TlSparseGeneralMatrix_ImplViennaCL& mat,
       const TlDenseVector_ImplViennaCL& vtr);
+  // DV = DV * SM(G)
+//   friend TlDenseVector_ImplViennaCL operator*(
+//       const TlDenseVector_ImplViennaCL& vtr,
+//       const TlSparseGeneralMatrix_ImplViennaCL& mat);
 };
 
 #endif  // TL_SPARSE_GENERAL_MATRIX_IMPL_VIENNACL_H

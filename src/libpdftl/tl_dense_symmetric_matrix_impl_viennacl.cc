@@ -46,6 +46,7 @@ TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(const T
 #ifdef HAVE_EIGEN
 TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(
     const TlDenseSymmetricMatrix_ImplEigen& rhs) {
+  std::cout << "TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(const TlDenseSymmetricMatrix_ImplEigen& rhs)" << std::endl;
   viennacl::copy(rhs.matrix_, this->matrix_);
 }
 #endif  // HAVE_EIGEN

@@ -102,6 +102,7 @@ TlSparseGeneralMatrix_ViennaCL operator*(const TlSparseGeneralMatrix_ViennaCL& s
 
 TlDenseVector_ViennaCL operator*(const TlSparseGeneralMatrix_ViennaCL& mat,
                                  const TlDenseVector_ViennaCL& vtr) {
+  //std::cout << "operator*(VCL)" << std::endl;
   return TlDenseVector_ViennaCL(
       *(dynamic_cast<TlSparseGeneralMatrix_ImplViennaCL*>(mat.pImpl_)) *
       *(dynamic_cast<TlDenseVector_ImplViennaCL*>(vtr.pImpl_)));

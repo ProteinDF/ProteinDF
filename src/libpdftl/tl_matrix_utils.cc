@@ -34,7 +34,7 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderInfo(
     headerSize =
         TlMatrixUtils::getHeaderInfo(fs, pMatrixType, pNumOfRows, pNumOfCols, pNumOfItems);
   } else {
-    std::cerr << TlUtils::format("could not open file. %s @%s,%d",
+    std::cerr << TlUtils::format("cannot open matrix file: %s @%s:%d",
                                  filepath.c_str(), __FILE__, __LINE__)
               << std::endl;
   }

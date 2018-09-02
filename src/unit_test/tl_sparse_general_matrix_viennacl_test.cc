@@ -290,6 +290,7 @@ TEST(TlSparseGeneralMatrix_ViennaCL, multi_sparsemat_densevtr) {
   SM.set(1, 0, 2.0);
   SM.set(2, 0, 3.0);
   SM.set(3, 3, 4.0);
+  std::cout << SM << std::endl;
 
   TlDenseGeneralMatrix_ViennaCL DM(row1, col1);
   DM.set(0, 0, 1.0);
@@ -301,9 +302,12 @@ TEST(TlSparseGeneralMatrix_ViennaCL, multi_sparsemat_densevtr) {
   for (int i = 0; i < vlen; ++i) {
     x.set(i, i);
   }
+  //std::cout << x << std::endl;
 
-  TlDenseVector_ViennaCL y1 = SM * x;
   TlDenseVector_ViennaCL y2 = DM * x;
+  //std::cout << y2 << std::endl;
+  TlDenseVector_ViennaCL y1 = SM * x;
+  //std::cout << y1 << std::endl;
 
   EXPECT_EQ(y1.getSize(), row1);
   for (int i = 0; i < row1; ++i) {

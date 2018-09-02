@@ -26,9 +26,9 @@ class TlDenseVector_ImplViennaCL : public TlDenseVector_ImplObject {
   TlDenseVector_ImplViennaCL(TlDenseVectorObject::index_type dim = 0);
   TlDenseVector_ImplViennaCL(const TlDenseVector_ImplViennaCL& rhs);
   TlDenseVector_ImplViennaCL(const std::vector<double>& rhs);
-  #ifdef HAVE_EIGEN
+#ifdef HAVE_EIGEN
   TlDenseVector_ImplViennaCL(const TlDenseVector_ImplEigen& rhs);
-  #endif // HAVE_EIGEN
+#endif  // HAVE_EIGEN
 
   operator std::vector<double>() const;
 
@@ -101,10 +101,15 @@ class TlDenseVector_ImplViennaCL : public TlDenseVector_ImplObject {
       const TlDenseVector_ImplViennaCL& vec,
       const TlDenseGeneralMatrix_ImplViennaCL& mat);
 
-  // SM x V
+  // SM(G) x DV
   friend TlDenseVector_ImplViennaCL operator*(
       const TlSparseGeneralMatrix_ImplViennaCL& mat,
       const TlDenseVector_ImplViennaCL& vtr);
+  // DV x SM(G)
+  friend TlDenseVector_ImplViennaCL operator*(
+      const TlDenseVector_ImplViennaCL& vtr,
+      const TlSparseGeneralMatrix_ImplViennaCL& mat);
+  
   friend TlDenseVector_ImplViennaCL operator*(
       const TlSparseSymmetricMatrix_ImplViennaCL& mat,
       const TlDenseVector_ImplViennaCL& vtr);

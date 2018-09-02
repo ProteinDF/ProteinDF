@@ -1,10 +1,10 @@
+#include <Eigen/Sparse>
 #include <iostream>
 #include <limits>
-#include <Eigen/Sparse>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif // HAVE_CONFIG_H
+#endif  // HAVE_CONFIG_H
 
 #include "tl_dense_general_matrix_impl_eigen.h"
 #include "tl_dense_vector_impl_eigen.h"
@@ -14,10 +14,11 @@
 
 #ifdef HAVE_VIENNACL
 #include "tl_sparse_general_matrix_impl_viennacl.h"
-#endif // HAVE_VIENNACL
+#endif  // HAVE_VIENNACL
 
 const double TlSparseGeneralMatrix_ImplEigen::reference_ = 1.0;
-const double TlSparseGeneralMatrix_ImplEigen::epsilon_ = std::numeric_limits<double>::epsilon();
+const double TlSparseGeneralMatrix_ImplEigen::epsilon_ =
+    std::numeric_limits<double>::epsilon();
 
 TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_ImplEigen(
     const TlMatrixObject::index_type row, const TlMatrixObject::index_type col)
@@ -40,15 +41,20 @@ TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_ImplEigen(
 
 TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_ImplEigen(
     const TlDenseGeneralMatrix_ImplEigen& rhs)
-    : matrix_(rhs.matrix_.sparseView(TlSparseGeneralMatrix_ImplEigen::reference_,
-    TlSparseGeneralMatrix_ImplEigen::epsilon_)) {
-}
+    : matrix_(
+          rhs.matrix_.sparseView(TlSparseGeneralMatrix_ImplEigen::reference_,
+                                 TlSparseGeneralMatrix_ImplEigen::epsilon_)) {}
 
 #ifdef HAVE_VIENNACL
-TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_ImplEigen(const TlSparseGeneralMatrix_ImplViennaCL& rhs) {
+TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_ImplEigen(
+    const TlSparseGeneralMatrix_ImplViennaCL& rhs)
+    : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()) {
+  std::cout << "TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_"
+               "ImplEigen(const TlSparseGeneralMatrix_ImplViennaCL& rhs)"
+            << std::endl;
   viennacl::copy(rhs.matrix_, this->matrix_);
 }
-#endif // HAVE_VIENNACL
+#endif  // HAVE_VIENNACL
 
 TlSparseGeneralMatrix_ImplEigen::~TlSparseGeneralMatrix_ImplEigen() {}
 
@@ -241,9 +247,21 @@ TlSparseGeneralMatrix_ImplEigen operator*(
 // DV = SM(G) * DV
 TlDenseVector_ImplEigen operator*(const TlSparseGeneralMatrix_ImplEigen& mat,
                                   const TlDenseVector_ImplEigen& vtr) {
+  //std::cout << "TlDenseVector_ImplEigen operator*(const TlSparseGeneralMatrix_ImplEigen& mat, const TlDenseVector_ImplEigen& vtr)" << std::endl;
   assert(mat.getNumOfCols() == vtr.getSize());
   TlDenseVector_ImplEigen answer;
   answer.vector_ = mat.matrix_ * vtr.vector_;
+
+  return answer;
+}
+
+// DV = DV * SM(G)
+TlDenseVector_ImplEigen operator*(const TlDenseVector_ImplEigen& vtr,
+const TlSparseGeneralMatrix_ImplEigen& mat) {
+  //std::cout << "TlDenseVector_ImplEigen operator*(const TlDenseVector_ImplEigen& vtr, const TlSparseGeneralMatrix_ImplEigen& mat)" << std::endl;
+  assert(mat.getNumOfRows() == vtr.getSize());
+  TlDenseVector_ImplEigen answer;
+  answer.vector_ = mat.matrix_.transpose() * vtr.vector_;
 
   return answer;
 }
