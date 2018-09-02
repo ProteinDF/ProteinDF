@@ -222,20 +222,20 @@ bool TlDenseSymmetricMatrixObject::load(const std::string& filePath) {
         } break;
 
         default:
-          this->log_.critical(TlUtils::format("not supported format: @%s.%d",
+          this->log_.critical(TlUtils::format("not supported format: @%s:%d",
                                               __FILE__, __LINE__));
           break;
       }
     } else {
       this->log_.critical(
-          TlUtils::format("cannnot open matrix file: %s @(%s:%d)",
+          TlUtils::format("cannnot open matrix file: %s @%s:%d",
                           filePath.c_str(), __FILE__, __LINE__));
       throw;
     }
 
     fs.close();
   } else {
-    this->log_.critical(TlUtils::format("illegal matrix format: %s @(%s:%d)",
+    this->log_.critical(TlUtils::format("illegal matrix format: %s @%s:%d",
                                         filePath.c_str(), __FILE__, __LINE__));
     throw;
   }
@@ -266,7 +266,7 @@ bool TlDenseSymmetricMatrixObject::save(const std::string& filePath) const {
     fs.flush();
     answer = true;
   } else {
-    this->log_.critical(TlUtils::format("cannot write matrix: %s @(%s:%d)",
+    this->log_.critical(TlUtils::format("cannot write matrix: %s @%s:%d",
                                         filePath.c_str(), __FILE__, __LINE__));
   }
   fs.close();

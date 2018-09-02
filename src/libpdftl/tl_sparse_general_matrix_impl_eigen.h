@@ -33,9 +33,10 @@ class TlSparseGeneralMatrix_ImplEigen : public TlSparseMatrix_ImplObject {
   TlSparseGeneralMatrix_ImplEigen(const MatrixDataType& rhs);
   TlSparseGeneralMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplEigen& rhs);
 
-  #ifdef HAVE_VIENNACL
-  TlSparseGeneralMatrix_ImplEigen(const TlSparseGeneralMatrix_ImplViennaCL& rhs);
-  #endif // HAVE_VIENNACL
+#ifdef HAVE_VIENNACL
+  TlSparseGeneralMatrix_ImplEigen(
+      const TlSparseGeneralMatrix_ImplViennaCL& rhs);
+#endif  // HAVE_VIENNACL
 
   virtual ~TlSparseGeneralMatrix_ImplEigen();
 
@@ -124,12 +125,16 @@ class TlSparseGeneralMatrix_ImplEigen : public TlSparseMatrix_ImplObject {
   // SM(G) = SM(S) * SM(S)
   friend TlSparseGeneralMatrix_ImplEigen operator*(
       const TlSparseSymmetricMatrix_ImplEigen& sm1,
-  const TlSparseSymmetricMatrix_ImplEigen& sm2);
+      const TlSparseSymmetricMatrix_ImplEigen& sm2);
 
   // DV = SM(G) * DV
   friend TlDenseVector_ImplEigen operator*(
       const TlSparseGeneralMatrix_ImplEigen& mat,
       const TlDenseVector_ImplEigen& vtr);
+  // DV = DV * SM(G)
+  friend TlDenseVector_ImplEigen operator*(
+      const TlDenseVector_ImplEigen& vtr,
+      const TlSparseGeneralMatrix_ImplEigen& mat);
 
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // Eigen macro

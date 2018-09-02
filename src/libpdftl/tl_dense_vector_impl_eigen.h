@@ -107,9 +107,11 @@ class TlDenseVector_ImplEigen : public TlDenseVector_ImplObject {
       const TlDenseVector_ImplEigen& vec,
       const TlDenseSymmetricMatrix_ImplEigen& mat);
 
-  // SM(G) * DV
+  // SM(G) x DV
   friend TlDenseVector_ImplEigen operator*(const TlSparseGeneralMatrix_ImplEigen& mat, const TlDenseVector_ImplEigen& vtr);
-  // SM(S) * DV
+  // DV x SM(G)
+  friend TlDenseVector_ImplEigen operator*(const TlDenseVector_ImplEigen& vtr, const TlSparseGeneralMatrix_ImplEigen& mat);
+  // SM(S) x DV
   friend TlDenseVector_ImplEigen operator*(const TlSparseSymmetricMatrix_ImplEigen& mat, const TlDenseVector_ImplEigen& vtr);
 
  public:

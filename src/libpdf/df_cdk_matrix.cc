@@ -42,8 +42,8 @@ void DfCdkMatrix::getK() {
     case LAP_EIGEN: {
       this->log_.info("Linear Algebra Package: Eigen");
       this->getK_method<TlDenseSymmetricMatrix_Eigen, TlDenseVector_Eigen,
-                        TlDenseGeneralMatrix_Eigen,
-                        TlDenseSymmetricMatrix_Eigen>();
+                        TlSparseGeneralMatrix_Eigen,
+                        TlSparseSymmetricMatrix_Eigen>();
     } break;
 #endif  // HAVE_EIGEN
 
@@ -51,8 +51,8 @@ void DfCdkMatrix::getK() {
     case LAP_VIENNACL: {
       this->log_.info("Linear Algebra Package: ViennaCL");
       this->getK_method<TlDenseSymmetricMatrix_ViennaCL, TlDenseVector_ViennaCL,
-                        TlDenseGeneralMatrix_ViennaCL,
-                        TlDenseSymmetricMatrix_ViennaCL>();
+                        TlSparseGeneralMatrix_ViennaCL,
+                        TlSparseSymmetricMatrix_ViennaCL>();
     } break;
 #endif  // HAVE_VIENNACL
 
@@ -221,7 +221,6 @@ void DfCdkMatrix::getK_byLjk_useTransMatrix(const RUN_TYPE runType) {
           this->convert_I2PQ<SymmetricMatrix, Vector, SparseGeneralMatrix>(
               I2PQ_mat, L.getColVector(*it));
       assert(l.getNumOfRows() == this->m_nNumOfAOs);
-
       K += l * P * l;
     }
 
@@ -251,6 +250,7 @@ void DfCdkMatrix::getK_byLjk_useSparseMatrix(const RUN_TYPE runType) {
 
   const SymmetricMatrix P = this->getSpinDensityMatrix<SymmetricMatrix>(
       runType, this->m_nIteration - 1);
+  std::cout << "make P" << std::endl;
   const SparseSymmetricMatrix P_SM = P;
 
   this->log_.info("start loop");
@@ -271,6 +271,7 @@ void DfCdkMatrix::getK_byLjk_useSparseMatrix(const RUN_TYPE runType) {
               I2PQ_mat, L.getColVector(*it));
       assert(l.getNumOfRows() == this->m_nNumOfAOs);
 
+      std::cout << "flag" << std::endl;
       SparseSymmetricMatrix X = l * P_SM * l;
       tmpK += X;
     }
@@ -344,7 +345,7 @@ SparseGeneralMatrix DfCdkMatrix::getTrans_I2PQ_Matrix(
   const TlMatrixObject::index_type numOfAoPairs =
       this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2;
 
-  SparseGeneralMatrix expandL(numOfItilde, numOfAoPairs);
+  SparseGeneralMatrix expandL(numOfAoPairs, numOfItilde);
   for (TlMatrixObject::index_type i = 0; i < numOfItilde; ++i) {
     TlMatrixObject::index_type row = I2PQ[i].index1();
     TlMatrixObject::index_type col = I2PQ[i].index2();
@@ -352,7 +353,7 @@ SparseGeneralMatrix DfCdkMatrix::getTrans_I2PQ_Matrix(
       std::swap(row, col);
     }
     const TlMatrixObject::index_type rowcol = row * (row + 1) / 2 + col;
-    expandL.set(i, rowcol, 1.0);
+    expandL.set(rowcol, i, 1.0);
   }
   return expandL;
 }
@@ -361,7 +362,9 @@ template <typename SymmetricMatrix, typename Vector,
           typename SparseGeneralMatrix>
 SymmetricMatrix DfCdkMatrix::convert_I2PQ(const SparseGeneralMatrix& I2PQ_mat,
                                           const Vector& L) {
-  Vector expandL = L * I2PQ_mat;
+  //std::cout << "flag0" << std::endl;
+  Vector expandL = I2PQ_mat * L;
+  //std::cout << "flag1\n" << std::endl;
   SymmetricMatrix answer(this->m_nNumOfAOs);
   answer.vtr2mat(expandL);
 

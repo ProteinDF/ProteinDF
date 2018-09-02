@@ -30,7 +30,8 @@ TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
 }
 
 #ifdef HAVE_VIENNACL
-TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplViennaCL& rhs) {
+TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplViennaCL& rhs) 
+: TlDenseGeneralMatrix_ImplEigen(rhs.getNumOfRows(), rhs.getNumOfCols()){
   viennacl::copy(rhs.matrix_, this->matrix_);
 }
 #endif // HAVE_VIENNACL
