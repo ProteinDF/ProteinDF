@@ -29,12 +29,10 @@ TlSparseGeneralMatrix_ImplViennaCL::TlSparseGeneralMatrix_ImplViennaCL(
 TlSparseGeneralMatrix_ImplViennaCL::TlSparseGeneralMatrix_ImplViennaCL(
     const TlSparseGeneralMatrix_ImplViennaCL& rhs)
     : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()){
-      std::cout << "TlSparseGeneralMatrix_ImplViennaCL::TlSparseGeneralMatrix_ImplViennaCL(const TlSparseGeneralMatrix_ImplViennaCL& rhs)" << std::endl;
 #ifdef HAVE_EIGEN
-          {
-            EigenMatrixDataType tmp(rhs.getNumOfRows(), rhs.getNumOfCols());
-  viennacl::copy(rhs.matrix_, tmp);
-  viennacl::copy(tmp, this->matrix_);
+          {EigenMatrixDataType tmp(rhs.getNumOfRows(), rhs.getNumOfCols());
+viennacl::copy(rhs.matrix_, tmp);
+viennacl::copy(tmp, this->matrix_);
 }
 #else
           {std::vector<std::map<unsigned int, double> > tmp(
@@ -147,7 +145,10 @@ void TlSparseGeneralMatrix_ImplViennaCL::mul(
 // ----------------------------------------------------------------------------
 TlSparseGeneralMatrix_ImplViennaCL& TlSparseGeneralMatrix_ImplViennaCL::
 operator=(const TlSparseGeneralMatrix_ImplViennaCL& rhs) {
-  std::cout << "TlSparseGeneralMatrix_ImplViennaCL& TlSparseGeneralMatrix_ImplViennaCL::operator=(const TlSparseGeneralMatrix_ImplViennaCL& rhs)" << std::endl;
+  // std::cout << "TlSparseGeneralMatrix_ImplViennaCL& "
+  //              "TlSparseGeneralMatrix_ImplViennaCL::operator=(const "
+  //              "TlSparseGeneralMatrix_ImplViennaCL& rhs)"
+  //           << std::endl;
   if (this != &rhs) {
     this->matrix_.clear();
     this->matrix_.resize(rhs.getNumOfRows(), rhs.getNumOfCols());
@@ -281,9 +282,9 @@ TlSparseGeneralMatrix_ImplViennaCL operator*(
 TlDenseVector_ImplViennaCL operator*(
     const TlSparseGeneralMatrix_ImplViennaCL& mat,
     const TlDenseVector_ImplViennaCL& vtr) {
-  //std::cout << "SM x DV (1)" << std::endl;
+  // std::cout << "SM x DV (1)" << std::endl;
   assert(mat.getNumOfCols() == vtr.getSize());
-  //std::cout << "SM x DV (2)" << std::endl;
+  // std::cout << "SM x DV (2)" << std::endl;
   TlDenseVector_ImplViennaCL answer;
   answer.vector_ = viennacl::linalg::prod(mat.matrix_, vtr.vector_);
 
@@ -292,11 +293,14 @@ TlDenseVector_ImplViennaCL operator*(
 
 // DV = DV * SM(G)
 // TlDenseVector_ImplViennaCL operator*(
-//     const TlDenseVector_ImplViennaCL& vtr,     const TlSparseGeneralMatrix_ImplViennaCL& mat) {
-//   std::cout << "TlDenseVector_ImplViennaCL operator*(const TlDenseVector_ImplViennaCL& vtr, const TlSparseGeneralMatrix_ImplViennaCL& mat)" << std::endl;
-//   assert(mat.getNumOfRows() == vtr.getSize());
+//     const TlDenseVector_ImplViennaCL& vtr,     const
+//     TlSparseGeneralMatrix_ImplViennaCL& mat) {
+//   std::cout << "TlDenseVector_ImplViennaCL operator*(const
+//   TlDenseVector_ImplViennaCL& vtr, const TlSparseGeneralMatrix_ImplViennaCL&
+//   mat)" << std::endl; assert(mat.getNumOfRows() == vtr.getSize());
 //   TlDenseVector_ImplViennaCL answer;
-//   answer.vector_ = viennacl::linalg::prod(viennacl::trans(mat.matrix_), vtr.vector_);
+//   answer.vector_ = viennacl::linalg::prod(viennacl::trans(mat.matrix_),
+//   vtr.vector_);
 
 //   return answer;
 // }

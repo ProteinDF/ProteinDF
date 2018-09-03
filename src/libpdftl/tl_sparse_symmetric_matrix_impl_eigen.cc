@@ -7,7 +7,7 @@
 
 #ifdef HAVE_VIENNACL
 #include "tl_sparse_symmetric_matrix_impl_viennacl.h"
-#endif // HAVE_VIENNACL
+#endif  // HAVE_VIENNACL
 
 TlSparseSymmetricMatrix_ImplEigen::TlSparseSymmetricMatrix_ImplEigen(
     const TlMatrixObject::index_type dim)
@@ -19,9 +19,10 @@ TlSparseSymmetricMatrix_ImplEigen::TlSparseSymmetricMatrix_ImplEigen(
 
 TlSparseSymmetricMatrix_ImplEigen::TlSparseSymmetricMatrix_ImplEigen(
     const TlSparseGeneralMatrix_ImplEigen& rhs) {
-  this->matrix_ = rhs.matrix_;
+  assert(rhs.getNumOfRows() == rhs.getNumOfCols());
   this->resize(rhs.getNumOfRows(), rhs.getNumOfRows());
-  // this->matrix_ = this->matrix_.selfadjointView<Eigen::Upper>();
+  this->matrix_ = rhs.matrix_.selfadjointView<Eigen::Upper>();
+  // std::cout << this->matrix_ << std::endl;
 }
 
 TlSparseSymmetricMatrix_ImplEigen::TlSparseSymmetricMatrix_ImplEigen(
@@ -32,10 +33,11 @@ TlSparseSymmetricMatrix_ImplEigen::TlSparseSymmetricMatrix_ImplEigen(
 }
 
 #ifdef HAVE_VIENNACL
-TlSparseSymmetricMatrix_ImplEigen::TlSparseSymmetricMatrix_ImplEigen(const TlSparseSymmetricMatrix_ImplViennaCL& rhs) {
+TlSparseSymmetricMatrix_ImplEigen::TlSparseSymmetricMatrix_ImplEigen(
+    const TlSparseSymmetricMatrix_ImplViennaCL& rhs) : TlSparseGeneralMatrix_ImplEigen(rhs.getNumOfRows(), rhs.getNumOfCols()) {
   viennacl::copy(rhs.matrix_, this->matrix_);
 }
-#endif // HAVE_VIENNACL
+#endif  // HAVE_VIENNACL
 
 TlSparseSymmetricMatrix_ImplEigen::~TlSparseSymmetricMatrix_ImplEigen() {}
 
@@ -89,12 +91,14 @@ void TlSparseSymmetricMatrix_ImplEigen::mul(
 // ----------------------------------------------------------------------------
 // operators
 // ----------------------------------------------------------------------------
-TlSparseSymmetricMatrix_ImplEigen& TlSparseSymmetricMatrix_ImplEigen::operator+=(const TlSparseSymmetricMatrix_ImplEigen& sm) {
+TlSparseSymmetricMatrix_ImplEigen& TlSparseSymmetricMatrix_ImplEigen::
+operator+=(const TlSparseSymmetricMatrix_ImplEigen& sm) {
   this->matrix_ += sm.matrix_;
   return *this;
 }
 
-TlSparseSymmetricMatrix_ImplEigen& TlSparseSymmetricMatrix_ImplEigen::operator-=(const TlSparseSymmetricMatrix_ImplEigen& sm) {
+TlSparseSymmetricMatrix_ImplEigen& TlSparseSymmetricMatrix_ImplEigen::
+operator-=(const TlSparseSymmetricMatrix_ImplEigen& sm) {
   this->matrix_ -= sm.matrix_;
   return *this;
 }
@@ -130,7 +134,9 @@ TlSparseGeneralMatrix_ImplEigen operator*(
     const TlSparseSymmetricMatrix_ImplEigen& sm2) {
   assert(sm1.getNumOfCols() == sm2.getNumOfRows());
   TlSparseGeneralMatrix_ImplEigen answer;
-  answer.matrix_ = sm1.matrix_ * TlSparseGeneralMatrix_ImplEigen::MatrixDataType(sm2.matrix_.selfadjointView<Eigen::Lower>());
+  answer.matrix_ =
+      sm1.matrix_ * TlSparseGeneralMatrix_ImplEigen::MatrixDataType(
+                        sm2.matrix_.selfadjointView<Eigen::Lower>());
 
   return answer;
 }
@@ -141,8 +147,9 @@ TlSparseGeneralMatrix_ImplEigen operator*(
     const TlSparseGeneralMatrix_ImplEigen& sm2) {
   assert(sm1.getNumOfCols() == sm2.getNumOfRows());
   TlSparseGeneralMatrix_ImplEigen answer;
-  answer.matrix_ = TlSparseGeneralMatrix_ImplEigen::MatrixDataType(sm1.matrix_.selfadjointView<Eigen::Lower>()) 
-  * sm2.matrix_;
+  answer.matrix_ = TlSparseGeneralMatrix_ImplEigen::MatrixDataType(
+                       sm1.matrix_.selfadjointView<Eigen::Lower>()) *
+                   sm2.matrix_;
 
   return answer;
 }
@@ -153,8 +160,10 @@ TlSparseGeneralMatrix_ImplEigen operator*(
     const TlSparseSymmetricMatrix_ImplEigen& sm2) {
   assert(sm1.getNumOfCols() == sm2.getNumOfRows());
   TlSparseGeneralMatrix_ImplEigen answer;
-  answer.matrix_ = TlSparseGeneralMatrix_ImplEigen::MatrixDataType(sm1.matrix_.selfadjointView<Eigen::Lower>()) 
-  * TlSparseGeneralMatrix_ImplEigen::MatrixDataType(sm2.matrix_.selfadjointView<Eigen::Lower>());
+  answer.matrix_ = TlSparseGeneralMatrix_ImplEigen::MatrixDataType(
+                       sm1.matrix_.selfadjointView<Eigen::Lower>()) *
+                   TlSparseGeneralMatrix_ImplEigen::MatrixDataType(
+                       sm2.matrix_.selfadjointView<Eigen::Lower>());
 
   return answer;
 }
