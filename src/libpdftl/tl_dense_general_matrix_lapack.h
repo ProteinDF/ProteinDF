@@ -19,6 +19,8 @@ class TlDenseGeneralMatrix_Lapack : public TlDenseGeneralMatrixObject {
   TlDenseGeneralMatrix_Lapack(const TlDenseSymmetricMatrix_Lapack& rhs);
   TlDenseGeneralMatrix_Lapack(const TlDenseGeneralMatrix_ImplLapack& rhs);
 
+  void vtr2mat(const std::vector<double>& vtr);
+
   virtual ~TlDenseGeneralMatrix_Lapack();
 
   // ---------------------------------------------------------------------------

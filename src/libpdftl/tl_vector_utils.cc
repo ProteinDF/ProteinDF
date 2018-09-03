@@ -26,8 +26,8 @@ TlVectorUtils::FileSize TlVectorUtils::getHeaderInfo(
   if (!fs.fail()) {
     headerSize = TlVectorUtils::getHeaderSize_templ1<std::fstream>(fs, pSize);
   } else {
-    std::cerr << TlUtils::format("could not open file. @%s(%d)", __FILE__,
-                                 __LINE__)
+    std::cerr << TlUtils::format("cannot open vector file: %s @%s:%d",
+                                 filepath.c_str(), __FILE__, __LINE__)
               << std::endl;
   }
   fs.close();
@@ -48,7 +48,7 @@ bool TlVectorUtils::load(const std::string& filepath, double* pBuf,
     fs.seekg(headerSize + startPos);
     fs.read(reinterpret_cast<char*>(pBuf), sizeof(double) * numOfItems);
   } else {
-    std::cerr << TlUtils::format("cannnot open matrix file: %s @(%s:%d)",
+    std::cerr << TlUtils::format("cannnot open vector file: %s @%s:%d",
                                  filepath.c_str(), __FILE__, __LINE__)
               << std::endl;
   }

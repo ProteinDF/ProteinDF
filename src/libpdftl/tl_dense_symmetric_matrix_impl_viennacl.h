@@ -10,6 +10,7 @@
 class TlDenseGeneralMatrix_ImplViennaCL;
 class TlDenseVector_ImplViennaCL;
 class TlDenseSymmetricMatrix_ImplEigen;
+class TlSparseSymmetricMatrix_ImplViennaCL;
 
 class TlDenseSymmetricMatrix_ImplViennaCL
     : public TlDenseGeneralMatrix_ImplViennaCL {
@@ -24,7 +25,12 @@ class TlDenseSymmetricMatrix_ImplViennaCL
   TlDenseSymmetricMatrix_ImplViennaCL(
       const TlDenseGeneralMatrix_ImplViennaCL& rhs);
   TlDenseSymmetricMatrix_ImplViennaCL(
+      const TlSparseSymmetricMatrix_ImplViennaCL& rhs);
+  
+#ifdef HAVE_EIGEN
+  TlDenseSymmetricMatrix_ImplViennaCL(
       const TlDenseSymmetricMatrix_ImplEigen& rhs);
+#endif  // HAVE_EIGEN
   virtual ~TlDenseSymmetricMatrix_ImplViennaCL();
 
   // ---------------------------------------------------------------------------
@@ -53,8 +59,11 @@ class TlDenseSymmetricMatrix_ImplViennaCL
   //     const TlDenseSymmetetricMatrix_ImplViennaCL& rhs);
   TlDenseSymmetricMatrix_ImplViennaCL transpose() const;
   TlDenseSymmetricMatrix_ImplViennaCL inverse() const;
+
   bool eig(TlDenseVector_ImplViennaCL* pEigval,
            TlDenseGeneralMatrix_ImplViennaCL* pEigvec) const;
+  bool eig_powerIteration(TlDenseVector_ImplViennaCL* pEigval,
+                          TlDenseGeneralMatrix_ImplViennaCL* pEigvec) const;
   bool eig_QR(TlDenseVector_ImplViennaCL* pEigval,
               TlDenseGeneralMatrix_ImplViennaCL* pEigvec) const;
 
@@ -66,6 +75,14 @@ class TlDenseSymmetricMatrix_ImplViennaCL
   // others
   // ---------------------------------------------------------------------------
   friend class TlDenseGeneralMatrix_ImplViennaCL;
+  friend class TlDenseSymmetricMatrix_ImplEigen;
+
+  friend TlDenseGeneralMatrix_ImplViennaCL operator*(
+      const TlDenseGeneralMatrix_ImplViennaCL& mat1,
+      const TlDenseSymmetricMatrix_ImplViennaCL& mat2);
+  friend TlDenseGeneralMatrix_ImplViennaCL operator*(
+      const TlDenseSymmetricMatrix_ImplViennaCL& mat1,
+      const TlDenseGeneralMatrix_ImplViennaCL& mat2);
 };
 
 #endif  // TL_DENSE_SYMMETRIC_MATRIX_IMPL_VIENNACL_H

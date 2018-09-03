@@ -13,9 +13,22 @@ TlDenseVector_Eigen::TlDenseVector_Eigen(const TlDenseVector_Eigen& rhs) {
       *dynamic_cast<const TlDenseVector_ImplEigen*>(rhs.pImpl_));
 }
 
-TlDenseVector_Eigen::TlDenseVector_Eigen(const double* p, size_type size) {
-  this->pImpl_ = new TlDenseVector_ImplEigen(p, size);
+TlDenseVector_Eigen::TlDenseVector_Eigen(const std::vector<double>& rhs) {
+  this->pImpl_ = new TlDenseVector_ImplEigen(rhs);
 }
+
+// TlDenseVector_Eigen::TlDenseVector_Eigen(const double* p, size_type size) {
+//   this->pImpl_ = new TlDenseVector_ImplEigen(p, size);
+// }
+
+TlDenseVector_Eigen::TlDenseVector_Eigen(const TlDenseVector_ImplEigen& rhs) {
+  this->pImpl_ = new TlDenseVector_ImplEigen(rhs);
+}
+
+TlDenseVector_Eigen::operator std::vector<double>() const {
+  return std::vector<double>(*(dynamic_cast<TlDenseVector_ImplEigen*>(this->pImpl_)));
+}
+
 
 TlDenseVector_Eigen::~TlDenseVector_Eigen() {
   delete this->pImpl_;

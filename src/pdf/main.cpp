@@ -70,10 +70,10 @@ int PDF_MAIN(int argc, char* argv[]) {
 
     TlViennaCL vcl;
     vcl.setupAllAvailableDevices();
-    vcl.showDevices();
+    log.info(vcl.listDevices());
 
     vcl.switchDevice(deviceId);
-    vcl.showCurrentDevice();
+    log.info(vcl.listCurrentDevice());
   }
 #endif  // HAVE_VIENNACL
 

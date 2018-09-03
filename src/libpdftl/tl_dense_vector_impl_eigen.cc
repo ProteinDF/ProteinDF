@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "tl_dense_vector_impl_eigen.h"
 
 // ---------------------------------------------------------------------------
@@ -13,11 +15,23 @@ TlDenseVector_ImplEigen::TlDenseVector_ImplEigen(
 }
 
 TlDenseVector_ImplEigen::TlDenseVector_ImplEigen(
+    const std::vector<double>& rhs)
+    : vector_(MapTypeConst(rhs.data(), rhs.size())) {}
+
+TlDenseVector_ImplEigen::TlDenseVector_ImplEigen(
     const double* p, const TlDenseVectorObject::size_type size)
     : vector_(MapTypeConst(p, size)) {}
 
 TlDenseVector_ImplEigen::TlDenseVector_ImplEigen(const VectorDataType& rhs) {
   this->vector_ = rhs;
+}
+
+TlDenseVector_ImplEigen::operator std::vector<double>() const {
+  const std::size_t size = this->getSize();
+  std::vector<double> answer(size);
+  MapType(&(answer[0]), size) = this->vector_;
+
+  return answer;
 }
 
 TlDenseVector_ImplEigen::~TlDenseVector_ImplEigen() {}

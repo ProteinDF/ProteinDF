@@ -18,8 +18,8 @@ class TlDenseSymmetricMatrix_Scalapack : public TlDenseSymmetricMatrixObject {
       const TlMatrixObject::index_type dim = 1);
   TlDenseSymmetricMatrix_Scalapack(const TlDenseSymmetricMatrix_Scalapack& rhs);
   TlDenseSymmetricMatrix_Scalapack(const TlDenseGeneralMatrix_Scalapack& rhs);
-  TlDenseSymmetricMatrix_Scalapack(const TlDenseVector_Scalapack& v,
-                                   const TlMatrixObject::index_type dim);
+//   TlDenseSymmetricMatrix_Scalapack(const TlDenseVector_Scalapack& v,
+//                                    const TlMatrixObject::index_type dim);
   virtual ~TlDenseSymmetricMatrix_Scalapack();
 
   // ---------------------------------------------------------------------------

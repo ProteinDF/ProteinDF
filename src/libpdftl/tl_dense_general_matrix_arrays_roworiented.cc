@@ -82,7 +82,7 @@ double TlDenseGeneralMatrix_arrays_RowOriented::get(
   return TlDenseMatrix_arrays_Object::get_from_vm(row, col);
 }
 
-TlDenseVector_Lapack TlDenseGeneralMatrix_arrays_RowOriented::getRowVector(
+std::vector<double> TlDenseGeneralMatrix_arrays_RowOriented::getRowVector(
     const index_type row) const {
   return TlDenseMatrix_arrays_Object::getVector(row);
 }

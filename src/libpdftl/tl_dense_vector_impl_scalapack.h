@@ -4,14 +4,13 @@
 #include <valarray>
 #include <vector>
 #include "tl_dense_vector_impl_object.h"
+#include "tl_dense_scalapack_object.h"
 
 class TlDenseGeneralMatrix_ImplScalapack;
 class TlDenseVector_ImplLapack;
+class TlDenseVector_Lapack;
 
-class TlDenseVector_ImplScalapack : public TlDenseVector_ImplObject {
- protected:
-  // typedef std::valarray<double> DataType;
-
+class TlDenseVector_ImplScalapack : public TlDenseVector_ImplObject, public TlDenseScalapackObject {
   // ---------------------------------------------------------------------------
   // constructor & destructor
   // ---------------------------------------------------------------------------
@@ -62,40 +61,27 @@ class TlDenseVector_ImplScalapack : public TlDenseVector_ImplObject {
       const TlDenseVector_ImplScalapack& rhs);
 
   // ---------------------------------------------------------------------------
+  // I/O
+  // ---------------------------------------------------------------------------
+  public:
+    bool load(const std::string& sFilePath);
+    bool save(const std::string& sFilePath) const;
+  
+  // ---------------------------------------------------------------------------
   // protected
   // ---------------------------------------------------------------------------
  protected:
-  virtual void initialize();
-  virtual int getIndex(int nGlobalRow, int nGlobalCol) const;
+     bool load(std::ifstream& ifs);
+//   bool save(std::ofstream& ofs) const;
+    std::vector<TlVectorObject::VectorElement> getVectorElementsInLocal() const;
 
+  void saveElements(
+    TlDenseVector_Lapack* pVector, const std::vector<TlVectorObject::VectorElement>& elements) const;
+
+ protected:
   // ---------------------------------------------------------------------------
   // variables
   // ---------------------------------------------------------------------------
- protected:
-  int m_nContext;
-  int m_pDESC[9];
-  int m_nRows;    // 大域行列の行数
-  int m_nCols;    // 大域行列の列数
-  int m_nMyRows;  // ローカル行列の行数
-  int m_nMyCols;  // ローカル行列の列数
-
-  int m_nRank;         // プロセスのランク
-  int m_nProc;         // 総プロセス数
-  int m_nProcGridRow;  // プロセスグリッドの行数
-  int m_nProcGridCol;  // プロセスグリッドの列数
-  int m_nMyProcRow;    // プロセスグリッドにおける自分の行数
-  int m_nMyProcCol;    // プロセスグリッドにおける自分の列数
-  int m_nBlockSize;    // ブロックサイズ
-
-  // index table
-  // usage: m_RowIndexTable[local_index] = global_index
-  std::vector<int> m_RowIndexTable;
-  std::vector<int> m_ColIndexTable;
-
-  double* vector_;
-
- protected:
-  // static int systemBlockSize_;
 
   // ---------------------------------------------------------------------------
   // friends

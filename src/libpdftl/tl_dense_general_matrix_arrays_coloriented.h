@@ -23,6 +23,7 @@
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
+#include <string>
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_matrix_arrays_object.h"
 #include "tl_matrix_object.h"
@@ -38,6 +39,7 @@ class TlDenseGeneralMatrix_arrays_ColOriented
   explicit TlDenseGeneralMatrix_arrays_ColOriented(
       const TlDenseGeneralMatrix_Lapack& rhs, int numOfSubunits = 1,
       int subunitID = 0, bool isUsingMemManager = false);
+  TlDenseGeneralMatrix_arrays_ColOriented(const std::string& path);
   TlDenseGeneralMatrix_arrays_ColOriented(
       const TlDenseGeneralMatrix_arrays_ColOriented& rhs);
 
@@ -55,7 +57,7 @@ class TlDenseGeneralMatrix_arrays_ColOriented
   virtual void add(index_type row, index_type col, double value);
   virtual double get(index_type row, index_type col) const;
 
-  virtual TlDenseVector_Lapack getColVector(const index_type col) const;
+  virtual std::vector<double> getColVector(const index_type col) const;
   virtual void getColVector(const index_type col, double* pBuf,
                             const index_type length) const;
 

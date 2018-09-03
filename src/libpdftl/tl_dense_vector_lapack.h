@@ -17,6 +17,9 @@ class TlDenseVector_Lapack : public TlDenseVectorObject {
   TlDenseVector_Lapack(const std::vector<double>& rhs);
   // TlDenseVector_Lapack(const double* p,
   //                      const TlDenseVectorObject::size_type length);
+
+  operator std::vector<double>() const;
+
   virtual ~TlDenseVector_Lapack();
 
   // ---------------------------------------------------------------------------

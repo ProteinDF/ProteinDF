@@ -454,9 +454,15 @@ TlMatrixObject::size_type TlDenseGeneralMatrix_ImplLapack::index(
   return index;
 }
 
+void TlDenseGeneralMatrix_ImplLapack::vtr2mat(const std::vector<double>& vtr) {
+  assert(vtr.size() == this->getNumOfElements());
+  std::copy(vtr.begin(), vtr.end(), this->matrix_);
+}
+
 // ---------------------------------------------------------------------------
 // others
 // ---------------------------------------------------------------------------
+// DV = DM(G) * DV
 TlDenseVector_ImplLapack operator*(const TlDenseGeneralMatrix_ImplLapack& mat,
                                    const TlDenseVector_ImplLapack& vec) {
   TlLogging& logger = TlLogging::getInstance();
@@ -488,6 +494,7 @@ TlDenseVector_ImplLapack operator*(const TlDenseGeneralMatrix_ImplLapack& mat,
   return answer;
 }
 
+// DV = DV * DM(G)
 TlDenseVector_ImplLapack operator*(const TlDenseVector_ImplLapack& vec,
                                    const TlDenseGeneralMatrix_ImplLapack& mat) {
   TlLogging& logger = TlLogging::getInstance();
@@ -497,7 +504,7 @@ TlDenseVector_ImplLapack operator*(const TlDenseVector_ImplLapack& vec,
                                     __FILE__));
   }
 
-  TlDenseVector_ImplLapack answer(vec.getSize());
+  TlDenseVector_ImplLapack answer(mat.getNumOfCols());
   const char TRANS = 'T';
   const int M = mat.getNumOfRows();
   const int N = mat.getNumOfCols();

@@ -87,16 +87,16 @@ void DfQclo::DfQcloMain() {
 
       switch (this->m_nMethodType) {
         case METHOD_RKS:
-          dfDiagonal.DfDiagQclo(RUN_RKS, fragname, norbcut);
+          dfDiagonal.runQclo(RUN_RKS, fragname, norbcut);
           break;
 
         case METHOD_UKS:
-          dfDiagonal.DfDiagQclo(RUN_UKS_ALPHA, fragname, norbcut);
-          dfDiagonal.DfDiagQclo(RUN_UKS_BETA, fragname, norbcut);
+          dfDiagonal.runQclo(RUN_UKS_ALPHA, fragname, norbcut);
+          dfDiagonal.runQclo(RUN_UKS_BETA, fragname, norbcut);
           break;
 
         case METHOD_ROKS:
-          dfDiagonal.DfDiagQclo(RUN_ROKS, fragname, norbcut);
+          dfDiagonal.runQclo(RUN_ROKS, fragname, norbcut);
           break;
 
         default:
@@ -112,7 +112,7 @@ void DfQclo::DfQcloMain() {
 
       // DfTransatob dfTransatob(this->m_flGbi);
       DfTransatob dfTransatob(this->pPdfParam_);
-      dfTransatob.DfTrsatobQclo(fragname, norbcut);
+      dfTransatob.runQclo(fragname, norbcut);
 
       this->loggerEndTitle();
     }

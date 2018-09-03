@@ -18,6 +18,8 @@ class TlDenseSymmetricMatrixObject : public TlMatrixObject {
   TlDenseSymmetricMatrixObject(TlDenseMatrix_ImplObject* pImpl = NULL);
   virtual ~TlDenseSymmetricMatrixObject();
 
+  virtual void vtr2mat(const std::vector<double>& vtr);
+  
  public:
   // ---------------------------------------------------------------------------
   // properties

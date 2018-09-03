@@ -138,7 +138,7 @@ void DfPreScf::createInitialGuessUsingLCAO(const RUN_TYPE runType) {
     tmpParam["orbital-overlap-correspondence-method"] = "keep";
     tmpParam["num_of_iterations"] = 0;
     DfDmatrix dfDmatrix(&tmpParam);
-    dfDmatrix.DfDmatrixMain();  // RKS only?
+    dfDmatrix.run();  // RKS only?
   }
 }
 

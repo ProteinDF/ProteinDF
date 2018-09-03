@@ -95,11 +95,11 @@ class DfCD_Parallel : public DfCD {
   virtual void getK_S_woCD_mmap_DC(const RUN_TYPE runType,
                                    TlDenseSymmetricMatrix_Lapack* pK);
 
-  virtual void getK_S_fast(const RUN_TYPE runType,
+  virtual void getK_byLk(const RUN_TYPE runType,
                            TlDenseSymmetricMatrix_Lapack* pK);
 
  public:
-  void getK_D(const RUN_TYPE runType, TlDenseSymmetricMatrix_Scalapack* pK);
+  void getK_D(const RUN_TYPE runType);
 
  protected:
   void getK_S_woCD_D(const RUN_TYPE runType,

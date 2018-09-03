@@ -148,7 +148,7 @@ void DfInitialGuess::createInitialGuessUsingLCAO(const RUN_TYPE runType) {
 
     // 密度行列の作成
     DfDmatrix dfDmatrix(&tmpParam);
-    dfDmatrix.DfDmatrixMain();  // RKS only?
+    dfDmatrix.run();  // RKS only?
   }
 }
 
@@ -432,7 +432,7 @@ void DfInitialGuess::makeDensityMatrix() {
   tmpParam["control-iteration"] = 0;
 
   DfDmatrix* pDfDmat = getDfDmatrixObject(&tmpParam);
-  pDfDmat->DfDmatrixMain();
+  pDfDmat->run();
   delete pDfDmat;
   pDfDmat = NULL;
 }

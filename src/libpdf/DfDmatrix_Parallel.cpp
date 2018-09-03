@@ -26,75 +26,118 @@
 #include "TlTime.h"
 #include "tl_dense_general_matrix_scalapack.h"
 #include "tl_dense_symmetric_matrix_scalapack.h"
+#include "tl_dense_vector_scalapack.h"
 
 DfDmatrix_Parallel::DfDmatrix_Parallel(TlSerializeData* pPdfParam)
     : DfDmatrix(pPdfParam) {}
 
 DfDmatrix_Parallel::~DfDmatrix_Parallel() {}
 
-void DfDmatrix_Parallel::main(const DfObject::RUN_TYPE runType) {
+void DfDmatrix_Parallel::run() {
 #ifdef HAVE_SCALAPACK
   if (this->m_bUsingSCALAPACK == true) {
-    this->main_SCALAPACK(runType);
+    this->run_Scalapack();
   } else {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
-      DfDmatrix::main(runType);
+      DfDmatrix::run();
     }
     rComm.barrier();
   }
 #else
-  {
+  { 
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
-      DfDmatrix::main(runType);
+      DfDmatrix::run();
     }
     rComm.barrier();
   }
 #endif  // HAVE_SCALAPACK
 }
 
-void DfDmatrix_Parallel::main_SCALAPACK(const DfObject::RUN_TYPE runType) {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  this->log_.info("build density matrix using ScaLAPACK.");
-
-  // occupation
-  TlDenseVector_Lapack currOcc;
-  switch (this->orbitalCorrespondenceMethod_) {
-    case OCM_OVERLAP:
-      this->log_.info(" orbital correspondence method: MO-overlap");
-      currOcc = this->getOccupationUsingOverlap<TlDenseGeneralMatrix_Scalapack>(
-          runType);
-      if (rComm.isMaster() == true) {
-        currOcc.save(this->getOccupationPath(runType));
-      }
+void DfDmatrix_Parallel::run_Scalapack() {
+  switch (this->m_nMethodType) {
+    case METHOD_RKS:
+      this->makeOccupation<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Scalapack>(RUN_RKS);
+      this->generateDensityMatrix<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Scalapack>(RUN_RKS);
       break;
 
-    case OCM_PROJECTION:
-      this->log_.info(" orbital correspondence method: MO-projection");
-      currOcc =
-          this->getOccupationUsingProjection<TlDenseGeneralMatrix_Scalapack,
-                                             TlDenseSymmetricMatrix_Scalapack>(
-              runType);
-      if (rComm.isMaster() == true) {
-        currOcc.save(this->getOccupationPath(runType));
+    case METHOD_UKS:
+      this->makeOccupation<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Scalapack>(RUN_UKS_ALPHA);
+      this->generateDensityMatrix<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Scalapack>(RUN_UKS_ALPHA);
+
+      this->makeOccupation<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Scalapack>(RUN_UKS_BETA);
+      this->generateDensityMatrix<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Scalapack>(RUN_UKS_BETA);
+      break;
+
+    case METHOD_ROKS:
+      this->makeOccupation<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Scalapack>(RUN_ROKS_CLOSED);
+      this->generateDensityMatrix<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Scalapack>(RUN_ROKS_CLOSED);
+
+      this->makeOccupation<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Scalapack>(RUN_ROKS_OPEN);
+      this->generateDensityMatrix<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Scalapack>(RUN_ROKS_OPEN);
+
+      // ROKS_alpha,beta
+      {
+        TlDenseSymmetricMatrix_Scalapack PC = DfObject::getSpinDensityMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_ROKS_CLOSED, this->m_nIteration);
+        TlDenseSymmetricMatrix_Scalapack PO = DfObject::getSpinDensityMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_ROKS_OPEN, this->m_nIteration);
+
+        TlDenseSymmetricMatrix_Scalapack PA = PC + PO;
+        DfObject::saveSpinDensityMatrix(RUN_ROKS_ALPHA, this->m_nIteration, PA);
+
+        TlDenseSymmetricMatrix_Scalapack PB = PC;
+        DfObject::saveSpinDensityMatrix(RUN_ROKS_BETA, this->m_nIteration, PB);
       }
       break;
 
     default:
-      if (rComm.isMaster() == true) {
-        this->log_.info(" orbital correspondence method: none");
-        currOcc.load(this->getOccupationPath(runType));
-      }
-      rComm.broadcast(&currOcc);
+      CnErr.abort();
       break;
   }
-
-  rComm.barrier();
-  this->generateDensityMatrix<TlDenseGeneralMatrix_Scalapack,
-                              TlDenseSymmetricMatrix_Scalapack>(runType,
-                                                                currOcc);
 }
+
+
+// void DfDmatrix_Parallel::main_SCALAPACK(const DfObject::RUN_TYPE runType) {
+//   TlCommunicate& rComm = TlCommunicate::getInstance();
+//   this->log_.info("build density matrix using ScaLAPACK.");
+
+//   // occupation
+//   TlDenseVector_Lapack currOcc;
+//   switch (this->orbitalCorrespondenceMethod_) {
+//     case OCM_OVERLAP:
+//       this->log_.info(" orbital correspondence method: MO-overlap");
+//       currOcc = this->getOccupationUsingOverlap<TlDenseGeneralMatrix_Scalapack>(
+//           runType);
+//       if (rComm.isMaster() == true) {
+//         currOcc.save(this->getOccupationPath(runType));
+//       }
+//       break;
+
+//     case OCM_PROJECTION:
+//       this->log_.info(" orbital correspondence method: MO-projection");
+//       currOcc =
+//           this->getOccupationUsingProjection<TlDenseGeneralMatrix_Scalapack,
+//                                              TlDenseSymmetricMatrix_Scalapack>(
+//               runType);
+//       if (rComm.isMaster() == true) {
+//         currOcc.save(this->getOccupationPath(runType));
+//       }
+//       break;
+
+//     default:
+//       if (rComm.isMaster() == true) {
+//         this->log_.info(" orbital correspondence method: none");
+//         currOcc.load(this->getOccupationPath(runType));
+//       }
+//       rComm.broadcast(&currOcc);
+//       break;
+//   }
+
+//   rComm.barrier();
+//   this->generateDensityMatrix<TlDenseGeneralMatrix_Scalapack,
+//                               TlDenseSymmetricMatrix_Scalapack>(runType,
+//                                                                 currOcc);
+// }
 
 void DfDmatrix_Parallel::checkOccupation(const TlDenseVector_Lapack& prevOcc,
                                          const TlDenseVector_Lapack& currOcc) {
@@ -118,7 +161,7 @@ TlDenseVector_Lapack DfDmatrix_Parallel::getOccVtr(
   TlCommunicate& rComm = TlCommunicate::getInstance();
   TlDenseVector_Lapack occ;
   if (rComm.isMaster() == true) {
-    occ = DfObject::getOccVtr(runType);
+    occ = DfObject::getOccVtr<TlDenseVector_Lapack>(runType);
   }
   rComm.broadcast(&occ);
 

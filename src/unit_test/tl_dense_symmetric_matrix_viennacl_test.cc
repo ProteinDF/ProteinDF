@@ -6,6 +6,7 @@
 #include "tl_dense_general_matrix_viennacl.h"
 #include "tl_dense_symmetric_matrix_eigen.h"
 #include "tl_dense_symmetric_matrix_viennacl.h"
+#include "tl_dense_vector_viennacl.h"
 
 static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 static const std::string mat_save_load_path = "temp.sym.viennacl.save_load.mat";
@@ -297,7 +298,38 @@ TEST(TlDenseSymmetricMatrix_ViennaCL, save_and_load) {
 //   EXPECT_DOUBLE_EQ(54.0, C(2, 1));
 //   EXPECT_DOUBLE_EQ(66.0, C(2, 2));
 // }
-//
+
+TEST(TlDenseSymmetricMatrix_ViennaCL, operator_mul1) {
+  TlDenseSymmetricMatrix_ViennaCL A = getSymMatrixA<TlDenseSymmetricMatrix_ViennaCL>();
+  // [ 0  -  - ]
+  // [ 1  2  - ]
+  // [ 3  4  5 ]
+
+  TlDenseGeneralMatrix_ViennaCL B(3, 3);
+  B.set(0, 0, 0.0);
+  B.set(0, 1, 1.0);
+  B.set(0, 2, 2.0);
+  B.set(1, 0, 3.0);
+  B.set(1, 1, 4.0);
+  B.set(1, 2, 5.0);
+  B.set(2, 0, 6.0);
+  B.set(2, 1, 7.0);
+  B.set(2, 2, 8.0);
+
+  TlDenseGeneralMatrix_ViennaCL C = A * B;
+
+  EXPECT_DOUBLE_EQ(21.0, C.get(0, 0));
+  EXPECT_DOUBLE_EQ(25.0, C.get(0, 1));
+  EXPECT_DOUBLE_EQ(29.0, C.get(0, 2));
+  EXPECT_DOUBLE_EQ(30.0, C.get(1, 0));
+  EXPECT_DOUBLE_EQ(37.0, C.get(1, 1));
+  EXPECT_DOUBLE_EQ(44.0, C.get(1, 2));
+  EXPECT_DOUBLE_EQ(42.0, C.get(2, 0));
+  EXPECT_DOUBLE_EQ(54.0, C.get(2, 1));
+  EXPECT_DOUBLE_EQ(66.0, C.get(2, 2));
+}
+
+
 // TEST(TlDenseSymmetricMatrix_ViennaCL, testMultiEqual2) {
 //   TlDenseSymmetricMatrix_ViennaCL A = getSymMatrixA();
 //   // [ 0  -  - ]
@@ -383,3 +415,66 @@ TEST(TlDenseSymmetricMatrix_ViennaCL, save_and_load) {
 //   EXPECT_DOUBLE_EQ(A(3, 2), LL(3, 2));
 //   EXPECT_DOUBLE_EQ(A(3, 3), LL(3, 3));
 // }
+
+// TEST(TlDenseSymmetricMatrix_ViennaCL, eig) {
+//   TlDenseSymmetricMatrix_ViennaCL A = getSymMatrixD<TlDenseSymmetricMatrix_ViennaCL>();
+
+//   TlDenseVector_ViennaCL eigVal;
+//   TlDenseGeneralMatrix_ViennaCL eigVec;
+//   A.eig(&eigVal, &eigVec);
+
+//   eigVal.save("eigval_vcl.vtr");
+//   eigVec.save("eigvec_vcl.mat");
+
+//   // check
+//   // -2.0531 -0.5146 -0.2943 12.8621
+//   // 
+//   //   0.7003 -0.5144 -0.2767  0.4103
+//   //   0.3592  0.4851  0.6634  0.4422
+//   //  -0.1569  0.5420 -0.6504  0.5085
+//   //  -0.5965 -0.4543  0.2457  0.6144
+//   EXPECT_NEAR(-2.0531, eigVal.get(0), 1.E-4);
+//   EXPECT_NEAR(-0.5146, eigVal.get(1), 1.E-4);
+//   EXPECT_NEAR(-0.2943, eigVal.get(2), 1.E-4);
+//   EXPECT_NEAR(12.8621, eigVal.get(3), 1.E-4);
+
+//   TlDenseSymmetricMatrix_ViennaCL d(eigVal.getSize());
+//   for (int i = 0; i < eigVal.getSize(); ++i) {
+//     d.set(i, i, eigVal.get(i));
+//   }
+//   TlDenseGeneralMatrix_ViennaCL lhs = A * eigVec;
+//   TlDenseGeneralMatrix_ViennaCL rhs = eigVec * d;
+
+//   for (int i = 0; i < A.getNumOfRows(); ++i) {
+//     for (int j = 0; j < A.getNumOfCols(); ++j) {
+//       EXPECT_NEAR(lhs.get(i, j), rhs.get(i, j), 1.0E-2);
+//     }
+//   }
+// }
+
+TEST(TlDenseSymmetricMatrix_ViennaCL, eig) {
+  int dim = 100;
+  TlDenseSymmetricMatrix_ViennaCL A = getSymmetricMatrix<TlDenseSymmetricMatrix_ViennaCL>(dim);
+  A.save("eig_A.mat");
+
+  TlDenseVector_ViennaCL eigVal;
+  TlDenseGeneralMatrix_ViennaCL eigVec;
+  A.eig(&eigVal, &eigVec);
+
+  eigVal.save("eigval_vcl.vtr");
+  eigVec.save("eigvec_vcl.mat");
+
+  // check
+  TlDenseSymmetricMatrix_ViennaCL d(eigVal.getSize());
+  for (int i = 0; i < dim; ++i) {
+    d.set(i, i, eigVal.get(i));
+  }
+  TlDenseGeneralMatrix_ViennaCL lhs = A * eigVec;
+  TlDenseGeneralMatrix_ViennaCL rhs = eigVec * d;
+
+  for (int i = 0; i < dim; ++i) {
+    for (int j = 0; j < dim; ++j) {
+      EXPECT_NEAR(lhs.get(i, j), rhs.get(i, j), 1.0E-2);
+    }
+  }
+}

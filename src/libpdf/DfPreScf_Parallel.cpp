@@ -81,7 +81,7 @@ void DfPreScf_Parallel::createInitialGuessUsingLCAO_onScaLAPACK(
     tmpParam["orbital-overlap-correspondence-method"] = "keep";
     tmpParam["num_of_iterations"] = 0;
     DfDmatrix_Parallel dfDmatrix(&tmpParam);
-    dfDmatrix.DfDmatrixMain();  // RKS only?
+    dfDmatrix.run();  // RKS only?
   }
 }
 
@@ -104,7 +104,7 @@ void DfPreScf_Parallel::createInitialGuessUsingLCAO_onDisk(
     tmpParam["orbital-overlap-correspondence-method"] = "keep";
     tmpParam["num_of_iterations"] = 0;
     DfDmatrix dfDmatrix(&tmpParam);
-    dfDmatrix.DfDmatrixMain();  // RKS only?
+    dfDmatrix.run();  // RKS only?
   }
 }
 

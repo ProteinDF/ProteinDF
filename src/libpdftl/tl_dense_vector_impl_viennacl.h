@@ -5,10 +5,15 @@
 // ViennaCL algorithms on Eigen objects
 #define VIENNACL_WITH_EIGEN 1
 
+#include <vector>
+
 #include "tl_dense_vector_impl_object.h"
 #include "viennacl/vector.hpp"
 
 class TlDenseGeneralMatrix_ImplViennaCL;
+class TlSparseGeneralMatrix_ImplViennaCL;
+class TlSparseSymmetricMatrix_ImplViennaCL;
+class TlDenseVector_ImplEigen;
 
 class TlDenseVector_ImplViennaCL : public TlDenseVector_ImplObject {
  public:
@@ -20,6 +25,13 @@ class TlDenseVector_ImplViennaCL : public TlDenseVector_ImplObject {
  public:
   TlDenseVector_ImplViennaCL(TlDenseVectorObject::index_type dim = 0);
   TlDenseVector_ImplViennaCL(const TlDenseVector_ImplViennaCL& rhs);
+  TlDenseVector_ImplViennaCL(const std::vector<double>& rhs);
+#ifdef HAVE_EIGEN
+  TlDenseVector_ImplViennaCL(const TlDenseVector_ImplEigen& rhs);
+#endif  // HAVE_EIGEN
+
+  operator std::vector<double>() const;
+
   virtual ~TlDenseVector_ImplViennaCL();
 
   // ---------------------------------------------------------------------------
@@ -50,9 +62,11 @@ class TlDenseVector_ImplViennaCL : public TlDenseVector_ImplObject {
   // operations
   // ---------------------------------------------------------------------------
  public:
-  double sum() const;
-  void sortByGreater();
+  virtual double sum() const;
+  virtual void sortByGreater();
   TlDenseVector_ImplViennaCL& dotInPlace(const TlDenseVector_ImplViennaCL& rhs);
+
+  TlDenseVector_ImplViennaCL& reverse();
 
   // ---------------------------------------------------------------------------
   // variables
@@ -86,6 +100,19 @@ class TlDenseVector_ImplViennaCL : public TlDenseVector_ImplObject {
   friend TlDenseVector_ImplViennaCL operator*(
       const TlDenseVector_ImplViennaCL& vec,
       const TlDenseGeneralMatrix_ImplViennaCL& mat);
+
+  // SM(G) x DV
+  friend TlDenseVector_ImplViennaCL operator*(
+      const TlSparseGeneralMatrix_ImplViennaCL& mat,
+      const TlDenseVector_ImplViennaCL& vtr);
+  // DV x SM(G)
+  friend TlDenseVector_ImplViennaCL operator*(
+      const TlDenseVector_ImplViennaCL& vtr,
+      const TlSparseGeneralMatrix_ImplViennaCL& mat);
+  
+  friend TlDenseVector_ImplViennaCL operator*(
+      const TlSparseSymmetricMatrix_ImplViennaCL& mat,
+      const TlDenseVector_ImplViennaCL& vtr);
 };
 
 #endif  // TL_DENSE_VECTOR_IMPL_VIENNACL_H

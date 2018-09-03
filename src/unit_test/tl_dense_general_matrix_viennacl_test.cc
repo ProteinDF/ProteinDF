@@ -3,10 +3,14 @@
 #include "config.h"
 #include "gtest/gtest.h"
 #include "matrix_common.h"
-#include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_general_matrix_viennacl.h"
 #include "tl_dense_vector_viennacl.h"
 #include "vector_common.h"
+#include "tl_sparse_general_matrix_viennacl.h"
+
+#ifdef HAVE_EIGEN
+#include "tl_dense_general_matrix_eigen.h"
+#endif // HAVE_EIGEN
 
 static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 static const double EPS2 = 1.0E-2;
@@ -16,6 +20,23 @@ static const std::string mat_load_path = "temp.gen.viennacl.load.mat";
 // -----------------------------------------------------------------------------
 // test
 // -----------------------------------------------------------------------------
+// TEST(TlDenseGeneralMatrix_ViennaCL, constructBySparseGeneralMatrix) {
+//   const int row = 20;
+//   const int col = 30;
+//   TlSparseGeneralMatrix_ViennaCL SM(row, col);
+
+//   SM.set(1, 0, 1.0);
+//   SM.set(2, 3, 4.0);
+//   SM.set(5, 8, -10.0);
+
+//   TlDenseGeneralMatrix_ViennaCL DM = SM;
+//   EXPECT_EQ(row, DM.getNumOfRows());
+//   EXPECT_EQ(col, DM.getNumOfCols());
+//   EXPECT_DOUBLE_EQ(1.0, DM.get(1, 0));
+//   EXPECT_DOUBLE_EQ(4.0, DM.get(2, 3));
+//   EXPECT_DOUBLE_EQ(-10.0, DM.get(5, 8));
+// }
+
 TEST(TlDenseGeneralMatrix_ViennaCL, copyFromEigen) {
   TlDenseGeneralMatrix_Eigen a = getMatrixA<TlDenseGeneralMatrix_Eigen>();
   TlDenseGeneralMatrix_ViennaCL b = a;
@@ -29,6 +50,49 @@ TEST(TlDenseGeneralMatrix_ViennaCL, copyFromEigen) {
   }
 }
 
+#ifdef HAVE_EIGEN
+TEST(TlDenseGeneralMatrix_ViennaCL, constructBy_DenseGeneralMatrix_Eigen) {
+  const int row = 20;
+  const int col = 30;
+  TlDenseGeneralMatrix_Eigen DM_E(row, col);
+
+  DM_E.set(1, 0, 1.0);
+  DM_E.set(2, 3, 4.0);
+  DM_E.set(5, 8, -10.0);
+
+  TlDenseGeneralMatrix_ViennaCL DM = DM_E;
+  EXPECT_EQ(row, DM.getNumOfRows());
+  EXPECT_EQ(col, DM.getNumOfCols());
+  EXPECT_DOUBLE_EQ(1.0, DM.get(1, 0));
+  EXPECT_DOUBLE_EQ(4.0, DM.get(2, 3));
+  EXPECT_DOUBLE_EQ(-10.0, DM.get(5, 8));
+}
+#endif // HAVE_EIGEN
+
+TEST(TlDenseGeneralMatrix_ViennaCL, vtr2mat) {
+  const int row = 3;
+  const int col = 4;
+  const int elements = row * col;
+  std::vector<double> vtr(elements);
+  for (int i = 0; i < elements; ++i) {
+    vtr[i] = i;
+  }
+
+  TlDenseGeneralMatrix_ViennaCL a(row, col);
+  a.vtr2mat(vtr);
+  // std::cout << a << std::endl;
+
+  EXPECT_EQ(row, a.getNumOfRows());
+  EXPECT_EQ(col, a.getNumOfCols());
+  int i = 0;
+  for (int c = 0; c < col; ++c) { // col-major
+    for (int r = 0; r < row; ++r) {
+      EXPECT_DOUBLE_EQ(vtr[i], a.get(r, c));
+      ++i;
+    }
+  }
+}
+
 // TEST(TlDenseGeneralMatrix_ViennaCL, constructByTlSerializedData) {
 //   // TODO
 // }
@@ -36,6 +100,7 @@ TEST(TlDenseGeneralMatrix_ViennaCL, copyFromEigen) {
 // TEST(TlDenseGeneralMatrix_ViennaCL, vtr2mat) {
 //   // TODO
 // }
+
 
 #ifdef HAVE_HDF5
 // TEST(TlDenseGeneralMatrix_ViennaCL, hdf5) {
@@ -114,19 +179,20 @@ TEST(TlDenseGeneralMatrix_ViennaCL, operator_mul_mat_vec) {
   EXPECT_DOUBLE_EQ(23.0, z.get(2));
 }
 
-//            [0 1 2]
-// [0 1 2 ] * [3 4 5] = [15 18 21]
-//            [6 7 8]
+//           [ 1  2  3  4]
+// [0 1 2] * [ 5  6  7  8] = [23 26 29 32]
+//           [ 9 10 11 12]
 TEST(TlDenseGeneralMatrix_ViennaCL, operator_mul_vec_mat) {
-  TlDenseGeneralMatrix_ViennaCL a = getMatrixA<TlDenseGeneralMatrix_ViennaCL>();
+  TlDenseGeneralMatrix_ViennaCL a = getMatrixD<TlDenseGeneralMatrix_ViennaCL>();
   TlDenseVector_ViennaCL v = getVectorA<TlDenseVector_ViennaCL>();
 
   TlDenseVector_ViennaCL z = v * a;
 
-  EXPECT_EQ(3, z.getSize());
-  EXPECT_DOUBLE_EQ(15.0, z.get(0));
-  EXPECT_DOUBLE_EQ(18.0, z.get(1));
-  EXPECT_DOUBLE_EQ(21.0, z.get(2));
+  EXPECT_EQ(4, z.getSize());
+  EXPECT_DOUBLE_EQ(23.0, z.get(0));
+  EXPECT_DOUBLE_EQ(26.0, z.get(1));
+  EXPECT_DOUBLE_EQ(29.0, z.get(2));
+  EXPECT_DOUBLE_EQ(32.0, z.get(3));
 }
 
 // TEST(TlDenseGeneralMatrix_ViennaCL, dot) {
@@ -207,3 +273,20 @@ TEST(TlDenseGeneralMatrix_ViennaCL, operator_mul_vec_mat) {
 //   EXPECT_NEAR(B(3, 0), AX(3, 0), EPS2);
 //   EXPECT_NEAR(B(4, 0), AX(4, 0), EPS2);
 // }
+
+TEST(TlDenseGeneralMatrix_ViennaCL, reverseColumns) {
+  const int row = 20;
+  const int col = 20;
+  TlDenseGeneralMatrix_Eigen ref = getTlMatrix<TlDenseGeneralMatrix_Eigen>(row, col);
+  TlDenseGeneralMatrix_ViennaCL a(ref);
+
+  a.reverseColumns();
+  // std::cout << ref << std::endl;
+  // std::cout << a << std::endl;
+
+  for (int i = 0; i < row; ++i) {
+    for (int j = 0; j < col; ++j) {
+      EXPECT_DOUBLE_EQ(ref.get(i, col -j -1), a.get(i, j));
+    }
+  }
+}

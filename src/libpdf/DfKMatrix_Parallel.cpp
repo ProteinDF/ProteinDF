@@ -32,19 +32,19 @@ DfKMatrix_Parallel::~DfKMatrix_Parallel() {}
 void DfKMatrix_Parallel::getK_CD() {
 #ifdef HAVE_SCALAPACK
   if (this->m_bUsingSCALAPACK == true) {
-    TlDenseSymmetricMatrix_Scalapack K(this->m_nNumOfAOs);
-    this->getK_CD_distributed(RUN_RKS, &K);
-    DfObject::saveHFxMatrix(RUN_RKS, this->m_nIteration, K);
+    //TlDenseSymmetricMatrix_Scalapack K(this->m_nNumOfAOs);
+    this->getK_CD_distributed(RUN_RKS);
+    //DfObject::saveHFxMatrix(RUN_RKS, this->m_nIteration, K);
   } else {
-    TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
-    this->getK_CD_local(RUN_RKS, &K);
-    this->saveKMatrix(RUN_RKS, K);
+    //TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
+    this->getK_CD_replica(RUN_RKS);
+    //this->saveKMatrix(RUN_RKS, K);
   }
 #else
   {
-    TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
-    this->getK_CD_local(RUN_RKS, &K);
-    this->saveKMatrix(RUN_RKS, K);
+    //TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
+    this->getK_CD_replica(RUN_RKS);
+    //this->saveKMatrix(RUN_RKS, K);
   }
 #endif  // HAVE_SCALAPACK
 }
@@ -77,16 +77,14 @@ void DfKMatrix_Parallel::saveKMatrix(const RUN_TYPE runType,
   }
 }
 
-void DfKMatrix_Parallel::getK_CD_local(const RUN_TYPE runType,
-                                       TlDenseSymmetricMatrix_Lapack* pK) {
+void DfKMatrix_Parallel::getK_CD_replica(const RUN_TYPE runType) {
   DfCD_Parallel dfCD(this->pPdfParam_);
-  dfCD.getK(runType, pK);
+  dfCD.getK(runType);
 }
 
-void DfKMatrix_Parallel::getK_CD_distributed(
-    const RUN_TYPE runType, TlDenseSymmetricMatrix_Scalapack* pK) {
+void DfKMatrix_Parallel::getK_CD_distributed(const RUN_TYPE runType) {
   DfCD_Parallel dfCD(this->pPdfParam_);
-  dfCD.getK_D(runType, pK);
+  dfCD.getK_D(runType);
 }
 
 void DfKMatrix_Parallel::getK_conventional_local(

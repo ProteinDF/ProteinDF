@@ -46,8 +46,8 @@ class TlDenseSymmetricMatrix_ImplScalapack
       const TlDenseSymmetricMatrix_ImplScalapack& rhs);
   TlDenseSymmetricMatrix_ImplScalapack(
       const TlDenseGeneralMatrix_ImplScalapack& rhs);
-  TlDenseSymmetricMatrix_ImplScalapack(const TlDenseVector_ImplScalapack& v,
-                                       const TlMatrixObject::index_type dim);
+//   TlDenseSymmetricMatrix_ImplScalapack(const TlDenseVector_ImplScalapack& v,
+//                                        const TlMatrixObject::index_type dim);
   virtual ~TlDenseSymmetricMatrix_ImplScalapack();
 
   // ---------------------------------------------------------------------------

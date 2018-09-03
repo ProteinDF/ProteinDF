@@ -37,7 +37,8 @@ class DfKMatrix : public DfObject {
 
   // void getK_RI_local(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack
   // *pK);
-  void getK_CD_local(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
+  virtual void getK_CD_replica(const RUN_TYPE runType);
+  
   void getK_conventional_local(const RUN_TYPE runType,
                                TlDenseSymmetricMatrix_Lapack* pK);
 

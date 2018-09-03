@@ -1,20 +1,17 @@
 #ifndef TL_DENSE_VECTOR_OBJECT_H
 #define TL_DENSE_VECTOR_OBJECT_H
 
-#include <string>
-#include "TlLogging.h"
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
+#include <string>
+#include "TlLogging.h"
+#include "tl_vector_object.h"
+
 class TlDenseVector_ImplObject;
 
-class TlDenseVectorObject {
- public:
-  typedef signed int index_type;
-  typedef signed int size_type;
-
+class TlDenseVectorObject : public TlVectorObject {
   // ---------------------------------------------------------------------------
   // constructor & destructor
   // ---------------------------------------------------------------------------

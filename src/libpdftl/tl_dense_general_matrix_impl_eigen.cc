@@ -1,9 +1,22 @@
-#include "tl_dense_general_matrix_impl_eigen.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif  // HAVE_CONFIG_H
+
 #include <Eigen/Core>
 #include <Eigen/LU>
 #include <iostream>
+
+#include "tl_dense_general_matrix_impl_eigen.h"
 #include "tl_dense_symmetric_matrix_impl_eigen.h"
 #include "tl_dense_vector_impl_eigen.h"
+#include "tl_sparse_general_matrix_impl_eigen.h"
+
+#ifdef HAVE_VIENNACL
+#define VIENNACL_HAVE_EIGEN
+#include <viennacl/matrix.hpp>
+#include <viennacl/matrix_proxy.hpp>
+#include "tl_dense_general_matrix_impl_viennacl.h"
+#endif  //
 
 TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
     const TlMatrixObject::index_type row, const TlMatrixObject::index_type col)
@@ -24,8 +37,27 @@ TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
   this->matrix_ = rhs;
 }
 
+TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
+    const TlSparseGeneralMatrix_ImplEigen& sm)
+    : matrix_(sm.matrix_) {}
+
+void TlDenseGeneralMatrix_ImplEigen::vtr2mat(const std::vector<double>& vtr) {
+  assert(vtr.size() == this->getNumOfRows() * this->getNumOfCols());
+  this->matrix_ =
+      MapTypeConst(&(vtr[0]), this->getNumOfRows(), this->getNumOfCols());
+}
+
+#ifdef HAVE_VIENNACL
+TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
+    const TlDenseGeneralMatrix_ImplViennaCL& rhs)
+    : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()) {
+  viennacl::copy(rhs.matrix_, this->matrix_);
+}
+#endif  // HAVE_VIENNACL
+
 TlDenseGeneralMatrix_ImplEigen::~TlDenseGeneralMatrix_ImplEigen() {}
 
+// ----------------------
 TlMatrixObject::index_type TlDenseGeneralMatrix_ImplEigen::getNumOfRows()
     const {
   return this->matrix_.rows();
@@ -217,5 +249,11 @@ TlDenseVector_ImplEigen operator*(const TlDenseVector_ImplEigen& vec,
   TlDenseVector_ImplEigen answer;
   answer.vector_ = vec.vector_.transpose() * mat.matrix_;
 
+  return answer;
+}
+
+TlDenseGeneralMatrix_ImplEigen operator*(const double coef, const TlDenseGeneralMatrix_ImplEigen& DM) {
+  TlDenseGeneralMatrix_ImplEigen answer = DM;
+  answer *= coef;
   return answer;
 }

@@ -8,8 +8,12 @@
 #include <mutex>
 #endif  // __cplusplus
 
+class TlDenseGeneralMatrix_ImplEigen;
 class TlDenseSymmetricMatrix_ImplEigen;
 class TlDenseVector_ImplEigen;
+class TlSparseGeneralMatrix_ImplEigen;
+class TlSparseSymmetricMatrix_ImplEigen;
+class TlDenseGeneralMatrix_ImplViennaCL;
 
 class TlDenseGeneralMatrix_ImplEigen : public TlDenseMatrix_ImplObject {
  public:
@@ -27,6 +31,14 @@ class TlDenseGeneralMatrix_ImplEigen : public TlDenseMatrix_ImplObject {
   TlDenseGeneralMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplEigen& rhs);
   TlDenseGeneralMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplEigen& rhs);
   TlDenseGeneralMatrix_ImplEigen(const MatrixDataType& rhs);
+  TlDenseGeneralMatrix_ImplEigen(const TlSparseGeneralMatrix_ImplEigen& sm);
+
+#ifdef HAVE_VIENNACL  
+  TlDenseGeneralMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplViennaCL& rhs);
+#endif // HAVE_VIENNACL
+
+  void vtr2mat(const std::vector<double>& vtr);
+
   virtual ~TlDenseGeneralMatrix_ImplEigen();
 
   // ---------------------------------------------------------------------------
@@ -96,17 +108,50 @@ class TlDenseGeneralMatrix_ImplEigen : public TlDenseMatrix_ImplObject {
   // others
   // ---------------------------------------------------------------------------
   friend class TlDenseSymmetricMatrix_ImplEigen;
+  friend class TlSparseGeneralMatrix_ImplEigen;
   friend class TlDenseGeneralMatrix_ImplViennaCL;
 
+  // DM(G) = DM(G) * DM(S)
+  friend TlDenseGeneralMatrix_ImplEigen operator*(
+      const TlDenseGeneralMatrix_ImplEigen& mat1,
+      const TlDenseSymmetricMatrix_ImplEigen& mat2);
+  // DM(G) = DM(S) * DM(G)
+  friend TlDenseGeneralMatrix_ImplEigen operator*(
+      const TlDenseSymmetricMatrix_ImplEigen& mat1,
+      const TlDenseGeneralMatrix_ImplEigen& mat2);
+
+  // DV = DM(G) * DV
   friend TlDenseVector_ImplEigen operator*(
       const TlDenseGeneralMatrix_ImplEigen& mat,
       const TlDenseVector_ImplEigen& vec);
+  // DV = DV * DM(G)
   friend TlDenseVector_ImplEigen operator*(
       const TlDenseVector_ImplEigen& vec,
       const TlDenseGeneralMatrix_ImplEigen& mat);
 
+  // v.s. sparse matrix
+  // DM(G) = DM(G) * SM(G)
+  friend TlDenseGeneralMatrix_ImplEigen operator*(
+      const TlDenseGeneralMatrix_ImplEigen& mat1,
+      const TlSparseGeneralMatrix_ImplEigen& mat2);
+  // DM(G) = SM(G) * DM(G)
+  friend TlDenseGeneralMatrix_ImplEigen operator*(
+      const TlSparseGeneralMatrix_ImplEigen& mat1,
+      const TlDenseGeneralMatrix_ImplEigen& mat2);
+
+  // DM(G) = DM(G) * SM(S)
+  friend TlDenseGeneralMatrix_ImplEigen operator*(
+      const TlDenseGeneralMatrix_ImplEigen& mat1,
+      const TlSparseSymmetricMatrix_ImplEigen& mat2);
+  // DM(G) = SM(S) * DM(G)
+  friend TlDenseGeneralMatrix_ImplEigen operator*(
+      const TlSparseSymmetricMatrix_ImplEigen& mat1,
+      const TlDenseGeneralMatrix_ImplEigen& mat2);
+
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // Eigen macro
 };
+
+TlDenseGeneralMatrix_ImplViennaCL operator*(const double coef, const TlDenseGeneralMatrix_ImplViennaCL& DM);
 
 #endif  // TL_DENSE_GENERAL_MATRIX_IMPLE_EIGEN_H
