@@ -163,6 +163,8 @@ bool DfTaskCtrl::getQueue(const std::size_t maxIndeces,
     }
   }
 
+  this->log_.info(TlUtils::format("progress: %ld/%ld %.1f%%", currentIndex, maxIndeces, 100.0 * (double(currentIndex) / double(maxIndeces))));
+
   return (pTasks->empty() != true);
 }
 
