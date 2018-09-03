@@ -250,7 +250,6 @@ void DfCdkMatrix::getK_byLjk_useSparseMatrix(const RUN_TYPE runType) {
 
   const SymmetricMatrix P = this->getSpinDensityMatrix<SymmetricMatrix>(
       runType, this->m_nIteration - 1);
-  std::cout << "make P" << std::endl;
   const SparseSymmetricMatrix P_SM = P;
 
   this->log_.info("start loop");
@@ -271,7 +270,6 @@ void DfCdkMatrix::getK_byLjk_useSparseMatrix(const RUN_TYPE runType) {
               I2PQ_mat, L.getColVector(*it));
       assert(l.getNumOfRows() == this->m_nNumOfAOs);
 
-      std::cout << "flag" << std::endl;
       SparseSymmetricMatrix X = l * P_SM * l;
       tmpK += X;
     }
@@ -362,9 +360,7 @@ template <typename SymmetricMatrix, typename Vector,
           typename SparseGeneralMatrix>
 SymmetricMatrix DfCdkMatrix::convert_I2PQ(const SparseGeneralMatrix& I2PQ_mat,
                                           const Vector& L) {
-  //std::cout << "flag0" << std::endl;
   Vector expandL = I2PQ_mat * L;
-  //std::cout << "flag1\n" << std::endl;
   SymmetricMatrix answer(this->m_nNumOfAOs);
   answer.vtr2mat(expandL);
 

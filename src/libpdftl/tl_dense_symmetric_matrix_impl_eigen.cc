@@ -24,7 +24,7 @@ TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
 }
 
 TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
-    const TlSparseSymmetricMatrix_ImplEigen& sm) {
+    const TlSparseSymmetricMatrix_ImplEigen& sm) : TlDenseGeneralMatrix_ImplEigen(sm.getNumOfRows(), sm.getNumOfCols()) {
   // this->matrix_ = sm.matrix_.selfadjointView<Eigen::Upper>();
   this->matrix_ = sm.matrix_;
 }

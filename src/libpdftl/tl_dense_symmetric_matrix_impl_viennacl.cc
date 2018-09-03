@@ -1,20 +1,25 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif // HAVE_CONFIG_H
+#endif  // HAVE_CONFIG_H
 
-#include "tl_dense_symmetric_matrix_impl_viennacl.h"
+// IMPORTANT: Must be set prior to any ViennaCL includes if you want to use
+// ViennaCL algorithms on Eigen objects
+#define VIENNACL_WITH_EIGEN 1
+
+#ifdef HAVE_EIGEN
+#include "tl_sparse_symmetric_matrix_impl_eigen.h"
+#endif  // HAVE_EIGEN
+
 #include "tl_dense_general_matrix_impl_viennacl.h"
 #include "tl_dense_symmetric_matrix_impl_eigen.h"
+#include "tl_dense_symmetric_matrix_impl_viennacl.h"
 #include "tl_dense_vector_impl_viennacl.h"
+#include "tl_sparse_symmetric_matrix_impl_viennacl.h"
 
 #include <viennacl/linalg/power_iter.hpp>
 #include <viennacl/linalg/qr-method.hpp>
 #include <viennacl/matrix.hpp>
 #include <viennacl/vector.hpp>
-
-#ifdef HAVE_EIGEN
-#include "tl_sparse_symmetric_matrix_impl_eigen.h"
-#endif // HAVE_EIGEN
 
 TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(
     const TlMatrixObject::index_type dim)
@@ -38,15 +43,19 @@ TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(
   }
 }
 
-TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(const TlSparseSymmetricMatrix_ImplViennaCL& rhs) {
+TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(
+    const TlSparseSymmetricMatrix_ImplViennaCL& rhs)
+    : TlDenseGeneralMatrix_ImplViennaCL(rhs.getNumOfRows(),
+                                        rhs.getNumOfCols()) {
   TlDenseSymmetricMatrix_ImplEigen DM = TlSparseSymmetricMatrix_ImplEigen(rhs);
   viennacl::copy(DM.matrix_, this->matrix_);
 }
 
 #ifdef HAVE_EIGEN
 TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(
-    const TlDenseSymmetricMatrix_ImplEigen& rhs) {
-  std::cout << "TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(const TlDenseSymmetricMatrix_ImplEigen& rhs)" << std::endl;
+    const TlDenseSymmetricMatrix_ImplEigen& rhs)
+    : TlDenseGeneralMatrix_ImplViennaCL(rhs.getNumOfRows(),
+                                        rhs.getNumOfCols()) {
   viennacl::copy(rhs.matrix_, this->matrix_);
 }
 #endif  // HAVE_EIGEN
