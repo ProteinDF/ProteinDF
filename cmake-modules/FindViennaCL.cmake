@@ -17,6 +17,8 @@ SET(VIENNACL_INCLUDE_SEARCH_PATHS
   /usr/include
   /usr/local/include
   /opt/ViennaCL/include
+  ${VIENNACL_ROOT}
+  ${VIENNACL_ROOT}/include
   $ENV{VIENNACL_ROOT}
   $ENV{VIENNACL_ROOT}/include
   )

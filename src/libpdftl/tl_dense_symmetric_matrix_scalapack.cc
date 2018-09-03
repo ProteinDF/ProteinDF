@@ -27,11 +27,11 @@ TlDenseSymmetricMatrix_Scalapack::TlDenseSymmetricMatrix_Scalapack(
       *(dynamic_cast<const TlDenseGeneralMatrix_ImplScalapack*>(rhs.pImpl_)));
 }
 
-TlDenseSymmetricMatrix_Scalapack::TlDenseSymmetricMatrix_Scalapack(
-    const TlDenseVector_Scalapack& v, const TlMatrixObject::index_type dim) {
-  this->pImpl_ = new TlDenseSymmetricMatrix_ImplScalapack(
-      *(dynamic_cast<const TlDenseVector_ImplScalapack*>(v.pImpl_)), dim);
-}
+// TlDenseSymmetricMatrix_Scalapack::TlDenseSymmetricMatrix_Scalapack(
+//     const TlDenseVector_Scalapack& v, const TlMatrixObject::index_type dim) {
+//   this->pImpl_ = new TlDenseSymmetricMatrix_ImplScalapack(
+//       *(dynamic_cast<const TlDenseVector_ImplScalapack*>(v.pImpl_)), dim);
+// }
 
 TlDenseSymmetricMatrix_Scalapack::~TlDenseSymmetricMatrix_Scalapack() {
   delete this->pImpl_;
@@ -204,14 +204,16 @@ bool TlDenseSymmetricMatrix_Scalapack::save(const std::string& filePath) const {
 }
 
 void TlDenseSymmetricMatrix_Scalapack::dump(TlDenseVector_Scalapack* v) const {
-  dynamic_cast<TlDenseSymmetricMatrix_ImplScalapack*>(this->pImpl_)
-      ->dump(dynamic_cast<TlDenseVector_ImplScalapack*>(v->pImpl_));
+    // TODO: implement
+//   dynamic_cast<TlDenseSymmetricMatrix_ImplScalapack*>(this->pImpl_)
+//       ->dump(dynamic_cast<TlDenseVector_ImplScalapack*>(v->pImpl_));
 }
 
 void TlDenseSymmetricMatrix_Scalapack::restore(
     const TlDenseVector_Scalapack& v) {
-  dynamic_cast<TlDenseSymmetricMatrix_ImplScalapack*>(this->pImpl_)
-      ->restore(*(dynamic_cast<TlDenseVector_ImplScalapack*>(v.pImpl_)));
+    // TODO: implement
+//   dynamic_cast<TlDenseSymmetricMatrix_ImplScalapack*>(this->pImpl_)
+//       ->restore(*(dynamic_cast<TlDenseVector_ImplScalapack*>(v.pImpl_)));
 }
 
 // ---------------------------------------------------------------------------

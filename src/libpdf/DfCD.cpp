@@ -20,10 +20,11 @@
 #include <omp.h>
 #endif  // _OPENMP
 
-#include <set>
 #include <numeric>
+#include <set>
 
 #include "CnError.h"
+#include "CnFile.h"
 #include "DfCD.h"
 #include "DfEngineObject.h"
 #include "DfEriEngine.h"
@@ -36,7 +37,12 @@
 #include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_dense_vector_lapack.h"
 
-DfCD::DfCD(TlSerializeData* pPdfParam) : DfObject(pPdfParam), pEngines_(NULL) {
+DfCD::DfCD(TlSerializeData* pPdfParam, bool initializeFileObj)
+    : DfObject(pPdfParam), pEngines_(NULL) {
+  if (initializeFileObj) {
+    this->file_ = new CnFile();
+  }
+
   this->cutoffThreshold_ = 1.0E-10;
   if ((*pPdfParam)["cut_value"].getStr().empty() != true) {
     this->cutoffThreshold_ = (*pPdfParam)["cut_value"].getDouble();
@@ -104,7 +110,10 @@ DfCD::DfCD(TlSerializeData* pPdfParam) : DfObject(pPdfParam), pEngines_(NULL) {
   }
 }
 
-DfCD::~DfCD() {}
+DfCD::~DfCD() {
+  delete this->file_;
+  this->file_ = NULL;
+}
 
 void DfCD::destroyEngines() {
   this->log_.info("delete engine");
@@ -635,9 +644,8 @@ TlDenseVector_Lapack DfCD::getScreenedDensityMatrix(const RUN_TYPE runType,
   TlDenseSymmetricMatrix_Lapack P;
   switch (runType) {
     case RUN_RKS:
-      P = 0.5 *
-          this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
-              RUN_RKS, this->m_nIteration - 1);
+      P = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
+                    RUN_RKS, this->m_nIteration - 1);
       break;
 
     case RUN_UKS_ALPHA:
@@ -647,17 +655,15 @@ TlDenseVector_Lapack DfCD::getScreenedDensityMatrix(const RUN_TYPE runType,
       break;
 
     case RUN_ROKS_ALPHA: {
-      P = 0.5 *
-          this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
-              RUN_ROKS_CLOSED, this->m_nIteration - 1);
+      P = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
+                    RUN_ROKS_CLOSED, this->m_nIteration - 1);
       P += this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
           RUN_ROKS_OPEN, this->m_nIteration - 1);
     } break;
 
     case RUN_ROKS_BETA: {
-      P = 0.5 *
-          this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
-              RUN_ROKS_CLOSED, this->m_nIteration - 1);
+      P = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
+                    RUN_ROKS_CLOSED, this->m_nIteration - 1);
     } break;
 
     default:
@@ -746,30 +752,9 @@ void DfCD::divideCholeskyBasis(const index_type numOfCBs, index_type* pStart,
   *pEnd = numOfCBs;
 }
 
-void DfCD::getK(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK) {
-  switch (this->fastCDK_mode_) {
-    case FASTCDK_NONE:
-      if (this->useMmapMatrix_) {
-        this->getK_S_woCD_mmap(runType, pK);
-      } else {
-        this->getK_S_woCD(runType, pK);
-      }
-      break;
-
-    case FASTCDK_DEBUG_FULL_SUPERMATRIX:
-    case FASTCDK_DEBUG_SUPERMATRIX:
-    case FASTCDK_PRODUCTIVE_FULL:
-    case FASTCDK_PRODUCTIVE:
-      this->getK_S_fast(runType, pK);
-      break;
-
-    default:
-      this->log_.critical(
-          TlUtils::format("%s: %d: program error.", __FILE__, __LINE__));
-      CnErr.abort();
-  }
-}
-
+// ----------------------------------------------------------------------------
+// K
+// ----------------------------------------------------------------------------
 TlDenseSymmetricMatrix_Lapack DfCD::getPMatrix(const RUN_TYPE runType,
                                                int itr) {
   TlDenseSymmetricMatrix_Lapack P;
@@ -787,17 +772,15 @@ TlDenseSymmetricMatrix_Lapack DfCD::getPMatrix(const RUN_TYPE runType,
         break;
 
       case RUN_ROKS_ALPHA: {
-        P = 0.5 *
-            this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED,
-                                                              itr);
+        P = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
+                      RUN_ROKS_CLOSED, itr);
         P += this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN,
                                                                itr);
       } break;
 
       case RUN_ROKS_BETA: {
-        P = 0.5 *
-            this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED,
-                                                              itr);
+        P = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
+                      RUN_ROKS_CLOSED, itr);
       } break;
 
       default:
@@ -809,6 +792,39 @@ TlDenseSymmetricMatrix_Lapack DfCD::getPMatrix(const RUN_TYPE runType,
   }
 
   return P;
+}
+
+void DfCD::getK(const RUN_TYPE runType) {
+  switch (this->fastCDK_mode_) {
+    case FASTCDK_NONE:
+      if (this->useMmapMatrix_) {
+        // this->getK_S_woCD_mmap(runType, pK);
+        this->getK_byLjk_defMatrix<TlDenseGeneralMatrix_mmap>(runType);
+        // this->getK_byLjk<TlDenseSymmetricMatrix_Lapack,
+        //                  TlDenseGeneralMatrix_mmap, TlDenseGeneralMatrix_Lapack,
+        //                  TlDenseSymmetricMatrix_Lapack>(runType);
+      } else {
+        // this->getK_S_woCD(runType, pK);
+        this->getK_byLjk_defMatrix<TlDenseGeneralMatrix_arrays_ColOriented>(runType);
+        // this->getK_byLjk<TlDenseSymmetricMatrix_Lapack,
+        //                  TlDenseGeneralMatrix_arrays_ColOriented,
+        //                  TlDenseGeneralMatrix_Lapack,
+        //                  TlDenseSymmetricMatrix_Lapack>(runType);
+      }
+      break;
+
+    case FASTCDK_DEBUG_FULL_SUPERMATRIX:
+    case FASTCDK_DEBUG_SUPERMATRIX:
+    case FASTCDK_PRODUCTIVE_FULL:
+    case FASTCDK_PRODUCTIVE:
+      this->getK_byLk<TlDenseSymmetricMatrix_Lapack>(runType);
+      break;
+
+    default:
+      this->log_.critical(
+          TlUtils::format("%s: %d: program error.", __FILE__, __LINE__));
+      CnErr.abort();
+  }
 }
 
 void DfCD::getK_S_woCD(const RUN_TYPE runType,
@@ -877,9 +893,101 @@ void DfCD::getK_S_woCD_mmap(const RUN_TYPE runType,
   this->finalize(pK);
 }
 
-void DfCD::getK_S_fast(const RUN_TYPE runType,
-                       TlDenseSymmetricMatrix_Lapack* pK) {
+template <class Ljk_MatrixType>
+void DfCD::getK_byLjk_defMatrix(const RUN_TYPE runType) {
+  switch (this->linearAlgebraPackage_) {
+#ifdef HAVE_LAPACK
+    case LAP_LAPACK:
+      this->log_.info("linear algebra package: LAPACK");
+      this->getK_byLjk<TlDenseSymmetricMatrix_Lapack, Ljk_MatrixType,
+                       TlDenseGeneralMatrix_Lapack,
+                       TlDenseSymmetricMatrix_Lapack>(runType);
+      break;
+#endif  // HAVE_LAPACK
+
+// #ifdef HAVE_EIGEN
+//     case LAP_EIGEN:
+//       this->log_.info("linear algebra package: Eigen");
+//       this->getK_byLjk<TlDenseSymmetricMatrix_Eigen, Ljk_MatrixType,
+//                        TlDenseGeneralMatrix_Eigen,
+//                        TlDenseSymmetricMatrix_Eigen>(runType);
+//       break;
+// #endif  // HAVE_EIGEN
+
+// #ifdef HAVE_VIENNACL
+//     case LAP_VIENNACL:
+//       this->log_.info("linear algebra package: ViennaCL");
+//       this->getK_byLjk<TlDenseSymmetricMatrix_ViennaCL, Ljk_MatrixType,
+//                        TlDenseGeneralMatrix_ViennaCL,
+//                        TlDenseSymmetricMatrix_ViennaCL>(runType);
+//       break;
+// #endif  // HAVE_VIENNACL
+
+    default: {
+      this->log_.critical(
+          TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
+      this->log_.critical(TlUtils::format("linear algebra package: %d",
+                                          this->linearAlgebraPackage_));
+      CnErr.abort();
+    } break;
+  }
+}
+
+template <class K_MatrixType, class Ljk_MatrixType, class GeneralMatrixType,
+          class SymmetricMatrixType>
+void DfCD::getK_byLjk(const RUN_TYPE runType) {
+  this->log_.info("calc K by CD method (serial).");
+  K_MatrixType K(this->m_nNumOfAOs);
+
+  const Ljk_MatrixType L(DfObject::getLjkMatrixPath());
+  this->log_.info(
+      TlUtils::format("L(K): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
+  const index_type numOfCBs = L.getNumOfCols();
+
+  const SymmetricMatrixType P =
+      this->getPMatrix(runType, this->m_nIteration - 1);
+
+  this->log_.info("start loop");
+  const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
+  index_type start_CholeskyBasis = 0;
+  index_type end_CholeskyBasis = 0;
+  this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
+
+  DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
+  std::vector<std::size_t> tasks;
+  bool hasTasks = pTaskCtrl->getQueue(numOfCBs, 100, &tasks, true);
+  while (hasTasks == true) {
+    std::vector<std::size_t>::const_iterator itEnd = tasks.end();
+    for (std::vector<std::size_t>::const_iterator it = tasks.begin();
+         it != itEnd; ++it) {
+      const SymmetricMatrixType l =
+          this->getCholeskyVector(L.getColVector(*it), I2PQ);
+      assert(l.getNumOfRows() == this->m_nNumOfAOs);
+
+      GeneralMatrixType X = l * P;
+      X *= l;
+
+      K += X;
+    }
+
+    hasTasks = pTaskCtrl->getQueue(numOfCBs, 100, &tasks);
+  }
+
+  K *= -1.0;
+  this->log_.info("finalize");
+  this->finalize(&K);
+
+  delete pTaskCtrl;
+  pTaskCtrl = NULL;
+
+  this->file_->saveMatrix(
+    DfObject::getHFxMatrixPath(runType, this->m_nIteration), K);
+}
+
+template<class K_MatrixType>
+void DfCD::getK_byLk(const RUN_TYPE runType) {
   this->log_.info("calc K(fast) by CD method (serial).");
+  K_MatrixType K(this->m_nNumOfAOs);
 
   // cholesky vector
   const TlDenseGeneralMatrix_arrays_ColOriented L = this->getLk();
@@ -907,10 +1015,14 @@ void DfCD::getK_S_fast(const RUN_TYPE runType,
   }
   vK *= -1.0;
 
-  this->expandKMatrix(vK, I2PR, pK);
-  this->finalize(pK);
+  this->expandKMatrix(vK, I2PR, &K);
+  this->finalize(&K);
+
+  this->file_->saveMatrix(
+    DfObject::getHFxMatrixPath(runType, this->m_nIteration), K);
 }
 
+// ----------------------------------------------------------------------------
 void DfCD::getK_A(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK) {
   const TlOrbitalInfo orbInfo_p((*this->pPdfParam_)["coordinates"],
                                 (*this->pPdfParam_)["basis_set"]);
@@ -1392,7 +1504,7 @@ void DfCD::calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
 
   const double tau = this->CDAM_tau_;
   const int taskListSize = taskList.size();
-// const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+  // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
   {
@@ -1470,7 +1582,7 @@ void DfCD::calcDiagonals_K_full_kernel(
 
   const double tau = this->CDAM_tau_K_;
   const int taskListSize = taskList.size();
-// const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+  // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
   {
@@ -1665,7 +1777,7 @@ void DfCD::calcDiagonalsA_kernel(const TlOrbitalInfoObject& orbInfo_p,
 
   const double tau = this->CDAM_tau_;
   const int taskListSize = taskList.size();
-// const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
+  // const double pairwisePGTO_cutoffThreshold = this->cutoffEpsilon3_;
 
 #pragma omp parallel
   {

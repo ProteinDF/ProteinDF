@@ -1,13 +1,15 @@
 #ifndef TL_VIENNACL_H
 #define TL_VIENNACL_H
 
+#include <string>
+
 class TlViennaCL {
  public:
     void setupAllAvailableDevices();
-    void showDevices();
+    std::string listDevices();
 
     void switchDevice(const int id);
-    void showCurrentDevice();
+    std::string listCurrentDevice();
 };
 
 #endif  // TL_VIENNACL_H

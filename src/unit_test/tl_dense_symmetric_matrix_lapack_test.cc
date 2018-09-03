@@ -12,6 +12,29 @@ static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 static const std::string mat_save_load_path = "temp.sym.blas.save_load.mat";
 static const std::string mat_h5 = "temp.sym.h5";
 
+TEST(TlDenseSymmetricMatrix_Lapack, vtr2mat) {
+  const int dim = 4;
+  const int elements = dim * (dim +1) / 2;
+  std::vector<double> vtr(elements);
+  for (int i = 0; i < elements; ++i) {
+    vtr[i] = i;
+  }
+
+  TlDenseSymmetricMatrix_Lapack a(dim);
+  a.vtr2mat(vtr);
+
+  EXPECT_EQ(dim, a.getNumOfRows());
+  EXPECT_EQ(dim, a.getNumOfCols());
+  int i = 0;
+  for (int c = 0; c < dim; ++c) { // col-major
+    for (int r = 0; r <= c; ++r) {
+      EXPECT_DOUBLE_EQ(vtr[i], a.get(r, c));
+      ++i;
+    }
+  }
+}
+
+
 TEST(TlDenseSymmetricMatrix_Lapack, doesSym2gen) {
   TlDenseSymmetricMatrix_Lapack a =
       getSymMatrixA<TlDenseSymmetricMatrix_Lapack>();
@@ -249,7 +272,37 @@ TEST(TlDenseSymmetricMatrix_Lapack, multiplication_VMV) {
 //   EXPECT_DOUBLE_EQ(54.0, C(2, 1));
 //   EXPECT_DOUBLE_EQ(66.0, C(2, 2));
 // }
-//
+
+TEST(TlDenseSymmetricMatrix_Lapack, operator_mul1) {
+  TlDenseSymmetricMatrix_Lapack A = getSymMatrixA<TlDenseSymmetricMatrix_Lapack>();
+  // [ 0  -  - ]
+  // [ 1  2  - ]
+  // [ 3  4  5 ]
+
+  TlDenseGeneralMatrix_Lapack B(3, 3);
+  B.set(0, 0, 0.0);
+  B.set(0, 1, 1.0);
+  B.set(0, 2, 2.0);
+  B.set(1, 0, 3.0);
+  B.set(1, 1, 4.0);
+  B.set(1, 2, 5.0);
+  B.set(2, 0, 6.0);
+  B.set(2, 1, 7.0);
+  B.set(2, 2, 8.0);
+
+  TlDenseGeneralMatrix_Lapack C = A * B;
+
+  EXPECT_DOUBLE_EQ(21.0, C.get(0, 0));
+  EXPECT_DOUBLE_EQ(25.0, C.get(0, 1));
+  EXPECT_DOUBLE_EQ(29.0, C.get(0, 2));
+  EXPECT_DOUBLE_EQ(30.0, C.get(1, 0));
+  EXPECT_DOUBLE_EQ(37.0, C.get(1, 1));
+  EXPECT_DOUBLE_EQ(44.0, C.get(1, 2));
+  EXPECT_DOUBLE_EQ(42.0, C.get(2, 0));
+  EXPECT_DOUBLE_EQ(54.0, C.get(2, 1));
+  EXPECT_DOUBLE_EQ(66.0, C.get(2, 2));
+}
+
 // TEST(TlDenseSymmetricMatrix_Lapack, operator_multi2) {
 //   TlDenseSymmetricMatrix_Lapack A = getSymMatrixA();
 //   // [ 0  -  - ]
@@ -396,3 +449,66 @@ TEST(TlDenseSymmetricMatrix_Lapack, multiplication_VMV) {
 //   EXPECT_DOUBLE_EQ(A(3, 2), LL(3, 2));
 //   EXPECT_DOUBLE_EQ(A(3, 3), LL(3, 3));
 // }
+
+// TEST(TlDenseSymmetricMatrix_Lapack, eig) {
+//   TlDenseSymmetricMatrix_Lapack A = getSymMatrixD<TlDenseSymmetricMatrix_Lapack>();
+  
+//   TlDenseVector_Lapack eigVal;
+//   TlDenseGeneralMatrix_Lapack eigVec;
+//   A.eig(&eigVal, &eigVec);
+
+//   eigVal.save("eigval_lapack.vtr");
+//   eigVec.save("eigvec_lapack.mat");
+
+//   // check
+//   // -2.0531 -0.5146 -0.2943 12.8621
+//   //
+//   //   0.7003 -0.5144 -0.2767  0.4103
+//   //   0.3592  0.4851  0.6634  0.4422
+//   //  -0.1569  0.5420 -0.6504  0.5085
+//   //  -0.5965 -0.4543  0.2457  0.6144
+//   EXPECT_NEAR(-2.0531, eigVal.get(0), 1.E-4);
+//   EXPECT_NEAR(-0.5146, eigVal.get(1), 1.E-4);
+//   EXPECT_NEAR(-0.2943, eigVal.get(2), 1.E-4);
+//   EXPECT_NEAR(12.8621, eigVal.get(3), 1.E-4);
+
+//   TlDenseSymmetricMatrix_Lapack d(eigVal.getSize());
+//   for (int i = 0; i < eigVal.getSize(); ++i) {
+//     d.set(i, i, eigVal.get(i));
+//   }
+//   TlDenseGeneralMatrix_Lapack lhs = A * eigVec;
+//   TlDenseGeneralMatrix_Lapack rhs = eigVec * d;
+
+//   for (int i = 0; i < A.getNumOfRows(); ++i) {
+//     for (int j = 0; j < A.getNumOfCols(); ++j) {
+//       EXPECT_NEAR(lhs.get(i, j), rhs.get(i, j), 1.0E-5);
+//     }
+//   }
+// }
+
+TEST(TlDenseSymmetricMatrix_Lapack, eig) {
+  int dim = 100;
+  TlDenseSymmetricMatrix_Lapack A = getSymmetricMatrix<TlDenseSymmetricMatrix_Lapack>(dim);
+  A.save("eig_A.mat");
+
+  TlDenseVector_Lapack eigVal;
+  TlDenseGeneralMatrix_Lapack eigVec;
+  A.eig(&eigVal, &eigVec);
+
+  eigVal.save("eigval_vcl.vtr");
+  eigVec.save("eigvec_vcl.mat");
+
+  // check
+  TlDenseSymmetricMatrix_Lapack d(eigVal.getSize());
+  for (int i = 0; i < dim; ++i) {
+    d.set(i, i, eigVal.get(i));
+  }
+  TlDenseGeneralMatrix_Lapack lhs = A * eigVec;
+  TlDenseGeneralMatrix_Lapack rhs = eigVec * d;
+
+  for (int i = 0; i < dim; ++i) {
+    for (int j = 0; j < dim; ++j) {
+      EXPECT_NEAR(lhs.get(i, j), rhs.get(i, j), 1.0E-2);
+    }
+  }
+}

@@ -22,6 +22,7 @@
 #include <cassert>
 #include <string>
 
+#include "CnError.h"
 #include "DfObject.h"
 #include "TlUtils.h"
 
@@ -42,57 +43,79 @@ class DfTransatob : public DfObject {
   DfTransatob(TlSerializeData* pPdfParam);
   virtual ~DfTransatob();
 
-  virtual void DfTrsatobMain();
-  virtual void DfTrsatobQclo(const std::string& fragname, int norbcut);
+  virtual void run();
+  virtual void runQclo(const std::string& fragname, int norbcut);
 
  protected:
-  template <typename MatrixType>
-  void main(const RUN_TYPE runtype, const std::string& fragname = "",
-            bool bPdfQcloMode = false);
+  template <typename GeneralMatrix>
+  void run_method(const TlMatrixObject::index_type numOfMOs,
+                  const std::string& fragname = "");
+
+ protected:
+  template <typename GeneralMatrix>
+  void Cprime2C(const RUN_TYPE runtype,
+                const TlMatrixObject::index_type numOfMOs,
+                const std::string& fragname = "");
 };
 
 // template
-template <typename MatrixType>
-void DfTransatob::main(const RUN_TYPE runType, const std::string& fragname,
-                       bool bPdfQcloMode) {
+template <typename GeneralMatrix>
+void DfTransatob::Cprime2C(const DfObject::RUN_TYPE runType,
+                           const TlMatrixObject::index_type numOfMOs,
+                           const std::string& fragname) {
   // "read X matrix"
-  MatrixType X;
-  {
-    X = this->getXMatrix<MatrixType>();
+  GeneralMatrix X;
+  X = this->getXMatrix<GeneralMatrix>();
 
-    if (X.getNumOfRows() != this->m_nNumOfAOs ||
-        X.getNumOfCols() != this->m_nNumOfMOs) {
-      this->logger(
-          TlUtils::format("rowDim of X matrix = %d\n", X.getNumOfRows()));
-      this->logger(
-          TlUtils::format("colDim of X matrix = %d\n", X.getNumOfCols()));
-      this->logger(TlUtils::format("number_ao_basis = %d", this->m_nNumOfAOs));
-      this->logger(TlUtils::format("number_independant_basis = %d\n",
-                                   this->m_nNumOfMOs));
-      this->logger("DfTransatob dimension is not consistency, but continue\n");
-    }
+  if (X.getNumOfRows() != this->m_nNumOfAOs || X.getNumOfCols() != numOfMOs) {
+    this->log_.info(
+        TlUtils::format("rowDim of X matrix = %d", X.getNumOfRows()));
+    this->log_.info(
+        TlUtils::format("colDim of X matrix = %d", X.getNumOfCols()));
+    this->log_.info(TlUtils::format("number_ao_basis = %d", this->m_nNumOfAOs));
+    this->log_.info(TlUtils::format("number_independant_basis = %d", numOfMOs));
+    this->log_.info("DfTransatob dimension is not consistency, but continue\n");
   }
 
   // "read C' matrix"
-  MatrixType Cprime;
-  {
-    const std::string fragment = "";
-    Cprime = this->getCprimeMatrix<MatrixType>(runType, this->m_nIteration,
-                                               fragment);
+  GeneralMatrix Cprime;
+  Cprime = this->getCprimeMatrix<GeneralMatrix>(runType, this->m_nIteration,
+                                                fragname);
 
-    if (Cprime.getNumOfRows() != this->m_nNumOfMOs ||
-        Cprime.getNumOfCols() != this->m_nNumOfMOs) {
-      this->logger(TlUtils::format("row of C' = %d\n", Cprime.getNumOfRows()));
-      this->logger(TlUtils::format("col of C' = %d\n", Cprime.getNumOfRows()));
-      this->logger(
-          TlUtils::format("number_mo_basis = %d\n", this->m_nNumOfMOs));
-      this->logger("DfTransatob dimension is not consistency, but continue\n");
-    }
+  if ((Cprime.getNumOfRows() != numOfMOs) ||
+      (Cprime.getNumOfCols() != numOfMOs)) {
+    this->log_.info(TlUtils::format("row of C' = %d", Cprime.getNumOfRows()));
+    this->log_.info(TlUtils::format("col of C' = %d", Cprime.getNumOfRows()));
+    this->log_.info(TlUtils::format("number_mo_basis = %d", numOfMOs));
+    this->log_.info("DfTransatob dimension is not consistency, but continue");
   }
 
   // calculate "C = X * C'"
-  const MatrixType C = X * Cprime;
+  const GeneralMatrix C = X * Cprime;
   this->saveCMatrix(runType, this->m_nIteration, C);
+}
+
+template <typename GeneralMatrix>
+void DfTransatob::run_method(const TlMatrixObject::index_type numOfMOs,
+                             const std::string& fragment) {
+  switch (this->m_nMethodType) {
+    case METHOD_RKS:
+      this->Cprime2C<GeneralMatrix>(RUN_RKS, numOfMOs, fragment);  // RKS
+      break;
+
+    case METHOD_UKS:
+      this->Cprime2C<GeneralMatrix>(RUN_UKS_ALPHA, numOfMOs, fragment);  // UKS alpha spin
+      this->Cprime2C<GeneralMatrix>(RUN_UKS_BETA, numOfMOs, fragment);  // UKS beta spin
+      break;
+
+    case METHOD_ROKS:
+      this->Cprime2C<GeneralMatrix>(RUN_ROKS, numOfMOs, fragment);
+      break;
+
+    default:
+      CnErr.abort();
+      break;
+  }
 }
 
 #endif  // DFTRANSATOB_H

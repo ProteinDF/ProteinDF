@@ -147,7 +147,9 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
       const double numOfElectrons = dfPop.getSumOfElectrons(P_high);
       const double coef = this->m_nNumOfElectrons / numOfElectrons;
 
-      this->savePpqMatrix(RUN_RKS, 0, coef * P_high);
+      P_high *= coef;
+      this->savePpqMatrix(RUN_RKS, 0, P_high);
+      this->saveSpinDensityMatrix(RUN_RKS, 0, 0.5 * P_high);
     } break;
 
     case METHOD_UKS: {
@@ -158,8 +160,12 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
           this->m_nNumOfAlphaElectrons / numOfAlphaElectrons;
       const double coef_beta = this->m_nNumOfBetaElectrons / numOfBetaElectrons;
 
-      this->savePpqMatrix(RUN_UKS_ALPHA, 0, coef_alpha * P_high);
-      this->savePpqMatrix(RUN_UKS_BETA, 0, coef_beta * P_high);
+      const SymmetricMatrixType PA = coef_alpha * P_high;
+      const SymmetricMatrixType PB = coef_beta * P_high;
+      this->savePpqMatrix(RUN_UKS_ALPHA, 0, PA);
+      this->savePpqMatrix(RUN_UKS_BETA, 0, PB);
+      this->saveSpinDensityMatrix(RUN_UKS_ALPHA, 0, PA);
+      this->saveSpinDensityMatrix(RUN_UKS_BETA, 0, PB);
     } break;
 
     case METHOD_ROKS: {
@@ -171,8 +177,12 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
       const double coef_open =
           this->numOfOpenShellElectrons_ / numOfOpenElectrons;
 
-      this->savePpqMatrix(RUN_ROKS_CLOSED, 0, coef_close * P_high);
-      this->savePpqMatrix(RUN_ROKS_OPEN, 0, coef_open * P_high);
+      const SymmetricMatrixType PC = coef_close * P_high;
+      const SymmetricMatrixType PO = coef_open * P_high;
+      this->savePpqMatrix(RUN_ROKS_CLOSED, 0, PC);
+      this->savePpqMatrix(RUN_ROKS_OPEN, 0, PO);
+      this->saveSpinDensityMatrix(RUN_ROKS_ALPHA, 0, PC + PO);
+      this->saveSpinDensityMatrix(RUN_ROKS_BETA, 0, PC);
     } break;
 
     default:

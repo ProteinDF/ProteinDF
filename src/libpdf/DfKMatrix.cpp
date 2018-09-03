@@ -21,7 +21,13 @@
 #include "DfCD.h"
 #include "DfEriX.h"
 
-DfKMatrix::DfKMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {}
+#include "common.h"
+#include "df_cdk_matrix.h"
+
+DfKMatrix::DfKMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
+  this->updateLinearAlgebraPackageParam(
+      (*(this->pPdfParam_))["linear_algebra_package/K"].getStr());
+}
 
 DfKMatrix::~DfKMatrix() {}
 
@@ -51,42 +57,8 @@ void DfKMatrix::buildK() {
 // }
 
 void DfKMatrix::getK_CD() {
-  switch (this->m_nMethodType) {
-    case METHOD_RKS: {
-      TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
-      this->getK_CD_local(RUN_RKS, &K);
-      this->saveKMatrix(RUN_RKS, K);
-    } break;
-
-    case METHOD_UKS: {
-      TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
-      this->getK_CD_local(RUN_UKS_ALPHA, &K);
-      this->saveKMatrix(RUN_UKS_ALPHA, K);
-    }
-      {
-        TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
-        this->getK_CD_local(RUN_UKS_BETA, &K);
-        this->saveKMatrix(RUN_UKS_BETA, K);
-      }
-      break;
-
-    case METHOD_ROKS: {
-      TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
-      this->getK_CD_local(RUN_ROKS_ALPHA, &K);
-      this->saveKMatrix(RUN_ROKS_ALPHA, K);
-    }
-      {
-        TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
-        this->getK_CD_local(RUN_ROKS_BETA, &K);
-        this->saveKMatrix(RUN_ROKS_BETA, K);
-      }
-      break;
-
-    default:
-      this->log_.critical("program error.");
-      CnErr.abort();
-      break;
-  }
+  DfCdkMatrix dfCDK(this->pPdfParam_);
+  dfCDK.getK();
 }
 
 void DfKMatrix::getK_conventional() {
@@ -150,11 +122,9 @@ void DfKMatrix::getK_conventional() {
 //     }
 // }
 
-void DfKMatrix::getK_CD_local(const RUN_TYPE runType,
-                              TlDenseSymmetricMatrix_Lapack* pK) {
+void DfKMatrix::getK_CD_replica(const RUN_TYPE runType) {
   DfCD dfCD(this->pPdfParam_);
-  dfCD.getK(runType, pK);
-  // dfCD.getK_A(runType, pK);
+  dfCD.getK(runType);
 }
 
 void DfKMatrix::getK_conventional_local(const RUN_TYPE runType,

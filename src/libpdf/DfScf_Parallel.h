@@ -60,6 +60,7 @@ class DfScf_Parallel : public DfScf {
 
   virtual DfTransatob* getDfTransatobObject();
 
+  virtual void calcDensityMatrix();
   virtual DfDmatrix* getDfDmatrixObject();
 
   virtual DfTotalEnergy* getDfTotalEnergyObject();

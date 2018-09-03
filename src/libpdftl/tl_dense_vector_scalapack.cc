@@ -108,6 +108,19 @@ TlDenseVector_Scalapack& TlDenseVector_Scalapack::dotInPlace(
 // }
 
 // ---------------------------------------------------------------------------
+// I/O
+// ---------------------------------------------------------------------------
+bool TlDenseVector_Scalapack::load(const std::string& filePath) {
+  bool answer = dynamic_cast<TlDenseVector_ImplScalapack*>(this->pImpl_)->load(filePath);
+  return answer;
+}
+
+bool TlDenseVector_Scalapack::save(const std::string& filePath) const {
+  bool answer = dynamic_cast<TlDenseVector_ImplScalapack*>(this->pImpl_)->save(filePath);
+  return answer;
+}
+
+// ---------------------------------------------------------------------------
 // others
 // ---------------------------------------------------------------------------
 TlDenseVector_Scalapack operator+(const TlDenseVector_Scalapack& rhs1,

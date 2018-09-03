@@ -1,6 +1,9 @@
 set(LIBPDF_HEADERS
-  common_matrix.h
+  common.h
+  datatype.h
+  df_cdk_matrix.h
   CnError.h
+  CnFile.h
   DfCD.h
   DfCalcGrid.h
   DfCalcGridX.h
@@ -88,7 +91,9 @@ set(LIBPDF_HEADERS
 
 
 set(LIBPDF_SOURCES
+  df_cdk_matrix.cc
   CnError.cpp
+  CnFile.cc
   DfCD.cpp
   DfCalcGrid.cpp
   DfCalcGridX.cpp
@@ -173,6 +178,7 @@ set(LIBPDF_SOURCES
 
 
 set(LIBPPDF_HEADERS
+  CnFile_parallel.h
   DfCD_Parallel.h
   DfCalcGridX_Parallel.h
   DfCleanup_Parallel.h
@@ -214,6 +220,7 @@ set(LIBPPDF_HEADERS
 
 
 set(LIBPPDF_SOURCES
+  CnFile_parallel.cc
   DfCD_Parallel.cpp
   DfCalcGridX_Parallel.cpp
   DfCleanup_Parallel.cpp

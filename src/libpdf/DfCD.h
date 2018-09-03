@@ -20,6 +20,7 @@
 #define DFCD_H
 
 #include <deque>
+#include <utility>
 #include <vector>
 
 #include "DfObject.h"
@@ -32,14 +33,16 @@
 
 class TlOrbitalInfo;
 class DfEngineObject;
+class TlDenseSymmetricMatrixObject;
 class TlDenseGeneralMatrix_Lapack;
 class TlDenseSymmetricMatrix_Lapack;
+class CnFile;
 
 // #define CHECK_LOOP // 計算ループ構造のチェック
 
 class DfCD : public DfObject {
  public:
-  DfCD(TlSerializeData* pPdfParam);
+  explicit DfCD(TlSerializeData* pPdfParam, bool initializeFileObj = true);
   virtual ~DfCD();
 
  public:
@@ -48,7 +51,7 @@ class DfCD : public DfObject {
   virtual void calcCholeskyVectorsForGridFree();
 
   void getJ(TlDenseSymmetricMatrix_Lapack* pJ);
-  virtual void getK(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
+  virtual void getK(const RUN_TYPE runType);
   virtual void getM(const TlDenseSymmetricMatrix_Lapack& P,
                     TlDenseSymmetricMatrix_Lapack* pM);
 
@@ -73,13 +76,25 @@ class DfCD : public DfObject {
   virtual TlDenseSymmetricMatrix_Lapack getPMatrix(const RUN_TYPE runType,
                                                    const int iteration);
 
-  virtual void getK_S_woCD(const RUN_TYPE runType,
-                           TlDenseSymmetricMatrix_Lapack* pK);
-  virtual void getK_S_woCD_mmap(const RUN_TYPE runType,
-                                TlDenseSymmetricMatrix_Lapack* pK);
+  // ----------------------------------------------------------------------------
+  // K
+  // ----------------------------------------------------------------------------
+ protected:
+  [[deprecated]] virtual void getK_S_woCD(const RUN_TYPE runType,
+                                          TlDenseSymmetricMatrix_Lapack* pK);
 
-  virtual void getK_S_fast(const RUN_TYPE runType,
-                           TlDenseSymmetricMatrix_Lapack* pK);
+  [[deprecated]] virtual void getK_S_woCD_mmap(
+      const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
+
+  template <class Ljk_MatrixType>
+  void getK_byLjk_defMatrix(const RUN_TYPE runType);
+
+  template <class K_MatrixType, class Ljk_MatrixType, class GeneralMatrixType,
+            class SymmetricMatrixType>
+  void getK_byLjk(const RUN_TYPE runType);
+
+  template <class K_MatrixType>
+  void getK_byLk(const RUN_TYPE runType);
 
   virtual void getM_S(const TlDenseSymmetricMatrix_Lapack& P,
                       TlDenseSymmetricMatrix_Lapack* pM);
@@ -246,6 +261,17 @@ class DfCD : public DfObject {
         std::swap(this->index1_, this->index2_);
       }
     }
+
+    IndexPair2S(const IndexPair2S& rhs) : Index2(rhs.index1_, rhs.index2_) {}
+
+    IndexPair2S& operator=(const IndexPair2S& rhs) {
+      if (&rhs != this) {
+        this->index1_ = rhs.index1_;
+        this->index2_ = rhs.index2_;
+      }
+
+      return *this;
+    }
   };
 
   class IndexPair4S {
@@ -261,7 +287,7 @@ class DfCD : public DfObject {
     IndexPair4S(const Index4& i4)
         : ip2_1_(i4.index1(), i4.index2()), ip2_2_(i4.index3(), i4.index4()) {
       if (this->ip2_1_ < this->ip2_2_) {
-        std::swap(this->ip2_1_, this->ip2_2_);
+        std::swap<IndexPair2S>(this->ip2_1_, this->ip2_2_);
       }
     }
 
@@ -716,6 +742,9 @@ class DfCD : public DfObject {
   // debug
   PQ_PairArray debug_I2PQ_;
   // TlDenseSymmetricMatrix_Lapack debug_V_;
+
+ protected:
+  CnFile* file_;
 };
 
 template <class EngineClass>

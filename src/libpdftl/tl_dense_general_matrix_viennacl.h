@@ -6,6 +6,7 @@
 class TlDenseSymmetricMatrix_ViennaCL;
 class TlDenseGeneralMatrix_ImplViennaCL;
 class TlDenseVector_ViennaCL;
+class TlSparseGeneralMatrix_ViennaCL;
 
 class TlDenseGeneralMatrix_Eigen;
 
@@ -20,7 +21,14 @@ class TlDenseGeneralMatrix_ViennaCL : public TlDenseGeneralMatrixObject {
   TlDenseGeneralMatrix_ViennaCL(const TlDenseGeneralMatrix_ViennaCL& rhs);
   TlDenseGeneralMatrix_ViennaCL(const TlDenseSymmetricMatrix_ViennaCL& rhs);
   TlDenseGeneralMatrix_ViennaCL(const TlDenseGeneralMatrix_ImplViennaCL& rhs);
+  TlDenseGeneralMatrix_ViennaCL(const TlSparseGeneralMatrix_ViennaCL& rhs);
+
+#ifdef HAVE_EIGEN
   TlDenseGeneralMatrix_ViennaCL(const TlDenseGeneralMatrix_Eigen& rhs);
+#endif // HAVE_EIGEN
+
+  void vtr2mat(const std::vector<double>& vtr);
+
   virtual ~TlDenseGeneralMatrix_ViennaCL();
 
   // ---------------------------------------------------------------------------
@@ -62,17 +70,33 @@ class TlDenseGeneralMatrix_ViennaCL : public TlDenseGeneralMatrixObject {
   TlDenseGeneralMatrix_ViennaCL transpose() const;
   TlDenseGeneralMatrix_ViennaCL inverse() const;
 
+  TlDenseGeneralMatrix_ViennaCL& reverseColumns();
   // ---------------------------------------------------------------------------
   // others
   // ---------------------------------------------------------------------------
   friend class TlDenseSymmetricMatrix_ViennaCL;
+  friend class TlSparseGeneralMatrix_ViennaCL;
+  friend class TlDenseGeneralMatrix_Eigen;  
 
+  // DM(G) = DM(G) * DM(S)
+  friend TlDenseGeneralMatrix_ViennaCL operator*(
+      const TlDenseGeneralMatrix_ViennaCL& mat1,
+      const TlDenseSymmetricMatrix_ViennaCL& mat2);
+  // DM(G) = DM(S) * DM(G)
+  friend TlDenseGeneralMatrix_ViennaCL operator*(
+      const TlDenseSymmetricMatrix_ViennaCL& mat1,
+      const TlDenseGeneralMatrix_ViennaCL& mat2);
+
+  // DV = DM(G) * DV
   friend TlDenseVector_ViennaCL operator*(
       const TlDenseGeneralMatrix_ViennaCL& rhs1,
       const TlDenseVector_ViennaCL& rhs2);
+  // DV = DV * DM(G)
   friend TlDenseVector_ViennaCL operator*(
       const TlDenseVector_ViennaCL& rhs1,
       const TlDenseGeneralMatrix_ViennaCL& rhs2);
 };
+
+TlDenseGeneralMatrix_ViennaCL operator*(const double coef, const TlDenseGeneralMatrix_ViennaCL& dm);
 
 #endif  // TL_DENSE_GENERAL_MATRIX_VIENNACL_H

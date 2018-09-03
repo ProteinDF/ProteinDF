@@ -3,6 +3,13 @@
 #include "tl_dense_symmetric_matrix_impl_eigen.h"
 #include "tl_dense_vector_eigen.h"
 #include "tl_dense_vector_impl_eigen.h"
+#include "tl_sparse_symmetric_matrix_eigen.h"
+#include "tl_sparse_symmetric_matrix_impl_eigen.h"
+
+#ifdef HAVE_VIENNACL
+#include "tl_dense_symmetric_matrix_viennacl.h"
+#include "tl_dense_symmetric_matrix_impl_viennacl.h"
+#endif // HAVE_VIENNACL
 
 TlDenseSymmetricMatrix_Eigen::TlDenseSymmetricMatrix_Eigen(
     const TlMatrixObject::index_type dim) {
@@ -21,6 +28,16 @@ TlDenseSymmetricMatrix_Eigen::TlDenseSymmetricMatrix_Eigen(
       *(dynamic_cast<const TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_)));
 }
 
+TlDenseSymmetricMatrix_Eigen::TlDenseSymmetricMatrix_Eigen(const TlSparseSymmetricMatrix_Eigen& sm) {
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigen(*(dynamic_cast<TlSparseSymmetricMatrix_ImplEigen*>(sm.pImpl_)));
+}
+
+#ifdef HAVE_VIENNACL
+TlDenseSymmetricMatrix_Eigen::TlDenseSymmetricMatrix_Eigen(const TlDenseSymmetricMatrix_ViennaCL& rhs) {
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigen(*(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCL*>(rhs.pImpl_)));
+}
+#endif // HAVE_VIENNACL
+
 TlDenseSymmetricMatrix_Eigen::~TlDenseSymmetricMatrix_Eigen() {
   delete this->pImpl_;
   this->pImpl_ = NULL;
@@ -31,9 +48,11 @@ TlDenseSymmetricMatrix_Eigen::~TlDenseSymmetricMatrix_Eigen() {
 // ---------------------------------------------------------------------------
 TlDenseSymmetricMatrix_Eigen& TlDenseSymmetricMatrix_Eigen::operator=(
     const TlDenseSymmetricMatrix_Eigen& rhs) {
-  delete this->pImpl_;
-  this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigen(
-      *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(rhs.pImpl_)));
+  if (this != &rhs) {
+    delete this->pImpl_;
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigen(
+        *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(rhs.pImpl_)));
+  }
 
   return *this;
 }
@@ -123,13 +142,44 @@ bool TlDenseSymmetricMatrix_Eigen::eig(
 }
 
 TlDenseSymmetricMatrix_Eigen TlDenseSymmetricMatrix_Eigen::inverse() const {
-  TlDenseSymmetricMatrix_Eigen answer;
-  answer.pImpl_ = new TlDenseSymmetricMatrix_ImplEigen(
+  TlDenseSymmetricMatrix_ImplEigen tmp =
       dynamic_cast<const TlDenseSymmetricMatrix_ImplEigen*>(this->pImpl_)
-          ->inverse());
+          ->inverse();
+  TlDenseSymmetricMatrix_Eigen answer(tmp);
   return answer;
 }
 
 // ---------------------------------------------------------------------------
 // friend functions
 // ---------------------------------------------------------------------------
+TlDenseGeneralMatrix_Eigen operator*(const TlDenseGeneralMatrix_Eigen& mat1,
+                                     const TlDenseSymmetricMatrix_Eigen& mat2) {
+  const TlDenseGeneralMatrix_ImplEigen tmp =
+      *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(mat1.pImpl_)) *
+      *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(mat2.pImpl_));
+  TlDenseGeneralMatrix_Eigen answer(tmp);
+  return answer;
+}
+
+TlDenseGeneralMatrix_Eigen operator*(const TlDenseSymmetricMatrix_Eigen& mat1,
+                                     const TlDenseGeneralMatrix_Eigen& mat2) {
+  const TlDenseGeneralMatrix_ImplEigen tmp =
+      *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(mat1.pImpl_)) *
+      *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(mat2.pImpl_));
+  TlDenseGeneralMatrix_Eigen answer(tmp);
+  return answer;
+}
+
+TlDenseVector_Eigen operator*(const TlDenseSymmetricMatrix_Eigen& dms1,
+                              const TlDenseVector_Eigen& dv) {
+  return TlDenseVector_Eigen(
+      *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(dms1.pImpl_)) *
+      *(dynamic_cast<TlDenseVector_ImplEigen*>(dv.pImpl_)));
+}
+
+TlDenseVector_Eigen operator*(const TlDenseVector_Eigen& dv,
+                              const TlDenseSymmetricMatrix_Eigen& dms1) {
+  return TlDenseVector_Eigen(
+      *(dynamic_cast<TlDenseVector_ImplEigen*>(dv.pImpl_)) *
+      *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(dms1.pImpl_)));
+}

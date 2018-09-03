@@ -19,6 +19,25 @@ TlDenseSymmetricMatrixObject::TlDenseSymmetricMatrixObject(
 
 TlDenseSymmetricMatrixObject::~TlDenseSymmetricMatrixObject() {}
 
+void TlDenseSymmetricMatrixObject::vtr2mat(const std::vector<double>& vtr) {
+  const TlMatrixObject::index_type dim = this->getNumOfRows();
+  assert(dim == this->getNumOfCols());
+  assert(vtr.size() == dim * (dim +1) / 2);
+
+  std::size_t i = 0;
+  // column-major
+  for (TlMatrixObject::index_type c = 0; c < dim; ++c) {
+    for (TlMatrixObject::index_type r = 0; r <= c; ++r) {
+      double v = vtr[i];
+      this->set(r, c, v);
+      ++i;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------
 TlMatrixObject::index_type TlDenseSymmetricMatrixObject::getNumOfRows() const {
   return this->pImpl_->getNumOfRows();
 }
@@ -203,20 +222,20 @@ bool TlDenseSymmetricMatrixObject::load(const std::string& filePath) {
         } break;
 
         default:
-          this->log_.critical(TlUtils::format("not supported format: @%s.%d",
+          this->log_.critical(TlUtils::format("not supported format: @%s:%d",
                                               __FILE__, __LINE__));
           break;
       }
     } else {
       this->log_.critical(
-          TlUtils::format("cannnot open matrix file: %s @(%s:%d)",
+          TlUtils::format("cannnot open matrix file: %s @%s:%d",
                           filePath.c_str(), __FILE__, __LINE__));
       throw;
     }
 
     fs.close();
   } else {
-    this->log_.critical(TlUtils::format("illegal matrix format: %s @(%s:%d)",
+    this->log_.critical(TlUtils::format("illegal matrix format: %s @%s:%d",
                                         filePath.c_str(), __FILE__, __LINE__));
     throw;
   }
@@ -247,7 +266,7 @@ bool TlDenseSymmetricMatrixObject::save(const std::string& filePath) const {
     fs.flush();
     answer = true;
   } else {
-    this->log_.critical(TlUtils::format("cannot write matrix: %s @(%s:%d)",
+    this->log_.critical(TlUtils::format("cannot write matrix: %s @%s:%d",
                                         filePath.c_str(), __FILE__, __LINE__));
   }
   fs.close();
@@ -411,6 +430,7 @@ TlSerializeData TlDenseSymmetricMatrixObject::getSerializeData() const {
   return data;
 }
 
+// ----------------------------------------------------------------------------
 std::ostream& operator<<(std::ostream& stream,
                          const TlDenseSymmetricMatrixObject& mat) {
   const TlMatrixObject::index_type nNumOfDim =

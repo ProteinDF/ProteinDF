@@ -21,9 +21,9 @@ set(PDF_XTEST_SOURCES
   tl_dense_general_matrix_lapack_test.cc
   tl_dense_symmetric_matrix_lapack_test.cc
 
-  tl_sparse_matrix_test.cc
-  tl_sparse_symmetric_matrix_test.cc
-  tl_sparse_vector_test.cc
+  #tl_sparse_matrix_test.cc
+  #tl_sparse_symmetric_matrix_test.cc
+  #tl_sparse_vector_test.cc
 
   TlPositionTest.cpp
   TlSerializeDataTest.cpp
@@ -47,6 +47,7 @@ set(PDF_XTEST_MPI_SOURCES
   TlCommunicateTest.cpp
   tl_dense_general_matrix_scalapack_test.cc
   tl_dense_symmetric_matrix_scalapack_test.cc
+  tl_dense_vector_scalapack_test.cc
   main_MPI.cpp
   )
 
@@ -66,18 +67,28 @@ if (EIGEN3_FOUND)
     ${PDF_XTEST_SOURCES}
     tl_dense_general_matrix_eigen_test.cc
     tl_dense_symmetric_matrix_eigen_test.cc
+    #tl_dense_vector_eigen_test.cc
+
+    tl_sparse_general_matrix_eigen_test.cc
+    tl_sparse_symmetric_matrix_eigen_test.cc
+    #tl_sparse_vector_eigen_test.cc
     )
 endif(EIGEN3_FOUND)
 
 
 # objects using ViennaCL
-if (VIENNACL_FOUND)
+if (EIGEN3_FOUND AND VIENNACL_FOUND)
   set(PDF_XTEST_SOURCES
     ${PDF_XTEST_SOURCES}
     tl_dense_general_matrix_viennacl_test.cc
     tl_dense_symmetric_matrix_viennacl_test.cc
+    tl_dense_vector_viennacl_test.cc
+
+    tl_sparse_general_matrix_viennacl_test.cc
+    tl_sparse_symmetric_matrix_viennacl_test.cc
+    #tl_sparse_vector_eigen_viennacl.cc
     )
-endif(VIENNACL_FOUND)
+endif(EIGEN3_FOUND AND VIENNACL_FOUND)
 
 
 add_executable(pdf-xtest ${PDF_XTEST_SOURCES})
@@ -96,7 +107,7 @@ if (MPI_FOUND)
 
   add_test(
     NAME xtest.mpi
-    COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 $<TARGET_FILE:pdf-xtest.MPI>
+    COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${NUMPROC} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:pdf-xtest.MPI> ${MPIEXEC_POSTFLAGS}
     )
     set_property(TEST xtest.mpi PROPERTY LABELS xtest.mpi)
     set_property(TEST xtest.mpi PROPERTY RUN_SERIAL)

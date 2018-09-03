@@ -29,9 +29,14 @@ class DfTaskCtrl_Parallel : public DfTaskCtrl {
   virtual ~DfTaskCtrl_Parallel();
 
  public:
+  virtual bool getQueue(const std::size_t maxIndeces,
+                        const std::size_t maxGrainSize,
+                        std::vector<std::size_t>* pTasks,
+                        bool initialize = false);
+
   virtual bool getQueue(const TlOrbitalInfoObject& orbitalInfo,
                         const int maxGrainSize, std::vector<Task>* pTask,
-                        bool initialize);
+                        bool initialize = false);
 
   virtual bool getQueue2(const TlOrbitalInfoObject& orbitalInfo,
                          const bool isCutoffByDistibution,
@@ -127,6 +132,9 @@ class DfTaskCtrl_Parallel : public DfTaskCtrl {
   void cutoffReport_MS();
 
  protected:
+  bool getQueue_DC(const std::size_t maxIndeces, const std::size_t maxGrainSize,
+                   std::vector<std::size_t>* pTasks, bool initialize = false);
+
   bool getQueue_DC(const TlOrbitalInfoObject& orbitalInfo,
                    const int maxGrainSize, std::vector<Task>* pTask,
                    bool initialize);

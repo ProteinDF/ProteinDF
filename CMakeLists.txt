@@ -14,19 +14,29 @@ execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE BUILD_GIT_REV
 execute_process(COMMAND date +%Y%m%d OUTPUT_VARIABLE BUILD_DATE OUTPUT_STRIP_TRAILING_WHITESPACE)
 if (DEFINED BUILD_GIT_REV)
   set(PROJECT_VERSION_BUILD "${BUILD_GIT_REV}")
-else()
+else (DEFINED BUILD_GIT_REV)
   set(PROJECT_VERSION_BUILD "${BUILD_DATE}")
-endif()
+endif (DEFINED BUILD_GIT_REV)
 #message("BUILD_GIT_REV: ${BUILD_GIT_REV}")
 #message("BUILD_DATE: ${BUILD_DATE}")
 #message("PROJECT_VERSION_BUILD: ${PROJECT_VERSION_BUILD}")
 
-#
+# -----------------------------------------------------------------------------
+# Option
+# -----------------------------------------------------------------------------
+OPTION(USE_EIGEN "use EIGEN" on)
+OPTION(USE_VIENNACL "use ViennaCL" on)
+OPTION(USE_HDF5 "use HDF5" on)
+
+# -----------------------------------------------------------------------------
+# Check
+# -----------------------------------------------------------------------------
 include(CheckTypeSize)
 include(CheckIncludeFile)
 
-
-#set(CMAKE_VERBOSE_MAKEFILE 1)
+# -----------------------------------------------------------------------------
+# Modules
+# -----------------------------------------------------------------------------
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake-modules")
 
 # C++ compiler
@@ -84,14 +94,19 @@ endif(OPENMP_FOUND)
 
 
 # check linear algebra package
-find_package(Eigen3)
-if (EIGEN3_FOUND)
-  message("Eigen3 information:")
-  message("  EIGEN3_INCLUDE_DIR: ${EIGEN3_INCLUDE_DIR}")
-  message("  EIGEN3_VERSION: ${EIGEN3_VERSION}")
+if (USE_EIGEN)
+  find_package(Eigen3)
+  if (EIGEN3_FOUND)
+    message("Eigen3 information:")
+    message("  EIGEN3_INCLUDE_DIR: ${EIGEN3_INCLUDE_DIR}")
+    message("  EIGEN3_VERSION: ${EIGEN3_VERSION}")
 
-  set(HAVE_EIGEN3 1) # for config.h
-endif(EIGEN3_FOUND)
+    set(HAVE_EIGEN 1) # for config.h
+    include_directories(${EIGEN3_INCLUDE_DIR})
+  endif (EIGEN3_FOUND)
+else (USE_EIGEN)
+  message("USE_EIGEN: ${USE_EIGEN}")
+endif (USE_EIGEN)
 
 find_package(BLAS REQUIRED)
 if (BLAS_FOUND)
@@ -127,17 +142,25 @@ if (OpenCL_FOUND)
 endif (OpenCL_FOUND)
 
 # check ViennaCL
-find_package(ViennaCL)
-if (VIENNACL_FOUND)
-  message("ViennaCL information:")
-  message("  VIENNACL_INCLUDE_DIR: ${VIENNACL_INCLUDE_DIR}")
+if (USE_VIENNACL)
+  find_package(ViennaCL)
+  if (VIENNACL_FOUND)
+    message("ViennaCL information:")
+    message("  VIENNACL_INCLUDE_DIR: ${VIENNACL_INCLUDE_DIR}")
 
-  if (OpenCL_FOUND)
-    add_definitions(-DVIENNACL_WITH_OPENCL)
-  endif (OpenCL_FOUND)
+    if (OpenCL_FOUND)
+      add_definitions(-DVIENNACL_WITH_OPENCL)
+    endif (OpenCL_FOUND)
   
-  set(HAVE_VIENNACL 1) # for config.h
-endif(VIENNACL_FOUND)
+    set(HAVE_VIENNACL 1) # for config.h
+    include_directories(${VIENNACL_INCLUDE_DIR})
+  else (VIENNACL_FOUND)
+    message("Not Found ViennaCL")
+    message("  please check: VIENNACL_ROOT")
+  endif (VIENNACL_FOUND)
+else (USE_VIENNACL)
+  message("USE_VIENNACL: ${USE_VIENNACL}")
+endif (USE_VIENNACL)
 
 
 # check BLACS
@@ -168,20 +191,26 @@ endif(SCALAPACK_FOUND)
 
 
 # check HDF5
-find_package(HDF5 COMPONENTS C CXX)
-if (HDF5_FOUND)
-  include_directories(${HDF5_INCLUDE_DIRS})
-  message("HDF5 information:")
-  message("  HDF5_VERSION: ${HDF5_VERSION}")
-  message("  HDF5_IS_PARALLEL: ${HDF5_IS_PARALLEL}")
-  message("  HDF5_INCLUDE_DIRS: ${HDF5_INCLUDE_DIRS}")
-  message("  HDF5_CXX_INCLUDE_DIRS: ${HDF5_CXX_INCLUDE_DIRS}")
-  message("  HDF5_LIBRARIES: ${HDF5_LIBRARIES}")
-  message("  HDF5_HL_LIBRARIES: ${HDF5_HL_LIBRARIES}")
-  message("  HDF5_CXX_LIBRARIES: ${HDF5_CXX_LIBRARIES}")
+if (USE_HDF5)
+  find_package(HDF5 COMPONENTS C CXX)
+  if (HDF5_FOUND)
+    include_directories(${HDF5_INCLUDE_DIRS})
+    message("HDF5 information:")
+    message("  HDF5_VERSION: ${HDF5_VERSION}")
+    message("  HDF5_IS_PARALLEL: ${HDF5_IS_PARALLEL}")
+    message("  HDF5_INCLUDE_DIRS: ${HDF5_INCLUDE_DIRS}")
+    message("  HDF5_CXX_INCLUDE_DIRS: ${HDF5_CXX_INCLUDE_DIRS}")
+    message("  HDF5_LIBRARIES: ${HDF5_LIBRARIES}")
+    message("  HDF5_HL_LIBRARIES: ${HDF5_HL_LIBRARIES}")
+    message("  HDF5_CXX_LIBRARIES: ${HDF5_CXX_LIBRARIES}")
 
-  set(HAVE_HDF5 1) # for config.h
-endif(HDF5_FOUND)
+    set(HAVE_HDF5 1) # for config.h
+  else (HDF5_FOUND)
+    message("Not Found HDF5")
+  endif (HDF5_FOUND)
+else (USE_HDF5)
+  message("USE_HDF5: ${USE_HDF5}")
+endif (USE_HDF5)
 
 
 # check threads

@@ -24,6 +24,7 @@
 
 #include "DfScf.h"
 #include "TlUtils.h"
+#include "common.h"
 
 #include "DfCalcGrid.h"
 #include "DfCleanup.h"
@@ -56,6 +57,14 @@
 
 #include "TlFile.h"
 #include "TlMsgPack.h"
+
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
+
+#include "tl_dense_general_matrix_eigen.h"
+#include "tl_dense_symmetric_matrix_eigen.h"
+#include "tl_dense_vector_eigen.h"
 
 #define NUMBER_OF_CHECK 2
 
@@ -680,10 +689,43 @@ void DfScf::diagonal() {
   // Diagonarize Fock matrix
   TlTime timer;
   this->loggerStartTitle("Diagonal");
+
   DfDiagonal* pDfDiagonal = this->getDfDiagonalObject();
-  pDfDiagonal->DfDiagMain();
+  pDfDiagonal->run();
   delete pDfDiagonal;
   pDfDiagonal = NULL;
+
+  // switch (this->linearAlgebraPackage_) {
+  //   case LAP_LAPACK: {
+  //     this->log_.info("Linear Algebra Package: LAPACK");
+  //     DfDiagonalTempl<TlDenseGeneralMatrix_Lapack,
+  //                     TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack>
+  //         dfDiagonal(this->pPdfParam_);
+  //     dfDiagonal.run();
+  //   } break;
+
+  //   case LAP_EIGEN:
+  //   case LAP_VIENNACL:
+  //   {
+  //     this->log_.info("Linear Algebra Package: Eigen");
+  //     DfDiagonalTempl<TlDenseGeneralMatrix_Eigen, TlDenseSymmetricMatrix_Eigen,
+  //                     TlDenseVector_Eigen>
+  //         dfDiagonal(this->pPdfParam_);
+  //     dfDiagonal.run();
+  //   } break;
+
+  //   // case LAP_VIENNACL: {
+  //   //   this->log_.info("Linear Algebra Package: ViennaCL");
+  //   //   DfDiagonalTempl<TlDenseGeneralMatrix_ViennaCL,
+  //   //                   TlDenseSymmetricMatrix_ViennaCL, TlDenseVector_ViennaCL>
+  //   //       dfDiagonal(this->pPdfParam_);
+  //   //   dfDiagonal.run();
+  //   // } break;
+
+  //   default:
+  //     CnErr.abort(TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
+  // }
+
   this->loggerEndTitle();
   (*this->pPdfParam_)["stat"]["elapsed_time"]["diagonal"][this->m_nIteration] =
       timer.getElapseTime();
@@ -702,7 +744,7 @@ void DfScf::execScfLoop_EndFock_TransC() {
   TlTime timer;
   this->loggerStartTitle("Transform Matrix");
   DfTransatob* pDfTransAtoB = this->getDfTransatobObject();
-  pDfTransAtoB->DfTrsatobMain();
+  pDfTransAtoB->run();
   delete pDfTransAtoB;
   pDfTransAtoB = NULL;
   this->loggerEndTitle();
@@ -719,10 +761,10 @@ void DfScf::calcDensityMatrix() {
   // density matrix generation
   TlTime timer;
   this->loggerStartTitle("Density Matirx");
-  DfDmatrix* pDfDmatrix = this->getDfDmatrixObject();
-  pDfDmatrix->DfDmatrixMain();
-  delete pDfDmatrix;
-  pDfDmatrix = NULL;
+
+  DfDmatrix dfDmatrix(this->pPdfParam_);
+  dfDmatrix.run();
+
   this->loggerEndTitle();
   (*this->pPdfParam_)["stat"]["elapsed_time"]["density_matrix"]
                      [this->m_nIteration] = timer.getElapseTime();

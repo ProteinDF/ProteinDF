@@ -169,12 +169,26 @@ TYPED_TEST_P(DenseVectorTest, doesSaveAndLoad) {
   EXPECT_DOUBLE_EQ(2.0, a.get(2));
 }
 
+TYPED_TEST_P(DenseVectorTest, doesTransformStdVector) {
+  TypeParam a(3);
+  a.set(0, 0.0);
+  a.set(1, 1.0);
+  a.set(2, 2.0);
+
+  std::vector<double> b = a;
+
+  EXPECT_EQ(3, b.size());
+  EXPECT_DOUBLE_EQ(0.0, b[0]);
+  EXPECT_DOUBLE_EQ(1.0, b[1]);
+  EXPECT_DOUBLE_EQ(2.0, b[2]);
+}
+
 REGISTER_TYPED_TEST_CASE_P(DenseVectorTest, doesConstructor,
                            doesCopyConstructor, doesOperator_eq,
                            doesOperator_iadd, doesOperator_isub,
                            doesOperator_imul, doesOperator_add,
                            doesOperator_sub, doesSum, doesNorm, doesNorm2,
                            doesArgmax, doesSortByGreater, doesDotInPlace,
-                           doesSaveAndLoad);
+                           doesSaveAndLoad, doesTransformStdVector);
 
 #endif  // DENSE_VECTOR_TEST_TEMPLATE_H

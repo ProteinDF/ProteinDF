@@ -26,6 +26,7 @@
 #include "TlUtils.h"
 #include "tl_dense_general_matrix_scalapack.h"
 #include "tl_dense_symmetric_matrix_scalapack.h"
+#include "tl_dense_vector_scalapack.h"
 
 DfDiagonal_Parallel::DfDiagonal_Parallel(TlSerializeData* pPdfParam)
     : DfDiagonal(pPdfParam) {}
@@ -45,7 +46,7 @@ void DfDiagonal_Parallel::DfDiagMain() {
   this->log_.info("diagonal(parallel) using LAPACK.");
   TlCommunicate& rComm = TlCommunicate::getInstance();
   if (rComm.isMaster() == true) {
-    DfDiagonal::DfDiagMain();
+    DfDiagonal::run();
   }
   rComm.barrier();
 }
@@ -65,7 +66,7 @@ void DfDiagonal_Parallel::DfDiagQclo(const DfObject::RUN_TYPE runType,
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
   if (rComm.isMaster() == true) {
-    DfDiagonal::DfDiagQclo(runType, fragname, norbcut);
+    DfDiagonal::runQclo(runType, fragname, norbcut);
   }
   rComm.barrier();
 }
@@ -74,19 +75,23 @@ void DfDiagonal_Parallel::DfDiagMain_SCALAPACK() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
       this->main<TlDenseGeneralMatrix_Scalapack,
-                 TlDenseSymmetricMatrix_Scalapack>(RUN_RKS);
+                 TlDenseSymmetricMatrix_Scalapack,
+                 TlDenseVector_Lapack>(RUN_RKS);
       break;
 
     case METHOD_UKS:
       this->main<TlDenseGeneralMatrix_Scalapack,
-                 TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_ALPHA);
+                 TlDenseSymmetricMatrix_Scalapack,
+                 TlDenseVector_Lapack>(RUN_UKS_ALPHA);
       this->main<TlDenseGeneralMatrix_Scalapack,
-                 TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_BETA);
+                 TlDenseSymmetricMatrix_Scalapack,
+                 TlDenseVector_Lapack>(RUN_UKS_BETA);
       break;
 
     case METHOD_ROKS:
       this->main<TlDenseGeneralMatrix_Scalapack,
-                 TlDenseSymmetricMatrix_Scalapack>(RUN_ROKS);
+                 TlDenseSymmetricMatrix_Scalapack,
+                 TlDenseVector_Lapack>(RUN_ROKS);
       break;
 
     default:
@@ -100,6 +105,6 @@ void DfDiagonal_Parallel::DfDiagQclo_SCALAPACK(const DfObject::RUN_TYPE runType,
                                                const std::string& fragname,
                                                int norbcut) {
   this->m_nNumOfMOs = norbcut;
-  this->main<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack>(
+  this->main<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Lapack>(
       runType, fragname, true);
 }

@@ -27,7 +27,9 @@
 #include "DfDensityFittingX_ScaLAPACK.h"
 #include "DfDiagonal_Parallel.h"
 #include "DfDiffDensityMatrix_Parallel.h"
+
 #include "DfDmatrix_Parallel.h"
+
 #include "DfFockMatrix_Parallel.h"
 #include "DfGridFreeXC_Parallel.h"
 #include "DfJMatrix_Parallel.h"
@@ -38,6 +40,10 @@
 #include "DfTransFmatrix_Parallel.h"
 #include "DfTransatob_Parallel.h"
 #include "DfXCFunctional_Parallel.h"
+
+#include "tl_dense_general_matrix_scalapack.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
+#include "tl_dense_vector_scalapack.h"
 
 #define NUMBER_OF_CHECK 2
 
@@ -200,6 +206,35 @@ DfDiagonal* DfScf_Parallel::getDfDiagonalObject() {
 DfTransatob* DfScf_Parallel::getDfTransatobObject() {
   DfTransatob* pDfTransAtoB = new DfTransatob_Parallel(this->pPdfParam_);
   return pDfTransAtoB;
+}
+
+void DfScf_Parallel::calcDensityMatrix() {
+  bool done = false;
+#ifdef HAVE_SCALAPACK
+  if (this->m_bUsingSCALAPACK == true) {
+    TlTime timer;
+    this->loggerStartTitle("Density Matirx (ScaLAPACK)");
+
+    DfDmatrix_Parallel dfDmatrix(this->pPdfParam_);
+    dfDmatrix.run();
+
+    this->loggerEndTitle();
+    (*this->pPdfParam_)["stat"]["elapsed_time"]["density_matrix"]
+                       [this->m_nIteration] = timer.getElapseTime();
+
+    this->matrixCache_.flush();
+    done = true;
+  }
+#endif  // HAVE_SCALAPACK
+
+  if (!done) {
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    this->log_.info("Density Matirx @master");
+    if (rComm.isMaster() == true) {
+      DfScf::calcDensityMatrix();
+    }
+    rComm.barrier();
+  }
 }
 
 DfDmatrix* DfScf_Parallel::getDfDmatrixObject() {

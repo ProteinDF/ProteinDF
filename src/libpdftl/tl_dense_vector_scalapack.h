@@ -51,6 +51,13 @@ class TlDenseVector_Scalapack : public TlDenseVectorObject {
   // const double* data() const;
 
   // ---------------------------------------------------------------------------
+  // I/O
+  // ---------------------------------------------------------------------------
+ public:
+  virtual bool load(const std::string& filePath);
+  virtual bool save(const std::string& filePath) const;
+
+  // ---------------------------------------------------------------------------
   // others
   // ---------------------------------------------------------------------------
   friend class TlDenseGeneralMatrix_Scalapack;

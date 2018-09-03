@@ -1,7 +1,9 @@
 #ifndef TL_DENSE_VECTOR_IMPL_EIGEN_H
 #define TL_DENSE_VECTOR_IMPL_EIGEN_H
 
+#include <vector>
 #include <Eigen/Core>
+
 #include "tl_dense_vector_impl_object.h"
 
 #if __cplusplus >= 201103L
@@ -9,6 +11,10 @@
 #endif  // __cplusplus
 
 class TlDenseGeneralMatrix_ImplEigen;
+class TlDenseSymmetricMatrix_ImplEigen;
+class TlSparseGeneralMatrix_ImplEigen;
+class TlSparseSymmetricMatrix_ImplEigen;
+class TlDenseVector_ImplViennaCL;
 
 class TlDenseVector_ImplEigen : public TlDenseVector_ImplObject {
  public:
@@ -23,9 +29,13 @@ class TlDenseVector_ImplEigen : public TlDenseVector_ImplObject {
   explicit TlDenseVector_ImplEigen(
       const TlDenseVectorObject::index_type size = 0);
   TlDenseVector_ImplEigen(const TlDenseVector_ImplEigen& rhs);
+  TlDenseVector_ImplEigen(const std::vector<double>& rhs);
   TlDenseVector_ImplEigen(const double* p,
                           const TlDenseVectorObject::index_type size);
   TlDenseVector_ImplEigen(const VectorDataType& rhs);
+
+  operator std::vector<double>() const;
+
   virtual ~TlDenseVector_ImplEigen();
 
   // ---------------------------------------------------------------------------
@@ -55,8 +65,8 @@ class TlDenseVector_ImplEigen : public TlDenseVector_ImplObject {
   // operations
   // ---------------------------------------------------------------------------
  public:
-  double sum() const;
-  void sortByGreater();
+  virtual double sum() const;
+  virtual void sortByGreater();
   TlDenseVector_ImplEigen& dotInPlace(const TlDenseVector_ImplEigen& rhs);
 
   // ---------------------------------------------------------------------------
@@ -68,6 +78,8 @@ class TlDenseVector_ImplEigen : public TlDenseVector_ImplObject {
   // ---------------------------------------------------------------------------
   // others
   // ---------------------------------------------------------------------------
+  friend class TlDenseVector_ImplViennaCL;
+
   friend TlDenseVector_ImplEigen operator+(const TlDenseVector_ImplEigen& rhs1,
                                            const TlDenseVector_ImplEigen& rhs2);
   friend TlDenseVector_ImplEigen operator-(const TlDenseVector_ImplEigen& rhs1,
@@ -77,12 +89,30 @@ class TlDenseVector_ImplEigen : public TlDenseVector_ImplObject {
                                            const double rhs2);
   friend TlDenseVector_ImplEigen operator*(const double rhs1,
                                            const TlDenseVector_ImplEigen& rhs2);
+
+  // DM(G) * DV
   friend TlDenseVector_ImplEigen operator*(
       const TlDenseGeneralMatrix_ImplEigen& mat,
       const TlDenseVector_ImplEigen& vec);
+  // DV * DM(G)
   friend TlDenseVector_ImplEigen operator*(
       const TlDenseVector_ImplEigen& vec,
       const TlDenseGeneralMatrix_ImplEigen& mat);
+  // DM(S) * DV
+  friend TlDenseVector_ImplEigen operator*(
+      const TlDenseSymmetricMatrix_ImplEigen& mat,
+      const TlDenseVector_ImplEigen& vec);
+  // DV * DM(S)
+  friend TlDenseVector_ImplEigen operator*(
+      const TlDenseVector_ImplEigen& vec,
+      const TlDenseSymmetricMatrix_ImplEigen& mat);
+
+  // SM(G) x DV
+  friend TlDenseVector_ImplEigen operator*(const TlSparseGeneralMatrix_ImplEigen& mat, const TlDenseVector_ImplEigen& vtr);
+  // DV x SM(G)
+  friend TlDenseVector_ImplEigen operator*(const TlDenseVector_ImplEigen& vtr, const TlSparseGeneralMatrix_ImplEigen& mat);
+  // SM(S) x DV
+  friend TlDenseVector_ImplEigen operator*(const TlSparseSymmetricMatrix_ImplEigen& mat, const TlDenseVector_ImplEigen& vtr);
 
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // Eigen macro

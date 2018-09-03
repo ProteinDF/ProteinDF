@@ -210,6 +210,22 @@ TYPED_TEST_P(DenseGeneralMatrixTest, doesTransposeInPlace) {
   EXPECT_DOUBLE_EQ(8.0, a.get(2, 2));
 }
 
+TYPED_TEST_P(DenseGeneralMatrixTest, doesTranspose) {
+  TypeParam b = getMatrixA<TypeParam>();
+
+  TypeParam a = b.transpose();
+
+  EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
+  EXPECT_DOUBLE_EQ(1.0, a.get(1, 0));
+  EXPECT_DOUBLE_EQ(2.0, a.get(2, 0));
+  EXPECT_DOUBLE_EQ(3.0, a.get(0, 1));
+  EXPECT_DOUBLE_EQ(4.0, a.get(1, 1));
+  EXPECT_DOUBLE_EQ(5.0, a.get(2, 1));
+  EXPECT_DOUBLE_EQ(6.0, a.get(0, 2));
+  EXPECT_DOUBLE_EQ(7.0, a.get(1, 2));
+  EXPECT_DOUBLE_EQ(8.0, a.get(2, 2));
+}
+
 TYPED_TEST_P(DenseGeneralMatrixTest, doesDotInPlace) {
   TypeParam a = getMatrixA<TypeParam>();
   TypeParam b = getMatrixB<TypeParam>();
@@ -279,7 +295,7 @@ REGISTER_TYPED_TEST_CASE_P(DenseGeneralMatrixTest, doesConstructor,
                            doesCopyConstructor, doesResize, doesOperatorEq,
                            doesOperatorAdd, doesOperatorIAdd,
                            doesOperatorMultiMatrixAB, doesSum, doesTrace,
-                           doesMaxAbsoluteElement, doesTransposeInPlace,
+                           doesMaxAbsoluteElement, doesTransposeInPlace, doesTranspose,
                            doesDotInPlace, doesSaveAndLoad,
                            doesSaveAndLoadToHdf5);
 
