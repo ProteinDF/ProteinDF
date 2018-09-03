@@ -325,6 +325,9 @@ PQ_PairArray DfCdkMatrix::getI2PQ(const std::string& filepath) {
 template <typename SymmetricMatrix, typename Vector>
 SymmetricMatrix DfCdkMatrix::getCholeskyVector(const Vector& L_col,
                                                const PQ_PairArray& I2PQ) {
+  
+
+
   const index_type numOfItilde = L_col.getSize();
   assert(static_cast<std::size_t>(numOfItilde) == I2PQ.size());
 
@@ -336,6 +339,25 @@ SymmetricMatrix DfCdkMatrix::getCholeskyVector(const Vector& L_col,
   return answer;
 }
 
+// special version
+template <>
+TlDenseSymmetricMatrix_ViennaCL 
+DfCdkMatrix::getCholeskyVector<TlDenseSymmetricMatrix_ViennaCL, TlDenseVector_ViennaCL>(const TlDenseVector_ViennaCL& L_col,
+                                               const PQ_PairArray& I2PQ) {
+  const index_type numOfItilde = L_col.getSize();
+  assert(static_cast<std::size_t>(numOfItilde) == I2PQ.size());
+
+  //this->log_.info("convert matrix is build via Eigen.");
+  TlDenseSymmetricMatrix_Eigen answer(this->m_nNumOfAOs);
+  for (index_type i = 0; i < numOfItilde; ++i) {
+    answer.set(I2PQ[i].index1(), I2PQ[i].index2(), L_col.get(i));
+  }
+
+  return TlDenseSymmetricMatrix_ViennaCL(answer);
+}
+
+// ------------------------------
+//
 template <typename SparseGeneralMatrix>
 SparseGeneralMatrix DfCdkMatrix::getTrans_I2PQ_Matrix(
     const PQ_PairArray& I2PQ) {
@@ -356,6 +378,31 @@ SparseGeneralMatrix DfCdkMatrix::getTrans_I2PQ_Matrix(
   return expandL;
 }
 
+// special version
+template <>
+TlSparseGeneralMatrix_ViennaCL
+DfCdkMatrix::getTrans_I2PQ_Matrix<TlSparseGeneralMatrix_ViennaCL>(
+    const PQ_PairArray& I2PQ) {
+  this->log_.info("trans matrix is built via Eigen.");
+  const TlMatrixObject::index_type numOfItilde = I2PQ.size();
+  const TlMatrixObject::index_type numOfAoPairs =
+      this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2;
+
+  TlSparseGeneralMatrix_Eigen expandL(numOfAoPairs, numOfItilde);
+  for (TlMatrixObject::index_type i = 0; i < numOfItilde; ++i) {
+    TlMatrixObject::index_type row = I2PQ[i].index1();
+    TlMatrixObject::index_type col = I2PQ[i].index2();
+    if (row < col) {
+      std::swap(row, col);
+    }
+    const TlMatrixObject::index_type rowcol = row * (row + 1) / 2 + col;
+    expandL.set(rowcol, i, 1.0);
+  }
+  return TlSparseGeneralMatrix_ViennaCL(expandL);
+}
+
+// ---------------------------------------
+//
 template <typename SymmetricMatrix, typename Vector,
           typename SparseGeneralMatrix>
 SymmetricMatrix DfCdkMatrix::convert_I2PQ(const SparseGeneralMatrix& I2PQ_mat,
