@@ -290,7 +290,7 @@ TEST(TlSparseGeneralMatrix_ViennaCL, multi_sparsemat_densevtr) {
   SM.set(1, 0, 2.0);
   SM.set(2, 0, 3.0);
   SM.set(3, 3, 4.0);
-  std::cout << SM << std::endl;
+  //std::cout << SM << std::endl;
 
   TlDenseGeneralMatrix_ViennaCL DM(row1, col1);
   DM.set(0, 0, 1.0);

@@ -47,6 +47,10 @@ TlDenseSymmetricMatrix_ViennaCL::~TlDenseSymmetricMatrix_ViennaCL() {
   this->pImpl_ = NULL;
 }
 
+void TlDenseSymmetricMatrix_ViennaCL::vtr2mat(const std::vector<double>& vtr) {
+    dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCL*>(this->pImpl_)->vtr2mat(vtr);
+}
+
 // ---------------------------------------------------------------------------
 // operators
 // ---------------------------------------------------------------------------

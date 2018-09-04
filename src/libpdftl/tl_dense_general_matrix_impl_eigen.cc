@@ -41,12 +41,6 @@ TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
     const TlSparseGeneralMatrix_ImplEigen& sm)
     : matrix_(sm.matrix_) {}
 
-void TlDenseGeneralMatrix_ImplEigen::vtr2mat(const std::vector<double>& vtr) {
-  assert(vtr.size() == this->getNumOfRows() * this->getNumOfCols());
-  this->matrix_ =
-      MapTypeConst(&(vtr[0]), this->getNumOfRows(), this->getNumOfCols());
-}
-
 #ifdef HAVE_VIENNACL
 TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
     const TlDenseGeneralMatrix_ImplViennaCL& rhs)
@@ -56,6 +50,12 @@ TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
 #endif  // HAVE_VIENNACL
 
 TlDenseGeneralMatrix_ImplEigen::~TlDenseGeneralMatrix_ImplEigen() {}
+
+void TlDenseGeneralMatrix_ImplEigen::vtr2mat(const std::vector<double>& vtr) {
+  assert(vtr.size() == this->getNumOfRows() * this->getNumOfCols());
+  this->matrix_ =
+      MapTypeConst(&(vtr[0]), this->getNumOfRows(), this->getNumOfCols());
+}
 
 // ----------------------
 TlMatrixObject::index_type TlDenseGeneralMatrix_ImplEigen::getNumOfRows()
@@ -77,19 +77,19 @@ void TlDenseGeneralMatrix_ImplEigen::resize(
 double TlDenseGeneralMatrix_ImplEigen::get(
     const TlMatrixObject::index_type row,
     const TlMatrixObject::index_type col) const {
-  return this->matrix_.coeff(row, col);
+  return this->matrix_(row, col);
 }
 
 void TlDenseGeneralMatrix_ImplEigen::set(const TlMatrixObject::index_type row,
                                          const TlMatrixObject::index_type col,
                                          const double value) {
-  this->matrix_.coeffRef(row, col) = value;
+  this->matrix_(row, col) = value;
 }
 
 void TlDenseGeneralMatrix_ImplEigen::add(const TlMatrixObject::index_type row,
                                          const TlMatrixObject::index_type col,
                                          const double value) {
-  this->matrix_.coeffRef(row, col) += value;
+  this->matrix_(row, col) += value;
 }
 
 // ---------------------------------------------------------------------------

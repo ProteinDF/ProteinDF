@@ -33,6 +33,8 @@ class TlDenseSymmetricMatrix_ImplViennaCL
 #endif  // HAVE_EIGEN
   virtual ~TlDenseSymmetricMatrix_ImplViennaCL();
 
+  virtual void vtr2mat(const std::vector<double>& vtr);
+
   // ---------------------------------------------------------------------------
   // properties
   // ---------------------------------------------------------------------------

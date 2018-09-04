@@ -312,11 +312,11 @@ TEST(TlDenseGeneralMatrix_Lapack, operator_mul_mat_vec) {
 TEST(TlDenseGeneralMatrix_Lapack, operator_mul_vec_mat) {
   TlDenseGeneralMatrix_Lapack a = getMatrixD<TlDenseGeneralMatrix_Lapack>();
   TlDenseVector_Lapack v = getVectorA<TlDenseVector_Lapack>();
-  std::cout << a << std::endl;
-  std::cout << v << std::endl;
+  // std::cout << a << std::endl;
+  // std::cout << v << std::endl;
 
   TlDenseVector_Lapack z = v * a;
-  std::cout << z << std::endl;
+  // std::cout << z << std::endl;
 
   EXPECT_EQ(4, z.getSize());
   EXPECT_DOUBLE_EQ(23.0, z.get(0));

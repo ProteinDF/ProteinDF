@@ -25,6 +25,8 @@ class TlDenseSymmetricMatrix_Eigen : public TlDenseSymmetricMatrixObject {
 
   virtual ~TlDenseSymmetricMatrix_Eigen();
 
+  virtual void vtr2mat(const std::vector<double>& vtr);
+
   // ---------------------------------------------------------------------------
   // operators
   // ---------------------------------------------------------------------------

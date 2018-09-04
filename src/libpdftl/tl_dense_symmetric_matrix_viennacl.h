@@ -30,6 +30,8 @@ class TlDenseSymmetricMatrix_ViennaCL : public TlDenseSymmetricMatrixObject {
 
   virtual ~TlDenseSymmetricMatrix_ViennaCL();
 
+  virtual void vtr2mat(const std::vector<double>& vtr);
+
   // ---------------------------------------------------------------------------
   // operators
   // ---------------------------------------------------------------------------
