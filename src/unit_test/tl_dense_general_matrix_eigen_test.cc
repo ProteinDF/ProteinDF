@@ -246,11 +246,11 @@ TEST(TlDenseGeneralMatrix_Eigen, operator_mul_mat_vec) {
 TEST(TlDenseGeneralMatrix_Eigen, operator_mul_vec_mat) {
   TlDenseGeneralMatrix_Eigen a = getMatrixD<TlDenseGeneralMatrix_Eigen>();
   TlDenseVector_Eigen v = getVectorA<TlDenseVector_Eigen>();
-  std::cout << a << std::endl;
-  std::cout << v << std::endl;
+  // std::cout << a << std::endl;
+  // std::cout << v << std::endl;
 
   TlDenseVector_Eigen z = v * a;
-  std::cout << z << std::endl;
+  // std::cout << z << std::endl;
 
   EXPECT_EQ(4, z.getSize());
   EXPECT_DOUBLE_EQ(23.0, z.get(0));

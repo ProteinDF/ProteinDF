@@ -12,6 +12,7 @@ static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 static const std::string mat_save_load_path = "temp.sym.viennacl.save_load.mat";
 static const std::string mat_h5 = "temp.sym.h5";
 
+#ifdef HAVE_EIGEN
 TEST(TlDenseSymmetricMatrix_ViennaCL, copyFromEigen) {
   TlDenseSymmetricMatrix_Eigen a =
       getSymMatrixA<TlDenseSymmetricMatrix_Eigen>();
@@ -22,6 +23,29 @@ TEST(TlDenseSymmetricMatrix_ViennaCL, copyFromEigen) {
   for (int i = 0; i < a.getNumOfRows(); ++i) {
     for (int j = 0; j < a.getNumOfCols(); ++j) {
       EXPECT_DOUBLE_EQ(a.get(i, j), b.get(i, j));
+    }
+  }
+}
+#endif // HAVE_EIGEN
+
+TEST(TlDenseSymmetricMatrix_ViennaCL, vtr2mat) {
+  const int dim = 4;
+  const int elements = dim * (dim +1) / 2;
+  std::vector<double> vtr(elements);
+  for (int i = 0; i < elements; ++i) {
+    vtr[i] = i;
+  }
+
+  TlDenseSymmetricMatrix_ViennaCL a(dim);
+  a.vtr2mat(vtr);
+
+  EXPECT_EQ(dim, a.getNumOfRows());
+  EXPECT_EQ(dim, a.getNumOfCols());
+  int i = 0;
+  for (int c = 0; c < dim; ++c) { // col-major
+    for (int r = 0; r <= c; ++r) {
+      EXPECT_DOUBLE_EQ(vtr[i], a.get(r, c));
+      ++i;
     }
   }
 }

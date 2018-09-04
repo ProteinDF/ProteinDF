@@ -62,6 +62,49 @@ TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(
 
 TlDenseSymmetricMatrix_ImplViennaCL::~TlDenseSymmetricMatrix_ImplViennaCL() {}
 
+void TlDenseSymmetricMatrix_ImplViennaCL::vtr2mat(const std::vector<double>& vtr) {
+  const std::size_t dim = this->getNumOfRows();
+
+#ifdef HAVE_EIGEN
+{
+  Eigen::MatrixXd eigen_mat(dim, dim);
+  std::size_t i = 0;
+  // column-major
+  for (TlMatrixObject::index_type c = 0; c < dim; ++c) {
+    // non-diagonal term
+    for (TlMatrixObject::index_type r = 0; r < c; ++r) {
+      double v = vtr[i];
+      eigen_mat(r, c) = v;
+      eigen_mat(c, r) = v;
+      ++i;
+    }
+    // diagonal term
+    {
+      double v = vtr[i];
+      eigen_mat(c, c) = v;
+      ++i;
+    }
+  }
+  viennacl::copy(eigen_mat, this->matrix_);
+}
+#else // HAVE_EIGEN
+{
+  std::size_t i = 0;
+  // column-major
+  for (TlMatrixObject::index_type c = 0; c < dim; ++c) {
+    for (TlMatrixObject::index_type r = 0; r <= c; ++r) {
+      double v = vtr[i];
+      this->set(r, c, v);
+      ++i;
+    }
+  }
+}
+#endif // HAVE_EIGEN
+}
+
+// ---------------------------------------------------------------------------
+// properties
+// ---------------------------------------------------------------------------
 void TlDenseSymmetricMatrix_ImplViennaCL::set(
     const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
     const double value) {

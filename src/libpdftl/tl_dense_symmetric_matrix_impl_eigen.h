@@ -24,6 +24,8 @@ TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplViennaCL& rhs)
 
   virtual ~TlDenseSymmetricMatrix_ImplEigen();
 
+  virtual void vtr2mat(const std::vector<double>& vtr);
+
   // ---------------------------------------------------------------------------
   // properties
   // ---------------------------------------------------------------------------

@@ -57,6 +57,8 @@ TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(
 }
 #endif  // HAVE_EIGEN
 
+TlDenseGeneralMatrix_ImplViennaCL::~TlDenseGeneralMatrix_ImplViennaCL() {}
+
 void TlDenseGeneralMatrix_ImplViennaCL::vtr2mat(
     const std::vector<double>& vtr) {
   const TlMatrixObject::index_type numOfRows = this->getNumOfRows();
@@ -78,8 +80,6 @@ void TlDenseGeneralMatrix_ImplViennaCL::vtr2mat(
   }
 #endif  // HAVE_EIGEN
 }
-
-TlDenseGeneralMatrix_ImplViennaCL::~TlDenseGeneralMatrix_ImplViennaCL() {}
 
 // ---------------------------------------------------------------------------
 // properties

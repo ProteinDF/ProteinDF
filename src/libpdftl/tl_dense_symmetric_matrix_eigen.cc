@@ -43,6 +43,10 @@ TlDenseSymmetricMatrix_Eigen::~TlDenseSymmetricMatrix_Eigen() {
   this->pImpl_ = NULL;
 }
 
+void TlDenseSymmetricMatrix_Eigen::vtr2mat(const std::vector<double>& vtr) {
+    dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(this->pImpl_)->vtr2mat(vtr);
+}
+
 // ---------------------------------------------------------------------------
 // operators
 // ---------------------------------------------------------------------------

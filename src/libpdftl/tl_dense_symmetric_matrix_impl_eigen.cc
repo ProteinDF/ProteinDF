@@ -38,24 +38,38 @@ TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(const TlDense
 
 TlDenseSymmetricMatrix_ImplEigen::~TlDenseSymmetricMatrix_ImplEigen() {}
 
+void TlDenseSymmetricMatrix_ImplEigen::vtr2mat(const std::vector<double>& vtr) {
+  const std::size_t dim = this->getNumOfRows();
+
+  std::size_t i = 0;
+  // column-major
+  for (TlMatrixObject::index_type c = 0; c < dim; ++c) {
+    for (TlMatrixObject::index_type r = 0; r <= c; ++r) {
+      double v = vtr[i];
+      this->set(r, c, v);
+      ++i;
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // properties
 // ---------------------------------------------------------------------------
 void TlDenseSymmetricMatrix_ImplEigen::set(const TlMatrixObject::index_type row,
                                            const TlMatrixObject::index_type col,
                                            const double value) {
-  this->matrix_.coeffRef(row, col) = value;
+  this->matrix_(row, col) = value;
   if (row != col) {
-    this->matrix_.coeffRef(col, row) = value;
+    this->matrix_(col, row) = value;
   }
 }
 
 void TlDenseSymmetricMatrix_ImplEigen::add(const TlMatrixObject::index_type row,
                                            const TlMatrixObject::index_type col,
                                            const double value) {
-  this->matrix_.coeffRef(row, col) += value;
+  this->matrix_(row, col) += value;
   if (row != col) {
-    this->matrix_.coeffRef(col, row) += value;
+    this->matrix_(col, row) += value;
   }
 }
 
