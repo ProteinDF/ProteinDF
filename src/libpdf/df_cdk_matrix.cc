@@ -325,7 +325,7 @@ PQ_PairArray DfCdkMatrix::getI2PQ(const std::string& filepath) {
 template <typename SymmetricMatrix, typename Vector>
 SymmetricMatrix DfCdkMatrix::getCholeskyVector(const Vector& L_col,
                                                const PQ_PairArray& I2PQ) {
-  
+
 
 
   const index_type numOfItilde = L_col.getSize();
@@ -340,8 +340,9 @@ SymmetricMatrix DfCdkMatrix::getCholeskyVector(const Vector& L_col,
 }
 
 // special version
+#ifdef HAVE_VIENNACL
 template <>
-TlDenseSymmetricMatrix_ViennaCL 
+TlDenseSymmetricMatrix_ViennaCL
 DfCdkMatrix::getCholeskyVector<TlDenseSymmetricMatrix_ViennaCL, TlDenseVector_ViennaCL>(const TlDenseVector_ViennaCL& L_col,
                                                const PQ_PairArray& I2PQ) {
   const index_type numOfItilde = L_col.getSize();
@@ -355,6 +356,7 @@ DfCdkMatrix::getCholeskyVector<TlDenseSymmetricMatrix_ViennaCL, TlDenseVector_Vi
 
   return TlDenseSymmetricMatrix_ViennaCL(answer);
 }
+#endif // HAVE_VIENNACL
 
 // ------------------------------
 //
@@ -379,6 +381,7 @@ SparseGeneralMatrix DfCdkMatrix::getTrans_I2PQ_Matrix(
 }
 
 // special version
+#ifdef HAVE_VIENNACL
 template <>
 TlSparseGeneralMatrix_ViennaCL
 DfCdkMatrix::getTrans_I2PQ_Matrix<TlSparseGeneralMatrix_ViennaCL>(
@@ -400,6 +403,7 @@ DfCdkMatrix::getTrans_I2PQ_Matrix<TlSparseGeneralMatrix_ViennaCL>(
   }
   return TlSparseGeneralMatrix_ViennaCL(expandL);
 }
+#endif // HAVE_VIENNAACL
 
 // ---------------------------------------
 //
