@@ -270,6 +270,9 @@ void DfForce::calcForceFromWS(RUN_TYPE runType) {
     F_WS.save("F_WS.mtx");
   }
 
+  if (runType == DfObject::RUN_RKS) {
+    F_WS *= 2.0;
+  }
   this->force_ += F_WS;
 }
 
@@ -277,39 +280,14 @@ TlDenseGeneralMatrix_Lapack DfForce::getEnergyWeightedDensityMatrix(
     RUN_TYPE runType) {
   const int iteration = this->m_nIteration;
   const int numOfAOs = this->m_nNumOfAOs;
-  const int numOfMOs = this->m_nNumOfMOs;
 
-  TlDenseVector_Lapack eps;
-  eps.load(this->getOccupationPath(runType));
-  assert(eps.getSize() == numOfMOs);
-  {
-    TlDenseVector_Lapack eig;
-    eig.load(this->getEigenvaluesPath(runType, iteration));
-    assert(eig.getSize() == numOfMOs);
+  const TlDenseSymmetricMatrix_Lapack P =
+      DfObject::getSpinDensityMatrix<TlDenseSymmetricMatrix_Lapack>(runType,
+                                                                    iteration);
+  const TlDenseSymmetricMatrix_Lapack F =
+      DfObject::getFpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
 
-    // TODO: 高速化
-    for (int i = 0; i < numOfMOs; ++i) {
-      const double v = eps.get(i) * eig.get(i);
-      eps.set(i, v);
-    }
-  }
-
-  TlDenseGeneralMatrix_Lapack C =
-      this->getCMatrix<TlDenseGeneralMatrix_Lapack>(runType, iteration);
-  assert(C.getNumOfRows() == numOfAOs);
-  assert(C.getNumOfCols() == numOfMOs);
-
-  // TODO: 高速化
-  TlDenseGeneralMatrix_Lapack W(numOfAOs, numOfAOs);
-  for (int m = 0; m < numOfAOs; ++m) {
-    for (int n = 0; n < numOfAOs; ++n) {
-      double value = 0.0;
-      for (int i = 0; i < numOfMOs; ++i) {
-        value += eps.get(i) * C.get(m, i) * C.get(n, i);
-      }
-      W.set(m, n, value);
-    }
-  }
+  const TlDenseGeneralMatrix_Lapack W = P * F * P;
 
   return W;
 }
