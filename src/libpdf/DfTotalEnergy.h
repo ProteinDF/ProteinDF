@@ -106,6 +106,8 @@ class DfTotalEnergy : public DfObject {
   template <class SymmetricMatrixType>
   double calcEnergyFromDummy();
 
+  double calcS2();
+
  protected:
   virtual void output();
 
