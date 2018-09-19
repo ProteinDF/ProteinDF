@@ -25,8 +25,8 @@ endif (DEFINED BUILD_GIT_REV)
 # Option
 # -----------------------------------------------------------------------------
 OPTION(USE_EIGEN "use EIGEN" on)
-OPTION(USE_VIENNACL "use ViennaCL" on)
-OPTION(USE_HDF5 "use HDF5" on)
+OPTION(USE_VIENNACL "use ViennaCL" off)
+OPTION(USE_HDF5 "use HDF5" off)
 
 # -----------------------------------------------------------------------------
 # Check
