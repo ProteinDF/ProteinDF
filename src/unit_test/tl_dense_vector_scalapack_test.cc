@@ -2,12 +2,15 @@
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
+#include "TlCommunicate.h"
 #include "gtest/gtest.h"
 #include "tl_dense_vector_lapack.h"
 #include "tl_dense_vector_scalapack.h"
 #include "vector_common.h"
 
 static const std::string vct_path = "temp.scalapack.vct";
+static const std::string vct_test_scalapack_load_path =
+    "test.scalapack.load.vct";
 static const std::string h5_path = "temp.scalapack.vct.h5";
 
 TEST(TlDenseVector_Scalapack, constructor) {
@@ -176,30 +179,46 @@ TEST(TlDenseVector_Scalapack, resize2) {
 // }
 //
 TEST(TlDenseVector_Scalapack, save) {
-  TlDenseVector_Lapack ref = getVector<TlDenseVector_Lapack>(500);
+  TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  TlDenseVector_Scalapack v = getVector<TlDenseVector_Scalapack>(500);
+  const int size = 100;
+  TlDenseVector_Lapack ref = getVector<TlDenseVector_Lapack>(size);
+  TlDenseVector_Scalapack v = getVector<TlDenseVector_Scalapack>(size);
   v.save(vct_path);
 
-  TlDenseVector_Lapack a;
-  a.load(vct_path);
+  rComm.barrier();
+  if (rComm.isMaster()) {
+    TlDenseVector_Lapack a;
+    a.load(vct_path);
 
-  EXPECT_EQ(ref.getSize(), a.getSize());
-  for (int i = 0; i < ref.getSize(); ++i) {
-    EXPECT_DOUBLE_EQ(ref.get(i), a.get(i));
+    EXPECT_EQ(ref.getSize(), a.getSize());
+    for (int i = 0; i < ref.getSize(); ++i) {
+      EXPECT_DOUBLE_EQ(ref.get(i), a.get(i));
+    }
   }
 }
 
 TEST(TlDenseVector_Scalapack, load) {
-  TlDenseVector_Lapack v = getVector<TlDenseVector_Lapack>(500);
-  v.save(vct_path);
+  TlCommunicate& rComm = TlCommunicate::getInstance();
 
+  const int size = 100;
+  TlDenseVector_Lapack v = getVector<TlDenseVector_Lapack>(size);
+  if (rComm.isMaster()) {
+    v.save(vct_test_scalapack_load_path);
+  }
+
+  rComm.barrier();
   TlDenseVector_Scalapack a;
-  a.load(vct_path);
+  a.load(vct_test_scalapack_load_path);
 
+  rComm.barrier();
   EXPECT_EQ(v.getSize(), a.getSize());
   for (int i = 0; i < v.getSize(); ++i) {
-    EXPECT_DOUBLE_EQ(v.get(i), a.get(i));
+    double vi = v.get(i);
+    double ai = a.get(i);
+    if (rComm.isMaster()) {
+      EXPECT_DOUBLE_EQ(vi, ai);
+    }
   }
 }
 
