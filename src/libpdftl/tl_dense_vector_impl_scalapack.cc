@@ -224,11 +224,8 @@ bool TlDenseVector_ImplScalapack::load(const std::string& sFilePath) {
   answer = this->load(fs);
 
   if (answer != true) {
-    if (rComm.isMaster() == true) {
-      this->log_.critical(TlUtils::format(
-          "TlDenseVector_ImplScalapack::load() is not supported: %s",
-          sFilePath.c_str()));
-    }
+    this->log_.critical(TlUtils::format("Not supported file type: %s @%s.%d",
+                                        sFilePath.c_str(), __FILE__, __LINE__));
     std::abort();
   }
 
@@ -254,7 +251,8 @@ bool TlDenseVector_ImplScalapack::load(std::ifstream& ifs) {
   }
   rComm.broadcast(globalSize);
   this->resize(globalSize);
-  //std::cerr << TlUtils::format("[%d] resize: %d", rComm.getRank(), globalSize) << std::endl;
+  // std::cerr << TlUtils::format("[%d] resize: %d", rComm.getRank(),
+  // globalSize) << std::endl;
 
   // read contents
   if (rComm.isMaster() == true) {
@@ -275,7 +273,8 @@ bool TlDenseVector_ImplScalapack::load(std::ifstream& ifs) {
       ifs.read((char*)(&buf[0]), sizeof(double) * bufferCount);
 
       // 各プロセスのバッファに振り分ける
-      std::vector<std::vector<TlVectorObject::VectorElement> > elements(numOfProcs);
+      std::vector<std::vector<TlVectorObject::VectorElement> > elements(
+          numOfProcs);
       for (std::size_t i = 0; i < bufferCount; ++i) {
         int rank = 0;
         this->getGlobalRowCol2LocalRowCol(count, 0, &rank);
@@ -302,8 +301,12 @@ bool TlDenseVector_ImplScalapack::load(std::ifstream& ifs) {
         elementsBuf[proc] = elements[proc];
 
         rComm.iSendData(sizeLists[proc], proc, TAG_LOAD_SIZE);
+        // std::cerr << TlUtils::format("[0]->[%d]: TAG_LOAD_SIZE=%d", proc,
+        //                              sizeLists[proc])
+        //           << std::endl;
         if (sizeLists[proc] > 0) {
-          rComm.iSendDataX(&(elementsBuf[proc][0]), sizeLists[proc], proc, TAG_LOAD_VALUES);
+          rComm.iSendDataX(&(elementsBuf[proc][0]), sizeLists[proc], proc,
+                           TAG_LOAD_VALUES);
         }
         isSendData[proc] = true;
       }
@@ -317,9 +320,13 @@ bool TlDenseVector_ImplScalapack::load(std::ifstream& ifs) {
           int rank = 0;
           TlMatrixObject::index_type myRow;
           TlMatrixObject::index_type myCol;
-          this->getGlobalRowCol2LocalRowCol(globalIndex, 0, &rank, &myRow, &myCol);
+          this->getGlobalRowCol2LocalRowCol(globalIndex, 0, &rank, &myRow,
+                                            &myCol);
           assert(rank == myRank);
           TlVectorObject::size_type index = this->getLocalIndex(myRow, myCol);
+          // std::cerr << TlUtils::format("[0] vec[%d]=% 8.3f", globalIndex,
+          //                              elements[0][i].value)
+          //           << std::endl;
           this->pData_[index] = elements[0][i].value;
         }
       }
@@ -337,9 +344,10 @@ bool TlDenseVector_ImplScalapack::load(std::ifstream& ifs) {
     assert(rComm.checkNonBlockingCommunications());
 
     // 終了メッセージを全ノードに送る
-    std::vector<int> endMsg(numOfProcs, 0);
+    // sizeList=-1 が送られると終了
+    std::vector<int> endMsg(numOfProcs, -1);
     for (int proc = 1; proc < numOfProcs; ++proc) {  // proc == 0 は送信しない
-      rComm.iSendData(endMsg[proc], proc, TAG_LOAD_END);
+      rComm.iSendData(endMsg[proc], proc, TAG_LOAD_SIZE);
     }
     for (int proc = 1; proc < numOfProcs; ++proc) {  // proc == 0 は送信しない
       rComm.wait(endMsg[proc]);
@@ -352,38 +360,47 @@ bool TlDenseVector_ImplScalapack::load(std::ifstream& ifs) {
     int endMsg = 0;
 
     rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
-    rComm.iReceiveData(endMsg, root, TAG_LOAD_END);
     bool isLoopBreak = false;
     while (isLoopBreak == false) {
       if (rComm.test(sizeList) == true) {
         rComm.wait(sizeList);
-        if (sizeList > 0) {
-          elements.resize(sizeList);
-          rComm.receiveDataX(&(elements[0]), sizeList, root, TAG_LOAD_VALUES);
+        // std::cerr << TlUtils::format("[%d] TAG_LOAD_SIZE=%d",
+        // rComm.getRank(),
+        //                              sizeList)
+        //           << std::endl;
+        if (sizeList >= 0) {
+          if (sizeList > 0) {
+            elements.resize(sizeList);
+            rComm.receiveDataX(&(elements[0]), sizeList, root, TAG_LOAD_VALUES);
 
-          for (TlMatrixObject::index_type i = 0; i < sizeList; ++i) {
-            const TlMatrixObject::index_type globalIndex = elements[i].index;
+            for (TlMatrixObject::index_type i = 0; i < sizeList; ++i) {
+              const TlMatrixObject::index_type globalIndex = elements[i].index;
 
-            int rank = 0;
-            TlMatrixObject::index_type myRow, myCol;
-            this->getGlobalRowCol2LocalRowCol(globalIndex, 0, &rank, &myRow,
-                                              &myCol);
-            assert(rank == myRank);
-            TlVectorObject::size_type index = this->getLocalIndex(myRow, myCol);
-            this->pData_[index] = elements[i].value;
+              int rank = 0;
+              TlMatrixObject::index_type myRow, myCol;
+              this->getGlobalRowCol2LocalRowCol(globalIndex, 0, &rank, &myRow,
+                                                &myCol);
+              assert(rank == myRank);
+              TlVectorObject::size_type index =
+                  this->getLocalIndex(myRow, myCol);
+              // std::cerr << TlUtils::format("[%d] vec[%d]=% 8.3f",
+              // rComm.getRank(),
+              //                              globalIndex, elements[i].value)
+              //           << std::endl;
+              this->pData_[index] = elements[i].value;
+            }
           }
+          rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
+        } else {
+          assert(sizeList < 0);
+          isLoopBreak = true;
+          // std::cerr << TlUtils::format("[%d] done.", rComm.getRank())
+          //           << std::endl;
         }
-        rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
-      }
-
-      TlTime::sleep(4000);
-      if (rComm.test(&endMsg) == true) {
-        rComm.wait(&endMsg);
-        rComm.cancel(&sizeList);
-        isLoopBreak = true;
       }
     }
   }
+
   assert(rComm.checkNonBlockingCommunications());
   return answer;
 }
@@ -420,7 +437,8 @@ bool TlDenseVector_ImplScalapack::save(const std::string& sFilePath) const {
         rComm.receiveDataX(&(buf[0]), bufSize, src, TAG_SAVE_DATA);
         this->saveElements(&v, buf);
       }
-      // std::cerr << TlUtils::format("0: recv data src=%d", src) << std::endl;
+      // std::cerr << TlUtils::format("0: recv data src=%d", src) <<
+      // std::endl;
     }
 
     answer = v.save(sFilePath);

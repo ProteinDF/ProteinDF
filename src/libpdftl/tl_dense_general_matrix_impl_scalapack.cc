@@ -778,9 +778,10 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
     assert(rComm.checkNonBlockingCommunications());
 
     // 終了メッセージを全ノードに送る
-    std::vector<int> endMsg(numOfProcs, 0);
+    // sizeList=-1 で終了
+    std::vector<int> endMsg(numOfProcs, -1);
     for (int proc = 1; proc < numOfProcs; ++proc) {  // proc == 0 は送信しない
-      rComm.iSendData(endMsg[proc], proc, TAG_LOAD_END);
+      rComm.iSendData(endMsg[proc], proc, TAG_LOAD_SIZE);
     }
     for (int proc = 1; proc < numOfProcs; ++proc) {  // proc == 0 は送信しない
       rComm.wait(endMsg[proc]);
@@ -793,37 +794,43 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
     int endMsg = 0;
 
     rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
-    rComm.iReceiveData(endMsg, root, TAG_LOAD_END);
+    // rComm.iReceiveData(endMsg, root, TAG_LOAD_END);
     bool isLoopBreak = false;
     while (isLoopBreak == false) {
       if (rComm.test(sizeList) == true) {
         rComm.wait(sizeList);
-        if (sizeList > 0) {
-          elements.resize(sizeList);
-          rComm.receiveDataX(&(elements[0]), sizeList, root, TAG_LOAD_VALUES);
+        if (sizeList >= 0) {
+          if (sizeList > 0) {
+            elements.resize(sizeList);
+            rComm.receiveDataX(&(elements[0]), sizeList, root, TAG_LOAD_VALUES);
 
-          for (TlMatrixObject::index_type i = 0; i < sizeList; ++i) {
-            const TlMatrixObject::index_type globalRow = elements[i].row;
-            const TlMatrixObject::index_type globalCol = elements[i].col;
+            for (TlMatrixObject::index_type i = 0; i < sizeList; ++i) {
+              const TlMatrixObject::index_type globalRow = elements[i].row;
+              const TlMatrixObject::index_type globalCol = elements[i].col;
 
-            int rank = 0;
-            TlMatrixObject::index_type myRow;
-            TlMatrixObject::index_type myCol;
-            this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank,
-                                              &myRow, &myCol);
-            assert(rank == this->rank_);
-            TlMatrixObject::size_type index = this->getLocalIndex(myRow, myCol);
-            this->pData_[index] = elements[i].value;
+              int rank = 0;
+              TlMatrixObject::index_type myRow;
+              TlMatrixObject::index_type myCol;
+              this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank,
+                                                &myRow, &myCol);
+              assert(rank == this->rank_);
+              TlMatrixObject::size_type index =
+                  this->getLocalIndex(myRow, myCol);
+              this->pData_[index] = elements[i].value;
+            }
           }
+          rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
+        } else {
+          assert(sizeList < 0);
+          isLoopBreak = true;
         }
-        rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
       }
 
-      if (rComm.test(endMsg) == true) {
-        rComm.wait(endMsg);
-        rComm.cancel(sizeList);
-        isLoopBreak = true;
-      }
+      // if (rComm.test(endMsg) == true) {
+      //   rComm.wait(endMsg);
+      //   rComm.cancel(sizeList);
+      //   isLoopBreak = true;
+      // }
     }
   }
 
@@ -1882,8 +1889,9 @@ void TlDenseGeneralMatrix_ImplScalapack::mergeMatrix_common(
 // -----------------------------------------------------------------------------
 // std::vector<TlMatrixObject::MatrixElement>
 // TlDenseGeneralMatrix_ImplScalapack::getMatrixElementsInLocal() const {
-//   const TlMatrixObject::size_type numOfMyElements = this->getNumOfMyElements();
-//   std::vector<TlMatrixObject::MatrixElement> answer(numOfMyElements);
+//   const TlMatrixObject::size_type numOfMyElements =
+//   this->getNumOfMyElements(); std::vector<TlMatrixObject::MatrixElement>
+//   answer(numOfMyElements);
 //
 //   TlMatrixObject::size_type count = 0;
 //   const TlMatrixObject::index_type numOfRowIndeces =
