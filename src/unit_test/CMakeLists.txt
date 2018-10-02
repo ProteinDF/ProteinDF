@@ -105,9 +105,14 @@ if (MPI_FOUND)
   add_executable(pdf-xtest.MPI ${PDF_XTEST_MPI_SOURCES})
   target_link_libraries(pdf-xtest.MPI libppdf libppdftl libpdf libpdftl ${OpenCL_LIBRARIES} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} Threads::Threads)
 
+  # cf.) MPIEXEC_MAX_NUMPROCS
+  if (NOT DEFINED PROCS)
+    set(PROCS 4)
+  endif (NOT DEFINED PROCS)
+
   add_test(
     NAME xtest.mpi
-    COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ${MPIEXEC_PREFLAGS} $<TARGET_FILE:pdf-xtest.MPI> ${MPIEXEC_POSTFLAGS}
+    COMMAND ${MPIEXEC} ${MPIEXEC_PREFLAGS} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} $<TARGET_FILE:pdf-xtest.MPI> ${MPIEXEC_POSTFLAGS}
     )
     set_property(TEST xtest.mpi PROPERTY LABELS xtest.mpi)
     set_property(TEST xtest.mpi PROPERTY RUN_SERIAL)

@@ -1,20 +1,20 @@
 # -----------------------------------------------------------------------------
-# for PDF.x 
+# for PDF.x
 # -----------------------------------------------------------------------------
 set(PDF_SOURCES
   main.cpp
   )
 
 add_executable(PDF.x ${PDF_SOURCES})
-target_link_libraries(PDF.x 
-  libpdf 
+target_link_libraries(PDF.x
+  libpdf
   libpdftl
   )
 install(TARGETS PDF.x RUNTIME DESTINATION bin)
 
 
 # -----------------------------------------------------------------------------
-# for PPDF.x 
+# for PPDF.x
 # -----------------------------------------------------------------------------
 set(PPDF_SOURCES
   main_Parallel.cpp
@@ -23,9 +23,9 @@ set(PPDF_SOURCES
 if (MPI_FOUND)
   add_executable(PPDF.x ${PPDF_SOURCES})
   target_link_libraries(PPDF.x
-    libppdf 
-    libppdftl 
-    libpdf 
+    libppdf
+    libpdf
+    libppdftl
     libpdftl
     )
   install(TARGETS PPDF.x RUNTIME DESTINATION bin)

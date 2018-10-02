@@ -143,7 +143,7 @@ set(LIBPDFTL_SOURCES
 
 set(LIBPDFTL_LIBRARIES
   ${LIBPDFTL_LIBRARIES}
-  ${LAPACK_LIBRARIES} 
+  ${LAPACK_LIBRARIES}
   ${BLAS_LIBRARIES}
   )
 endif(LAPACK_FOUND)
@@ -218,7 +218,7 @@ if (VIENNACL_FOUND)
   set(LIBPDFTL_LIBRARIES
     ${LIBPDFTL_LIBRARIES}
     ${OpenCL_LIBRARIES}
-  )    
+  )
 endif(VIENNACL_FOUND)
 
 # objects using HDF5
@@ -235,8 +235,8 @@ if (HDF5_FOUND)
 
   set(LIBPDFTL_LIBRARIES
     ${LIBPDFTL_LIBRARIES}
-    ${HDF5_CXX_LIBRARIES} 
-    ${HDF5_LIBRARIES} 
+    ${HDF5_CXX_LIBRARIES}
+    ${HDF5_LIBRARIES}
     )
 endif(HDF5_FOUND)
 
@@ -272,8 +272,8 @@ set(LIBPPDFTL_SOURCES
   )
 
 
-add_library(libpdftl 
-  ${LIBPDFTL_HEADERS} 
+add_library(libpdftl
+  ${LIBPDFTL_HEADERS}
   ${LIBPDFTL_SOURCES}
   )
 target_link_libraries(libpdftl INTERFACE
@@ -298,15 +298,20 @@ install(FILES ${LIBPDFTL_HEADERS} DESTINATION include)
 
 
 if (MPI_FOUND)
-  add_library(libppdftl 
-    ${LIBPPDFTL_HEADERS} 
+  add_library(libppdftl
+    ${LIBPPDFTL_HEADERS}
     ${LIBPPDFTL_SOURCES}
     )
-  target_link_libraries(libppdftl INTERFACE 
-    ${SCALAPACK_LIBRARIES} 
-    ${BLACS_LIBRARIES} 
-    ${BLACS_CINIT_LIBRARIES} 
+
+  if (SCALAPACK_FOUND)
+  target_link_libraries(libppdftl INTERFACE
+    ${SCALAPACK_LIBRARIES}
+    ${BLACS_LIBRARIES}
+    ${BLACS_CINIT_LIBRARIES}
     ${BLACS_F77INIT_LIBRARIES}
+    )
+  endif()
+  target_link_libraries(libppdftl INTERFACE
     ${MPI_CXX_LIBRARIES}
     )
   set_target_properties(libppdftl PROPERTIES OUTPUT_NAME "ppdftl")
