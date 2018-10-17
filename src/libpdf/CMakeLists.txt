@@ -260,23 +260,48 @@ set(LIBPPDF_SOURCES
   ProteinDF_Parallel.cpp
   )
 
+set(LIBPDF_LIBRARIES
+  libpdftl
+)
 
+# libcint
+if (LIBCINT_FOUND)
+  set(LIBPDF_HEADERS
+    ${LIBPDF_HEADERS}
+    tl_libcint.h
+  )
+  set(LIBPDF_SOURCES
+    ${LIBPDF_SOURCES}
+    tl_libcint.cpp
+  )  
+  set(LIBPDF_LIBRARIES
+    ${LIBPDF_LIBRARIES}
+    ${LIBCINT_LIBRARIES}
+  )
+endif()
+
+# libpdf
 add_library(libpdf 
   ${LIBPDF_HEADERS} 
   ${LIBPDF_SOURCES}
   )
 target_link_libraries(libpdf INTERFACE
-  libpdftl
+  ${LIBPDF_LIBRARIES}
   )
 set_target_properties(libpdf PROPERTIES OUTPUT_NAME "pdf")
 
+if (LIBCINT_FOUND)
+  target_include_directories(libpdf PUBLIC ${LIBCINT_INCLUDE_DIR})
+endif()
+
+# libppdf
 if (MPI_FOUND)
   add_library(libppdf 
     ${LIBPPDF_HEADERS} 
     ${LIBPPDF_SOURCES}
     )
   target_link_libraries(libppdf INTERFACE
-    libpdftl
+    ${LIBPDF_LIBRARIES}
     libppdftl
     )
     set_target_properties(libppdf PROPERTIES OUTPUT_NAME "ppdf")
