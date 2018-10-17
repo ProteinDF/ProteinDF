@@ -4,8 +4,8 @@
 # find_package(ViennaCL)
 #
 # Once done this will define
-#  EIGEN3_FOUND - system has eigen lib with correct version
-#  EIGEN3_INCLUDE_DIR - the eigen include directory
+#  VIENNACL_FOUND - system has ViennaCL lib with correct version
+#  VIENNACL_INCLUDE_DIR - the ViennaCL include directory
 #
 # This module reads hints about search locations from
 # the following enviroment variables:

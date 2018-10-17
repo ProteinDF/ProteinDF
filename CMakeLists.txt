@@ -213,6 +213,19 @@ else (USE_HDF5)
 endif (USE_HDF5)
 
 
+# libcint
+if (BLAS_FOUND)
+  find_package(libcint)
+  if (LIBCINT_FOUND)
+    message("LIBCINT information:")
+    message("  LIBCINT_INCLUDE_DIR: ${LIBCINT_INCLUDE_DIR}")
+    message("  LIBCINT_LIBRARIES: ${LIBCINT_LIBRARIES}")
+    set(HAVE_LIBCINT 1) # for config.h
+  else()
+    message("Not Found LIBCINT")
+  endif()
+endif ()
+
 # check threads
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)

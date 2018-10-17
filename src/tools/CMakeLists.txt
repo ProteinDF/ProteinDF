@@ -202,6 +202,33 @@ target_link_libraries(pdf-mat-transpose libpdf libpdftl)
 install(TARGETS pdf-mat-transpose RUNTIME DESTINATION bin)
 
 
+set(PDF_MINT_SOURCES
+  main_mint.cpp
+  tl_mint_object.h
+  tl_mint_object.cpp
+  tl_mint_pdf.h
+  tl_mint_pdf.cpp
+)
+set(PDF_MINT_LIBRARIES
+  libpdf
+  libpdftl
+)
+if (LIBCINT_FOUND)
+  set(PDF_MINT_SOURCES
+    ${PDF_MINT_SOURCES}
+    tl_mint_libcint.h
+    tl_mint_libcint.cpp
+  )
+  set(PDF_MINT_LIBRARIES
+    ${PDF_MINT_LIBRARIES}
+    ${LIBCINT_LIBRARIES}
+    )
+endif()
+add_executable(pdf-mint ${PDF_MINT_SOURCES})
+target_link_libraries(pdf-mint ${PDF_MINT_LIBRARIES})
+install(TARGETS pdf-mint RUNTIME DESTINATION bin)
+
+
 set(PDF_MKFLD_MO_SOURCES
   main_mkfld_mo.cpp
   mkfld_common.h

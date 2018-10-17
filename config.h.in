@@ -16,4 +16,6 @@
 #cmakedefine HAVE_OPENCL
 #cmakedefine HAVE_VIENNACL
 
+#cmakedefine HAVE_LIBCINT
+
 #define __restrict__ __restrict
