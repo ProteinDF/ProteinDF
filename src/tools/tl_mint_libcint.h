@@ -17,6 +17,7 @@ class TlMint_Libcint : public TlMintObject {
 
 public:
   void showAtomTable() const;
+  void showBasissetTable() const;
 
  protected:
   void makeAtomTable(const Fl_Geometry& geom);

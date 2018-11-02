@@ -253,3 +253,17 @@ void TlMint_Libcint::showAtomTable() const {
     std::cout << std::endl;
   }
 }
+
+void TlMint_Libcint::showBasissetTable() const {
+  const int basissetTableSize = this->basissetTable_.size();
+  for (int i = 0; i < basissetTableSize; i += 8) {
+    std::cout << TlUtils::format("atom id: %2d", this->basissetTable_[i + 0]) << std::endl;
+    std::cout << TlUtils::format("ang. momentum: %d", this->basissetTable_[i + 1]) << std::endl;
+    std::cout << TlUtils::format("# pGTOs: %d", this->basissetTable_[i + 2]) << std::endl;
+    std::cout << TlUtils::format("# CTOs:  %d", this->basissetTable_[i + 3]) << std::endl;
+    std::cout << TlUtils::format("kappa: %d", this->basissetTable_[i + 4]) << std::endl;
+    std::cout << TlUtils::format("exp offset: %d", this->basissetTable_[i + 5]) << std::endl;
+    std::cout << TlUtils::format("coef offset: %d", this->basissetTable_[i + 6]) << std::endl;
+    std::cout << std::endl;
+  }
+}

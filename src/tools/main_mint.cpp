@@ -127,6 +127,7 @@ int main(int argc, char* argv[]) {
   }
 
   //pMint->showAtomTable();
+  pMint->showBasissetTable();
 
   delete pMint;
   pMint = NULL;
