@@ -38,6 +38,8 @@ class DfTransFmatrix : public DfObject {
   virtual void DfTrsFmatQclo(const std::string& fragname, int norbcut);
 
  protected:
+  void calcF2Fprime(const RUN_TYPE runType);
+
   template <typename MatrixType, typename SymmetricMatrixType>
   void main(RUN_TYPE runType, const std::string& fragname = "",
             bool bPdfQcloMode = false);
@@ -89,7 +91,7 @@ void DfTransFmatrix::main(const RUN_TYPE runType, const std::string& fragname,
   // F.save("FX.mtx");
 
   // make X^dagger
-  X.transpose();
+  X.transposeInPlace();
   // X.save("trX.mtx");
 
   // calculate X^dagger * (F*X)

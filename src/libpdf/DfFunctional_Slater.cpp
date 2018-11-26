@@ -16,9 +16,10 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "DfFunctional_Slater.h"
 #include <cmath>
+#include <cassert>
 
+#include "DfFunctional_Slater.h"
 #include "TlUtils.h"
 
 const double DfFunctional_Slater::INV_3 = 1.0 / 3.0;
@@ -85,9 +86,9 @@ void DfFunctional_Slater::getDerivativeFunctional(const double dRhoA,
 }
 
 // -------
-TlMatrix DfFunctional_Slater::getFunctionalCore(const double rhoA,
-                                                const double rhoB) {
-  TlMatrix answer(F_DIM, this->getNumOfFunctionalTerms());
+TlDenseGeneralMatrix_Lapack DfFunctional_Slater::getFunctionalCore(
+    const double rhoA, const double rhoB) {
+  TlDenseGeneralMatrix_Lapack answer(F_DIM, this->getNumOfFunctionalTerms());
   assert(this->getNumOfFunctionalTerms() == 1);
 
   const double rhoA43 = std::pow(rhoA, M_4_3);
@@ -107,9 +108,10 @@ TlMatrix DfFunctional_Slater::getFunctionalCore(const double rhoA,
   return answer;
 }
 
-TlMatrix DfFunctional_Slater::getDerivativeFunctionalCore(const double rhoA,
-                                                          const double rhoB) {
-  TlMatrix answer(D_DIM, this->getNumOfDerivativeFunctionalTerms());
+TlDenseGeneralMatrix_Lapack DfFunctional_Slater::getDerivativeFunctionalCore(
+    const double rhoA, const double rhoB) {
+  TlDenseGeneralMatrix_Lapack answer(D_DIM,
+                                     this->getNumOfDerivativeFunctionalTerms());
   assert(this->getNumOfFunctionalTerms() == 1);
 
   // roundF_roundRho =========================================================

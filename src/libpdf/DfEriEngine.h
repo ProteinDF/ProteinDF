@@ -160,9 +160,8 @@ class DfEriEngine : public DfEngineObject {
       this->sigma_P_ = 1.0 / this->zeta2_;
       this->P_ = (this->alpha2_ * A + this->beta2_ * B) * this->sigma_P_;
       this->U_P_ = U_COEF * std::pow(this->sigma_P_, (a + b + 1.5)) * coefA *
-                   coefB *
-                   std::exp(-2.0 * expA * expB * this->sigma_P_ *
-                            A.squareDistanceFrom(B));
+                   coefB * std::exp(-2.0 * expA * expB * this->sigma_P_ *
+                                    A.squareDistanceFrom(B));
     }
 
    public:

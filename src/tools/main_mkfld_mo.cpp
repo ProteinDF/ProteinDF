@@ -28,7 +28,6 @@
 #include "TlMoField.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
-#include "TlSymmetricMatrix.h"
 #include "mkfld_common.h"
 
 void help(const std::string& progName) {
@@ -101,7 +100,7 @@ int main(int argc, char* argv[]) {
   }
 
   // LCAO行列の読み込み
-  TlMatrix C;
+  TlDenseGeneralMatrix_Lapack C;
   if (lcaoMatrixPath.empty()) {
     const int iteration = param["num_of_iterations"].getInt();
     DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
@@ -139,7 +138,7 @@ int main(int argc, char* argv[]) {
   for (int i = 1; i < opt.getCount(); ++i) {
     const int MO_index = std::atoi(opt[i].c_str());
     const std::vector<double> values =
-        moFld.makeMoFld(C.getColVector(MO_index), grids);
+        moFld.makeMoFld(C.getColVector<TlDenseVector_Lapack>(MO_index), grids);
 
     const std::string key = TlUtils::format("%d", MO_index);
     storeData[key] = values;

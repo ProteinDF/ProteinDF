@@ -18,14 +18,13 @@
 
 #include <cmath>
 #include <ios>
+#include <cassert>
 
+#include "common.h"
 #include "DfDmatrix.h"
 #include "TlFile.h"
-#include "TlMatrix.h"
 #include "TlStringTokenizer.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
-#include "TlVector.h"
 
 /*********************************************************
 MO_OVERLAP_ITER:
@@ -53,67 +52,34 @@ DfDmatrix::DfDmatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
 
 DfDmatrix::~DfDmatrix() {}
 
-void DfDmatrix::DfDmatrixMain() {
-  switch (this->m_nMethodType) {
-    case METHOD_RKS:
-      this->main(RUN_RKS);
-      break;
+void DfDmatrix::run() {
+  switch (this->linearAlgebraPackage_) {
+    case LAP_LAPACK: {
+      this->log_.info("Linear Algebra Package: LAPACK");
+      this->run_impl<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack>();
+    } break;
 
-    case METHOD_UKS:
-      this->main(RUN_UKS_ALPHA);
-      this->main(RUN_UKS_BETA);
-      break;
+#ifdef HAVE_EIGEN
+    case LAP_EIGEN: {
+      this->log_.info("Linear Algebra Package: Eigen");
+      this->run_impl<TlDenseGeneralMatrix_Eigen, TlDenseSymmetricMatrix_Eigen, TlDenseVector_Eigen>();
+    } break;
+#endif // HAVE_EIGEN
 
-    case METHOD_ROKS:
-      this->main(RUN_ROKS_CLOSED);
-      this->main(RUN_ROKS_OPEN);
-      break;
+#ifdef HAVE_VIENNACL
+    case LAP_VIENNACL: {
+      this->log_.info("Linear Algebra Package: ViennaCL");
+      this->run_impl<TlDenseGeneralMatrix_ViennaCL, TlDenseSymmetricMatrix_ViennaCL, TlDenseVector_ViennaCL>();
+    } break;
+#endif // HAVE_VIENNACL
 
     default:
-      CnErr.abort();
-      break;
+      CnErr.abort(TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
   }
 }
 
-void DfDmatrix::main(const DfObject::RUN_TYPE runType) {
-  // occupation
-  TlVector currOcc;
-  switch (this->orbitalCorrespondenceMethod_) {
-    case OCM_OVERLAP:
-      this->log_.info(" orbital correspondence method: MO-overlap");
-      currOcc = this->getOccupationUsingOverlap<TlMatrix>(runType);
-      currOcc.save(this->getOccupationPath(runType));
-      break;
-
-    case OCM_PROJECTION:
-      this->log_.info(" orbital correspondence method: MO-projection");
-      currOcc = this->getOccupationUsingProjection<TlMatrix, TlSymmetricMatrix>(
-          runType);
-      currOcc.save(this->getOccupationPath(runType));
-      break;
-
-    default:
-      this->log_.info(" orbital correspondence method: none");
-      currOcc.load(this->getOccupationPath(runType));
-      break;
-  }
-
-  this->generateDensityMatrix<TlMatrix, TlSymmetricMatrix>(runType, currOcc);
-}
-
-// TlVector DfDmatrix::getOccupation(const DfObject::RUN_TYPE runType)
-// {
-//     const std::string sFileName = this->getOccupationPath(runType);
-
-//     TlVector occ;
-//     occ.load(sFileName);
-//     assert(occ.getSize() == this->m_nNumOfMOs);
-
-//     return occ;
-// }
-
-void DfDmatrix::checkOccupation(const TlVector& prevOcc,
-                                const TlVector& currOcc) {
+void DfDmatrix::checkOccupation(const TlDenseVectorObject& prevOcc,
+                                const TlDenseVectorObject& currOcc) {
   const double xx = prevOcc.sum();
   const double yy = currOcc.sum();
 
@@ -124,13 +90,13 @@ void DfDmatrix::checkOccupation(const TlVector& prevOcc,
     this->log_.error("previous occupation");
     {
       std::stringstream ss;
-      prevOcc.print(ss);
+      ss << prevOcc << std::endl;
       this->log_.error(ss.str());
     }
     this->log_.error("current occupation");
     {
       std::stringstream ss;
-      currOcc.print(ss);
+      ss << currOcc << std::endl;
       this->log_.error(ss.str());
     }
 
@@ -138,20 +104,21 @@ void DfDmatrix::checkOccupation(const TlVector& prevOcc,
   }
 }
 
-void DfDmatrix::printOccupation(const TlVector& occ) {
+void DfDmatrix::printOccupation(const TlDenseVectorObject& occ) {
   std::stringstream ss;
-  occ.print(ss);
+  ss << occ << std::endl;
   this->log_.info(ss.str());
 }
 
 // print out Two Vectors' elements
-void DfDmatrix::printTwoVectors(const TlVector& a, const TlVector& b,
+void DfDmatrix::printTwoVectors(const std::vector<double>& a,
+                                const std::vector<double>& b,
                                 const std::string& title, int pnumcol) {
-  assert(a.getSize() == b.getSize());
+  assert(a.size() == b.size());
   this->log_.info(TlUtils::format("\n\n       %s\n\n", title.c_str()));
 
   this->log_.info("       two vectors");
-  const index_type number_of_emt = a.getSize();
+  const index_type number_of_emt = a.size();
   for (int ord = 0; ord < number_of_emt; ord += pnumcol) {
     this->log_.info("       ");
     for (int j = ord; ((j < ord + pnumcol) && (j < number_of_emt)); ++j) {
@@ -178,118 +145,4 @@ void DfDmatrix::printTwoVectors(const TlVector& a, const TlVector& b,
   }
 }
 
-// TlVector DfDmatrix::createOccupation(const DfObject::RUN_TYPE runType)
-// {
-//     const TlSerializeData& pdfParam = *(this->pPdfParam_);
-
-//     // construct guess occupations
-//     TlVector occ(this->m_nNumOfMOs);
-//     switch (runType) {
-//     case RUN_RKS: {
-//         std::vector<int> docLevel =
-//         this->getLevel(pdfParam["method/rks/occlevel"].getStr()); for
-//         (std::vector<int>::const_iterator p = docLevel.begin(); p !=
-//         docLevel.end(); p++) {
-//             occ[*p -1] = 2.0;
-//         }
-//     }
-//     break;
-
-//     case RUN_UKS_ALPHA: {
-//         std::vector<int> aoocLevel =
-//         this->getLevel(pdfParam["method/uks/alpha_spin_occlevel"].getStr());
-//         for (std::vector<int>::const_iterator p = aoocLevel.begin(); p !=
-//         aoocLevel.end(); p++) {
-//             occ[*p -1] = 1.0;
-//         }
-//     }
-//     break;
-
-//     case RUN_UKS_BETA: {
-//         std::vector<int> boocLevel =
-//         this->getLevel(pdfParam["method/uks/beta_spin_occlevel"].getStr());
-//         for (std::vector<int>::const_iterator p = boocLevel.begin(); p !=
-//         boocLevel.end(); p++) {
-//             occ[*p -1] = 1.0;
-//         }
-//     }
-//     break;
-//     case RUN_ROKS: {
-//         std::vector<int> docLevel =
-//         this->getLevel(pdfParam["method/roks/closed-shell"].getStr()); for
-//         (std::vector<int>::const_iterator p = docLevel.begin(); p !=
-//         docLevel.end(); p++) {
-//             occ[*p -1] = 2.0;
-//         }
-
-//         std::vector<int> socLevel =
-//         this->getLevel(pdfParam["method/roks/open-shell"].getStr()); for
-//         (std::vector<int>::const_iterator p = socLevel.begin(); p !=
-//         socLevel.end(); p++) {
-//             // nsoc
-//             occ[*p -1] = 1.0;
-//         }
-//     }
-//     break;
-
-//     default:
-//         std::cerr << "program error. (DfDmatrix::createOccupation)" <<
-//         std::endl; break;
-//     }
-
-//     return occ;
-// }
-
-// std::vector<int> DfDmatrix::getLevel(std::string sLevel)
-// {
-//     std::vector<int> answer;
-//     answer.clear();
-
-//     // "-" を " - " に置換
-//     TlUtils::replace(sLevel, "-", " - ");
-
-//     TlStringTokenizer token(sLevel);
-//     bool bRegionMode = false;
-//     int nPrevIndex = 0;
-//     while (token.hasMoreTokens()) {
-//         std::string tmp = token.nextToken();
-
-//         if (tmp == "nil") {
-//             continue;
-//         }
-
-//         if (tmp == "-") {
-//             if (nPrevIndex != 0) {
-//                 bRegionMode = true;
-//                 continue;
-//             } else {
-//                 abort();
-//                 //CnErr.abort("DfPreScf", "", "putdoclevel", "syntax
-//                 error.");
-//             }
-//         }
-
-//         int nIndex = atoi(tmp.c_str());
-//         //std::cerr << "nIndex = " << nIndex << std::endl;
-//         if (nIndex > 0) {
-//             if (bRegionMode == true) {
-//                 // 数字が xx - yy の形で入力
-//                 for (int i = nPrevIndex +1; i <= nIndex; i++) {
-//                     answer.push_back(i);
-//                 }
-//                 bRegionMode = false;
-//                 nPrevIndex = 0;
-//             } else {
-//                 // 数字が単独で入力
-//                 answer.push_back(nIndex);
-//                 nPrevIndex = nIndex;
-//                 continue;
-//             }
-//         } else {
-//             abort();
-//             //CnErr.abort("DfPreScf", "", "putdoclevel", "syntax error.");
-//         }
-//     }
-
-//     return answer;
-// }
+// ----------------------------------------------------------------------------

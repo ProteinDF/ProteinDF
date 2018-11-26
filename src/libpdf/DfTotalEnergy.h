@@ -20,8 +20,7 @@
 #define DFTOTALENERGY_H
 
 #include "DfObject.h"
-#include "TlSymmetricMatrix.h"
-#include "TlVector.h"
+#include "tl_dense_vector_lapack.h"
 
 #include "CnError.h"
 #include "DfXCFunctional.h"
@@ -404,7 +403,8 @@ VectorType DfTotalEnergy::getEps(const RUN_TYPE runType) {
   switch (runType) {
     case RUN_RKS:
       E.load("fl_Work/fl_Vct_Epsilon");
-      if (static_cast<TlVector::size_type>(this->numOfAuxXC_) != E.getSize()) {
+      if (static_cast<TlVectorAbstract::size_type>(this->numOfAuxXC_) !=
+          E.getSize()) {
         this->logger(TlUtils::format("dimension_eps = %d\n", E.getSize()));
         this->logger(TlUtils::format("numOfAuxXC_ = %d\n", this->numOfAuxXC_));
         this->logger(
@@ -414,7 +414,8 @@ VectorType DfTotalEnergy::getEps(const RUN_TYPE runType) {
 
     case RUN_UKS_ALPHA:
       E.load("fl_Work/fl_Vct_Epsilona");
-      if (static_cast<TlVector::size_type>(this->numOfAuxXC_) != E.getSize()) {
+      if (static_cast<TlVectorAbstract::size_type>(this->numOfAuxXC_) !=
+          E.getSize()) {
         this->logger(TlUtils::format("dimension of epsa = %d\n", E.getSize()));
         this->logger(
             TlUtils::format("numOfAuxXC_   = %d\n", this->numOfAuxXC_));
@@ -425,7 +426,8 @@ VectorType DfTotalEnergy::getEps(const RUN_TYPE runType) {
 
     case RUN_UKS_BETA:
       E.load("fl_Work/fl_Vct_Epsilonb");
-      if (static_cast<TlVector::size_type>(this->numOfAuxXC_) != E.getSize()) {
+      if (static_cast<TlVectorAbstract::size_type>(this->numOfAuxXC_) !=
+          E.getSize()) {
         this->logger(TlUtils::format("dimension of epsb = %d\n", E.getSize()));
         this->logger(
             TlUtils::format("numOfAuxXC_   = %d\n", this->numOfAuxXC_));
@@ -485,7 +487,7 @@ double DfTotalEnergy::calculate_E_WITH_DIRECT(const SymmetricMatrixType& D) {
   }
   tmpEpq.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(m_nIteration));
 
-  return tmpEpq.dot(D).sum();
+  return tmpEpq.dotInPlace(D).sum();
 }
 
 // energy for one electron part
@@ -515,14 +517,14 @@ double DfTotalEnergy::calcOneElectronPart(const SymmetricMatrixType& D) {
     }
   }
 
-  return Hpq.dot(D).sum();
+  return Hpq.dotInPlace(D).sum();
 }
 
 template <typename SymmetricMatrixType>
 double DfTotalEnergy::calcJ(const SymmetricMatrixType& P) {
   SymmetricMatrixType J =
       DfObject::getJMatrix<SymmetricMatrixType>(this->m_nIteration);
-  return 0.5 * J.dot(P).sum();
+  return 0.5 * J.dotInPlace(P).sum();
 }
 
 /// J[rho~, rho~] (( "1/2*rho*rho'*Sab" ))の計算を行う
@@ -546,7 +548,7 @@ double DfTotalEnergy::calcJRhoRhoTilde_DIRECT(const SymmetricMatrixType& D) {
 
   const double coef = (this->J_engine_ == J_ENGINE_RI_J) ? 1.0 : 0.5;
 
-  return coef * (J.dot(D).sum());
+  return coef * (J.dotInPlace(D).sum());
 }
 
 // energy for xc energy term (compare myu*Ppq*Pqa with 4/3*Ex1)
@@ -560,7 +562,7 @@ double DfTotalEnergy::calcExc_DIRECT(const SymmetricMatrixType& D,
   DfOverlapType dfOverlap(this->pPdfParam_);
   dfOverlap.get_pqg(E, &B);
 
-  return B.dot(D).sum();
+  return B.dotInPlace(D).sum();
 }
 
 template <typename SymmetricMatrixType>
@@ -568,7 +570,7 @@ double DfTotalEnergy::calcExc(const RUN_TYPE runType,
                               const SymmetricMatrixType& P) {
   SymmetricMatrixType Exc =
       DfObject::getExcMatrix<SymmetricMatrixType>(runType, this->m_nIteration);
-  const double answer = Exc.dot(P).sum();
+  const double answer = Exc.dotInPlace(P).sum();
 
   return answer;
 }
@@ -581,7 +583,8 @@ double DfTotalEnergy::calcK(const RUN_TYPE runType,
   if (dfXCFunctional.isHybridFunctional() == true) {
     SymmetricMatrixType K = DfObject::getHFxMatrix<SymmetricMatrixType>(
         runType, this->m_nIteration);
-    answer = 0.5 * dfXCFunctional.getFockExchangeCoefficient() * K.dot(P).sum();
+    answer = 0.5 * dfXCFunctional.getFockExchangeCoefficient() *
+             K.dotInPlace(P).sum();
   }
 
   return answer;
@@ -634,7 +637,7 @@ double DfTotalEnergy::calcEnergyFromDummy() {
     Hpq2 *= (double)coef;
   }
 
-  const double energy_from_Hpq2 = Hpq2.dot(P).sum();
+  const double energy_from_Hpq2 = Hpq2.dotInPlace(P).sum();
   this->logger(TlUtils::format(" energy derived from core H = %18.16lf\n",
                                energy_from_Hpq2));
 

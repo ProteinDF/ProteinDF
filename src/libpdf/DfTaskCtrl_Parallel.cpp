@@ -72,22 +72,75 @@ void DfTaskCtrl_Parallel::cutoffReport_MS() {
     DfTaskCtrl::cutoffReport();
   }
 }
+// ----------------------------------------------------------------------------
+// queue
+// ----------------------------------------------------------------------------
+bool DfTaskCtrl_Parallel::getQueue(const std::size_t maxIndeces,
+                                   const std::size_t maxGrainSize,
+                                   std::vector<std::size_t>* pTasks,
+                                   bool initialize) {
+  bool answer = false;
 
+  if (this->isMasterSlave_ == true) {
+      this->log_.info("sorry, DC only");
+      answer = this->getQueue_DC(maxIndeces, maxGrainSize, pTasks, initialize);
+      // answer = this->getQueue_MS(maxIndeces, maxGrainSize, pTasks, initialize);
+  } else {
+      answer = this->getQueue_DC(maxIndeces, maxGrainSize, pTasks, initialize);
+  }
+
+  return answer;
+}
+
+bool DfTaskCtrl_Parallel::getQueue_DC(const std::size_t maxIndeces,
+                                   const std::size_t maxGrainSize,
+                                   std::vector<std::size_t>* pTasks,
+                                   bool initialize) {
+  assert(pTasks != NULL);
+
+  TlCommunicate& rComm = TlCommunicate::getInstance();
+  const int numOfProcs = rComm.getNumOfProcs();
+  const int globalMaxGrainSize = maxGrainSize * numOfProcs;
+
+  std::vector<std::size_t> globalTasks;
+  bool answer = DfTaskCtrl::getQueue(maxIndeces, globalMaxGrainSize, &globalTasks, initialize);
+
+  if (answer == true) {
+    const std::size_t grainSize = globalTasks.size();
+    const std::size_t localGrainSize = (grainSize + numOfProcs -1) / numOfProcs;
+
+    const int rank = rComm.getRank();
+    const std::size_t begin = localGrainSize * rank;
+    const std::size_t end = std::min(localGrainSize * (rank +1), grainSize);
+
+    if (begin < end ){
+      pTasks->resize(end - begin);
+      std::copy(globalTasks.begin() + begin, globalTasks.begin() + end, pTasks->begin());
+    }
+  }
+
+  return answer;
+}
+
+
+// ----------------------------------------------------------------------------
+// queue (orbital x 1)
+// ----------------------------------------------------------------------------
 bool DfTaskCtrl_Parallel::getQueue(const TlOrbitalInfoObject& orbitalInfo,
                                    const int maxGrainSize,
                                    std::vector<Task>* pTask, bool initialize) {
   bool answer = false;
 
-  // [TODO] in this version, DC only
-  answer = this->getQueue_DC(orbitalInfo, maxGrainSize, pTask, initialize);
-
-  // if (this->isMasterSlave_ == true) {
-  //     answer = this->getQueue_MS(orbitalInfo,
-  //                                maxGrainSize, pTask, initialize);
-  // } else {
-  //     answer = this->getQueue_DC(orbitalInfo,
-  //                                maxGrainSize, pTask, initialize);
-  // }
+  if (this->isMasterSlave_ == true) {
+      this->log_.info("sorry, DC only");
+      answer = this->getQueue_DC(orbitalInfo,
+                                 maxGrainSize, pTask, initialize);
+      // answer = this->getQueue_MS(orbitalInfo,
+      //                            maxGrainSize, pTask, initialize);
+  } else {
+      answer = this->getQueue_DC(orbitalInfo,
+                                 maxGrainSize, pTask, initialize);
+  }
 
   return answer;
 }

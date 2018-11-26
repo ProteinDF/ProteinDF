@@ -7,9 +7,15 @@
 #cmakedefine HAVE_UNISTD_H
 #cmakedefine HAVE_STDINT_H
 
+#cmakedefine HAVE_EIGEN
 #cmakedefine HAVE_BLAS
 #cmakedefine HAVE_LAPACK
 #cmakedefine HAVE_SCALAPACK
 #cmakedefine HAVE_HDF5
+
+#cmakedefine HAVE_OPENCL
+#cmakedefine HAVE_VIENNACL
+
+#cmakedefine HAVE_LIBCINT
 
 #define __restrict__ __restrict

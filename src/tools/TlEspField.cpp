@@ -23,8 +23,8 @@
 #include "Fl_Geometry.h"
 #include "TlPosition.h"
 #include "TlSerializeData.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 #define AU_PER_ANG 1.889762
 
@@ -33,7 +33,8 @@ TlEspField::TlEspField(const TlSerializeData& param) : param_(param) {}
 TlEspField::~TlEspField() {}
 
 std::vector<double> TlEspField::makeEspFld(
-    const TlSymmetricMatrix& P, const std::vector<TlPosition>& grids) {
+    const TlDenseSymmetricMatrix_Lapack& P,
+    const std::vector<TlPosition>& grids) {
   DfHpqX dfHpq(&this->param_);
 
   const std::size_t numOfGrids = grids.size();

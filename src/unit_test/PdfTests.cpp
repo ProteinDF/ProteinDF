@@ -2,6 +2,7 @@
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
+#include "TlDenseSymmetricMatrix_BLAS_OldTest.h"
 #include "TlFileMatrixTest.h"
 #include "TlFileSymmetricMatrixTest.h"
 #include "TlMatrixTest.h"
@@ -14,12 +15,11 @@
 #include "TlSparseVectorTest.h"
 #include "TlStlUtilsTest.h"
 #include "TlStringTokenizerTest.h"
-#include "TlSymmetricMatrixTest.h"
 #include "TlUtilsTest.h"
 #include "TlVectorTest.h"
 
-#include "TlColVectorMatrixTest.h"
-#include "TlRowVectorMatrixTest.h"
+#include "TlDenseGeneralMatrix_arrays_ColOrientedTest.h"
+#include "TlDenseGeneralMatrix_arrays_RowOrientedTest.h"
 
 //#include "Fl_UserinputXTest.h"
 
@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
 
   runner.addTest(TlVectorTest::suite());
   runner.addTest(TlMatrixTest::suite());
-  runner.addTest(TlSymmetricMatrixTest::suite());
+  runner.addTest(TlDenseSymmetricMatrix_BLAS_OldTest::suite());
   runner.addTest(TlSparseMatrixTest::suite());
   runner.addTest(TlSparseSymmetricMatrixTest::suite());
   runner.addTest(TlSparseVectorTest::suite());
@@ -55,8 +55,8 @@ int main(int argc, char* argv[]) {
   runner.addTest(TlPartialSymmetricMatrixTest::suite());
   runner.addTest(TlStlUtilsTest::suite());
 
-  runner.addTest(TlRowVectorMatrixTest::suite());
-  runner.addTest(TlColVectorMatrixTest::suite());
+  runner.addTest(TlDenseGeneralMatrix_arrays_RowOrientedTest::suite());
+  runner.addTest(TlDenseGeneralMatrix_arrays_ColOrientedTest::suite());
 
   //
   // runner.addTest(Fl_UserinputXTest::suite());

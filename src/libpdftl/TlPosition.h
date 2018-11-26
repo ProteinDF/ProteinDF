@@ -21,8 +21,8 @@
 
 #include <cassert>
 #include <cmath>
-#include "TlMatrix.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 /// 3次元座標(カーテシアン)を扱うクラス
 class TlPosition {
@@ -94,7 +94,7 @@ class TlPosition {
   ///
   /// rot must be a 3x3 rotation matrix
   /// @param[in] rot 回転行列
-  TlPosition& rotateBy(const TlMatrix& rot);
+  TlPosition& rotateBy(const TlDenseGeneralMatrix_Lapack& rot);
 
   // 原点からの距離を返す
   double distanceFrom() const;
@@ -180,17 +180,18 @@ class TlPosition {
     return (rhs1 * (1.0 / rhs2));
   };
 
-  friend TlPosition operator*(const TlMatrix& rot, const TlPosition& pos) {
+  friend TlPosition operator*(const TlDenseGeneralMatrix_Lapack& rot,
+                              const TlPosition& pos) {
     assert(rot.getNumOfRows() == 3);
     assert(rot.getNumOfCols() == 3);
 
-    TlVector x(3);
-    x[0] = pos.v_[0];
-    x[1] = pos.v_[1];
-    x[2] = pos.v_[2];
+    TlDenseVector_Lapack x(3);
+    x.set(0, pos.v_[0]);
+    x.set(1, pos.v_[1]);
+    x.set(2, pos.v_[2]);
     x = rot * x;
 
-    return TlPosition(x[0], x[1], x[2]);
+    return TlPosition(x.get(0), x.get(1), x.get(2));
   };
 };
 

@@ -19,8 +19,8 @@
 #include "DfInitialGuessHuckel_Parallel.h"
 #include <iostream>
 #include <limits>
-#include "TlDistributeMatrix.h"
-#include "TlDistributeSymmetricMatrix.h"
+#include "tl_dense_general_matrix_scalapack.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
 
 DfInitialGuessHuckel_Parallel::DfInitialGuessHuckel_Parallel(
     TlSerializeData* pPdfParam)
@@ -29,6 +29,6 @@ DfInitialGuessHuckel_Parallel::DfInitialGuessHuckel_Parallel(
 DfInitialGuessHuckel_Parallel::~DfInitialGuessHuckel_Parallel() {}
 
 void DfInitialGuessHuckel_Parallel::createGuess() {
-  DfInitialGuessHuckel::createGuess<TlDistributeSymmetricMatrix,
-                                    TlDistributeMatrix>();
+  DfInitialGuessHuckel::createGuess<TlDenseSymmetricMatrix_Scalapack,
+                                    TlDenseGeneralMatrix_Scalapack>();
 }

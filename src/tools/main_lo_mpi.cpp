@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
   TlCommunicate& rComm = TlCommunicate::getInstance(argc, argv);
 
   TlGetopt opt(argc, argv, "c:hp:v");
-  const bool isVerbose = (opt["v"] == "defined");
+  // const bool isVerbose = (opt["v"] == "defined");
   const bool isShowHelp = (opt["h"] == "defined");
 
   if (isShowHelp) {

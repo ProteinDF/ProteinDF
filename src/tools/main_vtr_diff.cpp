@@ -20,7 +20,7 @@
 
 #include "TlGetopt.h"
 #include "TlUtils.h"
-#include "TlVector.h"
+#include "tl_dense_vector_lapack.h"
 
 void help(const std::string& prgname) {
   std::cout << TlUtils::format("Usage: %s [options]... FILE1 FILE2",
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
 
   int nErrorCode = 0;
 
-  TlVector v1, v2;
+  TlDenseVector_Lapack v1, v2;
   if (v1.load(sPath1) == false) {
     std::cerr << "could not open: " << sPath1 << std::endl;
     return 1;
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
   }
 
   v1 -= v2;
-  v1.print(std::cout);
+  std::cout << v1 << std::endl;
 
   return nErrorCode;
 }

@@ -5,8 +5,8 @@ enable_testing()
 
 # Project Version
 set(PROJECT_VERSION_MAJOR "2018")
-set(PROJECT_VERSION_MINOR "4")
-set(PROJECT_VERSION_REVISION "1")
+set(PROJECT_VERSION_MINOR "10")
+set(PROJECT_VERSION_REVISION "0")
 set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_REVISION}")
 
 set(PROJECT_VERSION_BUILD "")
@@ -14,28 +14,43 @@ execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE BUILD_GIT_REV
 execute_process(COMMAND date +%Y%m%d OUTPUT_VARIABLE BUILD_DATE OUTPUT_STRIP_TRAILING_WHITESPACE)
 if (DEFINED BUILD_GIT_REV)
   set(PROJECT_VERSION_BUILD "${BUILD_GIT_REV}")
-else()
+else (DEFINED BUILD_GIT_REV)
   set(PROJECT_VERSION_BUILD "${BUILD_DATE}")
-endif()
+endif (DEFINED BUILD_GIT_REV)
 #message("BUILD_GIT_REV: ${BUILD_GIT_REV}")
 #message("BUILD_DATE: ${BUILD_DATE}")
 #message("PROJECT_VERSION_BUILD: ${PROJECT_VERSION_BUILD}")
 
-#
+# -----------------------------------------------------------------------------
+# Option
+# -----------------------------------------------------------------------------
+OPTION(USE_EIGEN "use EIGEN" on)
+OPTION(USE_VIENNACL "use ViennaCL" off)
+OPTION(USE_HDF5 "use HDF5" off)
+OPTION(USE_LIBCINT "use LIBCINT" off)
+
+# -----------------------------------------------------------------------------
+# Check
+# -----------------------------------------------------------------------------
 include(CheckTypeSize)
 include(CheckIncludeFile)
 
-
-#set(CMAKE_VERBOSE_MAKEFILE 1)
+# -----------------------------------------------------------------------------
+# Modules
+# -----------------------------------------------------------------------------
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake-modules")
 
+# C++ compiler
+if(NOT "${CMAKE_CXX_STANDARD}")
+  set(CMAKE_CXX_STANDARD 11)
+endif()
 
 # check compiler flags
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall -g")
-message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
-message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
+#message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+#message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
+#message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
 #message(STATUS "CMAKE_CXX_FLAGS_RELWITHDEBINFO: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 #message(STATUS "CMAKE_CXX_FLAGS_MINSIZEREL: ${CMAKE_CXX_FLAGS_MINSIZEREL}")
 
@@ -50,42 +65,6 @@ check_include_file("unistd.h" HAVE_UNISTD_H)
 check_include_file("stdint.h" HAVE_STDINT_H)
 
 
-# check OpenMP
-find_package(OpenMP)
-if (OPENMP_FOUND)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif(OPENMP_FOUND)
-
-
-# check linear algebra package
-find_package(BLAS REQUIRED)
-if (BLAS_FOUND)
-  #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
-  #set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
-  #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
-
-  message("BLAS information:")
-  message("  BLA_VENDOR: ${BLA_VENDOR}")
-  message("  BLA_STATIC: ${BLA_STATIC}")
-  message("  BLAS_LINKER_FLAGS: ${BLAS_LINKER_FLAGS}")
-  message("  BLAS_LIBRARIES: ${BLAS_LIBRARIES}")
-  set(HAVE_BLAS 1) # for config.h
-endif(BLAS_FOUND)
-
-find_package(LAPACK REQUIRED)
-if (LAPACK_FOUND)
-  #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
-  #set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
-  #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
-
-  message("LAPACK information:")
-  message("  LAPACK_LINKER_FLAGS: ${LAPACK_LINKER_FLAGS}")
-  message("  LAPACK_LIBRARIES: ${LAPACK_LIBRARIES}")
-  set(HAVE_LAPACK 1) # for config.h
-endif(LAPACK_FOUND)
-
-
 # check MPI
 find_package(MPI)
 if (MPI_FOUND)
@@ -94,14 +73,95 @@ if (MPI_FOUND)
   message("  MPIEXEC_EXECUTABLE: ${MPIEXEC_EXECUTABLE}")
   message("  MPIEXEC_NUMPROC_FLAG: ${MPIEXEC_NUMPROC_FLAG}")
   message("  MPI_CXX_COMPILER: ${MPI_CXX_COMPILER}")
+  message("  MPI_CXX_LINK_FLAGS: ${MPI_CXX_LINK_FLAGS}")
   message("  MPI_CXX_LIBRARIES: ${MPI_CXX_LIBRARIES}")
   message("  MPI_CXX_INCLUDE_PATH: ${MPI_CXX_INCLUDE_PATH}")
   message("  MPI_CXX_FOUND: ${MPI_CXX_FOUND}")
-  message("overwrite: CMAKE_CXX_COMPILER = ${MPI_CXX_COMPILER}")
+
   set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
+  message("overwrite: CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER}")
 else(MPI_FOUND)
   message("Not Found MPI compiler")
 endif(MPI_FOUND)
+
+
+# check OpenMP
+find_package(OpenMP)
+if (OPENMP_FOUND)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  add_definitions(-DVIENNACL_WITH_OPENMP)
+endif(OPENMP_FOUND)
+
+
+# check linear algebra package
+if (USE_EIGEN)
+  find_package(Eigen3)
+  if (EIGEN3_FOUND)
+    message("Eigen3 information:")
+    message("  EIGEN3_INCLUDE_DIR: ${EIGEN3_INCLUDE_DIR}")
+    message("  EIGEN3_VERSION: ${EIGEN3_VERSION}")
+
+    set(HAVE_EIGEN 1) # for config.h
+    include_directories(${EIGEN3_INCLUDE_DIR})
+  endif (EIGEN3_FOUND)
+else (USE_EIGEN)
+  message("USE_EIGEN: ${USE_EIGEN}")
+endif (USE_EIGEN)
+
+find_package(BLAS REQUIRED)
+if (BLAS_FOUND)
+  message("BLAS information:")
+  message("  BLA_VENDOR: ${BLA_VENDOR}")
+  message("  BLA_STATIC: ${BLA_STATIC}")
+  message("  BLAS_LINKER_FLAGS: ${BLAS_LINKER_FLAGS}")
+  message("  BLAS_LIBRARIES: ${BLAS_LIBRARIES}")
+
+  set(HAVE_BLAS 1) # for config.h
+endif(BLAS_FOUND)
+
+find_package(LAPACK REQUIRED)
+if (LAPACK_FOUND)
+  message("LAPACK information:")
+  message("  LAPACK_LINKER_FLAGS: ${LAPACK_LINKER_FLAGS}")
+  message("  LAPACK_LIBRARIES: ${LAPACK_LIBRARIES}")
+
+  set(HAVE_LAPACK 1) # for config.h
+endif(LAPACK_FOUND)
+
+
+# for OpenCL
+find_package(OpenCL)
+if (OpenCL_FOUND)
+  message("OpenCL information:")
+  message("  OpenCL_VERSION_STRING: ${OpenCL_VERSION_STRING}")
+  message("  OpenCL_INCLUDE_DIRS: ${OpenCL_INCLUDE_DIRS}")
+  message("  OpenCL_LIBRARIES: ${OpenCL_LIBRARIES}")
+
+  include_directories(${OpenCL_INCLUDE_DIRS})
+  set(HAVE_OPENCL 1) # for config.h
+endif (OpenCL_FOUND)
+
+# check ViennaCL
+if (USE_VIENNACL)
+  find_package(ViennaCL)
+  if (VIENNACL_FOUND)
+    message("ViennaCL information:")
+    message("  VIENNACL_INCLUDE_DIR: ${VIENNACL_INCLUDE_DIR}")
+
+    if (OpenCL_FOUND)
+      add_definitions(-DVIENNACL_WITH_OPENCL)
+    endif (OpenCL_FOUND)
+  
+    set(HAVE_VIENNACL 1) # for config.h
+    include_directories(${VIENNACL_INCLUDE_DIR})
+  else (VIENNACL_FOUND)
+    message("Not Found ViennaCL")
+    message("  please check: VIENNACL_ROOT")
+  endif (VIENNACL_FOUND)
+else (USE_VIENNACL)
+  message("USE_VIENNACL: ${USE_VIENNACL}")
+endif (USE_VIENNACL)
 
 
 # check BLACS
@@ -132,17 +192,42 @@ endif(SCALAPACK_FOUND)
 
 
 # check HDF5
-find_package(HDF5 COMPONENTS C CXX)
-if (HDF5_FOUND)
-  include_directories(${HDF5_INCLUDE_DIRS})
-  set(HAVE_HDF5 1)
-  message("HDF5 information:")
-  message("  HDF5_LIBRARIES: ${HDF5_LIBRARIES}")
-  message("  HDF5_HL_LIBRARIES: ${HDF5_HL_LIBRARIES}")
-  message("  HDF5_CPP_LIBRARIES: ${HDF5_CPP_LIBRARIES}")
-endif(HDF5_FOUND)
+if (USE_HDF5)
+  find_package(HDF5 COMPONENTS C CXX)
+  if (HDF5_FOUND)
+    include_directories(${HDF5_INCLUDE_DIRS})
+    message("HDF5 information:")
+    message("  HDF5_VERSION: ${HDF5_VERSION}")
+    message("  HDF5_IS_PARALLEL: ${HDF5_IS_PARALLEL}")
+    message("  HDF5_INCLUDE_DIRS: ${HDF5_INCLUDE_DIRS}")
+    message("  HDF5_CXX_INCLUDE_DIRS: ${HDF5_CXX_INCLUDE_DIRS}")
+    message("  HDF5_LIBRARIES: ${HDF5_LIBRARIES}")
+    message("  HDF5_HL_LIBRARIES: ${HDF5_HL_LIBRARIES}")
+    message("  HDF5_CXX_LIBRARIES: ${HDF5_CXX_LIBRARIES}")
+
+    set(HAVE_HDF5 1) # for config.h
+  else (HDF5_FOUND)
+    message("Not Found HDF5")
+  endif (HDF5_FOUND)
+else (USE_HDF5)
+  message("USE_HDF5: ${USE_HDF5}")
+endif (USE_HDF5)
 
 
+# libcint
+if (USE_LIBCINT)
+  if (BLAS_FOUND)
+    find_package(libcint)
+    if (LIBCINT_FOUND)
+      message("LIBCINT information:")
+      message("  LIBCINT_INCLUDE_DIR: ${LIBCINT_INCLUDE_DIR}")
+      message("  LIBCINT_LIBRARIES: ${LIBCINT_LIBRARIES}")
+      set(HAVE_LIBCINT 1) # for config.h
+    else()
+      message("Not Found LIBCINT")
+    endif()
+  endif ()
+endif ()
 # check threads
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)

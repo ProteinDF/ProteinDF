@@ -21,8 +21,9 @@
 // SCALAPACK ===========================================================
 DfDensityFittingX_ScaLAPACK::DfDensityFittingX_ScaLAPACK(
     TlSerializeData* pPdfParam)
-    : DfDensityFittingTmpl<TlDistributeSymmetricMatrix, TlDistributeVector,
-                           DfEriX_Parallel>(pPdfParam) {}
+    : DfDensityFittingTmpl<TlDenseSymmetricMatrix_Scalapack,
+                           TlDenseVector_Scalapack, DfEriX_Parallel>(
+          pPdfParam) {}
 
 DfDensityFittingX_ScaLAPACK::~DfDensityFittingX_ScaLAPACK() {}
 

@@ -24,7 +24,7 @@
 #include "CnError.h"
 #include "DfObject.h"
 #include "TlOrbitalInfo.h"
-#include "TlVector.h"
+#include "tl_dense_vector_lapack.h"
 
 /** 計算結果の出力を行うクラス
  */
@@ -56,11 +56,13 @@ class DfSummary : public DfObject {
 
   /** 密度行列展開係数、交換相関ポテンシャル展開係数を出力する
    */
-  void printAux(const TlVector& rho, const TlVector& myu, const TlVector& nyu);
+  void printAux(const TlDenseVector_Lapack& rho,
+                const TlDenseVector_Lapack& myu,
+                const TlDenseVector_Lapack& nyu);
 
   /** rho population を出力する
    */
-  void printRhoPop(const TlVector& rho);
+  void printRhoPop(const TlDenseVector_Lapack& rho);
 
  private:
 };
@@ -84,15 +86,15 @@ void DfSummary::exec() {
       // this->logger("output guess.lcao.rks and guess.occ.rks");
       this->saveGuessFile(DfObject::RUN_RKS, C, "rks");
 
-      const TlVector rho =
-          this->getRho<TlVector>(DfObject::RUN_RKS, this->m_nIteration);
+      const TlDenseVector_Lapack rho = this->getRho<TlDenseVector_Lapack>(
+          DfObject::RUN_RKS, this->m_nIteration);
 
-      TlVector myu;
+      TlDenseVector_Lapack myu;
       if (this->m_bIsXCFitting == true) {
         myu.load(this->getMyuPath(DfObject::RUN_RKS, this->m_nIteration));
       }
 
-      TlVector nyu;
+      TlDenseVector_Lapack nyu;
       if (this->m_sXCFunctional == "xalpha") {
         nyu.load(this->getNyuPath(DfObject::RUN_RKS, this->m_nIteration));
       }
@@ -120,15 +122,15 @@ void DfSummary::exec() {
       // this->loggerStartTitle("output guess.lcao.roks and guess.occ.roks");
       this->saveGuessFile(DfObject::RUN_ROKS, C, "roks");
 
-      const TlVector rho =
-          this->getRho<TlVector>(DfObject::RUN_ROKS, this->m_nIteration);
+      const TlDenseVector_Lapack rho = this->getRho<TlDenseVector_Lapack>(
+          DfObject::RUN_ROKS, this->m_nIteration);
 
-      TlVector myu;
+      TlDenseVector_Lapack myu;
       if (this->m_bIsXCFitting == true) {
         myu.load(this->getMyuPath(DfObject::RUN_ROKS, this->m_nIteration));
       }
 
-      TlVector nyu;
+      TlDenseVector_Lapack nyu;
       if (this->m_sXCFunctional == "xalpha") {
         nyu.load(this->getNyuPath(DfObject::RUN_ROKS, this->m_nIteration));
       }
@@ -170,30 +172,30 @@ void DfSummary::exec() {
       // guess.occ.uks-beta");
       this->saveGuessFile(DfObject::RUN_UKS_BETA, CB, "uks-beta");
 
-      const TlVector rhoA =
-          this->getRho<TlVector>(DfObject::RUN_UKS_ALPHA, this->m_nIteration);
+      const TlDenseVector_Lapack rhoA = this->getRho<TlDenseVector_Lapack>(
+          DfObject::RUN_UKS_ALPHA, this->m_nIteration);
 
-      TlVector myuA;
+      TlDenseVector_Lapack myuA;
       if (this->m_bIsXCFitting == true) {
         myuA.load(
             this->getMyuPath(DfObject::RUN_UKS_ALPHA, this->m_nIteration));
       }
 
-      TlVector nyuA;
+      TlDenseVector_Lapack nyuA;
       if (this->m_sXCFunctional == "xalpha") {
         nyuA.load(
             this->getNyuPath(DfObject::RUN_UKS_ALPHA, this->m_nIteration));
       }
 
-      const TlVector rhoB =
-          this->getRho<TlVector>(DfObject::RUN_UKS_BETA, this->m_nIteration);
+      const TlDenseVector_Lapack rhoB = this->getRho<TlDenseVector_Lapack>(
+          DfObject::RUN_UKS_BETA, this->m_nIteration);
 
-      TlVector myuB;
+      TlDenseVector_Lapack myuB;
       if (this->m_bIsXCFitting == true) {
         myuB.load(this->getMyuPath(DfObject::RUN_UKS_BETA, this->m_nIteration));
       }
 
-      TlVector nyuB;
+      TlDenseVector_Lapack nyuB;
       if (this->m_sXCFunctional == "xalpha") {
         nyuB.load(this->getNyuPath(DfObject::RUN_UKS_BETA, this->m_nIteration));
       }
@@ -245,7 +247,7 @@ void DfSummary::printMO(const MatrixType& C) {
           TlOrbitalInfoObject::basisTypeNameTbl_[orbInfo.getBasisType(i)]));
 
       for (int j = orderMO; (j < orderMO + 10) && (j < numOfMOs); ++j) {
-        this->logger(TlUtils::format(" %10.6lf", C(i, j)));
+        this->logger(TlUtils::format(" %10.6lf", C.get(i, j)));
       }
       this->logger("\n");
     }
@@ -260,12 +262,12 @@ void DfSummary::saveGuessFile(const DfObject::RUN_TYPE runType,
   C.saveText(std::string("result.guess.lcao." + suffix));
 
   // occupation file
-  TlVector occ;
+  TlDenseVector_Lapack occ;
   occ.load(this->getOccupationPath(runType));
 
   std::ofstream ofs;
   ofs.open(std::string("result.guess.occ." + suffix).c_str(), std::ios::out);
-  occ.outputText(ofs);
+  ofs << occ;
   ofs.close();
 }
 

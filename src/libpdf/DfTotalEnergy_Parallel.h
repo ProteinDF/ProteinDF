@@ -20,7 +20,6 @@
 #define DFTOTALENERGY_PARALLEL_H
 
 #include "DfTotalEnergy.h"
-#include "TlDistributeVector.h"
 
 class DfTotalEnergy_Parallel : public DfTotalEnergy {
  public:

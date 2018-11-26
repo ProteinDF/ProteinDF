@@ -22,10 +22,9 @@
 #include <string>
 
 #include "DfInitialGuess.h"
-#include "TlMatrix.h"
 #include "TlOrbitalInfo.h"
-#include "TlSymmetricMatrix.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 /// 拡張Huckel法による初期値を作成する
 class DfInitialGuessHuckel : public DfInitialGuess {
@@ -48,7 +47,7 @@ class DfInitialGuessHuckel : public DfInitialGuess {
   double getHii(const std::string& sAtomName, int nOrbitalType);
 
   template <typename SymmetricMatrixType, typename MatrixType>
-  void generatePMatrix(const MatrixType& C, const TlVector& occ,
+  void generatePMatrix(const MatrixType& C, const TlDenseVector_Lapack& occ,
                        SymmetricMatrixType& P1, SymmetricMatrixType& P2);
 
  protected:
@@ -76,37 +75,37 @@ void DfInitialGuessHuckel::createGuess() {
   MatrixType X = DfObject::getXMatrix<MatrixType>();
   {
     MatrixType tX = X;
-    tX.transpose();
+    tX.transposeInPlace();
 
     F = tX * F * X;
   }
 
   MatrixType C;
   {
-    TlVector eigval;
-    F.diagonal(&eigval, &C);
+    TlDenseVector_Lapack eigval;
+    F.eig(&eigval, &C);
   }
   C = X * C;
 
   // P
   switch (this->m_nMethodType) {
     case METHOD_RKS: {
-      const TlVector occ = this->createOccupation(RUN_RKS);
+      const TlDenseVector_Lapack occ = this->createOccupation(RUN_RKS);
       this->saveCMatrix(RUN_RKS, 0, C);
       this->makeDensityMatrix();
     } break;
 
     case METHOD_UKS: {
-      const TlVector occA = this->createOccupation(RUN_UKS_ALPHA);
-      const TlVector occB = this->createOccupation(RUN_UKS_BETA);
+      const TlDenseVector_Lapack occA = this->createOccupation(RUN_UKS_ALPHA);
+      const TlDenseVector_Lapack occB = this->createOccupation(RUN_UKS_BETA);
       this->saveCMatrix(RUN_UKS_ALPHA, 0, C);
       this->saveCMatrix(RUN_UKS_BETA, 0, C);
       this->makeDensityMatrix();
     } break;
 
     case METHOD_ROKS: {
-      const TlVector occA = this->createOccupation(RUN_ROKS_CLOSED);
-      const TlVector occB = this->createOccupation(RUN_ROKS_OPEN);
+      const TlDenseVector_Lapack occA = this->createOccupation(RUN_ROKS_CLOSED);
+      const TlDenseVector_Lapack occB = this->createOccupation(RUN_ROKS_OPEN);
       this->saveCMatrix(RUN_ROKS, 0, C);
       this->makeDensityMatrix();
     } break;
@@ -148,13 +147,13 @@ SymmetricMatrixType DfInitialGuessHuckel::getHuckelMatrix() {
       if (nAtomI != nAtomJ) {
         const double Hjj =
             this->getHii(orbInfo.getAtomName(j), orbInfo.getShellType(j));
-        F(i, j) = 0.5 * K * (Hii + Hjj) * Spq(i, j);
+        F.set(i, j, 0.5 * K * (Hii + Hjj) * Spq.get(i, j));
       }
     }
 
     // i == j
     if ((nPrevAtomI != nAtomI) || (nPrevShellType != nShellTypeI)) {
-      F(i, i) = Hii;
+      F.set(i, i, Hii);
       nPrevAtomI = nAtomI;
       nPrevShellType = nShellTypeI;
     }
@@ -166,7 +165,7 @@ SymmetricMatrixType DfInitialGuessHuckel::getHuckelMatrix() {
 
 template <typename SymmetricMatrixType, typename MatrixType>
 void DfInitialGuessHuckel::generatePMatrix(const MatrixType& C,
-                                           const TlVector& occ,
+                                           const TlDenseVector_Lapack& occ,
                                            SymmetricMatrixType& P1,
                                            SymmetricMatrixType& P2) {
   // generate density matrix
@@ -182,7 +181,7 @@ void DfInitialGuessHuckel::generatePMatrix(const MatrixType& C,
       double p2 = 0.0;
 
       for (int i = 0; i < occ.getSize(); i++) {
-        double occNum = occ[i];
+        const double occNum = occ.get(i);
 
         if (std::fabs(occNum - 2.0) < EPS) {
           p1 += C(p, i) * C(q, i);

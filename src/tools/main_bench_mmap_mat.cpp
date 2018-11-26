@@ -23,7 +23,6 @@
 #include <time.h>
 
 #include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 
 #include "TlGetopt.h"
 #include "TlMemManager.h"
@@ -61,9 +60,9 @@ int main(int argc, char* argv[]) {
   }
 
   clock_t startTime1 = clock();
-  TlSymmetricMatrix S;
+  TlDenseSymmetricMatrix_BLAS_Old S;
   S.load("S.matrix");
-  TlSymmetricMatrix eigVec;
+  TlDenseSymmetricMatrix_BLAS_Old eigVec;
   TlVector eigVal;
   clock_t endTime1 = clock();
 

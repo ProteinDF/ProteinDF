@@ -16,8 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <cassert>
+
 #include "DfFunctional_B88LYP.h"
 #include "TlUtils.h"
+#include "tl_dense_vector_lapack.h"
 
 DfFunctional_B88LYP::DfFunctional_B88LYP() {
   this->numOfFunctionalTerms_ = this->m_Becke88.getNumOfFunctionalTerms() +
@@ -91,70 +94,69 @@ void DfFunctional_B88LYP::getDerivativeFunctional(
   //   std::cerr << std::endl;
 }
 
-TlVector DfFunctional_B88LYP::getFunctionalTermCoef_GF() {
+TlDenseVector_Lapack DfFunctional_B88LYP::getFunctionalTermCoef_GF() {
   const int dim = this->getNumOfFunctionalTerms();
-  TlVector coef(dim);
+  TlDenseVector_Lapack coef(dim);
   for (int i = 0; i < dim; ++i) {
-    coef[i] = 1.0;
+    coef.set(i, 1.0);
   }
 
   return coef;
 }
 
-TlVector DfFunctional_B88LYP::getDerivativeFunctionalTermCoef_GF() {
+TlDenseVector_Lapack DfFunctional_B88LYP::getDerivativeFunctionalTermCoef_GF() {
   const int dim = this->getNumOfDerivativeFunctionalTerms();
-  TlVector coef(dim);
+  TlDenseVector_Lapack coef(dim);
   for (int i = 0; i < dim; ++i) {
-    coef[i] = 1.0;
+    coef.set(i, 1.0);
   }
 
   return coef;
 }
 
-TlMatrix DfFunctional_B88LYP::getFunctionalCore(const double rhoA,
-                                                const double rhoB,
-                                                const double xA,
-                                                const double xB) {
-  const TlMatrix x = this->m_Becke88.getFunctionalCore(rhoA, rhoB, xA, xB);
-  const TlMatrix c = this->m_LYP.getFunctionalCore(rhoA, rhoB, xA, xB);
+TlDenseGeneralMatrix_Lapack DfFunctional_B88LYP::getFunctionalCore(
+    const double rhoA, const double rhoB, const double xA, const double xB) {
+  const TlDenseGeneralMatrix_Lapack x =
+      this->m_Becke88.getFunctionalCore(rhoA, rhoB, xA, xB);
+  const TlDenseGeneralMatrix_Lapack c =
+      this->m_LYP.getFunctionalCore(rhoA, rhoB, xA, xB);
 
   const index_type numOfFunctionalTerms_X =
       this->m_Becke88.getNumOfFunctionalTerms();
   const index_type numOfFunctionalTerms_C =
       this->m_LYP.getNumOfFunctionalTerms();
-  TlMatrix xc(F_DIM, this->getNumOfFunctionalTerms());
+  TlDenseGeneralMatrix_Lapack xc(F_DIM, this->getNumOfFunctionalTerms());
   for (index_type i = 0; i < F_DIM; ++i) {
     for (index_type j = 0; j < numOfFunctionalTerms_X; ++j) {
-      xc(i, j) = x(i, j);
+      xc.set(i, j, x.get(i, j));
     }
     for (index_type j = 0; j < numOfFunctionalTerms_C; ++j) {
-      xc(i, numOfFunctionalTerms_X + j) = c(i, j);
+      xc.set(i, numOfFunctionalTerms_X + j, c.get(i, j));
     }
   }
 
   return xc;
 }
 
-TlMatrix DfFunctional_B88LYP::getDerivativeFunctionalCore(const double rhoA,
-                                                          const double rhoB,
-                                                          const double xA,
-                                                          const double xB) {
-  const TlMatrix x =
+TlDenseGeneralMatrix_Lapack DfFunctional_B88LYP::getDerivativeFunctionalCore(
+    const double rhoA, const double rhoB, const double xA, const double xB) {
+  const TlDenseGeneralMatrix_Lapack x =
       this->m_Becke88.getDerivativeFunctionalCore(rhoA, rhoB, xA, xB);
-  const TlMatrix c =
+  const TlDenseGeneralMatrix_Lapack c =
       this->m_LYP.getDerivativeFunctionalCore(rhoA, rhoB, xA, xB);
 
   const index_type numOfDerivativeFunctionalTerms_X =
       this->m_Becke88.getNumOfDerivativeFunctionalTerms();
   const index_type numOfDerivativeFunctionalTerms_C =
       this->m_LYP.getNumOfDerivativeFunctionalTerms();
-  TlMatrix xc(D_DIM, this->getNumOfDerivativeFunctionalTerms());
+  TlDenseGeneralMatrix_Lapack xc(D_DIM,
+                                 this->getNumOfDerivativeFunctionalTerms());
   for (index_type i = 0; i < D_DIM; ++i) {
     for (index_type j = 0; j < numOfDerivativeFunctionalTerms_X; ++j) {
-      xc(i, j) = x(i, j);
+      xc.set(i, j, x.get(i, j));
     }
     for (index_type j = 0; j < numOfDerivativeFunctionalTerms_C; ++j) {
-      xc(i, numOfDerivativeFunctionalTerms_X + j) = c(i, j);
+      xc.set(i, numOfDerivativeFunctionalTerms_X + j, c.get(i, j));
     }
   }
 

@@ -7,9 +7,8 @@
 #include "TlGetopt.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
-#include "TlVector.h"
+#include "tl_dense_vector_lapack.h"
 
 void help(const std::string& progName) {
   std::cout << TlUtils::format("%s [options] args...", progName.c_str())
@@ -45,10 +44,10 @@ double getCharge(TlSerializeData param) {
   return charge;
 }
 
-TlSymmetricMatrix makeA(TlSerializeData param) {
+TlDenseSymmetricMatrix_Lapack makeA(TlSerializeData param) {
   const Fl_Geometry flGeom(param["coordinates"]);
   const int numOfAtoms = flGeom.getNumOfAtoms();
-  TlSymmetricMatrix A(numOfAtoms + 1);
+  TlDenseSymmetricMatrix_Lapack A(numOfAtoms + 1);
   for (int i = 0; i < numOfAtoms; ++i) {
     const TlPosition posA = flGeom.getCoordinate(i);
     for (int j = 0; j < i; ++j) {
@@ -73,7 +72,8 @@ TlSymmetricMatrix makeA(TlSerializeData param) {
   return A;
 }
 
-TlVector makeB(TlSerializeData param, const TlSymmetricMatrix& P) {
+TlDenseVector_Lapack makeB(TlSerializeData param,
+                           const TlDenseSymmetricMatrix_Lapack& P) {
   const Fl_Geometry flGeom(param["coordinates"]);
   const int numOfAtoms = flGeom.getNumOfAtoms();
 
@@ -98,7 +98,7 @@ TlVector makeB(TlSerializeData param, const TlSymmetricMatrix& P) {
   DfHpqX dfHpq(&param);
   std::vector<double> values = dfHpq.getESP(P, grids);
 
-  TlVector B(numOfAtoms + 1);
+  TlDenseVector_Lapack B(numOfAtoms + 1);
   for (int i = 0; i < numOfAtoms; ++i) {
     B.set(i, -values[i]);
   }
@@ -111,7 +111,7 @@ TlVector makeB(TlSerializeData param, const TlSymmetricMatrix& P) {
   return B;
 }
 
-double estimateEnergy(TlSerializeData param, const TlVector& x) {
+double estimateEnergy(TlSerializeData param, const TlDenseVector_Lapack& x) {
   const Fl_Geometry flGeom(param["coordinates"]);
   const int numOfAtoms = flGeom.getNumOfAtoms();
 
@@ -128,11 +128,12 @@ double estimateEnergy(TlSerializeData param, const TlVector& x) {
   return e;
 }
 
-TlVector getQ(TlSerializeData param, const TlVector& q) {
+TlDenseVector_Lapack getQ(TlSerializeData param,
+                          const TlDenseVector_Lapack& q) {
   Fl_Geometry flGeom(param["coordinates"]);
   const int numOfAtoms = flGeom.getNumOfAtoms();
 
-  TlVector Q(numOfAtoms);
+  TlDenseVector_Lapack Q(numOfAtoms);
   for (int i = 0; i < numOfAtoms; ++i) {
     const std::string symbol = flGeom.getAtomSymbol(i);
     const double currentCharge = flGeom.getCharge(i);
@@ -171,7 +172,7 @@ int main(int argc, char* argv[]) {
   }
 
   // 密度行列の読み込み
-  TlSymmetricMatrix P;
+  TlDenseSymmetricMatrix_Lapack P;
   if (PMatrixFilePath == "") {
     const int iteration = param["num_of_iterations"].getInt();
     DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
@@ -181,20 +182,20 @@ int main(int argc, char* argv[]) {
   P.load(PMatrixFilePath);
 
   // A
-  TlSymmetricMatrix A = makeA(param);
+  TlDenseSymmetricMatrix_Lapack A = makeA(param);
   A.save("ceem_a.mat");
 
   // B; ESP計算
-  TlVector B = makeB(param, P);
+  TlDenseVector_Lapack B = makeB(param, P);
   B.save("ceem_b.vtr");
 
   // solve
   TlMatrix Ainv = A;
   Ainv.inverse();
-  TlVector x = Ainv * B;
+  TlDenseVector_Lapack x = Ainv * B;
   x.save("ceem_x.vtr");
 
-  TlVector Q = getQ(param, x);
+  TlDenseVector_Lapack Q = getQ(param, x);
   Q.print(std::cout);
 
   const double e = estimateEnergy(param, x);

@@ -54,6 +54,16 @@ target_link_libraries(pdf-info-orb libpdf libpdftl)
 install(TARGETS pdf-info-orb RUNTIME DESTINATION bin)
 
 
+if (VIENNACL_FOUND)
+set(PDF_INFO_VIENNACL_SOURCES
+  main_info_viennacl.cc
+  )
+add_executable(pdf-info-viennacl ${PDF_INFO_VIENNACL_SOURCES})
+target_include_directories(pdf-info-viennacl PUBLIC ${VIENNACL_INCLUDE_DIR})
+target_link_libraries(pdf-info-viennacl ${OpenCL_LIBRARIES})
+install(TARGETS pdf-info-viennacl RUNTIME DESTINATION bin)
+endif (VIENNACL_FOUND)
+
 set(PDF_INIT_PARAM_SOURCES
   main_init_param.cpp
   )
@@ -88,6 +98,14 @@ target_link_libraries(pdf-mat-add libpdf libpdftl)
 install(TARGETS pdf-mat-add RUNTIME DESTINATION bin)
 
 
+set(PDF_MAT_CHOLESKY_SOURCES
+  main_mat_cholesky.cpp
+  )
+add_executable(pdf-mat-cholesky ${PDF_MAT_CHOLESKY_SOURCES})
+target_link_libraries(pdf-mat-cholesky libpdf libpdftl)
+install(TARGETS pdf-mat-cholesky RUNTIME DESTINATION bin)
+
+
 set(PDF_MAT_DIAGONAL_SOURCES
   main_mat_diagonal.cpp
   )
@@ -113,7 +131,7 @@ install(TARGETS pdf-mat-dot RUNTIME DESTINATION bin)
 
 
 set(PDF_MAT_EXTEND_SOURCES
-  main_mat_extend.cpp
+  main_mat_extend.cc
   )
 add_executable(pdf-mat-extend ${PDF_MAT_EXTEND_SOURCES})
 target_link_libraries(pdf-mat-extend libpdf libpdftl)
@@ -160,6 +178,14 @@ target_link_libraries(pdf-mat-show libpdf libpdftl)
 install(TARGETS pdf-mat-show RUNTIME DESTINATION bin)
 
 
+set(PDF_MAT_SUM_SOURCES
+  main_mat_sum.cpp
+  )
+add_executable(pdf-mat-sum ${PDF_MAT_SUM_SOURCES})
+target_link_libraries(pdf-mat-sum libpdf libpdftl)
+install(TARGETS pdf-mat-sum RUNTIME DESTINATION bin)
+
+
 set(PDF_MAT_SYMMETRIZE_SOURCES
   main_mat_symmetrize.cpp
   )
@@ -174,6 +200,33 @@ set(PDF_MAT_TRANSPOSE_SOURCES
 add_executable(pdf-mat-transpose ${PDF_MAT_TRANSPOSE_SOURCES})
 target_link_libraries(pdf-mat-transpose libpdf libpdftl)
 install(TARGETS pdf-mat-transpose RUNTIME DESTINATION bin)
+
+
+set(PDF_MINT_SOURCES
+  main_mint.cpp
+  tl_mint_object.h
+  tl_mint_object.cpp
+  tl_mint_pdf.h
+  tl_mint_pdf.cpp
+)
+set(PDF_MINT_LIBRARIES
+  libpdf
+  libpdftl
+)
+if (LIBCINT_FOUND)
+  set(PDF_MINT_SOURCES
+    ${PDF_MINT_SOURCES}
+    tl_mint_libcint.h
+    tl_mint_libcint.cpp
+  )
+  set(PDF_MINT_LIBRARIES
+    ${PDF_MINT_LIBRARIES}
+    ${LIBCINT_LIBRARIES}
+    )
+endif()
+add_executable(pdf-mint ${PDF_MINT_SOURCES})
+target_link_libraries(pdf-mint ${PDF_MINT_LIBRARIES})
+install(TARGETS pdf-mint RUNTIME DESTINATION bin)
 
 
 set(PDF_MKFLD_MO_SOURCES
@@ -289,6 +342,16 @@ add_executable(pdf-rvm2csfd ${PDF_RVM2CSFD_SOURCES})
 target_link_libraries(pdf-rvm2csfd libpdf libpdftl)
 install(TARGETS pdf-rvm2csfd RUNTIME DESTINATION bin)
 
+# ------------------------------------------------------------------------------
+# benchmark
+# ------------------------------------------------------------------------------
+set(PDF_BENCH_MAT_SOURCES
+  main_bench_mat.cpp
+  )
+add_executable(pdf-bench-mat ${PDF_BENCH_MAT_SOURCES})
+target_link_libraries(pdf-bench-mat libpdf libpdftl)
+install(TARGETS pdf-bench-mat RUNTIME DESTINATION bin)
+
 
 # ================
 
@@ -311,6 +374,6 @@ if (MPI_FOUND)
     DfLocalize_Parallel.cpp
     )
   add_executable(pdf-lo-mpi ${PDF_LO_MPI_SOURCES})
-  target_link_libraries(pdf-lo-mpi libppdf libppdftl libpdf libpdftl ${MPI_CXX_LIBRARIES})
+  target_link_libraries(pdf-lo-mpi libppdf libppdftl libpdf libpdftl)
   install(TARGETS pdf-lo-mpi RUNTIME DESTINATION bin)
 endif(MPI_FOUND)

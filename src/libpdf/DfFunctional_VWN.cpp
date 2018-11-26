@@ -227,9 +227,8 @@ double DfFunctional_VWN::epsilonCPrime(const double A, const double b,
   const double dArg1 = 2.0 / x;
   const double dArg2 = -x2_b * dInvX;
   const double dArg3 = -4.0 * b * inv_x2bQ;
-  const double dArg4 =
-      -b * x0 * dInvX0 *
-      (2.0 / (x - x0) - x2_b * dInvX - 4.0 * (2.0 * x0 + b) * inv_x2bQ);
+  const double dArg4 = -b * x0 * dInvX0 * (2.0 / (x - x0) - x2_b * dInvX -
+                                           4.0 * (2.0 * x0 + b) * inv_x2bQ);
 
   const double dAnswer = A * (dArg1 + dArg2 + dArg3 + dArg4);
   return dAnswer;
@@ -293,9 +292,9 @@ void DfFunctional_VWN::roundVWN_roundRho(const double dRhoA, const double dRhoB,
   const double zeta3 = zeta * zeta * zeta;  // zeta^3
   const double zeta4 = zeta3 * zeta;        // zeta^4
 
-  const double term1 = -x / (6.0 * dRho) *
-                       (dEc_p_prime + dEc_a_prime * g * (1.0 + h * zeta4) +
-                        dEc_a * g * h_prime * zeta4);
+  const double term1 =
+      -x / (6.0 * dRho) * (dEc_p_prime + dEc_a_prime * g * (1.0 + h * zeta4) +
+                           dEc_a * g * h_prime * zeta4);
 
   const double term2coef =
       dEc_a * (g_prime * (1.0 + h * zeta4) + 4.0 * g * h * zeta3);
@@ -413,9 +412,9 @@ double DfFunctional_VWN::epsilonCPrime_ANTI(const double x) {
 }
 
 // ----------------
-TlMatrix DfFunctional_VWN::getFunctionalCore(const double rhoA,
-                                             const double rhoB) {
-  TlMatrix answer(F_DIM, this->getNumOfFunctionalTerms());
+TlDenseGeneralMatrix_Lapack DfFunctional_VWN::getFunctionalCore(
+    const double rhoA, const double rhoB) {
+  TlDenseGeneralMatrix_Lapack answer(F_DIM, this->getNumOfFunctionalTerms());
   assert(this->getNumOfFunctionalTerms() == 1);
 
   // (A10)
@@ -441,9 +440,10 @@ TlMatrix DfFunctional_VWN::getFunctionalCore(const double rhoA,
   return answer;
 }
 
-TlMatrix DfFunctional_VWN::getDerivativeFunctionalCore(const double rhoA,
-                                                       const double rhoB) {
-  TlMatrix answer(D_DIM, this->getNumOfDerivativeFunctionalTerms());
+TlDenseGeneralMatrix_Lapack DfFunctional_VWN::getDerivativeFunctionalCore(
+    const double rhoA, const double rhoB) {
+  TlDenseGeneralMatrix_Lapack answer(D_DIM,
+                                     this->getNumOfDerivativeFunctionalTerms());
   assert(this->getNumOfFunctionalTerms() == 1);
 
   // roundF_roundRho =========================================================

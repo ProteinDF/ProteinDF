@@ -135,6 +135,40 @@ DfTaskCtrl::ShellArrayTable DfTaskCtrl::makeShellArrayTable(
   return shellArrayTable;
 }
 
+// ----------------------------------------------------------------------------
+// queue
+// ----------------------------------------------------------------------------
+bool DfTaskCtrl::getQueue(const std::size_t maxIndeces,
+                          const std::size_t maxGrainSize,
+                          std::vector<std::size_t>* pTasks,
+                          bool initialize) {
+  assert(pTasks != NULL);
+  static std::size_t currentIndex = 0;
+
+  if (initialize == true) {
+    currentIndex = 0;
+    
+    return true;
+  }
+
+  pTasks->clear();
+  pTasks->reserve(maxGrainSize);
+  std::size_t numOfTasks = 0;
+  while (currentIndex < maxIndeces) {
+    pTasks->push_back(currentIndex);
+    ++numOfTasks;
+    ++currentIndex;
+
+    if (numOfTasks > maxGrainSize) {
+      break;
+    }
+  }
+
+  this->log_.info(TlUtils::format("progress: %ld/%ld %.1f%%", currentIndex, maxIndeces, 100.0 * (double(currentIndex) / double(maxIndeces))));
+
+  return (pTasks->empty() != true);
+}
+
 bool DfTaskCtrl::getQueue(const TlOrbitalInfoObject& orbitalInfo,
                           const int maxGrainSize, std::vector<Task>* pTaskList,
                           bool initialize) {
@@ -1489,7 +1523,8 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
     const ShellPairArrayTable& inShellPairArrayTable,
     const TlOrbitalInfoObject& orbitalInfo) {
   const int maxShellType = this->maxShellType_;
-  assert(inShellPairArrayTable.size() == (maxShellType * maxShellType));
+  assert(inShellPairArrayTable.size() ==
+         static_cast<std::size_t>(maxShellType * maxShellType));
 
   const double cutoffThreshold = this->cutoffEpsilon_density_;
   const double CONTRIBUTE_COEF = 2.0 * std::pow(TlMath::PI(), 2.5);
@@ -1586,7 +1621,8 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
     const TlOrbitalInfoObject& orbitalInfo2) {
   const int maxShellType1 = orbitalInfo1.getMaxShellType();
   const int maxShellType2 = orbitalInfo2.getMaxShellType();
-  assert(inShellPairArrayTable.size() == (maxShellType1 * maxShellType2));
+  assert(inShellPairArrayTable.size() ==
+         static_cast<std::size_t>(maxShellType1 * maxShellType2));
 
   const double cutoffThreshold = this->cutoffEpsilon_density_;
   const double CONTRIBUTE_COEF = 2.0 * std::pow(TlMath::PI(), 2.5);

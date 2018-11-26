@@ -20,23 +20,29 @@
 #define DFCD_H
 
 #include <deque>
+#include <utility>
+#include <vector>
+
 #include "DfObject.h"
 #include "DfTaskCtrl.h"
-#include "TlColVectorMatrix.h"
 #include "TlOrbitalInfo.h"
-#include "TlRowVectorMatrix.h"
-#include "TlSparseSymmetricMatrix.h"
 #include "TlStlUtils.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_general_matrix_arrays_coloriented.h"
+#include "tl_dense_general_matrix_arrays_roworiented.h"
+#include "tl_sparse_symmetric_matrix.h"
 
 class TlOrbitalInfo;
 class DfEngineObject;
+class TlDenseSymmetricMatrixObject;
+class TlDenseGeneralMatrix_Lapack;
+class TlDenseSymmetricMatrix_Lapack;
+class CnFile;
 
 // #define CHECK_LOOP // 計算ループ構造のチェック
 
 class DfCD : public DfObject {
  public:
-  DfCD(TlSerializeData* pPdfParam);
+  explicit DfCD(TlSerializeData* pPdfParam, bool initializeFileObj = true);
   virtual ~DfCD();
 
  public:
@@ -44,9 +50,10 @@ class DfCD : public DfObject {
   virtual void calcCholeskyVectorsForK();
   virtual void calcCholeskyVectorsForGridFree();
 
-  void getJ(TlSymmetricMatrix* pJ);
-  virtual void getK(const RUN_TYPE runType, TlSymmetricMatrix* pK);
-  virtual void getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+  void getJ(TlDenseSymmetricMatrix_Lapack* pJ);
+  virtual void getK(const RUN_TYPE runType);
+  virtual void getM(const TlDenseSymmetricMatrix_Lapack& P,
+                    TlDenseSymmetricMatrix_Lapack* pM);
 
  protected:
   enum FastCDK_MODE {
@@ -58,19 +65,41 @@ class DfCD : public DfObject {
   };
 
  protected:
-  void getJ_S(TlSymmetricMatrix* pJ);
-  void getJ_S_mmap(TlSymmetricMatrix* pJ);
+  std::size_t argmax_pivot(const std::vector<double>& diagonals,
+                           const std::vector<int>& pivot,
+                           const int pivotBegin) const;
 
-  virtual TlSymmetricMatrix getPMatrix(const RUN_TYPE runType,
-                                       const int iteration);
+ protected:
+  void getJ_S(TlDenseSymmetricMatrix_Lapack* pJ);
+  void getJ_S_mmap(TlDenseSymmetricMatrix_Lapack* pJ);
 
-  virtual void getK_S_woCD(const RUN_TYPE runType, TlSymmetricMatrix* pK);
-  virtual void getK_S_woCD_mmap(const RUN_TYPE runType, TlSymmetricMatrix* pK);
+  virtual TlDenseSymmetricMatrix_Lapack getPMatrix(const RUN_TYPE runType,
+                                                   const int iteration);
 
-  virtual void getK_S_fast(const RUN_TYPE runType, TlSymmetricMatrix* pK);
+  // ----------------------------------------------------------------------------
+  // K
+  // ----------------------------------------------------------------------------
+ protected:
+  [[deprecated]] virtual void getK_S_woCD(const RUN_TYPE runType,
+                                          TlDenseSymmetricMatrix_Lapack* pK);
 
-  virtual void getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
-  virtual void getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+  [[deprecated]] virtual void getK_S_woCD_mmap(
+      const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
+
+  template <class Ljk_MatrixType>
+  void getK_byLjk_defMatrix(const RUN_TYPE runType);
+
+  template <class K_MatrixType, class Ljk_MatrixType, class GeneralMatrixType,
+            class SymmetricMatrixType>
+  void getK_byLjk(const RUN_TYPE runType);
+
+  template <class K_MatrixType>
+  void getK_byLk(const RUN_TYPE runType);
+
+  virtual void getM_S(const TlDenseSymmetricMatrix_Lapack& P,
+                      TlDenseSymmetricMatrix_Lapack* pM);
+  virtual void getM_A(const TlDenseSymmetricMatrix_Lapack& P,
+                      TlDenseSymmetricMatrix_Lapack* pM);
 
  protected:
   class Index2 {
@@ -148,9 +177,9 @@ class DfCD : public DfObject {
  protected:
   virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
-  virtual void finalize(TlSymmetricMatrix* pMat);
+  virtual void finalize(TlDenseSymmetricMatrix_Lapack* pMat);
   virtual void finalize(TlSparseSymmetricMatrix* pMat);
-  virtual void finalize(TlMatrix* pMat);
+  virtual void finalize(TlDenseGeneralMatrix_Lapack* pMat);
   virtual void finalize(TlSparseMatrix* pMat);
   virtual void finalize_I2PQ(PQ_PairArray* pI2PQ);
 
@@ -158,42 +187,44 @@ class DfCD : public DfObject {
   virtual void saveI2PQ(const PQ_PairArray& I2PQ, const std::string& filepath);
   virtual PQ_PairArray getI2PQ(const std::string& filepath);
 
-  virtual void saveLjk(const TlRowVectorMatrix& Ljk);
-  virtual void saveLk(const TlRowVectorMatrix& Lk);
-  virtual void debugOutLjk(const TlMatrix& Ljk);
-  virtual void debugOutLk(const TlMatrix& Lk);
-  virtual TlColVectorMatrix getLjk();
-  virtual TlColVectorMatrix getLk();
+  virtual void saveLjk(const TlDenseGeneralMatrix_arrays_RowOriented& Ljk);
+  virtual void saveLk(const TlDenseGeneralMatrix_arrays_RowOriented& Lk);
+  virtual void debugOutLjk(const TlDenseGeneralMatrix_Lapack& Ljk);
+  virtual void debugOutLk(const TlDenseGeneralMatrix_Lapack& Lk);
+  virtual TlDenseGeneralMatrix_arrays_ColOriented getLjk();
+  virtual TlDenseGeneralMatrix_arrays_ColOriented getLk();
 
-  virtual void saveLxc(const TlRowVectorMatrix& Ljk);
-  virtual void debugOutLxc(const TlMatrix& Lxc);
-  virtual TlColVectorMatrix getLxc();
+  virtual void saveLxc(const TlDenseGeneralMatrix_arrays_RowOriented& Ljk);
+  virtual void debugOutLxc(const TlDenseGeneralMatrix_Lapack& Lxc);
+  virtual TlDenseGeneralMatrix_arrays_ColOriented getLxc();
 
-  TlSymmetricMatrix getCholeskyVector(const TlVector& L_col,
-                                      const PQ_PairArray& I2PQ);
+  TlDenseSymmetricMatrix_Lapack getCholeskyVector(
+      const TlDenseVector_Lapack& L_col, const PQ_PairArray& I2PQ);
 
-  virtual TlSymmetricMatrix getPMatrix();
+  virtual TlDenseSymmetricMatrix_Lapack getPMatrix();
 
   virtual void divideCholeskyBasis(const index_type numOfCBs,
                                    index_type* pStart, index_type* pEnd);
 
  protected:
   template <class EngineClass>
-  TlRowVectorMatrix calcCholeskyVectorsOnTheFly(
+  TlDenseGeneralMatrix_arrays_RowOriented calcCholeskyVectorsOnTheFly(
       const TlOrbitalInfoObject& orbInfo_p,
       const TlOrbitalInfoObject& orbInfo_q, const std::string& I2PQ_path);
 
-  virtual TlRowVectorMatrix calcCholeskyVectorsOnTheFlyA(
+  virtual TlDenseGeneralMatrix_arrays_RowOriented calcCholeskyVectorsOnTheFlyA(
       const TlOrbitalInfoObject& orbInfo_p,
       const TlOrbitalInfoObject& orbInfo_q, const std::string& I2PQ_path);
 
  public:
   void calcDiagonals(const TlOrbitalInfoObject& orbInfo, PQ_PairArray* pI2PQ,
-                     TlVector* pDiagonals);
+                     std::vector<double>* pDiagonals);
   void calcDiagonals_K_full(const TlOrbitalInfoObject& orbInfo,
-                            PQ_PairArray* pI2PR, TlVector* pDiagonals);
+                            PQ_PairArray* pI2PR,
+                            std::vector<double>* pDiagonals);
   void calcDiagonals_K_half(const TlOrbitalInfoObject& orbInfo,
-                            PQ_PairArray* pI2PR, TlVector* pDiagonals);
+                            PQ_PairArray* pI2PR,
+                            std::vector<double>* pDiagonals);
 
  protected:
   void calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo,
@@ -230,6 +261,17 @@ class DfCD : public DfObject {
         std::swap(this->index1_, this->index2_);
       }
     }
+
+    IndexPair2S(const IndexPair2S& rhs) : Index2(rhs.index1_, rhs.index2_) {}
+
+    IndexPair2S& operator=(const IndexPair2S& rhs) {
+      if (&rhs != this) {
+        this->index1_ = rhs.index1_;
+        this->index2_ = rhs.index2_;
+      }
+
+      return *this;
+    }
   };
 
   class IndexPair4S {
@@ -245,7 +287,7 @@ class DfCD : public DfObject {
     IndexPair4S(const Index4& i4)
         : ip2_1_(i4.index1(), i4.index2()), ip2_2_(i4.index3(), i4.index4()) {
       if (this->ip2_1_ < this->ip2_2_) {
-        std::swap(this->ip2_1_, this->ip2_2_);
+        std::swap<IndexPair2S>(this->ip2_1_, this->ip2_2_);
       }
     }
 
@@ -440,16 +482,17 @@ class DfCD : public DfObject {
   ERI_CacheType ERI_cache_;
 
  protected:
-  void getJ_S_v2(TlSymmetricMatrix* pJ);
-  TlVector getScreenedDensityMatrix(const PQ_PairArray& I2PQ);
-  TlVector getScreenedDensityMatrix(const RUN_TYPE runTyoe,
-                                    const PQ_PairArray& I2PQ);
-  // TlVector getScreenedDensityMatrix2(const RUN_TYPE runTyoe, const
+  void getJ_S_v2(TlDenseSymmetricMatrix_Lapack* pJ);
+  TlDenseVector_Lapack getScreenedDensityMatrix(const PQ_PairArray& I2PQ);
+  TlDenseVector_Lapack getScreenedDensityMatrix(const RUN_TYPE runTyoe,
+                                                const PQ_PairArray& I2PQ);
+  // TlDenseVector_Lapack getScreenedDensityMatrix2(const RUN_TYPE runTyoe,
+  // const
   // PQ_PairArray& I2PQ);
-  void expandJMatrix(const TlVector& vJ, const PQ_PairArray& I2PQ,
-                     TlSymmetricMatrix* pJ);
-  void expandKMatrix(const TlVector& vK, const PQ_PairArray& I2PR,
-                     TlSymmetricMatrix* pK);
+  void expandJMatrix(const TlDenseVector_Lapack& vJ, const PQ_PairArray& I2PQ,
+                     TlDenseSymmetricMatrix_Lapack* pJ);
+  void expandKMatrix(const TlDenseVector_Lapack& vK, const PQ_PairArray& I2PR,
+                     TlDenseSymmetricMatrix_Lapack* pK);
 
  protected:
   // index_type numOfPQs_;
@@ -561,7 +604,8 @@ class DfCD : public DfObject {
 
   void calcDiagonalsA(const TlOrbitalInfoObject& orbInfo_p,
                       const TlOrbitalInfoObject& orbInfo_q, PQ_PairArray* pI2PQ,
-                      TlSparseMatrix* pSchwartzTable, TlVector* pDiagonals);
+                      TlSparseMatrix* pSchwartzTable,
+                      std::vector<double>* pDiagonals);
   void calcDiagonalsA_kernel(const TlOrbitalInfoObject& orbInfo_p,
                              const TlOrbitalInfoObject& orbInfo_q,
                              const std::vector<DfTaskCtrl::Task2>& taskList,
@@ -591,27 +635,28 @@ class DfCD : public DfObject {
                                const std::vector<index_type> G_col_list,
                                const PQ_PairArray& I2PQ);
   // PQ_PairArray_A getI2PQ_A();
-  TlMatrix getCholeskyVectorA(const TlOrbitalInfoObject& orbInfo_p,
-                              const TlOrbitalInfoObject& orbInfo_q,
-                              const TlVector& L_col, const PQ_PairArray& I2PQ);
+  TlDenseGeneralMatrix_Lapack getCholeskyVectorA(
+      const TlOrbitalInfoObject& orbInfo_p,
+      const TlOrbitalInfoObject& orbInfo_q, const TlDenseVector_Lapack& L_col,
+      const PQ_PairArray& I2PQ);
 
   /// デバッグ用にSuperMatrixを作成します
   ///
   /// V_pq,rs = (pq|rs) or (pqrs)
   /// @param[in] orbInfo 軌道情報オブジェクト
   /// @retval supermatrix
-  TlSymmetricMatrix getSuperMatrix(const TlOrbitalInfoObject& orbInfo,
-                                   PQ_PairArray* pI2PQ);
+  TlDenseSymmetricMatrix_Lapack getSuperMatrix(
+      const TlOrbitalInfoObject& orbInfo, PQ_PairArray* pI2PQ);
 
   /// デバッグ用にSuperMatrix(交換項用)を作成します
   ///
   /// V_pr,qs = (pq|rs)
   /// @param[in] orbInfo 軌道情報オブジェクト
   /// @retval supermatrix
-  TlSymmetricMatrix getSuperMatrix_K_full(const TlOrbitalInfoObject& orbInfo,
-                                          PQ_PairArray* pI2PR);
-  TlSymmetricMatrix getSuperMatrix_K_half(const TlOrbitalInfoObject& orbInfo,
-                                          PQ_PairArray* pI2PR);
+  TlDenseSymmetricMatrix_Lapack getSuperMatrix_K_full(
+      const TlOrbitalInfoObject& orbInfo, PQ_PairArray* pI2PR);
+  TlDenseSymmetricMatrix_Lapack getSuperMatrix_K_half(
+      const TlOrbitalInfoObject& orbInfo, PQ_PairArray* pI2PR);
 
   /// デバッグ用にSuperMatrixを作成します
   ///
@@ -619,33 +664,35 @@ class DfCD : public DfObject {
   /// @param[in] orbInfo_p pまたはrで示される軌道の軌道情報オブジェクト
   /// @param[in] orbInfo_q qまたはsで示される軌道の軌道情報オブジェクト
   /// @retval supermatrix
-  TlSymmetricMatrix getSuperMatrix(const TlOrbitalInfoObject& orbInfo_p,
-                                   const TlOrbitalInfoObject& orbInfo_q,
-                                   PQ_PairArray* pI2PQ);
+  TlDenseSymmetricMatrix_Lapack getSuperMatrix(
+      const TlOrbitalInfoObject& orbInfo_p,
+      const TlOrbitalInfoObject& orbInfo_q, PQ_PairArray* pI2PQ);
 
   /// コレスキー分解を行います(デバッグ用)
   ///
   /// V = L * L
   /// @param[in] V supermatrix
   /// @retval コレスキーベクトル(L)
-  TlMatrix calcCholeskyVectors(const TlSymmetricMatrix& V);
+  TlDenseGeneralMatrix_Lapack calcCholeskyVectors(
+      const TlDenseSymmetricMatrix_Lapack& V);
 
   /// デバッグ用
-  void getJ_A(TlSymmetricMatrix* pJ);
+  void getJ_A(TlDenseSymmetricMatrix_Lapack* pJ);
 
   /// デバッグ用
-  void getK_A(const RUN_TYPE runType, TlSymmetricMatrix* pK);
+  void getK_A(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
 
  protected:
   bool debugBuildSuperMatrix_;
   bool debugCheckCD_;
 
  protected:
-  virtual TlRowVectorMatrix calcCholeskyVectorsOnTheFlyS_new(
+  virtual TlDenseGeneralMatrix_arrays_RowOriented
+  calcCholeskyVectorsOnTheFlyS_new(
       const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path,
       const double epsilon,
       void (DfCD::*calcDiagonalsFunc)(const TlOrbitalInfoObject&, PQ_PairArray*,
-                                      TlVector*),
+                                      std::vector<double>*),
       std::vector<double> (DfCD::*getSuperMatrixElements)(
           const TlOrbitalInfoObject&, const index_type,
           const std::vector<index_type>&, const PQ_PairArray&));
@@ -694,15 +741,18 @@ class DfCD : public DfObject {
 
   // debug
   PQ_PairArray debug_I2PQ_;
-  TlSymmetricMatrix debug_V_;
+  // TlDenseSymmetricMatrix_Lapack debug_V_;
+
+ protected:
+  CnFile* file_;
 };
 
 template <class EngineClass>
-TlRowVectorMatrix DfCD::calcCholeskyVectorsOnTheFly(
+TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFly(
     const TlOrbitalInfoObject& orbInfo_p, const TlOrbitalInfoObject& orbInfo_q,
     const std::string& I2PQ_path) {
   this->createEngines<EngineClass>();
-  const TlRowVectorMatrix L =
+  const TlDenseGeneralMatrix_arrays_RowOriented L =
       this->calcCholeskyVectorsOnTheFlyA(orbInfo_p, orbInfo_q, I2PQ_path);
   this->destroyEngines();
 

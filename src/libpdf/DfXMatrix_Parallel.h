@@ -21,6 +21,9 @@
 
 #include "DfXMatrix.h"
 
+class TlDenseGeneralMatrix_Scalapack;
+class TlDenseSymmetricMatrix_Scalapack;
+
 class DfXMatrix_Parallel : public DfXMatrix {
  public:
   DfXMatrix_Parallel(TlSerializeData* pPdfParam);
@@ -29,20 +32,24 @@ class DfXMatrix_Parallel : public DfXMatrix {
  public:
   virtual void buildX();
 
-  virtual void canonicalOrthogonalize(const TlSymmetricMatrix& S, TlMatrix* pX,
-                                      TlMatrix* pXinv,
+  virtual void canonicalOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
+                                      TlDenseGeneralMatrix_Lapack* pX,
+                                      TlDenseGeneralMatrix_Lapack* pXinv,
                                       const std::string& eigvalFilePath = "");
 
-  virtual void lowdinOrthogonalize(const TlSymmetricMatrix& S, TlMatrix* pX,
-                                   TlMatrix* pXinv,
+  virtual void lowdinOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
+                                   TlDenseGeneralMatrix_Lapack* pX,
+                                   TlDenseGeneralMatrix_Lapack* pXinv,
                                    const std::string& eigvalFilePath = "");
 
-  void canonicalOrthogonalize(const TlDistributeSymmetricMatrix& S,
-                              TlDistributeMatrix* pX, TlDistributeMatrix* pXinv,
+  void canonicalOrthogonalize(const TlDenseSymmetricMatrix_Scalapack& S,
+                              TlDenseGeneralMatrix_Scalapack* pX,
+                              TlDenseGeneralMatrix_Scalapack* pXinv,
                               const std::string& eigvalFilePath = "");
 
-  void lowdinOrthogonalize(const TlDistributeSymmetricMatrix& S,
-                           TlDistributeMatrix* pX, TlDistributeMatrix* pXinv,
+  void lowdinOrthogonalize(const TlDenseSymmetricMatrix_Scalapack& S,
+                           TlDenseGeneralMatrix_Scalapack* pX,
+                           TlDenseGeneralMatrix_Scalapack* pXinv,
                            const std::string& eigvalFilePath = "");
 
  protected:

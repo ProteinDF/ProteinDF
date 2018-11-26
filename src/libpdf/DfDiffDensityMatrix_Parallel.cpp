@@ -18,8 +18,8 @@
 
 #include "DfDiffDensityMatrix_Parallel.h"
 #include "TlCommunicate.h"
-#include "TlDistributeSymmetricMatrix.h"
 #include "TlFile.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
 
 DfDiffDensityMatrix_Parallel::DfDiffDensityMatrix_Parallel(
     TlSerializeData* pPdfParam)
@@ -35,21 +35,21 @@ void DfDiffDensityMatrix_Parallel::exec() {
     // using ScaLAPACK
     switch (this->m_nMethodType) {
       case METHOD_RKS:
-        DfDiffDensityMatrix::calc<TlDistributeSymmetricMatrix>(
+        DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
             RUN_RKS, this->m_nIteration);
         break;
 
       case METHOD_UKS:
-        DfDiffDensityMatrix::calc<TlDistributeSymmetricMatrix>(
+        DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
             RUN_UKS_ALPHA, this->m_nIteration);
-        DfDiffDensityMatrix::calc<TlDistributeSymmetricMatrix>(
+        DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
             RUN_UKS_BETA, this->m_nIteration);
         break;
 
       case METHOD_ROKS:
-        DfDiffDensityMatrix::calc<TlDistributeSymmetricMatrix>(
+        DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
             RUN_ROKS_CLOSED, this->m_nIteration);
-        DfDiffDensityMatrix::calc<TlDistributeSymmetricMatrix>(
+        DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
             RUN_ROKS_OPEN, this->m_nIteration);
         break;
 
@@ -82,12 +82,13 @@ void DfDiffDensityMatrix_Parallel::exec() {
 //                                                        const int iteration)
 // {
 //     this->log_.info("(delta P) is build using ScaLAPACK.");
-//     TlDistributeSymmetricMatrix P =
-//     DfObject::getPpqMatrix<TlDistributeSymmetricMatrix>(runType, iteration
+//     TlDenseSymmetricMatrix_Scalapack P =
+//     DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(runType,
+//     iteration
 //     -1); P.save(TlUtils::format("diffP_%d.mat", iteration)); if
 //     (TlFile::isExist(this->getPpqMatrixPath(runType, iteration -2)) == true)
 //     {
-//         P -= (this->getPpqMatrix<TlDistributeSymmetricMatrix>(runType,
+//         P -= (this->getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(runType,
 //         iteration -2));
 //     }
 

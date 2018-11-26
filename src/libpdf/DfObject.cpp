@@ -66,24 +66,24 @@ void DfObject::setParam(const TlSerializeData& data) {
 #endif  // _OPENMP
 
   // computational resource
-  this->procMaxMemSize_ = 1024UL * 1024UL * 1024UL;
-  {
-    const std::string memSizeStr =
-        TlUtils::toUpper(data["memory_size"].getStr());
-    if (memSizeStr.empty() == false) {
-      std::size_t value = std::atol(memSizeStr.c_str());
-      if (memSizeStr.rfind("MB") != std::string::npos) {
-        value *= (1024UL * 1024UL);
-      } else if (memSizeStr.rfind("GB") != std::string::npos) {
-        value *= (1024UL * 1024UL * 1024UL);
-      }
+  // this->procMaxMemSize_ = 1024UL * 1024UL * 1024UL;
+  // {
+  //   const std::string memSizeStr =
+  //       TlUtils::toUpper(data["memory_size"].getStr());
+  //   if (memSizeStr.empty() == false) {
+  //     std::size_t value = std::atol(memSizeStr.c_str());
+  //     if (memSizeStr.rfind("MB") != std::string::npos) {
+  //       value *= (1024UL * 1024UL);
+  //     } else if (memSizeStr.rfind("GB") != std::string::npos) {
+  //       value *= (1024UL * 1024UL * 1024UL);
+  //     }
+  //
+  //     this->procMaxMemSize_ = value;
+  //   }
+  // }
 
-      this->procMaxMemSize_ = value;
-    }
-  }
-
-  this->isEnableMmap_ = data["use_mapfile"].getBoolean();
-  this->isWorkOnDisk_ = data["work_on_disk"].getBoolean();
+  // this->isEnableMmap_ = data["use_mapfile"].getBoolean();
+  // this->isWorkOnDisk_ = data["work_on_disk"].getBoolean();
   this->localTempDir_ = data["local_temp_dir"].getStr();
   if (this->localTempDir_ == "") {
     this->localTempDir_ = "/tmp/";
@@ -253,6 +253,9 @@ void DfObject::setParam(const TlSerializeData& data) {
   this->isRI_K_ = data["RI_K"].getBoolean();
 
   // matrix operation
+  this->linearAlgebraPackage_ = DfObject::LAP_LAPACK;
+  this->updateLinearAlgebraPackageParam(data["linear_algebra_package"].getStr());
+
   this->m_bUsingSCALAPACK = false;
 #ifdef HAVE_SCALAPACK
   this->m_bUsingSCALAPACK =
@@ -298,12 +301,12 @@ void DfObject::setParam(const TlSerializeData& data) {
   this->enableExperimentalCode_ = data["experimental_code"].getBoolean();
 
   // for memory ==============================================================
-  this->isUseCache_ = (*(this->pPdfParam_))["use_matrix_cache"].getBoolean();
-  if (this->isUseCache_ == true) {
-    this->matrixCache_.setMaxMemSize(this->procMaxMemSize_);
-  } else {
-    this->matrixCache_.setMaxMemSize(0);
-  }
+  // this->isUseCache_ = (*(this->pPdfParam_))["use_matrix_cache"].getBoolean();
+  // if (this->isUseCache_ == true) {
+  //   this->matrixCache_.setMaxMemSize(this->procMaxMemSize_);
+  // } else {
+  this->matrixCache_.setMaxMemSize(0);
+  // }
   const bool isForceLoadingFromDisk =
       (*(this->pPdfParam_))["force_loading_from_disk"].getBoolean();
   this->matrixCache_.forceLoadingFromDisk(isForceLoadingFromDisk);
@@ -353,6 +356,9 @@ void DfObject::setParam(const TlSerializeData& data) {
   }
   if (paramFileBaseName["diff_density_matrix"].getStr().empty() == true) {
     paramFileBaseName["diff_density_matrix"] = "dP.%s.mat";
+  }
+  if (paramFileBaseName["spin_density_matrix"].getStr().empty() == true) {
+    paramFileBaseName["spin_density_matrix"] = "spin_density.%s.mat";
   }
 
   if (paramFileBaseName["occupation_vtr"].getStr().empty() == true) {
@@ -419,6 +425,26 @@ void DfObject::setParam(const TlSerializeData& data) {
   // for lo
   paramFileBaseName["Clo_matrix"] = "Clo.%s.mat";
 }
+
+void DfObject::updateLinearAlgebraPackageParam(const std::string& keyword) {
+    const std::string linearAlgebraPackage = TlUtils::toUpper(keyword);
+#ifdef HAVE_EIGEN
+    if (linearAlgebraPackage == "EIGEN") {
+      this->linearAlgebraPackage_ = DfObject::LAP_EIGEN;
+    }
+#endif  // HAVE_EIGEN
+#ifdef HAVE_LAPACK
+    if (linearAlgebraPackage == "LAPACK") {
+      this->linearAlgebraPackage_ = DfObject::LAP_LAPACK;
+    }
+#endif  // HAVE_LAPACK
+#ifdef HAVE_VIENNACL
+    if (linearAlgebraPackage == "VIENNACL") {
+      this->linearAlgebraPackage_ = DfObject::LAP_VIENNACL;
+    }
+#endif  // HAVE_VIENNACL
+}
+
 
 void DfObject::logger(const std::string& str) const {
   // TlLogX& log = TlLogX::getInstance();
@@ -592,6 +618,13 @@ std::string DfObject::getDiffDensityMatrixPath(const RUN_TYPE runType,
       DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
+std::string DfObject::getSpinDensityMatrixPath(const RUN_TYPE runType,
+                                               const int iteration) const {
+  return this->makeFilePath(
+      "spin_density_matrix",
+      DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+}
+
 std::string DfObject::getPpqMatrixPath(const RUN_TYPE nRunType,
                                        const int nIteration) const {
   return this->makeFilePath("Ppq_matrix", DfObject::m_sRunTypeSuffix[nRunType] +
@@ -740,12 +773,3 @@ std::string DfObject::getCloMatrixPath(const RUN_TYPE runType,
                                               TlUtils::xtos(iteration));
 }
 
-TlVector DfObject::getOccVtr(const RUN_TYPE runType) {
-  const std::string fileName = this->getOccupationPath(runType);
-
-  TlVector occ;
-  occ.load(fileName);
-  assert(occ.getSize() == this->m_nNumOfMOs);
-
-  return occ;
-}

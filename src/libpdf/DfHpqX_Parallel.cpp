@@ -19,6 +19,7 @@
 #include "DfHpqX_Parallel.h"
 #include "DfTaskCtrl_Parallel.h"
 #include "TlCommunicate.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
 
 DfHpqX_Parallel::DfHpqX_Parallel(TlSerializeData* pPdfParam)
     : DfHpqX(pPdfParam) {}
@@ -32,8 +33,8 @@ void DfHpqX_Parallel::logger(const std::string& str) const {
   }
 }
 
-void DfHpqX_Parallel::getHpqD(TlDistributeSymmetricMatrix* pHpq,
-                              TlDistributeSymmetricMatrix* pHpq2) {
+void DfHpqX_Parallel::getHpqD(TlDenseSymmetricMatrix_Scalapack* pHpq,
+                              TlDenseSymmetricMatrix_Scalapack* pHpq2) {
   const int numOfAOs = this->m_nNumOfAOs;
 
   // make coordinates
@@ -98,9 +99,9 @@ DfTaskCtrl* DfHpqX_Parallel::getDfTaskCtrlObject() const {
   return pDfTaskCtrl;
 }
 
-void DfHpqX_Parallel::finalize(TlSymmetricMatrix* pHpq,
-                               TlSymmetricMatrix* pHpq2) {
+void DfHpqX_Parallel::finalize(TlDenseSymmetricMatrix_Lapack* pHpq,
+                               TlDenseSymmetricMatrix_Lapack* pHpq2) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.allReduce_SUM(*pHpq);
-  rComm.allReduce_SUM(*pHpq2);
+  rComm.allReduce_SUM(pHpq);
+  rComm.allReduce_SUM(pHpq2);
 }

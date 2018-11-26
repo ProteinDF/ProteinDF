@@ -16,7 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <cassert>
+#include <cmath>
+
 #include "DfFunctional.h"
+#include "tl_dense_vector_lapack.h"
 
 ////////////////////////////////////////////////////////////////////////
 // DfFunctional
@@ -36,10 +40,9 @@ DfFunctional_GGA::DfFunctional_GGA() {
 DfFunctional_GGA::~DfFunctional_GGA() {}
 
 // for grid-free
-FunctionalSets DfFunctional_GGA::getFunctional_GF(const TlVector& rhoAs,
-                                                  const TlVector& rhoBs,
-                                                  const TlVector& xAs,
-                                                  const TlVector& xBs) {
+FunctionalSets DfFunctional_GGA::getFunctional_GF(
+    const TlDenseVector_Lapack& rhoAs, const TlDenseVector_Lapack& rhoBs,
+    const TlDenseVector_Lapack& xAs, const TlDenseVector_Lapack& xBs) {
   const index_type dim = rhoAs.getSize();
   assert(dim == rhoBs.getSize());
   assert(dim == xAs.getSize());
@@ -48,8 +51,8 @@ FunctionalSets DfFunctional_GGA::getFunctional_GF(const TlVector& rhoAs,
   const int numOfTerms = this->getNumOfFunctionalTerms();
   FunctionalSets answer(numOfTerms, dim);
   for (index_type i = 0; i < dim; ++i) {
-    const TlMatrix fs =
-        this->getFunctionalCore(rhoAs[i], rhoBs[i], xAs[i], xBs[i]);
+    const TlDenseGeneralMatrix_Lapack fs = this->getFunctionalCore(
+        rhoAs.get(i), rhoBs.get(i), xAs.get(i), xBs.get(i));
 
     for (int term = 0; term < numOfTerms; ++term) {
       answer.FA_termR.set(term, i, fs.get(FA_R, term));
@@ -63,8 +66,8 @@ FunctionalSets DfFunctional_GGA::getFunctional_GF(const TlVector& rhoAs,
 }
 
 DerivativeFunctionalSets DfFunctional_GGA::getDerivativeFunctional_GF(
-    const TlVector& rhoAs, const TlVector& rhoBs, const TlVector& xAs,
-    const TlVector& xBs) {
+    const TlDenseVector_Lapack& rhoAs, const TlDenseVector_Lapack& rhoBs,
+    const TlDenseVector_Lapack& xAs, const TlDenseVector_Lapack& xBs) {
   const index_type dim = rhoAs.getSize();
   assert(dim == rhoBs.getSize());
   assert(dim == xAs.getSize());
@@ -73,10 +76,10 @@ DerivativeFunctionalSets DfFunctional_GGA::getDerivativeFunctional_GF(
   const int numOfTerms = this->getNumOfDerivativeFunctionalTerms();
   DerivativeFunctionalSets answer(numOfTerms, dim);
   for (index_type i = 0; i < dim; ++i) {
-    assert(std::fabs(rhoAs[i] - rhoBs[i]) < 1.0E-5);
-    assert(std::fabs(xAs[i] - xBs[i]) < 1.0E-5);
-    const TlMatrix dfs =
-        this->getDerivativeFunctionalCore(rhoAs[i], rhoBs[i], xAs[i], xBs[i]);
+    assert(std::fabs(rhoAs.get(i) - rhoBs.get(i)) < 1.0E-5);
+    assert(std::fabs(xAs.get(i) - xBs.get(i)) < 1.0E-5);
+    const TlDenseGeneralMatrix_Lapack dfs = this->getDerivativeFunctionalCore(
+        rhoAs.get(i), rhoBs.get(i), xAs.get(i), xBs.get(i));
 
     for (int term = 0; term < numOfTerms; ++term) {
       answer.rFrRhoA_R.set(term, i, dfs.get(RA_R, term));

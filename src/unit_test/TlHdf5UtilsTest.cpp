@@ -1,7 +1,8 @@
 #include <string>
 #include <vector>
-#include "TlHdf5Utils.h"
 #include "gtest/gtest.h"
+
+#include "TlHdf5Utils.h"
 
 static const std::string h5_path = "temp.h5";
 
@@ -222,7 +223,7 @@ TEST(TlHdf5Utils, getset_vector_int) {
   std::vector<int> vec_out;
   h5.get("/vct/int", &vec_out);
 
-  EXPECT_EQ(size, vec_out.size());
+  EXPECT_EQ(size, static_cast<int>(vec_out.size()));
   for (int i = 0; i < size; ++i) {
     EXPECT_EQ(vec_in[i], vec_out[i]);
   }
@@ -243,7 +244,7 @@ TEST(TlHdf5Utils, getset_vector_long) {
   std::vector<long> vec_out;
   h5.get("/vct/long", &vec_out);
 
-  EXPECT_EQ(size, vec_out.size());
+  EXPECT_EQ(size, static_cast<int>(vec_out.size()));
   for (int i = 0; i < size; ++i) {
     EXPECT_EQ(vec_in[i], vec_out[i]);
   }
@@ -264,7 +265,7 @@ TEST(TlHdf5Utils, getset_vector_float) {
   std::vector<float> vec_out;
   h5.get("/vct/float", &vec_out);
 
-  EXPECT_EQ(size, vec_out.size());
+  EXPECT_EQ(size, static_cast<int>(vec_out.size()));
   for (int i = 0; i < size; ++i) {
     EXPECT_FLOAT_EQ(vec_in[i], vec_out[i]);
   }
@@ -285,7 +286,7 @@ TEST(TlHdf5Utils, getset_vector_double) {
   std::vector<double> vec_out;
 
   h5.get("/vct/double", &vec_out);
-  EXPECT_EQ(size, vec_out.size());
+  EXPECT_EQ(size, static_cast<int>(vec_out.size()));
   for (int i = 0; i < size; ++i) {
     EXPECT_DOUBLE_EQ(vec_in[i], vec_out[i]);
   }

@@ -23,8 +23,8 @@
 #include "Fl_Geometry.h"
 #include "TlPosition.h"
 #include "TlSerializeData.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 #define AU_PER_ANG 1.889762
 
@@ -33,7 +33,8 @@ TlDensField::TlDensField(const TlSerializeData& param) : param_(param) {}
 TlDensField::~TlDensField() {}
 
 std::vector<double> TlDensField::makeDensFld(
-    const TlSymmetricMatrix& P, const std::vector<TlPosition>& grids) {
+    const TlDenseSymmetricMatrix_Lapack& P,
+    const std::vector<TlPosition>& grids) {
   const std::size_t numOfGrids = grids.size();
   std::vector<double> values(numOfGrids, 0.0);
 

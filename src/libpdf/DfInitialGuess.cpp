@@ -40,7 +40,7 @@ DfInitialGuess::~DfInitialGuess() {}
 void DfInitialGuess::exec() {
   switch (this->initialGuessType_) {
     case GUESS_RHO:
-      // go below
+    // go below
     case GUESS_FILE_RHO:
       // this->createRho();
       // this->createOccupation();
@@ -133,11 +133,11 @@ void DfInitialGuess::createInitialGuessUsingLCAO() {
 
 void DfInitialGuess::createInitialGuessUsingLCAO(const RUN_TYPE runType) {
   // read guess lcao
-  const TlMatrix LCAO = this->getLCAO_LAPACK(runType);
+  const TlDenseGeneralMatrix_Lapack LCAO = this->getLCAO_LAPACK(runType);
   this->saveC0(runType, LCAO);
 
   // read guess occupation
-  const TlVector aOccupation = this->getOccupation(runType);
+  const TlDenseVector_Lapack aOccupation = this->getOccupation(runType);
   this->saveOccupation(runType, aOccupation);
 
   {
@@ -148,12 +148,13 @@ void DfInitialGuess::createInitialGuessUsingLCAO(const RUN_TYPE runType) {
 
     // 密度行列の作成
     DfDmatrix dfDmatrix(&tmpParam);
-    dfDmatrix.DfDmatrixMain();  // RKS only?
+    dfDmatrix.run();  // RKS only?
   }
 }
 
-TlMatrix DfInitialGuess::getLCAO_LAPACK(const RUN_TYPE runType) {
-  TlMatrix lcaoMatrix;
+TlDenseGeneralMatrix_Lapack DfInitialGuess::getLCAO_LAPACK(
+    const RUN_TYPE runType) {
+  TlDenseGeneralMatrix_Lapack lcaoMatrix;
   const std::string binFile = DfInitialGuess::getLcaoPath_bin(runType);
   const std::string txtFile = DfInitialGuess::getLcaoPath_txt(runType);
 
@@ -186,7 +187,9 @@ TlMatrix DfInitialGuess::getLCAO_LAPACK(const RUN_TYPE runType) {
     const int maxCols = col_dimension;
     for (int i = 0; i < maxRows; ++i) {
       for (int j = 0; j < maxCols; ++j) {
-        fi >> lcaoMatrix(i, j);
+        double v;
+        fi >> v;
+        lcaoMatrix.set(i, j, v);
       }
     }
   } else {
@@ -234,11 +237,11 @@ void DfInitialGuess::createInitialGuessUsingDensityMatrix() {
 void DfInitialGuess::createInitialGuessUsingDensityMatrix(
     const RUN_TYPE runType) {
   // read guess lcao
-  TlSymmetricMatrix P =
-      this->getInitialDensityMatrix<TlSymmetricMatrix>(runType);
+  TlDenseSymmetricMatrix_Lapack P =
+      this->getInitialDensityMatrix<TlDenseSymmetricMatrix_Lapack>(runType);
   if (this->isNormalizeDensityMatrix_) {
-    P = this->normalizeDensityMatrix<TlSymmetricMatrix, DfPopulation>(runType,
-                                                                      P);
+    P = this->normalizeDensityMatrix<TlDenseSymmetricMatrix_Lapack,
+                                     DfPopulation>(runType, P);
   }
   this->savePpqMatrix(runType, 0, P);
 
@@ -246,8 +249,8 @@ void DfInitialGuess::createInitialGuessUsingDensityMatrix(
   this->createOccupation();
 }
 
-TlVector DfInitialGuess::getOccupation(const RUN_TYPE runType) {
-  TlVector occupation;
+TlDenseVector_Lapack DfInitialGuess::getOccupation(const RUN_TYPE runType) {
+  TlDenseVector_Lapack occupation;
   const std::string binFile = TlUtils::format(
       "./guess.occ.%s.vtr", this->m_sRunTypeSuffix[runType].c_str());
   const std::string txtFile = TlUtils::format(
@@ -286,12 +289,12 @@ void DfInitialGuess::createOccupation() {
   }
 }
 
-TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType) {
+TlDenseVector_Lapack DfInitialGuess::createOccupation(const RUN_TYPE runType) {
   const TlSerializeData& pdfParam = *(this->pPdfParam_);
 
   // construct guess occupations
   const index_type numOfMOs = this->m_nNumOfMOs;
-  TlVector guess_occ(numOfMOs);
+  TlDenseVector_Lapack guess_occ(numOfMOs);
   switch (runType) {
     case RUN_RKS: {
       const std::vector<int> docLevel =
@@ -300,7 +303,7 @@ TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType) {
            p != docLevel.end(); ++p) {
         const int level = *p - 1;
         if ((0 <= level) && (level < numOfMOs)) {
-          guess_occ[*p - 1] = 2.0;
+          guess_occ.set(*p - 1, 2.0);
         }
       }
     } break;
@@ -312,7 +315,7 @@ TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType) {
            p != occLevel.end(); ++p) {
         const int level = *p - 1;
         if ((0 <= level) && (level < numOfMOs)) {
-          guess_occ[level] = 1.0;
+          guess_occ.set(level, 1.0);
         }
       }
     } break;
@@ -324,7 +327,7 @@ TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType) {
            p != occLevel.end(); ++p) {
         const int level = *p - 1;
         if ((0 <= level) && (level < numOfMOs)) {
-          guess_occ[*p - 1] = 1.0;
+          guess_occ.set(*p - 1, 1.0);
         }
       }
     } break;
@@ -336,7 +339,7 @@ TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType) {
            p != occLevel_c.end(); ++p) {
         const int level = *p - 1;
         if ((0 <= level) && (level < numOfMOs)) {
-          guess_occ[*p - 1] = 2.0;
+          guess_occ.set(*p - 1, 2.0);
         }
       }
     } break;
@@ -348,7 +351,7 @@ TlVector DfInitialGuess::createOccupation(const RUN_TYPE runType) {
            p != occLevel_o.end(); ++p) {
         const int level = *p - 1;
         if ((0 <= level) && (level < numOfMOs)) {
-          guess_occ[*p - 1] = 1.0;
+          guess_occ.set(*p - 1, 1.0);
         }
       }
     } break;
@@ -417,7 +420,7 @@ std::vector<int> DfInitialGuess::getLevel(const std::string& inputStr) {
 }
 
 void DfInitialGuess::saveOccupation(const RUN_TYPE runType,
-                                    const TlVector& rOccupation) {
+                                    const TlDenseVector_Lapack& rOccupation) {
   const std::string sOccFileName = this->getOccupationPath(runType);
   rOccupation.save(sOccFileName);
 }
@@ -429,7 +432,7 @@ void DfInitialGuess::makeDensityMatrix() {
   tmpParam["control-iteration"] = 0;
 
   DfDmatrix* pDfDmat = getDfDmatrixObject(&tmpParam);
-  pDfDmat->DfDmatrixMain();
+  pDfDmat->run();
   delete pDfDmat;
   pDfDmat = NULL;
 }

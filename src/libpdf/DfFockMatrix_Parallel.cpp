@@ -20,6 +20,7 @@
 #include "DfEriX_Parallel.h"
 #include "DfOverlapX_Parallel.h"
 #include "TlCommunicate.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
 
 DfFockMatrix_Parallel::DfFockMatrix_Parallel(TlSerializeData* pPdfParam)
     : DfFockMatrix(pPdfParam) {
@@ -44,7 +45,7 @@ void DfFockMatrix_Parallel::mainDIRECT_RKS() {
   if (this->m_bUsingSCALAPACK == true) {
     // ScaLAPACK
     this->log_.info("buid KS matrix using ScaLAPACK.");
-    DfFockMatrix::mainDIRECT_RKS<TlDistributeSymmetricMatrix>();
+    DfFockMatrix::mainDIRECT_RKS<TlDenseSymmetricMatrix_Scalapack>();
   } else {
     // LAPACK
     this->log_.info("buid KS matrix using LAPACK.");
@@ -62,7 +63,7 @@ void DfFockMatrix_Parallel::mainDIRECT_RKS() {
 //         this->logger("Direct scheme method is employed\n");
 //     }
 
-//     TlSymmetricMatrix F(this->m_nNumOfAOs);
+//     TlDenseSymmetricMatrix_Lapack F(this->m_nNumOfAOs);
 //     if (this->m_bMemorySave == true) {
 //         // DfThreeindexintegrals を使わない
 //         if (this->m_bIsXCFitting == true) {
@@ -92,14 +93,15 @@ void DfFockMatrix_Parallel::mainDIRECT_RKS() {
 //         this->logger("Direct scheme method is employed\n");
 //     }
 
-//     TlDistributeSymmetricMatrix F(this->m_nNumOfAOs);
+//     TlDenseSymmetricMatrix_Scalapack F(this->m_nNumOfAOs);
 //     if (this->m_bMemorySave == true) {
 //         // DfThreeindexintegrals を使わない
 //         if (this->m_bIsXCFitting == true) {
-//             DfFockMatrix::setXC_RI<TlDistributeSymmetricMatrix, TlVector,
+//             DfFockMatrix::setXC_RI<TlDenseSymmetricMatrix_Scalapack,
+//             TlDenseVector_Lapack,
 //             DfOverlap_Parallel>(RUN_RKS, F);
 //         } else {
-//             DfFockMatrix::setXC_DIRECT<TlDistributeSymmetricMatrix>(RUN_RKS,
+//             DfFockMatrix::setXC_DIRECT<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS,
 //             F);
 //         }
 
@@ -107,7 +109,7 @@ void DfFockMatrix_Parallel::mainDIRECT_RKS() {
 //     } else {
 //         // DfThreeindexintegrals を使う
 //         assert(this->m_bIsXCFitting == true);
-//         F = DfObject::getFpqMatrix<TlDistributeSymmetricMatrix>(RUN_RKS,
+//         F = DfObject::getFpqMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS,
 //         this->m_nIteration);
 //     }
 
@@ -155,37 +157,40 @@ void DfFockMatrix_Parallel::mainDIRECT_ROKS() {
 }
 
 void DfFockMatrix_Parallel::setXC_RI(const RUN_TYPE nRunType,
-                                     TlSymmetricMatrix& F) {
+                                     TlDenseSymmetricMatrix_Lapack& F) {
   assert(this->m_bUsingSCALAPACK == false);
-  DfFockMatrix::setXC_RI<TlSymmetricMatrix, TlVector, DfOverlapX_Parallel>(
-      nRunType, F);
+  DfFockMatrix::setXC_RI<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack,
+                         DfOverlapX_Parallel>(nRunType, F);
 }
 
 void DfFockMatrix_Parallel::setXC_DIRECT(const RUN_TYPE nRunType,
-                                         TlSymmetricMatrix& F) {
+                                         TlDenseSymmetricMatrix_Lapack& F) {
   assert(this->m_bUsingSCALAPACK == false);
   TlCommunicate& rComm = TlCommunicate::getInstance();
   if (rComm.isMaster() == true) {
-    DfFockMatrix::setXC_DIRECT<TlSymmetricMatrix>(nRunType, F);
+    DfFockMatrix::setXC_DIRECT<TlDenseSymmetricMatrix_Lapack>(nRunType, F);
   }
-  rComm.broadcast(F);
+  rComm.broadcast(&F);
 }
 
 void DfFockMatrix_Parallel::setCoulomb(const METHOD_TYPE nMethodType,
-                                       TlSymmetricMatrix& F) {
+                                       TlDenseSymmetricMatrix_Lapack& F) {
   assert(this->m_bUsingSCALAPACK == false);
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  TlSymmetricMatrix J(this->m_nNumOfAOs);
+  TlDenseSymmetricMatrix_Lapack J(this->m_nNumOfAOs);
   if (this->J_engine_ == J_ENGINE_RI_J) {
-    DfFockMatrix::setCoulomb<TlSymmetricMatrix, TlVector, DfEriX_Parallel>(
-        nMethodType, J);
+    DfFockMatrix::setCoulomb<TlDenseSymmetricMatrix_Lapack,
+                             TlDenseVector_Lapack, DfEriX_Parallel>(nMethodType,
+                                                                    J);
     // if (this->isUseNewEngine_ == true) {
     //     this->logger(" use new engine\n");
-    //     DfFockMatrix::setCoulomb<TlSymmetricMatrix, TlVector,
+    //     DfFockMatrix::setCoulomb<TlDenseSymmetricMatrix_Lapack,
+    //     TlDenseVector_Lapack,
     //     DfEriX_Parallel>(nMethodType, J);
     // } else {
-    //     DfFockMatrix::setCoulomb<TlSymmetricMatrix, TlVector,
+    //     DfFockMatrix::setCoulomb<TlDenseSymmetricMatrix_Lapack,
+    //     TlDenseVector_Lapack,
     //     DfEri_Parallel>(nMethodType, J);
     // }
     F += J;
@@ -193,60 +198,65 @@ void DfFockMatrix_Parallel::setCoulomb(const METHOD_TYPE nMethodType,
     if (rComm.isMaster() == true) {
       // update method
       if (this->m_nIteration > 1) {
-        TlSymmetricMatrix tmpJ;
-        tmpJ = DfObject::getJMatrix<TlSymmetricMatrix>(this->m_nIteration - 1);
+        TlDenseSymmetricMatrix_Lapack tmpJ;
+        tmpJ = DfObject::getJMatrix<TlDenseSymmetricMatrix_Lapack>(
+            this->m_nIteration - 1);
         J += tmpJ;
       }
       DfObject::saveJMatrix(this->m_nIteration, J);
     }
   } else {
     if (rComm.isMaster() == true) {
-      J = this->getJMatrix<TlSymmetricMatrix>(this->m_nIteration);
+      J = this->getJMatrix<TlDenseSymmetricMatrix_Lapack>(this->m_nIteration);
       // update method
       if (this->m_nIteration > 1) {
-        const TlSymmetricMatrix prevJ =
-            DfObject::getJMatrix<TlSymmetricMatrix>(this->m_nIteration - 1);
+        const TlDenseSymmetricMatrix_Lapack prevJ =
+            DfObject::getJMatrix<TlDenseSymmetricMatrix_Lapack>(
+                this->m_nIteration - 1);
         J -= prevJ;
       }
 
       F += J;
     }
-    rComm.broadcast(F);
+    rComm.broadcast(&F);
   }
 }
 
 void DfFockMatrix_Parallel::setCoulomb(const METHOD_TYPE nMethodType,
-                                       TlDistributeSymmetricMatrix& F) {
-  TlDistributeSymmetricMatrix J(this->m_nNumOfAOs);
+                                       TlDenseSymmetricMatrix_Scalapack& F) {
+  TlDenseSymmetricMatrix_Scalapack J(this->m_nNumOfAOs);
   if (this->J_engine_ == J_ENGINE_RI_J) {
-    DfFockMatrix::setCoulomb<TlDistributeSymmetricMatrix, TlVector,
-                             DfEriX_Parallel>(nMethodType, J);
+    DfFockMatrix::setCoulomb<TlDenseSymmetricMatrix_Scalapack,
+                             TlDenseVector_Lapack, DfEriX_Parallel>(nMethodType,
+                                                                    J);
     // if (this->isUseNewEngine_ == true) {
     //     this->logger(" use new engine\n");
-    //     DfFockMatrix::setCoulomb<TlDistributeSymmetricMatrix, TlVector,
+    //     DfFockMatrix::setCoulomb<TlDenseSymmetricMatrix_Scalapack,
+    //     TlDenseVector_Lapack,
     //     DfEriX_Parallel>(nMethodType, J);
     // } else {
-    //     DfFockMatrix::setCoulomb<TlDistributeSymmetricMatrix, TlVector,
+    //     DfFockMatrix::setCoulomb<TlDenseSymmetricMatrix_Scalapack,
+    //     TlDenseVector_Lapack,
     //     DfEri_Parallel>(nMethodType, J);
     // }
     F += J;
 
     // update method
     if (this->m_nIteration > 1) {
-      TlDistributeSymmetricMatrix tmpJ;
-      tmpJ = DfObject::getJMatrix<TlDistributeSymmetricMatrix>(
+      TlDenseSymmetricMatrix_Scalapack tmpJ;
+      tmpJ = DfObject::getJMatrix<TlDenseSymmetricMatrix_Scalapack>(
           this->m_nIteration - 1);
       J += tmpJ;
     }
     DfObject::saveJMatrix(this->m_nIteration, J);
   } else {
-    J = this->getJMatrix<TlDistributeSymmetricMatrix>(this->m_nIteration);
+    J = this->getJMatrix<TlDenseSymmetricMatrix_Scalapack>(this->m_nIteration);
 
     // update method
     if (this->m_nIteration > 1) {
-      const TlDistributeSymmetricMatrix prevJ =
-          DfObject::getJMatrix<TlDistributeSymmetricMatrix>(this->m_nIteration -
-                                                            1);
+      const TlDenseSymmetricMatrix_Scalapack prevJ =
+          DfObject::getJMatrix<TlDenseSymmetricMatrix_Scalapack>(
+              this->m_nIteration - 1);
       J -= prevJ;
     }
 
@@ -254,49 +264,50 @@ void DfFockMatrix_Parallel::setCoulomb(const METHOD_TYPE nMethodType,
   }
 }
 
-TlSymmetricMatrix DfFockMatrix_Parallel::getFpqMatrix(const RUN_TYPE nRunType,
-                                                      const int nIteration) {
+TlDenseSymmetricMatrix_Lapack DfFockMatrix_Parallel::getFpqMatrix(
+    const RUN_TYPE nRunType, const int nIteration) {
   assert(this->m_bUsingSCALAPACK == false);
-  TlSymmetricMatrix Fpq;
+  TlDenseSymmetricMatrix_Lapack Fpq;
   TlCommunicate& rComm = TlCommunicate::getInstance();
   if (rComm.isMaster() == true) {
-    Fpq = DfObject::getFpqMatrix<TlSymmetricMatrix>(nRunType, nIteration);
+    Fpq = DfObject::getFpqMatrix<TlDenseSymmetricMatrix_Lapack>(nRunType,
+                                                                nIteration);
   }
-  rComm.broadcast(Fpq);
+  rComm.broadcast(&Fpq);
   return Fpq;
 }
 
-TlVector DfFockMatrix_Parallel::getRho(const RUN_TYPE nRunType,
-                                       const int nIteration) {
+TlDenseVector_Lapack DfFockMatrix_Parallel::getRho(const RUN_TYPE nRunType,
+                                                   const int nIteration) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  TlVector rho;
+  TlDenseVector_Lapack rho;
   if (rComm.isMaster() == true) {
     rho = DfFockMatrix::getRho(nRunType, nIteration);
   }
-  rComm.broadcast(rho);
+  rComm.broadcast(&rho);
 
   return rho;
 }
 
-TlVector DfFockMatrix_Parallel::getMyu(const RUN_TYPE nRunType,
-                                       const int nIteration) {
+TlDenseVector_Lapack DfFockMatrix_Parallel::getMyu(const RUN_TYPE nRunType,
+                                                   const int nIteration) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  TlVector myu;
+  TlDenseVector_Lapack myu;
   if (rComm.isMaster() == true) {
     myu = DfFockMatrix::getMyu(nRunType, nIteration);
   }
-  rComm.broadcast(myu);
+  rComm.broadcast(&myu);
 
   return myu;
 }
 
 // void DfFockMatrix_Parallel::saveFpqMatrix(const RUN_TYPE nRunType, const
-// TlSymmetricMatrix& F)
+// TlDenseSymmetricMatrix_Lapack& F)
 // {
 //     assert(this->m_bUsingSCALAPACK == false);
 //     const TlCommunicate& rComm = TlCommunicate::getInstance();
 //     if (rComm.isMaster() == true) {
-//         DfObject::saveFpqMatrix<TlSymmetricMatrix>(nRunType,
+//         DfObject::saveFpqMatrix<TlDenseSymmetricMatrix_Lapack>(nRunType,
 //         this->m_nIteration, F);
 //     }
 // }

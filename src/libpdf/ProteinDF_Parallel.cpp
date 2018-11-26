@@ -34,8 +34,9 @@
 #include "TlUtils.h"
 
 #ifdef HAVE_SCALAPACK
-#include "TlDistributeMatrix.h"
-#include "TlDistributeVector.h"
+#include "tl_scalapack_context.h"
+#include "tl_dense_general_matrix_scalapack.h"
+#include "tl_dense_vector_scalapack.h"
 #endif  // HAVE_SCALAPACK
 
 ProteinDF_Parallel::ProteinDF_Parallel() {}
@@ -67,44 +68,48 @@ void ProteinDF_Parallel::inputData() {
   this->stepEndTitle();
 }
 
-void ProteinDF_Parallel::setupGlobalCondition_extra(){
+void ProteinDF_Parallel::setupGlobalCondition_extra() {
 #ifdef HAVE_SCALAPACK
-    {bool useScaLAPACK =
-         (TlUtils::toUpper(this->pdfParam_["linear_algebra_package"]
-                               .getStr()) == "SCALAPACK")
-             ? true
-             : false;
-if (useScaLAPACK == true) {
-  int scalapackBlockSize = 64;
-  if (this->pdfParam_.hasKey("scalapack_block_size") == true) {
-    scalapackBlockSize = this->pdfParam_["scalapack_block_size"].getInt();
+  {
+    bool useScaLAPACK =
+        (TlUtils::toUpper(this->pdfParam_["linear_algebra_package"].getStr()) ==
+         "SCALAPACK")
+            ? true
+            : false;
+    if (useScaLAPACK == true) {
+      int scalapackBlockSize = 64;
+      if (this->pdfParam_.hasKey("scalapack_block_size") == true) {
+        scalapackBlockSize = this->pdfParam_["scalapack_block_size"].getInt();
+      }
+      this->log_.info(
+          TlUtils::format("ScaLAPACK block size: %d", scalapackBlockSize));
+      //TlDenseGeneralMatrix_Scalapack::setSystemBlockSize(scalapackBlockSize);
+      //TlDenseVector_Scalapack::setSystemBlockSize(scalapackBlockSize);
+      TlScalapackContext::setBlockSize(scalapackBlockSize);
+
+      bool isUsingPartialIO = false;
+      if (this->pdfParam_.hasKey("save_distributed_matrix_to_local_disk") ==
+          true) {
+        isUsingPartialIO =
+            this->pdfParam_["save_distributed_matrix_to_local_disk"]
+                .getBoolean();
+      }
+      const std::string isUsingPartialIO_YN =
+          (isUsingPartialIO == true) ? "YES" : "NO ";
+      this->log_.info(TlUtils::format("partial I/O mode = %s\n",
+                                      isUsingPartialIO_YN.c_str()));
+      TlDenseGeneralMatrix_Scalapack::setUsingPartialIO(isUsingPartialIO);
+
+      // experimental
+      this->log_.info("[experimental parameters]");
+      this->log_.info("use_matrix_cache parameter disabled.");
+      this->pdfParam_["use_matrix_cache"] = false;
+
+      this->pdfParam_["ERI_calcmode"] = 2;
+      this->log_.info(TlUtils::format(
+          "ERI calc mode: %d", this->pdfParam_["ERI_calcmode"].getInt()));
+    }
   }
-  this->log_.info(
-      TlUtils::format("ScaLAPACK block size: %d", scalapackBlockSize));
-  TlDistributeMatrix::setSystemBlockSize(scalapackBlockSize);
-  TlDistributeVector::setSystemBlockSize(scalapackBlockSize);
-
-  bool isUsingPartialIO = false;
-  if (this->pdfParam_.hasKey("save_distributed_matrix_to_local_disk") == true) {
-    isUsingPartialIO =
-        this->pdfParam_["save_distributed_matrix_to_local_disk"].getBoolean();
-  }
-  const std::string isUsingPartialIO_YN =
-      (isUsingPartialIO == true) ? "YES" : "NO ";
-  this->log_.info(
-      TlUtils::format("partial I/O mode = %s\n", isUsingPartialIO_YN.c_str()));
-  TlDistributeMatrix::setUsingPartialIO(isUsingPartialIO);
-
-  // experimental
-  this->log_.info("[experimental parameters]");
-  this->log_.info("use_matrix_cache parameter disabled.");
-  this->pdfParam_["use_matrix_cache"] = false;
-
-  this->pdfParam_["ERI_calcmode"] = 2;
-  this->log_.info(TlUtils::format("ERI calc mode: %d",
-                                  this->pdfParam_["ERI_calcmode"].getInt()));
-}
-}
 #endif  // HAVE_SCALAPACK
 }
 
@@ -132,7 +137,7 @@ DfForce* ProteinDF_Parallel::getDfForceObject() {
 void ProteinDF_Parallel::startlogo() {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  const std::string version = "parallel";
+  const std::string version = TlUtils::format("%s (parallel)", PROJECT_VERSION);
   std::string info = "";
   info += TlUtils::format(" MPI process: %d\n", rComm.getNumOfProc());
 #ifdef _OPENMP

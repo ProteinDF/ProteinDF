@@ -20,6 +20,7 @@
 #define DFKMATRIX_H
 
 #include "DfObject.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 class DfKMatrix : public DfObject {
  public:
@@ -34,14 +35,18 @@ class DfKMatrix : public DfObject {
   virtual void getK_CD();
   virtual void getK_conventional();
 
-  // void getK_RI_local(const RUN_TYPE runType, TlSymmetricMatrix *pK);
-  void getK_CD_local(const RUN_TYPE runType, TlSymmetricMatrix* pK);
-  void getK_conventional_local(const RUN_TYPE runType, TlSymmetricMatrix* pK);
+  // void getK_RI_local(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack
+  // *pK);
+  virtual void getK_CD_replica(const RUN_TYPE runType);
+  
+  void getK_conventional_local(const RUN_TYPE runType,
+                               TlDenseSymmetricMatrix_Lapack* pK);
 
  protected:
-  virtual TlSymmetricMatrix getKMatrix(const RUN_TYPE runType,
-                                       const int iteration);
-  virtual void saveKMatrix(const RUN_TYPE runType, const TlSymmetricMatrix& K);
+  virtual TlDenseSymmetricMatrix_Lapack getKMatrix(const RUN_TYPE runType,
+                                                   const int iteration);
+  virtual void saveKMatrix(const RUN_TYPE runType,
+                           const TlDenseSymmetricMatrix_Lapack& K);
 
   template <class SymmetricMatrixType>
   SymmetricMatrixType getDiffDensityMatrix(RUN_TYPE runType);

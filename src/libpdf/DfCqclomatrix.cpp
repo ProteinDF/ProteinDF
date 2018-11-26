@@ -23,10 +23,10 @@
 #include "DfCqclomatrix.h"
 #include "Fl_Tbl_AtomFragment.h"
 #include "Fl_Tbl_Fragment.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 DfCqclomatrix::DfCqclomatrix(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam) {}
@@ -73,7 +73,8 @@ void DfCqclomatrix::main() {
   }
 
   // read S matrix
-  TlSymmetricMatrix Spq = DfObject::getSpqMatrix<TlSymmetricMatrix>();
+  TlDenseSymmetricMatrix_Lapack Spq =
+      DfObject::getSpqMatrix<TlDenseSymmetricMatrix_Lapack>();
 
   // fragment loop
   int count_basis = 0;
@@ -85,14 +86,14 @@ void DfCqclomatrix::main() {
     // the value is calculated and written to fl_Fragment.
 
     // create partial S matrix
-    TlSymmetricMatrix fragmentS(numOfFragmentBasis[frag]);
+    TlDenseSymmetricMatrix_Lapack fragmentS(numOfFragmentBasis[frag]);
     int counti = 0;
     for (int i = 0; i < m_nNumOfAOs; i++) {
       if (basis_fragment[i] == frag) {
         int countj = 0;
         for (int j = 0; j <= i; j++) {
           if (basis_fragment[j] == frag) {
-            fragmentS(counti, countj) = Spq(i, j);
+            fragmentS.set(counti, countj, Spq.get(i, j));
             countj++;
           }
         }
@@ -101,19 +102,19 @@ void DfCqclomatrix::main() {
     }
     this->log_.info(TlUtils::format("partial S matrix frag=%d", frag));
 
-    TlVector eigVal;
-    TlMatrix eigVec;
-    fragmentS.diagonal(&eigVal, &eigVec);
+    TlDenseVector_Lapack eigVal;
+    TlDenseGeneralMatrix_Lapack eigVec;
+    fragmentS.eig(&eigVal, &eigVec);
 
     this->log_.info("eigenvalue of partial S matrix");
     {
       std::stringstream ss;
-      eigVal.print(ss);
+      ss << eigVal << std::endl;
       this->log_.info(ss.str());
     }
 
     for (int i = 0; i < numOfFragmentBasis[frag]; i++) {
-      eigval[count_basis + i] = eigVal[i];
+      eigval[count_basis + i] = eigVal.get(i);
       eigfrag[count_basis + i] = frag;
     }
     count_basis += numOfFragmentBasis[frag];
@@ -222,7 +223,7 @@ void DfCqclomatrix::main() {
 }
 
 void DfCqclomatrix::main(std::string type) {
-  TlMatrix guess_lcao;
+  TlDenseGeneralMatrix_Lapack guess_lcao;
   Fl_Tbl_Fragment Tfrag(Fl_Geometry((*this->pPdfParam_)["coordinates"]));
 
   // read guess.lcao
@@ -252,14 +253,16 @@ void DfCqclomatrix::main(std::string type) {
 
     for (int i = 0; i < this->m_nNumOfAOs; i++) {
       for (int j = 0; j < this->m_nNumOfMOs; j++) {
-        fi >> guess_lcao(i, j);
+        double v;
+        fi >> v;
+        guess_lcao.set(i, j, v);
       }
     }
 
     this->log_.info("guess lcao " + type);
     {
       std::stringstream ss;
-      guess_lcao.print(ss);
+      ss << guess_lcao << std::endl;
       this->log_.info(ss.str());
     }
   }
@@ -267,7 +270,7 @@ void DfCqclomatrix::main(std::string type) {
   // write Cqclo of each fragment
   for (int frag = 0; frag < number_fragment; frag++) {
     int number_fragqclo = Tfrag.getNumberFragmentqclo(frag);
-    TlMatrix Cqclo(m_nNumOfAOs, number_fragqclo);
+    TlDenseGeneralMatrix_Lapack Cqclo(m_nNumOfAOs, number_fragqclo);
 
     for (int fragqclo = 0; fragqclo < number_fragqclo; fragqclo++) {
       int qclo = 0;
@@ -279,7 +282,7 @@ void DfCqclomatrix::main(std::string type) {
         qclo = Tfrag.getQcloBeta(frag, fragqclo);
       }
       for (int basis = 0; basis < this->m_nNumOfAOs; basis++) {
-        Cqclo(basis, fragqclo) = guess_lcao(basis, qclo);
+        Cqclo.set(basis, fragqclo, guess_lcao.get(basis, qclo));
       }
     }
 
@@ -290,11 +293,11 @@ void DfCqclomatrix::main(std::string type) {
   // write Cprime.matrix.frag#.(type)0 for Level-Shift
   for (int frag = 0; frag < number_fragment; frag++) {
     int number_fragqclo = Tfrag.getNumberFragmentqclo(frag);
-    TlMatrix Cprime_frag(number_fragqclo, number_fragqclo);
+    TlDenseGeneralMatrix_Lapack Cprime_frag(number_fragqclo, number_fragqclo);
 
     // Cprime_frag = Cqclo^-1 * Cqclo
     for (int i = 0; i < number_fragqclo; i++) {
-      Cprime_frag(i, i) = 1.0;
+      Cprime_frag.set(i, i, 1.0);
     }
 
     std::string fname = "fl_Work/fl_Mtr_Cprime.matrix.frag" +

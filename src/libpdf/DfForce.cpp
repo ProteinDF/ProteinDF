@@ -61,8 +61,8 @@ void DfForce::calcForce() {
   this->calcForceFromNuclei();
   this->calcForceFromWS(runType);
 
-  TlSymmetricMatrix P =
-      this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
+  TlDenseSymmetricMatrix_Lapack P =
+      this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
   this->calcForceFromHpq(P);
 
   this->calcForceFromCoulomb(runType);
@@ -102,8 +102,8 @@ void DfForce::output() {
   // calc RMS
   double rms = 0;
   {
-    TlMatrix force2 = this->force_;
-    force2.dot(force2);
+    TlDenseGeneralMatrix_Lapack force2 = this->force_;
+    force2.dotInPlace(force2);
     rms = force2.sum();
     rms = std::sqrt(rms / (double(numOfAtoms) * 3.0));
   }
@@ -125,12 +125,12 @@ void DfForce::output() {
   }
   {
     this->log_.info("=== FORCE (without X) ===");
-    TlMatrix force_woX = this->force_;
+    TlDenseGeneralMatrix_Lapack force_woX = this->force_;
     force_woX -= this->force_Xonly_;
 
     double max_val_woX = force_woX.getMaxAbsoluteElement();
-    TlMatrix force_woX2 = force_woX;
-    force_woX2.dot(force_woX2);
+    TlDenseGeneralMatrix_Lapack force_woX2 = force_woX;
+    force_woX2.dotInPlace(force_woX2);
     double rms_woX = force_woX2.sum();
     rms_woX = std::sqrt(rms_woX / (double(numOfAtoms) * 3.0));
 
@@ -198,7 +198,7 @@ void DfForce::calcForceFromNuclei() {
   const int numOfAtoms = this->m_nNumOfAtoms;
   const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
 
-  TlMatrix F_nuc(this->m_nNumOfAtoms, 3);
+  TlDenseGeneralMatrix_Lapack F_nuc(this->m_nNumOfAtoms, 3);
   for (int i = 0; i < numOfAtoms; ++i) {
     const TlPosition posI = flGeom.getCoordinate(i);
     const double chargeI = flGeom.getCharge(i);
@@ -234,12 +234,12 @@ void DfForce::calcForceFromNuclei() {
   this->force_ += F_nuc;
 }
 
-void DfForce::calcForceFromHpq(const TlSymmetricMatrix& P) {
+void DfForce::calcForceFromHpq(const TlDenseSymmetricMatrix_Lapack& P) {
   this->loggerTime("calc core-H");
 
   DfHpqX dfHpqX(&(this->pdfParamForForce_));
-  TlMatrix force_Hpq(this->m_nNumOfAtoms, 3);
-  TlMatrix force_Hpq_Xonly(this->m_nNumOfAtoms, 3);
+  TlDenseGeneralMatrix_Lapack force_Hpq(this->m_nNumOfAtoms, 3);
+  TlDenseGeneralMatrix_Lapack force_Hpq_Xonly(this->m_nNumOfAtoms, 3);
   dfHpqX.getForce(P, &force_Hpq, &force_Hpq_Xonly);
 
   if (this->isDebugOutMatrix_ == true) {
@@ -256,12 +256,13 @@ void DfForce::calcForceFromWS(RUN_TYPE runType) {
 
   DfOverlapX dfOvpX(&(this->pdfParamForForce_));
 
-  const TlSymmetricMatrix W = this->getEnergyWeightedDensityMatrix(runType);
+  const TlDenseSymmetricMatrix_Lapack W =
+      this->getEnergyWeightedDensityMatrix(runType);
   if (this->isDebugOutMatrix_ == true) {
     W.save("W.mtx");
   }
 
-  TlMatrix F_WS(this->m_nNumOfAtoms, 3);
+  TlDenseGeneralMatrix_Lapack F_WS(this->m_nNumOfAtoms, 3);
   dfOvpX.getForce(W, &F_WS);
 
   F_WS *= -1.0;
@@ -269,43 +270,24 @@ void DfForce::calcForceFromWS(RUN_TYPE runType) {
     F_WS.save("F_WS.mtx");
   }
 
+  if (runType == DfObject::RUN_RKS) {
+    F_WS *= 2.0;
+  }
   this->force_ += F_WS;
 }
 
-TlMatrix DfForce::getEnergyWeightedDensityMatrix(RUN_TYPE runType) {
+TlDenseGeneralMatrix_Lapack DfForce::getEnergyWeightedDensityMatrix(
+    RUN_TYPE runType) {
   const int iteration = this->m_nIteration;
   const int numOfAOs = this->m_nNumOfAOs;
-  const int numOfMOs = this->m_nNumOfMOs;
 
-  TlVector eps;
-  eps.load(this->getOccupationPath(runType));
-  assert(eps.getSize() == numOfMOs);
-  {
-    TlVector eig;
-    eig.load(this->getEigenvaluesPath(runType, iteration));
-    assert(eig.getSize() == numOfMOs);
+  const TlDenseSymmetricMatrix_Lapack P =
+      DfObject::getSpinDensityMatrix<TlDenseSymmetricMatrix_Lapack>(runType,
+                                                                    iteration);
+  const TlDenseSymmetricMatrix_Lapack F =
+      DfObject::getFpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
 
-    // TODO: 高速化
-    for (int i = 0; i < numOfMOs; ++i) {
-      eps[i] *= eig[i];
-    }
-  }
-
-  TlMatrix C = this->getCMatrix<TlMatrix>(runType, iteration);
-  assert(C.getNumOfRows() == numOfAOs);
-  assert(C.getNumOfCols() == numOfMOs);
-
-  // TODO: 高速化
-  TlMatrix W(numOfAOs, numOfAOs);
-  for (int m = 0; m < numOfAOs; ++m) {
-    for (int n = 0; n < numOfAOs; ++n) {
-      double value = 0.0;
-      for (int i = 0; i < numOfMOs; ++i) {
-        value += eps[i] * C.get(m, i) * C.get(n, i);
-      }
-      W.set(m, n, value);
-    }
-  }
+  const TlDenseGeneralMatrix_Lapack W = P * F * P;
 
   return W;
 }
@@ -324,13 +306,13 @@ void DfForce::calcForceFromCoulomb_exact(RUN_TYPE runType) {
   const int iteration = this->m_nIteration;
   const int numOfAtoms = this->m_nNumOfAtoms;
 
-  const TlSymmetricMatrix P =
-      this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
+  const TlDenseSymmetricMatrix_Lapack P =
+      this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
 
   DfEriX dfEri(&(this->pdfParamForForce_));
 
   // ((pq)'|(rs))
-  TlMatrix F_J(numOfAtoms, 3);
+  TlDenseGeneralMatrix_Lapack F_J(numOfAtoms, 3);
   dfEri.getForceJ(P, &F_J);
 
   // F_J *= 0.5;
@@ -347,18 +329,19 @@ void DfForce::calcForceFromCoulomb_RIJ(const RUN_TYPE runType) {
   const int iteration = this->m_nIteration;
   const int numOfAtoms = this->m_nNumOfAtoms;
 
-  const TlVector rho = this->getRho<TlVector>(runType, iteration);
-  const TlSymmetricMatrix P =
-      this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
+  const TlDenseVector_Lapack rho =
+      this->getRho<TlDenseVector_Lapack>(runType, iteration);
+  const TlDenseSymmetricMatrix_Lapack P =
+      this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
 
   DfEriX dfEri(&(this->pdfParamForForce_));
 
   // ((pq)'|a)
-  TlMatrix F_pqa(numOfAtoms, 3);
+  TlDenseGeneralMatrix_Lapack F_pqa(numOfAtoms, 3);
   dfEri.getForceJ(P, rho, &F_pqa);
 
   // (a'|b)
-  TlMatrix F_ab(numOfAtoms, 3);
+  TlDenseGeneralMatrix_Lapack F_ab(numOfAtoms, 3);
   dfEri.getForceJ(rho, &F_ab);
 
   if (this->isDebugOutMatrix_ == true) {
@@ -366,7 +349,7 @@ void DfForce::calcForceFromCoulomb_RIJ(const RUN_TYPE runType) {
     F_ab.save("F_ab.mtx");
   }
 
-  const TlMatrix F_J = (F_pqa - 0.5 * F_ab);
+  const TlDenseGeneralMatrix_Lapack F_J = (F_pqa - 0.5 * F_ab);
   this->force_ += F_J;
 }
 
@@ -383,11 +366,12 @@ void DfForce::calcForceFromPureXC(const RUN_TYPE runType) {
   const int iteration = this->m_nIteration;
   const int numOfAtoms = this->m_nNumOfAtoms;
 
-  TlMatrix Fxc(numOfAtoms, 3);
+  TlDenseGeneralMatrix_Lapack Fxc(numOfAtoms, 3);
 
   // for RKS
-  const TlSymmetricMatrix P =
-      0.5 * this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
+  const TlDenseSymmetricMatrix_Lapack P =
+      0.5 *
+      this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
 
   DfCalcGridX* pCalcGrid = this->getCalcGridObj();
 
@@ -432,9 +416,9 @@ void DfForce::calcForceFromPureXC_gridfree(RUN_TYPE runType) {
   this->loggerTime("calc XC(gridfree)");
 
   DfGridFreeXC dfGridFreeXC(&(this->pdfParamForForce_));
-  TlMatrix force = dfGridFreeXC.getForce();
+  TlDenseGeneralMatrix_Lapack force = dfGridFreeXC.getForce();
 
-  const TlMatrix T = this->getTransformMatrix(force);
+  const TlDenseGeneralMatrix_Lapack T = this->getTransformMatrix(force);
   force += T;
 
   if (this->isDebugOutMatrix_ == true) {
@@ -452,12 +436,12 @@ void DfForce::calcForceFromK(RUN_TYPE runType) {
     const int iteration = this->m_nIteration;
     const int numOfAtoms = this->m_nNumOfAtoms;
 
-    const TlSymmetricMatrix P =
-        this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
+    const TlDenseSymmetricMatrix_Lapack P =
+        this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
 
     DfEriX dfEri(&(this->pdfParamForForce_));
 
-    TlMatrix F_K(numOfAtoms, 3);
+    TlDenseGeneralMatrix_Lapack F_K(numOfAtoms, 3);
     // for RKS
     dfEri.getForceK(P, &F_K);
     if (runType == RUN_RKS) {
@@ -474,10 +458,11 @@ void DfForce::calcForceFromK(RUN_TYPE runType) {
   }
 }
 
-TlMatrix DfForce::getTransformMatrix(const TlMatrix& force) {
+TlDenseGeneralMatrix_Lapack DfForce::getTransformMatrix(
+    const TlDenseGeneralMatrix_Lapack& force) {
   const Fl_Geometry flGeom((*this->pPdfParam_)["coordinates"]);
   const int numOfAtoms = this->m_nNumOfAtoms;
-  TlMatrix answer(numOfAtoms, 3);
+  TlDenseGeneralMatrix_Lapack answer(numOfAtoms, 3);
 
   // 重心
   std::vector<TlPosition> X(numOfAtoms);
@@ -497,7 +482,7 @@ TlMatrix DfForce::getTransformMatrix(const TlMatrix& force) {
     }
   }
 
-  TlSymmetricMatrix rot(3);
+  TlDenseSymmetricMatrix_Lapack rot(3);
   for (int i = 0; i < numOfAtoms; ++i) {
     const TlPosition p = X[i];
     const double x = p.x();

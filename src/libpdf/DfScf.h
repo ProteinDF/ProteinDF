@@ -113,7 +113,7 @@ class DfScf : public DfObject {
   void execScfLoop_EndFock_TransC();
   virtual DfTransatob* getDfTransatobObject();
 
-  void calcDensityMatrix();
+  virtual void calcDensityMatrix();
   virtual DfDmatrix* getDfDmatrixObject();
 
   virtual void calcTotalEnergy();

@@ -22,63 +22,67 @@
 #include <string>
 
 #include "DfXMatrix.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 DfXMatrix::DfXMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
   assert(pPdfParam != NULL);
   const TlSerializeData& pdfParam = *pPdfParam;
   const double threshold_trancation =
-      pdfParam["orbital_independence_threshold"].getDouble();
+      pdfParam["orbital-independence-threshold"].getDouble();
 
   this->threshold_trancation_canonical_ = threshold_trancation;
-  if (pdfParam["orbital_independence_threshold/canonical"].getStr().empty() !=
+  if (pdfParam["orbital-independence-threshold/canonical"].getStr().empty() !=
       true) {
     this->threshold_trancation_canonical_ =
-        pdfParam["orbital_independence_threshold/canonical"].getDouble();
+        pdfParam["orbital-independence-threshold/canonical"].getDouble();
   }
 
   this->threshold_trancation_lowdin_ = threshold_trancation;
-  if (pdfParam["orbital_independence_threshold/lowdin"].getStr().empty() !=
+  if (pdfParam["orbital-independence-threshold/lowdin"].getStr().empty() !=
       true) {
     this->threshold_trancation_lowdin_ =
-        pdfParam["orbital_independence_threshold/lowdin"].getDouble();
+        pdfParam["orbital-independence-threshold/lowdin"].getDouble();
   }
 
-  this->XEigvalFilePath_ = "";
-  if (pdfParam["XMatrix/save_eigval"].getBoolean()) {
-    this->XEigvalFilePath_ = DfObject::getXEigvalVtrPath();
-  }
-
-  this->debug_save_mat_ = pdfParam["debug/DfXMatrix/save_mat"].getBoolean();
-  this->debug_check_X_ = pdfParam["debug/DfXMatrix/check_X"].getBoolean();
+  this->debugSaveEigval_ = pdfParam["debug/DfXMatrix/save-eigval"].getBoolean();
+  this->debugSaveMatrix_ = pdfParam["debug/DfXMatrix/save-mat"].getBoolean();
+  this->debugCheckX_ = pdfParam["debug/DfXMatrix/check-X"].getBoolean();
 }
 
 DfXMatrix::~DfXMatrix() {}
 
 void DfXMatrix::buildX() {
-  TlSymmetricMatrix S = this->getSpqMatrix<TlSymmetricMatrix>();
-  TlMatrix X;
-  TlMatrix Xinv;
+  TlDenseSymmetricMatrix_Lapack S =
+      this->getSpqMatrix<TlDenseSymmetricMatrix_Lapack>();
+  TlDenseGeneralMatrix_Lapack X;
+  TlDenseGeneralMatrix_Lapack Xinv;
 
-  this->canonicalOrthogonalize(S, &X, &Xinv, this->XEigvalFilePath_);
+  std::string eigvalFilePath = "";
+  if (this->debugSaveEigval_) {
+    eigvalFilePath = DfObject::getXEigvalVtrPath();
+  }
+  this->canonicalOrthogonalize(S, &X, &Xinv, eigvalFilePath);
 
   DfObject::saveXMatrix(X);
   DfObject::saveXInvMatrix(Xinv);
   (*(this->pPdfParam_))["num_of_MOs"] = X.getNumOfCols();
 }
 
-void DfXMatrix::canonicalOrthogonalize(const TlSymmetricMatrix& S, TlMatrix* pX,
-                                       TlMatrix* pXinv,
+void DfXMatrix::canonicalOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
+                                       TlDenseGeneralMatrix_Lapack* pX,
+                                       TlDenseGeneralMatrix_Lapack* pXinv,
                                        const std::string& eigvalFilePath) {
-  this->canonicalOrthogonalizeTmpl<TlSymmetricMatrix, TlMatrix>(S, pX, pXinv,
+  this->canonicalOrthogonalizeTmpl<TlDenseSymmetricMatrix_Lapack,
+                                   TlDenseGeneralMatrix_Lapack>(S, pX, pXinv,
                                                                 eigvalFilePath);
 }
 
-void DfXMatrix::lowdinOrthogonalize(const TlSymmetricMatrix& S, TlMatrix* pX,
-                                    TlMatrix* pXinv,
+void DfXMatrix::lowdinOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
+                                    TlDenseGeneralMatrix_Lapack* pX,
+                                    TlDenseGeneralMatrix_Lapack* pXinv,
                                     const std::string& eigvalFilePath) {
-  this->lowdinOrthogonalizeTmpl<TlSymmetricMatrix, TlMatrix>(S, pX, pXinv,
+  this->lowdinOrthogonalizeTmpl<TlDenseSymmetricMatrix_Lapack,
+                                TlDenseGeneralMatrix_Lapack>(S, pX, pXinv,
                                                              eigvalFilePath);
 }

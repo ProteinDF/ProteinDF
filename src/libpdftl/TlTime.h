@@ -107,8 +107,8 @@ class TlTime {
    */
   static std::string createTimeString(const std::time_t& rTime);
 
-  // std::string getReferenceDate() const;
-  // std::string getReferenceTime() const;
+// std::string getReferenceDate() const;
+// std::string getReferenceTime() const;
 
 #if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SYS_TIME_H)
   static double timeVal2double(struct timeval& tv) {

@@ -64,12 +64,12 @@ void TlRotateLCAO::rotateLCAO_typeP(const TlMatrix& lcao, const TlMatrix& rot,
                                     const int row, const int maxCol,
                                     TlMatrix* ioMatrix) {
   for (int col = 0; col < maxCol; ++col) {
-    TlVector v(3);
+    TlVector_BLAS v(3);
     for (int i = 0; i < 3; ++i) {
       v[i] = lcao.get(row + i, col);
     }
 
-    const TlVector u = v * rot;
+    const TlVector_BLAS u = v * rot;
 
     for (int i = 0; i < 3; ++i) {
       ioMatrix->set(row + i, col, u.get(i));
