@@ -9,8 +9,7 @@ env:
 before_script:
   - docker pull hiracchi/pdf-builder:${PDF_BUILDER_VER}
 script:
-  - docker run -d --name pdf hiracchi/pdf-builder:${PDF_BUILDER_VER}
-  - docker exec -it pdf pdf-checkout.sh --branch ${BRANCH} ProteinDF
+  - docker run -d --name pdf -v "${PWD}:/work/ProteinDF" hiracchi/pdf-builder:${PDF_BUILDER_VER}
   - docker exec -it pdf pdf-checkout.sh --branch ${BRANCH} ProteinDF_bridge
   - docker exec -it pdf pdf-checkout.sh --branch ${BRANCH} ProteinDF_pytools
   - docker exec -it pdf pdf-build.sh --srcdir /work/ProteinDF

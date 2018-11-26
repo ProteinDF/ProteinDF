@@ -66,9 +66,13 @@ void DfXMatrix_Parallel::buildX_ScaLAPACK() {
   TlDenseGeneralMatrix_Scalapack X;
   TlDenseGeneralMatrix_Scalapack Xinv;
 
+  std::string eigvalFilePath = "";
+  if (this->debugSaveEigval_) {
+    eigvalFilePath = DfObject::getXEigvalVtrPath();
+  }
   DfXMatrix::canonicalOrthogonalizeTmpl<TlDenseSymmetricMatrix_Scalapack,
                                         TlDenseGeneralMatrix_Scalapack>(
-      S, &X, &Xinv, this->XEigvalFilePath_);
+      S, &X, &Xinv, eigvalFilePath);
 
   (*(this->pPdfParam_))["num_of_MOs"] = X.getNumOfCols();
 

@@ -118,6 +118,8 @@ void TlDenseMatrixMmapObject::newMmap() {
   this->mmapBegin_ = (char*)mmap(NULL, this->fileSize_, PROT_READ | PROT_WRITE,
                                  MAP_SHARED, fd, 0);  //  MAP_HUGETLB
   this->dataBegin_ = (double*)(this->mmapBegin_ + this->headerSize_);
+  msync(this->mmapBegin_, this->getNumOfElements(), MS_ASYNC);
+  madvise(this->mmapBegin_, this->getNumOfElements(), MADV_WILLNEED);
 
   // we can close the file after mmap() was called.
   close(fd);
@@ -203,6 +205,7 @@ void TlDenseMatrixMmapObject::setRowVector(const index_type row,
   const index_type numOfCols = this->getNumOfCols();
   assert(v.getSize() == numOfCols);
 
+#pragma omp parallel for schedule(runtime)
   for (index_type i = 0; i < numOfCols; ++i) {
       this->set(row, i, v.get(i));
   }
@@ -213,6 +216,7 @@ void TlDenseMatrixMmapObject::setColVector(const index_type col,
   const index_type numOfRows = this->getNumOfRows();
   assert(v.getSize() == numOfRows);
 
+#pragma omp parallel for schedule(runtime)
   for (index_type i = 0; i < numOfRows; ++i) {
     this->set(i, col, v.get(i));
   }
@@ -225,6 +229,7 @@ std::vector<double> TlDenseMatrixMmapObject::getRowVector(
   const index_type numOfCols = this->getNumOfCols();
   std::vector<double> answer(numOfCols);
 
+#pragma omp parallel for schedule(runtime)
   for (index_type i = 0; i < numOfCols; ++i) {
     answer[i] = this->get(row, i);
   }
@@ -239,6 +244,7 @@ std::vector<double> TlDenseMatrixMmapObject::getColVector(
   const index_type numOfRows = this->getNumOfRows();
   std::vector<double> answer(numOfRows);
 
+#pragma omp parallel for schedule(runtime)
   for (index_type i = 0; i < numOfRows; ++i) {
     answer[i] = this->get(i, col);
   }

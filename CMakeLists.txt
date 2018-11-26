@@ -6,7 +6,7 @@ enable_testing()
 # Project Version
 set(PROJECT_VERSION_MAJOR "2018")
 set(PROJECT_VERSION_MINOR "10")
-set(PROJECT_VERSION_REVISION "a")
+set(PROJECT_VERSION_REVISION "0")
 set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_REVISION}")
 
 set(PROJECT_VERSION_BUILD "")
@@ -27,6 +27,7 @@ endif (DEFINED BUILD_GIT_REV)
 OPTION(USE_EIGEN "use EIGEN" on)
 OPTION(USE_VIENNACL "use ViennaCL" off)
 OPTION(USE_HDF5 "use HDF5" off)
+OPTION(USE_LIBCINT "use LIBCINT" off)
 
 # -----------------------------------------------------------------------------
 # Check
@@ -214,18 +215,19 @@ endif (USE_HDF5)
 
 
 # libcint
-if (BLAS_FOUND)
-  find_package(libcint)
-  if (LIBCINT_FOUND)
-    message("LIBCINT information:")
-    message("  LIBCINT_INCLUDE_DIR: ${LIBCINT_INCLUDE_DIR}")
-    message("  LIBCINT_LIBRARIES: ${LIBCINT_LIBRARIES}")
-    set(HAVE_LIBCINT 1) # for config.h
-  else()
-    message("Not Found LIBCINT")
-  endif()
+if (USE_LIBCINT)
+  if (BLAS_FOUND)
+    find_package(libcint)
+    if (LIBCINT_FOUND)
+      message("LIBCINT information:")
+      message("  LIBCINT_INCLUDE_DIR: ${LIBCINT_INCLUDE_DIR}")
+      message("  LIBCINT_LIBRARIES: ${LIBCINT_LIBRARIES}")
+      set(HAVE_LIBCINT 1) # for config.h
+    else()
+      message("Not Found LIBCINT")
+    endif()
+  endif ()
 endif ()
-
 # check threads
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)

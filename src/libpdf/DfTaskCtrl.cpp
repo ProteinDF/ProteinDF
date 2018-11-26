@@ -154,9 +154,10 @@ bool DfTaskCtrl::getQueue(const std::size_t maxIndeces,
   pTasks->clear();
   pTasks->reserve(maxGrainSize);
   std::size_t numOfTasks = 0;
-  for (; currentIndex < maxIndeces; ++currentIndex) {
+  while (currentIndex < maxIndeces) {
     pTasks->push_back(currentIndex);
     ++numOfTasks;
+    ++currentIndex;
 
     if (numOfTasks > maxGrainSize) {
       break;
