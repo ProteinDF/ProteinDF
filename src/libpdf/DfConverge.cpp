@@ -18,9 +18,7 @@
 
 #include "DfConverge.h"
 #include "CnError.h"
-#include "TlSymmetricMatrix.h"
 #include "TlUtils.h"
-#include "TlVector.h"
 
 DfConverge::DfConverge(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), m_nConvergeTarget(RHO_TILDE) {

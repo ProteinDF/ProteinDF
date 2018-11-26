@@ -232,7 +232,7 @@ VectorType DfConverge_Anderson::anderson(const VectorType& X1,
 
   const double theta_rest = 1.0 - theta;
   // U^(n-1) = (1-theta)*X^(n-1) + theta * X^(n-2)
-  // const TlVector U1 = theta_rest * X1 + theta * Y0;
+  // const TlDenseVector_Lapack U1 = theta_rest * X1 + theta * Y0;
   const VectorType U1 = theta_rest * X1 + theta * X2;
 
   // V^(n) = (1-theta)*Y^(n) + theta*Y^(n-1)
@@ -251,14 +251,19 @@ VectorType DfConverge_Anderson::getVectorOfKSMatrix(
   KS.load(this->getFpqMatrixPath(runType, nIteration));
   assert(KS.getNumOfRows() == this->m_nNumOfAOs);
 
-  return KS.getVector();
+  // return KS.getVector();
+  VectorType v;
+  KS.dump(&v);
+
+  return v;
 }
 
 template <class SymmetricMatrixType, class VectorType>
 void DfConverge_Anderson::writeKSMatrixFromVector(
     const DfObject::RUN_TYPE runType, const int nIteration,
     const VectorType& v) const {
-  SymmetricMatrixType KS(v, this->m_nNumOfAOs);
+  SymmetricMatrixType KS(this->m_nNumOfAOs);
+  KS.restore(v);
   KS.save(this->getFpqMatrixPath(runType, nIteration));
 }
 
@@ -269,14 +274,19 @@ VectorType DfConverge_Anderson::getVectorOfPMatrix(
   P.load(this->getPpqMatrixPath(runType, nIteration));
   assert(P.getNumOfRows() == this->m_nNumOfAOs);
 
-  return P.getVector();
+  // return P.getVector();
+  VectorType v;
+  P.dump(&v);
+
+  return v;
 }
 
 template <class SymmetricMatrixType, class VectorType>
 void DfConverge_Anderson::writePMatrixFromVector(
     const DfObject::RUN_TYPE runType, const int nIteration,
     const VectorType& v) const {
-  SymmetricMatrixType P(v, this->m_nNumOfAOs);
+  SymmetricMatrixType P(this->m_nNumOfAOs);
+  P.restore(v);
   P.save(this->getPpqMatrixPath(runType, nIteration));
 }
 

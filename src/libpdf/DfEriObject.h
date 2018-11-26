@@ -26,7 +26,8 @@ class DfEriObject : public DfObject {
   virtual ~DfEriObject();
 
  public:
-  virtual void getJ(const TlSymmetricMatrix& P, TlVector* pRho);
+  virtual void getJ(const TlDenseSymmetricMatrix_Lapack& P,
+                    TlDenseVector_Lapack* pRho);
 };
 
 #endif  // DFERIOBJECT_H

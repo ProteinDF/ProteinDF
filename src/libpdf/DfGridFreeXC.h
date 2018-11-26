@@ -29,8 +29,10 @@
 #include "DfXMatrix.h"
 #include "TlOrbitalInfo.h"
 #include "TlSerializeData.h"
-#include "TlSparseSymmetricMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
+#include "tl_dense_vector_object.h"
+#include "tl_sparse_symmetric_matrix.h"
 
 class DfGridFreeXC : public DfObject {
  public:
@@ -140,8 +142,11 @@ class DfGridFreeXC : public DfObject {
   typedef std::vector<ShellPairArray> ShellPairArrayTable;
 
  protected:
-  // virtual void getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
-  // virtual void getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+  // virtual void getM(const TlDenseSymmetricMatrix_Lapack& P,
+  // TlDenseSymmetricMatrix_Lapack*
+  // pM);
+  // virtual void getM_A(const TlDenseSymmetricMatrix_Lapack& P,
+  // TlDenseSymmetricMatrix_Lapack* pM);
 
   // TlSparseSymmetricMatrix makeSchwarzTable(const TlOrbitalInfoObject&
   // orbitalInfo); void getM_part(const TlOrbitalInfoObject& orbitalInfo,
@@ -168,21 +173,22 @@ class DfGridFreeXC : public DfObject {
   virtual void createEngines();
   virtual void destroyEngines();
   virtual DfTaskCtrl* getDfTaskCtrlObject() const;
-  virtual void finalize(TlSymmetricMatrix* pMtx);
+  virtual void finalize(TlDenseSymmetricMatrix_Lapack* pMtx);
 
-  void get_F_lamda(const TlVector lamda, TlMatrixObject* pF_lamda,
+  void get_F_lamda(const TlDenseVectorObject& lamda, TlMatrixObject* pF_lamda,
                    TlMatrixObject* pE_lamda);
 
-  // void get_F_lamda_GGA(const TlVector lambda_f,
-  //                      const TlVector lambda_g,
-  //                      TlSymmetricMatrix* pE_f,
-  //                      TlSymmetricMatrix* pE_g,
-  //                      TlSymmetricMatrix* pF_f_rho,
-  //                      TlSymmetricMatrix* pF_g_rho,
-  //                      TlSymmetricMatrix* pF_f_gaa,
-  //                      TlSymmetricMatrix* pF_g_gaa);
+  // void get_F_lamda_GGA(const TlDenseVector_Lapack lambda_f,
+  //                      const TlDenseVector_Lapack lambda_g,
+  //                      TlDenseSymmetricMatrix_Lapack* pE_f,
+  //                      TlDenseSymmetricMatrix_Lapack* pE_g,
+  //                      TlDenseSymmetricMatrix_Lapack* pF_f_rho,
+  //                      TlDenseSymmetricMatrix_Lapack* pF_g_rho,
+  //                      TlDenseSymmetricMatrix_Lapack* pF_f_gaa,
+  //                      TlDenseSymmetricMatrix_Lapack* pF_g_gaa);
 
-  void getM_exact(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+  void getM_exact(const TlDenseSymmetricMatrix_Lapack& P,
+                  TlDenseSymmetricMatrix_Lapack* pM);
   ShellArrayTable makeShellArrayTable(const TlOrbitalInfoObject& orbitalInfo);
   ShellPairArrayTable getShellPairArrayTable(
       const ShellArrayTable& shellArrayTable);
@@ -208,22 +214,23 @@ class DfGridFreeXC : public DfObject {
   void buildFxc_GGA_runtype(const RUN_TYPE runType);
 
  public:
-  TlMatrix getForce();
+  TlDenseGeneralMatrix_Lapack getForce();
 
   // virtual void calcCholeskyVectors_onTheFly();
 
  protected:
-  TlMatrix selectGradMat(const TlMatrix& input, const int atomIndex);
+  TlDenseGeneralMatrix_Lapack selectGradMat(
+      const TlDenseGeneralMatrix_Lapack& input, const int atomIndex);
 
   // void calcDiagonals(TlSparseSymmetricMatrix *pSchwartzTable,
   //                    PQ_PairArray *pI2PQ,
-  //                    TlVector *pDiagonals);
+  //                    TlDenseVector_Lapack *pDiagonals);
   // void calcDiagonals_kernel(const std::vector<DfTaskCtrl::Task2>& taskList,
   //                           TlSparseSymmetricMatrix *pSchwartzTable,
   //                           TlSparseSymmetricMatrix *pDiagonalMat,
   //                           PQ_PairArray *pI2PQ);
   // void saveI2PQ(const PQ_PairArray& I2PQ);
-  // void saveL(const TlMatrix& L);
+  // void saveL(const TlDenseGeneralMatrix_Lapack& L);
 
   // std::vector<double>
   // getSuperMatrixElements(const index_type G_row,
@@ -256,14 +263,14 @@ class DfGridFreeXC : public DfObject {
   //             const std::vector<index_type> G_col_list,
   //             const PQ_PairArray& I2PQ);
 
-  // void getM_byCD(TlSymmetricMatrix* pM);
-  // TlSymmetricMatrix getPMatrix();
-  TlMatrix getL();
+  // void getM_byCD(TlDenseSymmetricMatrix_Lapack* pM);
+  // TlDenseSymmetricMatrix_Lapack getPMatrix();
+  TlDenseGeneralMatrix_Lapack getL();
   PQ_PairArray getI2PQ();
   void divideCholeskyBasis(const index_type numOfCBs, index_type* pStart,
                            index_type* pEnd);
-  TlSymmetricMatrix getCholeskyVector(const TlVector& L_col,
-                                      const PQ_PairArray& I2PQ);
+  TlDenseSymmetricMatrix_Lapack getCholeskyVector(
+      const TlDenseVector_Lapack& L_col, const PQ_PairArray& I2PQ);
 
   DfFunctional_GGA* getFunctionalGGA();
 
@@ -341,7 +348,7 @@ void DfGridFreeXC::preprocessBeforeSCF_templ() {
       SymmetricMatrixType Sinv = DfObject::getSpqMatrix<SymmetricMatrixType>();
       Sinv.inverse();
 
-      gfStilde.transpose();
+      gfStilde.transposeInPlace();
       const MatrixType gfOmega = gfStilde * Sinv;
       this->log_.info("build (S~)^-1 matrix: save");
       DfObject::saveGfOmegaMatrix(gfOmega);
@@ -492,19 +499,19 @@ void DfGridFreeXC::buildFxc_LDA_runtype(const RUN_TYPE runType) {
     V = DfObject::getXMatrix<MatrixType>();
   }
   MatrixType tV = V;
-  tV.transpose();
+  tV.transposeInPlace();
 
   SymmetricMatrixType M_tilda = tV * M * V;
 
   // diagonalize M~
   MatrixType U;
-  TlVector lambda;
-  M_tilda.diagonal(&lambda, &U);
+  TlDenseVector_Lapack lambda;
+  M_tilda.eig(&lambda, &U);
 
   // check eigenvalues
   {
     if (lambda.getSize() > 0) {
-      double v = lambda[0];
+      double v = lambda.get(0);
       if (v < 1.0E-16) {
         this->log_.warn(
             TlUtils::format("The eigenvalue of M~ is too small.: % 8.3e", v));
@@ -518,7 +525,7 @@ void DfGridFreeXC::buildFxc_LDA_runtype(const RUN_TYPE runType) {
 
   MatrixType SVU = S * V * U;
   MatrixType UVS = SVU;
-  UVS.transpose();
+  UVS.transposeInPlace();
 
   // save
   {
@@ -625,23 +632,23 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType) {
   this->log_.info(
       TlUtils::format("orthonormal basis = %d", numOfGFOrthNormBasis));
   MatrixType Vt = V;
-  Vt.transpose();
+  Vt.transposeInPlace();
 
   MatrixType St = S;
-  St.transpose();
+  St.transposeInPlace();
 
   SymmetricMatrixType Mtilde = Vt * M * V;
   // Mtilde.save("Mtilde.mat");
 
   // diagonalize M~
-  TlVector lambda;
+  TlDenseVector_Lapack lambda;
   MatrixType U;
-  Mtilde.diagonal(&lambda, &U);
+  Mtilde.eig(&lambda, &U);
 
   // check eigenvalues
   {
     if (lambda.getSize() > 0) {
-      double v = lambda[0];
+      double v = lambda.get(0);
       if (v < 1.0E-16) {
         this->log_.warn(
             TlUtils::format("The eigenvalue of M~ is too small.: % 8.3e", v));
@@ -652,7 +659,7 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType) {
   // U.save("U.mat");
 
   MatrixType Ut = U;
-  Ut.transpose();
+  Ut.transposeInPlace();
   assert(lambda.getSize() == numOfGFOrthNormBasis);
   assert(U.getNumOfRows() == numOfGFOrthNormBasis);
   assert(U.getNumOfCols() == numOfGFOrthNormBasis);
@@ -688,20 +695,20 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType) {
   // DZ.save("DZ.mat");
 
   MatrixType DXt = DX;
-  DXt.transpose();
+  DXt.transposeInPlace();
   MatrixType DYt = DY;
-  DYt.transpose();
+  DYt.transposeInPlace();
   MatrixType DZt = DZ;
-  DZt.transpose();
+  DZt.transposeInPlace();
   const MatrixType RTX = 3.0 * (DXt * Mtilde_13 + Mtilde_13 * DX);
   const MatrixType RTY = 3.0 * (DYt * Mtilde_13 + Mtilde_13 * DY);
   const MatrixType RTZ = 3.0 * (DZt * Mtilde_13 + Mtilde_13 * DZ);
   MatrixType RTXt = RTX;
-  RTXt.transpose();
+  RTXt.transposeInPlace();
   MatrixType RTYt = RTY;
-  RTYt.transpose();
+  RTYt.transposeInPlace();
   MatrixType RTZt = RTZ;
-  RTZt.transpose();
+  RTZt.transposeInPlace();
 
   // RX2 := M[{nabla rho / rho^(-4/3)}^2]
   const SymmetricMatrixType RX2 = RTXt * RTX + RTYt * RTY + RTZt * RTZ;
@@ -714,34 +721,34 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType) {
   const MatrixType RZ2 = RTX * DX + RTY * DY + RTZ * DZ;
   // RZ2.save("RZ2.mat");
   MatrixType RZ2t = RZ2;
-  RZ2t.transpose();
+  RZ2t.transposeInPlace();
 
-  TlVector x2;
+  TlDenseVector_Lapack x2;
   MatrixType Ux2;
-  RX2.diagonal(&x2, &Ux2);
+  RX2.eig(&x2, &Ux2);
   // x2.save("x2.vct");
   // Ux2.save("Ux2.mat");
   MatrixType Ux2t = Ux2;
-  Ux2t.transpose();
+  Ux2t.transposeInPlace();
 
   // ------------------
   assert(lambda.getSize() == numOfGFOrthNormBasis);
-  // TlVector rhoAs(numOfGfOrbs);
-  // TlVector xAs(numOfGfOrbs);
-  TlVector rhoAs(numOfGFOrthNormBasis);
-  TlVector xAs(numOfGFOrthNormBasis);
+  // TlDenseVector_Lapack rhoAs(numOfGfOrbs);
+  // TlDenseVector_Lapack xAs(numOfGfOrbs);
+  TlDenseVector_Lapack rhoAs(numOfGFOrthNormBasis);
+  TlDenseVector_Lapack xAs(numOfGFOrthNormBasis);
   // for (index_type i = 0; i < numOfGfOrbs; ++i) {
   for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
-    const double rho_value = lambda[i];
+    const double rho_value = lambda.get(i);
     const double rho = (rho_value > 1.0E-16) ? rho_value : 0.0;
-    rhoAs[i] = rho;
+    rhoAs.set(i, rho);
 
     const double x2_value = x2.get(i);
     const double x = (x2_value > 1.0E-16) ? std::sqrt(x2_value) : 0.0;
-    xAs[i] = x;
+    xAs.set(i, x);
   }
-  const TlVector rhoBs = rhoAs;
-  const TlVector xBs = xAs;
+  const TlDenseVector_Lapack rhoBs = rhoAs;
+  const TlDenseVector_Lapack xBs = xAs;
 
   DfFunctional_GGA* pFunc = this->getFunctionalGGA();
   // Fxc -------------------------------------------------------------
@@ -751,17 +758,17 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType) {
     DerivativeFunctionalSets dfs =
         pFunc->getDerivativeFunctional_GF(rhoAs, rhoBs, xAs, xBs);
 
-    TlVector rhoAA43(numOfGFOrthNormBasis);
-    TlVector rhoAB43(numOfGFOrthNormBasis);
-    TlVector rhoBB43(numOfGFOrthNormBasis);
+    TlDenseVector_Lapack rhoAA43(numOfGFOrthNormBasis);
+    TlDenseVector_Lapack rhoAB43(numOfGFOrthNormBasis);
+    TlDenseVector_Lapack rhoBB43(numOfGFOrthNormBasis);
     for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
-      const double rhoA = lambda[i];
+      const double rhoA = lambda.get(i);
       if (rhoA > 1.0E-16) {
         const double rhoA43 = std::pow(rhoA, 4.0 / 3.0);
         const double rhoB43 = rhoA43;  // RKS
-        rhoAA43[i] = rhoA43;
-        rhoBB43[i] = rhoB43;
-        rhoAB43[i] = std::sqrt(rhoA43 * rhoB43);
+        rhoAA43.set(i, rhoA43);
+        rhoBB43.set(i, rhoB43);
+        rhoAB43.set(i, std::sqrt(rhoA43 * rhoB43));
       }
     }
 
@@ -780,17 +787,17 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType) {
     const int numOfTerms = pFunc->getNumOfDerivativeFunctionalTerms();
     for (int term = 0; term < numOfTerms; ++term) {
       for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
-        diag_RAR(i, i) = dfs.rFrRhoA_R(term, i);
-        diag_RAX(i, i) = dfs.rFrRhoA_X(term, i);
-        diag_RBR(i, i) = dfs.rFrRhoB_R(term, i);
-        diag_RBX(i, i) = dfs.rFrRhoB_X(term, i);
+        diag_RAR.set(i, i, dfs.rFrRhoA_R.get(term, i));
+        diag_RAX.set(i, i, dfs.rFrRhoA_X.get(term, i));
+        diag_RBR.set(i, i, dfs.rFrRhoB_R.get(term, i));
+        diag_RBX.set(i, i, dfs.rFrRhoB_X.get(term, i));
 
-        diag_GAAR(i, i) = dfs.rFrGAA_R(term, i) * rhoAA43[i];
-        diag_GAAX(i, i) = dfs.rFrGAA_X(term, i);
-        diag_GABR(i, i) = dfs.rFrGAB_R(term, i) * rhoAB43[i];
-        diag_GABX(i, i) = dfs.rFrGAB_X(term, i);
-        diag_GBBR(i, i) = dfs.rFrGBB_R(term, i) * rhoBB43[i];
-        diag_GBBX(i, i) = dfs.rFrGBB_X(term, i);
+        diag_GAAR.set(i, i, dfs.rFrGAA_R.get(term, i) * rhoAA43.get(i));
+        diag_GAAX.set(i, i, dfs.rFrGAA_X.get(term, i));
+        diag_GABR.set(i, i, dfs.rFrGAB_R.get(term, i) * rhoAB43.get(i));
+        diag_GABX.set(i, i, dfs.rFrGAB_X.get(term, i));
+        diag_GBBR.set(i, i, dfs.rFrGBB_R.get(term, i) * rhoBB43.get(i));
+        diag_GBBX.set(i, i, dfs.rFrGBB_X.get(term, i));
       }
 
       // alpha spin ------------
@@ -825,14 +832,14 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType) {
       {
         MatrixType FxcA_term2 = Fxc_GAA + Fxc_GAB;
         MatrixType FxcA_term2t = FxcA_term2;
-        FxcA_term2t.transpose();
+        FxcA_term2t.transposeInPlace();
         MatrixType FxcA_tilde_term2 = FxcA_term2t * RZ2 + RZ2t * FxcA_term2;
         FxcA_tilde += FxcA_tilde_term2;
       }
       {
         MatrixType FxcB_term2 = Fxc_GBB + Fxc_GAB;
         MatrixType FxcB_term2t = FxcB_term2;
-        FxcB_term2t.transpose();
+        FxcB_term2t.transposeInPlace();
         MatrixType FxcB_tilde_term2 = FxcB_term2t * RZ2 + RZ2t * FxcB_term2;
         FxcB_tilde += FxcB_tilde_term2;
       }
@@ -861,11 +868,11 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType) {
       const int numOfTerms = pFunc->getNumOfFunctionalTerms();
       for (int term = 0; term < numOfTerms; ++term) {
         for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
-          const double rho = rhoAs[i] + rhoBs[i];
+          const double rho = rhoAs.get(i) + rhoBs.get(i);
           if (rho > 1.0E-16) {
             const double inv_rho = 1.0 / rho;
-            diag_AR(i, i) = fs.FA_termR(term, i) * inv_rho;
-            diag_AX(i, i) = fs.FA_termX(term, i);
+            diag_AR.set(i, i, fs.FA_termR.get(term, i) * inv_rho);
+            diag_AX.set(i, i, fs.FA_termX.get(term, i));
             // diag_BR(i, i) = fs.FB_termR(term, i) * inv_rho;
             // diag_BX(i, i) = fs.FB_termX(term, i);
           }

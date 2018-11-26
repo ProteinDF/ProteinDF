@@ -20,10 +20,12 @@
 #include "config.h"  // this file created by autotools
 #endif               // HAVE_CONFIG_H
 
+#include "TlCommunicate.h"
 #include "DfDmatrix_Parallel.h"
 #include "DfInitialGuessHarris_Parallel.h"
 #include "DfInitialGuessHuckel_Parallel.h"
 #include "DfInitialGuess_Parallel.h"
+#include "tl_dense_general_matrix_scalapack.h"
 
 DfInitialGuess_Parallel::DfInitialGuess_Parallel(TlSerializeData* pPdfParam)
     : DfInitialGuess(pPdfParam) {}
@@ -47,15 +49,15 @@ void DfInitialGuess_Parallel::createInitialGuessUsingLCAO(
 void DfInitialGuess_Parallel::createInitialGuessUsingLCAO_onScaLAPACK(
     const RUN_TYPE runType) {
   // read guess lcao (all proc.)
-  const TlDistributeMatrix LCAO = this->getLCAO_onScaLAPACK(runType);
+  const TlDenseGeneralMatrix_Scalapack LCAO = this->getLCAO_onScaLAPACK(runType);
   this->saveC0(runType, LCAO);
 
   // read guess occupation
-  const TlVector aOccupation = this->getOccupation(runType);
+  const TlDenseVector_Lapack aOccupation = this->getOccupation(runType);
   this->saveOccupation(runType, aOccupation);
 
   // output guess lcao in orthonormal basis to a files in fl_Work directory
-  this->buildCprime0<TlDistributeMatrix>(runType, LCAO);
+  this->buildCprime0<TlDenseGeneralMatrix_Scalapack>(runType, LCAO);
 
   this->makeDensityMatrix();
 }
@@ -65,11 +67,13 @@ void DfInitialGuess_Parallel::createInitialGuessUsingLCAO_onLAPACK(
   TlCommunicate& rComm = TlCommunicate::getInstance();
   if (rComm.isMaster() == true) {
     // read guess lcao
-    const TlMatrix LCAO = DfInitialGuess::getLCAO_LAPACK(runType);
+    const TlDenseGeneralMatrix_Lapack LCAO =
+        DfInitialGuess::getLCAO_LAPACK(runType);
     this->saveC0(runType, LCAO);
 
     // read guess occupation
-    const TlVector aOccupation = DfInitialGuess::getOccupation(runType);
+    const TlDenseVector_Lapack aOccupation =
+        DfInitialGuess::getOccupation(runType);
     DfInitialGuess::saveOccupation(runType, aOccupation);
 
     {
@@ -80,12 +84,12 @@ void DfInitialGuess_Parallel::createInitialGuessUsingLCAO_onLAPACK(
 
       // 密度行列の作成
       DfDmatrix dfDmatrix(&tmpParam);
-      dfDmatrix.DfDmatrixMain();  // RKS only?
+      dfDmatrix.run();  // RKS only?
     }
   }
 }
 
-TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK(
+TlDenseGeneralMatrix_Scalapack DfInitialGuess_Parallel::getLCAO_onScaLAPACK(
     const RUN_TYPE runType) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
 
@@ -98,7 +102,7 @@ TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK(
   }
   rComm.broadcast(isBinMode);
 
-  TlDistributeMatrix lcaoMatrix;
+  TlDenseGeneralMatrix_Scalapack lcaoMatrix;
   if (isBinMode == 0) {
     lcaoMatrix = this->getLCAO_onScaLAPACK_txt(runType);
   } else if (isBinMode == 1) {
@@ -110,10 +114,10 @@ TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK(
   return lcaoMatrix;
 }
 
-TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK_txt(
+TlDenseGeneralMatrix_Scalapack DfInitialGuess_Parallel::getLCAO_onScaLAPACK_txt(
     const RUN_TYPE runType) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
-  TlDistributeMatrix lcaoMatrix(this->m_nNumOfAOs, this->m_nNumOfMOs);
+  TlDenseGeneralMatrix_Scalapack lcaoMatrix(this->m_nNumOfAOs, this->m_nNumOfMOs);
 
   const int numOfRows = this->m_nNumOfAOs;
   const int numOfCols = this->m_nNumOfMOs;
@@ -179,13 +183,9 @@ TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK_txt(
   return lcaoMatrix;
 }
 
-TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK_bin(
+TlDenseGeneralMatrix_Scalapack DfInitialGuess_Parallel::getLCAO_onScaLAPACK_bin(
     const RUN_TYPE runType) {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  TlDistributeMatrix lcaoMatrix(this->m_nNumOfAOs, this->m_nNumOfMOs);
-
-  const int numOfRows = this->m_nNumOfAOs;
-  const int numOfCols = this->m_nNumOfMOs;
+  TlDenseGeneralMatrix_Scalapack lcaoMatrix(this->m_nNumOfAOs, this->m_nNumOfMOs);
 
   lcaoMatrix.load(DfInitialGuess::getLcaoPath_bin(runType));
   if (lcaoMatrix.getNumOfRows() != this->m_nNumOfAOs) {
@@ -196,28 +196,30 @@ TlDistributeMatrix DfInitialGuess_Parallel::getLCAO_onScaLAPACK_bin(
   return lcaoMatrix;
 }
 
-TlVector DfInitialGuess_Parallel::createOccupation(const RUN_TYPE runType) {
-  TlVector answer;
+TlDenseVector_Lapack DfInitialGuess_Parallel::createOccupation(
+    const RUN_TYPE runType) {
+  TlDenseVector_Lapack answer;
   TlCommunicate& rComm = TlCommunicate::getInstance();
   if (rComm.isMaster() == true) {
     answer = DfInitialGuess::createOccupation(runType);
   }
-  rComm.broadcast(answer);
+  rComm.broadcast(&answer);
   return answer;
 }
 
-TlVector DfInitialGuess_Parallel::getOccupation(const RUN_TYPE runType) {
-  TlVector v;
+TlDenseVector_Lapack DfInitialGuess_Parallel::getOccupation(
+    const RUN_TYPE runType) {
+  TlDenseVector_Lapack v;
   TlCommunicate& rComm = TlCommunicate::getInstance();
   if (rComm.isMaster() == true) {
     v = DfInitialGuess::getOccupation(runType);
   }
-  rComm.broadcast(v);
+  rComm.broadcast(&v);
   return v;
 }
 
-void DfInitialGuess_Parallel::saveOccupation(const RUN_TYPE runType,
-                                             const TlVector& rOccupation) {
+void DfInitialGuess_Parallel::saveOccupation(
+    const RUN_TYPE runType, const TlDenseVector_Lapack& rOccupation) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
   if (rComm.isMaster() == true) {
     const std::string sOccFileName = this->getOccupationPath(runType);

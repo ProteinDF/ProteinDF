@@ -21,7 +21,8 @@
 #endif               // HAVE_CONFIG_H
 
 #include "DfSummary_Parallel.h"
-#include "TlDistributeMatrix.h"
+#include "tl_dense_general_matrix_scalapack.h"
+#include "TlCommunicate.h"
 
 DfSummary_Parallel::DfSummary_Parallel(TlSerializeData* pPdfParam)
     : DfSummary(pPdfParam) {}
@@ -58,5 +59,5 @@ void DfSummary_Parallel::exec_LAPACK() {
 }
 
 void DfSummary_Parallel::exec_ScaLAPACK() {
-  DfSummary::exec<TlDistributeMatrix>();
+  DfSummary::exec<TlDenseGeneralMatrix_Scalapack>();
 }

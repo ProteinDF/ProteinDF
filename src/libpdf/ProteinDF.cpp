@@ -122,13 +122,17 @@ void ProteinDF::exec() {
 }
 
 void ProteinDF::startlogo() {
+  const std::string version = TlUtils::format("%s (serial)", PROJECT_VERSION);
+
 #ifdef _OPENMP
   const std::string ompInfo =
       TlUtils::format(" OpenMP threads: %d\n", omp_get_max_threads());
-  this->startlogo("serial", ompInfo);
+  this->startlogo(version, ompInfo);
 #else
-  this->startlogo("serial");
+  this->startlogo(version);
 #endif  // _OPENMP
+
+  this->checkEnvironment();
 }
 
 void ProteinDF::startlogo(const std::string& version, const std::string& info) {
@@ -151,6 +155,13 @@ void ProteinDF::startlogo(const std::string& version, const std::string& info) {
   this->log_.info(
       "***********************************************************************"
       "*");
+}
+
+void ProteinDF::checkEnvironment() {
+#ifndef NDEBUG
+    this->log_.warn("This package was built on debug environment.");
+    this->log_.warn("Please use the release version for productive use.");
+#endif  // NDEBUG
 }
 
 void ProteinDF::endlogo() {

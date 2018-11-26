@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.5)
+# cmake_minimum_required(VERSION 3.5)
+add_subdirectory(unit_test)
 
 set(DATA_FILES
   basis2
@@ -8,4 +9,3 @@ set(DATA_FILES
   )
 
 install(FILES ${DATA_FILES} DESTINATION data)
-

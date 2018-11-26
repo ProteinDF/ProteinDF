@@ -38,7 +38,7 @@ void showHelp(const std::string& progname) {
 
 int main(int argc, char* argv[]) {
   TlGetopt opt(argc, argv, "hv");
-  const bool isVerbose = (opt["v"] == "defined");
+  // const bool isVerbose = (opt["v"] == "defined");
   const bool isShowHelp = (opt["h"] == "defined");
 
   if (isShowHelp) {

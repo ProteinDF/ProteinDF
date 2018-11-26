@@ -20,6 +20,7 @@
 #define DFPRESCF_PARALLEL_H
 
 #include "DfPreScf.h"
+#include "tl_dense_general_matrix_scalapack.h"
 
 /// DfScfクラスの前処理を行うクラス
 class DfPreScf_Parallel : public DfPreScf {
@@ -35,7 +36,7 @@ class DfPreScf_Parallel : public DfPreScf {
   void createInitialGuessUsingLCAO_onScaLAPACK(const RUN_TYPE runType);
   void createInitialGuessUsingLCAO_onDisk(const RUN_TYPE runType);
 
-  TlDistributeMatrix getLCAO_onScaLAPACK(const RUN_TYPE runType);
+  TlDenseGeneralMatrix_Scalapack getLCAO_onScaLAPACK(const RUN_TYPE runType);
 
   virtual void logger(const std::string& str) const;
 };

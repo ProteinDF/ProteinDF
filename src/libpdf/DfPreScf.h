@@ -21,10 +21,10 @@
 
 #include <string>
 #include <vector>
+#include <cassert>
 
 #include "CnError.h"
 #include "DfObject.h"
-#include "TlMatrix.h"
 
 /// DfScfクラスの前処理を行うクラス
 class DfPreScf : public DfObject {
@@ -49,10 +49,11 @@ class DfPreScf : public DfObject {
   void saveC0(const RUN_TYPE runType, const MatrixType& C0);
 
   /// 占有軌道情報を取得する
-  virtual TlVector getOccupation(const RUN_TYPE runType);
+  virtual TlDenseVector_Lapack getOccupation(const RUN_TYPE runType);
 
   /// 占有軌道情報を保存する
-  void saveOccupation(const RUN_TYPE runType, const TlVector& rOccupation);
+  void saveOccupation(const RUN_TYPE runType,
+                      const TlDenseVector_Lapack& rOccupation);
 
   /// Cprime0 を作成し、保存する
   template <typename MatrixType>
@@ -96,7 +97,9 @@ MatrixType DfPreScf::getLCAO(const RUN_TYPE runType) {
     const int excessCols = col_dimension - this->m_nNumOfMOs;
     for (int i = 0; i < maxRows; ++i) {
       for (int j = 0; j < maxCols; ++j) {
-        fi >> lcaoMatrix(i, j);
+        double v;
+        fi >> v;
+        lcaoMatrix.set(i, j, v);
       }
 
       for (int j = 0; j < excessCols; ++j) {

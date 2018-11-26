@@ -19,6 +19,8 @@
 #ifndef DFCONVERGE_DAMPING
 #define DFCONVERGE_DAMPING
 
+#include <cassert>
+
 #include "DfConverge.h"
 
 class DfConverge_Damping : public DfConverge {
@@ -109,9 +111,12 @@ void DfConverge_Damping::convergePMatrix(const DfObject::RUN_TYPE runType) {
     this->log_.info(" damping to density matrix");
 
     // Fpq damping
+    this->log_.info(" load1");
     SymmetricMatrixType currPpq;
     currPpq =
         DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration - 1);
+
+    this->log_.info(" load2");
     SymmetricMatrixType prevPpq;
     prevPpq =
         DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration - 2);

@@ -21,9 +21,9 @@
 
 #include <cstdlib>
 #include "DfCD.h"
-#include "TlColVectorMatrix.h"
-#include "TlDistributeSymmetricMatrix.h"
-#include "TlRowVectorMatrix.h"
+#include "tl_dense_general_matrix_arrays_coloriented.h"
+#include "tl_dense_general_matrix_arrays_roworiented.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
 
 class DfCD_Parallel : public DfCD {
  public:
@@ -35,98 +35,107 @@ class DfCD_Parallel : public DfCD {
   virtual void calcCholeskyVectorsForK();
   virtual void calcCholeskyVectorsForGridFree();
 
-  virtual void getJ(TlSymmetricMatrix* pJ);
-  void getJ_D(TlDistributeSymmetricMatrix* pJ);
+  virtual void getJ(TlDenseSymmetricMatrix_Lapack* pJ);
+  void getJ_D(TlDenseSymmetricMatrix_Scalapack* pJ);
 
-  virtual void getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+  virtual void getM(const TlDenseSymmetricMatrix_Lapack& P,
+                    TlDenseSymmetricMatrix_Lapack* pM);
 
-  void getM(const TlDistributeSymmetricMatrix& P,
-            TlDistributeSymmetricMatrix* pM);
+  void getM(const TlDenseSymmetricMatrix_Scalapack& P,
+            TlDenseSymmetricMatrix_Scalapack* pM);
 
-  // void getJ_distributed(TlDistributeSymmetricMatrix *pJ);
+  // void getJ_distributed(TlDenseSymmetricMatrix_Scalapack *pJ);
   // void getK_distributed(const RUN_TYPE runType,
-  //                       TlDistributeSymmetricMatrix *pK);
+  //                       TlDenseSymmetricMatrix_Scalapack *pK);
 
  protected:
   // void makeSuperMatrix_distribute();
-  // TlDistributeSymmetricMatrix
+  // TlDenseSymmetricMatrix_Scalapack
   // getGMatrix_distribute(const TlOrbitalInfoObject& orbitalInfo,
   //                       const TlSparseSymmetricMatrix& schwarzTable,
   //                       const index_type numOfItilde,
   //                       const PQ2I_Type& PQ2I);
-  // void makeL(const TlDistributeSymmetricMatrix& G);
+  // void makeL(const TlDenseSymmetricMatrix_Scalapack& G);
 
   virtual DfTaskCtrl* getDfTaskCtrlObject() const;
-  virtual void finalize(TlSymmetricMatrix* pMat);
+  virtual void finalize(TlDenseSymmetricMatrix_Lapack* pMat);
   virtual void finalize(TlSparseSymmetricMatrix* pMat);
   virtual void finalize_I2PQ(PQ_PairArray* pI2PQ);
 
   virtual void saveI2PQ(const PQ_PairArray& I2PQ, const std::string& filepath);
   virtual PQ_PairArray getI2PQ(const std::string& filepath);
 
-  // virtual void saveLjk(const TlMatrix& L);
-  // virtual TlMatrix getLjk();
+  // virtual void saveLjk(const TlDenseGeneralMatrix_Lapack& L);
+  // virtual TlDenseGeneralMatrix_Lapack getLjk();
 
-  // virtual TlSymmetricMatrix getPMatrix();
+  // virtual TlDenseSymmetricMatrix_Lapack getPMatrix();
 
   virtual void divideCholeskyBasis(const index_type numOfCBs,
                                    index_type* pStart, index_type* pEnd);
 
-  TlDistributeSymmetricMatrix getCholeskyVector_distribute(
-      const TlVector& L_col, const PQ_PairArray& I2PQ);
-  TlDistributeSymmetricMatrix getCholeskyVectorA_distribute(
+  TlDenseSymmetricMatrix_Scalapack getCholeskyVector_distribute(
+      const TlDenseVector_Lapack& L_col, const PQ_PairArray& I2PQ);
+  TlDenseSymmetricMatrix_Scalapack getCholeskyVectorA_distribute(
       const TlOrbitalInfoObject& orbInfo_p,
-      const TlOrbitalInfoObject& orbInfo_q, const TlVector& L_col,
+      const TlOrbitalInfoObject& orbInfo_q, const TlDenseVector_Lapack& L_col,
       const PQ_PairArray& I2PQ);
 
   // -------------------------------------------------------------------------
  protected:
-  void getJ_cvm(TlSymmetricMatrix* pJ);
-  void getJ_mmap_DC(TlSymmetricMatrix* pJ);
+  void getJ_cvm(TlDenseSymmetricMatrix_Lapack* pJ);
+  void getJ_mmap_DC(TlDenseSymmetricMatrix_Lapack* pJ);
 
  protected:
-  virtual TlSymmetricMatrix getPMatrix(const RUN_TYPE runType, int itr);
+  virtual TlDenseSymmetricMatrix_Lapack getPMatrix(const RUN_TYPE runType,
+                                                   int itr);
 
  protected:
-  virtual void getK_S_woCD(const RUN_TYPE runType, TlSymmetricMatrix* pK);
+  virtual void getK_S_woCD(const RUN_TYPE runType,
+                           TlDenseSymmetricMatrix_Lapack* pK);
   virtual void getK_S_woCD_mmap_DC(const RUN_TYPE runType,
-                                   TlSymmetricMatrix* pK);
+                                   TlDenseSymmetricMatrix_Lapack* pK);
 
-  virtual void getK_S_fast(const RUN_TYPE runType, TlSymmetricMatrix* pK);
+  virtual void getK_byLk(const RUN_TYPE runType,
+                           TlDenseSymmetricMatrix_Lapack* pK);
 
  public:
-  void getK_D(const RUN_TYPE runType, TlDistributeSymmetricMatrix* pK);
+  void getK_D(const RUN_TYPE runType);
 
  protected:
-  void getK_S_woCD_D(const RUN_TYPE runType, TlDistributeSymmetricMatrix* pK);
+  void getK_S_woCD_D(const RUN_TYPE runType,
+                     TlDenseSymmetricMatrix_Scalapack* pK);
 
  protected:
-  TlVector getScreenedDensityMatrixD(const PQ_PairArray& I2PQ);
-  void expandJMatrixD(const TlVector& vJ, const PQ_PairArray& I2PQ,
-                      TlDistributeSymmetricMatrix* pJ);
+  TlDenseVector_Lapack getScreenedDensityMatrixD(const PQ_PairArray& I2PQ);
+  void expandJMatrixD(const TlDenseVector_Lapack& vJ, const PQ_PairArray& I2PQ,
+                      TlDenseSymmetricMatrix_Scalapack* pJ);
 
  protected:
-  virtual void getM_S(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
-  virtual void getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+  virtual void getM_S(const TlDenseSymmetricMatrix_Lapack& P,
+                      TlDenseSymmetricMatrix_Lapack* pM);
+  virtual void getM_A(const TlDenseSymmetricMatrix_Lapack& P,
+                      TlDenseSymmetricMatrix_Lapack* pM);
 
-  void getM_S(const TlDistributeSymmetricMatrix& P,
-              TlDistributeSymmetricMatrix* pM);
-  void getM_A(const TlDistributeSymmetricMatrix& P,
-              TlDistributeSymmetricMatrix* pM);
+  void getM_S(const TlDenseSymmetricMatrix_Scalapack& P,
+              TlDenseSymmetricMatrix_Scalapack* pM);
+  void getM_A(const TlDenseSymmetricMatrix_Scalapack& P,
+              TlDenseSymmetricMatrix_Scalapack* pM);
 
  protected:
-  virtual TlRowVectorMatrix calcCholeskyVectorsOnTheFlyS_new(
+  virtual TlDenseGeneralMatrix_arrays_RowOriented
+  calcCholeskyVectorsOnTheFlyS_new(
       const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path,
       const double threshold,
       void (DfCD_Parallel::*calcDiagonalsFunc)(const TlOrbitalInfoObject&,
-                                               PQ_PairArray*, TlVector*),
+                                               PQ_PairArray*,
+                                               std::vector<double>*),
       void (DfCD_Parallel::*getSuperMatrixElements)(
           const TlOrbitalInfoObject&, const index_type,
           const std::vector<index_type>&, const PQ_PairArray&,
           std::vector<double>*));
 
  protected:
-  virtual TlRowVectorMatrix calcCholeskyVectorsOnTheFlyA(
+  virtual TlDenseGeneralMatrix_arrays_RowOriented calcCholeskyVectorsOnTheFlyA(
       const TlOrbitalInfoObject& orbInfo_p,
       const TlOrbitalInfoObject& orbInfo_q, const std::string& I2PQ_path);
 
@@ -149,15 +158,20 @@ class DfCD_Parallel : public DfCD {
       std::vector<double>* pSuperMatrixElements);
 
   // save L matrix ---------------------------------------------------
-  void saveL(const TlRowVectorMatrix& L, const std::string& path);
+  void saveL(const TlDenseGeneralMatrix_arrays_RowOriented& L,
+             const std::string& path);
 
-  TlColVectorMatrix transLMatrix(const TlRowVectorMatrix& rowVectorMatrix);
-  void transLMatrix2mmap(const TlRowVectorMatrix& rowVectorMatrix,
-                         const std::string& savePath);
+  TlDenseGeneralMatrix_arrays_ColOriented transLMatrix(
+      const TlDenseGeneralMatrix_arrays_RowOriented& rowVectorMatrix);
+  void transLMatrix2mmap(
+      const TlDenseGeneralMatrix_arrays_RowOriented& rowVectorMatrix,
+      const std::string& savePath);
 
   // for debug
-  TlMatrix mergeL(const TlRowVectorMatrix& L);
-  TlMatrix mergeL(const TlColVectorMatrix& L);
+  TlDenseGeneralMatrix_Lapack mergeL(
+      const TlDenseGeneralMatrix_arrays_RowOriented& L);
+  TlDenseGeneralMatrix_Lapack mergeL(
+      const TlDenseGeneralMatrix_arrays_ColOriented& L);
 
  private:
   bool isDebugSaveL_;

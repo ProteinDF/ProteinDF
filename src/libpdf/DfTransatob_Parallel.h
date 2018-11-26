@@ -26,12 +26,12 @@ class DfTransatob_Parallel : public DfTransatob {
   DfTransatob_Parallel(TlSerializeData* pPdfParam);
   virtual ~DfTransatob_Parallel();
 
-  virtual void DfTrsatobMain();
-  virtual void DfTrsatobQclo(const std::string& fragname, int norbcut);
+  virtual void run();
+  virtual void runQclo(const std::string& fragname, int norbcut);
 
  protected:
-  void DfTrsatobMain_SCALAPACK();
-  void DfTrsatobQclo_SCALAPACK(const std::string& fragname, int norbcut);
+  void run_Scalapack();
+  void runQclo_Scalapack(const std::string& fragname, int norbcut);
 
   virtual void logger(const std::string& str) const;
 };

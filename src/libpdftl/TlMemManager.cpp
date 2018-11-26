@@ -199,7 +199,11 @@ void TlMemManager::memMap() {
   {
     lseek(fd, this->mmapLength_, SEEK_SET);
     const char c = '\0';
-    write(fd, &c, sizeof(char));
+    const int retval = write(fd, &c, sizeof(char));
+    if (retval == -1) {
+      this->log_.critical(TlUtils::format("cannot write: %s", strerror(errno)));
+      abort();
+    }
   }
 
   // message

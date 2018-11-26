@@ -22,11 +22,11 @@
 #include <string>
 #include "DfObject.h"
 #include "TlCombineDensityMatrix.h"
-#include "TlMatrix.h"
 #include "TlMsgPack.h"
 #include "TlOrbitalInfo.h"
-#include "TlSymmetricMatrix.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 /// Harrisの汎関数による初期値を作成する
 class DfInitialGuessHarris : public DfObject {
@@ -94,8 +94,10 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
     TlOrbitalInfo orbInfo_harrisDB(coord,
                                    this->pdfParam_harrisDB_["basis_set"]);
 
-    const TlSymmetricMatrix P_DB(
+    TlDenseSymmetricMatrix_Lapack P_DB;
+    P_DB.loadSerializeData(
         this->pdfParam_harrisDB_["density_matrix"][atomSymbol]);
+
     combineDensMat.make(orbInfo_harrisDB, P_DB, orbInfo_low, &P_low);
   }
   if (this->debug_) {
@@ -108,20 +110,31 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
     DfOverlapType ovp(this->pPdfParam_);
     MatrixType S_tilde;
     ovp.getTransMat(orbInfo_low, orbInfo_high, &S_tilde);
-    // S_tilde.save("S_tilde.mat");
+    if ((*this->pPdfParam_)["debug/DfInitialGuessHarris/save_S_tilde"]
+            .getBoolean()) {
+      S_tilde.save("S_tilde.mat");
+    }
 
     SymmetricMatrixType S_inv;
     S_inv.load(this->getSpqMatrixPath());
-    S_inv.inverse();
+    S_inv = S_inv.inverse();
+    if ((*this->pPdfParam_)["debug/DfInitialGuessHarris/save_S_inv"]
+            .getBoolean()) {
+      S_inv.save("Sinv.mat");
+    }
 
     MatrixType omega = S_tilde * S_inv;
     MatrixType omega_t = omega;
-    omega_t.transpose();
+    omega_t.transposeInPlace();
 
     if (this->debug_) {
       omega.save("omega.mtx");
     }
     P_high = omega_t * P_low * omega;
+  }
+  if ((*this->pPdfParam_)["debug/DfInitialGuessHarris/save_P_high"]
+          .getBoolean()) {
+    P_high.save("P_high.mat");
   }
 
   // normalize
@@ -134,7 +147,9 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
       const double numOfElectrons = dfPop.getSumOfElectrons(P_high);
       const double coef = this->m_nNumOfElectrons / numOfElectrons;
 
-      this->savePpqMatrix(RUN_RKS, 0, coef * P_high);
+      P_high *= coef;
+      this->savePpqMatrix(RUN_RKS, 0, P_high);
+      this->saveSpinDensityMatrix(RUN_RKS, 0, 0.5 * P_high);
     } break;
 
     case METHOD_UKS: {
@@ -145,8 +160,12 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
           this->m_nNumOfAlphaElectrons / numOfAlphaElectrons;
       const double coef_beta = this->m_nNumOfBetaElectrons / numOfBetaElectrons;
 
-      this->savePpqMatrix(RUN_UKS_ALPHA, 0, coef_alpha * P_high);
-      this->savePpqMatrix(RUN_UKS_BETA, 0, coef_beta * P_high);
+      const SymmetricMatrixType PA = coef_alpha * P_high;
+      const SymmetricMatrixType PB = coef_beta * P_high;
+      this->savePpqMatrix(RUN_UKS_ALPHA, 0, PA);
+      this->savePpqMatrix(RUN_UKS_BETA, 0, PB);
+      this->saveSpinDensityMatrix(RUN_UKS_ALPHA, 0, PA);
+      this->saveSpinDensityMatrix(RUN_UKS_BETA, 0, PB);
     } break;
 
     case METHOD_ROKS: {
@@ -158,8 +177,12 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
       const double coef_open =
           this->numOfOpenShellElectrons_ / numOfOpenElectrons;
 
-      this->savePpqMatrix(RUN_ROKS_CLOSED, 0, coef_close * P_high);
-      this->savePpqMatrix(RUN_ROKS_OPEN, 0, coef_open * P_high);
+      const SymmetricMatrixType PC = coef_close * P_high;
+      const SymmetricMatrixType PO = coef_open * P_high;
+      this->savePpqMatrix(RUN_ROKS_CLOSED, 0, PC);
+      this->savePpqMatrix(RUN_ROKS_OPEN, 0, PO);
+      this->saveSpinDensityMatrix(RUN_ROKS_ALPHA, 0, PC + PO);
+      this->saveSpinDensityMatrix(RUN_ROKS_BETA, 0, PC);
     } break;
 
     default:

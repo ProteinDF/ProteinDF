@@ -19,14 +19,14 @@
 #ifndef TLMATRIXCACHE_H
 #define TLMATRIXCACHE_H
 
+#include <iostream>
 #include <list>
 #include <map>
 #include <string>
-#include <iostream>
 #include "TlFile.h"
 #include "TlLogging.h"
-#include "TlMatrixObject.h"
 #include "TlUtils.h"
+#include "tl_matrix_object.h"
 
 class TlMatrixCache {
  public:
@@ -96,7 +96,10 @@ class TlMatrixCache {
    public:
     std::string getPath() const { return this->path_; }
 
-    std::size_t getSize() const { return this->pMatrix_->getMemSize(); }
+    std::size_t getSize() const {
+      return this->pMatrix_->getNumOfRows() * this->pMatrix_->getNumOfCols() *
+             sizeof(double);
+    }
 
     TlMatrixObject const* getMatPtr() const { return this->pMatrix_; }
 
@@ -159,7 +162,8 @@ template <typename MatrixType>
 bool TlMatrixCache::set(const std::string& path, const MatrixType& matrix,
                         bool needSave) {
   bool answer = false;
-  const std::size_t bufSize = matrix.getMemSize();
+  // const std::size_t bufSize = matrix.getMemSize();
+  const std::size_t bufSize = matrix.getNumOfRows() * matrix.getNumOfCols() * sizeof(double);
   this->cleanOut(bufSize);
 
   ++(this->stats_[path].setTotal);

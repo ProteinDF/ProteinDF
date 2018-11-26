@@ -31,10 +31,10 @@ class DfGenerateGrid_Parallel : public DfGenerateGrid {
 
   virtual void makeTable();
 
-  virtual TlMatrix getOMatrix();
+  virtual TlDenseGeneralMatrix_Lapack getOMatrix();
 
-  virtual void generateGrid(const TlMatrix& O);
-  void generateGrid_DC(const TlMatrix& O);
+  virtual void generateGrid(const TlDenseGeneralMatrix_Lapack& O);
+  void generateGrid_DC(const TlDenseGeneralMatrix_Lapack& O);
 
   // TODO: implement master-slave model
   // void generateGrid_MS();

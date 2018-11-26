@@ -19,9 +19,13 @@
 #ifndef DFXMATRIX_H
 #define DFXMATRIX_H
 
+#include <cassert>
+#include <cmath>
+
 #include "DfObject.h"
-#include "TlMatrix.h"
-#include "TlVector.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 /// X行列を求めるクラス
 /// S行列から、固有値, 固有ベクトルを求め、X 行列および−1 X 行列の計算を行い、
@@ -34,12 +38,14 @@ class DfXMatrix : public DfObject {
  public:
   virtual void buildX();
 
-  virtual void canonicalOrthogonalize(const TlSymmetricMatrix& S, TlMatrix* pX,
-                                      TlMatrix* pXinv,
+  virtual void canonicalOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
+                                      TlDenseGeneralMatrix_Lapack* pX,
+                                      TlDenseGeneralMatrix_Lapack* pXinv,
                                       const std::string& eigvalFilePath = "");
 
-  virtual void lowdinOrthogonalize(const TlSymmetricMatrix& S, TlMatrix* pX,
-                                   TlMatrix* pXinv,
+  virtual void lowdinOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
+                                   TlDenseGeneralMatrix_Lapack* pX,
+                                   TlDenseGeneralMatrix_Lapack* pXinv,
                                    const std::string& eigvalFilePath = "");
 
  protected:
@@ -65,13 +71,16 @@ class DfXMatrix : public DfObject {
   double threshold_trancation_lowdin_;
 
   /// X行列作成時に求められた固有値を保存するファイル名
-  std::string XEigvalFilePath_;
+  //std::string XEigvalFilePath_;
+
+  /// 固有値を保持するかどうか
+  bool debugSaveEigval_;
 
   /// デバッグ用に行列を保存する
-  bool debug_save_mat_;
+  bool debugSaveMatrix_;
 
   /// X行列が性質を満たすかどうかをテストする(true)
-  bool debug_check_X_;
+  bool debugCheckX_;
 };
 
 template <typename SymmetricMatrixType, typename MatrixType>
@@ -79,17 +88,19 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
                                            MatrixType* pX, MatrixType* pXinv,
                                            const std::string& eigvalFilePath) {
   this->log_.info("orthogonalize by canonical method");
+  this->log_.info(
+      TlUtils::format("S: %d x %d", S.getNumOfRows(), S.getNumOfCols()));
 
-  const index_type dim = S.getNumOfRows();
-  index_type rest = 0;
+  const TlMatrixObject::index_type dim = S.getNumOfRows();
+  TlMatrixObject::index_type rest = 0;
 
-  TlVector sqrt_s;  // Sの固有値の平方根
-  MatrixType U;     // Sの固有ベクトル
+  TlDenseVector_Lapack sqrt_s;  // Sの固有値の平方根
+  MatrixType U;                 // Sの固有ベクトル
   {
     this->loggerTime("diagonalization of S matrix");
-    TlVector EigVal;
+    TlDenseVector_Lapack EigVal;
     MatrixType EigVec;
-    S.diagonal(&EigVal, &EigVec);
+    S.eig(&EigVal, &EigVec);
     assert(EigVal.getSize() == dim);
 
     if (!eigvalFilePath.empty()) {
@@ -115,7 +126,7 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
     }
 
     this->loggerTime(" generation of U matrix");
-    const index_type cutoffBasis = dim - rest;
+    const TlMatrixObject::index_type cutoffBasis = dim - rest;
 
     {
       MatrixType trans(dim, rest);
@@ -134,7 +145,7 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
       }
     }
   }
-  if (this->debug_save_mat_) {
+  if (this->debugSaveMatrix_) {
     U.save("U.mat");
     sqrt_s.save("sqrt_s.vct");
   }
@@ -153,17 +164,19 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
     this->loggerTime("generate X^-1 matrix");
 
     SymmetricMatrixType S12(rest);
-    for (index_type i = 0; i < rest; ++i) {
+    for (TlMatrixObject::index_type i = 0; i < rest; ++i) {
       S12.set(i, i, sqrt_s.get(i));
     }
 
-    U.transpose();
+    this->loggerTime("transpose U matrix");
+    U.transposeInPlace();
+
     *pXinv = S12 * U;
   }
 
   this->loggerTime(" finalize");
 
-  if (this->debug_check_X_) {
+  if (this->debugCheckX_) {
     this->check_X(*pX, *pXinv,
                   TlUtils::format("%s/S_", this->m_sWorkDirPath.c_str()));
   }
@@ -177,13 +190,13 @@ void DfXMatrix::lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
   const index_type dim = S.getNumOfRows();
   index_type rest = 0;
 
-  TlVector sqrt_s;  // Sの固有値の平方根
-  MatrixType U;     // Sの固有ベクトル
+  TlDenseVector_Lapack sqrt_s;  // Sの固有値の平方根
+  MatrixType U;                 // Sの固有ベクトル
   {
     this->loggerTime("diagonalization of S matrix");
-    TlVector EigVal;
+    TlDenseVector_Lapack EigVal;
     MatrixType EigVec;
-    S.diagonal(&EigVal, &EigVec);
+    S.eig(&EigVal, &EigVec);
     assert(EigVal.getSize() == dim);
 
     if (!eigvalFilePath.empty()) {
@@ -228,7 +241,7 @@ void DfXMatrix::lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
       }
     }
   }
-  if (this->debug_save_mat_) {
+  if (this->debugSaveMatrix_) {
     U.save("U.mat");
     sqrt_s.save("sqrt_s.vct");
   }
@@ -243,7 +256,7 @@ void DfXMatrix::lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
     *pX = U * S12;
 
     MatrixType Ut = U;
-    Ut.transpose();
+    Ut.transposeInPlace();
 
     *pX *= Ut;
   }
@@ -256,7 +269,7 @@ void DfXMatrix::lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
 
   this->loggerTime(" finalize");
 
-  if (this->debug_check_X_) {
+  if (this->debugCheckX_) {
     this->check_X(*pX, *pXinv,
                   TlUtils::format("%s/S_", this->m_sWorkDirPath.c_str()));
   }

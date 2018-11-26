@@ -19,8 +19,7 @@
 #ifndef DFXCFUNCTIONAL_H
 #define DFXCFUNCTIONAL_H
 
-#include "DfObject.h"
-#include "TlSymmetricMatrix.h"
+#include <cassert>
 
 #include "CnError.h"
 #include "DfFunctional_B3LYP.h"
@@ -28,6 +27,8 @@
 #include "DfFunctional_Becke88.h"
 #include "DfFunctional_HFS.h"
 #include "DfFunctional_SVWN.h"
+#include "DfObject.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 class DfCalcGridX;
 class DfEriX;
@@ -79,14 +80,15 @@ class DfXCFunctional : public DfObject {
 
  protected:
   /// Fockの交換項を求める
-  // virtual TlSymmetricMatrix getFockExchange(const TlSymmetricMatrix& prevP,
-  // RUN_TYPE nRunType); TlSymmetricMatrix getFockExchange(const
-  // TlSymmetricMatrix& P);
+  // virtual TlDenseSymmetricMatrix_Lapack getFockExchange(const
+  // TlDenseSymmetricMatrix_Lapack& prevP,
+  // RUN_TYPE nRunType); TlDenseSymmetricMatrix_Lapack getFockExchange(const
+  // TlDenseSymmetricMatrix_Lapack& P);
 
-  // double getFockExchangeEnergy(const TlSymmetricMatrix& P, const
-  // TlSymmetricMatrix& Ex); double getFockExchangeEnergy(const
-  // TlSymmetricMatrix& PA, const TlSymmetricMatrix& PB,
-  //                              const TlSymmetricMatrix& Ex);
+  // double getFockExchangeEnergy(const TlDenseSymmetricMatrix_Lapack& P, const
+  // TlDenseSymmetricMatrix_Lapack& Ex); double getFockExchangeEnergy(const
+  // TlDenseSymmetricMatrix_Lapack& PA, const TlDenseSymmetricMatrix_Lapack& PB,
+  //                              const TlDenseSymmetricMatrix_Lapack& Ex);
 
   /// 電子数を数値積分により求めることにより、グリッドの精度をチェックする
   void checkGridAccuracy();

@@ -16,11 +16,13 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "mkfld_common.h"
 #include <fstream>
 #include <iostream>
+
+#include "mkfld_common.h"
 #include "Fl_Geometry.h"
 #include "TlSerializeData.h"
+#include "TlUtils.h"
 
 void getDefaultSize(const TlSerializeData& param, TlPosition* pStartPos,
                     TlPosition* pEndPos) {
@@ -216,7 +218,7 @@ void saveCubeData(const std::vector<TlAtom>& atoms,
                   const std::size_t numOfGridZ, const TlPosition& startPos,
                   const TlPosition& gridPitch, const std::vector<double>& data,
                   const std::string& label, const std::string& filePath) {
-  const std::size_t numOfGrids = data.size();
+  // const std::size_t numOfGrids = data.size();
   const int numOfAtoms = atoms.size();
   int numOfDummyAtoms = 0;
   for (int i = 0; i < numOfAtoms; ++i) {
@@ -260,9 +262,9 @@ void saveCubeData(const std::vector<TlAtom>& atoms,
   }
 
   // 物理量
-  for (int x = 0; x < numOfGridX; ++x) {
-    for (int y = 0; y < numOfGridY; ++y) {
-      for (int z = 0; z < numOfGridZ; ++z) {
+  for (std::size_t x = 0; x < numOfGridX; ++x) {
+    for (std::size_t y = 0; y < numOfGridY; ++y) {
+      for (std::size_t z = 0; z < numOfGridZ; ++z) {
         const int index = (z * numOfGridY + y) * numOfGridX + x;
         ofs << TlUtils::format("% 12.5E ", data[index]);
         if (z % 6 == 5) {

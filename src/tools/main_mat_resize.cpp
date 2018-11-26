@@ -20,7 +20,7 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "TlMatrix.h"
+#include "tl_dense_general_matrix_lapack.h"
 
 void showHelp() {
   std::cout << "pdf-mat-resize [options] input_path output_path" << std::endl;
@@ -60,12 +60,12 @@ int main(int argc, char* argv[]) {
     std::cerr << "load matrix: " << inputMatrixPath << std::endl;
   }
 
-  TlMatrix A;
+  TlDenseGeneralMatrix_Lapack A;
   A.load(inputMatrixPath);
 
-  TlMatrix::index_type numOfRows =
+  TlMatrixObject::index_type numOfRows =
       (newNumOfRows != 0) ? newNumOfRows : A.getNumOfRows();
-  TlMatrix::index_type numOfCols =
+  TlMatrixObject::index_type numOfCols =
       (newNumOfCols != 0) ? newNumOfCols : A.getNumOfCols();
   A.resize(numOfRows, numOfCols);
 

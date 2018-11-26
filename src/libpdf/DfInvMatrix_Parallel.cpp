@@ -22,8 +22,8 @@
 
 #include "DfInvMatrix_Parallel.h"
 #include "TlCommunicate.h"
-#include "TlDistributeSymmetricMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 DfInvMatrix_Parallel::DfInvMatrix_Parallel(TlSerializeData* pPdfParam)
     : DfInvMatrix(pPdfParam) {}
@@ -33,7 +33,7 @@ DfInvMatrix_Parallel::~DfInvMatrix_Parallel() {}
 void DfInvMatrix_Parallel::DfInvMain() {
 #ifdef HAVE_SCALAPACK
   if (this->m_bUsingSCALAPACK == true) {
-    this->exec<TlDistributeSymmetricMatrix>();
+    this->exec<TlDenseSymmetricMatrix_Scalapack>();
     return;
   }
 #endif  // HAVE_SCALAPACK

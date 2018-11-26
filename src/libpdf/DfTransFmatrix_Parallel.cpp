@@ -19,8 +19,8 @@
 #include "DfTransFmatrix_Parallel.h"
 #include "CnError.h"
 #include "TlCommunicate.h"
-#include "TlDistributeMatrix.h"
-#include "TlDistributeSymmetricMatrix.h"
+#include "tl_dense_general_matrix_scalapack.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
 
 DfTransFmatrix_Parallel::DfTransFmatrix_Parallel(TlSerializeData* pPdfParam,
                                                  bool bExecDiis)
@@ -56,20 +56,20 @@ void DfTransFmatrix_Parallel::DfTrsFmatMain() {
 void DfTransFmatrix_Parallel::DfTrsFmatMain_SCALAPACK() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      DfTransFmatrix::main<TlDistributeMatrix, TlDistributeSymmetricMatrix>(
-          RUN_RKS);
+      DfTransFmatrix::main<TlDenseGeneralMatrix_Scalapack,
+                           TlDenseSymmetricMatrix_Scalapack>(RUN_RKS);
       break;
 
     case METHOD_UKS:
-      DfTransFmatrix::main<TlDistributeMatrix, TlDistributeSymmetricMatrix>(
-          RUN_UKS_ALPHA);
-      DfTransFmatrix::main<TlDistributeMatrix, TlDistributeSymmetricMatrix>(
-          RUN_UKS_BETA);
+      DfTransFmatrix::main<TlDenseGeneralMatrix_Scalapack,
+                           TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_ALPHA);
+      DfTransFmatrix::main<TlDenseGeneralMatrix_Scalapack,
+                           TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_BETA);
       break;
 
     case METHOD_ROKS:
-      DfTransFmatrix::main<TlDistributeMatrix, TlDistributeSymmetricMatrix>(
-          RUN_ROKS);
+      DfTransFmatrix::main<TlDenseGeneralMatrix_Scalapack,
+                           TlDenseSymmetricMatrix_Scalapack>(RUN_ROKS);
       break;
 
     default:
@@ -102,20 +102,24 @@ void DfTransFmatrix_Parallel::DfTrsFmatQclo_SCALAPACK(
   this->m_nNumOfMOs = norbcut;
   switch (this->m_nMethodType) {
     case METHOD_RKS:
-      DfTransFmatrix::main<TlDistributeMatrix, TlDistributeSymmetricMatrix>(
-          RUN_RKS, fragname, true);
+      DfTransFmatrix::main<TlDenseGeneralMatrix_Scalapack,
+                           TlDenseSymmetricMatrix_Scalapack>(RUN_RKS, fragname,
+                                                             true);
       break;
 
     case METHOD_UKS:
-      DfTransFmatrix::main<TlDistributeMatrix, TlDistributeSymmetricMatrix>(
-          RUN_UKS_ALPHA, fragname, true);
-      DfTransFmatrix::main<TlDistributeMatrix, TlDistributeSymmetricMatrix>(
-          RUN_UKS_BETA, fragname, true);
+      DfTransFmatrix::main<TlDenseGeneralMatrix_Scalapack,
+                           TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_ALPHA,
+                                                             fragname, true);
+      DfTransFmatrix::main<TlDenseGeneralMatrix_Scalapack,
+                           TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_BETA,
+                                                             fragname, true);
       break;
 
     case METHOD_ROKS:
-      DfTransFmatrix::main<TlDistributeMatrix, TlDistributeSymmetricMatrix>(
-          RUN_ROKS, fragname, true);
+      DfTransFmatrix::main<TlDenseGeneralMatrix_Scalapack,
+                           TlDenseSymmetricMatrix_Scalapack>(RUN_ROKS, fragname,
+                                                             true);
       break;
 
     default:

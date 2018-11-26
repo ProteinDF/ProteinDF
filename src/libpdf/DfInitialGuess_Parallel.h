@@ -20,7 +20,7 @@
 #define DFINITIALGUESS_PARALLEL_H
 
 #include "DfInitialGuess.h"
-#include "TlDistributeMatrix.h"
+#include "tl_dense_general_matrix_scalapack.h"
 
 class DfInitialGuess_Parallel : public DfInitialGuess {
  public:
@@ -30,7 +30,7 @@ class DfInitialGuess_Parallel : public DfInitialGuess {
  protected:
   // virtual void createRho();
 
-  virtual TlVector createOccupation(RUN_TYPE runType);
+  virtual TlDenseVector_Lapack createOccupation(RUN_TYPE runType);
 
   virtual void createInitialGuessUsingHuckel();
   virtual void createInitialGuessUsingCore();
@@ -39,19 +39,19 @@ class DfInitialGuess_Parallel : public DfInitialGuess {
   virtual void createInitialGuessUsingLCAO(RUN_TYPE runType);
 
   /// 占有軌道情報を取得する
-  virtual TlVector getOccupation(const RUN_TYPE runType);
+  virtual TlDenseVector_Lapack getOccupation(const RUN_TYPE runType);
 
   /// 占有軌道情報を保存する
   virtual void saveOccupation(const RUN_TYPE runType,
-                              const TlVector& rOccupation);
+                              const TlDenseVector_Lapack& rOccupation);
 
  protected:
   void createInitialGuessUsingLCAO_onLAPACK(const RUN_TYPE runType);
   void createInitialGuessUsingLCAO_onScaLAPACK(const RUN_TYPE runType);
 
-  TlDistributeMatrix getLCAO_onScaLAPACK(const RUN_TYPE runType);
-  TlDistributeMatrix getLCAO_onScaLAPACK_txt(const RUN_TYPE runType);
-  TlDistributeMatrix getLCAO_onScaLAPACK_bin(const RUN_TYPE runType);
+  TlDenseGeneralMatrix_Scalapack getLCAO_onScaLAPACK(const RUN_TYPE runType);
+  TlDenseGeneralMatrix_Scalapack getLCAO_onScaLAPACK_txt(const RUN_TYPE runType);
+  TlDenseGeneralMatrix_Scalapack getLCAO_onScaLAPACK_bin(const RUN_TYPE runType);
 
   virtual DfDmatrix* getDfDmatrixObject(TlSerializeData* param);
 };

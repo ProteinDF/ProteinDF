@@ -23,7 +23,8 @@
 #include "CnError.h"
 #include "DfObject.h"
 #include "DfXCFunctional.h"
-#include "TlVector.h"
+#include "tl_dense_vector_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 class DfFockMatrix : public DfObject {
  public:
@@ -38,14 +39,18 @@ class DfFockMatrix : public DfObject {
   virtual void mainDIRECT_UKS();
   virtual void mainDIRECT_ROKS();
 
-  virtual void setXC_RI(RUN_TYPE nRunType, TlSymmetricMatrix& F);
-  virtual void setXC_DIRECT(RUN_TYPE nRunType, TlSymmetricMatrix& F);
-  virtual void setCoulomb(METHOD_TYPE nMethodType, TlSymmetricMatrix& F);
-  virtual TlSymmetricMatrix getFpqMatrix(RUN_TYPE nRunType, int nIteration);
+  virtual void setXC_RI(RUN_TYPE nRunType, TlDenseSymmetricMatrix_Lapack& F);
+  virtual void setXC_DIRECT(RUN_TYPE nRunType, TlDenseSymmetricMatrix_Lapack& F);
+  virtual void setCoulomb(METHOD_TYPE nMethodType,
+                          TlDenseSymmetricMatrix_Lapack& F);
+  virtual TlDenseSymmetricMatrix_Lapack getFpqMatrix(RUN_TYPE nRunType,
+                                                   int nIteration);
 
-  virtual TlVector getRho(RUN_TYPE nRunType, int nIteration);
-  virtual TlVector getMyu(RUN_TYPE nRunType, int nIteration);
-  // virtual void saveFpqMatrix(RUN_TYPE nRunType, const TlSymmetricMatrix& F);
+  virtual TlDenseVector_Lapack getRho(RUN_TYPE nRunType, int nIteration);
+  virtual TlDenseVector_Lapack getMyu(RUN_TYPE nRunType, int nIteration);
+  // virtual void saveFpqMatrix(RUN_TYPE nRunType, const
+  // TlDenseSymmetricMatrix_Lapack&
+  // F);
 
  protected:
   template <typename SymmetricMatrixType>
@@ -278,11 +283,11 @@ void DfFockMatrix::mainDIRECT_ROKS() {
 
     SDc = S * Dc;
     DcS = SDc;
-    DcS.transpose();
+    DcS.transposeInPlace();
 
     SDo = S * Do;
     DoS = SDo;
-    DoS.transpose();
+    DoS.transposeInPlace();
 
     // SDc.save("SDc.mat");
     // DcS.save("DcS.mat");
@@ -351,7 +356,7 @@ void DfFockMatrix::mainDIRECT_ROKS() {
 //             Rhob.load(this->getRhoPath(RUN_UKS_BETA,  this->m_nIteration));
 //             assert(Rhoa.getSize() == Rhob.getSize());
 //             assert(Rhoa.getSize() ==
-//             static_cast<TlVector::size_type>(this->m_nNumOfAux));
+//             static_cast<TlDenseVector_Lapack::size_type>(this->m_nNumOfAux));
 
 //             Rho = Rhoa + Rhob;
 //         }
@@ -369,7 +374,7 @@ void DfFockMatrix::mainDIRECT_ROKS() {
 //             -1)); prevRhoa.load(this->getRhoPath(RUN_UKS_BETA,
 //             this->m_nIteration -1)); assert(prevRhoa.getSize() ==
 //             prevRhob.getSize()); assert(prevRhoa.getSize() ==
-//             static_cast<TlVector::size_type>(this->m_nNumOfAux));
+//             static_cast<TlDenseVector_Lapack::size_type>(this->m_nNumOfAux));
 
 //             prevRho = prevRhoa + prevRhob;
 //         }
@@ -381,7 +386,7 @@ void DfFockMatrix::mainDIRECT_ROKS() {
 //             -1)); Myub.load(this->getMyuPath(RUN_UKS_BETA,
 //             this->m_nIteration -1)); assert(Myua.getSize() ==
 //             Myub.getSize()); assert(Myua.getSize() ==
-//             static_cast<TlVector::size_type>(this->m_nNumOfAux));
+//             static_cast<TlDenseVector_Lapack::size_type>(this->m_nNumOfAux));
 //         }
 
 //         // calculate delta rou and delta myu
@@ -527,7 +532,7 @@ void DfFockMatrix::mainDIRECT_ROKS() {
 //             MatrixType A = W * X;
 //             A.save("fl_Work/DfFockmatrix.fl_Matrix.S_1");
 
-//             A.transpose();
+//             A.transposeInPlace();
 //             A.save("fl_Work/DfFockmatrix.fl_Matrix.S_1^dagger");
 
 //             SymmetricMatrixType Y;
@@ -537,7 +542,7 @@ void DfFockMatrix::mainDIRECT_ROKS() {
 //             A =  W * Y;
 //             A.save("fl_Work/DfFockmatrix.fl_Matrix.S_2");
 
-//             A.transpose();
+//             A.transposeInPlace();
 //             A.save("fl_Work/DfFockmatrix.fl_Matrix.S_2^dagger");
 //         }
 
@@ -651,7 +656,7 @@ void DfFockMatrix::mainDIRECT_ROKS() {
 
 //             A.save("fl_Work/DfFockmatrix.fl_Matrix.S_1(F_1-F_2)S_2^dagger");
 
-//             A.transpose();
+//             A.transposeInPlace();
 //             A.save("fl_Work/DfFockmatrix.fl_Matrix.(S_1(F_1-F_2)S_2^dagger)^dagger");
 //         }
 

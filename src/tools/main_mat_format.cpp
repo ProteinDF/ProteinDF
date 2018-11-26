@@ -21,8 +21,8 @@
 
 #include "TlGetopt.h"
 #include "TlMatrix.h"
-#include "TlRowVectorMatrix.h"
 #include "TlUtils.h"
+#include "tl_dense_general_matrix_arrays_roworiented.h"
 
 typedef TlMatrixObject::index_type index_type;
 
@@ -49,15 +49,15 @@ int main(int argc, char* argv[]) {
   index_type sizeOfVector = 0;
   int numOfSubunits = 0;
   int subunitID = 0;
-  if (TlRowVectorMatrix::isLoadable(in_path, &numOfVectors, &sizeOfVector,
-                                    &numOfSubunits, &subunitID)) {
-    TlRowVectorMatrix in;
+  if (TlDenseGeneralMatrix_arrays_RowOriented::isLoadable(
+          in_path, &numOfVectors, &sizeOfVector, &numOfSubunits, &subunitID)) {
+    TlDenseGeneralMatrix_arrays_RowOriented in;
     in.load(in_path);
 
     out.resize(numOfVectors, sizeOfVector);
     for (index_type i = 0; i < numOfVectors; ++i) {
       if (in.getSubunitID(i) == subunitID) {
-        TlVector v = in.getVector(i);
+        TlVector_BLAS v = in.getVector(i);
         assert(v.getSize() == sizeOfVector);
 
         for (index_type j = 0; j < sizeOfVector; ++j) {

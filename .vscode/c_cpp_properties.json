@@ -9,7 +9,13 @@
                 "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.1.0/include",
                 "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
                 "/usr/include",
-                "${workspaceFolder}/src/libpdftl"
+                "/usr/local/opt/hdf5/include",
+                "${workspaceFolder}/",
+                "${workspaceFolder}/src/libpdf",
+                "${workspaceFolder}/src/libpdftl",
+                "${workspaceFolder}/src/tools",
+                "${workspaceFolder}/src/unit_test",
+                "${env:HOME}/local/googletest/include"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",
@@ -17,10 +23,10 @@
                 "path": [
                     "${workspaceFolder}",
                     "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1",
-                    "/usr/local/include",
                     "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.1.0/include",
                     "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
-                    "/usr/include"
+                    "/usr/include",
+                    "/usr/local/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
@@ -29,9 +35,11 @@
                 "/System/Library/Frameworks",
                 "/Library/Frameworks"
             ],
-            "compilerPath": "/usr/bin/clang",
+            "compilerPath": "/usr/local/bin/g++-8",
             "cStandard": "c11",
-            "cppStandard": "c++17"
+            "cppStandard": "c++17",
+            "configurationProvider": "vector-of-bool.cmake-tools",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
         },
         {
             "name": "Linux",
@@ -74,5 +82,5 @@
             }
         }
     ],
-    "version": 3
+    "version": 4
 }

@@ -20,7 +20,10 @@
 #define DFOVERLAPX_PARALLEL_H
 
 #include "DfOverlapX.h"
-#include "TlDistributeSymmetricMatrix.h"
+
+class TlDenseGeneralMatrix_Scalapack;
+class TlDenseSymmetricMatrix_Scalapack;
+class TlDenseVector_Scalapack;
 
 class DfOverlapX_Parallel : public DfOverlapX {
  public:
@@ -28,64 +31,76 @@ class DfOverlapX_Parallel : public DfOverlapX {
   virtual ~DfOverlapX_Parallel();
 
  public:
-  void getSpqD(TlDistributeSymmetricMatrix* pSpq);
-  void getSabD(TlDistributeSymmetricMatrix* pSab);
+  void getSpqD(TlDenseSymmetricMatrix_Scalapack* pSpq);
+  void getSabD(TlDenseSymmetricMatrix_Scalapack* pSab);
 
-  virtual void getSgd(TlSymmetricMatrix* pSgd) { DfOverlapX::getSgd(pSgd); }
-  void getSgd(TlDistributeSymmetricMatrix* pSab);
+  virtual void getSgd(TlDenseSymmetricMatrix_Lapack* pSgd) {
+    DfOverlapX::getSgd(pSgd);
+  }
+  void getSgd(TlDenseSymmetricMatrix_Scalapack* pSab);
 
   /// 変換行列を作成する
   virtual void getTransMat(const TlOrbitalInfoObject& orbInfo1,
-                           const TlOrbitalInfoObject& orbInfo2, TlMatrix* pS) {
+                           const TlOrbitalInfoObject& orbInfo2,
+                           TlDenseGeneralMatrix_Lapack* pS) {
     DfOverlapX::getTransMat(orbInfo1, orbInfo2, pS);
   }
   void getTransMat(const TlOrbitalInfoObject& orbInfo1,
-                   const TlOrbitalInfoObject& orbInfo2, TlDistributeMatrix* pS);
+                   const TlOrbitalInfoObject& orbInfo2,
+                   TlDenseGeneralMatrix_Scalapack* pS);
 
   /// calc <pq gamma>
-  virtual void get_pqg(const TlVector& myu, TlSymmetricMatrix* pF) {
+  virtual void get_pqg(const TlDenseVector_Lapack& myu,
+                       TlDenseSymmetricMatrix_Lapack* pF) {
     DfOverlapX::get_pqg(myu, pF);
   }
-  virtual void get_pqg(const TlVector& myu, const TlVector& epsilon,
-                       TlSymmetricMatrix* pF, TlSymmetricMatrix* pE) {
+  virtual void get_pqg(const TlDenseVector_Lapack& myu,
+                       const TlDenseVector_Lapack& epsilon,
+                       TlDenseSymmetricMatrix_Lapack* pF,
+                       TlDenseSymmetricMatrix_Lapack* pE) {
     DfOverlapX::get_pqg(myu, epsilon, pF, pE);
   }
-  virtual void get_pqg(const TlDistributeVector& myu,
-                       TlDistributeSymmetricMatrix* pF);
+  virtual void get_pqg(const TlDenseVector_Scalapack& myu,
+                       TlDenseSymmetricMatrix_Scalapack* pF);
 
   /// 重なり行列を作成する
   virtual void getOvpMat(const TlOrbitalInfoObject& orbInfo,
-                         TlSymmetricMatrix* pS) {
+                         TlDenseSymmetricMatrix_Lapack* pS) {
     DfOverlapX::getOvpMat(orbInfo, pS);
   }
   void getOvpMat(const TlOrbitalInfoObject& orbitalInfo,
-                 TlDistributeSymmetricMatrix* pS);
+                 TlDenseSymmetricMatrix_Scalapack* pS);
 
   /// <p|nabra|q> を求める
   virtual void getGradient(const TlOrbitalInfoObject& orbitalInfo,
-                           TlMatrix* pMatX, TlMatrix* pMatY, TlMatrix* pMatZ) {
+                           TlDenseGeneralMatrix_Lapack* pMatX,
+                           TlDenseGeneralMatrix_Lapack* pMatY,
+                           TlDenseGeneralMatrix_Lapack* pMatZ) {
     DfOverlapX::getGradient(orbitalInfo, pMatX, pMatY, pMatZ);
   }
   void getGradient(const TlOrbitalInfoObject& orbitalInfo,
-                   TlDistributeMatrix* pMatX, TlDistributeMatrix* pMatY,
-                   TlDistributeMatrix* pMatZ);
+                   TlDenseGeneralMatrix_Scalapack* pMatX,
+                   TlDenseGeneralMatrix_Scalapack* pMatY,
+                   TlDenseGeneralMatrix_Scalapack* pMatZ);
 
-  virtual void getM(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
-  virtual void getM_A(const TlSymmetricMatrix& P, TlSymmetricMatrix* pM);
+  virtual void getM(const TlDenseSymmetricMatrix_Lapack& P,
+                    TlDenseSymmetricMatrix_Lapack* pM);
+  virtual void getM_A(const TlDenseSymmetricMatrix_Lapack& P,
+                      TlDenseSymmetricMatrix_Lapack* pM);
 
-  void getM(const TlDistributeSymmetricMatrix& P,
-            TlDistributeSymmetricMatrix* pM);
-  void getM_A(const TlDistributeSymmetricMatrix& P,
-              TlDistributeSymmetricMatrix* pM);
+  void getM(const TlDenseSymmetricMatrix_Scalapack& P,
+            TlDenseSymmetricMatrix_Scalapack* pM);
+  void getM_A(const TlDenseSymmetricMatrix_Scalapack& P,
+              TlDenseSymmetricMatrix_Scalapack* pM);
 
  protected:
   virtual void logger(const std::string& str) const;
 
   virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
-  virtual void finalize(TlMatrix* pMtx);
-  virtual void finalize(TlSymmetricMatrix* pMtx);
-  virtual void finalize(TlVector* pVct);
+  virtual void finalize(TlDenseGeneralMatrix_Lapack* pMtx);
+  virtual void finalize(TlDenseSymmetricMatrix_Lapack* pMtx);
+  virtual void finalize(TlDenseVector_Lapack* pVct);
 };
 
 #endif  // DFOVERLAPX_PARALLEL_H

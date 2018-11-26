@@ -20,8 +20,9 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_matrix_utils.h"
 
 int main(int argc, char* argv[]) {
   TlGetopt opt(argc, argv, "ghv");
@@ -34,23 +35,23 @@ int main(int argc, char* argv[]) {
     std::cerr << "loading... " << sPath << std::endl;
   }
 
-  if (TlSymmetricMatrix::isLoadable(sPath) == true) {
-    TlSymmetricMatrix M;
+  if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::RLHD) == true) {
+    TlDenseSymmetricMatrix_Lapack M;
     M.load(sPath);
 
     if (bGuessMode == true) {
       M.saveText(std::cout);
     } else {
-      M.print(std::cout);
+        std::cout << M << std::endl;
     }
-  } else if (TlMatrix::isLoadable(sPath) == true) {
-    TlMatrix M;
+  } else if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::CSFD) == true) {
+    TlDenseGeneralMatrix_Lapack M;
     M.load(sPath);
 
     if (bGuessMode == true) {
       M.saveText(std::cout);
     } else {
-      M.print(std::cout);
+        std::cout << M << std::endl;
     }
   } else {
     std::cerr << "unknown file type: " << sPath << std::endl;

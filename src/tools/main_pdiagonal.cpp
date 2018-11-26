@@ -23,8 +23,7 @@
 #include "TlDistributeMatrix.h"
 #include "TlDistributeSymmetricMatrix.h"
 #include "TlGetopt.h"
-#include "TlSymmetricMatrix.h"
-#include "TlVector.h"
+#include "tl_dense_vector_lapack.h"
 
 void showHelp() {
   std::cout << "diagonal [options] input_file_path" << std::endl;
@@ -66,7 +65,7 @@ int main(int argc, char* argv[]) {
     std::cerr << "load matrix: " << inputMatrixPath << std::endl;
   }
   if ((rComm.isMaster() == true) &&
-      (TlSymmetricMatrix::isLoadable(inputMatrixPath) != true)) {
+      (TlDenseSymmetricMatrix_BLAS_Old::isLoadable(inputMatrixPath) != true)) {
     std::cerr << "can not open file: " << inputMatrixPath << std::endl;
     return EXIT_FAILURE;
   }
@@ -77,7 +76,7 @@ int main(int argc, char* argv[]) {
   // const int numOfCols = A.getNumOfCols();
 
   TlDistributeMatrix eigVec(numOfDims, numOfDims);
-  TlVector eigVal(numOfDims);
+  TlDenseVector_Lapack eigVal(numOfDims);
 
   if ((bVerbose == true) && (rComm.isMaster() == true)) {
     std::cerr << "running..." << inputMatrixPath << std::endl;

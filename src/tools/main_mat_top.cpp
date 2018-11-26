@@ -20,7 +20,6 @@
 
 #include "TlGetopt.h"
 #include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 
 struct MatrixElement {
  public:
@@ -89,8 +88,8 @@ int main(int argc, char* argv[]) {
   }
 
   std::vector<MatrixElement> ranking(numOfRanks);
-  if (TlSymmetricMatrix::isLoadable(ifs) == true) {
-    TlSymmetricMatrix matrix;
+  if (TlDenseSymmetricMatrix_BLAS_Old::isLoadable(ifs) == true) {
+    TlDenseSymmetricMatrix_BLAS_Old matrix;
     matrix.load(path);
 
     const int dim = matrix.getNumOfRows();

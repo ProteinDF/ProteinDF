@@ -20,8 +20,6 @@
 #define DFCONVERGE_H
 
 #include "DfObject.h"
-#include "TlSymmetricMatrix.h"
-#include "TlVector.h"
 
 class DfConverge : public DfObject {
  protected:

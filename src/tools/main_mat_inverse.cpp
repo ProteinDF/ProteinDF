@@ -21,7 +21,7 @@
 
 #include "TlGetopt.h"
 #include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "TlMatrix_RLHD.h"
 #include "TlUtils.h"
 
 void showHelp(const std::string& progname) {
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
       A.save(outputMatrixPath);
     }
   } else if (TlMatrix::isLoadable(inputMatrixPath) != true) {
-    TlSymmetricMatrix A;
+    TlDenseSymmetricMatrix_BLAS_Old A;
     A.load(inputMatrixPath);
 
     if (bVerbose == true) {

@@ -20,7 +20,9 @@
 #define DFPOPULATION_PARALLEL_H
 
 #include "DfPopulation.h"
-#include "TlDistributeMatrix.h"
+
+class TlDenseSymmetricMatrix_Lapack;
+class TlDenseSymmetricMatrix_Scalapack;
 
 class DfPopulation_Parallel : public DfPopulation {
  public:
@@ -28,8 +30,8 @@ class DfPopulation_Parallel : public DfPopulation {
   virtual ~DfPopulation_Parallel();
 
  public:
-  virtual double getSumOfElectrons(const TlSymmetricMatrix& P);
-  double getSumOfElectrons(const TlDistributeSymmetricMatrix& P);
+  virtual double getSumOfElectrons(const TlDenseSymmetricMatrix_Lapack& P);
+  double getSumOfElectrons(const TlDenseSymmetricMatrix_Scalapack& P);
 
  protected:
   virtual void calcPop(const int iteration);

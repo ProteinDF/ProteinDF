@@ -21,7 +21,6 @@
 
 #include "TlGetopt.h"
 #include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 
 void showHelp() {
   std::cout << "diagonal [options] input_file_path" << std::endl;
@@ -61,18 +60,18 @@ int main(int argc, char* argv[]) {
   if (bVerbose == true) {
     std::cerr << "load matrix: " << inputMatrixPath << std::endl;
   }
-  if (TlSymmetricMatrix::isLoadable(inputMatrixPath) != true) {
+  if (TlDenseSymmetricMatrix_BLAS_Old::isLoadable(inputMatrixPath) != true) {
     std::cerr << "can not open file: " << inputMatrixPath << std::endl;
     return EXIT_FAILURE;
   }
 
-  TlSymmetricMatrix A;
+  TlDenseSymmetricMatrix_BLAS_Old A;
   A.load(inputMatrixPath);
   const int numOfDims = A.getNumOfRows();
   // const int numOfCols = A.getNumOfCols();
 
   TlMatrix eigVec(numOfDims, numOfDims);
-  TlVector eigVal(numOfDims);
+  TlVector_BLAS eigVal(numOfDims);
 
   if (bVerbose == true) {
     std::cerr << "running..." << inputMatrixPath << std::endl;

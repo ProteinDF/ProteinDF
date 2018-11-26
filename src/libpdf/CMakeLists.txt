@@ -1,5 +1,9 @@
 set(LIBPDF_HEADERS
+  common.h
+  datatype.h
+  df_cdk_matrix.h
   CnError.h
+  CnFile.h
   DfCD.h
   DfCalcGrid.h
   DfCalcGridX.h
@@ -87,7 +91,9 @@ set(LIBPDF_HEADERS
 
 
 set(LIBPDF_SOURCES
+  df_cdk_matrix.cc
   CnError.cpp
+  CnFile.cc
   DfCD.cpp
   DfCalcGrid.cpp
   DfCalcGridX.cpp
@@ -172,6 +178,7 @@ set(LIBPDF_SOURCES
 
 
 set(LIBPPDF_HEADERS
+  CnFile_parallel.h
   DfCD_Parallel.h
   DfCalcGridX_Parallel.h
   DfCleanup_Parallel.h
@@ -213,6 +220,7 @@ set(LIBPPDF_HEADERS
 
 
 set(LIBPPDF_SOURCES
+  CnFile_parallel.cc
   DfCD_Parallel.cpp
   DfCalcGridX_Parallel.cpp
   DfCleanup_Parallel.cpp
@@ -252,13 +260,51 @@ set(LIBPPDF_SOURCES
   ProteinDF_Parallel.cpp
   )
 
+set(LIBPDF_LIBRARIES
+  libpdftl
+)
 
-add_library(libpdf ${LIBPDF_HEADERS} ${LIBPDF_SOURCES})
+# libcint
+if (LIBCINT_FOUND)
+  set(LIBPDF_HEADERS
+    ${LIBPDF_HEADERS}
+    tl_libcint.h
+  )
+  set(LIBPDF_SOURCES
+    ${LIBPDF_SOURCES}
+    tl_libcint.cpp
+  )  
+  set(LIBPDF_LIBRARIES
+    ${LIBPDF_LIBRARIES}
+    ${LIBCINT_LIBRARIES}
+  )
+endif()
+
+# libpdf
+add_library(libpdf 
+  ${LIBPDF_HEADERS} 
+  ${LIBPDF_SOURCES}
+  )
+target_link_libraries(libpdf INTERFACE
+  ${LIBPDF_LIBRARIES}
+  )
 set_target_properties(libpdf PROPERTIES OUTPUT_NAME "pdf")
 
+if (LIBCINT_FOUND)
+  target_include_directories(libpdf PUBLIC ${LIBCINT_INCLUDE_DIR})
+endif()
+
+# libppdf
 if (MPI_FOUND)
-  add_library(libppdf ${LIBPPDF_HEADERS} ${LIBPPDF_SOURCES})
-  set_target_properties(libppdf PROPERTIES OUTPUT_NAME "ppdf")
+  add_library(libppdf 
+    ${LIBPPDF_HEADERS} 
+    ${LIBPPDF_SOURCES}
+    )
+  target_link_libraries(libppdf INTERFACE
+    ${LIBPDF_LIBRARIES}
+    libppdftl
+    )
+    set_target_properties(libppdf PROPERTIES OUTPUT_NAME "ppdf")
 endif()
 
 #  DfEnergyWeightedDensityMatrix.h

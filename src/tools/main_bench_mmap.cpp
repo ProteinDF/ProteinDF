@@ -23,7 +23,6 @@
 #include <time.h>
 
 #include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 
 #include "TlGetopt.h"
 #include "TlMemManager.h"
@@ -134,7 +133,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (isSymmetric == true) {
-    TlSymmetricMatrix m(dim);
+    TlDenseSymmetricMatrix_BLAS_Old m(dim);
     if (isRandom == true) {
       elapse = bench_rand(count, &m);
     } else {

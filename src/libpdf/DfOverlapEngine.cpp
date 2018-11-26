@@ -189,8 +189,9 @@ void DfOverlapEngine::calc0(const Query& query, const TlPosition& A,
               (zetaA * A + zetaB * B + zetaC * C + zetaD * D) * invZeta;
           const double G2 = G.squareDistanceFrom();
           const double kappa_exp =
-              zeta * (G2 - (zetaA * A2 + zetaB * B2 + zetaC * C2 + zetaD * D2) *
-                               invZeta);
+              zeta *
+              (G2 -
+               (zetaA * A2 + zetaB * B2 + zetaC * C2 + zetaD * D2) * invZeta);
           if (kappa_exp < DfOverlapEngine::MAX_EXPONENT) {
             const double kappa = std::exp(kappa_exp);
             const double base = M_PI * invZeta;

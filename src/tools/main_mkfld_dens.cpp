@@ -24,8 +24,8 @@
 #include "TlGetopt.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
-#include "TlSymmetricMatrix.h"
 #include "mkfld_common.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 
 void help(const std::string& progName) {
   std::cout << TlUtils::format("%s [options] args...", progName.c_str())
@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
   }
 
   // 密度行列の読み込み
-  TlSymmetricMatrix P;
+  TlDenseSymmetricMatrix_Lapack P;
   if (PMatrixFilePath == "") {
     const int iteration = param["num_of_iterations"].getInt();
     DfObject::RUN_TYPE runType = DfObject::RUN_RKS;

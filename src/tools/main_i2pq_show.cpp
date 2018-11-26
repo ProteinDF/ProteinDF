@@ -1,9 +1,7 @@
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
-
 #include "TlGetopt.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
 
 int main(int argc, char* argv[]) {
   TlGetopt opt(argc, argv, "dhv");

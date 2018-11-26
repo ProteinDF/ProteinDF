@@ -19,9 +19,11 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "TlUtils.h"
 #include "TlGetopt.h"
-#include "TlMatrix.h"
-#include "TlSymmetricMatrix.h"
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_matrix_utils.h"
 
 void showHelp(const std::string& name) {
   std::cout << TlUtils::format("%s [options] INPUT OUTPUT", name.c_str())
@@ -42,12 +44,12 @@ int main(int argc, char* argv[]) {
   std::string input_path = opt[1];
   std::string output_path = opt[2];
 
-  if (TlMatrix::isLoadable(input_path) != true) {
+  if (TlMatrixUtils::isLoadable(input_path, TlMatrixObject::CSFD) != true) {
     std::cerr << TlUtils::format("type mismatch: %s", input_path.c_str())
               << std::endl;
     return EXIT_FAILURE;
   }
-  TlMatrix in;
+  TlDenseGeneralMatrix_Lapack in;
   in.load(input_path);
 
   if (in.getNumOfRows() != in.getNumOfCols()) {
@@ -57,7 +59,7 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  TlSymmetricMatrix out(in);
+  TlDenseSymmetricMatrix_Lapack out(in);
   out.save(output_path);
 
   return EXIT_SUCCESS;

@@ -32,7 +32,7 @@ class DfForce_Parallel : public DfForce {
  protected:
   virtual void calcForceFromNuclei();
   virtual void calcForceFromWS(RUN_TYPE runType);
-  virtual void calcForceFromHpq(const TlSymmetricMatrix& P);
+  virtual void calcForceFromHpq(const TlDenseSymmetricMatrix_Lapack& P);
 
   virtual void calcForceFromCoulomb_exact(const RUN_TYPE runType);
   void calcForceFromCoulomb_exact_replicated(const RUN_TYPE runType);

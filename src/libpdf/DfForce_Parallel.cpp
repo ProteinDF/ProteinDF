@@ -20,9 +20,8 @@
 #include "DfEriX_Parallel.h"
 #include "DfXCFunctional_Parallel.h"
 #include "TlCommunicate.h"
-#include "TlSymmetricMatrix.h"
-#include "TlVector.h"
 #include "config.h"
+#include "tl_dense_vector_lapack.h"
 
 DfForce_Parallel::DfForce_Parallel(TlSerializeData* pPdfParam)
     : DfForce(pPdfParam) {
@@ -62,7 +61,8 @@ void DfForce_Parallel::calcForceFromWS(const RUN_TYPE runType) {
   }
 }
 
-void DfForce_Parallel::calcForceFromHpq(const TlSymmetricMatrix& P) {
+void DfForce_Parallel::calcForceFromHpq(
+    const TlDenseSymmetricMatrix_Lapack& P) {
   TlCommunicate& rComm = TlCommunicate::getInstance();
   if (rComm.isMaster() == true) {
     // perform in master-node only
@@ -85,16 +85,16 @@ void DfForce_Parallel::calcForceFromCoulomb_exact_replicated(
   const int iteration = this->m_nIteration;
   const int numOfAtoms = this->m_nNumOfAtoms;
 
-  TlSymmetricMatrix P;
+  TlDenseSymmetricMatrix_Lapack P;
   if (rComm.isMaster() == true) {
-    P = this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
+    P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
   }
-  rComm.broadcast(P);
+  rComm.broadcast(&P);
 
   DfEriX_Parallel dfEri(&(this->pdfParamForForce_));
 
   // ((pq)'|(rs))
-  TlMatrix F_J(numOfAtoms, 3);
+  TlDenseGeneralMatrix_Lapack F_J(numOfAtoms, 3);
   dfEri.getForceJ(P, &F_J);
 
   // F_J *= 0.5;
@@ -119,26 +119,26 @@ void DfForce_Parallel::calcForceFromCoulomb_RIJ_DC(const RUN_TYPE runType) {
   const int iteration = this->m_nIteration;
   const int numOfAtoms = this->m_nNumOfAtoms;
 
-  TlVector rho;
+  TlDenseVector_Lapack rho;
   if (rComm.isMaster() == true) {
-    rho = this->getRho<TlVector>(runType, iteration);
+    rho = this->getRho<TlDenseVector_Lapack>(runType, iteration);
   }
-  rComm.broadcast(rho);
+  rComm.broadcast(&rho);
 
-  TlSymmetricMatrix P;
+  TlDenseSymmetricMatrix_Lapack P;
   if (rComm.isMaster() == true) {
-    P = this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
+    P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
   }
-  rComm.broadcast(P);
+  rComm.broadcast(&P);
 
   DfEriX_Parallel dfEri(&(this->pdfParamForForce_));
 
   // ((pq)'|a)
-  TlMatrix F_pqa(numOfAtoms, 3);
+  TlDenseGeneralMatrix_Lapack F_pqa(numOfAtoms, 3);
   dfEri.getForceJ(P, rho, &F_pqa);
 
   // (a'|b)
-  TlMatrix F_ab(numOfAtoms, 3);
+  TlDenseGeneralMatrix_Lapack F_ab(numOfAtoms, 3);
   dfEri.getForceJ(rho, &F_ab);
 
   if (this->isDebugOutMatrix_ == true) {
@@ -148,7 +148,7 @@ void DfForce_Parallel::calcForceFromCoulomb_RIJ_DC(const RUN_TYPE runType) {
     }
   }
 
-  const TlMatrix F_J = (F_pqa - 0.5 * F_ab);
+  const TlDenseGeneralMatrix_Lapack F_J = (F_pqa - 0.5 * F_ab);
   this->force_ += F_J;
 }
 
@@ -169,15 +169,15 @@ void DfForce_Parallel::calcForceFromK_replicated(const RUN_TYPE runType) {
     const int iteration = this->m_nIteration;
     const int numOfAtoms = this->m_nNumOfAtoms;
 
-    TlSymmetricMatrix P;
+    TlDenseSymmetricMatrix_Lapack P;
     if (rComm.isMaster() == true) {
-      P = this->getPpqMatrix<TlSymmetricMatrix>(runType, iteration);
+      P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
     }
-    rComm.broadcast(P);
+    rComm.broadcast(&P);
 
     DfEriX_Parallel dfEri(&(this->pdfParamForForce_));
 
-    TlMatrix F_K(numOfAtoms, 3);
+    TlDenseGeneralMatrix_Lapack F_K(numOfAtoms, 3);
     // for RKS
     dfEri.getForceK(P, &F_K);
     if (runType == RUN_RKS) {
