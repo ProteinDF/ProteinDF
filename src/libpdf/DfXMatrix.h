@@ -71,13 +71,16 @@ class DfXMatrix : public DfObject {
   double threshold_trancation_lowdin_;
 
   /// X行列作成時に求められた固有値を保存するファイル名
-  std::string XEigvalFilePath_;
+  //std::string XEigvalFilePath_;
+
+  /// 固有値を保持するかどうか
+  bool debugSaveEigval_;
 
   /// デバッグ用に行列を保存する
-  bool debug_save_mat_;
+  bool debugSaveMatrix_;
 
   /// X行列が性質を満たすかどうかをテストする(true)
-  bool debug_check_X_;
+  bool debugCheckX_;
 };
 
 template <typename SymmetricMatrixType, typename MatrixType>
@@ -142,7 +145,7 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
       }
     }
   }
-  if (this->debug_save_mat_) {
+  if (this->debugSaveMatrix_) {
     U.save("U.mat");
     sqrt_s.save("sqrt_s.vct");
   }
@@ -173,7 +176,7 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
 
   this->loggerTime(" finalize");
 
-  if (this->debug_check_X_) {
+  if (this->debugCheckX_) {
     this->check_X(*pX, *pXinv,
                   TlUtils::format("%s/S_", this->m_sWorkDirPath.c_str()));
   }
@@ -238,7 +241,7 @@ void DfXMatrix::lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
       }
     }
   }
-  if (this->debug_save_mat_) {
+  if (this->debugSaveMatrix_) {
     U.save("U.mat");
     sqrt_s.save("sqrt_s.vct");
   }
@@ -266,7 +269,7 @@ void DfXMatrix::lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
 
   this->loggerTime(" finalize");
 
-  if (this->debug_check_X_) {
+  if (this->debugCheckX_) {
     this->check_X(*pX, *pXinv,
                   TlUtils::format("%s/S_", this->m_sWorkDirPath.c_str()));
   }

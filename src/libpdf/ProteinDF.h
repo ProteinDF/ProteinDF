@@ -56,6 +56,7 @@ class ProteinDF {
  protected:
   virtual void startlogo();
   void startlogo(const std::string& version, const std::string& info = "");
+  void checkEnvironment();
 
   virtual void inputData();
   void stepCreate();
