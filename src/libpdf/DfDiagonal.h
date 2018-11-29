@@ -83,11 +83,10 @@ inline void DfDiagonal::main(const DfObject::RUN_TYPE runType,
   GeneralMatrix eigVec;
   Fprime.eig(&eigVal, &eigVec);
 
-  // save eigval
-  eigVal.save(this->getEigenvaluesPath(runType, this->m_nIteration));
-
   // save eigvec
   this->saveCprimeMatrix(runType, this->m_nIteration, fragname, eigVec);
+  // save eigval
+  eigVal.save(this->getEigenvaluesPath(runType, this->m_nIteration));
 }
 
 #endif  // DFDIAGONAL_H

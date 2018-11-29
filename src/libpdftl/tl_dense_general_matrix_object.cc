@@ -4,6 +4,7 @@
 #include <cassert>
 #include "TlUtils.h"
 #include "tl_matrix_utils.h"
+#include "TlFile.h"
 
 #ifdef HAVE_HDF5
 #include "TlHdf5Utils.h"
@@ -200,6 +201,7 @@ bool TlDenseGeneralMatrixObject::load(const std::string& filePath) {
   } else {
     this->log_.critical(TlUtils::format("illegal matrix format: %s @%s:%d",
                                         filePath.c_str(), __FILE__, __LINE__));
+    this->log_.critical(TlUtils::format("file size: %ld", TlFile::getFileSize(filePath)));
     throw;
   }
 
