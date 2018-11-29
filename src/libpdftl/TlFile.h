@@ -50,7 +50,7 @@ class TlFile {
   static int rename(const std::string& oldName, const std::string& newName);
 
   /// get file size (bytes).
-  static size_t getFileSize(const std::string& filePath);
+  static std::size_t getFileSize(const std::string& filePath);
 
   /// return temporary file path
   static std::string getTempFilePath(const std::string& tmpdir = "/tmp/");
