@@ -87,16 +87,16 @@ int exec_MO_mode(const TlDenseGeneralMatrix_Lapack& SC,
   const int numOfAOs = C.getNumOfRows();
   const int numOfMOs = C.getNumOfCols();
 
-  if (level < numOfMOs) {
+  if (isVerbose == true) {
+    std::cerr << "MO level: " << level << std::endl;
+  }
+
+  if (level >= numOfMOs) {
     std::cerr << TlUtils::format(
                      "input level is out of range. input=%d, max=%d", level,
                      C.getNumOfCols())
               << std::endl;
     return EXIT_FAILURE;
-  }
-
-  if (isVerbose == true) {
-    std::cerr << "MO level: " << level << std::endl;
   }
 
   // MO
