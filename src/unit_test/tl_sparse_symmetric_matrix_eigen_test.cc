@@ -87,7 +87,7 @@ TEST(TlSparseSymmetricMatrix_Eigen, constructByDenseMat) {
   EXPECT_DOUBLE_EQ(1.0E-15, SM.get(3, 1));
   EXPECT_DOUBLE_EQ(-1.0E-15, SM.get(7, 1));
 
-  EXPECT_DOUBLE_EQ(1.0, SM.get(0, 1));  
+  EXPECT_DOUBLE_EQ(1.0, SM.get(0, 1));
   EXPECT_DOUBLE_EQ(0.0, SM.get(5, 4));
   EXPECT_DOUBLE_EQ(0.0, SM.get(2, 6));
   EXPECT_DOUBLE_EQ(1.0E-15, SM.get(1, 3));
@@ -142,7 +142,7 @@ TEST(TlSparseSymmetricMatrix_Eigen, operator_eq) {
   EXPECT_DOUBLE_EQ(0.0, a.get(4, 4));
 }
 
-TEST(TlSparseSymmetricMatrix_Eigen, multi_dense_sparse) {
+TEST(TlSparseSymmetricMatrix_Eigen, mul_densegen_sparsesym) {
   const int row1 = 3;
   const int col1 = 5;
   const int row2 = col1;
@@ -181,9 +181,24 @@ TEST(TlSparseSymmetricMatrix_Eigen, multi_dense_sparse) {
       EXPECT_DOUBLE_EQ(C.get(i, j), c.get(i, j));
     }
   }
+  // EXPECT_DOUBLE_EQ(14.0, c.get(0, 0));
+  // EXPECT_DOUBLE_EQ( 2.0, c.get(0, 1));
+  // EXPECT_DOUBLE_EQ( 3.0, c.get(0, 2));
+  // EXPECT_DOUBLE_EQ(16.0, c.get(0, 3));
+  // EXPECT_DOUBLE_EQ( 0.0, c.get(0, 4));
+  // EXPECT_DOUBLE_EQ(44.0, c.get(1, 0));
+  // EXPECT_DOUBLE_EQ(12.0, c.get(1, 1));
+  // EXPECT_DOUBLE_EQ(18.0, c.get(1, 2));
+  // EXPECT_DOUBLE_EQ(36.0, c.get(1, 3));
+  // EXPECT_DOUBLE_EQ( 0.0, c.get(1, 4));
+  // EXPECT_DOUBLE_EQ(74.0, c.get(2, 0));
+  // EXPECT_DOUBLE_EQ(22.0, c.get(2, 1));
+  // EXPECT_DOUBLE_EQ(33.0, c.get(2, 2));
+  // EXPECT_DOUBLE_EQ(56.0, c.get(2, 3));
+  // EXPECT_DOUBLE_EQ( 0.0, c.get(2, 4));
 }
 
-TEST(TlSparseSymmetricMatrix_Eigen, multi_sparse_dense) {
+TEST(TlSparseSymmetricMatrix_Eigen, mul_sparsesym_densegen) {
   const int row1 = 4;
   const int col1 = row1;
   const int row2 = col1;
