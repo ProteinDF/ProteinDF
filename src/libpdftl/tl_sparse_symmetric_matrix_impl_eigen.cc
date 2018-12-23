@@ -112,7 +112,10 @@ TlDenseGeneralMatrix_ImplEigen operator*(
     const TlSparseSymmetricMatrix_ImplEigen& mat2) {
   assert(mat1.getNumOfCols() == mat2.getNumOfRows());
   TlDenseGeneralMatrix_ImplEigen answer;
-  answer.matrix_ = mat1.matrix_ * mat2.matrix_.selfadjointView<Eigen::Lower>();
+
+  // answer.matrix_ = mat1.matrix_ * (mat2.matrix_.selfadjointView<Eigen::Lower>());
+  const TlSparseGeneralMatrix_ImplEigen::MatrixDataType tmp = mat2.matrix_.selfadjointView<Eigen::Lower>();
+  answer.matrix_ = mat1.matrix_ * tmp;
 
   return answer;
 }
