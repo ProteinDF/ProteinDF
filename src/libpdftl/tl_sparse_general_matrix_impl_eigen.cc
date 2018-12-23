@@ -49,9 +49,9 @@ TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_ImplEigen(
 TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_ImplEigen(
     const TlSparseGeneralMatrix_ImplViennaCL& rhs)
     : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()) {
-  std::cout << "TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_"
-               "ImplEigen(const TlSparseGeneralMatrix_ImplViennaCL& rhs)"
-            << std::endl;
+  // std::cout << "TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_"
+  //              "ImplEigen(const TlSparseGeneralMatrix_ImplViennaCL& rhs)"
+  //           << std::endl;
   viennacl::copy(rhs.matrix_, this->matrix_);
 }
 #endif  // HAVE_VIENNACL
