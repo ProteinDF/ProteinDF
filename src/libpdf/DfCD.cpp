@@ -1175,6 +1175,142 @@ TlDenseSymmetricMatrix_Lapack DfCD::getPMatrix() {
   return P;
 }
 
+// ----------------------------------------------------------------------------
+// [integral] calc CD
+// ----------------------------------------------------------------------------
+TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFlyS_new(
+    const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path,
+    const double threshold,
+    void (DfCD::*calcDiagonalsFunc)(const TlOrbitalInfoObject&, PQ_PairArray*,
+                                    std::vector<double>*),
+    std::vector<double> (DfCD::*getSuperMatrixElements)(
+        const TlOrbitalInfoObject&, const index_type,
+        const std::vector<index_type>&, const PQ_PairArray&)) {
+  this->log_.info("call on-the-fly Cholesky Decomposition routine (symmetric)");
+  assert(this->pEngines_ != NULL);
+
+  const index_type numOfAOs = orbInfo.getNumOfOrbitals();
+  const std::size_t numOfPQs = numOfAOs * (numOfAOs + 1) / 2;
+  this->log_.info(TlUtils::format("number of orbitals: %d", numOfAOs));
+  this->log_.info(TlUtils::format("number of pair of orbitals: %ld", numOfPQs));
+
+  // CDAM
+  assert(this->pEngines_ != NULL);
+  PQ_PairArray I2PQ;
+  std::vector<double> diagonals;  // 対角成分
+  (this->*calcDiagonalsFunc)(orbInfo, &I2PQ, &diagonals);
+  assert(diagonals.size() == I2PQ.size());
+
+  this->log_.info(TlUtils::format("number of screened pairs of orbitals: %ld",
+                                  I2PQ.size()));
+  this->saveI2PQ(I2PQ, I2PQ_path);
+
+  // debug
+  // this->debug_I2PQ_ = I2PQ;
+
+  // prepare variables
+  this->log_.info(
+      TlUtils::format("Cholesky Decomposition: epsilon=%e", threshold));
+  const index_type numOfPQtilde = I2PQ.size();
+  TlDenseGeneralMatrix_arrays_RowOriented L(numOfPQtilde, 1, 1, 0);
+
+  double error = std::accumulate(diagonals.begin(), diagonals.end(), 0.0);
+  std::vector<TlDenseVector_Lapack::size_type> pivot(numOfPQtilde);
+  for (index_type i = 0; i < numOfPQtilde; ++i) {
+    pivot[i] = i;
+  }
+
+  int progress = 0;
+  index_type division = std::max<index_type>(numOfPQtilde * 0.01, 100);
+  L.reserveColSize(division);
+
+  index_type numOfCDVcts = 0;
+  while ((error > threshold) && (numOfCDVcts < numOfPQtilde)) {
+#ifdef DEBUG_CD
+    this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e",
+                                     numOfCDVcts, numOfPQtilde, error));
+#endif  // DEBUG_CD
+
+    // progress
+    if (numOfCDVcts >= progress * division) {
+      this->log_.info(
+          TlUtils::format("CD progress: %12d: err=% 8.3e, local mem:%8.1f MB",
+                          numOfCDVcts, error, TlSystem::getMaxRSS()));
+      ++progress;
+
+      // メモリの確保
+      L.reserveColSize(division * progress);
+    }
+    L.resize(numOfPQtilde, numOfCDVcts + 1);
+
+    // pivot
+    {
+      const std::size_t argmax =
+          this->argmax_pivot(diagonals, pivot, numOfCDVcts);
+      std::swap(pivot[numOfCDVcts], pivot[argmax]);
+    }
+
+    const index_type pivot_m = pivot[numOfCDVcts];
+    error = diagonals[pivot_m];
+    if (error < threshold) {
+      break;
+    }
+
+    const double l_m_pm = std::sqrt(diagonals[pivot_m]);
+    const double inv_l_m_pm = 1.0 / l_m_pm;
+    L.set(pivot_m, numOfCDVcts, l_m_pm);
+
+    // get supermatrix elements
+    std::vector<double> G_pm;
+    const index_type numOf_G_cols = numOfPQtilde - (numOfCDVcts + 1);
+    {
+      std::vector<index_type> G_col_list(numOf_G_cols);
+      for (index_type c = 0; c < numOf_G_cols; ++c) {
+        const index_type pivot_i =
+            pivot[(numOfCDVcts + 1) + c];  // from (m+1) to N
+        G_col_list[c] = pivot_i;
+      }
+      G_pm =
+          (this->*getSuperMatrixElements)(orbInfo, pivot_m, G_col_list, I2PQ);
+    }
+    assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
+
+    // CD calc
+    const TlDenseVector_Lapack L_pm = L.getVector(pivot_m);
+    assert(L_pm.getSize() == numOfCDVcts + 1);
+
+    std::vector<double> L_xm(numOf_G_cols, 0.0);
+#pragma omp parallel for schedule(runtime)
+    for (index_type i = 0; i < numOf_G_cols; ++i) {
+      const index_type pivot_i =
+          pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
+      TlDenseVector_Lapack L_pi = L.getVector(pivot_i);
+      // TlDenseVector_Lapack tmp = L_pi.dotInPlace(L_pm);
+      // const double sum_ll = tmp.sum();
+      const double sum_ll = L_pi.dotInPlace(L_pm).sum();
+      const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+
+#pragma omp atomic
+      L_xm[i] += l_m_pi;
+#pragma omp atomic
+      diagonals[pivot_i] -= l_m_pi * l_m_pi;
+    }
+
+    for (index_type i = 0; i < numOf_G_cols; ++i) {
+      const index_type pivot_i =
+          pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
+      L.set(pivot_i, numOfCDVcts, L_xm[i]);
+    }
+
+    error = diagonals[pivot[numOfCDVcts]];
+    ++numOfCDVcts;
+  }
+  L.resize(numOfPQtilde, numOfCDVcts);
+  this->log_.info(TlUtils::format("Cholesky Vectors: %d", numOfCDVcts));
+
+  return L;
+}
+
 TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFlyA(
     const TlOrbitalInfoObject& orbInfo_p, const TlOrbitalInfoObject& orbInfo_q,
     const std::string& I2PQ_path) {
@@ -3079,139 +3215,6 @@ bool DfCD::getCachedValue(const TlOrbitalInfoObject& orbInfo, index_type indexP,
   // }
 
   return answer;
-}
-
-TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFlyS_new(
-    const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path,
-    const double threshold,
-    void (DfCD::*calcDiagonalsFunc)(const TlOrbitalInfoObject&, PQ_PairArray*,
-                                    std::vector<double>*),
-    std::vector<double> (DfCD::*getSuperMatrixElements)(
-        const TlOrbitalInfoObject&, const index_type,
-        const std::vector<index_type>&, const PQ_PairArray&)) {
-  this->log_.info("call on-the-fly Cholesky Decomposition routine (symmetric)");
-  assert(this->pEngines_ != NULL);
-
-  const index_type numOfAOs = orbInfo.getNumOfOrbitals();
-  const std::size_t numOfPQs = numOfAOs * (numOfAOs + 1) / 2;
-  this->log_.info(TlUtils::format("number of orbitals: %d", numOfAOs));
-  this->log_.info(TlUtils::format("number of pair of orbitals: %ld", numOfPQs));
-
-  // CDAM
-  assert(this->pEngines_ != NULL);
-  PQ_PairArray I2PQ;
-  std::vector<double> diagonals;  // 対角成分
-  (this->*calcDiagonalsFunc)(orbInfo, &I2PQ, &diagonals);
-  assert(diagonals.size() == I2PQ.size());
-
-  this->log_.info(TlUtils::format("number of screened pairs of orbitals: %ld",
-                                  I2PQ.size()));
-  this->saveI2PQ(I2PQ, I2PQ_path);
-
-  // debug
-  // this->debug_I2PQ_ = I2PQ;
-
-  // prepare variables
-  this->log_.info(
-      TlUtils::format("Cholesky Decomposition: epsilon=%e", threshold));
-  const index_type numOfPQtilde = I2PQ.size();
-  TlDenseGeneralMatrix_arrays_RowOriented L(numOfPQtilde, 1, 1, 0);
-
-  double error = std::accumulate(diagonals.begin(), diagonals.end(), 0.0);
-  std::vector<TlDenseVector_Lapack::size_type> pivot(numOfPQtilde);
-  for (index_type i = 0; i < numOfPQtilde; ++i) {
-    pivot[i] = i;
-  }
-
-  int progress = 0;
-  index_type division = std::max<index_type>(numOfPQtilde * 0.01, 100);
-  L.reserveColSize(division);
-
-  index_type numOfCDVcts = 0;
-  while ((error > threshold) && (numOfCDVcts < numOfPQtilde)) {
-#ifdef DEBUG_CD
-    this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e",
-                                     numOfCDVcts, numOfPQtilde, error));
-#endif  // DEBUG_CD
-
-    // progress
-    if (numOfCDVcts >= progress * division) {
-      this->log_.info(
-          TlUtils::format("CD progress: %12d: err=% 8.3e, local mem:%8.1f MB",
-                          numOfCDVcts, error, TlSystem::getMaxRSS()));
-      ++progress;
-
-      // メモリの確保
-      L.reserveColSize(division * progress);
-    }
-    L.resize(numOfPQtilde, numOfCDVcts + 1);
-
-    // pivot
-    {
-      const std::size_t argmax =
-          this->argmax_pivot(diagonals, pivot, numOfCDVcts);
-      std::swap(pivot[numOfCDVcts], pivot[argmax]);
-    }
-
-    const index_type pivot_m = pivot[numOfCDVcts];
-    error = diagonals[pivot_m];
-    if (error < threshold) {
-      break;
-    }
-
-    const double l_m_pm = std::sqrt(diagonals[pivot_m]);
-    const double inv_l_m_pm = 1.0 / l_m_pm;
-    L.set(pivot_m, numOfCDVcts, l_m_pm);
-
-    // get supermatrix elements
-    std::vector<double> G_pm;
-    const index_type numOf_G_cols = numOfPQtilde - (numOfCDVcts + 1);
-    {
-      std::vector<index_type> G_col_list(numOf_G_cols);
-      for (index_type c = 0; c < numOf_G_cols; ++c) {
-        const index_type pivot_i =
-            pivot[(numOfCDVcts + 1) + c];  // from (m+1) to N
-        G_col_list[c] = pivot_i;
-      }
-      G_pm =
-          (this->*getSuperMatrixElements)(orbInfo, pivot_m, G_col_list, I2PQ);
-    }
-    assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
-
-    // CD calc
-    const TlDenseVector_Lapack L_pm = L.getVector(pivot_m);
-    assert(L_pm.getSize() == numOfCDVcts + 1);
-
-    std::vector<double> L_xm(numOf_G_cols, 0.0);
-#pragma omp parallel for schedule(runtime)
-    for (index_type i = 0; i < numOf_G_cols; ++i) {
-      const index_type pivot_i =
-          pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
-      TlDenseVector_Lapack L_pi = L.getVector(pivot_i);
-      // TlDenseVector_Lapack tmp = L_pi.dotInPlace(L_pm);
-      // const double sum_ll = tmp.sum();
-      const double sum_ll = L_pi.dotInPlace(L_pm).sum();
-      const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
-
-#pragma omp atomic
-      L_xm[i] += l_m_pi;
-#pragma omp atomic
-      diagonals[pivot_i] -= l_m_pi * l_m_pi;
-    }
-
-    for (index_type i = 0; i < numOf_G_cols; ++i) {
-      const index_type pivot_i =
-          pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
-      L.set(pivot_i, numOfCDVcts, L_xm[i]);
-    }
-
-    error = diagonals[pivot[numOfCDVcts]];
-    ++numOfCDVcts;
-  }
-  L.resize(numOfPQtilde, numOfCDVcts);
-  this->log_.info(TlUtils::format("Cholesky Vectors: %d", numOfCDVcts));
-
-  return L;
 }
 
 bool DfCD::get_I_index(const PQ_PairArray& I2PQ, const index_type p,
