@@ -25,6 +25,10 @@ class TlDenseMatrix_ImplObject {
   virtual void resize(const TlMatrixObject::index_type row,
                       const TlMatrixObject::index_type col) = 0;
 
+  /// Requests that the matrix capacity be at least enough to contain "row x col" elements.
+  virtual void reserve(const TlMatrixObject::index_type row,
+                       const TlMatrixObject::index_type col);
+
   virtual double get(const TlMatrixObject::index_type row,
                      const TlMatrixObject::index_type col) const = 0;
   virtual void set(const TlMatrixObject::index_type row,
