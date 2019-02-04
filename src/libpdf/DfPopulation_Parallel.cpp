@@ -18,8 +18,8 @@
 
 #include "DfPopulation_Parallel.h"
 #include "TlCommunicate.h"
-#include "tl_dense_general_matrix_scalapack.h"
 #include "tl_dense_symmetric_matrix_scalapack.h"
+#include "tl_dense_vector_scalapack.h"
 
 DfPopulation_Parallel::DfPopulation_Parallel(TlSerializeData* pPdfParam)
     : DfPopulation(pPdfParam) {}
@@ -29,30 +29,19 @@ DfPopulation_Parallel::~DfPopulation_Parallel() {
   rComm.barrier();
 }
 
-double DfPopulation_Parallel::getSumOfElectrons(
-    const TlDenseSymmetricMatrix_Lapack& P) {
-  double answer = 0.0;
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    answer = DfPopulation::getSumOfElectrons(P);
-  }
-  rComm.broadcast(answer);
-  return answer;
-}
-
-double DfPopulation_Parallel::getSumOfElectrons(
+template <>
+double
+DfPopulation_Parallel::getSumOfElectrons<TlDenseSymmetricMatrix_Scalapack>(
     const TlDenseSymmetricMatrix_Scalapack& P) {
-  const TlDenseVector_Lapack trPS =
-      this->getPS<TlDenseGeneralMatrix_Scalapack,
-                  TlDenseSymmetricMatrix_Scalapack>(P);
-  return trPS.sum();
+  const double answer = DfPopulation::getSumOfElectrons(P);
+
+  return answer;
 }
 
 void DfPopulation_Parallel::calcPop(const int iteration) {
 #ifdef HAVE_SCALAPACK
   if (this->m_bUsingSCALAPACK == true) {
-    DfPopulation::calcPop<TlDenseGeneralMatrix_Scalapack,
-                          TlDenseSymmetricMatrix_Scalapack>(iteration);
+    DfPopulation::calcPop<TlDenseSymmetricMatrix_Scalapack>(iteration);
     return;
   }
 #endif  // HAVE_SCALAPACK

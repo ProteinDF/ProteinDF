@@ -22,103 +22,100 @@
 #include "DfPopulation.h"
 #include "Fl_Geometry.h"
 #include "TlUtils.h"
-#include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 DfPopulation::DfPopulation(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam),
-      orbitalInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"]) {}
+      orbitalInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"]) {
+  this->setNucleiCharges();
+}
 
 DfPopulation::~DfPopulation() {}
 
-double DfPopulation::getSumOfElectrons(const TlDenseSymmetricMatrix_Lapack& P) {
-  const TlDenseVector_Lapack trPS =
-      this->getPS<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-          P);
-  return trPS.sum();
+void DfPopulation::exec(const int iteration) {
+    this->getAtomPopulation<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack>(iteration);
 }
 
-TlDenseGeneralMatrix_Lapack DfPopulation::getAtomPopData(const int iteration) {
-  this->calcPop(iteration);
-
-  const Fl_Geometry flGeom((*(this->pPdfParam_))["coordinates"]);
-
-  TlDenseGeneralMatrix_Lapack answer;
-  switch (this->m_nMethodType) {
-    case METHOD_RKS: {
-      const std::size_t dim = this->grossAtomPopA_.getSize();
-      answer.resize(dim, 1);
-      for (std::size_t atomIndex = 0; atomIndex < dim; ++atomIndex) {
-        const double nucCharge = flGeom.getCharge(atomIndex);
-        answer.set(atomIndex, 0,
-                   nucCharge - this->grossAtomPopA_.get(atomIndex));
-      }
-    } break;
-
-    case METHOD_UKS: {
-      const std::size_t dim = this->grossAtomPopA_.getSize();
-      assert(dim == static_cast<std::size_t>(this->grossAtomPopB_.getSize()));
-      answer.resize(dim, 2);
-      for (std::size_t atomIndex = 0; atomIndex < dim; ++atomIndex) {
-        const double nucCharge = flGeom.getCharge(atomIndex);
-        answer.set(atomIndex, 0,
-                   nucCharge - this->grossAtomPopA_.get(atomIndex));
-        answer.set(atomIndex, 1,
-                   nucCharge - this->grossAtomPopB_.get(atomIndex));
-      }
-    } break;
-
-    case METHOD_ROKS: {
-      const std::size_t dim = this->grossAtomPopA_.getSize();
-      answer.resize(dim, 1);
-      for (std::size_t atomIndex = 0; atomIndex < dim; ++atomIndex) {
-        const double nucCharge = flGeom.getCharge(atomIndex);
-        answer.set(atomIndex, 0,
-                   nucCharge - this->grossAtomPopA_.get(atomIndex));
-      }
-    } break;
-
-    default:
-      break;
-  }
-
-  return answer;
-}
+// TlDenseGeneralMatrix_Lapack DfPopulation::getAtomPopData(const int iteration) {
+//   this->calcPop(iteration);
+//
+//   const Fl_Geometry flGeom((*(this->pPdfParam_))["coordinates"]);
+//
+//   TlDenseGeneralMatrix_Lapack answer;
+//   switch (this->m_nMethodType) {
+//     case METHOD_RKS: {
+//       const std::size_t dim = this->grossAtomPopA_.size();
+//       answer.resize(dim, 1);
+//       for (std::size_t atomIndex = 0; atomIndex < dim; ++atomIndex) {
+//         const double nucCharge = flGeom.getCharge(atomIndex);
+//         answer.set(atomIndex, 0, nucCharge - this->grossAtomPopA_[atomIndex]);
+//       }
+//     } break;
+//
+//     case METHOD_UKS: {
+//       const std::size_t dim = this->grossAtomPopA_.size();
+//       assert(dim == static_cast<std::size_t>(this->grossAtomPopB_.getSize()));
+//       answer.resize(dim, 2);
+//       for (std::size_t atomIndex = 0; atomIndex < dim; ++atomIndex) {
+//         const double nucCharge = flGeom.getCharge(atomIndex);
+//         answer.set(atomIndex, 0, nucCharge - this->grossAtomPopA_[atomIndex]);
+//         answer.set(atomIndex, 1, nucCharge - this->grossAtomPopB_[atomIndex]);
+//       }
+//     } break;
+//
+//     case METHOD_ROKS: {
+//       const std::size_t dim = this->grossAtomPopA_.size();
+//       answer.resize(dim, 1);
+//       for (std::size_t atomIndex = 0; atomIndex < dim; ++atomIndex) {
+//         const double nucCharge = flGeom.getCharge(atomIndex);
+//         answer.set(atomIndex, 0, nucCharge - this->grossAtomPopA_[atomIndex]);
+//       }
+//     } break;
+//
+//     default:
+//       break;
+//   }
+//
+//   return answer;
+// }
 
 void DfPopulation::calcPop(const int iteration) {
-  this->calcPop<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-      iteration);
+  this->calcPop<TlDenseSymmetricMatrix_Lapack>(iteration);
 }
 
-double DfPopulation::getNucleiCharge() {
+void DfPopulation::setNucleiCharges() {
   const Fl_Geometry geom((*this->pPdfParam_)["coordinates"]);
 
   const int numOfAtoms = this->m_nNumOfAtoms;
-  double charge = 0.0;
-  for (int i = 0; i < numOfAtoms; ++i) {
-    charge += geom.getCharge(i);
-  }
+  this->nucleiCharges_.resize(numOfAtoms);
 
-  return charge;
+  for (int i = 0; i < numOfAtoms; ++i) {
+    this->nucleiCharges_[i] = geom.getCharge(i);
+  }
+}
+
+double DfPopulation::getSumOfNucleiCharges() const {
+  return this->nucleiCharges_.sum();
 }
 
 // Mulliken Analysis (Gross Atom Population)
-TlDenseVector_Lapack DfPopulation::getGrossAtomPop(
-    const TlDenseVector_Lapack& trPS) {
+std::valarray<double> DfPopulation::getGrossAtomPop(
+    const std::valarray<double>& grossOrbPop) {
   std::string output = "";
 
   const index_type numOfAtoms = this->m_nNumOfAtoms;
   const index_type numOfAOs = this->m_nNumOfAOs;
 
-  std::vector<double> answer(numOfAtoms, 0.0);
+  std::valarray<double> answer(0.0, numOfAtoms);
 
 #pragma omp parallel for
   for (index_type aoIndex = 0; aoIndex < numOfAOs; ++aoIndex) {
     const index_type atomIndex = this->orbitalInfo_.getAtomIndex(aoIndex);
 
 #pragma omp critical(DfPopulation__getGrossAtomPop)
-    { answer[atomIndex] += trPS.get(aoIndex); }
+    { answer[atomIndex] += grossOrbPop[aoIndex]; }
   }
 
-  return TlDenseVector_Lapack(answer);
+  return answer;
 }

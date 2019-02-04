@@ -2,6 +2,7 @@
 #define TL_DENSE_VECTOR_LAPACK_H
 
 #include <vector>
+#include <valarray>
 #include "tl_dense_vector_object.h"
 
 class TlDenseGeneralMatrix_Lapack;
@@ -15,6 +16,7 @@ class TlDenseVector_Lapack : public TlDenseVectorObject {
   explicit TlDenseVector_Lapack(const TlDenseVectorObject::index_type size = 0);
   TlDenseVector_Lapack(const TlDenseVector_Lapack& rhs);
   TlDenseVector_Lapack(const std::vector<double>& rhs);
+  TlDenseVector_Lapack(const std::valarray<double>& rhs);
   // TlDenseVector_Lapack(const double* p,
   //                      const TlDenseVectorObject::size_type length);
 

@@ -1,13 +1,13 @@
-#include <fstream>
-#include <iostream>
 #include <cassert>
 #include <cmath>
+#include <fstream>
+#include <iostream>
 
+#include "TlUtils.h"
 #include "tl_dense_general_matrix_object.h"
 #include "tl_dense_matrix_impl_object.h"
 #include "tl_dense_symmetric_matrix_object.h"
 #include "tl_matrix_utils.h"
-#include "TlUtils.h"
 
 #ifdef HAVE_HDF5
 #include "TlHdf5Utils.h"
@@ -22,7 +22,7 @@ TlDenseSymmetricMatrixObject::~TlDenseSymmetricMatrixObject() {}
 void TlDenseSymmetricMatrixObject::vtr2mat(const std::vector<double>& vtr) {
   const TlMatrixObject::index_type dim = this->getNumOfRows();
   assert(dim == this->getNumOfCols());
-  assert(vtr.size() == dim * (dim +1) / 2);
+  assert(vtr.size() == dim * (dim + 1) / 2);
 
   std::size_t i = 0;
   // column-major
@@ -78,6 +78,28 @@ void TlDenseSymmetricMatrixObject::add(const TlMatrixObject::index_type row,
   this->pImpl_->add(row, col, value);
 }
 
+std::valarray<double> TlDenseSymmetricMatrixObject::getRowVector(
+    const TlMatrixObject::index_type row) const {
+  const TlMatrixObject::index_type size = this->getNumOfCols();
+  std::valarray<double> v(size);
+  for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+    v[i] = this->get(row, i);
+  }
+
+  return v;
+}
+
+std::valarray<double> TlDenseSymmetricMatrixObject::getColVector(
+    const TlMatrixObject::index_type col) const {
+  const TlMatrixObject::index_type size = this->getNumOfRows();
+  std::valarray<double> v(size);
+  for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+    v[i] = this->get(i, col);
+  }
+
+  return v;
+}
+
 // ---------------------------------------------------------------------------
 // Operations
 // ---------------------------------------------------------------------------
@@ -88,7 +110,7 @@ double TlDenseSymmetricMatrixObject::trace() const {
 }
 
 double TlDenseSymmetricMatrixObject::getRMS() const {
-    return this->pImpl_->getRMS();
+  return this->pImpl_->getRMS();
 }
 
 double TlDenseSymmetricMatrixObject::getMaxAbsoluteElement(
@@ -130,7 +152,7 @@ void TlDenseSymmetricMatrixObject::pivotedCholeskyDecomposition(
       const std::size_t end = pivot.size();
       for (std::size_t pivotIndex = pivotBegin; pivotIndex < end;
            ++pivotIndex) {
-          sum += diagonals[pivot[pivotIndex]];
+        sum += diagonals[pivot[pivotIndex]];
       }
 
       return sum;
@@ -227,9 +249,9 @@ bool TlDenseSymmetricMatrixObject::load(const std::string& filePath) {
           break;
       }
     } else {
-      this->log_.critical(
-          TlUtils::format("cannnot open matrix file: %s @%s:%d",
-                          filePath.c_str(), __FILE__, __LINE__));
+      this->log_.critical(TlUtils::format("cannnot open matrix file: %s @%s:%d",
+                                          filePath.c_str(), __FILE__,
+                                          __LINE__));
       throw;
     }
 

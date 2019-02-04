@@ -18,6 +18,10 @@ TlDenseVector_Lapack::TlDenseVector_Lapack(const std::vector<double>& rhs) {
   this->pImpl_ = new TlDenseVector_ImplLapack(rhs);
 }
 
+TlDenseVector_Lapack::TlDenseVector_Lapack(const std::valarray<double>& rhs) {
+  this->pImpl_ = new TlDenseVector_ImplLapack(rhs);
+}
+
 // TlDenseVector_Lapack::TlDenseVector_Lapack(const double* p, size_type size) {
 //   this->pImpl_ = new TlDenseVector_ImplLapack(p, size);
 // }

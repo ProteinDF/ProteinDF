@@ -2,6 +2,7 @@
 #define TL_DENSE_VECTOR_IMPL_LAPACK_H
 
 #include <vector>
+#include <valarray>
 #include "tl_dense_vector_impl_object.h"
 
 class TlDenseGeneralMatrix_ImplLapack;
@@ -16,6 +17,7 @@ class TlDenseVector_ImplLapack : public TlDenseVector_ImplObject {
       const TlDenseVectorObject::index_type size = 0);
   TlDenseVector_ImplLapack(const TlDenseVector_ImplLapack& rhs);
   TlDenseVector_ImplLapack(const std::vector<double>& rhs);
+  TlDenseVector_ImplLapack(const std::valarray<double>& rhs);
 
   operator std::vector<double>() const;
 
