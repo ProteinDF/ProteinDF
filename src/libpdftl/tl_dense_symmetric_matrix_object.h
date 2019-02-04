@@ -5,6 +5,8 @@
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
+#include <valarray>
+
 #include "TlSerializeData.h"
 #include "tl_matrix_object.h"
 class TlDenseMatrix_ImplObject;
@@ -19,7 +21,7 @@ class TlDenseSymmetricMatrixObject : public TlMatrixObject {
   virtual ~TlDenseSymmetricMatrixObject();
 
   virtual void vtr2mat(const std::vector<double>& vtr);
-  
+
  public:
   // ---------------------------------------------------------------------------
   // properties
@@ -34,6 +36,11 @@ class TlDenseSymmetricMatrixObject : public TlMatrixObject {
                    const TlMatrixObject::index_type col, const double value);
   virtual void add(const TlMatrixObject::index_type row,
                    const TlMatrixObject::index_type col, const double value);
+
+  std::valarray<double> getRowVector(
+      const TlMatrixObject::index_type row) const;
+  std::valarray<double> getColVector(
+      const TlMatrixObject::index_type col) const;
 
   // ---------------------------------------------------------------------------
   // operations
@@ -75,5 +82,45 @@ class TlDenseSymmetricMatrixObject : public TlMatrixObject {
 
 std::ostream& operator<<(std::ostream& stream,
                          const TlDenseSymmetricMatrixObject& mat);
+
+// -----------------------------------------------------------------------------
+// template
+// -----------------------------------------------------------------------------
+// template <class VectorType>
+// VectorType TlDenseSymmetricMatrixObject::getRowVector(
+//     const TlMatrixObject::index_type row) const {
+//   const TlMatrixObject::index_type size = this->getNumOfCols();
+//   VectorType v(size);
+//   for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+//     v.set(i, this->get(row, i));
+//   }
+
+//   return v;
+// }
+
+// template<>
+// std::valarray<double>
+// TlDenseSymmetricMatrixObject::getRowVector<std::valarray<double> >(
+//     const TlMatrixObject::index_type row) const {
+//   const TlMatrixObject::index_type size = this->getNumOfCols();
+//   std::valarray<double> v(size);
+//   for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+//       v[i] = this->get(row, i);
+//   }
+
+//   return v;
+// }
+
+// template <class VectorType>
+// VectorType TlDenseSymmetricMatrixObject::getColVector(
+//     const TlMatrixObject::index_type col) const {
+//   const TlMatrixObject::index_type size = this->getNumOfRows();
+//   VectorType v(size);
+//   for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+//     v.set(i, this->get(i, col));
+//   }
+
+//   return v;
+// }
 
 #endif  // TL_DENSE_SYMMETRIC_MATRIX_OBJECT_H

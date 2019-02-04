@@ -178,6 +178,11 @@ class DfObject {
   std::string getNyuPath(RUN_TYPE nRunType, int nIteration) const;
   std::string getTalphaPath(RUN_TYPE runType, int iteration) const;
 
+  // Population
+  std::string getPopGrossOrbPath(RUN_TYPE runType, int iteration) const;
+  std::string getPopGrossAtomPath(RUN_TYPE runType, int iteration) const;
+  std::string getPopMullikenPath(RUN_TYPE runType, int iteration) const;
+
   // LO
   std::string getCloMatrixPath(RUN_TYPE runType, int itr) const;
 

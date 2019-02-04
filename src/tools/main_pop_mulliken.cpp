@@ -62,16 +62,18 @@ int main(int argc, char* argv[]) {
   }
 
   DfPopulation dfPop(&param);
+  dfPop.exec(iteration);
+  dfPop.getReport(iteration, std::cout);
 
-  if (savePath.empty() != true) {
-    const TlDenseGeneralMatrix_Lapack mtx = dfPop.getAtomPopData(iteration);
-    if (isVerbose == true) {
-      std::cerr << "save Mulliken Data as " << savePath << std::endl;
-    }
-    mtx.save(savePath);
-  } else {
-    dfPop.getReport(iteration, std::cout);
-  }
+  // if (savePath.empty() != true) {
+  //   // const TlDenseGeneralMatrix_Lapack mtx = dfPop.getAtomPopData(iteration);
+  //   if (isVerbose == true) {
+  //     std::cerr << "save Mulliken Data as " << savePath << std::endl;
+  //   }
+  //   //mtx.save(savePath);
+  // } else {
+  //   dfPop.getReport(iteration, std::cout);
+  // }
 
   return EXIT_SUCCESS;
 }

@@ -20,6 +20,7 @@
 #define DFPOPULATION_PARALLEL_H
 
 #include "DfPopulation.h"
+#include "TlCommunicate.h"
 
 class TlDenseSymmetricMatrix_Lapack;
 class TlDenseSymmetricMatrix_Scalapack;
@@ -30,11 +31,24 @@ class DfPopulation_Parallel : public DfPopulation {
   virtual ~DfPopulation_Parallel();
 
  public:
-  virtual double getSumOfElectrons(const TlDenseSymmetricMatrix_Lapack& P);
-  double getSumOfElectrons(const TlDenseSymmetricMatrix_Scalapack& P);
+  template <class SymmetricMatrixType>
+  double getSumOfElectrons(const SymmetricMatrixType& P);
 
  protected:
   virtual void calcPop(const int iteration);
 };
+
+template <class SymmetricMatrixType>
+double DfPopulation_Parallel::getSumOfElectrons(const SymmetricMatrixType& P) {
+  double answer = 0.0;
+
+  TlCommunicate& rComm = TlCommunicate::getInstance();
+  if (rComm.isMaster() == true) {
+    answer = DfPopulation::getSumOfElectrons(P);
+  }
+  rComm.broadcast(answer);
+
+  return answer;
+}
 
 #endif  // DFPOPULATION_PARALLEL_H

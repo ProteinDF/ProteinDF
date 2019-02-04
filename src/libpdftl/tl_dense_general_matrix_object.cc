@@ -1,10 +1,10 @@
 #include "tl_dense_general_matrix_object.h"
+#include <cassert>
 #include <fstream>
 #include <iostream>
-#include <cassert>
+#include "TlFile.h"
 #include "TlUtils.h"
 #include "tl_matrix_utils.h"
-#include "TlFile.h"
 
 #ifdef HAVE_HDF5
 #include "TlHdf5Utils.h"
@@ -191,9 +191,9 @@ bool TlDenseGeneralMatrixObject::load(const std::string& filePath) {
           break;
       }
     } else {
-      this->log_.critical(
-          TlUtils::format("cannnot open matrix file: %s @%s:%d",
-                          filePath.c_str(), __FILE__, __LINE__));
+      this->log_.critical(TlUtils::format("cannnot open matrix file: %s @%s:%d",
+                                          filePath.c_str(), __FILE__,
+                                          __LINE__));
       throw;
     }
 
@@ -201,7 +201,8 @@ bool TlDenseGeneralMatrixObject::load(const std::string& filePath) {
   } else {
     this->log_.critical(TlUtils::format("illegal matrix format: %s @%s:%d",
                                         filePath.c_str(), __FILE__, __LINE__));
-    this->log_.critical(TlUtils::format("file size: %ld", TlFile::getFileSize(filePath)));
+    this->log_.critical(
+        TlUtils::format("file size: %ld", TlFile::getFileSize(filePath)));
     throw;
   }
 
@@ -349,14 +350,15 @@ bool TlDenseGeneralMatrixObject::saveHdf5(const std::string& filepath,
 
 #endif  // HAVE_HDF5
 
-void TlDenseGeneralMatrixObject::dump(double* buf, const std::size_t size) const {
-    this->pImpl_->dump(buf, size);
+void TlDenseGeneralMatrixObject::dump(double* buf,
+                                      const std::size_t size) const {
+  this->pImpl_->dump(buf, size);
 }
 
-void TlDenseGeneralMatrixObject::restore(const double* buf, const std::size_t size) {
-    this->pImpl_->restore(buf, size);
+void TlDenseGeneralMatrixObject::restore(const double* buf,
+                                         const std::size_t size) {
+  this->pImpl_->restore(buf, size);
 }
-
 
 // -----------------------------------------------------------------------------
 std::ostream& operator<<(std::ostream& stream,

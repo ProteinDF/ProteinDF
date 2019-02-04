@@ -1,6 +1,8 @@
 #ifndef TL_DENSE_GENERAL_MATRIX_OBJECT_H
 #define TL_DENSE_GENERAL_MATRIX_OBJECT_H
 
+#include <valarray>
+
 #include "tl_dense_matrix_impl_object.h"
 #include "tl_dense_vector_object.h"
 #include "tl_matrix_object.h"
@@ -52,10 +54,26 @@ class TlDenseGeneralMatrixObject : public TlMatrixObject {
              const TlDenseGeneralMatrixObject& ref);
 
   template <class VectorType>
-  VectorType getRowVector(const TlMatrixObject::index_type row) const;
+  VectorType getRowVector(const TlMatrixObject::index_type row) const {
+    const TlMatrixObject::index_type size = this->getNumOfCols();
+    VectorType v(size);
+    for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+      v.set(i, this->get(row, i));
+    }
+
+    return v;
+  }
 
   template <class VectorType>
-  VectorType getColVector(const TlMatrixObject::index_type col) const;
+  VectorType getColVector(const TlMatrixObject::index_type col) const {
+    const TlMatrixObject::index_type size = this->getNumOfRows();
+    VectorType v(size);
+    for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+      v.set(i, this->get(i, col));
+    }
+
+    return v;
+  }
 
   // ---------------------------------------------------------------------------
   // Operations
@@ -97,28 +115,6 @@ std::ostream& operator<<(std::ostream& stream,
                          const TlDenseGeneralMatrixObject& mat);
 
 // -----------------------------------------------------------------------------
-template <class VectorType>
-VectorType TlDenseGeneralMatrixObject::getRowVector(
-    const TlMatrixObject::index_type row) const {
-  const TlMatrixObject::index_type size = this->getNumOfCols();
-  VectorType v(size);
-  for (TlMatrixObject::index_type i = 0; i < size; ++i) {
-    v.set(i, this->get(row, i));
-  }
-
-  return v;
-}
-
-template <class VectorType>
-VectorType TlDenseGeneralMatrixObject::getColVector(
-    const TlMatrixObject::index_type col) const {
-  const TlMatrixObject::index_type size = this->getNumOfRows();
-  VectorType v(size);
-  for (TlMatrixObject::index_type i = 0; i < size; ++i) {
-    v.set(i, this->get(i, col));
-  }
-
-  return v;
-}
-
+// template
+// -----------------------------------------------------------------------------
 #endif  // TL_DENSE_GENERAL_MATRIX_OBJECT_H

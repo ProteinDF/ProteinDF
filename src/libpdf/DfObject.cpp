@@ -423,6 +423,17 @@ void DfObject::setParam(const TlSerializeData& data) {
     paramFileBaseName["eigenvalues"] = "eigenvalues.%s.vtr";
   }
 
+  // for Population
+  if (paramFileBaseName["pop/gross/orb"].getStr().empty() == true) {
+    paramFileBaseName["pop/gross/orb"] = "pop.gross.orb.%s.vtr";
+  }
+  if (paramFileBaseName["pop/gross/atom"].getStr().empty() == true) {
+    paramFileBaseName["pop/gross/atom"] = "pop.gross.atom.%s.vtr";
+  }
+  if (paramFileBaseName["pop/mulliken"].getStr().empty() == true) {
+    paramFileBaseName["pop/mulliken"] = "pop.mulliken.%s.vtr";
+  }
+
   // for lo
   paramFileBaseName["Clo_matrix"] = "Clo.%s.mat";
 }
@@ -765,6 +776,27 @@ std::string DfObject::getDipoleVelocityIntegralsYPath() const {
 
 std::string DfObject::getDipoleVelocityIntegralsZPath() const {
   return this->makeFilePath("dipoleVelocityIntegrals_z");
+}
+
+std::string DfObject::getPopGrossOrbPath(const RUN_TYPE runType,
+                                         const int iteration) const {
+  return this->makeFilePath(
+      "pop/gross/orb",
+      DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+}
+
+std::string DfObject::getPopGrossAtomPath(const RUN_TYPE runType,
+                                          const int iteration) const {
+  return this->makeFilePath(
+      "pop/gross/atom",
+      DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+}
+
+std::string DfObject::getPopMullikenPath(const RUN_TYPE runType,
+                                         const int iteration) const {
+  return this->makeFilePath(
+      "pop/mulliken",
+      DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
 std::string DfObject::getCloMatrixPath(const RUN_TYPE runType,
