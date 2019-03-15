@@ -122,10 +122,10 @@ int PDF_MAIN(int argc, char* argv[]) {
 
   log.setProcID(rComm.getRank());
   if (opt["d"] == "defined") {
-    log.setLevel(TlLogging::DEBUG, TlLogging::WARN);
+    log.setLevel(TlLogging::TL_DEBUG, TlLogging::TL_WARN);
   }
   if (opt["D"] == "defined") {
-    log.setLevel(TlLogging::DEBUG, TlLogging::DEBUG);
+    log.setLevel(TlLogging::TL_DEBUG, TlLogging::TL_DEBUG);
   }
 
   // run ProteinDF

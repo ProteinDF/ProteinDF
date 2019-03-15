@@ -28,7 +28,7 @@ const char* TlLogging::pLevelStr_[] = {"DEBUG", "INFO", "WARN", "ERROR",
 TlLogging::TlLogging() {
   this->filePath_ = "output.log";
   this->procID_ = 0;
-  this->setLevel(INFO, WARN);
+  this->setLevel(TL_INFO, TL_WARN);
 }
 
 TlLogging::~TlLogging() { this->output_.close(); }
@@ -65,16 +65,16 @@ void TlLogging::setLevel() {
   this->level_ = (this->procID_ == 0) ? this->masterLevel_ : this->workerLevel_;
 }
 
-void TlLogging::debug(const std::string& msg) { this->output(DEBUG, msg); }
+void TlLogging::debug(const std::string& msg) { this->output(TL_DEBUG, msg); }
 
-void TlLogging::info(const std::string& msg) { this->output(INFO, msg); }
+void TlLogging::info(const std::string& msg) { this->output(TL_INFO, msg); }
 
-void TlLogging::warn(const std::string& msg) { this->output(WARN, msg); }
+void TlLogging::warn(const std::string& msg) { this->output(TL_WARN, msg); }
 
-void TlLogging::error(const std::string& msg) { this->output(ERROR, msg); }
+void TlLogging::error(const std::string& msg) { this->output(TL_ERROR, msg); }
 
 void TlLogging::critical(const std::string& msg) {
-  this->output(CRITICAL, msg);
+  this->output(TL_CRITICAL, msg);
 }
 
 void TlLogging::output(const int level, const std::string& msg) {
@@ -84,7 +84,7 @@ void TlLogging::output(const int level, const std::string& msg) {
     this->open();
     this->output_ << prettyMsg << std::flush;
 
-    if (level >= CRITICAL) {
+    if (level >= TL_CRITICAL) {
       std::cerr << prettyMsg << std::flush;
     }
   }

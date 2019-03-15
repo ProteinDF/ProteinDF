@@ -28,7 +28,7 @@
 /// 出力レベル以上の出力が無ければ無視されます。
 class TlLogging {
  public:
-  enum Level { DEBUG, INFO, WARN, ERROR, CRITICAL };
+  enum Level { TL_DEBUG, TL_INFO, TL_WARN, TL_ERROR, TL_CRITICAL };
 
  public:
   static TlLogging& getInstance();
@@ -38,7 +38,7 @@ class TlLogging {
   void setProcID(const int procID);
 
   void setLevel(const TlLogging::Level masterLevel,
-                const TlLogging::Level workerLevel = WARN);
+                const TlLogging::Level workerLevel = TL_WARN);
 
   void debug(const std::string& msg);
   void info(const std::string& msg);
