@@ -57,7 +57,7 @@ int PDF_MAIN(int argc, char* argv[]) {
   log.setFilePath(output);
 
   if (opt["d"] == "defined") {
-    log.setLevel(TlLogging::DEBUG);
+    log.setLevel(TlLogging::TL_DEBUG);
   }
 
   // ViennaCL
