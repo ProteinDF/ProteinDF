@@ -314,7 +314,7 @@ void TlHdf5Utils::get(const std::string& path, std::string* pOut) const {
   char* pBuf = new char[dataSize +1];
 
   dataSet.read(pBuf, memType, memSpace);
-  *pOut = std::string(pBuf);
+  *pOut = std::string(pBuf, dataSize);
 
   delete[] pBuf;
   pBuf = NULL;
