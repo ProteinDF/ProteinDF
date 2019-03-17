@@ -5,6 +5,14 @@
 #include "TlUtils.h"
 
 // ---------------------------------------------------------------------------
+// properties
+// ---------------------------------------------------------------------------
+void TlDenseMatrix_ImplObject::reserve(const TlMatrixObject::index_type row,
+                                       const TlMatrixObject::index_type col) {
+// do nothing
+}
+
+// ---------------------------------------------------------------------------
 // operations
 // ---------------------------------------------------------------------------
 std::vector<double> TlDenseMatrix_ImplObject::diagonals() const {
