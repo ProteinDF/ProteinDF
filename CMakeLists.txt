@@ -144,6 +144,15 @@ endif (OpenCL_FOUND)
 
 # check ViennaCL
 if (USE_VIENNACL)
+
+  # for boost
+  find_package(Boost REQUIRED)
+  if (Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+    message("Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
+    message("Boost_LIBRARIES: ${Boost_LIBRARIES}")
+  endif (Boost_FOUND)
+
   find_package(ViennaCL)
   if (VIENNACL_FOUND)
     message("ViennaCL information:")
