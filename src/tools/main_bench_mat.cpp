@@ -327,6 +327,7 @@ void showHelp() {
   std::cerr << "-d <device id>: switch device id" << std::endl;
   std::cerr << "-s <size>: matrix size" << std::endl;
   std::cerr << "-g: test GPU code only" << std::endl;
+  std::cerr << "-e: eigenvalue problem only" << std::endl;
 }
 
 // -----------------------------------------------------------------------------
@@ -414,7 +415,7 @@ int main(int argc, char* argv[]) {
       benchSymmetricMatrix<TlDenseSymmetricMatrix_Lapack,
                            TlDenseGeneralMatrix_Lapack>(dim);
 
-#ifdef HAVE_EIGEN                      
+#ifdef HAVE_EIGEN
       std::cout << ">>>> Eigen@SymmetriclMatrix" << std::endl;
       benchSymmetricMatrix<TlDenseSymmetricMatrix_Eigen,
                            TlDenseGeneralMatrix_Eigen>(dim);
@@ -437,7 +438,7 @@ int main(int argc, char* argv[]) {
     benchDiagonal<TlDenseSymmetricMatrix_Lapack, TlDenseGeneralMatrix_Lapack,
                   TlDenseVector_Lapack>(dim);
 
-#ifdef HAVE_EIGEN                  
+#ifdef HAVE_EIGEN
     std::cout << ">>>> Eigen@SymmetricMatrix (diagonal)" << std::endl;
     benchDiagonal<TlDenseSymmetricMatrix_Eigen, TlDenseGeneralMatrix_Eigen,
                   TlDenseVector_Eigen>(dim);
