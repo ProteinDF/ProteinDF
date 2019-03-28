@@ -55,24 +55,26 @@ void benchDiagonalWithEigen(TlMatrixObject::index_type dim) {
 
   std::cout << TlUtils::format("diagonal: %8.3e sec", calcTime) << std::endl;
 }
-#endif // HAVE_EIGEN
+#endif  // HAVE_EIGEN
 
 // -----------------------------------------------------------------------------
 // prepare
 // -----------------------------------------------------------------------------
 void showHelp() {
-  std::cerr << "a benchmark (matrix diagonal) of linear algebra packages" << std::endl;
+  std::cerr << "a benchmark (matrix diagonal) of linear algebra packages"
+            << std::endl;
   std::cerr << "OPTIONS:" << std::endl;
   std::cerr << "-d <device id>: switch device id" << std::endl;
   std::cerr << "-s <size>: matrix size" << std::endl;
-  std::cerr << "-g: test GPU code only" << std::endl;
+  std::cerr << "-c: test CPU code" << std::endl;
+  std::cerr << "-g: test GPU code" << std::endl;
 }
 
 // -----------------------------------------------------------------------------
 // MAIN
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "hd:s:g");
+  TlGetopt opt(argc, argv, "hcd:s:g");
 
   if (opt["h"] == "defined") {
     showHelp();
@@ -102,12 +104,12 @@ int main(int argc, char* argv[]) {
     dim = std::atoi(opt["s"].c_str());
   }
 
-  bool gpuOnly = false;
-  if (opt["g"] == "defined") {
-    gpuOnly = true;
+  bool onCPU = (opt["c"] == "defined");
+  bool onGPU = (opt["g"] == "defined");
+  if (!(onCPU ^ onGPU)) {
+    onCPU = true;
+    onGPU = true;
   }
-
-  std::cout << "dim: " << dim << std::endl;
 
   initRand();
 
@@ -124,7 +126,7 @@ int main(int argc, char* argv[]) {
 #endif  // HAVE_VIENNACL
 
   // diagonal
-  if (gpuOnly != true) {
+  if (onCPU) {
     std::cout << ">>>> BLAS@SymmetricMatrix (diagonal)" << std::endl;
     benchDiagonal<TlDenseSymmetricMatrix_Lapack, TlDenseGeneralMatrix_Lapack,
                   TlDenseVector_Lapack>(dim);
@@ -133,14 +135,16 @@ int main(int argc, char* argv[]) {
     std::cout << ">>>> Eigen@SymmetricMatrix (diagonal)" << std::endl;
     benchDiagonal<TlDenseSymmetricMatrix_Eigen, TlDenseGeneralMatrix_Eigen,
                   TlDenseVector_Eigen>(dim);
-#endif // HAVE_EIGEN
+#endif  // HAVE_EIGEN
   }
 
 #ifdef HAVE_VIENNACL
-  std::cout << ">>>> ViennaCL@SymmetricMatrix (diagonal)" << std::endl;
-  benchDiagonalWithEigen<TlDenseSymmetricMatrix_ViennaCL,
-                         TlDenseGeneralMatrix_ViennaCL, TlDenseVector_ViennaCL>(
-      dim);
+  if (onGPU) {
+    std::cout << ">>>> ViennaCL@SymmetricMatrix (diagonal)" << std::endl;
+    benchDiagonalWithEigen<TlDenseSymmetricMatrix_ViennaCL,
+                           TlDenseGeneralMatrix_ViennaCL,
+                           TlDenseVector_ViennaCL>(dim);
+  }
 #endif  // HAVE_VIENNACL
 
   std::cout << "done." << std::endl;
