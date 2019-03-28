@@ -167,14 +167,15 @@ void showHelp() {
   std::cerr << "OPTIONS:" << std::endl;
   std::cerr << "-d <device id>: switch device id" << std::endl;
   std::cerr << "-s <size>: matrix size" << std::endl;
-  std::cerr << "-g: test GPU code only" << std::endl;
+  std::cerr << "-c: test CPU code" << std::endl;
+  std::cerr << "-g: test GPU code" << std::endl;
 }
 
 // -----------------------------------------------------------------------------
 // MAIN
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "hd:s:g");
+  TlGetopt opt(argc, argv, "hcd:s:g");
 
   if (opt["h"] == "defined") {
     showHelp();
@@ -204,9 +205,11 @@ int main(int argc, char* argv[]) {
     dim = std::atoi(opt["s"].c_str());
   }
 
-  bool gpuOnly = false;
-  if (opt["g"] == "defined") {
-    gpuOnly = true;
+  bool onCPU = (opt["c"] == "defined");
+  bool onGPU = (opt["g"] == "defined");
+  if (!(onCPU ^ onGPU)) {
+    onCPU = true;
+    onGPU = true;
   }
 
   std::cout << "dim: " << dim << std::endl;
@@ -226,7 +229,7 @@ int main(int argc, char* argv[]) {
 #endif  // HAVE_VIENNACL
 
   // general matrix
-  if (gpuOnly != true) {
+  if (onCPU) {
     std::cout << ">>>> BLAS@GeneralMatrix" << std::endl;
     benchGeneralMatrix<TlDenseGeneralMatrix_Lapack>(dim);
 
@@ -235,16 +238,19 @@ int main(int argc, char* argv[]) {
     benchGeneralMatrix<TlDenseGeneralMatrix_Eigen>(dim);
 #endif  // HAVE_EIGEN
   }
-#ifdef HAVE_VIENNACL
-  // std::cout << ">>>> ViennaCL@GeneralMatrix" << std::endl;
-  // benchGeneralMatrix<TlDenseGeneralMatrix_ViennaCL>(dim);
 
-  std::cout << ">>>> ViennaCL(Eigen)@GeneralMatrix" << std::endl;
-  benchGeneralMatrixWithEigen<TlDenseGeneralMatrix_ViennaCL>(dim);
+#ifdef HAVE_VIENNACL
+  if (onGPU) {
+    // std::cout << ">>>> ViennaCL@GeneralMatrix" << std::endl;
+    // benchGeneralMatrix<TlDenseGeneralMatrix_ViennaCL>(dim);
+
+    std::cout << ">>>> ViennaCL(Eigen)@GeneralMatrix" << std::endl;
+    benchGeneralMatrixWithEigen<TlDenseGeneralMatrix_ViennaCL>(dim);
+  }
 #endif  // HAVE_VIENNACL
 
   // symmetric matrix
-  if (gpuOnly != true) {
+  if (onCPU) {
     std::cout << ">>>> BLAS@SymmetricMatrix" << std::endl;
     benchSymmetricMatrix<TlDenseSymmetricMatrix_Lapack,
                          TlDenseGeneralMatrix_Lapack>(dim);
@@ -255,14 +261,17 @@ int main(int argc, char* argv[]) {
                          TlDenseGeneralMatrix_Eigen>(dim);
 #endif  // HAVE_EIGEN
   }
-#ifdef HAVE_VIENNACL
-  // std::cout << ">>>> ViennaCL@SymmetricMatrix" << std::endl;
-  // benchSymmetricMatrix<TlDenseSymmetricMatrix_ViennaCL,
-  //                      TlDenseGeneralMatrix_ViennaCL>(dim);
 
-  std::cout << ">>>> ViennaCL(Eigen)@SymmetricMatrix" << std::endl;
-  benchSymmetricMatrixWithEigen<TlDenseSymmetricMatrix_ViennaCL,
-                                TlDenseGeneralMatrix_ViennaCL>(dim);
+#ifdef HAVE_VIENNACL
+  if (onGPU) {
+    // std::cout << ">>>> ViennaCL@SymmetricMatrix" << std::endl;
+    // benchSymmetricMatrix<TlDenseSymmetricMatrix_ViennaCL,
+    //                      TlDenseGeneralMatrix_ViennaCL>(dim);
+
+    std::cout << ">>>> ViennaCL(Eigen)@SymmetricMatrix" << std::endl;
+    benchSymmetricMatrixWithEigen<TlDenseSymmetricMatrix_ViennaCL,
+                                  TlDenseGeneralMatrix_ViennaCL>(dim);
+  }
 #endif  // HAVE_VIENNACL
 
   std::cout << "done." << std::endl;

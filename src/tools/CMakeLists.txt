@@ -345,13 +345,6 @@ install(TARGETS pdf-rvm2csfd RUNTIME DESTINATION bin)
 # ------------------------------------------------------------------------------
 # benchmark
 # ------------------------------------------------------------------------------
-set(PDF_BENCH_MAT_SOURCES
-  main_bench_mat.cpp
-  )
-add_executable(pdf-bench-mat ${PDF_BENCH_MAT_SOURCES})
-target_link_libraries(pdf-bench-mat libpdf libpdftl)
-install(TARGETS pdf-bench-mat RUNTIME DESTINATION bin)
-
 set(PDF_BENCH_MAT_MUL_SOURCES
   main_bench_mat_common.h
   main_bench_mat_mul.cc
