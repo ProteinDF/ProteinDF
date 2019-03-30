@@ -57,6 +57,7 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
   virtual bool load(const std::string& path);
   virtual bool save(const std::string& path) const;
 
+ public:
   virtual bool load(const std::string& basename, int subunitID);
 
  public:
