@@ -16,10 +16,14 @@
 #include "tl_dense_vector_impl_viennacl.h"
 #include "tl_sparse_symmetric_matrix_impl_viennacl.h"
 
+#include "TlUtils.h"
+
 #include <viennacl/linalg/power_iter.hpp>
 #include <viennacl/linalg/qr-method.hpp>
 #include <viennacl/matrix.hpp>
 #include <viennacl/vector.hpp>
+
+#include "TlTime.h"
 
 TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(
     const TlMatrixObject::index_type dim)
@@ -175,11 +179,16 @@ bool TlDenseSymmetricMatrix_ImplViennaCL::eig_QR(
 
   // QR method
   // The eigenvalues obtained are in descending order!
+  //TlTime time;
+  //time.start();
   MatrixDataType A = this->matrix_;
   viennacl::linalg::qr_method_sym(A, pEigvec->matrix_, pEigval->vector_);
 
+  //std::cerr << TlUtils::format("reverse val: %8.3e sec", time.getElapseTime()) << std::endl;
   pEigval->reverse();
+  //std::cerr << TlUtils::format("reverse vec: %8.3e sec", time.getElapseTime()) << std::endl;
   pEigvec->reverseColumns();
+  //std::cerr << TlUtils::format("end:         %8.3e sec", time.getElapseTime()) << std::endl;
 
   return true;
 }
