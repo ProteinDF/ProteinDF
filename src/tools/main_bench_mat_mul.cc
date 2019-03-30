@@ -1,68 +1,8 @@
-#include <stdio.h>
-#include <time.h>
-#include <cmath>
-#include <cstdlib>
-#include <iostream>
-
-#include "TlGetopt.h"
-#include "TlTime.h"
-#include "TlUtils.h"
-#include "tl_dense_general_matrix_lapack.h"
-#include "tl_dense_symmetric_matrix_lapack.h"
-#include "tl_dense_vector_lapack.h"
-
-#ifdef _OPENMP
-#include <omp.h>
-#endif  // _OPENMP
-
-#ifdef HAVE_EIGEN
-#include "tl_dense_general_matrix_eigen.h"
-#include "tl_dense_symmetric_matrix_eigen.h"
-#include "tl_dense_vector_eigen.h"
-#endif // HAVE_EIGEN
-
-#ifdef HAVE_VIENNACL
-#include "tl_dense_general_matrix_viennacl.h"
-#include "tl_dense_symmetric_matrix_viennacl.h"
-#include "tl_dense_vector_viennacl.h"
-
-#include "tl_viennacl.h"
-#include "viennacl/ocl/backend.hpp"
-#include "viennacl/ocl/context.hpp"
-#include "viennacl/ocl/enqueue.hpp"
-#include "viennacl/ocl/platform.hpp"
-#endif  // HAVE_VIENNACL
+#include "main_bench_mat_common.h"
 
 // -----------------------------------------------------------------------------
 // General Matrix
 // -----------------------------------------------------------------------------
-template <typename DenseMatrixType>
-void setupGeneralMatrix(const TlMatrixObject::index_type dim,
-                        DenseMatrixType* pMat) {
-  for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
-    for (TlMatrixObject::index_type c = 0; c < dim; ++c) {
-      const double v = double(rand()) / double((RAND_MAX));
-      pMat->set(r, c, v);
-    }
-  }
-}
-
-#ifdef HAVE_EIGEN
-template <typename DenseMatrixType>
-void setupGeneralMatrixWithEigen(const TlMatrixObject::index_type dim,
-                                 DenseMatrixType* pMat) {
-  TlDenseGeneralMatrix_Eigen tmp(dim, dim);
-  for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
-    for (TlMatrixObject::index_type c = 0; c < dim; ++c) {
-      const double v = double(rand()) / double((RAND_MAX));
-      tmp.set(r, c, v);
-    }
-  }
-
-  *pMat = tmp;
-}
-#endif // HAVE_EIGEN
-
 template <typename DenseMatrixType>
 void benchGeneralMatrix(TlMatrixObject::index_type dim) {
   TlTime time;
@@ -137,54 +77,11 @@ void benchGeneralMatrixWithEigen(TlMatrixObject::index_type dim) {
                                FLOP / (mulTime * 1024.0 * 1024.0 * 1024.0))
             << std::endl;
 }
-#endif // defined(HAVE_EIGEN)
-
+#endif  // defined(HAVE_EIGEN)
 
 // -----------------------------------------------------------------------------
 // Symmetric Matrix
 // -----------------------------------------------------------------------------
-template <typename SymmetricMatrixType>
-void setupSymmetricMatrix(const TlMatrixObject::index_type dim,
-                          SymmetricMatrixType* pMat) {
-  for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
-    for (TlMatrixObject::index_type c = 0; c < r; ++c) {
-      const double v = double(rand()) / double((RAND_MAX));
-      pMat->set(r, c, v);
-    }
-    pMat->set(r, r, double(r));
-  }
-}
-
-#ifdef HAVE_EIGEN
-template <typename SymmetricMatrixType>
-void setupSymmetricMatrixWithEigen(const TlMatrixObject::index_type dim,
-                                   SymmetricMatrixType* pMat) {
-  TlDenseSymmetricMatrix_Eigen tmp(dim);
-  for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
-    for (TlMatrixObject::index_type c = 0; c < r; ++c) {
-      const double v = double(rand()) / double((RAND_MAX));
-      tmp.set(r, c, v);
-    }
-    tmp.set(r, r, double(r));
-  }
-
-  *pMat = tmp;
-}
-#endif // HAVE_EIGEN
-
-template <typename SymmetricMatrixType>
-void setupSymmetricMatrixForDiagonal(const TlMatrixObject::index_type dim,
-                                     SymmetricMatrixType* pMat) {
-  pMat->resize(dim);
-  for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
-    for (TlMatrixObject::index_type c = 0; c < r; ++c) {
-      const double v = std::sqrt(0.3 * double(r) * double(c));
-      pMat->set(r, c, v);
-    }
-    pMat->set(r, r, double(r));
-  }
-}
-
 template <typename SymmetricMatrixType, typename GeneralMatrixType>
 void benchSymmetricMatrix(const TlMatrixObject::index_type dim) {
   TlTime time;
@@ -259,81 +156,26 @@ void benchSymmetricMatrixWithEigen(const TlMatrixObject::index_type dim) {
                                FLOP / (mulTime * 1024.0 * 1024.0 * 1024.0))
             << std::endl;
 }
-#endif // defined(HAVE_EIGEN)
-
-
-template <typename SymmetricMatrixType, typename GeneralMatrixType,
-          typename VectorType>
-void benchDiagonal(TlMatrixObject::index_type dim) {
-  TlTime time;
-  time.start();
-  SymmetricMatrixType A(dim);
-  const double createTime = time.getElapseTime();
-  time.reset();
-  time.start();
-
-  setupSymmetricMatrixForDiagonal(dim, &A);
-  const double setupTime = time.getElapseTime();
-  time.reset();
-  time.start();
-
-  GeneralMatrixType X;
-  VectorType v;
-  A.eig(&v, &X);
-  const double calcTime = time.getElapseTime();
-
-  std::cout << TlUtils::format("create:   %8.3e sec", createTime) << std::endl;
-  std::cout << TlUtils::format("setup:    %8.3e sec", setupTime) << std::endl;
-  std::cout << TlUtils::format("diagonal: %8.3e sec", calcTime) << std::endl;
-}
-
-#ifdef HAVE_EIGEN
-template <typename SymmetricMatrixType, typename GeneralMatrixType,
-          typename VectorType>
-void benchDiagonalWithEigen(TlMatrixObject::index_type dim) {
-  TlTime time;
-  time.start();
-  SymmetricMatrixType A(dim);
-  const double createTime = time.getElapseTime();
-  std::cout << TlUtils::format("create:   %8.3e sec", createTime) << std::endl;
-  time.reset();
-  time.start();
-
-  TlDenseSymmetricMatrix_Eigen tmpA(dim);
-  setupSymmetricMatrixForDiagonal(dim, &tmpA);
-  A = tmpA;
-  const double setupTime = time.getElapseTime();
-  std::cout << TlUtils::format("setup:    %8.3e sec", setupTime) << std::endl;
-  time.reset();
-  time.start();
-
-  GeneralMatrixType X;
-  VectorType v;
-  A.eig(&v, &X);
-  const double calcTime = time.getElapseTime();
-
-  std::cout << TlUtils::format("diagonal: %8.3e sec", calcTime) << std::endl;
-}
-#endif // HAVE_EIGEN
+#endif  // defined(HAVE_EIGEN)
 
 // -----------------------------------------------------------------------------
 // prepare
 // -----------------------------------------------------------------------------
-void initRand() { srand((unsigned int)time(NULL)); }
-
 void showHelp() {
-  std::cerr << "a benchmark of linear algebra packages" << std::endl;
+  std::cerr << "a matrix(multiplication) benchmark of linear algebra packages"
+            << std::endl;
   std::cerr << "OPTIONS:" << std::endl;
   std::cerr << "-d <device id>: switch device id" << std::endl;
   std::cerr << "-s <size>: matrix size" << std::endl;
-  std::cerr << "-g: test GPU code only" << std::endl;
+  std::cerr << "-c: test CPU code" << std::endl;
+  std::cerr << "-g: test GPU code" << std::endl;
 }
 
 // -----------------------------------------------------------------------------
 // MAIN
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "ehd:s:g");
+  TlGetopt opt(argc, argv, "hcd:s:g");
 
   if (opt["h"] == "defined") {
     showHelp();
@@ -363,14 +205,11 @@ int main(int argc, char* argv[]) {
     dim = std::atoi(opt["s"].c_str());
   }
 
-  bool gpuOnly = false;
-  if (opt["g"] == "defined") {
-    gpuOnly = true;
-  }
-
-  bool eigOnly = false;
-  if (opt["e"] == "defined") {
-    eigOnly = true;
+  bool onCPU = (opt["c"] == "defined");
+  bool onGPU = (opt["g"] == "defined");
+  if (!(onCPU ^ onGPU)) {
+    onCPU = true;
+    onGPU = true;
   }
 
   std::cout << "dim: " << dim << std::endl;
@@ -390,37 +229,41 @@ int main(int argc, char* argv[]) {
 #endif  // HAVE_VIENNACL
 
   // general matrix
-  if (eigOnly != true) {
-    if (gpuOnly != true) {
-      std::cout << ">>>> BLAS@GeneralMatrix" << std::endl;
-      benchGeneralMatrix<TlDenseGeneralMatrix_Lapack>(dim);
+  if (onCPU) {
+    std::cout << ">>>> BLAS@GeneralMatrix" << std::endl;
+    benchGeneralMatrix<TlDenseGeneralMatrix_Lapack>(dim);
 
 #ifdef HAVE_EIGEN
-      std::cout << ">>>> Eigen@GeneralMatrix" << std::endl;
-      benchGeneralMatrix<TlDenseGeneralMatrix_Eigen>(dim);
-#endif // HAVE_EIGEN
-    }
+    std::cout << ">>>> Eigen@GeneralMatrix" << std::endl;
+    benchGeneralMatrix<TlDenseGeneralMatrix_Eigen>(dim);
+#endif  // HAVE_EIGEN
+  }
+
 #ifdef HAVE_VIENNACL
+  if (onGPU) {
     // std::cout << ">>>> ViennaCL@GeneralMatrix" << std::endl;
     // benchGeneralMatrix<TlDenseGeneralMatrix_ViennaCL>(dim);
 
     std::cout << ">>>> ViennaCL(Eigen)@GeneralMatrix" << std::endl;
     benchGeneralMatrixWithEigen<TlDenseGeneralMatrix_ViennaCL>(dim);
+  }
 #endif  // HAVE_VIENNACL
 
-    // symmetric matrix
-    if (gpuOnly != true) {
-      std::cout << ">>>> BLAS@SymmetricMatrix" << std::endl;
-      benchSymmetricMatrix<TlDenseSymmetricMatrix_Lapack,
-                           TlDenseGeneralMatrix_Lapack>(dim);
+  // symmetric matrix
+  if (onCPU) {
+    std::cout << ">>>> BLAS@SymmetricMatrix" << std::endl;
+    benchSymmetricMatrix<TlDenseSymmetricMatrix_Lapack,
+                         TlDenseGeneralMatrix_Lapack>(dim);
 
-#ifdef HAVE_EIGEN                      
-      std::cout << ">>>> Eigen@SymmetriclMatrix" << std::endl;
-      benchSymmetricMatrix<TlDenseSymmetricMatrix_Eigen,
-                           TlDenseGeneralMatrix_Eigen>(dim);
-#endif // HAVE_EIGEN
-    }
+#ifdef HAVE_EIGEN
+    std::cout << ">>>> Eigen@SymmetriclMatrix" << std::endl;
+    benchSymmetricMatrix<TlDenseSymmetricMatrix_Eigen,
+                         TlDenseGeneralMatrix_Eigen>(dim);
+#endif  // HAVE_EIGEN
+  }
+
 #ifdef HAVE_VIENNACL
+  if (onGPU) {
     // std::cout << ">>>> ViennaCL@SymmetricMatrix" << std::endl;
     // benchSymmetricMatrix<TlDenseSymmetricMatrix_ViennaCL,
     //                      TlDenseGeneralMatrix_ViennaCL>(dim);
@@ -428,27 +271,7 @@ int main(int argc, char* argv[]) {
     std::cout << ">>>> ViennaCL(Eigen)@SymmetricMatrix" << std::endl;
     benchSymmetricMatrixWithEigen<TlDenseSymmetricMatrix_ViennaCL,
                                   TlDenseGeneralMatrix_ViennaCL>(dim);
-#endif  // HAVE_VIENNACL
   }
-
-  // diagonal
-  if (gpuOnly != true) {
-    std::cout << ">>>> BLAS@SymmetricMatrix (diagonal)" << std::endl;
-    benchDiagonal<TlDenseSymmetricMatrix_Lapack, TlDenseGeneralMatrix_Lapack,
-                  TlDenseVector_Lapack>(dim);
-
-#ifdef HAVE_EIGEN                  
-    std::cout << ">>>> Eigen@SymmetricMatrix (diagonal)" << std::endl;
-    benchDiagonal<TlDenseSymmetricMatrix_Eigen, TlDenseGeneralMatrix_Eigen,
-                  TlDenseVector_Eigen>(dim);
-#endif // HAVE_EIGEN
-  }
-
-#ifdef HAVE_VIENNACL
-  std::cout << ">>>> ViennaCL@SymmetricMatrix (diagonal)" << std::endl;
-  benchDiagonalWithEigen<TlDenseSymmetricMatrix_ViennaCL,
-                         TlDenseGeneralMatrix_ViennaCL, TlDenseVector_ViennaCL>(
-      dim);
 #endif  // HAVE_VIENNACL
 
   std::cout << "done." << std::endl;

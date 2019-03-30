@@ -345,12 +345,21 @@ install(TARGETS pdf-rvm2csfd RUNTIME DESTINATION bin)
 # ------------------------------------------------------------------------------
 # benchmark
 # ------------------------------------------------------------------------------
-set(PDF_BENCH_MAT_SOURCES
-  main_bench_mat.cpp
+set(PDF_BENCH_MAT_MUL_SOURCES
+  main_bench_mat_common.h
+  main_bench_mat_mul.cc
   )
-add_executable(pdf-bench-mat ${PDF_BENCH_MAT_SOURCES})
-target_link_libraries(pdf-bench-mat libpdf libpdftl)
-install(TARGETS pdf-bench-mat RUNTIME DESTINATION bin)
+add_executable(pdf-bench-mat-mul ${PDF_BENCH_MAT_MUL_SOURCES})
+target_link_libraries(pdf-bench-mat-mul libpdf libpdftl)
+install(TARGETS pdf-bench-mat-mul RUNTIME DESTINATION bin)
+
+set(PDF_BENCH_MAT_DIAG_SOURCES
+  main_bench_mat_common.h
+  main_bench_mat_diag.cc
+  )
+add_executable(pdf-bench-mat-diag ${PDF_BENCH_MAT_DIAG_SOURCES})
+target_link_libraries(pdf-bench-mat-diag libpdf libpdftl)
+install(TARGETS pdf-bench-mat-diag RUNTIME DESTINATION bin)
 
 
 # ================
