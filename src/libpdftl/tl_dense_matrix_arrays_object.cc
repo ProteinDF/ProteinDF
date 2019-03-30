@@ -387,16 +387,16 @@ bool TlDenseMatrix_arrays_Object::isLoadable(const std::string& filepath,
   return answer;
 }
 
-bool TlDenseMatrix_arrays_Object::load(const std::string& basename,
-                                       int subunitID) {
-  const std::string path =
-      TlDenseMatrix_arrays_Object::getFileName(basename, subunitID);
-  return this->load(path);
+bool TlDenseMatrix_arrays_Object::load(const std::string& basename) {
+  return this->load(basename, this->subunitID_);
 }
 
-bool TlDenseMatrix_arrays_Object::load(const std::string& path) {
+bool TlDenseMatrix_arrays_Object::load(const std::string& basename, const int subunitID) {
   bool answer = false;
   TlLogging& log = TlLogging::getInstance();
+
+  const std::string path =
+      TlDenseMatrix_arrays_Object::getFileName(basename, subunitID);
 
   std::ifstream ifs;
   ifs.open(path.c_str(), std::ifstream::in);
