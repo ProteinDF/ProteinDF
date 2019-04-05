@@ -1,6 +1,11 @@
 #include "tl_dense_vector_eigen.h"
 #include "tl_dense_vector_impl_eigen.h"
 
+#ifdef HAVE_VIENNACL
+#include "tl_dense_vector_viennacl.h"
+#include "tl_dense_vector_impl_viennacl.h"
+#endif // HAVE_VIENNACL
+
 // ---------------------------------------------------------------------------
 // constructor & destructor
 // ---------------------------------------------------------------------------
@@ -17,6 +22,11 @@ TlDenseVector_Eigen::TlDenseVector_Eigen(const std::vector<double>& rhs) {
   this->pImpl_ = new TlDenseVector_ImplEigen(rhs);
 }
 
+TlDenseVector_Eigen::operator std::vector<double>() const {
+  return std::vector<double>(
+      *(dynamic_cast<TlDenseVector_ImplEigen*>(this->pImpl_)));
+}
+
 // TlDenseVector_Eigen::TlDenseVector_Eigen(const double* p, size_type size) {
 //   this->pImpl_ = new TlDenseVector_ImplEigen(p, size);
 // }
@@ -25,10 +35,12 @@ TlDenseVector_Eigen::TlDenseVector_Eigen(const TlDenseVector_ImplEigen& rhs) {
   this->pImpl_ = new TlDenseVector_ImplEigen(rhs);
 }
 
-TlDenseVector_Eigen::operator std::vector<double>() const {
-  return std::vector<double>(*(dynamic_cast<TlDenseVector_ImplEigen*>(this->pImpl_)));
+#ifdef HAVE_VIENNACL
+TlDenseVector_Eigen::TlDenseVector_Eigen(const TlDenseVector_ViennaCL& rhs) {
+  this->pImpl_ = new TlDenseVector_ImplEigen(
+      *dynamic_cast<const TlDenseVector_ImplViennaCL*>(rhs.pImpl_));
 }
-
+#endif  // HAVE_VIENNACL
 
 TlDenseVector_Eigen::~TlDenseVector_Eigen() {
   delete this->pImpl_;

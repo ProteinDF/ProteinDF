@@ -78,6 +78,7 @@ class TlDenseVector_ImplViennaCL : public TlDenseVector_ImplObject {
   // others
   // ---------------------------------------------------------------------------
   friend class TlDenseSymmetricMatrix_ImplViennaCL;
+  friend class TlDenseVector_ImplEigen;
 
   friend TlDenseVector_ImplViennaCL operator+(
       const TlDenseVector_ImplViennaCL& rhs1,
@@ -109,7 +110,7 @@ class TlDenseVector_ImplViennaCL : public TlDenseVector_ImplObject {
   friend TlDenseVector_ImplViennaCL operator*(
       const TlDenseVector_ImplViennaCL& vtr,
       const TlSparseGeneralMatrix_ImplViennaCL& mat);
-  
+
   friend TlDenseVector_ImplViennaCL operator*(
       const TlSparseSymmetricMatrix_ImplViennaCL& mat,
       const TlDenseVector_ImplViennaCL& vtr);

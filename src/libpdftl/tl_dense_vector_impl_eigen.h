@@ -34,6 +34,10 @@ class TlDenseVector_ImplEigen : public TlDenseVector_ImplObject {
                           const TlDenseVectorObject::index_type size);
   TlDenseVector_ImplEigen(const VectorDataType& rhs);
 
+#ifdef HAVE_VIENNACL
+  TlDenseVector_ImplEigen(const TlDenseVector_ImplViennaCL& rhs);
+#endif // HAVE_VIENNACL
+
   operator std::vector<double>() const;
 
   virtual ~TlDenseVector_ImplEigen();

@@ -20,6 +20,10 @@ class TlDenseVector_Eigen : public TlDenseVectorObject {
 //                       const TlDenseVectorObject::size_type length);
   TlDenseVector_Eigen(const TlDenseVector_ImplEigen& rhs);
 
+#ifdef HAVE_VIENNACL
+  TlDenseVector_Eigen(const TlDenseVector_ViennaCL& rhs);
+#endif // HAVE_VIENNACL
+
   operator std::vector<double>() const;
 
   virtual ~TlDenseVector_Eigen();
