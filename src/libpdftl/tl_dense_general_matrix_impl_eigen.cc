@@ -12,7 +12,7 @@
 #include "tl_sparse_general_matrix_impl_eigen.h"
 
 #ifdef HAVE_VIENNACL
-#define VIENNACL_HAVE_EIGEN
+#define VIENNACL_HAVE_EIGEN 1
 #include <viennacl/matrix.hpp>
 #include <viennacl/matrix_proxy.hpp>
 #include "tl_dense_general_matrix_impl_viennacl.h"
