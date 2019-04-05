@@ -177,6 +177,29 @@ TlDenseSymmetricMatrix_ViennaCL TlDenseSymmetricMatrix_ViennaCL::inverse()
 }
 
 // ---------------------------------------------------------------------------
+// I/O
+// ---------------------------------------------------------------------------
+bool TlDenseSymmetricMatrix_ViennaCL::load(const std::string& filePath) {
+    TlDenseSymmetricMatrix_Eigen eigenmat;
+    const bool answer = eigenmat.load(filePath);
+
+    if (answer) {
+        delete this->pImpl_;
+        this->pImpl_ = NULL;
+
+        this->pImpl_ = new TlDenseSymmetricMatrix_ImplViennaCL(
+            *dynamic_cast<const TlDenseSymmetricMatrix_ImplEigen*>(eigenmat.pImpl_));
+    }
+
+    return answer;
+}
+
+bool TlDenseSymmetricMatrix_ViennaCL::save(const std::string& filePath) const {
+    TlDenseSymmetricMatrix_Eigen eigenmat(*this);
+    return eigenmat.save(filePath);
+}
+
+// ---------------------------------------------------------------------------
 // protected
 // ---------------------------------------------------------------------------
 bool TlDenseSymmetricMatrix_ViennaCL::eig_powerIteration(
