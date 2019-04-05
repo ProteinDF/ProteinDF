@@ -69,6 +69,13 @@ class TlDenseSymmetricMatrix_ViennaCL : public TlDenseSymmetricMatrixObject {
   TlDenseSymmetricMatrix_ViennaCL inverse() const;
 
   // ---------------------------------------------------------------------------
+  // I/O
+  // ---------------------------------------------------------------------------
+  virtual bool load(const std::string& filePath);
+  virtual bool save(const std::string& filePath) const;
+
+
+  // ---------------------------------------------------------------------------
   // protected
   // ---------------------------------------------------------------------------
  protected:
