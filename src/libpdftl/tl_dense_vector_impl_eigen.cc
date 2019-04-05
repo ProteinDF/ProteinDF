@@ -2,6 +2,12 @@
 
 #include "tl_dense_vector_impl_eigen.h"
 
+#ifdef HAVE_VIENNACL
+#define VIENNACL_HAVE_EIGEN
+#include <viennacl/vector.hpp>
+#include "tl_dense_vector_impl_viennacl.h"
+#endif  // HAVE_VIENNACL
+
 // ---------------------------------------------------------------------------
 // constructor & destructor
 // ---------------------------------------------------------------------------
@@ -14,8 +20,7 @@ TlDenseVector_ImplEigen::TlDenseVector_ImplEigen(
   this->vector_ = rhs.vector_;
 }
 
-TlDenseVector_ImplEigen::TlDenseVector_ImplEigen(
-    const std::vector<double>& rhs)
+TlDenseVector_ImplEigen::TlDenseVector_ImplEigen(const std::vector<double>& rhs)
     : vector_(MapTypeConst(rhs.data(), rhs.size())) {}
 
 TlDenseVector_ImplEigen::TlDenseVector_ImplEigen(
@@ -25,6 +30,14 @@ TlDenseVector_ImplEigen::TlDenseVector_ImplEigen(
 TlDenseVector_ImplEigen::TlDenseVector_ImplEigen(const VectorDataType& rhs) {
   this->vector_ = rhs;
 }
+
+#ifdef HAVE_VIENNACL
+TlDenseVector_ImplEigen::TlDenseVector_ImplEigen(
+    const TlDenseVector_ImplViennaCL& rhs)
+    : vector_(VectorDataType::Zero(rhs.getSize())) {
+  viennacl::copy(rhs.vector_, this->vector_);
+}
+#endif  // HAVE_VIENNACL
 
 TlDenseVector_ImplEigen::operator std::vector<double>() const {
   const std::size_t size = this->getSize();

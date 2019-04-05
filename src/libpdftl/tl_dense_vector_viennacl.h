@@ -51,6 +51,7 @@ class TlDenseVector_ViennaCL : public TlDenseVectorObject {
   // others
   // ---------------------------------------------------------------------------
   friend class TlDenseSymmetricMatrix_ViennaCL;
+  friend class TlDenseVector_Eigen;
 
   friend TlDenseVector_ViennaCL operator+(const TlDenseVector_ViennaCL& rhs1,
                                           const TlDenseVector_ViennaCL& rhs2);

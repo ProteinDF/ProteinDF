@@ -1,12 +1,19 @@
-#include "tl_dense_vector_impl_viennacl.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif  // HAVE_CONFIG_H
+
 #include <algorithm>
 #include <cassert>
 #include <functional>
 #include <vector>
-#include "viennacl/linalg/sum.hpp"
-#include "viennacl/vector.hpp"
-#include "viennacl/vector_proxy.hpp"
+
+#define VIENNACL_HAVE_EIGEN 1
+#include <viennacl/linalg/sum.hpp>
+#include <viennacl/vector.hpp>
+#include <viennacl/vector_proxy.hpp>
+
 #include "tl_dense_vector_impl_eigen.h"
+#include "tl_dense_vector_impl_viennacl.h"
 
 #ifdef HAVE_EIGEN
 #include "tl_dense_vector_eigen.h"
@@ -32,7 +39,8 @@ TlDenseVector_ImplViennaCL::TlDenseVector_ImplViennaCL(
 
 #ifdef HAVE_EIGEN
 TlDenseVector_ImplViennaCL::TlDenseVector_ImplViennaCL(
-    const TlDenseVector_ImplEigen& rhs) : vector_(rhs.getSize()) {
+    const TlDenseVector_ImplEigen& rhs)
+    : vector_(rhs.getSize()) {
   viennacl::copy(rhs.vector_, this->vector_);
 }
 #endif  // HAVE_EIGEN
