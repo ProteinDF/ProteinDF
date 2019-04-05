@@ -325,9 +325,6 @@ PQ_PairArray DfCdkMatrix::getI2PQ(const std::string& filepath) {
 template <typename SymmetricMatrix, typename Vector>
 SymmetricMatrix DfCdkMatrix::getCholeskyVector(const Vector& L_col,
                                                const PQ_PairArray& I2PQ) {
-
-
-
   const index_type numOfItilde = L_col.getSize();
   assert(static_cast<std::size_t>(numOfItilde) == I2PQ.size());
 
@@ -342,21 +339,22 @@ SymmetricMatrix DfCdkMatrix::getCholeskyVector(const Vector& L_col,
 // special version
 #ifdef HAVE_VIENNACL
 template <>
-TlDenseSymmetricMatrix_ViennaCL
-DfCdkMatrix::getCholeskyVector<TlDenseSymmetricMatrix_ViennaCL, TlDenseVector_ViennaCL>(const TlDenseVector_ViennaCL& L_col,
-                                               const PQ_PairArray& I2PQ) {
+TlDenseSymmetricMatrix_ViennaCL DfCdkMatrix::getCholeskyVector<
+    TlDenseSymmetricMatrix_ViennaCL, TlDenseVector_ViennaCL>(
+    const TlDenseVector_ViennaCL& L_col, const PQ_PairArray& I2PQ) {
   const index_type numOfItilde = L_col.getSize();
   assert(static_cast<std::size_t>(numOfItilde) == I2PQ.size());
 
-  //this->log_.info("convert matrix is build via Eigen.");
+  // this->log_.info("convert matrix is build via Eigen.");
+  const TlDenseVector_Eigen L_col_eigen = L_col;
   TlDenseSymmetricMatrix_Eigen answer(this->m_nNumOfAOs);
   for (index_type i = 0; i < numOfItilde; ++i) {
-    answer.set(I2PQ[i].index1(), I2PQ[i].index2(), L_col.get(i));
+      answer.set(I2PQ[i].index1(), I2PQ[i].index2(), L_col_eigen.get(i));
   }
 
   return TlDenseSymmetricMatrix_ViennaCL(answer);
 }
-#endif // HAVE_VIENNACL
+#endif  // HAVE_VIENNACL
 
 // ------------------------------
 //
@@ -383,9 +381,8 @@ SparseGeneralMatrix DfCdkMatrix::getTrans_I2PQ_Matrix(
 // special version
 #ifdef HAVE_VIENNACL
 template <>
-TlSparseGeneralMatrix_ViennaCL
-DfCdkMatrix::getTrans_I2PQ_Matrix<TlSparseGeneralMatrix_ViennaCL>(
-    const PQ_PairArray& I2PQ) {
+TlSparseGeneralMatrix_ViennaCL DfCdkMatrix::getTrans_I2PQ_Matrix<
+    TlSparseGeneralMatrix_ViennaCL>(const PQ_PairArray& I2PQ) {
   this->log_.info("trans matrix is built via Eigen.");
   const TlMatrixObject::index_type numOfItilde = I2PQ.size();
   const TlMatrixObject::index_type numOfAoPairs =
@@ -403,7 +400,7 @@ DfCdkMatrix::getTrans_I2PQ_Matrix<TlSparseGeneralMatrix_ViennaCL>(
   }
   return TlSparseGeneralMatrix_ViennaCL(expandL);
 }
-#endif // HAVE_VIENNAACL
+#endif  // HAVE_VIENNAACL
 
 // ---------------------------------------
 //
