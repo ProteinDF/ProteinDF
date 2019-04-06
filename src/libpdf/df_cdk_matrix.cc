@@ -1,6 +1,10 @@
-#include "df_cdk_matrix.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif  // _OPENMP
+
 #include "CnError.h"
 #include "DfTaskCtrl.h"
+#include "df_cdk_matrix.h"
 #include "tl_dense_general_matrix_arrays_coloriented.h"
 #include "tl_dense_general_matrix_mmap.h"
 
@@ -164,21 +168,29 @@ void DfCdkMatrix::getK_byLjk(const RUN_TYPE runType) {
   this->log_.info("start loop");
   const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
 
+  int numOfThreads = 1;
+#ifdef _OPENMP
+  numOfThreads = omp_get_num_procs();
+#endif  // _OPENMP
+  const int taskSize = 100 * numOfThreads;
+  this->log_.info(TlUtils::format("task size: %d", taskSize));
+
   DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
   std::vector<std::size_t> tasks;
-  bool hasTasks = pTaskCtrl->getQueue(numOfCBs, 100, &tasks, true);
+  bool hasTasks = pTaskCtrl->getQueue(numOfCBs, taskSize, &tasks, true);
   while (hasTasks == true) {
-    std::vector<std::size_t>::const_iterator itEnd = tasks.end();
-    for (std::vector<std::size_t>::const_iterator it = tasks.begin();
-         it != itEnd; ++it) {
+    const int numOfTasks = tasks.size();
+//#pragma omp parallel for schedule(runtime)
+    for (int i = 0; i < numOfTasks; ++i) {
       const SymmetricMatrix l =
-          this->getCholeskyVector<SymmetricMatrix, Vector>(L.getColVector(*it),
-                                                           I2PQ);
+          this->getCholeskyVector<SymmetricMatrix, Vector>(
+              L.getColVector(tasks[i]), I2PQ);
       assert(l.getNumOfRows() == this->m_nNumOfAOs);
 
-      K += l * P * l;
+//#pragma omp critical
+      { K += l * P * l; }
     }
-    hasTasks = pTaskCtrl->getQueue(numOfCBs, 100, &tasks);
+    hasTasks = pTaskCtrl->getQueue(numOfCBs, taskSize, &tasks);
   }
 
   K *= -1.0;
@@ -210,21 +222,30 @@ void DfCdkMatrix::getK_byLjk_useTransMatrix(const RUN_TYPE runType) {
   const SparseGeneralMatrix I2PQ_mat =
       this->getTrans_I2PQ_Matrix<SparseGeneralMatrix>(I2PQ);
 
+  int numOfThreads = 1;
+#ifdef _OPENMP
+  numOfThreads = omp_get_num_procs();
+#endif  // _OPENMP
+  const int taskSize = 100 * numOfThreads;
+  this->log_.info(TlUtils::format("task size: %d", taskSize));
+
   DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
   std::vector<std::size_t> tasks;
-  bool hasTasks = pTaskCtrl->getQueue(numOfCBs, 100, &tasks, true);
+  bool hasTasks = pTaskCtrl->getQueue(numOfCBs, taskSize, &tasks, true);
   while (hasTasks == true) {
-    std::vector<std::size_t>::const_iterator itEnd = tasks.end();
-    for (std::vector<std::size_t>::const_iterator it = tasks.begin();
-         it != itEnd; ++it) {
+    const int numOfTasks = tasks.size();
+// #pragma omp parallel for schedule(runtime)
+    for (int i = 0; i < numOfTasks; ++i) {
       const SymmetricMatrix l =
           this->convert_I2PQ<SymmetricMatrix, Vector, SparseGeneralMatrix>(
-              I2PQ_mat, L.getColVector(*it));
+              I2PQ_mat, L.getColVector(tasks[i]));
       assert(l.getNumOfRows() == this->m_nNumOfAOs);
-      K += l * P * l;
+
+// #pragma omp critical
+      { K += l * P * l; }
     }
 
-    hasTasks = pTaskCtrl->getQueue(numOfCBs, 100, &tasks);
+    hasTasks = pTaskCtrl->getQueue(numOfCBs, taskSize, &tasks);
   }
 
   K *= -1.0;
@@ -260,21 +281,30 @@ void DfCdkMatrix::getK_byLjk_useSparseMatrix(const RUN_TYPE runType) {
   SparseSymmetricMatrix tmpK(this->m_nNumOfAOs);
   DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
   std::vector<std::size_t> tasks;
-  bool hasTasks = pTaskCtrl->getQueue(numOfCBs, 100, &tasks, true);
+
+  int numOfThreads = 1;
+#ifdef _OPENMP
+  numOfThreads = omp_get_num_procs();
+#endif  // _OPENMP
+  const int taskSize = 100 * numOfThreads;
+  this->log_.info(TlUtils::format("task size: %d", taskSize));
+
+  bool hasTasks = pTaskCtrl->getQueue(numOfCBs, taskSize, &tasks, true);
   while (hasTasks == true) {
-    std::vector<std::size_t>::const_iterator itEnd = tasks.end();
-    for (std::vector<std::size_t>::const_iterator it = tasks.begin();
-         it != itEnd; ++it) {
+    const int numOfTasks = tasks.size();
+// #pragma omp parallel for schedule(runtime)
+    for (int i = 0; i < numOfTasks; ++i) {
       const SparseSymmetricMatrix l =
           this->convert_I2PQ<SymmetricMatrix, Vector, SparseGeneralMatrix>(
-              I2PQ_mat, L.getColVector(*it));
+              I2PQ_mat, L.getColVector(tasks[i]));
       assert(l.getNumOfRows() == this->m_nNumOfAOs);
 
       SparseSymmetricMatrix X = l * P_SM * l;
-      tmpK += X;
+// #pragma omp critical
+      { tmpK += X; }
     }
 
-    hasTasks = pTaskCtrl->getQueue(numOfCBs, 100, &tasks);
+    hasTasks = pTaskCtrl->getQueue(numOfCBs, taskSize, &tasks);
   }
 
   K = tmpK;
@@ -349,7 +379,7 @@ TlDenseSymmetricMatrix_ViennaCL DfCdkMatrix::getCholeskyVector<
   const TlDenseVector_Eigen L_col_eigen = L_col;
   TlDenseSymmetricMatrix_Eigen answer(this->m_nNumOfAOs);
   for (index_type i = 0; i < numOfItilde; ++i) {
-      answer.set(I2PQ[i].index1(), I2PQ[i].index2(), L_col_eigen.get(i));
+    answer.set(I2PQ[i].index1(), I2PQ[i].index2(), L_col_eigen.get(i));
   }
 
   return TlDenseSymmetricMatrix_ViennaCL(answer);
@@ -381,8 +411,9 @@ SparseGeneralMatrix DfCdkMatrix::getTrans_I2PQ_Matrix(
 // special version
 #ifdef HAVE_VIENNACL
 template <>
-TlSparseGeneralMatrix_ViennaCL DfCdkMatrix::getTrans_I2PQ_Matrix<
-    TlSparseGeneralMatrix_ViennaCL>(const PQ_PairArray& I2PQ) {
+TlSparseGeneralMatrix_ViennaCL
+DfCdkMatrix::getTrans_I2PQ_Matrix<TlSparseGeneralMatrix_ViennaCL>(
+    const PQ_PairArray& I2PQ) {
   this->log_.info("trans matrix is built via Eigen.");
   const TlMatrixObject::index_type numOfItilde = I2PQ.size();
   const TlMatrixObject::index_type numOfAoPairs =
