@@ -361,6 +361,18 @@ add_executable(pdf-bench-mat-diag ${PDF_BENCH_MAT_DIAG_SOURCES})
 target_link_libraries(pdf-bench-mat-diag libpdf libpdftl)
 install(TARGETS pdf-bench-mat-diag RUNTIME DESTINATION bin)
 
+# ------------------------------------------------------------------------------
+# debug
+# ------------------------------------------------------------------------------
+if (VIENNACL_FOUND)
+  set(PDF_DEBUG_MAT_MUL_SOURCES
+    tool_common.h
+    main_debug_mat_mul.cc
+    )
+  add_executable(pdf-debug-mat-mul ${PDF_DEBUG_MAT_MUL_SOURCES})
+  target_link_libraries(pdf-debug-mat-mul libpdf libpdftl)
+  install(TARGETS pdf-debug-mat-mul RUNTIME DESTINATION bin)
+  endif (VIENNACL_FOUND)
 
 # ================
 
