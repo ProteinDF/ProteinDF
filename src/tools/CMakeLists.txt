@@ -37,6 +37,12 @@ add_executable(pdf-info-charge ${PDF_INFO_CHARGE_SOURCES})
 target_link_libraries(pdf-info-charge libpdf libpdftl)
 install(TARGETS pdf-info-charge RUNTIME DESTINATION bin)
 
+set(PDF_INFO_ECOMP_SOURCES
+  main_info_ecomponents.cc
+  )
+add_executable(pdf-info-ecomp ${PDF_INFO_ECOMP_SOURCES})
+target_link_libraries(pdf-info-ecomp libpdf libpdftl)
+install(TARGETS pdf-info-ecomp RUNTIME DESTINATION bin)
 
 set(PDF_INFO_GRID_SOURCES
   main_info_grid.cpp

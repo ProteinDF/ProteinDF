@@ -129,6 +129,13 @@ void TlDenseVector_ImplEigen::sortByGreater() {
             std::greater<double>());
 }
 
+double TlDenseVector_ImplEigen::dot(const TlDenseVector_ImplEigen& rhs) const {
+  assert(this->getSize() == rhs.getSize());
+  const double answer = this->vector_.dot(rhs.vector_);
+
+  return answer;
+}
+
 TlDenseVector_ImplEigen& TlDenseVector_ImplEigen::dotInPlace(
     const TlDenseVector_ImplEigen& rhs) {
   assert(this->getSize() == rhs.getSize());
