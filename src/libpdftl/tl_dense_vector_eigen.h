@@ -38,6 +38,7 @@ class TlDenseVector_Eigen : public TlDenseVectorObject {
   // ---------------------------------------------------------------------------
   // operations
   // ---------------------------------------------------------------------------
+  double dot(const TlDenseVector_Eigen& rhs) const;
   TlDenseVector_Eigen& dotInPlace(const TlDenseVector_Eigen& rhs);
 
   // ---------------------------------------------------------------------------

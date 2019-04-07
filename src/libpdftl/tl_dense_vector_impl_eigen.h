@@ -67,6 +67,8 @@ class TlDenseVector_ImplEigen : public TlDenseVector_ImplObject {
  public:
   virtual double sum() const;
   virtual void sortByGreater();
+  
+  double dot(const TlDenseVector_ImplEigen& rhs) const;
   TlDenseVector_ImplEigen& dotInPlace(const TlDenseVector_ImplEigen& rhs);
 
   // ---------------------------------------------------------------------------
