@@ -1,10 +1,13 @@
 #ifndef DF_TOTALENERGY_TMPL_H
 #define DF_TOTALENERGY_TMPL_H
 
+#include <vector>
+
 #include "CnError.h"
 #include "DfObject.h"
 #include "DfOverlapX.h"
 #include "DfXCFunctional.h"
+#include "TlOrbitalInfo.h"
 
 // ----------------------------------------------------------------------------
 // template class
@@ -17,6 +20,10 @@ class DfTotalEnergy_tmpl : public DfObject {
 
  public:
   void calc(const int iteration);
+  double get_IE(const std::vector<int>& indeces1) const;
+  double get_IE(const std::vector<int>& indeces1,
+                const std::vector<int>& indeces2) const;
+
   void output();
   void updateParam();
 
@@ -45,6 +52,13 @@ class DfTotalEnergy_tmpl : public DfObject {
   void calcE_xc_DIRECT(const SymmetricMatrix& PA, const Vector& eps);
 
  protected:
+  std::vector<int> atomArray2AoArray(const std::vector<int>& atomArray) const;
+  double get_IE_matrix(const SymmetricMatrix& matrix,
+                       const std::vector<int>& atomIndeces1,
+                       const std::vector<int>& atomIndeces2) const;
+
+ protected:
+  TlOrbitalInfo orbInfo_;
   DfXCFunctional* pDfXCFunctionalObject_;
   DfOverlapX* pDfOverlapObject_;
 
@@ -66,6 +80,11 @@ class DfTotalEnergy_tmpl : public DfObject {
   SymmetricMatrix* pPA_;
   SymmetricMatrix* pPB_;
   SymmetricMatrix* pPAB_;
+
+  // for interaction energy
+  SymmetricMatrix* pIE_nuc_;
+  SymmetricMatrix* pIE_nuc_X_;
+  SymmetricMatrix* pIE_;
 };
 
 // ----------------------------------------------------------------------------
@@ -86,6 +105,7 @@ template <class SymmetricMatrix, class Vector, class DfOverlap>
 DfTotalEnergy_tmpl<SymmetricMatrix, Vector, DfOverlap>::DfTotalEnergy_tmpl(
     TlSerializeData* pPdfParam)
     : DfObject(pPdfParam),
+      orbInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"]),
       pDfXCFunctionalObject_(NULL),
       pDfOverlapObject_(NULL),
       E_H_(0.0),
@@ -98,8 +118,15 @@ DfTotalEnergy_tmpl<SymmetricMatrix, Vector, DfOverlap>::DfTotalEnergy_tmpl(
       E_disp_(0.0),
       pPA_(NULL),
       pPB_(NULL),
-      pPAB_(NULL) {
+      pPAB_(NULL),
+      pIE_nuc_(NULL),
+      pIE_nuc_X_(NULL),
+      pIE_(NULL) {
   //
+  const TlMatrixObject::index_type AOs = this->m_nNumOfAOs;
+  this->pIE_nuc_ = new SymmetricMatrix();
+  this->pIE_nuc_X_ = new SymmetricMatrix();
+  this->pIE_ = new SymmetricMatrix(AOs);
 }
 
 template <class SymmetricMatrix, class Vector, class DfOverlap>
@@ -115,6 +142,13 @@ DfTotalEnergy_tmpl<SymmetricMatrix, Vector, DfOverlap>::~DfTotalEnergy_tmpl() {
   this->pPB_ = NULL;
   delete this->pPAB_;
   this->pPAB_ = NULL;
+
+  delete this->pIE_nuc_;
+  this->pIE_nuc_ = NULL;
+  delete this->pIE_nuc_X_;
+  this->pIE_nuc_X_ = NULL;
+  delete this->pIE_;
+  this->pIE_ = NULL;
 }
 
 // initialize -----------------------------------------------------------------
@@ -235,6 +269,7 @@ void DfTotalEnergy_tmpl<SymmetricMatrix, Vector, DfOverlap>::calc(
 
   this->calcScfIteration_ = iteration;
   this->loadDensityMatrix();
+
   switch (this->m_nMethodType) {
     case METHOD_RKS: {
       this->calcE_K(RUN_RKS, *(this->pPA_));
@@ -267,10 +302,87 @@ void DfTotalEnergy_tmpl<SymmetricMatrix, Vector, DfOverlap>::calc(
   this->calcE_H();
   this->calcE_J();
 
-  // if (this->enableGrimmeDispersion_ == true) {
-  //   this->E_disp_ =
-  //   this->pDfXCFunctionalObject_->getGrimmeDispersionEnergy();
-  // }
+  if (this->enableGrimmeDispersion_ == true) {
+    this->E_disp_ = this->pDfXCFunctionalObject_->getGrimmeDispersionEnergy();
+  }
+}
+
+template <class SymmetricMatrix, class Vector, class DfOverlap>
+double DfTotalEnergy_tmpl<SymmetricMatrix, Vector, DfOverlap>::get_IE(
+    const std::vector<int>& atomIndeces1) const {
+  double ie_nuc = 
+      this->get_IE_matrix(*(this->pIE_nuc_), atomIndeces1, atomIndeces1);
+
+  const std::vector<int> aoIndeces1 = this->atomArray2AoArray(atomIndeces1);
+  double ie = this->get_IE_matrix(*(this->pIE_), aoIndeces1, aoIndeces1);
+
+  double answer = ie + ie_nuc;
+  std::cout << TlUtils::format("IE(nuc): %28.16lf", ie_nuc) << std::endl;
+  std::cout << TlUtils::format("IE(nie): %28.16lf", ie) << std::endl;
+  std::cout << TlUtils::format("IE     : %28.16lf", answer) << std::endl;
+
+  return answer;
+}
+
+template <class SymmetricMatrix, class Vector, class DfOverlap>
+double DfTotalEnergy_tmpl<SymmetricMatrix, Vector, DfOverlap>::get_IE(
+    const std::vector<int>& atomIndeces1,
+    const std::vector<int>& atomIndeces2) const {
+  double ie_nuc = 
+      this->get_IE_matrix(*(this->pIE_nuc_), atomIndeces1, atomIndeces2);
+
+  const std::vector<int> aoIndeces1 = this->atomArray2AoArray(atomIndeces1);
+  const std::vector<int> aoIndeces2 = this->atomArray2AoArray(atomIndeces2);
+  double ie = this->get_IE_matrix(*(this->pIE_), aoIndeces1, aoIndeces2);
+
+  ie_nuc *= 2.0;
+  ie *= 2.0;
+  double answer = ie + ie_nuc;
+  std::cout << TlUtils::format("IE(nuc): %28.16lf", ie_nuc) << std::endl;
+  std::cout << TlUtils::format("IE(nie): %28.16lf", ie) << std::endl;
+  std::cout << TlUtils::format("IE     : %28.16lf", answer) << std::endl;
+
+  return answer;
+}
+
+template <class SymmetricMatrix, class Vector, class DfOverlap>
+double DfTotalEnergy_tmpl<SymmetricMatrix, Vector, DfOverlap>::get_IE_matrix(
+    const SymmetricMatrix& matrix, const std::vector<int>& indeces1,
+    const std::vector<int>& indeces2) const {
+  double IE = 0.0;
+  std::vector<int>::const_iterator itEnd1 = indeces1.end();
+  std::vector<int>::const_iterator itEnd2 = indeces2.end();
+  for (std::vector<int>::const_iterator it1 = indeces1.begin(); it1 != itEnd1;
+       ++it1) {
+    for (std::vector<int>::const_iterator it2 = indeces2.begin(); it2 != itEnd2;
+         ++it2) {
+      IE += matrix.get(*it1, *it2);
+    }
+  }
+
+  return IE;
+}
+
+template <class SymmetricMatrix, class Vector, class DfOverlap>
+std::vector<int>
+DfTotalEnergy_tmpl<SymmetricMatrix, Vector, DfOverlap>::atomArray2AoArray(
+    const std::vector<int>& atomArray) const {
+  std::vector<int> aoArray;
+  const int numOfAOs = this->orbInfo_.getNumOfOrbitals();
+  for (int ao = 0; ao < numOfAOs; ++ao) {
+    const int atomIndex = this->orbInfo_.getAtomIndex(ao);
+
+    std::vector<int>::const_iterator itEnd = atomArray.end();
+    for (std::vector<int>::const_iterator it = atomArray.begin(); it != itEnd;
+         ++it) {
+      if (*it == atomIndex) {
+        aoArray.push_back(ao);
+        break;
+      }
+    }
+  }
+
+  return aoArray;
 }
 
 // ----------------------------------------------------------------------------
@@ -284,6 +396,9 @@ void DfTotalEnergy_tmpl<SymmetricMatrix, Vector, DfOverlap>::calcE_nuc() {
     // read nuclear charge
     const Fl_Geometry geom((*this->pPdfParam_)["coordinates"]);
     const int numOfAtoms = this->m_nNumOfAtoms;
+
+    this->pIE_nuc_->resize(numOfAtoms);
+    this->pIE_nuc_X_->resize(numOfAtoms);
 
     // calculate nuclear repulsion
     double E_nuc = 0.0;
@@ -299,8 +414,11 @@ void DfTotalEnergy_tmpl<SymmetricMatrix, Vector, DfOverlap>::calcE_nuc() {
         const double distance = pi.distanceFrom(pj);
 
         const double E = ci * cj / distance;
+        this->pIE_nuc_->set(i, j, 0.5 * E);
         E_nuc += E;
+
         if (isDummy || ("X" == geom.getAtomSymbol(j))) {
+          this->pIE_nuc_X_->set(i, j, 0.5 * E);
           E_nuc_X += E;
         }
       }
@@ -326,6 +444,8 @@ void DfTotalEnergy_tmpl<SymmetricMatrix, Vector, DfOverlap>::calcE_H() {
   }
 
   const SymmetricMatrix E_H = Hpq.dotInPlace(P_AB);
+  *(this->pIE_) += E_H;
+
   this->E_H_ = E_H.sum();
 
   // add dummy charge
@@ -371,8 +491,10 @@ void DfTotalEnergy_tmpl<SymmetricMatrix, Vector, DfOverlap>::calcE_J_exact() {
   SymmetricMatrix J =
       DfObject::getJMatrix<SymmetricMatrix>(this->calcScfIteration_);
 
-  SymmetricMatrix E_J = J.dotInPlace(P_AB);
-  this->E_J_ = 0.25 * E_J.sum();
+  const SymmetricMatrix E_J = 0.5 * 0.5 * J.dotInPlace(P_AB);
+  *(this->pIE_) += E_J;
+
+  this->E_J_ = E_J.sum();
 }
 
 template <class SymmetricMatrix, class Vector, class DfOverlap>
@@ -422,10 +544,18 @@ void DfTotalEnergy_tmpl<SymmetricMatrix, Vector, DfOverlap>::calcE_K_exact(
     const RUN_TYPE runType, const SymmetricMatrix& PA) {
   DfXCFunctional dfXCFunctional(this->pPdfParam_);
   if (dfXCFunctional.isHybridFunctional() == true) {
-    SymmetricMatrix K = DfObject::getHFxMatrix<SymmetricMatrix>(
-        runType, this->calcScfIteration_);
-    this->E_K_ += 0.5 * 0.5 * dfXCFunctional.getFockExchangeCoefficient() *
-                  K.dotInPlace(PA).sum();
+    const SymmetricMatrix E_K = 0.5 * 0.5 *
+                                dfXCFunctional.getFockExchangeCoefficient() *
+                                DfObject::getHFxMatrix<SymmetricMatrix>(
+                                    runType, this->calcScfIteration_)
+                                    .dotInPlace(PA);
+
+    if (runType == RUN_RKS) {
+      *(this->pIE_) += 2.0 * E_K;
+    } else {
+      *(this->pIE_) += E_K;
+    }
+    this->E_K_ += E_K.sum();
   }
 }
 

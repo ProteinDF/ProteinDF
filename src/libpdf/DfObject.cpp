@@ -776,4 +776,6 @@ std::string DfObject::getCloMatrixPath(const RUN_TYPE runType,
 // ----------------------------------------------------------------------------
 // properties
 // ----------------------------------------------------------------------------
+int DfObject::getNumOfAtoms() const { return this->m_nNumOfAtoms; }
+
 int DfObject::iteration() const { return this->m_nIteration; }
