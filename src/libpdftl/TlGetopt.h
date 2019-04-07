@@ -20,6 +20,7 @@
 #define TLGETOPT_H
 
 #include <map>
+#include <vector>
 #include <string>
 
 /**
@@ -43,7 +44,7 @@ class TlGetopt {
 
   // accession
  public:
-  int getCount() const { return this->m_nCount; };
+  int getCount() const { return this->args_.size(); };
   const std::string operator[](const std::string& sKey) const;
   const std::string operator[](unsigned int n) const;
 
@@ -61,6 +62,7 @@ class TlGetopt {
    *  データ保持用
    */
   std::map<std::string, std::string> m_Data;
+  std::vector<std::string> args_;
 
   /**
    *  エラー文字列

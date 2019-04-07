@@ -31,10 +31,11 @@ TlGetopt::TlGetopt(int argc, char* argv[], const char* list) {
   this->initialize();
 
   // argv[0]は通常コマンド名が入る
-  this->m_Data["0"] = std::string(argv[0]);
+  this->args_.push_back(argv[0]);
+  // this->m_Data["0"] = std::string(argv[0]);
   argc--;
   argv++;
-  this->m_nCount++;
+  // this->m_nCount++;
 
   this->parseArgv(argc, argv, list);
 }
@@ -46,8 +47,9 @@ TlGetopt::~TlGetopt() {}
  *
  */
 void TlGetopt::initialize() {
-  this->m_nCount = 0;
+  // this->m_nCount = 0;
   this->m_Data.clear();
+  this->args_.clear();
   this->m_sError = "";
 }
 
@@ -73,12 +75,9 @@ const std::string TlGetopt::operator[](const std::string& sKey) const {
  */
 const std::string TlGetopt::operator[](unsigned int n) const {
   std::string answer = "";
-  std::string sKey = TlUtils::xtos<unsigned int>(n);
 
-  std::map<std::string, std::string>::const_iterator p =
-      this->m_Data.find(sKey);
-  if (p != this->m_Data.end()) {
-    answer = p->second;
+  if (n < this->args_.size()) {
+    answer = this->args_[n];
   }
 
   return answer;
@@ -112,10 +111,10 @@ void TlGetopt::parseArgv(int argc, char* argv[], const char* list) {
     sList = sList.substr(1);
   }
 
-  bool bOptionSection =
-      true;  // optionのparseをしている時はtrue, 引数の時はfalseを表すフラグ
-  std::string sOptArg =
-      "";  // optionの引数用フラグ兼ハッシュのkey。""の場合flagなし
+  // optionのparseをしている時はtrue, 引数の時はfalseを表すフラグ
+  bool bOptionSection = true;
+  // optionの引数用フラグ兼ハッシュのkey。""の場合flagなし
+  std::string sOptArg = "";
   for (int i = 0; i < argc; i++) {
     std::string str = std::string(argv[i]);
 
@@ -170,8 +169,10 @@ void TlGetopt::parseArgv(int argc, char* argv[], const char* list) {
 
     } else {
       // 引数の処理
-      this->m_Data[TlUtils::xtos<int>(this->m_nCount)] = str;
-      this->m_nCount++;
+      this->args_.push_back(str);
+      // std::cout << "m_nCount=" << this->m_nCount << std::endl;
+      // this->m_Data[TlUtils::xtos<int>(this->m_nCount)] = str;
+      // this->m_nCount++;
     }
   }
 }
