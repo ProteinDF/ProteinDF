@@ -1,26 +1,24 @@
 #include <cstdlib>
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "TlGetopt.h"
-#include "TlSerializeData.h"
 #include "TlMsgPack.h"
+#include "TlSerializeData.h"
 #include "TlUtils.h"
 
+#include "df_total_energy_eigen.h"
+
 int main(int argc, char* argv[]) {
-    TlGetopt opt(argc, argv, "hb:p:");
+  // parse args
+  TlGetopt opt(argc, argv, "hi:p:v");
+  const bool verbose = (opt["v"] == "defined");
 
-    std::string pdfParamPath = "pdfparam.mpac";
-    if (! opt["p"].empty()) {
-        pdfParamPath = opt["p"];
-    }
-
-    std::string orbInput = "";
-    if (! opt["b"].empty()) {
-        const std::string opt_b = opt["b"];
-        orbInput = opt_b;
-    }
+  std::string pdfParamPath = "pdfparam.mpac";
+  if (!opt["p"].empty()) {
+    pdfParamPath = opt["p"];
+  }
 
   // パラメータファイルの読み込み
   TlSerializeData param;
@@ -30,12 +28,38 @@ int main(int argc, char* argv[]) {
     param = mpac.getSerializeData();
   }
 
-
-    std::vector<int> orb_list = TlUtils::vector_notation(orbInput);
-    std::vector<int>::const_iterator itEnd = orb_list.end();
-    for (std::vector<int>::const_iterator it = orb_list.begin(); it != itEnd; ++it) {
-        std::cout << *it << std::endl;
+  //
+  int iteration = -1;
+  {
+    if (!opt["i"].empty()) {
+      iteration = std::atoi(opt["i"].c_str());
+    } else {
+      DfObject dfObj(&param);
+      iteration = dfObj.iteration();
     }
+  }
+  if (verbose) {
+    std::cerr << TlUtils::format("iteration: %d", iteration) << std::endl;
+  }
 
-    return EXIT_SUCCESS;
+  // parse args
+  const int numOfArgs = opt.getCount();
+  std::vector<std::vector<int> > group;
+  for (int i = 1; i < numOfArgs; ++i) {
+    const std::string input = opt[i];
+    const std::vector<int> inputArray =
+        TlUtils::nonreduntant_vector(TlUtils::vector_notation(input));
+    if (verbose) {
+      std::cerr << TlUtils::format("group[%d]: %s", i, input.c_str())
+                << std::endl;
+      std::cerr << TlUtils::vector2str(inputArray) << std::endl;
+    }
+    group.push_back(inputArray);
+  }
+
+  DfTotalEnergy_Eigen dfTotalEnergy(&param);
+  dfTotalEnergy.calc(iteration);
+  dfTotalEnergy.output();
+
+  return EXIT_SUCCESS;
 }
