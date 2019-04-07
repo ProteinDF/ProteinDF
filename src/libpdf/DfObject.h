@@ -23,31 +23,31 @@
 #include "config.h"  // this file created by autotools
 #endif               // HAVE_CONFIG_H
 
+#include <cassert>
 #include <iostream>
 #include <string>
-#include <cassert>
 
 #include "TlLogging.h"
 #include "TlMatrixCache.h"
 #include "TlSerializeData.h"
+#include "tl_dense_vector_lapack.h"
 #include "tl_matrix_object.h"
 #include "tl_vector_utils.h"
-#include "tl_dense_vector_lapack.h"
 
 #ifdef HAVE_EIGEN
 #include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_symmetric_matrix_eigen.h"
-#endif // HAVE_EIGEN
+#endif  // HAVE_EIGEN
 
 #ifdef HAVE_LAPACK
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
-#endif // HAVE_LAPACK
+#endif  // HAVE_LAPACK
 
 #ifdef HAVE_VIENNACL
 #include "tl_dense_general_matrix_viennacl.h"
 #include "tl_dense_symmetric_matrix_viennacl.h"
-#endif // HAVE_VIENNACL
+#endif  // HAVE_VIENNACL
 
 /// Dfクラスの親クラス
 class DfObject {
@@ -104,6 +104,15 @@ class DfObject {
   DfObject(TlSerializeData* pPdfParam);
   virtual ~DfObject();
 
+  // --------------------------------------------------------------------------
+  // properties
+  // --------------------------------------------------------------------------
+ public:
+  int iteration() const;
+
+  // --------------------------------------------------------------------------
+  // PATH
+  // --------------------------------------------------------------------------
  public:
   std::string getSpqMatrixPath();
   std::string getFpqMatrixPath(RUN_TYPE runType, int iteration) const;
@@ -460,17 +469,19 @@ class DfObject {
   Vector getOccVtr(const RUN_TYPE runType);
 
   // --------------------------------------------------------------------------
-  // parameters
+  // methods
   // --------------------------------------------------------------------------
  protected:
   virtual void setParam(const TlSerializeData& data);
   void updateLinearAlgebraPackageParam(const std::string& keyword);
 
+ protected:
+  // void clearCache(const std::string& path);
+
   // --------------------------------------------------------------------------
   // logger
   // --------------------------------------------------------------------------
-protected:
-
+ protected:
   virtual void logger(const std::string& str) const;
   void loggerTime(const std::string& str) const;
   void loggerStartTitle(const std::string& stepName,
@@ -478,9 +489,9 @@ protected:
   void loggerEndTitle(const std::string& stepName = "",
                       const char lineChar = '-') const;
 
- protected:
-  // void clearCache(const std::string& path);
-
+  // --------------------------------------------------------------------------
+  // constants
+  // --------------------------------------------------------------------------
  protected:
   enum J_Engine_Type { J_ENGINE_CONVENTIONAL, J_ENGINE_RI_J, J_ENGINE_CD };
 
@@ -504,6 +515,9 @@ protected:
     LAP_SCALAPACK
   };
 
+  // --------------------------------------------------------------------------
+  // parameters
+  // --------------------------------------------------------------------------
  protected:
   static const std::string m_sWorkDirPath;  // fl_Work directory name
   static const std::string
@@ -667,8 +681,8 @@ template <class SymmetricMatrixType>
 SymmetricMatrixType DfObject::getSpqMatrix() {
   SymmetricMatrixType Spq;
   const std::string path = this->getSpqMatrixPath();
-  //Spq = this->matrixCache_.get<SymmetricMatrixType>(path);
-  //Spq.resize(this->m_nNumOfAOs);
+  // Spq = this->matrixCache_.get<SymmetricMatrixType>(path);
+  // Spq.resize(this->m_nNumOfAOs);
   Spq.load(path);
   return Spq;
 }
@@ -746,7 +760,7 @@ template <class MatrixType>
 MatrixType DfObject::getXInvMatrix() {
   MatrixType XInv;
   const std::string path = this->getXInvMatrixPath();
-  //XInv = this->matrixCache_.get<MatrixType>(path);
+  // XInv = this->matrixCache_.get<MatrixType>(path);
   XInv.load(path);
 
   return XInv;
