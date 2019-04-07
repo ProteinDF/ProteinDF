@@ -254,7 +254,8 @@ void DfObject::setParam(const TlSerializeData& data) {
 
   // matrix operation
   this->linearAlgebraPackage_ = DfObject::LAP_LAPACK;
-  this->updateLinearAlgebraPackageParam(data["linear_algebra_package"].getStr());
+  this->updateLinearAlgebraPackageParam(
+      data["linear_algebra_package"].getStr());
 
   this->m_bUsingSCALAPACK = false;
 #ifdef HAVE_SCALAPACK
@@ -427,24 +428,23 @@ void DfObject::setParam(const TlSerializeData& data) {
 }
 
 void DfObject::updateLinearAlgebraPackageParam(const std::string& keyword) {
-    const std::string linearAlgebraPackage = TlUtils::toUpper(keyword);
+  const std::string linearAlgebraPackage = TlUtils::toUpper(keyword);
 #ifdef HAVE_EIGEN
-    if (linearAlgebraPackage == "EIGEN") {
-      this->linearAlgebraPackage_ = DfObject::LAP_EIGEN;
-    }
+  if (linearAlgebraPackage == "EIGEN") {
+    this->linearAlgebraPackage_ = DfObject::LAP_EIGEN;
+  }
 #endif  // HAVE_EIGEN
 #ifdef HAVE_LAPACK
-    if (linearAlgebraPackage == "LAPACK") {
-      this->linearAlgebraPackage_ = DfObject::LAP_LAPACK;
-    }
+  if (linearAlgebraPackage == "LAPACK") {
+    this->linearAlgebraPackage_ = DfObject::LAP_LAPACK;
+  }
 #endif  // HAVE_LAPACK
 #ifdef HAVE_VIENNACL
-    if (linearAlgebraPackage == "VIENNACL") {
-      this->linearAlgebraPackage_ = DfObject::LAP_VIENNACL;
-    }
+  if (linearAlgebraPackage == "VIENNACL") {
+    this->linearAlgebraPackage_ = DfObject::LAP_VIENNACL;
+  }
 #endif  // HAVE_VIENNACL
 }
-
 
 void DfObject::logger(const std::string& str) const {
   // TlLogX& log = TlLogX::getInstance();
@@ -773,3 +773,7 @@ std::string DfObject::getCloMatrixPath(const RUN_TYPE runType,
                                               TlUtils::xtos(iteration));
 }
 
+// ----------------------------------------------------------------------------
+// properties
+// ----------------------------------------------------------------------------
+int DfObject::iteration() const { return this->m_nIteration; }
