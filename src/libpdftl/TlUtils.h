@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cwctype>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -185,6 +186,19 @@ class TlUtils {
 
   static void progressbar(const float progress);
 
+ public:
+  /// vector notation
+  /// "[1-3, 5]" -> [1, 2, 3, 5]
+  static std::vector<int> vector_notation(const std::string& inputStr);
+
+  /// [1, 2, 3, 4, 5, 2, 3, 4] -> [1, 2, 3, 4, 5]
+  template <typename T>
+  static std::vector<T> nonreduntant_vector(const std::vector<T>& vtr);
+
+ public:
+  template <typename T>
+  static std::string vector2str(const std::vector<T>& vtr);
+  
  private:
   template <typename T, typename F>
   static void trim_ws_t(std::basic_string<T>& s, F f);
@@ -273,5 +287,42 @@ void TlUtils::rtrim(std::basic_string<T>& s, T c) {
 
 //   s.erase(p, s.end());
 // }
+
+template <typename T>
+std::vector<T> TlUtils::nonreduntant_vector(const std::vector<T>& vtr) {
+  std::set<T> s;
+  {
+    typename std::vector<T>::const_iterator itEnd = vtr.end();
+    for (typename std::vector<T>::const_iterator it = vtr.begin(); it != itEnd;
+         ++it) {
+      s.insert(*it);
+    }
+  }
+
+  std::vector<T> v;
+  v.reserve(s.size());
+  {
+    typename std::set<T>::const_iterator itEnd = s.end();
+    for (typename std::set<T>::const_iterator it = s.begin(); it != itEnd;
+         ++it) {
+      v.push_back(*it);
+    }
+  }
+
+  return v;
+}
+
+template <typename T>
+std::string TlUtils::vector2str(const std::vector<T>& vtr) {
+  std::string output = "";
+
+  typename std::vector<T>::const_iterator itEnd = vtr.end();
+  for (typename std::vector<T>::const_iterator it = vtr.begin(); it != itEnd;
+       ++it) {
+    output += TlUtils::xtos(*it) + ",";
+  }
+
+  return output;
+}
 
 #endif  // TLUTILS_H

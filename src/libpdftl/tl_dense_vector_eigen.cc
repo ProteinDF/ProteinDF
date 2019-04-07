@@ -96,6 +96,14 @@ TlDenseVector_Eigen& TlDenseVector_Eigen::operator/=(const double rhs) {
 // ---------------------------------------------------------------------------
 // operations
 // ---------------------------------------------------------------------------
+double TlDenseVector_Eigen::dot(const TlDenseVector_Eigen& rhs) const {
+  double answer = dynamic_cast<TlDenseVector_ImplEigen*>(this->pImpl_)
+      ->dot(*dynamic_cast<TlDenseVector_ImplEigen*>(rhs.pImpl_));
+
+  return answer;
+}
+
+
 TlDenseVector_Eigen& TlDenseVector_Eigen::dotInPlace(
     const TlDenseVector_Eigen& rhs) {
   dynamic_cast<TlDenseVector_ImplEigen*>(this->pImpl_)

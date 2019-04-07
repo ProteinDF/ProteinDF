@@ -2,6 +2,7 @@ set(LIBPDF_HEADERS
   common.h
   datatype.h
   df_cdk_matrix.h
+  df_total_energy_tmpl.h
   CnError.h
   CnFile.h
   DfCD.h
@@ -263,6 +264,18 @@ set(LIBPPDF_SOURCES
 set(LIBPDF_LIBRARIES
   libpdftl
 )
+
+if (EIGEN3_FOUND)
+  set(LIBPDF_HEADERS
+    ${LIBPDF_HEADERS}
+    df_total_energy_eigen.h
+  )
+
+  set(LIBPDF_SOURCES
+    ${LIBPDF_SOURCES}
+    df_total_energy_eigen.cc
+  )
+endif (EIGEN3_FOUND)
 
 # libcint
 if (LIBCINT_FOUND)
