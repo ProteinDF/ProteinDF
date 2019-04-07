@@ -117,6 +117,9 @@ void TlGetopt::parseArgv(int argc, char* argv[], const char* list) {
   std::string sOptArg = "";
   for (int i = 0; i < argc; i++) {
     std::string str = std::string(argv[i]);
+    if (str.size() == 0) {
+      continue;
+    }
 
     // strの先頭が'-'でないものはオプションではない
     if (str.at(0) != '-') {

@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
+#include <limits>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -418,6 +419,8 @@ void TlUtils::progressbar(const float progress) {
 
 // "[1-3, 5]" -> "1,2,3,5"
 std::vector<int> TlUtils::vector_notation(const std::string& inputStr) {
+  static const int HYPHEN = std::numeric_limits<int>::min();
+
   std::vector<int> answer;
 
   // 構文解釈
@@ -436,7 +439,7 @@ std::vector<int> TlUtils::vector_notation(const std::string& inputStr) {
       }
 
       if (c == '-') {
-        stack.push_back(-1);
+        stack.push_back(HYPHEN);
       }
     }
   }
@@ -448,17 +451,17 @@ std::vector<int> TlUtils::vector_notation(const std::string& inputStr) {
   const int stackSize = stack.size();
   for (int i = 0; i < stackSize; ++i) {
     const int v = stack[i];
-    if (v > 0) {
+    // std::cout << "stack: " << i << ":" << v << std::endl;
+    if (v > HYPHEN) {
       answer.push_back(v);
-    } else if (v == -1) {
+    } else if (v == HYPHEN) {
       const int i1 = i + 1;
       if ((i1 < stackSize) && (answer.size() > 0)) {
         const int end = stack[i1];
         const int start = answer.at(answer.size() - 1);
-        if (start > 0) {
-          for (int v = start + 1; v <= end; ++v) {
-            answer.push_back(v);
-          }
+        // std::cout << "stack: start=" << start << ", end=" << end << std::endl;
+        for (int v = start + 1; v <= end; ++v) {
+          answer.push_back(v);
         }
         ++i;
       }
