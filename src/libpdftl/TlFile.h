@@ -49,8 +49,6 @@ class TlFile {
     /// @retval 0以外 エラー
     static int rename(const std::string& oldName, const std::string& newName);
 
-    static int move(const std::string& oldName, const std::string& newName);
-
     /// get file size (bytes).
     static std::size_t getFileSize(const std::string& filePath);
 

@@ -1433,7 +1433,8 @@ void DfCD_Parallel::getK_S_woCD_D(const RUN_TYPE runType,
         TlUtils::format("K add:       %10.1f sec.", time_add.getElapseTime()));
 }
 
-void DfCD_Parallel::getM(const TlDenseSymmetricMatrix_Lapack& P,
+void DfCD_Parallel::getM(const RUN_TYPE runType,
+                         const TlDenseSymmetricMatrix_Lapack& P,
                          TlDenseSymmetricMatrix_Lapack* pM) {
     this->log_.info("DfCD_Parallel::getM()");
     if (this->isDedicatedBasisForGridFree_) {
@@ -1541,7 +1542,8 @@ void DfCD_Parallel::getM_A(const TlDenseSymmetricMatrix_Lapack& P,
     rComm.allReduce_SUM(pM);
 }
 
-void DfCD_Parallel::getM(const TlDenseSymmetricMatrix_Scalapack& P,
+void DfCD_Parallel::getM(const RUN_TYPE runType,
+                         const TlDenseSymmetricMatrix_Scalapack& P,
                          TlDenseSymmetricMatrix_Scalapack* pM) {
     this->log_.critical("sorry, NO IMPLEMENTED!");
     this->log_.critical(

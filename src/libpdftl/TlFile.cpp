@@ -21,6 +21,7 @@
 #endif  // HAVE_CONFIG_H
 
 #include <cassert>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <ostream>

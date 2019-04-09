@@ -166,7 +166,7 @@ void DfForce::output() {
     }
 }
 
-void DfForce::saveForce() { this->force_.save("force.mtx"); }
+void DfForce::saveForce() { this->force_.save("fl_Work/force.mat"); }
 
 void DfForce::outputStartTitle(const std::string& stepName,
                                const char lineChar) {
@@ -229,7 +229,7 @@ void DfForce::calcForceFromNuclei() {
 
     F_nuc *= -1.0;
     if (this->isDebugOutMatrix_ == true) {
-        F_nuc.save("F_nuc.mtx");
+        F_nuc.save("fl_Work/F_nuc.mat");
     }
 
     this->force_ += F_nuc;
@@ -244,8 +244,8 @@ void DfForce::calcForceFromHpq(const TlDenseSymmetricMatrix_Lapack& P) {
     dfHpqX.getForce(P, &force_Hpq, &force_Hpq_Xonly);
 
     if (this->isDebugOutMatrix_ == true) {
-        force_Hpq.save("F_h.mtx");
-        force_Hpq_Xonly.save("F_h_Xonly.mtx");
+        force_Hpq.save("fl_Work/F_h.mat");
+        force_Hpq_Xonly.save("fl_Work/F_h_Xonly.mat");
     }
 
     this->force_ += force_Hpq;
@@ -260,7 +260,7 @@ void DfForce::calcForceFromWS(RUN_TYPE runType) {
     const TlDenseSymmetricMatrix_Lapack W =
         this->getEnergyWeightedDensityMatrix(runType);
     if (this->isDebugOutMatrix_ == true) {
-        W.save("W.mtx");
+        W.save("fl_Work/W.mat");
     }
 
     TlDenseGeneralMatrix_Lapack F_WS(this->m_nNumOfAtoms, 3);
@@ -268,7 +268,7 @@ void DfForce::calcForceFromWS(RUN_TYPE runType) {
 
     F_WS *= -1.0;
     if (this->isDebugOutMatrix_ == true) {
-        F_WS.save("F_WS.mtx");
+        F_WS.save("fl_Work/F_WS.mat");
     }
 
     if (runType == DfObject::RUN_RKS) {
@@ -319,7 +319,7 @@ void DfForce::calcForceFromCoulomb_exact(RUN_TYPE runType) {
 
     // F_J *= 0.5;
     if (this->isDebugOutMatrix_ == true) {
-        F_J.save("F_J.mtx");
+        F_J.save("fl_Work/F_J.mat");
     }
 
     this->force_ += F_J;
@@ -347,8 +347,8 @@ void DfForce::calcForceFromCoulomb_RIJ(const RUN_TYPE runType) {
     dfEri.getForceJ(rho, &F_ab);
 
     if (this->isDebugOutMatrix_ == true) {
-        F_pqa.save("F_pqa.mtx");
-        F_ab.save("F_ab.mtx");
+        F_pqa.save("fl_Work/F_pqa.mat");
+        F_ab.save("fl_Work/F_ab.mat");
     }
 
     const TlDenseGeneralMatrix_Lapack F_J = (F_pqa - 0.5 * F_ab);
@@ -410,7 +410,7 @@ void DfForce::calcForceFromPureXC(const RUN_TYPE runType) {
     pCalcGrid = NULL;
 
     if (this->isDebugOutMatrix_ == true) {
-        Fxc.save("F_xc.mtx");
+        Fxc.save("fl_Work/F_xc.mat");
     }
     this->force_ += Fxc;
 }
@@ -419,13 +419,18 @@ void DfForce::calcForceFromPureXC_gridfree(RUN_TYPE runType) {
     this->loggerTime("calc XC(gridfree)");
 
     DfGridFreeXC dfGridFreeXC(&(this->pdfParamForForce_));
-    TlDenseGeneralMatrix_Lapack force = dfGridFreeXC.getForce();
 
-    const TlDenseGeneralMatrix_Lapack T = this->getTransformMatrix(force);
-    force += T;
+    // TlDenseGeneralMatrix_Lapack force = dfGridFreeXC.getForce();
+
+    TlDenseGeneralMatrix_Lapack force =
+        dfGridFreeXC.getForce2<TlDenseGeneralMatrix_Lapack>();
+
+    // const TlDenseGeneralMatrix_Lapack T = this->getTransformMatrix(force);
+    // T.save("fl_Work/T.mat");
+    // force += T;
 
     if (this->isDebugOutMatrix_ == true) {
-        force.save("F_xc_gf.mtx");
+        force.save("fl_Work/F_xc_gf.mat");
     }
     this->force_ += force;
 }
@@ -456,7 +461,7 @@ void DfForce::calcForceFromK(RUN_TYPE runType) {
         F_K *= dfXCFunctional.getFockExchangeCoefficient();  // for B3LYP
 
         if (this->isDebugOutMatrix_ == true) {
-            F_K.save("F_K.mtx");
+            F_K.save("fl_Work/F_K.mat");
         }
         this->force_ += F_K;
     }
@@ -499,7 +504,7 @@ TlDenseGeneralMatrix_Lapack DfForce::getTransformMatrix(
         rot.add(1, 2, -y * z);
         rot.add(2, 2, x * x + y * y);
     }
-    // rot.save("force_rot.mat");
+    // rot.save("fl_Work/force_rot.mat");
 
     const double chk = rot.get(0, 0) * rot.get(1, 1) * rot.get(2, 2);
     this->log_.info(TlUtils::format("chk = % 8.3e", chk));
@@ -555,7 +560,7 @@ TlDenseGeneralMatrix_Lapack DfForce::getTransformMatrix(
         }
     } else {
         rot.inverse();
-        // rot.save("force_rotinv.mat");
+        // rot.save("fl_Work/force_rotinv.mat");
     }
 
     // <-- OK

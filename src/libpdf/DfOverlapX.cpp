@@ -1235,3 +1235,1020 @@ void DfOverlapX::storeM_A(const index_type shellIndexP, const int maxStepsP,
         }
     }
 }
+
+void DfOverlapX::get_dM_exact(const TlDenseSymmetricMatrix_Eigen& P,
+                              TlDenseGeneralMatrix_Eigen* pdMx,
+                              TlDenseGeneralMatrix_Eigen* pdMy,
+                              TlDenseGeneralMatrix_Eigen* pdMz,
+                              const int atomIndex) {
+    assert(pdMx != NULL);
+    assert(pdMy != NULL);
+    assert(pdMz != NULL);
+    pdMx->resize(this->m_nNumOfAOs, this->m_nNumOfAOs);
+    pdMy->resize(this->m_nNumOfAOs, this->m_nNumOfAOs);
+    pdMz->resize(this->m_nNumOfAOs, this->m_nNumOfAOs);
+
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
+
+    this->createEngines();
+
+    int threadID = 0;
+
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    // P
+    for (index_type shellIndexP = 0; shellIndexP < numOfAOs;) {
+        const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+        const int maxStepsP = 2 * shellTypeP + 1;
+
+        this->log_.info(
+            TlUtils::format("progress %d / %d", shellIndexP, numOfAOs));
+        const int atomIndex_P = orbitalInfo.getAtomIndex(shellIndexP);
+        if (atomIndex != atomIndex_P) {
+            shellIndexP += maxStepsP;
+            continue;
+        }
+
+        for (index_type shellIndexQ = 0; shellIndexQ < numOfAOs;) {
+            const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+
+            for (index_type shellIndexR = 0; shellIndexR < numOfAOs;) {
+                const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
+                const int maxStepsR = 2 * shellTypeR + 1;
+
+                for (index_type shellIndexS = 0; shellIndexS < numOfAOs;) {
+                    const int shellTypeS =
+                        orbitalInfo.getShellType(shellIndexS);
+                    const int maxStepsS = 2 * shellTypeS + 1;
+
+                    this->pEngines_[threadID].calc(1, orbitalInfo, shellIndexP,
+                                                   0, orbitalInfo, shellIndexQ,
+                                                   0, orbitalInfo, shellIndexR,
+                                                   0, orbitalInfo, shellIndexS);
+
+                    int step = 0;
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMx->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMy->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMz->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    assert(step ==
+                           3 * maxStepsP * maxStepsQ * maxStepsR * maxStepsS);
+
+                    shellIndexS += maxStepsS;
+                }
+                shellIndexR += maxStepsR;
+            }
+            shellIndexQ += maxStepsQ;
+        }
+        shellIndexP += maxStepsP;
+    }
+
+    // pdMx->save(TlUtils::format("dmx-p.%d.mat", atomIndex));
+    // pdMy->save(TlUtils::format("dmy-p.%d.mat", atomIndex));
+    // pdMz->save(TlUtils::format("dmz-p.%d.mat", atomIndex));
+
+    // Q
+    for (index_type shellIndexP = 0; shellIndexP < numOfAOs;) {
+        const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+        const int maxStepsP = 2 * shellTypeP + 1;
+
+        for (index_type shellIndexQ = 0; shellIndexQ < numOfAOs;) {
+            const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+
+            const int atomIndex_Q = orbitalInfo.getAtomIndex(shellIndexQ);
+            if (atomIndex != atomIndex_Q) {
+                shellIndexQ += maxStepsQ;
+                continue;
+            }
+
+            for (index_type shellIndexR = 0; shellIndexR < numOfAOs;) {
+                const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
+                const int maxStepsR = 2 * shellTypeR + 1;
+
+                for (index_type shellIndexS = 0; shellIndexS < numOfAOs;) {
+                    const int shellTypeS =
+                        orbitalInfo.getShellType(shellIndexS);
+                    const int maxStepsS = 2 * shellTypeS + 1;
+
+                    this->pEngines_[threadID].calc(0, orbitalInfo, shellIndexP,
+                                                   1, orbitalInfo, shellIndexQ,
+                                                   0, orbitalInfo, shellIndexR,
+                                                   0, orbitalInfo, shellIndexS);
+
+                    int step = 0;
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMx->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMy->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMz->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    assert(step ==
+                           3 * maxStepsP * maxStepsQ * maxStepsR * maxStepsS);
+
+                    shellIndexS += maxStepsS;
+                }
+                shellIndexR += maxStepsR;
+            }
+            shellIndexQ += maxStepsQ;
+        }
+        shellIndexP += maxStepsP;
+    }
+
+    pdMx->save(TlUtils::format("dmx-pq.%d.mat", atomIndex));
+    pdMy->save(TlUtils::format("dmy-pq.%d.mat", atomIndex));
+    pdMz->save(TlUtils::format("dmz-pq.%d.mat", atomIndex));
+
+    // R
+    for (index_type shellIndexP = 0; shellIndexP < numOfAOs;) {
+        const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+        const int maxStepsP = 2 * shellTypeP + 1;
+
+        for (index_type shellIndexQ = 0; shellIndexQ < numOfAOs;) {
+            const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+
+            for (index_type shellIndexR = 0; shellIndexR < numOfAOs;) {
+                const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
+                const int maxStepsR = 2 * shellTypeR + 1;
+
+                const int atomIndex_R = orbitalInfo.getAtomIndex(shellIndexR);
+                if (atomIndex != atomIndex_R) {
+                    shellIndexR += maxStepsR;
+                    continue;
+                }
+
+                for (index_type shellIndexS = 0; shellIndexS < numOfAOs;) {
+                    const int shellTypeS =
+                        orbitalInfo.getShellType(shellIndexS);
+                    const int maxStepsS = 2 * shellTypeS + 1;
+
+                    this->pEngines_[threadID].calc(0, orbitalInfo, shellIndexP,
+                                                   0, orbitalInfo, shellIndexQ,
+                                                   1, orbitalInfo, shellIndexR,
+                                                   0, orbitalInfo, shellIndexS);
+
+                    int step = 0;
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMx->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMy->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMz->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    assert(step ==
+                           3 * maxStepsP * maxStepsQ * maxStepsR * maxStepsS);
+
+                    shellIndexS += maxStepsS;
+                }
+                shellIndexR += maxStepsR;
+            }
+            shellIndexQ += maxStepsQ;
+        }
+        shellIndexP += maxStepsP;
+    }
+
+    // pdMx->save(TlUtils::format("dmx-pqr.%d.mat", atomIndex));
+    // pdMy->save(TlUtils::format("dmy-pqr.%d.mat", atomIndex));
+    // pdMz->save(TlUtils::format("dmz-pqr.%d.mat", atomIndex));
+
+    // S
+    for (index_type shellIndexP = 0; shellIndexP < numOfAOs;) {
+        const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+        const int maxStepsP = 2 * shellTypeP + 1;
+
+        for (index_type shellIndexQ = 0; shellIndexQ < numOfAOs;) {
+            const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+
+            for (index_type shellIndexR = 0; shellIndexR < numOfAOs;) {
+                const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
+                const int maxStepsR = 2 * shellTypeR + 1;
+
+                for (index_type shellIndexS = 0; shellIndexS < numOfAOs;) {
+                    const int shellTypeS =
+                        orbitalInfo.getShellType(shellIndexS);
+                    const int maxStepsS = 2 * shellTypeS + 1;
+
+                    const int atomIndex_S =
+                        orbitalInfo.getAtomIndex(shellIndexS);
+                    if (atomIndex != atomIndex_S) {
+                        shellIndexS += maxStepsS;
+                        continue;
+                    }
+
+                    this->pEngines_[threadID].calc(0, orbitalInfo, shellIndexP,
+                                                   0, orbitalInfo, shellIndexQ,
+                                                   0, orbitalInfo, shellIndexR,
+                                                   1, orbitalInfo, shellIndexS);
+
+                    int step = 0;
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMx->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMy->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMz->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    assert(step ==
+                           3 * maxStepsP * maxStepsQ * maxStepsR * maxStepsS);
+
+                    shellIndexS += maxStepsS;
+                }
+                shellIndexR += maxStepsR;
+            }
+            shellIndexQ += maxStepsQ;
+        }
+        shellIndexP += maxStepsP;
+    }
+
+    pdMx->save(TlUtils::format("dmx-pqrs.%d.mat", atomIndex));
+    pdMy->save(TlUtils::format("dmy-pqrs.%d.mat", atomIndex));
+    pdMz->save(TlUtils::format("dmz-pqrs.%d.mat", atomIndex));
+
+    this->destroyEngines();
+}
+
+//
+void DfOverlapX::get_dM_exact2(const TlOrbitalInfoObject& orbitalInfo_pq,
+                               const TlOrbitalInfoObject& orbitalInfo_rs,
+                               const TlDenseSymmetricMatrix_Eigen& P,
+                               TlDenseGeneralMatrix_Eigen* pdMx,
+                               TlDenseGeneralMatrix_Eigen* pdMy,
+                               TlDenseGeneralMatrix_Eigen* pdMz,
+                               const int atomIndex) {
+    assert(pdMx != NULL);
+    assert(pdMy != NULL);
+    assert(pdMz != NULL);
+
+    const index_type numOfOrbs_pq = orbitalInfo_pq.getNumOfOrbitals();
+    const index_type numOfOrbs_rs = orbitalInfo_rs.getNumOfOrbitals();
+
+    pdMx->resize(numOfOrbs_pq, numOfOrbs_pq);
+    pdMy->resize(numOfOrbs_pq, numOfOrbs_pq);
+    pdMz->resize(numOfOrbs_pq, numOfOrbs_pq);
+
+    this->createEngines();
+
+    int threadID = 0;
+
+    // P
+    for (index_type shellIndexP = 0; shellIndexP < numOfOrbs_pq;) {
+        const int shellTypeP = orbitalInfo_pq.getShellType(shellIndexP);
+        const int maxStepsP = 2 * shellTypeP + 1;
+
+        // this->log_.info(TlUtils::format("progress %d / %d", shellIndexP,
+        // numOfAOs));
+        const int atomIndex_P = orbitalInfo_pq.getAtomIndex(shellIndexP);
+        if (atomIndex != atomIndex_P) {
+            shellIndexP += maxStepsP;
+            continue;
+        }
+
+        for (index_type shellIndexQ = 0; shellIndexQ < numOfOrbs_pq;) {
+            const int shellTypeQ = orbitalInfo_pq.getShellType(shellIndexQ);
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+
+            for (index_type shellIndexR = 0; shellIndexR < numOfOrbs_rs;) {
+                const int shellTypeR = orbitalInfo_rs.getShellType(shellIndexR);
+                const int maxStepsR = 2 * shellTypeR + 1;
+
+                for (index_type shellIndexS = 0; shellIndexS < numOfOrbs_rs;) {
+                    const int shellTypeS =
+                        orbitalInfo_rs.getShellType(shellIndexS);
+                    const int maxStepsS = 2 * shellTypeS + 1;
+
+                    this->pEngines_[threadID].calc(
+                        1, orbitalInfo_pq, shellIndexP, 0, orbitalInfo_pq,
+                        shellIndexQ, 0, orbitalInfo_rs, shellIndexR, 0,
+                        orbitalInfo_rs, shellIndexS);
+
+                    int step = 0;
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMx->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMy->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMz->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    assert(step ==
+                           3 * maxStepsP * maxStepsQ * maxStepsR * maxStepsS);
+
+                    shellIndexS += maxStepsS;
+                }
+                shellIndexR += maxStepsR;
+            }
+            shellIndexQ += maxStepsQ;
+        }
+        shellIndexP += maxStepsP;
+    }
+
+    // pdMx->save(TlUtils::format("dmx-p.%d.mat", atomIndex));
+    // pdMy->save(TlUtils::format("dmy-p.%d.mat", atomIndex));
+    // pdMz->save(TlUtils::format("dmz-p.%d.mat", atomIndex));
+
+    // Q
+    for (index_type shellIndexP = 0; shellIndexP < numOfOrbs_pq;) {
+        const int shellTypeP = orbitalInfo_pq.getShellType(shellIndexP);
+        const int maxStepsP = 2 * shellTypeP + 1;
+
+        for (index_type shellIndexQ = 0; shellIndexQ < numOfOrbs_pq;) {
+            const int shellTypeQ = orbitalInfo_pq.getShellType(shellIndexQ);
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+
+            const int atomIndex_Q = orbitalInfo_pq.getAtomIndex(shellIndexQ);
+            if (atomIndex != atomIndex_Q) {
+                shellIndexQ += maxStepsQ;
+                continue;
+            }
+
+            for (index_type shellIndexR = 0; shellIndexR < numOfOrbs_rs;) {
+                const int shellTypeR = orbitalInfo_rs.getShellType(shellIndexR);
+                const int maxStepsR = 2 * shellTypeR + 1;
+
+                for (index_type shellIndexS = 0; shellIndexS < numOfOrbs_rs;) {
+                    const int shellTypeS =
+                        orbitalInfo_rs.getShellType(shellIndexS);
+                    const int maxStepsS = 2 * shellTypeS + 1;
+
+                    this->pEngines_[threadID].calc(
+                        0, orbitalInfo_pq, shellIndexP, 1, orbitalInfo_pq,
+                        shellIndexQ, 0, orbitalInfo_rs, shellIndexR, 0,
+                        orbitalInfo_rs, shellIndexS);
+
+                    int step = 0;
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMx->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMy->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    pdMz->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    assert(step ==
+                           3 * maxStepsP * maxStepsQ * maxStepsR * maxStepsS);
+
+                    shellIndexS += maxStepsS;
+                }
+                shellIndexR += maxStepsR;
+            }
+            shellIndexQ += maxStepsQ;
+        }
+        shellIndexP += maxStepsP;
+    }
+
+    pdMx->save(TlUtils::format("dmx-pq.%d.mat", atomIndex));
+    pdMy->save(TlUtils::format("dmy-pq.%d.mat", atomIndex));
+    pdMz->save(TlUtils::format("dmz-pq.%d.mat", atomIndex));
+
+    // // R
+    // for (index_type shellIndexP = 0; shellIndexP < numOfAOs;) {
+    //   const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+    //   const int maxStepsP = 2 * shellTypeP + 1;
+    //
+    //   for (index_type shellIndexQ = 0; shellIndexQ < numOfAOs; ) {
+    //     const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+    //     const int maxStepsQ = 2 * shellTypeQ + 1;
+    //
+    //     for (index_type shellIndexR = 0; shellIndexR < numOfAOs; ) {
+    //       const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
+    //       const int maxStepsR = 2 * shellTypeR + 1;
+    //
+    //       const int atomIndex_R = orbitalInfo.getAtomIndex(shellIndexR);
+    //       if (atomIndex != atomIndex_R) {
+    //         shellIndexR += maxStepsR;
+    //         continue;
+    //       }
+    //
+    //       for (index_type shellIndexS = 0; shellIndexS < numOfAOs; ) {
+    //         const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
+    //         const int maxStepsS = 2 * shellTypeS + 1;
+    //
+    //         this->pEngines_[threadID].calc(
+    //             0, orbitalInfo, shellIndexP, 0, orbitalInfo, shellIndexQ, 1,
+    //             orbitalInfo, shellIndexR, 0, orbitalInfo, shellIndexS);
+    //
+    //         int step = 0;
+    //         for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+    //           for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+    //             for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+    //               for (int step_s = 0; step_s < maxStepsS; ++step_s) {
+    //                 double v = this->pEngines_[threadID].WORK[step];
+    //                 v *= P.get(shellIndexR +step_r, shellIndexS +step_s);
+    //                 pdMx->add(shellIndexP +step_p, shellIndexQ +step_q, v);
+    //                 ++step;
+    //               }
+    //             }
+    //           }
+    //         }
+    //         for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+    //           for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+    //             for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+    //               for (int step_s = 0; step_s < maxStepsS; ++step_s) {
+    //                 double v = this->pEngines_[threadID].WORK[step];
+    //                 v *= P.get(shellIndexR +step_r, shellIndexS +step_s);
+    //                 pdMy->add(shellIndexP +step_p, shellIndexQ +step_q, v);
+    //                 ++step;
+    //               }
+    //             }
+    //           }
+    //         }
+    //         for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+    //           for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+    //             for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+    //               for (int step_s = 0; step_s < maxStepsS; ++step_s) {
+    //                 double v = this->pEngines_[threadID].WORK[step];
+    //                 v *= P.get(shellIndexR +step_r, shellIndexS +step_s);
+    //                 pdMz->add(shellIndexP +step_p, shellIndexQ +step_q, v);
+    //                 ++step;
+    //               }
+    //             }
+    //           }
+    //         }
+    //         assert(step == 3 * maxStepsP * maxStepsQ * maxStepsR *
+    //         maxStepsS);
+    //
+    //         shellIndexS += maxStepsS;
+    //       }
+    //       shellIndexR += maxStepsR;
+    //     }
+    //     shellIndexQ += maxStepsQ;
+    //   }
+    //   shellIndexP += maxStepsP;
+    // }
+    //
+    // // pdMx->save(TlUtils::format("dmx-pqr.%d.mat", atomIndex));
+    // // pdMy->save(TlUtils::format("dmy-pqr.%d.mat", atomIndex));
+    // // pdMz->save(TlUtils::format("dmz-pqr.%d.mat", atomIndex));
+    //
+    //
+    // // S
+    // for (index_type shellIndexP = 0; shellIndexP < numOfAOs;) {
+    //   const int shellTypeP = orbitalInfo.getShellType(shellIndexP);
+    //   const int maxStepsP = 2 * shellTypeP + 1;
+    //
+    //   for (index_type shellIndexQ = 0; shellIndexQ < numOfAOs; ) {
+    //     const int shellTypeQ = orbitalInfo.getShellType(shellIndexQ);
+    //     const int maxStepsQ = 2 * shellTypeQ + 1;
+    //
+    //     for (index_type shellIndexR = 0; shellIndexR < numOfAOs; ) {
+    //       const int shellTypeR = orbitalInfo.getShellType(shellIndexR);
+    //       const int maxStepsR = 2 * shellTypeR + 1;
+    //
+    //       for (index_type shellIndexS = 0; shellIndexS < numOfAOs; ) {
+    //         const int shellTypeS = orbitalInfo.getShellType(shellIndexS);
+    //         const int maxStepsS = 2 * shellTypeS + 1;
+    //
+    //         const int atomIndex_S = orbitalInfo.getAtomIndex(shellIndexS);
+    //         if (atomIndex != atomIndex_S) {
+    //           shellIndexS += maxStepsS;
+    //           continue;
+    //         }
+    //
+    //         this->pEngines_[threadID].calc(
+    //             0, orbitalInfo, shellIndexP, 0, orbitalInfo, shellIndexQ, 0,
+    //             orbitalInfo, shellIndexR, 1, orbitalInfo, shellIndexS);
+    //
+    //         int step = 0;
+    //         for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+    //           for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+    //             for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+    //               for (int step_s = 0; step_s < maxStepsS; ++step_s) {
+    //                 double v = this->pEngines_[threadID].WORK[step];
+    //                 v *= P.get(shellIndexR +step_r, shellIndexS +step_s);
+    //                 pdMx->add(shellIndexP +step_p, shellIndexQ +step_q, v);
+    //                 ++step;
+    //               }
+    //             }
+    //           }
+    //         }
+    //         for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+    //           for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+    //             for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+    //               for (int step_s = 0; step_s < maxStepsS; ++step_s) {
+    //                 double v = this->pEngines_[threadID].WORK[step];
+    //                 v *= P.get(shellIndexR +step_r, shellIndexS +step_s);
+    //                 pdMy->add(shellIndexP +step_p, shellIndexQ +step_q, v);
+    //                 ++step;
+    //               }
+    //             }
+    //           }
+    //         }
+    //         for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+    //           for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+    //             for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+    //               for (int step_s = 0; step_s < maxStepsS; ++step_s) {
+    //                 double v = this->pEngines_[threadID].WORK[step];
+    //                 v *= P.get(shellIndexR +step_r, shellIndexS +step_s);
+    //                 pdMz->add(shellIndexP +step_p, shellIndexQ +step_q, v);
+    //                 ++step;
+    //               }
+    //             }
+    //           }
+    //         }
+    //         assert(step == 3 * maxStepsP * maxStepsQ * maxStepsR *
+    //         maxStepsS);
+    //
+    //         shellIndexS += maxStepsS;
+    //       }
+    //       shellIndexR += maxStepsR;
+    //     }
+    //     shellIndexQ += maxStepsQ;
+    //   }
+    //   shellIndexP += maxStepsP;
+    // }
+
+    pdMx->save(TlUtils::format("dmx-pqrs.%d.mat", atomIndex));
+    pdMy->save(TlUtils::format("dmy-pqrs.%d.mat", atomIndex));
+    pdMz->save(TlUtils::format("dmz-pqrs.%d.mat", atomIndex));
+
+    this->destroyEngines();
+}
+
+void DfOverlapX::get_dM(const TlOrbitalInfoObject& orbitalInfo_pq,
+                        const TlOrbitalInfoObject& orbitalInfo_rs,
+                        const TlDenseSymmetricMatrix_Eigen& P,
+                        TlDenseSymmetricMatrix_Eigen* pdMx,
+                        TlDenseSymmetricMatrix_Eigen* pdMy,
+                        TlDenseSymmetricMatrix_Eigen* pdMz,
+                        const int atomIndex) {
+    assert(pdMx != NULL);
+    assert(pdMy != NULL);
+    assert(pdMz != NULL);
+
+    const index_type numOfOrbs_pq = orbitalInfo_pq.getNumOfOrbitals();
+    const index_type numOfOrbs_rs = orbitalInfo_rs.getNumOfOrbitals();
+
+    pdMx->resize(numOfOrbs_pq);
+    pdMy->resize(numOfOrbs_pq);
+    pdMz->resize(numOfOrbs_pq);
+
+    this->createEngines();
+
+    int threadID = 0;
+
+    // PQ
+    for (index_type shellIndexP = 0; shellIndexP < numOfOrbs_pq;) {
+        const int shellTypeP = orbitalInfo_pq.getShellType(shellIndexP);
+        const int maxStepsP = 2 * shellTypeP + 1;
+
+        const int atomIndex_P = orbitalInfo_pq.getAtomIndex(shellIndexP);
+        if (atomIndex != atomIndex_P) {
+            shellIndexP += maxStepsP;
+            continue;
+        }
+
+        for (index_type shellIndexQ = 0; shellIndexQ < numOfOrbs_pq;) {
+            const int shellTypeQ = orbitalInfo_pq.getShellType(shellIndexQ);
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+
+            for (index_type shellIndexR = 0; shellIndexR < numOfOrbs_rs;) {
+                const int shellTypeR = orbitalInfo_rs.getShellType(shellIndexR);
+                const int maxStepsR = 2 * shellTypeR + 1;
+
+                for (index_type shellIndexS = 0; shellIndexS < numOfOrbs_rs;) {
+                    const int shellTypeS =
+                        orbitalInfo_rs.getShellType(shellIndexS);
+                    const int maxStepsS = 2 * shellTypeS + 1;
+
+                    this->pEngines_[threadID].calc(
+                        1, orbitalInfo_pq, shellIndexP, 0, orbitalInfo_pq,
+                        shellIndexQ, 0, orbitalInfo_rs, shellIndexR, 0,
+                        orbitalInfo_rs, shellIndexS);
+
+                    int step = 0;
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    if (shellIndexP + step_p ==
+                                        shellIndexQ + step_q) {
+                                        v *= 2.0;
+                                    }
+                                    pdMx->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    if (shellIndexP + step_p ==
+                                        shellIndexQ + step_q) {
+                                        v *= 2.0;
+                                    }
+                                    pdMy->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    if (shellIndexP + step_p ==
+                                        shellIndexQ + step_q) {
+                                        v *= 2.0;
+                                    }
+                                    pdMz->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    assert(step ==
+                           3 * maxStepsP * maxStepsQ * maxStepsR * maxStepsS);
+
+                    shellIndexS += maxStepsS;
+                }
+                shellIndexR += maxStepsR;
+            }
+            shellIndexQ += maxStepsQ;
+        }
+        shellIndexP += maxStepsP;
+    }
+
+    // pdMx->save(TlUtils::format("dmx-pq.%d.mat", atomIndex));
+    // pdMy->save(TlUtils::format("dmy-pq.%d.mat", atomIndex));
+    // pdMz->save(TlUtils::format("dmz-pq.%d.mat", atomIndex));
+
+    // R
+    for (index_type shellIndexP = 0; shellIndexP < numOfOrbs_pq;) {
+        const int shellTypeP = orbitalInfo_pq.getShellType(shellIndexP);
+        const int maxStepsP = 2 * shellTypeP + 1;
+
+        for (index_type shellIndexQ = 0; shellIndexQ < numOfOrbs_pq;) {
+            const int shellTypeQ = orbitalInfo_pq.getShellType(shellIndexQ);
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+
+            for (index_type shellIndexR = 0; shellIndexR < numOfOrbs_rs;) {
+                const int shellTypeR = orbitalInfo_rs.getShellType(shellIndexR);
+                const int maxStepsR = 2 * shellTypeR + 1;
+
+                const int atomIndex_R =
+                    orbitalInfo_rs.getAtomIndex(shellIndexR);
+                if (atomIndex != atomIndex_R) {
+                    shellIndexR += maxStepsR;
+                    continue;
+                }
+
+                for (index_type shellIndexS = 0; shellIndexS < numOfOrbs_rs;) {
+                    const int shellTypeS =
+                        orbitalInfo_rs.getShellType(shellIndexS);
+                    const int maxStepsS = 2 * shellTypeS + 1;
+
+                    this->pEngines_[threadID].calc(
+                        0, orbitalInfo_pq, shellIndexP, 0, orbitalInfo_pq,
+                        shellIndexQ, 1, orbitalInfo_rs, shellIndexR, 0,
+                        orbitalInfo_rs, shellIndexS);
+
+                    int step = 0;
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    if (shellIndexP + step_p ==
+                                        shellIndexQ + step_q) {
+                                        v *= 2.0;
+                                    }
+                                    pdMx->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    if (shellIndexP + step_p ==
+                                        shellIndexQ + step_q) {
+                                        v *= 2.0;
+                                    }
+                                    pdMy->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    for (int step_p = 0; step_p < maxStepsP; ++step_p) {
+                        for (int step_q = 0; step_q < maxStepsQ; ++step_q) {
+                            for (int step_r = 0; step_r < maxStepsR; ++step_r) {
+                                for (int step_s = 0; step_s < maxStepsS;
+                                     ++step_s) {
+                                    double v =
+                                        this->pEngines_[threadID].WORK[step];
+                                    v *= P.get(shellIndexR + step_r,
+                                               shellIndexS + step_s);
+                                    if (shellIndexP + step_p ==
+                                        shellIndexQ + step_q) {
+                                        v *= 2.0;
+                                    }
+                                    pdMz->add(shellIndexP + step_p,
+                                              shellIndexQ + step_q, v);
+                                    ++step;
+                                }
+                            }
+                        }
+                    }
+                    assert(step ==
+                           3 * maxStepsP * maxStepsQ * maxStepsR * maxStepsS);
+
+                    shellIndexS += maxStepsS;
+                }
+                shellIndexR += maxStepsR;
+            }
+            shellIndexQ += maxStepsQ;
+        }
+        shellIndexP += maxStepsP;
+    }
+
+    // pdMx->save(TlUtils::format("dmx-pqrs.%d.mat", atomIndex));
+    // pdMy->save(TlUtils::format("dmy-pqrs.%d.mat", atomIndex));
+    // pdMz->save(TlUtils::format("dmz-pqrs.%d.mat", atomIndex));
+
+    this->destroyEngines();
+}

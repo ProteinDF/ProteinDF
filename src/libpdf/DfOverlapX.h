@@ -19,6 +19,10 @@
 #ifndef DFOVERLAPX_H
 #define DFOVERLAPX_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif  // HAVE_CONFIG_H
+
 #include <vector>
 #include "DfObject.h"
 #include "DfOverlapEngine.h"
@@ -26,6 +30,10 @@
 
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
+#ifdef HAVE_EIGEN
+#include "tl_dense_general_matrix_eigen.h"
+#include "tl_dense_symmetric_matrix_eigen.h"
+#endif  // HAVE_EIGEN
 
 class TlOrbitalInfoObject;
 
@@ -66,6 +74,23 @@ class DfOverlapX : public DfObject {
               TlDenseSymmetricMatrix_Lapack* pM);
     void getM_A(const TlDenseSymmetricMatrix_Lapack& P,
                 TlDenseSymmetricMatrix_Lapack* pM);
+
+    void get_dM_exact(const TlDenseSymmetricMatrix_Eigen& P,
+                      TlDenseGeneralMatrix_Eigen* pdMx,
+                      TlDenseGeneralMatrix_Eigen* pdMy,
+                      TlDenseGeneralMatrix_Eigen* pdMz, const int atomIndex);
+    void get_dM_exact2(const TlOrbitalInfoObject& orbitalInfo_pq,
+                       const TlOrbitalInfoObject& orbitalInfo_rs,
+                       const TlDenseSymmetricMatrix_Eigen& P,
+                       TlDenseGeneralMatrix_Eigen* pdMx,
+                       TlDenseGeneralMatrix_Eigen* pdMy,
+                       TlDenseGeneralMatrix_Eigen* pdMz, const int atomIndex);
+    void get_dM(const TlOrbitalInfoObject& orbitalInfo_pq,
+                const TlOrbitalInfoObject& orbitalInfo_rs,
+                const TlDenseSymmetricMatrix_Eigen& P,
+                TlDenseSymmetricMatrix_Eigen* pdMx,
+                TlDenseSymmetricMatrix_Eigen* pdMy,
+                TlDenseSymmetricMatrix_Eigen* pdMz, const int atomIndex);
 
    public:
     /// calc <pq gamma>

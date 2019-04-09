@@ -120,6 +120,7 @@ if (MPI_FOUND)
     set(MPI_PROCS 4)
   endif (NOT DEFINED MPI_PROCS)
 
+  message("MPI_PROCS: ${MPI_PROCS}")
   add_test(
     NAME xtest.mpi
     COMMAND ${MPIEXEC}

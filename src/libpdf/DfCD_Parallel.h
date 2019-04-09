@@ -38,10 +38,11 @@ class DfCD_Parallel : public DfCD {
     virtual void getJ(TlDenseSymmetricMatrix_Lapack* pJ);
     void getJ_D(TlDenseSymmetricMatrix_Scalapack* pJ);
 
-    virtual void getM(const TlDenseSymmetricMatrix_Lapack& P,
+    virtual void getM(const RUN_TYPE runType,
+                      const TlDenseSymmetricMatrix_Lapack& P,
                       TlDenseSymmetricMatrix_Lapack* pM);
 
-    void getM(const TlDenseSymmetricMatrix_Scalapack& P,
+    void getM(const RUN_TYPE runType, const TlDenseSymmetricMatrix_Scalapack& P,
               TlDenseSymmetricMatrix_Scalapack* pM);
 
     // void getJ_distributed(TlDenseSymmetricMatrix_Scalapack *pJ);

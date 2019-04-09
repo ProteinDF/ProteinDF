@@ -59,7 +59,8 @@ class DfCD : public DfObject {
     // --------------------------------------------------------------------------
     void getJ(TlDenseSymmetricMatrix_Lapack* pJ);
     virtual void getK(const RUN_TYPE runType);
-    virtual void getM(const TlDenseSymmetricMatrix_Lapack& P,
+    virtual void getM(const RUN_TYPE runType,
+                      const TlDenseSymmetricMatrix_Lapack& P,
                       TlDenseSymmetricMatrix_Lapack* pM);
 
    protected:

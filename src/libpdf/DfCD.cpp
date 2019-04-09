@@ -1155,7 +1155,7 @@ void DfCD::getK_A(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK) {
     this->finalize(pK);
 }
 
-void DfCD::getM(const TlDenseSymmetricMatrix_Lapack& P,
+void DfCD::getM(const RUN_TYPE runType, const TlDenseSymmetricMatrix_Lapack& P,
                 TlDenseSymmetricMatrix_Lapack* pM) {
     if (this->isDedicatedBasisForGridFree_) {
         if (this->useMmapMatrix_) {
@@ -1313,9 +1313,6 @@ void DfCD::getM_A_mmap(const TlDenseSymmetricMatrix_Lapack& P,
         TlUtils::format("L(xc): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
     const index_type numOfCBs = L.getNumOfCols();
 
-    TlDenseGeneralMatrix_Lapack C;
-    P.pivotedCholeskyDecomposition(&C, this->epsilon_);
-
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrXCPath());
 
     index_type start_CholeskyBasis = 0;
@@ -1323,20 +1320,17 @@ void DfCD::getM_A_mmap(const TlDenseSymmetricMatrix_Lapack& P,
     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis,
                               &end_CholeskyBasis);
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-        TlDenseGeneralMatrix_Lapack l = this->getCholeskyVectorA(
+        const TlDenseGeneralMatrix_Lapack l = this->getCholeskyVectorA(
             orbInfo_p, orbInfo_q, L.getColVector(I), I2PQ);
         // l.save(TlUtils::format("fl_Work/debug_LI_xc_%d.mat", I));
         assert(l.getNumOfRows() == orbInfo_p.getNumOfOrbitals());
         assert(l.getNumOfCols() == dim_M);
-        l.transposeInPlace();
 
-        TlDenseGeneralMatrix_Lapack X = l * C;
-        TlDenseGeneralMatrix_Lapack Xt = X;
-        Xt.transposeInPlace();
+        const TlDenseGeneralMatrix_Lapack lt = l.transpose();
+        assert(lt.getNumOfRows() == dim_M);
+        assert(lt.getNumOfCols() == orbInfo_p.getNumOfOrbitals());
 
-        TlDenseSymmetricMatrix_Lapack XX = X * Xt;
-        assert(XX.getNumOfRows() == dim_M);
-        *pM += XX;
+        *pM += lt * P * l;
     }
 
     this->finalize(pM);

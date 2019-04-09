@@ -16,6 +16,10 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif  // HAVE_CONFIG_H
+
 #include <cassert>
 #ifdef _OPENMP
 #include <omp.h>
@@ -35,6 +39,12 @@
 #include "TlSystem.h"
 #include "TlTime.h"
 #include "TlUtils.h"
+
+#ifdef HAVE_EIGEN
+#include "tl_dense_general_matrix_eigen.h"
+#include "tl_dense_symmetric_matrix_eigen.h"
+#include "tl_dense_vector_eigen.h"
+#endif  // HAVE_EIGEN
 
 const int DfGridFreeXC::MAX_SHELL_TYPE = 2 + 1;
 const double DfGridFreeXC::ONE_THIRD = 1.0 / 3.0;
@@ -71,8 +81,13 @@ DfGridFreeXC::DfGridFreeXC(TlSerializeData* pPdfParam)
     }
 
     this->debugSaveM_ = (*pPdfParam)["debug/DfGridFreeXC/saveM"].getBoolean();
-    if (this->debugSaveM_) {
-        this->log_.info("using GAMESS formula");
+    // if (this->debugSaveM_) {
+    //     this->log_.info("using GAMESS formula");
+    // }
+
+    this->ene_grad_type_ = 1;
+    if ((*pPdfParam)["gridfree/ene_grad_type"].getStr().empty() != true) {
+        this->ene_grad_type_ = (*pPdfParam)["gridfree/ene_grad_type"].getInt();
     }
 }
 
@@ -1015,4 +1030,209 @@ TlDenseGeneralMatrix_Lapack DfGridFreeXC::selectGradMat(
         }
     }
     return output;
+}
+
+// TlDenseGeneralMatrix_Lapack DfGridFreeXC::getForce2() {
+//   const index_type numOfAtoms = this->m_nNumOfAtoms;
+//   TlDenseGeneralMatrix_Eigen gradExc(numOfAtoms, 3);
+
+//   for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
+//     this->getForce2_atom(atomIndex, &gradExc);
+//   }
+
+//   return gradExc;
+// }
+
+void DfGridFreeXC::getForce2_atom(const int atomIndex,
+                                  TlDenseGeneralMatrixObject* p_dExc) {
+    typedef TlDenseGeneralMatrix_Eigen GeneralMatrix;
+    typedef TlDenseSymmetricMatrix_Eigen SymmetricMatrix;
+    typedef TlDenseVector_Eigen Vector;
+    typedef DfOverlapX DfOverlapClass;
+
+    const DfObject::RUN_TYPE runType = RUN_RKS;
+    // const int itr = this->m_nIteration;
+
+    this->log_.info(
+        TlUtils::format("calc d(Exc)/dx @%4d by gridfree.", atomIndex));
+
+    std::string basisset_param = "basis_set";
+    if (this->isDedicatedBasisForGridFree_) {
+        basisset_param = "basis_set_gridfree";
+    }
+    const TlOrbitalInfo orbitalInfo_GF((*(this->pPdfParam_))["coordinates"],
+                                       (*(this->pPdfParam_))[basisset_param]);
+
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    const index_type numOfGfOrbs = orbitalInfo_GF.getNumOfOrbitals();
+    this->log_.info(TlUtils::format("AOs = %d", numOfAOs));
+    this->log_.info(TlUtils::format("auxAOs for GF = %d", numOfGfOrbs));
+
+    const SymmetricMatrix P = this->getPMatrix<SymmetricMatrix>(runType);
+
+    GeneralMatrix dMx;
+    GeneralMatrix dMy;
+    GeneralMatrix dMz;
+    // SymmetricMatrix dMx;
+    // SymmetricMatrix dMy;
+    // SymmetricMatrix dMz;
+
+    // if (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD) {
+    //   this->log_.info("begin to create M matrix based on CD.");
+    //   {
+    //     DfCD_class dfCD(this->pPdfParam_);
+    //     dfCD.getM(runType, P, &M);
+    //   }
+    // } else
+    {
+        //   this->log_.info("begin to create M matrix using 4-center
+        //   overlap.");
+        DfOverlapClass dfOvp(this->pPdfParam_);
+        if (this->isDedicatedBasisForGridFree_) {
+            //     dfOvp.getM_A(P, &M);
+            dfOvp.get_dM_exact2(orbitalInfo_GF, this->orbitalInfo_, P, &dMx,
+                                &dMy, &dMz, atomIndex);
+            // dfOvp.get_dM(orbitalInfo_GF, this->orbitalInfo_, P, &dMx, &dMy,
+            // &dMz, atomIndex);
+        } else {
+            // dfOvp.get_dM_exact(P, &dMx, &dMy, &dMz, atomIndex);
+            dfOvp.get_dM_exact2(this->orbitalInfo_, this->orbitalInfo_, P, &dMx,
+                                &dMy, &dMz, atomIndex);
+            // dfOvp.get_dM(this->orbitalInfo_, this->orbitalInfo_, P, &dMx,
+            // &dMy, &dMz, atomIndex);
+        }
+    }
+
+    this->log_.info("begin to generate Exc using grid-free method.");
+    // tV * S * V == I
+    GeneralMatrix S;
+    GeneralMatrix V;
+    if (this->isDedicatedBasisForGridFree_) {
+        S = DfObject::getGfStildeMatrix<GeneralMatrix>();
+        V = DfObject::getGfVMatrix<GeneralMatrix>();
+    } else {
+        S = DfObject::getSpqMatrix<SymmetricMatrix>();
+        V = DfObject::getXMatrix<GeneralMatrix>();
+    }
+
+    const double dE_dx =
+        this->calc_ene_grad<GeneralMatrix, SymmetricMatrix, Vector>(P, S, V,
+                                                                    dMx);
+    const double dE_dy =
+        this->calc_ene_grad<GeneralMatrix, SymmetricMatrix, Vector>(P, S, V,
+                                                                    dMy);
+    const double dE_dz =
+        this->calc_ene_grad<GeneralMatrix, SymmetricMatrix, Vector>(P, S, V,
+                                                                    dMz);
+    this->log_.info(TlUtils::format("dE/dx @%4d: % 16.10f", atomIndex, dE_dx));
+    this->log_.info(TlUtils::format("dE/dy @%4d: % 16.10f", atomIndex, dE_dy));
+    this->log_.info(TlUtils::format("dE/dz @%4d: % 16.10f", atomIndex, dE_dz));
+    p_dExc->set(atomIndex, 0, dE_dx);
+    p_dExc->set(atomIndex, 1, dE_dy);
+    p_dExc->set(atomIndex, 2, dE_dz);
+}
+
+template <class GeneralMatrix, class SymmetricMatrix, class Vector>
+double DfGridFreeXC::calc_ene_grad(const SymmetricMatrix& P,
+                                   const GeneralMatrix& S,
+                                   const GeneralMatrix& V,
+                                   const GeneralMatrix& M) {
+    this->log_.info("DfGridFreeXC::calc_ene_grad()");
+    this->log_.info(
+        TlUtils::format("S: %d x %d", S.getNumOfRows(), S.getNumOfCols()));
+    this->log_.info(
+        TlUtils::format("M: %d x %d", M.getNumOfRows(), M.getNumOfCols()));
+    this->log_.info(
+        TlUtils::format("V: %d x %d", V.getNumOfRows(), V.getNumOfCols()));
+    SymmetricMatrix M_tilda;
+    {
+        const GeneralMatrix tV = V.transpose();
+        M_tilda = tV * M * V;
+    }
+
+    // diagonalize M~
+    GeneralMatrix U;
+    Vector lambda;
+    M_tilda.eig(&lambda, &U);
+    // lambda.save(TlUtils::format("lambda.%d.vtr", atomIndex));
+
+    this->log_.info("DfGridFreeXC::calc_ene_grad() -> eig");
+    // eigenvalues
+    const index_type eigval_size = lambda.getSize();
+    Vector lambda_neg(eigval_size);
+    {
+        for (index_type i = 0; i < eigval_size; ++i) {
+            const double v = lambda.get(i);
+            if (lambda.get(i) < 0.0) {
+                lambda.set(i, 0.0);
+                lambda_neg.set(i, -v);
+            }
+        }
+    }
+
+    double dE = 0.0;
+    switch (this->ene_grad_type_) {
+        case 1:
+            dE += this->get_ene_grad1(P, S, V, U, lambda);
+            dE -= this->get_ene_grad1(P, S, V, U, lambda_neg);
+            break;
+
+        case 2:
+            dE += this->get_ene_grad2(P, S, V, U, lambda);
+            dE -= this->get_ene_grad2(P, S, V, U, lambda_neg);
+            break;
+
+        default:
+            this->log_.critical(
+                TlUtils::format("program error: %s@%d", __FILE__, __LINE__));
+    }
+
+    return dE;
+}
+
+template <class GeneralMatrix, class SymmetricMatrix, class Vector>
+double DfGridFreeXC::get_ene_grad1(const SymmetricMatrix& P,
+                                   const GeneralMatrix& S,
+                                   const GeneralMatrix& V,
+                                   const GeneralMatrix& U,
+                                   const Vector& lambda) {
+    this->log_.info("DfGridFreeXC::get_ene_grad1()");
+    SymmetricMatrix F_lambda(lambda.getSize());
+    SymmetricMatrix E_lambda(lambda.getSize());
+    this->get_F_lamda(lambda, &F_lambda, &E_lambda);
+
+    GeneralMatrix SVU = S * V * U;
+    GeneralMatrix UVS = SVU;
+    UVS.transposeInPlace();
+
+    SymmetricMatrix E = SVU * F_lambda * UVS;
+    E.dotInPlace(P);
+    const double dE = E.sum();
+    return dE;
+}
+
+template <class GeneralMatrix, class SymmetricMatrix, class Vector>
+double DfGridFreeXC::get_ene_grad2(const SymmetricMatrix& P,
+                                   const GeneralMatrix& S,
+                                   const GeneralMatrix& V,
+                                   const GeneralMatrix& U,
+                                   const Vector& lambda) {
+    this->log_.info("DfGridFreeXC::get_ene_grad2()");
+    SymmetricMatrix F_lambda(lambda.getSize());
+    SymmetricMatrix E_lambda(lambda.getSize());
+    this->get_F_lamda(lambda, &F_lambda, &E_lambda);
+
+    GeneralMatrix VU = V * U;
+    GeneralMatrix UV = VU;
+    UV.transposeInPlace();
+
+    SymmetricMatrix Eh = VU * F_lambda * UV;
+
+    GeneralMatrix tS = S;
+    tS.transposeInPlace();
+    SymmetricMatrix Ph = tS * P * S;
+
+    Eh.dotInPlace(Ph);
+    const double dE = Eh.sum();
+    return dE;
 }

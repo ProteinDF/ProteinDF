@@ -123,6 +123,7 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
             }
             rest = dim - cutoffCount;
         }
+        this->log_.info(TlUtils::format("remained: %d / %d", rest, dim));
 
         this->loggerTime(" generation of U matrix");
         const TlMatrixObject::index_type cutoffBasis = dim - rest;
@@ -219,6 +220,7 @@ void DfXMatrix::lowdinOrthogonalizeTmpl(const SymmetricMatrixType& S,
             }
             rest = dim - cutoffCount;
         }
+        this->log_.info(TlUtils::format("remained: %d / %d", rest, dim));
 
         this->loggerTime(" generation of U matrix");
         const index_type cutoffBasis = dim - rest;
