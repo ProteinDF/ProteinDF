@@ -91,4 +91,10 @@ class TlDenseSymmetricMatrix_Eigen : public TlDenseSymmetricMatrixObject {
       const TlDenseSymmetricMatrix_Eigen& rhs2);
 };
 
+TlDenseSymmetricMatrix_Eigen operator*(const double coef,
+                                       const TlDenseSymmetricMatrix_Eigen& DM);
+
+TlDenseSymmetricMatrix_Eigen operator*(const TlDenseSymmetricMatrix_Eigen& DM,
+                                       const double coef);
+
 #endif  // TL_DENSE_SYMMETRIC_MATRIX_EIGEN_H

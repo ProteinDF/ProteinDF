@@ -19,8 +19,9 @@ class TlDenseSymmetricMatrix_ImplEigen : public TlDenseGeneralMatrix_ImplEigen {
   TlDenseSymmetricMatrix_ImplEigen(const TlSparseSymmetricMatrix_ImplEigen& sm);
 
 #ifdef HAVE_VIENNACL
-TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplViennaCL& rhs);
-#endif // HAVE_VIENNACL
+  TlDenseSymmetricMatrix_ImplEigen(
+      const TlDenseSymmetricMatrix_ImplViennaCL& rhs);
+#endif  // HAVE_VIENNACL
 
   virtual ~TlDenseSymmetricMatrix_ImplEigen();
 
@@ -79,16 +80,19 @@ TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplViennaCL& rhs)
   // DM(S) * DV
   friend TlDenseVector_ImplEigen operator*(
       const TlDenseSymmetricMatrix_ImplEigen& dms,
-      const TlDenseVector_ImplEigen& dv
-  );
+      const TlDenseVector_ImplEigen& dv);
   // DV * DM(S)
   friend TlDenseVector_ImplEigen operator*(
       const TlDenseVector_ImplEigen& dv,
-      const TlDenseSymmetricMatrix_ImplEigen& dms
-  );
+      const TlDenseSymmetricMatrix_ImplEigen& dms);
 
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // Eigen macro
 };
+
+TlDenseSymmetricMatrix_ImplEigen operator*(
+    const double coef, const TlDenseSymmetricMatrix_ImplEigen& DM);
+TlDenseSymmetricMatrix_ImplEigen operator*(
+    const TlDenseSymmetricMatrix_ImplEigen& DM, const double coef);
 
 #endif  // TL_DENSE_SYMMETRIC_MATRIX_IMPL_EIGEN_H

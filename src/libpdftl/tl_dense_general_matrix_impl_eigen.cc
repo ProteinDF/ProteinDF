@@ -252,7 +252,15 @@ TlDenseVector_ImplEigen operator*(const TlDenseVector_ImplEigen& vec,
   return answer;
 }
 
-TlDenseGeneralMatrix_ImplEigen operator*(const double coef, const TlDenseGeneralMatrix_ImplEigen& DM) {
+TlDenseGeneralMatrix_ImplEigen operator*(
+    const double coef, const TlDenseGeneralMatrix_ImplEigen& DM) {
+  TlDenseGeneralMatrix_ImplEigen answer = DM;
+  answer *= coef;
+  return answer;
+}
+
+TlDenseGeneralMatrix_ImplEigen operator*(
+    const TlDenseGeneralMatrix_ImplEigen& DM, const double coef) {
   TlDenseGeneralMatrix_ImplEigen answer = DM;
   answer *= coef;
   return answer;

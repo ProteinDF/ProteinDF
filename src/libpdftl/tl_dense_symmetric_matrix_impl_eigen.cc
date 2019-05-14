@@ -6,7 +6,7 @@
 
 #ifdef HAVE_VIENNACL
 #include "tl_dense_symmetric_matrix_impl_viennacl.h"
-#endif // HAVE_VIENNACL
+#endif  // HAVE_VIENNACL
 
 TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
     const TlMatrixObject::index_type dim)
@@ -24,17 +24,19 @@ TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
 }
 
 TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
-    const TlSparseSymmetricMatrix_ImplEigen& sm) : TlDenseGeneralMatrix_ImplEigen(sm.getNumOfRows(), sm.getNumOfCols()) {
+    const TlSparseSymmetricMatrix_ImplEigen& sm)
+    : TlDenseGeneralMatrix_ImplEigen(sm.getNumOfRows(), sm.getNumOfCols()) {
   // this->matrix_ = sm.matrix_.selfadjointView<Eigen::Upper>();
   this->matrix_ = sm.matrix_;
 }
 
 #ifdef HAVE_VIENNACL
-TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplViennaCL& rhs) 
-: TlDenseGeneralMatrix_ImplEigen(rhs.getNumOfRows(), rhs.getNumOfCols()){
+TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
+    const TlDenseSymmetricMatrix_ImplViennaCL& rhs)
+    : TlDenseGeneralMatrix_ImplEigen(rhs.getNumOfRows(), rhs.getNumOfCols()) {
   viennacl::copy(rhs.matrix_, this->matrix_);
 }
-#endif // HAVE_VIENNACL
+#endif  // HAVE_VIENNACL
 
 TlDenseSymmetricMatrix_ImplEigen::~TlDenseSymmetricMatrix_ImplEigen() {}
 
@@ -162,5 +164,19 @@ TlDenseVector_ImplEigen operator*(const TlDenseVector_ImplEigen& dv,
                                   const TlDenseSymmetricMatrix_ImplEigen& dms) {
   TlDenseVector_ImplEigen answer;
   answer.vector_ = dv.vector_ * dms.matrix_;
+  return answer;
+}
+
+TlDenseSymmetricMatrix_ImplEigen operator*(
+    const double coef, const TlDenseSymmetricMatrix_ImplEigen& DM) {
+  TlDenseSymmetricMatrix_ImplEigen answer = DM;
+  answer *= coef;
+  return answer;
+}
+
+TlDenseSymmetricMatrix_ImplEigen operator*(
+    const TlDenseSymmetricMatrix_ImplEigen& DM, const double coef) {
+  TlDenseSymmetricMatrix_ImplEigen answer = DM;
+  answer *= coef;
   return answer;
 }
