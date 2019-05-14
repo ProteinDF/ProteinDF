@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(ProteinDF)
+enable_language(C)
 enable_language(CXX)
 enable_testing()
 
@@ -65,6 +66,54 @@ check_include_file("unistd.h" HAVE_UNISTD_H)
 check_include_file("stdint.h" HAVE_STDINT_H)
 
 
+# check OpenMP
+set(HAVE_ENV_OPENMP_HOME $ENV{OpenMP_HOME})
+if (HAVE_ENV_OPENMP_HOME)
+    set(OpenMP_HOME $ENV{OpenMP_HOME})
+    message(STATUS "OpenMP Root : ${OpenMP_HOME}")
+endif ()
+
+set(HAVE_OpenMP_C_LIB_NAMES $ENV{OpenMP_C_LIB_NAMES})
+if (HAVE_OpenMP_C_LIB_NAMES)
+    message(STATUS "set OpenMP_C_LIB_NAMES: $ENV{OpenMP_C_LIB_NAMES}")
+    set(OpenMP_C_LIB_NAMES $ENV{OpenMP_C_LIB_NAMES})
+endif (HAVE_OpenMP_C_LIB_NAMES)
+set(HAVE_OpenMP_CXX_LIB_NAMES $ENV{OpenMP_CXX_LIB_NAMES})
+if (HAVE_OpenMP_CXX_LIB_NAMES)
+    message(STATUS "set OpenMP_CXX_LIB_NAMES: $ENV{OpenMP_CXX_LIB_NAMES}")
+    set(OpenMP_CXX_LIB_NAMES $ENV{OpenMP_CXX_LIB_NAMES})
+endif (HAVE_OpenMP_CXX_LIB_NAMES)
+set(HAVE_OpenMP_omp_LIBRARY $ENV{OpenMP_omp_LIBRARY})
+if (HAVE_OpenMP_omp_LIBRARY)
+    message(STATUS "set OpenMP_omp_LIBRARY: $ENV{OpenMP_omp_LIBRARY}")
+    set(OpenMP_omp_LIBRARY $ENV{OpenMP_omp_LIBRARY})
+endif (HAVE_OpenMP_omp_LIBRARY)
+
+set(HAVE_ENV_OpenMP_C_FLAGS $ENV{OpenMP_C_FLAGS})
+if (HAVE_ENV_OpenMP_C_FLAGS)
+    message(STATUS "set OpenMP_C_FLAGS: $ENV{OpenMP_C_FLAGS}")
+    set(OpenMP_C_FLAGS $ENV{OpenMP_C_FLAGS} CACHE STRING "" FORCE)
+endif ()
+set(HAVE_ENV_OpenMP_CXX_FLAGS $ENV{OpenMP_CXX_FLAGS})
+if (HAVE_ENV_OpenMP_CXX_FLAGS)
+    message(STATUS "set OpenMP_CXX_FLAGS: $ENV{OpenMP_CXX_FLAGS}")
+    set(OpenMP_CXX_FLAGS $ENV{OpenMP_CXX_FLAGS} CACHE STRING "" FORCE)
+endif ()
+
+find_package(OpenMP)
+if (OPENMP_FOUND)
+  message("OpenMP information:")
+  message("  OpenMP_VERSION: ${OpenMP_VERSION}")
+  message("  OpenMP_CXX_FLAGS: ${OpenMP_CXX_FLAGS}")
+  message("  OpenMP_CXX_LIB_NAMES: ${OpenMP_CXX_LIB_NAMES}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  add_definitions(-DVIENNACL_WITH_OPENMP)
+else (OPENMP_FOUND)
+message("OpenMP not found")
+endif (OPENMP_FOUND)
+
+
 # check MPI
 find_package(MPI)
 if (MPI_FOUND)
@@ -91,15 +140,6 @@ if (MPI_FOUND)
 else(MPI_FOUND)
   message("Not Found MPI compiler")
 endif(MPI_FOUND)
-
-
-# check OpenMP
-find_package(OpenMP)
-if (OPENMP_FOUND)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  add_definitions(-DVIENNACL_WITH_OPENMP)
-endif(OPENMP_FOUND)
 
 
 # check linear algebra package

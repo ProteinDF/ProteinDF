@@ -21,9 +21,9 @@ class TlDenseGeneralMatrix_Eigen : public TlDenseGeneralMatrixObject {
   TlDenseGeneralMatrix_Eigen(const TlDenseSymmetricMatrix_Eigen& rhs);
   TlDenseGeneralMatrix_Eigen(const TlDenseGeneralMatrix_ImplEigen& rhs);
   TlDenseGeneralMatrix_Eigen(const TlSparseGeneralMatrix_Eigen& sm);
-  #ifdef HAVE_VIENNACL
+#ifdef HAVE_VIENNACL
   TlDenseGeneralMatrix_Eigen(const TlDenseGeneralMatrix_ViennaCL& rhs);
-  #endif // HAVE_VIENNACL
+#endif  // HAVE_VIENNACL
 
   void vtr2mat(const std::vector<double>& vtr);
 
@@ -102,6 +102,9 @@ class TlDenseGeneralMatrix_Eigen : public TlDenseGeneralMatrixObject {
       const TlDenseGeneralMatrix_Eigen& mat2);
 };
 
-TlDenseGeneralMatrix_Eigen operator*(const double coef, const TlDenseGeneralMatrix_Eigen& DM);
+TlDenseGeneralMatrix_Eigen operator*(const double coef,
+                                     const TlDenseGeneralMatrix_Eigen& DM);
+TlDenseGeneralMatrix_Eigen operator*(const TlDenseGeneralMatrix_Eigen& DM,
+                                     const double coef);
 
 #endif  // TL_DENSE_GENERAL_MATRIX_EIGEN_H

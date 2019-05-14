@@ -33,9 +33,9 @@ class TlDenseGeneralMatrix_ImplEigen : public TlDenseMatrix_ImplObject {
   TlDenseGeneralMatrix_ImplEigen(const MatrixDataType& rhs);
   TlDenseGeneralMatrix_ImplEigen(const TlSparseGeneralMatrix_ImplEigen& sm);
 
-#ifdef HAVE_VIENNACL  
+#ifdef HAVE_VIENNACL
   TlDenseGeneralMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplViennaCL& rhs);
-#endif // HAVE_VIENNACL
+#endif  // HAVE_VIENNACL
 
   void vtr2mat(const std::vector<double>& vtr);
 
@@ -152,6 +152,9 @@ class TlDenseGeneralMatrix_ImplEigen : public TlDenseMatrix_ImplObject {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // Eigen macro
 };
 
-TlDenseGeneralMatrix_ImplViennaCL operator*(const double coef, const TlDenseGeneralMatrix_ImplViennaCL& DM);
+TlDenseGeneralMatrix_ImplEigen operator*(
+    const double coef, const TlDenseGeneralMatrix_ImplEigen& DM);
+TlDenseGeneralMatrix_ImplEigen operator*(
+    const TlDenseGeneralMatrix_ImplEigen& DM, const double coef);
 
 #endif  // TL_DENSE_GENERAL_MATRIX_IMPLE_EIGEN_H
