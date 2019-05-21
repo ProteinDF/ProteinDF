@@ -66,7 +66,25 @@ check_include_file("unistd.h" HAVE_UNISTD_H)
 check_include_file("stdint.h" HAVE_STDINT_H)
 
 
-# check OpenMP
+# -----------------------------------------------------------------------------
+# Boost
+# -----------------------------------------------------------------------------
+find_package(Boost)
+if (Boost_FOUND)
+  message("Boost information:")
+  message("  Boost_VERSION: ${Boost_VERSION}")
+  message("  Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
+  message("  Boost_LIBRARIES: ${Boost_LIBRARIES}")
+
+  include_directories(${Boost_INCLUDE_DIRS})
+else (Boost_FOUND)
+  message("Not Found Boost")
+endif (Boost_FOUND)
+
+
+# -----------------------------------------------------------------------------
+# OpenMP
+# -----------------------------------------------------------------------------
 set(HAVE_ENV_OPENMP_HOME $ENV{OpenMP_HOME})
 if (HAVE_ENV_OPENMP_HOME)
     set(OpenMP_HOME $ENV{OpenMP_HOME})
@@ -114,7 +132,9 @@ message("OpenMP not found")
 endif (OPENMP_FOUND)
 
 
-# check MPI
+# -----------------------------------------------------------------------------
+# MPI
+# -----------------------------------------------------------------------------
 find_package(MPI)
 if (MPI_FOUND)
   if (DEFINED ENV{MPIEXEC_FLAGS})
@@ -178,7 +198,9 @@ if (LAPACK_FOUND)
 endif(LAPACK_FOUND)
 
 
-# for OpenCL
+# -----------------------------------------------------------------------------
+# OpenCL
+# -----------------------------------------------------------------------------
 find_package(OpenCL)
 if (OpenCL_FOUND)
   message("OpenCL information:")
@@ -190,7 +212,9 @@ if (OpenCL_FOUND)
   set(HAVE_OPENCL 1) # for config.h
 endif (OpenCL_FOUND)
 
-# check ViennaCL
+# -----------------------------------------------------------------------------
+# ViennaCL
+# -----------------------------------------------------------------------------
 if (USE_VIENNACL)
 
   # for boost
@@ -221,7 +245,9 @@ else (USE_VIENNACL)
 endif (USE_VIENNACL)
 
 
-# check BLACS
+# -----------------------------------------------------------------------------
+# BLACS
+# -----------------------------------------------------------------------------
 find_package(BLACS)
 if (BLACS_FOUND)
   message("BLACS information")
@@ -236,7 +262,9 @@ else(BLACS_FOUND)
 endif (BLACS_FOUND)
 
 
-# check ScaLAPACK
+# -----------------------------------------------------------------------------
+# ScaLAPACK
+# -----------------------------------------------------------------------------
 find_package(ScaLAPACK)
 if (SCALAPACK_FOUND)
   message("ScaLAPACK information")
@@ -248,7 +276,9 @@ else(SCALAPACK_FOUND)
 endif(SCALAPACK_FOUND)
 
 
-# check HDF5
+# -----------------------------------------------------------------------------
+# HDF5
+# -----------------------------------------------------------------------------
 if (USE_HDF5)
   find_package(HDF5 COMPONENTS C CXX)
   if (HDF5_FOUND)
@@ -271,7 +301,9 @@ else (USE_HDF5)
 endif (USE_HDF5)
 
 
+# -----------------------------------------------------------------------------
 # libcint
+# -----------------------------------------------------------------------------
 if (USE_LIBCINT)
   if (BLAS_FOUND)
     find_package(libcint)
@@ -291,7 +323,9 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 
-# check Google Test
+# -----------------------------------------------------------------------------
+# Google Test
+# -----------------------------------------------------------------------------
 #   ref.) env param: `GTEST_ROOT`
 find_package(GTest)
 if (GTEST_FOUND)
@@ -303,7 +337,9 @@ if (GTEST_FOUND)
 endif (GTEST_FOUND)
 
 
+# -----------------------------------------------------------------------------
 # Doxygen
+# -----------------------------------------------------------------------------
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
   set(DOXYGEN_CONF_FILE "doxygen.conf")
