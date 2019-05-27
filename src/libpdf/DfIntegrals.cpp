@@ -35,15 +35,17 @@
 
 DfIntegrals::DfIntegrals(TlSerializeData* pParam,
                          const std::string& saveParamPath)
-    : DfObject(pParam), saveParamPath_(saveParamPath) {}
+    : DfObject(pParam), saveParamPath_(saveParamPath) {
+  if (this->saveParamPath_.empty() != true) {
+      this->saveParamPath_ = (*pParam)["pdf_param_path"].getStr();
+  }
+}
 
 DfIntegrals::~DfIntegrals() {}
 
 void DfIntegrals::saveParam() {
-  if (this->saveParamPath_.empty() != true) {
     TlMsgPack mpac(*(this->pPdfParam_));
     mpac.save(this->saveParamPath_);
-  }
 }
 
 void DfIntegrals::main() {
