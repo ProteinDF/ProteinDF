@@ -25,7 +25,7 @@ run_test()
        serial_dev 2>&1 | tee out.test_serial_dev
 
     docker exec -it \
-       --env OMP_NUM_THREADS=2 \
+       --env OMP_NUM_THREADS=4 \
        --env OMP_SCHEDULE=dynamic \
        --env OMPI_MCA_btl_vader_single_copy_mechanism=none \
        --env MPIEXEC="mpiexec -n 4 --allow-run-as-root " \
