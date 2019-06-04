@@ -436,11 +436,11 @@ void TlDenseGeneralMatrix_ImplLapack::initialize(bool clearIfNeeded) {
 
 TlMatrixObject::size_type TlDenseGeneralMatrix_ImplLapack::getNumOfElements()
     const {
-  const TlMatrixObject::size_type row = this->getNumOfRows();
-  const TlMatrixObject::size_type col = this->getNumOfCols();
-  const TlMatrixObject::size_type elements = row * col;
+    const std::size_t row = this->getNumOfRows();
+    const std::size_t col = this->getNumOfCols();
+    const std::size_t elements = row * col;
 
-  return elements;
+    return elements;
 }
 
 TlMatrixObject::size_type TlDenseGeneralMatrix_ImplLapack::index(
@@ -450,7 +450,10 @@ TlMatrixObject::size_type TlDenseGeneralMatrix_ImplLapack::index(
   assert((0 <= row) && (row < this->getNumOfRows()));
   assert((0 <= col) && (col < this->getNumOfCols()));
 
-  const TlMatrixObject::size_type index = row + this->getNumOfRows() * col;
+  const std::size_t r = row;
+  const std::size_t c = col;
+  const std::size_t index = r + this->getNumOfRows() * c;
+
   return index;
 }
 
