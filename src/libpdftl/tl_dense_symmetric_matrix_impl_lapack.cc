@@ -273,12 +273,12 @@ bool TlDenseSymmetricMatrix_ImplLapack::eig(
 // ---------------------------------------------------------------------------
 TlMatrixObject::size_type TlDenseSymmetricMatrix_ImplLapack::getNumOfElements()
     const {
-  const TlMatrixObject::size_type dim = this->getNumOfRows();
-  assert(dim == this->getNumOfCols());
+    const std::size_t dim = this->getNumOfRows();
+    assert(dim == this->getNumOfCols());
 
-  const TlMatrixObject::size_type elements = dim * (dim + 1) / 2;
+    const std::size_t elements = dim * (dim + 1) / 2;
 
-  return elements;
+    return elements;
 }
 
 TlMatrixObject::size_type TlDenseSymmetricMatrix_ImplLapack::index(
@@ -292,8 +292,10 @@ TlMatrixObject::size_type TlDenseSymmetricMatrix_ImplLapack::index(
   if (row < col) {
     std::swap(row, col);
   }
-  const TlMatrixObject::size_type index = row * (row + 1) / 2 + col;
-  assert(index < this->getNumOfElements());
+
+  const std::size_t r = row;
+  const std::size_t c = col;
+  const std::size_t index = r * (r + 1) / 2 + c;
 
   return index;
 }
