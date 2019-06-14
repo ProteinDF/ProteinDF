@@ -799,8 +799,10 @@ DfTotalEnergy* DfScf::getDfTotalEnergyObject() {
 void DfScf::calcTotalRealEnergy() {
   // calculate total energy
   this->loggerStartTitle("Total Energy derived from point charges");
+
   DfTotalEnergy* pDfTotalEnergy = this->getDfTotalEnergyObject();
   pDfTotalEnergy->calculate_real_energy();
+
   delete pDfTotalEnergy;
   pDfTotalEnergy = NULL;
   this->loggerEndTitle();
