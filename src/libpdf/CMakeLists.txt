@@ -2,6 +2,8 @@ set(LIBPDF_HEADERS
   common.h
   datatype.h
   df_cdk_matrix.h
+  df_total_energy_eigen.h
+  df_total_energy_lapack.h
   df_total_energy_tmpl.h
   CnError.h
   CnFile.h
@@ -93,6 +95,8 @@ set(LIBPDF_HEADERS
 
 set(LIBPDF_SOURCES
   df_cdk_matrix.cc
+  df_total_energy_eigen.cc
+  df_total_energy_lapack.cc
   CnError.cpp
   CnFile.cc
   DfCD.cpp
