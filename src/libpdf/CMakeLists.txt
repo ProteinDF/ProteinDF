@@ -183,6 +183,7 @@ set(LIBPDF_SOURCES
 
 
 set(LIBPPDF_HEADERS
+  df_total_energy_scalapack.h
   CnFile_parallel.h
   DfCD_Parallel.h
   DfCalcGridX_Parallel.h
@@ -225,6 +226,7 @@ set(LIBPPDF_HEADERS
 
 
 set(LIBPPDF_SOURCES
+  df_total_energy_scalapack.cc
   CnFile_parallel.cc
   DfCD_Parallel.cpp
   DfCalcGridX_Parallel.cpp

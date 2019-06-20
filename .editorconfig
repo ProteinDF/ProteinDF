@@ -24,4 +24,4 @@ indent_size = 2
 # C/C++
 [*.{c,h,cpp,hpp}]
 indent_style = space
-indent_size = 2
+indent_size = 4

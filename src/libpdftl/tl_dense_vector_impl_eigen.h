@@ -65,6 +65,8 @@ class TlDenseVector_ImplEigen : public TlDenseVector_ImplObject {
   TlDenseVector_ImplEigen& operator*=(const double rhs);
   TlDenseVector_ImplEigen& operator/=(const double rhs);
 
+  double operator*(const TlDenseVector_ImplEigen& rhs) const;
+
   // ---------------------------------------------------------------------------
   // operations
   // ---------------------------------------------------------------------------

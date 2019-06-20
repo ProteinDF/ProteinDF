@@ -5,7 +5,7 @@
 #include "df_total_energy_tmpl.h"
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
-#include "tl_dense_vector_eigen.h"
+#include "tl_dense_vector_lapack.h"
 
 class DfTotalEnergy_Lapack
     : public DfTotalEnergy_tmpl<TlDenseGeneralMatrix_Lapack,

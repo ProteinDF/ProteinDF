@@ -28,6 +28,8 @@
 #include "DfObject.h"
 #include "DfXCFunctional.h"
 
+#include "TlTime.h"
+
 class DfDensityFittingObject;
 class DfJMatrix;
 class DfKMatrix;
@@ -41,112 +43,165 @@ class DfSummary;
 
 /// SCF 繰り返し計算を行うクラス
 class DfScf : public DfObject {
- protected:
-  enum ScfAccelerationType {
-    SCF_ACCELERATION_SIMPLE = 0,
-    SCF_ACCELERATION_ANDERSON,
-    SCF_ACCELERATION_DIIS,
-    SCF_ACCELERATION_MIX
-  };
+   protected:
+    enum ScfAccelerationType {
+        SCF_ACCELERATION_SIMPLE = 0,
+        SCF_ACCELERATION_ANDERSON,
+        SCF_ACCELERATION_DIIS,
+        SCF_ACCELERATION_MIX
+    };
 
-  enum DampObjectType {
-    DAMP_NONE = 0,
-    DAMP_DENSITY_MATRIX,
-    DAMP_DENSITY,
-    DAMP_FOCK
-  };
+    enum DampObjectType {
+        DAMP_NONE = 0,
+        DAMP_DENSITY_MATRIX,
+        DAMP_DENSITY,
+        DAMP_FOCK
+    };
 
-  enum SYMMETRIC_MATRIX_NAME {
-    DIFF_DENSITY_MATRIX,
-    DIFF_DENSITY_MATRIX_ALPHA,
-    DIFF_DENSITY_MATRIX_BETA,
-  };
+    enum SYMMETRIC_MATRIX_NAME {
+        DIFF_DENSITY_MATRIX,
+        DIFF_DENSITY_MATRIX_ALPHA,
+        DIFF_DENSITY_MATRIX_BETA,
+    };
 
- public:
-  DfScf(TlSerializeData* pPdfParam);
-  virtual ~DfScf();
+   public:
+    DfScf(TlSerializeData* pPdfParam);
+    virtual ~DfScf();
 
- public:
-  int dfScfMain();
+   public:
+    int dfScfMain();
 
- protected:
-  /// メンバ変数へ値を設定する
-  virtual void setScfParam();
+   protected:
+    /// メンバ変数へ値を設定する
+    virtual void setScfParam();
 
- protected:
-  int execScfLoop();
-  virtual void setScfRestartPoint(const std::string& str);
+   protected:
+    int execScfLoop();
+    virtual void setScfRestartPoint(const std::string& str);
 
-  // update法に伴い、差電子密度行列を計算する
-  virtual void diffDensityMatrix();
+    // update法に伴い、差電子密度行列を計算する
+    virtual void diffDensityMatrix();
 
-  void doDensityFitting();
-  virtual DfDensityFittingObject* getDfDensityFittingObject();
+    void doDensityFitting();
+    virtual DfDensityFittingObject* getDfDensityFittingObject();
 
-  virtual void doXCIntegral();
+    virtual void doXCIntegral();
 
-  // virtual void execScfLoop_XcEneFit();
+    // virtual void execScfLoop_XcEneFit();
 
-  virtual void doThreeIndexIntegral();
+    virtual void doThreeIndexIntegral();
 
-  void buildXcMatrix();
-  virtual DfGridFreeXC* getDfGridFreeXcObject();
-  virtual DfXCFunctional* getDfXCFunctional();
+    void buildXcMatrix();
+    virtual DfGridFreeXC* getDfGridFreeXcObject();
+    virtual DfXCFunctional* getDfXCFunctional();
 
-  void buildJMatrix();
-  virtual DfJMatrix* getDfJMatrixObject();
+    void buildJMatrix();
+    virtual DfJMatrix* getDfJMatrixObject();
 
-  void buildKMatrix();
-  virtual DfKMatrix* getDfKMatrixObject();
+    void buildKMatrix();
+    virtual DfKMatrix* getDfKMatrixObject();
 
-  void buildFock();
-  virtual DfFockMatrix* getDfFockMatrixObject();
+    void buildFock();
+    virtual DfFockMatrix* getDfFockMatrixObject();
 
-  void transformFock();
-  virtual DfTransFmatrix* getDfTransFmatrixObject(bool isExecDiis);
+    void transformFock();
+    virtual DfTransFmatrix* getDfTransFmatrixObject(bool isExecDiis);
 
-  virtual void doLevelShift();
+    virtual void doLevelShift();
 
-  void diagonal();
-  virtual DfDiagonal* getDfDiagonalObject();
+    void diagonal();
+    virtual DfDiagonal* getDfDiagonalObject();
 
-  void execScfLoop_EndFock_TransC();
-  virtual DfTransatob* getDfTransatobObject();
+    void execScfLoop_EndFock_TransC();
+    virtual DfTransatob* getDfTransatobObject();
 
-  virtual void calcDensityMatrix();
-  virtual DfDmatrix* getDfDmatrixObject();
+    virtual void calcDensityMatrix();
+    virtual DfDmatrix* getDfDmatrixObject();
 
-  virtual void calcTotalEnergy();
+    // Total Energy -----------------------------------------------------------
+    virtual void calcTotalEnergy();
+    virtual void calcTotalRealEnergy();
 
-  void calcTotalRealEnergy();
-  virtual DfTotalEnergy* getDfTotalEnergyObject();
+    template <class DfTotalEnergyClass>
+    void calcTotalEnergy_tmpl() {
+        TlTime timer;
+        this->loggerStartTitle("Total Energy");
 
-  virtual DfPopulation* getDfPopulationObject();
-  void calcPopulation();
+        DfTotalEnergyClass dfTotalEnergy(this->pPdfParam_);
+        dfTotalEnergy.run();
 
-  virtual DfSummary* getDfSummaryObject();
-  void summarize();
+        this->loggerEndTitle();
+        (*this->pPdfParam_)["stat"]["elapsed_time"]["total_energy"]
+                           [this->m_nIteration] = timer.getElapseTime();
+    };
 
-  virtual bool judge();
-  virtual bool checkConverge();
+    template <class DfTotalEnergyClass>
+    void calcTotalRealEnergy_tmpl() {
+        this->loggerStartTitle("Total Energy derived from point charges");
 
-  void converge();
-  virtual DfConverge* getDfConverge();
+        DfTotalEnergyClass dfTotalEnergy(this->pPdfParam_);
+        dfTotalEnergy.outputForDummy();
 
-  virtual void cleanup();
+        this->loggerEndTitle();
+    }
 
-  virtual bool checkMaxIteration();
+    // virtual DfTotalEnergy* getDfTotalEnergyObject();
 
- protected:
-  virtual void saveParam() const;
+    // ------------------------------------------------------------------------
+    virtual DfPopulation* getDfPopulationObject();
+    void calcPopulation();
 
- protected:
-  DampObjectType m_nDampObject;
-  ScfAccelerationType m_nScfAcceleration;
+    virtual DfSummary* getDfSummaryObject();
+    void summarize();
 
-  int m_nConvergenceCounter;
+    virtual bool judge();
+    virtual bool checkConverge();
 
-  bool isUseNewEngine_;
+    void converge();
+    virtual DfConverge* getDfConverge();
+
+    virtual void cleanup();
+
+    virtual bool checkMaxIteration();
+
+   protected:
+    virtual void saveParam() const;
+
+   protected:
+    DampObjectType m_nDampObject;
+    ScfAccelerationType m_nScfAcceleration;
+
+    int m_nConvergenceCounter;
+
+    bool isUseNewEngine_;
 };
+
+// ----------------------------------------------------------------------------
+// template
+// ----------------------------------------------------------------------------
+
+// calculate total energy
+// template <class T>
+// void DfScf::calcTotalEnergy_tmpl<T>() {
+//     TlTime timer;
+//     this->loggerStartTitle("Total Energy");
+
+//     T dfTotalEnergy(this->pPdfParam_);
+//     dfTotalEnergy.run();
+
+//     this->loggerEndTitle();
+//     (*this->pPdfParam_)["stat"]["elapsed_time"]["total_energy"]
+//                        [this->m_nIteration] = timer.getElapseTime();
+// }
+
+// template <class DfTotalEnergyClass>
+// void DfScf::calcTotalRealEnergy<DfTotalEnergyClass>() {
+//     this->loggerStartTitle("Total Energy derived from point charges");
+
+//     DfTotalEnergyClass dfTotalEnergy(this->pPdfParam_);
+//     dfTotalEnergy.calculate_real_energy();
+
+//     this->loggerEndTitle();
+// }
 
 #endif  // DFSCF_H

@@ -55,8 +55,10 @@ class TlDenseGeneralMatrix_Eigen : public TlDenseGeneralMatrixObject {
   double sum() const;
   double getRMS() const;
 
+  TlDenseGeneralMatrix_Eigen dot(const TlDenseGeneralMatrix_Eigen& rhs) const;
   const TlDenseGeneralMatrix_Eigen& dotInPlace(
       const TlDenseGeneralMatrix_Eigen& rhs);
+
   TlDenseGeneralMatrix_Eigen transpose() const;
   TlDenseGeneralMatrix_Eigen inverse() const;
 

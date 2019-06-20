@@ -85,8 +85,10 @@ class TlDenseGeneralMatrix_ImplEigen : public TlDenseMatrix_ImplObject {
       TlMatrixObject::index_type* outCol) const;
   virtual void transposeInPlace();
 
+  TlDenseGeneralMatrix_ImplEigen dot(const TlDenseGeneralMatrix_ImplEigen& rhs) const;
   const TlDenseGeneralMatrix_ImplEigen& dotInPlace(
       const TlDenseGeneralMatrix_ImplEigen& rhs);
+
   TlDenseGeneralMatrix_ImplEigen transpose() const;
   TlDenseGeneralMatrix_ImplEigen inverse() const;
 
