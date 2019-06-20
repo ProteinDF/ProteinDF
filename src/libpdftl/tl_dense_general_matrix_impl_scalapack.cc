@@ -483,6 +483,14 @@ void TlDenseGeneralMatrix_ImplScalapack::transposeInPlace() {
   (*this) = C;
 }
 
+TlDenseGeneralMatrix_ImplScalapack TlDenseGeneralMatrix_ImplScalapack::dot(
+    const TlDenseGeneralMatrix_ImplScalapack& X) const {
+  TlDenseGeneralMatrix_ImplScalapack answer = *this;
+  answer.dotInPlace(X);
+  
+  return answer;
+}
+
 // pddot?
 const TlDenseGeneralMatrix_ImplScalapack&
 TlDenseGeneralMatrix_ImplScalapack::dotInPlace(

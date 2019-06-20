@@ -117,6 +117,11 @@ TlDenseVector_ImplEigen& TlDenseVector_ImplEigen::operator/=(const double rhs) {
   return this->operator*=(1.0 / rhs);
 }
 
+double TlDenseVector_ImplEigen::operator*(
+    const TlDenseVector_ImplEigen& rhs) const {
+      return this->dot(rhs);
+}
+
 // ---------------------------------------------------------------------------
 // operations
 // ---------------------------------------------------------------------------

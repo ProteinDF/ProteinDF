@@ -60,8 +60,10 @@ class TlDenseGeneralMatrix_Lapack : public TlDenseGeneralMatrixObject {
   double sum() const;
   double getRMS() const;
 
+  TlDenseGeneralMatrix_Lapack dot(const TlDenseGeneralMatrix_Lapack& rhs) const;
   const TlDenseGeneralMatrix_Lapack& dotInPlace(
       const TlDenseGeneralMatrix_Lapack& rhs);
+
   TlDenseGeneralMatrix_Lapack transpose() const;
   TlDenseGeneralMatrix_Lapack inverse() const;
 

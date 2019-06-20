@@ -22,61 +22,66 @@
 #include "DfScf.h"
 
 class DfScf_Parallel : public DfScf {
- public:
-  DfScf_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfScf_Parallel();
+   public:
+    DfScf_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfScf_Parallel();
 
- protected:
-  virtual void logger(const std::string& str) const;
+   protected:
+    virtual void logger(const std::string& str) const;
 
- protected:
-  virtual DfGridFreeXC* getDfGridFreeXcObject();
-  virtual DfXCFunctional* getDfXCFunctional();
+   protected:
+    virtual DfGridFreeXC* getDfGridFreeXcObject();
+    virtual DfXCFunctional* getDfXCFunctional();
 
- protected:
-  virtual void saveParam() const;
-  virtual void setScfParam();
+   protected:
+    virtual void saveParam() const;
+    virtual void setScfParam();
 
- protected:
-  virtual void diffDensityMatrix();
+   protected:
+    virtual void diffDensityMatrix();
 
-  virtual DfDensityFittingObject* getDfDensityFittingObject();
+    virtual DfDensityFittingObject* getDfDensityFittingObject();
 
-  virtual void doXCIntegral();
+    virtual void doXCIntegral();
 
-  virtual void doThreeIndexIntegral();
+    virtual void doThreeIndexIntegral();
 
-  virtual DfJMatrix* getDfJMatrixObject();
+    virtual DfJMatrix* getDfJMatrixObject();
 
-  virtual DfKMatrix* getDfKMatrixObject();
+    virtual DfKMatrix* getDfKMatrixObject();
 
-  virtual DfFockMatrix* getDfFockMatrixObject();
+    virtual DfFockMatrix* getDfFockMatrixObject();
 
-  virtual DfTransFmatrix* getDfTransFmatrixObject(bool isExecDiis);
+    virtual DfTransFmatrix* getDfTransFmatrixObject(bool isExecDiis);
 
-  virtual void doLevelShift();
+    virtual void doLevelShift();
 
-  virtual DfDiagonal* getDfDiagonalObject();
+    virtual DfDiagonal* getDfDiagonalObject();
 
-  virtual DfTransatob* getDfTransatobObject();
+    virtual DfTransatob* getDfTransatobObject();
 
-  virtual void calcDensityMatrix();
-  virtual DfDmatrix* getDfDmatrixObject();
+    virtual void calcDensityMatrix();
+    virtual DfDmatrix* getDfDmatrixObject();
 
-  virtual DfTotalEnergy* getDfTotalEnergyObject();
+    // Total Energy -----------------------------------------------------------
+    virtual void calcTotalEnergy();
+    virtual void calcTotalRealEnergy();
 
-  virtual DfPopulation* getDfPopulationObject();
+    // virtual DfTotalEnergy* getDfTotalEnergyObject();
+    // ------------------------------------------------------------------------
 
-  virtual DfSummary* getDfSummaryObject();
+    virtual DfPopulation* getDfPopulationObject();
 
-  virtual bool judge();
-  virtual bool checkConverge();
+    virtual DfSummary* getDfSummaryObject();
 
-  virtual DfConverge* getDfConverge();
+    virtual bool judge();
+    virtual bool checkConverge();
 
-  virtual void cleanup();
+    virtual DfConverge* getDfConverge();
 
-  virtual bool checkMaxIteration();
+    virtual void cleanup();
+
+    virtual bool checkMaxIteration();
 };
 
 #endif  // DFSCF_PARALLEL_H

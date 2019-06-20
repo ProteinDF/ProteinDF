@@ -57,6 +57,7 @@ class TlDenseVector_ImplLapack : public TlDenseVector_ImplObject {
   virtual double sum() const;
   virtual void sortByGreater();
 
+  double dot(const TlDenseVector_ImplLapack& rhs) const;
   TlDenseVector_ImplLapack& dotInPlace(const TlDenseVector_ImplLapack& rhs);
 
   // ---------------------------------------------------------------------------
