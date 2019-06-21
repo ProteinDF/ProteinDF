@@ -119,7 +119,10 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration,
     } else {
       vOcc.load(DfObject::getOccupationPath(runType));
     }
-    assert(vOcc.getSize() == norbcut);
+    if (vOcc.getSize() < norbcut) {
+        this->log_.info(TlUtils::format("occ resize to %d", norbcut));
+        vOcc.resize(norbcut);
+    }
 
     double shift_closed = 0.0;
     double shift_open = 0.0;
