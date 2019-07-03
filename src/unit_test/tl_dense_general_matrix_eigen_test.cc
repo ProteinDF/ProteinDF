@@ -65,8 +65,7 @@ TEST(TlDenseGeneralMatrix_Eigen, vtr2mat) {
     vtr[i] = i;
   }
 
-  TlDenseGeneralMatrix_Eigen a(row, col);
-  a.vtr2mat(vtr);
+  TlDenseGeneralMatrix_Eigen a(row, col, vtr.data());
   // std::cout << a << std::endl;
 
   EXPECT_EQ(row, a.getNumOfRows());

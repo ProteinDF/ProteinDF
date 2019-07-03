@@ -11,9 +11,9 @@
 // constructor & destructor
 // ---------------------------------------------------------------------------
 TlDenseGeneralMatrix_Lapack::TlDenseGeneralMatrix_Lapack(
-    const TlMatrixObject::index_type row,
-    const TlMatrixObject::index_type col) {
-    this->pImpl_ = new TlDenseGeneralMatrix_ImplLapack(row, col);
+    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+    double const* const pBuf) {
+    this->pImpl_ = new TlDenseGeneralMatrix_ImplLapack(row, col, pBuf);
 }
 
 TlDenseGeneralMatrix_Lapack::TlDenseGeneralMatrix_Lapack(
@@ -33,14 +33,13 @@ TlDenseGeneralMatrix_Lapack::TlDenseGeneralMatrix_Lapack(
     this->pImpl_ = new TlDenseGeneralMatrix_ImplLapack(rhs);
 }
 
-void TlDenseGeneralMatrix_Lapack::vtr2mat(const std::vector<double>& vtr) {
-    assert(vtr.size() == this->getNumOfRows() * this->getNumOfCols());
-    dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->vtr2mat(vtr);
-}
-
 TlDenseGeneralMatrix_Lapack::~TlDenseGeneralMatrix_Lapack() {
     delete this->pImpl_;
     this->pImpl_ = NULL;
+}
+
+TlDenseGeneralMatrix_Lapack::operator std::vector<double>() const {
+    return *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_));
 }
 
 // ---------------------------------------------------------------------------

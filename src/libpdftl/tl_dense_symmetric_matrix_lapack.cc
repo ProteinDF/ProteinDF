@@ -6,8 +6,8 @@
 #include "tl_dense_vector_lapack.h"
 
 TlDenseSymmetricMatrix_Lapack::TlDenseSymmetricMatrix_Lapack(
-    const TlMatrixObject::index_type dim) {
-  this->pImpl_ = new TlDenseSymmetricMatrix_ImplLapack(dim);
+    const TlMatrixObject::index_type dim, double const* const pBuf) {
+  this->pImpl_ = new TlDenseSymmetricMatrix_ImplLapack(dim, pBuf);
 }
 
 TlDenseSymmetricMatrix_Lapack::TlDenseSymmetricMatrix_Lapack(
@@ -22,13 +22,13 @@ TlDenseSymmetricMatrix_Lapack::TlDenseSymmetricMatrix_Lapack(
       *(dynamic_cast<const TlDenseGeneralMatrix_ImplLapack*>(rhs.pImpl_)));
 }
 
-void TlDenseSymmetricMatrix_Lapack::vtr2mat(const std::vector<double>& vtr){
-    dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)->vtr2mat(vtr);
-}
-
 TlDenseSymmetricMatrix_Lapack::~TlDenseSymmetricMatrix_Lapack() {
   delete this->pImpl_;
   this->pImpl_ = NULL;
+}
+
+TlDenseSymmetricMatrix_Lapack::operator std::vector<double>() const {
+    return *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_));
 }
 
 // ---------------------------------------------------------------------------

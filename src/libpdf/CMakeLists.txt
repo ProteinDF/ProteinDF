@@ -183,6 +183,9 @@ set(LIBPDF_SOURCES
 
 
 set(LIBPPDF_HEADERS
+  df_total_energy_parallel_tmpl.h
+  df_total_energy_parallel_eigen.h
+  df_total_energy_parallel_lapack.h
   df_total_energy_scalapack.h
   CnFile_parallel.h
   DfCD_Parallel.h
@@ -226,6 +229,8 @@ set(LIBPPDF_HEADERS
 
 
 set(LIBPPDF_SOURCES
+  df_total_energy_parallel_eigen.cc
+  df_total_energy_parallel_lapack.cc
   df_total_energy_scalapack.cc
   CnFile_parallel.cc
   DfCD_Parallel.cpp

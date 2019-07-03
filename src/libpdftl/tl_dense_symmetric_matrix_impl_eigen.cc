@@ -9,8 +9,12 @@
 #endif  // HAVE_VIENNACL
 
 TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
-    const TlMatrixObject::index_type dim)
-    : TlDenseGeneralMatrix_ImplEigen(dim, dim) {}
+    const TlMatrixObject::index_type dim, double const * const pBuf)
+    : TlDenseGeneralMatrix_ImplEigen(dim, dim) {
+    if (pBuf != NULL) {
+        this->vtr2mat(pBuf);
+    }
+}
 
 TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
     const TlDenseSymmetricMatrix_ImplEigen& rhs)
@@ -18,40 +22,44 @@ TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
 
 TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
     const TlDenseGeneralMatrix_ImplEigen& rhs) {
-  this->matrix_ = rhs.matrix_;
-  this->resize(rhs.getNumOfRows(), rhs.getNumOfRows());
-  this->matrix_ = this->matrix_.selfadjointView<Eigen::Upper>();
+    this->matrix_ = rhs.matrix_;
+    this->resize(rhs.getNumOfRows(), rhs.getNumOfRows());
+    this->matrix_ = this->matrix_.selfadjointView<Eigen::Upper>();
 }
 
 TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
     const TlSparseSymmetricMatrix_ImplEigen& sm)
     : TlDenseGeneralMatrix_ImplEigen(sm.getNumOfRows(), sm.getNumOfCols()) {
-  // this->matrix_ = sm.matrix_.selfadjointView<Eigen::Upper>();
-  this->matrix_ = sm.matrix_;
+    // this->matrix_ = sm.matrix_.selfadjointView<Eigen::Upper>();
+    this->matrix_ = sm.matrix_;
 }
 
 #ifdef HAVE_VIENNACL
 TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
     const TlDenseSymmetricMatrix_ImplViennaCL& rhs)
     : TlDenseGeneralMatrix_ImplEigen(rhs.getNumOfRows(), rhs.getNumOfCols()) {
-  viennacl::copy(rhs.matrix_, this->matrix_);
+    viennacl::copy(rhs.matrix_, this->matrix_);
 }
 #endif  // HAVE_VIENNACL
 
 TlDenseSymmetricMatrix_ImplEigen::~TlDenseSymmetricMatrix_ImplEigen() {}
 
-void TlDenseSymmetricMatrix_ImplEigen::vtr2mat(const std::vector<double>& vtr) {
-  const std::size_t dim = this->getNumOfRows();
+TlDenseSymmetricMatrix_ImplEigen::operator std::vector<double>() const {
+    const std::size_t dim = this->getNumOfRows();
+    const std::size_t size = dim * (dim + 1) / 2;
+    std::vector<double> buf(size);
 
-  std::size_t i = 0;
-  // column-major
-  for (TlMatrixObject::index_type c = 0; c < dim; ++c) {
-    for (TlMatrixObject::index_type r = 0; r <= c; ++r) {
-      double v = vtr[i];
-      this->set(r, c, v);
-      ++i;
+    // column-major
+    std::size_t i = 0;
+    for (std::size_t c = 0; c < dim; ++c) {
+        for (std::size_t r = 0; r <= c; ++r) {
+            const double v = this->get(r, c);
+            buf[i] = v;
+            ++i;
+        }
     }
-  }
+
+    return buf;
 }
 
 // ---------------------------------------------------------------------------
@@ -60,19 +68,19 @@ void TlDenseSymmetricMatrix_ImplEigen::vtr2mat(const std::vector<double>& vtr) {
 void TlDenseSymmetricMatrix_ImplEigen::set(const TlMatrixObject::index_type row,
                                            const TlMatrixObject::index_type col,
                                            const double value) {
-  this->matrix_(row, col) = value;
-  if (row != col) {
-    this->matrix_(col, row) = value;
-  }
+    this->matrix_(row, col) = value;
+    if (row != col) {
+        this->matrix_(col, row) = value;
+    }
 }
 
 void TlDenseSymmetricMatrix_ImplEigen::add(const TlMatrixObject::index_type row,
                                            const TlMatrixObject::index_type col,
                                            const double value) {
-  this->matrix_(row, col) += value;
-  if (row != col) {
-    this->matrix_(col, row) += value;
-  }
+    this->matrix_(row, col) += value;
+    if (row != col) {
+        this->matrix_(col, row) += value;
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -84,51 +92,64 @@ void TlDenseSymmetricMatrix_ImplEigen::add(const TlMatrixObject::index_type row,
 // ---------------------------------------------------------------------------
 TlDenseSymmetricMatrix_ImplEigen TlDenseSymmetricMatrix_ImplEigen::transpose()
     const {
-  // do nothing
-  return *this;
+    // do nothing
+    return *this;
 }
 
 TlDenseSymmetricMatrix_ImplEigen TlDenseSymmetricMatrix_ImplEigen::inverse()
     const {
 #if __cplusplus >= 201103L
-  std::lock_guard<std::mutex> lock(this->matrix_mutex_);
+    std::lock_guard<std::mutex> lock(this->matrix_mutex_);
 #endif
 
-  this->matrix_ = this->matrix_.selfadjointView<Eigen::Lower>();
+    this->matrix_ = this->matrix_.selfadjointView<Eigen::Lower>();
 
-  TlDenseSymmetricMatrix_ImplEigen answer;
-  answer.matrix_ = this->matrix_.inverse();
+    TlDenseSymmetricMatrix_ImplEigen answer;
+    answer.matrix_ = this->matrix_.inverse();
 
-  return answer;
+    return answer;
 }
 
 bool TlDenseSymmetricMatrix_ImplEigen::eig(
     TlDenseVector_ImplEigen* pEigVal,
     TlDenseGeneralMatrix_ImplEigen* pEigVec) const {
 #if __cplusplus >= 201103L
-  std::lock_guard<std::mutex> lock(this->matrix_mutex_);
+    std::lock_guard<std::mutex> lock(this->matrix_mutex_);
 #endif
-  bool answer = false;
-  this->matrix_ = this->matrix_.selfadjointView<Eigen::Lower>();
+    bool answer = false;
+    this->matrix_ = this->matrix_.selfadjointView<Eigen::Lower>();
 
-  Eigen::SelfAdjointEigenSolver<MatrixDataType> es(this->matrix_);
-  if (es.info() == Eigen::Success) {
-    if (pEigVal != NULL) {
-      *pEigVal = TlDenseVector_ImplEigen(es.eigenvalues());
+    Eigen::SelfAdjointEigenSolver<MatrixDataType> es(this->matrix_);
+    if (es.info() == Eigen::Success) {
+        if (pEigVal != NULL) {
+            *pEigVal = TlDenseVector_ImplEigen(es.eigenvalues());
+        }
+        if (pEigVec != NULL) {
+            *pEigVec = TlDenseGeneralMatrix_ImplEigen(es.eigenvectors());
+        }
+
+        answer = true;
     }
-    if (pEigVec != NULL) {
-      *pEigVec = TlDenseGeneralMatrix_ImplEigen(es.eigenvectors());
-    }
 
-    answer = true;
-  }
-
-  return answer;
+    return answer;
 }
 
 // ---------------------------------------------------------------------------
-// private
+// protected
 // ---------------------------------------------------------------------------
+void TlDenseSymmetricMatrix_ImplEigen::vtr2mat(double const * const pBuf) {
+    const TlMatrixObject::index_type dim = this->getNumOfRows();
+
+    std::size_t i = 0;
+    // column-major
+    for (TlMatrixObject::index_type c = 0; c < dim; ++c) {
+        for (TlMatrixObject::index_type r = 0; r <= c; ++r) {
+            double v = pBuf[i];
+            this->set(r, c, v);
+            ++i;
+        }
+    }
+}
 
 // ---------------------------------------------------------------------------
 // others
@@ -137,46 +158,46 @@ bool TlDenseSymmetricMatrix_ImplEigen::eig(
 TlDenseGeneralMatrix_ImplEigen operator*(
     const TlDenseGeneralMatrix_ImplEigen& mat1,
     const TlDenseSymmetricMatrix_ImplEigen& mat2) {
-  TlDenseGeneralMatrix_ImplEigen answer;
-  answer.matrix_ = mat1.matrix_ * mat2.matrix_;
-  return answer;
+    TlDenseGeneralMatrix_ImplEigen answer;
+    answer.matrix_ = mat1.matrix_ * mat2.matrix_;
+    return answer;
 }
 
 // DM(S) * DM(G)
 TlDenseGeneralMatrix_ImplEigen operator*(
     const TlDenseSymmetricMatrix_ImplEigen& mat1,
     const TlDenseGeneralMatrix_ImplEigen& mat2) {
-  TlDenseGeneralMatrix_ImplEigen answer;
-  answer.matrix_ = mat1.matrix_ * mat2.matrix_;
-  return answer;
+    TlDenseGeneralMatrix_ImplEigen answer;
+    answer.matrix_ = mat1.matrix_ * mat2.matrix_;
+    return answer;
 }
 
 // DM(S) * DV
 TlDenseVector_ImplEigen operator*(const TlDenseSymmetricMatrix_ImplEigen& dms,
                                   const TlDenseVector_ImplEigen& dv) {
-  TlDenseVector_ImplEigen answer;
-  answer.vector_ = dms.matrix_ * dv.vector_;
-  return answer;
+    TlDenseVector_ImplEigen answer;
+    answer.vector_ = dms.matrix_ * dv.vector_;
+    return answer;
 }
 
 // DV * DM(S)
 TlDenseVector_ImplEigen operator*(const TlDenseVector_ImplEigen& dv,
                                   const TlDenseSymmetricMatrix_ImplEigen& dms) {
-  TlDenseVector_ImplEigen answer;
-  answer.vector_ = dv.vector_ * dms.matrix_;
-  return answer;
+    TlDenseVector_ImplEigen answer;
+    answer.vector_ = dv.vector_ * dms.matrix_;
+    return answer;
 }
 
 TlDenseSymmetricMatrix_ImplEigen operator*(
     const double coef, const TlDenseSymmetricMatrix_ImplEigen& DM) {
-  TlDenseSymmetricMatrix_ImplEigen answer = DM;
-  answer *= coef;
-  return answer;
+    TlDenseSymmetricMatrix_ImplEigen answer = DM;
+    answer *= coef;
+    return answer;
 }
 
 TlDenseSymmetricMatrix_ImplEigen operator*(
     const TlDenseSymmetricMatrix_ImplEigen& DM, const double coef) {
-  TlDenseSymmetricMatrix_ImplEigen answer = DM;
-  answer *= coef;
-  return answer;
+    TlDenseSymmetricMatrix_ImplEigen answer = DM;
+    answer *= coef;
+    return answer;
 }

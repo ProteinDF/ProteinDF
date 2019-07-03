@@ -34,14 +34,14 @@ TlDenseVector_ImplLapack::TlDenseVector_ImplLapack(
   std::copy(&(rhs[0]), &(rhs[0]) + rhs.size(), this->vector_);
 }
 
-TlDenseVector_ImplLapack::operator std::vector<double>() const {
-  std::vector<double> answer(this->vector_, this->vector_ + this->getSize());
-  return answer;
-}
-
 TlDenseVector_ImplLapack::~TlDenseVector_ImplLapack() {
   delete[] this->vector_;
   this->vector_ = NULL;
+}
+
+TlDenseVector_ImplLapack::operator std::vector<double>() const {
+  std::vector<double> answer(this->vector_, this->vector_ + this->getSize());
+  return answer;
 }
 
 // ---------------------------------------------------------------------------

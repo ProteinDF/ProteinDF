@@ -12,13 +12,14 @@ class TlDenseSymmetricMatrix_Lapack : public TlDenseSymmetricMatrixObject {
   // ---------------------------------------------------------------------------
  public:
   explicit TlDenseSymmetricMatrix_Lapack(
-      const TlMatrixObject::index_type dim = 1);
+      const TlMatrixObject::index_type dim = 1,
+      double const* const pBuf = NULL);
   TlDenseSymmetricMatrix_Lapack(const TlDenseSymmetricMatrix_Lapack& rhs);
   TlDenseSymmetricMatrix_Lapack(const TlDenseGeneralMatrix_Lapack& rhs);
 
-  virtual void vtr2mat(const std::vector<double>& vtr);
-
   virtual ~TlDenseSymmetricMatrix_Lapack();
+
+  operator std::vector<double>() const;
 
   // ---------------------------------------------------------------------------
   // properties

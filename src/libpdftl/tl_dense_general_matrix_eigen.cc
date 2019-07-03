@@ -13,8 +13,9 @@
 
 TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(
     const TlMatrixObject::index_type row,
-    const TlMatrixObject::index_type col) {
-    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(row, col);
+    const TlMatrixObject::index_type col,
+    double const * const pBuf) {
+    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(row, col, pBuf);
 }
 
 TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(
@@ -48,13 +49,13 @@ TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(
 }
 #endif  // HAVE_VIENNACL
 
-void TlDenseGeneralMatrix_Eigen::vtr2mat(const std::vector<double>& vtr) {
-    dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)->vtr2mat(vtr);
-}
-
 TlDenseGeneralMatrix_Eigen::~TlDenseGeneralMatrix_Eigen() {
     delete this->pImpl_;
     this->pImpl_ = NULL;
+}
+
+TlDenseGeneralMatrix_Eigen::operator std::vector<double>() const {
+    return *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_));
 }
 
 // ---------------------------------------------------------------------------

@@ -9,10 +9,17 @@
 #include "tl_dense_vector_impl_lapack.h"
 #include "tl_dense_vector_impl_scalapack.h"
 
+// ----------------------------------------------------------------------------
+// constructor & destructor
+// ----------------------------------------------------------------------------
 TlDenseGeneralMatrix_ImplLapack::TlDenseGeneralMatrix_ImplLapack(
-    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col)
+    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col, double const * const pBuf)
     : row_(row), col_(col), matrix_(NULL) {
     this->initialize();
+
+    if (pBuf != NULL) {
+        this->vtr2mat(pBuf);
+    }
 };
 
 TlDenseGeneralMatrix_ImplLapack::TlDenseGeneralMatrix_ImplLapack(
@@ -50,6 +57,11 @@ TlDenseGeneralMatrix_ImplLapack::TlDenseGeneralMatrix_ImplLapack(
 TlDenseGeneralMatrix_ImplLapack::~TlDenseGeneralMatrix_ImplLapack() {
     delete[] this->matrix_;
     this->matrix_ = NULL;
+}
+
+TlDenseGeneralMatrix_ImplLapack::operator std::vector<double>() const {
+  std::vector<double> answer(this->matrix_, this->matrix_ + this->getNumOfElements());
+  return answer;
 }
 
 // ---------------------------------------------------------------------------
@@ -468,9 +480,8 @@ TlMatrixObject::size_type TlDenseGeneralMatrix_ImplLapack::index(
     return index;
 }
 
-void TlDenseGeneralMatrix_ImplLapack::vtr2mat(const std::vector<double>& vtr) {
-    assert(vtr.size() == this->getNumOfElements());
-    std::copy(vtr.begin(), vtr.end(), this->matrix_);
+void TlDenseGeneralMatrix_ImplLapack::vtr2mat(double const * const pBuf) {
+    std::copy(pBuf, pBuf + this->getNumOfElements(), this->matrix_);
 }
 
 // ---------------------------------------------------------------------------

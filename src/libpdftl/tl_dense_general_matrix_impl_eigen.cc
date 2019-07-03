@@ -18,9 +18,17 @@
 #include "tl_dense_general_matrix_impl_viennacl.h"
 #endif  //
 
+// ----------------------------------------------------------------------------
+// constructor & destructor
+// ----------------------------------------------------------------------------
 TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
-    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col)
-    : matrix_(MatrixDataType::Zero(row, col)){};
+    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+    double const* const pBuf)
+    : matrix_(MatrixDataType::Zero(row, col)) {
+    if (pBuf != NULL) {
+        this->vtr2mat(pBuf);
+    }
+};
 
 TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
     const TlDenseGeneralMatrix_ImplEigen& rhs) {
@@ -51,13 +59,18 @@ TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
 
 TlDenseGeneralMatrix_ImplEigen::~TlDenseGeneralMatrix_ImplEigen() {}
 
-void TlDenseGeneralMatrix_ImplEigen::vtr2mat(const std::vector<double>& vtr) {
-    assert(vtr.size() == this->getNumOfRows() * this->getNumOfCols());
-    this->matrix_ =
-        MapTypeConst(&(vtr[0]), this->getNumOfRows(), this->getNumOfCols());
+TlDenseGeneralMatrix_ImplEigen::operator std::vector<double>() const {
+    const std::size_t row = this->getNumOfRows();
+    const std::size_t col = this->getNumOfCols();
+    std::vector<double> v(row * col);
+    MapType(&(v[0]), row, col) = this->matrix_;
+
+    return v;
 }
 
-// ----------------------
+// ---------------------------------------------------------------------------
+// properties
+// ---------------------------------------------------------------------------
 TlMatrixObject::index_type TlDenseGeneralMatrix_ImplEigen::getNumOfRows()
     const {
     return this->matrix_.rows();
@@ -228,7 +241,12 @@ TlDenseGeneralMatrix_ImplEigen TlDenseGeneralMatrix_ImplEigen::inverse() const {
 // ---------------------------------------------------------------------------
 // protected
 // ---------------------------------------------------------------------------
-
+void TlDenseGeneralMatrix_ImplEigen::vtr2mat(double const* const pBuf) {
+    const std::size_t row = this->getNumOfRows();
+    const std::size_t col = this->getNumOfCols();
+    
+    this->matrix_ = MapTypeConst(pBuf, row, col);
+}
 // ---------------------------------------------------------------------------
 // others
 // ---------------------------------------------------------------------------
