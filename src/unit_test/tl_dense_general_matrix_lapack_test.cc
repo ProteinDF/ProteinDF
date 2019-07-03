@@ -23,8 +23,7 @@ TEST(TlDenseGeneralMatrix_Lapack, vtr2mat) {
     vtr[i] = i;
   }
 
-  TlDenseGeneralMatrix_Lapack a(row, col);
-  a.vtr2mat(vtr);
+  TlDenseGeneralMatrix_Lapack a(row, col, vtr.data());
 
   EXPECT_EQ(row, a.getNumOfRows());
   EXPECT_EQ(col, a.getNumOfCols());

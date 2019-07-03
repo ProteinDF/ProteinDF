@@ -12,13 +12,18 @@ class TlDenseGeneralMatrix_ImplLapack : public TlDenseMatrix_ImplObject {
     // constructor & destructor
     // ---------------------------------------------------------------------------
    public:
+    // column-major
+    // a11, a21, a31, a41, ..., am1, a12, a22, a32, ...
     explicit TlDenseGeneralMatrix_ImplLapack(
         const TlMatrixObject::index_type row = 0,
-        const TlMatrixObject::index_type col = 0);
+        const TlMatrixObject::index_type col = 0,
+        double const * const pBuf = NULL);
     TlDenseGeneralMatrix_ImplLapack(const TlDenseGeneralMatrix_ImplLapack& rhs);
     TlDenseGeneralMatrix_ImplLapack(
         const TlDenseSymmetricMatrix_ImplLapack& rhs);
     virtual ~TlDenseGeneralMatrix_ImplLapack();
+
+    operator std::vector<double>() const;
 
     // ---------------------------------------------------------------------------
     // static
@@ -111,10 +116,8 @@ class TlDenseGeneralMatrix_ImplLapack : public TlDenseMatrix_ImplObject {
     virtual TlMatrixObject::size_type getNumOfElements() const;
     virtual TlMatrixObject::size_type index(
         TlMatrixObject::index_type row, TlMatrixObject::index_type col) const;
+    virtual void vtr2mat(double const * const pBuf);
 
-    // column-major
-    // a11, a21, a31, a41, ..., am1, a12, a22, a32, ...
-    virtual void vtr2mat(const std::vector<double>& vtr);
     // ---------------------------------------------------------------------------
     // variables
     // ---------------------------------------------------------------------------

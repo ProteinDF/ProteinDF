@@ -14,14 +14,15 @@ class TlDenseGeneralMatrix_Lapack : public TlDenseGeneralMatrixObject {
  public:
   explicit TlDenseGeneralMatrix_Lapack(
       const TlMatrixObject::index_type row = 1,
-      const TlMatrixObject::index_type col = 1);
+      const TlMatrixObject::index_type col = 1,
+      double const * const pBuf = NULL);
   TlDenseGeneralMatrix_Lapack(const TlDenseGeneralMatrix_Lapack& rhs);
   TlDenseGeneralMatrix_Lapack(const TlDenseSymmetricMatrix_Lapack& rhs);
   TlDenseGeneralMatrix_Lapack(const TlDenseGeneralMatrix_ImplLapack& rhs);
 
-  void vtr2mat(const std::vector<double>& vtr);
-
   virtual ~TlDenseGeneralMatrix_Lapack();
+
+  operator std::vector<double>() const;
 
   // ---------------------------------------------------------------------------
   // properties
