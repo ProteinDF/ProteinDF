@@ -120,7 +120,6 @@ class DfScf : public DfObject {
 
     // Total Energy -----------------------------------------------------------
     virtual void calcTotalEnergy();
-    virtual void calcTotalRealEnergy();
 
     template <class DfTotalEnergyClass>
     void calcTotalEnergy_tmpl() {
@@ -134,16 +133,6 @@ class DfScf : public DfObject {
         (*this->pPdfParam_)["stat"]["elapsed_time"]["total_energy"]
                            [this->m_nIteration] = timer.getElapseTime();
     };
-
-    template <class DfTotalEnergyClass>
-    void calcTotalRealEnergy_tmpl() {
-        this->loggerStartTitle("Total Energy derived from point charges");
-
-        DfTotalEnergyClass dfTotalEnergy(this->pPdfParam_);
-        dfTotalEnergy.outputForDummy();
-
-        this->loggerEndTitle();
-    }
 
     // virtual DfTotalEnergy* getDfTotalEnergyObject();
 
@@ -192,16 +181,6 @@ class DfScf : public DfObject {
 //     this->loggerEndTitle();
 //     (*this->pPdfParam_)["stat"]["elapsed_time"]["total_energy"]
 //                        [this->m_nIteration] = timer.getElapseTime();
-// }
-
-// template <class DfTotalEnergyClass>
-// void DfScf::calcTotalRealEnergy<DfTotalEnergyClass>() {
-//     this->loggerStartTitle("Total Energy derived from point charges");
-
-//     DfTotalEnergyClass dfTotalEnergy(this->pPdfParam_);
-//     dfTotalEnergy.calculate_real_energy();
-
-//     this->loggerEndTitle();
 // }
 
 #endif  // DFSCF_H

@@ -65,7 +65,6 @@ class DfScf_Parallel : public DfScf {
 
     // Total Energy -----------------------------------------------------------
     virtual void calcTotalEnergy();
-    virtual void calcTotalRealEnergy();
 
     // virtual DfTotalEnergy* getDfTotalEnergyObject();
     // ------------------------------------------------------------------------

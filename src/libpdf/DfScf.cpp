@@ -447,9 +447,6 @@ int DfScf::execScfLoop() {
         this->calcPopulation();
     }
 
-    // calculation of Total energy, energy part which comes from dummy charge
-    this->calcTotalRealEnergy();
-
     // DfSummary
     const std::string sDfSummary =
         TlUtils::toUpper(pdfParam["summary"].getStr());
@@ -812,24 +809,9 @@ DfDmatrix* DfScf::getDfDmatrixObject() {
 //     return pDfTotalEnergy;
 // }
 
-// void DfScf::calcTotalRealEnergy() {
-//     this->loggerStartTitle("Total Energy derived from point charges");
-
-//     DfTotalEnergy* pDfTotalEnergy = this->getDfTotalEnergyObject();
-//     pDfTotalEnergy->calculate_real_energy();
-
-//     delete pDfTotalEnergy;
-//     pDfTotalEnergy = NULL;
-//     this->loggerEndTitle();
-// }
-
 // calculate total energy
 void DfScf::calcTotalEnergy() {
     this->calcTotalEnergy_tmpl<DfTotalEnergy_Lapack>();
-}
-
-void DfScf::calcTotalRealEnergy() {
-    this->calcTotalRealEnergy_tmpl<DfTotalEnergy_Lapack>();
 }
 
 DfPopulation* DfScf::getDfPopulationObject() {
