@@ -257,17 +257,6 @@ void DfScf_Parallel::calcTotalEnergy() {
     }
 }
 
-void DfScf_Parallel::calcTotalRealEnergy() {
-    if (this->linearAlgebraPackage_ == DfObject::LAP_SCALAPACK) {
-        this->calcTotalRealEnergy_tmpl<DfTotalEnergy_Scalapack>();
-    } else {
-        TlCommunicate& rComm = TlCommunicate::getInstance();
-        if (rComm.isMaster()) {
-            DfScf::calcTotalRealEnergy();
-        }
-    }
-}
-
 // DfTotalEnergy* DfScf_Parallel::getDfTotalEnergyObject() {
 //     DfTotalEnergy* pDfTotalEnergy =
 //         new DfTotalEnergy_Parallel(this->pPdfParam_);

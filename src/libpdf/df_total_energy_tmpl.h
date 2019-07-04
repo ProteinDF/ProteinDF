@@ -23,7 +23,7 @@ class DfTotalEnergy_tmpl : public DfObject {
     void run();
     void calc(const int iteration);
     void output();
-    void outputForDummy();
+    // void outputForDummy();
 
     double get_IE(const std::vector<int>& indeces1) const;
     double get_IE(const std::vector<int>& indeces1,
@@ -321,7 +321,6 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
             this->E_K_ *= 2.0;
 
             this->calcE_XC(RUN_RKS, PA);
-            this->E_XC_ *= 2.0;
 
             P_AB = 2.0 * PA;
         } break;
@@ -380,8 +379,8 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
     }
     E_total += this->E_K_;
     E_total += this->E_XC_;
-    E_total += this->E_nuc_;
-    E_total += this->E_nuc_X_;
+    E_total += this->E_nuc_; 
+    E_total += this->E_nuc_X_; 
     this->E_total_ = E_total;
 }
 
@@ -528,12 +527,12 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
                 const double distance = pi.distanceFrom(pj);
 
                 const double E = ci * cj / distance;
-                this->pIE_nuc_->set(i, j, 0.5 * E);
-                E_nuc += E;
-
                 if (isDummy || ("X" == geom.getAtomSymbol(j))) {
                     this->pIE_nuc_X_->set(i, j, 0.5 * E);
                     E_nuc_X += E;
+                } else {
+                    this->pIE_nuc_->set(i, j, 0.5 * E);
+                    E_nuc += E;
                 }
             }
         }
@@ -724,6 +723,9 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
     SymmetricMatrix Exc = DfObject::getExcMatrix<SymmetricMatrix>(
         runType, this->calcScfIteration_);
     this->E_XC_ += Exc.dotInPlace(PA).sum();
+    if (runType == DfObject::RUN_RKS) {
+        this->E_XC_ *= 2.0;
+    }
 }
 
 // energy for xc energy term (compare myu*Ppq*Pqa with 4/3*Ex1)
@@ -793,7 +795,8 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 
     // 1e term
     this->log_.info(TlUtils::format(" Ts+Vn          = %28.16lf", this->E_h_));
-    E_Total += this->E_h_;
+    this->log_.info(TlUtils::format(" Ts+Vn (X)      = %28.16lf", this->E_h_X_));
+    E_Total += this->E_h_ + this->E_h_X_;
 
     // J term
     switch (this->J_engine_) {
@@ -866,7 +869,10 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 
     this->log_.info(
         TlUtils::format(" E_nuclei       = %28.16lf", this->E_nuc_));
+    this->log_.info(
+        TlUtils::format(" E_nuclei(X)    = %28.16lf", this->E_nuc_X_));
     E_Total += this->E_nuc_;
+    E_Total += this->E_nuc_X_;
 
     this->log_.info(TlUtils::format(" TE             = %28.16lf", E_Total));
     // this->logger("------------------------------------------------\n");
@@ -892,34 +898,6 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
     }
 
     this->log_.info("------------------------------------------------");
-}
-
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                        DfOverlapType>::outputForDummy() {
-    this->logger(" total energy --- Information related with dummy atoms:");
-
-    const double current_energy = this->E_total_;
-
-    // check whether dummy atom exists or not
-    if (this->m_nNumOfDummyAtoms == 0) {
-        this->logger(" no dummy atoms are found.");
-        return;
-    }
-
-    this->logger(TlUtils::format(
-        " energy derived from core-h of dummy atoms: %18.16lf", this->E_h_X_));
-    this->logger(TlUtils::format(" energy derived from nuclear part: %18.16lf",
-                                 this->E_nuc_X_));
-    const double E_fromX = this->E_h_X_ + this->E_nuc_X_;
-
-    // enegy derived from dummy charge and real energy
-    const double realEnergy = current_energy - E_fromX;
-
-    this->logger(TlUtils::format(
-        " total energy excluding dummy charge = %18.16lf", realEnergy));
-    return;
 }
 
 #endif  // DF_TOTALENERGY_TMPL_H

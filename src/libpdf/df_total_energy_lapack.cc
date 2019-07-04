@@ -3,8 +3,6 @@
 DfTotalEnergy_Lapack::DfTotalEnergy_Lapack(TlSerializeData* pPdfParam)
     : DfTotalEnergy_tmpl<TlDenseGeneralMatrix_Lapack,
                          TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack,
-                         DfOverlapX>(pPdfParam) {
-    this->log_.info("run DfTotalEnergy_Lapack::DfTotalEnergy_Lapack()");
-}
+                         DfOverlapX>(pPdfParam) {}
 
 DfTotalEnergy_Lapack::~DfTotalEnergy_Lapack() {}
