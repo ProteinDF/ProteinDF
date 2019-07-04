@@ -15,8 +15,9 @@
 
 TlDenseGeneralMatrix_ViennaCL::TlDenseGeneralMatrix_ViennaCL(
     const TlMatrixObject::index_type row,
-    const TlMatrixObject::index_type col) {
-  this->pImpl_ = new TlDenseGeneralMatrix_ImplViennaCL(row, col);
+    const TlMatrixObject::index_type col,
+    double const * const pBuf) {
+  this->pImpl_ = new TlDenseGeneralMatrix_ImplViennaCL(row, col, pBuf);
 }
 
 TlDenseGeneralMatrix_ViennaCL::TlDenseGeneralMatrix_ViennaCL(
@@ -48,14 +49,13 @@ TlDenseGeneralMatrix_ViennaCL::TlDenseGeneralMatrix_ViennaCL(
 }
 #endif // HAVE_EIGEN
 
-void TlDenseGeneralMatrix_ViennaCL::vtr2mat(const std::vector<double>& vtr) {
-  dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(this->pImpl_)->vtr2mat(vtr);
-}
-
-
 TlDenseGeneralMatrix_ViennaCL::~TlDenseGeneralMatrix_ViennaCL() {
   delete this->pImpl_;
   this->pImpl_ = NULL;
+}
+
+TlDenseGeneralMatrix_ViennaCL::operator std::vector<double>() {
+    return *(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(this->pImpl_));
 }
 
 // ---------------------------------------------------------------------------

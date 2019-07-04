@@ -27,7 +27,8 @@ class TlDenseGeneralMatrix_ImplEigen : public TlDenseMatrix_ImplObject {
  public:
   explicit TlDenseGeneralMatrix_ImplEigen(
       const TlMatrixObject::index_type row = 0,
-      const TlMatrixObject::index_type col = 0);
+      const TlMatrixObject::index_type col = 0,
+      double const * const pBuf = NULL);
   TlDenseGeneralMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplEigen& rhs);
   TlDenseGeneralMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplEigen& rhs);
   TlDenseGeneralMatrix_ImplEigen(const MatrixDataType& rhs);
@@ -37,9 +38,9 @@ class TlDenseGeneralMatrix_ImplEigen : public TlDenseMatrix_ImplObject {
   TlDenseGeneralMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplViennaCL& rhs);
 #endif  // HAVE_VIENNACL
 
-  void vtr2mat(const std::vector<double>& vtr);
-
   virtual ~TlDenseGeneralMatrix_ImplEigen();
+
+  operator std::vector<double>() const;
 
   // ---------------------------------------------------------------------------
   // properties
@@ -85,14 +86,18 @@ class TlDenseGeneralMatrix_ImplEigen : public TlDenseMatrix_ImplObject {
       TlMatrixObject::index_type* outCol) const;
   virtual void transposeInPlace();
 
+  TlDenseGeneralMatrix_ImplEigen dot(const TlDenseGeneralMatrix_ImplEigen& rhs) const;
   const TlDenseGeneralMatrix_ImplEigen& dotInPlace(
       const TlDenseGeneralMatrix_ImplEigen& rhs);
+
   TlDenseGeneralMatrix_ImplEigen transpose() const;
   TlDenseGeneralMatrix_ImplEigen inverse() const;
 
   // ---------------------------------------------------------------------------
   // protected
   // ---------------------------------------------------------------------------
+  protected:
+  virtual void vtr2mat(double const * const pBuf);
 
   // ---------------------------------------------------------------------------
   // variables

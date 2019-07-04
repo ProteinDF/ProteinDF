@@ -57,6 +57,7 @@ class TlDenseVector_ImplScalapack : public TlDenseVector_ImplObject, public TlDe
  public:
   virtual void sortByGreater();
 
+  double dot(const TlDenseVector_ImplScalapack& rhs) const;
   TlDenseVector_ImplScalapack& dotInPlace(
       const TlDenseVector_ImplScalapack& rhs);
 

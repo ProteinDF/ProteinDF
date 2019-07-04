@@ -209,6 +209,31 @@ void DfTotalEnergy::calculate_real_energy() {
   this->calcRealEnergy<TlDenseSymmetricMatrix_Lapack>();
 }
 
+double DfTotalEnergy::calcS2() {
+  // calc (N_alpha - N_beta / 2)
+  const double N_alpha = this->m_nNumOfAlphaElectrons;
+  const double N_beta = this->m_nNumOfBetaElectrons;
+  const double Nab2 = 0.5 * (N_alpha - N_beta);
+  
+  // S^2_exact 
+  double s2_exact = Nab2 * (Nab2 + 1.0);
+
+  // S^2 (UKS)
+  double csc = 0.0;
+  {
+    const int itr = this->m_nIteration;
+    const TlDenseGeneralMatrix_Lapack C_alpha = DfObject::getCMatrix<TlDenseGeneralMatrix_Lapack>(RUN_UKS_ALPHA, itr);
+    const TlDenseGeneralMatrix_Lapack C_beta = DfObject::getCMatrix<TlDenseGeneralMatrix_Lapack>(RUN_UKS_BETA, itr);
+    const TlDenseSymmetricMatrix_Lapack S = DfObject::getSpqMatrix<TlDenseSymmetricMatrix_Lapack>();
+
+    const TlDenseGeneralMatrix_Lapack CSC = C_alpha * S * C_beta;
+    csc = CSC.sum();
+  }
+
+  double s2 = s2_exact + N_beta - csc;
+  return s2;
+}
+
 DfEriX* DfTotalEnergy::getDfEriX() const {
   DfEriX* pDfEri = new DfEriX(this->pPdfParam_);
 

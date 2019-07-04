@@ -16,7 +16,8 @@ class TlDenseGeneralMatrix_Eigen : public TlDenseGeneralMatrixObject {
   // ---------------------------------------------------------------------------
  public:
   explicit TlDenseGeneralMatrix_Eigen(const TlMatrixObject::index_type row = 1,
-                                      const TlMatrixObject::index_type col = 1);
+                                      const TlMatrixObject::index_type col = 1,
+                                      double const * const pBuf = NULL);
   TlDenseGeneralMatrix_Eigen(const TlDenseGeneralMatrix_Eigen& rhs);
   TlDenseGeneralMatrix_Eigen(const TlDenseSymmetricMatrix_Eigen& rhs);
   TlDenseGeneralMatrix_Eigen(const TlDenseGeneralMatrix_ImplEigen& rhs);
@@ -25,7 +26,7 @@ class TlDenseGeneralMatrix_Eigen : public TlDenseGeneralMatrixObject {
   TlDenseGeneralMatrix_Eigen(const TlDenseGeneralMatrix_ViennaCL& rhs);
 #endif  // HAVE_VIENNACL
 
-  void vtr2mat(const std::vector<double>& vtr);
+  operator std::vector<double>() const;
 
   virtual ~TlDenseGeneralMatrix_Eigen();
 
@@ -55,8 +56,10 @@ class TlDenseGeneralMatrix_Eigen : public TlDenseGeneralMatrixObject {
   double sum() const;
   double getRMS() const;
 
+  TlDenseGeneralMatrix_Eigen dot(const TlDenseGeneralMatrix_Eigen& rhs) const;
   const TlDenseGeneralMatrix_Eigen& dotInPlace(
       const TlDenseGeneralMatrix_Eigen& rhs);
+
   TlDenseGeneralMatrix_Eigen transpose() const;
   TlDenseGeneralMatrix_Eigen inverse() const;
 
