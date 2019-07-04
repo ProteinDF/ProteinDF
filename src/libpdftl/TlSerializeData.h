@@ -310,6 +310,10 @@ class TlSerializeData {
   TlSerializeData(const char* pStr, const std::size_t size);
   TlSerializeData(const std::string& str);
   TlSerializeData(const TlSerializeData& rhs);
+
+  template<typename T>
+  TlSerializeData(const std::vector<T>& rhs);
+
   virtual ~TlSerializeData();
 
   TlSerializeData& operator=(const TlSerializeData& rhs);
@@ -411,5 +415,17 @@ class TlSerializeData {
 
   static TlSerializeData* pNullObject_;
 };
+
+template <typename T>
+TlSerializeData::TlSerializeData(const std::vector<T>& rhs)
+    : type_(NONE), scalar_(0), str_("") {
+    this->array_.clear();
+    this->map_.clear();
+
+    typename std::vector<T>::const_iterator itEnd = rhs.end();
+    for (typename std::vector<T>::const_iterator it = rhs.begin(); it != itEnd; ++it) {
+        this->pushBack(*it);
+    }
+}
 
 #endif  // TLSERIALIZEDATA_H
