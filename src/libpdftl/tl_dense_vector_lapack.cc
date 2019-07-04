@@ -90,6 +90,13 @@ double TlDenseVector_Lapack::operator*(const TlDenseVector_Lapack& rhs) const {
 // ---------------------------------------------------------------------------
 // operations
 // ---------------------------------------------------------------------------
+double TlDenseVector_Lapack::dot(const TlDenseVector_Lapack& rhs) const {
+  double answer = dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)
+      ->dot(*dynamic_cast<TlDenseVector_ImplLapack*>(rhs.pImpl_));
+
+  return answer;
+}
+
 TlDenseVector_Lapack& TlDenseVector_Lapack::dotInPlace(
     const TlDenseVector_Lapack& rhs) {
   dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)

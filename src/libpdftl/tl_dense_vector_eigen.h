@@ -39,6 +39,8 @@ class TlDenseVector_Eigen : public TlDenseVectorObject {
   TlDenseVector_Eigen& operator*=(const double rhs);
   TlDenseVector_Eigen& operator/=(const double rhs);
 
+  double operator*(const TlDenseVector_Eigen& rhs) const;
+
   // ---------------------------------------------------------------------------
   // operations
   // ---------------------------------------------------------------------------

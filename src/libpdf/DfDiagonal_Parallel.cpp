@@ -33,11 +33,11 @@ DfDiagonal_Parallel::DfDiagonal_Parallel(TlSerializeData* pPdfParam)
 
 DfDiagonal_Parallel::~DfDiagonal_Parallel() {}
 
-void DfDiagonal_Parallel::DfDiagMain() {
+void DfDiagonal_Parallel::run() {
 #ifdef HAVE_SCALAPACK
   if (this->m_bUsingSCALAPACK == true) {
     this->log_.info("diagonal(parallel) using SCALAPACK.");
-    this->DfDiagMain_SCALAPACK();
+    this->run_SCALAPACK();
     return;
   }
 #endif  // HAVE_SCALAPACK
@@ -71,7 +71,7 @@ void DfDiagonal_Parallel::DfDiagQclo(const DfObject::RUN_TYPE runType,
   rComm.barrier();
 }
 
-void DfDiagonal_Parallel::DfDiagMain_SCALAPACK() {
+void DfDiagonal_Parallel::run_SCALAPACK() {
   switch (this->m_nMethodType) {
     case METHOD_RKS:
       this->main<TlDenseGeneralMatrix_Scalapack,

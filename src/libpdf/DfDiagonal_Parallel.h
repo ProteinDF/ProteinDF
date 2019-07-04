@@ -26,12 +26,12 @@ class DfDiagonal_Parallel : public DfDiagonal {
   DfDiagonal_Parallel(TlSerializeData* pPdfParam);
   virtual ~DfDiagonal_Parallel();
 
-  virtual void DfDiagMain();
+  virtual void run();
   virtual void DfDiagQclo(DfObject::RUN_TYPE runType,
                           const std::string& fragname, int norbcut);
 
  protected:
-  void DfDiagMain_SCALAPACK();
+  void run_SCALAPACK();
   void DfDiagQclo_SCALAPACK(DfObject::RUN_TYPE runType,
                             const std::string& fragname, int norbcut);
 };

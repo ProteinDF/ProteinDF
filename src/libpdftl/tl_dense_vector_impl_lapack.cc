@@ -34,14 +34,14 @@ TlDenseVector_ImplLapack::TlDenseVector_ImplLapack(
   std::copy(&(rhs[0]), &(rhs[0]) + rhs.size(), this->vector_);
 }
 
-TlDenseVector_ImplLapack::operator std::vector<double>() const {
-  std::vector<double> answer(this->vector_, this->vector_ + this->getSize());
-  return answer;
-}
-
 TlDenseVector_ImplLapack::~TlDenseVector_ImplLapack() {
   delete[] this->vector_;
   this->vector_ = NULL;
+}
+
+TlDenseVector_ImplLapack::operator std::vector<double>() const {
+  std::vector<double> answer(this->vector_, this->vector_ + this->getSize());
+  return answer;
 }
 
 // ---------------------------------------------------------------------------
@@ -153,12 +153,7 @@ TlDenseVector_ImplLapack& TlDenseVector_ImplLapack::operator/=(
 
 double TlDenseVector_ImplLapack::operator*(
     const TlDenseVector_ImplLapack& rhs) const {
-  const int N = this->getSize();
-  const int incX = 1;
-  const int incY = 1;
-
-  const double v = ddot_(&N, this->vector_, &incX, rhs.vector_, &incY);
-  return v;
+      return this->dot(rhs);
 }
 
 // ---------------------------------------------------------------------------
@@ -175,6 +170,16 @@ double TlDenseVector_ImplLapack::sum() const {
 void TlDenseVector_ImplLapack::sortByGreater() {
   std::sort(this->vector_, this->vector_ + this->getSize(),
             std::greater<double>());
+}
+
+double TlDenseVector_ImplLapack::dot(const TlDenseVector_ImplLapack& rhs) const {
+  assert(this->getSize() == rhs.getSize());
+  const int N = this->getSize();
+  const int incX = 1;
+  const int incY = 1;
+
+  const double v = ddot_(&N, this->vector_, &incX, rhs.vector_, &incY);
+  return v;
 }
 
 TlDenseVector_ImplLapack& TlDenseVector_ImplLapack::dotInPlace(

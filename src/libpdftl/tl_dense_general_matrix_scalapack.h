@@ -63,8 +63,10 @@ class TlDenseGeneralMatrix_Scalapack : public TlDenseGeneralMatrixObject {
 
   TlDenseGeneralMatrix_Scalapack transpose() const;
 
+  TlDenseGeneralMatrix_Scalapack dot(const TlDenseGeneralMatrix_Scalapack& rhs) const;
   const TlDenseGeneralMatrix_Scalapack& dotInPlace(
       const TlDenseGeneralMatrix_Scalapack& rhs);
+
   TlDenseGeneralMatrix_Scalapack inverse() const;
 
   bool getSparseMatrix(TlSparseMatrix* pMatrix, bool isFinalize = false) const;

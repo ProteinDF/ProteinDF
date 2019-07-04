@@ -41,6 +41,7 @@ class TlDenseVector_Lapack : public TlDenseVectorObject {
   // operations
   // ---------------------------------------------------------------------------
  public:
+  double dot(const TlDenseVector_Lapack& rhs) const;
   TlDenseVector_Lapack& dotInPlace(const TlDenseVector_Lapack& rhs);
 
  public:

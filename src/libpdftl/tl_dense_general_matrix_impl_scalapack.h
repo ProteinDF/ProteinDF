@@ -106,6 +106,7 @@ class TlDenseGeneralMatrix_ImplScalapack : public TlDenseMatrix_ImplObject {
   TlDenseGeneralMatrix_ImplScalapack transpose() const;
   virtual void transposeInPlace();
 
+  TlDenseGeneralMatrix_ImplScalapack dot(const TlDenseGeneralMatrix_ImplScalapack& rhs) const;
   const TlDenseGeneralMatrix_ImplScalapack& dotInPlace(
       const TlDenseGeneralMatrix_ImplScalapack& rhs);
 

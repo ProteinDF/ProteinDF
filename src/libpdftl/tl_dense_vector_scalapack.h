@@ -44,6 +44,7 @@ class TlDenseVector_Scalapack : public TlDenseVectorObject {
   // operations
   // ---------------------------------------------------------------------------
  public:
+  double dot(const TlDenseVector_Scalapack& rhs) const;
   TlDenseVector_Scalapack& dotInPlace(const TlDenseVector_Scalapack& rhs);
 
  public:

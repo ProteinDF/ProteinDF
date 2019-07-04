@@ -257,13 +257,11 @@ void DfObject::setParam(const TlSerializeData& data) {
   this->updateLinearAlgebraPackageParam(
       data["linear_algebra_package"].getStr());
 
+  // matrix operation: obsolete option
   this->m_bUsingSCALAPACK = false;
-#ifdef HAVE_SCALAPACK
-  this->m_bUsingSCALAPACK =
-      (TlUtils::toUpper(data["linear_algebra_package"].getStr()) == "SCALAPACK")
-          ? true
-          : false;
-#endif  // HAVE_SCALAPACK
+  if (this->linearAlgebraPackage_ == LAP_SCALAPACK) {
+  this->m_bUsingSCALAPACK = true;
+  }
 
   this->isSaveDistributedMatrixToLocalDisk_ = false;
 #ifdef HAVE_SCALAPACK
@@ -445,16 +443,24 @@ void DfObject::updateLinearAlgebraPackageParam(const std::string& keyword) {
     this->linearAlgebraPackage_ = DfObject::LAP_EIGEN;
   }
 #endif  // HAVE_EIGEN
+
 #ifdef HAVE_LAPACK
   if (linearAlgebraPackage == "LAPACK") {
     this->linearAlgebraPackage_ = DfObject::LAP_LAPACK;
   }
 #endif  // HAVE_LAPACK
+
 #ifdef HAVE_VIENNACL
   if (linearAlgebraPackage == "VIENNACL") {
     this->linearAlgebraPackage_ = DfObject::LAP_VIENNACL;
   }
 #endif  // HAVE_VIENNACL
+
+#ifdef HAVE_SCALAPACK
+  if (linearAlgebraPackage == "SCALAPACK") {
+    this->linearAlgebraPackage_ = DfObject::LAP_SCALAPACK;
+  }
+#endif // HAVE_SCALAPACK
 }
 
 void DfObject::logger(const std::string& str) const {

@@ -13,48 +13,49 @@
 
 TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(
     const TlMatrixObject::index_type row,
-    const TlMatrixObject::index_type col) {
-  this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(row, col);
+    const TlMatrixObject::index_type col,
+    double const * const pBuf) {
+    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(row, col, pBuf);
 }
 
 TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(
     const TlDenseGeneralMatrix_Eigen& rhs) {
-  this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(
-      *(dynamic_cast<const TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_)));
+    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(
+        *(dynamic_cast<const TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_)));
 }
 
 TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(
     const TlDenseSymmetricMatrix_Eigen& rhs) {
-  this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(
-      *(dynamic_cast<const TlDenseSymmetricMatrix_ImplEigen*>(rhs.pImpl_)));
+    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(
+        *(dynamic_cast<const TlDenseSymmetricMatrix_ImplEigen*>(rhs.pImpl_)));
 }
 
 TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(
     const TlDenseGeneralMatrix_ImplEigen& rhs) {
-  this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(rhs);
+    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(rhs);
 }
 
 TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(
     const TlSparseGeneralMatrix_Eigen& sm) {
-  this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(
-      *(dynamic_cast<TlSparseGeneralMatrix_ImplEigen*>(sm.pImpl_)));
+    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(
+        *(dynamic_cast<TlSparseGeneralMatrix_ImplEigen*>(sm.pImpl_)));
 }
 
 #ifdef HAVE_VIENNACL
 TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(
     const TlDenseGeneralMatrix_ViennaCL& rhs) {
-  this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(
-      *(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(rhs.pImpl_)));
+    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(
+        *(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(rhs.pImpl_)));
 }
 #endif  // HAVE_VIENNACL
 
-void TlDenseGeneralMatrix_Eigen::vtr2mat(const std::vector<double>& vtr) {
-  dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)->vtr2mat(vtr);
+TlDenseGeneralMatrix_Eigen::~TlDenseGeneralMatrix_Eigen() {
+    delete this->pImpl_;
+    this->pImpl_ = NULL;
 }
 
-TlDenseGeneralMatrix_Eigen::~TlDenseGeneralMatrix_Eigen() {
-  delete this->pImpl_;
-  this->pImpl_ = NULL;
+TlDenseGeneralMatrix_Eigen::operator std::vector<double>() const {
+    return *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_));
 }
 
 // ---------------------------------------------------------------------------
@@ -62,70 +63,70 @@ TlDenseGeneralMatrix_Eigen::~TlDenseGeneralMatrix_Eigen() {
 // ---------------------------------------------------------------------------
 TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::operator=(
     const TlDenseGeneralMatrix_Eigen& rhs) {
-  delete this->pImpl_;
-  this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(
-      *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_)));
+    delete this->pImpl_;
+    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(
+        *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_)));
 
-  return *this;
+    return *this;
 }
 
 const TlDenseGeneralMatrix_Eigen TlDenseGeneralMatrix_Eigen::operator+(
     const TlDenseGeneralMatrix_Eigen& rhs) const {
-  TlDenseGeneralMatrix_Eigen answer = *this;
-  answer += rhs;
-  return answer;
+    TlDenseGeneralMatrix_Eigen answer = *this;
+    answer += rhs;
+    return answer;
 }
 
 const TlDenseGeneralMatrix_Eigen TlDenseGeneralMatrix_Eigen::operator-(
     const TlDenseGeneralMatrix_Eigen& rhs) const {
-  TlDenseGeneralMatrix_Eigen answer = *this;
-  answer -= rhs;
-  return answer;
+    TlDenseGeneralMatrix_Eigen answer = *this;
+    answer -= rhs;
+    return answer;
 }
 
 const TlDenseGeneralMatrix_Eigen TlDenseGeneralMatrix_Eigen::operator*(
     const TlDenseGeneralMatrix_Eigen& rhs) const {
-  TlDenseGeneralMatrix_Eigen answer = *this;
-  answer *= rhs;
-  return answer;
+    TlDenseGeneralMatrix_Eigen answer = *this;
+    answer *= rhs;
+    return answer;
 }
 
 TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::operator+=(
     const TlDenseGeneralMatrix_Eigen& rhs) {
-  *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) +=
-      *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_));
+    *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) +=
+        *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_));
 
-  return *this;
+    return *this;
 }
 
 TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::operator-=(
     const TlDenseGeneralMatrix_Eigen& rhs) {
-  *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) -=
-      *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_));
+    *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) -=
+        *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_));
 
-  return *this;
+    return *this;
 }
 
 TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::operator*=(
     const double coef) {
-  *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) *= coef;
+    *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) *= coef;
 
-  return *this;
+    return *this;
 }
 
 TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::operator/=(
     const double coef) {
-  *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) /= coef;
+    *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) /= coef;
 
-  return *this;
+    return *this;
 }
 
 TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::operator*=(
     const TlDenseGeneralMatrix_Eigen& rhs) {
-  *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) *=
-      *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_));
+    *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)) *=
+        *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_));
 
-  return *this;
+    return *this;
 }
 
 // ---------------------------------------------------------------------------
@@ -134,25 +135,36 @@ TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::operator*=(
 double TlDenseGeneralMatrix_Eigen::sum() const { return this->pImpl_->sum(); }
 
 double TlDenseGeneralMatrix_Eigen::getRMS() const {
-  return this->pImpl_->getRMS();
+    return this->pImpl_->getRMS();
+}
+
+TlDenseGeneralMatrix_Eigen TlDenseGeneralMatrix_Eigen::dot(
+    const TlDenseGeneralMatrix_Eigen& rhs) const {
+    TlDenseGeneralMatrix_Eigen answer(
+        dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)
+            ->dot(*(dynamic_cast<const TlDenseGeneralMatrix_ImplEigen*>(
+                rhs.pImpl_))));
+
+    return answer;
 }
 
 const TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::dotInPlace(
     const TlDenseGeneralMatrix_Eigen& rhs) {
-  dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)
-      ->dotInPlace(
-          *(dynamic_cast<const TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_)));
-  return *this;
+    dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)
+        ->dotInPlace(
+            *(dynamic_cast<const TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_)));
+    return *this;
 }
 
 TlDenseGeneralMatrix_Eigen TlDenseGeneralMatrix_Eigen::transpose() const {
-  return TlDenseGeneralMatrix_Eigen(
-      dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)->transpose());
+    return TlDenseGeneralMatrix_Eigen(
+        dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)
+            ->transpose());
 }
 
 TlDenseGeneralMatrix_Eigen TlDenseGeneralMatrix_Eigen::inverse() const {
-  return TlDenseGeneralMatrix_Eigen(
-      dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)->inverse());
+    return TlDenseGeneralMatrix_Eigen(
+        dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)->inverse());
 }
 
 // ---------------------------------------------------------------------------
@@ -160,28 +172,28 @@ TlDenseGeneralMatrix_Eigen TlDenseGeneralMatrix_Eigen::inverse() const {
 // ---------------------------------------------------------------------------
 TlDenseVector_Eigen operator*(const TlDenseGeneralMatrix_Eigen& rhs1,
                               const TlDenseVector_Eigen& rhs2) {
-  return TlDenseVector_Eigen(
-      *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs1.pImpl_)) *
-      *(dynamic_cast<TlDenseVector_ImplEigen*>(rhs2.pImpl_)));
+    return TlDenseVector_Eigen(
+        *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs1.pImpl_)) *
+        *(dynamic_cast<TlDenseVector_ImplEigen*>(rhs2.pImpl_)));
 }
 
 TlDenseVector_Eigen operator*(const TlDenseVector_Eigen& rhs1,
                               const TlDenseGeneralMatrix_Eigen& rhs2) {
-  return TlDenseVector_Eigen(
-      *(dynamic_cast<TlDenseVector_ImplEigen*>(rhs1.pImpl_)) *
-      *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs2.pImpl_)));
+    return TlDenseVector_Eigen(
+        *(dynamic_cast<TlDenseVector_ImplEigen*>(rhs1.pImpl_)) *
+        *(dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(rhs2.pImpl_)));
 }
 
 TlDenseGeneralMatrix_Eigen operator*(const double coef,
                                      const TlDenseGeneralMatrix_Eigen& DM) {
-  TlDenseGeneralMatrix_Eigen answer = DM;
-  answer *= coef;
-  return answer;
+    TlDenseGeneralMatrix_Eigen answer = DM;
+    answer *= coef;
+    return answer;
 }
 
 TlDenseGeneralMatrix_Eigen operator*(const TlDenseGeneralMatrix_Eigen& DM,
                                      const double coef) {
-  TlDenseGeneralMatrix_Eigen answer = DM;
-  answer *= coef;
-  return answer;
+    TlDenseGeneralMatrix_Eigen answer = DM;
+    answer *= coef;
+    return answer;
 }

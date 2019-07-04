@@ -12,8 +12,9 @@
 #endif  // HAVE_VIENNACL
 
 TlDenseSymmetricMatrix_Eigen::TlDenseSymmetricMatrix_Eigen(
-    const TlMatrixObject::index_type dim) {
-  this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigen(dim);
+    const TlMatrixObject::index_type dim,
+    double const * const pBuf) {
+  this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigen(dim, pBuf);
 }
 
 TlDenseSymmetricMatrix_Eigen::TlDenseSymmetricMatrix_Eigen(
@@ -47,10 +48,9 @@ TlDenseSymmetricMatrix_Eigen::~TlDenseSymmetricMatrix_Eigen() {
   this->pImpl_ = NULL;
 }
 
-void TlDenseSymmetricMatrix_Eigen::vtr2mat(const std::vector<double>& vtr) {
-  dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(this->pImpl_)->vtr2mat(vtr);
+TlDenseSymmetricMatrix_Eigen::operator std::vector<double>() const {
+  return *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(this->pImpl_));
 }
-
 // ---------------------------------------------------------------------------
 // operators
 // ---------------------------------------------------------------------------

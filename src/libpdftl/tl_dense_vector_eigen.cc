@@ -93,6 +93,12 @@ TlDenseVector_Eigen& TlDenseVector_Eigen::operator/=(const double rhs) {
   return *this;
 }
 
+double TlDenseVector_Eigen::operator*(const TlDenseVector_Eigen& rhs) const {
+  return dynamic_cast<const TlDenseVector_ImplEigen*>(this->pImpl_)
+      ->
+      operator*(*dynamic_cast<const TlDenseVector_ImplEigen*>(rhs.pImpl_));
+}
+
 // ---------------------------------------------------------------------------
 // operations
 // ---------------------------------------------------------------------------
