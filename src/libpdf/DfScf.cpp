@@ -45,12 +45,18 @@
 #include "DfSummary.h"
 #include "DfThreeindexintegrals.h"
 // #include "DfTotalEnergy.h"
+
+#ifdef HAVE_LAPACK
 #include "df_total_energy_lapack.h"
+#endif // HAVE_LAPACK
+
+#ifdef HAVE_EIGEN
 #include "df_total_energy_eigen.h"
+#endif // HAVE_EIGEN
+
 #include "DfTransFmatrix.h"
 #include "DfTransatob.h"
 #include "DfXCFunctional.h"
-#include "df_total_energy_lapack.h"
 
 // FoR Extended QCLO
 #include "DfCqclomatrix.h"
