@@ -7,7 +7,7 @@
 #include <string>
 
 #ifdef HAVE_EIGEN
-#include <eigen/core>
+#include <Eigen/Core>
 
 class TlSystem_Eigen {
    public:
