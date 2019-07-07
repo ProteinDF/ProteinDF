@@ -2,7 +2,6 @@ set(LIBPDF_HEADERS
   common.h
   datatype.h
   df_cdk_matrix.h
-  df_total_energy_eigen.h
   df_total_energy_lapack.h
   df_total_energy_tmpl.h
   CnError.h
@@ -95,7 +94,6 @@ set(LIBPDF_HEADERS
 
 set(LIBPDF_SOURCES
   df_cdk_matrix.cc
-  df_total_energy_eigen.cc
   df_total_energy_lapack.cc
   CnError.cpp
   CnFile.cc
@@ -184,7 +182,6 @@ set(LIBPDF_SOURCES
 
 set(LIBPPDF_HEADERS
   df_total_energy_parallel_tmpl.h
-  df_total_energy_parallel_eigen.h
   df_total_energy_parallel_lapack.h
   df_total_energy_scalapack.h
   CnFile_parallel.h
@@ -229,7 +226,6 @@ set(LIBPPDF_HEADERS
 
 
 set(LIBPPDF_SOURCES
-  df_total_energy_parallel_eigen.cc
   df_total_energy_parallel_lapack.cc
   df_total_energy_scalapack.cc
   CnFile_parallel.cc
@@ -276,16 +272,27 @@ set(LIBPDF_LIBRARIES
   libpdftl
 )
 
+# Eigen
 if (EIGEN3_FOUND)
   set(LIBPDF_HEADERS
     ${LIBPDF_HEADERS}
     df_total_energy_eigen.h
-  )
+    )
 
   set(LIBPDF_SOURCES
     ${LIBPDF_SOURCES}
     df_total_energy_eigen.cc
-  )
+    )
+
+  set(LIBPPDF_HEADERS
+    ${LIBPPDF_HEADERS}
+    df_total_energy_parallel_eigen.h
+    )
+
+  set(LIBPPDF_SOURCES
+    ${LIBPPDF_SOURCES}
+    df_total_energy_parallel_eigen.cc
+    )
 endif (EIGEN3_FOUND)
 
 # libcint
@@ -297,7 +304,7 @@ if (LIBCINT_FOUND)
   set(LIBPDF_SOURCES
     ${LIBPDF_SOURCES}
     tl_libcint.cpp
-  )  
+  )
   set(LIBPDF_LIBRARIES
     ${LIBPDF_LIBRARIES}
     ${LIBCINT_LIBRARIES}
@@ -305,8 +312,8 @@ if (LIBCINT_FOUND)
 endif()
 
 # libpdf
-add_library(libpdf 
-  ${LIBPDF_HEADERS} 
+add_library(libpdf
+  ${LIBPDF_HEADERS}
   ${LIBPDF_SOURCES}
   )
 target_link_libraries(libpdf INTERFACE
@@ -320,8 +327,8 @@ endif()
 
 # libppdf
 if (MPI_FOUND)
-  add_library(libppdf 
-    ${LIBPPDF_HEADERS} 
+  add_library(libppdf
+    ${LIBPPDF_HEADERS}
     ${LIBPPDF_SOURCES}
     )
   target_link_libraries(libppdf INTERFACE

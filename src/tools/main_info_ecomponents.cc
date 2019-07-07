@@ -9,7 +9,7 @@
 #include "TlSerializeData.h"
 #include "TlUtils.h"
 
-#include "df_total_energy_eigen.h"
+#include "df_total_energy_lapack.h"
 
 int main(int argc, char* argv[]) {
     // parse args
@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    DfTotalEnergy_Eigen dfTotalEnergy(&param);
+    DfTotalEnergy_Lapack dfTotalEnergy(&param);
     dfTotalEnergy.calc(iteration);
     dfTotalEnergy.output();
 
