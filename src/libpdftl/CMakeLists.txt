@@ -161,6 +161,8 @@ if (EIGEN3_FOUND)
     tl_sparse_general_matrix_impl_eigen.h
     tl_sparse_symmetric_matrix_eigen.h
     tl_sparse_symmetric_matrix_impl_eigen.h
+
+    tl_system_eigen.h
     )
 
   set(LIBPDFTL_SOURCES
