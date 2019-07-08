@@ -2,6 +2,8 @@ set(LIBPDF_HEADERS
   common.h
   datatype.h
   df_cdk_matrix.h
+  df_population_lapack.h
+  df_population_tmpl.h
   df_total_energy_lapack.h
   df_total_energy_tmpl.h
   CnError.h
@@ -95,6 +97,7 @@ set(LIBPDF_HEADERS
 set(LIBPDF_SOURCES
   df_cdk_matrix.cc
   df_total_energy_lapack.cc
+  df_population_lapack.cc
   CnError.cpp
   CnFile.cc
   DfCD.cpp
@@ -276,11 +279,13 @@ set(LIBPDF_LIBRARIES
 if (EIGEN3_FOUND)
   set(LIBPDF_HEADERS
     ${LIBPDF_HEADERS}
+    df_population_eigen.h
     df_total_energy_eigen.h
     )
 
   set(LIBPDF_SOURCES
     ${LIBPDF_SOURCES}
+    df_population_eigen.cc
     df_total_energy_eigen.cc
     )
 
