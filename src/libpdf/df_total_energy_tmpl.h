@@ -289,7 +289,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 
             // K
             {
-                SymmetricMatrix E_K;
+                SymmetricMatrix E_K(this->m_nNumOfAOs);
                 this->E_K_ = this->calcE_K(RUN_RKS, PA, &E_K);
 
                 this->E_K_ *= 2.0;
@@ -298,7 +298,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
             }
             // XC
             {
-                SymmetricMatrix E_XC;
+                SymmetricMatrix E_XC(this->m_nNumOfAOs);
                 this->calcE_XC(RUN_RKS, PA, &E_XC);
 
                 E_XC *= 2.0;
@@ -316,7 +316,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 
             // K
             {
-                SymmetricMatrix E_KA, E_KB;
+                SymmetricMatrix E_KA(this->m_nNumOfAOs), E_KB(this->m_nNumOfAOs);
                 this->E_KA_ = this->calcE_K(RUN_UKS_ALPHA, PA, &E_KA);
                 this->E_KB_ = this->calcE_K(RUN_UKS_BETA, PB, &E_KB);
                 this->E_K_ = this->E_KA_ + this->E_KB_;
@@ -325,7 +325,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
             }
             // XC
             {
-                SymmetricMatrix E_XC_A, E_XC_B;
+                SymmetricMatrix E_XC_A(this->m_nNumOfAOs), E_XC_B(this->m_nNumOfAOs);
                 this->calcE_XC(RUN_UKS_ALPHA, PA, &E_XC_A);
                 this->calcE_XC(RUN_UKS_BETA, PB, &E_XC_B);
                 E_XC_A.save(DfObject::m_sWorkDirPath + "/" + "e_XC.uks-alpha.mat");
@@ -344,7 +344,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
             PA += PB;
 
             {
-                SymmetricMatrix E_KA, E_KB;
+                SymmetricMatrix E_KA(this->m_nNumOfAOs), E_KB(this->m_nNumOfAOs);
                 this->E_KA_ = this->calcE_K(RUN_ROKS_ALPHA, PA, &E_KA);
                 this->E_KB_ = this->calcE_K(RUN_ROKS_BETA, PB, &E_KB);
                 this->E_K_ = this->E_KA_ + this->E_KB_;
@@ -352,7 +352,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
                 E_KA.save(DfObject::m_sWorkDirPath + "/" + "e_K.roks-beta.mat");
             }
             {
-                SymmetricMatrix E_XC_A, E_XC_B;
+                SymmetricMatrix E_XC_A(this->m_nNumOfAOs), E_XC_B(this->m_nNumOfAOs);
                 this->calcE_XC(RUN_ROKS_ALPHA, PA, &E_XC_A);
                 this->calcE_XC(RUN_ROKS_BETA, PB, &E_XC_B);
                 E_XC_A.save(DfObject::m_sWorkDirPath + "/" + "e_XC.roks-alpha.mat");
