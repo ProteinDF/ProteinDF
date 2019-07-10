@@ -64,6 +64,9 @@ class TlDenseSymmetricMatrixObject : public TlMatrixObject {
   virtual bool saveText(const std::string& filePath) const;
   virtual void saveText(std::ostream& os) const;
 
+  virtual bool saveCsv(const std::string& filePath) const;
+  virtual void saveCsv(std::ostream& os) const;
+
 #ifdef HAVE_HDF5
   virtual bool loadHdf5(const std::string& filepath, const std::string& h5path);
   virtual bool saveHdf5(const std::string& filepath,
