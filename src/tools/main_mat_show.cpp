@@ -25,9 +25,10 @@
 #include "tl_matrix_utils.h"
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "ghv");
+  TlGetopt opt(argc, argv, "cghv");
 
   const bool bVerbose = (opt["v"] == "defined");
+  const bool bCsvMode = (opt["c"] == "defined");
   const bool bGuessMode = (opt["g"] == "defined");
 
   std::string sPath = opt[1];
@@ -39,7 +40,9 @@ int main(int argc, char* argv[]) {
     TlDenseSymmetricMatrix_Lapack M;
     M.load(sPath);
 
-    if (bGuessMode == true) {
+    if (bCsvMode == true) {
+      M.saveCsv(std::cout);
+    } else if (bGuessMode == true) {
       M.saveText(std::cout);
     } else {
         std::cout << M << std::endl;
@@ -48,7 +51,9 @@ int main(int argc, char* argv[]) {
     TlDenseGeneralMatrix_Lapack M;
     M.load(sPath);
 
-    if (bGuessMode == true) {
+    if (bCsvMode == true) {
+      M.saveCsv(std::cout);
+    } else if (bGuessMode == true) {
       M.saveText(std::cout);
     } else {
         std::cout << M << std::endl;

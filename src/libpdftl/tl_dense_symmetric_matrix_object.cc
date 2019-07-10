@@ -329,6 +329,35 @@ void TlDenseSymmetricMatrixObject::saveText(std::ostream& os) const {
   os << "\n";
 }
 
+bool TlDenseSymmetricMatrixObject::saveCsv(const std::string& filePath) const {
+  bool answer = true;
+
+  std::ofstream ofs;
+  ofs.open(filePath.c_str(), std::ofstream::out);
+
+  if (ofs.good()) {
+    this->saveCsv(ofs);
+  }
+
+  ofs.close();
+
+  return answer;
+}
+
+void TlDenseSymmetricMatrixObject::saveCsv(std::ostream& os) const {
+  const TlMatrixObject::index_type rows = this->getNumOfRows();
+  const TlMatrixObject::index_type cols = this->getNumOfCols();
+
+  for (TlMatrixObject::index_type i = 0; i < rows; ++i) {
+    for (TlMatrixObject::index_type j = 0; j < cols -1; ++j) {
+      os << TlUtils::format(" %16.10e, ", this->get(i, j));
+    }
+    os << TlUtils::format(" %16.10e", this->get(i, cols -1));
+    os << "\n";
+  }
+  os << "\n";
+}
+
 #ifdef HAVE_HDF5
 bool TlDenseSymmetricMatrixObject::loadHdf5(const std::string& filepath,
                                             const std::string& h5path) {
