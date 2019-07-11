@@ -119,3 +119,10 @@ std::valarray<double> DfPopulation::getGrossAtomPop(
 
   return answer;
 }
+
+double DfPopulation::getCharge(int atomIndex) {
+  const Fl_Geometry flGeom((*(this->pPdfParam_))["coordinates"]);
+  const double nucCharge = flGeom.getCharge(atomIndex);
+  const double grossAtomPop = this->grossAtomPopA_[atomIndex];
+  return nucCharge - grossAtomPop;
+}
