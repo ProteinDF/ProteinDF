@@ -43,6 +43,8 @@ class DfPopulation : public DfObject {
 
     // TlDenseGeneralMatrix_Lapack getAtomPopData(const int iteration);
 
+  double getCharge(int atomIndex);
+
  public:
   template <class SymmetricMatrixType>
   double getSumOfElectrons(const SymmetricMatrixType& P);
