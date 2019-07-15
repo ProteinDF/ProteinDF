@@ -88,10 +88,6 @@ void DfIntegrals::main() {
   //     this->outputEndTitle();
   //   }
 
-  // Cholesky Vector
-  this->createCholeskyVectors();
-  this->createCholeskyVectors_K();
-
   // X matrix
   this->createXMatrix();
 
@@ -104,6 +100,10 @@ void DfIntegrals::main() {
     this->prepareGridFree();
     this->createGrids();
   }
+
+  // Cholesky Vector
+  this->createCholeskyVectors();
+  this->createCholeskyVectors_K();
 
   // flush
   this->matrixCache_.flush();
