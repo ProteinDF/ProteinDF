@@ -141,13 +141,12 @@ void TlDenseMatrixMmapObject::resize(const index_type newRow,
   // backup
   const index_type oldRow = this->getNumOfRows();
   const index_type oldCol = this->getNumOfCols();
-  const std::string backupPath = TlFile::getTempFilePath();
   this->syncMmap();
   this->deleteMmap();
-  TlFile::copy(this->filePath_, backupPath);
+  const std::string backupPath = TlFile::getTempFilePath();
+  TlFile::rename(this->filePath_, backupPath);
 
   // new matrix
-  TlFile::remove(this->filePath_);
   this->row_ = newRow;
   this->col_ = newCol;
   this->createNewFile();
@@ -155,8 +154,9 @@ void TlDenseMatrixMmapObject::resize(const index_type newRow,
   assert(this->getNumOfRows() == newRow);
   assert(this->getNumOfCols() == newCol);
 
-  // TlDenseMatrixMmapObject backup(backupPath);
   TlDenseMatrixMmapObject* pBackup = this->copy(backupPath);
+  assert(oldRow == pBackup->getNumOfRows());
+  assert(oldCol == pBackup->getNumOfCols());
   const index_type copyMaxRow = std::min(newRow, oldRow);
   const index_type copyMaxCol = std::min(newCol, oldCol);
   for (index_type c = 0; c < copyMaxCol; ++c) {
@@ -167,7 +167,6 @@ void TlDenseMatrixMmapObject::resize(const index_type newRow,
   delete pBackup;
   pBackup = NULL;
 
-  // delete backup
   TlFile::remove(backupPath);
 }
 
