@@ -192,9 +192,8 @@ void TlDenseMatrix_IO_object::resize(const TlMatrixObject::index_type newRow,
   this->finalize();
 
   // copy
-  const std::string tempFilePath = TlFile::getTempFilePath();
-  TlFile::copy(this->filePath_, tempFilePath);
-  TlFile::remove(this->filePath_);
+  const std::string tempFilePath = this->filePath_ + ".bak";
+  TlFile::rename(this->filePath_, tempFilePath);
   assert(TlFile::isExistFile(this->filePath_) == false);
 
   // create new file matrix
