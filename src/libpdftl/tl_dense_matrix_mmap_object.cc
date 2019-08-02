@@ -143,8 +143,9 @@ void TlDenseMatrixMmapObject::resize(const index_type newRow,
   const index_type oldCol = this->getNumOfCols();
   this->syncMmap();
   this->deleteMmap();
-  const std::string backupPath = TlFile::getTempFilePath();
-  TlFile::rename(this->filePath_, backupPath);
+
+  const std::string backupPath = this->filePath_ + ".bak";
+  const int ret = TlFile::rename(this->filePath_, backupPath);
 
   // new matrix
   this->row_ = newRow;
