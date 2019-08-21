@@ -122,7 +122,13 @@ if (MPI_FOUND)
 
   add_test(
     NAME xtest.mpi
-    COMMAND ${MPIEXEC} ${MPIEXEC_FLAGS} ${MPIEXEC_PREFLAGS} ${MPIEXEC_NUMPROC_FLAG} ${MPI_PROCS} $<TARGET_FILE:pdf-xtest.MPI> ${MPIEXEC_POSTFLAGS}
+    COMMAND ${MPIEXEC}
+      ${MPIEXEC_FLAGS} 
+      ${MPIEXEC_NUMPROC_FLAG} 
+      ${MPI_PROCS} 
+      ${MPIEXEC_PREFLAGS}
+      $<TARGET_FILE:pdf-xtest.MPI> 
+      ${MPIEXEC_POSTFLAGS}
     )
     set_property(TEST xtest.mpi PROPERTY LABELS xtest.mpi)
     set_property(TEST xtest.mpi PROPERTY RUN_SERIAL)
