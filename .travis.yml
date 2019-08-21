@@ -4,15 +4,20 @@ services:
   - docker
 env:
   global:
-    - PDF_BUILDER_VER=develop
-    - BRANCH=develop
+    - PDF_BUILDER_VER=latest
+    - PDF_BRIDGE_BRANCH=master
+    - PDF_PYTOOLS_BRANCH=master
+    - OMP_NUM_THREADS=4
+    - OMP_SCHEDULE=dynamic
+    - OMPI_MCA_btl_vader_single_copy_mechanism=none
+    - MPIEXEC="mpiexec -n 4 --oversubscribe --allow-run-as-root"
 before_script:
   - docker pull hiracchi/pdf-builder:${PDF_BUILDER_VER}
 script:
   - docker run -d --name pdf -v "${PWD}:/work/ProteinDF" hiracchi/pdf-builder:${PDF_BUILDER_VER}
-  - docker exec -it pdf pdf-checkout.sh --branch ${BRANCH} ProteinDF_bridge
-  - docker exec -it pdf pdf-checkout.sh --branch ${BRANCH} ProteinDF_pytools
-  - docker exec -it pdf pdf-build.sh --srcdir /work/ProteinDF
+  - docker exec -it pdf pdf-checkout.sh --branch ${PDF_BRIDGE_BRANCH} ProteinDF_bridge
+  - docker exec -it pdf pdf-checkout.sh --branch ${PDF_PYTOOLS_BRANCH} ProteinDF_pytools
+  - docker exec -it --env MPIEXEC_FLAGS='--oversubscribe;--allow-run-as-root' pdf pdf-build.sh --srcdir /work/ProteinDF
   - docker exec -it pdf pdf-build.sh --srcdir /work/ProteinDF_bridge
   - docker exec -it pdf pdf-build.sh --srcdir /work/ProteinDF_pytools
   - "travis_wait 30 sleep 1800 &"
