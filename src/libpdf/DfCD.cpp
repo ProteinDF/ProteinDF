@@ -21,6 +21,7 @@
 #endif  // _OPENMP
 
 #include <numeric>
+#include <valarray>
 #include <set>
 
 #include "CnError.h"
@@ -1441,28 +1442,30 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(
         assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
 
         // CD calc
-        TlDenseVector_Lapack L_pm = pL->getRowVector(pivot_m);
-        L_pm.resize(numOfCDVcts + 1);
-        // assert(L_pm.getSize() == numOfCDVcts + 1);
+        std::valarray<double> L_pm(0.0, numOfCDVcts + 1);
+        const std::size_t copyCount_m = pL->getRowVector(pivot_m, &(L_pm[0]), numOfCDVcts + 1);
+        assert(copyCount_m == numOfCDVcts + 1);
 
         std::vector<double> L_xm(numOf_G_cols, 0.0);
 #pragma omp parallel for schedule(runtime)
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i =
                 pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
-            TlDenseVector_Lapack L_pi = pL->getRowVector(pivot_i);
-            L_pi.resize(numOfCDVcts + 1);
-            // TlDenseVector_Lapack tmp = L_pi.dotInPlace(L_pm);
-            // const double sum_ll = tmp.sum();
-            const double sum_ll = L_pi.dotInPlace(L_pm).sum();
+            
+            std::valarray<double> L_pi(0.0, numOfCDVcts + 1);
+            const std::size_t copyCount_i = pL->getRowVector(pivot_i, &(L_pi[0]), numOfCDVcts + 1);
+            assert(copyCount_i == numOfCDVcts + 1);
+
+            const double sum_ll = (L_pm * L_pi).sum();
             const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
 
-#pragma omp atomic
+//#pragma omp atomic
             L_xm[i] += l_m_pi;
-#pragma omp atomic
+//#pragma omp atomic
             diagonals[pivot_i] -= l_m_pi * l_m_pi;
         }
 
+#pragma omp parallel for schedule(runtime)
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i =
                 pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
