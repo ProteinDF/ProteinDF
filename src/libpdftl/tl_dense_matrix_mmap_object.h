@@ -29,6 +29,8 @@ class TlDenseMatrixMmapObject : public TlMatrixObject {
                             const TlDenseVector_Lapack& v);
   virtual std::vector<double> getRowVector(const index_type row) const;
   virtual std::vector<double> getColVector(const index_type col) const;
+  virtual std::size_t getRowVector(const index_type row, double* pBuf, std::size_t maxCount) const;
+  virtual std::size_t getColVector(const index_type col, double* pBuf, std::size_t maxCount) const;
 
  protected:
   virtual TlDenseMatrixMmapObject* copy(const std::string& path) const = 0;
