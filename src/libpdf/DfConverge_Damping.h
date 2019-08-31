@@ -40,7 +40,7 @@ class DfConverge_Damping : public DfConverge {
   template <class SymmetricMatrixType>
   void convergeKSMatrix(DfObject::RUN_TYPE runType);
 
-  template <class SymmetricMatrixType>
+  template <class SymmetricMatrix>
   void convergePMatrix(DfObject::RUN_TYPE runType);
 
  protected:
@@ -103,33 +103,37 @@ void DfConverge_Damping::convergeKSMatrix(const DfObject::RUN_TYPE runType) {
   }
 }
 
-template <class SymmetricMatrixType>
+template <class SymmetricMatrix>
 void DfConverge_Damping::convergePMatrix(const DfObject::RUN_TYPE runType) {
   const int iteration = this->m_nIteration;
 
   if (iteration >= this->m_nStartIteration) {
     this->log_.info(" damping to density matrix");
 
-    // Fpq damping
-    this->log_.info(" load1");
-    SymmetricMatrixType currPpq;
-    currPpq =
-        DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration - 1);
+    SymmetricMatrix currPpq =
+        DfObject::getPpqMatrix<SymmetricMatrix>(runType, iteration - 1);
 
-    this->log_.info(" load2");
-    SymmetricMatrixType prevPpq;
-    prevPpq =
-        DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration - 2);
+    SymmetricMatrix prevPpq =
+        DfObject::getPpqMatrix<SymmetricMatrix>(runType, iteration - 2);
 
-    // get damped Ppq
+    SymmetricMatrix currP_spin = this->getSpinDensityMatrix<SymmetricMatrix>(
+        runType, this->m_nIteration - 1);
+    SymmetricMatrix prevP_spin = this->getSpinDensityMatrix<SymmetricMatrix>(
+        runType, this->m_nIteration - 2);
+
     this->log_.info(
         TlUtils::format(" damping factor = %f", this->m_dDampingFactor));
     currPpq *= (1.0 - this->m_dDampingFactor);
     prevPpq *= this->m_dDampingFactor;
     currPpq += prevPpq;
 
-    // write damped current Ppq
+    currP_spin *= (1.0 - this->m_dDampingFactor);
+    prevP_spin *= this->m_dDampingFactor;
+    currP_spin += prevP_spin;
+
     DfObject::savePpqMatrix(runType, iteration - 1, currPpq);
+    DfObject::saveSpinDensityMatrix<SymmetricMatrix>(runType, iteration - 1,
+                                                     currP_spin);
   }
 }
 
