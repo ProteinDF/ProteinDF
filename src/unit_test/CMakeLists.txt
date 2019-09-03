@@ -92,7 +92,7 @@ endif(EIGEN3_FOUND AND VIENNACL_FOUND)
 
 
 add_executable(pdf-xtest ${PDF_XTEST_SOURCES})
-target_link_libraries(pdf-xtest libpdf libpdftl ${OpenCL_LIBRARIES} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} Threads::Threads)
+target_link_libraries(pdf-xtest libpdf libpdftl ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} Threads::Threads)
 
 if (NOT DEFINED PDF_XTEST_FLAG)
   if (NOT DEFINED ENV{PDF_XTEST_FLAG})
@@ -113,7 +113,7 @@ set_property(TEST xtest PROPERTY TIMEOUT 120)
 
 if (MPI_FOUND)
   add_executable(pdf-xtest.MPI ${PDF_XTEST_MPI_SOURCES})
-  target_link_libraries(pdf-xtest.MPI libppdf libppdftl libpdf libpdftl ${OpenCL_LIBRARIES} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} Threads::Threads)
+  target_link_libraries(pdf-xtest.MPI libppdf libppdftl libpdf libpdftl ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} Threads::Threads)
 
   # cf.) MPIEXEC_MAX_NUMPROCS
   if (NOT DEFINED MPI_PROCS)
