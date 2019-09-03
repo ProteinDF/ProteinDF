@@ -314,16 +314,14 @@ TlDenseGeneralMatrix_ImplViennaCL::reverseColumns() {
 // ---------------------------------------------------------------------------
 // protected
 // ---------------------------------------------------------------------------
-void TlDenseGeneralMatrix_ImplViennaCL::vtr2mat(
-    const std::vector<double>& vtr) {
+void TlDenseGeneralMatrix_ImplViennaCL::vtr2mat(const double* pBuf) {
     const std::size_t row = this->getNumOfRows();
     const std::size_t col = this->getNumOfCols();
-    assert(vtr.size() == row * col);
 
 #ifdef HAVE_EIGEN
     {
         const Eigen::MatrixXd tmp =
-            Eigen::Map<const Eigen::MatrixXd>(&(vtr[0]), row, col);
+            Eigen::Map<const Eigen::MatrixXd>(pBuf, row, col);
         viennacl::copy(tmp, this->matrix_);
     }
 #else
@@ -331,7 +329,7 @@ void TlDenseGeneralMatrix_ImplViennaCL::vtr2mat(
         std::size_t i = 0;
         for (std::size_t c = 0; c < col; ++c) {
             for (std::size_t r = 0; r < row; ++r) {
-                this->set(r, c, vtr[i]);
+                this->set(r, c, pBuf[i]);
                 ++i;
             }
         }

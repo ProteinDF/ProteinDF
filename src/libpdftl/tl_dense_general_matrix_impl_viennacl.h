@@ -39,7 +39,7 @@ class TlDenseGeneralMatrix_ImplViennaCL : public TlDenseMatrix_ImplObject {
     explicit TlDenseGeneralMatrix_ImplViennaCL(
         const TlMatrixObject::index_type row = 0,
         const TlMatrixObject::index_type col = 0,
-        double const * const pBuf = NULL);
+        double const* const pBuf = NULL);
     TlDenseGeneralMatrix_ImplViennaCL(
         const TlDenseGeneralMatrix_ImplViennaCL& rhs);
     TlDenseGeneralMatrix_ImplViennaCL(
@@ -111,8 +111,8 @@ class TlDenseGeneralMatrix_ImplViennaCL : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // protected
     // ---------------------------------------------------------------------------
-    protected:
-        void vtr2mat(const std::vector<double>& vtr);
+   protected:
+    void vtr2mat(const double* pBuf);
 
     // ---------------------------------------------------------------------------
     // variables
