@@ -73,7 +73,7 @@ class DfCD : public DfObject {
 
    protected:
     std::size_t argmax_pivot(const std::vector<double>& diagonals,
-                             const std::vector<int>& pivot,
+                             const std::vector<std::size_t>& pivot,
                              const int pivotBegin) const;
 
    protected:
@@ -243,39 +243,27 @@ class DfCD : public DfObject {
     // [integral] calc Cholesky Vectors
     // ----------------------------------------------------------------------------
    protected:
+    // typedef: functional pointer
+    typedef void (DfCD::*CalcDiagonalsFunc)(const TlOrbitalInfoObject&,
+                                            PQ_PairArray*,
+                                            std::vector<double>*);
+    typedef void (DfCD::*GetSuperMatrixElementsFunc)(
+        const TlOrbitalInfoObject&, const index_type,
+        const std::vector<index_type>&, const PQ_PairArray&,
+        std::vector<double>*);
+
     /// calc Chokesky Vectors <pq|rs> for symmetric basis
     virtual TlDenseGeneralMatrix_arrays_RowOriented
     calcCholeskyVectorsOnTheFlyS_new(
         const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path,
-        const double epsilon,
-        void (DfCD::*calcDiagonalsFunc)(const TlOrbitalInfoObject&,
-                                        PQ_PairArray*, std::vector<double>*),
-        std::vector<double> (DfCD::*getSuperMatrixElements)(
-            const TlOrbitalInfoObject&, const index_type,
-            const std::vector<index_type>&, const PQ_PairArray&));
-
-    // typedef: functional pointer
-    typedef void (DfCD::*CalcDiagonalsFunc)(const TlOrbitalInfoObject&, PQ_PairArray*,
-                                      std::vector<double>*);
-    typedef std::vector<double> (DfCD::*GetSuperMatrixElements)(
-        const TlOrbitalInfoObject&, const index_type,
-        const std::vector<index_type>&, const PQ_PairArray&);
+        const double epsilon, CalcDiagonalsFunc calcDiagonalsFunc,
+        GetSuperMatrixElementsFunc getSuperMatrixElements);
 
     /// calc Chokesky Vectors <pq|rs> for symmetric basis (mmap)
-    // void calcCholeskyVectorsOnTheFlyS(
-    //     const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path,
-    //     const double epsilon,
-    //     void (DfCD::*calcDiagonalsFunc)(const TlOrbitalInfoObject&,
-    //                                     PQ_PairArray*, std::vector<double>*),
-    //     std::vector<double> (DfCD::*getSuperMatrixElements)(
-    //         const TlOrbitalInfoObject&, const index_type,
-    //         const std::vector<index_type>&, const PQ_PairArray&),
-    //     TlDenseGeneralMatrix_mmap* pL);
     void calcCholeskyVectorsOnTheFlyS(
         const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path,
-        const double epsilon,
-        CalcDiagonalsFunc calcDiagonalsFunc,
-        GetSuperMatrixElements getSuperMatrixElements,
+        const double epsilon, CalcDiagonalsFunc calcDiagonalsFunc,
+        GetSuperMatrixElementsFunc getSuperMatrixElements,
         TlDenseGeneralMatrix_mmap* pL);
 
     /// calc Chokesky Vectors <Pq|Rs> for assymmetric basis
@@ -532,9 +520,10 @@ class DfCD : public DfObject {
    public:
     /// 与えられたsuper matrix の要素に対し、2電子積分を計算して代入する。
     /// On-the-Fly時に使用する。
-    virtual std::vector<double> getSuperMatrixElements(
+    virtual void getSuperMatrixElements(
         const TlOrbitalInfoObject& orbInfo, const index_type G_row,
-        const std::vector<index_type>& G_col_list, const PQ_PairArray& I2PQ);
+        const std::vector<index_type>& G_col_list, const PQ_PairArray& I2PQ,
+        std::vector<double>* pElements);
 
    protected:
     /// 要求されたsuper matrixの行列要素のうち、必要なshell
@@ -768,9 +757,10 @@ class DfCD : public DfObject {
     bool debugCheckCD_;
 
     // K full ----------------------------------------------------------
-    std::vector<double> getSuperMatrixElements_K_full(
+    void getSuperMatrixElements_K_full(
         const TlOrbitalInfoObject& orbInfo, const index_type G_row,
-        const std::vector<index_type>& G_col_list, const PQ_PairArray& I2PQ);
+        const std::vector<index_type>& G_col_list, const PQ_PairArray& I2PQ,
+        std::vector<double>* pElements);
     virtual std::vector<DfCD::IndexPair4S> getCalcList_K_full(
         const TlOrbitalInfoObject& orbInfo, const index_type G_row,
         const std::vector<index_type>& G_col_list, const index_type start,
@@ -783,9 +773,10 @@ class DfCD : public DfObject {
                                        const PQ_PairArray& I2PQ);
 
     // K half ----------------------------------------------------------
-    std::vector<double> getSuperMatrixElements_K_half(
+    void getSuperMatrixElements_K_half(
         const TlOrbitalInfoObject& orbInfo, const index_type G_row,
-        const std::vector<index_type>& G_col_list, const PQ_PairArray& I2PQ);
+        const std::vector<index_type>& G_col_list, const PQ_PairArray& I2PQ,
+        std::vector<double>* pElements);
 
     virtual std::vector<DfCD::IndexPair4S> getCalcList_K_half(
         const TlOrbitalInfoObject& orbInfo, const index_type G_row,

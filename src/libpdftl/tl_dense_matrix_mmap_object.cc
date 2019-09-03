@@ -137,41 +137,53 @@ void TlDenseMatrixMmapObject::deleteMmap() {
     this->mmapBegin_ = NULL;
 }
 
-void TlDenseMatrixMmapObject::resize(const index_type newRow,
-                                     const index_type newCol) {
-    // backup
-    const index_type oldRow = this->getNumOfRows();
-    const index_type oldCol = this->getNumOfCols();
-    this->syncMmap();
-    this->deleteMmap();
+// void TlDenseMatrixMmapObject::resize(const index_type newRow,
+//                                      const index_type newCol) {
+//     std::cout << TlUtils::format(
+//                      "TlDenseMatrixMmapObject::resize(%d, %d) enter", newRow,
+//                      newCol)
+//               << std::endl;
+//     // backup
+//     const index_type oldRow = this->getNumOfRows();
+//     const index_type oldCol = this->getNumOfCols();
+//     // this->syncMmap();
+//     this->deleteMmap();
 
-    const std::string backupPath = this->filePath_ + ".bak";
-    const int ret = TlFile::rename(this->filePath_, backupPath);
-    assert(ret == 0);
+//     const std::string backupPath = this->filePath_ + ".bak";
+//     const int ret = TlFile::rename(this->filePath_, backupPath);
+//     assert(ret == 0);
 
-    // new matrix
-    this->row_ = newRow;
-    this->col_ = newCol;
-    this->createNewFile();
-    this->openFile();
-    assert(this->getNumOfRows() == newRow);
-    assert(this->getNumOfCols() == newCol);
+//     // new matrix
+//     this->row_ = newRow;
+//     this->col_ = newCol;
+//     std::cout << "TlDenseMatrixMmapObject::resize() createNewFile" <<
+//     std::endl; this->createNewFile(); std::cout <<
+//     "TlDenseMatrixMmapObject::resize() openfile" << std::endl;
+//     this->openFile();
+//     assert(this->getNumOfRows() == newRow);
+//     assert(this->getNumOfCols() == newCol);
 
-    TlDenseMatrixMmapObject* pBackup = this->copy(backupPath);
-    assert(oldRow == pBackup->getNumOfRows());
-    assert(oldCol == pBackup->getNumOfCols());
-    const index_type copyMaxRow = std::min(newRow, oldRow);
-    const index_type copyMaxCol = std::min(newCol, oldCol);
-    for (index_type c = 0; c < copyMaxCol; ++c) {
-        for (index_type r = 0; r < copyMaxRow; ++r) {
-            this->set(r, c, pBackup->get(r, c));
-        }
-    }
-    delete pBackup;
-    pBackup = NULL;
+//     std::cout << "TlDenseMatrixMmapObject::resize() copy" << std::endl;
+//     TlDenseMatrixMmapObject* pBackup = this->copy(backupPath);
+//     std::cout << "TlDenseMatrixMmapObject::resize() set" << std::endl;
+//     assert(oldRow == pBackup->getNumOfRows());
+//     assert(oldCol == pBackup->getNumOfCols());
+//     const index_type copyMaxRow = std::min(newRow, oldRow);
+//     const index_type copyMaxCol = std::min(newCol, oldCol);
+//     for (index_type c = 0; c < copyMaxCol; ++c) {
+//         for (index_type r = 0; r < copyMaxRow; ++r) {
+//             this->set(r, c, pBackup->get(r, c));
+//         }
+//     }
+//     delete pBackup;
+//     pBackup = NULL;
 
-    TlFile::remove(backupPath);
-}
+//     TlFile::remove(backupPath);
+//     std::cout << TlUtils::format("TlDenseMatrixMmapObject::resize(%d, %d)
+//     end",
+//                                  newRow, newCol)
+//               << std::endl;
+// }
 
 std::size_t TlDenseMatrixMmapObject::getMemSize() const { return 0; }
 
@@ -277,7 +289,7 @@ std::size_t TlDenseMatrixMmapObject::getColVector(
     const std::size_t copyCount = std::min(count, numOfRows);
 
 #pragma omp parallel for schedule(runtime)
-    for (index_type i = 0; i < copyCount; ++i) {
+    for (std::size_t i = 0; i < copyCount; ++i) {
         pBuf[i] = this->get(i, col);
     }
 
