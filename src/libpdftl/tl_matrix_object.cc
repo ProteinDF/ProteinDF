@@ -30,68 +30,117 @@ TlMatrixObject::TlMatrixObject(const MatrixType matrixType,
       col_(col),
       log_(TlLogging::getInstance()) {}
 
-TlMatrixObject::size_type TlMatrixObject::getNumOfElements_CSFD() const {
-  const size_type row = static_cast<size_type>(this->getNumOfRows());
-  const size_type col = static_cast<size_type>(this->getNumOfCols());
+TlMatrixObject::size_type TlMatrixObject::getNumOfElements() const {
+    TlMatrixObject::size_type elements = 0;
 
-  const size_type elements = row * col;
-  return elements;
+    switch (this->matrixType_) {
+        case TlMatrixObject::CSFD:
+            elements = this->getNumOfElements_CSFD();
+            break;
+
+        case TlMatrixObject::RSFD:
+            elements = this->getNumOfElements_RSFD();
+            break;
+
+        case TlMatrixObject::RLHD:
+            elements = this->getNumOfElements_RLHD();
+            break;
+
+        default:
+            this->log_.critical("program error: unknown matrix type");
+            break;
+    }
+
+    return elements;
+}
+
+TlMatrixObject::size_type TlMatrixObject::getNumOfElements_CSFD() const {
+    const size_type row = static_cast<size_type>(this->getNumOfRows());
+    const size_type col = static_cast<size_type>(this->getNumOfCols());
+
+    const size_type elements = row * col;
+    return elements;
 }
 
 TlMatrixObject::size_type TlMatrixObject::getNumOfElements_RSFD() const {
-  // the same value of CSFD!
-  return this->getNumOfElements_CSFD();
+    // the same value of CSFD!
+    return this->getNumOfElements_CSFD();
 }
 
 TlMatrixObject::size_type TlMatrixObject::getNumOfElements_RLHD() const {
-  const size_type dim = static_cast<size_type>(this->getNumOfRows());
-  assert(dim == static_cast<size_type>(this->getNumOfCols()));
+    const size_type dim = static_cast<size_type>(this->getNumOfRows());
+    assert(dim == static_cast<size_type>(this->getNumOfCols()));
 
-  const size_type elements = dim * (dim + 1) / 2;
-  return elements;
+    const size_type elements = dim * (dim + 1) / 2;
+    return elements;
+}
+
+TlMatrixObject::size_type TlMatrixObject::getIndex(index_type row,
+                                                   index_type col) const {
+    TlMatrixObject::size_type index = 0;
+
+    switch (this->matrixType_) {
+        case TlMatrixObject::CSFD:
+            index = this->getIndex_CSFD(row, col);
+            break;
+
+        case TlMatrixObject::RSFD:
+            index = this->getIndex_RSFD(row, col);
+            break;
+
+        case TlMatrixObject::RLHD:
+            index = this->getIndex_RLHD(row, col);
+            break;
+
+        default:
+            this->log_.critical("program error: unknown matrix type");
+            break;
+    }
+
+    return index;
 }
 
 TlMatrixObject::size_type TlMatrixObject::getIndex_RSFD(index_type row,
                                                         index_type col) const {
-  assert(0 <= row);
-  assert(row < this->getNumOfRows());
-  assert(0 <= col);
-  assert(col < this->getNumOfCols());
+    assert(0 <= row);
+    assert(row < this->getNumOfRows());
+    assert(0 <= col);
+    assert(col < this->getNumOfCols());
 
-  const size_type r = static_cast<size_type>(row);
-  const size_type c = static_cast<size_type>(col);
-  const size_type maxC = static_cast<size_type>(this->getNumOfCols());
+    const size_type r = static_cast<size_type>(row);
+    const size_type c = static_cast<size_type>(col);
+    const size_type maxC = static_cast<size_type>(this->getNumOfCols());
 
-  const size_type addr = r * maxC + c;
-  return addr;
+    const size_type addr = r * maxC + c;
+    return addr;
 }
 
 TlMatrixObject::size_type TlMatrixObject::getIndex_CSFD(index_type row,
                                                         index_type col) const {
-  assert(0 <= row);
-  assert(row < this->getNumOfRows());
-  assert(0 <= col);
-  assert(col < this->getNumOfCols());
+    assert(0 <= row);
+    assert(row < this->getNumOfRows());
+    assert(0 <= col);
+    assert(col < this->getNumOfCols());
 
-  const size_type r = static_cast<size_type>(row);
-  const size_type c = static_cast<size_type>(col);
-  const size_type maxR = static_cast<size_type>(this->getNumOfRows());
+    const size_type r = static_cast<size_type>(row);
+    const size_type c = static_cast<size_type>(col);
+    const size_type maxR = static_cast<size_type>(this->getNumOfRows());
 
-  const size_type addr = c * maxR + r;
-  return addr;
+    const size_type addr = c * maxR + r;
+    return addr;
 }
 
 TlMatrixObject::size_type TlMatrixObject::getIndex_RLHD(index_type row,
                                                         index_type col) const {
-  if (row < col) {
-    std::swap(row, col);
-  }
+    if (row < col) {
+        std::swap(row, col);
+    }
 
-  const size_type r = static_cast<size_type>(row);
-  const size_type c = static_cast<size_type>(col);
+    const size_type r = static_cast<size_type>(row);
+    const size_type c = static_cast<size_type>(col);
 
-  const size_type addr = r * (r + 1) / 2 + c;
-  return addr;
+    const size_type addr = r * (r + 1) / 2 + c;
+    return addr;
 }
 
 // TlVector TlMatrixObject::getRowVector(const int row) const {
@@ -121,34 +170,34 @@ TlMatrixObject::size_type TlMatrixObject::getIndex_RLHD(index_type row,
 // }
 
 std::ostream& operator<<(std::ostream& stream, const TlMatrixObject& mat) {
-  const TlMatrixObject::index_type numOfRows = mat.getNumOfRows();
-  const TlMatrixObject::index_type numOfCols = mat.getNumOfCols();
+    const TlMatrixObject::index_type numOfRows = mat.getNumOfRows();
+    const TlMatrixObject::index_type numOfCols = mat.getNumOfCols();
 
-  for (TlMatrixObject::index_type ord = 0; ord < numOfCols; ord += 10) {
-    stream << "       ";
-    for (TlMatrixObject::index_type j = ord;
-         ((j < ord + 10) && (j < numOfCols)); ++j) {
-      stream << TlUtils::format("   %5d th", j + 1);
+    for (TlMatrixObject::index_type ord = 0; ord < numOfCols; ord += 10) {
+        stream << "       ";
+        for (TlMatrixObject::index_type j = ord;
+             ((j < ord + 10) && (j < numOfCols)); ++j) {
+            stream << TlUtils::format("   %5d th", j + 1);
+        }
+        stream << "\n ----";
+
+        for (TlMatrixObject::index_type j = ord;
+             ((j < ord + 10) && (j < numOfCols)); ++j) {
+            stream << "-----------";
+        }
+        stream << "----\n";
+
+        for (TlMatrixObject::index_type i = 0; i < numOfRows; ++i) {
+            stream << TlUtils::format(" %5d  ", i + 1);
+
+            for (TlMatrixObject::index_type j = ord;
+                 ((j < ord + 10) && (j < numOfCols)); ++j) {
+                stream << TlUtils::format(" %10.6lf", mat.get(i, j));
+            }
+            stream << "\n";
+        }
+        stream << "\n\n";
     }
-    stream << "\n ----";
 
-    for (TlMatrixObject::index_type j = ord;
-         ((j < ord + 10) && (j < numOfCols)); ++j) {
-      stream << "-----------";
-    }
-    stream << "----\n";
-
-    for (TlMatrixObject::index_type i = 0; i < numOfRows; ++i) {
-      stream << TlUtils::format(" %5d  ", i + 1);
-
-      for (TlMatrixObject::index_type j = ord;
-           ((j < ord + 10) && (j < numOfCols)); ++j) {
-        stream << TlUtils::format(" %10.6lf", mat.get(i, j));
-      }
-      stream << "\n";
-    }
-    stream << "\n\n";
-  }
-
-  return stream;
+    return stream;
 }
