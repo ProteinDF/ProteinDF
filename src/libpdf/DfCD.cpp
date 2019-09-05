@@ -823,13 +823,14 @@ TlDenseSymmetricMatrix_Lapack DfCD::getPMatrix(const RUN_TYPE runType,
 void DfCD::getK(const RUN_TYPE runType) {
     switch (this->fastCDK_mode_) {
         case FASTCDK_NONE:
-            // if (this->useMmapMatrix_) {
-            this->log_.info("load L on mmap");
-            this->getK_byLjk_defMatrix<TlDenseGeneralMatrix_mmap>(runType);
-            //} else {
-            // this->log_.info("load L on array");
-            // this->getK_byLjk_defMatrix<TlDenseGeneralMatrix_arrays_ColOriented>(runType);
-            //}
+            if (this->useMmapMatrix_) {
+                this->log_.info("load L on mmap");
+                this->getK_byLjk_defMatrix<TlDenseGeneralMatrix_mmap>(runType);
+            } else {
+                this->log_.info("load L on array");
+                this->getK_byLjk_defMatrix<
+                    TlDenseGeneralMatrix_arrays_ColOriented>(runType);
+            }
             break;
 
         case FASTCDK_DEBUG_FULL_SUPERMATRIX:
