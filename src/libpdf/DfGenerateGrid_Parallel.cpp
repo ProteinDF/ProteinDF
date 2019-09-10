@@ -28,141 +28,148 @@ DfGenerateGrid_Parallel::DfGenerateGrid_Parallel(TlSerializeData* pPdfParam)
 DfGenerateGrid_Parallel::~DfGenerateGrid_Parallel() {}
 
 void DfGenerateGrid_Parallel::logger(const std::string& str) const {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  if (rComm.isMaster() == true) {
-    DfGenerateGrid::logger(str);
-  }
+    if (rComm.isMaster() == true) {
+        DfGenerateGrid::logger(str);
+    }
 }
 
 void DfGenerateGrid_Parallel::makeTable() {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    DfGenerateGrid::makeTable();
-  }
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        DfGenerateGrid::makeTable();
+    }
 
-  rComm.broadcast(this->maxRadii_);
+    rComm.broadcast(this->maxRadii_);
 }
 
 TlDenseGeneralMatrix_Lapack DfGenerateGrid_Parallel::getOMatrix() {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  TlDenseGeneralMatrix_Lapack O;
-  if (rComm.isMaster() == true) {
-    O = DfGenerateGrid::getOMatrix();
-  }
-  rComm.broadcast(&O);
+    TlDenseGeneralMatrix_Lapack O;
+    if (rComm.isMaster() == true) {
+        O = DfGenerateGrid::getOMatrix();
+    }
+    rComm.broadcast(&O);
 
-  return O;
+    return O;
 }
 
 void DfGenerateGrid_Parallel::generateGrid(
     const TlDenseGeneralMatrix_Lapack& O) {
-  // if (this->isMasterSlave_ == true) {
-  //     this->generateGrid_MS();
-  // } else {
-  this->generateGrid_DC(O);
-  // }
+    // if (this->isMasterSlave_ == true) {
+    //     this->generateGrid_MS();
+    // } else {
+    this->generateGrid_DC(O);
+    // }
 
-  this->gatherGridData();
+    this->gatherGridData();
 }
 
 void DfGenerateGrid_Parallel::generateGrid_DC(
     const TlDenseGeneralMatrix_Lapack& O) {
-  this->logger("generate grid by DC");
-  TlCommunicate& rComm = TlCommunicate::getInstance();
+    this->logger("generate grid by DC");
+    TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  const int nEndAtomNumber = this->m_nNumOfAtoms;
+    const int nEndAtomNumber = this->m_nNumOfAtoms;
 
-  const int nProc = rComm.getNumOfProc();
-  const int nRank = rComm.getRank();
-  const int nRange = nEndAtomNumber;
-  const int nInterval =
-      (nRange + (nProc - 1)) / nProc;         // +(nProc-1) は余り対策
-  const int nLocalStart = nRank * nInterval;  // nProc = 0, 1, 2, ...
-  const int nLocalEnd = std::min((nLocalStart + nInterval), nEndAtomNumber);
+    const int nProc = rComm.getNumOfProc();
+    const int nRank = rComm.getRank();
+    const int nRange = nEndAtomNumber;
+    const int nInterval =
+        (nRange + (nProc - 1)) / nProc;         // +(nProc-1) は余り対策
+    const int nLocalStart = nRank * nInterval;  // nProc = 0, 1, 2, ...
+    const int nLocalEnd = std::min((nLocalStart + nInterval), nEndAtomNumber);
 
-  std::size_t numOfGrids = 0;
-  for (int atom = nLocalStart; atom < nLocalEnd; ++atom) {
-    std::vector<double> coordX;
-    std::vector<double> coordY;
-    std::vector<double> coordZ;
-    std::vector<double> weight;
+    std::size_t numOfGrids = 0;
+#pragma omp parallel for schedule(runtime)
+    for (int atom = nLocalStart; atom < nLocalEnd; ++atom) {
+        std::vector<double> coordX;
+        std::vector<double> coordY;
+        std::vector<double> coordZ;
+        std::vector<double> weight;
 
-    if ((this->m_gridType == SG_1) || (this->m_gridType == USER)) {
-      DfGenerateGrid::generateGrid_SG1(O, atom, &coordX, &coordY, &coordZ,
-                                       &weight);
-    } else {
-      DfGenerateGrid::generateGrid(O, atom, &coordX, &coordY, &coordZ, &weight);
+        if ((this->m_gridType == SG_1) || (this->m_gridType == USER)) {
+            DfGenerateGrid::generateGrid_SG1(O, atom, &coordX, &coordY, &coordZ,
+                                             &weight);
+        } else {
+            DfGenerateGrid::generateGrid(O, atom, &coordX, &coordY, &coordZ,
+                                         &weight);
+        }
+
+        // store grid matrix
+        const std::size_t numOfAtomGrids = weight.size();
+#pragma omp critical(DfGenerateGrid__generateGrid)
+        {
+            this->grdMat_.resize(numOfGrids + numOfAtomGrids,
+                                 this->numOfColsOfGrdMat_);
+            for (std::size_t i = 0; i < numOfAtomGrids; ++i) {
+                this->grdMat_.set(numOfGrids, 0, coordX[i]);
+                this->grdMat_.set(numOfGrids, 1, coordY[i]);
+                this->grdMat_.set(numOfGrids, 2, coordZ[i]);
+                this->grdMat_.set(numOfGrids, 3, weight[i]);
+                this->grdMat_.set(numOfGrids, 4, atom);
+                ++numOfGrids;
+            }
+        }
     }
-
-    // store grid matrix
-    const std::size_t numOfAtomGrids = weight.size();
-    this->grdMat_.resize(numOfGrids + numOfAtomGrids, this->numOfColsOfGrdMat_);
-    for (std::size_t i = 0; i < numOfAtomGrids; ++i) {
-      this->grdMat_.set(numOfGrids, 0, coordX[i]);
-      this->grdMat_.set(numOfGrids, 1, coordY[i]);
-      this->grdMat_.set(numOfGrids, 2, coordZ[i]);
-      this->grdMat_.set(numOfGrids, 3, weight[i]);
-      this->grdMat_.set(numOfGrids, 4, atom);
-      ++numOfGrids;
-    }
-  }
 }
 
 void DfGenerateGrid_Parallel::gatherGridData() {
-  this->logger("gather grid data");
+    this->logger("gather grid data");
 
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  const int numOfProcs = rComm.getNumOfProc();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int numOfProcs = rComm.getNumOfProc();
 
-  index_type numOfRowsOfGlobalGridMatrix = this->grdMat_.getNumOfRows();
+    index_type numOfRowsOfGlobalGridMatrix = this->grdMat_.getNumOfRows();
 
-  const int tag = TAG_GENGRID_GATHER_GRID_DATA;
-  if (rComm.isMaster() == true) {
-    const index_type numOfColsOfGlobalGridMatrix = this->grdMat_.getNumOfCols();
-    // TODO: use TlMatrixFile instead of TlDenseGeneralMatrix_Lapack because of
-    // memory
-    // waste.
-    this->log_.info(TlUtils::format("grid matrix size: %d, %d",
-                                    numOfRowsOfGlobalGridMatrix,
-                                    numOfRowsOfGlobalGridMatrix));
-    TlDenseGeneralMatrix_Lapack grdMat(numOfRowsOfGlobalGridMatrix,
-                                       numOfColsOfGlobalGridMatrix);
+    const int tag = TAG_GENGRID_GATHER_GRID_DATA;
+    if (rComm.isMaster() == true) {
+        const index_type numOfColsOfGlobalGridMatrix =
+            this->grdMat_.getNumOfCols();
+        // TODO: use TlMatrixFile instead of TlDenseGeneralMatrix_Lapack because
+        // of memory waste.
+        this->log_.info(TlUtils::format("grid matrix size: %d, %d",
+                                        numOfRowsOfGlobalGridMatrix,
+                                        numOfRowsOfGlobalGridMatrix));
+        TlDenseGeneralMatrix_Lapack grdMat(numOfRowsOfGlobalGridMatrix,
+                                           numOfColsOfGlobalGridMatrix);
 
-    index_type currentNumOfRows = 0;
+        index_type currentNumOfRows = 0;
 
-    // set elements from 0
-    grdMat.block(currentNumOfRows, 0, this->grdMat_);
-    currentNumOfRows += this->grdMat_.getNumOfRows();
+        // set elements from 0
+        grdMat.block(currentNumOfRows, 0, this->grdMat_);
+        currentNumOfRows += this->grdMat_.getNumOfRows();
 
-    // set elements from the others
-    std::vector<bool> recvCheck(numOfProcs, false);
-    for (int i = 1; i < numOfProcs; ++i) {
-      int proc = 0;
-      TlDenseGeneralMatrix_Lapack tmpGrdMat;
-      rComm.receiveDataFromAnySource(tmpGrdMat, &proc, tag);
-      if (recvCheck[proc] != false) {
-        this->log_.warn(
-            TlUtils::format("already received grid data from %d", proc));
-      }
-      recvCheck[proc] = true;
-      this->log_.debug(TlUtils::format("recv grid data from %d", proc));
+        // set elements from the others
+        std::vector<bool> recvCheck(numOfProcs, false);
+        for (int i = 1; i < numOfProcs; ++i) {
+            int proc = 0;
+            TlDenseGeneralMatrix_Lapack tmpGrdMat;
+            rComm.receiveDataFromAnySource(tmpGrdMat, &proc, tag);
+            if (recvCheck[proc] != false) {
+                this->log_.warn(TlUtils::format(
+                    "already received grid data from %d", proc));
+            }
+            recvCheck[proc] = true;
+            this->log_.debug(TlUtils::format("recv grid data from %d", proc));
 
-      this->log_.info(TlUtils::format("recv block mat (%d, %d) from %d",
-                                      tmpGrdMat.getNumOfRows(),
-                                      tmpGrdMat.getNumOfCols(), proc));
-      numOfRowsOfGlobalGridMatrix += tmpGrdMat.getNumOfRows();
-      grdMat.resize(numOfRowsOfGlobalGridMatrix, numOfColsOfGlobalGridMatrix);
+            this->log_.info(TlUtils::format("recv block mat (%d, %d) from %d",
+                                            tmpGrdMat.getNumOfRows(),
+                                            tmpGrdMat.getNumOfCols(), proc));
+            numOfRowsOfGlobalGridMatrix += tmpGrdMat.getNumOfRows();
+            grdMat.resize(numOfRowsOfGlobalGridMatrix,
+                          numOfColsOfGlobalGridMatrix);
 
-      grdMat.block(currentNumOfRows, 0, tmpGrdMat);
-      currentNumOfRows += tmpGrdMat.getNumOfRows();
+            grdMat.block(currentNumOfRows, 0, tmpGrdMat);
+            currentNumOfRows += tmpGrdMat.getNumOfRows();
+        }
+
+        // grdMat.save(this->getGridMatrixPath(0));
+        this->saveGridMatrix(0, grdMat);
+    } else {
+        rComm.sendData(this->grdMat_, 0, tag);
+        this->log_.debug("send grid data");
     }
-
-    // grdMat.save(this->getGridMatrixPath(0));
-    this->saveGridMatrix(0, grdMat);
-  } else {
-    rComm.sendData(this->grdMat_, 0, tag);
-    this->log_.debug("send grid data");
-  }
 }
