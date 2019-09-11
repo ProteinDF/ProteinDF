@@ -173,11 +173,30 @@ void DfCD::calcCholeskyVectorsForJK() {
 
         if (this->useMmapMatrix_) {
             this->log_.info("L_jk build on mmap");
-            const std::string L_mat_path = DfObject::getLjkMatrixPath();
-            TlDenseGeneralMatrix_mmap L(L_mat_path, 1, 1);
-            this->calcCholeskyVectorsOnTheFlyS(
-                orbInfo, this->getI2pqVtrPath(), this->epsilon_,
-                &DfCD::calcDiagonals, &DfCD::getSuperMatrixElements, &L);
+
+            std::string L_mat_path = DfObject::getLjkMatrixPath();
+            if (!this->localTempPath_.empty()) {
+                L_mat_path =
+                    TlUtils::format("%s/Ljk.mat", this->localTempPath_.c_str());
+            }
+
+            this->log_.info(
+                TlUtils::format("L saved as %s", L_mat_path.c_str()));
+            if (TlFile::isExistFile(L_mat_path)) {
+                TlFile::remove(L_mat_path);
+            }
+            {
+                TlDenseGeneralMatrix_mmap L(L_mat_path, 1, 1);
+                this->calcCholeskyVectorsOnTheFlyS(
+                    orbInfo, this->getI2pqVtrPath(), this->epsilon_,
+                    &DfCD::calcDiagonals, &DfCD::getSuperMatrixElements, &L);
+            }
+            if (!this->localTempPath_.empty()) {
+                this->log_.info(TlUtils::format(
+                    "L move to %s", DfObject::getLjkMatrixPath().c_str()));
+                TlFile::move(L_mat_path, DfObject::getLjkMatrixPath());
+            }
+
         } else {
             this->log_.info("L_jk build on arrays");
             const TlDenseGeneralMatrix_arrays_RowOriented Ljk =
@@ -1389,7 +1408,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(
     int progress = 0;
     const index_type division = std::max<index_type>(numOfPQtilde * 0.01, 100);
     index_type L_cols = this->m_nNumOfAOs * 5;
-    this->log_.info(TlUtils::format("reservoed L col: %d", L_cols));
+    this->log_.info(TlUtils::format("resize L col: %d", L_cols));
     pL->resize(numOfPQtilde, L_cols);
 
     index_type numOfCDVcts = 0;
@@ -1408,7 +1427,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(
         // メモリの確保
         if (numOfCDVcts >= L_cols) {
             L_cols = numOfCDVcts + this->m_nNumOfAOs;
-            this->log_.info(TlUtils::format("L col: %d", L_cols));
+            this->log_.info(TlUtils::format("resize L col: %d", L_cols));
             pL->resize(numOfPQtilde, L_cols);
         }
 

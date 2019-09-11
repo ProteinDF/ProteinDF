@@ -21,11 +21,13 @@
 #endif  // HAVE_CONFIG_H
 
 #include <cassert>
-#include <cstdio>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <ostream>
 
+// C
+#include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -92,9 +94,26 @@ int TlFile::rename(const std::string& oldName, const std::string& newName) {
     if (TlFile::isExistFile(newName) == true) {
         TlFile::remove(newName);
     }
-    ans = std::rename(oldName.c_str(), newName.c_str());
+
+    ans = std::rename(oldName.c_str(), newName.c_str());  // stdio.h
+    if (ans != 0) {
+        if (errno == EXDEV) {
+            // both files exist different file system
+            const int ret_cp = TlFile::copy(oldName, newName);
+            if (ret_cp == 0) {
+                int ret_rm = TlFile::remove(oldName);
+                if (ret_rm == 0) {
+                    ans = 0;
+                }
+            }
+        }
+    }
 
     return ans;
+}
+
+int TlFile::move(const std::string& oldName, const std::string& newName) {
+    return TlFile::rename(oldName, newName);
 }
 
 std::size_t TlFile::getFileSize(const std::string& filePath) {
