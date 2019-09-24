@@ -271,50 +271,54 @@ void ProteinDF::manageMemory() {
     this->log_.info(TlUtils::format("allocatable memory: %ld byte",
                                     this->pdfParam_["memory_size"].getLong()));
 
-    if (this->pdfParam_["use_mapfile"].getBoolean() == true) {
-        std::string filePath = this->pdfParam_["mapfile_basename"].getStr();
-        if (filePath == "") {
-            filePath = "/tmp/pdfmmap";
-        }
+    // if (this->pdfParam_["use_mapfile"].getBoolean() == true) {
+    //     std::string filePath = this->pdfParam_["mapfile_basename"].getStr();
+    //     if (filePath == "") {
+    //         filePath = "/tmp/pdfmmap";
+    //     }
 
-        std::size_t mapFileSize =
-            std::size_t(1024UL * 1024UL * 1024UL);  // 少なくとも 1 GBは欲しい。
-        std::string mapFileSizeStr =
-            TlUtils::toUpper(this->pdfParam_["mapfile_size"].getStr());
-        if (mapFileSizeStr != "AUTO") {
-            const std::size_t input_mapFileSize =
-                std::atol(mapFileSizeStr.c_str());
-            this->log_.info(TlUtils::format("input map file size: %lu byte",
-                                            input_mapFileSize));
-            mapFileSize = std::max<std::size_t>(mapFileSize, input_mapFileSize);
-        } else {
-            this->log_.info("map file size is calculated automatically.");
-            const std::size_t numOfAOs = this->pdfParam_["num_of_AOs"].getInt();
-            const std::size_t numOfAuxDen =
-                this->pdfParam_["num_of_auxCDs"].getInt();
-            const std::size_t numOfAuxXC =
-                this->pdfParam_["num_of_auxXCs"].getInt();
-            const std::size_t numOfAux = std::max(numOfAuxDen, numOfAuxXC);
+    //     std::size_t mapFileSize =
+    //         std::size_t(1024UL * 1024UL * 1024UL);  // 少なくとも 1
+    //         GBは欲しい。
+    //     std::string mapFileSizeStr =
+    //         TlUtils::toUpper(this->pdfParam_["mapfile_size"].getStr());
+    //     if (mapFileSizeStr != "AUTO") {
+    //         const std::size_t input_mapFileSize =
+    //             std::atol(mapFileSizeStr.c_str());
+    //         this->log_.info(TlUtils::format("input map file size: %lu byte",
+    //                                         input_mapFileSize));
+    //         mapFileSize = std::max<std::size_t>(mapFileSize,
+    //         input_mapFileSize);
+    //     } else {
+    //         this->log_.info("map file size is calculated automatically.");
+    //         const std::size_t numOfAOs =
+    //         this->pdfParam_["num_of_AOs"].getInt(); const std::size_t
+    //         numOfAuxDen =
+    //             this->pdfParam_["num_of_auxCDs"].getInt();
+    //         const std::size_t numOfAuxXC =
+    //             this->pdfParam_["num_of_auxXCs"].getInt();
+    //         const std::size_t numOfAux = std::max(numOfAuxDen, numOfAuxXC);
 
-            const std::size_t needMem_AO =
-                numOfAOs * numOfAOs * 3;  // full matrix
-            const std::size_t needMem_Aux =
-                (numOfAux * (numOfAux + 1) / 2) * 3;  // half matrix
+    //         const std::size_t needMem_AO =
+    //             numOfAOs * numOfAOs * 3;  // full matrix
+    //         const std::size_t needMem_Aux =
+    //             (numOfAux * (numOfAux + 1) / 2) * 3;  // half matrix
 
-            mapFileSize = std::max(mapFileSize, needMem_AO * sizeof(double));
-            mapFileSize = std::max(mapFileSize, needMem_Aux * sizeof(double));
-        }
-        TlMemManager::setParam(mapFileSize, filePath);
+    //         mapFileSize = std::max(mapFileSize, needMem_AO * sizeof(double));
+    //         mapFileSize = std::max(mapFileSize, needMem_Aux *
+    //         sizeof(double));
+    //     }
+    //     TlMemManager::setParam(mapFileSize, filePath);
 
-        this->pdfParam_["mapfile_size"] = mapFileSize;
-        this->pdfParam_["mapfile_basename"] = filePath;
-        this->log_.info(
-            TlUtils::format("map file size: %lu byte", mapFileSize));
-        this->log_.info(
-            TlUtils::format("map file basename: %s", filePath.c_str()));
+    //     this->pdfParam_["mapfile_size"] = mapFileSize;
+    //     this->pdfParam_["mapfile_basename"] = filePath;
+    //     this->log_.info(
+    //         TlUtils::format("map file size: %lu byte", mapFileSize));
+    //     this->log_.info(
+    //         TlUtils::format("map file basename: %s", filePath.c_str()));
 
-        this->saveParam();
-    }
+    //     this->saveParam();
+    // }
 }
 
 void ProteinDF::setupGlobalCondition_extra() {
