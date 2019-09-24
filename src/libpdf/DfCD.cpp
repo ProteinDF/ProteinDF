@@ -1372,12 +1372,10 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(
 
     const index_type numOfAOs = orbInfo.getNumOfOrbitals();
     const std::size_t numOfPQs = numOfAOs * (numOfAOs + 1) / 2;
-    this->log_.info(TlUtils::format("number of orbitals: %d", numOfAOs));
-    this->log_.info(
-        TlUtils::format("number of pair of orbitals: %ld", numOfPQs));
+    this->log_.info(TlUtils::format("orbitals: %d", numOfAOs));
+    this->log_.info(TlUtils::format("pair of orbitals: %ld", numOfPQs));
 
     // CDAM
-    assert(this->pEngines_ != NULL);
     PQ_PairArray I2PQ;
     std::vector<double> diagonals;  // 対角成分
     (this->*calcDiagonalsFunc)(orbInfo, &I2PQ, &diagonals);
@@ -1387,8 +1385,8 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(
     //     v_diagonal.save("CDAM_diag.vtr");
     // }
 
-    this->log_.info(TlUtils::format("number of screened pairs of orbitals: %ld",
-                                    I2PQ.size()));
+    this->log_.info(
+        TlUtils::format("screened pairs of orbitals: %ld", I2PQ.size()));
     this->saveI2PQ(I2PQ, I2PQ_path);
 
     // debug
@@ -1631,6 +1629,144 @@ TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFlyA(
 
     return L;
 }
+
+//
+void DfCD::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
+                                        const TlOrbitalInfoObject& orbInfo_q,
+                                        const std::string& I2PQ_path,
+                                        const double threshold,
+                                        TlDenseGeneralMatrix_mmap* pL) {
+    this->log_.info("call on-the-fly Cholesky Decomposition routine");
+    assert(this->pEngines_ != NULL);
+
+    this->initializeCutoffStats(
+        std::max(orbInfo_p.getMaxShellType(), orbInfo_q.getMaxShellType()));
+
+    const index_type numOfOrbs_p = orbInfo_p.getNumOfOrbitals();
+    const index_type numOfOrbs_q = orbInfo_q.getNumOfOrbitals();
+    const std::size_t numOfPQs = numOfOrbs_p * numOfOrbs_q;
+    this->log_.info(TlUtils::format("orbitals1: %d", numOfOrbs_p));
+    this->log_.info(TlUtils::format("orbitals2: %d", numOfOrbs_q));
+    this->log_.info(TlUtils::format("pair of orbitals: %ld", numOfPQs));
+
+    // CDAM
+    PQ_PairArray I2PQ;
+    TlSparseMatrix schwartzTable(numOfOrbs_p, numOfOrbs_q);
+    std::vector<double> diagonals;  // 対角成分
+    this->calcDiagonalsA(orbInfo_p, orbInfo_q, &I2PQ, &schwartzTable,
+                         &diagonals);
+
+    this->log_.info(
+        TlUtils::format("screened pairs of orbitals: %ld", I2PQ.size()));
+    this->saveI2PQ(I2PQ, I2PQ_path);
+    // this->ERI_cache_manager_.setMaxItems(I2PQ.size() * 2);
+
+    // TlDenseGeneralMatrix_arrays_RowOriented L(N, 1, 1, 0);
+    // prepare variables
+    this->log_.info(
+        TlUtils::format("Cholesky Decomposition: epsilon=%e", threshold));
+    const index_type numOfPQtilde = I2PQ.size();  // N
+
+    double error = std::accumulate(diagonals.begin(), diagonals.end(), 0.0);
+    std::vector<std::size_t> pivot(numOfPQtilde);
+    for (index_type i = 0; i < numOfPQtilde; ++i) {
+        pivot[i] = i;
+    }
+
+    int progress = 0;
+    const index_type division = std::max<index_type>(numOfPQtilde * 0.01, 100);
+    index_type L_cols = numOfOrbs_p * 5;
+    this->log_.info(TlUtils::format("resize L col: %d", L_cols));
+    pL->resize(numOfPQtilde, L_cols);
+
+    index_type numOfCDVcts = 0;  // m
+    while ((error > threshold) && (numOfCDVcts < numOfPQtilde)) {
+#ifdef DEBUG_CD
+        this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e",
+                                         m, N, error));
+#endif  // DEBUG_CD
+
+        // progress
+        if (numOfCDVcts >= progress * division) {
+            this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e",
+                                            numOfCDVcts, error));
+            ++progress;
+        }
+        // メモリの確保
+        if (numOfCDVcts >= L_cols) {
+            L_cols = numOfCDVcts + numOfOrbs_p;
+            this->log_.info(TlUtils::format("resize L col: %d", L_cols));
+            pL->resize(numOfPQtilde, L_cols);
+        }
+
+        // pivot
+        {
+            const std::size_t argmax =
+                this->argmax_pivot(diagonals, pivot, numOfCDVcts);
+            std::swap(pivot[numOfCDVcts], pivot[argmax]);
+        }
+
+        const index_type pivot_m = pivot[numOfCDVcts];
+        error = diagonals[pivot_m];
+        if (error < threshold) {
+            break;
+        }
+
+        const double l_m_pm = std::sqrt(diagonals[pivot[pivot_m]]);
+        const double inv_l_m_pm = 1.0 / l_m_pm;
+        pL->set(pivot_m, numOfCDVcts, l_m_pm);
+
+        // get supermatrix elements
+        const index_type numOf_G_cols = numOfPQtilde - (numOfCDVcts + 1);
+        std::vector<double> G_pm(numOf_G_cols);
+        {
+            std::vector<index_type> G_col_list(numOf_G_cols);
+            for (index_type c = 0; c < numOf_G_cols; ++c) {
+                const index_type pivot_i =
+                    pivot[numOfCDVcts + 1 + c];  // from (m+1) to N
+                G_col_list[c] = pivot_i;
+            }
+            G_pm = this->getSuperMatrixElementsA(
+                orbInfo_p, orbInfo_q, pivot_m, G_col_list, I2PQ, schwartzTable);
+        }
+        assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
+
+        // CD calc
+        std::valarray<double> L_pm(0.0, numOfCDVcts + 1);
+        const std::size_t copyCount_m =
+            pL->getRowVector(pivot_m, &(L_pm[0]), numOfCDVcts + 1);
+        assert(copyCount_m == numOfCDVcts + 1);
+
+#pragma omp parallel
+        {
+            std::valarray<double> L_pi(0.0, numOfCDVcts + 1);
+#pragma omp for schedule(runtime)
+            for (index_type i = 0; i < numOf_G_cols; ++i) {
+                const index_type pivot_i =
+                    pivot[numOfCDVcts + 1 + i];  // from (m+1) to N
+
+                const std::size_t copyCount_i =
+                    pL->getRowVector(pivot_i, &(L_pi[0]), numOfCDVcts + 1);
+                assert(copyCount_i == numOfCDVcts + 1);
+
+                const double sum_ll = (L_pm * L_pi).sum();
+                const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+
+                pL->set(pivot_i, numOfCDVcts, l_m_pi);
+                diagonals[pivot_i] -= l_m_pi * l_m_pi;
+            }
+        }
+
+        // error = diagonals[pivot[numOfCDVcts]];
+        ++numOfCDVcts;
+    }
+    pL->resize(numOfPQtilde, numOfCDVcts);
+    this->log_.info(TlUtils::format("Cholesky Vectors: %d", numOfCDVcts));
+
+    // this->schwartzCutoffReport(
+    //     std::max(orbInfo_p.getMaxShellType(), orbInfo_q.getMaxShellType()));
+}
+//
 
 void DfCD::calcDiagonals(const TlOrbitalInfoObject& orbInfo,
                          PQ_PairArray* pI2PQ, std::vector<double>* pDiagonals) {
