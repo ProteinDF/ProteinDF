@@ -277,6 +277,12 @@ class DfCD : public DfObject {
     calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
                                  const TlOrbitalInfoObject& orbInfo_q,
                                  const std::string& I2PQ_path);
+    /// calc Chokesky Vectors <pq|rs> for assymmetric basis (mmap)
+    void calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
+                                      const TlOrbitalInfoObject& orbInfo_q,
+                                      const std::string& I2PQ_path,
+                                      const double epsilon,
+                                      TlDenseGeneralMatrix_mmap* pL);
 
     // ----------------------------------------------------------------------------
     // [integral] calc diagonals for CD
@@ -816,8 +822,10 @@ TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFly(
     const TlOrbitalInfoObject& orbInfo_p, const TlOrbitalInfoObject& orbInfo_q,
     const std::string& I2PQ_path) {
     this->createEngines<EngineClass>();
+
     const TlDenseGeneralMatrix_arrays_RowOriented L =
         this->calcCholeskyVectorsOnTheFlyA(orbInfo_p, orbInfo_q, I2PQ_path);
+
     this->destroyEngines();
 
     return L;
