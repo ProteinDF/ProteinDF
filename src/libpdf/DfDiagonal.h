@@ -28,65 +28,66 @@
 
 /// KS行列の対角化を行う
 class DfDiagonal : public DfObject {
- public:
-  DfDiagonal(TlSerializeData* pPdfData);
-  virtual ~DfDiagonal();
+   public:
+    DfDiagonal(TlSerializeData* pPdfData);
+    virtual ~DfDiagonal();
 
- public:
-  virtual void run();
-  virtual void runQclo(DfObject::RUN_TYPE runType, const std::string& fragname,
-                       int norbcut);
+   public:
+    virtual void run();
+    virtual void runQclo(DfObject::RUN_TYPE runType,
+                         const std::string& fragname, int norbcut);
 
- protected:
-  template <typename GeneralMatrix, typename SymmetricMatrix, typename Vector>
-  inline void run_impl();
+   protected:
+    template <typename GeneralMatrix, typename SymmetricMatrix, typename Vector>
+    inline void run_impl();
 
-  template <typename MatrixType, typename SymmetricMatrixType, typename Vector>
-  void main(DfObject::RUN_TYPE runType, const std::string& fragname = "",
-            bool bPdfQcloMode = false);
+    template <typename MatrixType, typename SymmetricMatrixType,
+              typename Vector>
+    void main(DfObject::RUN_TYPE runType, const std::string& fragname = "",
+              bool bPdfQcloMode = false);
 };
 
 // template
 template <typename GeneralMatrix, typename SymmetricMatrix, typename Vector>
 inline void DfDiagonal::run_impl() {
-  // output informations
-  switch (this->m_nMethodType) {
-    case METHOD_RKS:
-      this->main<GeneralMatrix, SymmetricMatrix, Vector>(RUN_RKS);
-      break;
+    // output informations
+    switch (this->m_nMethodType) {
+        case METHOD_RKS:
+            this->main<GeneralMatrix, SymmetricMatrix, Vector>(RUN_RKS);
+            break;
 
-    case METHOD_UKS:
-      this->main<GeneralMatrix, SymmetricMatrix, Vector>(RUN_UKS_ALPHA);
-      this->main<GeneralMatrix, SymmetricMatrix, Vector>(RUN_UKS_BETA);
-      break;
+        case METHOD_UKS:
+            this->main<GeneralMatrix, SymmetricMatrix, Vector>(RUN_UKS_ALPHA);
+            this->main<GeneralMatrix, SymmetricMatrix, Vector>(RUN_UKS_BETA);
+            break;
 
-    case METHOD_ROKS:
-      this->main<GeneralMatrix, SymmetricMatrix, Vector>(RUN_ROKS);
-      break;
+        case METHOD_ROKS:
+            this->main<GeneralMatrix, SymmetricMatrix, Vector>(RUN_ROKS);
+            break;
 
-    default:
-      CnErr.abort("DfDiagonal", "", "DfDiagMain",
-                  "the value of scftype is illegal");
-      break;
-  }
+        default:
+            CnErr.abort("DfDiagonal", "", "DfDiagMain",
+                        "the value of scftype is illegal");
+            break;
+    }
 }
 
 template <typename GeneralMatrix, typename SymmetricMatrix, typename Vector>
 inline void DfDiagonal::main(const DfObject::RUN_TYPE runType,
                              const std::string& fragname, bool bPdfQcloMode) {
-  // input file
-  SymmetricMatrix Fprime = this->getFprimeMatrix<SymmetricMatrix>(
-      runType, this->m_nIteration, fragname);
+    // input file
+    SymmetricMatrix Fprime = this->getFprimeMatrix<SymmetricMatrix>(
+        runType, this->m_nIteration, fragname);
 
-  // diagonal
-  Vector eigVal;
-  GeneralMatrix eigVec;
-  Fprime.eig(&eigVal, &eigVec);
+    // diagonal
+    Vector eigVal;
+    GeneralMatrix eigVec;
+    Fprime.eig(&eigVal, &eigVec);
 
-  // save eigvec
-  this->saveCprimeMatrix(runType, this->m_nIteration, fragname, eigVec);
-  // save eigval
-  eigVal.save(this->getEigenvaluesPath(runType, this->m_nIteration));
+    // save eigvec
+    DfObject::saveCprimeMatrix(runType, this->m_nIteration, fragname, eigVec);
+    // save eigval
+    eigVal.save(this->getEigenvaluesPath(runType, this->m_nIteration));
 }
 
 #endif  // DFDIAGONAL_H
