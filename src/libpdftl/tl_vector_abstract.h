@@ -28,37 +28,37 @@
 /** 行列クラスのインターフェースを規定する
  */
 class TlVectorAbstract {
- public:
-  /// 行数、列数を表す整数型(範囲外を示す値として-1を取る場合がある)
-  typedef signed int index_type;
+   public:
+    /// 行数、列数を表す整数型(範囲外を示す値として-1を取る場合がある)
+    typedef signed int index_type;
 
-  /// 数値配列の総数を表す整数型
-  typedef signed int size_type;
+    /// 数値配列の総数を表す整数型
+    typedef signed int size_type;
 
- public:
-  virtual ~TlVectorAbstract() {}
+   public:
+    virtual ~TlVectorAbstract() {}
 
- public:
-  virtual void resize(index_type nSize) = 0;
+   public:
+    virtual void resize(index_type nSize) = 0;
 
- public:
-  virtual void add(const index_type index, const double value) = 0;
+   public:
+    virtual void add(const index_type index, const double value) = 0;
 
-  /// 要素を返す(読み取り専用)
-  ///
-  /// @param[in] index 要素番号
-  /// @return 要素
-  virtual double operator[](index_type index) const = 0;
+    /// 要素を返す(読み取り専用)
+    ///
+    /// @param[in] index 要素番号
+    /// @return 要素
+    virtual double operator[](index_type index) const = 0;
 
-  /// 要素を返す(代入用)
-  ///
-  /// @param[in] index 要素番号
-  /// @return 要素
-  virtual double& operator[](index_type index) = 0;
+    /// 要素を返す(代入用)
+    ///
+    /// @param[in] index 要素番号
+    /// @return 要素
+    virtual double& operator[](index_type index) = 0;
 
- public:
-  virtual bool save(const std::string& str) const = 0;
-  virtual bool load(const std::string& str) = 0;
+   public:
+    virtual bool save(const std::string& str) const = 0;
+    virtual bool load(const std::string& str) = 0;
 };
 
 #endif  // TLVECTOROBJECT_H

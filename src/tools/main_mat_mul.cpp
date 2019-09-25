@@ -25,77 +25,77 @@
 #include "tl_matrix_utils.h"
 
 void showHelp() {
-  std::cout
-      << "multiple [options] input_file_path1 input_file_path2 output_file_path"
-      << std::endl;
-  std::cout << " OPTIONS:" << std::endl;
-  std::cout << "  -h:      show help" << std::endl;
-  std::cout << "  -v:      verbose" << std::endl;
+    std::cout << "multiple [options] input_file_path1 input_file_path2 "
+                 "output_file_path"
+              << std::endl;
+    std::cout << " OPTIONS:" << std::endl;
+    std::cout << "  -h:      show help" << std::endl;
+    std::cout << "  -v:      verbose" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "hv");
+    TlGetopt opt(argc, argv, "hv");
 
-  if (opt["h"] == "defined") {
-    showHelp();
+    if (opt["h"] == "defined") {
+        showHelp();
+        return EXIT_SUCCESS;
+    }
+
+    const bool bVerbose = (opt["v"] == "defined");
+
+    if (opt.getCount() <= 1) {
+        showHelp();
+        return EXIT_FAILURE;
+    }
+    const std::string inputMatrixPath1 = opt[1];
+    const std::string inputMatrixPath2 = opt[2];
+    const std::string outputMatrixPath = opt[3];
+
+    if (bVerbose == true) {
+        std::cerr << "load matrix: " << inputMatrixPath1 << std::endl;
+    }
+
+    TlDenseGeneralMatrix_Lapack A;
+    if (TlMatrixUtils::isLoadable(inputMatrixPath1, TlMatrixObject::CSFD)) {
+        A.load(inputMatrixPath1);
+    } else if (TlMatrixUtils::isLoadable(inputMatrixPath1,
+                                         TlMatrixObject::RLHD)) {
+        TlDenseSymmetricMatrix_Lapack tmp;
+        tmp.load(inputMatrixPath1);
+        A = tmp;
+    } else {
+        std::cerr << "can not open file: " << inputMatrixPath1 << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    if (bVerbose == true) {
+        std::cerr << "load matrix: " << inputMatrixPath2 << std::endl;
+    }
+    TlDenseGeneralMatrix_Lapack B;
+    if (TlMatrixUtils::isLoadable(inputMatrixPath2, TlMatrixObject::CSFD)) {
+        B.load(inputMatrixPath2);
+    } else if (TlMatrixUtils::isLoadable(inputMatrixPath2,
+                                         TlMatrixObject::RLHD)) {
+        TlDenseSymmetricMatrix_Lapack tmp;
+        tmp.load(inputMatrixPath2);
+        B = tmp;
+    } else {
+        std::cerr << "can not open file: " << inputMatrixPath2 << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    if (bVerbose == true) {
+        std::cerr << "running..." << std::endl;
+    }
+
+    TlDenseGeneralMatrix_Lapack C = A * B;
+
+    if (bVerbose == true) {
+        std::cerr << "save matrix: " << outputMatrixPath << std::endl;
+    }
+    if (outputMatrixPath != "") {
+        C.save(outputMatrixPath);
+    }
+
     return EXIT_SUCCESS;
-  }
-
-  const bool bVerbose = (opt["v"] == "defined");
-
-  if (opt.getCount() <= 1) {
-    showHelp();
-    return EXIT_FAILURE;
-  }
-  const std::string inputMatrixPath1 = opt[1];
-  const std::string inputMatrixPath2 = opt[2];
-  const std::string outputMatrixPath = opt[3];
-
-  if (bVerbose == true) {
-    std::cerr << "load matrix: " << inputMatrixPath1 << std::endl;
-  }
-
-  TlDenseGeneralMatrix_Lapack A;
-  if (TlMatrixUtils::isLoadable(inputMatrixPath1, TlMatrixObject::CSFD)) {
-    A.load(inputMatrixPath1);
-  } else if (TlMatrixUtils::isLoadable(inputMatrixPath1,
-                                       TlMatrixObject::RLHD)) {
-    TlDenseSymmetricMatrix_Lapack tmp;
-    tmp.load(inputMatrixPath1);
-    A = tmp;
-  } else {
-    std::cerr << "can not open file: " << inputMatrixPath1 << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  if (bVerbose == true) {
-    std::cerr << "load matrix: " << inputMatrixPath2 << std::endl;
-  }
-  TlDenseGeneralMatrix_Lapack B;
-  if (TlMatrixUtils::isLoadable(inputMatrixPath2, TlMatrixObject::CSFD)) {
-    B.load(inputMatrixPath2);
-  } else if (TlMatrixUtils::isLoadable(inputMatrixPath2,
-                                       TlMatrixObject::RLHD)) {
-    TlDenseSymmetricMatrix_Lapack tmp;
-    tmp.load(inputMatrixPath2);
-    B = tmp;
-  } else {
-    std::cerr << "can not open file: " << inputMatrixPath2 << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  if (bVerbose == true) {
-    std::cerr << "running..." << std::endl;
-  }
-
-  TlDenseGeneralMatrix_Lapack C = A * B;
-
-  if (bVerbose == true) {
-    std::cerr << "save matrix: " << outputMatrixPath << std::endl;
-  }
-  if (outputMatrixPath != "") {
-    C.save(outputMatrixPath);
-  }
-
-  return EXIT_SUCCESS;
 }

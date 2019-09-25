@@ -12,61 +12,60 @@ static const std::string mat_save_load_path = "temp.sym.eigen.save_load.mat";
 static const std::string mat_h5 = "temp.sym.h5";
 
 TEST(TlDenseSymmetricMatrix_Eigen, vtr2mat) {
-  const int dim = 4;
-  const int elements = dim * (dim +1) / 2;
-  std::vector<double> vtr(elements);
-  for (int i = 0; i < elements; ++i) {
-    vtr[i] = i;
-  }
-
-  TlDenseSymmetricMatrix_Eigen a(dim);
-  a.vtr2mat(vtr);
-
-  EXPECT_EQ(dim, a.getNumOfRows());
-  EXPECT_EQ(dim, a.getNumOfCols());
-  int i = 0;
-  for (int c = 0; c < dim; ++c) { // col-major
-    for (int r = 0; r <= c; ++r) {
-      EXPECT_DOUBLE_EQ(vtr[i], a.get(r, c));
-      ++i;
+    const int dim = 4;
+    const int elements = dim * (dim + 1) / 2;
+    std::vector<double> vtr(elements);
+    for (int i = 0; i < elements; ++i) {
+        vtr[i] = i;
     }
-  }
+
+    TlDenseSymmetricMatrix_Eigen a(dim);
+    a.vtr2mat(vtr);
+
+    EXPECT_EQ(dim, a.getNumOfRows());
+    EXPECT_EQ(dim, a.getNumOfCols());
+    int i = 0;
+    for (int c = 0; c < dim; ++c) {  // col-major
+        for (int r = 0; r <= c; ++r) {
+            EXPECT_DOUBLE_EQ(vtr[i], a.get(r, c));
+            ++i;
+        }
+    }
 }
 
 TEST(TlDenseSymmetricMatrix_Eigen, sym2gen) {
-  TlDenseSymmetricMatrix_Eigen a =
-      getSymMatrixA<TlDenseSymmetricMatrix_Eigen>();
-  TlDenseGeneralMatrix_Eigen b = a;
+    TlDenseSymmetricMatrix_Eigen a =
+        getSymMatrixA<TlDenseSymmetricMatrix_Eigen>();
+    TlDenseGeneralMatrix_Eigen b = a;
 
-  ASSERT_EQ(3, b.getNumOfRows());
-  ASSERT_EQ(3, b.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, b.get(0, 0));
-  EXPECT_DOUBLE_EQ(1.0, b.get(0, 1));
-  EXPECT_DOUBLE_EQ(3.0, b.get(0, 2));
-  EXPECT_DOUBLE_EQ(1.0, b.get(1, 0));
-  EXPECT_DOUBLE_EQ(2.0, b.get(1, 1));
-  EXPECT_DOUBLE_EQ(4.0, b.get(1, 2));
-  EXPECT_DOUBLE_EQ(3.0, b.get(2, 0));
-  EXPECT_DOUBLE_EQ(4.0, b.get(2, 1));
-  EXPECT_DOUBLE_EQ(5.0, b.get(2, 2));
+    ASSERT_EQ(3, b.getNumOfRows());
+    ASSERT_EQ(3, b.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, b.get(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, b.get(0, 1));
+    EXPECT_DOUBLE_EQ(3.0, b.get(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, b.get(1, 0));
+    EXPECT_DOUBLE_EQ(2.0, b.get(1, 1));
+    EXPECT_DOUBLE_EQ(4.0, b.get(1, 2));
+    EXPECT_DOUBLE_EQ(3.0, b.get(2, 0));
+    EXPECT_DOUBLE_EQ(4.0, b.get(2, 1));
+    EXPECT_DOUBLE_EQ(5.0, b.get(2, 2));
 }
 
 TEST(TlDenseSymmetricMatrix_Eigen, gen2sym) {
-  TlDenseGeneralMatrix_Eigen a =
-      getMatrixA<TlDenseGeneralMatrix_Eigen>();
-  TlDenseSymmetricMatrix_Eigen b = a;
+    TlDenseGeneralMatrix_Eigen a = getMatrixA<TlDenseGeneralMatrix_Eigen>();
+    TlDenseSymmetricMatrix_Eigen b = a;
 
-  ASSERT_EQ(3, b.getNumOfRows());
-  ASSERT_EQ(3, b.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, b.get(0, 0));
-  EXPECT_DOUBLE_EQ(1.0, b.get(0, 1));
-  EXPECT_DOUBLE_EQ(2.0, b.get(0, 2));
-  EXPECT_DOUBLE_EQ(1.0, b.get(1, 0));
-  EXPECT_DOUBLE_EQ(4.0, b.get(1, 1));
-  EXPECT_DOUBLE_EQ(5.0, b.get(1, 2));
-  EXPECT_DOUBLE_EQ(2.0, b.get(2, 0));
-  EXPECT_DOUBLE_EQ(5.0, b.get(2, 1));
-  EXPECT_DOUBLE_EQ(8.0, b.get(2, 2));
+    ASSERT_EQ(3, b.getNumOfRows());
+    ASSERT_EQ(3, b.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, b.get(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, b.get(0, 1));
+    EXPECT_DOUBLE_EQ(2.0, b.get(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, b.get(1, 0));
+    EXPECT_DOUBLE_EQ(4.0, b.get(1, 1));
+    EXPECT_DOUBLE_EQ(5.0, b.get(1, 2));
+    EXPECT_DOUBLE_EQ(2.0, b.get(2, 0));
+    EXPECT_DOUBLE_EQ(5.0, b.get(2, 1));
+    EXPECT_DOUBLE_EQ(8.0, b.get(2, 2));
 }
 
 // TEST(TlDenseSymmetricMatrix_Eigen, convertFromTlVector2) {
@@ -95,24 +94,24 @@ TEST(TlDenseSymmetricMatrix_Eigen, gen2sym) {
 // }
 
 TEST(TlDenseSymmetricMatrix_Eigen, save_and_load) {
-  TlDenseSymmetricMatrix_Eigen a =
-      getSymMatrixA<TlDenseSymmetricMatrix_Eigen>();
-  bool isSaved = a.save(mat_save_load_path);
-  EXPECT_EQ(isSaved, true);
+    TlDenseSymmetricMatrix_Eigen a =
+        getSymMatrixA<TlDenseSymmetricMatrix_Eigen>();
+    bool isSaved = a.save(mat_save_load_path);
+    EXPECT_EQ(isSaved, true);
 
-  TlDenseSymmetricMatrix_Eigen b;
-  bool isLoaded = b.load(mat_save_load_path);
-  EXPECT_EQ(isLoaded, true);
+    TlDenseSymmetricMatrix_Eigen b;
+    bool isLoaded = b.load(mat_save_load_path);
+    EXPECT_EQ(isLoaded, true);
 
-  EXPECT_DOUBLE_EQ(0.0, b.get(0, 0));
-  EXPECT_DOUBLE_EQ(1.0, b.get(0, 1));
-  EXPECT_DOUBLE_EQ(3.0, b.get(0, 2));
-  EXPECT_DOUBLE_EQ(1.0, b.get(1, 0));
-  EXPECT_DOUBLE_EQ(2.0, b.get(1, 1));
-  EXPECT_DOUBLE_EQ(4.0, b.get(1, 2));
-  EXPECT_DOUBLE_EQ(3.0, b.get(2, 0));
-  EXPECT_DOUBLE_EQ(4.0, b.get(2, 1));
-  EXPECT_DOUBLE_EQ(5.0, b.get(2, 2));
+    EXPECT_DOUBLE_EQ(0.0, b.get(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, b.get(0, 1));
+    EXPECT_DOUBLE_EQ(3.0, b.get(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, b.get(1, 0));
+    EXPECT_DOUBLE_EQ(2.0, b.get(1, 1));
+    EXPECT_DOUBLE_EQ(4.0, b.get(1, 2));
+    EXPECT_DOUBLE_EQ(3.0, b.get(2, 0));
+    EXPECT_DOUBLE_EQ(4.0, b.get(2, 1));
+    EXPECT_DOUBLE_EQ(5.0, b.get(2, 2));
 }
 
 // #ifdef HAVE_HDF5
@@ -158,84 +157,86 @@ TEST(TlDenseSymmetricMatrix_Eigen, save_and_load) {
 //
 
 TEST(TlDenseSymmetricMatrix_Eigen, mul_sym_sym) {
-  TlDenseSymmetricMatrix_Eigen a =
-      getSymMatrixA<TlDenseSymmetricMatrix_Eigen>();
-  TlDenseSymmetricMatrix_Eigen b =
-      getSymMatrixB<TlDenseSymmetricMatrix_Eigen>();
+    TlDenseSymmetricMatrix_Eigen a =
+        getSymMatrixA<TlDenseSymmetricMatrix_Eigen>();
+    TlDenseSymmetricMatrix_Eigen b =
+        getSymMatrixB<TlDenseSymmetricMatrix_Eigen>();
 
-  TlDenseGeneralMatrix_Eigen c = a * b;
+    TlDenseGeneralMatrix_Eigen c = a * b;
 
-  ASSERT_EQ(3, c.getNumOfRows());
-  ASSERT_EQ(3, c.getNumOfCols());
-  EXPECT_DOUBLE_EQ(7.0, c.get(0, 0));
-  EXPECT_DOUBLE_EQ(15.0, c.get(0, 1));
-  EXPECT_DOUBLE_EQ(19.0, c.get(0, 2));
-  EXPECT_DOUBLE_EQ(10.0, c.get(1, 0));
-  EXPECT_DOUBLE_EQ(23.0, c.get(1, 1));
-  EXPECT_DOUBLE_EQ(30.0, c.get(1, 2));
-  EXPECT_DOUBLE_EQ(14.0, c.get(2, 0));
-  EXPECT_DOUBLE_EQ(35.0, c.get(2, 1));
-  EXPECT_DOUBLE_EQ(47.0, c.get(2, 2));
+    ASSERT_EQ(3, c.getNumOfRows());
+    ASSERT_EQ(3, c.getNumOfCols());
+    EXPECT_DOUBLE_EQ(7.0, c.get(0, 0));
+    EXPECT_DOUBLE_EQ(15.0, c.get(0, 1));
+    EXPECT_DOUBLE_EQ(19.0, c.get(0, 2));
+    EXPECT_DOUBLE_EQ(10.0, c.get(1, 0));
+    EXPECT_DOUBLE_EQ(23.0, c.get(1, 1));
+    EXPECT_DOUBLE_EQ(30.0, c.get(1, 2));
+    EXPECT_DOUBLE_EQ(14.0, c.get(2, 0));
+    EXPECT_DOUBLE_EQ(35.0, c.get(2, 1));
+    EXPECT_DOUBLE_EQ(47.0, c.get(2, 2));
 }
 
 TEST(TlDenseSymmetricMatrix_Eigen, multi_sym_gen) {
-  TlDenseSymmetricMatrix_Eigen A = getSymMatrixA<TlDenseSymmetricMatrix_Eigen>();
-  // [ 0  -  - ]
-  // [ 1  2  - ]
-  // [ 3  4  5 ]
+    TlDenseSymmetricMatrix_Eigen A =
+        getSymMatrixA<TlDenseSymmetricMatrix_Eigen>();
+    // [ 0  -  - ]
+    // [ 1  2  - ]
+    // [ 3  4  5 ]
 
-  TlDenseGeneralMatrix_Eigen B(3, 3);
-  B.set(0, 0, 0.0);
-  B.set(0, 1, 1.0);
-  B.set(0, 2, 2.0);
-  B.set(1, 0, 3.0);
-  B.set(1, 1, 4.0);
-  B.set(1, 2, 5.0);
-  B.set(2, 0, 6.0);
-  B.set(2, 1, 7.0);
-  B.set(2, 2, 8.0);
+    TlDenseGeneralMatrix_Eigen B(3, 3);
+    B.set(0, 0, 0.0);
+    B.set(0, 1, 1.0);
+    B.set(0, 2, 2.0);
+    B.set(1, 0, 3.0);
+    B.set(1, 1, 4.0);
+    B.set(1, 2, 5.0);
+    B.set(2, 0, 6.0);
+    B.set(2, 1, 7.0);
+    B.set(2, 2, 8.0);
 
-  TlDenseGeneralMatrix_Eigen C = A * B;
+    TlDenseGeneralMatrix_Eigen C = A * B;
 
-  EXPECT_DOUBLE_EQ(21.0, C.get(0, 0));
-  EXPECT_DOUBLE_EQ(25.0, C.get(0, 1));
-  EXPECT_DOUBLE_EQ(29.0, C.get(0, 2));
-  EXPECT_DOUBLE_EQ(30.0, C.get(1, 0));
-  EXPECT_DOUBLE_EQ(37.0, C.get(1, 1));
-  EXPECT_DOUBLE_EQ(44.0, C.get(1, 2));
-  EXPECT_DOUBLE_EQ(42.0, C.get(2, 0));
-  EXPECT_DOUBLE_EQ(54.0, C.get(2, 1));
-  EXPECT_DOUBLE_EQ(66.0, C.get(2, 2));
+    EXPECT_DOUBLE_EQ(21.0, C.get(0, 0));
+    EXPECT_DOUBLE_EQ(25.0, C.get(0, 1));
+    EXPECT_DOUBLE_EQ(29.0, C.get(0, 2));
+    EXPECT_DOUBLE_EQ(30.0, C.get(1, 0));
+    EXPECT_DOUBLE_EQ(37.0, C.get(1, 1));
+    EXPECT_DOUBLE_EQ(44.0, C.get(1, 2));
+    EXPECT_DOUBLE_EQ(42.0, C.get(2, 0));
+    EXPECT_DOUBLE_EQ(54.0, C.get(2, 1));
+    EXPECT_DOUBLE_EQ(66.0, C.get(2, 2));
 }
 
 TEST(TlDenseSymmetricMatrix_Eigen, mul_gen_sym) {
-  TlDenseSymmetricMatrix_Eigen A = getSymMatrixA<TlDenseSymmetricMatrix_Eigen>();
-  // [ 0  -  - ]
-  // [ 1  2  - ]
-  // [ 3  4  5 ]
+    TlDenseSymmetricMatrix_Eigen A =
+        getSymMatrixA<TlDenseSymmetricMatrix_Eigen>();
+    // [ 0  -  - ]
+    // [ 1  2  - ]
+    // [ 3  4  5 ]
 
-  TlDenseGeneralMatrix_Eigen B(3, 3);
-  B.set(0, 0, 0.0);
-  B.set(0, 1, 1.0);
-  B.set(0, 2, 2.0);
-  B.set(1, 0, 3.0);
-  B.set(1, 1, 4.0);
-  B.set(1, 2, 5.0);
-  B.set(2, 0, 6.0);
-  B.set(2, 1, 7.0);
-  B.set(2, 2, 8.0);
+    TlDenseGeneralMatrix_Eigen B(3, 3);
+    B.set(0, 0, 0.0);
+    B.set(0, 1, 1.0);
+    B.set(0, 2, 2.0);
+    B.set(1, 0, 3.0);
+    B.set(1, 1, 4.0);
+    B.set(1, 2, 5.0);
+    B.set(2, 0, 6.0);
+    B.set(2, 1, 7.0);
+    B.set(2, 2, 8.0);
 
-  TlDenseGeneralMatrix_Eigen C = B * A;
+    TlDenseGeneralMatrix_Eigen C = B * A;
 
-  EXPECT_DOUBLE_EQ(7.0, C.get(0, 0));
-  EXPECT_DOUBLE_EQ(10.0, C.get(0, 1));
-  EXPECT_DOUBLE_EQ(14.0, C.get(0, 2));
-  EXPECT_DOUBLE_EQ(19.0, C.get(1, 0));
-  EXPECT_DOUBLE_EQ(31.0, C.get(1, 1));
-  EXPECT_DOUBLE_EQ(50.0, C.get(1, 2));
-  EXPECT_DOUBLE_EQ(31.0, C.get(2, 0));
-  EXPECT_DOUBLE_EQ(52.0, C.get(2, 1));
-  EXPECT_DOUBLE_EQ(86.0, C.get(2, 2));
+    EXPECT_DOUBLE_EQ(7.0, C.get(0, 0));
+    EXPECT_DOUBLE_EQ(10.0, C.get(0, 1));
+    EXPECT_DOUBLE_EQ(14.0, C.get(0, 2));
+    EXPECT_DOUBLE_EQ(19.0, C.get(1, 0));
+    EXPECT_DOUBLE_EQ(31.0, C.get(1, 1));
+    EXPECT_DOUBLE_EQ(50.0, C.get(1, 2));
+    EXPECT_DOUBLE_EQ(31.0, C.get(2, 0));
+    EXPECT_DOUBLE_EQ(52.0, C.get(2, 1));
+    EXPECT_DOUBLE_EQ(86.0, C.get(2, 2));
 }
 
 // TEST(TlDenseSymmetricMatrix_Eigen, imul1) {
@@ -325,7 +326,8 @@ TEST(TlDenseSymmetricMatrix_Eigen, mul_gen_sym) {
 //
 
 // TEST(TlDenseSymmetricMatrix_Eigen, eig) {
-//   TlDenseSymmetricMatrix_Eigen A = getSymMatrixD<TlDenseSymmetricMatrix_Eigen>();
+//   TlDenseSymmetricMatrix_Eigen A =
+//   getSymMatrixD<TlDenseSymmetricMatrix_Eigen>();
 
 //   TlDenseVector_Eigen eigVal;
 //   TlDenseGeneralMatrix_Eigen eigVec;
@@ -361,28 +363,29 @@ TEST(TlDenseSymmetricMatrix_Eigen, mul_gen_sym) {
 // }
 
 TEST(TlDenseSymmetricMatrix_Eigen, eig) {
-  int dim = 100;
-  TlDenseSymmetricMatrix_Eigen A = getSymmetricMatrix<TlDenseSymmetricMatrix_Eigen>(dim);
-  A.save("eig_A.mat");
+    int dim = 100;
+    TlDenseSymmetricMatrix_Eigen A =
+        getSymmetricMatrix<TlDenseSymmetricMatrix_Eigen>(dim);
+    A.save("eig_A.mat");
 
-  TlDenseVector_Eigen eigVal;
-  TlDenseGeneralMatrix_Eigen eigVec;
-  A.eig(&eigVal, &eigVec);
+    TlDenseVector_Eigen eigVal;
+    TlDenseGeneralMatrix_Eigen eigVec;
+    A.eig(&eigVal, &eigVec);
 
-  eigVal.save("eigval_vcl.vtr");
-  eigVec.save("eigvec_vcl.mat");
+    eigVal.save("eigval_vcl.vtr");
+    eigVec.save("eigvec_vcl.mat");
 
-  // check
-  TlDenseSymmetricMatrix_Eigen d(eigVal.getSize());
-  for (int i = 0; i < dim; ++i) {
-    d.set(i, i, eigVal.get(i));
-  }
-  TlDenseGeneralMatrix_Eigen lhs = A * eigVec;
-  TlDenseGeneralMatrix_Eigen rhs = eigVec * d;
-
-  for (int i = 0; i < dim; ++i) {
-    for (int j = 0; j < dim; ++j) {
-      EXPECT_NEAR(lhs.get(i, j), rhs.get(i, j), 1.0E-2);
+    // check
+    TlDenseSymmetricMatrix_Eigen d(eigVal.getSize());
+    for (int i = 0; i < dim; ++i) {
+        d.set(i, i, eigVal.get(i));
     }
-  }
+    TlDenseGeneralMatrix_Eigen lhs = A * eigVec;
+    TlDenseGeneralMatrix_Eigen rhs = eigVec * d;
+
+    for (int i = 0; i < dim; ++i) {
+        for (int j = 0; j < dim; ++j) {
+            EXPECT_NEAR(lhs.get(i, j), rhs.get(i, j), 1.0E-2);
+        }
+    }
 }

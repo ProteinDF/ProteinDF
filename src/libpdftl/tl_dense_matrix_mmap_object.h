@@ -39,7 +39,7 @@ class TlDenseMatrixMmapObject : public TlMatrixObject {
     // virtual TlMatrixObject::size_type getNumOfElements() const;
     // virtual size_type getIndex(const index_type row,
     //                            const index_type col) const = 0;
-    //virtual TlDenseMatrixMmapObject* copy(const std::string& path) const = 0;
+    // virtual TlDenseMatrixMmapObject* copy(const std::string& path) const = 0;
 
    private:
     virtual bool load(const std::string& path);

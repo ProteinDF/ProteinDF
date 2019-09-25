@@ -23,317 +23,332 @@
 #include "CnError.h"
 #include "DfObject.h"
 #include "DfXCFunctional.h"
-#include "tl_dense_vector_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 class DfFockMatrix : public DfObject {
- public:
-  DfFockMatrix(TlSerializeData* pPdfParam);
-  virtual ~DfFockMatrix();
+   public:
+    DfFockMatrix(TlSerializeData* pPdfParam);
+    virtual ~DfFockMatrix();
 
- public:
-  void DfFockMatrixMain();
+   public:
+    void DfFockMatrixMain();
 
- protected:
-  virtual void mainDIRECT_RKS();
-  virtual void mainDIRECT_UKS();
-  virtual void mainDIRECT_ROKS();
+   protected:
+    virtual void mainDIRECT_RKS();
+    virtual void mainDIRECT_UKS();
+    virtual void mainDIRECT_ROKS();
 
-  virtual void setXC_RI(RUN_TYPE nRunType, TlDenseSymmetricMatrix_Lapack& F);
-  virtual void setXC_DIRECT(RUN_TYPE nRunType, TlDenseSymmetricMatrix_Lapack& F);
-  virtual void setCoulomb(METHOD_TYPE nMethodType,
-                          TlDenseSymmetricMatrix_Lapack& F);
-  virtual TlDenseSymmetricMatrix_Lapack getFpqMatrix(RUN_TYPE nRunType,
-                                                   int nIteration);
+    virtual void setXC_RI(RUN_TYPE nRunType, TlDenseSymmetricMatrix_Lapack& F);
+    virtual void setXC_DIRECT(RUN_TYPE nRunType,
+                              TlDenseSymmetricMatrix_Lapack& F);
+    virtual void setCoulomb(METHOD_TYPE nMethodType,
+                            TlDenseSymmetricMatrix_Lapack& F);
+    virtual TlDenseSymmetricMatrix_Lapack getFpqMatrix(RUN_TYPE nRunType,
+                                                       int nIteration);
 
-  virtual TlDenseVector_Lapack getRho(RUN_TYPE nRunType, int nIteration);
-  virtual TlDenseVector_Lapack getMyu(RUN_TYPE nRunType, int nIteration);
-  // virtual void saveFpqMatrix(RUN_TYPE nRunType, const
-  // TlDenseSymmetricMatrix_Lapack&
-  // F);
+    virtual TlDenseVector_Lapack getRho(RUN_TYPE nRunType, int nIteration);
+    virtual TlDenseVector_Lapack getMyu(RUN_TYPE nRunType, int nIteration);
+    // virtual void saveFpqMatrix(RUN_TYPE nRunType, const
+    // TlDenseSymmetricMatrix_Lapack&
+    // F);
 
- protected:
-  template <typename SymmetricMatrixType>
-  void mainDIRECT_RKS();
+   protected:
+    template <typename SymmetricMatrixType>
+    void mainDIRECT_RKS();
 
-  template <typename SymmetricMatrixType>
-  void mainDIRECT_UKS();
+    template <typename SymmetricMatrixType>
+    void mainDIRECT_UKS();
 
-  template <typename MatrixType, typename SymmetricMatrixType,
-            typename VectorType, class DfEriClass, class DfOverlapClass>
-  void mainDIRECT_ROKS();
+    template <typename MatrixType, typename SymmetricMatrixType,
+              typename VectorType, class DfEriClass, class DfOverlapClass>
+    void mainDIRECT_ROKS();
 
-  template <typename SymmetricMatrixType, typename VectorType,
-            class DfOverlapClass>
-  void setXC_RI(const RUN_TYPE nRunType, SymmetricMatrixType& F);
+    template <typename SymmetricMatrixType, typename VectorType,
+              class DfOverlapClass>
+    void setXC_RI(const RUN_TYPE nRunType, SymmetricMatrixType& F);
 
-  template <typename SymmetricMatrixType>
-  void setXC_DIRECT(const RUN_TYPE nRunType, SymmetricMatrixType& F);
+    template <typename SymmetricMatrixType>
+    void setXC_DIRECT(const RUN_TYPE nRunType, SymmetricMatrixType& F);
 
-  template <typename SymmetricMatrixType, typename VectorType, class DfEriClass>
-  void setCoulomb(const METHOD_TYPE nMethodType, SymmetricMatrixType& F);
+    template <typename SymmetricMatrixType, typename VectorType,
+              class DfEriClass>
+    void setCoulomb(const METHOD_TYPE nMethodType, SymmetricMatrixType& F);
 
-  template <typename SymmetricMatrixType>
-  void setHpq(const RUN_TYPE nRunType, SymmetricMatrixType& F);
+    template <typename SymmetricMatrixType>
+    void setHpq(const RUN_TYPE nRunType, SymmetricMatrixType& F);
 
- protected:
-  bool isUseNewEngine_;
+   protected:
+    bool isUseNewEngine_;
 };
 
 // =====================================================================
 // template
 template <typename SymmetricMatrixType>
 void DfFockMatrix::mainDIRECT_RKS() {
-  SymmetricMatrixType F(this->m_nNumOfAOs);
+    SymmetricMatrixType F(this->m_nNumOfAOs);
 
-  {
-    SymmetricMatrixType Hpq = DfObject::getHpqMatrix<SymmetricMatrixType>();
-    F += Hpq;
-  }
-  if (this->m_nNumOfDummyAtoms > 0) {
-    SymmetricMatrixType Hpq2 = DfObject::getHpq2Matrix<SymmetricMatrixType>();
-    const int chargeExtrapolateNumber =
-        std::max(this->chargeExtrapolateNumber_, 1);
-    const int times = std::min(this->m_nIteration, chargeExtrapolateNumber);
-    F += static_cast<int>(times) * Hpq2;
-  }
-
-  {
-    SymmetricMatrixType J =
-        DfObject::getJMatrix<SymmetricMatrixType>(this->m_nIteration);
-    F += J;
-  }
-
-  {
-    const DfXCFunctional dfXCFunctional(this->pPdfParam_);
-    if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
-      SymmetricMatrixType Fxc = DfObject::getFxcMatrix<SymmetricMatrixType>(
-          RUN_RKS, this->m_nIteration);
-      F += Fxc;
+    {
+        SymmetricMatrixType Hpq = DfObject::getHpqMatrix<SymmetricMatrixType>();
+        F += Hpq;
+    }
+    if (this->m_nNumOfDummyAtoms > 0) {
+        SymmetricMatrixType Hpq2 =
+            DfObject::getHpq2Matrix<SymmetricMatrixType>();
+        const int chargeExtrapolateNumber =
+            std::max(this->chargeExtrapolateNumber_, 1);
+        const int times = std::min(this->m_nIteration, chargeExtrapolateNumber);
+        F += static_cast<int>(times) * Hpq2;
     }
 
-    if (dfXCFunctional.isHybridFunctional() == true) {
-      const double coef = dfXCFunctional.getFockExchangeCoefficient();
-      this->log_.info(TlUtils::format("coefficient of K: %f", coef));
-      SymmetricMatrixType K = DfObject::getHFxMatrix<SymmetricMatrixType>(
-          RUN_RKS, this->m_nIteration);
-      K *= coef;
-      F += K;
+    {
+        SymmetricMatrixType J =
+            DfObject::getJMatrix<SymmetricMatrixType>(this->m_nIteration);
+        F += J;
     }
-  }
 
-  DfObject::saveFpqMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration, F);
+    {
+        const DfXCFunctional dfXCFunctional(this->pPdfParam_);
+        if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
+            SymmetricMatrixType Fxc =
+                DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_RKS,
+                                                            this->m_nIteration);
+            F += Fxc;
+        }
+
+        if (dfXCFunctional.isHybridFunctional() == true) {
+            const double coef = dfXCFunctional.getFockExchangeCoefficient();
+            this->log_.info(TlUtils::format("coefficient of K: %f", coef));
+            SymmetricMatrixType K = DfObject::getHFxMatrix<SymmetricMatrixType>(
+                RUN_RKS, this->m_nIteration);
+            K *= coef;
+            F += K;
+        }
+    }
+
+    DfObject::saveFpqMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration,
+                                                 F);
 }
 
 template <typename SymmetricMatrixType>
 void DfFockMatrix::mainDIRECT_UKS() {
-  SymmetricMatrixType FA(this->m_nNumOfAOs);
-  SymmetricMatrixType FB(this->m_nNumOfAOs);
+    SymmetricMatrixType FA(this->m_nNumOfAOs);
+    SymmetricMatrixType FB(this->m_nNumOfAOs);
 
-  {
-    SymmetricMatrixType Hpq = DfObject::getHpqMatrix<SymmetricMatrixType>();
-    FA += Hpq;
-    FB += Hpq;
-  }
-  if (this->m_nNumOfDummyAtoms > 0) {
-    SymmetricMatrixType Hpq2 = DfObject::getHpq2Matrix<SymmetricMatrixType>();
-    const int chargeExtrapolateNumber =
-        std::max(this->chargeExtrapolateNumber_, 1);
-    const int times = std::min(this->m_nIteration, chargeExtrapolateNumber);
-    FA += static_cast<int>(times) * Hpq2;
-    FB += static_cast<int>(times) * Hpq2;
-  }
-
-  {
-    SymmetricMatrixType J =
-        DfObject::getJMatrix<SymmetricMatrixType>(this->m_nIteration);
-    FA += J;
-    FB += J;
-  }
-
-  {
-    const DfXCFunctional dfXCFunctional(this->pPdfParam_);
-    if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
-      {
-        SymmetricMatrixType FxcA = DfObject::getFxcMatrix<SymmetricMatrixType>(
-            RUN_UKS_ALPHA, this->m_nIteration);
-        FA += FxcA;
-      }
-      {
-        SymmetricMatrixType FxcB = DfObject::getFxcMatrix<SymmetricMatrixType>(
-            RUN_UKS_BETA, this->m_nIteration);
-        FB += FxcB;
-      }
+    {
+        SymmetricMatrixType Hpq = DfObject::getHpqMatrix<SymmetricMatrixType>();
+        FA += Hpq;
+        FB += Hpq;
+    }
+    if (this->m_nNumOfDummyAtoms > 0) {
+        SymmetricMatrixType Hpq2 =
+            DfObject::getHpq2Matrix<SymmetricMatrixType>();
+        const int chargeExtrapolateNumber =
+            std::max(this->chargeExtrapolateNumber_, 1);
+        const int times = std::min(this->m_nIteration, chargeExtrapolateNumber);
+        FA += static_cast<int>(times) * Hpq2;
+        FB += static_cast<int>(times) * Hpq2;
     }
 
-    if (dfXCFunctional.isHybridFunctional() == true) {
-      const double coef = dfXCFunctional.getFockExchangeCoefficient();
-      this->log_.info(TlUtils::format("coefficient of K: %f", coef));
-      {
-        SymmetricMatrixType KA = DfObject::getHFxMatrix<SymmetricMatrixType>(
-            RUN_UKS_ALPHA, this->m_nIteration);
-        KA *= coef;
-        FA += KA;
-      }
-      {
-        SymmetricMatrixType KB = DfObject::getHFxMatrix<SymmetricMatrixType>(
-            RUN_UKS_BETA, this->m_nIteration);
-        KB *= coef;
-        FB += KB;
-      }
+    {
+        SymmetricMatrixType J =
+            DfObject::getJMatrix<SymmetricMatrixType>(this->m_nIteration);
+        FA += J;
+        FB += J;
     }
-  }
 
-  DfObject::saveFpqMatrix<SymmetricMatrixType>(RUN_UKS_ALPHA,
-                                               this->m_nIteration, FA);
-  DfObject::saveFpqMatrix<SymmetricMatrixType>(RUN_UKS_BETA, this->m_nIteration,
-                                               FB);
+    {
+        const DfXCFunctional dfXCFunctional(this->pPdfParam_);
+        if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
+            {
+                SymmetricMatrixType FxcA =
+                    DfObject::getFxcMatrix<SymmetricMatrixType>(
+                        RUN_UKS_ALPHA, this->m_nIteration);
+                FA += FxcA;
+            }
+            {
+                SymmetricMatrixType FxcB =
+                    DfObject::getFxcMatrix<SymmetricMatrixType>(
+                        RUN_UKS_BETA, this->m_nIteration);
+                FB += FxcB;
+            }
+        }
+
+        if (dfXCFunctional.isHybridFunctional() == true) {
+            const double coef = dfXCFunctional.getFockExchangeCoefficient();
+            this->log_.info(TlUtils::format("coefficient of K: %f", coef));
+            {
+                SymmetricMatrixType KA =
+                    DfObject::getHFxMatrix<SymmetricMatrixType>(
+                        RUN_UKS_ALPHA, this->m_nIteration);
+                KA *= coef;
+                FA += KA;
+            }
+            {
+                SymmetricMatrixType KB =
+                    DfObject::getHFxMatrix<SymmetricMatrixType>(
+                        RUN_UKS_BETA, this->m_nIteration);
+                KB *= coef;
+                FB += KB;
+            }
+        }
+    }
+
+    DfObject::saveFpqMatrix<SymmetricMatrixType>(RUN_UKS_ALPHA,
+                                                 this->m_nIteration, FA);
+    DfObject::saveFpqMatrix<SymmetricMatrixType>(RUN_UKS_BETA,
+                                                 this->m_nIteration, FB);
 }
 
 template <typename MatrixType, typename SymmetricMatrixType,
           typename VectorType, class DfEriClass, class DfOverlapClass>
 void DfFockMatrix::mainDIRECT_ROKS() {
-  const index_type numOfAOs = this->m_nNumOfAOs;
-  SymmetricMatrixType Fc(numOfAOs);
-  SymmetricMatrixType Fo(numOfAOs);
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    SymmetricMatrixType Fc(numOfAOs);
+    SymmetricMatrixType Fo(numOfAOs);
 
-  {
-    SymmetricMatrixType Hpq = DfObject::getHpqMatrix<SymmetricMatrixType>();
-    Fc = Hpq;
-  }
-  if (this->m_nNumOfDummyAtoms > 0) {
-    SymmetricMatrixType Hpq2 = DfObject::getHpq2Matrix<SymmetricMatrixType>();
-    const int chargeExtrapolateNumber =
-        std::max(this->chargeExtrapolateNumber_, 1);
-    const int times = std::min(this->m_nIteration, chargeExtrapolateNumber);
-    Fc += times * Hpq2;
-  }
-
-  {
-    SymmetricMatrixType J =
-        DfObject::getJMatrix<SymmetricMatrixType>(this->m_nIteration);
-    Fc += J;
-  }
-  Fo = 0.5 * Fc;
-
-  {
-    SymmetricMatrixType Fxc_up =
-        0.5 * DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_ROKS_ALPHA,
-                                                          this->m_nIteration);
-    Fc += Fxc_up;
-    Fo += Fxc_up;
-  }
-  {
-    SymmetricMatrixType Fxc_down =
-        0.5 * DfObject::getFxcMatrix<SymmetricMatrixType>(RUN_ROKS_BETA,
-                                                          this->m_nIteration);
-    Fc += Fxc_down;
-  }
-
-  {
-    const DfXCFunctional dfXCFunctional(this->pPdfParam_);
-    if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
-      {
-        SymmetricMatrixType Fxc_o = DfObject::getFxcMatrix<SymmetricMatrixType>(
-            RUN_ROKS_OPEN, this->m_nIteration);
-        Fo += Fxc_o;
-      }
-      {
-        SymmetricMatrixType Fxc_c = DfObject::getFxcMatrix<SymmetricMatrixType>(
-            RUN_ROKS_CLOSED, this->m_nIteration);
-        Fc += Fxc_c;
-      }
+    {
+        SymmetricMatrixType Hpq = DfObject::getHpqMatrix<SymmetricMatrixType>();
+        Fc = Hpq;
+    }
+    if (this->m_nNumOfDummyAtoms > 0) {
+        SymmetricMatrixType Hpq2 =
+            DfObject::getHpq2Matrix<SymmetricMatrixType>();
+        const int chargeExtrapolateNumber =
+            std::max(this->chargeExtrapolateNumber_, 1);
+        const int times = std::min(this->m_nIteration, chargeExtrapolateNumber);
+        Fc += times * Hpq2;
     }
 
-    if (dfXCFunctional.isHybridFunctional() == true) {
-      const double coef = dfXCFunctional.getFockExchangeCoefficient();
-      this->log_.info(TlUtils::format("coefficient of K: %f", coef));
-      {
-        SymmetricMatrixType K_up =
-            0.5 * DfObject::getHFxMatrix<SymmetricMatrixType>(
+    {
+        SymmetricMatrixType J =
+            DfObject::getJMatrix<SymmetricMatrixType>(this->m_nIteration);
+        Fc += J;
+    }
+    Fo = 0.5 * Fc;
+
+    {
+        SymmetricMatrixType Fxc_up =
+            0.5 * DfObject::getFxcMatrix<SymmetricMatrixType>(
                       RUN_ROKS_ALPHA, this->m_nIteration);
-        K_up *= coef;
-
-        Fc += K_up;
-        Fo += K_up;
-      }
-      {
-        SymmetricMatrixType K_down =
-            0.5 * DfObject::getHFxMatrix<SymmetricMatrixType>(
+        Fc += Fxc_up;
+        Fo += Fxc_up;
+    }
+    {
+        SymmetricMatrixType Fxc_down =
+            0.5 * DfObject::getFxcMatrix<SymmetricMatrixType>(
                       RUN_ROKS_BETA, this->m_nIteration);
-        K_down *= coef;
-
-        Fc += K_down;
-      }
+        Fc += Fxc_down;
     }
-  }
 
-  // Fo.save("Fo.mat");
-  // Fc.save("Fc.mat");
+    {
+        const DfXCFunctional dfXCFunctional(this->pPdfParam_);
+        if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
+            {
+                SymmetricMatrixType Fxc_o =
+                    DfObject::getFxcMatrix<SymmetricMatrixType>(
+                        RUN_ROKS_OPEN, this->m_nIteration);
+                Fo += Fxc_o;
+            }
+            {
+                SymmetricMatrixType Fxc_c =
+                    DfObject::getFxcMatrix<SymmetricMatrixType>(
+                        RUN_ROKS_CLOSED, this->m_nIteration);
+                Fc += Fxc_c;
+            }
+        }
 
-  // -------------------------------------------------------------------------
-  MatrixType SDc, DcS, SDo, DoS;
-  {
-    const SymmetricMatrixType S = DfObject::getSpqMatrix<SymmetricMatrixType>();
-    const SymmetricMatrixType Dc =
-        0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(
-                  RUN_ROKS_CLOSED, this->m_nIteration - 1);
-    const SymmetricMatrixType Do = DfObject::getPpqMatrix<SymmetricMatrixType>(
-        RUN_ROKS_OPEN, this->m_nIteration - 1);
+        if (dfXCFunctional.isHybridFunctional() == true) {
+            const double coef = dfXCFunctional.getFockExchangeCoefficient();
+            this->log_.info(TlUtils::format("coefficient of K: %f", coef));
+            {
+                SymmetricMatrixType K_up =
+                    0.5 * DfObject::getHFxMatrix<SymmetricMatrixType>(
+                              RUN_ROKS_ALPHA, this->m_nIteration);
+                K_up *= coef;
 
-    SDc = S * Dc;
-    DcS = SDc;
-    DcS.transposeInPlace();
+                Fc += K_up;
+                Fo += K_up;
+            }
+            {
+                SymmetricMatrixType K_down =
+                    0.5 * DfObject::getHFxMatrix<SymmetricMatrixType>(
+                              RUN_ROKS_BETA, this->m_nIteration);
+                K_down *= coef;
 
-    SDo = S * Do;
-    DoS = SDo;
-    DoS.transposeInPlace();
-
-    // SDc.save("SDc.mat");
-    // DcS.save("DcS.mat");
-    // SDo.save("SDo.mat");
-    // DoS.save("DoS.mat");
-  }
-
-  MatrixType Ftmp(numOfAOs, numOfAOs);
-  {
-    SymmetricMatrixType E(numOfAOs);
-    for (index_type i = 0; i < numOfAOs; ++i) {
-      E.set(i, i, 1.0);
+                Fc += K_down;
+            }
+        }
     }
-    const MatrixType E_SDc = E - SDc;
-    const MatrixType E_DcS = E - DcS;
-    const MatrixType E_SDo = E - SDo;
-    const MatrixType E_DoS = E - DoS;
-    // E_SDc.save("E_SDc.mat");
-    // E_DcS.save("E_DcS.mat");
-    // E_SDo.save("E_SDo.mat");
-    // E_DoS.save("E_DoS.mat");
 
-    const MatrixType F1 = E_SDo * Fc * E_DoS;
-    const MatrixType F2 = E_SDc * Fo * E_DcS;
-    // F1.save("F1.mat");
-    // F2.save("F2.mat");
-    Ftmp = F1 + F2;
+    // Fo.save("Fo.mat");
+    // Fc.save("Fc.mat");
 
-    // {
-    //     MatrixType A = E_SDo * E_DoS;
-    //     MatrixType B = E_SDc * E_DcS;
-    //     MatrixType B2 = E_DcS * E_SDc;
-    //     A.save("A.mat");
-    //     B.save("B.mat");
-    //     B.save("B2.mat");
-    // }
-  }
+    // -------------------------------------------------------------------------
+    MatrixType SDc, DcS, SDo, DoS;
+    {
+        const SymmetricMatrixType S =
+            DfObject::getSpqMatrix<SymmetricMatrixType>();
+        const SymmetricMatrixType Dc =
+            0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(
+                      RUN_ROKS_CLOSED, this->m_nIteration - 1);
+        const SymmetricMatrixType Do =
+            DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN,
+                                                        this->m_nIteration - 1);
 
-  {
-    const SymmetricMatrixType FcFo = Fc - Fo;
-    Ftmp += SDc * FcFo * DoS;
-    Ftmp += SDo * FcFo * DcS;
-  }
+        SDc = S * Dc;
+        DcS = SDc;
+        DcS.transposeInPlace();
 
-  const SymmetricMatrixType F = Ftmp;
-  DfObject::saveFpqMatrix(RUN_ROKS, this->m_nIteration, F);
+        SDo = S * Do;
+        DoS = SDo;
+        DoS.transposeInPlace();
+
+        // SDc.save("SDc.mat");
+        // DcS.save("DcS.mat");
+        // SDo.save("SDo.mat");
+        // DoS.save("DoS.mat");
+    }
+
+    MatrixType Ftmp(numOfAOs, numOfAOs);
+    {
+        SymmetricMatrixType E(numOfAOs);
+        for (index_type i = 0; i < numOfAOs; ++i) {
+            E.set(i, i, 1.0);
+        }
+        const MatrixType E_SDc = E - SDc;
+        const MatrixType E_DcS = E - DcS;
+        const MatrixType E_SDo = E - SDo;
+        const MatrixType E_DoS = E - DoS;
+        // E_SDc.save("E_SDc.mat");
+        // E_DcS.save("E_DcS.mat");
+        // E_SDo.save("E_SDo.mat");
+        // E_DoS.save("E_DoS.mat");
+
+        const MatrixType F1 = E_SDo * Fc * E_DoS;
+        const MatrixType F2 = E_SDc * Fo * E_DcS;
+        // F1.save("F1.mat");
+        // F2.save("F2.mat");
+        Ftmp = F1 + F2;
+
+        // {
+        //     MatrixType A = E_SDo * E_DoS;
+        //     MatrixType B = E_SDc * E_DcS;
+        //     MatrixType B2 = E_DcS * E_SDc;
+        //     A.save("A.mat");
+        //     B.save("B.mat");
+        //     B.save("B2.mat");
+        // }
+    }
+
+    {
+        const SymmetricMatrixType FcFo = Fc - Fo;
+        Ftmp += SDc * FcFo * DoS;
+        Ftmp += SDo * FcFo * DcS;
+    }
+
+    const SymmetricMatrixType F = Ftmp;
+    DfObject::saveFpqMatrix(RUN_ROKS, this->m_nIteration, F);
 }
 
 // template<typename MatrixType, typename SymmetricMatrixType, typename
@@ -687,112 +702,118 @@ void DfFockMatrix::mainDIRECT_ROKS() {
 template <typename SymmetricMatrixType, typename VectorType,
           class DfOverlapClass>
 void DfFockMatrix::setXC_RI(const RUN_TYPE nRunType, SymmetricMatrixType& F) {
-  // RI 法
-  VectorType Myu = this->getMyu(nRunType, this->m_nIteration);
-  if (this->m_nIteration >= 2) {
-    const VectorType prevMyu = this->getMyu(nRunType, this->m_nIteration - 1);
-    Myu -= prevMyu;
-  }
+    // RI 法
+    VectorType Myu = this->getMyu(nRunType, this->m_nIteration);
+    if (this->m_nIteration >= 2) {
+        const VectorType prevMyu =
+            this->getMyu(nRunType, this->m_nIteration - 1);
+        Myu -= prevMyu;
+    }
 
-  DfOverlapClass dfOverlap(this->pPdfParam_);
-  dfOverlap.get_pqg(Myu, &F);
+    DfOverlapClass dfOverlap(this->pPdfParam_);
+    dfOverlap.get_pqg(Myu, &F);
 }
 
 template <typename SymmetricMatrixType>
 void DfFockMatrix::setXC_DIRECT(const RUN_TYPE nRunType,
                                 SymmetricMatrixType& F) {
-  F = this->getFxcMatrix<SymmetricMatrixType>(nRunType, this->m_nIteration);
+    F = this->getFxcMatrix<SymmetricMatrixType>(nRunType, this->m_nIteration);
 
-  if (this->m_nIteration >= 2) {
-    // this->setHpq() で前回のFockを足し込むので、
-    // ２回転目以降は差分を求める必要がある
-    F -= this->getFxcMatrix<SymmetricMatrixType>(nRunType,
-                                                 this->m_nIteration - 1);
-  }
+    if (this->m_nIteration >= 2) {
+        // this->setHpq() で前回のFockを足し込むので、
+        // ２回転目以降は差分を求める必要がある
+        F -= this->getFxcMatrix<SymmetricMatrixType>(nRunType,
+                                                     this->m_nIteration - 1);
+    }
 }
 
 template <typename SymmetricMatrixType, typename VectorType, class DfEriClass>
 void DfFockMatrix::setCoulomb(const METHOD_TYPE nMethodType,
                               SymmetricMatrixType& F) {
-  VectorType Rho;
-  switch (nMethodType) {
-    case METHOD_RKS:
-      Rho = this->getRho(RUN_RKS, this->m_nIteration);
-      break;
-    case METHOD_UKS:
-      Rho = this->getRho(RUN_UKS_ALPHA, this->m_nIteration);
-      Rho += this->getRho(RUN_UKS_BETA, this->m_nIteration);
-      break;
-    default:
-      std::cerr << "unsopported. sorry." << std::endl;
-      CnErr.abort();
-      break;
-  }
-
-  if (this->m_nIteration >= 2) {
-    VectorType prevRho;
+    VectorType Rho;
     switch (nMethodType) {
-      case METHOD_RKS:
-        prevRho = this->getRho(RUN_RKS, this->m_nIteration - 1);
-        break;
-      case METHOD_UKS:
-        prevRho = this->getRho(RUN_UKS_ALPHA, this->m_nIteration - 1);
-        prevRho += this->getRho(RUN_UKS_BETA, this->m_nIteration - 1);
-        break;
-      default:
-        std::cerr << "unsopported. sorry." << std::endl;
-        CnErr.abort();
-        break;
+        case METHOD_RKS:
+            Rho = this->getRho(RUN_RKS, this->m_nIteration);
+            break;
+        case METHOD_UKS:
+            Rho = this->getRho(RUN_UKS_ALPHA, this->m_nIteration);
+            Rho += this->getRho(RUN_UKS_BETA, this->m_nIteration);
+            break;
+        default:
+            std::cerr << "unsopported. sorry." << std::endl;
+            CnErr.abort();
+            break;
     }
 
-    Rho -= prevRho;
-  }
+    if (this->m_nIteration >= 2) {
+        VectorType prevRho;
+        switch (nMethodType) {
+            case METHOD_RKS:
+                prevRho = this->getRho(RUN_RKS, this->m_nIteration - 1);
+                break;
+            case METHOD_UKS:
+                prevRho = this->getRho(RUN_UKS_ALPHA, this->m_nIteration - 1);
+                prevRho += this->getRho(RUN_UKS_BETA, this->m_nIteration - 1);
+                break;
+            default:
+                std::cerr << "unsopported. sorry." << std::endl;
+                CnErr.abort();
+                break;
+        }
 
-  DfEriClass dfEri(this->pPdfParam_);
-  dfEri.getJ(Rho, &F);
+        Rho -= prevRho;
+    }
+
+    DfEriClass dfEri(this->pPdfParam_);
+    dfEri.getJ(Rho, &F);
 }
 
 template <typename SymmetricMatrixType>
 void DfFockMatrix::setHpq(const RUN_TYPE runType, SymmetricMatrixType& F) {
-  // one electron part =================================================
-  if (this->m_nIteration == 1) {
-    // at first iteration, add one electron part to deltaH
-    {
-      SymmetricMatrixType Hpq = DfObject::getHpqMatrix<SymmetricMatrixType>();
-      assert(Hpq.getNumOfRows() == this->m_nNumOfAOs);
-      F += Hpq;
-    }
+    // one electron part =================================================
+    if (this->m_nIteration == 1) {
+        // at first iteration, add one electron part to deltaH
+        {
+            SymmetricMatrixType Hpq =
+                DfObject::getHpqMatrix<SymmetricMatrixType>();
+            assert(Hpq.getNumOfRows() == this->m_nNumOfAOs);
+            F += Hpq;
+        }
 
-    if ((this->m_nNumOfDummyAtoms != 0) &&
-        (this->chargeExtrapolateNumber_ == 0)) {
-      SymmetricMatrixType Hpq2 = DfObject::getHpq2Matrix<SymmetricMatrixType>();
-      F += Hpq2;
-    }
-  } else {
-    // add previous F-matrix to deltaH
-    {
-      SymmetricMatrixType prevFpq = DfObject::getFpqMatrix<SymmetricMatrixType>(
-          runType, this->m_nIteration - 1);
-      if (prevFpq.getNumOfRows() != this->m_nNumOfAOs) {
-        std::string msg = TlUtils::format(
-            "dimension of previous Fock matrix is not equal to the current: %d "
-            "!= %d",
-            prevFpq.getNumOfRows(), this->m_nNumOfAOs);
-        std::cerr << msg << std::endl;
-      }
-      assert(prevFpq.getNumOfRows() == this->m_nNumOfAOs);
-      F += prevFpq;
-    }
+        if ((this->m_nNumOfDummyAtoms != 0) &&
+            (this->chargeExtrapolateNumber_ == 0)) {
+            SymmetricMatrixType Hpq2 =
+                DfObject::getHpq2Matrix<SymmetricMatrixType>();
+            F += Hpq2;
+        }
+    } else {
+        // add previous F-matrix to deltaH
+        {
+            SymmetricMatrixType prevFpq =
+                DfObject::getFpqMatrix<SymmetricMatrixType>(
+                    runType, this->m_nIteration - 1);
+            if (prevFpq.getNumOfRows() != this->m_nNumOfAOs) {
+                std::string msg = TlUtils::format(
+                    "dimension of previous Fock matrix is not equal to the "
+                    "current: %d "
+                    "!= %d",
+                    prevFpq.getNumOfRows(), this->m_nNumOfAOs);
+                std::cerr << msg << std::endl;
+            }
+            assert(prevFpq.getNumOfRows() == this->m_nNumOfAOs);
+            F += prevFpq;
+        }
 
-    // add dummy charge
-    if ((this->m_nNumOfDummyAtoms != 0) &&
-        (this->m_nIteration <= this->chargeExtrapolateNumber_ + 1)) {
-      SymmetricMatrixType Hpq2 = DfObject::getHpq2Matrix<SymmetricMatrixType>();
-      F += Hpq2;
-      this->logger(TlUtils::format("Added Dummy Charge / %d\n",
-                                   this->chargeExtrapolateNumber_));
+        // add dummy charge
+        if ((this->m_nNumOfDummyAtoms != 0) &&
+            (this->m_nIteration <= this->chargeExtrapolateNumber_ + 1)) {
+            SymmetricMatrixType Hpq2 =
+                DfObject::getHpq2Matrix<SymmetricMatrixType>();
+            F += Hpq2;
+            this->logger(TlUtils::format("Added Dummy Charge / %d\n",
+                                         this->chargeExtrapolateNumber_));
+        }
     }
-  }
 }
 
 #endif  // DFFOCKMATRIX_H

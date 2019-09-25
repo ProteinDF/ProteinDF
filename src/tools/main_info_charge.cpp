@@ -24,31 +24,31 @@
 #include "TlMsgPack.h"
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "hf:");
+    TlGetopt opt(argc, argv, "hf:");
 
-  std::string paramPath = "pdfparam.mpac";
-  if (opt["f"].empty() == false) {
-    paramPath = opt["f"];
-  }
+    std::string paramPath = "pdfparam.mpac";
+    if (opt["f"].empty() == false) {
+        paramPath = opt["f"];
+    }
 
-  // パラメータファイルの読み込み
-  TlMsgPack mpac;
-  mpac.load(paramPath);
-  TlSerializeData param = mpac.getSerializeData();
+    // パラメータファイルの読み込み
+    TlMsgPack mpac;
+    mpac.load(paramPath);
+    TlSerializeData param = mpac.getSerializeData();
 
-  Fl_Geometry flGeom(param["coordinates"]);
-  DfInfo dfInfo(&param);
+    Fl_Geometry flGeom(param["coordinates"]);
+    DfInfo dfInfo(&param);
 
-  const int nuclCharge = flGeom.getTotalCharge();
-  const int elecCharge = -dfInfo.getNumOfElectrons();
+    const int nuclCharge = flGeom.getTotalCharge();
+    const int elecCharge = -dfInfo.getNumOfElectrons();
 
-  std::cout << "nucleus charge            = " << nuclCharge << std::endl;
-  std::cout << "nucleus charge(without X) = " << flGeom.getTotalChargeWithoutX()
-            << std::endl;
-  std::cout << "electron charge           = " << elecCharge << std::endl;
-  std::cout << "charge                    = " << nuclCharge + elecCharge
-            << std::endl;
-  std::cout << "formula: " << flGeom.getFormula() << std::endl;
+    std::cout << "nucleus charge            = " << nuclCharge << std::endl;
+    std::cout << "nucleus charge(without X) = "
+              << flGeom.getTotalChargeWithoutX() << std::endl;
+    std::cout << "electron charge           = " << elecCharge << std::endl;
+    std::cout << "charge                    = " << nuclCharge + elecCharge
+              << std::endl;
+    std::cout << "formula: " << flGeom.getFormula() << std::endl;
 
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

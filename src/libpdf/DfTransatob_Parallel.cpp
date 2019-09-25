@@ -27,53 +27,53 @@ DfTransatob_Parallel::DfTransatob_Parallel(TlSerializeData* pPdfParam)
 DfTransatob_Parallel::~DfTransatob_Parallel() {}
 
 void DfTransatob_Parallel::logger(const std::string& str) const {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    DfTransatob::logger(str);
-  }
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        DfTransatob::logger(str);
+    }
 }
 
 void DfTransatob_Parallel::run() {
 #ifdef HAVE_SCALAPACK
-  if (this->m_bUsingSCALAPACK == true) {
-    this->logger("DfTransatob(parallel) using SCALAPACK.");
-    this->run_Scalapack();
-    return;
-  } else {
-    this->logger("DfTransatob(parallel) using LAPACK.");
-  }
+    if (this->m_bUsingSCALAPACK == true) {
+        this->logger("DfTransatob(parallel) using SCALAPACK.");
+        this->run_Scalapack();
+        return;
+    } else {
+        this->logger("DfTransatob(parallel) using LAPACK.");
+    }
 #endif  // HAVE_SCALAPACK
 
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    DfTransatob::run();
-  }
-  rComm.barrier();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        DfTransatob::run();
+    }
+    rComm.barrier();
 }
 
 void DfTransatob_Parallel::run_Scalapack() {
-  DfTransatob::run_method<TlDenseGeneralMatrix_Scalapack>(this->m_nNumOfMOs);
+    DfTransatob::run_method<TlDenseGeneralMatrix_Scalapack>(this->m_nNumOfMOs);
 }
 
 void DfTransatob_Parallel::runQclo(const std::string& fragname, int norbcut) {
 #ifdef HAVE_SCALAPACK
-  if (this->m_bUsingSCALAPACK == true) {
-    this->logger("DfTransatob(parallel) using SCALAPACK.\n");
-    this->runQclo_Scalapack(fragname, norbcut);
-    return;
-  } else {
-    this->logger("DfTransatob(parallel) using LAPACK.\n");
-  }
+    if (this->m_bUsingSCALAPACK == true) {
+        this->logger("DfTransatob(parallel) using SCALAPACK.\n");
+        this->runQclo_Scalapack(fragname, norbcut);
+        return;
+    } else {
+        this->logger("DfTransatob(parallel) using LAPACK.\n");
+    }
 #endif  // HAVE_SCALAPACK
 
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    DfTransatob::runQclo(fragname, norbcut);
-  }
-  rComm.barrier();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        DfTransatob::runQclo(fragname, norbcut);
+    }
+    rComm.barrier();
 }
 
 void DfTransatob_Parallel::runQclo_Scalapack(const std::string& fragname,
                                              int norbcut) {
-  DfTransatob::run_method<TlDenseGeneralMatrix_Scalapack>(norbcut, fragname);
+    DfTransatob::run_method<TlDenseGeneralMatrix_Scalapack>(norbcut, fragname);
 }

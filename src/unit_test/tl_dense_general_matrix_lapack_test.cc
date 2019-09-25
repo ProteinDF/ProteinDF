@@ -15,25 +15,25 @@ static const std::string mat_save_load_path = "temp.gen.blas.save_load.mat";
 // test
 // -----------------------------------------------------------------------------
 TEST(TlDenseGeneralMatrix_Lapack, vtr2mat) {
-  const int row = 3;
-  const int col = 4;
-  const int elements = row * col;
-  std::vector<double> vtr(elements);
-  for (int i = 0; i < elements; ++i) {
-    vtr[i] = i;
-  }
-
-  TlDenseGeneralMatrix_Lapack a(row, col, vtr.data());
-
-  EXPECT_EQ(row, a.getNumOfRows());
-  EXPECT_EQ(col, a.getNumOfCols());
-  int i = 0;
-  for (int c = 0; c < col; ++c) { // col-major
-    for (int r = 0; r < row; ++r) {
-      EXPECT_DOUBLE_EQ(vtr[i], a.get(r, c));
-      ++i;
+    const int row = 3;
+    const int col = 4;
+    const int elements = row * col;
+    std::vector<double> vtr(elements);
+    for (int i = 0; i < elements; ++i) {
+        vtr[i] = i;
     }
-  }
+
+    TlDenseGeneralMatrix_Lapack a(row, col, vtr.data());
+
+    EXPECT_EQ(row, a.getNumOfRows());
+    EXPECT_EQ(col, a.getNumOfCols());
+    int i = 0;
+    for (int c = 0; c < col; ++c) {  // col-major
+        for (int r = 0; r < row; ++r) {
+            EXPECT_DOUBLE_EQ(vtr[i], a.get(r, c));
+            ++i;
+        }
+    }
 }
 
 // TEST(TlDenseGeneralMatrix_Lapack, getMatrixA) {
@@ -207,25 +207,25 @@ TEST(TlDenseGeneralMatrix_Lapack, vtr2mat) {
 // }
 
 TEST(TlDenseGeneralMatrix_Lapack, save_and_load) {
-  TlDenseGeneralMatrix_Lapack m = getMatrixA<TlDenseGeneralMatrix_Lapack>();
-  const bool isSaved = m.save(mat_save_load_path);
-  EXPECT_EQ(isSaved, true);
+    TlDenseGeneralMatrix_Lapack m = getMatrixA<TlDenseGeneralMatrix_Lapack>();
+    const bool isSaved = m.save(mat_save_load_path);
+    EXPECT_EQ(isSaved, true);
 
-  TlDenseGeneralMatrix_Lapack a;
-  const bool isLoaded = a.load(mat_save_load_path);
-  EXPECT_EQ(isLoaded, true);
+    TlDenseGeneralMatrix_Lapack a;
+    const bool isLoaded = a.load(mat_save_load_path);
+    EXPECT_EQ(isLoaded, true);
 
-  EXPECT_EQ(3, a.getNumOfRows());
-  EXPECT_EQ(3, a.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
-  EXPECT_DOUBLE_EQ(1.0, a.get(0, 1));
-  EXPECT_DOUBLE_EQ(2.0, a.get(0, 2));
-  EXPECT_DOUBLE_EQ(3.0, a.get(1, 0));
-  EXPECT_DOUBLE_EQ(4.0, a.get(1, 1));
-  EXPECT_DOUBLE_EQ(5.0, a.get(1, 2));
-  EXPECT_DOUBLE_EQ(6.0, a.get(2, 0));
-  EXPECT_DOUBLE_EQ(7.0, a.get(2, 1));
-  EXPECT_DOUBLE_EQ(8.0, a.get(2, 2));
+    EXPECT_EQ(3, a.getNumOfRows());
+    EXPECT_EQ(3, a.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, a.get(0, 1));
+    EXPECT_DOUBLE_EQ(2.0, a.get(0, 2));
+    EXPECT_DOUBLE_EQ(3.0, a.get(1, 0));
+    EXPECT_DOUBLE_EQ(4.0, a.get(1, 1));
+    EXPECT_DOUBLE_EQ(5.0, a.get(1, 2));
+    EXPECT_DOUBLE_EQ(6.0, a.get(2, 0));
+    EXPECT_DOUBLE_EQ(7.0, a.get(2, 1));
+    EXPECT_DOUBLE_EQ(8.0, a.get(2, 2));
 }
 
 #ifdef HAVE_HDF5
@@ -294,34 +294,34 @@ TEST(TlDenseGeneralMatrix_Lapack, save_and_load) {
 // [3 4 5] x [1] = [14]
 // [6 7 8]   [2]   [23]
 TEST(TlDenseGeneralMatrix_Lapack, operator_mul_mat_vec) {
-  TlDenseGeneralMatrix_Lapack a = getMatrixA<TlDenseGeneralMatrix_Lapack>();
-  TlDenseVector_Lapack v = getVectorA<TlDenseVector_Lapack>();
+    TlDenseGeneralMatrix_Lapack a = getMatrixA<TlDenseGeneralMatrix_Lapack>();
+    TlDenseVector_Lapack v = getVectorA<TlDenseVector_Lapack>();
 
-  TlDenseVector_Lapack z = a * v;
+    TlDenseVector_Lapack z = a * v;
 
-  EXPECT_EQ(3, z.getSize());
-  EXPECT_DOUBLE_EQ(5.0, z.get(0));
-  EXPECT_DOUBLE_EQ(14.0, z.get(1));
-  EXPECT_DOUBLE_EQ(23.0, z.get(2));
+    EXPECT_EQ(3, z.getSize());
+    EXPECT_DOUBLE_EQ(5.0, z.get(0));
+    EXPECT_DOUBLE_EQ(14.0, z.get(1));
+    EXPECT_DOUBLE_EQ(23.0, z.get(2));
 }
 
 //           [ 1  2  3  4]
 // [0 1 2] * [ 5  6  7  8] = [23 26 29 32]
 //           [ 9 10 11 12]
 TEST(TlDenseGeneralMatrix_Lapack, operator_mul_vec_mat) {
-  TlDenseGeneralMatrix_Lapack a = getMatrixD<TlDenseGeneralMatrix_Lapack>();
-  TlDenseVector_Lapack v = getVectorA<TlDenseVector_Lapack>();
-  // std::cout << a << std::endl;
-  // std::cout << v << std::endl;
+    TlDenseGeneralMatrix_Lapack a = getMatrixD<TlDenseGeneralMatrix_Lapack>();
+    TlDenseVector_Lapack v = getVectorA<TlDenseVector_Lapack>();
+    // std::cout << a << std::endl;
+    // std::cout << v << std::endl;
 
-  TlDenseVector_Lapack z = v * a;
-  // std::cout << z << std::endl;
+    TlDenseVector_Lapack z = v * a;
+    // std::cout << z << std::endl;
 
-  EXPECT_EQ(4, z.getSize());
-  EXPECT_DOUBLE_EQ(23.0, z.get(0));
-  EXPECT_DOUBLE_EQ(26.0, z.get(1));
-  EXPECT_DOUBLE_EQ(29.0, z.get(2));
-  EXPECT_DOUBLE_EQ(32.0, z.get(3));
+    EXPECT_EQ(4, z.getSize());
+    EXPECT_DOUBLE_EQ(23.0, z.get(0));
+    EXPECT_DOUBLE_EQ(26.0, z.get(1));
+    EXPECT_DOUBLE_EQ(29.0, z.get(2));
+    EXPECT_DOUBLE_EQ(32.0, z.get(3));
 }
 
 // TEST(TlDenseGeneralMatrix_Lapack, dotInPlace) {

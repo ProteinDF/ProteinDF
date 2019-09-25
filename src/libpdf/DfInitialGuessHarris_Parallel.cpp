@@ -30,33 +30,33 @@ DfInitialGuessHarris_Parallel::DfInitialGuessHarris_Parallel(
 DfInitialGuessHarris_Parallel::~DfInitialGuessHarris_Parallel() {}
 
 void DfInitialGuessHarris_Parallel::main() {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
 
 #ifdef HAVE_SCALAPACK
-  if (this->m_bUsingSCALAPACK) {
-    this->distributeHarrisDB();
+    if (this->m_bUsingSCALAPACK) {
+        this->distributeHarrisDB();
 
-    DfInitialGuessHarris::calcInitialDensityMatrix<
-        TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack,
-        DfOverlapX_Parallel, DfPopulation_Parallel>();
-  } else {
-    if (rComm.isMaster()) {
-      DfInitialGuessHarris::main();
+        DfInitialGuessHarris::calcInitialDensityMatrix<
+            TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack,
+            DfOverlapX_Parallel, DfPopulation_Parallel>();
+    } else {
+        if (rComm.isMaster()) {
+            DfInitialGuessHarris::main();
+        }
     }
-  }
 #else
-  if (rComm.isMaster()) {
-    DfInitialGuessHarris::main();
-  }
+    if (rComm.isMaster()) {
+        DfInitialGuessHarris::main();
+    }
 #endif  // HAVE_SCALAPACK
 }
 
 void DfInitialGuessHarris_Parallel::distributeHarrisDB() {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  if (rComm.isMaster()) {
-    DfInitialGuessHarris::loadHarrisDB();
-  }
+    if (rComm.isMaster()) {
+        DfInitialGuessHarris::loadHarrisDB();
+    }
 
-  rComm.broadcast(this->pdfParam_harrisDB_);
+    rComm.broadcast(this->pdfParam_harrisDB_);
 }

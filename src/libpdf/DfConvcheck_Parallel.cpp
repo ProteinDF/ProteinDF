@@ -19,59 +19,62 @@
 #include "DfConvcheck_Parallel.h"
 #include <iostream>
 #include "TlCommunicate.h"
-#include "tl_dense_symmetric_matrix_scalapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_scalapack.h"
 
 DfConvcheck_Parallel::DfConvcheck_Parallel(TlSerializeData* pPdfParam,
                                            int num_iter)
     : DfConvcheck(pPdfParam, num_iter) {
-  //   TlCommunicate& rComm = TlCommunicate::getInstance();
-  //   std::cout << "DfConvcheck_Parallel::DfConvcheck_Parallel() at " <<
-  //   rComm.getRank() << std::endl;
+    //   TlCommunicate& rComm = TlCommunicate::getInstance();
+    //   std::cout << "DfConvcheck_Parallel::DfConvcheck_Parallel() at " <<
+    //   rComm.getRank() << std::endl;
 }
 
 DfConvcheck_Parallel::~DfConvcheck_Parallel() {
-  //   TlCommunicate& rComm = TlCommunicate::getInstance();
-  //   std::cout << "DfConvcheck_Parallel::~DfConvcheck_Parallel() at " <<
-  //   rComm.getRank() << std::endl;
+    //   TlCommunicate& rComm = TlCommunicate::getInstance();
+    //   std::cout << "DfConvcheck_Parallel::~DfConvcheck_Parallel() at " <<
+    //   rComm.getRank() << std::endl;
 }
 
 void DfConvcheck_Parallel::check() {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  // no judgement for the first iteration
-  if (this->m_nIteration == 1) {
-    this->isConverged_ = false;
-    return;
-  }
+    // no judgement for the first iteration
+    if (this->m_nIteration == 1) {
+        this->isConverged_ = false;
+        return;
+    }
 
 #ifdef HAVE_SCALAPACK
-  if (this->m_bUsingSCALAPACK) {
-    this->log_.info("convgergence check (parallel) using ScaLAPACK");
-    DfConvcheck::check<TlDenseSymmetricMatrix_Scalapack>(this->m_nIteration);
-  } else {
-    this->log_.info("convgergence check (parallel) using LAPACK");
-    if (rComm.isMaster()) {
-      DfConvcheck::check<TlDenseSymmetricMatrix_Lapack>(this->m_nIteration);
+    if (this->m_bUsingSCALAPACK) {
+        this->log_.info("convgergence check (parallel) using ScaLAPACK");
+        DfConvcheck::check<TlDenseSymmetricMatrix_Scalapack>(
+            this->m_nIteration);
+    } else {
+        this->log_.info("convgergence check (parallel) using LAPACK");
+        if (rComm.isMaster()) {
+            DfConvcheck::check<TlDenseSymmetricMatrix_Lapack>(
+                this->m_nIteration);
+        }
     }
-  }
 #else
-  {
-    this->log_.info("convgergence check (parallel) using LAPACK");
-    if (rComm.isMaster()) {
-      DfConvcheck::check<TlDenseSymmetricMatrix_Lapack>(this->m_nIteration);
+    {
+        this->log_.info("convgergence check (parallel) using LAPACK");
+        if (rComm.isMaster()) {
+            DfConvcheck::check<TlDenseSymmetricMatrix_Lapack>(
+                this->m_nIteration);
+        }
     }
-  }
 #endif  // HAVE_SCALAPACK
 
-  // check for convergence
-  if (rComm.isMaster()) {
-    this->isConverged_ =
-        ((this->judgeRmsMatrixA_) && (this->judgeRmsMatrixB_) &&
-         (this->judgeMaxMatrixA_) && (this->judgeMaxMatrixB_) &&
-         (this->judgeTotalEnergy_));
-  }
-  rComm.broadcast(this->isConverged_);
+    // check for convergence
+    if (rComm.isMaster()) {
+        this->isConverged_ =
+            ((this->judgeRmsMatrixA_) && (this->judgeRmsMatrixB_) &&
+             (this->judgeMaxMatrixA_) && (this->judgeMaxMatrixB_) &&
+             (this->judgeTotalEnergy_));
+    }
+    rComm.broadcast(this->isConverged_);
 
-  this->showResults();
+    this->showResults();
 }

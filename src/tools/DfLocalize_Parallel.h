@@ -23,18 +23,19 @@
 #include "DfLocalize.h"
 
 class DfLocalize_Parallel : public DfLocalize {
- public:
-  DfLocalize_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfLocalize_Parallel();
+   public:
+    DfLocalize_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfLocalize_Parallel();
 
-  virtual void localize(const std::string& inputCMatrixPath = "");
+    virtual void localize(const std::string& inputCMatrixPath = "");
 
- protected:
-  virtual int getJobItem(DfLocalize::JobItem* pJob, bool isInitialized = false);
+   protected:
+    virtual int getJobItem(DfLocalize::JobItem* pJob,
+                           bool isInitialized = false);
 
- protected:
-  std::vector<bool> jobFinishedList_;
-  std::vector<bool> jobOccupiedOrb_;
+   protected:
+    std::vector<bool> jobFinishedList_;
+    std::vector<bool> jobOccupiedOrb_;
 };
 
 #endif  // DFLOCALIZE_PARALLEL_H

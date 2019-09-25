@@ -9,7 +9,7 @@
 #endif  // HAVE_VIENNACL
 
 TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
-    const TlMatrixObject::index_type dim, double const * const pBuf)
+    const TlMatrixObject::index_type dim, double const* const pBuf)
     : TlDenseGeneralMatrix_ImplEigen(dim, dim) {
     if (pBuf != NULL) {
         this->vtr2mat(pBuf);
@@ -137,7 +137,7 @@ bool TlDenseSymmetricMatrix_ImplEigen::eig(
 // ---------------------------------------------------------------------------
 // protected
 // ---------------------------------------------------------------------------
-void TlDenseSymmetricMatrix_ImplEigen::vtr2mat(double const * const pBuf) {
+void TlDenseSymmetricMatrix_ImplEigen::vtr2mat(double const* const pBuf) {
     const TlMatrixObject::index_type dim = this->getNumOfRows();
 
     std::size_t i = 0;

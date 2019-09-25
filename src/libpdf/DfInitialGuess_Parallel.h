@@ -23,37 +23,39 @@
 #include "tl_dense_general_matrix_scalapack.h"
 
 class DfInitialGuess_Parallel : public DfInitialGuess {
- public:
-  DfInitialGuess_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfInitialGuess_Parallel();
+   public:
+    DfInitialGuess_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfInitialGuess_Parallel();
 
- protected:
-  // virtual void createRho();
+   protected:
+    // virtual void createRho();
 
-  virtual TlDenseVector_Lapack createOccupation(RUN_TYPE runType);
+    virtual TlDenseVector_Lapack createOccupation(RUN_TYPE runType);
 
-  virtual void createInitialGuessUsingHuckel();
-  virtual void createInitialGuessUsingCore();
-  virtual void createInitialGuessUsingHarris();
+    virtual void createInitialGuessUsingHuckel();
+    virtual void createInitialGuessUsingCore();
+    virtual void createInitialGuessUsingHarris();
 
-  virtual void createInitialGuessUsingLCAO(RUN_TYPE runType);
+    virtual void createInitialGuessUsingLCAO(RUN_TYPE runType);
 
-  /// 占有軌道情報を取得する
-  virtual TlDenseVector_Lapack getOccupation(const RUN_TYPE runType);
+    /// 占有軌道情報を取得する
+    virtual TlDenseVector_Lapack getOccupation(const RUN_TYPE runType);
 
-  /// 占有軌道情報を保存する
-  virtual void saveOccupation(const RUN_TYPE runType,
-                              const TlDenseVector_Lapack& rOccupation);
+    /// 占有軌道情報を保存する
+    virtual void saveOccupation(const RUN_TYPE runType,
+                                const TlDenseVector_Lapack& rOccupation);
 
- protected:
-  void createInitialGuessUsingLCAO_onLAPACK(const RUN_TYPE runType);
-  void createInitialGuessUsingLCAO_onScaLAPACK(const RUN_TYPE runType);
+   protected:
+    void createInitialGuessUsingLCAO_onLAPACK(const RUN_TYPE runType);
+    void createInitialGuessUsingLCAO_onScaLAPACK(const RUN_TYPE runType);
 
-  TlDenseGeneralMatrix_Scalapack getLCAO_onScaLAPACK(const RUN_TYPE runType);
-  TlDenseGeneralMatrix_Scalapack getLCAO_onScaLAPACK_txt(const RUN_TYPE runType);
-  TlDenseGeneralMatrix_Scalapack getLCAO_onScaLAPACK_bin(const RUN_TYPE runType);
+    TlDenseGeneralMatrix_Scalapack getLCAO_onScaLAPACK(const RUN_TYPE runType);
+    TlDenseGeneralMatrix_Scalapack getLCAO_onScaLAPACK_txt(
+        const RUN_TYPE runType);
+    TlDenseGeneralMatrix_Scalapack getLCAO_onScaLAPACK_bin(
+        const RUN_TYPE runType);
 
-  virtual DfDmatrix* getDfDmatrixObject(TlSerializeData* param);
+    virtual DfDmatrix* getDfDmatrixObject(TlSerializeData* param);
 };
 
 #endif  // DFINITIALGUESS_PARALLEL_H

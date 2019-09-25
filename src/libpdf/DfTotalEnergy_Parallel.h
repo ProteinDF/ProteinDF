@@ -22,28 +22,28 @@
 #include "DfTotalEnergy.h"
 
 class DfTotalEnergy_Parallel : public DfTotalEnergy {
- public:
-  DfTotalEnergy_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfTotalEnergy_Parallel();
+   public:
+    DfTotalEnergy_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfTotalEnergy_Parallel();
 
- public:
-  virtual void exec();
+   public:
+    virtual void exec();
 
-  /// ダミー原子を除いた時の全エネルギー計算を行う
-  virtual void calculate_real_energy();
+    /// ダミー原子を除いた時の全エネルギー計算を行う
+    virtual void calculate_real_energy();
 
- protected:
-  void logger(const std::string& str) const;
+   protected:
+    void logger(const std::string& str) const;
 
- protected:
-  void exec_LAPACK();
-  void exec_ScaLAPACK();
+   protected:
+    void exec_LAPACK();
+    void exec_ScaLAPACK();
 
- protected:
-  virtual void output();
+   protected:
+    virtual void output();
 
- protected:
-  bool m_bUseDistributeMatrix;
+   protected:
+    bool m_bUseDistributeMatrix;
 };
 
 #endif  // DFTOTALENERGY_PARALLEL_H

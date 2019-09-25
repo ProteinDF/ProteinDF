@@ -20,96 +20,96 @@
 #include <iostream>
 
 #include "TlGetopt.h"
+#include "TlUtils.h"
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_matrix_utils.h"
-#include "TlUtils.h"
 
 void showHelp() {
-  std::cout << "pdf-mat-add [options] MATRIX_FILE1 MATRIX_FILE2 OUTPUT"
-            << std::endl;
-  std::cout << " OPTIONS:" << std::endl;
-  std::cout << "  -h:      show help" << std::endl;
+    std::cout << "pdf-mat-add [options] MATRIX_FILE1 MATRIX_FILE2 OUTPUT"
+              << std::endl;
+    std::cout << " OPTIONS:" << std::endl;
+    std::cout << "  -h:      show help" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "h");
+    TlGetopt opt(argc, argv, "h");
 
-  std::string path1 = opt[1];
-  std::string path2 = opt[2];
-  std::string path3 = opt[3];
+    std::string path1 = opt[1];
+    std::string path2 = opt[2];
+    std::string path3 = opt[3];
 
-  bool isSymMat1 = false;
-  if (TlMatrixUtils::isLoadable(path1, TlMatrixObject::RLHD) == true) {
-    isSymMat1 = true;
-  } else if (TlMatrixUtils::isLoadable(path1, TlMatrixObject::CSFD) == true) {
-    isSymMat1 = false;
-  } else {
-    std::cerr << "can not open file: " << path1 << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  bool isSymMat2 = false;
-  if (TlMatrixUtils::isLoadable(path2, TlMatrixObject::RLHD) == true) {
-    isSymMat2 = true;
-  } else if (TlMatrixUtils::isLoadable(path2, TlMatrixObject::CSFD) == true) {
-    isSymMat2 = false;
-  } else {
-    std::cerr << "can not open file: " << path2 << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  if ((isSymMat1 == true) && (isSymMat2 == true)) {
-    TlDenseSymmetricMatrix_Lapack M1;
-    M1.load(path1);
-
-    TlDenseSymmetricMatrix_Lapack M2;
-    M2.load(path2);
-
-    if ((M1.getNumOfRows() != M2.getNumOfRows()) ||
-        (M1.getNumOfCols() != M2.getNumOfCols())) {
-      std::cerr << TlUtils::format(
-                       "size is not consistent: (%d, %d) != (%d, %d)",
-                       M1.getNumOfRows(), M1.getNumOfCols(), M2.getNumOfRows(),
-                       M2.getNumOfCols())
-                << std::endl;
-      return EXIT_FAILURE;
-    }
-
-    M1 += M2;
-    M1.save(path3);
-  } else {
-    TlDenseGeneralMatrix_Lapack M1;
-    if (isSymMat1 == true) {
-      TlDenseSymmetricMatrix_Lapack tmp;
-      tmp.load(path1);
-      M1 = tmp;
+    bool isSymMat1 = false;
+    if (TlMatrixUtils::isLoadable(path1, TlMatrixObject::RLHD) == true) {
+        isSymMat1 = true;
+    } else if (TlMatrixUtils::isLoadable(path1, TlMatrixObject::CSFD) == true) {
+        isSymMat1 = false;
     } else {
-      M1.load(path1);
+        std::cerr << "can not open file: " << path1 << std::endl;
+        return EXIT_FAILURE;
     }
 
-    TlDenseGeneralMatrix_Lapack M2;
-    if (isSymMat2 == true) {
-      TlDenseSymmetricMatrix_Lapack tmp;
-      tmp.load(path2);
-      M2 = tmp;
+    bool isSymMat2 = false;
+    if (TlMatrixUtils::isLoadable(path2, TlMatrixObject::RLHD) == true) {
+        isSymMat2 = true;
+    } else if (TlMatrixUtils::isLoadable(path2, TlMatrixObject::CSFD) == true) {
+        isSymMat2 = false;
     } else {
-      M2.load(path2);
+        std::cerr << "can not open file: " << path2 << std::endl;
+        return EXIT_FAILURE;
     }
 
-    if ((M1.getNumOfRows() != M2.getNumOfRows()) ||
-        (M1.getNumOfCols() != M2.getNumOfCols())) {
-      std::cerr << TlUtils::format(
-                       "size is not consistent: (%d, %d) != (%d, %d)",
-                       M1.getNumOfRows(), M1.getNumOfCols(), M2.getNumOfRows(),
-                       M2.getNumOfCols())
-                << std::endl;
-      return EXIT_FAILURE;
+    if ((isSymMat1 == true) && (isSymMat2 == true)) {
+        TlDenseSymmetricMatrix_Lapack M1;
+        M1.load(path1);
+
+        TlDenseSymmetricMatrix_Lapack M2;
+        M2.load(path2);
+
+        if ((M1.getNumOfRows() != M2.getNumOfRows()) ||
+            (M1.getNumOfCols() != M2.getNumOfCols())) {
+            std::cerr << TlUtils::format(
+                             "size is not consistent: (%d, %d) != (%d, %d)",
+                             M1.getNumOfRows(), M1.getNumOfCols(),
+                             M2.getNumOfRows(), M2.getNumOfCols())
+                      << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        M1 += M2;
+        M1.save(path3);
+    } else {
+        TlDenseGeneralMatrix_Lapack M1;
+        if (isSymMat1 == true) {
+            TlDenseSymmetricMatrix_Lapack tmp;
+            tmp.load(path1);
+            M1 = tmp;
+        } else {
+            M1.load(path1);
+        }
+
+        TlDenseGeneralMatrix_Lapack M2;
+        if (isSymMat2 == true) {
+            TlDenseSymmetricMatrix_Lapack tmp;
+            tmp.load(path2);
+            M2 = tmp;
+        } else {
+            M2.load(path2);
+        }
+
+        if ((M1.getNumOfRows() != M2.getNumOfRows()) ||
+            (M1.getNumOfCols() != M2.getNumOfCols())) {
+            std::cerr << TlUtils::format(
+                             "size is not consistent: (%d, %d) != (%d, %d)",
+                             M1.getNumOfRows(), M1.getNumOfCols(),
+                             M2.getNumOfRows(), M2.getNumOfCols())
+                      << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        M1 += M2;
+        M1.save(path3);
     }
 
-    M1 += M2;
-    M1.save(path3);
-  }
-
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

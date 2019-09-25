@@ -19,48 +19,48 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "TlUtils.h"
 #include "TlGetopt.h"
+#include "TlUtils.h"
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_matrix_utils.h"
 
 void showHelp(const std::string& name) {
-  std::cout << TlUtils::format("%s [options] INPUT OUTPUT", name.c_str())
-            << std::endl;
-  std::cout << "convert normal matrix to symmetric matrix" << std::endl;
-  std::cout << " OPTIONS:" << std::endl;
-  std::cout << "  -h:      show help" << std::endl;
+    std::cout << TlUtils::format("%s [options] INPUT OUTPUT", name.c_str())
+              << std::endl;
+    std::cout << "convert normal matrix to symmetric matrix" << std::endl;
+    std::cout << " OPTIONS:" << std::endl;
+    std::cout << "  -h:      show help" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "h");
+    TlGetopt opt(argc, argv, "h");
 
-  if ((opt["h"] == "defined") || (opt.getCount() < 3)) {
-    showHelp(opt[0]);
-    return EXIT_FAILURE;
-  }
+    if ((opt["h"] == "defined") || (opt.getCount() < 3)) {
+        showHelp(opt[0]);
+        return EXIT_FAILURE;
+    }
 
-  std::string input_path = opt[1];
-  std::string output_path = opt[2];
+    std::string input_path = opt[1];
+    std::string output_path = opt[2];
 
-  if (TlMatrixUtils::isLoadable(input_path, TlMatrixObject::CSFD) != true) {
-    std::cerr << TlUtils::format("type mismatch: %s", input_path.c_str())
-              << std::endl;
-    return EXIT_FAILURE;
-  }
-  TlDenseGeneralMatrix_Lapack in;
-  in.load(input_path);
+    if (TlMatrixUtils::isLoadable(input_path, TlMatrixObject::CSFD) != true) {
+        std::cerr << TlUtils::format("type mismatch: %s", input_path.c_str())
+                  << std::endl;
+        return EXIT_FAILURE;
+    }
+    TlDenseGeneralMatrix_Lapack in;
+    in.load(input_path);
 
-  if (in.getNumOfRows() != in.getNumOfCols()) {
-    std::cerr << TlUtils::format("wrong matrix size: %d x %d",
-                                 in.getNumOfRows(), in.getNumOfCols())
-              << std::endl;
-    return EXIT_FAILURE;
-  }
+    if (in.getNumOfRows() != in.getNumOfCols()) {
+        std::cerr << TlUtils::format("wrong matrix size: %d x %d",
+                                     in.getNumOfRows(), in.getNumOfCols())
+                  << std::endl;
+        return EXIT_FAILURE;
+    }
 
-  TlDenseSymmetricMatrix_Lapack out(in);
-  out.save(output_path);
+    TlDenseSymmetricMatrix_Lapack out(in);
+    out.save(output_path);
 
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

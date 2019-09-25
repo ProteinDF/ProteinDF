@@ -32,83 +32,85 @@
 #include "tl_dense_symmetric_matrix_lapack.h"
 
 class DfHpqX : public DfObject {
- public:
-  typedef std::vector<index_type> ShellArray;
-  typedef std::vector<ShellArray> ShellArrayTable;
+   public:
+    typedef std::vector<index_type> ShellArray;
+    typedef std::vector<ShellArray> ShellArrayTable;
 
- public:
-  DfHpqX(TlSerializeData* pPdfParam);
-  virtual ~DfHpqX();
+   public:
+    DfHpqX(TlSerializeData* pPdfParam);
+    virtual ~DfHpqX();
 
- public:
-  void getHpq(TlDenseSymmetricMatrix_Lapack* pHpq,
-              TlDenseSymmetricMatrix_Lapack* pHpq2);
+   public:
+    void getHpq(TlDenseSymmetricMatrix_Lapack* pHpq,
+                TlDenseSymmetricMatrix_Lapack* pHpq2);
 
-  /// Hpq由来の力成分を求める
-  ///
-  /// @param [in] P 密度行列
-  /// @param [out] pForce 原子数(dummy chargeを含む)×3(x, y, z成分)の行列
-  /// @param [out] pForce_Xonly 原子数(dummy chargeを含む)×3(x, y,
-  /// z成分)の行列(dummy charge由来)
-  void getForce(const TlDenseSymmetricMatrix_Lapack& P,
-                TlDenseGeneralMatrix_Lapack* pForce,
-                TlDenseGeneralMatrix_Lapack* pForce_Xonly);
+    /// Hpq由来の力成分を求める
+    ///
+    /// @param [in] P 密度行列
+    /// @param [out] pForce 原子数(dummy chargeを含む)×3(x, y, z成分)の行列
+    /// @param [out] pForce_Xonly 原子数(dummy chargeを含む)×3(x, y,
+    /// z成分)の行列(dummy charge由来)
+    void getForce(const TlDenseSymmetricMatrix_Lapack& P,
+                  TlDenseGeneralMatrix_Lapack* pForce,
+                  TlDenseGeneralMatrix_Lapack* pForce_Xonly);
 
-  /// ESP を求める
-  ///
-  /// @param [in] P 密度行列
-  /// @param [in] grids 評価グリッド座標群
-  /// @return 評価グリッド群順にESP値を代入した配列
-  std::vector<double> getESP(const TlMatrixObject& P,
-                             const std::vector<TlPosition>& grids);
+    /// ESP を求める
+    ///
+    /// @param [in] P 密度行列
+    /// @param [in] grids 評価グリッド座標群
+    /// @return 評価グリッド群順にESP値を代入した配列
+    std::vector<double> getESP(const TlMatrixObject& P,
+                               const std::vector<TlPosition>& grids);
 
- protected:
-  /// DfHpqEngineオブジェクトを作成する
-  ///
-  /// OpenMPスレッド数のオブジェクトを作成する。
-  /// 富士通コンパイラではコンストラクタ中で
-  /// オブジェクトを作成できないため。
-  void createEngines();
+   protected:
+    /// DfHpqEngineオブジェクトを作成する
+    ///
+    /// OpenMPスレッド数のオブジェクトを作成する。
+    /// 富士通コンパイラではコンストラクタ中で
+    /// オブジェクトを作成できないため。
+    void createEngines();
 
-  /// DfHpqEngineオブジェクトを破棄する
-  void destroyEngines();
+    /// DfHpqEngineオブジェクトを破棄する
+    void destroyEngines();
 
-  virtual DfTaskCtrl* getDfTaskCtrlObject() const;
+    virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
-  virtual void finalize(TlDenseSymmetricMatrix_Lapack* pHpq,
-                        TlDenseSymmetricMatrix_Lapack* pHpq2);
-  virtual void finalize(std::vector<double>* pValues);
+    virtual void finalize(TlDenseSymmetricMatrix_Lapack* pHpq,
+                          TlDenseSymmetricMatrix_Lapack* pHpq2);
+    virtual void finalize(std::vector<double>* pValues);
 
- protected:
-  void getHpq_part(const TlOrbitalInfoObject& orbitalInfo,
-                   const std::vector<DfTaskCtrl::Task2>& taskList,
-                   const std::vector<TlAtom>& Cs, const std::vector<TlAtom>& Xs,
-                   TlMatrixObject* pHpq, TlMatrixObject* pHpq2);
+   protected:
+    void getHpq_part(const TlOrbitalInfoObject& orbitalInfo,
+                     const std::vector<DfTaskCtrl::Task2>& taskList,
+                     const std::vector<TlAtom>& Cs,
+                     const std::vector<TlAtom>& Xs, TlMatrixObject* pHpq,
+                     TlMatrixObject* pHpq2);
 
-  void getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
-                         const int shellTypeP, const int shellTypeQ,
-                         const index_type shellIndexP,
-                         const ShellArray& shellArrayQ, const TlMatrixObject& P,
-                         TlDenseGeneralMatrix_Lapack* pForce,
-                         TlDenseGeneralMatrix_Lapack* pForceX);
+    void getForce_partProc(const TlOrbitalInfoObject& orbitalInfo,
+                           const int shellTypeP, const int shellTypeQ,
+                           const index_type shellIndexP,
+                           const ShellArray& shellArrayQ,
+                           const TlMatrixObject& P,
+                           TlDenseGeneralMatrix_Lapack* pForce,
+                           TlDenseGeneralMatrix_Lapack* pForceX);
 
-  void getESP_part(const TlOrbitalInfoObject& orbitalInfo,
-                   const std::vector<DfTaskCtrl::Task2>& taskList,
-                   const TlMatrixObject& P,
-                   const std::vector<TlPosition>& grids,
-                   std::vector<double>* pValues);
+    void getESP_part(const TlOrbitalInfoObject& orbitalInfo,
+                     const std::vector<DfTaskCtrl::Task2>& taskList,
+                     const TlMatrixObject& P,
+                     const std::vector<TlPosition>& grids,
+                     std::vector<double>* pValues);
 
- protected:
-  void makeShellArrayTable();
-  DfHpqEngine::PGTOs getPGTOs(const index_type shellIndex);
+   protected:
+    void makeShellArrayTable();
+    DfHpqEngine::PGTOs getPGTOs(const index_type shellIndex);
 
- protected:
-  enum { X = 0, Y = 1, Z = 2 };
+   protected:
+    enum { X = 0, Y = 1, Z = 2 };
 
- protected:
-  DfHpqEngine* pEngines_;
-  TlOrbitalInfo orbitalInfo_;
-  ShellArrayTable shellArrayTable_;
+   protected:
+    DfHpqEngine* pEngines_;
+    TlOrbitalInfo orbitalInfo_;
+    ShellArrayTable shellArrayTable_;
 };
 
 #endif  // DFHPQX_H

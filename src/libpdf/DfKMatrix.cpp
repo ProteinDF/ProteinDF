@@ -25,28 +25,28 @@
 #include "df_cdk_matrix.h"
 
 DfKMatrix::DfKMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
-  this->updateLinearAlgebraPackageParam(
-      (*(this->pPdfParam_))["linear_algebra_package/K"].getStr());
+    this->updateLinearAlgebraPackageParam(
+        (*(this->pPdfParam_))["linear_algebra_package/K"].getStr());
 }
 
 DfKMatrix::~DfKMatrix() {}
 
 void DfKMatrix::buildK() {
-  switch (this->K_engine_) {
-    // case K_ENGINE_RI_K:
-    //     this->log_.info("use RI_K engine");
-    //     this->getK_RI();
-    //     break;
-    case K_ENGINE_CD:
-    case K_ENGINE_FASTCDK:
-      this->log_.info("use CD method");
-      this->getK_CD();
-      break;
-    default:
-      this->log_.info("use conventional method");
-      this->getK_conventional();
-      break;
-  }
+    switch (this->K_engine_) {
+        // case K_ENGINE_RI_K:
+        //     this->log_.info("use RI_K engine");
+        //     this->getK_RI();
+        //     break;
+        case K_ENGINE_CD:
+        case K_ENGINE_FASTCDK:
+            this->log_.info("use CD method");
+            this->getK_CD();
+            break;
+        default:
+            this->log_.info("use conventional method");
+            this->getK_conventional();
+            break;
+    }
 }
 
 // void DfKMatrix::getK_RI()
@@ -57,47 +57,47 @@ void DfKMatrix::buildK() {
 // }
 
 void DfKMatrix::getK_CD() {
-  DfCdkMatrix dfCDK(this->pPdfParam_);
-  dfCDK.getK();
+    DfCdkMatrix dfCDK(this->pPdfParam_);
+    dfCDK.getK();
 }
 
 void DfKMatrix::getK_conventional() {
-  switch (this->m_nMethodType) {
-    case METHOD_RKS: {
-      TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
-      this->getK_conventional_local(RUN_RKS, &K);
-      this->saveKMatrix(RUN_RKS, K);
-    } break;
+    switch (this->m_nMethodType) {
+        case METHOD_RKS: {
+            TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
+            this->getK_conventional_local(RUN_RKS, &K);
+            this->saveKMatrix(RUN_RKS, K);
+        } break;
 
-    case METHOD_UKS: {
-      TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
-      this->getK_conventional_local(RUN_UKS_ALPHA, &K);
-      this->saveKMatrix(RUN_UKS_ALPHA, K);
+        case METHOD_UKS: {
+            TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
+            this->getK_conventional_local(RUN_UKS_ALPHA, &K);
+            this->saveKMatrix(RUN_UKS_ALPHA, K);
+        }
+            {
+                TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
+                this->getK_conventional_local(RUN_UKS_BETA, &K);
+                this->saveKMatrix(RUN_UKS_BETA, K);
+            }
+            break;
+
+        case METHOD_ROKS: {
+            TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
+            this->getK_conventional_local(RUN_ROKS_ALPHA, &K);
+            this->saveKMatrix(RUN_ROKS_ALPHA, K);
+        }
+            {
+                TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
+                this->getK_conventional_local(RUN_ROKS_BETA, &K);
+                this->saveKMatrix(RUN_ROKS_BETA, K);
+            }
+            break;
+
+        default:
+            this->log_.critical("program error.");
+            CnErr.abort();
+            break;
     }
-      {
-        TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
-        this->getK_conventional_local(RUN_UKS_BETA, &K);
-        this->saveKMatrix(RUN_UKS_BETA, K);
-      }
-      break;
-
-    case METHOD_ROKS: {
-      TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
-      this->getK_conventional_local(RUN_ROKS_ALPHA, &K);
-      this->saveKMatrix(RUN_ROKS_ALPHA, K);
-    }
-      {
-        TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
-        this->getK_conventional_local(RUN_ROKS_BETA, &K);
-        this->saveKMatrix(RUN_ROKS_BETA, K);
-      }
-      break;
-
-    default:
-      this->log_.critical("program error.");
-      CnErr.abort();
-      break;
-  }
 }
 
 // void DfKMatrix::getK_RI_local(const RUN_TYPE runType,
@@ -123,39 +123,40 @@ void DfKMatrix::getK_conventional() {
 // }
 
 void DfKMatrix::getK_CD_replica(const RUN_TYPE runType) {
-  DfCD dfCD(this->pPdfParam_);
-  dfCD.getK(runType);
+    DfCD dfCD(this->pPdfParam_);
+    dfCD.getK(runType);
 }
 
 void DfKMatrix::getK_conventional_local(const RUN_TYPE runType,
                                         TlDenseSymmetricMatrix_Lapack* pK) {
-  TlDenseSymmetricMatrix_Lapack P;
-  if (this->isUpdateMethod_ == true) {
-    P = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>(runType);
-  } else {
-    P = this->getDensityMatrix<TlDenseSymmetricMatrix_Lapack>(runType);
-  }
-
-  DfEriX dfEri(this->pPdfParam_);
-  dfEri.getK(P, pK);
-
-  if (this->isUpdateMethod_ == true) {
-    if (this->m_nIteration > 1) {
-      const TlDenseSymmetricMatrix_Lapack prevK =
-          this->getKMatrix(runType, this->m_nIteration - 1);
-      *pK += prevK;
+    TlDenseSymmetricMatrix_Lapack P;
+    if (this->isUpdateMethod_ == true) {
+        P = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>(runType);
+    } else {
+        P = this->getDensityMatrix<TlDenseSymmetricMatrix_Lapack>(runType);
     }
-  }
+
+    DfEriX dfEri(this->pPdfParam_);
+    dfEri.getK(P, pK);
+
+    if (this->isUpdateMethod_ == true) {
+        if (this->m_nIteration > 1) {
+            const TlDenseSymmetricMatrix_Lapack prevK =
+                this->getKMatrix(runType, this->m_nIteration - 1);
+            *pK += prevK;
+        }
+    }
 }
 
 TlDenseSymmetricMatrix_Lapack DfKMatrix::getKMatrix(const RUN_TYPE runType,
                                                     const int iteration) {
-  const TlDenseSymmetricMatrix_Lapack K =
-      DfObject::getHFxMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
-  return K;
+    const TlDenseSymmetricMatrix_Lapack K =
+        DfObject::getHFxMatrix<TlDenseSymmetricMatrix_Lapack>(runType,
+                                                              iteration);
+    return K;
 }
 
 void DfKMatrix::saveKMatrix(const RUN_TYPE runType,
                             const TlDenseSymmetricMatrix_Lapack& K) {
-  DfObject::saveHFxMatrix(runType, this->m_nIteration, K);
+    DfObject::saveHFxMatrix(runType, this->m_nIteration, K);
 }

@@ -24,18 +24,18 @@
 
 /// 入力データの解析を行う
 class DfInputdata {
- public:
-  DfInputdata();
-  virtual ~DfInputdata();
+   public:
+    DfInputdata();
+    virtual ~DfInputdata();
 
-  // メインルーチン;
-  virtual TlSerializeData main(const bool isReadUserInput = true);
+    // メインルーチン;
+    virtual TlSerializeData main(const bool isReadUserInput = true);
 
- protected:
-  void show(const TlSerializeData& data) const;
+   protected:
+    void show(const TlSerializeData& data) const;
 
-  // protected:
-  //     mutable TlSerializeData data_;
+    // protected:
+    //     mutable TlSerializeData data_;
 };
 
 #endif  // DFINPUTDATA_H

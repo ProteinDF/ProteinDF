@@ -20,11 +20,11 @@
 #include "tl_dense_symmetric_matrix_lapack.h"
 
 DfInvMatrix::DfInvMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
-  const TlSerializeData& pdfParam = *pPdfParam;
-  const std::string sXcPotential =
-      TlUtils::toUpper(pdfParam["xc_functional"].getStr());
-  const char nLastChar = sXcPotential[sXcPotential.length() - 1];
-  this->m_bIsXcFitting = (nLastChar == '~') ? true : false;
+    const TlSerializeData& pdfParam = *pPdfParam;
+    const std::string sXcPotential =
+        TlUtils::toUpper(pdfParam["xc_functional"].getStr());
+    const char nLastChar = sXcPotential[sXcPotential.length() - 1];
+    this->m_bIsXcFitting = (nLastChar == '~') ? true : false;
 }
 
 DfInvMatrix::~DfInvMatrix() {}

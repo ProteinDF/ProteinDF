@@ -64,7 +64,7 @@ class TlDenseSymmetricMatrix_ImplEigen : public TlDenseGeneralMatrix_ImplEigen {
     // protected:
     // ---------------------------------------------------------------------------
    protected:
-    virtual void vtr2mat(double const * const pBuf);
+    virtual void vtr2mat(double const* const pBuf);
 
     // ---------------------------------------------------------------------------
     // others

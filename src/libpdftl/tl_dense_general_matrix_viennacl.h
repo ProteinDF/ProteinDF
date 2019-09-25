@@ -18,7 +18,7 @@ class TlDenseGeneralMatrix_ViennaCL : public TlDenseGeneralMatrixObject {
     explicit TlDenseGeneralMatrix_ViennaCL(
         const TlMatrixObject::index_type row = 1,
         const TlMatrixObject::index_type col = 1,
-        double const * const pBuf = NULL);
+        double const* const pBuf = NULL);
     TlDenseGeneralMatrix_ViennaCL(const TlDenseGeneralMatrix_ViennaCL& rhs);
     TlDenseGeneralMatrix_ViennaCL(const TlDenseSymmetricMatrix_ViennaCL& rhs);
     TlDenseGeneralMatrix_ViennaCL(const TlDenseGeneralMatrix_ImplViennaCL& rhs);
@@ -77,7 +77,6 @@ class TlDenseGeneralMatrix_ViennaCL : public TlDenseGeneralMatrixObject {
     // protected
     // ---------------------------------------------------------------------------
    protected:
-
     // ---------------------------------------------------------------------------
     // others
     // ---------------------------------------------------------------------------

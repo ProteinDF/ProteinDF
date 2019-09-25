@@ -1,6 +1,6 @@
-#include "DfFunctional_VWN.h"
 #include <string>
 #include <vector>
+#include "DfFunctional_VWN.h"
 #include "digit.h"
 #include "gtest/gtest.h"
 
@@ -39,26 +39,26 @@ static const double EPS = 1.0E-10;
 //  v2sigmaabbb   =  0.000000000000E+00
 //  v2sigmabb2    =  0.000000000000E+00
 TEST(DfFunctional_VWN, pointwise1) {
-  // input
-  const double dRhoA = 0.17E+01;
-  const double dRhoB = 0.17E+01;
+    // input
+    const double dRhoA = 0.17E+01;
+    const double dRhoB = 0.17E+01;
 
-  // expected value
-  const double zk = -0.278978177367E+00;
-  const double vRhoA = -0.907896301530E-01;
-  const double vRhoB = -0.907896301530E-01;
+    // expected value
+    const double zk = -0.278978177367E+00;
+    const double vRhoA = -0.907896301530E-01;
+    const double vRhoB = -0.907896301530E-01;
 
-  // execute test
-  DfFunctional_VWN f;
+    // execute test
+    DfFunctional_VWN f;
 
-  double dFunctionalValue = f.getFunctional(dRhoA, dRhoB);
-  EXPECT_NEAR(zk, dFunctionalValue, EPS);
+    double dFunctionalValue = f.getFunctional(dRhoA, dRhoB);
+    EXPECT_NEAR(zk, dFunctionalValue, EPS);
 
-  double dRoundF_roundRhoA, dRoundF_roundRhoB;
-  f.getDerivativeFunctional(dRhoA, dRhoB, &dRoundF_roundRhoA,
-                            &dRoundF_roundRhoB);
-  EXPECT_NEAR(vRhoA, dRoundF_roundRhoA, EPS);
-  EXPECT_NEAR(vRhoB, dRoundF_roundRhoB, EPS);
+    double dRoundF_roundRhoA, dRoundF_roundRhoB;
+    f.getDerivativeFunctional(dRhoA, dRhoB, &dRoundF_roundRhoA,
+                              &dRoundF_roundRhoB);
+    EXPECT_NEAR(vRhoA, dRoundF_roundRhoA, EPS);
+    EXPECT_NEAR(vRhoB, dRoundF_roundRhoB, EPS);
 }
 
 // void DfFunctional_VWNTest::testPointwise1_RKS(){

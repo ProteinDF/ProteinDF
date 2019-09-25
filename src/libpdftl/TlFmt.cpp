@@ -46,11 +46,11 @@ const double TlFmt::EPSILON =
     std::numeric_limits<double>::epsilon();  // double の計算機epsilon
 
 TlFmt& TlFmt::getInstance() {
-  if (TlFmt::m_pInstance == NULL) {
-    TlFmt::m_pInstance = new TlFmt();
-  }
+    if (TlFmt::m_pInstance == NULL) {
+        TlFmt::m_pInstance = new TlFmt();
+    }
 
-  return *TlFmt::m_pInstance;
+    return *TlFmt::m_pInstance;
 }
 
 TlFmt::TlFmt(int nFlag)
@@ -59,36 +59,36 @@ TlFmt::TlFmt(int nFlag)
       m_previousT(0.0),
       m_nNumOfFunctionCalled(0),
       m_nNumOfCacheHits(0) {
-  // for debug
-  this->m_nFlags = TLFMT_ENABLE_CACHE;
+    // for debug
+    this->m_nFlags = TLFMT_ENABLE_CACHE;
 
-  // initialize
-  this->m_FmtTable = new double*[FMT_N_STEP + 1];
-  for (int n = 0; n < FMT_N_STEP + 1; ++n) {
-    this->m_FmtTable[n] = new double[FMT_MAX_M + 1];
-    for (int m = 0; m <= FMT_MAX_M; ++m) {
-      this->m_FmtTable[n][m] = 0.0;
+    // initialize
+    this->m_FmtTable = new double*[FMT_N_STEP + 1];
+    for (int n = 0; n < FMT_N_STEP + 1; ++n) {
+        this->m_FmtTable[n] = new double[FMT_MAX_M + 1];
+        for (int m = 0; m <= FMT_MAX_M; ++m) {
+            this->m_FmtTable[n][m] = 0.0;
+        }
     }
-  }
 
-  this->m_aFmtCalcCache.clear();
-  this->m_previousF.clear();
+    this->m_aFmtCalcCache.clear();
+    this->m_previousF.clear();
 
-  // 表の作成
-  this->makeFmtTable();
+    // 表の作成
+    this->makeFmtTable();
 }
 
 TlFmt::~TlFmt() {
-  if (this->m_FmtTable != NULL) {
-    for (int n = 0; n < FMT_N_STEP + 1; ++n) {
-      if (this->m_FmtTable[n] != NULL) {
-        delete[] this->m_FmtTable[n];
-        this->m_FmtTable[n] = NULL;
-      }
+    if (this->m_FmtTable != NULL) {
+        for (int n = 0; n < FMT_N_STEP + 1; ++n) {
+            if (this->m_FmtTable[n] != NULL) {
+                delete[] this->m_FmtTable[n];
+                this->m_FmtTable[n] = NULL;
+            }
+        }
+        delete[] this->m_FmtTable;
+        this->m_FmtTable = NULL;
     }
-    delete[] this->m_FmtTable;
-    this->m_FmtTable = NULL;
-  }
 }
 
 // this->m_FmtTable[][] の作成
@@ -96,180 +96,182 @@ TlFmt::~TlFmt() {
 // あらかじめ T = 0.0 〜 2m+36 まで、1/2^9 刻みでFm(T)を計算しておく。
 // この値を基に、T = 0.0 〜 2m+36 の範囲では、Taylor展開を行う。
 void TlFmt::makeFmtTable() {
-  // T=0の場合。
-  // すなわち Fm(0) = 1 / (2*m +1)
-  for (int m = 0; m <= FMT_MAX_M; ++m) {
-    this->m_FmtTable[0][m] = 1.0 / (2 * m + 1);
-  }
-
-  // T>0 の場合
-  int m = FMT_MAX_M;  // m が小さいものは、後に帰納的に求める (*)
-  const double THR_ZERO = 1.0E-17;
-
-  // 変数 func に term を加算していくが、誤差を小さくするために
-  // term が小さい順に加算する。後にsortする必要があるので、そのリスト。
-  double valueTable[ValueTableSize];
-
-  for (int j = 1; j <= FMT_N_STEP; ++j) {
-    const double t = FMT_STEPSIZE * j;
-    const double expt = std::exp(-t);
-    int nu = 2 * m + 1;
-    const double t2 = t * 2.0;
-    const double eps = (expt / t2) * THR_ZERO;
-    double term = 1.0 / nu;
-
-    valueTable[0] = term;
-    int index = 1;
-    int i = nu;
-    do {
-      i += 2;
-      term *= (t2 / i);
-      valueTable[index] = term;
-      ++index;
-    } while (term > eps);
-    assert(index < ValueTableSize);
-
-    // std::sort(aFuncAdditionList.begin(), aFuncAdditionList.end());
-    // double func = std::accumulate(aFuncAdditionList.begin(),
-    // aFuncAdditionList.end(), 0.0);
-    double func = 0.0;
-    // 小さい順に加算
-    for (int k = index - 1; k >= 0; --k) {
-      func += valueTable[k];
+    // T=0の場合。
+    // すなわち Fm(0) = 1 / (2*m +1)
+    for (int m = 0; m <= FMT_MAX_M; ++m) {
+        this->m_FmtTable[0][m] = 1.0 / (2 * m + 1);
     }
 
-    this->m_FmtTable[j][m] =
-        expt *
-        func;  // 0からTf(=2m+36)までをFMT_INV_D分割したうちのj番目のFm(T)の値
-    // (T = FMT_STEPSIZE*j)
+    // T>0 の場合
+    int m = FMT_MAX_M;  // m が小さいものは、後に帰納的に求める (*)
+    const double THR_ZERO = 1.0E-17;
 
-    // (*)
-    // Fm(T) が求まれば、
-    // F(m+1)(T) = -F'm(T) より、帰納的に求まる。
-    for (int mm = m - 1; mm >= 0; mm--) {
-      nu -= 2;
-      this->m_FmtTable[j][mm] = (expt + t2 * this->m_FmtTable[j][mm + 1]) / nu;
+    // 変数 func に term を加算していくが、誤差を小さくするために
+    // term が小さい順に加算する。後にsortする必要があるので、そのリスト。
+    double valueTable[ValueTableSize];
+
+    for (int j = 1; j <= FMT_N_STEP; ++j) {
+        const double t = FMT_STEPSIZE * j;
+        const double expt = std::exp(-t);
+        int nu = 2 * m + 1;
+        const double t2 = t * 2.0;
+        const double eps = (expt / t2) * THR_ZERO;
+        double term = 1.0 / nu;
+
+        valueTable[0] = term;
+        int index = 1;
+        int i = nu;
+        do {
+            i += 2;
+            term *= (t2 / i);
+            valueTable[index] = term;
+            ++index;
+        } while (term > eps);
+        assert(index < ValueTableSize);
+
+        // std::sort(aFuncAdditionList.begin(), aFuncAdditionList.end());
+        // double func = std::accumulate(aFuncAdditionList.begin(),
+        // aFuncAdditionList.end(), 0.0);
+        double func = 0.0;
+        // 小さい順に加算
+        for (int k = index - 1; k >= 0; --k) {
+            func += valueTable[k];
+        }
+
+        this->m_FmtTable[j][m] =
+            expt *
+            func;  // 0からTf(=2m+36)までをFMT_INV_D分割したうちのj番目のFm(T)の値
+        // (T = FMT_STEPSIZE*j)
+
+        // (*)
+        // Fm(T) が求まれば、
+        // F(m+1)(T) = -F'm(T) より、帰納的に求まる。
+        for (int mm = m - 1; mm >= 0; mm--) {
+            nu -= 2;
+            this->m_FmtTable[j][mm] =
+                (expt + t2 * this->m_FmtTable[j][mm + 1]) / nu;
+        }
     }
-  }
 }
 
 std::vector<double> TlFmt::getFmtSubstance(const int m, const double& t) const {
-  std::vector<double> f(m + 1, 0.0);
+    std::vector<double> f(m + 1, 0.0);
 
-  if (t <= (2 * m + 36)) {  // Tf = 2*m + 36
-    const int ts = static_cast<int>(0.5 + t * INV_FMT_STEPSIZE);
-    const double delta = ts * FMT_STEPSIZE - t;
-    for (int i = 0; i <= m; i++) {
-      f[i] = ((this->m_FmtTable[ts][i + 3] * INV6 * delta +
-               this->m_FmtTable[ts][i + 2] * INV2) *
-                  delta +
-              this->m_FmtTable[ts][i + 1]) *
-                 delta +
-             this->m_FmtTable[ts][i];
+    if (t <= (2 * m + 36)) {  // Tf = 2*m + 36
+        const int ts = static_cast<int>(0.5 + t * INV_FMT_STEPSIZE);
+        const double delta = ts * FMT_STEPSIZE - t;
+        for (int i = 0; i <= m; i++) {
+            f[i] = ((this->m_FmtTable[ts][i + 3] * INV6 * delta +
+                     this->m_FmtTable[ts][i + 2] * INV2) *
+                        delta +
+                    this->m_FmtTable[ts][i + 1]) *
+                       delta +
+                   this->m_FmtTable[ts][i];
+        }
+    } else {
+        const double t_inv = INV2 / t;
+        f[0] = std::sqrt(PI_DIV2 * t_inv);
+        double nu = 1.0;
+        for (int i = 1; i <= m; i++) {
+            f[i] = t_inv * nu * f[i - 1];
+            nu += 2.0;
+        }
     }
-  } else {
-    const double t_inv = INV2 / t;
-    f[0] = std::sqrt(PI_DIV2 * t_inv);
-    double nu = 1.0;
-    for (int i = 1; i <= m; i++) {
-      f[i] = t_inv * nu * f[i - 1];
-      nu += 2.0;
-    }
-  }
 
-  // 実際に計算した回数をカウントアップ
-  this->m_nNumOfFunctionCalled++;
+    // 実際に計算した回数をカウントアップ
+    this->m_nNumOfFunctionCalled++;
 
-  return f;
+    return f;
 }
 
 /// Fm(T)の値を返す
 /// T が一定のとき、m が大きい方から呼び出した方が速いはず。
 double TlFmt::getFmT0(const int m, const double& t) const {
-  assert(m >= 0);
-  double answer = 0.0;
+    assert(m >= 0);
+    double answer = 0.0;
 
-  if ((this->m_nFlags & TLFMT_ENABLE_CACHE) == 1) {
-    // キャッシュを使う ================================================
-    bool bHasCalced = false;  // すでに計算されているかチェックするためのフラグ
+    if ((this->m_nFlags & TLFMT_ENABLE_CACHE) == 1) {
+        // キャッシュを使う ================================================
+        bool bHasCalced =
+            false;  // すでに計算されているかチェックするためのフラグ
 
-    // キャッシュ内にすでに計算されているかチェック
-    std::map<double, std::vector<double> >::const_iterator p =
-        this->m_aFmtCalcCache.find(t);
-    if (p != this->m_aFmtCalcCache.end()) {
-      if (m < (int)(*p).second.size()) {
-        answer = ((*p).second).at(m);
+        // キャッシュ内にすでに計算されているかチェック
+        std::map<double, std::vector<double> >::const_iterator p =
+            this->m_aFmtCalcCache.find(t);
+        if (p != this->m_aFmtCalcCache.end()) {
+            if (m < (int)(*p).second.size()) {
+                answer = ((*p).second).at(m);
 
-        // キャッシュにヒットした回数
-        this->m_nNumOfCacheHits++;
-        bHasCalced = true;
-      }
+                // キャッシュにヒットした回数
+                this->m_nNumOfCacheHits++;
+                bHasCalced = true;
+            }
+        }
+
+        if (bHasCalced == false) {
+            // キャッシュにヒットしないので計算する
+            std::vector<double> f = this->getFmtSubstance(m, t);
+            answer = f[m];
+
+            // 計算結果をキャッシュに入れておく
+            (this->m_aFmtCalcCache)[t] = f;
+        }
+    } else {
+        // キャッシュを使わない ============================================
+        //     if ((this->m_previousT == t) &&
+        //  (this->m_previousF.size() -1 > m)){
+        //       // 前回の値を呼ばれた
+        //       answer = this->m_previousF[m];
+        //     } else {
+        // 新しいFを計算する
+        std::vector<double> f = this->getFmtSubstance(m, t);
+        answer = f[m];
+        // 前回分を更新
+        this->m_previousF = f;
+        this->m_previousT = t;
+        //     }
     }
 
-    if (bHasCalced == false) {
-      // キャッシュにヒットしないので計算する
-      std::vector<double> f = this->getFmtSubstance(m, t);
-      answer = f[m];
+    // for debug
+    // std::cout << "TlFmt::getFmT F[" << m << "](" << t << ") = " << answer <<
+    // std::endl;
 
-      // 計算結果をキャッシュに入れておく
-      (this->m_aFmtCalcCache)[t] = f;
-    }
-  } else {
-    // キャッシュを使わない ============================================
-    //     if ((this->m_previousT == t) &&
-    //  (this->m_previousF.size() -1 > m)){
-    //       // 前回の値を呼ばれた
-    //       answer = this->m_previousF[m];
-    //     } else {
-    // 新しいFを計算する
-    std::vector<double> f = this->getFmtSubstance(m, t);
-    answer = f[m];
-    // 前回分を更新
-    this->m_previousF = f;
-    this->m_previousT = t;
-    //     }
-  }
-
-  // for debug
-  // std::cout << "TlFmt::getFmT F[" << m << "](" << t << ") = " << answer <<
-  // std::endl;
-
-  return answer;
+    return answer;
 }
 
 void TlFmt::getFmT(const int m, const double& t, double* pBuf) const {
-  assert(0 <= m);
-  assert(m < TlFmt::FMT_M);
+    assert(0 <= m);
+    assert(m < TlFmt::FMT_M);
 
-  if (t <= (2 * m + 36)) {  // Tf = 2*m + 36
-    const int ts = static_cast<int>(0.5 + t * INV_FMT_STEPSIZE);
-    const double delta = ts * FMT_STEPSIZE - t;
-    for (int i = 0; i <= m; ++i) {
-      pBuf[i] = this->m_FmtTable[ts][i] +
-                ((this->m_FmtTable[ts][i + 3] * INV6 * delta +
-                  this->m_FmtTable[ts][i + 2] * INV2) *
-                     delta +
-                 this->m_FmtTable[ts][i + 1]) *
-                    delta;
+    if (t <= (2 * m + 36)) {  // Tf = 2*m + 36
+        const int ts = static_cast<int>(0.5 + t * INV_FMT_STEPSIZE);
+        const double delta = ts * FMT_STEPSIZE - t;
+        for (int i = 0; i <= m; ++i) {
+            pBuf[i] = this->m_FmtTable[ts][i] +
+                      ((this->m_FmtTable[ts][i + 3] * INV6 * delta +
+                        this->m_FmtTable[ts][i + 2] * INV2) *
+                           delta +
+                       this->m_FmtTable[ts][i + 1]) *
+                          delta;
+        }
+    } else {
+        const double t_inv = INV2 / t;
+        pBuf[0] = std::sqrt(PI_DIV2 * t_inv);
+        double nu = 1.0;
+        for (int i = 1; i <= m; ++i) {
+            pBuf[i] = t_inv * nu * pBuf[i - 1];
+            nu += 2.0;
+        }
     }
-  } else {
-    const double t_inv = INV2 / t;
-    pBuf[0] = std::sqrt(PI_DIV2 * t_inv);
-    double nu = 1.0;
-    for (int i = 1; i <= m; ++i) {
-      pBuf[i] = t_inv * nu * pBuf[i - 1];
-      nu += 2.0;
-    }
-  }
 }
 
 void TlFmt::getGmT(const int m, const double& t, double* pBuf) const {
-  assert(0 <= m);
-  assert(m < TlFmt::FMT_M);
-  static const double COEF = std::sqrt(2.0 / TlFmt::PI);
+    assert(0 <= m);
+    assert(m < TlFmt::FMT_M);
+    static const double COEF = std::sqrt(2.0 / TlFmt::PI);
 
-  this->getFmT(m, t, pBuf);
-  for (int i = 0; i <= m; ++i) {
-    pBuf[i] *= COEF;
-  }
+    this->getFmT(m, t, pBuf);
+    for (int i = 0; i <= m; ++i) {
+        pBuf[i] *= COEF;
+    }
 }

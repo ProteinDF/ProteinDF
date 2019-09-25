@@ -28,16 +28,18 @@
 DfPopulation::DfPopulation(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam),
       orbitalInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"]) {
-  this->setNucleiCharges();
+    this->setNucleiCharges();
 }
 
 DfPopulation::~DfPopulation() {}
 
 void DfPopulation::exec(const int iteration) {
-    this->getAtomPopulation<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack>(iteration);
+    this->getAtomPopulation<TlDenseSymmetricMatrix_Lapack,
+                            TlDenseVector_Lapack>(iteration);
 }
 
-// TlDenseGeneralMatrix_Lapack DfPopulation::getAtomPopData(const int iteration) {
+// TlDenseGeneralMatrix_Lapack DfPopulation::getAtomPopData(const int iteration)
+// {
 //   this->calcPop(iteration);
 //
 //   const Fl_Geometry flGeom((*(this->pPdfParam_))["coordinates"]);
@@ -49,18 +51,21 @@ void DfPopulation::exec(const int iteration) {
 //       answer.resize(dim, 1);
 //       for (std::size_t atomIndex = 0; atomIndex < dim; ++atomIndex) {
 //         const double nucCharge = flGeom.getCharge(atomIndex);
-//         answer.set(atomIndex, 0, nucCharge - this->grossAtomPopA_[atomIndex]);
+//         answer.set(atomIndex, 0, nucCharge -
+//         this->grossAtomPopA_[atomIndex]);
 //       }
 //     } break;
 //
 //     case METHOD_UKS: {
 //       const std::size_t dim = this->grossAtomPopA_.size();
-//       assert(dim == static_cast<std::size_t>(this->grossAtomPopB_.getSize()));
+//       assert(dim ==
+//       static_cast<std::size_t>(this->grossAtomPopB_.getSize()));
 //       answer.resize(dim, 2);
 //       for (std::size_t atomIndex = 0; atomIndex < dim; ++atomIndex) {
 //         const double nucCharge = flGeom.getCharge(atomIndex);
-//         answer.set(atomIndex, 0, nucCharge - this->grossAtomPopA_[atomIndex]);
-//         answer.set(atomIndex, 1, nucCharge - this->grossAtomPopB_[atomIndex]);
+//         answer.set(atomIndex, 0, nucCharge -
+//         this->grossAtomPopA_[atomIndex]); answer.set(atomIndex, 1, nucCharge
+//         - this->grossAtomPopB_[atomIndex]);
 //       }
 //     } break;
 //
@@ -69,7 +74,8 @@ void DfPopulation::exec(const int iteration) {
 //       answer.resize(dim, 1);
 //       for (std::size_t atomIndex = 0; atomIndex < dim; ++atomIndex) {
 //         const double nucCharge = flGeom.getCharge(atomIndex);
-//         answer.set(atomIndex, 0, nucCharge - this->grossAtomPopA_[atomIndex]);
+//         answer.set(atomIndex, 0, nucCharge -
+//         this->grossAtomPopA_[atomIndex]);
 //       }
 //     } break;
 //
@@ -81,48 +87,48 @@ void DfPopulation::exec(const int iteration) {
 // }
 
 void DfPopulation::calcPop(const int iteration) {
-  this->calcPop<TlDenseSymmetricMatrix_Lapack>(iteration);
+    this->calcPop<TlDenseSymmetricMatrix_Lapack>(iteration);
 }
 
 void DfPopulation::setNucleiCharges() {
-  const Fl_Geometry geom((*this->pPdfParam_)["coordinates"]);
+    const Fl_Geometry geom((*this->pPdfParam_)["coordinates"]);
 
-  const int numOfAtoms = this->m_nNumOfAtoms;
-  this->nucleiCharges_.resize(numOfAtoms);
+    const int numOfAtoms = this->m_nNumOfAtoms;
+    this->nucleiCharges_.resize(numOfAtoms);
 
-  for (int i = 0; i < numOfAtoms; ++i) {
-    this->nucleiCharges_[i] = geom.getCharge(i);
-  }
+    for (int i = 0; i < numOfAtoms; ++i) {
+        this->nucleiCharges_[i] = geom.getCharge(i);
+    }
 }
 
 double DfPopulation::getSumOfNucleiCharges() const {
-  return this->nucleiCharges_.sum();
+    return this->nucleiCharges_.sum();
 }
 
 // Mulliken Analysis (Gross Atom Population)
 std::valarray<double> DfPopulation::getGrossAtomPop(
     const std::valarray<double>& grossOrbPop) {
-  std::string output = "";
+    std::string output = "";
 
-  const index_type numOfAtoms = this->m_nNumOfAtoms;
-  const index_type numOfAOs = this->m_nNumOfAOs;
+    const index_type numOfAtoms = this->m_nNumOfAtoms;
+    const index_type numOfAOs = this->m_nNumOfAOs;
 
-  std::valarray<double> answer(0.0, numOfAtoms);
+    std::valarray<double> answer(0.0, numOfAtoms);
 
 #pragma omp parallel for
-  for (index_type aoIndex = 0; aoIndex < numOfAOs; ++aoIndex) {
-    const index_type atomIndex = this->orbitalInfo_.getAtomIndex(aoIndex);
+    for (index_type aoIndex = 0; aoIndex < numOfAOs; ++aoIndex) {
+        const index_type atomIndex = this->orbitalInfo_.getAtomIndex(aoIndex);
 
 #pragma omp critical(DfPopulation__getGrossAtomPop)
-    { answer[atomIndex] += grossOrbPop[aoIndex]; }
-  }
+        { answer[atomIndex] += grossOrbPop[aoIndex]; }
+    }
 
-  return answer;
+    return answer;
 }
 
 double DfPopulation::getCharge(int atomIndex) {
-  const Fl_Geometry flGeom((*(this->pPdfParam_))["coordinates"]);
-  const double nucCharge = flGeom.getCharge(atomIndex);
-  const double grossAtomPop = this->grossAtomPopA_[atomIndex];
-  return nucCharge - grossAtomPop;
+    const Fl_Geometry flGeom((*(this->pPdfParam_))["coordinates"]);
+    const double nucCharge = flGeom.getCharge(atomIndex);
+    const double grossAtomPop = this->grossAtomPopA_[atomIndex];
+    return nucCharge - grossAtomPop;
 }

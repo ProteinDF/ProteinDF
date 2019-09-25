@@ -42,11 +42,11 @@
 #include "DfXCFunctional_Parallel.h"
 
 #ifdef HAVE_SCALAPACK
+#include "df_total_energy_scalapack.h"
 #include "tl_dense_general_matrix_scalapack.h"
 #include "tl_dense_symmetric_matrix_scalapack.h"
 #include "tl_dense_vector_scalapack.h"
-#include "df_total_energy_scalapack.h"
-#endif // HAVE_SCALAPACK
+#endif  // HAVE_SCALAPACK
 
 #define NUMBER_OF_CHECK 2
 

@@ -7,26 +7,26 @@
 static const std::string matPath = "temp.mmap.rsfd.mat";
 
 static void cleanup() {
-  if (TlFile::isExistFile(matPath)) {
-    TlFile::remove(matPath);
-  }
+    if (TlFile::isExistFile(matPath)) {
+        TlFile::remove(matPath);
+    }
 }
 
 TEST(TlMatrixMmapRowMajor, construct) {
-  const int row = 100;
-  const int col = 200;
-  {
-    cleanup();
-    TlMatrixMmapRowMajor m(matPath, row, col);
-  }
+    const int row = 100;
+    const int col = 200;
+    {
+        cleanup();
+        TlMatrixMmapRowMajor m(matPath, row, col);
+    }
 
-  {
-    TlDenseGeneralMatrix_Lapack a;
-    a.load(matPath);
+    {
+        TlDenseGeneralMatrix_Lapack a;
+        a.load(matPath);
 
-    EXPECT_EQ(row, a.getNumOfRows());
-    EXPECT_EQ(col, a.getNumOfCols());
-  }
+        EXPECT_EQ(row, a.getNumOfRows());
+        EXPECT_EQ(col, a.getNumOfCols());
+    }
 }
 
 // TEST(TlMatrixMmapRowMajor, resize) {

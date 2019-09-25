@@ -11,39 +11,39 @@
 class TlSparseMatrix_ImplObject;
 
 class TlSparseSymmetricMatrixObject : public TlMatrixObject {
- public:
-  // ---------------------------------------------------------------------------
-  // constructor & destructor
-  // ---------------------------------------------------------------------------
-  TlSparseSymmetricMatrixObject(TlSparseMatrix_ImplObject* pImpl = NULL);
-  virtual ~TlSparseSymmetricMatrixObject();
+   public:
+    // ---------------------------------------------------------------------------
+    // constructor & destructor
+    // ---------------------------------------------------------------------------
+    TlSparseSymmetricMatrixObject(TlSparseMatrix_ImplObject* pImpl = NULL);
+    virtual ~TlSparseSymmetricMatrixObject();
 
- public:
-  // ---------------------------------------------------------------------------
-  // properties
-  // ---------------------------------------------------------------------------
-  virtual TlMatrixObject::index_type getNumOfRows() const;
-  virtual TlMatrixObject::index_type getNumOfCols() const;
-  virtual void resize(const TlMatrixObject::index_type dim);
+   public:
+    // ---------------------------------------------------------------------------
+    // properties
+    // ---------------------------------------------------------------------------
+    virtual TlMatrixObject::index_type getNumOfRows() const;
+    virtual TlMatrixObject::index_type getNumOfCols() const;
+    virtual void resize(const TlMatrixObject::index_type dim);
 
-  virtual double get(const TlMatrixObject::index_type row,
-                     const TlMatrixObject::index_type col) const;
-  virtual void set(const TlMatrixObject::index_type row,
-                   const TlMatrixObject::index_type col, const double value);
-  virtual void add(const TlMatrixObject::index_type row,
-                   const TlMatrixObject::index_type col, const double value);
-                   
-  // ---------------------------------------------------------------------------
-  // I/O
-  // ---------------------------------------------------------------------------
-  virtual bool load(const std::string& filePath);
-  virtual bool save(const std::string& filePath) const;
+    virtual double get(const TlMatrixObject::index_type row,
+                       const TlMatrixObject::index_type col) const;
+    virtual void set(const TlMatrixObject::index_type row,
+                     const TlMatrixObject::index_type col, const double value);
+    virtual void add(const TlMatrixObject::index_type row,
+                     const TlMatrixObject::index_type col, const double value);
 
-  // ---------------------------------------------------------------------------
-  // variables
-  // ---------------------------------------------------------------------------
- protected:
-  TlSparseMatrix_ImplObject* pImpl_;
+    // ---------------------------------------------------------------------------
+    // I/O
+    // ---------------------------------------------------------------------------
+    virtual bool load(const std::string& filePath);
+    virtual bool save(const std::string& filePath) const;
+
+    // ---------------------------------------------------------------------------
+    // variables
+    // ---------------------------------------------------------------------------
+   protected:
+    TlSparseMatrix_ImplObject* pImpl_;
 };
 
 std::ostream& operator<<(std::ostream& stream,

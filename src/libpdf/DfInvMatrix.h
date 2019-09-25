@@ -49,40 +49,41 @@
 // 暫定的に対角化ルーチンを利用して逆行列を作るようにした。
 
 class DfInvMatrix : public DfObject {
- public:
-  DfInvMatrix(TlSerializeData* pPdfParam);
-  virtual ~DfInvMatrix();
+   public:
+    DfInvMatrix(TlSerializeData* pPdfParam);
+    virtual ~DfInvMatrix();
 
- public:
-  virtual void DfInvMain();
+   public:
+    virtual void DfInvMain();
 
- protected:
-  template <class SymmetricMatrixType>
-  void exec();
+   protected:
+    template <class SymmetricMatrixType>
+    void exec();
 
- protected:
-  bool m_bIsXcFitting;
+   protected:
+    bool m_bIsXcFitting;
 };
 
 template <class SymmetricMatrixType>
 void DfInvMatrix::exec() {
-  // for Sab (cd basis)
-  this->logger(
-      " construct Sabinv with three full matrix in term of diagonalization");
-  {
-    SymmetricMatrixType Sab = DfObject::getSabMatrix<SymmetricMatrixType>();
-    Sab = Sab.inverse();
-    DfObject::saveSabInvMatrix(Sab);
-  }
-
-  // for Sgd (xc basis)
-  if (this->m_bIsXcFitting == true) {
+    // for Sab (cd basis)
     this->logger(
-        " construct Sgdinv with three full matrix in term of diagonalization");
-    SymmetricMatrixType Sgd = DfObject::getSgdMatrix<SymmetricMatrixType>();
-    Sgd = Sgd.inverse();
-    DfObject::saveSgdInvMatrix(Sgd);
-  }
+        " construct Sabinv with three full matrix in term of diagonalization");
+    {
+        SymmetricMatrixType Sab = DfObject::getSabMatrix<SymmetricMatrixType>();
+        Sab = Sab.inverse();
+        DfObject::saveSabInvMatrix(Sab);
+    }
+
+    // for Sgd (xc basis)
+    if (this->m_bIsXcFitting == true) {
+        this->logger(
+            " construct Sgdinv with three full matrix in term of "
+            "diagonalization");
+        SymmetricMatrixType Sgd = DfObject::getSgdMatrix<SymmetricMatrixType>();
+        Sgd = Sgd.inverse();
+        DfObject::saveSgdInvMatrix(Sgd);
+    }
 }
 
 #endif  // DFINVMATRIX_H

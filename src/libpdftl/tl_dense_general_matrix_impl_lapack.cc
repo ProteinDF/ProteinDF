@@ -13,7 +13,8 @@
 // constructor & destructor
 // ----------------------------------------------------------------------------
 TlDenseGeneralMatrix_ImplLapack::TlDenseGeneralMatrix_ImplLapack(
-    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col, double const * const pBuf)
+    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+    double const* const pBuf)
     : row_(row), col_(col), matrix_(NULL) {
     this->initialize();
 
@@ -60,8 +61,9 @@ TlDenseGeneralMatrix_ImplLapack::~TlDenseGeneralMatrix_ImplLapack() {
 }
 
 TlDenseGeneralMatrix_ImplLapack::operator std::vector<double>() const {
-  std::vector<double> answer(this->matrix_, this->matrix_ + this->getNumOfElements());
-  return answer;
+    std::vector<double> answer(this->matrix_,
+                               this->matrix_ + this->getNumOfElements());
+    return answer;
 }
 
 // ---------------------------------------------------------------------------
@@ -480,7 +482,7 @@ TlMatrixObject::size_type TlDenseGeneralMatrix_ImplLapack::index(
     return index;
 }
 
-void TlDenseGeneralMatrix_ImplLapack::vtr2mat(double const * const pBuf) {
+void TlDenseGeneralMatrix_ImplLapack::vtr2mat(double const* const pBuf) {
     std::copy(pBuf, pBuf + this->getNumOfElements(), this->matrix_);
 }
 

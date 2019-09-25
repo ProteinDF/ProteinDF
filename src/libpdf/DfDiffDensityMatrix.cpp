@@ -22,48 +22,49 @@
 
 DfDiffDensityMatrix::DfDiffDensityMatrix(TlSerializeData* pPdfData)
     : DfObject(pPdfData) {
-  this->isSaveDiffMatrix_ =
-      (TlUtils::toUpper((*pPdfData)["save_diff_density_matrix"].getStr()) ==
-       "YES");
+    this->isSaveDiffMatrix_ =
+        (TlUtils::toUpper((*pPdfData)["save_diff_density_matrix"].getStr()) ==
+         "YES");
 }
 
 DfDiffDensityMatrix::~DfDiffDensityMatrix() {}
 
 void DfDiffDensityMatrix::exec() {
-  // check memory
-  // const std::size_t needMem =
-  //     this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) * sizeof(double);
-  // if ((this->isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
-  //   this->log_.info(" The differencial density matrix is build on disk.");
-  //   TlMatrix::useMemManager(true);
-  // } else {
-  //   this->log_.info(" The differencial density matrix is build on memory.");
-  //   TlMatrix::useMemManager(false);
-  // }
+    // check memory
+    // const std::size_t needMem =
+    //     this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) * sizeof(double);
+    // if ((this->isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
+    //   this->log_.info(" The differencial density matrix is build on disk.");
+    //   TlMatrix::useMemManager(true);
+    // } else {
+    //   this->log_.info(" The differencial density matrix is build on
+    //   memory."); TlMatrix::useMemManager(false);
+    // }
 
-  switch (this->m_nMethodType) {
-    case METHOD_RKS:
-      this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, this->m_nIteration);
-      break;
+    switch (this->m_nMethodType) {
+        case METHOD_RKS:
+            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_RKS,
+                                                      this->m_nIteration);
+            break;
 
-    case METHOD_UKS:
-      this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA,
-                                                this->m_nIteration);
-      this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA,
-                                                this->m_nIteration);
-      break;
+        case METHOD_UKS:
+            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA,
+                                                      this->m_nIteration);
+            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA,
+                                                      this->m_nIteration);
+            break;
 
-    case METHOD_ROKS:
-      this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED,
-                                                this->m_nIteration);
-      this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN,
-                                                this->m_nIteration);
-      break;
+        case METHOD_ROKS:
+            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED,
+                                                      this->m_nIteration);
+            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN,
+                                                      this->m_nIteration);
+            break;
 
-    default:
-      std::cerr << "program error. " << __FILE__ << ":" << __LINE__
-                << std::endl;
-      abort();
-      break;
-  }
+        default:
+            std::cerr << "program error. " << __FILE__ << ":" << __LINE__
+                      << std::endl;
+            abort();
+            break;
+    }
 }

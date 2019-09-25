@@ -316,7 +316,8 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 
             // K
             {
-                SymmetricMatrix E_KA(this->m_nNumOfAOs), E_KB(this->m_nNumOfAOs);
+                SymmetricMatrix E_KA(this->m_nNumOfAOs),
+                    E_KB(this->m_nNumOfAOs);
                 this->E_KA_ = this->calcE_K(RUN_UKS_ALPHA, PA, &E_KA);
                 this->E_KB_ = this->calcE_K(RUN_UKS_BETA, PB, &E_KB);
                 this->E_K_ = this->E_KA_ + this->E_KB_;
@@ -325,11 +326,14 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
             }
             // XC
             {
-                SymmetricMatrix E_XC_A(this->m_nNumOfAOs), E_XC_B(this->m_nNumOfAOs);
+                SymmetricMatrix E_XC_A(this->m_nNumOfAOs),
+                    E_XC_B(this->m_nNumOfAOs);
                 this->calcE_XC(RUN_UKS_ALPHA, PA, &E_XC_A);
                 this->calcE_XC(RUN_UKS_BETA, PB, &E_XC_B);
-                E_XC_A.save(DfObject::m_sWorkDirPath + "/" + "e_XC.uks-alpha.mat");
-                E_XC_B.save(DfObject::m_sWorkDirPath + "/" + "e_XC.uks-beta.mat");
+                E_XC_A.save(DfObject::m_sWorkDirPath + "/" +
+                            "e_XC.uks-alpha.mat");
+                E_XC_B.save(DfObject::m_sWorkDirPath + "/" +
+                            "e_XC.uks-beta.mat");
             }
 
             P_AB = PA + PB;
@@ -344,19 +348,24 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
             PA += PB;
 
             {
-                SymmetricMatrix E_KA(this->m_nNumOfAOs), E_KB(this->m_nNumOfAOs);
+                SymmetricMatrix E_KA(this->m_nNumOfAOs),
+                    E_KB(this->m_nNumOfAOs);
                 this->E_KA_ = this->calcE_K(RUN_ROKS_ALPHA, PA, &E_KA);
                 this->E_KB_ = this->calcE_K(RUN_ROKS_BETA, PB, &E_KB);
                 this->E_K_ = this->E_KA_ + this->E_KB_;
-                E_KA.save(DfObject::m_sWorkDirPath + "/" + "e_K.roks-alpha.mat");
+                E_KA.save(DfObject::m_sWorkDirPath + "/" +
+                          "e_K.roks-alpha.mat");
                 E_KA.save(DfObject::m_sWorkDirPath + "/" + "e_K.roks-beta.mat");
             }
             {
-                SymmetricMatrix E_XC_A(this->m_nNumOfAOs), E_XC_B(this->m_nNumOfAOs);
+                SymmetricMatrix E_XC_A(this->m_nNumOfAOs),
+                    E_XC_B(this->m_nNumOfAOs);
                 this->calcE_XC(RUN_ROKS_ALPHA, PA, &E_XC_A);
                 this->calcE_XC(RUN_ROKS_BETA, PB, &E_XC_B);
-                E_XC_A.save(DfObject::m_sWorkDirPath + "/" + "e_XC.roks-alpha.mat");
-                E_XC_B.save(DfObject::m_sWorkDirPath + "/" + "e_XC.roks-beta.mat");
+                E_XC_A.save(DfObject::m_sWorkDirPath + "/" +
+                            "e_XC.roks-alpha.mat");
+                E_XC_B.save(DfObject::m_sWorkDirPath + "/" +
+                            "e_XC.roks-beta.mat");
             }
             P_AB = PA + PB;
         } break;
@@ -438,7 +447,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
     // K
     {
         SymmetricMatrix E_K;
-        E_K.load(DfObject::m_sWorkDirPath + "/" +"e_K.rks.mat");
+        E_K.load(DfObject::m_sWorkDirPath + "/" + "e_K.rks.mat");
         E_e += E_K;
 
         SymmetricMatrix IE_K = this->get_IE(E_K, atomIndexGroup);
@@ -447,7 +456,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
     // XC
     {
         SymmetricMatrix E_XC;
-        E_XC.load(DfObject::m_sWorkDirPath + "/" +"e_XC.rks.mat");
+        E_XC.load(DfObject::m_sWorkDirPath + "/" + "e_XC.rks.mat");
         E_e += E_XC;
 
         SymmetricMatrix IE_K = this->get_IE(E_XC, atomIndexGroup);
@@ -457,7 +466,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
     // h
     {
         SymmetricMatrix E_h;
-        E_h.load(DfObject::m_sWorkDirPath + "/" +"e_h.mat");
+        E_h.load(DfObject::m_sWorkDirPath + "/" + "e_h.mat");
         E_e += E_h;
 
         SymmetricMatrix IE_h = this->get_IE(E_h, atomIndexGroup);
@@ -465,7 +474,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
     }
     {
         SymmetricMatrix E_h_X;
-        E_h_X.load(DfObject::m_sWorkDirPath + "/" +"e_h_X.mat");
+        E_h_X.load(DfObject::m_sWorkDirPath + "/" + "e_h_X.mat");
         E_e += E_h_X;
 
         SymmetricMatrix IE_h_X = this->get_IE(E_h_X, atomIndexGroup);
@@ -475,7 +484,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
     // J
     {
         SymmetricMatrix E_J;
-        E_J.load(DfObject::m_sWorkDirPath + "/" +"e_J.mat");
+        E_J.load(DfObject::m_sWorkDirPath + "/" + "e_J.mat");
         E_e += E_J;
 
         SymmetricMatrix IE_J = this->get_IE(E_J, atomIndexGroup);
@@ -705,7 +714,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
     const SymmetricMatrix E_h = Hpq.dotInPlace(P_AB);
 
     this->E_h_ = E_h.sum();
-    E_h.save(DfObject::m_sWorkDirPath + "/" +"e_h.mat");
+    E_h.save(DfObject::m_sWorkDirPath + "/" + "e_h.mat");
 }
 
 template <class GeneralMatrix, class SymmetricMatrix, class Vector,
@@ -728,7 +737,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
         const SymmetricMatrix E_h_X = Hpq2.dotInPlace(P_AB);
 
         this->E_h_X_ = E_h_X.sum();
-        E_h_X.save(DfObject::m_sWorkDirPath + "/" +"e_h_X.mat");
+        E_h_X.save(DfObject::m_sWorkDirPath + "/" + "e_h_X.mat");
     }
 }
 
@@ -764,7 +773,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
     const SymmetricMatrix E_J = 0.5 * J.dotInPlace(P_AB);
 
     this->E_J_ = E_J.sum();
-    E_J.save(DfObject::m_sWorkDirPath + "/" +"e_J.mat");
+    E_J.save(DfObject::m_sWorkDirPath + "/" + "e_J.mat");
 }
 
 template <class GeneralMatrix, class SymmetricMatrix, class Vector,

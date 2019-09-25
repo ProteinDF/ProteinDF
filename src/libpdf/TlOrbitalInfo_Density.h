@@ -22,11 +22,11 @@
 #include "TlOrbitalInfoObject.h"
 
 class TlOrbitalInfo_Density : public TlOrbitalInfoObject {
- public:
-  TlOrbitalInfo_Density(const TlSerializeData& geomData,
-                        const TlSerializeData& basisData);
+   public:
+    TlOrbitalInfo_Density(const TlSerializeData& geomData,
+                          const TlSerializeData& basisData);
 
-  virtual ~TlOrbitalInfo_Density();
+    virtual ~TlOrbitalInfo_Density();
 };
 
 #endif  // TLORBITAL_INFO_DENSITY_H

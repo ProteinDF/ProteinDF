@@ -22,12 +22,12 @@
 #include "DfConvcheck.h"
 
 class DfConvcheck_Parallel : public DfConvcheck {
- public:
-  DfConvcheck_Parallel(TlSerializeData* pPdfParam, int num_iter);
-  virtual ~DfConvcheck_Parallel();
+   public:
+    DfConvcheck_Parallel(TlSerializeData* pPdfParam, int num_iter);
+    virtual ~DfConvcheck_Parallel();
 
- protected:
-  virtual void check();
+   protected:
+    virtual void check();
 };
 
 #endif  // DFCONVCHECK_PARALLEL_H

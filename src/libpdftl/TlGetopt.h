@@ -20,8 +20,8 @@
 #define TLGETOPT_H
 
 #include <map>
-#include <vector>
 #include <string>
+#include <vector>
 
 /**
  *  コマンドラインオプションを処理するクラス
@@ -38,36 +38,36 @@
  *  argv[0]がコマンド名になるかは、実装定義であるので注意が必要である。
  */
 class TlGetopt {
- public:
-  TlGetopt(int argc, char* argv[], const char* list);
-  ~TlGetopt();
+   public:
+    TlGetopt(int argc, char* argv[], const char* list);
+    ~TlGetopt();
 
-  // accession
- public:
-  int getCount() const { return this->args_.size(); };
-  const std::string operator[](const std::string& sKey) const;
-  const std::string operator[](unsigned int n) const;
+    // accession
+   public:
+    int getCount() const { return this->args_.size(); };
+    const std::string operator[](const std::string& sKey) const;
+    const std::string operator[](unsigned int n) const;
 
- protected:
-  void initialize();
-  void parseArgv(int argc, char* argv[], const char* list);
+   protected:
+    void initialize();
+    void parseArgv(int argc, char* argv[], const char* list);
 
- protected:
-  /**
-   *  引数の数
-   */
-  int m_nCount;
+   protected:
+    /**
+     *  引数の数
+     */
+    int m_nCount;
 
-  /**
-   *  データ保持用
-   */
-  std::map<std::string, std::string> m_Data;
-  std::vector<std::string> args_;
+    /**
+     *  データ保持用
+     */
+    std::map<std::string, std::string> m_Data;
+    std::vector<std::string> args_;
 
-  /**
-   *  エラー文字列
-   */
-  std::string m_sError;
+    /**
+     *  エラー文字列
+     */
+    std::string m_sError;
 };
 
 #endif  // TLGETOPT_H

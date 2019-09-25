@@ -23,14 +23,14 @@
 
 /// Harrisの汎関数による初期値を作成する
 class DfInitialGuessHarris_Parallel : public DfInitialGuessHarris {
- public:
-  DfInitialGuessHarris_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfInitialGuessHarris_Parallel();
+   public:
+    DfInitialGuessHarris_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfInitialGuessHarris_Parallel();
 
-  virtual void main();
+    virtual void main();
 
- protected:
-  void distributeHarrisDB();
+   protected:
+    void distributeHarrisDB();
 };
 
 #endif  // DFINITIALGUESSHARRIS_PARALLEL_H

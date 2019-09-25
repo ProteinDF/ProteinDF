@@ -22,62 +22,63 @@
 #include "common.h"
 
 DfTransatob::DfTransatob(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
-  this->updateLinearAlgebraPackageParam(
-      (*(this->pPdfParam_))["linear_algebra_package/trans_c"].getStr());
+    this->updateLinearAlgebraPackageParam(
+        (*(this->pPdfParam_))["linear_algebra_package/trans_c"].getStr());
 }
 
 DfTransatob::~DfTransatob() {}
 
 void DfTransatob::run() {
-  switch (this->linearAlgebraPackage_) {
-    case LAP_LAPACK: {
-      this->log_.info("Linear Algebra Package: LAPACK");
-      this->run_method<TlDenseGeneralMatrix_Lapack>(this->m_nNumOfMOs);
-    } break;
+    switch (this->linearAlgebraPackage_) {
+        case LAP_LAPACK: {
+            this->log_.info("Linear Algebra Package: LAPACK");
+            this->run_method<TlDenseGeneralMatrix_Lapack>(this->m_nNumOfMOs);
+        } break;
 
 #ifdef HAVE_EIGEN
-    case LAP_EIGEN: {
-      this->log_.info("Linear Algebra Package: Eigen");
-      this->run_method<TlDenseGeneralMatrix_Eigen>(this->m_nNumOfMOs);
-    } break;
+        case LAP_EIGEN: {
+            this->log_.info("Linear Algebra Package: Eigen");
+            this->run_method<TlDenseGeneralMatrix_Eigen>(this->m_nNumOfMOs);
+        } break;
 #endif  // HAVE_EIGEN
 
 #ifdef HAVE_VIENNACL
-    case LAP_VIENNACL: {
-      this->log_.info("Linear Algebra Package: ViennaCL");
-      this->run_method<TlDenseGeneralMatrix_ViennaCL>(this->m_nNumOfMOs);
-    } break;
+        case LAP_VIENNACL: {
+            this->log_.info("Linear Algebra Package: ViennaCL");
+            this->run_method<TlDenseGeneralMatrix_ViennaCL>(this->m_nNumOfMOs);
+        } break;
 #endif  // HAVE_VIENNACL
 
-    default:
-      CnErr.abort(TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
-  }
+        default:
+            CnErr.abort(
+                TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
+    }
 }
 
 // for extended QCLO method
 void DfTransatob::runQclo(const std::string& fragname, int norbcut) {
-  switch (this->linearAlgebraPackage_) {
-    case LAP_LAPACK: {
-      this->log_.info("Linear Algebra Package: LAPACK");
-      this->run_method<TlDenseGeneralMatrix_Lapack>(norbcut, fragname);
-    } break;
+    switch (this->linearAlgebraPackage_) {
+        case LAP_LAPACK: {
+            this->log_.info("Linear Algebra Package: LAPACK");
+            this->run_method<TlDenseGeneralMatrix_Lapack>(norbcut, fragname);
+        } break;
 
 #ifdef HAVE_EIGEN
-    case LAP_EIGEN: {
-      this->log_.info("Linear Algebra Package: Eigen");
-      this->run_method<TlDenseGeneralMatrix_Eigen>(norbcut, fragname);
-    } break;
+        case LAP_EIGEN: {
+            this->log_.info("Linear Algebra Package: Eigen");
+            this->run_method<TlDenseGeneralMatrix_Eigen>(norbcut, fragname);
+        } break;
 #endif  // HAVE_EIGEN
 
 #ifdef HAVE_VIENNACL
-    case LAP_VIENNACL: {
-      this->log_.info("Linear Algebra Package: ViennaCL");
-      this->run_method<TlDenseGeneralMatrix_ViennaCL>(norbcut, fragname);
-    } break;
+        case LAP_VIENNACL: {
+            this->log_.info("Linear Algebra Package: ViennaCL");
+            this->run_method<TlDenseGeneralMatrix_ViennaCL>(norbcut, fragname);
+        } break;
 #endif  // HAVE_VIENNACL
 
-    default:
-      CnErr.abort(TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
-  }
+        default:
+            CnErr.abort(
+                TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
+    }
 }
-

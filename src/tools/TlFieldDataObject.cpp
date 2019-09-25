@@ -37,13 +37,13 @@ TlFieldDataObject::TlFieldDataObject(const TlFieldDataObject& rhs)
 TlFieldDataObject::~TlFieldDataObject() {}
 
 void TlFieldDataObject::setComment(const std::string& comment) {
-  this->comment_ = comment;
+    this->comment_ = comment;
 }
 
 std::string TlFieldDataObject::getComment() const { return this->comment_; }
 
 void TlFieldDataObject::setLabel(const std::string& label) {
-  this->label_ = label;
+    this->label_ = label;
 }
 
 std::string TlFieldDataObject::getLabel() const { return this->label_; }

@@ -244,7 +244,7 @@ TlDenseGeneralMatrix_ImplEigen TlDenseGeneralMatrix_ImplEigen::inverse() const {
 void TlDenseGeneralMatrix_ImplEigen::vtr2mat(double const* const pBuf) {
     const std::size_t row = this->getNumOfRows();
     const std::size_t col = this->getNumOfCols();
-    
+
     this->matrix_ = MapTypeConst(pBuf, row, col);
 }
 // ---------------------------------------------------------------------------

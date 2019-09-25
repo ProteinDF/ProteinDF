@@ -22,30 +22,30 @@
 #include "DfForce.h"
 
 class DfForce_Parallel : public DfForce {
- public:
-  DfForce_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfForce_Parallel();
+   public:
+    DfForce_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfForce_Parallel();
 
- protected:
-  virtual void logger(const std::string& str) const;
+   protected:
+    virtual void logger(const std::string& str) const;
 
- protected:
-  virtual void calcForceFromNuclei();
-  virtual void calcForceFromWS(RUN_TYPE runType);
-  virtual void calcForceFromHpq(const TlDenseSymmetricMatrix_Lapack& P);
+   protected:
+    virtual void calcForceFromNuclei();
+    virtual void calcForceFromWS(RUN_TYPE runType);
+    virtual void calcForceFromHpq(const TlDenseSymmetricMatrix_Lapack& P);
 
-  virtual void calcForceFromCoulomb_exact(const RUN_TYPE runType);
-  void calcForceFromCoulomb_exact_replicated(const RUN_TYPE runType);
+    virtual void calcForceFromCoulomb_exact(const RUN_TYPE runType);
+    void calcForceFromCoulomb_exact_replicated(const RUN_TYPE runType);
 
-  virtual void calcForceFromCoulomb_RIJ(const RUN_TYPE runType);
-  void calcForceFromCoulomb_RIJ_DC(const RUN_TYPE runType);
+    virtual void calcForceFromCoulomb_RIJ(const RUN_TYPE runType);
+    void calcForceFromCoulomb_RIJ_DC(const RUN_TYPE runType);
 
-  virtual void calcForceFromK(const RUN_TYPE runType);
-  void calcForceFromK_replicated(const RUN_TYPE runType);
+    virtual void calcForceFromK(const RUN_TYPE runType);
+    void calcForceFromK_replicated(const RUN_TYPE runType);
 
-  virtual DfCalcGridX* getCalcGridObj();
+    virtual DfCalcGridX* getCalcGridObj();
 
-  virtual void output();
+    virtual void output();
 };
 
 #endif  // DFFORCE_PARALLEL_H

@@ -31,571 +31,580 @@ DfThreeindexintegrals::DfThreeindexintegrals(TlSerializeData* pPdfParam)
 DfThreeindexintegrals::~DfThreeindexintegrals() {}
 
 void DfThreeindexintegrals::DfThreeindexintegralsMain() {
-  // DIRECT SCHEME
-  switch (this->m_nMethodType) {
-    case METHOD_RKS: {
-      if (this->m_bIsXCFitting == true) {
-        this->mainDIRECT_RKS(this->m_nIteration);  // RKS
-      } else {
-        this->mainDIRECT_RKS2(this->m_nIteration);  // RKS
-      }
-    } break;
+    // DIRECT SCHEME
+    switch (this->m_nMethodType) {
+        case METHOD_RKS: {
+            if (this->m_bIsXCFitting == true) {
+                this->mainDIRECT_RKS(this->m_nIteration);  // RKS
+            } else {
+                this->mainDIRECT_RKS2(this->m_nIteration);  // RKS
+            }
+        } break;
 
-    case METHOD_UKS:
-      this->mainDIRECT_UKS(this->m_nIteration);  // UKS alpha spin
-      break;
+        case METHOD_UKS:
+            this->mainDIRECT_UKS(this->m_nIteration);  // UKS alpha spin
+            break;
 
-    case METHOD_ROKS:
-      this->mainDIRECT_ROKS(this->m_nIteration);  // ROKS
-      break;
+        case METHOD_ROKS:
+            this->mainDIRECT_ROKS(this->m_nIteration);  // ROKS
+            break;
 
-    default:
-      CnErr.abort("DfThreeindexintegrals", "", "main", "runtype is illegal");
-      break;
-  }
+        default:
+            CnErr.abort("DfThreeindexintegrals", "", "main",
+                        "runtype is illegal");
+            break;
+    }
 }
 
 TlDenseSymmetricMatrix_Lapack DfThreeindexintegrals::getPMatrix(
     const RUN_TYPE runType, int iteration) {
-  assert(iteration >= 0);
+    assert(iteration >= 0);
 
-  TlDenseSymmetricMatrix_Lapack P;
-  P.load(this->getPpqMatrixPath(runType, iteration));
+    TlDenseSymmetricMatrix_Lapack P;
+    P.load(this->getPpqMatrixPath(runType, iteration));
 
-  return P;
+    return P;
 }
 
 void DfThreeindexintegrals::mainDIRECT_RKS(int iteration) {
-  this->log_.info("Direct scheme method is employed");
+    this->log_.info("Direct scheme method is employed");
 
-  // read Rou
-  TlDenseVector_Lapack currRho;
-  currRho.load(this->getRhoPath(RUN_RKS, iteration));
-  assert(this->m_nNumOfAux == currRho.getSize());
+    // read Rou
+    TlDenseVector_Lapack currRho;
+    currRho.load(this->getRhoPath(RUN_RKS, iteration));
+    assert(this->m_nNumOfAux == currRho.getSize());
 
-  // read Myu
-  TlDenseVector_Lapack currMyu;
-  currMyu.load(this->getMyuPath(RUN_RKS, iteration));
-  assert(this->numOfAuxXC_ == currMyu.getSize());
+    // read Myu
+    TlDenseVector_Lapack currMyu;
+    currMyu.load(this->getMyuPath(RUN_RKS, iteration));
+    assert(this->numOfAuxXC_ == currMyu.getSize());
 
-  // read Epsilon
-  // energy for xc energy term (compair myu*Ppq*Pqa with 4/3*Ex1)
-  TlDenseVector_Lapack currEps;
-  currEps.load("fl_Work/fl_Vct_Epsilon" + TlUtils::xtos(iteration));
-  assert(this->numOfAuxXC_ == currEps.getSize());
+    // read Epsilon
+    // energy for xc energy term (compair myu*Ppq*Pqa with 4/3*Ex1)
+    TlDenseVector_Lapack currEps;
+    currEps.load("fl_Work/fl_Vct_Epsilon" + TlUtils::xtos(iteration));
+    assert(this->numOfAuxXC_ == currEps.getSize());
 
-  // read previous Rou, Myu, Eps & calculate delta
-  if (iteration > 1) {  // iteration != 1
-    {
-      TlDenseVector_Lapack prevRho(this->m_nNumOfAux);
-      prevRho.load(this->getRhoPath(RUN_RKS, iteration - 1));
-      assert(this->m_nNumOfAux == prevRho.getSize());
+    // read previous Rou, Myu, Eps & calculate delta
+    if (iteration > 1) {  // iteration != 1
+        {
+            TlDenseVector_Lapack prevRho(this->m_nNumOfAux);
+            prevRho.load(this->getRhoPath(RUN_RKS, iteration - 1));
+            assert(this->m_nNumOfAux == prevRho.getSize());
 
-      currRho -= prevRho;
+            currRho -= prevRho;
+        }
+
+        {
+            TlDenseVector_Lapack prevMyu;
+            prevMyu.load(this->getMyuPath(RUN_RKS, iteration - 1));
+            assert(this->numOfAuxXC_ == prevMyu.getSize());
+
+            currMyu -= prevMyu;
+        }
+
+        {
+            TlDenseVector_Lapack prevEps;
+            prevEps.load("fl_Work/fl_Vct_Epsilon" +
+                         TlUtils::xtos(iteration - 1));
+            assert(this->numOfAuxXC_ == prevEps.getSize());
+
+            currEps -= prevEps;
+        }
     }
 
-    {
-      TlDenseVector_Lapack prevMyu;
-      prevMyu.load(this->getMyuPath(RUN_RKS, iteration - 1));
-      assert(this->numOfAuxXC_ == prevMyu.getSize());
+    // prepare Fock
+    TlDenseSymmetricMatrix_Lapack F(this->m_nNumOfAOs);
 
-      currMyu -= prevMyu;
+    // クーロン項
+    // [pq|alpha]
+    {
+        DfEriX dferi(this->pPdfParam_);
+        // dferi.getdeltaHpqA(currRho, F);
+        dferi.getJ(currRho, &F);
     }
 
-    {
-      TlDenseVector_Lapack prevEps;
-      prevEps.load("fl_Work/fl_Vct_Epsilon" + TlUtils::xtos(iteration - 1));
-      assert(this->numOfAuxXC_ == prevEps.getSize());
+    // prepare E
+    TlDenseSymmetricMatrix_Lapack E = F;
 
-      currEps -= prevEps;
-    }
-  }
-
-  // prepare Fock
-  TlDenseSymmetricMatrix_Lapack F(this->m_nNumOfAOs);
-
-  // クーロン項
-  // [pq|alpha]
-  {
-    DfEriX dferi(this->pPdfParam_);
-    // dferi.getdeltaHpqA(currRho, F);
-    dferi.getJ(currRho, &F);
-  }
-
-  // prepare E
-  TlDenseSymmetricMatrix_Lapack E = F;
-
-  // 交換相関項
-  if (this->m_sXCFunctional != "hf") {
-    // myu * [pq gamma] for Fock
-    // eps * [pq gamma] for E
-    {
-      DfOverlapX dfovr(this->pPdfParam_);
-      // dfovr.getdeltaHpqG(currMyu, currEps, F, E);
-      dfovr.get_pqg(currMyu, currEps, &F, &E);
-    }
-  } else {
-    // Ex using HF
-    TlDenseSymmetricMatrix_Lapack P(this->m_nNumOfAOs);
-    if (iteration == 1) {
-      P = this->getPMatrix(RUN_RKS, iteration - 1);
+    // 交換相関項
+    if (this->m_sXCFunctional != "hf") {
+        // myu * [pq gamma] for Fock
+        // eps * [pq gamma] for E
+        {
+            DfOverlapX dfovr(this->pPdfParam_);
+            // dfovr.getdeltaHpqG(currMyu, currEps, F, E);
+            dfovr.get_pqg(currMyu, currEps, &F, &E);
+        }
     } else {
-      P = this->getPMatrix(RUN_RKS, iteration - 1);
-      {
-        const TlDenseSymmetricMatrix_Lapack prevP =
-            this->getPMatrix(RUN_RKS, iteration - 2);
-        P -= prevP;
-      }
+        // Ex using HF
+        TlDenseSymmetricMatrix_Lapack P(this->m_nNumOfAOs);
+        if (iteration == 1) {
+            P = this->getPMatrix(RUN_RKS, iteration - 1);
+        } else {
+            P = this->getPMatrix(RUN_RKS, iteration - 1);
+            {
+                const TlDenseSymmetricMatrix_Lapack prevP =
+                    this->getPMatrix(RUN_RKS, iteration - 2);
+                P -= prevP;
+            }
+        }
+
+        //     std::cerr << "DfThreeindexintegral using RIHF." << std::endl;
+        //     DfEri2 dfEri2(this->m_flGbi, iteration);
+        //     TlDenseSymmetricMatrix_Lapack K = dfEri2.getKMatrix(P);
+        //     K *= -0.5;
+        //     std::cerr << "K(RI) >>>>" << std::endl;
+        //     K.print(std::cerr);
+
+        //     std::cerr << "DfThreeindexintegral using HF." << std::endl;
+        // DfTwoElectronIntegral dfTEI(this->pPdfParam_);
+        DfEriX dfEri(this->pPdfParam_);
+        TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
+        // dfTEI.getContractKMatrixByIntegralDriven(P, &K);
+        dfEri.getK(P, &K);
+
+        // TlDenseSymmetricMatrix_Lapack K =
+        // dfTEI.getContractKMatrixByRTmethod(P);
+        //     std::cerr << "K(HF) >>>>" << std::endl;
+        //     K.print(std::cerr);
+
+        F += K;
+        E += (0.5 * K);
     }
 
-    //     std::cerr << "DfThreeindexintegral using RIHF." << std::endl;
-    //     DfEri2 dfEri2(this->m_flGbi, iteration);
-    //     TlDenseSymmetricMatrix_Lapack K = dfEri2.getKMatrix(P);
-    //     K *= -0.5;
-    //     std::cerr << "K(RI) >>>>" << std::endl;
-    //     K.print(std::cerr);
-
-    //     std::cerr << "DfThreeindexintegral using HF." << std::endl;
-    // DfTwoElectronIntegral dfTEI(this->pPdfParam_);
-    DfEriX dfEri(this->pPdfParam_);
-    TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
-    // dfTEI.getContractKMatrixByIntegralDriven(P, &K);
-    dfEri.getK(P, &K);
-
-    // TlDenseSymmetricMatrix_Lapack K =
-    // dfTEI.getContractKMatrixByRTmethod(P);
-    //     std::cerr << "K(HF) >>>>" << std::endl;
-    //     K.print(std::cerr);
-
-    F += K;
-    E += (0.5 * K);
-  }
-
-  DfObject::saveFpqMatrix(RUN_RKS, iteration, F);
-  E.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
+    DfObject::saveFpqMatrix(RUN_RKS, iteration, F);
+    E.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
 }
 
 void DfThreeindexintegrals::mainDIRECT_RKS2(int iteration) {
-  this->log_.info("Direct scheme method is employed");
+    this->log_.info("Direct scheme method is employed");
 
-  // read Rou
-  TlDenseVector_Lapack currRho;
-  currRho.load("fl_Work/fl_Vct_Rou" + TlUtils::xtos(iteration));
-  assert(this->m_nNumOfAux == currRho.getSize());
+    // read Rou
+    TlDenseVector_Lapack currRho;
+    currRho.load("fl_Work/fl_Vct_Rou" + TlUtils::xtos(iteration));
+    assert(this->m_nNumOfAux == currRho.getSize());
 
-  // read Myu
-  //   TlDenseVector_Lapack currMyu;
-  //   currMyu.load("fl_Work/fl_Vct_Myu" + TlUtils::xtos(iteration));
-  //   assert(this->numOfAuxXC_ == currMyu.getSize());
+    // read Myu
+    //   TlDenseVector_Lapack currMyu;
+    //   currMyu.load("fl_Work/fl_Vct_Myu" + TlUtils::xtos(iteration));
+    //   assert(this->numOfAuxXC_ == currMyu.getSize());
 
-  // read Epsilon
-  // energy for xc energy term (compair myu*Ppq*Pqa with 4/3*Ex1)
-  //   TlDenseVector_Lapack currEps;
-  //   currEps.load("fl_Work/fl_Vct_Epsilon" + TlUtils::xtos(iteration));
-  //   assert(this->numOfAuxXC_ == currEps.getSize());
+    // read Epsilon
+    // energy for xc energy term (compair myu*Ppq*Pqa with 4/3*Ex1)
+    //   TlDenseVector_Lapack currEps;
+    //   currEps.load("fl_Work/fl_Vct_Epsilon" + TlUtils::xtos(iteration));
+    //   assert(this->numOfAuxXC_ == currEps.getSize());
 
-  // read previous Rou, Myu, Eps & calculate delta
-  if (iteration > 1) {  // iteration != 1
+    // read previous Rou, Myu, Eps & calculate delta
+    if (iteration > 1) {  // iteration != 1
+        {
+            TlDenseVector_Lapack prevRho(this->m_nNumOfAux);
+            prevRho.load("fl_Work/fl_Vct_Rou" + TlUtils::xtos(iteration - 1));
+            assert(this->m_nNumOfAux == prevRho.getSize());
+
+            currRho -= prevRho;
+        }
+
+        //     {
+        //       TlDenseVector_Lapack prevMyu;
+        //       prevMyu.load("fl_Work/fl_Vct_Myu" + TlUtils::xtos(iteration
+        //       -1)); assert(this->numOfAuxXC_ == prevMyu.getSize());
+
+        //       currMyu -= prevMyu;
+        //     }
+
+        //     {
+        //       TlDenseVector_Lapack prevEps;
+        //       prevEps.load("fl_Work/fl_Vct_Epsilon" + TlUtils::xtos(iteration
+        //       -1)); assert(this->numOfAuxXC_ == prevEps.getSize());
+
+        //       currEps -= prevEps;
+        //     }
+    }
+
+    // prepare Fock
+    TlDenseSymmetricMatrix_Lapack F(this->m_nNumOfAOs);
+
+    // クーロン項
+    // [pq|alpha]
     {
-      TlDenseVector_Lapack prevRho(this->m_nNumOfAux);
-      prevRho.load("fl_Work/fl_Vct_Rou" + TlUtils::xtos(iteration - 1));
-      assert(this->m_nNumOfAux == prevRho.getSize());
-
-      currRho -= prevRho;
+        DfEriX dferi(this->pPdfParam_);
+        // dferi.getdeltaHpqA(currRho, F);
+        dferi.getJ(currRho, &F);
     }
 
-    //     {
-    //       TlDenseVector_Lapack prevMyu;
-    //       prevMyu.load("fl_Work/fl_Vct_Myu" + TlUtils::xtos(iteration -1));
-    //       assert(this->numOfAuxXC_ == prevMyu.getSize());
+    // prepare E
+    TlDenseSymmetricMatrix_Lapack E = F;
 
-    //       currMyu -= prevMyu;
-    //     }
+    // 交換相関項
+    if (this->m_sXCFunctional != "hf") {
+        //     TlDenseSymmetricMatrix_Lapack P(this->m_nNumOfAOs);
+        //     if (iteration == 1){
+        //       P = this->getPMatrix("rks", iteration -1);
+        //     } else {
+        //       P = this->getPMatrix("rks", iteration -1);
+        //       {
+        //  const TlDenseSymmetricMatrix_Lapack prevP = this->getPMatrix("rks",
+        //  iteration
+        //  -2);
+        //  P -= prevP;
+        //       }
+        //     }
 
-    //     {
-    //       TlDenseVector_Lapack prevEps;
-    //       prevEps.load("fl_Work/fl_Vct_Epsilon" + TlUtils::xtos(iteration
-    //       -1)); assert(this->numOfAuxXC_ == prevEps.getSize());
+        // new method
+        //     {
+        //       TlDenseSymmetricMatrix_Lapack Fxc; //(this->m_nNumOfAOs);
+        //       DfXCFunctional dfXCFunctional(this->m_flGbi);
 
-    //       currEps -= prevEps;
-    //     }
-  }
+        //       const TlDenseSymmetricMatrix_Lapack P = this->getPMatrix("rks",
+        //       iteration
+        //       -1);
 
-  // prepare Fock
-  TlDenseSymmetricMatrix_Lapack F(this->m_nNumOfAOs);
+        //       Fxc = dfXCFunctional.getFxc(P);
+        //       Fxc.save("fl_Work/fl_Mtr_Fxc.matrix." +
+        //       TlUtils::xtos(iteration));
 
-  // クーロン項
-  // [pq|alpha]
-  {
-    DfEriX dferi(this->pPdfParam_);
-    // dferi.getdeltaHpqA(currRho, F);
-    dferi.getJ(currRho, &F);
-  }
+        //       //       if (iteration != 1){
+        //       //     TlDenseSymmetricMatrix_Lapack Fxc_prev;
+        //       //     Fxc_prev.load("fl_Work/fl_Mtr_Fxc.matrix." +
+        //       TlUtils::xtos(iteration -1));
+        //       //     Fxc -= Fxc_prev;
+        //       //       }
 
-  // prepare E
-  TlDenseSymmetricMatrix_Lapack E = F;
+        //       F += Fxc;
+        //     }
 
-  // 交換相関項
-  if (this->m_sXCFunctional != "hf") {
-    //     TlDenseSymmetricMatrix_Lapack P(this->m_nNumOfAOs);
-    //     if (iteration == 1){
-    //       P = this->getPMatrix("rks", iteration -1);
-    //     } else {
-    //       P = this->getPMatrix("rks", iteration -1);
-    //       {
-    //  const TlDenseSymmetricMatrix_Lapack prevP = this->getPMatrix("rks",
-    //  iteration
-    //  -2);
-    //  P -= prevP;
-    //       }
-    //     }
-
-    // new method
-    //     {
-    //       TlDenseSymmetricMatrix_Lapack Fxc; //(this->m_nNumOfAOs);
-    //       DfXCFunctional dfXCFunctional(this->m_flGbi);
-
-    //       const TlDenseSymmetricMatrix_Lapack P = this->getPMatrix("rks",
-    //       iteration
-    //       -1);
-
-    //       Fxc = dfXCFunctional.getFxc(P);
-    //       Fxc.save("fl_Work/fl_Mtr_Fxc.matrix." + TlUtils::xtos(iteration));
-
-    //       //       if (iteration != 1){
-    //       //     TlDenseSymmetricMatrix_Lapack Fxc_prev;
-    //       //     Fxc_prev.load("fl_Work/fl_Mtr_Fxc.matrix." +
-    //       TlUtils::xtos(iteration -1));
-    //       //     Fxc -= Fxc_prev;
-    //       //       }
-
-    //       F += Fxc;
-    //     }
-
-    //     DfCalcGridX dfCalcGrid(this->m_flGbi);
-    //     dfCalcGrid.calcXCIntegForFock(P, F);
-    // CnErr.abort("not implemented yet!! stop.");
-  } else {
-    // Ex using HF
-    TlDenseSymmetricMatrix_Lapack P(this->m_nNumOfAOs);
-    if (iteration == 1) {
-      P = this->getPMatrix(RUN_RKS, iteration - 1);
+        //     DfCalcGridX dfCalcGrid(this->m_flGbi);
+        //     dfCalcGrid.calcXCIntegForFock(P, F);
+        // CnErr.abort("not implemented yet!! stop.");
     } else {
-      P = this->getPMatrix(RUN_RKS, iteration - 1);
-      {
-        const TlDenseSymmetricMatrix_Lapack prevP =
-            this->getPMatrix(RUN_RKS, iteration - 2);
-        P -= prevP;
-      }
+        // Ex using HF
+        TlDenseSymmetricMatrix_Lapack P(this->m_nNumOfAOs);
+        if (iteration == 1) {
+            P = this->getPMatrix(RUN_RKS, iteration - 1);
+        } else {
+            P = this->getPMatrix(RUN_RKS, iteration - 1);
+            {
+                const TlDenseSymmetricMatrix_Lapack prevP =
+                    this->getPMatrix(RUN_RKS, iteration - 2);
+                P -= prevP;
+            }
+        }
+
+        //     std::cerr << "delta P >>>>" << std::endl;
+        //     P.print(std::cerr);
+
+        //     std::cerr << "DfThreeindexintegral using RIHF." << std::endl;
+        //     DfEri2 dfEri2(this->m_flGbi, iteration);
+        //     TlDenseSymmetricMatrix_Lapack K = dfEri2.getKMatrix(P);
+        //     K *= -0.5;
+        //     std::cerr << "K(RI) >>>>" << std::endl;
+        //     K.print(std::cerr);
+
+        //     std::cerr << "DfThreeindexintegral using HF." << std::endl;
+        // DfTwoElectronIntegral dfTEI(this->pPdfParam_);
+        DfEriX dfEri(this->pPdfParam_);
+        TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
+        // dfTEI.getContractKMatrixByIntegralDriven(P, &K);
+        dfEri.getK(P, &K);
+
+        // TlDenseSymmetricMatrix_Lapack K =
+        // dfTEI.getContractKMatrixByRTmethod(P);
+        //     std::cerr << "K(HF) >>>>" << std::endl;
+        //     K.print(std::cerr);
+
+        F += K;
+        E += (0.5 * K);
     }
 
-    //     std::cerr << "delta P >>>>" << std::endl;
-    //     P.print(std::cerr);
-
-    //     std::cerr << "DfThreeindexintegral using RIHF." << std::endl;
-    //     DfEri2 dfEri2(this->m_flGbi, iteration);
-    //     TlDenseSymmetricMatrix_Lapack K = dfEri2.getKMatrix(P);
-    //     K *= -0.5;
-    //     std::cerr << "K(RI) >>>>" << std::endl;
-    //     K.print(std::cerr);
-
-    //     std::cerr << "DfThreeindexintegral using HF." << std::endl;
-    // DfTwoElectronIntegral dfTEI(this->pPdfParam_);
-    DfEriX dfEri(this->pPdfParam_);
-    TlDenseSymmetricMatrix_Lapack K(this->m_nNumOfAOs);
-    // dfTEI.getContractKMatrixByIntegralDriven(P, &K);
-    dfEri.getK(P, &K);
-
-    // TlDenseSymmetricMatrix_Lapack K =
-    // dfTEI.getContractKMatrixByRTmethod(P);
-    //     std::cerr << "K(HF) >>>>" << std::endl;
-    //     K.print(std::cerr);
-
-    F += K;
-    E += (0.5 * K);
-  }
-
-  DfObject::saveFpqMatrix(RUN_RKS, iteration, F);
-  E.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
+    DfObject::saveFpqMatrix(RUN_RKS, iteration, F);
+    E.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
 }
 
 void DfThreeindexintegrals::mainDIRECT_UKS(int iteration) {
-  this->log_.info("Direct scheme method is employed");
+    this->log_.info("Direct scheme method is employed");
 
-  // read Rho
-  TlDenseVector_Lapack currRho;
-  {
-    TlDenseVector_Lapack currRhoA;
-    TlDenseVector_Lapack currRhoB;
-    currRhoA.load("fl_Work/fl_Vct_Roua" + TlUtils::xtos(iteration));
-    currRhoB.load("fl_Work/fl_Vct_Roub" + TlUtils::xtos(iteration));
-    assert(currRhoA.getSize() == currRhoB.getSize());
-    assert(this->m_nNumOfAux == currRhoA.getSize());
-
-    currRho = currRhoA + currRhoB;
-  }
-
-  // read Myu
-  TlDenseVector_Lapack currMyuA;
-  TlDenseVector_Lapack currMyuB;
-  currMyuA.load("fl_Work/fl_Vct_Myua" + TlUtils::xtos(iteration));
-  currMyuB.load("fl_Work/fl_Vct_Myub" + TlUtils::xtos(iteration));
-  assert(currMyuA.getSize() == currMyuB.getSize());
-  assert(this->numOfAuxXC_ == currMyuA.getSize());
-
-  // read Epsilon
-  // energy for xc energy term (compair myu*Ppq*Pqa with 4/3*Ex1)
-  TlDenseVector_Lapack currEpsA;
-  TlDenseVector_Lapack currEpsB;
-  if ("xalpha" == m_sXCFunctional || "gxalpha" == m_sXCFunctional) {
-    currEpsA.load("fl_Work/fl_Vct_Epsilona" + TlUtils::xtos(iteration));
-    currEpsB.load("fl_Work/fl_Vct_Epsilonb" + TlUtils::xtos(iteration));
-    assert(currEpsA.getSize() == currEpsB.getSize());
-  } else {
-    currEpsA.load("fl_Work/fl_Vct_Epsilona" + TlUtils::xtos(iteration));
-  }
-  assert(this->numOfAuxXC_ == currEpsA.getSize());
-
-  // read previous
-  if (iteration > 1) {
+    // read Rho
+    TlDenseVector_Lapack currRho;
     {
-      TlDenseVector_Lapack prevRhoA;
-      TlDenseVector_Lapack prevRhoB;
-      prevRhoA.load("fl_Work/fl_Vct_Roua" + TlUtils::xtos(iteration - 1));
-      prevRhoB.load("fl_Work/fl_Vct_Roub" + TlUtils::xtos(iteration - 1));
-      assert(prevRhoA.getSize() == prevRhoB.getSize());
-      assert(this->m_nNumOfAux == prevRhoA.getSize());
+        TlDenseVector_Lapack currRhoA;
+        TlDenseVector_Lapack currRhoB;
+        currRhoA.load("fl_Work/fl_Vct_Roua" + TlUtils::xtos(iteration));
+        currRhoB.load("fl_Work/fl_Vct_Roub" + TlUtils::xtos(iteration));
+        assert(currRhoA.getSize() == currRhoB.getSize());
+        assert(this->m_nNumOfAux == currRhoA.getSize());
 
-      currRho -= (prevRhoA + prevRhoB);
+        currRho = currRhoA + currRhoB;
     }
 
-    {
-      TlDenseVector_Lapack prevMyuA;
-      TlDenseVector_Lapack prevMyuB;
-      prevMyuA.load("fl_Work/fl_Vct_Myua" + TlUtils::xtos(iteration - 1));
-      prevMyuB.load("fl_Work/fl_Vct_Myub" + TlUtils::xtos(iteration - 1));
-      assert(prevMyuA.getSize() == prevMyuB.getSize());
-      assert(this->numOfAuxXC_ == prevMyuA.getSize());
+    // read Myu
+    TlDenseVector_Lapack currMyuA;
+    TlDenseVector_Lapack currMyuB;
+    currMyuA.load("fl_Work/fl_Vct_Myua" + TlUtils::xtos(iteration));
+    currMyuB.load("fl_Work/fl_Vct_Myub" + TlUtils::xtos(iteration));
+    assert(currMyuA.getSize() == currMyuB.getSize());
+    assert(this->numOfAuxXC_ == currMyuA.getSize());
 
-      currMyuA -= prevMyuA;
-      currMyuB -= prevMyuB;
-    }
-
-    {
-      if ("xalpha" == m_sXCFunctional || "gxalpha" == m_sXCFunctional) {
-        TlDenseVector_Lapack prevEpsA;
-        TlDenseVector_Lapack prevEpsB;
-        prevEpsA.load("fl_Work/fl_Vct_Epsilona" + TlUtils::xtos(iteration - 1));
-        prevEpsB.load("fl_Work/fl_Vct_Epsilonb" + TlUtils::xtos(iteration - 1));
-        assert(prevEpsA.getSize() == prevEpsB.getSize());
-        assert(this->numOfAuxXC_ == prevEpsA.getSize());
-
-        currEpsA -= prevEpsA;
-        currEpsB -= prevEpsB;
-      } else {
-        TlDenseVector_Lapack prevEpsA;
-        prevEpsA.load("fl_Work/fl_Vct_Epsilona" + TlUtils::xtos(iteration - 1));
-        assert(this->numOfAuxXC_ == prevEpsA.getSize());
-
-        currEpsA -= prevEpsA;
-      }
-    }
-  }
-
-  TlDenseSymmetricMatrix_Lapack F(this->m_nNumOfAOs);
-
-  {
-    DfEriX dferi(this->pPdfParam_);
-    // dferi.getdeltaHpqA(currRho, F);
-    dferi.getJ(currRho, &F);
-  }
-
-  F.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
-
-  TlDenseSymmetricMatrix_Lapack E = F;
-
-  {
-    DfOverlapX dfovr(this->pPdfParam_);
-    dfovr.get_pqg(currMyuA, currMyuB, &F, &E);
-  }
-
-  F.save("fl_Work/fl_Mtr_Fpq.matrix.uks-alpha" + TlUtils::xtos(iteration));
-  E.save("fl_Work/fl_Mtr_Fpq.matrix.uks-beta" + TlUtils::xtos(iteration));
-
-  E.load("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
-
-  {
-    DfOverlapX dfovr(this->pPdfParam_);
-    if (m_sXCFunctional == "xalpha" || m_sXCFunctional == "gxalpha") {
-      dfovr.get_pqg(currEpsA, &E);
-      dfovr.get_pqg(currEpsB, &E);
+    // read Epsilon
+    // energy for xc energy term (compair myu*Ppq*Pqa with 4/3*Ex1)
+    TlDenseVector_Lapack currEpsA;
+    TlDenseVector_Lapack currEpsB;
+    if ("xalpha" == m_sXCFunctional || "gxalpha" == m_sXCFunctional) {
+        currEpsA.load("fl_Work/fl_Vct_Epsilona" + TlUtils::xtos(iteration));
+        currEpsB.load("fl_Work/fl_Vct_Epsilonb" + TlUtils::xtos(iteration));
+        assert(currEpsA.getSize() == currEpsB.getSize());
     } else {
-      dfovr.get_pqg(currEpsA, &E);
+        currEpsA.load("fl_Work/fl_Vct_Epsilona" + TlUtils::xtos(iteration));
     }
-  }
+    assert(this->numOfAuxXC_ == currEpsA.getSize());
 
-  E.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
+    // read previous
+    if (iteration > 1) {
+        {
+            TlDenseVector_Lapack prevRhoA;
+            TlDenseVector_Lapack prevRhoB;
+            prevRhoA.load("fl_Work/fl_Vct_Roua" + TlUtils::xtos(iteration - 1));
+            prevRhoB.load("fl_Work/fl_Vct_Roub" + TlUtils::xtos(iteration - 1));
+            assert(prevRhoA.getSize() == prevRhoB.getSize());
+            assert(this->m_nNumOfAux == prevRhoA.getSize());
+
+            currRho -= (prevRhoA + prevRhoB);
+        }
+
+        {
+            TlDenseVector_Lapack prevMyuA;
+            TlDenseVector_Lapack prevMyuB;
+            prevMyuA.load("fl_Work/fl_Vct_Myua" + TlUtils::xtos(iteration - 1));
+            prevMyuB.load("fl_Work/fl_Vct_Myub" + TlUtils::xtos(iteration - 1));
+            assert(prevMyuA.getSize() == prevMyuB.getSize());
+            assert(this->numOfAuxXC_ == prevMyuA.getSize());
+
+            currMyuA -= prevMyuA;
+            currMyuB -= prevMyuB;
+        }
+
+        {
+            if ("xalpha" == m_sXCFunctional || "gxalpha" == m_sXCFunctional) {
+                TlDenseVector_Lapack prevEpsA;
+                TlDenseVector_Lapack prevEpsB;
+                prevEpsA.load("fl_Work/fl_Vct_Epsilona" +
+                              TlUtils::xtos(iteration - 1));
+                prevEpsB.load("fl_Work/fl_Vct_Epsilonb" +
+                              TlUtils::xtos(iteration - 1));
+                assert(prevEpsA.getSize() == prevEpsB.getSize());
+                assert(this->numOfAuxXC_ == prevEpsA.getSize());
+
+                currEpsA -= prevEpsA;
+                currEpsB -= prevEpsB;
+            } else {
+                TlDenseVector_Lapack prevEpsA;
+                prevEpsA.load("fl_Work/fl_Vct_Epsilona" +
+                              TlUtils::xtos(iteration - 1));
+                assert(this->numOfAuxXC_ == prevEpsA.getSize());
+
+                currEpsA -= prevEpsA;
+            }
+        }
+    }
+
+    TlDenseSymmetricMatrix_Lapack F(this->m_nNumOfAOs);
+
+    {
+        DfEriX dferi(this->pPdfParam_);
+        // dferi.getdeltaHpqA(currRho, F);
+        dferi.getJ(currRho, &F);
+    }
+
+    F.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
+
+    TlDenseSymmetricMatrix_Lapack E = F;
+
+    {
+        DfOverlapX dfovr(this->pPdfParam_);
+        dfovr.get_pqg(currMyuA, currMyuB, &F, &E);
+    }
+
+    F.save("fl_Work/fl_Mtr_Fpq.matrix.uks-alpha" + TlUtils::xtos(iteration));
+    E.save("fl_Work/fl_Mtr_Fpq.matrix.uks-beta" + TlUtils::xtos(iteration));
+
+    E.load("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
+
+    {
+        DfOverlapX dfovr(this->pPdfParam_);
+        if (m_sXCFunctional == "xalpha" || m_sXCFunctional == "gxalpha") {
+            dfovr.get_pqg(currEpsA, &E);
+            dfovr.get_pqg(currEpsB, &E);
+        } else {
+            dfovr.get_pqg(currEpsA, &E);
+        }
+    }
+
+    E.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
 }
 
 void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration) {
-  this->log_.info("ROKS Direct scheme method is employed");
+    this->log_.info("ROKS Direct scheme method is employed");
 
-  // read Rou
-  TlDenseVector_Lapack currRho;
-  {
-    TlDenseVector_Lapack currRhoA;
-    currRhoA.load("fl_Work/fl_Vct_Roua" + TlUtils::xtos(iteration));
-    TlDenseVector_Lapack currRhoB;
-    currRhoB.load("fl_Work/fl_Vct_Roub" + TlUtils::xtos(iteration));
-
-    assert(currRhoA.getSize() == currRhoB.getSize());
-    assert(this->m_nNumOfAux == currRhoA.getSize());
-
-    currRho = currRhoA + currRhoB;
-  }
-
-  // read Myu
-  TlDenseVector_Lapack currMyuA;
-  currMyuA.load("fl_Work/fl_Vct_Myua" + TlUtils::xtos(iteration));
-  TlDenseVector_Lapack currMyuB;
-  currMyuB.load("fl_Work/fl_Vct_Myub" + TlUtils::xtos(iteration));
-
-  assert(currMyuA.getSize() == currMyuB.getSize());
-  assert(this->numOfAuxXC_ == currMyuA.getSize());
-
-  // read Epsilon
-  // energy for xc energy term (compair myu*Ppq*Pqa with 4/3*Ex1)
-  TlDenseVector_Lapack currEpsA;
-  TlDenseVector_Lapack currEpsB;
-
-  if (m_sXCFunctional == "xalpha" || m_sXCFunctional == "gxalpha") {
-    currEpsA.load("fl_Work/fl_Vct_Epsilona" + TlUtils::xtos(iteration));
-    currEpsB.load("fl_Work/fl_Vct_Epsilonb" + TlUtils::xtos(iteration));
-
-    assert(currEpsA.getSize() == currEpsB.getSize());
-    assert(this->numOfAuxXC_ == currEpsA.getSize());
-  } else {
-    currEpsA.load("fl_Work/fl_Vct_Epsilona" + TlUtils::xtos(iteration));
-    assert(this->numOfAuxXC_ == currEpsA.getSize());
-  }
-
-  // read previous
-  if (iteration > 1) {
+    // read Rou
+    TlDenseVector_Lapack currRho;
     {
-      TlDenseVector_Lapack prevRhoA;
-      prevRhoA.load("fl_Work/fl_Vct_Roua" + TlUtils::xtos(iteration - 1));
-      TlDenseVector_Lapack prevRhoB;
-      prevRhoB.load("fl_Work/fl_Vct_Roub" + TlUtils::xtos(iteration - 1));
+        TlDenseVector_Lapack currRhoA;
+        currRhoA.load("fl_Work/fl_Vct_Roua" + TlUtils::xtos(iteration));
+        TlDenseVector_Lapack currRhoB;
+        currRhoB.load("fl_Work/fl_Vct_Roub" + TlUtils::xtos(iteration));
 
-      assert(prevRhoA.getSize() == prevRhoB.getSize());
-      assert(this->m_nNumOfAux == prevRhoA.getSize());
+        assert(currRhoA.getSize() == currRhoB.getSize());
+        assert(this->m_nNumOfAux == currRhoA.getSize());
 
-      currRho -= (prevRhoA + prevRhoB);
+        currRho = currRhoA + currRhoB;
     }
 
-    {
-      TlDenseVector_Lapack prevMyuA;
-      prevMyuA.load("fl_Work/fl_Vct_Myua" + TlUtils::xtos(iteration - 1));
-      TlDenseVector_Lapack prevMyuB;
-      prevMyuB.load("fl_Work/fl_Vct_Myub" + TlUtils::xtos(iteration - 1));
+    // read Myu
+    TlDenseVector_Lapack currMyuA;
+    currMyuA.load("fl_Work/fl_Vct_Myua" + TlUtils::xtos(iteration));
+    TlDenseVector_Lapack currMyuB;
+    currMyuB.load("fl_Work/fl_Vct_Myub" + TlUtils::xtos(iteration));
 
-      assert(prevMyuA.getSize() == prevMyuB.getSize());
-      assert(this->numOfAuxXC_ == prevMyuA.getSize());
+    assert(currMyuA.getSize() == currMyuB.getSize());
+    assert(this->numOfAuxXC_ == currMyuA.getSize());
 
-      currMyuA -= prevMyuA;
-      currMyuB -= prevMyuB;
+    // read Epsilon
+    // energy for xc energy term (compair myu*Ppq*Pqa with 4/3*Ex1)
+    TlDenseVector_Lapack currEpsA;
+    TlDenseVector_Lapack currEpsB;
+
+    if (m_sXCFunctional == "xalpha" || m_sXCFunctional == "gxalpha") {
+        currEpsA.load("fl_Work/fl_Vct_Epsilona" + TlUtils::xtos(iteration));
+        currEpsB.load("fl_Work/fl_Vct_Epsilonb" + TlUtils::xtos(iteration));
+
+        assert(currEpsA.getSize() == currEpsB.getSize());
+        assert(this->numOfAuxXC_ == currEpsA.getSize());
+    } else {
+        currEpsA.load("fl_Work/fl_Vct_Epsilona" + TlUtils::xtos(iteration));
+        assert(this->numOfAuxXC_ == currEpsA.getSize());
     }
 
-    {
-      if (m_sXCFunctional == "xalpha" || m_sXCFunctional == "gxalpha") {
-        TlDenseVector_Lapack prevEpsA;
-        TlDenseVector_Lapack prevEpsB;
-        prevEpsA.load("fl_Work/fl_Vct_Epsilona" + TlUtils::xtos(iteration - 1));
-        prevEpsB.load("fl_Work/fl_Vct_Epsilonb" + TlUtils::xtos(iteration - 1));
+    // read previous
+    if (iteration > 1) {
+        {
+            TlDenseVector_Lapack prevRhoA;
+            prevRhoA.load("fl_Work/fl_Vct_Roua" + TlUtils::xtos(iteration - 1));
+            TlDenseVector_Lapack prevRhoB;
+            prevRhoB.load("fl_Work/fl_Vct_Roub" + TlUtils::xtos(iteration - 1));
 
-        assert(prevEpsA.getSize() == prevEpsB.getSize());
-        assert(this->numOfAuxXC_ == prevEpsA.getSize());
+            assert(prevRhoA.getSize() == prevRhoB.getSize());
+            assert(this->m_nNumOfAux == prevRhoA.getSize());
 
-        currEpsA -= prevEpsA;
-        currEpsB -= prevEpsB;
-      } else {
-        TlDenseVector_Lapack prevEpsA;
-        prevEpsA.load("fl_Work/fl_Vct_Epsilona" + TlUtils::xtos(iteration - 1));
-        assert(this->numOfAuxXC_ == prevEpsA.getSize());
+            currRho -= (prevRhoA + prevRhoB);
+        }
 
-        currEpsA -= prevEpsA;
-      }
-    }
-  }
+        {
+            TlDenseVector_Lapack prevMyuA;
+            prevMyuA.load("fl_Work/fl_Vct_Myua" + TlUtils::xtos(iteration - 1));
+            TlDenseVector_Lapack prevMyuB;
+            prevMyuB.load("fl_Work/fl_Vct_Myub" + TlUtils::xtos(iteration - 1));
 
-  // construct kohn-sham matrix of closed part ( F1 )
-  this->log_.info("construct Kohn-Sham matrix F1");
-  {
-    TlDenseSymmetricMatrix_Lapack F(this->m_nNumOfAOs);
-    TlDenseSymmetricMatrix_Lapack E(this->m_nNumOfAOs);
+            assert(prevMyuA.getSize() == prevMyuB.getSize());
+            assert(this->numOfAuxXC_ == prevMyuA.getSize());
 
-    {
-      // integral object generated
-      // then add coulomb contribution of rho to F ?
-      {
-        DfEriX dferi(this->pPdfParam_);
-        dferi.getJ(currRho, &F);
-      }
+            currMyuA -= prevMyuA;
+            currMyuB -= prevMyuB;
+        }
 
-      E = F;
+        {
+            if (m_sXCFunctional == "xalpha" || m_sXCFunctional == "gxalpha") {
+                TlDenseVector_Lapack prevEpsA;
+                TlDenseVector_Lapack prevEpsB;
+                prevEpsA.load("fl_Work/fl_Vct_Epsilona" +
+                              TlUtils::xtos(iteration - 1));
+                prevEpsB.load("fl_Work/fl_Vct_Epsilonb" +
+                              TlUtils::xtos(iteration - 1));
 
-      DfOverlapX dfovr(this->pPdfParam_);
-      if (m_sXCFunctional == "xalpha" || m_sXCFunctional == "gxalpha") {
-        TlDenseVector_Lapack myu = 0.5 * currMyuA;
+                assert(prevEpsA.getSize() == prevEpsB.getSize());
+                assert(this->numOfAuxXC_ == prevEpsA.getSize());
 
-        dfovr.get_pqg(myu, currEpsA, &F, &E);
+                currEpsA -= prevEpsA;
+                currEpsB -= prevEpsB;
+            } else {
+                TlDenseVector_Lapack prevEpsA;
+                prevEpsA.load("fl_Work/fl_Vct_Epsilona" +
+                              TlUtils::xtos(iteration - 1));
+                assert(this->numOfAuxXC_ == prevEpsA.getSize());
 
-        myu = 0.5 * currMyuB;
-        dfovr.get_pqg(myu, currEpsB, &F, &E);
-      } else {
-        TlDenseVector_Lapack myu = 0.5 * currMyuA;
-        dfovr.get_pqg(myu, &F);
-
-        myu = 0.5 * currMyuB;
-        dfovr.get_pqg(myu, currEpsA, &F, &E);
-      }
+                currEpsA -= prevEpsA;
+            }
+        }
     }
 
-    // temporarily write F matrix to a file to calculate E
-    E.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
-
-    // temporarily write F matrix to a file
-    F.save("fl_Work/fl_Mtr_F1pqtmp");
-  }
-
-  // construct kohn-sham matrix of open part ( F2 )
-  this->log_.info("construct Kohn-Sham matrix F2");
-  {
-    TlDenseSymmetricMatrix_Lapack F(this->m_nNumOfAOs);
-    TlDenseSymmetricMatrix_Lapack E(this->m_nNumOfAOs);
-
-    // integral object generated
-    // then add coulomb contribution of rho to F ?
+    // construct kohn-sham matrix of closed part ( F1 )
+    this->log_.info("construct Kohn-Sham matrix F1");
     {
-      TlDenseVector_Lapack tmpRho = 0.5 * currRho;
-      DfEriX dferi(this->pPdfParam_);
-      dferi.getJ(tmpRho, &F);
+        TlDenseSymmetricMatrix_Lapack F(this->m_nNumOfAOs);
+        TlDenseSymmetricMatrix_Lapack E(this->m_nNumOfAOs);
+
+        {
+            // integral object generated
+            // then add coulomb contribution of rho to F ?
+            {
+                DfEriX dferi(this->pPdfParam_);
+                dferi.getJ(currRho, &F);
+            }
+
+            E = F;
+
+            DfOverlapX dfovr(this->pPdfParam_);
+            if (m_sXCFunctional == "xalpha" || m_sXCFunctional == "gxalpha") {
+                TlDenseVector_Lapack myu = 0.5 * currMyuA;
+
+                dfovr.get_pqg(myu, currEpsA, &F, &E);
+
+                myu = 0.5 * currMyuB;
+                dfovr.get_pqg(myu, currEpsB, &F, &E);
+            } else {
+                TlDenseVector_Lapack myu = 0.5 * currMyuA;
+                dfovr.get_pqg(myu, &F);
+
+                myu = 0.5 * currMyuB;
+                dfovr.get_pqg(myu, currEpsA, &F, &E);
+            }
+        }
+
+        // temporarily write F matrix to a file to calculate E
+        E.save("fl_Work/fl_Mtr_Epqtmp" + TlUtils::xtos(iteration));
+
+        // temporarily write F matrix to a file
+        F.save("fl_Work/fl_Mtr_F1pqtmp");
     }
 
-    // integral object generated
-    // then add xc potential contribution of myu-alpha to F ?
+    // construct kohn-sham matrix of open part ( F2 )
+    this->log_.info("construct Kohn-Sham matrix F2");
     {
-      TlDenseVector_Lapack myu = 0.5 * currMyuA;
-      DfOverlapX dfovr(this->pPdfParam_);
-      dfovr.get_pqg(currMyuA, &F);
-    }
+        TlDenseSymmetricMatrix_Lapack F(this->m_nNumOfAOs);
+        TlDenseSymmetricMatrix_Lapack E(this->m_nNumOfAOs);
 
-    // integral object generated
-    // then add xc potential contribution of myu-beta to F ?
-    {
-      // Log << "■不対電子はαだけにあること！■\n";
-    }
+        // integral object generated
+        // then add coulomb contribution of rho to F ?
+        {
+            TlDenseVector_Lapack tmpRho = 0.5 * currRho;
+            DfEriX dferi(this->pPdfParam_);
+            dferi.getJ(tmpRho, &F);
+        }
 
-    F.save("fl_Work/fl_Mtr_F2pqtmp");
-  }
+        // integral object generated
+        // then add xc potential contribution of myu-alpha to F ?
+        {
+            TlDenseVector_Lapack myu = 0.5 * currMyuA;
+            DfOverlapX dfovr(this->pPdfParam_);
+            dfovr.get_pqg(currMyuA, &F);
+        }
+
+        // integral object generated
+        // then add xc potential contribution of myu-beta to F ?
+        {
+            // Log << "■不対電子はαだけにあること！■\n";
+        }
+
+        F.save("fl_Work/fl_Mtr_F2pqtmp");
+    }
 }

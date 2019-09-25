@@ -21,35 +21,37 @@
 
 #include "DfDensityFittingObject.h"
 #include "DfEriX_Parallel.h"
-#include "tl_dense_vector_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 // LAPACK版
 class DfDensityFittingX_Parallel
     : public DfDensityFittingTmpl<TlDenseSymmetricMatrix_Lapack,
                                   TlDenseVector_Lapack, DfEriX_Parallel> {
- public:
-  DfDensityFittingX_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfDensityFittingX_Parallel();
+   public:
+    DfDensityFittingX_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfDensityFittingX_Parallel();
 
-  void exec();
+    void exec();
 
- protected:
-  virtual TlDenseVector_Lapack getNalpha();
-  virtual TlDenseSymmetricMatrix_Lapack getSabinv();
-  virtual TlDenseVector_Lapack calcTAlpha_DIRECT(
-      const TlDenseSymmetricMatrix_Lapack& P);
-  virtual TlDenseVector_Lapack getTalpha(RUN_TYPE runType, const int iteration);
-  virtual void getTalpha_ROKS(TlDenseVector_Lapack* pT_alphaA,
-                              TlDenseVector_Lapack* pT_alphaB);
-  virtual TlDenseSymmetricMatrix_Lapack getDiffDensityMatrix(RUN_TYPE runType);
-  virtual TlDenseSymmetricMatrix_Lapack getP1pq(const int nIteration);
-  virtual TlDenseSymmetricMatrix_Lapack getP2pq(const int nIteration);
-  virtual double getLamda(const TlDenseVector_Lapack& SabinvN,
-                          const TlDenseVector_Lapack& t_alpha,
-                          const TlDenseVector_Lapack& N_alpha,
-                          const double dNumOfElec);
-  virtual void saveRho(const TlDenseVector_Lapack& rRho, RUN_TYPE runType);
+   protected:
+    virtual TlDenseVector_Lapack getNalpha();
+    virtual TlDenseSymmetricMatrix_Lapack getSabinv();
+    virtual TlDenseVector_Lapack calcTAlpha_DIRECT(
+        const TlDenseSymmetricMatrix_Lapack& P);
+    virtual TlDenseVector_Lapack getTalpha(RUN_TYPE runType,
+                                           const int iteration);
+    virtual void getTalpha_ROKS(TlDenseVector_Lapack* pT_alphaA,
+                                TlDenseVector_Lapack* pT_alphaB);
+    virtual TlDenseSymmetricMatrix_Lapack getDiffDensityMatrix(
+        RUN_TYPE runType);
+    virtual TlDenseSymmetricMatrix_Lapack getP1pq(const int nIteration);
+    virtual TlDenseSymmetricMatrix_Lapack getP2pq(const int nIteration);
+    virtual double getLamda(const TlDenseVector_Lapack& SabinvN,
+                            const TlDenseVector_Lapack& t_alpha,
+                            const TlDenseVector_Lapack& N_alpha,
+                            const double dNumOfElec);
+    virtual void saveRho(const TlDenseVector_Lapack& rRho, RUN_TYPE runType);
 };
 
 #endif  // DFDENSITYFITTINGX_PARALLEL_H

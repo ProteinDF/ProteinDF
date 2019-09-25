@@ -48,200 +48,207 @@ DfTotalEnergy::DfTotalEnergy(TlSerializeData* pPdfParam)
 DfTotalEnergy::~DfTotalEnergy() {}
 
 void DfTotalEnergy::exec() {
-  this->exec_template<DfOverlapX, DfEriX, TlDenseSymmetricMatrix_Lapack,
-                      TlDenseVector_Lapack>();
+    this->exec_template<DfOverlapX, DfEriX, TlDenseSymmetricMatrix_Lapack,
+                        TlDenseVector_Lapack>();
 }
 
 void DfTotalEnergy::output() {
-  double E_Total = 0.0;
+    double E_Total = 0.0;
 
-  // 表示
-  if ((this->m_bMemorySave == false) && (this->m_bDiskUtilization == false)) {
-    E_Total += this->m_dE_OEP_JRR_Exc;
-    E_Total += this->m_dE_J_RhoTilde_RhoTilde;
-    E_Total += this->m_dE_NuclearRepulsion;
-
-    this->logger("------------------------------------------------\n");
-    this->logger(TlUtils::format(" Ts+Vn+J[Rho~,Rho~]+Exc = %28.16lf\n",
-                                 this->m_dE_OEP_JRR_Exc));
-    this->logger(TlUtils::format(" J[Rho~,Rho~]           = %28.16lf\n",
-                                 this->m_dE_J_RhoTilde_RhoTilde));
-    this->logger(TlUtils::format(" Enuclei                = %28.16lf\n",
-                                 this->m_dE_NuclearRepulsion));
-    this->logger(
-        TlUtils::format(" TE                     = %28.16lf\n", E_Total));
-    this->logger("------------------------------------------------\n");
-  } else {
-    this->log_.info("------------------------------------------------");
-
-    this->log_.info(TlUtils::format(" Ts+Vn          = %28.16lf\n",
-                                    this->m_dE_OneElectronPart));
-    E_Total += this->m_dE_OneElectronPart;
-
-    switch (this->J_engine_) {
-      case J_ENGINE_RI_J:
-        this->log_.info(TlUtils::format(" E_J[Rho, Rho~] = %28.16lf\n",
-                                        this->m_dE_J_Rho_RhoTilde));
-        E_Total += this->m_dE_J_Rho_RhoTilde;
-        this->log_.info(TlUtils::format(" E_J[Rho~,Rho~] = %28.16lf\n",
-                                        this->m_dE_J_RhoTilde_RhoTilde));
+    // 表示
+    if ((this->m_bMemorySave == false) && (this->m_bDiskUtilization == false)) {
+        E_Total += this->m_dE_OEP_JRR_Exc;
         E_Total += this->m_dE_J_RhoTilde_RhoTilde;
-        break;
+        E_Total += this->m_dE_NuclearRepulsion;
 
-      case J_ENGINE_CONVENTIONAL:
-      case J_ENGINE_CD:
+        this->logger("------------------------------------------------\n");
+        this->logger(TlUtils::format(" Ts+Vn+J[Rho~,Rho~]+Exc = %28.16lf\n",
+                                     this->m_dE_OEP_JRR_Exc));
+        this->logger(TlUtils::format(" J[Rho~,Rho~]           = %28.16lf\n",
+                                     this->m_dE_J_RhoTilde_RhoTilde));
+        this->logger(TlUtils::format(" Enuclei                = %28.16lf\n",
+                                     this->m_dE_NuclearRepulsion));
+        this->logger(
+            TlUtils::format(" TE                     = %28.16lf\n", E_Total));
+        this->logger("------------------------------------------------\n");
+    } else {
+        this->log_.info("------------------------------------------------");
+
+        this->log_.info(TlUtils::format(" Ts+Vn          = %28.16lf\n",
+                                        this->m_dE_OneElectronPart));
+        E_Total += this->m_dE_OneElectronPart;
+
+        switch (this->J_engine_) {
+            case J_ENGINE_RI_J:
+                this->log_.info(TlUtils::format(" E_J[Rho, Rho~] = %28.16lf\n",
+                                                this->m_dE_J_Rho_RhoTilde));
+                E_Total += this->m_dE_J_Rho_RhoTilde;
+                this->log_.info(
+                    TlUtils::format(" E_J[Rho~,Rho~] = %28.16lf\n",
+                                    this->m_dE_J_RhoTilde_RhoTilde));
+                E_Total += this->m_dE_J_RhoTilde_RhoTilde;
+                break;
+
+            case J_ENGINE_CONVENTIONAL:
+            case J_ENGINE_CD:
+                this->log_.info(TlUtils::format(" E_J            = %28.16lf\n",
+                                                this->J_term_));
+                E_Total += this->J_term_;
+                break;
+
+            default:
+                break;
+        }
+
         this->log_.info(
-            TlUtils::format(" E_J            = %28.16lf\n", this->J_term_));
-        E_Total += this->J_term_;
-        break;
+            TlUtils::format(" E_xc(pure)     = %28.16lf\n", this->m_dExc));
+        E_Total += this->m_dExc;
 
-      default:
-        break;
+        if (this->enableGrimmeDispersion_ == true) {
+            this->log_.info(TlUtils::format(" E_cx(+disp.)   = %28.16lf\n",
+                                            E_Total + this->E_disp_));
+        }
+
+        switch (this->m_nMethodType) {
+            case METHOD_RKS:
+                this->log_.info(TlUtils::format(" E_K            = %28.16lf\n",
+                                                this->K_term_));
+                break;
+
+            case METHOD_UKS:
+                this->log_.info(TlUtils::format(" E_K            = %28.16lf\n",
+                                                this->K_term_));
+                this->log_.info(TlUtils::format("   E_K(alpha)   = %28.16lf\n",
+                                                this->E_KA_));
+                this->log_.info(TlUtils::format("   E_K(beta)    = %28.16lf\n",
+                                                this->E_KB_));
+                break;
+
+            case METHOD_ROKS:
+                this->log_.info(TlUtils::format(" E_K            = %28.16lf\n",
+                                                this->K_term_));
+                this->log_.info(TlUtils::format("   E_K(alpha)   = %28.16lf\n",
+                                                this->E_KA_));
+                this->log_.info(TlUtils::format("   E_K(beta)    = %28.16lf\n",
+                                                this->E_KB_));
+                break;
+
+            default:
+                this->log_.critical("program error");
+                break;
+        }
+        E_Total += this->K_term_;
+
+        this->log_.info(TlUtils::format(" E_nuclei       = %28.16lf\n",
+                                        this->m_dE_NuclearRepulsion));
+        E_Total += this->m_dE_NuclearRepulsion;
+
+        this->log_.info(
+            TlUtils::format(" TE             = %28.16lf\n", E_Total));
+        this->log_.info("------------------------------------------------");
+        // this->logger("------------------------------------------------\n");
+        // this->logger(TlUtils::format(" Ts+Vn        = %28.16lf\n",
+        // this->m_dE_OneElectronPart)); this->logger(TlUtils::format(" J[Rho,
+        // Rho~] = %28.16lf\n", this->m_dE_J_Rho_RhoTilde)); if (this->J_engine_
+        // == J_ENGINE_RI_J) {
+        //     this->logger(TlUtils::format(" J[Rho~,Rho~] = %28.16lf\n",
+        //     this->m_dE_J_RhoTilde_RhoTilde));
+        // }
+        // this->logger(TlUtils::format(" Exc          = %28.16lf\n",
+        // this->m_dExc)); this->logger(TlUtils::format(" Enuclei      =
+        // %28.16lf\n", this->m_dE_NuclearRepulsion));
+        // this->logger(TlUtils::format(" TE           = %28.16lf\n", E_Total));
+        // this->logger("------------------------------------------------\n");
     }
 
-    this->log_.info(
-        TlUtils::format(" E_xc(pure)     = %28.16lf\n", this->m_dExc));
-    E_Total += this->m_dExc;
-
-    if (this->enableGrimmeDispersion_ == true) {
-      this->log_.info(TlUtils::format(" E_cx(+disp.)   = %28.16lf\n",
-                                      E_Total + this->E_disp_));
-    }
-
-    switch (this->m_nMethodType) {
-      case METHOD_RKS:
-        this->log_.info(
-            TlUtils::format(" E_K            = %28.16lf\n", this->K_term_));
-        break;
-
-      case METHOD_UKS:
-        this->log_.info(
-            TlUtils::format(" E_K            = %28.16lf\n", this->K_term_));
-        this->log_.info(
-            TlUtils::format("   E_K(alpha)   = %28.16lf\n", this->E_KA_));
-        this->log_.info(
-            TlUtils::format("   E_K(beta)    = %28.16lf\n", this->E_KB_));
-        break;
-
-      case METHOD_ROKS:
-        this->log_.info(
-            TlUtils::format(" E_K            = %28.16lf\n", this->K_term_));
-        this->log_.info(
-            TlUtils::format("   E_K(alpha)   = %28.16lf\n", this->E_KA_));
-        this->log_.info(
-            TlUtils::format("   E_K(beta)    = %28.16lf\n", this->E_KB_));
-        break;
-
-      default:
-        this->log_.critical("program error");
-        break;
-    }
-    E_Total += this->K_term_;
-
-    this->log_.info(TlUtils::format(" E_nuclei       = %28.16lf\n",
-                                    this->m_dE_NuclearRepulsion));
-    E_Total += this->m_dE_NuclearRepulsion;
-
-    this->log_.info(TlUtils::format(" TE             = %28.16lf\n", E_Total));
-    this->log_.info("------------------------------------------------");
-    // this->logger("------------------------------------------------\n");
-    // this->logger(TlUtils::format(" Ts+Vn        = %28.16lf\n",
-    // this->m_dE_OneElectronPart)); this->logger(TlUtils::format(" J[Rho, Rho~]
-    // = %28.16lf\n", this->m_dE_J_Rho_RhoTilde)); if (this->J_engine_ ==
-    // J_ENGINE_RI_J) {
-    //     this->logger(TlUtils::format(" J[Rho~,Rho~] = %28.16lf\n",
-    //     this->m_dE_J_RhoTilde_RhoTilde));
-    // }
-    // this->logger(TlUtils::format(" Exc          = %28.16lf\n",
-    // this->m_dExc)); this->logger(TlUtils::format(" Enuclei      =
-    // %28.16lf\n", this->m_dE_NuclearRepulsion));
-    // this->logger(TlUtils::format(" TE           = %28.16lf\n", E_Total));
-    // this->logger("------------------------------------------------\n");
-  }
-
-  std::cout << TlUtils::format(" %3d th TE = %18.16lf", this->m_nIteration,
-                               E_Total)
-            << std::endl;
-  this->write_total_energy(E_Total);
+    std::cout << TlUtils::format(" %3d th TE = %18.16lf", this->m_nIteration,
+                                 E_Total)
+              << std::endl;
+    this->write_total_energy(E_Total);
 }
 
 // energy for nuclear repulsion
 double DfTotalEnergy::calculate_energy_nuclear_repulsion() {
-  double E_nuclear_repulsion = 0.0;
+    double E_nuclear_repulsion = 0.0;
 
-  if (std::fabs(this->m_dNuclearRepulsion) > TOO_SMALL) {
-    this->logger(
-        " energy of nuclear repulstion has already been calculated.\n");
-    E_nuclear_repulsion = this->m_dNuclearRepulsion;
-  } else {
-    // read nuclear charge
-    const Fl_Geometry geom((*this->pPdfParam_)["coordinates"]);
+    if (std::fabs(this->m_dNuclearRepulsion) > TOO_SMALL) {
+        this->logger(
+            " energy of nuclear repulstion has already been calculated.\n");
+        E_nuclear_repulsion = this->m_dNuclearRepulsion;
+    } else {
+        // read nuclear charge
+        const Fl_Geometry geom((*this->pPdfParam_)["coordinates"]);
 
-    // calculate nuclear repulsion
-    for (int i = 0; i < this->m_nNumOfAtoms; ++i) {
-      const double ci = geom.getCharge(i);
-      const TlPosition pi = geom.getCoordinate(i);
+        // calculate nuclear repulsion
+        for (int i = 0; i < this->m_nNumOfAtoms; ++i) {
+            const double ci = geom.getCharge(i);
+            const TlPosition pi = geom.getCoordinate(i);
 
-      for (int j = i + 1; j < this->m_nNumOfAtoms; ++j) {
-        const double cj = geom.getCharge(j);
-        const TlPosition pj = geom.getCoordinate(j);
+            for (int j = i + 1; j < this->m_nNumOfAtoms; ++j) {
+                const double cj = geom.getCharge(j);
+                const TlPosition pj = geom.getCoordinate(j);
 
-        // double distance =  sqrt((x_i - x_j)*(x_i - x_j) + (y_i - y_j)*(y_i -
-        // y_j) + (z_i - z_j)*(z_i - z_j));
-        const double distance = pi.distanceFrom(pj);
-        E_nuclear_repulsion += ci * cj / distance;
-      }
+                // double distance =  sqrt((x_i - x_j)*(x_i - x_j) + (y_i -
+                // y_j)*(y_i - y_j) + (z_i - z_j)*(z_i - z_j));
+                const double distance = pi.distanceFrom(pj);
+                E_nuclear_repulsion += ci * cj / distance;
+            }
+        }
+
+        // stored to static variable
+        this->m_dNuclearRepulsion = E_nuclear_repulsion;
     }
 
-    // stored to static variable
-    this->m_dNuclearRepulsion = E_nuclear_repulsion;
-  }
-
-  return E_nuclear_repulsion;
+    return E_nuclear_repulsion;
 }
 
 void DfTotalEnergy::write_total_energy(const double E_Total) const {
-  (*this->pPdfParam_)["TEs"][this->m_nIteration] = E_Total;
+    (*this->pPdfParam_)["TEs"][this->m_nIteration] = E_Total;
 }
 
 // total energy including dummy charge
 void DfTotalEnergy::calculate_real_energy() {
-  this->calcRealEnergy<TlDenseSymmetricMatrix_Lapack>();
+    this->calcRealEnergy<TlDenseSymmetricMatrix_Lapack>();
 }
 
 double DfTotalEnergy::calcS2() {
-  // calc (N_alpha - N_beta / 2)
-  const double N_alpha = this->m_nNumOfAlphaElectrons;
-  const double N_beta = this->m_nNumOfBetaElectrons;
-  const double Nab2 = 0.5 * (N_alpha - N_beta);
-  
-  // S^2_exact 
-  double s2_exact = Nab2 * (Nab2 + 1.0);
+    // calc (N_alpha - N_beta / 2)
+    const double N_alpha = this->m_nNumOfAlphaElectrons;
+    const double N_beta = this->m_nNumOfBetaElectrons;
+    const double Nab2 = 0.5 * (N_alpha - N_beta);
 
-  // S^2 (UKS)
-  double csc = 0.0;
-  {
-    const int itr = this->m_nIteration;
-    const TlDenseGeneralMatrix_Lapack C_alpha = DfObject::getCMatrix<TlDenseGeneralMatrix_Lapack>(RUN_UKS_ALPHA, itr);
-    const TlDenseGeneralMatrix_Lapack C_beta = DfObject::getCMatrix<TlDenseGeneralMatrix_Lapack>(RUN_UKS_BETA, itr);
-    const TlDenseSymmetricMatrix_Lapack S = DfObject::getSpqMatrix<TlDenseSymmetricMatrix_Lapack>();
+    // S^2_exact
+    double s2_exact = Nab2 * (Nab2 + 1.0);
 
-    const TlDenseGeneralMatrix_Lapack CSC = C_alpha * S * C_beta;
-    csc = CSC.sum();
-  }
+    // S^2 (UKS)
+    double csc = 0.0;
+    {
+        const int itr = this->m_nIteration;
+        const TlDenseGeneralMatrix_Lapack C_alpha =
+            DfObject::getCMatrix<TlDenseGeneralMatrix_Lapack>(RUN_UKS_ALPHA,
+                                                              itr);
+        const TlDenseGeneralMatrix_Lapack C_beta =
+            DfObject::getCMatrix<TlDenseGeneralMatrix_Lapack>(RUN_UKS_BETA,
+                                                              itr);
+        const TlDenseSymmetricMatrix_Lapack S =
+            DfObject::getSpqMatrix<TlDenseSymmetricMatrix_Lapack>();
 
-  double s2 = s2_exact + N_beta - csc;
-  return s2;
+        const TlDenseGeneralMatrix_Lapack CSC = C_alpha * S * C_beta;
+        csc = CSC.sum();
+    }
+
+    double s2 = s2_exact + N_beta - csc;
+    return s2;
 }
 
 DfEriX* DfTotalEnergy::getDfEriX() const {
-  DfEriX* pDfEri = new DfEriX(this->pPdfParam_);
+    DfEriX* pDfEri = new DfEriX(this->pPdfParam_);
 
-  return pDfEri;
+    return pDfEri;
 }
 
 DfOverlapX* DfTotalEnergy::getDfOverlapX() const {
-  DfOverlapX* pDfOverlap = new DfOverlapX(this->pPdfParam_);
+    DfOverlapX* pDfOverlap = new DfOverlapX(this->pPdfParam_);
 
-  return pDfOverlap;
+    return pDfOverlap;
 }

@@ -12,9 +12,8 @@
 #endif  // HAVE_VIENNACL
 
 TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(
-    const TlMatrixObject::index_type row,
-    const TlMatrixObject::index_type col,
-    double const * const pBuf) {
+    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+    double const* const pBuf) {
     this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(row, col, pBuf);
 }
 

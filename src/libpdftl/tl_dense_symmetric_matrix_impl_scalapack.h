@@ -33,110 +33,112 @@ class TlDenseVector_ImplLapack;
 
 class TlDenseSymmetricMatrix_ImplScalapack
     : public TlDenseGeneralMatrix_ImplScalapack {
- public:
-  enum DIAGONAL_METHOD { QR, DIVIDE_AND_CONQUER };
+   public:
+    enum DIAGONAL_METHOD { QR, DIVIDE_AND_CONQUER };
 
-  // ---------------------------------------------------------------------------
-  // constructor & destructor
-  // ---------------------------------------------------------------------------
- public:
-  explicit TlDenseSymmetricMatrix_ImplScalapack(
-      const TlMatrixObject::index_type dim = 0);
-  TlDenseSymmetricMatrix_ImplScalapack(
-      const TlDenseSymmetricMatrix_ImplScalapack& rhs);
-  TlDenseSymmetricMatrix_ImplScalapack(
-      const TlDenseGeneralMatrix_ImplScalapack& rhs);
-//   TlDenseSymmetricMatrix_ImplScalapack(const TlDenseVector_ImplScalapack& v,
-//                                        const TlMatrixObject::index_type dim);
-  virtual ~TlDenseSymmetricMatrix_ImplScalapack();
+    // ---------------------------------------------------------------------------
+    // constructor & destructor
+    // ---------------------------------------------------------------------------
+   public:
+    explicit TlDenseSymmetricMatrix_ImplScalapack(
+        const TlMatrixObject::index_type dim = 0);
+    TlDenseSymmetricMatrix_ImplScalapack(
+        const TlDenseSymmetricMatrix_ImplScalapack& rhs);
+    TlDenseSymmetricMatrix_ImplScalapack(
+        const TlDenseGeneralMatrix_ImplScalapack& rhs);
+    //   TlDenseSymmetricMatrix_ImplScalapack(const TlDenseVector_ImplScalapack&
+    //   v,
+    //                                        const TlMatrixObject::index_type
+    //                                        dim);
+    virtual ~TlDenseSymmetricMatrix_ImplScalapack();
 
-  // ---------------------------------------------------------------------------
-  // properties
-  // ---------------------------------------------------------------------------
- public:
-  // virtual TlMatrixObject::size_type getNumOfElements() const;
-  virtual double get(TlMatrixObject::index_type row,
-                     TlMatrixObject::index_type col) const;
-  virtual void set(TlMatrixObject::index_type row,
-                   TlMatrixObject::index_type col, const double value);
-  virtual void add(TlMatrixObject::index_type row,
-                   TlMatrixObject::index_type col, double value);
+    // ---------------------------------------------------------------------------
+    // properties
+    // ---------------------------------------------------------------------------
+   public:
+    // virtual TlMatrixObject::size_type getNumOfElements() const;
+    virtual double get(TlMatrixObject::index_type row,
+                       TlMatrixObject::index_type col) const;
+    virtual void set(TlMatrixObject::index_type row,
+                     TlMatrixObject::index_type col, const double value);
+    virtual void add(TlMatrixObject::index_type row,
+                     TlMatrixObject::index_type col, double value);
 
-  // ---------------------------------------------------------------------------
-  // operators
-  // ---------------------------------------------------------------------------
- public:
-  // TlDenseSymmetricMatrix_ImplScalapack& operator*=(const double coef);
-  // const TlDenseGeneralMatrix_ImplLapack operator*=(
-  //   const TlDenseSymmetricMatrix_ImplScalapack& rhs);
+    // ---------------------------------------------------------------------------
+    // operators
+    // ---------------------------------------------------------------------------
+   public:
+    // TlDenseSymmetricMatrix_ImplScalapack& operator*=(const double coef);
+    // const TlDenseGeneralMatrix_ImplLapack operator*=(
+    //   const TlDenseSymmetricMatrix_ImplScalapack& rhs);
 
-  // ---------------------------------------------------------------------------
-  // operations
-  // ---------------------------------------------------------------------------
- public:
-  // virtual double sum() const;
-  // virtual double getRMS() const;
-  // virtual double getMaxAbsoluteElement(
-  //     TlMatrixObject::index_type* outRow,
-  //     TlMatrixObject::index_type* outCol) const;
+    // ---------------------------------------------------------------------------
+    // operations
+    // ---------------------------------------------------------------------------
+   public:
+    // virtual double sum() const;
+    // virtual double getRMS() const;
+    // virtual double getMaxAbsoluteElement(
+    //     TlMatrixObject::index_type* outRow,
+    //     TlMatrixObject::index_type* outCol) const;
 
-  // const TlDenseGeneralMatrix_ImplLapack& dotInPlace(
-  //     const TlDenseGeneralMatrix_ImplLapack& rhs);
-  // TlDenseSymmetricMatrix_ImplScalapack transpose() const;
-  // TlDenseSymmetricMatrix_ImplScalapack inverse() const;
+    // const TlDenseGeneralMatrix_ImplLapack& dotInPlace(
+    //     const TlDenseGeneralMatrix_ImplLapack& rhs);
+    // TlDenseSymmetricMatrix_ImplScalapack transpose() const;
+    // TlDenseSymmetricMatrix_ImplScalapack inverse() const;
 
-  bool eig(TlDenseVector_ImplLapack* pEigVal,
-           TlDenseGeneralMatrix_ImplScalapack* pEigVec,
-           const DIAGONAL_METHOD method = DIVIDE_AND_CONQUER) const;
+    bool eig(TlDenseVector_ImplLapack* pEigVal,
+             TlDenseGeneralMatrix_ImplScalapack* pEigVec,
+             const DIAGONAL_METHOD method = DIVIDE_AND_CONQUER) const;
 
-  // ---------------------------------------------------------------------------
-  // I/O
-  // ---------------------------------------------------------------------------
- public:
-  virtual bool load(const std::string& filePath);
-  virtual bool save(const std::string& filePath) const;
+    // ---------------------------------------------------------------------------
+    // I/O
+    // ---------------------------------------------------------------------------
+   public:
+    virtual bool load(const std::string& filePath);
+    virtual bool save(const std::string& filePath) const;
 
- public:
-  // virtual void dump(double* buf, const std::size_t size) const;
-  // virtual void restore(const double* buf, const std::size_t size);
+   public:
+    // virtual void dump(double* buf, const std::size_t size) const;
+    // virtual void restore(const double* buf, const std::size_t size);
 
-  // ---------------------------------------------------------------------------
-  // protected
-  // ---------------------------------------------------------------------------
- protected:
-  virtual TlMatrixObject::size_type index(TlMatrixObject::index_type row,
-                                          TlMatrixObject::index_type col) const;
+    // ---------------------------------------------------------------------------
+    // protected
+    // ---------------------------------------------------------------------------
+   protected:
+    virtual TlMatrixObject::size_type index(
+        TlMatrixObject::index_type row, TlMatrixObject::index_type col) const;
 
-  virtual bool load(std::fstream& filePath);
+    virtual bool load(std::fstream& filePath);
 
-  virtual std::vector<TlMatrixObject::MatrixElement> getMatrixElementsInLocal2()
-      const;
-  // ---------------------------------------------------------------------------
-  // private
-  // ---------------------------------------------------------------------------
+    virtual std::vector<TlMatrixObject::MatrixElement>
+    getMatrixElementsInLocal2() const;
+    // ---------------------------------------------------------------------------
+    // private
+    // ---------------------------------------------------------------------------
 
-  // ---------------------------------------------------------------------------
-  // friend
-  // ---------------------------------------------------------------------------
-  friend bool diagonalByScaLapack_QR(
-      const TlDenseSymmetricMatrix_ImplScalapack& inMatrix,
-      TlDenseVector_ImplLapack* outEigVal,
-      TlDenseGeneralMatrix_ImplScalapack* outEigVec);
-  friend bool diagonalByScaLapack_DC(
-      const TlDenseSymmetricMatrix_ImplScalapack& inMatrix,
-      TlDenseVector_ImplLapack* outEigVal,
-      TlDenseGeneralMatrix_ImplScalapack* outEigVec);
+    // ---------------------------------------------------------------------------
+    // friend
+    // ---------------------------------------------------------------------------
+    friend bool diagonalByScaLapack_QR(
+        const TlDenseSymmetricMatrix_ImplScalapack& inMatrix,
+        TlDenseVector_ImplLapack* outEigVal,
+        TlDenseGeneralMatrix_ImplScalapack* outEigVec);
+    friend bool diagonalByScaLapack_DC(
+        const TlDenseSymmetricMatrix_ImplScalapack& inMatrix,
+        TlDenseVector_ImplLapack* outEigVal,
+        TlDenseGeneralMatrix_ImplScalapack* outEigVec);
 
-  // friend TlDenseGeneralMatrix_ImplLapack operator*(
-  //     const TlDenseSymmetricMatrix_ImplScalapack& rhs1,
-  //     const TlDenseGeneralMatrix_ImplLapack& rhs2);
-  // friend TlDenseGeneralMatrix_ImplLapack operator*(
-  //     const TlDenseGeneralMatrix_ImplLapack& rhs1,
-  //     const TlDenseSymmetricMatrix_ImplScalapack& rhs2);
-  //
-  // friend TlDenseVector_ImplLapack operator*(
-  //     const TlDenseSymmetricMatrix_ImplScalapack& mat,
-  //     const TlDenseVector_ImplLapack& vec);
+    // friend TlDenseGeneralMatrix_ImplLapack operator*(
+    //     const TlDenseSymmetricMatrix_ImplScalapack& rhs1,
+    //     const TlDenseGeneralMatrix_ImplLapack& rhs2);
+    // friend TlDenseGeneralMatrix_ImplLapack operator*(
+    //     const TlDenseGeneralMatrix_ImplLapack& rhs1,
+    //     const TlDenseSymmetricMatrix_ImplScalapack& rhs2);
+    //
+    // friend TlDenseVector_ImplLapack operator*(
+    //     const TlDenseSymmetricMatrix_ImplScalapack& mat,
+    //     const TlDenseVector_ImplLapack& vec);
 };
 
 #endif  // TL_DENSE_SYMMETRIC_MATRIX_IMPL_SCALAPACK_H

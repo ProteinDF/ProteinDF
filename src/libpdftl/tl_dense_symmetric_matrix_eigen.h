@@ -15,7 +15,7 @@ class TlDenseSymmetricMatrix_Eigen : public TlDenseSymmetricMatrixObject {
    public:
     explicit TlDenseSymmetricMatrix_Eigen(
         const TlMatrixObject::index_type dim = 1,
-        double const * const pBuf = NULL);
+        double const* const pBuf = NULL);
     TlDenseSymmetricMatrix_Eigen(const TlDenseSymmetricMatrix_Eigen& rhs);
     TlDenseSymmetricMatrix_Eigen(const TlDenseGeneralMatrix_Eigen& rhs);
     TlDenseSymmetricMatrix_Eigen(const TlSparseSymmetricMatrix_Eigen& sm);
