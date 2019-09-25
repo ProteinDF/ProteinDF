@@ -35,34 +35,34 @@
 
 DfInitialGuessHarris::DfInitialGuessHarris(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), debug_(false) {
-  // if (this->isWorkOnDisk_ == true) {
-  //   this->logger(" initial guess by harris functional is built on disk.\n");
-  //   TlDenseGeneralMatrix_Lapack::useMemManager(true);
-  // }
+    // if (this->isWorkOnDisk_ == true) {
+    //   this->logger(" initial guess by harris functional is built on
+    //   disk.\n"); TlDenseGeneralMatrix_Lapack::useMemManager(true);
+    // }
 }
 
 DfInitialGuessHarris::~DfInitialGuessHarris() {}
 
 void DfInitialGuessHarris::main() {
-  this->loadHarrisDB();
+    this->loadHarrisDB();
 
-  DfInitialGuessHarris::calcInitialDensityMatrix<TlDenseGeneralMatrix_Lapack,
-                                                 TlDenseSymmetricMatrix_Lapack,
-                                                 DfOverlapX, DfPopulation>();
+    DfInitialGuessHarris::calcInitialDensityMatrix<
+        TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack, DfOverlapX,
+        DfPopulation>();
 }
 
 void DfInitialGuessHarris::loadHarrisDB() {
-  std::string harrisDbFile = "harris.mpac";
-  const char* pdfHome = std::getenv("PDF_HOME");
-  if (pdfHome != NULL) {
-    harrisDbFile = TlUtils::format("%s/data/harris.mpac", pdfHome);
-  }
+    std::string harrisDbFile = "harris.mpac";
+    const char* pdfHome = std::getenv("PDF_HOME");
+    if (pdfHome != NULL) {
+        harrisDbFile = TlUtils::format("%s/data/harris.mpac", pdfHome);
+    }
 
-  TlMsgPack mpac;
-  if (!mpac.load(harrisDbFile)) {
-    this->log_.critical(
-        TlUtils::format("cannot load %s.", harrisDbFile.c_str()));
-    abort();
-  }
-  this->pdfParam_harrisDB_ = mpac.getSerializeData();
+    TlMsgPack mpac;
+    if (!mpac.load(harrisDbFile)) {
+        this->log_.critical(
+            TlUtils::format("cannot load %s.", harrisDbFile.c_str()));
+        abort();
+    }
+    this->pdfParam_harrisDB_ = mpac.getSerializeData();
 }

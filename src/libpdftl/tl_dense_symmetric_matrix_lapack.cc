@@ -7,24 +7,24 @@
 
 TlDenseSymmetricMatrix_Lapack::TlDenseSymmetricMatrix_Lapack(
     const TlMatrixObject::index_type dim, double const* const pBuf) {
-  this->pImpl_ = new TlDenseSymmetricMatrix_ImplLapack(dim, pBuf);
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplLapack(dim, pBuf);
 }
 
 TlDenseSymmetricMatrix_Lapack::TlDenseSymmetricMatrix_Lapack(
     const TlDenseSymmetricMatrix_Lapack& rhs) {
-  this->pImpl_ = new TlDenseSymmetricMatrix_ImplLapack(
-      *(dynamic_cast<const TlDenseSymmetricMatrix_ImplLapack*>(rhs.pImpl_)));
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplLapack(
+        *(dynamic_cast<const TlDenseSymmetricMatrix_ImplLapack*>(rhs.pImpl_)));
 }
 
 TlDenseSymmetricMatrix_Lapack::TlDenseSymmetricMatrix_Lapack(
     const TlDenseGeneralMatrix_Lapack& rhs) {
-  this->pImpl_ = new TlDenseSymmetricMatrix_ImplLapack(
-      *(dynamic_cast<const TlDenseGeneralMatrix_ImplLapack*>(rhs.pImpl_)));
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplLapack(
+        *(dynamic_cast<const TlDenseGeneralMatrix_ImplLapack*>(rhs.pImpl_)));
 }
 
 TlDenseSymmetricMatrix_Lapack::~TlDenseSymmetricMatrix_Lapack() {
-  delete this->pImpl_;
-  this->pImpl_ = NULL;
+    delete this->pImpl_;
+    this->pImpl_ = NULL;
 }
 
 TlDenseSymmetricMatrix_Lapack::operator std::vector<double>() const {
@@ -40,62 +40,62 @@ TlDenseSymmetricMatrix_Lapack::operator std::vector<double>() const {
 // ---------------------------------------------------------------------------
 TlDenseSymmetricMatrix_Lapack& TlDenseSymmetricMatrix_Lapack::operator=(
     const TlDenseSymmetricMatrix_Lapack& rhs) {
-  delete this->pImpl_;
-  this->pImpl_ = new TlDenseSymmetricMatrix_ImplLapack(
-      *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs.pImpl_)));
+    delete this->pImpl_;
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplLapack(
+        *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs.pImpl_)));
 
-  return *this;
+    return *this;
 }
 
 const TlDenseSymmetricMatrix_Lapack TlDenseSymmetricMatrix_Lapack::operator+(
     const TlDenseSymmetricMatrix_Lapack& rhs) const {
-  TlDenseSymmetricMatrix_Lapack answer = *this;
-  answer += rhs;
-  return answer;
+    TlDenseSymmetricMatrix_Lapack answer = *this;
+    answer += rhs;
+    return answer;
 }
 
 const TlDenseSymmetricMatrix_Lapack TlDenseSymmetricMatrix_Lapack::operator-(
     const TlDenseSymmetricMatrix_Lapack& rhs) const {
-  TlDenseSymmetricMatrix_Lapack answer = *this;
-  answer -= rhs;
-  return answer;
+    TlDenseSymmetricMatrix_Lapack answer = *this;
+    answer -= rhs;
+    return answer;
 }
 
 const TlDenseGeneralMatrix_Lapack TlDenseSymmetricMatrix_Lapack::operator*(
     const TlDenseSymmetricMatrix_Lapack& rhs) const {
-  TlDenseGeneralMatrix_Lapack answer = *this;
-  answer *= rhs;
-  return answer;
+    TlDenseGeneralMatrix_Lapack answer = *this;
+    answer *= rhs;
+    return answer;
 }
 
 TlDenseSymmetricMatrix_Lapack& TlDenseSymmetricMatrix_Lapack::operator+=(
     const TlDenseSymmetricMatrix_Lapack& rhs) {
-  *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)) +=
-      *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs.pImpl_));
+    *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)) +=
+        *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs.pImpl_));
 
-  return *this;
+    return *this;
 }
 
 TlDenseSymmetricMatrix_Lapack& TlDenseSymmetricMatrix_Lapack::operator-=(
     const TlDenseSymmetricMatrix_Lapack& rhs) {
-  *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)) -=
-      *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs.pImpl_));
+    *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)) -=
+        *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs.pImpl_));
 
-  return *this;
+    return *this;
 }
 
 TlDenseSymmetricMatrix_Lapack& TlDenseSymmetricMatrix_Lapack::operator*=(
     const double coef) {
-  *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)) *= coef;
+    *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)) *= coef;
 
-  return *this;
+    return *this;
 }
 
 TlDenseSymmetricMatrix_Lapack& TlDenseSymmetricMatrix_Lapack::operator/=(
     const double coef) {
-  *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)) /= coef;
+    *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)) /= coef;
 
-  return *this;
+    return *this;
 }
 
 // TlDenseSymmetricMatrix_Lapack& TlDenseSymmetricMatrix_Lapack::operator*=(
@@ -109,53 +109,55 @@ TlDenseSymmetricMatrix_Lapack& TlDenseSymmetricMatrix_Lapack::operator/=(
 // ---------------------------------------------------------------------------
 const TlDenseSymmetricMatrix_Lapack& TlDenseSymmetricMatrix_Lapack::dotInPlace(
     const TlDenseSymmetricMatrix_Lapack& rhs) {
-  dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
-      ->dotInPlace(
-          *dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs.pImpl_));
+    dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
+        ->dotInPlace(
+            *dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs.pImpl_));
 
-  return *this;
+    return *this;
 }
 
 bool TlDenseSymmetricMatrix_Lapack::eig(
     TlDenseVector_Lapack* pEigVal, TlDenseGeneralMatrix_Lapack* pEigVec) const {
-  TlDenseVector_ImplLapack* pImpl_eigval =
-      dynamic_cast<TlDenseVector_ImplLapack*>(pEigVal->pImpl_);
-  TlDenseGeneralMatrix_ImplLapack* pImpl_eigvec =
-      dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(pEigVec->pImpl_);
+    TlDenseVector_ImplLapack* pImpl_eigval =
+        dynamic_cast<TlDenseVector_ImplLapack*>(pEigVal->pImpl_);
+    TlDenseGeneralMatrix_ImplLapack* pImpl_eigvec =
+        dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(pEigVec->pImpl_);
 
-  const bool answer =
-      dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
-          ->eig(pImpl_eigval, pImpl_eigvec);
-  return answer;
+    const bool answer =
+        dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
+            ->eig(pImpl_eigval, pImpl_eigvec);
+    return answer;
 }
 
 TlDenseSymmetricMatrix_Lapack TlDenseSymmetricMatrix_Lapack::inverse() const {
-  TlDenseSymmetricMatrix_Lapack answer;
-  answer.pImpl_ = new TlDenseSymmetricMatrix_ImplLapack(
-      dynamic_cast<const TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
-          ->inverse());
-  return answer;
+    TlDenseSymmetricMatrix_Lapack answer;
+    answer.pImpl_ = new TlDenseSymmetricMatrix_ImplLapack(
+        dynamic_cast<const TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
+            ->inverse());
+    return answer;
 }
 
 double* TlDenseSymmetricMatrix_Lapack::data() {
-  return dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)->data();
+    return dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
+        ->data();
 }
 
 const double* TlDenseSymmetricMatrix_Lapack::data() const {
-  return dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)->data();
+    return dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
+        ->data();
 }
 
 // ---------------------------------------------------------------------------
 // I/O
 // ---------------------------------------------------------------------------
 void TlDenseSymmetricMatrix_Lapack::dump(TlDenseVector_Lapack* v) const {
-  dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
-      ->dump(dynamic_cast<TlDenseVector_ImplLapack*>(v->pImpl_));
+    dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
+        ->dump(dynamic_cast<TlDenseVector_ImplLapack*>(v->pImpl_));
 }
 
 void TlDenseSymmetricMatrix_Lapack::restore(const TlDenseVector_Lapack& v) {
-  dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
-      ->restore(*(dynamic_cast<TlDenseVector_ImplLapack*>(v.pImpl_)));
+    dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
+        ->restore(*(dynamic_cast<TlDenseVector_ImplLapack*>(v.pImpl_)));
 }
 
 // ---------------------------------------------------------------------------
@@ -163,8 +165,8 @@ void TlDenseSymmetricMatrix_Lapack::restore(const TlDenseVector_Lapack& v) {
 // ---------------------------------------------------------------------------
 TlMatrixObject::size_type TlDenseSymmetricMatrix_Lapack::getNumOfElements()
     const {
-  return dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
-      ->getNumOfElements();
+    return dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
+        ->getNumOfElements();
 }
 
 // ---------------------------------------------------------------------------
@@ -172,43 +174,43 @@ TlMatrixObject::size_type TlDenseSymmetricMatrix_Lapack::getNumOfElements()
 // ---------------------------------------------------------------------------
 TlDenseGeneralMatrix_Lapack operator*(const TlDenseSymmetricMatrix_Lapack& rhs1,
                                       const TlDenseGeneralMatrix_Lapack& rhs2) {
-  TlDenseGeneralMatrix_Lapack answer;
-  *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(answer.pImpl_)) =
-      *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs1.pImpl_)) *
-      *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(rhs2.pImpl_));
+    TlDenseGeneralMatrix_Lapack answer;
+    *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(answer.pImpl_)) =
+        *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs1.pImpl_)) *
+        *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(rhs2.pImpl_));
 
-  return answer;
+    return answer;
 }
 
 TlDenseGeneralMatrix_Lapack operator*(
     const TlDenseGeneralMatrix_Lapack& rhs1,
     const TlDenseSymmetricMatrix_Lapack& rhs2) {
-  TlDenseGeneralMatrix_Lapack answer;
-  *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(answer.pImpl_)) =
-      *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(rhs1.pImpl_)) *
-      *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs2.pImpl_));
+    TlDenseGeneralMatrix_Lapack answer;
+    *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(answer.pImpl_)) =
+        *(dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(rhs1.pImpl_)) *
+        *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs2.pImpl_));
 
-  return answer;
+    return answer;
 }
 
 TlDenseVector_Lapack operator*(const TlDenseSymmetricMatrix_Lapack& rhs1,
                                const TlDenseVector_Lapack& rhs2) {
-  TlDenseVector_Lapack answer;
-  *(dynamic_cast<TlDenseVector_ImplLapack*>(answer.pImpl_)) =
-      *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs1.pImpl_)) *
-      *(dynamic_cast<TlDenseVector_ImplLapack*>(rhs2.pImpl_));
+    TlDenseVector_Lapack answer;
+    *(dynamic_cast<TlDenseVector_ImplLapack*>(answer.pImpl_)) =
+        *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs1.pImpl_)) *
+        *(dynamic_cast<TlDenseVector_ImplLapack*>(rhs2.pImpl_));
 
-  return answer;
+    return answer;
 }
 
 TlDenseVector_Lapack operator*(const TlDenseVector_Lapack& rhs1,
                                const TlDenseSymmetricMatrix_Lapack& rhs2) {
-  TlDenseVector_Lapack answer;
-  *(dynamic_cast<TlDenseVector_ImplLapack*>(answer.pImpl_)) =
-      *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs2.pImpl_)) *
-      *(dynamic_cast<TlDenseVector_ImplLapack*>(rhs1.pImpl_));
+    TlDenseVector_Lapack answer;
+    *(dynamic_cast<TlDenseVector_ImplLapack*>(answer.pImpl_)) =
+        *(dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(rhs2.pImpl_)) *
+        *(dynamic_cast<TlDenseVector_ImplLapack*>(rhs1.pImpl_));
 
-  return answer;
+    return answer;
 }
 
 // ---------------------------------------------------------------------------
@@ -216,13 +218,13 @@ TlDenseVector_Lapack operator*(const TlDenseVector_Lapack& rhs1,
 // ---------------------------------------------------------------------------
 TlDenseSymmetricMatrix_Lapack operator*(
     const double coef, const TlDenseSymmetricMatrix_Lapack& matrix) {
-  TlDenseSymmetricMatrix_Lapack answer = matrix;
-  answer *= coef;
+    TlDenseSymmetricMatrix_Lapack answer = matrix;
+    answer *= coef;
 
-  return answer;
+    return answer;
 }
 
 TlDenseSymmetricMatrix_Lapack operator*(
     const TlDenseSymmetricMatrix_Lapack& matrix, const double coef) {
-  return coef * matrix;
+    return coef * matrix;
 }

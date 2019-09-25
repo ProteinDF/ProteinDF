@@ -28,57 +28,57 @@ TlSparseSymmetricMatrix::TlSparseSymmetricMatrix(
 TlSparseSymmetricMatrix::~TlSparseSymmetricMatrix() {}
 
 void TlSparseSymmetricMatrix::resize(const int size) {
-  TlSparseMatrix::resize(size, size);
+    TlSparseMatrix::resize(size, size);
 }
 
 TlDenseVector_Lapack TlSparseSymmetricMatrix::getRowVector(
     const index_type row) const {
-  const int numOfCols = this->getNumOfCols();
-  TlDenseVector_Lapack ans(numOfCols);
+    const int numOfCols = this->getNumOfCols();
+    TlDenseVector_Lapack ans(numOfCols);
 
-  if (this->m_aMatrix.size() > (std::size_t)(numOfCols / 2)) {
-    for (index_type i = 0; i < numOfCols; ++i) {
-      ans.set(i, this->get(row, i));
+    if (this->m_aMatrix.size() > (std::size_t)(numOfCols / 2)) {
+        for (index_type i = 0; i < numOfCols; ++i) {
+            ans.set(i, this->get(row, i));
+        }
+    } else {
+        const_iterator pEnd = this->end();
+        for (const_iterator p = this->begin(); p != pEnd; ++p) {
+            const int r = p->first.row;
+            const int c = p->first.col;
+            if (r == row) {
+                ans.set(c, p->second);
+            } else if (c == row) {
+                ans.set(r, p->second);
+            }
+        }
     }
-  } else {
-    const_iterator pEnd = this->end();
-    for (const_iterator p = this->begin(); p != pEnd; ++p) {
-      const int r = p->first.row;
-      const int c = p->first.col;
-      if (r == row) {
-        ans.set(c, p->second);
-      } else if (c == row) {
-        ans.set(r, p->second);
-      }
-    }
-  }
 
-  return ans;
+    return ans;
 }
 
 TlDenseVector_Lapack TlSparseSymmetricMatrix::getColVector(
     const index_type col) const {
-  const int numOfRows = this->getNumOfRows();
-  TlDenseVector_Lapack ans(numOfRows);
+    const int numOfRows = this->getNumOfRows();
+    TlDenseVector_Lapack ans(numOfRows);
 
-  if (this->m_aMatrix.size() > (std::size_t)(numOfRows / 2)) {
-    for (index_type i = 0; i < numOfRows; ++i) {
-      ans.set(i, this->get(i, col));
+    if (this->m_aMatrix.size() > (std::size_t)(numOfRows / 2)) {
+        for (index_type i = 0; i < numOfRows; ++i) {
+            ans.set(i, this->get(i, col));
+        }
+    } else {
+        const_iterator pEnd = this->end();
+        for (const_iterator p = this->begin(); p != pEnd; ++p) {
+            const int r = p->first.row;
+            const int c = p->first.col;
+            if (c == col) {
+                ans.set(r, p->second);
+            } else if (r == col) {
+                ans.set(c, p->second);
+            }
+        }
     }
-  } else {
-    const_iterator pEnd = this->end();
-    for (const_iterator p = this->begin(); p != pEnd; ++p) {
-      const int r = p->first.row;
-      const int c = p->first.col;
-      if (c == col) {
-        ans.set(r, p->second);
-      } else if (r == col) {
-        ans.set(c, p->second);
-      }
-    }
-  }
 
-  return ans;
+    return ans;
 }
 
 // const TlSparseSymmetricMatrix& TlSparseSymmetricMatrix::dot(const

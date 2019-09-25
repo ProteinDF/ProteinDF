@@ -72,7 +72,7 @@ class TlDenseSymmetricMatrix_ImplLapack
     virtual TlMatrixObject::size_type index(
         TlMatrixObject::index_type row, TlMatrixObject::index_type col) const;
 
-    virtual void vtr2mat(double const * const pBuf);
+    virtual void vtr2mat(double const* const pBuf);
 
     // ---------------------------------------------------------------------------
     // private

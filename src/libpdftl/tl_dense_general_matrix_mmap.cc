@@ -22,7 +22,8 @@ TlDenseGeneralMatrix_mmap::~TlDenseGeneralMatrix_mmap() {}
 
 // TlDenseGeneralMatrix_mmap* TlDenseGeneralMatrix_mmap::copy(
 //     const std::string& path) const {
-//     TlDenseGeneralMatrix_mmap* pObj = new TlDenseGeneralMatrix_mmap(path, 1, 1);
+//     TlDenseGeneralMatrix_mmap* pObj = new TlDenseGeneralMatrix_mmap(path, 1,
+//     1);
 
 //     return pObj;
 // }

@@ -25,23 +25,23 @@
 
 // 交換・相関項の計算を行う
 class DfXCFunctional_Parallel : public DfXCFunctional {
- public:
-  DfXCFunctional_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfXCFunctional_Parallel();
+   public:
+    DfXCFunctional_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfXCFunctional_Parallel();
 
- public:
-  virtual void buildXcMatrix();
+   public:
+    virtual void buildXcMatrix();
 
-  virtual double getGrimmeDispersionEnergy();
+    virtual double getGrimmeDispersionEnergy();
 
- protected:
-  virtual void logger(const std::string& str) const;
+   protected:
+    virtual void logger(const std::string& str) const;
 
-  void buildXC_LAPACK();
-  void buildXC_ScaLAPACK();
+    void buildXC_LAPACK();
+    void buildXC_ScaLAPACK();
 
- protected:
-  virtual DfEriX* getDfEriXObject();
+   protected:
+    virtual DfEriX* getDfEriXObject();
 };
 
 #endif  // DFXCFUNCTIONAL_PARALLEL_H

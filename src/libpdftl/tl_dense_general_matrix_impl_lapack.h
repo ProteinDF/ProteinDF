@@ -17,7 +17,7 @@ class TlDenseGeneralMatrix_ImplLapack : public TlDenseMatrix_ImplObject {
     explicit TlDenseGeneralMatrix_ImplLapack(
         const TlMatrixObject::index_type row = 0,
         const TlMatrixObject::index_type col = 0,
-        double const * const pBuf = NULL);
+        double const* const pBuf = NULL);
     TlDenseGeneralMatrix_ImplLapack(const TlDenseGeneralMatrix_ImplLapack& rhs);
     TlDenseGeneralMatrix_ImplLapack(
         const TlDenseSymmetricMatrix_ImplLapack& rhs);
@@ -116,7 +116,7 @@ class TlDenseGeneralMatrix_ImplLapack : public TlDenseMatrix_ImplObject {
     virtual TlMatrixObject::size_type getNumOfElements() const;
     virtual TlMatrixObject::size_type index(
         TlMatrixObject::index_type row, TlMatrixObject::index_type col) const;
-    virtual void vtr2mat(double const * const pBuf);
+    virtual void vtr2mat(double const* const pBuf);
 
     // ---------------------------------------------------------------------------
     // variables

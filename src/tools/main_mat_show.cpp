@@ -25,43 +25,43 @@
 #include "tl_matrix_utils.h"
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "cghv");
+    TlGetopt opt(argc, argv, "cghv");
 
-  const bool bVerbose = (opt["v"] == "defined");
-  const bool bCsvMode = (opt["c"] == "defined");
-  const bool bGuessMode = (opt["g"] == "defined");
+    const bool bVerbose = (opt["v"] == "defined");
+    const bool bCsvMode = (opt["c"] == "defined");
+    const bool bGuessMode = (opt["g"] == "defined");
 
-  std::string sPath = opt[1];
-  if (bVerbose) {
-    std::cerr << "loading... " << sPath << std::endl;
-  }
-
-  if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::RLHD) == true) {
-    TlDenseSymmetricMatrix_Lapack M;
-    M.load(sPath);
-
-    if (bCsvMode == true) {
-      M.saveCsv(std::cout);
-    } else if (bGuessMode == true) {
-      M.saveText(std::cout);
-    } else {
-        std::cout << M << std::endl;
+    std::string sPath = opt[1];
+    if (bVerbose) {
+        std::cerr << "loading... " << sPath << std::endl;
     }
-  } else if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::CSFD) == true) {
-    TlDenseGeneralMatrix_Lapack M;
-    M.load(sPath);
 
-    if (bCsvMode == true) {
-      M.saveCsv(std::cout);
-    } else if (bGuessMode == true) {
-      M.saveText(std::cout);
+    if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::RLHD) == true) {
+        TlDenseSymmetricMatrix_Lapack M;
+        M.load(sPath);
+
+        if (bCsvMode == true) {
+            M.saveCsv(std::cout);
+        } else if (bGuessMode == true) {
+            M.saveText(std::cout);
+        } else {
+            std::cout << M << std::endl;
+        }
+    } else if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::CSFD) == true) {
+        TlDenseGeneralMatrix_Lapack M;
+        M.load(sPath);
+
+        if (bCsvMode == true) {
+            M.saveCsv(std::cout);
+        } else if (bGuessMode == true) {
+            M.saveText(std::cout);
+        } else {
+            std::cout << M << std::endl;
+        }
     } else {
-        std::cout << M << std::endl;
+        std::cerr << "unknown file type: " << sPath << std::endl;
+        return EXIT_FAILURE;
     }
-  } else {
-    std::cerr << "unknown file type: " << sPath << std::endl;
-    return EXIT_FAILURE;
-  }
 
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

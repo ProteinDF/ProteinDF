@@ -38,10 +38,12 @@ std::vector<std::vector<int> > getGroupsOfAtoms(const std::string& mpacPath) {
     TlSerializeData input = mpac.getSerializeData();
 
     TlSerializeData::ArrayIterator itEnd = input.endArray();
-    for (TlSerializeData::ArrayIterator it = input.beginArray(); it != itEnd; ++it) {
+    for (TlSerializeData::ArrayIterator it = input.beginArray(); it != itEnd;
+         ++it) {
         std::vector<int> atoms;
         TlSerializeData::ArrayIterator itAtomEnd = it->endArray();
-        for (TlSerializeData::ArrayIterator itAtom = it->beginArray(); itAtom != itAtomEnd; ++itAtom) {
+        for (TlSerializeData::ArrayIterator itAtom = it->beginArray();
+             itAtom != itAtomEnd; ++itAtom) {
             atoms.push_back(itAtom->getInt());
         }
         groups_atom.push_back(atoms);
@@ -84,7 +86,6 @@ int main(int argc, char* argv[]) {
         groups_atom = getGroupsOfAtoms(mpacPath);
     }
 
-
     if (isVerbose == true) {
         std::cerr << "iteration = " << iteration << std::endl;
     }
@@ -103,17 +104,21 @@ int main(int argc, char* argv[]) {
     //   dfPop.getReport(iteration, std::cout);
     // }
 
-    // 
+    //
     int groupIndex = 0;
     std::vector<std::vector<int> >::const_iterator itGrpEnd = groups_atom.end();
-    for (std::vector<std::vector<int> >::const_iterator itGrp = groups_atom.begin(); itGrp != itGrpEnd; ++itGrp) {
+    for (std::vector<std::vector<int> >::const_iterator itGrp =
+             groups_atom.begin();
+         itGrp != itGrpEnd; ++itGrp) {
         double grpSum = 0.0;
         std::vector<int>::const_iterator itEnd = itGrp->end();
-        for (std::vector<int>::const_iterator it = itGrp->begin(); it != itEnd; ++it) {
+        for (std::vector<int>::const_iterator it = itGrp->begin(); it != itEnd;
+             ++it) {
             const double charge = dfPop.getCharge(*it);
             grpSum += charge;
         }
-        std::cout << TlUtils::format("group [%4d]: % 8.3f", groupIndex, grpSum) << std::endl;
+        std::cout << TlUtils::format("group [%4d]: % 8.3f", groupIndex, grpSum)
+                  << std::endl;
         ++groupIndex;
     }
 

@@ -23,21 +23,21 @@
 #include "tl_dense_vector_lapack.h"
 
 class DfDmatrix_Parallel : public DfDmatrix {
- public:
-  DfDmatrix_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfDmatrix_Parallel();
+   public:
+    DfDmatrix_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfDmatrix_Parallel();
 
- public:
-  virtual void run();
+   public:
+    virtual void run();
 
- protected:
-  void run_Scalapack();
+   protected:
+    void run_Scalapack();
 
-  virtual void checkOccupation(const TlDenseVector_Lapack& prevOcc,
-                               const TlDenseVector_Lapack& currOcc);
-  virtual void printOccupation(const TlDenseVector_Lapack& occ);
+    virtual void checkOccupation(const TlDenseVector_Lapack& prevOcc,
+                                 const TlDenseVector_Lapack& currOcc);
+    virtual void printOccupation(const TlDenseVector_Lapack& occ);
 
-  virtual TlDenseVector_Lapack getOccVtr(DfObject::RUN_TYPE runType);
+    virtual TlDenseVector_Lapack getOccVtr(DfObject::RUN_TYPE runType);
 };
 
 #endif  // DFDMATRIX_PARALLEL_H

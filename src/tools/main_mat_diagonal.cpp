@@ -20,76 +20,77 @@
 #include <iostream>
 
 #include "TlGetopt.h"
+#include "TlUtils.h"
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_dense_vector_lapack.h"
 #include "tl_matrix_utils.h"
-#include "TlUtils.h"
 
 void showHelp(const std::string& progname) {
-  std::cout << TlUtils::format("%s [options] input_file_path", progname.c_str())
-            << std::endl;
-  std::cout << " OPTIONS:" << std::endl;
-  std::cout << "  -l FILE: save vector for eigen values" << std::endl;
-  std::cout << "  -x FILE: save matrix for eigen vector" << std::endl;
-  std::cout << "  -h:      show help" << std::endl;
-  std::cout << "  -v:      verbose" << std::endl;
+    std::cout << TlUtils::format("%s [options] input_file_path",
+                                 progname.c_str())
+              << std::endl;
+    std::cout << " OPTIONS:" << std::endl;
+    std::cout << "  -l FILE: save vector for eigen values" << std::endl;
+    std::cout << "  -x FILE: save matrix for eigen vector" << std::endl;
+    std::cout << "  -h:      show help" << std::endl;
+    std::cout << "  -v:      verbose" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "hvl:x:");
+    TlGetopt opt(argc, argv, "hvl:x:");
 
-  if (opt["h"] == "defined") {
-    showHelp(opt[0]);
+    if (opt["h"] == "defined") {
+        showHelp(opt[0]);
+        return EXIT_SUCCESS;
+    }
+
+    const bool bVerbose = (opt["v"] == "defined");
+
+    if (opt.getCount() <= 1) {
+        showHelp(opt[0]);
+        return EXIT_FAILURE;
+    }
+    std::string inputMatrixPath = opt[1];
+
+    std::string eigValPath = opt["l"];
+    std::string eigVecPath = opt["x"];
+
+    if (bVerbose == true) {
+        std::cerr << "load matrix: " << inputMatrixPath << std::endl;
+    }
+    if (TlMatrixUtils::isLoadable(inputMatrixPath, TlMatrixObject::RLHD) !=
+        true) {
+        std::cerr << "can not open file: " << inputMatrixPath << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    TlDenseSymmetricMatrix_Lapack A;
+    A.load(inputMatrixPath);
+    const int numOfDims = A.getNumOfRows();
+    // const int numOfCols = A.getNumOfCols();
+
+    TlDenseGeneralMatrix_Lapack eigVec(numOfDims, numOfDims);
+    TlDenseVector_Lapack eigVal(numOfDims);
+
+    if (bVerbose == true) {
+        std::cerr << "running..." << inputMatrixPath << std::endl;
+    }
+    A.eig(&eigVal, &eigVec);
+
+    if (bVerbose == true) {
+        std::cerr << "save eigen values: " << eigValPath << std::endl;
+    }
+    if (eigValPath != "") {
+        eigVal.save(eigValPath);
+    }
+
+    if (bVerbose == true) {
+        std::cerr << "save eigen vectors: " << eigVecPath << std::endl;
+    }
+    if (eigVecPath != "") {
+        eigVec.save(eigVecPath);
+    }
+
     return EXIT_SUCCESS;
-  }
-
-  const bool bVerbose = (opt["v"] == "defined");
-
-  if (opt.getCount() <= 1) {
-    showHelp(opt[0]);
-    return EXIT_FAILURE;
-  }
-  std::string inputMatrixPath = opt[1];
-
-  std::string eigValPath = opt["l"];
-  std::string eigVecPath = opt["x"];
-
-  if (bVerbose == true) {
-    std::cerr << "load matrix: " << inputMatrixPath << std::endl;
-  }
-  if (TlMatrixUtils::isLoadable(inputMatrixPath, TlMatrixObject::RLHD) !=
-      true) {
-    std::cerr << "can not open file: " << inputMatrixPath << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  TlDenseSymmetricMatrix_Lapack A;
-  A.load(inputMatrixPath);
-  const int numOfDims = A.getNumOfRows();
-  // const int numOfCols = A.getNumOfCols();
-
-  TlDenseGeneralMatrix_Lapack eigVec(numOfDims, numOfDims);
-  TlDenseVector_Lapack eigVal(numOfDims);
-
-  if (bVerbose == true) {
-    std::cerr << "running..." << inputMatrixPath << std::endl;
-  }
-  A.eig(&eigVal, &eigVec);
-
-  if (bVerbose == true) {
-    std::cerr << "save eigen values: " << eigValPath << std::endl;
-  }
-  if (eigValPath != "") {
-    eigVal.save(eigValPath);
-  }
-
-  if (bVerbose == true) {
-    std::cerr << "save eigen vectors: " << eigVecPath << std::endl;
-  }
-  if (eigVecPath != "") {
-    eigVec.save(eigVecPath);
-  }
-
-  return EXIT_SUCCESS;
 }

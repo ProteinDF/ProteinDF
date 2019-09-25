@@ -26,23 +26,23 @@
 #include <string>
 
 class TlSystem {
- public:
-  static int getPID();
-  static int getPPID();
-  static std::string getEnv(const std::string& key);
+   public:
+    static int getPID();
+    static int getPPID();
+    static std::string getEnv(const std::string& key);
 
-  /// ホスト名を返す
-  static std::string getHostName();
+    /// ホスト名を返す
+    static std::string getHostName();
 
-  /// 使用された常駐セットサイズの最大値(MB)を返す
-  static double getMaxRSS();
+    /// 使用された常駐セットサイズの最大値(MB)を返す
+    static double getMaxRSS();
 
- private:
-  static int pid_;
-  static int ppid_;
+   private:
+    static int pid_;
+    static int ppid_;
 
-  static const int MAX_HOSTNAME_LENGTH;
-  static std::string hostname_;
+    static const int MAX_HOSTNAME_LENGTH;
+    static std::string hostname_;
 };
 
 #endif  // TLSYSTEM_H

@@ -48,11 +48,11 @@
 
 #ifdef HAVE_LAPACK
 #include "df_total_energy_lapack.h"
-#endif // HAVE_LAPACK
+#endif  // HAVE_LAPACK
 
 #ifdef HAVE_EIGEN
 #include "df_total_energy_eigen.h"
-#endif // HAVE_EIGEN
+#endif  // HAVE_EIGEN
 
 #include "DfTransFmatrix.h"
 #include "DfTransatob.h"

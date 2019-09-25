@@ -6,6 +6,6 @@ DfTotalEnergy_Scalapack::DfTotalEnergy_Scalapack(TlSerializeData* pPdfParam)
                          TlDenseVector_Scalapack, DfOverlapX_Parallel>(
           pPdfParam) {
     this->log_.info("run DfTotalEnergy_Scalapack::DfTotalEnergy_Scalapack()");
-          }
+}
 
 DfTotalEnergy_Scalapack::~DfTotalEnergy_Scalapack() {}

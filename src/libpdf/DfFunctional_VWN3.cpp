@@ -34,19 +34,21 @@ DfFunctional_VWN3::DfFunctional_VWN3() {}
 DfFunctional_VWN3::~DfFunctional_VWN3() {}
 
 double DfFunctional_VWN3::epsilonC_PARA(const double x) {
-  return this->epsilonC(VWN3_A_PARA, VWN3_B_PARA, VWN3_C_PARA, VWN3_X0_PARA, x);
+    return this->epsilonC(VWN3_A_PARA, VWN3_B_PARA, VWN3_C_PARA, VWN3_X0_PARA,
+                          x);
 }
 
 double DfFunctional_VWN3::epsilonC_FERR(const double x) {
-  return this->epsilonC(VWN3_A_FERR, VWN3_B_FERR, VWN3_C_FERR, VWN3_X0_FERR, x);
+    return this->epsilonC(VWN3_A_FERR, VWN3_B_FERR, VWN3_C_FERR, VWN3_X0_FERR,
+                          x);
 }
 
 double DfFunctional_VWN3::epsilonCPrime_PARA(const double x) {
-  return this->epsilonCPrime(VWN3_A_PARA, VWN3_B_PARA, VWN3_C_PARA,
-                             VWN3_X0_PARA, x);
+    return this->epsilonCPrime(VWN3_A_PARA, VWN3_B_PARA, VWN3_C_PARA,
+                               VWN3_X0_PARA, x);
 }
 
 double DfFunctional_VWN3::epsilonCPrime_FERR(const double x) {
-  return this->epsilonCPrime(VWN3_A_FERR, VWN3_B_FERR, VWN3_C_FERR,
-                             VWN3_X0_FERR, x);
+    return this->epsilonCPrime(VWN3_A_FERR, VWN3_B_FERR, VWN3_C_FERR,
+                               VWN3_X0_FERR, x);
 }

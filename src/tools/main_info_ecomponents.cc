@@ -57,10 +57,12 @@ int main(int argc, char* argv[]) {
         }
 
         TlSerializeData::ArrayIterator itEnd = input.endArray();
-        for (TlSerializeData::ArrayIterator it = input.beginArray(); it != itEnd; ++it) {
+        for (TlSerializeData::ArrayIterator it = input.beginArray();
+             it != itEnd; ++it) {
             std::vector<int> atoms;
             TlSerializeData::ArrayIterator itAtomEnd = it->endArray();
-            for (TlSerializeData::ArrayIterator itAtom = it->beginArray(); itAtom != itAtomEnd; ++itAtom) {
+            for (TlSerializeData::ArrayIterator itAtom = it->beginArray();
+                 itAtom != itAtomEnd; ++itAtom) {
                 atoms.push_back(itAtom->getInt());
             }
             groups_atom.push_back(atoms);
@@ -72,7 +74,8 @@ int main(int argc, char* argv[]) {
         const int numOfArgs = opt.getCount();
         for (int i = 1; i < numOfArgs; ++i) {  // opt[0] is program name
             const std::string input = opt[i];
-            std::cout << TlUtils::format("input %d: %s", i, input.c_str()) << std::endl;
+            std::cout << TlUtils::format("input %d: %s", i, input.c_str())
+                      << std::endl;
             const std::vector<int> inputArray =
                 TlUtils::nonreduntant_vector(TlUtils::vector_notation(input));
             groups_atom.push_back(inputArray);
@@ -80,15 +83,17 @@ int main(int argc, char* argv[]) {
         if (groups_atom.size() == 0) {
             DfObject dfObj(&param);
             int numOfAtoms = dfObj.getNumOfAtoms();
-            const std::string allAtoms = TlUtils::format("0-%d", numOfAtoms - 1);
-            const std::vector<int> allAtomsArray =
-              TlUtils::nonreduntant_vector(TlUtils::vector_notation(allAtoms));
+            const std::string allAtoms =
+                TlUtils::format("0-%d", numOfAtoms - 1);
+            const std::vector<int> allAtomsArray = TlUtils::nonreduntant_vector(
+                TlUtils::vector_notation(allAtoms));
             groups_atom.push_back(allAtomsArray);
         }
         if (verbose) {
             const int numOfGroups = groups_atom.size();
             for (int i = 0; i < numOfGroups; ++i) {
-                std::cerr << TlUtils::format("group[%d] (atom): %s", i,
+                std::cerr << TlUtils::format(
+                                 "group[%d] (atom): %s", i,
                                  TlUtils::vector2str(groups_atom[i]).c_str())
                           << std::endl;
             }
@@ -104,19 +109,21 @@ int main(int argc, char* argv[]) {
     // const int numOfGroups = groups_atom.size();
     // for (int i = 0; i < numOfGroups; ++i) {
     //     {
-    //         std::cout << TlUtils::format(">>>> group: %d <-> group: %d", i, i)
+    //         std::cout << TlUtils::format(">>>> group: %d <-> group: %d", i,
+    //         i)
     //                   << std::endl;
     //         double IE = dfTotalEnergy.get_IE(groups_atom[i]);
     //         IE_total += IE;
     //     }
     //     for (int j = i + 1; j < numOfGroups; ++j) {
-    //         std::cout << TlUtils::format(">>>> group: %d <-> group: %d", i, j)
+    //         std::cout << TlUtils::format(">>>> group: %d <-> group: %d", i,
+    //         j)
     //                   << std::endl;
     //         // std::cout << TlUtils::format("group: %d [%s]", i,
-    //         //                              TlUtils::vector2str(groups_atom[i]).c_str())
+    //         // TlUtils::vector2str(groups_atom[i]).c_str())
     //         //           << std::endl;
     //         // std::cout << TlUtils::format("group: %d [%s]", j,
-    //         //                              TlUtils::vector2str(groups_atom[j]).c_str())
+    //         // TlUtils::vector2str(groups_atom[j]).c_str())
     //         //           << std::endl;
     //         double IE = dfTotalEnergy.get_IE(groups_atom[i], groups_atom[j]);
     //         IE_total += IE;

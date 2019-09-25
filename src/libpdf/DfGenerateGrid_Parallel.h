@@ -22,35 +22,35 @@
 #include "DfGenerateGrid.h"
 
 class DfGenerateGrid_Parallel : public DfGenerateGrid {
- public:
-  DfGenerateGrid_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfGenerateGrid_Parallel();
+   public:
+    DfGenerateGrid_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfGenerateGrid_Parallel();
 
- protected:
-  virtual void logger(const std::string& str) const;
+   protected:
+    virtual void logger(const std::string& str) const;
 
-  virtual void makeTable();
+    virtual void makeTable();
 
-  virtual TlDenseGeneralMatrix_Lapack getOMatrix();
+    virtual TlDenseGeneralMatrix_Lapack getOMatrix();
 
-  virtual void generateGrid(const TlDenseGeneralMatrix_Lapack& O);
-  void generateGrid_DC(const TlDenseGeneralMatrix_Lapack& O);
+    virtual void generateGrid(const TlDenseGeneralMatrix_Lapack& O);
+    void generateGrid_DC(const TlDenseGeneralMatrix_Lapack& O);
 
-  // TODO: implement master-slave model
-  // void generateGrid_MS();
+    // TODO: implement master-slave model
+    // void generateGrid_MS();
 
-  void gatherGridData();
+    void gatherGridData();
 
- protected:
-  enum {
-    TAG_GENGRID_MSG_TO_ROOT = 1201,
-    TAG_GENGRID_SEND_RANGE = 1202,
-    TAG_GENGRID_SEND_ATOMLIST = 1203,
-    TAG_GENGRID_SEND_ATOM = 1204,
-    TAG_GENGRID_SEND_DATA = 1205,
+   protected:
+    enum {
+        TAG_GENGRID_MSG_TO_ROOT = 1201,
+        TAG_GENGRID_SEND_RANGE = 1202,
+        TAG_GENGRID_SEND_ATOMLIST = 1203,
+        TAG_GENGRID_SEND_ATOM = 1204,
+        TAG_GENGRID_SEND_DATA = 1205,
 
-    TAG_GENGRID_GATHER_GRID_DATA = 1206
-  };
+        TAG_GENGRID_GATHER_GRID_DATA = 1206
+    };
 };
 
 #endif  // DFGENERATEGRID_PARALLEL_H

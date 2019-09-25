@@ -125,10 +125,10 @@ const double TlAtom::m_dVdw_radii[] = {
 //
 TlAtom::TlAtom(const std::string& symbol, const TlPosition& pos, double charge)
     : charge_(charge), m_position(pos), m_element(0) {
-  this->m_properties.reset();
-  this->m_sPcClass = TlAtom::UNDEFINED;
+    this->m_properties.reset();
+    this->m_sPcClass = TlAtom::UNDEFINED;
 
-  this->setElement(symbol);
+    this->setElement(symbol);
 }
 
 TlAtom::~TlAtom() {}
@@ -136,7 +136,7 @@ TlAtom::~TlAtom() {}
 void TlAtom::setElement(unsigned int n) { this->m_element = n; }
 
 void TlAtom::setElement(const std::string& symbol) {
-  this->m_element = TlAtom::getElementNumber(symbol);
+    this->m_element = TlAtom::getElementNumber(symbol);
 }
 
 void TlAtom::setCharge(double c) { this->charge_ = c; }
@@ -145,125 +145,125 @@ double TlAtom::getCharge() const { return this->charge_; }
 
 // TODO: rename atomic number
 int TlAtom::getElementNumber(const std::string& symbol) {
-  for (int i = 1; i < MAX_NUMBER_OF_ATOMS; ++i) {
-    if (symbol == TlAtom::m_sSymbols[i]) {
-      return i;
+    for (int i = 1; i < MAX_NUMBER_OF_ATOMS; ++i) {
+        if (symbol == TlAtom::m_sSymbols[i]) {
+            return i;
+        }
     }
-  }
 
-  return 0;
+    return 0;
 }
 
 //
 int TlAtom::getType() const {
-  bool b_sp1 = this->m_properties.test(sp);
-  bool b_sp2 = this->m_properties.test(sp2);
-  bool b_sp3 = this->m_properties.test(sp3);
+    bool b_sp1 = this->m_properties.test(sp);
+    bool b_sp2 = this->m_properties.test(sp2);
+    bool b_sp3 = this->m_properties.test(sp3);
 
-  if (this->m_element == this->getElementNumber("Br")) {
-    if (b_sp3 && this->m_sPcClass == 6) {
-      return Br_sp3_6;
+    if (this->m_element == this->getElementNumber("Br")) {
+        if (b_sp3 && this->m_sPcClass == 6) {
+            return Br_sp3_6;
+        }
+    } else if (this->m_element == this->getElementNumber("Cl")) {
+        if (b_sp3 && this->m_sPcClass == 6) {
+            return Cl_sp3_6;
+        }
+    } else if (this->m_element == this->getElementNumber("C")) {
+        if (b_sp1 && this->m_sPcClass == 6) {
+            return C_sp1_6;
+        } else if (b_sp1 && this->m_sPcClass == 7) {
+            return C_sp1_7;
+        } else if (b_sp2 && this->m_sPcClass == 6) {
+            return C_sp2_6;
+        } else if (b_sp2 && this->m_sPcClass == 7) {
+            return C_sp2_7;
+        } else if (b_sp3 && this->m_sPcClass == 6) {
+            return C_sp3_6;
+        } else if (b_sp3 && this->m_sPcClass == 7) {
+            return C_sp3_7;
+        }
+    } else if (this->m_element == this->getElementNumber("F")) {
+        if (b_sp3 && this->m_sPcClass == 6) {
+            return F_sp3_6;
+        }
+    } else if (this->m_element == this->getElementNumber("I")) {
+        if (b_sp3 && this->m_sPcClass == 6) {
+            return I_sp3_6;
+        }
+    } else if (this->m_element == this->getElementNumber("N")) {
+        if (b_sp1 && this->m_sPcClass == 4) {
+            return N_sp1_4;
+        } else if (b_sp1 && this->m_sPcClass == 7) {
+            return N_sp1_7;
+        } else if (b_sp2 && this->m_sPcClass == 1) {
+            return N_sp2_1;
+        } else if (b_sp2 && this->m_sPcClass == 2) {
+            return N_sp2_2;
+        } else if (b_sp2 && this->m_sPcClass == 3) {
+            return N_sp2_3;
+        } else if (b_sp2 && this->m_sPcClass == 4) {
+            return N_sp2_4;
+        } else if (b_sp2 && this->m_sPcClass == 5) {
+            return N_sp2_5;
+        } else if (b_sp2 && this->m_sPcClass == 7) {
+            return N_sp2_7;
+        } else if (b_sp3 && this->m_sPcClass == 1) {
+            return N_sp3_1;
+        } else if (b_sp3 && this->m_sPcClass == 2) {
+            return N_sp3_2;
+        } else if (b_sp3 && this->m_sPcClass == 3) {
+            return N_sp3_3;
+        } else if (b_sp3 && this->m_sPcClass == 5) {
+            return N_sp3_5;
+        } else if (b_sp3 && this->m_sPcClass == 7) {
+            return N_sp3_7;
+        }
+    } else if (this->m_element == this->getElementNumber("O")) {
+        if (b_sp2 && this->m_sPcClass == 1) {
+            return O_sp2_1;
+        } else if (b_sp2 && this->m_sPcClass == 2) {
+            return O_sp2_2;
+        } else if (b_sp2 && this->m_sPcClass == 4) {
+            return O_sp2_4;
+        } else if (b_sp2 && this->m_sPcClass == 5) {
+            return O_sp2_5;
+        } else if (b_sp3 && this->m_sPcClass == 1) {
+            return O_sp3_1;
+        } else if (b_sp3 && this->m_sPcClass == 2) {
+            return O_sp3_2;
+        } else if (b_sp3 && this->m_sPcClass == 4) {
+            return O_sp3_4;
+        } else if (b_sp3 && this->m_sPcClass == 5) {
+            return O_sp3_5;
+        }
+    } else if (this->m_element == this->getElementNumber("P")) {
+        if (b_sp2 && this->m_sPcClass == 7) {
+            return P_sp2_7;
+        } else if (b_sp3 && this->m_sPcClass == 1) {
+            return P_sp3_1;
+        } else if (b_sp3 && this->m_sPcClass == 7) {
+            return P_sp3_7;
+        }
+    } else if (this->m_element == this->getElementNumber("S")) {
+        if (b_sp1 && this->m_sPcClass == 7) {
+            return S_sp1_7;
+        } else if (b_sp2 && this->m_sPcClass == 2) {
+            return S_sp2_2;
+        } else if (b_sp2 && this->m_sPcClass == 4) {
+            return S_sp2_4;
+        } else if (b_sp2 && this->m_sPcClass == 6) {
+            return S_sp2_6;
+        } else if (b_sp2 && this->m_sPcClass == 7) {
+            return S_sp2_7;
+        } else if (b_sp3 && this->m_sPcClass == 1) {
+            return S_sp3_1;
+        } else if (b_sp3 && this->m_sPcClass == 2) {
+            return S_sp3_2;
+        } else if (b_sp3 && this->m_sPcClass == 6) {
+            return S_sp3_6;
+        } else if (b_sp3 && this->m_sPcClass == 7) {
+            return S_sp3_7;
+        }
     }
-  } else if (this->m_element == this->getElementNumber("Cl")) {
-    if (b_sp3 && this->m_sPcClass == 6) {
-      return Cl_sp3_6;
-    }
-  } else if (this->m_element == this->getElementNumber("C")) {
-    if (b_sp1 && this->m_sPcClass == 6) {
-      return C_sp1_6;
-    } else if (b_sp1 && this->m_sPcClass == 7) {
-      return C_sp1_7;
-    } else if (b_sp2 && this->m_sPcClass == 6) {
-      return C_sp2_6;
-    } else if (b_sp2 && this->m_sPcClass == 7) {
-      return C_sp2_7;
-    } else if (b_sp3 && this->m_sPcClass == 6) {
-      return C_sp3_6;
-    } else if (b_sp3 && this->m_sPcClass == 7) {
-      return C_sp3_7;
-    }
-  } else if (this->m_element == this->getElementNumber("F")) {
-    if (b_sp3 && this->m_sPcClass == 6) {
-      return F_sp3_6;
-    }
-  } else if (this->m_element == this->getElementNumber("I")) {
-    if (b_sp3 && this->m_sPcClass == 6) {
-      return I_sp3_6;
-    }
-  } else if (this->m_element == this->getElementNumber("N")) {
-    if (b_sp1 && this->m_sPcClass == 4) {
-      return N_sp1_4;
-    } else if (b_sp1 && this->m_sPcClass == 7) {
-      return N_sp1_7;
-    } else if (b_sp2 && this->m_sPcClass == 1) {
-      return N_sp2_1;
-    } else if (b_sp2 && this->m_sPcClass == 2) {
-      return N_sp2_2;
-    } else if (b_sp2 && this->m_sPcClass == 3) {
-      return N_sp2_3;
-    } else if (b_sp2 && this->m_sPcClass == 4) {
-      return N_sp2_4;
-    } else if (b_sp2 && this->m_sPcClass == 5) {
-      return N_sp2_5;
-    } else if (b_sp2 && this->m_sPcClass == 7) {
-      return N_sp2_7;
-    } else if (b_sp3 && this->m_sPcClass == 1) {
-      return N_sp3_1;
-    } else if (b_sp3 && this->m_sPcClass == 2) {
-      return N_sp3_2;
-    } else if (b_sp3 && this->m_sPcClass == 3) {
-      return N_sp3_3;
-    } else if (b_sp3 && this->m_sPcClass == 5) {
-      return N_sp3_5;
-    } else if (b_sp3 && this->m_sPcClass == 7) {
-      return N_sp3_7;
-    }
-  } else if (this->m_element == this->getElementNumber("O")) {
-    if (b_sp2 && this->m_sPcClass == 1) {
-      return O_sp2_1;
-    } else if (b_sp2 && this->m_sPcClass == 2) {
-      return O_sp2_2;
-    } else if (b_sp2 && this->m_sPcClass == 4) {
-      return O_sp2_4;
-    } else if (b_sp2 && this->m_sPcClass == 5) {
-      return O_sp2_5;
-    } else if (b_sp3 && this->m_sPcClass == 1) {
-      return O_sp3_1;
-    } else if (b_sp3 && this->m_sPcClass == 2) {
-      return O_sp3_2;
-    } else if (b_sp3 && this->m_sPcClass == 4) {
-      return O_sp3_4;
-    } else if (b_sp3 && this->m_sPcClass == 5) {
-      return O_sp3_5;
-    }
-  } else if (this->m_element == this->getElementNumber("P")) {
-    if (b_sp2 && this->m_sPcClass == 7) {
-      return P_sp2_7;
-    } else if (b_sp3 && this->m_sPcClass == 1) {
-      return P_sp3_1;
-    } else if (b_sp3 && this->m_sPcClass == 7) {
-      return P_sp3_7;
-    }
-  } else if (this->m_element == this->getElementNumber("S")) {
-    if (b_sp1 && this->m_sPcClass == 7) {
-      return S_sp1_7;
-    } else if (b_sp2 && this->m_sPcClass == 2) {
-      return S_sp2_2;
-    } else if (b_sp2 && this->m_sPcClass == 4) {
-      return S_sp2_4;
-    } else if (b_sp2 && this->m_sPcClass == 6) {
-      return S_sp2_6;
-    } else if (b_sp2 && this->m_sPcClass == 7) {
-      return S_sp2_7;
-    } else if (b_sp3 && this->m_sPcClass == 1) {
-      return S_sp3_1;
-    } else if (b_sp3 && this->m_sPcClass == 2) {
-      return S_sp3_2;
-    } else if (b_sp3 && this->m_sPcClass == 6) {
-      return S_sp3_6;
-    } else if (b_sp3 && this->m_sPcClass == 7) {
-      return S_sp3_7;
-    }
-  }
-  return UNKNOWN;
+    return UNKNOWN;
 }

@@ -8,9 +8,9 @@
 #include "tl_dense_vector_eigen.h"
 
 class DfTotalEnergy_Eigen
-    : public DfTotalEnergy_tmpl<
-          TlDenseGeneralMatrix_Eigen, TlDenseSymmetricMatrix_Eigen,
-          TlDenseVector_Eigen, DfOverlapX> {
+    : public DfTotalEnergy_tmpl<TlDenseGeneralMatrix_Eigen,
+                                TlDenseSymmetricMatrix_Eigen,
+                                TlDenseVector_Eigen, DfOverlapX> {
    public:
     DfTotalEnergy_Eigen(TlSerializeData* pPdfParam);
     virtual ~DfTotalEnergy_Eigen();

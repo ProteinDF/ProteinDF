@@ -34,190 +34,191 @@
 // #define CACHE_GROUP_BIT (20) //  1048576 (2^20)個のローカルインデックス
 // (=8MB)
 #define CACHE_GROUP_BIT \
-  (24)  // 16777216 (2^24)個のローカルインデックス (=128MB for double)
+    (24)  // 16777216 (2^24)個のローカルインデックス (=128MB for double)
 // #define DEFAULT_CACHE_SIZE (1 * 1024 * 1024 * 1024) // 1 GB
 #define DEFAULT_CACHE_SIZE (2147483648)  // 2 GB = 2 * 1073741824
 
 class TlDenseMatrix_IO_object : public TlMatrixObject {
-  friend class TlCommunicate;
+    friend class TlCommunicate;
 
- protected:
-  // for cache
-  struct CacheUnit {
+   protected:
+    // for cache
+    struct CacheUnit {
+       public:
+        CacheUnit(unsigned long g) : group(g), isUpdate(false) {}
+
+       public:
+        unsigned long group;
+        bool isUpdate;
+        std::vector<double> data;
+
+        friend bool operator==(const CacheUnit& x, const CacheUnit& y) {
+            return (x.group == y.group);
+        }
+    };
+
+    struct CacheUnitComp : public std::unary_function<const CacheUnit&, bool> {
+       public:
+        CacheUnitComp(unsigned long group) : group_(group) {}
+
+        bool operator()(const CacheUnit& cu) { return (group_ == cu.group); }
+
+       private:
+        unsigned long group_;
+    };
+
    public:
-    CacheUnit(unsigned long g) : group(g), isUpdate(false) {}
+    // create new file
+    explicit TlDenseMatrix_IO_object(
+        const TlMatrixObject::MatrixType matrixType,
+        const std::string& filePath, index_type row, index_type col,
+        std::size_t cacheSize = DEFAULT_CACHE_SIZE);
+    // load file
+    explicit TlDenseMatrix_IO_object(
+        const TlMatrixObject::MatrixType matrixType,
+        const std::string& filePath,
+        std::size_t cacheSize = DEFAULT_CACHE_SIZE);
+    virtual ~TlDenseMatrix_IO_object();
+
+   protected:
+    /// subclass用コンストラクタ
+    ///
+    /// ファイルをsubclassで作成する場合には、`doOpen = false` にすること。
+    // TlDenseMatrix_IO_object(const std::string& filePath, index_type row,
+    //                    index_type col, bool doOpen, std::size_t cacheSize);
+
+    void initializeCache();
+
+    /// cacheに残ったデータの書き込みなど、終了処理を行う
+    void finalize() const;
+
+    // public:
+    // index_type getNumOfRows() const;
+    // index_type getNumOfCols() const;
+
+    virtual std::size_t getMemSize() const;
 
    public:
-    unsigned long group;
-    bool isUpdate;
-    std::vector<double> data;
+    virtual void set(index_type row, index_type col, double value);
+    virtual double get(index_type row, index_type col) const;
+    virtual void add(index_type row, index_type col, double value);
 
-    friend bool operator==(const CacheUnit& x, const CacheUnit& y) {
-      return (x.group == y.group);
+    virtual TlDenseMatrix_IO_object& operator*=(double coef);
+    virtual TlDenseMatrix_IO_object& operator/=(double coef) {
+        return this->operator*=(1.0 / coef);
     }
-  };
 
-  struct CacheUnitComp : public std::unary_function<const CacheUnit&, bool> {
-   public:
-    CacheUnitComp(unsigned long group) : group_(group) {}
+    /// 指定した行の要素から構成されるベクトルを返す
+    ///
+    /// @param[in] nRow 指定する行
+    virtual TlDenseVector_Lapack getRowVector(index_type row) const;
 
-    bool operator()(const CacheUnit& cu) { return (group_ == cu.group); }
+    /// 指定した列の要素から構成されるベクトルを返す
+    ///
+    /// @param[in] nCol 指定する列
+    virtual TlDenseVector_Lapack getColumnVector(index_type col) const;
 
-   private:
-    unsigned long group_;
-  };
+    virtual void setRowVector(const index_type row,
+                              const TlDenseVector_Lapack& v);
+    virtual void setColVector(const index_type col,
+                              const TlDenseVector_Lapack& v);
 
- public:
-  // create new file
-  explicit TlDenseMatrix_IO_object(const TlMatrixObject::MatrixType matrixType,
-                                   const std::string& filePath, index_type row,
-                                   index_type col,
-                                   std::size_t cacheSize = DEFAULT_CACHE_SIZE);
-  // load file
-  explicit TlDenseMatrix_IO_object(const TlMatrixObject::MatrixType matrixType,
-                                   const std::string& filePath,
-                                   std::size_t cacheSize = DEFAULT_CACHE_SIZE);
-  virtual ~TlDenseMatrix_IO_object();
+    /// ブロック行列を返す
+    ///
+    /// @param[in] row 始点となる行
+    /// @param[in] col 始点となる列
+    /// @param[in] row_distance 取得する行数
+    /// @param[in] col_distance 取得する列数
+    /// @return row_distance × col_distance 次元のブロック行列
+    virtual TlDenseGeneralMatrix_Lapack getBlockMatrix(
+        index_type row, index_type col, index_type rowDistance,
+        index_type colDistance) const;
 
- protected:
-  /// subclass用コンストラクタ
-  ///
-  /// ファイルをsubclassで作成する場合には、`doOpen = false` にすること。
-  // TlDenseMatrix_IO_object(const std::string& filePath, index_type row,
-  //                    index_type col, bool doOpen, std::size_t cacheSize);
+    /// 行列要素を指定された位置に上書きする
+    ///
+    /// @param[in] row 始点となる行
+    /// @param[in] col 始点となる列
+    /// @param[in] matrix 行列要素
+    virtual void block(const TlMatrixObject::index_type row,
+                       const TlMatrixObject::index_type col,
+                       const TlDenseGeneralMatrixObject& matrix);
 
-  void initializeCache();
+   protected:
+    void createNewFile();
+    void open();
+    virtual bool readHeader();
 
-  /// cacheに残ったデータの書き込みなど、終了処理を行う
-  void finalize() const;
+    virtual TlMatrixObject::size_type getIndex(
+        const TlMatrixObject::index_type row,
+        const TlMatrixObject::index_type col) const = 0;
+    virtual TlMatrixObject::size_type getNumOfElements() const = 0;
 
-  // public:
-  // index_type getNumOfRows() const;
-  // index_type getNumOfCols() const;
+    double* getCachedData(const int row, const int col);
+    double getCachedData(const int row, const int col) const;
+    void updateCache(size_t index) const;
 
-  virtual std::size_t getMemSize() const;
+   protected:
+    template <typename FileMatrixObject>
+    void resize(const TlMatrixObject::index_type row,
+                const TlMatrixObject::index_type col);
 
- public:
-  virtual void set(index_type row, index_type col, double value);
-  virtual double get(index_type row, index_type col) const;
-  virtual void add(index_type row, index_type col, double value);
+   protected:
+    void writeDisk(const CacheUnit& cu) const;
 
-  virtual TlDenseMatrix_IO_object& operator*=(double coef);
-  virtual TlDenseMatrix_IO_object& operator/=(double coef) {
-    return this->operator*=(1.0 / coef);
-  }
+   protected:
+    virtual bool load(const std::string& path) { return false; }
 
-  /// 指定した行の要素から構成されるベクトルを返す
-  ///
-  /// @param[in] nRow 指定する行
-  virtual TlDenseVector_Lapack getRowVector(index_type row) const;
+    virtual bool save(const std::string& path) const { return false; }
 
-  /// 指定した列の要素から構成されるベクトルを返す
-  ///
-  /// @param[in] nCol 指定する列
-  virtual TlDenseVector_Lapack getColumnVector(index_type col) const;
+   protected:
+    std::string filePath_;
+    mutable std::fstream fs_;
+    std::fstream::pos_type startPos_;
 
-  virtual void setRowVector(const index_type row,
-                            const TlDenseVector_Lapack& v);
-  virtual void setColVector(const index_type col,
-                            const TlDenseVector_Lapack& v);
-
-  /// ブロック行列を返す
-  ///
-  /// @param[in] row 始点となる行
-  /// @param[in] col 始点となる列
-  /// @param[in] row_distance 取得する行数
-  /// @param[in] col_distance 取得する列数
-  /// @return row_distance × col_distance 次元のブロック行列
-  virtual TlDenseGeneralMatrix_Lapack getBlockMatrix(
-      index_type row, index_type col, index_type rowDistance,
-      index_type colDistance) const;
-
-  /// 行列要素を指定された位置に上書きする
-  ///
-  /// @param[in] row 始点となる行
-  /// @param[in] col 始点となる列
-  /// @param[in] matrix 行列要素
-  virtual void block(const TlMatrixObject::index_type row,
-                     const TlMatrixObject::index_type col,
-                     const TlDenseGeneralMatrixObject& matrix);
-
- protected:
-  void createNewFile();
-  void open();
-  virtual bool readHeader();
-
-  virtual TlMatrixObject::size_type getIndex(
-      const TlMatrixObject::index_type row,
-      const TlMatrixObject::index_type col) const = 0;
-  virtual TlMatrixObject::size_type getNumOfElements() const = 0;
-
-  double* getCachedData(const int row, const int col);
-  double getCachedData(const int row, const int col) const;
-  void updateCache(size_t index) const;
-
- protected:
-  template <typename FileMatrixObject>
-  void resize(const TlMatrixObject::index_type row,
-              const TlMatrixObject::index_type col);
-
- protected:
-  void writeDisk(const CacheUnit& cu) const;
-
- protected:
-  virtual bool load(const std::string& path) { return false; }
-
-  virtual bool save(const std::string& path) const { return false; }
-
- protected:
-  std::string filePath_;
-  mutable std::fstream fs_;
-  std::fstream::pos_type startPos_;
-
-  mutable std::list<CacheUnit> cache_;
-  mutable size_t cacheCount_;  // == cache_.size()
-  size_t cacheSize_;
+    mutable std::list<CacheUnit> cache_;
+    mutable size_t cacheCount_;  // == cache_.size()
+    size_t cacheSize_;
 };
 
 template <typename FileMatrixObject>
 void TlDenseMatrix_IO_object::resize(const TlMatrixObject::index_type newRow,
                                      const TlMatrixObject::index_type newCol) {
-  assert(0 < newRow);
-  assert(0 < newCol);
+    assert(0 < newRow);
+    assert(0 < newCol);
 
-  const index_type oldRow = this->getNumOfRows();
-  const index_type oldCol = this->getNumOfCols();
+    const index_type oldRow = this->getNumOfRows();
+    const index_type oldCol = this->getNumOfCols();
 
-  // finalize this object
-  this->finalize();
+    // finalize this object
+    this->finalize();
 
-  // copy
-  const std::string tempFilePath = this->filePath_ + ".bak";
-  TlFile::rename(this->filePath_, tempFilePath);
-  assert(TlFile::isExistFile(this->filePath_) == false);
+    // copy
+    const std::string tempFilePath = this->filePath_ + ".bak";
+    TlFile::rename(this->filePath_, tempFilePath);
+    assert(TlFile::isExistFile(this->filePath_) == false);
 
-  // create new file matrix
-  this->row_ = newRow;
-  this->col_ = newCol;
-  this->initializeCache();
-  this->createNewFile();
-  this->open();
-  assert(this->getNumOfRows() == newRow);
-  assert(this->getNumOfCols() == newCol);
+    // create new file matrix
+    this->row_ = newRow;
+    this->col_ = newCol;
+    this->initializeCache();
+    this->createNewFile();
+    this->open();
+    assert(this->getNumOfRows() == newRow);
+    assert(this->getNumOfCols() == newCol);
 
-  // copy elements
-  {
-    const FileMatrixObject refMatrix(tempFilePath);
-    const index_type maxRow = std::min(oldRow, newRow);
-    const index_type maxCol = std::min(oldCol, newCol);
-    for (index_type r = 0; r < maxRow; ++r) {
-      for (index_type c = 0; c < maxCol; ++c) {
-        this->set(r, c, refMatrix.get(r, c));
-      }
+    // copy elements
+    {
+        const FileMatrixObject refMatrix(tempFilePath);
+        const index_type maxRow = std::min(oldRow, newRow);
+        const index_type maxCol = std::min(oldCol, newCol);
+        for (index_type r = 0; r < maxRow; ++r) {
+            for (index_type c = 0; c < maxCol; ++c) {
+                this->set(r, c, refMatrix.get(r, c));
+            }
+        }
     }
-  }
 
-  // delete temp file
-  TlFile::remove(tempFilePath);
+    // delete temp file
+    TlFile::remove(tempFilePath);
 }
 #endif  // TL_MATRIX_FILE_OBJECT_H

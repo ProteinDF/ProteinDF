@@ -35,53 +35,53 @@ std::string TlSystem::hostname_ = "";
 
 int TlSystem::getPID() {
 #ifdef HAVE_UNISTD_H
-  if (TlSystem::pid_ == -1) {
-    TlSystem::pid_ = getpid();
-  }
+    if (TlSystem::pid_ == -1) {
+        TlSystem::pid_ = getpid();
+    }
 #endif  // HAVE_UNISTD_H
 
-  return TlSystem::pid_;
+    return TlSystem::pid_;
 }
 
 int TlSystem::getPPID() {
 #ifdef HAVE_UNISTD_H
-  if (TlSystem::ppid_ == -1) {
-    TlSystem::ppid_ = getppid();
-  }
+    if (TlSystem::ppid_ == -1) {
+        TlSystem::ppid_ = getppid();
+    }
 #endif  // HAVE_UNISTD_H
-  return TlSystem::ppid_;
+    return TlSystem::ppid_;
 }
 
 std::string TlSystem::getEnv(const std::string& key) {
-  std::string ans(std::getenv(key.c_str()));
+    std::string ans(std::getenv(key.c_str()));
 
-  return ans;
+    return ans;
 }
 
 std::string TlSystem::getHostName() {
 #ifdef HAVE_UNISTD_H
-  if (TlSystem::hostname_.empty()) {
-    char* pHostName = new char[MAX_HOSTNAME_LENGTH];
-    gethostname(pHostName, MAX_HOSTNAME_LENGTH);
+    if (TlSystem::hostname_.empty()) {
+        char* pHostName = new char[MAX_HOSTNAME_LENGTH];
+        gethostname(pHostName, MAX_HOSTNAME_LENGTH);
 
-    TlSystem::hostname_ = std::string(pHostName);
+        TlSystem::hostname_ = std::string(pHostName);
 
-    delete[] pHostName;
-    pHostName = NULL;
-  }
+        delete[] pHostName;
+        pHostName = NULL;
+    }
 #endif  // HAVE_UNISTD_H
 
-  return TlSystem::hostname_;
+    return TlSystem::hostname_;
 }
 
 double TlSystem::getMaxRSS() {
-  double answer = 0.0;
+    double answer = 0.0;
 
 #ifdef HAVE_SYS_RESOURCE_H
-  struct rusage resourceUsage;
-  getrusage(RUSAGE_SELF, &resourceUsage);
-  answer = resourceUsage.ru_maxrss / 1024.0;
+    struct rusage resourceUsage;
+    getrusage(RUSAGE_SELF, &resourceUsage);
+    answer = resourceUsage.ru_maxrss / 1024.0;
 #endif  // HAVE_SYS_RESOURCE_H
 
-  return answer;
+    return answer;
 }

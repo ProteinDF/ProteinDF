@@ -27,52 +27,53 @@
 typedef TlMatrixObject::index_type index_type;
 
 void showHelp() {
-  std::cout << "pdf-mat-format [options] IN_MATRIX_FILE OUT_MATRIX_FILE"
-            << std::endl;
-  std::cout << " OPTIONS:" << std::endl;
-  std::cout << "  -h:      show help" << std::endl;
+    std::cout << "pdf-mat-format [options] IN_MATRIX_FILE OUT_MATRIX_FILE"
+              << std::endl;
+    std::cout << " OPTIONS:" << std::endl;
+    std::cout << "  -h:      show help" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "h");
+    TlGetopt opt(argc, argv, "h");
 
-  std::string in_path = opt[1];
-  std::string out_path = opt[2];
+    std::string in_path = opt[1];
+    std::string out_path = opt[2];
 
-  TlMatrix out;
-  if (TlMatrix::isLoadable(out_path)) {
-    std::cerr << "loading output matrix: " << out_path << std::endl;
-    out.load(out_path);
-  }
-
-  index_type numOfVectors = 0;
-  index_type sizeOfVector = 0;
-  int numOfSubunits = 0;
-  int subunitID = 0;
-  if (TlDenseGeneralMatrix_arrays_RowOriented::isLoadable(
-          in_path, &numOfVectors, &sizeOfVector, &numOfSubunits, &subunitID)) {
-    TlDenseGeneralMatrix_arrays_RowOriented in;
-    in.load(in_path);
-
-    out.resize(numOfVectors, sizeOfVector);
-    for (index_type i = 0; i < numOfVectors; ++i) {
-      if (in.getSubunitID(i) == subunitID) {
-        TlVector_BLAS v = in.getVector(i);
-        assert(v.getSize() == sizeOfVector);
-
-        for (index_type j = 0; j < sizeOfVector; ++j) {
-          out.set(i, j, v[j]);
-        }
-      }
+    TlMatrix out;
+    if (TlMatrix::isLoadable(out_path)) {
+        std::cerr << "loading output matrix: " << out_path << std::endl;
+        out.load(out_path);
     }
 
-    std::cerr << "save: " << out_path << std::endl;
-    out.save(out_path);
+    index_type numOfVectors = 0;
+    index_type sizeOfVector = 0;
+    int numOfSubunits = 0;
+    int subunitID = 0;
+    if (TlDenseGeneralMatrix_arrays_RowOriented::isLoadable(
+            in_path, &numOfVectors, &sizeOfVector, &numOfSubunits,
+            &subunitID)) {
+        TlDenseGeneralMatrix_arrays_RowOriented in;
+        in.load(in_path);
 
-  } else {
-    std::cerr << "cannot load: " << in_path << std::endl;
-    return EXIT_FAILURE;
-  }
+        out.resize(numOfVectors, sizeOfVector);
+        for (index_type i = 0; i < numOfVectors; ++i) {
+            if (in.getSubunitID(i) == subunitID) {
+                TlVector_BLAS v = in.getVector(i);
+                assert(v.getSize() == sizeOfVector);
 
-  return EXIT_SUCCESS;
+                for (index_type j = 0; j < sizeOfVector; ++j) {
+                    out.set(i, j, v[j]);
+                }
+            }
+        }
+
+        std::cerr << "save: " << out_path << std::endl;
+        out.save(out_path);
+
+    } else {
+        std::cerr << "cannot load: " << in_path << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }

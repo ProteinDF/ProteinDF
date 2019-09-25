@@ -26,29 +26,29 @@
 #include "ProteinDF.h"
 
 class ProteinDF_Parallel : public ProteinDF {
- public:
-  ProteinDF_Parallel();
-  virtual ~ProteinDF_Parallel();
+   public:
+    ProteinDF_Parallel();
+    virtual ~ProteinDF_Parallel();
 
- protected:
-  virtual void loadParam(const std::string& requestFilePath = "");
-  virtual void saveParam() const;
+   protected:
+    virtual void loadParam(const std::string& requestFilePath = "");
+    virtual void saveParam() const;
 
-  virtual void setupGlobalCondition_extra();
+    virtual void setupGlobalCondition_extra();
 
- protected:
-  virtual DfIntegrals* getDfIntegralsObject();
-  virtual DfInitialGuess* getDfInitialGuessObject();
-  virtual DfForce* getDfForceObject();
+   protected:
+    virtual DfIntegrals* getDfIntegralsObject();
+    virtual DfInitialGuess* getDfInitialGuessObject();
+    virtual DfForce* getDfForceObject();
 
-  virtual void inputData();
+    virtual void inputData();
 
-  virtual DfScf* createDfScfInstance();
+    virtual DfScf* createDfScfInstance();
 
-  virtual void startlogo();
-  virtual void endlogo();
-  virtual void stepStartTitle(const std::string& stepName);
-  virtual void stepEndTitle();
+    virtual void startlogo();
+    virtual void endlogo();
+    virtual void stepStartTitle(const std::string& stepName);
+    virtual void stepEndTitle();
 };
 
 #endif  // PROTEINDF_H

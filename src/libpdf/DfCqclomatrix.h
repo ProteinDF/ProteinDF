@@ -28,18 +28,18 @@
 //  output : Cqclo (Unitary ,column/row oriented,unpacked)
 
 class DfCqclomatrix : public DfObject {
- public:
-  // flGbi は書き換えられる
-  DfCqclomatrix(TlSerializeData* pPdfParam);
-  ~DfCqclomatrix();
+   public:
+    // flGbi は書き換えられる
+    DfCqclomatrix(TlSerializeData* pPdfParam);
+    ~DfCqclomatrix();
 
-  void main();
+    void main();
 
- private:
-  void main(std::string type);
+   private:
+    void main(std::string type);
 
- private:
-  int number_fragment;  // Number of fragments
+   private:
+    int number_fragment;  // Number of fragments
 };
 
 #endif  // DFCQCLOMATRIX_H

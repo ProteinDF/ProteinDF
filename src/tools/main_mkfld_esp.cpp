@@ -28,234 +28,239 @@
 #include "tl_dense_symmetric_matrix_lapack.h"
 
 void help(const std::string& progName) {
-  std::cout << TlUtils::format("%s [options] args...", progName.c_str())
-            << std::endl;
-  std::cout << "output volume data of ESP." << std::endl;
-  std::cout << "OPTIONS:" << std::endl;
-  std::cout
-      << " -p PATH      set ProteinDF parameter file. default = pdfparam.mpac"
-      << std::endl;
-  std::cout << " -d PATH      set density matrix file. default is presumed by "
-               "parameter file."
-            << std::endl;
-  std::cout << " -a           potential from atoms only " << std::endl;
-  std::cout << " -i gridfile  use user-defined grid xyz data by file"
-            << std::endl;
-  std::cout << " -f           save AVS field (.fld) file." << std::endl;
-  std::cout << " -c           save cube (.cube) file" << std::endl;
-  std::cout << " -m           save message pack (.mpac) file." << std::endl;
-  std::cout << " -o PREFIX    output prefix (default: esp)" << std::endl;
-  std::cout << " -h           show help message (this)." << std::endl;
-  std::cout << " -v           show message verbosely." << std::endl;
+    std::cout << TlUtils::format("%s [options] args...", progName.c_str())
+              << std::endl;
+    std::cout << "output volume data of ESP." << std::endl;
+    std::cout << "OPTIONS:" << std::endl;
+    std::cout
+        << " -p PATH      set ProteinDF parameter file. default = pdfparam.mpac"
+        << std::endl;
+    std::cout
+        << " -d PATH      set density matrix file. default is presumed by "
+           "parameter file."
+        << std::endl;
+    std::cout << " -a           potential from atoms only " << std::endl;
+    std::cout << " -i gridfile  use user-defined grid xyz data by file"
+              << std::endl;
+    std::cout << " -f           save AVS field (.fld) file." << std::endl;
+    std::cout << " -c           save cube (.cube) file" << std::endl;
+    std::cout << " -m           save message pack (.mpac) file." << std::endl;
+    std::cout << " -o PREFIX    output prefix (default: esp)" << std::endl;
+    std::cout << " -h           show help message (this)." << std::endl;
+    std::cout << " -v           show message verbosely." << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "ap:d:i:fcmo:hv");
+    TlGetopt opt(argc, argv, "ap:d:i:fcmo:hv");
 
-  const bool verbose = (opt["v"] == "defined");
-  if ((opt["h"] == "defined")) {
-    help(opt[0]);
-    return EXIT_SUCCESS;
-  }
-
-  std::string pdfParamPath = "pdfparam.mpac";
-  if (opt["p"].empty() != true) {
-    pdfParamPath = opt["p"];
-  }
-  std::string PMatrixFilePath = "";
-  if (opt["d"].empty() != true) {
-    PMatrixFilePath = opt["d"];
-  }
-
-  bool isAtomsOnly = false;
-  if (opt["a"] == "defined") {
-    isAtomsOnly = true;
-  }
-
-  std::string inputGridFilePath = "";
-  if (opt["i"].empty() != true) {
-    inputGridFilePath = opt["i"];
-    if (verbose) {
-      std::cerr << "user grid coord file: " << inputGridFilePath << std::endl;
+    const bool verbose = (opt["v"] == "defined");
+    if ((opt["h"] == "defined")) {
+        help(opt[0]);
+        return EXIT_SUCCESS;
     }
-  }
 
-  bool isSaveAvsFieldFile = false;
-  if (opt["f"] == "defined") {
-    isSaveAvsFieldFile = true;
-  }
+    std::string pdfParamPath = "pdfparam.mpac";
+    if (opt["p"].empty() != true) {
+        pdfParamPath = opt["p"];
+    }
+    std::string PMatrixFilePath = "";
+    if (opt["d"].empty() != true) {
+        PMatrixFilePath = opt["d"];
+    }
 
-  bool isSaveCubeFile = false;
-  if (opt["c"] == "defined") {
-    isSaveCubeFile = true;
-  }
+    bool isAtomsOnly = false;
+    if (opt["a"] == "defined") {
+        isAtomsOnly = true;
+    }
 
-  bool isSaveMpacFile = false;
-  if (opt["m"] == "defined") {
-    isSaveMpacFile = true;
-  }
+    std::string inputGridFilePath = "";
+    if (opt["i"].empty() != true) {
+        inputGridFilePath = opt["i"];
+        if (verbose) {
+            std::cerr << "user grid coord file: " << inputGridFilePath
+                      << std::endl;
+        }
+    }
 
-  // check configuration
-  if (!inputGridFilePath.empty()) {
+    bool isSaveAvsFieldFile = false;
+    if (opt["f"] == "defined") {
+        isSaveAvsFieldFile = true;
+    }
+
+    bool isSaveCubeFile = false;
+    if (opt["c"] == "defined") {
+        isSaveCubeFile = true;
+    }
+
+    bool isSaveMpacFile = false;
+    if (opt["m"] == "defined") {
+        isSaveMpacFile = true;
+    }
+
+    // check configuration
+    if (!inputGridFilePath.empty()) {
+        if (isSaveAvsFieldFile) {
+            std::cerr << "cannot save AVS field data with user-defined grids."
+                      << std::endl;
+            isSaveAvsFieldFile = false;
+        }
+        if (isSaveCubeFile) {
+            std::cerr << "cannot save Cube field data with user-defined grids."
+                      << std::endl;
+            isSaveCubeFile = false;
+        }
+    }
+
+    if ((!isSaveAvsFieldFile) && (!isSaveCubeFile) && (!isSaveMpacFile)) {
+        isSaveMpacFile = true;
+    }
+
+    std::string outputPrefix = "esp";
+    if (!opt["o"].empty()) {
+        outputPrefix = opt["o"];
+    }
+
+    // パラメータファイルの読み込み
+    TlSerializeData param;
+    {
+        TlMsgPack mpac;
+        mpac.load(pdfParamPath);
+        param = mpac.getSerializeData();
+    }
+
+    // 密度行列の読み込み
+    TlDenseSymmetricMatrix_Lapack P;
+    if (isAtomsOnly != true) {
+        if (PMatrixFilePath == "") {
+            const int iteration = param["num_of_iterations"].getInt();
+            DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
+            DfObject dfObject(&param);
+            PMatrixFilePath = dfObject.getPpqMatrixPath(runType, iteration);
+        }
+        if (verbose) {
+            std::cerr << "loading: " << PMatrixFilePath << std::endl;
+        }
+        P.load(PMatrixFilePath);
+    } else {
+        std::cerr << "skip load density matrix: atom only mode." << std::endl;
+    }
+
+    // 計算サイズの決定
+    TlPosition startPos;
+    TlPosition endPos;
+    getDefaultSize(param, &startPos, &endPos);
+    compensateRange(&startPos, &endPos);
+
+    const TlPosition gridPitch(GRID_PITCH, GRID_PITCH, GRID_PITCH);
+    int numOfGridX, numOfGridY, numOfGridZ;
+    std::vector<TlPosition> grids;
+    if (inputGridFilePath.empty()) {
+        grids = makeGrids(startPos, endPos, gridPitch, &numOfGridX, &numOfGridY,
+                          &numOfGridZ);
+    } else {
+        TlMsgPack inputGridMsgPack;
+        inputGridMsgPack.load(inputGridFilePath);
+        TlSerializeData inputGridData = inputGridMsgPack.getSerializeData();
+
+        const int numOfInputGrids = inputGridData["num_of_grids"].getInt();
+        grids.resize(numOfInputGrids);
+        const double AU_PER_ANG = 1.0 / ANG_PER_AU;
+        const TlSerializeData& inputGrids = inputGridData["grids"];
+        for (int i = 0; i < numOfInputGrids; ++i) {
+            const TlSerializeData& inputGrid = inputGrids.getAt(i);
+            const double x = inputGrid.getAt(0).getDouble() * AU_PER_ANG;
+            const double y = inputGrid.getAt(1).getDouble() * AU_PER_ANG;
+            const double z = inputGrid.getAt(2).getDouble() * AU_PER_ANG;
+            grids[i] = TlPosition(x, y, z);
+        }
+    }
+    const std::size_t numOfGrids = grids.size();
+
+    if (verbose == true) {
+        std::cerr << TlUtils::format(
+                         "start point(a.u.) = (% 8.3f, % 8.3f, % 8.3f)",
+                         startPos.x(), startPos.y(), startPos.z())
+                  << std::endl;
+        std::cerr << TlUtils::format(
+                         "end point(a.u.) = (% 8.3f, % 8.3f, % 8.3f)",
+                         endPos.x(), endPos.y(), endPos.z())
+                  << std::endl;
+    }
+
+    // ESP計算
+    TlEspField espFld(param);
+    std::vector<double> values;
+    if (isAtomsOnly != true) {
+        values = espFld.makeEspFld(P, grids);
+    } else {
+        values = espFld.makeEspFld(grids);
+    }
+
+    // convert grid unit to angstrom
+    // for (std::size_t i = 0; i < numOfGrids; ++i) {
+    //     grids[i] *= ANG_PER_AU;
+    // }
+
+    // save to mpac
+    if (isSaveMpacFile) {
+        const std::string mpacFilePath = outputPrefix + ".mpac";
+        std::cerr << "save message pack file: " << mpacFilePath << std::endl;
+
+        TlSerializeData output;
+        output["version"] = "2014.0";
+        output["num_of_grids"] = numOfGrids;
+        for (std::size_t gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
+            TlSerializeData pos;
+            pos.pushBack(grids[gridIndex].x() * ANG_PER_AU);
+            pos.pushBack(grids[gridIndex].y() * ANG_PER_AU);
+            pos.pushBack(grids[gridIndex].z() * ANG_PER_AU);
+
+            output["grids"].pushBack(pos);
+        }
+        output["grid_unit"] = "angstrom";
+
+        for (std::size_t i = 0; i < numOfGrids; ++i) {
+            output["ESP"].setAt(i, values[i]);
+        }
+
+        TlMsgPack mpac(output);
+        mpac.save(mpacFilePath);
+    }
+
+    // save to fld
     if (isSaveAvsFieldFile) {
-      std::cerr << "cannot save AVS field data with user-defined grids."
-                << std::endl;
-      isSaveAvsFieldFile = false;
+        const std::string fieldFilePath = outputPrefix + ".fld";
+        std::cerr << "save AVS field file: " << fieldFilePath << std::endl;
+
+        std::string label = "ESP";
+        std::vector<std::vector<double> > data;
+        data.push_back(values);
+
+        saveFieldData(numOfGridX, numOfGridY, numOfGridZ, grids, data, label,
+                      fieldFilePath);
     }
+
+    // save to cube file
     if (isSaveCubeFile) {
-      std::cerr << "cannot save Cube field data with user-defined grids."
-                << std::endl;
-      isSaveCubeFile = false;
-    }
-  }
+        const std::string cubeFilePath = outputPrefix + ".cube";
+        std::cerr << "save CUBE file: " << cubeFilePath << std::endl;
 
-  if ((!isSaveAvsFieldFile) && (!isSaveCubeFile) && (!isSaveMpacFile)) {
-    isSaveMpacFile = true;
-  }
+        const Fl_Geometry flGeom(param["coordinates"]);
+        const int numOfAtoms = flGeom.getNumOfAtoms();
+        std::vector<TlAtom> atoms(numOfAtoms);
+        for (int i = 0; i < numOfAtoms; ++i) {
+            TlAtom atom(flGeom.getAtom(i));
+            atom.setCharge(flGeom.getCharge(i));
+            atom.moveTo(flGeom.getCoordinate(i));
+            // atom.moveTo(flGeom.getCoordinate(i) * ANG_PER_AU); //
+            // angstroamに変換
+            atoms[i] = atom;
+        }
 
-  std::string outputPrefix = "esp";
-  if (!opt["o"].empty()) {
-    outputPrefix = opt["o"];
-  }
-
-  // パラメータファイルの読み込み
-  TlSerializeData param;
-  {
-    TlMsgPack mpac;
-    mpac.load(pdfParamPath);
-    param = mpac.getSerializeData();
-  }
-
-  // 密度行列の読み込み
-  TlDenseSymmetricMatrix_Lapack P;
-  if (isAtomsOnly != true) {
-    if (PMatrixFilePath == "") {
-      const int iteration = param["num_of_iterations"].getInt();
-      DfObject::RUN_TYPE runType = DfObject::RUN_RKS;
-      DfObject dfObject(&param);
-      PMatrixFilePath = dfObject.getPpqMatrixPath(runType, iteration);
-    }
-    if (verbose) {
-      std::cerr << "loading: " << PMatrixFilePath << std::endl;
-    }
-    P.load(PMatrixFilePath);
-  } else {
-    std::cerr << "skip load density matrix: atom only mode." << std::endl;
-  }
-
-  // 計算サイズの決定
-  TlPosition startPos;
-  TlPosition endPos;
-  getDefaultSize(param, &startPos, &endPos);
-  compensateRange(&startPos, &endPos);
-
-  const TlPosition gridPitch(GRID_PITCH, GRID_PITCH, GRID_PITCH);
-  int numOfGridX, numOfGridY, numOfGridZ;
-  std::vector<TlPosition> grids;
-  if (inputGridFilePath.empty()) {
-    grids = makeGrids(startPos, endPos, gridPitch, &numOfGridX, &numOfGridY,
-                      &numOfGridZ);
-  } else {
-    TlMsgPack inputGridMsgPack;
-    inputGridMsgPack.load(inputGridFilePath);
-    TlSerializeData inputGridData = inputGridMsgPack.getSerializeData();
-
-    const int numOfInputGrids = inputGridData["num_of_grids"].getInt();
-    grids.resize(numOfInputGrids);
-    const double AU_PER_ANG = 1.0 / ANG_PER_AU;
-    const TlSerializeData& inputGrids = inputGridData["grids"];
-    for (int i = 0; i < numOfInputGrids; ++i) {
-      const TlSerializeData& inputGrid = inputGrids.getAt(i);
-      const double x = inputGrid.getAt(0).getDouble() * AU_PER_ANG;
-      const double y = inputGrid.getAt(1).getDouble() * AU_PER_ANG;
-      const double z = inputGrid.getAt(2).getDouble() * AU_PER_ANG;
-      grids[i] = TlPosition(x, y, z);
-    }
-  }
-  const std::size_t numOfGrids = grids.size();
-
-  if (verbose == true) {
-    std::cerr << TlUtils::format("start point(a.u.) = (% 8.3f, % 8.3f, % 8.3f)",
-                                 startPos.x(), startPos.y(), startPos.z())
-              << std::endl;
-    std::cerr << TlUtils::format("end point(a.u.) = (% 8.3f, % 8.3f, % 8.3f)",
-                                 endPos.x(), endPos.y(), endPos.z())
-              << std::endl;
-  }
-
-  // ESP計算
-  TlEspField espFld(param);
-  std::vector<double> values;
-  if (isAtomsOnly != true) {
-    values = espFld.makeEspFld(P, grids);
-  } else {
-    values = espFld.makeEspFld(grids);
-  }
-
-  // convert grid unit to angstrom
-  // for (std::size_t i = 0; i < numOfGrids; ++i) {
-  //     grids[i] *= ANG_PER_AU;
-  // }
-
-  // save to mpac
-  if (isSaveMpacFile) {
-    const std::string mpacFilePath = outputPrefix + ".mpac";
-    std::cerr << "save message pack file: " << mpacFilePath << std::endl;
-
-    TlSerializeData output;
-    output["version"] = "2014.0";
-    output["num_of_grids"] = numOfGrids;
-    for (std::size_t gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
-      TlSerializeData pos;
-      pos.pushBack(grids[gridIndex].x() * ANG_PER_AU);
-      pos.pushBack(grids[gridIndex].y() * ANG_PER_AU);
-      pos.pushBack(grids[gridIndex].z() * ANG_PER_AU);
-
-      output["grids"].pushBack(pos);
-    }
-    output["grid_unit"] = "angstrom";
-
-    for (std::size_t i = 0; i < numOfGrids; ++i) {
-      output["ESP"].setAt(i, values[i]);
+        const std::string label = "esp";
+        saveCubeData(atoms, numOfGridX, numOfGridY, numOfGridZ, startPos,
+                     gridPitch, values, label, cubeFilePath);
     }
 
-    TlMsgPack mpac(output);
-    mpac.save(mpacFilePath);
-  }
-
-  // save to fld
-  if (isSaveAvsFieldFile) {
-    const std::string fieldFilePath = outputPrefix + ".fld";
-    std::cerr << "save AVS field file: " << fieldFilePath << std::endl;
-
-    std::string label = "ESP";
-    std::vector<std::vector<double> > data;
-    data.push_back(values);
-
-    saveFieldData(numOfGridX, numOfGridY, numOfGridZ, grids, data, label,
-                  fieldFilePath);
-  }
-
-  // save to cube file
-  if (isSaveCubeFile) {
-    const std::string cubeFilePath = outputPrefix + ".cube";
-    std::cerr << "save CUBE file: " << cubeFilePath << std::endl;
-
-    const Fl_Geometry flGeom(param["coordinates"]);
-    const int numOfAtoms = flGeom.getNumOfAtoms();
-    std::vector<TlAtom> atoms(numOfAtoms);
-    for (int i = 0; i < numOfAtoms; ++i) {
-      TlAtom atom(flGeom.getAtom(i));
-      atom.setCharge(flGeom.getCharge(i));
-      atom.moveTo(flGeom.getCoordinate(i));
-      // atom.moveTo(flGeom.getCoordinate(i) * ANG_PER_AU); // angstroamに変換
-      atoms[i] = atom;
-    }
-
-    const std::string label = "esp";
-    saveCubeData(atoms, numOfGridX, numOfGridY, numOfGridZ, startPos, gridPitch,
-                 values, label, cubeFilePath);
-  }
-
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

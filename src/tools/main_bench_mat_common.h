@@ -22,7 +22,7 @@
 #include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_symmetric_matrix_eigen.h"
 #include "tl_dense_vector_eigen.h"
-#endif // HAVE_EIGEN
+#endif  // HAVE_EIGEN
 
 #ifdef HAVE_VIENNACL
 #include "tl_dense_general_matrix_viennacl.h"
@@ -42,31 +42,29 @@
 template <typename DenseMatrixType>
 void setupGeneralMatrix(const TlMatrixObject::index_type dim,
                         DenseMatrixType* pMat) {
-  for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
-    for (TlMatrixObject::index_type c = 0; c < dim; ++c) {
-      const double v = double(rand()) / double((RAND_MAX));
-      pMat->set(r, c, v);
+    for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
+        for (TlMatrixObject::index_type c = 0; c < dim; ++c) {
+            const double v = double(rand()) / double((RAND_MAX));
+            pMat->set(r, c, v);
+        }
     }
-  }
 }
 
 #ifdef HAVE_EIGEN
 template <typename DenseMatrixType>
 void setupGeneralMatrixWithEigen(const TlMatrixObject::index_type dim,
                                  DenseMatrixType* pMat) {
-  TlDenseGeneralMatrix_Eigen tmp(dim, dim);
-  for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
-    for (TlMatrixObject::index_type c = 0; c < dim; ++c) {
-      const double v = double(rand()) / double((RAND_MAX));
-      tmp.set(r, c, v);
+    TlDenseGeneralMatrix_Eigen tmp(dim, dim);
+    for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
+        for (TlMatrixObject::index_type c = 0; c < dim; ++c) {
+            const double v = double(rand()) / double((RAND_MAX));
+            tmp.set(r, c, v);
+        }
     }
-  }
 
-  *pMat = tmp;
+    *pMat = tmp;
 }
-#endif // HAVE_EIGEN
-
-
+#endif  // HAVE_EIGEN
 
 // -----------------------------------------------------------------------------
 // Symmetric Matrix
@@ -74,43 +72,43 @@ void setupGeneralMatrixWithEigen(const TlMatrixObject::index_type dim,
 template <typename SymmetricMatrixType>
 void setupSymmetricMatrix(const TlMatrixObject::index_type dim,
                           SymmetricMatrixType* pMat) {
-  for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
-    for (TlMatrixObject::index_type c = 0; c < r; ++c) {
-      const double v = double(rand()) / double((RAND_MAX));
-      pMat->set(r, c, v);
+    for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
+        for (TlMatrixObject::index_type c = 0; c < r; ++c) {
+            const double v = double(rand()) / double((RAND_MAX));
+            pMat->set(r, c, v);
+        }
+        pMat->set(r, r, double(r));
     }
-    pMat->set(r, r, double(r));
-  }
 }
 
 #ifdef HAVE_EIGEN
 template <typename SymmetricMatrixType>
 void setupSymmetricMatrixWithEigen(const TlMatrixObject::index_type dim,
                                    SymmetricMatrixType* pMat) {
-  TlDenseSymmetricMatrix_Eigen tmp(dim);
-  for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
-    for (TlMatrixObject::index_type c = 0; c < r; ++c) {
-      const double v = double(rand()) / double((RAND_MAX));
-      tmp.set(r, c, v);
+    TlDenseSymmetricMatrix_Eigen tmp(dim);
+    for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
+        for (TlMatrixObject::index_type c = 0; c < r; ++c) {
+            const double v = double(rand()) / double((RAND_MAX));
+            tmp.set(r, c, v);
+        }
+        tmp.set(r, r, double(r));
     }
-    tmp.set(r, r, double(r));
-  }
 
-  *pMat = tmp;
+    *pMat = tmp;
 }
-#endif // HAVE_EIGEN
+#endif  // HAVE_EIGEN
 
 template <typename SymmetricMatrixType>
 void setupSymmetricMatrixForDiagonal(const TlMatrixObject::index_type dim,
                                      SymmetricMatrixType* pMat) {
-  pMat->resize(dim);
-  for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
-    for (TlMatrixObject::index_type c = 0; c < r; ++c) {
-      const double v = std::sqrt(0.3 * double(r) * double(c));
-      pMat->set(r, c, v);
+    pMat->resize(dim);
+    for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
+        for (TlMatrixObject::index_type c = 0; c < r; ++c) {
+            const double v = std::sqrt(0.3 * double(r) * double(c));
+            pMat->set(r, c, v);
+        }
+        pMat->set(r, r, double(r));
     }
-    pMat->set(r, r, double(r));
-  }
 }
 
 // -----------------------------------------------------------------------------
@@ -118,5 +116,4 @@ void setupSymmetricMatrixForDiagonal(const TlMatrixObject::index_type dim,
 // -----------------------------------------------------------------------------
 void initRand() { srand((unsigned int)time(NULL)); }
 
-
-#endif // MAIN_BENCH_MAT_COMMON_H
+#endif  // MAIN_BENCH_MAT_COMMON_H

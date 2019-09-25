@@ -11,26 +11,26 @@ static const std::string vct_path = "temp.vct";
 static const std::string h5_path = "temp.vct.h5";
 
 TEST(TlDenseVector_ViennaCL, constructer) {
-  TlDenseVector_ViennaCL a(3);
+    TlDenseVector_ViennaCL a(3);
 
-  EXPECT_EQ(TlDenseVector_ViennaCL::size_type(3), a.getSize());
-  EXPECT_DOUBLE_EQ(0.0, a.get(0));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1));
-  EXPECT_DOUBLE_EQ(0.0, a.get(2));
+    EXPECT_EQ(TlDenseVector_ViennaCL::size_type(3), a.getSize());
+    EXPECT_DOUBLE_EQ(0.0, a.get(0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2));
 }
 
 TEST(TlDenseVector_ViennaCL, copyConstructer) {
-  // a = {  0, 1, 2 }
-  TlDenseVector_ViennaCL a(3);
-  a.set(0, 0.0);
-  a.set(1, 1.0);
-  a.set(2, 2.0);
+    // a = {  0, 1, 2 }
+    TlDenseVector_ViennaCL a(3);
+    a.set(0, 0.0);
+    a.set(1, 1.0);
+    a.set(2, 2.0);
 
-  TlDenseVector_ViennaCL b = a;
-  EXPECT_EQ(TlDenseVector_ViennaCL::size_type(3), b.getSize());
-  EXPECT_DOUBLE_EQ(0.0, b.get(0));
-  EXPECT_DOUBLE_EQ(1.0, b.get(1));
-  EXPECT_DOUBLE_EQ(2.0, b.get(2));
+    TlDenseVector_ViennaCL b = a;
+    EXPECT_EQ(TlDenseVector_ViennaCL::size_type(3), b.getSize());
+    EXPECT_DOUBLE_EQ(0.0, b.get(0));
+    EXPECT_DOUBLE_EQ(1.0, b.get(1));
+    EXPECT_DOUBLE_EQ(2.0, b.get(2));
 }
 
 // TEST(TlDenseVector_ViennaCL, operatorCopy) {
@@ -170,15 +170,15 @@ TEST(TlDenseVector_ViennaCL, copyConstructer) {
 // }
 //
 TEST(TlDenseVector_ViennaCL, reverse) {
-  const int dim = 100;
-  TlDenseVector_Eigen ref = getVector<TlDenseVector_Eigen>(dim);
-  TlDenseVector_ViennaCL a = ref;
-  a.reverse();
+    const int dim = 100;
+    TlDenseVector_Eigen ref = getVector<TlDenseVector_Eigen>(dim);
+    TlDenseVector_ViennaCL a = ref;
+    a.reverse();
 
-  EXPECT_EQ(dim, a.getSize());
-  for (int i = 0; i < dim; ++i) {
-    EXPECT_DOUBLE_EQ(ref.get(dim - i - 1), a.get(i));
-  }
+    EXPECT_EQ(dim, a.getSize());
+    for (int i = 0; i < dim; ++i) {
+        EXPECT_DOUBLE_EQ(ref.get(dim - i - 1), a.get(i));
+    }
 }
 
 // TEST(TlDenseVector_ViennaCL, save) {

@@ -14,20 +14,20 @@ static const std::string mat_path = "temp.mat";
 // test
 // -----------------------------------------------------------------------------
 TEST(TlMatrixBlasRowMajor, constructer) {
-  TlMatrixBlasRowMajor a(3, 3);
+    TlMatrixBlasRowMajor a(3, 3);
 
-  EXPECT_EQ(TlMatrixObject::CSFD, a.getType());
-  EXPECT_EQ(3, a.getNumOfRows());
-  EXPECT_EQ(3, a.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
-  EXPECT_DOUBLE_EQ(0.0, a.get(0, 1));
-  EXPECT_DOUBLE_EQ(0.0, a.get(0, 2));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1, 0));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1, 1));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1, 2));
-  EXPECT_DOUBLE_EQ(0.0, a.get(2, 0));
-  EXPECT_DOUBLE_EQ(0.0, a.get(2, 1));
-  EXPECT_DOUBLE_EQ(0.0, a.get(2, 2));
+    EXPECT_EQ(TlMatrixObject::CSFD, a.getType());
+    EXPECT_EQ(3, a.getNumOfRows());
+    EXPECT_EQ(3, a.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 2));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 2));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2, 0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2, 1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2, 2));
 }
 
 // TEST(TlMatrixBlasRowMajor, constructByTlSerializedData) {

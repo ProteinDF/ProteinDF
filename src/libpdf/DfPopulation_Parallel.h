@@ -26,29 +26,29 @@ class TlDenseSymmetricMatrix_Lapack;
 class TlDenseSymmetricMatrix_Scalapack;
 
 class DfPopulation_Parallel : public DfPopulation {
- public:
-  DfPopulation_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfPopulation_Parallel();
+   public:
+    DfPopulation_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfPopulation_Parallel();
 
- public:
-  template <class SymmetricMatrixType>
-  double getSumOfElectrons(const SymmetricMatrixType& P);
+   public:
+    template <class SymmetricMatrixType>
+    double getSumOfElectrons(const SymmetricMatrixType& P);
 
- protected:
-  virtual void calcPop(const int iteration);
+   protected:
+    virtual void calcPop(const int iteration);
 };
 
 template <class SymmetricMatrixType>
 double DfPopulation_Parallel::getSumOfElectrons(const SymmetricMatrixType& P) {
-  double answer = 0.0;
+    double answer = 0.0;
 
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    answer = DfPopulation::getSumOfElectrons(P);
-  }
-  rComm.broadcast(answer);
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        answer = DfPopulation::getSumOfElectrons(P);
+    }
+    rComm.broadcast(answer);
 
-  return answer;
+    return answer;
 }
 
 #endif  // DFPOPULATION_PARALLEL_H

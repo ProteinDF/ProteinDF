@@ -25,69 +25,71 @@
 #include "TlUtils.h"
 
 void showHelp(const std::string& progname) {
-  std::cout << TlUtils::format(
-                   "USAGE: %s [options] input_file_path output_file_path",
-                   progname.c_str())
-            << std::endl;
-  std::cout << " OPTIONS:" << std::endl;
-  std::cout << "  -h:      show help" << std::endl;
-  std::cout << "  -v:      verbose" << std::endl;
+    std::cout << TlUtils::format(
+                     "USAGE: %s [options] input_file_path output_file_path",
+                     progname.c_str())
+              << std::endl;
+    std::cout << " OPTIONS:" << std::endl;
+    std::cout << "  -h:      show help" << std::endl;
+    std::cout << "  -v:      verbose" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "hvl:x:");
+    TlGetopt opt(argc, argv, "hvl:x:");
 
-  if (opt["h"] == "defined") {
-    showHelp(opt[0]);
+    if (opt["h"] == "defined") {
+        showHelp(opt[0]);
+        return EXIT_SUCCESS;
+    }
+
+    const bool bVerbose = (opt["v"] == "defined");
+
+    if (opt.getCount() <= 1) {
+        showHelp(opt[0]);
+        return EXIT_FAILURE;
+    }
+    const std::string inputMatrixPath = opt[1];
+    const std::string outputMatrixPath = opt[2];
+
+    if (bVerbose == true) {
+        std::cerr << "load matrix: " << inputMatrixPath << std::endl;
+    }
+    if (TlMatrix::isLoadable(inputMatrixPath) == true) {
+        TlMatrix A;
+        A.load(inputMatrixPath);
+
+        if (bVerbose == true) {
+            std::cerr << "running..." << std::endl;
+        }
+        A.inverse();
+
+        if (bVerbose == true) {
+            std::cerr << "save inverse matrix: " << outputMatrixPath
+                      << std::endl;
+        }
+        if (outputMatrixPath != "") {
+            A.save(outputMatrixPath);
+        }
+    } else if (TlMatrix::isLoadable(inputMatrixPath) != true) {
+        TlDenseSymmetricMatrix_BLAS_Old A;
+        A.load(inputMatrixPath);
+
+        if (bVerbose == true) {
+            std::cerr << "running..." << std::endl;
+        }
+        A.inverse();
+
+        if (bVerbose == true) {
+            std::cerr << "save inverse matrix: " << outputMatrixPath
+                      << std::endl;
+        }
+        if (outputMatrixPath != "") {
+            A.save(outputMatrixPath);
+        }
+    } else {
+        std::cerr << "can not open file: " << inputMatrixPath << std::endl;
+        return EXIT_FAILURE;
+    }
+
     return EXIT_SUCCESS;
-  }
-
-  const bool bVerbose = (opt["v"] == "defined");
-
-  if (opt.getCount() <= 1) {
-    showHelp(opt[0]);
-    return EXIT_FAILURE;
-  }
-  const std::string inputMatrixPath = opt[1];
-  const std::string outputMatrixPath = opt[2];
-
-  if (bVerbose == true) {
-    std::cerr << "load matrix: " << inputMatrixPath << std::endl;
-  }
-  if (TlMatrix::isLoadable(inputMatrixPath) == true) {
-    TlMatrix A;
-    A.load(inputMatrixPath);
-
-    if (bVerbose == true) {
-      std::cerr << "running..." << std::endl;
-    }
-    A.inverse();
-
-    if (bVerbose == true) {
-      std::cerr << "save inverse matrix: " << outputMatrixPath << std::endl;
-    }
-    if (outputMatrixPath != "") {
-      A.save(outputMatrixPath);
-    }
-  } else if (TlMatrix::isLoadable(inputMatrixPath) != true) {
-    TlDenseSymmetricMatrix_BLAS_Old A;
-    A.load(inputMatrixPath);
-
-    if (bVerbose == true) {
-      std::cerr << "running..." << std::endl;
-    }
-    A.inverse();
-
-    if (bVerbose == true) {
-      std::cerr << "save inverse matrix: " << outputMatrixPath << std::endl;
-    }
-    if (outputMatrixPath != "") {
-      A.save(outputMatrixPath);
-    }
-  } else {
-    std::cerr << "can not open file: " << inputMatrixPath << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  return EXIT_SUCCESS;
 }

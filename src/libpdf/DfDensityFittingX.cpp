@@ -23,8 +23,8 @@
 #include "DfDensityFittingX.h"
 
 DfDensityFittingX::DfDensityFittingX(TlSerializeData* pPdfParam)
-    : DfDensityFittingTmpl<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack, DfEriX>(
-          pPdfParam) {}
+    : DfDensityFittingTmpl<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack,
+                           DfEriX>(pPdfParam) {}
 
 DfDensityFittingX::~DfDensityFittingX() {}
 

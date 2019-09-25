@@ -546,7 +546,8 @@ class TlCommunicate {
                   const std::size_t start, const std::size_t end, int root);
 
     template <class DenseGeneralMatrix>
-    int broadcast_denseGeneralMatrix(DenseGeneralMatrix* pMatrix, const int root);
+    int broadcast_denseGeneralMatrix(DenseGeneralMatrix* pMatrix,
+                                     const int root);
 
     template <class DenseSymmetricMatrix>
     int broadcast_denseSymmetricMatrix(DenseSymmetricMatrix* pMatrix, int root);

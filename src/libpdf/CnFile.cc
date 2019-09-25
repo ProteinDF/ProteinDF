@@ -8,13 +8,16 @@ CnFile::~CnFile() {}
 
 // ----------------------------------------------------------------------------
 // template<class SymmetricMatrix>
-// void CnFile::getDensityMatrix(const DfObject::RUN_TYPE, int itr, TlMatrixObject* pP) {
+// void CnFile::getDensityMatrix(const DfObject::RUN_TYPE, int itr,
+// TlMatrixObject* pP) {
 //     SymmetricMatrixType P;
 
 //     switch (runType) {
 //     case RUN_RKS:
 //     {
-//         P = 0.5 * this->locdMatrix<SymmetricMatrix>(DfObject::getPpqMatrixPath(RUN_RKS, itr));
+//         P = 0.5 *
+//         this->locdMatrix<SymmetricMatrix>(DfObject::getPpqMatrixPath(RUN_RKS,
+//         itr));
 //     }
 //     break;
 
@@ -44,7 +47,7 @@ CnFile::~CnFile() {}
 
 // template<class MatrixType>
 // void CnFile::loadMatrix(const std::string& path) {
-//     MatrixType 
+//     MatrixType
 // }
 
 void CnFile::saveMatrix(const std::string& path, const TlMatrixObject& matrix) {

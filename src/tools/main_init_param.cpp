@@ -30,39 +30,40 @@
 void usage(const std::string& name);
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "hvo:");
+    TlGetopt opt(argc, argv, "hvo:");
 
-  if (opt["h"] == "defined") {
-    usage(opt[0]);
+    if (opt["h"] == "defined") {
+        usage(opt[0]);
+        return EXIT_SUCCESS;
+    }
+
+    bool verbose = false;
+    if (opt["v"] == "defined") {
+        verbose = true;
+    }
+
+    std::string outputPath = "init_pdfparam.mpac";
+    if (!opt["o"].empty()) {
+        outputPath = opt["o"];
+    }
+
+    DfInputdata dfInput;
+    const bool isReadUserInput = false;
+    TlSerializeData param = dfInput.main(isReadUserInput);
+
+    if (verbose) {
+        std::cout << TlUtils::format("save: %s", outputPath.c_str())
+                  << std::endl;
+    }
+    TlMsgPack mpac(param);
+    mpac.save(outputPath);
+
     return EXIT_SUCCESS;
-  }
-
-  bool verbose = false;
-  if (opt["v"] == "defined") {
-    verbose = true;
-  }
-
-  std::string outputPath = "init_pdfparam.mpac";
-  if (!opt["o"].empty()) {
-    outputPath = opt["o"];
-  }
-
-  DfInputdata dfInput;
-  const bool isReadUserInput = false;
-  TlSerializeData param = dfInput.main(isReadUserInput);
-
-  if (verbose) {
-    std::cout << TlUtils::format("save: %s", outputPath.c_str()) << std::endl;
-  }
-  TlMsgPack mpac(param);
-  mpac.save(outputPath);
-
-  return EXIT_SUCCESS;
 }
 
 void usage(const std::string& name) {
-  std::cout << "%s [OPTION]" << std::endl;
-  std::cout << "initialize ProteinDF parameters" << std::endl;
-  std::cout << std::endl;
-  std::cout << "  -o FILE: output MsgPack file" << std::endl;
+    std::cout << "%s [OPTION]" << std::endl;
+    std::cout << "initialize ProteinDF parameters" << std::endl;
+    std::cout << std::endl;
+    std::cout << "  -o FILE: output MsgPack file" << std::endl;
 }

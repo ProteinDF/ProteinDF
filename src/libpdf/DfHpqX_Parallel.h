@@ -24,21 +24,21 @@
 class TlDenseSymmetricMatrix_Scalapack;
 
 class DfHpqX_Parallel : public DfHpqX {
- public:
-  DfHpqX_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfHpqX_Parallel();
+   public:
+    DfHpqX_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfHpqX_Parallel();
 
- public:
-  void getHpqD(TlDenseSymmetricMatrix_Scalapack* pHpq,
-               TlDenseSymmetricMatrix_Scalapack* pHpq2);
+   public:
+    void getHpqD(TlDenseSymmetricMatrix_Scalapack* pHpq,
+                 TlDenseSymmetricMatrix_Scalapack* pHpq2);
 
- protected:
-  virtual void logger(const std::string& str) const;
+   protected:
+    virtual void logger(const std::string& str) const;
 
-  virtual DfTaskCtrl* getDfTaskCtrlObject() const;
+    virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
-  virtual void finalize(TlDenseSymmetricMatrix_Lapack* pHpq,
-                        TlDenseSymmetricMatrix_Lapack* pHpq2);
+    virtual void finalize(TlDenseSymmetricMatrix_Lapack* pHpq,
+                          TlDenseSymmetricMatrix_Lapack* pHpq2);
 };
 
 #endif  // DFHPQX_PARALLEL_H

@@ -22,13 +22,13 @@
 #include <vector>
 
 class TlIntVector {
- public:
-  TlIntVector(const std::vector<int>& v);
-  ~TlIntVector();
+   public:
+    TlIntVector(const std::vector<int>& v);
+    ~TlIntVector();
 
- public:
-  void save(const std::string& path);
-  void load(const std::string& path);
+   public:
+    void save(const std::string& path);
+    void load(const std::string& path);
 };
 
 #endif  // TLINTVECTOR_H

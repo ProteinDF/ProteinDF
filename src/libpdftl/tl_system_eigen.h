@@ -15,6 +15,6 @@ class TlSystem_Eigen {
         return Eigen::SimdInstructionSetsInUse();
     }
 };
-#endif //HAVE_EIGEN
+#endif  // HAVE_EIGEN
 
 #endif  // TL_SYSTEM_EIGEN_H
