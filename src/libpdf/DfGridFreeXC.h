@@ -1298,10 +1298,6 @@ GeneralMatrix DfGridFreeXC::getForce2() {
     for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
         this->getForce2_atom(atomIndex, &gradExc);
     }
-    // DfObject::saveExcMatrix(RUN_RKS, this->m_nIteration,
-    // SymmetricMatrixType(ExcA));
-    DfObject::saveExcMatrix(runType, this->m_nIteration,
-                            SymmetricMatrixType(ExcA));
 
     return gradExc;
 }
