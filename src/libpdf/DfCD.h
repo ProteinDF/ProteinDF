@@ -111,8 +111,12 @@ class DfCD : public DfObject {
     // ----------------------------------------------------------------------------
     virtual void getM_S(const TlDenseSymmetricMatrix_Lapack& P,
                         TlDenseSymmetricMatrix_Lapack* pM);
+    virtual void getM_S_mmap(const TlDenseSymmetricMatrix_Lapack& P,
+                             TlDenseSymmetricMatrix_Lapack* pM);
     virtual void getM_A(const TlDenseSymmetricMatrix_Lapack& P,
                         TlDenseSymmetricMatrix_Lapack* pM);
+    virtual void getM_A_mmap(const TlDenseSymmetricMatrix_Lapack& P,
+                             TlDenseSymmetricMatrix_Lapack* pM);
 
    protected:
     class Index2 {
