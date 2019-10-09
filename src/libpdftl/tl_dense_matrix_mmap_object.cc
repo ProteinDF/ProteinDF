@@ -215,24 +215,46 @@ void TlDenseMatrixMmapObject::add(const index_type row, const index_type col,
 }
 
 void TlDenseMatrixMmapObject::setRowVector(const index_type row,
-                                           const TlDenseVector_Lapack& v) {
+                                           const std::vector<double>& v) {
     const index_type numOfCols = this->getNumOfCols();
-    assert(v.getSize() == numOfCols);
+    assert(v.size() == numOfCols);
 
 #pragma omp parallel for schedule(runtime)
     for (index_type i = 0; i < numOfCols; ++i) {
-        this->set(row, i, v.get(i));
+        this->set(row, i, v[i]);
+    }
+}
+
+void TlDenseMatrixMmapObject::setRowVector(const index_type row,
+                                           const std::valarray<double>& v) {
+    const index_type numOfCols = this->getNumOfCols();
+    assert(v.size() == numOfCols);
+
+#pragma omp parallel for schedule(runtime)
+    for (index_type i = 0; i < numOfCols; ++i) {
+        this->set(row, i, v[i]);
     }
 }
 
 void TlDenseMatrixMmapObject::setColVector(const index_type col,
-                                           const TlDenseVector_Lapack& v) {
+                                           const std::vector<double>& v) {
     const index_type numOfRows = this->getNumOfRows();
-    assert(v.getSize() == numOfRows);
+    assert(v.size() == numOfRows);
 
 #pragma omp parallel for schedule(runtime)
     for (index_type i = 0; i < numOfRows; ++i) {
-        this->set(i, col, v.get(i));
+        this->set(i, col, v[i]);
+    }
+}
+
+void TlDenseMatrixMmapObject::setColVector(const index_type col,
+                                           const std::valarray<double>& v) {
+    const index_type numOfRows = this->getNumOfRows();
+    assert(v.size() == numOfRows);
+
+#pragma omp parallel for schedule(runtime)
+    for (index_type i = 0; i < numOfRows; ++i) {
+        this->set(i, col, v[i]);
     }
 }
 
