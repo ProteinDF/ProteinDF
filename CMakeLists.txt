@@ -5,9 +5,9 @@ enable_language(CXX)
 enable_testing()
 
 # Project Version
-set(PROJECT_VERSION_MAJOR "2018")
+set(PROJECT_VERSION_MAJOR "2019")
 set(PROJECT_VERSION_MINOR "10")
-set(PROJECT_VERSION_REVISION "2")
+set(PROJECT_VERSION_REVISION "RC")
 set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_REVISION}")
 
 set(PROJECT_VERSION_BUILD "")
@@ -233,7 +233,7 @@ if (USE_VIENNACL)
     if (OpenCL_FOUND)
       add_definitions(-DVIENNACL_WITH_OPENCL)
     endif (OpenCL_FOUND)
-  
+
     set(HAVE_VIENNACL 1) # for config.h
     include_directories(${VIENNACL_INCLUDE_DIR})
   else (VIENNACL_FOUND)

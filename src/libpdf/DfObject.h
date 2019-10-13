@@ -125,7 +125,8 @@ class DfObject {
 
    protected:
     std::string makeFilePath(const std::string& baseFileName,
-                             const std::string& suffix = "") const;
+                             const std::string& suffix = "",
+                             const std::string& dir = "") const;
     std::string getHpqMatrixPath();
     std::string getHpq2MatrixPath();
     std::string getSabMatrixPath();
@@ -136,9 +137,9 @@ class DfObject {
     std::string getI2pqVtrPath();
     std::string getI2prVtrPath();
     std::string getI2pqVtrXCPath();
-    std::string getLjkMatrixPath();
-    std::string getLkMatrixPath();
-    std::string getLxcMatrixPath();
+    std::string getLjkMatrixPath(const std::string& dir = "");
+    std::string getLkMatrixPath(const std::string& dir = "");
+    std::string getLxcMatrixPath(const std::string& dir = "");
     std::string getXMatrixPath();
     std::string getXInvMatrixPath();
     std::string getXEigvalVtrPath();
@@ -612,7 +613,8 @@ class DfObject {
     /// 分散行列をローカルディスクへ保存する(true)かどうかを表すフラグ
     /// falseの場合は分散行列でも1つのファイルに保存される。
     /// default value is false
-    bool isSaveDistributedMatrixToLocalDisk_;
+    // [TODO]
+    // bool isSaveDistributedMatrixToLocalDisk_;
 
     // 一時ファイル保存に利用できるローカルディスクのパス
     // std::string localDiskPath_;

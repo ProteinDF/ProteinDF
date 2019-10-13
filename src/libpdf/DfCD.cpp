@@ -174,12 +174,8 @@ void DfCD::calcCholeskyVectorsForJK() {
         if (this->useMmapMatrix_) {
             this->log_.info("L_jk build on mmap");
 
-            std::string L_mat_path = DfObject::getLjkMatrixPath();
-            if (!this->localTempPath_.empty()) {
-                L_mat_path =
-                    TlUtils::format("%s/Ljk.mat", this->localTempPath_.c_str());
-            }
-
+            std::string L_mat_path =
+                DfObject::getLjkMatrixPath(this->localTempPath_);
             this->log_.info(
                 TlUtils::format("L saved as %s", L_mat_path.c_str()));
             if (TlFile::isExistFile(L_mat_path)) {
@@ -191,7 +187,7 @@ void DfCD::calcCholeskyVectorsForJK() {
                     orbInfo, this->getI2pqVtrPath(), this->epsilon_,
                     &DfCD::calcDiagonals, &DfCD::getSuperMatrixElements, &L);
             }
-            if (!this->localTempPath_.empty()) {
+            if (L_mat_path != DfObject::getLjkMatrixPath()) {
                 this->log_.info(TlUtils::format(
                     "L move to %s", DfObject::getLjkMatrixPath().c_str()));
                 TlFile::move(L_mat_path, DfObject::getLjkMatrixPath());
@@ -377,12 +373,8 @@ void DfCD::calcCholeskyVectorsForGridFree() {
             if (this->useMmapMatrix_) {
                 this->log_.info("L_xc build on mmap");
 
-                std::string L_mat_path = DfObject::getLxcMatrixPath();
-                if (!this->localTempPath_.empty()) {
-                    L_mat_path = TlUtils::format("%s/Lxc.mat",
-                                                 this->localTempPath_.c_str());
-                }
-
+                std::string L_mat_path =
+                    DfObject::getLxcMatrixPath(this->localTempPath_);
                 this->log_.info(
                     TlUtils::format("L saved as %s", L_mat_path.c_str()));
                 if (TlFile::isExistFile(L_mat_path)) {
@@ -396,7 +388,7 @@ void DfCD::calcCholeskyVectorsForGridFree() {
                                                        this->epsilon_, &L);
                     this->destroyEngines();
                 }
-                if (!this->localTempPath_.empty()) {
+                if (L_mat_path != DfObject::getLxcMatrixPath()) {
                     this->log_.info(TlUtils::format(
                         "L move to %s", DfObject::getLxcMatrixPath().c_str()));
                     TlFile::move(L_mat_path, DfObject::getLxcMatrixPath());
@@ -433,12 +425,7 @@ void DfCD::calcCholeskyVectorsForGridFree() {
             if (this->useMmapMatrix_) {
                 this->log_.info("L_xc build on mmap");
 
-                std::string L_mat_path = DfObject::getLxcMatrixPath();
-                if (!this->localTempPath_.empty()) {
-                    L_mat_path = TlUtils::format("%s/Lxc.mat",
-                                                 this->localTempPath_.c_str());
-                }
-
+                std::string L_mat_path = DfObject::getLxcMatrixPath(this->localTempPath_);
                 this->log_.info(
                     TlUtils::format("L saved as %s", L_mat_path.c_str()));
                 if (TlFile::isExistFile(L_mat_path)) {
@@ -453,7 +440,7 @@ void DfCD::calcCholeskyVectorsForGridFree() {
                         &L);
                     this->destroyEngines();
                 }
-                if (!this->localTempPath_.empty()) {
+                if (L_mat_path != DfObject::getLxcMatrixPath()) {
                     this->log_.info(TlUtils::format(
                         "L move to %s", DfObject::getLxcMatrixPath().c_str()));
                     TlFile::move(L_mat_path, DfObject::getLxcMatrixPath());
@@ -1601,7 +1588,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(
 
         const double l_m_pm = std::sqrt(diagonals[pivot_m]);
         const double inv_l_m_pm = 1.0 / l_m_pm;
-        pL->set(pivot_m, numOfCDVcts, l_m_pm);
+        // pL->set(pivot_m, numOfCDVcts, l_m_pm);
 
         // get supermatrix elements
         const index_type numOf_G_cols = numOfPQtilde - (numOfCDVcts + 1);
@@ -1617,35 +1604,39 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(
                                             &G_pm);
         }
         assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
-        // {
-        //     TlDenseVector_Lapack vG_pm = G_pm;
-        //     vG_pm.save(TlUtils::format("Gpm.%d.vtr", numOfCDVcts));
-        // }
 
         // CD calc
-        std::valarray<double> L_pm(0.0, numOfCDVcts + 1);
-        const std::size_t copyCount_m =
-            pL->getRowVector(pivot_m, &(L_pm[0]), numOfCDVcts + 1);
-        assert(copyCount_m == numOfCDVcts + 1);
-
-#pragma omp parallel
+        // output:
+        //   out_L_rows: row elements at the column numOfCDVcts(target) in L
+        //   diagonals:
         {
-            std::valarray<double> L_pi(0.0, numOfCDVcts + 1);
+            std::valarray<double> L_pm_x(0.0, numOfCDVcts + 1);
+            const std::size_t copyCount_m =
+                pL->getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
+            assert(copyCount_m == numOfCDVcts + 1);
+
+            std::valarray<double> out_L_rows(0.0, numOfPQtilde);
+            out_L_rows[pivot_m] = l_m_pm;
+#pragma omp parallel
+            {
+                std::valarray<double> L_pi_x(0.0, numOfCDVcts + 1);
 #pragma omp for schedule(runtime)
-            for (index_type i = 0; i < numOf_G_cols; ++i) {
-                const index_type pivot_i =
-                    pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
+                for (index_type i = 0; i < numOf_G_cols; ++i) {
+                    const index_type pivot_i =
+                        pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
 
-                const std::size_t copyCount_i =
-                    pL->getRowVector(pivot_i, &(L_pi[0]), numOfCDVcts + 1);
-                assert(copyCount_i == numOfCDVcts + 1);
+                    const std::size_t copyCount_i = pL->getRowVector(
+                        pivot_i, &(L_pi_x[0]), numOfCDVcts + 1);
+                    assert(copyCount_i == numOfCDVcts + 1);
 
-                const double sum_ll = (L_pm * L_pi).sum();
-                const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+                    const double sum_ll = (L_pm_x * L_pi_x).sum();
+                    const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
 
-                pL->set(pivot_i, numOfCDVcts, l_m_pi);
-                diagonals[pivot_i] -= l_m_pi * l_m_pi;
+                    out_L_rows[pivot_i] = l_m_pi;
+                    diagonals[pivot_i] -= l_m_pi * l_m_pi;
+                }
             }
+            pL->setColVector(numOfCDVcts, out_L_rows);
         }
 
         // error = diagonals[pivot[numOfCDVcts]];
@@ -1795,7 +1786,8 @@ void DfCD::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
                                         const std::string& I2PQ_path,
                                         const double threshold,
                                         TlDenseGeneralMatrix_mmap* pL) {
-    this->log_.info("call on-the-fly Cholesky Decomposition routine");
+    this->log_.info(
+        "call on-the-fly Cholesky Decomposition routine (asymmetric)");
     assert(this->pEngines_ != NULL);
 
     this->initializeCutoffStats(
@@ -1832,7 +1824,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
 
     int progress = 0;
     const index_type division = std::max<index_type>(numOfPQtilde * 0.01, 100);
-    index_type L_cols = numOfOrbs_p * 5;
+    index_type L_cols = std::max(numOfOrbs_p, numOfOrbs_q) * 5;
     this->log_.info(TlUtils::format("resize L col: %d", L_cols));
     pL->resize(numOfPQtilde, L_cols);
 
@@ -1871,7 +1863,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
 
         const double l_m_pm = std::sqrt(diagonals[pivot_m]);
         const double inv_l_m_pm = 1.0 / l_m_pm;
-        pL->set(pivot_m, numOfCDVcts, l_m_pm);
+        // pL->set(pivot_m, numOfCDVcts, l_m_pm);
 
         // get supermatrix elements
         const index_type numOf_G_cols = numOfPQtilde - (numOfCDVcts + 1);
@@ -1889,31 +1881,39 @@ void DfCD::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
         assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
 
         // CD calc
-        std::valarray<double> L_pm(0.0, numOfCDVcts + 1);
-        const std::size_t copyCount_m =
-            pL->getRowVector(pivot_m, &(L_pm[0]), numOfCDVcts + 1);
-        assert(copyCount_m == numOfCDVcts + 1);
-
-#pragma omp parallel
+        // output:
+        //   out_L_rows: row elements at the column numOfCDVcts(target) in L
+        //   diagonals:
         {
-            std::valarray<double> L_pi(0.0, numOfCDVcts + 1);
+            std::valarray<double> L_pm_x(0.0, numOfCDVcts + 1);
+            const std::size_t copyCount_m =
+                pL->getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
+            assert(copyCount_m == numOfCDVcts + 1);
+
+            std::valarray<double> out_L_rows(0.0, numOfPQtilde);
+            out_L_rows[pivot_m] = l_m_pm;
+#pragma omp parallel
+            {
+                std::valarray<double> L_pi_x(0.0, numOfCDVcts + 1);
 #pragma omp for schedule(runtime)
-            for (index_type i = 0; i < numOf_G_cols; ++i) {
-                const index_type pivot_i =
-                    pivot[numOfCDVcts + 1 + i];  // from (m+1) to N
+                for (index_type i = 0; i < numOf_G_cols; ++i) {
+                    const index_type pivot_i =
+                        pivot[numOfCDVcts + 1 + i];  // from (m+1) to N
 
-                const std::size_t copyCount_i =
-                    pL->getRowVector(pivot_i, &(L_pi[0]), numOfCDVcts + 1);
-                assert(copyCount_i == numOfCDVcts + 1);
+                    const std::size_t copyCount_i = pL->getRowVector(
+                        pivot_i, &(L_pi_x[0]), numOfCDVcts + 1);
+                    assert(copyCount_i == numOfCDVcts + 1);
 
-                const double sum_ll = (L_pm * L_pi).sum();
-                const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+                    const double sum_ll = (L_pm_x * L_pi_x).sum();
+                    const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
 
-                pL->set(pivot_i, numOfCDVcts, l_m_pi);
-                diagonals[pivot_i] -= l_m_pi * l_m_pi;
+                    // pL->set(pivot_i, numOfCDVcts, l_m_pi);
+                    out_L_rows[pivot_i] = l_m_pi;
+                    diagonals[pivot_i] -= l_m_pi * l_m_pi;
+                }
             }
+            pL->setColVector(numOfCDVcts, out_L_rows);
         }
-
         ++numOfCDVcts;
     }
 
