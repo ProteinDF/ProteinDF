@@ -270,13 +270,14 @@ void DfObject::setParam(const TlSerializeData& data) {
         this->m_bUsingSCALAPACK = true;
     }
 
-    this->isSaveDistributedMatrixToLocalDisk_ = false;
-#ifdef HAVE_SCALAPACK
-    if (data.hasKey("save_distributed_matrix_to_local_disk") == true) {
-        this->isSaveDistributedMatrixToLocalDisk_ =
-            data["save_distributed_matrix_to_local_disk"].getBoolean();
-    }
-#endif  // HAVE_SCALAPACK
+    // [TODO]
+    //     this->isSaveDistributedMatrixToLocalDisk_ = false;
+    // #ifdef HAVE_SCALAPACK
+    //     if (data.hasKey("save_distributed_matrix_to_local_disk") == true) {
+    //         this->isSaveDistributedMatrixToLocalDisk_ =
+    //             data["save_distributed_matrix_to_local_disk"].getBoolean();
+    //     }
+    // #endif  // HAVE_SCALAPACK
 
     // this->localDiskPath_ = "/tmp";
     // if (data.hasKey("local_disk_path") == true) {
@@ -537,7 +538,8 @@ void DfObject::loggerEndTitle(const std::string& stepName,
 
 // =====================================================================
 std::string DfObject::makeFilePath(const std::string& baseFileName,
-                                   const std::string& suffix) const {
+                                   const std::string& suffix,
+                                   const std::string& dir) const {
     std::string base =
         (*(this->pPdfParam_))["control"]["file_base_name"][baseFileName]
             .getStr();
@@ -545,13 +547,19 @@ std::string DfObject::makeFilePath(const std::string& baseFileName,
         base = TlUtils::format(base.c_str(), suffix.c_str());
     }
 
-    std::string path;
-    if (this->isSaveDistributedMatrixToLocalDisk_ == true) {
-        path = this->localTempPath_ + "/" + base + "." +
-               TlUtils::xtos(this->rank_);
-    } else {
-        path = DfObject::m_sWorkDirPath + "/" + base;
+    std::string dirname = DfObject::m_sWorkDirPath;
+    if (!dir.empty()) {
+        dirname = dir;
     }
+
+    // [TODO]
+    std::string path = "";
+    // if (this->isSaveDistributedMatrixToLocalDisk_ == true) {
+    //     path = this->localTempPath_ + "/" + base + "." +
+    //            TlUtils::xtos(this->rank_);
+    // } else {
+    path = dirname + "/" + base;
+    // }
 
     return path;
 }
@@ -600,16 +608,16 @@ std::string DfObject::getI2pqVtrXCPath() {
     return this->makeFilePath("I2PQ_XC_vtr");
 }
 
-std::string DfObject::getLjkMatrixPath() {
-    return this->makeFilePath("Ljk_matrix");
+std::string DfObject::getLjkMatrixPath(const std::string& dir) {
+    return this->makeFilePath("Ljk_matrix", "", dir);
 }
 
-std::string DfObject::getLkMatrixPath() {
-    return this->makeFilePath("Lk_matrix");
+std::string DfObject::getLkMatrixPath(const std::string& dir) {
+    return this->makeFilePath("Lk_matrix", "", dir);
 }
 
-std::string DfObject::getLxcMatrixPath() {
-    return this->makeFilePath("Lxc_matrix");
+std::string DfObject::getLxcMatrixPath(const std::string& dir) {
+    return this->makeFilePath("Lxc_matrix", "", dir);
 }
 
 std::string DfObject::getXMatrixPath() {

@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-#include "tl_dense_vector_lapack.h"
 #include "tl_matrix_object.h"
 
 class TlDenseMatrixMmapObject : public TlMatrixObject {
@@ -25,9 +24,14 @@ class TlDenseMatrixMmapObject : public TlMatrixObject {
     virtual void add(index_type row, index_type col, double value);
 
     virtual void setRowVector(const index_type row,
-                              const TlDenseVector_Lapack& v);
+                              const std::vector<double>& v);
+    virtual void setRowVector(const index_type row,
+                              const std::valarray<double>& v);
     virtual void setColVector(const index_type col,
-                              const TlDenseVector_Lapack& v);
+                              const std::vector<double>& v);
+    virtual void setColVector(const index_type col,
+                              const std::valarray<double>& v);
+
     virtual std::vector<double> getRowVector(const index_type row) const;
     virtual std::vector<double> getColVector(const index_type col) const;
     virtual std::size_t getRowVector(const index_type row, double* pBuf,
