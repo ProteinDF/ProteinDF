@@ -537,9 +537,9 @@ void DfObject::loggerEndTitle(const std::string& stepName,
 }
 
 // =====================================================================
-std::string DfObject::makeFilePath(
-    const std::string& baseFileName,
-    const std::string& suffix const std::string& dir) const {
+std::string DfObject::makeFilePath(const std::string& baseFileName,
+                                   const std::string& suffix,
+                                   const std::string& dir) const {
     std::string base =
         (*(this->pPdfParam_))["control"]["file_base_name"][baseFileName]
             .getStr();
@@ -553,6 +553,7 @@ std::string DfObject::makeFilePath(
     }
 
     // [TODO]
+    std::string path = "";
     // if (this->isSaveDistributedMatrixToLocalDisk_ == true) {
     //     path = this->localTempPath_ + "/" + base + "." +
     //            TlUtils::xtos(this->rank_);
@@ -607,16 +608,16 @@ std::string DfObject::getI2pqVtrXCPath() {
     return this->makeFilePath("I2PQ_XC_vtr");
 }
 
-std::string DfObject::getLjkMatrixPath() {
-    return this->makeFilePath("Ljk_matrix");
+std::string DfObject::getLjkMatrixPath(const std::string& dir) {
+    return this->makeFilePath("Ljk_matrix", "", dir);
 }
 
-std::string DfObject::getLkMatrixPath() {
-    return this->makeFilePath("Lk_matrix");
+std::string DfObject::getLkMatrixPath(const std::string& dir) {
+    return this->makeFilePath("Lk_matrix", "", dir);
 }
 
-std::string DfObject::getLxcMatrixPath() {
-    return this->makeFilePath("Lxc_matrix");
+std::string DfObject::getLxcMatrixPath(const std::string& dir) {
+    return this->makeFilePath("Lxc_matrix", "", dir);
 }
 
 std::string DfObject::getXMatrixPath() {
