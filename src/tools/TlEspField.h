@@ -27,18 +27,18 @@
 class TlFieldData_Uniform;
 
 class TlEspField {
- public:
-  TlEspField(const TlSerializeData& param);
-  ~TlEspField();
+   public:
+    TlEspField(const TlSerializeData& param);
+    ~TlEspField();
 
-  std::vector<double> makeEspFld(const TlDenseSymmetricMatrix_Lapack& P,
-                                 const std::vector<TlPosition>& grids);
+    std::vector<double> makeEspFld(const TlDenseSymmetricMatrix_Lapack& P,
+                                   const std::vector<TlPosition>& grids);
 
-  // atom only
-  std::vector<double> makeEspFld(const std::vector<TlPosition>& grids);
+    // atom only
+    std::vector<double> makeEspFld(const std::vector<TlPosition>& grids);
 
- protected:
-  TlSerializeData param_;
+   protected:
+    TlSerializeData param_;
 };
 
 #endif  // TLESPFIELD_H

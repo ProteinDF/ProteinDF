@@ -24,112 +24,115 @@
 #endif  // HAVE_CONFIG_H
 
 #include <vector>
-#include "tl_matrix_object.h"
 #include "tl_dense_vector_lapack.h"
+#include "tl_matrix_object.h"
 
 /// 配列の配列として行列を扱うためのコンテナ
 class TlDenseMatrix_arrays_Object : public TlMatrixObject {
- public:
-  explicit TlDenseMatrix_arrays_Object(index_type numOfVectors = 1,
-                                       index_type sizeOfVector = 1,
-                                       int numOfMembers = 1, int ID = 0,
-                                       bool isUsingMemManager = false);
-  TlDenseMatrix_arrays_Object(const TlDenseMatrix_arrays_Object& rhs);
+   public:
+    explicit TlDenseMatrix_arrays_Object(index_type numOfVectors = 1,
+                                         index_type sizeOfVector = 1,
+                                         int numOfMembers = 1, int ID = 0,
+                                         bool isUsingMemManager = false);
+    TlDenseMatrix_arrays_Object(const TlDenseMatrix_arrays_Object& rhs);
 
-  virtual ~TlDenseMatrix_arrays_Object();
+    virtual ~TlDenseMatrix_arrays_Object();
 
-  TlDenseMatrix_arrays_Object& operator=(
-      const TlDenseMatrix_arrays_Object& rhs);
+    TlDenseMatrix_arrays_Object& operator=(
+        const TlDenseMatrix_arrays_Object& rhs);
 
- public:
-  virtual index_type getNumOfRows() const = 0;
-  virtual index_type getNumOfCols() const = 0;
+   public:
+    virtual index_type getNumOfRows() const = 0;
+    virtual index_type getNumOfCols() const = 0;
 
-  /// インスタンスのメモリサイズを返す
-  virtual std::size_t getMemSize() const;
+    /// インスタンスのメモリサイズを返す
+    virtual std::size_t getMemSize() const;
 
- private:
-  virtual double get(index_type row, index_type col) const = 0;
-  virtual void set(index_type row, index_type col, double value) = 0;
-  virtual void add(index_type row, index_type col, double value) = 0;
+   private:
+    virtual double get(index_type row, index_type col) const = 0;
+    virtual void set(index_type row, index_type col, double value) = 0;
+    virtual void add(index_type row, index_type col, double value) = 0;
 
- public:
-  virtual bool load(const std::string& path);
-  virtual bool save(const std::string& path) const;
+   public:
+    virtual bool load(const std::string& path);
+    virtual bool save(const std::string& path) const;
 
-  virtual bool load(const std::string& basename, int subunitID);
+   public:
+    virtual bool load(const std::string& basename, int subunitID);
 
- public:
-  void resize(index_type newNumOfVectors, index_type newVectorSize);
+   public:
+    void resize(index_type newNumOfVectors, index_type newVectorSize);
 
-  /// 値を代入する
-  void set_to_vm(index_type vectorIndex, index_type index, double value);
+    /// 値を代入する
+    void set_to_vm(index_type vectorIndex, index_type index, double value);
 
-  void add_to_vm(index_type vectorIndex, index_type index, double value);
+    void add_to_vm(index_type vectorIndex, index_type index, double value);
 
-  double get_from_vm(index_type vectorIndex, index_type index) const;
+    double get_from_vm(index_type vectorIndex, index_type index) const;
 
     std::vector<double> getVector(index_type vectorIndex) const;
-  void getVector(const index_type vectorIndex, double* pBuf,
-                 const index_type length) const;
-  void setVector(index_type vectorIndex, const TlDenseVector_Lapack& v);
+    void getVector(const index_type vectorIndex, double* pBuf,
+                   const index_type length) const;
+    void setVector(index_type vectorIndex, const TlDenseVector_Lapack& v);
 
- public:
-  static std::string getFileName(const std::string& basename,
-                                 const int subunitID);
+   public:
+    static std::string getFileName(const std::string& basename,
+                                   const int subunitID);
 
-  /// 指定したファイルがこのクラスで読み込めるかどうかをチェックする。
-  /// 読み込める場合はtrueを返す。
-  /// このとき、pNumOfSubunitsが指定されていれば、全サブユニット数が代入される。
-  /// また、pSubunitIDが指定されていれば、サブユニットIDが代入される。
-  static bool isLoadable(const std::string& filepath,
-                         index_type* pNumOfVectors = NULL,
-                         index_type* pSizeOfVector = NULL,
-                         int* pNumOfSubunits = NULL, int* pSubunitID = NULL);
+    /// 指定したファイルがこのクラスで読み込めるかどうかをチェックする。
+    /// 読み込める場合はtrueを返す。
+    /// このとき、pNumOfSubunitsが指定されていれば、全サブユニット数が代入される。
+    /// また、pSubunitIDが指定されていれば、サブユニットIDが代入される。
+    static bool isLoadable(const std::string& filepath,
+                           index_type* pNumOfVectors = NULL,
+                           index_type* pSizeOfVector = NULL,
+                           int* pNumOfSubunits = NULL, int* pSubunitID = NULL);
 
- public:
-  index_type getSizeOfVector() const { return this->sizeOfVector_; };
+   public:
+    index_type getSizeOfVector() const { return this->sizeOfVector_; };
 
-  index_type getNumOfVectors() const { return this->numOfVectors_; };
+    index_type getNumOfVectors() const { return this->numOfVectors_; };
 
-  index_type getNumOfLocalVectors() const { return this->numOfLocalVectors_; };
+    index_type getNumOfLocalVectors() const {
+        return this->numOfLocalVectors_;
+    };
 
-  int getNumOfSubunits() const { return this->numOfSubunits_; };
+    int getNumOfSubunits() const { return this->numOfSubunits_; };
 
-  /// 自分のIDを返す
-  int getSubunitID() const { return this->subunitID_; };
+    /// 自分のIDを返す
+    int getSubunitID() const { return this->subunitID_; };
 
-  /// 該当するベクトルを持っているPE番号を返す
-  int getSubunitID(const index_type vectorIndex) const;
+    /// 該当するベクトルを持っているPE番号を返す
+    int getSubunitID(const index_type vectorIndex) const;
 
- protected:
-  /// 前もってvector sizeを設定する
-  void reserveVectorSize(index_type vectorSize);
+   protected:
+    /// 前もってvector sizeを設定する
+    void reserveVectorSize(index_type vectorSize);
 
-  /// data_ メンバ変数を破棄する
-  void destroy();
+    /// data_ メンバ変数を破棄する
+    void destroy();
 
- protected:
-  bool saveByTheOtherType(const std::string& basename) const;
+   protected:
+    bool saveByTheOtherType(const std::string& basename) const;
 
- private:
-  index_type numOfVectors_;  /// ベクトルの総数(global)
-  index_type sizeOfVector_;  /// 1ベクトルの大きさ
+   private:
+    index_type numOfVectors_;  /// ベクトルの総数(global)
+    index_type sizeOfVector_;  /// 1ベクトルの大きさ
 
-  /// 行列全体を構成するオブジェクトの総数
-  /// 通常はプロセスの総数
-  int numOfSubunits_;
+    /// 行列全体を構成するオブジェクトの総数
+    /// 通常はプロセスの総数
+    int numOfSubunits_;
 
-  /// このオブジェクトのID
-  /// 通常はプロセスID
-  int subunitID_;
+    /// このオブジェクトのID
+    /// 通常はプロセスID
+    int subunitID_;
 
-  index_type numOfLocalVectors_;  // ベクトルの総数(local)
+    index_type numOfLocalVectors_;  // ベクトルの総数(local)
 
-  index_type reservedVectorSize_;  /// あらかじめ保持している1ベクトルの大きさ
+    index_type reservedVectorSize_;  /// あらかじめ保持している1ベクトルの大きさ
 
-  bool isUsingMemManager_;  /// 独自のメモリマネージャを使う(true)
-  std::vector<double*> data_;  /// データ
+    bool isUsingMemManager_;  /// 独自のメモリマネージャを使う(true)
+    std::vector<double*> data_;  /// データ
 };
 
 #endif  // TLCOLVECTORMATRIX2_H

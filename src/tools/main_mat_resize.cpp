@@ -23,56 +23,56 @@
 #include "tl_dense_general_matrix_lapack.h"
 
 void showHelp() {
-  std::cout << "pdf-mat-resize [options] input_path output_path" << std::endl;
-  std::cout << " OPTIONS:" << std::endl;
-  std::cout << "  -r rows: new number of rows" << std::endl;
-  std::cout << "  -c cols: new number of cols" << std::endl;
-  std::cout << "  -h:      show help" << std::endl;
-  std::cout << "  -v:      verbose" << std::endl;
+    std::cout << "pdf-mat-resize [options] input_path output_path" << std::endl;
+    std::cout << " OPTIONS:" << std::endl;
+    std::cout << "  -r rows: new number of rows" << std::endl;
+    std::cout << "  -c cols: new number of cols" << std::endl;
+    std::cout << "  -h:      show help" << std::endl;
+    std::cout << "  -v:      verbose" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "r:c:hv");
+    TlGetopt opt(argc, argv, "r:c:hv");
 
-  if (opt["h"] == "defined") {
-    showHelp();
+    if (opt["h"] == "defined") {
+        showHelp();
+        return EXIT_SUCCESS;
+    }
+
+    const bool bVerbose = (opt["v"] == "defined");
+    int newNumOfRows = 0;
+    if (!opt["r"].empty()) {
+        newNumOfRows = std::atoi(opt["r"].c_str());
+    }
+    int newNumOfCols = 0;
+    if (!opt["c"].empty()) {
+        newNumOfCols = std::atoi(opt["c"].c_str());
+    }
+
+    if (opt.getCount() <= 2) {
+        showHelp();
+        return EXIT_FAILURE;
+    }
+    std::string inputMatrixPath = opt[1];
+    std::string outputMatrixPath = opt[2];
+
+    if (bVerbose == true) {
+        std::cerr << "load matrix: " << inputMatrixPath << std::endl;
+    }
+
+    TlDenseGeneralMatrix_Lapack A;
+    A.load(inputMatrixPath);
+
+    TlMatrixObject::index_type numOfRows =
+        (newNumOfRows != 0) ? newNumOfRows : A.getNumOfRows();
+    TlMatrixObject::index_type numOfCols =
+        (newNumOfCols != 0) ? newNumOfCols : A.getNumOfCols();
+    A.resize(numOfRows, numOfCols);
+
+    if (bVerbose == true) {
+        std::cerr << "save matrix: " << outputMatrixPath << std::endl;
+    }
+    A.save(outputMatrixPath);
+
     return EXIT_SUCCESS;
-  }
-
-  const bool bVerbose = (opt["v"] == "defined");
-  int newNumOfRows = 0;
-  if (!opt["r"].empty()) {
-    newNumOfRows = std::atoi(opt["r"].c_str());
-  }
-  int newNumOfCols = 0;
-  if (!opt["c"].empty()) {
-    newNumOfCols = std::atoi(opt["c"].c_str());
-  }
-
-  if (opt.getCount() <= 2) {
-    showHelp();
-    return EXIT_FAILURE;
-  }
-  std::string inputMatrixPath = opt[1];
-  std::string outputMatrixPath = opt[2];
-
-  if (bVerbose == true) {
-    std::cerr << "load matrix: " << inputMatrixPath << std::endl;
-  }
-
-  TlDenseGeneralMatrix_Lapack A;
-  A.load(inputMatrixPath);
-
-  TlMatrixObject::index_type numOfRows =
-      (newNumOfRows != 0) ? newNumOfRows : A.getNumOfRows();
-  TlMatrixObject::index_type numOfCols =
-      (newNumOfCols != 0) ? newNumOfCols : A.getNumOfCols();
-  A.resize(numOfRows, numOfCols);
-
-  if (bVerbose == true) {
-    std::cerr << "save matrix: " << outputMatrixPath << std::endl;
-  }
-  A.save(outputMatrixPath);
-
-  return EXIT_SUCCESS;
 }

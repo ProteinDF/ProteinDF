@@ -11,13 +11,15 @@
 class TlMatrixObject;
 
 class CnFile {
- public:
-  CnFile();
-  virtual ~CnFile();
+   public:
+    CnFile();
+    virtual ~CnFile();
 
- public:
-  //virtual void getPMatrix(const DfObject::RUN_TYPE, int itr, TlMatrixObject* pMatrix);
-  virtual void saveMatrix(const std::string& path, const TlMatrixObject& matrix);
+   public:
+    // virtual void getPMatrix(const DfObject::RUN_TYPE, int itr,
+    // TlMatrixObject* pMatrix);
+    virtual void saveMatrix(const std::string& path,
+                            const TlMatrixObject& matrix);
 };
 
 #endif  // CNFILE_H

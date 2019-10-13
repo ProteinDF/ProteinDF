@@ -10,12 +10,12 @@ static const std::string vct_path = "temp.vct";
 static const std::string h5_path = "temp.vct.h5";
 
 TEST(TlDenseVector_Eigen, constructer) {
-  TlDenseVector_Eigen a(3);
+    TlDenseVector_Eigen a(3);
 
-  EXPECT_EQ(TlDenseVector_Eigen::size_type(3), a.getSize());
-  EXPECT_DOUBLE_EQ(0.0, a.get(0));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1));
-  EXPECT_DOUBLE_EQ(0.0, a.get(2));
+    EXPECT_EQ(TlDenseVector_Eigen::size_type(3), a.getSize());
+    EXPECT_DOUBLE_EQ(0.0, a.get(0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2));
 }
 
 // TEST(TlDenseVector_Eigen, copyConstructer) {

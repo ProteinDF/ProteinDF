@@ -25,181 +25,184 @@
 
 DfForce_Parallel::DfForce_Parallel(TlSerializeData* pPdfParam)
     : DfForce(pPdfParam) {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.broadcast(this->pdfParamForForce_);
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    rComm.broadcast(this->pdfParamForForce_);
 }
 
 DfForce_Parallel::~DfForce_Parallel() {}
 
 void DfForce_Parallel::logger(const std::string& str) const {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    DfForce::logger(str);
-  }
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        DfForce::logger(str);
+    }
 }
 
 void DfForce_Parallel::output() {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster()) {
-    DfForce::output();
-  }
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster()) {
+        DfForce::output();
+    }
 }
 
 void DfForce_Parallel::calcForceFromNuclei() {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    // perform in master-node only
-    DfForce::calcForceFromNuclei();
-  }
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        // perform in master-node only
+        DfForce::calcForceFromNuclei();
+    }
 }
 
 void DfForce_Parallel::calcForceFromWS(const RUN_TYPE runType) {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    // perform in master-node only
-    DfForce::calcForceFromWS(runType);
-  }
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        // perform in master-node only
+        DfForce::calcForceFromWS(runType);
+    }
 }
 
 void DfForce_Parallel::calcForceFromHpq(
     const TlDenseSymmetricMatrix_Lapack& P) {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    // perform in master-node only
-    DfForce::calcForceFromHpq(P);
-  }
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        // perform in master-node only
+        DfForce::calcForceFromHpq(P);
+    }
 }
 
 void DfForce_Parallel::calcForceFromCoulomb_exact(const RUN_TYPE runType) {
-  // #ifdef HAVE_SCALAPACK
-  // #else
-  // #endif // HAVE_SCALAPACK
-  this->calcForceFromCoulomb_exact_replicated(runType);
+    // #ifdef HAVE_SCALAPACK
+    // #else
+    // #endif // HAVE_SCALAPACK
+    this->calcForceFromCoulomb_exact_replicated(runType);
 }
 
 void DfForce_Parallel::calcForceFromCoulomb_exact_replicated(
     const RUN_TYPE runType) {
-  this->loggerTime("calc force from J(parallel, replicated)");
+    this->loggerTime("calc force from J(parallel, replicated)");
 
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  const int iteration = this->m_nIteration;
-  const int numOfAtoms = this->m_nNumOfAtoms;
-
-  TlDenseSymmetricMatrix_Lapack P;
-  if (rComm.isMaster() == true) {
-    P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
-  }
-  rComm.broadcast(&P);
-
-  DfEriX_Parallel dfEri(&(this->pdfParamForForce_));
-
-  // ((pq)'|(rs))
-  TlDenseGeneralMatrix_Lapack F_J(numOfAtoms, 3);
-  dfEri.getForceJ(P, &F_J);
-
-  // F_J *= 0.5;
-  if (this->isDebugOutMatrix_ == true) {
-    if (rComm.isMaster() == true) {
-      F_J.save("F_J.mtx");
-    }
-  }
-
-  this->force_ += F_J;
-}
-
-void DfForce_Parallel::calcForceFromCoulomb_RIJ(const RUN_TYPE runType) {
-  this->calcForceFromCoulomb_RIJ_DC(runType);
-}
-
-void DfForce_Parallel::calcForceFromCoulomb_RIJ_DC(const RUN_TYPE runType) {
-  this->loggerTime(" calc force from J (RIJ, DC)");
-
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-
-  const int iteration = this->m_nIteration;
-  const int numOfAtoms = this->m_nNumOfAtoms;
-
-  TlDenseVector_Lapack rho;
-  if (rComm.isMaster() == true) {
-    rho = this->getRho<TlDenseVector_Lapack>(runType, iteration);
-  }
-  rComm.broadcast(&rho);
-
-  TlDenseSymmetricMatrix_Lapack P;
-  if (rComm.isMaster() == true) {
-    P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
-  }
-  rComm.broadcast(&P);
-
-  DfEriX_Parallel dfEri(&(this->pdfParamForForce_));
-
-  // ((pq)'|a)
-  TlDenseGeneralMatrix_Lapack F_pqa(numOfAtoms, 3);
-  dfEri.getForceJ(P, rho, &F_pqa);
-
-  // (a'|b)
-  TlDenseGeneralMatrix_Lapack F_ab(numOfAtoms, 3);
-  dfEri.getForceJ(rho, &F_ab);
-
-  if (this->isDebugOutMatrix_ == true) {
-    if (rComm.isMaster() == true) {
-      F_pqa.save("F_pqa.mtx");
-      F_ab.save("F_ab.mtx");
-    }
-  }
-
-  const TlDenseGeneralMatrix_Lapack F_J = (F_pqa - 0.5 * F_ab);
-  this->force_ += F_J;
-}
-
-void DfForce_Parallel::calcForceFromK(const RUN_TYPE runType) {
-  // #ifdef HAVE_SCALAPACK
-  // #else
-  // #endif // HAVE_SCALAPACK
-  this->calcForceFromK_replicated(runType);
-}
-
-void DfForce_Parallel::calcForceFromK_replicated(const RUN_TYPE runType) {
-  this->loggerTime("calc force from K (parallel; replicated)");
-
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  const DfXCFunctional_Parallel dfXCFunctional(&(this->pdfParamForForce_));
-
-  if (dfXCFunctional.isHybridFunctional() == true) {
+    TlCommunicate& rComm = TlCommunicate::getInstance();
     const int iteration = this->m_nIteration;
     const int numOfAtoms = this->m_nNumOfAtoms;
 
     TlDenseSymmetricMatrix_Lapack P;
     if (rComm.isMaster() == true) {
-      P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
+        P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType,
+                                                              iteration);
     }
     rComm.broadcast(&P);
 
     DfEriX_Parallel dfEri(&(this->pdfParamForForce_));
 
-    TlDenseGeneralMatrix_Lapack F_K(numOfAtoms, 3);
-    // for RKS
-    dfEri.getForceK(P, &F_K);
-    if (runType == RUN_RKS) {
-      F_K *= 0.5;
+    // ((pq)'|(rs))
+    TlDenseGeneralMatrix_Lapack F_J(numOfAtoms, 3);
+    dfEri.getForceJ(P, &F_J);
+
+    // F_J *= 0.5;
+    if (this->isDebugOutMatrix_ == true) {
+        if (rComm.isMaster() == true) {
+            F_J.save("F_J.mtx");
+        }
     }
 
-    F_K *= -1.0;
-    F_K *= dfXCFunctional.getFockExchangeCoefficient();  // for B3LYP
+    this->force_ += F_J;
+}
+
+void DfForce_Parallel::calcForceFromCoulomb_RIJ(const RUN_TYPE runType) {
+    this->calcForceFromCoulomb_RIJ_DC(runType);
+}
+
+void DfForce_Parallel::calcForceFromCoulomb_RIJ_DC(const RUN_TYPE runType) {
+    this->loggerTime(" calc force from J (RIJ, DC)");
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    const int iteration = this->m_nIteration;
+    const int numOfAtoms = this->m_nNumOfAtoms;
+
+    TlDenseVector_Lapack rho;
+    if (rComm.isMaster() == true) {
+        rho = this->getRho<TlDenseVector_Lapack>(runType, iteration);
+    }
+    rComm.broadcast(&rho);
+
+    TlDenseSymmetricMatrix_Lapack P;
+    if (rComm.isMaster() == true) {
+        P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType,
+                                                              iteration);
+    }
+    rComm.broadcast(&P);
+
+    DfEriX_Parallel dfEri(&(this->pdfParamForForce_));
+
+    // ((pq)'|a)
+    TlDenseGeneralMatrix_Lapack F_pqa(numOfAtoms, 3);
+    dfEri.getForceJ(P, rho, &F_pqa);
+
+    // (a'|b)
+    TlDenseGeneralMatrix_Lapack F_ab(numOfAtoms, 3);
+    dfEri.getForceJ(rho, &F_ab);
 
     if (this->isDebugOutMatrix_ == true) {
-      if (rComm.isMaster() == true) {
-        F_K.save("F_K.mtx");
-      }
+        if (rComm.isMaster() == true) {
+            F_pqa.save("F_pqa.mtx");
+            F_ab.save("F_ab.mtx");
+        }
     }
-    this->force_ += F_K;
-  }
+
+    const TlDenseGeneralMatrix_Lapack F_J = (F_pqa - 0.5 * F_ab);
+    this->force_ += F_J;
+}
+
+void DfForce_Parallel::calcForceFromK(const RUN_TYPE runType) {
+    // #ifdef HAVE_SCALAPACK
+    // #else
+    // #endif // HAVE_SCALAPACK
+    this->calcForceFromK_replicated(runType);
+}
+
+void DfForce_Parallel::calcForceFromK_replicated(const RUN_TYPE runType) {
+    this->loggerTime("calc force from K (parallel; replicated)");
+
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const DfXCFunctional_Parallel dfXCFunctional(&(this->pdfParamForForce_));
+
+    if (dfXCFunctional.isHybridFunctional() == true) {
+        const int iteration = this->m_nIteration;
+        const int numOfAtoms = this->m_nNumOfAtoms;
+
+        TlDenseSymmetricMatrix_Lapack P;
+        if (rComm.isMaster() == true) {
+            P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType,
+                                                                  iteration);
+        }
+        rComm.broadcast(&P);
+
+        DfEriX_Parallel dfEri(&(this->pdfParamForForce_));
+
+        TlDenseGeneralMatrix_Lapack F_K(numOfAtoms, 3);
+        // for RKS
+        dfEri.getForceK(P, &F_K);
+        if (runType == RUN_RKS) {
+            F_K *= 0.5;
+        }
+
+        F_K *= -1.0;
+        F_K *= dfXCFunctional.getFockExchangeCoefficient();  // for B3LYP
+
+        if (this->isDebugOutMatrix_ == true) {
+            if (rComm.isMaster() == true) {
+                F_K.save("F_K.mtx");
+            }
+        }
+        this->force_ += F_K;
+    }
 }
 
 DfCalcGridX* DfForce_Parallel::getCalcGridObj() {
-  this->logger("create calc-grid engine(parallel)");
-  DfCalcGridX* pDfCalcGrid =
-      new DfCalcGridX_Parallel(&(this->pdfParamForForce_));
+    this->logger("create calc-grid engine(parallel)");
+    DfCalcGridX* pDfCalcGrid =
+        new DfCalcGridX_Parallel(&(this->pdfParamForForce_));
 
-  return pDfCalcGrid;
+    return pDfCalcGrid;
 }

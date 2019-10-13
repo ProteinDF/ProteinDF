@@ -363,58 +363,59 @@ TlPrdctbl::TlPrdctbl() {}
 TlPrdctbl::~TlPrdctbl() {}
 
 int TlPrdctbl::getAtomicNumber(const std::string& str) {
-  int answer = -1;
-  const int nMaxAtomIndex = sizeof(periodicTable) / sizeof(char*);
-  for (int i = 0; i < nMaxAtomIndex; i++) {
-    if (str.compare(periodicTable[i]) == 0) {
-      answer = i;
-      break;
+    int answer = -1;
+    const int nMaxAtomIndex = sizeof(periodicTable) / sizeof(char*);
+    for (int i = 0; i < nMaxAtomIndex; i++) {
+        if (str.compare(periodicTable[i]) == 0) {
+            answer = i;
+            break;
+        }
     }
-  }
 
-  return answer;
+    return answer;
 }
 
 std::string TlPrdctbl::getSymbol(int n) {
-  std::string answer = "";
-  const int maxAtomIndex = sizeof(periodicTable) / sizeof(char*);
-  if ((1 <= n) && (n < maxAtomIndex)) {
-    answer = std::string(periodicTable[n]);
-  }
+    std::string answer = "";
+    const int maxAtomIndex = sizeof(periodicTable) / sizeof(char*);
+    if ((1 <= n) && (n < maxAtomIndex)) {
+        answer = std::string(periodicTable[n]);
+    }
 
-  return answer;
+    return answer;
 }
 
 double TlPrdctbl::getVdwRadii(const int atomicNumber) {
-  double answer = UNDEFINED;
+    double answer = UNDEFINED;
 
-  const int maxAtomicNumber = sizeof(TlPrdctbl::vdwRadii) / sizeof(double);
-  if ((1 <= atomicNumber) && (atomicNumber < maxAtomicNumber)) {
-    answer = TlPrdctbl::vdwRadii[atomicNumber];
-  }
+    const int maxAtomicNumber = sizeof(TlPrdctbl::vdwRadii) / sizeof(double);
+    if ((1 <= atomicNumber) && (atomicNumber < maxAtomicNumber)) {
+        answer = TlPrdctbl::vdwRadii[atomicNumber];
+    }
 
-  return answer;
+    return answer;
 }
 
 double TlPrdctbl::getBraggSlaterRadii(const int atomicNumber) {
-  double answer = 0.0;
+    double answer = 0.0;
 
-  const int maxAtomicNumber =
-      sizeof(TlPrdctbl::BraggSlaterRadii) / sizeof(double);
-  if ((1 <= atomicNumber) && (atomicNumber < maxAtomicNumber)) {
-    answer = TlPrdctbl::BraggSlaterRadii[atomicNumber];
-  }
+    const int maxAtomicNumber =
+        sizeof(TlPrdctbl::BraggSlaterRadii) / sizeof(double);
+    if ((1 <= atomicNumber) && (atomicNumber < maxAtomicNumber)) {
+        answer = TlPrdctbl::BraggSlaterRadii[atomicNumber];
+    }
 
-  return answer;
+    return answer;
 }
 
 double TlPrdctbl::getCovalentRadii(const int atomicNumber) {
-  double answer = 0.0;
+    double answer = 0.0;
 
-  const int maxAtomicNumber = sizeof(TlPrdctbl::covalentRadii) / sizeof(double);
-  if ((1 <= atomicNumber) && (atomicNumber < maxAtomicNumber)) {
-    answer = TlPrdctbl::covalentRadii[atomicNumber];
-  }
+    const int maxAtomicNumber =
+        sizeof(TlPrdctbl::covalentRadii) / sizeof(double);
+    if ((1 <= atomicNumber) && (atomicNumber < maxAtomicNumber)) {
+        answer = TlPrdctbl::covalentRadii[atomicNumber];
+    }
 
-  return answer;
+    return answer;
 }

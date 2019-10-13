@@ -4,12 +4,12 @@
 #include "DfObject.h"
 
 class DfInfo : public DfObject {
- public:
-  DfInfo(TlSerializeData* pPdfParam);
-  virtual ~DfInfo();
+   public:
+    DfInfo(TlSerializeData* pPdfParam);
+    virtual ~DfInfo();
 
- public:
-  int getNumOfElectrons() const;
+   public:
+    int getNumOfElectrons() const;
 };
 
 #endif  // DFINFO_H

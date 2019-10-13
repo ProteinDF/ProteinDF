@@ -35,411 +35,415 @@
 
 DfIntegrals::DfIntegrals(TlSerializeData* pParam,
                          const std::string& saveParamPath)
-    : DfObject(pParam), saveParamPath_(saveParamPath) {}
+    : DfObject(pParam), saveParamPath_(saveParamPath) {
+    if (this->saveParamPath_.empty() != true) {
+        this->saveParamPath_ = (*pParam)["pdf_param_path"].getStr();
+    }
+}
 
 DfIntegrals::~DfIntegrals() {}
 
 void DfIntegrals::saveParam() {
-  if (this->saveParamPath_.empty() != true) {
     TlMsgPack mpac(*(this->pPdfParam_));
     mpac.save(this->saveParamPath_);
-  }
 }
 
 void DfIntegrals::main() {
-  // initialize --------------------------------------------------------
-  if (this->isRestart_ == true) {
-    this->logger(" restart calculation is enabled.\n");
-  } else {
-    (*this->pPdfParam_)["control"]["integrals_state"].set(0);
-  }
-  unsigned int calcState =
-      (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    // initialize --------------------------------------------------------
+    if (this->isRestart_ == true) {
+        this->logger(" restart calculation is enabled.\n");
+    } else {
+        (*this->pPdfParam_)["control"]["integrals_state"].set(0);
+    }
+    unsigned int calcState =
+        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-  // Hpq --------------- -----------------------------------------------
-  if ((this->isRestart_ == false) || ((calcState & DfIntegrals::Hpq) == 0)) {
-    this->outputStartTitle("Hpq");
-    this->createHpqMatrix();
-    this->outputEndTitle();
+    // Hpq --------------- -----------------------------------------------
+    if ((this->isRestart_ == false) || ((calcState & DfIntegrals::Hpq) == 0)) {
+        this->outputStartTitle("Hpq");
+        this->createHpqMatrix();
+        this->outputEndTitle();
 
-    calcState |= DfIntegrals::Hpq;
-    (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-    this->saveParam();
-  }
+        calcState |= DfIntegrals::Hpq;
+        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+        this->saveParam();
+    }
 
-  // Spq, Sab2, Sgd, Na ------------------------------------------------
-  this->createOverlapMatrix();
+    // Spq, Sab2, Sgd, Na ------------------------------------------------
+    this->createOverlapMatrix();
 
-  // Sab ---------------------------------------------------------------
-  this->createERIMatrix();
+    // Sab ---------------------------------------------------------------
+    this->createERIMatrix();
 
-  //   if ((this->m_bIsXcFitting != true) &&
-  //       (this->isRI_K_ == true)) {
-  //     // V^(-1/2) ------------------------------------------------------
-  //     this->outputStartTitle("V^-1/2");
-  //     {
-  //       DfEri2 dfEri2(this->flGlobalinput_);
-  //       TlDenseSymmetricMatrix_Lapack V = dfEri2.generateInvSquareVMatrix();
+    //   if ((this->m_bIsXcFitting != true) &&
+    //       (this->isRI_K_ == true)) {
+    //     // V^(-1/2) ------------------------------------------------------
+    //     this->outputStartTitle("V^-1/2");
+    //     {
+    //       DfEri2 dfEri2(this->flGlobalinput_);
+    //       TlDenseSymmetricMatrix_Lapack V =
+    //       dfEri2.generateInvSquareVMatrix();
 
-  //       this->saveInvSquareVMatrix(V);
-  //     }
-  //     this->outputEndTitle();
-  //   }
+    //       this->saveInvSquareVMatrix(V);
+    //     }
+    //     this->outputEndTitle();
+    //   }
 
-  // Cholesky Vector
-  this->createCholeskyVectors();
-  this->createCholeskyVectors_K();
+    // X matrix
+    this->createXMatrix();
 
-  // X matrix
-  this->createXMatrix();
+    // inverse matrix
+    this->createInverseMatrixes();
 
-  // inverse matrix
-  this->createInverseMatrixes();
+    // XC
+    if (this->isDFT_ == true) {
+        this->createCholeskyVectors_XC();
+        this->prepareGridFree();
+        this->createGrids();
+    }
 
-  // XC
-  if (this->isDFT_ == true) {
-    this->createCholeskyVectors_XC();
-    this->prepareGridFree();
-    this->createGrids();
-  }
+    // Cholesky Vector
+    this->createCholeskyVectors();
+    this->createCholeskyVectors_K();
 
-  // flush
-  this->matrixCache_.flush();
+    // flush
+    this->matrixCache_.flush();
 }
 
 DfCD* DfIntegrals::getDfCDObject() {
-  DfCD* pDfCD = new DfCD(this->pPdfParam_);
-  return pDfCD;
+    DfCD* pDfCD = new DfCD(this->pPdfParam_);
+    return pDfCD;
 }
 
 DfGridFreeXC* DfIntegrals::getDfGridFreeXCObject() {
-  DfGridFreeXC* pDfGridFreeXC = new DfGridFreeXC(this->pPdfParam_);
-  return pDfGridFreeXC;
+    DfGridFreeXC* pDfGridFreeXC = new DfGridFreeXC(this->pPdfParam_);
+    return pDfGridFreeXC;
 }
 
 DfXMatrix* DfIntegrals::getDfXMatrixObject() {
-  DfXMatrix* pDfXMatrix = new DfXMatrix(this->pPdfParam_);
+    DfXMatrix* pDfXMatrix = new DfXMatrix(this->pPdfParam_);
 
-  return pDfXMatrix;
+    return pDfXMatrix;
 }
 
 DfInvMatrix* DfIntegrals::getDfInvMatrixObject() {
-  DfInvMatrix* pDfInvMatrix = new DfInvMatrix(this->pPdfParam_);
+    DfInvMatrix* pDfInvMatrix = new DfInvMatrix(this->pPdfParam_);
 
-  return pDfInvMatrix;
+    return pDfInvMatrix;
 }
 
 DfGenerateGrid* DfIntegrals::getDfGenerateGridObject() {
-  DfGenerateGrid* pDfGenerateGrid = new DfGenerateGrid(this->pPdfParam_);
+    DfGenerateGrid* pDfGenerateGrid = new DfGenerateGrid(this->pPdfParam_);
 
-  return pDfGenerateGrid;
+    return pDfGenerateGrid;
 }
 
 void DfIntegrals::createHpqMatrix() {
-  TlDenseSymmetricMatrix_Lapack Hpq(this->m_nNumOfAOs);
-  TlDenseSymmetricMatrix_Lapack Hpq2(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_Lapack Hpq(this->m_nNumOfAOs);
+    TlDenseSymmetricMatrix_Lapack Hpq2(this->m_nNumOfAOs);
 
-  DfHpqX dfHpqX = DfHpqX(this->pPdfParam_);
-  dfHpqX.getHpq(&Hpq, &Hpq2);
-  // if (this->isUseNewEngine_ == true) {
-  //     this->logger(" use new engine.\n");
-  //     DfHpqX dfHpqX = DfHpqX(this->pPdfParam_);
-  //     dfHpqX.getHpq(&Hpq, &Hpq2);
-  // } else {
-  //     DfHpq dfHpq = DfHpq(this->pPdfParam_);
-  //     dfHpq.getHpq(&Hpq, &Hpq2);
-  // }
+    DfHpqX dfHpqX = DfHpqX(this->pPdfParam_);
+    dfHpqX.getHpq(&Hpq, &Hpq2);
+    // if (this->isUseNewEngine_ == true) {
+    //     this->logger(" use new engine.\n");
+    //     DfHpqX dfHpqX = DfHpqX(this->pPdfParam_);
+    //     dfHpqX.getHpq(&Hpq, &Hpq2);
+    // } else {
+    //     DfHpq dfHpq = DfHpq(this->pPdfParam_);
+    //     dfHpq.getHpq(&Hpq, &Hpq2);
+    // }
 
-  this->saveHpqMatrix(Hpq);
-  this->saveHpq2Matrix(Hpq2);
+    this->saveHpqMatrix(Hpq);
+    this->saveHpq2Matrix(Hpq2);
 }
 
 void DfIntegrals::createOverlapMatrix() {
-  unsigned int calcState =
-      (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
-  // DfOverlap dfOverlap(this->pPdfParam_);
-  DfOverlapX dfOverlapX(this->pPdfParam_);
+    unsigned int calcState =
+        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    // DfOverlap dfOverlap(this->pPdfParam_);
+    DfOverlapX dfOverlapX(this->pPdfParam_);
 
-  // Spq
-  if ((calcState & DfIntegrals::Spq) == 0) {
-    this->outputStartTitle("Spq");
+    // Spq
+    if ((calcState & DfIntegrals::Spq) == 0) {
+        this->outputStartTitle("Spq");
 
-    TlDenseSymmetricMatrix_Lapack Spq(this->m_nNumOfAOs);
-    dfOverlapX.getSpq(&Spq);
-    // if (this->isUseNewEngine_ == true) {
-    //     this->logger(" use new engine.\n");
-    //     dfOverlapX.getSpq(&Spq);
-    // } else {
-    //     dfOverlap.getSpq(&Spq);
-    // }
-    this->saveSpqMatrix(Spq);
-
-    this->outputEndTitle();
-
-    calcState |= DfIntegrals::Spq;
-    (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-    this->saveParam();
-  }
-
-  if (this->K_engine_ == K_ENGINE_RI_K) {
-    // Sgd
-    if ((calcState & DfIntegrals::Sgd) == 0) {
-      if (this->m_bIsXCFitting == true) {
-        this->outputStartTitle("Sgd");
-
-        TlDenseSymmetricMatrix_Lapack Sgd(this->numOfAuxXC_);
-        dfOverlapX.getSgd(&Sgd);
-        this->saveSgdMatrix(Sgd);
+        TlDenseSymmetricMatrix_Lapack Spq(this->m_nNumOfAOs);
+        dfOverlapX.getSpq(&Spq);
+        // if (this->isUseNewEngine_ == true) {
+        //     this->logger(" use new engine.\n");
+        //     dfOverlapX.getSpq(&Spq);
+        // } else {
+        //     dfOverlap.getSpq(&Spq);
+        // }
+        this->saveSpqMatrix(Spq);
 
         this->outputEndTitle();
-      }
 
-      calcState |= DfIntegrals::Sgd;
-      (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-      this->saveParam();
-    }
-  }
-
-  if (this->J_engine_ == J_ENGINE_RI_J) {
-    // Sab2
-    if ((calcState & DfIntegrals::Sab2) == 0) {
-      this->outputStartTitle("Sab2");
-
-      TlDenseSymmetricMatrix_Lapack Sab2(this->m_nNumOfAux);
-      dfOverlapX.getSab(&Sab2);
-      // if (this->isUseNewEngine_ == true) {
-      //     this->logger(" use new engine.\n");
-      //     dfOverlapX.getSab(&Sab2);
-      // } else {
-      //     dfOverlap.getSab2(&Sab2);
-      // }
-      this->saveSab2Matrix(Sab2);
-
-      this->outputEndTitle();
-
-      calcState |= DfIntegrals::Sab2;
-      (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-      this->saveParam();
+        calcState |= DfIntegrals::Spq;
+        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+        this->saveParam();
     }
 
-    // Na
-    if ((calcState & DfIntegrals::Na) == 0) {
-      this->outputStartTitle("N_alpha");
+    if (this->K_engine_ == K_ENGINE_RI_K) {
+        // Sgd
+        if ((calcState & DfIntegrals::Sgd) == 0) {
+            if (this->m_bIsXCFitting == true) {
+                this->outputStartTitle("Sgd");
 
-      TlDenseVector_Lapack Na(this->m_nNumOfAux);
-      dfOverlapX.getNalpha(&Na);
-      // if (this->isUseNewEngine_ == true) {
-      //     this->logger(" use new engine.\n");
-      //     dfOverlapX.getNalpha(&Na);
-      // } else {
-      //     dfOverlap.getNa(&Na);
-      // }
-      this->saveNalpha(Na);
+                TlDenseSymmetricMatrix_Lapack Sgd(this->numOfAuxXC_);
+                dfOverlapX.getSgd(&Sgd);
+                this->saveSgdMatrix(Sgd);
 
-      this->outputEndTitle();
+                this->outputEndTitle();
+            }
 
-      calcState |= DfIntegrals::Na;
-      (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-      this->saveParam();
+            calcState |= DfIntegrals::Sgd;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
+        }
     }
-  }
+
+    if (this->J_engine_ == J_ENGINE_RI_J) {
+        // Sab2
+        if ((calcState & DfIntegrals::Sab2) == 0) {
+            this->outputStartTitle("Sab2");
+
+            TlDenseSymmetricMatrix_Lapack Sab2(this->m_nNumOfAux);
+            dfOverlapX.getSab(&Sab2);
+            // if (this->isUseNewEngine_ == true) {
+            //     this->logger(" use new engine.\n");
+            //     dfOverlapX.getSab(&Sab2);
+            // } else {
+            //     dfOverlap.getSab2(&Sab2);
+            // }
+            this->saveSab2Matrix(Sab2);
+
+            this->outputEndTitle();
+
+            calcState |= DfIntegrals::Sab2;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
+        }
+
+        // Na
+        if ((calcState & DfIntegrals::Na) == 0) {
+            this->outputStartTitle("N_alpha");
+
+            TlDenseVector_Lapack Na(this->m_nNumOfAux);
+            dfOverlapX.getNalpha(&Na);
+            // if (this->isUseNewEngine_ == true) {
+            //     this->logger(" use new engine.\n");
+            //     dfOverlapX.getNalpha(&Na);
+            // } else {
+            //     dfOverlap.getNa(&Na);
+            // }
+            this->saveNalpha(Na);
+
+            this->outputEndTitle();
+
+            calcState |= DfIntegrals::Na;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
+        }
+    }
 }
 
 void DfIntegrals::createERIMatrix() {
-  unsigned int calcState =
-      (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState =
+        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-  if (this->J_engine_ == J_ENGINE_RI_J) {
-    if ((calcState & DfIntegrals::Sab) == 0) {
-      this->outputStartTitle("Sab");
+    if (this->J_engine_ == J_ENGINE_RI_J) {
+        if ((calcState & DfIntegrals::Sab) == 0) {
+            this->outputStartTitle("Sab");
 
-      TlDenseSymmetricMatrix_Lapack Sab(this->m_nNumOfAux);
-      // DfEri dfEri(this->pPdfParam_);
-      DfEriX dfEriX(this->pPdfParam_);
+            TlDenseSymmetricMatrix_Lapack Sab(this->m_nNumOfAux);
+            // DfEri dfEri(this->pPdfParam_);
+            DfEriX dfEriX(this->pPdfParam_);
 
-      dfEriX.getJab(&Sab);
-      // if (this->isUseNewEngine_ == true) {
-      //     this->logger(" use new engine.\n");
-      //     dfEriX.getJab(&Sab);
-      // } else {
-      //     dfEri.getSab(&Sab);
-      // }
-      this->saveSabMatrix(Sab);
+            dfEriX.getJab(&Sab);
+            // if (this->isUseNewEngine_ == true) {
+            //     this->logger(" use new engine.\n");
+            //     dfEriX.getJab(&Sab);
+            // } else {
+            //     dfEri.getSab(&Sab);
+            // }
+            this->saveSabMatrix(Sab);
 
-      this->outputEndTitle();
+            this->outputEndTitle();
 
-      calcState |= DfIntegrals::Sab;
-      (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-      this->saveParam();
+            calcState |= DfIntegrals::Sab;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
+        }
     }
-  }
 }
 
 void DfIntegrals::createCholeskyVectors() {
-  unsigned int calcState =
-      (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState =
+        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-  if ((calcState & DfIntegrals::CD) == 0) {
-    if ((this->J_engine_ == J_ENGINE_CD) || (this->K_engine_ == K_ENGINE_CD)) {
-      this->outputStartTitle("Cholesky Vectors");
-      DfCD* pDfCD = this->getDfCDObject();
-      pDfCD->calcCholeskyVectorsForJK();
+    if ((calcState & DfIntegrals::CD) == 0) {
+        if ((this->J_engine_ == J_ENGINE_CD) ||
+            (this->K_engine_ == K_ENGINE_CD)) {
+            this->outputStartTitle("Cholesky Vectors");
+            DfCD* pDfCD = this->getDfCDObject();
+            pDfCD->calcCholeskyVectorsForJK();
 
-      delete pDfCD;
-      pDfCD = NULL;
+            delete pDfCD;
+            pDfCD = NULL;
 
-      this->outputEndTitle();
+            this->outputEndTitle();
+        }
+
+        calcState |= DfIntegrals::CD;
+        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+        this->saveParam();
     }
-
-    calcState |= DfIntegrals::CD;
-    (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-    this->saveParam();
-  }
 }
 
 void DfIntegrals::createCholeskyVectors_K() {
-  unsigned int calcState =
-      (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState =
+        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-  if ((calcState & DfIntegrals::CDK) == 0) {
-    if (this->K_engine_ == K_ENGINE_FASTCDK) {
-      this->outputStartTitle("Cholesky Vectors (for K)");
-      DfCD* pDfCD = this->getDfCDObject();
-      pDfCD->calcCholeskyVectorsForK();
+    if ((calcState & DfIntegrals::CDK) == 0) {
+        if (this->K_engine_ == K_ENGINE_FASTCDK) {
+            this->outputStartTitle("Cholesky Vectors (for K)");
+            DfCD* pDfCD = this->getDfCDObject();
+            pDfCD->calcCholeskyVectorsForK();
 
-      delete pDfCD;
-      pDfCD = NULL;
+            delete pDfCD;
+            pDfCD = NULL;
 
-      this->outputEndTitle();
+            this->outputEndTitle();
+        }
+
+        calcState |= DfIntegrals::CDK;
+        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+        this->saveParam();
     }
-
-    calcState |= DfIntegrals::CDK;
-    (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-    this->saveParam();
-  }
 }
 
 void DfIntegrals::prepareGridFree() {
-  unsigned int calcState =
-      (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState =
+        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-  if ((calcState & DfIntegrals::GRID_FREE) == 0) {
-    if ((this->XC_engine_ == XC_ENGINE_GRIDFREE) ||
-        (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD)) {
-      this->outputStartTitle("prepare GridFree");
-      DfGridFreeXC* pDfGridFreeXC = this->getDfGridFreeXCObject();
-      pDfGridFreeXC->preprocessBeforeSCF();
+    if ((calcState & DfIntegrals::GRID_FREE) == 0) {
+        if ((this->XC_engine_ == XC_ENGINE_GRIDFREE) ||
+            (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD)) {
+            this->outputStartTitle("prepare GridFree");
+            DfGridFreeXC* pDfGridFreeXC = this->getDfGridFreeXCObject();
+            pDfGridFreeXC->preprocessBeforeSCF();
 
-      delete pDfGridFreeXC;
-      pDfGridFreeXC = NULL;
+            delete pDfGridFreeXC;
+            pDfGridFreeXC = NULL;
 
-      this->outputEndTitle();
+            this->outputEndTitle();
+        }
+
+        calcState |= DfIntegrals::GRID_FREE;
+        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+        this->saveParam();
     }
-
-    calcState |= DfIntegrals::GRID_FREE;
-    (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-    this->saveParam();
-  }
 }
 
 void DfIntegrals::createXMatrix() {
-  unsigned int calcState =
-      (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState =
+        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-  if ((calcState & DfIntegrals::X) == 0) {
-    this->outputStartTitle("X matrix");
-    DfXMatrix* pDfXMatrix = this->getDfXMatrixObject();
-    pDfXMatrix->buildX();
+    if ((calcState & DfIntegrals::X) == 0) {
+        this->outputStartTitle("X matrix");
+        DfXMatrix* pDfXMatrix = this->getDfXMatrixObject();
+        pDfXMatrix->buildX();
 
-    delete pDfXMatrix;
-    pDfXMatrix = NULL;
+        delete pDfXMatrix;
+        pDfXMatrix = NULL;
 
-    this->outputEndTitle();
+        this->outputEndTitle();
 
-    calcState |= DfIntegrals::X;
-    (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-    this->saveParam();
-  }
+        calcState |= DfIntegrals::X;
+        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+        this->saveParam();
+    }
 }
 
 void DfIntegrals::createInverseMatrixes() {
-  unsigned int calcState =
-      (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState =
+        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-  if (this->J_engine_ == J_ENGINE_RI_J) {
-    if ((calcState & DfIntegrals::INV) == 0) {
-      this->outputStartTitle("inverse matrix");
-      DfInvMatrix* pDfInvMatrix = this->getDfInvMatrixObject();
-      pDfInvMatrix->DfInvMain();
+    if (this->J_engine_ == J_ENGINE_RI_J) {
+        if ((calcState & DfIntegrals::INV) == 0) {
+            this->outputStartTitle("inverse matrix");
+            DfInvMatrix* pDfInvMatrix = this->getDfInvMatrixObject();
+            pDfInvMatrix->DfInvMain();
 
-      delete pDfInvMatrix;
-      pDfInvMatrix = NULL;
+            delete pDfInvMatrix;
+            pDfInvMatrix = NULL;
 
-      this->outputEndTitle();
+            this->outputEndTitle();
 
-      calcState |= DfIntegrals::INV;
-      (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-      this->saveParam();
+            calcState |= DfIntegrals::INV;
+            (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+            this->saveParam();
+        }
     }
-  }
 }
 
 void DfIntegrals::createCholeskyVectors_XC() {
-  unsigned int calcState =
-      (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
-  if ((calcState & DfIntegrals::CHOLESKY_VECTORS_XC) == 0) {
-    if (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD) {
-      this->outputStartTitle("Cholesky Vectors for XC");
+    unsigned int calcState =
+        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    if ((calcState & DfIntegrals::CHOLESKY_VECTORS_XC) == 0) {
+        if (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD) {
+            this->outputStartTitle("Cholesky Vectors for XC");
 
-      DfCD* pDfCD = this->getDfCDObject();
-      pDfCD->calcCholeskyVectorsForGridFree();
+            DfCD* pDfCD = this->getDfCDObject();
+            pDfCD->calcCholeskyVectorsForGridFree();
 
-      delete pDfCD;
-      pDfCD = NULL;
+            delete pDfCD;
+            pDfCD = NULL;
 
-      this->outputEndTitle();
+            this->outputEndTitle();
+        }
+
+        calcState |= DfIntegrals::CHOLESKY_VECTORS_XC;
+        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+        this->saveParam();
     }
-
-    calcState |= DfIntegrals::CHOLESKY_VECTORS_XC;
-    (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-    this->saveParam();
-  }
 }
 
 void DfIntegrals::createGrids() {
-  unsigned int calcState =
-      (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState =
+        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-  if (((calcState & DfIntegrals::GRID) == 0) &&
-      (this->XC_engine_ == XC_ENGINE_GRID)) {
-    this->outputStartTitle("Grid generation");
+    if (((calcState & DfIntegrals::GRID) == 0) &&
+        (this->XC_engine_ == XC_ENGINE_GRID)) {
+        this->outputStartTitle("Grid generation");
 
-    DfGenerateGrid* pDfGenerateGrid = this->getDfGenerateGridObject();
-    pDfGenerateGrid->dfGrdMain();
+        DfGenerateGrid* pDfGenerateGrid = this->getDfGenerateGridObject();
+        pDfGenerateGrid->dfGrdMain();
 
-    delete pDfGenerateGrid;
-    pDfGenerateGrid = NULL;
+        delete pDfGenerateGrid;
+        pDfGenerateGrid = NULL;
 
-    this->outputEndTitle();
+        this->outputEndTitle();
 
-    calcState |= DfIntegrals::GRID;
-    (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
-    this->saveParam();
-  }
+        calcState |= DfIntegrals::GRID;
+        (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
+        this->saveParam();
+    }
 }
 
 void DfIntegrals::saveInvSquareVMatrix(const TlDenseSymmetricMatrix_Lapack& v) {
-  v.save("fl_Work/fl_Mtr_invSquareV.matrix");
+    v.save("fl_Work/fl_Mtr_invSquareV.matrix");
 }
 
 void DfIntegrals::outputStartTitle(const std::string& stepName,
                                    const char lineChar) {
-  const std::string title = ">>>> " + stepName;
-  this->log_.info(title);
+    const std::string title = ">>>> " + stepName;
+    this->log_.info(title);
 }
 
 void DfIntegrals::outputEndTitle(const std::string& stepName,
                                  const char lineChar) {
-  const std::string title = "<<<< " + stepName + " ";
-  this->log_.info(title);
+    const std::string title = "<<<< " + stepName + " ";
+    this->log_.info(title);
 }

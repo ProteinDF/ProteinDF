@@ -30,155 +30,155 @@
 // Basisset名に対応した値を、データベースから
 // 取ってくるクラス。データベースの名前は今の所basis2である
 class Fl_Db_Basis {
- private:
-  struct Cgto {
-    char shell;               // Shelltype { s , p , d };
-    double scalefactor;       // Scalefactor;
-    double normalizedfactor;  // Normalazedfactor;
-    struct Pgto {
-      double exponent;     // Expornent;
-      double coefficient;  // Coefficient;
+   private:
+    struct Cgto {
+        char shell;               // Shelltype { s , p , d };
+        double scalefactor;       // Scalefactor;
+        double normalizedfactor;  // Normalazedfactor;
+        struct Pgto {
+            double exponent;     // Expornent;
+            double coefficient;  // Coefficient;
+        };
+        std::vector<Pgto> contraction;
     };
-    std::vector<Pgto> contraction;
-  };
 
- public:
-  Fl_Db_Basis(const std::string&);
-  virtual ~Fl_Db_Basis();
+   public:
+    Fl_Db_Basis(const std::string&);
+    virtual ~Fl_Db_Basis();
 
- public:
-  int getTotalcgto() const { return this->cgto.size(); }
+   public:
+    int getTotalcgto() const { return this->cgto.size(); }
 
-  int getrouSnum() const {
-    int nAnswer = 0;
-    for (unsigned int i = 0; i < this->rhoCgto.size(); ++i) {
-      if (this->rhoCgto[i].shell == 's') {
-        ++nAnswer;
-      }
-    }
-    return static_cast<int>(nAnswer);
-  }
-
-  int getrouPnum() const {
-    int nAnswer = 0;
-    for (unsigned int i = 0; i < this->rhoCgto.size(); ++i) {
-      if (this->rhoCgto[i].shell == 'p') {
-        ++nAnswer;
-      }
-    }
-    return static_cast<int>(nAnswer);
-  }
-
-  int getrouDnum() const {
-    int nAnswer = 0;
-    for (unsigned int i = 0; i < this->rhoCgto.size(); ++i) {
-      if (this->rhoCgto[i].shell == 'd') {
-        ++nAnswer;
-      }
+    int getrouSnum() const {
+        int nAnswer = 0;
+        for (unsigned int i = 0; i < this->rhoCgto.size(); ++i) {
+            if (this->rhoCgto[i].shell == 's') {
+                ++nAnswer;
+            }
+        }
+        return static_cast<int>(nAnswer);
     }
 
-    return static_cast<int>(nAnswer);
-  }
-
-  int getrouTotalnum() const { return this->rhoCgto.size(); }
-
-  int getmyuSnum() const {
-    int nAnswer = 0;
-    for (unsigned int i = 0; i < this->myuCgto.size(); ++i) {
-      if (this->myuCgto[i].shell == 's') {
-        ++nAnswer;
-      }
+    int getrouPnum() const {
+        int nAnswer = 0;
+        for (unsigned int i = 0; i < this->rhoCgto.size(); ++i) {
+            if (this->rhoCgto[i].shell == 'p') {
+                ++nAnswer;
+            }
+        }
+        return static_cast<int>(nAnswer);
     }
-    return static_cast<int>(nAnswer);
-  }
 
-  int getmyuPnum() const {
-    int nAnswer = 0;
-    for (unsigned int i = 0; i < this->myuCgto.size(); ++i) {
-      if (this->myuCgto[i].shell == 'p') {
-        ++nAnswer;
-      }
+    int getrouDnum() const {
+        int nAnswer = 0;
+        for (unsigned int i = 0; i < this->rhoCgto.size(); ++i) {
+            if (this->rhoCgto[i].shell == 'd') {
+                ++nAnswer;
+            }
+        }
+
+        return static_cast<int>(nAnswer);
     }
-    return static_cast<int>(nAnswer);
-  }
 
-  int getmyuDnum() const {
-    int nAnswer = 0;
-    for (unsigned int i = 0; i < this->myuCgto.size(); ++i) {
-      if (this->myuCgto[i].shell == 'd') {
-        ++nAnswer;
-      }
+    int getrouTotalnum() const { return this->rhoCgto.size(); }
+
+    int getmyuSnum() const {
+        int nAnswer = 0;
+        for (unsigned int i = 0; i < this->myuCgto.size(); ++i) {
+            if (this->myuCgto[i].shell == 's') {
+                ++nAnswer;
+            }
+        }
+        return static_cast<int>(nAnswer);
     }
-    return static_cast<int>(nAnswer);
-  }
 
-  int getmyuTotalnum() const { return this->myuCgto.size(); }
+    int getmyuPnum() const {
+        int nAnswer = 0;
+        for (unsigned int i = 0; i < this->myuCgto.size(); ++i) {
+            if (this->myuCgto[i].shell == 'p') {
+                ++nAnswer;
+            }
+        }
+        return static_cast<int>(nAnswer);
+    }
 
-  char getShell(int s) const { return this->cgto[s].shell; }
+    int getmyuDnum() const {
+        int nAnswer = 0;
+        for (unsigned int i = 0; i < this->myuCgto.size(); ++i) {
+            if (this->myuCgto[i].shell == 'd') {
+                ++nAnswer;
+            }
+        }
+        return static_cast<int>(nAnswer);
+    }
 
-  double getScalefactor(int s) { return cgto[s].scalefactor; }
+    int getmyuTotalnum() const { return this->myuCgto.size(); }
 
-  double getNormalizedfactor(int s) { return cgto[s].normalizedfactor; }
+    char getShell(int s) const { return this->cgto[s].shell; }
 
-  int getContraction(int s) { return this->cgto[s].contraction.size(); }
+    double getScalefactor(int s) { return cgto[s].scalefactor; }
 
-  double getExpornent(int s, int p) {
-    return this->cgto[s].contraction[p].exponent;
-  }
+    double getNormalizedfactor(int s) { return cgto[s].normalizedfactor; }
 
-  double getCoefficient(int s, int p) {
-    return this->cgto[s].contraction[p].coefficient;
-  }
+    int getContraction(int s) { return this->cgto[s].contraction.size(); }
 
-  char getrouShell(int s) { return this->rhoCgto[s].shell; }
+    double getExpornent(int s, int p) {
+        return this->cgto[s].contraction[p].exponent;
+    }
 
-  double getrouScalefactor(int s) { return this->rhoCgto[s].scalefactor; }
+    double getCoefficient(int s, int p) {
+        return this->cgto[s].contraction[p].coefficient;
+    }
 
-  double getrouNormalizedfactor(int s) {
-    return this->rhoCgto[s].normalizedfactor;
-  }
+    char getrouShell(int s) { return this->rhoCgto[s].shell; }
 
-  int getrouContraction(int s) { return this->rhoCgto[s].contraction.size(); }
+    double getrouScalefactor(int s) { return this->rhoCgto[s].scalefactor; }
 
-  double getrouExpornent(int s, int p) {
-    return this->rhoCgto[s].contraction[p].exponent;
-  }
+    double getrouNormalizedfactor(int s) {
+        return this->rhoCgto[s].normalizedfactor;
+    }
 
-  double getrouCoefficient(int s, int p) {
-    return this->rhoCgto[s].contraction[p].coefficient;
-  }
+    int getrouContraction(int s) { return this->rhoCgto[s].contraction.size(); }
 
-  char getmyuShell(int s) { return this->myuCgto[s].shell; }
+    double getrouExpornent(int s, int p) {
+        return this->rhoCgto[s].contraction[p].exponent;
+    }
 
-  double getmyuScalefactor(int s) { return this->myuCgto[s].scalefactor; }
+    double getrouCoefficient(int s, int p) {
+        return this->rhoCgto[s].contraction[p].coefficient;
+    }
 
-  double getmyuNormalizedfactor(int s) {
-    return this->myuCgto[s].normalizedfactor;
-  }
+    char getmyuShell(int s) { return this->myuCgto[s].shell; }
 
-  int getmyuContraction(int s) { return this->myuCgto[s].contraction.size(); }
+    double getmyuScalefactor(int s) { return this->myuCgto[s].scalefactor; }
 
-  double getmyuExpornent(int s, int p) {
-    return this->myuCgto[s].contraction[p].exponent;
-  }
+    double getmyuNormalizedfactor(int s) {
+        return this->myuCgto[s].normalizedfactor;
+    }
 
-  double getmyuCoefficient(int s, int p) {
-    return this->myuCgto[s].contraction[p].coefficient;
-  }
+    int getmyuContraction(int s) { return this->myuCgto[s].contraction.size(); }
 
- private:
-  void setData();
-  void read_cGTOs(const int numOfCGTOs, const std::string& shellType,
-                  std::ifstream& fi, std::vector<Cgto>* pCGTOs);
+    double getmyuExpornent(int s, int p) {
+        return this->myuCgto[s].contraction[p].exponent;
+    }
 
-  std::vector<std::string> getWords(const std::string& str);
+    double getmyuCoefficient(int s, int p) {
+        return this->myuCgto[s].contraction[p].coefficient;
+    }
 
- private:
-  std::string m_sBasisName;
+   private:
+    void setData();
+    void read_cGTOs(const int numOfCGTOs, const std::string& shellType,
+                    std::ifstream& fi, std::vector<Cgto>* pCGTOs);
 
-  std::vector<Cgto> cgto;
-  std::vector<Cgto> rhoCgto;
-  std::vector<Cgto> myuCgto;
+    std::vector<std::string> getWords(const std::string& str);
+
+   private:
+    std::string m_sBasisName;
+
+    std::vector<Cgto> cgto;
+    std::vector<Cgto> rhoCgto;
+    std::vector<Cgto> myuCgto;
 };
 
 #endif  // FL_DB_BASIS_H

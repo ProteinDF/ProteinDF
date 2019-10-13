@@ -22,12 +22,12 @@
 #include "DfInputdata.h"
 
 class DfInputdata_Parallel : public DfInputdata {
- public:
-  DfInputdata_Parallel();
-  virtual ~DfInputdata_Parallel();
+   public:
+    DfInputdata_Parallel();
+    virtual ~DfInputdata_Parallel();
 
- public:
-  virtual TlSerializeData main(const bool isReadUserInput = true);
+   public:
+    virtual TlSerializeData main(const bool isReadUserInput = true);
 };
 
 #endif  // DFINPUTDATA_PARALLEL_H

@@ -29,40 +29,40 @@
 #define AM_GRAD_LEVEL (2)
 
 class DfEngineObject {
- public:
-  typedef int index_type;
+   public:
+    typedef int index_type;
 
- public:
-  DfEngineObject()
-      : primitiveLevelThreshold_(0.0), log_(TlLogging::getInstance()) {}
+   public:
+    DfEngineObject()
+        : primitiveLevelThreshold_(0.0), log_(TlLogging::getInstance()) {}
 
-  void setPrimitiveLevelThreshold(const double threshold) {
-    this->primitiveLevelThreshold_ = threshold;
-  }
-  double getPrimitiveLevelThreshold() const {
-    return this->primitiveLevelThreshold_;
-  }
+    void setPrimitiveLevelThreshold(const double threshold) {
+        this->primitiveLevelThreshold_ = threshold;
+    }
+    double getPrimitiveLevelThreshold() const {
+        return this->primitiveLevelThreshold_;
+    }
 
-  virtual void calc(const int diff1, const TlOrbitalInfoObject& orbInfo1,
-                    const index_type shell1, const int diff2,
-                    const TlOrbitalInfoObject& orbInfo2,
-                    const index_type shell2, const int diff3,
-                    const TlOrbitalInfoObject& orbInfo3,
-                    const index_type shell3, const int diff4,
-                    const TlOrbitalInfoObject& orbInfo4,
-                    const index_type shell4) = 0;
+    virtual void calc(const int diff1, const TlOrbitalInfoObject& orbInfo1,
+                      const index_type shell1, const int diff2,
+                      const TlOrbitalInfoObject& orbInfo2,
+                      const index_type shell2, const int diff3,
+                      const TlOrbitalInfoObject& orbInfo3,
+                      const index_type shell3, const int diff4,
+                      const TlOrbitalInfoObject& orbInfo4,
+                      const index_type shell4) = 0;
 
- public:
-  virtual ~DfEngineObject(){};
+   public:
+    virtual ~DfEngineObject(){};
 
- public:
-  virtual double value(const index_type index) const = 0;
+   public:
+    virtual double value(const index_type index) const = 0;
 
- protected:
-  // see J. Chem. Phys., 105, 2726 (1996), eq33
-  double primitiveLevelThreshold_;
+   protected:
+    // see J. Chem. Phys., 105, 2726 (1996), eq33
+    double primitiveLevelThreshold_;
 
-  TlLogging& log_;
+    TlLogging& log_;
 };
 
 #endif  // DFENGINEOBJECT_H

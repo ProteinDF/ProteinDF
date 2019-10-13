@@ -29,75 +29,76 @@
 #include "tl_dense_symmetric_matrix_lapack.h"
 
 class DfLocalize : public DfObject {
- protected:
-  struct Orb_QA_Item {
-   public:
-    Orb_QA_Item(std::size_t o = 0, double q = 0.0) : orb(o), qa(q){};
+   protected:
+    struct Orb_QA_Item {
+       public:
+        Orb_QA_Item(std::size_t o = 0, double q = 0.0) : orb(o), qa(q){};
 
-   public:
-    std::size_t orb;
-    double qa;
-  };
-
-  struct do_OrbQAItem_sort_functor_cmp {
-    bool operator()(const Orb_QA_Item& a, const Orb_QA_Item& b) const {
-      return (a.qa > b.qa);
+       public:
+        std::size_t orb;
+        double qa;
     };
-  };
 
-  struct JobItem {
+    struct do_OrbQAItem_sort_functor_cmp {
+        bool operator()(const Orb_QA_Item& a, const Orb_QA_Item& b) const {
+            return (a.qa > b.qa);
+        };
+    };
+
+    struct JobItem {
+       public:
+        JobItem(std::size_t i = 0, std::size_t j = 0) : orb_i(i), orb_j(j) {}
+
+       public:
+        std::size_t orb_i;
+        std::size_t orb_j;
+    };
+
    public:
-    JobItem(std::size_t i = 0, std::size_t j = 0) : orb_i(i), orb_j(j) {}
+    DfLocalize(TlSerializeData* pPdfParam);
+    virtual ~DfLocalize();
 
    public:
-    std::size_t orb_i;
-    std::size_t orb_j;
-  };
+    virtual void localize(const std::string& inputCMatrixPath = "");
 
- public:
-  DfLocalize(TlSerializeData* pPdfParam);
-  virtual ~DfLocalize();
+   protected:
+    void makeGroup();
+    void makeQATable();
+    void calcQA(const std::size_t orb_i, const std::size_t orb_j, double* pA_ij,
+                double* pB_ij);
 
- public:
-  virtual void localize(const std::string& inputCMatrixPath = "");
+    void getRotatingMatrix(const double A_ij, const double B_ij,
+                           const double normAB,
+                           TlDenseGeneralMatrix_Lapack* pRot);
+    void rotateCmatrix(std::size_t orb_i, std::size_t orb_j,
+                       const TlDenseGeneralMatrix_Lapack& rot);
 
- protected:
-  void makeGroup();
-  void makeQATable();
-  void calcQA(const std::size_t orb_i, const std::size_t orb_j, double* pA_ij,
-              double* pB_ij);
+   protected:
+    double calcQA(const std::size_t orb_i);
 
-  void getRotatingMatrix(const double A_ij, const double B_ij,
-                         const double normAB,
-                         TlDenseGeneralMatrix_Lapack* pRot);
-  void rotateCmatrix(std::size_t orb_i, std::size_t orb_j,
-                     const TlDenseGeneralMatrix_Lapack& rot);
+    void makeJobList();
+    virtual int getJobItem(DfLocalize::JobItem* pJob,
+                           bool isInitialized = false);
 
- protected:
-  double calcQA(const std::size_t orb_i);
+   protected:
+    int maxIteration_;
+    double threshold_;
 
-  void makeJobList();
-  virtual int getJobItem(DfLocalize::JobItem* pJob, bool isInitialized = false);
+    TlOrbitalInfo orbInfo_;
+    int numOfOcc_;
 
- protected:
-  int maxIteration_;
-  double threshold_;
+    std::size_t startOrb_;
+    std::size_t endOrb_;
 
-  TlOrbitalInfo orbInfo_;
-  int numOfOcc_;
+    std::string SMatrixPath_;
+    std::string CMatrixPath_;
 
-  std::size_t startOrb_;
-  std::size_t endOrb_;
+    std::vector<std::vector<std::size_t> > group_;
+    TlDenseSymmetricMatrix_Lapack S_;
+    TlDenseGeneralMatrix_Lapack C_;
 
-  std::string SMatrixPath_;
-  std::string CMatrixPath_;
-
-  std::vector<std::vector<std::size_t> > group_;
-  TlDenseSymmetricMatrix_Lapack S_;
-  TlDenseGeneralMatrix_Lapack C_;
-
-  std::vector<Orb_QA_Item> orb_QA_table_;
-  std::vector<JobItem> jobList_;
+    std::vector<Orb_QA_Item> orb_QA_table_;
+    std::vector<JobItem> jobList_;
 };
 
 #endif  // DFLOCALIZE_H

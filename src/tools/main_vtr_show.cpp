@@ -25,50 +25,51 @@
 #include "tl_vector_utils.h"
 
 void showHelp(const std::string& progname) {
-  std::cout << TlUtils::format("Usage: %s [options]... FILE", progname.c_str())
-            << std::endl;
-  std::cout << "display ProteinDF vector file" << std::endl;
-  std::cout << "Options:" << std::endl;
-  std::cout << " -g           show guess mode" << std::endl;
-  std::cout << " -l           show list mode" << std::endl;
-  std::cout << " -h           show help message (this)." << std::endl;
-  std::cout << " -v           show message verbosely." << std::endl;
+    std::cout << TlUtils::format("Usage: %s [options]... FILE",
+                                 progname.c_str())
+              << std::endl;
+    std::cout << "display ProteinDF vector file" << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << " -g           show guess mode" << std::endl;
+    std::cout << " -l           show list mode" << std::endl;
+    std::cout << " -h           show help message (this)." << std::endl;
+    std::cout << " -v           show message verbosely." << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "ghlv");
+    TlGetopt opt(argc, argv, "ghlv");
 
-  const bool bGuessMode = (opt["g"] == "defined");
-  const bool bListMode = (opt["l"] == "defined");
-  const bool bVerbose = (opt["v"] == "defined");
+    const bool bGuessMode = (opt["g"] == "defined");
+    const bool bListMode = (opt["l"] == "defined");
+    const bool bVerbose = (opt["v"] == "defined");
 
-  if (opt["h"] == "defined") {
-    showHelp(opt[0]);
-  }
-
-  std::string sPath = opt[1];
-  if (bVerbose) {
-    std::cerr << "loading... " << sPath << std::endl;
-  }
-
-  TlDenseVector_Lapack v;
-  bool bIsLoadable = TlVectorUtils::isLoadable(sPath);
-  if (bIsLoadable == false) {
-    std::cerr << "could not open: " << sPath << std::endl;
-    return EXIT_FAILURE;
-  }
-  v.load(sPath);
-
-  if (bGuessMode == true) {
-      v.outputText(std::cout);
-  } else if (bListMode == true) {
-    const int nSize = v.getSize();
-    for (int i = 0; i < nSize; ++i) {
-      std::cout << v.get(i) << std::endl;
+    if (opt["h"] == "defined") {
+        showHelp(opt[0]);
     }
-  } else {
-      std::cout << v << std::endl;
-  }
 
-  return EXIT_SUCCESS;
+    std::string sPath = opt[1];
+    if (bVerbose) {
+        std::cerr << "loading... " << sPath << std::endl;
+    }
+
+    TlDenseVector_Lapack v;
+    bool bIsLoadable = TlVectorUtils::isLoadable(sPath);
+    if (bIsLoadable == false) {
+        std::cerr << "could not open: " << sPath << std::endl;
+        return EXIT_FAILURE;
+    }
+    v.load(sPath);
+
+    if (bGuessMode == true) {
+        v.outputText(std::cout);
+    } else if (bListMode == true) {
+        const int nSize = v.getSize();
+        for (int i = 0; i < nSize; ++i) {
+            std::cout << v.get(i) << std::endl;
+        }
+    } else {
+        std::cout << v << std::endl;
+    }
+
+    return EXIT_SUCCESS;
 }

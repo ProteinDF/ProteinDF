@@ -37,6 +37,12 @@ add_executable(pdf-info-charge ${PDF_INFO_CHARGE_SOURCES})
 target_link_libraries(pdf-info-charge libpdf libpdftl)
 install(TARGETS pdf-info-charge RUNTIME DESTINATION bin)
 
+set(PDF_INFO_ECOMP_SOURCES
+  main_info_ecomponents.cc
+  )
+add_executable(pdf-info-ecomp ${PDF_INFO_ECOMP_SOURCES})
+target_link_libraries(pdf-info-ecomp libpdf libpdftl)
+install(TARGETS pdf-info-ecomp RUNTIME DESTINATION bin)
 
 set(PDF_INFO_GRID_SOURCES
   main_info_grid.cpp
@@ -345,13 +351,34 @@ install(TARGETS pdf-rvm2csfd RUNTIME DESTINATION bin)
 # ------------------------------------------------------------------------------
 # benchmark
 # ------------------------------------------------------------------------------
-set(PDF_BENCH_MAT_SOURCES
-  main_bench_mat.cpp
+set(PDF_BENCH_MAT_MUL_SOURCES
+  main_bench_mat_common.h
+  main_bench_mat_mul.cc
   )
-add_executable(pdf-bench-mat ${PDF_BENCH_MAT_SOURCES})
-target_link_libraries(pdf-bench-mat libpdf libpdftl)
-install(TARGETS pdf-bench-mat RUNTIME DESTINATION bin)
+add_executable(pdf-bench-mat-mul ${PDF_BENCH_MAT_MUL_SOURCES})
+target_link_libraries(pdf-bench-mat-mul libpdf libpdftl)
+install(TARGETS pdf-bench-mat-mul RUNTIME DESTINATION bin)
 
+set(PDF_BENCH_MAT_DIAG_SOURCES
+  main_bench_mat_common.h
+  main_bench_mat_diag.cc
+  )
+add_executable(pdf-bench-mat-diag ${PDF_BENCH_MAT_DIAG_SOURCES})
+target_link_libraries(pdf-bench-mat-diag libpdf libpdftl)
+install(TARGETS pdf-bench-mat-diag RUNTIME DESTINATION bin)
+
+# ------------------------------------------------------------------------------
+# debug
+# ------------------------------------------------------------------------------
+if (VIENNACL_FOUND)
+  set(PDF_DEBUG_MAT_MUL_SOURCES
+    tool_common.h
+    main_debug_mat_mul.cc
+    )
+  add_executable(pdf-debug-mat-mul ${PDF_DEBUG_MAT_MUL_SOURCES})
+  target_link_libraries(pdf-debug-mat-mul libpdf libpdftl)
+  install(TARGETS pdf-debug-mat-mul RUNTIME DESTINATION bin)
+  endif (VIENNACL_FOUND)
 
 # ================
 

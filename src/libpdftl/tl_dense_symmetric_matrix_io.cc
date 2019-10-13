@@ -26,42 +26,42 @@ TlFileSymmetricMatrix::TlFileSymmetricMatrix(
     const std::size_t cacheSize)
     : TlDenseMatrix_IO_object(TlMatrixObject::RLHD, filePath, dim, dim,
                               cacheSize) {
-  this->createNewFile();
-  this->open();
+    this->createNewFile();
+    this->open();
 }
 
 TlFileSymmetricMatrix::TlFileSymmetricMatrix(const std::string& filePath,
                                              const std::size_t cacheSize)
     : TlDenseMatrix_IO_object(TlMatrixObject::RLHD, filePath, cacheSize) {
-  this->open();
+    this->open();
 }
 
 TlFileSymmetricMatrix::~TlFileSymmetricMatrix() {}
 
 void TlFileSymmetricMatrix::resize(const index_type newDim) {
-  TlDenseMatrix_IO_object::resize<TlFileSymmetricMatrix>(newDim, newDim);
+    TlDenseMatrix_IO_object::resize<TlFileSymmetricMatrix>(newDim, newDim);
 }
 
 TlMatrixObject::size_type TlFileSymmetricMatrix::getIndex(
     const TlMatrixObject::index_type row,
     const TlMatrixObject::index_type col) const {
-  return TlMatrixObject::getIndex_RLHD(row, col);
+    return TlMatrixObject::getIndex_RLHD(row, col);
 }
 
 TlMatrixObject::size_type TlFileSymmetricMatrix::getNumOfElements() const {
-  return TlMatrixObject::getNumOfElements_RLHD();
+    return TlMatrixObject::getNumOfElements_RLHD();
 }
 
 TlFileSymmetricMatrix& TlFileSymmetricMatrix::operator*=(const double coef) {
-  // ToDo: 高速化
-  const size_type numOfRows = this->getNumOfRows();
-  const size_type numOfCols = this->getNumOfCols();
-  for (size_type r = 0; r < numOfRows; ++r) {
-    for (size_type c = 0; c < numOfCols; ++c) {
-      const double value = this->get(r, c) * coef;
-      this->set(r, c, value);
+    // ToDo: 高速化
+    const size_type numOfRows = this->getNumOfRows();
+    const size_type numOfCols = this->getNumOfCols();
+    for (size_type r = 0; r < numOfRows; ++r) {
+        for (size_type c = 0; c < numOfCols; ++c) {
+            const double value = this->get(r, c) * coef;
+            this->set(r, c, value);
+        }
     }
-  }
 
-  return *this;
+    return *this;
 }

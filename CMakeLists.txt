@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.5)
 project(ProteinDF)
+enable_language(C)
 enable_language(CXX)
 enable_testing()
 
 # Project Version
-set(PROJECT_VERSION_MAJOR "2018")
+set(PROJECT_VERSION_MAJOR "2019")
 set(PROJECT_VERSION_MINOR "10")
-set(PROJECT_VERSION_REVISION "2")
+set(PROJECT_VERSION_REVISION "RC")
 set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_REVISION}")
 
 set(PROJECT_VERSION_BUILD "")
@@ -65,7 +66,75 @@ check_include_file("unistd.h" HAVE_UNISTD_H)
 check_include_file("stdint.h" HAVE_STDINT_H)
 
 
-# check MPI
+# -----------------------------------------------------------------------------
+# Boost
+# -----------------------------------------------------------------------------
+find_package(Boost)
+if (Boost_FOUND)
+  message("Boost information:")
+  message("  Boost_VERSION: ${Boost_VERSION}")
+  message("  Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
+  message("  Boost_LIBRARIES: ${Boost_LIBRARIES}")
+
+  include_directories(${Boost_INCLUDE_DIRS})
+else (Boost_FOUND)
+  message("Not Found Boost")
+endif (Boost_FOUND)
+
+
+# -----------------------------------------------------------------------------
+# OpenMP
+# -----------------------------------------------------------------------------
+set(HAVE_ENV_OPENMP_HOME $ENV{OpenMP_HOME})
+if (HAVE_ENV_OPENMP_HOME)
+    set(OpenMP_HOME $ENV{OpenMP_HOME})
+    message(STATUS "OpenMP Root : ${OpenMP_HOME}")
+endif ()
+
+set(HAVE_OpenMP_C_LIB_NAMES $ENV{OpenMP_C_LIB_NAMES})
+if (HAVE_OpenMP_C_LIB_NAMES)
+    message(STATUS "set OpenMP_C_LIB_NAMES: $ENV{OpenMP_C_LIB_NAMES}")
+    set(OpenMP_C_LIB_NAMES $ENV{OpenMP_C_LIB_NAMES})
+endif (HAVE_OpenMP_C_LIB_NAMES)
+set(HAVE_OpenMP_CXX_LIB_NAMES $ENV{OpenMP_CXX_LIB_NAMES})
+if (HAVE_OpenMP_CXX_LIB_NAMES)
+    message(STATUS "set OpenMP_CXX_LIB_NAMES: $ENV{OpenMP_CXX_LIB_NAMES}")
+    set(OpenMP_CXX_LIB_NAMES $ENV{OpenMP_CXX_LIB_NAMES})
+endif (HAVE_OpenMP_CXX_LIB_NAMES)
+set(HAVE_OpenMP_omp_LIBRARY $ENV{OpenMP_omp_LIBRARY})
+if (HAVE_OpenMP_omp_LIBRARY)
+    message(STATUS "set OpenMP_omp_LIBRARY: $ENV{OpenMP_omp_LIBRARY}")
+    set(OpenMP_omp_LIBRARY $ENV{OpenMP_omp_LIBRARY})
+endif (HAVE_OpenMP_omp_LIBRARY)
+
+set(HAVE_ENV_OpenMP_C_FLAGS $ENV{OpenMP_C_FLAGS})
+if (HAVE_ENV_OpenMP_C_FLAGS)
+    message(STATUS "set OpenMP_C_FLAGS: $ENV{OpenMP_C_FLAGS}")
+    set(OpenMP_C_FLAGS $ENV{OpenMP_C_FLAGS} CACHE STRING "" FORCE)
+endif ()
+set(HAVE_ENV_OpenMP_CXX_FLAGS $ENV{OpenMP_CXX_FLAGS})
+if (HAVE_ENV_OpenMP_CXX_FLAGS)
+    message(STATUS "set OpenMP_CXX_FLAGS: $ENV{OpenMP_CXX_FLAGS}")
+    set(OpenMP_CXX_FLAGS $ENV{OpenMP_CXX_FLAGS} CACHE STRING "" FORCE)
+endif ()
+
+find_package(OpenMP)
+if (OPENMP_FOUND)
+  message("OpenMP information:")
+  message("  OpenMP_VERSION: ${OpenMP_VERSION}")
+  message("  OpenMP_CXX_FLAGS: ${OpenMP_CXX_FLAGS}")
+  message("  OpenMP_CXX_LIB_NAMES: ${OpenMP_CXX_LIB_NAMES}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  add_definitions(-DVIENNACL_WITH_OPENMP)
+else (OPENMP_FOUND)
+message("OpenMP not found")
+endif (OPENMP_FOUND)
+
+
+# -----------------------------------------------------------------------------
+# MPI
+# -----------------------------------------------------------------------------
 find_package(MPI)
 if (MPI_FOUND)
   if (DEFINED ENV{MPIEXEC_FLAGS})
@@ -91,15 +160,6 @@ if (MPI_FOUND)
 else(MPI_FOUND)
   message("Not Found MPI compiler")
 endif(MPI_FOUND)
-
-
-# check OpenMP
-find_package(OpenMP)
-if (OPENMP_FOUND)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  add_definitions(-DVIENNACL_WITH_OPENMP)
-endif(OPENMP_FOUND)
 
 
 # check linear algebra package
@@ -138,7 +198,9 @@ if (LAPACK_FOUND)
 endif(LAPACK_FOUND)
 
 
-# for OpenCL
+# -----------------------------------------------------------------------------
+# OpenCL
+# -----------------------------------------------------------------------------
 find_package(OpenCL)
 if (OpenCL_FOUND)
   message("OpenCL information:")
@@ -150,8 +212,19 @@ if (OpenCL_FOUND)
   set(HAVE_OPENCL 1) # for config.h
 endif (OpenCL_FOUND)
 
-# check ViennaCL
+# -----------------------------------------------------------------------------
+# ViennaCL
+# -----------------------------------------------------------------------------
 if (USE_VIENNACL)
+
+  # for boost
+  find_package(Boost REQUIRED)
+  if (Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+    message("Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
+    message("Boost_LIBRARIES: ${Boost_LIBRARIES}")
+  endif (Boost_FOUND)
+
   find_package(ViennaCL)
   if (VIENNACL_FOUND)
     message("ViennaCL information:")
@@ -160,7 +233,7 @@ if (USE_VIENNACL)
     if (OpenCL_FOUND)
       add_definitions(-DVIENNACL_WITH_OPENCL)
     endif (OpenCL_FOUND)
-  
+
     set(HAVE_VIENNACL 1) # for config.h
     include_directories(${VIENNACL_INCLUDE_DIR})
   else (VIENNACL_FOUND)
@@ -172,7 +245,9 @@ else (USE_VIENNACL)
 endif (USE_VIENNACL)
 
 
-# check BLACS
+# -----------------------------------------------------------------------------
+# BLACS
+# -----------------------------------------------------------------------------
 find_package(BLACS)
 if (BLACS_FOUND)
   message("BLACS information")
@@ -187,7 +262,9 @@ else(BLACS_FOUND)
 endif (BLACS_FOUND)
 
 
-# check ScaLAPACK
+# -----------------------------------------------------------------------------
+# ScaLAPACK
+# -----------------------------------------------------------------------------
 find_package(ScaLAPACK)
 if (SCALAPACK_FOUND)
   message("ScaLAPACK information")
@@ -199,7 +276,9 @@ else(SCALAPACK_FOUND)
 endif(SCALAPACK_FOUND)
 
 
-# check HDF5
+# -----------------------------------------------------------------------------
+# HDF5
+# -----------------------------------------------------------------------------
 if (USE_HDF5)
   find_package(HDF5 COMPONENTS C CXX)
   if (HDF5_FOUND)
@@ -222,7 +301,9 @@ else (USE_HDF5)
 endif (USE_HDF5)
 
 
+# -----------------------------------------------------------------------------
 # libcint
+# -----------------------------------------------------------------------------
 if (USE_LIBCINT)
   if (BLAS_FOUND)
     find_package(libcint)
@@ -242,7 +323,9 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 
-# check Google Test
+# -----------------------------------------------------------------------------
+# Google Test
+# -----------------------------------------------------------------------------
 #   ref.) env param: `GTEST_ROOT`
 find_package(GTest)
 if (GTEST_FOUND)
@@ -252,6 +335,26 @@ if (GTEST_FOUND)
   message("  GTEST_LIBRARIES: ${GTEST_LIBRARIES}")
   message("  GTEST_MAIN_LIBRARIES: ${GTEST_MAIN_LIBRARIES}")
 endif (GTEST_FOUND)
+
+
+# -----------------------------------------------------------------------------
+# Doxygen
+# -----------------------------------------------------------------------------
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+  set(DOXYGEN_CONF_FILE "doxygen.conf")
+  set(DOXYGEN_CONF_PATH ${CMAKE_CURRENT_BINARY_DIR}/${DOXYGEN_CONF_FILE})
+  set(DOXYGEN_SOURCE_DIR ${CMAKE_SOURCE_DIR})
+  set(DOXYGEN_TARGET "doc")
+
+  configure_file(${DOXYGEN_CONF_FILE}.in ${DOXYGEN_CONF_PATH})
+
+  add_custom_target(${DOXYGEN_TARGET}
+                    ${DOXYGEN_EXECUTABLE} ${DOXYGEN_CONF_PATH}
+                    DEPENDS  ${DOXYGEN_CONF_PATH})
+else (DOXYGEN_FOUND)
+  message("Doxygen not found")
+endif (DOXYGEN_FOUND)
 
 
 # make config.h

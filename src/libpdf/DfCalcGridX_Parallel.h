@@ -29,140 +29,142 @@ class TlDenseGeneralMatrix_Scalapack;
 class TlDenseSymmetricMatrix_Scalapack;
 
 class DfCalcGridX_Parallel : public DfCalcGridX {
- public:
-  DfCalcGridX_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfCalcGridX_Parallel();
+   public:
+    DfCalcGridX_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfCalcGridX_Parallel();
 
-  // for LAPACK --------------------------------------------------------------
- public:
-  double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_Lapack& P_A,
-                                     DfFunctional_LDA* pFunctional,
-                                     TlDenseSymmetricMatrix_Lapack* pF_A);
-  double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_Lapack& P_A,
-                                     const TlDenseSymmetricMatrix_Lapack& P_B,
-                                     DfFunctional_LDA* pFunctional,
-                                     TlDenseSymmetricMatrix_Lapack* pF_A,
-                                     TlDenseSymmetricMatrix_Lapack* pF_B);
-  double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_Lapack& P_A,
-                                     DfFunctional_GGA* pFunctional,
-                                     TlDenseSymmetricMatrix_Lapack* pF_A);
-  double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_Lapack& P_A,
-                                     const TlDenseSymmetricMatrix_Lapack& P_B,
-                                     DfFunctional_GGA* pFunctional,
-                                     TlDenseSymmetricMatrix_Lapack* pF_A,
-                                     TlDenseSymmetricMatrix_Lapack* pF_B);
+    // for LAPACK --------------------------------------------------------------
+   public:
+    double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_Lapack& P_A,
+                                       DfFunctional_LDA* pFunctional,
+                                       TlDenseSymmetricMatrix_Lapack* pF_A);
+    double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_Lapack& P_A,
+                                       const TlDenseSymmetricMatrix_Lapack& P_B,
+                                       DfFunctional_LDA* pFunctional,
+                                       TlDenseSymmetricMatrix_Lapack* pF_A,
+                                       TlDenseSymmetricMatrix_Lapack* pF_B);
+    double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_Lapack& P_A,
+                                       DfFunctional_GGA* pFunctional,
+                                       TlDenseSymmetricMatrix_Lapack* pF_A);
+    double calcXCIntegForFockAndEnergy(const TlDenseSymmetricMatrix_Lapack& P_A,
+                                       const TlDenseSymmetricMatrix_Lapack& P_B,
+                                       DfFunctional_GGA* pFunctional,
+                                       TlDenseSymmetricMatrix_Lapack* pF_A,
+                                       TlDenseSymmetricMatrix_Lapack* pF_B);
 
- protected:
-  virtual void calcRho_LDA(const TlDenseSymmetricMatrix_Lapack& P_A);
-  virtual void calcRho_LDA(const TlDenseSymmetricMatrix_Lapack& P_A,
-                           const TlDenseSymmetricMatrix_Lapack& P_B);
-  virtual void calcRho_GGA(const TlDenseSymmetricMatrix_Lapack& P_A);
-  virtual void calcRho_GGA(const TlDenseSymmetricMatrix_Lapack& P_A,
-                           const TlDenseSymmetricMatrix_Lapack& P_B);
+   protected:
+    virtual void calcRho_LDA(const TlDenseSymmetricMatrix_Lapack& P_A);
+    virtual void calcRho_LDA(const TlDenseSymmetricMatrix_Lapack& P_A,
+                             const TlDenseSymmetricMatrix_Lapack& P_B);
+    virtual void calcRho_GGA(const TlDenseSymmetricMatrix_Lapack& P_A);
+    virtual void calcRho_GGA(const TlDenseSymmetricMatrix_Lapack& P_A,
+                             const TlDenseSymmetricMatrix_Lapack& P_B);
 
-  double buildVxc(DfFunctional_LDA* pFunctional,
-                  TlDenseSymmetricMatrix_Lapack* pF_A);
-  double buildVxc(DfFunctional_LDA* pFunctional,
-                  TlDenseSymmetricMatrix_Lapack* pF_A,
-                  TlDenseSymmetricMatrix_Lapack* pF_B);
-  double buildVxc(DfFunctional_GGA* pFunctional,
-                  TlDenseSymmetricMatrix_Lapack* pF_A);
-  double buildVxc(DfFunctional_GGA* pFunctional,
-                  TlDenseSymmetricMatrix_Lapack* pF_A,
-                  TlDenseSymmetricMatrix_Lapack* pF_B);
+    double buildVxc(DfFunctional_LDA* pFunctional,
+                    TlDenseSymmetricMatrix_Lapack* pF_A);
+    double buildVxc(DfFunctional_LDA* pFunctional,
+                    TlDenseSymmetricMatrix_Lapack* pF_A,
+                    TlDenseSymmetricMatrix_Lapack* pF_B);
+    double buildVxc(DfFunctional_GGA* pFunctional,
+                    TlDenseSymmetricMatrix_Lapack* pF_A);
+    double buildVxc(DfFunctional_GGA* pFunctional,
+                    TlDenseSymmetricMatrix_Lapack* pF_A,
+                    TlDenseSymmetricMatrix_Lapack* pF_B);
 
-  TlDenseGeneralMatrix_Lapack distributeGridMatrix(const int iteration);
-  void gatherAndSaveGridMatrix(const TlDenseGeneralMatrix_Lapack& gridMat);
+    TlDenseGeneralMatrix_Lapack distributeGridMatrix(const int iteration);
+    void gatherAndSaveGridMatrix(const TlDenseGeneralMatrix_Lapack& gridMat);
 
-  // for ScaLAPACK -----------------------------------------------------------
- public:
-  double calcXCIntegForFockAndEnergy(
-      const TlDenseSymmetricMatrix_Scalapack& P_A,
-      DfFunctional_LDA* pFunctional, TlDenseSymmetricMatrix_Scalapack* pF_A);
-  double calcXCIntegForFockAndEnergy(
-      const TlDenseSymmetricMatrix_Scalapack& P_A,
-      const TlDenseSymmetricMatrix_Scalapack& P_B,
-      DfFunctional_LDA* pFunctional, TlDenseSymmetricMatrix_Scalapack* pF_A,
-      TlDenseSymmetricMatrix_Scalapack* pF_B);
-  double calcXCIntegForFockAndEnergy(
-      const TlDenseSymmetricMatrix_Scalapack& P_A,
-      DfFunctional_GGA* pFunctional, TlDenseSymmetricMatrix_Scalapack* pF_A);
-  double calcXCIntegForFockAndEnergy(
-      const TlDenseSymmetricMatrix_Scalapack& P_A,
-      const TlDenseSymmetricMatrix_Scalapack& P_B,
-      DfFunctional_GGA* pFunctional, TlDenseSymmetricMatrix_Scalapack* pF_A,
-      TlDenseSymmetricMatrix_Scalapack* pF_B);
+    // for ScaLAPACK -----------------------------------------------------------
+   public:
+    double calcXCIntegForFockAndEnergy(
+        const TlDenseSymmetricMatrix_Scalapack& P_A,
+        DfFunctional_LDA* pFunctional, TlDenseSymmetricMatrix_Scalapack* pF_A);
+    double calcXCIntegForFockAndEnergy(
+        const TlDenseSymmetricMatrix_Scalapack& P_A,
+        const TlDenseSymmetricMatrix_Scalapack& P_B,
+        DfFunctional_LDA* pFunctional, TlDenseSymmetricMatrix_Scalapack* pF_A,
+        TlDenseSymmetricMatrix_Scalapack* pF_B);
+    double calcXCIntegForFockAndEnergy(
+        const TlDenseSymmetricMatrix_Scalapack& P_A,
+        DfFunctional_GGA* pFunctional, TlDenseSymmetricMatrix_Scalapack* pF_A);
+    double calcXCIntegForFockAndEnergy(
+        const TlDenseSymmetricMatrix_Scalapack& P_A,
+        const TlDenseSymmetricMatrix_Scalapack& P_B,
+        DfFunctional_GGA* pFunctional, TlDenseSymmetricMatrix_Scalapack* pF_A,
+        TlDenseSymmetricMatrix_Scalapack* pF_B);
 
- protected:
-  TlDenseGeneralMatrix_Lapack getGlobalGridMatrix(const int iteration);
-  void allReduceGridMatrix(const TlDenseGeneralMatrix_Lapack& gridMat);
+   protected:
+    TlDenseGeneralMatrix_Lapack getGlobalGridMatrix(const int iteration);
+    void allReduceGridMatrix(const TlDenseGeneralMatrix_Lapack& gridMat);
 
-  void calcRho_LDA(const TlDenseSymmetricMatrix_Scalapack& P_A);
-  void calcRho_LDA(const TlDenseSymmetricMatrix_Scalapack& P_A,
-                   const TlDenseSymmetricMatrix_Scalapack& P_B);
-  void calcRho_GGA(const TlDenseSymmetricMatrix_Scalapack& P_A);
-  void calcRho_GGA(const TlDenseSymmetricMatrix_Scalapack& P_A,
-                   const TlDenseSymmetricMatrix_Scalapack& P_B);
+    void calcRho_LDA(const TlDenseSymmetricMatrix_Scalapack& P_A);
+    void calcRho_LDA(const TlDenseSymmetricMatrix_Scalapack& P_A,
+                     const TlDenseSymmetricMatrix_Scalapack& P_B);
+    void calcRho_GGA(const TlDenseSymmetricMatrix_Scalapack& P_A);
+    void calcRho_GGA(const TlDenseSymmetricMatrix_Scalapack& P_A,
+                     const TlDenseSymmetricMatrix_Scalapack& P_B);
 
-  void calcRho_LDA(const TlDenseGeneralMatrix_Scalapack& P_A,
-                   TlDenseGeneralMatrix_Lapack* pGridMatrix);
-  void calcRho_LDA(const TlDenseGeneralMatrix_Scalapack& P_A,
-                   const TlDenseGeneralMatrix_Scalapack& P_B,
-                   TlDenseGeneralMatrix_Lapack* pGridMatrix);
-  void calcRho_GGA(const TlDenseGeneralMatrix_Scalapack& P_A,
-                   TlDenseGeneralMatrix_Lapack* pGridMatrix);
-  void calcRho_GGA(const TlDenseGeneralMatrix_Scalapack& P_A,
-                   const TlDenseGeneralMatrix_Scalapack& P_B,
-                   TlDenseGeneralMatrix_Lapack* pGridMatrix);
+    void calcRho_LDA(const TlDenseGeneralMatrix_Scalapack& P_A,
+                     TlDenseGeneralMatrix_Lapack* pGridMatrix);
+    void calcRho_LDA(const TlDenseGeneralMatrix_Scalapack& P_A,
+                     const TlDenseGeneralMatrix_Scalapack& P_B,
+                     TlDenseGeneralMatrix_Lapack* pGridMatrix);
+    void calcRho_GGA(const TlDenseGeneralMatrix_Scalapack& P_A,
+                     TlDenseGeneralMatrix_Lapack* pGridMatrix);
+    void calcRho_GGA(const TlDenseGeneralMatrix_Scalapack& P_A,
+                     const TlDenseGeneralMatrix_Scalapack& P_B,
+                     TlDenseGeneralMatrix_Lapack* pGridMatrix);
 
-  double buildVxc(DfFunctional_LDA* pFunctional,
-                  TlDenseSymmetricMatrix_Scalapack* pF_A);
-  double buildVxc(DfFunctional_LDA* pFunctional,
-                  TlDenseSymmetricMatrix_Scalapack* pF_A,
-                  TlDenseSymmetricMatrix_Scalapack* pF_B);
-  double buildVxc(DfFunctional_GGA* pFunctional,
-                  TlDenseSymmetricMatrix_Scalapack* pF_A);
-  double buildVxc(DfFunctional_GGA* pFunctional,
-                  TlDenseSymmetricMatrix_Scalapack* pF_A,
-                  TlDenseSymmetricMatrix_Scalapack* pF_B);
+    double buildVxc(DfFunctional_LDA* pFunctional,
+                    TlDenseSymmetricMatrix_Scalapack* pF_A);
+    double buildVxc(DfFunctional_LDA* pFunctional,
+                    TlDenseSymmetricMatrix_Scalapack* pF_A,
+                    TlDenseSymmetricMatrix_Scalapack* pF_B);
+    double buildVxc(DfFunctional_GGA* pFunctional,
+                    TlDenseSymmetricMatrix_Scalapack* pF_A);
+    double buildVxc(DfFunctional_GGA* pFunctional,
+                    TlDenseSymmetricMatrix_Scalapack* pF_A,
+                    TlDenseSymmetricMatrix_Scalapack* pF_B);
 
-  virtual void getWholeDensity(double* pRhoA, double* pRhoB) const;
+    virtual void getWholeDensity(double* pRhoA, double* pRhoB) const;
 
-  virtual void defineCutOffValues(const TlDenseSymmetricMatrix_Lapack& P);
+    virtual void defineCutOffValues(const TlDenseSymmetricMatrix_Lapack& P);
 
-  virtual void defineCutOffValues(const TlDenseSymmetricMatrix_Lapack& PA,
-                                  const TlDenseSymmetricMatrix_Lapack& PB);
+    virtual void defineCutOffValues(const TlDenseSymmetricMatrix_Lapack& PA,
+                                    const TlDenseSymmetricMatrix_Lapack& PB);
 
- public:
-  virtual TlDenseGeneralMatrix_Lapack energyGradient(
-      const TlDenseSymmetricMatrix_Lapack& P_A, DfFunctional_LDA* pFunctional);
-  virtual TlDenseGeneralMatrix_Lapack energyGradient(
-      const TlDenseSymmetricMatrix_Lapack& P_A, DfFunctional_GGA* pFunctional);
+   public:
+    virtual TlDenseGeneralMatrix_Lapack energyGradient(
+        const TlDenseSymmetricMatrix_Lapack& P_A,
+        DfFunctional_LDA* pFunctional);
+    virtual TlDenseGeneralMatrix_Lapack energyGradient(
+        const TlDenseSymmetricMatrix_Lapack& P_A,
+        DfFunctional_GGA* pFunctional);
 
- protected:
-  void defineCutOffValues(const TlDenseSymmetricMatrix_Scalapack& P);
-  void defineCutOffValues(const TlDenseSymmetricMatrix_Scalapack& PA,
-                          const TlDenseSymmetricMatrix_Scalapack& PB);
+   protected:
+    void defineCutOffValues(const TlDenseSymmetricMatrix_Scalapack& P);
+    void defineCutOffValues(const TlDenseSymmetricMatrix_Scalapack& PA,
+                            const TlDenseSymmetricMatrix_Scalapack& PB);
 
- protected:
-  // tag for MPI
-  enum {
-    TAG_REQUEST_JOB = 9001,
-    TAG_ASSIGN_JOB = 9002,
-    TAG_TERMINATE_SLAVE = 9003,
-    TAG_TERMINATE_OK = 9004,
+   protected:
+    // tag for MPI
+    enum {
+        TAG_REQUEST_JOB = 9001,
+        TAG_ASSIGN_JOB = 9002,
+        TAG_TERMINATE_SLAVE = 9003,
+        TAG_TERMINATE_OK = 9004,
 
-    TAG_CALC_GRID_DISTRIBUTE = 9005,
-    TAG_CALCGRID_GATHER = 9006
-  };
+        TAG_CALC_GRID_DISTRIBUTE = 9005,
+        TAG_CALCGRID_GATHER = 9006
+    };
 
- protected:
-  int assignAtomRange_;
-  int assignAoRange_;
-  int assignJobsPerProc_;
-  std::size_t densityMatrixCacheMemSize_;
+   protected:
+    int assignAtomRange_;
+    int assignAoRange_;
+    int assignJobsPerProc_;
+    std::size_t densityMatrixCacheMemSize_;
 
-  int calcMode_;
+    int calcMode_;
 };
 
 #endif  // DFCALCGRIDX_PARALLEL_H

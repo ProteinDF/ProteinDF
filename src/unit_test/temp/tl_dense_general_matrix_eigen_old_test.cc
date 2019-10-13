@@ -15,20 +15,20 @@ static const std::string mat_path = "temp.mat";
 // test
 // -----------------------------------------------------------------------------
 TEST(TlDenseGeneralMatrix_Eigen_Old, constructer) {
-  TlDenseGeneralMatrix_Eigen_Old a(3, 3);
+    TlDenseGeneralMatrix_Eigen_Old a(3, 3);
 
-  EXPECT_EQ(TlMatrixObject::CSFD, a.getType());
-  EXPECT_EQ(3, a.getNumOfRows());
-  EXPECT_EQ(3, a.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
-  EXPECT_DOUBLE_EQ(0.0, a.get(0, 1));
-  EXPECT_DOUBLE_EQ(0.0, a.get(0, 2));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1, 0));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1, 1));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1, 2));
-  EXPECT_DOUBLE_EQ(0.0, a.get(2, 0));
-  EXPECT_DOUBLE_EQ(0.0, a.get(2, 1));
-  EXPECT_DOUBLE_EQ(0.0, a.get(2, 2));
+    EXPECT_EQ(TlMatrixObject::CSFD, a.getType());
+    EXPECT_EQ(3, a.getNumOfRows());
+    EXPECT_EQ(3, a.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 2));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 2));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2, 0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2, 1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2, 2));
 }
 
 // TEST(TlDenseGeneralMatrix_Eigen_Old, constructByTlSerializedData) {
@@ -40,185 +40,193 @@ TEST(TlDenseGeneralMatrix_Eigen_Old, constructer) {
 // }
 
 TEST(TlDenseGeneralMatrix_Eigen_Old, copyConstructer) {
-  TlDenseGeneralMatrix_Eigen_Old a = getMatrixA<TlDenseGeneralMatrix_Eigen_Old>();
-  TlDenseGeneralMatrix_Eigen_Old c(a);
+    TlDenseGeneralMatrix_Eigen_Old a =
+        getMatrixA<TlDenseGeneralMatrix_Eigen_Old>();
+    TlDenseGeneralMatrix_Eigen_Old c(a);
 
-  EXPECT_EQ(3, c.getNumOfRows());
-  EXPECT_EQ(3, c.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, c.get(0, 0));
-  EXPECT_DOUBLE_EQ(1.0, c.get(0, 1));
-  EXPECT_DOUBLE_EQ(2.0, c.get(0, 2));
-  EXPECT_DOUBLE_EQ(3.0, c.get(1, 0));
-  EXPECT_DOUBLE_EQ(4.0, c.get(1, 1));
-  EXPECT_DOUBLE_EQ(5.0, c.get(1, 2));
-  EXPECT_DOUBLE_EQ(6.0, c.get(2, 0));
-  EXPECT_DOUBLE_EQ(7.0, c.get(2, 1));
-  EXPECT_DOUBLE_EQ(8.0, c.get(2, 2));
+    EXPECT_EQ(3, c.getNumOfRows());
+    EXPECT_EQ(3, c.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, c.get(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, c.get(0, 1));
+    EXPECT_DOUBLE_EQ(2.0, c.get(0, 2));
+    EXPECT_DOUBLE_EQ(3.0, c.get(1, 0));
+    EXPECT_DOUBLE_EQ(4.0, c.get(1, 1));
+    EXPECT_DOUBLE_EQ(5.0, c.get(1, 2));
+    EXPECT_DOUBLE_EQ(6.0, c.get(2, 0));
+    EXPECT_DOUBLE_EQ(7.0, c.get(2, 1));
+    EXPECT_DOUBLE_EQ(8.0, c.get(2, 2));
 }
 
 TEST(TlDenseGeneralMatrix_Eigen_Old, symmat2mat) {
-  TlDenseSymmetricMatrix_Eigen_Old s(4);
-  s.set(0, 0, 1.0);
-  s.set(1, 2, 2.0);
-  s.set(3, 2, 3.0);
+    TlDenseSymmetricMatrix_Eigen_Old s(4);
+    s.set(0, 0, 1.0);
+    s.set(1, 2, 2.0);
+    s.set(3, 2, 3.0);
 
-  TlDenseGeneralMatrix_Eigen_Old m(s);
+    TlDenseGeneralMatrix_Eigen_Old m(s);
 
-  EXPECT_EQ(TlMatrixObject::CSFD, m.getType());
-  EXPECT_EQ(4, m.getNumOfRows());
-  EXPECT_EQ(4, m.getNumOfCols());
-  EXPECT_DOUBLE_EQ(1.0, m.get(0, 0));
-  EXPECT_DOUBLE_EQ(0.0, m.get(0, 1));
-  EXPECT_DOUBLE_EQ(0.0, m.get(0, 2));
-  EXPECT_DOUBLE_EQ(0.0, m.get(0, 3));
-  EXPECT_DOUBLE_EQ(0.0, m.get(1, 0));
-  EXPECT_DOUBLE_EQ(0.0, m.get(1, 1));
-  EXPECT_DOUBLE_EQ(2.0, m.get(1, 2));
-  EXPECT_DOUBLE_EQ(0.0, m.get(1, 3));
-  EXPECT_DOUBLE_EQ(0.0, m.get(2, 0));
-  EXPECT_DOUBLE_EQ(2.0, m.get(2, 1));
-  EXPECT_DOUBLE_EQ(0.0, m.get(2, 2));
-  EXPECT_DOUBLE_EQ(3.0, m.get(2, 3));
-  EXPECT_DOUBLE_EQ(0.0, m.get(3, 0));
-  EXPECT_DOUBLE_EQ(0.0, m.get(3, 1));
-  EXPECT_DOUBLE_EQ(3.0, m.get(3, 2));
-  EXPECT_DOUBLE_EQ(0.0, m.get(3, 3));
+    EXPECT_EQ(TlMatrixObject::CSFD, m.getType());
+    EXPECT_EQ(4, m.getNumOfRows());
+    EXPECT_EQ(4, m.getNumOfCols());
+    EXPECT_DOUBLE_EQ(1.0, m.get(0, 0));
+    EXPECT_DOUBLE_EQ(0.0, m.get(0, 1));
+    EXPECT_DOUBLE_EQ(0.0, m.get(0, 2));
+    EXPECT_DOUBLE_EQ(0.0, m.get(0, 3));
+    EXPECT_DOUBLE_EQ(0.0, m.get(1, 0));
+    EXPECT_DOUBLE_EQ(0.0, m.get(1, 1));
+    EXPECT_DOUBLE_EQ(2.0, m.get(1, 2));
+    EXPECT_DOUBLE_EQ(0.0, m.get(1, 3));
+    EXPECT_DOUBLE_EQ(0.0, m.get(2, 0));
+    EXPECT_DOUBLE_EQ(2.0, m.get(2, 1));
+    EXPECT_DOUBLE_EQ(0.0, m.get(2, 2));
+    EXPECT_DOUBLE_EQ(3.0, m.get(2, 3));
+    EXPECT_DOUBLE_EQ(0.0, m.get(3, 0));
+    EXPECT_DOUBLE_EQ(0.0, m.get(3, 1));
+    EXPECT_DOUBLE_EQ(3.0, m.get(3, 2));
+    EXPECT_DOUBLE_EQ(0.0, m.get(3, 3));
 }
 
 TEST(TlDenseGeneralMatrix_Eigen_Old, resize) {
-  TlDenseGeneralMatrix_Eigen_Old a(2, 3);
-  a.set(0, 1, 2.0);
-  a.set(1, 2, -4.0);
+    TlDenseGeneralMatrix_Eigen_Old a(2, 3);
+    a.set(0, 1, 2.0);
+    a.set(1, 2, -4.0);
 
-  EXPECT_EQ(2, a.getNumOfRows());
-  EXPECT_EQ(3, a.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
-  EXPECT_DOUBLE_EQ(2.0, a.get(0, 1));
-  EXPECT_DOUBLE_EQ(0.0, a.get(0, 2));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1, 0));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1, 1));
-  EXPECT_DOUBLE_EQ(-4.0, a.get(1, 2));
+    EXPECT_EQ(2, a.getNumOfRows());
+    EXPECT_EQ(3, a.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
+    EXPECT_DOUBLE_EQ(2.0, a.get(0, 1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 2));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 1));
+    EXPECT_DOUBLE_EQ(-4.0, a.get(1, 2));
 
-  a.resize(4, 4);
-  EXPECT_EQ(4, a.getNumOfRows());
-  EXPECT_EQ(4, a.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
-  EXPECT_DOUBLE_EQ(2.0, a.get(0, 1));
-  EXPECT_DOUBLE_EQ(0.0, a.get(0, 2));
-  EXPECT_DOUBLE_EQ(0.0, a.get(0, 3));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1, 0));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1, 1));
-  EXPECT_DOUBLE_EQ(-4.0, a.get(1, 2));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1, 3));
-  EXPECT_DOUBLE_EQ(0.0, a.get(2, 0));
-  EXPECT_DOUBLE_EQ(0.0, a.get(2, 1));
-  EXPECT_DOUBLE_EQ(0.0, a.get(2, 2));
-  EXPECT_DOUBLE_EQ(0.0, a.get(2, 3));
-  EXPECT_DOUBLE_EQ(0.0, a.get(3, 0));
-  EXPECT_DOUBLE_EQ(0.0, a.get(3, 1));
-  EXPECT_DOUBLE_EQ(0.0, a.get(3, 2));
-  EXPECT_DOUBLE_EQ(0.0, a.get(3, 3));
+    a.resize(4, 4);
+    EXPECT_EQ(4, a.getNumOfRows());
+    EXPECT_EQ(4, a.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
+    EXPECT_DOUBLE_EQ(2.0, a.get(0, 1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 2));
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 3));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 1));
+    EXPECT_DOUBLE_EQ(-4.0, a.get(1, 2));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 3));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2, 0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2, 1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2, 2));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2, 3));
+    EXPECT_DOUBLE_EQ(0.0, a.get(3, 0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(3, 1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(3, 2));
+    EXPECT_DOUBLE_EQ(0.0, a.get(3, 3));
 
-  a.resize(2, 2);
-  EXPECT_EQ(2, a.getNumOfRows());
-  EXPECT_EQ(2, a.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
-  EXPECT_DOUBLE_EQ(2.0, a.get(0, 1));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1, 0));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1, 1));
+    a.resize(2, 2);
+    EXPECT_EQ(2, a.getNumOfRows());
+    EXPECT_EQ(2, a.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
+    EXPECT_DOUBLE_EQ(2.0, a.get(0, 1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 1));
 }
 
 TEST(TlDenseGeneralMatrix_Eigen_Old, operator_eq) {
-  TlDenseGeneralMatrix_Eigen_Old a = getMatrixA<TlDenseGeneralMatrix_Eigen_Old>();
-  TlDenseGeneralMatrix_Eigen_Old c;
+    TlDenseGeneralMatrix_Eigen_Old a =
+        getMatrixA<TlDenseGeneralMatrix_Eigen_Old>();
+    TlDenseGeneralMatrix_Eigen_Old c;
 
-  c = a;
+    c = a;
 
-  EXPECT_EQ(3, c.getNumOfRows());
-  EXPECT_EQ(3, c.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, c.get(0, 0));
-  EXPECT_DOUBLE_EQ(1.0, c.get(0, 1));
-  EXPECT_DOUBLE_EQ(2.0, c.get(0, 2));
-  EXPECT_DOUBLE_EQ(3.0, c.get(1, 0));
-  EXPECT_DOUBLE_EQ(4.0, c.get(1, 1));
-  EXPECT_DOUBLE_EQ(5.0, c.get(1, 2));
-  EXPECT_DOUBLE_EQ(6.0, c.get(2, 0));
-  EXPECT_DOUBLE_EQ(7.0, c.get(2, 1));
-  EXPECT_DOUBLE_EQ(8.0, c.get(2, 2));
+    EXPECT_EQ(3, c.getNumOfRows());
+    EXPECT_EQ(3, c.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, c.get(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, c.get(0, 1));
+    EXPECT_DOUBLE_EQ(2.0, c.get(0, 2));
+    EXPECT_DOUBLE_EQ(3.0, c.get(1, 0));
+    EXPECT_DOUBLE_EQ(4.0, c.get(1, 1));
+    EXPECT_DOUBLE_EQ(5.0, c.get(1, 2));
+    EXPECT_DOUBLE_EQ(6.0, c.get(2, 0));
+    EXPECT_DOUBLE_EQ(7.0, c.get(2, 1));
+    EXPECT_DOUBLE_EQ(8.0, c.get(2, 2));
 }
 
 TEST(TlDenseGeneralMatrix_Eigen_Old, operator_add) {
-  TlDenseGeneralMatrix_Eigen_Old a = getMatrixA<TlDenseGeneralMatrix_Eigen_Old>();
-  TlDenseGeneralMatrix_Eigen_Old b = getMatrixB<TlDenseGeneralMatrix_Eigen_Old>();
+    TlDenseGeneralMatrix_Eigen_Old a =
+        getMatrixA<TlDenseGeneralMatrix_Eigen_Old>();
+    TlDenseGeneralMatrix_Eigen_Old b =
+        getMatrixB<TlDenseGeneralMatrix_Eigen_Old>();
 
-  TlDenseGeneralMatrix_Eigen_Old c = a + b;
+    TlDenseGeneralMatrix_Eigen_Old c = a + b;
 
-  EXPECT_EQ(3, c.getNumOfRows());
-  EXPECT_EQ(3, c.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, c.get(0, 0));
-  EXPECT_DOUBLE_EQ(4.0, c.get(0, 1));
-  EXPECT_DOUBLE_EQ(8.0, c.get(0, 2));
-  EXPECT_DOUBLE_EQ(4.0, c.get(1, 0));
-  EXPECT_DOUBLE_EQ(8.0, c.get(1, 1));
-  EXPECT_DOUBLE_EQ(12.0, c.get(1, 2));
-  EXPECT_DOUBLE_EQ(8.0, c.get(2, 0));
-  EXPECT_DOUBLE_EQ(12.0, c.get(2, 1));
-  EXPECT_DOUBLE_EQ(16.0, c.get(2, 2));
+    EXPECT_EQ(3, c.getNumOfRows());
+    EXPECT_EQ(3, c.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, c.get(0, 0));
+    EXPECT_DOUBLE_EQ(4.0, c.get(0, 1));
+    EXPECT_DOUBLE_EQ(8.0, c.get(0, 2));
+    EXPECT_DOUBLE_EQ(4.0, c.get(1, 0));
+    EXPECT_DOUBLE_EQ(8.0, c.get(1, 1));
+    EXPECT_DOUBLE_EQ(12.0, c.get(1, 2));
+    EXPECT_DOUBLE_EQ(8.0, c.get(2, 0));
+    EXPECT_DOUBLE_EQ(12.0, c.get(2, 1));
+    EXPECT_DOUBLE_EQ(16.0, c.get(2, 2));
 }
 
 TEST(TlDenseGeneralMatrix_Eigen_Old, operator_iadd) {
-  TlDenseGeneralMatrix_Eigen_Old a = getMatrixA<TlDenseGeneralMatrix_Eigen_Old>();
-  TlDenseGeneralMatrix_Eigen_Old b = getMatrixB<TlDenseGeneralMatrix_Eigen_Old>();
+    TlDenseGeneralMatrix_Eigen_Old a =
+        getMatrixA<TlDenseGeneralMatrix_Eigen_Old>();
+    TlDenseGeneralMatrix_Eigen_Old b =
+        getMatrixB<TlDenseGeneralMatrix_Eigen_Old>();
 
-  b += a;
+    b += a;
 
-  EXPECT_EQ(3, b.getNumOfRows());
-  EXPECT_EQ(3, b.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, b.get(0, 0));
-  EXPECT_DOUBLE_EQ(4.0, b.get(0, 1));
-  EXPECT_DOUBLE_EQ(8.0, b.get(0, 2));
-  EXPECT_DOUBLE_EQ(4.0, b.get(1, 0));
-  EXPECT_DOUBLE_EQ(8.0, b.get(1, 1));
-  EXPECT_DOUBLE_EQ(12.0, b.get(1, 2));
-  EXPECT_DOUBLE_EQ(8.0, b.get(2, 0));
-  EXPECT_DOUBLE_EQ(12.0, b.get(2, 1));
-  EXPECT_DOUBLE_EQ(16.0, b.get(2, 2));
+    EXPECT_EQ(3, b.getNumOfRows());
+    EXPECT_EQ(3, b.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, b.get(0, 0));
+    EXPECT_DOUBLE_EQ(4.0, b.get(0, 1));
+    EXPECT_DOUBLE_EQ(8.0, b.get(0, 2));
+    EXPECT_DOUBLE_EQ(4.0, b.get(1, 0));
+    EXPECT_DOUBLE_EQ(8.0, b.get(1, 1));
+    EXPECT_DOUBLE_EQ(12.0, b.get(1, 2));
+    EXPECT_DOUBLE_EQ(8.0, b.get(2, 0));
+    EXPECT_DOUBLE_EQ(12.0, b.get(2, 1));
+    EXPECT_DOUBLE_EQ(16.0, b.get(2, 2));
 }
 
 TEST(TlDenseGeneralMatrix_Eigen_Old, save) {
-  TlDenseGeneralMatrix_Eigen_Old m = getMatrixA<TlDenseGeneralMatrix_Eigen_Old>();
-  m.save(mat_path);
+    TlDenseGeneralMatrix_Eigen_Old m =
+        getMatrixA<TlDenseGeneralMatrix_Eigen_Old>();
+    m.save(mat_path);
 
-  TlDenseGeneralMatrix_BLAS_old ref;
-  ref.load(mat_path);
-  EXPECT_EQ(m.getNumOfRows(), ref.getNumOfRows());
-  EXPECT_EQ(m.getNumOfCols(), ref.getNumOfCols());
-  for (int r = 0; r < m.getNumOfRows(); ++r) {
-    for (int c = 0; c < m.getNumOfCols(); ++c) {
-      EXPECT_DOUBLE_EQ(m.get(r, c), ref.get(r, c));
+    TlDenseGeneralMatrix_BLAS_old ref;
+    ref.load(mat_path);
+    EXPECT_EQ(m.getNumOfRows(), ref.getNumOfRows());
+    EXPECT_EQ(m.getNumOfCols(), ref.getNumOfCols());
+    for (int r = 0; r < m.getNumOfRows(); ++r) {
+        for (int c = 0; c < m.getNumOfCols(); ++c) {
+            EXPECT_DOUBLE_EQ(m.get(r, c), ref.get(r, c));
+        }
     }
-  }
 }
 
 TEST(TlDenseGeneralMatrix_Eigen_Old, load) {
-  TlDenseGeneralMatrix_BLAS_old ref = getMatrixA<TlDenseGeneralMatrix_BLAS_old>();
-  ref.save(mat_path);
+    TlDenseGeneralMatrix_BLAS_old ref =
+        getMatrixA<TlDenseGeneralMatrix_BLAS_old>();
+    ref.save(mat_path);
 
-  TlDenseGeneralMatrix_Eigen_Old a;
-  a.load(mat_path);
+    TlDenseGeneralMatrix_Eigen_Old a;
+    a.load(mat_path);
 
-  EXPECT_EQ(TlMatrixObject::CSFD, a.getType());
-  EXPECT_EQ(3, a.getNumOfRows());
-  EXPECT_EQ(3, a.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
-  EXPECT_DOUBLE_EQ(1.0, a.get(0, 1));
-  EXPECT_DOUBLE_EQ(2.0, a.get(0, 2));
-  EXPECT_DOUBLE_EQ(3.0, a.get(1, 0));
-  EXPECT_DOUBLE_EQ(4.0, a.get(1, 1));
-  EXPECT_DOUBLE_EQ(5.0, a.get(1, 2));
-  EXPECT_DOUBLE_EQ(6.0, a.get(2, 0));
-  EXPECT_DOUBLE_EQ(7.0, a.get(2, 1));
-  EXPECT_DOUBLE_EQ(8.0, a.get(2, 2));
+    EXPECT_EQ(TlMatrixObject::CSFD, a.getType());
+    EXPECT_EQ(3, a.getNumOfRows());
+    EXPECT_EQ(3, a.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, a.get(0, 1));
+    EXPECT_DOUBLE_EQ(2.0, a.get(0, 2));
+    EXPECT_DOUBLE_EQ(3.0, a.get(1, 0));
+    EXPECT_DOUBLE_EQ(4.0, a.get(1, 1));
+    EXPECT_DOUBLE_EQ(5.0, a.get(1, 2));
+    EXPECT_DOUBLE_EQ(6.0, a.get(2, 0));
+    EXPECT_DOUBLE_EQ(7.0, a.get(2, 1));
+    EXPECT_DOUBLE_EQ(8.0, a.get(2, 2));
 }
 
 #ifdef HAVE_HDF5
@@ -264,27 +272,28 @@ TEST(TlDenseGeneralMatrix_Eigen_Old, load) {
 // }
 //
 TEST(TlDenseGeneralMatrix_Eigen_Old, operator_mul_AB) {
-  TlDenseGeneralMatrix_Eigen_Old a = getMatrixA<TlDenseGeneralMatrix_Eigen_Old>();
-  TlDenseGeneralMatrix_Eigen_Old b = getMatrixB<TlDenseGeneralMatrix_Eigen_Old>();
-  TlDenseGeneralMatrix_Eigen_Old c = a * b;
+    TlDenseGeneralMatrix_Eigen_Old a =
+        getMatrixA<TlDenseGeneralMatrix_Eigen_Old>();
+    TlDenseGeneralMatrix_Eigen_Old b =
+        getMatrixB<TlDenseGeneralMatrix_Eigen_Old>();
+    TlDenseGeneralMatrix_Eigen_Old c = a * b;
 
-  EXPECT_EQ(3, c.getNumOfRows());
-  EXPECT_EQ(3, c.getNumOfCols());
-  EXPECT_DOUBLE_EQ(5.0, c.get(0, 0));
-  EXPECT_DOUBLE_EQ(14.0, c.get(0, 1));
-  EXPECT_DOUBLE_EQ(23.0, c.get(0, 2));
-  EXPECT_DOUBLE_EQ(14.0, c.get(1, 0));
-  EXPECT_DOUBLE_EQ(50.0, c.get(1, 1));
-  EXPECT_DOUBLE_EQ(86.0, c.get(1, 2));
-  EXPECT_DOUBLE_EQ(23.0, c.get(2, 0));
-  EXPECT_DOUBLE_EQ(86.0, c.get(2, 1));
-  EXPECT_DOUBLE_EQ(149.0, c.get(2, 2));
+    EXPECT_EQ(3, c.getNumOfRows());
+    EXPECT_EQ(3, c.getNumOfCols());
+    EXPECT_DOUBLE_EQ(5.0, c.get(0, 0));
+    EXPECT_DOUBLE_EQ(14.0, c.get(0, 1));
+    EXPECT_DOUBLE_EQ(23.0, c.get(0, 2));
+    EXPECT_DOUBLE_EQ(14.0, c.get(1, 0));
+    EXPECT_DOUBLE_EQ(50.0, c.get(1, 1));
+    EXPECT_DOUBLE_EQ(86.0, c.get(1, 2));
+    EXPECT_DOUBLE_EQ(23.0, c.get(2, 0));
+    EXPECT_DOUBLE_EQ(86.0, c.get(2, 1));
+    EXPECT_DOUBLE_EQ(149.0, c.get(2, 2));
 }
 
 // TEST(TlDenseGeneralMatrix_Eigen_Old, operator_mul_AX) {
-//   TlDenseGeneralMatrix_Eigen_Old a = getMatrixA<TlDenseGeneralMatrix_Eigen_Old>();
-//   TlVector x(3);
-//   x[0] = 1.0;
+//   TlDenseGeneralMatrix_Eigen_Old a =
+//   getMatrixA<TlDenseGeneralMatrix_Eigen_Old>(); TlVector x(3); x[0] = 1.0;
 //   x[1] = 2.0;
 //   x[2] = 3.0;
 //   TlVector z = a * x;

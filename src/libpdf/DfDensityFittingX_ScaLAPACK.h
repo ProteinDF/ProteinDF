@@ -42,11 +42,11 @@
 class DfDensityFittingX_ScaLAPACK
     : public DfDensityFittingTmpl<TlDenseSymmetricMatrix_Scalapack,
                                   TlDenseVector_Scalapack, DfEriX_Parallel> {
- public:
-  DfDensityFittingX_ScaLAPACK(TlSerializeData* pPdfParam);
-  virtual ~DfDensityFittingX_ScaLAPACK();
+   public:
+    DfDensityFittingX_ScaLAPACK(TlSerializeData* pPdfParam);
+    virtual ~DfDensityFittingX_ScaLAPACK();
 
-  void exec();
+    void exec();
 };
 
 #endif  // DFDENSITYFITTINGX_SCALAPACK_H

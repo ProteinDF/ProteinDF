@@ -21,82 +21,96 @@
 
 DfConverge_Anderson::DfConverge_Anderson(TlSerializeData* pPdfParam)
     : DfConverge_Damping(pPdfParam) {
-  const TlSerializeData& pdfParam = *pPdfParam;
-  this->m_nStartIterationOfAnderson =
-      std::max(pdfParam["scf_acceleration/anderson/start_number"].getInt(), 3);
+    const TlSerializeData& pdfParam = *pPdfParam;
+    this->m_nStartIterationOfAnderson = std::max(
+        pdfParam["scf_acceleration/anderson/start_number"].getInt(), 3);
 
-  this->m_dDampingFactorOfAnderson =
-      pdfParam["scf_acceleration/anderson/damping_factor"].getDouble();
+    this->m_dDampingFactorOfAnderson =
+        pdfParam["scf_acceleration/anderson/damping_factor"].getDouble();
 }
 
 DfConverge_Anderson::~DfConverge_Anderson() {}
 
 void DfConverge_Anderson::convergeRhoTilde() {
-  switch (this->m_nMethodType) {
-    case METHOD_RKS:
-      this->convergeRhoTilde<TlDenseVector_Lapack>(DfObject::RUN_RKS);
-      break;
-    case METHOD_UKS:
-      this->convergeRhoTilde<TlDenseVector_Lapack>(DfObject::RUN_UKS_ALPHA);
-      this->convergeRhoTilde<TlDenseVector_Lapack>(DfObject::RUN_UKS_BETA);
-      break;
-    case METHOD_ROKS:
-      this->convergeRhoTilde<TlDenseVector_Lapack>(DfObject::RUN_ROKS_CLOSED);
-      this->convergeRhoTilde<TlDenseVector_Lapack>(DfObject::RUN_ROKS_OPEN);
-      break;
-    default:
-      std::cerr << "program error. @DfConverge_Anderson::convergeRhoTilde()"
+    switch (this->m_nMethodType) {
+        case METHOD_RKS:
+            this->convergeRhoTilde<TlDenseVector_Lapack>(DfObject::RUN_RKS);
+            break;
+        case METHOD_UKS:
+            this->convergeRhoTilde<TlDenseVector_Lapack>(
+                DfObject::RUN_UKS_ALPHA);
+            this->convergeRhoTilde<TlDenseVector_Lapack>(
+                DfObject::RUN_UKS_BETA);
+            break;
+        case METHOD_ROKS:
+            this->convergeRhoTilde<TlDenseVector_Lapack>(
+                DfObject::RUN_ROKS_CLOSED);
+            this->convergeRhoTilde<TlDenseVector_Lapack>(
+                DfObject::RUN_ROKS_OPEN);
+            break;
+        default:
+            std::cerr
+                << "program error. @DfConverge_Anderson::convergeRhoTilde()"
                 << std::endl;
-      break;
-  }
+            break;
+    }
 }
 
 void DfConverge_Anderson::convergeKSMatrix() {
-  switch (this->m_nMethodType) {
-    case METHOD_RKS:
-      this->convergeKSMatrix<TlDenseSymmetricMatrix_Lapack,
-                             TlDenseVector_Lapack>(DfObject::RUN_RKS);
-      break;
-    case METHOD_UKS:
-      this->convergeKSMatrix<TlDenseSymmetricMatrix_Lapack,
-                             TlDenseVector_Lapack>(DfObject::RUN_UKS_ALPHA);
-      this->convergeKSMatrix<TlDenseSymmetricMatrix_Lapack,
-                             TlDenseVector_Lapack>(DfObject::RUN_UKS_BETA);
-      break;
-    case METHOD_ROKS:
-      this->convergeKSMatrix<TlDenseSymmetricMatrix_Lapack,
-                             TlDenseVector_Lapack>(DfObject::RUN_ROKS_CLOSED);
-      this->convergeKSMatrix<TlDenseSymmetricMatrix_Lapack,
-                             TlDenseVector_Lapack>(DfObject::RUN_ROKS_OPEN);
-      break;
-    default:
-      std::cerr << "program error. @DfConverge_Anderson::convergeKSMatrix()"
+    switch (this->m_nMethodType) {
+        case METHOD_RKS:
+            this->convergeKSMatrix<TlDenseSymmetricMatrix_Lapack,
+                                   TlDenseVector_Lapack>(DfObject::RUN_RKS);
+            break;
+        case METHOD_UKS:
+            this->convergeKSMatrix<TlDenseSymmetricMatrix_Lapack,
+                                   TlDenseVector_Lapack>(
+                DfObject::RUN_UKS_ALPHA);
+            this->convergeKSMatrix<TlDenseSymmetricMatrix_Lapack,
+                                   TlDenseVector_Lapack>(
+                DfObject::RUN_UKS_BETA);
+            break;
+        case METHOD_ROKS:
+            this->convergeKSMatrix<TlDenseSymmetricMatrix_Lapack,
+                                   TlDenseVector_Lapack>(
+                DfObject::RUN_ROKS_CLOSED);
+            this->convergeKSMatrix<TlDenseSymmetricMatrix_Lapack,
+                                   TlDenseVector_Lapack>(
+                DfObject::RUN_ROKS_OPEN);
+            break;
+        default:
+            std::cerr
+                << "program error. @DfConverge_Anderson::convergeKSMatrix()"
                 << std::endl;
-      break;
-  }
+            break;
+    }
 }
 
 void DfConverge_Anderson::convergePMatrix() {
-  switch (this->m_nMethodType) {
-    case METHOD_RKS:
-      this->convergePMatrix<TlDenseSymmetricMatrix_Lapack,
-                            TlDenseVector_Lapack>(DfObject::RUN_RKS);
-      break;
-    case METHOD_UKS:
-      this->convergePMatrix<TlDenseSymmetricMatrix_Lapack,
-                            TlDenseVector_Lapack>(DfObject::RUN_UKS_ALPHA);
-      this->convergePMatrix<TlDenseSymmetricMatrix_Lapack,
-                            TlDenseVector_Lapack>(DfObject::RUN_UKS_BETA);
-      break;
-    case METHOD_ROKS:
-      this->convergePMatrix<TlDenseSymmetricMatrix_Lapack,
-                            TlDenseVector_Lapack>(DfObject::RUN_ROKS_CLOSED);
-      this->convergePMatrix<TlDenseSymmetricMatrix_Lapack,
-                            TlDenseVector_Lapack>(DfObject::RUN_ROKS_OPEN);
-      break;
-    default:
-      std::cerr << "program error. @DfConverge_Anderson::convergePMatrix()"
+    switch (this->m_nMethodType) {
+        case METHOD_RKS:
+            this->convergePMatrix<TlDenseSymmetricMatrix_Lapack,
+                                  TlDenseVector_Lapack>(DfObject::RUN_RKS);
+            break;
+        case METHOD_UKS:
+            this->convergePMatrix<TlDenseSymmetricMatrix_Lapack,
+                                  TlDenseVector_Lapack>(
+                DfObject::RUN_UKS_ALPHA);
+            this->convergePMatrix<TlDenseSymmetricMatrix_Lapack,
+                                  TlDenseVector_Lapack>(DfObject::RUN_UKS_BETA);
+            break;
+        case METHOD_ROKS:
+            this->convergePMatrix<TlDenseSymmetricMatrix_Lapack,
+                                  TlDenseVector_Lapack>(
+                DfObject::RUN_ROKS_CLOSED);
+            this->convergePMatrix<TlDenseSymmetricMatrix_Lapack,
+                                  TlDenseVector_Lapack>(
+                DfObject::RUN_ROKS_OPEN);
+            break;
+        default:
+            std::cerr
+                << "program error. @DfConverge_Anderson::convergePMatrix()"
                 << std::endl;
-      break;
-  }
+            break;
+    }
 }

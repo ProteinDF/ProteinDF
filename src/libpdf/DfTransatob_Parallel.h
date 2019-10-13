@@ -22,18 +22,18 @@
 #include "DfTransatob.h"
 
 class DfTransatob_Parallel : public DfTransatob {
- public:
-  DfTransatob_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfTransatob_Parallel();
+   public:
+    DfTransatob_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfTransatob_Parallel();
 
-  virtual void run();
-  virtual void runQclo(const std::string& fragname, int norbcut);
+    virtual void run();
+    virtual void runQclo(const std::string& fragname, int norbcut);
 
- protected:
-  void run_Scalapack();
-  void runQclo_Scalapack(const std::string& fragname, int norbcut);
+   protected:
+    void run_Scalapack();
+    void runQclo_Scalapack(const std::string& fragname, int norbcut);
 
-  virtual void logger(const std::string& str) const;
+    virtual void logger(const std::string& str) const;
 };
 
 #endif  // DFTRANSATOB_PARALLEL_H

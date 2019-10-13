@@ -35,20 +35,20 @@ TlDensField::~TlDensField() {}
 std::vector<double> TlDensField::makeDensFld(
     const TlDenseSymmetricMatrix_Lapack& P,
     const std::vector<TlPosition>& grids) {
-  const std::size_t numOfGrids = grids.size();
-  std::vector<double> values(numOfGrids, 0.0);
+    const std::size_t numOfGrids = grids.size();
+    std::vector<double> values(numOfGrids, 0.0);
 
-  DfCalcGridX dfCalcGrid(&this->param_);
+    DfCalcGridX dfCalcGrid(&this->param_);
 
 #pragma omp parallel for schedule(runtime)
-  for (std::size_t gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
-    const TlPosition grid = grids[gridIndex];
-    double rho = 0.0;
-    dfCalcGrid.gridDensity(P, grid, &rho);
+    for (std::size_t gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
+        const TlPosition grid = grids[gridIndex];
+        double rho = 0.0;
+        dfCalcGrid.gridDensity(P, grid, &rho);
 
 #pragma omp critical(TlDensField__makeDensFld)
-    { values[gridIndex] += rho; }
-  }
+        { values[gridIndex] += rho; }
+    }
 
-  return values;
+    return values;
 }

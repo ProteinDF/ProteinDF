@@ -12,69 +12,78 @@ class TlSparseGeneralMatrix_Eigen;
 class TlSparseSymmetricMatrix_Eigen;
 
 class TlDenseVector_Eigen : public TlDenseVectorObject {
- public:
-  explicit TlDenseVector_Eigen(TlDenseVectorObject::index_type size = 0);
-  TlDenseVector_Eigen(const TlDenseVector_Eigen& rhs);
-  TlDenseVector_Eigen(const std::vector<double>& rhs);
-//   TlDenseVector_Eigen(const double* p,
-//                       const TlDenseVectorObject::size_type length);
-  TlDenseVector_Eigen(const TlDenseVector_ImplEigen& rhs);
+   public:
+    explicit TlDenseVector_Eigen(TlDenseVectorObject::index_type size = 0);
+    TlDenseVector_Eigen(const TlDenseVector_Eigen& rhs);
+    TlDenseVector_Eigen(const std::vector<double>& rhs);
+    //   TlDenseVector_Eigen(const double* p,
+    //                       const TlDenseVectorObject::size_type length);
+    TlDenseVector_Eigen(const TlDenseVector_ImplEigen& rhs);
 
-  operator std::vector<double>() const;
+#ifdef HAVE_VIENNACL
+    TlDenseVector_Eigen(const TlDenseVector_ViennaCL& rhs);
+#endif  // HAVE_VIENNACL
 
-  virtual ~TlDenseVector_Eigen();
+    operator std::vector<double>() const;
 
-  // ---------------------------------------------------------------------------
-  // operators
-  // ---------------------------------------------------------------------------
- public:
-  TlDenseVector_Eigen& operator=(const TlDenseVector_Eigen& rhs);
+    virtual ~TlDenseVector_Eigen();
 
-  TlDenseVector_Eigen& operator+=(const TlDenseVector_Eigen& rhs);
-  TlDenseVector_Eigen& operator-=(const TlDenseVector_Eigen& rhs);
-  TlDenseVector_Eigen& operator*=(const double rhs);
-  TlDenseVector_Eigen& operator/=(const double rhs);
+    // ---------------------------------------------------------------------------
+    // operators
+    // ---------------------------------------------------------------------------
+   public:
+    TlDenseVector_Eigen& operator=(const TlDenseVector_Eigen& rhs);
 
-  // ---------------------------------------------------------------------------
-  // operations
-  // ---------------------------------------------------------------------------
-  TlDenseVector_Eigen& dotInPlace(const TlDenseVector_Eigen& rhs);
+    TlDenseVector_Eigen& operator+=(const TlDenseVector_Eigen& rhs);
+    TlDenseVector_Eigen& operator-=(const TlDenseVector_Eigen& rhs);
+    TlDenseVector_Eigen& operator*=(const double rhs);
+    TlDenseVector_Eigen& operator/=(const double rhs);
 
-  // ---------------------------------------------------------------------------
-  // others
-  // ---------------------------------------------------------------------------
-  friend class TlDenseGeneralMatrix_Eigen;
-  friend class TlDenseSymmetricMatrix_Eigen;
-  friend class TlDenseVector_ViennaCL;
+    double operator*(const TlDenseVector_Eigen& rhs) const;
 
-  friend TlDenseVector_Eigen operator+(const TlDenseVector_Eigen& rhs1,
-                                       const TlDenseVector_Eigen& rhs2);
-  friend TlDenseVector_Eigen operator-(const TlDenseVector_Eigen& rhs1,
-                                       const TlDenseVector_Eigen& rhs2);
-  friend TlDenseVector_Eigen operator*(const TlDenseVector_Eigen& rhs1,
-                                       const double rhs2);
-  friend TlDenseVector_Eigen operator*(const double rhs1,
-                                       const TlDenseVector_Eigen& rhs2);
+    // ---------------------------------------------------------------------------
+    // operations
+    // ---------------------------------------------------------------------------
+    double dot(const TlDenseVector_Eigen& rhs) const;
+    TlDenseVector_Eigen& dotInPlace(const TlDenseVector_Eigen& rhs);
 
-  // DM(G) * DV
-  friend TlDenseVector_Eigen operator*(
-      const TlDenseGeneralMatrix_Eigen& rhs1,
-      const TlDenseVector_Eigen& rhs2);
-  // DV * DM(G)
-  friend TlDenseVector_Eigen operator*(
-      const TlDenseVector_Eigen& rhs1,
-      const TlDenseGeneralMatrix_Eigen& rhs2);
-  // DM(S) * DV
-  friend TlDenseVector_Eigen operator*(
-      const TlDenseSymmetricMatrix_Eigen& rhs1,
-      const TlDenseVector_Eigen& rhs2);
-  // DV * DM(S)
-  friend TlDenseVector_Eigen operator*(
-      const TlDenseVector_Eigen& rhs1,
-      const TlDenseSymmetricMatrix_Eigen& rhs2);
+    // ---------------------------------------------------------------------------
+    // others
+    // ---------------------------------------------------------------------------
+    friend class TlDenseGeneralMatrix_Eigen;
+    friend class TlDenseSymmetricMatrix_Eigen;
+    friend class TlDenseVector_ViennaCL;
 
-  friend TlDenseVector_Eigen operator*(const TlSparseGeneralMatrix_Eigen& mat, const TlDenseVector_Eigen& vtr);
-  friend TlDenseVector_Eigen operator*(const TlSparseSymmetricMatrix_Eigen& mat, const TlDenseVector_Eigen& vtr);
+    friend TlDenseVector_Eigen operator+(const TlDenseVector_Eigen& rhs1,
+                                         const TlDenseVector_Eigen& rhs2);
+    friend TlDenseVector_Eigen operator-(const TlDenseVector_Eigen& rhs1,
+                                         const TlDenseVector_Eigen& rhs2);
+    friend TlDenseVector_Eigen operator*(const TlDenseVector_Eigen& rhs1,
+                                         const double rhs2);
+    friend TlDenseVector_Eigen operator*(const double rhs1,
+                                         const TlDenseVector_Eigen& rhs2);
+
+    // DM(G) * DV
+    friend TlDenseVector_Eigen operator*(const TlDenseGeneralMatrix_Eigen& rhs1,
+                                         const TlDenseVector_Eigen& rhs2);
+    // DV * DM(G)
+    friend TlDenseVector_Eigen operator*(
+        const TlDenseVector_Eigen& rhs1,
+        const TlDenseGeneralMatrix_Eigen& rhs2);
+    // DM(S) * DV
+    friend TlDenseVector_Eigen operator*(
+        const TlDenseSymmetricMatrix_Eigen& rhs1,
+        const TlDenseVector_Eigen& rhs2);
+    // DV * DM(S)
+    friend TlDenseVector_Eigen operator*(
+        const TlDenseVector_Eigen& rhs1,
+        const TlDenseSymmetricMatrix_Eigen& rhs2);
+
+    friend TlDenseVector_Eigen operator*(const TlSparseGeneralMatrix_Eigen& mat,
+                                         const TlDenseVector_Eigen& vtr);
+    friend TlDenseVector_Eigen operator*(
+        const TlSparseSymmetricMatrix_Eigen& mat,
+        const TlDenseVector_Eigen& vtr);
 };
 
 #endif  // TL_DENSE_VECTOR_EIGEN_H

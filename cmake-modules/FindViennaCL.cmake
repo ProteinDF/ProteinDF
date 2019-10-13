@@ -19,8 +19,9 @@ SET(VIENNACL_INCLUDE_SEARCH_PATHS
   /opt/ViennaCL/include
   ${VIENNACL_ROOT}
   ${VIENNACL_ROOT}/include
-  $ENV{VIENNACL_ROOT}
-  $ENV{VIENNACL_ROOT}/include
+  # $ENV{VIENNACL_ROOT}
+  # $ENV{VIENNACL_ROOT}/include
+  ENV VIENNACL_ROOT
   )
 
 find_path(

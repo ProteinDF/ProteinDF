@@ -24,8 +24,8 @@
 #include "TlOrbitalInfo_XC.h"
 #include "tl_dense_general_matrix_scalapack.h"
 #include "tl_dense_symmetric_matrix_scalapack.h"
-#include "tl_sparse_symmetric_matrix.h"
 #include "tl_dense_vector_scalapack.h"
+#include "tl_sparse_symmetric_matrix.h"
 
 DfOverlapX_Parallel::DfOverlapX_Parallel(TlSerializeData* pPdfParam)
     : DfOverlapX(pPdfParam) {}
@@ -33,191 +33,193 @@ DfOverlapX_Parallel::DfOverlapX_Parallel(TlSerializeData* pPdfParam)
 DfOverlapX_Parallel::~DfOverlapX_Parallel() {}
 
 void DfOverlapX_Parallel::logger(const std::string& str) const {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    DfOverlapX::logger(str);
-  }
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        DfOverlapX::logger(str);
+    }
 }
 
 DfTaskCtrl* DfOverlapX_Parallel::getDfTaskCtrlObject() const {
-  DfTaskCtrl* pDfTaskCtrl = new DfTaskCtrl_Parallel(this->pPdfParam_);
-  return pDfTaskCtrl;
+    DfTaskCtrl* pDfTaskCtrl = new DfTaskCtrl_Parallel(this->pPdfParam_);
+    return pDfTaskCtrl;
 }
 
 void DfOverlapX_Parallel::finalize(TlDenseGeneralMatrix_Lapack* pMtx) {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.allReduce_SUM(pMtx);
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    rComm.allReduce_SUM(pMtx);
 }
 
 void DfOverlapX_Parallel::finalize(TlDenseSymmetricMatrix_Lapack* pMtx) {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.allReduce_SUM(pMtx);
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    rComm.allReduce_SUM(pMtx);
 }
 
 void DfOverlapX_Parallel::finalize(TlDenseVector_Lapack* pVct) {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  rComm.allReduce_SUM(pVct);
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    rComm.allReduce_SUM(pVct);
 }
 
 void DfOverlapX_Parallel::getSpqD(TlDenseSymmetricMatrix_Scalapack* pSpq) {
-  assert(pSpq != NULL);
-  const index_type numOfAOs = this->m_nNumOfAOs;
-  pSpq->resize(numOfAOs);
-  TlSparseSymmetricMatrix tmpSpq(numOfAOs);
+    assert(pSpq != NULL);
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    pSpq->resize(numOfAOs);
+    TlSparseSymmetricMatrix tmpSpq(numOfAOs);
 
-  const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                  (*(this->pPdfParam_))["basis_set"]);
-  this->calcOverlap(orbitalInfo, &tmpSpq);
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
+    this->calcOverlap(orbitalInfo, &tmpSpq);
 
-  this->loggerTime(" finalize");
-  pSpq->mergeSparseMatrix(tmpSpq);
+    this->loggerTime(" finalize");
+    pSpq->mergeSparseMatrix(tmpSpq);
 }
 
 void DfOverlapX_Parallel::getSabD(TlDenseSymmetricMatrix_Scalapack* pSab) {
-  assert(pSab != NULL);
-  const index_type numOfAuxDens = this->m_nNumOfAux;
-  pSab->resize(numOfAuxDens);
-  TlSparseSymmetricMatrix tmpSab(numOfAuxDens);
+    assert(pSab != NULL);
+    const index_type numOfAuxDens = this->m_nNumOfAux;
+    pSab->resize(numOfAuxDens);
+    TlSparseSymmetricMatrix tmpSab(numOfAuxDens);
 
-  const TlOrbitalInfo_Density orbitalInfo_Density(
-      (*(this->pPdfParam_))["coordinates"],
-      (*(this->pPdfParam_))["basis_set_j"]);
-  this->calcOverlap(orbitalInfo_Density, &tmpSab);
+    const TlOrbitalInfo_Density orbitalInfo_Density(
+        (*(this->pPdfParam_))["coordinates"],
+        (*(this->pPdfParam_))["basis_set_j"]);
+    this->calcOverlap(orbitalInfo_Density, &tmpSab);
 
-  this->loggerTime(" finalize");
-  pSab->mergeSparseMatrix(tmpSab);
+    this->loggerTime(" finalize");
+    pSab->mergeSparseMatrix(tmpSab);
 }
 
 void DfOverlapX_Parallel::getSgd(TlDenseSymmetricMatrix_Scalapack* pSgd) {
-  assert(pSgd != NULL);
-  const index_type numOfAuxXC = this->numOfAuxXC_;
-  pSgd->resize(numOfAuxXC);
-  TlSparseSymmetricMatrix tmpSgd(numOfAuxXC);
+    assert(pSgd != NULL);
+    const index_type numOfAuxXC = this->numOfAuxXC_;
+    pSgd->resize(numOfAuxXC);
+    TlSparseSymmetricMatrix tmpSgd(numOfAuxXC);
 
-  const TlOrbitalInfo_XC orbitalInfo_XC((*(this->pPdfParam_))["coordinates"],
-                                        (*(this->pPdfParam_))["basis_set_xc"]);
-  this->calcOverlap(orbitalInfo_XC, &tmpSgd);
+    const TlOrbitalInfo_XC orbitalInfo_XC(
+        (*(this->pPdfParam_))["coordinates"],
+        (*(this->pPdfParam_))["basis_set_xc"]);
+    this->calcOverlap(orbitalInfo_XC, &tmpSgd);
 
-  this->loggerTime(" finalize");
-  pSgd->mergeSparseMatrix(tmpSgd);
+    this->loggerTime(" finalize");
+    pSgd->mergeSparseMatrix(tmpSgd);
 }
 
 void DfOverlapX_Parallel::getTransMat(
     const TlOrbitalInfoObject& orbitalInfo1,
     const TlOrbitalInfoObject& orbitalInfo2,
     TlDenseGeneralMatrix_Scalapack* pTransMat) {
-  assert(pTransMat != NULL);
-  pTransMat->resize(orbitalInfo1.getNumOfOrbitals(),
-                    orbitalInfo2.getNumOfOrbitals());
+    assert(pTransMat != NULL);
+    pTransMat->resize(orbitalInfo1.getNumOfOrbitals(),
+                      orbitalInfo2.getNumOfOrbitals());
 
-  TlSparseMatrix tmpTransMat(orbitalInfo1.getNumOfOrbitals(),
-                             orbitalInfo2.getNumOfOrbitals());
-  this->calcOverlap(orbitalInfo1, orbitalInfo2, &tmpTransMat);
-  pTransMat->mergeSparseMatrix(tmpTransMat);
+    TlSparseMatrix tmpTransMat(orbitalInfo1.getNumOfOrbitals(),
+                               orbitalInfo2.getNumOfOrbitals());
+    this->calcOverlap(orbitalInfo1, orbitalInfo2, &tmpTransMat);
+    pTransMat->mergeSparseMatrix(tmpTransMat);
 }
 
 void DfOverlapX_Parallel::get_pqg(const TlDenseVector_Scalapack& myu,
                                   TlDenseSymmetricMatrix_Scalapack* pF) {
-  assert(pF != NULL);
-  const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                  (*(this->pPdfParam_))["basis_set"]);
-  const TlOrbitalInfo_XC orbitalInfo_XC((*(this->pPdfParam_))["coordinates"],
-                                        (*(this->pPdfParam_))["basis_set_xc"]);
-  pF->resize(orbitalInfo.getNumOfOrbitals());
+    assert(pF != NULL);
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
+    const TlOrbitalInfo_XC orbitalInfo_XC(
+        (*(this->pPdfParam_))["coordinates"],
+        (*(this->pPdfParam_))["basis_set_xc"]);
+    pF->resize(orbitalInfo.getNumOfOrbitals());
 
-  const TlDenseVector_Lapack tmpMyu = myu.getVector();
-  TlSparseSymmetricMatrix tmpF(orbitalInfo.getNumOfOrbitals());
+    const TlDenseVector_Lapack tmpMyu = myu.getVector();
+    TlSparseSymmetricMatrix tmpF(orbitalInfo.getNumOfOrbitals());
 
-  this->calcOverlap(orbitalInfo_XC, tmpMyu, orbitalInfo, &tmpF);
-  this->loggerTime("finalize");
-  pF->mergeSparseMatrix(tmpF);
+    this->calcOverlap(orbitalInfo_XC, tmpMyu, orbitalInfo, &tmpF);
+    this->loggerTime("finalize");
+    pF->mergeSparseMatrix(tmpF);
 }
 
 void DfOverlapX_Parallel::getOvpMat(const TlOrbitalInfoObject& orbitalInfo,
                                     TlDenseSymmetricMatrix_Scalapack* pS) {
-  assert(pS != NULL);
-  pS->resize(orbitalInfo.getNumOfOrbitals());
-  TlSparseSymmetricMatrix tmpS(orbitalInfo.getNumOfOrbitals());
+    assert(pS != NULL);
+    pS->resize(orbitalInfo.getNumOfOrbitals());
+    TlSparseSymmetricMatrix tmpS(orbitalInfo.getNumOfOrbitals());
 
-  this->calcOverlap(orbitalInfo, &tmpS);
+    this->calcOverlap(orbitalInfo, &tmpS);
 
-  this->loggerTime("finalize");
-  pS->mergeSparseMatrix(tmpS);
+    this->loggerTime("finalize");
+    pS->mergeSparseMatrix(tmpS);
 }
 
 void DfOverlapX_Parallel::getGradient(const TlOrbitalInfoObject& orbitalInfo,
                                       TlDenseGeneralMatrix_Scalapack* pMatX,
                                       TlDenseGeneralMatrix_Scalapack* pMatY,
                                       TlDenseGeneralMatrix_Scalapack* pMatZ) {
-  assert(pMatX != NULL);
-  assert(pMatY != NULL);
-  assert(pMatZ != NULL);
+    assert(pMatX != NULL);
+    assert(pMatY != NULL);
+    assert(pMatZ != NULL);
 
-  const index_type numOfAOs = orbitalInfo.getNumOfOrbitals();
-  pMatX->resize(numOfAOs, numOfAOs);
-  pMatY->resize(numOfAOs, numOfAOs);
-  pMatZ->resize(numOfAOs, numOfAOs);
+    const index_type numOfAOs = orbitalInfo.getNumOfOrbitals();
+    pMatX->resize(numOfAOs, numOfAOs);
+    pMatY->resize(numOfAOs, numOfAOs);
+    pMatZ->resize(numOfAOs, numOfAOs);
 
-  const ShellArrayTable shellArrayTable =
-      this->makeShellArrayTable(orbitalInfo);
+    const ShellArrayTable shellArrayTable =
+        this->makeShellArrayTable(orbitalInfo);
 
-  this->createEngines();
-  DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
+    this->createEngines();
+    DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
 
-  TlSparseMatrix tmpMatX(numOfAOs, numOfAOs);
-  TlSparseMatrix tmpMatY(numOfAOs, numOfAOs);
-  TlSparseMatrix tmpMatZ(numOfAOs, numOfAOs);
+    TlSparseMatrix tmpMatX(numOfAOs, numOfAOs);
+    TlSparseMatrix tmpMatY(numOfAOs, numOfAOs);
+    TlSparseMatrix tmpMatZ(numOfAOs, numOfAOs);
 
-  std::vector<DfTaskCtrl::Task2> taskList;
-  bool hasTask = pTaskCtrl->getQueue2(orbitalInfo, true, this->grainSize_,
-                                      &taskList, true);
-  while (hasTask == true) {
-    this->getGradient_partProc(orbitalInfo, taskList, &tmpMatX, &tmpMatY,
-                               &tmpMatZ);
+    std::vector<DfTaskCtrl::Task2> taskList;
+    bool hasTask = pTaskCtrl->getQueue2(orbitalInfo, true, this->grainSize_,
+                                        &taskList, true);
+    while (hasTask == true) {
+        this->getGradient_partProc(orbitalInfo, taskList, &tmpMatX, &tmpMatY,
+                                   &tmpMatZ);
 
-    hasTask =
-        pTaskCtrl->getQueue2(orbitalInfo, true, this->grainSize_, &taskList);
-  }
+        hasTask = pTaskCtrl->getQueue2(orbitalInfo, true, this->grainSize_,
+                                       &taskList);
+    }
 
-  pTaskCtrl->cutoffReport();
-  delete pTaskCtrl;
-  pTaskCtrl = NULL;
-  this->destroyEngines();
+    pTaskCtrl->cutoffReport();
+    delete pTaskCtrl;
+    pTaskCtrl = NULL;
+    this->destroyEngines();
 
-  pMatX->mergeSparseMatrix(tmpMatX);
-  pMatY->mergeSparseMatrix(tmpMatY);
-  pMatZ->mergeSparseMatrix(tmpMatZ);
+    pMatX->mergeSparseMatrix(tmpMatX);
+    pMatY->mergeSparseMatrix(tmpMatY);
+    pMatZ->mergeSparseMatrix(tmpMatZ);
 }
 
 void DfOverlapX_Parallel::getM(const TlDenseSymmetricMatrix_Lapack& P,
                                TlDenseSymmetricMatrix_Lapack* pM) {
-  this->log_.info(
-      "DfOverlapX_Parallel::getM(const TlDenseSymmetricMatrix_Lapack&, "
-      "TlDenseSymmetricMatrix_Lapack* "
-      "pM)");
-  DfOverlapX::getM(P, pM);
+    this->log_.info(
+        "DfOverlapX_Parallel::getM(const TlDenseSymmetricMatrix_Lapack&, "
+        "TlDenseSymmetricMatrix_Lapack* "
+        "pM)");
+    DfOverlapX::getM(P, pM);
 }
 
 void DfOverlapX_Parallel::getM_A(const TlDenseSymmetricMatrix_Lapack& P,
                                  TlDenseSymmetricMatrix_Lapack* pM) {
-  this->log_.info(
-      "DfOverlapX_Parallel::getM_A(const TlDenseSymmetricMatrix_Lapack&, "
-      "TlDenseSymmetricMatrix_Lapack* pM)");
-  DfOverlapX::getM_A(P, pM);
+    this->log_.info(
+        "DfOverlapX_Parallel::getM_A(const TlDenseSymmetricMatrix_Lapack&, "
+        "TlDenseSymmetricMatrix_Lapack* pM)");
+    DfOverlapX::getM_A(P, pM);
 }
 
 void DfOverlapX_Parallel::getM(const TlDenseSymmetricMatrix_Scalapack& P,
                                TlDenseSymmetricMatrix_Scalapack* pM) {
-  this->log_.info(
-      "DfOverlapX_Parallel::getM(const TlDistSymmetricMatrix&, "
-      "TlDistSymmetricMatrix* pM)");
-  abort();
+    this->log_.info(
+        "DfOverlapX_Parallel::getM(const TlDistSymmetricMatrix&, "
+        "TlDistSymmetricMatrix* pM)");
+    abort();
 }
 
 void DfOverlapX_Parallel::getM_A(const TlDenseSymmetricMatrix_Scalapack& P,
                                  TlDenseSymmetricMatrix_Scalapack* pM) {
-  this->log_.info(
-      "DfOverlapX_Parallel::getM_A(const TlDistSymmetricMatrix&, "
-      "TlDistSymmetricMatrix* pM)");
-  abort();
+    this->log_.info(
+        "DfOverlapX_Parallel::getM_A(const TlDistSymmetricMatrix&, "
+        "TlDistSymmetricMatrix* pM)");
+    abort();
 }

@@ -25,28 +25,28 @@ TlFileGenericMatrix::TlFileGenericMatrix(const std::string& filePath,
                                          const size_t cacheSize)
     : TlDenseMatrix_IO_object(TlMatrixObject::CSFD, filePath, row, col,
                               cacheSize) {
-  this->createNewFile();
-  this->open();
+    this->createNewFile();
+    this->open();
 }
 
 TlFileGenericMatrix::TlFileGenericMatrix(const std::string& filePath,
                                          const size_t cacheSize)
     : TlDenseMatrix_IO_object(TlMatrixObject::CSFD, filePath, cacheSize) {
-  this->open();
+    this->open();
 }
 
 TlFileGenericMatrix::~TlFileGenericMatrix() {}
 
 void TlFileGenericMatrix::resize(const TlMatrixObject::index_type row,
                                  const TlMatrixObject::index_type col) {
-  TlDenseMatrix_IO_object::resize<TlFileGenericMatrix>(row, col);
+    TlDenseMatrix_IO_object::resize<TlFileGenericMatrix>(row, col);
 }
 
 TlMatrixObject::size_type TlFileGenericMatrix::getIndex(
     const index_type row, const index_type col) const {
-  return TlMatrixObject::getIndex_CSFD(row, col);
+    return TlMatrixObject::getIndex_CSFD(row, col);
 }
 
 TlMatrixObject::size_type TlFileGenericMatrix::getNumOfElements() const {
-  return TlMatrixObject::getNumOfElements_CSFD();
+    return TlMatrixObject::getNumOfElements_CSFD();
 }

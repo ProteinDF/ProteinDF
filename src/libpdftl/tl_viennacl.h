@@ -4,7 +4,7 @@
 #include <string>
 
 class TlViennaCL {
- public:
+   public:
     void setupAllAvailableDevices();
     std::string listDevices();
 

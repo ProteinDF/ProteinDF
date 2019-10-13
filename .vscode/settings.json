@@ -5,7 +5,7 @@
     "cmake.parallelJobs": 4,
     "cmake.ctest.parallelJobs": 1,
     "cmake.ctestArgs": ["-V"],
-    "cmake.installPrefix": "${env:HOME}/local/ProteinDF.dev",
+    "cmake.installPrefix": "${env:HOME}/local/PDF.dev",
     "cmake.environment": {
         // "PATH": "${env:HOME}/local/openmpi3/bin:/usr/local/bin:${env:PATH}",
         "PDF_HOME": "${env:HOME}/local/ProteinDF",

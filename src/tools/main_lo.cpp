@@ -24,57 +24,57 @@
 #include "TlSerializeData.h"
 
 void showHelp(const std::string& progname) {
-  std::cout << TlUtils::format("%s [OPTIONS] basisset_name ...",
-                               progname.c_str())
-            << std::endl;
-  std::cout << std::endl;
-  std::cout << " localize C matrix" << std::endl;
-  std::cout
-      << " -p PATH       set ProteinDF parameter file. default = pdfparam.mpac"
-      << std::endl;
-  std::cout << " -c PATH       set C matrix path" << std::endl;
-  std::cout << " -h            show help" << std::endl;
-  std::cout << " -v            verbose output" << std::endl;
+    std::cout << TlUtils::format("%s [OPTIONS] basisset_name ...",
+                                 progname.c_str())
+              << std::endl;
+    std::cout << std::endl;
+    std::cout << " localize C matrix" << std::endl;
+    std::cout << " -p PATH       set ProteinDF parameter file. default = "
+                 "pdfparam.mpac"
+              << std::endl;
+    std::cout << " -c PATH       set C matrix path" << std::endl;
+    std::cout << " -h            show help" << std::endl;
+    std::cout << " -v            verbose output" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "c:hp:v");
-  const bool isVerbose = (opt["v"] == "defined");
-  const bool isShowHelp = (opt["h"] == "defined");
+    TlGetopt opt(argc, argv, "c:hp:v");
+    const bool isVerbose = (opt["v"] == "defined");
+    const bool isShowHelp = (opt["h"] == "defined");
 
-  if (isShowHelp) {
-    showHelp(opt[0]);
-    return EXIT_SUCCESS;
-  }
+    if (isShowHelp) {
+        showHelp(opt[0]);
+        return EXIT_SUCCESS;
+    }
 
-  std::string pdfParamPath = "pdfparam.mpac";
-  if (opt["p"].empty() != true) {
-    pdfParamPath = opt["p"];
-  }
+    std::string pdfParamPath = "pdfparam.mpac";
+    if (opt["p"].empty() != true) {
+        pdfParamPath = opt["p"];
+    }
 
-  std::string inputCMatrixPath = "";
-  if (opt["c"].empty() != true) {
-    inputCMatrixPath = opt["c"];
-  }
+    std::string inputCMatrixPath = "";
+    if (opt["c"].empty() != true) {
+        inputCMatrixPath = opt["c"];
+    }
 
-  if (isVerbose) {
-    std::cerr << "parameter path: " << pdfParamPath << std::endl;
-  }
+    if (isVerbose) {
+        std::cerr << "parameter path: " << pdfParamPath << std::endl;
+    }
 
-  TlSerializeData param;
-  {
-    TlMsgPack mpac;
-    mpac.load(pdfParamPath);
-    param = mpac.getSerializeData();
-  }
+    TlSerializeData param;
+    {
+        TlMsgPack mpac;
+        mpac.load(pdfParamPath);
+        param = mpac.getSerializeData();
+    }
 
-  DfLocalize lo(&param);
-  lo.localize(inputCMatrixPath);
+    DfLocalize lo(&param);
+    lo.localize(inputCMatrixPath);
 
-  {
-    TlMsgPack mpac(param);
-    mpac.save(pdfParamPath);
-  }
+    {
+        TlMsgPack mpac(param);
+        mpac.save(pdfParamPath);
+    }
 
-  return 0;
+    return 0;
 }

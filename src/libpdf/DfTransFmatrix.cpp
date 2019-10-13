@@ -22,92 +22,94 @@
 
 DfTransFmatrix::DfTransFmatrix(TlSerializeData* pPdfParam, bool bExecDiis)
     : DfObject(pPdfParam), m_bExecDiis(bExecDiis) {
-  this->updateLinearAlgebraPackageParam(
-      (*(this->pPdfParam_))["linear_algebra_package/trans_F"].getStr());
+    this->updateLinearAlgebraPackageParam(
+        (*(this->pPdfParam_))["linear_algebra_package/trans_F"].getStr());
 }
 
 DfTransFmatrix::~DfTransFmatrix() {}
 
 void DfTransFmatrix::DfTrsFmatMain() {
-  switch (this->m_nMethodType) {
-    case METHOD_RKS:
-      this->calcF2Fprime(RUN_RKS);
-      break;
+    switch (this->m_nMethodType) {
+        case METHOD_RKS:
+            this->calcF2Fprime(RUN_RKS);
+            break;
 
-    case METHOD_UKS:
-      this->calcF2Fprime(RUN_UKS_ALPHA);
-      this->calcF2Fprime(RUN_UKS_BETA);
-      break;
+        case METHOD_UKS:
+            this->calcF2Fprime(RUN_UKS_ALPHA);
+            this->calcF2Fprime(RUN_UKS_BETA);
+            break;
 
-    case METHOD_ROKS:
-      this->calcF2Fprime(RUN_ROKS);
-      break;
+        case METHOD_ROKS:
+            this->calcF2Fprime(RUN_ROKS);
+            break;
 
-    default:
-      CnErr.abort();
-      break;
-  }
+        default:
+            CnErr.abort();
+            break;
+    }
 }
 
 void DfTransFmatrix::calcF2Fprime(const RUN_TYPE runType) {
-  switch (this->linearAlgebraPackage_) {
+    switch (this->linearAlgebraPackage_) {
 #ifdef HAVE_LAPACK
-    case LAP_LAPACK:
-      this->log_.info("linear algebra package: LAPACK");
-      this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-          runType);
-      break;
+        case LAP_LAPACK:
+            this->log_.info("linear algebra package: LAPACK");
+            this->main<TlDenseGeneralMatrix_Lapack,
+                       TlDenseSymmetricMatrix_Lapack>(runType);
+            break;
 #endif  // HAVE_LAPACK
 
 #ifdef HAVE_EIGEN
-    case LAP_EIGEN:
-      this->log_.info("linear algebra package: Eigen3");
-      this->main<TlDenseGeneralMatrix_Eigen, TlDenseSymmetricMatrix_Eigen>(
-          runType);
-      break;
+        case LAP_EIGEN:
+            this->log_.info("linear algebra package: Eigen3");
+            this->main<TlDenseGeneralMatrix_Eigen,
+                       TlDenseSymmetricMatrix_Eigen>(runType);
+            break;
 #endif  // HAVE_EIGEN
 
 #ifdef HAVE_VIENNACL
-    case LAP_VIENNACL:
-      this->log_.info("linear algebra package: ViennaCL");
-      this->main<TlDenseGeneralMatrix_ViennaCL,
-                 TlDenseSymmetricMatrix_ViennaCL>(runType);
-      break;
+        case LAP_VIENNACL:
+            this->log_.info("linear algebra package: ViennaCL");
+            this->main<TlDenseGeneralMatrix_ViennaCL,
+                       TlDenseSymmetricMatrix_ViennaCL>(runType);
+            break;
 #endif  // HAVE_VIENNACL
 
-    default: {
-      this->log_.critical(
-          TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
-      this->log_.critical(TlUtils::format("linear algebra package: %d",
-                                          this->linearAlgebraPackage_));
-      CnErr.abort();
-    } break;
-  }
+        default: {
+            this->log_.critical(
+                TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
+            this->log_.critical(TlUtils::format("linear algebra package: %d",
+                                                this->linearAlgebraPackage_));
+            CnErr.abort();
+        } break;
+    }
 }
 
 void DfTransFmatrix::DfTrsFmatQclo(const std::string& fragname, int norbcut) {
-  this->m_nNumOfMOs = norbcut;
+    this->m_nNumOfMOs = norbcut;
 
-  switch (this->m_nMethodType) {
-    case METHOD_RKS:
-      this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-          RUN_RKS, fragname, true);
-      break;
+    switch (this->m_nMethodType) {
+        case METHOD_RKS:
+            this->main<TlDenseGeneralMatrix_Lapack,
+                       TlDenseSymmetricMatrix_Lapack>(RUN_RKS, fragname, true);
+            break;
 
-    case METHOD_UKS:
-      this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-          RUN_UKS_ALPHA, fragname, true);
-      this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-          RUN_UKS_BETA, fragname, true);
-      break;
+        case METHOD_UKS:
+            this->main<TlDenseGeneralMatrix_Lapack,
+                       TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA, fragname,
+                                                      true);
+            this->main<TlDenseGeneralMatrix_Lapack,
+                       TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA, fragname,
+                                                      true);
+            break;
 
-    case METHOD_ROKS:
-      this->main<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack>(
-          RUN_ROKS, fragname, true);
-      break;
+        case METHOD_ROKS:
+            this->main<TlDenseGeneralMatrix_Lapack,
+                       TlDenseSymmetricMatrix_Lapack>(RUN_ROKS, fragname, true);
+            break;
 
-    default:
-      CnErr.abort();
-      break;
-  }
+        default:
+            CnErr.abort();
+            break;
+    }
 }
