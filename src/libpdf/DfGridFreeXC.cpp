@@ -43,311 +43,336 @@ DfGridFreeXC::DfGridFreeXC(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam),
       pOvpEngines_(NULL),
       orbitalInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"]) {
-  this->numOfPQs_ = this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2;
+    this->numOfPQs_ = this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2;
 
-  this->tau_ = 1.0E-10;
-  if ((*pPdfParam)["gridfree/CDAM_tau"].getStr().empty() != true) {
-    this->tau_ = (*pPdfParam)["grid_free/CDAM_tau"].getDouble();
-  }
-
-  this->epsilon_ = 1.0E-4;
-  if ((*pPdfParam)["gridfree/CD_epsilon"].getStr().empty() != true) {
-    this->epsilon_ = (*pPdfParam)["grid_free/CD_epsilon"].getDouble();
-  }
-
-  this->isCanonicalOrthogonalize_ = true;
-  if ((*pPdfParam)["gridfree/orthogonalize_method"].getStr().empty() != true) {
-    const std::string method = TlUtils::toUpper(
-        (*pPdfParam)["gridfree/orthogonalize_method"].getStr());
-    if (method == "LOWDIN") {
-      this->isCanonicalOrthogonalize_ = false;
+    this->tau_ = 1.0E-10;
+    if ((*pPdfParam)["gridfree/CDAM_tau"].getStr().empty() != true) {
+        this->tau_ = (*pPdfParam)["grid_free/CDAM_tau"].getDouble();
     }
-  }
 
-  this->GfVEigvalVtrPath_ = "";
-  if ((*pPdfParam)["gridfree/save_v_eigval"].getBoolean()) {
-    this->GfVEigvalVtrPath_ = DfObject::getGfVEigvalVtrPath();
-  }
+    this->epsilon_ = 1.0E-4;
+    if ((*pPdfParam)["gridfree/CD_epsilon"].getStr().empty() != true) {
+        this->epsilon_ = (*pPdfParam)["grid_free/CD_epsilon"].getDouble();
+    }
 
-  this->debugSaveM_ = (*pPdfParam)["debug/DfGridFreeXC/saveM"].getBoolean();
-  if (this->debugSaveM_) {
-    this->log_.info("using GAMESS formula");
-  }
+    this->isCanonicalOrthogonalize_ = true;
+    if ((*pPdfParam)["gridfree/orthogonalize_method"].getStr().empty() !=
+        true) {
+        const std::string method = TlUtils::toUpper(
+            (*pPdfParam)["gridfree/orthogonalize_method"].getStr());
+        if (method == "LOWDIN") {
+            this->isCanonicalOrthogonalize_ = false;
+        }
+    }
+
+    this->GfVEigvalVtrPath_ = "";
+    if ((*pPdfParam)["gridfree/save_v_eigval"].getBoolean()) {
+        this->GfVEigvalVtrPath_ = DfObject::getGfVEigvalVtrPath();
+    }
+
+    this->debugSaveM_ = (*pPdfParam)["debug/DfGridFreeXC/saveM"].getBoolean();
+    if (this->debugSaveM_) {
+        this->log_.info("using GAMESS formula");
+    }
 }
 
 DfGridFreeXC::~DfGridFreeXC() {}
 
 DfOverlapX* DfGridFreeXC::getDfOverlapObject() {
-  DfOverlapX* pDfOverlapX = new DfOverlapX(this->pPdfParam_);
-  return pDfOverlapX;
+    DfOverlapX* pDfOverlapX = new DfOverlapX(this->pPdfParam_);
+    return pDfOverlapX;
 }
 
 DfXMatrix* DfGridFreeXC::getDfXMatrixObject() {
-  DfXMatrix* pDfXMatrix = new DfXMatrix(this->pPdfParam_);
-  return pDfXMatrix;
+    DfXMatrix* pDfXMatrix = new DfXMatrix(this->pPdfParam_);
+    return pDfXMatrix;
 }
 
 // before SCF ==================================================================
 void DfGridFreeXC::preprocessBeforeSCF() {
-  this->preprocessBeforeSCF_templ<DfOverlapX, DfXMatrix,
-                                  TlDenseSymmetricMatrix_Lapack,
-                                  TlDenseGeneralMatrix_Lapack>();
+    this->preprocessBeforeSCF_templ<DfOverlapX, DfXMatrix,
+                                    TlDenseSymmetricMatrix_Lapack,
+                                    TlDenseGeneralMatrix_Lapack>();
 }
 
 // in SCF ======================================================================
 void DfGridFreeXC::buildFxc() {
-  const DfXCFunctional xcFunc(this->pPdfParam_);
-  if (xcFunc.getXcType() == DfXCFunctional::HF) {
-    // need not pure-DFT term
-    return;
-  }
+    const DfXCFunctional xcFunc(this->pPdfParam_);
+    if (xcFunc.getXcType() == DfXCFunctional::HF) {
+        // need not pure-DFT term
+        return;
+    }
 
-  const DfXCFunctional::FUNCTIONAL_TYPE funcType = xcFunc.getFunctionalType();
-  switch (funcType) {
-    case DfXCFunctional::LDA:
-      this->buildFxc_LDA();
-      break;
+    const DfXCFunctional::FUNCTIONAL_TYPE funcType = xcFunc.getFunctionalType();
+    switch (funcType) {
+        case DfXCFunctional::LDA:
+            this->buildFxc_LDA();
+            break;
 
-    case DfXCFunctional::GGA:
-      this->buildFxc_GGA();
-      break;
+        case DfXCFunctional::GGA:
+            this->buildFxc_GGA();
+            break;
 
-    default:
-      this->log_.critical("unknown XC functional type. stop.");
-      CnErr.abort();
-      break;
-  }
+        default:
+            this->log_.critical("unknown XC functional type. stop.");
+            CnErr.abort();
+            break;
+    }
 }
 
 void DfGridFreeXC::buildFxc_LDA() {
-  this->log_.info("DfGridFreeXC::buildFxc_LDA()");
-  this->buildFxc_LDA_method<DfOverlapX, DfCD, TlDenseSymmetricMatrix_Lapack,
-                            TlDenseGeneralMatrix_Lapack>();
+    this->log_.info("DfGridFreeXC::buildFxc_LDA()");
+    this->buildFxc_LDA_method<DfOverlapX, DfCD, TlDenseSymmetricMatrix_Lapack,
+                              TlDenseGeneralMatrix_Lapack>();
 }
 
 void DfGridFreeXC::createEngines() {
-  assert(this->pOvpEngines_ == NULL);
+    assert(this->pOvpEngines_ == NULL);
 
-  this->log_.info(
-      TlUtils::format("create ERI engine: %d", this->numOfThreads_));
-  this->pOvpEngines_ = new DfOverlapEngine[this->numOfThreads_];
+    this->log_.info(
+        TlUtils::format("create ERI engine: %d", this->numOfThreads_));
+    this->pOvpEngines_ = new DfOverlapEngine[this->numOfThreads_];
 }
 
 void DfGridFreeXC::destroyEngines() {
-  this->log_.info("delete OpenMP ERI engine");
-  if (this->pOvpEngines_ != NULL) {
-    delete[] this->pOvpEngines_;
-  }
-  this->pOvpEngines_ = NULL;
+    this->log_.info("delete OpenMP ERI engine");
+    if (this->pOvpEngines_ != NULL) {
+        delete[] this->pOvpEngines_;
+    }
+    this->pOvpEngines_ = NULL;
 }
 
 DfTaskCtrl* DfGridFreeXC::getDfTaskCtrlObject() const {
-  DfTaskCtrl* pDfTaskCtrl = new DfTaskCtrl(this->pPdfParam_);
-  return pDfTaskCtrl;
+    DfTaskCtrl* pDfTaskCtrl = new DfTaskCtrl(this->pPdfParam_);
+    return pDfTaskCtrl;
 }
 
 void DfGridFreeXC::finalize(TlDenseSymmetricMatrix_Lapack* pMtx) {
-  // do nothing
+    // do nothing
 }
 
 void DfGridFreeXC::get_F_lamda(const TlDenseVectorObject& lamda,
                                TlMatrixObject* pF_lamda,
                                TlMatrixObject* pE_lamda) {
-  const int dim = lamda.getSize();
-  assert(pF_lamda->getNumOfRows() == dim);
-  assert(pF_lamda->getNumOfCols() == dim);
-  assert(pE_lamda->getNumOfRows() == dim);
-  assert(pE_lamda->getNumOfCols() == dim);
+    const int dim = lamda.getSize();
+    assert(pF_lamda->getNumOfRows() == dim);
+    assert(pF_lamda->getNumOfCols() == dim);
+    assert(pE_lamda->getNumOfRows() == dim);
+    assert(pE_lamda->getNumOfCols() == dim);
 
-  DfFunctional_LDA* pFunc = NULL;
-  std::string checkXC = this->m_sXCFunctional;
-  if (checkXC == "SVWN") {
-    pFunc = new DfFunctional_SVWN();
-  } else if (checkXC == "HFS") {
-    pFunc = new DfFunctional_HFS();
-  } else {
-    this->log_.critical(
-        TlUtils::format("not support functional: %s", checkXC.c_str()));
-    abort();
-  }
-
-  double fv_a = 0.0;
-  double fv_b = 0.0;
-  for (int i = 0; i < dim; ++i) {
-    const double v = lamda.get(i);
-    if (v > 1.0E-16) {
-      pFunc->getDerivativeFunctional(v, v, &fv_a, &fv_b);
-      pF_lamda->set(i, i, fv_a);
-
-      const double f = pFunc->getFunctional(v, v) / (2.0 * v);
-      pE_lamda->set(i, i, f);
+    DfFunctional_LDA* pFunc = NULL;
+    std::string checkXC = this->m_sXCFunctional;
+    if (checkXC == "SVWN") {
+        pFunc = new DfFunctional_SVWN();
+    } else if (checkXC == "HFS") {
+        pFunc = new DfFunctional_HFS();
+    } else {
+        this->log_.critical(
+            TlUtils::format("not support functional: %s", checkXC.c_str()));
+        abort();
     }
-  }
 
-  delete pFunc;
-  pFunc = NULL;
+    double fv_a = 0.0;
+    double fv_b = 0.0;
+    for (int i = 0; i < dim; ++i) {
+        const double v = lamda.get(i);
+        if (v > 1.0E-16) {
+            pFunc->getDerivativeFunctional(v, v, &fv_a, &fv_b);
+            pF_lamda->set(i, i, fv_a);
+
+            const double f = pFunc->getFunctional(v, v) / (2.0 * v);
+            pE_lamda->set(i, i, f);
+        }
+    }
+
+    delete pFunc;
+    pFunc = NULL;
 }
 
 void DfGridFreeXC::getM_exact(const TlDenseSymmetricMatrix_Lapack& P,
                               TlDenseSymmetricMatrix_Lapack* pM) {
-  assert(pM != NULL);
-  TlDenseGeneralMatrix_Lapack M(this->m_nNumOfAOs, this->m_nNumOfAOs);
-  pM->resize(this->m_nNumOfAOs);
+    assert(pM != NULL);
+    TlDenseGeneralMatrix_Lapack M(this->m_nNumOfAOs, this->m_nNumOfAOs);
+    pM->resize(this->m_nNumOfAOs);
 
-  DfOverlapEngine engine;
+    DfOverlapEngine engine;
 
-  const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
-                                  (*(this->pPdfParam_))["basis_set"]);
+    const TlOrbitalInfo orbitalInfo((*(this->pPdfParam_))["coordinates"],
+                                    (*(this->pPdfParam_))["basis_set"]);
 
-  const ShellArrayTable shellArrayTable =
-      this->makeShellArrayTable(orbitalInfo);
-  // const ShellPairArrayTable shellPairArrayTable =
-  // this->getShellPairArrayTable(shellArrayTable);
+    const ShellArrayTable shellArrayTable =
+        this->makeShellArrayTable(orbitalInfo);
+    // const ShellPairArrayTable shellPairArrayTable =
+    // this->getShellPairArrayTable(shellArrayTable);
 
-  for (int shellTypeP = MAX_SHELL_TYPE - 1; shellTypeP >= 0; --shellTypeP) {
-    const int maxStepsP = 2 * shellTypeP + 1;
-    const ShellArray shellArrayP = shellArrayTable[shellTypeP];
-    ShellArray::const_iterator pItEnd = shellArrayP.end();
+    for (int shellTypeP = MAX_SHELL_TYPE - 1; shellTypeP >= 0; --shellTypeP) {
+        const int maxStepsP = 2 * shellTypeP + 1;
+        const ShellArray shellArrayP = shellArrayTable[shellTypeP];
+        ShellArray::const_iterator pItEnd = shellArrayP.end();
 
-    for (int shellTypeQ = MAX_SHELL_TYPE - 1; shellTypeQ >= 0; --shellTypeQ) {
-      const int maxStepsQ = 2 * shellTypeQ + 1;
-      const ShellArray shellArrayQ = shellArrayTable[shellTypeQ];
-      ShellArray::const_iterator qItEnd = shellArrayQ.end();
+        for (int shellTypeQ = MAX_SHELL_TYPE - 1; shellTypeQ >= 0;
+             --shellTypeQ) {
+            const int maxStepsQ = 2 * shellTypeQ + 1;
+            const ShellArray shellArrayQ = shellArrayTable[shellTypeQ];
+            ShellArray::const_iterator qItEnd = shellArrayQ.end();
 
-      for (int shellTypeR = MAX_SHELL_TYPE - 1; shellTypeR >= 0; --shellTypeR) {
-        const int maxStepsR = 2 * shellTypeR + 1;
-        const ShellArray shellArrayR = shellArrayTable[shellTypeR];
-        ShellArray::const_iterator rItEnd = shellArrayR.end();
+            for (int shellTypeR = MAX_SHELL_TYPE - 1; shellTypeR >= 0;
+                 --shellTypeR) {
+                const int maxStepsR = 2 * shellTypeR + 1;
+                const ShellArray shellArrayR = shellArrayTable[shellTypeR];
+                ShellArray::const_iterator rItEnd = shellArrayR.end();
 
-        for (int shellTypeS = MAX_SHELL_TYPE - 1; shellTypeS >= 0;
-             --shellTypeS) {
-          const int maxStepsS = 2 * shellTypeS + 1;
-          const ShellArray shellArrayS = shellArrayTable[shellTypeS];
-          ShellArray::const_iterator sItEnd = shellArrayS.end();
+                for (int shellTypeS = MAX_SHELL_TYPE - 1; shellTypeS >= 0;
+                     --shellTypeS) {
+                    const int maxStepsS = 2 * shellTypeS + 1;
+                    const ShellArray shellArrayS = shellArrayTable[shellTypeS];
+                    ShellArray::const_iterator sItEnd = shellArrayS.end();
 
-          const DfOverlapEngine::Query query(0, 0, 0, 0, shellTypeP, shellTypeQ,
-                                             shellTypeR, shellTypeS);
+                    const DfOverlapEngine::Query query(0, 0, 0, 0, shellTypeP,
+                                                       shellTypeQ, shellTypeR,
+                                                       shellTypeS);
 
-          for (ShellArray::const_iterator pIt = shellArrayP.begin();
-               pIt != pItEnd; ++pIt) {
-            const index_type shellIndexP = *pIt;
-            // const TlPosition posP = orbitalInfo.getPosition(shellIndexP);
-            // const DfOverlapEngine::PGTOs pgtosP =
-            // DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexP);
+                    for (ShellArray::const_iterator pIt = shellArrayP.begin();
+                         pIt != pItEnd; ++pIt) {
+                        const index_type shellIndexP = *pIt;
+                        // const TlPosition posP =
+                        // orbitalInfo.getPosition(shellIndexP); const
+                        // DfOverlapEngine::PGTOs pgtosP =
+                        // DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexP);
 
-            for (ShellArray::const_iterator qIt = shellArrayQ.begin();
-                 qIt != qItEnd; ++qIt) {
-              const index_type shellIndexQ = *qIt;
-              // const TlPosition posQ = orbitalInfo.getPosition(shellIndexQ);
-              // const DfOverlapEngine::PGTOs pgtosQ =
-              // DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexQ);
+                        for (ShellArray::const_iterator qIt =
+                                 shellArrayQ.begin();
+                             qIt != qItEnd; ++qIt) {
+                            const index_type shellIndexQ = *qIt;
+                            // const TlPosition posQ =
+                            // orbitalInfo.getPosition(shellIndexQ); const
+                            // DfOverlapEngine::PGTOs pgtosQ =
+                            // DfOverlapEngine::getPGTOs(orbitalInfo,
+                            // shellIndexQ);
 
-              for (ShellArray::const_iterator rIt = shellArrayR.begin();
-                   rIt != rItEnd; ++rIt) {
-                const index_type shellIndexR = *rIt;
-                // const TlPosition posR = orbitalInfo.getPosition(shellIndexR);
-                // const DfOverlapEngine::PGTOs pgtosR =
-                // DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexR);
+                            for (ShellArray::const_iterator rIt =
+                                     shellArrayR.begin();
+                                 rIt != rItEnd; ++rIt) {
+                                const index_type shellIndexR = *rIt;
+                                // const TlPosition posR =
+                                // orbitalInfo.getPosition(shellIndexR); const
+                                // DfOverlapEngine::PGTOs pgtosR =
+                                // DfOverlapEngine::getPGTOs(orbitalInfo,
+                                // shellIndexR);
 
-                for (ShellArray::const_iterator sIt = shellArrayS.begin();
-                     sIt != sItEnd; ++sIt) {
-                  const index_type shellIndexS = *sIt;
-                  // const TlPosition posS =
-                  // orbitalInfo.getPosition(shellIndexS); const
-                  // DfOverlapEngine::PGTOs pgtosS =
-                  // DfOverlapEngine::getPGTOs(orbitalInfo, shellIndexS);
+                                for (ShellArray::const_iterator sIt =
+                                         shellArrayS.begin();
+                                     sIt != sItEnd; ++sIt) {
+                                    const index_type shellIndexS = *sIt;
+                                    // const TlPosition posS =
+                                    // orbitalInfo.getPosition(shellIndexS);
+                                    // const DfOverlapEngine::PGTOs pgtosS =
+                                    // DfOverlapEngine::getPGTOs(orbitalInfo,
+                                    // shellIndexS);
 
-                  // engine.calc0(query,
-                  //              posP, posQ, posR, posS,
-                  //              pgtosP, pgtosQ, pgtosR, pgtosS);
-                  engine.calc(0, orbitalInfo, shellIndexP, 0, orbitalInfo,
-                              shellIndexQ, 0, orbitalInfo, shellIndexR, 0,
-                              orbitalInfo, shellIndexS);
+                                    // engine.calc0(query,
+                                    //              posP, posQ, posR, posS,
+                                    //              pgtosP, pgtosQ, pgtosR,
+                                    //              pgtosS);
+                                    engine.calc(0, orbitalInfo, shellIndexP, 0,
+                                                orbitalInfo, shellIndexQ, 0,
+                                                orbitalInfo, shellIndexR, 0,
+                                                orbitalInfo, shellIndexS);
 
-                  int index = 0;
-                  for (int i = 0; i < maxStepsP; ++i) {
-                    const int indexP = shellIndexP + i;
+                                    int index = 0;
+                                    for (int i = 0; i < maxStepsP; ++i) {
+                                        const int indexP = shellIndexP + i;
 
-                    for (int j = 0; j < maxStepsQ; ++j) {
-                      const int indexQ = shellIndexQ + j;
+                                        for (int j = 0; j < maxStepsQ; ++j) {
+                                            const int indexQ = shellIndexQ + j;
 
-                      for (int k = 0; k < maxStepsR; ++k) {
-                        const int indexR = shellIndexR + k;
+                                            for (int k = 0; k < maxStepsR;
+                                                 ++k) {
+                                                const int indexR =
+                                                    shellIndexR + k;
 
-                        for (int l = 0; l < maxStepsS; ++l) {
-                          const int indexS = shellIndexS + l;
+                                                for (int l = 0; l < maxStepsS;
+                                                     ++l) {
+                                                    const int indexS =
+                                                        shellIndexS + l;
 
-                          const double P_rs = P.get(indexR, indexS);
-                          const double value = engine.WORK[index];
-                          M.add(indexP, indexQ, P_rs * value);
+                                                    const double P_rs =
+                                                        P.get(indexR, indexS);
+                                                    const double value =
+                                                        engine.WORK[index];
+                                                    M.add(indexP, indexQ,
+                                                          P_rs * value);
 
-                          ++index;
+                                                    ++index;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
-                      }
                     }
-                  }
                 }
-              }
             }
-          }
         }
-      }
     }
-  }
 
-  *pM = M;
+    *pM = M;
 }
 
 DfGridFreeXC::ShellArrayTable DfGridFreeXC::makeShellArrayTable(
     const TlOrbitalInfoObject& orbitalInfo) {
-  ShellArrayTable shellArrayTable(MAX_SHELL_TYPE);
-  const index_type maxShellIndex = orbitalInfo.getNumOfOrbitals();
+    ShellArrayTable shellArrayTable(MAX_SHELL_TYPE);
+    const index_type maxShellIndex = orbitalInfo.getNumOfOrbitals();
 
-  index_type shellIndex = 0;
-  while (shellIndex < maxShellIndex) {
-    // shellType: 0=s, 1=p, 2=d
-    const int shellType = orbitalInfo.getShellType(shellIndex);
-    const int steps = 2 * shellType + 1;
+    index_type shellIndex = 0;
+    while (shellIndex < maxShellIndex) {
+        // shellType: 0=s, 1=p, 2=d
+        const int shellType = orbitalInfo.getShellType(shellIndex);
+        const int steps = 2 * shellType + 1;
 
-    shellArrayTable[shellType].push_back(shellIndex);
+        shellArrayTable[shellType].push_back(shellIndex);
 
-    shellIndex += steps;
-  }
+        shellIndex += steps;
+    }
 
-  return shellArrayTable;
+    return shellArrayTable;
 }
 
 DfGridFreeXC::ShellPairArrayTable DfGridFreeXC::getShellPairArrayTable(
     const ShellArrayTable& shellArrayTable) {
-  ShellPairArrayTable shellPairArrayTable(MAX_SHELL_TYPE * MAX_SHELL_TYPE);
+    ShellPairArrayTable shellPairArrayTable(MAX_SHELL_TYPE * MAX_SHELL_TYPE);
 
-  for (int shellTypeP = MAX_SHELL_TYPE - 1; shellTypeP >= 0; --shellTypeP) {
-    const ShellArray& shellArrayP = shellArrayTable[shellTypeP];
-    ShellArray::const_iterator pItEnd = shellArrayP.end();
+    for (int shellTypeP = MAX_SHELL_TYPE - 1; shellTypeP >= 0; --shellTypeP) {
+        const ShellArray& shellArrayP = shellArrayTable[shellTypeP];
+        ShellArray::const_iterator pItEnd = shellArrayP.end();
 
-    for (int shellTypeR = MAX_SHELL_TYPE - 1; shellTypeR >= 0; --shellTypeR) {
-      const ShellArray& shellArrayR = shellArrayTable[shellTypeR];
-      ShellArray::const_iterator rItEnd = shellArrayR.end();
+        for (int shellTypeR = MAX_SHELL_TYPE - 1; shellTypeR >= 0;
+             --shellTypeR) {
+            const ShellArray& shellArrayR = shellArrayTable[shellTypeR];
+            ShellArray::const_iterator rItEnd = shellArrayR.end();
 
-      const int shellPairType_PR = shellTypeP * MAX_SHELL_TYPE + shellTypeR;
-      for (ShellArray::const_iterator pIt = shellArrayP.begin(); pIt != pItEnd;
-           ++pIt) {
-        const index_type indexP = *pIt;
+            const int shellPairType_PR =
+                shellTypeP * MAX_SHELL_TYPE + shellTypeR;
+            for (ShellArray::const_iterator pIt = shellArrayP.begin();
+                 pIt != pItEnd; ++pIt) {
+                const index_type indexP = *pIt;
 
-        for (ShellArray::const_iterator rIt = shellArrayR.begin();
-             rIt != rItEnd; ++rIt) {
-          const index_type indexR = *rIt;
+                for (ShellArray::const_iterator rIt = shellArrayR.begin();
+                     rIt != rItEnd; ++rIt) {
+                    const index_type indexR = *rIt;
 
-          if (indexP >= indexR) {
-            ShellPair shellPair(indexP, indexR);
-            shellPairArrayTable[shellPairType_PR].push_back(shellPair);
-          }
+                    if (indexP >= indexR) {
+                        ShellPair shellPair(indexP, indexR);
+                        shellPairArrayTable[shellPairType_PR].push_back(
+                            shellPair);
+                    }
+                }
+            }
         }
-      }
     }
-  }
 
-  return shellPairArrayTable;
+    return shellPairArrayTable;
 }
 
 // TlDenseSymmetricMatrix_Lapack DfGridFreeXC::getPMatrix()
@@ -358,60 +383,60 @@ DfGridFreeXC::ShellPairArrayTable DfGridFreeXC::getShellPairArrayTable(
 // }
 
 TlDenseGeneralMatrix_Lapack DfGridFreeXC::getL() {
-  // TlDenseGeneralMatrix_Lapack L =
-  // DfObject::getLMatrix<TlDenseGeneralMatrix_Lapack>();
-  TlDenseGeneralMatrix_Lapack L;
-  L.load("GF_L.mat");
+    // TlDenseGeneralMatrix_Lapack L =
+    // DfObject::getLMatrix<TlDenseGeneralMatrix_Lapack>();
+    TlDenseGeneralMatrix_Lapack L;
+    L.load("GF_L.mat");
 
-  return L;
+    return L;
 }
 
 DfGridFreeXC::PQ_PairArray DfGridFreeXC::getI2PQ() {
-  std::string filepath = this->getI2pqVtrPath();
-  std::ifstream ifs;
-  ifs.open(filepath.c_str(), std::ofstream::in | std::ofstream::binary);
-  if (ifs.fail()) {
-    abort();
-  }
+    std::string filepath = this->getI2pqVtrPath();
+    std::ifstream ifs;
+    ifs.open(filepath.c_str(), std::ofstream::in | std::ofstream::binary);
+    if (ifs.fail()) {
+        abort();
+    }
 
-  std::size_t size = 0;
-  ifs.read(reinterpret_cast<char*>(&size), sizeof(std::size_t));
+    std::size_t size = 0;
+    ifs.read(reinterpret_cast<char*>(&size), sizeof(std::size_t));
 
-  PQ_PairArray answer(size);
-  index_type shellIndex1 = 0;
-  index_type shellIndex2 = 0;
-  for (std::size_t i = 0; i < size; ++i) {
-    ifs.read(reinterpret_cast<char*>(&shellIndex1), sizeof(index_type));
-    ifs.read(reinterpret_cast<char*>(&shellIndex2), sizeof(index_type));
-    answer[i] = IndexPair2(shellIndex1, shellIndex2);
-  }
+    PQ_PairArray answer(size);
+    index_type shellIndex1 = 0;
+    index_type shellIndex2 = 0;
+    for (std::size_t i = 0; i < size; ++i) {
+        ifs.read(reinterpret_cast<char*>(&shellIndex1), sizeof(index_type));
+        ifs.read(reinterpret_cast<char*>(&shellIndex2), sizeof(index_type));
+        answer[i] = IndexPair2(shellIndex1, shellIndex2);
+    }
 
-  ifs.close();
-  return answer;
+    ifs.close();
+    return answer;
 }
 
 void DfGridFreeXC::divideCholeskyBasis(const index_type numOfCBs,
                                        index_type* pStart, index_type* pEnd) {
-  *pStart = 0;
-  *pEnd = numOfCBs;
+    *pStart = 0;
+    *pEnd = numOfCBs;
 }
 
 TlDenseSymmetricMatrix_Lapack DfGridFreeXC::getCholeskyVector(
     const TlDenseVector_Lapack& L_col, const PQ_PairArray& I2PQ) {
-  const index_type numOfItilde = L_col.getSize();
-  TlDenseSymmetricMatrix_Lapack answer(this->m_nNumOfAOs);
-  for (index_type i = 0; i < numOfItilde; ++i) {
-    answer.set(I2PQ[i].index1(), I2PQ[i].index2(), L_col.get(i));
-  }
+    const index_type numOfItilde = L_col.getSize();
+    TlDenseSymmetricMatrix_Lapack answer(this->m_nNumOfAOs);
+    for (index_type i = 0; i < numOfItilde; ++i) {
+        answer.set(I2PQ[i].index1(), I2PQ[i].index2(), L_col.get(i));
+    }
 
-  return answer;
+    return answer;
 }
 
 // -----------------------------------------------------------------------------
 void DfGridFreeXC::buildFxc_GGA() {
-  this->log_.info("DfGridFreeXC::buildFxc_GGA()");
-  this->buildFxc_GGA_method<DfOverlapX, DfCD, TlDenseSymmetricMatrix_Lapack,
-                            TlDenseGeneralMatrix_Lapack>();
+    this->log_.info("DfGridFreeXC::buildFxc_GGA()");
+    this->buildFxc_GGA_method<DfOverlapX, DfCD, TlDenseSymmetricMatrix_Lapack,
+                              TlDenseGeneralMatrix_Lapack>();
 }
 
 // void DfGridFreeXC::buildFxc_GGA()
@@ -783,210 +808,211 @@ void DfGridFreeXC::buildFxc_GGA() {
 // }
 
 DfFunctional_GGA* DfGridFreeXC::getFunctionalGGA() {
-  DfFunctional_GGA* pFunc = NULL;
+    DfFunctional_GGA* pFunc = NULL;
 
-  DfXCFunctional xcFunc(this->pPdfParam_);
-  const DfXCFunctional::XC_TYPE xcType = xcFunc.getXcType();
-  switch (xcType) {
-    case DfXCFunctional::HFB:
-      pFunc = new DfFunctional_Becke88();
-      break;
+    DfXCFunctional xcFunc(this->pPdfParam_);
+    const DfXCFunctional::XC_TYPE xcType = xcFunc.getXcType();
+    switch (xcType) {
+        case DfXCFunctional::HFB:
+            pFunc = new DfFunctional_Becke88();
+            break;
 
-    case DfXCFunctional::BLYP:
-      pFunc = new DfFunctional_B88LYP();
-      break;
+        case DfXCFunctional::BLYP:
+            pFunc = new DfFunctional_B88LYP();
+            break;
 
-    case DfXCFunctional::B3LYP:
-      pFunc = new DfFunctional_B3LYP();
-      break;
+        case DfXCFunctional::B3LYP:
+            pFunc = new DfFunctional_B3LYP();
+            break;
 
-    default:
-      std::cerr << "DfGridFreeXC::getFunctionalGGA() " << xcType << std::endl;
-      pFunc = NULL;
-      abort();
-      break;
-  }
+        default:
+            std::cerr << "DfGridFreeXC::getFunctionalGGA() " << xcType
+                      << std::endl;
+            pFunc = NULL;
+            abort();
+            break;
+    }
 
-  return pFunc;
+    return pFunc;
 }
 
 TlDenseGeneralMatrix_Lapack DfGridFreeXC::getForce() {
-  const RUN_TYPE runType = RUN_RKS;
-  const int itr = this->m_nIteration;
+    const RUN_TYPE runType = RUN_RKS;
+    const int itr = this->m_nIteration;
 
-  const TlDenseSymmetricMatrix_Lapack S =
-      this->getSpqMatrix<TlDenseSymmetricMatrix_Lapack>();
-  const TlDenseGeneralMatrix_Lapack X =
-      this->getXMatrix<TlDenseGeneralMatrix_Lapack>();
-  TlDenseGeneralMatrix_Lapack Xt = X;
-  Xt.transposeInPlace();
+    const TlDenseSymmetricMatrix_Lapack S =
+        this->getSpqMatrix<TlDenseSymmetricMatrix_Lapack>();
+    const TlDenseGeneralMatrix_Lapack X =
+        this->getXMatrix<TlDenseGeneralMatrix_Lapack>();
+    TlDenseGeneralMatrix_Lapack Xt = X;
+    Xt.transposeInPlace();
 
-  // TlDenseSymmetricMatrix_Lapack P = 0.5 *
-  // this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS,
-  // itr);
-  const TlDenseGeneralMatrix_Lapack C =
-      this->getCMatrix<TlDenseGeneralMatrix_Lapack>(runType, itr);
-  TlDenseGeneralMatrix_Lapack Ct = C;
-  Ct.transposeInPlace();
+    // TlDenseSymmetricMatrix_Lapack P = 0.5 *
+    // this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS,
+    // itr);
+    const TlDenseGeneralMatrix_Lapack C =
+        this->getCMatrix<TlDenseGeneralMatrix_Lapack>(runType, itr);
+    TlDenseGeneralMatrix_Lapack Ct = C;
+    Ct.transposeInPlace();
 
-  // TlDenseGeneralMatrix_Lapack CCt = C * Ct;
-  // CCt.save("CCt.mat");
+    // TlDenseGeneralMatrix_Lapack CCt = C * Ct;
+    // CCt.save("CCt.mat");
 
-  // Exc =====================================================================
-  TlDenseSymmetricMatrix_Lapack Exc =
-      this->getFxcMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, itr);
-  Exc.save("GF_Exc.mat");
+    // Exc =====================================================================
+    TlDenseSymmetricMatrix_Lapack Exc =
+        this->getFxcMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, itr);
+    Exc.save("GF_Exc.mat");
 
-  // dS ======================================================================
-  TlDenseGeneralMatrix_Lapack dx, dy, dz;
-  DfOverlapX dfOvp(this->pPdfParam_);
-  dfOvp.getGradient(orbitalInfo_, &dx, &dy, &dz);
-  // dx.save("GF_dx.mat");
-  // dy.save("GF_dy.mat");
-  // dz.save("GF_dz.mat");
+    // dS ======================================================================
+    TlDenseGeneralMatrix_Lapack dx, dy, dz;
+    DfOverlapX dfOvp(this->pPdfParam_);
+    dfOvp.getGradient(orbitalInfo_, &dx, &dy, &dz);
+    // dx.save("GF_dx.mat");
+    // dy.save("GF_dy.mat");
+    // dz.save("GF_dz.mat");
 
-  // 規格直交化 ==============================================================
-  // TlDenseGeneralMatrix_Lapack o_Exc = Ct * Exc;
-  TlDenseGeneralMatrix_Lapack o_Exc = Xt * Exc * X;
-  o_Exc.save("GF_o_Exc.mat");
+    // 規格直交化 ==============================================================
+    // TlDenseGeneralMatrix_Lapack o_Exc = Ct * Exc;
+    TlDenseGeneralMatrix_Lapack o_Exc = Xt * Exc * X;
+    o_Exc.save("GF_o_Exc.mat");
 
-  // TlDenseGeneralMatrix_Lapack o_dx = Ct * dx;
-  // TlDenseGeneralMatrix_Lapack o_dy = Ct * dy;
-  // TlDenseGeneralMatrix_Lapack o_dz = Ct * dz;
-  TlDenseGeneralMatrix_Lapack o_dx = Xt * dx * X;
-  TlDenseGeneralMatrix_Lapack o_dy = Xt * dy * X;
-  TlDenseGeneralMatrix_Lapack o_dz = Xt * dz * X;
-  // TlDenseGeneralMatrix_Lapack o_dx = dx * C;
-  // TlDenseGeneralMatrix_Lapack o_dy = dy * C;
-  // TlDenseGeneralMatrix_Lapack o_dz = dz * C;
-  // o_dx.save("GF_o_dx.mat");
-  // o_dy.save("GF_o_dy.mat");
-  // o_dz.save("GF_o_dz.mat");
+    // TlDenseGeneralMatrix_Lapack o_dx = Ct * dx;
+    // TlDenseGeneralMatrix_Lapack o_dy = Ct * dy;
+    // TlDenseGeneralMatrix_Lapack o_dz = Ct * dz;
+    TlDenseGeneralMatrix_Lapack o_dx = Xt * dx * X;
+    TlDenseGeneralMatrix_Lapack o_dy = Xt * dy * X;
+    TlDenseGeneralMatrix_Lapack o_dz = Xt * dz * X;
+    // TlDenseGeneralMatrix_Lapack o_dx = dx * C;
+    // TlDenseGeneralMatrix_Lapack o_dy = dy * C;
+    // TlDenseGeneralMatrix_Lapack o_dz = dz * C;
+    // o_dx.save("GF_o_dx.mat");
+    // o_dy.save("GF_o_dy.mat");
+    // o_dz.save("GF_o_dz.mat");
 
-  // 積 ======================================================================
-  TlDenseGeneralMatrix_Lapack o_dxt = o_dx;
-  o_dxt.transposeInPlace();
-  TlDenseGeneralMatrix_Lapack o_dyt = o_dy;
-  o_dyt.transposeInPlace();
-  TlDenseGeneralMatrix_Lapack o_dzt = o_dz;
-  o_dzt.transposeInPlace();
+    // 積 ======================================================================
+    TlDenseGeneralMatrix_Lapack o_dxt = o_dx;
+    o_dxt.transposeInPlace();
+    TlDenseGeneralMatrix_Lapack o_dyt = o_dy;
+    o_dyt.transposeInPlace();
+    TlDenseGeneralMatrix_Lapack o_dzt = o_dz;
+    o_dzt.transposeInPlace();
 
-  TlDenseGeneralMatrix_Lapack o_dx_Exc = o_dxt * o_Exc;
-  TlDenseGeneralMatrix_Lapack o_dy_Exc = o_dyt * o_Exc;
-  TlDenseGeneralMatrix_Lapack o_dz_Exc = o_dzt * o_Exc;
-  // TlDenseGeneralMatrix_Lapack o_dx_Exc = o_dx * o_Exc;
-  // TlDenseGeneralMatrix_Lapack o_dy_Exc = o_dy * o_Exc;
-  // TlDenseGeneralMatrix_Lapack o_dz_Exc = o_dz * o_Exc;
-  // o_dx_Exc.save("GF_o_dxt_Exc.mat");
-  // o_dy_Exc.save("GF_o_dyt_Exc.mat");
-  // o_dz_Exc.save("GF_o_dzt_Exc.mat");
+    TlDenseGeneralMatrix_Lapack o_dx_Exc = o_dxt * o_Exc;
+    TlDenseGeneralMatrix_Lapack o_dy_Exc = o_dyt * o_Exc;
+    TlDenseGeneralMatrix_Lapack o_dz_Exc = o_dzt * o_Exc;
+    // TlDenseGeneralMatrix_Lapack o_dx_Exc = o_dx * o_Exc;
+    // TlDenseGeneralMatrix_Lapack o_dy_Exc = o_dy * o_Exc;
+    // TlDenseGeneralMatrix_Lapack o_dz_Exc = o_dz * o_Exc;
+    // o_dx_Exc.save("GF_o_dxt_Exc.mat");
+    // o_dy_Exc.save("GF_o_dyt_Exc.mat");
+    // o_dz_Exc.save("GF_o_dzt_Exc.mat");
 
-  // 規格直交化から戻す
-  TlDenseGeneralMatrix_Lapack SX = S * X;
-  TlDenseGeneralMatrix_Lapack SXt = SX;
-  SXt.transposeInPlace();
-  o_dx_Exc = SX * o_dx_Exc * SXt;
-  o_dy_Exc = SX * o_dy_Exc * SXt;
-  o_dz_Exc = SX * o_dz_Exc * SXt;
+    // 規格直交化から戻す
+    TlDenseGeneralMatrix_Lapack SX = S * X;
+    TlDenseGeneralMatrix_Lapack SXt = SX;
+    SXt.transposeInPlace();
+    o_dx_Exc = SX * o_dx_Exc * SXt;
+    o_dy_Exc = SX * o_dy_Exc * SXt;
+    o_dz_Exc = SX * o_dz_Exc * SXt;
 
-  const index_type numOfAOs = this->m_nNumOfAOs;
-  const index_type numOfMOs = this->m_nNumOfMOs;
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    const index_type numOfMOs = this->m_nNumOfMOs;
 
-  // 右からCをかける
-  // o_dx_Exc *= C;
-  // o_dy_Exc *= C;
-  // o_dz_Exc *= C;
-  TlDenseGeneralMatrix_Lapack C_mo = C;
-  {
-    TlDenseSymmetricMatrix_Lapack E(numOfAOs);
-    TlDenseVector_Lapack currOcc;
-    currOcc.load(this->getOccupationPath(runType));
-    for (index_type i = 0; i < numOfMOs; ++i) {
-      if (std::fabs(currOcc.get(i) - 2.0) < 1.0E-5) {
-        E.set(i, i, 1.0);
-      }
-    }
-    C_mo *= E;
-  }
-  o_dx_Exc *= C_mo;
-  o_dy_Exc *= C_mo;
-  o_dz_Exc *= C_mo;
-
-  // 左からCをかける
-  const index_type numOfAtoms = this->m_nNumOfAtoms;
-  TlDenseGeneralMatrix_Lapack force(numOfAtoms, 3);
-  TlDenseVector_Lapack Hx(numOfAOs), Hy(numOfAOs), Hz(numOfAOs);
-  {
-    TlDenseVector_Lapack currOcc;
-    currOcc.load(this->getOccupationPath(runType));
-    for (int i = 0; i < numOfMOs; ++i) {
-      if (std::fabs(currOcc.get(i) - 2.0) < 1.0E-5) {
-        for (int j = 0; j < numOfAOs; ++j) {
-          const double vx = C.get(j, i) * o_dx_Exc.get(j, i);
-          Hx.add(j, vx);
-          const double vy = C.get(j, i) * o_dy_Exc.get(j, i);
-          Hy.add(j, vy);
-          const double vz = C.get(j, i) * o_dz_Exc.get(j, i);
-          Hz.add(j, vz);
+    // 右からCをかける
+    // o_dx_Exc *= C;
+    // o_dy_Exc *= C;
+    // o_dz_Exc *= C;
+    TlDenseGeneralMatrix_Lapack C_mo = C;
+    {
+        TlDenseSymmetricMatrix_Lapack E(numOfAOs);
+        TlDenseVector_Lapack currOcc;
+        currOcc.load(this->getOccupationPath(runType));
+        for (index_type i = 0; i < numOfMOs; ++i) {
+            if (std::fabs(currOcc.get(i) - 2.0) < 1.0E-5) {
+                E.set(i, i, 1.0);
+            }
         }
-      }
+        C_mo *= E;
     }
-    Hx.save("GF_Hx.vct");
-    Hy.save("GF_Hy.vct");
-    Hz.save("GF_Hz.vct");
-  }
-  for (int i = 0; i < numOfAOs; ++i) {
-    const index_type atomIndex = this->orbitalInfo_.getAtomIndex(i);
-    force.add(atomIndex, 0, Hx.get(i));
-    force.add(atomIndex, 1, Hy.get(i));
-    force.add(atomIndex, 2, Hz.get(i));
-  }
+    o_dx_Exc *= C_mo;
+    o_dy_Exc *= C_mo;
+    o_dz_Exc *= C_mo;
 
-  force *= -4.0;
-  force *= 2.0;  // rks
+    // 左からCをかける
+    const index_type numOfAtoms = this->m_nNumOfAtoms;
+    TlDenseGeneralMatrix_Lapack force(numOfAtoms, 3);
+    TlDenseVector_Lapack Hx(numOfAOs), Hy(numOfAOs), Hz(numOfAOs);
+    {
+        TlDenseVector_Lapack currOcc;
+        currOcc.load(this->getOccupationPath(runType));
+        for (int i = 0; i < numOfMOs; ++i) {
+            if (std::fabs(currOcc.get(i) - 2.0) < 1.0E-5) {
+                for (int j = 0; j < numOfAOs; ++j) {
+                    const double vx = C.get(j, i) * o_dx_Exc.get(j, i);
+                    Hx.add(j, vx);
+                    const double vy = C.get(j, i) * o_dy_Exc.get(j, i);
+                    Hy.add(j, vy);
+                    const double vz = C.get(j, i) * o_dz_Exc.get(j, i);
+                    Hz.add(j, vz);
+                }
+            }
+        }
+        Hx.save("GF_Hx.vct");
+        Hy.save("GF_Hy.vct");
+        Hz.save("GF_Hz.vct");
+    }
+    for (int i = 0; i < numOfAOs; ++i) {
+        const index_type atomIndex = this->orbitalInfo_.getAtomIndex(i);
+        force.add(atomIndex, 0, Hx.get(i));
+        force.add(atomIndex, 1, Hy.get(i));
+        force.add(atomIndex, 2, Hz.get(i));
+    }
 
-  force.save("GF_force.mat");
+    force *= -4.0;
+    force *= 2.0;  // rks
 
-  // calc center of atoms
-  // const Fl_Geometry flGeom((*(this->pPdfParam_))["coordinates"]);
-  // TlPosition wc;
-  // double sum_w = 0.0;
-  // for (int i = 0; i < numOfAtoms; ++i) {
-  //     const TlAtom atom = flGeom.getAtom(i);
-  //     const TlPosition p = atom.getPosition();
-  //     const double weight = atom.getStdWeight();
-  //     std::cerr << TlUtils::format("(% f, %f, %f), %f", p.x(), p.y(), p.z(),
-  //     weight) << std::endl; wc += weight * p; sum_w += weight;
-  // }
-  // wc *= -1.0 / sum_w;
-  // std::cerr << TlUtils::format("wc: % f, % f, % f", wc.x(), wc.y(), wc.z())
-  // << std::endl;
+    force.save("GF_force.mat");
 
-  // for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
-  //     force.add(atomIndex, 0, wc.x());
-  //     force.add(atomIndex, 1, wc.y());
-  //     force.add(atomIndex, 2, wc.z());
-  // }
-  // force.save("GF_force2.mat");
+    // calc center of atoms
+    // const Fl_Geometry flGeom((*(this->pPdfParam_))["coordinates"]);
+    // TlPosition wc;
+    // double sum_w = 0.0;
+    // for (int i = 0; i < numOfAtoms; ++i) {
+    //     const TlAtom atom = flGeom.getAtom(i);
+    //     const TlPosition p = atom.getPosition();
+    //     const double weight = atom.getStdWeight();
+    //     std::cerr << TlUtils::format("(% f, %f, %f), %f", p.x(), p.y(),
+    //     p.z(), weight) << std::endl; wc += weight * p; sum_w += weight;
+    // }
+    // wc *= -1.0 / sum_w;
+    // std::cerr << TlUtils::format("wc: % f, % f, % f", wc.x(), wc.y(), wc.z())
+    // << std::endl;
 
-  return force;
+    // for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
+    //     force.add(atomIndex, 0, wc.x());
+    //     force.add(atomIndex, 1, wc.y());
+    //     force.add(atomIndex, 2, wc.z());
+    // }
+    // force.save("GF_force2.mat");
+
+    return force;
 }
 
 TlDenseGeneralMatrix_Lapack DfGridFreeXC::selectGradMat(
     const TlDenseGeneralMatrix_Lapack& input, const int atomIndex) {
-  const index_type numOfAOs = this->m_nNumOfAOs;
-  assert(input.getNumOfRows() == numOfAOs);
-  assert(input.getNumOfCols() == numOfAOs);
-  TlDenseGeneralMatrix_Lapack output(numOfAOs, numOfAOs);
-  for (index_type p = 0; p < numOfAOs; ++p) {
-    if (this->orbitalInfo_.getAtomIndex(p) == atomIndex) {
-      for (index_type q = 0; q < numOfAOs; ++q) {
-        output.set(p, q, input.get(p, q));
-        // if (this->orbitalInfo_.getAtomIndex(q) == atomIndex) {
-        //     output.set(p, q, input.get(p, q));
-        // }
-      }
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    assert(input.getNumOfRows() == numOfAOs);
+    assert(input.getNumOfCols() == numOfAOs);
+    TlDenseGeneralMatrix_Lapack output(numOfAOs, numOfAOs);
+    for (index_type p = 0; p < numOfAOs; ++p) {
+        if (this->orbitalInfo_.getAtomIndex(p) == atomIndex) {
+            for (index_type q = 0; q < numOfAOs; ++q) {
+                output.set(p, q, input.get(p, q));
+                // if (this->orbitalInfo_.getAtomIndex(q) == atomIndex) {
+                //     output.set(p, q, input.get(p, q));
+                // }
+            }
+        }
     }
-  }
-  return output;
+    return output;
 }

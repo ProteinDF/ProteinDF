@@ -19,6 +19,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <sstream>
 
 #include <stdarg.h>
@@ -28,115 +29,115 @@
 #include "TlUtils.h"
 
 std::string TlUtils::format(const char* psFormat, ...) {
-  va_list ap;
-  va_start(ap, psFormat);
+    va_list ap;
+    va_start(ap, psFormat);
 
-  size_t nLength = 256;
-  char* pBuf = NULL;
-  int nResult;
+    size_t nLength = 256;
+    char* pBuf = NULL;
+    int nResult;
 
-  do {
-    va_list aq;
-    // va_copy(aq, ap); // !! this function is defined by C99 !!
-    memcpy(&aq, &ap, sizeof(va_list));
+    do {
+        va_list aq;
+        // va_copy(aq, ap); // !! this function is defined by C99 !!
+        memcpy(&aq, &ap, sizeof(va_list));
 
-    nLength *= 2;
-    char* pNewBuf = new char[nLength];
+        nLength *= 2;
+        char* pNewBuf = new char[nLength];
 
-    if (pBuf != NULL) {
-      delete[] pBuf;
-    }
-    pBuf = pNewBuf;
-    pNewBuf = NULL;
+        if (pBuf != NULL) {
+            delete[] pBuf;
+        }
+        pBuf = pNewBuf;
+        pNewBuf = NULL;
 
-    nResult = vsnprintf(pBuf, nLength, psFormat, aq);
-    // nResult  = snprintf(pBuf, nLength, psFormat, aq);
-    if (nResult < 0) {
-      std::abort();
-    }
+        nResult = vsnprintf(pBuf, nLength, psFormat, aq);
+        // nResult  = snprintf(pBuf, nLength, psFormat, aq);
+        if (nResult < 0) {
+            std::abort();
+        }
 
-    va_end(aq);
-  } while (static_cast<size_t>(nResult) >= nLength);
+        va_end(aq);
+    } while (static_cast<size_t>(nResult) >= nLength);
 
-  va_end(ap);
-  std::string str(pBuf);
+    va_end(ap);
+    std::string str(pBuf);
 
-  delete[] pBuf;
+    delete[] pBuf;
 
-  return str;
+    return str;
 }
 
 template <>
 std::string TlUtils::xtos<bool>(const bool& t) {
-  std::stringstream s;
-  s << std::boolalpha << t;
-  return s.str();
+    std::stringstream s;
+    s << std::boolalpha << t;
+    return s.str();
 }
 
 void TlUtils::trim_ws(std::string& s) {
-  if (s.empty()) {
-    return;
-  }
+    if (s.empty()) {
+        return;
+    }
 
-  std::string::iterator p;
-  for (p = s.begin(); p != s.end() && std::isspace(*p); ++p) {
-  }
+    std::string::iterator p;
+    for (p = s.begin(); p != s.end() && std::isspace(*p); ++p) {
+    }
 
-  if (p != s.begin()) {
-    s.erase(s.begin(), p);
-  }
+    if (p != s.begin()) {
+        s.erase(s.begin(), p);
+    }
 }
 
 void TlUtils::trim_ws(std::wstring& s) {
-  if (s.empty()) {
-    return;
-  }
+    if (s.empty()) {
+        return;
+    }
 
-  std::wstring::iterator p;
-  for (p = s.begin(); p != s.end() && std::iswspace(*++p);) {
-  }
+    std::wstring::iterator p;
+    for (p = s.begin(); p != s.end() && std::iswspace(*++p);) {
+    }
 
-  if (!std::iswspace(*p)) {
-    p++;
-  }
+    if (!std::iswspace(*p)) {
+        p++;
+    }
 
-  s.erase(s.begin(), p);
+    s.erase(s.begin(), p);
 }
 
 void TlUtils::rtrim_ws(std::string& s) {
-  if (s.empty()) {
-    return;
-  }
+    if (s.empty()) {
+        return;
+    }
 
-  std::string::iterator p;
-  for (p = s.end(); p != s.begin() && std::isspace(*--p);) {
-  }
+    std::string::iterator p;
+    for (p = s.end(); p != s.begin() && std::isspace(*--p);) {
+    }
 
-  if (!std::iswspace(*p)) {
-    p++;
-  }
+    if (!std::iswspace(*p)) {
+        p++;
+    }
 
-  if (p != s.end()) {
-    s.erase(p, s.end());
-  }
+    if (p != s.end()) {
+        s.erase(p, s.end());
+    }
 }
 
 void TlUtils::rtrim_ws(std::wstring& s) {
-  if (s.empty()) {
-    return;
-  }
+    if (s.empty()) {
+        return;
+    }
 
-  std::wstring::iterator p;
-  for (p = s.end(); p != s.begin() && std::iswspace(*--p);) {
-  }
+    std::wstring::iterator p;
+    for (p = s.end(); p != s.begin() && std::iswspace(*--p);) {
+    }
 
-  if (!std::iswspace(*p)) {
-    p++;
-  }
+    if (!std::iswspace(*p)) {
+        p++;
+    }
 
-  if (p != s.end()) {
-    s.erase(p, s.end());
-  }
+    if (p != s.end()) {
+        s.erase(p, s.end());
+    }
 }
 
 /**
@@ -177,128 +178,128 @@ void TlUtils::rtrim_ws(std::wstring& s) {
  */
 std::vector<std::string> TlUtils::split(const std::string& str,
                                         const std::string& token) {
-  std::vector<std::string> aList;
-  aList.clear();
+    std::vector<std::string> aList;
+    aList.clear();
 
-  std::istringstream in(str);
-  char c;
+    std::istringstream in(str);
+    char c;
 
-  std::string temp_str = "";
-  while (in.get(c)) {
-    if (token.find(c) == std::string::npos) {
-      temp_str += c;
-    } else {
-      aList.push_back(temp_str);
-      temp_str = "";
+    std::string temp_str = "";
+    while (in.get(c)) {
+        if (token.find(c) == std::string::npos) {
+            temp_str += c;
+        } else {
+            aList.push_back(temp_str);
+            temp_str = "";
+        }
     }
-  }
-  if (!temp_str.empty()) {
-    aList.push_back(temp_str);
-  }
+    if (!temp_str.empty()) {
+        aList.push_back(temp_str);
+    }
 
-  return aList;
+    return aList;
 }
 
 std::string& TlUtils::replace(std::string& str, const std::string& sFrom,
                               const std::string& sTo) {
-  std::string::size_type n = 0;
-  std::string::size_type next = 0;
-  while ((n = str.find(sFrom, next)) != std::string::npos) {
-    str.replace(n, sFrom.size(), sTo);
-    next = n + sTo.size();
-  }
+    std::string::size_type n = 0;
+    std::string::size_type next = 0;
+    while ((n = str.find(sFrom, next)) != std::string::npos) {
+        str.replace(n, sFrom.size(), sTo);
+        next = n + sTo.size();
+    }
 
-  return str;
+    return str;
 }
 
 std::string TlUtils::toUpper(const std::string& str) {
-  std::ostringstream out;
-  std::istringstream in(str);
-  char c;
+    std::ostringstream out;
+    std::istringstream in(str);
+    char c;
 
-  while (in.get(c)) {
-    char tc = std::toupper(c);
-    out << tc;
-  }
+    while (in.get(c)) {
+        char tc = std::toupper(c);
+        out << tc;
+    }
 
-  return out.str();
+    return out.str();
 }
 
 std::string TlUtils::toLower(const std::string& str) {
-  std::ostringstream out;
-  std::istringstream in(str);
-  char c;
+    std::ostringstream out;
+    std::istringstream in(str);
+    char c;
 
-  while (in.get(c)) {
-    char tc = std::tolower(c);
-    out << tc;
-  }
+    while (in.get(c)) {
+        char tc = std::tolower(c);
+        out << tc;
+    }
 
-  return out.str();
+    return out.str();
 }
 
 // 文字列strをtimes回繰り返した文字列を返す
 std::string TlUtils::repeat(const std::string& str, const int times) {
-  std::ostringstream out;
+    std::ostringstream out;
 
-  for (int i = 0; i < times; ++i) {
-    out << str;
-  }
+    for (int i = 0; i < times; ++i) {
+        out << str;
+    }
 
-  return out.str();
+    return out.str();
 }
 
 std::string TlUtils::getWord(std::string& str) {
-  TlUtils::trim_ws(str);
-  std::string sAnswer = "";
+    TlUtils::trim_ws(str);
+    std::string sAnswer = "";
 
-  std::string::size_type nPosition = str.find_first_of(" \f\n\r\t\v");
+    std::string::size_type nPosition = str.find_first_of(" \f\n\r\t\v");
 
-  if (nPosition != std::string::npos) {
-    sAnswer = str.substr(0, nPosition);
-    str = str.substr(nPosition);
-  } else {
-    sAnswer = str;
-    str = "";
-  }
+    if (nPosition != std::string::npos) {
+        sAnswer = str.substr(0, nPosition);
+        str = str.substr(nPosition);
+    } else {
+        sAnswer = str;
+        str = "";
+    }
 
-  return sAnswer;
+    return sAnswer;
 }
 
 std::string TlUtils::textWrap(const std::string& str, size_t width) {
-  std::string tmp = "";
-  char cur = '\0';
-  char last = '\0';
-  size_t i = 0;
+    std::string tmp = "";
+    char cur = '\0';
+    char last = '\0';
+    size_t i = 0;
 
-  std::istringstream in(str);
-  std::ostringstream out;
-  while (in.get(cur)) {
-    if (++i == width) {
-      TlUtils::trim_ws(tmp);
-      out << '\n' << tmp;
-      tmp.clear();
-      i = 0;
-    } else if ((std::isspace(cur) == true) &&
-               (!std::isspace(last))) {  // 単語の終わり
-      out << tmp;
-      tmp.clear();
+    std::istringstream in(str);
+    std::ostringstream out;
+    while (in.get(cur)) {
+        if (++i == width) {
+            TlUtils::trim_ws(tmp);
+            out << '\n' << tmp;
+            tmp.clear();
+            i = 0;
+        } else if ((std::isspace(cur) == true) &&
+                   (!std::isspace(last))) {  // 単語の終わり
+            out << tmp;
+            tmp.clear();
+        }
+
+        if (cur == '\n') {
+            // flush
+            out << tmp << '\n';
+            tmp.clear();
+            i = 0;
+            last = '\0';
+        } else {
+            tmp += cur;
+            last = cur;
+        }
     }
+    out << tmp;
 
-    if (cur == '\n') {
-      // flush
-      out << tmp << '\n';
-      tmp.clear();
-      i = 0;
-      last = '\0';
-    } else {
-      tmp += cur;
-      last = cur;
-    }
-  }
-  out << tmp;
-
-  return out.str();
+    return out.str();
 }
 
 /**
@@ -312,106 +313,161 @@ std::string TlUtils::textWrap(const std::string& str, size_t width) {
  * @return ホワイトスペースもしくは"[]"で囲まれた文字列
  */
 std::string TlUtils::getPdfParam(std::string& str) {
-  // 先頭の空白を除去
-  TlUtils::trim_ws(str);
+    // 先頭の空白を除去
+    TlUtils::trim_ws(str);
 
-  std::string sAnswer = "";
+    std::string sAnswer = "";
 
-  bool bBraketMode = false;
-  if (str[0] == '[') {
-    std::string::size_type nBraket = str.find(']');
+    bool bBraketMode = false;
+    if (str[0] == '[') {
+        std::string::size_type nBraket = str.find(']');
 
-    if (nBraket != std::string::npos) {
-      // [] で囲まれた領域を返す
-      bBraketMode = true;
-      sAnswer = str.substr(1, nBraket - 1);
-      str = str.substr(nBraket + 1);
+        if (nBraket != std::string::npos) {
+            // [] で囲まれた領域を返す
+            bBraketMode = true;
+            sAnswer = str.substr(1, nBraket - 1);
+            str = str.substr(nBraket + 1);
+        }
     }
-  }
 
-  if (bBraketMode == false) {
-    std::string::size_type nWhiteSpace = str.find_first_of(" \t");
-    if (nWhiteSpace != std::string::npos) {
-      // ホワイトスペースで囲まれた領域を返す
+    if (bBraketMode == false) {
+        std::string::size_type nWhiteSpace = str.find_first_of(" \t");
+        if (nWhiteSpace != std::string::npos) {
+            // ホワイトスペースで囲まれた領域を返す
 
-      // 注:本来なら、以下のコードで足りる。
-      // >>>> code start:
-      sAnswer = str.substr(0, nWhiteSpace);
-      // <<<< code end:
-      //
-      // しかし、このコードでは何故か並列時に問題を生じる。
-      // 従って、以下のコードで代用する。
-      //       std::string tmp = "";
-      //       std::cout << "ws = " << nWhiteSpace << std::endl;
-      //       for (std::string::size_type i=0; i<nWhiteSpace; ++i){
-      // 	std::cout << i << ": " << str[i] << std::endl;
-      //   	tmp.append(&str[i]);
-      //       }
-      //       std::cout << sAnswer << "=?" << tmp << "." << std::endl;
-      //       {
-      // 	int nSize = nWhiteSpace +1; // +1 for '\0'
-      // 	char* pBuf = new char[nSize];
-      // 	str.copy(pBuf, nSize -1);
-      // 	pBuf[nSize -1] = '\0';
+            // 注:本来なら、以下のコードで足りる。
+            // >>>> code start:
+            sAnswer = str.substr(0, nWhiteSpace);
+            // <<<< code end:
+            //
+            // しかし、このコードでは何故か並列時に問題を生じる。
+            // 従って、以下のコードで代用する。
+            //       std::string tmp = "";
+            //       std::cout << "ws = " << nWhiteSpace << std::endl;
+            //       for (std::string::size_type i=0; i<nWhiteSpace; ++i){
+            // 	std::cout << i << ": " << str[i] << std::endl;
+            //   	tmp.append(&str[i]);
+            //       }
+            //       std::cout << sAnswer << "=?" << tmp << "." << std::endl;
+            //       {
+            // 	int nSize = nWhiteSpace +1; // +1 for '\0'
+            // 	char* pBuf = new char[nSize];
+            // 	str.copy(pBuf, nSize -1);
+            // 	pBuf[nSize -1] = '\0';
 
-      // 	sAnswer = std::string(pBuf);
-      // 	delete[] pBuf;
-      // 	pBuf = NULL;
-      //       }
+            // 	sAnswer = std::string(pBuf);
+            // 	delete[] pBuf;
+            // 	pBuf = NULL;
+            //       }
 
-      str = str.substr(nWhiteSpace + 1);
-    } else {
-      // 文字列全体を返す
-      sAnswer = str;
-      str = "";
+            str = str.substr(nWhiteSpace + 1);
+        } else {
+            // 文字列全体を返す
+            sAnswer = str;
+            str = "";
+        }
     }
-  }
 
-  return sAnswer;
+    return sAnswer;
 }
 
 std::string TlUtils::getPdfSlash(std::string& str) {
-  std::string sAnswer = "";
-  TlUtils::trim_ws(str);
+    std::string sAnswer = "";
+    TlUtils::trim_ws(str);
 
-  bool bFoundLeftBraket = false;
-  while (str.length() > 0) {
-    if ((str[0] == '/') && (bFoundLeftBraket == false)) {
-      str = str.substr(1);  // 先頭の"/"を除去
-      break;
+    bool bFoundLeftBraket = false;
+    while (str.length() > 0) {
+        if ((str[0] == '/') && (bFoundLeftBraket == false)) {
+            str = str.substr(1);  // 先頭の"/"を除去
+            break;
+        }
+
+        if (str[0] == '{') {
+            bFoundLeftBraket = true;
+        } else if ((bFoundLeftBraket == true) && (str[0] == '}')) {
+            bFoundLeftBraket = false;
+        }
+
+        sAnswer += str[0];
+        if (str.length() > 1) {
+            str = str.substr(1);
+        } else {
+            str = "";
+        }
     }
 
-    if (str[0] == '{') {
-      bFoundLeftBraket = true;
-    } else if ((bFoundLeftBraket == true) && (str[0] == '}')) {
-      bFoundLeftBraket = false;
-    }
-
-    sAnswer += str[0];
-    if (str.length() > 1) {
-      str = str.substr(1);
-    } else {
-      str = "";
-    }
-  }
-
-  return sAnswer;
+    return sAnswer;
 }
 
 void TlUtils::progressbar(const float progress) {
-  static const int barWidth = 70;
+    static const int barWidth = 70;
 
-  std::cout << "[";
-  const int pos = barWidth * progress;
-  for (int i = 0; i < barWidth; ++i) {
-    if (i < pos) {
-      std::cout << "=";
-    } else if (i == pos) {
-      std::cout << ">";
-    } else {
-      std::cout << " ";
+    std::cout << "[";
+    const int pos = barWidth * progress;
+    for (int i = 0; i < barWidth; ++i) {
+        if (i < pos) {
+            std::cout << "=";
+        } else if (i == pos) {
+            std::cout << ">";
+        } else {
+            std::cout << " ";
+        }
     }
-  }
-  std::cout << "] " << std::min<int>(int(progress * 100.0), 100) << " %\r";
-  std::cout.flush();
+    std::cout << "] " << std::min<int>(int(progress * 100.0), 100) << " %\r";
+    std::cout.flush();
+}
+
+// "[1-3, 5]" -> "1,2,3,5"
+std::vector<int> TlUtils::vector_notation(const std::string& inputStr) {
+    static const int HYPHEN = std::numeric_limits<int>::min();
+
+    std::vector<int> answer;
+
+    // 構文解釈
+    std::string numStr = "";
+    std::vector<int> stack;
+    const int len = inputStr.size();
+    for (int i = 0; i < len; ++i) {
+        const char c = inputStr[i];
+        if (std::isdigit(c) != 0) {
+            numStr.append(1, c);
+        } else {
+            if (numStr.size() > 0) {
+                const int num = std::atoi(numStr.c_str());
+                stack.push_back(num);
+                numStr = "";
+            }
+
+            if (c == '-') {
+                stack.push_back(HYPHEN);
+            }
+        }
+    }
+    if (numStr.empty() == false) {
+        stack.push_back(std::atoi(numStr.c_str()));
+    }
+
+    // 翻訳
+    const int stackSize = stack.size();
+    for (int i = 0; i < stackSize; ++i) {
+        const int v = stack[i];
+        // std::cout << "stack: " << i << ":" << v << std::endl;
+        if (v > HYPHEN) {
+            answer.push_back(v);
+        } else if (v == HYPHEN) {
+            const int i1 = i + 1;
+            if ((i1 < stackSize) && (answer.size() > 0)) {
+                const int end = stack[i1];
+                const int start = answer.at(answer.size() - 1);
+                // std::cout << "stack: start=" << start << ", end=" << end <<
+                // std::endl;
+                for (int v = start + 1; v <= end; ++v) {
+                    answer.push_back(v);
+                }
+                ++i;
+            }
+        }
+    }
+
+    return answer;
 }

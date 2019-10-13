@@ -28,52 +28,52 @@ DfDiffDensityMatrix_Parallel::DfDiffDensityMatrix_Parallel(
 DfDiffDensityMatrix_Parallel::~DfDiffDensityMatrix_Parallel() {}
 
 void DfDiffDensityMatrix_Parallel::exec() {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
 
 #ifdef HAVE_SCALAPACK
-  if (this->m_bUsingSCALAPACK == true) {
-    // using ScaLAPACK
-    switch (this->m_nMethodType) {
-      case METHOD_RKS:
-        DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
-            RUN_RKS, this->m_nIteration);
-        break;
+    if (this->m_bUsingSCALAPACK == true) {
+        // using ScaLAPACK
+        switch (this->m_nMethodType) {
+            case METHOD_RKS:
+                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
+                    RUN_RKS, this->m_nIteration);
+                break;
 
-      case METHOD_UKS:
-        DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
-            RUN_UKS_ALPHA, this->m_nIteration);
-        DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
-            RUN_UKS_BETA, this->m_nIteration);
-        break;
+            case METHOD_UKS:
+                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
+                    RUN_UKS_ALPHA, this->m_nIteration);
+                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
+                    RUN_UKS_BETA, this->m_nIteration);
+                break;
 
-      case METHOD_ROKS:
-        DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
-            RUN_ROKS_CLOSED, this->m_nIteration);
-        DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
-            RUN_ROKS_OPEN, this->m_nIteration);
-        break;
+            case METHOD_ROKS:
+                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
+                    RUN_ROKS_CLOSED, this->m_nIteration);
+                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
+                    RUN_ROKS_OPEN, this->m_nIteration);
+                break;
 
-      default:
-        std::cerr << "program error. " << __FILE__ << ":" << __LINE__
-                  << std::endl;
-        abort();
+            default:
+                std::cerr << "program error. " << __FILE__ << ":" << __LINE__
+                          << std::endl;
+                abort();
+        }
+
+    } else {
+        // using LAPACK
+        if (rComm.isMaster() == true) {
+            DfDiffDensityMatrix::exec();
+        }
+        rComm.barrier();
     }
-
-  } else {
-    // using LAPACK
-    if (rComm.isMaster() == true) {
-      DfDiffDensityMatrix::exec();
-    }
-    rComm.barrier();
-  }
 #else
-  {
-    // using LAPACK
-    if (rComm.isMaster() == true) {
-      DfDiffDensityMatrix::exec();
+    {
+        // using LAPACK
+        if (rComm.isMaster() == true) {
+            DfDiffDensityMatrix::exec();
+        }
+        rComm.barrier();
     }
-    rComm.barrier();
-  }
 #endif  // HAVE_SCALAPACK
 }
 

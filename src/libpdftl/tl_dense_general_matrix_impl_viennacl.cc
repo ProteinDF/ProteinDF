@@ -29,56 +29,65 @@
 // constructor & destructor
 // ---------------------------------------------------------------------------
 TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(
-    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col)
-    : matrix_(row, col) {}
+    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+    double const* const pBuf)
+    : matrix_(row, col) {
+    if (pBuf != NULL) {
+        this->vtr2mat(pBuf);
+    }
+}
 
 TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(
     const TlDenseGeneralMatrix_ImplViennaCL& rhs) {
-  this->matrix_ = rhs.matrix_;
+    this->matrix_ = rhs.matrix_;
 }
 
 TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(
     const TlDenseSymmetricMatrix_ImplViennaCL& rhs) {
-  this->matrix_ = rhs.matrix_;
+    this->matrix_ = rhs.matrix_;
 }
 
 TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(
     const TlSparseGeneralMatrix_ImplViennaCL& rhs)
     : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()) {
-  TlDenseGeneralMatrix_ImplEigen DM = TlSparseGeneralMatrix_ImplEigen(rhs);
-  viennacl::copy(DM.matrix_, this->matrix_);
+    TlDenseGeneralMatrix_ImplEigen DM = TlSparseGeneralMatrix_ImplEigen(rhs);
+    viennacl::copy(DM.matrix_, this->matrix_);
 }
 
 #ifdef HAVE_EIGEN
 TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(
     const TlDenseGeneralMatrix_ImplEigen& rhs)
     : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()) {
-  viennacl::copy(rhs.matrix_, this->matrix_);
+    viennacl::copy(rhs.matrix_, this->matrix_);
 }
 #endif  // HAVE_EIGEN
 
 TlDenseGeneralMatrix_ImplViennaCL::~TlDenseGeneralMatrix_ImplViennaCL() {}
 
-void TlDenseGeneralMatrix_ImplViennaCL::vtr2mat(
-    const std::vector<double>& vtr) {
-  const TlMatrixObject::index_type numOfRows = this->getNumOfRows();
-  const TlMatrixObject::index_type numOfCols = this->getNumOfCols();
-  assert(vtr.size() == numOfRows * numOfCols);
+TlDenseGeneralMatrix_ImplViennaCL::operator std::vector<double>() const {
+    const std::size_t row = this->getNumOfRows();
+    const std::size_t col = this->getNumOfCols();
+    std::vector<double> v(row * col);
+
 #ifdef HAVE_EIGEN
-  const Eigen::MatrixXd tmp =
-      Eigen::Map<const Eigen::MatrixXd>(&(vtr[0]), numOfRows, numOfCols);
-  viennacl::copy(tmp, this->matrix_);
-#else
-  {
-    std::size_t i = 0;
-    for (TlMatrixObject::index_type c = 0; c < numOfCols; ++c) {
-      for (TlMatrixObject::index_type r = 0; r < numOfRows; ++r) {
-        this->set(r, c, vtr[i]);
-        ++i;
-      }
+    {
+        Eigen::MatrixXd tmp;
+        viennacl::copy(this->matrix_, tmp);
+        Eigen::Map<Eigen::MatrixXd>(&(v[0]), row, col) = tmp;
     }
-  }
+#else
+    {
+        std::size_t i = 0;
+        for (std::size_t c = 0; c < col; ++c) {
+            for (std::size_t r = 0; r < row; ++r) {
+                v[i] = this->get(r, c);
+                ++i;
+            }
+        }
+    }
 #endif  // HAVE_EIGEN
+
+    return v;
 }
 
 // ---------------------------------------------------------------------------
@@ -86,36 +95,36 @@ void TlDenseGeneralMatrix_ImplViennaCL::vtr2mat(
 // ---------------------------------------------------------------------------
 TlMatrixObject::index_type TlDenseGeneralMatrix_ImplViennaCL::getNumOfRows()
     const {
-  return this->matrix_.size1();
+    return this->matrix_.size1();
 }
 
 TlMatrixObject::index_type TlDenseGeneralMatrix_ImplViennaCL::getNumOfCols()
     const {
-  return this->matrix_.size2();
+    return this->matrix_.size2();
 }
 
 void TlDenseGeneralMatrix_ImplViennaCL::resize(
     const TlMatrixObject::index_type newRow,
     const TlMatrixObject::index_type newCol) {
-  this->matrix_.resize(newRow, newCol, true);
+    this->matrix_.resize(newRow, newCol, true);
 }
 
 double TlDenseGeneralMatrix_ImplViennaCL::get(
     const TlMatrixObject::index_type row,
     const TlMatrixObject::index_type col) const {
-  return this->matrix_(row, col);
+    return this->matrix_(row, col);
 }
 
 void TlDenseGeneralMatrix_ImplViennaCL::set(
     const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
     const double value) {
-  this->matrix_(row, col) = value;
+    this->matrix_(row, col) = value;
 }
 
 void TlDenseGeneralMatrix_ImplViennaCL::add(
     const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
     const double value) {
-  this->matrix_(row, col) += value;
+    this->matrix_(row, col) += value;
 }
 
 // ---------------------------------------------------------------------------
@@ -123,187 +132,210 @@ void TlDenseGeneralMatrix_ImplViennaCL::add(
 // ---------------------------------------------------------------------------
 TlDenseGeneralMatrix_ImplViennaCL& TlDenseGeneralMatrix_ImplViennaCL::operator=(
     const TlDenseGeneralMatrix_ImplViennaCL& rhs) {
-  if (this != &rhs) {
-    this->matrix_ = rhs.matrix_;
-  }
+    if (this != &rhs) {
+        this->matrix_ = rhs.matrix_;
+    }
 
-  return *this;
+    return *this;
 }
 
 TlDenseGeneralMatrix_ImplViennaCL& TlDenseGeneralMatrix_ImplViennaCL::
 operator+=(const TlDenseGeneralMatrix_ImplViennaCL& rhs) {
-  const TlMatrixObject::index_type row1 = this->getNumOfRows();
-  const TlMatrixObject::index_type col1 = this->getNumOfCols();
-  const TlMatrixObject::index_type row2 = rhs.getNumOfRows();
-  const TlMatrixObject::index_type col2 = rhs.getNumOfCols();
-  assert(row1 == row2);
-  assert(col1 == col2);
+    const TlMatrixObject::index_type row1 = this->getNumOfRows();
+    const TlMatrixObject::index_type col1 = this->getNumOfCols();
+    const TlMatrixObject::index_type row2 = rhs.getNumOfRows();
+    const TlMatrixObject::index_type col2 = rhs.getNumOfCols();
+    assert(row1 == row2);
+    assert(col1 == col2);
 
-  this->matrix_ += rhs.matrix_;
+    this->matrix_ += rhs.matrix_;
 
-  return *this;
+    return *this;
 }
 
 TlDenseGeneralMatrix_ImplViennaCL& TlDenseGeneralMatrix_ImplViennaCL::
 operator-=(const TlDenseGeneralMatrix_ImplViennaCL& rhs) {
-  const TlMatrixObject::index_type row1 = this->getNumOfRows();
-  const TlMatrixObject::index_type col1 = this->getNumOfCols();
-  const TlMatrixObject::index_type row2 = rhs.getNumOfRows();
-  const TlMatrixObject::index_type col2 = rhs.getNumOfCols();
-  assert(row1 == row2);
-  assert(col1 == col2);
+    const TlMatrixObject::index_type row1 = this->getNumOfRows();
+    const TlMatrixObject::index_type col1 = this->getNumOfCols();
+    const TlMatrixObject::index_type row2 = rhs.getNumOfRows();
+    const TlMatrixObject::index_type col2 = rhs.getNumOfCols();
+    assert(row1 == row2);
+    assert(col1 == col2);
 
-  this->matrix_ -= rhs.matrix_;
+    this->matrix_ -= rhs.matrix_;
 
-  return *this;
+    return *this;
 }
 
 TlDenseGeneralMatrix_ImplViennaCL& TlDenseGeneralMatrix_ImplViennaCL::
 operator*=(const double coef) {
-  this->matrix_ *= coef;
+    this->matrix_ *= coef;
 
-  return *this;
+    return *this;
 }
 
 TlDenseGeneralMatrix_ImplViennaCL& TlDenseGeneralMatrix_ImplViennaCL::
 operator/=(const double coef) {
-  this->matrix_ *= (1.0 / coef);
+    this->matrix_ *= (1.0 / coef);
 
-  return *this;
+    return *this;
 }
 
 TlDenseGeneralMatrix_ImplViennaCL& TlDenseGeneralMatrix_ImplViennaCL::
 operator*=(const TlDenseGeneralMatrix_ImplViennaCL& rhs) {
-  const TlMatrixObject::index_type row1 = this->getNumOfRows();
-  const TlMatrixObject::index_type col1 = this->getNumOfCols();
-  const TlMatrixObject::index_type row2 = rhs.getNumOfRows();
-  const TlMatrixObject::index_type col2 = rhs.getNumOfCols();
-  assert(col1 == row2);
-  const MatrixDataType tmp = this->matrix_;
+    const TlMatrixObject::index_type row1 = this->getNumOfRows();
+    const TlMatrixObject::index_type col1 = this->getNumOfCols();
+    const TlMatrixObject::index_type row2 = rhs.getNumOfRows();
+    const TlMatrixObject::index_type col2 = rhs.getNumOfCols();
+    assert(col1 == row2);
+    const MatrixDataType tmp = this->matrix_;
 
-  this->resize(row1, col2);
-  this->matrix_ = viennacl::linalg::prod(tmp, rhs.matrix_);
+    this->resize(row1, col2);
+    this->matrix_ = viennacl::linalg::prod(tmp, rhs.matrix_);
 
-  return *this;
+    return *this;
 }
 
 // -----------------------------------------------------------------------------
 // operations
 // -----------------------------------------------------------------------------
 double TlDenseGeneralMatrix_ImplViennaCL::sum() const {
-  const VectorDataType v = viennacl::linalg::row_sum(this->matrix_);
-  const double sum = viennacl::linalg::sum(v);
+    const VectorDataType v = viennacl::linalg::row_sum(this->matrix_);
+    const double sum = viennacl::linalg::sum(v);
 
-  return sum;
+    return sum;
 }
 
 double TlDenseGeneralMatrix_ImplViennaCL::getRMS() const {
-  const double elements = this->getNumOfRows() * this->getNumOfCols();
+    const double elements = this->getNumOfRows() * this->getNumOfCols();
 
-  const MatrixDataType mat2 =
-      viennacl::linalg::element_prod(this->matrix_, this->matrix_);
-  const VectorDataType rows = viennacl::linalg::row_sum(mat2);
-  const double sum2 = viennacl::linalg::sum(rows);
-  const double rms = std::sqrt(sum2 / elements);
+    const MatrixDataType mat2 =
+        viennacl::linalg::element_prod(this->matrix_, this->matrix_);
+    const VectorDataType rows = viennacl::linalg::row_sum(mat2);
+    const double sum2 = viennacl::linalg::sum(rows);
+    const double rms = std::sqrt(sum2 / elements);
 
-  return rms;
+    return rms;
 }
 
 double TlDenseGeneralMatrix_ImplViennaCL::getMaxAbsoluteElement(
     TlMatrixObject::index_type* outRow,
     TlMatrixObject::index_type* outCol) const {
-  TlMatrixObject::index_type max_row = 0, max_col = 0;
-  double answer = 0.0;
-  const unsigned int numOfRows = this->getNumOfRows();
-  const unsigned int numOfCols = this->getNumOfCols();
-  for (unsigned int r = 0; r < numOfRows; ++r) {
-    VectorDataType vec_col(numOfCols);
-    viennacl::linalg::matrix_row(this->matrix_, r, vec_col);
-    const unsigned int col = viennacl::linalg::index_norm_inf(vec_col);
-    double value = vec_col[col];
-    if (std::fabs(answer) < std::fabs(value)) {
-      max_row = r;
-      max_col = col;
-      answer = value;
+    TlMatrixObject::index_type max_row = 0, max_col = 0;
+    double answer = 0.0;
+    const unsigned int numOfRows = this->getNumOfRows();
+    const unsigned int numOfCols = this->getNumOfCols();
+    for (unsigned int r = 0; r < numOfRows; ++r) {
+        VectorDataType vec_col(numOfCols);
+        viennacl::linalg::matrix_row(this->matrix_, r, vec_col);
+        const unsigned int col = viennacl::linalg::index_norm_inf(vec_col);
+        double value = vec_col[col];
+        if (std::fabs(answer) < std::fabs(value)) {
+            max_row = r;
+            max_col = col;
+            answer = value;
+        }
     }
-  }
 
-  if (outRow != NULL) {
-    *outRow = max_row;
-  }
-  if (outCol != NULL) {
-    *outCol = max_col;
-  }
+    if (outRow != NULL) {
+        *outRow = max_row;
+    }
+    if (outCol != NULL) {
+        *outCol = max_col;
+    }
 
-  return answer;
+    return answer;
 }
 
 void TlDenseGeneralMatrix_ImplViennaCL::transposeInPlace() {
-  this->matrix_ = viennacl::trans(this->matrix_);
+    this->matrix_ = viennacl::trans(this->matrix_);
 }
 
 TlDenseGeneralMatrix_ImplViennaCL&
 TlDenseGeneralMatrix_ImplViennaCL::dotInPlace(
     const TlDenseGeneralMatrix_ImplViennaCL& rhs) {
-  const MatrixDataType tmp =
-      viennacl::linalg::element_prod(this->matrix_, rhs.matrix_);
-  this->matrix_ = tmp;
-  return *this;
+    const MatrixDataType tmp =
+        viennacl::linalg::element_prod(this->matrix_, rhs.matrix_);
+    this->matrix_ = tmp;
+    return *this;
 }
 
 TlDenseGeneralMatrix_ImplViennaCL TlDenseGeneralMatrix_ImplViennaCL::transpose()
     const {
-  TlDenseGeneralMatrix_ImplViennaCL answer(this->getNumOfCols(),
-                                           this->getNumOfRows());
-  answer.matrix_ = viennacl::trans(this->matrix_);
+    TlDenseGeneralMatrix_ImplViennaCL answer(this->getNumOfCols(),
+                                             this->getNumOfRows());
+    answer.matrix_ = viennacl::trans(this->matrix_);
 
-  return answer;
+    return answer;
 }
 
 TlDenseGeneralMatrix_ImplViennaCL TlDenseGeneralMatrix_ImplViennaCL::inverse()
     const {
-  // const TlMatrixObject::index_type dim = this->getNumOfRows();
-  // const VectorDataType v = viennacl::scalar_vector<double>(dim, 1.0);
-  // MatrixDataType E = viennacl::diag(v);
+    // const TlMatrixObject::index_type dim = this->getNumOfRows();
+    // const VectorDataType v = viennacl::scalar_vector<double>(dim, 1.0);
+    // MatrixDataType E = viennacl::diag(v);
 
-  TlDenseGeneralMatrix_ImplViennaCL answer(this->getNumOfCols(),
-                                           this->getNumOfRows());
-  // answer.matrix_ = viennacl::linalg::solve(this->matrix_, E,
-  // viennacl::linalg::cg_tag());
+    TlDenseGeneralMatrix_ImplViennaCL answer(this->getNumOfCols(),
+                                             this->getNumOfRows());
+    // answer.matrix_ = viennacl::linalg::solve(this->matrix_, E,
+    // viennacl::linalg::cg_tag());
 
-  // LU factorization
-  // MatrixDataType tmp = this->matrix_;
-  // viennacl::linalg::lu_factorize(tmp);
-  // viennacl::linalg::lu_substitute(tmp, E);
+    // LU factorization
+    // MatrixDataType tmp = this->matrix_;
+    // viennacl::linalg::lu_factorize(tmp);
+    // viennacl::linalg::lu_substitute(tmp, E);
 
 #ifdef HAVE_EIGEN
-  {
-    EigenMatrixDataType eigenMat(this->getNumOfRows(), this->getNumOfCols());
-    copy(this->matrix_, eigenMat);
-    const EigenMatrixDataType eigenInvMat = eigenMat.inverse();
-    answer.resize(eigenInvMat.rows(), eigenInvMat.cols());
-    copy(eigenInvMat, answer.matrix_);
-  }
+    {
+        EigenMatrixDataType eigenMat(this->getNumOfRows(),
+                                     this->getNumOfCols());
+        copy(this->matrix_, eigenMat);
+        const EigenMatrixDataType eigenInvMat = eigenMat.inverse();
+        answer.resize(eigenInvMat.rows(), eigenInvMat.cols());
+        copy(eigenInvMat, answer.matrix_);
+    }
 #endif  // HAVE_EIGEN
 
-  return answer;
+    return answer;
 }
 
 TlDenseGeneralMatrix_ImplViennaCL&
 TlDenseGeneralMatrix_ImplViennaCL::reverseColumns() {
-  viennacl::slice sr(0, 1, this->getNumOfRows());
-  viennacl::slice sc(this->getNumOfCols() - 1, -1, this->getNumOfCols());
+    viennacl::slice sr(0, 1, this->getNumOfRows());
+    viennacl::slice sc(this->getNumOfCols() - 1, -1, this->getNumOfCols());
 
-  viennacl::matrix_slice<MatrixDataType> s(this->matrix_, sr, sc);
-  const MatrixDataType tmp = s;
-  this->matrix_ = tmp;
+    viennacl::matrix_slice<MatrixDataType> s(this->matrix_, sr, sc);
+    const MatrixDataType tmp = s;
+    this->matrix_ = tmp;
 
-  return *this;
+    return *this;
 }
 
 // ---------------------------------------------------------------------------
 // protected
 // ---------------------------------------------------------------------------
+void TlDenseGeneralMatrix_ImplViennaCL::vtr2mat(const double* pBuf) {
+    const std::size_t row = this->getNumOfRows();
+    const std::size_t col = this->getNumOfCols();
+
+#ifdef HAVE_EIGEN
+    {
+        const Eigen::MatrixXd tmp =
+            Eigen::Map<const Eigen::MatrixXd>(pBuf, row, col);
+        viennacl::copy(tmp, this->matrix_);
+    }
+#else
+    {
+        std::size_t i = 0;
+        for (std::size_t c = 0; c < col; ++c) {
+            for (std::size_t r = 0; r < row; ++r) {
+                this->set(r, c, pBuf[i]);
+                ++i;
+            }
+        }
+    }
+#endif  // HAVE_EIGEN
+}
 
 // ---------------------------------------------------------------------------
 // others
@@ -312,28 +344,29 @@ TlDenseGeneralMatrix_ImplViennaCL::reverseColumns() {
 TlDenseVector_ImplViennaCL operator*(
     const TlDenseGeneralMatrix_ImplViennaCL& mat,
     const TlDenseVector_ImplViennaCL& vec) {
-  assert(mat.getNumOfCols() == vec.getSize());
-  TlDenseVector_ImplViennaCL answer(mat.getNumOfRows());
-  answer.vector_ = viennacl::linalg::prod(mat.matrix_, vec.vector_);
+    assert(mat.getNumOfCols() == vec.getSize());
+    TlDenseVector_ImplViennaCL answer(mat.getNumOfRows());
+    answer.vector_ = viennacl::linalg::prod(mat.matrix_, vec.vector_);
 
-  return answer;
+    return answer;
 }
 
 // DV = DV * DM(G)
 TlDenseVector_ImplViennaCL operator*(
     const TlDenseVector_ImplViennaCL& vec,
     const TlDenseGeneralMatrix_ImplViennaCL& mat) {
-  assert(mat.getNumOfRows() == vec.getSize());
-  TlDenseVector_ImplViennaCL answer(mat.getNumOfCols());
-  answer.vector_ =
-      viennacl::linalg::prod(viennacl::trans(mat.matrix_), vec.vector_);
+    assert(mat.getNumOfRows() == vec.getSize());
+    TlDenseVector_ImplViennaCL answer(mat.getNumOfCols());
+    answer.vector_ =
+        viennacl::linalg::prod(viennacl::trans(mat.matrix_), vec.vector_);
 
-  return answer;
+    return answer;
 }
 
 // DM(G) = double * DM(G)
-TlDenseGeneralMatrix_ImplViennaCL operator*(const double coef, const TlDenseGeneralMatrix_ImplViennaCL& DM) {
-  TlDenseGeneralMatrix_ImplViennaCL answer = DM;
-  answer *= coef;
-  return answer;
+TlDenseGeneralMatrix_ImplViennaCL operator*(
+    const double coef, const TlDenseGeneralMatrix_ImplViennaCL& DM) {
+    TlDenseGeneralMatrix_ImplViennaCL answer = DM;
+    answer *= coef;
+    return answer;
 }

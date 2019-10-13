@@ -25,39 +25,39 @@
 class TlDenseSymmetricMatrix_Scalapack;
 
 class DfKMatrix_Parallel : public DfKMatrix {
- public:
-  DfKMatrix_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfKMatrix_Parallel();
+   public:
+    DfKMatrix_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfKMatrix_Parallel();
 
- protected:
-  // virtual void getK_RI();
-  virtual void getK_CD();
-  virtual void getK_conventional();
+   protected:
+    // virtual void getK_RI();
+    virtual void getK_CD();
+    virtual void getK_conventional();
 
-  // virtual void getK_RI_local(const RUN_TYPE runType,
-  // TlDenseSymmetricMatrix_Lapack*
-  // pJ);
-  // void getK_RI_distributed(const RUN_TYPE runType,
-  // TlDenseSymmetricMatrix_Scalapack *pJ);
+    // virtual void getK_RI_local(const RUN_TYPE runType,
+    // TlDenseSymmetricMatrix_Lapack*
+    // pJ);
+    // void getK_RI_distributed(const RUN_TYPE runType,
+    // TlDenseSymmetricMatrix_Scalapack *pJ);
 
-  virtual void getK_CD_replica(const RUN_TYPE runType);
-  void getK_CD_distributed(const RUN_TYPE runType);
+    virtual void getK_CD_replica(const RUN_TYPE runType);
+    void getK_CD_distributed(const RUN_TYPE runType);
 
-  virtual void getK_conventional_local(const RUN_TYPE runType,
-                                       TlDenseSymmetricMatrix_Lapack* pJ);
-  void getK_conventional_distributed(const RUN_TYPE runType,
-                                     TlDenseSymmetricMatrix_Scalapack* pJ);
+    virtual void getK_conventional_local(const RUN_TYPE runType,
+                                         TlDenseSymmetricMatrix_Lapack* pJ);
+    void getK_conventional_distributed(const RUN_TYPE runType,
+                                       TlDenseSymmetricMatrix_Scalapack* pJ);
 
- protected:
-  // virtual TlDenseSymmetricMatrix_Lapack getPMatrix(const RUN_TYPE runType,
-  //                                      const int iteration);
-  // virtual TlDenseSymmetricMatrix_Lapack getDiffDensityMatrix(const RUN_TYPE
-  // runType);
+   protected:
+    // virtual TlDenseSymmetricMatrix_Lapack getPMatrix(const RUN_TYPE runType,
+    //                                      const int iteration);
+    // virtual TlDenseSymmetricMatrix_Lapack getDiffDensityMatrix(const RUN_TYPE
+    // runType);
 
-  virtual TlDenseSymmetricMatrix_Lapack getKMatrix(const RUN_TYPE runType,
-                                                   const int iteration);
-  virtual void saveKMatrix(const RUN_TYPE runType,
-                           const TlDenseSymmetricMatrix_Lapack& K);
+    virtual TlDenseSymmetricMatrix_Lapack getKMatrix(const RUN_TYPE runType,
+                                                     const int iteration);
+    virtual void saveKMatrix(const RUN_TYPE runType,
+                             const TlDenseSymmetricMatrix_Lapack& K);
 };
 
 #endif  // DFKMATRIX_PARALLEL_H

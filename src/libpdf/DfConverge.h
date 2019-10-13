@@ -22,23 +22,23 @@
 #include "DfObject.h"
 
 class DfConverge : public DfObject {
- protected:
-  enum ConvergeTarget { RHO_TILDE, KS_MATRIX, DENSITY_MATRIX };
+   protected:
+    enum ConvergeTarget { RHO_TILDE, KS_MATRIX, DENSITY_MATRIX };
 
- public:
-  DfConverge(TlSerializeData* pPdfParam);
-  virtual ~DfConverge();
+   public:
+    DfConverge(TlSerializeData* pPdfParam);
+    virtual ~DfConverge();
 
- public:
-  void doConverge();
+   public:
+    void doConverge();
 
- protected:
-  virtual void convergeRhoTilde() = 0;
-  virtual void convergeKSMatrix() = 0;
-  virtual void convergePMatrix() = 0;
+   protected:
+    virtual void convergeRhoTilde() = 0;
+    virtual void convergeKSMatrix() = 0;
+    virtual void convergePMatrix() = 0;
 
- protected:
-  ConvergeTarget m_nConvergeTarget;
+   protected:
+    ConvergeTarget m_nConvergeTarget;
 };
 
 #endif  // DFCONVERGE

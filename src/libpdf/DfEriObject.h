@@ -22,12 +22,12 @@
 #include "DfObject.h"
 
 class DfEriObject : public DfObject {
-  DfEriObject(TlSerializeData* pPdfParam);
-  virtual ~DfEriObject();
+    DfEriObject(TlSerializeData* pPdfParam);
+    virtual ~DfEriObject();
 
- public:
-  virtual void getJ(const TlDenseSymmetricMatrix_Lapack& P,
-                    TlDenseVector_Lapack* pRho);
+   public:
+    virtual void getJ(const TlDenseSymmetricMatrix_Lapack& P,
+                      TlDenseVector_Lapack* pRho);
 };
 
 #endif  // DFERIOBJECT_H

@@ -25,36 +25,36 @@ class TlDenseGeneralMatrix_Scalapack;
 class TlDenseSymmetricMatrix_Scalapack;
 
 class DfXMatrix_Parallel : public DfXMatrix {
- public:
-  DfXMatrix_Parallel(TlSerializeData* pPdfParam);
-  virtual ~DfXMatrix_Parallel();
+   public:
+    DfXMatrix_Parallel(TlSerializeData* pPdfParam);
+    virtual ~DfXMatrix_Parallel();
 
- public:
-  virtual void buildX();
+   public:
+    virtual void buildX();
 
-  virtual void canonicalOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
-                                      TlDenseGeneralMatrix_Lapack* pX,
-                                      TlDenseGeneralMatrix_Lapack* pXinv,
-                                      const std::string& eigvalFilePath = "");
+    virtual void canonicalOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
+                                        TlDenseGeneralMatrix_Lapack* pX,
+                                        TlDenseGeneralMatrix_Lapack* pXinv,
+                                        const std::string& eigvalFilePath = "");
 
-  virtual void lowdinOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
-                                   TlDenseGeneralMatrix_Lapack* pX,
-                                   TlDenseGeneralMatrix_Lapack* pXinv,
-                                   const std::string& eigvalFilePath = "");
+    virtual void lowdinOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
+                                     TlDenseGeneralMatrix_Lapack* pX,
+                                     TlDenseGeneralMatrix_Lapack* pXinv,
+                                     const std::string& eigvalFilePath = "");
 
-  void canonicalOrthogonalize(const TlDenseSymmetricMatrix_Scalapack& S,
-                              TlDenseGeneralMatrix_Scalapack* pX,
-                              TlDenseGeneralMatrix_Scalapack* pXinv,
-                              const std::string& eigvalFilePath = "");
+    void canonicalOrthogonalize(const TlDenseSymmetricMatrix_Scalapack& S,
+                                TlDenseGeneralMatrix_Scalapack* pX,
+                                TlDenseGeneralMatrix_Scalapack* pXinv,
+                                const std::string& eigvalFilePath = "");
 
-  void lowdinOrthogonalize(const TlDenseSymmetricMatrix_Scalapack& S,
-                           TlDenseGeneralMatrix_Scalapack* pX,
-                           TlDenseGeneralMatrix_Scalapack* pXinv,
-                           const std::string& eigvalFilePath = "");
+    void lowdinOrthogonalize(const TlDenseSymmetricMatrix_Scalapack& S,
+                             TlDenseGeneralMatrix_Scalapack* pX,
+                             TlDenseGeneralMatrix_Scalapack* pXinv,
+                             const std::string& eigvalFilePath = "");
 
- protected:
-  void buildX_LAPACK();
-  void buildX_ScaLAPACK();
+   protected:
+    void buildX_LAPACK();
+    void buildX_ScaLAPACK();
 };
 
 #endif  // DFXMATRIX_PARALLEL_H

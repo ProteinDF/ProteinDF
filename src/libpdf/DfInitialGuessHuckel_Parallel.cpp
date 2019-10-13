@@ -29,6 +29,6 @@ DfInitialGuessHuckel_Parallel::DfInitialGuessHuckel_Parallel(
 DfInitialGuessHuckel_Parallel::~DfInitialGuessHuckel_Parallel() {}
 
 void DfInitialGuessHuckel_Parallel::createGuess() {
-  DfInitialGuessHuckel::createGuess<TlDenseSymmetricMatrix_Scalapack,
-                                    TlDenseGeneralMatrix_Scalapack>();
+    DfInitialGuessHuckel::createGuess<TlDenseSymmetricMatrix_Scalapack,
+                                      TlDenseGeneralMatrix_Scalapack>();
 }

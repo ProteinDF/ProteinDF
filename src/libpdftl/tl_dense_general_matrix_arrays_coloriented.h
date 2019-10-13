@@ -32,42 +32,42 @@
 /// 行個数の、列個サイズのベクトルが集合したコンテナクラス
 class TlDenseGeneralMatrix_arrays_ColOriented
     : public TlDenseMatrix_arrays_Object {
- public:
-  explicit TlDenseGeneralMatrix_arrays_ColOriented(
-      index_type row = 1, index_type col = 1, int numOfSubunits = 1,
-      int subunitID = 0, bool isUsingMemManager = false);
-  explicit TlDenseGeneralMatrix_arrays_ColOriented(
-      const TlDenseGeneralMatrix_Lapack& rhs, int numOfSubunits = 1,
-      int subunitID = 0, bool isUsingMemManager = false);
-  TlDenseGeneralMatrix_arrays_ColOriented(const std::string& path);
-  TlDenseGeneralMatrix_arrays_ColOriented(
-      const TlDenseGeneralMatrix_arrays_ColOriented& rhs);
+   public:
+    explicit TlDenseGeneralMatrix_arrays_ColOriented(
+        index_type row = 1, index_type col = 1, int numOfSubunits = 1,
+        int subunitID = 0, bool isUsingMemManager = false);
+    explicit TlDenseGeneralMatrix_arrays_ColOriented(
+        const TlDenseGeneralMatrix_Lapack& rhs, int numOfSubunits = 1,
+        int subunitID = 0, bool isUsingMemManager = false);
+    TlDenseGeneralMatrix_arrays_ColOriented(const std::string& path);
+    TlDenseGeneralMatrix_arrays_ColOriented(
+        const TlDenseGeneralMatrix_arrays_ColOriented& rhs);
 
-  virtual ~TlDenseGeneralMatrix_arrays_ColOriented();
+    virtual ~TlDenseGeneralMatrix_arrays_ColOriented();
 
- public:
-  virtual void resize(index_type row, index_type col);
-  void reserveRowSize(const index_type reserveRowSize);
+   public:
+    virtual void resize(index_type row, index_type col);
+    void reserveRowSize(const index_type reserveRowSize);
 
-  index_type getNumOfRows() const { return this->getSizeOfVector(); };
+    index_type getNumOfRows() const { return this->getSizeOfVector(); };
 
-  index_type getNumOfCols() const { return this->getNumOfVectors(); };
+    index_type getNumOfCols() const { return this->getNumOfVectors(); };
 
-  virtual void set(index_type row, index_type col, double value);
-  virtual void add(index_type row, index_type col, double value);
-  virtual double get(index_type row, index_type col) const;
+    virtual void set(index_type row, index_type col, double value);
+    virtual void add(index_type row, index_type col, double value);
+    virtual double get(index_type row, index_type col) const;
 
-  virtual std::vector<double> getColVector(const index_type col) const;
-  virtual void getColVector(const index_type col, double* pBuf,
-                            const index_type length) const;
+    virtual std::vector<double> getColVector(const index_type col) const;
+    virtual void getColVector(const index_type col, double* pBuf,
+                              const index_type length) const;
 
- public:
-  /// TlDenseGeneralMatrix_Lapackオブジェクトを返す(for debug)
-  TlDenseGeneralMatrix_Lapack getTlMatrixObject() const;
+   public:
+    /// TlDenseGeneralMatrix_Lapackオブジェクトを返す(for debug)
+    TlDenseGeneralMatrix_Lapack getTlMatrixObject() const;
 
-  /// TlDenseGeneralMatrix_arrays_RowOriented形式で保存
-  void saveByTlDenseGeneralMatrix_arrays_RowOriented(
-      const std::string& basename) const;
+    /// TlDenseGeneralMatrix_arrays_RowOriented形式で保存
+    void saveByTlDenseGeneralMatrix_arrays_RowOriented(
+        const std::string& basename) const;
 };
 
 #endif  // TLCOLVECTORMATRIX_H

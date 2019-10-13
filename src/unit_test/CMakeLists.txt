@@ -92,18 +92,28 @@ endif(EIGEN3_FOUND AND VIENNACL_FOUND)
 
 
 add_executable(pdf-xtest ${PDF_XTEST_SOURCES})
-target_link_libraries(pdf-xtest libpdf libpdftl ${OpenCL_LIBRARIES} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} Threads::Threads)
+target_link_libraries(pdf-xtest libpdf libpdftl ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} Threads::Threads)
+
+if (NOT DEFINED PDF_XTEST_FLAG)
+  if (NOT DEFINED ENV{PDF_XTEST_FLAG})
+      set(PDF_XTEST_FLAG "-d 0")
+  else (NOT DEFINED ENV{PDF_XTEST_FLAG})
+      set(PDF_XTEST_FLAG $ENV{PDF_XTEST_FLAG})
+  endif (NOT DEFINED ENV{PDF_XTEST_FLAG})
+endif (NOT DEFINED PDF_XTEST_FLAG)
+separate_arguments(PDF_XTEST_FLAG)
+message("PDF_XTEST_FLAG: ${PDF_XTEST_FLAG}")
 
 add_test(
   NAME xtest
-  COMMAND $<TARGET_FILE:pdf-xtest>)
+  COMMAND $<TARGET_FILE:pdf-xtest> ${PDF_XTEST_FLAG})
 set_property(TEST xtest PROPERTY LABELS xtest)
 set_property(TEST xtest PROPERTY RUN_SERIAL)
 set_property(TEST xtest PROPERTY TIMEOUT 120)
 
 if (MPI_FOUND)
   add_executable(pdf-xtest.MPI ${PDF_XTEST_MPI_SOURCES})
-  target_link_libraries(pdf-xtest.MPI libppdf libppdftl libpdf libpdftl ${OpenCL_LIBRARIES} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} Threads::Threads)
+  target_link_libraries(pdf-xtest.MPI libppdf libppdftl libpdf libpdftl ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} Threads::Threads)
 
   # cf.) MPIEXEC_MAX_NUMPROCS
   if (NOT DEFINED MPI_PROCS)
@@ -112,7 +122,13 @@ if (MPI_FOUND)
 
   add_test(
     NAME xtest.mpi
-    COMMAND ${MPIEXEC} ${MPIEXEC_FLAGS} ${MPIEXEC_PREFLAGS} ${MPIEXEC_NUMPROC_FLAG} ${MPI_PROCS} $<TARGET_FILE:pdf-xtest.MPI> ${MPIEXEC_POSTFLAGS}
+    COMMAND ${MPIEXEC}
+      ${MPIEXEC_FLAGS} 
+      ${MPIEXEC_NUMPROC_FLAG} 
+      ${MPI_PROCS} 
+      ${MPIEXEC_PREFLAGS}
+      $<TARGET_FILE:pdf-xtest.MPI> 
+      ${MPIEXEC_POSTFLAGS}
     )
     set_property(TEST xtest.mpi PROPERTY LABELS xtest.mpi)
     set_property(TEST xtest.mpi PROPERTY RUN_SERIAL)

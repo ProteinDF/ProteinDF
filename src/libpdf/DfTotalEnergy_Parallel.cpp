@@ -32,64 +32,64 @@
 
 DfTotalEnergy_Parallel::DfTotalEnergy_Parallel(TlSerializeData* pPdfParam)
     : DfTotalEnergy(pPdfParam) {
-  this->m_bUseDistributeMatrix = false;
+    this->m_bUseDistributeMatrix = false;
 }
 
 DfTotalEnergy_Parallel::~DfTotalEnergy_Parallel() {}
 
 void DfTotalEnergy_Parallel::logger(const std::string& str) const {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  if (rComm.isMaster() == true) {
-    DfTotalEnergy::logger(str);
-  }
+    if (rComm.isMaster() == true) {
+        DfTotalEnergy::logger(str);
+    }
 }
 
 void DfTotalEnergy_Parallel::output() {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    DfTotalEnergy::output();
-  }
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        DfTotalEnergy::output();
+    }
 }
 
 void DfTotalEnergy_Parallel::exec() {
 #ifdef HAVE_SCALAPACK
-  if (this->m_bUsingSCALAPACK == true) {
-    this->exec_ScaLAPACK();
-    return;
-  }
+    if (this->m_bUsingSCALAPACK == true) {
+        this->exec_ScaLAPACK();
+        return;
+    }
 #endif  // HAVE_SCALAPACK
 
-  this->exec_LAPACK();
+    this->exec_LAPACK();
 }
 
 void DfTotalEnergy_Parallel::exec_LAPACK() {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    DfTotalEnergy::exec();
-  }
-  rComm.barrier();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        DfTotalEnergy::exec();
+    }
+    rComm.barrier();
 }
 
 void DfTotalEnergy_Parallel::exec_ScaLAPACK() {
-  DfTotalEnergy::exec_template<DfOverlapX_Parallel, DfEriX_Parallel,
-                               TlDenseSymmetricMatrix_Scalapack,
-                               TlDenseVector_Scalapack>();
+    DfTotalEnergy::exec_template<DfOverlapX_Parallel, DfEriX_Parallel,
+                                 TlDenseSymmetricMatrix_Scalapack,
+                                 TlDenseVector_Scalapack>();
 }
 
 // total energy including dummy charge
 void DfTotalEnergy_Parallel::calculate_real_energy() {
 #ifdef HAVE_SCALAPACK
-  if (this->m_bUsingSCALAPACK == true) {
-    // ScaLAPACK
-    this->calcRealEnergy<TlDenseSymmetricMatrix_Scalapack>();
-    return;
-  }
+    if (this->m_bUsingSCALAPACK == true) {
+        // ScaLAPACK
+        this->calcRealEnergy<TlDenseSymmetricMatrix_Scalapack>();
+        return;
+    }
 #endif  // HAVE_SCALAPACK
 
-  // LAPACK
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    DfTotalEnergy::calculate_real_energy();
-  }
+    // LAPACK
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        DfTotalEnergy::calculate_real_energy();
+    }
 }

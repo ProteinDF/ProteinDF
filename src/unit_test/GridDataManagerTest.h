@@ -6,25 +6,25 @@
 #include "GridDataManager.h"
 
 class GridDataManagerTest : public CppUnit::TestFixture {
-  CPPUNIT_TEST_SUITE(GridDataManagerTest);
-  CPPUNIT_TEST(testConstructer);
-  CPPUNIT_TEST(testSetDensity);
-  CPPUNIT_TEST(testGetDensity);
-  CPPUNIT_TEST(testUpdate);
-  CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE(GridDataManagerTest);
+    CPPUNIT_TEST(testConstructer);
+    CPPUNIT_TEST(testSetDensity);
+    CPPUNIT_TEST(testGetDensity);
+    CPPUNIT_TEST(testUpdate);
+    CPPUNIT_TEST_SUITE_END();
 
- public:
-  void testConstructer();
-  void testSetDensity();
-  void testGetDensity();
-  void testUpdate();
+   public:
+    void testConstructer();
+    void testSetDensity();
+    void testGetDensity();
+    void testUpdate();
 
- public:
-  GridDataManagerTest() {}
+   public:
+    GridDataManagerTest() {}
 
-  void setUp() {}
+    void setUp() {}
 
-  void tearDown() {}
+    void tearDown() {}
 };
 
 #endif  // GRIDDATAMANAGERTEST_H

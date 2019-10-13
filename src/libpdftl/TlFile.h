@@ -23,40 +23,42 @@
 #include <string>
 
 class TlFile {
- public:
-  /// filePathが存在していればtrue、なければfalseを返す。
-  static bool isExistFile(const std::string& filePath);
+   public:
+    /// filePathが存在していればtrue、なければfalseを返す。
+    static bool isExistFile(const std::string& filePath);
 
-  /// ファイルをコピーする。
-  ///
-  /// ファイルが存在しなかった場合は何もしない。
-  static int copy(const std::string& fromFilePath,
-                  const std::string& destFilePath);
+    /// ファイルをコピーする。
+    ///
+    /// ファイルが存在しなかった場合は何もしない。
+    static int copy(const std::string& fromFilePath,
+                    const std::string& destFilePath);
 
-  /// 指定したパスのファイルを削除する。
-  ///
-  /// ファイルが存在しなかった場合は何もしない。
-  /// @retval 0 成功
-  /// @retval 0以外 エラー
-  static int remove(const std::string& filePath);
+    /// 指定したパスのファイルを削除する。
+    ///
+    /// ファイルが存在しなかった場合は何もしない。
+    /// @retval 0 成功
+    /// @retval 0以外 エラー
+    static int remove(const std::string& filePath);
 
-  /// ファイル名を変更する。
-  ///
-  /// ファイルが存在しなかった場合は何もしない。
-  /// @param oldName 変更前の名前
-  /// @param newName 新しい名前
-  /// @retval 0 成功
-  /// @retval 0以外 エラー
-  static int rename(const std::string& oldName, const std::string& newName);
+    /// ファイル名を変更する。
+    ///
+    /// ファイルが存在しなかった場合は何もしない。
+    /// @param oldName 変更前の名前
+    /// @param newName 新しい名前
+    /// @retval 0 成功
+    /// @retval 0以外 エラー
+    static int rename(const std::string& oldName, const std::string& newName);
 
-  /// get file size (bytes).
-  static std::size_t getFileSize(const std::string& filePath);
+    static int move(const std::string& oldName, const std::string& newName);
 
-  /// return temporary file path
-  static std::string getTempFilePath(const std::string& tmpdir = "/tmp/");
+    /// get file size (bytes).
+    static std::size_t getFileSize(const std::string& filePath);
 
- private:
-  static std::size_t BUFFER_SIZE;
+    /// return temporary file path
+    static std::string getTempFilePath(const std::string& tmpdir = "/tmp/");
+
+   private:
+    static std::size_t BUFFER_SIZE;
 };
 
 #endif  // TLFILE_H

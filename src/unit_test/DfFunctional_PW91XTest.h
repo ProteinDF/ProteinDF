@@ -6,40 +6,40 @@
 #include "DfFunctional_PW91X.h"
 
 class DfFunctional_PW91XTest : public CppUnit::TestFixture {
-  CPPUNIT_TEST_SUITE(DfFunctional_PW91XTest);
-  CPPUNIT_TEST(testConstructer);
-  CPPUNIT_TEST(testPointwise1);
-  CPPUNIT_TEST(testPointwise1_RKS);
-  //   CPPUNIT_TEST(testPointwise2);
-  //   CPPUNIT_TEST(testPointwise2_RKS);
-  //   CPPUNIT_TEST(testPointwise3);
-  //   CPPUNIT_TEST(testPointwise3_RKS);
-  //   CPPUNIT_TEST(testPointwise4);
-  //   CPPUNIT_TEST(testPointwise11);
-  //   CPPUNIT_TEST(testPointwise12);
-  CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE(DfFunctional_PW91XTest);
+    CPPUNIT_TEST(testConstructer);
+    CPPUNIT_TEST(testPointwise1);
+    CPPUNIT_TEST(testPointwise1_RKS);
+    //   CPPUNIT_TEST(testPointwise2);
+    //   CPPUNIT_TEST(testPointwise2_RKS);
+    //   CPPUNIT_TEST(testPointwise3);
+    //   CPPUNIT_TEST(testPointwise3_RKS);
+    //   CPPUNIT_TEST(testPointwise4);
+    //   CPPUNIT_TEST(testPointwise11);
+    //   CPPUNIT_TEST(testPointwise12);
+    CPPUNIT_TEST_SUITE_END();
 
- public:
-  void testConstructer();
-  void testPointwise1();
-  void testPointwise1_RKS();
-  //   void testPointwise2();
-  //   void testPointwise2_RKS();
-  //   void testPointwise3();
-  //   void testPointwise3_RKS();
-  //   void testPointwise4();
-  //   void testPointwise11();
-  //   void testPointwise12();
+   public:
+    void testConstructer();
+    void testPointwise1();
+    void testPointwise1_RKS();
+    //   void testPointwise2();
+    //   void testPointwise2_RKS();
+    //   void testPointwise3();
+    //   void testPointwise3_RKS();
+    //   void testPointwise4();
+    //   void testPointwise11();
+    //   void testPointwise12();
 
- public:
-  DfFunctional_PW91XTest() {}
+   public:
+    DfFunctional_PW91XTest() {}
 
-  void setUp() {}
+    void setUp() {}
 
-  void tearDown() {}
+    void tearDown() {}
 
- private:
-  const static double EPS;
+   private:
+    const static double EPS;
 };
 
 #endif  // DFFUNCTIONAL_PW91XTEST_H

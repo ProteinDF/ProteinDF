@@ -28,15 +28,16 @@
  *  @param list [in] 有効にするオプション(引数を取るものはコロンをつける)
  */
 TlGetopt::TlGetopt(int argc, char* argv[], const char* list) {
-  this->initialize();
+    this->initialize();
 
-  // argv[0]は通常コマンド名が入る
-  this->m_Data["0"] = std::string(argv[0]);
-  argc--;
-  argv++;
-  this->m_nCount++;
+    // argv[0]は通常コマンド名が入る
+    this->args_.push_back(argv[0]);
+    // this->m_Data["0"] = std::string(argv[0]);
+    argc--;
+    argv++;
+    // this->m_nCount++;
 
-  this->parseArgv(argc, argv, list);
+    this->parseArgv(argc, argv, list);
 }
 
 TlGetopt::~TlGetopt() {}
@@ -46,9 +47,10 @@ TlGetopt::~TlGetopt() {}
  *
  */
 void TlGetopt::initialize() {
-  this->m_nCount = 0;
-  this->m_Data.clear();
-  this->m_sError = "";
+    // this->m_nCount = 0;
+    this->m_Data.clear();
+    this->args_.clear();
+    this->m_sError = "";
 }
 
 /**
@@ -56,15 +58,15 @@ void TlGetopt::initialize() {
  *
  */
 const std::string TlGetopt::operator[](const std::string& sKey) const {
-  std::string answer = "";
+    std::string answer = "";
 
-  std::map<std::string, std::string>::const_iterator p =
-      this->m_Data.find(sKey);
-  if (p != this->m_Data.end()) {
-    answer = p->second;
-  }
+    std::map<std::string, std::string>::const_iterator p =
+        this->m_Data.find(sKey);
+    if (p != this->m_Data.end()) {
+        answer = p->second;
+    }
 
-  return answer;
+    return answer;
 }
 
 /**
@@ -72,16 +74,13 @@ const std::string TlGetopt::operator[](const std::string& sKey) const {
  *
  */
 const std::string TlGetopt::operator[](unsigned int n) const {
-  std::string answer = "";
-  std::string sKey = TlUtils::xtos<unsigned int>(n);
+    std::string answer = "";
 
-  std::map<std::string, std::string>::const_iterator p =
-      this->m_Data.find(sKey);
-  if (p != this->m_Data.end()) {
-    answer = p->second;
-  }
+    if (n < this->args_.size()) {
+        answer = this->args_[n];
+    }
 
-  return answer;
+    return answer;
 }
 
 /**
@@ -95,85 +94,92 @@ const std::string TlGetopt::operator[](unsigned int n) const {
 //   aOptListのkeyにはオプション文字列を入れる
 //   そのvalueには""(null; オプションのみ), ":"(引数が必須)
 void TlGetopt::parseArgv(int argc, char* argv[], const char* list) {
-  // parse list
-  //
-  std::string sList(list);
-  std::map<std::string, std::string> aOptList;
-  aOptList.clear();
-  std::string prev_s = "";
-  while (!sList.empty()) {
-    if (sList.at(0) == ':') {
-      aOptList[prev_s] = ":";
-    } else {
-      std::string tmp(sList, 0, 1);
-      aOptList[tmp] = "";
-      prev_s = tmp;
-    }
-    sList = sList.substr(1);
-  }
-
-  bool bOptionSection =
-      true;  // optionのparseをしている時はtrue, 引数の時はfalseを表すフラグ
-  std::string sOptArg =
-      "";  // optionの引数用フラグ兼ハッシュのkey。""の場合flagなし
-  for (int i = 0; i < argc; i++) {
-    std::string str = std::string(argv[i]);
-
-    // strの先頭が'-'でないものはオプションではない
-    if (str.at(0) != '-') {
-      bOptionSection = false;
-    }
-
-    // option, 引数ごとの処理
-    if (bOptionSection) {
-      // optionの処理
-      str = str.substr(1);  // str[0]は'-'のハズのはずなので、取り除く
-
-      if (str.at(0) == '-') {  // 先頭から２つ目が'-'の場合も取り除く
-        str = str.substr(1);
-      }
-
-      if (str.empty()) {  // strが'-'または'--'はoptionの終わり。次は引数
-        bOptionSection = false;
-      }
-
-      int nLen = str.length();  // length()は'\0'を含める
-      while (!str.empty()) {
-        std::string check_char(str, 0, 1);
-        for (std::map<std::string, std::string>::const_iterator p =
-                 aOptList.begin();
-             p != aOptList.end(); p++) {
-          if (check_char == p->first) {
-            if (nLen == 1 && p->second == ":") {  // optionは引数を取る
-              if (i + 1 < argc) {
-                this->m_Data[check_char] = std::string(argv[i + 1]);
-                i++;
-                break;
-              } else {  // error! optionが引数を取らなかった
-                std::stringstream s;
-                s << "illegal option: " << check_char;
-                m_sError = s.str();
-              }
-            } else if (p->second == "") {  // optionは引数を取らない
-              // ''の場合
-              this->m_Data[check_char] = "defined";
-              break;
-            } else {  // 引数リストに無いoption
-              std::stringstream s;
-              s << "illegal option: " << check_char;
-              m_sError = s.str();
-            }
-          }
+    // parse list
+    //
+    std::string sList(list);
+    std::map<std::string, std::string> aOptList;
+    aOptList.clear();
+    std::string prev_s = "";
+    while (!sList.empty()) {
+        if (sList.at(0) == ':') {
+            aOptList[prev_s] = ":";
+        } else {
+            std::string tmp(sList, 0, 1);
+            aOptList[tmp] = "";
+            prev_s = tmp;
         }
-        str = str.substr(1);
-      }
-
-    } else {
-      // 引数の処理
-      this->m_Data[TlUtils::xtos<int>(this->m_nCount)] = str;
-      this->m_nCount++;
+        sList = sList.substr(1);
     }
-  }
+
+    // optionのparseをしている時はtrue, 引数の時はfalseを表すフラグ
+    bool bOptionSection = true;
+    // optionの引数用フラグ兼ハッシュのkey。""の場合flagなし
+    std::string sOptArg = "";
+    for (int i = 0; i < argc; i++) {
+        std::string str = std::string(argv[i]);
+        if (str.size() == 0) {
+            continue;
+        }
+
+        // strの先頭が'-'でないものはオプションではない
+        if (str.at(0) != '-') {
+            bOptionSection = false;
+        }
+
+        // option, 引数ごとの処理
+        if (bOptionSection) {
+            // optionの処理
+            str = str.substr(1);  // str[0]は'-'のハズのはずなので、取り除く
+
+            if (str.at(0) == '-') {  // 先頭から２つ目が'-'の場合も取り除く
+                str = str.substr(1);
+            }
+
+            if (str.empty()) {  // strが'-'または'--'はoptionの終わり。次は引数
+                bOptionSection = false;
+            }
+
+            int nLen = str.length();  // length()は'\0'を含める
+            while (!str.empty()) {
+                std::string check_char(str, 0, 1);
+                for (std::map<std::string, std::string>::const_iterator p =
+                         aOptList.begin();
+                     p != aOptList.end(); p++) {
+                    if (check_char == p->first) {
+                        if (nLen == 1 &&
+                            p->second == ":") {  // optionは引数を取る
+                            if (i + 1 < argc) {
+                                this->m_Data[check_char] =
+                                    std::string(argv[i + 1]);
+                                i++;
+                                break;
+                            } else {  // error! optionが引数を取らなかった
+                                std::stringstream s;
+                                s << "illegal option: " << check_char;
+                                m_sError = s.str();
+                            }
+                        } else if (p->second == "") {  // optionは引数を取らない
+                            // ''の場合
+                            this->m_Data[check_char] = "defined";
+                            break;
+                        } else {  // 引数リストに無いoption
+                            std::stringstream s;
+                            s << "illegal option: " << check_char;
+                            m_sError = s.str();
+                        }
+                    }
+                }
+                str = str.substr(1);
+            }
+
+        } else {
+            // 引数の処理
+            this->args_.push_back(str);
+            // std::cout << "m_nCount=" << this->m_nCount << std::endl;
+            // this->m_Data[TlUtils::xtos<int>(this->m_nCount)] = str;
+            // this->m_nCount++;
+        }
+    }
 }
 
 // EOF

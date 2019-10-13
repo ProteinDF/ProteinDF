@@ -31,52 +31,52 @@
 /// 疎ベクトルクラス
 // class TlSparseVector : public TlVectorAbstract {
 class TlSparseVector {
- public:
-  typedef TlVectorAbstract::size_type size_type;
+   public:
+    typedef TlVectorAbstract::size_type size_type;
 
- public:
-  explicit TlSparseVector(size_type size = 1);
-  virtual ~TlSparseVector();
+   public:
+    explicit TlSparseVector(size_type size = 1);
+    virtual ~TlSparseVector();
 
- public:
-  virtual size_type getSize() const;
-  virtual void resize(size_type newSize);
+   public:
+    virtual size_type getSize() const;
+    virtual void resize(size_type newSize);
 
- public:
-  virtual double get(const size_type index) const;
-  virtual void set(const size_type index, const double value);
-  virtual void add(const size_type index, const double value);
+   public:
+    virtual double get(const size_type index) const;
+    virtual void set(const size_type index, const double value);
+    virtual void add(const size_type index, const double value);
 
-  double operator[](const size_type index) const;
-  double& operator[](const size_type index);
+    double operator[](const size_type index) const;
+    double& operator[](const size_type index);
 
-  TlSparseVector& operator+=(const TlSparseVector& rhs);
-  TlSparseVector& operator-=(const TlSparseVector& rhs);
+    TlSparseVector& operator+=(const TlSparseVector& rhs);
+    TlSparseVector& operator-=(const TlSparseVector& rhs);
 
- public:
-  typedef size_type KeyType;
-  typedef std::map<KeyType, double> SparseVectorData;
+   public:
+    typedef size_type KeyType;
+    typedef std::map<KeyType, double> SparseVectorData;
 
-  typedef SparseVectorData::const_iterator const_iterator;
-  typedef SparseVectorData::iterator iterator;
+    typedef SparseVectorData::const_iterator const_iterator;
+    typedef SparseVectorData::iterator iterator;
 
-  // operator
- public:
-  /// 最初のイテレータを返す
-  const_iterator begin() const { return this->data_.begin(); }
+    // operator
+   public:
+    /// 最初のイテレータを返す
+    const_iterator begin() const { return this->data_.begin(); }
 
-  /// 最初のイテレータを返す
-  iterator begin() { return this->data_.begin(); }
+    /// 最初のイテレータを返す
+    iterator begin() { return this->data_.begin(); }
 
-  /// 最後のイテレータを返す
-  const_iterator end() const { return this->data_.end(); }
+    /// 最後のイテレータを返す
+    const_iterator end() const { return this->data_.end(); }
 
-  /// 最後のイテレータを返す
-  iterator end() { return this->data_.end(); }
+    /// 最後のイテレータを返す
+    iterator end() { return this->data_.end(); }
 
- protected:
-  size_type size_;
-  mutable SparseVectorData data_;
+   protected:
+    size_type size_;
+    mutable SparseVectorData data_;
 };
 
 #endif  // TLSPARSEVECTOR_H

@@ -24,18 +24,18 @@
 #include "TlMatrix.h"
 
 class DfRLMO : public DfObject {
- public:
-  DfRLMO(TlSerializeData* pPdfParam);
-  virtual ~DfRLMO();
+   public:
+    DfRLMO(TlSerializeData* pPdfParam);
+    virtual ~DfRLMO();
 
- public:
-  void exec(const std::vector<index_type>& startBlockAOs);
+   public:
+    void exec(const std::vector<index_type>& startBlockAOs);
 
- protected:
-  TlDenseSymmetricMatrix_Lapack getX();
+   protected:
+    TlDenseSymmetricMatrix_Lapack getX();
 
-  TlMatrix getT(const TlDenseSymmetricMatrix_Lapack& D,
-                const std::vector<index_type>& startBlockAOs);
+    TlMatrix getT(const TlDenseSymmetricMatrix_Lapack& D,
+                  const std::vector<index_type>& startBlockAOs);
 };
 
 #endif  // DFRLMO_H

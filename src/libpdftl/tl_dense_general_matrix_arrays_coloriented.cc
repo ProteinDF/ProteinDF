@@ -17,8 +17,8 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "tl_dense_general_matrix_arrays_coloriented.h"
-#include <iostream>
 #include <cassert>
+#include <iostream>
 
 TlDenseGeneralMatrix_arrays_ColOriented::
     TlDenseGeneralMatrix_arrays_ColOriented(const index_type row,
@@ -35,13 +35,13 @@ TlDenseGeneralMatrix_arrays_ColOriented::
         const int subunitID, bool isUsingMemManager)
     : TlDenseMatrix_arrays_Object(rhs.getNumOfCols(), rhs.getNumOfRows(),
                                   numOfSubunits, subunitID, isUsingMemManager) {
-  const index_type numOfRows = rhs.getNumOfRows();
-  const index_type numOfCols = rhs.getNumOfCols();
-  for (index_type r = 0; r < numOfRows; ++r) {
-    for (index_type c = 0; c < numOfCols; ++c) {
-      this->set(r, c, rhs.get(r, c));
+    const index_type numOfRows = rhs.getNumOfRows();
+    const index_type numOfCols = rhs.getNumOfCols();
+    for (index_type r = 0; r < numOfRows; ++r) {
+        for (index_type c = 0; c < numOfCols; ++c) {
+            this->set(r, c, rhs.get(r, c));
+        }
     }
-  }
 }
 
 TlDenseGeneralMatrix_arrays_ColOriented::
@@ -52,7 +52,7 @@ TlDenseGeneralMatrix_arrays_ColOriented::
 TlDenseGeneralMatrix_arrays_ColOriented::
     TlDenseGeneralMatrix_arrays_ColOriented(const std::string& path)
     : TlDenseMatrix_arrays_Object() {
-  this->load(path);
+    this->load(path);
 }
 
 TlDenseGeneralMatrix_arrays_ColOriented::
@@ -60,60 +60,61 @@ TlDenseGeneralMatrix_arrays_ColOriented::
 
 void TlDenseGeneralMatrix_arrays_ColOriented::resize(const index_type row,
                                                      const index_type col) {
-  TlDenseMatrix_arrays_Object::resize(col, row);
+    TlDenseMatrix_arrays_Object::resize(col, row);
 }
 
 void TlDenseGeneralMatrix_arrays_ColOriented::reserveRowSize(
     const index_type reserveRowSize) {
-  TlDenseMatrix_arrays_Object::reserveVectorSize(reserveRowSize);
+    TlDenseMatrix_arrays_Object::reserveVectorSize(reserveRowSize);
 }
 
 void TlDenseGeneralMatrix_arrays_ColOriented::set(const index_type row,
                                                   const index_type col,
                                                   const double value) {
-  TlDenseMatrix_arrays_Object::set_to_vm(col, row, value);
+    TlDenseMatrix_arrays_Object::set_to_vm(col, row, value);
 }
 
 void TlDenseGeneralMatrix_arrays_ColOriented::add(const index_type row,
                                                   const index_type col,
                                                   const double value) {
-  TlDenseMatrix_arrays_Object::add_to_vm(col, row, value);
+    TlDenseMatrix_arrays_Object::add_to_vm(col, row, value);
 }
 
 double TlDenseGeneralMatrix_arrays_ColOriented::get(
     const index_type row, const index_type col) const {
-  return TlDenseMatrix_arrays_Object::get_from_vm(col, row);
+    return TlDenseMatrix_arrays_Object::get_from_vm(col, row);
 }
 
 std::vector<double> TlDenseGeneralMatrix_arrays_ColOriented::getColVector(
     const index_type col) const {
-  return TlDenseMatrix_arrays_Object::getVector(col);
+    return TlDenseMatrix_arrays_Object::getVector(col);
 }
 
 void TlDenseGeneralMatrix_arrays_ColOriented::getColVector(
     const index_type col, double* pBuf, const index_type length) const {
-  TlDenseMatrix_arrays_Object::getVector(col, pBuf, length);
+    TlDenseMatrix_arrays_Object::getVector(col, pBuf, length);
 }
 
 TlDenseGeneralMatrix_Lapack
 TlDenseGeneralMatrix_arrays_ColOriented::getTlMatrixObject() const {
-  const index_type numOfRows = this->getNumOfRows();
-  const index_type numOfCols = this->getNumOfCols();
-  TlDenseGeneralMatrix_Lapack answer(numOfRows, numOfCols);
+    const index_type numOfRows = this->getNumOfRows();
+    const index_type numOfCols = this->getNumOfCols();
+    TlDenseGeneralMatrix_Lapack answer(numOfRows, numOfCols);
 
-  for (index_type c = 0; c < numOfCols; ++c) {
-    const TlDenseVector_Lapack v = TlDenseMatrix_arrays_Object::getVector(c);
-    assert(v.getSize() == numOfRows);
-    for (index_type r = 0; r < numOfRows; ++r) {
-      answer.set(r, c, v.get(r));
+    for (index_type c = 0; c < numOfCols; ++c) {
+        const TlDenseVector_Lapack v =
+            TlDenseMatrix_arrays_Object::getVector(c);
+        assert(v.getSize() == numOfRows);
+        for (index_type r = 0; r < numOfRows; ++r) {
+            answer.set(r, c, v.get(r));
+        }
     }
-  }
 
-  return answer;
+    return answer;
 }
 
 void TlDenseGeneralMatrix_arrays_ColOriented::
     saveByTlDenseGeneralMatrix_arrays_RowOriented(
         const std::string& basename) const {
-  TlDenseMatrix_arrays_Object::saveByTheOtherType(basename);
+    TlDenseMatrix_arrays_Object::saveByTheOtherType(basename);
 }

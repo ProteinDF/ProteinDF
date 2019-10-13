@@ -20,9 +20,9 @@
 #include <cmath>
 #include "CnError.h"
 #include "Fl_Geometry.h"
-#include "tl_dense_general_matrix_lapack.h"
 #include "TlMath.h"
 #include "TlUtils.h"
+#include "tl_dense_general_matrix_lapack.h"
 
 DfSummary::DfSummary(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {}
 
@@ -31,77 +31,78 @@ DfSummary::~DfSummary() {}
 void DfSummary::exec() { this->exec<TlDenseGeneralMatrix_Lapack>(); }
 
 void DfSummary::printEigen(DfObject::RUN_TYPE runType) {
-  TlDenseVector_Lapack eigval;
-  eigval.load(this->getEigenvaluesPath(runType, this->m_nIteration));
+    TlDenseVector_Lapack eigval;
+    eigval.load(this->getEigenvaluesPath(runType, this->m_nIteration));
 
-  std::stringstream ss;
-  ss << eigval;
-  this->log_.info(ss.str());
+    std::stringstream ss;
+    ss << eigval;
+    this->log_.info(ss.str());
 }
 
 void DfSummary::printAux(const TlDenseVector_Lapack& rho,
                          const TlDenseVector_Lapack& myu,
                          const TlDenseVector_Lapack& nyu) {
-  const int rhoSize = rho.getSize();
-  const int myuSize = myu.getSize();
-  const int nyuSize = nyu.getSize();
-  // TlLogX& Log = TlLogX::getInstance();
+    const int rhoSize = rho.getSize();
+    const int myuSize = myu.getSize();
+    const int nyuSize = nyu.getSize();
+    // TlLogX& Log = TlLogX::getInstance();
 
-  // header
-  this->logger("    GTO    ATOM       SHELL                 RHO");
-  if (myuSize > 0) {
-    this->logger("                MYU");
-    if (nyuSize > 0) {
-      this->logger("                NYU");
-    }
-  }
-  this->logger("\n");
-
-  const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
-                              (*this->pPdfParam_)["basis_set_xc"]);
-  const int dim = std::max(rhoSize, std::max(myuSize, nyuSize));
-  for (int i = 0; i < dim; ++i) {
-    this->logger(TlUtils::format(
-        " %6d %-2s %6s", i + 1, orbInfo.getAtomName(i).c_str(),
-        TlOrbitalInfoObject::basisTypeNameTbl_[orbInfo.getBasisType(i)]));
-
-    if (i < rhoSize) {
-      this->logger(TlUtils::format(" %18.6lf", rho.get(i)));
-    } else {
-      this->logger("                   ");
-    }
-
-    if (i < myuSize) {
-      this->logger(TlUtils::format(" %18.6lf", myu.get(i)));
-    } else {
-      this->logger("                   ");
-    }
-
-    if (i < nyuSize) {
-      this->logger(TlUtils::format(" %18.6lf", nyu.get(i)));
-    } else {
-      this->logger("                   ");
+    // header
+    this->logger("    GTO    ATOM       SHELL                 RHO");
+    if (myuSize > 0) {
+        this->logger("                MYU");
+        if (nyuSize > 0) {
+            this->logger("                NYU");
+        }
     }
     this->logger("\n");
-  }
+
+    const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
+                                (*this->pPdfParam_)["basis_set_xc"]);
+    const int dim = std::max(rhoSize, std::max(myuSize, nyuSize));
+    for (int i = 0; i < dim; ++i) {
+        this->logger(TlUtils::format(
+            " %6d %-2s %6s", i + 1, orbInfo.getAtomName(i).c_str(),
+            TlOrbitalInfoObject::basisTypeNameTbl_[orbInfo.getBasisType(i)]));
+
+        if (i < rhoSize) {
+            this->logger(TlUtils::format(" %18.6lf", rho.get(i)));
+        } else {
+            this->logger("                   ");
+        }
+
+        if (i < myuSize) {
+            this->logger(TlUtils::format(" %18.6lf", myu.get(i)));
+        } else {
+            this->logger("                   ");
+        }
+
+        if (i < nyuSize) {
+            this->logger(TlUtils::format(" %18.6lf", nyu.get(i)));
+        } else {
+            this->logger("                   ");
+        }
+        this->logger("\n");
+    }
 }
 
 void DfSummary::printRhoPop(const TlDenseVector_Lapack& rho) {
-  const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
-                              (*this->pPdfParam_)["basis_set_j"]);
-  const int numOfAux = this->m_nNumOfAux;
+    const TlOrbitalInfo orbInfo((*this->pPdfParam_)["coordinates"],
+                                (*this->pPdfParam_)["basis_set_j"]);
+    const int numOfAux = this->m_nNumOfAux;
 
-  this->logger("    GTO    ATOM       SHELL                 RHO\n\n");
-  for (int i = 0; i < numOfAux; ++i) {
-    this->logger(TlUtils::format(
-        " %6d %-2s %6s", i + 1, orbInfo.getAtomName(i).c_str(),
-        TlOrbitalInfoObject::basisTypeNameTbl_[orbInfo.getBasisType(i)]));
+    this->logger("    GTO    ATOM       SHELL                 RHO\n\n");
+    for (int i = 0; i < numOfAux; ++i) {
+        this->logger(TlUtils::format(
+            " %6d %-2s %6s", i + 1, orbInfo.getAtomName(i).c_str(),
+            TlOrbitalInfoObject::basisTypeNameTbl_[orbInfo.getBasisType(i)]));
 
-    // const double popu = std::pow((M_PI / (2.0 *
-    // RGTO.getExponent(Tdens.getcgtonum(k),0))), 0.25) * rho[i];
-    const double popu =
-        std::pow((M_PI / (2.0 * orbInfo.getExponent(i, 0))), 0.25) * rho.get(i);
-    this->logger(TlUtils::format(" %18.6lf\n", popu));
-  }
-  this->logger("\n");
+        // const double popu = std::pow((M_PI / (2.0 *
+        // RGTO.getExponent(Tdens.getcgtonum(k),0))), 0.25) * rho[i];
+        const double popu =
+            std::pow((M_PI / (2.0 * orbInfo.getExponent(i, 0))), 0.25) *
+            rho.get(i);
+        this->logger(TlUtils::format(" %18.6lf\n", popu));
+    }
+    this->logger("\n");
 }

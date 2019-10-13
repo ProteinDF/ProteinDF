@@ -29,24 +29,24 @@
 #define DEFAULT_CACHE_SIZE (2147483648)  // 2 GB = 2 * 1073741824
 
 class TlFileGenericMatrix : public TlDenseMatrix_IO_object {
- public:
-  explicit TlFileGenericMatrix(const std::string& filePath,
-                               TlMatrixObject::index_type row,
-                               TlMatrixObject::index_type col,
-                               std::size_t cacheSize = DEFAULT_CACHE_SIZE);
-  explicit TlFileGenericMatrix(const std::string& filePath,
-                               std::size_t cacheSize = DEFAULT_CACHE_SIZE);
-  virtual ~TlFileGenericMatrix();
+   public:
+    explicit TlFileGenericMatrix(const std::string& filePath,
+                                 TlMatrixObject::index_type row,
+                                 TlMatrixObject::index_type col,
+                                 std::size_t cacheSize = DEFAULT_CACHE_SIZE);
+    explicit TlFileGenericMatrix(const std::string& filePath,
+                                 std::size_t cacheSize = DEFAULT_CACHE_SIZE);
+    virtual ~TlFileGenericMatrix();
 
- public:
-  void resize(const TlMatrixObject::index_type row,
-              const TlMatrixObject::index_type col);
+   public:
+    void resize(const TlMatrixObject::index_type row,
+                const TlMatrixObject::index_type col);
 
- protected:
-  virtual TlMatrixObject::size_type getIndex(
-      const TlMatrixObject::index_type row,
-      const TlMatrixObject::index_type col) const;
-  virtual TlMatrixObject::size_type getNumOfElements() const;
+   protected:
+    virtual TlMatrixObject::size_type getIndex(
+        const TlMatrixObject::index_type row,
+        const TlMatrixObject::index_type col) const;
+    virtual TlMatrixObject::size_type getNumOfElements() const;
 };
 
 #endif  // TL_DENSE_GENERAL_MATRIX_IO_H

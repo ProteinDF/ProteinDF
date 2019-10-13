@@ -32,7 +32,7 @@
 
 #ifdef HAVE_VIENNACL
 #include "tl_viennacl.h"
-#endif // HAVE_VIENNACL
+#endif  // HAVE_VIENNACL
 
 #ifdef __FUJITSU
 #define PDF_MAIN MAIN__
@@ -41,49 +41,49 @@
 #endif  // __FUJITSU
 
 int PDF_MAIN(int argc, char* argv[]) {
-  // setup parameters
-  TlGetopt opt(argc, argv, "a:dro:");
+    // setup parameters
+    TlGetopt opt(argc, argv, "a:dro:");
 
-  bool isRestart = false;
-  if (opt["r"] == "defined") {
-    isRestart = true;
-  }
-
-  TlLogging& log = TlLogging::getInstance();
-  std::string output = "fl_Out_Std";
-  if (opt["o"].empty() != true) {
-    output = opt["o"];
-  }
-  log.setFilePath(output);
-
-  if (opt["d"] == "defined") {
-    log.setLevel(TlLogging::DEBUG);
-  }
-
-  // ViennaCL
-#ifdef HAVE_VIENNACL
-  {
-    int deviceId = 0;
-    if (!opt["a"].empty()) {
-      deviceId = std::atoi(opt["a"].c_str());
+    bool isRestart = false;
+    if (opt["r"] == "defined") {
+        isRestart = true;
     }
 
-    TlViennaCL vcl;
-    vcl.setupAllAvailableDevices();
-    log.info(vcl.listDevices());
+    TlLogging& log = TlLogging::getInstance();
+    std::string output = "fl_Out_Std";
+    if (opt["o"].empty() != true) {
+        output = opt["o"];
+    }
+    log.setFilePath(output);
 
-    vcl.switchDevice(deviceId);
-    log.info(vcl.listCurrentDevice());
-  }
+    if (opt["d"] == "defined") {
+        log.setLevel(TlLogging::TL_DEBUG);
+    }
+
+    // ViennaCL
+#ifdef HAVE_VIENNACL
+    {
+        int deviceId = 0;
+        if (!opt["a"].empty()) {
+            deviceId = std::atoi(opt["a"].c_str());
+        }
+
+        TlViennaCL vcl;
+        vcl.setupAllAvailableDevices();
+        log.info(vcl.listDevices());
+
+        vcl.switchDevice(deviceId);
+        log.info(vcl.listCurrentDevice());
+    }
 #endif  // HAVE_VIENNACL
 
-  // do ProteinDF
-  ProteinDF PDF;
-  if (isRestart == true) {
-    PDF.restart("pdfparam.mpac");
-  } else {
-    PDF.run();
-  }
+    // do ProteinDF
+    ProteinDF PDF;
+    if (isRestart == true) {
+        PDF.restart("pdfparam.mpac");
+    } else {
+        PDF.run();
+    }
 
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

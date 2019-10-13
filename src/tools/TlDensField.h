@@ -25,15 +25,15 @@
 class TlDenseSymmetricMatrix_Lapack;
 
 class TlDensField {
- public:
-  TlDensField(const TlSerializeData& param);
-  ~TlDensField();
+   public:
+    TlDensField(const TlSerializeData& param);
+    ~TlDensField();
 
-  std::vector<double> makeDensFld(const TlDenseSymmetricMatrix_Lapack& P,
-                                  const std::vector<TlPosition>& grids);
+    std::vector<double> makeDensFld(const TlDenseSymmetricMatrix_Lapack& P,
+                                    const std::vector<TlPosition>& grids);
 
- protected:
-  TlSerializeData param_;
+   protected:
+    TlSerializeData param_;
 };
 
 #endif  // TLDENSFIELD_H

@@ -26,14 +26,14 @@
 #include "tl_dense_vector_lapack.h"
 
 class DfDensityFittingX
-    : public DfDensityFittingTmpl<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack,
-                                  DfEriX> {
- public:
-  DfDensityFittingX(TlSerializeData* pPdfParam);
-  virtual ~DfDensityFittingX();
+    : public DfDensityFittingTmpl<TlDenseSymmetricMatrix_Lapack,
+                                  TlDenseVector_Lapack, DfEriX> {
+   public:
+    DfDensityFittingX(TlSerializeData* pPdfParam);
+    virtual ~DfDensityFittingX();
 
- public:
-  void exec();
+   public:
+    void exec();
 };
 
 #endif  // DFDENSITYFITTINGX_H

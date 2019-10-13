@@ -6,27 +6,26 @@
 class Fl_Geometry;
 class TlOrbitalInfo;
 
-class TlLibcint
-{
-  public:
+class TlLibcint {
+   public:
     TlLibcint(const Fl_Geometry &geom, const TlOrbitalInfo &orbInfo);
     ~TlLibcint();
 
-  public:
+   public:
     void calc_ovp(const int shell_id_i, const int shell_id_j);
     void calc_nuc(const int shell_id_i, const int shell_id_j);
     void calc_kin(const int shell_id_i, const int shell_id_j);
     void calc_ERI(const int shell_id_i, const int shell_id_j,
                   const int shell_id_k, const int shell_id_l);
 
-  protected:
+   protected:
     void makeAtomTable(const Fl_Geometry &geom);
     void makeBasissetTable(const TlOrbitalInfo &orbInfo);
 
     int getValuesOffset() const;
     void addValue(const double value);
 
-  private:
+   private:
     static const double AU2ANG;
     static const int ATOM_BLOCK_SIZE;
     static const int BASISSET_BLOCK_SIZE;
@@ -41,4 +40,4 @@ class TlLibcint
     std::vector<double> values_;
 };
 
-#endif // TLLIBCCINT_H
+#endif  // TLLIBCCINT_H

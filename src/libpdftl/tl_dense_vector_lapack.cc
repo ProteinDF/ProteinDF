@@ -6,16 +6,20 @@
 // ---------------------------------------------------------------------------
 TlDenseVector_Lapack::TlDenseVector_Lapack(
     TlDenseVectorObject::index_type size) {
-  this->pImpl_ = new TlDenseVector_ImplLapack(size);
+    this->pImpl_ = new TlDenseVector_ImplLapack(size);
 }
 
 TlDenseVector_Lapack::TlDenseVector_Lapack(const TlDenseVector_Lapack& rhs) {
-  this->pImpl_ = new TlDenseVector_ImplLapack(
-      *dynamic_cast<const TlDenseVector_ImplLapack*>(rhs.pImpl_));
+    this->pImpl_ = new TlDenseVector_ImplLapack(
+        *dynamic_cast<const TlDenseVector_ImplLapack*>(rhs.pImpl_));
 }
 
 TlDenseVector_Lapack::TlDenseVector_Lapack(const std::vector<double>& rhs) {
-  this->pImpl_ = new TlDenseVector_ImplLapack(rhs);
+    this->pImpl_ = new TlDenseVector_ImplLapack(rhs);
+}
+
+TlDenseVector_Lapack::TlDenseVector_Lapack(const std::valarray<double>& rhs) {
+    this->pImpl_ = new TlDenseVector_ImplLapack(rhs);
 }
 
 // TlDenseVector_Lapack::TlDenseVector_Lapack(const double* p, size_type size) {
@@ -23,12 +27,13 @@ TlDenseVector_Lapack::TlDenseVector_Lapack(const std::vector<double>& rhs) {
 // }
 
 TlDenseVector_Lapack::operator std::vector<double>() const {
-  return std::vector<double>(*(dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)));
+    return std::vector<double>(
+        *(dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)));
 }
 
 TlDenseVector_Lapack::~TlDenseVector_Lapack() {
-  delete this->pImpl_;
-  this->pImpl_ = NULL;
+    delete this->pImpl_;
+    this->pImpl_ = NULL;
 }
 
 // ---------------------------------------------------------------------------
@@ -36,70 +41,78 @@ TlDenseVector_Lapack::~TlDenseVector_Lapack() {
 // ---------------------------------------------------------------------------
 TlDenseVector_Lapack& TlDenseVector_Lapack::operator=(
     const TlDenseVector_Lapack& rhs) {
-  if (this != &rhs) {
-    delete this->pImpl_;
-    this->pImpl_ = NULL;
+    if (this != &rhs) {
+        delete this->pImpl_;
+        this->pImpl_ = NULL;
 
-    this->pImpl_ = new TlDenseVector_ImplLapack(
-        *dynamic_cast<const TlDenseVector_ImplLapack*>(rhs.pImpl_));
-  }
+        this->pImpl_ = new TlDenseVector_ImplLapack(
+            *dynamic_cast<const TlDenseVector_ImplLapack*>(rhs.pImpl_));
+    }
 
-  return *this;
+    return *this;
 }
 
 TlDenseVector_Lapack& TlDenseVector_Lapack::operator+=(
     const TlDenseVector_Lapack& rhs) {
-  dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)
-      ->
-      operator+=(*dynamic_cast<TlDenseVector_ImplLapack*>(rhs.pImpl_));
+    dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)
+        ->
+        operator+=(*dynamic_cast<TlDenseVector_ImplLapack*>(rhs.pImpl_));
 
-  return *this;
+    return *this;
 }
 
 TlDenseVector_Lapack& TlDenseVector_Lapack::operator-=(
     const TlDenseVector_Lapack& rhs) {
-  dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)
-      ->
-      operator-=(*dynamic_cast<TlDenseVector_ImplLapack*>(rhs.pImpl_));
+    dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)
+        ->
+        operator-=(*dynamic_cast<TlDenseVector_ImplLapack*>(rhs.pImpl_));
 
-  return *this;
+    return *this;
 }
 
 TlDenseVector_Lapack& TlDenseVector_Lapack::operator*=(const double rhs) {
-  dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)->operator*=(rhs);
+    dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)->operator*=(rhs);
 
-  return *this;
+    return *this;
 }
 
 TlDenseVector_Lapack& TlDenseVector_Lapack::operator/=(const double rhs) {
-  dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)->operator/=(rhs);
+    dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)->operator/=(rhs);
 
-  return *this;
+    return *this;
 }
 
 double TlDenseVector_Lapack::operator*(const TlDenseVector_Lapack& rhs) const {
-  return dynamic_cast<const TlDenseVector_ImplLapack*>(this->pImpl_)
-      ->
-      operator*(*dynamic_cast<const TlDenseVector_ImplLapack*>(rhs.pImpl_));
+    return dynamic_cast<const TlDenseVector_ImplLapack*>(this->pImpl_)
+        ->
+        operator*(*dynamic_cast<const TlDenseVector_ImplLapack*>(rhs.pImpl_));
 }
 
 // ---------------------------------------------------------------------------
 // operations
 // ---------------------------------------------------------------------------
+double TlDenseVector_Lapack::dot(const TlDenseVector_Lapack& rhs) const {
+    double answer =
+        dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)
+            ->dot(*dynamic_cast<TlDenseVector_ImplLapack*>(rhs.pImpl_));
+
+    return answer;
+}
+
 TlDenseVector_Lapack& TlDenseVector_Lapack::dotInPlace(
     const TlDenseVector_Lapack& rhs) {
-  dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)
-      ->dotInPlace(*dynamic_cast<TlDenseVector_ImplLapack*>(rhs.pImpl_));
+    dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)
+        ->dotInPlace(*dynamic_cast<TlDenseVector_ImplLapack*>(rhs.pImpl_));
 
-  return *this;
+    return *this;
 }
 
 double* TlDenseVector_Lapack::data() {
-  return dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)->data();
+    return dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)->data();
 }
 
 const double* TlDenseVector_Lapack::data() const {
-  return dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)->data();
+    return dynamic_cast<TlDenseVector_ImplLapack*>(this->pImpl_)->data();
 }
 
 // ---------------------------------------------------------------------------
@@ -107,29 +120,29 @@ const double* TlDenseVector_Lapack::data() const {
 // ---------------------------------------------------------------------------
 TlDenseVector_Lapack operator+(const TlDenseVector_Lapack& rhs1,
                                const TlDenseVector_Lapack& rhs2) {
-  TlDenseVector_Lapack answer = rhs1;
-  answer += rhs2;
+    TlDenseVector_Lapack answer = rhs1;
+    answer += rhs2;
 
-  return answer;
+    return answer;
 }
 
 TlDenseVector_Lapack operator-(const TlDenseVector_Lapack& rhs1,
                                const TlDenseVector_Lapack& rhs2) {
-  TlDenseVector_Lapack answer = rhs1;
-  answer -= rhs2;
+    TlDenseVector_Lapack answer = rhs1;
+    answer -= rhs2;
 
-  return answer;
+    return answer;
 }
 
 TlDenseVector_Lapack operator*(const TlDenseVector_Lapack& rhs1,
                                const double rhs2) {
-  TlDenseVector_Lapack answer = rhs1;
-  answer *= rhs2;
+    TlDenseVector_Lapack answer = rhs1;
+    answer *= rhs2;
 
-  return answer;
+    return answer;
 }
 
 TlDenseVector_Lapack operator*(const double rhs1,
                                const TlDenseVector_Lapack& rhs2) {
-  return rhs2 * rhs1;
+    return rhs2 * rhs1;
 }

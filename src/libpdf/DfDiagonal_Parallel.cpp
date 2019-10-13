@@ -33,78 +33,78 @@ DfDiagonal_Parallel::DfDiagonal_Parallel(TlSerializeData* pPdfParam)
 
 DfDiagonal_Parallel::~DfDiagonal_Parallel() {}
 
-void DfDiagonal_Parallel::DfDiagMain() {
+void DfDiagonal_Parallel::run() {
 #ifdef HAVE_SCALAPACK
-  if (this->m_bUsingSCALAPACK == true) {
-    this->log_.info("diagonal(parallel) using SCALAPACK.");
-    this->DfDiagMain_SCALAPACK();
-    return;
-  }
+    if (this->m_bUsingSCALAPACK == true) {
+        this->log_.info("diagonal(parallel) using SCALAPACK.");
+        this->run_SCALAPACK();
+        return;
+    }
 #endif  // HAVE_SCALAPACK
 
-  // LAPACK
-  this->log_.info("diagonal(parallel) using LAPACK.");
-  TlCommunicate& rComm = TlCommunicate::getInstance();
-  if (rComm.isMaster() == true) {
-    DfDiagonal::run();
-  }
-  rComm.barrier();
+    // LAPACK
+    this->log_.info("diagonal(parallel) using LAPACK.");
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster() == true) {
+        DfDiagonal::run();
+    }
+    rComm.barrier();
 }
 
 void DfDiagonal_Parallel::DfDiagQclo(const DfObject::RUN_TYPE runType,
                                      const std::string& fragname, int norbcut) {
 #ifdef HAVE_SCALAPACK
-  if (this->m_bUsingSCALAPACK == true) {
-    this->log_.info("diagonalization using SCALAPACK.");
-    this->DfDiagQclo_SCALAPACK(runType, fragname, norbcut);
-    return;
-  } else {
-    this->log_.info("diagonalization using LAPACK.");
-  }
+    if (this->m_bUsingSCALAPACK == true) {
+        this->log_.info("diagonalization using SCALAPACK.");
+        this->DfDiagQclo_SCALAPACK(runType, fragname, norbcut);
+        return;
+    } else {
+        this->log_.info("diagonalization using LAPACK.");
+    }
 #endif  // HAVE_SCALAPACK
 
-  TlCommunicate& rComm = TlCommunicate::getInstance();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  if (rComm.isMaster() == true) {
-    DfDiagonal::runQclo(runType, fragname, norbcut);
-  }
-  rComm.barrier();
+    if (rComm.isMaster() == true) {
+        DfDiagonal::runQclo(runType, fragname, norbcut);
+    }
+    rComm.barrier();
 }
 
-void DfDiagonal_Parallel::DfDiagMain_SCALAPACK() {
-  switch (this->m_nMethodType) {
-    case METHOD_RKS:
-      this->main<TlDenseGeneralMatrix_Scalapack,
-                 TlDenseSymmetricMatrix_Scalapack,
-                 TlDenseVector_Lapack>(RUN_RKS);
-      break;
+void DfDiagonal_Parallel::run_SCALAPACK() {
+    switch (this->m_nMethodType) {
+        case METHOD_RKS:
+            this->main<TlDenseGeneralMatrix_Scalapack,
+                       TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Lapack>(
+                RUN_RKS);
+            break;
 
-    case METHOD_UKS:
-      this->main<TlDenseGeneralMatrix_Scalapack,
-                 TlDenseSymmetricMatrix_Scalapack,
-                 TlDenseVector_Lapack>(RUN_UKS_ALPHA);
-      this->main<TlDenseGeneralMatrix_Scalapack,
-                 TlDenseSymmetricMatrix_Scalapack,
-                 TlDenseVector_Lapack>(RUN_UKS_BETA);
-      break;
+        case METHOD_UKS:
+            this->main<TlDenseGeneralMatrix_Scalapack,
+                       TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Lapack>(
+                RUN_UKS_ALPHA);
+            this->main<TlDenseGeneralMatrix_Scalapack,
+                       TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Lapack>(
+                RUN_UKS_BETA);
+            break;
 
-    case METHOD_ROKS:
-      this->main<TlDenseGeneralMatrix_Scalapack,
-                 TlDenseSymmetricMatrix_Scalapack,
-                 TlDenseVector_Lapack>(RUN_ROKS);
-      break;
+        case METHOD_ROKS:
+            this->main<TlDenseGeneralMatrix_Scalapack,
+                       TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Lapack>(
+                RUN_ROKS);
+            break;
 
-    default:
-      CnErr.abort("DfDiagonal", "", "DfDiagMain",
-                  "the value of scftype is illegal");
-      break;
-  }
+        default:
+            CnErr.abort("DfDiagonal", "", "DfDiagMain",
+                        "the value of scftype is illegal");
+            break;
+    }
 }
 
 void DfDiagonal_Parallel::DfDiagQclo_SCALAPACK(const DfObject::RUN_TYPE runType,
                                                const std::string& fragname,
                                                int norbcut) {
-  this->m_nNumOfMOs = norbcut;
-  this->main<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack, TlDenseVector_Lapack>(
-      runType, fragname, true);
+    this->m_nNumOfMOs = norbcut;
+    this->main<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack,
+               TlDenseVector_Lapack>(runType, fragname, true);
 }

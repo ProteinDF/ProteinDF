@@ -22,15 +22,15 @@
 #include "DfDiffDensityMatrix.h"
 
 class DfDiffDensityMatrix_Parallel : public DfDiffDensityMatrix {
- public:
-  DfDiffDensityMatrix_Parallel(TlSerializeData* pPdfParam);
-  ~DfDiffDensityMatrix_Parallel();
+   public:
+    DfDiffDensityMatrix_Parallel(TlSerializeData* pPdfParam);
+    ~DfDiffDensityMatrix_Parallel();
 
- public:
-  virtual void exec();
+   public:
+    virtual void exec();
 
- protected:
-  // void calc_usingScaLAPACK(DfObject::RUN_TYPE runType, int iteration);
+   protected:
+    // void calc_usingScaLAPACK(DfObject::RUN_TYPE runType, int iteration);
 };
 
 #endif  // DFDIFFDENSITYMATRIX_PARALLEL_H

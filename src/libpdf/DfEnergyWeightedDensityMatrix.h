@@ -22,12 +22,12 @@
 #include "DfObject.h"
 
 class DfEnergyWeightedDensityMatrix : public DfObject {
- public:
-  DfEnergyWeightedDensityMatrix();
-  virtual ~DfEnergyWeightedDensityMatrix();
+   public:
+    DfEnergyWeightedDensityMatrix();
+    virtual ~DfEnergyWeightedDensityMatrix();
 
- public:
-  void calc(RUN_TYPE runType);
+   public:
+    void calc(RUN_TYPE runType);
 };
 
 #endif  // DFENEGYWEIGHTEDDENSITYMATRIX_H

@@ -1,73 +1,72 @@
 #include <limits>
 
+#include "TlSystem.h"
+#include "TlUtils.h"
 #include "config.h"
 #include "gtest/gtest.h"
 #include "matrix_common.h"
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
-#include "TlSystem.h"
-#include "TlUtils.h"
 
 static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 static const std::string mat_save_load_path = "temp.sym.blas.save_load.mat";
 static const std::string mat_h5 = "temp.sym.h5";
 
 TEST(TlDenseSymmetricMatrix_Lapack, vtr2mat) {
-  const int dim = 4;
-  const int elements = dim * (dim +1) / 2;
-  std::vector<double> vtr(elements);
-  for (int i = 0; i < elements; ++i) {
-    vtr[i] = i;
-  }
-
-  TlDenseSymmetricMatrix_Lapack a(dim);
-  a.vtr2mat(vtr);
-
-  EXPECT_EQ(dim, a.getNumOfRows());
-  EXPECT_EQ(dim, a.getNumOfCols());
-  int i = 0;
-  for (int c = 0; c < dim; ++c) { // col-major
-    for (int r = 0; r <= c; ++r) {
-      EXPECT_DOUBLE_EQ(vtr[i], a.get(r, c));
-      ++i;
+    const int dim = 4;
+    const int elements = dim * (dim + 1) / 2;
+    std::vector<double> vtr(elements);
+    for (int i = 0; i < elements; ++i) {
+        vtr[i] = i;
     }
-  }
+
+    TlDenseSymmetricMatrix_Lapack a(dim);
+    a.vtr2mat(vtr);
+
+    EXPECT_EQ(dim, a.getNumOfRows());
+    EXPECT_EQ(dim, a.getNumOfCols());
+    int i = 0;
+    for (int c = 0; c < dim; ++c) {  // col-major
+        for (int r = 0; r <= c; ++r) {
+            EXPECT_DOUBLE_EQ(vtr[i], a.get(r, c));
+            ++i;
+        }
+    }
 }
 
-
 TEST(TlDenseSymmetricMatrix_Lapack, sym2gen) {
-  TlDenseSymmetricMatrix_Lapack a =
-      getSymMatrixA<TlDenseSymmetricMatrix_Lapack>();
-  TlDenseGeneralMatrix_Lapack b = a;
+    TlDenseSymmetricMatrix_Lapack a =
+        getSymMatrixA<TlDenseSymmetricMatrix_Lapack>();
+    TlDenseGeneralMatrix_Lapack b = a;
 
-  ASSERT_EQ(3, b.getNumOfRows());
-  ASSERT_EQ(3, b.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, b.get(0, 0));
-  EXPECT_DOUBLE_EQ(1.0, b.get(0, 1));
-  EXPECT_DOUBLE_EQ(3.0, b.get(0, 2));
-  EXPECT_DOUBLE_EQ(1.0, b.get(1, 0));
-  EXPECT_DOUBLE_EQ(2.0, b.get(1, 1));
-  EXPECT_DOUBLE_EQ(4.0, b.get(1, 2));
-  EXPECT_DOUBLE_EQ(3.0, b.get(2, 0));
-  EXPECT_DOUBLE_EQ(4.0, b.get(2, 1));
-  EXPECT_DOUBLE_EQ(5.0, b.get(2, 2));
+    ASSERT_EQ(3, b.getNumOfRows());
+    ASSERT_EQ(3, b.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, b.get(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, b.get(0, 1));
+    EXPECT_DOUBLE_EQ(3.0, b.get(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, b.get(1, 0));
+    EXPECT_DOUBLE_EQ(2.0, b.get(1, 1));
+    EXPECT_DOUBLE_EQ(4.0, b.get(1, 2));
+    EXPECT_DOUBLE_EQ(3.0, b.get(2, 0));
+    EXPECT_DOUBLE_EQ(4.0, b.get(2, 1));
+    EXPECT_DOUBLE_EQ(5.0, b.get(2, 2));
 }
 
 TEST(TlDenseSymmetricMatrix_Lapack, gen2sym) {
-  TlDenseGeneralMatrix_Lapack a = getMatrixA<TlDenseGeneralMatrix_Lapack>();
-  TlDenseSymmetricMatrix_Lapack b = a;
+    TlDenseGeneralMatrix_Lapack a = getMatrixA<TlDenseGeneralMatrix_Lapack>();
+    TlDenseSymmetricMatrix_Lapack b = a;
 
-  ASSERT_EQ(3, b.getNumOfRows());
-  ASSERT_EQ(3, b.getNumOfCols());
-  EXPECT_DOUBLE_EQ(0.0, b.get(0, 0));
-  EXPECT_DOUBLE_EQ(1.0, b.get(0, 1));
-  EXPECT_DOUBLE_EQ(2.0, b.get(0, 2));
-  EXPECT_DOUBLE_EQ(1.0, b.get(1, 0));
-  EXPECT_DOUBLE_EQ(4.0, b.get(1, 1));
-  EXPECT_DOUBLE_EQ(5.0, b.get(1, 2));
-  EXPECT_DOUBLE_EQ(2.0, b.get(2, 0));
-  EXPECT_DOUBLE_EQ(5.0, b.get(2, 1));
-  EXPECT_DOUBLE_EQ(8.0, b.get(2, 2));
+    ASSERT_EQ(3, b.getNumOfRows());
+    ASSERT_EQ(3, b.getNumOfCols());
+    EXPECT_DOUBLE_EQ(0.0, b.get(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, b.get(0, 1));
+    EXPECT_DOUBLE_EQ(2.0, b.get(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, b.get(1, 0));
+    EXPECT_DOUBLE_EQ(4.0, b.get(1, 1));
+    EXPECT_DOUBLE_EQ(5.0, b.get(1, 2));
+    EXPECT_DOUBLE_EQ(2.0, b.get(2, 0));
+    EXPECT_DOUBLE_EQ(5.0, b.get(2, 1));
+    EXPECT_DOUBLE_EQ(8.0, b.get(2, 2));
 }
 
 // TEST(TlDenseSymmetricMatrix_Lapack, convertFromTlVector2) {
@@ -96,24 +95,24 @@ TEST(TlDenseSymmetricMatrix_Lapack, gen2sym) {
 // }
 
 TEST(TlDenseSymmetricMatrix_Lapack, save_and_load) {
-  TlDenseSymmetricMatrix_Lapack a =
-      getSymMatrixA<TlDenseSymmetricMatrix_Lapack>();
-  bool isSaved = a.save(mat_save_load_path);
-  EXPECT_EQ(isSaved, true);
+    TlDenseSymmetricMatrix_Lapack a =
+        getSymMatrixA<TlDenseSymmetricMatrix_Lapack>();
+    bool isSaved = a.save(mat_save_load_path);
+    EXPECT_EQ(isSaved, true);
 
-  TlDenseSymmetricMatrix_Lapack b;
-  bool isLoaded = b.load(mat_save_load_path);
-  EXPECT_EQ(isLoaded, true);
+    TlDenseSymmetricMatrix_Lapack b;
+    bool isLoaded = b.load(mat_save_load_path);
+    EXPECT_EQ(isLoaded, true);
 
-  EXPECT_DOUBLE_EQ(0.0, b.get(0, 0));
-  EXPECT_DOUBLE_EQ(1.0, b.get(0, 1));
-  EXPECT_DOUBLE_EQ(3.0, b.get(0, 2));
-  EXPECT_DOUBLE_EQ(1.0, b.get(1, 0));
-  EXPECT_DOUBLE_EQ(2.0, b.get(1, 1));
-  EXPECT_DOUBLE_EQ(4.0, b.get(1, 2));
-  EXPECT_DOUBLE_EQ(3.0, b.get(2, 0));
-  EXPECT_DOUBLE_EQ(4.0, b.get(2, 1));
-  EXPECT_DOUBLE_EQ(5.0, b.get(2, 2));
+    EXPECT_DOUBLE_EQ(0.0, b.get(0, 0));
+    EXPECT_DOUBLE_EQ(1.0, b.get(0, 1));
+    EXPECT_DOUBLE_EQ(3.0, b.get(0, 2));
+    EXPECT_DOUBLE_EQ(1.0, b.get(1, 0));
+    EXPECT_DOUBLE_EQ(2.0, b.get(1, 1));
+    EXPECT_DOUBLE_EQ(4.0, b.get(1, 2));
+    EXPECT_DOUBLE_EQ(3.0, b.get(2, 0));
+    EXPECT_DOUBLE_EQ(4.0, b.get(2, 1));
+    EXPECT_DOUBLE_EQ(5.0, b.get(2, 2));
 }
 
 // #ifdef HAVE_HDF5
@@ -139,130 +138,132 @@ TEST(TlDenseSymmetricMatrix_Lapack, save_and_load) {
 // #endif  // HAVE_HDF5
 
 TEST(TlDenseSymmetricMatrix_Lapack, muLsym_sym) {
-  TlDenseSymmetricMatrix_Lapack a =
-      getSymMatrixA<TlDenseSymmetricMatrix_Lapack>();
-  TlDenseSymmetricMatrix_Lapack b =
-      getSymMatrixB<TlDenseSymmetricMatrix_Lapack>();
+    TlDenseSymmetricMatrix_Lapack a =
+        getSymMatrixA<TlDenseSymmetricMatrix_Lapack>();
+    TlDenseSymmetricMatrix_Lapack b =
+        getSymMatrixB<TlDenseSymmetricMatrix_Lapack>();
 
-  TlDenseGeneralMatrix_Lapack c = a * b;
+    TlDenseGeneralMatrix_Lapack c = a * b;
 
-  ASSERT_EQ(3, c.getNumOfRows());
-  ASSERT_EQ(3, c.getNumOfCols());
-  EXPECT_DOUBLE_EQ(7.0, c.get(0, 0));
-  EXPECT_DOUBLE_EQ(15.0, c.get(0, 1));
-  EXPECT_DOUBLE_EQ(19.0, c.get(0, 2));
-  EXPECT_DOUBLE_EQ(10.0, c.get(1, 0));
-  EXPECT_DOUBLE_EQ(23.0, c.get(1, 1));
-  EXPECT_DOUBLE_EQ(30.0, c.get(1, 2));
-  EXPECT_DOUBLE_EQ(14.0, c.get(2, 0));
-  EXPECT_DOUBLE_EQ(35.0, c.get(2, 1));
-  EXPECT_DOUBLE_EQ(47.0, c.get(2, 2));
+    ASSERT_EQ(3, c.getNumOfRows());
+    ASSERT_EQ(3, c.getNumOfCols());
+    EXPECT_DOUBLE_EQ(7.0, c.get(0, 0));
+    EXPECT_DOUBLE_EQ(15.0, c.get(0, 1));
+    EXPECT_DOUBLE_EQ(19.0, c.get(0, 2));
+    EXPECT_DOUBLE_EQ(10.0, c.get(1, 0));
+    EXPECT_DOUBLE_EQ(23.0, c.get(1, 1));
+    EXPECT_DOUBLE_EQ(30.0, c.get(1, 2));
+    EXPECT_DOUBLE_EQ(14.0, c.get(2, 0));
+    EXPECT_DOUBLE_EQ(35.0, c.get(2, 1));
+    EXPECT_DOUBLE_EQ(47.0, c.get(2, 2));
 }
 
 TEST(TlDenseSymmetricMatrix_Lapack, mul_sym_gen) {
-  TlDenseSymmetricMatrix_Lapack A = getSymMatrixA<TlDenseSymmetricMatrix_Lapack>();
-  // [ 0  -  - ]
-  // [ 1  2  - ]
-  // [ 3  4  5 ]
+    TlDenseSymmetricMatrix_Lapack A =
+        getSymMatrixA<TlDenseSymmetricMatrix_Lapack>();
+    // [ 0  -  - ]
+    // [ 1  2  - ]
+    // [ 3  4  5 ]
 
-  TlDenseGeneralMatrix_Lapack B(3, 3);
-  B.set(0, 0, 0.0);
-  B.set(0, 1, 1.0);
-  B.set(0, 2, 2.0);
-  B.set(1, 0, 3.0);
-  B.set(1, 1, 4.0);
-  B.set(1, 2, 5.0);
-  B.set(2, 0, 6.0);
-  B.set(2, 1, 7.0);
-  B.set(2, 2, 8.0);
+    TlDenseGeneralMatrix_Lapack B(3, 3);
+    B.set(0, 0, 0.0);
+    B.set(0, 1, 1.0);
+    B.set(0, 2, 2.0);
+    B.set(1, 0, 3.0);
+    B.set(1, 1, 4.0);
+    B.set(1, 2, 5.0);
+    B.set(2, 0, 6.0);
+    B.set(2, 1, 7.0);
+    B.set(2, 2, 8.0);
 
-  TlDenseGeneralMatrix_Lapack C = A * B;
+    TlDenseGeneralMatrix_Lapack C = A * B;
 
-  EXPECT_DOUBLE_EQ(21.0, C.get(0, 0));
-  EXPECT_DOUBLE_EQ(25.0, C.get(0, 1));
-  EXPECT_DOUBLE_EQ(29.0, C.get(0, 2));
-  EXPECT_DOUBLE_EQ(30.0, C.get(1, 0));
-  EXPECT_DOUBLE_EQ(37.0, C.get(1, 1));
-  EXPECT_DOUBLE_EQ(44.0, C.get(1, 2));
-  EXPECT_DOUBLE_EQ(42.0, C.get(2, 0));
-  EXPECT_DOUBLE_EQ(54.0, C.get(2, 1));
-  EXPECT_DOUBLE_EQ(66.0, C.get(2, 2));
+    EXPECT_DOUBLE_EQ(21.0, C.get(0, 0));
+    EXPECT_DOUBLE_EQ(25.0, C.get(0, 1));
+    EXPECT_DOUBLE_EQ(29.0, C.get(0, 2));
+    EXPECT_DOUBLE_EQ(30.0, C.get(1, 0));
+    EXPECT_DOUBLE_EQ(37.0, C.get(1, 1));
+    EXPECT_DOUBLE_EQ(44.0, C.get(1, 2));
+    EXPECT_DOUBLE_EQ(42.0, C.get(2, 0));
+    EXPECT_DOUBLE_EQ(54.0, C.get(2, 1));
+    EXPECT_DOUBLE_EQ(66.0, C.get(2, 2));
 }
 
 TEST(TlDenseSymmetricMatrix_Lapack, mul_gen_sym) {
-  TlDenseSymmetricMatrix_Lapack A = getSymMatrixA<TlDenseSymmetricMatrix_Lapack>();
-  // [ 0  -  - ]
-  // [ 1  2  - ]
-  // [ 3  4  5 ]
+    TlDenseSymmetricMatrix_Lapack A =
+        getSymMatrixA<TlDenseSymmetricMatrix_Lapack>();
+    // [ 0  -  - ]
+    // [ 1  2  - ]
+    // [ 3  4  5 ]
 
-  TlDenseGeneralMatrix_Lapack B(3, 3);
-  B.set(0, 0, 0.0);
-  B.set(0, 1, 1.0);
-  B.set(0, 2, 2.0);
-  B.set(1, 0, 3.0);
-  B.set(1, 1, 4.0);
-  B.set(1, 2, 5.0);
-  B.set(2, 0, 6.0);
-  B.set(2, 1, 7.0);
-  B.set(2, 2, 8.0);
+    TlDenseGeneralMatrix_Lapack B(3, 3);
+    B.set(0, 0, 0.0);
+    B.set(0, 1, 1.0);
+    B.set(0, 2, 2.0);
+    B.set(1, 0, 3.0);
+    B.set(1, 1, 4.0);
+    B.set(1, 2, 5.0);
+    B.set(2, 0, 6.0);
+    B.set(2, 1, 7.0);
+    B.set(2, 2, 8.0);
 
-  TlDenseGeneralMatrix_Lapack C = B * A;
+    TlDenseGeneralMatrix_Lapack C = B * A;
 
-  EXPECT_DOUBLE_EQ(7.0, C.get(0, 0));
-  EXPECT_DOUBLE_EQ(10.0, C.get(0, 1));
-  EXPECT_DOUBLE_EQ(14.0, C.get(0, 2));
-  EXPECT_DOUBLE_EQ(19.0, C.get(1, 0));
-  EXPECT_DOUBLE_EQ(31.0, C.get(1, 1));
-  EXPECT_DOUBLE_EQ(50.0, C.get(1, 2));
-  EXPECT_DOUBLE_EQ(31.0, C.get(2, 0));
-  EXPECT_DOUBLE_EQ(52.0, C.get(2, 1));
-  EXPECT_DOUBLE_EQ(86.0, C.get(2, 2));
+    EXPECT_DOUBLE_EQ(7.0, C.get(0, 0));
+    EXPECT_DOUBLE_EQ(10.0, C.get(0, 1));
+    EXPECT_DOUBLE_EQ(14.0, C.get(0, 2));
+    EXPECT_DOUBLE_EQ(19.0, C.get(1, 0));
+    EXPECT_DOUBLE_EQ(31.0, C.get(1, 1));
+    EXPECT_DOUBLE_EQ(50.0, C.get(1, 2));
+    EXPECT_DOUBLE_EQ(31.0, C.get(2, 0));
+    EXPECT_DOUBLE_EQ(52.0, C.get(2, 1));
+    EXPECT_DOUBLE_EQ(86.0, C.get(2, 2));
 }
 
 TEST(TlDenseSymmetricMatrix_Lapack, multiplication_MV) {
-  const std::string PDF_HOME = TlSystem::getEnv("PDF_HOME");
+    const std::string PDF_HOME = TlSystem::getEnv("PDF_HOME");
 
-  TlDenseSymmetricMatrix_Lapack M;
-  TlDenseGeneralMatrix_Lapack V;
-  M.load(TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str()));
-  V.load(TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str()));
+    TlDenseSymmetricMatrix_Lapack M;
+    TlDenseGeneralMatrix_Lapack V;
+    M.load(TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str()));
+    V.load(TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str()));
 
-  TlDenseGeneralMatrix_Lapack mv = M * V;
+    TlDenseGeneralMatrix_Lapack mv = M * V;
 
-  TlDenseGeneralMatrix_Lapack MV;
-  MV.load(TlUtils::format("%s/data/unit_test/MV.mat", PDF_HOME.c_str()));
+    TlDenseGeneralMatrix_Lapack MV;
+    MV.load(TlUtils::format("%s/data/unit_test/MV.mat", PDF_HOME.c_str()));
 
-  const int rows = M.getNumOfRows();
-  const int cols = V.getNumOfCols();
-  for (int i = 0; i < rows; ++i) {
-    for (int j = 0; j < cols; ++j) {
-      EXPECT_NEAR(MV.get(i, j), mv.get(i, j), 1.0E-5);
+    const int rows = M.getNumOfRows();
+    const int cols = V.getNumOfCols();
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            EXPECT_NEAR(MV.get(i, j), mv.get(i, j), 1.0E-5);
+        }
     }
-  }
 }
 
 TEST(TlDenseSymmetricMatrix_Lapack, multiplication_VMV) {
-  const std::string PDF_HOME = TlSystem::getEnv("PDF_HOME");
+    const std::string PDF_HOME = TlSystem::getEnv("PDF_HOME");
 
-  TlDenseSymmetricMatrix_Lapack M;
-  TlDenseGeneralMatrix_Lapack V;
-  M.load(TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str()));
-  V.load(TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str()));
+    TlDenseSymmetricMatrix_Lapack M;
+    TlDenseGeneralMatrix_Lapack V;
+    M.load(TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str()));
+    V.load(TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str()));
 
-  TlDenseGeneralMatrix_Lapack tV = V;
-  tV.transposeInPlace();
+    TlDenseGeneralMatrix_Lapack tV = V;
+    tV.transposeInPlace();
 
-  TlDenseGeneralMatrix_Lapack vmv = tV * M * V;
+    TlDenseGeneralMatrix_Lapack vmv = tV * M * V;
 
-  TlDenseSymmetricMatrix_Lapack VMV;
-  VMV.load(TlUtils::format("%s/data/unit_test/VMV.mat", PDF_HOME.c_str()));
+    TlDenseSymmetricMatrix_Lapack VMV;
+    VMV.load(TlUtils::format("%s/data/unit_test/VMV.mat", PDF_HOME.c_str()));
 
-  const int dim = V.getNumOfCols();
-  for (int i = 0; i < dim; ++i) {
-    for (int j = 0; j < dim; ++j) {
-      EXPECT_NEAR(VMV.get(i, j), vmv.get(i, j), 1.0E-5);
+    const int dim = V.getNumOfCols();
+    for (int i = 0; i < dim; ++i) {
+        for (int j = 0; j < dim; ++j) {
+            EXPECT_NEAR(VMV.get(i, j), vmv.get(i, j), 1.0E-5);
+        }
     }
-  }
 }
 
 //
@@ -403,7 +404,8 @@ TEST(TlDenseSymmetricMatrix_Lapack, multiplication_VMV) {
 // }
 
 // TEST(TlDenseSymmetricMatrix_Lapack, eig) {
-//   TlDenseSymmetricMatrix_Lapack A = getSymMatrixD<TlDenseSymmetricMatrix_Lapack>();
+//   TlDenseSymmetricMatrix_Lapack A =
+//   getSymMatrixD<TlDenseSymmetricMatrix_Lapack>();
 
 //   TlDenseVector_Lapack eigVal;
 //   TlDenseGeneralMatrix_Lapack eigVec;
@@ -439,28 +441,29 @@ TEST(TlDenseSymmetricMatrix_Lapack, multiplication_VMV) {
 // }
 
 TEST(TlDenseSymmetricMatrix_Lapack, eig) {
-  int dim = 100;
-  TlDenseSymmetricMatrix_Lapack A = getSymmetricMatrix<TlDenseSymmetricMatrix_Lapack>(dim);
-  A.save("eig_A.mat");
+    int dim = 100;
+    TlDenseSymmetricMatrix_Lapack A =
+        getSymmetricMatrix<TlDenseSymmetricMatrix_Lapack>(dim);
+    A.save("eig_A.mat");
 
-  TlDenseVector_Lapack eigVal;
-  TlDenseGeneralMatrix_Lapack eigVec;
-  A.eig(&eigVal, &eigVec);
+    TlDenseVector_Lapack eigVal;
+    TlDenseGeneralMatrix_Lapack eigVec;
+    A.eig(&eigVal, &eigVec);
 
-  eigVal.save("eigval_vcl.vtr");
-  eigVec.save("eigvec_vcl.mat");
+    eigVal.save("eigval_vcl.vtr");
+    eigVec.save("eigvec_vcl.mat");
 
-  // check
-  TlDenseSymmetricMatrix_Lapack d(eigVal.getSize());
-  for (int i = 0; i < dim; ++i) {
-    d.set(i, i, eigVal.get(i));
-  }
-  TlDenseGeneralMatrix_Lapack lhs = A * eigVec;
-  TlDenseGeneralMatrix_Lapack rhs = eigVec * d;
-
-  for (int i = 0; i < dim; ++i) {
-    for (int j = 0; j < dim; ++j) {
-      EXPECT_NEAR(lhs.get(i, j), rhs.get(i, j), 1.0E-2);
+    // check
+    TlDenseSymmetricMatrix_Lapack d(eigVal.getSize());
+    for (int i = 0; i < dim; ++i) {
+        d.set(i, i, eigVal.get(i));
     }
-  }
+    TlDenseGeneralMatrix_Lapack lhs = A * eigVec;
+    TlDenseGeneralMatrix_Lapack rhs = eigVec * d;
+
+    for (int i = 0; i < dim; ++i) {
+        for (int j = 0; j < dim; ++j) {
+            EXPECT_NEAR(lhs.get(i, j), rhs.get(i, j), 1.0E-2);
+        }
+    }
 }

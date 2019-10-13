@@ -28,34 +28,34 @@ const char* TlResidue::residueTable[] = {
     "TRP",   "TYR",   "TYRC-", "TYRN+", "VALC-", "VAL",   "HEM"};
 
 int TlResidue::number() {
-  return (sizeof(TlResidue::residueTable) / sizeof(char*));
+    return (sizeof(TlResidue::residueTable) / sizeof(char*));
 }
 
 // [TH] 仕様がおかしい。開始０に変更した方がよい。
 std::string TlResidue::label(int p) {
-  assert((1 <= p) && p <= this->number());
+    assert((1 <= p) && p <= this->number());
 
-  //   if( p>number() ){
-  //     CnErr.abort( "TlResidue", "", "label", TlUtils::format("illegal order
-  //     of amino acid information table %d", p));
-  //   }
-  //    printf("%s\n",residue[p-1]);
-  return std::string(TlResidue::residueTable[p - 1]);
+    //   if( p>number() ){
+    //     CnErr.abort( "TlResidue", "", "label", TlUtils::format("illegal order
+    //     of amino acid information table %d", p));
+    //   }
+    //    printf("%s\n",residue[p-1]);
+    return std::string(TlResidue::residueTable[p - 1]);
 }
 
 TlResidue::TlResidue() {}
 
 bool TlResidue::isResidue(const std::string& str) {
-  bool bAnswer = false;
+    bool bAnswer = false;
 
-  int nNumOfResidues = sizeof(TlResidue::residueTable) / sizeof(char*);
+    int nNumOfResidues = sizeof(TlResidue::residueTable) / sizeof(char*);
 
-  for (int i = 0; i < nNumOfResidues; ++i) {
-    if (str == std::string(TlResidue::residueTable[i])) {
-      bAnswer = true;
-      break;
+    for (int i = 0; i < nNumOfResidues; ++i) {
+        if (str == std::string(TlResidue::residueTable[i])) {
+            bAnswer = true;
+            break;
+        }
     }
-  }
 
-  return bAnswer;
+    return bAnswer;
 }

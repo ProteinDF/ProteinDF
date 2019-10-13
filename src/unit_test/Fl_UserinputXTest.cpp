@@ -25,11 +25,12 @@
 void Fl_UserinputXTest::testConstructer() { Fl_UserinputX flUserinput; }
 
 void Fl_UserinputXTest::testGetFlGlobalinputX() {
-  Fl_UserinputX flUserinput("Fl_UserinputXTest.txt");
-  flUserinput.load();
-  TlParameter param = flUserinput.getParameter();
+    Fl_UserinputX flUserinput("Fl_UserinputXTest.txt");
+    flUserinput.load();
+    TlParameter param = flUserinput.getParameter();
 
-  CPPUNIT_ASSERT_EQUAL(std::string("create integral guess scf"),
-                       param["MAIN"]["step-control"]);
-  CPPUNIT_ASSERT_EQUAL(std::string("1.0e-16"), param["INTEGRAL"]["cut-value"]);
+    CPPUNIT_ASSERT_EQUAL(std::string("create integral guess scf"),
+                         param["MAIN"]["step-control"]);
+    CPPUNIT_ASSERT_EQUAL(std::string("1.0e-16"),
+                         param["INTEGRAL"]["cut-value"]);
 }

@@ -14,65 +14,65 @@ static const std::string vct_test_scalapack_load_path =
 static const std::string h5_path = "temp.scalapack.vct.h5";
 
 TEST(TlDenseVector_Scalapack, constructor) {
-  TlDenseVector_Scalapack a(100);
+    TlDenseVector_Scalapack a(100);
 
-  EXPECT_EQ(TlDenseVector_Scalapack::size_type(100), a.getSize());
-  EXPECT_DOUBLE_EQ(0.0, a.get(0));
-  EXPECT_DOUBLE_EQ(0.0, a.get(1));
-  EXPECT_DOUBLE_EQ(0.0, a.get(2));
+    EXPECT_EQ(TlDenseVector_Scalapack::size_type(100), a.getSize());
+    EXPECT_DOUBLE_EQ(0.0, a.get(0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2));
 }
 
 TEST(TlDenseVector_Scalapack, copyConstructor) {
-  TlDenseVector_Scalapack a(100);
-  a.set(0, 0.0);
-  a.set(20, 1.0);
-  a.set(50, 2.0);
+    TlDenseVector_Scalapack a(100);
+    a.set(0, 0.0);
+    a.set(20, 1.0);
+    a.set(50, 2.0);
 
-  TlDenseVector_Scalapack b = a;
-  EXPECT_EQ(TlDenseVector_Scalapack::size_type(100), b.getSize());
-  EXPECT_DOUBLE_EQ(0.0, b.get(0));
-  EXPECT_DOUBLE_EQ(1.0, b.get(20));
-  EXPECT_DOUBLE_EQ(2.0, b.get(50));
+    TlDenseVector_Scalapack b = a;
+    EXPECT_EQ(TlDenseVector_Scalapack::size_type(100), b.getSize());
+    EXPECT_DOUBLE_EQ(0.0, b.get(0));
+    EXPECT_DOUBLE_EQ(1.0, b.get(20));
+    EXPECT_DOUBLE_EQ(2.0, b.get(50));
 }
 
 TEST(TlDenseVector_Scalapack, operatorCopy) {
-  TlDenseVector_Scalapack a(100);
-  a.set(0, 0.0);
-  a.set(20, 1.0);
-  a.set(50, 2.0);
+    TlDenseVector_Scalapack a(100);
+    a.set(0, 0.0);
+    a.set(20, 1.0);
+    a.set(50, 2.0);
 
-  TlDenseVector_Scalapack b;
-  b = a;
+    TlDenseVector_Scalapack b;
+    b = a;
 
-  EXPECT_EQ(TlDenseVector_Scalapack::size_type(100), b.getSize());
-  EXPECT_DOUBLE_EQ(0.0, b.get(0));
-  EXPECT_DOUBLE_EQ(1.0, b.get(20));
-  EXPECT_DOUBLE_EQ(2.0, b.get(50));
+    EXPECT_EQ(TlDenseVector_Scalapack::size_type(100), b.getSize());
+    EXPECT_DOUBLE_EQ(0.0, b.get(0));
+    EXPECT_DOUBLE_EQ(1.0, b.get(20));
+    EXPECT_DOUBLE_EQ(2.0, b.get(50));
 }
 
 TEST(TlDenseVector_Scalapack, resize1) {
-  TlDenseVector_Scalapack a(100);
-  a.set(0, 0.0);
-  a.set(20, 1.0);
-  a.set(50, 2.0);
+    TlDenseVector_Scalapack a(100);
+    a.set(0, 0.0);
+    a.set(20, 1.0);
+    a.set(50, 2.0);
 
-  a.resize(200);
-  EXPECT_EQ(TlDenseVector_Scalapack::size_type(200), a.getSize());
-  EXPECT_DOUBLE_EQ(0.0, a.get(0));
-  EXPECT_DOUBLE_EQ(1.0, a.get(20));
-  EXPECT_DOUBLE_EQ(2.0, a.get(50));
+    a.resize(200);
+    EXPECT_EQ(TlDenseVector_Scalapack::size_type(200), a.getSize());
+    EXPECT_DOUBLE_EQ(0.0, a.get(0));
+    EXPECT_DOUBLE_EQ(1.0, a.get(20));
+    EXPECT_DOUBLE_EQ(2.0, a.get(50));
 }
 
 TEST(TlDenseVector_Scalapack, resize2) {
-  TlDenseVector_Scalapack a(100);
-  a.set(0, 0.0);
-  a.set(20, 1.0);
-  a.set(50, 2.0);
+    TlDenseVector_Scalapack a(100);
+    a.set(0, 0.0);
+    a.set(20, 1.0);
+    a.set(50, 2.0);
 
-  a.resize(50);
-  EXPECT_EQ(TlDenseVector_Scalapack::size_type(50), a.getSize());
-  EXPECT_DOUBLE_EQ(0.0, a.get(0));
-  EXPECT_DOUBLE_EQ(1.0, a.get(20));
+    a.resize(50);
+    EXPECT_EQ(TlDenseVector_Scalapack::size_type(50), a.getSize());
+    EXPECT_DOUBLE_EQ(0.0, a.get(0));
+    EXPECT_DOUBLE_EQ(1.0, a.get(20));
 }
 
 // TEST(TlDenseVector_Scalapack, operator_add) {
@@ -179,47 +179,47 @@ TEST(TlDenseVector_Scalapack, resize2) {
 // }
 //
 TEST(TlDenseVector_Scalapack, save) {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  const int size = 100;
-  TlDenseVector_Lapack ref = getVector<TlDenseVector_Lapack>(size);
-  TlDenseVector_Scalapack v = getVector<TlDenseVector_Scalapack>(size);
-  v.save(vct_path);
+    const int size = 100;
+    TlDenseVector_Lapack ref = getVector<TlDenseVector_Lapack>(size);
+    TlDenseVector_Scalapack v = getVector<TlDenseVector_Scalapack>(size);
+    v.save(vct_path);
 
-  rComm.barrier();
-  if (rComm.isMaster()) {
-    TlDenseVector_Lapack a;
-    a.load(vct_path);
+    rComm.barrier();
+    if (rComm.isMaster()) {
+        TlDenseVector_Lapack a;
+        a.load(vct_path);
 
-    EXPECT_EQ(ref.getSize(), a.getSize());
-    for (int i = 0; i < ref.getSize(); ++i) {
-      EXPECT_DOUBLE_EQ(ref.get(i), a.get(i));
+        EXPECT_EQ(ref.getSize(), a.getSize());
+        for (int i = 0; i < ref.getSize(); ++i) {
+            EXPECT_DOUBLE_EQ(ref.get(i), a.get(i));
+        }
     }
-  }
 }
 
 TEST(TlDenseVector_Scalapack, load) {
-  TlCommunicate& rComm = TlCommunicate::getInstance();
+    TlCommunicate& rComm = TlCommunicate::getInstance();
 
-  const int size = 100;
-  TlDenseVector_Lapack v = getVector<TlDenseVector_Lapack>(size);
-  if (rComm.isMaster()) {
-    v.save(vct_test_scalapack_load_path);
-  }
-
-  rComm.barrier();
-  TlDenseVector_Scalapack a;
-  a.load(vct_test_scalapack_load_path);
-
-  rComm.barrier();
-  EXPECT_EQ(v.getSize(), a.getSize());
-  for (int i = 0; i < v.getSize(); ++i) {
-    double vi = v.get(i);
-    double ai = a.get(i);
+    const int size = 100;
+    TlDenseVector_Lapack v = getVector<TlDenseVector_Lapack>(size);
     if (rComm.isMaster()) {
-      EXPECT_DOUBLE_EQ(vi, ai);
+        v.save(vct_test_scalapack_load_path);
     }
-  }
+
+    rComm.barrier();
+    TlDenseVector_Scalapack a;
+    a.load(vct_test_scalapack_load_path);
+
+    rComm.barrier();
+    EXPECT_EQ(v.getSize(), a.getSize());
+    for (int i = 0; i < v.getSize(); ++i) {
+        double vi = v.get(i);
+        double ai = a.get(i);
+        if (rComm.isMaster()) {
+            EXPECT_DOUBLE_EQ(vi, ai);
+        }
+    }
 }
 
 // #ifdef HAVE_HDF5

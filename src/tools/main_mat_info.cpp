@@ -21,46 +21,46 @@
 #include <string>
 
 #include "TlGetopt.h"
-#include "tl_matrix_utils.h"
 #include "TlUtils.h"
+#include "tl_matrix_utils.h"
 
 void showHelp(const std::string& progname) {
-  std::cout << TlUtils::format("%s [options] MATRIX_FILE", progname.c_str())
-            << std::endl;
-  std::cout << " OPTIONS:" << std::endl;
-  std::cout << "  -h:      show help" << std::endl;
+    std::cout << TlUtils::format("%s [options] MATRIX_FILE", progname.c_str())
+              << std::endl;
+    std::cout << " OPTIONS:" << std::endl;
+    std::cout << "  -h:      show help" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-  TlGetopt opt(argc, argv, "h");
+    TlGetopt opt(argc, argv, "h");
 
-  if (opt["h"] == "defined") {
-    showHelp(opt[0]);
+    if (opt["h"] == "defined") {
+        showHelp(opt[0]);
+        return EXIT_SUCCESS;
+    }
+
+    std::string path = opt[1];
+
+    TlMatrixObject::MatrixType type;
+    TlMatrixObject::index_type numOfRows = 0;
+    TlMatrixObject::index_type numOfCols = 0;
+
+    if (TlMatrixUtils::isLoadable(path, TlMatrixObject::RLHD) == true) {
+        TlMatrixUtils::getHeaderInfo(path, &type, &numOfRows, &numOfCols);
+        std::cout << "type: symmetric" << std::endl;
+    } else if (TlMatrixUtils::isLoadable(path, TlMatrixObject::CSFD) == true) {
+        TlMatrixUtils::getHeaderInfo(path, &type, &numOfRows, &numOfCols);
+        std::cout << "type: normal (column-major)" << std::endl;
+    } else if (TlMatrixUtils::isLoadable(path, TlMatrixObject::RSFD) == true) {
+        TlMatrixUtils::getHeaderInfo(path, &type, &numOfRows, &numOfCols);
+        std::cout << "type: normal (row-major)" << std::endl;
+    } else {
+        std::cerr << "can not open file: " << path << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    std::cout << "row: " << numOfRows << std::endl;
+    std::cout << "col: " << numOfCols << std::endl;
+
     return EXIT_SUCCESS;
-  }
-
-  std::string path = opt[1];
-
-  TlMatrixObject::MatrixType type;
-  TlMatrixObject::index_type numOfRows = 0;
-  TlMatrixObject::index_type numOfCols = 0;
-
-  if (TlMatrixUtils::isLoadable(path, TlMatrixObject::RLHD) == true) {
-    TlMatrixUtils::getHeaderInfo(path, &type, &numOfRows, &numOfCols);
-    std::cout << "type: symmetric" << std::endl;
-  } else if (TlMatrixUtils::isLoadable(path, TlMatrixObject::CSFD) == true) {
-    TlMatrixUtils::getHeaderInfo(path, &type, &numOfRows, &numOfCols);
-    std::cout << "type: normal (column-major)" << std::endl;
-  } else if (TlMatrixUtils::isLoadable(path, TlMatrixObject::RSFD) == true) {
-    TlMatrixUtils::getHeaderInfo(path, &type, &numOfRows, &numOfCols);
-    std::cout << "type: normal (row-major)" << std::endl;
-  } else {
-    std::cerr << "can not open file: " << path << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  std::cout << "row: " << numOfRows << std::endl;
-  std::cout << "col: " << numOfCols << std::endl;
-
-  return EXIT_SUCCESS;
 }

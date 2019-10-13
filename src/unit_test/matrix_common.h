@@ -3,55 +3,55 @@
 
 template <typename T>
 T getTlMatrix(int row, int col) {
-  T m(row, col);
+    T m(row, col);
 
-  std::srand((unsigned int)time(NULL));
-  for (int r = 0; r < row; ++r) {
-    for (int c = 0; c < col; ++c) {
-      m.set(r, c, double(double(std::rand()) / double(RAND_MAX)));
+    std::srand((unsigned int)time(NULL));
+    for (int r = 0; r < row; ++r) {
+        for (int c = 0; c < col; ++c) {
+            m.set(r, c, double(double(std::rand()) / double(RAND_MAX)));
+        }
     }
-  }
 
-  return m;
+    return m;
 }
 
 template <typename T>
 T getGeneralMatrix(int row, int col) {
-  T m(row, col);
-  int count = 1;
-  for (int i = 0; i < row; ++i) {
-    for (int j = 0; j < col; ++j) {
-      m.set(i, j, double(count));
-      ++count;
+    T m(row, col);
+    int count = 1;
+    for (int i = 0; i < row; ++i) {
+        for (int j = 0; j < col; ++j) {
+            m.set(i, j, double(count));
+            ++count;
+        }
     }
-  }
-  return m;
+    return m;
 }
 
 template <typename T>
 T getGeneralSparseMatrix(int row, int col, int base = 7) {
-  T m(row, col);
-  int count = 1;
-  for (int i = 0; i < row; ++i) {
-    for (int j = 0; j < col; ++j) {
-      if ((count % base) == 0) {
-        m.set(i, j, double(count));
-      }
-      ++count;
+    T m(row, col);
+    int count = 1;
+    for (int i = 0; i < row; ++i) {
+        for (int j = 0; j < col; ++j) {
+            if ((count % base) == 0) {
+                m.set(i, j, double(count));
+            }
+            ++count;
+        }
     }
-  }
-  return m;
+    return m;
 }
 
 template <typename T>
 T getSymmetricMatrix(int dim) {
-  T m(dim);
-  for (int i = 0; i < dim; ++i) {
-    for (int j = 0; j <= i; ++j) {
-      m.set(i, j, double(i+1));
+    T m(dim);
+    for (int i = 0; i < dim; ++i) {
+        for (int j = 0; j <= i; ++j) {
+            m.set(i, j, double(i + 1));
+        }
     }
-  }
-  return m;
+    return m;
 }
 
 //          1 th       2 th       3 th
@@ -61,34 +61,34 @@ T getSymmetricMatrix(int dim) {
 // 3     6.000000   7.000000   8.000000
 template <typename T>
 T getMatrixA() {
-  T a(3, 3);
-  a.set(0, 0, 0.0);
-  a.set(0, 1, 1.0);
-  a.set(0, 2, 2.0);
-  a.set(1, 0, 3.0);
-  a.set(1, 1, 4.0);
-  a.set(1, 2, 5.0);
-  a.set(2, 0, 6.0);
-  a.set(2, 1, 7.0);
-  a.set(2, 2, 8.0);
+    T a(3, 3);
+    a.set(0, 0, 0.0);
+    a.set(0, 1, 1.0);
+    a.set(0, 2, 2.0);
+    a.set(1, 0, 3.0);
+    a.set(1, 1, 4.0);
+    a.set(1, 2, 5.0);
+    a.set(2, 0, 6.0);
+    a.set(2, 1, 7.0);
+    a.set(2, 2, 8.0);
 
-  return a;
+    return a;
 };
 
 template <typename T>
 T getMatrixB() {
-  T b(3, 3);
-  b.set(0, 0, 0.0);
-  b.set(1, 0, 1.0);
-  b.set(2, 0, 2.0);
-  b.set(0, 1, 3.0);
-  b.set(1, 1, 4.0);
-  b.set(2, 1, 5.0);
-  b.set(0, 2, 6.0);
-  b.set(1, 2, 7.0);
-  b.set(2, 2, 8.0);
+    T b(3, 3);
+    b.set(0, 0, 0.0);
+    b.set(1, 0, 1.0);
+    b.set(2, 0, 2.0);
+    b.set(0, 1, 3.0);
+    b.set(1, 1, 4.0);
+    b.set(2, 1, 5.0);
+    b.set(0, 2, 6.0);
+    b.set(1, 2, 7.0);
+    b.set(2, 2, 8.0);
 
-  return b;
+    return b;
 }
 
 // [ 1   2  3 ]
@@ -96,18 +96,18 @@ T getMatrixB() {
 // [ 4   3  2 ]
 template <typename T>
 T getMatrixC() {
-  T b(3, 3);
-  b.set(0, 0, 1.0);
-  b.set(1, 0, 2.0);
-  b.set(2, 0, 3.0);
-  b.set(0, 1, 2.0);
-  b.set(1, 1, -1.0);
-  b.set(2, 1, 1.0);
-  b.set(0, 2, 4.0);
-  b.set(1, 2, 3.0);
-  b.set(2, 2, 2.0);
+    T b(3, 3);
+    b.set(0, 0, 1.0);
+    b.set(1, 0, 2.0);
+    b.set(2, 0, 3.0);
+    b.set(0, 1, 2.0);
+    b.set(1, 1, -1.0);
+    b.set(2, 1, 1.0);
+    b.set(0, 2, 4.0);
+    b.set(1, 2, 3.0);
+    b.set(2, 2, 2.0);
 
-  return b;
+    return b;
 }
 
 // [ 1  2  3  4]
@@ -115,21 +115,21 @@ T getMatrixC() {
 // [ 9 10 11 12]
 template <typename T>
 T getMatrixD() {
-  T d(3, 4);
-  d.set(0, 0, 1.0);  
-  d.set(0, 1, 2.0);  
-  d.set(0, 2, 3.0);  
-  d.set(0, 3, 4.0);  
-  d.set(1, 0, 5.0);  
-  d.set(1, 1, 6.0);  
-  d.set(1, 2, 7.0);  
-  d.set(1, 3, 8.0);  
-  d.set(2, 0, 9.0);  
-  d.set(2, 1, 10.0);  
-  d.set(2, 2, 11.0);  
-  d.set(2, 3, 12.0);  
+    T d(3, 4);
+    d.set(0, 0, 1.0);
+    d.set(0, 1, 2.0);
+    d.set(0, 2, 3.0);
+    d.set(0, 3, 4.0);
+    d.set(1, 0, 5.0);
+    d.set(1, 1, 6.0);
+    d.set(1, 2, 7.0);
+    d.set(1, 3, 8.0);
+    d.set(2, 0, 9.0);
+    d.set(2, 1, 10.0);
+    d.set(2, 2, 11.0);
+    d.set(2, 3, 12.0);
 
-  return d;
+    return d;
 }
 
 // [ 0  1  3 ]
@@ -137,15 +137,15 @@ T getMatrixD() {
 // [ -  -  5 ]
 template <typename T>
 T getSymMatrixA() {
-  T a(3);
-  a.set(0, 0, 0.0);
-  a.set(0, 1, 1.0);
-  a.set(1, 1, 2.0);
-  a.set(0, 2, 3.0);
-  a.set(1, 2, 4.0);
-  a.set(2, 2, 5.0);
+    T a(3);
+    a.set(0, 0, 0.0);
+    a.set(0, 1, 1.0);
+    a.set(1, 1, 2.0);
+    a.set(0, 2, 3.0);
+    a.set(1, 2, 4.0);
+    a.set(2, 2, 5.0);
 
-  return a;
+    return a;
 }
 
 // [ 0  1  2 ]
@@ -153,15 +153,15 @@ T getSymMatrixA() {
 // [ -  -  5 ]
 template <typename T>
 T getSymMatrixB() {
-  T b(3);
-  b.set(0, 0, 0.0);
-  b.set(0, 1, 1.0);
-  b.set(1, 1, 3.0);
-  b.set(0, 2, 2.0);
-  b.set(1, 2, 4.0);
-  b.set(2, 2, 5.0);
+    T b(3);
+    b.set(0, 0, 0.0);
+    b.set(0, 1, 1.0);
+    b.set(1, 1, 3.0);
+    b.set(0, 2, 2.0);
+    b.set(1, 2, 4.0);
+    b.set(2, 2, 5.0);
 
-  return b;
+    return b;
 }
 
 //
@@ -171,37 +171,36 @@ T getSymMatrixB() {
 // [ 0.633540 0.053748 1.080290 0.731896
 template <typename T>
 T getSymMatrixC() {
-  T c(4);
-  c.set(0, 0, 0.937162);
-  c.set(1, 0, 0.064600);
-  c.set(1, 1, 0.233206);
-  c.set(2, 0, 0.880494);
-  c.set(2, 1, 0.228902);
-  c.set(2, 2, 1.820559);
-  c.set(3, 0, 0.633540);
-  c.set(3, 1, 0.053748);
-  c.set(3, 2, 1.080290);
-  c.set(3, 3, 0.731896);
+    T c(4);
+    c.set(0, 0, 0.937162);
+    c.set(1, 0, 0.064600);
+    c.set(1, 1, 0.233206);
+    c.set(2, 0, 0.880494);
+    c.set(2, 1, 0.228902);
+    c.set(2, 2, 1.820559);
+    c.set(3, 0, 0.633540);
+    c.set(3, 1, 0.053748);
+    c.set(3, 2, 1.080290);
+    c.set(3, 3, 0.731896);
 
-  return c;
+    return c;
 }
 
 template <typename T>
 T getSymMatrixD() {
-  T d(4);
-  d.set(0, 0, 1.0);
-  d.set(1, 0, 2.0);
-  d.set(1, 1, 2.0);
-  d.set(2, 0, 3.0);
-  d.set(2, 1, 3.0);
-  d.set(2, 2, 3.0);
-  d.set(3, 0, 4.0);
-  d.set(3, 1, 4.0);
-  d.set(3, 2, 4.0);
-  d.set(3, 3, 4.0);
+    T d(4);
+    d.set(0, 0, 1.0);
+    d.set(1, 0, 2.0);
+    d.set(1, 1, 2.0);
+    d.set(2, 0, 3.0);
+    d.set(2, 1, 3.0);
+    d.set(2, 2, 3.0);
+    d.set(3, 0, 4.0);
+    d.set(3, 1, 4.0);
+    d.set(3, 2, 4.0);
+    d.set(3, 3, 4.0);
 
-  return d;
+    return d;
 }
-
 
 #endif  // MATRIX_COMMON_H

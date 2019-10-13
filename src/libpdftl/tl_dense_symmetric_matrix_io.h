@@ -22,32 +22,32 @@
 #include "tl_dense_matrix_io_object.h"
 
 class TlFileSymmetricMatrix : public TlDenseMatrix_IO_object {
- public:
-  explicit TlFileSymmetricMatrix(
-      const std::string& filePath, const TlMatrixObject::index_type dim,
-      const std::size_t cacheSize = DEFAULT_CACHE_SIZE);
-  explicit TlFileSymmetricMatrix(
-      const std::string& filePath,
-      const std::size_t cacheSize = DEFAULT_CACHE_SIZE);
-  virtual ~TlFileSymmetricMatrix();
+   public:
+    explicit TlFileSymmetricMatrix(
+        const std::string& filePath, const TlMatrixObject::index_type dim,
+        const std::size_t cacheSize = DEFAULT_CACHE_SIZE);
+    explicit TlFileSymmetricMatrix(
+        const std::string& filePath,
+        const std::size_t cacheSize = DEFAULT_CACHE_SIZE);
+    virtual ~TlFileSymmetricMatrix();
 
- public:
-  void resize(const TlMatrixObject::index_type dim);
+   public:
+    void resize(const TlMatrixObject::index_type dim);
 
- private:
-  // void resize(index_type newRow, index_type newCol){};  // access forbidden
+   private:
+    // void resize(index_type newRow, index_type newCol){};  // access forbidden
 
- public:
-  virtual TlFileSymmetricMatrix& operator*=(const double coef);
-  virtual TlFileSymmetricMatrix& operator/=(const double coef) {
-    return this->operator*=(1.0 / coef);
-  }
+   public:
+    virtual TlFileSymmetricMatrix& operator*=(const double coef);
+    virtual TlFileSymmetricMatrix& operator/=(const double coef) {
+        return this->operator*=(1.0 / coef);
+    }
 
- protected:
-  virtual TlMatrixObject::size_type getIndex(
-      const TlMatrixObject::index_type row,
-      const TlMatrixObject::index_type col) const;
-  virtual TlMatrixObject::size_type getNumOfElements() const;
+   protected:
+    virtual TlMatrixObject::size_type getIndex(
+        const TlMatrixObject::index_type row,
+        const TlMatrixObject::index_type col) const;
+    virtual TlMatrixObject::size_type getNumOfElements() const;
 };
 
 #endif  // TL_DENSE_SYMMETRIC_MATRIX_IO_H
