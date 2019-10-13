@@ -174,12 +174,8 @@ void DfCD::calcCholeskyVectorsForJK() {
         if (this->useMmapMatrix_) {
             this->log_.info("L_jk build on mmap");
 
-            std::string L_mat_path = DfObject::getLjkMatrixPath();
-            if (!this->localTempPath_.empty()) {
-                L_mat_path =
-                    TlUtils::format("%s/Ljk.mat", this->localTempPath_.c_str());
-            }
-
+            std::string L_mat_path =
+                DfObject::getLjkMatrixPath(this->localTempPath_);
             this->log_.info(
                 TlUtils::format("L saved as %s", L_mat_path.c_str()));
             if (TlFile::isExistFile(L_mat_path)) {
@@ -191,7 +187,7 @@ void DfCD::calcCholeskyVectorsForJK() {
                     orbInfo, this->getI2pqVtrPath(), this->epsilon_,
                     &DfCD::calcDiagonals, &DfCD::getSuperMatrixElements, &L);
             }
-            if (!this->localTempPath_.empty()) {
+            if (L_mat_path != DfObject::getLjkMatrixPath()) {
                 this->log_.info(TlUtils::format(
                     "L move to %s", DfObject::getLjkMatrixPath().c_str()));
                 TlFile::move(L_mat_path, DfObject::getLjkMatrixPath());
@@ -377,12 +373,8 @@ void DfCD::calcCholeskyVectorsForGridFree() {
             if (this->useMmapMatrix_) {
                 this->log_.info("L_xc build on mmap");
 
-                std::string L_mat_path = DfObject::getLxcMatrixPath();
-                if (!this->localTempPath_.empty()) {
-                    L_mat_path = TlUtils::format("%s/Lxc.mat",
-                                                 this->localTempPath_.c_str());
-                }
-
+                std::string L_mat_path =
+                    DfObject::getLxcMatrixPath(this->localTempPath_);
                 this->log_.info(
                     TlUtils::format("L saved as %s", L_mat_path.c_str()));
                 if (TlFile::isExistFile(L_mat_path)) {
@@ -396,7 +388,7 @@ void DfCD::calcCholeskyVectorsForGridFree() {
                                                        this->epsilon_, &L);
                     this->destroyEngines();
                 }
-                if (!this->localTempPath_.empty()) {
+                if (L_mat_path != DfObject::getLxcMatrixPath()) {
                     this->log_.info(TlUtils::format(
                         "L move to %s", DfObject::getLxcMatrixPath().c_str()));
                     TlFile::move(L_mat_path, DfObject::getLxcMatrixPath());
@@ -433,12 +425,7 @@ void DfCD::calcCholeskyVectorsForGridFree() {
             if (this->useMmapMatrix_) {
                 this->log_.info("L_xc build on mmap");
 
-                std::string L_mat_path = DfObject::getLxcMatrixPath();
-                if (!this->localTempPath_.empty()) {
-                    L_mat_path = TlUtils::format("%s/Lxc.mat",
-                                                 this->localTempPath_.c_str());
-                }
-
+                std::string L_mat_path = DfObject::getLxcMatrixPath(this->localTempPath_);
                 this->log_.info(
                     TlUtils::format("L saved as %s", L_mat_path.c_str()));
                 if (TlFile::isExistFile(L_mat_path)) {
@@ -453,7 +440,7 @@ void DfCD::calcCholeskyVectorsForGridFree() {
                         &L);
                     this->destroyEngines();
                 }
-                if (!this->localTempPath_.empty()) {
+                if (L_mat_path != DfObject::getLxcMatrixPath()) {
                     this->log_.info(TlUtils::format(
                         "L move to %s", DfObject::getLxcMatrixPath().c_str()));
                     TlFile::move(L_mat_path, DfObject::getLxcMatrixPath());
@@ -1837,7 +1824,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
 
     int progress = 0;
     const index_type division = std::max<index_type>(numOfPQtilde * 0.01, 100);
-    index_type L_cols = numOfOrbs_p * 5;
+    index_type L_cols = std::max(numOfOrbs_p, numOfOrbs_q) * 5;
     this->log_.info(TlUtils::format("resize L col: %d", L_cols));
     pL->resize(numOfPQtilde, L_cols);
 
