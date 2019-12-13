@@ -163,9 +163,6 @@ void DfScf::setScfParam() {
 
     // Damp Object Type
     this->m_nDampObject = DAMP_DENSITY;
-    if (this->J_engine_ != J_ENGINE_RI_J) {
-        this->m_nDampObject = DAMP_DENSITY_MATRIX;
-    }
     {
         const std::string sDampObject = TlUtils::toUpper(
             pdfParam["scf_acceleration/damping/damping_type"].getStr());
@@ -180,6 +177,14 @@ void DfScf::setScfParam() {
             this->log_.warn(TlUtils::format("unknown acceleration method: %s",
                                             sDampObject.c_str()));
         }
+    }
+    if (this->J_engine_ != J_ENGINE_RI_J) {
+        this->log_.warn(
+            "damping \"density\" is not supported except for the RI method. ");
+        this->log_.warn("\"density_matrix\" is used.");
+        (*this->pPdfParam_)["scf_acceleration/damping/damping_type"] =
+            "density_matrix";
+        this->m_nDampObject = DAMP_DENSITY_MATRIX;
     }
 }
 
