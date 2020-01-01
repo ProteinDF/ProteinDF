@@ -187,6 +187,15 @@ class TlUtils {
 
     static void progressbar(const float progress);
 
+    /// change memory layout
+    ///
+    /// a11, a12, a13, a21, a22, a23,...
+    /// ->
+    /// a11, a21, a31, ..., a12, a22, a32, ..., a13, a23, a33, ...
+    template <typename T>
+    static void changeMemoryLayout(const T* pInput, const std::size_t axis1,
+                                   const std::size_t axis2, T* pOutput);
+
    public:
     /// vector notation
     /// "[1-3, 5]" -> [1, 2, 3, 5]
@@ -324,6 +333,16 @@ std::string TlUtils::vector2str(const std::vector<T>& vtr) {
     }
 
     return output;
+}
+
+template <typename T>
+void TlUtils::changeMemoryLayout(const T* pInput, const std::size_t axis1,
+                                 const std::size_t axis2, T* pOutput) {
+    for (std::size_t i = 0; i < axis1; ++i) {
+        for (std::size_t j = 0; j < axis2; ++j) {
+            pOutput[j * axis1 + i] = pInput[axis2 * i + j];
+        }
+    }
 }
 
 #endif  // TLUTILS_H

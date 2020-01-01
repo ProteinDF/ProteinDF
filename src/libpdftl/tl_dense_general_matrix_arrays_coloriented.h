@@ -70,4 +70,7 @@ class TlDenseGeneralMatrix_arrays_ColOriented
         const std::string& basename) const;
 };
 
+std::ostream& operator<<(std::ostream& stream,
+                         const TlDenseGeneralMatrix_arrays_ColOriented& mat);
+
 #endif  // TLCOLVECTORMATRIX_H

@@ -589,6 +589,7 @@ class DfCD : public DfObject {
     FastCDK_MODE fastCDK_mode_;
 
     bool useMmapMatrix_;
+    bool isCvSavedAsMmap_;
 
     // =====================================================================
    protected:
