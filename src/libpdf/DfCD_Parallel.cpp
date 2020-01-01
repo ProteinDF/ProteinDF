@@ -656,7 +656,8 @@ void DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(
                 std::valarray<double> L_pm_x(0.0, numOfCDVcts + 1);
                 const std::size_t copyCount_m =
                     pL->getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
-                assert(copyCount_m == numOfCDVcts + 1);
+                assert(copyCount_m ==
+                       static_cast<std::size_t>(numOfCDVcts + 1));
 
                 std::valarray<double> out_L_rows(0.0, numOfPQtilde);
                 out_L_rows[pivot_m] = l_m_pm;
@@ -670,7 +671,8 @@ void DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(
 
                         const std::size_t copyCount_i = pL->getRowVector(
                             pivot_i, &(L_pi_x[0]), numOfCDVcts + 1);
-                        assert(copyCount_i == numOfCDVcts + 1);
+                        assert(copyCount_i ==
+                               static_cast<std::size_t>(numOfCDVcts + 1));
 
                         const double sum_ll = (L_pm_x * L_pi_x).sum();
                         const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
@@ -992,7 +994,7 @@ void DfCD_Parallel::getSuperMatrixElements_K_half(
 void DfCD_Parallel::saveL(const TlDenseGeneralMatrix_arrays_RowOriented& L,
                           const std::string& path) {
     L.save(path + ".rvm");
-    if (this->useMmapMatrix_) {
+    if (this->isCvSavedAsMmap_ == true) {
         this->log_.info("save the Cholesky vectors. (mmap)");
         this->transLMatrix2mmap(L, path);
     } else {
@@ -1057,7 +1059,7 @@ TlDenseGeneralMatrix_Lapack DfCD_Parallel::mergeL(
 }
 
 void DfCD_Parallel::getJ(TlDenseSymmetricMatrix_Lapack* pJ) {
-    if (this->useMmapMatrix_) {
+    if (this->isCvSavedAsMmap_ == true) {
         this->getJ_mmap_DC(pJ);
     } else {
         this->getJ_cvm(pJ);
@@ -1776,33 +1778,138 @@ void DfCD_Parallel::transLMatrix2mmap(
 
     const index_type numOfRows = rowVectorMatrix.getNumOfRows();
     const index_type numOfCols = rowVectorMatrix.getNumOfCols();
+    const int sizeOfChunk = rowVectorMatrix.getSizeOfChunk();
+
+    // const int root = 0;
+    // const int endMessageTag = -1;
 
     if (rComm.isMaster()) {
+        // std::cout << TlUtils::format("mmap: %d, %d (chunk=%d)", numOfRows,
+        //                              numOfCols, sizeOfChunk)
+        //           << std::endl;
         TlDenseGeneralMatrix_mmap output(savePath, numOfRows, numOfCols);
 
-        index_type count = 0;
-        std::vector<double> buf(numOfCols);
-        for (index_type row = 0; row < numOfRows; row += numOfProcs) {
-            rowVectorMatrix.getRowVector(row, &(buf[0]), numOfCols);
-            output.setRowVector(row, buf);
-            ++count;
+        // host data
+        {
+            std::vector<double> chunkBuf(numOfCols * sizeOfChunk);
+            std::vector<double> transBuf(numOfCols * sizeOfChunk);
+            for (index_type row = 0; row < numOfRows; row += sizeOfChunk) {
+                if (rowVectorMatrix.getSubunitID(row) == 0) {
+                    // std::cout << TlUtils::format("[0] row=%d", row) <<
+                    // std::endl;
+                    rowVectorMatrix.getChunk(row, &(chunkBuf[0]),
+                                             numOfCols * sizeOfChunk);
+
+                    // change memory layout
+                    const index_type readRowChunks =
+                        std::min(sizeOfChunk, numOfRows - row);
+                    TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks,
+                                                numOfCols, &(transBuf[0]));
+
+                    // write to matrix
+                    // std::cout << "write to matrix..." << std::endl;
+                    for (int j = 0; j < numOfCols; ++j) {
+                        for (int i = 0; i < readRowChunks; ++i) {
+                            output.set(row + i, j,
+                                       transBuf[readRowChunks * j + i]);
+                        }
+                    }
+                }
+            }
         }
 
-        int src, tag;
-        for (; count < numOfRows; ++count) {
-            rComm.iReceiveDataFromAnySourceAnyTag(&(buf[0]), numOfCols);
+        // remote data
+        {
+            std::vector<double> recvBuf(numOfCols * sizeOfChunk);
+            std::vector<int> recvCounts(numOfProcs, 0);
 
-            rComm.wait(&(buf[0]), &src, &tag);
-            output.setRowVector(tag, buf);
-            // std::cout << TlUtils::format("%d / %d / %d", count, tag,
-            // numOfRows) << std::endl;
+            // std::cout << "begin loop:" << std::endl;
+            int src, tag;
+            bool endOfLoop = false;
+            while (endOfLoop == false) {
+                // recv
+                rComm.iReceiveDataFromAnySourceAnyTag(&(recvBuf[0]),
+                                                      numOfCols * sizeOfChunk);
+                rComm.wait(&(recvBuf[0]), &src, &tag);
+
+                // write to matrix
+                const index_type row = sizeOfChunk * src + recvCounts[src] *
+                                                               sizeOfChunk *
+                                                               numOfProcs;
+                // std::cout << TlUtils::format("[0] <- [%d] row=%d tag=%d",
+                // src,
+                //                              row, tag)
+                //           << std::endl;
+                assert(row == tag);
+                const index_type readRowChunks =
+                    std::min(sizeOfChunk, numOfRows - row);
+                for (int j = 0; j < numOfCols; ++j) {
+                    for (int i = 0; i < readRowChunks; ++i) {
+                        output.set(row + i, j, recvBuf[readRowChunks * j + i]);
+                    }
+                }
+
+                ++recvCounts[src];
+
+                endOfLoop = true;
+                for (int proc = 1; proc < numOfProcs; ++proc) {
+                    // How much data was received?
+                    const index_type recvIndex =
+                        sizeOfChunk * proc +
+                        (recvCounts[proc] - 1) * sizeOfChunk * numOfProcs;
+
+                    if ((recvIndex + sizeOfChunk * numOfProcs) < numOfRows) {
+                        endOfLoop = false;
+                        // std::cout
+                        //     << TlUtils::format("[0] end range @%d %d < %d
+                        //     [NG]",
+                        //                        proc, recvIndex, numOfRows)
+                        //     << std::endl;
+                        break;
+                    } else {
+                        this->log_.debug(
+                            TlUtils::format("end range @%d %d > %d [OK]", proc,
+                                            recvIndex, numOfRows));
+                    }
+                }
+            }
+            // std::cout << "end loop:" << std::endl;
         }
     } else {
-        std::vector<double> buf(numOfCols);
-        for (index_type row = myRank; row < numOfRows; row += numOfProcs) {
-            rowVectorMatrix.getRowVector(row, &(buf[0]), numOfCols);
-            rComm.iSendDataX((double*)(&(buf[0])), numOfCols, 0, row);
-            rComm.wait(&(buf[0]));
+        std::vector<double> chunkBuf(numOfCols * sizeOfChunk);
+        std::vector<double> sendBuf(numOfCols * sizeOfChunk);
+        for (index_type row = 0; row < numOfRows; row += sizeOfChunk) {
+            // if (myRank == 1) {
+            //     std::cout << TlUtils::format("row = %d, subunitid = %d", row,
+            //                                  rowVectorMatrix.getSubunitID(row))
+            //               << std::endl;
+            // }
+
+            // get chunk
+            if (rowVectorMatrix.getSubunitID(row) == myRank) {
+                const int copied = rowVectorMatrix.getChunk(
+                    row, &(chunkBuf[0]), numOfCols * sizeOfChunk);
+                assert(copied <= numOfCols * sizeOfChunk);
+
+                // change memory layout
+                const index_type readChunks =
+                    std::min(sizeOfChunk, numOfRows - row);
+                std::fill(sendBuf.begin(), sendBuf.end(), 0.0);
+                TlUtils::changeMemoryLayout(&(chunkBuf[0]), readChunks,
+                                            numOfCols, &(sendBuf[0]));
+
+                // send
+                rComm.iSendDataX((double*)(&(sendBuf[0])),
+                                 numOfCols * sizeOfChunk, 0, row);
+                rComm.wait(&(sendBuf[0]));
+                // std::cout << TlUtils::format("[%d] send tag=%d", myRank, row)
+                //           << std::endl;
+            }
         }
+
+        // std::cout << TlUtils::format("[%d] send finish", myRank) <<
+        // std::endl;
     }
+
+    assert(rComm.checkNonBlockingCommunications());
 }

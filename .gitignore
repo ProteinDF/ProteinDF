@@ -1,5 +1,6 @@
 *~
 build/*
+out.*
 
 # automake & autoconf
 Makefile.in

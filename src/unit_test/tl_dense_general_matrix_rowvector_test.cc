@@ -1,6 +1,8 @@
 #include <iostream>
 #include <limits>
+#include "TlUtils.h"
 #include "gtest/gtest.h"
+#include "tl_dense_general_matrix_arrays_coloriented.h"
 #include "tl_dense_general_matrix_arrays_roworiented.h"
 #include "tl_dense_general_matrix_lapack.h"
 
@@ -77,6 +79,464 @@ TEST(TlDenseGeneralMatrix_arrays_RowOriented, contents) {
     }
 }
 
+TEST(TlDenseGeneralMatrix_arrays_RowOriented, contents_group) {
+    const int numOfRows = 1000;
+    const int numOfCols = 2000;
+    const int numOfSubunits = 4;
+    std::vector<TlDenseGeneralMatrix_arrays_RowOriented*> pMatrices(
+        numOfSubunits, NULL);
+    TlDenseGeneralMatrix_Lapack refMat(numOfRows, numOfCols);
+
+    // construct
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices[id] = new TlDenseGeneralMatrix_arrays_RowOriented(
+            numOfRows, numOfCols, numOfSubunits, id);
+    }
+
+    for (int id = 0; id < numOfSubunits; ++id) {
+        EXPECT_EQ(numOfRows, pMatrices[id]->getNumOfRows());
+        EXPECT_EQ(numOfCols, pMatrices[id]->getNumOfCols());
+    }
+
+    // prepare
+    double val = 0.0;
+    for (int i = 0; i < numOfRows; ++i) {
+        for (int j = 0; j < numOfCols; ++j) {
+            for (int id = 0; id < numOfSubunits; ++id) {
+                pMatrices[id]->set(i, j, val);
+            }
+            refMat.set(i, j, val);
+        }
+        val += 0.01;
+    }
+
+    // resize
+    const int newNumOfRows = numOfRows;
+    const int newNumOfCols = numOfCols;
+    // for (int id = 0; id < numOfSubunits; ++id) {
+    //     pMatrices[id]->resize(newNumOfRows, newNumOfCols);
+    // }
+    // refMat.resize(newNumOfRows, newNumOfCols);
+
+    // for (int id = 0; id < numOfSubunits; ++id) {
+    //     EXPECT_EQ(newNumOfRows, pMatrices[id]->getNumOfRows());
+    //     EXPECT_EQ(newNumOfCols, pMatrices[id]->getNumOfCols());
+    // }
+
+    // check
+    for (int i = 0; i < newNumOfRows; ++i) {
+        for (int j = 0; j < newNumOfCols; ++j) {
+            const double val = refMat.get(i, j);
+
+            const int subunit = pMatrices[0]->getSubunitID(i);
+            for (int id = 0; id < numOfSubunits; ++id) {
+                const int subunit2 = pMatrices[id]->getSubunitID(i);
+                EXPECT_EQ(subunit, subunit2);
+            }
+            const double val2 = pMatrices[subunit]->get(i, j);
+            EXPECT_DOUBLE_EQ(val, val2);
+        }
+    }
+
+    // destroy
+    for (int id = 0; id < numOfSubunits; ++id) {
+        delete pMatrices[id];
+        pMatrices[id] = NULL;
+    }
+}
+
+TEST(TlDenseGeneralMatrix_arrays_RowOriented, reserve1) {
+    const int numOfRows = 1000;
+    const int numOfCols = 2000;
+    const int numOfSubunits = 1;
+    std::vector<TlDenseGeneralMatrix_arrays_RowOriented*> pMatrices(
+        numOfSubunits, NULL);
+    TlDenseGeneralMatrix_Lapack refMat(numOfRows, numOfCols);
+
+    // construct
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices[id] = new TlDenseGeneralMatrix_arrays_RowOriented(
+            numOfRows, numOfCols, numOfSubunits, id);
+    }
+
+    for (int id = 0; id < numOfSubunits; ++id) {
+        EXPECT_EQ(numOfRows, pMatrices[id]->getNumOfRows());
+        EXPECT_EQ(numOfCols, pMatrices[id]->getNumOfCols());
+    }
+
+    // prepare
+    double val = 0.0;
+    for (int i = 0; i < numOfRows; ++i) {
+        for (int j = 0; j < numOfCols; ++j) {
+            for (int id = 0; id < numOfSubunits; ++id) {
+                pMatrices[id]->set(i, j, val);
+            }
+            refMat.set(i, j, val);
+        }
+        val += 0.01;
+    }
+
+    // reserve
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices[id]->reserveColSize(numOfCols + 1000);
+    }
+
+    // check
+    for (int i = 0; i < numOfRows; ++i) {
+        for (int j = 0; j < numOfCols; ++j) {
+            const double val = refMat.get(i, j);
+
+            const int subunit = pMatrices[0]->getSubunitID(i);
+            for (int id = 0; id < numOfSubunits; ++id) {
+                const int subunit2 = pMatrices[id]->getSubunitID(i);
+                EXPECT_EQ(subunit, subunit2);
+            }
+            const double val2 = pMatrices[subunit]->get(i, j);
+            EXPECT_DOUBLE_EQ(val, val2)
+                << TlUtils::format("M(%d, %d)[%d]", i, j, subunit);
+        }
+    }
+
+    // destroy
+    for (int id = 0; id < numOfSubunits; ++id) {
+        delete pMatrices[id];
+        pMatrices[id] = NULL;
+    }
+}
+
+TEST(TlDenseGeneralMatrix_arrays_RowOriented, resize_group1) {
+    const int numOfRows = 1000;
+    const int numOfCols = 2000;
+    const int numOfSubunits = 1;
+    std::vector<TlDenseGeneralMatrix_arrays_RowOriented*> pMatrices(
+        numOfSubunits, NULL);
+    TlDenseGeneralMatrix_Lapack refMat(numOfRows, numOfCols);
+
+    // construct
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices[id] = new TlDenseGeneralMatrix_arrays_RowOriented(
+            numOfRows, numOfCols, numOfSubunits, id);
+    }
+
+    for (int id = 0; id < numOfSubunits; ++id) {
+        EXPECT_EQ(numOfRows, pMatrices[id]->getNumOfRows());
+        EXPECT_EQ(numOfCols, pMatrices[id]->getNumOfCols());
+    }
+
+    // prepare
+    double val = 0.0;
+    for (int i = 0; i < numOfRows; ++i) {
+        for (int j = 0; j < numOfCols; ++j) {
+            for (int id = 0; id < numOfSubunits; ++id) {
+                pMatrices[id]->set(i, j, val);
+            }
+            refMat.set(i, j, val);
+        }
+        val += 0.01;
+    }
+
+    // resize
+    const int newNumOfRows = 4000;
+    const int newNumOfCols = 3000;
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices[id]->resize(newNumOfRows, newNumOfCols);
+    }
+    refMat.resize(newNumOfRows, newNumOfCols);
+
+    for (int id = 0; id < numOfSubunits; ++id) {
+        EXPECT_EQ(newNumOfRows, pMatrices[id]->getNumOfRows());
+        EXPECT_EQ(newNumOfCols, pMatrices[id]->getNumOfCols());
+    }
+
+    // check
+    for (int i = 0; i < newNumOfRows; ++i) {
+        for (int j = 0; j < newNumOfCols; ++j) {
+            const double val = refMat.get(i, j);
+
+            const int subunit = pMatrices[0]->getSubunitID(i);
+            for (int id = 0; id < numOfSubunits; ++id) {
+                const int subunit2 = pMatrices[id]->getSubunitID(i);
+                EXPECT_EQ(subunit, subunit2);
+            }
+            const double val2 = pMatrices[subunit]->get(i, j);
+            EXPECT_DOUBLE_EQ(val, val2)
+                << TlUtils::format("M(%d, %d)[%d]", i, j, subunit);
+        }
+    }
+
+    // destroy
+    for (int id = 0; id < numOfSubunits; ++id) {
+        delete pMatrices[id];
+        pMatrices[id] = NULL;
+    }
+}
+
+TEST(TlDenseGeneralMatrix_arrays_RowOriented, resize_row_group) {
+    const int numOfRows = 1000;
+    const int numOfCols = 2000;
+    const int numOfSubunits = 4;
+    std::vector<TlDenseGeneralMatrix_arrays_RowOriented*> pMatrices(
+        numOfSubunits, NULL);
+    TlDenseGeneralMatrix_Lapack refMat(numOfRows, numOfCols);
+
+    // construct
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices[id] = new TlDenseGeneralMatrix_arrays_RowOriented(
+            numOfRows, numOfCols, numOfSubunits, id);
+    }
+
+    for (int id = 0; id < numOfSubunits; ++id) {
+        EXPECT_EQ(numOfRows, pMatrices[id]->getNumOfRows());
+        EXPECT_EQ(numOfCols, pMatrices[id]->getNumOfCols());
+    }
+
+    // prepare
+    double val = 0.0;
+    for (int i = 0; i < numOfRows; ++i) {
+        for (int j = 0; j < numOfCols; ++j) {
+            for (int id = 0; id < numOfSubunits; ++id) {
+                pMatrices[id]->set(i, j, val);
+            }
+            refMat.set(i, j, val);
+        }
+        val += 0.01;
+    }
+
+    // resize
+    const int newNumOfRows = 2000;
+    const int newNumOfCols = numOfCols;
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices[id]->resize(newNumOfRows, newNumOfCols);
+    }
+    refMat.resize(newNumOfRows, newNumOfCols);
+
+    for (int id = 0; id < numOfSubunits; ++id) {
+        EXPECT_EQ(newNumOfRows, pMatrices[id]->getNumOfRows());
+        EXPECT_EQ(newNumOfCols, pMatrices[id]->getNumOfCols());
+    }
+
+    // check
+    for (int i = 0; i < newNumOfRows; ++i) {
+        for (int j = 0; j < newNumOfCols; ++j) {
+            const double val = refMat.get(i, j);
+
+            const int subunit = pMatrices[0]->getSubunitID(i);
+            for (int id = 0; id < numOfSubunits; ++id) {
+                const int subunit2 = pMatrices[id]->getSubunitID(i);
+                EXPECT_EQ(subunit, subunit2);
+            }
+            const double val2 = pMatrices[subunit]->get(i, j);
+            EXPECT_DOUBLE_EQ(val, val2);
+        }
+    }
+
+    // destroy
+    for (int id = 0; id < numOfSubunits; ++id) {
+        delete pMatrices[id];
+        pMatrices[id] = NULL;
+    }
+}
+
+TEST(TlDenseGeneralMatrix_arrays_RowOriented, resize_col_group) {
+    const int numOfRows = 1000;
+    const int numOfCols = 2000;
+    const int numOfSubunits = 4;
+    std::vector<TlDenseGeneralMatrix_arrays_RowOriented*> pMatrices(
+        numOfSubunits, NULL);
+    TlDenseGeneralMatrix_Lapack refMat(numOfRows, numOfCols);
+
+    // construct
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices[id] = new TlDenseGeneralMatrix_arrays_RowOriented(
+            numOfRows, numOfCols, numOfSubunits, id);
+    }
+
+    for (int id = 0; id < numOfSubunits; ++id) {
+        EXPECT_EQ(numOfRows, pMatrices[id]->getNumOfRows());
+        EXPECT_EQ(numOfCols, pMatrices[id]->getNumOfCols());
+    }
+
+    // prepare
+    double val = 0.0;
+    for (int i = 0; i < numOfRows; ++i) {
+        for (int j = 0; j < numOfCols; ++j) {
+            for (int id = 0; id < numOfSubunits; ++id) {
+                pMatrices[id]->set(i, j, val);
+            }
+            refMat.set(i, j, val);
+        }
+        val += 0.01;
+    }
+
+    // resize
+    const int newNumOfRows = numOfRows;
+    const int newNumOfCols = 3000;
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices[id]->resize(newNumOfRows, newNumOfCols);
+    }
+    refMat.resize(newNumOfRows, newNumOfCols);
+
+    for (int id = 0; id < numOfSubunits; ++id) {
+        EXPECT_EQ(newNumOfRows, pMatrices[id]->getNumOfRows());
+        EXPECT_EQ(newNumOfCols, pMatrices[id]->getNumOfCols());
+    }
+
+    // check
+    for (int i = 0; i < newNumOfRows; ++i) {
+        for (int j = 0; j < newNumOfCols; ++j) {
+            const double val = refMat.get(i, j);
+
+            const int subunit = pMatrices[0]->getSubunitID(i);
+            for (int id = 0; id < numOfSubunits; ++id) {
+                const int subunit2 = pMatrices[id]->getSubunitID(i);
+                EXPECT_EQ(subunit, subunit2);
+            }
+            const double val2 = pMatrices[subunit]->get(i, j);
+            EXPECT_DOUBLE_EQ(val, val2);
+        }
+    }
+
+    // destroy
+    for (int id = 0; id < numOfSubunits; ++id) {
+        delete pMatrices[id];
+        pMatrices[id] = NULL;
+    }
+}
+
+TEST(TlDenseGeneralMatrix_arrays_RowOriented, resize_group) {
+    const int numOfRows = 1000;
+    const int numOfCols = 2000;
+    const int numOfSubunits = 4;
+    std::vector<TlDenseGeneralMatrix_arrays_RowOriented*> pMatrices(
+        numOfSubunits, NULL);
+    TlDenseGeneralMatrix_Lapack refMat(numOfRows, numOfCols);
+
+    // construct
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices[id] = new TlDenseGeneralMatrix_arrays_RowOriented(
+            numOfRows, numOfCols, numOfSubunits, id);
+    }
+
+    for (int id = 0; id < numOfSubunits; ++id) {
+        EXPECT_EQ(numOfRows, pMatrices[id]->getNumOfRows());
+        EXPECT_EQ(numOfCols, pMatrices[id]->getNumOfCols());
+    }
+
+    // prepare
+    double val = 0.0;
+    for (int i = 0; i < numOfRows; ++i) {
+        for (int j = 0; j < numOfCols; ++j) {
+            for (int id = 0; id < numOfSubunits; ++id) {
+                pMatrices[id]->set(i, j, val);
+            }
+            refMat.set(i, j, val);
+        }
+        val += 0.01;
+    }
+
+    // resize
+    const int newNumOfRows = 4000;
+    const int newNumOfCols = 3000;
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices[id]->resize(newNumOfRows, newNumOfCols);
+    }
+    refMat.resize(newNumOfRows, newNumOfCols);
+
+    for (int id = 0; id < numOfSubunits; ++id) {
+        EXPECT_EQ(newNumOfRows, pMatrices[id]->getNumOfRows());
+        EXPECT_EQ(newNumOfCols, pMatrices[id]->getNumOfCols());
+    }
+
+    // check
+    for (int i = 0; i < newNumOfRows; ++i) {
+        for (int j = 0; j < newNumOfCols; ++j) {
+            const double val = refMat.get(i, j);
+
+            const int subunit = pMatrices[0]->getSubunitID(i);
+            for (int id = 0; id < numOfSubunits; ++id) {
+                const int subunit2 = pMatrices[id]->getSubunitID(i);
+                EXPECT_EQ(subunit, subunit2);
+            }
+            const double val2 = pMatrices[subunit]->get(i, j);
+            EXPECT_DOUBLE_EQ(val, val2)
+                << TlUtils::format("M(%d, %d)[%d]", i, j, subunit);
+        }
+    }
+
+    // destroy
+    for (int id = 0; id < numOfSubunits; ++id) {
+        delete pMatrices[id];
+        pMatrices[id] = NULL;
+    }
+}
+
+TEST(TlDenseGeneralMatrix_arrays_RowOriented, resize_group_decrese) {
+    const int numOfRows = 1000;
+    const int numOfCols = 2000;
+    const int numOfSubunits = 4;
+    std::vector<TlDenseGeneralMatrix_arrays_RowOriented*> pMatrices(
+        numOfSubunits, NULL);
+    TlDenseGeneralMatrix_Lapack refMat(numOfRows, numOfCols);
+
+    // construct
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices[id] = new TlDenseGeneralMatrix_arrays_RowOriented(
+            numOfRows, numOfCols, numOfSubunits, id);
+    }
+
+    for (int id = 0; id < numOfSubunits; ++id) {
+        EXPECT_EQ(numOfRows, pMatrices[id]->getNumOfRows());
+        EXPECT_EQ(numOfCols, pMatrices[id]->getNumOfCols());
+    }
+
+    // prepare
+    double val = 0.0;
+    for (int i = 0; i < numOfRows; ++i) {
+        for (int j = 0; j < numOfCols; ++j) {
+            for (int id = 0; id < numOfSubunits; ++id) {
+                pMatrices[id]->set(i, j, val);
+            }
+            refMat.set(i, j, val);
+        }
+        val += 0.01;
+    }
+
+    // resize
+    const int newNumOfRows = 500;
+    const int newNumOfCols = 1000;
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices[id]->resize(newNumOfRows, newNumOfCols);
+    }
+    refMat.resize(newNumOfRows, newNumOfCols);
+
+    for (int id = 0; id < numOfSubunits; ++id) {
+        EXPECT_EQ(newNumOfRows, pMatrices[id]->getNumOfRows());
+        EXPECT_EQ(newNumOfCols, pMatrices[id]->getNumOfCols());
+    }
+
+    // check
+    for (int i = 0; i < newNumOfRows; ++i) {
+        for (int j = 0; j < newNumOfCols; ++j) {
+            const double val = refMat.get(i, j);
+
+            const int subunit = pMatrices[0]->getSubunitID(i);
+            for (int id = 0; id < numOfSubunits; ++id) {
+                const int subunit2 = pMatrices[id]->getSubunitID(i);
+                EXPECT_EQ(subunit, subunit2);
+            }
+            const double val2 = pMatrices[subunit]->get(i, j);
+            EXPECT_DOUBLE_EQ(val, val2)
+                << TlUtils::format("M(%d, %d)[%d]", i, j, subunit);
+        }
+    }
+
+    // destroy
+    for (int id = 0; id < numOfSubunits; ++id) {
+        delete pMatrices[id];
+        pMatrices[id] = NULL;
+    }
+}
+
 TEST(TlDenseGeneralMatrix_arrays_RowOriented, save_load) {
     const int maxRow = 100;
     const int maxCol = 80;
@@ -135,5 +595,81 @@ TEST(TlDenseGeneralMatrix_arrays_RowOriented, toTlMatrix) {
         for (int c = 0; c < maxCol; ++c) {
             EXPECT_NEAR(matA.get(r, c), matB.get(r, c), EPS);
         }
+    }
+}
+
+TEST(TlDenseGeneralMatrix_arrays_RowOriented, saveAsColOriented1) {
+    const int numOfRows = 1000;
+    const int numOfCols = 2000;
+    const int numOfSubunits = 1;
+    std::vector<TlDenseGeneralMatrix_arrays_RowOriented*> pMatrices_row(
+        numOfSubunits, NULL);
+    TlDenseGeneralMatrix_Lapack refMat(numOfRows, numOfCols);
+
+    // construct
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices_row[id] = new TlDenseGeneralMatrix_arrays_RowOriented(
+            numOfRows, numOfCols, numOfSubunits, id);
+    }
+
+    for (int id = 0; id < numOfSubunits; ++id) {
+        EXPECT_EQ(numOfRows, pMatrices_row[id]->getNumOfRows());
+        EXPECT_EQ(numOfCols, pMatrices_row[id]->getNumOfCols());
+    }
+
+    // prepare
+    double val = 0.0;
+    for (int i = 0; i < numOfRows; ++i) {
+        for (int j = 0; j < numOfCols; ++j) {
+            for (int id = 0; id < numOfSubunits; ++id) {
+                pMatrices_row[id]->set(i, j, val);
+            }
+            refMat.set(i, j, val);
+        }
+        val += 0.01;
+    }
+
+    // transform
+    const std::string basename = "/tmp/test_array_col";
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices_row[id]->saveByTlDenseGeneralMatrix_arrays_ColOriented(
+            basename);
+    }
+
+    // load
+    std::vector<TlDenseGeneralMatrix_arrays_ColOriented*> pMatrices_col(
+        numOfSubunits, NULL);
+    for (int id = 0; id < numOfSubunits; ++id) {
+        pMatrices_col[id] = new TlDenseGeneralMatrix_arrays_ColOriented(
+            1, 1, numOfSubunits, id);
+        pMatrices_col[id]->load(basename);
+    }
+
+    // check
+    for (int id = 0; id < numOfSubunits; ++id) {
+        EXPECT_EQ(pMatrices_col[id]->getNumOfRows(), numOfRows);
+        EXPECT_EQ(pMatrices_col[id]->getNumOfCols(), numOfCols);
+    }
+    for (int i = 0; i < numOfRows; ++i) {
+        for (int j = 0; j < numOfCols; ++j) {
+            const double val = refMat.get(i, j);
+
+            const int subunit = pMatrices_col[0]->getSubunitID(i);
+            for (int id = 0; id < numOfSubunits; ++id) {
+                const int subunit2 = pMatrices_col[id]->getSubunitID(i);
+                EXPECT_EQ(subunit, subunit2);
+            }
+            const double val2 = pMatrices_col[subunit]->get(i, j);
+            EXPECT_DOUBLE_EQ(val, val2);
+        }
+    }
+
+    // destroy
+    for (int id = 0; id < numOfSubunits; ++id) {
+        delete pMatrices_row[id];
+        pMatrices_row[id] = NULL;
+
+        delete pMatrices_col[id];
+        pMatrices_col[id] = NULL;
     }
 }

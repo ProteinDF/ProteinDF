@@ -65,5 +65,5 @@ docker exec -it ${DOCKER_CONTAINER_NAME} pdf-build.sh --srcdir /work/ProteinDF_p
 
 run_test
 
-#docker exec -it \
-#    ${DOCKER_CONTAINER_NAME} /bin/bash
+docker exec -it \
+    ${DOCKER_CONTAINER_NAME} /bin/bash

@@ -20,6 +20,8 @@
 #include <iostream>
 
 #include "TlGetopt.h"
+#include "TlUtils.h"
+#include "tl_dense_general_matrix_arrays_roworiented.h"
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_matrix_utils.h"
@@ -58,6 +60,32 @@ int main(int argc, char* argv[]) {
         } else {
             std::cout << M << std::endl;
         }
+    } else if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::ABGD) == true) {
+        TlMatrixObject::MatrixType type;
+        TlMatrixObject::index_type numOfRows = 0;
+        TlMatrixObject::index_type numOfCols = 0;
+        std::size_t numOfItems = 0;
+        TlMatrixObject::index_type numOfSubunits = 0;
+        TlMatrixObject::index_type subunitId = 0;
+        TlMatrixObject::index_type sizeOfChunk = 0;
+        TlMatrixUtils::getHeaderInfo(sPath, &type, &numOfRows, &numOfCols,
+                                     &numOfItems, &numOfSubunits, &subunitId,
+                                     &sizeOfChunk);
+        std::cout << "row: " << numOfRows << std::endl;
+        std::cout << "col: " << numOfCols << std::endl;
+        std::cout << TlUtils::format("unit: %d/%d", subunitId + 1,
+                                     numOfSubunits)
+                  << std::endl;
+        std::cout << "chunk size: " << sizeOfChunk << std::endl;
+
+        TlDenseGeneralMatrix_arrays_RowOriented M;
+        bool isLoaded = M.load(sPath, -1);
+        if (isLoaded) {
+            std::cout << M << std::endl;
+        } else {
+            std::cout << "cannot load: " << sPath << std::endl;
+        }
+
     } else {
         std::cerr << "unknown file type: " << sPath << std::endl;
         return EXIT_FAILURE;
