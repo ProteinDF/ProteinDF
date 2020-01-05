@@ -20,6 +20,7 @@
 #define DFGENERATEGRID_H
 
 #include <string>
+
 #include "DfObject.h"
 #include "Fl_Geometry.h"
 #include "TlLebedevGrid.h"
@@ -46,11 +47,11 @@ class DfGenerateGrid : public DfObject {
    protected:
     virtual void makeTable();
 
-    void generateGrid(const TlDenseGeneralMatrix_Lapack& O, const int iatom,
-                      std::vector<double>* pCoordX,
-                      std::vector<double>* pCoordY,
-                      std::vector<double>* pCoordZ,
-                      std::vector<double>* pWeight);
+    // void generateGrid(const TlDenseGeneralMatrix_Lapack& O, const int iatom,
+    //                   std::vector<double>* pCoordX,
+    //                   std::vector<double>* pCoordY,
+    //                   std::vector<double>* pCoordZ,
+    //                   std::vector<double>* pWeight);
 
     void generateGrid_SG1(const TlDenseGeneralMatrix_Lapack& O, const int iatom,
                           std::vector<double>* pCoordX,
@@ -164,7 +165,7 @@ class DfGenerateGrid : public DfObject {
                       std::vector<double>* pPartitioningWeights);
 
    protected:
-    enum GridType { COARSE, MEDIUM, MEDIUM_FINE, FINE, SG_1, USER };
+    enum GridType { COARSE, MEDIUM, MEDIUM_FINE, FINE, ULTRA_FINE, SG_1, USER };
 
    protected:
     std::string gridtype;
@@ -209,6 +210,8 @@ class DfGenerateGrid : public DfObject {
 
     /// Gauss-Chebyshev mapping type
     GC_MAPPING_TYPE GC_mappingType_;
+
+    PARTITIONING_METHOD partitioningMethod_;
 
     /// using atomic size adjustments in Becke partitioning
     bool isAtomicSizeAdjustments_;

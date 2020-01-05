@@ -17,7 +17,9 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfGenerateGrid_Parallel.h"
+
 #include <cassert>
+
 #include "DfXCFunctional.h"
 #include "TlCommunicate.h"
 #include "TlUtils.h"
@@ -90,13 +92,13 @@ void DfGenerateGrid_Parallel::generateGrid_DC(
         std::vector<double> coordZ;
         std::vector<double> weight;
 
-        if ((this->m_gridType == SG_1) || (this->m_gridType == USER)) {
-            DfGenerateGrid::generateGrid_SG1(O, atom, &coordX, &coordY, &coordZ,
-                                             &weight);
-        } else {
-            DfGenerateGrid::generateGrid(O, atom, &coordX, &coordY, &coordZ,
+        // if ((this->m_gridType == SG_1) || (this->m_gridType == USER)) {
+        DfGenerateGrid::generateGrid_SG1(O, atom, &coordX, &coordY, &coordZ,
                                          &weight);
-        }
+        // } else {
+        //     DfGenerateGrid::generateGrid(O, atom, &coordX, &coordY, &coordZ,
+        //                                  &weight);
+        // }
 
         // store grid matrix
         const std::size_t numOfAtomGrids = weight.size();
