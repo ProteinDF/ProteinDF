@@ -1,7 +1,9 @@
 #include "tl_dense_general_matrix_object.h"
+
 #include <cassert>
 #include <fstream>
 #include <iostream>
+
 #include "TlFile.h"
 #include "TlUtils.h"
 #include "tl_matrix_utils.h"
@@ -92,9 +94,9 @@ void TlDenseGeneralMatrixObject::block(const TlMatrixObject::index_type row,
           (0 < (col + colDistance) &&
            (col + colDistance) <= this->getNumOfCols()))) {
         this->log_.critical(TlUtils::format(
-            "setBlockMatrix() start(%d, %d) mat(%d, %d) -> (%d, %d)", row, col,
-            ref.getNumOfRows(), ref.getNumOfCols(), this->getNumOfRows(),
-            this->getNumOfCols()));
+            "setBlockMatrix() start(%d, %d) mat(%d, %d) -> (%d, %d) @%s.%d",
+            row, col, ref.getNumOfRows(), ref.getNumOfCols(),
+            this->getNumOfRows(), this->getNumOfCols(), __FILE__, __LINE__));
     }
     assert(0 <= row && row < this->getNumOfRows());
     assert(0 <= col && col < this->getNumOfCols());
