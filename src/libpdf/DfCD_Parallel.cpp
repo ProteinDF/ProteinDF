@@ -32,6 +32,7 @@
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_general_matrix_mmap.h"
 #include "tl_dense_general_matrix_scalapack.h"
+#include "tl_dense_symmetric_matrix_eigen.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 
 #define TRANS_MEM_SIZE (1 * 1024 * 1024 * 1024)  // 1GB
@@ -1807,13 +1808,9 @@ void DfCD_Parallel::transLMatrix2mmap(
                                                 numOfCols, &(transBuf[0]));
 
                     // write to matrix
-                    // std::cout << "write to matrix..." << std::endl;
-                    for (int j = 0; j < numOfCols; ++j) {
-                        for (int i = 0; i < readRowChunks; ++i) {
-                            output.set(row + i, j,
-                                       transBuf[readRowChunks * j + i]);
-                        }
-                    }
+                    TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols,
+                                                      &(transBuf[0]));
+                    output.block(row, 0, tmpMat);
                 }
             }
         }
@@ -1843,10 +1840,10 @@ void DfCD_Parallel::transLMatrix2mmap(
                 assert(row == tag);
                 const index_type readRowChunks =
                     std::min(sizeOfChunk, numOfRows - row);
-                for (int j = 0; j < numOfCols; ++j) {
-                    for (int i = 0; i < readRowChunks; ++i) {
-                        output.set(row + i, j, recvBuf[readRowChunks * j + i]);
-                    }
+                {
+                    TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols,
+                                                      &(recvBuf[0]));
+                    output.block(row, 0, tmpMat);
                 }
 
                 ++recvCounts[src];
