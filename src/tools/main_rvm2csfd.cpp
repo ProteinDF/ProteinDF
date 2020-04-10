@@ -1,8 +1,10 @@
 #include <iostream>
+
 #include "TlFile.h"
 #include "TlGetopt.h"
 #include "TlUtils.h"
 #include "tl_dense_general_matrix_arrays_roworiented.h"
+#include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_general_matrix_mmap.h"
 
 typedef TlMatrixObject::index_type index_type;
@@ -99,12 +101,6 @@ int main(int argc, char* argv[]) {
         for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
             const index_type chunkStartRow =
                 sizeOfChunk * (numOfSubunits * chunk + unit);
-            // for (int v = 0; v < sizeOfChunk; ++v) {
-            //     for (int c = 0; c < numOfCols; ++c) {
-            //         chunkBuf[v * sizeOfChunk + c] = m.get(
-            //             (chunk * numOfSubunits + unit) * sizeOfChunk + v, c);
-            //     }
-            // }
             m.getChunk(chunkStartRow, &(chunkBuf[0]), numOfCols * sizeOfChunk);
 
             // change memory layout
@@ -113,13 +109,9 @@ int main(int argc, char* argv[]) {
             TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks,
                                         numOfCols, &(transBuf[0]));
 
-            // write to matrix
-            for (int c = 0; c < numOfCols; ++c) {
-                for (int r = 0; r < readRowChunks; ++r) {
-                    fileMat.set(chunkStartRow + r, c,
-                                transBuf[readRowChunks * c + r]);
-                }
-            }
+            TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols,
+                                              &(transBuf[0]));
+            fileMat.block(chunkStartRow, 0, tmpMat);
 
             TlUtils::progressbar(float(chunk) / numOfLocalChunks);
         }
