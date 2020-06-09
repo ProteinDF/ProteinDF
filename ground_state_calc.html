@@ -1,0 +1,527 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="ja" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="ja" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>8. 基底状態計算 &mdash; ProteinDF User&#39;s Manual 2020.06.0 ドキュメント</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/translations.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="検索" href="search.html" />
+    <link rel="next" title="9. ProteinDF計算結果の解析" href="analysis.html" />
+    <link rel="prev" title="6. 実行方法" href="exec.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ProteinDF User's Manual
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2020.06.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="preface.html">1. はじめに</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">2. 概要</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">3. インストール</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start_guide.html">4. クイックスタートガイド</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input.html">5. 入力ファイル</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exec.html">6. 実行方法</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exec.html#id6">7. 動作形式</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">8. 基底状態計算</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">8.1. 計算方法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">8.2. 電子数・電子占有状態の指定</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#restricted-kohn-sham-method">8.2.1. 制限法計算(restricted Kohn-Sham method)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#unrestricted-kohn-sham-method">8.2.2. 非制限法計算(unrestricted Kohn-Sham method)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#restricted-open-shell-kohn-sham-method">8.2.3. 制限開殻計算(restricted open shell Kohn-Sham method)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">8.3. 初期値の指定</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#core">8.3.1. core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#huckel">8.3.2. Hückel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#harris">8.3.3. Harrisの汎関数</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">8.3.4. 近似電子密度</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lcao">8.3.5. LCAO係数行列</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">8.3.6. 密度行列</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">8.4. クーロン項の計算</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id8">8.4.1. 計算エンジンの選択</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#conventional">8.4.1.1. conventional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ri-j">8.4.1.2. RI_J</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id9">8.4.1.3. コレスキー分解法</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#fock">8.5. Fock交換項の計算</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id10">8.5.1. 計算エンジンの選択</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id11">8.5.1.1. conventional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id12">8.5.1.2. コレスキー分解法</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hartree-fock">8.5.2. ハイブリッド汎関数法およびHartree-Fock法</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id13">8.6. 交換相関項の計算</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id14">8.6.1. グリッドの選択</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id15">8.6.2. 数値積分法で利用できる汎関数</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id16">8.6.3. グリッドフリー法</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id17">8.7. レベルシフト計算</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id18">8.8. 収束加速法</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#damping">8.8.1. damping法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#anderson">8.8.2. Anderson法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#diis">8.8.3. DIIS法</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">9. ProteinDF計算結果の解析</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QCLO.html">10. 全自動計算プログラムQCLO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendix.html">11. 付録</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ProteinDF User's Manual</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li><span class="section-number">8. </span>基底状態計算</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/ground_state_calc.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="id1">
+<h1><span class="section-number">8. </span>基底状態計算<a class="headerlink" href="#id1" title="このヘッドラインへのパーマリンク">¶</a></h1>
+<div class="section" id="id2">
+<h2><span class="section-number">8.1. </span>計算方法<a class="headerlink" href="#id2" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p>計算対象の電子配置に基づき、ProteinDFでは閉殻・開殻・制限付き開殻計算が実行できます。
+キーワード <code class="docutils literal notranslate"><span class="pre">method</span></code> で指定します。</p>
+</div>
+<div class="section" id="id3">
+<h2><span class="section-number">8.2. </span>電子数・電子占有状態の指定<a class="headerlink" href="#id3" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<div class="section" id="restricted-kohn-sham-method">
+<h3><span class="section-number">8.2.1. </span>制限法計算(restricted Kohn-Sham method)<a class="headerlink" href="#restricted-kohn-sham-method" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>1つの分子軌道に1組の電子対を配置する閉殻分子(一重項)の計算を行います。
+<code class="docutils literal notranslate"><span class="pre">method</span> <span class="pre">=</span> <span class="pre">rks</span></code> を指定してください。</p>
+<p>キーワード <code class="docutils literal notranslate"><span class="pre">method/rks/occlevel</span></code> で電子の電子配置を指定します。
+例えば、10個の電子が対になってエネルギーの低い5つの軌道を占有する場合、</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>method/rks/occlevel = [1 - 5]
+</pre></div>
+</div>
+<p>と記述してください。最も低い分子軌道が1番となり、順に、2、3、・・・と続きます。</p>
+<p>また、電子数はキーワード <code class="docutils literal notranslate"><span class="pre">rks/electrons</span></code> で指定します。
+10個の電子であれば、</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rks/electrons = 10
+</pre></div>
+</div>
+<p>と記述します。</p>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>閉殻計算の場合、 <code class="docutils literal notranslate"><span class="pre">rks/electrons</span></code> の値は必ず偶数になります。</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p><code class="docutils literal notranslate"><span class="pre">method/rks/occlevel</span> <span class="pre">=</span> <span class="pre">[1-4,</span> <span class="pre">6]</span></code> というような記述もできます。
+このとき、1番目の軌道から4番目の軌道まで、そして6番目の軌道に電子が占有されます。</p>
+</div>
+</div>
+<div class="section" id="unrestricted-kohn-sham-method">
+<h3><span class="section-number">8.2.2. </span>非制限法計算(unrestricted Kohn-Sham method)<a class="headerlink" href="#unrestricted-kohn-sham-method" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>αスピン、βスピンそれぞれの電子配置が異なる開殻分子の計算を行います。
+<code class="docutils literal notranslate"><span class="pre">method</span> <span class="pre">=</span> <span class="pre">rks</span></code> を指定してください。</p>
+<p>それぞれの電子数は、αスピンは <code class="docutils literal notranslate"><span class="pre">uks/alpha_electrons</span></code> 、βスピンは <code class="docutils literal notranslate"><span class="pre">uks/beta_electrons</span></code> で指定します。
+電子配置は同様に <code class="docutils literal notranslate"><span class="pre">method/uks/alpha-spin-occlevel</span></code> 、 <code class="docutils literal notranslate"><span class="pre">method/uks/beta-spin-occlevel</span></code> で指定します。</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p><code class="docutils literal notranslate"><span class="pre">uks/alpha_electrons</span></code> の値は <code class="docutils literal notranslate"><span class="pre">uks/beta_electrons</span></code> と等しいか、それよりも大きくなるようにしてください。</p>
+</div>
+</div>
+<div class="section" id="restricted-open-shell-kohn-sham-method">
+<h3><span class="section-number">8.2.3. </span>制限開殻計算(restricted open shell Kohn-Sham method)<a class="headerlink" href="#restricted-open-shell-kohn-sham-method" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>閉殻電子配置(closed-shell)と開殻電子配置(open-shell)に分けて計算する手法です。
+<code class="docutils literal notranslate"><span class="pre">method</span> <span class="pre">=</span> <span class="pre">roks</span></code> を指定してください。</p>
+<p>電子数は <code class="docutils literal notranslate"><span class="pre">method/roks/closed_shell_electrons</span></code> 、 <code class="docutils literal notranslate"><span class="pre">method/roks/open_shell_electrons</span></code> で指定し、
+電子配置は <code class="docutils literal notranslate"><span class="pre">method/roks/closed_shell_occlevel</span></code> 、 <code class="docutils literal notranslate"><span class="pre">method/roks/open_shell_occlevel</span></code> で指定します。</p>
+</div>
+</div>
+<div class="section" id="id4">
+<h2><span class="section-number">8.3. </span>初期値の指定<a class="headerlink" href="#id4" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p>SCF繰り返し計算における初期値を指定します。
+キーワードは <code class="docutils literal notranslate"><span class="pre">guess</span></code> です。</p>
+<div class="section" id="core">
+<h3><span class="section-number">8.3.1. </span>core<a class="headerlink" href="#core" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>コアハミルトニアンを使って初期値を作成します。
+<code class="docutils literal notranslate"><span class="pre">guess</span> <span class="pre">=</span> <span class="pre">core</span></code> で使用できます。</p>
+</div>
+<div class="section" id="huckel">
+<h3><span class="section-number">8.3.2. </span>Hückel<a class="headerlink" href="#huckel" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>Hückel法により初期値を作成します。
+<code class="docutils literal notranslate"><span class="pre">guess</span> <span class="pre">=</span> <span class="pre">huckel</span></code> で使用できます。</p>
+</div>
+<div class="section" id="harris">
+<h3><span class="section-number">8.3.3. </span>Harrisの汎関数<a class="headerlink" href="#harris" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>Harrisの汎関数を用いて初期値を作成します。
+<code class="docutils literal notranslate"><span class="pre">guess</span> <span class="pre">=</span> <span class="pre">harris</span></code> で使用できます。
+原子種によっては用意されていない場合があります。</p>
+</div>
+<div class="section" id="id5">
+<h3><span class="section-number">8.3.4. </span>近似電子密度<a class="headerlink" href="#id5" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>近似電子密度を用いて初期値を作成します。
+<code class="docutils literal notranslate"><span class="pre">guess</span> <span class="pre">=</span> <span class="pre">rho</span></code> で使用できます。
+RI法以外では正しい結果が得られない場合があります。</p>
+</div>
+<div class="section" id="lcao">
+<h3><span class="section-number">8.3.5. </span>LCAO係数行列<a class="headerlink" href="#lcao" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>LCAO係数行列から初期値を作成します。
+<code class="docutils literal notranslate"><span class="pre">guess</span> <span class="pre">=</span> <span class="pre">lcao</span></code> で使用できます。
+あらかじめLCAO係数行列を用意しておく必要があります。</p>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>現行のバージョンでは、計算ディレクトリにLCAOテキストファイル、OCCテキストファイルを用意しておく必要があります。
+この仕様は今後変更される可能性があります。</p>
+</div>
+</div>
+<div class="section" id="id6">
+<h3><span class="section-number">8.3.6. </span>密度行列<a class="headerlink" href="#id6" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>密度行列を初期値として利用します。
+<code class="docutils literal notranslate"><span class="pre">guess</span> <span class="pre">=</span> <span class="pre">density</span></code> で使用できます。
+あらかじめ密度行列を用意しておく必要があります。</p>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>現行のバージョンでは、作業用ディレクトリ(fl_Work)下に0番目の密度行列ファイルを置く必要があります。
+この仕様は今後変更される可能性があります。</p>
+</div>
+</div>
+</div>
+<div class="section" id="id7">
+<h2><span class="section-number">8.4. </span>クーロン項の計算<a class="headerlink" href="#id7" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<div class="section" id="id8">
+<h3><span class="section-number">8.4.1. </span>計算エンジンの選択<a class="headerlink" href="#id8" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>クーロン項の計算で必要な4中心2電子積分は、
+計算律速なルーチンの一つです。
+ProteinDFでは、いくつかの計算エンジンを実装しています。
+キーワード <code class="docutils literal notranslate"><span class="pre">J_engine</span></code> で選択できます。</p>
+<div class="section" id="conventional">
+<h4><span class="section-number">8.4.1.1. </span>conventional<a class="headerlink" href="#conventional" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>SCF繰り返し計算の各イテレーションにおいて、
+4中心2電子積分を計算し、クーロン項を求めます。</p>
+</div>
+<div class="section" id="ri-j">
+<h4><span class="section-number">8.4.1.2. </span>RI_J<a class="headerlink" href="#ri-j" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>SCF繰り返し計算の各イテレーションにおいて、
+RI法に基づき、3中心積分を計算してクーロン項を求めます。
+計算精度は補助基底関数に依存します。
+ProteinDFのデフォルトです。</p>
+</div>
+<div class="section" id="id9">
+<h4><span class="section-number">8.4.1.3. </span>コレスキー分解法<a class="headerlink" href="#id9" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>コレスキー分解法に基づき、
+SCF繰り返し計算の前に4中心2電子積分のコレスキーベクトルを求めます。
+SCF繰り返し計算の各イテレーションでは、
+密度行列との行列演算によりクーロン項を求めます。
+SCF計算中に分子積分を行わないために高速に演算できますが、
+メモリやディスクの記憶域を多く消費します。
+<code class="docutils literal notranslate"><span class="pre">J_engine</span> <span class="pre">=</span> <span class="pre">CD</span></code> で使用できます。</p>
+</div>
+</div>
+</div>
+<div class="section" id="fock">
+<h2><span class="section-number">8.5. </span>Fock交換項の計算<a class="headerlink" href="#fock" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<div class="section" id="id10">
+<h3><span class="section-number">8.5.1. </span>計算エンジンの選択<a class="headerlink" href="#id10" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>Fockの交換項も4中心2電子積分計算が必要なため、
+計算律速になります。
+キーワード <code class="docutils literal notranslate"><span class="pre">K_engine</span></code> で計算エンジンを選択できます。</p>
+<div class="section" id="id11">
+<h4><span class="section-number">8.5.1.1. </span>conventional<a class="headerlink" href="#id11" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>SCF繰り返し計算の各イテレーションにおいて、
+4中心2電子積分を計算し、クーロン項を求めます。
+ProteinDFのデフォルトです。
+<code class="docutils literal notranslate"><span class="pre">K_engine</span> <span class="pre">=</span> <span class="pre">conventional</span></code> で使用できます。</p>
+</div>
+<div class="section" id="id12">
+<h4><span class="section-number">8.5.1.2. </span>コレスキー分解法<a class="headerlink" href="#id12" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>クーロン項と同様に、コレスキー分解法によって
+Fock交換項を求めます。
+クーロン項のコレスキー分解で求めたコレスキーベクトルを
+共通して利用します。
+<code class="docutils literal notranslate"><span class="pre">K_engine</span> <span class="pre">=</span> <span class="pre">CD</span></code> で使用できます。</p>
+</div>
+</div>
+<div class="section" id="hartree-fock">
+<h3><span class="section-number">8.5.2. </span>ハイブリッド汎関数法およびHartree-Fock法<a class="headerlink" href="#hartree-fock" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>パラメータ <code class="docutils literal notranslate"><span class="pre">xc-potential</span></code> に以下の値を設定することで、
+ハイブリッド汎関数計算、またはHartree-Fock計算を行うことができます。</p>
+<ul>
+<li><p>HF</p>
+<p>Hartree-Fock法による電子状態計算を行います。</p>
+</li>
+<li><p>B3LYP</p>
+<p>Becke 3パラメータによるハイブリッド汎関数計算を行います。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="id13">
+<h2><span class="section-number">8.6. </span>交換相関項の計算<a class="headerlink" href="#id13" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p>ProteinDFにおいて、Kohn-Sham行列の交換相関項ならびに交換相関エネルギーは
+数値積分計算、または解析計算(grid-free法)によって求めることができます。
+デフォルトは数値積分計算です。</p>
+<div class="section" id="id14">
+<h3><span class="section-number">8.6.1. </span>グリッドの選択<a class="headerlink" href="#id14" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>数値グリッドはパラメータ <code class="docutils literal notranslate"><span class="pre">xc-potential/grid-type</span></code> で指定できます。
+デフォルトはSG-1グリッドを採用します。
+詳しくは付録を参照してください。</p>
+</div>
+<div class="section" id="id15">
+<h3><span class="section-number">8.6.2. </span>数値積分法で利用できる汎関数<a class="headerlink" href="#id15" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>汎関数の指定は <code class="docutils literal notranslate"><span class="pre">xc_potential</span></code> で行います。
+利用可能な汎関数は以下のとおりです。</p>
+<ul class="simple">
+<li><p>SVWN~</p></li>
+<li><p>SVWN</p></li>
+<li><p>BLYP</p></li>
+<li><p>B3LYP</p></li>
+<li><p>HFB</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>末尾にチルダ(~)がある交換相関汎関数は、
+RI法に基づき近似電子密度から交換相関項が求められます。</p>
+</div>
+</div>
+<div class="section" id="id16">
+<h3><span class="section-number">8.6.3. </span>グリッドフリー法<a class="headerlink" href="#id16" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>グリッドフリー法による交換相関項計算を実行します。
+詳しくは付録のキーワード <code class="docutils literal notranslate"><span class="pre">grid_free</span></code> を参照してください。</p>
+</div>
+</div>
+<div class="section" id="id17">
+<h2><span class="section-number">8.7. </span>レベルシフト計算<a class="headerlink" href="#id17" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p>レベルシフト法は特定の軌道について軌道エネルギーをずらすことができる計算手法です。
+詳しくは付録のキーワード <code class="docutils literal notranslate"><span class="pre">level_shift</span></code> を参照してください。</p>
+</div>
+<div class="section" id="id18">
+<h2><span class="section-number">8.8. </span>収束加速法<a class="headerlink" href="#id18" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p>SCF繰り返し計算において、
+安定かつ効率良く収束させるために、
+ProteinDFではいくつかの収束アルゴリズムを選択できます。
+キーワード <code class="docutils literal notranslate"><span class="pre">scf_acceleration</span></code> で選択できます。</p>
+<div class="section" id="damping">
+<h3><span class="section-number">8.8.1. </span>damping法<a class="headerlink" href="#damping" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>前回の繰り返し計算で用いた物理量を一定の割合で混ぜ合わせる方法です。
+<span class="math notranslate nohighlight">\(n\)</span> 回目のSCF計算で求められた物理量を <span class="math notranslate nohighlight">\(Y^{\left(n\right)}\)</span> と表し、
+更新される量を <span class="math notranslate nohighlight">\(X^{\left(n\right)}\)</span> とすると、
+以下のように求められます。</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}X^{\left(n\right)}\leftarrow aX^{\left(n-1\right)}+\left(1-a\right)Y^{\left(n\right)}\\\left(0&lt;a&lt;1\right)\end{aligned}\end{align} \]</div>
+<p>ここで、混ぜ合わせる割合(<span class="math notranslate nohighlight">\(a\)</span>)は、
+<code class="docutils literal notranslate"><span class="pre">scf_acceleration/damping/damping_factor</span></code>
+で設定できます。
+また、対象となる物理量は、
+<code class="docutils literal notranslate"><span class="pre">scf_acceleration/damping/damping_type</span></code>
+で指定できます。</p>
+<ul class="simple">
+<li><p>使用例</p></li>
+</ul>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>scf_acceleration/damping/damping_factor = 0.85
+scf_acceleration/damping/damping_type = density_matrix
+</pre></div>
+</div>
+</div>
+<div class="section" id="anderson">
+<h3><span class="section-number">8.8.2. </span>Anderson法<a class="headerlink" href="#anderson" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>Andersonによる2次収束法を用います。
+以下、過去2点の物理量を用いた場合の式を示します。</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}X^{\left(n\right)}=u^{\left(n-1\right)}+b^{\left(n-1\right)}\left(v^{\left(n\right)}-u^{\left(n-1\right)}\right)\\u^{\left(n-1\right)}=X^{\left(n-1\right)}+\theta^{\left(n-1\right)}\left(X^{\left(n-2\right)}-X^{\left(n-1\right)}\right)\\v^{\left(n\right)}=Y^{\left(n\right)}+\theta^{\left(n-1\right)}\left(Y^{\left(n-1\right)}-Y^{\left(n\right)}\right)\\\theta^{\left(n-1\right)}=\frac{\left(r^{\left(n-1\right)},r^{\left(n-1\right)}-r^{\left(n-2\right)}\right)}{\left(r^{\left(n-1\right)}-r^{\left(n-2\right)},r^{\left(n-1\right)}-r^{\left(n-2\right)}\right)}\\r^{\left(n-1\right)}=Y^{\left(n\right)}-X^{\left(n-1\right)}\\\left(u,v\right)=\sum_{i}u_{i}v_{i}w_{i}\end{aligned}\end{align} \]</div>
+<p>上式 <span class="math notranslate nohighlight">\(b^{\left(n-1\right)}\)</span> は、
+<code class="docutils literal notranslate"><span class="pre">scf-acceleration/anderson/damping-factor</span></code> で指定できます。</p>
+<p>なお、Anderson法を開始するまではdamping法を用います。
+Anderson法を開始するSCF回数は、 <code class="docutils literal notranslate"><span class="pre">scf_acceleration/anderson/start_number</span></code> で指定できます。</p>
+</div>
+<div class="section" id="diis">
+<h3><span class="section-number">8.8.3. </span>DIIS法<a class="headerlink" href="#diis" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>Pulay によるDirect Inversion of the Iterative Subspace (DIIS)法を採用します。
+DIIS法では、新しい物理量 <span class="math notranslate nohighlight">\(X^{\left(n\right)}\)</span> は過去の <span class="math notranslate nohighlight">\(X^{\left(n-i\right)}\)</span> の
+線形結合で得られると仮定します。</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}\displaystyle{X^{\left(n\right)}=\sum_{i=i_{0}}^{M}c_{i}X^{\left(n-i\right)}}\\\left(i_{0} \ge 1,\ i_{0}&lt;M \le n-1\right)\end{aligned}\end{align} \]</div>
+<p>ここで、参照数 <span class="math notranslate nohighlight">\(M\)</span> は <code class="docutils literal notranslate"><span class="pre">scf-acceleration/diis/number-of-diis</span></code> で指定します。</p>
+<p>またDIIS法でも、DIIS法を開始するまではdamping法を用います。
+DIIS法を開始するSCF回数は、 <code class="docutils literal notranslate"><span class="pre">scf-acceleration/diis/start-number</span></code> で指定します。</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="analysis.html" class="btn btn-neutral float-right" title="9. ProteinDF計算結果の解析" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="exec.html" class="btn btn-neutral float-left" title="6. 実行方法" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014-2020, Toshiyuki HIRANO
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,357 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="ja" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="ja" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>9. ProteinDF計算結果の解析 &mdash; ProteinDF User&#39;s Manual 2020.06.0 ドキュメント</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/translations.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="検索" href="search.html" />
+    <link rel="next" title="10. 全自動計算プログラムQCLO" href="QCLO.html" />
+    <link rel="prev" title="8. 基底状態計算" href="ground_state_calc.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ProteinDF User's Manual
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2020.06.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="preface.html">1. はじめに</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">2. 概要</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">3. インストール</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start_guide.html">4. クイックスタートガイド</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input.html">5. 入力ファイル</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exec.html">6. 実行方法</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exec.html#id6">7. 動作形式</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ground_state_calc.html">8. 基底状態計算</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">9. ProteinDF計算結果の解析</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">9.1. 一般的に用いられる解析ツール</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">9.2. 上級者(デバッグ)用ツール</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="QCLO.html">10. 全自動計算プログラムQCLO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendix.html">11. 付録</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ProteinDF User's Manual</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li><span class="section-number">9. </span>ProteinDF計算結果の解析</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/analysis.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="proteindf">
+<h1><span class="section-number">9. </span>ProteinDF計算結果の解析<a class="headerlink" href="#proteindf" title="このヘッドラインへのパーマリンク">¶</a></h1>
+<div class="section" id="id1">
+<h2><span class="section-number">9.1. </span>一般的に用いられる解析ツール<a class="headerlink" href="#id1" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<ul class="simple">
+<li><p>pdf-top</p></li>
+</ul>
+<p>指定された分子軌道に対し、寄与の大きい原子軌道を表示します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: pdf-top [Option]
+</pre></div>
+</div>
+<p>実行すると以下の様な出力が得られます。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ pdf-top 115
+MO level: 115
+No. 1     8  C (  42.525,   37.241,   32.674) p(    px) (  8.18%;   8.18%)
+No. 2     8  C (  42.525,   37.241,   32.674) p(    pz) (  7.77%;  15.95%)
+No. 3    20  C (  43.858,   35.420,   31.228) p(    px) (  7.38%;  23.34%)
+No. 4    11  N (  41.507,   35.639,   33.859) p(    px) (  6.74%;  30.08%)
+No. 5    14  C (  42.553,   33.543,   32.877) p(    px) (  6.69%;  36.77%)
+No. 6    20  C (  43.858,   35.420,   31.228) p(    pz) (  5.54%;  42.31%)
+No. 7    14  C (  42.553,   33.543,   32.877) p(    pz) (  5.20%;  47.51%)
+No. 8    11  N (  41.507,   35.639,   33.859) p(    pz) (  4.71%;  52.23%)
+No. 9     9  C (  41.623,   36.994,   33.649) p(    px) (  4.39%;  56.62%)
+No.10     9  C (  41.623,   36.994,   33.649) p(    pz) (  3.39%;  60.00%)
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>pdf-pop-mulliken</p></li>
+</ul>
+<p>output Mulliken population.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: pdf-pop-mulliken &lt;MO_ID&gt;
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>pdf-mo</p></li>
+</ul>
+<p>分子軌道フィールドデータを出力します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: pdf-mo &lt;MO_ID&gt;
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>pdf-esp</p></li>
+</ul>
+<p>静電ポテンシャルのフィールドデータを出力します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: pdf-esp
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>pdf-dens</p></li>
+</ul>
+<p>電子密度フィールドデータを出力します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: pdf-dens
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>pdf-archive</p></li>
+</ul>
+<p>計算結果を集約し、アーカイブを作成します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: pdf-archive
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>pdf-report</p></li>
+</ul>
+<p>計算結果のレポートを作成します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: pdf-archive
+</pre></div>
+</div>
+<p>以下のようなエネルギー収束曲線(<a href="#analysisconvhist">Fig.  4</a>)や
+軌道エネルギーの収束履歴(<a href="#analysislevelhist">Fig.  5</a>)が得られます。</p>
+<div class="figure align-center" id="id3">
+<span id="analysisconvhist"></span><a class="reference internal image-reference" href="_images/analysis_conv_hist.png"><img alt="analysis_conv_hist.png" src="_images/analysis_conv_hist.png" style="width: 8cm;" /></a>
+<p class="caption"><span class="caption-text">Fig. 4: エネルギー収束曲線</span><a class="headerlink" href="#id3" title="この画像へのパーマリンク">¶</a></p>
+</div>
+<div class="figure align-center" id="id4">
+<span id="analysislevelhist"></span><a class="reference internal image-reference" href="_images/analysis_level_hist.png"><img alt="analysis_level_hist.png" src="_images/analysis_level_hist.png" style="width: 8cm;" /></a>
+<p class="caption"><span class="caption-text">Fig. 5: 軌道エネルギーの収束履歴</span><a class="headerlink" href="#id4" title="この画像へのパーマリンク">¶</a></p>
+</div>
+</div>
+<div class="section" id="id2">
+<h2><span class="section-number">9.2. </span>上級者(デバッグ)用ツール<a class="headerlink" href="#id2" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<ul class="simple">
+<li><p>pdf-mat2txt</p></li>
+</ul>
+<p>指定した行列ファイル(バイナリ形式)を標準出力に出力します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: pdf-mat2txt
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>pdf-vtr2txt</p></li>
+</ul>
+<p>指定したベクトルファイル(バイナリ形式)を標準出力に出力します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: pdf-vtr2txt
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>pdf-mpac2yml</p></li>
+</ul>
+<p>MessagePack形式のファイルをYAMLファイルの変換します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: mpac2yml.py [options] FILE
+
+Options:
+-h, --help  show this help message and exit
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>pdf-yml2mpac</p></li>
+</ul>
+<p>YAML形式のファイルをMessagePack形式に変換します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: yml2mpac.py [options] YAML_FILE MPAC_FILE
+
+Options:
+-h, --help  show this help message and exit
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>pdf-diff</p></li>
+</ul>
+<p>2つの計算結果を比較します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: pdf-diff
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>pdf-matinfo</p></li>
+</ul>
+<p>行列情報を出力します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: pdf-matinfo
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>pdf-genmat</p></li>
+</ul>
+<p>行列を作成します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: pdf-genmat
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="QCLO.html" class="btn btn-neutral float-right" title="10. 全自動計算プログラムQCLO" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ground_state_calc.html" class="btn btn-neutral float-left" title="8. 基底状態計算" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014-2020, Toshiyuki HIRANO
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

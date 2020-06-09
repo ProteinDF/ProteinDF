@@ -1,0 +1,1075 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="ja" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="ja" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>10. 全自動計算プログラムQCLO &mdash; ProteinDF User&#39;s Manual 2020.06.0 ドキュメント</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/translations.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="検索" href="search.html" />
+    <link rel="next" title="11. 付録" href="appendix.html" />
+    <link rel="prev" title="9. ProteinDF計算結果の解析" href="analysis.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ProteinDF User's Manual
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2020.06.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="preface.html">1. はじめに</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">2. 概要</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">3. インストール</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start_guide.html">4. クイックスタートガイド</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input.html">5. 入力ファイル</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exec.html">6. 実行方法</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exec.html#id6">7. 動作形式</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ground_state_calc.html">8. 基底状態計算</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">9. ProteinDF計算結果の解析</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">10. 全自動計算プログラムQCLO</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">10.1. はじめに</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">10.1.1. 半自動計算法プログラム QCLO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">10.1.2. タンパク質全電子計算の収束過程</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">10.1.3. カノニカル軌道と局在化軌道</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id5">10.1.3.1. QCLO法に基づく自動計算機能</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">10.2. 実行方法</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">10.2.1. QCLO法プログラムの入力データの準備</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">10.2.2. QCLO法プログラムの実行方法</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">10.3. 自動計算法プログラムの入力キーワード</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#control">10.3.1. CONTROL ブロック</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#step-selection">10.3.1.1. step-selection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#filename">10.3.1.2. filename</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#step">10.3.2. STEP ブロック</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#sequential-frames">10.3.2.1. sequential-frames</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#general-frames">10.3.2.2. general-frames</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#execution">10.3.2.3. execution</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#global">10.3.3. GLOBAL ブロック</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id24">10.3.4. その他のキーワード</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pdf-keywords">10.3.4.1. pdf-keywords</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qclo-keywords">10.3.4.2. qclo-keywords</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fragment">10.3.4.3. fragment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#id33">10.3.5. qclo-keywordsで指定する計算条件</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#add-ethyl">10.3.5.1. add_ethyl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#set-fragment-add-ethyl">10.3.5.2. set_fragment_add_ethyl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#no-add-terminal">10.3.5.3. no_add_terminal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#set-fragment-by-element">10.3.5.4. set_fragment_by_element</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#localize-unocc-orbital">10.3.5.5. localize_unocc_orbital</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pickup-unocc-orbital">10.3.5.6. pickup_unocc_orbital</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#guessqclo-combine-unocc-orbital">10.3.5.7. guessqclo_combine_unocc_orbital</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#initial-guess-lcao-file">10.3.5.8. initial-guess-lcao-file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#initial-guess-lcao-alpha-file">10.3.5.9. initial-guess-lcao-alpha-file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#initial-guess-lcao-beta-file">10.3.5.10. initial-guess-lcao-beta-file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#initial-guess-occ-file">10.3.5.11. initial-guess-occ-file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#initial-guess-occ-alpha-file">10.3.5.12. initial-guess-occ-alpha-file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#initial-guess-occ-beta-file">10.3.5.13. initial-guess-occ-beta-file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#initial-guess-rho-file">10.3.5.14. initial-guess-rho-file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#initial-qclo-file">10.3.5.15. initial-qclo-file</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="appendix.html">11. 付録</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ProteinDF User's Manual</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li><span class="section-number">10. </span>全自動計算プログラムQCLO</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/QCLO.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="qclo">
+<h1><span class="section-number">10. </span>全自動計算プログラムQCLO<a class="headerlink" href="#qclo" title="このヘッドラインへのパーマリンク">¶</a></h1>
+<div class="section" id="id1">
+<h2><span class="section-number">10.1. </span>はじめに<a class="headerlink" href="#id1" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p>密度汎関数法による超大規模タンパク質全電子計算は、
+密度汎関数法による分子軌道法に基づく計算プログラムProteinDF と、
+ProteinDF の実行のための初期値を作成する半自動計算法プログラムQCLO (Quasi-Canonical Localized Orbital)
+またはRMO (Regional Molecular Orbital)から構成されます。
+QCLOまたはRMOプログラムを実行すると、計算シナリオに従い、
+ProteinDF プログラムに計算のための初期値が渡され、ProteinDF プログラムによる全電子計算が実行されます。</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>(現在の)QCLOプログラムは今後更新されません。
+新しく開発される全自動計算プログラムと記載が異なる場合があります。</p>
+</div>
+<div class="section" id="id2">
+<h3><span class="section-number">10.1.1. </span>半自動計算法プログラム QCLO<a class="headerlink" href="#id2" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>タンパク質全電子自動計算法プログラムは、
+QCLO法またはRMO法を用いた収束過程支援のプログラムです。
+アミノ酸残基などの単位で局在化していますが、
+その中ではアミノ酸残基単体の軌道であるカノニカル軌道に近いQCLOやRMOを切り貼りすると、
+ペプチド鎖の分子軌道計算のよい初期値になります。
+ペプチド鎖の分子軌道計算結果から再度QCLOやRMOを求め、
+さらに大きなペプチド鎖の計算の初期値とし、
+これらのペプチド延長過程を繰り返して全電子計算を行う手法をタンパク質の全電子自動計算収束過程法と呼びます。
+これにより容易に機能性に富んだタンパク質の精密な量子化学計算を実行できるようになります。</p>
+</div>
+<div class="section" id="id3">
+<h3><span class="section-number">10.1.2. </span>タンパク質全電子計算の収束過程<a class="headerlink" href="#id3" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>一般に、タンパク質やペプチド鎖のような大きな分子の電子状態は、
+はじめから一点計算を行うことが困難です。
+タンパク質をアミノ酸残基のような小さな分子片に分割して、
+それらの計算で求められた解を基に徐々に大きなペプチド鎖を計算していくといった手法を用います。
+本手法の概要を <a href="#qclosteps">Fig.  1</a> に示します。</p>
+<div class="figure align-center" id="id78">
+<span id="qclosteps"></span><a class="reference internal image-reference" href="_images/QCLO_steps.png"><img alt="QCLO_steps.png" src="_images/QCLO_steps.png" style="width: 8cm;" /></a>
+<p class="caption"><span class="caption-text">Fig. 1: タンパク質全電子計算収束過程の概要</span><a class="headerlink" href="#id78" title="この画像へのパーマリンク">¶</a></p>
+</div>
+<p>ステップ1 ではタンパク質やペプチド鎖をアミノ酸残基1 残基ずつに分割し、これらの計算を行います。
+ステップ2 ではステップ1 で計算された1 残基の結果をもとに、3 残基ずつの計算を実行します。
+このようにステップ2 以降では重なりを持って切り出します。
+同様にステップ3 ではステップ2 の3 残基の結果をもとに数残基のペプチド鎖の計算を実行します。
+このとき、ペプチド鎖の両端は対応する2 残基、間は真ん中の1 残基の結果をつなげて、初期値を作成します。
+このような操作を繰り返すことにより、次第にペプチド鎖の長さを延長して、
+最終的に全タンパク質の計算を実行します。
+この収束過程で作成される分子をフレーム分子とよびます。
+なお、ステップ1ではHarrisの初期値、ステップ2ではステップ1で計算された電子密度を合成して初期値を作ります。
+しかし、つなげる分子の数が多いほど誤差が蓄積しますし、
+重なりを持たせているとはいえ、結合部分では比較的大きな誤差が生じます。
+このような誤差は大きな分子の分子軌道計算には致命的な欠陥を生じることがあります。
+そこで、ステップ3 以降では、新しい局在化軌道をベースにした初期値合成方法を使用します。</p>
+</div>
+<div class="section" id="id4">
+<h3><span class="section-number">10.1.3. </span>カノニカル軌道と局在化軌道<a class="headerlink" href="#id4" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>分子軌道の表現には自由度があり、ユニタリ変換によって色々なものに変形できます。
+この性質を利用して、次の2 つの表現方法がよく使用されます。
+一つは正準直交系であるカノニカル軌道（Canonical Orbital）であり、
+もう一つは局在化軌道（Localized Orbital）です。
+局在化軌道はそれが空間的に最も狭い範囲で最大限に局在するように決めて求められる軌道です。
+その判定は、Edmiston-Rüdenberg、 Foster-Boys らにより提案された局在化指標の式が有名ですが、
+Pipek-Mezey のPopulation 法や、GuらのRMO法と呼ばれる方法もあります。
+いずれも軌道が特定の空間に局在化すればするほど指標が大きくなるよう立式されています。
+特にEdmiston-Rüdenberg、Population 法、およびRMO法の指標によって求められる局在化軌道は、
+一般に内殻電子は原子核のまわりに、結合に関与している価電子はその結合の周囲に、
+結合に関与していない価電子は、いわゆる孤立電子対軌道の形に局在化するため、
+化学者の直感との対応がつきやすいことで知られています。</p>
+<p>本システムでは、Edmiston-Rüdenberg法よりも高速な、Population 法とRMO法を採用しました。
+ペプチド鎖の良い初期値を合成するために、ステップ3 以降では局在化軌道を用います。
+分子軌道を局在した形で表現すれば、分子軌道を化学的によい近似で個別に取り扱うことができます。
+つまり煩雑な手続きが必要ですが、局在化軌道が作られれば安全かつ自由に分子軌道を分離結合することが可能になります。
+これにより精度の良い初期値を作成することができます。
+この切り貼りに便利な軌道をその性質から、先に擬カノニカル局在化軌道(QCLO)と名付けました。
+RMO法はまったく異なる計算方法ですが、特定の領域に局在化させた軌道を作成する方法で、基本的に取り扱い方は変わりません。
+一般に、分子サイズが大きくなるほど、RMO法の方が高速に計算できます。
+これらを用いて初期値を作成する方法は <a href="#qclofragment">Fig.  2</a> に示すように、
+ペプチド鎖をアミノ酸残基の側鎖やアミノ酸をつなぐペプチド結合などの部分（これらをフラグメントと呼ぶ）に分割し、
+フラグメントのみに広がり、かつフラグメントのカノニカル分子軌道に似た軌道を求め、
+これらを組み合わせてペプチド鎖全体の分子軌道計算の初期値とする方法です。
+局在化軌道を求めるには、計算目的となる分子の周辺の影響を取り込むため、
+またペプチド結合の部分を厳密に表現するために3 残基以上のフレーム分子から出発します。
+このフレーム分子においてペプチド鎖の場合のフラグメントは主鎖と側鎖の2 パターンに分類します。
+こう分類することで本システムでは自動的にフラグメントに分けることができます。</p>
+<div class="figure align-center" id="id79">
+<span id="qclofragment"></span><a class="reference internal image-reference" href="_images/QCLO_fragment.png"><img alt="QCLO_fragment.png" src="_images/QCLO_fragment.png" style="width: 8cm;" /></a>
+<p class="caption"><span class="caption-text">Fig. 2: フレーム分子THR-VAL-GLUとフラグメント</span><a class="headerlink" href="#id79" title="この画像へのパーマリンク">¶</a></p>
+</div>
+<p>QCLOおよびRMO作成の手順は以下の通りです。</p>
+<ul class="simple">
+<li><p>手順1 : フレーム分子毎の分子軌道計算</p></li>
+</ul>
+<p>フレーム分子の分子軌道計算を実行します。
+フレーム分子の構造はペプチド鎖の相当部分と同じものを用い、
+切断されたＮ末、C 末にそれぞれH、OH を付加します。ここで得られる軌道はフレーム分子全体に広がったカノニカル軌道です。</p>
+<ul class="simple">
+<li><p>手順2 : フレーム分子毎の局在化軌道計算</p></li>
+</ul>
+<p>手順1 で得られた分子軌道を個々の化学結合や孤立電子対に局在する分子軌道に変換します。QCLOとRMOではこの計算方法が異なります。</p>
+<ul class="simple">
+<li><p>手順3 : フラグメント毎の擬カノニカル局在化軌道計算</p></li>
+</ul>
+<p>手順2 で得られた軌道の中から各フラグメントに属す局在化軌道を選び出し、
+それらの係数行列を使用してフレーム分子のKohn-Sham 行列（ab initio HF 法ならばFock行列）を
+原子軌道ベースから局在化軌道ベースに変換します。
+そうして作られたフラグメントのKohn-Sham 行列の固有値方程式を解くことで
+フラグメントに局在しつつ、フラグメント全体に広がった軌道が求められます。
+以上の手順1～3 でQCLOまたはRMOが得られます。
+手順1～3 をすべてのフレーム分子とそのフラグメントで実行し、初期値は手順4 で作成します。</p>
+<ul class="simple">
+<li><p>手順4 :局在化軌道の結合</p></li>
+</ul>
+<p>手順3 で計算されたQCLOやRMOはフレーム分子毎に計算されています。
+まず、手順1 で付加した原子H、OH の軌道成分は本来のペプチド鎖には存在しないため、取り除きます。
+すべてのフラグメントのQCLOまたはRMOを組み合わせてペプチド鎖全体の軌道セットを作成します。
+この軌道セットは規格直交化されていないため、ここでLöwdinの直交化を実行します。
+Löwdin の直交化はもとの軌道をなるべく変えないように規格直交化を達成しますので、
+得られた軌道は手順3 の軌道とほとんど変わりません。これによりペプチド鎖全体で規格直交したLCAO 行列が得られます。</p>
+<p>手順1～4 の手順を組み合わせた方法を、タンパク質全電子計算の収束過程と呼びます。</p>
+<div class="section" id="id5">
+<h4><span class="section-number">10.1.3.1. </span>QCLO法に基づく自動計算機能<a class="headerlink" href="#id5" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>重複計算を排除するQCLO法に基づく自動計算機能です。
+ProteinDFプログラムのフラグメント単位のQCLO計算結果を用いて、
+ProteinDFプログラムの初期データ（LCAO）を作成する機能を持ちます。</p>
+<p>ProteinDF プログラムでは、Roothaan方程式 <span class="math notranslate nohighlight">\(FC=SC\epsilon\)</span> を解く際に、行列 <span class="math notranslate nohighlight">\(X=U*s^{-1/2}\)</span> によって、
+直交基底に変換して解いています。</p>
+<ol class="arabic simple">
+<li><p>原子軌道 (AO) 基底 KS 行列を、直交化基底 KS 行列に変換</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[F'=X^{t}FXC\]</div>
+<ol class="arabic simple" start="2">
+<li><p>KS 行列に対するレベルシフト</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[F'=F'+C'(C'*\beta)^{\dagger}\]</div>
+<ol class="arabic simple" start="3">
+<li><p>KS 行列の対角化し、直交化基底での係数行列を得る</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[F'C'=C'\epsilon'\]</div>
+<ol class="arabic simple" start="4">
+<li><p>係数行列を AO 基底に変換</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[C=XC'\]</div>
+<p>QCLO 法の計算方法の概要を以下に示します。</p>
+<ul class="simple">
+<li><p>第1ステップ：</p></li>
+</ul>
+<p>普通の SCF MO 計算を全アミノ酸に対して行います。初期電子密度は、原子の電子密度から作成します。</p>
+<ul class="simple">
+<li><p>第2ステップ：</p></li>
+</ul>
+<p>初期電子密度は、第１ステップで得られたモノマーの電子密度を切り貼りする。
+局在化軌道（LO）をフラグメントに振り分けた後、フラグメントの QCLO は、次の式によって求められます。
+この固有方程式の解が QCLO です。</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}F'=C_{LO}^{t}FC_{LO}\\F'C'=C'\epsilon'\end{aligned}\end{align} \]</div>
+<div class="line-block">
+<div class="line"><span class="math notranslate nohighlight">\(F\)</span> フレーム分子の Fock or Kohn-Sham 行列</div>
+<div class="line"><span class="math notranslate nohighlight">\(C_LO\)</span> フラグメントに割り振られた LO の係数行列</div>
+<div class="line"><span class="math notranslate nohighlight">\(F'\)</span> フラグメントの Fock or Kohn-Sham 行列（LO 基底）</div>
+</div>
+<ul class="simple">
+<li><p>第3ステップ以降：</p></li>
+</ul>
+<p>第2ステップの QCLO を集めて初期値を作成する。
+集められた QCLO は Löwdin変換によって直交化しなければなりませんが、
+変換しても元の QCLO からはほとんど変化しません。
+直交化された QCLO から、フラグメントに対する初期値が作成される。
+フラグメントに対する Fock もしくは Kohn-Sham 行列は、以下の式で求められます。</p>
+<div class="math notranslate nohighlight">
+\[F'=C_{QCLO}^{t}FC_{QCLO}\]</div>
+<div class="line-block">
+<div class="line"><span class="math notranslate nohighlight">\(C_{QCLO}\)</span> QCLO の係数行列（原子軌道基底）</div>
+</div>
+<p>この解は、前のステップの QCLO で張られた空間における、第3ステップの QCLO です。
+QCLO 法の処理フローを <a href="#qcloflow">Fig.  3</a>  に示します。</p>
+<div class="figure align-center" id="id80">
+<span id="qcloflow"></span><img alt="QCLO_flow.png" src="_images/QCLO_flow.png" />
+<p class="caption"><span class="caption-text">Fig. 3: QCLO法の処理フロー</span><a class="headerlink" href="#id80" title="この画像へのパーマリンク">¶</a></p>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="id6">
+<h2><span class="section-number">10.2. </span>実行方法<a class="headerlink" href="#id6" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<div class="section" id="id7">
+<h3><span class="section-number">10.2.1. </span>QCLO法プログラムの入力データの準備<a class="headerlink" href="#id7" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>半自動計算法プログラムの入力キーワードは入力ファイルQcStepにおいて指定します。
+以下にQcStepファイルの例を示します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>// Qclo input file
+&gt;&gt;&gt;&gt;CONTROL
+      step-selection = { 1 2 3 4 }
+      filename = 1hrc_amber.nowat.pdb
+&gt;&gt;&gt;&gt;STEP1
+      execution = {creation integral guess pdf }
+      sequential-frames = {
+              18-24|1
+      }
+&gt;&gt;&gt;&gt;STEP2
+      execution = {creation integral guessrho pdf lo pickup}
+
+      sequential-frames = {
+              18-24|3
+      }
+&gt;&gt;&gt;&gt;STEP3
+      execution = {creation integral guessqclo pdf lo pickup}
+
+      sequential-frames = {
+              18-22
+              21-24
+      }
+&gt;&gt;&gt;&gt;STEP4
+      execution = {creation integral guessqclo pdf }
+      sequential-frames = {
+              18-24
+      }
+      pdf-keywords = {
+              max-iteration = 5
+      ｝
+&gt;&gt;&gt;&gt;GLOBAL
+      pdf-keywords = {
+         scf-acceleration = damping
+         scf-acceleration/damping/damping-factor = 0.90
+      ｝
+</pre></div>
+</div>
+<p>QcStepファイルは、&quot; &gt;&gt;&gt;&gt;&quot;で表されるブロック内にキーワードを指定します。
+ブロック名は、CONTROL, STEP#, GLOBALです。ただし、#はStep数を表します。
+コメントは//で始まり改行コードまでがコメントとなります。</p>
+</div>
+<div class="section" id="id8">
+<h3><span class="section-number">10.2.2. </span>QCLO法プログラムの実行方法<a class="headerlink" href="#id8" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>自動計算法プログラムをコマンドラインから実行するには、以下のように行います。</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% <span class="nv">$PDF_HOME</span>/bin/QCLO.x
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id9">
+<h2><span class="section-number">10.3. </span>自動計算法プログラムの入力キーワード<a class="headerlink" href="#id9" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<div class="section" id="control">
+<h3><span class="section-number">10.3.1. </span>CONTROL ブロック<a class="headerlink" href="#control" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>CONTROL ブロックでは、自動計算法全体に関するキーワードを指定します。</p>
+<div class="section" id="step-selection">
+<h4><span class="section-number">10.3.1.1. </span>step-selection<a class="headerlink" href="#step-selection" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>自動計算法のステップ制御のためのキーワードです。
+{}内には同一ファイル内に記述されているSTEP#ブロックキーワードの番号（#）が記述できます。</p>
+<div class="section" id="id10">
+<h5><span class="section-number">10.3.1.1.1. </span>デフォルト値<a class="headerlink" href="#id10" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<blockquote>
+<div><p>STEPブロックで指定されたSTEP数</p>
+</div></blockquote>
+</div>
+<div class="section" id="id11">
+<h5><span class="section-number">10.3.1.1.2. </span>とりうる値<a class="headerlink" href="#id11" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<blockquote>
+<div><p>{ （計算するステップ数）}</p>
+</div></blockquote>
+</div>
+<div class="section" id="id12">
+<h5><span class="section-number">10.3.1.1.3. </span>使用例<a class="headerlink" href="#id12" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>step-selection = { 1 2 3 4 }
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="filename">
+<h4><span class="section-number">10.3.1.2. </span>filename<a class="headerlink" href="#filename" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>PDBファイルまたはPDBファイルフォーマットに従ったファイルをサポートします。</p>
+<div class="section" id="id13">
+<h5><span class="section-number">10.3.1.2.1. </span>デフォルト値<a class="headerlink" href="#id13" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id14">
+<h5><span class="section-number">10.3.1.2.2. </span>とりうる値<a class="headerlink" href="#id14" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>PDBファイル名またはPDBファイルフォーマットに従ったファイル名</p>
+</div>
+<div class="section" id="id15">
+<h5><span class="section-number">10.3.1.2.3. </span>使用例<a class="headerlink" href="#id15" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>filename = 1hrc_amber.nowat.pdb
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="step">
+<h3><span class="section-number">10.3.2. </span>STEP ブロック<a class="headerlink" href="#step" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>STEP ブロックでは、各計算STEPに関するキーワードを指定します。</p>
+<div class="section" id="sequential-frames">
+<h4><span class="section-number">10.3.2.1. </span>sequential-frames<a class="headerlink" href="#sequential-frames" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>ペプチド鎖フレームを指定するキーワード。
+sequential-frames ={  }の形式でペプチド鎖フレームを指定します。
+{}内でペプチド鎖のフレーム定義とその一連の計算を指示します。
+{}内の記述の仕方は以下のとおりです。</p>
+<ul class="simple">
+<li><p>$1-$2|$3</p></li>
+</ul>
+<p>$1～$2残基ペプチド鎖を$3残基毎に2残基の重なりを持って切り分けた断片を定義します。
+最終断片は$3残基でなくてもかまいません。</p>
+<ul class="simple">
+<li><p>$4</p></li>
+</ul>
+<p>$4残基番号のアミノ酸残基</p>
+<ul class="simple">
+<li><p>$5-$6</p></li>
+</ul>
+<p>$5～$6残基ペプチド鎖($1-$2|$3の$3省略時に相当する。)</p>
+<div class="section" id="id16">
+<h5><span class="section-number">10.3.2.1.1. </span>デフォルト値<a class="headerlink" href="#id16" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id17">
+<h5><span class="section-number">10.3.2.1.2. </span>とりうる値<a class="headerlink" href="#id17" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>ペプチド鎖フレーム構成残基番号</p>
+</div>
+<div class="section" id="id18">
+<h5><span class="section-number">10.3.2.1.3. </span>使用例<a class="headerlink" href="#id18" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sequential-frames = {
+  18-24|3
+}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="general-frames">
+<h4><span class="section-number">10.3.2.2. </span>general-frames<a class="headerlink" href="#general-frames" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>一般のフレーム分子を定義し、その一連の計算を実行するためのキーワードです。
+以下の形式で指定します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>general-frames = {
+  name : {
+    …
+  }
+}
+</pre></div>
+</div>
+<p>nameはシステム予約名を除く任意の文字列を指定できます。
+{}内にはSTEP#以前に計算済みのsequential-framesキーワード右値{}内文字列を記述することができます。</p>
+<div class="section" id="id19">
+<h5><span class="section-number">10.3.2.2.1. </span>デフォルト値<a class="headerlink" href="#id19" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id20">
+<h5><span class="section-number">10.3.2.2.2. </span>使用例<a class="headerlink" href="#id20" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>general-frames = {
+  H2O : {
+             {
+             }
+        }
+  }
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="execution">
+<h4><span class="section-number">10.3.2.3. </span>execution<a class="headerlink" href="#execution" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>STEP# 内の実行制御のためのキーワードです。
+{}内には以下の文字列が記述できます。</p>
+<ul class="simple">
+<li><p>creation</p></li>
+</ul>
+<p>作業環境作成</p>
+<ul class="simple">
+<li><p>integral</p></li>
+</ul>
+<p>ProteinDFの積分実行</p>
+<ul class="simple">
+<li><p>guess</p></li>
+</ul>
+<p>ProteinDFによるinitial guess作成</p>
+<ul class="simple">
+<li><p>guessrho</p></li>
+</ul>
+<p>ρ~結合によるinitial guess作成</p>
+<ul class="simple">
+<li><p>guessdensity</p></li>
+</ul>
+<p>密度行列の結合によるinitial guess作成</p>
+<ul class="simple">
+<li><p>guessqclo</p></li>
+</ul>
+<p>QCLOによるinitial guess作成。(STEP 3以降有効)</p>
+<ul class="simple">
+<li><p>guessfile</p></li>
+</ul>
+<p>qclo-keywordsで指定した初期データファイルを使用</p>
+<ul class="simple">
+<li><p>pdf</p></li>
+</ul>
+<p>ProteinDF計算</p>
+<ul class="simple">
+<li><p>lo</p></li>
+</ul>
+<p>軌道局在化計算</p>
+<ul class="simple">
+<li><p>pickup</p></li>
+</ul>
+<p>局在化軌道のフラグメントへの振り分け</p>
+<ul class="simple">
+<li><p>pdfqclo</p></li>
+</ul>
+<p>拡張QCLO法による分子軌道計算</p>
+<div class="section" id="id21">
+<h5><span class="section-number">10.3.2.3.1. </span>デフォルト値<a class="headerlink" href="#id21" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>Step1では execution = {creation integral guess pdf }</p>
+<p>Step2では execution = {creation integral guessrho pdf lo pickup }</p>
+<p>Step3以降は execution = {  creation integral guessqclo pdf lo pickup }</p>
+</div>
+<div class="section" id="id22">
+<h5><span class="section-number">10.3.2.3.2. </span>とりうる値<a class="headerlink" href="#id22" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<blockquote>
+<div><p>creation,integral, guess, guessrho, guessqclo, guessfile,  lo, pickup, pdf, pdfqclo</p>
+</div></blockquote>
+</div>
+<div class="section" id="id23">
+<h5><span class="section-number">10.3.2.3.3. </span>使用例<a class="headerlink" href="#id23" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>execution = { creation integral guess pdf }
+execution = { creation integral guessrho pdf lo pickup }
+execution = { creation integral guessqclo pdf lo pickup }
+</pre></div>
+</div>
+<p>上記の例はSTEP1, STEP2, STEP#(#&gt;2)のデフォルト値を示しています。</p>
+</div>
+</div>
+</div>
+<div class="section" id="global">
+<h3><span class="section-number">10.3.3. </span>GLOBAL ブロック<a class="headerlink" href="#global" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<p>このブロック内に記述されたキーワードは全てのブロックに反映します。
+現行では以下に示す <code class="docutils literal notranslate"><span class="pre">pdf-keywords</span></code> と <code class="docutils literal notranslate"><span class="pre">qclo-keywords</span></code> が記述できます。</p>
+</div>
+<div class="section" id="id24">
+<h3><span class="section-number">10.3.4. </span>その他のキーワード<a class="headerlink" href="#id24" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<div class="section" id="pdf-keywords">
+<h4><span class="section-number">10.3.4.1. </span>pdf-keywords<a class="headerlink" href="#pdf-keywords" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>これを記述したブロック内でのProteinDF計算においてのみ有効となる
+ProteinDFプログラムの入力キーワードを指定します。
+以下の形式で指定します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>pdf-keywords = {
+  ProteinDFプログラムの入力キーワード群
+}
+</pre></div>
+</div>
+<p>これらは自動計算法入力ファイルのどこに記述してもかまいません。
+このときキーワードの優先順位と有効範囲は以下とします。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>{}内 &gt; {}外 &gt; STEP#ブロック &gt; GLOBALブロック &gt; CONTROLブロック
+</pre></div>
+</div>
+<div class="section" id="id25">
+<h5><span class="section-number">10.3.4.1.1. </span>デフォルト値<a class="headerlink" href="#id25" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id26">
+<h5><span class="section-number">10.3.4.1.2. </span>とりうる値<a class="headerlink" href="#id26" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>ProteinDFプログラムの入力キーワード</p>
+</div>
+<div class="section" id="id27">
+<h5><span class="section-number">10.3.4.1.3. </span>使用例<a class="headerlink" href="#id27" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>pdf-keywords = {
+  max-iteration = 5
+}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="qclo-keywords">
+<h4><span class="section-number">10.3.4.2. </span>qclo-keywords<a class="headerlink" href="#qclo-keywords" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>これを記述したブロック内での自動計算においてのみ有効となる自動計算法プログラムの入力キーワードを指定します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>qclo-keywords = {
+  自動計算法プログラムの入力キーワード群
+}
+</pre></div>
+</div>
+<p>これらは自動計算法入力ファイルのどこに記述してもかまいません。
+このときキーワードの優先順位と有効範囲は以下の通りです。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>{}内 &gt; {}外 &gt; STEP#ブロック &gt; GLOBALブロック &gt; CONTROLブロック
+</pre></div>
+</div>
+<div class="section" id="id28">
+<h5><span class="section-number">10.3.4.2.1. </span>デフォルト値<a class="headerlink" href="#id28" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id29">
+<h5><span class="section-number">10.3.4.2.2. </span>とりうる値<a class="headerlink" href="#id29" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>自動計算法プログラムの入力キーワード</p>
+</div>
+<div class="section" id="id30">
+<h5><span class="section-number">10.3.4.2.3. </span>使用例<a class="headerlink" href="#id30" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>qclo-keywords = {
+  set_fragment_by_element
+}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="fragment">
+<h4><span class="section-number">10.3.4.3. </span>fragment<a class="headerlink" href="#fragment" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>フレーム分子のQCLO作成時のフラグメント分割を、以下の形式で指定します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>fragment = {
+  フラグメント１の名前 = {
+    フラグメント１の構成要素１
+      ...
+    フラグメント１の構成要素ｍ
+  }
+  ...
+  フラグメントｎの名前 = {
+  ...
+  }
+}
+</pre></div>
+</div>
+<p>以上の指定は、フレーム分子の定義箇所の中に記述します。</p>
+<div class="section" id="id31">
+<h5><span class="section-number">10.3.4.3.1. </span>デフォルト値<a class="headerlink" href="#id31" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id32">
+<h5><span class="section-number">10.3.4.3.2. </span>使用例<a class="headerlink" href="#id32" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>fragment = {
+  frag_res18 = {
+    18
+  }
+  frag_res19_21 = {
+    19-21
+  }
+  frag_res22 = {
+    22
+  }
+｝
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="id33">
+<h3><span class="section-number">10.3.5. </span>qclo-keywordsで指定する計算条件<a class="headerlink" href="#id33" title="このヘッドラインへのパーマリンク">¶</a></h3>
+<div class="section" id="add-ethyl">
+<h4><span class="section-number">10.3.5.1. </span>add_ethyl<a class="headerlink" href="#add-ethyl" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>フレーム分子にエチル基を付加します。
+エチル基の座標データには、指定したアミノ酸残基の側鎖の座標データを用います。</p>
+<div class="section" id="id34">
+<h5><span class="section-number">10.3.5.1.1. </span>デフォルト値<a class="headerlink" href="#id34" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id35">
+<h5><span class="section-number">10.3.5.1.2. </span>とりうる値<a class="headerlink" href="#id35" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>残基番号</p>
+</div>
+<div class="section" id="id36">
+<h5><span class="section-number">10.3.5.1.3. </span>使用例<a class="headerlink" href="#id36" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>add_ethyl  =  18
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="set-fragment-add-ethyl">
+<h4><span class="section-number">10.3.5.2. </span>set_fragment_add_ethyl<a class="headerlink" href="#set-fragment-add-ethyl" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>フレーム分子を、指定したアミノ酸残基の一部とみなし、側鎖に相当する部分を切り出してRsideフラグメントを作成します。</p>
+<div class="section" id="id37">
+<h5><span class="section-number">10.3.5.2.1. </span>デフォルト値<a class="headerlink" href="#id37" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id38">
+<h5><span class="section-number">10.3.5.2.2. </span>とりうる値<a class="headerlink" href="#id38" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>残基番号</p>
+</div>
+<div class="section" id="id39">
+<h5><span class="section-number">10.3.5.2.3. </span>使用例<a class="headerlink" href="#id39" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>set_fragment_add_ethyl  =  18
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="no-add-terminal">
+<h4><span class="section-number">10.3.5.3. </span>no_add_terminal<a class="headerlink" href="#no-add-terminal" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>ペプチド結合を切断した箇所に H, OH を付加する処理を行わないようにします。</p>
+<div class="section" id="id40">
+<h5><span class="section-number">10.3.5.3.1. </span>デフォルト値<a class="headerlink" href="#id40" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id41">
+<h5><span class="section-number">10.3.5.3.2. </span>とりうる値<a class="headerlink" href="#id41" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id42">
+<h5><span class="section-number">10.3.5.3.3. </span>使用例<a class="headerlink" href="#id42" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>no_add_terminal
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="set-fragment-by-element">
+<h4><span class="section-number">10.3.5.4. </span>set_fragment_by_element<a class="headerlink" href="#set-fragment-by-element" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>QCLO作成時のフラグメント分割を、初期値作成時のフラグメント分割と同一にします。</p>
+<div class="section" id="id43">
+<h5><span class="section-number">10.3.5.4.1. </span>デフォルト値<a class="headerlink" href="#id43" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id44">
+<h5><span class="section-number">10.3.5.4.2. </span>とりうる値<a class="headerlink" href="#id44" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id45">
+<h5><span class="section-number">10.3.5.4.3. </span>使用例<a class="headerlink" href="#id45" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>set_fragment_by_element
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="localize-unocc-orbital">
+<h4><span class="section-number">10.3.5.5. </span>localize_unocc_orbital<a class="headerlink" href="#localize-unocc-orbital" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>QCLO作成時に空軌道もLocalize処理を行います。</p>
+<div class="section" id="id46">
+<h5><span class="section-number">10.3.5.5.1. </span>デフォルト値<a class="headerlink" href="#id46" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id47">
+<h5><span class="section-number">10.3.5.5.2. </span>とりうる値<a class="headerlink" href="#id47" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id48">
+<h5><span class="section-number">10.3.5.5.3. </span>使用例<a class="headerlink" href="#id48" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>localize_unocc_orbital
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="pickup-unocc-orbital">
+<h4><span class="section-number">10.3.5.6. </span>pickup_unocc_orbital<a class="headerlink" href="#pickup-unocc-orbital" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>空軌道についてLOのフラグメントへの割り当て処理を行います。</p>
+<div class="section" id="id49">
+<h5><span class="section-number">10.3.5.6.1. </span>デフォルト値<a class="headerlink" href="#id49" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id50">
+<h5><span class="section-number">10.3.5.6.2. </span>とりうる値<a class="headerlink" href="#id50" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id51">
+<h5><span class="section-number">10.3.5.6.3. </span>使用例<a class="headerlink" href="#id51" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>pickup_unocc_orbital
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="guessqclo-combine-unocc-orbital">
+<h4><span class="section-number">10.3.5.7. </span>guessqclo_combine_unocc_orbital<a class="headerlink" href="#guessqclo-combine-unocc-orbital" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>QCLOからの初期値作成時に空軌道についても処理を行います。</p>
+<div class="section" id="id52">
+<h5><span class="section-number">10.3.5.7.1. </span>デフォルト値<a class="headerlink" href="#id52" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id53">
+<h5><span class="section-number">10.3.5.7.2. </span>とりうる値<a class="headerlink" href="#id53" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id54">
+<h5><span class="section-number">10.3.5.7.3. </span>使用例<a class="headerlink" href="#id54" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>guessqclo_combine_unocc_orbita
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="initial-guess-lcao-file">
+<h4><span class="section-number">10.3.5.8. </span>initial-guess-lcao-file<a class="headerlink" href="#initial-guess-lcao-file" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>RKS計算において、LCAO展開係数行列の初期データファイルを指定します。</p>
+<div class="section" id="id55">
+<h5><span class="section-number">10.3.5.8.1. </span>デフォルト値<a class="headerlink" href="#id55" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id56">
+<h5><span class="section-number">10.3.5.8.2. </span>とりうる値<a class="headerlink" href="#id56" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>ファイル名</p>
+</div>
+<div class="section" id="id57">
+<h5><span class="section-number">10.3.5.8.3. </span>使用例<a class="headerlink" href="#id57" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>initial-guess-lcao-file  =  step3/13_19/result.guess.lcao.rks
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="initial-guess-lcao-alpha-file">
+<h4><span class="section-number">10.3.5.9. </span>initial-guess-lcao-alpha-file<a class="headerlink" href="#initial-guess-lcao-alpha-file" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>UKS計算において、α電子軌道のLCAO展開係数行列の初期データファイルを指定します。</p>
+<div class="section" id="id58">
+<h5><span class="section-number">10.3.5.9.1. </span>デフォルト値<a class="headerlink" href="#id58" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id59">
+<h5><span class="section-number">10.3.5.9.2. </span>とりうる値<a class="headerlink" href="#id59" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>ファイル名</p>
+</div>
+<div class="section" id="id60">
+<h5><span class="section-number">10.3.5.9.3. </span>使用例<a class="headerlink" href="#id60" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>initial-guess-lcao-alpha-file  =  step3/13_19/result.guess.lcao.uks-alpha
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="initial-guess-lcao-beta-file">
+<h4><span class="section-number">10.3.5.10. </span>initial-guess-lcao-beta-file<a class="headerlink" href="#initial-guess-lcao-beta-file" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>UKS計算において、β電子軌道のLCAO展開係数行列の初期データファイルを指定します。</p>
+<div class="section" id="id61">
+<h5><span class="section-number">10.3.5.10.1. </span>デフォルト値<a class="headerlink" href="#id61" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id62">
+<h5><span class="section-number">10.3.5.10.2. </span>とりうる値<a class="headerlink" href="#id62" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>ファイル名</p>
+</div>
+<div class="section" id="id63">
+<h5><span class="section-number">10.3.5.10.3. </span>使用例<a class="headerlink" href="#id63" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>initial-guess-lcao-beta-file  =  step3/13_19/result.guess.lcao.uks-beta
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="initial-guess-occ-file">
+<h4><span class="section-number">10.3.5.11. </span>initial-guess-occ-file<a class="headerlink" href="#initial-guess-occ-file" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>RKS計算において、占有数の初期データファイルを指定します。</p>
+<div class="section" id="id64">
+<h5><span class="section-number">10.3.5.11.1. </span>デフォルト値<a class="headerlink" href="#id64" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id65">
+<h5><span class="section-number">10.3.5.11.2. </span>とりうる値<a class="headerlink" href="#id65" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>ファイル名</p>
+</div>
+<div class="section" id="id66">
+<h5><span class="section-number">10.3.5.11.3. </span>使用例<a class="headerlink" href="#id66" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>initial-guess-occ-file  =  step3/13_19/result.guess.occ.rks
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="initial-guess-occ-alpha-file">
+<h4><span class="section-number">10.3.5.12. </span>initial-guess-occ-alpha-file<a class="headerlink" href="#initial-guess-occ-alpha-file" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>UKS計算において、α電子占有数の初期データファイルを指定します。</p>
+<div class="section" id="id67">
+<h5><span class="section-number">10.3.5.12.1. </span>デフォルト値<a class="headerlink" href="#id67" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id68">
+<h5><span class="section-number">10.3.5.12.2. </span>とりうる値<a class="headerlink" href="#id68" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>ファイル名</p>
+</div>
+<div class="section" id="id69">
+<h5><span class="section-number">10.3.5.12.3. </span>使用例<a class="headerlink" href="#id69" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>initial-guess-occ-alpha-file  =  step3/13_19/result.guess.occ.uks-alpha
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="initial-guess-occ-beta-file">
+<h4><span class="section-number">10.3.5.13. </span>initial-guess-occ-beta-file<a class="headerlink" href="#initial-guess-occ-beta-file" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>UKS計算において、β電子占有数の初期データファイルを指定します。</p>
+<div class="section" id="id70">
+<h5><span class="section-number">10.3.5.13.1. </span>デフォルト値<a class="headerlink" href="#id70" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id71">
+<h5><span class="section-number">10.3.5.13.2. </span>とりうる値<a class="headerlink" href="#id71" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>ファイル名</p>
+</div>
+<div class="section" id="id72">
+<h5><span class="section-number">10.3.5.13.3. </span>使用例<a class="headerlink" href="#id72" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>initial-guess-occ-beta-file  =  step3/13_19/result.guess.occ.uks-beta
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="initial-guess-rho-file">
+<h4><span class="section-number">10.3.5.14. </span>initial-guess-rho-file<a class="headerlink" href="#initial-guess-rho-file" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>近似電子密度展開係数の初期データファイルを指定します。</p>
+<div class="section" id="id73">
+<h5><span class="section-number">10.3.5.14.1. </span>デフォルト値<a class="headerlink" href="#id73" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id74">
+<h5><span class="section-number">10.3.5.14.2. </span>とりうる値<a class="headerlink" href="#id74" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>ファイル名</p>
+</div>
+<div class="section" id="id75">
+<h5><span class="section-number">10.3.5.14.3. </span>使用例<a class="headerlink" href="#id75" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>initial-guess-rho-file  =  guess2.ch3ch2coox.txt
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="initial-qclo-file">
+<h4><span class="section-number">10.3.5.15. </span>initial-qclo-file<a class="headerlink" href="#initial-qclo-file" title="このヘッドラインへのパーマリンク">¶</a></h4>
+<p>フラグメントのQCLOの初期データファイルを、フラグメント名、ファイル名の順に指定します。</p>
+<div class="section" id="id76">
+<h5><span class="section-number">10.3.5.15.1. </span>デフォルト値<a class="headerlink" href="#id76" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<p>なし</p>
+</div>
+<div class="section" id="id77">
+<h5><span class="section-number">10.3.5.15.2. </span>使用例<a class="headerlink" href="#id77" title="このヘッドラインへのパーマリンク">¶</a></h5>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>initial-qclo-file = fragment1  step3/13_19/fl_Work/fl_Mtr_C.matrix.frag1.rks8
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="appendix.html" class="btn btn-neutral float-right" title="11. 付録" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="analysis.html" class="btn btn-neutral float-left" title="9. ProteinDF計算結果の解析" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014-2020, Toshiyuki HIRANO
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
