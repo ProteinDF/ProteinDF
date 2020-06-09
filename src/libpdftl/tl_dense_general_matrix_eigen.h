@@ -27,88 +27,88 @@ class TlDenseGeneralMatrix_Eigen : public TlDenseGeneralMatrixObject {
     TlDenseGeneralMatrix_Eigen(const TlDenseGeneralMatrix_ViennaCL& rhs);
 #endif  // HAVE_VIENNACL
 
-    operator std::vector<double>() const;
+  operator std::vector<double>() const;
 
-    virtual ~TlDenseGeneralMatrix_Eigen();
+  virtual ~TlDenseGeneralMatrix_Eigen();
 
-    // ---------------------------------------------------------------------------
-    // operators
-    // ---------------------------------------------------------------------------
-   public:
-    TlDenseGeneralMatrix_Eigen& operator=(
-        const TlDenseGeneralMatrix_Eigen& rhs);
+  // ---------------------------------------------------------------------------
+  // transformation
+  // ---------------------------------------------------------------------------
+  void vtr2mat(const std::vector<double>& vtr);
 
-    const TlDenseGeneralMatrix_Eigen operator+(
-        const TlDenseGeneralMatrix_Eigen& rhs) const;
-    const TlDenseGeneralMatrix_Eigen operator-(
-        const TlDenseGeneralMatrix_Eigen& rhs) const;
-    const TlDenseGeneralMatrix_Eigen operator*(
-        const TlDenseGeneralMatrix_Eigen& rhs) const;
+  // ---------------------------------------------------------------------------
+  // operators
+  // ---------------------------------------------------------------------------
+ public:
+  TlDenseGeneralMatrix_Eigen& operator=(const TlDenseGeneralMatrix_Eigen& rhs);
 
-    TlDenseGeneralMatrix_Eigen& operator+=(
-        const TlDenseGeneralMatrix_Eigen& rhs);
-    TlDenseGeneralMatrix_Eigen& operator-=(
-        const TlDenseGeneralMatrix_Eigen& rhs);
-    TlDenseGeneralMatrix_Eigen& operator*=(const double coef);
-    TlDenseGeneralMatrix_Eigen& operator/=(const double coef);
-    TlDenseGeneralMatrix_Eigen& operator*=(
-        const TlDenseGeneralMatrix_Eigen& rhs);
+  const TlDenseGeneralMatrix_Eigen operator+(
+      const TlDenseGeneralMatrix_Eigen& rhs) const;
+  const TlDenseGeneralMatrix_Eigen operator-(
+      const TlDenseGeneralMatrix_Eigen& rhs) const;
+  const TlDenseGeneralMatrix_Eigen operator*(
+      const TlDenseGeneralMatrix_Eigen& rhs) const;
 
-    // ---------------------------------------------------------------------------
-    // operations
-    // ---------------------------------------------------------------------------
-   public:
-    double sum() const;
-    double getRMS() const;
+  TlDenseGeneralMatrix_Eigen& operator+=(const TlDenseGeneralMatrix_Eigen& rhs);
+  TlDenseGeneralMatrix_Eigen& operator-=(const TlDenseGeneralMatrix_Eigen& rhs);
+  TlDenseGeneralMatrix_Eigen& operator*=(const double coef);
+  TlDenseGeneralMatrix_Eigen& operator/=(const double coef);
+  TlDenseGeneralMatrix_Eigen& operator*=(const TlDenseGeneralMatrix_Eigen& rhs);
 
-    TlDenseGeneralMatrix_Eigen dot(const TlDenseGeneralMatrix_Eigen& rhs) const;
-    const TlDenseGeneralMatrix_Eigen& dotInPlace(
-        const TlDenseGeneralMatrix_Eigen& rhs);
+  // ---------------------------------------------------------------------------
+  // operations
+  // ---------------------------------------------------------------------------
+ public:
+  double sum() const;
+  double getRMS() const;
 
-    TlDenseGeneralMatrix_Eigen transpose() const;
-    TlDenseGeneralMatrix_Eigen inverse() const;
+  TlDenseGeneralMatrix_Eigen dot(const TlDenseGeneralMatrix_Eigen& rhs) const;
+  const TlDenseGeneralMatrix_Eigen& dotInPlace(
+      const TlDenseGeneralMatrix_Eigen& rhs);
 
-    // ---------------------------------------------------------------------------
-    // others
-    // ---------------------------------------------------------------------------
-    friend class TlDenseSymmetricMatrix_Eigen;
-    friend class TlDenseGeneralMatrix_ViennaCL;
-    friend class TlSparseGeneralMatrix_Eigen;
+  TlDenseGeneralMatrix_Eigen transpose() const;
+  TlDenseGeneralMatrix_Eigen inverse() const;
 
-    // DM(G) * DM(S)
-    friend TlDenseGeneralMatrix_Eigen operator*(
-        const TlDenseGeneralMatrix_Eigen& mat1,
-        const TlDenseSymmetricMatrix_Eigen& mat2);
-    // DM(S) * DM(G)
-    friend TlDenseGeneralMatrix_Eigen operator*(
-        const TlDenseSymmetricMatrix_Eigen& mat1,
-        const TlDenseGeneralMatrix_Eigen& mat2);
+  // ---------------------------------------------------------------------------
+  // others
+  // ---------------------------------------------------------------------------
+  friend class TlDenseSymmetricMatrix_Eigen;
+  friend class TlDenseGeneralMatrix_ViennaCL;
+  friend class TlSparseGeneralMatrix_Eigen;
 
-    // DM(G) * DV
-    friend TlDenseVector_Eigen operator*(const TlDenseGeneralMatrix_Eigen& rhs1,
-                                         const TlDenseVector_Eigen& rhs2);
-    // DV * DM(G)
-    friend TlDenseVector_Eigen operator*(
-        const TlDenseVector_Eigen& rhs1,
-        const TlDenseGeneralMatrix_Eigen& rhs2);
+  // DM(G) * DM(S)
+  friend TlDenseGeneralMatrix_Eigen operator*(
+      const TlDenseGeneralMatrix_Eigen& mat1,
+      const TlDenseSymmetricMatrix_Eigen& mat2);
+  // DM(S) * DM(G)
+  friend TlDenseGeneralMatrix_Eigen operator*(
+      const TlDenseSymmetricMatrix_Eigen& mat1,
+      const TlDenseGeneralMatrix_Eigen& mat2);
 
-    // DM(G) * SM(G)
-    friend TlDenseGeneralMatrix_Eigen operator*(
-        const TlDenseGeneralMatrix_Eigen& mat1,
-        const TlSparseGeneralMatrix_Eigen& mat2);
-    // SM(G) * DM(G)
-    friend TlDenseGeneralMatrix_Eigen operator*(
-        const TlSparseGeneralMatrix_Eigen& mat1,
-        const TlDenseGeneralMatrix_Eigen& mat2);
+  // DM(G) * DV
+  friend TlDenseVector_Eigen operator*(const TlDenseGeneralMatrix_Eigen& rhs1,
+                                       const TlDenseVector_Eigen& rhs2);
+  // DV * DM(G)
+  friend TlDenseVector_Eigen operator*(const TlDenseVector_Eigen& rhs1,
+                                       const TlDenseGeneralMatrix_Eigen& rhs2);
 
-    // DM(G) * SM(S)
-    friend TlDenseGeneralMatrix_Eigen operator*(
-        const TlDenseGeneralMatrix_Eigen& mat1,
-        const TlSparseSymmetricMatrix_Eigen& mat2);
-    // SM(S) * DM(G)
-    friend TlDenseGeneralMatrix_Eigen operator*(
-        const TlSparseSymmetricMatrix_Eigen& mat1,
-        const TlDenseGeneralMatrix_Eigen& mat2);
+  // DM(G) * SM(G)
+  friend TlDenseGeneralMatrix_Eigen operator*(
+      const TlDenseGeneralMatrix_Eigen& mat1,
+      const TlSparseGeneralMatrix_Eigen& mat2);
+  // SM(G) * DM(G)
+  friend TlDenseGeneralMatrix_Eigen operator*(
+      const TlSparseGeneralMatrix_Eigen& mat1,
+      const TlDenseGeneralMatrix_Eigen& mat2);
+
+  // DM(G) * SM(S)
+  friend TlDenseGeneralMatrix_Eigen operator*(
+      const TlDenseGeneralMatrix_Eigen& mat1,
+      const TlSparseSymmetricMatrix_Eigen& mat2);
+  // SM(S) * DM(G)
+  friend TlDenseGeneralMatrix_Eigen operator*(
+      const TlSparseSymmetricMatrix_Eigen& mat1,
+      const TlDenseGeneralMatrix_Eigen& mat2);
 };
 
 TlDenseGeneralMatrix_Eigen operator*(const double coef,

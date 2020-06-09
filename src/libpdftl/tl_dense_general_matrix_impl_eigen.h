@@ -39,73 +39,77 @@ class TlDenseGeneralMatrix_ImplEigen : public TlDenseMatrix_ImplObject {
         const TlDenseGeneralMatrix_ImplViennaCL& rhs);
 #endif  // HAVE_VIENNACL
 
-    virtual ~TlDenseGeneralMatrix_ImplEigen();
+  virtual ~TlDenseGeneralMatrix_ImplEigen();
 
-    operator std::vector<double>() const;
+  operator std::vector<double>() const;
 
-    // ---------------------------------------------------------------------------
-    // properties
-    // ---------------------------------------------------------------------------
-   public:
-    virtual TlMatrixObject::index_type getNumOfRows() const;
-    virtual TlMatrixObject::index_type getNumOfCols() const;
-    virtual void resize(const TlMatrixObject::index_type row,
-                        const TlMatrixObject::index_type col);
+  // ---------------------------------------------------------------------------
+  // transformation
+  // ---------------------------------------------------------------------------
+  void vtr2mat(const std::vector<double>& vtr);
 
-    virtual double get(const TlMatrixObject::index_type row,
-                       const TlMatrixObject::index_type col) const;
+  // ---------------------------------------------------------------------------
+  // properties
+  // ---------------------------------------------------------------------------
+ public:
+  virtual TlMatrixObject::index_type getNumOfRows() const;
+  virtual TlMatrixObject::index_type getNumOfCols() const;
+  virtual void resize(const TlMatrixObject::index_type row,
+                      const TlMatrixObject::index_type col);
 
-    virtual void set(const TlMatrixObject::index_type row,
-                     const TlMatrixObject::index_type col, const double value);
+  virtual double get(const TlMatrixObject::index_type row,
+                     const TlMatrixObject::index_type col) const;
 
-    virtual void add(const TlMatrixObject::index_type row,
-                     const TlMatrixObject::index_type col, const double value);
+  virtual void set(const TlMatrixObject::index_type row,
+                   const TlMatrixObject::index_type col, const double value);
 
-    // ---------------------------------------------------------------------------
-    // operators
-    // ---------------------------------------------------------------------------
-   public:
-    TlDenseGeneralMatrix_ImplEigen& operator=(
-        const TlDenseGeneralMatrix_ImplEigen& rhs);
-    TlDenseGeneralMatrix_ImplEigen& operator+=(
-        const TlDenseGeneralMatrix_ImplEigen& rhs);
-    TlDenseGeneralMatrix_ImplEigen& operator-=(
-        const TlDenseGeneralMatrix_ImplEigen& rhs);
-    TlDenseGeneralMatrix_ImplEigen& operator*=(const double coef);
-    TlDenseGeneralMatrix_ImplEigen& operator/=(const double coef);
-    TlDenseGeneralMatrix_ImplEigen& operator*=(
-        const TlDenseGeneralMatrix_ImplEigen& rhs);
+  virtual void add(const TlMatrixObject::index_type row,
+                   const TlMatrixObject::index_type col, const double value);
 
-    // ---------------------------------------------------------------------------
-    // operations
-    // ---------------------------------------------------------------------------
-   public:
-    virtual double sum() const;
-    virtual double getRMS() const;
-    virtual double getMaxAbsoluteElement(
-        TlMatrixObject::index_type* outRow,
-        TlMatrixObject::index_type* outCol) const;
-    virtual void transposeInPlace();
+  // ---------------------------------------------------------------------------
+  // operators
+  // ---------------------------------------------------------------------------
+ public:
+  TlDenseGeneralMatrix_ImplEigen& operator=(
+      const TlDenseGeneralMatrix_ImplEigen& rhs);
+  TlDenseGeneralMatrix_ImplEigen& operator+=(
+      const TlDenseGeneralMatrix_ImplEigen& rhs);
+  TlDenseGeneralMatrix_ImplEigen& operator-=(
+      const TlDenseGeneralMatrix_ImplEigen& rhs);
+  TlDenseGeneralMatrix_ImplEigen& operator*=(const double coef);
+  TlDenseGeneralMatrix_ImplEigen& operator/=(const double coef);
+  TlDenseGeneralMatrix_ImplEigen& operator*=(
+      const TlDenseGeneralMatrix_ImplEigen& rhs);
 
-    TlDenseGeneralMatrix_ImplEigen dot(
-        const TlDenseGeneralMatrix_ImplEigen& rhs) const;
-    const TlDenseGeneralMatrix_ImplEigen& dotInPlace(
-        const TlDenseGeneralMatrix_ImplEigen& rhs);
+  // ---------------------------------------------------------------------------
+  // operations
+  // ---------------------------------------------------------------------------
+ public:
+  virtual double sum() const;
+  virtual double getRMS() const;
+  virtual double getMaxAbsoluteElement(
+      TlMatrixObject::index_type* outRow,
+      TlMatrixObject::index_type* outCol) const;
+  virtual void transposeInPlace();
 
-    TlDenseGeneralMatrix_ImplEigen transpose() const;
-    TlDenseGeneralMatrix_ImplEigen inverse() const;
+  TlDenseGeneralMatrix_ImplEigen dot(const TlDenseGeneralMatrix_ImplEigen& rhs) const;
+  const TlDenseGeneralMatrix_ImplEigen& dotInPlace(
+      const TlDenseGeneralMatrix_ImplEigen& rhs);
 
-    // ---------------------------------------------------------------------------
-    // protected
-    // ---------------------------------------------------------------------------
-   protected:
-    virtual void vtr2mat(double const* const pBuf);
+  TlDenseGeneralMatrix_ImplEigen transpose() const;
+  TlDenseGeneralMatrix_ImplEigen inverse() const;
 
-    // ---------------------------------------------------------------------------
-    // variables
-    // ---------------------------------------------------------------------------
-   protected:
-    mutable MatrixDataType matrix_;
+  // ---------------------------------------------------------------------------
+  // protected
+  // ---------------------------------------------------------------------------
+  protected:
+  virtual void vtr2mat(double const * const pBuf);
+
+  // ---------------------------------------------------------------------------
+  // variables
+  // ---------------------------------------------------------------------------
+ protected:
+  mutable MatrixDataType matrix_;
 
 #if __cplusplus >= 201103L
     mutable std::mutex matrix_mutex_;

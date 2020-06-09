@@ -68,6 +68,9 @@ class TlDenseGeneralMatrix_arrays_RowOriented
         const std::string& basename) const;
 };
 
+std::ostream& operator<<(std::ostream& stream,
+                         const TlDenseGeneralMatrix_arrays_RowOriented& mat);
+
 bool RowVectorMatrix2CSFD(const std::string& rvmBasePath,
                           const std::string& csfdPath, bool verbose = false,
                           bool showProgress = false);

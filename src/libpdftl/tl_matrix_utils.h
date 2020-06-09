@@ -22,7 +22,8 @@ class TlMatrixUtils {
         TlMatrixObject::MatrixType* pMatrixType = NULL,
         TlMatrixObject::index_type* pNumOfRows = NULL,
         TlMatrixObject::index_type* pNumOfCols = NULL,
-        std::size_t* pNumOfItems = NULL);
+        std::size_t* pNumOfItems = NULL, int* pNumOfSubunits = NULL,
+        int* pSubunitId = NULL, int* pSizeOfChunk = NULL);
 
     /// ヘッダ情報を読み取る
     /// header情報を読み取れた場合はヘッダサイズを返す
@@ -32,7 +33,8 @@ class TlMatrixUtils {
         std::fstream& fs, TlMatrixObject::MatrixType* pMatrixType = NULL,
         TlMatrixObject::index_type* pNumOfRows = NULL,
         TlMatrixObject::index_type* pNumOfCols = NULL,
-        std::size_t* pNumOfItems = NULL);
+        std::size_t* pNumOfItems = NULL, int* pNumOfSubunits = NULL,
+        int* pSubunitId = NULL, int* pSizeOfChunk = NULL);
 
    public:
     // static TlMatrixObject::size_type loadMatrix(
@@ -74,7 +76,8 @@ class TlMatrixUtils {
         stream& s, TlMatrixObject::MatrixType* pMatrixType = NULL,
         TlMatrixObject::index_type* pNumOfRows = NULL,
         TlMatrixObject::index_type* pNumOfCols = NULL,
-        std::size_t* pNumOfItems = NULL);
+        std::size_t* pNumOfItems = NULL, int* pNumOfSubunits = NULL,
+        int* pSubunitId = NULL, int* pSizeOfChunk = NULL);
 
     /// header情報を読み取れた場合はヘッダサイズを返す
     /// 読み取れなかった場合は0を返す
@@ -82,12 +85,17 @@ class TlMatrixUtils {
     static FileSize getHeaderSize_templ2(StreamType& s, MatrixType* pMatrixType,
                                          TlMatrixObject::index_type* pNumOfRows,
                                          TlMatrixObject::index_type* pNumOfCols,
-                                         std::size_t* pNumOfItems);
+                                         std::size_t* pNumOfItems,
+                                         int* pNumOfSubunits = NULL,
+                                         int* pSubunitId = NULL,
+                                         int* pSizeOfChunk = NULL);
 
     static std::size_t estimateFileSize(TlMatrixObject::MatrixType matrixType,
                                         TlMatrixObject::index_type row,
                                         TlMatrixObject::index_type col,
-                                        std::size_t numOfItems);
+                                        std::size_t numOfItems,
+                                        const int numOfSubunits,
+                                        const int sizeOfChunk);
 };
 
 template <class MatrixClass>

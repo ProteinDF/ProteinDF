@@ -1,0 +1,749 @@
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: ProteinDF User's Manual 2014.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-11-18 00:11-0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../source/QCLO.rst:5
+msgid "全自動計算プログラムQCLO"
+msgstr ""
+
+#: ../../source/QCLO.rst:9
+msgid "はじめに"
+msgstr ""
+
+#: ../../source/QCLO.rst:11
+msgid ""
+"密度汎関数法による超大規模タンパク質全電子計算は、 密度汎関数法による分子軌道法に基づく計算プログラムProteinDF と、 ProteinDF "
+"の実行のための初期値を作成する半自動計算法プログラムQCLO (Quasi-Canonical Localized Orbital) またはRMO "
+"(Regional Molecular Orbital)から構成されます。 QCLOまたはRMOプログラムを実行すると、計算シナリオに従い、 "
+"ProteinDF プログラムに計算のための初期値が渡され、ProteinDF プログラムによる全電子計算が実行されます。"
+msgstr ""
+
+#: ../../source/QCLO.rst:21
+msgid "(現在の)QCLOプログラムは今後更新されません。 新しく開発される全自動計算プログラムと記載が異なる場合があります。"
+msgstr ""
+
+#: ../../source/QCLO.rst:26
+msgid "半自動計算法プログラム QCLO"
+msgstr ""
+
+#: ../../source/QCLO.rst:28
+msgid ""
+"タンパク質全電子自動計算法プログラムは、 QCLO法またはRMO法を用いた収束過程支援のプログラムです。 アミノ酸残基などの単位で局在化していますが、 "
+"その中ではアミノ酸残基単体の軌道であるカノニカル軌道に近いQCLOやRMOを切り貼りすると、 ペプチド鎖の分子軌道計算のよい初期値になります。 "
+"ペプチド鎖の分子軌道計算結果から再度QCLOやRMOを求め、 さらに大きなペプチド鎖の計算の初期値とし、 "
+"これらのペプチド延長過程を繰り返して全電子計算を行う手法をタンパク質の全電子自動計算収束過程法と呼びます。 "
+"これにより容易に機能性に富んだタンパク質の精密な量子化学計算を実行できるようになります。"
+msgstr ""
+
+#: ../../source/QCLO.rst:40
+msgid "タンパク質全電子計算の収束過程"
+msgstr ""
+
+#: ../../source/QCLO.rst:42
+msgid ""
+"一般に、タンパク質やペプチド鎖のような大きな分子の電子状態は、 はじめから一点計算を行うことが困難です。 "
+"タンパク質をアミノ酸残基のような小さな分子片に分割して、 それらの計算で求められた解を基に徐々に大きなペプチド鎖を計算していくといった手法を用います。 "
+"本手法の概要を :num:`Fig. #qclosteps` に示します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:55
+msgid "タンパク質全電子計算収束過程の概要"
+msgstr ""
+
+#: ../../source/QCLO.rst:57
+msgid ""
+"ステップ1 ではタンパク質やペプチド鎖をアミノ酸残基1 残基ずつに分割し、これらの計算を行います。 ステップ2 ではステップ1 で計算された1 "
+"残基の結果をもとに、3 残基ずつの計算を実行します。 このようにステップ2 以降では重なりを持って切り出します。 同様にステップ3 ではステップ2 の3"
+" 残基の結果をもとに数残基のペプチド鎖の計算を実行します。 このとき、ペプチド鎖の両端は対応する2 残基、間は真ん中の1 "
+"残基の結果をつなげて、初期値を作成します。 このような操作を繰り返すことにより、次第にペプチド鎖の長さを延長して、 "
+"最終的に全タンパク質の計算を実行します。 この収束過程で作成される分子をフレーム分子とよびます。 "
+"なお、ステップ1ではHarrisの初期値、ステップ2ではステップ1で計算された電子密度を合成して初期値を作ります。 "
+"しかし、つなげる分子の数が多いほど誤差が蓄積しますし、 重なりを持たせているとはいえ、結合部分では比較的大きな誤差が生じます。 "
+"このような誤差は大きな分子の分子軌道計算には致命的な欠陥を生じることがあります。 そこで、ステップ3 "
+"以降では、新しい局在化軌道をベースにした初期値合成方法を使用します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:73
+msgid "カノニカル軌道と局在化軌道"
+msgstr ""
+
+#: ../../source/QCLO.rst:75
+msgid ""
+"分子軌道の表現には自由度があり、ユニタリ変換によって色々なものに変形できます。 この性質を利用して、次の2 つの表現方法がよく使用されます。 "
+"一つは正準直交系であるカノニカル軌道（Canonical Orbital）であり、 もう一つは局在化軌道（Localized Orbital）です。 "
+"局在化軌道はそれが空間的に最も狭い範囲で最大限に局在するように決めて求められる軌道です。 その判定は、Edmiston-Rüdenberg、 "
+"Foster-Boys らにより提案された局在化指標の式が有名ですが、 Pipek-Mezey のPopulation "
+"法や、GuらのRMO法と呼ばれる方法もあります。 いずれも軌道が特定の空間に局在化すればするほど指標が大きくなるよう立式されています。 "
+"特にEdmiston-Rüdenberg、Population 法、およびRMO法の指標によって求められる局在化軌道は、 "
+"一般に内殻電子は原子核のまわりに、結合に関与している価電子はその結合の周囲に、 "
+"結合に関与していない価電子は、いわゆる孤立電子対軌道の形に局在化するため、 化学者の直感との対応がつきやすいことで知られています。"
+msgstr ""
+
+#: ../../source/QCLO.rst:88
+msgid ""
+"本システムでは、Edmiston-Rüdenberg法よりも高速な、Population 法とRMO法を採用しました。 "
+"ペプチド鎖の良い初期値を合成するために、ステップ3 以降では局在化軌道を用います。 "
+"分子軌道を局在した形で表現すれば、分子軌道を化学的によい近似で個別に取り扱うことができます。 "
+"つまり煩雑な手続きが必要ですが、局在化軌道が作られれば安全かつ自由に分子軌道を分離結合することが可能になります。 "
+"これにより精度の良い初期値を作成することができます。 この切り貼りに便利な軌道をその性質から、先に擬カノニカル局在化軌道(QCLO)と名付けました。 "
+"RMO法はまったく異なる計算方法ですが、特定の領域に局在化させた軌道を作成する方法で、基本的に取り扱い方は変わりません。 "
+"一般に、分子サイズが大きくなるほど、RMO法の方が高速に計算できます。 これらを用いて初期値を作成する方法は :num:`Fig. "
+"#qclofragment` に示すように、 "
+"ペプチド鎖をアミノ酸残基の側鎖やアミノ酸をつなぐペプチド結合などの部分（これらをフラグメントと呼ぶ）に分割し、 "
+"フラグメントのみに広がり、かつフラグメントのカノニカル分子軌道に似た軌道を求め、 "
+"これらを組み合わせてペプチド鎖全体の分子軌道計算の初期値とする方法です。 局在化軌道を求めるには、計算目的となる分子の周辺の影響を取り込むため、 "
+"またペプチド結合の部分を厳密に表現するために3 残基以上のフレーム分子から出発します。 "
+"このフレーム分子においてペプチド鎖の場合のフラグメントは主鎖と側鎖の2 パターンに分類します。 "
+"こう分類することで本システムでは自動的にフラグメントに分けることができます。"
+msgstr ""
+
+#: ../../source/QCLO.rst:112
+msgid "フレーム分子THR-VAL-GLUとフラグメント"
+msgstr ""
+
+#: ../../source/QCLO.rst:115
+msgid "QCLOおよびRMO作成の手順は以下の通りです。"
+msgstr ""
+
+#: ../../source/QCLO.rst:117
+msgid "手順1 : フレーム分子毎の分子軌道計算"
+msgstr ""
+
+#: ../../source/QCLO.rst:119
+msgid ""
+"フレーム分子の分子軌道計算を実行します。 フレーム分子の構造はペプチド鎖の相当部分と同じものを用い、 切断されたＮ末、C 末にそれぞれH、OH "
+"を付加します。ここで得られる軌道はフレーム分子全体に広がったカノニカル軌道です。"
+msgstr ""
+
+#: ../../source/QCLO.rst:123
+msgid "手順2 : フレーム分子毎の局在化軌道計算"
+msgstr ""
+
+#: ../../source/QCLO.rst:125
+msgid "手順1 で得られた分子軌道を個々の化学結合や孤立電子対に局在する分子軌道に変換します。QCLOとRMOではこの計算方法が異なります。"
+msgstr ""
+
+#: ../../source/QCLO.rst:127
+msgid "手順3 : フラグメント毎の擬カノニカル局在化軌道計算"
+msgstr ""
+
+#: ../../source/QCLO.rst:129
+msgid ""
+"手順2 で得られた軌道の中から各フラグメントに属す局在化軌道を選び出し、 それらの係数行列を使用してフレーム分子のKohn-Sham 行列（ab "
+"initio HF 法ならばFock行列）を 原子軌道ベースから局在化軌道ベースに変換します。 そうして作られたフラグメントのKohn-Sham "
+"行列の固有値方程式を解くことで フラグメントに局在しつつ、フラグメント全体に広がった軌道が求められます。 以上の手順1～3 "
+"でQCLOまたはRMOが得られます。 手順1～3 をすべてのフレーム分子とそのフラグメントで実行し、初期値は手順4 で作成します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:137
+msgid "手順4 :局在化軌道の結合"
+msgstr ""
+
+#: ../../source/QCLO.rst:139
+msgid ""
+"手順3 で計算されたQCLOやRMOはフレーム分子毎に計算されています。 まず、手順1 で付加した原子H、OH "
+"の軌道成分は本来のペプチド鎖には存在しないため、取り除きます。 "
+"すべてのフラグメントのQCLOまたはRMOを組み合わせてペプチド鎖全体の軌道セットを作成します。 "
+"この軌道セットは規格直交化されていないため、ここでLöwdinの直交化を実行します。 Löwdin "
+"の直交化はもとの軌道をなるべく変えないように規格直交化を達成しますので、 得られた軌道は手順3 "
+"の軌道とほとんど変わりません。これによりペプチド鎖全体で規格直交したLCAO 行列が得られます。"
+msgstr ""
+
+#: ../../source/QCLO.rst:146
+msgid "手順1～4 の手順を組み合わせた方法を、タンパク質全電子計算の収束過程と呼びます。"
+msgstr ""
+
+#: ../../source/QCLO.rst:150
+msgid "QCLO法に基づく自動計算機能"
+msgstr ""
+
+#: ../../source/QCLO.rst:152
+msgid ""
+"重複計算を排除するQCLO法に基づく自動計算機能です。 ProteinDFプログラムのフラグメント単位のQCLO計算結果を用いて、 "
+"ProteinDFプログラムの初期データ（LCAO）を作成する機能を持ちます。"
+msgstr ""
+
+#: ../../source/QCLO.rst:156
+msgid ""
+"ProteinDF プログラムでは、Roothaan方程式 :math:`FC=SC\\epsilon` を解く際に、行列 "
+":math:`X=U*s^{-1/2}` によって、 直交基底に変換して解いています。"
+msgstr ""
+
+#: ../../source/QCLO.rst:160
+msgid "原子軌道 (AO) 基底 KS 行列を、直交化基底 KS 行列に変換"
+msgstr ""
+
+#: ../../source/QCLO.rst:166
+msgid "KS 行列に対するレベルシフト"
+msgstr ""
+
+#: ../../source/QCLO.rst:172
+msgid "KS 行列の対角化し、直交化基底での係数行列を得る"
+msgstr ""
+
+#: ../../source/QCLO.rst:178
+msgid "係数行列を AO 基底に変換"
+msgstr ""
+
+#: ../../source/QCLO.rst:186
+msgid "QCLO 法の計算方法の概要を以下に示します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:189
+msgid "第1ステップ："
+msgstr ""
+
+#: ../../source/QCLO.rst:191
+msgid "普通の SCF MO 計算を全アミノ酸に対して行います。初期電子密度は、原子の電子密度から作成します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:193
+msgid "第2ステップ："
+msgstr ""
+
+#: ../../source/QCLO.rst:195
+msgid ""
+"初期電子密度は、第１ステップで得られたモノマーの電子密度を切り貼りする。 局在化軌道（LO）をフラグメントに振り分けた後、フラグメントの QCLO "
+"は、次の式によって求められます。 この固有方程式の解が QCLO です。"
+msgstr ""
+
+#: ../../source/QCLO.rst:206
+msgid ":math:`F` フレーム分子の Fock or Kohn-Sham 行列"
+msgstr ""
+
+#: ../../source/QCLO.rst:207
+msgid ":math:`C_LO` フラグメントに割り振られた LO の係数行列"
+msgstr ""
+
+#: ../../source/QCLO.rst:208
+msgid ":math:`F'` フラグメントの Fock or Kohn-Sham 行列（LO 基底）"
+msgstr ""
+
+#: ../../source/QCLO.rst:211
+msgid "第3ステップ以降："
+msgstr ""
+
+#: ../../source/QCLO.rst:213
+msgid ""
+"第2ステップの QCLO を集めて初期値を作成する。 集められた QCLO は Löwdin変換によって直交化しなければなりませんが、 変換しても元の "
+"QCLO からはほとんど変化しません。 直交化された QCLO から、フラグメントに対する初期値が作成される。 フラグメントに対する Fock もしくは"
+" Kohn-Sham 行列は、以下の式で求められます。"
+msgstr ""
+
+#: ../../source/QCLO.rst:224
+msgid ":math:`C_{QCLO}` QCLO の係数行列（原子軌道基底）"
+msgstr ""
+
+#: ../../source/QCLO.rst:226
+msgid ""
+"この解は、前のステップの QCLO で張られた空間における、第3ステップの QCLO です。 QCLO 法の処理フローを :num:`Fig. "
+"#qcloflow`  に示します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:235
+msgid "QCLO法の処理フロー"
+msgstr ""
+
+#: ../../source/QCLO.rst:239
+msgid "実行方法"
+msgstr ""
+
+#: ../../source/QCLO.rst:242
+msgid "QCLO法プログラムの入力データの準備"
+msgstr ""
+
+#: ../../source/QCLO.rst:244
+msgid "半自動計算法プログラムの入力キーワードは入力ファイルQcStepにおいて指定します。 以下にQcStepファイルの例を示します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:286
+msgid ""
+"QcStepファイルは、\" >>>>\"で表されるブロック内にキーワードを指定します。 ブロック名は、CONTROL, STEP#, "
+"GLOBALです。ただし、#はStep数を表します。 コメントは//で始まり改行コードまでがコメントとなります。"
+msgstr ""
+
+#: ../../source/QCLO.rst:292
+msgid "QCLO法プログラムの実行方法"
+msgstr ""
+
+#: ../../source/QCLO.rst:294
+msgid "自動計算法プログラムをコマンドラインから実行するには、以下のように行います。"
+msgstr ""
+
+#: ../../source/QCLO.rst:302 ../../source/QCLO.rst:596
+msgid "自動計算法プログラムの入力キーワード"
+msgstr ""
+
+#: ../../source/QCLO.rst:305
+msgid "CONTROL ブロック"
+msgstr ""
+
+#: ../../source/QCLO.rst:307
+msgid "CONTROL ブロックでは、自動計算法全体に関するキーワードを指定します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:310
+msgid "step-selection"
+msgstr ""
+
+#: ../../source/QCLO.rst:312
+msgid ""
+"自動計算法のステップ制御のためのキーワードです。 {}内には同一ファイル内に記述されているSTEP#ブロックキーワードの番号（#）が記述できます。"
+msgstr ""
+
+#: ../../source/QCLO.rst:316 ../../source/QCLO.rst:339
+#: ../../source/QCLO.rst:384 ../../source/QCLO.rst:423
+#: ../../source/QCLO.rst:492 ../../source/QCLO.rst:550
+#: ../../source/QCLO.rst:589 ../../source/QCLO.rst:630
+#: ../../source/QCLO.rst:662 ../../source/QCLO.rst:685
+#: ../../source/QCLO.rst:708 ../../source/QCLO.rst:731
+#: ../../source/QCLO.rst:753 ../../source/QCLO.rst:776
+#: ../../source/QCLO.rst:799 ../../source/QCLO.rst:822
+#: ../../source/QCLO.rst:843 ../../source/QCLO.rst:865
+#: ../../source/QCLO.rst:888 ../../source/QCLO.rst:911
+#: ../../source/QCLO.rst:933 ../../source/QCLO.rst:956
+#: ../../source/QCLO.rst:980
+msgid "デフォルト値"
+msgstr ""
+
+#: ../../source/QCLO.rst:318
+msgid "STEPブロックで指定されたSTEP数"
+msgstr ""
+
+#: ../../source/QCLO.rst:321 ../../source/QCLO.rst:344
+#: ../../source/QCLO.rst:389 ../../source/QCLO.rst:501
+#: ../../source/QCLO.rst:555 ../../source/QCLO.rst:594
+#: ../../source/QCLO.rst:667 ../../source/QCLO.rst:690
+#: ../../source/QCLO.rst:713 ../../source/QCLO.rst:735
+#: ../../source/QCLO.rst:758 ../../source/QCLO.rst:781
+#: ../../source/QCLO.rst:804 ../../source/QCLO.rst:826
+#: ../../source/QCLO.rst:847 ../../source/QCLO.rst:870
+#: ../../source/QCLO.rst:893 ../../source/QCLO.rst:915
+#: ../../source/QCLO.rst:938 ../../source/QCLO.rst:961
+msgid "とりうる値"
+msgstr ""
+
+#: ../../source/QCLO.rst:323
+msgid "{ （計算するステップ数）}"
+msgstr ""
+
+#: ../../source/QCLO.rst:326 ../../source/QCLO.rst:349
+#: ../../source/QCLO.rst:394 ../../source/QCLO.rst:428
+#: ../../source/QCLO.rst:506 ../../source/QCLO.rst:560
+#: ../../source/QCLO.rst:599 ../../source/QCLO.rst:635
+#: ../../source/QCLO.rst:672 ../../source/QCLO.rst:695
+#: ../../source/QCLO.rst:718 ../../source/QCLO.rst:739
+#: ../../source/QCLO.rst:763 ../../source/QCLO.rst:786
+#: ../../source/QCLO.rst:809 ../../source/QCLO.rst:830
+#: ../../source/QCLO.rst:852 ../../source/QCLO.rst:875
+#: ../../source/QCLO.rst:898 ../../source/QCLO.rst:920
+#: ../../source/QCLO.rst:943 ../../source/QCLO.rst:967
+#: ../../source/QCLO.rst:985
+msgid "使用例"
+msgstr ""
+
+#: ../../source/QCLO.rst:334
+msgid "filename"
+msgstr ""
+
+#: ../../source/QCLO.rst:336
+msgid "PDBファイルまたはPDBファイルフォーマットに従ったファイルをサポートします。"
+msgstr ""
+
+#: ../../source/QCLO.rst:341 ../../source/QCLO.rst:386
+#: ../../source/QCLO.rst:425 ../../source/QCLO.rst:552
+#: ../../source/QCLO.rst:591 ../../source/QCLO.rst:632
+#: ../../source/QCLO.rst:664 ../../source/QCLO.rst:687
+#: ../../source/QCLO.rst:710 ../../source/QCLO.rst:715
+#: ../../source/QCLO.rst:732 ../../source/QCLO.rst:736
+#: ../../source/QCLO.rst:755 ../../source/QCLO.rst:760
+#: ../../source/QCLO.rst:778 ../../source/QCLO.rst:783
+#: ../../source/QCLO.rst:801 ../../source/QCLO.rst:806
+#: ../../source/QCLO.rst:823 ../../source/QCLO.rst:844
+#: ../../source/QCLO.rst:867 ../../source/QCLO.rst:890
+#: ../../source/QCLO.rst:912 ../../source/QCLO.rst:935
+#: ../../source/QCLO.rst:958 ../../source/QCLO.rst:982
+msgid "なし"
+msgstr ""
+
+#: ../../source/QCLO.rst:346
+msgid "PDBファイル名またはPDBファイルフォーマットに従ったファイル名"
+msgstr ""
+
+#: ../../source/QCLO.rst:357
+msgid "STEP ブロック"
+msgstr ""
+
+#: ../../source/QCLO.rst:359
+msgid "STEP ブロックでは、各計算STEPに関するキーワードを指定します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:362
+msgid "sequential-frames"
+msgstr ""
+
+#: ../../source/QCLO.rst:364
+msgid ""
+"ペプチド鎖フレームを指定するキーワード。 sequential-frames ={  }の形式でペプチド鎖フレームを指定します。 "
+"{}内でペプチド鎖のフレーム定義とその一連の計算を指示します。 {}内の記述の仕方は以下のとおりです。"
+msgstr ""
+
+#: ../../source/QCLO.rst:369
+msgid "$1-$2|$3"
+msgstr ""
+
+#: ../../source/QCLO.rst:371
+msgid "$1～$2残基ペプチド鎖を$3残基毎に2残基の重なりを持って切り分けた断片を定義します。 最終断片は$3残基でなくてもかまいません。"
+msgstr ""
+
+#: ../../source/QCLO.rst:374
+msgid "$4"
+msgstr ""
+
+#: ../../source/QCLO.rst:376
+msgid "$4残基番号のアミノ酸残基"
+msgstr ""
+
+#: ../../source/QCLO.rst:378
+msgid "$5-$6"
+msgstr ""
+
+#: ../../source/QCLO.rst:380
+msgid "$5～$6残基ペプチド鎖($1-$2|$3の$3省略時に相当する。)"
+msgstr ""
+
+#: ../../source/QCLO.rst:391
+msgid "ペプチド鎖フレーム構成残基番号"
+msgstr ""
+
+#: ../../source/QCLO.rst:405
+msgid "general-frames"
+msgstr ""
+
+#: ../../source/QCLO.rst:407
+msgid "一般のフレーム分子を定義し、その一連の計算を実行するためのキーワードです。 以下の形式で指定します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:419
+msgid ""
+"nameはシステム予約名を除く任意の文字列を指定できます。 {}内にはSTEP#以前に計算済みのsequential-"
+"framesキーワード右値{}内文字列を記述することができます。"
+msgstr ""
+
+#: ../../source/QCLO.rst:441
+msgid "execution"
+msgstr ""
+
+#: ../../source/QCLO.rst:443
+msgid "STEP# 内の実行制御のためのキーワードです。 {}内には以下の文字列が記述できます。"
+msgstr ""
+
+#: ../../source/QCLO.rst:446
+msgid "creation"
+msgstr ""
+
+#: ../../source/QCLO.rst:448
+msgid "作業環境作成"
+msgstr ""
+
+#: ../../source/QCLO.rst:450
+msgid "integral"
+msgstr ""
+
+#: ../../source/QCLO.rst:452
+msgid "ProteinDFの積分実行"
+msgstr ""
+
+#: ../../source/QCLO.rst:454
+msgid "guess"
+msgstr ""
+
+#: ../../source/QCLO.rst:456
+msgid "ProteinDFによるinitial guess作成"
+msgstr ""
+
+#: ../../source/QCLO.rst:458
+msgid "guessrho"
+msgstr ""
+
+#: ../../source/QCLO.rst:460
+msgid "ρ~結合によるinitial guess作成"
+msgstr ""
+
+#: ../../source/QCLO.rst:462
+msgid "guessdensity"
+msgstr ""
+
+#: ../../source/QCLO.rst:464
+msgid "密度行列の結合によるinitial guess作成"
+msgstr ""
+
+#: ../../source/QCLO.rst:466
+msgid "guessqclo"
+msgstr ""
+
+#: ../../source/QCLO.rst:468
+msgid "QCLOによるinitial guess作成。(STEP 3以降有効)"
+msgstr ""
+
+#: ../../source/QCLO.rst:470
+msgid "guessfile"
+msgstr ""
+
+#: ../../source/QCLO.rst:472
+msgid "qclo-keywordsで指定した初期データファイルを使用"
+msgstr ""
+
+#: ../../source/QCLO.rst:474
+msgid "pdf"
+msgstr ""
+
+#: ../../source/QCLO.rst:476
+msgid "ProteinDF計算"
+msgstr ""
+
+#: ../../source/QCLO.rst:478
+msgid "lo"
+msgstr ""
+
+#: ../../source/QCLO.rst:480
+msgid "軌道局在化計算"
+msgstr ""
+
+#: ../../source/QCLO.rst:482
+msgid "pickup"
+msgstr ""
+
+#: ../../source/QCLO.rst:484
+msgid "局在化軌道のフラグメントへの振り分け"
+msgstr ""
+
+#: ../../source/QCLO.rst:486
+msgid "pdfqclo"
+msgstr ""
+
+#: ../../source/QCLO.rst:488
+msgid "拡張QCLO法による分子軌道計算"
+msgstr ""
+
+#: ../../source/QCLO.rst:494
+msgid "Step1では execution = {creation integral guess pdf }"
+msgstr ""
+
+#: ../../source/QCLO.rst:496
+msgid "Step2では execution = {creation integral guessrho pdf lo pickup }"
+msgstr ""
+
+#: ../../source/QCLO.rst:498
+msgid "Step3以降は execution = {  creation integral guessqclo pdf lo pickup }"
+msgstr ""
+
+#: ../../source/QCLO.rst:503
+msgid ""
+"creation,integral, guess, guessrho, guessqclo, guessfile,  lo, pickup, pdf, "
+"pdfqclo"
+msgstr ""
+
+#: ../../source/QCLO.rst:515
+msgid "上記の例はSTEP1, STEP2, STEP#(#>2)のデフォルト値を示しています。"
+msgstr ""
+
+#: ../../source/QCLO.rst:519
+msgid "GLOBAL ブロック"
+msgstr ""
+
+#: ../../source/QCLO.rst:521
+msgid ""
+"このブロック内に記述されたキーワードは全てのブロックに反映します。 現行では以下に示す ``pdf-keywords`` と ``qclo-"
+"keywords`` が記述できます。"
+msgstr ""
+
+#: ../../source/QCLO.rst:526
+msgid "その他のキーワード"
+msgstr ""
+
+#: ../../source/QCLO.rst:529
+msgid "pdf-keywords"
+msgstr ""
+
+#: ../../source/QCLO.rst:531
+msgid ""
+"これを記述したブロック内でのProteinDF計算においてのみ有効となる ProteinDFプログラムの入力キーワードを指定します。 "
+"以下の形式で指定します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:541
+msgid "これらは自動計算法入力ファイルのどこに記述してもかまいません。 このときキーワードの優先順位と有効範囲は以下とします。"
+msgstr ""
+
+#: ../../source/QCLO.rst:557
+msgid "ProteinDFプログラムの入力キーワード"
+msgstr ""
+
+#: ../../source/QCLO.rst:570
+msgid "qclo-keywords"
+msgstr ""
+
+#: ../../source/QCLO.rst:572
+msgid "これを記述したブロック内での自動計算においてのみ有効となる自動計算法プログラムの入力キーワードを指定します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:580
+msgid "これらは自動計算法入力ファイルのどこに記述してもかまいません。 このときキーワードの優先順位と有効範囲は以下の通りです。"
+msgstr ""
+
+#: ../../source/QCLO.rst:609
+msgid "fragment"
+msgstr ""
+
+#: ../../source/QCLO.rst:611
+msgid "フレーム分子のQCLO作成時のフラグメント分割を、以下の形式で指定します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:627
+msgid "以上の指定は、フレーム分子の定義箇所の中に記述します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:653
+msgid "qclo-keywordsで指定する計算条件"
+msgstr ""
+
+#: ../../source/QCLO.rst:656
+msgid "add_ethyl"
+msgstr ""
+
+#: ../../source/QCLO.rst:658
+msgid "フレーム分子にエチル基を付加します。 エチル基の座標データには、指定したアミノ酸残基の側鎖の座標データを用います。"
+msgstr ""
+
+#: ../../source/QCLO.rst:669 ../../source/QCLO.rst:692
+msgid "残基番号"
+msgstr ""
+
+#: ../../source/QCLO.rst:680
+msgid "set_fragment_add_ethyl"
+msgstr ""
+
+#: ../../source/QCLO.rst:682
+msgid "フレーム分子を、指定したアミノ酸残基の一部とみなし、側鎖に相当する部分を切り出してRsideフラグメントを作成します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:703
+msgid "no_add_terminal"
+msgstr ""
+
+#: ../../source/QCLO.rst:705
+msgid "ペプチド結合を切断した箇所に H, OH を付加する処理を行わないようにします。"
+msgstr ""
+
+#: ../../source/QCLO.rst:726
+msgid "set_fragment_by_element"
+msgstr ""
+
+#: ../../source/QCLO.rst:728
+msgid "QCLO作成時のフラグメント分割を、初期値作成時のフラグメント分割と同一にします。"
+msgstr ""
+
+#: ../../source/QCLO.rst:747
+msgid "localize_unocc_orbital"
+msgstr ""
+
+#: ../../source/QCLO.rst:749
+msgid "QCLO作成時に空軌道もLocalize処理を行います。"
+msgstr ""
+
+#: ../../source/QCLO.rst:771
+msgid "pickup_unocc_orbital"
+msgstr ""
+
+#: ../../source/QCLO.rst:773
+msgid "空軌道についてLOのフラグメントへの割り当て処理を行います。"
+msgstr ""
+
+#: ../../source/QCLO.rst:794
+msgid "guessqclo_combine_unocc_orbital"
+msgstr ""
+
+#: ../../source/QCLO.rst:796
+msgid "QCLOからの初期値作成時に空軌道についても処理を行います。"
+msgstr ""
+
+#: ../../source/QCLO.rst:817
+msgid "initial-guess-lcao-file"
+msgstr ""
+
+#: ../../source/QCLO.rst:819
+msgid "RKS計算において、LCAO展開係数行列の初期データファイルを指定します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:827 ../../source/QCLO.rst:849
+#: ../../source/QCLO.rst:872 ../../source/QCLO.rst:895
+#: ../../source/QCLO.rst:917 ../../source/QCLO.rst:940
+#: ../../source/QCLO.rst:963
+msgid "ファイル名"
+msgstr ""
+
+#: ../../source/QCLO.rst:838
+msgid "initial-guess-lcao-alpha-file"
+msgstr ""
+
+#: ../../source/QCLO.rst:840
+msgid "UKS計算において、α電子軌道のLCAO展開係数行列の初期データファイルを指定します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:860
+msgid "initial-guess-lcao-beta-file"
+msgstr ""
+
+#: ../../source/QCLO.rst:862
+msgid "UKS計算において、β電子軌道のLCAO展開係数行列の初期データファイルを指定します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:883
+msgid "initial-guess-occ-file"
+msgstr ""
+
+#: ../../source/QCLO.rst:885
+msgid "RKS計算において、占有数の初期データファイルを指定します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:906
+msgid "initial-guess-occ-alpha-file"
+msgstr ""
+
+#: ../../source/QCLO.rst:908
+msgid "UKS計算において、α電子占有数の初期データファイルを指定します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:928
+msgid "initial-guess-occ-beta-file"
+msgstr ""
+
+#: ../../source/QCLO.rst:930
+msgid "UKS計算において、β電子占有数の初期データファイルを指定します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:951
+msgid "initial-guess-rho-file"
+msgstr ""
+
+#: ../../source/QCLO.rst:953
+msgid "近似電子密度展開係数の初期データファイルを指定します。"
+msgstr ""
+
+#: ../../source/QCLO.rst:975
+msgid "initial-qclo-file"
+msgstr ""
+
+#: ../../source/QCLO.rst:977
+msgid "フラグメントのQCLOの初期データファイルを、フラグメント名、ファイル名の順に指定します。"
+msgstr ""

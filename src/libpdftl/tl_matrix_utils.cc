@@ -1,6 +1,7 @@
 #include "tl_matrix_utils.h"
 #include <iostream>
 #include "TlUtils.h"
+#include "tl_dense_matrix_arrays_object.h"
 // #include "nullptr.h"
 
 // -----------------------------------------------------------------------------
@@ -22,7 +23,8 @@ bool TlMatrixUtils::isLoadable(const std::string& filePath,
 TlMatrixUtils::FileSize TlMatrixUtils::getHeaderInfo(
     const std::string& filepath, TlMatrixObject::MatrixType* pMatrixType,
     TlMatrixObject::index_type* pNumOfRows,
-    TlMatrixObject::index_type* pNumOfCols, std::size_t* pNumOfItems) {
+    TlMatrixObject::index_type* pNumOfCols, std::size_t* pNumOfItems,
+    int* pNumOfSubunits, int* pSubunitId, int* pSizeOfChunk) {
     FileSize headerSize = 0;
 
     std::ios_base::sync_with_stdio(false);
@@ -30,8 +32,9 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderInfo(
     fs.open(filepath.c_str(), std::ios::in | std::ios::binary);
 
     if (!fs.fail()) {
-        headerSize = TlMatrixUtils::getHeaderInfo(fs, pMatrixType, pNumOfRows,
-                                                  pNumOfCols, pNumOfItems);
+        headerSize = TlMatrixUtils::getHeaderInfo(
+            fs, pMatrixType, pNumOfRows, pNumOfCols, pNumOfItems,
+            pNumOfSubunits, pSubunitId, pSizeOfChunk);
     } else {
         std::cerr << TlUtils::format("cannot open matrix file: %s @%s:%d",
                                      filepath.c_str(), __FILE__, __LINE__)
@@ -46,10 +49,12 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderInfo(
 TlMatrixUtils::FileSize TlMatrixUtils::getHeaderInfo(
     std::fstream& fs, TlMatrixObject::MatrixType* pMatrixType,
     TlMatrixObject::index_type* pNumOfRows,
-    TlMatrixObject::index_type* pNumOfCols, std::size_t* pNumOfItems) {
+    TlMatrixObject::index_type* pNumOfCols, std::size_t* pNumOfItems,
+    int* pNumOfSubunits, int* pSubunitId, int* pSizeOfChunk) {
     const FileSize headerSize =
         TlMatrixUtils::getHeaderSize_templ1<std::fstream>(
-            fs, pMatrixType, pNumOfRows, pNumOfCols, pNumOfItems);
+            fs, pMatrixType, pNumOfRows, pNumOfCols, pNumOfItems,
+            pNumOfSubunits, pSubunitId, pSizeOfChunk);
     fs.seekg(headerSize, std::ios_base::beg);
 
     return headerSize;
@@ -106,18 +111,23 @@ template <typename StreamType>
 TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ1(
     StreamType& s, TlMatrixObject::MatrixType* pMatrixType,
     TlMatrixObject::index_type* pNumOfRows,
-    TlMatrixObject::index_type* pNumOfCols, std::size_t* pNumOfItems) {
+    TlMatrixObject::index_type* pNumOfCols, std::size_t* pNumOfItems,
+    int* pNumOfSubunits, int* pSubunitId, int* pSizeOfChunk) {
     TlMatrixObject::MatrixType matrixType;
     TlMatrixObject::index_type rows = 0;
     TlMatrixObject::index_type cols = 0;
     std::size_t numOfItems = 0;
+    int numOfSubunits = 0;
+    int subunitId = 0;
+    int sizeOfChunk = 0;
 
     FileSize headerSize = 0;
     // char case:
     {
         char type = 0;
         headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, char, int>(
-            s, &type, &rows, &cols, &numOfItems);
+            s, &type, &rows, &cols, &numOfItems, &numOfSubunits, &subunitId,
+            &sizeOfChunk);
         // std::cout << TlUtils::format("%s: %d (%d, %d)", "ci", type, rows,
         // cols)
         //           << std::endl;
@@ -125,7 +135,8 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ1(
         if (headerSize == 0) {
             headerSize =
                 TlMatrixUtils::getHeaderSize_templ2<StreamType, char, long>(
-                    s, &type, &rows, &cols, &numOfItems);
+                    s, &type, &rows, &cols, &numOfItems, &numOfSubunits,
+                    &subunitId, &sizeOfChunk);
             // std::cout << TlUtils::format("%s: %d (%d, %d)", "cl", type, rows,
             // cols)
             //           << std::endl;
@@ -137,7 +148,8 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ1(
     if (headerSize == 0) {
         int type = 0;
         headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, int, int>(
-            s, &type, &rows, &cols, &numOfItems);
+            s, &type, &rows, &cols, &numOfItems, &numOfSubunits, &subunitId,
+            &sizeOfChunk);
         // std::cout << TlUtils::format("%s: %d (%d, %d)", "ii", type, rows,
         // cols)
         //           << std::endl;
@@ -145,7 +157,8 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ1(
         if (headerSize == 0) {
             headerSize =
                 TlMatrixUtils::getHeaderSize_templ2<StreamType, int, long>(
-                    s, &type, &rows, &cols, &numOfItems);
+                    s, &type, &rows, &cols, &numOfItems, &numOfSubunits,
+                    &subunitId, &sizeOfChunk);
             // std::cout << TlUtils::format("%s: %d (%d, %d)", "il", type, rows,
             // cols)
             //           << std::endl;
@@ -157,7 +170,8 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ1(
     if (headerSize == 0) {
         long type = 0;
         headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, long, int>(
-            s, &type, &rows, &cols, &numOfItems);
+            s, &type, &rows, &cols, &numOfItems, &numOfSubunits, &subunitId,
+            &sizeOfChunk);
         // std::cout << TlUtils::format("%s: %d (%d, %d)", "li", type, rows,
         // cols)
         //           << std::endl;
@@ -165,7 +179,8 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ1(
         if (headerSize == 0) {
             headerSize =
                 TlMatrixUtils::getHeaderSize_templ2<StreamType, long, long>(
-                    s, &type, &rows, &cols, &numOfItems);
+                    s, &type, &rows, &cols, &numOfItems, &numOfSubunits,
+                    &subunitId, &sizeOfChunk);
             // std::cout << TlUtils::format("%s: %d (%d, %d)", "ll", type, rows,
             // cols)
             //           << std::endl;
@@ -183,6 +198,18 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ1(
         if (pNumOfCols != NULL) {
             *pNumOfCols = cols;
         }
+        if (pNumOfItems != NULL) {
+            *pNumOfItems = numOfItems;
+        }
+        if (pNumOfSubunits != NULL) {
+            *pNumOfSubunits = numOfSubunits;
+        }
+        if (pSubunitId != NULL) {
+            *pSubunitId = subunitId;
+        }
+        if (pSizeOfChunk != NULL) {
+            *pSizeOfChunk = sizeOfChunk;
+        }
     }
 
     return headerSize;
@@ -192,11 +219,15 @@ template <typename StreamType, typename MatrixType, typename IndexType>
 TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ2(
     StreamType& s, MatrixType* pMatrixType,
     TlMatrixObject::index_type* pNumOfRows,
-    TlMatrixObject::index_type* pNumOfCols, std::size_t* pNumOfItems) {
+    TlMatrixObject::index_type* pNumOfCols, std::size_t* pNumOfItems,
+    int* pNumOfSubunits, int* pSubunitId, int* pSizeOfChunk) {
     MatrixType matrixType = 0;
     IndexType rows = 0;
     IndexType cols = 0;
     std::size_t numOfItems = 0;
+    int numOfSubunits = 0;
+    int subunitId = 0;
+    int sizeOfChunk = 0;
 
     // get file size
     FileSize fileSize = 0;
@@ -215,12 +246,25 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ2(
         (matrixType == TlMatrixObject::COOS)) {
         s.read(reinterpret_cast<char*>(&numOfItems), sizeof(std::size_t));
         headerSize += sizeof(std::size_t);
+    } else if (matrixType == TlMatrixObject::ABGD) {
+        s.read(reinterpret_cast<char*>(&numOfSubunits), sizeof(int));
+        s.read(reinterpret_cast<char*>(&subunitId), sizeof(int));
+        s.read(reinterpret_cast<char*>(&sizeOfChunk), sizeof(int));
+        headerSize += sizeof(int) * 3;
     }
 
     const FileSize estimatedFileSize =
         headerSize + TlMatrixUtils::estimateFileSize(
                          static_cast<TlMatrixObject::MatrixType>(matrixType),
-                         rows, cols, numOfItems);
+                         rows, cols, numOfItems, numOfSubunits, sizeOfChunk);
+    // std::cerr << TlUtils::format(
+    //                  "%s@%d [%d, %d] type: %d, fs: %ld/%ld %d/%d/%d",
+    //                  __FILE__,
+    //                  __LINE__, rows, cols, matrixType, fileSize,
+    //                  estimatedFileSize, numOfSubunits, subunitId,
+    //                  sizeOfChunk)
+    //           << std::endl;
+
     FileSize answer = 0;
     if (estimatedFileSize == fileSize) {
         answer = headerSize;
@@ -237,12 +281,25 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ2(
     if (pNumOfItems != NULL) {
         *pNumOfItems = numOfItems;
     }
+
+    // for array matrix
+    if (pNumOfSubunits != NULL) {
+        *pNumOfSubunits = numOfSubunits;
+    }
+    if (pSubunitId != NULL) {
+        *pSubunitId = subunitId;
+    }
+    if (pSizeOfChunk != NULL) {
+        *pSizeOfChunk = sizeOfChunk;
+    }
+
     return answer;
 }
 
 std::size_t TlMatrixUtils::estimateFileSize(
     TlMatrixObject::MatrixType matrixType, const TlMatrixObject::index_type row,
-    const TlMatrixObject::index_type col, const std::size_t numOfItems) {
+    const TlMatrixObject::index_type col, const std::size_t numOfItems,
+    const int numOfSubunits, const int sizeOfChunk) {
     std::size_t answer = 0;
 
     const std::size_t size_index = sizeof(TlMatrixObject::index_type);
@@ -266,8 +323,19 @@ std::size_t TlMatrixUtils::estimateFileSize(
             answer = (size_index * 2 + size_double) * numOfItems;
             break;
 
+        case TlMatrixObject::ABGD: {
+            const std::size_t numOfChunks =
+                TlDenseMatrix_arrays_Object::getNumOfLocalChunks(
+                    row, numOfSubunits, sizeOfChunk);
+            // std::cerr << TlUtils::format("chunks: %d", numOfChunks)
+            //           << std::endl;
+            answer = size_double * (numOfChunks * sizeOfChunk) * col;
+        } break;
+
         default:
-            std::cerr << "program error. " << std::endl;
+            std::cerr << TlUtils::format("program error: matrix_type=%d %s@%d",
+                                         int(matrixType), __FILE__, __LINE__)
+                      << std::endl;
             break;
     }
 

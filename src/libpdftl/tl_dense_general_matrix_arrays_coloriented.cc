@@ -16,9 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "tl_dense_general_matrix_arrays_coloriented.h"
 #include <cassert>
 #include <iostream>
+
+#include "TlUtils.h"
+#include "tl_dense_general_matrix_arrays_coloriented.h"
 
 TlDenseGeneralMatrix_arrays_ColOriented::
     TlDenseGeneralMatrix_arrays_ColOriented(const index_type row,
@@ -113,6 +115,42 @@ TlDenseGeneralMatrix_arrays_ColOriented::getTlMatrixObject() const {
     return answer;
 }
 
+// -----------------------------------------------------------------------------
+std::ostream& operator<<(std::ostream& stream,
+                         const TlDenseGeneralMatrix_arrays_ColOriented& mat) {
+    const TlMatrixObject::index_type numOfRows = mat.getNumOfRows();
+    const TlMatrixObject::index_type numOfCols = mat.getNumOfCols();
+
+    for (TlMatrixObject::index_type ord = 0; ord < numOfCols; ord += 10) {
+        stream << "       ";
+        for (TlMatrixObject::index_type j = ord;
+             ((j < ord + 10) && (j < numOfCols)); ++j) {
+            stream << TlUtils::format("   %5d th", j + 1);
+        }
+        stream << "\n ----";
+
+        for (TlMatrixObject::index_type j = ord;
+             ((j < ord + 10) && (j < numOfCols)); ++j) {
+            stream << "-----------";
+        }
+        stream << "----\n";
+
+        for (TlMatrixObject::index_type i = 0; i < numOfRows; ++i) {
+            stream << TlUtils::format(" %5d  ", i + 1);
+
+            for (TlMatrixObject::index_type j = ord;
+                 ((j < ord + 10) && (j < numOfCols)); ++j) {
+                stream << TlUtils::format(" %10.6lf", mat.get(i, j));
+            }
+            stream << "\n";
+        }
+        stream << "\n\n";
+    }
+
+    return stream;
+}
+
+// -----------------------------------------------------------------------------
 void TlDenseGeneralMatrix_arrays_ColOriented::
     saveByTlDenseGeneralMatrix_arrays_RowOriented(
         const std::string& basename) const {

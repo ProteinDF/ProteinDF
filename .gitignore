@@ -1,5 +1,6 @@
 *~
 build/*
+out.*
 
 # automake & autoconf
 Makefile.in
@@ -46,4 +47,9 @@ pdf-*
 *.exe
 *.out
 *.app
+
+# Sphinx documentation
+doc/.python-version
+doc/_build/*
+**/__pycache__/*
 
