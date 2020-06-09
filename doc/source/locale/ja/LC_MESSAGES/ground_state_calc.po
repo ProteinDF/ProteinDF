@@ -1,0 +1,408 @@
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: ProteinDF User's Manual 2014.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-11-18 00:11-0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../source/ground_state_calc.rst:5
+msgid "基底状態計算"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:8
+msgid "計算方法"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:10
+msgid ""
+"計算対象の電子配置に基づき、ProteinDFでは閉殻・開殻・制限付き開殻計算が実行できます。 キーワード ``method`` で指定します。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:14
+msgid "電子数・電子占有状態の指定"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:17
+msgid "制限法計算(restricted Kohn-Sham method)"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:19
+msgid "1つの分子軌道に1組の電子対を配置する閉殻分子(一重項)の計算を行います。 ``method = rks`` を指定してください。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:22
+msgid ""
+"キーワード ``method/rks/occlevel`` で電子の電子配置を指定します。 "
+"例えば、10個の電子が対になってエネルギーの低い5つの軌道を占有する場合、"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:29
+msgid "と記述してください。最も低い分子軌道が1番となり、順に、2、3、・・・と続きます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:31
+msgid "また、電子数はキーワード ``rks/electrons`` で指定します。 10個の電子であれば、"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:38
+msgid "と記述します。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:42
+msgid "閉殻計算の場合、 ``rks/electrons`` の値は必ず偶数になります。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:46
+msgid ""
+"``method/rks/occlevel = [1-4, 6]`` というような記述もできます。 "
+"このとき、1番目の軌道から4番目の軌道まで、そして6番目の軌道に電子が占有されます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:51
+msgid "非制限法計算(unrestricted Kohn-Sham method)"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:53
+msgid "αスピン、βスピンそれぞれの電子配置が異なる開殻分子の計算を行います。 ``method = rks`` を指定してください。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:56
+msgid ""
+"それぞれの電子数は、αスピンは ``uks/alpha_electrons`` 、βスピンは ``uks/beta_electrons`` "
+"で指定します。 電子配置は同様に ``method/uks/alpha-spin-occlevel`` 、 ``method/uks/beta-"
+"spin-occlevel`` で指定します。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:61
+msgid ""
+"``uks/alpha_electrons`` の値は ``uks/beta_electrons`` "
+"と等しいか、それよりも大きくなるようにしてください。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:65
+msgid "制限開殻計算(restricted open shell Kohn-Sham method)"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:67
+msgid ""
+"閉殻電子配置(closed-shell)と開殻電子配置(open-shell)に分けて計算する手法です。 ``method = roks`` "
+"を指定してください。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:70
+msgid ""
+"電子数は ``method/roks/closed_shell_electrons`` 、 "
+"``method/roks/open_shell_electrons`` で指定し、 電子配置は "
+"``method/roks/closed_shell_occlevel`` 、 ``method/roks/open_shell_occlevel`` "
+"で指定します。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:75
+msgid "初期値の指定"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:77
+msgid "SCF繰り返し計算における初期値を指定します。 キーワードは ``guess`` です。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:81
+msgid "core"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:83
+msgid "コアハミルトニアンを使って初期値を作成します。 ``guess = core`` で使用できます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:87
+msgid "Hückel"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:89
+msgid "Hückel法により初期値を作成します。 ``guess = huckel`` で使用できます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:94
+msgid "Harrisの汎関数"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:96
+msgid ""
+"Harrisの汎関数を用いて初期値を作成します。 ``guess = harris`` で使用できます。 "
+"原子種によっては用意されていない場合があります。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:102
+msgid "近似電子密度"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:104
+msgid ""
+"近似電子密度を用いて初期値を作成します。 ``guess = rho`` で使用できます。 RI法以外では正しい結果が得られない場合があります。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:109
+msgid "LCAO係数行列"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:111
+msgid ""
+"LCAO係数行列から初期値を作成します。 ``guess = lcao`` で使用できます。 あらかじめLCAO係数行列を用意しておく必要があります。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:117
+msgid ""
+"現行のバージョンでは、計算ディレクトリにLCAOテキストファイル、OCCテキストファイルを用意しておく必要があります。 "
+"この仕様は今後変更される可能性があります。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:122
+msgid "密度行列"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:124
+msgid ""
+"密度行列を初期値として利用します。 ``guess = density`` で使用できます。 あらかじめ密度行列を用意しておく必要があります。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:130
+msgid ""
+"現行のバージョンでは、作業用ディレクトリ(fl_Work)下に0番目の密度行列ファイルを置く必要があります。 この仕様は今後変更される可能性があります。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:135
+msgid "クーロン項の計算"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:138
+#: ../../source/ground_state_calc.rst:177
+msgid "計算エンジンの選択"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:140
+msgid ""
+"クーロン項の計算で必要な4中心2電子積分は、 計算律速なルーチンの一つです。 ProteinDFでは、いくつかの計算エンジンを実装しています。 "
+"キーワード ``J_engine`` で選択できます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:147
+#: ../../source/ground_state_calc.rst:185
+msgid "conventional"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:149
+msgid "SCF繰り返し計算の各イテレーションにおいて、 4中心2電子積分を計算し、クーロン項を求めます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:154
+msgid "RI_J"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:156
+msgid ""
+"SCF繰り返し計算の各イテレーションにおいて、 RI法に基づき、3中心積分を計算してクーロン項を求めます。 計算精度は補助基底関数に依存します。 "
+"ProteinDFのデフォルトです。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:162
+#: ../../source/ground_state_calc.rst:194
+msgid "コレスキー分解法"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:164
+msgid ""
+"コレスキー分解法に基づき、 SCF繰り返し計算の前に4中心2電子積分のコレスキーベクトルを求めます。 SCF繰り返し計算の各イテレーションでは、 "
+"密度行列との行列演算によりクーロン項を求めます。 SCF計算中に分子積分を行わないために高速に演算できますが、 "
+"メモリやディスクの記憶域を多く消費します。 ``J_engine = CD`` で使用できます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:174
+msgid "Fock交換項の計算"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:179
+msgid ""
+"Fockの交換項も4中心2電子積分計算が必要なため、 計算律速になります。 キーワード ``K_engine`` で計算エンジンを選択できます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:187
+msgid ""
+"SCF繰り返し計算の各イテレーションにおいて、 4中心2電子積分を計算し、クーロン項を求めます。 ProteinDFのデフォルトです。 "
+"``K_engine = conventional`` で使用できます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:196
+msgid ""
+"クーロン項と同様に、コレスキー分解法によって Fock交換項を求めます。 クーロン項のコレスキー分解で求めたコレスキーベクトルを 共通して利用します。 "
+"``K_engine = CD`` で使用できます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:204
+msgid "ハイブリッド汎関数法およびHartree-Fock法"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:206
+msgid ""
+"パラメータ ``xc-potential`` に以下の値を設定することで、 ハイブリッド汎関数計算、またはHartree-"
+"Fock計算を行うことができます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:209
+msgid "HF"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:211
+msgid "Hartree-Fock法による電子状態計算を行います。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:213
+#: ../../source/ground_state_calc.rst:243
+msgid "B3LYP"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:215
+msgid "Becke 3パラメータによるハイブリッド汎関数計算を行います。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:219
+msgid "交換相関項の計算"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:221
+msgid ""
+"ProteinDFにおいて、Kohn-Sham行列の交換相関項ならびに交換相関エネルギーは 数値積分計算、または解析計算(grid-"
+"free法)によって求めることができます。 デフォルトは数値積分計算です。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:227
+msgid "グリッドの選択"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:229
+msgid ""
+"数値グリッドはパラメータ ``xc-potential/grid-type`` で指定できます。 デフォルトはSG-1グリッドを採用します。 "
+"詳しくは付録を参照してください。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:235
+msgid "数値積分法で利用できる汎関数"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:237
+msgid "汎関数の指定は ``xc_potential`` で行います。 利用可能な汎関数は以下のとおりです。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:240
+msgid "SVWN~"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:241
+msgid "SVWN"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:242
+msgid "BLYP"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:244
+msgid "HFB"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:248
+msgid "末尾にチルダ(~)がある交換相関汎関数は、 RI法に基づき近似電子密度から交換相関項が求められます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:253
+msgid "グリッドフリー法"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:255
+msgid "グリッドフリー法による交換相関項計算を実行します。 詳しくは付録のキーワード ``grid_free`` を参照してください。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:260
+msgid "レベルシフト計算"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:262
+msgid ""
+"レベルシフト法は特定の軌道について軌道エネルギーをずらすことができる計算手法です。 詳しくは付録のキーワード ``level_shift`` "
+"を参照してください。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:267
+msgid "収束加速法"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:269
+msgid ""
+"SCF繰り返し計算において、 安定かつ効率良く収束させるために、 ProteinDFではいくつかの収束アルゴリズムを選択できます。 キーワード "
+"``scf_acceleration`` で選択できます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:276
+msgid "damping法"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:278
+msgid ""
+"前回の繰り返し計算で用いた物理量を一定の割合で混ぜ合わせる方法です。 :math:`n` 回目のSCF計算で求められた物理量を "
+":math:`Y^{\\left(n\\right)}` と表し、 更新される量を :math:`X^{\\left(n\\right)}` とすると、"
+" 以下のように求められます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:290
+msgid ""
+"ここで、混ぜ合わせる割合(:math:`a`)は、 ``scf_acceleration/damping/damping_factor`` "
+"で設定できます。 また、対象となる物理量は、 ``scf_acceleration/damping/damping_type`` で指定できます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:298
+msgid "使用例"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:307
+msgid "Anderson法"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:309
+msgid "Andersonによる2次収束法を用います。 以下、過去2点の物理量を用いた場合の式を示します。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:327
+msgid ""
+"上式 :math:`b^{\\left(n-1\\right)}` は、 ``scf-acceleration/anderson/damping-"
+"factor`` で指定できます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:330
+msgid ""
+"なお、Anderson法を開始するまではdamping法を用います。 Anderson法を開始するSCF回数は、 "
+"``scf_acceleration/anderson/start_number`` で指定できます。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:335
+msgid "DIIS法"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:337
+msgid ""
+"Pulay によるDirect Inversion of the Iterative Subspace (DIIS)法を採用します。 "
+"DIIS法では、新しい物理量 :math:`X^{\\left(n\\right)}` は過去の "
+":math:`X^{\\left(n-i\\right)}` の 線形結合で得られると仮定します。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:349
+msgid "ここで、参照数 :math:`M` は ``scf-acceleration/diis/number-of-diis`` で指定します。"
+msgstr ""
+
+#: ../../source/ground_state_calc.rst:351
+msgid ""
+"またDIIS法でも、DIIS法を開始するまではdamping法を用います。 DIIS法を開始するSCF回数は、 ``scf-"
+"acceleration/diis/start-number`` で指定します。"
+msgstr ""

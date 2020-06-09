@@ -48,3 +48,8 @@ pdf-*
 *.out
 *.app
 
+# Sphinx documentation
+doc/.python-version
+doc/_build/*
+**/__pycache__/*
+

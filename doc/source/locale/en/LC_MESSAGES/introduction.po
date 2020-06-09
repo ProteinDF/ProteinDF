@@ -1,0 +1,146 @@
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: ProteinDF User's Manual 2014.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-11-18 00:11-0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../source/introduction.rst:5
+msgid "概要"
+msgstr "Overview"
+
+#: ../../source/introduction.rst:7
+msgid "ProteinDFはタンパク質の精密な全電子カノニカル分子軌道計算の実行・解析に焦点をあてたプログラムです。"
+msgstr "ProteinDF is an application program focusing on precisely executing/analyzing all-electron canonical molecular orbital (CMO) calculations of proteins."
+
+#: ../../source/introduction.rst:12
+msgid "特徴"
+msgstr "Features"
+
+#: ../../source/introduction.rst:14
+msgid "ProteinDFには以下の特徴があります。"
+msgstr "The ProteinDF features are as follows:"
+
+#: ../../source/introduction.rst:16
+msgid "Gauss型基底関数を用いた密度汎関数法プログラム"
+msgstr "Density functional theory (DFT) program using Gaussian-type basis sets"
+
+#: ../../source/introduction.rst:18
+msgid "Hartree-Fock計算 および 純粋密度汎関数計算、混合密度汎関数計算"
+msgstr "Allows Hartree-Fock (HF) calculations, pure DFT calculations, and hybrid DFT calculations. "
+
+#: ../../source/introduction.rst:20
+msgid "オブジェクト指向言語C++で開発"
+msgstr "Implemented using the object-oriented program language C++."
+
+#: ../../source/introduction.rst:22
+msgid "タンパク質をはじめとする巨大分子の基底状態全電子カノニカル分子軌道計算"
+msgstr "Ground-state all-electron CMO calculation for large molecules including proteins."
+
+#: ../../source/introduction.rst:24
+msgid "RI(Resolution of Identity)法による分子積分の高速化"
+msgstr "High-speed molecular integrals with the Resolution of Identity (RI) method."
+
+#: ../../source/introduction.rst:25
+msgid "コレスキー分解法による精密化と高速化の両立"
+msgstr "Precise and fast computation with Cholesky decomposition."
+
+#: ../../source/introduction.rst:26
+msgid "大規模行列の分散保持による大規模計算"
+msgstr "Large-scale computation by distributing large-scale matrices."
+
+#: ../../source/introduction.rst:27
+msgid "MPI / OpenMPによるハイブリッド並列化による並列計算"
+msgstr "Hybrid parallel computation with MPI/OpenMP."
+
+#: ../../source/introduction.rst:29
+msgid "巨大分子の解析"
+msgstr "Large molecule analysis."
+
+#: ../../source/introduction.rst:31
+msgid "各原子座標におけるエネルギー勾配の解析的計算"
+msgstr "Analytic calculation of energy gradient at each atomic coordinate."
+
+#: ../../source/introduction.rst:32
+msgid "Mulliken電子密度解析"
+msgstr "Mulliken population analysis."
+
+#: ../../source/introduction.rst:33
+msgid "分子軌道・電子密度・静電ポテンシャルの計算"
+msgstr "Calculation of MOs, electron density, and electrostatic potential."
+
+#: ../../source/introduction.rst:37
+msgid "計算手法"
+msgstr "Calculation method"
+
+#: ../../source/introduction.rst:39
+msgid "
+"タンパク質の構造を丸ごと取り扱い、機能を定量的に予測できる計算方法は、 電子相関を効果的に取り込むことができるKohn-Sham方程式を解く密度汎関数法が適しています。 ProteinDFは基底関数にガウス型関数を使用するKohn-Sham-Roothaan法に基づく密度汎関数計算プログラムで、 化学では標準的な分子軌道計算法です。 密度汎関数法の解説や、大規模計算技術の詳細は他書に譲り、 ここでは簡単にProteinDFの概要を述べます。"
+msgstr "To handle the entire structure of a protein and to predict its functions quantitatively, it is appropriate to use a DFT method which solves Kohn-Sham equations, where electron correlation can be incorporated effectively. ProteinDF is a Gaussian-basis DFT calculation program based on the Kohn-Sham-Roothaan (KSR) method, a standard MO calculation method in chemistry. For details on DFT calculations and large-scale computation, please refer to the other materials. This section briefly describes the ProteinDF overview."
+
+#: ../../source/introduction.rst:46
+msgid "大規模なカノニカル計算を達成するため、 計算高速化法としてRI (Resolution of Identity)法やコレスキー分解法を採用しています。 計算方法は制限付き、非制限付き、および制限付き開殻Kohn-Sham(Restricted, Unrestricted and Restricted Open-shell KS) 法をサポートしています。 デフォルトの交換相関ポテンシャルはハイブリッド汎関数B3LYPで、 局所汎関数SVWN、ならびに一般化密度勾配補正のBLYPなどが用意されています。 なお、SVWNに関しては、交換相関ポテンシャル計算にもRI法を用いて計算する方法も選択することができます。 これらの方法で、エネルギー勾配計算が用意されていますが、 これを用いた構造最適化機能や量子分子動力学法計算、 物理量の計算には、これらを実行するための外部プログラムと連携を行う必要があります。 基底関数と補助基底関数はガウス型基底関数を用いる密度汎関数法に最適化したものを basis2 ファイルに用意しています。追加も可能です。 ProteinDF のデフォルトセットはValence Double(VD) 相当のものを指定してあります。 詳しくはbasis2 ファイルをご覧下さい。 ProteinDF は他の分子軌道法プログラムと同様にキーワード方式で実行が指定されます。 上記の説明中にも現れましたが、ほぼすべてのキーワードはデフォルト値が設定されています。 詳しくは付録を参考にして下さい。"
+msgstr "To carry out large-scale canonical calculation, ProteinDF employs RI technique and Cholesky decomposition to speed up the calculation. Restricted, Unrestricted, and Restricted Open-Shell Kohn-Sham (KS) methods are available. The hybrid functional B3LYP is set to the default exchange-correlation potential, and a local density functional SVWN and generalized gradient approximation (GGA) BLYP are also available. The SVWN can also be used for calculation of exchange-correlation potential and also for RI calculations. Energy gradient calculations can be achieved by these methods. To use the obtained energy gradient for geometry optimization, quantum molecular dynamics calculation, and physical quantity calculation, the user is required to work ProteinDF with the relevant external programs. The basis sets and auxiliary basis sets are prepared in the basis2 file in the form optimized for Gaussian basis DFT calculations. The user can also add desired basis sets to the file. The default set for ProteinDF is Valence Double (VD) equivalent. For details, refer to the content of the basis2 file. The user can operate ProteinDF by specifying keywords as in the other MO calculation programs. Default values are already set to most keywords, some of which were mentioned above. See Appendix for details.
+"
+
+#: ../../source/introduction.rst:65
+msgid "計算サイズ"
+msgstr "Computation size"
+
+#: ../../source/introduction.rst:67
+msgid "ProteinDF の最大の特徴はその計算サイズです。 数十残基からなるタンパク質の全電子計算が現在のPCで無理なく実行できる理由は、 私たちが行ってきたさまざまな工夫に起因するものと自負していますが、 もっとも大きな要因はメモリ仕様に関するプログラミングの取り決めにあります。 ProteinDF では動的なメモリ管理により、 基底関数の次元をもつ行列を数個分のみを使用して全実行が行われます。 この事実から逆に、使用するマシンのメモリサイズから最大計算サイズが算出できます。 ちなみに、基底関数の数をN :sub:`orb` とすると、行列1つ分のメモリは8×N :sub:`orb` × N :sub:`orb` バイトと概算できます。 ただし、通常OS や転送などが使用するメモリ領域がありますし、 特に動的なメモリ消去において(たとえプログラムに明記していても)、OS が勝手なタイミングで行う場合があります。 また、メモリを最大限に利用するため、中間出力としてディスク媒体を使用しています。 計算中は計算サイズの行列を最低200個分保持できるよう、ディスクの空きを確保して下さい。 ProteinDF では安全のため中間出力をすべて残しています。"
+msgstr "The most distinctive feature of ProteinDF is its computation size. The user can execute all-electron calculation of proteins with several dozens of residues in the current PC system without any difficulties. Among all of our efforts to make the program possible, the biggest contributing factor was our coding conventions for memory management. Utilizing dynamic memory management, ProteinDF calculates all matrices, with as many dimensions as basis sets, by using only a limited number of memory units. With this scheme, we can reversely calculate the maximum computation size from the memory size of the computing machine. When the number of basis sets is Norb, we can roughly estimate the memory size for each matrix to be 8 x Norb x Norb bytes. Note, however, that the OS or transferring processes also use some memory spaces. In particular, the OS may execute dynamic memory deletion on its own timing (even when the timing is expressly declared in the program). Note also that ProteinDF outputs intermediate files to disk storage in order to take full advantage of the memory. During computation, be sure to secure disk space sufficient for at least 200 matrices, each with the estimated computation size. ProteinDF saves all intermediate outputs for safe computation."
+
+#: ../../source/introduction.rst:83
+msgid "その他"
+msgstr "Others"
+
+#: ../../source/introduction.rst:85
+msgid "ProteinDF はペプチド鎖からなるタンパク質の全電子計算に適化しています。 一方、ヘテロ分子を含む計算など、より複雑な計算には自動計算法もGUI の対応もまだ不十分な状態です。 このような計算を行うには、本手法やプログラムを深く理解し、 場合によっては手作業が必要となると思います。 詳しくはリファレンスマニュアルを参考にして下さい。 最後に、これまで私達がペプチド鎖からなるタンパク質の全電子計算を通して得た経験のうち重要と思われるものを以下に列挙します。"
+msgstr "ProteinDF is optimized for all-electron calculation of proteins made up of peptide chains. However, the automatic calculation methods and GUI are not well supported for more complicated calculations, such as those involving hetero molecules. To perform such calculations, thoroughly familiarize yourself with the program as well as applied methods, and modify the program manually. Refer to separate reference manuals for details. Finally, the following sections explain the points which, based on our experience of all-electron calculation of peptide chain proteins, seem most important:"
+
+#: ../../source/introduction.rst:94
+msgid "タンパク質サイズの経験則"
+msgstr "Empirical rule on protein size"
+
+#: ../../source/introduction.rst:96
+msgid "タンパク質の密度汎関数計算とはどの程度の規模の計算なのかを確認することは、 初めに行うべき最も大切なことの一つです。 Roothaan法ではKohn-Sham方程式の固有値を求める問題を行列方程式の固有値解法に置き換えます。 そのため、行列のサイズが計算の規模を表す指標になります。 昔から、タンパク質ではアミノ酸残基の総数と分子量との間に次の経験則が知られています。"
+msgstr "When performing DFT calculation of proteins, one of the most important first considerations is estimating the size of computation. In the Roothaan method, the eigenvalue problem of the Kohn-Sham equation is replaced with that of the matrix equation. This means that the size of the matrix can indicate the scale of computation. The following empirical rule traditionally defines the relationship between protein molecular mass and the total number of amino acid residues:"
+
+#: ../../source/introduction.rst:102
+msgid "(タンパク質の分子量) = 110 × (アミノ酸残基数)"
+msgstr "(Protein molecular mass) = 110 x (Number of amino acid residues)"
+
+#: ../../source/introduction.rst:104
+msgid "この関係式は、タンパク質がペプチド鎖でできていること、 アミノ酸をつくる水素、炭素、窒素、酸素、硫黄といった原子の組成比率が巨大な分子で平均化されるためによく合います。 この経験則を発展させて、タンパク質のアミノ酸残基数(N\\ :sub:`res`)、原子数(N\\ :sub:`atom`)、 電子数(N\\ :sub:`ele`)、軌道数(N\\ :sub:`orb`)(すなわち行列の次元)との間の比例関係を導くことができます。 例えばProteinDF のデフォルトセット(VD 相当) ではおおよそ以下の関係が成り立ちます。"
+msgstr "This relational expression is well matched to the actual cases, due to the fact that proteins are made of peptide chains, and that the composition ratios of atoms which make up amino acids, such as hydrogen, carbon, nitrogen, oxygen, and sulfur, are averaged in large molecules. By expanding this rule, we can derive a proportional relationship on a protein, among the number of the amino acid residues (Nres), number of the atoms (Natom), number of the electrons (Nele), and number of the orbitals (Norb) (i.e. matrix dimensions). For example, in the case of the ProteinDF default set (VD equivalent), the following relationship is approximately established:"
+
+#: ../../source/introduction.rst:110
+msgid "N\\ :sub:`res` : N\\ :sub:`atom` : N\\ :sub:`ele` : N\\ :sub:`orb` = 1 : 20 : 70 : 100"
+msgstr "N\\ :sub:`res` : N\\ :sub:`atom` : N\\ :sub:`ele` : N\\ :sub:`orb` = 1 : 20 : 70 : 100"
+
+#: ../../source/introduction.rst:112
+msgid "ここで、N\\ :sub:`atom` のうち半分は水素原子であることも経験的にわかっています。 これは計算サイズを知るうえで有用な関係式です。 もちろん、N\\ :sub:`orb` は使用する基底関数等のセットに依存しますが、 異なるセットでも同様の比例関係式を簡単に見積もることができます。 計算を行う前に、使用するセットにおける比例関係式を導いて、安全な計算サイズを把握して下さい。"
+msgstr "Here, it is empirically known that the half of Natom consists of hydrogen. This relational expression is useful to estimate computation size. Although Norb is dependent on the size of basis set, we can easily derive a similar proportional relation for different basis sets. Obtain a good estimation of computation size before actual computation, by deriving the relational expression according to the basis set."
+
+#: ../../source/introduction.rst:120
+msgid "タンパク質構造の歪み"
+msgstr "Distortion in protein structure"
+
+#: ../../source/introduction.rst:122
+msgid "タンパク質の立体構造はProtein Data Bank(PDB) から入手するのが一般的です。 PDBは、X 線構造解析や中性子散乱、多次元NMR などで決定したタンパク質構成原子の3 次元座標データ群です。 しかし、PDB の座標データには実験そのものの性格上、あるいはその後のデータチューニングの性質上、 異常な構造の歪みを持っているものが多数あります。 これは密度汎関数法計算において特に悪影響を与えます。 また、現在の計算機資源では、全電子カノニカル分子軌道法による密度汎関数法そのもので構造最適化することはまだ現実的ではありません。 計算の際には分子力学法、MOZYME などの半経験法、QM/MMやONIOM法、 フラグメント分子軌道法などで、最適化されることをお勧めします。 また、タンパク質の構造歪みのチェックには例えばPROCHECK などを参考にして下さい。"
+msgstr "In general, we can obtain protein conformations from the Protein Data Bank (PDB). The PDB collects three-dimensional coordinate data of protein atoms experimentally determined with X-ray structural analysis, neutron scattering method, multi-dimensional NMR, and other methods. In the PDB, however, there are a number of data structurally distorted due to the characteristics of the experiment itself or by later data tuning. This distortion may cause adverse effects especially on DFT calculations. Meanwhile, it is not yet practical under the current computer resources to optimize the entire structure of proteins using only the DFT calculations based on all-electron CMO method. To optimize the structure, therefore, we recommend using the MM method, semi-empirical MO method such as MOZYME, QM/MM method, ONIOM method, and FMO method, etc. To check the distortion in protein structure, refer to the PROCHECK, etc."
+
+#: ../../source/introduction.rst:134
+msgid "タンパク質表面の取り扱い"
+msgstr "Protein surface properties"
+
+#: ../../source/introduction.rst:136
+msgid "化学分子では孤立系のシミュレーションが標準的に行われていますが、 これまでの経験では、密度汎関数法では表面に解離基が多数存在する水溶性タンパク質を真空中で解くことはできません。 これは密度汎関数法の精度の良さを示す1 つの事実であると考えられますが、 一方で計算者側からすれば大変厄介な事実でもあります。 タンパク質の表面がどのようになっているのかは、 今でも最先端の研究課題です。 最も良い方法はタンパク質の周りに溶媒分子(水分子やバッファーイオン)を適切に相当数配置させることですが、 全て量子的に取り扱うと計算サイズが飛躍的に膨れ上がってしまいます。 そのような計算はチャレンジングで大変興味がそそられますが、 通常の計算では、タンパク質周りドロップレット状に古典的な水分子やカウンターイオンを配置させる、 といった便法を使用するなどの対処が必要です。"
+msgstr "Isolated systems have been used as the standard method for simulating chemical molecules. In our experience, however, the DFT cannot solve water-soluble proteins containing a number of dissociable groups on their surface in a vacuum environment. This fact may prove the accuracy of DFT calculations, but also proves troublesome for the person performing the calculation. Elucidating the surface property of proteins features among the forefront of current research subjects. In the surface property case, the most ideal means will involve appropriately arranging a number of solvent molecules (i.e. water molecules or buffer ions) around the protein. However, handling all molecules quantum-mechanically will significantly increase the computation size. Although there is an attraction in attempting that kind of calculation, an alternative means should be applied in practical computation, such as arranging classically-handled water molecules or counter ions in droplets around the proteins."
