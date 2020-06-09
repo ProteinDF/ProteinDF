@@ -115,6 +115,47 @@ void TlDenseGeneralMatrix_arrays_RowOriented::
     TlDenseMatrix_arrays_Object::saveByTheOtherType(basename);
 }
 
+// -----------------------------------------------------------------------------
+std::ostream& operator<<(std::ostream& stream,
+                         const TlDenseGeneralMatrix_arrays_RowOriented& mat) {
+    const TlMatrixObject::index_type numOfRows = mat.getNumOfRows();
+    const TlMatrixObject::index_type numOfCols = mat.getNumOfCols();
+
+    for (TlMatrixObject::index_type ord = 0; ord < numOfCols; ord += 10) {
+        stream << "       ";
+        for (TlMatrixObject::index_type j = ord;
+             ((j < ord + 10) && (j < numOfCols)); ++j) {
+            stream << TlUtils::format("   %5d th", j + 1);
+        }
+        stream << "\n ----";
+
+        for (TlMatrixObject::index_type j = ord;
+             ((j < ord + 10) && (j < numOfCols)); ++j) {
+            stream << "-----------";
+        }
+        stream << "----\n";
+
+        for (TlMatrixObject::index_type i = 0; i < numOfRows; ++i) {
+            stream << TlUtils::format(" %5d  ", i + 1);
+
+            for (TlMatrixObject::index_type j = ord;
+                 ((j < ord + 10) && (j < numOfCols)); ++j) {
+                if (mat.getSubunitID(i) == mat.getSubunitID()) {
+                    stream << TlUtils::format(" %10.6lf", mat.get(i, j));
+
+                } else {
+                    stream << " ----------";
+                }
+            }
+            stream << "\n";
+        }
+        stream << "\n\n";
+    }
+
+    return stream;
+}
+
+// -----------------------------------------------------------------------------
 bool RowVectorMatrix2CSFD(const std::string& rvmBasePath,
                           const std::string& csfdPath, bool verbose,
                           bool showProgress) {
@@ -122,6 +163,7 @@ bool RowVectorMatrix2CSFD(const std::string& rvmBasePath,
     TlMatrixObject::index_type numOfRows = 0;
     TlMatrixObject::index_type numOfCols = 0;
     int numOfSubunits = 0;
+    int sizeOfChunk = 0;
     {
         int subunitID = 0;
         const std::string inputPath0 =
@@ -129,7 +171,7 @@ bool RowVectorMatrix2CSFD(const std::string& rvmBasePath,
         TlMatrixObject::index_type sizeOfVector, numOfVectors;
         const bool isLoadable = TlDenseMatrix_arrays_Object::isLoadable(
             inputPath0, &numOfVectors, &sizeOfVector, &numOfSubunits,
-            &subunitID);
+            &subunitID, &sizeOfChunk);
         if (isLoadable != true) {
             std::cerr << "can not open file: " << inputPath0 << std::endl;
             return false;
@@ -143,6 +185,7 @@ bool RowVectorMatrix2CSFD(const std::string& rvmBasePath,
             std::cerr << "rows: " << numOfRows << std::endl;
             std::cerr << "cols: " << numOfCols << std::endl;
             std::cerr << "units: " << numOfSubunits << std::endl;
+            std::cerr << "chunk: " << sizeOfChunk << std::endl;
         }
     }
 
@@ -166,10 +209,11 @@ bool RowVectorMatrix2CSFD(const std::string& rvmBasePath,
         m.load(rvmBasePath, i);
 
         std::vector<double> vtr(numOfCols);
-        for (TlMatrixObject::index_type r = i; r < numOfRows;
-             r += numOfSubunits) {
-            m.getVector(r, &(vtr[0]), numOfCols);
-            fileMat.setRowVector(r, vtr);
+        for (TlMatrixObject::index_type r = i; r < numOfRows; ++r) {
+            if (i == m.getSubunitID(r)) {
+                m.getVector(r, &(vtr[0]), numOfCols);
+                fileMat.setRowVector(r, vtr);
+            }
 
             if (showProgress) {
                 TlUtils::progressbar(float(r) / numOfRows);

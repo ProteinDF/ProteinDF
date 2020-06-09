@@ -1,0 +1,113 @@
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: ProteinDF User's Manual 2014.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-11-18 00:11-0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../source/quick_start_guide.rst:3
+msgid "クイックスタートガイド"
+msgstr "Quick Start Guide"
+
+#: ../../source/quick_start_guide.rst:5
+msgid "ここではアミノ酸(グリシン)の一点計算を1プロセスで計算します。"
+msgstr "This chapter describes how to perform a single-point calculation of amino acid (glycine) using a single process."
+
+#: ../../source/quick_start_guide.rst:12
+msgid "計算用ディレクトリの用意"
+msgstr "Creating calculation directories"
+
+#: ../../source/quick_start_guide.rst:14
+msgid "ProteinDFでは行列・ベクトルなどのサイズ・数ともに大きな中間ファイルを ディスクに書き込みます。 ProteinDFの実行に際し、あらかじめ計算に使用するディレクトリを作成します。 作成すべきディレクトリは"
+msgstr "ProteinDF writes a large number of large intermediate files with matrices/vectors on disk storage. Before starting actual calculations, create the following calculation directories:"
+
+#: ../../source/quick_start_guide.rst:19 ../../source/quick_start_guide.rst:7
+msgid "fl_Input"
+msgstr "fl_Input"
+
+#: ../../source/quick_start_guide.rst:20 ../../source/quick_start_guide.rst:8
+msgid "fl_Table"
+msgstr "fl_Table"
+
+#: ../../source/quick_start_guide.rst:21 ../../source/quick_start_guide.rst:9
+msgid "fl_Work"
+msgstr "fl_Work"
+
+#: ../../source/quick_start_guide.rst:23
+msgid "の3つです。"
+msgstr "."
+
+#: ../../source/quick_start_guide.rst:28
+msgid "ディスクの書き込みに失敗すると、プログラムが異常終了することがあります。 特にMPI並列計算を行う場合は、すべてのノードから書き込みができることを確認してください。"
+msgstr "The program may abnormally terminate if the intermediate files cannot be written properly. Before executing MPI parallel computation, make sure that the files can be properly written from all nodes."
+
+#: ../../source/quick_start_guide.rst:34
+msgid "${PDF_HOME}/bin/pdfsetup を実行しても同様のことが行えます。"
+msgstr "The user can execute ``${PDF_HOME}/bin/pdfsetup`` to perform the operation above."
+
+#: ../../source/quick_start_guide.rst:38
+msgid "入力ファイルの準備"
+msgstr "Creating input files"
+
+#: ../../source/quick_start_guide.rst:42
+msgid "以下の内容のテキストファイルを作成し、 ``fl_Userinput`` というファイル名で保存します。"
+msgstr "Create a text file with the following content, and save it under the name ``fl_Userinput``:"
+
+#: ../../source/quick_start_guide.rst:105
+msgid "ProteinDFの起動オプションにより、 入力ファイルを変更することができます。"
+msgstr "Input files can be changed with a startup option of ProteinDF."
+
+#: ../../source/quick_start_guide.rst:110
+msgid "ProteinDFの実行"
+msgstr "Executing ProteinDF"
+
+#: ../../source/quick_start_guide.rst:112
+msgid "環境変数PDF_HOMEを適切に設定した後、 ProteinDF(逐次版)を実行します。"
+msgstr "Configure the environment variable PDF_HOME appropriately, and execute ProteinDF (in serial mode)."
+
+#: ../../source/quick_start_guide.rst:120
+msgid "正常に終了した場合は、コマンドプロンプトに戻ります。"
+msgstr "If the program terminates properly, the system returns to the command prompt."
+
+#: ../../source/quick_start_guide.rst:124
+msgid "結果の表示"
+msgstr "Outputting results"
+
+#: ../../source/quick_start_guide.rst:126
+msgid "計算結果はファイルに出力されます。 以下に例を示します。"
+msgstr "The calculation results are output in files. The following shows an example of the output:"
+
+#: ../../source/quick_start_guide.rst:132
+msgid "出力ファイルの場所は、ProteinDFの起動オプションにより変更できます。"
+msgstr "The output file location can be changed with a startup option of ProteinDF."
+
+#: ../../source/quick_start_guide.rst:135
+msgid "はじめにProteinDFのバージョン、ならびに並列数(MPIプロセス数、OpenMPスレッド数)が 表示されます。 意図した通りに実行されているか確認してください。"
+msgstr "The beginning of the output file shows the version of ProteinDF and the number of parallel processes (MPI process count, the number of OpenMP threads). Make sure that the calculation was performed as intended."
+
+#: ../../source/quick_start_guide.rst:147
+msgid "``step_control`` に記載されている手順に従い、計算が実行されます。 ログの左側に出力日時が記載されます。"
+msgstr "The calculation is performed according to the procedure described in ``step_control``. The output date is indicated at left in the log.
+"
+
+#: ../../source/quick_start_guide.rst:170
+msgid "エネルギー情報は ``Total Energy`` ブロックに出力されます。"
+msgstr "Energy data are output in the ``Total Energy`` block."
+
+#: ../../source/quick_start_guide.rst:186
+msgid "その他、計算サイズ、カットオフ情報が随時出力されます。"
+msgstr "Other information, such as calculation size or cut off data, is output as needed."
+
+#: ../../source/quick_start_guide.rst:188
+msgid "計算が正常に終了すると、CPU時間と経過時間が出力されます。"
+msgstr "When the calculation completes properly, the CPU time and elapsed time are output."
+
+#: ../../source/quick_start_guide.rst:40
+msgid "fl_Userinput"
+msgstr "fl_Userinput"

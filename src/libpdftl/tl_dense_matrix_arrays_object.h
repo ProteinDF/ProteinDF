@@ -44,6 +44,7 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
    public:
     virtual index_type getNumOfRows() const = 0;
     virtual index_type getNumOfCols() const = 0;
+    int getSizeOfChunk() const;
 
     /// インスタンスのメモリサイズを返す
     virtual std::size_t getMemSize() const;
@@ -58,6 +59,7 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
     virtual bool save(const std::string& path) const;
 
    public:
+    /// @param (subunitID) >= 0 add suffix, < 0 open the basename as path
     virtual bool load(const std::string& basename, int subunitID);
 
    public:
@@ -73,7 +75,13 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
     std::vector<double> getVector(index_type vectorIndex) const;
     void getVector(const index_type vectorIndex, double* pBuf,
                    const index_type length) const;
-    void setVector(index_type vectorIndex, const TlDenseVector_Lapack& v);
+    void setVector(index_type vectorIndex, const std::vector<double>& v);
+
+    /// copy chunk data
+    ///
+    //  retval: size of copied buffer
+    std::size_t getChunk(const index_type vectorIndex, double* pBuf,
+                         const std::size_t length) const;
 
    public:
     static std::string getFileName(const std::string& basename,
@@ -86,7 +94,8 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
     static bool isLoadable(const std::string& filepath,
                            index_type* pNumOfVectors = NULL,
                            index_type* pSizeOfVector = NULL,
-                           int* pNumOfSubunits = NULL, int* pSubunitID = NULL);
+                           int* pNumOfSubunits = NULL, int* pSubunitID = NULL,
+                           int* pSizeOfChunk = NULL);
 
    public:
     index_type getSizeOfVector() const { return this->sizeOfVector_; };
@@ -94,7 +103,10 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
     index_type getNumOfVectors() const { return this->numOfVectors_; };
 
     index_type getNumOfLocalVectors() const {
-        return this->numOfLocalVectors_;
+        // return this->numOfLocalVectors_;
+        const index_type numOfLocalVectors = this->getNumOfLocalVectors(
+            this->numOfVectors_, this->numOfSubunits_, this->sizeOfChunk_);
+        return numOfLocalVectors;
     };
 
     int getNumOfSubunits() const { return this->numOfSubunits_; };
@@ -112,12 +124,26 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
     /// data_ メンバ変数を破棄する
     void destroy();
 
+   public:
+    static index_type getNumOfLocalChunks(const index_type numOfVectors,
+                                          const int numOfSubunits,
+                                          const int sizeOfChunk);
+
    protected:
+    // defunct
+    static index_type getNumOfLocalVectors(const index_type numOfVectors,
+                                           const int numOfSubunits,
+                                           const int sizeOfChunk);
+
+    index_type getLocalVectorIndex(const index_type vectorIndex,
+                                   int* pSubunitId, int* pLocalChunkId = NULL,
+                                   int* pLocalChunkVectorIndex = NULL) const;
     bool saveByTheOtherType(const std::string& basename) const;
 
    private:
     index_type numOfVectors_;  /// ベクトルの総数(global)
     index_type sizeOfVector_;  /// 1ベクトルの大きさ
+    index_type sizeOfChunk_;   ///
 
     /// 行列全体を構成するオブジェクトの総数
     /// 通常はプロセスの総数
@@ -127,12 +153,12 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
     /// 通常はプロセスID
     int subunitID_;
 
-    index_type numOfLocalVectors_;  // ベクトルの総数(local)
-
     index_type reservedVectorSize_;  /// あらかじめ保持している1ベクトルの大きさ
 
     bool isUsingMemManager_;  /// 独自のメモリマネージャを使う(true)
-    std::vector<double*> data_;  /// データ
+
+    int numOfLocalChunks_;
+    std::vector<double*> chunks_;
 };
 
 #endif  // TLCOLVECTORMATRIX2_H

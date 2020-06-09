@@ -69,7 +69,8 @@ class TlMatrixObject {
         CLHD = 4,  /// Coulmn-oriented Lower Half Dens matrix
         CUHD = 5,  /// Coulmn-oriented Upper Half Dens matrix
         COOF = 6,  /// list of tuple (row, col, value) full sparse matrix
-        COOS = 7   /// list of tuple (row, col, value) half sparse matrix
+        COOS = 7,  /// list of tuple (row, col, value) half sparse matrix
+        ABGD = 32  /// General Dens-matrix stored by Arrays Blocks
     };
 
     // ---------------------------------------------------------------------------

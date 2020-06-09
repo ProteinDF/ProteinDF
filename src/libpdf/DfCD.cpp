@@ -99,6 +99,15 @@ DfCD::DfCD(TlSerializeData* pPdfParam, bool initializeFileObj)
             (*this->pPdfParam_)["CD/use_mmap_matrix"].getBoolean();
     }
 
+    this->isCvSavedAsMmap_ = true;
+    if (!(*this->pPdfParam_)["CD/is_cv_saved_as_mmap"].getStr().empty()) {
+        this->isCvSavedAsMmap_ =
+            (*this->pPdfParam_)["CD/is_cv_saved_as_mmap"].getBoolean();
+    }
+    if (this->useMmapMatrix_ == true) {
+        this->isCvSavedAsMmap_ = true;
+    }
+
     this->debugBuildSuperMatrix_ = false;
     if ((*pPdfParam)["debug/DfCD/build_supermatrix"].getStr().empty() != true) {
         this->debugBuildSuperMatrix_ =
@@ -425,7 +434,8 @@ void DfCD::calcCholeskyVectorsForGridFree() {
             if (this->useMmapMatrix_) {
                 this->log_.info("L_xc build on mmap");
 
-                std::string L_mat_path = DfObject::getLxcMatrixPath(this->localTempPath_);
+                std::string L_mat_path =
+                    DfObject::getLxcMatrixPath(this->localTempPath_);
                 this->log_.info(
                     TlUtils::format("L saved as %s", L_mat_path.c_str()));
                 if (TlFile::isExistFile(L_mat_path)) {
@@ -519,10 +529,11 @@ DfCD::PQ_PairArray DfCD::getI2PQ(const std::string& filepath) {
 void DfCD::saveLjk(const TlDenseGeneralMatrix_arrays_RowOriented& Ljk) {
     const std::string path = DfObject::getLjkMatrixPath();
 
+    // temporary saving for slow transformation
     Ljk.save(path + ".rvm");
 
     this->log_.info("save Ljk");
-    if (this->useMmapMatrix_) {
+    if (this->isCvSavedAsMmap_ == true) {
         RowVectorMatrix2CSFD(path + ".rvm", path);
     } else {
         Ljk.saveByTlDenseGeneralMatrix_arrays_ColOriented(path);
@@ -530,9 +541,17 @@ void DfCD::saveLjk(const TlDenseGeneralMatrix_arrays_RowOriented& Ljk) {
 }
 
 void DfCD::saveLk(const TlDenseGeneralMatrix_arrays_RowOriented& Lk) {
-    this->log_.info("save Lk");
     const std::string path = DfObject::getLkMatrixPath();
-    Lk.saveByTlDenseGeneralMatrix_arrays_ColOriented(path);
+
+    // temporary saving for slow transformation
+    Lk.save(path + ".rvm");
+
+    this->log_.info("save Lk");
+    if (this->useMmapMatrix_) {
+        RowVectorMatrix2CSFD(path + ".rvm", path);
+    } else {
+        Lk.saveByTlDenseGeneralMatrix_arrays_ColOriented(path);
+    }
 }
 
 void DfCD::saveLxc(const TlDenseGeneralMatrix_arrays_RowOriented& Lxc) {
@@ -640,7 +659,7 @@ TlDenseGeneralMatrix_Lapack DfCD::getCholeskyVectorA(
 }
 
 void DfCD::getJ(TlDenseSymmetricMatrix_Lapack* pJ) {
-    if (this->useMmapMatrix_) {
+    if (this->isCvSavedAsMmap_ == true) {
         this->getJ_S_mmap(pJ);
     } else {
         this->getJ_S(pJ);
@@ -891,13 +910,22 @@ TlDenseSymmetricMatrix_Lapack DfCD::getPMatrix(const RUN_TYPE runType,
 void DfCD::getK(const RUN_TYPE runType) {
     switch (this->fastCDK_mode_) {
         case FASTCDK_NONE:
-            if (this->useMmapMatrix_) {
-                this->log_.info("load L on mmap");
+            this->log_.info("FastCDK mode: NONE");
+            if (this->isCvSavedAsMmap_) {
+                // this->getK_S_woCD_mmap(runType, pK);
                 this->getK_byLjk_defMatrix<TlDenseGeneralMatrix_mmap>(runType);
+                // this->getK_byLjk<TlDenseSymmetricMatrix_Lapack,
+                //                  TlDenseGeneralMatrix_mmap,
+                //                  TlDenseGeneralMatrix_Lapack,
+                //                  TlDenseSymmetricMatrix_Lapack>(runType);
             } else {
-                this->log_.info("load L on array");
+                // this->getK_S_woCD(runType, pK);
                 this->getK_byLjk_defMatrix<
                     TlDenseGeneralMatrix_arrays_ColOriented>(runType);
+                // this->getK_byLjk<TlDenseSymmetricMatrix_Lapack,
+                //                  TlDenseGeneralMatrix_arrays_ColOriented,
+                //                  TlDenseGeneralMatrix_Lapack,
+                //                  TlDenseSymmetricMatrix_Lapack>(runType);
             }
             break;
 
@@ -905,6 +933,7 @@ void DfCD::getK(const RUN_TYPE runType) {
         case FASTCDK_DEBUG_SUPERMATRIX:
         case FASTCDK_PRODUCTIVE_FULL:
         case FASTCDK_PRODUCTIVE:
+            this->log_.info("FastCDK mode: OK");
             this->getK_byLk<TlDenseSymmetricMatrix_Lapack>(runType);
             break;
 
@@ -1158,13 +1187,13 @@ void DfCD::getK_A(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK) {
 void DfCD::getM(const TlDenseSymmetricMatrix_Lapack& P,
                 TlDenseSymmetricMatrix_Lapack* pM) {
     if (this->isDedicatedBasisForGridFree_) {
-        if (this->useMmapMatrix_) {
+        if (this->isCvSavedAsMmap_ == true) {
             this->getM_A_mmap(P, pM);
         } else {
             this->getM_A(P, pM);
         }
     } else {
-        if (this->useMmapMatrix_) {
+        if (this->isCvSavedAsMmap_) {
             this->getM_S_mmap(P, pM);
         } else {
             this->getM_S(P, pM);
@@ -1433,6 +1462,8 @@ TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFlyS_new(
             ++progress;
 
             // メモリの確保
+            this->log_.info(
+                TlUtils::format("reserve: %d", division * progress));
             L.reserveColSize(division * progress);
         }
         L.resize(numOfPQtilde, numOfCDVcts + 1);
