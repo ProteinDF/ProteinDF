@@ -1,4 +1,5 @@
 set(LIBPDFTL_HEADERS
+  tl_assert.h
   tl_dense_general_matrix_object.h
   tl_dense_symmetric_matrix_object.h
   tl_dense_matrix_impl_object.h
