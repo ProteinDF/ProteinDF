@@ -17,12 +17,15 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "tl_dense_matrix_arrays_object.h"
+
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+
 #include "TlLogging.h"
 #include "TlMemManager.h"
 #include "TlUtils.h"
+#include "tl_assert.h"
 
 #define DEFAULT_CHUNK_SIZE 32
 
@@ -237,7 +240,11 @@ TlMatrixObject::index_type TlDenseMatrix_arrays_Object::getNumOfLocalVectors(
 TlMatrixObject::index_type TlDenseMatrix_arrays_Object::getLocalVectorIndex(
     const index_type vectorIndex, int* pSubunitId, int* pLocalChunkId,
     int* pLocalChunkVectorIndex) const {
-    assert((0 <= vectorIndex) && (vectorIndex < this->numOfVectors_));
+    // assert((0 <= vectorIndex) && (vectorIndex < this->numOfVectors_));
+    TL_ASSERT((0 <= vectorIndex) && (vectorIndex < this->numOfVectors_),
+              TlUtils::format("vectorIndex=%d (max:%d)", vectorIndex,
+                              this->numOfVectors_));
+
     const index_type sizeOfBlock = this->sizeOfChunk_ * this->numOfSubunits_;
     const div_t blocks = std::div(vectorIndex, sizeOfBlock);
     const index_type numOfBlocks = blocks.quot;
