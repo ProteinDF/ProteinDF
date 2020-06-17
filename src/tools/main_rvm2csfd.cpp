@@ -101,17 +101,21 @@ int main(int argc, char* argv[]) {
         for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
             const index_type chunkStartRow =
                 sizeOfChunk * (numOfSubunits * chunk + unit);
-            m.getChunk(chunkStartRow, &(chunkBuf[0]), numOfCols * sizeOfChunk);
 
-            // change memory layout
-            const index_type readRowChunks =
-                std::min(sizeOfChunk, numOfRows - chunkStartRow);
-            TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks,
-                                        numOfCols, &(transBuf[0]));
+            if (chunkStartRow < numOfRows) {
+                m.getChunk(chunkStartRow, &(chunkBuf[0]),
+                           numOfCols * sizeOfChunk);
 
-            TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols,
-                                              &(transBuf[0]));
-            fileMat.block(chunkStartRow, 0, tmpMat);
+                // change memory layout
+                const index_type readRowChunks =
+                    std::min(sizeOfChunk, numOfRows - chunkStartRow);
+                TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks,
+                                            numOfCols, &(transBuf[0]));
+
+                TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols,
+                                                  &(transBuf[0]));
+                fileMat.block(chunkStartRow, 0, tmpMat);
+            }
 
             TlUtils::progressbar(float(chunk) / numOfLocalChunks);
         }
