@@ -1,6 +1,6 @@
 #!/bin/bash -eux
 
-PDF_BUILDER_VER="latest"
+PDF_BUILDER_VER="2020.6"
 #BRANCH=develop
 PDF_BRIDGE_BRANCH="master"
 PDF_PYTOOLS_BRANCH="master"
