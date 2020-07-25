@@ -38,6 +38,8 @@ int main(int argc, char* argv[]) {
         std::cerr << "output: " << outputPath << std::endl;
     }
 
+    bool yn = RowVectorMatrix2CSFD(inputBaseName, outputPath, verbose, true);
+
     // check
     index_type numOfRows = 0;
     index_type numOfCols = 0;

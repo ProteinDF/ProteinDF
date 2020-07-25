@@ -17,10 +17,13 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "tl_dense_general_matrix_arrays_roworiented.h"
+
 #include <cassert>
 #include <iostream>
+
 #include "TlFile.h"
 #include "TlUtils.h"
+#include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_general_matrix_mmap.h"
 
 TlDenseGeneralMatrix_arrays_RowOriented::
@@ -199,26 +202,53 @@ bool RowVectorMatrix2CSFD(const std::string& rvmBasePath,
     TlDenseGeneralMatrix_mmap fileMat(csfdPath, numOfRows, numOfCols);
 
     // load & set
-    for (int i = 0; i < numOfSubunits; ++i) {
+    for (int unit = 0; unit < numOfSubunits; ++unit) {
         if (verbose) {
-            std::cerr << TlUtils::format("%d / %d", i + 1, numOfSubunits)
+            std::cerr << TlUtils::format("%d / %d", unit + 1, numOfSubunits)
                       << std::endl;
         }
 
-        TlDenseGeneralMatrix_arrays_RowOriented m;
-        m.load(rvmBasePath, i);
+        TlDenseGeneralMatrix_arrays_RowOriented partMat;
+        partMat.load(rvmBasePath, unit);
 
-        std::vector<double> vtr(numOfCols);
-        for (TlMatrixObject::index_type r = i; r < numOfRows; ++r) {
-            if (i == m.getSubunitID(r)) {
-                m.getVector(r, &(vtr[0]), numOfCols);
-                fileMat.setRowVector(r, vtr);
+        // std::vector<double> vtr(numOfCols);
+        // for (TlMatrixObject::index_type r = unit; r < numOfRows; ++r) {
+        //     if (i == m.getSubunitID(r)) {
+        //         m.getVector(r, &(vtr[0]), numOfCols);
+        //         fileMat.setRowVector(r, vtr);
+        //     }
+
+        //     if (showProgress) {
+        //         TlUtils::progressbar(float(r) / numOfRows);
+        //     }
+        // }
+        std::vector<double> chunkBuf(numOfCols * sizeOfChunk);
+        std::vector<double> transBuf(numOfCols * sizeOfChunk);
+        const int numOfLocalChunks =
+            TlDenseMatrix_arrays_Object::getNumOfLocalChunks(
+                numOfRows, numOfSubunits, sizeOfChunk);
+        for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
+            const TlMatrixObject::index_type chunkStartRow =
+                sizeOfChunk * (numOfSubunits * chunk + unit);
+
+            if (chunkStartRow < numOfRows) {
+                partMat.getChunk(chunkStartRow, &(chunkBuf[0]),
+                                 numOfCols * sizeOfChunk);
+
+                // change memory layout
+                const TlMatrixObject::index_type readRowChunks =
+                    std::min(sizeOfChunk, numOfRows - chunkStartRow);
+                TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks,
+                                            numOfCols, &(transBuf[0]));
+
+                TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols,
+                                                  &(transBuf[0]));
+                fileMat.block(chunkStartRow, 0, tmpMat);
             }
 
-            if (showProgress) {
-                TlUtils::progressbar(float(r) / numOfRows);
-            }
+            TlUtils::progressbar(float(chunk) / numOfLocalChunks);
         }
+
         if (showProgress) {
             TlUtils::progressbar(1.0);
             std::cout << std::endl;
