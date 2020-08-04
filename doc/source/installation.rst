@@ -1,99 +1,80 @@
 ************
-インストール
+Installation
 ************
 
-動作環境
+System requirements
 ========
 
-ProteinDFはいくつかの形式で配布されています。
-READMEファイルが添付されている場合は、まずREADMEファイルをご覧下さい。
+ProteinDF has several distributions. If a README file is provided, first read the README file.
 
+To execute ProteinDF, the following environment is required:
 
-ProteinDFの動作には以下の動作環境が必要です。
-
-* UNIX/Linux オペレーティングシステム
-* Cランタイムライブラリ(通常はOSに同梱されています)
+* UNIX/Linux operating system
+* C runtime library (normally bundled with the OS) 
 * bash
-* BLAS, LAPACKライブラリ
-* MPI実行環境(並列版のみ)
-* 分散行列演算ライブラリ(ScaLAPACK)
+* BLAS, LAPACK library
+* MPI runtime environment (only for parallel version) 
+* Distributed matrix operation library (ScaLAPACK) 
 
 
-ハードウェアとオペレーティングシステム
+Hardware and operating system
 --------------------------------------
 
-POSIX準拠のコンピュータシステムで動作します。
-現在、以下の計算機システムで動作確認が行われています。
+ProteinDF has been confirmed to operate on POSIX-compliant computer systems, as well on as the following computing systems:
 
-* SGI社製 Altix 3000シリーズ
-* Cray社製 XT-5, XT-6
+* SGI Altix 3000 series
+* Cray XT-5, XT-6
 
-一般的なx86 PC Linuxでも動作します。
+The program should also work on the x86 PC Linux system.
 
 
-メモリとディスク
+Memory and disk
 ----------------
 
-計算モデルの大きさに応じて必要なメモリ量が異なります。
-また、並列計算を行う場合、
-行列演算にLAPACKを使用する場合とScaLAPACKを使用する場合でも、
-1ノードあたりに必要なメモリ量が変わります。
-LAPACKを使用する場合は、各ノードに搭載されているメモリ容量が計算可能なサイズの上限です。
-一方、ScaLAPACKを使用する場合は、全ノードで計算領域を分散保持しますので、
-全ノードのメモリ容量が計算可能サイズの上限になります。
-ただし、この他にも計算可能サイズを決定する要因がありますので
-目安としてください。
+The required memory size depends on the scale of computation model. Furthermore, in parallel computation, the required memory size per node varies depending on whether one uses LAPACK or ScaLAPACK for matrix operations. For LAPACK, the maximum computation scale is equal to the memory size on each node. For ScaLAPACK, the scale is equal to the total memory size on all nodes, since the computation area is distributed and stored in all nodes. Note that this estimation serves only as a guideline, since other factors also determine the available computation scale.
 
 .. warning::
 
-  32bit OSでは扱えるメモリサイズ、ファイルサイズなど幾つかの制限事項がある場合があります。
+  For a 32bit OS, ProteinDF may have some limitations in available memory size, file size, etc.
 
 
-pythonモジュール
+python module
 ----------------
 
-ProteinDFの動作には、
-いくつかのpythonスクリプトが用意されています。
-これらpythonスクリプトは、ProteinDFの実行そのものには必要ありませんが、
-計算結果の解析用として用意されています。
-これらpythonスクリプトの動作には以下のソフトウェア(モジュール)が必要です。
-これらのソフトウェアの環境構築は、それぞれのシステムの方針に従って下さい。
+Several python scripts are prepared for ProteinDF. These scripts are not necessary for program execution, but for analysis of calculation results. To use these python scripts, the following programs (modules) are required. For configuration of these programs, follow the system guidelines.
 
-* python(version 2.5以上)
-* argparseモジュール
-* numpyモジュール
-* matplotlibモジュール
-* MessagePackモジュール
-* YAMLモジュール
+* python(version 3.5以上)
+* argparse module
+* numpy module
+* matplotlib module
+* MessagePack module
+* YAML module
 
 
 
-インストールと準備
+Installation and setup
 ==================
 
-配布パッケージによって、インストールの形態が異なります。
-READMEファイルが添付されている場合は、READMEファイルの指示に従って下さい。
+The installation procedure varies according to the distributed package. If a README file is provided, follow the README file instructions.
 
 
-.. index:: 環境変数
+.. index:: Environment variables
 
-環境変数
+Environment variables
 --------
 
 
-ProteinDFの実行には、以下の環境変数を設定する必要があります。
-利用する環境に応じて、適切に環境変数を設定してください。
+ProteinDF requires the user to configure the following environment variables. Appropriately set the variables according to the user's environment.
+
 
 .. index:: PDF_HOME
 
 PDF_HOME
 ^^^^^^^^
 
-ProteinDFパッケージをコピーしたディレクトリを指定します。
+Specify the directory where the ProteinDF package was copied.
 
-
-例えば、/usr/local/ProteinDF に本パッケージをコピーしたとき、
-ログインシェルにbashを利用している場合は.bashrcに以下を追加してください。
+For example, when the package was copied to /usr/local/ProteinDF and when bash is used as the login shell, add the following to .bashrc:
 
 .. code-block:: bash
 
@@ -105,8 +86,7 @@ ProteinDFパッケージをコピーしたディレクトリを指定します�
 OMP_NUM_THREADS
 ^^^^^^^^^^^^^^^
 
-OpenMPにおける最大スレッド数を設定します。
-ビルド時にOpenMPを有効にする必要があります。
+When executing ProteinDF with the OpenMP multi-threading, specify the type and chunk size of the parallel schedule inside the OpenMP parallel region.
 
 
 .. index:: OMP_SCHEDULE
@@ -114,23 +94,21 @@ OpenMPにおける最大スレッド数を設定します。
 OMP_SCHEDULE
 ^^^^^^^^^^^^
 
-OpenMPにおける並列スケジュールのタイプとチャンクサイズを設定できます。
-ビルド時にOpenMPを有効にする必要があります。
+When executing ProteinDF with the OpenMP multi-threading, specify the type and chunk size of the parallel schedule inside the OpenMP parallel region.
 
 
-
-ソースからのビルド
+Build from the source
 ------------------
 
 .. index: configure
 
-cmakeの実行
+Executing CMake
 ^^^^^^^^^^^^^^^
 
-ProteinDFではMakefileの作成にcmakeを利用しています。
-任意のディレクトリにて、ソースディレクトリを指定してcmakeを実行します。
-例えばtarballを展開したディレクトリの直下にbuildディレクトリを作成する場合、
-以下のように実行します。
+ProteinDF uses CMake to create the Makefile.
+You can execute cmake by specifying the source directory in an arbitrary directory.
+For example, to create a build directory directly under the source directory, 
+you can execute cmake by specifying run as follows.
 
 .. code-block:: bash
 
@@ -141,27 +119,22 @@ ProteinDFではMakefileの作成にcmakeを利用しています。
 
 .. note::
 
-  cmakeは自動的にビルド環境を調査し、ライブラリの場所を設定します。
-  調査結果はcmakeの実行時に出力されます。
-  出力結果をファイルに保存して後に参照したい場合は、teeコマンドを利用して
+  CMake automatically surveys the build environment and sets the location of the library. 
+  The results are output when cmake is run. 
+  If you want to save the output to a file and refer to it later, 
+  you can use the tee command to run it as follows:
   ``$ cmake .. 2>&1 | tee out.cmake``
-  のように実行します。
 
 
-以下によく用いられる変数を示します。
-詳しくは ``cmake -L`` または ``cmake -LA`` をご覧ください。
+Here are some common variables.
+Use ``cmake -L`` or ``cmake -LA``` for more information.
 
 
-* ``--prefix=location``
+* ``--DCMAKE_INSTALL_PREFIX=PATH``
 
 プログラムのインストール先を指定します。
 デフォルトは/usr/localです。
 ユーザーのホームディレクトリなどにインストールするときに用いられます。
-
-
-* ``--enable-parallel``
-
-逐次版に加えて並列版プログラムも作成します。
 
 
 * ``--with-blas=location``
@@ -181,10 +154,7 @@ ScaLAPACKライブラリの場所を指定します。
 
 * 環境変数CC,CXX,MPICXX
 
-ビルドに用いるC/C++コンパイラを指定します。
-MPIライブラリをリンクする場合は、
-mpicxxなど計算機システムに応じたコンパイラを使用してください。
-
+Specifies the options to pass to the C/C++ compiler. Use this variable to specify the options to the OpenMP compilers, etc.
 
 * 環境変数CFLAGS,CXXFLAGS
 
@@ -199,50 +169,44 @@ OpenMPなどのコンパイラへの指示は、この環境変数に指定し�
 
 BLASライブラリを指定します。
 
-* 環境変数LAPACK_LIBS
+* LAPACK_LIBS
 
 LAPACKライブラリを指定します。
 
-* 環境変数SCALAPACK_LIBS
+* SCALAPACK_LIBS
 
-ScaLAPACKライブラリを指定します。
+Specifies the ScaLAPACK library.
 
 
-makeの実行
+Executing \"make\"
 ^^^^^^^^^^
 
-configureを実行し、Makefileが作成されたことを確認してください。
-Makefileが作成されたならば、makeを実行します。
-
+Execute the ``cmake`` command, and make sure the Makefile is created. 
+Once the Makefile is created, execute the ``make`` command.
 
 .. code-block:: bash
 
   $ make 2>&1 | tee out.make
 
 
-インストールの実行
+Installing the program
 ^^^^^^^^^^^^^^^^^^
 
-makeの実行した後、実行ファイル・データを所定のパスにインストールします。
-
+After executing \"make\", install the execution file/data to the specified path.
 
 .. code-block:: bash
 
   $ make install 2>&1 | tee out.make_install
 
 
-インストールが実行されると、以下のファイルがコピーされます。
-
+After the execution above, the following files will be created:
 
 * ${PDF_HOME}/bin/PDF.x
 * ${PDF_HOME}/bin/PPDF.x
 * ${PDF_HOME}/data/basis2
 
 
-うまく行かない場合
+When trouble occurs...
 ^^^^^^^^^^^^^^^^^^
 
-環境によってはスクリプトが実行できない、ビルドできないなどの問題が発生するかもしれません。
-その場合は、各スクリプトの出力(上記の操作の場合、out.configure, out.make, out.make_install)をよくチェックしてください。
-
-
+In some environments, problems may occur such that no script can be executed, or no build is possible. In such cases, check the output of each script thoroughly (i.e. out.configure, out.make, and out.make_install in the case above).

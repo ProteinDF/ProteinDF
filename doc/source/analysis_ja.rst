@@ -1,22 +1,22 @@
 .. -*- coding: utf-8; -*-
 
 ***********************
-Analysis of the ProteinDF Calculation Results
+ProteinDF計算結果の解析
 ***********************
 
 
-General analysis tools
+一般的に用いられる解析ツール
 ============================
 
 * pdf-top
 
-Displays atomic orbitals with a large contribution to the specified molecular orbital.
+指定された分子軌道に対し、寄与の大きい原子軌道を表示します。
 
 .. code-block:: none
    
    Usage: pdf-top [Option]
 
-Executing the command above obtains the following outputs:
+実行すると以下の様な出力が得られます。
 
 .. code-block:: none
    
@@ -36,7 +36,7 @@ Executing the command above obtains the following outputs:
 
 * pdf-pop-mulliken
 
-Output Mulliken population.
+output Mulliken population.
 
 .. code-block:: none
 
@@ -47,7 +47,7 @@ Output Mulliken population.
 
 * pdf-mo
 
-Outputs molecular orbital field data.
+分子軌道フィールドデータを出力します。
 
 .. code-block:: none
    
@@ -56,7 +56,7 @@ Outputs molecular orbital field data.
 
 * pdf-esp
 
-Outputs electrostatic potential field data.
+静電ポテンシャルのフィールドデータを出力します。
 
 .. code-block:: none
    
@@ -65,7 +65,7 @@ Outputs electrostatic potential field data.
 
 * pdf-dens
 
-Outputs electron density field data.
+電子密度フィールドデータを出力します。
 
 .. code-block:: none
    
@@ -74,7 +74,7 @@ Outputs electron density field data.
 
 * pdf-archive
 
-Aggregates calculation results to create archives.
+計算結果を集約し、アーカイブを作成します。
 
 .. code-block:: none
    
@@ -83,15 +83,14 @@ Aggregates calculation results to create archives.
 
 * pdf-report
 
-Creates calculation result reports.
+計算結果のレポートを作成します。
 
 .. code-block:: none
    
    Usage: pdf-archive
 
-The user can obtain energy convergence curve (:num:`Fig. #analysisconvhist`) 
-and orbital energy convergence history (:num:`Fig. #analysislevelhist`), 
-as shown below:
+以下のようなエネルギー収束曲線(:num:`Fig. #analysisconvhist`)や
+軌道エネルギーの収束履歴(:num:`Fig. #analysislevelhist`)が得られます。
 
 
 .. _analysisconvhist:
@@ -101,7 +100,7 @@ as shown below:
    :alt: analysis_conv_hist.png
    :align: center
 
-   Energy convergence curve
+   エネルギー収束曲線
 
 
 .. _analysislevelhist:
@@ -111,15 +110,15 @@ as shown below:
    :alt: analysis_level_hist.png
    :align: center
 
-   Orbital energy convergence history
+   軌道エネルギーの収束履歴
 
 
-Advanced (debug) tools
+上級者(デバッグ)用ツール
 ========================
 
 * pdf-mat2txt
 
-Outputs the specified matrix file (binary format) to standard output.
+指定した行列ファイル(バイナリ形式)を標準出力に出力します。
 
 .. code-block:: none
    
@@ -128,7 +127,7 @@ Outputs the specified matrix file (binary format) to standard output.
 
 * pdf-vtr2txt
 
-Outputs the specified vector file (binary format) to standard output.
+指定したベクトルファイル(バイナリ形式)を標準出力に出力します。
 
 .. code-block:: none
    
@@ -137,7 +136,7 @@ Outputs the specified vector file (binary format) to standard output.
 
 * pdf-mpac2yml
 
-Converts MessagePack files to YAML files.
+MessagePack形式のファイルをYAMLファイルの変換します。
 
 .. code-block:: none
    
@@ -149,7 +148,7 @@ Converts MessagePack files to YAML files.
 
 * pdf-yml2mpac
 
-Converts YAML files to MessagePack files.
+YAML形式のファイルをMessagePack形式に変換します。
 
 .. code-block:: none
    
@@ -161,7 +160,7 @@ Converts YAML files to MessagePack files.
 
 * pdf-diff
 
-Compares two calculation results.
+2つの計算結果を比較します。
 
 .. code-block:: none
    
@@ -170,7 +169,7 @@ Compares two calculation results.
 
 * pdf-matinfo
 
-Outputs matrix information.
+行列情報を出力します。
 
 .. code-block:: none
    
@@ -179,8 +178,10 @@ Outputs matrix information.
 
 * pdf-genmat
 
-Generates matrices.
+行列を作成します。
 
 .. code-block:: none
    
    Usage: pdf-genmat
+
+

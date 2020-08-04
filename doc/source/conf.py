@@ -187,6 +187,7 @@ html_static_path = ['_static']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'ProteinDFusermanualdoc'
 
+html_context = {"language": language}
 
 # -- Options for LaTeX output ---------------------------------------------
 

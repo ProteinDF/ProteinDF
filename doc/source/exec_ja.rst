@@ -1,81 +1,75 @@
 ========
-Execution Procedure
+実行方法
 ========
 
-Program execution procedure
+プログラムの実行方法
 ====================
 
-Follow the procedure below to execute ProteinDF from the command line:
+ProteinDFプログラムをコマンドラインから実行するには、以下の手順で行います。
 
 
-Preparation
+前準備
 ------
 
-Create directories (default: fl_Work) for outputting intermediate data, 
-under the execution directory of ProteinDF (where the input file is located).
+ProteinDFを実行する(入力ファイルが存在する)ディレクトリに、
+中間データ作成用ディレクトリ(デフォルトはfl_Input, fl_Table, fl_Work)を作成します。
 
 .. note::
 
-  These directories can be created with the ``pdf-setup`` command.
+  これらのディレクトリは ``pdf-setup`` コマンドでも作成できます。
 
 .. note::
 
-  The data written in these directories will be extremely large. 
-  It is recommended to create the directories in a high-speed disk storage 
-  with large capacity.
+  これらのディレクトリに書き込まれるデータは、巨大なものになります。
+  高速かつ容量の大きなディスクにディレクトリを設置することをお勧めします。
 
 
-Executing the program (serial version)
+シリアル版の実行
 ----------------
 
-To execute the serial version of ProteinDF, use the following command:
+シリアル版で実行するには、以下のコマンドを実行します。
 
 .. code-block:: bash
 
   % $PDF_HOME/bin/PDF.x
 
-When the computation starts, 
-total energy at each SCF calculation is sequentially displayed 
-in the standard output. 
-In addition, the series of the calculation result data is output 
-in the log file (fl_Out_Std). 
-Intermediate data during all-electron calculation is also output 
-in the log file.
+計算が始まると、標準出力に各SCFにおける全エネルギーの値が順次表示されます。
+計算結果の一連のデータは、ログファイル(fl_Out_Std)に出力されます。
+ログファイルファイルには全電子計算の過程における中間データも出力されます。
 
 
-Executing the program (parallel version)
+並列版プログラムの実行
 ----------------------
 
-To execute the parallel version of ProteinDF, use the following command:
+以下のようにProteinDFプログラムを実行します。
 
 .. code-block:: bash
 
   % mpiexec -n N $PDF_HOME/bin/PDF.x
 
-Here, specify ``N``, the number of processors for parallel computation.
+ここで、 ``N`` には並列計算を行うプロセッサ数を指定してください。
 
 .. note::
 
-  Execution procedure of the MPI program varies depending 
-  on the computing system environment. 
-  For details, refer to the system manuals.
+  MPIプログラムの実行方法は、計算機環境によって異なります。
+  計算機システムのマニュアル等を参照してください。
 
-When the computation starts, 
-total energy at each SCF calculation is sequentially displayed 
-in the standard output. 
-In addition, the series of the calculation result data is 
-output in a text file (default file name: fl_Out_Std), as in the serial mode.
+計算が始まると、標準出力に各SCFにおける全エネルギーの値が順次表示されます。
+計算結果の一連のデータは、シリアル版と同様にテキスト形式で
+ファイル(デフォルトのファイル名はfl_Out_Std)に出力されます。
+
 
 
 ========
-Run Type
+動作形式
 ========
 
 概要
 ====
 
-ProteinDF has several run types to efficiently compute 
-a large object with limited computing resources.
+ProteinDFは限られた計算機資源で、
+大きな計算対象を効率よく計算するために、
+いくつかの動作形式を持っています。
 
 ======================== ================= ============
 run type                 parallel method   matrix      
@@ -160,3 +154,6 @@ distributed
 * 指定されたメモリサイズでは行列が確保できない場合は、ディスク領域に行列を保持します。
 * 行列演算はScaLAPACKを利用します。
 * ``linear_algebra_package`` キーワードに ``ScaLAPACK`` を指定します。
+
+
+

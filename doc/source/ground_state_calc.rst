@@ -1,241 +1,252 @@
 .. -*- coding: utf-8; -*-
 
 ************
-基底状態計算
+Ground State Calculation
 ************
 
-計算方法
+Calculation method
 ========
 
-計算対象の電子配置に基づき、ProteinDFでは閉殻・開殻・制限付き開殻計算が実行できます。
-キーワード ``method`` で指定します。
+ProteinDF allows the user to perform closed-shell, open-shell, 
+and open-shell restricted calculations according 
+to the electron configuration of the object. 
+The calculation method can be specified using the keyword ``method``.
 
-電子数・電子占有状態の指定
+Specifying electron count/occupied state
 ==========================
 
-制限法計算(restricted Kohn-Sham method)
+restricted Kohn-Sham method
 ---------------------------------------
 
-1つの分子軌道に1組の電子対を配置する閉殻分子(一重項)の計算を行います。
-``method = rks`` を指定してください。
+This method performs the calculation of a closed-shell molecule (singlet) 
+where an electron pair occupies a single molecular orbital. 
+To perform the calculation, specify ``method = rks``.
 
-キーワード ``method/rks/occlevel`` で電子の電子配置を指定します。
-例えば、10個の電子が対になってエネルギーの低い5つの軌道を占有する場合、
+Further, specify the electron configuration using the keyword ``method/rks/occlevel``.
+For example, when ten paired electrons occupy five low energy molecular orbitals, 
+specify as follows:
 
 .. code-block:: none
    
    method/rks/occlevel = [1 - 5]
 
-と記述してください。最も低い分子軌道が1番となり、順に、2、3、・・・と続きます。
+Here the lowest energy orbital is No. 1, and as the number increases, 
+a higher energy orbital is assigned.
 
-また、電子数はキーワード ``rks/electrons`` で指定します。
-10個の電子であれば、
+
+Specify electron count by using the keyword ``rks/electrons``. 
+In the case of ten electrons, specify as follows:
 
 .. code-block:: none
    
    rks/electrons = 10
 
-と記述します。
 
 .. note::
    
-   閉殻計算の場合、 ``rks/electrons`` の値は必ず偶数になります。
+   For closed-shell calculations, the ``rks/electrons`` value must be an even number.
 
 .. note::
 
-   ``method/rks/occlevel = [1-4, 6]`` というような記述もできます。
-   このとき、1番目の軌道から4番目の軌道まで、そして6番目の軌道に電子が占有されます。
+   The user can also specify the electron configuration as in ``method/rks/occlevel = [1-4, 6]``. 
+   In this case, electrons occupy the first to fourth orbitals, and the sixth orbital.
 
 
-非制限法計算(unrestricted Kohn-Sham method)
+unrestricted Kohn-Sham method
 -------------------------------------------
 
-αスピン、βスピンそれぞれの電子配置が異なる開殻分子の計算を行います。
-``method = rks`` を指定してください。
+This method performs the calculation of an open-shell molecule, 
+where the electron configurations of alpha spin and beta spin differ. 
+To perform the calculation, specify ``method=uks``.
 
-それぞれの電子数は、αスピンは ``uks/alpha_electrons`` 、βスピンは ``uks/beta_electrons`` で指定します。
-電子配置は同様に ``method/uks/alpha-spin-occlevel`` 、 ``method/uks/beta-spin-occlevel`` で指定します。
+Specify electron counts for alpha and beta spins using ``uks/alpha_electrons`` and 
+``uks/beta_electrons``, respectively. 
+Similarly, specify the electron configuration for alpha and beta spins 
+with ``method/uks/alpha-spin-occlevel`` and ``method/uks/beta-spin-occlevel``, respectively. 
 
 .. warning::
    
-   ``uks/alpha_electrons`` の値は ``uks/beta_electrons`` と等しいか、それよりも大きくなるようにしてください。
+   Specify a ``uks/alpha_electrons`` value equal to or larger than the ``uks/beta_electrons`` value.
 
 
-制限開殻計算(restricted open shell Kohn-Sham method)
+restricted open shell Kohn-Sham method
 ----------------------------------------------------
 
-閉殻電子配置(closed-shell)と開殻電子配置(open-shell)に分けて計算する手法です。
-``method = roks`` を指定してください。
+This method performs the calculation by categorizing closed- and open-shell electron configurations. 
+To perform the calculation, specify ``method=roks``.
 
-電子数は ``method/roks/closed_shell_electrons`` 、 ``method/roks/open_shell_electrons`` で指定し、
-電子配置は ``method/roks/closed_shell_occlevel`` 、 ``method/roks/open_shell_occlevel`` で指定します。
+Specify electron counts with ``method/roks/closed_shell_electrons`` and 
+``method/roks/open_shell_electrons``, 
+and electron configuration with ``method/roks/closed_shell_occlevel`` 
+and ``method/roks/open_shell_occlevel``.
 
 
-初期値の指定
+Initial guess
 ============
 
-SCF繰り返し計算における初期値を指定します。
-キーワードは ``guess`` です。
+Use the keyword ``guess`` to specify the initial guess for SFC loops.
 
 core
 ----
 
-コアハミルトニアンを使って初期値を作成します。
-``guess = core`` で使用できます。
+Generates initial guess using core Hamiltonian. 
+Specify ``guess=core``
 
 Hückel
 ------
 
-Hückel法により初期値を作成します。
-``guess = huckel`` で使用できます。
+enerates initial guess with the Hückel method. 
+Specify ``guess=huckel``.
 
 
-Harrisの汎関数
+Harris functional
 --------------
 
-Harrisの汎関数を用いて初期値を作成します。
-``guess = harris`` で使用できます。
-原子種によっては用意されていない場合があります。
+Generates initial guess with the Harris functional. 
+Specify ``guess=harris``. 
+This function is not available for some atomic species.
 
 
-近似電子密度
+Approximated electron density
 ------------
 
-近似電子密度を用いて初期値を作成します。
-``guess = rho`` で使用できます。
-RI法以外では正しい結果が得られない場合があります。
+Generates initial guess with an approximated electron density. 
+Specify ``guess=rho``. 
+A reliable result may not be obtained unless the RI method is applied.
 
-LCAO係数行列
+
+LCAO coefficient matrix
 ------------
 
-LCAO係数行列から初期値を作成します。
-``guess = lcao`` で使用できます。
-あらかじめLCAO係数行列を用意しておく必要があります。
+Generates initial guess with the LCAO coefficient matrix. 
+Specify ``guess=lcao``. When using this function, 
+prepare the LCAO coefficient matrix beforehand.
 
 .. note::
    
-   現行のバージョンでは、計算ディレクトリにLCAOテキストファイル、OCCテキストファイルを用意しておく必要があります。
-   この仕様は今後変更される可能性があります。
+   In the current version of the program, 
+   it is necessary to prepare LCAO text files and OCC text files in the calculation directory. 
+   This specification may change in the future.
 
 
-密度行列
+Density matrix
 --------
 
-密度行列を初期値として利用します。
-``guess = density`` で使用できます。
-あらかじめ密度行列を用意しておく必要があります。
+Uses a density matrix as the initial guess. 
+Specify ``guess=density``. 
+Prepare the density matrix beforehand.
 
 .. note::
    
-   現行のバージョンでは、作業用ディレクトリ(fl_Work)下に0番目の密度行列ファイルを置く必要があります。
-   この仕様は今後変更される可能性があります。
+   In the current version of the program, 
+   it is necessary to put the 0th density matrix file in the work directory (fl_Work). 
+   This specification may change in the future.
 
 
-クーロン項の計算
+oulomb term calculation
 ================
 
-計算エンジンの選択
+Selecting calculation engine
 ------------------
 
-クーロン項の計算で必要な4中心2電子積分は、
-計算律速なルーチンの一つです。
-ProteinDFでは、いくつかの計算エンジンを実装しています。
-キーワード ``J_engine`` で選択できます。
-
+Four-center two electron integrals required in Coulomb term calculation is
+a rate-determining process. 
+Several calculation engines are implemented on ProteinDF for the calculation. 
+Use the keyword ``J_engine`` for selection.
 
 conventional
 ^^^^^^^^^^^^
 
-SCF繰り返し計算の各イテレーションにおいて、
-4中心2電子積分を計算し、クーロン項を求めます。
+Calculates four-center two electron integrals at each SCF iteration 
+to obtain the Coulomb term.
 
 
 RI_J
 ^^^^
 
-SCF繰り返し計算の各イテレーションにおいて、
-RI法に基づき、3中心積分を計算してクーロン項を求めます。
-計算精度は補助基底関数に依存します。
-ProteinDFのデフォルトです。
+Calculates three-center integrals at each SCF iteration based on the RI method 
+to obtain the Coulomb term. 
+The calculation accuracy depends on auxiliary basis sets. 
 
-コレスキー分解法
+Cholesky decomposition
 ^^^^^^^^^^^^^^^^
 
-コレスキー分解法に基づき、
-SCF繰り返し計算の前に4中心2電子積分のコレスキーベクトルを求めます。
-SCF繰り返し計算の各イテレーションでは、
-密度行列との行列演算によりクーロン項を求めます。
-SCF計算中に分子積分を行わないために高速に演算できますが、
-メモリやディスクの記憶域を多く消費します。
-``J_engine = CD`` で使用できます。
+Based on the Cholesky decomposition method, 
+obtains Cholesky vectors for four-center two-electron integrals before SCF loops. 
+The Coulomb term is obtained during each SCF iteration through density matrix operation. 
+High-speed computation is allowed since no molecular integral is 
+executed during SCF calculations, 
+but a large amount of memory and disk is consumed. 
+Specify ``J_engine=CD`` to select this engine.
+This is the default engine of ProteinDF.
 
 
-Fock交換項の計算
+Fock exchange term calculation
 ================
 
-計算エンジンの選択
+Selecting calculation engine
 ------------------
 
-Fockの交換項も4中心2電子積分計算が必要なため、
-計算律速になります。
-キーワード ``K_engine`` で計算エンジンを選択できます。
-
+The Fock exchange term calculation is also rate-determining 
+since it requires four-center two electron integrals. 
+Use the keyword ``k_engine`` to select a calculation engine.
 
 conventional
 ^^^^^^^^^^^^
 
-SCF繰り返し計算の各イテレーションにおいて、
-4中心2電子積分を計算し、クーロン項を求めます。
-ProteinDFのデフォルトです。
-``K_engine = conventional`` で使用できます。
+Calculates four-center two electron integrals at each SCF iteration 
+to obtain the Fock exchange term. 
+This is the default engine of ProteinDF. 
+Specify ``K_engine=conventional`` to select this engine.
 
 
-コレスキー分解法
+Cholesky decomposition
 ^^^^^^^^^^^^^^^^
 
-クーロン項と同様に、コレスキー分解法によって
-Fock交換項を求めます。
-クーロン項のコレスキー分解で求めたコレスキーベクトルを
-共通して利用します。
-``K_engine = CD`` で使用できます。
+Obtains the Fock exchange term using the Cholesky decomposition method, 
+as in the Coulomb term calculation. 
+This engine uses the Cholesky vectors obtained through the Cholesky decomposition 
+for the Coulomb term calculation. 
+Specify ``K_engine=CD`` to select this engine.
 
 
-ハイブリッド汎関数法およびHartree-Fock法
+Hybrid functional method and Hartree-Fock method
 ----------------------------------------
 
-パラメータ ``xc-potential`` に以下の値を設定することで、
-ハイブリッド汎関数計算、またはHartree-Fock計算を行うことができます。
+The user can perform a hybrid functional calculation or Hartree-Fock calculation 
+by specifying the following value in the parameter ``xc-potential``:
 
 * HF
 
-  Hartree-Fock法による電子状態計算を行います。
+  Performs electron state calculations by the Hartree-Fock method.
 
 * B3LYP
 
-  Becke 3パラメータによるハイブリッド汎関数計算を行います。
+  Performs hybrid functional calculations with the Becke 3-parameter.
 
 
-交換相関項の計算
+Exchange-correlation term calculation
 ================
 
-ProteinDFにおいて、Kohn-Sham行列の交換相関項ならびに交換相関エネルギーは
-数値積分計算、または解析計算(grid-free法)によって求めることができます。
-デフォルトは数値積分計算です。
+In ProteinDF, 
+the user can use numerical integral calculation or analytical calculation (grid-free method) 
+to obtain the exchange-correlation term of the Kohn-Sham matrix, 
+as well as the exchange-correlation energy. 
+The default is the numerical integrals.
 
 
-グリッドの選択
+Selecting the grid
 --------------
 
-数値グリッドはパラメータ ``xc-potential/grid-type`` で指定できます。
-デフォルトはSG-1グリッドを採用します。
-詳しくは付録を参照してください。
+Specify the numerical grid with the parameter ``xc-potential/grid-type``. 
+The default is the SG-1 grid. Refer to Appendix for details.
 
 
-数値積分法で利用できる汎関数
+Functionals available for numerical integral method
 ----------------------------
 
-汎関数の指定は ``xc_potential`` で行います。
-利用可能な汎関数は以下のとおりです。
+Specify functionals with ``xc_potential``. 
+The available functionals are as follows:
 
 * SVWN~
 * SVWN
@@ -245,40 +256,39 @@ ProteinDFにおいて、Kohn-Sham行列の交換相関項ならびに交換相�
 
 .. note::
    
-   末尾にチルダ(~)がある交換相関汎関数は、
-   RI法に基づき近似電子密度から交換相関項が求められます。
+   For the exchange-correlation functional followed by a tilde ``~``, 
+   ProteinDF obtains the exchange-correlation term 
+   with an approximated electron density based on the RI method.
 
 
-グリッドフリー法
+Grid free method
 ----------------
 
-グリッドフリー法による交換相関項計算を実行します。
-詳しくは付録のキーワード ``grid_free`` を参照してください。
+Calculates the exchange-correlation term with a grid-free method. 
+For details, see the keyword ``grid_free`` in Appendix.
 
 
-レベルシフト計算
+Level shift calculation
 ================
 
-レベルシフト法は特定の軌道について軌道エネルギーをずらすことができる計算手法です。
-詳しくは付録のキーワード ``level_shift`` を参照してください。
+This method allows shifting the energy level of a particular orbital. 
+For details, see the keyword ``level_shift`` in Appendix.
 
 
-収束加速法
+Convergence acceleration techniques
 ==========
 
-SCF繰り返し計算において、
-安定かつ効率良く収束させるために、
-ProteinDFではいくつかの収束アルゴリズムを選択できます。
-キーワード ``scf_acceleration`` で選択できます。
+ProteinDF provides several convergence algorisms to achieve a stable 
+and efficient convergence during SFC loops. 
+Use the keyword ``scf_acceleration`` for selection.
 
 
-damping法
+damping method
 ---------
 
-前回の繰り返し計算で用いた物理量を一定の割合で混ぜ合わせる方法です。
-:math:`n` 回目のSCF計算で求められた物理量を :math:`Y^{\left(n\right)}` と表し、
-更新される量を :math:`X^{\left(n\right)}` とすると、
-以下のように求められます。
+The physical quantity used in the last iteration is mixed to the current in a certain ratio. 
+When Y (n) represents the physical quantity obtained at the nth SCF iteration, 
+the updated amount X (n) can be obtained as follows:
 
 .. math::
    
@@ -287,15 +297,12 @@ damping法
    \left(0<a<1\right)
 
 
-ここで、混ぜ合わせる割合(:math:`a`)は、
-``scf_acceleration/damping/damping_factor``
-で設定できます。
-また、対象となる物理量は、
-``scf_acceleration/damping/damping_type`` 
-で指定できます。
+Here, specify the mixing ratio (a) and target physical quantity 
+with ``scf_acceleration/damping/damping_factor`` 
+and ``scf_acceleration/damping/damping_type``, respectitvely.
 
 
-* 使用例
+* Example
 
 .. code-block:: none
    
@@ -303,11 +310,11 @@ damping法
    scf_acceleration/damping/damping_type = density_matrix
 
 
-Anderson法
+Anderson's method
 ----------
 
-Andersonによる2次収束法を用います。
-以下、過去2点の物理量を用いた場合の式を示します。
+Employs the quadratic convergence method developed by Anderson. 
+The equations when using the physical quantities at the past two points are as follows:
 
 .. math::
    
@@ -324,19 +331,19 @@ Andersonによる2次収束法を用います。
    \left(u,v\right)=\sum_{i}u_{i}v_{i}w_{i}
 
 
-上式 :math:`b^{\left(n-1\right)}` は、
-``scf-acceleration/anderson/damping-factor`` で指定できます。
+Here, specify the b(n-1) with ``scf-acceleration/anderson/damping-factor``. 
 
-なお、Anderson法を開始するまではdamping法を用います。
-Anderson法を開始するSCF回数は、 ``scf_acceleration/anderson/start_number`` で指定できます。
+The damping method is applied before the Andarson's method is started. 
+Specify the SCF iteration number starting the Anderson's method 
+with ``scf_acceleration/anderson/start_number``. 
 
 
-DIIS法
+DIIS method
 ------
 
-Pulay によるDirect Inversion of the Iterative Subspace (DIIS)法を採用します。
-DIIS法では、新しい物理量 :math:`X^{\left(n\right)}` は過去の :math:`X^{\left(n-i\right)}` の
-線形結合で得られると仮定します。
+Employs the Direct Inversion of the Iterative Subspace (DIIS) method by Pulay. 
+The DIIS method assumes that a new physical quantity X (n) can be obtained 
+by the linear combination of X (n-i) in the past.
 
 .. math::
    
@@ -345,9 +352,8 @@ DIIS法では、新しい物理量 :math:`X^{\left(n\right)}` は過去の :math
    \left(i_{0} \ge 1,\ i_{0}<M \le n-1\right)
    
 
+Here, specify the number of references M with ``scf-acceleration/diis/number-of-diis``.
 
-ここで、参照数 :math:`M` は ``scf-acceleration/diis/number-of-diis`` で指定します。
-
-またDIIS法でも、DIIS法を開始するまではdamping法を用います。
-DIIS法を開始するSCF回数は、 ``scf-acceleration/diis/start-number`` で指定します。
-
+The damping method is applied before the DIIS method is started. 
+Specify the SCF iteration number starting the DIIS method 
+with ``scf-acceleration/diis/start-number``.
