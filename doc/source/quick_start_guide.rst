@@ -1,24 +1,21 @@
 **********************
-クイックスタートガイド
+Quick Start Guide
 **********************
 
-ここではアミノ酸(グリシン)の一点計算を1プロセスで計算します。
+This chapter describes how to perform a single-point calculation of amino acid (glycine) using a single process.
 
 .. index:: fl_Input
 .. index:: fl_Table
 .. index:: fl_Work
 
-計算用ディレクトリの用意
+Creating calculation directories
 ========================
 
-ProteinDFでは行列・ベクトルなどのサイズ・数ともに大きな中間ファイルを
-ディスクに書き込みます。
-ProteinDFの実行に際し、あらかじめ計算に使用するディレクトリを作成します。
-作成すべきディレクトリは
+ProteinDF writes a large number of large intermediate files with matrices/vectors on disk storage. 
+Before starting actual calculations, create the following calculation directories:
 
 * fl_Work
 
-です。
 
 .. note::
 
@@ -27,8 +24,8 @@ ProteinDFの実行に際し、あらかじめ計算に使用するディレク�
 
 .. warning::
 
-  ディスクの書き込みに失敗すると、プログラムが異常終了することがあります。
-  特にMPI並列計算を行う場合は、すべてのノードから書き込みができることを確認してください。
+  The program may abnormally terminate if the intermediate files cannot be written properly. 
+  Before executing MPI parallel computation, make sure that the files can be properly written from all nodes.
 
 
 入力ファイルの準備
@@ -36,102 +33,43 @@ ProteinDFの実行に際し、あらかじめ計算に使用するディレク�
 
 .. index:: fl_Userinput
 
-以下の内容のテキストファイルを作成し、
-``fl_Userinput``
-というファイル名で保存します。
+Create a text file with the following content, and save it under the name ``fl_Userinput``:
 
 
-.. code-block:: text
-  
-  >>>>MAIN
-        step-control    = [create integral guess scf]
-        cut-value       = 1.0e-10
-        scf-start-guess = harris
-        max-iteration   = 100
-        method  = rks
-        method/rks/electron-number              = 40
-        method/rks/occlevel                     = [ 1 - 20 ]
-        orbital-independence-threshold          = 0.007
-        convergence/type                        = density
-        convergence/threshold                   = 1e-4
-        convergence/threshold-energy            = 1e-5
-        scf-acceleration                        = damping
-        scf-acceleration/damping/damping-factor = 0.65 
-        xc-potential                            = b3lyp
-        scf-acceleration/damping/damping-type   = density_matrix
-  
-  >>>>MOLECULE
-        geometry/cartesian/unit = angstrom
-        geometry/cartesian/input        = {
-                N        -1.888000        0.035000       -0.211000
-                H        -1.766000        0.945000        0.189000
-                H        -1.817000        0.099000       -1.205000
-                C        -0.758000       -0.730000        0.287000
-                H        -0.893000       -0.915000        1.372000
-                H        -0.720000       -1.725000       -0.200000
-                C         0.529000        0.065000        0.064000
-                O         0.520000        1.294000        0.114000
-                O         1.742000       -0.451000       -0.186000
-                H         1.692000       -1.400000       -0.203000
-        }end
-  
-        basis-set/orbital       = {
-                H = "O-HYDROGEN (41) DZVP"
-                O = "O-OXYGEN (621/41) by FS"
-                C = "O-CARBON (621/41) by FS"
-                N = "O-NITROGEN (621/41) by FS"
-        }end
-  
-        basis-set/density-auxiliary     = {
-                H = "A-HYDROGEN (4,1;4,1) from deMon"
-                O = "A-OXYGEN (7/2;7/2) by FS"
-                C = "A-CARBON (7/2;7/2) by FS"
-                N = "A-NITROGEN (7/2;7/2) by FS"
-        }end
-  
-        basis-set/exchange-auxiliary    = {
-                H = "A-HYDROGEN (4,1;4,1) from deMon"
-                O = "A-OXYGEN (7/2;7/2) by FS"
-                C = "A-CARBON (7/2;7/2) by FS"
-                N = "A-NITROGEN (7/2;7/2) by FS"
-        }end
+.. literalinclude:: fl_Userinput
 
 
 .. note::
 
-  ProteinDFの起動オプションにより、
-  入力ファイルを変更することができます。
+  Input files can be changed with a startup option of ProteinDF.
 
 
-ProteinDFの実行
+Executing ProteinDF
 ===============
 
-環境変数PDF_HOMEを適切に設定した後、
-ProteinDF(逐次版)を実行します。
+Configure the environment variable PDF_HOME appropriately, and execute ProteinDF (in serial mode).
 
 .. code-block:: bash
 
   % ${PDF_HOME}/bin/PDF.x
 
 
-正常に終了した場合は、コマンドプロンプトに戻ります。
+If the program terminates properly, the system returns to the command prompt.
 
 
-結果の表示
+Results
 ==========
 
-計算結果はファイルに出力されます。
-以下に例を示します。
-
+The calculation results are output in files. The following shows an example of the output:
 
 .. note::
 
-  出力ファイルの場所は、ProteinDFの起動オプションにより変更できます。
+  The output file location can be changed with a startup option of ProteinDF.
 
 
-はじめにProteinDFのバージョン、ならびに並列数(MPIプロセス数、OpenMPスレッド数)が
-表示されます。
-意図した通りに実行されているか確認してください。
+The beginning of the output file shows the version of ProteinDF and the number of parallel processes 
+(MPI process count, the number of OpenMP threads). 
+Make sure that the calculation was performed as intended.
 
 .. code-block:: none
    
@@ -141,8 +79,8 @@ ProteinDF(逐次版)を実行します。
    [0:2012/**/07 17:17:02:INFO]  OpenMP threads: 12
    [0:2012/**/07 17:17:02:INFO] 
 
-``step_control`` に記載されている手順に従い、計算が実行されます。
-ログの左側に出力日時が記載されます。
+The calculation is performed according to the procedure described in ``step_control``. 
+The output date is indicated at left in the log.
 
 .. code-block:: none
    
@@ -164,7 +102,7 @@ ProteinDF(逐次版)を実行します。
    ===============================================
 
 
-エネルギー情報は ``Total Energy`` ブロックに出力されます。
+Energy data are output in the ``Total Energy`` block.
 
 .. code-block:: none
    
@@ -180,9 +118,9 @@ ProteinDF(逐次版)を実行します。
     TE             =        -282.1999717298841688
    ------------------------------------------------
 
-その他、計算サイズ、カットオフ情報が随時出力されます。
+Other information, such as calculation size or cut off data, is output as needed.
 
-計算が正常に終了すると、CPU時間と経過時間が出力されます。
+When the calculation completes properly, the CPU time and elapsed time are output.
 
 .. code-block:: none
    
