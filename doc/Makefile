@@ -50,20 +50,27 @@ help:
 clean:
 	rm -rf $(BUILDDIR)/*
 
-html:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
-	@echo
-	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+html_%:
+	@$(SPHINXBUILD) -D language="$*" -b html $(ALLSPHINXOPTS) "$(BUILDDIR)/html/$*"
 
-html_en:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) -Dlanguage=en $(BUILDDIR)/en/html
-	@echo
-	@echo "Build finished. The HTML pages are in $(BUILDDIR)/en/html."
+# orverride default html target
+html: html_en html_ja 
+	@
 
-html_ja:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) -Dlanguage=ja $(BUILDDIR)/ja/html
-	@echo
-	@echo "Build finished. The HTML pages are in $(BUILDDIR)/ja/html."
+# html:
+# 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+# 	@echo
+# 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+# html_en:
+# 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) -Dlanguage=en $(BUILDDIR)/en/html
+# 	@echo
+# 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/en/html."
+
+# html_ja:
+# 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) -Dlanguage=ja $(BUILDDIR)/ja/html
+# 	@echo
+# 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/ja/html."
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
