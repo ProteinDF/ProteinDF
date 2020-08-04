@@ -1,20 +1,18 @@
 
 **************
- 入力ファイル
+ Input files
 **************
 
-ProteinDFプログラムは、
-計算に必要なパラメータを、ASCIIテキスト形式の入力ファイルから読み込みます。
-テキストファイルですので、
-お気に入りのテキストエディタで作成・編集することができます。
+ProteinDF reads calculation parameters from ASCII text input files. 
+The user can use any preferred editor to create and edit the input files.
 
 .. index:: fl_Userinput
 
-デフォルトの入力ファイル名はfl_Userinputです。
-カレントディレクトリにfl_Userinputファイルが存在する場合は、
-これを入力ファイルとして読み込みます。
+The default input file name is ``fl_Userinput``. 
+If a file named ``fl_Userinput`` exists in the current directory, 
+the program reads the file as an input.
 
-ProteinDF入力ファイルは、以下のセクションから構成されます。
+The input file for ProteinDF consists of the following sections:
 
 * MAIN
 
@@ -22,60 +20,64 @@ ProteinDF入力ファイルは、以下のセクションから構成されま�
 
 .. note::
 
-  これまでのProteinDFではキーワードをグループで分類していましたが、
-  現在は分類する必要はありません。
-  キーワードはどこに記述してもかまいません。
+  Although the previous versions of ProteinDF categorized the keywords in groups, 
+  the current version does not require such grouping. 
+  Specify keywords at any arbitrary location."
 
 .. warning::
    
-   入力ファイルはデフォルトのロケール(LANG=C)のみを受け付けます。
-   日本語の漢字コード(UTF-8, EUC, Shift-JIS)などを使用すると、
-   正しい結果が得られない場合があります。
-   特に空白(スペース)に注意してください。
+   The input files only accept the default locale (LANG=C). 
+   If a Japanese Kanji-code (e.g. UTF-8, EUC, Shift-JIS) is used in input files, 
+   the program may not obtain an accurate result. 
+   In particular, pay attention to the use of a blank (space) character.
 
 .. warning::
    
-   入力ファイルで使用する改行コードは、実行するシステムの改行コードに従ってください。
-   正しい改行コードを使用しないと、正しい結果が得られない場合があります。
-   多くのUNIX系のシステムでは、LF(0x0A)を使用しています。
-   Windowsシステム(改行コードはCR(0x0D)+LF)で作成した入力ファイルを
-   FTP, SFTPなどでUNIX系システムに転送した場合は注意してください。
+   In input files, be sure to use the line feed code in accordance with the user's system. 
+   Otherwise, the program may not obtain an accurate result. 
+   Most of the UNIX systems use the LF (0x0A) code. 
+   Be sure to take an appropriate measure when transferring the files 
+   created in a Windows system (line feed code: CR(0x0D)+LF) 
+   to UNIX systems via FTP or SFTP.
 
 
-構文
+Syntax
 ====
 
-キーワードの指定は以下の形式で指定します。
+Specify the keywords in the following format:
 
 .. code-block:: none
                   
    keyword = value
 
-keywordは大文字・小文字を区別しません。
+The keywords are case-insensitive.
 
-value には3つの様式があります。
+The value can be of the following three types:
 
-* 単一の値
+* A single value
 
-空白(スペース、タブ文字、改行など)を含まない値はそのまま記述できます。
+A value which does not contain a blank (space, tab, line feed, etc.) 
+can be directly specified as follows:
 
 .. code-block:: none
    
    max-iteration = 100
 
 
-* 1行の文字列
+* A single-line text
 
-改行を含まない文字列は ``[`` と ``]`` で挟んで指定できます。
+A text which does not contain a line feed can be specified 
+between brackets (``[ ]``), as follows:
 
 .. code-block:: none
    
    method/nsp/occlevel = [ 1 - 20 ]
 
 
-* 複数行の文字列
+* Multiple-line text
 
-改行を含む場合は、 ``{`` と ``}end`` で挟んで指定します。
+Specify a text which contains a line feed between braces (``{``, ``}end``) 
+as follows:
 
 .. code-block:: none
    
@@ -91,59 +93,59 @@ value には3つの様式があります。
                 O         0.520000        1.294000        0.114000
                 O         1.742000       -0.451000       -0.186000
                 H         1.692000       -1.400000       -0.203000
-   }end
+   }
 
 .. note::
    
-   ``//`` (ダブルスラッシュ)より後ろの文字列は改行までコメントとして扱われます。
-   また、行の先頭が ``#`` (シャープ)の場合、改行までがコメントとして無視されます。
+   Any text following double-slash ``//`` to the end of the line is 
+   treated as a comment. 
+   Any line beginning with a hash ``#`` is also ignored as a comment.
 
 .. note::
 
-  同じキーワードが出現した場合は、あとに記述したものに上書きされます。
+  If identical keywords are specified, the latter one overwrites the earlier.
 
 
-MAINセクション
+MAIN section
 ==============
 
-計算に必要なパラメータをこのセクションに記述します。
-詳しくは付録のパラメータリストをご覧ください。
-以下に主なパラメータを示します。
+Specify the parameters necessary for calculation. 
+For details, see the parameter list in Appendix. 
+The following describes the most frequently used parameters:
 
 .. index:: step_control
 
 step_control
 ^^^^^^^^^^^^
 
-計算スキームを指定します。
-ProteinDFの計算は指定されたスキームの順に実行されます。
+Specifies calculation schemes. 
+The ProteinDF performs calculations according to the scheme order specified here.
 
-
-とりうる値
+Values
 """"""""""
 
 * create
 
-パラメータの解析をします。計算は実行しません。
+Analyzes the parameters. No calculation is performed.
 
 * integral
 
-コアハミルトニアン、重なり積分、グリッド生成など、SCF繰り返し計算前の処理を行います。
+Executes the pre-processing for SCF loops, such as core Hamiltonian, overlap integrals, and grid generation. 
 
 * guess
 
-初期電子密度を用意します。
+Generates initial guess.
 
 * SCF
 
-SCF繰り返し計算を実行します。
+Executes SCF loops.
 
 * force
 
-エネルギーの核座標による微分を計算します。
+Calculates derivatives of energy with respect to nuclear coordinates.
 
 
-使用例
+Example
 """"""
 
 .. code-block:: none
@@ -156,60 +158,58 @@ SCF繰り返し計算を実行します。
 scf_start_guess
 ^^^^^^^^^^^^^^^
 
-SCF計算における初期値を指定します。
+Specifies initial guess for SCF calculations.
 
-とりうる値
+Values
 """"""""""
 
 * huckel
 
-  Hückel法により初期電子密度を求めます。
+  Obtains initial guess with the Hückel method.
 
 * harris
 
-  Harrisの汎関数を用いて、あらかじめ用意された原子の電子密度から初期電子密度を求めます。
+  Obtains initial guess using the Harris functional from the electron density of atoms previously prepared.
 
 * core
 
-  コアハミルトニアンを対角化した波動関数から初期電子密度を求めます。
+  Obtains initial guess from the wave function obtained by diagonalizing the core Hamiltonian.
 
 * rho
 
-  あらかじめ用意された原子ごとの近似電子密度を合成して、モデル分子の近似電子密度を作成します。
+  Merges the approximated electron density of each atom previously prepared, and generates an approximated electron density of the model molecule.
 
 * file_rho
 
-  ユーザーが作成した補助基底展開係数ファイル ``guess_rho`` を用いて
-  近似電子密度を求め、これを初期値として用います。
+  Obtains an approximated electron density using an auxiliary basis expansion coefficient file ``guess_rho`` created by the user, and uses the value as initial guess.
 
 * lcao
 
-  ユーザーが作成したLCAO行列ファイル(``guess.lcao.rks``)、占有数ファイル(``guess.occ.rks``)から初期値を作成します。
+  Generates initial guess from the user-created LCAO matrix file (``guess.lcao.rks``) and occupation number file (``guess.occ.rks``).
 
 * density_matrix
 
-  ユーザーが作成した電子密度ファイルを初期値として利用します。
+  Uses the user-created electron density file as initial guess.
 
-
-MOLECULEセクション
+MOLECULE section
 ==================
 
-以下のキーワードを指定します。
+Specify the following keywords:
 
 .. index:: geometry/cartesian/unit
 
 geometry/cartesian/unit
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-入力座標の長さの単位を指定します。
+Specifies the unit of length used for input coordinates.
 
-とりうる値
+Value
 """"""""""
 
 angstrom, au
 
 
-使用例
+Exaple
 """"""
 
 .. code-block:: none
@@ -222,11 +222,13 @@ angstrom, au
 geometry/cartesian/input
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-計算対象の原子種やXYZ座標などを指定します。
-1行に1つの原子を指定し、原子種、X座標、Y座標、Z座標の順に空白(スペース、タブ文字)で区切って指定します。
-原子種は元素記号で指定します。
+Specifies the target atomic species to be calculated and their XYZ coordinates. 
+In each line, specify atomic species, X, Y, and Y coordinates sequentially, 
+separating each value with a blank (space or tab) character. 
+Specify atomic species with the atomic symbols.
 
-使用例
+
+Example
 """"""
 
 .. code-block:: none
@@ -246,28 +248,29 @@ geometry/cartesian/input
 
 .. note::
    
-   元素記号のあとに ``@`` を付けてラベルを付けることができます。
-   異なるグループの同じ元素に違う基底関数を与えるときに便利です。
+   The user can add a label by attaching ``@`` after atomic symbols. 
+   This function is useful when assigning basis sets to the same element 
+   in separate groups.
 
 .. note::
    
-   ダミー原子は ``X`` で指定できます。
-   このときダミー原子の電荷は第5カラムに指定します。
-   
+   A dummy atom can be specified with ``X``. 
+   In that case, specify the electric charge of the dummy atom 
+   in the fifth column.
+
 
 .. index:: basis-set/orbital
 
 basis-set/orbital
 ^^^^^^^^^^^^^^^^^
 
-基底関数を指定します。
-原子種に対して、使用する基底関数の名称を記述してください。
-計算で用いるすべての原子種に対して、基底関数を指定する必要があります。
-また、指定した基底関数の名前は、basis2ファイルに用意されている必要があります。
-basis2ファイルについては付録を参照してください。
+Specifies basis sets to all atomic species used for calculation. 
+Describe the name of the basis set for each atomic species. 
+The names of the assigned basis sets must be previously specified 
+in the basis2 file. See Appendix for the basis2 file.
 
 
-使用例
+Example
 """"""
 
 .. code-block:: none
@@ -279,9 +282,10 @@ basis2ファイルについては付録を参照してください。
                 N = "O-NITROGEN (621/41) by FS"
    }end
 
+
 .. note::
    
-   原子の後に ``@`` を付けてラベルを記述できます。
+   The user can add a label by attaching ``@`` after atomic symbols.
 
 
 .. index:: basis-set/density-auxiliary
@@ -289,9 +293,9 @@ basis2ファイルについては付録を参照してください。
 basis-set/density-auxiliary
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-クーロン項の計算で使用する補助基底関数を指定します。
-クーロン項をRI_J法で求める場合に使用します。
-指定方法は基底関数と同様です。
+Specifies the auxiliary basis sets used for Coulomb term calculation. 
+Use this keyword when calculating the term in the RI_J method. 
+The specification procedure is the same as that for basis sets.
 
 
 .. index:: basis-set/exchange-auxiliary
@@ -299,15 +303,13 @@ basis-set/density-auxiliary
 basis-set/exchange-auxiliary
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-交換相関項の計算で使用する補助基底関数を指定します。
-交換相関項をRI法で求める場合に使用します。
-(交換相関汎関数の指定で、汎関数名の末尾に ``~`` を付けた場合です。)
-指定方法は基底関数と同様です。
+Specifies the auxiliary basis sets used for exchange-correlation term calculation. 
+Use this keyword when calculating the term in the RI method 
+(i.e. when the user attached ``~`` to the end of the specified exchange-correlation functional.)
+ The specification procedure is the same as that for basis sets.
 
 
 basis-set/gridfree
 ^^^^^^^^^^^^^^^^^^
 
-グリッドフリー法による交換相関項の計算で使用する補助基底関数を指定します。
-使用するためには ``gridfree/dedicated_basis`` を有効( ``yes`` )にする必要があります。
-
+Specifies the auxiliary basis sets used for grid-free method.

@@ -1,21 +1,24 @@
 **********************
-Quick Start Guide
+クイックスタートガイド
 **********************
 
-This chapter describes how to perform a single-point calculation of amino acid (glycine) using a single process.
+ここではアミノ酸(グリシン)の一点計算を1プロセスで計算します。
 
 .. index:: fl_Input
 .. index:: fl_Table
 .. index:: fl_Work
 
-Creating calculation directories
+計算用ディレクトリの用意
 ========================
 
-ProteinDF writes a large number of large intermediate files with matrices/vectors on disk storage. 
-Before starting actual calculations, create the following calculation directories:
+ProteinDFでは行列・ベクトルなどのサイズ・数ともに大きな中間ファイルを
+ディスクに書き込みます。
+ProteinDFの実行に際し、あらかじめ計算に使用するディレクトリを作成します。
+作成すべきディレクトリは
 
 * fl_Work
 
+です。
 
 .. note::
 
@@ -24,8 +27,8 @@ Before starting actual calculations, create the following calculation directorie
 
 .. warning::
 
-  The program may abnormally terminate if the intermediate files cannot be written properly. 
-  Before executing MPI parallel computation, make sure that the files can be properly written from all nodes.
+  ディスクの書き込みに失敗すると、プログラムが異常終了することがあります。
+  特にMPI並列計算を行う場合は、すべてのノードから書き込みができることを確認してください。
 
 
 入力ファイルの準備
@@ -33,7 +36,9 @@ Before starting actual calculations, create the following calculation directorie
 
 .. index:: fl_Userinput
 
-Create a text file with the following content, and save it under the name ``fl_Userinput``:
+以下の内容のテキストファイルを作成し、
+``fl_Userinput``
+というファイル名で保存します。
 
 
 .. literalinclude:: fl_Userinput
@@ -41,35 +46,39 @@ Create a text file with the following content, and save it under the name ``fl_U
 
 .. note::
 
-  Input files can be changed with a startup option of ProteinDF.
+  ProteinDFの起動オプションにより、
+  入力ファイルを変更することができます。
 
 
-Executing ProteinDF
+ProteinDFの実行
 ===============
 
-Configure the environment variable PDF_HOME appropriately, and execute ProteinDF (in serial mode).
+環境変数PDF_HOMEを適切に設定した後、
+ProteinDF(逐次版)を実行します。
 
 .. code-block:: bash
 
   % ${PDF_HOME}/bin/PDF.x
 
 
-If the program terminates properly, the system returns to the command prompt.
+正常に終了した場合は、コマンドプロンプトに戻ります。
 
 
-Results
+結果の表示
 ==========
 
-The calculation results are output in files. The following shows an example of the output:
+計算結果はファイルに出力されます。
+以下に例を示します。
+
 
 .. note::
 
-  The output file location can be changed with a startup option of ProteinDF.
+  出力ファイルの場所は、ProteinDFの起動オプションにより変更できます。
 
 
-The beginning of the output file shows the version of ProteinDF and the number of parallel processes 
-(MPI process count, the number of OpenMP threads). 
-Make sure that the calculation was performed as intended.
+はじめにProteinDFのバージョン、ならびに並列数(MPIプロセス数、OpenMPスレッド数)が
+表示されます。
+意図した通りに実行されているか確認してください。
 
 .. code-block:: none
    
@@ -79,8 +88,8 @@ Make sure that the calculation was performed as intended.
    [0:2012/**/07 17:17:02:INFO]  OpenMP threads: 12
    [0:2012/**/07 17:17:02:INFO] 
 
-The calculation is performed according to the procedure described in ``step_control``. 
-The output date is indicated at left in the log.
+``step_control`` に記載されている手順に従い、計算が実行されます。
+ログの左側に出力日時が記載されます。
 
 .. code-block:: none
    
@@ -102,7 +111,7 @@ The output date is indicated at left in the log.
    ===============================================
 
 
-Energy data are output in the ``Total Energy`` block.
+エネルギー情報は ``Total Energy`` ブロックに出力されます。
 
 .. code-block:: none
    
@@ -118,9 +127,9 @@ Energy data are output in the ``Total Energy`` block.
     TE             =        -282.1999717298841688
    ------------------------------------------------
 
-Other information, such as calculation size or cut off data, is output as needed.
+その他、計算サイズ、カットオフ情報が随時出力されます。
 
-When the calculation completes properly, the CPU time and elapsed time are output.
+計算が正常に終了すると、CPU時間と経過時間が出力されます。
 
 .. code-block:: none
    

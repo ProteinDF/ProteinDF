@@ -1,68 +1,68 @@
 .. -*- coding: utf-8; -*-
 
 ********
-はじめに
+Introduction
 ********
 
-本書はProteinDFソフトウェアのユーザーズマニュアルです。
+This document is the User's Manual for the ProteinDF program.
 
 
-免責事項
+Disclaimer
 ========
 
-本マニュアルは完全ではありません。
-また、この文書は有用であるという期待の下に作成・配布されていますが、 無保証です。
-ソフトウェア開発は継続して行われており、本マニュアルに書かれている内容と異なる場合があります。
-使用することによって生じるいかなる直接的・間接的損害についても筆者はその責を負いません。
+This manual is a work in progress. 
+Though created and distributed in the hope of being useful, 
+this document is offered without any warranty of any kind. 
+Since the software is still being developed, 
+some content of this manual may differ from the provided product. 
+The author disclaims all liability for any damages directly or indirectly
+caused by the use of this manual.
 
-ご意見・質問等はメーリングリスト(pdf-users [AT] iis.u-tokyo.ac.jp)、または下記連絡先までお願いします。
+For questions and feedback, 
+please use the contact information.
 
-
-ライセンス
+License
 ==========
 
-ProtienDF ソフトウェアは、
-オープンソースライセンスである GNU 一般公衆利用許諾契約書（GPL）に基づいてリリースされています。
-GPL ライセンスの正式な条件については、 http://www.fsf.org/licenses/ を参照してください。
-http://www.fsf.org/licenses/gpl-faq.html および http://www.gnu.org/philosophy/enforcing-gpl.html も参照してください。
+The ProteinDF software is released under an open source license: 
+the GNU General Public License (GPL). 
+For the exact terms and conditions of the GPL license, 
+please refer to http://www.fsf.org/licenses/. 
+Please also refer to http://www.fsf.org/licenses/gpl-faq.html 
+and http://www.gnu.org/philosophy/enforcing-gpl.html.
 
 
-なお、本ソフトウェアの開発は主に学術研究助成によって支援されています。
-開発支援のために、ProteinDFを用いた研究成果を発表される際には、
-以下のProteinDF論文を引用していただけると幸いです。
-また、その研究の書誌情報をご連絡いただけると助かります。
+The development of this software is supported by scientific research grants. 
+When publishing research results using ProteinDF, 
+please cite the following article to assist the development of our software. 
+When citing the article, 
+please share with us the bibliographical information of the research material.
 
 * F. Sato, Y. Shigemitsu, I. Okazaki, S. Yahiro, M. Fukue, S. Kozuru, and H. Kashiwagi,
   "Development of a new density functional program for all-electron calculation of proteins",
   Int. J. Quant. Chem., 63, 245-246 (1997).
 
 
-連絡先
-======
+Contact information
+===================
 
-153-8505 東京都目黒区駒場4-6-1
-
-東京大学 生産技術研究所 佐藤文俊研究室
-
-email: pdf-dev [AT] iis.u-tokyo.ac.jp
+4-6-1 Komaba, Meguro, Tokyo 153-8505 Japan
+Sato, F. Laboratory, Institute of Industrial Science, the University of Tokyo
 
 
+Acknowledgement
+===============
 
-謝辞
-====
+The development of this program was supported by grants from the following projects:
 
-本プログラムの開発は、以下のプロジェクトの支援を受けて開発されました。
-
-* 科学技術振興事業団「計算科学技術活用型特定研究開発推進事業(ACT-JST)」
-* 文部科学省「戦略的基盤ソフトウェアの開発」
-* 文部科学省「革新的シミュレーションソフトウェアの研究開発」
-* 文部科学省「イノベーション基盤シミュレーションソフトウェアの研究開発」
-* 文部科学省「次世代生命体統合シミュレーションソフトウェアの研究開発」
+* `Research and Development for Applying Advanced Computational Science and Technology` by Japan Science and Technology Corporation 
+* `Frontier Simulation Software for Industrial Science` by Ministry of Education, Culture, Sports, Science and Technology (MEXT)
+* `Revolutionary Simulation Software` by MEXT
+* `Research and Development of Innovative Simulation Software` by MEXT
+* `Next-generation Integrated Simulation of Living Matter` by MEXT
 
 
-更新履歴
-========
+Revision history
+=================
 
-* 2012年12月 初版
-* 2013年 3月 イノベーションプロジェクト版リリースに伴う修正
-* 2017年10月 ビルド方式変更に伴う修正
+* Dec. 2012  First edition

@@ -54,6 +54,16 @@ html:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
+html_en:
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) -Dlanguage=en $(BUILDDIR)/en/html
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/en/html."
+
+html_ja:
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) -Dlanguage=ja $(BUILDDIR)/ja/html
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/ja/html."
+
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
 	@echo
