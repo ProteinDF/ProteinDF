@@ -1,11 +1,11 @@
 .. -*- coding: utf-8; -*-
 
-************
+************************
 Ground State Calculation
-************
+************************
 
 Calculation method
-========
+==================
 
 ProteinDF allows the user to perform closed-shell, open-shell, 
 and open-shell restricted calculations according 
@@ -13,10 +13,10 @@ to the electron configuration of the object.
 The calculation method can be specified using the keyword ``method``.
 
 Specifying electron count/occupied state
-==========================
+========================================
 
 restricted Kohn-Sham method
----------------------------------------
+---------------------------
 
 This method performs the calculation of a closed-shell molecule (singlet) 
 where an electron pair occupies a single molecular orbital. 
@@ -82,7 +82,7 @@ and ``method/roks/open_shell_occlevel``.
 
 
 Initial guess
-============
+=============
 
 Use the keyword ``guess`` to specify the initial guess for SFC loops.
 
@@ -100,7 +100,7 @@ Specify ``guess=huckel``.
 
 
 Harris functional
---------------
+-----------------
 
 Generates initial guess with the Harris functional. 
 Specify ``guess=harris``. 
@@ -108,7 +108,7 @@ This function is not available for some atomic species.
 
 
 Approximated electron density
-------------
+-----------------------------
 
 Generates initial guess with an approximated electron density. 
 Specify ``guess=rho``. 
@@ -116,7 +116,7 @@ A reliable result may not be obtained unless the RI method is applied.
 
 
 LCAO coefficient matrix
-------------
+-----------------------
 
 Generates initial guess with the LCAO coefficient matrix. 
 Specify ``guess=lcao``. When using this function, 
@@ -130,7 +130,7 @@ prepare the LCAO coefficient matrix beforehand.
 
 
 Density matrix
---------
+--------------
 
 Uses a density matrix as the initial guess. 
 Specify ``guess=density``. 
@@ -144,10 +144,10 @@ Prepare the density matrix beforehand.
 
 
 oulomb term calculation
-================
+=======================
 
 Selecting calculation engine
-------------------
+----------------------------
 
 Four-center two electron integrals required in Coulomb term calculation is
 a rate-determining process. 
@@ -169,7 +169,7 @@ to obtain the Coulomb term.
 The calculation accuracy depends on auxiliary basis sets. 
 
 Cholesky decomposition
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
 Based on the Cholesky decomposition method, 
 obtains Cholesky vectors for four-center two-electron integrals before SCF loops. 
@@ -182,10 +182,10 @@ This is the default engine of ProteinDF.
 
 
 Fock exchange term calculation
-================
+==============================
 
 Selecting calculation engine
-------------------
+----------------------------
 
 The Fock exchange term calculation is also rate-determining 
 since it requires four-center two electron integrals. 
@@ -201,7 +201,7 @@ Specify ``K_engine=conventional`` to select this engine.
 
 
 Cholesky decomposition
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
 Obtains the Fock exchange term using the Cholesky decomposition method, 
 as in the Coulomb term calculation. 
@@ -211,7 +211,7 @@ Specify ``K_engine=CD`` to select this engine.
 
 
 Hybrid functional method and Hartree-Fock method
-----------------------------------------
+------------------------------------------------
 
 The user can perform a hybrid functional calculation or Hartree-Fock calculation 
 by specifying the following value in the parameter ``xc-potential``:
@@ -226,7 +226,7 @@ by specifying the following value in the parameter ``xc-potential``:
 
 
 Exchange-correlation term calculation
-================
+=====================================
 
 In ProteinDF, 
 the user can use numerical integral calculation or analytical calculation (grid-free method) 
@@ -236,14 +236,14 @@ The default is the numerical integrals.
 
 
 Selecting the grid
---------------
+------------------
 
 Specify the numerical grid with the parameter ``xc-potential/grid-type``. 
 The default is the SG-1 grid. Refer to Appendix for details.
 
 
 Functionals available for numerical integral method
-----------------------------
+---------------------------------------------------
 
 Specify functionals with ``xc_potential``. 
 The available functionals are as follows:
@@ -269,14 +269,14 @@ For details, see the keyword ``grid_free`` in Appendix.
 
 
 Level shift calculation
-================
+=======================
 
 This method allows shifting the energy level of a particular orbital. 
 For details, see the keyword ``level_shift`` in Appendix.
 
 
 Convergence acceleration techniques
-==========
+===================================
 
 ProteinDF provides several convergence algorisms to achieve a stable 
 and efficient convergence during SFC loops. 
@@ -284,7 +284,7 @@ Use the keyword ``scf_acceleration`` for selection.
 
 
 damping method
----------
+--------------
 
 The physical quantity used in the last iteration is mixed to the current in a certain ratio. 
 When Y (n) represents the physical quantity obtained at the nth SCF iteration, 
@@ -311,7 +311,7 @@ and ``scf_acceleration/damping/damping_type``, respectitvely.
 
 
 Anderson's method
-----------
+-----------------
 
 Employs the quadratic convergence method developed by Anderson. 
 The equations when using the physical quantities at the past two points are as follows:
@@ -339,7 +339,7 @@ with ``scf_acceleration/anderson/start_number``.
 
 
 DIIS method
-------
+-----------
 
 Employs the Direct Inversion of the Iterative Subspace (DIIS) method by Pulay. 
 The DIIS method assumes that a new physical quantity X (n) can be obtained 

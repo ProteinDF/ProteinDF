@@ -1,6 +1,6 @@
-**********************
+*****************
 Quick Start Guide
-**********************
+*****************
 
 This chapter describes how to perform a single-point calculation of amino acid (glycine) using a single process.
 
@@ -9,7 +9,7 @@ This chapter describes how to perform a single-point calculation of amino acid (
 .. index:: fl_Work
 
 Creating calculation directories
-========================
+================================
 
 ProteinDF writes a large number of large intermediate files with matrices/vectors on disk storage. 
 Before starting actual calculations, create the following calculation directories:
@@ -19,7 +19,7 @@ Before starting actual calculations, create the following calculation directorie
 
 .. note::
 
-  ``${PDF_HOME}/bin/pdf-setup`` を実行すると、計算に必要な環境を整えます。
+  Exec ``${PDF_HOME}/bin/pdf-setup`` command, and prepare the environment for the calculation.
 
 
 .. warning::
@@ -28,7 +28,7 @@ Before starting actual calculations, create the following calculation directorie
   Before executing MPI parallel computation, make sure that the files can be properly written from all nodes.
 
 
-入力ファイルの準備
+Create input file
 ==================
 
 .. index:: fl_Userinput
@@ -44,7 +44,7 @@ Create a text file with the following content, and save it under the name ``fl_U
   Input files can be changed with a startup option of ProteinDF.
 
 
-Executing ProteinDF
+Exec ProteinDF
 ===============
 
 Configure the environment variable PDF_HOME appropriately, and execute ProteinDF (in serial mode).

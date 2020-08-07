@@ -1,15 +1,15 @@
-========
+===================
 Execution Procedure
-========
+===================
 
 Program execution procedure
-====================
+===========================
 
 Follow the procedure below to execute ProteinDF from the command line:
 
 
 Preparation
-------
+-----------
 
 Create directories (default: fl_Work) for outputting intermediate data, 
 under the execution directory of ProteinDF (where the input file is located).
@@ -26,7 +26,7 @@ under the execution directory of ProteinDF (where the input file is located).
 
 
 Executing the program (serial version)
-----------------
+---------------------------------------
 
 To execute the serial version of ProteinDF, use the following command:
 
@@ -44,7 +44,7 @@ in the log file.
 
 
 Executing the program (parallel version)
-----------------------
+----------------------------------------
 
 To execute the parallel version of ProteinDF, use the following command:
 
