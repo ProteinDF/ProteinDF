@@ -3,7 +3,7 @@ Installation
 ************
 
 System requirements
-========
+===================
 
 ProteinDF has several distributions. If a README file is provided, first read the README file.
 
@@ -18,7 +18,7 @@ To execute ProteinDF, the following environment is required:
 
 
 Hardware and operating system
---------------------------------------
+-----------------------------
 
 ProteinDF has been confirmed to operate on POSIX-compliant computer systems, as well on as the following computing systems:
 
@@ -53,7 +53,7 @@ Several python scripts are prepared for ProteinDF. These scripts are not necessa
 
 
 Installation and setup
-==================
+======================
 
 The installation procedure varies according to the distributed package. If a README file is provided, follow the README file instructions.
 
@@ -61,7 +61,7 @@ The installation procedure varies according to the distributed package. If a REA
 .. index:: Environment variables
 
 Environment variables
---------
+---------------------
 
 
 ProteinDF requires the user to configure the following environment variables. Appropriately set the variables according to the user's environment.
@@ -98,7 +98,7 @@ When executing ProteinDF with the OpenMP multi-threading, specify the type and c
 
 
 Build from the source
-------------------
+---------------------
 
 .. index: configure
 
@@ -179,7 +179,7 @@ Specifies the ScaLAPACK library.
 
 
 Executing \"make\"
-^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
 
 Execute the ``cmake`` command, and make sure the Makefile is created. 
 Once the Makefile is created, execute the ``make`` command.
@@ -190,7 +190,7 @@ Once the Makefile is created, execute the ``make`` command.
 
 
 Installing the program
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
 After executing \"make\", install the execution file/data to the specified path.
 
@@ -207,6 +207,6 @@ After the execution above, the following files will be created:
 
 
 When trouble occurs...
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
 In some environments, problems may occur such that no script can be executed, or no build is possible. In such cases, check the output of each script thoroughly (i.e. out.configure, out.make, and out.make_install in the case above).
