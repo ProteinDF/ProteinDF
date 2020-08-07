@@ -1,14 +1,14 @@
 .. -*- coding: utf-8; -*-
 
-********
+************
 Introduction
-********
+************
 
 This document is the User's Manual for the ProteinDF program.
 
 
 Disclaimer
-========
+==========
 
 This manual is a work in progress. 
 Though created and distributed in the hope of being useful, 
@@ -22,7 +22,7 @@ For questions and feedback,
 please use the contact information.
 
 License
-==========
+=======
 
 The ProteinDF software is released under an open source license: 
 the GNU General Public License (GPL). 

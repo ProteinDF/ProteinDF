@@ -42,7 +42,7 @@ The input file for ProteinDF consists of the following sections:
 
 
 Syntax
-====
+======
 
 Specify the keywords in the following format:
 
@@ -146,7 +146,7 @@ Calculates derivatives of energy with respect to nuclear coordinates.
 
 
 Example
-""""""
+"""""""
 
 .. code-block:: none
                 
@@ -229,7 +229,7 @@ Specify atomic species with the atomic symbols.
 
 
 Example
-""""""
+"""""""
 
 .. code-block:: none
    
@@ -271,7 +271,7 @@ in the basis2 file. See Appendix for the basis2 file.
 
 
 Example
-""""""
+"""""""
 
 .. code-block:: none
    
@@ -306,7 +306,7 @@ basis-set/exchange-auxiliary
 Specifies the auxiliary basis sets used for exchange-correlation term calculation. 
 Use this keyword when calculating the term in the RI method 
 (i.e. when the user attached ``~`` to the end of the specified exchange-correlation functional.)
- The specification procedure is the same as that for basis sets.
+The specification procedure is the same as that for basis sets.
 
 
 basis-set/gridfree
