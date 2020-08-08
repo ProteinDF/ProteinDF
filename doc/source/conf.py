@@ -32,10 +32,12 @@ sys.path.append(os.path.abspath('exts'))
 # ones.
 # extensions = []
 extensions = [
+  'sphinx.ext.autodoc',
+  'sphinx.ext.githubpages',
   'sphinx.ext.mathjax',
   'sphinx.ext.todo',
+  'sphinx.ext.viewcode',
   'numfig',
-  'sphinx.ext.githubpages',
   ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -75,7 +77,7 @@ today_fmt = '%B %d, %Y'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+exclude_patterns = ['_build']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -275,7 +277,6 @@ texinfo_documents = [
 
 # -- TODO ----------------------------------------------------------------------
 todo_include_todos = False
-
 
 # -- numfix --------------------------------------------------------------------
 number_figures = True
