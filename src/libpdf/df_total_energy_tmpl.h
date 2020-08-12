@@ -472,7 +472,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
         SymmetricMatrix IE_h = this->get_IE(E_h, atomIndexGroup);
         IE_h.save(DfObject::m_sWorkDirPath + "/" + "IE_h.mat");
     }
-    {
+    if (this->m_nNumOfDummyAtoms > 0) {
         SymmetricMatrix E_h_X;
         E_h_X.load(DfObject::m_sWorkDirPath + "/" + "e_h_X.mat");
         E_e += E_h_X;
