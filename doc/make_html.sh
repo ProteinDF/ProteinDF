@@ -9,7 +9,7 @@ build_html()
     fi
     cd source
     sphinx-intl build -l "${LANG}"
-    sphinx-build -b html -a -E -D language="${LANG}" . ../build/html/${LANG}
+    sphinx-build -b html -a -E -D language="${LANG}" . ../_build/html/${LANG}
 }
 
 
@@ -18,4 +18,3 @@ build_html en
 
 echo ">>>> build ja"
 build_html ja
-
