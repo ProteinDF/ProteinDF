@@ -1,22 +1,23 @@
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: ProteinDF User's Manual 2014.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-11-18 00:11-0600\n"
+"POT-Creation-Date: 2020-08-26 13:13+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.8.0\n"
 
 #: ../../source/analysis.rst:5
-msgid "ProteinDF計算結果の解析"
+msgid "Analysis of the ProteinDF Calculation Results"
 msgstr ""
 
 #: ../../source/analysis.rst:9
-msgid "一般的に用いられる解析ツール"
+msgid "General analysis tools"
 msgstr ""
 
 #: ../../source/analysis.rst:11
@@ -24,131 +25,203 @@ msgid "pdf-top"
 msgstr ""
 
 #: ../../source/analysis.rst:13
-msgid "指定された分子軌道に対し、寄与の大きい原子軌道を表示します。"
+msgid ""
+"Displays atomic orbitals with a large contribution to the specified "
+"molecular orbital."
 msgstr ""
 
 #: ../../source/analysis.rst:19
-msgid "実行すると以下の様な出力が得られます。"
+msgid "Executing the command above obtains the following outputs:"
 msgstr ""
 
 #: ../../source/analysis.rst:37
-msgid "pdf-pop"
+msgid "pdf-pop-mulliken"
 msgstr ""
 
 #: ../../source/analysis.rst:39
-msgid "形式電荷を出力します。"
-msgstr ""
-
-#: ../../source/analysis.rst:46
-msgid "pdf-mo"
+msgid "Output Mulliken population."
 msgstr ""
 
 #: ../../source/analysis.rst:48
-msgid "分子軌道フィールドデータを出力します。"
+msgid "pdf-mo"
 msgstr ""
 
-#: ../../source/analysis.rst:55
-msgid "pdf-esp"
+#: ../../source/analysis.rst:50
+msgid "Outputs molecular orbital field data."
 msgstr ""
 
 #: ../../source/analysis.rst:57
-msgid "静電ポテンシャルのフィールドデータを出力します。"
+msgid "pdf-esp"
 msgstr ""
 
-#: ../../source/analysis.rst:64
-msgid "pdf-dens"
+#: ../../source/analysis.rst:59
+msgid "Outputs electrostatic potential field data."
 msgstr ""
 
 #: ../../source/analysis.rst:66
-msgid "電子密度フィールドデータを出力します。"
+msgid "pdf-dens"
 msgstr ""
 
-#: ../../source/analysis.rst:73
-msgid "pdf-archive"
+#: ../../source/analysis.rst:68
+msgid "Outputs electron density field data."
 msgstr ""
 
 #: ../../source/analysis.rst:75
-msgid "計算結果を集約し、アーカイブを作成します。"
+msgid "pdf-archive"
 msgstr ""
 
-#: ../../source/analysis.rst:82
-msgid "pdf-report"
+#: ../../source/analysis.rst:77
+msgid "Aggregates calculation results to create archives."
 msgstr ""
 
 #: ../../source/analysis.rst:84
-msgid "計算結果のレポートを作成します。"
+msgid "pdf-report"
 msgstr ""
 
-#: ../../source/analysis.rst:90
+#: ../../source/analysis.rst:86
+msgid "Creates calculation result reports."
+msgstr ""
+
+#: ../../source/analysis.rst:92
 msgid ""
-"以下のようなエネルギー収束曲線(:num:`Fig. #analysisconvhist`)や 軌道エネルギーの収束履歴(:num:`Fig. "
-"#analysislevelhist`)が得られます。"
+"The user can obtain energy convergence curve (:num:`Fig. "
+"#analysisconvhist`) and orbital energy convergence history (:num:`Fig. "
+"#analysislevelhist`), as shown below:"
 msgstr ""
 
-#: ../../source/analysis.rst:101
-msgid "エネルギー収束曲線"
+#: ../../source/analysis.rst:104
+msgid "Energy convergence curve"
 msgstr ""
 
-#: ../../source/analysis.rst:111
-msgid "軌道エネルギーの収束履歴"
+#: ../../source/analysis.rst:114
+msgid "Orbital energy convergence history"
 msgstr ""
 
-#: ../../source/analysis.rst:115
-msgid "上級者(デバッグ)用ツール"
+#: ../../source/analysis.rst:118
+msgid "Advanced (debug) tools"
 msgstr ""
 
-#: ../../source/analysis.rst:117
+#: ../../source/analysis.rst:120
 msgid "pdf-mat2txt"
 msgstr ""
 
-#: ../../source/analysis.rst:119
-msgid "指定した行列ファイル(バイナリ形式)を標準出力に出力します。"
+#: ../../source/analysis.rst:122
+msgid "Outputs the specified matrix file (binary format) to standard output."
 msgstr ""
 
-#: ../../source/analysis.rst:126
+#: ../../source/analysis.rst:129
 msgid "pdf-vtr2txt"
 msgstr ""
 
-#: ../../source/analysis.rst:128
-msgid "指定したベクトルファイル(バイナリ形式)を標準出力に出力します。"
+#: ../../source/analysis.rst:131
+msgid "Outputs the specified vector file (binary format) to standard output."
 msgstr ""
 
-#: ../../source/analysis.rst:135
+#: ../../source/analysis.rst:138
 msgid "pdf-mpac2yml"
 msgstr ""
 
-#: ../../source/analysis.rst:137
-msgid "MessagePack形式のファイルをYAMLファイルの変換します。"
+#: ../../source/analysis.rst:140
+msgid "Converts MessagePack files to YAML files."
 msgstr ""
 
-#: ../../source/analysis.rst:147
+#: ../../source/analysis.rst:150
 msgid "pdf-yml2mpac"
 msgstr ""
 
-#: ../../source/analysis.rst:149
-msgid "YAML形式のファイルをMessagePack形式に変換します。"
+#: ../../source/analysis.rst:152
+msgid "Converts YAML files to MessagePack files."
 msgstr ""
 
-#: ../../source/analysis.rst:159
+#: ../../source/analysis.rst:162
 msgid "pdf-diff"
 msgstr ""
 
-#: ../../source/analysis.rst:161
-msgid "2つの計算結果を比較します。"
+#: ../../source/analysis.rst:164
+msgid "Compares two calculation results."
 msgstr ""
 
-#: ../../source/analysis.rst:168
+#: ../../source/analysis.rst:171
 msgid "pdf-matinfo"
 msgstr ""
 
-#: ../../source/analysis.rst:170
-msgid "行列情報を出力します。"
+#: ../../source/analysis.rst:173
+msgid "Outputs matrix information."
 msgstr ""
 
-#: ../../source/analysis.rst:177
+#: ../../source/analysis.rst:180
 msgid "pdf-genmat"
 msgstr ""
 
-#: ../../source/analysis.rst:179
-msgid "行列を作成します。"
+#: ../../source/analysis.rst:182
+msgid "Generates matrices."
 msgstr ""
+
+#~ msgid "ProteinDF計算結果の解析"
+#~ msgstr ""
+
+#~ msgid "一般的に用いられる解析ツール"
+#~ msgstr ""
+
+#~ msgid "指定された分子軌道に対し、寄与の大きい原子軌道を表示します。"
+#~ msgstr ""
+
+#~ msgid "実行すると以下の様な出力が得られます。"
+#~ msgstr ""
+
+#~ msgid "pdf-pop"
+#~ msgstr ""
+
+#~ msgid "形式電荷を出力します。"
+#~ msgstr ""
+
+#~ msgid "分子軌道フィールドデータを出力します。"
+#~ msgstr ""
+
+#~ msgid "静電ポテンシャルのフィールドデータを出力します。"
+#~ msgstr ""
+
+#~ msgid "電子密度フィールドデータを出力します。"
+#~ msgstr ""
+
+#~ msgid "計算結果を集約し、アーカイブを作成します。"
+#~ msgstr ""
+
+#~ msgid "計算結果のレポートを作成します。"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "以下のようなエネルギー収束曲線(:num:`Fig. #analysisconvhist`)や "
+#~ "軌道エネルギーの収束履歴(:num:`Fig. #analysislevelhist`)が得られます。"
+#~ msgstr ""
+
+#~ msgid "エネルギー収束曲線"
+#~ msgstr ""
+
+#~ msgid "軌道エネルギーの収束履歴"
+#~ msgstr ""
+
+#~ msgid "上級者(デバッグ)用ツール"
+#~ msgstr ""
+
+#~ msgid "指定した行列ファイル(バイナリ形式)を標準出力に出力します。"
+#~ msgstr ""
+
+#~ msgid "指定したベクトルファイル(バイナリ形式)を標準出力に出力します。"
+#~ msgstr ""
+
+#~ msgid "MessagePack形式のファイルをYAMLファイルの変換します。"
+#~ msgstr ""
+
+#~ msgid "YAML形式のファイルをMessagePack形式に変換します。"
+#~ msgstr ""
+
+#~ msgid "2つの計算結果を比較します。"
+#~ msgstr ""
+
+#~ msgid "行列情報を出力します。"
+#~ msgstr ""
+
+#~ msgid "行列を作成します。"
+#~ msgstr ""
+
