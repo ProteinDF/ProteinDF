@@ -28,7 +28,7 @@ out.*
 doc/.python-version
 doc/_build/*
 **/__pycache__/*
-doc/**/*.mo
+doc/source/locale/**/*.mo
 
 # Doxygen documentation
 doc/api/*
