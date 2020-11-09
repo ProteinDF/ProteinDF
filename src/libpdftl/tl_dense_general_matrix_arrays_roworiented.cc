@@ -200,6 +200,9 @@ bool RowVectorMatrix2CSFD(const std::string& rvmBasePath,
         TlFile::remove(csfdPath);
     }
     TlDenseGeneralMatrix_mmap fileMat(csfdPath, numOfRows, numOfCols);
+    if (verbose) {
+        std::cerr << "output matrix has been prepared by mmap." << std::endl;
+    }
 
     // load & set
     for (int unit = 0; unit < numOfSubunits; ++unit) {
@@ -209,7 +212,13 @@ bool RowVectorMatrix2CSFD(const std::string& rvmBasePath,
         }
 
         TlDenseGeneralMatrix_arrays_RowOriented partMat;
+        if (verbose) {
+            std::cerr << "create array matrix " << std::endl;
+        }
         partMat.load(rvmBasePath, unit);
+        if (verbose) {
+            std::cerr << "load partial matrix " << std::endl;
+        }
 
         // std::vector<double> vtr(numOfCols);
         // for (TlMatrixObject::index_type r = unit; r < numOfRows; ++r) {
