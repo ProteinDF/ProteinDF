@@ -5,6 +5,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
+SOURCEDIR     = source
 BUILDDIR      = _build
 
 # User-friendly check for sphinx-build
@@ -53,6 +54,15 @@ html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+html_%:
+	sphinx-intl build -l "${LANG}"
+	$(SPHINXBUILD) -b html -a -E -D language="${LANG}" "$(SOURCEDIR)" "$(BUILDDIR)/html/${LANG}"
+
+html_en
+
+livereload:
+	sphinx-autobuild -b html $(ALLSPHINXOPTS) "$(SOURCEDIR)" $(BUILDDIR)/html
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
