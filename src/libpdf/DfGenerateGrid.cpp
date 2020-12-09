@@ -738,25 +738,28 @@ void DfGenerateGrid::generateGrid(const TlDenseGeneralMatrix_Lapack& O) {
         std::vector<double> coordZ;
         std::vector<double> weight;
 
-        // if ((this->m_gridType == SG_1) || (this->m_gridType == USER)) {
-        this->generateGrid_SG1(O, atom, &coordX, &coordY, &coordZ, &weight);
+        // if (this->m_gridType == SG_1) {
+        this->generateGrid_atom(O, atom, &coordX, &coordY, &coordZ, &weight);
         // } else {
-        //     this->generateGrid(O, atom, &coordX, &coordY, &coordZ, &weight);
+        //     this->generateGrid_general(O, atom, &coordX, &coordY, &coordZ,
+        //                                &weight);
         // }
 
         // store grid matrix
         const std::size_t numOfAtomGrids = weight.size();
+        if (numOfAtomGrids > 0) {
 #pragma omp critical(DfGenerateGrid__generateGrid)
-        {
-            this->grdMat_.resize(numOfGrids + numOfAtomGrids,
-                                 this->numOfColsOfGrdMat_);
-            for (std::size_t i = 0; i < numOfAtomGrids; ++i) {
-                this->grdMat_.set(numOfGrids, 0, coordX[i]);
-                this->grdMat_.set(numOfGrids, 1, coordY[i]);
-                this->grdMat_.set(numOfGrids, 2, coordZ[i]);
-                this->grdMat_.set(numOfGrids, 3, weight[i]);
-                this->grdMat_.set(numOfGrids, 4, atom);
-                ++numOfGrids;
+            {
+                this->grdMat_.resize(numOfGrids + numOfAtomGrids,
+                                     this->numOfColsOfGrdMat_);
+                for (std::size_t i = 0; i < numOfAtomGrids; ++i) {
+                    this->grdMat_.set(numOfGrids, 0, coordX[i]);
+                    this->grdMat_.set(numOfGrids, 1, coordY[i]);
+                    this->grdMat_.set(numOfGrids, 2, coordZ[i]);
+                    this->grdMat_.set(numOfGrids, 3, weight[i]);
+                    this->grdMat_.set(numOfGrids, 4, atom);
+                    ++numOfGrids;
+                }
             }
         }
     }
@@ -764,11 +767,13 @@ void DfGenerateGrid::generateGrid(const TlDenseGeneralMatrix_Lapack& O) {
     this->saveGridMatrix(0, this->grdMat_);
 }
 
-// void DfGenerateGrid::generateGrid(const TlDenseGeneralMatrix_Lapack& O,
-//                                   const int iatom, std::vector<double>*
-//                                   pCoordX, std::vector<double>* pCoordY,
-//                                   std::vector<double>* pCoordZ,
-//                                   std::vector<double>* pWeight) {
+// void DfGenerateGrid::generateGrid_general(const TlDenseGeneralMatrix_Lapack&
+// O,
+//                                           const int iatom,
+//                                           std::vector<double>* pCoordX,
+//                                           std::vector<double>* pCoordY,
+//                                           std::vector<double>* pCoordZ,
+//                                           std::vector<double>* pWeight) {
 //     assert(pCoordX != NULL);
 //     assert(pCoordY != NULL);
 //     assert(pCoordZ != NULL);
@@ -807,8 +812,7 @@ void DfGenerateGrid::generateGrid(const TlDenseGeneralMatrix_Lapack& O) {
 //                           lebWeight);
 
 //             // Loop for the grid number of Omega vector for normal
-//             Grid(Beck\'s
-//             // Method)
+//             // Grid(Beck'sethod)
 //             for (int Omega = 0; Omega < nOgrid; ++Omega) {
 //                 weight = lebWeight[Omega];
 //                 const TlPosition pos_O = grid[Omega];
@@ -927,12 +931,12 @@ void DfGenerateGrid::generateGrid(const TlDenseGeneralMatrix_Lapack& O) {
 //     *pWeight = weightvec;
 // }
 
-void DfGenerateGrid::generateGrid_SG1(const TlDenseGeneralMatrix_Lapack& O,
-                                      const int iAtom,
-                                      std::vector<double>* pCoordX,
-                                      std::vector<double>* pCoordY,
-                                      std::vector<double>* pCoordZ,
-                                      std::vector<double>* pWeight) {
+void DfGenerateGrid::generateGrid_atom(const TlDenseGeneralMatrix_Lapack& O,
+                                       const int iAtom,
+                                       std::vector<double>* pCoordX,
+                                       std::vector<double>* pCoordY,
+                                       std::vector<double>* pCoordZ,
+                                       std::vector<double>* pWeight) {
     assert(pCoordX != NULL);
     assert(pCoordY != NULL);
     assert(pCoordZ != NULL);
