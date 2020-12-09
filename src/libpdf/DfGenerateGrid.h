@@ -47,17 +47,17 @@ class DfGenerateGrid : public DfObject {
    protected:
     virtual void makeTable();
 
-    // void generateGrid(const TlDenseGeneralMatrix_Lapack& O, const int iatom,
-    //                   std::vector<double>* pCoordX,
-    //                   std::vector<double>* pCoordY,
-    //                   std::vector<double>* pCoordZ,
-    //                   std::vector<double>* pWeight);
+    // void generateGrid_general(const TlDenseGeneralMatrix_Lapack& O,
+    //                           const int iatom, std::vector<double>* pCoordX,
+    //                           std::vector<double>* pCoordY,
+    //                           std::vector<double>* pCoordZ,
+    //                           std::vector<double>* pWeight);
 
-    void generateGrid_SG1(const TlDenseGeneralMatrix_Lapack& O, const int iatom,
-                          std::vector<double>* pCoordX,
-                          std::vector<double>* pCoordY,
-                          std::vector<double>* pCoordZ,
-                          std::vector<double>* pWeight);
+    void generateGrid_atom(const TlDenseGeneralMatrix_Lapack& O,
+                           const int iatom, std::vector<double>* pCoordX,
+                           std::vector<double>* pCoordY,
+                           std::vector<double>* pCoordZ,
+                           std::vector<double>* pWeight);
 
     /// rotation invariant用行列を求める
     /// ref) B. G. Johnson, P. M. W. Gill, J. A. Pople, Chem. Phys. Lett., 220,

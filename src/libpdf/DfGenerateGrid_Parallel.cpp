@@ -93,8 +93,8 @@ void DfGenerateGrid_Parallel::generateGrid_DC(
         std::vector<double> weight;
 
         // if ((this->m_gridType == SG_1) || (this->m_gridType == USER)) {
-        DfGenerateGrid::generateGrid_SG1(O, atom, &coordX, &coordY, &coordZ,
-                                         &weight);
+        DfGenerateGrid::generateGrid_atom(O, atom, &coordX, &coordY, &coordZ,
+                                          &weight);
         // } else {
         //     DfGenerateGrid::generateGrid(O, atom, &coordX, &coordY, &coordZ,
         //                                  &weight);
