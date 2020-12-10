@@ -4,6 +4,9 @@ enable_language(C)
 enable_language(CXX)
 enable_testing()
 
+# for CMake debug
+# set(CMAKE_VERBOSE_MAKEFILE TRUE)
+
 # Project Version
 set(PROJECT_VERSION_MAJOR "2020")
 set(PROJECT_VERSION_MINOR "4")

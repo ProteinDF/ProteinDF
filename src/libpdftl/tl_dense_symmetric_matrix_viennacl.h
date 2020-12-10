@@ -13,7 +13,8 @@ class TlDenseSymmetricMatrix_ViennaCL : public TlDenseSymmetricMatrixObject {
     //
     // ---------------------------------------------------------------------------
    public:
-    enum EIG_METHOD { EIG_QR, EIG_POWERITERATION };
+    enum EIG_METHOD { EIG_QR,
+                      EIG_POWERITERATION };
 
     // ---------------------------------------------------------------------------
     // constructor & destructor
@@ -99,5 +100,8 @@ class TlDenseSymmetricMatrix_ViennaCL : public TlDenseSymmetricMatrixObject {
         const TlDenseSymmetricMatrix_ViennaCL& mat1,
         const TlDenseGeneralMatrix_ViennaCL& mat2);
 };
+
+TlDenseSymmetricMatrix_ViennaCL operator*(
+    const double coef, const TlDenseSymmetricMatrix_ViennaCL& dm);
 
 #endif  // TL_DENSE_SYMMETRIC_MATRIX_VIENNACL_H

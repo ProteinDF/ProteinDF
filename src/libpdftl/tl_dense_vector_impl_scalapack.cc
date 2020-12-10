@@ -1,16 +1,16 @@
+#include "tl_dense_vector_impl_scalapack.h"
+
 #include <algorithm>
 #include <cassert>
 #include <functional>
 
 #include "TlCommunicate.h"
+#include "TlTime.h"
 #include "TlUtils.h"
 #include "scalapack.h"
 #include "tl_dense_vector_impl_lapack.h"
-#include "tl_dense_vector_impl_scalapack.h"
 #include "tl_dense_vector_lapack.h"
 #include "tl_scalapack_context.h"
-
-#include "TlTime.h"
 
 // const std::size_t TlDenseVector_ImplScalapack::FILE_BUFFER_SIZE =
 //     100 * 1024 * 1024;  // 100 MB
@@ -374,7 +374,7 @@ bool TlDenseVector_ImplScalapack::load(std::ifstream& ifs) {
         const int root = 0;
         TlMatrixObject::index_type sizeList = 0;
         std::vector<TlVectorObject::VectorElement> elements;
-        int endMsg = 0;
+        // int endMsg = 0;
 
         rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
         bool isLoopBreak = false;
