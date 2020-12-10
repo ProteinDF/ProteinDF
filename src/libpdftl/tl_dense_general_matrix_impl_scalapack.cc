@@ -1,4 +1,5 @@
 #include "tl_dense_general_matrix_impl_scalapack.h"
+
 #include "TlCommunicate.h"
 #include "scalapack.h"
 #include "tl_dense_general_matrix_io.h"
@@ -821,7 +822,7 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
         const int root = 0;
         TlMatrixObject::index_type sizeList = 0;
         std::vector<TlMatrixObject::MatrixElement> elements;
-        int endMsg = 0;
+        // int endMsg = 0;
 
         rComm.iReceiveData(sizeList, root, TAG_LOAD_SIZE);
         // rComm.iReceiveData(endMsg, root, TAG_LOAD_END);

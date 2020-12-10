@@ -33,10 +33,16 @@ class DfDmatrix_Parallel : public DfDmatrix {
    protected:
     void run_Scalapack();
 
+   protected:
     virtual void checkOccupation(const TlDenseVector_Lapack& prevOcc,
                                  const TlDenseVector_Lapack& currOcc);
     virtual void printOccupation(const TlDenseVector_Lapack& occ);
 
+   private:
+    using DfDmatrix::checkOccupation;
+    using DfDmatrix::printOccupation;
+
+   protected:
     virtual TlDenseVector_Lapack getOccVtr(DfObject::RUN_TYPE runType);
 };
 

@@ -81,8 +81,12 @@ class TlDenseGeneralMatrix_Lapack : public TlDenseGeneralMatrixObject {
     // I/O
     // ---------------------------------------------------------------------------
    public:
-    void dump(TlDenseVector_Lapack* v) const;
-    void restore(const TlDenseVector_Lapack& v);
+    virtual void dump(TlDenseVector_Lapack* v) const;
+    virtual void restore(const TlDenseVector_Lapack& v);
+
+   private:
+    using TlDenseGeneralMatrixObject::dump;
+    using TlDenseGeneralMatrixObject::restore;
 
     // ---------------------------------------------------------------------------
     // friends

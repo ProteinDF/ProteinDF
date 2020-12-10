@@ -3,6 +3,7 @@
 
 #include <valarray>
 #include <vector>
+
 #include "tl_dense_scalapack_object.h"
 #include "tl_dense_vector_impl_object.h"
 
@@ -38,6 +39,13 @@ class TlDenseVector_ImplScalapack : public TlDenseVector_ImplObject,
                      const double value);
 
     std::vector<double> getVector() const;
+
+   private:
+    using TlDenseScalapackObject::add;
+    using TlDenseScalapackObject::get;
+    using TlDenseScalapackObject::mul;
+    using TlDenseScalapackObject::resize;
+    using TlDenseScalapackObject::set;
 
     // ---------------------------------------------------------------------------
     // operators
