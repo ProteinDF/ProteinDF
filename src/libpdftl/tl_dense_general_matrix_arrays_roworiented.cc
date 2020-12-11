@@ -23,7 +23,7 @@
 
 #include "TlFile.h"
 #include "TlUtils.h"
-#include "tl_dense_general_matrix_eigen.h"
+#include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_general_matrix_mmap.h"
 
 TlDenseGeneralMatrix_arrays_RowOriented::
@@ -250,8 +250,8 @@ bool RowVectorMatrix2CSFD(const std::string& rvmBasePath,
                 TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks,
                                             numOfCols, &(transBuf[0]));
 
-                TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols,
-                                                  &(transBuf[0]));
+                TlDenseGeneralMatrix_Lapack tmpMat(readRowChunks, numOfCols,
+                                                   &(transBuf[0]));
                 fileMat.block(chunkStartRow, 0, tmpMat);
             }
 
