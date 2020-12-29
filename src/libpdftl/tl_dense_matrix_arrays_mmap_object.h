@@ -16,8 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef TL_DENSE_MATRIX_ARRAYS_OBJECT_H
-#define TL_DENSE_MATRIX_ARRAYS_OBJECT_H
+#ifndef TL_DENSE_MATRIX_ARRAYS_MMAP_OBJECT_H
+#define TL_DENSE_MATRIX_ARRAYS_MMAP_OBJECT_H
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -29,18 +29,14 @@
 #include "tl_matrix_object.h"
 
 /// 配列の配列として行列を扱うためのコンテナ
-class TlDenseMatrix_arrays_Object : public TlMatrixObject {
+class TlDenseMatrix_arrays_mmap_Object : public TlMatrixObject {
    public:
-    explicit TlDenseMatrix_arrays_Object(index_type numOfVectors = 1,
-                                         index_type sizeOfVector = 1,
-                                         int numOfMembers = 1, int ID = 0,
-                                         bool isUsingMemManager = false);
-    TlDenseMatrix_arrays_Object(const TlDenseMatrix_arrays_Object& rhs);
-
-    virtual ~TlDenseMatrix_arrays_Object();
-
-    TlDenseMatrix_arrays_Object& operator=(
-        const TlDenseMatrix_arrays_Object& rhs);
+    explicit TlDenseMatrix_arrays_mmap_Object(const std::string& filePath,
+                                              index_type numOfVectors = 1,
+                                              index_type sizeOfVector = 1,
+                                              int numOfMembers = 1, int ID = 0,
+                                              bool isUsingMemManager = false);
+    virtual ~TlDenseMatrix_arrays_mmap_Object();
 
    public:
     virtual index_type getNumOfRows() const = 0;
@@ -64,7 +60,7 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
     virtual bool load(const std::string& basename, int subunitID);
 
    public:
-    void resize(index_type newNumOfVectors, index_type newVectorSize);
+    // void resize(index_type newNumOfVectors, index_type newVectorSize);
 
     /// 値を代入する
     void set_to_vm(index_type vectorIndex, index_type index, double value);
@@ -120,10 +116,10 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
 
    protected:
     /// 前もってvector sizeを設定する
-    void reserveVectorSize(index_type vectorSize);
+    // void reserveVectorSize(index_type vectorSize);
 
     /// data_ メンバ変数を破棄する
-    void destroy();
+    // void destroy();
 
    public:
     static index_type getNumOfLocalChunks(const index_type numOfVectors,
@@ -141,7 +137,22 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
                                    int* pLocalChunkVectorIndex = NULL) const;
     bool saveByTheOtherType(const std::string& basename) const;
 
+   protected:
+    void createNewFile();
+    void openFile();
+
+   protected:
+    void newMmap();
+    void syncMmap();
+    void deleteMmap();
+
    private:
+    void getHeaderInfo();
+    std::size_t writeMatrixHeader(std::ofstream* pFs) const;
+
+   private:
+    std::string filePath_;
+
     index_type numOfVectors_;  /// ベクトルの総数(global)
     index_type sizeOfVector_;  /// 1ベクトルの大きさ
     index_type sizeOfChunk_;   ///
@@ -160,6 +171,13 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
 
     int numOfLocalChunks_;
     std::vector<double*> chunks_;
+
+   private:
+    char* mmapBegin_;
+    double* dataBegin_;
+
+    std::size_t headerSize_;
+    std::size_t fileSize_;
 };
 
-#endif  // TL_DENSE_MATRIX_ARRAYS_OBJECT_H
+#endif  // TL_DENSE_MATRIX_ARRAYS_MMAP_OBJECT_H

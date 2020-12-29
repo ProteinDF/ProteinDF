@@ -28,6 +28,7 @@ set(LIBPDFTL_HEADERS
   tl_dense_general_matrix_mmap.h
 
   tl_dense_matrix_arrays_object.h
+  tl_dense_matrix_arrays_mmap_object.h
   tl_dense_matrix_io_object.h
   tl_dense_matrix_mmap_object.h
 
@@ -84,6 +85,7 @@ set(LIBPDFTL_SOURCES
   tl_matrix_mmap_row_major.cc
 
   tl_dense_matrix_arrays_object.cc
+  tl_dense_matrix_arrays_mmap_object.cc
   tl_dense_matrix_mmap_object.cc
   tl_dense_matrix_io_object.cc
 
