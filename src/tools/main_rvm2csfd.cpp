@@ -3,6 +3,7 @@
 #include "TlFile.h"
 #include "TlGetopt.h"
 #include "TlUtils.h"
+#include "tl_dense_general_matrix_arrays_mmap_roworiented.h"
 #include "tl_dense_general_matrix_arrays_roworiented.h"
 #include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_general_matrix_mmap.h"
@@ -10,9 +11,7 @@
 typedef TlMatrixObject::index_type index_type;
 
 void showHelp(const std::string& progname) {
-    std::cout << TlUtils::format("%s [options] INPUT_BASENAME OUTPUT_BASENAME",
-                                 progname.c_str())
-              << std::endl;
+    std::cout << TlUtils::format("%s [options] INPUT_BASENAME OUTPUT_BASENAME", progname.c_str()) << std::endl;
     std::cout << " OPTIONS:" << std::endl;
     std::cout << "  -h:      show help" << std::endl;
     std::cout << "  -v:      verbose" << std::endl;
@@ -38,8 +37,8 @@ int main(int argc, char* argv[]) {
         std::cerr << "output: " << outputPath << std::endl;
     }
 
-    bool yn = RowVectorMatrix2CSFD(inputBaseName, outputPath, verbose, true);
-
+    // bool yn = RowVectorMatrix2CSFD(inputBaseName, outputPath, verbose, true);
+    transpose2CSFD(inputBaseName, outputPath, verbose, true);
     // check
     // index_type numOfRows = 0;
     // index_type numOfCols = 0;

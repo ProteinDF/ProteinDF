@@ -16,8 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef TLROWVECTORMATRIX_H
-#define TLROWVECTORMATRIX_H
+#ifndef TL_DENSE_GENERAL_MATRIX_ARRAYS_ROWORIENTED_H
+#define TL_DENSE_GENERAL_MATRIX_ARRAYS_ROWORIENTED_H
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -75,4 +75,4 @@ bool RowVectorMatrix2CSFD(const std::string& rvmBasePath,
                           const std::string& csfdPath, bool verbose = false,
                           bool showProgress = false);
 
-#endif  // TLROWVECTORMATRIX_H
+#endif  // TL_DENSE_GENERAL_MATRIX_ARRAYS_ROWORIENTED_H
