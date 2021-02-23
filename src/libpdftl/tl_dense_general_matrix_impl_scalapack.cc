@@ -12,8 +12,7 @@
 #include "TlHdf5Utils.h"
 #endif  // HAVE_HDF5
 
-const std::size_t TlDenseGeneralMatrix_ImplScalapack::FILE_BUFFER_SIZE =
-    100 * 1024 * 1024;  // 100 MB
+const std::size_t TlDenseGeneralMatrix_ImplScalapack::FILE_BUFFER_SIZE = 100 * 1024 * 1024;  // 100 MB
 bool TlDenseGeneralMatrix_ImplScalapack::isUsingPartialIO = false;
 
 /// @file
@@ -28,27 +27,17 @@ bool TlDenseGeneralMatrix_ImplScalapack::isUsingPartialIO = false;
 // ---------------------------------------------------------------------------
 // constructor & destructor
 // ---------------------------------------------------------------------------
-TlDenseGeneralMatrix_ImplScalapack::TlDenseGeneralMatrix_ImplScalapack(
-    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col)
-    : context_(0),
-      rows_(row),
-      cols_(col),
-      blockSize_(TlScalapackContext::getBlockSize()),
-      pData_(NULL) {
+TlDenseGeneralMatrix_ImplScalapack::TlDenseGeneralMatrix_ImplScalapack(const TlMatrixObject::index_type row,
+                                                                       const TlMatrixObject::index_type col)
+    : context_(0), rows_(row), cols_(col), blockSize_(TlScalapackContext::getBlockSize()), pData_(NULL) {
     this->initialize();
 }
 
-TlDenseGeneralMatrix_ImplScalapack::TlDenseGeneralMatrix_ImplScalapack(
-    const TlDenseGeneralMatrix_ImplScalapack& rhs)
-    : context_(0),
-      rows_(rhs.rows_),
-      cols_(rhs.cols_),
-      blockSize_(rhs.blockSize_),
-      pData_(NULL) {
+TlDenseGeneralMatrix_ImplScalapack::TlDenseGeneralMatrix_ImplScalapack(const TlDenseGeneralMatrix_ImplScalapack& rhs)
+    : context_(0), rows_(rhs.rows_), cols_(rhs.cols_), blockSize_(rhs.blockSize_), pData_(NULL) {
     this->initialize();
     if (rhs.getNumOfMyElements() > 0) {
-        std::copy(rhs.pData_, rhs.pData_ + rhs.getNumOfMyElements(),
-                  this->pData_);
+        std::copy(rhs.pData_, rhs.pData_ + rhs.getNumOfMyElements(), this->pData_);
     }
 }
 
@@ -62,26 +51,22 @@ TlDenseGeneralMatrix_ImplScalapack::~TlDenseGeneralMatrix_ImplScalapack() {
 // ---------------------------------------------------------------------------
 // properties
 // ---------------------------------------------------------------------------
-TlMatrixObject::index_type TlDenseGeneralMatrix_ImplScalapack::getNumOfRows()
-    const {
+TlMatrixObject::index_type TlDenseGeneralMatrix_ImplScalapack::getNumOfRows() const {
     return this->rows_;
 }
 
-TlMatrixObject::index_type TlDenseGeneralMatrix_ImplScalapack::getNumOfCols()
-    const {
+TlMatrixObject::index_type TlDenseGeneralMatrix_ImplScalapack::getNumOfCols() const {
     return this->cols_;
 }
 
-TlMatrixObject::size_type TlDenseGeneralMatrix_ImplScalapack::getNumOfElements()
-    const {
+TlMatrixObject::size_type TlDenseGeneralMatrix_ImplScalapack::getNumOfElements() const {
     const TlMatrixObject::size_type rows = this->getNumOfRows();
     const TlMatrixObject::size_type cols = this->getNumOfCols();
     return rows * cols;
 }
 
-void TlDenseGeneralMatrix_ImplScalapack::resize(
-    const TlMatrixObject::index_type row,
-    const TlMatrixObject::index_type col) {
+void TlDenseGeneralMatrix_ImplScalapack::resize(const TlMatrixObject::index_type row,
+                                                const TlMatrixObject::index_type col) {
     assert(row > 0);
     assert(col > 0);
     if ((row == this->getNumOfRows()) && (col == this->getNumOfCols())) {
@@ -104,26 +89,18 @@ void TlDenseGeneralMatrix_ImplScalapack::resize(
     {
         // ブロックサイズが同じでプロセスグリッドが同一なら
         // ローカルコピーで十分。
-        std::vector<TlMatrixObject::index_type>::const_iterator rBegin =
-            tmp.m_RowIndexTable.begin();
-        std::vector<TlMatrixObject::index_type>::const_iterator cBegin =
-            tmp.m_ColIndexTable.begin();
+        std::vector<TlMatrixObject::index_type>::const_iterator rBegin = tmp.m_RowIndexTable.begin();
+        std::vector<TlMatrixObject::index_type>::const_iterator cBegin = tmp.m_ColIndexTable.begin();
         std::vector<TlMatrixObject::index_type>::const_iterator rEnd =
-            std::lower_bound(tmp.m_RowIndexTable.begin(),
-                             tmp.m_RowIndexTable.end(), copyMaxRows);
+            std::lower_bound(tmp.m_RowIndexTable.begin(), tmp.m_RowIndexTable.end(), copyMaxRows);
         std::vector<TlMatrixObject::index_type>::const_iterator cEnd =
-            std::lower_bound(tmp.m_ColIndexTable.begin(),
-                             tmp.m_ColIndexTable.end(), copyMaxCols);
-        for (std::vector<TlMatrixObject::index_type>::const_iterator r = rBegin;
-             r != rEnd; ++r) {
+            std::lower_bound(tmp.m_ColIndexTable.begin(), tmp.m_ColIndexTable.end(), copyMaxCols);
+        for (std::vector<TlMatrixObject::index_type>::const_iterator r = rBegin; r != rEnd; ++r) {
             const TlMatrixObject::index_type row = *r;
-            for (std::vector<TlMatrixObject::index_type>::const_iterator c =
-                     cBegin;
-                 c != cEnd; ++c) {
+            for (std::vector<TlMatrixObject::index_type>::const_iterator c = cBegin; c != cEnd; ++c) {
                 const TlMatrixObject::index_type col = *c;
                 const TlMatrixObject::index_type oldIndex =
-                    std::distance(rBegin, r) +
-                    std::distance(cBegin, c) * tmp.myRows_;
+                    std::distance(rBegin, r) + std::distance(cBegin, c) * tmp.myRows_;
                 assert(0 <= oldIndex);
                 assert(oldIndex < tmp.getNumOfMyElements());
 
@@ -134,9 +111,8 @@ void TlDenseGeneralMatrix_ImplScalapack::resize(
     }
 }
 
-double TlDenseGeneralMatrix_ImplScalapack::get(
-    const TlMatrixObject::index_type globalRow,
-    const TlMatrixObject::index_type globalCol) const {
+double TlDenseGeneralMatrix_ImplScalapack::get(const TlMatrixObject::index_type globalRow,
+                                               const TlMatrixObject::index_type globalCol) const {
     assert((0 <= globalRow) && (globalRow < this->getNumOfRows()));
     assert((0 <= globalCol) && (globalCol < this->getNumOfCols()));
 
@@ -147,26 +123,22 @@ double TlDenseGeneralMatrix_ImplScalapack::get(
     double answer = 0.0;
     const int fortranGlobalRow = globalRow + 1;
     const int fortranGlobalCol = globalCol + 1;
-    pdelget_("A", " ", &answer, this->pData_, &fortranGlobalRow,
-             &fortranGlobalCol, this->pDESC_);
+    pdelget_("A", " ", &answer, this->pData_, &fortranGlobalRow, &fortranGlobalCol, this->pDESC_);
 
     return answer;
 }
 
-void TlDenseGeneralMatrix_ImplScalapack::set(
-    const TlMatrixObject::index_type globalRow,
-    const TlMatrixObject::index_type globalCol, const double value) {
+void TlDenseGeneralMatrix_ImplScalapack::set(const TlMatrixObject::index_type globalRow,
+                                             const TlMatrixObject::index_type globalCol, const double value) {
     assert((0 <= globalRow) && (globalRow < this->getNumOfRows()));
     assert((0 <= globalCol) && (globalCol < this->getNumOfCols()));
 
     int rank = 0;
     TlMatrixObject::index_type myRow = 0;
     TlMatrixObject::index_type myCol = 0;
-    this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow,
-                                      &myCol);
+    this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow, &myCol);
     if (rank == this->rank_) {
-        const TlMatrixObject::size_type index =
-            this->getLocalIndex(myRow, myCol);
+        const TlMatrixObject::size_type index = this->getLocalIndex(myRow, myCol);
         assert(0 <= index && index < this->getNumOfMyElements());
         assert(this->getIndex0(globalRow, globalCol) != -1);
         assert(this->getIndex0(globalRow, globalCol) == index);
@@ -174,28 +146,24 @@ void TlDenseGeneralMatrix_ImplScalapack::set(
     }
 }
 
-void TlDenseGeneralMatrix_ImplScalapack::add(
-    const TlMatrixObject::index_type globalRow,
-    const TlMatrixObject::index_type globalCol, const double value) {
+void TlDenseGeneralMatrix_ImplScalapack::add(const TlMatrixObject::index_type globalRow,
+                                             const TlMatrixObject::index_type globalCol, const double value) {
     assert((0 <= globalRow) && (globalRow < this->getNumOfRows()));
     assert((0 <= globalCol) && (globalCol < this->getNumOfCols()));
 
     int rank = 0;
     TlMatrixObject::index_type myRow = 0;
     TlMatrixObject::index_type myCol = 0;
-    this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow,
-                                      &myCol);
+    this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow, &myCol);
     if (rank == this->rank_) {
-        const TlMatrixObject::size_type index =
-            this->getLocalIndex(myRow, myCol);
+        const TlMatrixObject::size_type index = this->getLocalIndex(myRow, myCol);
         assert(0 <= index && index < this->getNumOfMyElements());
         this->pData_[index] += value;
     }
 }
 
-double TlDenseGeneralMatrix_ImplScalapack::getLocal(
-    const TlMatrixObject::index_type globalRow,
-    const TlMatrixObject::index_type globalCol) const {
+double TlDenseGeneralMatrix_ImplScalapack::getLocal(const TlMatrixObject::index_type globalRow,
+                                                    const TlMatrixObject::index_type globalCol) const {
     assert((0 <= globalRow) && (globalRow < this->getNumOfRows()));
     assert((0 <= globalCol) && (globalCol < this->getNumOfCols()));
 
@@ -204,11 +172,9 @@ double TlDenseGeneralMatrix_ImplScalapack::getLocal(
     int rank = 0;
     TlMatrixObject::index_type myRow = 0;
     TlMatrixObject::index_type myCol = 0;
-    this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow,
-                                      &myCol);
+    this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow, &myCol);
     if (rank == this->rank_) {
-        const TlMatrixObject::size_type index =
-            this->getLocalIndex(myRow, myCol);
+        const TlMatrixObject::size_type index = this->getLocalIndex(myRow, myCol);
         assert(0 <= index && index < this->getNumOfMyElements());
         answer = this->pData_[index];
     }
@@ -219,8 +185,8 @@ double TlDenseGeneralMatrix_ImplScalapack::getLocal(
 // ---------------------------------------------------------------------------
 // operators
 // ---------------------------------------------------------------------------
-TlDenseGeneralMatrix_ImplScalapack& TlDenseGeneralMatrix_ImplScalapack::
-operator=(const TlDenseGeneralMatrix_ImplScalapack& rhs) {
+TlDenseGeneralMatrix_ImplScalapack& TlDenseGeneralMatrix_ImplScalapack::operator=(
+    const TlDenseGeneralMatrix_ImplScalapack& rhs) {
     if (&rhs != this) {
         assert(rhs.getNumOfRows() > 0);
         assert(rhs.getNumOfCols() > 0);
@@ -229,15 +195,14 @@ operator=(const TlDenseGeneralMatrix_ImplScalapack& rhs) {
         this->blockSize_ = rhs.blockSize_;
 
         this->initialize();
-        std::copy(rhs.pData_, rhs.pData_ + rhs.getNumOfMyElements(),
-                  this->pData_);
+        std::copy(rhs.pData_, rhs.pData_ + rhs.getNumOfMyElements(), this->pData_);
     }
 
     return (*this);
 }
 
-TlDenseGeneralMatrix_ImplScalapack& TlDenseGeneralMatrix_ImplScalapack::
-operator+=(const TlDenseGeneralMatrix_ImplScalapack& rhs) {
+TlDenseGeneralMatrix_ImplScalapack& TlDenseGeneralMatrix_ImplScalapack::operator+=(
+    const TlDenseGeneralMatrix_ImplScalapack& rhs) {
     assert(this->rows_ == rhs.rows_);
     assert(this->cols_ == rhs.cols_);
     assert(this->blockSize_ == rhs.blockSize_);
@@ -250,8 +215,8 @@ operator+=(const TlDenseGeneralMatrix_ImplScalapack& rhs) {
     return (*this);
 }
 
-TlDenseGeneralMatrix_ImplScalapack& TlDenseGeneralMatrix_ImplScalapack::
-operator-=(const TlDenseGeneralMatrix_ImplScalapack& rhs) {
+TlDenseGeneralMatrix_ImplScalapack& TlDenseGeneralMatrix_ImplScalapack::operator-=(
+    const TlDenseGeneralMatrix_ImplScalapack& rhs) {
     assert(this->rows_ == rhs.rows_);
     assert(this->cols_ == rhs.cols_);
     assert(this->blockSize_ == rhs.blockSize_);
@@ -264,8 +229,7 @@ operator-=(const TlDenseGeneralMatrix_ImplScalapack& rhs) {
     return (*this);
 }
 
-TlDenseGeneralMatrix_ImplScalapack& TlDenseGeneralMatrix_ImplScalapack::
-operator*=(const double coef) {
+TlDenseGeneralMatrix_ImplScalapack& TlDenseGeneralMatrix_ImplScalapack::operator*=(const double coef) {
     const std::size_t bufSize = this->getNumOfMyElements();
     for (std::size_t i = 0; i < bufSize; ++i) {
         this->pData_[i] *= coef;
@@ -274,21 +238,19 @@ operator*=(const double coef) {
     return (*this);
 }
 
-TlDenseGeneralMatrix_ImplScalapack& TlDenseGeneralMatrix_ImplScalapack::
-operator/=(const double coef) {
+TlDenseGeneralMatrix_ImplScalapack& TlDenseGeneralMatrix_ImplScalapack::operator/=(const double coef) {
     return this->operator*=(1.0 / coef);
 }
 
-TlDenseGeneralMatrix_ImplScalapack& TlDenseGeneralMatrix_ImplScalapack::
-operator*=(const TlDenseGeneralMatrix_ImplScalapack& rhs) {
+TlDenseGeneralMatrix_ImplScalapack& TlDenseGeneralMatrix_ImplScalapack::operator*=(
+    const TlDenseGeneralMatrix_ImplScalapack& rhs) {
     TlDenseGeneralMatrix_ImplScalapack tmp = *this;
     *this = tmp * rhs;
 
     return (*this);
 }
 
-TlDenseGeneralMatrix_ImplScalapack TlDenseGeneralMatrix_ImplScalapack::inverse()
-    const {
+TlDenseGeneralMatrix_ImplScalapack TlDenseGeneralMatrix_ImplScalapack::inverse() const {
     TlDenseGeneralMatrix_ImplScalapack A = *this;
 
     const int M = A.getNumOfRows();
@@ -297,9 +259,7 @@ TlDenseGeneralMatrix_ImplScalapack TlDenseGeneralMatrix_ImplScalapack::inverse()
     const int JA = 1;
     const int zero = 0;
     int info = 0;
-    const int sizeOf_IPIV = numroc_(&A.rows_, &A.blockSize_, &A.m_nMyProcRow,
-                                    &zero, &A.procGridRow_) +
-                            A.blockSize_;
+    const int sizeOf_IPIV = numroc_(&A.rows_, &A.blockSize_, &A.m_nMyProcRow, &zero, &A.procGridRow_) + A.blockSize_;
 
     int* IPIV = new int[sizeOf_IPIV];
 
@@ -310,8 +270,7 @@ TlDenseGeneralMatrix_ImplScalapack TlDenseGeneralMatrix_ImplScalapack::inverse()
         int LIWORK = -1;
         double* WORK_SIZE = new double[1];
         int* IWORK_SIZE = new int[1];
-        pdgetri_(&M, A.pData_, &IA, &JA, A.pDESC_, IPIV, WORK_SIZE, &LWORK,
-                 IWORK_SIZE, &LIWORK, &info);
+        pdgetri_(&M, A.pData_, &IA, &JA, A.pDESC_, IPIV, WORK_SIZE, &LWORK, IWORK_SIZE, &LIWORK, &info);
 
         LWORK = static_cast<int>(WORK_SIZE[0]);
         double* WORK = new double[LWORK];
@@ -322,8 +281,7 @@ TlDenseGeneralMatrix_ImplScalapack TlDenseGeneralMatrix_ImplScalapack::inverse()
         delete[] IWORK_SIZE;
         IWORK_SIZE = NULL;
 
-        pdgetri_(&M, A.pData_, &IA, &JA, A.pDESC_, IPIV, WORK, &LWORK, IWORK,
-                 &LIWORK, &info);
+        pdgetri_(&M, A.pData_, &IA, &JA, A.pDESC_, IPIV, WORK, &LWORK, IWORK, &LIWORK, &info);
 
         if (info != 0) {
             std::cout << "pdgetri_ returns " << info << std::endl;
@@ -350,8 +308,7 @@ TlDenseGeneralMatrix_ImplScalapack TlDenseGeneralMatrix_ImplScalapack::inverse()
 // operations
 // ---------------------------------------------------------------------------
 std::vector<double> TlDenseGeneralMatrix_ImplScalapack::diagonals() const {
-    const TlMatrixObject::index_type dim =
-        std::min(this->getNumOfRows(), this->getNumOfCols());
+    const TlMatrixObject::index_type dim = std::min(this->getNumOfRows(), this->getNumOfCols());
     std::vector<double> answer(dim, 0.0);
 
     for (TlMatrixObject::index_type i = 0; i < dim; ++i) {
@@ -421,9 +378,8 @@ double TlDenseGeneralMatrix_ImplScalapack::getRMS() const {
     return rms;
 }
 
-double TlDenseGeneralMatrix_ImplScalapack::getMaxAbsoluteElement(
-    TlMatrixObject::index_type* pOutRow,
-    TlMatrixObject::index_type* pOutCol) const {
+double TlDenseGeneralMatrix_ImplScalapack::getMaxAbsoluteElement(TlMatrixObject::index_type* pOutRow,
+                                                                 TlMatrixObject::index_type* pOutCol) const {
     TlMatrixObject::index_type row = 0;
     TlMatrixObject::index_type col = 0;
     double maxValue = this->getLocalMaxAbsoluteElement(&row, &col);
@@ -467,8 +423,7 @@ double TlDenseGeneralMatrix_ImplScalapack::getMaxAbsoluteElement(
     return maxValue;
 }
 
-TlDenseGeneralMatrix_ImplScalapack
-TlDenseGeneralMatrix_ImplScalapack::transpose() const {
+TlDenseGeneralMatrix_ImplScalapack TlDenseGeneralMatrix_ImplScalapack::transpose() const {
     TlDenseGeneralMatrix_ImplScalapack answer = *this;
     answer.transposeInPlace();
 
@@ -485,8 +440,7 @@ void TlDenseGeneralMatrix_ImplScalapack::transposeInPlace() {
     TlDenseGeneralMatrix_ImplScalapack C(M, N);
     const int IC = 1;
     const int JC = 1;
-    pdtran_(&M, &N, &alpha, &(this->pData_[0]), &IA, &JA, this->pDESC_, &beta,
-            &(C.pData_[0]), &IC, &JC, C.pDESC_);
+    pdtran_(&M, &N, &alpha, &(this->pData_[0]), &IA, &JA, this->pDESC_, &beta, &(C.pData_[0]), &IC, &JC, C.pDESC_);
 
     (*this) = C;
 }
@@ -500,8 +454,7 @@ TlDenseGeneralMatrix_ImplScalapack TlDenseGeneralMatrix_ImplScalapack::dot(
 }
 
 // pddot?
-const TlDenseGeneralMatrix_ImplScalapack&
-TlDenseGeneralMatrix_ImplScalapack::dotInPlace(
+const TlDenseGeneralMatrix_ImplScalapack& TlDenseGeneralMatrix_ImplScalapack::dotInPlace(
     const TlDenseGeneralMatrix_ImplScalapack& X) {
     assert(this->getNumOfRows() == X.getNumOfRows());
     assert(this->getNumOfCols() == X.getNumOfCols());
@@ -515,8 +468,7 @@ TlDenseGeneralMatrix_ImplScalapack::dotInPlace(
 }
 
 // 複数スレッドから同時に呼び出さない
-bool TlDenseGeneralMatrix_ImplScalapack::getSparseMatrix(
-    TlSparseMatrix* pMatrix, bool isFinalize) const {
+bool TlDenseGeneralMatrix_ImplScalapack::getSparseMatrix(TlSparseMatrix* pMatrix, bool isFinalize) const {
     bool answer = false;
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
@@ -543,8 +495,7 @@ bool TlDenseGeneralMatrix_ImplScalapack::getSparseMatrix(
     return answer;
 }
 
-void TlDenseGeneralMatrix_ImplScalapack::mergeSparseMatrix(
-    const TlSparseMatrix& M) {
+void TlDenseGeneralMatrix_ImplScalapack::mergeSparseMatrix(const TlSparseMatrix& M) {
     assert(M.getNumOfRows() == this->getNumOfRows());
     assert(M.getNumOfCols() == this->getNumOfCols());
 
@@ -553,8 +504,7 @@ void TlDenseGeneralMatrix_ImplScalapack::mergeSparseMatrix(
     rComm.checkNonBlockingCommunications();
 
     // 送信すべきインデックスリストの作成
-    std::vector<std::vector<TlMatrixObject::index_type> > indexArrays(
-        numOfProcs);
+    std::vector<std::vector<TlMatrixObject::index_type> > indexArrays(numOfProcs);
     std::vector<std::vector<double> > values(numOfProcs);
 
     TlSparseMatrix::const_iterator itEnd = M.end();
@@ -566,11 +516,9 @@ void TlDenseGeneralMatrix_ImplScalapack::mergeSparseMatrix(
         int rank = 0;
         TlMatrixObject::index_type myRow = 0;
         TlMatrixObject::index_type myCol = 0;
-        this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow,
-                                          &myCol);
+        this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow, &myCol);
         if (rank == this->rank_) {
-            const TlMatrixObject::size_type index =
-                this->getLocalIndex(myRow, myCol);
+            const TlMatrixObject::size_type index = this->getLocalIndex(myRow, myCol);
             this->pData_[index] += value;
         } else {
             indexArrays[rank].push_back(globalRow);
@@ -583,22 +531,17 @@ void TlDenseGeneralMatrix_ImplScalapack::mergeSparseMatrix(
     rComm.checkNonBlockingCommunications();
 }
 
-std::vector<TlMatrixObject::index_type>
-TlDenseGeneralMatrix_ImplScalapack::getRowIndexTable() const {
+std::vector<TlMatrixObject::index_type> TlDenseGeneralMatrix_ImplScalapack::getRowIndexTable() const {
     return this->m_RowIndexTable;
 }
 
-std::vector<TlMatrixObject::index_type>
-TlDenseGeneralMatrix_ImplScalapack::getColIndexTable() const {
+std::vector<TlMatrixObject::index_type> TlDenseGeneralMatrix_ImplScalapack::getColIndexTable() const {
     return this->m_ColIndexTable;
 }
 
-void TlDenseGeneralMatrix_ImplScalapack::getLocalMatrix(
-    TlDenseGeneralMatrixObject* pOutMatrix) const {
-    const std::vector<TlMatrixObject::index_type> rowIndexes =
-        this->getRowIndexTable();
-    const std::vector<TlMatrixObject::index_type> colIndexes =
-        this->getColIndexTable();
+void TlDenseGeneralMatrix_ImplScalapack::getLocalMatrix(TlDenseGeneralMatrixObject* pOutMatrix) const {
+    const std::vector<TlMatrixObject::index_type> rowIndexes = this->getRowIndexTable();
+    const std::vector<TlMatrixObject::index_type> colIndexes = this->getColIndexTable();
     const int numOfRowIndexes = rowIndexes.size();
     const int numOfColIndexes = colIndexes.size();
     pOutMatrix->resize(numOfRowIndexes, numOfColIndexes);
@@ -636,8 +579,7 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(const std::string& sFilePath) {
 
     if (bIsFail) {
         if (rComm.isMaster() == true) {
-            std::cerr << "[error] could not open file. " << sFilePath
-                      << std::endl;
+            std::cerr << "[error] could not open file. " << sFilePath << std::endl;
         }
         abort();
     }
@@ -668,13 +610,16 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
 
     // read header
     bool answer = true;
+    TlMatrixObject::HeaderInfo headerInfo;
     TlMatrixObject::MatrixType matrixType;
     std::vector<TlMatrixObject::index_type> rowcol(2);
     if (rComm.isMaster() == true) {
-        TlMatrixUtils::getHeaderInfo(fs, &matrixType, &(rowcol[0]),
-                                     &(rowcol[1]));
-        assert((matrixType == TlMatrixObject::CSFD) ||
-               (matrixType == TlMatrixObject::RSFD));
+        TlMatrixUtils::getHeaderInfo(fs, &headerInfo);
+        assert((headerInfo.matrixType == TlMatrixObject::CSFD) || (headerInfo.matrixType == TlMatrixObject::RSFD));
+        matrixType = headerInfo.matrixType;
+        rowcol[0] = headerInfo.numOfRows;
+        rowcol[1] = headerInfo.numOfCols;
+
         // std::cerr << TlUtils::format("%d (%d, %d)", (int)matrixType,
         // rowcol[0],
         //                              rowcol[1])
@@ -700,20 +645,17 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
     this->initialize();
 
     if (rComm.isMaster() == true) {
-        static const std::size_t bufferCount =
-            FILE_BUFFER_SIZE / sizeof(double);
+        static const std::size_t bufferCount = FILE_BUFFER_SIZE / sizeof(double);
         std::vector<double> buf(bufferCount, 0.0);
 
         TlMatrixObject::index_type row = 0;
         TlMatrixObject::index_type col = 0;
         TlMatrixObject::size_type count = 0;
-        const TlMatrixObject::size_type maxCount =
-            this->getNumOfRows() * this->getNumOfCols();
+        const TlMatrixObject::size_type maxCount = this->getNumOfRows() * this->getNumOfCols();
         bool isFinished = false;
 
         std::vector<TlMatrixObject::index_type> sizeLists(numOfProcs, 0);
-        std::vector<std::vector<TlMatrixObject::MatrixElement> > elementsBuf(
-            numOfProcs);
+        std::vector<std::vector<TlMatrixObject::MatrixElement> > elementsBuf(numOfProcs);
         std::vector<bool> isSendData(numOfProcs, false);
 
         while (isFinished == false) {
@@ -721,26 +663,22 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
             fs.read((char*)(&buf[0]), sizeof(double) * bufferCount);
 
             // 各プロセスのバッファに振り分ける
-            std::vector<std::vector<TlMatrixObject::MatrixElement> > elements(
-                numOfProcs);
+            std::vector<std::vector<TlMatrixObject::MatrixElement> > elements(numOfProcs);
             for (std::size_t i = 0; i < bufferCount; ++i) {
                 if (matrixType == TlMatrixObject::RSFD) {
-                    const std::ldiv_t d =
-                        std::ldiv(count, this->getNumOfCols());
+                    const std::ldiv_t d = std::ldiv(count, this->getNumOfCols());
                     row = d.quot;
                     col = d.rem;
                 } else {
                     assert(matrixType == TlMatrixObject::CSFD);
-                    const std::ldiv_t d =
-                        std::ldiv(count, this->getNumOfRows());
+                    const std::ldiv_t d = std::ldiv(count, this->getNumOfRows());
                     col = d.quot;
                     row = d.rem;
                 }
                 // const int proc = this->getProcIdForIndex(row, col);
                 int rank = 0;
                 this->getGlobalRowCol2LocalRowCol(row, col, &rank);
-                elements[rank].push_back(
-                    TlMatrixObject::MatrixElement(row, col, buf[i]));
+                elements[rank].push_back(TlMatrixObject::MatrixElement(row, col, buf[i]));
 
                 ++count;
                 if (count >= maxCount) {
@@ -750,8 +688,7 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
             }
 
             // データを送信
-            for (int proc = 1; proc < numOfProcs;
-                 ++proc) {  // proc == 0 は送信しない
+            for (int proc = 1; proc < numOfProcs; ++proc) {  // proc == 0 は送信しない
                 if (isSendData[proc] == true) {
                     rComm.wait(sizeLists[proc]);
                     if (sizeLists[proc] > 0) {
@@ -765,8 +702,7 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
 
                 rComm.iSendData(sizeLists[proc], proc, TAG_LOAD_SIZE);
                 if (sizeLists[proc] > 0) {
-                    rComm.iSendDataX(&(elementsBuf[proc][0]), sizeLists[proc],
-                                     proc, TAG_LOAD_VALUES);
+                    rComm.iSendDataX(&(elementsBuf[proc][0]), sizeLists[proc], proc, TAG_LOAD_VALUES);
                 }
                 isSendData[proc] = true;
             }
@@ -775,26 +711,21 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
             {
                 const TlMatrixObject::index_type sizeList = elements[0].size();
                 for (TlMatrixObject::index_type i = 0; i < sizeList; ++i) {
-                    const TlMatrixObject::index_type globalRow =
-                        elements[0][i].row;
-                    const TlMatrixObject::index_type globalCol =
-                        elements[0][i].col;
+                    const TlMatrixObject::index_type globalRow = elements[0][i].row;
+                    const TlMatrixObject::index_type globalCol = elements[0][i].col;
 
                     int rank = 0;
                     TlMatrixObject::index_type myRow;
                     TlMatrixObject::index_type myCol;
-                    this->getGlobalRowCol2LocalRowCol(globalRow, globalCol,
-                                                      &rank, &myRow, &myCol);
+                    this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow, &myCol);
                     assert(rank == this->rank_);
-                    TlMatrixObject::size_type index =
-                        this->getLocalIndex(myRow, myCol);
+                    TlMatrixObject::size_type index = this->getLocalIndex(myRow, myCol);
                     this->pData_[index] = elements[0][i].value;
                 }
             }
         }  // end while
 
-        for (int proc = 1; proc < numOfProcs;
-             ++proc) {  // proc == 0 は送信しない
+        for (int proc = 1; proc < numOfProcs; ++proc) {  // proc == 0 は送信しない
             if (isSendData[proc] == true) {
                 rComm.wait(sizeLists[proc]);
                 if (sizeLists[proc] > 0) {
@@ -809,12 +740,10 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
         // 終了メッセージを全ノードに送る
         // sizeList=-1 で終了
         std::vector<int> endMsg(numOfProcs, -1);
-        for (int proc = 1; proc < numOfProcs;
-             ++proc) {  // proc == 0 は送信しない
+        for (int proc = 1; proc < numOfProcs; ++proc) {  // proc == 0 は送信しない
             rComm.iSendData(endMsg[proc], proc, TAG_LOAD_SIZE);
         }
-        for (int proc = 1; proc < numOfProcs;
-             ++proc) {  // proc == 0 は送信しない
+        for (int proc = 1; proc < numOfProcs; ++proc) {  // proc == 0 は送信しない
             rComm.wait(endMsg[proc]);
         }
     } else {
@@ -833,24 +762,18 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
                 if (sizeList >= 0) {
                     if (sizeList > 0) {
                         elements.resize(sizeList);
-                        rComm.receiveDataX(&(elements[0]), sizeList, root,
-                                           TAG_LOAD_VALUES);
+                        rComm.receiveDataX(&(elements[0]), sizeList, root, TAG_LOAD_VALUES);
 
-                        for (TlMatrixObject::index_type i = 0; i < sizeList;
-                             ++i) {
-                            const TlMatrixObject::index_type globalRow =
-                                elements[i].row;
-                            const TlMatrixObject::index_type globalCol =
-                                elements[i].col;
+                        for (TlMatrixObject::index_type i = 0; i < sizeList; ++i) {
+                            const TlMatrixObject::index_type globalRow = elements[i].row;
+                            const TlMatrixObject::index_type globalCol = elements[i].col;
 
                             int rank = 0;
                             TlMatrixObject::index_type myRow;
                             TlMatrixObject::index_type myCol;
-                            this->getGlobalRowCol2LocalRowCol(
-                                globalRow, globalCol, &rank, &myRow, &myCol);
+                            this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow, &myCol);
                             assert(rank == this->rank_);
-                            TlMatrixObject::size_type index =
-                                this->getLocalIndex(myRow, myCol);
+                            TlMatrixObject::size_type index = this->getLocalIndex(myRow, myCol);
                             this->pData_[index] = elements[i].value;
                         }
                     }
@@ -873,8 +796,7 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
     return answer;
 }
 
-bool TlDenseGeneralMatrix_ImplScalapack::save(
-    const std::string& filePath) const {
+bool TlDenseGeneralMatrix_ImplScalapack::save(const std::string& filePath) const {
     // if (TlDenseGeneralMatrix_blacs::isUsingPartialIO == true) {
     //   return this->saveLocal(sFilePath);
     // }
@@ -892,8 +814,7 @@ bool TlDenseGeneralMatrix_ImplScalapack::save(
 
         // store local matrix
         {
-            const std::vector<TlMatrixObject::MatrixElement> buf =
-                this->getMatrixElementsInLocal2();
+            const std::vector<TlMatrixObject::MatrixElement> buf = this->getMatrixElementsInLocal2();
             this->saveElements(&fm, buf);
         }
 
@@ -914,8 +835,7 @@ bool TlDenseGeneralMatrix_ImplScalapack::save(
     } else {
         // slave: send submatrix
         const int root = 0;
-        const std::vector<TlMatrixObject::MatrixElement> buf =
-            this->getMatrixElementsInLocal2();
+        const std::vector<TlMatrixObject::MatrixElement> buf = this->getMatrixElementsInLocal2();
         const TlMatrixObject::size_type bufSize = buf.size();
         rComm.sendData(bufSize, root, TAG_SAVE_HANDSHAKE);
         rComm.iSendDataX(&(buf[0]), buf.size(), root, TAG_SAVE_DATA);
@@ -948,29 +868,24 @@ void TlDenseGeneralMatrix_ImplScalapack::setUsingPartialIO(bool isUsePIO) {
 // protected
 // ---------------------------------------------------------------------------
 void TlDenseGeneralMatrix_ImplScalapack::initialize() {
-    TlScalapackContext::getData(this->context_, this->proc_, this->rank_,
-                                this->procGridRow_, this->procGridCol_);
+    TlScalapackContext::getData(this->context_, this->proc_, this->rank_, this->procGridRow_, this->procGridCol_);
 
     // my process position on the process matrix
-    Cblacs_gridinfo(this->context_, &(this->procGridRow_),
-                    &(this->procGridCol_), &(this->m_nMyProcRow),
+    Cblacs_gridinfo(this->context_, &(this->procGridRow_), &(this->procGridCol_), &(this->m_nMyProcRow),
                     &(this->m_nMyProcCol));
 
     // determine sizes of local matrix
     const int nStartRowProc = 0;
     const int nStartColProc = 0;
     this->myRows_ = std::max(
-        1, numroc_(&(this->rows_), &(this->blockSize_), &(this->m_nMyProcRow),
-                   &nStartRowProc, &(this->procGridRow_)));
+        1, numroc_(&(this->rows_), &(this->blockSize_), &(this->m_nMyProcRow), &nStartRowProc, &(this->procGridRow_)));
     this->myCols_ = std::max(
-        1, numroc_(&(this->cols_), &(this->blockSize_), &(this->m_nMyProcCol),
-                   &nStartColProc, &(this->procGridCol_)));
+        1, numroc_(&(this->cols_), &(this->blockSize_), &(this->m_nMyProcCol), &nStartColProc, &(this->procGridCol_)));
 
     // make parameter, desca
     int nInfo = 0;
-    descinit_(this->pDESC_, &(this->rows_), &(this->cols_), &(this->blockSize_),
-              &(this->blockSize_), &nStartRowProc, &nStartColProc,
-              &(this->context_), &(this->myRows_), &nInfo);
+    descinit_(this->pDESC_, &(this->rows_), &(this->cols_), &(this->blockSize_), &(this->blockSize_), &nStartRowProc,
+              &nStartColProc, &(this->context_), &(this->myRows_), &nInfo);
     assert(nInfo == 0);
 
     // 行列データ用バッファメモリの確保
@@ -985,12 +900,8 @@ void TlDenseGeneralMatrix_ImplScalapack::initialize() {
     {
         const int nMyRows = this->myRows_;
         const int nBlockSize = this->blockSize_;
-        const int nBlockIndex =
-            this->m_nMyProcRow *
-            nBlockSize;  // 各ローカル行列の最初のインデックス
-        const int nIncrementBlockIndex =
-            this->procGridRow_ *
-            nBlockSize;  // ブロック最初のインデックスの増分
+        const int nBlockIndex = this->m_nMyProcRow * nBlockSize;  // 各ローカル行列の最初のインデックス
+        const int nIncrementBlockIndex = this->procGridRow_ * nBlockSize;  // ブロック最初のインデックスの増分
         this->m_RowIndexTable.clear();
         this->m_RowIndexTable.reserve(nMyRows);
         for (int r = 0; r < nMyRows; ++r) {
@@ -1010,12 +921,8 @@ void TlDenseGeneralMatrix_ImplScalapack::initialize() {
     {
         const int nMyCols = this->myCols_;
         const int nBlockSize = this->blockSize_;
-        const int nBlockIndex =
-            this->m_nMyProcCol *
-            this->blockSize_;  // 各ローカル行列の最初のインデックス
-        const int nIncrementBlockIndex =
-            this->procGridCol_ *
-            this->blockSize_;  // ブロック最初のインデックスの増分
+        const int nBlockIndex = this->m_nMyProcCol * this->blockSize_;  // 各ローカル行列の最初のインデックス
+        const int nIncrementBlockIndex = this->procGridCol_ * this->blockSize_;  // ブロック最初のインデックスの増分
         this->m_ColIndexTable.clear();
         this->m_ColIndexTable.reserve(nMyCols);
         for (int c = 0; c < nMyCols; ++c) {
@@ -1056,8 +963,7 @@ void TlDenseGeneralMatrix_ImplScalapack::initialize() {
     //   this->mm_isWaitingSessionId_ = false;
 }
 
-TlMatrixObject::size_type
-TlDenseGeneralMatrix_ImplScalapack::getNumOfMyElements() const {
+TlMatrixObject::size_type TlDenseGeneralMatrix_ImplScalapack::getNumOfMyElements() const {
     const TlMatrixObject::size_type rows = this->myRows_;
     const TlMatrixObject::size_type cols = this->myCols_;
 
@@ -1069,23 +975,18 @@ int TlDenseGeneralMatrix_ImplScalapack::getBlockSize() const {
 }
 
 TlMatrixObject::size_type TlDenseGeneralMatrix_ImplScalapack::getIndex0(
-    const TlMatrixObject::index_type nGlobalRow,
-    const TlMatrixObject::index_type nGlobalCol) const {
+    const TlMatrixObject::index_type nGlobalRow, const TlMatrixObject::index_type nGlobalCol) const {
     TlMatrixObject::size_type answer = -1;
 
     std::vector<TlMatrixObject::index_type>::const_iterator pRow =
-        std::lower_bound(this->m_RowIndexTable.begin(),
-                         this->m_RowIndexTable.end(), nGlobalRow);
+        std::lower_bound(this->m_RowIndexTable.begin(), this->m_RowIndexTable.end(), nGlobalRow);
     if ((pRow != this->m_RowIndexTable.end()) && (*pRow == nGlobalRow)) {
         std::vector<TlMatrixObject::index_type>::const_iterator pCol =
-            std::lower_bound(this->m_ColIndexTable.begin(),
-                             this->m_ColIndexTable.end(), nGlobalCol);
+            std::lower_bound(this->m_ColIndexTable.begin(), this->m_ColIndexTable.end(), nGlobalCol);
 
         if ((pCol != this->m_ColIndexTable.end()) && (*pCol == nGlobalCol)) {
-            const TlMatrixObject::size_type localRow =
-                pRow - this->m_RowIndexTable.begin();
-            const TlMatrixObject::size_type localCol =
-                pCol - this->m_ColIndexTable.begin();
+            const TlMatrixObject::size_type localRow = pRow - this->m_RowIndexTable.begin();
+            const TlMatrixObject::size_type localCol = pCol - this->m_ColIndexTable.begin();
 
             answer = localRow + localCol * (this->myRows_);
         }
@@ -1094,11 +995,10 @@ TlMatrixObject::size_type TlDenseGeneralMatrix_ImplScalapack::getIndex0(
     return answer;
 }
 
-void TlDenseGeneralMatrix_ImplScalapack::getGlobalRowCol2LocalRowCol(
-    const TlMatrixObject::index_type globalRow,
-    const TlMatrixObject::index_type globalCol, int* pRank,
-    TlMatrixObject::index_type* pLocalRow,
-    TlMatrixObject::index_type* pLocalCol) const {
+void TlDenseGeneralMatrix_ImplScalapack::getGlobalRowCol2LocalRowCol(const TlMatrixObject::index_type globalRow,
+                                                                     const TlMatrixObject::index_type globalCol,
+                                                                     int* pRank, TlMatrixObject::index_type* pLocalRow,
+                                                                     TlMatrixObject::index_type* pLocalCol) const {
     const std::div_t rowBlockDiv = std::div(globalRow, this->blockSize_);
     const std::div_t colBlockDiv = std::div(globalCol, this->blockSize_);
     const int rowBlockIndex = rowBlockDiv.quot;
@@ -1106,10 +1006,8 @@ void TlDenseGeneralMatrix_ImplScalapack::getGlobalRowCol2LocalRowCol(
     const int rowLocalIndex = rowBlockDiv.rem;
     const int colLocalIndex = colBlockDiv.rem;
 
-    const std::div_t rowIndexResult =
-        std::div(rowBlockIndex, this->procGridRow_);
-    const std::div_t colIndexResult =
-        std::div(colBlockIndex, this->procGridCol_);
+    const std::div_t rowIndexResult = std::div(rowBlockIndex, this->procGridRow_);
+    const std::div_t colIndexResult = std::div(colBlockIndex, this->procGridCol_);
     int rowProcCycle = rowIndexResult.quot;
     int colProcCycle = colIndexResult.quot;
     int rowProcID = rowIndexResult.rem;
@@ -1146,38 +1044,31 @@ void TlDenseGeneralMatrix_ImplScalapack::getGlobalRowCol2LocalRowCol(
 //   *pGlobalCol = offsetCol + blocksCol * divCol.quot + divCol.rem;
 // }
 
-TlMatrixObject::index_type
-TlDenseGeneralMatrix_ImplScalapack::getLocal2Global_row(
+TlMatrixObject::index_type TlDenseGeneralMatrix_ImplScalapack::getLocal2Global_row(
     const TlMatrixObject::index_type localIndex) const {
-    return this->getLocal2Global(localIndex, this->m_nMyProcRow,
-                                 this->procGridRow_);
+    return this->getLocal2Global(localIndex, this->m_nMyProcRow, this->procGridRow_);
 }
 
-TlMatrixObject::index_type
-TlDenseGeneralMatrix_ImplScalapack::getLocal2Global_col(
+TlMatrixObject::index_type TlDenseGeneralMatrix_ImplScalapack::getLocal2Global_col(
     const TlMatrixObject::index_type localIndex) const {
-    return this->getLocal2Global(localIndex, this->m_nMyProcCol,
-                                 this->procGridCol_);
+    return this->getLocal2Global(localIndex, this->m_nMyProcCol, this->procGridCol_);
 }
 
 TlMatrixObject::index_type TlDenseGeneralMatrix_ImplScalapack::getLocal2Global(
-    const TlMatrixObject::index_type localIndex, const int procID,
-    const int numOfProcs) const {
+    const TlMatrixObject::index_type localIndex, const int procID, const int numOfProcs) const {
     const int blockSize = this->getBlockSize();
 
     const int offset = procID * blockSize;
     const int distance = numOfProcs * blockSize;
 
     const std::div_t div_result = std::div(localIndex, blockSize);
-    const int globalIndex =
-        offset + distance * div_result.quot + div_result.rem;
+    const int globalIndex = offset + distance * div_result.quot + div_result.rem;
 
     return globalIndex;
 }
 
 TlMatrixObject::index_type TlDenseGeneralMatrix_ImplScalapack::getLocalIndex(
-    const TlMatrixObject::index_type localRow,
-    const TlMatrixObject::index_type localCol) const {
+    const TlMatrixObject::index_type localRow, const TlMatrixObject::index_type localCol) const {
     const TlMatrixObject::size_type index = localRow + this->myRows_ * localCol;
     return index;
 }
@@ -1198,9 +1089,8 @@ TlMatrixObject::index_type TlDenseGeneralMatrix_ImplScalapack::getLocalIndex(
 //   return procID;
 // }
 
-double TlDenseGeneralMatrix_ImplScalapack::getLocalMaxAbsoluteElement(
-    TlMatrixObject::index_type* pOutRow,
-    TlMatrixObject::index_type* pOutCol) const {
+double TlDenseGeneralMatrix_ImplScalapack::getLocalMaxAbsoluteElement(TlMatrixObject::index_type* pOutRow,
+                                                                      TlMatrixObject::index_type* pOutCol) const {
     double dMaxValue = 0.0;
     std::size_t index = 0;
     const TlMatrixObject::size_type nMaxIndex = this->getNumOfMyElements();
@@ -1218,10 +1108,8 @@ double TlDenseGeneralMatrix_ImplScalapack::getLocalMaxAbsoluteElement(
         TlMatrixObject::index_type myCol = t.quot;
         TlMatrixObject::index_type nRow = 0;
         TlMatrixObject::index_type nCol = 0;
-        if ((myRow < static_cast<TlMatrixObject::index_type>(
-                         this->m_RowIndexTable.size())) &&
-            (myCol < static_cast<TlMatrixObject::index_type>(
-                         this->m_ColIndexTable.size()))) {
+        if ((myRow < static_cast<TlMatrixObject::index_type>(this->m_RowIndexTable.size())) &&
+            (myCol < static_cast<TlMatrixObject::index_type>(this->m_ColIndexTable.size()))) {
             nRow = this->m_RowIndexTable[myRow];
             nCol = this->m_ColIndexTable[myCol];
         } else {
@@ -1239,38 +1127,29 @@ double TlDenseGeneralMatrix_ImplScalapack::getLocalMaxAbsoluteElement(
     return dMaxValue;
 }
 
-void TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ServerTasks(
-    const bool isFinalize) const {
-#pragma omp critical( \
-    TlDenseGeneralMatrix_Scalapack__getPartialMatrix_ServerTasks)
+void TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ServerTasks(const bool isFinalize) const {
+#pragma omp critical(TlDenseGeneralMatrix_Scalapack__getPartialMatrix_ServerTasks)
     {
         TlCommunicate& rComm = TlCommunicate::getInstance();
 
         int requestProc = 0;
         if (this->isWaitingRequestHandShake_ == false) {
             // セッション開始
-            rComm.iReceiveDataFromAnySource(this->sessionId_,
-                                            TAG_GPM_SESSION_ID);
+            rComm.iReceiveDataFromAnySource(this->sessionId_, TAG_GPM_SESSION_ID);
             this->isWaitingRequestHandShake_ = true;
 
             if (this->isDebugOut_GPM_ == true) {
-                std::cerr << TlUtils::format(
-                                 "[%d] SRV [**]: recv session id from any.",
-                                 rComm.getRank())
-                          << std::endl;
+                std::cerr << TlUtils::format("[%d] SRV [**]: recv session id from any.", rComm.getRank()) << std::endl;
             }
         }
 
-        if ((this->isWaitingRequestHandShake_ == true) &&
-            (rComm.test(this->sessionId_, &requestProc) == true)) {
+        if ((this->isWaitingRequestHandShake_ == true) && (rComm.test(this->sessionId_, &requestProc) == true)) {
             // セッション番号受信
             rComm.wait(this->sessionId_);
             this->isWaitingRequestHandShake_ = false;
 
             if (this->isDebugOut_GPM_ == true) {
-                std::cerr << TlUtils::format(
-                                 "[%d] SRV [OK]: recv session id from [%d].",
-                                 rComm.getRank(), requestProc)
+                std::cerr << TlUtils::format("[%d] SRV [OK]: recv session id from [%d].", rComm.getRank(), requestProc)
                           << std::endl;
             }
 
@@ -1285,8 +1164,7 @@ void TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ServerTasks(
         }
 
         GpmServerTasksType::iterator itEnd = this->gpmServerTasks_.end();
-        for (GpmServerTasksType::iterator it = this->gpmServerTasks_.begin();
-             it != itEnd; ++it) {
+        for (GpmServerTasksType::iterator it = this->gpmServerTasks_.begin(); it != itEnd; ++it) {
             GPM_ServerTask& task = *it;
             const int proc = task.requestProc;
             if ((task.state & GPM_SERVER_RECV_NUM_OF_COMPONENTS) == 0) {
@@ -1298,8 +1176,7 @@ void TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ServerTasks(
                               << std::endl;
                 }
 
-                rComm.iReceiveData(task.numOfComponents, proc,
-                                   TAG_GPM_NUM_OF_COMPONENTS + task.sessionId);
+                rComm.iReceiveData(task.numOfComponents, proc, TAG_GPM_NUM_OF_COMPONENTS + task.sessionId);
                 task.state |= GPM_SERVER_RECV_NUM_OF_COMPONENTS;
                 continue;
             }
@@ -1309,13 +1186,12 @@ void TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ServerTasks(
                 if (rComm.test(task.numOfComponents) == true) {
                     rComm.wait(task.numOfComponents);
                     if (this->isDebugOut_GPM_ == true) {
-                        std::cerr
-                            << TlUtils::format(
-                                   "[%d] SRV [OK]: recv num of components from "
-                                   "[%d]. "
-                                   "num = %d",
-                                   rComm.getRank(), proc, task.numOfComponents)
-                            << std::endl;
+                        std::cerr << TlUtils::format(
+                                         "[%d] SRV [OK]: recv num of components from "
+                                         "[%d]. "
+                                         "num = %d",
+                                         rComm.getRank(), proc, task.numOfComponents)
+                                  << std::endl;
                     }
                     assert(task.numOfComponents > 0);
                     task.state |= GPM_SERVER_WAIT_NUM_OF_COMPONENTS;
@@ -1326,31 +1202,24 @@ void TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ServerTasks(
             if (((task.state & GPM_SERVER_WAIT_NUM_OF_COMPONENTS) != 0) &&
                 ((task.state & GPM_SERVER_RECV_COMPONENTS) == 0)) {
                 if (this->isDebugOut_GPM_ == true) {
-                    std::cerr << TlUtils::format(
-                                     "[%d] SRV [**]: recv components from [%d]",
-                                     rComm.getRank(), proc)
+                    std::cerr << TlUtils::format("[%d] SRV [**]: recv components from [%d]", rComm.getRank(), proc)
                               << std::endl;
                 }
 
                 assert(task.numOfComponents > 0);
                 task.components.resize(task.numOfComponents);
-                rComm.iReceiveDataX((int*)&(task.components[0]),
-                                    task.numOfComponents, proc,
+                rComm.iReceiveDataX((int*)&(task.components[0]), task.numOfComponents, proc,
                                     TAG_GPM_COMPONENTS + task.sessionId);
                 task.state |= GPM_SERVER_RECV_COMPONENTS;
                 continue;
             }
 
-            if (((task.state & GPM_SERVER_RECV_COMPONENTS) != 0) &&
-                ((task.state & GPM_SERVER_WAIT_COMPONENTS) == 0)) {
+            if (((task.state & GPM_SERVER_RECV_COMPONENTS) != 0) && ((task.state & GPM_SERVER_WAIT_COMPONENTS) == 0)) {
                 if (rComm.test((int*)&(task.components[0])) == true) {
                     rComm.wait((int*)&(task.components[0]));
                     if (this->isDebugOut_GPM_ == true) {
-                        std::cerr
-                            << TlUtils::format(
-                                   "[%d] SRV [OK]: recv components from [%d]",
-                                   rComm.getRank(), proc)
-                            << std::endl;
+                        std::cerr << TlUtils::format("[%d] SRV [OK]: recv components from [%d]", rComm.getRank(), proc)
+                                  << std::endl;
                     }
 
                     task.state |= GPM_SERVER_WAIT_COMPONENTS;
@@ -1361,28 +1230,22 @@ void TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ServerTasks(
             if (((task.state & GPM_SERVER_WAIT_COMPONENTS) != 0) &&
                 ((task.state & GPM_SERVER_SEND_ELEMENT_VALUES) == 0)) {
                 if (this->isDebugOut_GPM_ == true) {
-                    std::cerr << TlUtils::format(
-                                     "[%d] SRV [**]: send elements to [%d].",
-                                     rComm.getRank(), proc)
+                    std::cerr << TlUtils::format("[%d] SRV [**]: send elements to [%d].", rComm.getRank(), proc)
                               << std::endl;
                 }
 
                 const int size = task.numOfComponents / 2;
                 task.elementValues.resize(size);
                 for (int i = 0; i < size; ++i) {
-                    const TlMatrixObject::index_type globalRow =
-                        task.components[i * 2];
-                    const TlMatrixObject::index_type globalCol =
-                        task.components[i * 2 + 1];
+                    const TlMatrixObject::index_type globalRow = task.components[i * 2];
+                    const TlMatrixObject::index_type globalCol = task.components[i * 2 + 1];
 
                     int rank = 0;
                     TlMatrixObject::index_type myRow = 0;
                     TlMatrixObject::index_type myCol = 0;
-                    this->getGlobalRowCol2LocalRowCol(globalRow, globalCol,
-                                                      &rank, &myRow, &myCol);
+                    this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow, &myCol);
                     assert(rank == this->rank_);
-                    TlMatrixObject::size_type localIndex =
-                        this->getLocalIndex(myRow, myCol);
+                    TlMatrixObject::size_type localIndex = this->getLocalIndex(myRow, myCol);
                     const double value = this->pData_[localIndex];
                     task.elementValues[i] = value;
                 }
@@ -1397,11 +1260,8 @@ void TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ServerTasks(
                 if (rComm.test((double*)&(task.elementValues[0])) == true) {
                     rComm.wait((double*)&(task.elementValues[0]));
                     if (this->isDebugOut_GPM_ == true) {
-                        std::cerr
-                            << TlUtils::format(
-                                   "[%d] SRV [OK]: send elements to [%d].",
-                                   rComm.getRank(), proc)
-                            << std::endl;
+                        std::cerr << TlUtils::format("[%d] SRV [OK]: send elements to [%d].", rComm.getRank(), proc)
+                                  << std::endl;
                     }
                     task.state |= GPM_SERVER_WAIT_ELEMENT_VALUES;
                     continue;
@@ -1411,8 +1271,7 @@ void TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ServerTasks(
 
         // 終了したtaskをリストから除く
         // GpmServerTasksType::iterator itEnd = this->gpmServerTasks_.end();
-        for (GpmServerTasksType::iterator it = this->gpmServerTasks_.begin();
-             it != itEnd;) {
+        for (GpmServerTasksType::iterator it = this->gpmServerTasks_.begin(); it != itEnd;) {
             if ((it->state & GPM_SERVER_WAIT_ELEMENT_VALUES) != 0) {
                 it = this->gpmServerTasks_.erase(it);
                 continue;
@@ -1429,8 +1288,7 @@ void TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ServerTasks(
     }
 }
 
-void TlDenseGeneralMatrix_ImplScalapack::getSparseMatrix_registerTask(
-    TlSparseMatrix* pMatrix) const {
+void TlDenseGeneralMatrix_ImplScalapack::getSparseMatrix_registerTask(TlSparseMatrix* pMatrix) const {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProc();
 
@@ -1439,39 +1297,33 @@ void TlDenseGeneralMatrix_ImplScalapack::getSparseMatrix_registerTask(
         // 受信処理
         assert(this->getNumOfRows() == pMatrix->getNumOfRows());
         assert(this->getNumOfCols() == pMatrix->getNumOfCols());
-        if (this->gpmClientTasks_.find(pMatrix) ==
-            this->gpmClientTasks_.end()) {
+        if (this->gpmClientTasks_.find(pMatrix) == this->gpmClientTasks_.end()) {
             // タスクを初期化
             GPM_ClientTask task;
             task.state.resize(numOfProcs, 0);
             task.sessionIds.resize(numOfProcs, 0);
             for (int proc = 0; proc < numOfProcs; ++proc) {
-                task.sessionIds[proc] =
-                    this->getPartialMatrix_getSessionId(proc);
+                task.sessionIds[proc] = this->getPartialMatrix_getSessionId(proc);
             }
-            task.components.resize(numOfProcs,
-                                   std::vector<TlMatrixObject::index_type>());
+            task.components.resize(numOfProcs, std::vector<TlMatrixObject::index_type>());
             task.numOfComponents.resize(numOfProcs);
             task.elementValues.resize(numOfProcs);
             task.isFinished = false;
 
             // 要求された要素をどのプロセスが持っているかをチェック
-            for (TlSparseMatrix::iterator it = pMatrix->begin();
-                 it != pMatrix->end(); ++it) {
+            for (TlSparseMatrix::iterator it = pMatrix->begin(); it != pMatrix->end(); ++it) {
                 TlMatrixObject::index_type globalRow = it->first.row;
                 TlMatrixObject::index_type globalCol = it->first.col;
 
                 int rank = 0;
                 TlMatrixObject::index_type myRow = 0;
                 TlMatrixObject::index_type myCol = 0;
-                this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank,
-                                                  &myRow, &myCol);
+                this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow, &myCol);
                 // const TlMatrixObject::size_type localIndex =
                 // this->getIndex(row, col);
                 if (rank == this->rank_) {
                     // 自分が持っていれば格納すべき行列に値を代入する
-                    pMatrix->set(globalRow, globalCol,
-                                 this->getLocal(globalRow, globalCol));
+                    pMatrix->set(globalRow, globalCol, this->getLocal(globalRow, globalCol));
                 } else {
                     // 他プロセスが持っていれば、そのプロセスに要求するためのリストを作成する
                     // const int proc = this->getProcIdForIndex(row, col);
@@ -1492,8 +1344,7 @@ void TlDenseGeneralMatrix_ImplScalapack::getSparseMatrix_registerTask(
     }
 }
 
-int TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_getSessionId(
-    const int proc) const {
+int TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_getSessionId(const int proc) const {
     int answer = -1;
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.getRank() != proc) {
@@ -1511,15 +1362,13 @@ int TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_getSessionId(
     return answer;
 }
 
-bool TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ClientTasks(
-    TlMatrixObject* pMatrix) const {
+bool TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ClientTasks(TlMatrixObject* pMatrix) const {
     bool answer = false;
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProc();
 
     GpmClientTasks::iterator itEnd = this->gpmClientTasks_.end();
-    for (GpmClientTasks::iterator it = this->gpmClientTasks_.begin();
-         it != itEnd; ++it) {
+    for (GpmClientTasks::iterator it = this->gpmClientTasks_.begin(); it != itEnd; ++it) {
         TlMatrixObject* pMatrix = it->first;
         GPM_ClientTask& task = it->second;
 
@@ -1533,15 +1382,11 @@ bool TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ClientTasks(
                 task.state[proc] |= GPM_CLIENT_COUNT_COMPONENTS;
 
                 if (size == 0) {
-                    task.state[proc] = (GPM_CLIENT_COUNT_COMPONENTS |
-                                        GPM_CLIENT_SEND_SESSION_ID |
-                                        GPM_CLIENT_WAIT_SESSION_ID |
-                                        GPM_CLIENT_SEND_NUM_OF_COMPONENTS |
-                                        GPM_CLIENT_WAIT_NUM_OF_COMPONENTS |
-                                        GPM_CLIENT_SEND_COMPONENTS |
-                                        GPM_CLIENT_WAIT_COMPONENTS |
-                                        GPM_CLIENT_RECV_ELEMENT_VALUES |
-                                        GPM_CLIENT_WAIT_ELEMENT_VALUES);
+                    task.state[proc] =
+                        (GPM_CLIENT_COUNT_COMPONENTS | GPM_CLIENT_SEND_SESSION_ID | GPM_CLIENT_WAIT_SESSION_ID |
+                         GPM_CLIENT_SEND_NUM_OF_COMPONENTS | GPM_CLIENT_WAIT_NUM_OF_COMPONENTS |
+                         GPM_CLIENT_SEND_COMPONENTS | GPM_CLIENT_WAIT_COMPONENTS | GPM_CLIENT_RECV_ELEMENT_VALUES |
+                         GPM_CLIENT_WAIT_ELEMENT_VALUES);
                 }
                 continue;
             }
@@ -1553,13 +1398,11 @@ bool TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ClientTasks(
                         std::cerr << TlUtils::format(
                                          "[%d] CLI [**]: send session id to "
                                          "[%d]. num = %d",
-                                         rComm.getRank(), proc,
-                                         task.numOfComponents[proc])
+                                         rComm.getRank(), proc, task.numOfComponents[proc])
                                   << std::endl;
                     }
 
-                    rComm.iSendData(task.sessionIds[proc], proc,
-                                    TAG_GPM_SESSION_ID);
+                    rComm.iSendData(task.sessionIds[proc], proc, TAG_GPM_SESSION_ID);
                     task.state[proc] |= GPM_CLIENT_SEND_SESSION_ID;
                     this->trafficControl_[proc] = pMatrix;
                     continue;
@@ -1597,15 +1440,13 @@ bool TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ClientTasks(
                                          "[%d] CLI [**]: send num of "
                                          "components to [%d]. "
                                          "num = %d",
-                                         rComm.getRank(), proc,
-                                         task.numOfComponents[proc])
+                                         rComm.getRank(), proc, task.numOfComponents[proc])
                                   << std::endl;
                     }
 #endif  // NDEBUG
 
-                    rComm.iSendData(
-                        task.numOfComponents[proc], proc,
-                        TAG_GPM_NUM_OF_COMPONENTS + task.sessionIds[proc]);
+                    rComm.iSendData(task.numOfComponents[proc], proc,
+                                    TAG_GPM_NUM_OF_COMPONENTS + task.sessionIds[proc]);
                     task.state[proc] |= GPM_CLIENT_SEND_NUM_OF_COMPONENTS;
                     this->trafficControl_[proc] = pMatrix;
                     continue;
@@ -1636,18 +1477,13 @@ bool TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ClientTasks(
             if ((task.state[proc] & GPM_CLIENT_SEND_COMPONENTS) == 0) {
                 if (this->trafficControl_[proc] == pMatrix) {
                     if (this->isDebugOut_GPM_ == true) {
-                        std::cerr
-                            << TlUtils::format(
-                                   "[%d] CLI [**]: send components to [%d].",
-                                   rComm.getRank(), proc)
-                            << std::endl;
+                        std::cerr << TlUtils::format("[%d] CLI [**]: send components to [%d].", rComm.getRank(), proc)
+                                  << std::endl;
                     }
 
                     // 相手に要求要素組を送信する
-                    rComm.iSendDataX(
-                        (int*)&(task.components[proc][0]),
-                        task.numOfComponents[proc], proc,
-                        TAG_GPM_COMPONENTS + task.sessionIds[proc]);
+                    rComm.iSendDataX((int*)&(task.components[proc][0]), task.numOfComponents[proc], proc,
+                                     TAG_GPM_COMPONENTS + task.sessionIds[proc]);
                     task.state[proc] |= GPM_CLIENT_SEND_COMPONENTS;
                     continue;
                 }
@@ -1678,20 +1514,16 @@ bool TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ClientTasks(
                 if (this->trafficControl_[proc] == pMatrix) {
 #ifndef NDEBUG
                     if (this->isDebugOut_GPM_ == true) {
-                        std::cerr
-                            << TlUtils::format(
-                                   "[%d] CLI [**]: recv elements from [%d].",
-                                   rComm.getRank(), proc)
-                            << std::endl;
+                        std::cerr << TlUtils::format("[%d] CLI [**]: recv elements from [%d].", rComm.getRank(), proc)
+                                  << std::endl;
                     }
 #endif  // NDEBUG
 
                     // 行列データを待ち受ける
                     const std::size_t size = task.numOfComponents[proc] / 2;
                     task.elementValues[proc].resize(size);
-                    rComm.iReceiveDataX(
-                        (double*)&(task.elementValues[proc][0]), size, proc,
-                        TAG_GPM_ELEMENT_VALUES + task.sessionIds[proc]);
+                    rComm.iReceiveDataX((double*)&(task.elementValues[proc][0]), size, proc,
+                                        TAG_GPM_ELEMENT_VALUES + task.sessionIds[proc]);
                     task.state[proc] |= GPM_CLIENT_RECV_ELEMENT_VALUES;
                     continue;
                 }
@@ -1700,8 +1532,7 @@ bool TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ClientTasks(
             if (((task.state[proc] & GPM_CLIENT_RECV_ELEMENT_VALUES) != 0) &&
                 ((task.state[proc] & GPM_CLIENT_WAIT_ELEMENT_VALUES) == 0)) {
                 if (this->trafficControl_[proc] == pMatrix) {
-                    if (rComm.test((double*)&(task.elementValues[proc][0])) ==
-                        true) {
+                    if (rComm.test((double*)&(task.elementValues[proc][0])) == true) {
                         rComm.wait((double*)&(task.elementValues[proc][0]));
                         if (this->isDebugOut_GPM_ == true) {
                             std::cerr << TlUtils::format(
@@ -1730,13 +1561,10 @@ bool TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ClientTasks(
 
         if (isFinish == true) {
             for (int proc = 0; proc < numOfProcs; ++proc) {
-                const std::size_t numOfComponents =
-                    task.numOfComponents[proc] / 2;
+                const std::size_t numOfComponents = task.numOfComponents[proc] / 2;
                 for (std::size_t i = 0; i < numOfComponents; ++i) {
-                    const TlMatrixObject::index_type row =
-                        task.components[proc][i * 2];
-                    const TlMatrixObject::index_type col =
-                        task.components[proc][i * 2 + 1];
+                    const TlMatrixObject::index_type row = task.components[proc][i * 2];
+                    const TlMatrixObject::index_type col = task.components[proc][i * 2 + 1];
                     const double value = task.elementValues[proc][i];
 
                     pMatrix->set(row, col, value);
@@ -1755,9 +1583,7 @@ bool TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ClientTasks(
 
 #ifndef NDEBUG
             if (this->isDebugOut_GPM_ == true) {
-                std::cerr << TlUtils::format("[%d] CLI [##]: task finished.",
-                                             rComm.getRank())
-                          << std::endl;
+                std::cerr << TlUtils::format("[%d] CLI [##]: task finished.", rComm.getRank()) << std::endl;
             }
 #endif  // NDEBUG
 
@@ -1771,16 +1597,13 @@ bool TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ClientTasks(
         if (it != this->gpmClientTasks_.end()) {
             if (it->second.isFinished == true) {
                 for (int proc = 0; proc < numOfProcs; ++proc) {
-                    this->sessionTable_[proc].reset(
-                        it->second.sessionIds[proc]);
+                    this->sessionTable_[proc].reset(it->second.sessionIds[proc]);
                 }
 #pragma omp critical(TlDenseGeneralMatrix_blacs_gpmClientTasks_)
                 { this->gpmClientTasks_.erase(it); }
 
                 if (this->isDebugOut_GPM_ == true) {
-                    std::cerr << TlUtils::format("[%d] CLI [##]: task deleted.",
-                                                 rComm.getRank())
-                              << std::endl;
+                    std::cerr << TlUtils::format("[%d] CLI [##]: task deleted.", rComm.getRank()) << std::endl;
                 }
 
                 answer = true;
@@ -1792,8 +1615,7 @@ bool TlDenseGeneralMatrix_ImplScalapack::getPartialMatrix_ClientTasks(
 }
 
 void TlDenseGeneralMatrix_ImplScalapack::mergeMatrix_common(
-    const std::vector<std::vector<TlDenseVectorObject::index_type> >&
-        indexArrays,
+    const std::vector<std::vector<TlDenseVectorObject::index_type> >& indexArrays,
     const std::vector<std::vector<double> >& values) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
@@ -1813,23 +1635,19 @@ void TlDenseGeneralMatrix_ImplScalapack::mergeMatrix_common(
         }
 
         const std::size_t size = numOfIndeces[proc];
-        rComm.iSendData(numOfIndeces[proc], proc,
-                        TAG_TLDISTRIBUTE_MATRIX__MERGE__NUM_OF_INDECES);
+        rComm.iSendData(numOfIndeces[proc], proc, TAG_TLDISTRIBUTE_MATRIX__MERGE__NUM_OF_INDECES);
         if (size > 0) {
             assert(values[proc].size() == size / 2);
-            rComm.iSendDataX(
-                (TlMatrixObject::index_type*)&(indexArrays[proc][0]), size,
-                proc, TAG_TLDISTRIBUTE_MATRIX__MERGE__INDECES);
-            rComm.iSendDataX((double*)&(values[proc][0]), size / 2, proc,
-                             TAG_TLDISTRIBUTE_MATRIX__MERGE__VALUES);
+            rComm.iSendDataX((TlMatrixObject::index_type*)&(indexArrays[proc][0]), size, proc,
+                             TAG_TLDISTRIBUTE_MATRIX__MERGE__INDECES);
+            rComm.iSendDataX((double*)&(values[proc][0]), size / 2, proc, TAG_TLDISTRIBUTE_MATRIX__MERGE__VALUES);
         }
     }
 
     // 行列データを送信する処理 ------------------------------------------------
     // 送られるリストの処理
     std::vector<std::size_t> numOfInputIndeces(numOfProcs, 0);
-    std::vector<std::vector<TlMatrixObject::index_type> > inputIndexList(
-        numOfProcs);
+    std::vector<std::vector<TlMatrixObject::index_type> > inputIndexList(numOfProcs);
     std::vector<std::vector<double> > inputValues(numOfProcs);
     enum {
         RECV_NUM_OF_INDECES = 1,
@@ -1841,8 +1659,8 @@ void TlDenseGeneralMatrix_ImplScalapack::mergeMatrix_common(
         FINISHED = 64
     };
     std::vector<unsigned int> state(numOfProcs, 0);
-    state[rank] = (RECV_NUM_OF_INDECES | WAIT_NUM_OF_INDECES | RECV_INDECES |
-                   WAIT_INDECES | RECV_VALUES | WAIT_VALUES | FINISHED);
+    state[rank] = (RECV_NUM_OF_INDECES | WAIT_NUM_OF_INDECES | RECV_INDECES | WAIT_INDECES | RECV_VALUES | WAIT_VALUES |
+                   FINISHED);
 
     // input
     int terminateProc = 0;
@@ -1857,9 +1675,7 @@ void TlDenseGeneralMatrix_ImplScalapack::mergeMatrix_common(
             }
 
             if ((state[proc] & RECV_NUM_OF_INDECES) != RECV_NUM_OF_INDECES) {
-                rComm.iReceiveData(
-                    numOfInputIndeces[proc], proc,
-                    TAG_TLDISTRIBUTE_MATRIX__MERGE__NUM_OF_INDECES);
+                rComm.iReceiveData(numOfInputIndeces[proc], proc, TAG_TLDISTRIBUTE_MATRIX__MERGE__NUM_OF_INDECES);
                 state[proc] |= RECV_NUM_OF_INDECES;
             }
 
@@ -1876,19 +1692,16 @@ void TlDenseGeneralMatrix_ImplScalapack::mergeMatrix_common(
                 const std::size_t size = numOfInputIndeces[proc];
                 if (size > 0) {
                     inputIndexList[proc].resize(size);
-                    rComm.iReceiveDataX(
-                        (TlMatrixObject::index_type*)&(inputIndexList[proc][0]),
-                        size, proc, TAG_TLDISTRIBUTE_MATRIX__MERGE__INDECES);
+                    rComm.iReceiveDataX((TlMatrixObject::index_type*)&(inputIndexList[proc][0]), size, proc,
+                                        TAG_TLDISTRIBUTE_MATRIX__MERGE__INDECES);
                     state[proc] |= RECV_INDECES;
                 } else {
                     assert(size == 0);
-                    state[proc] |= (RECV_INDECES | WAIT_INDECES | RECV_VALUES |
-                                    WAIT_VALUES | FINISHED);
+                    state[proc] |= (RECV_INDECES | WAIT_INDECES | RECV_VALUES | WAIT_VALUES | FINISHED);
                 }
             }
 
-            if (((state[proc] & RECV_INDECES) == RECV_INDECES) &&
-                ((state[proc] & WAIT_INDECES) != WAIT_INDECES)) {
+            if (((state[proc] & RECV_INDECES) == RECV_INDECES) && ((state[proc] & WAIT_INDECES) != WAIT_INDECES)) {
                 if (rComm.test(&(inputIndexList[proc][0])) == true) {
                     rComm.wait(&(inputIndexList[proc][0]));
                     state[proc] |= WAIT_INDECES;
@@ -1900,41 +1713,34 @@ void TlDenseGeneralMatrix_ImplScalapack::mergeMatrix_common(
                 const std::size_t size = numOfInputIndeces[proc];
                 if (size > 0) {
                     inputValues[proc].resize(size / 2);
-                    rComm.iReceiveDataX((double*)&(inputValues[proc][0]),
-                                        (size / 2), proc,
+                    rComm.iReceiveDataX((double*)&(inputValues[proc][0]), (size / 2), proc,
                                         TAG_TLDISTRIBUTE_MATRIX__MERGE__VALUES);
                     state[proc] |= RECV_VALUES;
                 }
             }
 
-            if (((state[proc] & RECV_VALUES) == RECV_VALUES) &&
-                ((state[proc] & WAIT_VALUES) != WAIT_VALUES)) {
+            if (((state[proc] & RECV_VALUES) == RECV_VALUES) && ((state[proc] & WAIT_VALUES) != WAIT_VALUES)) {
                 if (rComm.test(&(inputValues[proc][0])) == true) {
                     rComm.wait(&(inputValues[proc][0]));
                     state[proc] |= WAIT_VALUES;
                 }
             }
 
-            if (((state[proc] & WAIT_VALUES) == WAIT_VALUES) &&
-                ((state[proc] & WAIT_INDECES) == WAIT_INDECES)) {
+            if (((state[proc] & WAIT_VALUES) == WAIT_VALUES) && ((state[proc] & WAIT_INDECES) == WAIT_INDECES)) {
                 const std::size_t size = numOfInputIndeces[proc];
                 const int max_i = size / 2;
                 for (int i = 0; i < max_i; ++i) {
-                    const TlMatrixObject::index_type globalRow =
-                        inputIndexList[proc][i * 2];
-                    const TlMatrixObject::index_type globalCol =
-                        inputIndexList[proc][i * 2 + 1];
+                    const TlMatrixObject::index_type globalRow = inputIndexList[proc][i * 2];
+                    const TlMatrixObject::index_type globalCol = inputIndexList[proc][i * 2 + 1];
                     const double value = inputValues[proc][i];
 
                     int rank = 0;
                     TlMatrixObject::index_type myRow = 0;
                     TlMatrixObject::index_type myCol = 0;
-                    this->getGlobalRowCol2LocalRowCol(globalRow, globalCol,
-                                                      &rank, &myRow, &myCol);
+                    this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow, &myCol);
 
                     assert(rank == this->rank_);
-                    TlMatrixObject::size_type index =
-                        this->getLocalIndex(myRow, myCol);
+                    TlMatrixObject::size_type index = this->getLocalIndex(myRow, myCol);
                     assert(index < this->getNumOfMyElements());
                     this->pData_[index] += value;
                 }
@@ -1995,26 +1801,19 @@ void TlDenseGeneralMatrix_ImplScalapack::mergeMatrix_common(
 //   return answer;
 // }
 
-std::vector<TlMatrixObject::MatrixElement>
-TlDenseGeneralMatrix_ImplScalapack::getMatrixElementsInLocal2() const {
-    const TlMatrixObject::size_type numOfMyElements =
-        this->getNumOfMyElements();
+std::vector<TlMatrixObject::MatrixElement> TlDenseGeneralMatrix_ImplScalapack::getMatrixElementsInLocal2() const {
+    const TlMatrixObject::size_type numOfMyElements = this->getNumOfMyElements();
     std::vector<TlMatrixObject::MatrixElement> answer(numOfMyElements);
 
     const TlMatrixObject::index_type localRows = this->myRows_;
     const TlMatrixObject::index_type localCols = this->myCols_;
     TlMatrixObject::size_type count = 0;
-    for (TlMatrixObject::index_type localRow = 0; localRow < localRows;
-         ++localRow) {
-        const TlMatrixObject::index_type globalRow =
-            this->getLocal2Global_row(localRow);
-        for (TlMatrixObject::index_type localCol = 0; localCol < localCols;
-             ++localCol) {
-            const TlMatrixObject::index_type globalCol =
-                this->getLocal2Global_col(localCol);
+    for (TlMatrixObject::index_type localRow = 0; localRow < localRows; ++localRow) {
+        const TlMatrixObject::index_type globalRow = this->getLocal2Global_row(localRow);
+        for (TlMatrixObject::index_type localCol = 0; localCol < localCols; ++localCol) {
+            const TlMatrixObject::index_type globalCol = this->getLocal2Global_col(localCol);
 
-            answer[count] = TlMatrixObject::MatrixElement(
-                globalRow, globalCol, this->getLocal(globalRow, globalCol));
+            answer[count] = TlMatrixObject::MatrixElement(globalRow, globalCol, this->getLocal(globalRow, globalCol));
             ++count;
         }
     }
@@ -2025,13 +1824,9 @@ TlDenseGeneralMatrix_ImplScalapack::getMatrixElementsInLocal2() const {
 }
 
 void TlDenseGeneralMatrix_ImplScalapack::saveElements(
-    TlDenseMatrix_IO_object* pFileMatrix,
-    const std::vector<TlMatrixObject::MatrixElement>& elements) const {
-    std::vector<TlMatrixObject::MatrixElement>::const_iterator itEnd =
-        elements.end();
-    for (std::vector<TlMatrixObject::MatrixElement>::const_iterator it =
-             elements.begin();
-         it != itEnd; ++it) {
+    TlDenseMatrix_IO_object* pFileMatrix, const std::vector<TlMatrixObject::MatrixElement>& elements) const {
+    std::vector<TlMatrixObject::MatrixElement>::const_iterator itEnd = elements.end();
+    for (std::vector<TlMatrixObject::MatrixElement>::const_iterator it = elements.begin(); it != itEnd; ++it) {
         pFileMatrix->set(it->row, it->col, it->value);
     }
 }
@@ -2039,9 +1834,8 @@ void TlDenseGeneralMatrix_ImplScalapack::saveElements(
 // ---------------------------------------------------------------------------
 // friends
 // ---------------------------------------------------------------------------
-TlDenseGeneralMatrix_ImplScalapack operator*(
-    const TlDenseGeneralMatrix_ImplScalapack& X,
-    const TlDenseGeneralMatrix_ImplScalapack& Y) {
+TlDenseGeneralMatrix_ImplScalapack operator*(const TlDenseGeneralMatrix_ImplScalapack& X,
+                                             const TlDenseGeneralMatrix_ImplScalapack& Y) {
     // this const_cast is requiered for PGI compiler
     // "error: expression must be an lvalue or a function designator"
     // TlDenseGeneralMatrix_ImplScalapack& Xtmp =
@@ -2066,22 +1860,19 @@ TlDenseGeneralMatrix_ImplScalapack operator*(
     const int nJY = 1;
     const int nIZ = 1;
 
-    pdgemm_("N", "N", &nZRow, &nZCol, &nXCol, &dAlpha, X.pData_, &nIX, &nJX,
-            X.pDESC_, Y.pData_, &nIY, &nJY, Y.pDESC_, &dBeta, Z.pData_, &nIZ,
-            &nIZ, Z.pDESC_);
+    pdgemm_("N", "N", &nZRow, &nZCol, &nXCol, &dAlpha, X.pData_, &nIX, &nJX, X.pDESC_, Y.pData_, &nIY, &nJY, Y.pDESC_,
+            &dBeta, Z.pData_, &nIZ, &nIZ, Z.pDESC_);
 
     return Z;
 }
 
-TlDenseVector_ImplScalapack operator*(
-    const TlDenseGeneralMatrix_ImplScalapack& A,
-    const TlDenseVector_ImplScalapack& X) {
+TlDenseVector_ImplScalapack operator*(const TlDenseGeneralMatrix_ImplScalapack& A,
+                                      const TlDenseVector_ImplScalapack& X) {
     // this const_cast is requiered for PGI compiler
     // "error: expression must be an lvalue or a function designator"
     // TlDenseGeneralMatrix_ImplScalapack& Atmp =
     // const_cast<TlDenseGeneralMatrix_ImplScalapack&>(A);
-    TlDenseVector_ImplScalapack& Xtmp =
-        const_cast<TlDenseVector_ImplScalapack&>(X);
+    TlDenseVector_ImplScalapack& Xtmp = const_cast<TlDenseVector_ImplScalapack&>(X);
 
     const int M = A.getNumOfRows();
     const int N = A.getNumOfCols();
@@ -2102,22 +1893,19 @@ TlDenseVector_ImplScalapack operator*(
     const int JY = 1;
     const int INCY = 1;
 
-    pdgemv_(&TRANS, &M, &N, &alpha, A.pData_, &IA, &JA, A.pDESC_, Xtmp.pData_,
-            &IX, &JX, Xtmp.pDESC_, &INCX, &beta, Y.pData_, &IY, &JY, Y.pDESC_,
-            &INCY);
+    pdgemv_(&TRANS, &M, &N, &alpha, A.pData_, &IA, &JA, A.pDESC_, Xtmp.pData_, &IX, &JX, Xtmp.pDESC_, &INCX, &beta,
+            Y.pData_, &IY, &JY, Y.pDESC_, &INCY);
 
     return Y;
 }
 
-TlDenseVector_ImplScalapack operator*(
-    const TlDenseVector_ImplScalapack& X,
-    const TlDenseGeneralMatrix_ImplScalapack& A) {
+TlDenseVector_ImplScalapack operator*(const TlDenseVector_ImplScalapack& X,
+                                      const TlDenseGeneralMatrix_ImplScalapack& A) {
     // this const_cast is requiered for PGI compiler
     // "error: expression must be an lvalue or a function designator"
     // TlDenseGeneralMatrix_ImplScalapack& Atmp =
     // const_cast<TlDenseGeneralMatrix_ImplScalapack&>(A);
-    TlDenseVector_ImplScalapack& Xtmp =
-        const_cast<TlDenseVector_ImplScalapack&>(X);
+    TlDenseVector_ImplScalapack& Xtmp = const_cast<TlDenseVector_ImplScalapack&>(X);
 
     const int M = A.getNumOfRows();
     const int N = A.getNumOfCols();
@@ -2138,9 +1926,8 @@ TlDenseVector_ImplScalapack operator*(
     const int JY = 1;
     const int INCY = 1;
 
-    pdgemv_(&TRANS, &M, &N, &alpha, A.pData_, &IA, &JA, A.pDESC_, Xtmp.pData_,
-            &IX, &JX, Xtmp.pDESC_, &INCX, &beta, Y.pData_, &IY, &JY, Y.pDESC_,
-            &INCY);
+    pdgemv_(&TRANS, &M, &N, &alpha, A.pData_, &IA, &JA, A.pDESC_, Xtmp.pData_, &IX, &JX, Xtmp.pDESC_, &INCX, &beta,
+            Y.pData_, &IY, &JY, Y.pDESC_, &INCY);
 
     return Y;
 }

@@ -16,8 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef TLCOLVECTORMATRIX_H
-#define TLCOLVECTORMATRIX_H
+#ifndef TL_DENSE_GENERAL_MATRIX_ARRAYS_COLORIENTED_H
+#define TL_DENSE_GENERAL_MATRIX_ARRAYS_COLORIENTED_H
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -73,4 +73,4 @@ class TlDenseGeneralMatrix_arrays_ColOriented
 std::ostream& operator<<(std::ostream& stream,
                          const TlDenseGeneralMatrix_arrays_ColOriented& mat);
 
-#endif  // TLCOLVECTORMATRIX_H
+#endif  // TL_DENSE_GENERAL_MATRIX_ARRAYS_COLORIENTED_H

@@ -1,21 +1,3 @@
-// Copyright (C) 2002-2014 The ProteinDF project
-// see also AUTHORS and README.
-//
-// This file is part of ProteinDF.
-//
-// ProteinDF is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// ProteinDF is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
-
 #include "tl_dense_matrix_arrays_mmap_object.h"
 
 #include <errno.h>
@@ -43,24 +25,42 @@
 #define CLEAR_BUFSIZE (4096)
 
 TlDenseMatrix_arrays_mmap_Object::TlDenseMatrix_arrays_mmap_Object(
-    const std::string& filePath, const index_type numOfVectors,
-    const index_type sizeOfVector, const int numOfSubunits, const int subunitID,
-    const bool isUsingMemManager)
+    const std::string& baseFilePath, const index_type numOfVectors, const index_type sizeOfVector,
+    const int numOfSubunits, const int subunitID, const index_type reservedSizeOfVector, bool forceCreateNewFile)
     : TlMatrixObject(ABGD),
-      filePath_(filePath),
-      numOfVectors_(0),
-      sizeOfVector_(0),
+      numOfVectors_(numOfVectors),
+      sizeOfVector_(sizeOfVector),
+      reservedSizeOfVector_(reservedSizeOfVector),
       sizeOfChunk_(DEFAULT_CHUNK_SIZE),
       numOfSubunits_(numOfSubunits),
-      subunitID_(subunitID),
-      reservedVectorSize_(0),
-      isUsingMemManager_(isUsingMemManager),
-      numOfLocalChunks_(0) {
-    // this->resize(numOfVectors, sizeOfVector);
+      subunitID_(subunitID) {
+    this->filePath_ = TlDenseMatrix_arrays_mmap_Object::getFileName(baseFilePath, this->subunitID_);
+    // this->numOfLocalChunks_ = TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(
+    //     this->getNumOfVectors(), this->getNumOfSubunits(), this->getSizeOfChunk());
+
+    if (reservedSizeOfVector == 0) {
+        this->reservedSizeOfVector_ = this->sizeOfVector_;
+    }
+    // std::cerr << "reserved size of vector = " << this->reservedSizeOfVector_ << std::endl;
+
+    this->createNewFile(forceCreateNewFile);
+    this->openFile();
+
+    // std::cerr << "# subunits: " << this->getNumOfSubunits() << std::endl;
+    // std::cerr << "# subunitID: " << this->getSubunitID() << std::endl;
+}
+
+TlDenseMatrix_arrays_mmap_Object::TlDenseMatrix_arrays_mmap_Object(const std::string& filePath)
+    : TlMatrixObject(ABGD), filePath_(filePath), sizeOfChunk_(DEFAULT_CHUNK_SIZE) {
+    // std::cerr << "TlDenseMatrix_arrays_mmap_Object::TlDenseMatrix_arrays_mmap_Object() constructor2 called"
+    //           << std::endl;
+    this->openFile();
+
+    // std::cerr << "# subunits: " << this->getNumOfSubunits() << std::endl;
+    // std::cerr << "# subunitID: " << this->getSubunitID() << std::endl;
 }
 
 TlDenseMatrix_arrays_mmap_Object::~TlDenseMatrix_arrays_mmap_Object() {
-    this->syncMmap();
     this->deleteMmap();
     // this->destroy();
 }
@@ -69,124 +69,134 @@ int TlDenseMatrix_arrays_mmap_Object::getSizeOfChunk() const {
     return this->sizeOfChunk_;
 }
 
-// void TlDenseMatrix_arrays_mmap_Object::resize(const index_type
-// newNumOfVectors,
-//                                               const index_type
-//                                               newSizeOfVector)
+void TlDenseMatrix_arrays_mmap_Object::resize(const index_type newNumOfVectors, const index_type newSizeOfVector) {
+    if (newNumOfVectors != this->getNumOfVectors()) {
+        // I end up recreating the file, so both the sizeOfVector and the numOfVectors are changed together.
 
-// {
-//     // evaluate chunks
-//     const int prevNumOfLocalChunks = this->numOfLocalChunks_;
-//     const int newNumOfLocalChunks = this->getNumOfLocalChunks(
-//         newNumOfVectors, this->numOfSubunits_, this->sizeOfChunk_);
-//     this->numOfLocalChunks_ = newNumOfLocalChunks;
+        // move file
+        this->deleteMmap();
+        const std::string filePath = this->filePath_;
+        const std::string backupFilePath = this->filePath_ + ".bak";
+        const int ret = TlFile::rename(filePath, backupFilePath);
+        assert(ret == 0);
 
-//     if (newNumOfLocalChunks > prevNumOfLocalChunks) {
-//         // ベクトル数を拡大
-//         const index_type reservedVectorSize = this->reservedVectorSize_;
+        // create new matrix
+        this->numOfVectors_ = newNumOfVectors;
+        this->sizeOfVector_ = newSizeOfVector;
+        this->reservedSizeOfVector_ = std::max(newSizeOfVector, this->reservedSizeOfVector_);
 
-//         this->chunks_.resize(newNumOfLocalChunks);
-//         const std::size_t sizeOfChunkVectors =
-//             reservedVectorSize * this->sizeOfChunk_;
-//         for (int i = prevNumOfLocalChunks; i < newNumOfLocalChunks; ++i) {
-//             double* pNewChunk = NULL;
-//             if (this->isUsingMemManager_ == true) {
-//                 TlMemManager& rMemManager = TlMemManager::getInstance();
-//                 pNewChunk = reinterpret_cast<double*>(
-//                     rMemManager.allocate(sizeof(double) *
-//                     sizeOfChunkVectors));
-//             } else {
-//                 pNewChunk = new double[sizeOfChunkVectors];
-//                 std::fill(pNewChunk, pNewChunk + sizeOfChunkVectors, 0.0);
-//             }
-//             this->chunks_[i] = pNewChunk;
-//         }
+        this->createNewFile();
+        this->openFile();
+        this->copyFromBackup();
 
-//     } else if (newNumOfLocalChunks < prevNumOfLocalChunks) {
-//         // ベクトル数を縮小
-//         if (this->isUsingMemManager_ == true) {
-//             TlMemManager& rMemManager = TlMemManager::getInstance();
-//             for (int i = newNumOfLocalChunks; i < prevNumOfLocalChunks; ++i)
-//             {
-//                 rMemManager.deallocate((char*)this->chunks_[i]);
-//                 this->chunks_[i] = NULL;
-//             }
-//         } else {
-//             for (int i = newNumOfLocalChunks; i < prevNumOfLocalChunks; ++i)
-//             {
-//                 delete[] this->chunks_[i];
-//                 this->chunks_[i] = NULL;
-//             }
-//         }
-//         this->chunks_.resize(newNumOfLocalChunks);
-//     }
+        TlFile::remove(backupFilePath);
+    } else {
+        // change sizeOfVector only
 
-//     this->numOfVectors_ = newNumOfVectors;
-//     this->reserveVectorSize(newSizeOfVector);
-//     this->sizeOfVector_ = newSizeOfVector;
-// }
+        if (newSizeOfVector > this->reservedSizeOfVector_) {
+            this->reserveVectorSize(newSizeOfVector);
+        }
 
-// void TlDenseMatrix_arrays_mmap_Object::reserveVectorSize(
-//     index_type newReservedVectorSize) {
-//     newReservedVectorSize =
-//         std::max(this->sizeOfVector_, newReservedVectorSize);
-//     const index_type prevReservedVectorSize = this->reservedVectorSize_;
+        if (newSizeOfVector != this->getSizeOfVector()) {
+            assert(newSizeOfVector <= this->reservedSizeOfVector_);
 
-//     if (prevReservedVectorSize < newReservedVectorSize) {
-//         const int numOfLocalChunks = this->numOfLocalChunks_;
-//         assert(this->chunks_.size() ==
-//                static_cast<std::size_t>(numOfLocalChunks));
-//         const std::size_t sizeOfChunkVectors =
-//             newReservedVectorSize * this->sizeOfChunk_;
-//         for (int i = 0; i < numOfLocalChunks; ++i) {
-//             // allocate new object
-//             double* pNew = NULL;
-//             if (this->isUsingMemManager_ == true) {
-//                 TlMemManager& rMemManager = TlMemManager::getInstance();
-//                 pNew = reinterpret_cast<double*>(
-//                     rMemManager.allocate(sizeof(double) *
-//                     sizeOfChunkVectors));
-//             } else {
-//                 pNew = new double[sizeOfChunkVectors];
-//             }
-//             std::fill(pNew, pNew + sizeOfChunkVectors, 0.0);
+            this->sizeOfVector_ = newSizeOfVector;
+            this->updateFileHeader();
+        }
+    }
+}
 
-//             if (this->chunks_[i] != NULL) {
-//                 // copy old data to new
-//                 const int sizeOfChunk = this->sizeOfChunk_;
-//                 for (int v = 0; v < sizeOfChunk; ++v) {
-//                     for (int u = 0; u < prevReservedVectorSize; ++u) {
-//                         const std::size_t prevIndex =
-//                             v * prevReservedVectorSize + u;
-//                         const std::size_t newIndex =
-//                             v * newReservedVectorSize + u;
-//                         assert(newIndex < sizeOfChunkVectors);
-//                         pNew[newIndex] = this->chunks_[i][prevIndex];
-//                     }
-//                 }
+void TlDenseMatrix_arrays_mmap_Object::copyFromBackup() {
+    TlDenseMatrix_arrays_mmap_Object backup(this->filePath_ + ".bak");
+    const index_type oldNumOfVectors = backup.getNumOfVectors();
+    const index_type oldSizeOfVector = backup.getSizeOfVector();
+    // const index_type oldReservedSizeOfVector = backup.reservedSizeOfVector_;
+    const index_type newNumOfVectors = this->getNumOfVectors();
+    const index_type newSizeOfVector = this->getSizeOfVector();
+    const index_type newReservedSizeOfVector = this->reservedSizeOfVector_;
 
-//                 // destroy old object
-//                 if (this->isUsingMemManager_ == true) {
-//                     TlMemManager& rMemManager = TlMemManager::getInstance();
-//                     rMemManager.deallocate((char*)this->chunks_[i]);
-//                 } else {
-//                     delete[] this->chunks_[i];
-//                 }
-//                 this->chunks_[i] = NULL;
-//             }
-//             this->chunks_[i] = pNew;
-//         }
+    // std::cerr << ">>>> copy From backup: " << std::endl;
+    // std::cerr << TlUtils::format("# vec: %d / %d", oldNumOfVectors, newNumOfVectors) << std::endl;
+    // std::cerr << TlUtils::format("size of vec: %d / %d", oldSizeOfVector, newSizeOfVector) << std::endl;
+    // std::cerr << TlUtils::format("reserved: %d / %d", oldReservedSizeOfVector, newReservedSizeOfVector) << std::endl;
 
-//         this->reservedVectorSize_ = newReservedVectorSize;
-//         this->log_.debug(
-//             TlUtils::format("reserveVectorSize()
-//             this->reservedVectorSize_=%d",
-//                             this->reservedVectorSize_));
-//     }
-// }
+    const int sizeOfChunk = this->getSizeOfChunk();
+    const int numOfSubunits = this->getNumOfSubunits();
+    const int subunitId = this->getSubunitID();
 
-int TlDenseMatrix_arrays_mmap_Object::getSubunitID(
-    const index_type vectorIndex) const {
+    const TlMatrixObject::size_type oldNumOfLocalChunks =
+        TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(oldNumOfVectors, numOfSubunits, sizeOfChunk);
+    const TlMatrixObject::size_type newNumOfLocalChunks =
+        TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(newNumOfVectors, numOfSubunits, sizeOfChunk);
+    const int copyNumOfLocalChunks = std::min(oldNumOfLocalChunks, newNumOfLocalChunks);
+
+    const TlMatrixObject::size_type copySizeOfVector = std::min(oldSizeOfVector, newSizeOfVector);
+
+    std::size_t count = 0;
+    std::vector<double> oldChunk(sizeOfChunk * oldSizeOfVector);
+    for (int chunkIndex = 0; chunkIndex < copyNumOfLocalChunks; ++chunkIndex) {
+        const index_type globalVectorIndex = sizeOfChunk * (chunkIndex * numOfSubunits + subunitId);
+        if (globalVectorIndex > oldNumOfVectors) {
+            break;
+        }
+
+        backup.getChunk(globalVectorIndex, &(oldChunk[0]), sizeOfChunk * oldSizeOfVector);
+        // for (int i = 0; i < sizeOfChunk * oldSizeOfVector; ++i) {
+        //     std::cerr << TlUtils::format("[%d] %d: %f", i, count + i, oldChunk[i]) << std::endl;
+        // }
+        count += sizeOfChunk * oldSizeOfVector;
+
+        const std::size_t copyOutOffset = sizeOfChunk * chunkIndex * newReservedSizeOfVector;
+        for (int i = 0; i < sizeOfChunk; ++i) {
+            // const std::size_t copyFrom = oldReservedSizeOfVector * i;
+            const std::size_t copyFrom = oldSizeOfVector * i;
+            const std::size_t copyOut = copyOutOffset + newReservedSizeOfVector * i;
+            // std::cerr << "copy out = " << copyOut << std::endl;
+            // for (int t = 0; t < copySizeOfVector; ++t) {
+            //     std::cerr << TlUtils::format("chunk[%d] = %f", copyFrom + t, oldChunk[copyFrom + t]) << std::endl;
+            // }
+            std::copy(&(oldChunk[0]) + copyFrom, &(oldChunk[0]) + (copyFrom + copySizeOfVector),
+                      this->dataBegin_ + copyOut);
+        }
+    }
+}
+
+void TlDenseMatrix_arrays_mmap_Object::reserveVectorSize(index_type newReservedSizeOfVector) {
+    newReservedSizeOfVector = std::max(this->sizeOfVector_, newReservedSizeOfVector);
+    const index_type prevReservedSizeOfVector = this->reservedSizeOfVector_;
+
+    // std::cerr << ">>>> reserved: " << std::endl;
+    // std::cerr << "reserved1: " << std::endl;
+    // std::cerr << TlUtils::format("# vec: %d", this->numOfVectors_) << std::endl;
+    // std::cerr << TlUtils::format("size of vec: %d", this->sizeOfVector_) << std::endl;
+    // std::cerr << TlUtils::format("reserved: %d", this->reservedSizeOfVector_) << std::endl;
+
+    if (prevReservedSizeOfVector < newReservedSizeOfVector) {
+        this->deleteMmap();
+
+        // move file
+        const std::string filePath = this->filePath_;
+        const std::string backupFilePath = this->filePath_ + ".bak";
+        const int ret = TlFile::rename(filePath, backupFilePath);
+        assert(ret == 0);
+
+        // create new matrix
+        this->reservedSizeOfVector_ = newReservedSizeOfVector;
+        this->createNewFile();
+        this->openFile();
+
+        this->copyFromBackup();
+
+        // std::cerr << "reserved2: " << std::endl;
+        // std::cerr << TlUtils::format("# vec: %d", this->numOfVectors_) << std::endl;
+        // std::cerr << TlUtils::format("size of vec: %d", this->sizeOfVector_) << std::endl;
+        // std::cerr << TlUtils::format("reserved: %d", this->reservedSizeOfVector_) << std::endl;
+
+        TlFile::remove(backupFilePath);
+    }
+}
+
+int TlDenseMatrix_arrays_mmap_Object::getSubunitID(const index_type vectorIndex) const {
     assert((0 <= vectorIndex) && (vectorIndex < this->numOfVectors_));
     int subunitId = -1;
     this->getLocalVectorIndex(vectorIndex, &subunitId);
@@ -194,37 +204,33 @@ int TlDenseMatrix_arrays_mmap_Object::getSubunitID(
     return subunitId;
 }
 
-TlMatrixObject::index_type
-TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(
-    const index_type numOfVectors, const int numOfSubunits,
-    const int sizeOfChunk) {
-    const int numOfVectorsPerUnit = sizeOfChunk * numOfSubunits;
-    const int numOfLocalChunks = numOfVectors / numOfVectorsPerUnit + 1;
+// static function
+TlMatrixObject::index_type TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(const index_type numOfVectors,
+                                                                                 const int numOfSubunits,
+                                                                                 const int sizeOfChunk) {
+    const TlMatrixObject::index_type numOfVectorsPerUnit = sizeOfChunk * numOfSubunits;
+    const TlMatrixObject::index_type numOfLocalChunks =
+        (numOfVectors + numOfVectorsPerUnit - 1) / numOfVectorsPerUnit;  // round up
 
     return numOfLocalChunks;
 }
 
 // defunct
-TlMatrixObject::index_type
-TlDenseMatrix_arrays_mmap_Object::getNumOfLocalVectors(
-    const index_type numOfVectors, const int numOfSubunits,
-    const int sizeOfChunk) {
-    const index_type numOfLocalChunks =
-        TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(
-            numOfVectors, numOfSubunits, sizeOfChunk);
-    const index_type numOfLocalVectors = sizeOfChunk * numOfLocalChunks;
+// TlMatrixObject::index_type TlDenseMatrix_arrays_mmap_Object::getNumOfLocalVectors(const index_type numOfVectors,
+//                                                                                   const int numOfSubunits,
+//                                                                                   const int sizeOfChunk) {
+//     const index_type numOfLocalChunks =
+//         TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(numOfVectors, numOfSubunits, sizeOfChunk);
+//     const index_type numOfLocalVectors = sizeOfChunk * numOfLocalChunks;
 
-    return numOfLocalVectors;
-}
+//     return numOfLocalVectors;
+// }
 
-TlMatrixObject::index_type
-TlDenseMatrix_arrays_mmap_Object::getLocalVectorIndex(
-    const index_type vectorIndex, int* pSubunitId, int* pLocalChunkId,
-    int* pLocalChunkVectorIndex) const {
-    // assert((0 <= vectorIndex) && (vectorIndex < this->numOfVectors_));
+std::size_t TlDenseMatrix_arrays_mmap_Object::getLocalVectorIndex(const index_type vectorIndex, int* pSubunitId,
+                                                                  int* pLocalChunkId,
+                                                                  int* pLocalChunkVectorIndex) const {
     TL_ASSERT((0 <= vectorIndex) && (vectorIndex < this->numOfVectors_),
-              TlUtils::format("vectorIndex=%d (max:%d)", vectorIndex,
-                              this->numOfVectors_));
+              TlUtils::format("vectorIndex=%d (max:%d)", vectorIndex, this->numOfVectors_));
 
     const index_type sizeOfBlock = this->sizeOfChunk_ * this->numOfSubunits_;
     const div_t blocks = std::div(vectorIndex, sizeOfBlock);
@@ -234,7 +240,8 @@ TlDenseMatrix_arrays_mmap_Object::getLocalVectorIndex(
     const index_type chunkId = chunks.quot;
     const index_type chunkIndex = chunks.rem;
 
-    const index_type localIndex = numOfBlocks * this->sizeOfChunk_ + chunkIndex;
+    // const index_type localIndex = numOfBlocks * this->sizeOfChunk_ + chunkIndex;
+    const std::size_t localIndex = (this->sizeOfChunk_ * numOfBlocks + chunkIndex) * this->reservedSizeOfVector_;
 
     if (pSubunitId != NULL) {
         *pSubunitId = chunkId;
@@ -251,42 +258,31 @@ TlDenseMatrix_arrays_mmap_Object::getLocalVectorIndex(
     return localIndex;
 }
 
-void TlDenseMatrix_arrays_mmap_Object::set_to_vm(const index_type vectorIndex,
-                                                 const index_type index,
+void TlDenseMatrix_arrays_mmap_Object::set_to_vm(const index_type vectorIndex, const index_type index,
                                                  const double value) {
     int subunitId = 0;
     int localChunkId = 0;
     int localChunkVectorIndex = 0;
-    (void)this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId,
-                                    &localChunkVectorIndex);
+    const std::size_t head = this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId, &localChunkVectorIndex);
     if (subunitId == this->subunitID_) {
-        assert(localChunkId < static_cast<int>(this->chunks_.size()));
         assert(localChunkVectorIndex < this->sizeOfChunk_);
-        const int localIndex =
-            this->reservedVectorSize_ * localChunkVectorIndex + index;
-        this->chunks_[localChunkId][localIndex] = value;
+        this->dataBegin_[head + index] = value;
     }
 }
 
-void TlDenseMatrix_arrays_mmap_Object::add_to_vm(const index_type vectorIndex,
-                                                 const index_type index,
+void TlDenseMatrix_arrays_mmap_Object::add_to_vm(const index_type vectorIndex, const index_type index,
                                                  const double value) {
     int subunitId = 0;
     int localChunkId = 0;
     int localChunkVectorIndex = 0;
-    (void)this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId,
-                                    &localChunkVectorIndex);
+    const std::size_t head = this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId, &localChunkVectorIndex);
     if (subunitId == this->subunitID_) {
-        assert(localChunkId < static_cast<int>(this->chunks_.size()));
         assert(localChunkVectorIndex < this->sizeOfChunk_);
-        const int localIndex =
-            this->reservedVectorSize_ * localChunkVectorIndex + index;
-        this->chunks_[localChunkId][localIndex] += value;
+        this->dataBegin_[head + index] += value;
     }
 }
 
-double TlDenseMatrix_arrays_mmap_Object::get_from_vm(
-    const index_type vectorIndex, const index_type index) const {
+double TlDenseMatrix_arrays_mmap_Object::get_from_vm(const index_type vectorIndex, const index_type index) const {
     assert((0 <= vectorIndex) && (vectorIndex < this->numOfVectors_));
     assert((0 <= index) && (index < this->sizeOfVector_));
 
@@ -294,104 +290,110 @@ double TlDenseMatrix_arrays_mmap_Object::get_from_vm(
     int subunitId = 0;
     int localChunkId = 0;
     int localChunkVectorIndex = 0;
-    (void)this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId,
-                                    &localChunkVectorIndex);
+    const std::size_t head = this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId, &localChunkVectorIndex);
     if (subunitId == this->subunitID_) {
-        assert(localChunkId < static_cast<int>(this->chunks_.size()));
         assert(localChunkVectorIndex < this->sizeOfChunk_);
-        const int localIndex =
-            this->reservedVectorSize_ * localChunkVectorIndex + index;
-        answer = this->chunks_[localChunkId][localIndex];
+        answer = this->dataBegin_[head + index];
+
+        // std::cerr << TlUtils::format("get (%d, %d) [%d, %d] = %f", vectorIndex, index, head, index, answer)
+        //           << std::endl;
     }
 
     return answer;
 }
 
-std::vector<double> TlDenseMatrix_arrays_mmap_Object::getVector(
-    const index_type vectorIndex) const {
+std::vector<double> TlDenseMatrix_arrays_mmap_Object::getVector(const index_type vectorIndex) const {
     const index_type vectorSize = this->sizeOfVector_;
     std::vector<double> answer(vectorSize);
 
     int subunitId = 0;
     int localChunkId = 0;
     int localChunkVectorIndex = 0;
-    (void)this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId,
-                                    &localChunkVectorIndex);
+    const std::size_t head = this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId, &localChunkVectorIndex);
     if (subunitId == this->subunitID_) {
-        assert(localChunkId < static_cast<int>(this->chunks_.size()));
         assert(localChunkVectorIndex < this->sizeOfChunk_);
-        const int localIndex =
-            this->reservedVectorSize_ * localChunkVectorIndex;
-
-        std::copy(&(this->chunks_[localChunkId][localIndex]),
-                  &(this->chunks_[localChunkId][localIndex]) + vectorSize,
-                  answer.begin());
+        // const int localIndex = this->reservedSizeOfVector_ * localChunkVectorIndex;
+        // std::copy(this->dataBegin_ + (this->sizeOfChunk_ * localChunkId + localIndex),
+        //           this->dataBegin_ + (this->sizeOfChunk_ * localChunkId + localIndex) + vectorSize,
+        //           answer.begin());
+        std::copy(this->dataBegin_ + head, this->dataBegin_ + head + vectorSize, answer.begin());
     }
 
     return answer;
 }
 
-void TlDenseMatrix_arrays_mmap_Object::getVector(
-    const index_type vectorIndex, double* pBuf, const index_type length) const {
-    const index_type vectorSize = this->sizeOfVector_;
-    const index_type copySize = std::min(length, vectorSize);
+std::size_t TlDenseMatrix_arrays_mmap_Object::getVector(const index_type vectorIndex, double* pBuf,
+                                                        const std::size_t maxCount) const {
+    const std::size_t vectorSize = this->sizeOfVector_;
+    std::size_t copySize = 0;
 
     int subunitId = 0;
     int localChunkId = 0;
     int localChunkVectorIndex = 0;
-    (void)this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId,
-                                    &localChunkVectorIndex);
+    const std::size_t head = this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId, &localChunkVectorIndex);
     if (subunitId == this->subunitID_) {
-        assert(localChunkId < static_cast<int>(this->chunks_.size()));
         assert(localChunkVectorIndex < this->sizeOfChunk_);
-        const int localIndex =
-            this->reservedVectorSize_ * localChunkVectorIndex;
-        std::copy(this->chunks_[localChunkId] + localIndex,
-                  this->chunks_[localChunkId] + (localIndex + copySize), pBuf);
+        // const int localIndex = this->reservedSizeOfVector_ * localChunkVectorIndex;
+        // std::copy(this->dataBegin_ + (this->sizeOfChunk_ * localChunkId + localIndex),
+        //           this->dataBegin_ + (this->sizeOfChunk_ * localChunkId + localIndex) + copySize, pBuf);
+
+        copySize = std::min(maxCount, vectorSize);
+        std::copy(this->dataBegin_ + head, this->dataBegin_ + head + copySize, pBuf);
     }
+
+    return copySize;
 }
 
-void TlDenseMatrix_arrays_mmap_Object::setVector(const index_type vectorIndex,
-                                                 const std::vector<double>& v) {
+void TlDenseMatrix_arrays_mmap_Object::setVector(const index_type vectorIndex, const std::vector<double>& v) {
     assert(v.size() == static_cast<std::size_t>(this->sizeOfVector_));
 
     int subunitId = 0;
     int localChunkId = 0;
     int localChunkVectorIndex = 0;
-    (void)this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId,
-                                    &localChunkVectorIndex);
+    const std::size_t head = this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId, &localChunkVectorIndex);
     if (subunitId == this->subunitID_) {
-        assert(localChunkId < static_cast<int>(this->chunks_.size()));
         assert(localChunkVectorIndex < this->sizeOfChunk_);
-        const int localIndex =
-            this->reservedVectorSize_ * localChunkVectorIndex;
-        std::copy(v.begin(), v.end(),
-                  &(this->chunks_[localChunkId][localIndex]));
+        // const int localIndex = this->reservedSizeOfVector_ * localChunkVectorIndex;
+        // std::copy(v.begin(), v.end(), this->dataBegin_ + (this->sizeOfChunk_ * localChunkId + localIndex));
+        std::copy(v.begin(), v.end(), this->dataBegin_ + head);
     }
 }
 
-std::size_t TlDenseMatrix_arrays_mmap_Object::getChunk(
-    const index_type vectorIndex, double* pBuf,
-    const std::size_t length) const {
-    // TODO: length support
+void TlDenseMatrix_arrays_mmap_Object::setAcrossMultipleVectors(index_type index, const std::valarray<double>& values) {
+    const index_type numOfVectors = this->getNumOfVectors();
+    TL_ASSERT((values.size() == static_cast<std::size_t>(numOfVectors)),
+              TlUtils::format("%ld != %ld @%s,%d", values.size(), numOfVectors, __FILE__, __LINE__));
+
+    for (index_type vectorIndex = 0; vectorIndex < numOfVectors; ++vectorIndex) {
+        this->set_to_vm(vectorIndex, index, values[vectorIndex]);
+    }
+}
+
+std::size_t TlDenseMatrix_arrays_mmap_Object::getChunk(const index_type vectorIndex, double* pBuf,
+                                                       const std::size_t length) const {
+    TL_ASSERT((0 <= vectorIndex) && (vectorIndex < this->numOfVectors_),
+              TlUtils::format("vectorIndex=%d (max:%d)", vectorIndex, this->numOfVectors_));
+
     const int sizeOfChunk = this->sizeOfChunk_;
     const int sizeOfVector = this->sizeOfVector_;
 
     int subunitId = 0;
     int localChunkId = 0;
     int localChunkVectorIndex = 0;
-    this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId,
-                              &localChunkVectorIndex);
+    const std::size_t head = this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId, &localChunkVectorIndex);
     assert(subunitId == this->subunitID_);
 
     std::size_t copiedSize = 0;
     {
-        const int sizeOfVectorReserved = this->reservedVectorSize_;
+        const int reservedSizeOfVector = this->reservedSizeOfVector_;
         for (int v = 0; v < sizeOfChunk; ++v) {
-            std::copy(&(this->chunks_[localChunkId][v * sizeOfVectorReserved]),
-                      &(this->chunks_[localChunkId][v * sizeOfVectorReserved]) +
-                          sizeOfVector,
-                      &(pBuf[v * sizeOfVector]));
+            // std::copy(this->dataBegin_ + this->sizeOfChunk_ * localChunkId + (v * reservedSizeOfVector),
+            //           this->dataBegin_ + this->sizeOfChunk_ * localChunkId + (v * reservedSizeOfVector) +
+            //           sizeOfVector,
+            //           &(pBuf[v * sizeOfVector]));
+            const std::size_t size = std::min<std::size_t>(sizeOfVector, length - copiedSize);
+            std::copy(this->dataBegin_ + head + reservedSizeOfVector * v,
+                      this->dataBegin_ + head + reservedSizeOfVector * v + size, &(pBuf[v * sizeOfVector]));
             copiedSize += sizeOfVector;
         }
     }
@@ -399,105 +401,12 @@ std::size_t TlDenseMatrix_arrays_mmap_Object::getChunk(
     return copiedSize;
 }
 
-std::string TlDenseMatrix_arrays_mmap_Object::getFileName(
-    const std::string& basename, const int subunitID) {
-    return TlUtils::format("%s.part%d.mat", basename.c_str(), subunitID);
+std::string TlDenseMatrix_arrays_mmap_Object::getFileName(const std::string& baseFilePath, const int subunitID) {
+    return TlUtils::format("%s.part%d.mat", baseFilePath.c_str(), subunitID);
 }
 
-bool TlDenseMatrix_arrays_mmap_Object::save(const std::string& basename) const {
-    const index_type numOfVectors = this->numOfVectors_;
-    const index_type sizeOfVector = this->sizeOfVector_;
-
-    std::ofstream ofs;
-    const std::string path = TlDenseMatrix_arrays_mmap_Object::getFileName(
-        basename, this->subunitID_);
-    ofs.open(path.c_str(), std::ofstream::out | std::ofstream::binary);
-
-    // header
-    const std::size_t sizeOfHeader = this->writeMatrixHeader(&ofs);
-
-    {
-        const int numOfLocalChunks = this->numOfLocalChunks_;
-        assert(this->chunks_.size() == std::size_t(numOfLocalChunks));
-        const std::size_t sizeOfVectorReserved = this->reservedVectorSize_;
-        const int sizeOfChunk = this->sizeOfChunk_;
-        for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
-            for (int v = 0; v < sizeOfChunk; ++v) {
-                const std::size_t headOfVector = sizeOfVectorReserved * v;
-                ofs.write(reinterpret_cast<const char*>(this->chunks_[chunk] +
-                                                        headOfVector),
-                          sizeof(double) * sizeOfVector);
-            }
-        }
-    }
-
-    ofs.close();
-
-    return true;
-}
-
-bool TlDenseMatrix_arrays_mmap_Object::saveByTheOtherType(
-    const std::string& basename) const {
-    assert(this->numOfSubunits_ == 1);
-
-    const index_type numOfVectors = this->numOfVectors_;
-    const index_type sizeOfVector = this->sizeOfVector_;
-    const int sizeOfChunk = this->sizeOfChunk_;
-
-    const index_type numOfVectorsB = sizeOfVector;  // swap!
-    const index_type sizeOfVectorB = numOfVectors;  // swap!
-
-    std::ofstream ofs;
-    const std::string path = TlDenseMatrix_arrays_mmap_Object::getFileName(
-        basename, this->subunitID_);
-    ofs.open(path.c_str(), std::ofstream::out | std::ofstream::binary);
-
-    // header
-    const int matrixType = TlMatrixObject::ABGD;
-    ofs.write(reinterpret_cast<const char*>(&matrixType), sizeof(char));
-    ofs.write(reinterpret_cast<const char*>(&numOfVectorsB),
-              sizeof(index_type));
-    ofs.write(reinterpret_cast<const char*>(&sizeOfVectorB),
-              sizeof(index_type));
-    ofs.write(reinterpret_cast<const char*>(&(this->numOfSubunits_)),
-              sizeof(int));
-    ofs.write(reinterpret_cast<const char*>(&(this->subunitID_)), sizeof(int));
-    ofs.write(reinterpret_cast<const char*>(&sizeOfChunk), sizeof(int));
-
-    // data
-    {
-        const int numOfLocalChunks = this->numOfLocalChunks_;
-        const int reservedVectorSize = this->reservedVectorSize_;
-        double* pBuf = new double[sizeOfVectorB];
-        for (index_type j = 0; j < sizeOfVector; ++j) {
-            for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
-                for (int c = 0; c < sizeOfChunk; ++c) {
-                    const std::size_t headOfVector = reservedVectorSize * c;
-                    const int i = chunk * sizeOfChunk + c;
-                    if (i >= numOfVectors) {
-                        break;
-                    }
-                    pBuf[i] = this->chunks_[chunk][headOfVector + j];
-                }
-            }
-            ofs.write(reinterpret_cast<const char*>(pBuf),
-                      sizeof(double) * sizeOfVectorB);
-        }
-
-        delete[] pBuf;
-        pBuf = NULL;
-    }
-
-    ofs.close();
-
-    return true;
-}
-
-bool TlDenseMatrix_arrays_mmap_Object::isLoadable(const std::string& filepath,
-                                                  index_type* pNumOfVectors,
-                                                  index_type* pSizeOfVector,
-                                                  int* pNumOfSubunits,
-                                                  int* pSubunitID,
+bool TlDenseMatrix_arrays_mmap_Object::isLoadable(const std::string& filepath, index_type* pNumOfVectors,
+                                                  index_type* pSizeOfVector, int* pNumOfSubunits, int* pSubunitID,
                                                   int* pSizeOfChunk) {
     bool answer = false;
 
@@ -508,18 +417,20 @@ bool TlDenseMatrix_arrays_mmap_Object::isLoadable(const std::string& filepath,
         int matrixType = 0;
         index_type numOfVectors = 0;
         index_type sizeOfVector = 0;
+        index_type reservedSizeOfVector = 0;
         int numOfSubunits = 0;
         int subunitID = 0;
         int sizeOfChunk = 0;
         ifs.read((char*)&matrixType, sizeof(char));
         ifs.read((char*)&numOfVectors, sizeof(index_type));
         ifs.read((char*)&sizeOfVector, sizeof(index_type));
+        ifs.read((char*)&reservedSizeOfVector, sizeof(index_type));
         ifs.read((char*)&numOfSubunits, sizeof(int));
         ifs.read((char*)&subunitID, sizeof(int));
         ifs.read((char*)&sizeOfChunk, sizeof(int));
 
-        if ((numOfVectors > 0) && (sizeOfVector > 0) && (numOfSubunits > 0) &&
-            (subunitID >= 0) && (subunitID < numOfSubunits)) {
+        if ((numOfVectors > 0) && (sizeOfVector > 0) && (numOfSubunits > 0) && (subunitID >= 0) &&
+            (subunitID < numOfSubunits)) {
             if (pNumOfVectors != NULL) {
                 *pNumOfVectors = numOfVectors;
             }
@@ -542,175 +453,90 @@ bool TlDenseMatrix_arrays_mmap_Object::isLoadable(const std::string& filepath,
     return answer;
 }
 
-bool TlDenseMatrix_arrays_mmap_Object::load(const std::string& basename) {
-    return this->load(basename, this->subunitID_);
-}
-
-bool TlDenseMatrix_arrays_mmap_Object::load(const std::string& basename,
-                                            const int subunitID) {
-    bool answer = false;
-    TlLogging& log = TlLogging::getInstance();
-
-    std::string path = basename;
-    if (subunitID >= 0) {
-        path =
-            TlDenseMatrix_arrays_mmap_Object::getFileName(basename, subunitID);
-    }
-
-    std::ifstream ifs;
-    ifs.open(path.c_str(), std::ifstream::in);
-    if (ifs.good()) {
-        // header
-        int matrixType = 0;
-        index_type numOfVectors = 0;
-        index_type sizeOfVector = 0;
-        int read_numOfSubunits = 0;
-        int read_subunitID = 0;
-        int read_sizeOfChunk = 0;
-        ifs.read((char*)&matrixType, sizeof(char));
-        ifs.read((char*)&numOfVectors, sizeof(index_type));
-        ifs.read((char*)&sizeOfVector, sizeof(index_type));
-        ifs.read((char*)&read_numOfSubunits, sizeof(int));
-        ifs.read((char*)&read_subunitID, sizeof(int));
-        ifs.read((char*)&read_sizeOfChunk, sizeof(int));
-        this->numOfSubunits_ = read_numOfSubunits;
-        this->subunitID_ = read_subunitID;
-        // this->resize(numOfVectors, sizeOfVector);
-
-        this->numOfSubunits_ = read_numOfSubunits;
-        this->subunitID_ = read_subunitID;
-        this->sizeOfChunk_ = read_sizeOfChunk;
-        // this->resize(numOfVectors, sizeOfVector);
-
-        const int headerSize =
-            sizeof(char) + sizeof(index_type) * 2 + sizeof(int) * 3;
-        assert(headerSize == ifs.tellg());
-
-        // data
-        ifs.clear();
-        ifs.seekg(headerSize, std::ios_base::beg);
-        assert(headerSize == ifs.tellg());
-        // std::size_t copied_chunk = 0;
-        {
-            const int numOfLocalChunks = this->numOfLocalChunks_;
-            assert(static_cast<std::size_t>(numOfLocalChunks) ==
-                   this->chunks_.size());
-            const int sizeOfChunk = this->sizeOfChunk_;
-            const int sizeOfVector = this->sizeOfVector_;
-            const int sizeOfVectorReserved = this->reservedVectorSize_;
-
-            std::vector<double> buf(sizeOfVectorReserved);
-            for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
-                for (int v = 0; v < sizeOfChunk; ++v) {
-                    ifs.read((char*)&(buf[0]), sizeof(double) * sizeOfVector);
-                    // copied_chunk += sizeOfVector;
-
-                    std::copy(
-                        buf.begin(), buf.begin() + sizeOfVector,
-                        this->chunks_[chunk] + (v * sizeOfVectorReserved));
-                }
-            }
-        }
-
-        answer = true;
-    } else {
-        log.error(TlUtils::format("cannot open file: %s", path.c_str()));
-    }
-
-    ifs.close();
-
-    return answer;
-}
-
 std::size_t TlDenseMatrix_arrays_mmap_Object::getMemSize() const {
     return this->numOfVectors_ * this->sizeOfVector_;
 }
 
-// void TlDenseMatrix_arrays_mmap_Object::destroy() {
-//     const index_type numOfLocalChunks = this->numOfLocalChunks_;
-//     if (this->isUsingMemManager_ == true) {
-//         TlMemManager& rMemManager = TlMemManager::getInstance();
-//         for (int i = 0; i < numOfLocalChunks; ++i) {
-//             rMemManager.deallocate((char*)this->chunks_[i]);
-//             this->chunks_[i] = NULL;
-//         }
-//     } else {
-//         for (int i = 0; i < numOfLocalChunks; ++i) {
-//             delete[] this->chunks_[i];
-//             this->chunks_[i] = NULL;
-//         }
-//     }
-//     this->chunks_.clear();
-// }
+TlMatrixObject::size_type TlDenseMatrix_arrays_mmap_Object::getNumOfReservedElements() const {
+    const TlMatrixObject::size_type numOfLocalChunks = TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(
+        this->getNumOfVectors(), this->getNumOfSubunits(), this->getSizeOfChunk());
+    const TlMatrixObject::size_type elements = (numOfLocalChunks * this->sizeOfChunk_) * this->reservedSizeOfVector_;
 
-void TlDenseMatrix_arrays_mmap_Object::createNewFile() {
-    if (TlFile::isExistFile(this->filePath_) == false) {
-        // create new file
-        std::ofstream ofs;
-        ofs.open(this->filePath_.c_str(),
-                 std::ios::binary | std::ios::trunc | std::ios::out);
+    return elements;
+}
 
-        // バッファ機能を停止する
-        ofs << std::setiosflags(std::ios::unitbuf);
+void TlDenseMatrix_arrays_mmap_Object::createNewFile(const bool isForceCreate) {
+    if (TlFile::isExistFile(this->filePath_) && (isForceCreate == true)) {
+        TlFile::remove(this->filePath_);
+    }
 
-        const std::size_t headerSize = this->writeMatrixHeader(&ofs);
-
-        const std::size_t size = this->getNumOfElements();
-        // size分ファイルにzeroを埋める
-        std::vector<double> buf(CLEAR_BUFSIZE);
-        ldiv_t ldivt = ldiv(size, CLEAR_BUFSIZE);
-        for (long i = 0; i < ldivt.quot; ++i) {
-            ofs.write(reinterpret_cast<const char*>(&(buf[0])),
-                      sizeof(double) * CLEAR_BUFSIZE);
-        }
-        if (ldivt.rem > 0) {
-            ofs.write(reinterpret_cast<const char*>(&(buf[0])),
-                      sizeof(double) * ldivt.rem);
-        }
-
-        // バッファ機能を再開する
-        ofs << std::resetiosflags(std::ios::unitbuf);
-        ofs.flush();
-
-        ofs.close();
+    if (!TlFile::isExistFile(this->filePath_)) {
+        this->createNewFile(this->filePath_, this->getNumOfReservedElements());
     }
 }
 
-void TlDenseMatrix_arrays_mmap_Object::openFile() {
-    this->getHeaderInfo();
-    this->newMmap();
+void TlDenseMatrix_arrays_mmap_Object::createNewFile(const std::string& filePath, const std::size_t size) {
+    // std::cerr << "TlDenseMatrix_arrays_mmap_Object::createNewFile(): " << filePath << ", " << size << std::endl;
+
+    // create new file
+    std::ofstream ofs;
+    ofs.open(filePath.c_str(), std::ios::binary | std::ios::trunc | std::ios::out);
+
+    // バッファ機能を停止する
+    ofs << std::setiosflags(std::ios::unitbuf);
+
+    (void)this->writeMatrixHeader(&ofs);
+
+    // size分ファイルにzeroを埋める
+    std::vector<double> buf(CLEAR_BUFSIZE);
+    ldiv_t ldivt = ldiv(size, CLEAR_BUFSIZE);
+    for (long i = 0; i < ldivt.quot; ++i) {
+        ofs.write(reinterpret_cast<const char*>(&(buf[0])), sizeof(double) * CLEAR_BUFSIZE);
+    }
+    if (ldivt.rem > 0) {
+        ofs.write(reinterpret_cast<const char*>(&(buf[0])), sizeof(double) * ldivt.rem);
+    }
+
+    // バッファ機能を再開する
+    ofs << std::resetiosflags(std::ios::unitbuf);
+    ofs.flush();
+
+    ofs.close();
 }
 
-void TlDenseMatrix_arrays_mmap_Object::getHeaderInfo() {
-    TlMatrixObject::MatrixType matrixType;
-    index_type row = 0;
-    index_type col = 0;
-    std::size_t numOfItems;
-    int numOfSubunits;
-    int subunitId;
-    int sizeOfChunk;
+void TlDenseMatrix_arrays_mmap_Object::openFile() {
+    // std::cerr << "TlDenseMatrix_arrays_mmap_Object::openFile(): getHeaderInfo" << std::endl;
+    this->getHeaderInfo(this->filePath_);
+    // std::cerr << "TlDenseMatrix_arrays_mmap_Object::openFile(): new mmap" << std::endl;
+    this->newMmap();
+    // std::cerr << "TlDenseMatrix_arrays_mmap_Object::openFile(): end" << std::endl;
+}
 
-    TlMatrixUtils::FileSize headerSize = TlMatrixUtils::getHeaderInfo(
-        this->filePath_, &matrixType, &row, &col, &numOfItems, &numOfSubunits,
-        &subunitId, &sizeOfChunk);
-    if ((headerSize > 0) && (matrixType == this->getType())) {
-        this->sizeOfVector_ = row;
-        this->numOfVectors_ = col;
+void TlDenseMatrix_arrays_mmap_Object::getHeaderInfo(const std::string& filePath) {
+    TlMatrixObject::HeaderInfo headerInfo;
+    TlMatrixUtils::FileSize headerSize = TlMatrixUtils::getHeaderInfo(filePath, &headerInfo);
 
-        this->numOfSubunits_ = numOfSubunits;
-        this->subunitID_ = subunitId;
-        this->sizeOfChunk_ = sizeOfChunk;
+    if ((headerSize > 0) && (headerInfo.matrixType == this->getType())) {
+        this->numOfVectors_ = headerInfo.numOfVectors;
+        this->sizeOfVector_ = headerInfo.sizeOfVector;
+        this->reservedSizeOfVector_ = headerInfo.reservedSizeOfVector;
+        TL_ASSERT((this->sizeOfVector_ <= this->reservedSizeOfVector_),
+                  TlUtils::format("sizeOfVector, reservedSizeOfVector = %d, %d @%s,%d", this->sizeOfVector_,
+                                  this->reservedSizeOfVector_, __FILE__, __LINE__));
+
+        this->numOfSubunits_ = headerInfo.numOfSubunits;
+        this->subunitID_ = headerInfo.subunitId;
+        this->sizeOfChunk_ = headerInfo.sizeOfChunk;
     } else {
-        std::cerr << TlUtils::format("cannot read matrix header: %s@%d",
-                                     __FILE__, __LINE__)
-                  << std::endl;
-        std::cerr << TlUtils::format("matrix: type=%d, row=%d, col=%d; hs=%ld",
-                                     (int)matrixType, row, col, headerSize)
+        std::cerr << TlUtils::format("cannot read matrix header: %s@%d", __FILE__, __LINE__) << std::endl;
+        std::cerr << TlUtils::format("matrix: type=%d, numOfVectors=%d, sizeOfVector=%d; hs=%ld",
+                                     static_cast<int>(headerInfo.matrixType), headerInfo.numOfVectors,
+                                     headerInfo.sizeOfVector, headerSize)
                   << std::endl;
     }
 
     this->headerSize_ = headerSize;
-    this->fileSize_ = headerSize + sizeof(double) * this->getNumOfElements();
+    this->fileSize_ = headerSize + sizeof(double) * this->getNumOfReservedElements();
 }
 
 void TlDenseMatrix_arrays_mmap_Object::newMmap() {
@@ -718,50 +544,87 @@ void TlDenseMatrix_arrays_mmap_Object::newMmap() {
     if (fd == -1) {
         int errorNo = errno;
         std::string errStr(strerror(errorNo));
-        this->log_.critical(TlUtils::format(
-            "open error: %s (%s)", this->filePath_.c_str(), errStr.c_str()));
+        this->log_.critical(TlUtils::format("open error: %s (%s)", this->filePath_.c_str(), errStr.c_str()));
         throw errStr;
     }
 
     struct stat sb;
     fstat(fd, &sb);
-    assert(std::size_t(sb.st_size) == this->fileSize_);
+    TL_ASSERT((std::size_t(sb.st_size) == this->fileSize_),
+              TlUtils::format("%ld, %ld", std::size_t(sb.st_size), this->fileSize_));
 
     // const std::size_t pageSize = sysconf(_SC_PAGE_SIZE);
     // const std::size_t mapSize = (this->fileSize_ / pageSize +1) * pageSize;
-    this->mmapBegin_ =
-        (char*)mmap(NULL, this->fileSize_, PROT_READ | PROT_WRITE, MAP_SHARED,
-                    fd, 0);  //  MAP_HUGETLB
+    this->mmapBegin_ = (char*)mmap(NULL, this->fileSize_, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);  //  MAP_HUGETLB
     this->dataBegin_ = (double*)(this->mmapBegin_ + this->headerSize_);
-    msync(this->mmapBegin_, this->getNumOfElements(), MS_ASYNC);
-    madvise(this->mmapBegin_, this->getNumOfElements(), MADV_WILLNEED);
+    msync(this->mmapBegin_, this->getNumOfReservedElements(), MS_ASYNC);
+    madvise(this->mmapBegin_, this->getNumOfReservedElements(), MADV_WILLNEED);
 
     // we can close the file after mmap() was called.
     close(fd);
 }
 
-std::size_t TlDenseMatrix_arrays_mmap_Object::writeMatrixHeader(
-    std::ofstream* pFs) const {
+std::size_t TlDenseMatrix_arrays_mmap_Object::writeMatrixHeader(std::ofstream* pFs) const {
     std::size_t sizeOfWriteBuffer = 0;
 
+    const char matrixType = static_cast<char>(this->getType());
     const index_type numOfVectors = this->numOfVectors_;
     const index_type sizeOfVector = this->sizeOfVector_;
+    const index_type reservedSizeOfVector = this->reservedSizeOfVector_;
 
-    const char matrixType = static_cast<char>(this->getType());
     pFs->write(reinterpret_cast<const char*>(&matrixType), sizeof(char));
-    pFs->write(reinterpret_cast<const char*>(&numOfVectors),
-               sizeof(index_type));
-    pFs->write(reinterpret_cast<const char*>(&sizeOfVector),
-               sizeof(index_type));
-    pFs->write(reinterpret_cast<const char*>(&(this->numOfSubunits_)),
-               sizeof(int));
-    pFs->write(reinterpret_cast<const char*>(&(this->subunitID_)), sizeof(int));
-    pFs->write(reinterpret_cast<const char*>(&(this->sizeOfChunk_)),
-               sizeof(int));
+    pFs->write(reinterpret_cast<const char*>(&numOfVectors), sizeof(index_type));
+    pFs->write(reinterpret_cast<const char*>(&sizeOfVector), sizeof(index_type));
+    pFs->write(reinterpret_cast<const char*>(&reservedSizeOfVector), sizeof(index_type));
 
-    sizeOfWriteBuffer = sizeof(char) + sizeof(index_type) * 2 + sizeof(int) * 3;
+    pFs->write(reinterpret_cast<const char*>(&(this->numOfSubunits_)), sizeof(int));
+    pFs->write(reinterpret_cast<const char*>(&(this->subunitID_)), sizeof(int));
+    pFs->write(reinterpret_cast<const char*>(&(this->sizeOfChunk_)), sizeof(int));
+
+    sizeOfWriteBuffer = sizeof(char) + sizeof(index_type) * 3 + sizeof(int) * 3;
 
     return sizeOfWriteBuffer;
+}
+
+void TlDenseMatrix_arrays_mmap_Object::updateFileHeader() {
+    const char matrixType = static_cast<char>(this->getType());
+    const index_type numOfVectors = this->numOfVectors_;
+    const index_type sizeOfVector = this->sizeOfVector_;
+    const index_type reservedSizeOfVector = this->reservedSizeOfVector_;
+    const int numOfSubunits = this->numOfSubunits_;
+    const int subunitID = this->subunitID_;
+    const int sizeOfChunk = this->sizeOfChunk_;
+
+    std::size_t offset = 0;
+    char const* p = NULL;
+
+    p = reinterpret_cast<const char*>(&matrixType);
+    std::copy(p, p + sizeof(char), this->mmapBegin_ + offset);
+    offset += sizeof(char);
+
+    p = reinterpret_cast<const char*>(&numOfVectors);
+    std::copy(p, p + sizeof(index_type), this->mmapBegin_ + offset);
+    offset += sizeof(index_type);
+
+    p = reinterpret_cast<const char*>(&sizeOfVector);
+    std::copy(p, p + sizeof(index_type), this->mmapBegin_ + offset);
+    offset += sizeof(index_type);
+
+    p = reinterpret_cast<const char*>(&reservedSizeOfVector);
+    std::copy(p, p + sizeof(index_type), this->mmapBegin_ + offset);
+    offset += sizeof(index_type);
+
+    p = reinterpret_cast<const char*>(&numOfSubunits);
+    std::copy(p, p + sizeof(int), this->mmapBegin_ + offset);
+    offset += sizeof(int);
+
+    p = reinterpret_cast<const char*>(&subunitID);
+    std::copy(p, p + sizeof(int), this->mmapBegin_ + offset);
+    offset += sizeof(int);
+
+    p = reinterpret_cast<const char*>(&sizeOfChunk);
+    std::copy(p, p + sizeof(int), this->mmapBegin_ + offset);
+    offset += sizeof(int);
 }
 
 void TlDenseMatrix_arrays_mmap_Object::syncMmap() {
@@ -774,4 +637,3 @@ void TlDenseMatrix_arrays_mmap_Object::deleteMmap() {
 
     this->mmapBegin_ = NULL;
 }
-
