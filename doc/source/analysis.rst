@@ -8,13 +8,13 @@ Analysis of the ProteinDF Calculation Results
 General analysis tools
 ============================
 
-* pdf-top
+* pdf-component
 
 Displays atomic orbitals with a large contribution to the specified molecular orbital.
 
 .. code-block:: none
    
-   Usage: pdf-top [Option]
+   Usage: pdf-component [Option]
 
 Executing the command above obtains the following outputs:
 

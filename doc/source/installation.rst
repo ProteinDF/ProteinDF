@@ -132,50 +132,35 @@ Use ``cmake -L`` or ``cmake -LA``` for more information.
 
 * ``--DCMAKE_INSTALL_PREFIX=PATH``
 
-プログラムのインストール先を指定します。
-デフォルトは/usr/localです。
-ユーザーのホームディレクトリなどにインストールするときに用いられます。
+Specify the installation location of the program.
+The default is /usr/local.
+This is used to install the program in the user's home directory.
 
 
 * ``--with-blas=location``
 
-BLASライブラリの場所を指定します。
+Specify the location of the BLAS library.
 
 
 * ``--with-lapack=location``
 
-LAPACKライブラリの場所を指定します。
+Specify the location of the LAPACK library.
 
 
 * ``--with-scalapack=location``
 
-ScaLAPACKライブラリの場所を指定します。
+Specify the location of the ScaLAPACK library.
 
 
-* 環境変数CC,CXX,MPICXX
+* Environment variable CC,CXX,MPICXX
 
 Specifies the options to pass to the C/C++ compiler. Use this variable to specify the options to the OpenMP compilers, etc.
 
-* 環境変数CFLAGS,CXXFLAGS
+* Environment variable CFLAGS,CXXFLAGS
 
-C/C++コンパイラに渡すオプションを指定します。
-OpenMPなどのコンパイラへの指示は、この環境変数に指定してください。
+Specify options for C/C++ compiler.
+Instructions to the compiler, such as OpenMP, should be specified in this environment variable.
 
-* 環境変数LIBS
-
-その他ビルドに必要なライブラリを指定します。
-
-* 環境変数BLAS_LIBS
-
-BLASライブラリを指定します。
-
-* LAPACK_LIBS
-
-LAPACKライブラリを指定します。
-
-* SCALAPACK_LIBS
-
-Specifies the ScaLAPACK library.
 
 
 Executing \"make\"
