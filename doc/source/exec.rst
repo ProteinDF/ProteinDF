@@ -71,8 +71,8 @@ output in a text file (default file name: fl_Out_Std), as in the serial mode.
 Run Type
 ========
 
-概要
-====
+Overview
+========
 
 ProteinDF has several run types to efficiently compute 
 a large object with limited computing resources.

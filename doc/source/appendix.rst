@@ -1,87 +1,84 @@
-****
-付録
-****
+********
+Appendix
+********
 
-ProteinDF起動オプション
-=======================
+startup options of ProteinDF
+============================
 
 * -r
 
-計算を再開可能な場所から再開(リスタート)します。
-計算条件はパラメータファイル(pdfparam.mpac)から読み取られます。
+Resume (restart) the calculation from where it can be restarted.
+The calculation conditions are read from the parameter file (pdfparam.mpac).
 
 
 * -i input_file
 
-入力ファイルを指定して計算を開始します。
-指定が無い場合はカレントディレクトリ上のfl_Userinputが使用されます。
+Specify an input file to start the calculation.
+If not specified, fl_Userinput on the current directory will be used.
 
 
 * -o output_file
 
-結果の出力ファイルを指定します。
-指定が無い場合はカレントディレクトリにfl_Out_Stdが出力されます。
+Specifies the output file for the result.
+If not specified, fl_Out_Std will be output to the current directory.
 
 
 * -d
 
-デバッグ出力を行います。
-出力ファイルならびに標準出力に大量にメッセージが出力されるため、
-注意が必要です。
-通常は選択する必要はありません。
+Debug output.
+Note that a large number of messages are output to the file and standard output.
+Normally, you do not need to select this option.
 
 
-
-入力パラメータリスト
+Input parameter list
 ====================
 
 .. include:: pdfkwd.rst
 
 
-入力ファイルフォーマット
+Input file format
 ========================
 
 
-basis2ファイルフォーマット
+basis2 file format
 ==========================
 
-basis2ファイルは基底関数情報を保存しています。
-以下に具体例を示します。
+The basis2 file stores the basis function information.
+The following is a concrete example.
 
 .. literalinclude:: basis2_sample.txt
 
 
 
-* フォーマット
+* Format
 
-** 1行目(タイトル行)
+** line 1(Title)
 
-基底関数名を記述します。
-"O-"から始まる名称は基底関数、"A-"から始まる名称は補助基底関数を表します。
-基底関数の場合は1つのCGTOブロック、
-補助基底関数の場合はクーロン項と交換相関項用の補助基底関数を表す2つのCGTOブロックから構成されます。
-
-** 2行目(CGTOブロック開始行)
-
-縮約ガウス型基底関数(CGTO)の軌道の形と数を指定します。
-空白文字により区切られた3つの整数値で表され、
-順にs型、p型、d型の数を表します。
-この行以降、CGTOブロックが続きます。
-
-"3 2 1"と記述されていた場合、
-s型の縮約ガウス型基底関数が3つ、
-p型の縮約ガウス型基底関数が2つ、
-d型の縮約ガウス型基底関数が1つ含まれていることを表します。
-したがって、この行以降、7つのCGTOブロックが記述されることになります。
+Describes the name of the basis function.
+A name starting with "O-" indicates a basis function, and a name starting with "A-" indicates an auxiliary basis function.
+In the case of basis functions, a single CGTO block.
+In the case of auxiliary basis functions, it consists of two CGTO blocks, one for the Coulomb term and the other for the auxiliary basis functions for the exchange-correlation term.
 
 
-** 3行目(CGTO開始行)
+** line 2(the number of CGTOs)
 
-CGTOブロックの始まりは、当該CGTOブロックが含む原始ガウス型基底関数(PGTO)の数を表します。
+Specifies the form and number of orbits of a contracted Gaussian basis function (CGTO).
+It is represented by three integer values separated by whitespace.
+The three integer values, separated by spaces, represent the number of s-type, p-type, and d-type orbits, in that order.
+After this line, the CGTO block continues.
+
+If it is written as "3 2 1,"
+There are three contracted Gaussian basis functions of type s, two contracted Gaussian basis functions of type p, and one contracted Gaussian basis function of type d.
+Therefore, after this line, six CGTO blocks will be described.
 
 
-** 4行目(PGTO行)
+** line 3(beginning of CGTO block)
 
-原始基底関数(PGTO)の指数と係数を、空白文字で区切って記述します。
-補助基底関数の場合は、係数(1.0)を省略することができます。
+The beginning of a CGTO block indicates the number of primitive Gaussian basis functions (PGTO) that the CGTO block contains.
+
+
+** line 4(PGTO)
+
+The exponents and coefficients of the primitive basis functions (PGTO) are described, separated by whitespace.
+For the auxiliary basis functions, the coefficient (1.0) can be omitted.
 
