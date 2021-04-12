@@ -200,6 +200,14 @@ target_link_libraries(pdf-mat-symmetrize libpdf libpdftl)
 install(TARGETS pdf-mat-symmetrize RUNTIME DESTINATION bin)
 
 
+set(PDF_MAT_TOP_SOURCES
+  main_mat_top.cpp
+  )
+add_executable(pdf-mat-top ${PDF_MAT_TOP_SOURCES})
+target_link_libraries(pdf-mat-top libpdf libpdftl)
+install(TARGETS pdf-mat-top RUNTIME DESTINATION bin)
+
+
 set(PDF_MAT_TRANSPOSE_SOURCES
   main_mat_transpose.cpp
   )
