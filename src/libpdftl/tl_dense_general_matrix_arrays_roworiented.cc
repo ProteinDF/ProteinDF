@@ -23,6 +23,7 @@
 
 #include "TlFile.h"
 #include "TlUtils.h"
+#include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_general_matrix_mmap.h"
 
@@ -222,12 +223,7 @@ bool RowVectorMatrix2CSFD(const std::string& rvmBasePath, const std::string& csf
                 const TlMatrixObject::index_type readRowChunks = std::min(sizeOfChunk, numOfRows - chunkStartRow);
                 TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks, numOfCols, &(transBuf[0]));
 
-<<<<<<< HEAD
-                TlDenseGeneralMatrix_Lapack tmpMat(readRowChunks, numOfCols,
-                                                   &(transBuf[0]));
-=======
                 TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
->>>>>>> 3aad75f (feat: save the Cholesky Vectors as array using mmap)
                 fileMat.block(chunkStartRow, 0, tmpMat);
             }
 
