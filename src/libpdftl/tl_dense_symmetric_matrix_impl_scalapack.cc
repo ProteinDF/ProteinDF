@@ -13,22 +13,22 @@
 // ---------------------------------------------------------------------------
 // constructor & destructor
 // ---------------------------------------------------------------------------
-TlDenseSymmetricMatrix_ImplScalapack::TlDenseSymmetricMatrix_ImplScalapack(
-    const TlMatrixObject::index_type dim)
-    : TlDenseGeneralMatrix_ImplScalapack(dim, dim) {}
+TlDenseSymmetricMatrix_ImplScalapack::TlDenseSymmetricMatrix_ImplScalapack(const TlMatrixObject::index_type dim)
+    : TlDenseGeneralMatrix_ImplScalapack(dim, dim) {
+}
 
 TlDenseSymmetricMatrix_ImplScalapack::TlDenseSymmetricMatrix_ImplScalapack(
     const TlDenseSymmetricMatrix_ImplScalapack& rhs)
-    : TlDenseGeneralMatrix_ImplScalapack(rhs) {}
+    : TlDenseGeneralMatrix_ImplScalapack(rhs) {
+}
 
 // dim = rows
 TlDenseSymmetricMatrix_ImplScalapack::TlDenseSymmetricMatrix_ImplScalapack(
     const TlDenseGeneralMatrix_ImplScalapack& rhs)
     : TlDenseGeneralMatrix_ImplScalapack(rhs) {
     if (rhs.getNumOfRows() != rhs.getNumOfCols()) {
-        this->log_.critical(TlUtils::format("dims are not consistent: %d != %d",
-                                            rhs.getNumOfRows(),
-                                            rhs.getNumOfCols()));
+        this->log_.critical(
+            TlUtils::format("dims are not consistent: %d != %d", rhs.getNumOfRows(), rhs.getNumOfCols()));
         throw;
     }
     assert(rhs.getNumOfRows() == rhs.getNumOfCols());
@@ -41,13 +41,13 @@ TlDenseSymmetricMatrix_ImplScalapack::TlDenseSymmetricMatrix_ImplScalapack(
 //   this->restore(v);
 // }
 
-TlDenseSymmetricMatrix_ImplScalapack::~TlDenseSymmetricMatrix_ImplScalapack() {}
+TlDenseSymmetricMatrix_ImplScalapack::~TlDenseSymmetricMatrix_ImplScalapack() {
+}
 
 // ---------------------------------------------------------------------------
 // properties
 // ---------------------------------------------------------------------------
-double TlDenseSymmetricMatrix_ImplScalapack::get(
-    TlMatrixObject::index_type row, TlMatrixObject::index_type col) const {
+double TlDenseSymmetricMatrix_ImplScalapack::get(TlMatrixObject::index_type row, TlMatrixObject::index_type col) const {
     // if (row < col) {
     //   std::swap(row, col);
     // }
@@ -55,15 +55,13 @@ double TlDenseSymmetricMatrix_ImplScalapack::get(
     return TlDenseGeneralMatrix_ImplScalapack::get(row, col);
 }
 
-void TlDenseSymmetricMatrix_ImplScalapack::set(TlMatrixObject::index_type row,
-                                               TlMatrixObject::index_type col,
+void TlDenseSymmetricMatrix_ImplScalapack::set(TlMatrixObject::index_type row, TlMatrixObject::index_type col,
                                                const double value) {
     TlDenseGeneralMatrix_ImplScalapack::set(row, col, value);
     TlDenseGeneralMatrix_ImplScalapack::set(col, row, value);
 }
 
-void TlDenseSymmetricMatrix_ImplScalapack::add(TlMatrixObject::index_type row,
-                                               TlMatrixObject::index_type col,
+void TlDenseSymmetricMatrix_ImplScalapack::add(TlMatrixObject::index_type row, TlMatrixObject::index_type col,
                                                const double value) {
     TlDenseGeneralMatrix_ImplScalapack::add(row, col, value);
     if (row != col) {
@@ -78,10 +76,9 @@ void TlDenseSymmetricMatrix_ImplScalapack::add(TlMatrixObject::index_type row,
 // ---------------------------------------------------------------------------
 // operations
 // ---------------------------------------------------------------------------
-bool TlDenseSymmetricMatrix_ImplScalapack::eig(
-    TlDenseVector_ImplLapack* pEigVal,
-    TlDenseGeneralMatrix_ImplScalapack* pEigVec,
-    TlDenseSymmetricMatrix_ImplScalapack::DIAGONAL_METHOD method) const {
+bool TlDenseSymmetricMatrix_ImplScalapack::eig(TlDenseVector_ImplLapack* pEigVal,
+                                               TlDenseGeneralMatrix_ImplScalapack* pEigVec,
+                                               TlDenseSymmetricMatrix_ImplScalapack::DIAGONAL_METHOD method) const {
     if (method == DIVIDE_AND_CONQUER) {
         return diagonalByScaLapack_DC(*this, pEigVal, pEigVec);
     } else {
@@ -122,8 +119,7 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(const std::string& sFilePath) {
 
     if (bAnswer != true) {
         this->log_.critical(
-            TlUtils::format("Not supported file type: %s @%s.%d",
-                            sFilePath.c_str(), __FILE__, __LINE__));
+            TlUtils::format("Not supported file type: %s @%s.%d", sFilePath.c_str(), __FILE__, __LINE__));
         std::abort();
     }
 
@@ -145,9 +141,12 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(std::fstream& fs) {
     bool answer = true;
     TlMatrixObject::MatrixType matType;
     TlMatrixObject::index_type dim;
+    TlMatrixObject::HeaderInfo headerInfo;
     if (rComm.isMaster() == true) {
-        TlMatrixUtils::getHeaderInfo(fs, &matType, &dim);
-        assert(matType == TlMatrixObject::RLHD);
+        TlMatrixUtils::getHeaderInfo(fs, &headerInfo);
+        assert(headerInfo.matrixType == TlMatrixObject::RLHD);
+        matType = headerInfo.matrixType;
+        dim = headerInfo.numOfRows;
     }
     // rComm.broadcast(matType);
     rComm.broadcast(dim);
@@ -173,8 +172,7 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(std::fstream& fs) {
     this->initialize();
 
     if (rComm.isMaster() == true) {
-        static const std::size_t bufferCount =
-            FILE_BUFFER_SIZE / sizeof(double);
+        static const std::size_t bufferCount = FILE_BUFFER_SIZE / sizeof(double);
         std::vector<double> buf(bufferCount, 0.0);
 
         TlMatrixObject::index_type row = 0;
@@ -184,8 +182,7 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(std::fstream& fs) {
         bool isFinished = false;
 
         std::vector<TlMatrixObject::index_type> sizeLists(numOfProcs, 0);
-        std::vector<std::vector<TlMatrixObject::MatrixElement> > elementsBuf(
-            numOfProcs);
+        std::vector<std::vector<TlMatrixObject::MatrixElement> > elementsBuf(numOfProcs);
         std::vector<bool> isSendData(numOfProcs, false);
 
         while (isFinished == false) {
@@ -193,18 +190,15 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(std::fstream& fs) {
             fs.read((char*)(&buf[0]), sizeof(double) * bufferCount);
 
             // 各プロセスのバッファに振り分ける
-            std::vector<std::vector<TlMatrixObject::MatrixElement> > elements(
-                numOfProcs);
+            std::vector<std::vector<TlMatrixObject::MatrixElement> > elements(numOfProcs);
             for (std::size_t i = 0; i < bufferCount; ++i) {
                 int rank = 0;
 
                 this->getGlobalRowCol2LocalRowCol(row, col, &rank);
-                elements[rank].push_back(
-                    TlMatrixObject::MatrixElement(row, col, buf[i]));
+                elements[rank].push_back(TlMatrixObject::MatrixElement(row, col, buf[i]));
 
                 this->getGlobalRowCol2LocalRowCol(col, row, &rank);
-                elements[rank].push_back(
-                    TlMatrixObject::MatrixElement(col, row, buf[i]));
+                elements[rank].push_back(TlMatrixObject::MatrixElement(col, row, buf[i]));
 
                 {
                     ++col;
@@ -222,8 +216,7 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(std::fstream& fs) {
             }
 
             // データを送信
-            for (int proc = 1; proc < numOfProcs;
-                 ++proc) {  // proc == 0は送信しない
+            for (int proc = 1; proc < numOfProcs; ++proc) {  // proc == 0は送信しない
                 if (isSendData[proc] == true) {
                     rComm.wait(sizeLists[proc]);
                     if (sizeLists[proc] > 0) {
@@ -237,8 +230,7 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(std::fstream& fs) {
 
                 rComm.iSendData(sizeLists[proc], proc, TAG_LOAD_SIZE);
                 if (sizeLists[proc] > 0) {
-                    rComm.iSendDataX(&(elementsBuf[proc][0]), sizeLists[proc],
-                                     proc, TAG_LOAD_VALUES);
+                    rComm.iSendDataX(&(elementsBuf[proc][0]), sizeLists[proc], proc, TAG_LOAD_VALUES);
                 }
                 isSendData[proc] = true;
             }
@@ -247,27 +239,21 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(std::fstream& fs) {
             {
                 const TlMatrixObject::index_type sizeList = elements[0].size();
                 for (TlMatrixObject::index_type i = 0; i < sizeList; ++i) {
-                    const TlMatrixObject::index_type globalRow =
-                        elements[0][i].row;
-                    const TlMatrixObject::index_type globalCol =
-                        elements[0][i].col;
+                    const TlMatrixObject::index_type globalRow = elements[0][i].row;
+                    const TlMatrixObject::index_type globalCol = elements[0][i].col;
 
                     int rank = 0;
                     TlMatrixObject::index_type myRow, myCol;
-                    this->getGlobalRowCol2LocalRowCol(globalRow, globalCol,
-                                                      &rank, &myRow, &myCol);
+                    this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow, &myCol);
                     assert(rank == this->rank_);
-                    const TlMatrixObject::size_type index =
-                        this->getLocalIndex(myRow, myCol);
-                    assert((0 <= index) &&
-                           (index < this->getNumOfMyElements()));
+                    const TlMatrixObject::size_type index = this->getLocalIndex(myRow, myCol);
+                    assert((0 <= index) && (index < this->getNumOfMyElements()));
                     this->pData_[index] = elements[0][i].value;
                 }
             }
         }  // end while
 
-        for (int proc = 1; proc < numOfProcs;
-             ++proc) {  // proc == 0 は送信しない
+        for (int proc = 1; proc < numOfProcs; ++proc) {  // proc == 0 は送信しない
             if (isSendData[proc] == true) {
                 rComm.wait(sizeLists[proc]);
                 if (sizeLists[proc] > 0) {
@@ -281,12 +267,10 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(std::fstream& fs) {
         // 終了メッセージを全ノードに送る
         // sizeList=-1 で終了
         std::vector<int> endMsg(numOfProcs, -1);
-        for (int proc = 1; proc < numOfProcs;
-             ++proc) {  // proc == 0 は送信しない
+        for (int proc = 1; proc < numOfProcs; ++proc) {  // proc == 0 は送信しない
             rComm.iSendData(endMsg[proc], proc, TAG_LOAD_SIZE);
         }
-        for (int proc = 1; proc < numOfProcs;
-             ++proc) {  // proc == 0 は送信しない
+        for (int proc = 1; proc < numOfProcs; ++proc) {  // proc == 0 は送信しない
             rComm.wait(endMsg[proc]);
         }
     } else {
@@ -304,23 +288,17 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(std::fstream& fs) {
                 if (sizeList >= 0) {
                     if (sizeList > 0) {
                         elements.resize(sizeList);
-                        rComm.receiveDataX(&(elements[0]), sizeList, root,
-                                           TAG_LOAD_VALUES);
+                        rComm.receiveDataX(&(elements[0]), sizeList, root, TAG_LOAD_VALUES);
 
-                        for (TlMatrixObject::index_type i = 0; i < sizeList;
-                             ++i) {
-                            const TlMatrixObject::index_type globalRow =
-                                elements[i].row;
-                            const TlMatrixObject::index_type globalCol =
-                                elements[i].col;
+                        for (TlMatrixObject::index_type i = 0; i < sizeList; ++i) {
+                            const TlMatrixObject::index_type globalRow = elements[i].row;
+                            const TlMatrixObject::index_type globalCol = elements[i].col;
 
                             int rank = 0;
                             TlMatrixObject::index_type myRow, myCol;
-                            this->getGlobalRowCol2LocalRowCol(
-                                globalRow, globalCol, &rank, &myRow, &myCol);
+                            this->getGlobalRowCol2LocalRowCol(globalRow, globalCol, &rank, &myRow, &myCol);
                             assert(rank == this->rank_);
-                            const TlMatrixObject::size_type index =
-                                this->getLocalIndex(myRow, myCol);
+                            const TlMatrixObject::size_type index = this->getLocalIndex(myRow, myCol);
                             this->pData_[index] = elements[i].value;
                         }
                     }
@@ -337,8 +315,7 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(std::fstream& fs) {
     return answer;
 }
 
-bool TlDenseSymmetricMatrix_ImplScalapack::save(
-    const std::string& sFilePath) const {
+bool TlDenseSymmetricMatrix_ImplScalapack::save(const std::string& sFilePath) const {
     // if (TlDenseGeneralMatrix_ImplScalapack::isUsingPartialIO == true) {
     //   return this->saveLocal(sFilePath);
     // }
@@ -355,8 +332,7 @@ bool TlDenseSymmetricMatrix_ImplScalapack::save(
 
         // store local matrix
         {
-            const std::vector<TlMatrixObject::MatrixElement> buf =
-                this->getMatrixElementsInLocal2();
+            const std::vector<TlMatrixObject::MatrixElement> buf = this->getMatrixElementsInLocal2();
             TlDenseGeneralMatrix_ImplScalapack::saveElements(&fm, buf);
         }
 
@@ -377,8 +353,7 @@ bool TlDenseSymmetricMatrix_ImplScalapack::save(
     } else {
         // slave: send submatrix
         const int root = 0;
-        const std::vector<TlMatrixObject::MatrixElement> buf =
-            this->getMatrixElementsInLocal2();
+        const std::vector<TlMatrixObject::MatrixElement> buf = this->getMatrixElementsInLocal2();
         const TlMatrixObject::size_type bufSize = buf.size();
         rComm.sendData(bufSize, root, TAG_SAVE_HANDSHAKE);
         rComm.iSendDataX(&(buf[0]), buf.size(), root, TAG_SAVE_DATA);
@@ -390,29 +365,22 @@ bool TlDenseSymmetricMatrix_ImplScalapack::save(
     return answer;
 }
 
-std::vector<TlMatrixObject::MatrixElement>
-TlDenseSymmetricMatrix_ImplScalapack::getMatrixElementsInLocal2() const {
-    const TlMatrixObject::size_type numOfMyElements =
-        this->getNumOfMyElements();
+std::vector<TlMatrixObject::MatrixElement> TlDenseSymmetricMatrix_ImplScalapack::getMatrixElementsInLocal2() const {
+    const TlMatrixObject::size_type numOfMyElements = this->getNumOfMyElements();
     std::vector<TlMatrixObject::MatrixElement> answer;
     answer.reserve(numOfMyElements);
 
     const TlMatrixObject::index_type localRows = this->myRows_;
     const TlMatrixObject::index_type localCols = this->myCols_;
     // TlMatrixObject::size_type count = 0;
-    for (TlMatrixObject::index_type localRow = 0; localRow < localRows;
-         ++localRow) {
-        const TlMatrixObject::index_type globalRow =
-            this->getLocal2Global_row(localRow);
-        for (TlMatrixObject::index_type localCol = 0; localCol < localCols;
-             ++localCol) {
-            const TlMatrixObject::index_type globalCol =
-                this->getLocal2Global_col(localCol);
+    for (TlMatrixObject::index_type localRow = 0; localRow < localRows; ++localRow) {
+        const TlMatrixObject::index_type globalRow = this->getLocal2Global_row(localRow);
+        for (TlMatrixObject::index_type localCol = 0; localCol < localCols; ++localCol) {
+            const TlMatrixObject::index_type globalCol = this->getLocal2Global_col(localCol);
 
             if (globalRow >= globalCol) {
-                answer.push_back(TlMatrixObject::MatrixElement(
-                    globalRow, globalCol,
-                    this->getLocal(globalRow, globalCol)));
+                answer.push_back(
+                    TlMatrixObject::MatrixElement(globalRow, globalCol, this->getLocal(globalRow, globalCol)));
             }
         }
     }
@@ -534,8 +502,8 @@ TlDenseSymmetricMatrix_ImplScalapack::getMatrixElementsInLocal2() const {
 // ---------------------------------------------------------------------------
 // protected
 // ---------------------------------------------------------------------------
-TlMatrixObject::size_type TlDenseSymmetricMatrix_ImplScalapack::index(
-    TlMatrixObject::index_type row, TlMatrixObject::index_type col) const {
+TlMatrixObject::size_type TlDenseSymmetricMatrix_ImplScalapack::index(TlMatrixObject::index_type row,
+                                                                      TlMatrixObject::index_type col) const {
     // This class treats 'U' type matrix.
     // if UPLO = 'U', AP(i + (j-1)*j/2) = A(i,j) for 1<=i<=j; in Fortran
     // index = row + col * (col +1) /2; // in C/C++ (in row >= col)
@@ -552,10 +520,8 @@ TlMatrixObject::size_type TlDenseSymmetricMatrix_ImplScalapack::index(
 }
 
 // ---------------------------------------------------------------------------
-bool diagonalByScaLapack_QR(
-    const TlDenseSymmetricMatrix_ImplScalapack& inMatrix,
-    TlDenseVector_ImplLapack* outEigVal,
-    TlDenseGeneralMatrix_ImplScalapack* outEigVec) {
+bool diagonalByScaLapack_QR(const TlDenseSymmetricMatrix_ImplScalapack& inMatrix, TlDenseVector_ImplLapack* outEigVal,
+                            TlDenseGeneralMatrix_ImplScalapack* outEigVec) {
     TlLogging& logger = TlLogging::getInstance();
     assert(outEigVal != NULL);
     assert(outEigVec != NULL);
@@ -586,8 +552,7 @@ bool diagonalByScaLapack_QR(
     double* pWorkSizeCheck = new double[1];
     int info = 0;
 
-    pdsyev_(JOBZ, UPLO, &N, pBufA, &IA, &JA, DESCA, W, Z, &IZ, &JZ, DESCZ,
-            pWorkSizeCheck, &LWORK, &info);
+    pdsyev_(JOBZ, UPLO, &N, pBufA, &IA, &JA, DESCA, W, Z, &IZ, &JZ, DESCZ, pWorkSizeCheck, &LWORK, &info);
 
     if (info != 0) {
         logger.critical(TlUtils::format("pdsyev_ error @1st call: %d", info));
@@ -600,8 +565,7 @@ bool diagonalByScaLapack_QR(
     delete[] pWorkSizeCheck;
     pWorkSizeCheck = NULL;
 
-    pdsyev_(JOBZ, UPLO, &N, pBufA, &IA, &JA, DESCA, W, Z, &IZ, &JZ, DESCZ,
-            pWork, &LWORK, &info);
+    pdsyev_(JOBZ, UPLO, &N, pBufA, &IA, &JA, DESCA, W, Z, &IZ, &JZ, DESCZ, pWork, &LWORK, &info);
 
     delete[] pWork;
     pWork = NULL;
@@ -613,10 +577,8 @@ bool diagonalByScaLapack_QR(
 }
 
 // Divide-and-Conquer Algorithm
-bool diagonalByScaLapack_DC(
-    const TlDenseSymmetricMatrix_ImplScalapack& inMatrix,
-    TlDenseVector_ImplLapack* outEigVal,
-    TlDenseGeneralMatrix_ImplScalapack* outEigVec) {
+bool diagonalByScaLapack_DC(const TlDenseSymmetricMatrix_ImplScalapack& inMatrix, TlDenseVector_ImplLapack* outEigVal,
+                            TlDenseGeneralMatrix_ImplScalapack* outEigVec) {
     TlLogging& logger = TlLogging::getInstance();
     assert(outEigVal != NULL);
     assert(outEigVec != NULL);
@@ -651,8 +613,8 @@ bool diagonalByScaLapack_DC(
     int* IWORK = new int[LIWORK];
     int info = 0;
 
-    pdsyevd_(JOBZ, UPLO, &N, pBufA, &IA, &JA, DESCA, W, Z, &IZ, &JZ, DESCZ,
-             pWorkSizeCheck, &LWORK, IWORK, &LIWORK, &info);
+    pdsyevd_(JOBZ, UPLO, &N, pBufA, &IA, &JA, DESCA, W, Z, &IZ, &JZ, DESCZ, pWorkSizeCheck, &LWORK, IWORK, &LIWORK,
+             &info);
 
     if (info != 0) {
         logger.critical(TlUtils::format("pdsyev_ error @1st call: %d", info));
@@ -665,8 +627,7 @@ bool diagonalByScaLapack_DC(
     delete[] pWorkSizeCheck;
     pWorkSizeCheck = NULL;
 
-    pdsyevd_(JOBZ, UPLO, &N, pBufA, &IA, &JA, DESCA, W, Z, &IZ, &JZ, DESCZ,
-             pWork, &LWORK, IWORK, &LIWORK, &info);
+    pdsyevd_(JOBZ, UPLO, &N, pBufA, &IA, &JA, DESCA, W, Z, &IZ, &JZ, DESCZ, pWork, &LWORK, IWORK, &LIWORK, &info);
 
     delete[] IWORK;
     IWORK = NULL;

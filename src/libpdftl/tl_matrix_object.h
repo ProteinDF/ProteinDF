@@ -42,24 +42,6 @@ class TlMatrixObject {
 
     // ---------------------------------------------------------------------------
    public:
-    /// 行列要素を格納するための構造体
-    ///
-    /// TlCommunicate で通信可能
-    struct MatrixElement {
-        typedef TlMatrixObject::index_type index_type;
-
-       public:
-        MatrixElement(index_type r = 0, index_type c = 0, double v = 0.0)
-            : row(r), col(c), value(v) {}
-
-       public:
-        index_type row;
-        index_type col;
-        double value;
-    };
-
-    // ---------------------------------------------------------------------------
-   public:
     enum MatrixType {
         UNDEFINED = -1,
         RSFD = 0,  /// RSFD: Row-oriented Standard Full Dens-matrix
@@ -75,16 +57,75 @@ class TlMatrixObject {
 
     // ---------------------------------------------------------------------------
    public:
-    explicit TlMatrixObject(const MatrixType matrixType = UNDEFINED,
-                            const index_type row = 1, index_type col = 1);
+    struct HeaderInfo {
+       public:
+        HeaderInfo()
+            : matrixType(UNDEFINED),
+              numOfRows(0),
+              numOfCols(0),
+              numOfItems(0),
+              numOfVectors(0),
+              sizeOfVector(0),
+              reservedSizeOfVector(0),
+              numOfSubunits(0),
+              subunitId(0),
+              sizeOfChunk(0){};
 
-    virtual ~TlMatrixObject() {}
+       public:
+        MatrixType matrixType;
+
+        // for RSFD, CSFD, RLHD, RUHD
+        index_type numOfRows;
+        index_type numOfCols;
+
+        // for COOF, COOS
+        std::size_t numOfItems;
+
+        // for ABGD
+        index_type numOfVectors;
+        index_type sizeOfVector;
+        index_type reservedSizeOfVector;
+        int numOfSubunits;
+        int subunitId;
+        int sizeOfChunk;
+    };
 
     // ---------------------------------------------------------------------------
    public:
-    virtual MatrixType getType() const { return this->matrixType_; };
-    virtual index_type getNumOfRows() const { return this->row_; };
-    virtual index_type getNumOfCols() const { return this->col_; };
+    /// 行列要素を格納するための構造体
+    ///
+    /// TlCommunicate で通信可能
+    struct MatrixElement {
+        typedef TlMatrixObject::index_type index_type;
+
+       public:
+        MatrixElement(index_type r = 0, index_type c = 0, double v = 0.0) : row(r), col(c), value(v) {
+        }
+
+       public:
+        index_type row;
+        index_type col;
+        double value;
+    };
+
+    // ---------------------------------------------------------------------------
+   public:
+    explicit TlMatrixObject(const MatrixType matrixType = UNDEFINED, const index_type row = 1, index_type col = 1);
+
+    virtual ~TlMatrixObject() {
+    }
+
+    // ---------------------------------------------------------------------------
+   public:
+    virtual MatrixType getType() const {
+        return this->matrixType_;
+    };
+    virtual index_type getNumOfRows() const {
+        return this->row_;
+    };
+    virtual index_type getNumOfCols() const {
+        return this->col_;
+    };
 
     // ---------------------------------------------------------------------------
     // I/O
