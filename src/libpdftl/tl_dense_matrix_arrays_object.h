@@ -16,14 +16,15 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef TLVECTORMATRIXOBJECT_H
-#define TLVECTORMATRIXOBJECT_H
+#ifndef TL_DENSE_MATRIX_ARRAYS_OBJECT_H
+#define TL_DENSE_MATRIX_ARRAYS_OBJECT_H
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
 #include <vector>
+
 #include "tl_dense_vector_lapack.h"
 #include "tl_matrix_object.h"
 
@@ -161,4 +162,4 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
     std::vector<double*> chunks_;
 };
 
-#endif  // TLCOLVECTORMATRIX2_H
+#endif  // TL_DENSE_MATRIX_ARRAYS_OBJECT_H
