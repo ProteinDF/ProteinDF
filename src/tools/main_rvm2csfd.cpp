@@ -4,7 +4,7 @@
 #include "TlGetopt.h"
 #include "TlUtils.h"
 #include "tl_dense_general_matrix_arrays_mmap_roworiented.h"
-#include "tl_dense_general_matrix_arrays_roworiented.h"
+// #include "tl_dense_general_matrix_arrays_roworiented.h"
 #include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_general_matrix_mmap.h"
 
@@ -38,7 +38,9 @@ int main(int argc, char* argv[]) {
     }
 
     // bool yn = RowVectorMatrix2CSFD(inputBaseName, outputPath, verbose, true);
-    transpose2CSFD(inputBaseName, outputPath, verbose, true);
+    // transpose2CSFD(inputBaseName, outputPath, verbose, true);
+    RowVectorMatrix2CSFD_mmap(inputBaseName, outputPath, verbose, true);
+
     // check
     // index_type numOfRows = 0;
     // index_type numOfCols = 0;
