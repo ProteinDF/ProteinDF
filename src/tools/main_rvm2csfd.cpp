@@ -38,8 +38,7 @@ int main(int argc, char* argv[]) {
     }
 
     // bool yn = RowVectorMatrix2CSFD(inputBaseName, outputPath, verbose, true);
-    // transpose2CSFD(inputBaseName, outputPath, verbose, true);
-    RowVectorMatrix2CSFD_mmap(inputBaseName, outputPath, verbose, true);
+    transpose2CSFD(inputBaseName, outputPath, verbose, true);
 
     // check
     // index_type numOfRows = 0;

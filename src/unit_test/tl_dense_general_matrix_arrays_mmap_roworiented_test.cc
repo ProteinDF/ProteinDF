@@ -1230,7 +1230,7 @@ TEST(TlDenseGeneralMatrix_arrays_mmap_RowOriented, RowVectorMatrix2CSFD) {
 
     // transform
     std::cerr << "transform begin." << std::endl;
-    RowVectorMatrix2CSFD_mmap(matPath1, csfdPath, true);
+    transpose2CSFD(matPath1, csfdPath, true);
     std::cerr << "transform done." << std::endl;
 
     // load

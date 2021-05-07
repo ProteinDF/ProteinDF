@@ -50,8 +50,8 @@ class TlDenseGeneralMatrix_arrays_mmap_RowOriented : public TlDenseMatrix_arrays
 
 std::ostream& operator<<(std::ostream& stream, const TlDenseGeneralMatrix_arrays_mmap_RowOriented& mat);
 
-bool RowVectorMatrix2CSFD_mmap(const std::string& rvmBasePath, const std::string& csfdPath, bool verbose = false,
-                               bool showProgress = false);
+// bool RowVectorMatrix2CSFD_mmap(const std::string& rvmBasePath, const std::string& csfdPath, bool verbose = false,
+//                                bool showProgress = false);
 
 //
 bool convert2csfd(const std::string& rvmBasePath, const int unit, const std::string& outputPath, const bool verbose,
