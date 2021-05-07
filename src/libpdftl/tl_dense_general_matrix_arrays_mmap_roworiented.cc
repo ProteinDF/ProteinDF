@@ -135,96 +135,6 @@ std::ostream& operator<<(std::ostream& stream, const TlDenseGeneralMatrix_arrays
 }
 
 // -----------------------------------------------------------------------------
-bool RowVectorMatrix2CSFD_mmap(const std::string& rvmBasePath, const std::string& csfdPath, bool verbose,
-                               bool showProgress) {
-    // check
-    TlMatrixObject::index_type numOfRows = 0;
-    TlMatrixObject::index_type numOfCols = 0;
-    int numOfSubunits = 0;
-    int sizeOfChunk = 0;
-    {
-        int subunitID = 0;
-        const std::string inputPath0 = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, subunitID);
-        TlMatrixObject::index_type sizeOfVector, numOfVectors;
-        const bool isLoadable = TlDenseMatrix_arrays_mmap_Object::isLoadable(inputPath0, &numOfVectors, &sizeOfVector,
-                                                                             &numOfSubunits, &subunitID, &sizeOfChunk);
-        if (isLoadable != true) {
-            std::cerr << "can not open file: " << inputPath0 << std::endl;
-            return false;
-        }
-
-        // row-vector matrix
-        numOfRows = numOfVectors;
-        numOfCols = sizeOfVector;
-
-        if (verbose) {
-            std::cerr << "rows: " << numOfRows << std::endl;
-            std::cerr << "cols: " << numOfCols << std::endl;
-            std::cerr << "units: " << numOfSubunits << std::endl;
-            std::cerr << "chunk: " << sizeOfChunk << std::endl;
-        }
-    }
-
-    // prepare output
-    if (TlFile::isExistFile(csfdPath)) {
-        if (verbose) {
-            std::cerr << "file overwrite: " << csfdPath << std::endl;
-        }
-        TlFile::remove(csfdPath);
-    }
-    TlDenseGeneralMatrix_mmap fileMat(csfdPath, numOfRows, numOfCols);
-    if (verbose) {
-        std::cerr << "output matrix has been prepared by mmap." << std::endl;
-    }
-
-    // load & set
-    for (int unit = 0; unit < numOfSubunits; ++unit) {
-        if (verbose) {
-            std::cerr << TlUtils::format("%d / %d", unit + 1, numOfSubunits) << std::endl;
-        }
-
-        TlDenseGeneralMatrix_arrays_mmap_RowOriented partMat(rvmBasePath, 1, 1, numOfSubunits, unit);
-        if (verbose) {
-            std::cerr << "load partial matrix " << std::endl;
-        }
-
-        std::vector<double> chunkBuf(numOfCols * sizeOfChunk);
-        std::vector<double> transBuf(numOfCols * sizeOfChunk);
-        const int numOfLocalChunks =
-            TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(numOfRows, numOfSubunits, sizeOfChunk);
-        for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
-            const TlMatrixObject::index_type chunkStartRow = sizeOfChunk * (numOfSubunits * chunk + unit);
-
-            if (chunkStartRow < numOfRows) {
-                partMat.getChunk(chunkStartRow, &(chunkBuf[0]), numOfCols * sizeOfChunk);
-
-                // change memory layout
-                const TlMatrixObject::index_type readRowChunks = std::min(sizeOfChunk, numOfRows - chunkStartRow);
-                TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks, numOfCols, &(transBuf[0]));
-
-                TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
-                fileMat.block(chunkStartRow, 0, tmpMat);
-            }
-
-            if (showProgress) {
-                TlUtils::progressbar(float(chunk) / numOfLocalChunks);
-            }
-        }
-
-        if (showProgress) {
-            TlUtils::progressbar(1.0);
-            std::cout << std::endl;
-        }
-    }
-
-    if (verbose) {
-        std::cerr << "end." << std::endl;
-    }
-
-    return true;
-}
-
-// -----------------------------------------------------------------------------
 bool convert2csfd(const std::string& rvmBasePath, const int unit, const std::string& outputPath, const bool verbose,
                   const bool showProgress) {
     bool answer = false;
@@ -325,6 +235,7 @@ void copy2csfd(const TlMatrixObject::index_type numOfRows, const TlMatrixObject:
     }
 }
 
+//
 bool transpose2CSFD(const std::string& rvmBasePath, const std::string& outputMatrixPath, const bool verbose,
                     const bool showProgress) {
     bool answer = false;
