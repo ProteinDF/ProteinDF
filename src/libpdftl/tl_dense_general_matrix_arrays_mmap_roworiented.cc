@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "TlFile.h"
+#include "TlSystem.h"
 #include "TlUtils.h"
 #include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_general_matrix_lapack.h"
@@ -12,11 +13,16 @@
 TlDenseGeneralMatrix_arrays_mmap_RowOriented::TlDenseGeneralMatrix_arrays_mmap_RowOriented(
     const std::string& baseFilePath, const index_type row, const index_type col, const int numOfSubunits,
     const int subunitID, const int reservedCols)
-    : TlDenseMatrix_arrays_mmap_Object(baseFilePath, row, col, numOfSubunits, subunitID, reservedCols) {
+    : TlDenseMatrix_arrays_mmap_Object(baseFilePath, row, col, numOfSubunits, subunitID, reservedCols),
+      tempCsfdMatPath_("") {
+    // this->tempDir_ = TlSystem::getEnv("TEMP");
+    this->tempDir_ = "/tmp";
 }
 
 TlDenseGeneralMatrix_arrays_mmap_RowOriented::TlDenseGeneralMatrix_arrays_mmap_RowOriented(const std::string& filePath)
-    : TlDenseMatrix_arrays_mmap_Object(filePath) {
+    : TlDenseMatrix_arrays_mmap_Object(filePath), tempCsfdMatPath_("") {
+    // this->tempDir_ = TlSystem::getEnv("TEMP");
+    this->tempDir_ = "/tmp";
 }
 
 // TlDenseGeneralMatrix_arrays_mmap_RowOriented::
@@ -42,6 +48,10 @@ TlDenseGeneralMatrix_arrays_mmap_RowOriented::TlDenseGeneralMatrix_arrays_mmap_R
 //     : TlDenseMatrix_arrays_Object(rhs) {}
 
 TlDenseGeneralMatrix_arrays_mmap_RowOriented::~TlDenseGeneralMatrix_arrays_mmap_RowOriented() {
+    if (!this->tempCsfdMatPath_.empty()) {
+        TlFile::remove(this->tempCsfdMatPath_);
+        this->tempCsfdMatPath_ = "";
+    }
 }
 
 void TlDenseGeneralMatrix_arrays_mmap_RowOriented::resize(const index_type row, const index_type col) {
@@ -93,10 +103,93 @@ TlDenseGeneralMatrix_Lapack TlDenseGeneralMatrix_arrays_mmap_RowOriented::getTlM
     return answer;
 }
 
-// void TlDenseGeneralMatrix_arrays_mmap_RowOriented::saveByTlDenseGeneralMatrix_arrays_ColOriented(
-//     const std::string& basename) const {
-//     TlDenseMatrix_arrays_mmap_Object::saveByTheOtherType(basename);
-// }
+void TlDenseGeneralMatrix_arrays_mmap_RowOriented::convertMemoryLayout(const bool verbose,
+                                                                       const bool showProgress) const {
+    const TlMatrixObject::index_type numOfRows = this->getNumOfRows();
+    const TlMatrixObject::index_type numOfCols = this->getNumOfCols();
+    const int numOfSubunits = this->getNumOfSubunits();
+    const int sizeOfChunk = this->getSizeOfChunk();
+    const int unit = this->getSubunitID();
+
+    // this->tempCsfdMatPath_ = TlUtils::format("%s/temp.%d", this->tempDir_.c_str(), unit);
+    this->tempCsfdMatPath_ = TlUtils::format("temp.%d", unit);
+
+    // set
+    std::vector<double> chunkBuf(numOfCols * sizeOfChunk);
+    std::vector<double> transBuf(numOfCols * sizeOfChunk);
+    const int numOfLocalChunks =
+        TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(numOfRows, numOfSubunits, sizeOfChunk);
+
+    const TlMatrixObject::index_type localNumOfRows = numOfLocalChunks * sizeOfChunk;
+    // std::cerr << TlUtils::format("localNumOfRows=%d, numOfLocalChunks=%d, sizeOfChunk=%d", localNumOfRows,
+    //                              numOfLocalChunks, sizeOfChunk)
+    //           << std::endl;
+
+    TlDenseGeneralMatrix_mmap outMat(this->tempCsfdMatPath_, localNumOfRows, numOfCols);
+    if (verbose) {
+        std::cerr << "output matrix has been prepared by mmap." << std::endl;
+    }
+
+    for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
+        const TlMatrixObject::index_type chunkStartRow = sizeOfChunk * (numOfSubunits * chunk + unit);
+
+        if (chunkStartRow < numOfRows) {
+            this->getChunk(chunkStartRow, &(chunkBuf[0]), numOfCols * sizeOfChunk);
+
+            // change memory layout
+            const TlMatrixObject::index_type readRowChunks = std::min(sizeOfChunk, numOfRows - chunkStartRow);
+            TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks, numOfCols, &(transBuf[0]));
+
+            TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
+            // std::cerr << TlUtils::format("chunk=%d; %d, %d", chunk, readRowChunks, tmpMat.getNumOfRows())
+            //           << std::endl;
+            outMat.block(chunk * sizeOfChunk, 0, tmpMat);
+        }
+
+        if (showProgress) {
+            TlUtils::progressbar(float(chunk) / numOfLocalChunks);
+        }
+    }
+
+    if (showProgress) {
+        TlUtils::progressbar(1.0);
+        std::cout << std::endl;
+    }
+}
+
+void TlDenseGeneralMatrix_arrays_mmap_RowOriented::set2csfd(TlDenseGeneralMatrix_mmap* pOutMat, const bool verbose,
+                                                            const bool showProgress) const {
+    const TlMatrixObject::index_type numOfRows = this->getNumOfRows();
+    const TlMatrixObject::index_type numOfCols = this->getNumOfCols();
+    const int numOfSubunits = this->getNumOfSubunits();
+    const int sizeOfChunk = this->getSizeOfChunk();
+    const int unit = this->getSubunitID();
+
+    if (this->tempCsfdMatPath_.empty()) {
+        std::cerr << "please call convertMemoryLayout() before this function. stop." << std::endl;
+        abort();
+    }
+
+    TlDenseGeneralMatrix_mmap inMat(this->tempCsfdMatPath_);
+    const TlMatrixObject::index_type numOfLocalRows = inMat.getNumOfRows();
+
+    const int numOfLocalChunks =
+        TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(numOfRows, numOfSubunits, sizeOfChunk);
+
+    TlDenseGeneralMatrix_Eigen tmpMat;
+    for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
+        const TlMatrixObject::index_type row = sizeOfChunk * chunk;
+        const TlMatrixObject::index_type chunkStartRow = sizeOfChunk * (numOfSubunits * chunk + unit);
+        const TlMatrixObject::index_type rowDistance = std::min(sizeOfChunk, numOfRows - chunkStartRow);
+        inMat.block(row, 0, rowDistance, numOfCols, &tmpMat);
+
+        // std::cerr << TlUtils::format("chunk: %d/%d", chunk, numOfLocalChunks - 1) << std::endl;
+        // std::cerr << TlUtils::format("chunkStartRow=%d, numOfLocalRows=%d, row=%d, rowDistance", chunkStartRow,
+        //                              numOfLocalRows, row, rowDistance)
+        //           << std::endl;
+        pOutMat->block(chunkStartRow, 0, tmpMat);
+    }
+}
 
 // -----------------------------------------------------------------------------
 std::ostream& operator<<(std::ostream& stream, const TlDenseGeneralMatrix_arrays_mmap_RowOriented& mat) {
@@ -283,11 +376,16 @@ bool transpose2CSFD(const std::string& rvmBasePath, const std::string& outputMat
     // 最終書き込み
     for (int unit = 0; unit < numOfSubunits; ++unit) {
         // std::cerr << "copy: " << unit << std::endl;
-        const std::string tempMatPath = TlUtils::format("Ljk.temp.%d", unit);
+        // const std::string tempMatPath = TlUtils::format("Ljk.temp.%d", unit);
 
-        convert2csfd(rvmBasePath, unit, tempMatPath, verbose, showProgress);
-        copy2csfd(numOfRows, numOfCols, numOfSubunits, sizeOfChunk, tempMatPath, unit, &outMat, verbose);
-        TlFile::remove(tempMatPath);
+        // convert2csfd(rvmBasePath, unit, tempMatPath, verbose, showProgress);
+        // copy2csfd(numOfRows, numOfCols, numOfSubunits, sizeOfChunk, tempMatPath, unit, &outMat, verbose);
+        // TlFile::remove(tempMatPath);
+
+        const std::string inputPath = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, unit);
+        TlDenseGeneralMatrix_arrays_mmap_RowOriented inMat(inputPath);
+        inMat.convertMemoryLayout(verbose, showProgress);
+        inMat.set2csfd(&outMat, verbose, showProgress);
     }
 
     return answer;
