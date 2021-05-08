@@ -46,14 +46,26 @@ class TlDenseGeneralMatrix_arrays_mmap_RowOriented : public TlDenseMatrix_arrays
 
     /// TlDenseGeneralMatrix_arrays_ColOriented形式で保存
     // void saveByTlDenseGeneralMatrix_arrays_ColOriented(const std::string& basename) const;
+
+   public:
+    std::string tempDir() const {
+        return this->tempDir_;
+    };
+    void tempDir(const std::string& tempDir) {
+        this->tempDir_ = tempDir;
+    };
+
+    void convertMemoryLayout(const bool verbose = false, const bool showProgress = false) const;
+    void set2csfd(TlDenseGeneralMatrix_mmap* pOutMat, const bool verbose = false,
+                  const bool showProgress = false) const;
+
+   private:
+    std::string tempDir_;
+    mutable std::string tempCsfdMatPath_;  // used for convert to CSFD matrix
 };
 
 std::ostream& operator<<(std::ostream& stream, const TlDenseGeneralMatrix_arrays_mmap_RowOriented& mat);
 
-// bool RowVectorMatrix2CSFD_mmap(const std::string& rvmBasePath, const std::string& csfdPath, bool verbose = false,
-//                                bool showProgress = false);
-
-//
 bool convert2csfd(const std::string& rvmBasePath, const int unit, const std::string& outputPath, const bool verbose,
                   const bool showProgress);
 void copy2csfd(const TlMatrixObject::index_type numOfRows, const TlMatrixObject::index_type numOfCols,
