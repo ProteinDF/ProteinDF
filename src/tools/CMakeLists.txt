@@ -216,6 +216,14 @@ target_link_libraries(pdf-mat-transpose libpdf libpdftl)
 install(TARGETS pdf-mat-transpose RUNTIME DESTINATION bin)
 
 
+set(PDF_MAT_UPDATE_RVM_SOURCES
+  main_mat_update_rvm.cc
+  )
+add_executable(pdf-mat-update-rvm ${PDF_MAT_UPDATE_RVM_SOURCES})
+target_link_libraries(pdf-mat-update-rvm libpdf libpdftl)
+install(TARGETS pdf-mat-update-rvm RUNTIME DESTINATION bin)
+
+
 set(PDF_MINT_SOURCES
   main_mint.cpp
   tl_mint_object.h
