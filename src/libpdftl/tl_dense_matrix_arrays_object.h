@@ -31,16 +31,13 @@
 /// 配列の配列として行列を扱うためのコンテナ
 class TlDenseMatrix_arrays_Object : public TlMatrixObject {
    public:
-    explicit TlDenseMatrix_arrays_Object(index_type numOfVectors = 1,
-                                         index_type sizeOfVector = 1,
-                                         int numOfMembers = 1, int ID = 0,
-                                         bool isUsingMemManager = false);
+    explicit TlDenseMatrix_arrays_Object(index_type numOfVectors = 1, index_type sizeOfVector = 1, int numOfMembers = 1,
+                                         int ID = 0, bool isUsingMemManager = false);
     TlDenseMatrix_arrays_Object(const TlDenseMatrix_arrays_Object& rhs);
 
     virtual ~TlDenseMatrix_arrays_Object();
 
-    TlDenseMatrix_arrays_Object& operator=(
-        const TlDenseMatrix_arrays_Object& rhs);
+    TlDenseMatrix_arrays_Object& operator=(const TlDenseMatrix_arrays_Object& rhs);
 
    public:
     virtual index_type getNumOfRows() const = 0;
@@ -58,6 +55,7 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
    public:
     virtual bool load(const std::string& path);
     virtual bool save(const std::string& path) const;
+    virtual bool save_withReservedSizeOfVector(const std::string& basename) const;
 
    public:
     /// @param (subunitID) >= 0 add suffix, < 0 open the basename as path
@@ -74,46 +72,49 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
     double get_from_vm(index_type vectorIndex, index_type index) const;
 
     std::vector<double> getVector(index_type vectorIndex) const;
-    void getVector(const index_type vectorIndex, double* pBuf,
-                   const index_type length) const;
+    void getVector(const index_type vectorIndex, double* pBuf, const index_type length) const;
     void setVector(index_type vectorIndex, const std::vector<double>& v);
 
     /// copy chunk data
     ///
     //  retval: size of copied buffer
-    std::size_t getChunk(const index_type vectorIndex, double* pBuf,
-                         const std::size_t length) const;
+    std::size_t getChunk(const index_type vectorIndex, double* pBuf, const std::size_t length) const;
 
    public:
-    static std::string getFileName(const std::string& basename,
-                                   const int subunitID);
+    static std::string getFileName(const std::string& basename, const int subunitID);
 
     /// 指定したファイルがこのクラスで読み込めるかどうかをチェックする。
     /// 読み込める場合はtrueを返す。
     /// このとき、pNumOfSubunitsが指定されていれば、全サブユニット数が代入される。
     /// また、pSubunitIDが指定されていれば、サブユニットIDが代入される。
-    static bool isLoadable(const std::string& filepath,
-                           index_type* pNumOfVectors = NULL,
-                           index_type* pSizeOfVector = NULL,
-                           int* pNumOfSubunits = NULL, int* pSubunitID = NULL,
+    static bool isLoadable(const std::string& filepath, index_type* pNumOfVectors = NULL,
+                           index_type* pSizeOfVector = NULL, int* pNumOfSubunits = NULL, int* pSubunitID = NULL,
                            int* pSizeOfChunk = NULL);
 
    public:
-    index_type getSizeOfVector() const { return this->sizeOfVector_; };
+    index_type getSizeOfVector() const {
+        return this->sizeOfVector_;
+    };
 
-    index_type getNumOfVectors() const { return this->numOfVectors_; };
+    index_type getNumOfVectors() const {
+        return this->numOfVectors_;
+    };
 
     index_type getNumOfLocalVectors() const {
         // return this->numOfLocalVectors_;
-        const index_type numOfLocalVectors = this->getNumOfLocalVectors(
-            this->numOfVectors_, this->numOfSubunits_, this->sizeOfChunk_);
+        const index_type numOfLocalVectors =
+            this->getNumOfLocalVectors(this->numOfVectors_, this->numOfSubunits_, this->sizeOfChunk_);
         return numOfLocalVectors;
     };
 
-    int getNumOfSubunits() const { return this->numOfSubunits_; };
+    int getNumOfSubunits() const {
+        return this->numOfSubunits_;
+    };
 
     /// 自分のIDを返す
-    int getSubunitID() const { return this->subunitID_; };
+    int getSubunitID() const {
+        return this->subunitID_;
+    };
 
     /// 該当するベクトルを持っているPE番号を返す
     int getSubunitID(const index_type vectorIndex) const;
@@ -126,18 +127,15 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
     void destroy();
 
    public:
-    static index_type getNumOfLocalChunks(const index_type numOfVectors,
-                                          const int numOfSubunits,
+    static index_type getNumOfLocalChunks(const index_type numOfVectors, const int numOfSubunits,
                                           const int sizeOfChunk);
 
    protected:
     // defunct
-    static index_type getNumOfLocalVectors(const index_type numOfVectors,
-                                           const int numOfSubunits,
+    static index_type getNumOfLocalVectors(const index_type numOfVectors, const int numOfSubunits,
                                            const int sizeOfChunk);
 
-    index_type getLocalVectorIndex(const index_type vectorIndex,
-                                   int* pSubunitId, int* pLocalChunkId = NULL,
+    index_type getLocalVectorIndex(const index_type vectorIndex, int* pSubunitId, int* pLocalChunkId = NULL,
                                    int* pLocalChunkVectorIndex = NULL) const;
     bool saveByTheOtherType(const std::string& basename) const;
 
