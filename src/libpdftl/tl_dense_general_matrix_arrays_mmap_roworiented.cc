@@ -180,12 +180,22 @@ void TlDenseGeneralMatrix_arrays_mmap_RowOriented::set2csfd(TlDenseGeneralMatrix
     for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
         const TlMatrixObject::index_type row = sizeOfChunk * chunk;
         const TlMatrixObject::index_type chunkStartRow = sizeOfChunk * (numOfSubunits * chunk + unit);
+        if (chunkStartRow >= numOfRows) {
+            // std::cerr << TlUtils::format("chunk: %d/%d, chunkStartRow=%d, numOfLocalRows=%d, row=%d <- bypassed.",
+            //                              chunk, numOfLocalChunks - 1, chunkStartRow, numOfLocalRows, row)
+            //           << std::endl;
+            continue;
+        }
         const TlMatrixObject::index_type rowDistance = std::min(sizeOfChunk, numOfRows - chunkStartRow);
+        // std::cerr << TlUtils::format("chunk: %d/%d, chunkStartRow=%d, numOfLocalRows=%d, row=%d, rowDistance=%d",
+        // chunk,
+        //                              numOfLocalChunks - 1, chunkStartRow, numOfLocalRows, row, rowDistance)
+        //           << std::endl;
         inMat.block(row, 0, rowDistance, numOfCols, &tmpMat);
 
-        // std::cerr << TlUtils::format("chunk: %d/%d", chunk, numOfLocalChunks - 1) << std::endl;
-        // std::cerr << TlUtils::format("chunkStartRow=%d, numOfLocalRows=%d, row=%d, rowDistance", chunkStartRow,
-        //                              numOfLocalRows, row, rowDistance)
+        // std::cerr << TlUtils::format("chunk: %d/%d, chunkStartRow=%d, numOfLocalRows=%d, row=%d, rowDistance=%d",
+        // chunk,
+        //                              numOfLocalChunks - 1, chunkStartRow, numOfLocalRows, row, rowDistance)
         //           << std::endl;
         pOutMat->block(chunkStartRow, 0, tmpMat);
     }
