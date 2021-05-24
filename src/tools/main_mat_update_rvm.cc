@@ -82,14 +82,18 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
 
-        m.load(inputPath);
+        m.loadSubunitFile(inputPath);
+        std::cerr << TlUtils::format("row: %d", m.getNumOfRows()) << std::endl;
+        std::cerr << TlUtils::format("col: %d", m.getNumOfCols()) << std::endl;
+        std::cerr << TlUtils::format("sizeOfChunk: %d", m.getSizeOfChunk()) << std::endl;
+        std::cerr << TlUtils::format("%d/%d", m.getSubunitID(), m.getNumOfSubunits()) << std::endl;
     }
 
     // save
     if (verbose) {
         std::cerr << TlUtils::format("saving %s ...", outputPath.c_str()) << std::endl;
     }
-    m.save_withReservedSizeOfVector(outputPath);
+    m.saveSubunitFileWithReservedSizeOfVector(outputPath);
 
     return EXIT_SUCCESS;
 }

@@ -415,12 +415,11 @@ bool TlDenseMatrix_arrays_Object::save(const std::string& basename) const {
     return true;
 }
 
-bool TlDenseMatrix_arrays_Object::save_withReservedSizeOfVector(const std::string& basename) const {
+bool TlDenseMatrix_arrays_Object::saveSubunitFileWithReservedSizeOfVector(const std::string& path) const {
     const index_type numOfVectors = this->numOfVectors_;
     const index_type sizeOfVector = this->sizeOfVector_;
 
     std::ofstream ofs;
-    const std::string path = TlDenseMatrix_arrays_Object::getFileName(basename, this->subunitID_);
     ofs.open(path.c_str(), std::ofstream::out | std::ofstream::binary);
 
     // header
@@ -555,12 +554,78 @@ bool TlDenseMatrix_arrays_Object::load(const std::string& basename) {
 
 bool TlDenseMatrix_arrays_Object::load(const std::string& basename, const int subunitID) {
     bool answer = false;
-    TlLogging& log = TlLogging::getInstance();
 
     std::string path = basename;
     if (subunitID >= 0) {
         path = TlDenseMatrix_arrays_Object::getFileName(basename, subunitID);
     }
+
+    // std::ifstream ifs;
+    // ifs.open(path.c_str(), std::ifstream::in);
+    // if (ifs.good()) {
+    //     // header
+    //     int matrixType = 0;
+    //     index_type numOfVectors = 0;
+    //     index_type sizeOfVector = 0;
+    //     int read_numOfSubunits = 0;
+    //     int read_subunitID = 0;
+    //     int read_sizeOfChunk = 0;
+    //     ifs.read((char*)&matrixType, sizeof(char));
+    //     ifs.read((char*)&numOfVectors, sizeof(index_type));
+    //     ifs.read((char*)&sizeOfVector, sizeof(index_type));
+    //     ifs.read((char*)&read_numOfSubunits, sizeof(int));
+    //     ifs.read((char*)&read_subunitID, sizeof(int));
+    //     ifs.read((char*)&read_sizeOfChunk, sizeof(int));
+    //     this->numOfSubunits_ = read_numOfSubunits;
+    //     this->subunitID_ = read_subunitID;
+    //     this->resize(numOfVectors, sizeOfVector);
+
+    //     this->numOfSubunits_ = read_numOfSubunits;
+    //     this->subunitID_ = read_subunitID;
+    //     this->sizeOfChunk_ = read_sizeOfChunk;
+    //     this->resize(numOfVectors, sizeOfVector);
+
+    //     const int headerSize = sizeof(char) + sizeof(index_type) * 2 + sizeof(int) * 3;
+    //     assert(headerSize == ifs.tellg());
+
+    //     // data
+    //     ifs.clear();
+    //     ifs.seekg(headerSize, std::ios_base::beg);
+    //     assert(headerSize == ifs.tellg());
+    //     // std::size_t copied_chunk = 0;
+    //     {
+    //         const int numOfLocalChunks = this->numOfLocalChunks_;
+    //         assert(static_cast<std::size_t>(numOfLocalChunks) == this->chunks_.size());
+    //         const int sizeOfChunk = this->sizeOfChunk_;
+    //         const int sizeOfVector = this->sizeOfVector_;
+    //         const int sizeOfVectorReserved = this->reservedVectorSize_;
+
+    //         std::vector<double> buf(sizeOfVectorReserved);
+    //         for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
+    //             for (int v = 0; v < sizeOfChunk; ++v) {
+    //                 ifs.read((char*)&(buf[0]), sizeof(double) * sizeOfVector);
+    //                 // copied_chunk += sizeOfVector;
+
+    //                 std::copy(buf.begin(), buf.begin() + sizeOfVector,
+    //                           this->chunks_[chunk] + (v * sizeOfVectorReserved));
+    //             }
+    //         }
+    //     }
+
+    //     answer = true;
+    // } else {
+    //     log.error(TlUtils::format("cannot open file: %s", path.c_str()));
+    // }
+
+    // ifs.close();
+
+    answer = this->loadSubunitFile(path);
+    return answer;
+}
+
+bool TlDenseMatrix_arrays_Object::loadSubunitFile(const std::string& path) {
+    TlLogging& log = TlLogging::getInstance();
+    bool answer = false;
 
     std::ifstream ifs;
     ifs.open(path.c_str(), std::ifstream::in);
