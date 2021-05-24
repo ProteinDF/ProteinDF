@@ -55,7 +55,10 @@ class TlDenseMatrix_arrays_Object : public TlMatrixObject {
    public:
     virtual bool load(const std::string& path);
     virtual bool save(const std::string& path) const;
-    virtual bool save_withReservedSizeOfVector(const std::string& basename) const;
+
+   public:
+    virtual bool loadSubunitFile(const std::string& path);
+    virtual bool saveSubunitFileWithReservedSizeOfVector(const std::string& basename) const;
 
    public:
     /// @param (subunitID) >= 0 add suffix, < 0 open the basename as path
