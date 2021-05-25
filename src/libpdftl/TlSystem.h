@@ -37,6 +37,9 @@ class TlSystem {
     /// 使用された常駐セットサイズの最大値(MB)を返す
     static double getMaxRSS();
 
+    /// POSIX mmap
+    static char* newMmap(const std::size_t fileSize, const int fd);
+
    private:
     static int pid_;
     static int ppid_;
