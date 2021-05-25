@@ -15,6 +15,7 @@
 #include <iostream>
 
 #include "TlFile.h"
+#include "TlSystem.h"
 #include "TlUtils.h"
 #include "tl_matrix_utils.h"
 
@@ -106,12 +107,10 @@ void TlDenseMatrixMmapObject::newMmap() {
     fstat(fd, &sb);
     assert(std::size_t(sb.st_size) == this->fileSize_);
 
-    // const std::size_t pageSize = sysconf(_SC_PAGE_SIZE);
-    // const std::size_t mapSize = (this->fileSize_ / pageSize +1) * pageSize;
-    this->mmapBegin_ = (char*)mmap(NULL, this->fileSize_, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);  //  MAP_HUGETLB
-    this->dataBegin_ = (double*)(this->mmapBegin_ + this->headerSize_);
+    this->mmapBegin_ = (char*)TlSystem::newMmap(this->fileSize_, fd);
     msync(this->mmapBegin_, this->getNumOfElements(), MS_ASYNC);
     madvise(this->mmapBegin_, this->getNumOfElements(), MADV_WILLNEED);
+    this->dataBegin_ = (double*)(this->mmapBegin_ + this->headerSize_);
 
     // we can close the file after mmap() was called.
     close(fd);
