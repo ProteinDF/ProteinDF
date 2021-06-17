@@ -17,13 +17,14 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "TlLogging.h"
+
 #include <iostream>
+
 #include "TlTime.h"
 #include "TlUtils.h"
 
 TlLogging* TlLogging::pInstance_ = NULL;
-const char* TlLogging::pLevelStr_[] = {"DEBUG", "INFO", "WARN", "ERROR",
-                                       "CRITIACAL"};
+const char* TlLogging::pLevelStr_[] = {"DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"};
 
 TlLogging::TlLogging() {
     this->filePath_ = "output.log";
@@ -31,7 +32,9 @@ TlLogging::TlLogging() {
     this->setLevel(TL_INFO, TL_WARN);
 }
 
-TlLogging::~TlLogging() { this->output_.close(); }
+TlLogging::~TlLogging() {
+    this->output_.close();
+}
 
 TlLogging& TlLogging::getInstance() {
     if (TlLogging::pInstance_ == NULL) {
@@ -54,25 +57,31 @@ void TlLogging::setProcID(const int procID) {
     this->setLevel();
 }
 
-void TlLogging::setLevel(const TlLogging::Level masterLevel,
-                         const TlLogging::Level workerLevel) {
+void TlLogging::setLevel(const TlLogging::Level masterLevel, const TlLogging::Level workerLevel) {
     this->masterLevel_ = masterLevel;
     this->workerLevel_ = workerLevel;
     this->setLevel();
 }
 
 void TlLogging::setLevel() {
-    this->level_ =
-        (this->procID_ == 0) ? this->masterLevel_ : this->workerLevel_;
+    this->level_ = (this->procID_ == 0) ? this->masterLevel_ : this->workerLevel_;
 }
 
-void TlLogging::debug(const std::string& msg) { this->output(TL_DEBUG, msg); }
+void TlLogging::debug(const std::string& msg) {
+    this->output(TL_DEBUG, msg);
+}
 
-void TlLogging::info(const std::string& msg) { this->output(TL_INFO, msg); }
+void TlLogging::info(const std::string& msg) {
+    this->output(TL_INFO, msg);
+}
 
-void TlLogging::warn(const std::string& msg) { this->output(TL_WARN, msg); }
+void TlLogging::warn(const std::string& msg) {
+    this->output(TL_WARN, msg);
+}
 
-void TlLogging::error(const std::string& msg) { this->output(TL_ERROR, msg); }
+void TlLogging::error(const std::string& msg) {
+    this->output(TL_ERROR, msg);
+}
 
 void TlLogging::critical(const std::string& msg) {
     this->output(TL_CRITICAL, msg);
@@ -93,8 +102,7 @@ void TlLogging::output(const int level, const std::string& msg) {
 
 void TlLogging::open() {
     if (this->output_.is_open() != true) {
-        this->output_.open(this->filePath_.c_str(),
-                           std::ios::out | std::ios::app);
+        this->output_.open(this->filePath_.c_str(), std::ios::out | std::ios::app);
     }
 }
 
@@ -107,8 +115,7 @@ void TlLogging::close() {
 std::string TlLogging::format(const int level, const std::string& input) {
     // prepare header
     const std::string header =
-        TlUtils::format("[%d:%s:%s] ", this->procID_, TlTime::getNow().c_str(),
-                        TlLogging::pLevelStr_[level]);
+        TlUtils::format("[%d:%s:%s] ", this->procID_, TlTime::getNow().c_str(), TlLogging::pLevelStr_[level]);
     const int headerSize = header.size();
 
     // text wrap
