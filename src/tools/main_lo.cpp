@@ -18,29 +18,29 @@
 
 #include <iostream>
 #include <string>
+
 #include "DfLocalize.h"
 #include "TlGetopt.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
 
 void showHelp(const std::string& progname) {
-    std::cout << TlUtils::format("%s [OPTIONS] basisset_name ...",
-                                 progname.c_str())
-              << std::endl;
+    std::cout << TlUtils::format("%s [OPTIONS] basisset_name ...", progname.c_str()) << std::endl;
     std::cout << std::endl;
     std::cout << " localize C matrix" << std::endl;
     std::cout << " -p PATH       set ProteinDF parameter file. default = "
                  "pdfparam.mpac"
               << std::endl;
     std::cout << " -c PATH       set C matrix path" << std::endl;
+    std::cout << " -r            restart lo calculation" << std::endl;
     std::cout << " -h            show help" << std::endl;
     std::cout << " -v            verbose output" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-    TlGetopt opt(argc, argv, "c:hp:v");
-    const bool isVerbose = (opt["v"] == "defined");
+    TlGetopt opt(argc, argv, "c:hp:rv");
     const bool isShowHelp = (opt["h"] == "defined");
+    const bool isVerbose = (opt["v"] == "defined");
 
     if (isShowHelp) {
         showHelp(opt[0]);
@@ -57,10 +57,14 @@ int main(int argc, char* argv[]) {
         inputCMatrixPath = opt["c"];
     }
 
-    if (isVerbose) {
-        std::cerr << "parameter path: " << pdfParamPath << std::endl;
-    }
+    const bool isRestart = (opt["r"] == "defined");
 
+    // if (isVerbose) {
+    // std::cerr << "parameter path: " << pdfParamPath << std::endl;
+    // std::cerr << "iteration: " << iteration << std::endl;
+    // }
+
+    // setup
     TlSerializeData param;
     {
         TlMsgPack mpac;
@@ -68,13 +72,19 @@ int main(int argc, char* argv[]) {
         param = mpac.getSerializeData();
     }
 
+    // lo
     DfLocalize lo(&param);
-    lo.localize(inputCMatrixPath);
+    if (!inputCMatrixPath.empty()) {
+        lo.setCMatrixPath(inputCMatrixPath);
+    }
+    lo.setRestart(isRestart);
+
+    lo.exec();
 
     {
         TlMsgPack mpac(param);
         mpac.save(pdfParamPath);
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

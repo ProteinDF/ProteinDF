@@ -20,22 +20,34 @@
 #define DFLOCALIZE_PARALLEL_H
 
 #include <vector>
+
 #include "DfLocalize.h"
+#include "TlCommunicate.h"
 
 class DfLocalize_Parallel : public DfLocalize {
    public:
     DfLocalize_Parallel(TlSerializeData* pPdfParam);
     virtual ~DfLocalize_Parallel();
 
-    virtual void localize(const std::string& inputCMatrixPath = "");
+   public:
+    virtual void exec();
+    virtual double localize(TlDenseGeneralMatrix_Lapack* pC);
 
    protected:
-    virtual int getJobItem(DfLocalize::JobItem* pJob,
-                           bool isInitialized = false);
+    virtual void initialize();
+
+    // Return true if the task remains, and return false if there are no tasks left.
+    // If the molecular orbital in charge is locked during processing,
+    // -1 will be placed in the molecular orbitals of JobItem.
+    virtual bool getJobItem(DfLocalize::JobItem* pJob, bool isInitialized = false);
 
    protected:
-    std::vector<bool> jobFinishedList_;
-    std::vector<bool> jobOccupiedOrb_;
+    void lockMO(const index_type MO);
+    void unlockMO(const index_type MO);
+    bool isLockedMO(const index_type mo1, const index_type mo2) const;
+
+   protected:
+    std::set<DfObject::index_type> lockMOs_;
 };
 
 #endif  // DFLOCALIZE_PARALLEL_H
