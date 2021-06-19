@@ -113,7 +113,7 @@ class DfLocalize : public DfObject {
 
     double G_;
 
-    std::vector<std::vector<index_type> > group_;
+    // std::vector<std::vector<index_type> > group_;
     std::vector<TlDenseVector_Lapack> groupV_;
 
     TlDenseSymmetricMatrix_Lapack S_;

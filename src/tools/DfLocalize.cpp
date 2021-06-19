@@ -163,7 +163,7 @@ double DfLocalize::localize(TlDenseGeneralMatrix_Lapack* pC) {
     while (this->getJobItem(&jobItem) != 0) {
         const index_type orb_i = jobItem.orb_i;
         const index_type orb_j = jobItem.orb_j;
-        // this->log_.info(TlUtils::format("calc: %d, %d", orb_i, orb_j));
+        this->log_.info(TlUtils::format("calc: %d, %d", orb_i, orb_j));
 
         double A_ij, B_ij;
         TlDenseVector_Lapack Cpi = pC->getColVector<TlDenseVector_Lapack>(orb_i);
@@ -202,8 +202,8 @@ void DfLocalize::makeGroup() {
 
     const int numOfGroups = numOfAtoms;
 
-    this->group_.clear();
-    this->group_.resize(numOfGroups);
+    // this->group_.clear();
+    // this->group_.resize(numOfGroups);
     this->groupV_.clear();
     this->groupV_.resize(numOfGroups);
     for (int i = 0; i < numOfGroups; ++i) {
@@ -212,7 +212,7 @@ void DfLocalize::makeGroup() {
 
     for (index_type orb = 0; orb < numOfAOs; ++orb) {
         const index_type atomID = this->orbInfo_.getAtomIndex(orb);
-        this->group_[atomID].push_back(orb);
+        // this->group_[atomID].push_back(orb);
 
         this->groupV_[atomID].set(orb, 1.0);
     }
@@ -454,7 +454,7 @@ void DfLocalize::calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_
     // std::cout << Cpj << std::endl;
 
     const index_type numOfAOs = this->m_nNumOfAOs;
-    const index_type numOfGrps = this->group_.size();
+    const index_type numOfGrps = this->groupV_.size();
 
     const TlDenseVector_Lapack SCpi = this->S_ * Cpi;
     const TlDenseVector_Lapack SCpj = this->S_ * Cpj;
@@ -503,7 +503,7 @@ void DfLocalize::calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_
 
 double DfLocalize::calcQA_ii(const TlDenseGeneralMatrix_Lapack& C, const index_type orb_i) {
     const index_type numOfAOs = this->m_nNumOfAOs;
-    const index_type numOfGrps = this->group_.size();
+    const index_type numOfGrps = this->groupV_.size();
     double sumQAii2 = 0.0;
 
     // TlDenseGeneralMatrix_Lapack Cpi(numOfAOs, 1);
