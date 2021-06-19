@@ -1,6 +1,7 @@
 #ifndef TL_DENSE_GENERAL_MATRIX_OBJECT_H
 #define TL_DENSE_GENERAL_MATRIX_OBJECT_H
 
+#include <cassert>
 #include <valarray>
 
 #include "tl_dense_matrix_impl_object.h"
@@ -73,6 +74,28 @@ class TlDenseGeneralMatrixObject : public TlMatrixObject {
         }
 
         return v;
+    }
+
+    virtual TlMatrixObject::index_type setRowVector(const TlMatrixObject::index_type row, const double* p,
+                                                    const TlMatrixObject::index_type length) {
+        const index_type copiedLength = std::min(length, this->getNumOfCols());
+#pragma omp parallel for
+        for (index_type i = 0; i < copiedLength; ++i) {
+            this->set(row, i, p[i]);
+        }
+
+        return copiedLength;
+    }
+
+    virtual TlMatrixObject::index_type setColVector(const TlMatrixObject::index_type col, const double* p,
+                                                    const TlMatrixObject::index_type length) {
+        const index_type copiedLength = std::min(length, this->getNumOfRows());
+#pragma omp parallel for
+        for (index_type i = 0; i < copiedLength; ++i) {
+            this->set(i, col, p[i]);
+        }
+
+        return copiedLength;
     }
 
     // ---------------------------------------------------------------------------

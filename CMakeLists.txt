@@ -360,6 +360,9 @@ else (DOXYGEN_FOUND)
 endif (DOXYGEN_FOUND)
 
 
+set(ld_flags "/home/hirano/local/lib/libtrapfpe.a")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ld_flags}")
+
 # make config.h
 configure_file(${CMAKE_SOURCE_DIR}/config.h.in ${CMAKE_BINARY_DIR}/config.h @ONLY)
 include_directories(${CMAKE_BINARY_DIR})

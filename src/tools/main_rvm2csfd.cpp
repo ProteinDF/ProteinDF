@@ -54,6 +54,9 @@ bool checkMatrixInfo(const std::string& rvmBasePath, TlMatrixObject::index_type*
     }
 
     if (isLoadable) {
+        if (isVerbose) {
+            std::cerr << "check successed." << std::endl;
+        }
         // numOfRows = numOfVectors;
         // numOfCols = sizeOfVector;
 
