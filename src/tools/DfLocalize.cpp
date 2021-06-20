@@ -158,12 +158,14 @@ double DfLocalize::localize(TlDenseGeneralMatrix_Lapack* pC) {
 
     this->log_.info("localize: start");
     double sumDeltaG = 0.0;
+    const double rotatingThreshold = this->threshold_ * 0.01;
+
     JobItem jobItem;
     (void)this->getJobItem(&jobItem, true);
     while (this->getJobItem(&jobItem) != 0) {
         const index_type orb_i = jobItem.orb_i;
         const index_type orb_j = jobItem.orb_j;
-        this->log_.info(TlUtils::format("calc: %d, %d", orb_i, orb_j));
+        // this->log_.info(TlUtils::format("calc: %d, %d", orb_i, orb_j));
 
         double A_ij, B_ij;
         TlDenseVector_Lapack Cpi = pC->getColVector<TlDenseVector_Lapack>(orb_i);
@@ -173,7 +175,7 @@ double DfLocalize::localize(TlDenseGeneralMatrix_Lapack* pC) {
         const double deltaG = A_ij + normAB;
         // std::cout << TlUtils::format("%f: A=%f B=%f", deltaG, A_ij, B_ij) << std::endl;
 
-        if (std::fabs(deltaG) > 1.0E-16) {
+        if (std::fabs(deltaG) > rotatingThreshold) {
             sumDeltaG += deltaG;
             TlDenseGeneralMatrix_Lapack rot(2, 2);
             this->getRotatingMatrix(A_ij, B_ij, normAB, &rot);
@@ -281,7 +283,6 @@ void DfLocalize::calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_
     assert(pA_ij != NULL);
     assert(pB_ij != NULL);
 
-    const index_type numOfAOs = this->m_nNumOfAOs;
     const index_type numOfGrps = this->groupV_.size();
 
     const TlDenseVector_Lapack SCpi = this->S_ * Cpi;
