@@ -333,17 +333,14 @@ double DfLocalize::calcQA_ii(const TlDenseGeneralMatrix_Lapack& C, const index_t
 
 void DfLocalize::makeJobList() {
     const std::size_t orbQATableSize = this->orb_QA_table_.size();
-    // const std::size_t maxJobIndex = orbQATableSize * (orbQATableSize - 1) / 2;  // '-1'は対角項が必要無いため
     this->jobList_.clear();
 
-    std::size_t index = 0;
     JobItem item;
     for (std::size_t i = 0; i < orbQATableSize; ++i) {
         item.orb_i = this->orb_QA_table_[i].orb;
         for (std::size_t j = orbQATableSize - 1; j > i; --j) {
             item.orb_j = this->orb_QA_table_[j].orb;
             this->jobList_.push_back(item);
-            ++index;
         }
     }
 }
