@@ -350,7 +350,7 @@ void TlEspPop::makeDesignMatrix_MK(TlDenseSymmetricMatrix_Lapack* pDesignMat, Tl
     pDesignMat->resize(numOfRealAtoms + 1);
     pPredicted->resize(numOfRealAtoms + 1);
     for (int a = 0; a < numOfRealAtoms; ++a) {
-        const TlDenseVector_Lapack r_a = d.getRowVector<TlDenseVector_Lapack>(a);
+        const TlDenseVector_Lapack r_a = d.getRowVector_tmpl<TlDenseVector_Lapack>(a);
         assert(r_a.getSize() == static_cast<int>(this->grids_.size()));
 
         // a == b
@@ -362,7 +362,7 @@ void TlEspPop::makeDesignMatrix_MK(TlDenseSymmetricMatrix_Lapack* pDesignMat, Tl
 
         // a != b
         for (int b = 0; b < a; ++b) {
-            TlDenseVector_Lapack r_b = d.getRowVector<TlDenseVector_Lapack>(b);
+            TlDenseVector_Lapack r_b = d.getRowVector_tmpl<TlDenseVector_Lapack>(b);
             r_b.dotInPlace(r_a);
             pDesignMat->set(a, b, r_b.sum());
         }
