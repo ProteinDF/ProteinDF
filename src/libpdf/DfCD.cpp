@@ -3435,12 +3435,12 @@ TlDenseGeneralMatrix_Lapack DfCD::calcCholeskyVectors(const TlDenseSymmetricMatr
         const index_type numOf_G_cols = N - (m + 1);
 
         // CD calc
-        const TlDenseVector_Lapack L_pm = L.getRowVector<TlDenseVector_Lapack>(pivot_m);
+        const TlDenseVector_Lapack L_pm = L.getRowVector_tmpl<TlDenseVector_Lapack>(pivot_m);
         std::vector<double> L_xm(numOf_G_cols);
 #pragma omp parallel for schedule(runtime)
         for (index_type i = 0; i < numOf_G_cols; ++i) {
             const index_type pivot_i = pivot[m + 1 + i];  // from (m+1) to N
-            TlDenseVector_Lapack L_pi = L.getRowVector<TlDenseVector_Lapack>(pivot_i);
+            TlDenseVector_Lapack L_pi = L.getRowVector_tmpl<TlDenseVector_Lapack>(pivot_i);
             const double sum_ll = (L_pi.dotInPlace(L_pm)).sum();
             // const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
             const double l_m_pi = (V.get(pivot_m, pivot[m + 1 + i]) - sum_ll) * inv_l_m_pm;

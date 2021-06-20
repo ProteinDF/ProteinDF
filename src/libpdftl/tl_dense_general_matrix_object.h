@@ -21,15 +21,11 @@ class TlDenseGeneralMatrixObject : public TlMatrixObject {
     // ---------------------------------------------------------------------------
     virtual TlMatrixObject::index_type getNumOfRows() const;
     virtual TlMatrixObject::index_type getNumOfCols() const;
-    virtual void resize(const TlMatrixObject::index_type row,
-                        const TlMatrixObject::index_type col);
+    virtual void resize(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col);
 
-    virtual double get(const TlMatrixObject::index_type row,
-                       const TlMatrixObject::index_type col) const;
-    virtual void set(const TlMatrixObject::index_type row,
-                     const TlMatrixObject::index_type col, const double value);
-    virtual void add(const TlMatrixObject::index_type row,
-                     const TlMatrixObject::index_type col, const double value);
+    virtual double get(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col) const;
+    virtual void set(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col, const double value);
+    virtual void add(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col, const double value);
 
     /// ブロック行列を返す
     ///
@@ -38,10 +34,8 @@ class TlDenseGeneralMatrixObject : public TlMatrixObject {
     /// @param[in] rowDistance 取得する行数
     /// @param[in] colDistance 取得する列数
     /// @return row_distance × col_distance 次元のブロック行列
-    void block(const TlMatrixObject::index_type row,
-               const TlMatrixObject::index_type col,
-               const TlMatrixObject::index_type rowDistance,
-               const TlMatrixObject::index_type colDistance,
+    void block(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+               const TlMatrixObject::index_type rowDistance, const TlMatrixObject::index_type colDistance,
                TlDenseGeneralMatrixObject* pOut) const;
 
     /// 行列要素を指定された位置に上書きする
@@ -49,14 +43,14 @@ class TlDenseGeneralMatrixObject : public TlMatrixObject {
     /// @param[in] row 始点となる行
     /// @param[in] col 始点となる列
     /// @param[in] ref 参照行列
-    void block(const TlMatrixObject::index_type row,
-               const TlMatrixObject::index_type col,
+    void block(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
                const TlDenseGeneralMatrixObject& ref);
 
     template <class VectorType>
-    VectorType getRowVector(const TlMatrixObject::index_type row) const {
+    VectorType getRowVector_tmpl(const TlMatrixObject::index_type row) const {
         const TlMatrixObject::index_type size = this->getNumOfCols();
         VectorType v(size);
+#pragma omp parallel for
         for (TlMatrixObject::index_type i = 0; i < size; ++i) {
             v.set(i, this->get(row, i));
         }
@@ -65,9 +59,10 @@ class TlDenseGeneralMatrixObject : public TlMatrixObject {
     }
 
     template <class VectorType>
-    VectorType getColVector(const TlMatrixObject::index_type col) const {
+    VectorType getColVector_tmpl(const TlMatrixObject::index_type col) const {
         const TlMatrixObject::index_type size = this->getNumOfRows();
         VectorType v(size);
+#pragma omp parallel for
         for (TlMatrixObject::index_type i = 0; i < size; ++i) {
             v.set(i, this->get(i, col));
         }
@@ -82,9 +77,8 @@ class TlDenseGeneralMatrixObject : public TlMatrixObject {
     virtual double sum() const;
     virtual double trace() const;
     virtual double getRMS() const;
-    virtual double getMaxAbsoluteElement(
-        TlMatrixObject::index_type* outRow = NULL,
-        TlMatrixObject::index_type* outCol = NULL) const;
+    virtual double getMaxAbsoluteElement(TlMatrixObject::index_type* outRow = NULL,
+                                         TlMatrixObject::index_type* outCol = NULL) const;
     virtual void transposeInPlace();
 
     // ---------------------------------------------------------------------------
@@ -100,10 +94,8 @@ class TlDenseGeneralMatrixObject : public TlMatrixObject {
     virtual void saveCsv(std::ostream& os) const;
 
 #ifdef HAVE_HDF5
-    virtual bool loadHdf5(const std::string& filepath,
-                          const std::string& h5path);
-    virtual bool saveHdf5(const std::string& filepath,
-                          const std::string& h5path) const;
+    virtual bool loadHdf5(const std::string& filepath, const std::string& h5path);
+    virtual bool saveHdf5(const std::string& filepath, const std::string& h5path) const;
 #endif  // HAVE_HDF5
 
     virtual void dump(double* buf, const std::size_t size) const;
@@ -116,8 +108,7 @@ class TlDenseGeneralMatrixObject : public TlMatrixObject {
     TlDenseMatrix_ImplObject* pImpl_;
 };
 
-std::ostream& operator<<(std::ostream& stream,
-                         const TlDenseGeneralMatrixObject& mat);
+std::ostream& operator<<(std::ostream& stream, const TlDenseGeneralMatrixObject& mat);
 
 // -----------------------------------------------------------------------------
 // template

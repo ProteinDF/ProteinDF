@@ -17,27 +17,25 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfLocalize_Parallel.h"
+
 #include "TlCommunicate.h"
 #include "TlTime.h"
 #include "TlUtils.h"
 
-DfLocalize_Parallel::DfLocalize_Parallel(TlSerializeData* pPdfParam)
-    : DfLocalize(pPdfParam) {}
+DfLocalize_Parallel::DfLocalize_Parallel(TlSerializeData* pPdfParam) : DfLocalize(pPdfParam) {
+}
 
-DfLocalize_Parallel::~DfLocalize_Parallel() {}
+DfLocalize_Parallel::~DfLocalize_Parallel() {
+}
 
 void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const std::size_t numOfAOs = this->m_nNumOfAOs;
 
     if (rComm.isMaster() == true) {
-        std::cout << TlUtils::format("number of Atoms = %ld",
-                                     this->m_nNumOfAtoms)
-                  << std::endl;
-        std::cout << TlUtils::format("number of AOs   = %ld", this->m_nNumOfAOs)
-                  << std::endl;
-        std::cout << TlUtils::format("number of MOs   = %ld", this->m_nNumOfMOs)
-                  << std::endl;
+        std::cout << TlUtils::format("number of Atoms = %ld", this->m_nNumOfAtoms) << std::endl;
+        std::cout << TlUtils::format("number of AOs   = %ld", this->m_nNumOfAOs) << std::endl;
+        std::cout << TlUtils::format("number of MOs   = %ld", this->m_nNumOfMOs) << std::endl;
     }
     this->makeGroup();
 
@@ -52,8 +50,7 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
 
         std::string CMatrixPath = inputCMatrixPath;
         if (CMatrixPath.empty() == true) {
-            CMatrixPath =
-                this->getCMatrixPath(DfObject::RUN_RKS, this->m_nIteration);
+            CMatrixPath = this->getCMatrixPath(DfObject::RUN_RKS, this->m_nIteration);
         }
         if (this->C_.load(CMatrixPath) == false) {
             std::cerr << "could not load: " << CMatrixPath << std::endl;
@@ -108,8 +105,7 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
                                     {
                                         rComm.sendData(FINISHED_JOB, src);
                                         ++numOfFinishedProc;
-                                        if (numOfFinishedProc ==
-                                            rComm.getNumOfProc() - 1) {
+                                        if (numOfFinishedProc == rComm.getNumOfProc() - 1) {
                                             isEscapeLoop = true;
                                         }
                                     }
@@ -123,11 +119,9 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
                                         rComm.sendData(orb_i, src);
                                         rComm.sendData(orb_j, src);
                                         TlDenseVector_Lapack vec_i =
-                                            this->C_.getColVector<
-                                                TlDenseVector_Lapack>(orb_i);
+                                            this->C_.getColVector_tmpl<TlDenseVector_Lapack>(orb_i);
                                         TlDenseVector_Lapack vec_j =
-                                            this->C_.getColVector<
-                                                TlDenseVector_Lapack>(orb_j);
+                                            this->C_.getColVector_tmpl<TlDenseVector_Lapack>(orb_j);
                                         rComm.sendData(vec_i, src);
                                         rComm.sendData(vec_j, src);
                                     }
@@ -199,10 +193,8 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
                     // std::cerr << TlUtils::format("[%d] recv job",
                     // rComm.getRank()) << std::endl;
 
-                    assert(vec_i.getSize() ==
-                           static_cast<TlVectorAbstract::size_type>(numOfAOs));
-                    assert(vec_j.getSize() ==
-                           static_cast<TlVectorAbstract::size_type>(numOfAOs));
+                    assert(vec_i.getSize() == static_cast<TlVectorAbstract::size_type>(numOfAOs));
+                    assert(vec_j.getSize() == static_cast<TlVectorAbstract::size_type>(numOfAOs));
                     for (std::size_t row = 0; row < numOfAOs; ++row) {
                         this->C_.set(row, orb_i, vec_i.get(row));
                         this->C_.set(row, orb_j, vec_j.get(row));
@@ -219,8 +211,8 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
                         this->rotateCmatrix(orb_i, orb_j, rot);
                     }
 
-                    vec_i = this->C_.getColVector<TlDenseVector_Lapack>(orb_i);
-                    vec_j = this->C_.getColVector<TlDenseVector_Lapack>(orb_j);
+                    vec_i = this->C_.getColVector_tmpl<TlDenseVector_Lapack>(orb_i);
+                    vec_j = this->C_.getColVector_tmpl<TlDenseVector_Lapack>(orb_j);
 
                     request = SEND_RESULTS;
                     rComm.sendData(request, root);
@@ -244,17 +236,14 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
         rComm.allReduce_SUM(sumDeltaG);
         bool isBreak = false;
         if (rComm.isMaster() == true) {
-            std::cout << TlUtils::format("itr: %d sum of delta_g: %10.5e\n",
-                                         num_iteration + 1, sumDeltaG);
+            std::cout << TlUtils::format("itr: %d sum of delta_g: %10.5e\n", num_iteration + 1, sumDeltaG);
             // this->C_.save(TlUtils::format("./lo_Work/fl_Mtr_C.lo.occu.rks%d",
             // num_iteration +1));
             DfObject::saveCloMatrix(RUN_RKS, num_iteration + 1, this->C_);
 
             if (sumDeltaG < this->threshold_) {
-                std::cout << "number of iteration: " << num_iteration + 1
-                          << std::endl;
-                (*(this->pPdfParam_))["lo/num_of_iterations"] =
-                    num_iteration + 1;
+                std::cout << "number of iteration: " << num_iteration + 1 << std::endl;
+                (*(this->pPdfParam_))["lo/num_of_iterations"] = num_iteration + 1;
                 (*(this->pPdfParam_))["lo/satisfied"] = "yes";
                 isBreak = true;
             }
@@ -270,8 +259,7 @@ void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
 // @ret 0 assigned no job because the task has been finished
 // @ret 1 assigned job to "pJob"
 // @ret 2 please wait because the job to assign is conflict.
-int DfLocalize_Parallel::getJobItem(DfLocalize::JobItem* pJob,
-                                    bool isInitialized) {
+int DfLocalize_Parallel::getJobItem(DfLocalize::JobItem* pJob, bool isInitialized) {
     assert(pJob != NULL);
 
     // static std::size_t jobIndex = 0;
@@ -300,8 +288,7 @@ int DfLocalize_Parallel::getJobItem(DfLocalize::JobItem* pJob,
         const std::size_t index_i = item.orb_i - this->startOrb_;
         const std::size_t index_j = item.orb_j - this->startOrb_;
 
-        if ((this->jobOccupiedOrb_[index_i] == false) &&
-            (this->jobOccupiedOrb_[index_j] == false)) {
+        if ((this->jobOccupiedOrb_[index_i] == false) && (this->jobOccupiedOrb_[index_j] == false)) {
             this->jobFinishedList_[i] = true;
             this->jobOccupiedOrb_[index_i] = true;
             this->jobOccupiedOrb_[index_j] = true;
