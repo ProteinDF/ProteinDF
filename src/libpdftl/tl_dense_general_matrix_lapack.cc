@@ -119,10 +119,18 @@ TlMatrixObject::index_type TlDenseGeneralMatrix_Lapack::getRowVector(const TlMat
     return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->getRowVector(row, length, pBuf);
 }
 
+std::vector<double> TlDenseGeneralMatrix_Lapack::getRowVector(const TlMatrixObject::index_type row) const {
+    return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->getRowVector(row);
+}
+
 TlMatrixObject::index_type TlDenseGeneralMatrix_Lapack::getColVector(const TlMatrixObject::index_type col,
                                                                      const TlMatrixObject::index_type length,
                                                                      double* pBuf) const {
     return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->getColVector(col, length, pBuf);
+}
+
+std::vector<double> TlDenseGeneralMatrix_Lapack::getColVector(const TlMatrixObject::index_type col) const {
+    return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->getColVector(col);
 }
 
 TlMatrixObject::index_type TlDenseGeneralMatrix_Lapack::setRowVector(const TlMatrixObject::index_type row,
@@ -131,10 +139,18 @@ TlMatrixObject::index_type TlDenseGeneralMatrix_Lapack::setRowVector(const TlMat
     return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->setRowVector(row, length, pBuf);
 }
 
+void TlDenseGeneralMatrix_Lapack::setRowVector(const TlMatrixObject::index_type row, const std::vector<double>& v) {
+    dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->setRowVector(row, v);
+}
+
 TlMatrixObject::index_type TlDenseGeneralMatrix_Lapack::setColVector(const TlMatrixObject::index_type col,
                                                                      const TlMatrixObject::index_type length,
                                                                      const double* pBuf) {
     return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->setColVector(col, length, pBuf);
+}
+
+void TlDenseGeneralMatrix_Lapack::setColVector(const TlMatrixObject::index_type col, const std::vector<double>& v) {
+    dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->setColVector(col, v);
 }
 
 // ---------------------------------------------------------------------------

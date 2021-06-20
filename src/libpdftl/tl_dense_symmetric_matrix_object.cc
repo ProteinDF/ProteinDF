@@ -75,9 +75,9 @@ void TlDenseSymmetricMatrixObject::add(const TlMatrixObject::index_type row, con
     this->pImpl_->add(row, col, value);
 }
 
-std::valarray<double> TlDenseSymmetricMatrixObject::getRowVector(const TlMatrixObject::index_type row) const {
+std::vector<double> TlDenseSymmetricMatrixObject::getRowVector(const TlMatrixObject::index_type row) const {
     const TlMatrixObject::index_type size = this->getNumOfCols();
-    std::valarray<double> v(size);
+    std::vector<double> v(size);
     for (TlMatrixObject::index_type i = 0; i < size; ++i) {
         v[i] = this->get(row, i);
     }
@@ -85,15 +85,55 @@ std::valarray<double> TlDenseSymmetricMatrixObject::getRowVector(const TlMatrixO
     return v;
 }
 
-std::valarray<double> TlDenseSymmetricMatrixObject::getColVector(const TlMatrixObject::index_type col) const {
+std::vector<double> TlDenseSymmetricMatrixObject::getColVector(const TlMatrixObject::index_type col) const {
     const TlMatrixObject::index_type size = this->getNumOfRows();
-    std::valarray<double> v(size);
+    std::vector<double> v(size);
     for (TlMatrixObject::index_type i = 0; i < size; ++i) {
         v[i] = this->get(i, col);
     }
 
     return v;
 }
+
+void TlDenseSymmetricMatrixObject::setRowVector(const TlMatrixObject::index_type row, const std::vector<double>& v) {
+    const TlMatrixObject::index_type size =
+        std::min(this->getNumOfCols(), static_cast<TlMatrixObject::index_type>(v.size()));
+
+#pragma omp parallel for
+    for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+        this->set(row, i, v[i]);
+    }
+}
+
+void TlDenseSymmetricMatrixObject::setColVector(const TlMatrixObject::index_type col, const std::vector<double>& v) {
+    const TlMatrixObject::index_type size =
+        std::min(this->getNumOfRows(), static_cast<TlMatrixObject::index_type>(v.size()));
+
+#pragma omp parallel for
+    for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+        this->set(i, col, v[i]);
+    }
+}
+
+// std::valarray<double> TlDenseSymmetricMatrixObject::getRowVector(const TlMatrixObject::index_type row) const {
+//     const TlMatrixObject::index_type size = this->getNumOfCols();
+//     std::valarray<double> v(size);
+//     for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+//         v[i] = this->get(row, i);
+//     }
+
+//     return v;
+// }
+
+// std::valarray<double> TlDenseSymmetricMatrixObject::getColVector(const TlMatrixObject::index_type col) const {
+//     const TlMatrixObject::index_type size = this->getNumOfRows();
+//     std::valarray<double> v(size);
+//     for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+//         v[i] = this->get(i, col);
+//     }
+
+//     return v;
+// }
 
 // ---------------------------------------------------------------------------
 // Operations

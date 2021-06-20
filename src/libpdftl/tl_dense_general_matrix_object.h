@@ -46,6 +46,11 @@ class TlDenseGeneralMatrixObject : public TlMatrixObject {
     void block(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
                const TlDenseGeneralMatrixObject& ref);
 
+    virtual std::vector<double> getRowVector(const TlMatrixObject::index_type row) const;
+    virtual std::vector<double> getColVector(const TlMatrixObject::index_type col) const;
+    virtual void setRowVector(const TlMatrixObject::index_type row, const std::vector<double>& v);
+    virtual void setColVector(const TlMatrixObject::index_type row, const std::vector<double>& v);
+
     template <class VectorType>
     VectorType getRowVector_tmpl(const TlMatrixObject::index_type row) const {
         const TlMatrixObject::index_type size = this->getNumOfCols();

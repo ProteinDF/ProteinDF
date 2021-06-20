@@ -101,6 +101,48 @@ void TlDenseGeneralMatrixObject::block(const TlMatrixObject::index_type row, con
     }
 }
 
+std::vector<double> TlDenseGeneralMatrixObject::getRowVector(const TlMatrixObject::index_type row) const {
+    const TlMatrixObject::index_type size = this->getNumOfCols();
+    std::vector<double> v(size);
+#pragma omp parallel for
+    for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+        v[i] = this->get(row, i);
+    }
+
+    return v;
+}
+
+std::vector<double> TlDenseGeneralMatrixObject::getColVector(const TlMatrixObject::index_type col) const {
+    const TlMatrixObject::index_type size = this->getNumOfRows();
+    std::vector<double> v(size);
+#pragma omp parallel for
+    for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+        v[i] = this->get(i, col);
+    }
+
+    return v;
+}
+
+void TlDenseGeneralMatrixObject::setRowVector(const TlMatrixObject::index_type row, const std::vector<double>& v) {
+    const TlMatrixObject::index_type size =
+        std::min(this->getNumOfCols(), static_cast<TlMatrixObject::index_type>(v.size()));
+
+#pragma omp parallel for
+    for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+        this->set(row, i, v[i]);
+    }
+}
+
+void TlDenseGeneralMatrixObject::setColVector(const TlMatrixObject::index_type col, const std::vector<double>& v) {
+    const TlMatrixObject::index_type size =
+        std::min(this->getNumOfRows(), static_cast<TlMatrixObject::index_type>(v.size()));
+
+#pragma omp parallel for
+    for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+        this->set(i, col, v[i]);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Operations
 // ---------------------------------------------------------------------------
