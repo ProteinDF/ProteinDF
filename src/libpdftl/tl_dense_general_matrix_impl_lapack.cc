@@ -147,6 +147,21 @@ TlMatrixObject::index_type TlDenseGeneralMatrix_ImplLapack::getRowVector(const T
     return copiedLength;
 }
 
+std::vector<double> TlDenseGeneralMatrix_ImplLapack::getRowVector(const TlMatrixObject::index_type row) const {
+    const TlMatrixObject::index_type numOfCols = this->getNumOfCols();
+    const TlMatrixObject::size_type base = this->index(row, 0);
+    const TlMatrixObject::size_type rows = this->getNumOfRows();
+
+    std::vector<double> v(numOfCols);
+
+#pragma omp parallel
+    for (TlMatrixObject::index_type c = 0; c < numOfCols; ++c) {
+        v[c] = this->matrix_[base + rows * c];
+    }
+
+    return v;
+}
+
 TlMatrixObject::index_type TlDenseGeneralMatrix_ImplLapack::getColVector(const TlMatrixObject::index_type col,
                                                                          const TlMatrixObject::index_type length,
                                                                          double* pBuf) const {
@@ -156,6 +171,16 @@ TlMatrixObject::index_type TlDenseGeneralMatrix_ImplLapack::getColVector(const T
     std::copy(this->matrix_ + base, this->matrix_ + base + copiedLength, pBuf);
 
     return copiedLength;
+}
+
+std::vector<double> TlDenseGeneralMatrix_ImplLapack::getColVector(const TlMatrixObject::index_type col) const {
+    const TlMatrixObject::index_type numOfRows = this->getNumOfRows();
+    std::vector<double> v(numOfRows);
+
+    const TlMatrixObject::size_type base = this->index(0, col);
+    std::copy(this->matrix_ + base, this->matrix_ + base + numOfRows, &(v[0]));
+
+    return v;
 }
 
 TlMatrixObject::index_type TlDenseGeneralMatrix_ImplLapack::setRowVector(const TlMatrixObject::index_type row,
@@ -173,6 +198,18 @@ TlMatrixObject::index_type TlDenseGeneralMatrix_ImplLapack::setRowVector(const T
     return copiedLength;
 }
 
+void TlDenseGeneralMatrix_ImplLapack::setRowVector(const TlMatrixObject::index_type row, const std::vector<double>& v) {
+    TlMatrixObject::index_type copiedLength =
+        std::min(static_cast<TlMatrixObject::index_type>(v.size()), this->getNumOfCols());
+    const TlMatrixObject::size_type base = this->index(row, 0);
+    const TlMatrixObject::size_type rows = this->getNumOfRows();
+
+#pragma omp parallel
+    for (TlMatrixObject::index_type c = 0; c < copiedLength; ++c) {
+        this->matrix_[base + rows * c] = v[c];
+    }
+}
+
 TlMatrixObject::index_type TlDenseGeneralMatrix_ImplLapack::setColVector(const TlMatrixObject::index_type col,
                                                                          const TlMatrixObject::index_type length,
                                                                          const double* pBuf) {
@@ -182,6 +219,14 @@ TlMatrixObject::index_type TlDenseGeneralMatrix_ImplLapack::setColVector(const T
     std::copy(pBuf, pBuf + copiedLength, this->matrix_ + base);
 
     return copiedLength;
+}
+
+void TlDenseGeneralMatrix_ImplLapack::setColVector(const TlMatrixObject::index_type col, const std::vector<double>& v) {
+    TlMatrixObject::index_type copiedLength =
+        std::min(static_cast<TlMatrixObject::index_type>(v.size()), this->getNumOfRows());
+    const TlMatrixObject::size_type base = this->index(0, col);
+
+    std::copy(v.begin(), v.begin() + copiedLength, this->matrix_ + base);
 }
 
 // ---------------------------------------------------------------------------
