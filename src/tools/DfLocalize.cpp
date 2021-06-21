@@ -73,6 +73,10 @@ void DfLocalize::setCMatrixPath(const std::string& path) {
 void DfLocalize::initialize() {
     this->G_ = 0.0;
 
+#ifdef _OPENMP
+    this->log_.info(TlUtils::format("OMP threads: %d", omp_get_max_threads()));
+#endif  // _OPENMP
+
     // output information
     this->log_.info(TlUtils::format("number of Atoms = %d", this->m_nNumOfAtoms));
     this->log_.info(TlUtils::format("number of AOs   = %d", this->m_nNumOfAOs));
@@ -168,8 +172,8 @@ double DfLocalize::localize(TlDenseGeneralMatrix_Lapack* pC) {
         // this->log_.info(TlUtils::format("calc: %d, %d", orb_i, orb_j));
 
         double A_ij, B_ij;
-        TlDenseVector_Lapack Cpi = pC->getColVector<TlDenseVector_Lapack>(orb_i);
-        TlDenseVector_Lapack Cpj = pC->getColVector<TlDenseVector_Lapack>(orb_j);
+        TlDenseVector_Lapack Cpi = pC->getColVector(orb_i);
+        TlDenseVector_Lapack Cpj = pC->getColVector(orb_j);
         this->calcQA_ij(Cpi, Cpj, &A_ij, &B_ij);
         const double normAB = std::sqrt(A_ij * A_ij + B_ij * B_ij);
         const double deltaG = A_ij + normAB;
@@ -181,8 +185,8 @@ double DfLocalize::localize(TlDenseGeneralMatrix_Lapack* pC) {
             this->getRotatingMatrix(A_ij, B_ij, normAB, &rot);
             this->rotateVectors(&Cpi, &Cpj, rot);
 
-            pC->setColVector(orb_i, Cpi.data(), numOfAOs);
-            pC->setColVector(orb_j, Cpj.data(), numOfAOs);
+            pC->setColVector(orb_i, numOfAOs, Cpi.data());
+            pC->setColVector(orb_j, numOfAOs, Cpj.data());
         }
     }
 
@@ -242,13 +246,13 @@ void DfLocalize::rotateVectors(TlDenseVector_Lapack* pCpi, TlDenseVector_Lapack*
     assert(pCpj->getSize() == numOfAOs);
 
     TlDenseGeneralMatrix_Lapack A(2, numOfAOs);
-    A.setRowVector(0, pCpi->data(), numOfAOs);
-    A.setRowVector(1, pCpj->data(), numOfAOs);
+    A.setRowVector(0, numOfAOs, pCpi->data());
+    A.setRowVector(1, numOfAOs, pCpj->data());
 
     const TlDenseGeneralMatrix_Lapack B = rot * A;  // rotate A to form B
 
-    *pCpi = B.getRowVector<TlDenseVector_Lapack>(0);
-    *pCpj = B.getRowVector<TlDenseVector_Lapack>(1);
+    *pCpi = B.getRowVector(0);
+    *pCpj = B.getRowVector(1);
     assert(pCpi->getSize() == numOfAOs);
     assert(pCpj->getSize() == numOfAOs);
 }
@@ -316,7 +320,7 @@ double DfLocalize::calcQA_ii(const TlDenseGeneralMatrix_Lapack& C, const index_t
     const index_type numOfGrps = this->groupV_.size();
     double sumQAii2 = 0.0;
 
-    const TlDenseVector_Lapack Cpi = C.getColVector<TlDenseVector_Lapack>(orb_i);
+    const TlDenseVector_Lapack Cpi = C.getColVector(orb_i);
     const TlDenseVector_Lapack SCpi = this->S_ * Cpi;
 
     // #pragma omp parallel for reduction(+ : sumQAii2)
