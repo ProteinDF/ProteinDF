@@ -147,8 +147,8 @@ double DfLocalize_Parallel::localize(TlDenseGeneralMatrix_Lapack* pC) {
                                 // assigned job
                                 this->lockMO(orb_i);
                                 this->lockMO(orb_j);
-                                TlDenseVector_Lapack vec_i = pC->getColVector<TlDenseVector_Lapack>(orb_i);
-                                TlDenseVector_Lapack vec_j = pC->getColVector<TlDenseVector_Lapack>(orb_j);
+                                TlDenseVector_Lapack vec_i = pC->getColVector(orb_i);
+                                TlDenseVector_Lapack vec_j = pC->getColVector(orb_j);
 
                                 // std::cerr << TlUtils::format("[0] send ASSIGNED_JOB to=%d", src) << std::endl;
                                 rComm.sendData(ASSIGNED_JOB, src);
