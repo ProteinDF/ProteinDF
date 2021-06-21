@@ -138,7 +138,7 @@ void DfLocalize::exec() {
     const int maxIteration = this->maxIteration_;
     for (int i = this->lo_iteration_ + 1; i <= maxIteration; ++i) {
         this->log_.info(TlUtils::format("localize: %d", i));
-        const double sumDeltaG = this->localize(&C);
+        const double sumDeltaG = this->localize_v2(&C);
 
         const std::string msg = TlUtils::format("%d th: G=%10.5e, delta_G=%10.5e", i, this->G_, sumDeltaG);
         this->log_.info(msg);
@@ -156,6 +156,7 @@ void DfLocalize::exec() {
 
 double DfLocalize::localize(TlDenseGeneralMatrix_Lapack* pC) {
     const index_type numOfAOs = this->m_nNumOfAOs;
+    const index_type numOfGrps = this->groupV_.size();
 
     this->makeQATable(*pC);
     this->makeJobList();
@@ -165,28 +166,197 @@ double DfLocalize::localize(TlDenseGeneralMatrix_Lapack* pC) {
     const double rotatingThreshold = this->threshold_ * 0.01;
 
     JobItem jobItem;
-    (void)this->getJobItem(&jobItem, true);
-    while (this->getJobItem(&jobItem) != 0) {
-        const index_type orb_i = jobItem.orb_i;
-        const index_type orb_j = jobItem.orb_j;
-        // this->log_.info(TlUtils::format("calc: %d, %d", orb_i, orb_j));
+    bool hasJob = this->getJobItem(&jobItem, true);
+    TlDenseVector_Lapack Cpi;
+    TlDenseVector_Lapack Cpj;
+    TlDenseVector_Lapack SCpi;
+    TlDenseVector_Lapack SCpj;
+    double A_ij = 0.0;
+    double B_ij = 0.0;
 
-        double A_ij, B_ij;
-        TlDenseVector_Lapack Cpi = pC->getColVector(orb_i);
-        TlDenseVector_Lapack Cpj = pC->getColVector(orb_j);
-        this->calcQA_ij(Cpi, Cpj, &A_ij, &B_ij);
-        const double normAB = std::sqrt(A_ij * A_ij + B_ij * B_ij);
-        const double deltaG = A_ij + normAB;
-        // std::cout << TlUtils::format("%f: A=%f B=%f", deltaG, A_ij, B_ij) << std::endl;
+#pragma omp parallel
+    {
+        while (true) {
+#pragma omp single
+            {
+                hasJob = this->getJobItem(&jobItem);
+                A_ij = 0.0;
+                B_ij = 0.0;
+            }
 
-        if (std::fabs(deltaG) > rotatingThreshold) {
-            sumDeltaG += deltaG;
-            TlDenseGeneralMatrix_Lapack rot(2, 2);
-            this->getRotatingMatrix(A_ij, B_ij, normAB, &rot);
-            this->rotateVectors(&Cpi, &Cpj, rot);
+            if (!hasJob) {
+                break;
+            }
 
-            pC->setColVector(orb_i, numOfAOs, Cpi.data());
-            pC->setColVector(orb_j, numOfAOs, Cpj.data());
+            const index_type orb_i = jobItem.orb_i;
+            const index_type orb_j = jobItem.orb_j;
+
+#pragma omp single nowait
+            this->log_.info(TlUtils::format("calc: %d, %d", orb_i, orb_j));
+
+// TlDenseVector_Lapack Cpi = pC->getColVector(orb_i);
+// TlDenseVector_Lapack Cpj = pC->getColVector(orb_j);
+#pragma omp single nowait
+            Cpi = pC->getColVector(orb_i);
+#pragma omp single nowait
+            Cpj = pC->getColVector(orb_j);
+#pragma omp barrier
+
+// this->calcQA_ij(Cpi, Cpj, &A_ij, &B_ij);
+
+// const TlDenseVector_Lapack SCpi = this->S_ * Cpi;
+// const TlDenseVector_Lapack SCpj = this->S_ * Cpj;
+#pragma omp single nowait
+            SCpi = this->S_ * Cpi;
+#pragma omp single nowait
+            SCpj = this->S_ * Cpj;
+#pragma omp barrier
+
+            double sumAij = 0.0;
+            double sumBij = 0.0;
+#pragma omp for schedule(runtime)
+            for (index_type grp = 0; grp < numOfGrps; ++grp) {
+                TlDenseVector_Lapack tCqi = Cpi;
+                TlDenseVector_Lapack tCqj = Cpj;
+                tCqi.dotInPlace(this->groupV_[grp]);
+                tCqj.dotInPlace(this->groupV_[grp]);
+
+                const double QAii = tCqi * SCpi;
+                const double QAjj = tCqj * SCpj;
+                const double QAij = 0.5 * (tCqj * SCpi + tCqi * SCpj);
+
+                const double QAii_QAjj = QAii - QAjj;
+                sumAij += QAij * QAij - 0.25 * QAii_QAjj * QAii_QAjj;
+                sumBij += QAij * QAii_QAjj;
+            }
+#pragma omp atomic
+            A_ij += sumAij;
+#pragma omp atomic
+            B_ij += sumBij;
+#pragma omp barrier
+
+            const double normAB = std::sqrt(A_ij * A_ij + B_ij * B_ij);
+            const double deltaG = A_ij + normAB;
+
+            // #pragma omp single nowait
+            //             std::cout << TlUtils::format("%f: A=%f B=%f", deltaG, A_ij, B_ij) << std::endl;
+
+#pragma omp single
+            {
+                if (std::fabs(deltaG) > rotatingThreshold) {
+                    sumDeltaG += deltaG;
+                    TlDenseGeneralMatrix_Lapack rot(2, 2);
+                    this->getRotatingMatrix(A_ij, B_ij, normAB, &rot);
+                    this->rotateVectors(&Cpi, &Cpj, rot);
+
+                    pC->setColVector(orb_i, numOfAOs, Cpi.data());
+                    pC->setColVector(orb_j, numOfAOs, Cpj.data());
+                }
+            }
+        }
+    }
+    this->log_.info("localize: end");
+    return sumDeltaG;
+}
+
+double DfLocalize::localize_v2(TlDenseGeneralMatrix_Lapack* pC) {
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    const index_type numOfGrps = this->groupV_.size();
+
+    this->makeQATable(*pC);
+    this->makeJobList();
+
+    this->log_.info("localize: start");
+    double sumDeltaG = 0.0;
+    const double rotatingThreshold = this->threshold_ * 0.01;
+
+    JobItem jobItem;
+    bool hasJob = this->getJobItem(&jobItem, true);
+    TlDenseVector_Lapack Cpi;
+    TlDenseVector_Lapack Cpj;
+    TlDenseVector_Lapack SCpi;
+    TlDenseVector_Lapack SCpj;
+    double A_ij = 0.0;
+    double B_ij = 0.0;
+
+#pragma omp parallel
+    {
+        while (true) {
+#pragma omp single
+            {
+                hasJob = this->getJobItem(&jobItem);
+                A_ij = 0.0;
+                B_ij = 0.0;
+            }
+
+            if (!hasJob) {
+                break;
+            }
+
+            const index_type orb_i = jobItem.orb_i;
+            const index_type orb_j = jobItem.orb_j;
+
+#pragma omp single nowait
+            this->log_.info(TlUtils::format("calc: %d, %d", orb_i, orb_j));
+
+#pragma omp sections
+            {
+#pragma omp section
+                Cpi = pC->getColVector(orb_i);
+#pragma omp section
+                Cpj = pC->getColVector(orb_j);
+            }
+
+            // this->calcQA_ij(Cpi, Cpj, &A_ij, &B_ij);
+#pragma omp sections
+            {
+#pragma omp section
+                SCpi = this->S_ * Cpi;
+#pragma omp section
+                SCpj = this->S_ * Cpj;
+            }
+
+            double sumAij = 0.0;
+            double sumBij = 0.0;
+#pragma omp for schedule(runtime) nowait
+            for (index_type grp = 0; grp < numOfGrps; ++grp) {
+                TlDenseVector_Lapack tCqi = Cpi;
+                TlDenseVector_Lapack tCqj = Cpj;
+                tCqi.dotInPlace(this->groupV_[grp]);
+                tCqj.dotInPlace(this->groupV_[grp]);
+
+                const double QAii = tCqi * SCpi;
+                const double QAjj = tCqj * SCpj;
+                const double QAij = 0.5 * (tCqj * SCpi + tCqi * SCpj);
+
+                const double QAii_QAjj = QAii - QAjj;
+                sumAij += QAij * QAij - 0.25 * QAii_QAjj * QAii_QAjj;
+                sumBij += QAij * QAii_QAjj;
+            }
+#pragma omp atomic
+            A_ij += sumAij;
+#pragma omp atomic
+            B_ij += sumBij;
+#pragma omp barrier
+
+            const double normAB = std::sqrt(A_ij * A_ij + B_ij * B_ij);
+            const double deltaG = A_ij + normAB;
+
+            // #pragma omp single nowait
+            //             std::cout << TlUtils::format("%f: A=%f B=%f", deltaG, A_ij, B_ij) << std::endl;
+
+#pragma omp single
+            {
+                if (std::fabs(deltaG) > rotatingThreshold) {
+                    sumDeltaG += deltaG;
+                    TlDenseGeneralMatrix_Lapack rot(2, 2);
+                    this->getRotatingMatrix(A_ij, B_ij, normAB, &rot);
+
+                    this->rotateVectors(&Cpi, &Cpj, rot);
+                    pC->setColVector(orb_i, numOfAOs, Cpi.data());
+                    pC->setColVector(orb_j, numOfAOs, Cpj.data());
+                }
+            }
         }
     }
 
@@ -295,7 +465,8 @@ void DfLocalize::calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_
     double sumAij = 0.0;
     double sumBij = 0.0;
 
-#pragma omp parallel for schedule(runtime) reduction(+ : sumAij, sumBij)
+//#pragma omp for schedule(runtime) private(sumAij, sumBij) reduction(+ : sumAij, sumBij)
+#pragma omp for schedule(runtime)
     for (index_type grp = 0; grp < numOfGrps; ++grp) {
         TlDenseVector_Lapack tCqi = Cpi;
         TlDenseVector_Lapack tCqj = Cpj;
@@ -311,8 +482,11 @@ void DfLocalize::calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_
         sumBij += QAij * QAii_QAjj;
     }
 
-    *pA_ij = sumAij;
-    *pB_ij = sumBij;
+#pragma omp critical(calcQA_ij)
+    {
+        *pA_ij += sumAij;
+        *pB_ij += sumBij;
+    }
 }
 
 double DfLocalize::calcQA_ii(const TlDenseGeneralMatrix_Lapack& C, const index_type orb_i) {
