@@ -68,6 +68,7 @@ class DfLocalize : public DfObject {
     void exec();
 
     virtual double localize(TlDenseGeneralMatrix_Lapack* pC);
+    virtual double localize_v2(TlDenseGeneralMatrix_Lapack* pC);
 
    protected:
     virtual void initialize();
