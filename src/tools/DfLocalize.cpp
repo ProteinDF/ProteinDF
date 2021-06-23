@@ -527,8 +527,16 @@ bool DfLocalize::getJobItem(DfLocalize::JobItem* pJob, bool isInitialized) {
     assert(pJob != NULL);
 
     static std::list<JobItem>::iterator it;
+    static std::size_t counter = 0;
+    static std::size_t maxJobs = 0;
+    static std::size_t noticeNext = 0;
+
     if (isInitialized == true) {
         it = this->jobList_.begin();
+
+        counter = 0;
+        maxJobs = this->jobList_.size();
+        noticeNext = 1;
 
         return true;
     }
@@ -537,7 +545,17 @@ bool DfLocalize::getJobItem(DfLocalize::JobItem* pJob, bool isInitialized) {
     if (it != this->jobList_.end()) {
         *pJob = *it;
         ++it;
+
+        if (counter > (maxJobs / 10) * noticeNext) {
+            const double ratio = (double(counter) / double(maxJobs)) * 100.0;
+            this->log_.info(TlUtils::format("progress: %3.2f%% (%ld/%ld)", ratio, counter, maxJobs));
+            ++noticeNext;
+        }
+
+        ++counter;
         answer = true;
+    } else {
+        this->log_.info("progress: 100% done");
     }
 
     return answer;
