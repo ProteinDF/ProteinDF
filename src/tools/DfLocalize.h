@@ -19,8 +19,6 @@
 #ifndef DFLOCALIZE_H
 #define DFLOCALIZE_H
 
-#include <list>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -48,9 +46,9 @@ class DfLocalize : public DfObject {
         };
     };
 
-    struct JobItem {
+    struct TaskItem {
        public:
-        JobItem(DfObject::index_type i = 0, DfObject::index_type j = 0) : orb_i(i), orb_j(j) {
+        TaskItem(DfObject::index_type i = 0, DfObject::index_type j = 0) : orb_i(i), orb_j(j) {
         }
 
        public:
@@ -69,8 +67,9 @@ class DfLocalize : public DfObject {
     void exec();
 
     virtual double localize(TlDenseGeneralMatrix_Lapack* pC);
-    virtual double localize_v2(TlDenseGeneralMatrix_Lapack* pC);
-    virtual double localize_v3(TlDenseGeneralMatrix_Lapack* pC);
+    // virtual double localize_v2(TlDenseGeneralMatrix_Lapack* pC);
+    // virtual double localize_v3(TlDenseGeneralMatrix_Lapack* pC);
+    virtual double localize_v4(TlDenseGeneralMatrix_Lapack* pC);
 
    protected:
     virtual void initialize();
@@ -95,10 +94,10 @@ class DfLocalize : public DfObject {
     //                double* pA_ij, double* pB_ij);
     void calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_Lapack& Cpj, double* pA_ij, double* pB_ij);
 
-    void makeJobList();
+    void makeTaskList(const index_type startMO, const index_type endMO);
 
     // Return true if the task remains, and return false if there are no tasks left.
-    virtual bool getJobItem(DfLocalize::JobItem* pJob, bool isInitialized = false);
+    virtual bool getTaskItem(DfLocalize::TaskItem* pTask, bool isInitialized = false);
 
    protected:
     TlLogging& log_;
@@ -124,7 +123,7 @@ class DfLocalize : public DfObject {
     TlDenseSymmetricMatrix_Lapack S_;
 
     std::vector<Orb_QA_Item> orb_QA_table_;
-    std::list<JobItem> jobList_;
+    std::vector<TaskItem> taskList_;
 
    protected:
     void initialLockMO(const index_type numOfMOs);

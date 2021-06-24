@@ -38,8 +38,8 @@ class DfLocalize_Parallel : public DfLocalize {
 
     // Return true if the task remains, and return false if there are no tasks left.
     // If the molecular orbital in charge is locked during processing,
-    // -1 will be placed in the molecular orbitals of JobItem.
-    virtual bool getJobItem(DfLocalize::JobItem* pJob, bool isInitialized = false);
+    // -1 will be placed in the molecular orbitals of TaskItem.
+    virtual bool getTaskItem(DfLocalize::TaskItem* pTask, bool isInitialized = false);
 
    protected:
     void lockMO(const index_type MO);
