@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include "DfLocalize.h"
+#include "TlTime.h"
 
 // #define OCCU_THRESHOLD (1.0e-7)
 // #define UNOCCU_THRESHOLD (1.0e-4)
@@ -53,10 +54,6 @@ DfLocalize::DfLocalize(TlSerializeData* pPdfParam)
     }
 
     this->numOfOcc_ = (this->m_nNumOfElectrons + 1) / 2;
-
-    // for OCC
-    this->startOrb_ = 0;
-    this->endOrb_ = this->numOfOcc_;
 }
 
 DfLocalize::~DfLocalize() {
@@ -71,6 +68,10 @@ void DfLocalize::setCMatrixPath(const std::string& path) {
 }
 
 void DfLocalize::initialize() {
+    // for OCC
+    this->startOrb_ = 0;
+    this->endOrb_ = this->numOfOcc_;
+
     this->G_ = 0.0;
 
 #ifdef _OPENMP
@@ -95,6 +96,53 @@ void DfLocalize::initialize() {
         this->log_.critical(TlUtils::format("could not load: %s", path.c_str()));
         abort();
     }
+    assert(this->S_.getNumOfRows() == this->m_nNumOfAOs);
+
+    this->checkOpenMP();
+}
+
+void DfLocalize::checkOpenMP() {
+#ifdef _OPENMP
+    {
+        this->log_.info(">>>> OpenMP info ");
+        const int numOfOmpThreads = omp_get_max_threads();
+        this->log_.info(TlUtils::format("OpenMP max threads: %d", numOfOmpThreads));
+
+        omp_sched_t kind;
+        int modifier = 0;
+        omp_get_schedule(&kind, &modifier);
+        switch (kind) {
+            case omp_sched_static:
+                this->log_.info("OpenMP schedule: static");
+                break;
+            case omp_sched_dynamic:
+                this->log_.info("OpenMP schedule: dynamic");
+                break;
+            case omp_sched_guided:
+                this->log_.info("OpenMP schedule: guided");
+                break;
+            case omp_sched_auto:
+                this->log_.info("OpenMP schedule: auto");
+                break;
+            default:
+                this->log_.info(TlUtils::format("OpenMP schedule: unknown: %d", static_cast<int>(kind)));
+                break;
+        }
+
+        const index_type MOs = this->endOrb_ - this->startOrb_ + 1;
+        this->log_.info(TlUtils::format("The number of MOs: %d", MOs));
+
+        const int idealMaxThreads = MOs * MOs / 1280;
+        if (idealMaxThreads < numOfOmpThreads) {
+            this->log_.info(
+                TlUtils::format("Too many OpenMP threads. Set the number of threads to %d.", idealMaxThreads));
+            omp_set_num_threads(idealMaxThreads);
+        }
+        this->log_.info("<<<<");
+    }
+#else
+    { this->log_.info("OpenMP is not enabled."); }
+#endif  // _OPENMP
 }
 
 bool DfLocalize::getSMatrix(TlDenseSymmetricMatrix_Lapack* pS) {
@@ -133,12 +181,19 @@ void DfLocalize::exec() {
     this->initialize();
 
     TlDenseGeneralMatrix_Lapack C;
-    this->getCMatrix(&C);
+    {
+        TlDenseGeneralMatrix_Lapack C_full;
+        this->getCMatrix(&C_full);
+        assert(this->startOrb_ < C_full.getNumOfCols());
+        assert(this->endOrb_ < C_full.getNumOfCols());
+
+        C_full.block(0, this->startOrb_, C_full.getNumOfRows(), this->endOrb_ - this->startOrb_ + 1, &C);
+    }
 
     const int maxIteration = this->maxIteration_;
     for (int i = this->lo_iteration_ + 1; i <= maxIteration; ++i) {
         this->log_.info(TlUtils::format("localize: %d", i));
-        const double sumDeltaG = this->localize_v2(&C);
+        const double sumDeltaG = this->localize_v3(&C);
 
         const std::string msg = TlUtils::format("%d th: G=%10.5e, delta_G=%10.5e", i, this->G_, sumDeltaG);
         this->log_.info(msg);
@@ -364,6 +419,78 @@ double DfLocalize::localize_v2(TlDenseGeneralMatrix_Lapack* pC) {
     return sumDeltaG;
 }
 
+double DfLocalize::localize_v3(TlDenseGeneralMatrix_Lapack* pC) {
+    const index_type numOfAOs = pC->getNumOfRows();
+    const index_type numOfMOs = pC->getNumOfCols();
+    // const index_type numOfGrps = this->groupV_.size();
+    // std::cout << TlUtils::format("C: %d x %d", pC->getNumOfRows(), pC->getNumOfCols()) << std::endl;
+    assert(numOfAOs == this->m_nNumOfAOs);
+
+    this->makeQATable(*pC);
+    // this->makeJobList();
+
+    this->log_.info("localize: start");
+    const double rotatingThreshold = this->threshold_ * 0.01;
+
+    // JobItem jobItem;
+    // bool hasJob = this->getJobItem(&jobItem, true);
+
+    this->initialLockMO(numOfMOs);
+
+    double sumDeltaG = 0.0;
+#pragma omp parallel for reduction(+ : sumDeltaG) schedule(runtime)
+    for (int index1 = 1; index1 < numOfMOs; ++index1) {
+        // Starting from 1 instead of 0 means that the diagonal elements are not computed.
+        const int max_index2 = numOfMOs - index1;
+        for (int index2 = 0; index2 < max_index2; ++index2) {
+            const index_type orb_i = index2;
+            const index_type orb_j = index1 + index2;
+
+            // this->log_.info(TlUtils::format("calc: %d, %d (%d, %d)", orb_i, orb_j, index1, index2));
+
+            double sleep = 100;
+            while (this->isLockedMO(orb_i, orb_j)) {
+                TlTime::sleep(sleep);
+                sleep *= 2.0;
+            }
+#pragma omp critical(lock_MO)
+            {
+                this->lockMO(orb_i);
+                this->lockMO(orb_j);
+            }
+
+            TlDenseVector_Lapack Cpi = pC->getColVector(orb_i);
+            TlDenseVector_Lapack Cpj = pC->getColVector(orb_j);
+
+            double A_ij = 0.0;
+            double B_ij = 0.0;
+            this->calcQA_ij(Cpi, Cpj, &A_ij, &B_ij);
+
+            const double normAB = std::sqrt(A_ij * A_ij + B_ij * B_ij);
+            const double deltaG = A_ij + normAB;
+
+            if (std::fabs(deltaG) > rotatingThreshold) {
+                sumDeltaG += deltaG;
+                TlDenseGeneralMatrix_Lapack rot(2, 2);
+                this->getRotatingMatrix(A_ij, B_ij, normAB, &rot);
+                this->rotateVectors(&Cpi, &Cpj, rot);
+
+                pC->setColVector(orb_i, numOfAOs, Cpi.data());
+                pC->setColVector(orb_j, numOfAOs, Cpj.data());
+            }
+
+#pragma omp critical(unlock_MO)
+            {
+                this->unlockMO(orb_i);
+                this->unlockMO(orb_j);
+            }
+        }
+    }
+
+    this->log_.info("localize: end");
+    return sumDeltaG;
+}
+
 void DfLocalize::makeGroup() {
     const index_type numOfAOs = this->m_nNumOfAOs;
     const index_type numOfAtoms = this->m_nNumOfAtoms;
@@ -465,8 +592,8 @@ void DfLocalize::calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_
     double sumAij = 0.0;
     double sumBij = 0.0;
 
-//#pragma omp for schedule(runtime) private(sumAij, sumBij) reduction(+ : sumAij, sumBij)
-#pragma omp for schedule(runtime)
+    //#pragma omp for schedule(runtime) private(sumAij, sumBij) reduction(+ : sumAij, sumBij)
+    // #pragma omp for schedule(runtime)
     for (index_type grp = 0; grp < numOfGrps; ++grp) {
         TlDenseVector_Lapack tCqi = Cpi;
         TlDenseVector_Lapack tCqj = Cpj;
@@ -482,7 +609,7 @@ void DfLocalize::calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_
         sumBij += QAij * QAii_QAjj;
     }
 
-#pragma omp critical(calcQA_ij)
+    // #pragma omp critical(calcQA_ij)
     {
         *pA_ij += sumAij;
         *pB_ij += sumBij;
@@ -490,7 +617,7 @@ void DfLocalize::calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_
 }
 
 double DfLocalize::calcQA_ii(const TlDenseGeneralMatrix_Lapack& C, const index_type orb_i) {
-    const index_type numOfAOs = this->m_nNumOfAOs;
+    // const index_type numOfAOs = this->m_nNumOfAOs;
     const index_type numOfGrps = this->groupV_.size();
     double sumQAii2 = 0.0;
 
@@ -556,6 +683,34 @@ bool DfLocalize::getJobItem(DfLocalize::JobItem* pJob, bool isInitialized) {
         answer = true;
     } else {
         this->log_.info("progress: 100% done");
+    }
+
+    return answer;
+}
+
+// lock MO
+void DfLocalize::initialLockMO(const index_type numOfMOs) {
+    this->lockMOs_.resize(numOfMOs);
+    std::fill(this->lockMOs_.begin(), this->lockMOs_.end(), 0);
+}
+
+void DfLocalize::lockMO(const index_type mo) {
+    assert(mo < static_cast<index_type>(this->lockMOs_.size()));
+    this->lockMOs_[mo] = 1;
+}
+
+void DfLocalize::unlockMO(const index_type mo) {
+    assert(mo < static_cast<index_type>(this->lockMOs_.size()));
+    this->lockMOs_[mo] = 0;
+}
+
+bool DfLocalize::isLockedMO(const index_type mo1, const index_type mo2) const {
+    assert(mo1 < static_cast<index_type>(this->lockMOs_.size()));
+    assert(mo2 < static_cast<index_type>(this->lockMOs_.size()));
+    bool answer = true;
+
+    if ((this->lockMOs_[mo1] + this->lockMOs_[mo2] == 0)) {
+        answer = false;
     }
 
     return answer;

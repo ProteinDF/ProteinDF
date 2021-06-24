@@ -20,6 +20,7 @@
 #define DFLOCALIZE_H
 
 #include <list>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -69,9 +70,12 @@ class DfLocalize : public DfObject {
 
     virtual double localize(TlDenseGeneralMatrix_Lapack* pC);
     virtual double localize_v2(TlDenseGeneralMatrix_Lapack* pC);
+    virtual double localize_v3(TlDenseGeneralMatrix_Lapack* pC);
 
    protected:
     virtual void initialize();
+    void checkOpenMP();
+
     bool getSMatrix(TlDenseSymmetricMatrix_Lapack* pS);
     std::string getCMatrixPath();
     void getCMatrix(TlDenseGeneralMatrix_Lapack* pC);
@@ -121,6 +125,15 @@ class DfLocalize : public DfObject {
 
     std::vector<Orb_QA_Item> orb_QA_table_;
     std::list<JobItem> jobList_;
+
+   protected:
+    void initialLockMO(const index_type numOfMOs);
+    void lockMO(const index_type MO);
+    void unlockMO(const index_type MO);
+    bool isLockedMO(const index_type mo1, const index_type mo2) const;
+
+   protected:
+    std::vector<char> lockMOs_;
 };
 
 #endif  // DFLOCALIZE_H

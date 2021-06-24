@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 
     TlGetopt opt(argc, argv, "c:hp:rv");
     const bool isShowHelp = (opt["h"] == "defined");
-    const bool isVerbose = (opt["v"] == "defined");
+    // const bool isVerbose = (opt["v"] == "defined");
 
     if (isShowHelp) {
         if (rComm.isMaster() == true) {
