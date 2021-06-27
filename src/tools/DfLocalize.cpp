@@ -35,9 +35,6 @@ DfLocalize::DfLocalize(TlSerializeData* pPdfParam)
       isRestart_(false),
       CMatrixPath_(""),
       orbInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"]) {
-    // setup log
-    this->log_.setFilePath("lo-output.txt");
-
     this->maxIteration_ = 100;
     if ((*pPdfParam)["lo/max_iteration"].getStr().empty() != true) {
         this->maxIteration_ = (*pPdfParam)["lo/max_iteration"].getInt();
@@ -80,8 +77,7 @@ void DfLocalize::initialize() {
     this->log_.info(TlUtils::format("number of MOs: %d", this->m_nNumOfMOs));
     this->log_.info(TlUtils::format("max iteration: %d", this->maxIteration_));
     this->log_.info(TlUtils::format("threshold: %10.5e", this->threshold_));
-    this->log_.info(TlUtils::format("start MO: %d", this->startOrb_));
-    this->log_.info(TlUtils::format("end MO: %d", this->endOrb_));
+    this->log_.info(TlUtils::format("processing MO: %d -> %d", this->startOrb_, this->endOrb_));
 
     this->log_.info("make group");
     this->makeGroup();
@@ -127,15 +123,6 @@ void DfLocalize::checkOpenMP() {
                 break;
         }
 
-        // const index_type MOs = this->endOrb_ - this->startOrb_ + 1;
-        // this->log_.info(TlUtils::format("The number of MOs: %d", MOs));
-
-        // const int idealMaxThreads = MOs * MOs / 1280;
-        // if (idealMaxThreads < numOfOmpThreads) {
-        //     this->log_.info(
-        //         TlUtils::format("Too many OpenMP threads. Set the number of threads to %d.", idealMaxThreads));
-        //     omp_set_num_threads(idealMaxThreads);
-        // }
         this->log_.info("<<<<");
     }
 #else
@@ -190,7 +177,7 @@ void DfLocalize::exec() {
     const int maxIteration = this->maxIteration_;
     for (int i = this->lo_iteration_ + 1; i <= maxIteration; ++i) {
         this->log_.info(TlUtils::format("localize: %d", i));
-        const double sumDeltaG = this->localize_v4(&C);
+        const double sumDeltaG = this->localize(&C);
 
         const std::string msg = TlUtils::format("%d th: G=%10.5e, delta_G=%10.5e", i, this->G_, sumDeltaG);
         this->log_.info(msg);
@@ -207,310 +194,45 @@ void DfLocalize::exec() {
 }
 
 double DfLocalize::localize(TlDenseGeneralMatrix_Lapack* pC) {
-    const index_type numOfAOs = this->m_nNumOfAOs;
-    const index_type numOfGrps = this->groupV_.size();
+    // const index_type numOfAOs = pC->getNumOfRows();
+    // const index_type numOfMOs = pC->getNumOfCols();
+    // assert(numOfAOs == this->m_nNumOfAOs);
 
-    this->makeQATable(*pC);
-    this->makeTaskList(this->startOrb_, this->endOrb_ + 1);
+    this->G_ = this->calcG(*pC, this->startOrb_, this->endOrb_);
+    const double sumDeltaG = this->localize_core(pC, this->startOrb_, this->endOrb_, this->startOrb_, this->endOrb_);
 
-    this->log_.info("localize: start");
-    double sumDeltaG = 0.0;
-    const double rotatingThreshold = this->threshold_ * 0.01;
-
-    TaskItem taskItem;
-    bool hasTask = this->getTaskItem(&taskItem, true);
-    TlDenseVector_Lapack Cpi;
-    TlDenseVector_Lapack Cpj;
-    TlDenseVector_Lapack SCpi;
-    TlDenseVector_Lapack SCpj;
-    double A_ij = 0.0;
-    double B_ij = 0.0;
-
-#pragma omp parallel
-    {
-        while (true) {
-#pragma omp single
-            {
-                hasTask = this->getTaskItem(&taskItem);
-                A_ij = 0.0;
-                B_ij = 0.0;
-            }
-
-            if (!hasTask) {
-                break;
-            }
-
-            const index_type orb_i = taskItem.orb_i;
-            const index_type orb_j = taskItem.orb_j;
-
-#pragma omp single nowait
-            this->log_.info(TlUtils::format("calc: %d, %d", orb_i, orb_j));
-
-// TlDenseVector_Lapack Cpi = pC->getColVector(orb_i);
-// TlDenseVector_Lapack Cpj = pC->getColVector(orb_j);
-#pragma omp single nowait
-            Cpi = pC->getColVector(orb_i);
-#pragma omp single nowait
-            Cpj = pC->getColVector(orb_j);
-#pragma omp barrier
-
-// this->calcQA_ij(Cpi, Cpj, &A_ij, &B_ij);
-
-// const TlDenseVector_Lapack SCpi = this->S_ * Cpi;
-// const TlDenseVector_Lapack SCpj = this->S_ * Cpj;
-#pragma omp single nowait
-            SCpi = this->S_ * Cpi;
-#pragma omp single nowait
-            SCpj = this->S_ * Cpj;
-#pragma omp barrier
-
-            double sumAij = 0.0;
-            double sumBij = 0.0;
-#pragma omp for schedule(runtime)
-            for (index_type grp = 0; grp < numOfGrps; ++grp) {
-                TlDenseVector_Lapack tCqi = Cpi;
-                TlDenseVector_Lapack tCqj = Cpj;
-                tCqi.dotInPlace(this->groupV_[grp]);
-                tCqj.dotInPlace(this->groupV_[grp]);
-
-                const double QAii = tCqi * SCpi;
-                const double QAjj = tCqj * SCpj;
-                const double QAij = 0.5 * (tCqj * SCpi + tCqi * SCpj);
-
-                const double QAii_QAjj = QAii - QAjj;
-                sumAij += QAij * QAij - 0.25 * QAii_QAjj * QAii_QAjj;
-                sumBij += QAij * QAii_QAjj;
-            }
-#pragma omp atomic
-            A_ij += sumAij;
-#pragma omp atomic
-            B_ij += sumBij;
-#pragma omp barrier
-
-            const double normAB = std::sqrt(A_ij * A_ij + B_ij * B_ij);
-            const double deltaG = A_ij + normAB;
-
-            // #pragma omp single nowait
-            //             std::cout << TlUtils::format("%f: A=%f B=%f", deltaG, A_ij, B_ij) << std::endl;
-
-#pragma omp single
-            {
-                if (std::fabs(deltaG) > rotatingThreshold) {
-                    sumDeltaG += deltaG;
-                    TlDenseGeneralMatrix_Lapack rot(2, 2);
-                    this->getRotatingMatrix(A_ij, B_ij, normAB, &rot);
-                    this->rotateVectors(&Cpi, &Cpj, rot);
-
-                    pC->setColVector(orb_i, numOfAOs, Cpi.data());
-                    pC->setColVector(orb_j, numOfAOs, Cpj.data());
-                }
-            }
-        }
-    }
-    this->log_.info("localize: end");
     return sumDeltaG;
 }
 
-// double DfLocalize::localize_v2(TlDenseGeneralMatrix_Lapack* pC) {
-//     const index_type numOfAOs = this->m_nNumOfAOs;
-//     const index_type numOfGrps = this->groupV_.size();
+double DfLocalize::localize_core(TlDenseGeneralMatrix_Lapack* pC, const index_type startMO1, const index_type endMO1,
+                                 const index_type startMO2, const index_type endMO2) {
+    assert(startMO1 < endMO1);
+    assert(startMO2 < endMO2);
 
-//     this->makeQATable(*pC);
-//     this->makeTaskList(this->startOrb_, this->endOrb_ + 1);
-
-//     this->log_.info("localize: start");
-//     double sumDeltaG = 0.0;
-//     const double rotatingThreshold = this->threshold_ * 0.01;
-
-//     TaskItem taskItem;
-//     bool hasTask = this->getTaskItem(&taskItem, true);
-//     TlDenseVector_Lapack Cpi;
-//     TlDenseVector_Lapack Cpj;
-//     TlDenseVector_Lapack SCpi;
-//     TlDenseVector_Lapack SCpj;
-//     double A_ij = 0.0;
-//     double B_ij = 0.0;
-
-// #pragma omp parallel
-//     {
-//         while (true) {
-// #pragma omp single
-//             {
-//                 hasTask = this->getTaskItem(&taskItem);
-//                 A_ij = 0.0;
-//                 B_ij = 0.0;
-//             }
-
-//             if (!hasTask) {
-//                 break;
-//             }
-
-//             const index_type orb_i = taskItem.orb_i;
-//             const index_type orb_j = taskItem.orb_j;
-
-// #pragma omp single nowait
-//             this->log_.info(TlUtils::format("calc: %d, %d", orb_i, orb_j));
-
-// #pragma omp sections
-//             {
-// #pragma omp section
-//                 Cpi = pC->getColVector(orb_i);
-// #pragma omp section
-//                 Cpj = pC->getColVector(orb_j);
-//             }
-
-//             // this->calcQA_ij(Cpi, Cpj, &A_ij, &B_ij);
-// #pragma omp sections
-//             {
-// #pragma omp section
-//                 SCpi = this->S_ * Cpi;
-// #pragma omp section
-//                 SCpj = this->S_ * Cpj;
-//             }
-
-//             double sumAij = 0.0;
-//             double sumBij = 0.0;
-// #pragma omp for schedule(runtime) nowait
-//             for (index_type grp = 0; grp < numOfGrps; ++grp) {
-//                 TlDenseVector_Lapack tCqi = Cpi;
-//                 TlDenseVector_Lapack tCqj = Cpj;
-//                 tCqi.dotInPlace(this->groupV_[grp]);
-//                 tCqj.dotInPlace(this->groupV_[grp]);
-
-//                 const double QAii = tCqi * SCpi;
-//                 const double QAjj = tCqj * SCpj;
-//                 const double QAij = 0.5 * (tCqj * SCpi + tCqi * SCpj);
-
-//                 const double QAii_QAjj = QAii - QAjj;
-//                 sumAij += QAij * QAij - 0.25 * QAii_QAjj * QAii_QAjj;
-//                 sumBij += QAij * QAii_QAjj;
-//             }
-// #pragma omp atomic
-//             A_ij += sumAij;
-// #pragma omp atomic
-//             B_ij += sumBij;
-// #pragma omp barrier
-
-//             const double normAB = std::sqrt(A_ij * A_ij + B_ij * B_ij);
-//             const double deltaG = A_ij + normAB;
-
-//             // #pragma omp single nowait
-//             //             std::cout << TlUtils::format("%f: A=%f B=%f", deltaG, A_ij, B_ij) << std::endl;
-
-// #pragma omp single
-//             {
-//                 if (std::fabs(deltaG) > rotatingThreshold) {
-//                     sumDeltaG += deltaG;
-//                     TlDenseGeneralMatrix_Lapack rot(2, 2);
-//                     this->getRotatingMatrix(A_ij, B_ij, normAB, &rot);
-
-//                     this->rotateVectors(&Cpi, &Cpj, rot);
-//                     pC->setColVector(orb_i, numOfAOs, Cpi.data());
-//                     pC->setColVector(orb_j, numOfAOs, Cpj.data());
-//                 }
-//             }
-//         }
-//     }
-
-//     this->log_.info("localize: end");
-//     return sumDeltaG;
-// }
-
-// double DfLocalize::localize_v3(TlDenseGeneralMatrix_Lapack* pC) {
-//     const index_type numOfAOs = pC->getNumOfRows();
-//     const index_type numOfMOs = pC->getNumOfCols();
-//     // const index_type numOfGrps = this->groupV_.size();
-//     // std::cout << TlUtils::format("C: %d x %d", pC->getNumOfRows(), pC->getNumOfCols()) << std::endl;
-//     assert(numOfAOs == this->m_nNumOfAOs);
-
-//     this->makeQATable(*pC);
-//     // this->makeTaskList();
-
-//     this->log_.info("localize: start");
-//     const double rotatingThreshold = this->threshold_ * 0.01;
-
-//     // TaskItem taskItem;
-//     // bool hasTask = this->getTaskItem(&taskItem, true);
-
-//     this->initialLockMO(numOfMOs);
-
-//     double sumDeltaG = 0.0;
-// #pragma omp parallel for reduction(+ : sumDeltaG) schedule(runtime)
-//     for (int index1 = 1; index1 < numOfMOs; ++index1) {
-//         // Starting from 1 instead of 0 means that the diagonal elements are not computed.
-//         const int max_index2 = numOfMOs - index1;
-//         for (int index2 = 0; index2 < max_index2; ++index2) {
-//             const index_type orb_i = index2;
-//             const index_type orb_j = index1 + index2;
-
-//             // this->log_.info(TlUtils::format("calc: %d, %d (%d, %d)", orb_i, orb_j, index1, index2));
-
-//             double sleep = 100;
-//             while (this->isLockedMO(orb_i, orb_j)) {
-//                 TlTime::sleep(sleep);
-//                 sleep *= 2.0;
-//             }
-// #pragma omp critical(lock_MO)
-//             {
-//                 this->lockMO(orb_i);
-//                 this->lockMO(orb_j);
-//             }
-
-//             TlDenseVector_Lapack Cpi = pC->getColVector(orb_i);
-//             TlDenseVector_Lapack Cpj = pC->getColVector(orb_j);
-
-//             double A_ij = 0.0;
-//             double B_ij = 0.0;
-//             this->calcQA_ij(Cpi, Cpj, &A_ij, &B_ij);
-
-//             const double normAB = std::sqrt(A_ij * A_ij + B_ij * B_ij);
-//             const double deltaG = A_ij + normAB;
-
-//             if (std::fabs(deltaG) > rotatingThreshold) {
-//                 sumDeltaG += deltaG;
-//                 TlDenseGeneralMatrix_Lapack rot(2, 2);
-//                 this->getRotatingMatrix(A_ij, B_ij, normAB, &rot);
-//                 this->rotateVectors(&Cpi, &Cpj, rot);
-
-//                 pC->setColVector(orb_i, numOfAOs, Cpi.data());
-//                 pC->setColVector(orb_j, numOfAOs, Cpj.data());
-//             }
-
-// #pragma omp critical(unlock_MO)
-//             {
-//                 this->unlockMO(orb_i);
-//                 this->unlockMO(orb_j);
-//             }
-//         }
-//     }
-
-//     this->log_.info("localize: end");
-//     return sumDeltaG;
-// }
-
-double DfLocalize::localize_v4(TlDenseGeneralMatrix_Lapack* pC) {
-    const index_type numOfAOs = pC->getNumOfRows();
-    const index_type numOfMOs = pC->getNumOfCols();
-    assert(numOfAOs == this->m_nNumOfAOs);
-
-    this->makeQATable(*pC);
-    this->makeTaskList(this->startOrb_, this->endOrb_ + 1);
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    assert(pC->getNumOfRows() == numOfAOs);
 
     this->log_.info("localize: start");
+
+    std::vector<TaskItem> taskList;
+    if ((startMO1 == startMO2) && (endMO1 == endMO2)) {
+        taskList = this->getTaskList(startMO1, endMO1);
+    } else {
+        taskList = this->getTaskList(startMO1, endMO1, startMO2, endMO2);
+    }
+
     const double rotatingThreshold = this->threshold_ * 0.01;
-
-    // TaskItem taskItem;
-    // bool hasTask = this->getTaskItem(&taskItem, true);
-    this->initialLockMO(numOfMOs);
-
     double sumDeltaG = 0.0;
 
-    const std::size_t numOfTasks = this->taskList_.size();
+    assert(endMO1 <= endMO2);
+    this->initLockMO(endMO2 + 1);
+
+    const std::size_t numOfTasks = taskList.size();
 #pragma omp parallel for reduction(+ : sumDeltaG) schedule(runtime)
     for (std::size_t i = 0; i < numOfTasks; ++i) {
-        const TaskItem& task = this->taskList_[i];
-        const index_type orb_i = task.orb_i;
-        const index_type orb_j = task.orb_j;
+        const TaskItem& task = taskList[i];
+        const index_type orb_i = task.first;
+        const index_type orb_j = task.second;
 
         double sleep = 100.0;
         while (this->isLockedMO(orb_i, orb_j)) {
@@ -523,7 +245,7 @@ double DfLocalize::localize_v4(TlDenseGeneralMatrix_Lapack* pC) {
             this->lockMO(orb_j);
         }
 
-        this->log_.info(TlUtils::format("calc: %d, %d", orb_i, orb_j));
+        this->log_.debug(TlUtils::format("calc: %d, %d", orb_i, orb_j));
         TlDenseVector_Lapack Cpi = pC->getColVector(orb_i);
         TlDenseVector_Lapack Cpj = pC->getColVector(orb_j);
 
@@ -561,43 +283,40 @@ void DfLocalize::makeGroup() {
 
     const int numOfGroups = numOfAtoms;
 
-    this->groupV_.clear();
-    this->groupV_.resize(numOfGroups);
+    this->group_.resize(numOfGroups);
     for (int i = 0; i < numOfGroups; ++i) {
-        this->groupV_[i].resize(numOfAOs);
+        this->group_[i].resize(numOfAOs);
     }
 
     for (index_type orb = 0; orb < numOfAOs; ++orb) {
         const index_type atomID = this->orbInfo_.getAtomIndex(orb);
-        this->groupV_[atomID].set(orb, 1.0);
+        this->group_[atomID].set(orb, 1.0);
     }
 }
 
-void DfLocalize::makeQATable(const TlDenseGeneralMatrix_Lapack& C) {
-    this->log_.info("make QA table");
+double DfLocalize::calcG(const TlDenseGeneralMatrix_Lapack& C, const index_type startMO, const index_type endMO) {
+    this->log_.info("calc G");
 
-    const index_type startOrb = this->startOrb_;
-    const index_type endOrb = this->endOrb_;
+    // const index_type startOrb = this->startOrb_;
+    // const index_type endOrb = this->endOrb_;
 
     double sumQAii2 = 0.0;
-    // sort
-    index_type size = endOrb - startOrb;
-    this->orb_QA_table_.resize(size);
+
+    const index_type size = endMO - startMO;
+    // this->orb_QA_table_.resize(size);
 #pragma omp parallel for schedule(runtime) reduction(+ : sumQAii2)
     for (index_type i = 0; i < size; ++i) {
-        const index_type orb = startOrb + i;
+        const index_type orb = startMO + i;
         const double QAii2 = this->calcQA_ii(C, orb);
         sumQAii2 += QAii2;
         // Orb_QA_Item item(orb, QAii2);
         // this->orb_QA_table_[i] = item;
     }
-    this->G_ = sumQAii2;
+    return sumQAii2;
 
     // QAが大きい順にソート
     // this->log_.info("sort QA table");
     // std::sort(this->orb_QA_table_.begin(), this->orb_QA_table_.end(), do_OrbQAItem_sort_functor_cmp());
-
-    // this->log_.info("end QA table");
 }
 
 void DfLocalize::rotateVectors(TlDenseVector_Lapack* pCpi, TlDenseVector_Lapack* pCpj,
@@ -648,7 +367,7 @@ void DfLocalize::calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_
     assert(pA_ij != NULL);
     assert(pB_ij != NULL);
 
-    const index_type numOfGrps = this->groupV_.size();
+    const index_type numOfGrps = this->group_.size();
 
     const TlDenseVector_Lapack SCpi = this->S_ * Cpi;
     const TlDenseVector_Lapack SCpj = this->S_ * Cpj;
@@ -661,8 +380,8 @@ void DfLocalize::calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_
     for (index_type grp = 0; grp < numOfGrps; ++grp) {
         TlDenseVector_Lapack tCqi = Cpi;
         TlDenseVector_Lapack tCqj = Cpj;
-        tCqi.dotInPlace(this->groupV_[grp]);
-        tCqj.dotInPlace(this->groupV_[grp]);
+        tCqi.dotInPlace(this->group_[grp]);
+        tCqj.dotInPlace(this->group_[grp]);
 
         const double QAii = tCqi * SCpi;
         const double QAjj = tCqj * SCpj;
@@ -682,7 +401,7 @@ void DfLocalize::calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_
 
 double DfLocalize::calcQA_ii(const TlDenseGeneralMatrix_Lapack& C, const index_type orb_i) {
     // const index_type numOfAOs = this->m_nNumOfAOs;
-    const index_type numOfGrps = this->groupV_.size();
+    const index_type numOfGrps = this->group_.size();
     double sumQAii2 = 0.0;
 
     const TlDenseVector_Lapack Cpi = C.getColVector(orb_i);
@@ -691,7 +410,7 @@ double DfLocalize::calcQA_ii(const TlDenseGeneralMatrix_Lapack& C, const index_t
     // #pragma omp parallel for reduction(+ : sumQAii2)
     for (index_type grp = 0; grp < numOfGrps; ++grp) {
         TlDenseVector_Lapack tCqi = Cpi;
-        tCqi.dotInPlace(this->groupV_[grp]);
+        tCqi.dotInPlace(this->group_[grp]);
 
         const double QAii = tCqi * SCpi;
         sumQAii2 += QAii * QAii;
@@ -700,24 +419,10 @@ double DfLocalize::calcQA_ii(const TlDenseGeneralMatrix_Lapack& C, const index_t
     return sumQAii2;
 }
 
-// void DfLocalize::makeTaskList() {
-//     const std::size_t orbQATableSize = this->orb_QA_table_.size();
-//     this->taskList_.clear();
-
-//     TaskItem item;
-//     for (std::size_t i = 0; i < orbQATableSize; ++i) {
-//         item.orb_i = this->orb_QA_table_[i].orb;
-//         for (std::size_t j = orbQATableSize - 1; j > i; --j) {
-//             item.orb_j = this->orb_QA_table_[j].orb;
-//             this->taskList_.push_back(item);
-//         }
-//     }
-// }
-
-void DfLocalize::makeTaskList(const index_type startMO, const index_type endMO) {
-    const index_type dim = endMO - startMO;
+std::vector<DfLocalize::TaskItem> DfLocalize::getTaskList(const index_type startMO, const index_type endMO) {
+    const index_type dim = endMO - startMO + 1;
     const index_type pairs = dim * (dim - 1) / 2;
-    this->taskList_.resize(pairs);
+    std::vector<TaskItem> taskList(pairs);
 
     std::size_t taskIndex = 0;
     TaskItem item;
@@ -728,54 +433,76 @@ void DfLocalize::makeTaskList(const index_type startMO, const index_type endMO) 
             const index_type orb_i = startMO + index2;
             const index_type orb_j = startMO + index1 + index2;
 
-            item.orb_i = orb_i;
-            item.orb_j = orb_j;
-            this->taskList_[taskIndex] = item;
+            taskList[taskIndex] = std::make_pair(orb_i, orb_j);
             ++taskIndex;
         }
     }
+    assert(taskIndex == pairs);
+
+    return taskList;
 }
 
-bool DfLocalize::getTaskItem(DfLocalize::TaskItem* pTask, bool isInitialized) {
-    assert(pTask != NULL);
+std::vector<DfLocalize::TaskItem> DfLocalize::getTaskList(const index_type startMO1, const index_type endMO1,
+                                                          const index_type startMO2, const index_type endMO2) {
+    assert(startMO1 < endMO1);
+    assert(endMO1 < startMO2);
+    assert(startMO2 < endMO2);
 
-    static std::vector<TaskItem>::iterator it;
-    static std::size_t counter = 0;
-    static std::size_t maxTasks = 0;
-    static std::size_t noticeNext = 0;
+    const index_type pairs = (endMO1 - startMO1 + 1) * (endMO2 - startMO2 + 1);
+    std::vector<TaskItem> taskList(pairs);
 
-    if (isInitialized == true) {
-        it = this->taskList_.begin();
-
-        counter = 0;
-        maxTasks = this->taskList_.size();
-        noticeNext = 1;
-
-        return true;
-    }
-
-    bool answer = false;
-    if (it != this->taskList_.end()) {
-        *pTask = *it;
-        ++it;
-
-        if (counter > (maxTasks / 10) * noticeNext) {
-            const double ratio = (double(counter) / double(maxTasks)) * 100.0;
-            this->log_.info(TlUtils::format("progress: %3.2f%% (%ld/%ld)", ratio, counter, maxTasks));
-            ++noticeNext;
+    std::size_t taskIndex = 0;
+    for (index_type mo1 = startMO1; mo1 <= endMO1; ++mo1) {
+        for (index_type mo2 = startMO2; mo2 <= endMO2; ++mo2) {
+            taskList[taskIndex] = std::make_pair(mo1, mo2);
+            ++taskIndex;
         }
-
-        ++counter;
-        answer = true;
-    } else {
-        this->log_.info("progress: 100% done");
     }
+    assert(taskIndex == pairs);
 
-    return answer;
+    return taskList;
 }
+
+// bool DfLocalize::getTaskItem(DfLocalize::TaskItem* pTask, bool isInitialized) {
+//     assert(pTask != NULL);
+
+//     static std::vector<TaskItem>::iterator it;
+//     static std::size_t counter = 0;
+//     static std::size_t maxTasks = 0;
+//     static std::size_t noticeNext = 0;
+
+//     if (isInitialized == true) {
+//         it = this->taskList_.begin();
+
+//         counter = 0;
+//         maxTasks = this->taskList_.size();
+//         noticeNext = 1;
+
+//         return true;
+//     }
+
+//     bool answer = false;
+//     if (it != this->taskList_.end()) {
+//         *pTask = *it;
+//         ++it;
+
+//         if (counter > (maxTasks / 10) * noticeNext) {
+//             const double ratio = (double(counter) / double(maxTasks)) * 100.0;
+//             this->log_.info(TlUtils::format("progress: %3.2f%% (%ld/%ld)", ratio, counter, maxTasks));
+//             ++noticeNext;
+//         }
+
+//         ++counter;
+//         answer = true;
+//     } else {
+//         this->log_.info("progress: 100% done");
+//     }
+
+//     return answer;
+// }
 
 // lock MO
-void DfLocalize::initialLockMO(const index_type numOfMOs) {
+void DfLocalize::initLockMO(const index_type numOfMOs) {
     this->lockMOs_.resize(numOfMOs);
     std::fill(this->lockMOs_.begin(), this->lockMOs_.end(), 0);
 }

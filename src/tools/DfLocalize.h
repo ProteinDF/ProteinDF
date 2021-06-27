@@ -30,31 +30,21 @@
 #include "tl_dense_symmetric_matrix_lapack.h"
 
 class DfLocalize : public DfObject {
-   protected:
-    struct Orb_QA_Item {
-       public:
-        Orb_QA_Item(DfObject::index_type o = 0, double q = 0.0) : orb(o), qa(q){};
+    //    protected:
+    //     struct Orb_QA_Item {
+    //        public:
+    //         Orb_QA_Item(DfObject::index_type o = 0, double q = 0.0) : orb(o), qa(q){};
 
-       public:
-        DfObject::index_type orb;
-        double qa;
-    };
+    //        public:
+    //         DfObject::index_type orb;
+    //         double qa;
+    //     };
 
-    struct do_OrbQAItem_sort_functor_cmp {
-        bool operator()(const Orb_QA_Item& a, const Orb_QA_Item& b) const {
-            return (a.qa > b.qa);
-        };
-    };
-
-    struct TaskItem {
-       public:
-        TaskItem(DfObject::index_type i = 0, DfObject::index_type j = 0) : orb_i(i), orb_j(j) {
-        }
-
-       public:
-        DfObject::index_type orb_i;
-        DfObject::index_type orb_j;
-    };
+    //     struct do_OrbQAItem_sort_functor_cmp {
+    //         bool operator()(const Orb_QA_Item& a, const Orb_QA_Item& b) const {
+    //             return (a.qa > b.qa);
+    //         };
+    //     };
 
    public:
     DfLocalize(TlSerializeData* pPdfParam);
@@ -67,9 +57,10 @@ class DfLocalize : public DfObject {
     void exec();
 
     virtual double localize(TlDenseGeneralMatrix_Lapack* pC);
-    // virtual double localize_v2(TlDenseGeneralMatrix_Lapack* pC);
-    // virtual double localize_v3(TlDenseGeneralMatrix_Lapack* pC);
-    virtual double localize_v4(TlDenseGeneralMatrix_Lapack* pC);
+
+   protected:
+    double localize_core(TlDenseGeneralMatrix_Lapack* pC, const index_type startMO1, const index_type endMO1,
+                         const index_type startMO2, const index_type endMO2);
 
    protected:
     virtual void initialize();
@@ -80,24 +71,15 @@ class DfLocalize : public DfObject {
     void getCMatrix(TlDenseGeneralMatrix_Lapack* pC);
 
     void makeGroup();
-    void makeQATable(const TlDenseGeneralMatrix_Lapack& C);
+    double calcG(const TlDenseGeneralMatrix_Lapack& C, const index_type startMO, const index_type endMO);
 
     void getRotatingMatrix(const double A_ij, const double B_ij, const double normAB,
                            TlDenseGeneralMatrix_Lapack* pRot);
-    // void rotateCmatrix(TlDenseGeneralMatrix_Lapack* pC, std::size_t orb_i, std::size_t orb_j,
-    //                    const TlDenseGeneralMatrix_Lapack& rot);
     void rotateVectors(TlDenseVector_Lapack* pCpi, TlDenseVector_Lapack* pCpj, const TlDenseGeneralMatrix_Lapack& rot);
 
    protected:
     double calcQA_ii(const TlDenseGeneralMatrix_Lapack& C, const index_type orb_i);
-    // void calcQA_ij(const TlDenseGeneralMatrix_Lapack& C, const std::size_t orb_i, const std::size_t orb_j,
-    //                double* pA_ij, double* pB_ij);
     void calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_Lapack& Cpj, double* pA_ij, double* pB_ij);
-
-    void makeTaskList(const index_type startMO, const index_type endMO);
-
-    // Return true if the task remains, and return false if there are no tasks left.
-    virtual bool getTaskItem(DfLocalize::TaskItem* pTask, bool isInitialized = false);
 
    protected:
     TlLogging& log_;
@@ -117,21 +99,24 @@ class DfLocalize : public DfObject {
 
     double G_;
 
-    // std::vector<std::vector<index_type> > group_;
-    std::vector<TlDenseVector_Lapack> groupV_;
+    std::vector<TlDenseVector_Lapack> group_;
 
     TlDenseSymmetricMatrix_Lapack S_;
 
-    std::vector<Orb_QA_Item> orb_QA_table_;
-    std::vector<TaskItem> taskList_;
+    // std::vector<Orb_QA_Item> orb_QA_table_;
 
    protected:
-    void initialLockMO(const index_type numOfMOs);
+    typedef std::pair<index_type, index_type> TaskItem;
+    std::vector<TaskItem> getTaskList(const index_type startMO, const index_type endMO);
+    std::vector<TaskItem> getTaskList(const index_type startMO1, const index_type endMO1, const index_type startMO2,
+                                      const index_type endMO2);  // for parallel
+
+   protected:
+    void initLockMO(const index_type numOfMOs);
     void lockMO(const index_type MO);
     void unlockMO(const index_type MO);
     bool isLockedMO(const index_type mo1, const index_type mo2) const;
 
-   protected:
     std::vector<char> lockMOs_;
 };
 

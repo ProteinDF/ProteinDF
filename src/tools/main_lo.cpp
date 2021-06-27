@@ -21,6 +21,7 @@
 
 #include "DfLocalize.h"
 #include "TlGetopt.h"
+#include "TlLogging.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
 
@@ -46,6 +47,9 @@ int main(int argc, char* argv[]) {
         showHelp(opt[0]);
         return EXIT_SUCCESS;
     }
+
+    TlLogging& log = TlLogging::getInstance();
+    log.setFilePath("lo-output.txt");
 
     std::string pdfParamPath = "pdfparam.mpac";
     if (opt["p"].empty() != true) {

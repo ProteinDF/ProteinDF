@@ -19,6 +19,7 @@
 #ifndef DFLOCALIZE_PARALLEL_H
 #define DFLOCALIZE_PARALLEL_H
 
+#include <utility>
 #include <vector>
 
 #include "DfLocalize.h"
@@ -36,18 +37,27 @@ class DfLocalize_Parallel : public DfLocalize {
    protected:
     virtual void initialize();
 
-    // Return true if the task remains, and return false if there are no tasks left.
-    // If the molecular orbital in charge is locked during processing,
-    // -1 will be placed in the molecular orbitals of TaskItem.
-    virtual bool getTaskItem(DfLocalize::TaskItem* pTask, bool isInitialized = false);
+   protected:
+    void getBlockCMatrix(const TlDenseGeneralMatrix_Lapack& C, const index_type MOsPerBlock, const int block1,
+                         const int block2, TlDenseGeneralMatrix_Lapack* pBlockC);
+    void setBlockCMatrix(const index_type MOsPerBlock, const int block1, const int block2,
+                         const TlDenseGeneralMatrix_Lapack& blockC, TlDenseGeneralMatrix_Lapack* pC);
 
    protected:
-    void lockMO(const index_type MO);
-    void unlockMO(const index_type MO);
-    bool isLockedMO(const index_type mo1, const index_type mo2) const;
+    typedef std::pair<int, int> JobItem;  // contains blockId1, blockId2
+    void makeJobList(const int dim);
+    bool getJobItem(JobItem* pJob, bool isInitialized = false);
+
+    std::vector<JobItem> jobList_;
 
    protected:
-    std::set<DfObject::index_type> lockMOs_;
+    void initLockBlock(const int block);
+    void lockBlock(const int block);
+    void unlockBlock(const int block);
+    bool isLockedBlock(const int block1, const int block2) const;
+
+   protected:
+    std::vector<char> lockBlocks_;
 };
 
 #endif  // DFLOCALIZE_PARALLEL_H
