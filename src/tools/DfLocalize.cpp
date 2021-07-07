@@ -177,7 +177,8 @@ void DfLocalize::exec() {
     const int maxIteration = this->maxIteration_;
     for (int i = this->lo_iteration_ + 1; i <= maxIteration; ++i) {
         this->log_.info(TlUtils::format("localize: %d", i));
-        const double sumDeltaG = this->localize(&C);
+        // const double sumDeltaG = this->localize(&C);
+        const double sumDeltaG = this->localize_byPop(&C);
 
         const std::string msg = TlUtils::format("%d th: G=%10.5e, delta_G=%10.5e", i, this->G_, sumDeltaG);
         this->log_.info(msg);
@@ -194,10 +195,6 @@ void DfLocalize::exec() {
 }
 
 double DfLocalize::localize(TlDenseGeneralMatrix_Lapack* pC) {
-    // const index_type numOfAOs = pC->getNumOfRows();
-    // const index_type numOfMOs = pC->getNumOfCols();
-    // assert(numOfAOs == this->m_nNumOfAOs);
-
     this->G_ = this->calcG(*pC, this->startOrb_, this->endOrb_);
     const double sumDeltaG = this->localize_core(pC, this->startOrb_, this->endOrb_, this->startOrb_, this->endOrb_);
 
@@ -245,7 +242,7 @@ double DfLocalize::localize_core(TlDenseGeneralMatrix_Lapack* pC, const index_ty
             this->lockMO(orb_j);
         }
 
-        this->log_.debug(TlUtils::format("calc: %d, %d", orb_i, orb_j));
+        // this->log_.info(TlUtils::format("calc: %d, %d", orb_i, orb_j));
         TlDenseVector_Lapack Cpi = pC->getColVector(orb_i);
         TlDenseVector_Lapack Cpj = pC->getColVector(orb_j);
 
@@ -296,27 +293,39 @@ void DfLocalize::makeGroup() {
 
 double DfLocalize::calcG(const TlDenseGeneralMatrix_Lapack& C, const index_type startMO, const index_type endMO) {
     this->log_.info("calc G");
-
-    // const index_type startOrb = this->startOrb_;
-    // const index_type endOrb = this->endOrb_;
-
-    double sumQAii2 = 0.0;
+    double G = 0.0;
 
     const index_type size = endMO - startMO;
-    // this->orb_QA_table_.resize(size);
-#pragma omp parallel for schedule(runtime) reduction(+ : sumQAii2)
+#pragma omp parallel for schedule(runtime) reduction(+ : G)
     for (index_type i = 0; i < size; ++i) {
         const index_type orb = startMO + i;
         const double QAii2 = this->calcQA_ii(C, orb);
-        sumQAii2 += QAii2;
-        // Orb_QA_Item item(orb, QAii2);
-        // this->orb_QA_table_[i] = item;
+        G += QAii2;
     }
-    return sumQAii2;
+
+    return G;
+}
+
+double DfLocalize::calcG_sort(const TlDenseGeneralMatrix_Lapack& C, const index_type startMO, const index_type endMO) {
+    this->log_.info("calc G");
+    double G = 0.0;
+
+    const index_type size = endMO - startMO;
+    this->groupMoPops_.resize(size);
+#pragma omp parallel for schedule(runtime) reduction(+ : G)
+    for (index_type i = 0; i < size; ++i) {
+        const index_type mo = startMO + i;
+        const double QAii2 = this->calcQA_ii(C, mo);
+        G += QAii2;
+
+        this->groupMoPops_[i] = MoPop(mo, QAii2);
+    }
 
     // QAが大きい順にソート
-    // this->log_.info("sort QA table");
-    // std::sort(this->orb_QA_table_.begin(), this->orb_QA_table_.end(), do_OrbQAItem_sort_functor_cmp());
+    this->log_.info("sort QA table");
+    std::sort(this->groupMoPops_.begin(), this->groupMoPops_.end(), MoPop::MoPop_sort_functor_cmp());
+
+    return G;
 }
 
 void DfLocalize::rotateVectors(TlDenseVector_Lapack* pCpi, TlDenseVector_Lapack* pCpj,
@@ -442,6 +451,7 @@ std::vector<DfLocalize::TaskItem> DfLocalize::getTaskList(const index_type start
     return taskList;
 }
 
+// for derived class
 std::vector<DfLocalize::TaskItem> DfLocalize::getTaskList(const index_type startMO1, const index_type endMO1,
                                                           const index_type startMO2, const index_type endMO2) {
     assert(startMO1 < endMO1);
@@ -527,4 +537,133 @@ bool DfLocalize::isLockedMO(const index_type mo1, const index_type mo2) const {
     }
 
     return answer;
+}
+
+// sort
+double DfLocalize::localize_byPop(TlDenseGeneralMatrix_Lapack* pC) {
+    this->G_ = this->calcG_sort(*pC, this->startOrb_, this->endOrb_);
+    const double sumDeltaG = this->localize_core_byPop(pC, this->startOrb_, this->endOrb_);
+
+    return sumDeltaG;
+}
+
+double DfLocalize::localize_core_byPop(TlDenseGeneralMatrix_Lapack* pC, const index_type startMO1,
+                                       const index_type endMO1) {
+    assert(startMO1 < endMO1);
+
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    assert(pC->getNumOfRows() == numOfAOs);
+
+    this->log_.info("localize: start");
+
+    const std::vector<TaskItem> taskList = this->getTaskList_byPop();
+
+    const double rotatingThreshold = this->threshold_ * 0.01;
+    double sumDeltaG = 0.0;
+
+    this->initLockMO(endMO1 + 1);
+
+    const std::size_t numOfTasks = taskList.size();
+#pragma omp parallel for reduction(+ : sumDeltaG) schedule(runtime)
+    for (std::size_t i = 0; i < numOfTasks; ++i) {
+        const TaskItem& task = taskList[i];
+        const index_type orb_i = task.first;
+        const index_type orb_j = task.second;
+
+        double sleep = 100.0;
+        while (this->isLockedMO(orb_i, orb_j)) {
+            TlTime::sleep(sleep);
+            sleep = std::min(4000.0, sleep * 2.0);
+        }
+#pragma omp critical(lock_MO)
+        {
+            this->lockMO(orb_i);
+            this->lockMO(orb_j);
+        }
+
+        // this->log_.info(TlUtils::format("calc: %d, %d", orb_i, orb_j));
+        TlDenseVector_Lapack Cpi = pC->getColVector(orb_i);
+        TlDenseVector_Lapack Cpj = pC->getColVector(orb_j);
+
+        double A_ij = 0.0;
+        double B_ij = 0.0;
+        this->calcQA_ij(Cpi, Cpj, &A_ij, &B_ij);
+
+        const double normAB = std::sqrt(A_ij * A_ij + B_ij * B_ij);
+        const double deltaG = A_ij + normAB;
+
+        if (std::fabs(deltaG) > rotatingThreshold) {
+            sumDeltaG += deltaG;
+            TlDenseGeneralMatrix_Lapack rot(2, 2);
+            this->getRotatingMatrix(A_ij, B_ij, normAB, &rot);
+            this->rotateVectors(&Cpi, &Cpj, rot);
+
+            pC->setColVector(orb_i, numOfAOs, Cpi.data());
+            pC->setColVector(orb_j, numOfAOs, Cpj.data());
+        }
+
+#pragma omp critical(unlock_MO)
+        {
+            this->unlockMO(orb_i);
+            this->unlockMO(orb_j);
+        }
+    }
+
+    this->log_.info("localize: end");
+    return sumDeltaG;
+}
+
+std::vector<DfLocalize::TaskItem> DfLocalize::getTaskList_byPop() {
+    const index_type dim = this->groupMoPops_.size();
+    const index_type pairs = dim * (dim - 1) / 2;
+    std::vector<TaskItem> taskList(pairs);
+
+    std::size_t taskIndex = 0;
+    TaskItem item;
+    // for (int index1 = 0; index1 < dim; ++index1) {
+    //     const index_type mo1 = this->groupMoPops_[index1].mo;
+    //     for (int index2 = dim - 1; index2 > index1; --index2) {
+    //         const index_type mo2 = this->groupMoPops_[index2].mo;
+
+    //         taskList[taskIndex] = std::make_pair(mo1, mo2);
+    //         ++taskIndex;
+    //     }
+    // }
+
+    // big-big pair
+    // for (int index1 = 0; index1 < dim - 1; ++index1) {
+    //     const int max_index2 = dim - index1 - 1;
+    //     for (int index2 = 0; index2 < max_index2; ++index2) {
+    //         const index_type mo1 = this->groupMoPops_[index1 + index2 + 1].mo;
+    //         const index_type mo2 = this->groupMoPops_[index2].mo;
+    //         taskList[taskIndex] = std::make_pair(mo1, mo2);
+    //         ++taskIndex;
+    //     }
+    // }
+
+    // small-small pair
+    for (int index1 = 0; index1 < dim - 1; ++index1) {
+        const int max_index2 = dim - index1 - 1;
+        for (int index2 = 0; index2 < max_index2; ++index2) {
+            const index_type mo1 = this->groupMoPops_[dim - (index1 + index2) - 1].mo;
+            const index_type mo2 = this->groupMoPops_[dim - index2 - 1].mo;
+            taskList[taskIndex] = std::make_pair(mo1, mo2);
+            ++taskIndex;
+        }
+    }
+
+    // big-small pair
+    // for (int index1 = 0; index1 < dim - 1; ++index1) {
+    //     const int max_index2 = dim - index1 - 1;
+    //     for (int index2 = 0; index2 < max_index2; ++index2) {
+    //         const index_type mo1 = this->groupMoPops_[index1 + index2].mo;
+    //         const index_type mo2 = this->groupMoPops_[dim - index2 - 1].mo;
+    //         taskList[taskIndex] = std::make_pair(mo1, mo2);
+    //         ++taskIndex;
+    //     }
+    // }
+
+    assert(taskIndex == pairs);
+
+    return taskList;
 }
