@@ -34,6 +34,7 @@ void showHelp(const std::string& progname) {
               << std::endl;
     std::cout << " -c PATH       set C matrix path" << std::endl;
     std::cout << " -r            restart lo calculation" << std::endl;
+    std::cout << " -g brd_file   specify group list" << std::endl;
     std::cout << " -h            show help" << std::endl;
     std::cout << " -v            verbose output" << std::endl;
 }
@@ -56,6 +57,11 @@ int main(int argc, char* argv[]) {
         pdfParamPath = opt["p"];
     }
 
+    std::string groupFilePath = "";
+    if (opt["g"].empty() != true) {
+        groupFilePath = opt["g"];
+    }
+
     std::string inputCMatrixPath = "";
     if (opt["c"].empty() != true) {
         inputCMatrixPath = opt["c"];
@@ -74,6 +80,16 @@ int main(int argc, char* argv[]) {
         TlMsgPack mpac;
         mpac.load(pdfParamPath);
         param = mpac.getSerializeData();
+    }
+
+    TlSerializeData groupData;
+    if (groupFilePath.empty() != true) {
+        log.info(TlUtils::format("load group file: %s", groupFilePath.c_str()));
+
+        TlMsgPack mpac;
+        mpac.load(groupFilePath);
+
+        groupData = mpac.getSerializeData();
     }
 
     // lo

@@ -30,21 +30,25 @@
 #include "tl_dense_symmetric_matrix_lapack.h"
 
 class DfLocalize : public DfObject {
-    //    protected:
-    //     struct Orb_QA_Item {
-    //        public:
-    //         Orb_QA_Item(DfObject::index_type o = 0, double q = 0.0) : orb(o), qa(q){};
+   protected:
+    struct MoPop {
+       public:
+        MoPop(DfObject::index_type mo = 0, double q = 0.0) : mo(mo), q(q){};
 
-    //        public:
-    //         DfObject::index_type orb;
-    //         double qa;
-    //     };
+       public:
+        DfObject::index_type mo;  // molecular orbital
+        double q;                 // Mulliken population
 
-    //     struct do_OrbQAItem_sort_functor_cmp {
-    //         bool operator()(const Orb_QA_Item& a, const Orb_QA_Item& b) const {
-    //             return (a.qa > b.qa);
-    //         };
-    //     };
+       public:
+        struct MoPop_sort_functor_cmp {
+            bool operator()(const MoPop& a, const MoPop& b) const {
+                return (a.q > b.q);
+            };
+        };
+    };
+
+   protected:
+    typedef std::pair<index_type, index_type> TaskItem;
 
    public:
     DfLocalize(TlSerializeData* pPdfParam);
@@ -56,9 +60,8 @@ class DfLocalize : public DfObject {
 
     void exec();
 
-    virtual double localize(TlDenseGeneralMatrix_Lapack* pC);
-
    protected:
+    virtual double localize(TlDenseGeneralMatrix_Lapack* pC);
     double localize_core(TlDenseGeneralMatrix_Lapack* pC, const index_type startMO1, const index_type endMO1,
                          const index_type startMO2, const index_type endMO2);
 
@@ -82,6 +85,12 @@ class DfLocalize : public DfObject {
     void calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_Lapack& Cpj, double* pA_ij, double* pB_ij);
 
    protected:
+    double localize_byPop(TlDenseGeneralMatrix_Lapack* pC);
+    double localize_core_byPop(TlDenseGeneralMatrix_Lapack* pC, const index_type startMO1, const index_type endMO1);
+    double calcG_sort(const TlDenseGeneralMatrix_Lapack& C, const index_type startMO, const index_type endMO);
+    std::vector<TaskItem> getTaskList_byPop();
+
+   protected:
     TlLogging& log_;
 
     bool isRestart_;
@@ -100,16 +109,16 @@ class DfLocalize : public DfObject {
     double G_;
 
     std::vector<TlDenseVector_Lapack> group_;
+    std::vector<MoPop> groupMoPops_;
 
     TlDenseSymmetricMatrix_Lapack S_;
 
-    // std::vector<Orb_QA_Item> orb_QA_table_;
-
    protected:
-    typedef std::pair<index_type, index_type> TaskItem;
     std::vector<TaskItem> getTaskList(const index_type startMO, const index_type endMO);
     std::vector<TaskItem> getTaskList(const index_type startMO1, const index_type endMO1, const index_type startMO2,
                                       const index_type endMO2);  // for parallel
+
+    std::vector<DfLocalize::TaskItem> getTaskListByPop();
 
    protected:
     void initLockMO(const index_type numOfMOs);
