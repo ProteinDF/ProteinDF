@@ -1,7 +1,18 @@
----
 BasedOnStyle: Google
----
 Language: Cpp
-IndentWidth:  4
-ColumnLimit: 120
-AllowShortFunctionsOnASingleLine: 'None'
+AccessModifierOffset: -4
+AlignTrailingComments: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+ColumnLimit: 0
+IncludeBlocks: Regroup
+IndentCaseLabels: true
+IndentWidth: 4
+NamespaceIndentation: All
+SortIncludes: true
+Standard: c++03
+TabWidth: 4
+UseTab: Never
