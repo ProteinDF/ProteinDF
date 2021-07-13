@@ -28,14 +28,12 @@
 #include "omp.h"
 #endif  // _OPENMP
 
-#include "ProteinDF.h"
-
 #include "DfForce.h"
 #include "DfInitialGuess.h"
 #include "DfInputdata.h"
 #include "DfIntegrals.h"
 #include "DfScf.h"
-
+#include "ProteinDF.h"
 #include "TlMatrixCache.h"
 #include "TlMemManager.h"
 #include "TlMsgPack.h"
@@ -44,11 +42,13 @@
 #include "TlUtils.h"
 #include "tl_system_eigen.h"
 
-ProteinDF::ProteinDF() : log_(TlLogging::getInstance()) {
+ProteinDF::ProteinDF()
+    : log_(TlLogging::getInstance()) {
     this->showCacheReport_ = false;
 }
 
-ProteinDF::~ProteinDF() {}
+ProteinDF::~ProteinDF() {
+}
 
 void ProteinDF::run() {
     this->startlogo();
@@ -115,8 +115,7 @@ void ProteinDF::exec() {
         } else if (group != "") {
             // nothing
             this->stepStartTitle(group);
-            this->log_.warn(TlUtils::format(
-                "unkown control keyword: %s, continue...", group.c_str()));
+            this->log_.warn(TlUtils::format("unkown control keyword: %s, continue...", group.c_str()));
             this->stepEndTitle();
         }
     }
@@ -129,8 +128,7 @@ void ProteinDF::startlogo() {
 
 #ifdef _OPENMP
     {
-        const std::string ompInfo =
-            TlUtils::format(" OpenMP threads: %d\n", omp_get_max_threads());
+        const std::string ompInfo = TlUtils::format(" OpenMP threads: %d\n", omp_get_max_threads());
         info += ompInfo;
     }
 #endif  // _OPENMP
@@ -138,8 +136,7 @@ void ProteinDF::startlogo() {
 #ifdef HAVE_EIGEN
     {
         const std::string eigenInfo =
-            " Eigen SIMD instruction: " +
-            TlSystem_Eigen::getSimdInstructionSetsInUse() + "\n";
+            " Eigen SIMD instruction: " + TlSystem_Eigen::getSimdInstructionSetsInUse() + "\n";
         info += eigenInfo;
     }
 #endif  // HAVE_EIGEN
@@ -161,10 +158,8 @@ void ProteinDF::startlogo(const std::string& version, const std::string& info) {
     this->log_.info("copyright(c) 1997-2019 ProteinDF development team.");
     this->log_.info("\n");
     this->log_.info("PLEASE CITE following:");
-    this->log_.info(
-        " F. Sato, Y. Shigemitsu, I. Okazaki, S. Yahiro, M. Fukue, S. Kozuru,");
-    this->log_.info(
-        " H. Kashiwagi, \"Development of a new density functional program for");
+    this->log_.info(" F. Sato, Y. Shigemitsu, I. Okazaki, S. Yahiro, M. Fukue, S. Kozuru,");
+    this->log_.info(" H. Kashiwagi, \"Development of a new density functional program for");
     this->log_.info(" all-electron calculation of proteins\",");
     this->log_.info(" Int. J. Quant. Chem., 63, 245-246 (1997).");
     this->log_.info(
@@ -190,10 +185,8 @@ void ProteinDF::endlogo() {
         reports += "\n";
     }
 
-    reports +=
-        TlUtils::format("CPU_TIME:    %9.0lf sec\n", g_GlobalTime.getCpuTime());
-    reports += TlUtils::format("ELAPS_TIME:  %9.0lf sec",
-                               g_GlobalTime.getElapseTime());
+    reports += TlUtils::format("CPU_TIME:    %9.0lf sec\n", g_GlobalTime.getCpuTime());
+    reports += TlUtils::format("ELAPS_TIME:  %9.0lf sec", g_GlobalTime.getElapseTime());
 
     this->endlogo(reports);
 }
@@ -254,8 +247,7 @@ void ProteinDF::setupGlobalCondition() {
 }
 
 void ProteinDF::manageMemory() {
-    std::string memSizeStr =
-        TlUtils::toUpper(this->pdfParam_["memory_size"].getStr());
+    std::string memSizeStr = TlUtils::toUpper(this->pdfParam_["memory_size"].getStr());
     if (memSizeStr.empty() == true) {
         memSizeStr = "1GB";
     }
@@ -268,8 +260,7 @@ void ProteinDF::manageMemory() {
         }
         this->pdfParam_["memory_size"] = value;
     }
-    this->log_.info(TlUtils::format("allocatable memory: %ld byte",
-                                    this->pdfParam_["memory_size"].getLong()));
+    this->log_.info(TlUtils::format("allocatable memory: %ld byte", this->pdfParam_["memory_size"].getLong()));
 
     // if (this->pdfParam_["use_mapfile"].getBoolean() == true) {
     //     std::string filePath = this->pdfParam_["mapfile_basename"].getStr();
@@ -325,7 +316,8 @@ void ProteinDF::setupGlobalCondition_extra() {
     // do nothing
 }
 
-void ProteinDF::stepCreate() {}
+void ProteinDF::stepCreate() {
+}
 
 void ProteinDF::stepIntegral() {
     this->loadParam();
@@ -395,13 +387,11 @@ void ProteinDF::loadParam(const std::string& requestFilePath) {
 
     // check
     if (requestFilePath.empty() != true) {
-        const std::string pdfParamPath =
-            this->pdfParam_["pdf_param_path"].getStr();
+        const std::string pdfParamPath = this->pdfParam_["pdf_param_path"].getStr();
         if (requestFilePath != pdfParamPath) {
-            std::cerr
-                << "the specified parameter file path is not consistent with "
-                   "pdf_param_path parameter."
-                << std::endl;
+            std::cerr << "the specified parameter file path is not consistent with "
+                         "pdf_param_path parameter."
+                      << std::endl;
         }
     }
 }
