@@ -627,7 +627,10 @@ void TlDenseMatrix_arrays_mmap_Object::updateFileHeader() {
 }
 
 void TlDenseMatrix_arrays_mmap_Object::syncMmap() {
-    msync(this->mmapBegin_, this->fileSize_, MS_SYNC);
+    int ret = msync(this->mmapBegin_, this->fileSize_, MS_SYNC);
+    if (ret != 0) {
+        std::cerr << "msync errored. " << ret << std::endl;
+    }
 }
 
 void TlDenseMatrix_arrays_mmap_Object::deleteMmap() {
