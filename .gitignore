@@ -30,3 +30,10 @@ doc/_build/*
 **/__pycache__/*
 doc/**/*.mo
 
+# Doxygen documentation
+doc/api/*
+
+# sourcetrail
+*.srctrlprj
+*.srctrldb
+*.srctrlbm
