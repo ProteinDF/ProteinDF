@@ -22,14 +22,12 @@
 #ifdef _OPENMP
 #include "omp.h"
 #endif  // _OPENMP
-#include "ProteinDF_Parallel.h"
-
 #include "DfForce_Parallel.h"
 #include "DfInitialGuess_Parallel.h"
 #include "DfInputdata_Parallel.h"
 #include "DfIntegrals_Parallel.h"
 #include "DfScf_Parallel.h"
-
+#include "ProteinDF_Parallel.h"
 #include "TlCommunicate.h"
 #include "TlUtils.h"
 

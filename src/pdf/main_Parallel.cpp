@@ -23,6 +23,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -47,8 +48,7 @@
 static void func_int(int signum) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int proc = rComm.getRank();
-    std::cerr << TlUtils::format("[%d] signal: %d received.", proc, signum)
-              << std::endl;
+    std::cerr << TlUtils::format("[%d] signal: %d received.", proc, signum) << std::endl;
     rComm.abort(1);
     std::abort();
 }
@@ -86,9 +86,7 @@ int PDF_MAIN(int argc, char* argv[]) {
         const int numOfProcs = rComm.getNumOfProcs();
         for (int i = 0; i < numOfProcs; ++i) {
             if (i == rComm.getRank()) {
-                std::cerr << TlUtils::format("PID %d on %s as rank %d",
-                                             getpid(), hostname.c_str(),
-                                             rComm.getRank())
+                std::cerr << TlUtils::format("PID %d on %s as rank %d", getpid(), hostname.c_str(), rComm.getRank())
                           << std::endl;
             }
             rComm.barrier();
@@ -98,8 +96,7 @@ int PDF_MAIN(int argc, char* argv[]) {
         const int waitingTime = 5000;
         rComm.barrier();
         if (rComm.isMaster() == true) {
-            std::cerr << TlUtils::format("waiting %d msec.", waitingTime)
-                      << std::endl;
+            std::cerr << TlUtils::format("waiting %d msec.", waitingTime) << std::endl;
         }
         TlTime::sleep(waitingTime);
         rComm.barrier();
@@ -108,11 +105,6 @@ int PDF_MAIN(int argc, char* argv[]) {
 
     // setup parameters
     TlGetopt opt(argc, argv, "Ddro:");
-
-    // bool isRestart = false;
-    // if (opt["r"] == "defined") {
-    //   isRestart = true;
-    // }
 
     TlLogging& log = TlLogging::getInstance();
     std::string output = "fl_Out_Std";
@@ -129,9 +121,22 @@ int PDF_MAIN(int argc, char* argv[]) {
         log.setLevel(TlLogging::TL_DEBUG, TlLogging::TL_DEBUG);
     }
 
+    // command option
+    bool isRestart = false;
+    if (rComm.isMaster()) {
+        if (opt["r"] == "defined") {
+            isRestart = true;
+        }
+    }
+    rComm.broadcast(isRestart);
+
     // run ProteinDF
     ProteinDF_Parallel PDF;
-    PDF.run();
+    if (isRestart == true) {
+        PDF.restart("pdfparam.mpac");
+    } else {
+        PDF.run();
+    }
 
     rComm.finalize();
     return EXIT_SUCCESS;
