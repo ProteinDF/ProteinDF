@@ -94,9 +94,8 @@ char* TlSystem::newMmap(const std::size_t fileSize, const int fd) {
     // const std::size_t mapSize = (this->fileSize_ / pageSize +1) * pageSize;
 
     const int prot = PROT_READ | PROT_WRITE;
-    // const int flags = MAP_SHARED;  //  MAP_HUGETLB
-    const int flags = MAP_PRIVATE;
-    // const int flags = MAP_PRIVATE | MAP_HUGETLB;
+    const int flags = MAP_SHARED;
+    // const int flags = MAP_SHARED | MAP_HUGETLB;
 
     char* addr = reinterpret_cast<char*>(::mmap(NULL, fileSize, prot, flags, fd, 0));
     if (addr == MAP_FAILED) {
