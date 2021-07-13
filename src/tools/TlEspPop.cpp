@@ -32,7 +32,8 @@ TlEspPop::TlEspPop(const TlSerializeData& param)
     this->expected_ = TlDenseVector_Lapack(this->realAtoms_.size());
 }
 
-TlEspPop::~TlEspPop() {}
+TlEspPop::~TlEspPop() {
+}
 
 TlEspPop::RESP_RESTRICTION TlEspPop::getRespRestriction() const {
     return this->resp_restriction_;
@@ -42,15 +43,25 @@ void TlEspPop::setRespRestriction(TlEspPop::RESP_RESTRICTION v) {
     this->resp_restriction_ = v;
 }
 
-double TlEspPop::getRestrictionParameterA() const { return this->param_a_; }
+double TlEspPop::getRestrictionParameterA() const {
+    return this->param_a_;
+}
 
-void TlEspPop::setRestrictionParameterA(const double a) { this->param_a_ = a; }
+void TlEspPop::setRestrictionParameterA(const double a) {
+    this->param_a_ = a;
+}
 
-double TlEspPop::getRestrictionParameterB() const { return this->param_b_; }
+double TlEspPop::getRestrictionParameterB() const {
+    return this->param_b_;
+}
 
-void TlEspPop::setRestrictionParameterB(const double b) { this->param_b_ = b; }
+void TlEspPop::setRestrictionParameterB(const double b) {
+    this->param_b_ = b;
+}
 
-void TlEspPop::verbose(bool yn) { this->verbose_ = yn; }
+void TlEspPop::verbose(bool yn) {
+    this->verbose_ = yn;
+}
 
 void TlEspPop::saveMpacFilePath(const std::string& path) {
     this->saveMpacFilePath_ = path;
@@ -115,8 +126,7 @@ void TlEspPop::exec(std::string PMatrixFilePath) {
         TlMsgPack mpac(output);
         if (this->saveMpacFilePath_.empty() != true) {
             if (this->verbose_) {
-                std::cerr << "output mpac file: " << this->saveMpacFilePath_
-                          << std::endl;
+                std::cerr << "output mpac file: " << this->saveMpacFilePath_ << std::endl;
             }
             mpac.save(this->saveMpacFilePath_);
         }
@@ -142,13 +152,11 @@ void TlEspPop::exec(std::string PMatrixFilePath) {
         while (this->itr_ < this->maxItr_) {
             switch (this->resp_restriction_) {
                 case REST_QUADRIC:
-                    this->makeDesignMatrix_quadric(MK_designMat, MK_predicted,
-                                                   &designMat, &predicted);
+                    this->makeDesignMatrix_quadric(MK_designMat, MK_predicted, &designMat, &predicted);
                     break;
 
                 case REST_HYPERBOLIC:
-                    this->makeDesignMatrix_hyperbolic(
-                        MK_designMat, MK_predicted, &designMat, &predicted);
+                    this->makeDesignMatrix_hyperbolic(MK_designMat, MK_predicted, &designMat, &predicted);
                     break;
 
                 default:
@@ -173,22 +181,19 @@ void TlEspPop::exec(std::string PMatrixFilePath) {
     this->output(modelCoef);
     if (this->saveDesignMatPath_.empty() != true) {
         if (this->verbose_) {
-            std::cerr << "design mat path: " << this->saveDesignMatPath_
-                      << std::endl;
+            std::cerr << "design mat path: " << this->saveDesignMatPath_ << std::endl;
         }
         designMat.save(this->saveDesignMatPath_);
     }
     if (this->savePredictedPath_.empty() != true) {
         if (this->verbose_) {
-            std::cerr << "predicetd vtr path: " << this->savePredictedPath_
-                      << std::endl;
+            std::cerr << "predicetd vtr path: " << this->savePredictedPath_ << std::endl;
         }
         predicted.save(this->savePredictedPath_);
     }
     if (this->saveModelCoefPath_.empty() != true) {
         if (this->verbose_) {
-            std::cerr << "model coef path: " << this->saveModelCoefPath_
-                      << std::endl;
+            std::cerr << "model coef path: " << this->saveModelCoefPath_ << std::endl;
         }
         modelCoef.save(this->saveModelCoefPath_);
     }
@@ -197,8 +202,7 @@ void TlEspPop::exec(std::string PMatrixFilePath) {
 std::vector<TlAtom> TlEspPop::getRealAtoms() {
     // const Fl_Geometry flGeom(this->param_["coordinates"]); // 単位はa.u.
     const int numOfAllAtoms = this->flGeom_.getNumOfAtoms();
-    const int numOfRealAtoms =
-        numOfAllAtoms - this->flGeom_.getNumOfDummyAtoms();
+    const int numOfRealAtoms = numOfAllAtoms - this->flGeom_.getNumOfDummyAtoms();
 
     this->sumOfCounterCharges_ = 0.0;
     std::vector<TlAtom> realAtoms(numOfRealAtoms);
@@ -221,8 +225,7 @@ std::vector<TlAtom> TlEspPop::getRealAtoms() {
 }
 
 // radii: atomic unit
-std::vector<TlPosition> TlEspPop::getMKGridsOnAtom(const TlPosition& center,
-                                                   const double radii) {
+std::vector<TlPosition> TlEspPop::getMKGridsOnAtom(const TlPosition& center, const double radii) {
     TlLebedevGrid lebGrid;
     const std::vector<int> gridList = lebGrid.getSupportedGridNumber();
 
@@ -230,13 +233,10 @@ std::vector<TlPosition> TlEspPop::getMKGridsOnAtom(const TlPosition& center,
     const double r = radii * AU2ANG;  // to angstroam unit
 
     const double area = 4.0 * TlMath::PI() * r * r;
-    std::vector<int>::const_iterator it = std::upper_bound(
-        gridList.begin(), gridList.end(), static_cast<int>(area));
+    std::vector<int>::const_iterator it = std::upper_bound(gridList.begin(), gridList.end(), static_cast<int>(area));
     const int numOfGrids = *it;
     if (this->verbose_) {
-        std::cerr << TlUtils::format("area=%8.3f ANG^2 grids=%d", area,
-                                     numOfGrids)
-                  << std::endl;
+        std::cerr << TlUtils::format("area=%8.3f ANG^2 grids=%d", area, numOfGrids) << std::endl;
     }
 
     std::vector<TlPosition> layerGrids;
@@ -261,9 +261,7 @@ bool TlEspPop::isInMolecule(const TlPosition& p, double coef) {
         const std::string symbol = atom.getSymbol();
         if (symbol != "X") {
             const double distance = p.distanceFrom(atom.getPosition());
-            const double vdwr =
-                TlPrdctbl::getVdwRadii(TlPrdctbl::getAtomicNumber(symbol)) *
-                ANG2AU;
+            const double vdwr = TlPrdctbl::getVdwRadii(TlPrdctbl::getAtomicNumber(symbol)) * ANG2AU;
             if (distance < vdwr * coef) {
                 answer = true;
                 break;
@@ -288,22 +286,17 @@ std::vector<TlPosition> TlEspPop::getMerzKollmanGrids() {
         const TlAtom atom = this->flGeom_.getAtom(i);
         const std::string symbol = atom.getSymbol();
         if (symbol != "X") {
-            const double vdwr =
-                TlPrdctbl::getVdwRadii(TlPrdctbl::getAtomicNumber(symbol)) *
-                ANG2AU;
+            const double vdwr = TlPrdctbl::getVdwRadii(TlPrdctbl::getAtomicNumber(symbol)) * ANG2AU;
 
-            for (int layer_index = 0; layer_index < numOfLayers;
-                 ++layer_index) {
+            for (int layer_index = 0; layer_index < numOfLayers; ++layer_index) {
                 const double coef = layers[layer_index];
 
                 // define the number of grids
-                std::vector<TlPosition> grids =
-                    this->getMKGridsOnAtom(atom.getPosition(), coef * vdwr);
+                std::vector<TlPosition> grids = this->getMKGridsOnAtom(atom.getPosition(), coef * vdwr);
 
                 // check in molecule
                 std::vector<TlPosition>::iterator itEnd = grids.end();
-                for (std::vector<TlPosition>::iterator it = grids.begin();
-                     it != itEnd; ++it) {
+                for (std::vector<TlPosition>::iterator it = grids.begin(); it != itEnd; ++it) {
                     if (this->isInMolecule(*it, coef) != true) {
                         allGrids.push_back(*it);
                     } else {
@@ -316,8 +309,7 @@ std::vector<TlPosition> TlEspPop::getMerzKollmanGrids() {
     }
 
     if (this->verbose_) {
-        std::cerr << TlUtils::format("screened %ld/%ld", screened, numOfGrids)
-                  << std::endl;
+        std::cerr << TlUtils::format("screened %ld/%ld", screened, numOfGrids) << std::endl;
     }
     return allGrids;
 }
@@ -328,8 +320,7 @@ TlDenseGeneralMatrix_Lapack TlEspPop::getInvDistanceMatrix() {
     const int numOfGrids = this->grids_.size();
     TlDenseGeneralMatrix_Lapack d(numOfRealAtoms, numOfGrids);
     if (this->verbose_) {
-        std::cerr << TlUtils::format("# of atoms: %d", numOfRealAtoms)
-                  << std::endl;
+        std::cerr << TlUtils::format("# of atoms: %d", numOfRealAtoms) << std::endl;
         std::cerr << TlUtils::format("# of grids: %d", numOfGrids) << std::endl;
     }
 
@@ -348,8 +339,7 @@ TlDenseGeneralMatrix_Lapack TlEspPop::getInvDistanceMatrix() {
     return d;
 }
 
-void TlEspPop::makeDesignMatrix_MK(TlDenseSymmetricMatrix_Lapack* pDesignMat,
-                                   TlDenseVector_Lapack* pPredicted) {
+void TlEspPop::makeDesignMatrix_MK(TlDenseSymmetricMatrix_Lapack* pDesignMat, TlDenseVector_Lapack* pPredicted) {
     assert(pDesignMat != NULL);
     assert(pPredicted != NULL);
     assert(this->esp_.getSize() == static_cast<int>(this->grids_.size()));
@@ -360,8 +350,7 @@ void TlEspPop::makeDesignMatrix_MK(TlDenseSymmetricMatrix_Lapack* pDesignMat,
     pDesignMat->resize(numOfRealAtoms + 1);
     pPredicted->resize(numOfRealAtoms + 1);
     for (int a = 0; a < numOfRealAtoms; ++a) {
-        const TlDenseVector_Lapack r_a =
-            d.getRowVector<TlDenseVector_Lapack>(a);
+        const TlDenseVector_Lapack r_a = d.getRowVector<TlDenseVector_Lapack>(a);
         assert(r_a.getSize() == static_cast<int>(this->grids_.size()));
 
         // a == b
@@ -390,21 +379,17 @@ void TlEspPop::makeDesignMatrix_MK(TlDenseSymmetricMatrix_Lapack* pDesignMat,
     }
 
     if (this->verbose_) {
-        std::cerr << TlUtils::format(
-                         "total charge: % 8.2f = % 8.2f - % 8.2f",
-                         this->totalCharge_ - this->sumOfCounterCharges_,
-                         this->totalCharge_, this->sumOfCounterCharges_)
+        std::cerr << TlUtils::format("total charge: % 8.2f = % 8.2f - % 8.2f",
+                                     this->totalCharge_ - this->sumOfCounterCharges_, this->totalCharge_,
+                                     this->sumOfCounterCharges_)
                   << std::endl;
     }
-    pPredicted->set(numOfRealAtoms,
-                    this->totalCharge_ - this->sumOfCounterCharges_);
+    pPredicted->set(numOfRealAtoms, this->totalCharge_ - this->sumOfCounterCharges_);
 }
 
-void TlEspPop::makeDesignMatrix_quadric(
-    const TlDenseSymmetricMatrix_Lapack& MK_designMat,
-    const TlDenseVector_Lapack& MK_predicted,
-    TlDenseSymmetricMatrix_Lapack* pDesignMat,
-    TlDenseVector_Lapack* pPredicted) {
+void TlEspPop::makeDesignMatrix_quadric(const TlDenseSymmetricMatrix_Lapack& MK_designMat,
+                                        const TlDenseVector_Lapack& MK_predicted,
+                                        TlDenseSymmetricMatrix_Lapack* pDesignMat, TlDenseVector_Lapack* pPredicted) {
     *pDesignMat = MK_designMat;
     *pPredicted = MK_predicted;
 
@@ -421,11 +406,10 @@ void TlEspPop::makeDesignMatrix_quadric(
     }
 }
 
-void TlEspPop::makeDesignMatrix_hyperbolic(
-    const TlDenseSymmetricMatrix_Lapack& MK_designMat,
-    const TlDenseVector_Lapack& MK_predicted,
-    TlDenseSymmetricMatrix_Lapack* pDesignMat,
-    TlDenseVector_Lapack* pPredicted) {
+void TlEspPop::makeDesignMatrix_hyperbolic(const TlDenseSymmetricMatrix_Lapack& MK_designMat,
+                                           const TlDenseVector_Lapack& MK_predicted,
+                                           TlDenseSymmetricMatrix_Lapack* pDesignMat,
+                                           TlDenseVector_Lapack* pPredicted) {
     *pDesignMat = MK_designMat;
     *pPredicted = MK_predicted;
 
@@ -437,14 +421,12 @@ void TlEspPop::makeDesignMatrix_hyperbolic(
     const int numOfRealAtoms = this->realAtoms_.size();
     for (int a = 0; a < numOfRealAtoms; ++a) {
         const double ya = q.get(a);
-        const double rest =
-            param_a * ya * (1.0 / std::sqrt(ya * ya + param_b2));
+        const double rest = param_a * ya * (1.0 / std::sqrt(ya * ya + param_b2));
 
         pDesignMat->add(a, a, rest);
         pPredicted->add(a, target * rest);
     }
-    pPredicted->set(numOfRealAtoms,
-                    this->totalCharge_ - this->sumOfCounterCharges_);
+    pPredicted->set(numOfRealAtoms, this->totalCharge_ - this->sumOfCounterCharges_);
 }
 
 bool TlEspPop::convCheck(const TlDenseVector_Lapack& modelCoef) {
@@ -456,11 +438,8 @@ bool TlEspPop::convCheck(const TlDenseVector_Lapack& modelCoef) {
         const int numOfSize = modelCoef.getSize();
         const double rmsErr = diff.dotInPlace(diff).sum() / double(numOfSize);
 
-        std::cerr << TlUtils::format("#%3d: MAX: % e RMS: % e", this->itr_,
-                                     maxErr, rmsErr)
-                  << std::endl;
-        if ((maxErr < this->maxErrorThreshold_) &&
-            (rmsErr < this->rmsErrorThreshold_)) {
+        std::cerr << TlUtils::format("#%3d: MAX: % e RMS: % e", this->itr_, maxErr, rmsErr) << std::endl;
+        if ((maxErr < this->maxErrorThreshold_) && (rmsErr < this->rmsErrorThreshold_)) {
             judge = true;
         }
     }
@@ -478,15 +457,11 @@ void TlEspPop::output(const TlDenseVector_Lapack& modelCoef) {
 
     switch (this->resp_restriction_) {
         case REST_QUADRIC:
-            std::cout << TlUtils::format("RESP charge (rest: quadric; a=% f)",
-                                         this->param_a_)
-                      << std::endl;
+            std::cout << TlUtils::format("RESP charge (rest: quadric; a=% f)", this->param_a_) << std::endl;
             break;
 
         case REST_HYPERBOLIC:
-            std::cout << TlUtils::format(
-                             "RESP charge (rest: hyperbolic; a=% f, b=% f)",
-                             this->param_a_, this->param_b_)
+            std::cout << TlUtils::format("RESP charge (rest: hyperbolic; a=% f, b=% f)", this->param_a_, this->param_b_)
                       << std::endl;
             break;
 
