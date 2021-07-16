@@ -12,8 +12,7 @@
 // ----------------------------------------------------------------------------
 // template class
 // ----------------------------------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
 class DfTotalEnergy_tmpl : public DfObject {
    public:
     DfTotalEnergy_tmpl(TlSerializeData* pPdfParam);
@@ -24,8 +23,7 @@ class DfTotalEnergy_tmpl : public DfObject {
     void calc(const int iteration);
     void output();
 
-    void get_IE(const std::vector<std::vector<DfObject::index_type> >&
-                    atomIndexGroup) const;
+    void get_IE(const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup) const;
 
     // double get_IE(const std::vector<int>& indeces1) const;
     // double get_IE(const std::vector<int>& indeces1,
@@ -39,8 +37,7 @@ class DfTotalEnergy_tmpl : public DfObject {
     virtual void prepareDfOverlapObject();
 
    protected:
-    virtual SymmetricMatrix getSpinDensityMatrix(const RUN_TYPE runType,
-                                                 const int iteration);
+    virtual SymmetricMatrix getSpinDensityMatrix(const RUN_TYPE runType, const int iteration);
 
     virtual Vector getRho();
     Vector getEps(const RUN_TYPE runType);
@@ -58,33 +55,24 @@ class DfTotalEnergy_tmpl : public DfObject {
     void calcE_J_rho_rhoTilde_DIRECT(const SymmetricMatrix& P_AB);
     void calcE_J_rhoTilde_rhoTilde();
 
-    double calcE_K(const RUN_TYPE runType, const SymmetricMatrix& PA,
-                   SymmetricMatrix* pE_K = NULL);
-    double calcE_K_exact(const RUN_TYPE runType, const SymmetricMatrix& PA,
-                         SymmetricMatrix* pE_K = NULL);
+    double calcE_K(const RUN_TYPE runType, const SymmetricMatrix& PA, SymmetricMatrix* pE_K = NULL);
+    double calcE_K_exact(const RUN_TYPE runType, const SymmetricMatrix& PA, SymmetricMatrix* pE_K = NULL);
 
-    void calcE_XC(const RUN_TYPE runType, const SymmetricMatrix& PA,
-                  SymmetricMatrix* pE_XC = NULL);
-    void calcE_XC_gridfree(const RUN_TYPE runType, const SymmetricMatrix& PA,
-                           SymmetricMatrix* pE_XC = NULL);
+    void calcE_XC(const RUN_TYPE runType, const SymmetricMatrix& PA, SymmetricMatrix* pE_XC = NULL);
+    void calcE_XC_gridfree(const RUN_TYPE runType, const SymmetricMatrix& PA, SymmetricMatrix* pE_XC = NULL);
     void calcE_XC_DIRECT(const SymmetricMatrix& PA, const Vector& eps);
 
    protected:
     void calcS2();
 
    protected:
-    SymmetricMatrix get_IE_nuc(
-        const SymmetricMatrix& matrix,
-        const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup)
-        const;
-    SymmetricMatrix get_IE(
-        const SymmetricMatrix& matrix,
-        const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup)
-        const;
+    SymmetricMatrix get_IE_nuc(const SymmetricMatrix& matrix,
+                               const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup) const;
+    SymmetricMatrix get_IE(const SymmetricMatrix& matrix,
+                           const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup) const;
 
     std::vector<int> atomArray2AoArray(const std::vector<int>& atomArray) const;
-    double get_IE_matrix(const SymmetricMatrix& matrix,
-                         const std::vector<int>& atomIndeces1,
+    double get_IE_matrix(const SymmetricMatrix& matrix, const std::vector<int>& atomIndeces1,
                          const std::vector<int>& atomIndeces2) const;
 
    protected:
@@ -120,26 +108,19 @@ class DfTotalEnergy_tmpl : public DfObject {
 // ----------------------------------------------------------------------------
 // template
 // ----------------------------------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-const double DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                                DfOverlapType>::TOO_SMALL = 1.0E-16;
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+const double DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::TOO_SMALL = 1.0E-16;
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-double DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                          DfOverlapType>::E_nuc_ = 0.0;
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+double DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::E_nuc_ = 0.0;
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-double DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                          DfOverlapType>::E_nuc_X_ = 0.0;
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+double DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::E_nuc_X_ = 0.0;
 
 // constructor & destructor ---------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
-    DfTotalEnergy_tmpl(TlSerializeData* pPdfParam)
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::DfTotalEnergy_tmpl(
+    TlSerializeData* pPdfParam)
     : DfObject(pPdfParam),
       orbInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"]),
       pDfXCFunctionalObject_(NULL),
@@ -156,12 +137,11 @@ DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
       E_XC_(0.0),
       E_disp_(0.0),
       pPA_(NULL),
-      pPB_(NULL) {}
+      pPB_(NULL) {
+}
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                   DfOverlapType>::~DfTotalEnergy_tmpl() {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::~DfTotalEnergy_tmpl() {
     delete this->pDfXCFunctionalObject_;
     this->pDfXCFunctionalObject_ = NULL;
     delete this->pDfOverlapObject_;
@@ -174,38 +154,28 @@ DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 }
 
 // initialize -----------------------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                        DfOverlapType>::prepareXCFunctionalObject() {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::prepareXCFunctionalObject() {
     this->pDfXCFunctionalObject_ = new DfXCFunctional(this->pPdfParam_);
 }
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                        DfOverlapType>::prepareDfOverlapObject() {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::prepareDfOverlapObject() {
     this->pDfOverlapObject_ = new DfOverlapX(this->pPdfParam_);
 }
 
 // ----------------------------------------------------------------------------
 // density matrix
 // ----------------------------------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-SymmetricMatrix
-DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                   DfOverlapType>::getSpinDensityMatrix(const RUN_TYPE runType,
-                                                        const int iteration) {
-    SymmetricMatrix matrix =
-        DfObject::getSpinDensityMatrix<SymmetricMatrix>(runType, iteration);
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+SymmetricMatrix DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::getSpinDensityMatrix(
+    const RUN_TYPE runType, const int iteration) {
+    SymmetricMatrix matrix = DfObject::getSpinDensityMatrix<SymmetricMatrix>(runType, iteration);
     return matrix;
 }
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-Vector DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                          DfOverlapType>::getRho() {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+Vector DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::getRho() {
     Vector rho;
     switch (this->m_nMethodType) {
         case METHOD_RKS:
@@ -228,28 +198,23 @@ Vector DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
     return rho;
 }
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-Vector DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                          DfOverlapType>::getEps(const RUN_TYPE runType) {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+Vector DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::getEps(const RUN_TYPE runType) {
     Vector eps;
     switch (runType) {
         case RUN_RKS:
             eps.load("fl_Work/fl_Vct_Epsilon");
-            assert(static_cast<TlVectorAbstract::size_type>(
-                       this->numOfAuxXC_) == eps.getSize());
+            assert(static_cast<TlVectorAbstract::size_type>(this->numOfAuxXC_) == eps.getSize());
             break;
 
         case RUN_UKS_ALPHA:
             eps.load("fl_Work/fl_Vct_Epsilona");
-            assert(static_cast<TlVectorAbstract::size_type>(
-                       this->numOfAuxXC_) == eps.getSize());
+            assert(static_cast<TlVectorAbstract::size_type>(this->numOfAuxXC_) == eps.getSize());
             break;
 
         case RUN_UKS_BETA:
             eps.load("fl_Work/fl_Vct_Epsilonb");
-            assert(static_cast<TlVectorAbstract::size_type>(
-                       this->numOfAuxXC_) == eps.getSize());
+            assert(static_cast<TlVectorAbstract::size_type>(this->numOfAuxXC_) == eps.getSize());
             break;
 
         default:
@@ -263,19 +228,15 @@ Vector DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 // ----------------------------------------------------------------------------
 // MAIN
 // ----------------------------------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                        DfOverlapType>::run() {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::run() {
     this->calc(this->m_nIteration);
     this->saveParams();
     this->output();
 }
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                        DfOverlapType>::calc(const int iteration) {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calc(const int iteration) {
     // calc parts
     this->calcE_nuc();
 
@@ -284,8 +245,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
     SymmetricMatrix P_AB;
     switch (this->m_nMethodType) {
         case METHOD_RKS: {
-            const SymmetricMatrix PA =
-                this->getSpinDensityMatrix(RUN_RKS, iteration);
+            const SymmetricMatrix PA = this->getSpinDensityMatrix(RUN_RKS, iteration);
 
             // K
             {
@@ -309,15 +269,12 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
         } break;
 
         case METHOD_UKS: {
-            const SymmetricMatrix PA =
-                this->getSpinDensityMatrix(RUN_UKS_ALPHA, iteration);
-            const SymmetricMatrix PB =
-                this->getSpinDensityMatrix(RUN_UKS_BETA, iteration);
+            const SymmetricMatrix PA = this->getSpinDensityMatrix(RUN_UKS_ALPHA, iteration);
+            const SymmetricMatrix PB = this->getSpinDensityMatrix(RUN_UKS_BETA, iteration);
 
             // K
             {
-                SymmetricMatrix E_KA(this->m_nNumOfAOs),
-                    E_KB(this->m_nNumOfAOs);
+                SymmetricMatrix E_KA(this->m_nNumOfAOs), E_KB(this->m_nNumOfAOs);
                 this->E_KA_ = this->calcE_K(RUN_UKS_ALPHA, PA, &E_KA);
                 this->E_KB_ = this->calcE_K(RUN_UKS_BETA, PB, &E_KB);
                 this->E_K_ = this->E_KA_ + this->E_KB_;
@@ -326,46 +283,36 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
             }
             // XC
             {
-                SymmetricMatrix E_XC_A(this->m_nNumOfAOs),
-                    E_XC_B(this->m_nNumOfAOs);
+                SymmetricMatrix E_XC_A(this->m_nNumOfAOs), E_XC_B(this->m_nNumOfAOs);
                 this->calcE_XC(RUN_UKS_ALPHA, PA, &E_XC_A);
                 this->calcE_XC(RUN_UKS_BETA, PB, &E_XC_B);
-                E_XC_A.save(DfObject::m_sWorkDirPath + "/" +
-                            "e_XC.uks-alpha.mat");
-                E_XC_B.save(DfObject::m_sWorkDirPath + "/" +
-                            "e_XC.uks-beta.mat");
+                E_XC_A.save(DfObject::m_sWorkDirPath + "/" + "e_XC.uks-alpha.mat");
+                E_XC_B.save(DfObject::m_sWorkDirPath + "/" + "e_XC.uks-beta.mat");
             }
 
             P_AB = PA + PB;
         } break;
 
         case METHOD_ROKS: {
-            SymmetricMatrix PB =
-                this->getSpinDensityMatrix(RUN_ROKS_CLOSED, iteration);
+            SymmetricMatrix PB = this->getSpinDensityMatrix(RUN_ROKS_CLOSED, iteration);
             PB *= 0.5;
-            SymmetricMatrix PA =
-                this->getSpinDensityMatrix(RUN_ROKS_OPEN, iteration);
+            SymmetricMatrix PA = this->getSpinDensityMatrix(RUN_ROKS_OPEN, iteration);
             PA += PB;
 
             {
-                SymmetricMatrix E_KA(this->m_nNumOfAOs),
-                    E_KB(this->m_nNumOfAOs);
+                SymmetricMatrix E_KA(this->m_nNumOfAOs), E_KB(this->m_nNumOfAOs);
                 this->E_KA_ = this->calcE_K(RUN_ROKS_ALPHA, PA, &E_KA);
                 this->E_KB_ = this->calcE_K(RUN_ROKS_BETA, PB, &E_KB);
                 this->E_K_ = this->E_KA_ + this->E_KB_;
-                E_KA.save(DfObject::m_sWorkDirPath + "/" +
-                          "e_K.roks-alpha.mat");
+                E_KA.save(DfObject::m_sWorkDirPath + "/" + "e_K.roks-alpha.mat");
                 E_KA.save(DfObject::m_sWorkDirPath + "/" + "e_K.roks-beta.mat");
             }
             {
-                SymmetricMatrix E_XC_A(this->m_nNumOfAOs),
-                    E_XC_B(this->m_nNumOfAOs);
+                SymmetricMatrix E_XC_A(this->m_nNumOfAOs), E_XC_B(this->m_nNumOfAOs);
                 this->calcE_XC(RUN_ROKS_ALPHA, PA, &E_XC_A);
                 this->calcE_XC(RUN_ROKS_BETA, PB, &E_XC_B);
-                E_XC_A.save(DfObject::m_sWorkDirPath + "/" +
-                            "e_XC.roks-alpha.mat");
-                E_XC_B.save(DfObject::m_sWorkDirPath + "/" +
-                            "e_XC.roks-beta.mat");
+                E_XC_A.save(DfObject::m_sWorkDirPath + "/" + "e_XC.roks-alpha.mat");
+                E_XC_B.save(DfObject::m_sWorkDirPath + "/" + "e_XC.roks-beta.mat");
             }
             P_AB = PA + PB;
         } break;
@@ -379,8 +326,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
     this->calcE_J(P_AB);
 
     if (this->enableGrimmeDispersion_ == true) {
-        this->E_disp_ =
-            this->pDfXCFunctionalObject_->getGrimmeDispersionEnergy();
+        this->E_disp_ = this->pDfXCFunctionalObject_->getGrimmeDispersionEnergy();
     }
 
     // calc total energy
@@ -403,22 +349,18 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 // ----------------------------------------------------------------------------
 //
 // ----------------------------------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                        DfOverlapType>::saveParams() {
-    (*this->pPdfParam_)["TEs"][this->m_nIteration] = this->E_total_;
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::saveParams() {
+    const std::string itr = TlUtils::xtos(this->m_nIteration);
+    (*this->pPdfParam_)["TEs"][itr] = this->E_total_;
 
-    (*this->pPdfParam_)["total_energy"][this->m_nIteration]["h"] = this->E_h_;
-    (*this->pPdfParam_)["total_energy"][this->m_nIteration]["h_X"] =
-        this->E_h_X_;
-    (*this->pPdfParam_)["total_energy"][this->m_nIteration]["J"] = this->E_J_;
-    (*this->pPdfParam_)["total_energy"][this->m_nIteration]["J_rr~"] =
-        this->E_J_rho_rhoTilde_;
-    (*this->pPdfParam_)["total_energy"][this->m_nIteration]["J_r~r~"] =
-        this->E_J_rhoTilde_rhoTilde_;
-    (*this->pPdfParam_)["total_energy"][this->m_nIteration]["K"] = this->E_K_;
-    (*this->pPdfParam_)["total_energy"][this->m_nIteration]["XC"] = this->E_XC_;
+    (*this->pPdfParam_)["total_energy"][itr]["h"] = this->E_h_;
+    (*this->pPdfParam_)["total_energy"][itr]["h_X"] = this->E_h_X_;
+    (*this->pPdfParam_)["total_energy"][itr]["J"] = this->E_J_;
+    (*this->pPdfParam_)["total_energy"][itr]["J_rr~"] = this->E_J_rho_rhoTilde_;
+    (*this->pPdfParam_)["total_energy"][itr]["J_r~r~"] = this->E_J_rhoTilde_rhoTilde_;
+    (*this->pPdfParam_)["total_energy"][itr]["K"] = this->E_K_;
+    (*this->pPdfParam_)["total_energy"][itr]["XC"] = this->E_XC_;
     (*this->pPdfParam_)["total_energy"]["nuc"] = this->E_nuc_;
     (*this->pPdfParam_)["total_energy"]["nuc_X"] = this->E_nuc_X_;
     (*this->pPdfParam_)["total_energy"]["disp"] = this->E_disp_;
@@ -427,11 +369,9 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 // ----------------------------------------------------------------------------
 // IE
 // ----------------------------------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
-    get_IE(const std::vector<std::vector<DfObject::index_type> >&
-               atomIndexGroup) const {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::get_IE(
+    const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup) const {
     // nuc
     SymmetricMatrix IE_nuc;
     {
@@ -501,28 +441,22 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
     IE.save(DfObject::m_sWorkDirPath + "/" + "IE.mat");
 }
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-SymmetricMatrix
-DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
-    get_IE_nuc(const SymmetricMatrix& matrix,
-               const std::vector<std::vector<DfObject::index_type> >&
-                   atomIndexGroup) const {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+SymmetricMatrix DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::get_IE_nuc(
+    const SymmetricMatrix& matrix, const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup) const {
     const int numOfGroups = atomIndexGroup.size();
     SymmetricMatrix IE(numOfGroups);
     for (int groupID1 = 0; groupID1 < numOfGroups; ++groupID1) {
         // non-diagonal
         for (int groupID2 = 0; groupID2 < groupID1; ++groupID2) {
-            double e = this->get_IE_matrix(matrix, atomIndexGroup[groupID1],
-                                           atomIndexGroup[groupID2]);
+            double e = this->get_IE_matrix(matrix, atomIndexGroup[groupID1], atomIndexGroup[groupID2]);
             e *= 2.0;
             IE.set(groupID1, groupID2, e);
         }
 
         // diagonal
         {
-            const double e = this->get_IE_matrix(
-                matrix, atomIndexGroup[groupID1], atomIndexGroup[groupID1]);
+            const double e = this->get_IE_matrix(matrix, atomIndexGroup[groupID1], atomIndexGroup[groupID1]);
             IE.set(groupID1, groupID1, e);
         }
     }
@@ -530,23 +464,17 @@ DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
     return IE;
 }
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-SymmetricMatrix
-DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
-    get_IE(const SymmetricMatrix& matrix,
-           const std::vector<std::vector<DfObject::index_type> >&
-               atomIndexGroup) const {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+SymmetricMatrix DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::get_IE(
+    const SymmetricMatrix& matrix, const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup) const {
     const int numOfGroups = atomIndexGroup.size();
     SymmetricMatrix IE(numOfGroups);
     for (int groupID1 = 0; groupID1 < numOfGroups; ++groupID1) {
-        const std::vector<int> aoIndeces1 =
-            this->atomArray2AoArray(atomIndexGroup[groupID1]);
+        const std::vector<int> aoIndeces1 = this->atomArray2AoArray(atomIndexGroup[groupID1]);
 
         // non-diagonal
         for (int groupID2 = 0; groupID2 < groupID1; ++groupID2) {
-            const std::vector<int> aoIndeces2 =
-                this->atomArray2AoArray(atomIndexGroup[groupID2]);
+            const std::vector<int> aoIndeces2 = this->atomArray2AoArray(atomIndexGroup[groupID2]);
             double e = this->get_IE_matrix(matrix, aoIndeces1, aoIndeces2);
             e *= 2.0;
             IE.set(groupID1, groupID2, e);
@@ -554,8 +482,7 @@ DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
 
         // diagonal
         {
-            const double e =
-                this->get_IE_matrix(matrix, aoIndeces1, aoIndeces1);
+            const double e = this->get_IE_matrix(matrix, aoIndeces1, aoIndeces1);
             IE.set(groupID1, groupID1, e);
         }
     }
@@ -607,20 +534,14 @@ DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
 //     return answer;
 // }
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-double DfTotalEnergy_tmpl<
-    GeneralMatrix, SymmetricMatrix, Vector,
-    DfOverlapType>::get_IE_matrix(const SymmetricMatrix& matrix,
-                                  const std::vector<int>& indeces1,
-                                  const std::vector<int>& indeces2) const {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+double DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::get_IE_matrix(
+    const SymmetricMatrix& matrix, const std::vector<int>& indeces1, const std::vector<int>& indeces2) const {
     double IE = 0.0;
     std::vector<int>::const_iterator itEnd1 = indeces1.end();
     std::vector<int>::const_iterator itEnd2 = indeces2.end();
-    for (std::vector<int>::const_iterator it1 = indeces1.begin(); it1 != itEnd1;
-         ++it1) {
-        for (std::vector<int>::const_iterator it2 = indeces2.begin();
-             it2 != itEnd2; ++it2) {
+    for (std::vector<int>::const_iterator it1 = indeces1.begin(); it1 != itEnd1; ++it1) {
+        for (std::vector<int>::const_iterator it2 = indeces2.begin(); it2 != itEnd2; ++it2) {
             IE += matrix.get(*it1, *it2);
         }
     }
@@ -628,19 +549,16 @@ double DfTotalEnergy_tmpl<
     return IE;
 }
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-std::vector<int> DfTotalEnergy_tmpl<
-    GeneralMatrix, SymmetricMatrix, Vector,
-    DfOverlapType>::atomArray2AoArray(const std::vector<int>& atomArray) const {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+std::vector<int> DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::atomArray2AoArray(
+    const std::vector<int>& atomArray) const {
     std::vector<int> aoArray;
     const int numOfAOs = this->orbInfo_.getNumOfOrbitals();
     for (int ao = 0; ao < numOfAOs; ++ao) {
         const int atomIndex = this->orbInfo_.getAtomIndex(ao);
 
         std::vector<int>::const_iterator itEnd = atomArray.end();
-        for (std::vector<int>::const_iterator it = atomArray.begin();
-             it != itEnd; ++it) {
+        for (std::vector<int>::const_iterator it = atomArray.begin(); it != itEnd; ++it) {
             if (*it == atomIndex) {
                 aoArray.push_back(ao);
                 break;
@@ -654,13 +572,10 @@ std::vector<int> DfTotalEnergy_tmpl<
 // ----------------------------------------------------------------------------
 // energy for nuclear repulsion
 // ----------------------------------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                        DfOverlapType>::calcE_nuc() {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_nuc() {
     if (std::fabs(this->E_nuc_) > TOO_SMALL) {
-        this->logger(
-            " energy of nuclear repulstion has already been calculated.");
+        this->logger(" energy of nuclear repulstion has already been calculated.");
     } else {
         // read nuclear charge
         const Fl_Geometry geom((*this->pPdfParam_)["coordinates"]);
@@ -700,15 +615,11 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 // ----------------------------------------------------------------------------
 // H
 // ----------------------------------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                        DfOverlapType>::calcE_h(const SymmetricMatrix& P_AB) {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_h(const SymmetricMatrix& P_AB) {
     SymmetricMatrix Hpq = DfObject::getHpqMatrix<SymmetricMatrix>();
-    if (Hpq.getNumOfRows() != this->m_nNumOfAOs ||
-        Hpq.getNumOfCols() != this->m_nNumOfAOs) {
-        CnErr.abort("DfTotalEnergy", "calculate_one_electron_part", "",
-                    "program error");
+    if (Hpq.getNumOfRows() != this->m_nNumOfAOs || Hpq.getNumOfCols() != this->m_nNumOfAOs) {
+        CnErr.abort("DfTotalEnergy", "calculate_one_electron_part", "", "program error");
     }
 
     const SymmetricMatrix E_h = Hpq.dotInPlace(P_AB);
@@ -717,20 +628,17 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
     E_h.save(DfObject::m_sWorkDirPath + "/" + "e_h.mat");
 }
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
-    calcE_h_fromX(const SymmetricMatrix& P_AB) {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_h_fromX(
+    const SymmetricMatrix& P_AB) {
     // add dummy charge
     if (this->m_nNumOfDummyAtoms > 0) {
-        const int chargeExtrapolateNumber =
-            (*(this->pPdfParam_))["charge-extrapolate-number"].getInt();
+        const int chargeExtrapolateNumber = (*(this->pPdfParam_))["charge-extrapolate-number"].getInt();
 
         SymmetricMatrix Hpq2 = DfObject::getHpq2Matrix<SymmetricMatrix>();
 
         if (chargeExtrapolateNumber > 1) {
-            const int coef =
-                std::min(this->m_nIteration, chargeExtrapolateNumber);
+            const int coef = std::min(this->m_nIteration, chargeExtrapolateNumber);
             Hpq2 *= coef;
         }
 
@@ -744,10 +652,8 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
 // ----------------------------------------------------------------------------
 // J term
 // ----------------------------------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                        DfOverlapType>::calcE_J(const SymmetricMatrix& P_AB) {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_J(const SymmetricMatrix& P_AB) {
     switch (this->J_engine_) {
         case J_ENGINE_RI_J: {
             this->calcE_J_RI(P_AB);
@@ -763,12 +669,10 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
     }
 }
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
-    calcE_J_exact(const SymmetricMatrix& P_AB) {
-    SymmetricMatrix J =
-        DfObject::getJMatrix<SymmetricMatrix>(this->calcScfIteration_);
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_J_exact(
+    const SymmetricMatrix& P_AB) {
+    SymmetricMatrix J = DfObject::getJMatrix<SymmetricMatrix>(this->calcScfIteration_);
 
     const SymmetricMatrix E_J = 0.5 * J.dotInPlace(P_AB);
 
@@ -776,26 +680,22 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
     E_J.save(DfObject::m_sWorkDirPath + "/" + "e_J.mat");
 }
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
-    calcE_J_RI(const SymmetricMatrix& P_AB) {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_J_RI(
+    const SymmetricMatrix& P_AB) {
     this->calcE_J_rhoTilde_rhoTilde();
 
-    if (!((this->m_bMemorySave == false) &&
-          (this->m_bDiskUtilization == false))) {
+    if (!((this->m_bMemorySave == false) && (this->m_bDiskUtilization == false))) {
         // NOT use Threeindexintegrals
         this->calcE_J_rho_rhoTilde_DIRECT(P_AB);
     }
 }
 
 // energy for a part of coulomb term ( rho*Ppq*Pqa )
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
-    calcE_J_rho_rhoTilde_DIRECT(const SymmetricMatrix& P_AB) {
-    SymmetricMatrix J =
-        DfObject::getJMatrix<SymmetricMatrix>(this->calcScfIteration_);
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_J_rho_rhoTilde_DIRECT(
+    const SymmetricMatrix& P_AB) {
+    SymmetricMatrix J = DfObject::getJMatrix<SymmetricMatrix>(this->calcScfIteration_);
 
     const double coef = (this->J_engine_ == J_ENGINE_RI_J) ? 1.0 : 0.5;
     SymmetricMatrix E_J = coef * J.dotInPlace(P_AB);
@@ -803,10 +703,8 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
 }
 
 /// J[rho~, rho~] (( "1/2*rho*rho'*Sab" ))の計算を行う
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                        DfOverlapType>::calcE_J_rhoTilde_rhoTilde() {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_J_rhoTilde_rhoTilde() {
     SymmetricMatrix Sab = DfObject::getSabMatrix<SymmetricMatrix>();
     const Vector rho = this->getRho();
     this->E_J_rhoTilde_rhoTilde_ = -0.5 * (rho.dot(Sab * rho));
@@ -815,31 +713,23 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 // ----------------------------------------------------------------------------
 // K term
 // ----------------------------------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-double DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                          DfOverlapType>::calcE_K(const RUN_TYPE runType,
-                                                  const SymmetricMatrix& PA,
-                                                  SymmetricMatrix* pE_K) {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+double DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_K(const RUN_TYPE runType,
+                                                                                          const SymmetricMatrix& PA,
+                                                                                          SymmetricMatrix* pE_K) {
     return this->calcE_K_exact(runType, PA, pE_K);
 }
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-double
-DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                   DfOverlapType>::calcE_K_exact(const RUN_TYPE runType,
-                                                 const SymmetricMatrix& PA,
-                                                 SymmetricMatrix* pE_K) {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+double DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_K_exact(
+    const RUN_TYPE runType, const SymmetricMatrix& PA, SymmetricMatrix* pE_K) {
     double answer = 0.0;
 
     DfXCFunctional dfXCFunctional(this->pPdfParam_);
     if (dfXCFunctional.isHybridFunctional() == true) {
         const SymmetricMatrix E_K =
             0.5 * dfXCFunctional.getFockExchangeCoefficient() *
-            DfObject::getHFxMatrix<SymmetricMatrix>(runType,
-                                                    this->calcScfIteration_)
-                .dotInPlace(PA);
+            DfObject::getHFxMatrix<SymmetricMatrix>(runType, this->calcScfIteration_).dotInPlace(PA);
 
         answer = E_K.sum();
         if (pE_K != NULL) {
@@ -853,12 +743,10 @@ DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 // ----------------------------------------------------------------------------
 // XC term
 // ----------------------------------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                        DfOverlapType>::calcE_XC(const RUN_TYPE runType,
-                                                 const SymmetricMatrix& PA,
-                                                 SymmetricMatrix* pE_XC) {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_XC(const RUN_TYPE runType,
+                                                                                         const SymmetricMatrix& PA,
+                                                                                         SymmetricMatrix* pE_XC) {
     DfXCFunctional dfXCFunctional(this->pPdfParam_);
     if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
         if (this->m_bIsXCFitting == true) {
@@ -874,13 +762,10 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
     }
 }
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
-    calcE_XC_gridfree(const RUN_TYPE runType, const SymmetricMatrix& PA,
-                      SymmetricMatrix* pE_XC) {
-    SymmetricMatrix E_XC = DfObject::getExcMatrix<SymmetricMatrix>(
-        runType, this->calcScfIteration_);
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_XC_gridfree(
+    const RUN_TYPE runType, const SymmetricMatrix& PA, SymmetricMatrix* pE_XC) {
+    SymmetricMatrix E_XC = DfObject::getExcMatrix<SymmetricMatrix>(runType, this->calcScfIteration_);
     E_XC.dotInPlace(PA);
 
     if (runType == DfObject::RUN_RKS) {
@@ -894,10 +779,9 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
 }
 
 // energy for xc energy term (compare myu*Ppq*Pqa with 4/3*Ex1)
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
-    calcE_XC_DIRECT(const SymmetricMatrix& PA, const Vector& eps) {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_XC_DIRECT(
+    const SymmetricMatrix& PA, const Vector& eps) {
     // put eps*[pqs] into B
     SymmetricMatrix pqg(this->m_nNumOfAOs);
 
@@ -910,10 +794,8 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
 // ----------------------------------------------------------------------------
 // S2
 // ----------------------------------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                        DfOverlapType>::calcS2() {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcS2() {
     // calc (N_alpha - N_beta / 2)
     const double N_alpha = this->m_nNumOfAlphaElectrons;
     const double N_beta = this->m_nNumOfBetaElectrons;
@@ -926,10 +808,8 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
     double csc2 = 0.0;
     {
         const int itr = this->m_nIteration;
-        GeneralMatrix C_alpha =
-            DfObject::getCMatrix<GeneralMatrix>(RUN_UKS_ALPHA, itr);
-        GeneralMatrix C_beta =
-            DfObject::getCMatrix<GeneralMatrix>(RUN_UKS_BETA, itr);
+        GeneralMatrix C_alpha = DfObject::getCMatrix<GeneralMatrix>(RUN_UKS_ALPHA, itr);
+        GeneralMatrix C_beta = DfObject::getCMatrix<GeneralMatrix>(RUN_UKS_BETA, itr);
         const SymmetricMatrix S = DfObject::getSpqMatrix<SymmetricMatrix>();
 
         C_alpha.resize(this->m_nNumOfAOs, N_alpha);
@@ -949,10 +829,8 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 // ----------------------------------------------------------------------------
 // output
 // ----------------------------------------------------------------------------
-template <class GeneralMatrix, class SymmetricMatrix, class Vector,
-          class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
-                        DfOverlapType>::output() {
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::output() {
     double E_Total = 0.0;
 
     // 表示
@@ -960,8 +838,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 
     // 1e term
     this->log_.info(TlUtils::format(" Ts+Vn          = %28.16lf", this->E_h_));
-    this->log_.info(
-        TlUtils::format(" Ts+Vn (X)      = %28.16lf", this->E_h_X_));
+    this->log_.info(TlUtils::format(" Ts+Vn (X)      = %28.16lf", this->E_h_X_));
     E_Total += this->E_h_ + this->E_h_X_;
 
     // J term
@@ -975,18 +852,15 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
             //   %28.16lf",
             //                                this->m_dE_OEP_JRR_Exc));
             // }
-            this->log_.info(TlUtils::format(" E_J[Rho, Rho~] = %28.16lf",
-                                            this->E_J_rho_rhoTilde_));
+            this->log_.info(TlUtils::format(" E_J[Rho, Rho~] = %28.16lf", this->E_J_rho_rhoTilde_));
             // E_Total += this->m_dE_J_Rho_RhoTilde;
-            this->log_.info(TlUtils::format(" E_J[Rho~,Rho~] = %28.16lf",
-                                            this->E_J_rhoTilde_rhoTilde_));
+            this->log_.info(TlUtils::format(" E_J[Rho~,Rho~] = %28.16lf", this->E_J_rhoTilde_rhoTilde_));
             // E_Total += this->m_dE_J_RhoTilde_RhoTilde;
         } break;
 
         case J_ENGINE_CONVENTIONAL:
         case J_ENGINE_CD: {
-            this->log_.info(
-                TlUtils::format(" E_J            = %28.16lf", this->E_J_));
+            this->log_.info(TlUtils::format(" E_J            = %28.16lf", this->E_J_));
             E_Total += this->E_J_;
         } break;
 
@@ -999,32 +873,24 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
     E_Total += this->E_XC_;
 
     if (this->enableGrimmeDispersion_ == true) {
-        this->log_.info(TlUtils::format(" E_cx(+disp.)   = %28.16lf",
-                                        E_Total + this->E_disp_));
+        this->log_.info(TlUtils::format(" E_cx(+disp.)   = %28.16lf", E_Total + this->E_disp_));
     }
 
     switch (this->m_nMethodType) {
         case METHOD_RKS:
-            this->log_.info(
-                TlUtils::format(" E_K            = %28.16lf", this->E_K_));
+            this->log_.info(TlUtils::format(" E_K            = %28.16lf", this->E_K_));
             break;
 
         case METHOD_UKS:
-            this->log_.info(
-                TlUtils::format(" E_K            = %28.16lf", this->E_K_));
-            this->log_.info(
-                TlUtils::format("   E_K(alpha)   = %28.16lf", this->E_KA_));
-            this->log_.info(
-                TlUtils::format("   E_K(beta)    = %28.16lf", this->E_KB_));
+            this->log_.info(TlUtils::format(" E_K            = %28.16lf", this->E_K_));
+            this->log_.info(TlUtils::format("   E_K(alpha)   = %28.16lf", this->E_KA_));
+            this->log_.info(TlUtils::format("   E_K(beta)    = %28.16lf", this->E_KB_));
             break;
 
         case METHOD_ROKS:
-            this->log_.info(
-                TlUtils::format(" E_K            = %28.16lf", this->E_K_));
-            this->log_.info(
-                TlUtils::format("   E_K(alpha)   = %28.16lf", this->E_KA_));
-            this->log_.info(
-                TlUtils::format("   E_K(beta)    = %28.16lf", this->E_KB_));
+            this->log_.info(TlUtils::format(" E_K            = %28.16lf", this->E_K_));
+            this->log_.info(TlUtils::format("   E_K(alpha)   = %28.16lf", this->E_KA_));
+            this->log_.info(TlUtils::format("   E_K(beta)    = %28.16lf", this->E_KB_));
             break;
 
         default:
@@ -1033,10 +899,8 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
     }
     E_Total += this->E_K_;
 
-    this->log_.info(
-        TlUtils::format(" E_nuclei       = %28.16lf", this->E_nuc_));
-    this->log_.info(
-        TlUtils::format(" E_nuclei(X)    = %28.16lf", this->E_nuc_X_));
+    this->log_.info(TlUtils::format(" E_nuclei       = %28.16lf", this->E_nuc_));
+    this->log_.info(TlUtils::format(" E_nuclei(X)    = %28.16lf", this->E_nuc_X_));
     E_Total += this->E_nuc_;
     E_Total += this->E_nuc_X_;
 
@@ -1055,9 +919,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
     // this->logger(TlUtils::format(" TE           = %28.16lf\n", E_Total));
     // this->logger("------------------------------------------------\n");
 
-    std::cout << TlUtils::format(" %3d th TE = %18.16lf", this->m_nIteration,
-                                 E_Total)
-              << std::endl;
+    std::cout << TlUtils::format(" %3d th TE = %18.16lf", this->m_nIteration, E_Total) << std::endl;
 
     if (this->m_nMethodType != METHOD_RKS) {
         this->calcS2();

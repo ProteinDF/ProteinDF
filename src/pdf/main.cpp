@@ -81,8 +81,10 @@ int PDF_MAIN(int argc, char* argv[]) {
     // do ProteinDF
     ProteinDF PDF;
     if (isRestart == true) {
+        std::cout << "restart calculation ..." << std::endl;
         PDF.restart("pdfparam.mpac");
     } else {
+        std::cout << "normal start calculation ..." << std::endl;
         PDF.run();
     }
 

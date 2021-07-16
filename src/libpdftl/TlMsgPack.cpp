@@ -29,11 +29,14 @@
 #include "TlMsgPack.h"
 #include "TlUtils.h"
 
-TlMsgPack::TlMsgPack(const TlSerializeData& data) : data_(data) {}
+TlMsgPack::TlMsgPack(const TlSerializeData& data) : data_(data) {
+}
 
-TlMsgPack::TlMsgPack(const TlMsgPack& rhs) : data_(rhs.data_) {}
+TlMsgPack::TlMsgPack(const TlMsgPack& rhs) : data_(rhs.data_) {
+}
 
-TlMsgPack::~TlMsgPack() {}
+TlMsgPack::~TlMsgPack() {
+}
 
 TlMsgPack& TlMsgPack::operator=(const TlMsgPack& rhs) {
     if (this != &rhs) {
@@ -43,7 +46,9 @@ TlMsgPack& TlMsgPack::operator=(const TlMsgPack& rhs) {
     return *this;
 }
 
-TlSerializeData TlMsgPack::getSerializeData() const { return this->data_; }
+TlSerializeData TlMsgPack::getSerializeData() const {
+    return this->data_;
+}
 
 bool TlMsgPack::load(const std::string& path) {
     std::ifstream ifs;
@@ -199,22 +204,16 @@ TlSerializeData TlMsgPack::loadBinary(std::istream& ifs) {
             default:
                 if (c <= (unsigned char)(0x7f)) {
                     ans = this->unpack_positiveFixNum(c);
-                } else if (((unsigned char)(0xe0) <= c) &&
-                           (c <= (unsigned char)(0xff))) {
+                } else if (((unsigned char)(0xe0) <= c) && (c <= (unsigned char)(0xff))) {
                     ans = this->unpack_negativeFixNum(c);
-                } else if (((unsigned char)(0xa0) <= c) &&
-                           (c <= (unsigned char)(0xbf))) {
+                } else if (((unsigned char)(0xa0) <= c) && (c <= (unsigned char)(0xbf))) {
                     ans = this->unpack_fixraw(c, ifs);
-                } else if (((unsigned char)(0x90) <= c) &&
-                           (c <= (unsigned char)(0x9f))) {
+                } else if (((unsigned char)(0x90) <= c) && (c <= (unsigned char)(0x9f))) {
                     ans = this->unpack_fixarray(c, ifs);
-                } else if (((unsigned char)(0x80) <= c) &&
-                           (c <= (unsigned char)(0x8f))) {
+                } else if (((unsigned char)(0x80) <= c) && (c <= (unsigned char)(0x8f))) {
                     ans = this->unpack_fixmap(c, ifs);
                 } else {
-                    std::cerr << TlUtils::format("unknown id=%2x @ %ld", c,
-                                                 this->debugCurrentPos_)
-                              << std::endl;
+                    std::cerr << TlUtils::format("unknown id=%2x @ %ld", c, this->debugCurrentPos_) << std::endl;
                     abort();
                 }
                 break;
@@ -224,9 +223,13 @@ TlSerializeData TlMsgPack::loadBinary(std::istream& ifs) {
     return ans;
 }
 
-int TlMsgPack::unpack_positiveFixNum(unsigned char c) { return (c & 127); }
+int TlMsgPack::unpack_positiveFixNum(unsigned char c) {
+    return (c & 127);
+}
 
-int TlMsgPack::unpack_negativeFixNum(unsigned char c) { return -(c & 31); }
+int TlMsgPack::unpack_negativeFixNum(unsigned char c) {
+    return -(c & 31);
+}
 
 TlSerializeData TlMsgPack::unpack_bin8(std::istream& ifs) {
     const std::size_t size = this->unpack_uint8(ifs);
@@ -285,8 +288,7 @@ TlSerializeData TlMsgPack::unpack_bin32(std::istream& ifs) {
     return ans;
 }
 
-TlSerializeData TlMsgPack::unpack_ext(std::istream& ifs,
-                                      const std::size_t size) {
+TlSerializeData TlMsgPack::unpack_ext(std::istream& ifs, const std::size_t size) {
     const int type = this->unpack_int8(ifs);
     TlSerializeData data;
     if (size != 0) {
@@ -634,10 +636,13 @@ void TlMsgPack::save(const std::string& path) const {
     std::ofstream ofs;
     ofs.open(path.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
     ofs << this->dump();
+    ofs.flush();
     ofs.close();
 }
 
-std::string TlMsgPack::dump() const { return this->dump(this->data_); }
+std::string TlMsgPack::dump() const {
+    return this->dump(this->data_);
+}
 
 std::string TlMsgPack::dump(const TlSerializeData& data) const {
     std::ostringstream os;
@@ -737,8 +742,7 @@ std::string TlMsgPack::dump_array(const TlSerializeData& data) const {
     this->write(os, char(0xdd));
     this->write(os, TlUtils::toBigEndian(size));
 
-    for (TlSerializeData::ArrayConstIterator p = data.beginArray();
-         p != data.endArray(); ++p) {
+    for (TlSerializeData::ArrayConstIterator p = data.beginArray(); p != data.endArray(); ++p) {
         os << this->dump(*p);
     }
 
@@ -754,8 +758,7 @@ std::string TlMsgPack::dump_map(const TlSerializeData& data) const {
     this->write(os, char(0xdf));
     this->write(os, TlUtils::toBigEndian(size));
 
-    for (TlSerializeData::MapConstIterator p = data.beginMap();
-         p != data.endMap(); ++p) {
+    for (TlSerializeData::MapConstIterator p = data.beginMap(); p != data.endMap(); ++p) {
         os << this->dump(p->first);
         os << this->dump(p->second);
     }

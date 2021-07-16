@@ -52,8 +52,7 @@ class DfIntegrals : public DfObject {
     };
 
    public:
-    explicit DfIntegrals(TlSerializeData* param = NULL,
-                         const std::string& saveParamPath = "");
+    explicit DfIntegrals(TlSerializeData* param = NULL);
     virtual ~DfIntegrals();
 
    public:
@@ -86,10 +85,8 @@ class DfIntegrals : public DfObject {
     virtual void saveInvSquareVMatrix(const TlDenseSymmetricMatrix_Lapack& v);
 
    protected:
-    virtual void outputStartTitle(const std::string& stepName,
-                                  const char lineChar = '-');
-    virtual void outputEndTitle(const std::string& stepName = "",
-                                const char lineChar = '-');
+    virtual void outputStartTitle(const std::string& stepName, const char lineChar = '-');
+    virtual void outputEndTitle(const std::string& stepName = "", const char lineChar = '-');
 
    protected:
     std::string saveParamPath_;

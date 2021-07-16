@@ -56,7 +56,11 @@ void ProteinDF::run() {
     // 入力データの解析
     // リスタート時には解析しない
     this->inputData();
-    this->saveParam();
+    // this->saveParam();
+    if (this->pdfParam_["restart"].getBoolean() == true) {
+        this->log_.warn("restart record is still in the parameter file, but normal calculation is started.");
+        this->pdfParam_["restart"] = "no";
+    }
 
     this->exec();
 
@@ -68,8 +72,9 @@ void ProteinDF::restart(const std::string& restartParamFilePath) {
 
     this->log_.info("loading ProteinDF parameter for restart.");
 
-    // リスタート時にはすでにあるパラメータファイルを読み取るのみ
+    // On restart, read already existing parameter file.
     this->loadParam(restartParamFilePath);
+    this->pdfParam_["restart"] = "yes";
 
     this->exec();
 
@@ -94,22 +99,21 @@ void ProteinDF::exec() {
             this->stepCreate();
         } else if (group == "integral") {
             // [integral]
-            this->loadParam();
             this->stepIntegral();
             this->saveParam();
         } else if (group == "guess") {
             // [guess]
-            this->loadParam();
+            // this->loadParam();
             this->stepGuess();
             this->saveParam();
         } else if (group == "scf" || group == "scfqclo") {
             // [scf] or [scfqclo]
-            this->loadParam();
+            // this->loadParam();
             this->stepScf();
             this->saveParam();
         } else if (group == "force") {
             // [force]
-            this->loadParam();
+            // this->loadParam();
             this->stepForce();
             this->saveParam();
         } else if (group != "") {
@@ -131,6 +135,10 @@ void ProteinDF::startlogo() {
         const std::string ompInfo = TlUtils::format(" OpenMP threads: %d\n", omp_get_max_threads());
         info += ompInfo;
     }
+#else
+    {
+        info += " OpenMP is disabled.\n";
+    }
 #endif  // _OPENMP
 
 #ifdef HAVE_EIGEN
@@ -138,6 +146,10 @@ void ProteinDF::startlogo() {
         const std::string eigenInfo =
             " Eigen SIMD instruction: " + TlSystem_Eigen::getSimdInstructionSetsInUse() + "\n";
         info += eigenInfo;
+    }
+#else
+    {
+        info += " Eigen is disabled."
     }
 #endif  // HAVE_EIGEN
 
@@ -320,8 +332,6 @@ void ProteinDF::stepCreate() {
 }
 
 void ProteinDF::stepIntegral() {
-    this->loadParam();
-
     this->stepStartTitle("INTEGRAL");
 
     DfIntegrals* pDfIntegrals = this->getDfIntegralsObject();
@@ -376,23 +386,20 @@ void ProteinDF::stepForce() {
 }
 
 void ProteinDF::loadParam(const std::string& requestFilePath) {
-    std::string filePath = requestFilePath;
+    std::string pdfParamPath = requestFilePath;
     if (requestFilePath.empty() == true) {
-        filePath = this->pdfParam_["pdf_param_path"].getStr();
+        pdfParamPath = this->pdfParam_["pdf_param_path"].getStr();
     }
 
     TlMsgPack mpac;
-    mpac.load(filePath);
+    mpac.load(pdfParamPath);
     this->pdfParam_ = mpac.getSerializeData();
 
     // check
-    if (requestFilePath.empty() != true) {
-        const std::string pdfParamPath = this->pdfParam_["pdf_param_path"].getStr();
-        if (requestFilePath != pdfParamPath) {
-            std::cerr << "the specified parameter file path is not consistent with "
-                         "pdf_param_path parameter."
-                      << std::endl;
-        }
+    if ((!requestFilePath.empty()) && (pdfParamPath != requestFilePath)) {
+        this->log_.warn("input parameter file path is not consistent with `pdf_param_path` parameter.");
+        this->log_.warn("`pdf_param_path` parameter is overwrote.");
+        this->pdfParam_["pdf_param_path"] = requestFilePath;
     }
 }
 

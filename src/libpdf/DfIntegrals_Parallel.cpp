@@ -17,6 +17,7 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfIntegrals_Parallel.h"
+
 #include "DfCD_Parallel.h"
 #include "DfEriX_Parallel.h"
 #include "DfGenerateGrid_Parallel.h"
@@ -27,10 +28,9 @@
 #include "Fl_Geometry.h"
 #include "TlCommunicate.h"
 
-DfIntegrals_Parallel::DfIntegrals_Parallel(TlSerializeData* pParam)
-    : DfIntegrals(pParam) {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-    DfObject::rank_ = rComm.getRank();
+DfIntegrals_Parallel::DfIntegrals_Parallel(TlSerializeData* pParam) : DfIntegrals(pParam) {
+    // TlCommunicate& rComm = TlCommunicate::getInstance();
+    // DfObject::rank_ = rComm.getRank();
     //     std::cerr << TlUtils::format("[%d] DfIntegrals_Parallel constructor
     //     called.", rComm.getRank())
     //               << std::endl;
@@ -68,8 +68,7 @@ DfInvMatrix* DfIntegrals_Parallel::getDfInvMatrixObject() {
 }
 
 DfGenerateGrid* DfIntegrals_Parallel::getDfGenerateGridObject() {
-    DfGenerateGrid* pDfGenerateGrid =
-        new DfGenerateGrid_Parallel(this->pPdfParam_);
+    DfGenerateGrid* pDfGenerateGrid = new DfGenerateGrid_Parallel(this->pPdfParam_);
 
     return pDfGenerateGrid;
 }
@@ -83,8 +82,7 @@ void saveInvSquareVMatrix(const TlDenseSymmetricMatrix_Lapack& v) {
     rComm.barrier();
 }
 
-void DfIntegrals_Parallel::outputStartTitle(const std::string& stepName,
-                                            const char lineChar) {
+void DfIntegrals_Parallel::outputStartTitle(const std::string& stepName, const char lineChar) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
     if (rComm.isMaster() == true) {
@@ -92,8 +90,7 @@ void DfIntegrals_Parallel::outputStartTitle(const std::string& stepName,
     }
 }
 
-void DfIntegrals_Parallel::outputEndTitle(const std::string& stepName,
-                                          const char lineChar) {
+void DfIntegrals_Parallel::outputEndTitle(const std::string& stepName, const char lineChar) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
     if (rComm.isMaster() == true) {
@@ -177,16 +174,14 @@ void DfIntegrals_Parallel::createOverlapMatrix() {
 
 void DfIntegrals_Parallel::createOverlapMatrix_LAPACK() {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    unsigned int calcState =
-        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
     DfOverlapX_Parallel dfOverlapX(this->pPdfParam_);
 
     // Spq
     if ((calcState & DfIntegrals::Spq) == 0) {
         this->outputStartTitle("Spq");
 
-        std::size_t needMem =
-            this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2 * sizeof(double);
+        std::size_t needMem = this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) / 2 * sizeof(double);
         needMem += rComm.getWorkMemSize();
         // if (this->procMaxMemSize_ < needMem) {
         //   this->logger(" S_(p q) is build on disk.\n");
@@ -316,8 +311,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK() {
 
 void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK() {
     // TlCommunicate& rComm = TlCommunicate::getInstance();
-    unsigned int calcState =
-        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
     DfOverlapX_Parallel dfOverlapX(this->pPdfParam_);
 
     // Spq
@@ -366,8 +360,7 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK() {
         if ((calcState & DfIntegrals::Sab2) == 0) {
             this->outputStartTitle("Sab2");
 
-            this->logger(
-                " S_(alpha beta) is build using on distribute matrix.\n");
+            this->logger(" S_(alpha beta) is build using on distribute matrix.\n");
             TlDenseSymmetricMatrix_Scalapack Sab2(this->m_nNumOfAux);
             dfOverlapX.getSabD(&Sab2);
             // if (this->isUseNewEngine_ == true) {
@@ -423,8 +416,7 @@ void DfIntegrals_Parallel::createERIMatrix() {
 }
 
 void DfIntegrals_Parallel::createERIMatrix_LAPACK() {
-    unsigned int calcState =
-        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
     if (this->J_engine_ == J_ENGINE_RI_J) {
         if ((calcState & DfIntegrals::Sab) == 0) {
@@ -469,8 +461,7 @@ void DfIntegrals_Parallel::createERIMatrix_LAPACK() {
 }
 
 void DfIntegrals_Parallel::createERIMatrix_ScaLAPACK() {
-    unsigned int calcState =
-        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
     if (this->J_engine_ == J_ENGINE_RI_J) {
         if ((calcState & DfIntegrals::Sab) == 0) {

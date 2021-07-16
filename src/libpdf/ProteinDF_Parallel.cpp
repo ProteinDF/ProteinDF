@@ -37,9 +37,11 @@
 #include "tl_scalapack_context.h"
 #endif  // HAVE_SCALAPACK
 
-ProteinDF_Parallel::ProteinDF_Parallel() {}
+ProteinDF_Parallel::ProteinDF_Parallel() {
+}
 
-ProteinDF_Parallel::~ProteinDF_Parallel() {}
+ProteinDF_Parallel::~ProteinDF_Parallel() {
+}
 
 void ProteinDF_Parallel::loadParam(const std::string& requestFilePath) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
@@ -68,33 +70,24 @@ void ProteinDF_Parallel::inputData() {
 
 void ProteinDF_Parallel::setupGlobalCondition_extra(){
 #ifdef HAVE_SCALAPACK
-    {bool useScaLAPACK =
-         (TlUtils::toUpper(this->pdfParam_["linear_algebra_package"]
-                               .getStr()) == "SCALAPACK")
-             ? true
-             : false;
+    {bool useScaLAPACK = (TlUtils::toUpper(this->pdfParam_["linear_algebra_package"].getStr()) == "SCALAPACK") ? true
+                                                                                                               : false;
 if (useScaLAPACK == true) {
     int scalapackBlockSize = 64;
     if (this->pdfParam_.hasKey("scalapack_block_size") == true) {
         scalapackBlockSize = this->pdfParam_["scalapack_block_size"].getInt();
     }
-    this->log_.info(
-        TlUtils::format("ScaLAPACK block size: %d", scalapackBlockSize));
+    this->log_.info(TlUtils::format("ScaLAPACK block size: %d", scalapackBlockSize));
     // TlDenseGeneralMatrix_Scalapack::setSystemBlockSize(scalapackBlockSize);
     // TlDenseVector_Scalapack::setSystemBlockSize(scalapackBlockSize);
     TlScalapackContext::setBlockSize(scalapackBlockSize);
 
     bool isUsingPartialIO = false;
-    if (this->pdfParam_.hasKey("save_distributed_matrix_to_local_disk") ==
-        true) {
-        isUsingPartialIO =
-            this->pdfParam_["save_distributed_matrix_to_local_disk"]
-                .getBoolean();
+    if (this->pdfParam_.hasKey("save_distributed_matrix_to_local_disk") == true) {
+        isUsingPartialIO = this->pdfParam_["save_distributed_matrix_to_local_disk"].getBoolean();
     }
-    const std::string isUsingPartialIO_YN =
-        (isUsingPartialIO == true) ? "YES" : "NO ";
-    this->log_.info(TlUtils::format("partial I/O mode = %s\n",
-                                    isUsingPartialIO_YN.c_str()));
+    const std::string isUsingPartialIO_YN = (isUsingPartialIO == true) ? "YES" : "NO ";
+    this->log_.info(TlUtils::format("partial I/O mode = %s\n", isUsingPartialIO_YN.c_str()));
     TlDenseGeneralMatrix_Scalapack::setUsingPartialIO(isUsingPartialIO);
 
     // experimental
@@ -103,8 +96,7 @@ if (useScaLAPACK == true) {
     this->pdfParam_["use_matrix_cache"] = false;
 
     this->pdfParam_["ERI_calcmode"] = 2;
-    this->log_.info(TlUtils::format("ERI calc mode: %d",
-                                    this->pdfParam_["ERI_calcmode"].getInt()));
+    this->log_.info(TlUtils::format("ERI calc mode: %d", this->pdfParam_["ERI_calcmode"].getInt()));
 }
 }
 #endif  // HAVE_SCALAPACK
@@ -116,8 +108,7 @@ DfIntegrals* ProteinDF_Parallel::getDfIntegralsObject() {
 }
 
 DfInitialGuess* ProteinDF_Parallel::getDfInitialGuessObject() {
-    DfInitialGuess* pDfInitialGuess =
-        new DfInitialGuess_Parallel(&this->pdfParam_);
+    DfInitialGuess* pDfInitialGuess = new DfInitialGuess_Parallel(&this->pdfParam_);
     return pDfInitialGuess;
 }
 
@@ -134,8 +125,7 @@ DfForce* ProteinDF_Parallel::getDfForceObject() {
 void ProteinDF_Parallel::startlogo() {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    const std::string version =
-        TlUtils::format("%s (parallel)", PROJECT_VERSION);
+    const std::string version = TlUtils::format("%s (parallel)", PROJECT_VERSION);
     std::string info = "";
     info += TlUtils::format(" MPI process: %d\n", rComm.getNumOfProc());
 #ifdef _OPENMP
@@ -152,10 +142,8 @@ void ProteinDF_Parallel::endlogo() {
 
     std::string performanceReports = "";
     performanceReports += TlUtils::format(" #%6d:\n", rank);
-    performanceReports +=
-        TlUtils::format(" CPU TIME  : %9.0lf sec\n", g_GlobalTime.getCpuTime());
-    performanceReports += TlUtils::format(" ELAPS_TIME: %9.0lf sec\n",
-                                          g_GlobalTime.getElapseTime());
+    performanceReports += TlUtils::format(" CPU TIME  : %9.0lf sec\n", g_GlobalTime.getCpuTime());
+    performanceReports += TlUtils::format(" ELAPS_TIME: %9.0lf sec\n", g_GlobalTime.getElapseTime());
 
     std::string matrixCacheReports = "";
     if (this->showCacheReport_ == true) {
