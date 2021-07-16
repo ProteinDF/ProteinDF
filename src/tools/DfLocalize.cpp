@@ -20,6 +20,7 @@
 #include <omp.h>
 #endif  // _OPENMP
 
+#include <algorithm>
 #include <iostream>
 
 #include "DfLocalize.h"
@@ -51,6 +52,8 @@ DfLocalize::DfLocalize(TlSerializeData* pPdfParam)
     }
 
     this->numOfOcc_ = (this->m_nNumOfElectrons + 1) / 2;
+
+    this->initialize();
 }
 
 DfLocalize::~DfLocalize() {
@@ -64,7 +67,36 @@ void DfLocalize::setCMatrixPath(const std::string& path) {
     this->CMatrixPath_ = path;
 }
 
+void DfLocalize::setGroup() {
+    // 原子ごとに1 group作成
+
+    const int numOfAtoms = this->m_nNumOfAtoms;
+    this->atomGroupList_.resize(numOfAtoms);
+
+    for (int atomIndex = 0; atomIndex < numOfAtoms; ++atomIndex) {
+        this->atomGroupList_[atomIndex] = atomIndex;
+    }
+}
+
+void DfLocalize::setGroup(const TlSerializeData& groupData) {
+    const int numOfAtoms = this->m_nNumOfAtoms;
+    this->atomGroupList_.resize(numOfAtoms);
+
+    const int numOfGroups = groupData.getSize();
+    for (int groupId = 0; groupId < numOfGroups; ++groupId) {
+        const TlSerializeData& group = groupData.getAt(groupId);
+
+        const int numOfGroupAtoms = group.getSize();
+        for (int atomId = 0; atomId < numOfGroupAtoms; ++atomId) {
+            const int atomIndex = group.getAt(atomId).getInt();
+            this->atomGroupList_[atomIndex] = groupId;
+        }
+    }
+}
+
 void DfLocalize::initialize() {
+    this->checkOpenMP();
+
     // for OCC
     this->startOrb_ = 0;
     this->endOrb_ = this->numOfOcc_;
@@ -79,9 +111,6 @@ void DfLocalize::initialize() {
     this->log_.info(TlUtils::format("threshold: %10.5e", this->threshold_));
     this->log_.info(TlUtils::format("processing MO: %d -> %d", this->startOrb_, this->endOrb_));
 
-    this->log_.info("make group");
-    this->makeGroup();
-
     // load S matrix
     this->log_.info("load S matrix");
     const bool isLoaded = this->getSMatrix(&(this->S_));
@@ -92,7 +121,7 @@ void DfLocalize::initialize() {
     }
     assert(this->S_.getNumOfRows() == this->m_nNumOfAOs);
 
-    this->checkOpenMP();
+    this->setGroup();
 }
 
 void DfLocalize::checkOpenMP() {
@@ -162,8 +191,6 @@ void DfLocalize::getCMatrix(TlDenseGeneralMatrix_Lapack* pC) {
 }
 
 void DfLocalize::exec() {
-    this->initialize();
-
     TlDenseGeneralMatrix_Lapack C;
     {
         TlDenseGeneralMatrix_Lapack C_full;
@@ -173,6 +200,9 @@ void DfLocalize::exec() {
 
         C_full.block(0, this->startOrb_, C_full.getNumOfRows(), this->endOrb_ - this->startOrb_ + 1, &C);
     }
+
+    this->log_.info("make group");
+    this->makeGroup();
 
     const int maxIteration = this->maxIteration_;
     for (int i = this->lo_iteration_ + 1; i <= maxIteration; ++i) {
@@ -274,20 +304,41 @@ double DfLocalize::localize_core(TlDenseGeneralMatrix_Lapack* pC, const index_ty
     return sumDeltaG;
 }
 
+// void DfLocalize::makeGroup() {
+//     const index_type numOfAOs = this->m_nNumOfAOs;
+//     const index_type numOfAtoms = this->m_nNumOfAtoms;
+
+//     const int numOfGroups = numOfAtoms;
+
+//     // initialize
+//     this->group_.resize(numOfGroups);
+//     for (int i = 0; i < numOfGroups; ++i) {
+//         this->group_[i].resize(numOfAOs);
+//     }
+
+//     for (index_type orb = 0; orb < numOfAOs; ++orb) {
+//         const index_type atomID = this->orbInfo_.getAtomIndex(orb);
+//         this->group_[atomID].set(orb, 1.0);
+//     }
+// }
+
 void DfLocalize::makeGroup() {
     const index_type numOfAOs = this->m_nNumOfAOs;
     const index_type numOfAtoms = this->m_nNumOfAtoms;
 
-    const int numOfGroups = numOfAtoms;
+    std::vector<int>::const_iterator itMax = std::max_element(this->atomGroupList_.begin(), this->atomGroupList_.end());
+    const int numOfGroups = *itMax + 1;
 
+    // initialize
     this->group_.resize(numOfGroups);
     for (int i = 0; i < numOfGroups; ++i) {
         this->group_[i].resize(numOfAOs);
     }
 
     for (index_type orb = 0; orb < numOfAOs; ++orb) {
-        const index_type atomID = this->orbInfo_.getAtomIndex(orb);
-        this->group_[atomID].set(orb, 1.0);
+        const index_type atomIndex = this->orbInfo_.getAtomIndex(orb);
+        const int groupIndex = this->atomGroupList_[atomIndex];
+        this->group_[groupIndex].set(orb, 1.0);
     }
 }
 
@@ -620,6 +671,7 @@ std::vector<DfLocalize::TaskItem> DfLocalize::getTaskList_byPop() {
 
     std::size_t taskIndex = 0;
     TaskItem item;
+    // no-care
     // for (int index1 = 0; index1 < dim; ++index1) {
     //     const index_type mo1 = this->groupMoPops_[index1].mo;
     //     for (int index2 = dim - 1; index2 > index1; --index2) {
@@ -631,26 +683,26 @@ std::vector<DfLocalize::TaskItem> DfLocalize::getTaskList_byPop() {
     // }
 
     // big-big pair
-    // for (int index1 = 0; index1 < dim - 1; ++index1) {
-    //     const int max_index2 = dim - index1 - 1;
-    //     for (int index2 = 0; index2 < max_index2; ++index2) {
-    //         const index_type mo1 = this->groupMoPops_[index1 + index2 + 1].mo;
-    //         const index_type mo2 = this->groupMoPops_[index2].mo;
-    //         taskList[taskIndex] = std::make_pair(mo1, mo2);
-    //         ++taskIndex;
-    //     }
-    // }
-
-    // small-small pair
     for (int index1 = 0; index1 < dim - 1; ++index1) {
         const int max_index2 = dim - index1 - 1;
         for (int index2 = 0; index2 < max_index2; ++index2) {
-            const index_type mo1 = this->groupMoPops_[dim - (index1 + index2) - 1].mo;
-            const index_type mo2 = this->groupMoPops_[dim - index2 - 1].mo;
+            const index_type mo1 = this->groupMoPops_[index1 + index2 + 1].mo;
+            const index_type mo2 = this->groupMoPops_[index2].mo;
             taskList[taskIndex] = std::make_pair(mo1, mo2);
             ++taskIndex;
         }
     }
+
+    // small-small pair
+    // for (int index1 = 0; index1 < dim - 1; ++index1) {
+    //     const int max_index2 = dim - index1 - 1;
+    //     for (int index2 = 0; index2 < max_index2; ++index2) {
+    //         const index_type mo1 = this->groupMoPops_[dim - (index1 + index2) - 1].mo;
+    //         const index_type mo2 = this->groupMoPops_[dim - index2 - 1].mo;
+    //         taskList[taskIndex] = std::make_pair(mo1, mo2);
+    //         ++taskIndex;
+    //     }
+    // }
 
     // big-small pair
     // for (int index1 = 0; index1 < dim - 1; ++index1) {

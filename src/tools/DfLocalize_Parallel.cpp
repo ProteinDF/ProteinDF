@@ -50,9 +50,6 @@ void DfLocalize_Parallel::initialize() {
     this->log_.info(TlUtils::format("threshold: %10.5e", this->threshold_));
     this->log_.info(TlUtils::format("processing MO: %d -> %d", this->startOrb_, this->endOrb_));
 
-    this->log_.info("make group");
-    this->makeGroup();
-
     // load S matrix
     this->log_.info("load S matrix");
     bool isLoadS = false;
@@ -75,12 +72,14 @@ void DfLocalize_Parallel::initialize() {
 
 void DfLocalize_Parallel::exec() {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    this->initialize();
 
     TlDenseGeneralMatrix_Lapack C;
     if (rComm.isMaster()) {
         this->getCMatrix(&C);
     }
+
+    this->log_.info("make group");
+    this->makeGroup();
 
     rComm.broadcast(this->lo_iteration_);
     const int maxIteration = this->maxIteration_;

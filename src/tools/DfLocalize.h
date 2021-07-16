@@ -19,6 +19,7 @@
 #ifndef DFLOCALIZE_H
 #define DFLOCALIZE_H
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -57,6 +58,7 @@ class DfLocalize : public DfObject {
    public:
     void setRestart(const bool yn);
     void setCMatrixPath(const std::string& path);
+    void setGroup(const TlSerializeData& groupData);
 
     void exec();
 
@@ -68,6 +70,7 @@ class DfLocalize : public DfObject {
    protected:
     virtual void initialize();
     void checkOpenMP();
+    void setGroup();
 
     bool getSMatrix(TlDenseSymmetricMatrix_Lapack* pS);
     std::string getCMatrixPath();
@@ -108,7 +111,15 @@ class DfLocalize : public DfObject {
 
     double G_;
 
+    /// atom indexに対するgroupのリスト
+    std::vector<int> atomGroupList_;
+
+    /// groupに対する原子軌道ベクトル
+    ///
+    /// そのgroupに属する原子軌道は、indexの値に1を代入する。
     std::vector<TlDenseVector_Lapack> group_;
+
+    /// groupに対するMoPopオブジェクト
     std::vector<MoPop> groupMoPops_;
 
     TlDenseSymmetricMatrix_Lapack S_;
