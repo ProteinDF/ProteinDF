@@ -40,7 +40,7 @@ void showHelp(const std::string& progname) {
 }
 
 int main(int argc, char* argv[]) {
-    TlGetopt opt(argc, argv, "c:hp:rv");
+    TlGetopt opt(argc, argv, "c:hg:p:rv");
     const bool isShowHelp = (opt["h"] == "defined");
     const bool isVerbose = (opt["v"] == "defined");
 
@@ -82,6 +82,7 @@ int main(int argc, char* argv[]) {
         param = mpac.getSerializeData();
     }
 
+    std::cout << "group file: " << groupFilePath << std::endl;
     TlSerializeData groupData;
     if (groupFilePath.empty() != true) {
         log.info(TlUtils::format("load group file: %s", groupFilePath.c_str()));
@@ -90,6 +91,7 @@ int main(int argc, char* argv[]) {
         mpac.load(groupFilePath);
 
         groupData = mpac.getSerializeData();
+        // std::cout << groupData.str() << std::endl;
     }
 
     // lo
@@ -98,6 +100,7 @@ int main(int argc, char* argv[]) {
         lo.setCMatrixPath(inputCMatrixPath);
     }
     lo.setRestart(isRestart);
+    lo.setGroup(groupData);
 
     lo.exec();
 
