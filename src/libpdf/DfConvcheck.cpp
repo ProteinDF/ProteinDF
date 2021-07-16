@@ -17,19 +17,19 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfConvcheck.h"
+
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
+
 #include "CnError.h"
 #include "TlUtils.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 
-DfConvcheck::DfConvcheck(TlSerializeData* pPdfParam, int num_iter)
-    : DfObject(pPdfParam) {
+DfConvcheck::DfConvcheck(TlSerializeData* pPdfParam, int num_iter) : DfObject(pPdfParam) {
     const TlSerializeData& pdfParam = *pPdfParam;
 
-    const std::string convergenceType =
-        TlUtils::toUpper(pdfParam["convergence/type"].getStr());
+    const std::string convergenceType = TlUtils::toUpper(pdfParam["convergence/type"].getStr());
     this->targetMatrix_ = CONV_TARGET_DENSITY;
     if (convergenceType == "FOCK") {
         this->targetMatrix_ = CONV_TARGET_FOCK;
@@ -37,13 +37,13 @@ DfConvcheck::DfConvcheck(TlSerializeData* pPdfParam, int num_iter)
 
     this->reqRmsMatrix_ = pdfParam["convergence/threshold/rms"].getDouble();
     this->reqMaxMatrix_ = pdfParam["convergence/threshold"].getDouble();
-    this->reqTotalEnergy_ =
-        pdfParam["convergence/threshold_energy"].getDouble();
+    this->reqTotalEnergy_ = pdfParam["convergence/threshold_energy"].getDouble();
 
     this->isChecked_ = false;
 }
 
-DfConvcheck::~DfConvcheck() {}
+DfConvcheck::~DfConvcheck() {
+}
 
 void DfConvcheck::check() {
     // no judgement for the first iteration
@@ -56,10 +56,8 @@ void DfConvcheck::check() {
     this->check<TlDenseSymmetricMatrix_Lapack>(this->m_nIteration);
 
     // check for convergence
-    this->isConverged_ =
-        ((this->judgeRmsMatrixA_) && (this->judgeRmsMatrixB_) &&
-         (this->judgeMaxMatrixA_) && (this->judgeMaxMatrixB_) &&
-         (this->judgeTotalEnergy_));
+    this->isConverged_ = ((this->judgeRmsMatrixA_) && (this->judgeRmsMatrixB_) && (this->judgeMaxMatrixA_) &&
+                          (this->judgeMaxMatrixB_) && (this->judgeTotalEnergy_));
 
     this->showResults();
 }
@@ -82,67 +80,47 @@ void DfConvcheck::showResults() {
     // matrix info
     switch (this->m_nMethodType) {
         case METHOD_RKS: {
-            this->log_.info(TlUtils::format(
-                "  RMS(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
-                this->getTargetMatrixStr(RUN_RKS).c_str(), this->rmsMatrixA_,
-                this->reqRmsMatrix_,
-                this->getYN(this->judgeRmsMatrixA_).c_str()));
-            this->log_.info(TlUtils::format(
-                "  MAX(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
-                this->getTargetMatrixStr(RUN_RKS).c_str(), this->maxMatrixA_,
-                this->reqMaxMatrix_,
-                this->getYN(this->judgeMaxMatrixA_).c_str()));
+            this->log_.info(TlUtils::format("  RMS(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
+                                            this->getTargetMatrixStr(RUN_RKS).c_str(), this->rmsMatrixA_,
+                                            this->reqRmsMatrix_, this->getYN(this->judgeRmsMatrixA_).c_str()));
+            this->log_.info(TlUtils::format("  MAX(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
+                                            this->getTargetMatrixStr(RUN_RKS).c_str(), this->maxMatrixA_,
+                                            this->reqMaxMatrix_, this->getYN(this->judgeMaxMatrixA_).c_str()));
         } break;
 
         case METHOD_UKS: {
-            this->log_.info(TlUtils::format(
-                "  RMS(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
-                this->getTargetMatrixStr(RUN_UKS_ALPHA).c_str(),
-                this->rmsMatrixA_, this->reqRmsMatrix_,
-                this->getYN(this->judgeRmsMatrixA_).c_str()));
-            this->log_.info(TlUtils::format(
-                "  MAX(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
-                this->getTargetMatrixStr(RUN_UKS_ALPHA).c_str(),
-                this->maxMatrixA_, this->reqMaxMatrix_,
-                this->getYN(this->judgeMaxMatrixA_).c_str()));
+            this->log_.info(TlUtils::format("  RMS(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
+                                            this->getTargetMatrixStr(RUN_UKS_ALPHA).c_str(), this->rmsMatrixA_,
+                                            this->reqRmsMatrix_, this->getYN(this->judgeRmsMatrixA_).c_str()));
+            this->log_.info(TlUtils::format("  MAX(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
+                                            this->getTargetMatrixStr(RUN_UKS_ALPHA).c_str(), this->maxMatrixA_,
+                                            this->reqMaxMatrix_, this->getYN(this->judgeMaxMatrixA_).c_str()));
         }
             {
-                this->log_.info(TlUtils::format(
-                    "  RMS(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
-                    this->getTargetMatrixStr(RUN_UKS_BETA).c_str(),
-                    this->rmsMatrixB_, this->reqRmsMatrix_,
-                    this->getYN(this->judgeRmsMatrixB_).c_str()));
-                this->log_.info(TlUtils::format(
-                    "  MAX(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
-                    this->getTargetMatrixStr(RUN_UKS_BETA).c_str(),
-                    this->maxMatrixB_, this->reqMaxMatrix_,
-                    this->getYN(this->judgeMaxMatrixB_).c_str()));
+                this->log_.info(TlUtils::format("  RMS(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
+                                                this->getTargetMatrixStr(RUN_UKS_BETA).c_str(), this->rmsMatrixB_,
+                                                this->reqRmsMatrix_, this->getYN(this->judgeRmsMatrixB_).c_str()));
+                this->log_.info(TlUtils::format("  MAX(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
+                                                this->getTargetMatrixStr(RUN_UKS_BETA).c_str(), this->maxMatrixB_,
+                                                this->reqMaxMatrix_, this->getYN(this->judgeMaxMatrixB_).c_str()));
             }
             break;
 
         case METHOD_ROKS: {
-            this->log_.info(TlUtils::format(
-                "  RMS(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
-                this->getTargetMatrixStr(RUN_ROKS_CLOSED).c_str(),
-                this->rmsMatrixA_, this->reqRmsMatrix_,
-                this->getYN(this->judgeRmsMatrixA_).c_str()));
-            this->log_.info(TlUtils::format(
-                "  MAX(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
-                this->getTargetMatrixStr(RUN_ROKS_CLOSED).c_str(),
-                this->maxMatrixA_, this->reqMaxMatrix_,
-                this->getYN(this->judgeMaxMatrixA_).c_str()));
+            this->log_.info(TlUtils::format("  RMS(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
+                                            this->getTargetMatrixStr(RUN_ROKS_CLOSED).c_str(), this->rmsMatrixA_,
+                                            this->reqRmsMatrix_, this->getYN(this->judgeRmsMatrixA_).c_str()));
+            this->log_.info(TlUtils::format("  MAX(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
+                                            this->getTargetMatrixStr(RUN_ROKS_CLOSED).c_str(), this->maxMatrixA_,
+                                            this->reqMaxMatrix_, this->getYN(this->judgeMaxMatrixA_).c_str()));
         }
             {
-                this->log_.info(TlUtils::format(
-                    "  RMS(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
-                    this->getTargetMatrixStr(RUN_ROKS_OPEN).c_str(),
-                    this->rmsMatrixB_, this->reqRmsMatrix_,
-                    this->getYN(this->judgeRmsMatrixB_).c_str()));
-                this->log_.info(TlUtils::format(
-                    "  MAX(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
-                    this->getTargetMatrixStr(RUN_ROKS_OPEN).c_str(),
-                    this->maxMatrixB_, this->reqMaxMatrix_,
-                    this->getYN(this->judgeMaxMatrixB_).c_str()));
+                this->log_.info(TlUtils::format("  RMS(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
+                                                this->getTargetMatrixStr(RUN_ROKS_OPEN).c_str(), this->rmsMatrixB_,
+                                                this->reqRmsMatrix_, this->getYN(this->judgeRmsMatrixB_).c_str()));
+                this->log_.info(TlUtils::format("  MAX(matrix: %7s) = %14.4le (req. %14.4le) [%3s]",
+                                                this->getTargetMatrixStr(RUN_ROKS_OPEN).c_str(), this->maxMatrixB_,
+                                                this->reqMaxMatrix_, this->getYN(this->judgeMaxMatrixB_).c_str()));
             }
             break;
 
@@ -154,10 +132,9 @@ void DfConvcheck::showResults() {
     // for Total Energy
     {
         {
-            this->log_.info(TlUtils::format(
-                "  T.E.                 = %14.4le (req. %14.4le) [%3s]",
-                this->deltaTotalEnergy_, this->reqTotalEnergy_,
-                this->getYN(this->judgeTotalEnergy_).c_str()));
+            this->log_.info(TlUtils::format("  T.E.                 = %14.4le (req. %14.4le) [%3s]",
+                                            this->deltaTotalEnergy_, this->reqTotalEnergy_,
+                                            this->getYN(this->judgeTotalEnergy_).c_str()));
         }
     }
 }
@@ -174,8 +151,7 @@ std::string DfConvcheck::getTargetMatrixStr(const RUN_TYPE runType) const {
             break;
 
         default:
-            CnErr.abort(
-                TlUtils::format("program error: %s.%d", __FILE__, __LINE__));
+            CnErr.abort(TlUtils::format("program error: %s.%d", __FILE__, __LINE__));
             break;
     }
 
@@ -202,22 +178,23 @@ std::string DfConvcheck::getTargetMatrixStr(const RUN_TYPE runType) const {
             break;
 
         default:
-            CnErr.abort(
-                TlUtils::format("program error: %s.%d", __FILE__, __LINE__));
+            CnErr.abort(TlUtils::format("program error: %s.%d", __FILE__, __LINE__));
             break;
     }
 
     return mat + suffix;
 }
 
-std::string DfConvcheck::getYN(bool yn) const { return (yn) ? "YES" : "NO "; }
+std::string DfConvcheck::getYN(bool yn) const {
+    return (yn) ? "YES" : "NO ";
+}
 
 // total energy convergence
 void DfConvcheck::checkTotalEnergy(const int iteration) {
     assert(iteration > 1);
 
-    const double TE = (*this->pPdfParam_)["TEs"][iteration].getDouble();
-    const double prevTE = (*this->pPdfParam_)["TEs"][iteration - 1].getDouble();
+    const double TE = (*this->pPdfParam_)["TEs"][TlUtils::xtos(iteration)].getDouble();
+    const double prevTE = (*this->pPdfParam_)["TEs"][TlUtils::xtos(iteration - 1)].getDouble();
 
     this->deltaTotalEnergy_ = std::fabs(TE - prevTE);
     this->judgeTotalEnergy_ = (this->deltaTotalEnergy_ < this->reqTotalEnergy_);

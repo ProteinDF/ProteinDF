@@ -26,6 +26,7 @@
 
 #include <cstdlib>
 #include <iostream>
+
 #include "CnError.h"
 #include "DfObject.h"
 #include "Fl_Geometry.h"
@@ -42,11 +43,9 @@ TlMatrixCache DfObject::matrixCache_;
 int DfObject::rank_ = 0;
 
 const std::string DfObject::m_sRunTypeSuffix[DfObject::RUN_MAXINDEX] = {
-    "undefined",   "rks",       "uks_alpha",  "uks_beta", "roks",
-    "roks_closed", "roks_open", "roks_alpha", "roks_beta"};
+    "undefined", "rks", "uks_alpha", "uks_beta", "roks", "roks_closed", "roks_open", "roks_alpha", "roks_beta"};
 
-DfObject::DfObject(TlSerializeData* pPdfParam)
-    : pPdfParam_(pPdfParam), log_(TlLogging::getInstance()) {
+DfObject::DfObject(TlSerializeData* pPdfParam) : pPdfParam_(pPdfParam), log_(TlLogging::getInstance()) {
     this->setParam(*pPdfParam);
     ++DfObject::objectCount_;
 }
@@ -91,8 +90,8 @@ void DfObject::setParam(const TlSerializeData& data) {
     }
 
     this->isRestart_ = false;
-    if (TlUtils::toUpper(data["restart"].getStr()) == "YES") {
-        this->isRestart_ = true;
+    if (!data["restart"].getStr().empty()) {
+        this->isRestart_ = data["restart"].getBoolean();
     }
 
     this->isUseNewEngine_ = data["new_engine"].getBoolean();
@@ -127,10 +126,8 @@ void DfObject::setParam(const TlSerializeData& data) {
     this->m_nNumOfElectrons = data["method/rks/electrons"].getInt();
     this->m_nNumOfAlphaElectrons = data["method/uks/alpha_electrons"].getInt();
     this->m_nNumOfBetaElectrons = data["method/uks/beta_electrons"].getInt();
-    this->numOfClosedShellElectrons_ =
-        data["method/roks/closed_electrons"].getInt();
-    this->numOfOpenShellElectrons_ =
-        data["method/roks/open_electrons"].getInt();
+    this->numOfClosedShellElectrons_ = data["method/roks/closed_electrons"].getInt();
+    this->numOfOpenShellElectrons_ = data["method/roks/open_electrons"].getInt();
 
     // guess
     this->initialGuessType_ = GUESS_UNKNOWN;
@@ -152,11 +149,9 @@ void DfObject::setParam(const TlSerializeData& data) {
             this->initialGuessType_ = GUESS_HARRIS;
         } else {
             if (guess.empty() == true) {
-                std::cerr << "initial guess parameter is not configured."
-                          << std::endl;
+                std::cerr << "initial guess parameter is not configured." << std::endl;
             } else {
-                std::cerr << "unknown initial guess parameter: " << guess
-                          << std::endl;
+                std::cerr << "unknown initial guess parameter: " << guess << std::endl;
             }
         }
     }
@@ -164,20 +159,15 @@ void DfObject::setParam(const TlSerializeData& data) {
     // calculaton properties ===================================================
     this->chargeExtrapolateNumber_ = data["charge_extrapolate_number"].getInt();
     // disk utilization(no == DIRECT, yes == DISK)
-    this->m_bDiskUtilization =
-        (TlUtils::toUpper(data["disk-utilization"].getStr()) == "YES") ? true
-                                                                       : false;
-    this->m_bMemorySave =
-        (TlUtils::toUpper(data["scf-memory-saving"].getStr()) == "YES") ? true
-                                                                        : false;
+    this->m_bDiskUtilization = (TlUtils::toUpper(data["disk-utilization"].getStr()) == "YES") ? true : false;
+    this->m_bMemorySave = (TlUtils::toUpper(data["scf-memory-saving"].getStr()) == "YES") ? true : false;
 
     this->isUpdateMethod_ = data["update_method"].getBoolean();
 
     // J
     {
         this->J_engine_ = J_ENGINE_RI_J;
-        const std::string J_engine =
-            TlUtils::toUpper(data["J_engine"].getStr());
+        const std::string J_engine = TlUtils::toUpper(data["J_engine"].getStr());
         if (J_engine == "RI_J") {
             this->J_engine_ = J_ENGINE_RI_J;
         } else if (J_engine == "CD") {
@@ -190,8 +180,7 @@ void DfObject::setParam(const TlSerializeData& data) {
     // K
     {
         this->K_engine_ = K_ENGINE_CONVENTIONAL;
-        const std::string K_engine =
-            TlUtils::toUpper(data["K_engine"].getStr());
+        const std::string K_engine = TlUtils::toUpper(data["K_engine"].getStr());
         if (K_engine == "RI_K") {
             this->K_engine_ = K_ENGINE_RI_K;
         } else if (K_engine == "CD") {
@@ -201,8 +190,7 @@ void DfObject::setParam(const TlSerializeData& data) {
         } else if (K_engine == "CONVENTIONAL") {
             this->K_engine_ = K_ENGINE_CONVENTIONAL;
         } else {
-            this->log_.warn(TlUtils::format("unknown parameter: K_engine=%s",
-                                            K_engine.c_str()));
+            this->log_.warn(TlUtils::format("unknown parameter: K_engine=%s", K_engine.c_str()));
             this->log_.warn("use conventional engine for K");
             this->K_engine_ = K_ENGINE_CONVENTIONAL;
         }
@@ -211,8 +199,7 @@ void DfObject::setParam(const TlSerializeData& data) {
     // XC functional
     {
         this->XC_engine_ = XC_ENGINE_GRID;
-        const std::string XC_engine =
-            TlUtils::toUpper(data["XC_engine"].getStr());
+        const std::string XC_engine = TlUtils::toUpper(data["XC_engine"].getStr());
         if (XC_engine == "GRID") {
             this->XC_engine_ = XC_ENGINE_GRID;
         } else if (XC_engine == "GRIDFREE") {
@@ -220,8 +207,7 @@ void DfObject::setParam(const TlSerializeData& data) {
         } else if (XC_engine == "GRIDFREE_CD") {
             this->XC_engine_ = XC_ENGINE_GRIDFREE_CD;
         } else {
-            this->log_.warn(TlUtils::format("unknown parameter: XC_engine=%s",
-                                            XC_engine.c_str()));
+            this->log_.warn(TlUtils::format("unknown parameter: XC_engine=%s", XC_engine.c_str()));
             this->log_.warn("use grid engine for XC");
             this->XC_engine_ = XC_ENGINE_GRID;
         }
@@ -229,8 +215,7 @@ void DfObject::setParam(const TlSerializeData& data) {
 
     this->m_sXCFunctional = TlUtils::toUpper(data["xc_functional"].getStr());
     {
-        const char nLastChar =
-            this->m_sXCFunctional[this->m_sXCFunctional.length() - 1];
+        const char nLastChar = this->m_sXCFunctional[this->m_sXCFunctional.length() - 1];
         this->m_bIsXCFitting = (nLastChar == '~') ? true : false;
     }
     {
@@ -239,10 +224,8 @@ void DfObject::setParam(const TlSerializeData& data) {
             this->isDFT_ = false;
         }
     }
-    this->m_bIsUpdateXC =
-        (TlUtils::toUpper(data["xc-update"].getStr()) == "NO") ? false : true;
-    this->isDedicatedBasisForGridFree_ =
-        data["gridfree/dedicated_basis"].getBoolean();
+    this->m_bIsUpdateXC = (TlUtils::toUpper(data["xc-update"].getStr()) == "NO") ? false : true;
+    this->isDedicatedBasisForGridFree_ = data["gridfree/dedicated_basis"].getBoolean();
 
     // Grimme empirical dispersion check
     {
@@ -261,8 +244,7 @@ void DfObject::setParam(const TlSerializeData& data) {
 
     // matrix operation
     this->linearAlgebraPackage_ = DfObject::LAP_LAPACK;
-    this->updateLinearAlgebraPackageParam(
-        data["linear_algebra_package"].getStr());
+    this->updateLinearAlgebraPackageParam(data["linear_algebra_package"].getStr());
 
     // matrix operation: obsolete option
     this->m_bUsingSCALAPACK = false;
@@ -293,10 +275,8 @@ void DfObject::setParam(const TlSerializeData& data) {
 
     this->isMasterSlave_ = false;
     {
-        const std::string parallelProcessingType =
-            TlUtils::toUpper(data["parallel_processing_type"].getStr());
-        if ((parallelProcessingType == "MASTER_SLAVE") ||
-            (parallelProcessingType == "MASTER-SLAVE") ||
+        const std::string parallelProcessingType = TlUtils::toUpper(data["parallel_processing_type"].getStr());
+        if ((parallelProcessingType == "MASTER_SLAVE") || (parallelProcessingType == "MASTER-SLAVE") ||
             (parallelProcessingType == "MS")) {
             this->isMasterSlave_ = true;
         }
@@ -315,13 +295,11 @@ void DfObject::setParam(const TlSerializeData& data) {
     // } else {
     this->matrixCache_.setMaxMemSize(0);
     // }
-    const bool isForceLoadingFromDisk =
-        (*(this->pPdfParam_))["force_loading_from_disk"].getBoolean();
+    const bool isForceLoadingFromDisk = (*(this->pPdfParam_))["force_loading_from_disk"].getBoolean();
     this->matrixCache_.forceLoadingFromDisk(isForceLoadingFromDisk);
 
     // setup
-    TlSerializeData& paramFileBaseName =
-        (*(this->pPdfParam_))["control"]["file_base_name"];
+    TlSerializeData& paramFileBaseName = (*(this->pPdfParam_))["control"]["file_base_name"];
     paramFileBaseName["Hpq_matrix"] = "Hpq.mat";
     paramFileBaseName["Hpq2_matrix"] = "Hpq2.mat";
     paramFileBaseName["Spq_matrix"] = "Spq.mat";
@@ -406,16 +384,13 @@ void DfObject::setParam(const TlSerializeData& data) {
         paramFileBaseName["GF_VEigval_vtr"] = "GF_VEigval.vtr";
     }
 
-    if (paramFileBaseName["dipoleVelocityIntegrals_x"].getStr().empty() ==
-        true) {
+    if (paramFileBaseName["dipoleVelocityIntegrals_x"].getStr().empty() == true) {
         paramFileBaseName["dipoleVelocityIntegrals_x"] = "dSdx.mat";
     }
-    if (paramFileBaseName["dipoleVelocityIntegrals_y"].getStr().empty() ==
-        true) {
+    if (paramFileBaseName["dipoleVelocityIntegrals_y"].getStr().empty() == true) {
         paramFileBaseName["dipoleVelocityIntegrals_y"] = "dSdy.mat";
     }
-    if (paramFileBaseName["dipoleVelocityIntegrals_z"].getStr().empty() ==
-        true) {
+    if (paramFileBaseName["dipoleVelocityIntegrals_z"].getStr().empty() == true) {
         paramFileBaseName["dipoleVelocityIntegrals_z"] = "dSdz.mat";
     }
 
@@ -497,8 +472,7 @@ void DfObject::loggerTime(const std::string& str) const {
     this->log_.info(str);
 }
 
-void DfObject::loggerStartTitle(const std::string& stepName,
-                                const char lineChar) const {
+void DfObject::loggerStartTitle(const std::string& stepName, const char lineChar) const {
     // std::string line = "";
     // TlUtils::pad(line, 72, lineChar);
 
@@ -519,8 +493,7 @@ void DfObject::loggerStartTitle(const std::string& stepName,
     this->logger(str);
 }
 
-void DfObject::loggerEndTitle(const std::string& stepName,
-                              const char lineChar) const {
+void DfObject::loggerEndTitle(const std::string& stepName, const char lineChar) const {
     // const std::string timeString = TlUtils::format("[%s %s]",
     //                                                TlTime::getNowDate().c_str(),
     //                                                TlTime::getNowTime().c_str());
@@ -537,12 +510,9 @@ void DfObject::loggerEndTitle(const std::string& stepName,
 }
 
 // =====================================================================
-std::string DfObject::makeFilePath(const std::string& baseFileName,
-                                   const std::string& suffix,
+std::string DfObject::makeFilePath(const std::string& baseFileName, const std::string& suffix,
                                    const std::string& dir) const {
-    std::string base =
-        (*(this->pPdfParam_))["control"]["file_base_name"][baseFileName]
-            .getStr();
+    std::string base = (*(this->pPdfParam_))["control"]["file_base_name"][baseFileName].getStr();
     if (suffix.empty() != true) {
         base = TlUtils::format(base.c_str(), suffix.c_str());
     }
@@ -637,8 +607,7 @@ std::string DfObject::getNalphaPath() {
 }
 
 std::string DfObject::getOccupationPath(const RUN_TYPE runType) {
-    return this->makeFilePath("occupation_vtr",
-                              DfObject::m_sRunTypeSuffix[runType]);
+    return this->makeFilePath("occupation_vtr", DfObject::m_sRunTypeSuffix[runType]);
 }
 
 std::string DfObject::getGridDataFilePath() const {
@@ -649,25 +618,16 @@ std::string DfObject::getGridMatrixPath(const int iteration) const {
     return this->makeFilePath("grid_matrix", TlUtils::xtos(iteration));
 }
 
-std::string DfObject::getDiffDensityMatrixPath(const RUN_TYPE runType,
-                                               const int iteration) const {
-    return this->makeFilePath(
-        "diff_density_matrix",
-        DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+std::string DfObject::getDiffDensityMatrixPath(const RUN_TYPE runType, const int iteration) const {
+    return this->makeFilePath("diff_density_matrix", DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
-std::string DfObject::getSpinDensityMatrixPath(const RUN_TYPE runType,
-                                               const int iteration) const {
-    return this->makeFilePath(
-        "spin_density_matrix",
-        DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+std::string DfObject::getSpinDensityMatrixPath(const RUN_TYPE runType, const int iteration) const {
+    return this->makeFilePath("spin_density_matrix", DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
-std::string DfObject::getPpqMatrixPath(const RUN_TYPE nRunType,
-                                       const int nIteration) const {
-    return this->makeFilePath(
-        "Ppq_matrix",
-        DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
+std::string DfObject::getPpqMatrixPath(const RUN_TYPE nRunType, const int nIteration) const {
+    return this->makeFilePath("Ppq_matrix", DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
 std::string DfObject::getP1pqMatrixPath(const int iteration) {
@@ -678,23 +638,15 @@ std::string DfObject::getP2pqMatrixPath(const int iteration) {
     return this->makeFilePath("P2pq_matrix", TlUtils::xtos(iteration));
 }
 
-std::string DfObject::getHFxMatrixPath(const RUN_TYPE nRunType,
-                                       const int nIteration) {
-    return this->makeFilePath(
-        "HFx_matrix",
-        DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
+std::string DfObject::getHFxMatrixPath(const RUN_TYPE nRunType, const int nIteration) {
+    return this->makeFilePath("HFx_matrix", DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
-std::string DfObject::getFpqMatrixPath(const RUN_TYPE nRunType,
-                                       const int nIteration) const {
-    return this->makeFilePath(
-        "Fpq_matrix",
-        DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
+std::string DfObject::getFpqMatrixPath(const RUN_TYPE nRunType, const int nIteration) const {
+    return this->makeFilePath("Fpq_matrix", DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
-std::string DfObject::getFprimeMatrixPath(const RUN_TYPE runType,
-                                          const int iteration,
-                                          const std::string& fragment) {
+std::string DfObject::getFprimeMatrixPath(const RUN_TYPE runType, const int iteration, const std::string& fragment) {
     std::string suffix = "";
     if (fragment.empty() != true) {
         suffix = fragment + ".";
@@ -703,33 +655,23 @@ std::string DfObject::getFprimeMatrixPath(const RUN_TYPE runType,
     return this->makeFilePath("Fprime_matrix", suffix);
 }
 
-std::string DfObject::getFxcMatrixPath(const RUN_TYPE nRunType,
-                                       const int nIteration) {
-    return this->makeFilePath(
-        "Fxc_matrix",
-        DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
+std::string DfObject::getFxcMatrixPath(const RUN_TYPE nRunType, const int nIteration) {
+    return this->makeFilePath("Fxc_matrix", DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
-std::string DfObject::getExcMatrixPath(const RUN_TYPE runType,
-                                       const int iteration) {
-    return this->makeFilePath(
-        "Exc_matrix",
-        DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+std::string DfObject::getExcMatrixPath(const RUN_TYPE runType, const int iteration) {
+    return this->makeFilePath("Exc_matrix", DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
-std::string DfObject::getFxcPureMatrixPath(const RUN_TYPE nRunType,
-                                           const int nIteration) {
-    return this->makeFilePath(
-        "FxcPure_matrix",
-        DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
+std::string DfObject::getFxcPureMatrixPath(const RUN_TYPE nRunType, const int nIteration) {
+    return this->makeFilePath("FxcPure_matrix", DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
 std::string DfObject::getJMatrixPath(const int iteration) {
     return this->makeFilePath("J_matrix", TlUtils::xtos(iteration));
 }
 
-std::string DfObject::getCMatrixPath(const RUN_TYPE runType, int iteration,
-                                     const std::string& fragment) const {
+std::string DfObject::getCMatrixPath(const RUN_TYPE runType, int iteration, const std::string& fragment) const {
     std::string suffix = "";
     if (fragment.empty() != true) {
         suffix = fragment + ".";
@@ -738,8 +680,7 @@ std::string DfObject::getCMatrixPath(const RUN_TYPE runType, int iteration,
     return this->makeFilePath("C_matrix", suffix);
 }
 
-std::string DfObject::getCprimeMatrixPath(const RUN_TYPE runType, int iteration,
-                                          const std::string& fragment) {
+std::string DfObject::getCprimeMatrixPath(const RUN_TYPE runType, int iteration, const std::string& fragment) {
     std::string suffix = "";
     if (fragment.empty() != true) {
         suffix = fragment + ".";
@@ -768,38 +709,24 @@ std::string DfObject::getGfVEigvalVtrPath() const {
     return this->makeFilePath("GF_VEigval_vtr");
 }
 
-std::string DfObject::getRhoPath(const RUN_TYPE nRunType,
-                                 const int nIteration) const {
-    return this->makeFilePath(
-        "rho_vector",
-        DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
+std::string DfObject::getRhoPath(const RUN_TYPE nRunType, const int nIteration) const {
+    return this->makeFilePath("rho_vector", DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
-std::string DfObject::getMyuPath(const RUN_TYPE nRunType,
-                                 const int nIteration) const {
-    return this->makeFilePath(
-        "myu_vector",
-        DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
+std::string DfObject::getMyuPath(const RUN_TYPE nRunType, const int nIteration) const {
+    return this->makeFilePath("myu_vector", DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
-std::string DfObject::getNyuPath(const RUN_TYPE nRunType,
-                                 const int nIteration) const {
-    return this->makeFilePath(
-        "myu_vector",
-        DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
+std::string DfObject::getNyuPath(const RUN_TYPE nRunType, const int nIteration) const {
+    return this->makeFilePath("myu_vector", DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
-std::string DfObject::getTalphaPath(const RUN_TYPE runType,
-                                    const int iteration) const {
-    return this->makeFilePath("T_alpha", DfObject::m_sRunTypeSuffix[runType] +
-                                             TlUtils::xtos(iteration));
+std::string DfObject::getTalphaPath(const RUN_TYPE runType, const int iteration) const {
+    return this->makeFilePath("T_alpha", DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
-std::string DfObject::getEigenvaluesPath(const RUN_TYPE runType,
-                                         const int iteration) const {
-    return this->makeFilePath(
-        "eigenvalues",
-        DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+std::string DfObject::getEigenvaluesPath(const RUN_TYPE runType, const int iteration) const {
+    return this->makeFilePath("eigenvalues", DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
 std::string DfObject::getDipoleVelocityIntegralsXPath() const {
@@ -814,37 +741,29 @@ std::string DfObject::getDipoleVelocityIntegralsZPath() const {
     return this->makeFilePath("dipoleVelocityIntegrals_z");
 }
 
-std::string DfObject::getPopGrossOrbPath(const RUN_TYPE runType,
-                                         const int iteration) const {
-    return this->makeFilePath(
-        "pop/gross/orb",
-        DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+std::string DfObject::getPopGrossOrbPath(const RUN_TYPE runType, const int iteration) const {
+    return this->makeFilePath("pop/gross/orb", DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
-std::string DfObject::getPopGrossAtomPath(const RUN_TYPE runType,
-                                          const int iteration) const {
-    return this->makeFilePath(
-        "pop/gross/atom",
-        DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+std::string DfObject::getPopGrossAtomPath(const RUN_TYPE runType, const int iteration) const {
+    return this->makeFilePath("pop/gross/atom", DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
-std::string DfObject::getPopMullikenPath(const RUN_TYPE runType,
-                                         const int iteration) const {
-    return this->makeFilePath(
-        "pop/mulliken",
-        DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+std::string DfObject::getPopMullikenPath(const RUN_TYPE runType, const int iteration) const {
+    return this->makeFilePath("pop/mulliken", DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
-std::string DfObject::getCloMatrixPath(const RUN_TYPE runType,
-                                       const int iteration) const {
-    return this->makeFilePath(
-        "Clo_matrix",
-        DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
+std::string DfObject::getCloMatrixPath(const RUN_TYPE runType, const int iteration) const {
+    return this->makeFilePath("Clo_matrix", DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
 // ----------------------------------------------------------------------------
 // properties
 // ----------------------------------------------------------------------------
-int DfObject::getNumOfAtoms() const { return this->m_nNumOfAtoms; }
+int DfObject::getNumOfAtoms() const {
+    return this->m_nNumOfAtoms;
+}
 
-int DfObject::iteration() const { return this->m_nIteration; }
+int DfObject::iteration() const {
+    return this->m_nIteration;
+}

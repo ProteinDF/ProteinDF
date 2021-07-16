@@ -16,32 +16,28 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "DfIntegrals.h"
+
 #include <cassert>
 
 #include "DfCD.h"
 #include "DfEriX.h"
+#include "DfGenerateGrid.h"
 #include "DfGridFreeXC.h"
 #include "DfHpqX.h"
-#include "DfIntegrals.h"
-#include "DfOverlapX.h"
-
-#include "DfGenerateGrid.h"
 #include "DfInvMatrix.h"
+#include "DfOverlapX.h"
 #include "DfXMatrix.h"
-
 #include "Fl_Geometry.h"
 #include "TlMsgPack.h"
 #include "TlTime.h"
 
-DfIntegrals::DfIntegrals(TlSerializeData* pParam,
-                         const std::string& saveParamPath)
-    : DfObject(pParam), saveParamPath_(saveParamPath) {
-    if (this->saveParamPath_.empty() != true) {
-        this->saveParamPath_ = (*pParam)["pdf_param_path"].getStr();
-    }
+DfIntegrals::DfIntegrals(TlSerializeData* pParam) : DfObject(pParam) {
+    this->saveParamPath_ = (*pParam)["pdf_param_path"].getStr();
 }
 
-DfIntegrals::~DfIntegrals() {}
+DfIntegrals::~DfIntegrals() {
+}
 
 void DfIntegrals::saveParam() {
     TlMsgPack mpac(*(this->pPdfParam_));
@@ -51,12 +47,11 @@ void DfIntegrals::saveParam() {
 void DfIntegrals::main() {
     // initialize --------------------------------------------------------
     if (this->isRestart_ == true) {
-        this->logger(" restart calculation is enabled.\n");
+        this->log_.info("restart calculation is enabled.");
     } else {
         (*this->pPdfParam_)["control"]["integrals_state"].set(0);
     }
-    unsigned int calcState =
-        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
     // Hpq --------------- -----------------------------------------------
     if ((this->isRestart_ == false) || ((calcState & DfIntegrals::Hpq) == 0)) {
@@ -158,8 +153,7 @@ void DfIntegrals::createHpqMatrix() {
 }
 
 void DfIntegrals::createOverlapMatrix() {
-    unsigned int calcState =
-        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
     // DfOverlap dfOverlap(this->pPdfParam_);
     DfOverlapX dfOverlapX(this->pPdfParam_);
 
@@ -249,8 +243,7 @@ void DfIntegrals::createOverlapMatrix() {
 }
 
 void DfIntegrals::createERIMatrix() {
-    unsigned int calcState =
-        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
     if (this->J_engine_ == J_ENGINE_RI_J) {
         if ((calcState & DfIntegrals::Sab) == 0) {
@@ -279,12 +272,10 @@ void DfIntegrals::createERIMatrix() {
 }
 
 void DfIntegrals::createCholeskyVectors() {
-    unsigned int calcState =
-        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
     if ((calcState & DfIntegrals::CD) == 0) {
-        if ((this->J_engine_ == J_ENGINE_CD) ||
-            (this->K_engine_ == K_ENGINE_CD)) {
+        if ((this->J_engine_ == J_ENGINE_CD) || (this->K_engine_ == K_ENGINE_CD)) {
             this->outputStartTitle("Cholesky Vectors");
             DfCD* pDfCD = this->getDfCDObject();
             pDfCD->calcCholeskyVectorsForJK();
@@ -302,8 +293,7 @@ void DfIntegrals::createCholeskyVectors() {
 }
 
 void DfIntegrals::createCholeskyVectors_K() {
-    unsigned int calcState =
-        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
     if ((calcState & DfIntegrals::CDK) == 0) {
         if (this->K_engine_ == K_ENGINE_FASTCDK) {
@@ -324,12 +314,10 @@ void DfIntegrals::createCholeskyVectors_K() {
 }
 
 void DfIntegrals::prepareGridFree() {
-    unsigned int calcState =
-        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
     if ((calcState & DfIntegrals::GRID_FREE) == 0) {
-        if ((this->XC_engine_ == XC_ENGINE_GRIDFREE) ||
-            (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD)) {
+        if ((this->XC_engine_ == XC_ENGINE_GRIDFREE) || (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD)) {
             this->outputStartTitle("prepare GridFree");
             DfGridFreeXC* pDfGridFreeXC = this->getDfGridFreeXCObject();
             pDfGridFreeXC->preprocessBeforeSCF();
@@ -347,8 +335,7 @@ void DfIntegrals::prepareGridFree() {
 }
 
 void DfIntegrals::createXMatrix() {
-    unsigned int calcState =
-        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
     if ((calcState & DfIntegrals::X) == 0) {
         this->outputStartTitle("X matrix");
@@ -367,8 +354,7 @@ void DfIntegrals::createXMatrix() {
 }
 
 void DfIntegrals::createInverseMatrixes() {
-    unsigned int calcState =
-        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
     if (this->J_engine_ == J_ENGINE_RI_J) {
         if ((calcState & DfIntegrals::INV) == 0) {
@@ -389,8 +375,7 @@ void DfIntegrals::createInverseMatrixes() {
 }
 
 void DfIntegrals::createCholeskyVectors_XC() {
-    unsigned int calcState =
-        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
     if ((calcState & DfIntegrals::CHOLESKY_VECTORS_XC) == 0) {
         if (this->XC_engine_ == XC_ENGINE_GRIDFREE_CD) {
             this->outputStartTitle("Cholesky Vectors for XC");
@@ -411,11 +396,9 @@ void DfIntegrals::createCholeskyVectors_XC() {
 }
 
 void DfIntegrals::createGrids() {
-    unsigned int calcState =
-        (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
+    unsigned int calcState = (*this->pPdfParam_)["control"]["integrals_state"].getUInt();
 
-    if (((calcState & DfIntegrals::GRID) == 0) &&
-        (this->XC_engine_ == XC_ENGINE_GRID)) {
+    if (((calcState & DfIntegrals::GRID) == 0) && (this->XC_engine_ == XC_ENGINE_GRID)) {
         this->outputStartTitle("Grid generation");
 
         DfGenerateGrid* pDfGenerateGrid = this->getDfGenerateGridObject();
@@ -436,14 +419,12 @@ void DfIntegrals::saveInvSquareVMatrix(const TlDenseSymmetricMatrix_Lapack& v) {
     v.save("fl_Work/fl_Mtr_invSquareV.matrix");
 }
 
-void DfIntegrals::outputStartTitle(const std::string& stepName,
-                                   const char lineChar) {
+void DfIntegrals::outputStartTitle(const std::string& stepName, const char lineChar) {
     const std::string title = ">>>> " + stepName;
     this->log_.info(title);
 }
 
-void DfIntegrals::outputEndTitle(const std::string& stepName,
-                                 const char lineChar) {
+void DfIntegrals::outputEndTitle(const std::string& stepName, const char lineChar) {
     const std::string title = "<<<< " + stepName + " ";
     this->log_.info(title);
 }

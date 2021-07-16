@@ -133,8 +133,14 @@ int PDF_MAIN(int argc, char* argv[]) {
     // run ProteinDF
     ProteinDF_Parallel PDF;
     if (isRestart == true) {
+        if (rComm.isMaster()) {
+            std::cerr << "restart calculation ..." << std::endl;
+        }
         PDF.restart("pdfparam.mpac");
     } else {
+        if (rComm.isMaster()) {
+            std::cerr << "normal start calculation ..." << std::endl;
+        }
         PDF.run();
     }
 
