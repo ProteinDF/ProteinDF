@@ -10,17 +10,20 @@
 #include "tl_dense_general_matrix_lapack.h"
 // #include "tl_dense_general_matrix_mmap.h"
 
+// @todo use /tmp or equivalent dir to use tempCsfdMat.
+
 TlDenseGeneralMatrix_arrays_mmap_RowOriented::TlDenseGeneralMatrix_arrays_mmap_RowOriented(
     const std::string& baseFilePath, const index_type row, const index_type col, const int numOfSubunits,
     const int subunitID, const int reservedCols)
     : TlDenseMatrix_arrays_mmap_Object(baseFilePath, row, col, numOfSubunits, subunitID, reservedCols),
-      tempCsfdMatPath_("") {
+      tempCsfdMatPath_(""),
+      isRemoveTempCsfdMat_(false) {
     // this->tempDir_ = TlSystem::getEnv("TEMP");
     this->tempDir_ = "/tmp";
 }
 
 TlDenseGeneralMatrix_arrays_mmap_RowOriented::TlDenseGeneralMatrix_arrays_mmap_RowOriented(const std::string& filePath)
-    : TlDenseMatrix_arrays_mmap_Object(filePath), tempCsfdMatPath_("") {
+    : TlDenseMatrix_arrays_mmap_Object(filePath), tempCsfdMatPath_(""), isRemoveTempCsfdMat_(false) {
     // this->tempDir_ = TlSystem::getEnv("TEMP");
     this->tempDir_ = "/tmp";
 }
@@ -48,7 +51,7 @@ TlDenseGeneralMatrix_arrays_mmap_RowOriented::TlDenseGeneralMatrix_arrays_mmap_R
 //     : TlDenseMatrix_arrays_Object(rhs) {}
 
 TlDenseGeneralMatrix_arrays_mmap_RowOriented::~TlDenseGeneralMatrix_arrays_mmap_RowOriented() {
-    if (!this->tempCsfdMatPath_.empty()) {
+    if ((!this->tempCsfdMatPath_.empty()) && (this->isRemoveTempCsfdMat_)) {
         TlFile::remove(this->tempCsfdMatPath_);
         this->tempCsfdMatPath_ = "";
     }
@@ -103,7 +106,7 @@ TlDenseGeneralMatrix_Lapack TlDenseGeneralMatrix_arrays_mmap_RowOriented::getTlM
     return answer;
 }
 
-void TlDenseGeneralMatrix_arrays_mmap_RowOriented::convertMemoryLayout(const bool verbose,
+void TlDenseGeneralMatrix_arrays_mmap_RowOriented::convertMemoryLayout(const std::string& tempCsfdMatPath, const bool verbose,
                                                                        const bool showProgress) const {
     const TlMatrixObject::index_type numOfRows = this->getNumOfRows();
     const TlMatrixObject::index_type numOfCols = this->getNumOfCols();
@@ -111,8 +114,12 @@ void TlDenseGeneralMatrix_arrays_mmap_RowOriented::convertMemoryLayout(const boo
     const int sizeOfChunk = this->getSizeOfChunk();
     const int unit = this->getSubunitID();
 
-    // this->tempCsfdMatPath_ = TlUtils::format("%s/temp.%d", this->tempDir_.c_str(), unit);
-    this->tempCsfdMatPath_ = TlUtils::format("temp.%d", unit);
+    if (tempCsfdMatPath.empty()) {
+        this->tempCsfdMatPath_ = TlUtils::format("/tmp.csfd.mat.%d", unit);
+        this->isRemoveTempCsfdMat_ = true;
+    } else {
+        this->tempCsfdMatPath_ = tempCsfdMatPath;
+    }
 
     // set
     std::vector<double> chunkBuf(numOfCols * sizeOfChunk);
@@ -323,11 +330,17 @@ void copy2csfd(const TlMatrixObject::index_type numOfRows, const TlMatrixObject:
 
     const int numOfLocalChunks =
         TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(numOfRows, numOfSubunits, sizeOfChunk);
+
     TlDenseGeneralMatrix_Eigen tmpMat;
     for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
         TlMatrixObject::index_type row = sizeOfChunk * chunk;
         const TlMatrixObject::index_type chunkStartRow = sizeOfChunk * (numOfSubunits * chunk + unit);
+        if (chunkStartRow >= numOfRows) {
+            continue;
+        }
+
         TlMatrixObject::index_type rowDistance = std::min(sizeOfChunk, numOfRows - chunkStartRow);
+
         inMat.block(row, 0, rowDistance, numOfCols, &tmpMat);
 
         // std::cerr << TlUtils::format("chunk: %d/%d", chunk, numOfLocalChunks - 1) << std::endl;
@@ -394,7 +407,9 @@ bool transpose2CSFD(const std::string& rvmBasePath, const std::string& outputMat
 
         const std::string inputPath = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, unit);
         TlDenseGeneralMatrix_arrays_mmap_RowOriented inMat(inputPath);
-        inMat.convertMemoryLayout(verbose, showProgress);
+
+        const std::string tempCsfdPath = TlUtils::format("/tmp/csfd.%d", unit);
+        inMat.convertMemoryLayout(tempCsfdPath, verbose, showProgress);
         inMat.set2csfd(&outMat, verbose, showProgress);
     }
 

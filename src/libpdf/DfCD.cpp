@@ -38,7 +38,8 @@
 #include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_dense_vector_lapack.h"
 
-DfCD::DfCD(TlSerializeData* pPdfParam, bool initializeFileObj) : DfObject(pPdfParam), pEngines_(NULL) {
+DfCD::DfCD(TlSerializeData* pPdfParam, bool initializeFileObj)
+    : DfObject(pPdfParam), pEngines_(NULL) {
     if (initializeFileObj) {
         this->file_ = new CnFile();
     }
@@ -2321,7 +2322,7 @@ void DfCD::calcDiagonalsA(const TlOrbitalInfoObject& orbInfo_p, const TlOrbitalI
     pSchwartzTable->resize(numOfOrbs_p, numOfOrbs_q);
     TlSparseMatrix diagonalMat(numOfOrbs_p, numOfOrbs_q);
 
-    // TODO: pq のスクリーニング
+    // @todo pq のスクリーニング
 
     // task
     this->log_.info("diagonal calculation: start");

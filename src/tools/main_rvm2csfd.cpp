@@ -127,13 +127,13 @@ int main(int argc, char* argv[]) {
             const std::string inputPath = TlDenseMatrix_arrays_mmap_Object::getFileName(inputBasePath, unit);
 
             TlDenseGeneralMatrix_arrays_mmap_RowOriented inMat(inputPath);
-            inMat.convertMemoryLayout(verbose, verbose);
+            inMat.convertMemoryLayout("", verbose, verbose);
             inMat.set2csfd(&outMat, verbose, verbose);
         }
     } else {
         std::cerr << TlUtils::format(">>>> unit %d/%d", subunitID, numOfSubunits - 1) << std::endl;
         TlDenseGeneralMatrix_arrays_mmap_RowOriented inMat(inputBasePath);
-        inMat.convertMemoryLayout(verbose, verbose);
+        inMat.convertMemoryLayout("", verbose, verbose);
         inMat.set2csfd(&outMat, verbose, verbose);
     }
 
