@@ -11,7 +11,7 @@
 #include "tl_dense_matrix_arrays_mmap_object.h"
 
 class TlDenseGeneralMatrix_arrays_mmap_RowOriented : public TlDenseMatrix_arrays_mmap_Object {
-   public:
+public:
     explicit TlDenseGeneralMatrix_arrays_mmap_RowOriented(const std::string& baseFilePath, index_type row,
                                                           index_type col, int numOfSubunits = 1, int subunitID = 0,
                                                           int reservedCols = 0);
@@ -19,7 +19,7 @@ class TlDenseGeneralMatrix_arrays_mmap_RowOriented : public TlDenseMatrix_arrays
 
     virtual ~TlDenseGeneralMatrix_arrays_mmap_RowOriented();
 
-   public:
+public:
     virtual void resize(index_type row, index_type col);
     void reserveColSize(const index_type reserveColSize);
 
@@ -40,14 +40,14 @@ class TlDenseGeneralMatrix_arrays_mmap_RowOriented : public TlDenseMatrix_arrays
 
     virtual void setColVector(const index_type col, const std::valarray<double>& v);
 
-   public:
+public:
     /// TlDenseGeneralMatrix_Lapackオブジェクトを返す(for debug)
     TlDenseGeneralMatrix_Lapack getTlMatrixObject() const;
 
     /// TlDenseGeneralMatrix_arrays_ColOriented形式で保存
     // void saveByTlDenseGeneralMatrix_arrays_ColOriented(const std::string& basename) const;
 
-   public:
+public:
     std::string tempDir() const {
         return this->tempDir_;
     };
@@ -55,13 +55,14 @@ class TlDenseGeneralMatrix_arrays_mmap_RowOriented : public TlDenseMatrix_arrays
         this->tempDir_ = tempDir;
     };
 
-    void convertMemoryLayout(const bool verbose = false, const bool showProgress = false) const;
+    void convertMemoryLayout(const std::string& tempCsfdPath, const bool verbose = false, const bool showProgress = false) const;
     void set2csfd(TlDenseGeneralMatrix_mmap* pOutMat, const bool verbose = false,
                   const bool showProgress = false) const;
 
-   private:
+private:
     std::string tempDir_;
     mutable std::string tempCsfdMatPath_;  // used for convert to CSFD matrix
+    mutable bool isRemoveTempCsfdMat_;
 };
 
 std::ostream& operator<<(std::ostream& stream, const TlDenseGeneralMatrix_arrays_mmap_RowOriented& mat);

@@ -38,7 +38,8 @@
 #define TRANS_MEM_SIZE (1 * 1024 * 1024 * 1024)  // 1GB
 // #define CD_DEBUG
 
-DfCD_Parallel::DfCD_Parallel(TlSerializeData* pPdfParam) : DfCD(pPdfParam, false) {
+DfCD_Parallel::DfCD_Parallel(TlSerializeData* pPdfParam)
+    : DfCD(pPdfParam, false) {
     this->file_ = new CnFile_parallel();
 
     this->isDebugSaveL_ = false;
@@ -173,31 +174,20 @@ bool DfCD_Parallel::transpose2CSFD_mpi(const std::string& rvmBasePath, const std
     int sizeOfChunk = 0;
     bool isLoadable = false;
     {
-        int subunitID = 0;
+        int subunitID = rank;
         const std::string inputPath0 = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, subunitID);
         TlMatrixObject::index_type sizeOfVector, numOfVectors;
         isLoadable = TlDenseMatrix_arrays_mmap_Object::isLoadable(inputPath0, &numOfVectors, &sizeOfVector,
                                                                   &numOfSubunits, &subunitID, &sizeOfChunk);
         if (isLoadable != true) {
-            std::cerr << "can not open file: " << inputPath0 << std::endl;
+            std::cerr << TlUtils::format("can not open file: %s@%d", inputPath0.c_str(), rank) << std::endl;
             return false;
         }
 
         numOfRows = numOfVectors;
         numOfCols = sizeOfVector;
 
-        if (verbose) {
-            std::cerr << "rows: " << numOfRows << std::endl;
-            std::cerr << "cols: " << numOfCols << std::endl;
-            std::cerr << "units: " << numOfSubunits << std::endl;
-            std::cerr << "chunk: " << sizeOfChunk << std::endl;
-        }
-    }
-
-    // convert
-    {
-        const std::string tempMatPath = TlUtils::format("Ljk.temp.%d", rank);
-        convert2csfd(rvmBasePath, rank, tempMatPath, verbose, showProgress);
+        // std::cerr << TlUtils::format("[%d] check matrix (%d, %d) %d@%d", rank, numOfRows, numOfCols, numOfSubunits, sizeOfChunk) << std::endl;
     }
 
     // prepare CSFD file
@@ -214,14 +204,29 @@ bool DfCD_Parallel::transpose2CSFD_mpi(const std::string& rvmBasePath, const std
         }
     }
 
+    // convert
+    {
+        const std::string L_path = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, rank);
+        TlDenseGeneralMatrix_arrays_mmap_RowOriented L(L_path);
+
+        const std::string tempCsfdMatPath = TlUtils::format("L_csfd.%d.mat", rank);
+        L.convertMemoryLayout(tempCsfdMatPath);
+
+        // @todo remove unused func `convert2csfd`
+        // convert2csfd(rvmBasePath, rank, tempMatPath, verbose, showProgress);
+    }
+
+    // @todo transfer tempCsfdMat to master note
+
     // 最終書き込み
     rComm.barrier();
     if (rComm.isMaster()) {
-        TlDenseGeneralMatrix_mmap outMat(outputMatrixPath, numOfRows, numOfCols);
+        TlDenseGeneralMatrix_mmap outMat(outputMatrixPath);
+
         for (int unit = 0; unit < numOfSubunits; ++unit) {
-            const std::string tempMatPath = TlUtils::format("Ljk.temp.%d", unit);
-            copy2csfd(numOfRows, numOfCols, numOfSubunits, sizeOfChunk, tempMatPath, unit, &outMat, verbose);
-            TlFile::remove(tempMatPath);
+            const std::string tempCsfdMatPath = TlUtils::format("L_csfd.%d.mat", unit);
+            copy2csfd(numOfRows, numOfCols, numOfSubunits, sizeOfChunk, tempCsfdMatPath, unit, &outMat, verbose);
+            TlFile::remove(tempCsfdMatPath);
         }
     }
 
