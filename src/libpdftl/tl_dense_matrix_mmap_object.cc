@@ -22,8 +22,7 @@
 #define CLEAR_BUFSIZE (4096)
 
 TlDenseMatrixMmapObject::TlDenseMatrixMmapObject(const TlMatrixObject::MatrixType matrixType,
-                                                 const std::string& filePath, const index_type row,
-                                                 const index_type col)
+                                                 const std::string& filePath, const index_type row, const index_type col)
     : TlMatrixObject(matrixType, row, col), filePath_(filePath) {
 }
 

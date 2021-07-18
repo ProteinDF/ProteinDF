@@ -6,10 +6,14 @@
 #include "TlFile.h"
 #include "TlUtils.h"
 
-TlDenseGeneralMatrix_mmap::TlDenseGeneralMatrix_mmap(const std::string& filePath, const index_type row,
-                                                     const index_type col)
+TlDenseGeneralMatrix_mmap::TlDenseGeneralMatrix_mmap(const std::string& filePath, const index_type row, const index_type col,
+                                                     bool forceCreateNewFile)
     : TlDenseMatrixMmapObject(TlMatrixObject::CSFD, filePath, row, col) {
+    if ((TlFile::isExistFile(filePath) == true) && (forceCreateNewFile == true)) {
+        TlFile::remove(filePath);
+    }
     this->createNewFile();
+
     this->openFile();
 }
 
@@ -100,8 +104,8 @@ void TlDenseGeneralMatrix_mmap::block(const TlMatrixObject::index_type row, cons
           (0 < (row + rowDistance) && (row + rowDistance) <= this->getNumOfRows()) &&
           (0 < (col + colDistance) && (col + colDistance) <= this->getNumOfCols()))) {
         this->log_.critical(TlUtils::format(
-            "illegal block size: block (%d, %d) from (%d, %d) to matrix (%d, %d); @%s.%d", ref.getNumOfRows(),
-            ref.getNumOfCols(), row, col, this->getNumOfRows(), this->getNumOfCols(), __FILE__, __LINE__));
+            "illegal block size: (%d, %d) from (%d, %d) in matrix (%d, %d); @%s.%d",
+            ref.getNumOfRows(), ref.getNumOfCols(), row, col, this->getNumOfRows(), this->getNumOfCols(), __FILE__, __LINE__));
     }
     assert(0 <= row && row < this->getNumOfRows());
     assert(0 <= col && col < this->getNumOfCols());
