@@ -12,9 +12,9 @@
 
 class TlDenseGeneralMatrix_arrays_mmap_RowOriented : public TlDenseMatrix_arrays_mmap_Object {
 public:
-    explicit TlDenseGeneralMatrix_arrays_mmap_RowOriented(const std::string& baseFilePath, index_type row,
-                                                          index_type col, int numOfSubunits = 1, int subunitID = 0,
-                                                          int reservedCols = 0);
+    explicit TlDenseGeneralMatrix_arrays_mmap_RowOriented(const std::string& baseFilePath, index_type row, index_type col,
+                                                          int numOfSubunits = 1, int subunitID = 0, int reservedCols = 0,
+                                                          bool forceCreateNewFile = false);
     TlDenseGeneralMatrix_arrays_mmap_RowOriented(const std::string& filePath);
 
     virtual ~TlDenseGeneralMatrix_arrays_mmap_RowOriented();

@@ -14,8 +14,8 @@
 
 TlDenseGeneralMatrix_arrays_mmap_RowOriented::TlDenseGeneralMatrix_arrays_mmap_RowOriented(
     const std::string& baseFilePath, const index_type row, const index_type col, const int numOfSubunits,
-    const int subunitID, const int reservedCols)
-    : TlDenseMatrix_arrays_mmap_Object(baseFilePath, row, col, numOfSubunits, subunitID, reservedCols),
+    const int subunitID, const int reservedCols, bool forceCreateNewFile)
+    : TlDenseMatrix_arrays_mmap_Object(baseFilePath, row, col, numOfSubunits, subunitID, reservedCols, forceCreateNewFile),
       tempCsfdMatPath_(""),
       isRemoveTempCsfdMat_(false) {
     // this->tempDir_ = TlSystem::getEnv("TEMP");
@@ -128,11 +128,14 @@ void TlDenseGeneralMatrix_arrays_mmap_RowOriented::convertMemoryLayout(const std
         TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(numOfRows, numOfSubunits, sizeOfChunk);
 
     const TlMatrixObject::index_type localNumOfRows = numOfLocalChunks * sizeOfChunk;
-    // std::cerr << TlUtils::format("localNumOfRows=%d, numOfLocalChunks=%d, sizeOfChunk=%d", localNumOfRows,
-    //                              numOfLocalChunks, sizeOfChunk)
+    // std::cerr << TlUtils::format("localNumOfRows=%d, numOfLocalChunks=%d, sizeOfChunk=%d", localNumOfRows, numOfLocalChunks, sizeOfChunk)
     //           << std::endl;
 
-    TlDenseGeneralMatrix_mmap outMat(this->tempCsfdMatPath_, localNumOfRows, numOfCols);
+    static const bool forceCreateNew = true;
+    TlDenseGeneralMatrix_mmap outMat(this->tempCsfdMatPath_, localNumOfRows, numOfCols, forceCreateNew);
+    assert(outMat.getNumOfRows() == localNumOfRows);
+    assert(outMat.getNumOfCols() == numOfCols);
+
     if (verbose) {
         std::cerr << "output matrix has been prepared by mmap." << std::endl;
     }
@@ -148,8 +151,9 @@ void TlDenseGeneralMatrix_arrays_mmap_RowOriented::convertMemoryLayout(const std
             TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks, numOfCols, &(transBuf[0]));
 
             TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
-            // std::cerr << TlUtils::format("chunk=%d; %d, %d", chunk, readRowChunks, tmpMat.getNumOfRows())
-            //           << std::endl;
+
+            // std::cerr << TlUtils::format("row: %d/%d (%d)", chunkStartRow, numOfRows, sizeOfChunk) << std::endl;
+            // std::cerr << TlUtils::format("chunk=%d/%d; %d==%d -> %d", chunk, numOfLocalChunks, readRowChunks, tmpMat.getNumOfRows(), chunk * sizeOfChunk) << std::endl;
             outMat.block(chunk * sizeOfChunk, 0, tmpMat);
         }
 
