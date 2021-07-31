@@ -389,9 +389,12 @@ bool TlDenseMatrix_arrays_Object::save(const std::string& basename) const {
 
     // header
     const int matrixType = TlMatrixObject::ABGD;
+    const index_type reservedSizeOfVector = sizeOfVector;
     ofs.write(reinterpret_cast<const char*>(&matrixType), sizeof(char));
     ofs.write(reinterpret_cast<const char*>(&numOfVectors), sizeof(index_type));
     ofs.write(reinterpret_cast<const char*>(&sizeOfVector), sizeof(index_type));
+    ofs.write(reinterpret_cast<const char*>(&reservedSizeOfVector), sizeof(index_type));  // common use for array_mmap
+
     ofs.write(reinterpret_cast<const char*>(&(this->numOfSubunits_)), sizeof(int));
     ofs.write(reinterpret_cast<const char*>(&(this->subunitID_)), sizeof(int));
     ofs.write(reinterpret_cast<const char*>(&(this->sizeOfChunk_)), sizeof(int));
@@ -514,12 +517,14 @@ bool TlDenseMatrix_arrays_Object::isLoadable(const std::string& filepath, index_
         int matrixType = 0;
         index_type numOfVectors = 0;
         index_type sizeOfVector = 0;
+        index_type sizeOfReservedVector = 0;
         int numOfSubunits = 0;
         int subunitID = 0;
         int sizeOfChunk = 0;
         ifs.read((char*)&matrixType, sizeof(char));
         ifs.read((char*)&numOfVectors, sizeof(index_type));
         ifs.read((char*)&sizeOfVector, sizeof(index_type));
+        ifs.read((char*)&sizeOfReservedVector, sizeof(index_type));  // common use for array_mmap
         ifs.read((char*)&numOfSubunits, sizeof(int));
         ifs.read((char*)&subunitID, sizeof(int));
         ifs.read((char*)&sizeOfChunk, sizeof(int));
