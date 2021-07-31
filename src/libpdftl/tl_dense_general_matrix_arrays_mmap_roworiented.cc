@@ -115,7 +115,7 @@ void TlDenseGeneralMatrix_arrays_mmap_RowOriented::convertMemoryLayout(const std
     const int unit = this->getSubunitID();
 
     if (tempCsfdMatPath.empty()) {
-        this->tempCsfdMatPath_ = TlUtils::format("/tmp.csfd.mat.%d", unit);
+        this->tempCsfdMatPath_ = TlUtils::format("./tmp.csfd.mat.%d", unit);
         this->isRemoveTempCsfdMat_ = true;
     } else {
         this->tempCsfdMatPath_ = tempCsfdMatPath;
