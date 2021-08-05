@@ -406,58 +406,58 @@ std::string TlDenseMatrix_arrays_mmap_Object::getFileName(const std::string& bas
     return TlUtils::format("%s.part%d.mat", baseFilePath.c_str(), subunitID);
 }
 
-bool TlDenseMatrix_arrays_mmap_Object::isLoadable(const std::string& filepath, index_type* pNumOfVectors,
-                                                  index_type* pSizeOfVector, int* pNumOfSubunits, int* pSubunitID,
-                                                  int* pSizeOfChunk) {
-    bool answer = false;
+// bool TlDenseMatrix_arrays_mmap_Object::isLoadable(const std::string& filepath, index_type* pNumOfVectors,
+//                                                   index_type* pSizeOfVector, int* pNumOfSubunits, int* pSubunitID,
+//                                                   int* pSizeOfChunk) {
+//     bool answer = false;
 
-    std::ifstream ifs;
-    ifs.open(filepath.c_str(), std::ifstream::in);
-    if (ifs.good()) {
-        // read header
-        int matrixType = 0;
-        index_type numOfVectors = 0;
-        index_type sizeOfVector = 0;
-        index_type reservedSizeOfVector = 0;
-        int numOfSubunits = 0;
-        int subunitID = 0;
-        int sizeOfChunk = 0;
-        ifs.read((char*)&matrixType, sizeof(char));
-        ifs.read((char*)&numOfVectors, sizeof(index_type));
-        ifs.read((char*)&sizeOfVector, sizeof(index_type));
-        ifs.read((char*)&reservedSizeOfVector, sizeof(index_type));
+//     std::ifstream ifs;
+//     ifs.open(filepath.c_str(), std::ifstream::in);
+//     if (ifs.good()) {
+//         // read header
+//         int matrixType = 0;
+//         index_type numOfVectors = 0;
+//         index_type sizeOfVector = 0;
+//         index_type reservedSizeOfVector = 0;
+//         int numOfSubunits = 0;
+//         int subunitID = 0;
+//         int sizeOfChunk = 0;
+//         ifs.read((char*)&matrixType, sizeof(char));
+//         ifs.read((char*)&numOfVectors, sizeof(index_type));
+//         ifs.read((char*)&sizeOfVector, sizeof(index_type));
+//         ifs.read((char*)&reservedSizeOfVector, sizeof(index_type));
 
-        ifs.read((char*)&numOfSubunits, sizeof(int));
-        ifs.read((char*)&subunitID, sizeof(int));
-        ifs.read((char*)&sizeOfChunk, sizeof(int));
+//         ifs.read((char*)&numOfSubunits, sizeof(int));
+//         ifs.read((char*)&subunitID, sizeof(int));
+//         ifs.read((char*)&sizeOfChunk, sizeof(int));
 
-        // std::cerr << TlUtils::format("type: %d (%d, %d/%d) [%d/%d] c=%d",
-        //                              matrixType, numOfVectors, sizeOfVector, reservedSizeOfVector, subunitID, numOfSubunits, sizeOfChunk)
-        //           << std::endl;
+//         // std::cerr << TlUtils::format("type: %d (%d, %d/%d) [%d/%d] c=%d",
+//         //                              matrixType, numOfVectors, sizeOfVector, reservedSizeOfVector, subunitID, numOfSubunits, sizeOfChunk)
+//         //           << std::endl;
 
-        if ((numOfVectors > 0) && (sizeOfVector > 0) && (numOfSubunits > 0) && (subunitID >= 0) &&
-            (subunitID < numOfSubunits)) {
-            if (pNumOfVectors != NULL) {
-                *pNumOfVectors = numOfVectors;
-            }
-            if (pSizeOfVector != NULL) {
-                *pSizeOfVector = sizeOfVector;
-            }
-            if (pNumOfSubunits != NULL) {
-                *pNumOfSubunits = numOfSubunits;
-            }
-            if (pSubunitID != NULL) {
-                *pSubunitID = subunitID;
-            }
-            if (pSizeOfChunk != NULL) {
-                *pSizeOfChunk = sizeOfChunk;
-            }
-            answer = true;
-        }
-    }
+//         if ((numOfVectors > 0) && (sizeOfVector > 0) && (numOfSubunits > 0) && (subunitID >= 0) &&
+//             (subunitID < numOfSubunits)) {
+//             if (pNumOfVectors != NULL) {
+//                 *pNumOfVectors = numOfVectors;
+//             }
+//             if (pSizeOfVector != NULL) {
+//                 *pSizeOfVector = sizeOfVector;
+//             }
+//             if (pNumOfSubunits != NULL) {
+//                 *pNumOfSubunits = numOfSubunits;
+//             }
+//             if (pSubunitID != NULL) {
+//                 *pSubunitID = subunitID;
+//             }
+//             if (pSizeOfChunk != NULL) {
+//                 *pSizeOfChunk = sizeOfChunk;
+//             }
+//             answer = true;
+//         }
+//     }
 
-    return answer;
-}
+//     return answer;
+// }
 
 std::size_t TlDenseMatrix_arrays_mmap_Object::getMemSize() const {
     return this->numOfVectors_ * this->sizeOfVector_;

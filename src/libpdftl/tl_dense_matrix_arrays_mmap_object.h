@@ -89,9 +89,9 @@ public:
     /// 読み込める場合はtrueを返す。
     /// このとき、pNumOfSubunitsが指定されていれば、全サブユニット数が代入される。
     /// また、pSubunitIDが指定されていれば、サブユニットIDが代入される。
-    static bool isLoadable(const std::string& filepath, index_type* pNumOfVectors = NULL,
-                           index_type* pSizeOfVector = NULL, int* pNumOfSubunits = NULL, int* pSubunitID = NULL,
-                           int* pSizeOfChunk = NULL);
+    // static bool isLoadable(const std::string& filepath, index_type* pNumOfVectors = NULL,
+    //                        index_type* pSizeOfVector = NULL, int* pNumOfSubunits = NULL, int* pSubunitID = NULL,
+    //                        int* pSizeOfChunk = NULL);
 
 public:
     index_type getSizeOfVector() const {

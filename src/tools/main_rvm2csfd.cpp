@@ -7,6 +7,7 @@
 // #include "tl_dense_general_matrix_arrays_roworiented.h"
 #include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_general_matrix_mmap.h"
+#include "tl_matrix_utils.h"
 
 typedef TlMatrixObject::index_type index_type;
 
@@ -20,15 +21,17 @@ void showHelp(const std::string& progname) {
 bool checkMatrixInfo(const std::string& rvmBasePath, TlMatrixObject::index_type* pNumOfRows,
                      TlMatrixObject::index_type* pNumOfCols, int* pNumOfSubunits, int* pSizeOfChunk, int* pSubunitID,
                      bool* pGuess) {
-    TlMatrixObject::index_type numOfRows = 0;
-    TlMatrixObject::index_type numOfCols = 0;
-    int numOfSubunits = 0;
-    int sizeOfChunk = 0;
+    // TlMatrixObject::index_type numOfRows = 0;
+    // TlMatrixObject::index_type numOfCols = 0;
+    // int numOfSubunits = 0;
+    // int sizeOfChunk = 0;
 
-    TlMatrixObject::index_type& sizeOfVector = numOfCols;
-    TlMatrixObject::index_type& numOfVectors = numOfRows;
+    // TlMatrixObject::index_type& sizeOfVector = numOfCols;
+    // TlMatrixObject::index_type& numOfVectors = numOfRows;
 
     int subunitID = 0;
+
+    TlMatrixObject::HeaderInfo headerInfo;
     bool isLoadable = false;
 
     // guess start unit
@@ -36,16 +39,15 @@ bool checkMatrixInfo(const std::string& rvmBasePath, TlMatrixObject::index_type*
         int subunitID = 0;
         const std::string inputPath0 = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, subunitID);
         std::cerr << "inputPath0: " << inputPath0 << std::endl;
-        isLoadable = TlDenseMatrix_arrays_mmap_Object::isLoadable(inputPath0, &numOfVectors, &sizeOfVector,
-                                                                  &numOfSubunits, &subunitID, &sizeOfChunk);
+        isLoadable = TlMatrixUtils::getHeaderInfo(inputPath0, &headerInfo);
+
         std::cerr << "isLoadable: " << isLoadable << std::endl;
         *pGuess = isLoadable;
     }
     // try direct load
     if (isLoadable == false) {
         std::cerr << "rvmBasePath: " << rvmBasePath << std::endl;
-        isLoadable = TlDenseMatrix_arrays_mmap_Object::isLoadable(rvmBasePath, &numOfVectors, &sizeOfVector,
-                                                                  &numOfSubunits, &subunitID, &sizeOfChunk);
+        isLoadable = TlMatrixUtils::getHeaderInfo(rvmBasePath, &headerInfo);
         std::cerr << "isLoadable: " << isLoadable << std::endl;
     }
 
@@ -53,11 +55,11 @@ bool checkMatrixInfo(const std::string& rvmBasePath, TlMatrixObject::index_type*
         // numOfRows = numOfVectors;
         // numOfCols = sizeOfVector;
 
-        *pNumOfRows = numOfRows;
-        *pNumOfCols = numOfCols;
-        *pNumOfSubunits = numOfSubunits;
-        *pSizeOfChunk = sizeOfChunk;
-        *pSubunitID = subunitID;
+        *pNumOfRows = headerInfo.numOfVectors;
+        *pNumOfCols = headerInfo.sizeOfVector;
+        *pNumOfSubunits = headerInfo.numOfSubunits;
+        *pSizeOfChunk = headerInfo.sizeOfChunk;
+        *pSubunitID = headerInfo.subunitId;
     }
 
     return isLoadable;
