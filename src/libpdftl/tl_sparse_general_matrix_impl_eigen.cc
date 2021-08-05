@@ -124,17 +124,16 @@ TlSparseGeneralMatrix_ImplEigen& TlSparseGeneralMatrix_ImplEigen::operator*=(con
 bool TlSparseGeneralMatrix_ImplEigen::load(const std::string& path) {
     bool answer = false;
     TlMatrixObject::HeaderInfo headerInfo;
-    // TlMatrixObject::MatrixType matrixType;
 
-    const TlMatrixUtils::FileSize headerSize = TlMatrixUtils::getHeaderInfo(path, &headerInfo);
-    if (headerSize > 0) {
+    const bool isLoadable = TlMatrixUtils::getHeaderInfo(path, &headerInfo);
+    if (isLoadable == true) {
         this->resize(headerInfo.numOfRows, headerInfo.numOfCols);
         this->matrix_.setZero();
 
         std::fstream fs;
         fs.open(path.c_str(), std::ios::in | std::ios::binary);
         if (!fs.fail()) {
-            fs.seekg(headerSize);
+            fs.seekg(headerInfo.headerSize);
             const std::size_t numOfItems = headerInfo.numOfItems;
             for (std::size_t i = 0; i < numOfItems; ++i) {
                 TlMatrixObject::index_type row;

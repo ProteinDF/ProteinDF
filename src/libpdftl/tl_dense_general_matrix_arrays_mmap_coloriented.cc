@@ -67,11 +67,6 @@ TlDenseGeneralMatrix_Lapack TlDenseGeneralMatrix_arrays_mmap_ColOriented::getTlM
     return answer;
 }
 
-// void TlDenseGeneralMatrix_arrays_mmap_ColOriented::saveByTlDenseGeneralMatrix_arrays_ColOriented(
-//     const std::string& basename) const {
-//     TlDenseMatrix_arrays_mmap_Object::saveByTheOtherType(basename);
-// }
-
 // -----------------------------------------------------------------------------
 std::ostream& operator<<(std::ostream& stream, const TlDenseGeneralMatrix_arrays_mmap_ColOriented& mat) {
     const TlMatrixObject::index_type numOfRows = mat.getNumOfRows();

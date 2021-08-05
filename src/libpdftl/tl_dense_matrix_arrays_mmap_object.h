@@ -31,7 +31,7 @@
 
 /// 配列の配列として行列を扱うためのコンテナ
 class TlDenseMatrix_arrays_mmap_Object : public TlMatrixObject {
-   public:
+public:
     explicit TlDenseMatrix_arrays_mmap_Object(const std::string& baseFilePath, index_type numOfVectors,
                                               index_type sizeOfVector, int numOfMembers = 1, int ID = 0,
                                               index_type reservedSizeOfVector = 0, bool forceCreateNewFile = false);
@@ -39,19 +39,19 @@ class TlDenseMatrix_arrays_mmap_Object : public TlMatrixObject {
 
     virtual ~TlDenseMatrix_arrays_mmap_Object();
 
-   public:
+public:
     int getSizeOfChunk() const;
 
     /// インスタンスのメモリサイズを返す
     virtual std::size_t getMemSize() const;
 
-   public:
+public:
     virtual void resize(const index_type newNumOfVectors, const index_type newSizeOfVector);
 
-   protected:
+protected:
     void reserveVectorSize(index_type newReservedVectorSize);
 
-   private:
+private:
     virtual bool load(const std::string& path) {
         return true;
     };
@@ -62,7 +62,7 @@ class TlDenseMatrix_arrays_mmap_Object : public TlMatrixObject {
         return true;
     };
 
-   public:
+public:
     // void resize(index_type newNumOfVectors, index_type newVectorSize);
 
     /// 値を代入する
@@ -82,7 +82,7 @@ class TlDenseMatrix_arrays_mmap_Object : public TlMatrixObject {
     //  retval: size of copied buffer
     std::size_t getChunk(const index_type vectorIndex, double* pBuf, const std::size_t length) const;
 
-   public:
+public:
     static std::string getFileName(const std::string& basename, const int subunitID);
 
     /// 指定したファイルがこのクラスで読み込めるかどうかをチェックする。
@@ -93,7 +93,7 @@ class TlDenseMatrix_arrays_mmap_Object : public TlMatrixObject {
                            index_type* pSizeOfVector = NULL, int* pNumOfSubunits = NULL, int* pSubunitID = NULL,
                            int* pSizeOfChunk = NULL);
 
-   public:
+public:
     index_type getSizeOfVector() const {
         return this->sizeOfVector_;
     };
@@ -121,27 +121,26 @@ class TlDenseMatrix_arrays_mmap_Object : public TlMatrixObject {
     /// 該当するベクトルを持っているPE番号を返す
     int getSubunitID(const index_type vectorIndex) const;
 
-   protected:
+protected:
     /// 前もってvector sizeを設定する
     // void reserveVectorSize(index_type vectorSize);
 
     /// data_ メンバ変数を破棄する
     // void destroy();
 
-   public:
+public:
     static index_type getNumOfLocalChunks(const index_type numOfVectors, const int numOfSubunits,
                                           const int sizeOfChunk);
 
-   protected:
+protected:
     // defunct
     // static index_type getNumOfLocalVectors(const index_type numOfVectors, const int numOfSubunits,
     //                                        const int sizeOfChunk);
 
     std::size_t getLocalVectorIndex(const index_type vectorIndex, int* pSubunitId, int* pLocalChunkId = NULL,
                                     int* pLocalChunkVectorIndex = NULL) const;
-    // bool saveByTheOtherType(const std::string& basename) const;
 
-   protected:
+protected:
     virtual size_type getNumOfReservedElements() const;
 
     void createNewFile(bool force = false);
@@ -149,16 +148,16 @@ class TlDenseMatrix_arrays_mmap_Object : public TlMatrixObject {
 
     void openFile();
 
-   protected:
+protected:
     void newMmap();
     void syncMmap();
     void deleteMmap();
 
-   private:
+private:
     void copyFromBackup();
 
     // prohhibit virtual functions
-   private:
+private:
     virtual index_type getNumOfRows() const {
         return 0;
     };
@@ -166,7 +165,7 @@ class TlDenseMatrix_arrays_mmap_Object : public TlMatrixObject {
         return 0;
     };
 
-   private:
+private:
     virtual double get(index_type row, index_type col) const {
         abort();
         return 0;
@@ -182,7 +181,7 @@ class TlDenseMatrix_arrays_mmap_Object : public TlMatrixObject {
     std::size_t writeMatrixHeader(std::ofstream* pFs) const;
     void updateFileHeader();
 
-   private:
+private:
     // std::string baseFilePath_;
     std::string filePath_;
 
@@ -202,7 +201,7 @@ class TlDenseMatrix_arrays_mmap_Object : public TlMatrixObject {
     // int numOfLocalChunks_;
     // std::vector<double*> chunks_;
 
-   private:
+private:
     // std::string filePath_;
 
     char* mmapBegin_;

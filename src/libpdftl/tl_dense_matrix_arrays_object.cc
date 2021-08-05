@@ -26,6 +26,7 @@
 #include "TlMemManager.h"
 #include "TlUtils.h"
 #include "tl_assert.h"
+#include "tl_matrix_utils.h"
 
 #define DEFAULT_CHUNK_SIZE 32
 
@@ -204,6 +205,10 @@ TlMatrixObject::index_type TlDenseMatrix_arrays_Object::getNumOfLocalChunks(cons
                                                                             const int numOfSubunits,
                                                                             const int sizeOfChunk) {
     const int numOfVectorsPerUnit = sizeOfChunk * numOfSubunits;
+    if (numOfVectorsPerUnit == 0) {
+        // wrong parameter
+        return 0;
+    }
     const int numOfLocalChunks = numOfVectors / numOfVectorsPerUnit + 1;
 
     return numOfLocalChunks;
@@ -463,6 +468,7 @@ bool TlDenseMatrix_arrays_Object::saveByTheOtherType(const std::string& basename
 
     const index_type numOfVectorsB = sizeOfVector;  // swap!
     const index_type sizeOfVectorB = numOfVectors;  // swap!
+    const index_type reservedSizeOfVector = sizeOfVectorB;
 
     std::ofstream ofs;
     const std::string path = TlDenseMatrix_arrays_Object::getFileName(basename, this->subunitID_);
@@ -473,6 +479,8 @@ bool TlDenseMatrix_arrays_Object::saveByTheOtherType(const std::string& basename
     ofs.write(reinterpret_cast<const char*>(&matrixType), sizeof(char));
     ofs.write(reinterpret_cast<const char*>(&numOfVectorsB), sizeof(index_type));
     ofs.write(reinterpret_cast<const char*>(&sizeOfVectorB), sizeof(index_type));
+    ofs.write(reinterpret_cast<const char*>(&reservedSizeOfVector), sizeof(index_type));  // for new format
+
     ofs.write(reinterpret_cast<const char*>(&(this->numOfSubunits_)), sizeof(int));
     ofs.write(reinterpret_cast<const char*>(&(this->subunitID_)), sizeof(int));
     ofs.write(reinterpret_cast<const char*>(&sizeOfChunk), sizeof(int));
@@ -636,28 +644,21 @@ bool TlDenseMatrix_arrays_Object::loadSubunitFile(const std::string& path) {
     ifs.open(path.c_str(), std::ifstream::in);
     if (ifs.good()) {
         // header
-        int matrixType = 0;
-        index_type numOfVectors = 0;
-        index_type sizeOfVector = 0;
-        int read_numOfSubunits = 0;
-        int read_subunitID = 0;
-        int read_sizeOfChunk = 0;
-        ifs.read((char*)&matrixType, sizeof(char));
-        ifs.read((char*)&numOfVectors, sizeof(index_type));
-        ifs.read((char*)&sizeOfVector, sizeof(index_type));
-        ifs.read((char*)&read_numOfSubunits, sizeof(int));
-        ifs.read((char*)&read_subunitID, sizeof(int));
-        ifs.read((char*)&read_sizeOfChunk, sizeof(int));
-        this->numOfSubunits_ = read_numOfSubunits;
-        this->subunitID_ = read_subunitID;
+        TlMatrixObject::HeaderInfo headerInfo;
+        const bool isLoadable = TlMatrixUtils::getHeaderInfo(ifs, &headerInfo);
+        assert(isLoadable == true);
+
+        const int matrixType = headerInfo.matrixType;
+        assert(matrixType == TlMatrixObject::ABGD);
+
+        const index_type numOfVectors = headerInfo.numOfVectors;
+        const index_type sizeOfVector = headerInfo.sizeOfVector;
+        this->numOfSubunits_ = headerInfo.numOfSubunits;
+        this->subunitID_ = headerInfo.subunitId;
+        this->sizeOfChunk_ = headerInfo.sizeOfChunk;
         this->resize(numOfVectors, sizeOfVector);
 
-        this->numOfSubunits_ = read_numOfSubunits;
-        this->subunitID_ = read_subunitID;
-        this->sizeOfChunk_ = read_sizeOfChunk;
-        this->resize(numOfVectors, sizeOfVector);
-
-        const int headerSize = sizeof(char) + sizeof(index_type) * 2 + sizeof(int) * 3;
+        const int headerSize = headerInfo.headerSize;
         assert(headerSize == ifs.tellg());
 
         // data

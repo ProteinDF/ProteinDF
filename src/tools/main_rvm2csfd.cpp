@@ -35,14 +35,18 @@ bool checkMatrixInfo(const std::string& rvmBasePath, TlMatrixObject::index_type*
     {
         int subunitID = 0;
         const std::string inputPath0 = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, subunitID);
+        std::cerr << "inputPath0: " << inputPath0 << std::endl;
         isLoadable = TlDenseMatrix_arrays_mmap_Object::isLoadable(inputPath0, &numOfVectors, &sizeOfVector,
                                                                   &numOfSubunits, &subunitID, &sizeOfChunk);
+        std::cerr << "isLoadable: " << isLoadable << std::endl;
         *pGuess = isLoadable;
     }
     // try direct load
     if (isLoadable == false) {
+        std::cerr << "rvmBasePath: " << rvmBasePath << std::endl;
         isLoadable = TlDenseMatrix_arrays_mmap_Object::isLoadable(rvmBasePath, &numOfVectors, &sizeOfVector,
                                                                   &numOfSubunits, &subunitID, &sizeOfChunk);
+        std::cerr << "isLoadable: " << isLoadable << std::endl;
     }
 
     if (isLoadable) {
@@ -126,8 +130,11 @@ int main(int argc, char* argv[]) {
             std::cerr << TlUtils::format(">>>> unit %d/%d", unit, numOfSubunits - 1) << std::endl;
             const std::string inputPath = TlDenseMatrix_arrays_mmap_Object::getFileName(inputBasePath, unit);
 
+            std::cerr << "load matrix: " << inputPath << std::endl;
             TlDenseGeneralMatrix_arrays_mmap_RowOriented inMat(inputPath);
+            std::cerr << "convert layout" << std::endl;
             inMat.convertMemoryLayout("", verbose, verbose);
+            std::cerr << "set" << std::endl;
             inMat.set2csfd(&outMat, verbose, verbose);
         }
     } else {

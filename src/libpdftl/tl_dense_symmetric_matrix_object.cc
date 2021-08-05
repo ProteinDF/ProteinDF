@@ -14,7 +14,8 @@
 #include "TlHdf5Utils.h"
 #endif  // HAVE_HDF5
 
-TlDenseSymmetricMatrixObject::TlDenseSymmetricMatrixObject(TlDenseMatrix_ImplObject* pImpl) : pImpl_(pImpl) {
+TlDenseSymmetricMatrixObject::TlDenseSymmetricMatrixObject(TlDenseMatrix_ImplObject* pImpl)
+    : pImpl_(pImpl) {
 }
 
 TlDenseSymmetricMatrixObject::~TlDenseSymmetricMatrixObject() {
@@ -245,8 +246,9 @@ bool TlDenseSymmetricMatrixObject::load(const std::string& filePath) {
     bool answer = false;
     TlMatrixObject::HeaderInfo headerInfo;
 
-    const TlMatrixUtils::FileSize headerSize = TlMatrixUtils::getHeaderInfo(filePath, &headerInfo);
-    if (headerSize > 0) {
+    const bool isLoadable = TlMatrixUtils::getHeaderInfo(filePath, &headerInfo);
+    const std::size_t headerSize = headerInfo.headerSize;
+    if (isLoadable == true) {
         const TlMatrixObject::index_type row = headerInfo.numOfRows;
         const TlMatrixObject::index_type col = headerInfo.numOfCols;
 
@@ -277,8 +279,7 @@ bool TlDenseSymmetricMatrixObject::load(const std::string& filePath) {
                     break;
             }
         } else {
-            this->log_.critical(
-                TlUtils::format("cannnot open matrix file: %s @%s:%d", filePath.c_str(), __FILE__, __LINE__));
+            this->log_.critical(TlUtils::format("cannot open matrix file: %s @%s:%d", filePath.c_str(), __FILE__, __LINE__));
             throw;
         }
 

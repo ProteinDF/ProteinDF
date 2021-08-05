@@ -96,14 +96,14 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(const std::string& sFilePath) {
 
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    std::fstream fs;
+    std::ifstream ifs;
     if (rComm.isMaster() == true) {
-        fs.open(sFilePath.c_str(), std::ios::binary | std::ios::in);
+        ifs.open(sFilePath.c_str(), std::ios::binary | std::ios::in);
     }
 
     bool bIsFail = false;
     if (rComm.isMaster() == true) {
-        bIsFail = fs.fail();
+        bIsFail = ifs.fail();
     }
     rComm.broadcast(bIsFail);
     if (bIsFail) {
@@ -115,7 +115,7 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(const std::string& sFilePath) {
         return false;
     }
 
-    bool bAnswer = this->load(fs);
+    bool bAnswer = this->load(ifs);
 
     if (bAnswer != true) {
         this->log_.critical(
@@ -124,14 +124,14 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(const std::string& sFilePath) {
     }
 
     if (rComm.isMaster() == true) {
-        fs.close();
+        ifs.close();
     }
 
     rComm.broadcast(bAnswer);
     return bAnswer;
 }
 
-bool TlDenseSymmetricMatrix_ImplScalapack::load(std::fstream& fs) {
+bool TlDenseSymmetricMatrix_ImplScalapack::load(std::ifstream& ifs) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     assert(rComm.checkNonBlockingCommunications());
 
@@ -143,28 +143,13 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(std::fstream& fs) {
     TlMatrixObject::index_type dim;
     TlMatrixObject::HeaderInfo headerInfo;
     if (rComm.isMaster() == true) {
-        TlMatrixUtils::getHeaderInfo(fs, &headerInfo);
+        const bool isLoadable = TlMatrixUtils::getHeaderInfo(ifs, &headerInfo);
         assert(headerInfo.matrixType == TlMatrixObject::RLHD);
         matType = headerInfo.matrixType;
         dim = headerInfo.numOfRows;
     }
     // rComm.broadcast(matType);
     rComm.broadcast(dim);
-
-    // switch (matType) {
-    //   case RLHD:
-    //     break;
-    //
-    //   case CLHD:
-    //     break;
-    //
-    //   default:
-    //     if (rComm.isMaster() == true) {
-    //       this->log_.critical("this matrix type is not supported. stop.");
-    //     }
-    //     answer = false;
-    //     break;
-    // }
 
     this->rows_ = dim;
     this->cols_ = dim;
@@ -187,7 +172,7 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(std::fstream& fs) {
 
         while (isFinished == false) {
             // buffer分を一度に読み込み
-            fs.read((char*)(&buf[0]), sizeof(double) * bufferCount);
+            ifs.read((char*)(&buf[0]), sizeof(double) * bufferCount);
 
             // 各プロセスのバッファに振り分ける
             std::vector<std::vector<TlMatrixObject::MatrixElement> > elements(numOfProcs);

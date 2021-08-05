@@ -41,8 +41,8 @@ int main(int argc, char* argv[]) {
     std::string path = opt[1];
 
     TlMatrixObject::HeaderInfo headerInfo;
-    const int headerSize = TlMatrixUtils::getHeaderInfo(path, &headerInfo);
-    if (headerSize > 0) {
+    const bool isLoadable = TlMatrixUtils::getHeaderInfo(path, &headerInfo);
+    if (isLoadable == true) {
         switch (headerInfo.matrixType) {
             case TlMatrixObject::RLHD:
                 std::cout << "type: symmetric" << std::endl;
@@ -69,13 +69,14 @@ int main(int argc, char* argv[]) {
                 std::cout << TlUtils::format("unit: %d/%d", headerInfo.subunitId + 1, headerInfo.numOfSubunits)
                           << std::endl;
                 std::cout << "chunk size: " << headerInfo.sizeOfChunk << std::endl;
+                std::cout << "version: " << headerInfo.version << std::endl;
                 break;
 
             default:
                 std::cerr << "unknown matrix type: " << path << std::endl;
         }
     } else {
-        std::cerr << "can not open file: " << path << std::endl;
+        std::cerr << "cannot open file: " << path << std::endl;
         return EXIT_FAILURE;
     }
 

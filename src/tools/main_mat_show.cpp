@@ -39,8 +39,8 @@ int main(int argc, char* argv[]) {
     }
 
     TlMatrixObject::HeaderInfo headerInfo;
-    const int headerSize = TlMatrixUtils::getHeaderInfo(path, &headerInfo);
-    if (headerSize > 0) {
+    const bool isLoadable = TlMatrixUtils::getHeaderInfo(path, &headerInfo);
+    if (isLoadable == true) {
         switch (headerInfo.matrixType) {
             case TlMatrixObject::RLHD: {
                 std::cout << "type: symmetric" << std::endl;
@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
             }
         }
     } else {
-        std::cerr << "can not open file: " << path << std::endl;
+        std::cerr << "cannot open file: " << path << std::endl;
         return EXIT_FAILURE;
     }
 

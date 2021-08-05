@@ -426,9 +426,14 @@ bool TlDenseMatrix_arrays_mmap_Object::isLoadable(const std::string& filepath, i
         ifs.read((char*)&numOfVectors, sizeof(index_type));
         ifs.read((char*)&sizeOfVector, sizeof(index_type));
         ifs.read((char*)&reservedSizeOfVector, sizeof(index_type));
+
         ifs.read((char*)&numOfSubunits, sizeof(int));
         ifs.read((char*)&subunitID, sizeof(int));
         ifs.read((char*)&sizeOfChunk, sizeof(int));
+
+        // std::cerr << TlUtils::format("type: %d (%d, %d/%d) [%d/%d] c=%d",
+        //                              matrixType, numOfVectors, sizeOfVector, reservedSizeOfVector, subunitID, numOfSubunits, sizeOfChunk)
+        //           << std::endl;
 
         if ((numOfVectors > 0) && (sizeOfVector > 0) && (numOfSubunits > 0) && (subunitID >= 0) &&
             (subunitID < numOfSubunits)) {
@@ -515,9 +520,11 @@ void TlDenseMatrix_arrays_mmap_Object::openFile() {
 
 void TlDenseMatrix_arrays_mmap_Object::getHeaderInfo(const std::string& filePath) {
     TlMatrixObject::HeaderInfo headerInfo;
-    TlMatrixUtils::FileSize headerSize = TlMatrixUtils::getHeaderInfo(filePath, &headerInfo);
+    const bool isLoadable = TlMatrixUtils::getHeaderInfo(filePath, &headerInfo);
+    assert(isLoadable == true);
+    const std::size_t headerSize = headerInfo.headerSize;
 
-    if ((headerSize > 0) && (headerInfo.matrixType == this->getType())) {
+    if ((isLoadable == true) && (headerInfo.matrixType == this->getType())) {
         this->numOfVectors_ = headerInfo.numOfVectors;
         this->sizeOfVector_ = headerInfo.sizeOfVector;
         this->reservedSizeOfVector_ = headerInfo.reservedSizeOfVector;

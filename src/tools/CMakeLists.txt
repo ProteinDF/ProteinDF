@@ -215,14 +215,19 @@ add_executable(pdf-mat-transpose ${PDF_MAT_TRANSPOSE_SOURCES})
 target_link_libraries(pdf-mat-transpose libpdf libpdftl)
 install(TARGETS pdf-mat-transpose RUNTIME DESTINATION bin)
 
+# set(PDF_MAT_UPDATE_RVM_SOURCES
+#   main_mat_update_rvm.cc
+#   )
+# add_executable(pdf-mat-update-rvm ${PDF_MAT_UPDATE_RVM_SOURCES})
+# target_link_libraries(pdf-mat-update-rvm libpdf libpdftl)
+# install(TARGETS pdf-mat-update-rvm RUNTIME DESTINATION bin)
 
-set(PDF_MAT_UPDATE_RVM_SOURCES
-  main_mat_update_rvm.cc
+set(PDF_MAT_UPGRADE_RVM_SOURCES
+  main_mat_upgrade_rvm.cc
   )
-add_executable(pdf-mat-update-rvm ${PDF_MAT_UPDATE_RVM_SOURCES})
-target_link_libraries(pdf-mat-update-rvm libpdf libpdftl)
-install(TARGETS pdf-mat-update-rvm RUNTIME DESTINATION bin)
-
+add_executable(pdf-mat-upgrade-rvm ${PDF_MAT_UPGRADE_RVM_SOURCES})
+target_link_libraries(pdf-mat-upgrade-rvm libpdf libpdftl)
+install(TARGETS pdf-mat-upgrade-rvm RUNTIME DESTINATION bin)
 
 set(PDF_MINT_SOURCES
   main_mint.cpp

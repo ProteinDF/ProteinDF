@@ -1,7 +1,9 @@
+#include "tl_dense_general_matrix_arrays_coloriented.h"
+
 #include <iostream>
 #include <limits>
+
 #include "gtest/gtest.h"
-#include "tl_dense_general_matrix_arrays_coloriented.h"
 #include "tl_dense_general_matrix_lapack.h"
 
 static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();

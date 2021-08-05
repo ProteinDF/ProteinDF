@@ -12,18 +12,18 @@ bool TlDenseSymmetricMatrixAbstract::load(const std::string& filePath, double* p
     TlMatrixObject::index_type row, col;
 
     TlMatrixObject::HeaderInfo headerInfo;
-    const TlMatrixUtils::FileSize headerSize = TlMatrixUtils::getHeaderInfo(filePath, &headerInfo);
+    const bool isLoadable = TlMatrixUtils::getHeaderInfo(filePath, &headerInfo);
     matrixType = headerInfo.matrixType;
     row = headerInfo.numOfRows;
     col = headerInfo.numOfCols;
 
-    if (headerSize > 0) {
+    if (isLoadable == true) {
         std::ios_base::sync_with_stdio(false);
         std::fstream fs;
         fs.open(filePath.c_str(), std::fstream::binary | std::fstream::in);
 
         if (!fs.fail()) {
-            fs.seekg(headerSize);
+            fs.seekg(headerInfo.headerSize);
 
             switch (matrixType) {
                 case TlMatrixObject::RLHD: {
