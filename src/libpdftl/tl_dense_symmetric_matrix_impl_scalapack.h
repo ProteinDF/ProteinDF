@@ -33,13 +33,14 @@ class TlDenseVector_ImplLapack;
 
 class TlDenseSymmetricMatrix_ImplScalapack
     : public TlDenseGeneralMatrix_ImplScalapack {
-   public:
-    enum DIAGONAL_METHOD { QR, DIVIDE_AND_CONQUER };
+public:
+    enum DIAGONAL_METHOD { QR,
+                           DIVIDE_AND_CONQUER };
 
     // ---------------------------------------------------------------------------
     // constructor & destructor
     // ---------------------------------------------------------------------------
-   public:
+public:
     explicit TlDenseSymmetricMatrix_ImplScalapack(
         const TlMatrixObject::index_type dim = 0);
     TlDenseSymmetricMatrix_ImplScalapack(
@@ -55,7 +56,7 @@ class TlDenseSymmetricMatrix_ImplScalapack
     // ---------------------------------------------------------------------------
     // properties
     // ---------------------------------------------------------------------------
-   public:
+public:
     // virtual TlMatrixObject::size_type getNumOfElements() const;
     virtual double get(TlMatrixObject::index_type row,
                        TlMatrixObject::index_type col) const;
@@ -67,7 +68,7 @@ class TlDenseSymmetricMatrix_ImplScalapack
     // ---------------------------------------------------------------------------
     // operators
     // ---------------------------------------------------------------------------
-   public:
+public:
     // TlDenseSymmetricMatrix_ImplScalapack& operator*=(const double coef);
     // const TlDenseGeneralMatrix_ImplLapack operator*=(
     //   const TlDenseSymmetricMatrix_ImplScalapack& rhs);
@@ -75,7 +76,7 @@ class TlDenseSymmetricMatrix_ImplScalapack
     // ---------------------------------------------------------------------------
     // operations
     // ---------------------------------------------------------------------------
-   public:
+public:
     // virtual double sum() const;
     // virtual double getRMS() const;
     // virtual double getMaxAbsoluteElement(
@@ -94,22 +95,22 @@ class TlDenseSymmetricMatrix_ImplScalapack
     // ---------------------------------------------------------------------------
     // I/O
     // ---------------------------------------------------------------------------
-   public:
+public:
     virtual bool load(const std::string& filePath);
     virtual bool save(const std::string& filePath) const;
 
-   public:
+public:
     // virtual void dump(double* buf, const std::size_t size) const;
     // virtual void restore(const double* buf, const std::size_t size);
 
     // ---------------------------------------------------------------------------
     // protected
     // ---------------------------------------------------------------------------
-   protected:
+protected:
     virtual TlMatrixObject::size_type index(
         TlMatrixObject::index_type row, TlMatrixObject::index_type col) const;
 
-    virtual bool load(std::fstream& filePath);
+    virtual bool load(std::ifstream& ifs);
 
     virtual std::vector<TlMatrixObject::MatrixElement>
     getMatrixElementsInLocal2() const;

@@ -566,14 +566,14 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(const std::string& sFilePath) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     bool bAnswer = false;
 
-    std::fstream fs;
+    std::ifstream ifs;
     if (rComm.isMaster() == true) {
-        fs.open(sFilePath.c_str(), std::ios::in | std::ios::binary);
+        ifs.open(sFilePath.c_str(), std::ios::in | std::ios::binary);
     }
 
     bool bIsFail = false;
     if (rComm.isMaster() == true) {
-        bIsFail = fs.fail();
+        bIsFail = ifs.fail();
     }
     rComm.broadcast(bIsFail);
 
@@ -584,7 +584,7 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(const std::string& sFilePath) {
         abort();
     }
 
-    bAnswer = this->load(fs);
+    bAnswer = this->load(ifs);
 
     if (bAnswer != true) {
         if (rComm.isMaster() == true) {
@@ -596,13 +596,13 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(const std::string& sFilePath) {
     }
 
     if (rComm.isMaster() == true) {
-        fs.close();
+        ifs.close();
     }
 
     return bAnswer;
 }
 
-bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
+bool TlDenseGeneralMatrix_ImplScalapack::load(std::ifstream& ifs) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     assert(rComm.checkNonBlockingCommunications());
 
@@ -614,31 +614,14 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
     TlMatrixObject::MatrixType matrixType;
     std::vector<TlMatrixObject::index_type> rowcol(2);
     if (rComm.isMaster() == true) {
-        TlMatrixUtils::getHeaderInfo(fs, &headerInfo);
+        const bool isLoadable = TlMatrixUtils::getHeaderInfo(ifs, &headerInfo);
         assert((headerInfo.matrixType == TlMatrixObject::CSFD) || (headerInfo.matrixType == TlMatrixObject::RSFD));
         matrixType = headerInfo.matrixType;
         rowcol[0] = headerInfo.numOfRows;
         rowcol[1] = headerInfo.numOfCols;
-
-        // std::cerr << TlUtils::format("%d (%d, %d)", (int)matrixType,
-        // rowcol[0],
-        //                              rowcol[1])
-        //           << std::endl;
+        // std::cerr << TlUtils::format("%d (%d, %d)", (int)matrixType, rowcol[0], rowcol[1]) << std::endl;
     }
     rComm.broadcast(&(rowcol[0]), 2, 0);
-
-    // switch (matrixType) {
-    //   case RSFD:
-    //     break;
-    //
-    //   case CSFD:
-    //     break;
-    //
-    //   default:
-    //     std::cerr << "this matrix type is not supported. stop." << std::endl;
-    //     answer = false;
-    //     break;
-    // }
 
     this->rows_ = rowcol[0];
     this->cols_ = rowcol[1];
@@ -660,7 +643,7 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::fstream& fs) {
 
         while (isFinished == false) {
             // buffer分を一度に読み込み
-            fs.read((char*)(&buf[0]), sizeof(double) * bufferCount);
+            ifs.read((char*)(&buf[0]), sizeof(double) * bufferCount);
 
             // 各プロセスのバッファに振り分ける
             std::vector<std::vector<TlMatrixObject::MatrixElement> > elements(numOfProcs);
@@ -900,7 +883,7 @@ void TlDenseGeneralMatrix_ImplScalapack::initialize() {
     {
         const int nMyRows = this->myRows_;
         const int nBlockSize = this->blockSize_;
-        const int nBlockIndex = this->m_nMyProcRow * nBlockSize;  // 各ローカル行列の最初のインデックス
+        const int nBlockIndex = this->m_nMyProcRow * nBlockSize;           // 各ローカル行列の最初のインデックス
         const int nIncrementBlockIndex = this->procGridRow_ * nBlockSize;  // ブロック最初のインデックスの増分
         this->m_RowIndexTable.clear();
         this->m_RowIndexTable.reserve(nMyRows);
@@ -921,7 +904,7 @@ void TlDenseGeneralMatrix_ImplScalapack::initialize() {
     {
         const int nMyCols = this->myCols_;
         const int nBlockSize = this->blockSize_;
-        const int nBlockIndex = this->m_nMyProcCol * this->blockSize_;  // 各ローカル行列の最初のインデックス
+        const int nBlockIndex = this->m_nMyProcCol * this->blockSize_;           // 各ローカル行列の最初のインデックス
         const int nIncrementBlockIndex = this->procGridCol_ * this->blockSize_;  // ブロック最初のインデックスの増分
         this->m_ColIndexTable.clear();
         this->m_ColIndexTable.reserve(nMyCols);

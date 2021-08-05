@@ -77,8 +77,9 @@ void TlDenseMatrixMmapObject::openFile() {
 void TlDenseMatrixMmapObject::getHeaderInfo() {
     TlMatrixObject::HeaderInfo headerInfo;
 
-    TlMatrixUtils::FileSize headerSize = TlMatrixUtils::getHeaderInfo(this->filePath_, &headerInfo);
-    if ((headerSize > 0) && (headerInfo.matrixType == this->getType())) {
+    const bool isLoadable = TlMatrixUtils::getHeaderInfo(this->filePath_, &headerInfo);
+    const std::size_t headerSize = headerInfo.headerSize;
+    if ((isLoadable == true) && (headerInfo.matrixType == this->getType())) {
         this->row_ = headerInfo.numOfRows;
         this->col_ = headerInfo.numOfCols;
     } else {

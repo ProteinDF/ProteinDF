@@ -22,8 +22,35 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <map>
+#include <string>
 
 #include "TlUtils.h"
+
+std::string TlMatrixObject::matrixTypeStr(TlMatrixObject::MatrixType matrixType) {
+    static std::map<TlMatrixObject::MatrixType, std::string> matrixType2str;
+    if (matrixType2str.size() == 0) {
+        // initialize
+        matrixType2str[UNDEFINED] = "UNDEFINED";
+        matrixType2str[RSFD] = "RSFD";
+        matrixType2str[CSFD] = "CSFD";
+        matrixType2str[RLHD] = "RLHD";
+        matrixType2str[RUHD] = "RUHD";
+        matrixType2str[CLHD] = "CLHD";
+        matrixType2str[CUHD] = "CUHD";
+        matrixType2str[COOF] = "COOF";
+        matrixType2str[COOS] = "COOS";
+        matrixType2str[ABGD] = "ABGD";
+    }
+
+    std::map<TlMatrixObject::MatrixType, std::string>::const_iterator it = matrixType2str.find(matrixType);
+    std::string answer = "";
+    if (it != matrixType2str.end()) {
+        answer = it->second;
+    }
+
+    return answer;
+}
 
 TlMatrixObject::TlMatrixObject(const MatrixType matrixType, const index_type row, const index_type col)
     : matrixType_(matrixType), row_(row), col_(col), log_(TlLogging::getInstance()) {

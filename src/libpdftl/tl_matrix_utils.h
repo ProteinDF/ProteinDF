@@ -7,33 +7,25 @@
 #include "tl_matrix_object.h"
 
 class TlMatrixUtils {
-   public:
+public:
     typedef std::char_traits<char>::off_type FileSize;
 
-   public:
+public:
     static bool isLoadable(const std::string& filePath, const TlMatrixObject::MatrixType matrixType);
 
-   public:
+public:
     /// ヘッダ情報を読み取る
-    /// header情報を読み取れた場合はヘッダサイズを返す
-    /// 読み取れなかった場合は0を返す
-    // static FileSize getHeaderInfo(const std::string& filePath, TlMatrixObject::MatrixType* pMatrixType = NULL,
-    //                               TlMatrixObject::index_type* pNumOfRows = NULL,
-    //                               TlMatrixObject::index_type* pNumOfCols = NULL, std::size_t* pNumOfItems = NULL,
-    //                               int* pNumOfSubunits = NULL, int* pSubunitId = NULL, int* pSizeOfChunk = NULL);
-    static FileSize getHeaderInfo(const std::string& filePath, TlMatrixObject::HeaderInfo* pHeaderInfo = NULL);
-
-    /// ヘッダ情報を読み取る
-    /// header情報を読み取れた場合はヘッダサイズを返す
-    /// 読み取れなかった場合は0を返す
+    /// header情報を読み取れた場合はtrueを返す
     /// 読み取り位置はヘッダの終了を指し示す。
-    // static FileSize getHeaderInfo(std::fstream& fs, TlMatrixObject::MatrixType* pMatrixType = NULL,
-    //                               TlMatrixObject::index_type* pNumOfRows = NULL,
-    //                               TlMatrixObject::index_type* pNumOfCols = NULL, std::size_t* pNumOfItems = NULL,
-    //                               int* pNumOfSubunits = NULL, int* pSubunitId = NULL, int* pSizeOfChunk = NULL);
-    static FileSize getHeaderInfo(std::fstream& fs, TlMatrixObject::HeaderInfo* pHeaderInfo = NULL);
+    static bool getHeaderInfo(const std::string& filePath, TlMatrixObject::HeaderInfo* pHeaderInfo = NULL);
 
-   public:
+    /// ヘッダ情報を読み取る
+    /// header情報を読み取れた場合はtrueを返す
+    /// 読み取り位置はヘッダの終了を指し示す。
+    static bool getHeaderInfo(std::ifstream& ifs, TlMatrixObject::HeaderInfo* pHeaderInfo = NULL);
+    static bool getHeaderInfo(std::fstream& fs, TlMatrixObject::HeaderInfo* pHeaderInfo = NULL);
+
+public:
     // static TlMatrixObject::size_type loadMatrix(
     //     const std::string& filepath,
     //     const TlMatrixObject::MatrixType inMatrixType, double* pBuf,
@@ -44,13 +36,13 @@ class TlMatrixUtils {
                            const TlMatrixObject::index_type rows, const TlMatrixObject::index_type cols,
                            const double* pBuf, const std::size_t numOfItems);
 
-   public:
+public:
     static void CSFD2RSFD(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
                           const double* pBufIn, double* pBufOut);
     static void RSFD2CSFD(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
                           const double* pBufIn, double* pBufOut);
 
-   public:
+public:
     /// リストからまとめて要素を加算する
     ///
     /// @param[in] pIndexPairs インデックスのリスト(row1, col1, row2, col2, ...)
@@ -60,28 +52,14 @@ class TlMatrixUtils {
     static void addByList(const TlMatrixObject::index_type* pIndexPairs, const double* pValues, const std::size_t size,
                           MatrixClass* pMatrix);
 
-   protected:
-    /// header情報を読み取れた場合はヘッダサイズを返す
-    /// 読み取れなかった場合は0を返す
-    // template <typename stream>
-    // static FileSize getHeaderSize_templ1(stream& s, TlMatrixObject::MatrixType* pMatrixType = NULL,
-    //                                      TlMatrixObject::index_type* pNumOfRows = NULL,
-    //                                      TlMatrixObject::index_type* pNumOfCols = NULL, std::size_t* pNumOfItems =
-    //                                      NULL, int* pNumOfSubunits = NULL, int* pSubunitId = NULL, int* pSizeOfChunk
-    //                                      = NULL);
+protected:
+    /// header情報を読み取れた場合はtrueを返す
     template <typename stream>
-    static FileSize getHeaderSize_templ1(stream& s, TlMatrixObject::HeaderInfo* pHeaderInfo = NULL);
+    static bool getHeaderSize_template(stream& s, TlMatrixObject::HeaderInfo* pHeaderInfo = NULL);
 
-    /// header情報を読み取れた場合はヘッダサイズを返す
-    /// 読み取れなかった場合は0を返す
-    // template <typename StreamType, typename MatrixType, typename IndexType>
-    // static FileSize getHeaderSize_templ2(StreamType& s, MatrixType* pMatrixType, TlMatrixObject::index_type*
-    // pNumOfRows,
-    //                                      TlMatrixObject::index_type* pNumOfCols, std::size_t* pNumOfItems,
-    //                                      int* pNumOfSubunits = NULL, int* pSubunitId = NULL, int* pSizeOfChunk =
-    //                                      NULL);
+    /// header情報を読み取れた場合はtrueを返す
     template <typename StreamType, typename MatrixType, typename IndexType>
-    static FileSize getHeaderSize_templ2(StreamType& s, TlMatrixObject::HeaderInfo* pHeaderInfo = NULL);
+    static bool getHeaderSizeByType_template(StreamType& s, TlMatrixObject::HeaderInfo* pHeaderInfo = NULL);
 
     static std::size_t estimateFileSize(const TlMatrixObject::HeaderInfo& headerInfo);
 };

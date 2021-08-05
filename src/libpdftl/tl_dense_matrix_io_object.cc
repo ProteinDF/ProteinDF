@@ -122,9 +122,9 @@ bool TlDenseMatrix_IO_object::readHeader() {
     bool answer = false;
     TlMatrixObject::HeaderInfo headerInfo;
 
-    const TlMatrixUtils::FileSize headerSize = TlMatrixUtils::getHeaderInfo(this->fs_, &headerInfo);
+    const bool isLoadable = TlMatrixUtils::getHeaderInfo(this->fs_, &headerInfo);
 
-    if ((headerSize > 0) && (headerInfo.matrixType == this->getType())) {
+    if ((isLoadable == true) && (headerInfo.matrixType == this->getType())) {
         answer = true;
         this->row_ = headerInfo.numOfRows;
         this->col_ = headerInfo.numOfCols;
@@ -133,7 +133,7 @@ bool TlDenseMatrix_IO_object::readHeader() {
     } else {
         std::cerr << TlUtils::format("cannot read matrix header: %s@%d", __FILE__, __LINE__) << std::endl;
         std::cerr << TlUtils::format("matrix: type=%d, row=%d, col=%d; hs=%ld", static_cast<int>(headerInfo.matrixType),
-                                     headerInfo.numOfRows, headerInfo.numOfCols, headerSize)
+                                     headerInfo.numOfRows, headerInfo.numOfCols, headerInfo.headerSize)
                   << std::endl;
     }
 

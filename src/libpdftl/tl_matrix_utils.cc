@@ -10,80 +10,64 @@
 // public
 // -----------------------------------------------------------------------------
 bool TlMatrixUtils::isLoadable(const std::string& filePath, const TlMatrixObject::MatrixType matrixType) {
-    // TlMatrixObject::MatrixType loadMatrixType;
     TlMatrixObject::HeaderInfo headerInfo;
-    const TlMatrixUtils::FileSize headerSize = TlMatrixUtils::getHeaderInfo(filePath, &headerInfo);
+    const bool isLoadable = TlMatrixUtils::getHeaderInfo(filePath, &headerInfo);
 
     bool answer = false;
-    if ((headerSize > 0) && (headerInfo.matrixType == matrixType)) {
+    if ((isLoadable == true) && (headerInfo.matrixType == matrixType)) {
         answer = true;
     }
+
     return answer;
 }
 
-TlMatrixUtils::FileSize TlMatrixUtils::getHeaderInfo(const std::string& filepath,
-                                                     TlMatrixObject::HeaderInfo* pHeaderInfo) {
-    FileSize headerSize = 0;
+bool TlMatrixUtils::getHeaderInfo(const std::string& filepath, TlMatrixObject::HeaderInfo* pHeaderInfo) {
+    bool answer = false;
 
     std::ios_base::sync_with_stdio(false);
-    std::fstream fs;
-    fs.open(filepath.c_str(), std::ios::in | std::ios::binary);
+    std::ifstream ifs;
+    ifs.open(filepath.c_str(), std::ios::in | std::ios::binary);
 
-    if (!fs.fail()) {
-        headerSize = TlMatrixUtils::getHeaderInfo(fs, pHeaderInfo);
+    if (!ifs.fail()) {
+        answer = TlMatrixUtils::getHeaderInfo(ifs, pHeaderInfo);
     } else {
         std::cerr << TlUtils::format("cannot open matrix file: %s @%s:%d", filepath.c_str(), __FILE__, __LINE__)
                   << std::endl;
     }
 
-    fs.close();
+    ifs.close();
 
-    return headerSize;
+    return answer;
 }
 
-// TlMatrixUtils::FileSize TlMatrixUtils::getHeaderInfo(const std::string& filepath,
-//                                                      TlMatrixObject::MatrixType* pMatrixType,
-//                                                      TlMatrixObject::index_type* pNumOfRows,
-//                                                      TlMatrixObject::index_type* pNumOfCols, std::size_t*
-//                                                      pNumOfItems, int* pNumOfSubunits, int* pSubunitId, int*
-//                                                      pSizeOfChunk) {
-//     FileSize headerSize = 0;
+bool TlMatrixUtils::getHeaderInfo(std::ifstream& ifs, TlMatrixObject::HeaderInfo* pHeaderInfo) {
+    TlMatrixObject::HeaderInfo headerInfo;
+    const bool answer = TlMatrixUtils::getHeaderSize_template<std::ifstream>(ifs, &headerInfo);
+    if (answer == true) {
+        const std::size_t headerSize = headerInfo.headerSize;
+        ifs.seekg(headerSize, std::ios_base::beg);
+    }
 
-//     std::ios_base::sync_with_stdio(false);
-//     std::fstream fs;
-//     fs.open(filepath.c_str(), std::ios::in | std::ios::binary);
+    if (pHeaderInfo != NULL) {
+        *pHeaderInfo = headerInfo;
+    }
 
-//     if (!fs.fail()) {
-//         headerSize = TlMatrixUtils::getHeaderInfo(fs, pMatrixType, pNumOfRows, pNumOfCols, pNumOfItems,
-//         pNumOfSubunits,
-//                                                   pSubunitId, pSizeOfChunk);
-//     } else {
-//         std::cerr << TlUtils::format("cannot open matrix file: %s @%s:%d", filepath.c_str(), __FILE__, __LINE__)
-//                   << std::endl;
-//     }
+    return answer;
+}
 
-//     fs.close();
+bool TlMatrixUtils::getHeaderInfo(std::fstream& fs, TlMatrixObject::HeaderInfo* pHeaderInfo) {
+    TlMatrixObject::HeaderInfo headerInfo;
+    const bool answer = TlMatrixUtils::getHeaderSize_template<std::fstream>(fs, &headerInfo);
+    if (answer == true) {
+        const std::size_t headerSize = headerInfo.headerSize;
+        fs.seekg(headerSize, std::ios_base::beg);
+    }
 
-//     return headerSize;
-// }
+    if (pHeaderInfo != NULL) {
+        *pHeaderInfo = headerInfo;
+    }
 
-// TlMatrixUtils::FileSize TlMatrixUtils::getHeaderInfo(std::fstream& fs, TlMatrixObject::MatrixType* pMatrixType,
-//                                                      TlMatrixObject::index_type* pNumOfRows,
-//                                                      TlMatrixObject::index_type* pNumOfCols, std::size_t*
-//                                                      pNumOfItems, int* pNumOfSubunits, int* pSubunitId, int*
-//                                                      pSizeOfChunk) {
-//     const FileSize headerSize = TlMatrixUtils::getHeaderSize_templ1<std::fstream>(
-//         fs, pMatrixType, pNumOfRows, pNumOfCols, pNumOfItems, pNumOfSubunits, pSubunitId, pSizeOfChunk);
-//     fs.seekg(headerSize, std::ios_base::beg);
-
-//     return headerSize;
-// }
-
-TlMatrixUtils::FileSize TlMatrixUtils::getHeaderInfo(std::fstream& fs, TlMatrixObject::HeaderInfo* pHeaderInfo) {
-    const FileSize headerSize = TlMatrixUtils::getHeaderSize_templ1<std::fstream>(fs, pHeaderInfo);
-    fs.seekg(headerSize, std::ios_base::beg);
-
-    return headerSize;
+    return answer;
 }
 
 bool TlMatrixUtils::saveMatrix(const std::string& filepath, const TlMatrixObject::MatrixType matrixType,
@@ -127,96 +111,48 @@ void TlMatrixUtils::RSFD2CSFD(const TlMatrixObject::index_type row, const TlMatr
 // protected
 // -----------------------------------------------------------------------------
 template <typename StreamType>
-TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ1(StreamType& s, TlMatrixObject::HeaderInfo* pHeaderInfo) {
-    // TlMatrixObject::MatrixType matrixType;
-    // TlMatrixObject::index_type rows = 0;
-    // TlMatrixObject::index_type cols = 0;
-    // std::size_t numOfItems = 0;
-    // int numOfSubunits = 0;
-    // int subunitId = 0;
-    // int sizeOfChunk = 0;
+bool TlMatrixUtils::getHeaderSize_template(StreamType& s, TlMatrixObject::HeaderInfo* pHeaderInfo) {
+    bool answer = false;
 
-    FileSize headerSize = 0;
     // char case:
     {
         // char type = 0;
-        headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, char, int>(s, pHeaderInfo);
-        // std::cout << TlUtils::format("%s: %d (%d, %d)", "ci", type, rows,
-        // cols)
-        //           << std::endl;
+        answer = TlMatrixUtils::getHeaderSizeByType_template<StreamType, char, int>(s, pHeaderInfo);
+        // std::cout << TlUtils::format("ci: %d (%d, %d)", pHeaderInfo->matrixType, pHeaderInfo->numOfRows, pHeaderInfo->numOfCols) << std::endl;
 
-        if (headerSize == 0) {
-            headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, char, long>(s, pHeaderInfo);
-            // std::cout << TlUtils::format("%s: %d (%d, %d)", "cl", type, rows,
-            // cols)
-            //           << std::endl;
+        if (answer == false) {
+            answer = TlMatrixUtils::getHeaderSizeByType_template<StreamType, char, long>(s, pHeaderInfo);
+            // std::cout << TlUtils::format("cl: %d (%d, %d)", pHeaderInfo->matrixType, pHeaderInfo->numOfRows, pHeaderInfo->numOfCols) << std::endl;
         }
-        // matrixType = static_cast<TlMatrixObject::MatrixType>(type);
     }
 
     // int case:
-    if (headerSize == 0) {
-        // int type = 0;
-        headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, int, int>(s, pHeaderInfo);
-        // std::cout << TlUtils::format("%s: %d (%d, %d)", "ii", type, rows,
-        // cols)
-        //           << std::endl;
+    if (answer == false) {
+        answer = TlMatrixUtils::getHeaderSizeByType_template<StreamType, int, int>(s, pHeaderInfo);
+        // std::cout << TlUtils::format("ii: %d (%d, %d)", pHeaderInfo->matrixType, pHeaderInfo->numOfRows, pHeaderInfo->numOfCols) << std::endl;
 
-        if (headerSize == 0) {
-            headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, int, long>(s, pHeaderInfo);
-            // std::cout << TlUtils::format("%s: %d (%d, %d)", "il", type, rows,
-            // cols)
-            //           << std::endl;
+        if (answer == false) {
+            answer = TlMatrixUtils::getHeaderSizeByType_template<StreamType, int, long>(s, pHeaderInfo);
+            // std::cout << TlUtils::format("il: %d (%d, %d)", pHeaderInfo->matrixType, pHeaderInfo->numOfRows, pHeaderInfo->numOfCols) << std::endl;
         }
-        // matrixType = static_cast<TlMatrixObject::MatrixType>(type);
     }
 
     // long case:
-    if (headerSize == 0) {
-        // long type = 0;
-        headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, long, int>(s, pHeaderInfo);
-        // std::cout << TlUtils::format("%s: %d (%d, %d)", "li", type, rows,
-        // cols)
-        //           << std::endl;
+    if (answer == false) {
+        answer = TlMatrixUtils::getHeaderSizeByType_template<StreamType, long, int>(s, pHeaderInfo);
+        // std::cout << TlUtils::format("li: %d (%d, %d)", pHeaderInfo->matrixType, pHeaderInfo->numOfRows, pHeaderInfo->numOfCols) << std::endl;
 
-        if (headerSize == 0) {
-            headerSize = TlMatrixUtils::getHeaderSize_templ2<StreamType, long, long>(s, pHeaderInfo);
-            // std::cout << TlUtils::format("%s: %d (%d, %d)", "ll", type, rows,
-            // cols)
-            //           << std::endl;
+        if (answer == false) {
+            answer = TlMatrixUtils::getHeaderSizeByType_template<StreamType, long, long>(s, pHeaderInfo);
+            std::cout << TlUtils::format("ll: %d (%d, %d)", pHeaderInfo->matrixType, pHeaderInfo->numOfRows, pHeaderInfo->numOfCols) << std::endl;
         }
-        // matrixType = static_cast<TlMatrixObject::MatrixType>(type);
     }
 
-    // if (headerSize > 0) {
-    //     if (pMatrixType != NULL) {
-    //         *pMatrixType = matrixType;
-    //     }
-    //     if (pNumOfRows != NULL) {
-    //         *pNumOfRows = rows;
-    //     }
-    //     if (pNumOfCols != NULL) {
-    //         *pNumOfCols = cols;
-    //     }
-    //     if (pNumOfItems != NULL) {
-    //         *pNumOfItems = numOfItems;
-    //     }
-    //     if (pNumOfSubunits != NULL) {
-    //         *pNumOfSubunits = numOfSubunits;
-    //     }
-    //     if (pSubunitId != NULL) {
-    //         *pSubunitId = subunitId;
-    //     }
-    //     if (pSizeOfChunk != NULL) {
-    //         *pSizeOfChunk = sizeOfChunk;
-    //     }
-    // }
-
-    return headerSize;
+    return answer;
 }
 
 template <typename StreamType, typename MatrixType, typename IndexType>
-TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ2(StreamType& s, TlMatrixObject::HeaderInfo* pHeaderInfo) {
+bool TlMatrixUtils::getHeaderSizeByType_template(StreamType& s, TlMatrixObject::HeaderInfo* pHeaderInfo) {
     MatrixType matrixType = 0;
     TlMatrixObject::HeaderInfo headerInfo;
 
@@ -229,9 +165,12 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ2(StreamType& s, TlMat
 
     s.seekg(0, std::ios_base::beg);
     s.read((char*)&(matrixType), sizeof(MatrixType));
+    std::ifstream::pos_type pos_type = s.tellg();
     headerInfo.matrixType = static_cast<TlMatrixObject::MatrixType>(matrixType);
-    // std::cerr << "matrixType (233): " << (int)matrixType << std::endl;
-    FileSize headerSize = sizeof(MatrixType);
+    // std::cerr << "matrixType: " << TlMatrixObject::matrixTypeStr(headerInfo.matrixType) << std::endl;
+
+    FileSize headerSize = sizeof(char);
+    bool answer = false;
 
     switch (matrixType) {
         case TlMatrixObject::RSFD:
@@ -248,7 +187,14 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ2(StreamType& s, TlMat
             headerInfo.numOfRows = rows;
             headerInfo.numOfCols = cols;
 
-            headerSize += sizeof(IndexType) * 2;
+            headerSize = sizeof(MatrixType) + sizeof(IndexType) * 2;
+            const FileSize estimatedFileSize = headerSize + TlMatrixUtils::estimateFileSize(headerInfo);
+            if (estimatedFileSize == fileSize) {
+                headerInfo.headerSize = headerSize;
+                headerInfo.version = 0;
+
+                answer = true;
+            }
         } break;
 
         case TlMatrixObject::COOF:
@@ -265,32 +211,95 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ2(StreamType& s, TlMat
             headerInfo.numOfCols = cols;
             headerInfo.numOfItems = numOfItems;
 
-            headerSize += sizeof(IndexType) * 2 + sizeof(std::size_t);
+            headerSize = sizeof(MatrixType) + sizeof(IndexType) * 2 + sizeof(std::size_t);
+            const FileSize estimatedFileSize = headerSize + TlMatrixUtils::estimateFileSize(headerInfo);
+            if (estimatedFileSize == fileSize) {
+                headerInfo.headerSize = headerSize;
+                headerInfo.version = 0;
+
+                answer = true;
+            }
         } break;
 
         case TlMatrixObject::ABGD: {
-            IndexType numOfVectors = 0;
-            IndexType sizeOfVector = 0;
-            IndexType reservedSizeOfVector = 0;
-            int numOfSubunits = 0;
-            int subunitId = 0;
-            int sizeOfChunk = 0;
+            // old format
+            {
+                IndexType numOfVectors = 0;
+                IndexType sizeOfVector = 0;
+                IndexType reservedSizeOfVector = 0;
+                int numOfSubunits = 0;
+                int subunitId = 0;
+                int sizeOfChunk = 0;
 
-            s.read(reinterpret_cast<char*>(&numOfVectors), sizeof(IndexType));
-            s.read(reinterpret_cast<char*>(&sizeOfVector), sizeof(IndexType));
-            s.read(reinterpret_cast<char*>(&reservedSizeOfVector), sizeof(IndexType));
-            s.read(reinterpret_cast<char*>(&numOfSubunits), sizeof(int));
-            s.read(reinterpret_cast<char*>(&subunitId), sizeof(int));
-            s.read(reinterpret_cast<char*>(&sizeOfChunk), sizeof(int));
+                // s.seekg(pos_type);
+                s.read(reinterpret_cast<char*>(&numOfVectors), sizeof(IndexType));
+                s.read(reinterpret_cast<char*>(&sizeOfVector), sizeof(IndexType));
+                // skip reading "reservedSizeOfVector" for old version
+                reservedSizeOfVector = sizeOfVector;
+                s.read(reinterpret_cast<char*>(&numOfSubunits), sizeof(int));
+                s.read(reinterpret_cast<char*>(&subunitId), sizeof(int));
+                s.read(reinterpret_cast<char*>(&sizeOfChunk), sizeof(int));
+                // std::cerr << TlUtils::format("(%d, %d, %d) [%d/%d] @%d",
+                //                              numOfVectors, sizeOfVector, reservedSizeOfVector, subunitId, numOfSubunits, sizeOfChunk)
+                //           << std::endl;
 
-            headerInfo.numOfVectors = numOfVectors;
-            headerInfo.sizeOfVector = sizeOfVector;
-            headerInfo.reservedSizeOfVector = reservedSizeOfVector;
-            headerInfo.numOfSubunits = numOfSubunits;
-            headerInfo.subunitId = subunitId;
-            headerInfo.sizeOfChunk = sizeOfChunk;
+                headerInfo.numOfVectors = numOfVectors;
+                headerInfo.sizeOfVector = sizeOfVector;
+                headerInfo.reservedSizeOfVector = reservedSizeOfVector;
+                headerInfo.numOfSubunits = numOfSubunits;
+                headerInfo.subunitId = subunitId;
+                headerInfo.sizeOfChunk = sizeOfChunk;
 
-            headerSize += sizeof(IndexType) * 3 + sizeof(int) * 3;
+                headerSize = sizeof(MatrixType) + sizeof(IndexType) * 2 + sizeof(int) * 3;
+                const FileSize estimatedFileSize = headerSize + TlMatrixUtils::estimateFileSize(headerInfo);
+                if (estimatedFileSize == fileSize) {
+                    headerInfo.headerSize = headerSize;
+                    headerInfo.version = 0;
+
+                    answer = true;
+
+                    std::cerr << "This file format is obsolete. Please update the format." << std::endl;
+                }
+            }
+
+            //
+            if (answer == false) {
+                IndexType numOfVectors = 0;
+                IndexType sizeOfVector = 0;
+                IndexType reservedSizeOfVector = 0;
+                int numOfSubunits = 0;
+                int subunitId = 0;
+                int sizeOfChunk = 0;
+
+                s.seekg(pos_type);
+                s.read(reinterpret_cast<char*>(&numOfVectors), sizeof(IndexType));
+                s.read(reinterpret_cast<char*>(&sizeOfVector), sizeof(IndexType));
+                s.read(reinterpret_cast<char*>(&reservedSizeOfVector), sizeof(IndexType));
+
+                s.read(reinterpret_cast<char*>(&numOfSubunits), sizeof(int));
+                s.read(reinterpret_cast<char*>(&subunitId), sizeof(int));
+                s.read(reinterpret_cast<char*>(&sizeOfChunk), sizeof(int));
+                // std::cerr << TlUtils::format("(%d, %d, %d) [%d/%d] @%d",
+                //                              numOfVectors, sizeOfVector, reservedSizeOfVector, subunitId, numOfSubunits, sizeOfChunk)
+                //           << std::endl;
+
+                headerInfo.numOfVectors = numOfVectors;
+                headerInfo.sizeOfVector = sizeOfVector;
+                headerInfo.reservedSizeOfVector = reservedSizeOfVector;
+                headerInfo.numOfSubunits = numOfSubunits;
+                headerInfo.subunitId = subunitId;
+                headerInfo.sizeOfChunk = sizeOfChunk;
+
+                headerSize = sizeof(MatrixType) + sizeof(IndexType) * 3 + sizeof(int) * 3;
+                const FileSize estimatedFileSize = headerSize + TlMatrixUtils::estimateFileSize(headerInfo);
+                // std::cerr << TlUtils::format("check ABGD2 filesize: %ld (%ld) = %dx%d", fileSize, estimatedFileSize, numOfVectors, sizeOfVector) << std::endl;
+                if (estimatedFileSize == fileSize) {
+                    headerInfo.headerSize = headerSize;
+                    headerInfo.version = 1;
+
+                    answer = true;
+                }
+            }
         } break;
 
         default: {
@@ -301,17 +310,12 @@ TlMatrixUtils::FileSize TlMatrixUtils::getHeaderSize_templ2(StreamType& s, TlMat
     if (pHeaderInfo != NULL) {
         *pHeaderInfo = headerInfo;
     }
-    const FileSize estimatedFileSize = headerSize + TlMatrixUtils::estimateFileSize(headerInfo);
+
     // std::cerr << TlUtils::format("%s@%d [%d, %d] type: %d, fs: %ld/%ld %d/%d/%d", __FILE__, __LINE__,
     //                              headerInfo.numOfRows, headerInfo.numOfCols, headerInfo.matrixType, fileSize,
     //                              estimatedFileSize, headerInfo.numOfSubunits, headerInfo.subunitId,
     //                              headerInfo.sizeOfChunk)
     //           << std::endl;
-
-    FileSize answer = 0;
-    if (estimatedFileSize == fileSize) {
-        answer = headerSize;
-    }
 
     return answer;
 }
@@ -346,10 +350,12 @@ std::size_t TlMatrixUtils::estimateFileSize(const TlMatrixObject::HeaderInfo& he
             break;
 
         case TlMatrixObject::ABGD: {
-            const std::size_t numOfChunks = TlDenseMatrix_arrays_Object::getNumOfLocalChunks(
-                headerInfo.numOfVectors, headerInfo.numOfSubunits, headerInfo.sizeOfChunk);
+            // std::cerr << TlUtils::format("numOfVectors: %d, subunits: %d, sizeOfChunk: %d",
+            //                              headerInfo.numOfVectors, headerInfo.numOfSubunits, headerInfo.sizeOfChunk)
+            //           << std::endl;
+            const std::size_t numOfLocalChunks = TlDenseMatrix_arrays_Object::getNumOfLocalChunks(headerInfo.numOfVectors, headerInfo.numOfSubunits, headerInfo.sizeOfChunk);
             // std::cerr << TlUtils::format("chunks: %d", numOfChunks) << std::endl;
-            answer = size_double * (numOfChunks * headerInfo.sizeOfChunk) * headerInfo.reservedSizeOfVector;
+            answer = size_double * (numOfLocalChunks * headerInfo.sizeOfChunk) * headerInfo.reservedSizeOfVector;
         } break;
 
         default:

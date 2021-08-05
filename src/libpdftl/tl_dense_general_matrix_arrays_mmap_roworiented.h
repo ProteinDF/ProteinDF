@@ -44,9 +44,6 @@ public:
     /// TlDenseGeneralMatrix_Lapackオブジェクトを返す(for debug)
     TlDenseGeneralMatrix_Lapack getTlMatrixObject() const;
 
-    /// TlDenseGeneralMatrix_arrays_ColOriented形式で保存
-    // void saveByTlDenseGeneralMatrix_arrays_ColOriented(const std::string& basename) const;
-
 public:
     std::string tempDir() const {
         return this->tempDir_;

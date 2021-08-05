@@ -10,14 +10,14 @@
 #include "tl_dense_matrix_arrays_mmap_object.h"
 
 class TlDenseGeneralMatrix_arrays_mmap_ColOriented : public TlDenseMatrix_arrays_mmap_Object {
-   public:
+public:
     explicit TlDenseGeneralMatrix_arrays_mmap_ColOriented(const std::string& baseFilePath, index_type row = 1,
                                                           index_type col = 1, int numOfSubunits = 1, int subunitID = 0,
                                                           int reservedRows = 0);
 
     virtual ~TlDenseGeneralMatrix_arrays_mmap_ColOriented();
 
-   public:
+public:
     virtual void resize(index_type row, index_type col);
     void reserveRowSize(const index_type reserveRowSize);
 
@@ -38,12 +38,9 @@ class TlDenseGeneralMatrix_arrays_mmap_ColOriented : public TlDenseMatrix_arrays
 
     virtual void setRowVector(const index_type row, const std::valarray<double>& v);
 
-   public:
+public:
     /// TlDenseGeneralMatrix_Lapackオブジェクトを返す(for debug)
     TlDenseGeneralMatrix_Lapack getTlMatrixObject() const;
-
-    /// TlDenseGeneralMatrix_arrays_ColOriented形式で保存
-    // void saveByTlDenseGeneralMatrix_arrays_ColOriented(const std::string& basename) const;
 };
 
 std::ostream& operator<<(std::ostream& stream, const TlDenseGeneralMatrix_arrays_mmap_ColOriented& mat);
