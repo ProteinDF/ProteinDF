@@ -34,6 +34,7 @@
 #include "tl_dense_general_matrix_scalapack.h"
 #include "tl_dense_symmetric_matrix_eigen.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_matrix_utils.h"
 
 #define TRANS_MEM_SIZE (1 * 1024 * 1024 * 1024)  // 1GB
 // #define CD_DEBUG
@@ -172,20 +173,21 @@ bool DfCD_Parallel::transpose2CSFD_mpi(const std::string& rvmBasePath, const std
     TlMatrixObject::index_type numOfCols = 0;
     int numOfSubunits = 0;
     int sizeOfChunk = 0;
-    bool isLoadable = false;
+    // bool isLoadable = false;
     {
         int subunitID = rank;
         const std::string inputPath0 = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, subunitID);
-        TlMatrixObject::index_type sizeOfVector, numOfVectors;
-        isLoadable = TlDenseMatrix_arrays_mmap_Object::isLoadable(inputPath0, &numOfVectors, &sizeOfVector,
-                                                                  &numOfSubunits, &subunitID, &sizeOfChunk);
+
+        TlMatrixObject::HeaderInfo headerInfo;
+        const bool isLoadable = TlMatrixUtils::getHeaderInfo(inputPath0, &headerInfo);
+
         if (isLoadable != true) {
             std::cerr << TlUtils::format("can not open file: %s@%d", inputPath0.c_str(), rank) << std::endl;
             return false;
         }
 
-        numOfRows = numOfVectors;
-        numOfCols = sizeOfVector;
+        numOfRows = headerInfo.numOfVectors;
+        numOfCols = headerInfo.sizeOfVector;
 
         // std::cerr << TlUtils::format("[%d] check matrix (%d, %d) %d@%d", rank, numOfRows, numOfCols, numOfSubunits, sizeOfChunk) << std::endl;
     }

@@ -8,7 +8,7 @@
 #include "TlUtils.h"
 #include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_general_matrix_lapack.h"
-// #include "tl_dense_general_matrix_mmap.h"
+#include "tl_matrix_utils.h"
 
 // @todo use /tmp or equivalent dir to use tempCsfdMat.
 
@@ -254,7 +254,7 @@ bool convert2csfd(const std::string& rvmBasePath, const int unit, const std::str
     bool answer = false;
 
     // check loadable
-    bool isLoadable = false;
+    // bool isLoadable = false;
     TlMatrixObject::index_type numOfRows = 0;
     TlMatrixObject::index_type numOfCols = 0;
     int numOfSubunits = 0;
@@ -262,17 +262,18 @@ bool convert2csfd(const std::string& rvmBasePath, const int unit, const std::str
     {
         int subunitID = 0;
         const std::string inputPath0 = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, unit);
-        TlMatrixObject::index_type sizeOfVector, numOfVectors;
-        isLoadable = TlDenseMatrix_arrays_mmap_Object::isLoadable(inputPath0, &numOfVectors, &sizeOfVector,
-                                                                  &numOfSubunits, &subunitID, &sizeOfChunk);
+
+        TlMatrixObject::HeaderInfo headerInfo;
+        const bool isLoadable = TlMatrixUtils::getHeaderInfo(inputPath0, &headerInfo);
+
         if (isLoadable != true) {
             std::cerr << "can not open file: " << inputPath0 << std::endl;
             answer = false;
         }
 
         // row-vector matrix
-        numOfRows = numOfVectors;
-        numOfCols = sizeOfVector;
+        numOfRows = headerInfo.numOfVectors;
+        numOfCols = headerInfo.sizeOfVector;
     }
 
     {
@@ -365,20 +366,21 @@ bool transpose2CSFD(const std::string& rvmBasePath, const std::string& outputMat
     TlMatrixObject::index_type numOfCols = 0;
     int numOfSubunits = 0;
     int sizeOfChunk = 0;
-    bool isLoadable = false;
+    // bool isLoadable = false;
     {
         int subunitID = 0;
         const std::string inputPath0 = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, subunitID);
-        TlMatrixObject::index_type sizeOfVector, numOfVectors;
-        isLoadable = TlDenseMatrix_arrays_mmap_Object::isLoadable(inputPath0, &numOfVectors, &sizeOfVector,
-                                                                  &numOfSubunits, &subunitID, &sizeOfChunk);
+
+        TlMatrixObject::HeaderInfo headerInfo;
+        const bool isLoadable = TlMatrixUtils::getHeaderInfo(inputPath0, &headerInfo);
+
         if (isLoadable != true) {
             std::cerr << "can not open file: " << inputPath0 << std::endl;
             return false;
         }
 
-        numOfRows = numOfVectors;
-        numOfCols = sizeOfVector;
+        numOfRows = headerInfo.numOfVectors;
+        numOfCols = headerInfo.sizeOfVector;
 
         if (verbose) {
             std::cerr << "rows: " << numOfRows << std::endl;
