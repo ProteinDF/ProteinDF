@@ -381,6 +381,8 @@ bool transpose2CSFD(const std::string& rvmBasePath, const std::string& outputMat
 
         numOfRows = headerInfo.numOfVectors;
         numOfCols = headerInfo.sizeOfVector;
+        numOfSubunits = headerInfo.numOfSubunits;
+        sizeOfChunk = headerInfo.sizeOfChunk;
 
         if (verbose) {
             std::cerr << "rows: " << numOfRows << std::endl;
