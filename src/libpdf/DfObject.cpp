@@ -770,13 +770,15 @@ int DfObject::iteration() const {
 }
 
 double DfObject::getTotalEnergy(const int iteration) const {
-    const double TE = (*(this->pPdfParam_))["TEs"][iteration].getDouble();
+    const std::string itr = TlUtils::xtos(iteration);
+    const double TE = (*(this->pPdfParam_))["TEs"][itr].getDouble();
 
     return TE;
 }
 
 double DfObject::getTotalEnergy_elec(int iteration) const {
-    const TlSerializeData& paramTE = (*this->pPdfParam_)["total_energy"][iteration];
+    const std::string itr = TlUtils::xtos(iteration);
+    const TlSerializeData& paramTE = (*this->pPdfParam_)["total_energy"][itr];
     const double E_h = paramTE["h"].getDouble();
     const double E_h_X = paramTE["h_X"].getDouble();
     const double E_J = paramTE["J"].getDouble();
