@@ -43,6 +43,7 @@
 #include "DfThreeindexintegrals.h"
 #include "TlUtils.h"
 #include "common.h"
+#include "df_converge_damping_oda_lapack.h"
 // #include "DfTotalEnergy.h"
 
 #ifdef HAVE_LAPACK
@@ -72,7 +73,8 @@
 
 #define NUMBER_OF_CHECK 2
 
-DfScf::DfScf(TlSerializeData* pPdfParam) : DfObject(pPdfParam), m_nDampObject(DAMP_NONE) {
+DfScf::DfScf(TlSerializeData* pPdfParam)
+    : DfObject(pPdfParam), m_nDampObject(DAMP_NONE) {
     this->isUseNewEngine_ = (*pPdfParam)["new_engine"].getBoolean();
 }
 
@@ -141,6 +143,8 @@ void DfScf::setScfParam() {
 
         if (sScfAcceleration == "DAMPING") {
             this->m_nScfAcceleration = SCF_ACCELERATION_SIMPLE;
+        } else if (sScfAcceleration == "ODA") {
+            this->m_nScfAcceleration = SCF_ACCELERATION_ODA;
         } else if (sScfAcceleration == "ANDERSON") {
             this->m_nScfAcceleration = SCF_ACCELERATION_ANDERSON;
         } else if (sScfAcceleration == "DIIS") {
@@ -895,6 +899,8 @@ DfConverge* DfScf::getDfConverge() {
     DfConverge* pDfConverge = NULL;
     if (this->m_nScfAcceleration == SCF_ACCELERATION_SIMPLE) {
         pDfConverge = new DfConverge_Damping(this->pPdfParam_);
+    } else if (this->m_nScfAcceleration == SCF_ACCELERATION_ODA) {
+        pDfConverge = new DfConverge_Damping_Oda_Lapack(this->pPdfParam_);
     } else if (this->m_nScfAcceleration == SCF_ACCELERATION_ANDERSON) {
         pDfConverge = new DfConverge_Anderson(this->pPdfParam_);
     } else if (this->m_nScfAcceleration == SCF_ACCELERATION_DIIS) {
