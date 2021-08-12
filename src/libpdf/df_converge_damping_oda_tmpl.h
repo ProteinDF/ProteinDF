@@ -10,15 +10,15 @@
 // ----------------------------------------------------------------------------
 template <class SymmetricMatrix, class Vector>
 class DfConverge_Damping_Oda_tmpl : public DfConverge_Damping_tmpl<SymmetricMatrix, Vector> {
-   public:
+public:
     DfConverge_Damping_Oda_tmpl(TlSerializeData* pPdfParam);
     virtual ~DfConverge_Damping_Oda_tmpl();
 
-   protected:
+protected:
     void getDampingFactor();
     void getParameters();
 
-   protected:
+protected:
     int odaStartIteration_;
 
     // ODA parameters
@@ -35,7 +35,7 @@ class DfConverge_Damping_Oda_tmpl : public DfConverge_Damping_tmpl<SymmetricMatr
 template <class SymmetricMatrix, class Vector>
 DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::DfConverge_Damping_Oda_tmpl(TlSerializeData* pPdfParam)
     : DfConverge_Damping_tmpl<SymmetricMatrix, Vector>(pPdfParam) {
-    this->odaStartIteration_ = std::max((*pPdfParam)["scf_acceleration/oda/start"].getInt(), 2);
+    this->odaStartIteration_ = std::max((*pPdfParam)["scf_acceleration/oda/start"].getInt(), 10);
 
     this->getDampingFactor();
 }
@@ -45,17 +45,21 @@ DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::~DfConverge_Damping_Oda_tm
 
 template <class SymmetricMatrix, class Vector>
 void DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::getDampingFactor() {
-    if (this->m_nIteration < this->odaStartIteration_) {
+    this->log_.info(TlUtils::format("ODA start iteration: %d", this->odaStartIteration_));
+    if (this->m_nIteration <= this->odaStartIteration_) {
         DfConverge_Damping_tmpl<SymmetricMatrix, Vector>::getDampingFactor();
         return;
     }
+
+    const double stdDampingFactor = (*this->pPdfParam_)["scf_acceleration/damping/damping_factor"].getDouble();
+    this->log_.info(TlUtils::format("scf_acceleration/damping/damping_factor = %f", stdDampingFactor));
 
     this->getParameters();
     const double a = this->oda_a_;
     const double b = this->oda_b_;
     const double c = this->oda_c_;
     const double d = this->oda_d_;
-    this->log_.info(TlUtils::format("ODA parameters: %f, %f, %f, %f", a, b, c, d));
+    this->log_.debug(TlUtils::format("ODA parameters: a=%f, b=%f, c=%f, d=%f", a, b, c, d));
 
     // lambda_m: l_m
     // f(l_m) = a*l_m^3 + b*l_m^2 + c*l_m + d
@@ -67,7 +71,7 @@ void DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::getDampingFactor() {
         std::vector<double> points;
         points.push_back(1.0);
         points.push_back(0.0);
-        // points.push_back(1.0 - DfConverge_Damping::getDampingFactor());
+        points.push_back(1.0 - stdDampingFactor);
 
         // 3a^2 + 2b +c
         double a_ = 3.0 * a;
