@@ -45,7 +45,8 @@ int DfObject::rank_ = 0;
 const std::string DfObject::m_sRunTypeSuffix[DfObject::RUN_MAXINDEX] = {
     "undefined", "rks", "uks_alpha", "uks_beta", "roks", "roks_closed", "roks_open", "roks_alpha", "roks_beta"};
 
-DfObject::DfObject(TlSerializeData* pPdfParam) : pPdfParam_(pPdfParam), log_(TlLogging::getInstance()) {
+DfObject::DfObject(TlSerializeData* pPdfParam)
+    : pPdfParam_(pPdfParam), log_(TlLogging::getInstance()) {
     this->setParam(*pPdfParam);
     ++DfObject::objectCount_;
 }
@@ -766,4 +767,27 @@ int DfObject::getNumOfAtoms() const {
 
 int DfObject::iteration() const {
     return this->m_nIteration;
+}
+
+double DfObject::getTotalEnergy(const int iteration) const {
+    const std::string itr = TlUtils::xtos(iteration);
+    const double TE = (*(this->pPdfParam_))["TEs"][itr].getDouble();
+
+    return TE;
+}
+
+double DfObject::getTotalEnergy_elec(int iteration) const {
+    const std::string itr = TlUtils::xtos(iteration);
+    const TlSerializeData& paramTE = (*this->pPdfParam_)["total_energy"][itr];
+    const double E_h = paramTE["h"].getDouble();
+    const double E_h_X = paramTE["h_X"].getDouble();
+    const double E_J = paramTE["J"].getDouble();
+    const double E_J_rrt = paramTE["J_rr~"].getDouble();
+    const double E_J_rtrt = paramTE["J_r~r~"].getDouble();
+    const double E_K = paramTE["K"].getDouble();
+    const double E_XC = paramTE["K"].getDouble();
+
+    const double E_elec = E_h + E_h_X + E_J + E_J_rrt + E_J_rtrt + E_K + E_XC;
+
+    return E_elec;
 }

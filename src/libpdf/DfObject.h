@@ -111,6 +111,10 @@ class DfObject {
     int getNumOfAtoms() const;
     int iteration() const;
 
+   public:
+    double getTotalEnergy(int iteration) const;
+    double getTotalEnergy_elec(int iteration) const;
+
     // --------------------------------------------------------------------------
     // PATH
     // --------------------------------------------------------------------------
@@ -381,7 +385,7 @@ class DfObject {
      *
      */
     template <class SymmetricMatrixType>
-    SymmetricMatrixType getFpqMatrix(RUN_TYPE runType, int iteration);
+    SymmetricMatrixType getFpqMatrix(RUN_TYPE runType, int iteration) const;
 
     template <class MatrixType>
     void saveXMatrix(const MatrixType& X);
@@ -436,7 +440,7 @@ class DfObject {
     void savePpqMatrix(const RUN_TYPE runType, const int iteration,
                        const SymmetricMatrixType& Ppq);
     template <class SymmetricMatrixType>
-    SymmetricMatrixType getPpqMatrix(RUN_TYPE runType, int iteration);
+    SymmetricMatrixType getPpqMatrix(RUN_TYPE runType, int iteration) const;
 
     // template<class SymmetricMatrixType>
     // void savePCMatrix(const int iteration,
@@ -502,7 +506,9 @@ class DfObject {
     // constants
     // --------------------------------------------------------------------------
    protected:
-    enum J_Engine_Type { J_ENGINE_CONVENTIONAL, J_ENGINE_RI_J, J_ENGINE_CD };
+    enum J_Engine_Type { J_ENGINE_CONVENTIONAL,
+                         J_ENGINE_RI_J,
+                         J_ENGINE_CD };
 
     enum K_Engine_Type {
         K_ENGINE_CONVENTIONAL,
@@ -589,9 +595,9 @@ class DfObject {
     XC_Engine_Type XC_engine_;
 
     std::string m_sXCFunctional;
-    bool isDFT_;  /// XC項にpure DFTを含む場合はtrue
+    bool isDFT_;          /// XC項にpure DFTを含む場合はtrue
     bool m_bIsXCFitting;  /// true => XC項をRI法で計算, false => XC項を直接計算
-    bool m_bIsUpdateXC;  /// XC項をupdate法で計算する(true)
+    bool m_bIsUpdateXC;   /// XC項をupdate法で計算する(true)
     bool
         enableGrimmeDispersion_;  /// Grimmeの経験的分散力補正を計算するかどうか
 
@@ -625,7 +631,7 @@ class DfObject {
     bool isMasterSlave_;  /// Master-Slave方式のときtrue
 
     // for debug =======================================================
-    bool isFileWarning;  /// fileが無い場合のメッセージを表示する
+    bool isFileWarning;            /// fileが無い場合のメッセージを表示する
     bool isSaveJMatrix_;           /// J行列を保存する
     bool enableExperimentalCode_;  /// 実験コードを有効にする
 
@@ -1113,7 +1119,7 @@ void DfObject::saveFpqMatrix(const RUN_TYPE runType, const int iteration,
 
 template <class SymmetricMatrixType>
 SymmetricMatrixType DfObject::getFpqMatrix(const RUN_TYPE runType,
-                                           const int iteration) {
+                                           const int iteration) const {
     SymmetricMatrixType Fpq;
     const std::string path = this->getFpqMatrixPath(runType, iteration);
     // Fpq = this->matrixCache_.get<SymmetricMatrixType>(path);
@@ -1234,7 +1240,7 @@ void DfObject::savePpqMatrix(const RUN_TYPE runType, const int iteration,
 
 template <class SymmetricMatrixType>
 SymmetricMatrixType DfObject::getPpqMatrix(const RUN_TYPE runType,
-                                           const int iteration) {
+                                           const int iteration) const {
     SymmetricMatrixType Ppq;
     const std::string path = this->getPpqMatrixPath(runType, iteration);
     // Ppq = this->matrixCache_.get<SymmetricMatrixType>(path);

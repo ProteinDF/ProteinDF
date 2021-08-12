@@ -44,6 +44,9 @@ class DfConverge_Damping : public DfConverge {
     void convergePMatrix(DfObject::RUN_TYPE runType);
 
    protected:
+    virtual double getDampingFactor() const;
+
+   protected:
     int m_nStartIteration;
     double m_dDampingFactor;
 };
@@ -66,10 +69,10 @@ void DfConverge_Damping::convergeRhoTilde(const DfObject::RUN_TYPE runType) {
         assert(currRho.getSize() == this->m_nNumOfAux);
 
         // get damped rho
-        this->log_.info(
-            TlUtils::format(" damping factor = %f", this->m_dDampingFactor));
-        currRho *= (1.0 - this->m_dDampingFactor);
-        prevRho *= this->m_dDampingFactor;
+        const double dampingFactor = this->getDampingFactor();
+        this->log_.info(TlUtils::format(" damping factor = %f", dampingFactor));
+        currRho *= (1.0 - dampingFactor);
+        prevRho *= dampingFactor;
         currRho += prevRho;
 
         // write damped current rho
@@ -93,10 +96,10 @@ void DfConverge_Damping::convergeKSMatrix(const DfObject::RUN_TYPE runType) {
             DfObject::getFpqMatrix<SymmetricMatrixType>(runType, iteration - 1);
 
         // get damped Fpq
-        this->log_.info(
-            TlUtils::format(" damping factor = %f", this->m_dDampingFactor));
-        currFpq *= (1.0 - this->m_dDampingFactor);
-        prevFpq *= this->m_dDampingFactor;
+        const double dampingFactor = this->getDampingFactor();
+        this->log_.info(TlUtils::format(" damping factor = %f", dampingFactor));
+        currFpq *= (1.0 - dampingFactor);
+        prevFpq *= dampingFactor;
         currFpq += prevFpq;
 
         // write damped current Fpq
@@ -124,19 +127,18 @@ void DfConverge_Damping::convergePMatrix(const DfObject::RUN_TYPE runType) {
             this->getSpinDensityMatrix<SymmetricMatrix>(runType,
                                                         this->m_nIteration - 2);
 
-        this->log_.info(
-            TlUtils::format(" damping factor = %f", this->m_dDampingFactor));
-        currPpq *= (1.0 - this->m_dDampingFactor);
-        prevPpq *= this->m_dDampingFactor;
+        const double dampingFactor = this->getDampingFactor();
+        this->log_.info(TlUtils::format(" damping factor = %f", dampingFactor));
+        currPpq *= (1.0 - dampingFactor);
+        prevPpq *= dampingFactor;
         currPpq += prevPpq;
 
-        currP_spin *= (1.0 - this->m_dDampingFactor);
-        prevP_spin *= this->m_dDampingFactor;
+        currP_spin *= (1.0 - dampingFactor);
+        prevP_spin *= dampingFactor;
         currP_spin += prevP_spin;
 
         DfObject::savePpqMatrix(runType, iteration - 1, currPpq);
-        DfObject::saveSpinDensityMatrix<SymmetricMatrix>(runType, iteration - 1,
-                                                         currP_spin);
+        DfObject::saveSpinDensityMatrix<SymmetricMatrix>(runType, iteration - 1, currP_spin);
     }
 }
 
