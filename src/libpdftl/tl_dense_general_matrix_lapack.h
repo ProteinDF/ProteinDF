@@ -60,15 +60,15 @@ public:
                                                     const TlMatrixObject::index_type length, const double* pBuf);
     virtual void setColVector(const TlMatrixObject::index_type row, const std::vector<double>& v);
 
-public:
-    virtual TlMatrixObject::index_type getRowVector(const TlMatrixObject::index_type row,
-                                                    const TlMatrixObject::index_type length, double* pBuf) const;
-    virtual TlMatrixObject::index_type getColVector(const TlMatrixObject::index_type row,
-                                                    const TlMatrixObject::index_type length, double* pBuf) const;
-    virtual TlMatrixObject::index_type setRowVector(const TlMatrixObject::index_type row,
-                                                    const TlMatrixObject::index_type length, const double* pBuf);
-    virtual TlMatrixObject::index_type setColVector(const TlMatrixObject::index_type col,
-                                                    const TlMatrixObject::index_type length, const double* pBuf);
+    // public:
+    // virtual TlMatrixObject::index_type getRowVector(const TlMatrixObject::index_type row,
+    //                                                 const TlMatrixObject::index_type length, double* pBuf) const;
+    // virtual TlMatrixObject::index_type getColVector(const TlMatrixObject::index_type row,
+    //                                                 const TlMatrixObject::index_type length, double* pBuf) const;
+    // virtual TlMatrixObject::index_type setRowVector(const TlMatrixObject::index_type row,
+    //                                                 const TlMatrixObject::index_type length, const double* pBuf);
+    // virtual TlMatrixObject::index_type setColVector(const TlMatrixObject::index_type col,
+    //                                                 const TlMatrixObject::index_type length, const double* pBuf);
     // ---------------------------------------------------------------------------
     // operations
     // ---------------------------------------------------------------------------
