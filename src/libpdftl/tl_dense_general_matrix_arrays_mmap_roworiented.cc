@@ -187,7 +187,7 @@ void TlDenseGeneralMatrix_arrays_mmap_RowOriented::set2csfd(TlDenseGeneralMatrix
     const int numOfLocalChunks =
         TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(numOfRows, numOfSubunits, sizeOfChunk);
 
-    TlDenseGeneralMatrix_Eigen tmpMat;
+#pragma omp parallel for
     for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
         const TlMatrixObject::index_type row = sizeOfChunk * chunk;
         const TlMatrixObject::index_type chunkStartRow = sizeOfChunk * (numOfSubunits * chunk + unit);
@@ -202,6 +202,7 @@ void TlDenseGeneralMatrix_arrays_mmap_RowOriented::set2csfd(TlDenseGeneralMatrix
         // chunk,
         //                              numOfLocalChunks - 1, chunkStartRow, numOfLocalRows, row, rowDistance)
         //           << std::endl;
+        TlDenseGeneralMatrix_Eigen tmpMat;
         inMat.block(row, 0, rowDistance, numOfCols, &tmpMat);
 
         // std::cerr << TlUtils::format("chunk: %d/%d, chunkStartRow=%d, numOfLocalRows=%d, row=%d, rowDistance=%d",

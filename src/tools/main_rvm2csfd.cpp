@@ -5,6 +5,7 @@
 #include "TlUtils.h"
 #include "tl_dense_general_matrix_arrays_mmap_roworiented.h"
 // #include "tl_dense_general_matrix_arrays_roworiented.h"
+#include "TlLogging.h"
 #include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_general_matrix_mmap.h"
 #include "tl_matrix_utils.h"
@@ -21,6 +22,7 @@ void showHelp(const std::string& progname) {
 bool checkMatrixInfo(const std::string& rvmBasePath, TlMatrixObject::index_type* pNumOfRows,
                      TlMatrixObject::index_type* pNumOfCols, int* pNumOfSubunits, int* pSizeOfChunk, int* pSubunitID,
                      bool* pGuess) {
+    TlLogging& log = TlLogging::getInstance();
     // TlMatrixObject::index_type numOfRows = 0;
     // TlMatrixObject::index_type numOfCols = 0;
     // int numOfSubunits = 0;
@@ -38,17 +40,17 @@ bool checkMatrixInfo(const std::string& rvmBasePath, TlMatrixObject::index_type*
     {
         int subunitID = 0;
         const std::string inputPath0 = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, subunitID);
-        std::cerr << "inputPath0: " << inputPath0 << std::endl;
+        log.debug(TlUtils::format("inputPath0: %s", inputPath0.c_str()));
         isLoadable = TlMatrixUtils::getHeaderInfo(inputPath0, &headerInfo);
 
-        std::cerr << "isLoadable: " << isLoadable << std::endl;
+        log.debug(TlUtils::format("isLoadable: %d", isLoadable));
         *pGuess = isLoadable;
     }
     // try direct load
     if (isLoadable == false) {
-        std::cerr << "rvmBasePath: " << rvmBasePath << std::endl;
+        log.debug(TlUtils::format("rvmBasePath: %s", rvmBasePath.c_str()));
         isLoadable = TlMatrixUtils::getHeaderInfo(rvmBasePath, &headerInfo);
-        std::cerr << "isLoadable: " << isLoadable << std::endl;
+        log.debug(TlUtils::format("isLoadable: %d", isLoadable));
     }
 
     if (isLoadable) {
@@ -66,7 +68,7 @@ bool checkMatrixInfo(const std::string& rvmBasePath, TlMatrixObject::index_type*
 }
 
 int main(int argc, char* argv[]) {
-    TlGetopt opt(argc, argv, "hv");
+    TlGetopt opt(argc, argv, "ho:v");
 
     if (opt["h"] == "defined") {
         showHelp(opt[0]);
@@ -78,12 +80,19 @@ int main(int argc, char* argv[]) {
         showHelp(opt[0]);
         return EXIT_FAILURE;
     }
+
+    TlLogging& log = TlLogging::getInstance();
+    std::string output = "rvm2csfd.log";
+    if (opt["o"].empty() != true) {
+        output = opt["o"];
+    }
+    log.setFilePath(output);
+
+    //
     std::string inputBasePath = opt[1];
     std::string outputPath = opt[2];
-    if (verbose) {
-        std::cerr << "input base path: " << inputBasePath << std::endl;
-        std::cerr << "output: " << outputPath << std::endl;
-    }
+    log.info(TlUtils::format("input base path: %s", inputBasePath.c_str()));
+    log.info(TlUtils::format("output: %s", outputPath.c_str()));
 
     // transpose2CSFD(inputBaseName, outputPath, verbose, true);
     TlMatrixObject::index_type numOfRows = 0;
@@ -95,26 +104,23 @@ int main(int argc, char* argv[]) {
     const bool canGetMatrixInfo = checkMatrixInfo(inputBasePath, &numOfRows, &numOfCols, &numOfSubunits, &sizeOfChunk,
                                                   &subunitID, &sequentialMode);
     if (canGetMatrixInfo == false) {
-        std::cerr << "can not open file: " << inputBasePath << std::endl;
+        log.critical(TlUtils::format("can not open file: %s", inputBasePath.c_str()));
 
         return EXIT_FAILURE;
     }
 
-    if (verbose) {
-        std::cerr << "rows: " << numOfRows << std::endl;
-        std::cerr << "cols: " << numOfCols << std::endl;
-        std::cerr << "units: " << numOfSubunits << std::endl;
-        std::cerr << "chunk: " << sizeOfChunk << std::endl;
-    }
+    log.info(TlUtils::format("rows: %d", numOfRows));
+    log.info(TlUtils::format("cols: %d", numOfCols));
+    log.info(TlUtils::format("units: %d", numOfSubunits));
+    log.info(TlUtils::format("chunk: %d", sizeOfChunk));
 
     // prepare output file
     if (TlFile::isExistFile(outputPath)) {
-        std::cerr << "overwrite output matrix: " << outputPath << std::endl;
+        log.info(TlUtils::format("overwrite output matrix: %s", outputPath.c_str()));
         TlDenseGeneralMatrix_mmap outMat(outputPath);
         if ((outMat.getNumOfRows() != numOfRows) || (outMat.getNumOfCols() != numOfCols)) {
-            std::cerr << TlUtils::format("matrix size mismatch (%d, %d) != (%d, %d).", numOfRows, numOfCols,
-                                         outMat.getNumOfRows(), outMat.getNumOfCols())
-                      << std::endl;
+            log.critical(TlUtils::format("matrix size mismatch (%d, %d) != (%d, %d).", numOfRows, numOfCols,
+                                         outMat.getNumOfRows(), outMat.getNumOfCols()));
             return EXIT_FAILURE;
         }
     } else {
@@ -129,14 +135,14 @@ int main(int argc, char* argv[]) {
     TlDenseGeneralMatrix_mmap outMat(outputPath);
     if (sequentialMode) {
         for (int unit = 0; unit < numOfSubunits; ++unit) {
-            std::cerr << TlUtils::format(">>>> unit %d/%d", unit, numOfSubunits - 1) << std::endl;
+            log.info(TlUtils::format(">>>> unit %d/%d", unit, numOfSubunits - 1));
             const std::string inputPath = TlDenseMatrix_arrays_mmap_Object::getFileName(inputBasePath, unit);
 
-            std::cerr << "load matrix: " << inputPath << std::endl;
+            log.info(TlUtils::format("load matrix: %s", inputPath.c_str()));
             TlDenseGeneralMatrix_arrays_mmap_RowOriented inMat(inputPath);
-            std::cerr << "convert layout" << std::endl;
+            log.info("convert layout");
             inMat.convertMemoryLayout("", verbose, verbose);
-            std::cerr << "set" << std::endl;
+            log.info("set");
             inMat.set2csfd(&outMat, verbose, verbose);
         }
     } else {
