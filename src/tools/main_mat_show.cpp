@@ -22,7 +22,7 @@
 #include "TlGetopt.h"
 #include "TlUtils.h"
 #include "tl_dense_general_matrix_arrays_mmap_roworiented.h"
-#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_general_matrix_mmap.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_matrix_utils.h"
 
@@ -58,8 +58,7 @@ int main(int argc, char* argv[]) {
 
             case TlMatrixObject::CSFD: {
                 std::cout << "type: normal (column-major)" << std::endl;
-                TlDenseGeneralMatrix_Lapack M;
-                M.load(path);
+                TlDenseGeneralMatrix_mmap M(path);
 
                 if (bCsvMode == true) {
                     M.saveCsv(std::cout);
