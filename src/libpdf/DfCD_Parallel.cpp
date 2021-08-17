@@ -188,8 +188,15 @@ bool DfCD_Parallel::transpose2CSFD_mpi(const std::string& rvmBasePath, const std
 
         numOfRows = headerInfo.numOfVectors;
         numOfCols = headerInfo.sizeOfVector;
+        numOfSubunits = headerInfo.numOfSubunits;
+        sizeOfChunk = headerInfo.sizeOfChunk;
 
-        // std::cerr << TlUtils::format("[%d] check matrix (%d, %d) %d@%d", rank, numOfRows, numOfCols, numOfSubunits, sizeOfChunk) << std::endl;
+        if (verbose) {
+            std::cerr << "rows: " << numOfRows << std::endl;
+            std::cerr << "cols: " << numOfCols << std::endl;
+            std::cerr << "units: " << numOfSubunits << std::endl;
+            std::cerr << "chunk: " << sizeOfChunk << std::endl;
+        }
     }
 
     // prepare CSFD file
@@ -207,16 +214,16 @@ bool DfCD_Parallel::transpose2CSFD_mpi(const std::string& rvmBasePath, const std
     }
 
     // convert
-    {
-        const std::string L_path = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, rank);
-        TlDenseGeneralMatrix_arrays_mmap_RowOriented L(L_path);
+    // {
+    //     const std::string L_path = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, rank);
+    //     TlDenseGeneralMatrix_arrays_mmap_RowOriented L(L_path);
 
-        const std::string tempCsfdMatPath = TlUtils::format("L_csfd.%d.mat", rank);
-        L.convertMemoryLayout(tempCsfdMatPath);
+    //     const std::string tempCsfdMatPath = TlUtils::format("L_csfd.%d.mat", rank);
+    //     L.convertMemoryLayout(tempCsfdMatPath);
 
-        // @todo remove unused func `convert2csfd`
-        // convert2csfd(rvmBasePath, rank, tempMatPath, verbose, showProgress);
-    }
+    //     // @todo remove unused func `convert2csfd`
+    //     // convert2csfd(rvmBasePath, rank, tempMatPath, verbose, showProgress);
+    // }
 
     // @todo transfer tempCsfdMat to master note
 
@@ -226,8 +233,14 @@ bool DfCD_Parallel::transpose2CSFD_mpi(const std::string& rvmBasePath, const std
         TlDenseGeneralMatrix_mmap outMat(outputMatrixPath);
 
         for (int unit = 0; unit < numOfSubunits; ++unit) {
+            this->log_.info(TlUtils::format("optimizing unit=%d", unit));
+            const std::string inputPath = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, unit);
+            TlDenseGeneralMatrix_arrays_mmap_RowOriented inMat(inputPath);
+
             const std::string tempCsfdMatPath = TlUtils::format("L_csfd.%d.mat", unit);
-            copy2csfd(numOfRows, numOfCols, numOfSubunits, sizeOfChunk, tempCsfdMatPath, unit, &outMat, verbose);
+            inMat.convertMemoryLayout(tempCsfdMatPath, verbose, showProgress);
+            inMat.set2csfd(&outMat, verbose, showProgress);
+
             TlFile::remove(tempCsfdMatPath);
         }
     }
