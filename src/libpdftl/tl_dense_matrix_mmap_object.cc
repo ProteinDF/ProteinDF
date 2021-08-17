@@ -306,3 +306,65 @@ bool TlDenseMatrixMmapObject::load(const std::string& path) {
 bool TlDenseMatrixMmapObject::save(const std::string& path) const {
     return true;
 }
+
+bool TlDenseMatrixMmapObject::saveText(const std::string& filePath) const {
+    bool answer = true;
+
+    std::ofstream ofs;
+    ofs.open(filePath.c_str(), std::ofstream::out);
+
+    if (ofs.good()) {
+        this->saveText(ofs);
+    }
+
+    ofs.close();
+
+    return answer;
+}
+
+void TlDenseMatrixMmapObject::saveText(std::ostream& os) const {
+    const TlMatrixObject::index_type rows = this->getNumOfRows();
+    const TlMatrixObject::index_type cols = this->getNumOfCols();
+
+    os << "TEXT\n";
+    os << rows << "\n";
+    os << cols << "\n";
+
+    // print out LCAO coefficent
+    for (TlMatrixObject::index_type i = 0; i < rows; ++i) {
+        for (TlMatrixObject::index_type j = 0; j < cols; ++j) {
+            os << TlUtils::format(" %10.6lf", this->get(i, j));
+        }
+        os << "\n";
+    }
+    os << "\n";
+}
+
+bool TlDenseMatrixMmapObject::saveCsv(const std::string& filePath) const {
+    bool answer = true;
+
+    std::ofstream ofs;
+    ofs.open(filePath.c_str(), std::ofstream::out);
+
+    if (ofs.good()) {
+        this->saveCsv(ofs);
+    }
+
+    ofs.close();
+
+    return answer;
+}
+
+void TlDenseMatrixMmapObject::saveCsv(std::ostream& os) const {
+    const TlMatrixObject::index_type rows = this->getNumOfRows();
+    const TlMatrixObject::index_type cols = this->getNumOfCols();
+
+    for (TlMatrixObject::index_type i = 0; i < rows; ++i) {
+        for (TlMatrixObject::index_type j = 0; j < cols - 1; ++j) {
+            os << TlUtils::format(" %16.10e, ", this->get(i, j));
+        }
+        os << TlUtils::format(" %16.10e", this->get(i, cols - 1));
+        os << "\n";
+    }
+    os << "\n";
+}
