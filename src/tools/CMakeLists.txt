@@ -298,6 +298,20 @@ target_link_libraries(pdf-mkfld-esp libpdf libpdftl)
 install(TARGETS pdf-mkfld-esp RUNTIME DESTINATION bin)
 
 
+set(PDF_MKFLD_ESP_CLASSIC_SOURCES
+  main_mkfld_esp_classic.cpp
+  mkfld_common.h
+  mkfld_common.cpp
+  TlFieldDataObject.h
+  TlFieldDataObject.cpp
+  TlEspField.h
+  TlEspField.cpp
+  )
+add_executable(pdf-mkfld-esp-classic ${PDF_MKFLD_ESP_CLASSIC_SOURCES})
+target_link_libraries(pdf-mkfld-esp-classic libpdf libpdftl)
+install(TARGETS pdf-mkfld-esp-classic RUNTIME DESTINATION bin)
+
+
 set(PDF_POP_MULLIKEN_SOURCES
   main_pop_mulliken.cpp
   )

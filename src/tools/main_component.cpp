@@ -200,6 +200,10 @@ TlDenseGeneralMatrix_Lapack getOrbContributionMatrix(const TlDenseGeneralMatrix_
         }
     }
 
+    std::string orbContribMatPath = "orb_contrib.mat";
+    std::cerr << "outout orb contribution matrix: " << orbContribMatPath << std::endl;
+    orbContribMat.save(orbContribMatPath);
+
     return orbContribMat;
 }
 
@@ -224,6 +228,10 @@ TlDenseGeneralMatrix_Lapack getAtomContributionMatrix(const TlDenseGeneralMatrix
             atomContribMat.add(atomIndex, mo, w);
         }
     }
+
+    std::string atomContribMatPath = "atom_contrib.mat";
+    std::cerr << "outout atom contribution matrix: " << atomContribMatPath << std::endl;
+    atomContribMat.save(atomContribMatPath);
 
     return atomContribMat;
 }
@@ -262,16 +270,19 @@ int exec_atomgroup_mode(const TlDenseGeneralMatrix_Lapack& CS, const TlDenseGene
     const TlDenseGeneralMatrix_Lapack atomContribMat = getAtomContributionMatrix(CS, C, orbInfo, threshold, isVerbose);
 
     std::cerr << "search MOs by each group ..." << std::endl;
+    std::cerr << "group threshold = " << threshold << std::endl;
     std::vector<std::set<int> > groupMOs(numOfGroups);
-    for (int groupIndex = 0; groupIndex < numOfGroups; ++groupIndex) {
-        std::set<int>::const_iterator itAtomEnd = groups[groupIndex].end();
-        for (std::set<int>::const_iterator itAtom = groups[groupIndex].begin(); itAtom != itAtomEnd; ++itAtom) {
-            const int atomIndex = *itAtom;
-            for (int mo = 0; mo < numOfMOs; ++mo) {
+    for (int mo = 0; mo < numOfMOs; ++mo) {
+        for (int groupIndex = 0; groupIndex < numOfGroups; ++groupIndex) {
+            double contrib_group = 0.0;
+            std::set<int>::const_iterator itAtomEnd = groups[groupIndex].end();
+            for (std::set<int>::const_iterator itAtom = groups[groupIndex].begin(); itAtom != itAtomEnd; ++itAtom) {
+                const int atomIndex = *itAtom;
                 const double w = atomContribMat.get(atomIndex, mo);
-                if (w >= threshold) {
-                    groupMOs[groupIndex].insert(mo);
-                }
+                contrib_group += w;
+            }
+            if (contrib_group >= threshold) {
+                groupMOs[groupIndex].insert(mo);
             }
         }
     }
@@ -370,7 +381,7 @@ int main(int argc, char* argv[]) {
     }
 
     // parameters - atom mode
-    double threshold = 0.5;
+    double threshold = 0.33;
     if (opt["t"].empty() == false) {
         threshold = std::atof(opt["t"].c_str());
     }
