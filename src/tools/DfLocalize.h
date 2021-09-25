@@ -31,16 +31,26 @@
 #include "tl_dense_symmetric_matrix_lapack.h"
 
 class DfLocalize : public DfObject {
-   protected:
-    struct MoPop {
-       public:
-        MoPop(DfObject::index_type mo = 0, double q = 0.0) : mo(mo), q(q){};
+public:
+    enum PairingOrder {
+        UNDEFINED = 0,
+        PO_ORDERED,
+        PO_BIG_BIG,
+        PO_BIG_SMALL,
+        PO_SMALL_SMALL
+    };
 
-       public:
+protected:
+    struct MoPop {
+    public:
+        MoPop(DfObject::index_type mo = 0, double q = 0.0)
+            : mo(mo), q(q){};
+
+    public:
         DfObject::index_type mo;  // molecular orbital
         double q;                 // Mulliken population
 
-       public:
+    public:
         struct MoPop_sort_functor_cmp {
             bool operator()(const MoPop& a, const MoPop& b) const {
                 return (a.q > b.q);
@@ -48,26 +58,27 @@ class DfLocalize : public DfObject {
         };
     };
 
-   protected:
+protected:
     typedef std::pair<index_type, index_type> TaskItem;
 
-   public:
+public:
     DfLocalize(TlSerializeData* pPdfParam);
     virtual ~DfLocalize();
 
-   public:
+public:
     void setRestart(const bool yn);
+    void setPairingOrder(PairingOrder po);
     void setCMatrixPath(const std::string& path);
     void setGroup(const TlSerializeData& groupData);
 
     void exec();
 
-   protected:
+protected:
     virtual double localize(TlDenseGeneralMatrix_Lapack* pC);
     double localize_core(TlDenseGeneralMatrix_Lapack* pC, const index_type startMO1, const index_type endMO1,
                          const index_type startMO2, const index_type endMO2);
 
-   protected:
+protected:
     virtual void initialize();
     void checkOpenMP();
     void setGroup();
@@ -83,21 +94,22 @@ class DfLocalize : public DfObject {
                            TlDenseGeneralMatrix_Lapack* pRot);
     void rotateVectors(TlDenseVector_Lapack* pCpi, TlDenseVector_Lapack* pCpj, const TlDenseGeneralMatrix_Lapack& rot);
 
-   protected:
+protected:
     double calcQA_ii(const TlDenseGeneralMatrix_Lapack& C, const index_type orb_i);
     void calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_Lapack& Cpj, double* pA_ij, double* pB_ij);
 
-   protected:
+protected:
     double localize_byPop(TlDenseGeneralMatrix_Lapack* pC);
     double localize_core_byPop(TlDenseGeneralMatrix_Lapack* pC, const index_type startMO1, const index_type endMO1);
     double calcG_sort(const TlDenseGeneralMatrix_Lapack& C, const index_type startMO, const index_type endMO);
     std::vector<TaskItem> getTaskList_byPop();
 
-   protected:
+protected:
     TlLogging& log_;
 
     bool isRestart_;
     std::string CMatrixPath_;
+    PairingOrder pairingOrder_;
 
     int lo_iteration_;
     int maxIteration_;
@@ -124,14 +136,14 @@ class DfLocalize : public DfObject {
 
     TlDenseSymmetricMatrix_Lapack S_;
 
-   protected:
+protected:
     std::vector<TaskItem> getTaskList(const index_type startMO, const index_type endMO);
     std::vector<TaskItem> getTaskList(const index_type startMO1, const index_type endMO1, const index_type startMO2,
                                       const index_type endMO2);  // for parallel
 
     std::vector<DfLocalize::TaskItem> getTaskListByPop();
 
-   protected:
+protected:
     void initLockMO(const index_type numOfMOs);
     void lockMO(const index_type MO);
     void unlockMO(const index_type MO);

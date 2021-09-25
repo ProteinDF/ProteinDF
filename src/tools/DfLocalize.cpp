@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include "CnError.h"
 #include "DfLocalize.h"
 #include "TlTime.h"
 
@@ -35,6 +36,7 @@ DfLocalize::DfLocalize(TlSerializeData* pPdfParam)
       log_(TlLogging::getInstance()),
       isRestart_(false),
       CMatrixPath_(""),
+      pairingOrder_(PO_BIG_SMALL),
       orbInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"]) {
     this->maxIteration_ = 100;
     if ((*pPdfParam)["lo/max_iteration"].getStr().empty() != true) {
@@ -61,6 +63,13 @@ DfLocalize::~DfLocalize() {
 
 void DfLocalize::setRestart(bool yn) {
     this->isRestart_ = yn;
+}
+
+void DfLocalize::setPairingOrder(DfLocalize::PairingOrder po) {
+    if (po == UNDEFINED) {
+        po = PO_BIG_SMALL;
+    }
+    this->pairingOrder_ = po;
 }
 
 void DfLocalize::setCMatrixPath(const std::string& path) {
@@ -255,7 +264,8 @@ double DfLocalize::localize_core(TlDenseGeneralMatrix_Lapack* pC, const index_ty
     this->initLockMO(endMO2 + 1);
 
     const std::size_t numOfTasks = taskList.size();
-#pragma omp parallel for reduction(+ : sumDeltaG) schedule(runtime)
+#pragma omp parallel for reduction(+ \
+                                   : sumDeltaG) schedule(runtime)
     for (std::size_t i = 0; i < numOfTasks; ++i) {
         const TaskItem& task = taskList[i];
         const index_type orb_i = task.first;
@@ -347,7 +357,8 @@ double DfLocalize::calcG(const TlDenseGeneralMatrix_Lapack& C, const index_type 
     double G = 0.0;
 
     const index_type size = endMO - startMO;
-#pragma omp parallel for schedule(runtime) reduction(+ : G)
+#pragma omp parallel for schedule(runtime) reduction(+ \
+                                                     : G)
     for (index_type i = 0; i < size; ++i) {
         const index_type orb = startMO + i;
         const double QAii2 = this->calcQA_ii(C, orb);
@@ -363,7 +374,8 @@ double DfLocalize::calcG_sort(const TlDenseGeneralMatrix_Lapack& C, const index_
 
     const index_type size = endMO - startMO;
     this->groupMoPops_.resize(size);
-#pragma omp parallel for schedule(runtime) reduction(+ : G)
+#pragma omp parallel for schedule(runtime) reduction(+ \
+                                                     : G)
     for (index_type i = 0; i < size; ++i) {
         const index_type mo = startMO + i;
         const double QAii2 = this->calcQA_ii(C, mo);
@@ -615,7 +627,8 @@ double DfLocalize::localize_core_byPop(TlDenseGeneralMatrix_Lapack* pC, const in
     this->initLockMO(endMO1 + 1);
 
     const std::size_t numOfTasks = taskList.size();
-#pragma omp parallel for reduction(+ : sumDeltaG) schedule(runtime)
+#pragma omp parallel for reduction(+ \
+                                   : sumDeltaG) schedule(runtime)
     for (std::size_t i = 0; i < numOfTasks; ++i) {
         const TaskItem& task = taskList[i];
         const index_type orb_i = task.first;
@@ -671,49 +684,64 @@ std::vector<DfLocalize::TaskItem> DfLocalize::getTaskList_byPop() {
 
     std::size_t taskIndex = 0;
     TaskItem item;
-    // no-care
-    // for (int index1 = 0; index1 < dim; ++index1) {
-    //     const index_type mo1 = this->groupMoPops_[index1].mo;
-    //     for (int index2 = dim - 1; index2 > index1; --index2) {
-    //         const index_type mo2 = this->groupMoPops_[index2].mo;
 
-    //         taskList[taskIndex] = std::make_pair(mo1, mo2);
-    //         ++taskIndex;
-    //     }
-    // }
+    switch (this->pairingOrder_) {
+        case PO_ORDERED:
+            // no-care
+            for (int index1 = 0; index1 < dim; ++index1) {
+                const index_type mo1 = this->groupMoPops_[index1].mo;
+                for (int index2 = dim - 1; index2 > index1; --index2) {
+                    const index_type mo2 = this->groupMoPops_[index2].mo;
 
-    // big-big pair
-    for (int index1 = 0; index1 < dim - 1; ++index1) {
-        const int max_index2 = dim - index1 - 1;
-        for (int index2 = 0; index2 < max_index2; ++index2) {
-            const index_type mo1 = this->groupMoPops_[index1 + index2 + 1].mo;
-            const index_type mo2 = this->groupMoPops_[index2].mo;
-            taskList[taskIndex] = std::make_pair(mo1, mo2);
-            ++taskIndex;
-        }
+                    taskList[taskIndex] = std::make_pair(mo1, mo2);
+                    ++taskIndex;
+                }
+            }
+            break;
+
+        case PO_BIG_BIG:
+            // big-big pair
+            for (int index1 = 0; index1 < dim - 1; ++index1) {
+                const int max_index2 = dim - index1 - 1;
+                for (int index2 = 0; index2 < max_index2; ++index2) {
+                    const index_type mo1 = this->groupMoPops_[index1 + index2 + 1].mo;
+                    const index_type mo2 = this->groupMoPops_[index2].mo;
+                    taskList[taskIndex] = std::make_pair(mo1, mo2);
+                    ++taskIndex;
+                }
+            }
+            break;
+
+        case PO_BIG_SMALL:
+            // big-small pair
+            for (int index1 = 0; index1 < dim - 1; ++index1) {
+                const int max_index2 = dim - index1 - 1;
+                for (int index2 = 0; index2 < max_index2; ++index2) {
+                    const index_type mo1 = this->groupMoPops_[index1 + index2].mo;
+                    const index_type mo2 = this->groupMoPops_[dim - index2 - 1].mo;
+                    taskList[taskIndex] = std::make_pair(mo1, mo2);
+                    ++taskIndex;
+                }
+            }
+            break;
+
+        case PO_SMALL_SMALL:
+            // small-small pair
+            for (int index1 = 0; index1 < dim - 1; ++index1) {
+                const int max_index2 = dim - index1 - 1;
+                for (int index2 = 0; index2 < max_index2; ++index2) {
+                    const index_type mo1 = this->groupMoPops_[dim - (index1 + index2) - 1].mo;
+                    const index_type mo2 = this->groupMoPops_[dim - index2 - 1].mo;
+                    taskList[taskIndex] = std::make_pair(mo1, mo2);
+                    ++taskIndex;
+                }
+            }
+            break;
+
+        default:
+            std::cerr << TlUtils::format("unknown pairing order algorithm: %d", static_cast<int>(this->pairingOrder_)) << std::endl;
+            CnErr.abort();
     }
-
-    // small-small pair
-    // for (int index1 = 0; index1 < dim - 1; ++index1) {
-    //     const int max_index2 = dim - index1 - 1;
-    //     for (int index2 = 0; index2 < max_index2; ++index2) {
-    //         const index_type mo1 = this->groupMoPops_[dim - (index1 + index2) - 1].mo;
-    //         const index_type mo2 = this->groupMoPops_[dim - index2 - 1].mo;
-    //         taskList[taskIndex] = std::make_pair(mo1, mo2);
-    //         ++taskIndex;
-    //     }
-    // }
-
-    // big-small pair
-    // for (int index1 = 0; index1 < dim - 1; ++index1) {
-    //     const int max_index2 = dim - index1 - 1;
-    //     for (int index2 = 0; index2 < max_index2; ++index2) {
-    //         const index_type mo1 = this->groupMoPops_[index1 + index2].mo;
-    //         const index_type mo2 = this->groupMoPops_[dim - index2 - 1].mo;
-    //         taskList[taskIndex] = std::make_pair(mo1, mo2);
-    //         ++taskIndex;
-    //     }
-    // }
 
     assert(taskIndex == pairs);
 
