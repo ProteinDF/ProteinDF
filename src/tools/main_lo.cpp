@@ -35,7 +35,7 @@ void showHelp(const std::string& progname) {
     std::cout << " -c PATH       set C matrix path" << std::endl;
     std::cout << " -r            restart lo calculation" << std::endl;
     std::cout << " -g <brd_file> specify group list" << std::endl;
-    std::cout << " -m <MODE>     switch pairing algorithm (big-big, big-small(defalt), small-small)" << std::endl;
+    std::cout << " -m <MODE>     switch pairing algorithm (ordered, big-big, big-small(defalt), small-small)" << std::endl;
     std::cout << " -h            show help" << std::endl;
     std::cout << " -v            verbose output" << std::endl;
 }
@@ -68,9 +68,20 @@ int main(int argc, char* argv[]) {
         inputCMatrixPath = opt["c"];
     }
 
-    std::string inputMode = "";
+    DfLocalize::PairingOrder pairingOrder = DfLocalize::PO_BIG_SMALL;
     if (opt["m"].empty() != true) {
-        inputMode = opt["m"];
+        const std::string sInputMode = TlUtils::toUpper(opt["m"]);
+        if (sInputMode == "BIG-BIG") {
+            pairingOrder = DfLocalize::PO_BIG_BIG;
+        } else if (sInputMode == "BIG-SMALL") {
+            pairingOrder = DfLocalize::PO_BIG_SMALL;
+        } else if (sInputMode == "SMALL-SMALL") {
+            pairingOrder = DfLocalize::PO_SMALL_SMALL;
+        } else if (sInputMode == "ORDERED") {
+            pairingOrder = DfLocalize::PO_ORDERED;
+        } else {
+            std::cerr << "illegal parameter: -m " << opt["m"] << std::endl;
+        }
     }
 
     const bool isRestart = (opt["r"] == "defined");
@@ -107,6 +118,7 @@ int main(int argc, char* argv[]) {
     }
     lo.setRestart(isRestart);
     lo.setGroup(groupData);
+    lo.setPairingOrder(pairingOrder);
 
     lo.exec();
 
