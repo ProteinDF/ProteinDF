@@ -34,13 +34,14 @@ void showHelp(const std::string& progname) {
               << std::endl;
     std::cout << " -c PATH       set C matrix path" << std::endl;
     std::cout << " -r            restart lo calculation" << std::endl;
-    std::cout << " -g brd_file   specify group list" << std::endl;
+    std::cout << " -g <brd_file> specify group list" << std::endl;
+    std::cout << " -m <MODE>     switch pairing algorithm (big-big, big-small(defalt), small-small)" << std::endl;
     std::cout << " -h            show help" << std::endl;
     std::cout << " -v            verbose output" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-    TlGetopt opt(argc, argv, "c:hg:p:rv");
+    TlGetopt opt(argc, argv, "c:hm:g:p:rv");
     const bool isShowHelp = (opt["h"] == "defined");
     const bool isVerbose = (opt["v"] == "defined");
 
@@ -65,6 +66,11 @@ int main(int argc, char* argv[]) {
     std::string inputCMatrixPath = "";
     if (opt["c"].empty() != true) {
         inputCMatrixPath = opt["c"];
+    }
+
+    std::string inputMode = "";
+    if (opt["m"].empty() != true) {
+        inputMode = opt["m"];
     }
 
     const bool isRestart = (opt["r"] == "defined");
