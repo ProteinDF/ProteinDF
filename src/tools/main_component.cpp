@@ -65,17 +65,22 @@ void showHelp(const std::string& name) {
               << std::endl;
     std::cout << "  -c path         specify LCAO matrix (default: guessed)" << std::endl;
     std::cout << "  -s path         specify overlap matrix (default: guessed)" << std::endl;
-    std::cout << "  -h:             show help(this)" << std::endl;
-    std::cout << "  -v:             enable verbose mode" << std::endl;
+    std::cout << "  -h              show help(this)" << std::endl;
+    std::cout << "  -v              enable verbose mode" << std::endl;
     std::cout << "  <MO mode>" << std::endl;
     std::cout << "  -M MO_LEVEL     show AO components for the MO level" << std::endl;
-    std::cout << "  -a:             output all basis functions" << std::endl;
+    std::cout << "  -a              output all basis functions" << std::endl;
     std::cout << "  -n NUM          output number of items" << std::endl;
     std::cout << "  <atom mode>" << std::endl;
     std::cout << "  -A ATOM_INDEX   output MO levels in which AOs are major" << std::endl;
     std::cout << "  -t THRESHOLD    threshold of w_atom" << std::endl;
     std::cout << "  <save mode>" << std::endl;
     std::cout << "  -S path         save intermediate files" << std::endl;
+    std::cout << "  -g g_PATH       save G-value vector file (default: g-value.vct)" << std::endl;
+    std::cout << "  -m ORB_CNT_PATH save orbital contribution matrix file" << std::endl;
+    std::cout << "  <atomgroup mode>" << std::endl;
+    std::cout << "  -G path         atomgroup path" << std::endl;
+    std::cout << "  -o output_PATH  output MOs by groups as msgpack file (default: output.mpac)" << std::endl;
 }
 
 /// MO モード
@@ -181,15 +186,18 @@ int exec_atom_mode(const TlDenseGeneralMatrix_Lapack& CS, const TlDenseGeneralMa
 }
 
 TlDenseGeneralMatrix_Lapack getOrbContributionMatrix(const TlDenseGeneralMatrix_Lapack& CS,
-                                                     const TlDenseGeneralMatrix_Lapack& C, bool isVerbose = false) {
+                                                     const TlDenseGeneralMatrix_Lapack& C,
+                                                     const std::string& orbContributionMatrixPath = "",
+                                                     const std::string& gValueVectorPath = "",
+                                                     bool isVerbose = false) {
     const TlMatrixObject::index_type numOfAOs = C.getNumOfRows();
     const TlMatrixObject::index_type numOfMOs = C.getNumOfCols();
     assert(CS.getNumOfRows() == numOfMOs);
     assert(CS.getNumOfCols() == numOfAOs);
 
-    // if (isVerbose) {
-    std::cerr << "calc orbital contribution matrix..." << std::endl;
-    // }
+    if (isVerbose) {
+        std::cerr << "calc orbital contribution matrix..." << std::endl;
+    }
     TlDenseGeneralMatrix_Lapack orbContribMat(numOfAOs, numOfMOs);
     for (TlMatrixObject::index_type mo = 0; mo < numOfMOs; ++mo) {
         const TlDenseVector_Lapack MO_vec = C.getColVector_tmpl<TlDenseVector_Lapack>(mo);
@@ -200,21 +208,48 @@ TlDenseGeneralMatrix_Lapack getOrbContributionMatrix(const TlDenseGeneralMatrix_
         }
     }
 
-    std::string orbContribMatPath = "orb_contrib.mat";
-    std::cerr << "outout orb contribution matrix: " << orbContribMatPath << std::endl;
-    orbContribMat.save(orbContribMatPath);
+    if (orbContributionMatrixPath.empty() != true) {
+        if (isVerbose) {
+            std::cerr << "outout orb contribution matrix: " << orbContributionMatrixPath << std::endl;
+        }
+        orbContribMat.save(orbContributionMatrixPath);
+    }
+
+    // calc G-value
+    if (gValueVectorPath.empty() != true) {
+        TlDenseVector_Lapack G(numOfMOs);
+        TlDenseVector_Lapack validation(numOfMOs);
+        for (TlMatrixObject::index_type mo = 0; mo < numOfMOs; ++mo) {
+            double sum = 0.0;
+            double g = 0.0;
+            for (TlMatrixObject::index_type ao = 0; ao < numOfAOs; ++ao) {
+                const double v = orbContribMat.get(ao, mo);
+                const double vv = v * v;
+                sum += v;
+                g += vv;
+            }
+            validation.set(mo, sum);
+            G.set(mo, g);
+        }
+        std::cerr << TlUtils::format("save G-values: %s", gValueVectorPath.c_str()) << std::endl;
+        G.save(gValueVectorPath);
+        // validation.save("validation.vct");
+    }
 
     return orbContribMat;
 }
 
 TlDenseGeneralMatrix_Lapack getAtomContributionMatrix(const TlDenseGeneralMatrix_Lapack& CS, const TlDenseGeneralMatrix_Lapack& C,
                                                       const TlOrbitalInfo& orbInfo, const double threshold,
+                                                      const std::string& orbContributionMatrixPath = "",
+                                                      const std::string& gValueVectorPath = "",
                                                       bool isVerbose = false) {
     const TlMatrixObject::index_type numOfAOs = C.getNumOfRows();
     const TlMatrixObject::index_type numOfMOs = C.getNumOfCols();
     const int numOfAtoms = orbInfo.getNumOfAtoms();
 
-    const TlDenseGeneralMatrix_Lapack orbContribMat = getOrbContributionMatrix(CS, C, isVerbose);
+    const TlDenseGeneralMatrix_Lapack orbContribMat =
+        getOrbContributionMatrix(CS, C, orbContributionMatrixPath, gValueVectorPath, isVerbose);
     assert(orbContribMat.getNumOfRows() == numOfAOs);
     assert(orbContribMat.getNumOfCols() == numOfMOs);
 
@@ -238,12 +273,11 @@ TlDenseGeneralMatrix_Lapack getAtomContributionMatrix(const TlDenseGeneralMatrix
 
 int exec_atomgroup_mode(const TlDenseGeneralMatrix_Lapack& CS, const TlDenseGeneralMatrix_Lapack& C,
                         const TlOrbitalInfo& orbInfo, const double threshold,
-                        const std::string& atomGroupPath, const std::string& output0, bool isVerbose = false) {
+                        const std::string& atomGroupPath, const std::string& output,
+                        const std::string& orbContributionMatrixPath = "",
+                        const std::string& gValueVectorPath = "",
+                        bool isVerbose = false) {
     const TlMatrixObject::index_type numOfMOs = C.getNumOfCols();
-    std::string output = output0;
-    if (output.length() == 0) {
-        output = "output.mpac";
-    }
 
     TlSerializeData atomGroup;
     {
@@ -252,7 +286,9 @@ int exec_atomgroup_mode(const TlDenseGeneralMatrix_Lapack& CS, const TlDenseGene
         atomGroup = msgPack.getSerializeData();
     }
 
-    std::cerr << "reading group info ..." << std::endl;
+    if (isVerbose) {
+        std::cerr << "reading group info ..." << std::endl;
+    }
     const int numOfGroups = atomGroup.getSize();
     std::vector<std::set<int> > groups(numOfGroups);
     for (int groupIndex = 0; groupIndex < numOfGroups; ++groupIndex) {
@@ -266,11 +302,16 @@ int exec_atomgroup_mode(const TlDenseGeneralMatrix_Lapack& CS, const TlDenseGene
         // std::cout << group.str() << std::endl;
     }
 
-    std::cerr << "calc atom contribute matrix..." << std::endl;
-    const TlDenseGeneralMatrix_Lapack atomContribMat = getAtomContributionMatrix(CS, C, orbInfo, threshold, isVerbose);
+    if (isVerbose) {
+        std::cerr << "calc atom contribute matrix..." << std::endl;
+    }
+    const TlDenseGeneralMatrix_Lapack atomContribMat =
+        getAtomContributionMatrix(CS, C, orbInfo, threshold, orbContributionMatrixPath, gValueVectorPath, isVerbose);
 
-    std::cerr << "search MOs by each group ..." << std::endl;
-    std::cerr << "group threshold = " << threshold << std::endl;
+    if (isVerbose) {
+        std::cerr << "search MOs by each group ..." << std::endl;
+        std::cerr << "group threshold = " << threshold << std::endl;
+    }
     std::vector<std::set<int> > groupMOs(numOfGroups);
     for (int mo = 0; mo < numOfMOs; ++mo) {
         for (int groupIndex = 0; groupIndex < numOfGroups; ++groupIndex) {
@@ -287,7 +328,9 @@ int exec_atomgroup_mode(const TlDenseGeneralMatrix_Lapack& CS, const TlDenseGene
         }
     }
 
-    std::cerr << "output: " << output << std::endl;
+    if (isVerbose) {
+        std::cerr << "output: " << output << std::endl;
+    }
     {
         TlSerializeData groupMOsData;
         groupMOsData.resize(numOfGroups);
@@ -308,8 +351,12 @@ int exec_atomgroup_mode(const TlDenseGeneralMatrix_Lapack& CS, const TlDenseGene
 }
 
 int exec_save_mode(const TlDenseGeneralMatrix_Lapack& CS, const TlDenseGeneralMatrix_Lapack& C,
-                   const std::string& savePath, bool isVerbose = false) {
-    const TlDenseGeneralMatrix_Lapack CSC = getOrbContributionMatrix(CS, C, isVerbose);
+                   const std::string& savePath,
+                   const std::string& orbContributionMatrixPath = "",
+                   const std::string& gValueVectorPath = "",
+                   bool isVerbose = false) {
+    const TlDenseGeneralMatrix_Lapack CSC =
+        getOrbContributionMatrix(CS, C, orbContributionMatrixPath, gValueVectorPath, isVerbose);
 
     if (isVerbose) {
         std::cerr << TlUtils::format("save matrix: %s", savePath.c_str()) << std::endl;
@@ -320,7 +367,7 @@ int exec_save_mode(const TlDenseGeneralMatrix_Lapack& CS, const TlDenseGeneralMa
 }
 
 int main(int argc, char* argv[]) {
-    TlGetopt opt(argc, argv, "A:G:M:S:ad:c:hn:o:s:t:v");
+    TlGetopt opt(argc, argv, "A:G:M:S:ad:c:g:hm:n:o:s:t:v");
 
     // parameters - common
     if (opt["h"] == "defined") {
@@ -338,11 +385,6 @@ int main(int argc, char* argv[]) {
     std::string LCAO_path = "";
     if (opt["c"].empty() == false) {
         LCAO_path = opt["c"];
-    }
-
-    std::string output = "";
-    if (opt["o"].empty() == false) {
-        output = opt["o"];
     }
 
     std::string Spq_path = "";
@@ -363,12 +405,12 @@ int main(int argc, char* argv[]) {
     } else if (opt["A"].empty() == false) {
         execMode = ATOM_MODE;
         inputAtomIndex = std::atoi(opt["A"].c_str());
-    } else if (opt["G"].empty() == false) {
-        execMode = ATOMGROUP_MODE;
-        atomGroupPath = opt["G"];
     } else if (opt["S"].empty() == false) {
         execMode = SAVE_MODE;
         savePath = opt["S"];
+    } else if (opt["G"].empty() == false) {
+        execMode = ATOMGROUP_MODE;
+        atomGroupPath = opt["G"];
     }
 
     // parameters - MO mode
@@ -384,6 +426,20 @@ int main(int argc, char* argv[]) {
     double threshold = 0.33;
     if (opt["t"].empty() == false) {
         threshold = std::atof(opt["t"].c_str());
+    }
+
+    // parameters - save mode / atomgroup mode
+    std::string orbContributionMatrixPath = "";
+    if (opt["m"].empty() == false) {
+        orbContributionMatrixPath = opt["m"];
+    }
+    std::string gValueVectorPath = "g-value.vct";
+    if (opt["g"].empty() == false) {
+        gValueVectorPath = opt["g"];
+    }
+    std::string output = "output.mpac";
+    if (opt["o"].empty() == false) {
+        output = opt["o"];
     }
 
     // for reading object
@@ -436,10 +492,11 @@ int main(int argc, char* argv[]) {
             answer = exec_atom_mode(CS, C, readOrbInfo, inputAtomIndex, threshold, isVerbose);
             break;
         case SAVE_MODE:
-            answer = exec_save_mode(CS, C, savePath, isVerbose);
+            answer = exec_save_mode(CS, C, savePath, orbContributionMatrixPath, gValueVectorPath, isVerbose);
             break;
         case ATOMGROUP_MODE:
-            answer = exec_atomgroup_mode(CS, C, readOrbInfo, threshold, atomGroupPath, output, isVerbose);
+            answer = exec_atomgroup_mode(CS, C, readOrbInfo, threshold, atomGroupPath,
+                                         orbContributionMatrixPath, gValueVectorPath, output, isVerbose);
             break;
         default:
             std::cerr << "please specify mode: " << std::endl;

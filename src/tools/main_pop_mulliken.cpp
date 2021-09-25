@@ -107,13 +107,10 @@ int main(int argc, char* argv[]) {
     //
     int groupIndex = 0;
     std::vector<std::vector<int> >::const_iterator itGrpEnd = groups_atom.end();
-    for (std::vector<std::vector<int> >::const_iterator itGrp =
-             groups_atom.begin();
-         itGrp != itGrpEnd; ++itGrp) {
+    for (std::vector<std::vector<int> >::const_iterator itGrp = groups_atom.begin(); itGrp != itGrpEnd; ++itGrp) {
         double grpSum = 0.0;
         std::vector<int>::const_iterator itEnd = itGrp->end();
-        for (std::vector<int>::const_iterator it = itGrp->begin(); it != itEnd;
-             ++it) {
+        for (std::vector<int>::const_iterator it = itGrp->begin(); it != itEnd; ++it) {
             const double charge = dfPop.getCharge(*it);
             grpSum += charge;
         }
