@@ -149,7 +149,7 @@ void ProteinDF::startlogo() {
     }
 #else
     {
-        info += " Eigen is disabled."
+        info += " Eigen is disabled.\n";
     }
 #endif  // HAVE_EIGEN
 
