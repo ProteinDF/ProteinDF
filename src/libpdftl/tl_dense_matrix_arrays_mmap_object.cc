@@ -242,7 +242,9 @@ std::size_t TlDenseMatrix_arrays_mmap_Object::getLocalVectorIndex(const index_ty
     const index_type chunkIndex = chunks.rem;
 
     // const index_type localIndex = numOfBlocks * this->sizeOfChunk_ + chunkIndex;
-    const std::size_t localIndex = (this->sizeOfChunk_ * numOfBlocks + chunkIndex) * this->reservedSizeOfVector_;
+    const std::size_t sizeOfChunk = this->sizeOfChunk_;
+    const std::size_t reservedSizeOfVector = this->reservedSizeOfVector_;
+    const std::size_t localIndex = (sizeOfChunk * numOfBlocks + chunkIndex) * reservedSizeOfVector;
 
     if (pSubunitId != NULL) {
         *pSubunitId = chunkId;
@@ -294,10 +296,8 @@ double TlDenseMatrix_arrays_mmap_Object::get_from_vm(const index_type vectorInde
     const std::size_t head = this->getLocalVectorIndex(vectorIndex, &subunitId, &localChunkId, &localChunkVectorIndex);
     if (subunitId == this->subunitID_) {
         assert(localChunkVectorIndex < this->sizeOfChunk_);
+        // std::cerr << TlUtils::format("get global(%d, %d) -> local[%d + %d] = %f", vectorIndex, index, head, index, answer) << std::endl;
         answer = this->dataBegin_[head + index];
-
-        // std::cerr << TlUtils::format("get (%d, %d) [%d, %d] = %f", vectorIndex, index, head, index, answer)
-        //           << std::endl;
     }
 
     return answer;
