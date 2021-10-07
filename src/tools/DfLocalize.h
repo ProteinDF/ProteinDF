@@ -68,6 +68,8 @@ public:
 public:
     void setRestart(const bool yn);
     void setPairingOrder(PairingOrder po);
+    std::string getPairingOrderStr() const;
+
     void setCMatrixPath(const std::string& path);
     void setGroup(const TlSerializeData& groupData);
 
