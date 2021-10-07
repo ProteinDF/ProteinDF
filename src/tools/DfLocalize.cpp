@@ -72,6 +72,33 @@ void DfLocalize::setPairingOrder(DfLocalize::PairingOrder po) {
     this->pairingOrder_ = po;
 }
 
+std::string DfLocalize::getPairingOrderStr() const {
+    std::string answer = "UNDEFINED";
+    switch (this->pairingOrder_) {
+        case PO_BIG_BIG:
+            answer = "BIG-BIG";
+            break;
+
+        case PO_BIG_SMALL:
+            answer = "BIG-SMALL";
+            break;
+
+        case PO_SMALL_SMALL:
+            answer = "SMALL-SMALL";
+            break;
+
+        case PO_ORDERED:
+            answer = "ORDERED";
+            break;
+
+        default:
+            answer = "UNDEFINED";
+            break;
+    }
+
+    return answer;
+}
+
 void DfLocalize::setCMatrixPath(const std::string& path) {
     this->CMatrixPath_ = path;
 }
@@ -200,6 +227,8 @@ void DfLocalize::getCMatrix(TlDenseGeneralMatrix_Lapack* pC) {
 }
 
 void DfLocalize::exec() {
+    this->log_.info(TlUtils::format("pairing order: %s", this->getPairingOrderStr().c_str()));
+
     TlDenseGeneralMatrix_Lapack C;
     {
         TlDenseGeneralMatrix_Lapack C_full;
