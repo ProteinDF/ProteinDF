@@ -200,7 +200,7 @@ void TlDenseMatrix_arrays_mmap_Object::reserveVectorSize(index_type newReservedS
 int TlDenseMatrix_arrays_mmap_Object::getSubunitID(const index_type vectorIndex) const {
     assert((0 <= vectorIndex) && (vectorIndex < this->numOfVectors_));
     int subunitId = -1;
-    this->getLocalVectorIndex(vectorIndex, &subunitId);
+    (void)this->getLocalVectorIndex(vectorIndex, &subunitId);
 
     return subunitId;
 }

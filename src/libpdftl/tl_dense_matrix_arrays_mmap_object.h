@@ -132,7 +132,7 @@ public:
     static index_type getNumOfLocalChunks(const index_type numOfVectors, const int numOfSubunits,
                                           const int sizeOfChunk);
 
-protected:
+private:
     // defunct
     // static index_type getNumOfLocalVectors(const index_type numOfVectors, const int numOfSubunits,
     //                                        const int sizeOfChunk);
