@@ -403,8 +403,9 @@ double DfLocalize::calcG_sort(const TlDenseGeneralMatrix_Lapack& C, const index_
 
     const index_type size = endMO - startMO;
     this->groupMoPops_.resize(size);
-#pragma omp parallel for schedule(runtime) reduction(+ \
-                                                     : G)
+    // clang-format off
+#pragma omp parallel for schedule(runtime) reduction(+: G)
+    // clang-format on
     for (index_type i = 0; i < size; ++i) {
         const index_type mo = startMO + i;
         const double QAii2 = this->calcQA_ii(C, mo);
@@ -413,9 +414,29 @@ double DfLocalize::calcG_sort(const TlDenseGeneralMatrix_Lapack& C, const index_
         this->groupMoPops_[i] = MoPop(mo, QAii2);
     }
 
-    // QAが大きい順にソート
-    this->log_.info("sort QA table");
-    std::sort(this->groupMoPops_.begin(), this->groupMoPops_.end(), MoPop::MoPop_sort_functor_cmp());
+    switch (this->pairingOrder_) {
+        case PO_BIG_BIG: {
+            this->log_.info("sort QA table (greater)");
+            // QAが大きい順にソート
+            std::sort(this->groupMoPops_.begin(), this->groupMoPops_.end(), MoPop::MoPop_sort_functor_cmp_grater());
+        } break;
+
+        case PO_BIG_SMALL: {
+            this->log_.info("sort QA table (greater)");
+            // QAが大きい順にソート
+            std::sort(this->groupMoPops_.begin(), this->groupMoPops_.end(), MoPop::MoPop_sort_functor_cmp_grater());
+        } break;
+
+        case PO_SMALL_SMALL: {
+            this->log_.info("sort QA table (lesser)");
+            // QAが小さい順にソート
+            std::sort(this->groupMoPops_.begin(), this->groupMoPops_.end(), MoPop::MoPop_sort_functor_cmp_lesser());
+        } break;
+
+        default:
+            this->log_.info("no sort QA table");
+            break;
+    }
 
     return G;
 }
@@ -656,8 +677,10 @@ double DfLocalize::localize_core_byPop(TlDenseGeneralMatrix_Lapack* pC, const in
     this->initLockMO(endMO1 + 1);
 
     const std::size_t numOfTasks = taskList.size();
-#pragma omp parallel for reduction(+ \
-                                   : sumDeltaG) schedule(runtime)
+
+    // clang-format off
+#pragma omp parallel for reduction(+: sumDeltaG) schedule(runtime)
+    // clang-format on
     for (std::size_t i = 0; i < numOfTasks; ++i) {
         const TaskItem& task = taskList[i];
         const index_type orb_i = task.first;
@@ -717,10 +740,10 @@ std::vector<DfLocalize::TaskItem> DfLocalize::getTaskList_byPop() {
     switch (this->pairingOrder_) {
         case PO_ORDERED:
             // no-care
-            for (int index1 = 0; index1 < dim; ++index1) {
-                const index_type mo1 = this->groupMoPops_[index1].mo;
-                for (int index2 = dim - 1; index2 > index1; --index2) {
-                    const index_type mo2 = this->groupMoPops_[index2].mo;
+            for (int i = 0; i < dim; ++i) {
+                const index_type mo1 = this->groupMoPops_[i].mo;
+                for (int j = i + 1; j < dim; ++j) {
+                    const index_type mo2 = this->groupMoPops_[j].mo;
 
                     taskList[taskIndex] = std::make_pair(mo1, mo2);
                     ++taskIndex;
@@ -730,24 +753,28 @@ std::vector<DfLocalize::TaskItem> DfLocalize::getTaskList_byPop() {
 
         case PO_BIG_BIG:
             // big-big pair
-            for (int index1 = 0; index1 < dim - 1; ++index1) {
-                const int max_index2 = dim - index1 - 1;
-                for (int index2 = 0; index2 < max_index2; ++index2) {
-                    const index_type mo1 = this->groupMoPops_[index1 + index2 + 1].mo;
-                    const index_type mo2 = this->groupMoPops_[index2].mo;
+            for (int i = 1; i < dim; ++i) {  // diagonal direction
+                const int max_j = dim - i;
+                for (int j = 0; j < max_j; ++j) {  //
+                    const index_type mo1 = this->groupMoPops_[i + j].mo;
+                    const index_type mo2 = this->groupMoPops_[j].mo;
+
                     taskList[taskIndex] = std::make_pair(mo1, mo2);
                     ++taskIndex;
                 }
             }
+
             break;
 
         case PO_BIG_SMALL:
             // big-small pair
-            for (int index1 = 0; index1 < dim - 1; ++index1) {
-                const int max_index2 = dim - index1 - 1;
-                for (int index2 = 0; index2 < max_index2; ++index2) {
-                    const index_type mo1 = this->groupMoPops_[index1 + index2].mo;
-                    const index_type mo2 = this->groupMoPops_[dim - index2 - 1].mo;
+            for (int i = 0; i < dim - 1; ++i) {  // diagonal direction
+                const int max_j = dim - 1 - i;
+                for (int j = 0; j < max_j; ++j) {  //
+                    // std::cout << TlUtils::format("(%d, %d)/%d -> %d, %d", i, j, dim, i + j, dim - 1 - j) << std::endl;
+                    const index_type mo1 = this->groupMoPops_[i + j].mo;
+                    const index_type mo2 = this->groupMoPops_[dim - 1 - j].mo;
+
                     taskList[taskIndex] = std::make_pair(mo1, mo2);
                     ++taskIndex;
                 }
@@ -756,11 +783,12 @@ std::vector<DfLocalize::TaskItem> DfLocalize::getTaskList_byPop() {
 
         case PO_SMALL_SMALL:
             // small-small pair
-            for (int index1 = 0; index1 < dim - 1; ++index1) {
-                const int max_index2 = dim - index1 - 1;
-                for (int index2 = 0; index2 < max_index2; ++index2) {
-                    const index_type mo1 = this->groupMoPops_[dim - (index1 + index2) - 1].mo;
-                    const index_type mo2 = this->groupMoPops_[dim - index2 - 1].mo;
+            for (int i = 1; i < dim; ++i) {  // diagonal direction
+                const int max_j = dim - i;
+                for (int j = 0; j < max_j; ++j) {  //
+                    const index_type mo1 = this->groupMoPops_[i + j].mo;
+                    const index_type mo2 = this->groupMoPops_[j].mo;
+
                     taskList[taskIndex] = std::make_pair(mo1, mo2);
                     ++taskIndex;
                 }
