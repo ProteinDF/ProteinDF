@@ -35,7 +35,7 @@ void showHelp(const std::string& progname) {
     std::cout << " -c PATH       set C matrix path" << std::endl;
     std::cout << " -r            restart lo calculation" << std::endl;
     std::cout << " -g <brd_file> specify group list" << std::endl;
-    std::cout << " -m <MODE>     switch pairing algorithm (ordered, big-big, big-small(defalt), small-small)" << std::endl;
+    std::cout << " -m <MODE>     switch pairing algorithm (ordered, big-big(defalt), big-small, small-small)" << std::endl;
     std::cout << " -h            show help" << std::endl;
     std::cout << " -v            verbose output" << std::endl;
 }
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
         inputCMatrixPath = opt["c"];
     }
 
-    DfLocalize::PairingOrder pairingOrder = DfLocalize::PO_BIG_SMALL;
+    DfLocalize::PairingOrder pairingOrder = DfLocalize::PO_BIG_BIG;
     if (opt["m"].empty() != true) {
         const std::string sInputMode = TlUtils::toUpper(opt["m"]);
         if (sInputMode == "BIG-BIG") {

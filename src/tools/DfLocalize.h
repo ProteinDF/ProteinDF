@@ -51,9 +51,15 @@ protected:
         double q;                 // Mulliken population
 
     public:
-        struct MoPop_sort_functor_cmp {
+        struct MoPop_sort_functor_cmp_grater {
             bool operator()(const MoPop& a, const MoPop& b) const {
                 return (a.q > b.q);
+            };
+        };
+
+        struct MoPop_sort_functor_cmp_lesser {
+            bool operator()(const MoPop& a, const MoPop& b) const {
+                return (a.q < b.q);
             };
         };
     };
