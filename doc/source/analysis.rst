@@ -13,13 +13,13 @@ General analysis tools
 Displays atomic orbitals with a large contribution to the specified molecular orbital.
 
 .. code-block:: none
-   
+
    Usage: pdf-component [Option]
 
 Executing the command above obtains the following outputs:
 
 .. code-block:: none
-   
+
    $ pdf-top 115
    MO level: 115
    No. 1     8  C (  42.525,   37.241,   32.674) p(    px) (  8.18%;   8.18%)
@@ -43,14 +43,14 @@ Output Mulliken population.
   Usage: pdf-pop-mulliken <MO_ID>
 
 
-  
+
 
 * pdf-mo
 
 Outputs molecular orbital field data.
 
 .. code-block:: none
-   
+
    Usage: pdf-mo <MO_ID>
 
 
@@ -59,8 +59,8 @@ Outputs molecular orbital field data.
 Outputs electrostatic potential field data.
 
 .. code-block:: none
-   
-   Usage: pdf-esp 
+
+   Usage: pdf-esp
 
 
 * pdf-dens
@@ -68,7 +68,7 @@ Outputs electrostatic potential field data.
 Outputs electron density field data.
 
 .. code-block:: none
-   
+
    Usage: pdf-dens
 
 
@@ -77,7 +77,7 @@ Outputs electron density field data.
 Aggregates calculation results to create archives.
 
 .. code-block:: none
-   
+
    Usage: pdf-archive
 
 
@@ -86,11 +86,11 @@ Aggregates calculation results to create archives.
 Creates calculation result reports.
 
 .. code-block:: none
-   
+
    Usage: pdf-archive
 
-The user can obtain energy convergence curve (:num:`Fig. #analysisconvhist`) 
-and orbital energy convergence history (:num:`Fig. #analysislevelhist`), 
+The user can obtain energy convergence curve (:num:`Fig. #analysisconvhist`)
+and orbital energy convergence history (:num:`Fig. #analysislevelhist`),
 as shown below:
 
 
@@ -122,7 +122,7 @@ Advanced (debug) tools
 Outputs the specified matrix file (binary format) to standard output.
 
 .. code-block:: none
-   
+
    Usage: pdf-mat2txt
 
 
@@ -131,7 +131,7 @@ Outputs the specified matrix file (binary format) to standard output.
 Outputs the specified vector file (binary format) to standard output.
 
 .. code-block:: none
-   
+
    Usage: pdf-vtr2txt
 
 
@@ -140,9 +140,9 @@ Outputs the specified vector file (binary format) to standard output.
 Converts MessagePack files to YAML files.
 
 .. code-block:: none
-   
+
    Usage: mpac2yml.py [options] FILE
-  
+
    Options:
    -h, --help  show this help message and exit
 
@@ -152,9 +152,9 @@ Converts MessagePack files to YAML files.
 Converts YAML files to MessagePack files.
 
 .. code-block:: none
-   
+
    Usage: yml2mpac.py [options] YAML_FILE MPAC_FILE
-  
+
    Options:
    -h, --help  show this help message and exit
 
@@ -164,23 +164,16 @@ Converts YAML files to MessagePack files.
 Compares two calculation results.
 
 .. code-block:: none
-   
+
    Usage: pdf-diff
 
 
-* pdf-matinfo
+* pdf-mat-info
 
 Outputs matrix information.
 
 .. code-block:: none
-   
-   Usage: pdf-matinfo
+
+   Usage: pdf-mat-info
 
 
-* pdf-genmat
-
-Generates matrices.
-
-.. code-block:: none
-   
-   Usage: pdf-genmat
