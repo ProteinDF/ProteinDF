@@ -4,8 +4,6 @@ Quick Start Guide
 
 This chapter describes how to perform a single-point calculation of amino acid (glycine) using a single process.
 
-.. index:: fl_Input
-.. index:: fl_Table
 .. index:: fl_Work
 
 Creating calculation directories

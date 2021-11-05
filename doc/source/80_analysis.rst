@@ -20,7 +20,7 @@ Executing the command above obtains the following outputs:
 
 .. code-block:: none
 
-   $ pdf-top 115
+   $ pdf-component 115
    MO level: 115
    No. 1     8  C (  42.525,   37.241,   32.674) p(    px) (  8.18%;   8.18%)
    No. 2     8  C (  42.525,   37.241,   32.674) p(    pz) (  7.77%;  15.95%)
@@ -45,31 +45,31 @@ Output Mulliken population.
 
 
 
-* pdf-mo
+* pdf-mkfld-mo
 
 Outputs molecular orbital field data.
 
 .. code-block:: none
 
-   Usage: pdf-mo <MO_ID>
+   Usage: pdf-mkfld-mo <MO_ID>
 
 
-* pdf-esp
+* pdf-mkfld-esp
 
 Outputs electrostatic potential field data.
 
 .. code-block:: none
 
-   Usage: pdf-esp
+   Usage: pdf-mkfld-esp
 
 
-* pdf-dens
+* pdf-mkfld-dens
 
 Outputs electron density field data.
 
 .. code-block:: none
 
-   Usage: pdf-dens
+   Usage: pdf-mkfld-dens
 
 
 * pdf-archive
@@ -117,25 +117,25 @@ as shown below:
 Advanced (debug) tools
 ========================
 
-* pdf-mat2txt
+* pdf-mat-show
 
 Outputs the specified matrix file (binary format) to standard output.
 
 .. code-block:: none
 
-   Usage: pdf-mat2txt
+   Usage: pdf-mat-show <matrix file>
 
 
-* pdf-vtr2txt
+* pdf-vtr-show
 
 Outputs the specified vector file (binary format) to standard output.
 
 .. code-block:: none
 
-   Usage: pdf-vtr2txt
+   Usage: pdf-vtr-show
 
 
-* pdf-mpac2yml
+* mpac2yml.py
 
 Converts MessagePack files to YAML files.
 
@@ -147,7 +147,7 @@ Converts MessagePack files to YAML files.
    -h, --help  show this help message and exit
 
 
-* pdf-yml2mpac
+* yml2mpac.py
 
 Converts YAML files to MessagePack files.
 
