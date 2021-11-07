@@ -1,0 +1,1235 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2014-2020, Toshiyuki HIRANO
+# This file is distributed under the same license as the ProteinDF User's
+# Manual package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: ProteinDF User's Manual 2020.06.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-11-07 21:24+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../source/90_appendix.rst:3
+msgid "Appendix"
+msgstr ""
+
+#: ../../source/90_appendix.rst:6
+msgid "startup options of ProteinDF"
+msgstr ""
+
+#: ../../source/90_appendix.rst:8
+msgid "-r"
+msgstr ""
+
+#: ../../source/90_appendix.rst:10
+msgid ""
+"Resume (restart) the calculation from where it can be restarted. The "
+"calculation conditions are read from the parameter file (pdfparam.mpac)."
+msgstr ""
+
+#: ../../source/90_appendix.rst:14
+msgid "-i input_file"
+msgstr ""
+
+#: ../../source/90_appendix.rst:16
+msgid ""
+"Specify an input file to start the calculation. If not specified, "
+"fl_Userinput on the current directory will be used."
+msgstr ""
+
+#: ../../source/90_appendix.rst:20
+msgid "-o output_file"
+msgstr ""
+
+#: ../../source/90_appendix.rst:22
+msgid ""
+"Specifies the output file for the result. If not specified, fl_Out_Std "
+"will be output to the current directory."
+msgstr ""
+
+#: ../../source/90_appendix.rst:26
+msgid "-d"
+msgstr ""
+
+#: ../../source/90_appendix.rst:28
+msgid ""
+"Debug output. Note that a large number of messages are output to the file"
+" and standard output. Normally, you do not need to select this option."
+msgstr ""
+
+#: ../../source/90_appendix.rst:34
+msgid "Input parameter list"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "pdf_param_path"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "キーワード"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "説明"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "パラメータファイルのパス"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "デフォルト値"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "pdfparam.mpac"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "形式"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid ".*"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:13
+msgid "step_control"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "計算ステップの指定"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "create"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "((create|integral|guess|scf|force)\\s*)+"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:25
+msgid "comment"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "コメント"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:37
+msgid "linear_algebra_package"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "線形ライブラリの指定"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "lapack"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(lapack|scalapack)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:49
+msgid "scalapack_block_size"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "ScaLAPACKブロックサイズの指定"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "64"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(\\d+)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:61
+msgid "save_distributed_matrix_to_local_disk"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "大域分散行列を各ノードで分散して保存"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "no"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(yes|no)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:73
+msgid "local_disk_path"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "ローカルディスクへの保存に使用するパス"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "/tmp"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:85
+msgid "memory_size"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "使用可能なメモリサイズ"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1GB"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "\\d+\\s*(MB|GB)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:97
+msgid "use_mapfile"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "仮想ディスクを使用する"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:109
+msgid "mapfile_size"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "仮想ディスクのサイズ"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "auto"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(\\d+\\s*(MB|GB)|auto)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:121
+msgid "mapfile_basename"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "仮想ディスクファイルの基本ファイル名"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "pdf"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:133
+msgid "work_on_disk"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "いつでも仮想ディスクを使用する"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:145
+msgid "parallel_processing_type"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "並列アルゴリズムの選択"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "divide_and_conquer"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(divide_and_conquer|DC|master_slave|MS)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:157
+msgid "cleanup"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "中間ファイルの削除"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:169
+msgid "show_keyword"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "キーワードを表示する"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:181
+msgid "show_input"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "入力パラメータを表示する"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "yes"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:193
+msgid "show_coordinates"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "分子座標を表示する"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:205
+msgid "show_orbital_basis"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "基底関数情報の表示形式の指定"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "gamess"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(gamess|amoss|none)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:217
+msgid "guess"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "guessの指定"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "rho"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(rho|file_rho|lcao|density|core|huckel|harris)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:229
+msgid "cut-value"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "積分カットオフ値"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1.0E-10"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(double > 0)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:241
+msgid "block-size"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "積分ブロックサイズ"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1024000"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(integer > 0)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:253
+msgid "charge-extrapolate-number"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "ダミー電荷を段階的に外挿する回数"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(integer >= 1)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:265
+msgid "orbital-overlap-correspondence"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "軌道の対応付けを行う"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "off"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "on/off"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:277
+msgid "orbital-overlap-correspondence-first"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "軌道の対応付けを初回から行う"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:289
+msgid "orbital-overlap-correspondence-method"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "軌道対応付けの方法"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "mo-overlap"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "mo-overlap/mo-projection"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:301
+msgid "orbital-overlap-correspondence-number"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "3"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "integer"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:313
+msgid "summary"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "計算サマリーを表示する"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "none"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(none|convergence|every-scf)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:325
+msgid "analyze_population"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "形式電荷の計算を行う"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:337
+msgid "max-iteration"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "SCF繰り返し計算の最大値"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "100"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(integer)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:349
+msgid "method"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "計算方法"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "rks"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(rks|uks|roks)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:361
+msgid "method/rks/occlevel"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "rks計算における占有軌道"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(array of integer >= 0)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:373
+msgid "method/rks/electrons"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "rks計算のおける電子数"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(integer >= 2)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:385
+msgid "method/uks/alpha_occlevel"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "uks計算におけるalpha電子の占有軌道"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:397
+msgid "method/uks/alpha_electrons"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "uks計算におけるalpha電子の数"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:409
+#: ../../source/pdfkwd.rst:469
+msgid "method/uks/beta_occlevel"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "uks計算におけるbeta電子の占有軌道"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:421
+msgid "method/uks/beta_electrons"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "uks計算におけるbeta電子の数"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:433
+msgid "method/roks/closed_occlevel"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "roks計算における閉殻軌道の指定"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(array of integer >= 1)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:445
+msgid "method/uks/close_electrons"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "roks計算における閉殻軌道の電子数"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:457
+msgid "method/roks/open_occlevel"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "roks計算における開殻軌道の指定"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:481
+msgid "save_diff_density_matrix"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:493
+msgid "use_matrix_cache"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:505
+msgid "force_loading_from_disk"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:517
+msgid "show_cache_report"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "キャッシュ情報の表示"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:529
+msgid "disk-utilization"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "yes/no"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:541
+msgid "update_method"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:553
+msgid "orbital-independence-threshold"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "0.007"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(real >= 0)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:565
+msgid "convergence/type"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "収束の対象となるパラメータ"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "density"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(fock|density|dcoef)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:577
+msgid "convergence/threshold"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "収束の閾値"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1e-3"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(real > 0)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:589
+msgid "convergence/threshold-energy"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "エネルギーにおける収束条件"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1e-4"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:601
+msgid "scf-acceleration"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "収束加速法の選択"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "damping"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(damping|anderson|diis)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:613
+msgid "scf-acceleration/damping/damping-factor"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "damping法におけるダンピング係数"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "0.85"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(real)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:625
+msgid "scf-acceleration/daming/start-number"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "damping法を開始するイテレーション"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "0"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(int)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:637
+msgid "scf-acceleration/damping/damping-type"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "damping法を適用する物理量"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(fock|density_matrix|density|dcoef)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:649
+msgid "scf-acceleration/anderson/damping-factor"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "anderson法におけるダンピング係数"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "0.50"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:661
+msgid "scf-acceleration/anderson/start-number"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "anderson法を適用開始するイテレーション"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:673
+msgid "level-shift"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "レベルシフト法を適用する"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:685
+msgid "level-shift/start-iteration"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "レベルシフト法を開始するイテレーション"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:697
+msgid "level-shift/ls-closed-mo"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "閉殻軌道に使用するレベルシフト値"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "0.00"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:709
+msgid "level-shift/ls-open-mo"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "開殻軌道に使用するレベルシフト値"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:721
+msgid "level-shift/ls-virtual-mo"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "空軌道に使用するレベルシフト値"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:733
+msgid "scf-acceleration/diis/number-of-diis"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:745
+msgid "scf-acceleration/diis/start-number"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "DIIS法を開始するイテレーション"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(integer >= 0)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:757
+msgid "scf-acceleration/diis/start-extrapolation"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "6"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:769
+msgid "xc-potential"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "交換相関ポテンシャルの指定"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "svwn~"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(svwn~|svwn|blyp|b3lyp)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:781
+msgid "grid_free"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "grid-free法を使用する"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "false"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:793
+msgid "xc-potential/grid-type"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "使用するグリッドの選択"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "sg-1"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "fine/medium-fine/medium/coarse/sg-1"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:805
+msgid "xc-update"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:817
+msgid "xc-density-threshold"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1.0E-16"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "real"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:829
+msgid "TEI-integral-driven"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:841
+msgid "J_engine"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "クーロン項の計算方法の選択"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "RI_J"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(conventional|RI_J|CD)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:853
+msgid "K_engine"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "Fock交換項の計算方法の選択"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "conventional"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(conventional|RI_K|CD)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:865
+msgid "CDAM_tau"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "CDAM法におけるτ値"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:877
+msgid "CD_epsilon"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "CD法におけるε値"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1.0E-4"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:889
+msgid "scf-memory-saving"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:901
+msgid "geometry/cartesian/input"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "カーテシアン座標による#分子座標の指定"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "nil"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "nil/stored"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:913
+msgid "geometry/cartesian/unit"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "a.u."
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "au/a.u./angstrom"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:925
+msgid "basis-set/orbital"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:937
+msgid "basis-set/density-auxiliary"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:949
+msgid "basis-set/exchange-auxiliary"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:961
+msgid "xc_density_threshold"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:973
+msgid "geometry"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "cartesian"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "cartesian/file"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:985
+msgid "coordinates"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:997
+msgid "basis_sets"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1009
+msgid "basis_sets_j"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1021
+msgid "basis_sets_k"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1033
+msgid "independent-orbital-number"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1045
+msgid "xc-potential/gxalpha/alpha-value"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "0.7"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1057
+msgid "myu-nyu-zero"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1069
+msgid "guess/nsp-ppq"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1081
+msgid "guess/sp-ppq"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1093
+msgid "guess/trans-angle-threshold"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1.0 1.5 20 30"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1105
+msgid "guess/make-myu-nyu"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "meth0"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "meth0/meth1/meth2/meth3/meth4"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1117
+msgid "guess/vct-normalize"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "ON OFF OFF"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1129
+msgid "guess/part-normalize"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1141
+msgid "guess/user-vector"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(nil|stored)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1153
+msgid "num_of_atoms"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1165
+msgid "num_of_dummy_atoms"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1177
+msgid "num_of_AOs"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1189
+msgid "num_of_MOs"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1201
+msgid "num_of_auxCDs"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1213
+msgid "num_of_auxXCs"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1225
+msgid "TE"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1237
+msgid "debug/file_warning"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1249
+msgid "debug/save_J"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1261
+msgid "debug/save_K"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1273
+msgid "debug/save_Fxc_pure"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1285
+msgid "debug/save_forces"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1297
+msgid "cutoff_distribution"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1309
+msgid "length_scale_parameter"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1321
+msgid "control"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1333
+msgid "debug/eri/exact_J"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1345
+msgid "cutoff_density"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1357
+msgid "cutoff_epsilon3"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1369
+msgid "debug/eri/exact_K"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1381
+msgid "new_engine"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1393
+msgid "debug/eri/output_K"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1405
+msgid "debug/eri/output_J"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1417
+msgid "num_of_iterations"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1429
+msgid "stat"
+msgstr ""
+
+#: ../../source/90_appendix.rst:40
+msgid "Input file format"
+msgstr ""
+
+#: ../../source/90_appendix.rst:44
+msgid "basis2 file format"
+msgstr ""
+
+#: ../../source/90_appendix.rst:46
+msgid ""
+"The basis2 file stores the basis function information. The following is a"
+" concrete example."
+msgstr ""
+
+#: ../../source/90_appendix.rst:53
+msgid "Format"
+msgstr ""
+
+#: ../../source/90_appendix.rst:55
+msgid "** line 1(Title)"
+msgstr ""
+
+#: ../../source/90_appendix.rst:57
+msgid ""
+"Describes the name of the basis function. A name starting with \"O-\" "
+"indicates a basis function, and a name starting with \"A-\" indicates an "
+"auxiliary basis function. In the case of basis functions, a single CGTO "
+"block. In the case of auxiliary basis functions, it consists of two CGTO "
+"blocks, one for the Coulomb term and the other for the auxiliary basis "
+"functions for the exchange-correlation term."
+msgstr ""
+
+#: ../../source/90_appendix.rst:63
+msgid "** line 2(the number of CGTOs)"
+msgstr ""
+
+#: ../../source/90_appendix.rst:65
+msgid ""
+"Specifies the form and number of orbits of a contracted Gaussian basis "
+"function (CGTO). It is represented by three integer values separated by "
+"whitespace. The three integer values, separated by spaces, represent the "
+"number of s-type, p-type, and d-type orbits, in that order. After this "
+"line, the CGTO block continues."
+msgstr ""
+
+#: ../../source/90_appendix.rst:70
+msgid ""
+"If it is written as \"3 2 1,\" There are three contracted Gaussian basis "
+"functions of type s, two contracted Gaussian basis functions of type p, "
+"and one contracted Gaussian basis function of type d. Therefore, after "
+"this line, six CGTO blocks will be described."
+msgstr ""
+
+#: ../../source/90_appendix.rst:75
+msgid "** line 3(beginning of CGTO block)"
+msgstr ""
+
+#: ../../source/90_appendix.rst:77
+msgid ""
+"The beginning of a CGTO block indicates the number of primitive Gaussian "
+"basis functions (PGTO) that the CGTO block contains."
+msgstr ""
+
+#: ../../source/90_appendix.rst:80
+msgid "** line 4(PGTO)"
+msgstr ""
+
+#: ../../source/90_appendix.rst:82
+msgid ""
+"The exponents and coefficients of the primitive basis functions (PGTO) "
+"are described, separated by whitespace. For the auxiliary basis "
+"functions, the coefficient (1.0) can be omitted."
+msgstr ""
+

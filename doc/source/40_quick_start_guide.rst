@@ -9,7 +9,7 @@ This chapter describes how to perform a single-point calculation of amino acid (
 Creating calculation directories
 ================================
 
-ProteinDF writes a large number of large intermediate files with matrices/vectors on disk storage. 
+ProteinDF writes a large number of large intermediate files with matrices/vectors on disk storage.
 Before starting actual calculations, create the following calculation directories:
 
 * fl_Work
@@ -22,7 +22,7 @@ Before starting actual calculations, create the following calculation directorie
 
 .. warning::
 
-  The program may abnormally terminate if the intermediate files cannot be written properly. 
+  The program may abnormally terminate if the intermediate files cannot be written properly.
   Before executing MPI parallel computation, make sure that the files can be properly written from all nodes.
 
 
@@ -45,7 +45,7 @@ Create a text file with the following content, and save it under the name ``fl_U
 Exec ProteinDF
 ===============
 
-Configure the environment variable PDF_HOME appropriately, and execute ProteinDF (in serial mode).
+Configure the environment variable ``PDF_HOME`` appropriately, and execute ProteinDF (in serial mode).
 
 .. code-block:: bash
 
@@ -65,36 +65,36 @@ The calculation results are output in files. The following shows an example of t
   The output file location can be changed with a startup option of ProteinDF.
 
 
-The beginning of the output file shows the version of ProteinDF and the number of parallel processes 
-(MPI process count, the number of OpenMP threads). 
+The beginning of the output file shows the version of ProteinDF and the number of parallel processes
+(MPI process count, the number of OpenMP threads).
 Make sure that the calculation was performed as intended.
 
 .. code-block:: none
-   
+
    [0:2012/**/07 17:17:02:INFO] **************************************
    [0:2012/**/07 17:17:02:INFO] ProteinDF version 20xx.x:xxxx (serial)
-   [0:2012/**/07 17:17:02:INFO] 
+   [0:2012/**/07 17:17:02:INFO]
    [0:2012/**/07 17:17:02:INFO]  OpenMP threads: 12
-   [0:2012/**/07 17:17:02:INFO] 
+   [0:2012/**/07 17:17:02:INFO]
 
-The calculation is performed according to the procedure described in ``step_control``. 
+The calculation is performed according to the procedure described in ``step_control``.
 The output date is indicated at left in the log.
 
 .. code-block:: none
-   
+
    ===============================================
     >>>> INTEGRAL
    ===============================================
     >>>> Hpq
-   
+
     ...
-   
+
    ===============================================
     >>>> GUESS
    ===============================================
-   
+
     ...
-   
+
    ===============================================
     >>>> SCF
    ===============================================
@@ -103,7 +103,7 @@ The output date is indicated at left in the log.
 Energy data are output in the ``Total Energy`` block.
 
 .. code-block:: none
-   
+
    ------------------------------------------------
     >>>> Total Energy
    ------------------------------------------------
@@ -121,7 +121,7 @@ Other information, such as calculation size or cut off data, is output as needed
 When the calculation completes properly, the CPU time and elapsed time are output.
 
 .. code-block:: none
-   
+
    ************************************************
     ProteinDF successful completion
     CPU_TIME:         3454 sec

@@ -3,14 +3,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ProteinDF User's Manual 2014.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-08-26 13:13+0900\n"
+"POT-Creation-Date: 2021-11-07 21:16+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.8.0\n"
+"Generated-By: Babel 2.9.1\n"
 
 #: ../../source/installation.rst:3
 msgid "Installation"
@@ -222,8 +222,9 @@ msgstr ""
 
 #: ../../source/installation.rst:135
 msgid ""
-"プログラムのインストール先を指定します。 デフォルトは/usr/localです。 "
-"ユーザーのホームディレクトリなどにインストールするときに用いられます。"
+"Specify the installation location of the program. The default is "
+"/usr/local. This is used to install the program in the user's home "
+"directory."
 msgstr ""
 
 #: ../../source/installation.rst:140
@@ -231,7 +232,7 @@ msgid "``--with-blas=location``"
 msgstr ""
 
 #: ../../source/installation.rst:142
-msgid "BLASライブラリの場所を指定します。"
+msgid "Specify the location of the BLAS library."
 msgstr ""
 
 #: ../../source/installation.rst:145
@@ -239,7 +240,7 @@ msgid "``--with-lapack=location``"
 msgstr ""
 
 #: ../../source/installation.rst:147
-msgid "LAPACKライブラリの場所を指定します。"
+msgid "Specify the location of the LAPACK library."
 msgstr ""
 
 #: ../../source/installation.rst:150
@@ -247,11 +248,11 @@ msgid "``--with-scalapack=location``"
 msgstr ""
 
 #: ../../source/installation.rst:152
-msgid "ScaLAPACKライブラリの場所を指定します。"
+msgid "Specify the location of the ScaLAPACK library."
 msgstr ""
 
 #: ../../source/installation.rst:155
-msgid "環境変数CC,CXX,MPICXX"
+msgid "Environment variable CC,CXX,MPICXX"
 msgstr ""
 
 #: ../../source/installation.rst:157
@@ -261,86 +262,56 @@ msgid ""
 msgstr ""
 
 #: ../../source/installation.rst:159
-msgid "環境変数CFLAGS,CXXFLAGS"
+msgid "Environment variable CFLAGS,CXXFLAGS"
 msgstr ""
 
 #: ../../source/installation.rst:161
-msgid "C/C++コンパイラに渡すオプションを指定します。 OpenMPなどのコンパイラへの指示は、この環境変数に指定してください。"
+msgid ""
+"Specify options for C/C++ compiler. Instructions to the compiler, such as"
+" OpenMP, should be specified in this environment variable."
 msgstr ""
 
-#: ../../source/installation.rst:164
-msgid "環境変数LIBS"
-msgstr ""
-
-#: ../../source/installation.rst:166
-msgid "その他ビルドに必要なライブラリを指定します。"
-msgstr ""
-
-#: ../../source/installation.rst:168
-msgid "環境変数BLAS_LIBS"
-msgstr ""
-
-#: ../../source/installation.rst:170
-msgid "BLASライブラリを指定します。"
-msgstr ""
-
-#: ../../source/installation.rst:172
-msgid "LAPACK_LIBS"
-msgstr ""
-
-#: ../../source/installation.rst:174
-msgid "LAPACKライブラリを指定します。"
-msgstr ""
-
-#: ../../source/installation.rst:176
-msgid "SCALAPACK_LIBS"
-msgstr ""
-
-#: ../../source/installation.rst:178
-msgid "Specifies the ScaLAPACK library."
-msgstr ""
-
-#: ../../source/installation.rst:182
+#: ../../source/installation.rst:167
 msgid "Executing \\\"make\\\""
 msgstr ""
 
-#: ../../source/installation.rst:184
+#: ../../source/installation.rst:169
 msgid ""
 "Execute the ``cmake`` command, and make sure the Makefile is created. "
 "Once the Makefile is created, execute the ``make`` command."
 msgstr ""
 
-#: ../../source/installation.rst:193
+#: ../../source/installation.rst:178
 msgid "Installing the program"
 msgstr ""
 
-#: ../../source/installation.rst:195
+#: ../../source/installation.rst:180
 msgid ""
 "After executing \\\"make\\\", install the execution file/data to the "
 "specified path."
 msgstr ""
 
-#: ../../source/installation.rst:202
+#: ../../source/installation.rst:187
 msgid "After the execution above, the following files will be created:"
 msgstr ""
 
-#: ../../source/installation.rst:204
+#: ../../source/installation.rst:189
 msgid "${PDF_HOME}/bin/PDF.x"
 msgstr ""
 
-#: ../../source/installation.rst:205
+#: ../../source/installation.rst:190
 msgid "${PDF_HOME}/bin/PPDF.x"
 msgstr ""
 
-#: ../../source/installation.rst:206
+#: ../../source/installation.rst:191
 msgid "${PDF_HOME}/data/basis2"
 msgstr ""
 
-#: ../../source/installation.rst:210
+#: ../../source/installation.rst:195
 msgid "When trouble occurs..."
 msgstr ""
 
-#: ../../source/installation.rst:212
+#: ../../source/installation.rst:197
 msgid ""
 "In some environments, problems may occur such that no script can be "
 "executed, or no build is possible. In such cases, check the output of "
@@ -550,5 +521,52 @@ msgstr ""
 #~ "ソースコードリポジトリから取得した場合は、 configureスクリプトをautotoolsを用いて作成する必要があります。"
 #~ " automake, autoconf, libtoolがインストールされた環境で、 "
 #~ "同梱のbootstrap.shを実行してください。"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "プログラムのインストール先を指定します。 デフォルトは/usr/localです。 "
+#~ "ユーザーのホームディレクトリなどにインストールするときに用いられます。"
+#~ msgstr ""
+
+#~ msgid "BLASライブラリの場所を指定します。"
+#~ msgstr ""
+
+#~ msgid "LAPACKライブラリの場所を指定します。"
+#~ msgstr ""
+
+#~ msgid "ScaLAPACKライブラリの場所を指定します。"
+#~ msgstr ""
+
+#~ msgid "環境変数CC,CXX,MPICXX"
+#~ msgstr ""
+
+#~ msgid "環境変数CFLAGS,CXXFLAGS"
+#~ msgstr ""
+
+#~ msgid "C/C++コンパイラに渡すオプションを指定します。 OpenMPなどのコンパイラへの指示は、この環境変数に指定してください。"
+#~ msgstr ""
+
+#~ msgid "環境変数LIBS"
+#~ msgstr ""
+
+#~ msgid "その他ビルドに必要なライブラリを指定します。"
+#~ msgstr ""
+
+#~ msgid "環境変数BLAS_LIBS"
+#~ msgstr ""
+
+#~ msgid "BLASライブラリを指定します。"
+#~ msgstr ""
+
+#~ msgid "LAPACK_LIBS"
+#~ msgstr ""
+
+#~ msgid "LAPACKライブラリを指定します。"
+#~ msgstr ""
+
+#~ msgid "SCALAPACK_LIBS"
+#~ msgstr ""
+
+#~ msgid "Specifies the ScaLAPACK library."
 #~ msgstr ""
 

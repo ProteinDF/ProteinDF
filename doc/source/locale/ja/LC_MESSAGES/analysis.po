@@ -3,14 +3,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ProteinDF User's Manual 2014.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-08-26 13:13+0900\n"
+"POT-Creation-Date: 2021-11-07 21:16+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.8.0\n"
+"Generated-By: Babel 2.9.1\n"
 
 #: ../../source/analysis.rst:5
 msgid "Analysis of the ProteinDF Calculation Results"
@@ -21,7 +21,7 @@ msgid "General analysis tools"
 msgstr ""
 
 #: ../../source/analysis.rst:11
-msgid "pdf-top"
+msgid "pdf-component"
 msgstr ""
 
 #: ../../source/analysis.rst:13
@@ -90,7 +90,15 @@ msgid ""
 msgstr ""
 
 #: ../../source/analysis.rst:104
+msgid "analysis_conv_hist.png"
+msgstr ""
+
+#: ../../source/analysis.rst:104
 msgid "Energy convergence curve"
+msgstr ""
+
+#: ../../source/analysis.rst:114
+msgid "analysis_level_hist.png"
 msgstr ""
 
 #: ../../source/analysis.rst:114
@@ -142,19 +150,11 @@ msgid "Compares two calculation results."
 msgstr ""
 
 #: ../../source/analysis.rst:171
-msgid "pdf-matinfo"
+msgid "pdf-mat-info"
 msgstr ""
 
 #: ../../source/analysis.rst:173
 msgid "Outputs matrix information."
-msgstr ""
-
-#: ../../source/analysis.rst:180
-msgid "pdf-genmat"
-msgstr ""
-
-#: ../../source/analysis.rst:182
-msgid "Generates matrices."
 msgstr ""
 
 #~ msgid "ProteinDF計算結果の解析"
@@ -223,5 +223,17 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "行列を作成します。"
+#~ msgstr ""
+
+#~ msgid "pdf-top"
+#~ msgstr ""
+
+#~ msgid "pdf-matinfo"
+#~ msgstr ""
+
+#~ msgid "pdf-genmat"
+#~ msgstr ""
+
+#~ msgid "Generates matrices."
 #~ msgstr ""
 
