@@ -11,7 +11,7 @@ Follow the procedure below to execute ProteinDF from the command line:
 Preparation
 -----------
 
-Create directories (default: fl_Work) for outputting intermediate data, 
+Create directories (default: ``fl_Work``) for outputting intermediate data,
 under the execution directory of ProteinDF (where the input file is located).
 
 .. note::
@@ -20,8 +20,8 @@ under the execution directory of ProteinDF (where the input file is located).
 
 .. note::
 
-  The data written in these directories will be extremely large. 
-  It is recommended to create the directories in a high-speed disk storage 
+  The data written in these directories will be extremely large.
+  It is recommended to create the directories in a high-speed disk storage
   with large capacity.
 
 
@@ -34,12 +34,12 @@ To execute the serial version of ProteinDF, use the following command:
 
   % $PDF_HOME/bin/PDF.x
 
-When the computation starts, 
-total energy at each SCF calculation is sequentially displayed 
-in the standard output. 
-In addition, the series of the calculation result data is output 
-in the log file (fl_Out_Std). 
-Intermediate data during all-electron calculation is also output 
+When the computation starts,
+total energy at each SCF calculation is sequentially displayed
+in the standard output.
+In addition, the series of the calculation result data is output
+in the log file (``fl_Out_Std``).
+Intermediate data during all-electron calculation is also output
 in the log file.
 
 
@@ -50,21 +50,21 @@ To execute the parallel version of ProteinDF, use the following command:
 
 .. code-block:: bash
 
-  % mpiexec -n N $PDF_HOME/bin/PDF.x
+  % mpiexec -n N $PDF_HOME/bin/PPDF.x
 
 Here, specify ``N``, the number of processors for parallel computation.
 
 .. note::
 
-  Execution procedure of the MPI program varies depending 
-  on the computing system environment. 
+  Execution procedure of the MPI program varies depending
+  on the computing system environment.
   For details, refer to the system manuals.
 
-When the computation starts, 
-total energy at each SCF calculation is sequentially displayed 
-in the standard output. 
-In addition, the series of the calculation result data is 
-output in a text file (default file name: fl_Out_Std), as in the serial mode.
+When the computation starts,
+total energy at each SCF calculation is sequentially displayed
+in the standard output.
+In addition, the series of the calculation result data is
+output in a text file (default file name: ``fl_Out_Std``), as in the serial mode.
 
 
 ========
@@ -74,89 +74,70 @@ Run Type
 Overview
 ========
 
-ProteinDF has several run types to efficiently compute 
+ProteinDF has several run types to efficiently compute
 a large object with limited computing resources.
 
 ======================== ================= ============
-run type                 parallel method   matrix      
+run type                 parallel method   matrix
 ======================== ================= ============
-serial                   OpenMP only       replica     
+serial                   OpenMP only       replica
 ------------------------ ----------------- ------------
-replica_static           MPI/OpenMP hybrid replica     
+replica_static           MPI/OpenMP hybrid replica
 ------------------------ ----------------- ------------
-replica_dynamic          MPI/OpenMP hybrid replica     
+replica_dynamic          MPI/OpenMP hybrid replica
 ------------------------ ----------------- ------------
-distributed              MPI/OpenMP hybrid distributed 
+distributed              MPI/OpenMP hybrid distributed
 ======================== ================= ============
 
 
 serial
 ======
 
-* 1プロセスのみで計算を行います。プロセス間通信は行いません。
-* OpenMPによるスレッド並列計算が可能です。
-* 行列演算はLAPACKを利用します。
-* 計算可能な系のサイズは、プロセスが使用できるメモリ容量に依存します。
+* Calculations are performed by only one process. No inter-process communication is performed.
+* Thread parallel computing by OpenMP is possible.
+* LAPACK is used for matrix operations.
+* The size of the computable system depends on the amount of memory available to the process.
 
 
 replica_static
 ==============
 
-* プロセス間通信(MPI)による並列計算を行います。各プロセス内ではOpenMP並列計算を行います。
-* プロセスは計算に必要な行列の全要素を各MPIプロセスで複製、保持します。
-* 指定されたメモリサイズでは行列が確保できない場合は、ディスク領域に行列を保持します。
-* タスクの分散は分割統治法を採用します。
-* 行列演算はLAPACKを利用します。
-* ``linear_algebra_package`` キーワードに ``LAPACK`` を指定します。
+* Performs parallel computation using inter-process communication (MPI). Within each process, OpenMP parallel computation is performed.
+* The process replicates and maintains all elements of the matrix required for the calculation in each MPI process.
+* If the matrix cannot be allocated with the specified memory size, the matrix is kept in the disk area.
+* Divide and conquer method is used to distribute the tasks.
+* Use LAPACK for matrix operations.
+* The ``linear_algebra_package`` keyword is ``LAPACK``.
 
 .. note::
 
-  分割統治法では、すべてのプロセスが演算処理に参加するので、
-  プロセス数が少ない場合に有効です。
-  負荷が均等に分散できない欠点があります。
-
-.. note::
-
-  memory_size キーワードでプロセスが利用できるメモリ量を指定します。
-
-.. warning::
-
-  メモリ不足によってディスクを利用した場合は、パフォーマンスが劣化する場合があります。
-
+  The divide-and-conquer method is effective when the number of processes is small, since all processes participate in the arithmetic operations. However It has the disadvantage that the load cannot be distributed evenly.
 
 
 replica_dynamic
 ===============
 
-* プロセス間通信(MPI)による並列計算を行います。各プロセス内ではOpenMP並列計算を行います。
-* プロセスは計算に必要な行列の全要素を各MPIプロセスで複製、保持します。
-* 指定されたメモリサイズでは行列が確保できない場合は、ディスク領域に行列を保持します。
-* タスクの分散はマスター-スレーブ法を採用します。
-* 行列演算はLAPACKを利用します。
-* ``linear_algebra_package`` キーワードに ``LAPACK`` を指定します。
-* ``parallel_processing_type`` キーワードに ``MS`` を指定します。
-
-.. note::
-
-  マスター-スレーブ法では、マスタープロセスはタスクの分散に専念し、演算を行いません。
-  負荷が均等に分散できるので、プロセス数が多い場合に有効です。
+* Performs parallel computation using inter-process communication (MPI). Within each process, OpenMP parallel computation is performed.
+* The process replicates and maintains all elements of the matrix required for the calculation in each MPI process.
+* If the matrix cannot be allocated with the specified memory size, the matrix will be kept in the disk area.
+* The leader/follower method is used for task distribution.
+* Use LAPACK for matrix operations.
+* ``linear_algebra_package`` keyword is ``LAPACK``.
+* The ``parallel_processing_type`` keyword must be ``MS``.
 
 
 .. note::
 
-  memory_size キーワードでプロセスが利用できるメモリ量を指定します。
-
-.. warning::
-
-  メモリ不足によってディスクを利用した場合は、パフォーマンスが劣化する場合があります。
+  In the leader/follower method, the master process concentrates on distributing tasks and does not perform operations.
+  Since the load can be distributed evenly, it is effective when the number of processes is large.
 
 
 
 distributed
 ===========
 
-* プロセス間通信(MPI)による並列計算を行います。各プロセス内ではOpenMP並列計算を行います。
-* 大域行列を各MPIプロセスに分割して保持します。
-* 指定されたメモリサイズでは行列が確保できない場合は、ディスク領域に行列を保持します。
-* 行列演算はScaLAPACKを利用します。
-* ``linear_algebra_package`` キーワードに ``ScaLAPACK`` を指定します。
+* It performs parallel computation by inter-process communication (MPI). OpenMP parallel computing is performed within each process.
+* The global matrix is divided and maintained in each MPI process.
+* If the matrix cannot be allocated in the specified memory size, the matrix is held in the disk area.
+* ScaLAPACK is used for matrix operations.
+* Specify ``ScaLAPACK`` for the ``linear_algebra_package`` keyword.

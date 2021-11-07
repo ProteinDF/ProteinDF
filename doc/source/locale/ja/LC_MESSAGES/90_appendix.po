@@ -1,9 +1,15 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2014-2020, Toshiyuki HIRANO
+# This file is distributed under the same license as the ProteinDF User's
+# Manual package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
 #
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: ProteinDF User's Manual 2014.0\n"
+"Project-Id-Version: ProteinDF User's Manual 2020.06.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-07 21:16+0900\n"
+"POT-Creation-Date: 2021-11-07 21:24+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -12,55 +18,55 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.1\n"
 
-#: ../../source/appendix.rst:3
+#: ../../source/90_appendix.rst:3
 msgid "Appendix"
 msgstr ""
 
-#: ../../source/appendix.rst:6
+#: ../../source/90_appendix.rst:6
 msgid "startup options of ProteinDF"
 msgstr ""
 
-#: ../../source/appendix.rst:8
+#: ../../source/90_appendix.rst:8
 msgid "-r"
 msgstr ""
 
-#: ../../source/appendix.rst:10
+#: ../../source/90_appendix.rst:10
 msgid ""
 "Resume (restart) the calculation from where it can be restarted. The "
 "calculation conditions are read from the parameter file (pdfparam.mpac)."
 msgstr ""
 
-#: ../../source/appendix.rst:14
+#: ../../source/90_appendix.rst:14
 msgid "-i input_file"
 msgstr ""
 
-#: ../../source/appendix.rst:16
+#: ../../source/90_appendix.rst:16
 msgid ""
 "Specify an input file to start the calculation. If not specified, "
 "fl_Userinput on the current directory will be used."
 msgstr ""
 
-#: ../../source/appendix.rst:20
+#: ../../source/90_appendix.rst:20
 msgid "-o output_file"
 msgstr ""
 
-#: ../../source/appendix.rst:22
+#: ../../source/90_appendix.rst:22
 msgid ""
 "Specifies the output file for the result. If not specified, fl_Out_Std "
 "will be output to the current directory."
 msgstr ""
 
-#: ../../source/appendix.rst:26
+#: ../../source/90_appendix.rst:26
 msgid "-d"
 msgstr ""
 
-#: ../../source/appendix.rst:28
+#: ../../source/90_appendix.rst:28
 msgid ""
 "Debug output. Note that a large number of messages are output to the file"
 " and standard output. Normally, you do not need to select this option."
 msgstr ""
 
-#: ../../source/appendix.rst:34
+#: ../../source/90_appendix.rst:34
 msgid "Input parameter list"
 msgstr ""
 
@@ -1153,29 +1159,29 @@ msgstr ""
 msgid "stat"
 msgstr ""
 
-#: ../../source/appendix.rst:40
+#: ../../source/90_appendix.rst:40
 msgid "Input file format"
 msgstr ""
 
-#: ../../source/appendix.rst:44
+#: ../../source/90_appendix.rst:44
 msgid "basis2 file format"
 msgstr ""
 
-#: ../../source/appendix.rst:46
+#: ../../source/90_appendix.rst:46
 msgid ""
 "The basis2 file stores the basis function information. The following is a"
 " concrete example."
 msgstr ""
 
-#: ../../source/appendix.rst:53
+#: ../../source/90_appendix.rst:53
 msgid "Format"
 msgstr ""
 
-#: ../../source/appendix.rst:55
+#: ../../source/90_appendix.rst:55
 msgid "** line 1(Title)"
 msgstr ""
 
-#: ../../source/appendix.rst:57
+#: ../../source/90_appendix.rst:57
 msgid ""
 "Describes the name of the basis function. A name starting with \"O-\" "
 "indicates a basis function, and a name starting with \"A-\" indicates an "
@@ -1185,11 +1191,11 @@ msgid ""
 "functions for the exchange-correlation term."
 msgstr ""
 
-#: ../../source/appendix.rst:63
+#: ../../source/90_appendix.rst:63
 msgid "** line 2(the number of CGTOs)"
 msgstr ""
 
-#: ../../source/appendix.rst:65
+#: ../../source/90_appendix.rst:65
 msgid ""
 "Specifies the form and number of orbits of a contracted Gaussian basis "
 "function (CGTO). It is represented by three integer values separated by "
@@ -1198,7 +1204,7 @@ msgid ""
 "line, the CGTO block continues."
 msgstr ""
 
-#: ../../source/appendix.rst:70
+#: ../../source/90_appendix.rst:70
 msgid ""
 "If it is written as \"3 2 1,\" There are three contracted Gaussian basis "
 "functions of type s, two contracted Gaussian basis functions of type p, "
@@ -1206,92 +1212,24 @@ msgid ""
 "this line, six CGTO blocks will be described."
 msgstr ""
 
-#: ../../source/appendix.rst:75
+#: ../../source/90_appendix.rst:75
 msgid "** line 3(beginning of CGTO block)"
 msgstr ""
 
-#: ../../source/appendix.rst:77
+#: ../../source/90_appendix.rst:77
 msgid ""
 "The beginning of a CGTO block indicates the number of primitive Gaussian "
 "basis functions (PGTO) that the CGTO block contains."
 msgstr ""
 
-#: ../../source/appendix.rst:80
+#: ../../source/90_appendix.rst:80
 msgid "** line 4(PGTO)"
 msgstr ""
 
-#: ../../source/appendix.rst:82
+#: ../../source/90_appendix.rst:82
 msgid ""
 "The exponents and coefficients of the primitive basis functions (PGTO) "
 "are described, separated by whitespace. For the auxiliary basis "
 "functions, the coefficient (1.0) can be omitted."
 msgstr ""
-
-#~ msgid "付録"
-#~ msgstr ""
-
-#~ msgid "ProteinDF起動オプション"
-#~ msgstr ""
-
-#~ msgid "計算を再開可能な場所から再開(リスタート)します。 計算条件はパラメータファイル(pdfparam.mpac)から読み取られます。"
-#~ msgstr ""
-
-#~ msgid "入力ファイルを指定して計算を開始します。 指定が無い場合はカレントディレクトリ上のfl_Userinputが使用されます。"
-#~ msgstr ""
-
-#~ msgid "結果の出力ファイルを指定します。 指定が無い場合はカレントディレクトリにfl_Out_Stdが出力されます。"
-#~ msgstr ""
-
-#~ msgid "デバッグ出力を行います。 出力ファイルならびに標準出力に大量にメッセージが出力されるため、 注意が必要です。 通常は選択する必要はありません。"
-#~ msgstr ""
-
-#~ msgid "入力パラメータリスト"
-#~ msgstr ""
-
-#~ msgid "入力ファイルフォーマット"
-#~ msgstr ""
-
-#~ msgid "basis2ファイルフォーマット"
-#~ msgstr ""
-
-#~ msgid "basis2ファイルは基底関数情報を保存しています。 以下に具体例を示します。"
-#~ msgstr ""
-
-#~ msgid "フォーマット"
-#~ msgstr ""
-
-#~ msgid "** 1行目(タイトル行)"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "基底関数名を記述します。 \"O-\"から始まる名称は基底関数、\"A-\"から始まる名称は補助基底関数を表します。 "
-#~ "基底関数の場合は1つのCGTOブロック、 "
-#~ "補助基底関数の場合はクーロン項と交換相関項用の補助基底関数を表す2つのCGTOブロックから構成されます。"
-#~ msgstr ""
-
-#~ msgid "** 2行目(CGTOブロック開始行)"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "縮約ガウス型基底関数(CGTO)の軌道の形と数を指定します。 空白文字により区切られた3つの整数値で表され、 "
-#~ "順にs型、p型、d型の数を表します。 この行以降、CGTOブロックが続きます。"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "\"3 2 1\"と記述されていた場合、 s型の縮約ガウス型基底関数が3つ、 "
-#~ "p型の縮約ガウス型基底関数が2つ、 d型の縮約ガウス型基底関数が1つ含まれていることを表します。 "
-#~ "したがって、この行以降、7つのCGTOブロックが記述されることになります。"
-#~ msgstr ""
-
-#~ msgid "** 3行目(CGTO開始行)"
-#~ msgstr ""
-
-#~ msgid "CGTOブロックの始まりは、当該CGTOブロックが含む原始ガウス型基底関数(PGTO)の数を表します。"
-#~ msgstr ""
-
-#~ msgid "** 4行目(PGTO行)"
-#~ msgstr ""
-
-#~ msgid "原始基底関数(PGTO)の指数と係数を、空白文字で区切って記述します。 補助基底関数の場合は、係数(1.0)を省略することができます。"
-#~ msgstr ""
 

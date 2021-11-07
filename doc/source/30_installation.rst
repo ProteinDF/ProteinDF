@@ -10,11 +10,11 @@ ProteinDF has several distributions. If a README file is provided, first read th
 To execute ProteinDF, the following environment is required:
 
 * UNIX/Linux operating system
-* C runtime library (normally bundled with the OS) 
+* C runtime library (normally bundled with the OS)
 * bash
 * BLAS, LAPACK library
-* MPI runtime environment (only for parallel version) 
-* Distributed matrix operation library (ScaLAPACK) 
+* MPI runtime environment (only for parallel version)
+* Distributed matrix operation library (ScaLAPACK)
 
 
 Hardware and operating system
@@ -38,12 +38,12 @@ The required memory size depends on the scale of computation model. Furthermore,
   For a 32bit OS, ProteinDF may have some limitations in available memory size, file size, etc.
 
 
-python module
+Python module
 ----------------
 
 Several python scripts are prepared for ProteinDF. These scripts are not necessary for program execution, but for analysis of calculation results. To use these python scripts, the following programs (modules) are required. For configuration of these programs, follow the system guidelines.
 
-* python(version 3.5以上)
+* Python(above version 3.5)
 * argparse module
 * numpy module
 * matplotlib module
@@ -86,7 +86,7 @@ For example, when the package was copied to /usr/local/ProteinDF and when bash i
 OMP_NUM_THREADS
 ^^^^^^^^^^^^^^^
 
-When executing ProteinDF with the OpenMP multi-threading, specify the type and chunk size of the parallel schedule inside the OpenMP parallel region.
+Sets the maximum number of threads in OpenMP. OpenMP must be enabled at build time.
 
 
 .. index:: OMP_SCHEDULE
@@ -107,7 +107,7 @@ Executing CMake
 
 ProteinDF uses CMake to create the Makefile.
 You can execute cmake by specifying the source directory in an arbitrary directory.
-For example, to create a build directory directly under the source directory, 
+For example, to create a build directory directly under the source directory,
 you can execute cmake by specifying run as follows.
 
 .. code-block:: bash
@@ -119,9 +119,9 @@ you can execute cmake by specifying run as follows.
 
 .. note::
 
-  CMake automatically surveys the build environment and sets the location of the library. 
-  The results are output when cmake is run. 
-  If you want to save the output to a file and refer to it later, 
+  CMake automatically surveys the build environment and sets the location of the library.
+  The results are output when cmake is run.
+  If you want to save the output to a file and refer to it later,
   you can use the tee command to run it as follows:
   ``$ cmake .. 2>&1 | tee out.cmake``
 
@@ -166,7 +166,7 @@ Instructions to the compiler, such as OpenMP, should be specified in this enviro
 Executing \"make\"
 ^^^^^^^^^^^^^^^^^^
 
-Execute the ``cmake`` command, and make sure the Makefile is created. 
+Execute the ``cmake`` command, and make sure the Makefile is created.
 Once the Makefile is created, execute the ``make`` command.
 
 .. code-block:: bash

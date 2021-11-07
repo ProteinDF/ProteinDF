@@ -1,0 +1,165 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2014-2020, Toshiyuki HIRANO
+# This file is distributed under the same license as the ProteinDF User's
+# Manual package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: ProteinDF User's Manual 2020.06.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-11-07 21:24+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../source/80_analysis.rst:5
+msgid "Analysis of the ProteinDF Calculation Results"
+msgstr ""
+
+#: ../../source/80_analysis.rst:9
+msgid "General analysis tools"
+msgstr ""
+
+#: ../../source/80_analysis.rst:11
+msgid "pdf-component"
+msgstr ""
+
+#: ../../source/80_analysis.rst:13
+msgid ""
+"Displays atomic orbitals with a large contribution to the specified "
+"molecular orbital."
+msgstr ""
+
+#: ../../source/80_analysis.rst:19
+msgid "Executing the command above obtains the following outputs:"
+msgstr ""
+
+#: ../../source/80_analysis.rst:37
+msgid "pdf-pop-mulliken"
+msgstr ""
+
+#: ../../source/80_analysis.rst:39
+msgid "Output Mulliken population."
+msgstr ""
+
+#: ../../source/80_analysis.rst:48
+msgid "pdf-mkfld-mo"
+msgstr ""
+
+#: ../../source/80_analysis.rst:50
+msgid "Outputs molecular orbital field data."
+msgstr ""
+
+#: ../../source/80_analysis.rst:57
+msgid "pdf-mkfld-esp"
+msgstr ""
+
+#: ../../source/80_analysis.rst:59
+msgid "Outputs electrostatic potential field data."
+msgstr ""
+
+#: ../../source/80_analysis.rst:66
+msgid "pdf-mkfld-dens"
+msgstr ""
+
+#: ../../source/80_analysis.rst:68
+msgid "Outputs electron density field data."
+msgstr ""
+
+#: ../../source/80_analysis.rst:75
+msgid "pdf-archive"
+msgstr ""
+
+#: ../../source/80_analysis.rst:77
+msgid "Aggregates calculation results to create archives."
+msgstr ""
+
+#: ../../source/80_analysis.rst:84
+msgid "pdf-report"
+msgstr ""
+
+#: ../../source/80_analysis.rst:86
+msgid "Creates calculation result reports."
+msgstr ""
+
+#: ../../source/80_analysis.rst:92
+msgid ""
+"The user can obtain energy convergence curve (:num:`Fig. "
+"#analysisconvhist`) and orbital energy convergence history (:num:`Fig. "
+"#analysislevelhist`), as shown below:"
+msgstr ""
+
+#: ../../source/80_analysis.rst:104
+msgid "analysis_conv_hist.png"
+msgstr ""
+
+#: ../../source/80_analysis.rst:104
+msgid "Energy convergence curve"
+msgstr ""
+
+#: ../../source/80_analysis.rst:114
+msgid "analysis_level_hist.png"
+msgstr ""
+
+#: ../../source/80_analysis.rst:114
+msgid "Orbital energy convergence history"
+msgstr ""
+
+#: ../../source/80_analysis.rst:118
+msgid "Advanced (debug) tools"
+msgstr ""
+
+#: ../../source/80_analysis.rst:120
+msgid "pdf-mat-show"
+msgstr ""
+
+#: ../../source/80_analysis.rst:122
+msgid "Outputs the specified matrix file (binary format) to standard output."
+msgstr ""
+
+#: ../../source/80_analysis.rst:129
+msgid "pdf-vtr-show"
+msgstr ""
+
+#: ../../source/80_analysis.rst:131
+msgid "Outputs the specified vector file (binary format) to standard output."
+msgstr ""
+
+#: ../../source/80_analysis.rst:138
+msgid "mpac2yml.py"
+msgstr ""
+
+#: ../../source/80_analysis.rst:140
+msgid "Converts MessagePack files to YAML files."
+msgstr ""
+
+#: ../../source/80_analysis.rst:150
+msgid "yml2mpac.py"
+msgstr ""
+
+#: ../../source/80_analysis.rst:152
+msgid "Converts YAML files to MessagePack files."
+msgstr ""
+
+#: ../../source/80_analysis.rst:162
+msgid "pdf-diff"
+msgstr ""
+
+#: ../../source/80_analysis.rst:164
+msgid "Compares two calculation results."
+msgstr ""
+
+#: ../../source/80_analysis.rst:171
+msgid "pdf-mat-info"
+msgstr ""
+
+#: ../../source/80_analysis.rst:173
+msgid "Outputs matrix information."
+msgstr ""
+

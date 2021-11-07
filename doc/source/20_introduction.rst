@@ -14,7 +14,7 @@ The ProteinDF features are as follows:
 
 * Density functional theory (DFT) program using Gaussian-type basis sets
 
-  * Allows Hartree-Fock (HF) calculations, pure DFT calculations, and hybrid DFT calculations. 
+  * Allows Hartree-Fock (HF) calculations, pure DFT calculations, and hybrid DFT calculations.
 
 * Implemented using the object-oriented program language C++.
 
@@ -36,39 +36,39 @@ Calculation method
 ==================
 
 To handle the entire structure of a protein and to predict its functions quantitatively,
-it is appropriate to use a DFT method which solves Kohn-Sham equations, 
-where electron correlation can be incorporated effectively. 
-The ProteinDF is a Gaussian-basis DFT calculation program based on the Kohn-Sham-Roothaan (KSR) method, 
-a standard MO calculation method in chemistry. 
-For details on DFT calculations and large-scale computation, 
-please refer to the other materials. 
+it is appropriate to use a DFT method which solves Kohn-Sham equations,
+where electron correlation can be incorporated effectively.
+The ProteinDF is a Gaussian-basis DFT calculation program based on the Kohn-Sham-Roothaan (KSR) method,
+a standard MO calculation method in chemistry.
+For details on DFT calculations and large-scale computation,
+please refer to the other materials.
 This section briefly describes the ProteinDF overview.
 
 
-To carry out large-scale canonical calculation, 
-the ProteinDF employs RI technique and Cholesky decomposition to speed up the calculation. 
-Restricted, Unrestricted, and Restricted Open-Shell Kohn-Sham (KS) methods are available. 
-The hybrid functional B3LYP is set to the default exchange-correlation potential, 
-and a local density functional SVWN and generalized gradient approximation (GGA) BLYP are also available. 
-The SVWN can also be used for calculation of exchange-correlation potential 
-and also for RI calculations. 
-Energy gradient calculations can be achieved by these methods. 
-To use the obtained energy gradient for geometry optimization, 
-quantum molecular dynamics calculation, and physical quantity calculation, 
-the user is required to work ProteinDF with the relevant external programs. 
-The basis sets and auxiliary basis sets are prepared in the basis2 file in the form optimized for Gaussian basis DFT calculations. 
-The user can also add desired basis sets to the file. 
-The default set for ProteinDF is Valence Double (VD) equivalent. 
-For details, refer to the content of the basis2 file. 
-The user can operate ProteinDF by specifying keywords as in the other MO calculation programs. 
-Default values are already set to most keywords, some of which were mentioned above. 
+To carry out large-scale canonical calculation,
+the ProteinDF employs RI technique and Cholesky decomposition to speed up the calculation.
+Restricted, Unrestricted, and Restricted Open-Shell Kohn-Sham (KS) methods are available.
+The hybrid functional B3LYP is set to the default exchange-correlation potential,
+and a local density functional SVWN and generalized gradient approximation (GGA) BLYP are also available.
+The SVWN can also be used for calculation of exchange-correlation potential
+and also for RI calculations.
+Energy gradient calculations can be achieved by these methods.
+To use the obtained energy gradient for geometry optimization,
+quantum molecular dynamics calculation, and physical quantity calculation,
+the user is required to work ProteinDF with the relevant external programs.
+The basis sets and auxiliary basis sets are prepared in the basis2 file in the form optimized for Gaussian basis DFT calculations.
+The user can also add desired basis sets to the file.
+The default set for ProteinDF is Valence Double (VD) equivalent.
+For details, refer to the content of the basis2 file.
+The user can operate ProteinDF by specifying keywords as in the other MO calculation programs.
+Default values are already set to most keywords, some of which were mentioned above.
 See Appendix for details.
 
 
-omputation size
-===============
+Computation size
+================
 
-The most distinctive feature of ProteinDF is its computation size. 
+The most distinctive feature of ProteinDF is its computation size.
 The user can execute all-electron calculation of proteins with several dozens of residues in the current PC system without any difficulties. Among all of our efforts to make the program possible, the biggest contributing factor was our coding conventions for memory management. Utilizing dynamic memory management, ProteinDF calculates all matrices, with as many dimensions as basis sets, by using only a limited number of memory units. With this scheme, we can reversely calculate the maximum computation size from the memory size of the computing machine. When the number of basis sets is Norb, we can roughly estimate the memory size for each matrix to be 8 x Norb x Norb bytes. Note, however, that the OS or transferring processes also use some memory spaces. In particular, the OS may execute dynamic memory deletion on its own timing (even when the timing is expressly declared in the program). Note also that ProteinDF outputs intermediate files to disk storage in order to take full advantage of the memory. During computation, be sure to secure disk space sufficient for at least 200 matrices, each with the estimated computation size. ProteinDF saves all intermediate outputs for safe computation.
 
 Others
