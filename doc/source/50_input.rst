@@ -277,12 +277,12 @@ Example
 
 .. code-block:: none
 
-   basis-set/orbital = {
-                H = "O-DZVP2.H"
-                O = "O-DZVP2.O"
-                C = "O-DZVP2.C"
-                N = "O-DZVP2.N"
-   }end
+   basis-set/orbital       = {
+      H = "O-DZVP2.H"
+      O = "O-DZVP2.O"
+      C = "O-DZVP2.C"
+      N = "O-DZVP2.N"
+   }
 
 
 .. note::
