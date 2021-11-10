@@ -125,11 +125,10 @@ msgid "Multiple-line text"
 msgstr "複数行の文字列"
 
 #: ../../source/50_input.rst:79
-#, fuzzy
 msgid ""
 "Specify a text which contains a line feed between braces (``{``, ``}``) "
 "as follows:"
-msgstr "改行を含む場合は、 { と }end で挟んで指定します。"
+msgstr "改行を含む場合は、 ``{`` と ``}`` で挟んで指定します。"
 
 #: ../../source/50_input.rst:100
 msgid ""
