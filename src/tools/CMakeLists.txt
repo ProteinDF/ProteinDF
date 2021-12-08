@@ -152,6 +152,14 @@ target_link_libraries(pdf-mat-info libpdf libpdftl)
 install(TARGETS pdf-mat-info RUNTIME DESTINATION bin)
 
 
+set(PDF_MAT_ISFINITE_SOURCES
+  main_mat_isfinite.cc
+  )
+add_executable(pdf-mat-isfinite ${PDF_MAT_ISFINITE_SOURCES})
+target_link_libraries(pdf-mat-isfinite libpdf libpdftl)
+install(TARGETS pdf-mat-isfinite RUNTIME DESTINATION bin)
+
+
 set(PDF_MAT_MUL_SOURCES
   main_mat_mul.cpp
   )

@@ -16,17 +16,17 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <cctype>
-#include <cstdlib>
-#include <iostream>
-#include <limits>
-#include <sstream>
+#include "TlUtils.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "TlUtils.h"
+#include <cctype>
+#include <cstdlib>
+#include <iostream>
+#include <limits>
+#include <sstream>
 
 std::string TlUtils::format(const char* psFormat, ...) {
     va_list ap;
@@ -277,7 +277,8 @@ std::string TlUtils::textWrap(const std::string& str, size_t width) {
     while (in.get(cur)) {
         if (++i == width) {
             TlUtils::trim_ws(tmp);
-            out << '\n' << tmp;
+            out << '\n'
+                << tmp;
             tmp.clear();
             i = 0;
         } else if ((std::isspace(cur) == true) &&
@@ -401,9 +402,15 @@ std::string TlUtils::getPdfSlash(std::string& str) {
 
 void TlUtils::progressbar(const float progress) {
     static const int barWidth = 70;
+    static int prevPos = 0;
+
+    const int pos = barWidth * progress;
+    if (prevPos == pos) {
+        return;
+    }
+    prevPos = pos;
 
     std::cout << "[";
-    const int pos = barWidth * progress;
     for (int i = 0; i < barWidth; ++i) {
         if (i < pos) {
             std::cout << "=";
