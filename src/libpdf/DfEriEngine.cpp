@@ -2754,10 +2754,9 @@ void DfEriEngine::calcR0() {
 int DfEriEngine::indexRM(const TlAngularMomentumVector& amv,
                          const int m) const {
     const int L = amv.angularMomentum();
-    std::cerr << TlUtils::format("L+m <= ERI_L_MAX: %d, %d, %d", L, m, ERI_L_MAX) << std::endl;
+    // std::cerr << TlUtils::format("L+m <= ERI_L_MAX: %d, %d, %d", L, m, ERI_L_MAX) << std::endl;
     assert((L + m) <= ERI_L_MAX);
-    const int amvBegin =
-        L * (L + 1) * (L + 2) / 6;  // [0](m)から[L-1](m)までが何個あったか
+    const int amvBegin = L * (L + 1) * (L + 2) / 6;  // [0](m)から[L-1](m)までが何個あったか
     const int index = ERI_NUM_OF_R_KINDS * m + amvBegin + amv.index();
 
     return index;
