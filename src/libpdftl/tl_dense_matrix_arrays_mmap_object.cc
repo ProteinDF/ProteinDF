@@ -489,22 +489,18 @@ void TlDenseMatrix_arrays_mmap_Object::createNewFile(const std::string& filePath
     ofs.open(filePath.c_str(), std::ios::binary | std::ios::trunc | std::ios::out);
 
     // バッファ機能を停止する
-    ofs << std::setiosflags(std::ios::unitbuf);
+    // ofs << std::setiosflags(std::ios::unitbuf);
 
     (void)this->writeMatrixHeader(&ofs);
 
     // size分ファイルにzeroを埋める
-    std::vector<double> buf(CLEAR_BUFSIZE);
-    ldiv_t ldivt = ldiv(size, CLEAR_BUFSIZE);
-    for (long i = 0; i < ldivt.quot; ++i) {
-        ofs.write(reinterpret_cast<const char*>(&(buf[0])), sizeof(double) * CLEAR_BUFSIZE);
-    }
-    if (ldivt.rem > 0) {
-        ofs.write(reinterpret_cast<const char*>(&(buf[0])), sizeof(double) * ldivt.rem);
+    const double v = 0.0;
+    for (std::size_t i = 0; i < size; ++i) {
+        ofs.write(reinterpret_cast<const char*>(&v), sizeof(double));
     }
 
     // バッファ機能を再開する
-    ofs << std::resetiosflags(std::ios::unitbuf);
+    // ofs << std::resetiosflags(std::ios::unitbuf);
     ofs.flush();
 
     ofs.close();
