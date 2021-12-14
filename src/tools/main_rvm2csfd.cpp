@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
     } else {
-        std::cerr << "creating output matrix: " << outputPath << std::endl;
+        log.info(TlUtils::format("create output: %s", outputPath.c_str()));
         TlDenseGeneralMatrix_mmap outMat(outputPath, numOfRows, numOfCols);
         if (verbose) {
             std::cerr << "output matrix has been prepared by mmap." << std::endl;
@@ -134,6 +134,8 @@ int main(int argc, char* argv[]) {
     //
     TlDenseGeneralMatrix_mmap outMat(outputPath);
     if (sequentialMode) {
+        log.info("run sequential mode");
+        const bool showProgress = true;
         for (int unit = 0; unit < numOfSubunits; ++unit) {
             log.info(TlUtils::format(">>>> unit %d/%d", unit, numOfSubunits - 1));
             const std::string inputPath = TlDenseMatrix_arrays_mmap_Object::getFileName(inputBasePath, unit);
@@ -141,11 +143,12 @@ int main(int argc, char* argv[]) {
             log.info(TlUtils::format("load matrix: %s", inputPath.c_str()));
             TlDenseGeneralMatrix_arrays_mmap_RowOriented inMat(inputPath);
             log.info("convert layout");
-            inMat.convertMemoryLayout("", verbose, verbose);
+            inMat.convertMemoryLayout("", verbose, showProgress);
             log.info("set");
-            inMat.set2csfd(&outMat, verbose, verbose);
+            inMat.set2csfd(&outMat, verbose, showProgress);
         }
     } else {
+        log.info("run unit mode");
         std::cerr << TlUtils::format(">>>> unit %d/%d", subunitID, numOfSubunits - 1) << std::endl;
         TlDenseGeneralMatrix_arrays_mmap_RowOriented inMat(inputBasePath);
         inMat.convertMemoryLayout("", verbose, verbose);
