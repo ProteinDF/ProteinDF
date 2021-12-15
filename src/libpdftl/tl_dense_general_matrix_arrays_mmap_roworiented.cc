@@ -3,6 +3,10 @@
 #include <cassert>
 #include <iostream>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif  // _OPENMP
+
 #include "TlFile.h"
 #include "TlSystem.h"
 #include "TlUtils.h"
@@ -122,8 +126,6 @@ void TlDenseGeneralMatrix_arrays_mmap_RowOriented::convertMemoryLayout(const std
     }
 
     // set
-    std::vector<double> chunkBuf(numOfCols * sizeOfChunk);
-    std::vector<double> transBuf(numOfCols * sizeOfChunk);
     const int numOfLocalChunks =
         TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(numOfRows, numOfSubunits, sizeOfChunk);
 
@@ -140,25 +142,41 @@ void TlDenseGeneralMatrix_arrays_mmap_RowOriented::convertMemoryLayout(const std
         std::cerr << "output matrix has been prepared by mmap." << std::endl;
     }
 
-    for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
-        const TlMatrixObject::index_type chunkStartRow = sizeOfChunk * (numOfSubunits * chunk + unit);
+    int progress = 0;
+#pragma omp parallel
+    {
+        std::vector<double> chunkBuf(numOfCols * sizeOfChunk);
+        std::vector<double> transBuf(numOfCols * sizeOfChunk);
 
-        if (chunkStartRow < numOfRows) {
-            this->getChunk(chunkStartRow, &(chunkBuf[0]), numOfCols * sizeOfChunk);
+        int threadId = 0;
+#ifdef _OPENMP
+        threadId = omp_get_thread_num();
+#endif  // _OPENMP
 
-            // change memory layout
-            const TlMatrixObject::index_type readRowChunks = std::min(sizeOfChunk, numOfRows - chunkStartRow);
-            TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks, numOfCols, &(transBuf[0]));
+#pragma omp for schedule(runtime)
+        for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
+            const TlMatrixObject::index_type chunkStartRow = sizeOfChunk * (numOfSubunits * chunk + unit);
 
-            TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
+            if (chunkStartRow < numOfRows) {
+                this->getChunk(chunkStartRow, &(chunkBuf[0]), numOfCols * sizeOfChunk);
 
-            // std::cerr << TlUtils::format("row: %d/%d (%d)", chunkStartRow, numOfRows, sizeOfChunk) << std::endl;
-            // std::cerr << TlUtils::format("chunk=%d/%d; %d==%d -> %d", chunk, numOfLocalChunks, readRowChunks, tmpMat.getNumOfRows(), chunk * sizeOfChunk) << std::endl;
-            outMat.block(chunk * sizeOfChunk, 0, tmpMat);
-        }
+                // change memory layout
+                const TlMatrixObject::index_type readRowChunks = std::min(sizeOfChunk, numOfRows - chunkStartRow);
+                TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks, numOfCols, &(transBuf[0]));
 
-        if (showProgress) {
-            TlUtils::progressbar(float(chunk) / numOfLocalChunks);
+                TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
+
+                // std::cerr << TlUtils::format("row: %d/%d (%d)", chunkStartRow, numOfRows, sizeOfChunk) << std::endl;
+                // std::cerr << TlUtils::format("chunk=%d/%d; %d==%d -> %d", chunk, numOfLocalChunks, readRowChunks, tmpMat.getNumOfRows(), chunk * sizeOfChunk) << std::endl;
+                outMat.block(chunk * sizeOfChunk, 0, tmpMat);
+            }
+
+#pragma omp atomic
+            ++progress;
+
+            if ((threadId == 0) && (showProgress)) {
+                TlUtils::progressbar(float(progress) / numOfLocalChunks);
+            }
         }
     }
 
@@ -187,29 +205,50 @@ void TlDenseGeneralMatrix_arrays_mmap_RowOriented::set2csfd(TlDenseGeneralMatrix
     const int numOfLocalChunks =
         TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(numOfRows, numOfSubunits, sizeOfChunk);
 
-#pragma omp parallel for
-    for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
-        const TlMatrixObject::index_type row = sizeOfChunk * chunk;
-        const TlMatrixObject::index_type chunkStartRow = sizeOfChunk * (numOfSubunits * chunk + unit);
-        if (chunkStartRow >= numOfRows) {
-            // std::cerr << TlUtils::format("chunk: %d/%d, chunkStartRow=%d, numOfLocalRows=%d, row=%d <- bypassed.",
-            //                              chunk, numOfLocalChunks - 1, chunkStartRow, numOfLocalRows, row)
-            //           << std::endl;
-            continue;
-        }
-        const TlMatrixObject::index_type rowDistance = std::min(sizeOfChunk, numOfRows - chunkStartRow);
-        // std::cerr << TlUtils::format("chunk: %d/%d, chunkStartRow=%d, numOfLocalRows=%d, row=%d, rowDistance=%d",
-        // chunk,
-        //                              numOfLocalChunks - 1, chunkStartRow, numOfLocalRows, row, rowDistance)
-        //           << std::endl;
-        TlDenseGeneralMatrix_Eigen tmpMat;
-        inMat.block(row, 0, rowDistance, numOfCols, &tmpMat);
+    int progress = 0;
+#pragma omp parallel
+    {
+        int threadId = 0;
+#ifdef _OPENMP
+        threadId = omp_get_thread_num();
+#endif  // _OPENMP
 
-        // std::cerr << TlUtils::format("chunk: %d/%d, chunkStartRow=%d, numOfLocalRows=%d, row=%d, rowDistance=%d",
-        // chunk,
-        //                              numOfLocalChunks - 1, chunkStartRow, numOfLocalRows, row, rowDistance)
-        //           << std::endl;
-        pOutMat->block(chunkStartRow, 0, tmpMat);
+#pragma omp for schedule(runtime)
+        for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
+            const TlMatrixObject::index_type row = sizeOfChunk * chunk;
+            const TlMatrixObject::index_type chunkStartRow = sizeOfChunk * (numOfSubunits * chunk + unit);
+            if (chunkStartRow >= numOfRows) {
+                // std::cerr << TlUtils::format("chunk: %d/%d, chunkStartRow=%d, numOfLocalRows=%d, row=%d <- bypassed.",
+                //                              chunk, numOfLocalChunks - 1, chunkStartRow, numOfLocalRows, row)
+                //           << std::endl;
+                continue;
+            }
+            const TlMatrixObject::index_type rowDistance = std::min(sizeOfChunk, numOfRows - chunkStartRow);
+            // std::cerr << TlUtils::format("chunk: %d/%d, chunkStartRow=%d, numOfLocalRows=%d, row=%d, rowDistance=%d",
+            // chunk,
+            //                              numOfLocalChunks - 1, chunkStartRow, numOfLocalRows, row, rowDistance)
+            //           << std::endl;
+            TlDenseGeneralMatrix_Eigen tmpMat;
+            inMat.block(row, 0, rowDistance, numOfCols, &tmpMat);
+
+            // std::cerr << TlUtils::format("chunk: %d/%d, chunkStartRow=%d, numOfLocalRows=%d, row=%d, rowDistance=%d",
+            // chunk,
+            //                              numOfLocalChunks - 1, chunkStartRow, numOfLocalRows, row, rowDistance)
+            //           << std::endl;
+            pOutMat->block(chunkStartRow, 0, tmpMat);
+
+#pragma omp atomic
+            ++progress;
+
+            if ((threadId == 0) && (showProgress)) {
+                TlUtils::progressbar(float(progress) / numOfLocalChunks);
+            }
+        }
+    }
+
+    if (showProgress) {
+        TlUtils::progressbar(1.0);
+        std::cout << std::endl;
     }
 }
 
