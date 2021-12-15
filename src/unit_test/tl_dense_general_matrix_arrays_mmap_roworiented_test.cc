@@ -1207,13 +1207,14 @@ TEST(TlDenseGeneralMatrix_arrays_mmap_RowOriented, RowVectorMatrix2CSFD) {
     const int numOfSubunits = 1;
     cleanup(matPath1, numOfSubunits);
 
+    const std::string baseMatPath = "temp.rvm";
+
     std::vector<TlDenseGeneralMatrix_arrays_mmap_RowOriented*> pMatrices(numOfSubunits, NULL);
     TlDenseGeneralMatrix_Lapack refMat(numOfRows, numOfCols);
 
     // construct
     for (int id = 0; id < numOfSubunits; ++id) {
-        pMatrices[id] =
-            new TlDenseGeneralMatrix_arrays_mmap_RowOriented(matPath1, numOfRows, numOfCols, numOfSubunits, id);
+        pMatrices[id] = new TlDenseGeneralMatrix_arrays_mmap_RowOriented(baseMatPath, numOfRows, numOfCols, numOfSubunits, id);
     }
 
     // prepare
@@ -1229,9 +1230,16 @@ TEST(TlDenseGeneralMatrix_arrays_mmap_RowOriented, RowVectorMatrix2CSFD) {
     }
 
     // transform
-    std::cerr << "transform begin." << std::endl;
-    transpose2CSFD(matPath1, csfdPath, true);
-    std::cerr << "transform done." << std::endl;
+    // transpose2CSFD(matPath1, csfdPath, true);
+    {
+        TlDenseGeneralMatrix_mmap outMat(csfdPath, numOfRows, numOfCols);
+        for (int unit = 0; unit < numOfSubunits; ++unit) {
+            const std::string inputPath = TlDenseMatrix_arrays_mmap_Object::getFileName(baseMatPath, unit);
+            TlDenseGeneralMatrix_arrays_mmap_RowOriented inMat(inputPath);
+            inMat.convertMemoryLayout("", false, false);
+            inMat.set2csfd(&outMat, false, false);
+        }
+    }
 
     // load
     TlDenseGeneralMatrix_Lapack chkMat;
