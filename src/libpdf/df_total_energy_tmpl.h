@@ -14,11 +14,11 @@
 // ----------------------------------------------------------------------------
 template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
 class DfTotalEnergy_tmpl : public DfObject {
-   public:
+public:
     DfTotalEnergy_tmpl(TlSerializeData* pPdfParam);
     virtual ~DfTotalEnergy_tmpl();
 
-   public:
+public:
     void run();
     void calc(const int iteration);
     void output();
@@ -29,14 +29,15 @@ class DfTotalEnergy_tmpl : public DfObject {
     // double get_IE(const std::vector<int>& indeces1,
     //               const std::vector<int>& indeces2) const;
 
-   protected:
+protected:
     virtual void saveParams();
+    virtual void output_stdout(const std::string& str) const;
 
-   protected:
+protected:
     virtual void prepareXCFunctionalObject();
     virtual void prepareDfOverlapObject();
 
-   protected:
+protected:
     virtual SymmetricMatrix getSpinDensityMatrix(const RUN_TYPE runType, const int iteration);
 
     virtual Vector getRho();
@@ -62,20 +63,20 @@ class DfTotalEnergy_tmpl : public DfObject {
     void calcE_XC_gridfree(const RUN_TYPE runType, const SymmetricMatrix& PA, SymmetricMatrix* pE_XC = NULL);
     void calcE_XC_DIRECT(const SymmetricMatrix& PA, const Vector& eps);
 
-   protected:
+protected:
     void calcS2();
 
-   protected:
+protected:
     SymmetricMatrix get_IE_nuc(const SymmetricMatrix& matrix,
                                const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup) const;
     SymmetricMatrix get_IE(const SymmetricMatrix& matrix,
                            const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup) const;
 
     std::vector<int> atomArray2AoArray(const std::vector<int>& atomArray) const;
-    double get_IE_matrix(const SymmetricMatrix& matrix, const std::vector<int>& atomIndeces1,
-                         const std::vector<int>& atomIndeces2) const;
+    double get_IE_matrix(const SymmetricMatrix& matrix, const std::vector<int>& atomIndexes1,
+                         const std::vector<int>& atomIndexes2) const;
 
-   protected:
+protected:
     TlOrbitalInfo orbInfo_;
     DfXCFunctional* pDfXCFunctionalObject_;
     DfOverlapX* pDfOverlapObject_;
@@ -494,12 +495,12 @@ SymmetricMatrix DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOve
 //           class DfOverlapType>
 // double DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
 //                           DfOverlapType>::get_IE(const std::vector<int>&
-//                                                      atomIndeces1) const {
+//                                                      atomIndexes1) const {
 //     double ie_nuc =
-//         this->get_IE_matrix(*(this->pIE_nuc_), atomIndeces1, atomIndeces1);
+//         this->get_IE_matrix(*(this->pIE_nuc_), atomIndexes1, atomIndexes1);
 
 //     const std::vector<int> aoIndeces1 =
-//     this->atomArray2AoArray(atomIndeces1); double ie =
+//     this->atomArray2AoArray(atomIndexes1); double ie =
 //     this->get_IE_matrix(*(this->pIE_), aoIndeces1, aoIndeces1);
 
 //     double answer = ie + ie_nuc;
@@ -514,13 +515,13 @@ SymmetricMatrix DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOve
 //           class DfOverlapType>
 // double DfTotalEnergy_tmpl<
 //     GeneralMatrix, SymmetricMatrix, Vector,
-//     DfOverlapType>::get_IE(const std::vector<int>& atomIndeces1,
+//     DfOverlapType>::get_IE(const std::vector<int>& atomIndexes1,
 //                            const std::vector<int>& atomIndeces2) const {
 //     double ie_nuc =
-//         this->get_IE_matrix(*(this->pIE_nuc_), atomIndeces1, atomIndeces2);
+//         this->get_IE_matrix(*(this->pIE_nuc_), atomIndexes1, atomIndeces2);
 
 //     const std::vector<int> aoIndeces1 =
-//     this->atomArray2AoArray(atomIndeces1); const std::vector<int> aoIndeces2
+//     this->atomArray2AoArray(atomIndexes1); const std::vector<int> aoIndeces2
 //     = this->atomArray2AoArray(atomIndeces2); double ie =
 //     this->get_IE_matrix(*(this->pIE_), aoIndeces1, aoIndeces2);
 
@@ -919,13 +920,18 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
     // this->logger(TlUtils::format(" TE           = %28.16lf\n", E_Total));
     // this->logger("------------------------------------------------\n");
 
-    std::cout << TlUtils::format(" %3d th TE = %18.16lf", this->m_nIteration, E_Total) << std::endl;
+    this->output_stdout(TlUtils::format(" %3d th TE = %18.16lf", this->m_nIteration, E_Total));
 
     if (this->m_nMethodType != METHOD_RKS) {
         this->calcS2();
     }
 
     this->log_.info("------------------------------------------------");
+}
+
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::output_stdout(const std::string& str) const {
+    std::cout << str << std::endl;
 }
 
 #endif  // DF_TOTALENERGY_TMPL_H
