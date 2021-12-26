@@ -51,11 +51,11 @@
 
 /// Dfクラスの親クラス
 class DfObject {
-   public:
+public:
     typedef int index_type;
     typedef long size_type;
 
-   public:
+public:
     enum METHOD_TYPE {
         METHOD_UNDEFINED = 0,
         METHOD_RKS = 1,
@@ -88,37 +88,37 @@ class DfObject {
     };
 
     struct IJShellPair {
-       public:
+    public:
         explicit IJShellPair(index_type i = 0, index_type j = 0)
             : nIShell(i), nJShell(j){};
 
         IJShellPair(const IJShellPair& rhs)
             : nIShell(rhs.nIShell), nJShell(rhs.nJShell){};
 
-       public:
+    public:
         index_type nIShell;
         index_type nJShell;
     };
 
-   public:
+public:
     DfObject(TlSerializeData* pPdfParam);
     virtual ~DfObject();
 
     // --------------------------------------------------------------------------
     // properties
     // --------------------------------------------------------------------------
-   public:
+public:
     int getNumOfAtoms() const;
     int iteration() const;
 
-   public:
+public:
     double getTotalEnergy(int iteration) const;
     double getTotalEnergy_elec(int iteration) const;
 
     // --------------------------------------------------------------------------
     // PATH
     // --------------------------------------------------------------------------
-   public:
+public:
     std::string getSpqMatrixPath();
     std::string getFpqMatrixPath(RUN_TYPE runType, int iteration) const;
     std::string getCMatrixPath(RUN_TYPE runType, int iteration,
@@ -127,7 +127,11 @@ class DfObject {
     std::string getEigenvaluesPath(const RUN_TYPE runType,
                                    const int iteration) const;
 
-   protected:
+protected:
+    /// 行列・ベクトルファイルのパスを返す
+    ///
+    /// "baseFileName"をキーとして、pdfpararm["file"]["base_base_name"]に登録されている
+    /// フォーマット文字列に応じて"suffix"を置き換えてファイル名を作成する。
     std::string makeFilePath(const std::string& baseFileName,
                              const std::string& suffix = "",
                              const std::string& dir = "") const;
@@ -191,7 +195,7 @@ class DfObject {
     // LO
     std::string getCloMatrixPath(RUN_TYPE runType, int itr) const;
 
-   protected:
+protected:
     template <class SymmetricMatrixType>
     void saveHpqMatrix(const SymmetricMatrixType& Hpq);
 
@@ -247,19 +251,19 @@ class DfObject {
     SymmetricMatrixType getSgdInvMatrix();
 
     template <class MatrixType>
-    MatrixType getLjkMatrix();
+    MatrixType getLjkMatrix(const std::string& dir = "");
     template <class MatrixType>
-    void saveLjkMatrix(const MatrixType& Ljk);
+    void saveLjkMatrix(const MatrixType& Ljk, const std::string& dir = "");
 
     template <class MatrixType>
-    MatrixType getLkMatrix();
+    MatrixType getLkMatrix(const std::string& dir = "");
     template <class MatrixType>
-    void saveLkMatrix(const MatrixType& Lk);
+    void saveLkMatrix(const MatrixType& Lk, const std::string& dir = "");
 
     template <class MatrixType>
-    MatrixType getLxcMatrix();
+    MatrixType getLxcMatrix(const std::string& dir = "");
     template <class MatrixType>
-    void saveLxcMatrix(const MatrixType& Lxc);
+    void saveLxcMatrix(const MatrixType& Lxc, const std::string& dir = "");
 
     template <class MatrixType>
     void saveGridMatrix(const int iteration, const MatrixType& gridMatrix);
@@ -484,17 +488,17 @@ class DfObject {
     // --------------------------------------------------------------------------
     // methods
     // --------------------------------------------------------------------------
-   protected:
+protected:
     virtual void setParam(const TlSerializeData& data);
     void updateLinearAlgebraPackageParam(const std::string& keyword);
 
-   protected:
+protected:
     // void clearCache(const std::string& path);
 
     // --------------------------------------------------------------------------
     // logger
     // --------------------------------------------------------------------------
-   protected:
+protected:
     virtual void logger(const std::string& str) const;
     void loggerTime(const std::string& str) const;
     void loggerStartTitle(const std::string& stepName,
@@ -505,7 +509,7 @@ class DfObject {
     // --------------------------------------------------------------------------
     // constants
     // --------------------------------------------------------------------------
-   protected:
+protected:
     enum J_Engine_Type { J_ENGINE_CONVENTIONAL,
                          J_ENGINE_RI_J,
                          J_ENGINE_CD };
@@ -533,13 +537,13 @@ class DfObject {
     // --------------------------------------------------------------------------
     // parameters
     // --------------------------------------------------------------------------
-   protected:
+protected:
     static const std::string m_sWorkDirPath;  // fl_Work directory name
     static const std::string
         m_sTempDirPath;  // fl_Work directory name // before fl_Temp
     static const std::string m_sRunTypeSuffix[RUN_MAXINDEX];
 
-   protected:
+protected:
     TlSerializeData* pPdfParam_;
 
     TlLogging& log_;
@@ -705,9 +709,8 @@ SymmetricMatrixType DfObject::getSpqMatrix() {
 }
 
 template <class MatrixType>
-MatrixType DfObject::getLjkMatrix() {
-    const std::string path = this->getLjkMatrixPath();
-    // MatrixType Ljk = this->matrixCache_.get<MatrixType>(path);
+MatrixType DfObject::getLjkMatrix(const std::string& dir) {
+    const std::string path = this->getLjkMatrixPath(dir);
     MatrixType Ljk;
     Ljk.load(path, 0);
 
@@ -715,18 +718,14 @@ MatrixType DfObject::getLjkMatrix() {
 }
 
 template <class MatrixType>
-void DfObject::saveLjkMatrix(const MatrixType& Ljk) {
-    const std::string path = this->getLjkMatrixPath();
-    // if (this->isUseCache_ == true) {
-    //   this->matrixCache_.set(path, Ljk, true);
-    // } else {
+void DfObject::saveLjkMatrix(const MatrixType& Ljk, const std::string& dir) {
+    const std::string path = this->getLjkMatrixPath(dir);
     Ljk.save(path, 0);
-    // }
 }
 
 template <class MatrixType>
-MatrixType DfObject::getLkMatrix() {
-    const std::string path = this->getLkMatrixPath();
+MatrixType DfObject::getLkMatrix(const std::string& dir) {
+    const std::string path = this->getLkMatrixPath(dir);
     MatrixType Lk;
     Lk.load(path, 0);
 
@@ -734,19 +733,14 @@ MatrixType DfObject::getLkMatrix() {
 }
 
 template <class MatrixType>
-void DfObject::saveLkMatrix(const MatrixType& Lk) {
+void DfObject::saveLkMatrix(const MatrixType& Lk, const std::string& dir) {
     const std::string path = this->getLkMatrixPath();
-    // if (this->isUseCache_ == true) {
-    //   this->matrixCache_.set(path, Lk, true);
-    // } else {
     Lk.save(path, 0);
-    // }
 }
 
 template <class MatrixType>
-MatrixType DfObject::getLxcMatrix() {
+MatrixType DfObject::getLxcMatrix(const std::string& dir) {
     const std::string path = this->getLxcMatrixPath();
-    // MatrixType Lxc = this->matrixCache_.get<MatrixType>(path);
     MatrixType Lxc;
     Lxc.load(path, 0);
 
@@ -754,13 +748,9 @@ MatrixType DfObject::getLxcMatrix() {
 }
 
 template <class MatrixType>
-void DfObject::saveLxcMatrix(const MatrixType& Lxc) {
-    const std::string path = this->getLxcMatrixPath();
-    // if (this->isUseCache_ == true) {
-    //   this->matrixCache_.set(path, Lxc, true);
-    // } else {
+void DfObject::saveLxcMatrix(const MatrixType& Lxc, const std::string& dir) {
+    const std::string path = this->getLxcMatrixPath(dir);
     Lxc.save(path);
-    // }
 }
 
 template <class MatrixType>
