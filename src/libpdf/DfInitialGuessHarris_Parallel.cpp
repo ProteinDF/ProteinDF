@@ -17,6 +17,7 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfInitialGuessHarris_Parallel.h"
+
 #include "DfOverlapX_Parallel.h"
 #include "DfPopulation_Parallel.h"
 #include "TlCommunicate.h"
@@ -36,9 +37,9 @@ void DfInitialGuessHarris_Parallel::main() {
     if (this->m_bUsingSCALAPACK) {
         this->distributeHarrisDB();
 
-        DfInitialGuessHarris::calcInitialDensityMatrix<
-            TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack,
-            DfOverlapX_Parallel, DfPopulation_Parallel>();
+        // std::cerr << TlUtils::format("[%d] DfInitialGuessHarris_Parallel::main()", rComm.getRank()) << std::endl;
+        DfInitialGuessHarris::calcInitialDensityMatrix<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack,
+                                                       DfOverlapX_Parallel, DfPopulation_Parallel>();
     } else {
         if (rComm.isMaster()) {
             DfInitialGuessHarris::main();

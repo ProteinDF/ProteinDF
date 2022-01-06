@@ -33,11 +33,11 @@ class TlDenseSymmetricMatrix_Lapack;
 
 /// Mulliken Population の計算を行い、電荷情報、スピン情報を出力するクラス
 class DfPopulation : public DfObject {
-   public:
+public:
     DfPopulation(TlSerializeData* pPdfParam);
     virtual ~DfPopulation();
 
-   public:
+public:
     void exec(const int iteration);
 
     template <class SymmetricMatrixType, class VectorType>
@@ -47,15 +47,15 @@ class DfPopulation : public DfObject {
 
     double getCharge(int atomIndex);
 
-   public:
+public:
     template <class SymmetricMatrixType>
     double getSumOfElectrons(const SymmetricMatrixType& P);
 
-   public:
+public:
     template <typename T>
     void getReport(const int iteration, T& out);
 
-   protected:
+protected:
     // init
     // ----------------------------------------------------------------------
     void setNucleiCharges();
@@ -88,7 +88,7 @@ class DfPopulation : public DfObject {
     template <typename T>
     void getOrbPopStr(const std::valarray<double>& trPS, T& out) const;
 
-   protected:
+protected:
     TlOrbitalInfo orbitalInfo_;
 
     std::valarray<double> nucleiCharges_;
@@ -102,6 +102,7 @@ class DfPopulation : public DfObject {
 
 template <class SymmetricMatrixType>
 double DfPopulation::getSumOfElectrons(const SymmetricMatrixType& P) {
+    // std::cerr << "DfPopulation::getSumOfElectrons()" << std::endl;
     const std::valarray<double> trPS = this->getPS<SymmetricMatrixType>(P);
     return trPS.sum();
 }
