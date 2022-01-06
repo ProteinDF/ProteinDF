@@ -17,6 +17,7 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfPopulation_Parallel.h"
+
 #include "TlCommunicate.h"
 #include "tl_dense_symmetric_matrix_scalapack.h"
 #include "tl_dense_vector_scalapack.h"
@@ -30,11 +31,14 @@ DfPopulation_Parallel::~DfPopulation_Parallel() {
 }
 
 template <>
-double
-DfPopulation_Parallel::getSumOfElectrons<TlDenseSymmetricMatrix_Scalapack>(
+double DfPopulation_Parallel::getSumOfElectrons<TlDenseSymmetricMatrix_Scalapack>(
     const TlDenseSymmetricMatrix_Scalapack& P) {
-    const double answer = DfPopulation::getSumOfElectrons(P);
+    // std::cerr << "DfPopulation_Parallel::getSumOfElectrons() " << std::endl;
 
+    const std::valarray<double> trPS = this->getPS<TlDenseSymmetricMatrix_Scalapack>(P);
+    const double answer = trPS.sum();
+
+    // const double answer = DfPopulation::getSumOfElectrons(P);
     return answer;
 }
 
