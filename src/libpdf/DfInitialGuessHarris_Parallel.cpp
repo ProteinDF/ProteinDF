@@ -19,8 +19,8 @@
 #include "DfInitialGuessHarris_Parallel.h"
 
 #include "DfOverlapX_Parallel.h"
-#include "DfPopulation_Parallel.h"
 #include "TlCommunicate.h"
+#include "df_population_scalapack.h"
 #include "tl_dense_general_matrix_scalapack.h"
 #include "tl_dense_symmetric_matrix_scalapack.h"
 
@@ -39,7 +39,7 @@ void DfInitialGuessHarris_Parallel::main() {
 
         // std::cerr << TlUtils::format("[%d] DfInitialGuessHarris_Parallel::main()", rComm.getRank()) << std::endl;
         DfInitialGuessHarris::calcInitialDensityMatrix<TlDenseGeneralMatrix_Scalapack, TlDenseSymmetricMatrix_Scalapack,
-                                                       DfOverlapX_Parallel, DfPopulation_Parallel>();
+                                                       DfOverlapX_Parallel, DfPopulation_Scalapack>();
     } else {
         if (rComm.isMaster()) {
             DfInitialGuessHarris::main();
