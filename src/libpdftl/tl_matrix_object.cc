@@ -44,7 +44,7 @@ std::string TlMatrixObject::matrixTypeStr(TlMatrixObject::MatrixType matrixType)
     }
 
     std::map<TlMatrixObject::MatrixType, std::string>::const_iterator it = matrixType2str.find(matrixType);
-    std::string answer = "";
+    std::string answer = "UNKNOWN";
     if (it != matrixType2str.end()) {
         answer = it->second;
     }
