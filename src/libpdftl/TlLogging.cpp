@@ -32,6 +32,10 @@ TlLogging::TlLogging() {
     this->setLevel(TL_INFO, TL_WARN);
 }
 
+TlLogging::TlLogging(const TlLogging& rhs)
+    : filePath_(rhs.filePath_), masterLevel_(rhs.masterLevel_), workerLevel_(rhs.workerLevel_), level_(rhs.level_), procID_(rhs.procID_) {
+}
+
 TlLogging::~TlLogging() {
     this->output_.close();
 }
