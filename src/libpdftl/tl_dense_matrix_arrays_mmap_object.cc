@@ -206,10 +206,16 @@ int TlDenseMatrix_arrays_mmap_Object::getSubunitID(const index_type vectorIndex)
 }
 
 // static function
+// TODO: TlDenseMatrix_arrays_Object::getNumOfLocalChunks() と共通のためリファクタリング
 TlMatrixObject::index_type TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(const index_type numOfVectors,
                                                                                  const int numOfSubunits,
                                                                                  const int sizeOfChunk) {
     const TlMatrixObject::index_type numOfVectorsPerUnit = sizeOfChunk * numOfSubunits;
+    if (numOfVectorsPerUnit == 0) {
+        // wrong parameter
+        return 0;
+    }
+
     const TlMatrixObject::index_type numOfLocalChunks =
         (numOfVectors + numOfVectorsPerUnit - 1) / numOfVectorsPerUnit;  // round up
 
@@ -489,9 +495,12 @@ void TlDenseMatrix_arrays_mmap_Object::createNewFile(const std::string& filePath
     ofs.open(filePath.c_str(), std::ios::binary | std::ios::trunc | std::ios::out);
 
     // バッファ機能を停止する
-    // ofs << std::setiosflags(std::ios::unitbuf);
+    ofs << std::setiosflags(std::ios::unitbuf);
 
-    (void)this->writeMatrixHeader(&ofs);
+    // ofs.seekp(0);
+    const std::size_t headerSize = this->writeMatrixHeader(&ofs);
+    // const std::size_t headerPos = ofs.tellp();
+    // std::cerr << TlUtils::format("header size: %ld/%ld", headerSize, headerPos) << std::endl;
 
     // size分ファイルにzeroを埋める
     const double v = 0.0;
@@ -500,7 +509,7 @@ void TlDenseMatrix_arrays_mmap_Object::createNewFile(const std::string& filePath
     }
 
     // バッファ機能を再開する
-    // ofs << std::resetiosflags(std::ios::unitbuf);
+    ofs << std::resetiosflags(std::ios::unitbuf);
     ofs.flush();
 
     ofs.close();
