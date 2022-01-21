@@ -208,7 +208,10 @@ TlMatrixObject::index_type TlDenseMatrix_arrays_Object::getNumOfLocalChunks(cons
         // wrong parameter
         return 0;
     }
-    const int numOfLocalChunks = numOfVectors / numOfVectorsPerUnit + 1;
+
+    // const int numOfLocalChunks = numOfVectors / numOfVectorsPerUnit + 1;
+    const TlMatrixObject::index_type numOfLocalChunks =
+        (numOfVectors + numOfVectorsPerUnit - 1) / numOfVectorsPerUnit;  // round up
 
     return numOfLocalChunks;
 }
