@@ -23,6 +23,8 @@
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
+#include <string>
+
 #include "TlLogging.h"
 #include "tl_dense_vector_lapack.h"
 
