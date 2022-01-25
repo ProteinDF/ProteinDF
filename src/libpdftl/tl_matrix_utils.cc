@@ -163,8 +163,6 @@ bool TlMatrixUtils::getHeaderSize_template(StreamType& s, TlMatrixObject::Header
 template <typename StreamType, typename MatrixType, typename IndexType>
 bool TlMatrixUtils::getHeaderSizeByType_template(StreamType& s, TlMatrixObject::HeaderInfo* pHeaderInfo) {
     TlLogging& log = TlLogging::getInstance();
-    const TlLogging::Level prevLogLevel = log.getLevel();
-    log.setLevel(TlLogging::TL_DEBUG);
 
     MatrixType matrixType = 0;
     TlMatrixObject::HeaderInfo headerInfo;
@@ -329,8 +327,6 @@ bool TlMatrixUtils::getHeaderSizeByType_template(StreamType& s, TlMatrixObject::
     //                              estimatedFileSize, headerInfo.numOfSubunits, headerInfo.subunitId,
     //                              headerInfo.sizeOfChunk)
     //           << std::endl;
-
-    log.setLevel(prevLogLevel);
 
     return answer;
 }
