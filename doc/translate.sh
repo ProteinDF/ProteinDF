@@ -1,6 +1,6 @@
 #!/bin/bash -x
 
-BUILDDIR=_build
+BUILDDIR=build
 SOURCEDIR=source
 
 make gettext
