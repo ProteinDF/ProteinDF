@@ -17,11 +17,13 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfTaskCtrl.h"
+
 #include "TlFmt.h"
 #include "TlMath.h"
 #include "TlOrbitalInfo.h"
 
-DfTaskCtrl::DfTaskCtrl(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
+DfTaskCtrl::DfTaskCtrl(TlSerializeData* pPdfParam)
+    : DfObject(pPdfParam) {
     TlOrbitalInfo orbitalInfo((*pPdfParam)["coordinates"],
                               (*pPdfParam)["basis_set"]);
     this->maxShellType_ = orbitalInfo.getMaxShellType();
@@ -64,7 +66,9 @@ void DfTaskCtrl::setCutoffThreshold(const double value) {
     this->cutoffThreshold_ = value;
 }
 
-double DfTaskCtrl::getCutoffThreshold() const { return this->cutoffThreshold_; }
+double DfTaskCtrl::getCutoffThreshold() const {
+    return this->cutoffThreshold_;
+}
 
 void DfTaskCtrl::setCutoffEpsilon_distribution(const double value) {
     this->cutoffEpsilon_distribution_ = value;
@@ -1617,10 +1621,10 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
     const double CONTRIBUTE_COEF = 2.0 * std::pow(TlMath::PI(), 2.5);
 
     TlFmt& FmT = TlFmt::getInstance();
-    static const double coef[6] = {-0.017450254, 0.132520568,  -0.047915444,
-                                   0.792267596,  -0.583721015, 0.697593555};
+    static const double coef[6] = {-0.017450254, 0.132520568, -0.047915444,
+                                   0.792267596, -0.583721015, 0.697593555};
     // l = 1.0のときのgamma値
-    static const double gamma1[6] = {0.03,        0.081722098, 0.222616709,
+    static const double gamma1[6] = {0.03, 0.081722098, 0.222616709,
                                      0.606423483, 1.651939972, 4.5};
     std::vector<double> gamma(6);
     {
@@ -1724,10 +1728,10 @@ DfTaskCtrl::ShellPairArrayTable DfTaskCtrl::selectShellPairArrayTableByDensity(
     const double CONTRIBUTE_COEF = 2.0 * std::pow(TlMath::PI(), 2.5);
 
     TlFmt& FmT = TlFmt::getInstance();
-    static const double coef[6] = {-0.017450254, 0.132520568,  -0.047915444,
-                                   0.792267596,  -0.583721015, 0.697593555};
+    static const double coef[6] = {-0.017450254, 0.132520568, -0.047915444,
+                                   0.792267596, -0.583721015, 0.697593555};
     // l = 1.0のときのgamma値
-    static const double gamma1[6] = {0.03,        0.081722098, 0.222616709,
+    static const double gamma1[6] = {0.03, 0.081722098, 0.222616709,
                                      0.606423483, 1.651939972, 4.5};
     std::vector<double> gamma(6);
     {
@@ -1943,10 +1947,11 @@ bool DfTaskCtrl::isAliveBySchwarzCutoff(
 
 void DfTaskCtrl::prescreeningReport() {
     const int maxShellType = this->maxShellType_;
-    static const char typeStr2[][3] = {"SS", "SP", "SD", "SF", "SG", "PS", "PP",
-                                       "PD", "PF", "PG", "DS", "DP", "DD", "DF",
-                                       "DG", "FS", "FP", "FD", "FF", "FG", "GS",
-                                       "GP", "GD", "GF", "GG"};
+
+    // static const char typeStr2[][3] = {"SS", "SP", "SD", "SF", "SG", "PS", "PP",
+    //                                    "PD", "PF", "PG", "DS", "DP", "DD", "DF",
+    //                                    "DG", "FS", "FP", "FD", "FF", "FG", "GS",
+    //                                    "GP", "GD", "GF", "GG"};
 
     // cutoff report for Epsilon1
     bool hasCutoff_density = false;
@@ -1969,7 +1974,9 @@ void DfTaskCtrl::prescreeningReport() {
                                         this->lengthScaleParameter_));
         this->log_.info("type: alive / all (ratio)");
         for (int shellTypeA = 0; shellTypeA < maxShellType; ++shellTypeA) {
+            const std::string typeStrA = TlOrbitalInfoObject::getShellTypeName(shellTypeA);
             for (int shellTypeB = 0; shellTypeB < maxShellType; ++shellTypeB) {
+                const std::string typeStrAB = typeStrA + TlOrbitalInfoObject::getShellTypeName(shellTypeB);
                 const int shellPairType =
                     shellTypeA * maxShellType + shellTypeB;
 
@@ -1979,7 +1986,7 @@ void DfTaskCtrl::prescreeningReport() {
                         (double)this->cutoffAll_density_[shellPairType] * 100.0;
                     this->log_.info(TlUtils::format(
                         " %2s: %12ld / %12ld (%6.2f%%)",
-                        typeStr2[shellPairType],
+                        typeStrAB.c_str(),
                         this->cutoffAlive_density_[shellPairType],
                         this->cutoffAll_density_[shellPairType], ratio));
                 }
@@ -1988,7 +1995,7 @@ void DfTaskCtrl::prescreeningReport() {
         this->log_.info("\n");
     }
 
-    // cutoff report for distribition
+    // cutoff report for distribution
     bool hasCutoff_distribution = false;
     for (int shellTypeA = 0;
          ((hasCutoff_distribution == false) && (shellTypeA < maxShellType));
@@ -2007,7 +2014,9 @@ void DfTaskCtrl::prescreeningReport() {
                                         this->cutoffEpsilon_distribution_));
         this->log_.info("type: alive / all (ratio)");
         for (int shellTypeA = 0; shellTypeA < maxShellType; ++shellTypeA) {
+            const std::string typeStrA = TlOrbitalInfoObject::getShellTypeName(shellTypeA);
             for (int shellTypeB = 0; shellTypeB < maxShellType; ++shellTypeB) {
+                const std::string typeStrAB = typeStrA + TlOrbitalInfoObject::getShellTypeName(shellTypeB);
                 const int shellPairType =
                     shellTypeA * maxShellType + shellTypeB;
 
@@ -2018,7 +2027,7 @@ void DfTaskCtrl::prescreeningReport() {
                         100.0;
                     this->log_.info(TlUtils::format(
                         " %2s: %12ld / %12ld (%6.2f%%)",
-                        typeStr2[shellPairType],
+                        typeStrAB.c_str(),
                         this->cutoffAlive_distribution_[shellPairType],
                         this->cutoffAll_distribution_[shellPairType], ratio));
                 }
