@@ -17,6 +17,7 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "TlOrbitalInfoObject.h"
+
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -25,10 +26,12 @@ const int TlOrbitalInfoObject::MAX_SHELL_TYPE = 3 + 1;
 const double TlOrbitalInfoObject::INV_SQRT3 = 1.0 / std::sqrt(3.0);
 const double TlOrbitalInfoObject::MAX_EXPONENT =
     std::log(std::numeric_limits<double>::max());
+const char* TlOrbitalInfoObject::shellTypeNameTbl_[] = {"s", "p", "d", "f", "g", "h", "i"};
 const char* TlOrbitalInfoObject::basisTypeNameTbl_[] = {
     "s", "px", "py", "pz", "dxy", "dxz", "dyz", "dx2-y2", "dz2", "---"};
 
-TlOrbitalInfoObject::TlOrbitalInfoObject() : log_(TlLogging::getInstance()) {}
+TlOrbitalInfoObject::TlOrbitalInfoObject()
+    : log_(TlLogging::getInstance()) {}
 
 TlOrbitalInfoObject::~TlOrbitalInfoObject() {}
 
@@ -271,6 +274,13 @@ TlOrbitalInfoObject::getStartIndexArrayOfShellGroup() const {
     std::vector<index_type>(answer).swap(answer);
 
     return answer;
+}
+
+std::string TlOrbitalInfoObject::getShellTypeName(const int shellType) {
+    static const int sizeOfShellTypeNameTable = static_cast<int>(sizeof(TlOrbitalInfoObject::shellTypeNameTbl_) / sizeof(TlOrbitalInfoObject::shellTypeNameTbl_[0]));
+    assert((0 <= shellType) && (shellType < sizeOfShellTypeNameTable));
+
+    return std::string(TlOrbitalInfoObject::shellTypeNameTbl_[shellType]);
 }
 
 void TlOrbitalInfoObject::getPrefactor_S(const TlPosition& pos,
