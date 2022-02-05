@@ -19,86 +19,145 @@
 #ifndef DFLOCALIZE_H
 #define DFLOCALIZE_H
 
+#include <set>
 #include <string>
 #include <vector>
 
 #include "DfObject.h"
+#include "TlLogging.h"
 #include "TlOrbitalInfo.h"
 #include "TlUtils.h"
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 
 class DfLocalize : public DfObject {
-   protected:
-    struct Orb_QA_Item {
-       public:
-        Orb_QA_Item(std::size_t o = 0, double q = 0.0) : orb(o), qa(q){};
-
-       public:
-        std::size_t orb;
-        double qa;
+public:
+    enum PairingOrder {
+        UNDEFINED = 0,
+        PO_ORDERED,
+        PO_BIG_BIG,
+        PO_BIG_SMALL,
+        PO_SMALL_SMALL
     };
 
-    struct do_OrbQAItem_sort_functor_cmp {
-        bool operator()(const Orb_QA_Item& a, const Orb_QA_Item& b) const {
-            return (a.qa > b.qa);
+protected:
+    struct MoPop {
+    public:
+        MoPop(DfObject::index_type mo = 0, double q = 0.0)
+            : mo(mo), q(q){};
+
+    public:
+        DfObject::index_type mo;  // molecular orbital
+        double q;                 // Mulliken population
+
+    public:
+        struct MoPop_sort_functor_cmp_grater {
+            bool operator()(const MoPop& a, const MoPop& b) const {
+                return (a.q > b.q);
+            };
+        };
+
+        struct MoPop_sort_functor_cmp_lesser {
+            bool operator()(const MoPop& a, const MoPop& b) const {
+                return (a.q < b.q);
+            };
         };
     };
 
-    struct JobItem {
-       public:
-        JobItem(std::size_t i = 0, std::size_t j = 0) : orb_i(i), orb_j(j) {}
+protected:
+    typedef std::pair<index_type, index_type> TaskItem;
 
-       public:
-        std::size_t orb_i;
-        std::size_t orb_j;
-    };
-
-   public:
+public:
     DfLocalize(TlSerializeData* pPdfParam);
     virtual ~DfLocalize();
 
-   public:
-    virtual void localize(const std::string& inputCMatrixPath = "");
+public:
+    void setRestart(const bool yn);
+    void setPairingOrder(PairingOrder po);
+    std::string getPairingOrderStr() const;
 
-   protected:
+    void setCMatrixPath(const std::string& path);
+    void setGroup(const TlSerializeData& groupData);
+
+    void exec();
+
+protected:
+    virtual double localize(TlDenseGeneralMatrix_Lapack* pC);
+    double localize_core(TlDenseGeneralMatrix_Lapack* pC, const index_type startMO1, const index_type endMO1,
+                         const index_type startMO2, const index_type endMO2);
+
+protected:
+    virtual void initialize();
+    void checkOpenMP();
+    void setGroup();
+
+    bool getSMatrix(TlDenseSymmetricMatrix_Lapack* pS);
+    std::string getCMatrixPath();
+    void getCMatrix(TlDenseGeneralMatrix_Lapack* pC);
+
     void makeGroup();
-    void makeQATable();
-    void calcQA(const std::size_t orb_i, const std::size_t orb_j, double* pA_ij,
-                double* pB_ij);
+    double calcG(const TlDenseGeneralMatrix_Lapack& C, const index_type startMO, const index_type endMO);
 
-    void getRotatingMatrix(const double A_ij, const double B_ij,
-                           const double normAB,
+    void getRotatingMatrix(const double A_ij, const double B_ij, const double normAB,
                            TlDenseGeneralMatrix_Lapack* pRot);
-    void rotateCmatrix(std::size_t orb_i, std::size_t orb_j,
-                       const TlDenseGeneralMatrix_Lapack& rot);
+    void rotateVectors(TlDenseVector_Lapack* pCpi, TlDenseVector_Lapack* pCpj, const TlDenseGeneralMatrix_Lapack& rot);
 
-   protected:
-    double calcQA(const std::size_t orb_i);
+protected:
+    double calcQA_ii(const TlDenseGeneralMatrix_Lapack& C, const index_type orb_i);
+    void calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_Lapack& Cpj, double* pA_ij, double* pB_ij);
 
-    void makeJobList();
-    virtual int getJobItem(DfLocalize::JobItem* pJob,
-                           bool isInitialized = false);
+protected:
+    double localize_byPop(TlDenseGeneralMatrix_Lapack* pC);
+    double localize_core_byPop(TlDenseGeneralMatrix_Lapack* pC, const index_type startMO1, const index_type endMO1);
+    double calcG_sort(const TlDenseGeneralMatrix_Lapack& C, const index_type startMO, const index_type endMO);
+    std::vector<TaskItem> getTaskList_byPop();
 
-   protected:
+protected:
+    TlLogging& log_;
+
+    bool isRestart_;
+    std::string CMatrixPath_;
+    PairingOrder pairingOrder_;
+
+    int lo_iteration_;
     int maxIteration_;
     double threshold_;
 
     TlOrbitalInfo orbInfo_;
     int numOfOcc_;
 
-    std::size_t startOrb_;
-    std::size_t endOrb_;
+    index_type startOrb_;
+    index_type endOrb_;
 
-    std::string SMatrixPath_;
-    std::string CMatrixPath_;
+    double G_;
 
-    std::vector<std::vector<std::size_t> > group_;
+    /// atom indexに対するgroupのリスト
+    std::vector<int> atomGroupList_;
+
+    /// groupに対する原子軌道ベクトル
+    ///
+    /// そのgroupに属する原子軌道は、indexの値に1を代入する。
+    std::vector<TlDenseVector_Lapack> group_;
+
+    /// groupに対するMoPopオブジェクト
+    std::vector<MoPop> groupMoPops_;
+
     TlDenseSymmetricMatrix_Lapack S_;
-    TlDenseGeneralMatrix_Lapack C_;
 
-    std::vector<Orb_QA_Item> orb_QA_table_;
-    std::vector<JobItem> jobList_;
+protected:
+    std::vector<TaskItem> getTaskList(const index_type startMO, const index_type endMO);
+    std::vector<TaskItem> getTaskList(const index_type startMO1, const index_type endMO1, const index_type startMO2,
+                                      const index_type endMO2);  // for parallel
+
+    std::vector<DfLocalize::TaskItem> getTaskListByPop();
+
+protected:
+    void initLockMO(const index_type numOfMOs);
+    void lockMO(const index_type MO);
+    void unlockMO(const index_type MO);
+    bool isLockedMO(const index_type mo1, const index_type mo2) const;
+
+    std::vector<char> lockMOs_;
 };
 
 #endif  // DFLOCALIZE_H
