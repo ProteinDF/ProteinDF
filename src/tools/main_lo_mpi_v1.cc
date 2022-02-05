@@ -20,23 +20,21 @@
 #include <iostream>
 #include <string>
 
-#include "DfLocalize_Parallel.h"
+#include "DfLocalize_Parallel_v1.h"
 #include "TlCommunicate.h"
 #include "TlGetopt.h"
-#include "TlLogging.h"
 #include "TlMsgPack.h"
 
-#define HOSTNAME_LEN 256
-
 void showHelp(const std::string& progname) {
-    std::cout << TlUtils::format("%s [OPTIONS] basisset_name ...", progname.c_str()) << std::endl;
+    std::cout << TlUtils::format("%s [OPTIONS] basisset_name ...",
+                                 progname.c_str())
+              << std::endl;
     std::cout << std::endl;
     std::cout << " localize C matrix" << std::endl;
     std::cout << " -p PATH       set ProteinDF parameter file. default = "
                  "pdfparam.mpac"
               << std::endl;
     std::cout << " -c PATH       set C matrix path" << std::endl;
-    std::cout << " -r            restart lo calculation" << std::endl;
     std::cout << " -h            show help" << std::endl;
     std::cout << " -v            verbose output" << std::endl;
 }
@@ -44,68 +42,18 @@ void showHelp(const std::string& progname) {
 int main(int argc, char* argv[]) {
     TlCommunicate& rComm = TlCommunicate::getInstance(argc, argv);
 
-    TlGetopt opt(argc, argv, "c:dhp:rv");
-    const bool isShowHelp = (opt["h"] == "defined");
+    TlGetopt opt(argc, argv, "c:hp:v");
     // const bool isVerbose = (opt["v"] == "defined");
-
-// for debug
-#ifndef NDEBUG
-    {
-        char* pHostName = new char[HOSTNAME_LEN];
-        (void)gethostname(pHostName, HOSTNAME_LEN);
-        const std::string hostname(pHostName);
-        delete[] pHostName;
-        pHostName = NULL;
-
-        const int numOfProcs = rComm.getNumOfProcs();
-        for (int i = 0; i < numOfProcs; ++i) {
-            if (i == rComm.getRank()) {
-                std::cerr << TlUtils::format("PID %d on %s as rank %d", getpid(), hostname.c_str(), rComm.getRank())
-                          << std::endl;
-            }
-            rComm.barrier();
-        }
-        rComm.barrier();
-
-        const int waitingTime = 5000;
-        rComm.barrier();
-        if (rComm.isMaster() == true) {
-            std::cerr << TlUtils::format("waiting %d msec.", waitingTime) << std::endl;
-        }
-        TlTime::sleep(waitingTime);
-        rComm.barrier();
-    }
-#endif  // NDEBUG
+    const bool isShowHelp = (opt["h"] == "defined");
 
     if (isShowHelp) {
-        if (rComm.isMaster() == true) {
-            showHelp(opt[0]);
-        }
+        showHelp(opt[0]);
 
         rComm.finalize();
         return EXIT_SUCCESS;
     }
 
-    TlLogging& log = TlLogging::getInstance();
-    log.setFilePath("lo-output.txt");
-
-    if (opt["d"] == "defined") {
-        log.setLevel(TlLogging::TL_DEBUG, TlLogging::TL_DEBUG);
-    }
-
     std::string pdfParamPath = "pdfparam.mpac";
-    if (opt["p"].empty() != true) {
-        pdfParamPath = opt["p"];
-    }
-
-    std::string inputCMatrixPath = "";
-    if (opt["c"].empty() != true) {
-        inputCMatrixPath = opt["c"];
-    }
-
-    const bool isRestart = (opt["r"] == "defined");
-
-    // setup
     TlSerializeData param;
     if (rComm.isMaster() == true) {
         if (opt["p"].empty() != true) {
@@ -118,14 +66,16 @@ int main(int argc, char* argv[]) {
     }
     rComm.broadcast(param);
 
-    // lo
-    DfLocalize_Parallel lo(&param);
-    if (!inputCMatrixPath.empty()) {
-        lo.setCMatrixPath(inputCMatrixPath);
+    std::string inputCMatrixPath = "";
+    if (rComm.isMaster() == true) {
+        if (opt["c"].empty() != true) {
+            inputCMatrixPath = opt["c"];
+        }
     }
-    lo.setRestart(isRestart);
+    rComm.broadcast(inputCMatrixPath);
 
-    lo.exec();
+    DfLocalize_Parallel lo(&param);
+    lo.localize(inputCMatrixPath);
 
     if (rComm.isMaster() == true) {
         TlMsgPack mpac(param);
