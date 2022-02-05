@@ -11,7 +11,7 @@ class TlDenseGeneralMatrix_Lapack : public TlDenseGeneralMatrixObject {
     // ---------------------------------------------------------------------------
     // constructor & destructor
     // ---------------------------------------------------------------------------
-   public:
+public:
     explicit TlDenseGeneralMatrix_Lapack(const TlMatrixObject::index_type row = 1,
                                          const TlMatrixObject::index_type col = 1, double const* const pBuf = NULL);
     TlDenseGeneralMatrix_Lapack(const TlDenseGeneralMatrix_Lapack& rhs);
@@ -25,13 +25,13 @@ class TlDenseGeneralMatrix_Lapack : public TlDenseGeneralMatrixObject {
     // ---------------------------------------------------------------------------
     // properties
     // ---------------------------------------------------------------------------
-   public:
+public:
     virtual TlMatrixObject::size_type getNumOfElements() const;
 
     // ---------------------------------------------------------------------------
     // operators
     // ---------------------------------------------------------------------------
-   public:
+public:
     TlDenseGeneralMatrix_Lapack& operator=(const TlDenseGeneralMatrix_Lapack& rhs);
 
     const TlDenseGeneralMatrix_Lapack operator+(const TlDenseGeneralMatrix_Lapack& rhs) const;
@@ -45,7 +45,7 @@ class TlDenseGeneralMatrix_Lapack : public TlDenseGeneralMatrixObject {
     TlDenseGeneralMatrix_Lapack& operator/=(const double coef);
     TlDenseGeneralMatrix_Lapack& operator*=(const TlDenseGeneralMatrix_Lapack& rhs);
 
-   public:
+public:
     virtual TlMatrixObject::index_type getRowVector(const TlMatrixObject::index_type row,
                                                     const TlMatrixObject::index_type length, double* pBuf) const;
     virtual TlMatrixObject::index_type getColVector(const TlMatrixObject::index_type row,
@@ -60,10 +60,19 @@ class TlDenseGeneralMatrix_Lapack : public TlDenseGeneralMatrixObject {
                                                     const TlMatrixObject::index_type length, const double* pBuf);
     virtual void setColVector(const TlMatrixObject::index_type row, const std::vector<double>& v);
 
+    // public:
+    // virtual TlMatrixObject::index_type getRowVector(const TlMatrixObject::index_type row,
+    //                                                 const TlMatrixObject::index_type length, double* pBuf) const;
+    // virtual TlMatrixObject::index_type getColVector(const TlMatrixObject::index_type row,
+    //                                                 const TlMatrixObject::index_type length, double* pBuf) const;
+    // virtual TlMatrixObject::index_type setRowVector(const TlMatrixObject::index_type row,
+    //                                                 const TlMatrixObject::index_type length, const double* pBuf);
+    // virtual TlMatrixObject::index_type setColVector(const TlMatrixObject::index_type col,
+    //                                                 const TlMatrixObject::index_type length, const double* pBuf);
     // ---------------------------------------------------------------------------
     // operations
     // ---------------------------------------------------------------------------
-   public:
+public:
     double sum() const;
     double getRMS() const;
 
@@ -76,18 +85,18 @@ class TlDenseGeneralMatrix_Lapack : public TlDenseGeneralMatrixObject {
     // solve Ax = B
     TlDenseGeneralMatrix_Lapack getLeastSquaresSolution(const TlDenseGeneralMatrix_Lapack& B) const;
 
-   public:
+public:
     double* data();
     const double* data() const;
 
     // ---------------------------------------------------------------------------
     // I/O
     // ---------------------------------------------------------------------------
-   public:
+public:
     virtual void dump(TlDenseVector_Lapack* v) const;
     virtual void restore(const TlDenseVector_Lapack& v);
 
-   private:
+private:
     using TlDenseGeneralMatrixObject::dump;
     using TlDenseGeneralMatrixObject::restore;
 
