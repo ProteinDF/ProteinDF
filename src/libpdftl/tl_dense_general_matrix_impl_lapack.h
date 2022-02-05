@@ -7,11 +7,11 @@ class TlDenseSymmetricMatrix_ImplLapack;
 class TlDenseVector_ImplLapack;
 
 class TlDenseGeneralMatrix_ImplLapack : public TlDenseMatrix_ImplObject {
-   public:
+public:
     // ---------------------------------------------------------------------------
     // constructor & destructor
     // ---------------------------------------------------------------------------
-   public:
+public:
     // column-major
     // a11, a21, a31, a41, ..., am1, a12, a22, a32, ...
     explicit TlDenseGeneralMatrix_ImplLapack(const TlMatrixObject::index_type row = 0,
@@ -30,7 +30,7 @@ class TlDenseGeneralMatrix_ImplLapack : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // properties
     // ---------------------------------------------------------------------------
-   public:
+public:
     virtual TlMatrixObject::index_type getNumOfRows() const;
     virtual TlMatrixObject::index_type getNumOfCols() const;
 
@@ -67,7 +67,7 @@ class TlDenseGeneralMatrix_ImplLapack : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // operators
     // ---------------------------------------------------------------------------
-   public:
+public:
     TlDenseGeneralMatrix_ImplLapack& operator=(const TlDenseGeneralMatrix_ImplLapack& rhs);
     TlDenseGeneralMatrix_ImplLapack operator*(const TlDenseGeneralMatrix_ImplLapack& rhs) const;
 
@@ -80,7 +80,7 @@ class TlDenseGeneralMatrix_ImplLapack : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // operations
     // ---------------------------------------------------------------------------
-   public:
+public:
     double* data();
     const double* data() const;
 
@@ -118,7 +118,7 @@ class TlDenseGeneralMatrix_ImplLapack : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // variables
     // ---------------------------------------------------------------------------
-   protected:
+protected:
     TlMatrixObject::index_type row_;
     TlMatrixObject::index_type col_;
     double* matrix_;  /// 行列要素
