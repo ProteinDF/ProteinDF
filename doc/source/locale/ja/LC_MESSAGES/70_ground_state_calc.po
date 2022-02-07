@@ -257,7 +257,7 @@ msgid ""
 "Calculates three-center integrals at each SCF iteration based on the RI "
 "method to obtain the Coulomb term. The calculation accuracy depends on "
 "auxiliary basis sets."
-msgstr "SCF繰り返し計算の各イテレーションにおいて、 RI法に基づき、3中心積分を計算してクーロン項を求めます。 計算精度は補助基底関数に依存します。 ProteinDFのデフォルトです。"
+msgstr "SCF繰り返し計算の各イテレーションにおいて、 RI法に基づき、3中心積分を計算してクーロン項を求めます。 計算精度は補助基底関数に依存します。 "
 
 #: ../../source/70_ground_state_calc.rst:166
 #: ../../source/70_ground_state_calc.rst:198
@@ -274,7 +274,7 @@ msgid ""
 "consumed. Specify ``J_engine=CD`` to select this engine. This is the "
 "default engine of ProteinDF."
 msgstr ""
-"コレスキー分解法に基づき、 SCF繰り返し計算の前に4中心2電子積分のコレスキーベクトルを求めます。 SCF繰り返し計算の各イテレーションでは、 密度行列との行列演算によりクーロン項を求めます。 SCF計算中に分子積分を行わないために高速に演算できますが、 メモリやディスクの記憶域を多く消費します。 ``J_engine = CD`` で使用できます。"
+"コレスキー分解法に基づき、 SCF繰り返し計算の前に4中心2電子積分のコレスキーベクトルを求めます。 SCF繰り返し計算の各イテレーションでは、 密度行列との行列演算によりクーロン項を求めます。 SCF計算中に分子積分を行わないために高速に演算できますが、 メモリやディスクの記憶域を多く消費します。 ``J_engine = CD`` で使用できます。現在のProteinDFのデフォルトです。"
 
 #: ../../source/70_ground_state_calc.rst:179
 msgid "Fock exchange term calculation"
