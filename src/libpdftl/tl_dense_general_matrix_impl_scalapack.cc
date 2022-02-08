@@ -611,7 +611,7 @@ bool TlDenseGeneralMatrix_ImplScalapack::load(std::ifstream& ifs) {
     // read header
     bool answer = true;
     TlMatrixObject::HeaderInfo headerInfo;
-    TlMatrixObject::MatrixType matrixType;
+    TlMatrixObject::MatrixType matrixType = TlMatrixObject::UNDEFINED;
     std::vector<TlMatrixObject::index_type> rowcol(2);
     if (rComm.isMaster() == true) {
         const bool isLoadable = TlMatrixUtils::getHeaderInfo(ifs, &headerInfo);

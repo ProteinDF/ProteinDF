@@ -86,6 +86,10 @@ int main(int argc, char* argv[]) {
                 std::cout << M << std::endl;
                 break;
             }
+
+            default:
+                std::cout << "not support type: " << headerInfo.matrixType << std::endl;
+                break;
         }
     } else {
         std::cerr << "cannot open file: " << path << std::endl;

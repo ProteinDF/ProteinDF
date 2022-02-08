@@ -37,13 +37,13 @@ void showHelp(const std::string& progname) {
     std::cout << " -g <brd_file> specify group list" << std::endl;
     std::cout << " -m <MODE>     switch pairing algorithm (ordered, big-big(defalt), big-small, small-small)" << std::endl;
     std::cout << " -h            show help" << std::endl;
-    std::cout << " -v            verbose output" << std::endl;
+    // std::cout << " -v            verbose output" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
     TlGetopt opt(argc, argv, "c:hm:g:p:rv");
     const bool isShowHelp = (opt["h"] == "defined");
-    const bool isVerbose = (opt["v"] == "defined");
+    // const bool isVerbose = (opt["v"] == "defined");
 
     if (isShowHelp) {
         showHelp(opt[0]);

@@ -304,7 +304,7 @@ void DfPopulation::getReport(const int iteration, T& out) {
 template <typename T>
 void DfPopulation::getAtomPopStr(const std::valarray<double>& trPS, const bool isCalcNetCharge, T& out) const {
     const index_type numOfAtoms = this->m_nNumOfAtoms;
-    assert(trPS.size() == numOfAtoms);
+    assert(static_cast<index_type>(trPS.size()) == numOfAtoms);
 
     if (isCalcNetCharge == true) {
         out << "  index Atom    gross         net\n";
@@ -330,7 +330,7 @@ void DfPopulation::getAtomPopStr(const std::valarray<double>& trPS, const bool i
 template <typename T>
 void DfPopulation::getOrbPopStr(const std::valarray<double>& trPS, T& out) const {
     const index_type numOfAOs = this->m_nNumOfAOs;
-    assert(trPS.size() == numOfAOs);
+    assert(static_cast<index_type>(trPS.size()) == numOfAOs);
 
     out << "  index  Atom        Shell     gross\n";
 

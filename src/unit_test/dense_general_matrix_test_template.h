@@ -6,6 +6,7 @@
 #endif  // HAVE_CONFIG_H
 
 #include <string>
+
 #include "gtest/gtest.h"
 #include "matrix_common.h"
 #include "tl_matrix_object.h"
@@ -13,7 +14,7 @@
 template <typename T>
 class DenseGeneralMatrixTest : public ::testing::Test {};
 
-TYPED_TEST_CASE_P(DenseGeneralMatrixTest);
+TYPED_TEST_SUITE_P(DenseGeneralMatrixTest);
 
 TYPED_TEST_P(DenseGeneralMatrixTest, doesConstructor) {
     TypeParam a = getMatrixA<TypeParam>();
@@ -291,12 +292,12 @@ TYPED_TEST_P(DenseGeneralMatrixTest, doesSaveAndLoadToHdf5) {
 #endif  // HAVE_HDF5
 }
 
-REGISTER_TYPED_TEST_CASE_P(DenseGeneralMatrixTest, doesConstructor,
-                           doesCopyConstructor, doesResize, doesOperatorEq,
-                           doesOperatorAdd, doesOperatorIAdd,
-                           doesOperatorMultiMatrixAB, doesSum, doesTrace,
-                           doesMaxAbsoluteElement, doesTransposeInPlace,
-                           doesTranspose, doesDotInPlace, doesSaveAndLoad,
-                           doesSaveAndLoadToHdf5);
+REGISTER_TYPED_TEST_SUITE_P(DenseGeneralMatrixTest, doesConstructor,
+                            doesCopyConstructor, doesResize, doesOperatorEq,
+                            doesOperatorAdd, doesOperatorIAdd,
+                            doesOperatorMultiMatrixAB, doesSum, doesTrace,
+                            doesMaxAbsoluteElement, doesTransposeInPlace,
+                            doesTranspose, doesDotInPlace, doesSaveAndLoad,
+                            doesSaveAndLoadToHdf5);
 
 #endif  // DENSE_GENERAL_MATRIX_TEST_TEMPLATE_H

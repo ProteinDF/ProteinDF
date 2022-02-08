@@ -25,7 +25,8 @@
 #include "TlTime.h"
 #include "TlUtils.h"
 
-DfLocalize_Parallel::DfLocalize_Parallel(TlSerializeData* pPdfParam) : DfLocalize(pPdfParam) {
+DfLocalize_Parallel::DfLocalize_Parallel(TlSerializeData* pPdfParam)
+    : DfLocalize(pPdfParam) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     this->log_.setProcID(rComm.getRank());
 }
@@ -119,7 +120,7 @@ double DfLocalize_Parallel::localize(TlDenseGeneralMatrix_Lapack* pC) {
     this->log_.info(TlUtils::format("blocks: %d", blocks));
     this->log_.info(TlUtils::format("MOsPerBlock: %d", MOsPerBlock));
 
-    const index_type numOfAOs = this->m_nNumOfAOs;
+    // const index_type numOfAOs = this->m_nNumOfAOs;
 
     JobItem jobItem;
     if (rComm.isMaster() == true) {
@@ -129,8 +130,11 @@ double DfLocalize_Parallel::localize(TlDenseGeneralMatrix_Lapack* pC) {
         (void)this->getJobItem(&jobItem, true);
     }
 
-    enum { REQUEST_JOB = 0, SEND_RESULTS = 1 };
-    enum { FINISHED_JOB = 0, ASSIGNED_JOB = 1, WAIT = 2 };
+    enum { REQUEST_JOB = 0,
+           SEND_RESULTS = 1 };
+    enum { FINISHED_JOB = 0,
+           ASSIGNED_JOB = 1,
+           WAIT = 2 };
     const int msgLength = 3;
     std::vector<int> msg(msgLength);
 
@@ -349,7 +353,7 @@ void DfLocalize_Parallel::makeJobList(const int dim) {
     const int pairs = dim * (dim + 1) / 2;
     this->jobList_.resize(pairs);
 
-    std::size_t counter = 0;
+    int counter = 0;
     for (int index1 = 0; index1 < dim; ++index1) {
         // Starting 0 means that the diagonal elements are computed.
         const int max_index2 = dim - index1;
