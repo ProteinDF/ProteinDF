@@ -42,4 +42,8 @@ html: html_en html_ja
 livereload:
 	@$(SPHINXAUTOBUILD) -b html $(ALLSPHINXOPTS) "$(SOURCEDIR)" $(BUILDDIR)/html
 
+gettext:
+		$(SPHINXBUILD) -b gettext $(I18NSPHINXOPTS) $(BUILDDIR)/locale
+		@echo
+		@echo "Build finished. The message catalogs are in $(BUILDDIR)/locale."
 

@@ -31,6 +31,7 @@ Contents:
    50_input
    60_exec
    70_ground_state_calc
+   75_3g_dft
    80_analysis
    90_appendix
 
@@ -40,7 +41,7 @@ Contents:
    customization
 
 .. only:: html
-   
+
    Indices and tables
    ==================
 
