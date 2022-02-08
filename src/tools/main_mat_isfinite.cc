@@ -114,6 +114,10 @@ int main(int argc, char* argv[]) {
                 std::cout << std::endl;
                 break;
             }
+
+            default:
+                std::cout << "sorry, not supported matrix." << std::endl;
+                break;
         }
 
         if (isFound) {

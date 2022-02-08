@@ -24,7 +24,7 @@ TlDenseSymmetricMatrixObject::~TlDenseSymmetricMatrixObject() {
 void TlDenseSymmetricMatrixObject::vtr2mat(const std::vector<double>& vtr) {
     const TlMatrixObject::index_type dim = this->getNumOfRows();
     assert(dim == this->getNumOfCols());
-    assert(vtr.size() == dim * (dim + 1) / 2);
+    assert(static_cast<TlMatrixObject::index_type>(vtr.size()) == dim * (dim + 1) / 2);
 
     std::size_t i = 0;
     // column-major

@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
     const TlDenseGeneralMatrix_arrays_mmap_RowOriented inMat(inputPath);
     const TlMatrixObject::index_type numOfRows = inMat.getNumOfRows();
     const TlMatrixObject::index_type numOfCols = inMat.getNumOfCols();
-    const int sizeOfChunk = inMat.getSizeOfChunk();
+    // const int sizeOfChunk = inMat.getSizeOfChunk();
     const int numOfSubunits = inMat.getNumOfSubunits();
     const int subunitId = inMat.getSubunitID();
 

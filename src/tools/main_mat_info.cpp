@@ -28,7 +28,7 @@
 void showHelp(const std::string& progname) {
     std::cout << TlUtils::format("%s [options] MATRIX_FILE", progname.c_str()) << std::endl;
     std::cout << " OPTIONS:" << std::endl;
-    std::cout << "  -d:      debug mode" << std::endl;
+    // std::cout << "  -d:      debug mode" << std::endl;
     std::cout << "  -h:      show help" << std::endl;
 }
 
@@ -43,11 +43,11 @@ int main(int argc, char* argv[]) {
     TlLogging& log = TlLogging::getInstance();
     log.setFilePath("pdf-mat-info.log");
 
-    bool debugMode = false;
-    if (opt["d"] == "defined") {
-        debugMode = true;
-        log.setLevel(TlLogging::TL_DEBUG);
-    }
+    // bool debugMode = false;
+    // if (opt["d"] == "defined") {
+    //     debugMode = true;
+    //     log.setLevel(TlLogging::TL_DEBUG);
+    // }
 
     std::string path = opt[1];
 

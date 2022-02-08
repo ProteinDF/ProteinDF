@@ -6,6 +6,7 @@
 #endif  // HAVE_CONFIG_H
 
 #include <string>
+
 #include "gtest/gtest.h"
 #include "matrix_common.h"
 
@@ -14,7 +15,7 @@ static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 template <typename T>
 class DenseSymmetricMatrixTest : public ::testing::Test {};
 
-TYPED_TEST_CASE_P(DenseSymmetricMatrixTest);
+TYPED_TEST_SUITE_P(DenseSymmetricMatrixTest);
 
 TYPED_TEST_P(DenseSymmetricMatrixTest, doesConstructor) {
     TypeParam a(3);
@@ -277,10 +278,10 @@ TYPED_TEST_P(DenseSymmetricMatrixTest, doesSum) {
 //   EXPECT_DOUBLE_EQ(A(3, 3), LL(3, 3));
 // }
 
-REGISTER_TYPED_TEST_CASE_P(DenseSymmetricMatrixTest, doesConstructor,
-                           doesCopyConstructor, doesOperatorEq, doesOperatorAdd,
-                           doesOperatorIAdd, doesSaveAndLoad,
-                           doesSaveAndLoadToHdf5, doesInverse, doesDotInPlace,
-                           doesSum);
+REGISTER_TYPED_TEST_SUITE_P(DenseSymmetricMatrixTest, doesConstructor,
+                            doesCopyConstructor, doesOperatorEq, doesOperatorAdd,
+                            doesOperatorIAdd, doesSaveAndLoad,
+                            doesSaveAndLoadToHdf5, doesInverse, doesDotInPlace,
+                            doesSum);
 
 #endif  // DENSE_SYMMETRIC_MATRIX_TEST_TEMPLATE_H

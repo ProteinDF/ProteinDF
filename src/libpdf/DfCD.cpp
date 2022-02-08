@@ -1643,7 +1643,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, cons
         //   diagonals:
         {
             std::valarray<double> L_pm_x(0.0, numOfCDVcts + 1);
-            const std::size_t copyCount_m = pL->getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
+            const index_type copyCount_m = pL->getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
             assert(copyCount_m == numOfCDVcts + 1);
 
             std::valarray<double> out_L_rows(0.0, numOfPQtilde);
@@ -1655,7 +1655,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, cons
                 for (index_type i = 0; i < numOf_G_cols; ++i) {
                     const index_type pivot_i = pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
 
-                    const std::size_t copyCount_i = pL->getRowVector(pivot_i, &(L_pi_x[0]), numOfCDVcts + 1);
+                    const index_type copyCount_i = pL->getRowVector(pivot_i, &(L_pi_x[0]), numOfCDVcts + 1);
                     assert(copyCount_i == numOfCDVcts + 1);
 
                     const double sum_ll = (L_pm_x * L_pi_x).sum();
@@ -1769,7 +1769,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, cons
         //   diagonals:
         {
             std::valarray<double> L_pm_x(0.0, numOfCDVcts + 1);
-            const std::size_t copyCount_m = pL->getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
+            const index_type copyCount_m = pL->getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
             assert(copyCount_m == numOfCDVcts + 1);
 
             std::valarray<double> out_L_rows(0.0, numOfPQtilde);
@@ -1781,7 +1781,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, cons
                 for (index_type i = 0; i < numOf_G_cols; ++i) {
                     const index_type pivot_i = pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
 
-                    const std::size_t copyCount_i = pL->getRowVector(pivot_i, &(L_pi_x[0]), numOfCDVcts + 1);
+                    const index_type copyCount_i = pL->getRowVector(pivot_i, &(L_pi_x[0]), numOfCDVcts + 1);
                     assert(copyCount_i == numOfCDVcts + 1);
 
                     const double sum_ll = (L_pm_x * L_pi_x).sum();
@@ -2019,7 +2019,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p, co
         //   diagonals:
         {
             std::valarray<double> L_pm_x(0.0, numOfCDVcts + 1);
-            const std::size_t copyCount_m = pL->getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
+            const index_type copyCount_m = pL->getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
             assert(copyCount_m == numOfCDVcts + 1);
 
             std::valarray<double> out_L_rows(0.0, numOfPQtilde);
@@ -2031,7 +2031,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p, co
                 for (index_type i = 0; i < numOf_G_cols; ++i) {
                     const index_type pivot_i = pivot[numOfCDVcts + 1 + i];  // from (m+1) to N
 
-                    const std::size_t copyCount_i = pL->getRowVector(pivot_i, &(L_pi_x[0]), numOfCDVcts + 1);
+                    const index_type copyCount_i = pL->getRowVector(pivot_i, &(L_pi_x[0]), numOfCDVcts + 1);
                     assert(copyCount_i == numOfCDVcts + 1);
 
                     const double sum_ll = (L_pm_x * L_pi_x).sum();
@@ -2147,7 +2147,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p, co
         //   diagonals:
         {
             std::valarray<double> L_pm_x(0.0, numOfCDVcts + 1);
-            const std::size_t copyCount_m = pL->getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
+            const index_type copyCount_m = pL->getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
             assert(copyCount_m == numOfCDVcts + 1);
 
             std::valarray<double> out_L_rows(0.0, numOfPQtilde);
@@ -2159,7 +2159,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p, co
                 for (index_type i = 0; i < numOf_G_cols; ++i) {
                     const index_type pivot_i = pivot[numOfCDVcts + 1 + i];  // from (m+1) to N
 
-                    const std::size_t copyCount_i = pL->getRowVector(pivot_i, &(L_pi_x[0]), numOfCDVcts + 1);
+                    const index_type copyCount_i = pL->getRowVector(pivot_i, &(L_pi_x[0]), numOfCDVcts + 1);
                     assert(copyCount_i == numOfCDVcts + 1);
 
                     const double sum_ll = (L_pm_x * L_pi_x).sum();
