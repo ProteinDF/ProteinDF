@@ -200,7 +200,7 @@ void TlDenseGeneralMatrix_arrays_mmap_RowOriented::set2csfd(TlDenseGeneralMatrix
     }
 
     TlDenseGeneralMatrix_mmap inMat(this->tempCsfdMatPath_);
-    const TlMatrixObject::index_type numOfLocalRows = inMat.getNumOfRows();
+    // const TlMatrixObject::index_type numOfLocalRows = inMat.getNumOfRows();
 
     const int numOfLocalChunks =
         TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(numOfRows, numOfSubunits, sizeOfChunk);
@@ -300,7 +300,7 @@ bool convert2csfd(const std::string& rvmBasePath, const int unit, const std::str
     int numOfSubunits = 0;
     int sizeOfChunk = 0;
     {
-        int subunitID = 0;
+        // int subunitID = 0;
         const std::string inputPath0 = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, unit);
 
         TlMatrixObject::HeaderInfo headerInfo;
@@ -371,7 +371,7 @@ void copy2csfd(const TlMatrixObject::index_type numOfRows, const TlMatrixObject:
                const int numOfSubunits, const int sizeOfChunk, const std::string& inMatPath, const int unit,
                TlDenseGeneralMatrix_mmap* pOutMat, const bool verbose) {
     TlDenseGeneralMatrix_mmap inMat(inMatPath);
-    const TlMatrixObject::index_type numOfLocalRows = inMat.getNumOfRows();
+    // const TlMatrixObject::index_type numOfLocalRows = inMat.getNumOfRows();
 
     const int numOfLocalChunks =
         TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(numOfRows, numOfSubunits, sizeOfChunk);

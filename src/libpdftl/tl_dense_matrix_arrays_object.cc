@@ -167,7 +167,7 @@ void TlDenseMatrix_arrays_Object::reserveVectorSize(std::size_t newReservedVecto
                 // copy old data to new
                 const int sizeOfChunk = this->sizeOfChunk_;
                 for (int v = 0; v < sizeOfChunk; ++v) {
-                    for (int u = 0; u < prevReservedVectorSize; ++u) {
+                    for (std::size_t u = 0; u < prevReservedVectorSize; ++u) {
                         const std::size_t prevIndex = v * prevReservedVectorSize + u;
                         const std::size_t newIndex = v * newReservedVectorSize + u;
                         assert(newIndex < sizeOfChunkVectors);
