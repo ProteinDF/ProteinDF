@@ -17,17 +17,17 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfForce.h"
+
 #include "DfCalcGridX.h"
 #include "DfEriX.h"
+#include "DfFunctional_B3LYP.h"
+#include "DfFunctional_B88LYP.h"
+#include "DfFunctional_SVWN.h"
 #include "DfGridFreeXC.h"
 #include "DfHpqX.h"
 #include "DfOverlapX.h"
 #include "DfXCFunctional.h"
 #include "Fl_Geometry.h"
-
-#include "DfFunctional_B3LYP.h"
-#include "DfFunctional_B88LYP.h"
-#include "DfFunctional_SVWN.h"
 #include "TlMsgPack.h"
 #include "TlTime.h"
 
@@ -166,7 +166,9 @@ void DfForce::output() {
     }
 }
 
-void DfForce::saveForce() { this->force_.save("force.mtx"); }
+void DfForce::saveForce() {
+    this->force_.save("force.mtx");
+}
 
 void DfForce::outputStartTitle(const std::string& stepName,
                                const char lineChar) {
@@ -280,7 +282,7 @@ void DfForce::calcForceFromWS(RUN_TYPE runType) {
 TlDenseGeneralMatrix_Lapack DfForce::getEnergyWeightedDensityMatrix(
     RUN_TYPE runType) {
     const int iteration = this->m_nIteration;
-    const int numOfAOs = this->m_nNumOfAOs;
+    // const int numOfAOs = this->m_nNumOfAOs;
 
     const TlDenseSymmetricMatrix_Lapack P =
         DfObject::getSpinDensityMatrix<TlDenseSymmetricMatrix_Lapack>(

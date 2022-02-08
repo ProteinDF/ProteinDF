@@ -364,7 +364,7 @@ double DfLocalize::localize_core(TlDenseGeneralMatrix_Lapack* pC, const index_ty
 
 void DfLocalize::makeGroup() {
     const index_type numOfAOs = this->m_nNumOfAOs;
-    const index_type numOfAtoms = this->m_nNumOfAtoms;
+    // const index_type numOfAtoms = this->m_nNumOfAtoms;
 
     std::vector<int>::const_iterator itMax = std::max_element(this->atomGroupList_.begin(), this->atomGroupList_.end());
     const int numOfGroups = *itMax + 1;
@@ -544,7 +544,7 @@ std::vector<DfLocalize::TaskItem> DfLocalize::getTaskList(const index_type start
     const index_type pairs = dim * (dim - 1) / 2;
     std::vector<TaskItem> taskList(pairs);
 
-    std::size_t taskIndex = 0;
+    index_type taskIndex = 0;
     TaskItem item;
     for (int index1 = 1; index1 < dim; ++index1) {
         // Starting from 1 instead of 0 means that the diagonal elements are not computed.
@@ -572,7 +572,7 @@ std::vector<DfLocalize::TaskItem> DfLocalize::getTaskList(const index_type start
     const index_type pairs = (endMO1 - startMO1 + 1) * (endMO2 - startMO2 + 1);
     std::vector<TaskItem> taskList(pairs);
 
-    std::size_t taskIndex = 0;
+    index_type taskIndex = 0;
     for (index_type mo1 = startMO1; mo1 <= endMO1; ++mo1) {
         for (index_type mo2 = startMO2; mo2 <= endMO2; ++mo2) {
             taskList[taskIndex] = std::make_pair(mo1, mo2);
@@ -732,7 +732,7 @@ std::vector<DfLocalize::TaskItem> DfLocalize::getTaskList_byPop() {
     const index_type pairs = dim * (dim - 1) / 2;
     std::vector<TaskItem> taskList(pairs);
 
-    std::size_t taskIndex = 0;
+    index_type taskIndex = 0;
     TaskItem item;
 
     switch (this->pairingOrder_) {

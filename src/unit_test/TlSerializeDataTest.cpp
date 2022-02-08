@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+
 #include "TlSerializeData.h"
 #include "gtest/gtest.h"
 
@@ -41,15 +42,15 @@ TEST(TlSerializeData, mapAccess) {
 }
 
 TEST(TlSerializeData, converVectorInt) {
-    const int size = 10;
+    const std::size_t size = 10;
     std::vector<int> v(size);
-    for (int i = 0; i < size; ++i) {
+    for (std::size_t i = 0; i < size; ++i) {
         v[i] = i;
     }
 
     TlSerializeData root = v;
     EXPECT_EQ(size, root.getSize());
-    for (int i = 0; i < size; ++i) {
-        EXPECT_EQ(i, root.getAt(i).getInt());
+    for (std::size_t i = 0; i < size; ++i) {
+        EXPECT_EQ(static_cast<int>(i), root.getAt(i).getInt());
     }
 }

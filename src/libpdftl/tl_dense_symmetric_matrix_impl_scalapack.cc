@@ -139,13 +139,13 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(std::ifstream& ifs) {
 
     // read header
     bool answer = true;
-    TlMatrixObject::MatrixType matType;
+    // TlMatrixObject::MatrixType matType = TlMatrixObject::UNDEFINED;
     TlMatrixObject::index_type dim;
     TlMatrixObject::HeaderInfo headerInfo;
     if (rComm.isMaster() == true) {
         const bool isLoadable = TlMatrixUtils::getHeaderInfo(ifs, &headerInfo);
         assert(headerInfo.matrixType == TlMatrixObject::RLHD);
-        matType = headerInfo.matrixType;
+        // matType = headerInfo.matrixType;
         dim = headerInfo.numOfRows;
     }
     // rComm.broadcast(matType);

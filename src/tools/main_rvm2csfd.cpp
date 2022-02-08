@@ -31,7 +31,7 @@ bool checkMatrixInfo(const std::string& rvmBasePath, TlMatrixObject::index_type*
     // TlMatrixObject::index_type& sizeOfVector = numOfCols;
     // TlMatrixObject::index_type& numOfVectors = numOfRows;
 
-    int subunitID = 0;
+    // int subunitID = 0;
 
     TlMatrixObject::HeaderInfo headerInfo;
     bool isLoadable = false;

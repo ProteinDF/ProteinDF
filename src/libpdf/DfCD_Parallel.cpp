@@ -76,10 +76,7 @@ void DfCD_Parallel::calcCholeskyVectorsForJK() {
                 std::string L_mat_path;
                 TlDenseGeneralMatrix_mmap* pL = NULL;
                 if (rComm.isMaster()) {
-                    L_mat_path = DfObject::getLjkMatrixPath();
-                    if (!this->localTempPath_.empty()) {
-                        L_mat_path = TlUtils::format("%s/Ljk.mat", this->localTempPath_.c_str());
-                    }
+                    L_mat_path = DfObject::getLjkMatrixPath(this->localTempPath_);
 
                     this->log_.info(TlUtils::format("L saved as %s", L_mat_path.c_str()));
                     if (TlFile::isExistFile(L_mat_path)) {
@@ -126,10 +123,7 @@ void DfCD_Parallel::calcCholeskyVectorsForJK() {
 
                 // prepare L
                 TlDenseGeneralMatrix_arrays_mmap_RowOriented* pL = NULL;
-                std::string L_mat_path = DfObject::getLjkMatrixPath();
-                if (!this->localTempPath_.empty()) {
-                    L_mat_path = TlUtils::format("%s/Ljk.mat", this->localTempPath_.c_str());
-                }
+                const std::string L_mat_path = DfObject::getLjkMatrixPath(this->localTempPath_);
 
                 this->log_.info(TlUtils::format("L saved as %s", L_mat_path.c_str()));
                 if (TlFile::isExistFile(L_mat_path)) {

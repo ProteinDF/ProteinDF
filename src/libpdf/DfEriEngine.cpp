@@ -3837,8 +3837,9 @@ void DfEriEngine::ERI_EQ44(const ERI_State eriState, EriDataType* pERI) {
                                            amv_p.debugOut().c_str(), a_prime,
                                            b_prime, p_prime, batch, value2)
                                     << std::endl;
-#endif  // DEBUG_EQ44 \
-        // answer -= this->AB_[i] * value2;
+#endif  // DEBUG_EQ44
+
+                                // answer -= this->AB_[i] * value2;
                                 answer -= AB_i * value2;
                             }
 
@@ -4147,8 +4148,9 @@ void DfEriEngine::ERI_EQ45(const ERI_State eriState, EriDataType* pERI) {
                                                  a_prime, b_prime + 1,
                                                  p_prime + 1, batch, value3)
                                           << std::endl;
-#endif  // DEBUG_EQ45 \
-        // answer += this->AB_[i] * value3;
+#endif  // DEBUG_EQ45
+
+                                // answer += this->AB_[i] * value3;
                                 answer += AB_i * value3;
                             }
 
