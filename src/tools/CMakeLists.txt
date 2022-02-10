@@ -66,12 +66,12 @@ add_executable(pdf-lo ${PDF_LO_SOURCES})
 target_link_libraries(pdf-lo libpdf libpdftl)
 install(TARGETS pdf-lo RUNTIME DESTINATION bin)
 
-install(
-  CODE "execute_process( \
-    COMMAND ${CMAKE_COMMAND} -E create_symlink \
-    ${CMAKE_INSTALL_PREFIX}/bin/pdf-lo.smp.1 \
-    ${CMAKE_INSTALL_PREFIX}/bin/pdf-lo \
-    )")
+# install(
+#   CODE "execute_process( \
+#     COMMAND ${CMAKE_COMMAND} -E create_symlink \
+#     ${CMAKE_INSTALL_PREFIX}/bin/pdf-lo.smp.1 \
+#     ${CMAKE_INSTALL_PREFIX}/bin/pdf-lo \
+#     )")
 
 set(PDF_MAT_ADD_SOURCES main_mat_add.cpp)
 add_executable(pdf-mat-add ${PDF_MAT_ADD_SOURCES})
@@ -316,12 +316,12 @@ if(MPI_FOUND)
   target_link_libraries(pdf-lo.mpi.1 libppdf libppdftl libpdf libpdftl)
   install(TARGETS pdf-lo.mpi.1 RUNTIME DESTINATION bin)
 
-  install(
-    CODE "execute_process( \
-      COMMAND ${CMAKE_COMMAND} -E create_symlink \
-      ${CMAKE_INSTALL_PREFIX}/bin/pdf-lo.mpi.1 \
-      ${CMAKE_INSTALL_PREFIX}/bin/pdf-lo.mpi \
-      )")
+  # install(
+  #   CODE "execute_process( \
+  #     COMMAND ${CMAKE_COMMAND} -E create_symlink \
+  #     ${CMAKE_INSTALL_PREFIX}/bin/pdf-lo.mpi.1 \
+  #     ${CMAKE_INSTALL_PREFIX}/bin/pdf-lo.mpi \
+  #     )")
 
   set(PDF_LO_MPI_SOURCES main_lo_mpi.cpp DfLocalize.h DfLocalize.cpp
                          DfLocalize_Parallel.h DfLocalize_Parallel.cpp)
