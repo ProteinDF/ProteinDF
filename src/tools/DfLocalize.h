@@ -103,6 +103,7 @@ protected:
     void rotateVectors(TlDenseVector_Lapack* pCpi, TlDenseVector_Lapack* pCpj, const TlDenseGeneralMatrix_Lapack& rot);
 
 protected:
+    double calcQA_ii_0(const TlDenseGeneralMatrix_Lapack& C, const index_type orb_i);
     double calcQA_ii(const TlDenseGeneralMatrix_Lapack& C, const index_type orb_i);
     void calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_Lapack& Cpj, double* pA_ij, double* pB_ij);
 

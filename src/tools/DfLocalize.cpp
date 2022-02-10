@@ -410,6 +410,7 @@ double DfLocalize::calcG_sort(const TlDenseGeneralMatrix_Lapack& C, const index_
     // clang-format on
     for (index_type i = 0; i < size; ++i) {
         const index_type mo = startMO + i;
+        // const double QAii2 = this->calcQA_ii_0(C, mo);
         const double QAii2 = this->calcQA_ii(C, mo);
         G += QAii2;
 
@@ -518,6 +519,25 @@ void DfLocalize::calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_
 
     *pA_ij += sumAij;
     *pB_ij += sumBij;
+}
+
+double DfLocalize::calcQA_ii_0(const TlDenseGeneralMatrix_Lapack& C, const index_type orb_i) {
+    // const index_type numOfAOs = this->m_nNumOfAOs;
+    const index_type numOfGrps = this->group_.size();
+    double sumQAii2 = 0.0;
+
+    const TlDenseVector_Lapack Cpi = C.getColVector(orb_i);
+    const TlDenseVector_Lapack SCpi = this->S_ * Cpi;
+
+    for (index_type grp = 0; grp < numOfGrps; ++grp) {
+        TlDenseVector_Lapack tCqi = Cpi;
+        tCqi.dotInPlace(this->group_[grp]);
+
+        const double QAii = tCqi * SCpi;
+        sumQAii2 += QAii;
+    }
+
+    return sumQAii2;
 }
 
 double DfLocalize::calcQA_ii(const TlDenseGeneralMatrix_Lapack& C, const index_type orb_i) {
