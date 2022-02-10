@@ -57,14 +57,14 @@ target_link_libraries(pdf-kwd libpdf libpdftl)
 install(TARGETS pdf-kwd RUNTIME DESTINATION bin)
 
 set(PDF_LO_V1_SOURCES main_lo_v1.cc DfLocalize_v1.h DfLocalize_v1.cc)
-add_executable(pdf-lo.smp.1 ${PDF_LO_V1_SOURCES})
-target_link_libraries(pdf-lo.smp.1 libpdf libpdftl)
-install(TARGETS pdf-lo.smp.1 RUNTIME DESTINATION bin)
+add_executable(pdf-lo.1 ${PDF_LO_V1_SOURCES})
+target_link_libraries(pdf-lo.1 libpdf libpdftl)
+install(TARGETS pdf-lo.1 RUNTIME DESTINATION bin)
 
-set(PDF_LO_V2_SOURCES main_lo.cpp DfLocalize.h DfLocalize.cpp)
-add_executable(pdf-lo.smp.2 ${PDF_LO_V2_SOURCES})
-target_link_libraries(pdf-lo.smp.2 libpdf libpdftl)
-install(TARGETS pdf-lo.smp.2 RUNTIME DESTINATION bin)
+set(PDF_LO_SOURCES main_lo.cpp DfLocalize.h DfLocalize.cpp)
+add_executable(pdf-lo ${PDF_LO_SOURCES})
+target_link_libraries(pdf-lo libpdf libpdftl)
+install(TARGETS pdf-lo RUNTIME DESTINATION bin)
 
 install(
   CODE "execute_process( \
