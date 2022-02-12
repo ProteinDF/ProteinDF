@@ -200,6 +200,21 @@ std::vector<std::string> TlUtils::split(const std::string& str,
     return aList;
 }
 
+std::string TlUtils::join(const std::vector<std::string>& strings, const std::string& delimiter) {
+    std::string answer = "";
+    std::vector<std::string>::const_iterator itEnd = strings.end();
+    for (std::vector<std::string>::const_iterator it = strings.begin(); it != itEnd; ++it) {
+        answer += *it + delimiter;
+    }
+
+    std::size_t length = answer.length();
+    if (length > 0) {
+        answer = answer.substr(0, length - delimiter.length());
+    }
+
+    return answer;
+}
+
 std::string& TlUtils::replace(std::string& str, const std::string& sFrom,
                               const std::string& sTo) {
     std::string::size_type n = 0;
