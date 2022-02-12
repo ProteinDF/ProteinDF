@@ -499,7 +499,8 @@ void TlDenseMatrix_arrays_mmap_Object::createNewFile(const std::string& filePath
 
     // ofs.seekp(0);
     const std::size_t headerSize = this->writeMatrixHeader(&ofs);
-    // const std::size_t headerPos = ofs.tellp();
+    const std::size_t headerPos = ofs.tellp();
+    assert(headerSize == headerPos);
     // std::cerr << TlUtils::format("header size: %ld/%ld", headerSize, headerPos) << std::endl;
 
     // size分ファイルにzeroを埋める
