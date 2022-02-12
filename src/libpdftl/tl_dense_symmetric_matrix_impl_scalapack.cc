@@ -143,7 +143,7 @@ bool TlDenseSymmetricMatrix_ImplScalapack::load(std::ifstream& ifs) {
     TlMatrixObject::index_type dim;
     TlMatrixObject::HeaderInfo headerInfo;
     if (rComm.isMaster() == true) {
-        const bool isLoadable = TlMatrixUtils::getHeaderInfo(ifs, &headerInfo);
+        (void)TlMatrixUtils::getHeaderInfo(ifs, &headerInfo);
         assert(headerInfo.matrixType == TlMatrixObject::RLHD);
         // matType = headerInfo.matrixType;
         dim = headerInfo.numOfRows;
