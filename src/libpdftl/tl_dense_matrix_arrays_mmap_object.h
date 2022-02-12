@@ -83,6 +83,11 @@ public:
     std::size_t getChunk(const index_type vectorIndex, double* pBuf, const std::size_t length) const;
 
 public:
+    std::string getFilePath() const {
+        return this->filePath_;
+    };
+
+public:
     static std::string getFileName(const std::string& basename, const int subunitID);
 
     /// 指定したファイルがこのクラスで読み込めるかどうかをチェックする。
