@@ -20,7 +20,7 @@
 #include <iostream>
 #include <string>
 
-#include "DfLocalize_Parallel_v1.h"
+#include "DfLocalize_Parallel.1.h"
 #include "TlCommunicate.h"
 #include "TlGetopt.h"
 #include "TlMsgPack.h"

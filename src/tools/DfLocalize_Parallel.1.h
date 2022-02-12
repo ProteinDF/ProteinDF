@@ -21,7 +21,7 @@
 
 #include <vector>
 
-#include "DfLocalize_v1.h"
+#include "DfLocalize.1.h"
 
 class DfLocalize_Parallel : public DfLocalize {
 public:
