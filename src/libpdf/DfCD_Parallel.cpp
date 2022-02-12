@@ -73,10 +73,11 @@ void DfCD_Parallel::calcCholeskyVectorsForJK() {
                 this->log_.info("L_jk build on mmap");
 
                 // prepare L
+                const bool isTmp = (this->localTempPath_.empty() != true);
                 std::string L_mat_path;
                 TlDenseGeneralMatrix_mmap* pL = NULL;
                 if (rComm.isMaster()) {
-                    L_mat_path = DfObject::getLjkMatrixPath(this->localTempPath_);
+                    L_mat_path = DfObject::getLjkMatrixPath(this->localTempPath_, isTmp);
 
                     this->log_.info(TlUtils::format("L saved as %s", L_mat_path.c_str()));
                     if (TlFile::isExistFile(L_mat_path)) {
@@ -94,7 +95,7 @@ void DfCD_Parallel::calcCholeskyVectorsForJK() {
                     delete pL;
                     pL = NULL;
 
-                    if (!this->localTempPath_.empty()) {
+                    if (isTmp) {
                         this->log_.info(TlUtils::format("L move to %s", DfObject::getLjkMatrixPath().c_str()));
                         TlFile::move(L_mat_path, DfObject::getLjkMatrixPath());
                     }
@@ -121,29 +122,36 @@ void DfCD_Parallel::calcCholeskyVectorsForJK() {
             case CD_INTERMEDIATE_FILE_FORMAT_ARRAY_MMAP: {
                 this->log_.info("L_jk build on arrays with mmap");
 
+                const std::string L_basePath = DfObject::getLjkMatrixPath();
+
                 // prepare L
-                TlDenseGeneralMatrix_arrays_mmap_RowOriented* pL = NULL;
-                const std::string L_mat_path = DfObject::getLjkMatrixPath(this->localTempPath_);
+                const bool isTmp = (this->localTempPath_.empty() != true);
+                const std::string L_basePath_tmp = DfObject::getLjkMatrixPath(this->localTempPath_, isTmp);
+                this->log_.info(TlUtils::format("L base name: %s", L_basePath_tmp.c_str()));
 
-                this->log_.info(TlUtils::format("L saved as %s", L_mat_path.c_str()));
-                if (TlFile::isExistFile(L_mat_path)) {
-                    TlFile::remove(L_mat_path);
+                std::string L_savedPath = "";
+                {
+                    TlDenseGeneralMatrix_arrays_mmap_RowOriented L(L_basePath_tmp, 1, 1,
+                                                                   rComm.getNumOfProcs(), rComm.getRank());
+                    // calc CD
+                    this->calcCholeskyVectorsOnTheFlyS(orbInfo, this->getI2pqVtrPath(), this->epsilon_,
+                                                       &DfCD::calcDiagonals, &DfCD_Parallel::getSuperMatrixElements, &L);
+                    L_savedPath = L.getFilePath();
                 }
-                pL = new TlDenseGeneralMatrix_arrays_mmap_RowOriented(L_mat_path, 1, 1, rComm.getNumOfProcs(),
-                                                                      rComm.getRank());
 
-                // calc CD
-                this->calcCholeskyVectorsOnTheFlyS(orbInfo, this->getI2pqVtrPath(), this->epsilon_,
-                                                   &DfCD::calcDiagonals, &DfCD_Parallel::getSuperMatrixElements, pL);
+                if (isTmp) {
+                    const int subunitId = rComm.getRank();
+                    const std::string new_L_savedPath = TlDenseGeneralMatrix_arrays_mmap_RowOriented::getFileName(L_basePath, subunitId);
+                    this->log_.info(TlUtils::format("L move to %s", new_L_savedPath.c_str()));
+                    TlFile::move(L_savedPath, new_L_savedPath);
+                }
 
                 // finalize
-                delete pL;
-                pL = NULL;
+                rComm.barrier();
                 this->log_.info("L_jk saved.");
 
-                // optimize L
                 this->log_.info("optimize L matrix.");
-                this->transpose2CSFD_mpi(L_mat_path, DfObject::getLjkMatrixPath());
+                this->transpose2CSFD_mpi(L_basePath, DfObject::getLjkMatrixPath());
             } break;
 
             default: {
