@@ -1,0 +1,444 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="ja" > <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" lang="ja">
+<!--<![endif]-->
+
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>5. 入力ファイル &mdash; ProteinDF User&#39;s Manual 2022.2.1 ドキュメント</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+  
+  <script type="text/javascript" id="documentation_options" data-url_root="./"
+    src="_static/documentation_options.js"></script>
+  <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+  <script src="_static/jquery.js"></script>
+  <script src="_static/underscore.js"></script>
+  <script src="_static/doctools.js"></script>
+  <script src="_static/translations.js"></script>
+  
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="index" title="索引" href="genindex.html" />
+  <link rel="search" title="検索" href="search.html" />
+  <link rel="next" title="6. 実行方法" href="60_exec.html" />
+  <link rel="prev" title="4. クイックスタートガイド" href="40_quick_start_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ProteinDF User's Manual
+              
+
+              
+            </a>
+
+            
+            
+            
+            <div class="version">
+              2022.2
+            </div>
+            
+            
+
+            
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            <div>
+              <select name="lang" onchange="location.href=value;">
+                <option value="../en/50_input.html">English</option>
+                <option value="../ja/50_input.html" selected>日本語</option>
+              </select>
+            </div>
+
+            
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+          
+          
+          
+          
+          
+          <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="10_preface.html">1. はじめに</a></li>
+<li class="toctree-l1"><a class="reference internal" href="20_introduction.html">2. 概要</a></li>
+<li class="toctree-l1"><a class="reference internal" href="30_installation.html">3. インストール</a></li>
+<li class="toctree-l1"><a class="reference internal" href="40_quick_start_guide.html">4. クイックスタートガイド</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">5. 入力ファイル</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#syntax">5.1. 構文</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#main-section">5.2. MAINセクション</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#step-control">5.2.1. step_control</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#values">5.2.1.1. とりうる値</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example">5.2.1.2. 例</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#scf-start-guess">5.2.2. scf_start_guess</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1">5.2.2.1. とりうる値</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#molecule-section">5.3. MOLECULEセクション</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#geometry-cartesian-unit">5.3.1. geometry/cartesian/unit</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#value">5.3.1.1. とりうる値</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#exaple">5.3.1.2. 例</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#geometry-cartesian-input">5.3.2. geometry/cartesian/input</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id2">5.3.2.1. 例</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#basis-set-orbital">5.3.3. basis-set/orbital</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id3">5.3.3.1. 例</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#basis-set-density-auxiliary">5.3.4. basis-set/density-auxiliary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#basis-set-exchange-auxiliary">5.3.5. basis-set/exchange-auxiliary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#basis-set-gridfree">5.3.6. basis-set/gridfree</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="60_exec.html">6. 実行方法</a></li>
+<li class="toctree-l1"><a class="reference internal" href="60_exec.html#run-type">7. 動作形式</a></li>
+<li class="toctree-l1"><a class="reference internal" href="70_ground_state_calc.html">8. 基底状態計算</a></li>
+<li class="toctree-l1"><a class="reference internal" href="75_3g_dft.html">9. 第3世代密度汎関数計算法</a></li>
+<li class="toctree-l1"><a class="reference internal" href="80_analysis.html">10. ProteinDF計算結果の解析</a></li>
+<li class="toctree-l1"><a class="reference internal" href="90_appendix.html">11. 付録</a></li>
+</ul>
+
+          
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">ProteinDF User's Manual</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+          <div class="rst-content">
+            
+            <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><span class="section-number">5. </span>入力ファイル</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/50_input.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+            <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+              <div itemprop="articleBody">
+                
+  <section id="input-files">
+<h1><span class="section-number">5. </span>入力ファイル<a class="headerlink" href="#input-files" title="このヘッドラインへのパーマリンク"></a></h1>
+<p>ProteinDFプログラムは、 計算に必要なパラメータを、ASCIIテキスト形式の入力ファイルから読み込みます。 テキストファイルですので、 お気に入りのテキストエディタで作成・編集することができます。</p>
+<p id="index-0">デフォルトの入力ファイル名は <code class="docutils literal notranslate"><span class="pre">fl_Userinput</span></code> です。 カレントディレクトリに <code class="docutils literal notranslate"><span class="pre">fl_Userinput</span></code> ファイルが存在する場合は、 これを入力ファイルとして読み込みます。</p>
+<p>ProteinDF入力ファイルは、以下のセクションから構成されます。</p>
+<ul class="simple">
+<li><p>MAIN</p></li>
+<li><p>MOLECULE</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>これまでのProteinDFではキーワードをグループで分類していましたが、 現在は分類する必要はありません。 キーワードはどこに記述してもかまいません。</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>入力ファイルはデフォルトのロケール(LANG=C)のみを受け付けます。 日本語の漢字コード(UTF-8, EUC, Shift-JIS)などを使用すると、 正しい結果が得られない場合があります。 特に空白(スペース)に注意してください。</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>入力ファイルで使用する改行コードは、実行するシステムの改行コードに従ってください。 正しい改行コードを使用しないと、正しい結果が得られない場合があります。 多くのUNIX系のシステムでは、LF(0x0A)を使用しています。 Windowsシステム(改行コードはCR(0x0D)+LF)で作成した入力ファイルを FTP, SFTPなどでUNIX系システムに転送した場合は注意してください。</p>
+</div>
+<section id="syntax">
+<h2><span class="section-number">5.1. </span>構文<a class="headerlink" href="#syntax" title="このヘッドラインへのパーマリンク"></a></h2>
+<p>キーワードの指定は以下の形式で指定します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>keyword = value
+</pre></div>
+</div>
+<p>keywordは大文字・小文字を区別しません。</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">value</span></code> can be of the following three types:</p>
+<ul class="simple">
+<li><p>単一の値</p></li>
+</ul>
+<p>空白(スペース、タブ文字、改行など)を含まない値はそのまま記述できます。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>max-iteration = 100
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>1行の文字列</p></li>
+</ul>
+<p>改行を含まない文字列は <code class="docutils literal notranslate"><span class="pre">[</span></code> と <code class="docutils literal notranslate"><span class="pre">]</span></code> で挟んで指定できます。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>method/nsp/occlevel = [ 1 - 20 ]
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>複数行の文字列</p></li>
+</ul>
+<p>改行を含む場合は、 <code class="docutils literal notranslate"><span class="pre">{</span></code> と <code class="docutils literal notranslate"><span class="pre">}</span></code> で挟んで指定します。</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>geometry/cartesian/input = {
+             // molecule1
+             N        -1.888000        0.035000       -0.211000
+             H        -1.766000        0.945000        0.189000
+             H        -1.817000        0.099000       -1.205000
+             C        -0.758000       -0.730000        0.287000
+             H        -0.893000       -0.915000        1.372000
+             H        -0.720000       -1.725000       -0.200000
+             C         0.529000        0.065000        0.064000
+             O         0.520000        1.294000        0.114000
+             O         1.742000       -0.451000       -0.186000
+             H         1.692000       -1.400000       -0.203000
+}
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p><code class="docutils literal notranslate"><span class="pre">//</span></code> (ダブルスラッシュ)より後ろの文字列は改行までコメントとして扱われます。また、行の先頭が <code class="docutils literal notranslate"><span class="pre">#</span></code> (シャープ)の場合、改行までがコメントとして無視されます。</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>同じキーワードが出現した場合は、あとに記述したものに上書きされます。</p>
+</div>
+</section>
+<section id="main-section">
+<h2><span class="section-number">5.2. </span>MAINセクション<a class="headerlink" href="#main-section" title="このヘッドラインへのパーマリンク"></a></h2>
+<p>計算に必要なパラメータをこのセクションに記述します。 詳しくは付録のパラメータリストをご覧ください。 以下に主なパラメータを示します。</p>
+<section id="step-control">
+<span id="index-1"></span><h3><span class="section-number">5.2.1. </span>step_control<a class="headerlink" href="#step-control" title="このヘッドラインへのパーマリンク"></a></h3>
+<p>計算スキームを指定します。 ProteinDFの計算は指定されたスキームの順に実行されます。</p>
+<section id="values">
+<h4><span class="section-number">5.2.1.1. </span>とりうる値<a class="headerlink" href="#values" title="このヘッドラインへのパーマリンク"></a></h4>
+<ul class="simple">
+<li><p>create</p></li>
+</ul>
+<p>パラメータの解析をします。計算は実行しません。</p>
+<ul class="simple">
+<li><p>integral</p></li>
+</ul>
+<p>コアハミルトニアン、重なり積分、グリッド生成など、SCF繰り返し計算前の処理を行います。</p>
+<ul class="simple">
+<li><p>guess</p></li>
+</ul>
+<p>初期値を用意します。</p>
+<ul class="simple">
+<li><p>SCF</p></li>
+</ul>
+<p>SCF繰り返し計算を実行します。</p>
+<ul class="simple">
+<li><p>force</p></li>
+</ul>
+<p>エネルギーの核座標による微分を計算します。</p>
+</section>
+<section id="example">
+<h4><span class="section-number">5.2.1.2. </span>例<a class="headerlink" href="#example" title="このヘッドラインへのパーマリンク"></a></h4>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>step_control = [create integral guess scf]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="scf-start-guess">
+<span id="index-2"></span><h3><span class="section-number">5.2.2. </span>scf_start_guess<a class="headerlink" href="#scf-start-guess" title="このヘッドラインへのパーマリンク"></a></h3>
+<p>SCF計算における初期値を指定します。</p>
+<section id="id1">
+<h4><span class="section-number">5.2.2.1. </span>とりうる値<a class="headerlink" href="#id1" title="このヘッドラインへのパーマリンク"></a></h4>
+<ul>
+<li><p>huckel</p>
+<p>Hückel法により初期電子密度を求めます。</p>
+</li>
+<li><p>harris</p>
+<p>Harrisの汎関数を用いて、あらかじめ用意された原子の電子密度から初期電子密度を求めます。</p>
+</li>
+<li><p>core</p>
+<p>コアハミルトニアンを対角化した波動関数から初期電子密度を求めます。</p>
+</li>
+<li><p>rho</p>
+<p>あらかじめ用意された原子ごとの近似電子密度を合成して、モデル分子の近似電子密度を作成します。</p>
+</li>
+<li><p>file_rho</p>
+<p>ユーザーが作成した補助基底展開係数ファイル guess_rho を用いて 近似電子密度を求め、これを初期値として用います。</p>
+</li>
+<li><p>lcao</p>
+<p>ユーザーが作成したLCAO行列ファイル(<code class="docutils literal notranslate"><span class="pre">guess.lcao.rks</span></code>)、占有数ファイル(<code class="docutils literal notranslate"><span class="pre">guess.occ.rks</span></code>)から初期値を作成します。</p>
+</li>
+<li><p>density_matrix</p>
+<p>ユーザーが作成した電子密度ファイルを初期値として利用します。</p>
+</li>
+</ul>
+</section>
+</section>
+</section>
+<section id="molecule-section">
+<h2><span class="section-number">5.3. </span>MOLECULEセクション<a class="headerlink" href="#molecule-section" title="このヘッドラインへのパーマリンク"></a></h2>
+<p>以下のキーワードを指定します。</p>
+<section id="geometry-cartesian-unit">
+<span id="index-3"></span><h3><span class="section-number">5.3.1. </span>geometry/cartesian/unit<a class="headerlink" href="#geometry-cartesian-unit" title="このヘッドラインへのパーマリンク"></a></h3>
+<p>入力座標の長さの単位を指定します。</p>
+<section id="value">
+<h4><span class="section-number">5.3.1.1. </span>とりうる値<a class="headerlink" href="#value" title="このヘッドラインへのパーマリンク"></a></h4>
+<p>angstrom, au</p>
+</section>
+<section id="exaple">
+<h4><span class="section-number">5.3.1.2. </span>例<a class="headerlink" href="#exaple" title="このヘッドラインへのパーマリンク"></a></h4>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>geometry/cartesian/unit = angstrom
+</pre></div>
+</div>
+</section>
+</section>
+<section id="geometry-cartesian-input">
+<span id="index-4"></span><h3><span class="section-number">5.3.2. </span>geometry/cartesian/input<a class="headerlink" href="#geometry-cartesian-input" title="このヘッドラインへのパーマリンク"></a></h3>
+<p>計算対象の原子種やXYZ座標などを指定します。 1行に1つの原子を指定し、原子種、X座標、Y座標、Z座標の順に空白(スペース、タブ文字)で区切って指定します。 原子種は元素記号で指定します。</p>
+<section id="id2">
+<h4><span class="section-number">5.3.2.1. </span>例<a class="headerlink" href="#id2" title="このヘッドラインへのパーマリンク"></a></h4>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>geometry/cartesian/input        = {
+             N        -1.888000        0.035000       -0.211000
+             H        -1.766000        0.945000        0.189000
+             H        -1.817000        0.099000       -1.205000
+             C        -0.758000       -0.730000        0.287000
+             H        -0.893000       -0.915000        1.372000
+             H        -0.720000       -1.725000       -0.200000
+             C         0.529000        0.065000        0.064000
+             O         0.520000        1.294000        0.114000
+             O         1.742000       -0.451000       -0.186000
+             H         1.692000       -1.400000       -0.203000
+}end
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>元素記号のあとに <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> を付けてラベルを付けることができます。 異なるグループの同じ元素に違う基底関数を与えるときに便利です。</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>ダミー原子は <code class="docutils literal notranslate"><span class="pre">X</span></code> で指定できます。 このときダミー原子の電荷は第5カラムに指定します。</p>
+</div>
+</section>
+</section>
+<section id="basis-set-orbital">
+<span id="index-5"></span><h3><span class="section-number">5.3.3. </span>basis-set/orbital<a class="headerlink" href="#basis-set-orbital" title="このヘッドラインへのパーマリンク"></a></h3>
+<p>基底関数を指定します。 原子種に対して、使用する基底関数の名称を記述してください。 計算で用いるすべての原子種に対して、基底関数を指定する必要があります。 また、指定した基底関数の名前は、<code class="docutils literal notranslate"><span class="pre">basis2</span></code> ファイルに用意されている必要があります。 <code class="docutils literal notranslate"><span class="pre">basis2</span></code> ファイルについては付録を参照してください。</p>
+<section id="id3">
+<h4><span class="section-number">5.3.3.1. </span>例<a class="headerlink" href="#id3" title="このヘッドラインへのパーマリンク"></a></h4>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>basis-set/orbital       = {
+   H = &quot;O-DZVP2.H&quot;
+   O = &quot;O-DZVP2.O&quot;
+   C = &quot;O-DZVP2.C&quot;
+   N = &quot;O-DZVP2.N&quot;
+}
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">注釈</p>
+<p>原子の後に <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> を付けてラベルを記述できます。</p>
+</div>
+</section>
+</section>
+<section id="basis-set-density-auxiliary">
+<span id="index-6"></span><h3><span class="section-number">5.3.4. </span>basis-set/density-auxiliary<a class="headerlink" href="#basis-set-density-auxiliary" title="このヘッドラインへのパーマリンク"></a></h3>
+<p>クーロン項の計算で使用する補助基底関数を指定します。 クーロン項をRI_J法で求める場合に使用します。 指定方法は基底関数と同様です。</p>
+</section>
+<section id="basis-set-exchange-auxiliary">
+<span id="index-7"></span><h3><span class="section-number">5.3.5. </span>basis-set/exchange-auxiliary<a class="headerlink" href="#basis-set-exchange-auxiliary" title="このヘッドラインへのパーマリンク"></a></h3>
+<p>交換相関項の計算で使用する補助基底関数を指定します。 交換相関項をRI法で求める場合に使用します。 (交換相関汎関数の指定で、汎関数名の末尾に <code class="docutils literal notranslate"><span class="pre">~</span></code> を付けた場合です。) 指定方法は基底関数と同様です。</p>
+</section>
+<section id="basis-set-gridfree">
+<h3><span class="section-number">5.3.6. </span>basis-set/gridfree<a class="headerlink" href="#basis-set-gridfree" title="このヘッドラインへのパーマリンク"></a></h3>
+<p>グリッドフリー法による交換相関項の計算で使用する補助基底関数を指定します。 使用するためには <code class="docutils literal notranslate"><span class="pre">gridfree/dedicated_basis</span></code> を有効( <code class="docutils literal notranslate"><span class="pre">yes</span></code> )にする必要があります。</p>
+</section>
+</section>
+</section>
+
+
+              </div>
+              
+            </div>
+            <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="40_quick_start_guide.html" class="btn btn-neutral float-left" title="4. クイックスタートガイド" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="60_exec.html" class="btn btn-neutral float-right" title="6. 実行方法" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014-2022, Toshiyuki HIRANO.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+          </div>
+        </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+    jQuery(function () {
+      SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+  
+   
+
+</body>
+
+</html>

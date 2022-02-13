@@ -1,0 +1,362 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" lang="en">
+<!--<![endif]-->
+
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>3. Installation &mdash; ProteinDF User&#39;s Manual 2022.2.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+  
+  <script type="text/javascript" id="documentation_options" data-url_root="./"
+    src="_static/documentation_options.js"></script>
+  <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+  <script src="_static/jquery.js"></script>
+  <script src="_static/underscore.js"></script>
+  <script src="_static/doctools.js"></script>
+  
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="index" title="Index" href="genindex.html" />
+  <link rel="search" title="Search" href="search.html" />
+  <link rel="next" title="4. Quick Start Guide" href="40_quick_start_guide.html" />
+  <link rel="prev" title="2. Overview" href="20_introduction.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ProteinDF User's Manual
+              
+
+              
+            </a>
+
+            
+            
+            
+            <div class="version">
+              2022.2
+            </div>
+            
+            
+
+            
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            <div>
+              <select name="lang" onchange="location.href=value;">
+                <option value="../en/30_installation.html" selected>English</option>
+                <option value="../ja/30_installation.html">日本語</option>
+              </select>
+            </div>
+
+            
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+          
+          
+          
+          
+          
+          <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="10_preface.html">1. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="20_introduction.html">2. Overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">3. Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#system-requirements">3.1. System requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hardware-and-operating-system">3.1.1. Hardware and operating system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#memory-and-disk">3.1.2. Memory and disk</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#python-module">3.1.3. Python module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-and-setup">3.2. Installation and setup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#environment-variables">3.2.1. Environment variables</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pdf-home">3.2.1.1. PDF_HOME</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omp-num-threads">3.2.1.2. OMP_NUM_THREADS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omp-schedule">3.2.1.3. OMP_SCHEDULE</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#build-from-the-source">3.2.2. Build from the source</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#executing-cmake">3.2.2.1. Executing CMake</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#executing-make">3.2.2.2. Executing &quot;make&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#installing-the-program">3.2.2.3. Installing the program</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#when-trouble-occurs">3.2.2.4. When trouble occurs…</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="40_quick_start_guide.html">4. Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="50_input.html">5. Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="60_exec.html">6. Execution Procedure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="60_exec.html#run-type">7. Run Type</a></li>
+<li class="toctree-l1"><a class="reference internal" href="70_ground_state_calc.html">8. Ground State Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="75_3g_dft.html">9. The third-generation density functional calculation method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="80_analysis.html">10. Analysis of the ProteinDF Calculation Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="90_appendix.html">11. Appendix</a></li>
+</ul>
+
+          
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">ProteinDF User's Manual</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+          <div class="rst-content">
+            
+            <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><span class="section-number">3. </span>Installation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/30_installation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+            <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+              <div itemprop="articleBody">
+                
+  <section id="installation">
+<h1><span class="section-number">3. </span>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h1>
+<section id="system-requirements">
+<h2><span class="section-number">3.1. </span>System requirements<a class="headerlink" href="#system-requirements" title="Permalink to this headline"></a></h2>
+<p>ProteinDF has several distributions. If a README file is provided, first read the README file.</p>
+<p>To execute ProteinDF, the following environment is required:</p>
+<ul class="simple">
+<li><p>UNIX/Linux operating system</p></li>
+<li><p>C runtime library (normally bundled with the OS)</p></li>
+<li><p>bash</p></li>
+<li><p>BLAS, LAPACK library</p></li>
+<li><p>MPI runtime environment (only for parallel version)</p></li>
+<li><p>Distributed matrix operation library (ScaLAPACK)</p></li>
+</ul>
+<section id="hardware-and-operating-system">
+<h3><span class="section-number">3.1.1. </span>Hardware and operating system<a class="headerlink" href="#hardware-and-operating-system" title="Permalink to this headline"></a></h3>
+<p>ProteinDF has been confirmed to operate on POSIX-compliant computer systems, as well on as the following computing systems:</p>
+<ul class="simple">
+<li><p>SGI Altix 3000 series</p></li>
+<li><p>Cray XT-5, XT-6</p></li>
+</ul>
+<p>The program should also work on the x86 PC Linux system.</p>
+</section>
+<section id="memory-and-disk">
+<h3><span class="section-number">3.1.2. </span>Memory and disk<a class="headerlink" href="#memory-and-disk" title="Permalink to this headline"></a></h3>
+<p>The required memory size depends on the scale of computation model. Furthermore, in parallel computation, the required memory size per node varies depending on whether one uses LAPACK or ScaLAPACK for matrix operations. For LAPACK, the maximum computation scale is equal to the memory size on each node. For ScaLAPACK, the scale is equal to the total memory size on all nodes, since the computation area is distributed and stored in all nodes. Note that this estimation serves only as a guideline, since other factors also determine the available computation scale.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>For a 32bit OS, ProteinDF may have some limitations in available memory size, file size, etc.</p>
+</div>
+</section>
+<section id="python-module">
+<h3><span class="section-number">3.1.3. </span>Python module<a class="headerlink" href="#python-module" title="Permalink to this headline"></a></h3>
+<p>Several python scripts are prepared for ProteinDF. These scripts are not necessary for program execution, but for analysis of calculation results. To use these python scripts, the following programs (modules) are required. For configuration of these programs, follow the system guidelines.</p>
+<ul class="simple">
+<li><p>Python(above version 3.5)</p></li>
+<li><p>argparse module</p></li>
+<li><p>numpy module</p></li>
+<li><p>matplotlib module</p></li>
+<li><p>MessagePack module</p></li>
+<li><p>YAML module</p></li>
+</ul>
+</section>
+</section>
+<section id="installation-and-setup">
+<h2><span class="section-number">3.2. </span>Installation and setup<a class="headerlink" href="#installation-and-setup" title="Permalink to this headline"></a></h2>
+<p>The installation procedure varies according to the distributed package. If a README file is provided, follow the README file instructions.</p>
+<section id="environment-variables">
+<span id="index-0"></span><h3><span class="section-number">3.2.1. </span>Environment variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline"></a></h3>
+<p>ProteinDF requires the user to configure the following environment variables. Appropriately set the variables according to the user’s environment.</p>
+<section id="pdf-home">
+<span id="index-1"></span><h4><span class="section-number">3.2.1.1. </span>PDF_HOME<a class="headerlink" href="#pdf-home" title="Permalink to this headline"></a></h4>
+<p>Specify the directory where the ProteinDF package was copied.</p>
+<p>For example, when the package was copied to /usr/local/ProteinDF and when bash is used as the login shell, add the following to .bashrc:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">PDF_HOME</span><span class="o">=</span>/usr/local/ProteinDF
+</pre></div>
+</div>
+</section>
+<section id="omp-num-threads">
+<span id="index-2"></span><h4><span class="section-number">3.2.1.2. </span>OMP_NUM_THREADS<a class="headerlink" href="#omp-num-threads" title="Permalink to this headline"></a></h4>
+<p>Sets the maximum number of threads in OpenMP. OpenMP must be enabled at build time.</p>
+</section>
+<section id="omp-schedule">
+<span id="index-3"></span><h4><span class="section-number">3.2.1.3. </span>OMP_SCHEDULE<a class="headerlink" href="#omp-schedule" title="Permalink to this headline"></a></h4>
+<p>When executing ProteinDF with the OpenMP multi-threading, specify the type and chunk size of the parallel schedule inside the OpenMP parallel region.</p>
+</section>
+</section>
+<section id="build-from-the-source">
+<h3><span class="section-number">3.2.2. </span>Build from the source<a class="headerlink" href="#build-from-the-source" title="Permalink to this headline"></a></h3>
+<section id="executing-cmake">
+<h4><span class="section-number">3.2.2.1. </span>Executing CMake<a class="headerlink" href="#executing-cmake" title="Permalink to this headline"></a></h4>
+<p>ProteinDF uses CMake to create the Makefile.
+You can execute cmake by specifying the source directory in an arbitrary directory.
+For example, to create a build directory directly under the source directory,
+you can execute cmake by specifying run as follows.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ mkdir build
+$ <span class="nb">cd</span> build
+$ cmake ..
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>CMake automatically surveys the build environment and sets the location of the library.
+The results are output when cmake is run.
+If you want to save the output to a file and refer to it later,
+you can use the tee command to run it as follows:
+<code class="docutils literal notranslate"><span class="pre">$</span> <span class="pre">cmake</span> <span class="pre">..</span> <span class="pre">2&gt;&amp;1</span> <span class="pre">|</span> <span class="pre">tee</span> <span class="pre">out.cmake</span></code></p>
+</div>
+<p>Here are some common variables.
+Use <code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">-L</span></code> or <code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">-LA`</span></code> for more information.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--DCMAKE_INSTALL_PREFIX=PATH</span></code></p></li>
+</ul>
+<p>Specify the installation location of the program.
+The default is /usr/local.
+This is used to install the program in the user’s home directory.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--with-blas=location</span></code></p></li>
+</ul>
+<p>Specify the location of the BLAS library.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--with-lapack=location</span></code></p></li>
+</ul>
+<p>Specify the location of the LAPACK library.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--with-scalapack=location</span></code></p></li>
+</ul>
+<p>Specify the location of the ScaLAPACK library.</p>
+<ul class="simple">
+<li><p>Environment variable CC,CXX,MPICXX</p></li>
+</ul>
+<p>Specifies the options to pass to the C/C++ compiler. Use this variable to specify the options to the OpenMP compilers, etc.</p>
+<ul class="simple">
+<li><p>Environment variable CFLAGS,CXXFLAGS</p></li>
+</ul>
+<p>Specify options for C/C++ compiler.
+Instructions to the compiler, such as OpenMP, should be specified in this environment variable.</p>
+</section>
+<section id="executing-make">
+<h4><span class="section-number">3.2.2.2. </span>Executing &quot;make&quot;<a class="headerlink" href="#executing-make" title="Permalink to this headline"></a></h4>
+<p>Execute the <code class="docutils literal notranslate"><span class="pre">cmake</span></code> command, and make sure the Makefile is created.
+Once the Makefile is created, execute the <code class="docutils literal notranslate"><span class="pre">make</span></code> command.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ make <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> <span class="p">|</span> tee out.make
+</pre></div>
+</div>
+</section>
+<section id="installing-the-program">
+<h4><span class="section-number">3.2.2.3. </span>Installing the program<a class="headerlink" href="#installing-the-program" title="Permalink to this headline"></a></h4>
+<p>After executing &quot;make&quot;, install the execution file/data to the specified path.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ make install <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> <span class="p">|</span> tee out.make_install
+</pre></div>
+</div>
+<p>After the execution above, the following files will be created:</p>
+<ul class="simple">
+<li><p>${PDF_HOME}/bin/PDF.x</p></li>
+<li><p>${PDF_HOME}/bin/PPDF.x</p></li>
+<li><p>${PDF_HOME}/data/basis2</p></li>
+</ul>
+</section>
+<section id="when-trouble-occurs">
+<h4><span class="section-number">3.2.2.4. </span>When trouble occurs…<a class="headerlink" href="#when-trouble-occurs" title="Permalink to this headline"></a></h4>
+<p>In some environments, problems may occur such that no script can be executed, or no build is possible. In such cases, check the output of each script thoroughly (i.e. out.configure, out.make, and out.make_install in the case above).</p>
+</section>
+</section>
+</section>
+</section>
+
+
+              </div>
+              
+            </div>
+            <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="20_introduction.html" class="btn btn-neutral float-left" title="2. Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="40_quick_start_guide.html" class="btn btn-neutral float-right" title="4. Quick Start Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014-2022, Toshiyuki HIRANO.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+          </div>
+        </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+    jQuery(function () {
+      SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+  
+   
+
+</body>
+
+</html>
