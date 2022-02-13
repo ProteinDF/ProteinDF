@@ -24,16 +24,16 @@ Contents:
    :maxdepth: 2
    :numbered:
 
-   preface
-   introduction
-   installation
-   quick_start_guide
-   input
-   exec
-   ground_state_calc
-   analysis
-   QCLO
-   appendix
+   10_preface
+   20_introduction
+   30_installation
+   40_quick_start_guide
+   50_input
+   60_exec
+   70_ground_state_calc
+   75_3g_dft
+   80_analysis
+   90_appendix
 
 
 .. memo
@@ -41,7 +41,7 @@ Contents:
    customization
 
 .. only:: html
-   
+
    Indices and tables
    ==================
 
@@ -51,4 +51,3 @@ Contents:
 
 
 .. todolist::
-

@@ -1,356 +1,572 @@
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: ProteinDF User's Manual 2014.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-11-18 00:11-0600\n"
+"POT-Creation-Date: 2021-11-07 21:16+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
 
 #: ../../source/installation.rst:3
-msgid "インストール"
+msgid "Installation"
 msgstr ""
 
 #: ../../source/installation.rst:6
-msgid "動作環境"
+msgid "System requirements"
 msgstr ""
 
 #: ../../source/installation.rst:8
-msgid "ProteinDFはいくつかの形式で配布されています。 READMEファイルが添付されている場合は、まずREADMEファイルをご覧下さい。"
+msgid ""
+"ProteinDF has several distributions. If a README file is provided, first "
+"read the README file."
+msgstr ""
+
+#: ../../source/installation.rst:10
+msgid "To execute ProteinDF, the following environment is required:"
 msgstr ""
 
 #: ../../source/installation.rst:12
-msgid "ProteinDFの動作には以下の動作環境が必要です。"
+msgid "UNIX/Linux operating system"
+msgstr ""
+
+#: ../../source/installation.rst:13
+msgid "C runtime library (normally bundled with the OS)"
 msgstr ""
 
 #: ../../source/installation.rst:14
-msgid "UNIX/Linux オペレーティングシステム"
-msgstr ""
-
-#: ../../source/installation.rst:15
-msgid "Cランタイムライブラリ(通常はOSに同梱されています)"
-msgstr ""
-
-#: ../../source/installation.rst:16
 msgid "bash"
 msgstr ""
 
+#: ../../source/installation.rst:15
+msgid "BLAS, LAPACK library"
+msgstr ""
+
+#: ../../source/installation.rst:16
+msgid "MPI runtime environment (only for parallel version)"
+msgstr ""
+
 #: ../../source/installation.rst:17
-msgid "BLAS, LAPACKライブラリ"
+msgid "Distributed matrix operation library (ScaLAPACK)"
 msgstr ""
 
-#: ../../source/installation.rst:18
-msgid "MPI実行環境(並列版のみ)"
-msgstr ""
-
-#: ../../source/installation.rst:19
-msgid "分散行列演算ライブラリ(ScaLAPACK)"
+#: ../../source/installation.rst:21
+msgid "Hardware and operating system"
 msgstr ""
 
 #: ../../source/installation.rst:23
-msgid "ハードウェアとオペレーティングシステム"
+msgid ""
+"ProteinDF has been confirmed to operate on POSIX-compliant computer "
+"systems, as well on as the following computing systems:"
 msgstr ""
 
 #: ../../source/installation.rst:25
-msgid "POSIX準拠のコンピュータシステムで動作します。 現在、以下の計算機システムで動作確認が行われています。"
+msgid "SGI Altix 3000 series"
+msgstr ""
+
+#: ../../source/installation.rst:26
+msgid "Cray XT-5, XT-6"
 msgstr ""
 
 #: ../../source/installation.rst:28
-msgid "SGI社製 Altix 3000シリーズ"
+msgid "The program should also work on the x86 PC Linux system."
 msgstr ""
 
-#: ../../source/installation.rst:29
-msgid "Cray社製 XT-5, XT-6"
+#: ../../source/installation.rst:32
+msgid "Memory and disk"
 msgstr ""
 
-#: ../../source/installation.rst:31
-msgid "一般的なx86 PC Linuxでも動作します。"
-msgstr ""
-
-#: ../../source/installation.rst:35
-msgid "メモリとディスク"
-msgstr ""
-
-#: ../../source/installation.rst:37
+#: ../../source/installation.rst:34
 msgid ""
-"計算モデルの大きさに応じて必要なメモリ量が異なります。 また、並列計算を行う場合、 "
-"行列演算にLAPACKを使用する場合とScaLAPACKを使用する場合でも、 1ノードあたりに必要なメモリ量が変わります。 "
-"LAPACKを使用する場合は、各ノードに搭載されているメモリ容量が計算可能なサイズの上限です。 "
-"一方、ScaLAPACKを使用する場合は、全ノードで計算領域を分散保持しますので、 全ノードのメモリ容量が計算可能サイズの上限になります。 "
-"ただし、この他にも計算可能サイズを決定する要因がありますので 目安としてください。"
+"The required memory size depends on the scale of computation model. "
+"Furthermore, in parallel computation, the required memory size per node "
+"varies depending on whether one uses LAPACK or ScaLAPACK for matrix "
+"operations. For LAPACK, the maximum computation scale is equal to the "
+"memory size on each node. For ScaLAPACK, the scale is equal to the total "
+"memory size on all nodes, since the computation area is distributed and "
+"stored in all nodes. Note that this estimation serves only as a "
+"guideline, since other factors also determine the available computation "
+"scale."
+msgstr ""
+
+#: ../../source/installation.rst:38
+msgid ""
+"For a 32bit OS, ProteinDF may have some limitations in available memory "
+"size, file size, etc."
+msgstr ""
+
+#: ../../source/installation.rst:42
+msgid "python module"
+msgstr ""
+
+#: ../../source/installation.rst:44
+msgid ""
+"Several python scripts are prepared for ProteinDF. These scripts are not "
+"necessary for program execution, but for analysis of calculation results."
+" To use these python scripts, the following programs (modules) are "
+"required. For configuration of these programs, follow the system "
+"guidelines."
+msgstr ""
+
+#: ../../source/installation.rst:46
+msgid "python(version 3.5以上)"
+msgstr ""
+
+#: ../../source/installation.rst:47
+msgid "argparse module"
+msgstr ""
+
+#: ../../source/installation.rst:48
+msgid "numpy module"
 msgstr ""
 
 #: ../../source/installation.rst:49
-msgid "32bit OSでは扱えるメモリサイズ、ファイルサイズなど幾つかの制限事項がある場合があります。"
+msgid "matplotlib module"
 msgstr ""
 
-#: ../../source/installation.rst:53
-msgid "pythonモジュール"
+#: ../../source/installation.rst:50
+msgid "MessagePack module"
 msgstr ""
 
-#: ../../source/installation.rst:55
+#: ../../source/installation.rst:51
+msgid "YAML module"
+msgstr ""
+
+#: ../../source/installation.rst:56
+msgid "Installation and setup"
+msgstr ""
+
+#: ../../source/installation.rst:58
 msgid ""
-"ProteinDFの動作には、 いくつかのpythonスクリプトが用意されています。 "
-"これらpythonスクリプトは、ProteinDFの実行そのものには必要ありませんが、 計算結果の解析用として用意されています。 "
-"これらpythonスクリプトの動作には以下のソフトウェア(モジュール)が必要です。 "
-"これらのソフトウェアの環境構築は、それぞれのシステムの方針に従って下さい。"
-msgstr ""
-
-#: ../../source/installation.rst:62
-msgid "python(version 2.5以上)"
-msgstr ""
-
-#: ../../source/installation.rst:63
-msgid "argparseモジュール"
+"The installation procedure varies according to the distributed package. "
+"If a README file is provided, follow the README file instructions."
 msgstr ""
 
 #: ../../source/installation.rst:64
-msgid "numpyモジュール"
-msgstr ""
-
-#: ../../source/installation.rst:65
-msgid "matplotlibモジュール"
-msgstr ""
-
-#: ../../source/installation.rst:66
-msgid "MessagePackモジュール"
+msgid "Environment variables"
 msgstr ""
 
 #: ../../source/installation.rst:67
-msgid "YAMLモジュール"
-msgstr ""
-
-#: ../../source/installation.rst:72
-msgid "インストールと準備"
-msgstr ""
-
-#: ../../source/installation.rst:74
 msgid ""
-"配布パッケージによって、インストールの形態が異なります。 READMEファイルが添付されている場合は、READMEファイルの指示に従って下さい。"
+"ProteinDF requires the user to configure the following environment "
+"variables. Appropriately set the variables according to the user's "
+"environment."
 msgstr ""
 
-#: ../../source/installation.rst:81 ../../source/installation.rst:78
-msgid "環境変数"
-msgstr ""
-
-#: ../../source/installation.rst:84
-msgid "ProteinDFの実行には、以下の環境変数を設定する必要があります。 利用する環境に応じて、適切に環境変数を設定してください。"
-msgstr ""
-
-#: ../../source/installation.rst:90 ../../source/installation.rst:87
+#: ../../source/installation.rst:73
 msgid "PDF_HOME"
 msgstr ""
 
-#: ../../source/installation.rst:92
-msgid "ProteinDFパッケージをコピーしたディレクトリを指定します。"
+#: ../../source/installation.rst:75
+msgid "Specify the directory where the ProteinDF package was copied."
 msgstr ""
 
-#: ../../source/installation.rst:95
+#: ../../source/installation.rst:77
 msgid ""
-"例えば、/usr/local/ProteinDF に本パッケージをコピーしたとき、 "
-"ログインシェルにbashを利用している場合は.bashrcに以下を追加してください。"
+"For example, when the package was copied to /usr/local/ProteinDF and when"
+" bash is used as the login shell, add the following to .bashrc:"
 msgstr ""
 
-#: ../../source/installation.rst:107 ../../source/installation.rst:104
+#: ../../source/installation.rst:87
 msgid "OMP_NUM_THREADS"
 msgstr ""
 
-#: ../../source/installation.rst:109
+#: ../../source/installation.rst:89 ../../source/installation.rst:97
 msgid ""
-"OpenMPによるスレッド並列を利用してProteinDFを実行する場合、 環境変数OMP_NUM_THREADSが指定されると、 "
-"OpenMP並列領域内における最大スレッド数を設定します。"
+"When executing ProteinDF with the OpenMP multi-threading, specify the "
+"type and chunk size of the parallel schedule inside the OpenMP parallel "
+"region."
 msgstr ""
 
-#: ../../source/installation.rst:117 ../../source/installation.rst:114
+#: ../../source/installation.rst:95
 msgid "OMP_SCHEDULE"
 msgstr ""
 
-#: ../../source/installation.rst:119
+#: ../../source/installation.rst:101
+msgid "Build from the source"
+msgstr ""
+
+#: ../../source/installation.rst:106
+msgid "Executing CMake"
+msgstr ""
+
+#: ../../source/installation.rst:108
 msgid ""
-"OpenMPによるスレッド並列を利用してProteinDFを実行する場合、 環境変数OMP_SCHEDULEにより、 "
-"OpenMP並列領域内における並列スケジュールのタイプとチャンクサイズを設定できます。"
+"ProteinDF uses CMake to create the Makefile. You can execute cmake by "
+"specifying the source directory in an arbitrary directory. For example, "
+"to create a build directory directly under the source directory, you can "
+"execute cmake by specifying run as follows."
 msgstr ""
 
-#: ../../source/installation.rst:125
-msgid "ランタイムライブラリのインストール"
-msgstr ""
-
-#: ../../source/installation.rst:127
+#: ../../source/installation.rst:122
 msgid ""
-"x86ならびにx86_64環境用バイナリ版では、 intel社製共有ライブラリが必要になる場合があります。 "
-"インテル社ウェブページより再配布可能なライブラリをダウンロードし、インストールしてください。 http://software.intel.com/en-"
-"us/articles/redistributable-libraries-for-the-intelr-c-and-visual-fortran-"
-"compiler-professional-editions-for-linux/"
+"CMake automatically surveys the build environment and sets the location "
+"of the library. The results are output when cmake is run. If you want to "
+"save the output to a file and refer to it later, you can use the tee "
+"command to run it as follows: ``$ cmake .. 2>&1 | tee out.cmake``"
 msgstr ""
 
-#: ../../source/installation.rst:134
-msgid "ソースからのビルド"
-msgstr ""
-
-#: ../../source/installation.rst:139
-msgid "configureの実行"
-msgstr ""
-
-#: ../../source/installation.rst:142
+#: ../../source/installation.rst:129
 msgid ""
-"tarballを展開したソースファイルには、configureスクリプトが用意されています。 configureスクリプトを実行することによって "
-"環境に応じたMakefileが作成されます。"
+"Here are some common variables. Use ``cmake -L`` or ``cmake -LA``` for "
+"more information."
 msgstr ""
 
-#: ../../source/installation.rst:154
+#: ../../source/installation.rst:133
+msgid "``--DCMAKE_INSTALL_PREFIX=PATH``"
+msgstr ""
+
+#: ../../source/installation.rst:135
 msgid ""
-"ソースコードリポジトリから開発ソースを取得した場合は、 autotoolsからconfigureスクリプトを作成する必要があります。 "
-"詳しくは[xxx]を参照してください。"
+"Specify the installation location of the program. The default is "
+"/usr/local. This is used to install the program in the user's home "
+"directory."
 msgstr ""
 
-#: ../../source/installation.rst:160
-msgid "以下によく用いられるオプション/環境変数を示します。 詳しくは configure --help をご覧ください。"
-msgstr ""
-
-#: ../../source/installation.rst:164
-msgid "``--prefix=location``"
-msgstr ""
-
-#: ../../source/installation.rst:166
-msgid ""
-"プログラムのインストール先を指定します。 デフォルトは/usr/localです。 ユーザーのホームディレクトリなどにインストールするときに用いられます。"
-msgstr ""
-
-#: ../../source/installation.rst:171
-msgid "``--enable-parallel``"
-msgstr ""
-
-#: ../../source/installation.rst:173
-msgid "逐次版に加えて並列版プログラムも作成します。"
-msgstr ""
-
-#: ../../source/installation.rst:176
+#: ../../source/installation.rst:140
 msgid "``--with-blas=location``"
 msgstr ""
 
-#: ../../source/installation.rst:178
-msgid "BLASライブラリの場所を指定します。"
+#: ../../source/installation.rst:142
+msgid "Specify the location of the BLAS library."
 msgstr ""
 
-#: ../../source/installation.rst:181
+#: ../../source/installation.rst:145
 msgid "``--with-lapack=location``"
 msgstr ""
 
-#: ../../source/installation.rst:183
-msgid "LAPACKライブラリの場所を指定します。"
+#: ../../source/installation.rst:147
+msgid "Specify the location of the LAPACK library."
 msgstr ""
 
-#: ../../source/installation.rst:186
+#: ../../source/installation.rst:150
 msgid "``--with-scalapack=location``"
 msgstr ""
 
-#: ../../source/installation.rst:188
-msgid "ScaLAPACKライブラリの場所を指定します。"
+#: ../../source/installation.rst:152
+msgid "Specify the location of the ScaLAPACK library."
 msgstr ""
 
-#: ../../source/installation.rst:191
-msgid "環境変数CC,CXX,MPICXX"
+#: ../../source/installation.rst:155
+msgid "Environment variable CC,CXX,MPICXX"
 msgstr ""
 
-#: ../../source/installation.rst:193
+#: ../../source/installation.rst:157
 msgid ""
-"ビルドに用いるC/C++コンパイラを指定します。 MPIライブラリをリンクする場合は、 "
-"mpicxxなど計算機システムに応じたコンパイラを使用してください。"
+"Specifies the options to pass to the C/C++ compiler. Use this variable to"
+" specify the options to the OpenMP compilers, etc."
 msgstr ""
 
-#: ../../source/installation.rst:198
-msgid "環境変数CFLAGS,CXXFLAGS"
+#: ../../source/installation.rst:159
+msgid "Environment variable CFLAGS,CXXFLAGS"
 msgstr ""
 
-#: ../../source/installation.rst:200
-msgid "C/C++コンパイラに渡すオプションを指定します。 OpenMPなどのコンパイラへの指示は、この環境変数に指定してください。"
+#: ../../source/installation.rst:161
+msgid ""
+"Specify options for C/C++ compiler. Instructions to the compiler, such as"
+" OpenMP, should be specified in this environment variable."
 msgstr ""
 
-#: ../../source/installation.rst:203
-msgid "環境変数LIBS"
+#: ../../source/installation.rst:167
+msgid "Executing \\\"make\\\""
 msgstr ""
 
-#: ../../source/installation.rst:205
-msgid "その他ビルドに必要なライブラリを指定します。"
+#: ../../source/installation.rst:169
+msgid ""
+"Execute the ``cmake`` command, and make sure the Makefile is created. "
+"Once the Makefile is created, execute the ``make`` command."
 msgstr ""
 
-#: ../../source/installation.rst:207
-msgid "環境変数BLAS_LIBS"
+#: ../../source/installation.rst:178
+msgid "Installing the program"
 msgstr ""
 
-#: ../../source/installation.rst:209
-msgid "BLASライブラリを指定します。"
+#: ../../source/installation.rst:180
+msgid ""
+"After executing \\\"make\\\", install the execution file/data to the "
+"specified path."
 msgstr ""
 
-#: ../../source/installation.rst:211
-msgid "環境変数LAPACK_LIBS"
+#: ../../source/installation.rst:187
+msgid "After the execution above, the following files will be created:"
 msgstr ""
 
-#: ../../source/installation.rst:213
-msgid "LAPACKライブラリを指定します。"
-msgstr ""
-
-#: ../../source/installation.rst:215
-msgid "環境変数SCALAPACK_LIBS"
-msgstr ""
-
-#: ../../source/installation.rst:217
-msgid "ScaLAPACKライブラリを指定します。"
-msgstr ""
-
-#: ../../source/installation.rst:221
-msgid "makeの実行"
-msgstr ""
-
-#: ../../source/installation.rst:223
-msgid "configureを実行し、Makefileが作成されたことを確認してください。 Makefileが作成されたならば、makeを実行します。"
-msgstr ""
-
-#: ../../source/installation.rst:233
-msgid "インストールの実行"
-msgstr ""
-
-#: ../../source/installation.rst:235
-msgid "makeの実行した後、実行ファイル・データを所定のパスにインストールします。"
-msgstr ""
-
-#: ../../source/installation.rst:243
-msgid "インストールが実行されると、以下のファイルがコピーされます。"
-msgstr ""
-
-#: ../../source/installation.rst:246
+#: ../../source/installation.rst:189
 msgid "${PDF_HOME}/bin/PDF.x"
 msgstr ""
 
-#: ../../source/installation.rst:247
+#: ../../source/installation.rst:190
 msgid "${PDF_HOME}/bin/PPDF.x"
 msgstr ""
 
-#: ../../source/installation.rst:248
+#: ../../source/installation.rst:191
 msgid "${PDF_HOME}/data/basis2"
 msgstr ""
 
-#: ../../source/installation.rst:252
-msgid "うまく行かない場合"
+#: ../../source/installation.rst:195
+msgid "When trouble occurs..."
 msgstr ""
 
-#: ../../source/installation.rst:254
+#: ../../source/installation.rst:197
 msgid ""
-"環境によってはスクリプトが実行できない、ビルドできないなどの問題が発生するかもしれません。 "
-"その場合は、各スクリプトの出力(上記の操作の場合、out.configure, out.make, "
-"out.make_install)をよくチェックしてください。"
+"In some environments, problems may occur such that no script can be "
+"executed, or no build is possible. In such cases, check the output of "
+"each script thoroughly (i.e. out.configure, out.make, and "
+"out.make_install in the case above)."
 msgstr ""
 
-#: ../../source/installation.rst:259
-msgid "開発コードからのビルド"
-msgstr ""
+#~ msgid "インストール"
+#~ msgstr ""
 
-#: ../../source/installation.rst:261
-msgid ""
-"ソースコードリポジトリから取得した場合は、 configureスクリプトをautotoolsを用いて作成する必要があります。 automake, "
-"autoconf, libtoolがインストールされた環境で、 同梱のbootstrap.shを実行してください。"
-msgstr ""
+#~ msgid "動作環境"
+#~ msgstr ""
+
+#~ msgid "ProteinDFはいくつかの形式で配布されています。 READMEファイルが添付されている場合は、まずREADMEファイルをご覧下さい。"
+#~ msgstr ""
+
+#~ msgid "ProteinDFの動作には以下の動作環境が必要です。"
+#~ msgstr ""
+
+#~ msgid "UNIX/Linux オペレーティングシステム"
+#~ msgstr ""
+
+#~ msgid "Cランタイムライブラリ(通常はOSに同梱されています)"
+#~ msgstr ""
+
+#~ msgid "BLAS, LAPACKライブラリ"
+#~ msgstr ""
+
+#~ msgid "MPI実行環境(並列版のみ)"
+#~ msgstr ""
+
+#~ msgid "分散行列演算ライブラリ(ScaLAPACK)"
+#~ msgstr ""
+
+#~ msgid "ハードウェアとオペレーティングシステム"
+#~ msgstr ""
+
+#~ msgid "POSIX準拠のコンピュータシステムで動作します。 現在、以下の計算機システムで動作確認が行われています。"
+#~ msgstr ""
+
+#~ msgid "SGI社製 Altix 3000シリーズ"
+#~ msgstr ""
+
+#~ msgid "Cray社製 XT-5, XT-6"
+#~ msgstr ""
+
+#~ msgid "一般的なx86 PC Linuxでも動作します。"
+#~ msgstr ""
+
+#~ msgid "メモリとディスク"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "計算モデルの大きさに応じて必要なメモリ量が異なります。 また、並列計算を行う場合、 "
+#~ "行列演算にLAPACKを使用する場合とScaLAPACKを使用する場合でも、 1ノードあたりに必要なメモリ量が変わります。"
+#~ " LAPACKを使用する場合は、各ノードに搭載されているメモリ容量が計算可能なサイズの上限です。 "
+#~ "一方、ScaLAPACKを使用する場合は、全ノードで計算領域を分散保持しますので、 "
+#~ "全ノードのメモリ容量が計算可能サイズの上限になります。 ただし、この他にも計算可能サイズを決定する要因がありますので "
+#~ "目安としてください。"
+#~ msgstr ""
+
+#~ msgid "32bit OSでは扱えるメモリサイズ、ファイルサイズなど幾つかの制限事項がある場合があります。"
+#~ msgstr ""
+
+#~ msgid "pythonモジュール"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "ProteinDFの動作には、 いくつかのpythonスクリプトが用意されています。 "
+#~ "これらpythonスクリプトは、ProteinDFの実行そのものには必要ありませんが、 計算結果の解析用として用意されています。"
+#~ " これらpythonスクリプトの動作には以下のソフトウェア(モジュール)が必要です。 "
+#~ "これらのソフトウェアの環境構築は、それぞれのシステムの方針に従って下さい。"
+#~ msgstr ""
+
+#~ msgid "python(version 2.5以上)"
+#~ msgstr ""
+
+#~ msgid "argparseモジュール"
+#~ msgstr ""
+
+#~ msgid "numpyモジュール"
+#~ msgstr ""
+
+#~ msgid "matplotlibモジュール"
+#~ msgstr ""
+
+#~ msgid "MessagePackモジュール"
+#~ msgstr ""
+
+#~ msgid "YAMLモジュール"
+#~ msgstr ""
+
+#~ msgid "インストールと準備"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "配布パッケージによって、インストールの形態が異なります。 "
+#~ "READMEファイルが添付されている場合は、READMEファイルの指示に従って下さい。"
+#~ msgstr ""
+
+#~ msgid "環境変数"
+#~ msgstr ""
+
+#~ msgid "ProteinDFの実行には、以下の環境変数を設定する必要があります。 利用する環境に応じて、適切に環境変数を設定してください。"
+#~ msgstr ""
+
+#~ msgid "ProteinDFパッケージをコピーしたディレクトリを指定します。"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "例えば、/usr/local/ProteinDF に本パッケージをコピーしたとき、 "
+#~ "ログインシェルにbashを利用している場合は.bashrcに以下を追加してください。"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "OpenMPによるスレッド並列を利用してProteinDFを実行する場合、 "
+#~ "環境変数OMP_NUM_THREADSが指定されると、 OpenMP並列領域内における最大スレッド数を設定します。"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "OpenMPによるスレッド並列を利用してProteinDFを実行する場合、 環境変数OMP_SCHEDULEにより、 "
+#~ "OpenMP並列領域内における並列スケジュールのタイプとチャンクサイズを設定できます。"
+#~ msgstr ""
+
+#~ msgid "ランタイムライブラリのインストール"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "x86ならびにx86_64環境用バイナリ版では、 intel社製共有ライブラリが必要になる場合があります。 "
+#~ "インテル社ウェブページより再配布可能なライブラリをダウンロードし、インストールしてください。 "
+#~ "http://software.intel.com/en-us/articles/redistributable-"
+#~ "libraries-for-the-intelr-c-and-visual-"
+#~ "fortran-compiler-professional-editions-for-"
+#~ "linux/"
+#~ msgstr ""
+
+#~ msgid "ソースからのビルド"
+#~ msgstr ""
+
+#~ msgid "configureの実行"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "tarballを展開したソースファイルには、configureスクリプトが用意されています。 "
+#~ "configureスクリプトを実行することによって 環境に応じたMakefileが作成されます。"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "ソースコードリポジトリから開発ソースを取得した場合は、 "
+#~ "autotoolsからconfigureスクリプトを作成する必要があります。 詳しくは[xxx]を参照してください。"
+#~ msgstr ""
+
+#~ msgid "以下によく用いられるオプション/環境変数を示します。 詳しくは configure --help をご覧ください。"
+#~ msgstr ""
+
+#~ msgid "``--prefix=location``"
+#~ msgstr ""
+
+#~ msgid "``--enable-parallel``"
+#~ msgstr ""
+
+#~ msgid "逐次版に加えて並列版プログラムも作成します。"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "ビルドに用いるC/C++コンパイラを指定します。 MPIライブラリをリンクする場合は、 "
+#~ "mpicxxなど計算機システムに応じたコンパイラを使用してください。"
+#~ msgstr ""
+
+#~ msgid "環境変数LAPACK_LIBS"
+#~ msgstr ""
+
+#~ msgid "環境変数SCALAPACK_LIBS"
+#~ msgstr ""
+
+#~ msgid "ScaLAPACKライブラリを指定します。"
+#~ msgstr ""
+
+#~ msgid "makeの実行"
+#~ msgstr ""
+
+#~ msgid "configureを実行し、Makefileが作成されたことを確認してください。 Makefileが作成されたならば、makeを実行します。"
+#~ msgstr ""
+
+#~ msgid "インストールの実行"
+#~ msgstr ""
+
+#~ msgid "makeの実行した後、実行ファイル・データを所定のパスにインストールします。"
+#~ msgstr ""
+
+#~ msgid "インストールが実行されると、以下のファイルがコピーされます。"
+#~ msgstr ""
+
+#~ msgid "うまく行かない場合"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "環境によってはスクリプトが実行できない、ビルドできないなどの問題が発生するかもしれません。 "
+#~ "その場合は、各スクリプトの出力(上記の操作の場合、out.configure, out.make, "
+#~ "out.make_install)をよくチェックしてください。"
+#~ msgstr ""
+
+#~ msgid "開発コードからのビルド"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "ソースコードリポジトリから取得した場合は、 configureスクリプトをautotoolsを用いて作成する必要があります。"
+#~ " automake, autoconf, libtoolがインストールされた環境で、 "
+#~ "同梱のbootstrap.shを実行してください。"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "プログラムのインストール先を指定します。 デフォルトは/usr/localです。 "
+#~ "ユーザーのホームディレクトリなどにインストールするときに用いられます。"
+#~ msgstr ""
+
+#~ msgid "BLASライブラリの場所を指定します。"
+#~ msgstr ""
+
+#~ msgid "LAPACKライブラリの場所を指定します。"
+#~ msgstr ""
+
+#~ msgid "ScaLAPACKライブラリの場所を指定します。"
+#~ msgstr ""
+
+#~ msgid "環境変数CC,CXX,MPICXX"
+#~ msgstr ""
+
+#~ msgid "環境変数CFLAGS,CXXFLAGS"
+#~ msgstr ""
+
+#~ msgid "C/C++コンパイラに渡すオプションを指定します。 OpenMPなどのコンパイラへの指示は、この環境変数に指定してください。"
+#~ msgstr ""
+
+#~ msgid "環境変数LIBS"
+#~ msgstr ""
+
+#~ msgid "その他ビルドに必要なライブラリを指定します。"
+#~ msgstr ""
+
+#~ msgid "環境変数BLAS_LIBS"
+#~ msgstr ""
+
+#~ msgid "BLASライブラリを指定します。"
+#~ msgstr ""
+
+#~ msgid "LAPACK_LIBS"
+#~ msgstr ""
+
+#~ msgid "LAPACKライブラリを指定します。"
+#~ msgstr ""
+
+#~ msgid "SCALAPACK_LIBS"
+#~ msgstr ""
+
+#~ msgid "Specifies the ScaLAPACK library."
+#~ msgstr ""
+

@@ -1,0 +1,153 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2014-2020, Toshiyuki HIRANO
+# This file is distributed under the same license as the ProteinDF User's
+# Manual package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: ProteinDF User's Manual 2020.06.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-02-09 13:12+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../source/10_preface.rst:5
+msgid "Introduction"
+msgstr "はじめに"
+
+#: ../../source/10_preface.rst:7
+msgid "This document is the User's Manual for the ProteinDF program."
+msgstr "本書はProteinDFソフトウェアのユーザーズマニュアルです。"
+
+#: ../../source/10_preface.rst:11
+msgid "Disclaimer"
+msgstr "免責事項"
+
+#: ../../source/10_preface.rst:13
+msgid ""
+"This manual is a work in progress. Though created and distributed in the "
+"hope of being useful, this document is offered without any warranty of "
+"any kind. Since the software is still being developed, some content of "
+"this manual may differ from the provided product. The author disclaims "
+"all liability for any damages directly or indirectly caused by the use of"
+" this manual."
+msgstr ""
+"本マニュアルは完全ではありません。 また、この文書は有用であるという期待の下に作成・配布されていますが、 無保証です。 "
+"ソフトウェア開発は継続して行われており、本マニュアルに書かれている内容と異なる場合があります。 "
+"使用することによって生じるいかなる直接的・間接的損害についても筆者はその責を負いません。"
+
+#: ../../source/10_preface.rst:21
+msgid "For questions and feedback, please use the contact information."
+msgstr "ご意見・質問等はメーリングリスト(pdf-users [AT] iis.u-tokyo.ac.jp)、または下記連絡先までお願いします。"
+
+#: ../../source/10_preface.rst:25
+msgid "License"
+msgstr "ライセンス"
+
+#: ../../source/10_preface.rst:27
+msgid ""
+"The ProteinDF software is released under an open source license: the GNU "
+"General Public License (GPL). For the exact terms and conditions of the "
+"GPL license, please refer to http://www.fsf.org/licenses/. Please also "
+"refer to http://www.fsf.org/licenses/gpl-faq.html and "
+"http://www.gnu.org/philosophy/enforcing-gpl.html."
+msgstr ""
+"ProtienDF ソフトウェアは、 オープンソースライセンスである GNU 一般公衆利用許諾契約書（GPL）に基づいてリリースされています。 "
+"GPL ライセンスの正式な条件については、 http://www.fsf.org/licenses/ を参照してください。 "
+"http://www.fsf.org/licenses/gpl-faq.html および "
+"http://www.gnu.org/philosophy/enforcing-gpl.html も参照してください。"
+
+#: ../../source/10_preface.rst:35
+msgid ""
+"The development of this software is supported by scientific research "
+"grants. When publishing research results using ProteinDF, please cite the"
+" following article to assist the development of our software. When citing"
+" the article, please share with us the bibliographical information of the"
+" research material."
+msgstr ""
+"なお、本ソフトウェアの開発は主に学術研究助成によって支援されています。 開発支援のために、ProteinDFを用いた研究成果を発表される際には、 "
+"以下のProteinDF論文を引用していただけると幸いです。 また、その研究の書誌情報をご連絡いただけると助かります。"
+
+#: ../../source/10_preface.rst:41
+msgid ""
+"F. Sato, Y. Shigemitsu, I. Okazaki, S. Yahiro, M. Fukue, S. Kozuru, and "
+"H. Kashiwagi, \"Development of a new density functional program for all-"
+"electron calculation of proteins\", Int. J. Quant. Chem., 63, 245-246 "
+"(1997)."
+msgstr ""
+
+#: ../../source/10_preface.rst:47
+msgid "Contact information"
+msgstr "連絡先"
+
+#: ../../source/10_preface.rst:49
+msgid ""
+"4-6-1 Komaba, Meguro, Tokyo 153-8505 Japan Sato, F. Laboratory, Institute"
+" of Industrial Science, the University of Tokyo"
+msgstr "153-8505 東京都目黒区駒場4-6-1東京大学 生産技術研究所 佐藤文俊研究室"
+
+#: ../../source/10_preface.rst:54
+msgid "Acknowledgement"
+msgstr "謝辞"
+
+#: ../../source/10_preface.rst:56
+msgid ""
+"The development of this program was supported by grants from the "
+"following projects:"
+msgstr "本プログラムの開発は、以下のプロジェクトの支援を受けて開発されました。"
+
+#: ../../source/10_preface.rst:58
+msgid ""
+"`Research and Development for Applying Advanced Computational Science and"
+" Technology` by Japan Science and Technology Corporation"
+msgstr "科学技術振興事業団「計算科学技術活用型特定研究開発推進事業(ACT-JST)」"
+
+#: ../../source/10_preface.rst:59
+msgid ""
+"`Frontier Simulation Software for Industrial Science` by Ministry of "
+"Education, Culture, Sports, Science and Technology (MEXT)"
+msgstr "文部科学省「戦略的基盤ソフトウェアの開発」"
+
+#: ../../source/10_preface.rst:60
+msgid "`Revolutionary Simulation Software` by MEXT"
+msgstr "文部科学省「革新的シミュレーションソフトウェアの研究開発」"
+
+#: ../../source/10_preface.rst:61
+msgid "`Research and Development of Innovative Simulation Software` by MEXT"
+msgstr "文部科学省「イノベーション基盤シミュレーションソフトウェアの研究開発」"
+
+#: ../../source/10_preface.rst:62
+msgid "`Next-generation Integrated Simulation of Living Matter` by MEXT"
+msgstr "文部科学省「次世代生命体統合シミュレーションソフトウェアの研究開発」"
+
+#: ../../source/10_preface.rst:66
+msgid "Revision history"
+msgstr "更新履歴"
+
+#: ../../source/10_preface.rst:68
+msgid "Dec. 2012  First edition"
+msgstr "2012年12月 初版"
+
+#: ../../source/10_preface.rst:69
+msgid "Mar. 2013  Revision due to the release of the Innovation Project version"
+msgstr "2013年 3月 イノベーションプロジェクト版リリースに伴う修正"
+
+#: ../../source/10_preface.rst:70
+msgid "Oct. 2017  Revision due to build method change"
+msgstr "2017年10月 ビルド方式変更に伴う修正"
+
+#: ../../source/10_preface.rst:71
+msgid "Nov. 2021  Revision update"
+msgstr "2021年11月 更新"
+
+#: ../../source/10_preface.rst:72
+msgid "Feb. 2022  Revision due to add 3G DFT method materials"
+msgstr "2022年2月 第三世代法の記事を追加"
+
