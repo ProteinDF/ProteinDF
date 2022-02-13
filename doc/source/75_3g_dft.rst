@@ -10,26 +10,48 @@ The third-generation density functional theory is an indispensable method
 for achieving canonical molecular orbitals of large molecules in ProteinDF.
 Please refer to the paper [ref:Hirano]_ for details. Here is an overview.
 
+There are challenges that need to be overcome in order to efficiently perform canonical molecular orbitals of large molecules.
+One is how to overcome the huge amount of computation, and the other is how to handle the large amount of memory required.
+
 In general, the computational complexity of a canonical molecular orbital calculation is :math:`N`, where N is the total number of basis functions.
 Formally, it is expressed as :math:`O(N^{4})`.
 This calculation size dependence is due to the four-center two-electron repulsive integral required to calculate the Coulomb and exchange terms.
-
 
 By using the cutoff method to ignore small integrals in advance,
 the computational complexity can be reduced to :math:`O(N^{2})` or even :math:`O(N)` by using empirical parameters.
 However, no :math:`O(N)` method has yet been found that can stably achieve canonical molecular orbital calculations for any large molecule,
 including proteins with a variety of properties.
 
+Currently, the mainstream molecular integration methods are the DIRECT method and the UPDATE method.
+As CPU performance has improved, the DIRECT method, which calculates the molecular integrals required for SCF iterations sequentially, is fast.
+And, the UPDATE method, which calculates only the molecular integrals for the updated density matrix elements in the SCF iterations, is a perfect match for the DIRECT method.
+However, in order to list the molecular integrals that need to be calculated by the DIRECT method, we need the information on the updated components of the density matrix (difference electron density matrix) for each iteration of the SCF calculation.
+
+In order to perform canonical molecular orbital calculations for large molecules using the DIRECT method,
+the current mainstream distributed memory parallel computers are not suitable.
+First of all, the amount of data in the difference electron density matrix may not fit into the memory of a computational node.
+It is possible to maintain a distributed global memory on a PC cluster, but access to the matrix elements will be slowed down by the network.
+Also, in a distributed-memory parallel computer, if there is even one slow compute node, the whole compute nodes will be forced to wait.
+Therefore, it is essential to equalize the tasks on all computation nodes.
+In the UPDATE method, the non-zero elements of the difference electron density matrix are unpredictable.
+In addition, the computational complexity for different types of basis function orbitals (s, p, d, ...) is significantly different.
+Therefore, it is very difficult to equalize the parallel computing tasks for a huge number of molecular integration calculations.
 
 In the third-generation density functional theory, the computational complexity is reduced by mathematically exact cutoff using the Cholesky decomposition.
 The third-generation density functional method uses the Cholesky decomposition and mathematically exact cutoff to reduce the computational complexity and to achieve efficient parallel computation even on the current mainstream distributed parallel computers.
 
+As will hereinafter be described in detail,
+in the third-generation density functional calculation method,
+molecular integrals are stored as Cholesky vectors before the SCF iteration,
+and during the SCF iterations, the calculation is accomplished using only matrix operations (without molecular integrals).
+By using the optimized linear arithmetic library,
+we can exploit the computational performance of distributed-memory parallel computers
+for canonical molecular orbital calculations in large-scale molecular systems.
 
 The third-generation density functional theory can be said to be an efficient storage of the molecular integrals
 in the File method in the form of Cholesky vectors.
 Nevertheless, the data size of Cholesky vectors for large molecules is still large,
 which is a drawback of the third-generation density functional theory.
-
 
 
 Calculation of Coulomb and exchange terms in the third-generation density functional calculation method

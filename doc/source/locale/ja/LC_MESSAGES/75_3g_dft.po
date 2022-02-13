@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ProteinDF User's Manual 2022.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-02-08 13:44+0900\n"
+"POT-Creation-Date: 2022-02-10 11:12+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -32,18 +32,30 @@ msgid ""
 " for achieving canonical molecular orbitals of large molecules in "
 "ProteinDF. Please refer to the paper [ref:Hirano]_ for details. Here is "
 "an overview."
-msgstr "ProteinDFにおいて大規模分子の正準分子軌道を達成する上で、欠かすことのでききない計算方法が第3世代密度汎関数計算法です。詳細は論文 [ref:Hirano]_ を参照してください。ここでは、概要を紹介します。"
+msgstr ""
+"ProteinDFにおいて大規模分子の正準分子軌道を達成する上で、欠かすことのでききない計算方法が第3世代密度汎関数計算法です。詳細は論文 "
+"[ref:Hirano]_ を参照してください。ここでは、概要を紹介します。"
 
 #: ../../source/75_3g_dft.rst:13
+msgid ""
+"There are challenges that need to be overcome in order to efficiently "
+"perform canonical molecular orbitals of large molecules. One is how to "
+"overcome the huge amount of computation, and the other is how to handle "
+"the large amount of memory required."
+msgstr "大規模分子の正準分子軌道を効率的に行うためには、克服すべき課題があります。一つは膨大な計算量をどう克服するか、もう一つは必要な大容量メモリをどのように取り扱うか、です。"
+
+#: ../../source/75_3g_dft.rst:16
 msgid ""
 "In general, the computational complexity of a canonical molecular orbital"
 " calculation is :math:`N`, where N is the total number of basis "
 "functions. Formally, it is expressed as :math:`O(N^{4})`. This "
 "calculation size dependence is due to the four-center two-electron "
 "repulsive integral required to calculate the Coulomb and exchange terms."
-msgstr "一般に正準分子軌道計算の計算量は、基底関数の総数を :math:`N` とすると、形式的に :math:`O(N^{4})` とあらわされます。この計算サイズ依存性は、クーロン項・交換項の計算に必要な4中心2電子反発積分に起因するものです。"
+msgstr ""
+"一般に正準分子軌道計算の計算量は、基底関数の総数を :math:`N` とすると、形式的に :math:`O(N^{4})` "
+"とあらわされます。この計算サイズ依存性は、クーロン項・交換項の計算に必要な4中心2電子反発積分に起因するものです。"
 
-#: ../../source/75_3g_dft.rst:18
+#: ../../source/75_3g_dft.rst:20
 msgid ""
 "By using the cutoff method to ignore small integrals in advance, the "
 "computational complexity can be reduced to :math:`O(N^{2})` or even "
@@ -51,9 +63,48 @@ msgid ""
 "method has yet been found that can stably achieve canonical molecular "
 "orbital calculations for any large molecule, including proteins with a "
 "variety of properties."
-msgstr "あらかじめ微小な積分値を無視するcutoff法などを駆使すると、その計算量を :math:`O(N^{2})` 程度に、さらに経験的パラメータを利用して :math:`O(N)` に抑えることができます。しかし、さまざまな性質を示すタンパク質をはじめとする、あらゆる大規模分子の正準分子軌道計算を安定的に達成できる :math:`O(N)` 計算法はまだ見つかっていません。"
+msgstr ""
+"あらかじめ微小な積分値を無視するcutoff法などを駆使すると、その計算量を :math:`O(N^{2})` "
+"程度に、さらに経験的パラメータを利用して :math:`O(N)` "
+"に抑えることができます。しかし、さまざまな性質を示すタンパク質をはじめとする、あらゆる大規模分子の正準分子軌道計算を安定的に達成できる "
+":math:`O(N)` 計算法はまだ見つかっていません。"
 
-#: ../../source/75_3g_dft.rst:24
+#: ../../source/75_3g_dft.rst:25
+msgid ""
+"Currently, the mainstream molecular integration methods are the DIRECT "
+"method and the UPDATE method. As CPU performance has improved, the DIRECT"
+" method, which calculates the molecular integrals required for SCF "
+"iterations sequentially, is fast. And, the UPDATE method, which "
+"calculates only the molecular integrals for the updated density matrix "
+"elements in the SCF iterations, is a perfect match for the DIRECT method."
+" However, in order to list the molecular integrals that need to be "
+"calculated by the DIRECT method, we need the information on the updated "
+"components of the density matrix (difference electron density matrix) for"
+" each iteration of the SCF calculation."
+msgstr "現在主流の分子積分法はDIRECT法とUPDATE法です。CPUの性能が向上した現在は、SCF繰り返し計算時に必要な分子積分を逐次計算するDIRECT法は高速に計算できます。SCF繰り返し計算において更新された密度行列要素に関する分子積分のみを求めるUPDATE法は、DIRECT法と相性が抜群です。ただし、DIRECT法で計算が必要な分子積分をリストアップするためには、SCF繰り返し計算の各回においての密度行列の更新成分情報(差電子密度行列)が必要です。"
+
+#: ../../source/75_3g_dft.rst:30
+msgid ""
+"In order to perform canonical molecular orbital calculations for large "
+"molecules using the DIRECT method, the current mainstream distributed "
+"memory parallel computers are not suitable. First of all, the amount of "
+"data in the difference electron density matrix may not fit into the "
+"memory of a computational node. It is possible to maintain a distributed "
+"global memory on a PC cluster, but access to the matrix elements will be "
+"slowed down by the network. Also, in a distributed-memory parallel "
+"computer, if there is even one slow compute node, the whole compute nodes"
+" will be forced to wait. Therefore, it is essential to equalize the tasks"
+" on all computation nodes. In the UPDATE method, the non-zero elements of"
+" the difference electron density matrix are unpredictable. In addition, "
+"the computational complexity for different types of basis function "
+"orbitals (s, p, d, ...) is significantly different. Therefore, it is very"
+" difficult to equalize the parallel computing tasks for a huge number of "
+"molecular integration calculations."
+msgstr ""
+"大規模分子の正準分子軌道計算をDIRECT法で行うためには、現在主流の分散メモリ型並列計算機は不向きです。まず、差電子密度行列のデータ量は計算ノードのメモリに収まらない可能性があります。大域メモリをPCクラスタに分散保持することも可能ですが、行列要素のアクセスがネットワークを介することで遅くなります。また、分散メモリ型並列計算機では、1つでも遅い計算ノードがあると全体の計算ノードが待たされるため、全ての計算ノードにおけるタスクの均等化が必須です。UPDATE法において、差電子密度行列の非ゼロ要素は予測不能です。さらに基底関数の軌道の種類(s,"
+" p, d, ...)に対する計算量は大幅に違います。したがって、膨大な分子積分計算の並列計算タスクの均等化は非常に困難です。"
+
+#: ../../source/75_3g_dft.rst:40
 msgid ""
 "In the third-generation density functional theory, the computational "
 "complexity is reduced by mathematically exact cutoff using the Cholesky "
@@ -63,50 +114,69 @@ msgid ""
 "even on the current mainstream distributed parallel computers."
 msgstr "第3世代密度汎関数計算法では、Cholesky分解を用いて数学的に厳密にcutoffすることで計算量を抑えるとともに、現在主流の分散型並列計算機でも効率的な並列計算を実現します。"
 
-#: ../../source/75_3g_dft.rst:28
+#: ../../source/75_3g_dft.rst:43
+msgid ""
+"As will hereinafter be described in detail, in the third-generation "
+"density functional calculation method, molecular integrals are stored as "
+"Cholesky vectors before the SCF iteration, and during the SCF iterations,"
+" the calculation is accomplished using only matrix operations (without "
+"molecular integrals). By using the optimized linear arithmetic library, "
+"we can exploit the computational performance of distributed-memory "
+"parallel computers for canonical molecular orbital calculations in large-"
+"scale molecular systems."
+msgstr ""
+"詳細は後述しますが、"
+"第3世代密度汎関数計算法では、SCF繰り返し計算前に分子積分をCholeskyベクトルとして蓄積し、"
+"SCF繰り返し計算中は(分子積分計算は行わず)に行列演算のみで計算を達成します。"
+"最適化されている線形演算ライブラリを用いることにより、"
+"大規模分子系における正準分子軌道計算において、分散メモリ型並列計算機の計算性能を引き出します。"
+
+#: ../../source/75_3g_dft.rst:51
 msgid ""
 "The third-generation density functional theory can be said to be an "
 "efficient storage of the molecular integrals in the File method in the "
 "form of Cholesky vectors. Nevertheless, the data size of Cholesky vectors"
 " for large molecules is still large, which is a drawback of the third-"
 "generation density functional theory."
-msgstr "第3世代密度汎関数計算法はFile法における分子積分をCholesky ベクトルの形で効率的に保存したとも言えます。それでも大規模分子のCholesky ベクトルのデータサイズが大きくなるため、これが第3世代密度汎関数計算法の欠点になります。"
+msgstr ""
+"第3世代密度汎関数計算法はFile法における分子積分をCholesky "
+"ベクトルの形で効率的に保存したとも言えます。それでも大規模分子のCholesky "
+"ベクトルのデータサイズが大きくなるため、これが第3世代密度汎関数計算法の欠点になります。"
 
-#: ../../source/75_3g_dft.rst:36
+#: ../../source/75_3g_dft.rst:58
 msgid ""
 "Calculation of Coulomb and exchange terms in the third-generation density"
 " functional calculation method"
 msgstr "第3世代密度汎関数計算法におけるクーロン項・交換項の計算"
 
-#: ../../source/75_3g_dft.rst:39
+#: ../../source/75_3g_dft.rst:61
 msgid ""
 "Consider the supermatrix :math:`\\pmb{V}` with the 4-center integral "
 ":math:`\\langle pq | rs \\rangle` as its matrix element. Since this is a "
 "positive definite symmetric matrix, it can be Cholesky decomposed."
 msgstr ""
-"4中心積分 :math:`\\langle pq | rs \\rangle` を行列要素とするスーパーマトリックス :math:`\pmb{V}` を考えると、"
-"これは正定値対称行列なのでCholesky分解できます。"
+"4中心積分 :math:`\\langle pq | rs \\rangle` を行列要素とするスーパーマトリックス "
+":math:`\\pmb{V}` を考えると、これは正定値対称行列なのでCholesky分解できます。"
 
-#: ../../source/75_3g_dft.rst:43
+#: ../../source/75_3g_dft.rst:65
 msgid ""
 "V^{ERI}_{pq,rs} = \\langle pq | rs \\rangle \\approx "
 "\\sum_{K=1}^{M}{L^{ERI}_{K,pq} L^{ERI}_{K,rs}}"
 msgstr ""
 
-#: ../../source/75_3g_dft.rst:48
+#: ../../source/75_3g_dft.rst:70
 msgid ""
 "Using the obtained Cholesky vector :math:`\\pmb{L}`, the Coulomb and Fock"
 " exchange terms can be obtained as follows"
-msgstr ""
-"得られたCholeskyベクトル :math:`\pmb{L}` を使うとクーロン項、Fock交換項は以下のように求められます。"
+msgstr "得られたCholeskyベクトル :math:`\\pmb{L}` を使うとクーロン項、Fock交換項は以下のように求められます。"
 
-#: ../../source/75_3g_dft.rst:51
+#: ../../source/75_3g_dft.rst:73
 msgid ""
 "J_{pq} = \\sum_{rs}{P_{rs} \\langle pq | rs \\rangle} \\approx "
 "\\sum_{rs}\\sum_{I}{L_{I,pq} L_{I,rs} P_{rs}}"
 msgstr ""
 
-#: ../../source/75_3g_dft.rst:56
+#: ../../source/75_3g_dft.rst:78
 msgid ""
 "K_{pq} &= - \\frac{1}{2} \\sum_{rs}{P_{rs} \\langle pr | qs \\rangle} "
 "\\approx - \\frac{1}{2} \\sum_{I}\\sum_{i}{X_{I,pi} X_{I,qi}}\n"
@@ -116,7 +186,7 @@ msgid ""
 "P_{rs} &= \\sum_{i}{Q_{ri} Q_{si}}"
 msgstr ""
 
-#: ../../source/75_3g_dft.rst:65
+#: ../../source/75_3g_dft.rst:87
 msgid ""
 "The computational precision of the Cholesky decomposition, "
 ":math:`\\delta`, can then be obtained as follows The decomposition can be"
@@ -124,17 +194,18 @@ msgid ""
 "user, and the rank of the matrix can be reduced accordingly. In other "
 "words, the size of the Cholesky vector :math:`\\pmb{L}` can be reduced "
 "according to the desired computational precision."
-msgstr "このとき、Cholesky分解の計算精度 :math:`\delta` は以下のように求めらます。"
-"ユーザーが決めた任意の計算精度で数学的に厳密に分解が可能であり、それに応じて行列のrankを下げることができます。"
-"すなわち、求める計算精度に応じてCholeskyベクトル :math:`\pmb{L}` のサイズを削減することができます。"
+msgstr ""
+"このとき、Cholesky分解の計算精度 :math:`\\delta` "
+"は以下のように求めらます。ユーザーが決めた任意の計算精度で数学的に厳密に分解が可能であり、それに応じて行列のrankを下げることができます。すなわち、求める計算精度に応じてCholeskyベクトル"
+" :math:`\\pmb{L}` のサイズを削減することができます。"
 
-#: ../../source/75_3g_dft.rst:70
+#: ../../source/75_3g_dft.rst:92
 msgid ""
 "\\left| \\langle pq | rs \\rangle - \\sum_{K=1}^{M}{L_{K,pq} L_{K,rs}} "
 "\\right| \\leq \\delta"
 msgstr ""
 
-#: ../../source/75_3g_dft.rst:75
+#: ../../source/75_3g_dft.rst:97
 msgid ""
 "You can also reduce the size of the Cholesky vector :math:`\\pmb{L}` by "
 "sorting out the diagonal components of the supermatrix :math:`\\pmb{V}` "
@@ -143,21 +214,22 @@ msgid ""
 "those whose diagonal components are larger than the threshold "
 ":math:`\\pmb{V}`. This is equivalent to the commonly used cutoff method "
 "with Schwarz's inequality."
-msgstr "また、スーパーマトリックス :math:`\pmb{V}` の対角成分の値が閾値 :math:`\tau` よりも大きなものを選別しておくことで、"
-"Choleskyベクトル :math:`\pmb{L}` のサイズを削減することもできます。"
-"これは一般的に用いられるSchwarzの不等式によるcutoff法と等価です。"
+msgstr ""
+"また、スーパーマトリックス :math:`\\pmb{V}` の対角成分の値が閾値 :math:`\tau` "
+"よりも大きなものを選別しておくことで、Choleskyベクトル :math:`\\pmb{L}` "
+"のサイズを削減することもできます。これは一般的に用いられるSchwarzの不等式によるcutoff法と等価です。"
 
-#: ../../source/75_3g_dft.rst:80
+#: ../../source/75_3g_dft.rst:102
 msgid "\\langle pq | pq \\rangle \\ge \\tau"
 msgstr ""
 
-#: ../../source/75_3g_dft.rst:86
+#: ../../source/75_3g_dft.rst:108
 msgid ""
 "Implementation of the third-generation density functional calculation "
 "method in the ProteinDF"
 msgstr "ProteinDFにおける第3世代密度汎関数計算法の実装"
 
-#: ../../source/75_3g_dft.rst:89
+#: ../../source/75_3g_dft.rst:111
 msgid ""
 "In recent years, computers have greatly improved their performance "
 "through the use of caches. The direction of data access for Cholesky "
@@ -169,13 +241,11 @@ msgid ""
 "ProteinDF switches the data access direction before and during SCF "
 "iterations."
 msgstr ""
-"近年のコンピュータはキャッシュの利用によって大幅に性能を向上させています。"
-"Cholesky ベクトルのデータアクセス方向は、Cholesky ベクトルの生成時とCholesky ベクトルを使ったクーロン項・交換項の計算時で異なります。"
-"Cholesky ベクトルの生成時は行方向のデータアクセスになりますが、クーロン項・交換項の計算時は列方向のデータアクセスになります。"
-"コンピュータのキャッシュを有効活用するために、SCF繰り返し計算前と計算中でProteinDFではデータアクセス方向を切り替えます。"
+"近年のコンピュータはキャッシュの利用によって大幅に性能を向上させています。Cholesky ベクトルのデータアクセス方向は、Cholesky "
+"ベクトルの生成時とCholesky ベクトルを使ったクーロン項・交換項の計算時で異なります。Cholesky "
+"ベクトルの生成時は行方向のデータアクセスになりますが、クーロン項・交換項の計算時は列方向のデータアクセスになります。コンピュータのキャッシュを有効活用するために、SCF繰り返し計算前と計算中でProteinDFではデータアクセス方向を切り替えます。"
 
-
-#: ../../source/75_3g_dft.rst:97
+#: ../../source/75_3g_dft.rst:119
 msgid ""
 "When switching the data access direction for Cholesky vectors and when "
 "calculating Coulomb and exchange terms, file I/O is a major performance "
@@ -184,18 +254,16 @@ msgid ""
 "provides fast file I/O, such as SSD, you can achieve a high-performance "
 "calculation."
 msgstr ""
-"Cholesky ベクトルのデータアクセス方向の切り替えと、クーロン項・交換項計算時において、"
-"ファイルI/Oがパフォーマンスに大きな影響を与えます。"
-"ProteinDFでは `local_temp_path` キーワードでCholesky ベクトルの保存領域を指定できます。"
-"SSDなど高速なファイルI/Oをもたらす機器を指定することで、パフォーマンスの良い計算が達成できます。"
+"Cholesky "
+"ベクトルのデータアクセス方向の切り替えと、クーロン項・交換項計算時において、ファイルI/Oがパフォーマンスに大きな影響を与えます。ProteinDFでは"
+" `local_temp_path` キーワードでCholesky "
+"ベクトルの保存領域を指定できます。SSDなど高速なファイルI/Oをもたらす機器を指定することで、パフォーマンスの良い計算が達成できます。"
 
-
-#: ../../source/75_3g_dft.rst:103
+#: ../../source/75_3g_dft.rst:125
 msgid "Reference"
 msgstr ""
 
-
-#: ../../source/75_3g_dft.rst:105
+#: ../../source/75_3g_dft.rst:127
 msgid ""
 "Hirano, F. Sato, \"A third-generation density-functional-theory-based "
 "method for calculating canonical molecular orbitals of large molecules\","

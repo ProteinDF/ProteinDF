@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ProteinDF User's Manual 2020.06.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-07 21:24+0900\n"
+"POT-Creation-Date: 2022-02-09 13:05+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,11 +20,11 @@ msgstr ""
 
 #: ../../source/80_analysis.rst:5
 msgid "Analysis of the ProteinDF Calculation Results"
-msgstr ""
+msgstr "ProteinDF計算結果の解析"
 
 #: ../../source/80_analysis.rst:9
 msgid "General analysis tools"
-msgstr ""
+msgstr "一般利用向け解析ツール"
 
 #: ../../source/80_analysis.rst:11
 msgid "pdf-component"
@@ -34,132 +34,148 @@ msgstr ""
 msgid ""
 "Displays atomic orbitals with a large contribution to the specified "
 "molecular orbital."
-msgstr ""
+msgstr "分子軌道における基底関数(原子軌道)の寄与率を表示します。"
 
 #: ../../source/80_analysis.rst:19
 msgid "Executing the command above obtains the following outputs:"
-msgstr ""
+msgstr "コマンドを実行すると以下のような出力が得られます。"
 
 #: ../../source/80_analysis.rst:37
-msgid "pdf-pop-mulliken"
+msgid "pdf-kwd"
 msgstr ""
 
 #: ../../source/80_analysis.rst:39
-msgid "Output Mulliken population."
-msgstr ""
+msgid ""
+"Show ProteinDF input keywords. It can be output in several formats. "
+"Please refer to the help(-h)."
+msgstr "ProteinDF入力ファイルにおけるキーワードを出力します。いくつかの形式で出力できます。詳しくはヘルプ(-h)を参照してください"
 
 #: ../../source/80_analysis.rst:48
-msgid "pdf-mkfld-mo"
+msgid "pdf-pop-mulliken"
 msgstr ""
 
 #: ../../source/80_analysis.rst:50
-msgid "Outputs molecular orbital field data."
-msgstr ""
+msgid "Output Mulliken population."
+msgstr "Mulliken電荷密度分布を出力します。"
 
 #: ../../source/80_analysis.rst:57
-msgid "pdf-mkfld-esp"
+msgid "pdf-mkfld-mo"
 msgstr ""
 
 #: ../../source/80_analysis.rst:59
-msgid "Outputs electrostatic potential field data."
+msgid ""
+"Outputs molecular orbital volume data. It can be output in several "
+"formats. Please refer to the help(-h)."
+msgstr "分子軌道のボリュームデータを出力します。いくつかの形式で出力できます。詳しくはヘルプ(-h)を参照してください"
+
+#: ../../source/80_analysis.rst:68
+msgid "pdf-mkfld-esp"
 msgstr ""
 
-#: ../../source/80_analysis.rst:66
+#: ../../source/80_analysis.rst:70
+msgid ""
+"Outputs electrostatic potential volume data. It can be output in several "
+"formats. Please refer to the help(-h)."
+msgstr "静電ポテンシャルのボリュームデータを出力します。いくつかの形式で出力できます。詳しくはヘルプ(-h)を参照してください"
+
+#: ../../source/80_analysis.rst:79
 msgid "pdf-mkfld-dens"
 msgstr ""
 
-#: ../../source/80_analysis.rst:68
-msgid "Outputs electron density field data."
-msgstr ""
+#: ../../source/80_analysis.rst:81
+msgid ""
+"Outputs electron density volume data. It can be output in several "
+"formats. Please refer to the help(-h)."
+msgstr "電子密度のボリュームデータを出力します。いくつかの形式で出力できます。詳しくはヘルプ(-h)を参照してください"
 
-#: ../../source/80_analysis.rst:75
+#: ../../source/80_analysis.rst:89
 msgid "pdf-archive"
 msgstr ""
 
-#: ../../source/80_analysis.rst:77
+#: ../../source/80_analysis.rst:91
 msgid "Aggregates calculation results to create archives."
-msgstr ""
+msgstr "計算結果のアーカイブを作成して集計します。"
 
-#: ../../source/80_analysis.rst:84
+#: ../../source/80_analysis.rst:98
 msgid "pdf-report"
 msgstr ""
 
-#: ../../source/80_analysis.rst:86
+#: ../../source/80_analysis.rst:100
 msgid "Creates calculation result reports."
-msgstr ""
+msgstr "計算結果の簡単なレポートを出力します。"
 
-#: ../../source/80_analysis.rst:92
+#: ../../source/80_analysis.rst:106
 msgid ""
 "The user can obtain energy convergence curve (:num:`Fig. "
 "#analysisconvhist`) and orbital energy convergence history (:num:`Fig. "
 "#analysislevelhist`), as shown below:"
-msgstr ""
+msgstr "エネルギー収束カーブおよび分子軌道エネルギー収束履歴が得られます。"
 
-#: ../../source/80_analysis.rst:104
+#: ../../source/80_analysis.rst:118
 msgid "analysis_conv_hist.png"
 msgstr ""
 
-#: ../../source/80_analysis.rst:104
+#: ../../source/80_analysis.rst:118
 msgid "Energy convergence curve"
 msgstr ""
 
-#: ../../source/80_analysis.rst:114
+#: ../../source/80_analysis.rst:128
 msgid "analysis_level_hist.png"
 msgstr ""
 
-#: ../../source/80_analysis.rst:114
+#: ../../source/80_analysis.rst:128
 msgid "Orbital energy convergence history"
 msgstr ""
 
-#: ../../source/80_analysis.rst:118
+#: ../../source/80_analysis.rst:132
 msgid "Advanced (debug) tools"
-msgstr ""
+msgstr "応用(開発者向け)ツール"
 
-#: ../../source/80_analysis.rst:120
+#: ../../source/80_analysis.rst:134
 msgid "pdf-mat-show"
 msgstr ""
 
-#: ../../source/80_analysis.rst:122
+#: ../../source/80_analysis.rst:136
 msgid "Outputs the specified matrix file (binary format) to standard output."
-msgstr ""
+msgstr "バイナリ形式の行列ファイルをテキスト形式で出力します。"
 
-#: ../../source/80_analysis.rst:129
+#: ../../source/80_analysis.rst:143
 msgid "pdf-vtr-show"
 msgstr ""
 
-#: ../../source/80_analysis.rst:131
+#: ../../source/80_analysis.rst:145
 msgid "Outputs the specified vector file (binary format) to standard output."
-msgstr ""
+msgstr "バイナリ形式のベクトルファイルをテキスト形式で出力します。"
 
-#: ../../source/80_analysis.rst:138
+#: ../../source/80_analysis.rst:152
 msgid "mpac2yml.py"
 msgstr ""
 
-#: ../../source/80_analysis.rst:140
+#: ../../source/80_analysis.rst:154
 msgid "Converts MessagePack files to YAML files."
-msgstr ""
+msgstr "MessagePack形式のファイルをYAML形式に変換します。"
 
-#: ../../source/80_analysis.rst:150
+#: ../../source/80_analysis.rst:164
 msgid "yml2mpac.py"
 msgstr ""
 
-#: ../../source/80_analysis.rst:152
+#: ../../source/80_analysis.rst:166
 msgid "Converts YAML files to MessagePack files."
-msgstr ""
+msgstr "YAML形式のファイルをMessagePack形式に変換します。"
 
-#: ../../source/80_analysis.rst:162
+#: ../../source/80_analysis.rst:176
 msgid "pdf-diff"
 msgstr ""
 
-#: ../../source/80_analysis.rst:164
+#: ../../source/80_analysis.rst:178
 msgid "Compares two calculation results."
-msgstr ""
+msgstr "2つの計算結果を比較します。"
 
-#: ../../source/80_analysis.rst:171
+#: ../../source/80_analysis.rst:185
 msgid "pdf-mat-info"
 msgstr ""
 
-#: ../../source/80_analysis.rst:173
+#: ../../source/80_analysis.rst:187
 msgid "Outputs matrix information."
-msgstr ""
+msgstr "行列ファイルの情報(行数、列数など)を出力します。"
 
