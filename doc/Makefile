@@ -38,6 +38,7 @@ html_%:
 
 # orverride default html target
 html: html_en html_ja
+	@cp redirect.html "$(BUILDDIR)/html/index.html"
 
 livereload:
 	@$(SPHINXAUTOBUILD) -b html $(ALLSPHINXOPTS) "$(SOURCEDIR)" $(BUILDDIR)/html
