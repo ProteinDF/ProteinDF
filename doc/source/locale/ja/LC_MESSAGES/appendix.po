@@ -1,22 +1,23 @@
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: ProteinDF User's Manual 2014.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-11-18 00:11-0600\n"
+"POT-Creation-Date: 2021-11-07 21:16+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
 
 #: ../../source/appendix.rst:3
-msgid "付録"
+msgid "Appendix"
 msgstr ""
 
 #: ../../source/appendix.rst:6
-msgid "ProteinDF起動オプション"
+msgid "startup options of ProteinDF"
 msgstr ""
 
 #: ../../source/appendix.rst:8
@@ -24,7 +25,9 @@ msgid "-r"
 msgstr ""
 
 #: ../../source/appendix.rst:10
-msgid "計算を再開可能な場所から再開(リスタート)します。 計算条件はパラメータファイル(pdfparam.mpac)から読み取られます。"
+msgid ""
+"Resume (restart) the calculation from where it can be restarted. The "
+"calculation conditions are read from the parameter file (pdfparam.mpac)."
 msgstr ""
 
 #: ../../source/appendix.rst:14
@@ -32,7 +35,9 @@ msgid "-i input_file"
 msgstr ""
 
 #: ../../source/appendix.rst:16
-msgid "入力ファイルを指定して計算を開始します。 指定が無い場合はカレントディレクトリ上のfl_Userinputが使用されます。"
+msgid ""
+"Specify an input file to start the calculation. If not specified, "
+"fl_Userinput on the current directory will be used."
 msgstr ""
 
 #: ../../source/appendix.rst:20
@@ -40,7 +45,9 @@ msgid "-o output_file"
 msgstr ""
 
 #: ../../source/appendix.rst:22
-msgid "結果の出力ファイルを指定します。 指定が無い場合はカレントディレクトリにfl_Out_Stdが出力されます。"
+msgid ""
+"Specifies the output file for the result. If not specified, fl_Out_Std "
+"will be output to the current directory."
 msgstr ""
 
 #: ../../source/appendix.rst:26
@@ -49,140 +56,23 @@ msgstr ""
 
 #: ../../source/appendix.rst:28
 msgid ""
-"デバッグ出力を行います。 出力ファイルならびに標準出力に大量にメッセージが出力されるため、 注意が必要です。 通常は選択する必要はありません。"
+"Debug output. Note that a large number of messages are output to the file"
+" and standard output. Normally, you do not need to select this option."
 msgstr ""
 
-#: ../../source/appendix.rst:36
-msgid "入力パラメータリスト"
+#: ../../source/appendix.rst:34
+msgid "Input parameter list"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "pdf_param_path"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "キーワード"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "説明"
 msgstr ""
 
@@ -190,66 +80,7 @@ msgstr ""
 msgid "パラメータファイルのパス"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "デフォルト値"
 msgstr ""
 
@@ -257,75 +88,15 @@ msgstr ""
 msgid "pdfparam.mpac"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "形式"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid ".*"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:13 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:13
 msgid "step_control"
 msgstr ""
 
@@ -341,7 +112,7 @@ msgstr ""
 msgid "((create|integral|guess|scf|force)\\s*)+"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:25 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:25
 msgid "comment"
 msgstr ""
 
@@ -349,7 +120,7 @@ msgstr ""
 msgid "コメント"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:37 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:37
 msgid "linear_algebra_package"
 msgstr ""
 
@@ -365,7 +136,7 @@ msgstr ""
 msgid "(lapack|scalapack)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:49 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:49
 msgid "scalapack_block_size"
 msgstr ""
 
@@ -381,7 +152,7 @@ msgstr ""
 msgid "(\\d+)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:61 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:61
 msgid "save_distributed_matrix_to_local_disk"
 msgstr ""
 
@@ -389,31 +160,15 @@ msgstr ""
 msgid "大域分散行列を各ノードで分散して保存"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "no"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "(yes|no)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:73 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:73
 msgid "local_disk_path"
 msgstr ""
 
@@ -425,7 +180,7 @@ msgstr ""
 msgid "/tmp"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:85 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:85
 msgid "memory_size"
 msgstr ""
 
@@ -441,7 +196,7 @@ msgstr ""
 msgid "\\d+\\s*(MB|GB)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:97 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:97
 msgid "use_mapfile"
 msgstr ""
 
@@ -449,7 +204,7 @@ msgstr ""
 msgid "仮想ディスクを使用する"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:109 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:109
 msgid "mapfile_size"
 msgstr ""
 
@@ -465,7 +220,7 @@ msgstr ""
 msgid "(\\d+\\s*(MB|GB)|auto)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:121 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:121
 msgid "mapfile_basename"
 msgstr ""
 
@@ -477,7 +232,7 @@ msgstr ""
 msgid "pdf"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:133 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:133
 msgid "work_on_disk"
 msgstr ""
 
@@ -485,7 +240,7 @@ msgstr ""
 msgid "いつでも仮想ディスクを使用する"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:145 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:145
 msgid "parallel_processing_type"
 msgstr ""
 
@@ -501,7 +256,7 @@ msgstr ""
 msgid "(divide_and_conquer|DC|master_slave|MS)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:157 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:157
 msgid "cleanup"
 msgstr ""
 
@@ -509,7 +264,7 @@ msgstr ""
 msgid "中間ファイルの削除"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:169 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:169
 msgid "show_keyword"
 msgstr ""
 
@@ -517,7 +272,7 @@ msgstr ""
 msgid "キーワードを表示する"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:181 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:181
 msgid "show_input"
 msgstr ""
 
@@ -525,15 +280,11 @@ msgstr ""
 msgid "入力パラメータを表示する"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
 #: ../../source/pdfkwd.rst:1
 msgid "yes"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:193 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:193
 msgid "show_coordinates"
 msgstr ""
 
@@ -541,7 +292,7 @@ msgstr ""
 msgid "分子座標を表示する"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:205 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:205
 msgid "show_orbital_basis"
 msgstr ""
 
@@ -557,7 +308,7 @@ msgstr ""
 msgid "(gamess|amoss|none)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:217 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:217
 msgid "guess"
 msgstr ""
 
@@ -573,7 +324,7 @@ msgstr ""
 msgid "(rho|file_rho|lcao|density|core|huckel|harris)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:229 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:229
 msgid "cut-value"
 msgstr ""
 
@@ -581,7 +332,7 @@ msgstr ""
 msgid "積分カットオフ値"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "1.0E-10"
 msgstr ""
 
@@ -589,7 +340,7 @@ msgstr ""
 msgid "(double > 0)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:241 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:241
 msgid "block-size"
 msgstr ""
 
@@ -601,11 +352,11 @@ msgstr ""
 msgid "1024000"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "(integer > 0)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:253 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:253
 msgid "charge-extrapolate-number"
 msgstr ""
 
@@ -613,17 +364,15 @@ msgstr ""
 msgid "ダミー電荷を段階的に外挿する回数"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
 #: ../../source/pdfkwd.rst:1
 msgid "1"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
 #: ../../source/pdfkwd.rst:1
 msgid "(integer >= 1)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:265 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:265
 msgid "orbital-overlap-correspondence"
 msgstr ""
 
@@ -631,15 +380,15 @@ msgstr ""
 msgid "軌道の対応付けを行う"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "off"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "on/off"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:277 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:277
 msgid "orbital-overlap-correspondence-first"
 msgstr ""
 
@@ -647,7 +396,7 @@ msgstr ""
 msgid "軌道の対応付けを初回から行う"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:289 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:289
 msgid "orbital-overlap-correspondence-method"
 msgstr ""
 
@@ -663,12 +412,11 @@ msgstr ""
 msgid "mo-overlap/mo-projection"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:301 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:301
 msgid "orbital-overlap-correspondence-number"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "3"
 msgstr ""
 
@@ -676,7 +424,7 @@ msgstr ""
 msgid "integer"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:313 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:313
 msgid "summary"
 msgstr ""
 
@@ -684,15 +432,15 @@ msgstr ""
 msgid "計算サマリーを表示する"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "none"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "(none|convergence|every-scf)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:325 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:325
 msgid "analyze_population"
 msgstr ""
 
@@ -700,7 +448,7 @@ msgstr ""
 msgid "形式電荷の計算を行う"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:337 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:337
 msgid "max-iteration"
 msgstr ""
 
@@ -712,11 +460,11 @@ msgstr ""
 msgid "100"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "(integer)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:349 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:349
 msgid "method"
 msgstr ""
 
@@ -732,7 +480,7 @@ msgstr ""
 msgid "(rks|uks|roks)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:361 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:361
 msgid "method/rks/occlevel"
 msgstr ""
 
@@ -740,13 +488,11 @@ msgstr ""
 msgid "rks計算における占有軌道"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
 #: ../../source/pdfkwd.rst:1
 msgid "(array of integer >= 0)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:373 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:373
 msgid "method/rks/electrons"
 msgstr ""
 
@@ -758,7 +504,7 @@ msgstr ""
 msgid "(integer >= 2)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:385 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:385
 msgid "method/uks/alpha_occlevel"
 msgstr ""
 
@@ -766,7 +512,7 @@ msgstr ""
 msgid "uks計算におけるalpha電子の占有軌道"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:397 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:397
 msgid "method/uks/alpha_electrons"
 msgstr ""
 
@@ -774,16 +520,16 @@ msgstr ""
 msgid "uks計算におけるalpha電子の数"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:409 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:469 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:409
+#: ../../source/pdfkwd.rst:469
 msgid "method/uks/beta_occlevel"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "uks計算におけるbeta電子の占有軌道"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:421 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:421
 msgid "method/uks/beta_electrons"
 msgstr ""
 
@@ -791,7 +537,7 @@ msgstr ""
 msgid "uks計算におけるbeta電子の数"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:433 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:433
 msgid "method/roks/closed_occlevel"
 msgstr ""
 
@@ -799,11 +545,11 @@ msgstr ""
 msgid "roks計算における閉殻軌道の指定"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "(array of integer >= 1)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:445 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:445
 msgid "method/uks/close_electrons"
 msgstr ""
 
@@ -811,7 +557,7 @@ msgstr ""
 msgid "roks計算における閉殻軌道の電子数"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:457 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:457
 msgid "method/roks/open_occlevel"
 msgstr ""
 
@@ -819,19 +565,19 @@ msgstr ""
 msgid "roks計算における開殻軌道の指定"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:481 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:481
 msgid "save_diff_density_matrix"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:493 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:493
 msgid "use_matrix_cache"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:505 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:505
 msgid "force_loading_from_disk"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:517 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:517
 msgid "show_cache_report"
 msgstr ""
 
@@ -839,19 +585,19 @@ msgstr ""
 msgid "キャッシュ情報の表示"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:529 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:529
 msgid "disk-utilization"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "yes/no"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:541 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:541
 msgid "update_method"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:553 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:553
 msgid "orbital-independence-threshold"
 msgstr ""
 
@@ -863,7 +609,7 @@ msgstr ""
 msgid "(real >= 0)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:565 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:565
 msgid "convergence/type"
 msgstr ""
 
@@ -871,7 +617,7 @@ msgstr ""
 msgid "収束の対象となるパラメータ"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "density"
 msgstr ""
 
@@ -879,7 +625,7 @@ msgstr ""
 msgid "(fock|density|dcoef)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:577 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:577
 msgid "convergence/threshold"
 msgstr ""
 
@@ -891,11 +637,11 @@ msgstr ""
 msgid "1e-3"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "(real > 0)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:589 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:589
 msgid "convergence/threshold-energy"
 msgstr ""
 
@@ -907,7 +653,7 @@ msgstr ""
 msgid "1e-4"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:601 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:601
 msgid "scf-acceleration"
 msgstr ""
 
@@ -923,7 +669,7 @@ msgstr ""
 msgid "(damping|anderson|diis)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:613 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:613
 msgid "scf-acceleration/damping/damping-factor"
 msgstr ""
 
@@ -935,14 +681,11 @@ msgstr ""
 msgid "0.85"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
 #: ../../source/pdfkwd.rst:1
 msgid "(real)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:625 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:625
 msgid "scf-acceleration/daming/start-number"
 msgstr ""
 
@@ -950,16 +693,15 @@ msgstr ""
 msgid "damping法を開始するイテレーション"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "0"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
 #: ../../source/pdfkwd.rst:1
 msgid "(int)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:637 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:637
 msgid "scf-acceleration/damping/damping-type"
 msgstr ""
 
@@ -971,7 +713,7 @@ msgstr ""
 msgid "(fock|density_matrix|density|dcoef)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:649 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:649
 msgid "scf-acceleration/anderson/damping-factor"
 msgstr ""
 
@@ -983,7 +725,7 @@ msgstr ""
 msgid "0.50"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:661 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:661
 msgid "scf-acceleration/anderson/start-number"
 msgstr ""
 
@@ -991,7 +733,7 @@ msgstr ""
 msgid "anderson法を適用開始するイテレーション"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:673 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:673
 msgid "level-shift"
 msgstr ""
 
@@ -999,7 +741,7 @@ msgstr ""
 msgid "レベルシフト法を適用する"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:685 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:685
 msgid "level-shift/start-iteration"
 msgstr ""
 
@@ -1007,7 +749,7 @@ msgstr ""
 msgid "レベルシフト法を開始するイテレーション"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:697 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:697
 msgid "level-shift/ls-closed-mo"
 msgstr ""
 
@@ -1015,12 +757,11 @@ msgstr ""
 msgid "閉殻軌道に使用するレベルシフト値"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
 #: ../../source/pdfkwd.rst:1
 msgid "0.00"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:709 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:709
 msgid "level-shift/ls-open-mo"
 msgstr ""
 
@@ -1028,7 +769,7 @@ msgstr ""
 msgid "開殻軌道に使用するレベルシフト値"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:721 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:721
 msgid "level-shift/ls-virtual-mo"
 msgstr ""
 
@@ -1036,11 +777,11 @@ msgstr ""
 msgid "空軌道に使用するレベルシフト値"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:733 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:733
 msgid "scf-acceleration/diis/number-of-diis"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:745 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:745
 msgid "scf-acceleration/diis/start-number"
 msgstr ""
 
@@ -1048,11 +789,11 @@ msgstr ""
 msgid "DIIS法を開始するイテレーション"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "(integer >= 0)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:757 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:757
 msgid "scf-acceleration/diis/start-extrapolation"
 msgstr ""
 
@@ -1060,7 +801,7 @@ msgstr ""
 msgid "6"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:769 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:769
 msgid "xc-potential"
 msgstr ""
 
@@ -1076,7 +817,7 @@ msgstr ""
 msgid "(svwn~|svwn|blyp|b3lyp)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:781 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:781
 msgid "grid_free"
 msgstr ""
 
@@ -1088,7 +829,7 @@ msgstr ""
 msgid "false"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:793 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:793
 msgid "xc-potential/grid-type"
 msgstr ""
 
@@ -1104,28 +845,27 @@ msgstr ""
 msgid "fine/medium-fine/medium/coarse/sg-1"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:805 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:805
 msgid "xc-update"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:817 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:817
 msgid "xc-density-threshold"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "1.0E-16"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
 #: ../../source/pdfkwd.rst:1
 msgid "real"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:829 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:829
 msgid "TEI-integral-driven"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:841 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:841
 msgid "J_engine"
 msgstr ""
 
@@ -1141,7 +881,7 @@ msgstr ""
 msgid "(conventional|RI_J|CD)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:853 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:853
 msgid "K_engine"
 msgstr ""
 
@@ -1157,7 +897,7 @@ msgstr ""
 msgid "(conventional|RI_K|CD)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:865 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:865
 msgid "CDAM_tau"
 msgstr ""
 
@@ -1165,7 +905,7 @@ msgstr ""
 msgid "CDAM法におけるτ値"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:877 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:877
 msgid "CD_epsilon"
 msgstr ""
 
@@ -1177,11 +917,11 @@ msgstr ""
 msgid "1.0E-4"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:889 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:889
 msgid "scf-memory-saving"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:901 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:901
 msgid "geometry/cartesian/input"
 msgstr ""
 
@@ -1189,21 +929,15 @@ msgstr ""
 msgid "カーテシアン座標による#分子座標の指定"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "nil"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
-#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1
 msgid "nil/stored"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:913 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:913
 msgid "geometry/cartesian/unit"
 msgstr ""
 
@@ -1215,23 +949,23 @@ msgstr ""
 msgid "au/a.u./angstrom"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:925 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:925
 msgid "basis-set/orbital"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:937 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:937
 msgid "basis-set/density-auxiliary"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:949 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:949
 msgid "basis-set/exchange-auxiliary"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:961 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:961
 msgid "xc_density_threshold"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:973 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:973
 msgid "geometry"
 msgstr ""
 
@@ -1243,27 +977,27 @@ msgstr ""
 msgid "cartesian/file"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:985 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:985
 msgid "coordinates"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:997 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:997
 msgid "basis_sets"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1009 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1009
 msgid "basis_sets_j"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1021 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1021
 msgid "basis_sets_k"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1033 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1033
 msgid "independent-orbital-number"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1045 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1045
 msgid "xc-potential/gxalpha/alpha-value"
 msgstr ""
 
@@ -1271,19 +1005,19 @@ msgstr ""
 msgid "0.7"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1057 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1057
 msgid "myu-nyu-zero"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1069 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1069
 msgid "guess/nsp-ppq"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1081 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1081
 msgid "guess/sp-ppq"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1093 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1093
 msgid "guess/trans-angle-threshold"
 msgstr ""
 
@@ -1291,7 +1025,7 @@ msgstr ""
 msgid "1.0 1.5 20 30"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1105 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1105
 msgid "guess/make-myu-nyu"
 msgstr ""
 
@@ -1303,7 +1037,7 @@ msgstr ""
 msgid "meth0/meth1/meth2/meth3/meth4"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1117 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1117
 msgid "guess/vct-normalize"
 msgstr ""
 
@@ -1311,11 +1045,11 @@ msgstr ""
 msgid "ON OFF OFF"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1129 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1129
 msgid "guess/part-normalize"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1141 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1141
 msgid "guess/user-vector"
 msgstr ""
 
@@ -1323,156 +1057,241 @@ msgstr ""
 msgid "(nil|stored)"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1153 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1153
 msgid "num_of_atoms"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1165 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1165
 msgid "num_of_dummy_atoms"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1177 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1177
 msgid "num_of_AOs"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1189 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1189
 msgid "num_of_MOs"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1201 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1201
 msgid "num_of_auxCDs"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1213 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1213
 msgid "num_of_auxXCs"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1225 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1225
 msgid "TE"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1237 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1237
 msgid "debug/file_warning"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1249 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1249
 msgid "debug/save_J"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1261 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1261
 msgid "debug/save_K"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1273 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1273
 msgid "debug/save_Fxc_pure"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1285 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1285
 msgid "debug/save_forces"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1297 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1297
 msgid "cutoff_distribution"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1309 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1309
 msgid "length_scale_parameter"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1321 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1321
 msgid "control"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1333 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1333
 msgid "debug/eri/exact_J"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1345 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1345
 msgid "cutoff_density"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1357 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1357
 msgid "cutoff_epsilon3"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1369 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1369
 msgid "debug/eri/exact_K"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1381 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1381
 msgid "new_engine"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1393 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1393
 msgid "debug/eri/output_K"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1405 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1405
 msgid "debug/eri/output_J"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1417 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1417
 msgid "num_of_iterations"
 msgstr ""
 
-#: ../../source/pdfkwd.rst:1429 ../../source/pdfkwd.rst:1
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1429
 msgid "stat"
 msgstr ""
 
-#: ../../source/appendix.rst:42
-msgid "入力ファイルフォーマット"
+#: ../../source/appendix.rst:40
+msgid "Input file format"
+msgstr ""
+
+#: ../../source/appendix.rst:44
+msgid "basis2 file format"
 msgstr ""
 
 #: ../../source/appendix.rst:46
-msgid "basis2ファイルフォーマット"
+msgid ""
+"The basis2 file stores the basis function information. The following is a"
+" concrete example."
 msgstr ""
 
-#: ../../source/appendix.rst:48
-msgid "basis2ファイルは基底関数情報を保存しています。 以下に具体例を示します。"
+#: ../../source/appendix.rst:53
+msgid "Format"
 msgstr ""
 
 #: ../../source/appendix.rst:55
-msgid "フォーマット"
+msgid "** line 1(Title)"
 msgstr ""
 
 #: ../../source/appendix.rst:57
-msgid "** 1行目(タイトル行)"
-msgstr ""
-
-#: ../../source/appendix.rst:59
 msgid ""
-"基底関数名を記述します。 \"O-\"から始まる名称は基底関数、\"A-\"から始まる名称は補助基底関数を表します。 "
-"基底関数の場合は1つのCGTOブロック、 補助基底関数の場合はクーロン項と交換相関項用の補助基底関数を表す2つのCGTOブロックから構成されます。"
+"Describes the name of the basis function. A name starting with \"O-\" "
+"indicates a basis function, and a name starting with \"A-\" indicates an "
+"auxiliary basis function. In the case of basis functions, a single CGTO "
+"block. In the case of auxiliary basis functions, it consists of two CGTO "
+"blocks, one for the Coulomb term and the other for the auxiliary basis "
+"functions for the exchange-correlation term."
 msgstr ""
 
-#: ../../source/appendix.rst:64
-msgid "** 2行目(CGTOブロック開始行)"
+#: ../../source/appendix.rst:63
+msgid "** line 2(the number of CGTOs)"
 msgstr ""
 
-#: ../../source/appendix.rst:66
+#: ../../source/appendix.rst:65
 msgid ""
-"縮約ガウス型基底関数(CGTO)の軌道の形と数を指定します。 空白文字により区切られた3つの整数値で表され、 順にs型、p型、d型の数を表します。 "
-"この行以降、CGTOブロックが続きます。"
+"Specifies the form and number of orbits of a contracted Gaussian basis "
+"function (CGTO). It is represented by three integer values separated by "
+"whitespace. The three integer values, separated by spaces, represent the "
+"number of s-type, p-type, and d-type orbits, in that order. After this "
+"line, the CGTO block continues."
 msgstr ""
 
-#: ../../source/appendix.rst:71
+#: ../../source/appendix.rst:70
 msgid ""
-"\"3 2 1\"と記述されていた場合、 s型の縮約ガウス型基底関数が3つ、 p型の縮約ガウス型基底関数が2つ、 "
-"d型の縮約ガウス型基底関数が1つ含まれていることを表します。 したがって、この行以降、7つのCGTOブロックが記述されることになります。"
+"If it is written as \"3 2 1,\" There are three contracted Gaussian basis "
+"functions of type s, two contracted Gaussian basis functions of type p, "
+"and one contracted Gaussian basis function of type d. Therefore, after "
+"this line, six CGTO blocks will be described."
 msgstr ""
 
-#: ../../source/appendix.rst:78
-msgid "** 3行目(CGTO開始行)"
+#: ../../source/appendix.rst:75
+msgid "** line 3(beginning of CGTO block)"
+msgstr ""
+
+#: ../../source/appendix.rst:77
+msgid ""
+"The beginning of a CGTO block indicates the number of primitive Gaussian "
+"basis functions (PGTO) that the CGTO block contains."
 msgstr ""
 
 #: ../../source/appendix.rst:80
-msgid "CGTOブロックの始まりは、当該CGTOブロックが含む原始ガウス型基底関数(PGTO)の数を表します。"
+msgid "** line 4(PGTO)"
 msgstr ""
 
-#: ../../source/appendix.rst:83
-msgid "** 4行目(PGTO行)"
+#: ../../source/appendix.rst:82
+msgid ""
+"The exponents and coefficients of the primitive basis functions (PGTO) "
+"are described, separated by whitespace. For the auxiliary basis "
+"functions, the coefficient (1.0) can be omitted."
 msgstr ""
 
-#: ../../source/appendix.rst:85
-msgid "原始基底関数(PGTO)の指数と係数を、空白文字で区切って記述します。 補助基底関数の場合は、係数(1.0)を省略することができます。"
-msgstr ""
+#~ msgid "付録"
+#~ msgstr ""
+
+#~ msgid "ProteinDF起動オプション"
+#~ msgstr ""
+
+#~ msgid "計算を再開可能な場所から再開(リスタート)します。 計算条件はパラメータファイル(pdfparam.mpac)から読み取られます。"
+#~ msgstr ""
+
+#~ msgid "入力ファイルを指定して計算を開始します。 指定が無い場合はカレントディレクトリ上のfl_Userinputが使用されます。"
+#~ msgstr ""
+
+#~ msgid "結果の出力ファイルを指定します。 指定が無い場合はカレントディレクトリにfl_Out_Stdが出力されます。"
+#~ msgstr ""
+
+#~ msgid "デバッグ出力を行います。 出力ファイルならびに標準出力に大量にメッセージが出力されるため、 注意が必要です。 通常は選択する必要はありません。"
+#~ msgstr ""
+
+#~ msgid "入力パラメータリスト"
+#~ msgstr ""
+
+#~ msgid "入力ファイルフォーマット"
+#~ msgstr ""
+
+#~ msgid "basis2ファイルフォーマット"
+#~ msgstr ""
+
+#~ msgid "basis2ファイルは基底関数情報を保存しています。 以下に具体例を示します。"
+#~ msgstr ""
+
+#~ msgid "フォーマット"
+#~ msgstr ""
+
+#~ msgid "** 1行目(タイトル行)"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "基底関数名を記述します。 \"O-\"から始まる名称は基底関数、\"A-\"から始まる名称は補助基底関数を表します。 "
+#~ "基底関数の場合は1つのCGTOブロック、 "
+#~ "補助基底関数の場合はクーロン項と交換相関項用の補助基底関数を表す2つのCGTOブロックから構成されます。"
+#~ msgstr ""
+
+#~ msgid "** 2行目(CGTOブロック開始行)"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "縮約ガウス型基底関数(CGTO)の軌道の形と数を指定します。 空白文字により区切られた3つの整数値で表され、 "
+#~ "順にs型、p型、d型の数を表します。 この行以降、CGTOブロックが続きます。"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "\"3 2 1\"と記述されていた場合、 s型の縮約ガウス型基底関数が3つ、 "
+#~ "p型の縮約ガウス型基底関数が2つ、 d型の縮約ガウス型基底関数が1つ含まれていることを表します。 "
+#~ "したがって、この行以降、7つのCGTOブロックが記述されることになります。"
+#~ msgstr ""
+
+#~ msgid "** 3行目(CGTO開始行)"
+#~ msgstr ""
+
+#~ msgid "CGTOブロックの始まりは、当該CGTOブロックが含む原始ガウス型基底関数(PGTO)の数を表します。"
+#~ msgstr ""
+
+#~ msgid "** 4行目(PGTO行)"
+#~ msgstr ""
+
+#~ msgid "原始基底関数(PGTO)の指数と係数を、空白文字で区切って記述します。 補助基底関数の場合は、係数(1.0)を省略することができます。"
+#~ msgstr ""
+

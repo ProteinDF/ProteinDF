@@ -1,7 +1,13 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2014-2020, Toshiyuki HIRANO
+# This file is distributed under the same license as the ProteinDF User's
+# Manual package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
 #
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: ProteinDF User's Manual 2014.0\n"
+"Project-Id-Version: ProteinDF User's Manual 2020.06.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-02-09 12:35+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
@@ -12,21 +18,74 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.1\n"
 
+#: ../../source/90_appendix.rst:3
+msgid "Appendix"
+msgstr "付録"
+
+#: ../../source/90_appendix.rst:6
+msgid "startup options of ProteinDF"
+msgstr "ProteinDFの実行オプション"
+
+#: ../../source/90_appendix.rst:8
+msgid "-r"
+msgstr ""
+
+#: ../../source/90_appendix.rst:10
+msgid ""
+"Resume (restart) the calculation from where it can be restarted. The "
+"calculation conditions are read from the parameter file (pdfparam.mpac)."
+msgstr "途中で止まった計算を再実行します。計算条件はパラメータファイル(pdfparam.mpac)から読み出されます。"
+
+#: ../../source/90_appendix.rst:14
+msgid "-i input_file"
+msgstr ""
+
+#: ../../source/90_appendix.rst:16
+msgid ""
+"Specify an input file to start the calculation. If not specified, "
+"fl_Userinput on the current directory will be used."
+msgstr "入力ファイルを指定します。指定されなければfl_Userinputというファイルが使用されます。"
+
+#: ../../source/90_appendix.rst:20
+msgid "-o output_file"
+msgstr ""
+
+#: ../../source/90_appendix.rst:22
+msgid ""
+"Specifies the output file for the result. If not specified, fl_Out_Std "
+"will be output to the current directory."
+msgstr "出力ファイルを指定します。指定されなければfl_Out_Stdというファイルが使用されます。"
+
+#: ../../source/90_appendix.rst:26
+msgid "-d"
+msgstr ""
+
+#: ../../source/90_appendix.rst:28
+msgid ""
+"Debug output. Note that a large number of messages are output to the file"
+" and standard output. Normally, you do not need to select this option."
+msgstr "デバッグ用の出力です。大量のメッセージが出力されるので注意してください。通常は使用する必要はありません。"
+
+#: ../../source/90_appendix.rst:34
+msgid "Input parameter list"
+msgstr "入力パラメータリスト"
+
 #: ../../source/pdfkwd.rst:1
 msgid "pdf_param_path"
 msgstr ""
 
 #: ../../source/pdfkwd.rst:1
+#, fuzzy
 msgid "parameter"
-msgstr ""
+msgstr "入力パラメータリスト"
 
 #: ../../source/pdfkwd.rst:1
 msgid "explanation"
-msgstr ""
+msgstr "説明"
 
 #: ../../source/pdfkwd.rst:1
 msgid "default"
-msgstr ""
+msgstr "デフォルト値"
 
 #: ../../source/pdfkwd.rst:1
 msgid "pdfparam.mpac"
@@ -34,7 +93,7 @@ msgstr ""
 
 #: ../../source/pdfkwd.rst:1
 msgid "values"
-msgstr ""
+msgstr "とりうる値"
 
 #: ../../source/pdfkwd.rst:1
 msgid ".*"
@@ -1012,288 +1071,77 @@ msgstr ""
 msgid "stat"
 msgstr ""
 
-#~ msgid "キーワード"
-#~ msgstr ""
-
-#~ msgid "説明"
-#~ msgstr ""
-
-#~ msgid "パラメータファイルのパス"
-#~ msgstr ""
-
-#~ msgid "デフォルト値"
-#~ msgstr ""
-
-#~ msgid "形式"
-#~ msgstr ""
-
-#~ msgid "計算ステップの指定"
-#~ msgstr ""
-
-#~ msgid "コメント"
-#~ msgstr ""
-
-#~ msgid "線形ライブラリの指定"
-#~ msgstr ""
-
-#~ msgid "ScaLAPACKブロックサイズの指定"
-#~ msgstr ""
-
-#~ msgid "大域分散行列を各ノードで分散して保存"
-#~ msgstr ""
-
-#~ msgid "local_disk_path"
-#~ msgstr ""
-
-#~ msgid "ローカルディスクへの保存に使用するパス"
-#~ msgstr ""
-
-#~ msgid "/tmp"
-#~ msgstr ""
-
-#~ msgid "使用可能なメモリサイズ"
-#~ msgstr ""
-
-#~ msgid "use_mapfile"
-#~ msgstr ""
-
-#~ msgid "仮想ディスクを使用する"
-#~ msgstr ""
-
-#~ msgid "仮想ディスクのサイズ"
-#~ msgstr ""
-
-#~ msgid "仮想ディスクファイルの基本ファイル名"
-#~ msgstr ""
-
-#~ msgid "いつでも仮想ディスクを使用する"
-#~ msgstr ""
-
-#~ msgid "並列アルゴリズムの選択"
-#~ msgstr ""
-
-#~ msgid "中間ファイルの削除"
-#~ msgstr ""
-
-#~ msgid "キーワードを表示する"
-#~ msgstr ""
-
-#~ msgid "入力パラメータを表示する"
-#~ msgstr ""
-
-#~ msgid "分子座標を表示する"
-#~ msgstr ""
-
-#~ msgid "基底関数情報の表示形式の指定"
-#~ msgstr ""
-
-#~ msgid "guessの指定"
-#~ msgstr ""
-
-#~ msgid "cut-value"
-#~ msgstr ""
-
-#~ msgid "積分カットオフ値"
-#~ msgstr ""
-
-#~ msgid "積分ブロックサイズ"
-#~ msgstr ""
-
-#~ msgid "ダミー電荷を段階的に外挿する回数"
-#~ msgstr ""
-
-#~ msgid "軌道の対応付けを行う"
-#~ msgstr ""
-
-#~ msgid "軌道の対応付けを初回から行う"
-#~ msgstr ""
-
-#~ msgid "軌道対応付けの方法"
-#~ msgstr ""
-
-#~ msgid "計算サマリーを表示する"
-#~ msgstr ""
-
-#~ msgid "形式電荷の計算を行う"
-#~ msgstr ""
-
-#~ msgid "max-iteration"
-#~ msgstr ""
-
-#~ msgid "SCF繰り返し計算の最大値"
-#~ msgstr ""
-
-#~ msgid "計算方法"
-#~ msgstr ""
-
-#~ msgid "rks計算における占有軌道"
-#~ msgstr ""
-
-#~ msgid "rks計算のおける電子数"
-#~ msgstr ""
-
-#~ msgid "uks計算におけるalpha電子の占有軌道"
-#~ msgstr ""
-
-#~ msgid "uks計算におけるalpha電子の数"
-#~ msgstr ""
-
-#~ msgid "uks計算におけるbeta電子の占有軌道"
-#~ msgstr ""
-
-#~ msgid "uks計算におけるbeta電子の数"
-#~ msgstr ""
-
-#~ msgid "roks計算における閉殻軌道の指定"
-#~ msgstr ""
-
-#~ msgid "method/uks/close_electrons"
-#~ msgstr ""
-
-#~ msgid "roks計算における閉殻軌道の電子数"
-#~ msgstr ""
-
-#~ msgid "roks計算における開殻軌道の指定"
-#~ msgstr ""
-
-#~ msgid "キャッシュ情報の表示"
-#~ msgstr ""
-
-#~ msgid "収束の対象となるパラメータ"
-#~ msgstr ""
-
-#~ msgid "density"
-#~ msgstr ""
-
-#~ msgid "収束の閾値"
-#~ msgstr ""
-
-#~ msgid "convergence/threshold-energy"
-#~ msgstr ""
-
-#~ msgid "エネルギーにおける収束条件"
-#~ msgstr ""
-
-#~ msgid "scf-acceleration"
-#~ msgstr ""
-
-#~ msgid "収束加速法の選択"
-#~ msgstr ""
-
-#~ msgid "scf-acceleration/damping/damping-factor"
-#~ msgstr ""
-
-#~ msgid "damping法におけるダンピング係数"
-#~ msgstr ""
-
-#~ msgid "scf-acceleration/daming/start-number"
-#~ msgstr ""
-
-#~ msgid "damping法を開始するイテレーション"
-#~ msgstr ""
-
-#~ msgid "scf-acceleration/damping/damping-type"
-#~ msgstr ""
-
-#~ msgid "damping法を適用する物理量"
-#~ msgstr ""
-
-#~ msgid "scf-acceleration/anderson/damping-factor"
-#~ msgstr ""
-
-#~ msgid "anderson法におけるダンピング係数"
-#~ msgstr ""
-
-#~ msgid "scf-acceleration/anderson/start-number"
-#~ msgstr ""
-
-#~ msgid "anderson法を適用開始するイテレーション"
-#~ msgstr ""
-
-#~ msgid "level-shift"
-#~ msgstr ""
-
-#~ msgid "レベルシフト法を適用する"
-#~ msgstr ""
-
-#~ msgid "level-shift/start-iteration"
-#~ msgstr ""
-
-#~ msgid "レベルシフト法を開始するイテレーション"
-#~ msgstr ""
-
-#~ msgid "level-shift/ls-closed-mo"
-#~ msgstr ""
-
-#~ msgid "閉殻軌道に使用するレベルシフト値"
-#~ msgstr ""
-
-#~ msgid "level-shift/ls-open-mo"
-#~ msgstr ""
-
-#~ msgid "開殻軌道に使用するレベルシフト値"
-#~ msgstr ""
-
-#~ msgid "level-shift/ls-virtual-mo"
-#~ msgstr ""
-
-#~ msgid "空軌道に使用するレベルシフト値"
-#~ msgstr ""
-
-#~ msgid "scf-acceleration/diis/number-of-diis"
-#~ msgstr ""
-
-#~ msgid "scf-acceleration/diis/start-number"
-#~ msgstr ""
-
-#~ msgid "DIIS法を開始するイテレーション"
-#~ msgstr ""
-
-#~ msgid "scf-acceleration/diis/start-extrapolation"
-#~ msgstr ""
-
-#~ msgid "6"
-#~ msgstr ""
-
-#~ msgid "xc-potential"
-#~ msgstr ""
-
-#~ msgid "交換相関ポテンシャルの指定"
-#~ msgstr ""
-
-#~ msgid "svwn~"
-#~ msgstr ""
-
-#~ msgid "grid-free法を使用する"
-#~ msgstr ""
-
-#~ msgid "使用するグリッドの選択"
-#~ msgstr ""
-
-#~ msgid "クーロン項の計算方法の選択"
-#~ msgstr ""
-
-#~ msgid "Fock交換項の計算方法の選択"
-#~ msgstr ""
-
-#~ msgid "CDAM法におけるτ値"
-#~ msgstr ""
-
-#~ msgid "CD法におけるε値"
-#~ msgstr ""
-
-#~ msgid "カーテシアン座標による#分子座標の指定"
-#~ msgstr ""
-
-#~ msgid "basis_sets"
-#~ msgstr ""
-
-#~ msgid "basis_sets_j"
-#~ msgstr ""
-
-#~ msgid "basis_sets_k"
-#~ msgstr ""
-
-#~ msgid "cutoff_epsilon3"
-#~ msgstr ""
+#: ../../source/90_appendix.rst:40
+msgid "Input file format"
+msgstr ""
+
+#: ../../source/90_appendix.rst:44
+msgid "basis2 file format"
+msgstr ""
+
+#: ../../source/90_appendix.rst:46
+msgid ""
+"The basis2 file stores the basis function information. The following is a"
+" concrete example."
+msgstr ""
+
+#: ../../source/90_appendix.rst:53
+msgid "Format"
+msgstr ""
+
+#: ../../source/90_appendix.rst:55
+msgid "** line 1(Title)"
+msgstr ""
+
+#: ../../source/90_appendix.rst:57
+msgid ""
+"Describes the name of the basis function. A name starting with \"O-\" "
+"indicates a basis function, and a name starting with \"A-\" indicates an "
+"auxiliary basis function. In the case of basis functions, a single CGTO "
+"block. In the case of auxiliary basis functions, it consists of two CGTO "
+"blocks, one for the Coulomb term and the other for the auxiliary basis "
+"functions for the exchange-correlation term."
+msgstr ""
+
+#: ../../source/90_appendix.rst:63
+msgid "** line 2(the number of CGTOs)"
+msgstr ""
+
+#: ../../source/90_appendix.rst:65
+msgid ""
+"Specifies the form and number of orbits of a contracted Gaussian basis "
+"function (CGTO). It is represented by three integer values separated by "
+"whitespace. The three integer values, separated by spaces, represent the "
+"number of s-type, p-type, and d-type orbits, in that order. After this "
+"line, the CGTO block continues."
+msgstr ""
+
+#: ../../source/90_appendix.rst:70
+msgid ""
+"If it is written as \"3 2 1,\" There are three contracted Gaussian basis "
+"functions of type s, two contracted Gaussian basis functions of type p, "
+"and one contracted Gaussian basis function of type d. Therefore, after "
+"this line, six CGTO blocks will be described."
+msgstr ""
+
+#: ../../source/90_appendix.rst:75
+msgid "** line 3(beginning of CGTO block)"
+msgstr ""
+
+#: ../../source/90_appendix.rst:77
+msgid ""
+"The beginning of a CGTO block indicates the number of primitive Gaussian "
+"basis functions (PGTO) that the CGTO block contains."
+msgstr ""
+
+#: ../../source/90_appendix.rst:80
+msgid "** line 4(PGTO)"
+msgstr ""
+
+#: ../../source/90_appendix.rst:82
+msgid ""
+"The exponents and coefficients of the primitive basis functions (PGTO) "
+"are described, separated by whitespace. For the auxiliary basis "
+"functions, the coefficient (1.0) can be omitted."
+msgstr ""
 
