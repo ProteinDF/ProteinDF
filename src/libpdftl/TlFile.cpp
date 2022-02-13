@@ -35,8 +35,63 @@
 #include <unistd.h>
 
 #include "TlFile.h"
+#include "TlUtils.h"
 
 std::size_t TlFile::BUFFER_SIZE = 4096;
+
+std::string TlFile::dir(const std::string& path) {
+    const std::string delimiter = "/";
+    const std::vector<std::string> units = TlUtils::split(path, delimiter);
+
+    std::string answer = "";
+    const int numOfUnits = units.size();
+    for (int i = 0; i < numOfUnits - 1; ++i) {
+        if (units[i].empty()) {
+            continue;
+        }
+        answer += delimiter + units[i];
+    }
+
+    return answer;
+}
+
+std::string TlFile::filename(const std::string& path) {
+    const std::string delimiter = "/";
+    const std::vector<std::string> units = TlUtils::split(path, delimiter);
+
+    const int numOfUnits = units.size();
+    const std::string answer = units[numOfUnits - 1];
+
+    return answer;
+}
+
+std::string TlFile::stem(const std::string& path) {
+    const std::string filename = TlFile::filename(path);
+
+    const std::string delimiter = ".";
+    const std::vector<std::string> units = TlUtils::split(filename, delimiter);
+
+    std::string answer = "";
+    const int numOfUnits = units.size();
+    for (int i = 0; i < numOfUnits - 1; ++i) {
+        answer += units[i] + delimiter;
+    }
+    answer = answer.substr(0, answer.length() - 1);
+
+    return answer;
+}
+
+std::string TlFile::extension(const std::string& path) {
+    const std::string filename = TlFile::filename(path);
+
+    const std::string delimiter = ".";
+    const std::vector<std::string> units = TlUtils::split(path, delimiter);
+
+    const int numOfUnits = units.size();
+    const std::string answer = delimiter + units[numOfUnits - 1];
+
+    return answer;
+}
 
 bool TlFile::isExistFile(const std::string& filePath) {
     bool answer = true;

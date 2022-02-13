@@ -131,10 +131,11 @@ protected:
     /// 行列・ベクトルファイルのパスを返す
     ///
     /// "baseFileName"をキーとして、pdfpararm["file"]["base_base_name"]に登録されている
-    /// フォーマット文字列に応じて"suffix"を置き換えてファイル名を作成する。
+    /// フォーマット文字列に応じて"iteration"を置き換えてファイル名を作成する。
     std::string makeFilePath(const std::string& baseFileName,
-                             const std::string& suffix = "",
-                             const std::string& dir = "") const;
+                             const std::string& iteration = "",
+                             const std::string& dir = "",
+                             const std::string& suffix = "") const;
     std::string getHpqMatrixPath();
     std::string getHpq2MatrixPath();
     std::string getSabMatrixPath();
@@ -145,7 +146,7 @@ protected:
     std::string getI2pqVtrPath();
     std::string getI2prVtrPath();
     std::string getI2pqVtrXCPath();
-    std::string getLjkMatrixPath(const std::string& dir = "");
+    std::string getLjkMatrixPath(const std::string& dir = "", bool isTmp = false);
     std::string getLkMatrixPath(const std::string& dir = "");
     std::string getLxcMatrixPath(const std::string& dir = "");
     std::string getXMatrixPath();

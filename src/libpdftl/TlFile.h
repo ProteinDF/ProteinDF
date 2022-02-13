@@ -23,7 +23,13 @@
 #include <string>
 
 class TlFile {
-   public:
+public:
+    static std::string dir(const std::string& path);
+    static std::string filename(const std::string& path);
+    static std::string stem(const std::string& path);
+    static std::string extension(const std::string& path);
+
+public:
     /// filePathが存在していればtrue、なければfalseを返す。
     static bool isExistFile(const std::string& filePath);
 
@@ -57,7 +63,7 @@ class TlFile {
     /// return temporary file path
     static std::string getTempFilePath(const std::string& tmpdir = "/tmp/");
 
-   private:
+private:
     static std::size_t BUFFER_SIZE;
 };
 

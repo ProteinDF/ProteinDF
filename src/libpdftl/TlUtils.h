@@ -20,6 +20,7 @@
 #define TLUTILS_H
 
 #include <stdarg.h>
+
 #include <algorithm>
 #include <cctype>
 #include <cwctype>
@@ -30,7 +31,7 @@
 
 /// 文字列処理クラス
 class TlUtils {
-   public:
+public:
     /// 安全な sprintf() (std::string 版)
     static std::string format(const char* psFormat, ...);
 
@@ -74,14 +75,14 @@ class TlUtils {
     /** 文字列を区切り文字で区切る
      *
      */
-    static std::vector<std::string> split(const std::string&,
-                                          const std::string&);
+    static std::vector<std::string> split(const std::string& str, const std::string& delimiter);
+
+    static std::string join(const std::vector<std::string>& strings, const std::string& delimiter);
 
     /** 文字列を置換する
      *
      */
-    static std::string& replace(std::string& str, const std::string& sFrom,
-                                const std::string& sTo);
+    static std::string& replace(std::string& str, const std::string& sFrom, const std::string& sTo);
 
     /// 大文字に変換する
     static std::string toUpper(const std::string& str);
@@ -159,7 +160,9 @@ class TlUtils {
         return *(reinterpret_cast<char*>(&i)) == 1;
     }
 
-    static bool isBigEndian() { return !(TlUtils::isLittleEndian()); }
+    static bool isBigEndian() {
+        return !(TlUtils::isLittleEndian());
+    }
 
     template <typename T>
     static T toBigEndian(T value) {
@@ -196,7 +199,7 @@ class TlUtils {
     static void changeMemoryLayout(const T* pInput, const std::size_t axis1,
                                    const std::size_t axis2, T* pOutput);
 
-   public:
+public:
     /// vector notation
     /// "[1-3, 5]" -> [1, 2, 3, 5]
     static std::vector<int> vector_notation(const std::string& inputStr);
@@ -205,11 +208,11 @@ class TlUtils {
     template <typename T>
     static std::vector<T> nonreduntant_vector(const std::vector<T>& vtr);
 
-   public:
+public:
     template <typename T>
     static std::string vector2str(const std::vector<T>& vtr);
 
-   private:
+private:
     template <typename T, typename F>
     static void trim_ws_t(std::basic_string<T>& s, F f);
 };

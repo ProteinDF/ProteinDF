@@ -511,27 +511,22 @@ void DfObject::loggerEndTitle(const std::string& stepName, const char lineChar) 
 }
 
 // =====================================================================
-std::string DfObject::makeFilePath(const std::string& baseFileName, const std::string& suffix,
-                                   const std::string& dir) const {
+std::string DfObject::makeFilePath(const std::string& baseFileName, const std::string& iteration,
+                                   const std::string& dir, const std::string& suffix) const {
     std::string base = (*(this->pPdfParam_))["control"]["file_base_name"][baseFileName].getStr();
-    if (suffix.empty() != true) {
-        base = TlUtils::format(base.c_str(), suffix.c_str());
+    if (iteration.empty() != true) {
+        base = TlUtils::format(base.c_str(), iteration.c_str());
     }
+
+    const std::string stem = TlFile::stem(base);
+    const std::string ext = TlFile::extension(base);
 
     std::string dirname = DfObject::m_sWorkDirPath;
     if (!dir.empty()) {
         dirname = dir;
     }
 
-    // [TODO]
-    std::string path = "";
-    // if (this->isSaveDistributedMatrixToLocalDisk_ == true) {
-    //     path = this->localTempPath_ + "/" + base + "." +
-    //            TlUtils::xtos(this->rank_);
-    // } else {
-    path = dirname + "/" + base;
-    // }
-
+    const std::string path = dirname + "/" + stem + suffix + ext;
     return path;
 }
 
@@ -579,8 +574,13 @@ std::string DfObject::getI2pqVtrXCPath() {
     return this->makeFilePath("I2PQ_XC_vtr");
 }
 
-std::string DfObject::getLjkMatrixPath(const std::string& dir) {
-    return this->makeFilePath("Ljk_matrix", "", dir);
+std::string DfObject::getLjkMatrixPath(const std::string& dir, bool isTmp) {
+    std::string suffix = "";
+    if (isTmp) {
+        suffix = TlUtils::format(".%d", TlSystem::getPID());
+    }
+    const std::string path = this->makeFilePath("Ljk_matrix", "", dir, suffix);
+    return path;
 }
 
 std::string DfObject::getLkMatrixPath(const std::string& dir) {
