@@ -21,66 +21,73 @@
 #include <string>
 
 #include "TlGetopt.h"
+#include "TlLogging.h"
 #include "TlUtils.h"
 #include "tl_matrix_utils.h"
 
 void showHelp(const std::string& progname) {
-    std::cout << TlUtils::format("%s [options] MATRIX_FILE", progname.c_str())
-              << std::endl;
+    std::cout << TlUtils::format("%s [options] MATRIX_FILE", progname.c_str()) << std::endl;
     std::cout << " OPTIONS:" << std::endl;
+    // std::cout << "  -d:      debug mode" << std::endl;
     std::cout << "  -h:      show help" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-    TlGetopt opt(argc, argv, "h");
+    TlGetopt opt(argc, argv, "dh");
 
     if (opt["h"] == "defined") {
         showHelp(opt[0]);
         return EXIT_SUCCESS;
     }
 
+    TlLogging& log = TlLogging::getInstance();
+    log.setFilePath("pdf-mat-info.log");
+
+    // bool debugMode = false;
+    // if (opt["d"] == "defined") {
+    //     debugMode = true;
+    //     log.setLevel(TlLogging::TL_DEBUG);
+    // }
+
     std::string path = opt[1];
 
-    TlMatrixObject::MatrixType type;
-    TlMatrixObject::index_type numOfRows = 0;
-    TlMatrixObject::index_type numOfCols = 0;
+    TlMatrixObject::HeaderInfo headerInfo;
+    const bool isLoadable = TlMatrixUtils::getHeaderInfo(path, &headerInfo);
+    if (isLoadable == true) {
+        switch (headerInfo.matrixType) {
+            case TlMatrixObject::RLHD:
+                std::cout << "type: symmetric" << std::endl;
+                std::cout << "row: " << headerInfo.numOfRows << std::endl;
+                std::cout << "col: " << headerInfo.numOfCols << std::endl;
+                break;
 
-    if (TlMatrixUtils::isLoadable(path, TlMatrixObject::RLHD) == true) {
-        TlMatrixUtils::getHeaderInfo(path, &type, &numOfRows, &numOfCols);
+            case TlMatrixObject::CSFD:
+                std::cout << "type: normal (column-major)" << std::endl;
+                std::cout << "row: " << headerInfo.numOfRows << std::endl;
+                std::cout << "col: " << headerInfo.numOfCols << std::endl;
+                break;
 
-        std::cout << "type: symmetric" << std::endl;
-        std::cout << "row: " << numOfRows << std::endl;
-        std::cout << "col: " << numOfCols << std::endl;
-    } else if (TlMatrixUtils::isLoadable(path, TlMatrixObject::CSFD) == true) {
-        TlMatrixUtils::getHeaderInfo(path, &type, &numOfRows, &numOfCols);
+            case TlMatrixObject::RSFD:
+                std::cout << "type: normal (row-major)" << std::endl;
+                std::cout << "row: " << headerInfo.numOfRows << std::endl;
+                std::cout << "col: " << headerInfo.numOfCols << std::endl;
+                break;
 
-        std::cout << "type: normal (column-major)" << std::endl;
-        std::cout << "row: " << numOfRows << std::endl;
-        std::cout << "col: " << numOfCols << std::endl;
-    } else if (TlMatrixUtils::isLoadable(path, TlMatrixObject::RSFD) == true) {
-        TlMatrixUtils::getHeaderInfo(path, &type, &numOfRows, &numOfCols);
+            case TlMatrixObject::ABGD:
+                std::cout << "type: General Dens-matrix stored by Arrays Blocks" << std::endl;
+                std::cout << "#vectors: " << headerInfo.numOfVectors << std::endl;
+                std::cout << "sizeOfVector: " << headerInfo.sizeOfVector << std::endl;
+                std::cout << TlUtils::format("unit: %d/%d", headerInfo.subunitId + 1, headerInfo.numOfSubunits)
+                          << std::endl;
+                std::cout << "chunk size: " << headerInfo.sizeOfChunk << std::endl;
+                std::cout << "version: " << headerInfo.version << std::endl;
+                break;
 
-        std::cout << "type: normal (row-major)" << std::endl;
-        std::cout << "row: " << numOfRows << std::endl;
-        std::cout << "col: " << numOfCols << std::endl;
-    } else if (TlMatrixUtils::isLoadable(path, TlMatrixObject::ABGD) == true) {
-        std::size_t numOfItems = 0;
-        TlMatrixObject::index_type numOfSubunits = 0;
-        TlMatrixObject::index_type subunitId = 0;
-        TlMatrixObject::index_type sizeOfChunk = 0;
-        TlMatrixUtils::getHeaderInfo(path, &type, &numOfRows, &numOfCols,
-                                     &numOfItems, &numOfSubunits, &subunitId,
-                                     &sizeOfChunk);
-        std::cout << "type: General Dens-matrix stored by Arrays Blocks"
-                  << std::endl;
-        std::cout << "row: " << numOfRows << std::endl;
-        std::cout << "col: " << numOfCols << std::endl;
-        std::cout << TlUtils::format("unit: %d/%d", subunitId + 1,
-                                     numOfSubunits)
-                  << std::endl;
-        std::cout << "chunk size: " << sizeOfChunk << std::endl;
+            default:
+                log.critical(TlUtils::format("unknown matrix type: %s", path.c_str()));
+        }
     } else {
-        std::cerr << "can not open file: " << path << std::endl;
+        log.critical(TlUtils::format("cannot open file: %s", path.c_str()));
         return EXIT_FAILURE;
     }
 

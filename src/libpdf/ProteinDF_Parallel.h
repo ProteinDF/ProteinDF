@@ -26,17 +26,17 @@
 #include "ProteinDF.h"
 
 class ProteinDF_Parallel : public ProteinDF {
-   public:
+public:
     ProteinDF_Parallel();
     virtual ~ProteinDF_Parallel();
 
-   protected:
+protected:
     virtual void loadParam(const std::string& requestFilePath = "");
     virtual void saveParam() const;
 
     virtual void setupGlobalCondition_extra();
 
-   protected:
+protected:
     virtual DfIntegrals* getDfIntegralsObject();
     virtual DfInitialGuess* getDfInitialGuessObject();
     virtual DfForce* getDfForceObject();

@@ -17,13 +17,15 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfInitialGuess.h"
+
 #include <fstream>
+
 #include "CnError.h"
 #include "DfDmatrix.h"
 #include "DfInitialGuessHarris.h"
 #include "DfInitialGuessHuckel.h"
-#include "DfPopulation.h"
 #include "TlStringTokenizer.h"
+#include "df_population_lapack.h"
 
 DfInitialGuess::DfInitialGuess(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam) {
@@ -246,7 +248,7 @@ void DfInitialGuess::createInitialGuessUsingDensityMatrix(
         this->getInitialDensityMatrix<TlDenseSymmetricMatrix_Lapack>(runType);
     if (this->isNormalizeDensityMatrix_) {
         P = this->normalizeDensityMatrix<TlDenseSymmetricMatrix_Lapack,
-                                         DfPopulation>(runType, P);
+                                         DfPopulation_Lapack>(runType, P);
     }
     this->savePpqMatrix(runType, 0, P);
 

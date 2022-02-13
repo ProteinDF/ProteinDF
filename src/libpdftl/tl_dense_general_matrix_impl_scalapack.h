@@ -10,6 +10,7 @@
 #endif  // HAVE_HDF5
 
 #include <bitset>
+#include <fstream>
 #include <list>
 #include <vector>
 
@@ -29,7 +30,7 @@ class TlDenseGeneralMatrix_ImplScalapack : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // constructor & destructor
     // ---------------------------------------------------------------------------
-   public:
+public:
     explicit TlDenseGeneralMatrix_ImplScalapack(
         TlMatrixObject::index_type row = 1, TlMatrixObject::index_type col = 1);
     TlDenseGeneralMatrix_ImplScalapack(
@@ -51,7 +52,7 @@ class TlDenseGeneralMatrix_ImplScalapack : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // properties
     // ---------------------------------------------------------------------------
-   public:
+public:
     virtual TlMatrixObject::index_type getNumOfRows() const;
     virtual TlMatrixObject::index_type getNumOfCols() const;
     virtual TlMatrixObject::size_type getNumOfElements() const;
@@ -76,7 +77,7 @@ class TlDenseGeneralMatrix_ImplScalapack : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // operators
     // ---------------------------------------------------------------------------
-   public:
+public:
     // need to call by all processes.
     TlDenseGeneralMatrix_ImplScalapack& operator=(
         const TlDenseGeneralMatrix_ImplScalapack& rhs);
@@ -93,7 +94,7 @@ class TlDenseGeneralMatrix_ImplScalapack : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // operations
     // ---------------------------------------------------------------------------
-   public:
+public:
     virtual std::vector<double> diagonals() const;
 
     virtual double sum() const;
@@ -131,7 +132,7 @@ class TlDenseGeneralMatrix_ImplScalapack : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // I/O
     // ---------------------------------------------------------------------------
-   public:
+public:
     virtual bool load(const std::string& filePath);
     virtual bool save(const std::string& filePath) const;
 
@@ -144,14 +145,14 @@ class TlDenseGeneralMatrix_ImplScalapack : public TlDenseMatrix_ImplObject {
 
     static void setUsingPartialIO(bool isUsePIO);
 
-   public:
+public:
     //   void dump(TlDenseVector_ImplScalapack* v) const;
     //   void restore(const TlDenseVector_ImplScalapack& v);
 
     // ---------------------------------------------------------------------------
     // protected
     // ---------------------------------------------------------------------------
-   protected:
+protected:
     virtual void initialize();
     virtual TlMatrixObject::size_type getNumOfMyElements() const;
 
@@ -214,7 +215,7 @@ class TlDenseGeneralMatrix_ImplScalapack : public TlDenseMatrix_ImplObject {
             indexArrays,
         const std::vector<std::vector<double> >& values);
 
-    virtual bool load(std::fstream& filePath);
+    virtual bool load(std::ifstream& ifs);
 
     // #ifdef HAVE_HDF5
     //  protected:
@@ -239,11 +240,11 @@ class TlDenseGeneralMatrix_ImplScalapack : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // variables
     // ---------------------------------------------------------------------------
-   protected:
+protected:
     static const std::size_t FILE_BUFFER_SIZE;
     static bool isUsingPartialIO;
 
-   protected:
+protected:
     int context_;
     int pDESC_[9];
     TlMatrixObject::index_type rows_;    // 大域行列の行数
@@ -266,10 +267,10 @@ class TlDenseGeneralMatrix_ImplScalapack : public TlDenseMatrix_ImplObject {
 
     double* pData_;
 
-   protected:
+protected:
     // static int systemBlockSize_;
 
-   protected:
+protected:
     /// MPI通信タグ
     enum {
         // for copy constructor
@@ -307,17 +308,17 @@ class TlDenseGeneralMatrix_ImplScalapack : public TlDenseMatrix_ImplObject {
         TAG_TLDISTRIBUTE_MATRIX__MERGE__VALUES = 2003
     };
 
-   protected:
+protected:
     // GPM
     // -----------------------------------------------------------------------
     bool isDebugOut_GPM_;
 
     struct GPM_ServerTask {
-       public:
+    public:
         GPM_ServerTask()
             : state(0), sessionId(0), requestProc(0), numOfComponents(0) {}
 
-       public:
+    public:
         unsigned int state;
         int sessionId;
         int requestProc;

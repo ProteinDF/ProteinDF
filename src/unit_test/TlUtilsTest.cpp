@@ -1,7 +1,20 @@
 #include <string>
 #include <vector>
+
 #include "TlUtils.h"
 #include "gtest/gtest.h"
+
+TEST(TlUtils, join) {
+    std::vector<std::string> strings(4);
+    strings[0] = "This";
+    strings[1] = "is";
+    strings[2] = "a";
+    strings[3] = "pen";
+
+    const std::string sentense = TlUtils::join(strings, " ");
+
+    EXPECT_EQ(std::string("This is a pen"), sentense);
+}
 
 TEST(TlUtils, pad) {
     std::string str1 = "line";

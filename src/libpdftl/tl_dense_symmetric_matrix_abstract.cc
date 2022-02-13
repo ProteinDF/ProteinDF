@@ -1,25 +1,29 @@
 #include "tl_dense_symmetric_matrix_abstract.h"
+
 #include <cassert>
+
 #include "TlUtils.h"
 #include "tl_matrix_utils.h"
 
-bool TlDenseSymmetricMatrixAbstract::load(
-    const std::string& filePath, double* pBuf,
-    const TlMatrixObject::size_type length) {
+bool TlDenseSymmetricMatrixAbstract::load(const std::string& filePath, double* pBuf,
+                                          const TlMatrixObject::size_type length) {
     bool answer = false;
     TlMatrixObject::MatrixType matrixType;
     TlMatrixObject::index_type row, col;
 
-    const TlMatrixUtils::FileSize headerSize =
-        TlMatrixUtils::getHeaderInfo(filePath, &matrixType, &row, &col);
+    TlMatrixObject::HeaderInfo headerInfo;
+    const bool isLoadable = TlMatrixUtils::getHeaderInfo(filePath, &headerInfo);
+    matrixType = headerInfo.matrixType;
+    row = headerInfo.numOfRows;
+    col = headerInfo.numOfCols;
 
-    if (headerSize > 0) {
+    if (isLoadable == true) {
         std::ios_base::sync_with_stdio(false);
         std::fstream fs;
         fs.open(filePath.c_str(), std::fstream::binary | std::fstream::in);
 
         if (!fs.fail()) {
-            fs.seekg(headerSize);
+            fs.seekg(headerInfo.headerSize);
 
             switch (matrixType) {
                 case TlMatrixObject::RLHD: {
@@ -30,23 +34,20 @@ bool TlDenseSymmetricMatrixAbstract::load(
                     double buf;
                     for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
                         for (TlMatrixObject::index_type c = 0; c <= r; ++c) {
-                            fs.read(reinterpret_cast<char*>(&buf),
-                                    sizeof(double));
+                            fs.read(reinterpret_cast<char*>(&buf), sizeof(double));
                             this->set(r, c, buf);
                         }
                     }
                 } break;
 
                 default: {
-                    this->log_.critical(TlUtils::format(
-                        "not supported format: @%s.%d", __FILE__, __LINE__));
+                    this->log_.critical(TlUtils::format("not supported format: @%s.%d", __FILE__, __LINE__));
                 } break;
             }
             answer = true;
         } else {
             this->log_.critical(
-                TlUtils::format("cannnot open matrix file: %s @(%s:%d)",
-                                filePath.c_str(), __FILE__, __LINE__));
+                TlUtils::format("cannnot open matrix file: %s @(%s:%d)", filePath.c_str(), __FILE__, __LINE__));
         }
         fs.close();
     }
@@ -54,9 +55,8 @@ bool TlDenseSymmetricMatrixAbstract::load(
     return answer;
 }
 
-bool TlDenseSymmetricMatrixAbstract::save(
-    const std::string& filePath, const double* pBuf,
-    const TlMatrixObject::size_type length) const {
+bool TlDenseSymmetricMatrixAbstract::save(const std::string& filePath, const double* pBuf,
+                                          const TlMatrixObject::size_type length) const {
     bool answer = false;
 
     std::ios_base::sync_with_stdio(false);
@@ -69,10 +69,8 @@ bool TlDenseSymmetricMatrixAbstract::save(
         const TlMatrixObject::index_type col = this->getNumOfCols();
 
         fs.write(&nType, sizeof(char));
-        fs.write(reinterpret_cast<const char*>(&row),
-                 sizeof(TlMatrixObject::index_type));
-        fs.write(reinterpret_cast<const char*>(&col),
-                 sizeof(TlMatrixObject::index_type));
+        fs.write(reinterpret_cast<const char*>(&row), sizeof(TlMatrixObject::index_type));
+        fs.write(reinterpret_cast<const char*>(&col), sizeof(TlMatrixObject::index_type));
         fs.write(reinterpret_cast<const char*>(pBuf), length * sizeof(double));
 
         fs.close();

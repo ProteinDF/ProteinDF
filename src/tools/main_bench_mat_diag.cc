@@ -101,6 +101,8 @@ int main(int argc, char* argv[]) {
     if (!opt["d"].empty()) {
         deviceId = std::atoi(opt["d"].c_str());
     }
+    std::cout << TlUtils::format("device ID: %d", deviceId) << std::endl;
+
     TlMatrixObject::index_type dim = 10240;
     if (!opt["s"].empty()) {
         dim = std::atoi(opt["s"].c_str());

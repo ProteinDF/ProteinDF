@@ -20,6 +20,7 @@
 #define DFINITIALGUESSHARRIS_H
 
 #include <string>
+
 #include "DfObject.h"
 #include "TlCombineDensityMatrix.h"
 #include "TlMsgPack.h"
@@ -30,32 +31,33 @@
 
 /// Harrisの汎関数による初期値を作成する
 class DfInitialGuessHarris : public DfObject {
-   private:
-    enum ScfType { RKS, UKS, ROKS };
+private:
+    enum ScfType { RKS,
+                   UKS,
+                   ROKS };
 
-   public:
+public:
     DfInitialGuessHarris(TlSerializeData* pPdfParam);
     virtual ~DfInitialGuessHarris();
 
     virtual void main();
 
-   protected:
+protected:
     void loadHarrisDB();
 
-    template <class MatrixType, class SymmetricMatrixType, class DfOverlapType,
-              class DfPopulationType>
+    template <class MatrixType, class SymmetricMatrixType, class DfOverlapType, class DfPopulationType>
     void calcInitialDensityMatrix();
 
-   protected:
+protected:
     /// debug時はtrueにする
     bool debug_;
 
     TlSerializeData pdfParam_harrisDB_;
 };
 
-template <class MatrixType, class SymmetricMatrixType, class DfOverlapType,
-          class DfPopulationType>
+template <class MatrixType, class SymmetricMatrixType, class DfOverlapType, class DfPopulationType>
 void DfInitialGuessHarris::calcInitialDensityMatrix() {
+    // std::cerr << "calcInitialDensityMatrix()" << std::endl;
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
     const TlOrbitalInfo orbInfo_high(pdfParam["coordinates"],
                                      pdfParam["basis_set"]);
@@ -63,7 +65,7 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
 
     TlSerializeData pdfParam_low;  // for low-level
 
-    // set low-lebel geometry
+    // set low-level geometry
     pdfParam_low["coordinates"]["atoms"] = pdfParam["coordinates"]["atoms"];
 
     // set low-level basis set
@@ -89,15 +91,12 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
         }
 
         TlSerializeData coord;
-        coord["atoms"].pushBack(
-            pdfParam["coordinates"]["atoms"].getAt(atomIndex));
+        coord["atoms"].pushBack(pdfParam["coordinates"]["atoms"].getAt(atomIndex));
 
-        TlOrbitalInfo orbInfo_harrisDB(coord,
-                                       this->pdfParam_harrisDB_["basis_set"]);
+        TlOrbitalInfo orbInfo_harrisDB(coord, this->pdfParam_harrisDB_["basis_set"]);
 
         TlDenseSymmetricMatrix_Lapack P_DB;
-        P_DB.loadSerializeData(
-            this->pdfParam_harrisDB_["density_matrix"][atomSymbol]);
+        P_DB.loadSerializeData(this->pdfParam_harrisDB_["density_matrix"][atomSymbol]);
 
         combineDensMat.make(orbInfo_harrisDB, P_DB, orbInfo_low, &P_low);
     }
@@ -110,17 +109,18 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
     {
         DfOverlapType ovp(this->pPdfParam_);
         MatrixType S_tilde;
+
+        // std::cerr << "calcInitialDensityMatrix(): trans mat" << std::endl;
         ovp.getTransMat(orbInfo_low, orbInfo_high, &S_tilde);
-        if ((*this->pPdfParam_)["debug/DfInitialGuessHarris/save_S_tilde"]
-                .getBoolean()) {
+        if ((*this->pPdfParam_)["debug/DfInitialGuessHarris/save_S_tilde"].getBoolean()) {
             S_tilde.save("S_tilde.mat");
         }
 
+        // std::cerr << "calcInitialDensityMatrix(): Sinv" << std::endl;
         SymmetricMatrixType S_inv;
         S_inv.load(this->getSpqMatrixPath());
         S_inv = S_inv.inverse();
-        if ((*this->pPdfParam_)["debug/DfInitialGuessHarris/save_S_inv"]
-                .getBoolean()) {
+        if ((*this->pPdfParam_)["debug/DfInitialGuessHarris/save_S_inv"].getBoolean()) {
             S_inv.save("Sinv.mat");
         }
 
@@ -133,12 +133,12 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
         }
         P_high = omega_t * P_low * omega;
     }
-    if ((*this->pPdfParam_)["debug/DfInitialGuessHarris/save_P_high"]
-            .getBoolean()) {
+    if ((*this->pPdfParam_)["debug/DfInitialGuessHarris/save_P_high"].getBoolean()) {
         P_high.save("P_high.mat");
     }
 
     // normalize
+    // std::cerr << "calcInitialDensityMatrix(): normalize" << std::endl;
     switch (this->m_nMethodType) {
         case METHOD_RKS: {
             // double numOfElectrons = 0.0;
@@ -146,11 +146,15 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
             // this->savePpqMatrix(RUN_RKS, 0, P_high); //
             // sumOfElectrons()で必要 dfPop.sumOfElectrons(0, &numOfElectrons,
             // NULL);
+            // std::cerr << "calcInitialDensityMatrix(): pop" << std::endl;
             const double numOfElectrons = dfPop.getSumOfElectrons(P_high);
+            // std::cerr << "calcInitialDensityMatrix(): elec=" << numOfElectrons << std::endl;
             const double coef = this->m_nNumOfElectrons / numOfElectrons;
 
             P_high *= coef;
+            // std::cerr << "calcInitialDensityMatrix(): save Ppq1" << std::endl;
             this->savePpqMatrix(RUN_RKS, 0, P_high);
+            // std::cerr << "calcInitialDensityMatrix(): save Ppq2" << std::endl;
             this->saveSpinDensityMatrix(RUN_RKS, 0, 0.5 * P_high);
         } break;
 
@@ -195,8 +199,7 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
             break;
     }
 
-    this->logger(
-        " initial density matrix is created using Harris functional.\n");
+    this->logger(" initial density matrix is created using Harris functional.\n");
 }
 
 #endif  // DFINITIALGUESSHARRIS_H

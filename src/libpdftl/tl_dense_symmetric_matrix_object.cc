@@ -1,3 +1,5 @@
+#include "tl_dense_symmetric_matrix_object.h"
+
 #include <cassert>
 #include <cmath>
 #include <fstream>
@@ -6,23 +8,23 @@
 #include "TlUtils.h"
 #include "tl_dense_general_matrix_object.h"
 #include "tl_dense_matrix_impl_object.h"
-#include "tl_dense_symmetric_matrix_object.h"
 #include "tl_matrix_utils.h"
 
 #ifdef HAVE_HDF5
 #include "TlHdf5Utils.h"
 #endif  // HAVE_HDF5
 
-TlDenseSymmetricMatrixObject::TlDenseSymmetricMatrixObject(
-    TlDenseMatrix_ImplObject* pImpl)
-    : pImpl_(pImpl) {}
+TlDenseSymmetricMatrixObject::TlDenseSymmetricMatrixObject(TlDenseMatrix_ImplObject* pImpl)
+    : pImpl_(pImpl) {
+}
 
-TlDenseSymmetricMatrixObject::~TlDenseSymmetricMatrixObject() {}
+TlDenseSymmetricMatrixObject::~TlDenseSymmetricMatrixObject() {
+}
 
 void TlDenseSymmetricMatrixObject::vtr2mat(const std::vector<double>& vtr) {
     const TlMatrixObject::index_type dim = this->getNumOfRows();
     assert(dim == this->getNumOfCols());
-    assert(vtr.size() == dim * (dim + 1) / 2);
+    assert(static_cast<TlMatrixObject::index_type>(vtr.size()) == dim * (dim + 1) / 2);
 
     std::size_t i = 0;
     // column-major
@@ -46,8 +48,7 @@ TlMatrixObject::index_type TlDenseSymmetricMatrixObject::getNumOfCols() const {
     return this->pImpl_->getNumOfCols();
 }
 
-void TlDenseSymmetricMatrixObject::resize(
-    const TlMatrixObject::index_type dim) {
+void TlDenseSymmetricMatrixObject::resize(const TlMatrixObject::index_type dim) {
     // #ifndef NDEBUG
     //   if (newRow != newCol) {
     //     this->log_.warn(
@@ -60,28 +61,24 @@ void TlDenseSymmetricMatrixObject::resize(
     this->pImpl_->resize(dim, dim);
 }
 
-double TlDenseSymmetricMatrixObject::get(
-    const TlMatrixObject::index_type row,
-    const TlMatrixObject::index_type col) const {
+double TlDenseSymmetricMatrixObject::get(const TlMatrixObject::index_type row,
+                                         const TlMatrixObject::index_type col) const {
     return this->pImpl_->get(row, col);
 }
 
-void TlDenseSymmetricMatrixObject::set(const TlMatrixObject::index_type row,
-                                       const TlMatrixObject::index_type col,
+void TlDenseSymmetricMatrixObject::set(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
                                        const double value) {
     this->pImpl_->set(row, col, value);
 }
 
-void TlDenseSymmetricMatrixObject::add(const TlMatrixObject::index_type row,
-                                       const TlMatrixObject::index_type col,
+void TlDenseSymmetricMatrixObject::add(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
                                        const double value) {
     this->pImpl_->add(row, col, value);
 }
 
-std::valarray<double> TlDenseSymmetricMatrixObject::getRowVector(
-    const TlMatrixObject::index_type row) const {
+std::vector<double> TlDenseSymmetricMatrixObject::getRowVector(const TlMatrixObject::index_type row) const {
     const TlMatrixObject::index_type size = this->getNumOfCols();
-    std::valarray<double> v(size);
+    std::vector<double> v(size);
     for (TlMatrixObject::index_type i = 0; i < size; ++i) {
         v[i] = this->get(row, i);
     }
@@ -89,10 +86,9 @@ std::valarray<double> TlDenseSymmetricMatrixObject::getRowVector(
     return v;
 }
 
-std::valarray<double> TlDenseSymmetricMatrixObject::getColVector(
-    const TlMatrixObject::index_type col) const {
+std::vector<double> TlDenseSymmetricMatrixObject::getColVector(const TlMatrixObject::index_type col) const {
     const TlMatrixObject::index_type size = this->getNumOfRows();
-    std::valarray<double> v(size);
+    std::vector<double> v(size);
     for (TlMatrixObject::index_type i = 0; i < size; ++i) {
         v[i] = this->get(i, col);
     }
@@ -100,10 +96,52 @@ std::valarray<double> TlDenseSymmetricMatrixObject::getColVector(
     return v;
 }
 
+void TlDenseSymmetricMatrixObject::setRowVector(const TlMatrixObject::index_type row, const std::vector<double>& v) {
+    const TlMatrixObject::index_type size =
+        std::min(this->getNumOfCols(), static_cast<TlMatrixObject::index_type>(v.size()));
+
+#pragma omp parallel for
+    for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+        this->set(row, i, v[i]);
+    }
+}
+
+void TlDenseSymmetricMatrixObject::setColVector(const TlMatrixObject::index_type col, const std::vector<double>& v) {
+    const TlMatrixObject::index_type size =
+        std::min(this->getNumOfRows(), static_cast<TlMatrixObject::index_type>(v.size()));
+
+#pragma omp parallel for
+    for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+        this->set(i, col, v[i]);
+    }
+}
+
+// std::valarray<double> TlDenseSymmetricMatrixObject::getRowVector(const TlMatrixObject::index_type row) const {
+//     const TlMatrixObject::index_type size = this->getNumOfCols();
+//     std::valarray<double> v(size);
+//     for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+//         v[i] = this->get(row, i);
+//     }
+
+//     return v;
+// }
+
+// std::valarray<double> TlDenseSymmetricMatrixObject::getColVector(const TlMatrixObject::index_type col) const {
+//     const TlMatrixObject::index_type size = this->getNumOfRows();
+//     std::valarray<double> v(size);
+//     for (TlMatrixObject::index_type i = 0; i < size; ++i) {
+//         v[i] = this->get(i, col);
+//     }
+
+//     return v;
+// }
+
 // ---------------------------------------------------------------------------
 // Operations
 // ---------------------------------------------------------------------------
-double TlDenseSymmetricMatrixObject::sum() const { return this->pImpl_->sum(); }
+double TlDenseSymmetricMatrixObject::sum() const {
+    return this->pImpl_->sum();
+}
 
 double TlDenseSymmetricMatrixObject::trace() const {
     return this->pImpl_->trace();
@@ -113,25 +151,22 @@ double TlDenseSymmetricMatrixObject::getRMS() const {
     return this->pImpl_->getRMS();
 }
 
-double TlDenseSymmetricMatrixObject::getMaxAbsoluteElement(
-    TlMatrixObject::index_type* outRow,
-    TlMatrixObject::index_type* outCol) const {
+double TlDenseSymmetricMatrixObject::getMaxAbsoluteElement(TlMatrixObject::index_type* outRow,
+                                                           TlMatrixObject::index_type* outCol) const {
     return this->pImpl_->getMaxAbsoluteElement(outRow, outCol);
 }
 
 // Harbrecht, Peter, Schneider, 2011
-void TlDenseSymmetricMatrixObject::pivotedCholeskyDecomposition(
-    TlDenseGeneralMatrixObject* pL, const double threshold) const {
+void TlDenseSymmetricMatrixObject::pivotedCholeskyDecomposition(TlDenseGeneralMatrixObject* pL,
+                                                                const double threshold) const {
     // internal function ----
     struct argmax_pivot {
-        std::size_t operator()(const std::vector<double>& diagonals,
-                               const std::vector<int>& pivot,
+        std::size_t operator()(const std::vector<double>& diagonals, const std::vector<int>& pivot,
                                const int pivotBegin) {
             std::size_t maxPivotIndex = pivotBegin;
             double maxVal = 0.0;
             const std::size_t end = pivot.size();
-            for (std::size_t pivotIndex = pivotBegin; pivotIndex < end;
-                 ++pivotIndex) {
+            for (std::size_t pivotIndex = pivotBegin; pivotIndex < end; ++pivotIndex) {
                 std::size_t diagonal_index = pivot[pivotIndex];
                 assert(diagonal_index < diagonals.size());
                 const double v = diagonals[pivot[pivotIndex]];
@@ -146,12 +181,10 @@ void TlDenseSymmetricMatrixObject::pivotedCholeskyDecomposition(
     };
 
     struct accumulate {
-        double operator()(const std::vector<double>& diagonals,
-                          const std::vector<int>& pivot, const int pivotBegin) {
+        double operator()(const std::vector<double>& diagonals, const std::vector<int>& pivot, const int pivotBegin) {
             double sum = 0.0;
             const std::size_t end = pivot.size();
-            for (std::size_t pivotIndex = pivotBegin; pivotIndex < end;
-                 ++pivotIndex) {
+            for (std::size_t pivotIndex = pivotBegin; pivotIndex < end; ++pivotIndex) {
                 sum += diagonals[pivot[pivotIndex]];
             }
 
@@ -177,8 +210,7 @@ void TlDenseSymmetricMatrixObject::pivotedCholeskyDecomposition(
     pL->resize(N, N);
     TlMatrixObject::index_type m = 0;
     while (error > threshold) {
-        const TlMatrixObject::index_type argmax =
-            argmax_pivot()(diagonals, pivot, m);
+        const TlMatrixObject::index_type argmax = argmax_pivot()(diagonals, pivot, m);
         std::swap(pivot[m], pivot[argmax]);
 
         assert(diagonals[pivot[m]] >= 0.0);
@@ -192,8 +224,7 @@ void TlDenseSymmetricMatrixObject::pivotedCholeskyDecomposition(
             for (TlMatrixObject::index_type j = 0; j < m; ++j) {
                 sum_ll += pL->get(j, pivot[m]) * pL->get(j, pivot[i]);
             }
-            const double l_m_pi =
-                (this->get(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
+            const double l_m_pi = (this->get(pivot[m], pivot[i]) - sum_ll) * inv_l_m_pm;
             pL->set(m, pivot[i], l_m_pi);
 
             diagonals[pivot[i]] -= l_m_pi * l_m_pi;
@@ -213,16 +244,16 @@ void TlDenseSymmetricMatrixObject::pivotedCholeskyDecomposition(
 // ---------------------------------------------------------------------------
 bool TlDenseSymmetricMatrixObject::load(const std::string& filePath) {
     bool answer = false;
-    MatrixType matrixType;
-    TlMatrixObject::index_type row;
-    TlMatrixObject::index_type col;
+    TlMatrixObject::HeaderInfo headerInfo;
 
-    const TlMatrixUtils::FileSize headerSize =
-        TlMatrixUtils::getHeaderInfo(filePath, &matrixType, &row, &col);
-    if (headerSize > 0) {
+    const bool isLoadable = TlMatrixUtils::getHeaderInfo(filePath, &headerInfo);
+    const std::size_t headerSize = headerInfo.headerSize;
+    if (isLoadable == true) {
+        const TlMatrixObject::index_type row = headerInfo.numOfRows;
+        const TlMatrixObject::index_type col = headerInfo.numOfCols;
+
         if (row != col) {
-            this->log_.critical(
-                TlUtils::format("illegal format: @%s.%d", __FILE__, __LINE__));
+            this->log_.critical(TlUtils::format("illegal format: @%s.%d", __FILE__, __LINE__));
         }
         this->resize(row);
 
@@ -231,13 +262,12 @@ bool TlDenseSymmetricMatrixObject::load(const std::string& filePath) {
         if (!fs.fail()) {
             fs.seekg(headerSize);
 
-            switch (matrixType) {
+            switch (headerInfo.matrixType) {
                 case TlMatrixObject::RLHD: {
                     double v;
                     for (TlMatrixObject::index_type r = 0; r < row; ++r) {
                         for (TlMatrixObject::index_type c = 0; c <= r; ++c) {
-                            fs.read(reinterpret_cast<char*>(&v),
-                                    sizeof(double));
+                            fs.read(reinterpret_cast<char*>(&v), sizeof(double));
                             this->set(r, c, v);
                         }
                     }
@@ -245,22 +275,17 @@ bool TlDenseSymmetricMatrixObject::load(const std::string& filePath) {
                 } break;
 
                 default:
-                    this->log_.critical(TlUtils::format(
-                        "not supported format: @%s:%d", __FILE__, __LINE__));
+                    this->log_.critical(TlUtils::format("not supported format: @%s:%d", __FILE__, __LINE__));
                     break;
             }
         } else {
-            this->log_.critical(
-                TlUtils::format("cannnot open matrix file: %s @%s:%d",
-                                filePath.c_str(), __FILE__, __LINE__));
+            this->log_.critical(TlUtils::format("cannot open matrix file: %s @%s:%d", filePath.c_str(), __FILE__, __LINE__));
             throw;
         }
 
         fs.close();
     } else {
-        this->log_.critical(TlUtils::format("illegal matrix format: %s @%s:%d",
-                                            filePath.c_str(), __FILE__,
-                                            __LINE__));
+        this->log_.critical(TlUtils::format("illegal matrix format: %s @%s:%d", filePath.c_str(), __FILE__, __LINE__));
         throw;
     }
 
@@ -276,10 +301,8 @@ bool TlDenseSymmetricMatrixObject::save(const std::string& filePath) const {
         const TlMatrixObject::index_type dim = this->getNumOfRows();
 
         fs.write(&nType, sizeof(char));
-        fs.write(reinterpret_cast<const char*>(&dim),
-                 sizeof(TlMatrixObject::index_type));
-        fs.write(reinterpret_cast<const char*>(&dim),
-                 sizeof(TlMatrixObject::index_type));
+        fs.write(reinterpret_cast<const char*>(&dim), sizeof(TlMatrixObject::index_type));
+        fs.write(reinterpret_cast<const char*>(&dim), sizeof(TlMatrixObject::index_type));
 
         for (TlMatrixObject::index_type r = 0; r < dim; ++r) {
             for (TlMatrixObject::index_type c = 0; c <= r; ++c) {
@@ -290,9 +313,7 @@ bool TlDenseSymmetricMatrixObject::save(const std::string& filePath) const {
         fs.flush();
         answer = true;
     } else {
-        this->log_.critical(TlUtils::format("cannot write matrix: %s @%s:%d",
-                                            filePath.c_str(), __FILE__,
-                                            __LINE__));
+        this->log_.critical(TlUtils::format("cannot write matrix: %s @%s:%d", filePath.c_str(), __FILE__, __LINE__));
     }
     fs.close();
 
@@ -362,8 +383,7 @@ void TlDenseSymmetricMatrixObject::saveCsv(std::ostream& os) const {
 }
 
 #ifdef HAVE_HDF5
-bool TlDenseSymmetricMatrixObject::loadHdf5(const std::string& filepath,
-                                            const std::string& h5path) {
+bool TlDenseSymmetricMatrixObject::loadHdf5(const std::string& filepath, const std::string& h5path) {
     TlHdf5Utils h5(filepath);
 
     int mat_type;
@@ -375,8 +395,7 @@ bool TlDenseSymmetricMatrixObject::loadHdf5(const std::string& filepath,
     h5.getAttr(h5path, "col", &col);
     if (row != col) {
         this->log_.critical(
-            TlUtils::format("illegal parameter: row(%d) != col(%d) @%s:%d", row,
-                            col, __FILE__, __LINE__));
+            TlUtils::format("illegal parameter: row(%d) != col(%d) @%s:%d", row, col, __FILE__, __LINE__));
     }
     this->resize(row);
     const TlMatrixObject::index_type dim = row;
@@ -407,17 +426,15 @@ bool TlDenseSymmetricMatrixObject::loadHdf5(const std::string& filepath,
         } break;
 
         default:
-            this->log_.critical(TlUtils::format(
-                "illegal matrix type for TlDenseSymmetricMatrix_BLAS_Old: %d",
-                mat_type));
+            this->log_.critical(
+                TlUtils::format("illegal matrix type for TlDenseSymmetricMatrix_BLAS_Old: %d", mat_type));
             break;
     }
 
     return true;
 }
 
-bool TlDenseSymmetricMatrixObject::saveHdf5(const std::string& filepath,
-                                            const std::string& h5path) const {
+bool TlDenseSymmetricMatrixObject::saveHdf5(const std::string& filepath, const std::string& h5path) const {
     TlHdf5Utils h5(filepath);
 
     const index_type row = this->getNumOfRows();
@@ -449,8 +466,7 @@ bool TlDenseSymmetricMatrixObject::saveHdf5(const std::string& filepath,
 
 #endif  // HAVE_HDF5
 
-void TlDenseSymmetricMatrixObject::loadSerializeData(
-    const TlSerializeData& data) {
+void TlDenseSymmetricMatrixObject::loadSerializeData(const TlSerializeData& data) {
     const TlMatrixObject::index_type row = std::max(data["row"].getInt(), 1);
     const TlMatrixObject::index_type col = std::max(data["col"].getInt(), 1);
     assert(row == col);
@@ -485,23 +501,19 @@ TlSerializeData TlDenseSymmetricMatrixObject::getSerializeData() const {
 }
 
 // ----------------------------------------------------------------------------
-std::ostream& operator<<(std::ostream& stream,
-                         const TlDenseSymmetricMatrixObject& mat) {
-    const TlMatrixObject::index_type nNumOfDim =
-        mat.getNumOfRows();  // == this->getNumOfCols()
+std::ostream& operator<<(std::ostream& stream, const TlDenseSymmetricMatrixObject& mat) {
+    const TlMatrixObject::index_type nNumOfDim = mat.getNumOfRows();  // == this->getNumOfCols()
 
     stream << "\n\n";
     for (TlMatrixObject::index_type ord = 0; ord < nNumOfDim; ord += 10) {
         stream << "       ";
-        for (TlMatrixObject::index_type j = ord;
-             ((j < ord + 10) && (j < nNumOfDim)); ++j) {
+        for (TlMatrixObject::index_type j = ord; ((j < ord + 10) && (j < nNumOfDim)); ++j) {
             stream << TlUtils::format("   %5d th", j + 1);
         }
         stream << "\n"
                << " ----";
 
-        for (TlMatrixObject::index_type j = ord;
-             ((j < ord + 10) && (j < nNumOfDim)); ++j) {
+        for (TlMatrixObject::index_type j = ord; ((j < ord + 10) && (j < nNumOfDim)); ++j) {
             stream << "-----------";
         }
         stream << "----\n";
@@ -509,8 +521,7 @@ std::ostream& operator<<(std::ostream& stream,
         for (TlMatrixObject::index_type i = 0; i < nNumOfDim; ++i) {
             stream << TlUtils::format(" %5d  ", i + 1);
 
-            for (TlMatrixObject::index_type j = ord;
-                 ((j < ord + 10) && (j < nNumOfDim)); ++j) {
+            for (TlMatrixObject::index_type j = ord; ((j < ord + 10) && (j < nNumOfDim)); ++j) {
                 if (j > i) {
                     stream << "    ----   ";
                 } else {

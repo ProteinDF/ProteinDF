@@ -27,7 +27,6 @@
 #include "DfGridFreeXC.h"
 #include "DfObject.h"
 #include "DfXCFunctional.h"
-
 #include "TlTime.h"
 
 class DfDensityFittingObject;
@@ -46,6 +45,7 @@ class DfScf : public DfObject {
    protected:
     enum ScfAccelerationType {
         SCF_ACCELERATION_SIMPLE = 0,
+        SCF_ACCELERATION_ODA,
         SCF_ACCELERATION_ANDERSON,
         SCF_ACCELERATION_DIIS,
         SCF_ACCELERATION_MIX

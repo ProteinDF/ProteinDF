@@ -3,13 +3,14 @@
 
 #include <iostream>
 #include <string>
+
 #include "gtest/gtest.h"
 #include "vector_common.h"
 
 template <typename T>
 class DenseVectorTest : public ::testing::Test {};
 
-TYPED_TEST_CASE_P(DenseVectorTest);
+TYPED_TEST_SUITE_P(DenseVectorTest);
 
 TYPED_TEST_P(DenseVectorTest, doesConstructor) {
     TypeParam a(3);
@@ -177,18 +178,18 @@ TYPED_TEST_P(DenseVectorTest, doesTransformStdVector) {
 
     std::vector<double> b = a;
 
-    EXPECT_EQ(3, b.size());
+    EXPECT_EQ(static_cast<std::size_t>(3), b.size());
     EXPECT_DOUBLE_EQ(0.0, b[0]);
     EXPECT_DOUBLE_EQ(1.0, b[1]);
     EXPECT_DOUBLE_EQ(2.0, b[2]);
 }
 
-REGISTER_TYPED_TEST_CASE_P(DenseVectorTest, doesConstructor,
-                           doesCopyConstructor, doesOperator_eq,
-                           doesOperator_iadd, doesOperator_isub,
-                           doesOperator_imul, doesOperator_add,
-                           doesOperator_sub, doesSum, doesNorm, doesNorm2,
-                           doesArgmax, doesSortByGreater, doesDotInPlace,
-                           doesSaveAndLoad, doesTransformStdVector);
+REGISTER_TYPED_TEST_SUITE_P(DenseVectorTest, doesConstructor,
+                            doesCopyConstructor, doesOperator_eq,
+                            doesOperator_iadd, doesOperator_isub,
+                            doesOperator_imul, doesOperator_add,
+                            doesOperator_sub, doesSum, doesNorm, doesNorm2,
+                            doesArgmax, doesSortByGreater, doesDotInPlace,
+                            doesSaveAndLoad, doesTransformStdVector);
 
 #endif  // DENSE_VECTOR_TEST_TEMPLATE_H

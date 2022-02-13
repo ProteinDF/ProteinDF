@@ -18,4 +18,3 @@ build_html en
 
 echo ">>>> build ja"
 build_html ja
-

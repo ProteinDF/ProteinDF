@@ -28,14 +28,12 @@
 #include "omp.h"
 #endif  // _OPENMP
 
-#include "ProteinDF.h"
-
 #include "DfForce.h"
 #include "DfInitialGuess.h"
 #include "DfInputdata.h"
 #include "DfIntegrals.h"
 #include "DfScf.h"
-
+#include "ProteinDF.h"
 #include "TlMatrixCache.h"
 #include "TlMemManager.h"
 #include "TlMsgPack.h"
@@ -44,11 +42,13 @@
 #include "TlUtils.h"
 #include "tl_system_eigen.h"
 
-ProteinDF::ProteinDF() : log_(TlLogging::getInstance()) {
+ProteinDF::ProteinDF()
+    : log_(TlLogging::getInstance()) {
     this->showCacheReport_ = false;
 }
 
-ProteinDF::~ProteinDF() {}
+ProteinDF::~ProteinDF() {
+}
 
 void ProteinDF::run() {
     this->startlogo();
@@ -56,7 +56,11 @@ void ProteinDF::run() {
     // 入力データの解析
     // リスタート時には解析しない
     this->inputData();
-    this->saveParam();
+    // this->saveParam();
+    if (this->pdfParam_["restart"].getBoolean() == true) {
+        this->log_.warn("restart record is still in the parameter file, but normal calculation is started.");
+        this->pdfParam_["restart"] = "no";
+    }
 
     this->exec();
 
@@ -68,8 +72,9 @@ void ProteinDF::restart(const std::string& restartParamFilePath) {
 
     this->log_.info("loading ProteinDF parameter for restart.");
 
-    // リスタート時にはすでにあるパラメータファイルを読み取るのみ
+    // On restart, read already existing parameter file.
     this->loadParam(restartParamFilePath);
+    this->pdfParam_["restart"] = "yes";
 
     this->exec();
 
@@ -94,29 +99,27 @@ void ProteinDF::exec() {
             this->stepCreate();
         } else if (group == "integral") {
             // [integral]
-            this->loadParam();
             this->stepIntegral();
             this->saveParam();
         } else if (group == "guess") {
             // [guess]
-            this->loadParam();
+            // this->loadParam();
             this->stepGuess();
             this->saveParam();
         } else if (group == "scf" || group == "scfqclo") {
             // [scf] or [scfqclo]
-            this->loadParam();
+            // this->loadParam();
             this->stepScf();
             this->saveParam();
         } else if (group == "force") {
             // [force]
-            this->loadParam();
+            // this->loadParam();
             this->stepForce();
             this->saveParam();
         } else if (group != "") {
             // nothing
             this->stepStartTitle(group);
-            this->log_.warn(TlUtils::format(
-                "unkown control keyword: %s, continue...", group.c_str()));
+            this->log_.warn(TlUtils::format("unkown control keyword: %s, continue...", group.c_str()));
             this->stepEndTitle();
         }
     }
@@ -129,18 +132,24 @@ void ProteinDF::startlogo() {
 
 #ifdef _OPENMP
     {
-        const std::string ompInfo =
-            TlUtils::format(" OpenMP threads: %d\n", omp_get_max_threads());
+        const std::string ompInfo = TlUtils::format(" OpenMP threads: %d\n", omp_get_max_threads());
         info += ompInfo;
+    }
+#else
+    {
+        info += " OpenMP is disabled.\n";
     }
 #endif  // _OPENMP
 
 #ifdef HAVE_EIGEN
     {
         const std::string eigenInfo =
-            " Eigen SIMD instruction: " +
-            TlSystem_Eigen::getSimdInstructionSetsInUse() + "\n";
+            " Eigen SIMD instruction: " + TlSystem_Eigen::getSimdInstructionSetsInUse() + "\n";
         info += eigenInfo;
+    }
+#else
+    {
+        info += " Eigen is disabled.\n";
     }
 #endif  // HAVE_EIGEN
 
@@ -161,10 +170,8 @@ void ProteinDF::startlogo(const std::string& version, const std::string& info) {
     this->log_.info("copyright(c) 1997-2019 ProteinDF development team.");
     this->log_.info("\n");
     this->log_.info("PLEASE CITE following:");
-    this->log_.info(
-        " F. Sato, Y. Shigemitsu, I. Okazaki, S. Yahiro, M. Fukue, S. Kozuru,");
-    this->log_.info(
-        " H. Kashiwagi, \"Development of a new density functional program for");
+    this->log_.info(" F. Sato, Y. Shigemitsu, I. Okazaki, S. Yahiro, M. Fukue, S. Kozuru,");
+    this->log_.info(" H. Kashiwagi, \"Development of a new density functional program for");
     this->log_.info(" all-electron calculation of proteins\",");
     this->log_.info(" Int. J. Quant. Chem., 63, 245-246 (1997).");
     this->log_.info(
@@ -190,10 +197,8 @@ void ProteinDF::endlogo() {
         reports += "\n";
     }
 
-    reports +=
-        TlUtils::format("CPU_TIME:    %9.0lf sec\n", g_GlobalTime.getCpuTime());
-    reports += TlUtils::format("ELAPS_TIME:  %9.0lf sec",
-                               g_GlobalTime.getElapseTime());
+    reports += TlUtils::format("CPU_TIME:    %9.0lf sec\n", g_GlobalTime.getCpuTime());
+    reports += TlUtils::format("ELAPS_TIME:  %9.0lf sec", g_GlobalTime.getElapseTime());
 
     this->endlogo(reports);
 }
@@ -254,8 +259,7 @@ void ProteinDF::setupGlobalCondition() {
 }
 
 void ProteinDF::manageMemory() {
-    std::string memSizeStr =
-        TlUtils::toUpper(this->pdfParam_["memory_size"].getStr());
+    std::string memSizeStr = TlUtils::toUpper(this->pdfParam_["memory_size"].getStr());
     if (memSizeStr.empty() == true) {
         memSizeStr = "1GB";
     }
@@ -268,8 +272,7 @@ void ProteinDF::manageMemory() {
         }
         this->pdfParam_["memory_size"] = value;
     }
-    this->log_.info(TlUtils::format("allocatable memory: %ld byte",
-                                    this->pdfParam_["memory_size"].getLong()));
+    this->log_.info(TlUtils::format("allocatable memory: %ld byte", this->pdfParam_["memory_size"].getLong()));
 
     // if (this->pdfParam_["use_mapfile"].getBoolean() == true) {
     //     std::string filePath = this->pdfParam_["mapfile_basename"].getStr();
@@ -325,11 +328,10 @@ void ProteinDF::setupGlobalCondition_extra() {
     // do nothing
 }
 
-void ProteinDF::stepCreate() {}
+void ProteinDF::stepCreate() {
+}
 
 void ProteinDF::stepIntegral() {
-    this->loadParam();
-
     this->stepStartTitle("INTEGRAL");
 
     DfIntegrals* pDfIntegrals = this->getDfIntegralsObject();
@@ -384,25 +386,20 @@ void ProteinDF::stepForce() {
 }
 
 void ProteinDF::loadParam(const std::string& requestFilePath) {
-    std::string filePath = requestFilePath;
+    std::string pdfParamPath = requestFilePath;
     if (requestFilePath.empty() == true) {
-        filePath = this->pdfParam_["pdf_param_path"].getStr();
+        pdfParamPath = this->pdfParam_["pdf_param_path"].getStr();
     }
 
     TlMsgPack mpac;
-    mpac.load(filePath);
+    mpac.load(pdfParamPath);
     this->pdfParam_ = mpac.getSerializeData();
 
     // check
-    if (requestFilePath.empty() != true) {
-        const std::string pdfParamPath =
-            this->pdfParam_["pdf_param_path"].getStr();
-        if (requestFilePath != pdfParamPath) {
-            std::cerr
-                << "the specified parameter file path is not consistent with "
-                   "pdf_param_path parameter."
-                << std::endl;
-        }
+    if ((!requestFilePath.empty()) && (pdfParamPath != requestFilePath)) {
+        this->log_.warn("input parameter file path is not consistent with `pdf_param_path` parameter.");
+        this->log_.warn("`pdf_param_path` parameter is overwrote.");
+        this->pdfParam_["pdf_param_path"] = requestFilePath;
     }
 }
 

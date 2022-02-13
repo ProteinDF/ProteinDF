@@ -1,0 +1,1147 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2014-2020, Toshiyuki HIRANO
+# This file is distributed under the same license as the ProteinDF User's
+# Manual package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: ProteinDF User's Manual 2020.06.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-02-09 12:35+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../source/90_appendix.rst:3
+msgid "Appendix"
+msgstr "付録"
+
+#: ../../source/90_appendix.rst:6
+msgid "startup options of ProteinDF"
+msgstr "ProteinDFの実行オプション"
+
+#: ../../source/90_appendix.rst:8
+msgid "-r"
+msgstr ""
+
+#: ../../source/90_appendix.rst:10
+msgid ""
+"Resume (restart) the calculation from where it can be restarted. The "
+"calculation conditions are read from the parameter file (pdfparam.mpac)."
+msgstr "途中で止まった計算を再実行します。計算条件はパラメータファイル(pdfparam.mpac)から読み出されます。"
+
+#: ../../source/90_appendix.rst:14
+msgid "-i input_file"
+msgstr ""
+
+#: ../../source/90_appendix.rst:16
+msgid ""
+"Specify an input file to start the calculation. If not specified, "
+"fl_Userinput on the current directory will be used."
+msgstr "入力ファイルを指定します。指定されなければfl_Userinputというファイルが使用されます。"
+
+#: ../../source/90_appendix.rst:20
+msgid "-o output_file"
+msgstr ""
+
+#: ../../source/90_appendix.rst:22
+msgid ""
+"Specifies the output file for the result. If not specified, fl_Out_Std "
+"will be output to the current directory."
+msgstr "出力ファイルを指定します。指定されなければfl_Out_Stdというファイルが使用されます。"
+
+#: ../../source/90_appendix.rst:26
+msgid "-d"
+msgstr ""
+
+#: ../../source/90_appendix.rst:28
+msgid ""
+"Debug output. Note that a large number of messages are output to the file"
+" and standard output. Normally, you do not need to select this option."
+msgstr "デバッグ用の出力です。大量のメッセージが出力されるので注意してください。通常は使用する必要はありません。"
+
+#: ../../source/90_appendix.rst:34
+msgid "Input parameter list"
+msgstr "入力パラメータリスト"
+
+#: ../../source/pdfkwd.rst:1
+msgid "pdf_param_path"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+#, fuzzy
+msgid "parameter"
+msgstr "入力パラメータリスト"
+
+#: ../../source/pdfkwd.rst:1
+msgid "explanation"
+msgstr "説明"
+
+#: ../../source/pdfkwd.rst:1
+msgid "default"
+msgstr "デフォルト値"
+
+#: ../../source/pdfkwd.rst:1
+msgid "pdfparam.mpac"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "values"
+msgstr "とりうる値"
+
+#: ../../source/pdfkwd.rst:1
+msgid ".*"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:13
+msgid "step_control"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "create"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "((create|integral|guess|scf|force)\\s*)+"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:25
+msgid "comment"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:37
+msgid "linear_algebra_package"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "lapack"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(lapack|scalapack)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:49
+msgid "scalapack_block_size"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "64"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(\\d+)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:61
+msgid "save_distributed_matrix_to_local_disk"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "no"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(yes|no)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:73
+msgid "local_temp_path"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:85
+msgid "memory_size"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1GB"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "\\d+\\s*(MB|GB)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:97
+msgid "use_mmap"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:109
+msgid "mapfile_size"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "auto"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(\\d+\\s*(MB|GB)|auto)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:121
+msgid "mapfile_basename"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "pdf"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:133
+msgid "work_on_disk"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:145
+msgid "parallel_processing_type"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "divide_and_conquer"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(divide_and_conquer|DC|master_slave|MS)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:157
+msgid "cleanup"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:169
+msgid "show_keyword"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:181
+msgid "show_input"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "yes"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:193
+msgid "show_coordinates"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:205
+msgid "show_orbital_basis"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "gamess"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(gamess|amoss|none)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:217
+msgid "guess"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "rho"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(rho|file_rho|lcao|density|core|huckel|harris)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:229
+msgid "guess/normalize_density_matrix"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "true"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "string"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:241
+msgid "cut_value"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1.0E-10"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(double > 0)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:253
+msgid "block-size"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1024000"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(integer > 0)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:265
+msgid "charge-extrapolate-number"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(integer >= 1)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:277
+msgid "orbital-overlap-correspondence"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "off"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "on/off"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:289
+msgid "orbital-overlap-correspondence-first"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:301
+msgid "orbital-overlap-correspondence-method"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "mo-overlap"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "mo-overlap/mo-projection"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:313
+msgid "orbital-overlap-correspondence-number"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "3"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "integer"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:325
+msgid "summary"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "none"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(none|convergence|every-scf)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:337
+msgid "analyze_population"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:349
+msgid "max_iteration"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "100"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(integer)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:361
+msgid "method"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "rks"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(rks|uks|roks)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:373
+msgid "method/rks/occlevel"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(array of integer >= 0)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:385
+msgid "method/rks/electrons"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(integer >= 2)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:397
+msgid "method/uks/alpha_occlevel"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:409
+msgid "method/uks/alpha_electrons"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:421
+msgid "method/uks/beta_occlevel"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:433
+msgid "method/uks/beta_electrons"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:445
+msgid "method/roks/closed_occlevel"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:457
+msgid "method/roks/closed_electrons"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:469
+msgid "method/roks/open_occlevel"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(array of integer >= 1)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:481
+msgid "method/roks/open_electrons"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(integer >= 0)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:493
+msgid "save_diff_density_matrix"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:505
+msgid "use_matrix_cache"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:517
+msgid "force_loading_from_disk"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:529
+msgid "show_cache_report"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:541
+msgid "disk-utilization"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "yes/no"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:553
+msgid "update_method"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:565
+msgid "orbital-independence-threshold"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "0.007"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(real >= 0)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:577
+msgid "orbital-independence-threshold/canonical"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:589
+msgid "orbital-independence-threshold/lowdin"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:601
+msgid "convergence/type"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "density_matrix"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(fock|density|dcoef)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:613
+msgid "convergence/threshold/rms"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "0.001"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(real > 0)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:625
+msgid "convergence/threshold"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1e-3"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:637
+msgid "convergence/threshold_energy"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1e-4"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:649
+msgid "scf_acceleration"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "damping"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(damping|anderson|diis)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:661
+msgid "scf_acceleration/damping/damping_factor"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "0.85"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(real)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:673
+msgid "scf_acceleration/daming/start_number"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "0"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(int)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:685
+msgid "scf_acceleration/damping/damping_type"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(fock|density_matrix|density|dcoef)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:697
+msgid "scf_acceleration/oda/start"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "10"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:709
+msgid "scf_acceleration/anderson/start_number"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:721
+msgid "scf_acceleration/anderson/damping_factor"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "0.50"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:733
+msgid "scf_acceleration/diis/start"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:745
+msgid "scf_acceleration/diis/last_items"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:757
+msgid "level_shift"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:769
+msgid "level_shift/start_iteration"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:781
+msgid "level_shift/closed_mo"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "0.00"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:793
+msgid "level_shift/open_mo"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:805
+msgid "level_shift/virtual_mo"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:817
+msgid "xc_functional"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "svwn"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(svwn~|svwn|blyp|b3lyp)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:829
+msgid "grid_free"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "false"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:841
+msgid "xc-potential/grid-type"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "sg-1"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "fine/medium-fine/medium/coarse/sg-1"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:853
+msgid "xc-update"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:865
+msgid "xc-density-threshold"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1.0E-16"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "real"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:877
+msgid "grid/weight_threshold"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:889
+msgid "grid/num_of_radial_shells"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "75"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "int"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:901
+msgid "grid/num_of_angular_points"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "302"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:913
+msgid "grid/radial_quadorature_method"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "GC"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(GC|Gauss-Chebyshev|EM|Eular-Maclaurin)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:925
+msgid "grid/GC_mapping_type"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "TA"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(Becke|TA|KK)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:937
+msgid "grid/partitioning_method"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "Becke"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(Becke|SSWeight)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:949
+msgid "grid/pruning"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:961
+msgid "TEI-integral-driven"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:973
+msgid "J_engine"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "RI_J"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(conventional|RI_J|CD)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:985
+msgid "K_engine"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "conventional"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(conventional|RI_K|CD)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:997
+msgid "XC_engine"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "grid"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(grid|gridfree|gridfree_CD)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1009
+msgid "CDAM_tau"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1021
+msgid "CD_epsilon"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1.0E-4"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1033
+msgid "CD/intermediate_file_format"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "array_mmap"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(array_mmap|array|mmap)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1045
+msgid "gridfree/orthogonalize_method"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "canonical"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(canonical|lowdin)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1057
+msgid "gridfree/dedicated_basis"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1069
+msgid "gridfree/save_v_eigval"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1081
+msgid "scf-memory-saving"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1093
+msgid "geometry/cartesian/input"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "nil"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "nil/stored"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1105
+msgid "geometry/cartesian/unit"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "a.u."
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "au/a.u./angstrom"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1117
+msgid "basis-set/orbital"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1129
+msgid "basis-set/density-auxiliary"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1141
+msgid "basis-set/exchange-auxiliary"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1153
+msgid "basis-set/gridfree"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1165
+msgid "xc_density_threshold"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1177
+msgid "geometry"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "cartesian"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "cartesian/file"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1189
+msgid "coordinates"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1201
+msgid "basis_set"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1213
+msgid "basis_set_j"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1225
+msgid "basis_set_xc"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1237
+msgid "basis_set_gridfree"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1249
+msgid "independent-orbital-number"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1261
+msgid "xc-potential/gxalpha/alpha-value"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "0.7"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1273
+msgid "myu-nyu-zero"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1285
+msgid "guess/nsp-ppq"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1297
+msgid "guess/sp-ppq"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1309
+msgid "guess/trans-angle-threshold"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1.0 1.5 20 30"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1321
+msgid "guess/make-myu-nyu"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "meth0"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "meth0/meth1/meth2/meth3/meth4"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1333
+msgid "guess/vct-normalize"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "ON OFF OFF"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1345
+msgid "guess/part-normalize"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1357
+msgid "guess/user-vector"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "(nil|stored)"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1369
+msgid "num_of_atoms"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1381
+msgid "num_of_dummy_atoms"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1393
+msgid "num_of_AOs"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1405
+msgid "num_of_MOs"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1417
+msgid "num_of_auxCDs"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1429
+msgid "num_of_auxXCs"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1441
+msgid "TE"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1453
+msgid "debug/file_warning"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1465
+msgid "debug/save_J"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1477
+msgid "debug/save_K"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1489
+msgid "debug/save_Fxc_pure"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1501
+msgid "debug/save_forces"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1513
+msgid "cutoff_distribution"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1525
+msgid "length_scale_parameter"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1537
+msgid "control"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1549
+msgid "debug/eri/exact_J"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1561
+msgid "cutoff_density"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1573
+msgid "cutoff_threshold_primitive"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1
+msgid "1e-12"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1585
+msgid "debug/eri/exact_K"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1597
+msgid "new_engine"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1609
+msgid "debug/eri/output_K"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1621
+msgid "debug/eri/output_J"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1633
+msgid "debug/DfXMatrix/save-eigval"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1645
+msgid "debug/DfXMatrix/save-mat"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1657
+msgid "debug/DfXMatrix/check-X"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1669
+msgid "num_of_iterations"
+msgstr ""
+
+#: ../../source/pdfkwd.rst:1 ../../source/pdfkwd.rst:1681
+msgid "stat"
+msgstr ""
+
+#: ../../source/90_appendix.rst:40
+msgid "Input file format"
+msgstr ""
+
+#: ../../source/90_appendix.rst:44
+msgid "basis2 file format"
+msgstr ""
+
+#: ../../source/90_appendix.rst:46
+msgid ""
+"The basis2 file stores the basis function information. The following is a"
+" concrete example."
+msgstr ""
+
+#: ../../source/90_appendix.rst:53
+msgid "Format"
+msgstr ""
+
+#: ../../source/90_appendix.rst:55
+msgid "** line 1(Title)"
+msgstr ""
+
+#: ../../source/90_appendix.rst:57
+msgid ""
+"Describes the name of the basis function. A name starting with \"O-\" "
+"indicates a basis function, and a name starting with \"A-\" indicates an "
+"auxiliary basis function. In the case of basis functions, a single CGTO "
+"block. In the case of auxiliary basis functions, it consists of two CGTO "
+"blocks, one for the Coulomb term and the other for the auxiliary basis "
+"functions for the exchange-correlation term."
+msgstr ""
+
+#: ../../source/90_appendix.rst:63
+msgid "** line 2(the number of CGTOs)"
+msgstr ""
+
+#: ../../source/90_appendix.rst:65
+msgid ""
+"Specifies the form and number of orbits of a contracted Gaussian basis "
+"function (CGTO). It is represented by three integer values separated by "
+"whitespace. The three integer values, separated by spaces, represent the "
+"number of s-type, p-type, and d-type orbits, in that order. After this "
+"line, the CGTO block continues."
+msgstr ""
+
+#: ../../source/90_appendix.rst:70
+msgid ""
+"If it is written as \"3 2 1,\" There are three contracted Gaussian basis "
+"functions of type s, two contracted Gaussian basis functions of type p, "
+"and one contracted Gaussian basis function of type d. Therefore, after "
+"this line, six CGTO blocks will be described."
+msgstr ""
+
+#: ../../source/90_appendix.rst:75
+msgid "** line 3(beginning of CGTO block)"
+msgstr ""
+
+#: ../../source/90_appendix.rst:77
+msgid ""
+"The beginning of a CGTO block indicates the number of primitive Gaussian "
+"basis functions (PGTO) that the CGTO block contains."
+msgstr ""
+
+#: ../../source/90_appendix.rst:80
+msgid "** line 4(PGTO)"
+msgstr ""
+
+#: ../../source/90_appendix.rst:82
+msgid ""
+"The exponents and coefficients of the primitive basis functions (PGTO) "
+"are described, separated by whitespace. For the auxiliary basis "
+"functions, the coefficient (1.0) can be omitted."
+msgstr ""
+

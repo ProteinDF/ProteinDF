@@ -24,6 +24,7 @@
 #endif  // HAVE_CONFIG_H
 
 #include <string>
+
 #include "TlLogging.h"
 #include "TlSerializeData.h"
 
@@ -33,27 +34,27 @@ class DfForce;
 class DfScf;
 
 class ProteinDF {
-   public:
+public:
     ProteinDF();
     virtual ~ProteinDF();
 
-   public:
+public:
     void run();
     void restart(const std::string& restartParamFilePath);
 
-   protected:
+protected:
     void exec();
 
-   protected:
+protected:
     virtual void saveParam() const;
     virtual void loadParam(const std::string& requestFilePath = "");
 
-   protected:
+protected:
     void setupGlobalCondition();
     virtual void setupGlobalCondition_extra();
     virtual void manageMemory();
 
-   protected:
+protected:
     virtual void startlogo();
     void startlogo(const std::string& version, const std::string& info = "");
     void checkEnvironment();
@@ -69,16 +70,16 @@ class ProteinDF {
     virtual void endlogo();
     void endlogo(const std::string& reports);
 
-   protected:
+protected:
     virtual DfIntegrals* getDfIntegralsObject();
     virtual DfInitialGuess* getDfInitialGuessObject();
     virtual DfForce* getDfForceObject();
 
-   protected:
+protected:
     virtual void stepStartTitle(const std::string& stepName);
     virtual void stepEndTitle();
 
-   protected:
+protected:
     TlLogging& log_;
     TlSerializeData pdfParam_;
 

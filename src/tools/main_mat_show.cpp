@@ -21,8 +21,8 @@
 
 #include "TlGetopt.h"
 #include "TlUtils.h"
-#include "tl_dense_general_matrix_arrays_roworiented.h"
-#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_general_matrix_arrays_mmap_roworiented.h"
+#include "tl_dense_general_matrix_mmap.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_matrix_utils.h"
 
@@ -33,63 +33,113 @@ int main(int argc, char* argv[]) {
     const bool bCsvMode = (opt["c"] == "defined");
     const bool bGuessMode = (opt["g"] == "defined");
 
-    std::string sPath = opt[1];
+    std::string path = opt[1];
     if (bVerbose) {
-        std::cerr << "loading... " << sPath << std::endl;
+        std::cerr << "loading... " << path << std::endl;
     }
 
-    if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::RLHD) == true) {
-        TlDenseSymmetricMatrix_Lapack M;
-        M.load(sPath);
+    TlMatrixObject::HeaderInfo headerInfo;
+    const bool isLoadable = TlMatrixUtils::getHeaderInfo(path, &headerInfo);
+    if (isLoadable == true) {
+        switch (headerInfo.matrixType) {
+            case TlMatrixObject::RLHD: {
+                std::cout << "type: symmetric" << std::endl;
+                TlDenseSymmetricMatrix_Lapack M;
+                M.load(path);
 
-        if (bCsvMode == true) {
-            M.saveCsv(std::cout);
-        } else if (bGuessMode == true) {
-            M.saveText(std::cout);
-        } else {
-            std::cout << M << std::endl;
+                if (bCsvMode == true) {
+                    M.saveCsv(std::cout);
+                } else if (bGuessMode == true) {
+                    M.saveText(std::cout);
+                } else {
+                    std::cout << M << std::endl;
+                }
+            } break;
+
+            case TlMatrixObject::CSFD: {
+                std::cout << "type: normal (column-major)" << std::endl;
+                TlDenseGeneralMatrix_mmap M(path);
+
+                if (bCsvMode == true) {
+                    M.saveCsv(std::cout);
+                } else if (bGuessMode == true) {
+                    M.saveText(std::cout);
+                } else {
+                    std::cout << M << std::endl;
+                }
+            } break;
+
+            case TlMatrixObject::RSFD: {
+                std::cout << "type: normal (row-major)" << std::endl;
+                break;
+            }
+
+            case TlMatrixObject::ABGD: {
+                std::cout << "type: General Dens-matrix stored by Arrays Blocks" << std::endl;
+                std::cout << "#vectors: " << headerInfo.numOfVectors << std::endl;
+                std::cout << "sizeOfVector: " << headerInfo.sizeOfVector << std::endl;
+                std::cout << TlUtils::format("unit: %d/%d", headerInfo.subunitId + 1, headerInfo.numOfSubunits)
+                          << std::endl;
+                std::cout << "chunk size: " << headerInfo.sizeOfChunk << std::endl;
+
+                TlDenseGeneralMatrix_arrays_mmap_RowOriented M(path);
+                std::cout << M << std::endl;
+                break;
+            }
+
+            default:
+                std::cout << "not support type: " << headerInfo.matrixType << std::endl;
+                break;
         }
-    } else if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::CSFD) == true) {
-        TlDenseGeneralMatrix_Lapack M;
-        M.load(sPath);
-
-        if (bCsvMode == true) {
-            M.saveCsv(std::cout);
-        } else if (bGuessMode == true) {
-            M.saveText(std::cout);
-        } else {
-            std::cout << M << std::endl;
-        }
-    } else if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::ABGD) == true) {
-        TlMatrixObject::MatrixType type;
-        TlMatrixObject::index_type numOfRows = 0;
-        TlMatrixObject::index_type numOfCols = 0;
-        std::size_t numOfItems = 0;
-        TlMatrixObject::index_type numOfSubunits = 0;
-        TlMatrixObject::index_type subunitId = 0;
-        TlMatrixObject::index_type sizeOfChunk = 0;
-        TlMatrixUtils::getHeaderInfo(sPath, &type, &numOfRows, &numOfCols,
-                                     &numOfItems, &numOfSubunits, &subunitId,
-                                     &sizeOfChunk);
-        std::cout << "row: " << numOfRows << std::endl;
-        std::cout << "col: " << numOfCols << std::endl;
-        std::cout << TlUtils::format("unit: %d/%d", subunitId + 1,
-                                     numOfSubunits)
-                  << std::endl;
-        std::cout << "chunk size: " << sizeOfChunk << std::endl;
-
-        TlDenseGeneralMatrix_arrays_RowOriented M;
-        bool isLoaded = M.load(sPath, -1);
-        if (isLoaded) {
-            std::cout << M << std::endl;
-        } else {
-            std::cout << "cannot load: " << sPath << std::endl;
-        }
-
     } else {
-        std::cerr << "unknown file type: " << sPath << std::endl;
+        std::cerr << "cannot open file: " << path << std::endl;
         return EXIT_FAILURE;
     }
+
+    // if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::RLHD) == true) {
+    //     TlDenseSymmetricMatrix_Lapack M;
+    //     M.load(sPath);
+
+    //     if (bCsvMode == true) {
+    //         M.saveCsv(std::cout);
+    //     } else if (bGuessMode == true) {
+    //         M.saveText(std::cout);
+    //     } else {
+    //         std::cout << M << std::endl;
+    //     }
+    // } else if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::CSFD) == true) {
+    //     TlDenseGeneralMatrix_Lapack M;
+    //     M.load(sPath);
+
+    //     if (bCsvMode == true) {
+    //         M.saveCsv(std::cout);
+    //     } else if (bGuessMode == true) {
+    //         M.saveText(std::cout);
+    //     } else {
+    //         std::cout << M << std::endl;
+    //     }
+    // } else if (TlMatrixUtils::isLoadable(sPath, TlMatrixObject::ABGD) == true) {
+    //     TlMatrixObject::HeaderInfo headerInfo;
+    //     TlMatrixUtils::getHeaderInfo(sPath, &headerInfo);
+
+    //     std::cout << "row: " << headerInfo.numOfRows << std::endl;
+    //     std::cout << "col: " << headerInfo.numOfCols << std::endl;
+    //     std::cout << TlUtils::format("unit: %d/%d", headerInfo.subunitId + 1, headerInfo.numOfSubunits) << std::endl;
+    //     std::cout << "chunk size: " << headerInfo.sizeOfChunk << std::endl;
+
+    //     TlDenseGeneralMatrix_arrays_mmap_RowOriented M(sPath, 1, 1);
+    //     std::cout << M << std::endl;
+    //     // bool isLoaded = M.load(sPath, -1);
+    //     // if (isLoaded) {
+    //     //     std::cout << M << std::endl;
+    //     // } else {
+    //     //     std::cout << "cannot load: " << sPath << std::endl;
+    //     // }
+
+    // } else {
+    //     std::cerr << "unknown file type: " << sPath << std::endl;
+    //     return EXIT_FAILURE;
+    // }
 
     return EXIT_SUCCESS;
 }

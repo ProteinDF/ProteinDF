@@ -18,7 +18,9 @@ TEST(TlDenseGeneralMatrix_mmap, construct) {
     const int col = 200;
     {
         cleanup();
+        std::cerr << "TlDenseGeneralMatrix_mmap construct: start" << std::endl;
         TlDenseGeneralMatrix_mmap m(matPath, row, col);
+        std::cerr << "TlDenseGeneralMatrix_mmap construct: done." << std::endl;
     }
 
     {
@@ -34,8 +36,7 @@ TEST(TlDenseGeneralMatrix_mmap, construct_by_file) {
     cleanup();
     const int row = 100;
     const int col = 200;
-    TlDenseGeneralMatrix_Lapack ref =
-        getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
+    TlDenseGeneralMatrix_Lapack ref = getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
     ref.save(matPath);
     TlDenseGeneralMatrix_mmap a(matPath);
 
@@ -52,8 +53,7 @@ TEST(TlDenseGeneralMatrix_mmap, resize) {
     cleanup();
     const int row = 100;
     const int col = 200;
-    TlDenseGeneralMatrix_Lapack ref =
-        getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
+    TlDenseGeneralMatrix_Lapack ref = getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
     ref.save(matPath);
     TlDenseGeneralMatrix_mmap a(matPath);
 
@@ -75,11 +75,9 @@ TEST(TlDenseGeneralMatrix_mmap, get_set_matrix) {
     cleanup();
     const int row = 100;
     const int col = 200;
-    TlDenseGeneralMatrix_Lapack ref =
-        getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
+    TlDenseGeneralMatrix_Lapack ref = getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
 
-    TlDenseGeneralMatrix_mmap m(matPath, ref.getNumOfRows(),
-                                ref.getNumOfCols());
+    TlDenseGeneralMatrix_mmap m(matPath, ref.getNumOfRows(), ref.getNumOfCols());
     for (int r = 0; r < ref.getNumOfRows(); ++r) {
         for (int c = 0; c < ref.getNumOfCols(); ++c) {
             m.set(r, c, ref.get(r, c));
@@ -99,12 +97,10 @@ TEST(TlDenseGeneralMatrix_mmap, set_matrix) {
     cleanup();
     const int row = 100;
     const int col = 200;
-    TlDenseGeneralMatrix_Lapack ref =
-        getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
+    TlDenseGeneralMatrix_Lapack ref = getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
 
     {
-        TlDenseGeneralMatrix_mmap m(matPath, ref.getNumOfRows(),
-                                    ref.getNumOfCols());
+        TlDenseGeneralMatrix_mmap m(matPath, ref.getNumOfRows(), ref.getNumOfCols());
         for (int r = 0; r < ref.getNumOfRows(); ++r) {
             for (int c = 0; c < ref.getNumOfCols(); ++c) {
                 m.set(r, c, ref.get(r, c));
@@ -130,8 +126,7 @@ TEST(TlDenseGeneralMatrix_mmap, get_matrix) {
     cleanup();
     const int row = 200;
     const int col = 100;
-    TlDenseGeneralMatrix_Lapack ref =
-        getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
+    TlDenseGeneralMatrix_Lapack ref = getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
     ref.save(matPath);
 
     {
@@ -150,11 +145,9 @@ TEST(TlDenseGeneralMatrix_mmap, set_block) {
     cleanup();
     const int row = 100;
     const int col = 200;
-    TlDenseGeneralMatrix_Lapack ref =
-        getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
+    TlDenseGeneralMatrix_Lapack ref = getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
 
-    TlDenseGeneralMatrix_mmap m(matPath, ref.getNumOfRows(),
-                                ref.getNumOfCols());
+    TlDenseGeneralMatrix_mmap m(matPath, ref.getNumOfRows(), ref.getNumOfCols());
     {
         for (int r = 0; r < ref.getNumOfRows(); ++r) {
             for (int c = 0; c < ref.getNumOfCols(); ++c) {
@@ -194,11 +187,9 @@ TEST(TlDenseGeneralMatrix_mmap, get_block) {
     cleanup();
     const int row = 100;
     const int col = 200;
-    TlDenseGeneralMatrix_Lapack ref =
-        getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
+    TlDenseGeneralMatrix_Lapack ref = getTlMatrix<TlDenseGeneralMatrix_Lapack>(row, col);
 
-    TlDenseGeneralMatrix_mmap m(matPath, ref.getNumOfRows(),
-                                ref.getNumOfCols());
+    TlDenseGeneralMatrix_mmap m(matPath, ref.getNumOfRows(), ref.getNumOfCols());
     {
         for (int r = 0; r < ref.getNumOfRows(); ++r) {
             for (int c = 0; c < ref.getNumOfCols(); ++c) {

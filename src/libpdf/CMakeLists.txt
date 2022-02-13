@@ -2,6 +2,9 @@ set(LIBPDF_HEADERS
   common.h
   datatype.h
   df_cdk_matrix.h
+  df_converge_damping_tmpl.h
+  df_converge_damping_oda_lapack.h
+  df_converge_damping_oda_tmpl.h
   df_population_lapack.h
   df_population_tmpl.h
   df_total_energy_lapack.h
@@ -96,6 +99,7 @@ set(LIBPDF_HEADERS
 
 set(LIBPDF_SOURCES
   df_cdk_matrix.cc
+  df_converge_damping_oda_lapack.cc
   df_total_energy_lapack.cc
   df_population_lapack.cc
   CnError.cpp
@@ -184,6 +188,8 @@ set(LIBPDF_SOURCES
 
 
 set(LIBPPDF_HEADERS
+  df_population_scalapack.h
+  df_population_tmpl.h
   df_total_energy_parallel_tmpl.h
   df_total_energy_parallel_lapack.h
   df_total_energy_scalapack.h
@@ -229,6 +235,7 @@ set(LIBPPDF_HEADERS
 
 
 set(LIBPPDF_SOURCES
+  df_population_scalapack.cc
   df_total_energy_parallel_lapack.cc
   df_total_energy_scalapack.cc
   CnFile_parallel.cc

@@ -17,7 +17,9 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfConverge_Damping.h"
+
 #include <cassert>
+
 #include "TlTime.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_dense_vector_lapack.h"
@@ -107,4 +109,10 @@ void DfConverge_Damping::convergePMatrix() {
                       << std::endl;
             break;
     }
+}
+
+double DfConverge_Damping::getDampingFactor() const {
+    const double dampingFactor = (*this->pPdfParam_)["scf_acceleration/damping/damping_factor"].getDouble();
+
+    return dampingFactor;
 }

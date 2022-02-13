@@ -27,15 +27,29 @@
 /// MPI並列プログラム用に出力レベルを2つ(master用, worker用)用意しています。
 /// 出力レベル以上の出力が無ければ無視されます。
 class TlLogging {
-   public:
-    enum Level { TL_DEBUG, TL_INFO, TL_WARN, TL_ERROR, TL_CRITICAL };
+public:
+    enum Level { TL_DEBUG,
+                 TL_INFO,
+                 TL_WARN,
+                 TL_ERROR,
+                 TL_CRITICAL };
 
-   public:
+public:
     static TlLogging& getInstance();
 
-   public:
+public:
     void setFilePath(const std::string& filePath);
     void setProcID(const int procID);
+
+    TlLogging::Level getLevel(const bool isMaster = true) const {
+        TlLogging::Level answer;
+        if (isMaster) {
+            answer = this->masterLevel_;
+        } else {
+            answer = this->workerLevel_;
+        }
+        return answer;
+    }
 
     void setLevel(const TlLogging::Level masterLevel,
                   const TlLogging::Level workerLevel = TL_WARN);
@@ -46,8 +60,9 @@ class TlLogging {
     void error(const std::string& msg);
     void critical(const std::string& msg);
 
-   private:
+private:
     TlLogging();
+    TlLogging(const TlLogging& rhs);
     ~TlLogging();
 
     void setLevel();
@@ -58,7 +73,7 @@ class TlLogging {
     void output(const int level, const std::string& msg);
     std::string format(const int level, const std::string& input);
 
-   private:
+private:
     static TlLogging* pInstance_;
     static const char* pLevelStr_[];
 
