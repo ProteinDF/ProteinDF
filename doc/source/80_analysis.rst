@@ -34,6 +34,17 @@ Executing the command above obtains the following outputs:
    No.10     9  C (  41.623,   36.994,   33.649) p(    pz) (  3.39%;  60.00%)
 
 
+* pdf-kwd
+
+Show ProteinDF input keywords.
+It can be output in several formats. Please refer to the help(-h).
+
+.. code-block:: none
+
+  Usage: pdf-kwd
+
+
+
 * pdf-pop-mulliken
 
 Output Mulliken population.
@@ -43,11 +54,11 @@ Output Mulliken population.
   Usage: pdf-pop-mulliken <MO_ID>
 
 
-
-
 * pdf-mkfld-mo
 
-Outputs molecular orbital field data.
+Outputs molecular orbital volume data.
+It can be output in several formats. Please refer to the help(-h).
+
 
 .. code-block:: none
 
@@ -56,7 +67,9 @@ Outputs molecular orbital field data.
 
 * pdf-mkfld-esp
 
-Outputs electrostatic potential field data.
+Outputs electrostatic potential volume data.
+It can be output in several formats. Please refer to the help(-h).
+
 
 .. code-block:: none
 
@@ -65,7 +78,8 @@ Outputs electrostatic potential field data.
 
 * pdf-mkfld-dens
 
-Outputs electron density field data.
+Outputs electron density volume data.
+It can be output in several formats. Please refer to the help(-h).
 
 .. code-block:: none
 
