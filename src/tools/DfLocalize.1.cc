@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "DfLocalize_v1.h"
+#include "DfLocalize.1.h"
 
 #include <iostream>
 
