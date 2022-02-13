@@ -17,13 +17,16 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "PdfKeyword.h"
+
 #include <cassert>
 #include <iostream>
+
 #include "TlLogging.h"
 #include "TlMsgPack.h"
 #include "TlUtils.h"
 
-PdfKeyword::PdfKeyword() : log_(TlLogging::getInstance()) {
+PdfKeyword::PdfKeyword()
+    : log_(TlLogging::getInstance()) {
     this->initialize();
 }
 
@@ -182,13 +185,12 @@ std::string PdfKeyword::get_reST_jp(bool showHiddenItem) const {
         output += "  :widths: 20,80\n";
         output += "  :stub-columns: 1\n";
         output += "\n";
-        output +=
-            TlUtils::format("  \"パラメータ\", \"%s\"\n", item.keyword.c_str());
-        output += TlUtils::format("  \"説明\", \"%s\"\n", item.desc_jp.c_str());
-        output += TlUtils::format("  \"規定値\", \"%s\"\n",
+        output += TlUtils::format("  \"parameter\", \"%s\"\n", item.keyword.c_str());
+        output += TlUtils::format("  \"explanation\", \"%s\"\n", item.desc_jp.c_str());
+        output += TlUtils::format("  \"default\", \"%s\"\n",
                                   item.defaultValue.c_str());
         output +=
-            TlUtils::format("  \"取りうる値\", \"%s\"\n", item.syntax.c_str());
+            TlUtils::format("  \"values\", \"%s\"\n", item.syntax.c_str());
         output += "\n\n";
     }
 

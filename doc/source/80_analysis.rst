@@ -1,26 +1,26 @@
 .. -*- coding: utf-8; -*-
 
-***********************
-ProteinDF計算結果の解析
-***********************
+*********************************************
+Analysis of the ProteinDF Calculation Results
+*********************************************
 
 
-一般的に用いられる解析ツール
+General analysis tools
 ============================
 
-* pdf-top
+* pdf-component
 
-指定された分子軌道に対し、寄与の大きい原子軌道を表示します。
-
-.. code-block:: none
-   
-   Usage: pdf-top [Option]
-
-実行すると以下の様な出力が得られます。
+Displays atomic orbitals with a large contribution to the specified molecular orbital.
 
 .. code-block:: none
-   
-   $ pdf-top 115
+
+   Usage: pdf-component [Option]
+
+Executing the command above obtains the following outputs:
+
+.. code-block:: none
+
+   $ pdf-component 115
    MO level: 115
    No. 1     8  C (  42.525,   37.241,   32.674) p(    px) (  8.18%;   8.18%)
    No. 2     8  C (  42.525,   37.241,   32.674) p(    pz) (  7.77%;  15.95%)
@@ -34,63 +34,78 @@ ProteinDF計算結果の解析
    No.10     9  C (  41.623,   36.994,   33.649) p(    pz) (  3.39%;  60.00%)
 
 
+* pdf-kwd
+
+Show ProteinDF input keywords.
+It can be output in several formats. Please refer to the help(-h).
+
+.. code-block:: none
+
+  Usage: pdf-kwd
+
+
+
 * pdf-pop-mulliken
 
-output Mulliken population.
+Output Mulliken population.
 
 .. code-block:: none
 
   Usage: pdf-pop-mulliken <MO_ID>
 
 
-  
+* pdf-mkfld-mo
 
-* pdf-mo
+Outputs molecular orbital volume data.
+It can be output in several formats. Please refer to the help(-h).
 
-分子軌道フィールドデータを出力します。
 
 .. code-block:: none
-   
-   Usage: pdf-mo <MO_ID>
+
+   Usage: pdf-mkfld-mo <MO_ID>
 
 
-* pdf-esp
+* pdf-mkfld-esp
 
-静電ポテンシャルのフィールドデータを出力します。
+Outputs electrostatic potential volume data.
+It can be output in several formats. Please refer to the help(-h).
+
 
 .. code-block:: none
-   
-   Usage: pdf-esp 
+
+   Usage: pdf-mkfld-esp
 
 
-* pdf-dens
+* pdf-mkfld-dens
 
-電子密度フィールドデータを出力します。
+Outputs electron density volume data.
+It can be output in several formats. Please refer to the help(-h).
 
 .. code-block:: none
-   
-   Usage: pdf-dens
+
+   Usage: pdf-mkfld-dens
 
 
 * pdf-archive
 
-計算結果を集約し、アーカイブを作成します。
+Aggregates calculation results to create archives.
 
 .. code-block:: none
-   
+
    Usage: pdf-archive
 
 
 * pdf-report
 
-計算結果のレポートを作成します。
+Creates calculation result reports.
 
 .. code-block:: none
-   
+
    Usage: pdf-archive
 
-以下のようなエネルギー収束曲線(:num:`Fig. #analysisconvhist`)や
-軌道エネルギーの収束履歴(:num:`Fig. #analysislevelhist`)が得られます。
+The user can obtain energy convergence curve (:num:`Fig. #analysisconvhist`)
+and orbital energy convergence history (:num:`Fig. #analysislevelhist`),
+as shown below:
 
 
 .. _analysisconvhist:
@@ -100,7 +115,7 @@ output Mulliken population.
    :alt: analysis_conv_hist.png
    :align: center
 
-   エネルギー収束曲線
+   Energy convergence curve
 
 
 .. _analysislevelhist:
@@ -110,78 +125,69 @@ output Mulliken population.
    :alt: analysis_level_hist.png
    :align: center
 
-   軌道エネルギーの収束履歴
+   Orbital energy convergence history
 
 
-上級者(デバッグ)用ツール
+Advanced (debug) tools
 ========================
 
-* pdf-mat2txt
+* pdf-mat-show
 
-指定した行列ファイル(バイナリ形式)を標準出力に出力します。
-
-.. code-block:: none
-   
-   Usage: pdf-mat2txt
-
-
-* pdf-vtr2txt
-
-指定したベクトルファイル(バイナリ形式)を標準出力に出力します。
+Outputs the specified matrix file (binary format) to standard output.
 
 .. code-block:: none
-   
-   Usage: pdf-vtr2txt
+
+   Usage: pdf-mat-show <matrix file>
 
 
-* pdf-mpac2yml
+* pdf-vtr-show
 
-MessagePack形式のファイルをYAMLファイルの変換します。
+Outputs the specified vector file (binary format) to standard output.
 
 .. code-block:: none
-   
+
+   Usage: pdf-vtr-show
+
+
+* mpac2yml.py
+
+Converts MessagePack files to YAML files.
+
+.. code-block:: none
+
    Usage: mpac2yml.py [options] FILE
-  
+
    Options:
    -h, --help  show this help message and exit
 
 
-* pdf-yml2mpac
+* yml2mpac.py
 
-YAML形式のファイルをMessagePack形式に変換します。
+Converts YAML files to MessagePack files.
 
 .. code-block:: none
-   
+
    Usage: yml2mpac.py [options] YAML_FILE MPAC_FILE
-  
+
    Options:
    -h, --help  show this help message and exit
 
 
 * pdf-diff
 
-2つの計算結果を比較します。
+Compares two calculation results.
 
 .. code-block:: none
-   
+
    Usage: pdf-diff
 
 
-* pdf-matinfo
+* pdf-mat-info
 
-行列情報を出力します。
-
-.. code-block:: none
-   
-   Usage: pdf-matinfo
-
-
-* pdf-genmat
-
-行列を作成します。
+Outputs matrix information.
 
 .. code-block:: none
-   
-   Usage: pdf-genmat
+
+   Usage: pdf-mat-info
 
 
