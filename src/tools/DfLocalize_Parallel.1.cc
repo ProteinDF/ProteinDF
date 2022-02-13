@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "DfLocalize_Parallel_v1.h"
+#include "DfLocalize_Parallel.1.h"
 
 #include "TlCommunicate.h"
 #include "TlTime.h"
