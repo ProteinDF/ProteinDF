@@ -1,4 +1,5 @@
 set(LIBPDFTL_HEADERS
+  tl_assert.h
   tl_dense_general_matrix_object.h
   tl_dense_symmetric_matrix_object.h
   tl_dense_matrix_impl_object.h
@@ -23,10 +24,13 @@ set(LIBPDFTL_HEADERS
 
   tl_dense_general_matrix_arrays_coloriented.h
   tl_dense_general_matrix_arrays_roworiented.h
+  tl_dense_general_matrix_arrays_mmap_coloriented.h
+  tl_dense_general_matrix_arrays_mmap_roworiented.h
   tl_dense_general_matrix_io.h
   tl_dense_general_matrix_mmap.h
 
   tl_dense_matrix_arrays_object.h
+  tl_dense_matrix_arrays_mmap_object.h
   tl_dense_matrix_io_object.h
   tl_dense_matrix_mmap_object.h
 
@@ -76,6 +80,8 @@ set(LIBPDFTL_SOURCES
   TlMemManager.cpp
 
   tl_dense_general_matrix_arrays_roworiented.cc
+  tl_dense_general_matrix_arrays_mmap_coloriented.cc
+  tl_dense_general_matrix_arrays_mmap_roworiented.cc
   tl_dense_general_matrix_io.cc
   tl_dense_general_matrix_mmap.cc
   tl_dense_symmetric_matrix_abstract.cc
@@ -83,6 +89,7 @@ set(LIBPDFTL_SOURCES
   tl_matrix_mmap_row_major.cc
 
   tl_dense_matrix_arrays_object.cc
+  tl_dense_matrix_arrays_mmap_object.cc
   tl_dense_matrix_mmap_object.cc
   tl_dense_matrix_io_object.cc
 

@@ -26,11 +26,10 @@
 
 #include "CnError.h"
 #include "DfInitialGuessHarris.h"
-#include "DfPopulation.h"
-#include "PdfUserInput.h"
-
 #include "DfOverlapX.h"
+#include "PdfUserInput.h"
 #include "TlSerializeData.h"
+#include "df_population_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 
 DfInitialGuessHarris::DfInitialGuessHarris(TlSerializeData* pPdfParam)
@@ -48,7 +47,7 @@ void DfInitialGuessHarris::main() {
 
     DfInitialGuessHarris::calcInitialDensityMatrix<
         TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack, DfOverlapX,
-        DfPopulation>();
+        DfPopulation_Lapack>();
 }
 
 void DfInitialGuessHarris::loadHarrisDB() {

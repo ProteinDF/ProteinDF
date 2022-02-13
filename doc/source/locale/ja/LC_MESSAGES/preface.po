@@ -1,117 +1,200 @@
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: ProteinDF User's Manual 2014.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-11-18 00:11-0600\n"
+"POT-Creation-Date: 2020-08-26 13:13+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.8.0\n"
 
 #: ../../source/preface.rst:5
-msgid "はじめに"
+msgid "Introduction"
 msgstr ""
 
 #: ../../source/preface.rst:7
-msgid "本書はProteinDFソフトウェアのユーザーズマニュアルです。"
+msgid "This document is the User's Manual for the ProteinDF program."
 msgstr ""
 
 #: ../../source/preface.rst:11
-msgid "免責事項"
+msgid "Disclaimer"
 msgstr ""
 
 #: ../../source/preface.rst:13
 msgid ""
-"本マニュアルは完全ではありません。 また、この文書は有用であるという期待の下に作成・配布されていますが、 無保証です。 "
-"ソフトウェア開発は継続して行われており、本マニュアルに書かれている内容と異なる場合があります。 "
-"使用することによって生じるいかなる直接的・間接的損害についても筆者はその責を負いません。"
+"This manual is a work in progress. Though created and distributed in the "
+"hope of being useful, this document is offered without any warranty of "
+"any kind. Since the software is still being developed, some content of "
+"this manual may differ from the provided product. The author disclaims "
+"all liability for any damages directly or indirectly caused by the use of"
+" this manual."
 msgstr ""
 
-#: ../../source/preface.rst:18
-msgid "ご意見・質問等はメーリングリスト(pdf-users [AT] iis.u-tokyo.ac.jp)、または下記連絡先までお願いします。"
+#: ../../source/preface.rst:21
+msgid "For questions and feedback, please use the contact information."
 msgstr ""
 
-#: ../../source/preface.rst:22
-msgid "ライセンス"
+#: ../../source/preface.rst:25
+msgid "License"
 msgstr ""
 
-#: ../../source/preface.rst:24
+#: ../../source/preface.rst:27
 msgid ""
-"ProtienDF ソフトウェアは、 オープンソースライセンスである GNU 一般公衆利用許諾契約書（GPL）に基づいてリリースされています。 GPL "
-"ライセンスの正式な条件については、 http://www.fsf.org/licenses/ を参照してください。 "
-"http://www.fsf.org/licenses/gpl-faq.html および http://www.gnu.org/philosophy"
-"/enforcing-gpl.html も参照してください。"
-msgstr ""
-
-#: ../../source/preface.rst:30
-msgid ""
-"なお、本ソフトウェアの開発は主に学術研究助成によって支援されています。 開発支援のために、ProteinDFを用いた研究成果を発表される際には、 "
-"以下のProteinDF論文を引用していただけると幸いです。 また、その研究の書誌情報をご連絡いただけると助かります。"
+"The ProteinDF software is released under an open source license: the GNU "
+"General Public License (GPL). For the exact terms and conditions of the "
+"GPL license, please refer to http://www.fsf.org/licenses/. Please also "
+"refer to http://www.fsf.org/licenses/gpl-faq.html and "
+"http://www.gnu.org/philosophy/enforcing-gpl.html."
 msgstr ""
 
 #: ../../source/preface.rst:35
 msgid ""
-"F. Sato, Y. Shigemitsu, I. Okazaki, S. Yahiro, M. Fukue, S. Kozuru, and H. "
-"Kashiwagi, \"Development of a new density functional program for all-"
+"The development of this software is supported by scientific research "
+"grants. When publishing research results using ProteinDF, please cite the"
+" following article to assist the development of our software. When citing"
+" the article, please share with us the bibliographical information of the"
+" research material."
+msgstr ""
+
+#: ../../source/preface.rst:41
+msgid ""
+"F. Sato, Y. Shigemitsu, I. Okazaki, S. Yahiro, M. Fukue, S. Kozuru, and "
+"H. Kashiwagi, \"Development of a new density functional program for all-"
 "electron calculation of proteins\", Int. J. Quant. Chem., 63, 245-246 "
 "(1997)."
 msgstr ""
 
-#: ../../source/preface.rst:41
-msgid "連絡先"
-msgstr ""
-
-#: ../../source/preface.rst:43
-msgid "153-8505 東京都目黒区駒場4-6-1"
-msgstr ""
-
-#: ../../source/preface.rst:45
-msgid "東京大学 生産技術研究所 佐藤文俊研究室"
-msgstr ""
-
 #: ../../source/preface.rst:47
-msgid "email: pdf-dev [AT] iis.u-tokyo.ac.jp"
+msgid "Contact information"
 msgstr ""
 
-#: ../../source/preface.rst:52
-msgid "謝辞"
+#: ../../source/preface.rst:49
+msgid ""
+"4-6-1 Komaba, Meguro, Tokyo 153-8505 Japan Sato, F. Laboratory, Institute"
+" of Industrial Science, the University of Tokyo"
 msgstr ""
 
 #: ../../source/preface.rst:54
-msgid "本プログラムの開発は、以下のプロジェクトの支援を受けて開発されました。"
+msgid "Acknowledgement"
 msgstr ""
 
 #: ../../source/preface.rst:56
-msgid "科学技術振興事業団「計算科学技術活用型特定研究開発推進事業(ACT-JST)」"
-msgstr ""
-
-#: ../../source/preface.rst:57
-msgid "文部科学省「戦略的基盤ソフトウェアの開発」"
+msgid ""
+"The development of this program was supported by grants from the "
+"following projects:"
 msgstr ""
 
 #: ../../source/preface.rst:58
-msgid "文部科学省「革新的シミュレーションソフトウェアの研究開発」"
+msgid ""
+"`Research and Development for Applying Advanced Computational Science and"
+" Technology` by Japan Science and Technology Corporation"
 msgstr ""
 
 #: ../../source/preface.rst:59
-msgid "文部科学省「イノベーション基盤シミュレーションソフトウェアの研究開発」"
+msgid ""
+"`Frontier Simulation Software for Industrial Science` by Ministry of "
+"Education, Culture, Sports, Science and Technology (MEXT)"
 msgstr ""
 
 #: ../../source/preface.rst:60
-msgid "文部科学省「次世代生命体統合シミュレーションソフトウェアの研究開発」"
+msgid "`Revolutionary Simulation Software` by MEXT"
 msgstr ""
 
-#: ../../source/preface.rst:64
-msgid "更新履歴"
+#: ../../source/preface.rst:61
+msgid "`Research and Development of Innovative Simulation Software` by MEXT"
+msgstr ""
+
+#: ../../source/preface.rst:62
+msgid "`Next-generation Integrated Simulation of Living Matter` by MEXT"
 msgstr ""
 
 #: ../../source/preface.rst:66
-msgid "2012年12月 初版"
+msgid "Revision history"
 msgstr ""
 
-#: ../../source/preface.rst:67
-msgid "2013年 3月 イノベーションプロジェクト版リリースに伴う修正"
+#: ../../source/preface.rst:68
+msgid "Dec. 2012  First edition"
 msgstr ""
+
+#~ msgid "はじめに"
+#~ msgstr ""
+
+#~ msgid "本書はProteinDFソフトウェアのユーザーズマニュアルです。"
+#~ msgstr ""
+
+#~ msgid "免責事項"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "本マニュアルは完全ではありません。 また、この文書は有用であるという期待の下に作成・配布されていますが、 "
+#~ "無保証です。 ソフトウェア開発は継続して行われており、本マニュアルに書かれている内容と異なる場合があります。 "
+#~ "使用することによって生じるいかなる直接的・間接的損害についても筆者はその責を負いません。"
+#~ msgstr ""
+
+#~ msgid "ご意見・質問等はメーリングリスト(pdf-users [AT] iis.u-tokyo.ac.jp)、または下記連絡先までお願いします。"
+#~ msgstr ""
+
+#~ msgid "ライセンス"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "ProtienDF ソフトウェアは、 オープンソースライセンスである GNU "
+#~ "一般公衆利用許諾契約書（GPL）に基づいてリリースされています。 GPL ライセンスの正式な条件については、 "
+#~ "http://www.fsf.org/licenses/ を参照してください。 "
+#~ "http://www.fsf.org/licenses/gpl-faq.html および "
+#~ "http://www.gnu.org/philosophy/enforcing-gpl.html "
+#~ "も参照してください。"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "なお、本ソフトウェアの開発は主に学術研究助成によって支援されています。 "
+#~ "開発支援のために、ProteinDFを用いた研究成果を発表される際には、 "
+#~ "以下のProteinDF論文を引用していただけると幸いです。 また、その研究の書誌情報をご連絡いただけると助かります。"
+#~ msgstr ""
+
+#~ msgid "連絡先"
+#~ msgstr ""
+
+#~ msgid "153-8505 東京都目黒区駒場4-6-1"
+#~ msgstr ""
+
+#~ msgid "東京大学 生産技術研究所 佐藤文俊研究室"
+#~ msgstr ""
+
+#~ msgid "email: pdf-dev [AT] iis.u-tokyo.ac.jp"
+#~ msgstr ""
+
+#~ msgid "謝辞"
+#~ msgstr ""
+
+#~ msgid "本プログラムの開発は、以下のプロジェクトの支援を受けて開発されました。"
+#~ msgstr ""
+
+#~ msgid "科学技術振興事業団「計算科学技術活用型特定研究開発推進事業(ACT-JST)」"
+#~ msgstr ""
+
+#~ msgid "文部科学省「戦略的基盤ソフトウェアの開発」"
+#~ msgstr ""
+
+#~ msgid "文部科学省「革新的シミュレーションソフトウェアの研究開発」"
+#~ msgstr ""
+
+#~ msgid "文部科学省「イノベーション基盤シミュレーションソフトウェアの研究開発」"
+#~ msgstr ""
+
+#~ msgid "文部科学省「次世代生命体統合シミュレーションソフトウェアの研究開発」"
+#~ msgstr ""
+
+#~ msgid "更新履歴"
+#~ msgstr ""
+
+#~ msgid "2012年12月 初版"
+#~ msgstr ""
+
+#~ msgid "2013年 3月 イノベーションプロジェクト版リリースに伴う修正"
+#~ msgstr ""
+

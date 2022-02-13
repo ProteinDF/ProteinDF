@@ -19,23 +19,45 @@
 #ifndef DFLOCALIZE_PARALLEL_H
 #define DFLOCALIZE_PARALLEL_H
 
+#include <utility>
 #include <vector>
+
 #include "DfLocalize.h"
+#include "TlCommunicate.h"
 
 class DfLocalize_Parallel : public DfLocalize {
    public:
     DfLocalize_Parallel(TlSerializeData* pPdfParam);
     virtual ~DfLocalize_Parallel();
 
-    virtual void localize(const std::string& inputCMatrixPath = "");
+   public:
+    virtual void exec();
+    virtual double localize(TlDenseGeneralMatrix_Lapack* pC);
 
    protected:
-    virtual int getJobItem(DfLocalize::JobItem* pJob,
-                           bool isInitialized = false);
+    virtual void initialize();
 
    protected:
-    std::vector<bool> jobFinishedList_;
-    std::vector<bool> jobOccupiedOrb_;
+    void getBlockCMatrix(const TlDenseGeneralMatrix_Lapack& C, const index_type MOsPerBlock, const int block1,
+                         const int block2, TlDenseGeneralMatrix_Lapack* pBlockC);
+    void setBlockCMatrix(const index_type MOsPerBlock, const int block1, const int block2,
+                         const TlDenseGeneralMatrix_Lapack& blockC, TlDenseGeneralMatrix_Lapack* pC);
+
+   protected:
+    typedef std::pair<int, int> JobItem;  // contains blockId1, blockId2
+    void makeJobList(const int dim);
+    bool getJobItem(JobItem* pJob, bool isInitialized = false);
+
+    std::vector<JobItem> jobList_;
+
+   protected:
+    void initLockBlock(const int block);
+    void lockBlock(const int block);
+    void unlockBlock(const int block);
+    bool isLockedBlock(const int block1, const int block2) const;
+
+   protected:
+    std::vector<char> lockBlocks_;
 };
 
 #endif  // DFLOCALIZE_PARALLEL_H

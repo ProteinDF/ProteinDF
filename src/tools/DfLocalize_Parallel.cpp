@@ -17,309 +17,419 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfLocalize_Parallel.h"
+
+#include <cassert>
+#include <map>
+
 #include "TlCommunicate.h"
 #include "TlTime.h"
 #include "TlUtils.h"
 
 DfLocalize_Parallel::DfLocalize_Parallel(TlSerializeData* pPdfParam)
-    : DfLocalize(pPdfParam) {}
-
-DfLocalize_Parallel::~DfLocalize_Parallel() {}
-
-void DfLocalize_Parallel::localize(const std::string& inputCMatrixPath) {
+    : DfLocalize(pPdfParam) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
-    const std::size_t numOfAOs = this->m_nNumOfAOs;
+    this->log_.setProcID(rComm.getRank());
+}
 
-    if (rComm.isMaster() == true) {
-        std::cout << TlUtils::format("number of Atoms = %ld",
-                                     this->m_nNumOfAtoms)
-                  << std::endl;
-        std::cout << TlUtils::format("number of AOs   = %ld", this->m_nNumOfAOs)
-                  << std::endl;
-        std::cout << TlUtils::format("number of MOs   = %ld", this->m_nNumOfMOs)
-                  << std::endl;
+DfLocalize_Parallel::~DfLocalize_Parallel() {
+}
+
+void DfLocalize_Parallel::initialize() {
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    // for OCC
+    this->startOrb_ = 0;
+    this->endOrb_ = this->numOfOcc_;
+
+    this->G_ = 0.0;
+
+    // output information
+    this->log_.info(TlUtils::format("number of Atoms: %d", this->m_nNumOfAtoms));
+    this->log_.info(TlUtils::format("number of AOs: %d", this->m_nNumOfAOs));
+    this->log_.info(TlUtils::format("number of MOs: %d", this->m_nNumOfMOs));
+    this->log_.info(TlUtils::format("max iteration: %d", this->maxIteration_));
+    this->log_.info(TlUtils::format("threshold: %10.5e", this->threshold_));
+    this->log_.info(TlUtils::format("processing MO: %d -> %d", this->startOrb_, this->endOrb_));
+
+    // load S matrix
+    this->log_.info("load S matrix");
+    bool isLoadS = false;
+    const std::string S_path = this->getSpqMatrixPath();
+    if (rComm.isMaster()) {
+        isLoadS = this->getSMatrix(&(this->S_));
     }
+    rComm.broadcast(isLoadS);
+
+    if (isLoadS == false) {
+        if (rComm.isMaster()) {
+            const std::string path = this->getSpqMatrixPath();
+            this->log_.critical(TlUtils::format("could not load: %s", S_path.c_str()));
+        }
+        abort();
+    } else {
+        rComm.broadcast(&(this->S_));
+    }
+}
+
+void DfLocalize_Parallel::exec() {
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    TlDenseGeneralMatrix_Lapack C;
+    if (rComm.isMaster()) {
+        this->getCMatrix(&C);
+    }
+
+    this->log_.info("make group");
     this->makeGroup();
 
-    this->S_.resize(this->m_nNumOfAOs);
-    this->C_.resize(this->m_nNumOfAOs, this->m_nNumOfMOs);
-    if (rComm.isMaster() == true) {
-        const std::string S_path = this->getSpqMatrixPath();
-        if (this->S_.load(S_path) == false) {
-            std::cerr << "could not load: " << S_path << std::endl;
-            abort();
-        }
-
-        std::string CMatrixPath = inputCMatrixPath;
-        if (CMatrixPath.empty() == true) {
-            CMatrixPath =
-                this->getCMatrixPath(DfObject::RUN_RKS, this->m_nIteration);
-        }
-        if (this->C_.load(CMatrixPath) == false) {
-            std::cerr << "could not load: " << CMatrixPath << std::endl;
-            abort();
-        }
-    }
-    rComm.broadcast(&(this->S_));
-
-    enum { REQUEST_JOB = 0, SEND_RESULTS = 1 };
-
-    enum { FINISHED_JOB = 0, ASSIGNED_JOB = 1, WAIT = 2 };
-
-    if (rComm.isMaster() == true) {
-        std::cerr << "begin loop." << std::endl;
-    }
-
+    rComm.broadcast(this->lo_iteration_);
     const int maxIteration = this->maxIteration_;
-    for (int num_iteration = 0; num_iteration < maxIteration; ++num_iteration) {
-        if (rComm.isMaster() == true) {
-            this->makeQATable();
-            this->makeJobList();
-            JobItem jobItem;  // dummy
-            (void)this->getJobItem(&jobItem, true);
+    for (int i = this->lo_iteration_ + 1; i < maxIteration; ++i) {
+        const double sumDeltaG = this->localize(&C);
+
+        const std::string msg = TlUtils::format("%d th: G=%10.5e, delta_G=%10.5e", i, this->G_, sumDeltaG);
+        this->log_.info(msg);
+        if (rComm.isMaster()) {
+            std::cout << msg << std::endl;
         }
 
-        double sumDeltaG = 0.0;
-        if (rComm.isMaster() == true) {
-            int jobRequest = 0;
-            int src = 0;
-
-            JobItem jobItem;
-            bool isEscapeLoop = false;
-            int numOfFinishedProc = 0;
-            std::size_t orb_i = 0;
-            std::size_t orb_j = 0;
-            TlDenseVector_Lapack vec_i(numOfAOs);
-            TlDenseVector_Lapack vec_j(numOfAOs);
-            do {
-                rComm.receiveDataFromAnySource(jobRequest, &src);
-                // std::cerr << TlUtils::format("[0] recv %d from=%d",
-                // jobRequest, src)
-                // << std::endl;
-                switch (jobRequest) {
-                    case REQUEST_JOB:
-                        // slaveが仕事を要求
-                        {
-                            const int hasJob = this->getJobItem(&jobItem);
-
-                            switch (hasJob) {
-                                case 0:
-                                    // finished
-                                    {
-                                        rComm.sendData(FINISHED_JOB, src);
-                                        ++numOfFinishedProc;
-                                        if (numOfFinishedProc ==
-                                            rComm.getNumOfProc() - 1) {
-                                            isEscapeLoop = true;
-                                        }
-                                    }
-                                    break;
-                                case 1:
-                                    // assigned job
-                                    {
-                                        rComm.sendData(ASSIGNED_JOB, src);
-                                        const std::size_t orb_i = jobItem.orb_i;
-                                        const std::size_t orb_j = jobItem.orb_j;
-                                        rComm.sendData(orb_i, src);
-                                        rComm.sendData(orb_j, src);
-                                        TlDenseVector_Lapack vec_i =
-                                            this->C_.getColVector<
-                                                TlDenseVector_Lapack>(orb_i);
-                                        TlDenseVector_Lapack vec_j =
-                                            this->C_.getColVector<
-                                                TlDenseVector_Lapack>(orb_j);
-                                        rComm.sendData(vec_i, src);
-                                        rComm.sendData(vec_j, src);
-                                    }
-                                    break;
-                                case 2:
-                                    // wait
-                                    { rComm.sendData(WAIT, src); }
-                                    break;
-
-                                default:
-                                    // something wrong
-                                    abort();
-                                    break;
-                            }
-                        }
-                        break;
-
-                    case SEND_RESULTS:
-                        // slaveが結果を返す
-                        {
-                            rComm.receiveData(orb_i, src);
-                            rComm.receiveData(orb_j, src);
-                            rComm.receiveData(vec_i, src);
-                            rComm.receiveData(vec_j, src);
-                            // std::cerr << TlUtils::format("[0] recv job
-                            // from=%d", src) << std::endl;
-
-                            // 行列の格納
-                            for (std::size_t row = 0; row < numOfAOs; ++row) {
-                                this->C_.set(row, orb_i, vec_i.get(row));
-                                this->C_.set(row, orb_j, vec_j.get(row));
-                            }
-
-                            // 行列ロックの解除
-                            const std::size_t index_i = orb_i - this->startOrb_;
-                            const std::size_t index_j = orb_j - this->startOrb_;
-                            this->jobOccupiedOrb_[index_i] = false;
-                            this->jobOccupiedOrb_[index_j] = false;
-                        }
-                        break;
-
-                    default:
-                        // something wrong...
-                        abort();
-                        break;
-                }
-            } while (isEscapeLoop == false);
-        } else {
-            // for Slave
-            const int root = 0;
-            int request = REQUEST_JOB;
-            int hasJob = 0;
-
-            rComm.sendData(request, root);
-            rComm.receiveData(hasJob, root);
-
-            std::size_t orb_i = 0;
-            std::size_t orb_j = 0;
-            TlDenseVector_Lapack vec_i(numOfAOs);
-            TlDenseVector_Lapack vec_j(numOfAOs);
-            TlDenseGeneralMatrix_Lapack rot(2, 2);
-            while (hasJob != FINISHED_JOB) {
-                if (hasJob == ASSIGNED_JOB) {
-                    const std::size_t numOfAOs = this->m_nNumOfAOs;
-                    rComm.receiveData(orb_i, root);
-                    rComm.receiveData(orb_j, root);
-                    rComm.receiveData(vec_i, root);
-                    rComm.receiveData(vec_j, root);
-                    // std::cerr << TlUtils::format("[%d] recv job",
-                    // rComm.getRank()) << std::endl;
-
-                    assert(vec_i.getSize() ==
-                           static_cast<TlVectorAbstract::size_type>(numOfAOs));
-                    assert(vec_j.getSize() ==
-                           static_cast<TlVectorAbstract::size_type>(numOfAOs));
-                    for (std::size_t row = 0; row < numOfAOs; ++row) {
-                        this->C_.set(row, orb_i, vec_i.get(row));
-                        this->C_.set(row, orb_j, vec_j.get(row));
-                    }
-
-                    double A_ij = 0.0;
-                    double B_ij = 0.0;
-                    this->calcQA(orb_i, orb_j, &A_ij, &B_ij);
-                    double normAB = std::sqrt(A_ij * A_ij + B_ij * B_ij);
-                    double deltaG = A_ij + normAB;
-                    if (std::fabs(deltaG) > 1.0E-16) {
-                        sumDeltaG += deltaG;
-                        this->getRotatingMatrix(A_ij, B_ij, normAB, &rot);
-                        this->rotateCmatrix(orb_i, orb_j, rot);
-                    }
-
-                    vec_i = this->C_.getColVector<TlDenseVector_Lapack>(orb_i);
-                    vec_j = this->C_.getColVector<TlDenseVector_Lapack>(orb_j);
-
-                    request = SEND_RESULTS;
-                    rComm.sendData(request, root);
-                    rComm.sendData(orb_i, root);
-                    rComm.sendData(orb_j, root);
-                    rComm.sendData(vec_i, root);
-                    rComm.sendData(vec_j, root);
-                    // std::cerr << TlUtils::format("[%d] send job",
-                    // rComm.getRank()) << std::endl;
-                } else if (hasJob == WAIT) {
-                    TlTime::sleep(1000);  // wait 4000 ms.
-                }
-
-                request = REQUEST_JOB;
-                rComm.sendData(request, root);
-                rComm.receiveData(hasJob, root);
-            }
+        if (rComm.isMaster()) {
+            DfObject::saveCloMatrix(RUN_RKS, i, C);
         }
 
-        // summarize
-        rComm.allReduce_SUM(sumDeltaG);
-        bool isBreak = false;
-        if (rComm.isMaster() == true) {
-            std::cout << TlUtils::format("itr: %d sum of delta_g: %10.5e\n",
-                                         num_iteration + 1, sumDeltaG);
-            // this->C_.save(TlUtils::format("./lo_Work/fl_Mtr_C.lo.occu.rks%d",
-            // num_iteration +1));
-            DfObject::saveCloMatrix(RUN_RKS, num_iteration + 1, this->C_);
-
-            if (sumDeltaG < this->threshold_) {
-                std::cout << "number of iteration: " << num_iteration + 1
-                          << std::endl;
-                (*(this->pPdfParam_))["lo/num_of_iterations"] =
-                    num_iteration + 1;
+        if (sumDeltaG < this->threshold_) {
+            if (rComm.isMaster()) {
+                (*(this->pPdfParam_))["lo/num_of_iterations"] = i;
                 (*(this->pPdfParam_))["lo/satisfied"] = "yes";
-                isBreak = true;
             }
-        }
-
-        rComm.broadcast(isBreak);
-        if (isBreak == true) {
             break;
         }
     }
 }
 
-// @ret 0 assigned no job because the task has been finished
-// @ret 1 assigned job to "pJob"
-// @ret 2 please wait because the job to assign is conflict.
-int DfLocalize_Parallel::getJobItem(DfLocalize::JobItem* pJob,
-                                    bool isInitialized) {
+double DfLocalize_Parallel::localize(TlDenseGeneralMatrix_Lapack* pC) {
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int rank = rComm.getRank();
+    const int numOfProcs = rComm.getNumOfProcs();
+
+    const index_type numOfMOs = this->endOrb_ - this->startOrb_ + 1;
+    const int blocks = numOfProcs * 2;
+    const index_type MOsPerBlock = numOfMOs / blocks;
+
+    this->log_.info(TlUtils::format("numOfMOs: %d", numOfMOs));
+    this->log_.info(TlUtils::format("blocks: %d", blocks));
+    this->log_.info(TlUtils::format("MOsPerBlock: %d", MOsPerBlock));
+
+    // const index_type numOfAOs = this->m_nNumOfAOs;
+
+    JobItem jobItem;
+    if (rComm.isMaster() == true) {
+        this->G_ = this->calcG(*pC, this->startOrb_, this->endOrb_);
+        this->makeJobList(MOsPerBlock);
+
+        (void)this->getJobItem(&jobItem, true);
+    }
+
+    enum { REQUEST_JOB = 0,
+           SEND_RESULTS = 1 };
+    enum { FINISHED_JOB = 0,
+           ASSIGNED_JOB = 1,
+           WAIT = 2 };
+    const int msgLength = 3;
+    std::vector<int> msg(msgLength);
+
+    double sumDeltaG = 0.0;
+    if (rComm.isMaster() == true) {
+        this->initLockBlock(blocks + 1);
+        int taskRequest = 0;
+        int src = 0;
+
+        int numOfFinishedProc = 0;
+        std::map<int, JobItem> rank_job_db;
+
+        bool hasTask = false;
+        JobItem reservedJobItem;
+        bool isEscapeLoop = false;
+        while (isEscapeLoop == false) {
+            rComm.receiveDataFromAnySource(taskRequest, &src);
+            this->log_.info(TlUtils::format("[0] recv %d from=%d", taskRequest, src));
+            switch (taskRequest) {
+                case REQUEST_JOB: {
+                    if (hasTask) {
+                        jobItem = reservedJobItem;
+                    } else {
+                        hasTask = this->getJobItem(&jobItem);
+                    }
+                    if (hasTask) {
+                        rank_job_db[src] = jobItem;
+                        const int block1 = jobItem.first;
+                        const int block2 = jobItem.second;
+
+                        this->log_.info(TlUtils::format("[0] check block: %d, %d", block1, block2));
+                        if (this->isLockedBlock(block1, block2) == false) {
+                            this->log_.info(TlUtils::format("[0] check OK: %d, %d", block1, block2));
+                            // assigned task
+                            this->lockBlock(block1);
+                            this->lockBlock(block2);
+                            this->log_.info(TlUtils::format("[0] lock: %d, %d", block1, block2));
+                            TlDenseGeneralMatrix_Lapack blockC;
+                            this->getBlockCMatrix(*pC, MOsPerBlock, block1, block2, &blockC);
+
+                            this->log_.info(TlUtils::format("[0] send ASSIGNED_JOB to=%d", src));
+                            msg[0] = ASSIGNED_JOB;
+                            msg[1] = block1;
+                            msg[2] = block2;
+                            rComm.sendDataX(&(msg[0]), msgLength, src);
+                            rComm.sendData(blockC, src);
+                            // std::cerr << "[0] end JOB assign" << std::endl;
+                            hasTask = false;
+                        } else {
+                            // wait
+                            this->log_.info(TlUtils::format("[0] send WAIT to %d", src));
+                            msg[0] = WAIT;
+                            msg[1] = 0;
+                            msg[2] = 0;
+                            rComm.sendDataX(&(msg[0]), msgLength, src);
+                            reservedJobItem = jobItem;
+                        }
+                    } else {
+                        // finished
+                        {
+                            this->log_.info(TlUtils::format("[0] send FINISHED_JOB to=%d", src));
+                            msg[0] = FINISHED_JOB;
+                            msg[1] = 0;
+                            msg[2] = 0;
+                            rComm.sendDataX(&(msg[0]), msgLength, src);
+                            ++numOfFinishedProc;
+                            if (numOfFinishedProc == rComm.getNumOfProc() - 1) {
+                                isEscapeLoop = true;
+                            }
+                        }
+                    }
+                } break;
+
+                case SEND_RESULTS: {
+                    this->log_.info(TlUtils::format("[0] recv SEND_RESULTS from %d", src));
+                    std::map<int, JobItem>::const_iterator it = rank_job_db.find(src);
+                    if (it == rank_job_db.end()) {
+                        this->log_.critical("program error.");
+                    }
+
+                    TlDenseGeneralMatrix_Lapack blockC;
+                    rComm.receiveData(blockC, src);
+                    const int block1 = it->second.first;
+                    const int block2 = it->second.second;
+                    rank_job_db.erase(src);
+
+                    this->log_.debug(TlUtils::format("[0] set results from %d: C(%d x %d), block: %d, %d ", src,
+                                                     blockC.getNumOfRows(), blockC.getNumOfCols(), block1, block2));
+                    this->setBlockCMatrix(MOsPerBlock, block1, block2, blockC, pC);
+
+                    this->unlockBlock(block1);
+                    this->unlockBlock(block2);
+                } break;
+
+                default:
+                    // something wrong...
+                    abort();
+                    break;
+            }
+        }
+    } else {
+        // for Slave
+        const int root = 0;
+        int request = REQUEST_JOB;
+        int hasTask = 0;
+
+        rComm.sendData(request, root);
+        // std::cerr << TlUtils::format("[%d] send request", rank) << std::endl;
+        rComm.receiveDataX(&(msg[0]), msgLength, root);
+        this->log_.debug(TlUtils::format("[%d] recv JOB %d", rank, hasTask));
+
+        while (msg[0] != FINISHED_JOB) {
+            if (msg[0] == ASSIGNED_JOB) {
+                const int block1 = msg[1];
+                const int block2 = msg[2];
+                this->log_.debug(TlUtils::format("[%d] ASSIGNED_JOB %d, %d", rank, block1, block2));
+
+                TlDenseGeneralMatrix_Lapack blockC;
+                rComm.receiveData(blockC, root);
+                this->log_.debug(
+                    TlUtils::format("[%d] recv matrix: %d, %d", rank, blockC.getNumOfRows(), blockC.getNumOfCols()));
+
+                const index_type numOfCols = blockC.getNumOfCols();
+                index_type startMO1 = 0;
+                index_type endMO1 = numOfCols - 1;
+                index_type startMO2 = 0;
+                index_type endMO2 = numOfCols - 1;
+                if (numOfCols > MOsPerBlock) {
+                    endMO1 = MOsPerBlock - 1;
+                    startMO2 = MOsPerBlock;
+                }
+
+                this->log_.debug(
+                    TlUtils::format("[%d] run localize: %d, %d, %d, %d", rank, startMO1, endMO1, startMO2, endMO2));
+                sumDeltaG = DfLocalize::localize_core(&blockC, startMO1, endMO1, startMO2, endMO2);
+
+                request = SEND_RESULTS;
+                rComm.sendData(request, root);
+                rComm.sendData(blockC, root);
+            } else if (msg[0] == WAIT) {
+                TlTime::sleep(4000);  // wait 4000 ms.
+            }
+
+            request = REQUEST_JOB;
+            rComm.sendData(request, root);
+            rComm.receiveDataX(&(msg[0]), msgLength, root);
+        }
+    }
+
+    // summarize
+    rComm.allReduce_SUM(sumDeltaG);
+
+    return sumDeltaG;
+}
+
+void DfLocalize_Parallel::getBlockCMatrix(const TlDenseGeneralMatrix_Lapack& C, const index_type MOsPerBlock,
+                                          const int block1, const int block2, TlDenseGeneralMatrix_Lapack* pBlockC) {
+    const index_type numOfAOs = this->m_nNumOfAOs;
+
+    {
+        const index_type startMO1 = block1 * MOsPerBlock + this->startOrb_;
+        const index_type endMO1 = std::min((block1 + 1) * MOsPerBlock - 1, this->endOrb_);
+
+        C.block(0, startMO1, numOfAOs, endMO1 - startMO1 + 1, pBlockC);
+    }
+
+    if (block1 != block2) {
+        TlDenseGeneralMatrix_Lapack tmpBlockC;
+        const index_type startMO2 = block2 * MOsPerBlock + this->startOrb_;
+        const index_type endMO2 = std::min((block2 + 1) * MOsPerBlock - 1, this->endOrb_);
+        C.block(0, startMO2, numOfAOs, endMO2 - startMO2 + 1, &tmpBlockC);
+
+        const index_type block1endCol = pBlockC->getNumOfCols();
+        pBlockC->resize(pBlockC->getNumOfRows(), pBlockC->getNumOfCols() + tmpBlockC.getNumOfCols());
+        pBlockC->block(0, block1endCol, tmpBlockC);
+    }
+}
+
+void DfLocalize_Parallel::setBlockCMatrix(const index_type MOsPerBlock, const int block1, const int block2,
+                                          const TlDenseGeneralMatrix_Lapack& blockC, TlDenseGeneralMatrix_Lapack* pC) {
+    const index_type numOfAOs = this->m_nNumOfAOs;
+    assert(blockC.getNumOfRows() == numOfAOs);
+    assert(pC->getNumOfRows() == numOfAOs);
+
+    this->log_.info(TlUtils::format("blockC: %d,%d", blockC.getNumOfRows(), blockC.getNumOfCols()));
+    {
+        const index_type startMO1 = block1 * MOsPerBlock + this->startOrb_;
+        const index_type endMO1 = std::min((block1 + 1) * MOsPerBlock - 1, this->endOrb_);
+        this->log_.debug(
+            TlUtils::format("DfLocalize_Parallel::setBlockCMatrix() 1: startMO=%d, endMO=%d", startMO1, endMO1));
+
+        TlDenseGeneralMatrix_Lapack tmpC;
+        blockC.block(0, 0, numOfAOs, endMO1 - startMO1 + 1, &tmpC);
+        this->log_.debug(TlUtils::format("DfLocalize_Parallel::setBlockCMatrix() 1: tmpC(%d, %d)", tmpC.getNumOfRows(),
+                                         tmpC.getNumOfCols()));
+        pC->block(0, startMO1, tmpC);
+    }
+
+    if (block1 != block2) {
+        // Processing when there is a late block
+        const index_type startMO2 = block2 * MOsPerBlock + this->startOrb_;
+        const index_type endMO2 = std::min((block2 + 1) * MOsPerBlock - 1, this->endOrb_);
+        this->log_.debug(
+            TlUtils::format("DfLocalize_Parallel::setBlockCMatrix() 2: startMO=%d, endMO=%d", startMO2, endMO2));
+
+        TlDenseGeneralMatrix_Lapack tmpC;
+        blockC.block(0, MOsPerBlock, numOfAOs, endMO2 - startMO2 + 1, &tmpC);
+        assert(MOsPerBlock + (endMO2 - startMO2 + 1) == pC->getNumOfCols());
+
+        pC->block(0, startMO2, tmpC);
+    }
+}
+
+//
+void DfLocalize_Parallel::makeJobList(const int dim) {
+    const int pairs = dim * (dim + 1) / 2;
+    this->jobList_.resize(pairs);
+
+    int counter = 0;
+    for (int index1 = 0; index1 < dim; ++index1) {
+        // Starting 0 means that the diagonal elements are computed.
+        const int max_index2 = dim - index1;
+        for (int index2 = 0; index2 < max_index2; ++index2) {
+            const int block_i = index2;
+            const int block_j = index1 + index2;
+
+            this->jobList_[counter] = std::make_pair(block_i, block_j);
+            ++counter;
+        }
+    }
+    assert(counter == pairs);
+}
+
+bool DfLocalize_Parallel::getJobItem(DfLocalize_Parallel::JobItem* pJob, bool isInitialized) {
     assert(pJob != NULL);
 
-    // static std::size_t jobIndex = 0;
-    const std::size_t maxJobIndex = this->jobList_.size();
+    static std::vector<JobItem>::iterator it;
+    static std::size_t progressCounter = 0;
+    static std::size_t progressMaxCounter = 0;
+    static std::size_t progressNoticeNext = 0;
 
     if (isInitialized == true) {
-        // jobIndex = 0;
-        // maxJobIndex = this->jobList_.size();
+        it = this->jobList_.begin();
 
-        // for parallel operation
-        this->jobFinishedList_.clear();
-        this->jobFinishedList_.resize(maxJobIndex, false);
-        this->jobOccupiedOrb_.clear();
-        this->jobOccupiedOrb_.resize(this->orb_QA_table_.size(), false);
+        progressCounter = 0;
+        progressMaxCounter = this->jobList_.size();
+        progressNoticeNext = 1;
 
         return true;
     }
 
-    int answer = 0;
-    for (std::size_t i = 0; i < maxJobIndex; ++i) {
-        if (this->jobFinishedList_[i] == true) {
-            continue;
+    bool answer = false;
+    if (it != this->jobList_.end()) {
+        *pJob = *it;
+        ++it;
+
+        // show progress
+        if (progressCounter > (progressMaxCounter * 0.1) * progressNoticeNext) {
+            const double ratio = (double(progressCounter) / double(progressMaxCounter)) * 100.0;
+            this->log_.info(TlUtils::format("progress: %3.2f%% (%ld/%ld)", ratio, progressCounter, progressMaxCounter));
+            ++progressNoticeNext;
         }
 
-        const JobItem item = this->jobList_[i];
-        const std::size_t index_i = item.orb_i - this->startOrb_;
-        const std::size_t index_j = item.orb_j - this->startOrb_;
-
-        if ((this->jobOccupiedOrb_[index_i] == false) &&
-            (this->jobOccupiedOrb_[index_j] == false)) {
-            this->jobFinishedList_[i] = true;
-            this->jobOccupiedOrb_[index_i] = true;
-            this->jobOccupiedOrb_[index_j] = true;
-            *pJob = item;
-            answer = 1;  // assign
-
-            break;
-        }
+        ++progressCounter;
+        answer = true;
+    } else {
+        this->log_.info("progress: 100% done");
     }
 
-    // check
-    if (answer == 0) {
-        for (std::size_t i = 0; i < maxJobIndex; ++i) {
-            if (this->jobFinishedList_[i] != true) {
-                answer = 2;  // wait
-                break;
-            }
-        }
+    return answer;
+}
+
+// lock Block
+void DfLocalize_Parallel::initLockBlock(const int numOfBlocks) {
+    this->lockBlocks_.resize(numOfBlocks);
+    std::fill(this->lockBlocks_.begin(), this->lockBlocks_.end(), 0);
+}
+
+void DfLocalize_Parallel::lockBlock(const int block) {
+    assert(block < static_cast<index_type>(this->lockBlocks_.size()));
+    this->lockBlocks_[block] = 1;
+}
+
+void DfLocalize_Parallel::unlockBlock(const int block) {
+    assert(block < static_cast<index_type>(this->lockBlocks_.size()));
+    this->lockBlocks_[block] = 0;
+}
+
+bool DfLocalize_Parallel::isLockedBlock(const int block1, const int block2) const {
+    assert(block1 < static_cast<index_type>(this->lockBlocks_.size()));
+    assert(block2 < static_cast<index_type>(this->lockBlocks_.size()));
+    bool answer = true;
+
+    if ((this->lockBlocks_[block1] + this->lockBlocks_[block2]) == 0) {
+        answer = false;
     }
 
     return answer;

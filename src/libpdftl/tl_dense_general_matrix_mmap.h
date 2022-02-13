@@ -5,16 +5,16 @@
 #include "tl_dense_matrix_mmap_object.h"
 
 class TlDenseGeneralMatrix_mmap : public TlDenseMatrixMmapObject {
-   public:
-    TlDenseGeneralMatrix_mmap(const std::string& filePath, const index_type row,
-                              const index_type col);
+public:
+    TlDenseGeneralMatrix_mmap(const std::string& filePath, const index_type row, const index_type col,
+                              bool forceCreateNewFile = false);
     TlDenseGeneralMatrix_mmap(const std::string& filePath);
     virtual ~TlDenseGeneralMatrix_mmap();
 
-   public:
+public:
     void resize(const index_type newRow, const index_type newCol);
 
-   public:
+public:
     /// ブロック行列を返す
     ///
     /// @param[in] row 始点となる行
@@ -37,7 +37,7 @@ class TlDenseGeneralMatrix_mmap : public TlDenseMatrixMmapObject {
                const TlMatrixObject::index_type col,
                const TlDenseGeneralMatrixObject& ref);
 
-   protected:
+protected:
     // virtual TlDenseGeneralMatrix_mmap* copy(const std::string& path) const;
     virtual size_type getIndex(const index_type row,
                                const index_type col) const;

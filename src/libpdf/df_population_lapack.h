@@ -8,7 +8,7 @@
 class DfPopulation_Lapack
     : public DfPopulation_tmpl<TlDenseSymmetricMatrix_Lapack,
                                TlDenseVector_Lapack> {
-   public:
+public:
     DfPopulation_Lapack(TlSerializeData* pPdfParam);
     virtual ~DfPopulation_Lapack();
 };

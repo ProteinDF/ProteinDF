@@ -589,18 +589,19 @@ DfCdkMatrix::getTrans_I2PQ_Matrix<TlSparseGeneralMatrix_ViennaCL>(
         }
         return TlSparseGeneralMatrix_ViennaCL(expandL);
     }
+}
 #endif  // HAVE_VIENNAACL
 
-    // -----------------------------------------------------------------------------
-    // convert_I2PQ
-    // -----------------------------------------------------------------------------
-    template <typename SymmetricMatrix, typename Vector,
-              typename SparseGeneralMatrix>
-    SymmetricMatrix DfCdkMatrix::convert_I2PQ(
-        const SparseGeneralMatrix& I2PQ_mat, const Vector& L) {
-        Vector expandL = I2PQ_mat * L;
-        SymmetricMatrix answer(this->m_nNumOfAOs);
-        answer.vtr2mat(expandL);
+// -----------------------------------------------------------------------------
+// convert_I2PQ
+// -----------------------------------------------------------------------------
+template <typename SymmetricMatrix, typename Vector,
+          typename SparseGeneralMatrix>
+SymmetricMatrix DfCdkMatrix::convert_I2PQ(
+    const SparseGeneralMatrix& I2PQ_mat, const Vector& L) {
+    Vector expandL = I2PQ_mat * L;
+    SymmetricMatrix answer(this->m_nNumOfAOs);
+    answer.vtr2mat(expandL);
 
-        return answer;
-    }
+    return answer;
+}

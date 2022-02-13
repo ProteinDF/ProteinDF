@@ -19,7 +19,10 @@
 #include <iostream>
 
 #include "TlGetopt.h"
-#include "TlMatrix.h"
+#include "TlUtils.h"
+#include "tl_matrix_utils.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_general_matrix_lapack.h"
 
 struct MatrixElement {
    public:
@@ -80,16 +83,16 @@ int main(int argc, char* argv[]) {
 
     int errorCode = 0;
 
-    std::ifstream ifs;
-    ifs.open(path.c_str());
-    if (ifs.fail()) {
-        std::cerr << "could not open file. " << path << std::endl;
-        return 1;
-    }
+    // std::ifstream ifs;
+    // ifs.open(path.c_str());
+    // if (ifs.fail()) {
+    //     std::cerr << "could not open file. " << path << std::endl;
+    //     return 1;
+    // }
 
     std::vector<MatrixElement> ranking(numOfRanks);
-    if (TlDenseSymmetricMatrix_BLAS_Old::isLoadable(ifs) == true) {
-        TlDenseSymmetricMatrix_BLAS_Old matrix;
+    if (TlMatrixUtils::isLoadable(path, TlMatrixObject::RLHD) == true) {
+        TlDenseSymmetricMatrix_Lapack matrix;
         matrix.load(path);
 
         const int dim = matrix.getNumOfRows();
@@ -98,8 +101,8 @@ int main(int argc, char* argv[]) {
                 check(MatrixElement(r, c, matrix.get(r, c)), &ranking);
             }
         }
-    } else if (TlMatrix::isLoadable(ifs) == true) {
-        TlMatrix matrix;
+    } else if (TlMatrixUtils::isLoadable(path, TlMatrixObject::CSFD) == true) {
+        TlDenseGeneralMatrix_Lapack matrix;
         matrix.load(path);
 
         const int row = matrix.getNumOfRows();

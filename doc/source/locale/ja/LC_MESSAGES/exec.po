@@ -1,207 +1,281 @@
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: ProteinDF User's Manual 2014.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-11-18 00:11-0600\n"
+"POT-Creation-Date: 2021-11-07 21:16+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
 
 #: ../../source/exec.rst:3
-msgid "実行方法"
+msgid "Execution Procedure"
 msgstr ""
 
 #: ../../source/exec.rst:6
-msgid "プログラムの実行方法"
+msgid "Program execution procedure"
 msgstr ""
 
 #: ../../source/exec.rst:8
-msgid "ProteinDFプログラムをコマンドラインから実行するには、以下の手順で行います。"
+msgid "Follow the procedure below to execute ProteinDF from the command line:"
 msgstr ""
 
 #: ../../source/exec.rst:12
-msgid "前準備"
+msgid "Preparation"
 msgstr ""
 
 #: ../../source/exec.rst:14
 msgid ""
-"ProteinDFを実行する(入力ファイルが存在する)ディレクトリに、 中間データ作成用ディレクトリ(デフォルトはfl_Input, fl_Table,"
-" fl_Work)を作成します。"
+"Create directories (default: fl_Work) for outputting intermediate data, "
+"under the execution directory of ProteinDF (where the input file is "
+"located)."
 msgstr ""
 
 #: ../../source/exec.rst:19
-msgid "これらのディレクトリは ``pdf-setup`` コマンドでも作成できます。"
+msgid "These directories can be created with the ``pdf-setup`` command."
 msgstr ""
 
 #: ../../source/exec.rst:23
-msgid "これらのディレクトリに書き込まれるデータは、巨大なものになります。 高速かつ容量の大きなディスクにディレクトリを設置することをお勧めします。"
-msgstr ""
-
-#: ../../source/exec.rst:28
-msgid "シリアル版の実行"
-msgstr ""
-
-#: ../../source/exec.rst:30
-msgid "シリアル版で実行するには、以下のコマンドを実行します。"
-msgstr ""
-
-#: ../../source/exec.rst:36
 msgid ""
-"計算が始まると、標準出力に各SCFにおける全エネルギーの値が順次表示されます。 "
-"計算結果の一連のデータは、ログファイル(fl_Out_Std)に出力されます。 "
-"ログファイルファイルには全電子計算の過程における中間データも出力されます。"
+"The data written in these directories will be extremely large. It is "
+"recommended to create the directories in a high-speed disk storage with "
+"large capacity."
 msgstr ""
 
-#: ../../source/exec.rst:42
-msgid "並列版プログラムの実行"
+#: ../../source/exec.rst:29
+msgid "Executing the program (serial version)"
 msgstr ""
 
-#: ../../source/exec.rst:44
-msgid "以下のようにProteinDFプログラムを実行します。"
+#: ../../source/exec.rst:31
+msgid "To execute the serial version of ProteinDF, use the following command:"
 msgstr ""
 
-#: ../../source/exec.rst:50
-msgid "ここで、 ``N`` には並列計算を行うプロセッサ数を指定してください。"
-msgstr ""
-
-#: ../../source/exec.rst:54
-msgid "MPIプログラムの実行方法は、計算機環境によって異なります。 計算機システムのマニュアル等を参照してください。"
-msgstr ""
-
-#: ../../source/exec.rst:57
+#: ../../source/exec.rst:37
 msgid ""
-"計算が始まると、標準出力に各SCFにおける全エネルギーの値が順次表示されます。 計算結果の一連のデータは、シリアル版と同様にテキスト形式で "
-"ファイル(デフォルトのファイル名はfl_Out_Std)に出力されます。"
+"When the computation starts, total energy at each SCF calculation is "
+"sequentially displayed in the standard output. In addition, the series of"
+" the calculation result data is output in the log file (fl_Out_Std). "
+"Intermediate data during all-electron calculation is also output in the "
+"log file."
 msgstr ""
 
-#: ../../source/exec.rst:65
-msgid "動作形式"
+#: ../../source/exec.rst:47
+msgid "Executing the program (parallel version)"
 msgstr ""
 
-#: ../../source/exec.rst:68
-msgid "概要"
+#: ../../source/exec.rst:49
+msgid "To execute the parallel version of ProteinDF, use the following command:"
 msgstr ""
 
-#: ../../source/exec.rst:70
-msgid "ProteinDFは限られた計算機資源で、 大きな計算対象を効率よく計算するために、 いくつかの動作形式を持っています。"
+#: ../../source/exec.rst:55
+msgid "Here, specify ``N``, the number of processors for parallel computation."
+msgstr ""
+
+#: ../../source/exec.rst:59
+msgid ""
+"Execution procedure of the MPI program varies depending on the computing "
+"system environment. For details, refer to the system manuals."
+msgstr ""
+
+#: ../../source/exec.rst:63
+msgid ""
+"When the computation starts, total energy at each SCF calculation is "
+"sequentially displayed in the standard output. In addition, the series of"
+" the calculation result data is output in a text file (default file name:"
+" fl_Out_Std), as in the serial mode."
+msgstr ""
+
+#: ../../source/exec.rst:72
+msgid "Run Type"
 msgstr ""
 
 #: ../../source/exec.rst:75
-msgid "run type"
-msgstr ""
-
-#: ../../source/exec.rst:75
-msgid "parallel method"
-msgstr ""
-
-#: ../../source/exec.rst:75
-msgid "matrix"
-msgstr ""
-
-#: ../../source/exec.rst:77 ../../source/exec.rst:88
-msgid "serial"
+msgid "Overview"
 msgstr ""
 
 #: ../../source/exec.rst:77
+msgid ""
+"ProteinDF has several run types to efficiently compute a large object "
+"with limited computing resources."
+msgstr ""
+
+#: ../../source/exec.rst:81
+msgid "run type"
+msgstr ""
+
+#: ../../source/exec.rst:81
+msgid "parallel method"
+msgstr ""
+
+#: ../../source/exec.rst:81
+msgid "matrix"
+msgstr ""
+
+#: ../../source/exec.rst:83 ../../source/exec.rst:94
+msgid "serial"
+msgstr ""
+
+#: ../../source/exec.rst:83
 msgid "OpenMP only"
 msgstr ""
 
-#: ../../source/exec.rst:77 ../../source/exec.rst:79 ../../source/exec.rst:81
+#: ../../source/exec.rst:83 ../../source/exec.rst:85 ../../source/exec.rst:87
 msgid "replica"
 msgstr ""
 
-#: ../../source/exec.rst:79 ../../source/exec.rst:97
+#: ../../source/exec.rst:85 ../../source/exec.rst:103
 msgid "replica_static"
 msgstr ""
 
-#: ../../source/exec.rst:79 ../../source/exec.rst:81 ../../source/exec.rst:83
+#: ../../source/exec.rst:85 ../../source/exec.rst:87 ../../source/exec.rst:89
 msgid "MPI/OpenMP hybrid"
 msgstr ""
 
-#: ../../source/exec.rst:81 ../../source/exec.rst:123
+#: ../../source/exec.rst:87 ../../source/exec.rst:129
 msgid "replica_dynamic"
 msgstr ""
 
-#: ../../source/exec.rst:83 ../../source/exec.rst:83 ../../source/exec.rst:150
+#: ../../source/exec.rst:89 ../../source/exec.rst:156
 msgid "distributed"
 msgstr ""
 
-#: ../../source/exec.rst:90
+#: ../../source/exec.rst:96
 msgid "1プロセスのみで計算を行います。プロセス間通信は行いません。"
 msgstr ""
 
-#: ../../source/exec.rst:91
+#: ../../source/exec.rst:97
 msgid "OpenMPによるスレッド並列計算が可能です。"
 msgstr ""
 
-#: ../../source/exec.rst:92 ../../source/exec.rst:103
-#: ../../source/exec.rst:129
+#: ../../source/exec.rst:98 ../../source/exec.rst:109 ../../source/exec.rst:135
 msgid "行列演算はLAPACKを利用します。"
 msgstr ""
 
-#: ../../source/exec.rst:93
+#: ../../source/exec.rst:99
 msgid "計算可能な系のサイズは、プロセスが使用できるメモリ容量に依存します。"
 msgstr ""
 
-#: ../../source/exec.rst:99 ../../source/exec.rst:125
-#: ../../source/exec.rst:152
+#: ../../source/exec.rst:105 ../../source/exec.rst:131
+#: ../../source/exec.rst:158
 msgid "プロセス間通信(MPI)による並列計算を行います。各プロセス内ではOpenMP並列計算を行います。"
 msgstr ""
 
-#: ../../source/exec.rst:100 ../../source/exec.rst:126
+#: ../../source/exec.rst:106 ../../source/exec.rst:132
 msgid "プロセスは計算に必要な行列の全要素を各MPIプロセスで複製、保持します。"
 msgstr ""
 
-#: ../../source/exec.rst:101 ../../source/exec.rst:127
-#: ../../source/exec.rst:154
+#: ../../source/exec.rst:107 ../../source/exec.rst:133
+#: ../../source/exec.rst:160
 msgid "指定されたメモリサイズでは行列が確保できない場合は、ディスク領域に行列を保持します。"
 msgstr ""
 
-#: ../../source/exec.rst:102
+#: ../../source/exec.rst:108
 msgid "タスクの分散は分割統治法を採用します。"
 msgstr ""
 
-#: ../../source/exec.rst:104 ../../source/exec.rst:130
+#: ../../source/exec.rst:110 ../../source/exec.rst:136
 msgid "``linear_algebra_package`` キーワードに ``LAPACK`` を指定します。"
 msgstr ""
 
-#: ../../source/exec.rst:108
+#: ../../source/exec.rst:114
 msgid "分割統治法では、すべてのプロセスが演算処理に参加するので、 プロセス数が少ない場合に有効です。 負荷が均等に分散できない欠点があります。"
 msgstr ""
 
-#: ../../source/exec.rst:114 ../../source/exec.rst:141
+#: ../../source/exec.rst:120 ../../source/exec.rst:147
 msgid "memory_size キーワードでプロセスが利用できるメモリ量を指定します。"
 msgstr ""
 
-#: ../../source/exec.rst:118 ../../source/exec.rst:145
+#: ../../source/exec.rst:124 ../../source/exec.rst:151
 msgid "メモリ不足によってディスクを利用した場合は、パフォーマンスが劣化する場合があります。"
 msgstr ""
 
-#: ../../source/exec.rst:128
+#: ../../source/exec.rst:134
 msgid "タスクの分散はマスター-スレーブ法を採用します。"
 msgstr ""
 
-#: ../../source/exec.rst:131
+#: ../../source/exec.rst:137
 msgid "``parallel_processing_type`` キーワードに ``MS`` を指定します。"
 msgstr ""
 
-#: ../../source/exec.rst:135
-msgid ""
-"マスター-スレーブ法では、マスタープロセスはタスクの分散に専念し、演算を行いません。 負荷が均等に分散できるので、プロセス数が多い場合に有効です。"
+#: ../../source/exec.rst:141
+msgid "マスター-スレーブ法では、マスタープロセスはタスクの分散に専念し、演算を行いません。 負荷が均等に分散できるので、プロセス数が多い場合に有効です。"
 msgstr ""
 
-#: ../../source/exec.rst:153
+#: ../../source/exec.rst:159
 msgid "大域行列を各MPIプロセスに分割して保持します。"
 msgstr ""
 
-#: ../../source/exec.rst:155
+#: ../../source/exec.rst:161
 msgid "行列演算はScaLAPACKを利用します。"
 msgstr ""
 
-#: ../../source/exec.rst:156
+#: ../../source/exec.rst:162
 msgid "``linear_algebra_package`` キーワードに ``ScaLAPACK`` を指定します。"
 msgstr ""
+
+#~ msgid "実行方法"
+#~ msgstr ""
+
+#~ msgid "プログラムの実行方法"
+#~ msgstr ""
+
+#~ msgid "ProteinDFプログラムをコマンドラインから実行するには、以下の手順で行います。"
+#~ msgstr ""
+
+#~ msgid "前準備"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "ProteinDFを実行する(入力ファイルが存在する)ディレクトリに、 "
+#~ "中間データ作成用ディレクトリ(デフォルトはfl_Input, fl_Table, fl_Work)を作成します。"
+#~ msgstr ""
+
+#~ msgid "これらのディレクトリは ``pdf-setup`` コマンドでも作成できます。"
+#~ msgstr ""
+
+#~ msgid "これらのディレクトリに書き込まれるデータは、巨大なものになります。 高速かつ容量の大きなディスクにディレクトリを設置することをお勧めします。"
+#~ msgstr ""
+
+#~ msgid "シリアル版の実行"
+#~ msgstr ""
+
+#~ msgid "シリアル版で実行するには、以下のコマンドを実行します。"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "計算が始まると、標準出力に各SCFにおける全エネルギーの値が順次表示されます。 "
+#~ "計算結果の一連のデータは、ログファイル(fl_Out_Std)に出力されます。 "
+#~ "ログファイルファイルには全電子計算の過程における中間データも出力されます。"
+#~ msgstr ""
+
+#~ msgid "並列版プログラムの実行"
+#~ msgstr ""
+
+#~ msgid "以下のようにProteinDFプログラムを実行します。"
+#~ msgstr ""
+
+#~ msgid "ここで、 ``N`` には並列計算を行うプロセッサ数を指定してください。"
+#~ msgstr ""
+
+#~ msgid "MPIプログラムの実行方法は、計算機環境によって異なります。 計算機システムのマニュアル等を参照してください。"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "計算が始まると、標準出力に各SCFにおける全エネルギーの値が順次表示されます。 "
+#~ "計算結果の一連のデータは、シリアル版と同様にテキスト形式で "
+#~ "ファイル(デフォルトのファイル名はfl_Out_Std)に出力されます。"
+#~ msgstr ""
+
+#~ msgid "動作形式"
+#~ msgstr ""
+
+#~ msgid "ProteinDFは限られた計算機資源で、 大きな計算対象を効率よく計算するために、 いくつかの動作形式を持っています。"
+#~ msgstr ""
+
+#~ msgid "概要"
+#~ msgstr ""
+

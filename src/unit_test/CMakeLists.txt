@@ -15,8 +15,9 @@ set(PDF_XTEST_SOURCES
   tl_dense_general_matrix_file_test.cc
   tl_dense_symmetric_matrix_file_test.cc
 
-  tl_dense_general_matrix_colvector_test.cc
-  tl_dense_general_matrix_rowvector_test.cc
+  tl_dense_general_matrix_arrays_coloriented_test.cc
+  tl_dense_general_matrix_arrays_roworiented_test.cc
+  tl_dense_general_matrix_arrays_mmap_roworiented_test.cc
 
   tl_dense_general_matrix_lapack_test.cc
   tl_dense_symmetric_matrix_lapack_test.cc
@@ -109,7 +110,7 @@ add_test(
   COMMAND $<TARGET_FILE:pdf-xtest> ${PDF_XTEST_FLAG})
 set_property(TEST xtest PROPERTY LABELS xtest)
 set_property(TEST xtest PROPERTY RUN_SERIAL)
-set_property(TEST xtest PROPERTY TIMEOUT 120)
+set_property(TEST xtest PROPERTY TIMEOUT 600)
 
 if (MPI_FOUND)
   add_executable(pdf-xtest.MPI ${PDF_XTEST_MPI_SOURCES})
@@ -123,14 +124,14 @@ if (MPI_FOUND)
   add_test(
     NAME xtest.mpi
     COMMAND ${MPIEXEC}
-      ${MPIEXEC_FLAGS} 
-      ${MPIEXEC_NUMPROC_FLAG} 
-      ${MPI_PROCS} 
+      ${MPIEXEC_FLAGS}
+      ${MPIEXEC_NUMPROC_FLAG}
+      ${MPI_PROCS}
       ${MPIEXEC_PREFLAGS}
-      $<TARGET_FILE:pdf-xtest.MPI> 
+      $<TARGET_FILE:pdf-xtest.MPI>
       ${MPIEXEC_POSTFLAGS}
     )
     set_property(TEST xtest.mpi PROPERTY LABELS xtest.mpi)
     set_property(TEST xtest.mpi PROPERTY RUN_SERIAL)
-    set_property(TEST xtest.mpi PROPERTY TIMEOUT 120)
+    set_property(TEST xtest.mpi PROPERTY TIMEOUT 300)
 endif(MPI_FOUND)

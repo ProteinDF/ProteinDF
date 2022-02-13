@@ -18,38 +18,49 @@
 
 #include <iostream>
 #include <string>
+
 #include "DfLocalize.h"
 #include "TlGetopt.h"
+#include "TlLogging.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
 
 void showHelp(const std::string& progname) {
-    std::cout << TlUtils::format("%s [OPTIONS] basisset_name ...",
-                                 progname.c_str())
-              << std::endl;
+    std::cout << TlUtils::format("%s [OPTIONS] basisset_name ...", progname.c_str()) << std::endl;
     std::cout << std::endl;
     std::cout << " localize C matrix" << std::endl;
     std::cout << " -p PATH       set ProteinDF parameter file. default = "
                  "pdfparam.mpac"
               << std::endl;
     std::cout << " -c PATH       set C matrix path" << std::endl;
+    std::cout << " -r            restart lo calculation" << std::endl;
+    std::cout << " -g <brd_file> specify group list" << std::endl;
+    std::cout << " -m <MODE>     switch pairing algorithm (ordered, big-big(defalt), big-small, small-small)" << std::endl;
     std::cout << " -h            show help" << std::endl;
-    std::cout << " -v            verbose output" << std::endl;
+    // std::cout << " -v            verbose output" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-    TlGetopt opt(argc, argv, "c:hp:v");
-    const bool isVerbose = (opt["v"] == "defined");
+    TlGetopt opt(argc, argv, "c:hm:g:p:rv");
     const bool isShowHelp = (opt["h"] == "defined");
+    // const bool isVerbose = (opt["v"] == "defined");
 
     if (isShowHelp) {
         showHelp(opt[0]);
         return EXIT_SUCCESS;
     }
 
+    TlLogging& log = TlLogging::getInstance();
+    log.setFilePath("lo-output.txt");
+
     std::string pdfParamPath = "pdfparam.mpac";
     if (opt["p"].empty() != true) {
         pdfParamPath = opt["p"];
+    }
+
+    std::string groupFilePath = "";
+    if (opt["g"].empty() != true) {
+        groupFilePath = opt["g"];
     }
 
     std::string inputCMatrixPath = "";
@@ -57,10 +68,30 @@ int main(int argc, char* argv[]) {
         inputCMatrixPath = opt["c"];
     }
 
-    if (isVerbose) {
-        std::cerr << "parameter path: " << pdfParamPath << std::endl;
+    DfLocalize::PairingOrder pairingOrder = DfLocalize::PO_BIG_BIG;
+    if (opt["m"].empty() != true) {
+        const std::string sInputMode = TlUtils::toUpper(opt["m"]);
+        if (sInputMode == "BIG-BIG") {
+            pairingOrder = DfLocalize::PO_BIG_BIG;
+        } else if (sInputMode == "BIG-SMALL") {
+            pairingOrder = DfLocalize::PO_BIG_SMALL;
+        } else if (sInputMode == "SMALL-SMALL") {
+            pairingOrder = DfLocalize::PO_SMALL_SMALL;
+        } else if (sInputMode == "ORDERED") {
+            pairingOrder = DfLocalize::PO_ORDERED;
+        } else {
+            std::cerr << "illegal parameter: -m " << opt["m"] << std::endl;
+        }
     }
 
+    const bool isRestart = (opt["r"] == "defined");
+
+    // if (isVerbose) {
+    // std::cerr << "parameter path: " << pdfParamPath << std::endl;
+    // std::cerr << "iteration: " << iteration << std::endl;
+    // }
+
+    // setup
     TlSerializeData param;
     {
         TlMsgPack mpac;
@@ -68,13 +99,33 @@ int main(int argc, char* argv[]) {
         param = mpac.getSerializeData();
     }
 
+    std::cout << "group file: " << groupFilePath << std::endl;
+    TlSerializeData groupData;
+    if (groupFilePath.empty() != true) {
+        log.info(TlUtils::format("load group file: %s", groupFilePath.c_str()));
+
+        TlMsgPack mpac;
+        mpac.load(groupFilePath);
+
+        groupData = mpac.getSerializeData();
+        // std::cout << groupData.str() << std::endl;
+    }
+
+    // lo
     DfLocalize lo(&param);
-    lo.localize(inputCMatrixPath);
+    if (!inputCMatrixPath.empty()) {
+        lo.setCMatrixPath(inputCMatrixPath);
+    }
+    lo.setRestart(isRestart);
+    lo.setGroup(groupData);
+    lo.setPairingOrder(pairingOrder);
+
+    lo.exec();
 
     {
         TlMsgPack mpac(param);
         mpac.save(pdfParamPath);
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

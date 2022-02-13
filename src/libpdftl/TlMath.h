@@ -32,7 +32,7 @@
 /** 数学的処理を行うクラス
  */
 class TlMath {
-   public:
+public:
     /** x!を計算する
      *
      *  limit is 170!=7.257416...e+306 (MACHINE DEPEND)
@@ -56,6 +56,10 @@ class TlMath {
     // 標準C++にはasinhは定義されていない
     static double arcsinh(const double x) {
         return std::log(x + std::sqrt(x * x + 1));
+    }
+
+    static bool isfinite(double x) {
+        return std::isfinite(x);  // above C++11
     }
 
     /** 組み合わせ nCr の計算をする
@@ -83,11 +87,17 @@ class TlMath {
     static double pow(const double x, const double y);
 
     // function below utilized math.h
-    static double PI() { return M_PI; };
+    static double PI() {
+        return M_PI;
+    };
 
-    double sqrt(double x) { return ::sqrt(x); };
+    double sqrt(double x) {
+        return ::sqrt(x);
+    };
 
-    double exp(double x) { return ::exp(x); };
+    double exp(double x) {
+        return ::exp(x);
+    };
 
     /// 桁落ちのチェック
     /// cancellation of significant digits

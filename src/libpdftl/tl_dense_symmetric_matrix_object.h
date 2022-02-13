@@ -30,17 +30,17 @@ class TlDenseSymmetricMatrixObject : public TlMatrixObject {
     virtual TlMatrixObject::index_type getNumOfCols() const;
     virtual void resize(const TlMatrixObject::index_type dim);
 
-    virtual double get(const TlMatrixObject::index_type row,
-                       const TlMatrixObject::index_type col) const;
-    virtual void set(const TlMatrixObject::index_type row,
-                     const TlMatrixObject::index_type col, const double value);
-    virtual void add(const TlMatrixObject::index_type row,
-                     const TlMatrixObject::index_type col, const double value);
+    virtual double get(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col) const;
+    virtual void set(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col, const double value);
+    virtual void add(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col, const double value);
 
-    std::valarray<double> getRowVector(
-        const TlMatrixObject::index_type row) const;
-    std::valarray<double> getColVector(
-        const TlMatrixObject::index_type col) const;
+    virtual std::vector<double> getRowVector(const TlMatrixObject::index_type row) const;
+    virtual std::vector<double> getColVector(const TlMatrixObject::index_type col) const;
+    virtual void setRowVector(const TlMatrixObject::index_type row, const std::vector<double>& v);
+    virtual void setColVector(const TlMatrixObject::index_type row, const std::vector<double>& v);
+
+    // std::valarray<double> getRowVector(const TlMatrixObject::index_type row) const;
+    // std::valarray<double> getColVector(const TlMatrixObject::index_type col) const;
 
     // ---------------------------------------------------------------------------
     // operations
@@ -48,12 +48,10 @@ class TlDenseSymmetricMatrixObject : public TlMatrixObject {
     virtual double sum() const;
     virtual double trace() const;
     virtual double getRMS() const;
-    virtual double getMaxAbsoluteElement(
-        TlMatrixObject::index_type* outRow = NULL,
-        TlMatrixObject::index_type* outCol = NULL) const;
+    virtual double getMaxAbsoluteElement(TlMatrixObject::index_type* outRow = NULL,
+                                         TlMatrixObject::index_type* outCol = NULL) const;
 
-    void pivotedCholeskyDecomposition(TlDenseGeneralMatrixObject* pL,
-                                      const double threshold) const;
+    void pivotedCholeskyDecomposition(TlDenseGeneralMatrixObject* pL, const double threshold) const;
 
     // ---------------------------------------------------------------------------
     // I/O
@@ -68,10 +66,8 @@ class TlDenseSymmetricMatrixObject : public TlMatrixObject {
     virtual void saveCsv(std::ostream& os) const;
 
 #ifdef HAVE_HDF5
-    virtual bool loadHdf5(const std::string& filepath,
-                          const std::string& h5path);
-    virtual bool saveHdf5(const std::string& filepath,
-                          const std::string& h5path) const;
+    virtual bool loadHdf5(const std::string& filepath, const std::string& h5path);
+    virtual bool saveHdf5(const std::string& filepath, const std::string& h5path) const;
 #endif  // HAVE_HDF5
 
     void loadSerializeData(const TlSerializeData& data);
@@ -84,8 +80,7 @@ class TlDenseSymmetricMatrixObject : public TlMatrixObject {
     TlDenseMatrix_ImplObject* pImpl_;
 };
 
-std::ostream& operator<<(std::ostream& stream,
-                         const TlDenseSymmetricMatrixObject& mat);
+std::ostream& operator<<(std::ostream& stream, const TlDenseSymmetricMatrixObject& mat);
 
 // -----------------------------------------------------------------------------
 // template

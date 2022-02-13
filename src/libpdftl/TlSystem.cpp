@@ -17,7 +17,10 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "TlSystem.h"
+
+#include <sys/mman.h>
 #include <sys/types.h>
+
 #include <cstdlib>
 
 #ifdef HAVE_UNISTD_H
@@ -84,4 +87,23 @@ double TlSystem::getMaxRSS() {
 #endif  // HAVE_SYS_RESOURCE_H
 
     return answer;
+}
+
+char* TlSystem::newMmap(const std::size_t fileSize, const int fd) {
+    // const std::size_t pageSize = sysconf(_SC_PAGE_SIZE);
+    // const std::size_t mapSize = (this->fileSize_ / pageSize +1) * pageSize;
+
+    const int prot = PROT_READ | PROT_WRITE;
+    const int flags = MAP_SHARED;
+    // const int flags = MAP_SHARED | MAP_HUGETLB;
+
+    char* addr = reinterpret_cast<char*>(::mmap(NULL, fileSize, prot, flags, fd, 0));
+    if (addr == MAP_FAILED) {
+        do {
+            perror("mmap");
+            exit(EXIT_FAILURE);
+        } while (0);
+    }
+
+    return addr;
 }

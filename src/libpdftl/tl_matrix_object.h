@@ -23,6 +23,8 @@
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
+#include <string>
+
 #include "TlLogging.h"
 #include "tl_dense_vector_lapack.h"
 
@@ -34,62 +36,116 @@
 ///
 class TlMatrixObject {
     // ---------------------------------------------------------------------------
-   public:
+public:
     /// 行数、列数を表す整数型(範囲外を示す値として-1を取る場合がある)
     typedef signed int index_type;
     /// 数値配列の総数を表す整数型(範囲外を示す値として-1を取る場合がある)
     typedef signed long size_type;
 
-    // ---------------------------------------------------------------------------
-   public:
-    /// 行列要素を格納するための構造体
-    ///
-    /// TlCommunicate で通信可能
-    struct MatrixElement {
-        typedef TlMatrixObject::index_type index_type;
-
-       public:
-        MatrixElement(index_type r = 0, index_type c = 0, double v = 0.0)
-            : row(r), col(c), value(v) {}
-
-       public:
-        index_type row;
-        index_type col;
-        double value;
-    };
+    /// alias for filesize
+    typedef std::char_traits<char>::off_type FileSize;
 
     // ---------------------------------------------------------------------------
-   public:
+public:
     enum MatrixType {
         UNDEFINED = -1,
         RSFD = 0,  /// RSFD: Row-oriented Standard Full Dens-matrix
-        CSFD = 1,  /// Coulmn-oriented Standard Full Dens-matrix
+        CSFD = 1,  /// Column-oriented Standard Full Dens-matrix
         RLHD = 2,  /// Row-oriented Lower Half Dens matrix
         RUHD = 3,  /// Row-oriented Upper Half Dens matrix
-        CLHD = 4,  /// Coulmn-oriented Lower Half Dens matrix
-        CUHD = 5,  /// Coulmn-oriented Upper Half Dens matrix
+        CLHD = 4,  /// Column-oriented Lower Half Dens matrix
+        CUHD = 5,  /// Column-oriented Upper Half Dens matrix
         COOF = 6,  /// list of tuple (row, col, value) full sparse matrix
         COOS = 7,  /// list of tuple (row, col, value) half sparse matrix
         ABGD = 32  /// General Dens-matrix stored by Arrays Blocks
     };
 
     // ---------------------------------------------------------------------------
-   public:
-    explicit TlMatrixObject(const MatrixType matrixType = UNDEFINED,
-                            const index_type row = 1, index_type col = 1);
+public:
+    struct HeaderInfo {
+    public:
+        HeaderInfo()
+            : matrixType(UNDEFINED),
+              numOfRows(0),
+              numOfCols(0),
+              numOfItems(0),
+              numOfVectors(0),
+              sizeOfVector(0),
+              reservedSizeOfVector(0),
+              numOfSubunits(0),
+              subunitId(0),
+              sizeOfChunk(0),
+              headerSize(0),
+              version(0){};
 
-    virtual ~TlMatrixObject() {}
+    public:
+        MatrixType matrixType;
+
+        // for RSFD, CSFD, RLHD, RUHD
+        index_type numOfRows;
+        index_type numOfCols;
+
+        // for COOF, COOS
+        std::size_t numOfItems;
+
+        // for ABGD
+        index_type numOfVectors;
+        index_type sizeOfVector;
+        index_type reservedSizeOfVector;
+        int numOfSubunits;
+        int subunitId;
+        int sizeOfChunk;
+
+        // others
+        std::size_t headerSize;
+        int version;
+    };
+
+public:
+    static std::string matrixTypeStr(MatrixType matrixType);
 
     // ---------------------------------------------------------------------------
-   public:
-    virtual MatrixType getType() const { return this->matrixType_; };
-    virtual index_type getNumOfRows() const { return this->row_; };
-    virtual index_type getNumOfCols() const { return this->col_; };
+public:
+    /// 行列要素を格納するための構造体
+    ///
+    /// TlCommunicate で通信可能
+    struct MatrixElement {
+        typedef TlMatrixObject::index_type index_type;
+
+    public:
+        MatrixElement(index_type r = 0, index_type c = 0, double v = 0.0)
+            : row(r), col(c), value(v) {
+        }
+
+    public:
+        index_type row;
+        index_type col;
+        double value;
+    };
+
+    // ---------------------------------------------------------------------------
+public:
+    explicit TlMatrixObject(const MatrixType matrixType = UNDEFINED, const index_type row = 1, index_type col = 1);
+
+    virtual ~TlMatrixObject() {
+    }
+
+    // ---------------------------------------------------------------------------
+public:
+    virtual MatrixType getType() const {
+        return this->matrixType_;
+    };
+    virtual index_type getNumOfRows() const {
+        return this->row_;
+    };
+    virtual index_type getNumOfCols() const {
+        return this->col_;
+    };
 
     // ---------------------------------------------------------------------------
     // I/O
     // ---------------------------------------------------------------------------
-   public:
+public:
     /// 指定されたパスから内容を読み込む
     ///
     /// @retval true 成功
@@ -102,13 +158,13 @@ class TlMatrixObject {
     /// @retval false 失敗
     virtual bool save(const std::string& path) const = 0;
 
-   protected:
+protected:
     virtual size_type getNumOfElements() const;
     size_type getNumOfElements_CSFD() const;
     size_type getNumOfElements_RSFD() const;
     size_type getNumOfElements_RLHD() const;
 
-   protected:
+protected:
     virtual size_type getIndex(index_type row, index_type col) const;
     size_type getIndex_RSFD(index_type row, index_type col) const;
     size_type getIndex_CSFD(index_type row, index_type col) const;
@@ -117,7 +173,7 @@ class TlMatrixObject {
     // ---------------------------------------------------------------------------
     // get/set
     // ---------------------------------------------------------------------------
-   public:
+public:
     /** 要素を返す(読み取り専用)
      *
      *  内部では、行列要素を(2次元配列ではなく)
@@ -157,7 +213,7 @@ class TlMatrixObject {
     // ---------------------------------------------------------------------------
     // checked.
     // ---------------------------------------------------------------------------
-   public:
+public:
     virtual double getLocal(index_type row, index_type col) const {
         return this->get(row, col);
     }
@@ -165,16 +221,16 @@ class TlMatrixObject {
     // ---------------------------------------------------------------------------
     // deprecated
     // ---------------------------------------------------------------------------
-   private:
+private:
     /// インスタンスのメモリサイズを返す
     //  virtual std::size_t getMemSize() const = 0;
 
-   protected:
+protected:
     MatrixType matrixType_;
     index_type row_;
     index_type col_;
 
-   protected:
+protected:
     TlLogging& log_;
 };
 

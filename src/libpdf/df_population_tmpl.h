@@ -1,6 +1,7 @@
 #ifndef DF_POPULATION_TMPL_H
 #define DF_POPULATION_TMPL_H
 
+#include <numeric>
 #include <valarray>
 
 #include "DfObject.h"
@@ -11,16 +12,16 @@
 /// Mulliken Population の計算を行い、電荷情報、スピン情報を出力するクラス
 template <class SymmetricMatrix, class Vector>
 class DfPopulation_tmpl : public DfObject {
-   public:
+public:
     DfPopulation_tmpl(TlSerializeData* pPdfParam);
     virtual ~DfPopulation_tmpl();
 
-   public:
+public:
     double getSumOfElectrons(const SymmetricMatrix& P);
 
     void getAtomPopulation(const int iteration);
 
-   protected:
+protected:
     std::valarray<double> getAtomPopulation_runtype(const RUN_TYPE runType,
                                                     const int iteration);
     std::valarray<double> getGrossOrbPop(const DfObject::RUN_TYPE runType,
@@ -37,7 +38,7 @@ class DfPopulation_tmpl : public DfObject {
     template <typename T>
     void getOrbPopStr(const std::valarray<double>& trPS, T& out) const;
 
-   protected:
+protected:
     TlOrbitalInfo orbitalInfo_;
 
     std::valarray<double> nucleiCharges_;
@@ -52,6 +53,15 @@ class DfPopulation_tmpl : public DfObject {
 // -----------------------------------------------------------------------------
 // IMPLEMENTATION
 // -----------------------------------------------------------------------------
+template <class SymmetricMatrix, class Vector>
+DfPopulation_tmpl<SymmetricMatrix, Vector>::DfPopulation_tmpl(TlSerializeData* pPdfParam)
+    : DfObject(pPdfParam), orbitalInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"]) {
+}
+
+template <class SymmetricMatrix, class Vector>
+DfPopulation_tmpl<SymmetricMatrix, Vector>::~DfPopulation_tmpl() {
+}
+
 template <class SymmetricMatrix, class Vector>
 double DfPopulation_tmpl<SymmetricMatrix, Vector>::getSumOfElectrons(
     const SymmetricMatrix& P) {
@@ -130,8 +140,8 @@ std::valarray<double> DfPopulation_tmpl<SymmetricMatrix, Vector>::getPS(
     const DfObject::index_type numOfAOs = this->m_nNumOfAOs;
     std::valarray<double> answer(numOfAOs);
     for (DfObject::index_type i = 0; i < numOfAOs; ++i) {
-        const std::valarray<double> v = PS.getColVector(i);
-        answer[i] = v.sum();
+        const std::vector<double> v = PS.getColVector(i);
+        answer[i] = std::accumulate(v.begin(), v.end(), 0.0);
     }
 
     return answer;

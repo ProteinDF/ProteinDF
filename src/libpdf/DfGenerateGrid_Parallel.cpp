@@ -24,10 +24,11 @@
 #include "TlCommunicate.h"
 #include "TlUtils.h"
 
-DfGenerateGrid_Parallel::DfGenerateGrid_Parallel(TlSerializeData* pPdfParam)
-    : DfGenerateGrid(pPdfParam) {}
+DfGenerateGrid_Parallel::DfGenerateGrid_Parallel(TlSerializeData* pPdfParam) : DfGenerateGrid(pPdfParam) {
+}
 
-DfGenerateGrid_Parallel::~DfGenerateGrid_Parallel() {}
+DfGenerateGrid_Parallel::~DfGenerateGrid_Parallel() {
+}
 
 void DfGenerateGrid_Parallel::logger(const std::string& str) const {
     TlCommunicate& rComm = TlCommunicate::getInstance();
@@ -58,8 +59,7 @@ TlDenseGeneralMatrix_Lapack DfGenerateGrid_Parallel::getOMatrix() {
     return O;
 }
 
-void DfGenerateGrid_Parallel::generateGrid(
-    const TlDenseGeneralMatrix_Lapack& O) {
+void DfGenerateGrid_Parallel::generateGrid(const TlDenseGeneralMatrix_Lapack& O) {
     // if (this->isMasterSlave_ == true) {
     //     this->generateGrid_MS();
     // } else {
@@ -69,8 +69,7 @@ void DfGenerateGrid_Parallel::generateGrid(
     this->gatherGridData();
 }
 
-void DfGenerateGrid_Parallel::generateGrid_DC(
-    const TlDenseGeneralMatrix_Lapack& O) {
+void DfGenerateGrid_Parallel::generateGrid_DC(const TlDenseGeneralMatrix_Lapack& O) {
     this->logger("generate grid by DC");
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
@@ -79,9 +78,8 @@ void DfGenerateGrid_Parallel::generateGrid_DC(
     const int nProc = rComm.getNumOfProc();
     const int nRank = rComm.getRank();
     const int nRange = nEndAtomNumber;
-    const int nInterval =
-        (nRange + (nProc - 1)) / nProc;         // +(nProc-1) は余り対策
-    const int nLocalStart = nRank * nInterval;  // nProc = 0, 1, 2, ...
+    const int nInterval = (nRange + (nProc - 1)) / nProc;  // +(nProc-1) は余り対策
+    const int nLocalStart = nRank * nInterval;             // nProc = 0, 1, 2, ...
     const int nLocalEnd = std::min((nLocalStart + nInterval), nEndAtomNumber);
 
     std::size_t numOfGrids = 0;
@@ -93,8 +91,7 @@ void DfGenerateGrid_Parallel::generateGrid_DC(
         std::vector<double> weight;
 
         // if ((this->m_gridType == SG_1) || (this->m_gridType == USER)) {
-        DfGenerateGrid::generateGrid_SG1(O, atom, &coordX, &coordY, &coordZ,
-                                         &weight);
+        DfGenerateGrid::generateGrid_atom(O, atom, &coordX, &coordY, &coordZ, &weight);
         // } else {
         //     DfGenerateGrid::generateGrid(O, atom, &coordX, &coordY, &coordZ,
         //                                  &weight);
@@ -102,10 +99,13 @@ void DfGenerateGrid_Parallel::generateGrid_DC(
 
         // store grid matrix
         const std::size_t numOfAtomGrids = weight.size();
+        if (numOfAtomGrids == 0) {
+            continue;
+        }
+
 #pragma omp critical(DfGenerateGrid__generateGrid)
         {
-            this->grdMat_.resize(numOfGrids + numOfAtomGrids,
-                                 this->numOfColsOfGrdMat_);
+            this->grdMat_.resize(numOfGrids + numOfAtomGrids, this->numOfColsOfGrdMat_);
             for (std::size_t i = 0; i < numOfAtomGrids; ++i) {
                 this->grdMat_.set(numOfGrids, 0, coordX[i]);
                 this->grdMat_.set(numOfGrids, 1, coordY[i]);
@@ -128,15 +128,12 @@ void DfGenerateGrid_Parallel::gatherGridData() {
 
     const int tag = TAG_GENGRID_GATHER_GRID_DATA;
     if (rComm.isMaster() == true) {
-        const index_type numOfColsOfGlobalGridMatrix =
-            this->grdMat_.getNumOfCols();
+        const index_type numOfColsOfGlobalGridMatrix = this->grdMat_.getNumOfCols();
         // TODO: use TlMatrixFile instead of TlDenseGeneralMatrix_Lapack because
         // of memory waste.
-        this->log_.info(TlUtils::format("grid matrix size: %d, %d",
-                                        numOfRowsOfGlobalGridMatrix,
-                                        numOfRowsOfGlobalGridMatrix));
-        TlDenseGeneralMatrix_Lapack grdMat(numOfRowsOfGlobalGridMatrix,
-                                           numOfColsOfGlobalGridMatrix);
+        this->log_.info(
+            TlUtils::format("grid matrix size: %d, %d", numOfRowsOfGlobalGridMatrix, numOfRowsOfGlobalGridMatrix));
+        TlDenseGeneralMatrix_Lapack grdMat(numOfRowsOfGlobalGridMatrix, numOfColsOfGlobalGridMatrix);
 
         index_type currentNumOfRows = 0;
 
@@ -151,18 +148,15 @@ void DfGenerateGrid_Parallel::gatherGridData() {
             TlDenseGeneralMatrix_Lapack tmpGrdMat;
             rComm.receiveDataFromAnySource(tmpGrdMat, &proc, tag);
             if (recvCheck[proc] != false) {
-                this->log_.warn(TlUtils::format(
-                    "already received grid data from %d", proc));
+                this->log_.warn(TlUtils::format("already received grid data from %d", proc));
             }
             recvCheck[proc] = true;
             this->log_.debug(TlUtils::format("recv grid data from %d", proc));
 
-            this->log_.info(TlUtils::format("recv block mat (%d, %d) from %d",
-                                            tmpGrdMat.getNumOfRows(),
+            this->log_.info(TlUtils::format("recv block mat (%d, %d) from %d", tmpGrdMat.getNumOfRows(),
                                             tmpGrdMat.getNumOfCols(), proc));
             numOfRowsOfGlobalGridMatrix += tmpGrdMat.getNumOfRows();
-            grdMat.resize(numOfRowsOfGlobalGridMatrix,
-                          numOfColsOfGlobalGridMatrix);
+            grdMat.resize(numOfRowsOfGlobalGridMatrix, numOfColsOfGlobalGridMatrix);
 
             grdMat.block(currentNumOfRows, 0, tmpGrdMat);
             currentNumOfRows += tmpGrdMat.getNumOfRows();

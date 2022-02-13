@@ -1,10 +1,11 @@
+#include "tl_dense_symmetric_matrix_impl_lapack.h"
+
 #include <cassert>
 #include <iostream>
 
 #include "TlUtils.h"
 #include "lapack.h"
 #include "tl_dense_general_matrix_lapack.h"
-#include "tl_dense_symmetric_matrix_impl_lapack.h"
 #include "tl_dense_vector_impl_lapack.h"
 
 // ---------------------------------------------------------------------------
@@ -239,7 +240,7 @@ bool TlDenseSymmetricMatrix_ImplLapack::eig(
     double* Z = pEigVec->matrix_;
 
     double* WORK = new double[3 * N];  // (作業/出力用)
-    int INFO = 0;  // (出力用) =0: 正常終了, >0: 収束しなかった
+    int INFO = 0;                      // (出力用) =0: 正常終了, >0: 収束しなかった
 
     dspev_(&JOBZ, &UPLO, &N, AP, W, Z, &LDZ, WORK, &INFO);
 
@@ -282,9 +283,8 @@ bool TlDenseSymmetricMatrix_ImplLapack::eig(
 // ---------------------------------------------------------------------------
 // protected
 // ---------------------------------------------------------------------------
-TlMatrixObject::size_type TlDenseSymmetricMatrix_ImplLapack::getNumOfElements()
-    const {
-    const std::size_t dim = this->getNumOfRows();
+TlMatrixObject::size_type TlDenseSymmetricMatrix_ImplLapack::getNumOfElements() const {
+    const TlMatrixObject::index_type dim = this->getNumOfRows();
     assert(dim == this->getNumOfCols());
 
     const std::size_t elements = dim * (dim + 1) / 2;

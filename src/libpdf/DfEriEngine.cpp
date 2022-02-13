@@ -17,8 +17,10 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfEriEngine.h"
+
 #include <algorithm>
 #include <iostream>
+
 #include "TlFmt.h"
 #include "TlMath.h"
 #include "TlUtils.h"
@@ -59,7 +61,8 @@ const TlAngularMomentumVector DfEriEngine::E2_[3] = {
     TlAngularMomentumVector(0, 0, 2)};
 
 ////////////////////////////////////////////////////////////////////////////////
-DfEriEngine::DfEriEngine() : log_(TlLogging::getInstance()) {
+DfEriEngine::DfEriEngine()
+    : log_(TlLogging::getInstance()) {
     this->p0M_ = new double*[ERI_L_MAX + 1];
     for (int i = 0; i < (ERI_L_MAX + 1); ++i) {
         this->p0M_[i] = new double[ERI_KPKQ_MAX];
@@ -570,7 +573,8 @@ void DfEriEngine::calc0(const AngularMomentum2& qAB,
 
 // this->time_calc_all_.stop();
 #ifdef DEBUG_HGP
-    std::cerr << "<<<<END\n" << std::endl;
+    std::cerr << "<<<<END\n"
+              << std::endl;
 #endif  // DEBUG_HGP
 }
 
@@ -2750,9 +2754,9 @@ void DfEriEngine::calcR0() {
 int DfEriEngine::indexRM(const TlAngularMomentumVector& amv,
                          const int m) const {
     const int L = amv.angularMomentum();
+    // std::cerr << TlUtils::format("L+m <= ERI_L_MAX: %d, %d, %d", L, m, ERI_L_MAX) << std::endl;
     assert((L + m) <= ERI_L_MAX);
-    const int amvBegin =
-        L * (L + 1) * (L + 2) / 6;  // [0](m)から[L-1](m)までが何個あったか
+    const int amvBegin = L * (L + 1) * (L + 2) / 6;  // [0](m)から[L-1](m)までが何個あったか
     const int index = ERI_NUM_OF_R_KINDS * m + amvBegin + amv.index();
 
     return index;
@@ -3834,7 +3838,8 @@ void DfEriEngine::ERI_EQ44(const ERI_State eriState, EriDataType* pERI) {
                                            b_prime, p_prime, batch, value2)
                                     << std::endl;
 #endif  // DEBUG_EQ44
-        // answer -= this->AB_[i] * value2;
+
+                                // answer -= this->AB_[i] * value2;
                                 answer -= AB_i * value2;
                             }
 
@@ -4144,7 +4149,8 @@ void DfEriEngine::ERI_EQ45(const ERI_State eriState, EriDataType* pERI) {
                                                  p_prime + 1, batch, value3)
                                           << std::endl;
 #endif  // DEBUG_EQ45
-        // answer += this->AB_[i] * value3;
+
+                                // answer += this->AB_[i] * value3;
                                 answer += AB_i * value3;
                             }
 

@@ -44,11 +44,6 @@ int PDF_MAIN(int argc, char* argv[]) {
     // setup parameters
     TlGetopt opt(argc, argv, "a:dro:");
 
-    bool isRestart = false;
-    if (opt["r"] == "defined") {
-        isRestart = true;
-    }
-
     TlLogging& log = TlLogging::getInstance();
     std::string output = "fl_Out_Std";
     if (opt["o"].empty() != true) {
@@ -77,11 +72,19 @@ int PDF_MAIN(int argc, char* argv[]) {
     }
 #endif  // HAVE_VIENNACL
 
+    // command option
+    bool isRestart = false;
+    if (opt["r"] == "defined") {
+        isRestart = true;
+    }
+
     // do ProteinDF
     ProteinDF PDF;
     if (isRestart == true) {
+        std::cout << "restart calculation ..." << std::endl;
         PDF.restart("pdfparam.mpac");
     } else {
+        std::cout << "normal start calculation ..." << std::endl;
         PDF.run();
     }
 

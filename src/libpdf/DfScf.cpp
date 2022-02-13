@@ -22,10 +22,6 @@
 
 #include <cmath>
 
-#include "DfScf.h"
-#include "TlUtils.h"
-#include "common.h"
-
 #include "DfCalcGrid.h"
 #include "DfCleanup.h"
 #include "DfConvcheck.h"
@@ -42,8 +38,12 @@
 #include "DfKMatrix.h"
 #include "DfLevelshift.h"
 #include "DfPopulation.h"
+#include "DfScf.h"
 #include "DfSummary.h"
 #include "DfThreeindexintegrals.h"
+#include "TlUtils.h"
+#include "common.h"
+#include "df_converge_damping_oda_lapack.h"
 // #include "DfTotalEnergy.h"
 
 #ifdef HAVE_LAPACK
@@ -60,20 +60,16 @@
 
 // FoR Extended QCLO
 #include "DfCqclomatrix.h"
-#include "DfQclo.h"
-
 #include "DfPreScf.h"
-
+#include "DfQclo.h"
 #include "TlFile.h"
 #include "TlMsgPack.h"
-
-#include "tl_dense_general_matrix_lapack.h"
-#include "tl_dense_symmetric_matrix_lapack.h"
-#include "tl_dense_vector_lapack.h"
-
 #include "tl_dense_general_matrix_eigen.h"
+#include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_eigen.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_dense_vector_eigen.h"
+#include "tl_dense_vector_lapack.h"
 
 #define NUMBER_OF_CHECK 2
 
@@ -82,14 +78,14 @@ DfScf::DfScf(TlSerializeData* pPdfParam)
     this->isUseNewEngine_ = (*pPdfParam)["new_engine"].getBoolean();
 }
 
-DfScf::~DfScf() {}
+DfScf::~DfScf() {
+}
 
 void DfScf::saveParam() const {
     (*(this->pPdfParam_))["num_of_iterations"] = this->m_nIteration;
 
     // save PDF parameter
-    const std::string pdfParamPath =
-        (*this->pPdfParam_)["pdf_param_path"].getStr();
+    const std::string pdfParamPath = (*this->pPdfParam_)["pdf_param_path"].getStr();
     TlMsgPack pdfParam_mpac(*(this->pPdfParam_));
     pdfParam_mpac.save(pdfParamPath);
 }
@@ -100,8 +96,7 @@ int DfScf::dfScfMain() {
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
     this->setScfParam();
 
-    this->logger(" restart calculation is " + pdfParam["restart"].getStr() +
-                 "\n");
+    this->logger(" restart calculation is " + pdfParam["restart"].getStr() + "\n");
 
     std::string sStepControl = pdfParam["step_control"].getStr();
     std::string group = "";
@@ -111,8 +106,7 @@ int DfScf::dfScfMain() {
 
     // QCLO法用。PreSCFに持って行くべき
     if (group == "SCFQCLO") {
-        if ((this->isRestart_ == false) ||
-            (pdfParam["DfScf"]["scf-restart-point"] == "startPDF")) {
+        if ((this->isRestart_ == false) || (pdfParam["DfScf"]["scf-restart-point"] == "startPDF")) {
             this->loggerStartTitle("DfCqclomatrix");
 
             DfCqclomatrix dfcqclomatrix(this->pPdfParam_);
@@ -139,33 +133,31 @@ void DfScf::setScfParam() {
     // iteration number
     this->m_nIteration = 0;
     if (this->isRestart_ == true) {
-        this->m_nIteration =
-            std::max<int>(1, pdfParam["num_of_iterations"].getInt());
+        this->m_nIteration = std::max<int>(1, pdfParam["num_of_iterations"].getInt());
     }
 
     // damping switch
     this->m_nScfAcceleration = SCF_ACCELERATION_SIMPLE;
     {
-        const std::string sScfAcceleration =
-            TlUtils::toUpper(pdfParam["scf_acceleration"].getStr());
+        const std::string sScfAcceleration = TlUtils::toUpper(pdfParam["scf_acceleration"].getStr());
 
         if (sScfAcceleration == "DAMPING") {
             this->m_nScfAcceleration = SCF_ACCELERATION_SIMPLE;
+        } else if (sScfAcceleration == "ODA") {
+            this->m_nScfAcceleration = SCF_ACCELERATION_ODA;
         } else if (sScfAcceleration == "ANDERSON") {
             this->m_nScfAcceleration = SCF_ACCELERATION_ANDERSON;
         } else if (sScfAcceleration == "DIIS") {
             this->m_nScfAcceleration = SCF_ACCELERATION_DIIS;
         } else {
-            this->log_.warn(TlUtils::format("unknown acceleration method: %s",
-                                            sScfAcceleration.c_str()));
+            this->log_.warn(TlUtils::format("unknown acceleration method: %s", sScfAcceleration.c_str()));
         }
     }
 
     // Damp Object Type
     this->m_nDampObject = DAMP_DENSITY;
     {
-        const std::string sDampObject = TlUtils::toUpper(
-            pdfParam["scf_acceleration/damping/damping_type"].getStr());
+        const std::string sDampObject = TlUtils::toUpper(pdfParam["scf_acceleration/damping/damping_type"].getStr());
 
         if (sDampObject == "DENSITY_MATRIX") {
             this->m_nDampObject = DAMP_DENSITY_MATRIX;
@@ -174,16 +166,13 @@ void DfScf::setScfParam() {
         } else if (sDampObject == "FOCK") {
             this->m_nDampObject = DAMP_FOCK;
         } else {
-            this->log_.warn(TlUtils::format("unknown acceleration method: %s",
-                                            sDampObject.c_str()));
+            this->log_.warn(TlUtils::format("unknown acceleration method: %s", sDampObject.c_str()));
         }
     }
     if (this->J_engine_ != J_ENGINE_RI_J) {
-        this->log_.warn(
-            "damping \"density\" is not supported except for the RI method. ");
+        this->log_.warn("damping \"density\" is not supported except for the RI method. ");
         this->log_.warn("\"density_matrix\" is used.");
-        (*this->pPdfParam_)["scf_acceleration/damping/damping_type"] =
-            "density_matrix";
+        (*this->pPdfParam_)["scf_acceleration/damping/damping_type"] = "density_matrix";
         this->m_nDampObject = DAMP_DENSITY_MATRIX;
     }
 }
@@ -228,8 +217,7 @@ int DfScf::execScfLoop() {
     SCF_STATE nScfState = BEGIN;
     (*this->pPdfParam_)["control"]["scf_converged"] = false;
     if (this->isRestart_ == true) {
-        const std::string respoint =
-            TlUtils::toUpper(pdfParam["control"]["scf_state"].getStr());
+        const std::string respoint = TlUtils::toUpper(pdfParam["control"]["scf_state"].getStr());
 
         if (respoint == "prepareGuess") {
             nScfState = BEGIN;
@@ -279,8 +267,7 @@ int DfScf::execScfLoop() {
         switch (nScfState) {
             case BEGIN:
                 this->logger("// =====================================\n");
-                this->logger(TlUtils::format("number of iteration = %d\n",
-                                             this->m_nIteration));
+                this->logger(TlUtils::format("number of iteration = %d\n", this->m_nIteration));
                 this->logger("// =====================================\n");
                 nScfState = DIFF_DENSITY_MATRIX;
                 break;
@@ -390,9 +377,7 @@ int DfScf::execScfLoop() {
                 break;
 
             case POPULATION:
-                if (TlUtils::toUpper(
-                        (*(this->pPdfParam_))["analyze_population"].getStr()) ==
-                    "EVERY-SCF") {
+                if (TlUtils::toUpper((*(this->pPdfParam_))["analyze_population"].getStr()) == "EVERY-SCF") {
                     this->calcPopulation();
                 }
                 this->setScfRestartPoint("POPULATION");
@@ -400,8 +385,7 @@ int DfScf::execScfLoop() {
                 break;
 
             case SUMMARY:
-                if (TlUtils::toUpper(pdfParam["summary"].getStr()) ==
-                    "EVERY-SCF") {
+                if (TlUtils::toUpper(pdfParam["summary"].getStr()) == "EVERY-SCF") {
                     this->summarize();
                 }
                 this->setScfRestartPoint("SUMMARY");
@@ -437,24 +421,20 @@ int DfScf::execScfLoop() {
                 break;
 
             default:
-                std::cerr << "unknown ScfState(" << (int)nScfState << "). stop."
-                          << std::endl;
+                std::cerr << "unknown ScfState(" << (int)nScfState << "). stop." << std::endl;
                 exit(1);
                 break;
         }
     }
 
     // pupulation analysis
-    const std::string sAnalizePopulation =
-        TlUtils::toUpper(pdfParam["analyze_population"].getStr());
-    if ((sAnalizePopulation == "EVERY-SCF") ||
-        (sAnalizePopulation == "CONVERGENCE")) {
+    const std::string sAnalizePopulation = TlUtils::toUpper(pdfParam["analyze_population"].getStr());
+    if ((sAnalizePopulation == "EVERY-SCF") || (sAnalizePopulation == "CONVERGENCE")) {
         this->calcPopulation();
     }
 
     // DfSummary
-    const std::string sDfSummary =
-        TlUtils::toUpper(pdfParam["summary"].getStr());
+    const std::string sDfSummary = TlUtils::toUpper(pdfParam["summary"].getStr());
     if ((sDfSummary == "EVERY-SCF") || (sDfSummary == "CONVERGENCE")) {
         this->summarize();
     }
@@ -479,8 +459,7 @@ void DfScf::diffDensityMatrix() {
         dddm.exec();
 
         this->loggerEndTitle();
-        (*this->pPdfParam_)["stat"]["elapsed_time"]["diff_density_matrix"]
-                           [this->m_nIteration] = timer.getElapseTime();
+        (*this->pPdfParam_)["stat"]["elapsed_time"]["diff_density_matrix"][this->m_nIteration] = timer.getElapseTime();
     }
 }
 
@@ -491,8 +470,7 @@ void DfScf::doDensityFitting() {
 
     if (this->J_engine_ == J_ENGINE_RI_J) {
         if (this->m_nIteration == 1) {
-            if ((this->initialGuessType_ == GUESS_RHO) ||
-                (this->initialGuessType_ == GUESS_FILE_RHO)) {
+            if ((this->initialGuessType_ == GUESS_RHO) || (this->initialGuessType_ == GUESS_FILE_RHO)) {
                 this->logger(
                     "Initial rho is provided. Density fitting is "
                     "unnecessary.\n");
@@ -503,15 +481,13 @@ void DfScf::doDensityFitting() {
         TlTime timer;
         this->loggerStartTitle("Density Fitting");
 
-        DfDensityFittingObject* pDfDensityFitting =
-            this->getDfDensityFittingObject();
+        DfDensityFittingObject* pDfDensityFitting = this->getDfDensityFittingObject();
         pDfDensityFitting->exec();
         delete pDfDensityFitting;
         pDfDensityFitting = NULL;
 
         this->loggerEndTitle();
-        (*this->pPdfParam_)["stat"]["elapsed_time"]["density_fitting"]
-                           [this->m_nIteration] = timer.getElapseTime();
+        (*this->pPdfParam_)["stat"]["elapsed_time"]["density_fitting"][this->m_nIteration] = timer.getElapseTime();
 
         if (this->m_nDampObject == DAMP_DENSITY) {
             this->converge();
@@ -542,8 +518,7 @@ void DfScf::doXCIntegral() {
 }
 
 void DfScf::doThreeIndexIntegral() {
-    if ((this->isDFT_ == true) && (this->m_bMemorySave != true) &&
-        (this->m_bIsXCFitting == true)) {
+    if ((this->isDFT_ == true) && (this->m_bMemorySave != true) && (this->m_bIsXCFitting == true)) {
         this->loggerStartTitle("DfThreeindexintegrals");
         DfThreeindexintegrals dfThreeindexintegrals(this->pPdfParam_);
         dfThreeindexintegrals.DfThreeindexintegralsMain();
@@ -568,9 +543,8 @@ void DfScf::buildXcMatrix() {
 
             // for restart
             if (this->isRestart_ == true) {
-                const std::string prevGridDataFilePath = TlUtils::format(
-                    "%s.itr%d", this->getGridDataFilePath().c_str(),
-                    this->m_nIteration - 1);
+                const std::string prevGridDataFilePath =
+                    TlUtils::format("%s.itr%d", this->getGridDataFilePath().c_str(), this->m_nIteration - 1);
                 TlFile::copy(prevGridDataFilePath, this->getGridDataFilePath());
             }
 
@@ -582,8 +556,7 @@ void DfScf::buildXcMatrix() {
         }
 
         this->loggerEndTitle();
-        (*this->pPdfParam_)["stat"]["elapsed_time"]["xc_matrix"]
-                           [this->m_nIteration] = timer.getElapseTime();
+        (*this->pPdfParam_)["stat"]["elapsed_time"]["xc_matrix"][this->m_nIteration] = timer.getElapseTime();
         this->saveParam();
 
         // flush
@@ -638,8 +611,7 @@ void DfScf::buildFock() {
     DfFockMatrix* pDfFockMatrix = this->getDfFockMatrixObject();
     pDfFockMatrix->DfFockMatrixMain();
     this->loggerEndTitle();
-    (*this->pPdfParam_)["stat"]["elapsed_time"]["fock_matrix"]
-                       [this->m_nIteration] = timer.getElapseTime();
+    (*this->pPdfParam_)["stat"]["elapsed_time"]["fock_matrix"][this->m_nIteration] = timer.getElapseTime();
 
     if (this->m_nDampObject == DAMP_FOCK) {
         this->converge();
@@ -672,20 +644,17 @@ void DfScf::transformFock() {
     pDfTransFmatrix = NULL;
 
     this->loggerEndTitle();
-    (*this->pPdfParam_)["stat"]["elapsed_time"]["transform_F_matrix"]
-                       [this->m_nIteration] = timer.getElapseTime();
+    (*this->pPdfParam_)["stat"]["elapsed_time"]["transform_F_matrix"][this->m_nIteration] = timer.getElapseTime();
 }
 
 DfTransFmatrix* DfScf::getDfTransFmatrixObject(bool isExecDiis) {
-    DfTransFmatrix* pDfTransFmatrix =
-        new DfTransFmatrix(this->pPdfParam_, isExecDiis);
+    DfTransFmatrix* pDfTransFmatrix = new DfTransFmatrix(this->pPdfParam_, isExecDiis);
     return pDfTransFmatrix;
 }
 
 void DfScf::doLevelShift() {
     // add level shift to Kohn-Sham matrix
-    const int start_iter =
-        (*(this->pPdfParam_))["level_shift/start_iteration"].getInt();
+    const int start_iter = (*(this->pPdfParam_))["level_shift/start_iteration"].getInt();
     const bool levelShift = (*(this->pPdfParam_))["level_shift"].getBoolean();
     if ((levelShift == true) && (this->m_nIteration >= start_iter)) {
         TlTime timer;
@@ -695,8 +664,7 @@ void DfScf::doLevelShift() {
         LS.DfLshiftMain();
 
         this->loggerEndTitle();
-        (*this->pPdfParam_)["stat"]["elapsed_time"]["level_shift"]
-                           [this->m_nIteration] = timer.getElapseTime();
+        (*this->pPdfParam_)["stat"]["elapsed_time"]["level_shift"][this->m_nIteration] = timer.getElapseTime();
     }
 }
 
@@ -745,8 +713,7 @@ void DfScf::diagonal() {
     // }
 
     this->loggerEndTitle();
-    (*this->pPdfParam_)["stat"]["elapsed_time"]["diagonal"]
-                       [this->m_nIteration] = timer.getElapseTime();
+    (*this->pPdfParam_)["stat"]["elapsed_time"]["diagonal"][this->m_nIteration] = timer.getElapseTime();
 
     // flush
     this->matrixCache_.flush();
@@ -766,8 +733,7 @@ void DfScf::execScfLoop_EndFock_TransC() {
     delete pDfTransAtoB;
     pDfTransAtoB = NULL;
     this->loggerEndTitle();
-    (*this->pPdfParam_)["stat"]["elapsed_time"]["transform_C_matrix"]
-                       [this->m_nIteration] = timer.getElapseTime();
+    (*this->pPdfParam_)["stat"]["elapsed_time"]["transform_C_matrix"][this->m_nIteration] = timer.getElapseTime();
 }
 
 DfTransatob* DfScf::getDfTransatobObject() {
@@ -784,8 +750,7 @@ void DfScf::calcDensityMatrix() {
     dfDmatrix.run();
 
     this->loggerEndTitle();
-    (*this->pPdfParam_)["stat"]["elapsed_time"]["density_matrix"]
-                       [this->m_nIteration] = timer.getElapseTime();
+    (*this->pPdfParam_)["stat"]["elapsed_time"]["density_matrix"][this->m_nIteration] = timer.getElapseTime();
 
     // flush
     this->matrixCache_.flush();
@@ -877,14 +842,12 @@ bool DfScf::judge() {
 
             // if (conv_counter == 1){
             if (this->m_nConvergenceCounter == 1) {
-                const std::string str =
-                    " *** Convergence conditions are satisfied: (1st) ***\n";
+                const std::string str = " *** Convergence conditions are satisfied: (1st) ***\n";
                 this->logger(str);
                 std::cout << str;
                 //} else if (conv_counter == 2){
             } else if (this->m_nConvergenceCounter == 2) {
-                std::string str =
-                    " *** Convergence conditions are satisfied: (2nd) ***\n";
+                std::string str = " *** Convergence conditions are satisfied: (2nd) ***\n";
                 str += "*** SCF is well converged ***\n";
                 this->logger(str);
                 std::cout << str;
@@ -909,6 +872,10 @@ bool DfScf::judge() {
 }
 
 bool DfScf::checkConverge() {
+    // std::cout << ">>conv" << std::endl;
+    // std::cout << (*this->pPdfParam_)["TEs"].str() << std::endl;
+    // std::cout << "<<" << std::endl;
+
     DfConvcheck dfConvcheck(this->pPdfParam_, this->m_nIteration);
 
     return dfConvcheck.isConverged();
@@ -925,14 +892,15 @@ void DfScf::converge() {
     pDfConverge = NULL;
 
     this->loggerEndTitle();
-    (*this->pPdfParam_)["stat"]["elapsed_time"]["converge"]
-                       [this->m_nIteration] = timer.getElapseTime();
+    (*this->pPdfParam_)["stat"]["elapsed_time"]["converge"][this->m_nIteration] = timer.getElapseTime();
 }
 
 DfConverge* DfScf::getDfConverge() {
     DfConverge* pDfConverge = NULL;
     if (this->m_nScfAcceleration == SCF_ACCELERATION_SIMPLE) {
         pDfConverge = new DfConverge_Damping(this->pPdfParam_);
+    } else if (this->m_nScfAcceleration == SCF_ACCELERATION_ODA) {
+        pDfConverge = new DfConverge_Damping_Oda_Lapack(this->pPdfParam_);
     } else if (this->m_nScfAcceleration == SCF_ACCELERATION_ANDERSON) {
         pDfConverge = new DfConverge_Anderson(this->pPdfParam_);
     } else if (this->m_nScfAcceleration == SCF_ACCELERATION_DIIS) {
@@ -956,8 +924,7 @@ bool DfScf::checkMaxIteration() {
     bool answer = false;
     if (this->m_nIteration >= (*this->pPdfParam_)["max_iteration"].getInt()) {
         const std::string str =
-            TlUtils::format(" max_iteration %d is reached.\n",
-                            (*this->pPdfParam_)["max_iteration"].getInt());
+            TlUtils::format(" max_iteration %d is reached.\n", (*this->pPdfParam_)["max_iteration"].getInt());
         this->logger(str);
         std::cout << str;
 

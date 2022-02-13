@@ -21,6 +21,7 @@
 #include <fstream>
 #include <map>
 #include <vector>
+
 #include "DfObject.h"
 #include "Fl_Geometry.h"
 #include "TlAtom.h"
@@ -31,15 +32,11 @@
 #include "mkfld_common.h"
 
 void help(const std::string& progName) {
-    std::cout << TlUtils::format("%s [options] <MO index> [<MO index> ...]",
-                                 progName.c_str())
-              << std::endl;
+    std::cout << TlUtils::format("%s [options] <MO index> [<MO index> ...]", progName.c_str()) << std::endl;
     std::cout << std::endl;
     std::cout << "output volume data of molecular orbital" << std::endl;
     std::cout << "OPTIONS:" << std::endl;
-    std::cout
-        << " -p <path>    set ProteinDF parameter file(default: pdfparam.mpac)"
-        << std::endl;
+    std::cout << " -p <path>    set ProteinDF parameter file(default: pdfparam.mpac)" << std::endl;
     std::cout << " -l <path>    set LCAO matrix file" << std::endl;
     std::cout << " -f           save AVS field (.fld) file." << std::endl;
     std::cout << " -c           save cube (.cube) file" << std::endl;
@@ -118,18 +115,14 @@ int main(int argc, char* argv[]) {
 
     const TlPosition gridPitch(GRID_PITCH, GRID_PITCH, GRID_PITCH);
     int numOfGridX, numOfGridY, numOfGridZ;
-    std::vector<TlPosition> grids = makeGrids(
-        startPos, endPos, gridPitch, &numOfGridX, &numOfGridY, &numOfGridZ);
+    std::vector<TlPosition> grids = makeGrids(startPos, endPos, gridPitch, &numOfGridX, &numOfGridY, &numOfGridZ);
     const std::size_t numOfGrids = grids.size();
 
     if (verbose == true) {
-        std::cerr << TlUtils::format(
-                         "start point(a.u.) = (% 8.3f, % 8.3f, % 8.3f)",
-                         startPos.x(), startPos.y(), startPos.z())
+        std::cerr << TlUtils::format("start point(a.u.) = (% 8.3f, % 8.3f, % 8.3f)", startPos.x(), startPos.y(),
+                                     startPos.z())
                   << std::endl;
-        std::cerr << TlUtils::format(
-                         "end point(a.u.) = (% 8.3f, % 8.3f, % 8.3f)",
-                         endPos.x(), endPos.y(), endPos.z())
+        std::cerr << TlUtils::format("end point(a.u.) = (% 8.3f, % 8.3f, % 8.3f)", endPos.x(), endPos.y(), endPos.z())
                   << std::endl;
     }
 
@@ -139,8 +132,7 @@ int main(int argc, char* argv[]) {
     // i = 1 から始まる理由はopt[0]がプログラム名のため
     for (int i = 1; i < opt.getCount(); ++i) {
         const int MO_index = std::atoi(opt[i].c_str());
-        const std::vector<double> values = moFld.makeMoFld(
-            C.getColVector<TlDenseVector_Lapack>(MO_index), grids);
+        const std::vector<double> values = moFld.makeMoFld(C.getColVector_tmpl<TlDenseVector_Lapack>(MO_index), grids);
 
         const std::string key = TlUtils::format("%d", MO_index);
         storeData[key] = values;
@@ -169,9 +161,8 @@ int main(int argc, char* argv[]) {
         }
         output["grid_unit"] = "angstrom";
 
-        for (std::map<std::string, std::vector<double> >::const_iterator p =
-                 storeData.begin();
-             p != storeData.end(); ++p) {
+        for (std::map<std::string, std::vector<double> >::const_iterator p = storeData.begin(); p != storeData.end();
+             ++p) {
             const std::string key = p->first;
             const std::vector<double>& value = p->second;
 
@@ -191,9 +182,8 @@ int main(int argc, char* argv[]) {
 
         std::string label = "";
         std::vector<std::vector<double> > data;
-        for (std::map<std::string, std::vector<double> >::const_iterator p =
-                 storeData.begin();
-             p != storeData.end(); ++p) {
+        for (std::map<std::string, std::vector<double> >::const_iterator p = storeData.begin(); p != storeData.end();
+             ++p) {
             const std::string key = p->first;
             const std::vector<double>& value = p->second;
 
@@ -201,8 +191,7 @@ int main(int argc, char* argv[]) {
             data.push_back(value);
         }
 
-        saveFieldData(numOfGridX, numOfGridY, numOfGridZ, grids, data, label,
-                      fieldFilePath);
+        saveFieldData(numOfGridX, numOfGridY, numOfGridZ, grids, data, label, fieldFilePath);
     }
 
     // save to cube
@@ -219,20 +208,17 @@ int main(int argc, char* argv[]) {
             atoms[i] = atom;
         }
 
-        for (std::map<std::string, std::vector<double> >::const_iterator p =
-                 storeData.begin();
-             p != storeData.end(); ++p) {
+        for (std::map<std::string, std::vector<double> >::const_iterator p = storeData.begin(); p != storeData.end();
+             ++p) {
             const std::string key = p->first;
             const std::vector<double>& values = p->second;
 
             const std::string label = TlUtils::format("MO_%s", key.c_str());
             std::vector<double> values_au = values;
 
-            std::string path =
-                TlUtils::format("%s%s.cube", outputPrefix.c_str(), key.c_str());
+            std::string path = TlUtils::format("%s%s.cube", outputPrefix.c_str(), key.c_str());
             std::cerr << "save CUBE file: " << path << std::endl;
-            saveCubeData(atoms, numOfGridX, numOfGridY, numOfGridZ, startPos,
-                         gridPitch, values, label, path);
+            saveCubeData(atoms, numOfGridX, numOfGridY, numOfGridZ, startPos, gridPitch, values, label, path);
         }
     }
 

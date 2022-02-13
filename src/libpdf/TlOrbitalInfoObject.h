@@ -36,11 +36,11 @@
 ///
 /// PGTOは指数の小さい順にソートされる
 class TlOrbitalInfoObject {
-   public:
+public:
     typedef int index_type;
     typedef long size_type;
 
-   public:
+public:
     typedef std::vector<TlAtom> Atoms;
 
     /// primitive-GaussTypeOrbitalの情報を保持する構造体
@@ -69,7 +69,7 @@ class TlOrbitalInfoObject {
 
         double factor;  // sum of exp(-a)
 
-       public:
+    public:
         bool operator==(const CGTO& rhs) const {
             bool answer = false;
             if ((this->atomSymbol == rhs.atomSymbol) &&
@@ -101,10 +101,10 @@ class TlOrbitalInfoObject {
         }
     };
 
-   protected:
+protected:
     /// 軌道の情報を保持する構造体
     struct Orbital {
-       public:
+    public:
         int shellType;  // 0: s, 1: p, 2:d
         int basisType;  // s=0, px=1, py=2, ...
         int atomIndex;  // 対応するatoms_のインデックス
@@ -115,7 +115,7 @@ class TlOrbitalInfoObject {
         double prefactor_grady;
         double prefactor_gradz;
 
-       public:
+    public:
         bool operator==(const Orbital& rhs) const {
             bool answer = false;
             if ((this->shellType == rhs.shellType) &&
@@ -140,12 +140,16 @@ class TlOrbitalInfoObject {
         }
     };
 
-   public:
+public:
     /// 原子数を返す
-    int getNumOfAtoms() const { return this->atoms_.size(); }
+    int getNumOfAtoms() const {
+        return this->atoms_.size();
+    }
 
     /// 系の全軌道数を返す
-    index_type getNumOfOrbitals() const { return this->orbitals_.size(); }
+    index_type getNumOfOrbitals() const {
+        return this->orbitals_.size();
+    }
 
     /// 与えられた軌道のシェルの型を返す.
     ///
@@ -158,7 +162,9 @@ class TlOrbitalInfoObject {
         return this->orbitals_[AO].shellType;
     }
 
-    static int getMaxShellType() { return TlOrbitalInfoObject::MAX_SHELL_TYPE; }
+    static int getMaxShellType() {
+        return TlOrbitalInfoObject::MAX_SHELL_TYPE;
+    }
 
     /// シェル毎にグループ化された軌道の最初の軌道番号の配列を返す
     ///
@@ -191,6 +197,8 @@ class TlOrbitalInfoObject {
         const int basisType = this->getBasisType(AO);
         return AO - (basisType - basisTypeBase[shellType]);
     }
+
+    static std::string getShellTypeName(const int shellType);
 
     std::string getBasisTypeName(const index_type AO) const {
         assert(AO < this->getNumOfOrbitals());
@@ -264,11 +272,11 @@ class TlOrbitalInfoObject {
         return this->cgtos_[this->getCgtoIndex(AO)].factor;
     }
 
-   public:
+public:
     bool operator==(const TlOrbitalInfoObject& rhs) const;
     bool operator!=(const TlOrbitalInfoObject& rhs) const;
 
-   public:
+public:
     // for debug
     template <typename T>
     void printCGTOs(T& out) const;
@@ -276,7 +284,7 @@ class TlOrbitalInfoObject {
     template <typename T>
     void printPGTOs(const PGTOs rPGTOs, T& out) const;
 
-   protected:
+protected:
     /// コンストラクタ
     ///
     TlOrbitalInfoObject();
@@ -284,7 +292,7 @@ class TlOrbitalInfoObject {
     /// デストラクタ
     virtual ~TlOrbitalInfoObject();
 
-   protected:
+protected:
     int getCgtoIndex(const index_type AO) const {
         assert(AO < this->getNumOfOrbitals());
         return this->orbitals_[AO].cgtoIndex;
@@ -295,7 +303,7 @@ class TlOrbitalInfoObject {
     void setAtoms(const Fl_Geometry& flGeom);
     void makeOrbitalTable();
 
-   protected:
+protected:
     static void getPrefactor_S(const TlPosition& pos, double* pValue);
     static void getPrefactor_PX(const TlPosition& pos, double* pValue);
     static void getPrefactor_PY(const TlPosition& pos, double* pValue);
@@ -326,7 +334,7 @@ class TlOrbitalInfoObject {
     static void getGradPrefactor_DZZ(const TlPosition& pos, const double alpha,
                                      double* pDX, double* pDY, double* pDZ);
 
-   public:
+public:
     /// 扱うことのできるシェルの型の総数
     /// @sa getShellType()
     static const int MAX_SHELL_TYPE;
@@ -334,9 +342,10 @@ class TlOrbitalInfoObject {
     static const double INV_SQRT3;
     static const double MAX_EXPONENT;
 
+    static const char* shellTypeNameTbl_[];
     static const char* basisTypeNameTbl_[];
 
-   protected:
+protected:
     Atoms atoms_;
     CGTOs cgtos_;
     std::vector<Orbital> orbitals_;
