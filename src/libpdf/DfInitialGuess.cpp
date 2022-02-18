@@ -41,43 +41,71 @@ DfInitialGuess::DfInitialGuess(TlSerializeData* pPdfParam)
 DfInitialGuess::~DfInitialGuess() {}
 
 void DfInitialGuess::exec() {
-    switch (this->initialGuessType_) {
-        case GUESS_RHO:
-        // go below
-        case GUESS_FILE_RHO:
-            // this->createRho();
-            // this->createOccupation();
-            this->log_.critical("sorry. guess rho parameter is obsolete.");
-            CnErr.abort();
-            break;
+    unsigned int calcState = this->loadCalcState();
 
-        case GUESS_DENSITY:
-            this->createInitialGuessUsingDensityMatrix();
-            break;
+    if ((calcState & GUESS_DONE) == 0) {
+        switch (this->initialGuessType_) {
+            case GUESS_RHO:
+            // go below
+            case GUESS_FILE_RHO:
+                // this->createRho();
+                // this->createOccupation();
+                this->log_.critical("sorry. guess rho parameter is obsolete.");
+                CnErr.abort();
+                break;
 
-        case GUESS_LCAO:
-            this->createInitialGuessUsingLCAO();
-            break;
+            case GUESS_DENSITY:
+                this->createInitialGuessUsingDensityMatrix();
+                break;
 
-        case GUESS_HUCKEL:
-            this->createOccupation();
-            this->createInitialGuessUsingHuckel();
-            break;
+            case GUESS_LCAO:
+                this->createInitialGuessUsingLCAO();
+                break;
 
-        case GUESS_CORE:
-            this->createOccupation();
-            this->createInitialGuessUsingCore();
-            break;
+            case GUESS_HUCKEL:
+                this->createOccupation();
+                this->createInitialGuessUsingHuckel();
+                break;
 
-        case GUESS_HARRIS:
-            this->createOccupation();
-            this->createInitialGuessUsingHarris();
-            break;
+            case GUESS_CORE:
+                this->createOccupation();
+                this->createInitialGuessUsingCore();
+                break;
 
-        default:
-            this->log_.warn("unknown initial guess parameter.");
-            break;
+            case GUESS_HARRIS:
+                this->createOccupation();
+                this->createInitialGuessUsingHarris();
+                break;
+
+            default:
+                this->log_.warn("unknown initial guess parameter.");
+                break;
+        }
+
+        calcState |= GUESS_DONE;
+        this->saveCalcState(calcState);
     }
+}
+
+unsigned int DfInitialGuess::loadCalcState() const {
+    unsigned int cs = GUESS_UNPROCESSED;
+
+    const bool isRestart = (*this->pPdfParam_)["restart"].getBoolean();
+    if (isRestart) {
+        this->logger("restart calculation is enabled.");
+        cs = (*this->pPdfParam_)["control"]["guess_state"].getUInt();
+    }
+
+    return cs;
+}
+
+void DfInitialGuess::saveCalcState(unsigned int cs) {
+    (*this->pPdfParam_)["control"]["guess_state"] = cs;
+
+    // save PDF parameter
+    const std::string pdfParamPath = (*this->pPdfParam_)["pdf_param_path"].getStr();
+    TlMsgPack pdfParam_mpac(*this->pPdfParam_);
+    pdfParam_mpac.save(pdfParamPath);
 }
 
 void DfInitialGuess::createInitialGuessUsingHuckel() {

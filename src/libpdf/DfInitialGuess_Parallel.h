@@ -23,11 +23,15 @@
 #include "tl_dense_general_matrix_scalapack.h"
 
 class DfInitialGuess_Parallel : public DfInitialGuess {
-   public:
+public:
     DfInitialGuess_Parallel(TlSerializeData* pPdfParam);
     virtual ~DfInitialGuess_Parallel();
 
-   protected:
+protected:
+    virtual unsigned int loadCalcState() const;
+    virtual void saveCalcState(unsigned int cs);
+
+protected:
     // virtual void createRho();
 
     virtual TlDenseVector_Lapack createOccupation(RUN_TYPE runType);
@@ -45,7 +49,7 @@ class DfInitialGuess_Parallel : public DfInitialGuess {
     virtual void saveOccupation(const RUN_TYPE runType,
                                 const TlDenseVector_Lapack& rOccupation);
 
-   protected:
+protected:
     void createInitialGuessUsingLCAO_onLAPACK(const RUN_TYPE runType);
     void createInitialGuessUsingLCAO_onScaLAPACK(const RUN_TYPE runType);
 
