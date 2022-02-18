@@ -32,6 +32,25 @@ DfInitialGuess_Parallel::DfInitialGuess_Parallel(TlSerializeData* pPdfParam)
 
 DfInitialGuess_Parallel::~DfInitialGuess_Parallel() {}
 
+unsigned int DfInitialGuess_Parallel::loadCalcState() const {
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    unsigned int cs = 0;
+    if (rComm.isMaster()) {
+        cs = DfInitialGuess::loadCalcState();
+    }
+    (void)rComm.broadcast(cs);
+
+    return cs;
+}
+
+void DfInitialGuess_Parallel::saveCalcState(unsigned int cs) {
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    if (rComm.isMaster()) {
+        DfInitialGuess::saveCalcState(cs);
+    }
+}
+
 void DfInitialGuess_Parallel::createInitialGuessUsingLCAO(
     const RUN_TYPE runType) {
 #ifdef HAVE_SCALAPACK
