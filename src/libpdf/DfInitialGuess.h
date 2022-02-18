@@ -24,6 +24,7 @@
 #endif               // HAVE_CONFIG_H
 
 #include <fstream>
+
 #include "CnError.h"
 #include "DfObject.h"
 #include "TlUtils.h"
@@ -34,13 +35,23 @@ class TlDenseVector_Lapack;
 
 /// 初期電子密度を求めるクラス
 class DfInitialGuess : public DfObject {
-   public:
+protected:
+    enum CalcState {
+        GUESS_UNPROCESSED = 0,
+        GUESS_DONE = 1
+    };
+
+public:
     DfInitialGuess(TlSerializeData* pPdfParam);
     virtual ~DfInitialGuess();
 
     void exec();
 
-   protected:
+protected:
+    virtual unsigned int loadCalcState() const;
+    virtual void saveCalcState(unsigned int cs);
+
+protected:
     // virtual void createRho();
 
     void createOccupation();
@@ -67,7 +78,7 @@ class DfInitialGuess : public DfObject {
     virtual void saveOccupation(const RUN_TYPE runType,
                                 const TlDenseVector_Lapack& rOccupation);
 
-   protected:
+protected:
     /// LCAO行列を取得する
     // template <typename MatrixType>
     // MatrixType getLCAO(const RUN_TYPE runType);
@@ -100,7 +111,7 @@ class DfInitialGuess : public DfObject {
     SymmetricMatrixType normalizeDensityMatrix(const RUN_TYPE runType,
                                                const SymmetricMatrixType& P);
 
-   protected:
+protected:
     bool isNormalizeDensityMatrix_;
 };
 
