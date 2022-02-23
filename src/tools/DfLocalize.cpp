@@ -244,7 +244,7 @@ void DfLocalize::exec() {
 
     const int maxIteration = this->maxIteration_;
     for (int i = this->lo_iteration_ + 1; i <= maxIteration; ++i) {
-        this->log_.info(TlUtils::format("localize: %d", i));
+        this->log_.info(TlUtils::format("localize iteration: %d", i));
         // const double sumDeltaG = this->localize(&C);
         const double sumDeltaG = this->localize_byPop(&C);
 
@@ -294,7 +294,7 @@ double DfLocalize::localize_core(TlDenseGeneralMatrix_Lapack* pC, const index_ty
 
     const std::size_t numOfTasks = taskList.size();
     // clang-format off
-#pragma omp parallel for reduction(+: sumDeltaG) schedule(runtime)
+// #pragma omp parallel for reduction(+: sumDeltaG) schedule(runtime)
     // clang-format on
     for (std::size_t i = 0; i < numOfTasks; ++i) {
         const TaskItem& task = taskList[i];
@@ -306,7 +306,7 @@ double DfLocalize::localize_core(TlDenseGeneralMatrix_Lapack* pC, const index_ty
             TlTime::sleep(sleep);
             sleep = std::min(4000.0, sleep * 2.0);
         }
-#pragma omp critical(lock_MO)
+        // #pragma omp critical(lock_MO)
         {
             this->lockMO(orb_i);
             this->lockMO(orb_j);
@@ -333,7 +333,7 @@ double DfLocalize::localize_core(TlDenseGeneralMatrix_Lapack* pC, const index_ty
             pC->setColVector(orb_j, numOfAOs, Cpj.data());
         }
 
-#pragma omp critical(unlock_MO)
+        // #pragma omp critical(unlock_MO)
         {
             this->unlockMO(orb_i);
             this->unlockMO(orb_j);
@@ -500,8 +500,9 @@ void DfLocalize::calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_
     double sumAij = 0.0;
     double sumBij = 0.0;
 
-    //#pragma omp for schedule(runtime) private(sumAij, sumBij) reduction(+ : sumAij, sumBij)
-    // #pragma omp for schedule(runtime)
+    // clang-format off
+#pragma omp parallel for schedule(dynamic) reduction(+: sumAij, sumBij)
+    // clang-format on
     for (index_type grp = 0; grp < numOfGrps; ++grp) {
         TlDenseVector_Lapack tCqi = Cpi;
         TlDenseVector_Lapack tCqj = Cpj;
@@ -513,6 +514,7 @@ void DfLocalize::calcQA_ij(const TlDenseVector_Lapack& Cpi, const TlDenseVector_
         const double QAij = 0.5 * (tCqj * SCpi + tCqi * SCpj);
 
         const double QAii_QAjj = QAii - QAjj;
+
         sumAij += QAij * QAij - 0.25 * QAii_QAjj * QAii_QAjj;
         sumBij += QAij * QAii_QAjj;
     }
@@ -695,27 +697,42 @@ double DfLocalize::localize_core_byPop(TlDenseGeneralMatrix_Lapack* pC, const in
     this->initLockMO(endMO1 + 1);
 
     const std::size_t numOfTasks = taskList.size();
+    this->log_.info(TlUtils::format("#tasks: %ld", numOfTasks));
+    std::size_t progress = 0;
+    const std::size_t period = numOfTasks * 0.1;
 
     // clang-format off
-// #pragma omp parallel for reduction(+: sumDeltaG) schedule(runtime)
+    // #pragma omp parallel for ordered reduction(+: sumDeltaG) schedule(static,1)
     // clang-format on
     for (std::size_t i = 0; i < numOfTasks; ++i) {
-        const TaskItem& task = taskList[i];
-        const index_type orb_i = task.first;
-        const index_type orb_j = task.second;
+        index_type orb_i, orb_j;
+
+        // #pragma omp ordered
+        {
+            const TaskItem& task = taskList[i];
+            orb_i = task.first;
+            orb_j = task.second;
+        }
 
         //         double sleep = 100.0;
         //         while (this->isLockedMO(orb_i, orb_j)) {
         //             TlTime::sleep(sleep);
         //             sleep = std::min(4000.0, sleep * 2.0);
         //         }
+
         // #pragma omp critical(lock_MO)
         //         {
         //             this->lockMO(orb_i);
         //             this->lockMO(orb_j);
         //         }
 
-        // this->log_.info(TlUtils::format("calc: %d, %d", orb_i, orb_j));
+        ++progress;
+        if (progress > period) {
+            const double ratio = double(i) / double(numOfTasks) * 100.0;
+            this->log_.info(TlUtils::format("calc progress: %16ld/%16ld; %5.2f%%", i, numOfTasks, ratio));
+            progress = 0;
+        }
+
         TlDenseVector_Lapack Cpi = pC->getColVector(orb_i);
         TlDenseVector_Lapack Cpj = pC->getColVector(orb_j);
 
@@ -727,11 +744,11 @@ double DfLocalize::localize_core_byPop(TlDenseGeneralMatrix_Lapack* pC, const in
         const double deltaG = A_ij + normAB;
 
         if (std::fabs(deltaG) > rotatingThreshold) {
-            sumDeltaG += deltaG;
             TlDenseGeneralMatrix_Lapack rot(2, 2);
             this->getRotatingMatrix(A_ij, B_ij, normAB, &rot);
             this->rotateVectors(&Cpi, &Cpj, rot);
 
+            sumDeltaG += deltaG;
             pC->setColVector(orb_i, numOfAOs, Cpi.data());
             pC->setColVector(orb_j, numOfAOs, Cpj.data());
         }
