@@ -12,14 +12,14 @@ class TlDenseSymmetricMatrix_ViennaCL : public TlDenseSymmetricMatrixObject {
     // ---------------------------------------------------------------------------
     //
     // ---------------------------------------------------------------------------
-   public:
+public:
     enum EIG_METHOD { EIG_QR,
                       EIG_POWERITERATION };
 
     // ---------------------------------------------------------------------------
     // constructor & destructor
     // ---------------------------------------------------------------------------
-   public:
+public:
     explicit TlDenseSymmetricMatrix_ViennaCL(
         const TlMatrixObject::index_type dim = 1);
     TlDenseSymmetricMatrix_ViennaCL(const TlDenseSymmetricMatrix_ViennaCL& rhs);
@@ -37,7 +37,7 @@ class TlDenseSymmetricMatrix_ViennaCL : public TlDenseSymmetricMatrixObject {
     // ---------------------------------------------------------------------------
     // operators
     // ---------------------------------------------------------------------------
-   public:
+public:
     TlDenseSymmetricMatrix_ViennaCL& operator=(
         const TlDenseSymmetricMatrix_ViennaCL& rhs);
     TlDenseSymmetricMatrix_ViennaCL& operator=(
@@ -79,7 +79,7 @@ class TlDenseSymmetricMatrix_ViennaCL : public TlDenseSymmetricMatrixObject {
     // ---------------------------------------------------------------------------
     // protected
     // ---------------------------------------------------------------------------
-   protected:
+protected:
     bool eig_powerIteration(TlDenseVector_ViennaCL* pEigVal,
                             TlDenseGeneralMatrix_ViennaCL* pEigVec) const;
 
@@ -87,7 +87,7 @@ class TlDenseSymmetricMatrix_ViennaCL : public TlDenseSymmetricMatrixObject {
                 TlDenseGeneralMatrix_ViennaCL* pEigVec) const;
 
     // ---------------------------------------------------------------------------
-    // Others
+    // Friends
     // ---------------------------------------------------------------------------
     friend class TlDenseGeneralMatrix_ViennaCL;
     friend class TlDenseSymmetricMatrix_Eigen;
@@ -101,7 +101,12 @@ class TlDenseSymmetricMatrix_ViennaCL : public TlDenseSymmetricMatrixObject {
         const TlDenseGeneralMatrix_ViennaCL& mat2);
 };
 
+// ---------------------------------------------------------------------------
+// arithmetic
+// ---------------------------------------------------------------------------
 TlDenseSymmetricMatrix_ViennaCL operator*(
     const double coef, const TlDenseSymmetricMatrix_ViennaCL& dm);
+TlDenseSymmetricMatrix_ViennaCL operator*(
+    const TlDenseSymmetricMatrix_ViennaCL& dm, const double coef);
 
 #endif  // TL_DENSE_SYMMETRIC_MATRIX_VIENNACL_H
