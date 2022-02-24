@@ -253,9 +253,17 @@ TlDenseGeneralMatrix_ViennaCL operator*(
         *dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(mat2.pImpl_));
 }
 
+// ---------------------------------------------------------------------------
+// arithmetic
+// ---------------------------------------------------------------------------
 TlDenseSymmetricMatrix_ViennaCL operator*(
     const double coef, const TlDenseSymmetricMatrix_ViennaCL& DM) {
     TlDenseSymmetricMatrix_ViennaCL answer = DM;
     answer *= coef;
     return answer;
+}
+
+TlDenseSymmetricMatrix_ViennaCL operator*(
+    const TlDenseSymmetricMatrix_ViennaCL& DM, const double coef) {
+    return coef * DM;
 }
