@@ -16,16 +16,26 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "DfXMatrix.h"
+
 #include <cassert>
 #include <cmath>
 #include <fstream>
 #include <string>
 
-#include "DfXMatrix.h"
+#include "CnError.h"
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
-DfXMatrix::DfXMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
+#ifdef HAVE_EIGEN
+#include "tl_dense_general_matrix_eigen.h"
+#include "tl_dense_symmetric_matrix_eigen.h"
+#include "tl_dense_vector_eigen.h"
+#endif  // HAVE_EIGEN
+
+DfXMatrix::DfXMatrix(TlSerializeData* pPdfParam)
+    : DfObject(pPdfParam) {
     assert(pPdfParam != NULL);
     const TlSerializeData& pdfParam = *pPdfParam;
     const double threshold_trancation =
@@ -54,20 +64,33 @@ DfXMatrix::DfXMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
 DfXMatrix::~DfXMatrix() {}
 
 void DfXMatrix::buildX() {
-    TlDenseSymmetricMatrix_Lapack S =
-        this->getSpqMatrix<TlDenseSymmetricMatrix_Lapack>();
-    TlDenseGeneralMatrix_Lapack X;
-    TlDenseGeneralMatrix_Lapack Xinv;
+    switch (this->linearAlgebraPackage_) {
+        case LAP_LAPACK: {
+            this->log_.info("Linear Algebra Package: Lapack");
+            this->buildX_templ<TlDenseSymmetricMatrix_Lapack,
+                               TlDenseGeneralMatrix_Lapack, TlDenseVector_Lapack>();
+        } break;
 
-    std::string eigvalFilePath = "";
-    if (this->debugSaveEigval_) {
-        eigvalFilePath = DfObject::getXEigvalVtrPath();
+#ifdef HAVE_EIGEN
+        case LAP_EIGEN: {
+            this->log_.info("Linear Algebra Package: Eigen");
+            this->buildX_templ<TlDenseSymmetricMatrix_Eigen,
+                               TlDenseGeneralMatrix_Eigen, TlDenseVector_Eigen>();
+        } break;
+#endif  // HAVE_EIGEN
+
+#ifdef HAVE_VIENNACL
+        case LAP_VIENNACL: {
+            this->log_.info("Linear Algebra Package: ViennaCL -> Eigen");
+            this->buildX_templ<TlDenseSymmetricMatrix_Eigen,
+                               TlDenseGeneralMatrix_Eigen, , TlDenseVector_Eigen>();
+        } break;
+#endif  // HAVE_VIENNACL
+
+        default:
+            CnErr.abort(
+                TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
     }
-    this->canonicalOrthogonalize(S, &X, &Xinv, eigvalFilePath);
-
-    DfObject::saveXMatrix(X);
-    DfObject::saveXInvMatrix(Xinv);
-    (*(this->pPdfParam_))["num_of_MOs"] = X.getNumOfCols();
 }
 
 void DfXMatrix::canonicalOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
@@ -75,7 +98,7 @@ void DfXMatrix::canonicalOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
                                        TlDenseGeneralMatrix_Lapack* pXinv,
                                        const std::string& eigvalFilePath) {
     this->canonicalOrthogonalizeTmpl<TlDenseSymmetricMatrix_Lapack,
-                                     TlDenseGeneralMatrix_Lapack>(
+                                     TlDenseGeneralMatrix_Lapack, TlDenseVector_Lapack>(
         S, pX, pXinv, eigvalFilePath);
 }
 
