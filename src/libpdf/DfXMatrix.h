@@ -30,11 +30,11 @@
 /// S行列から、固有値, 固有ベクトルを求め、X 行列および−1 X 行列の計算を行い、
 /// X, Xinv(Xの逆行列)を出力する
 class DfXMatrix : public DfObject {
-   public:
+public:
     DfXMatrix(TlSerializeData* pPdfParam);
     virtual ~DfXMatrix();
 
-   public:
+public:
     virtual void buildX();
 
     virtual void canonicalOrthogonalize(const TlDenseSymmetricMatrix_Lapack& S,
@@ -47,8 +47,11 @@ class DfXMatrix : public DfObject {
                                      TlDenseGeneralMatrix_Lapack* pXinv,
                                      const std::string& eigvalFilePath = "");
 
-   protected:
-    template <typename SymmetricMatrixType, typename MatrixType>
+protected:
+    template <typename SymmetricMatrixType, typename MatrixType, typename VectorTYpe>
+    void buildX_templ();
+
+    template <typename SymmetricMatrixType, typename MatrixType, typename VectorType>
     void canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
                                     MatrixType* pX, MatrixType* pXinv,
                                     const std::string& eigvalFilePath = "");
@@ -62,7 +65,7 @@ class DfXMatrix : public DfObject {
     void check_X(const MatrixType& X, const MatrixType& Xinv,
                  const std::string& savePathPrefix);
 
-   protected:
+protected:
     /// 一次従属性の判定値(for canonical method)
     double threshold_trancation_canonical_;
 
@@ -82,7 +85,24 @@ class DfXMatrix : public DfObject {
     bool debugCheckX_;
 };
 
-template <typename SymmetricMatrixType, typename MatrixType>
+template <typename SymmetricMatrixType, typename MatrixType, typename VectorType>
+void DfXMatrix::buildX_templ() {
+    SymmetricMatrixType S = this->getSpqMatrix<SymmetricMatrixType>();
+    MatrixType X;
+    MatrixType Xinv;
+
+    std::string eigvalFilePath = "";
+    if (this->debugSaveEigval_) {
+        eigvalFilePath = DfObject::getXEigvalVtrPath();
+    }
+    this->canonicalOrthogonalizeTmpl<SymmetricMatrixType, MatrixType, VectorType>(S, &X, &Xinv, eigvalFilePath);
+
+    DfObject::saveXMatrix(X);
+    DfObject::saveXInvMatrix(Xinv);
+    (*(this->pPdfParam_))["num_of_MOs"] = X.getNumOfCols();
+}
+
+template <typename SymmetricMatrixType, typename MatrixType, typename VectorType>
 void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
                                            MatrixType* pX, MatrixType* pXinv,
                                            const std::string& eigvalFilePath) {
@@ -97,7 +117,7 @@ void DfXMatrix::canonicalOrthogonalizeTmpl(const SymmetricMatrixType& S,
     MatrixType U;                 // Sの固有ベクトル
     {
         this->loggerTime("diagonalization of S matrix");
-        TlDenseVector_Lapack EigVal;
+        VectorType EigVal;
         MatrixType EigVec;
         S.eig(&EigVal, &EigVec);
         assert(EigVal.getSize() == dim);
