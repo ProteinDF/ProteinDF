@@ -397,8 +397,8 @@ void copy2csfd(const TlMatrixObject::index_type numOfRows, const TlMatrixObject:
 }
 
 //
-bool transpose2CSFD(const std::string& rvmBasePath, const std::string& outputMatrixPath, const bool verbose,
-                    const bool showProgress) {
+bool transpose2CSFD(const std::string& rvmBasePath, const std::string& outputMatrixPath, const std::string& tmpPath,
+                    const bool verbose, const bool showProgress) {
     bool answer = false;
 
     // 初期データ読み込み
@@ -445,6 +445,7 @@ bool transpose2CSFD(const std::string& rvmBasePath, const std::string& outputMat
     }
 
     // 最終書き込み
+    const int pid = TlSystem::getPID();
     for (int unit = 0; unit < numOfSubunits; ++unit) {
         // std::cerr << "copy: " << unit << std::endl;
         // const std::string tempMatPath = TlUtils::format("Ljk.temp.%d", unit);
@@ -456,9 +457,10 @@ bool transpose2CSFD(const std::string& rvmBasePath, const std::string& outputMat
         const std::string inputPath = TlDenseMatrix_arrays_mmap_Object::getFileName(rvmBasePath, unit);
         TlDenseGeneralMatrix_arrays_mmap_RowOriented inMat(inputPath);
 
-        const std::string tempCsfdPath = TlUtils::format("/tmp/csfd.%d", unit);
+        const std::string tempCsfdPath = TlUtils::format("%s/csfd.%d.%d.mat", tmpPath.c_str(), pid, unit);
         inMat.convertMemoryLayout(tempCsfdPath, verbose, showProgress);
         inMat.set2csfd(&outMat, verbose, showProgress);
+        TlFile::remove(tempCsfdPath);
     }
 
     return answer;
