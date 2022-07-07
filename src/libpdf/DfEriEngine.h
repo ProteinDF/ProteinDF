@@ -106,7 +106,7 @@
 #define ERI_MAX_BATCH (5880 + 1)
 
 class DfEriEngine : public DfEngineObject {
-   public:
+public:
     typedef int index_type;
 
     struct AngularMomentum2 {
@@ -118,7 +118,9 @@ class DfEriEngine : public DfEngineObject {
             assert(j <= ERI_B_MAX);
         }
 
-        int sum() const { return a_bar + b_bar + a + b; };
+        int sum() const {
+            return a_bar + b_bar + a + b;
+        };
 
         int index() const {
             return ((a_bar * (ERI_B_BAR_MAX + 1) + b_bar) * (ERI_A_MAX + 1) +
@@ -132,7 +134,7 @@ class DfEriEngine : public DfEngineObject {
                    (ERI_B_MAX + 1);
         }
 
-       public:
+    public:
         // 8bitで-31 ~ +32 まで OK
         int a_bar;  // grad i
         int b_bar;  // grad j
@@ -142,7 +144,7 @@ class DfEriEngine : public DfEngineObject {
 
     // for pGTO ----------------------------------------------------------------
     class PGTO_Pair {
-       public:
+    public:
         // default constructer for container template
         PGTO_Pair()
             : alpha2_(0.0),
@@ -166,20 +168,32 @@ class DfEriEngine : public DfEngineObject {
                                   A.squareDistanceFrom(B));
         }
 
-       public:
-        double alpha2() const { return this->alpha2_; }
+    public:
+        double alpha2() const {
+            return this->alpha2_;
+        }
 
-        double beta2() const { return this->beta2_; }
+        double beta2() const {
+            return this->beta2_;
+        }
 
-        double zeta2() const { return this->zeta2_; }
+        double zeta2() const {
+            return this->zeta2_;
+        }
 
-        double sigma_P() const { return this->sigma_P_; }
+        double sigma_P() const {
+            return this->sigma_P_;
+        }
 
-        TlPosition P() const { return this->P_; }
+        TlPosition P() const {
+            return this->P_;
+        }
 
-        double U_P() const { return this->U_P_; }
+        double U_P() const {
+            return this->U_P_;
+        }
 
-       private:
+    private:
         // double alpha_;
         // double beta_;
         double alpha2_;   // = alpha * 2
@@ -200,19 +214,19 @@ class DfEriEngine : public DfEngineObject {
 
     // for cGTO ----------------------------------------------------------------
     struct CGTO_Pair {
-       public:
+    public:
         CGTO_Pair(const TlPosition& ab, const PGTO_Pairs& ps)
             : AB(ab), PS(ps) {}
 
-       public:
+    public:
         TlPosition AB;
         PGTO_Pairs PS;
     };
 
     // Elementary 4-Center Quantities ------------------------------------------
-   private:
+private:
     struct E4 {
-       public:
+    public:
         E4() {}
 
         E4(const TlPosition& P, const TlPosition& Q, double sigma_P,
@@ -224,7 +238,7 @@ class DfEriEngine : public DfEngineObject {
             this->U = U_P * U_Q;
         }
 
-       public:
+    public:
         TlPosition R;
         double R2;
         double _2theta2;
@@ -233,9 +247,9 @@ class DfEriEngine : public DfEngineObject {
     };
 
     // for Contract ------------------------------------------------------------
-   private:
+private:
     struct ContractScale {
-       public:
+    public:
         explicit ContractScale(const int ap = 0, const int bp = 0,
                                const int pp = 0)
             : a_prime(ap), b_prime(bp), p_prime(pp) {}
@@ -247,7 +261,7 @@ class DfEriEngine : public DfEngineObject {
             return v;
         }
 
-       public:
+    public:
         // int a_prime : 6; // -31 ~ +32 まで OK
         // int b_prime : 6;
         // int p_prime : 6;
@@ -267,7 +281,7 @@ class DfEriEngine : public DfEngineObject {
     typedef std::vector<ContractScale> ContractScalesVector;
 
     struct ContractState {
-       public:
+    public:
         explicit ContractState(
             const TlAngularMomentumVector& R = TlAngularMomentumVector(),
             const int ap = 0, const int bp = 0, const int pp = 0,
@@ -305,7 +319,7 @@ class DfEriEngine : public DfEngineObject {
               isCached_index_(rhs.isCached_index_),
               cached_index_(rhs.cached_index_) {}
 
-       public:
+    public:
         void setABP(const int ap, const int bp, const int pp) {
             this->a_prime = ap;
             this->b_prime = bp;
@@ -326,9 +340,15 @@ class DfEriEngine : public DfEngineObject {
             this->isCached_index_ = false;
         }
 
-        int getCprime() const { return this->c_prime; }
-        int getDprime() const { return this->d_prime; }
-        int getQprime() const { return this->q_prime; }
+        int getCprime() const {
+            return this->c_prime;
+        }
+        int getDprime() const {
+            return this->d_prime;
+        }
+        int getQprime() const {
+            return this->q_prime;
+        }
 
         std::string debugOut() const {
             return TlUtils::format("[%u(%u); (%u %u %u|%u %u %u)]", r, r_index,
@@ -361,7 +381,7 @@ class DfEriEngine : public DfEngineObject {
             return this->cached_index_;
         }
 
-       private:
+    private:
         // unsigned int r_index : 16; // -32767 ~ +32768 までOK
         // unsigned int r       :  6; // -31 ~ +32 まで OK
         // unsigned int a_prime :  6; // -7 ~ +8 まで OK
@@ -379,7 +399,7 @@ class DfEriEngine : public DfEngineObject {
         int d_prime;
         int q_prime;
 
-       private:
+    private:
         // mutable bool isCached_index_abp_;
         // mutable std::size_t cached_index_abp_;
         // mutable bool isCached_index_cdq_;
@@ -391,21 +411,21 @@ class DfEriEngine : public DfEngineObject {
     };
 
     struct nR_dash {
-       public:
+    public:
         nR_dash(const ContractState& inCS = ContractState(),
                 const std::vector<double>& inValues = std::vector<double>())
             : cs(inCS), values(inValues) {}
 
-       public:
+    public:
         ContractState cs;
         std::vector<double> values;
     };
     typedef std::vector<nR_dash> nR_dash_Type;
 
     // recursive relation state ------------------------------------------------
-   private:
+private:
     struct ERI_State {
-       public:
+    public:
         explicit ERI_State(int a_bar_in = 0, int b_bar_in = 0, int a_in = 0,
                            int b_in = 0, int p_in = 0, int a_prime_in = 0,
                            int b_prime_in = 0, int p_prime_in = 0)
@@ -439,11 +459,19 @@ class DfEriEngine : public DfEngineObject {
                  this->b_prime) *
                     (ERI_P_PRIME_MAX + 1) +
                 this->p_prime;
+#ifndef NDEBUG
+            if (index >= ERI_NUM_OF_ERI_STATES) {
+                TlLogging& log = TlLogging::getInstance();
+                log.critical(TlUtils::format("index=%d/%d a^=%d b^=%d a=%d b=%d p=%d a'=%d b'=%d p'=%d] %s@%d", index, ERI_NUM_OF_ERI_STATES,
+                                             this->a_bar, this->b_bar, this->a, this->b, this->p, this->a_prime, this->b_prime, this->p_prime, __FILE__, __LINE__));
+            }
+#endif  // NDEBUG
             assert(index < ERI_NUM_OF_ERI_STATES);
+
             return index;
         }
 
-       public:
+    public:
         int a_bar;
         int b_bar;
         int a;
@@ -463,7 +491,7 @@ class DfEriEngine : public DfEngineObject {
     typedef std::vector<std::vector<std::vector<double> > > EriDataType;
 
     // construct & destruct ----------------------------------------------------
-   public:
+public:
     DfEriEngine();
     virtual ~DfEriEngine();
 
@@ -493,7 +521,7 @@ class DfEriEngine : public DfEngineObject {
     void calcGrad(const AngularMomentum2& qAB, const AngularMomentum2& qCD,
                   const CGTO_Pair& IJ, const CGTO_Pair& KL);
 
-   private:
+private:
     void initialize();
 
     void calc0(const AngularMomentum2& qAB, const AngularMomentum2& qCD,
@@ -635,14 +663,14 @@ class DfEriEngine : public DfEngineObject {
 
     void compD(const AngularMomentum2& qAB, const AngularMomentum2& qCD);
 
-   public:
+public:
     double* WORK;
     double* WORK_A;
     double* WORK_B;
     double* WORK_C;
     double* WORK_D;
 
-   private:
+private:
     static const int OUTPUT_BUFFER_SIZE;
 
     // E1 = (1, 0, 0), (0, 1, 0), (0, 0, 1);
