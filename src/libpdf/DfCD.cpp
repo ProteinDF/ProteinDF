@@ -247,7 +247,7 @@ void DfCD::calcCholeskyVectorsForJK() {
 
                 this->log_.info("optimize L matrix.");
                 // RowVectorMatrix2CSFD_mmap(L_mat_path, DfObject::getLjkMatrixPath());
-                transpose2CSFD(L_basePath, DfObject::getLjkMatrixPath());
+                transpose2CSFD(L_basePath, DfObject::getLjkMatrixPath(), this->localTempPath_);
             } break;
 
             default: {
@@ -463,7 +463,7 @@ void DfCD::calcCholeskyVectorsForGridFree() {
                     }
 
                     this->log_.info("optimize L matrix.");
-                    transpose2CSFD(L_mat_path, DfObject::getLxcMatrixPath());
+                    transpose2CSFD(L_mat_path, DfObject::getLxcMatrixPath(), this->localTempPath_);
                 } break;
 
                 default: {
@@ -550,7 +550,7 @@ void DfCD::calcCholeskyVectorsForGridFree() {
                     }
 
                     this->log_.info("optimize L matrix.");
-                    transpose2CSFD(L_mat_path, DfObject::getLxcMatrixPath());
+                    transpose2CSFD(L_mat_path, DfObject::getLxcMatrixPath(), this->localTempPath_);
                 } break;
 
                 default: {

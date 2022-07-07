@@ -69,7 +69,8 @@ bool convert2csfd(const std::string& rvmBasePath, const int unit, const std::str
 void copy2csfd(const TlMatrixObject::index_type numOfRows, const TlMatrixObject::index_type numOfCols,
                const int numOfSubunits, const int sizeOfChunk, const std::string& inMatPath, const int unit,
                TlDenseGeneralMatrix_mmap* pOutMat, const bool verbose);
-bool transpose2CSFD(const std::string& rvmBasePath, const std::string& outputMatrixPath, const bool verbose = false,
+bool transpose2CSFD(const std::string& rvmBasePath, const std::string& outputMatrixPath,
+                    const std::string& tmpPath = "/tmp", const bool verbose = false,
                     const bool showProgress = false);
 
 #endif  // TL_DENSE_GENERAL_MATRIX_ARRAYS_MMAP_ROWORIENTED_H
