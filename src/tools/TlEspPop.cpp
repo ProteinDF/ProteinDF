@@ -141,8 +141,7 @@ void TlEspPop::exec(std::string PMatrixFilePath) {
 
     if (this->resp_restriction_ == REST_NONE) {
         // solve
-        TlDenseSymmetricMatrix_Lapack invDesignMat = designMat;
-        invDesignMat.inverse();
+        const TlDenseSymmetricMatrix_Lapack invDesignMat = designMat.inverse();
 
         modelCoef = invDesignMat * predicted;
     } else {
@@ -164,8 +163,7 @@ void TlEspPop::exec(std::string PMatrixFilePath) {
             }
 
             // solve
-            TlDenseSymmetricMatrix_Lapack invDesignMat = designMat;
-            invDesignMat.inverse();
+            const TlDenseSymmetricMatrix_Lapack invDesignMat = designMat.inverse();
 
             modelCoef = invDesignMat * predicted;
             this->expected_ = modelCoef;
