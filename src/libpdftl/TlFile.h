@@ -23,12 +23,13 @@
 #include <fstream>
 #include <string>
 
-template <typename _CharT>
-class basic_filebuf_Mfile : public std::basic_filebuf<_CharT> {
-public:
-    // "using" is required for becoming "protected" to "public"
-    using std::basic_filebuf<_CharT>::_M_file;
-};
+// This template class depends on GCC
+// template <typename _CharT>
+// class basic_filebuf_Mfile : public std::basic_filebuf<_CharT> {
+// public:
+//     // "using" is required for becoming "protected" to "public"
+//     using std::basic_filebuf<_CharT>::_M_file;
+// };
 
 class TlFile {
 public:
@@ -71,6 +72,8 @@ public:
     /// return temporary file path
     static std::string getTempFilePath(const std::string& tmpdir = "/tmp/");
 
+<<<<<<< Updated upstream
+
 public:
     static int getFileDescriptor(std::fstream& fs) {
         int answer = -1;
@@ -95,6 +98,31 @@ public:
         }
         return answer;
     }
+
+public:
+    // static int getFileDescriptor(std::fstream& fs) {
+    //     int answer = -1;
+    //     if (fs.is_open()) {
+    //         answer = ((basic_filebuf_Mfile<std::fstream::char_type>*)fs.rdbuf())->_M_file.fd();
+    //     }
+    //     return answer;
+    // }
+
+    // static int getFileDescriptor(std::ifstream& fs) {
+    //     int answer = -1;
+    //     if (fs.is_open()) {
+    //         answer = ((basic_filebuf_Mfile<std::ifstream::char_type>*)fs.rdbuf())->_M_file.fd();
+    //     }
+    //     return answer;
+    // }
+
+    // static int getFileDescriptor(std::ofstream& fs) {
+    //     int answer = -1;
+    //     if (fs.is_open()) {
+    //         answer = ((basic_filebuf_Mfile<std::ofstream::char_type>*)fs.rdbuf())->_M_file.fd();
+    //     }
+    //     return answer;
+    // }
 
 private:
     static std::size_t BUFFER_SIZE;
