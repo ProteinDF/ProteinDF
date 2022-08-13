@@ -66,7 +66,13 @@ protected:
 
     /// 初期値として電子密度行列を使用
     void createInitialGuessUsingDensityMatrix();
+
+    template <typename SymmetricMatrixType, typename DfPopulationType>
+    void createInitialGuessUsingDensityMatrix_tmpl();
+
     /// 初期値として電子密度行列を使用(RUN_TYPE毎)
+    // void createInitialGuessUsingDensityMatrix(const RUN_TYPE runType);
+    template <typename SymmetricMatrixType, typename DfPopulationType>
     void createInitialGuessUsingDensityMatrix(const RUN_TYPE runType);
 
     std::vector<int> getLevel(const std::string& level);
@@ -166,6 +172,51 @@ protected:
 //     return lcaoMatrix;
 // }
 
+template <typename SymmetricMatrixType, typename DfPopulationType>
+void DfInitialGuess::createInitialGuessUsingDensityMatrix_tmpl() {
+    switch (this->m_nMethodType) {
+        case METHOD_RKS: {
+            this->createInitialGuessUsingDensityMatrix<SymmetricMatrixType, DfPopulationType>(RUN_RKS);
+        } break;
+
+        case METHOD_UKS: {
+            this->createInitialGuessUsingDensityMatrix<SymmetricMatrixType, DfPopulationType>(RUN_UKS_ALPHA);
+            this->createInitialGuessUsingDensityMatrix<SymmetricMatrixType, DfPopulationType>(RUN_UKS_BETA);
+        } break;
+
+        case METHOD_ROKS: {
+            this->createInitialGuessUsingDensityMatrix<SymmetricMatrixType, DfPopulationType>(RUN_ROKS_CLOSED);
+            this->createInitialGuessUsingDensityMatrix<SymmetricMatrixType, DfPopulationType>(RUN_ROKS_OPEN);
+        } break;
+
+        default:
+            abort();
+    }
+
+    this->createOccupation();
+}
+
+template <typename SymmetricMatrixType, typename DfPopulationType>
+void DfInitialGuess::createInitialGuessUsingDensityMatrix(const RUN_TYPE runType) {
+    // read guess lcao
+    SymmetricMatrixType P = this->getInitialDensityMatrix<SymmetricMatrixType>(runType);
+    if (this->isNormalizeDensityMatrix_) {
+        P = this->normalizeDensityMatrix<SymmetricMatrixType, DfPopulationType>(runType, P);
+    }
+    this->savePpqMatrix(runType, 0, P);
+
+    // spin density matrix
+    const int iteration = 0;
+    if (runType == RUN_RKS) {
+        this->saveSpinDensityMatrix(runType, iteration, 0.5 * P);
+    } else {
+        this->saveSpinDensityMatrix(runType, iteration, P);
+    }
+
+    // make occupation data
+    this->createOccupation();
+}
+
 template <typename SymmetricMatrixType>
 SymmetricMatrixType DfInitialGuess::getInitialDensityMatrix(
     const RUN_TYPE runType) {
@@ -184,8 +235,7 @@ SymmetricMatrixType DfInitialGuess::getInitialDensityMatrix(
 }
 
 template <typename SymmetricMatrixType, class DfPopulationType>
-SymmetricMatrixType DfInitialGuess::normalizeDensityMatrix(
-    const RUN_TYPE runType, const SymmetricMatrixType& P) {
+SymmetricMatrixType DfInitialGuess::normalizeDensityMatrix(const RUN_TYPE runType, const SymmetricMatrixType& P) {
     this->log_.info(" normalize initial density matrix. ");
     DfPopulationType dfPop(this->pPdfParam_);
     const double trPS = dfPop.getSumOfElectrons(P);

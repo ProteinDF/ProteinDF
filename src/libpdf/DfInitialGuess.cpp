@@ -25,7 +25,14 @@
 #include "DfInitialGuessHarris.h"
 #include "DfInitialGuessHuckel.h"
 #include "TlStringTokenizer.h"
+
+#ifdef HAVE_EIGEN
+#include "df_population_eigen.h"
+#endif  // HAVE_EIGEN
+
+#ifdef HAVE_LAPACK
 #include "df_population_lapack.h"
+#endif  // HAVE_LAPACK
 
 DfInitialGuess::DfInitialGuess(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam) {
@@ -246,43 +253,58 @@ std::string DfInitialGuess::getLcaoPath_bin(const RUN_TYPE runType) {
 
 // density matrix ======================================================
 void DfInitialGuess::createInitialGuessUsingDensityMatrix() {
-    switch (this->m_nMethodType) {
-        case METHOD_RKS:
-            this->createInitialGuessUsingDensityMatrix(RUN_RKS);
-            break;
+    switch (this->linearAlgebraPackage_) {
+        case LAP_VIENNACL:
+            // use LAP_EIGEN
+        case LAP_EIGEN: {
+#ifdef HAVE_EIGEN
+            {
+                this->createInitialGuessUsingDensityMatrix_tmpl<TlDenseSymmetricMatrix_Eigen, DfPopulation_Eigen>();
+            }
+#else
+            {
+                CnErr.abort("linear algebra package mismatch.");
+            }
+#endif  // HAVE_EIGEN
+        } break;
 
-        case METHOD_UKS:
-            this->createInitialGuessUsingDensityMatrix(RUN_UKS_ALPHA);
-            this->createInitialGuessUsingDensityMatrix(RUN_UKS_BETA);
-            break;
-
-        case METHOD_ROKS:
-            this->createInitialGuessUsingDensityMatrix(RUN_ROKS_CLOSED);
-            this->createInitialGuessUsingDensityMatrix(RUN_ROKS_OPEN);
-            break;
+        case LAP_LAPACK: {
+#ifdef HAVE_LAPACK
+            {
+                this->createInitialGuessUsingDensityMatrix_tmpl<TlDenseSymmetricMatrix_Lapack, DfPopulation_Lapack>();
+            }
+#else
+            {
+                CnErr.abort("linear algebra package mismatch.");
+            }
+#endif  // HAVE_LAPACK
+        } break;
 
         default:
-            abort();
-            break;
+            CnErr.abort("linear algebra package mismatch.");
     }
-
-    this->createOccupation();
 }
 
-void DfInitialGuess::createInitialGuessUsingDensityMatrix(
-    const RUN_TYPE runType) {
-    // read guess lcao
-    TlDenseSymmetricMatrix_Lapack P =
-        this->getInitialDensityMatrix<TlDenseSymmetricMatrix_Lapack>(runType);
-    if (this->isNormalizeDensityMatrix_) {
-        P = this->normalizeDensityMatrix<TlDenseSymmetricMatrix_Lapack,
-                                         DfPopulation_Lapack>(runType, P);
-    }
-    this->savePpqMatrix(runType, 0, P);
+// void DfInitialGuess::createInitialGuessUsingDensityMatrix(const RUN_TYPE runType) {
+//     // read guess lcao
+//     TlDenseSymmetricMatrix_Lapack P = this->getInitialDensityMatrix<TlDenseSymmetricMatrix_Lapack>(runType);
+//     if (this->isNormalizeDensityMatrix_) {
+//         P = this->normalizeDensityMatrix<TlDenseSymmetricMatrix_Lapack,
+//                                          DfPopulation_Lapack>(runType, P);
+//     }
+//     this->savePpqMatrix(runType, 0, P);
 
-    // make occupation data
-    this->createOccupation();
-}
+//     // spin density matrix
+//     const int iteration = 0;
+//     if (runType == METHOD_RKS) {
+//         this->saveSpinDensityMatrix(runType, iteration, 0.5 * P);
+//     } else {
+//         this->saveSpinDensityMatrix(runType, iteration, P);
+//     }
+
+//     // make occupation data
+//     this->createOccupation();
+// }
 
 TlDenseVector_Lapack DfInitialGuess::getOccupation(const RUN_TYPE runType) {
     TlDenseVector_Lapack occupation;
