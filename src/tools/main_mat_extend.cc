@@ -251,7 +251,7 @@ void showHelp(const std::string& name) {
     std::cout << "extend mode" << std::endl;
     std::cout << "  -d:      extend diagonal block" << std::endl;
     std::cout << "  -r:      extend row-wise" << std::endl;
-    std::cout << "  -c:      extend coloumn-wise" << std::endl;
+    std::cout << "  -c:      extend column-wise" << std::endl;
     std::cout << std::endl;
     std::cout << "  -h:      show help" << std::endl;
     std::cout << "  -v:      verbose" << std::endl;
@@ -341,24 +341,18 @@ int main(int argc, char* argv[]) {
     } else {
         switch (extendMode) {
             case EXTEND_ROW_WISE:
-                retval = extend_row_wise<TlDenseGeneralMatrix_Lapack>(
-                    pMat1, pMat2, outputMatrixPath, isVerbose);
+                retval = extend_row_wise<TlDenseGeneralMatrix_Lapack>(pMat1, pMat2, outputMatrixPath, isVerbose);
                 break;
 
             case EXTEND_COL_WISE:
-                retval = extend_column_wise<TlDenseGeneralMatrix_Lapack>(
-                    pMat1, pMat2, outputMatrixPath, isVerbose);
+                retval = extend_column_wise<TlDenseGeneralMatrix_Lapack>(pMat1, pMat2, outputMatrixPath, isVerbose);
                 break;
 
             case EXTEND_DIAGONAL_BLOCK: {
                 if ((isSymmetric1 == true) && (isSymmetric2 == true)) {
-                    retval = extend_diagonal_block_symmetricType<
-                        TlDenseSymmetricMatrix_Lapack>(
-                        pMat1, pMat2, outputMatrixPath, isVerbose);
+                    retval = extend_diagonal_block_symmetricType<TlDenseSymmetricMatrix_Lapack>(pMat1, pMat2, outputMatrixPath, isVerbose);
                 } else {
-                    retval = extend_diagonal_block_generalType<
-                        TlDenseGeneralMatrix_Lapack>(
-                        pMat1, pMat2, outputMatrixPath, isVerbose);
+                    retval = extend_diagonal_block_generalType<TlDenseGeneralMatrix_Lapack>(pMat1, pMat2, outputMatrixPath, isVerbose);
                 }
             } break;
 
