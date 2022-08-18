@@ -46,20 +46,30 @@ void calcCSC(const TlSerializeData& pdfParam1, const std::string& cMatPath1,
             S_tilde.save(sTildeMatPath);
         }
     }
+    if (verbose) {
+        std::cerr << TlUtils::format("S~ size: %d, %d", S_tilde.getNumOfRows(), S_tilde.getNumOfCols()) << std::endl;
+    }
 
     GeneralMatrix C1;
     if (verbose) {
         std::cerr << "load C matrix1: " << cMatPath1 << std::endl;
     }
     C1.load(cMatPath1);
+    if (verbose) {
+        std::cerr << TlUtils::format("C matrix size: %d, %d", C1.getNumOfRows(), C1.getNumOfCols()) << std::endl;
+    }
 
     GeneralMatrix C2;
     if (verbose) {
         std::cerr << "load C matrix2: " << cMatPath2 << std::endl;
     }
     C2.load(cMatPath2);
+    if (verbose) {
+        std::cerr << TlUtils::format("C matrix size: %d, %d", C2.getNumOfRows(), C2.getNumOfCols()) << std::endl;
+    }
 
-    GeneralMatrix CSC = C1 * S_tilde * C2;
+    GeneralMatrix C1t = C1.transpose();
+    GeneralMatrix CSC = C1t * S_tilde * C2;
     CSC.save(cscMatPath);
 }
 
