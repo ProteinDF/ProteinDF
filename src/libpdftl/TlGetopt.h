@@ -23,36 +23,43 @@
 #include <string>
 #include <vector>
 
-/**
- *  コマンドラインオプションを処理するクラス
- *
- *  コンストラクタにargc, argvを設定し、listに所定の書式で
- *  読み込むオプションを指定すると、このオブジェクトに対し、
- *  []メソッドでオプションの値にアクセスできる。
- *  オプションの書式は、いわゆるgetoptの書式に準ずる。
- *  long optionは指定できない。
- *  また、引数の値には、0から始まるインデックスで、
- *  同じく[]メソッドでアクセスできる。
- *  argv[0]の値はコマンド名になる前提で、
- *  オプション解析をargv[1]から処理しているが、
- *  argv[0]がコマンド名になるかは、実装定義であるので注意が必要である。
- */
+// コマンドラインオプションを処理するクラス
+//
+// コンストラクタにargc, argvを設定し、listに所定の書式で
+// 読み込むオプションを指定すると、このオブジェクトに対し、
+// []メソッドでオプションの値にアクセスできる。
+// オプションの書式は、いわゆるgetoptの書式に準ずる。
+// long optionは指定できない。
+//
+// 引数の値には、0から始まるインデックスで、
+// 同じく[]メソッドでアクセスできる。
+// argv[0]の値はコマンド名になる前提で、
+// オプション解析をargv[1]から処理しているが、
+// argv[0]がコマンド名になるかは、実装定義であるので注意が必要である。
+//
+// オプションフラグが指定された場合は"defined"が格納される。
+// 引数を受け取るオプションフラグ(文字の後に":"をつける)が指定された場合は、
+// 文字列が格納される。
+// それ以外は空文字が格納されている。
+
 class TlGetopt {
-   public:
+public:
     TlGetopt(int argc, char* argv[], const char* list);
     ~TlGetopt();
 
     // accession
-   public:
-    int getCount() const { return this->args_.size(); };
+public:
+    int getCount() const {
+        return this->args_.size();
+    };
     const std::string operator[](const std::string& sKey) const;
     const std::string operator[](unsigned int n) const;
 
-   protected:
+protected:
     void initialize();
     void parseArgv(int argc, char* argv[], const char* list);
 
-   protected:
+protected:
     /**
      *  引数の数
      */
