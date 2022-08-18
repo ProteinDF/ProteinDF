@@ -16,10 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "TlGetopt.h"
+
 #include <iostream>
 #include <sstream>
 
-#include "TlGetopt.h"
 #include "TlUtils.h"
 
 /**
@@ -142,9 +143,7 @@ void TlGetopt::parseArgv(int argc, char* argv[], const char* list) {
             int nLen = str.length();  // length()は'\0'を含める
             while (!str.empty()) {
                 std::string check_char(str, 0, 1);
-                for (std::map<std::string, std::string>::const_iterator p =
-                         aOptList.begin();
-                     p != aOptList.end(); p++) {
+                for (std::map<std::string, std::string>::const_iterator p = aOptList.begin(); p != aOptList.end(); p++) {
                     if (check_char == p->first) {
                         if (nLen == 1 &&
                             p->second == ":") {  // optionは引数を取る
