@@ -43,11 +43,11 @@ class CnFile;
 // #define CHECK_LOOP // 計算ループ構造のチェック
 
 class DfCD : public DfObject {
-   public:
+public:
     explicit DfCD(TlSerializeData* pPdfParam, bool initializeFileObj = true);
     virtual ~DfCD();
 
-   public:
+public:
     // --------------------------------------------------------------------------
     // [integral]
     // --------------------------------------------------------------------------
@@ -62,14 +62,15 @@ class DfCD : public DfObject {
     virtual void getK(const RUN_TYPE runType);
     virtual void getM(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricMatrix_Lapack* pM);
 
-   protected:
+protected:
     enum CD_INTERMEDIATE_FILE_FORMAT {
         CD_INTERMEDIATE_FILE_FORMAT_MMAP,
         CD_INTERMEDIATE_FILE_FORMAT_ARRAY,
         CD_INTERMEDIATE_FILE_FORMAT_ARRAY_MMAP
     };
 
-    enum CD_FILE_FORMAT { CD_FILE_FORMAT_CSFD, CD_FILE_FORMAT_ABGD };
+    enum CD_FILE_FORMAT { CD_FILE_FORMAT_CSFD,
+                          CD_FILE_FORMAT_ABGD };
 
     enum FastCDK_MODE {
         FASTCDK_NONE,
@@ -79,11 +80,11 @@ class DfCD : public DfObject {
         FASTCDK_DEBUG_SUPERMATRIX        // V_pr,qs = <pq|rs> + <ps|rq>
     };
 
-   protected:
+protected:
     std::size_t argmax_pivot(const std::vector<double>& diagonals, const std::vector<std::size_t>& pivot,
                              const int pivotBegin) const;
 
-   protected:
+protected:
     // --------------------------------------------------------------------------
     // [SCF] J
     // --------------------------------------------------------------------------
@@ -95,7 +96,7 @@ class DfCD : public DfObject {
     // ----------------------------------------------------------------------------
     // [SCF] K
     // ----------------------------------------------------------------------------
-   protected:
+protected:
     [[deprecated]] virtual void getK_S_woCD(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
 
     [[deprecated]] virtual void getK_S_woCD_mmap(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
@@ -117,10 +118,11 @@ class DfCD : public DfObject {
     virtual void getM_A(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricMatrix_Lapack* pM);
     virtual void getM_A_mmap(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricMatrix_Lapack* pM);
 
-   protected:
+protected:
     class Index2 {
-       public:
-        explicit Index2(index_type i1 = 0, index_type i2 = 0) : index1_(i1), index2_(i2) {
+    public:
+        explicit Index2(index_type i1 = 0, index_type i2 = 0)
+            : index1_(i1), index2_(i2) {
         }
 
         bool operator<(const Index2& rhs) const {
@@ -145,13 +147,13 @@ class DfCD : public DfObject {
             return this->index2_;
         }
 
-       protected:
+    protected:
         index_type index1_;
         index_type index2_;
     };
 
     class Index4 {
-       public:
+    public:
         explicit Index4(index_type i1 = 0, index_type i2 = 0, index_type i3 = 0, index_type i4 = 0)
             : index2_1_(i1, i2), index2_2_(i3, i4) {
         }
@@ -186,19 +188,19 @@ class DfCD : public DfObject {
             return this->index2_2_.index2();
         }
 
-       private:
+    private:
         Index2 index2_1_;
         Index2 index2_2_;
     };
 
-   protected:
+protected:
     typedef std::vector<Index2> PQ_PairArray;
     typedef std::vector<size_type> PQ2I_Type;
 
     // ----------------------------------------------------------------------------
     // [integral] ERI engine
     // ----------------------------------------------------------------------------
-   protected:
+protected:
     template <class EngineClass>
     void createEngines();
 
@@ -207,7 +209,7 @@ class DfCD : public DfObject {
     // ----------------------------------------------------------------------------
     // [integral] ERI task control
     // ----------------------------------------------------------------------------
-   protected:
+protected:
     virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
     virtual void finalize(TlDenseSymmetricMatrix_Lapack* pMat);
@@ -219,7 +221,7 @@ class DfCD : public DfObject {
     // ----------------------------------------------------------------------------
     // [integral] I2PQ (CDAM)
     // ----------------------------------------------------------------------------
-   protected:
+protected:
     virtual void saveI2PQ(const PQ_PairArray& I2PQ, const std::string& filepath);
     virtual PQ_PairArray getI2PQ(const std::string& filepath);
 
@@ -252,7 +254,7 @@ class DfCD : public DfObject {
     // ----------------------------------------------------------------------------
     // [integral] calc Cholesky Vectors
     // ----------------------------------------------------------------------------
-   protected:
+protected:
     // typedef: functional pointer
     typedef void (DfCD::*CalcDiagonalsFunc)(const TlOrbitalInfoObject&, PQ_PairArray*, std::vector<double>*);
     typedef void (DfCD::*GetSuperMatrixElementsFunc)(const TlOrbitalInfoObject&, const index_type,
@@ -298,12 +300,12 @@ class DfCD : public DfObject {
     // ----------------------------------------------------------------------------
     // [integral] calc diagonals for CD
     // ----------------------------------------------------------------------------
-   public:
+public:
     void calcDiagonals(const TlOrbitalInfoObject& orbInfo, PQ_PairArray* pI2PQ, std::vector<double>* pDiagonals);
     void calcDiagonals_K_full(const TlOrbitalInfoObject& orbInfo, PQ_PairArray* pI2PR, std::vector<double>* pDiagonals);
     void calcDiagonals_K_half(const TlOrbitalInfoObject& orbInfo, PQ_PairArray* pI2PR, std::vector<double>* pDiagonals);
 
-   protected:
+protected:
     void calcDiagonals_kernel(const TlOrbitalInfoObject& orbInfo, const std::vector<DfTaskCtrl::Task2>& taskList,
                               TlSparseSymmetricMatrix* pDiagonalMat, PQ_PairArray* pI2PQ);
     void calcDiagonals_K_full_kernel(const TlOrbitalInfoObject& orbInfo, const std::vector<DfTaskCtrl::Task2>& taskList,
@@ -317,23 +319,25 @@ class DfCD : public DfObject {
     void initializeCutoffStats(const int maxShellType);
     void schwartzCutoffReport(const int maxShellType);
 
-   protected:
+protected:
     mutable std::vector<unsigned long> cutoffAll_schwartz_;
     mutable std::vector<unsigned long> cutoffAlive_schwartz_;
 
     // ----------------------------------------------------------------------------
     // [integral] 2電子積分キャッシュ
     // ----------------------------------------------------------------------------
-   protected:
+protected:
     class IndexPair2S : public Index2 {
-       public:
-        IndexPair2S(index_type i1, index_type i2) : Index2(i1, i2) {
+    public:
+        IndexPair2S(index_type i1, index_type i2)
+            : Index2(i1, i2) {
             if (this->index1_ < this->index2_) {
                 std::swap(this->index1_, this->index2_);
             }
         }
 
-        IndexPair2S(const IndexPair2S& rhs) : Index2(rhs.index1_, rhs.index2_) {
+        IndexPair2S(const IndexPair2S& rhs)
+            : Index2(rhs.index1_, rhs.index2_) {
         }
 
         IndexPair2S& operator=(const IndexPair2S& rhs) {
@@ -347,7 +351,7 @@ class DfCD : public DfObject {
     };
 
     class IndexPair4S {
-       public:
+    public:
         explicit IndexPair4S(index_type i1 = 0, index_type i2 = 0, index_type i3 = 0, index_type i4 = 0)
             : ip2_1_(i1, i2), ip2_2_(i3, i4) {
             if (this->ip2_1_ < this->ip2_2_) {
@@ -355,7 +359,8 @@ class DfCD : public DfObject {
             }
         }
 
-        IndexPair4S(const Index4& i4) : ip2_1_(i4.index1(), i4.index2()), ip2_2_(i4.index3(), i4.index4()) {
+        IndexPair4S(const Index4& i4)
+            : ip2_1_(i4.index1(), i4.index2()), ip2_2_(i4.index3(), i4.index4()) {
             if (this->ip2_1_ < this->ip2_2_) {
                 std::swap<IndexPair2S>(this->ip2_1_, this->ip2_2_);
             }
@@ -391,13 +396,13 @@ class DfCD : public DfObject {
             return this->ip2_2_.index2();
         }
 
-       private:
+    private:
         IndexPair2S ip2_1_;
         IndexPair2S ip2_2_;
     };
 
     class IndexPair4A {
-       public:
+    public:
         explicit IndexPair4A(index_type i1 = 0, index_type i2 = 0, index_type i3 = 0, index_type i4 = 0)
             : index2_1_(i1, i2), index2_2_(i3, i4) {
             // if (this->index2_1_ < this->index2_2_) {
@@ -405,7 +410,8 @@ class DfCD : public DfObject {
             // }
         }
 
-        IndexPair4A(const Index4& i4) : index2_1_(i4.index1(), i4.index2()), index2_2_(i4.index3(), i4.index4()) {
+        IndexPair4A(const Index4& i4)
+            : index2_1_(i4.index1(), i4.index2()), index2_2_(i4.index3(), i4.index4()) {
             // if (this->index2_1_ < this->index2_2_) {
             //     std::swap(this->index2_1_, this->index2_2_);
             // }
@@ -441,7 +447,7 @@ class DfCD : public DfObject {
             return this->index2_2_.index2();
         }
 
-       private:
+    private:
         Index2 index2_1_;
         Index2 index2_2_;
     };
@@ -527,14 +533,14 @@ class DfCD : public DfObject {
     /// 2電子積分キャッシュの型
     typedef std::map<IndexPair4S, std::vector<double> > ERI_CacheType;
 
-   public:
+public:
     /// 与えられたsuper matrix の要素に対し、2電子積分を計算して代入する。
     /// On-the-Fly時に使用する。
     virtual void getSuperMatrixElements(const TlOrbitalInfoObject& orbInfo, const index_type G_row,
                                         const std::vector<index_type>& G_col_list, const PQ_PairArray& I2PQ,
                                         std::vector<double>* pElements);
 
-   protected:
+protected:
     /// 要求されたsuper matrixの行列要素のうち、必要なshell
     /// indexのリストを返す。
     ///
@@ -558,7 +564,7 @@ class DfCD : public DfObject {
     /// 2電子積分キャッシュ
     ERI_CacheType ERI_cache_;
 
-   protected:
+protected:
     void getJ_S_v2(TlDenseSymmetricMatrix_Lapack* pJ);
     TlDenseVector_Lapack getScreenedDensityMatrix(const PQ_PairArray& I2PQ);
     TlDenseVector_Lapack getScreenedDensityMatrix(const RUN_TYPE runTyoe, const PQ_PairArray& I2PQ);
@@ -568,7 +574,7 @@ class DfCD : public DfObject {
     void expandJMatrix(const TlDenseVector_Lapack& vJ, const PQ_PairArray& I2PQ, TlDenseSymmetricMatrix_Lapack* pJ);
     void expandKMatrix(const TlDenseVector_Lapack& vK, const PQ_PairArray& I2PR, TlDenseSymmetricMatrix_Lapack* pK);
 
-   protected:
+protected:
     DfEngineObject** pEngines_;
 
     double cutoffThreshold_;
@@ -579,6 +585,7 @@ class DfCD : public DfObject {
     double epsilon_K_;
 
     CD_INTERMEDIATE_FILE_FORMAT cdIntermediateFileFormat_;
+    bool optCdFile_;
     CD_FILE_FORMAT cdFileFormat_;
     FastCDK_MODE fastCDK_mode_;
 
@@ -586,7 +593,7 @@ class DfCD : public DfObject {
     // bool isCvSavedAsMmap_;
 
     // =====================================================================
-   protected:
+protected:
     /// 非対称形2index管理クラス
     ///
     /// (pq)の組を管理するクラス
@@ -740,7 +747,7 @@ class DfCD : public DfObject {
     /// デバッグ用
     void getK_A(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
 
-   protected:
+protected:
     bool debugBuildSuperMatrix_;
     bool debugCheckCD_;
 
@@ -782,7 +789,7 @@ class DfCD : public DfObject {
     PQ_PairArray debug_I2PQ_;
     // TlDenseSymmetricMatrix_Lapack debug_V_;
 
-   protected:
+protected:
     CnFile* file_;
 };
 
