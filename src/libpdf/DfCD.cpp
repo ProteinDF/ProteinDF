@@ -109,6 +109,11 @@ DfCD::DfCD(TlSerializeData* pPdfParam, bool initializeFileObj)
         }
     }
 
+    this->optCdFile_ = true;
+    if ((*this->pPdfParam_)["CD/opt_CD_file"].getStr().empty() != true) {
+        this->optCdFile_ = (*this->pPdfParam_)["CD/opt_CD_file"].getBoolean();
+    }
+
     this->cdFileFormat_ = CD_FILE_FORMAT_CSFD;
 
     // this->isCvSavedAsMmap_ = true;
@@ -215,8 +220,14 @@ void DfCD::calcCholeskyVectorsForJK() {
                 const TlDenseGeneralMatrix_arrays_RowOriented Ljk =
                     this->calcCholeskyVectorsOnTheFlyS_new(orbInfo, this->getI2pqVtrPath(), this->epsilon_,
                                                            &DfCD::calcDiagonals, &DfCD::getSuperMatrixElements);
-                this->log_.info("optimize L matrix.");
-                this->saveLjk(Ljk);
+
+                if (this->optCdFile_) {
+                    this->log_.info("optimize L matrix.");
+                    this->saveLjk(Ljk);
+                } else {
+                    this->log_.info("skip optimize L matrix");
+                }
+
             } break;
 
             case CD_INTERMEDIATE_FILE_FORMAT_ARRAY_MMAP: {
@@ -245,9 +256,13 @@ void DfCD::calcCholeskyVectorsForJK() {
                 }
                 this->log_.info("L_jk saved.");
 
-                this->log_.info("optimize L matrix.");
-                // RowVectorMatrix2CSFD_mmap(L_mat_path, DfObject::getLjkMatrixPath());
-                transpose2CSFD(L_basePath, DfObject::getLjkMatrixPath(), this->localTempPath_);
+                if (this->optCdFile_) {
+                    this->log_.info("optimize L matrix.");
+                    // RowVectorMatrix2CSFD_mmap(L_mat_path, DfObject::getLjkMatrixPath());
+                    transpose2CSFD(L_basePath, DfObject::getLjkMatrixPath(), this->localTempPath_);
+                } else {
+                    this->log_.info("skip optimize L matrix");
+                }
             } break;
 
             default: {
