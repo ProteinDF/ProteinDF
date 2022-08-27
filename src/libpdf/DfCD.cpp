@@ -226,6 +226,10 @@ void DfCD::calcCholeskyVectorsForJK() {
                     this->saveLjk(Ljk);
                 } else {
                     this->log_.info("skip optimize L matrix");
+                    const int subunitID = 0;
+                    const std::string path = TlUtils::format("%s.part%d.mat", DfObject::getLjkMatrixPath().c_str(), subunitID);
+                    Ljk.save(path);
+                    this->log_.info("save partial L matrix");
                 }
 
             } break;
