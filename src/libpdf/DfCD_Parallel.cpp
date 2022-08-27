@@ -115,6 +115,10 @@ void DfCD_Parallel::calcCholeskyVectorsForJK() {
                     this->saveL(Ljk, DfObject::getLjkMatrixPath());
                 } else {
                     this->log_.info("skip optimize L matrix");
+                    const int subunitID = rComm.getRank();
+                    const std::string path = TlUtils::format("%s.part%d.mat", DfObject::getLjkMatrixPath().c_str(), subunitID);
+                    Ljk.save(path);
+                    this->log_.info("save partial L matrix");
                 }
 
                 // if (rComm.isMaster()) {
