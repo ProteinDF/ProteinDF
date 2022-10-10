@@ -19,7 +19,9 @@
 #endif  // HAVE_LAPACK
 
 void usage(const std::string& progname) {
-    std::cout << TlUtils::format("usage: %s \"pdfparam1.mpac\" \"C matrix path1\" \"pdfparam2.mpac\" \"C matrix path2\"",
+    std::cout << TlUtils::format("usage1: %s pdfparam_path1 pdfparam_path2 C_matrix_path1 C_matrix_path2 \n",
+                                 progname.c_str())
+              << TlUtils::format("usage2: %s ProteinDF_path1 ProteinDF_path2",
                                  progname.c_str())
               << std::endl;
     std::cout << " calculate CSC matrix" << std::endl;
@@ -27,6 +29,20 @@ void usage(const std::string& progname) {
     std::cout << "options:" << std::endl;
     std::cout << "-s FILE:    save S~ matrix" << std::endl;
     std::cout << "-v:         verbose output" << std::endl;
+}
+
+TlSerializeData getPdfParam(const std::string& pdfParamPath) {
+    TlMsgPack mpac;
+    std::cerr << "load pdfparam: " << pdfParamPath << std::endl;
+    mpac.load(pdfParamPath);
+    return mpac.getSerializeData();
+}
+
+std::string getCMatrixPath(const TlSerializeData& pdfParam) {
+    TlSerializeData tmpPdfParam = pdfParam;
+    DfObject dfObject(&tmpPdfParam);
+    const int iteration = dfObject.iteration();
+    return dfObject.getCMatrixPath(DfObject::RUN_RKS, iteration);
 }
 
 template <class GeneralMatrix>
@@ -70,6 +86,9 @@ void calcCSC(const TlSerializeData& pdfParam1, const std::string& cMatPath1,
 
     GeneralMatrix C1t = C1.transpose();
     GeneralMatrix CSC = C1t * S_tilde * C2;
+    if (verbose) {
+        std::cerr << "save CSC matrix: " << cscMatPath << std::endl;
+    }
     CSC.save(cscMatPath);
 }
 
@@ -77,7 +96,7 @@ int main(int argc, char* argv[]) {
     // setup file path
     TlGetopt opt(argc, argv, "ho:s:v");
 
-    if ((opt["h"].empty() == false) || (opt.getCount() <= 2)) {
+    if (opt["h"].empty() == false) {
         usage(opt[0]);
         return EXIT_SUCCESS;
     }
@@ -94,29 +113,33 @@ int main(int argc, char* argv[]) {
 
     const bool verbose = (opt["v"] == "defined");
 
-    const std::string paramPath1 = opt[1];
-    const std::string cMatPath1 = opt[2];
-    const std::string paramPath2 = opt[3];
-    const std::string cMatPath2 = opt[4];
-
-    if (verbose) {
-        std::cerr << "ProteinDF parameter file1: " << paramPath1 << std::endl;
-        std::cerr << "ProteinDF parameter file2: " << paramPath2 << std::endl;
-        std::cerr << "C matrix path1: " << cMatPath1 << std::endl;
-        std::cerr << "C matrix path2: " << cMatPath2 << std::endl;
-    }
-
     TlSerializeData pdfParam1;
-    {
-        TlMsgPack mpac;
-        mpac.load(paramPath1);
-        pdfParam1 = mpac.getSerializeData();
-    }
     TlSerializeData pdfParam2;
-    {
-        TlMsgPack mpac;
-        mpac.load(paramPath2);
-        pdfParam2 = mpac.getSerializeData();
+    std::string cMatPath1 = "";
+    std::string cMatPath2 = "";
+    if (opt.getCount() == 3) {
+        const std::string pdfPath1 = opt[1];
+        const std::string pdfPath2 = opt[2];
+        if (verbose) {
+            std::cerr << "ProteinDF path1: " << pdfPath1 << std::endl;
+            std::cerr << "ProteinDF path2: " << pdfPath2 << std::endl;
+        }
+
+        pdfParam1 = getPdfParam(pdfPath1 + "/pdfparam.mpac");
+        pdfParam2 = getPdfParam(pdfPath2 + "/pdfparam.mpac");
+        cMatPath1 = pdfPath1 + "/" + getCMatrixPath(pdfParam1);
+        cMatPath2 = pdfPath2 + "/" + getCMatrixPath(pdfParam2);
+    } else if (opt.getCount() == 5) {
+        const std::string pdfParamPath1 = opt[1];
+        const std::string pdfParamPath2 = opt[2];
+        pdfParam1 = getPdfParam(pdfParamPath1);
+        pdfParam2 = getPdfParam(pdfParamPath2);
+        cMatPath1 = opt[3];
+        cMatPath2 = opt[4];
+    } else {
+        std::cerr << "illegal option." << std::endl;
+        usage(opt[0]);
+        return EXIT_FAILURE;
     }
 
 #ifdef HAVE_LAPACK
