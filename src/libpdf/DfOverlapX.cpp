@@ -950,11 +950,7 @@ void DfOverlapX::getM(const TlDenseSymmetricMatrix_Lapack& P,
 
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
-    // pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
-    pDfTaskCtrl->setCutoffThreshold(0.0);
-    pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
-    // pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
-    pDfTaskCtrl->setCutoffEpsilon_distribution(0.0);
+    pDfTaskCtrl->setCutoffEpsilon_distribution(0.0); // cannot use this cutoff
 
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo, schwarzTable,
@@ -1132,11 +1128,7 @@ void DfOverlapX::getM_A(const TlDenseSymmetricMatrix_Lapack& P,
 
     this->createEngines();
     DfTaskCtrl* pDfTaskCtrl = this->getDfTaskCtrlObject();
-    // pDfTaskCtrl->setCutoffThreshold(this->cutoffThreshold_);
-    pDfTaskCtrl->setCutoffThreshold(0.0);
-    pDfTaskCtrl->setCutoffEpsilon_density(0.0);  // cannot use this cutoff
-    // pDfTaskCtrl->setCutoffEpsilon_distribution(this->cutoffEpsilon_distribution_);
-    pDfTaskCtrl->setCutoffEpsilon_distribution(0.0);
+    pDfTaskCtrl->setCutoffEpsilon_distribution(0.0); // cannot use this cutoff
 
     std::vector<DfTaskCtrl::Task4> taskList;
     bool hasTask = pDfTaskCtrl->getQueue4(orbitalInfo_GF, orbitalInfo,
