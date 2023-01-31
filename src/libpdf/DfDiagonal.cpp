@@ -25,9 +25,15 @@
 #include "TlUtils.h"
 #include "common.h"
 
-DfDiagonal::DfDiagonal(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
-    this->updateLinearAlgebraPackageParam(
-        (*(this->pPdfParam_))["linear_algebra_package/diagonal"].getStr());
+DfDiagonal::DfDiagonal(TlSerializeData* pPdfParam)
+    : DfObject(pPdfParam) {
+    std::string linearAlgebraPackge_diagonal = (*(this->pPdfParam_))["linear_algebra_package/diagonal"].getStr();
+    if ((this->linearAlgebraPackage_ == DfObject::LAP_VIENNACL) && (linearAlgebraPackge_diagonal.empty())) {
+        this->log_.info("use Eigen instead of ViennaCL as the linear algebra package.");
+        this->log_.info("If you want to use the ViennaCL, use 'linear_algebra_package/diagonal = viennacl'.");
+        linearAlgebraPackge_diagonal = "EIGEN";
+    }
+    this->updateLinearAlgebraPackageParam(linearAlgebraPackge_diagonal);
 }
 
 DfDiagonal::~DfDiagonal() {}
