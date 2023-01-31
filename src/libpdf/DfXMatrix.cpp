@@ -83,7 +83,7 @@ void DfXMatrix::buildX() {
         case LAP_VIENNACL: {
             this->log_.info("Linear Algebra Package: ViennaCL -> Eigen");
             this->buildX_templ<TlDenseSymmetricMatrix_Eigen,
-                               TlDenseGeneralMatrix_Eigen, , TlDenseVector_Eigen>();
+                               TlDenseGeneralMatrix_Eigen, TlDenseVector_Eigen>();
         } break;
 #endif  // HAVE_VIENNACL
 
