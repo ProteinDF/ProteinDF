@@ -28,16 +28,16 @@
 
 /// KS行列の対角化を行う
 class DfDiagonal : public DfObject {
-   public:
+public:
     DfDiagonal(TlSerializeData* pPdfData);
     virtual ~DfDiagonal();
 
-   public:
+public:
     virtual void run();
     virtual void runQclo(DfObject::RUN_TYPE runType,
                          const std::string& fragname, int norbcut);
 
-   protected:
+protected:
     template <typename GeneralMatrix, typename SymmetricMatrix, typename Vector>
     inline void run_impl();
 
