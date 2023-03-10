@@ -16,7 +16,10 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "TlCommunicate.h"
+
 #include <mpi.h>
+
 #include <cassert>
 #include <cstddef>
 #include <cstring>
@@ -24,10 +27,8 @@
 #include <numeric>
 #include <typeinfo>
 
-#include "TlCommunicate.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
-
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_dense_vector_impl_lapack.h"
@@ -87,7 +88,9 @@ void TlCommunicate::setWorkMemSize(const std::size_t workMemSize) {
         std::max<std::size_t>(workMemSize, DEFAULT_WORK_MEM_SIZE);
 }
 
-std::size_t TlCommunicate::getWorkMemSize() const { return this->workMemSize_; }
+std::size_t TlCommunicate::getWorkMemSize() const {
+    return this->workMemSize_;
+}
 
 std::string TlCommunicate::getReport() const {
     std::string answer = TlUtils::format(" #%d:\n", this->getRank());
@@ -108,6 +111,14 @@ std::string TlCommunicate::getReport() const {
                               this->counter_iallreduce_);
 
     return answer;
+}
+
+std::string TlCommunicate::getHostName() const {
+    int name_length = 0;
+    char* name = new char[MPI_MAX_PROCESSOR_NAME];
+
+    MPI_Get_processor_name(name, &name_length);
+    return std::string(name);
 }
 
 int TlCommunicate::barrier(bool isDebugOut) const {
@@ -2846,16 +2857,24 @@ int TlCommunicate::abort(const int errorCode) {
     return answer;
 }
 
-int TlCommunicate::getNumOfProcs() const { return this->m_nProc; }
+int TlCommunicate::getNumOfProcs() const {
+    return this->m_nProc;
+}
 
-int TlCommunicate::getRank() const { return this->m_nRank; }
+int TlCommunicate::getRank() const {
+    return this->m_nRank;
+}
 
 /**
  *  rank が 0 だったらtrueを返す
  */
-bool TlCommunicate::isMaster() const { return (this->m_nRank == 0); }
+bool TlCommunicate::isMaster() const {
+    return (this->m_nRank == 0);
+}
 
-bool TlCommunicate::isSlave() const { return !(this->isMaster()); }
+bool TlCommunicate::isSlave() const {
+    return !(this->isMaster());
+}
 
 // original MPI_Datatype ==============================================
 void TlCommunicate::register_MatrixElement() {
