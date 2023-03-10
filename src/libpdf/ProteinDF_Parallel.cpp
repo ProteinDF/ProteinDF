@@ -132,6 +132,18 @@ void ProteinDF_Parallel::startlogo() {
     info += TlUtils::format(" OpenMP threads: %d\n", omp_get_max_threads());
 #endif  // _OPENMP
 
+#ifdef HAVE_EIGEN
+    {
+        const std::string eigenInfo =
+            " Eigen SIMD instruction: " + TlSystem_Eigen::getSimdInstructionSetsInUse() + "\n";
+        info += eigenInfo;
+    }
+#else
+    {
+        info += " Eigen is disabled.\n";
+    }
+#endif  // HAVE_EIGEN
+
     ProteinDF::startlogo(version, info);
 }
 
