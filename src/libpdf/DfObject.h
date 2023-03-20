@@ -540,8 +540,7 @@ protected:
     // --------------------------------------------------------------------------
 protected:
     static const std::string m_sWorkDirPath;  // fl_Work directory name
-    static const std::string
-        m_sTempDirPath;  // fl_Work directory name // before fl_Temp
+    static const std::string m_sTempDirPath;  // fl_Work directory name // before fl_Temp
     static const std::string m_sRunTypeSuffix[RUN_MAXINDEX];
 
 protected:

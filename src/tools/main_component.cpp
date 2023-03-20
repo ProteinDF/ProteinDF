@@ -63,6 +63,7 @@ void showHelp(const std::string& name) {
     std::cout << "  -d DIRECTORY    set directory to read (default: current "
                  "directory)"
               << std::endl;
+    std::cout << "  -i iteration    specify SCF iteration (default: latest)" << std::endl;
     std::cout << "  -c path         specify LCAO matrix (default: guessed)" << std::endl;
     std::cout << "  -s path         specify overlap matrix (default: guessed)" << std::endl;
     std::cout << "  -h              show help(this)" << std::endl;
@@ -76,7 +77,7 @@ void showHelp(const std::string& name) {
     std::cout << "  -t THRESHOLD    threshold of w_atom" << std::endl;
     std::cout << "  <save mode>" << std::endl;
     std::cout << "  -S path         save intermediate files" << std::endl;
-    std::cout << "  -g g_PATH       save G-value vector file (default: g-value.vct)" << std::endl;
+    std::cout << "  -g g_PATH       save G-value vector file (default: g-value.vtr)" << std::endl;
     std::cout << "  -m ORB_CNT_PATH save orbital contribution matrix file" << std::endl;
     std::cout << "  <atomgroup mode>" << std::endl;
     std::cout << "  -G path         atomgroup path" << std::endl;
@@ -367,7 +368,7 @@ int exec_save_mode(const TlDenseGeneralMatrix_Lapack& CS, const TlDenseGeneralMa
 }
 
 int main(int argc, char* argv[]) {
-    TlGetopt opt(argc, argv, "A:G:M:S:ad:c:g:hm:n:o:s:t:v");
+    TlGetopt opt(argc, argv, "A:G:M:S:ad:c:g:hi:m:n:o:s:t:v");
 
     // parameters - common
     if (opt["h"] == "defined") {
@@ -380,6 +381,11 @@ int main(int argc, char* argv[]) {
     std::string readDir = "./";
     if (opt["d"].empty() == false) {
         readDir = opt["d"];
+    }
+
+    int iteration = 0;
+    if (opt["i"].empty() == false) {
+        iteration = std::atoi(opt["i"].c_str());
     }
 
     std::string LCAO_path = "";
@@ -433,7 +439,7 @@ int main(int argc, char* argv[]) {
     if (opt["m"].empty() == false) {
         orbContributionMatrixPath = opt["m"];
     }
-    std::string gValueVectorPath = "g-value.vct";
+    std::string gValueVectorPath = "g-value.vtr";
     if (opt["g"].empty() == false) {
         gValueVectorPath = opt["g"];
     }
@@ -448,7 +454,9 @@ int main(int argc, char* argv[]) {
     readMsgPack.load(readParamPath);
     TlSerializeData pdfparam = readMsgPack.getSerializeData();
     const TlOrbitalInfo readOrbInfo(pdfparam["coordinates"], pdfparam["basis_set"]);
-    const int lastIteration = pdfparam["num_of_iterations"].getInt();
+    if (iteration == 0) {
+        iteration = pdfparam["num_of_iterations"].getInt();
+    }
     DfObject dfObj(&pdfparam);
 
     // calc CS
@@ -467,7 +475,7 @@ int main(int argc, char* argv[]) {
 
         // load C
         if (LCAO_path.empty()) {
-            LCAO_path = dfObj.getCMatrixPath(DfObject::RUN_RKS, lastIteration);
+            LCAO_path = dfObj.getCMatrixPath(DfObject::RUN_RKS, iteration);
         }
         if (isVerbose == true) {
             std::cout << TlUtils::format("read LCAO: %s", LCAO_path.c_str()) << std::endl;

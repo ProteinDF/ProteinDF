@@ -26,7 +26,7 @@ out.*
 
 # Sphinx documentation
 doc/.python-version
-doc/_build/*
+doc/build/*
 **/__pycache__/*
 doc/source/locale/**/*.mo
 

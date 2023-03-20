@@ -109,7 +109,17 @@ void DfCD_Parallel::calcCholeskyVectorsForJK() {
                     orbInfo, this->getI2pqVtrPath(), this->epsilon_, &DfCD::calcDiagonals,
                     &DfCD_Parallel::getSuperMatrixElements);
 
-                this->saveL(Ljk, DfObject::getLjkMatrixPath());
+                if (this->optCdFile_) {
+                    this->log_.info("optimize L matrix.");
+
+                    this->saveL(Ljk, DfObject::getLjkMatrixPath());
+                } else {
+                    this->log_.info("skip optimize L matrix");
+                    const int subunitID = rComm.getRank();
+                    const std::string path = TlUtils::format("%s.part%d.mat", DfObject::getLjkMatrixPath().c_str(), subunitID);
+                    Ljk.save(path);
+                    this->log_.info("save partial L matrix");
+                }
 
                 // if (rComm.isMaster()) {
                 //     if (!this->localTempPath_.empty()) {
@@ -150,8 +160,12 @@ void DfCD_Parallel::calcCholeskyVectorsForJK() {
                 rComm.barrier();
                 this->log_.info("L_jk saved.");
 
-                this->log_.info("optimize L matrix.");
-                this->transpose2CSFD_mpi(L_basePath, DfObject::getLjkMatrixPath());
+                if (this->optCdFile_) {
+                    this->log_.info("optimize L matrix.");
+                    this->transpose2CSFD_mpi(L_basePath, DfObject::getLjkMatrixPath());
+                } else {
+                    this->log_.info("skip optimize L matrix");
+                }
             } break;
 
             default: {

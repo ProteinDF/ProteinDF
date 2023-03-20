@@ -83,7 +83,10 @@ void DfObject::setParam(const TlSerializeData& data) {
     // }
 
     // this->isWorkOnDisk_ = data["work_on_disk"].getBoolean();
-    this->localTempPath_ = data["local_temp_path"].getStr();
+    this->localTempPath_ = DfObject::m_sWorkDirPath + "/";
+    if (!data["local_temp_path"].getStr().empty()) {
+        this->localTempPath_ = data["local_temp_path"].getStr();
+    }
 
     this->useMmap_ = false;
     if (!data["use_mmap"].getStr().empty()) {

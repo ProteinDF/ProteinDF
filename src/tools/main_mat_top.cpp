@@ -19,24 +19,26 @@
 #include <iostream>
 
 #include "TlGetopt.h"
+#include "TlMsgPack.h"
+#include "TlSerializeData.h"
 #include "TlUtils.h"
-#include "tl_matrix_utils.h"
-#include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_matrix_utils.h"
 
 struct MatrixElement {
-   public:
+public:
     explicit MatrixElement(int r = 0, int c = 0, double v = 0.0)
         : row(r), col(c), value(v) {}
 
-   public:
+public:
     int row;
     int col;
     double value;
 };
 
 struct MatrixElement_cmp {
-   public:
+public:
     bool operator()(const MatrixElement& a, const MatrixElement& b) {
         return (std::fabs(a.value) > std::fabs(b.value));
     }
@@ -45,11 +47,13 @@ struct MatrixElement_cmp {
 void showHelp(const std::string& progname) {
     std::cout << TlUtils::format("%s [options] MATRIX_FILE", progname.c_str())
               << std::endl;
-    std::cout << "print matrix elements having a large value." << std::endl;
+    std::cout << "print matrix elements having large value." << std::endl;
     std::cout << " OPTIONS:" << std::endl;
-    std::cout << "  -t NUM:  specify the number of elements" << std::endl;
-    std::cout << "  -v:      verbose output" << std::endl;
-    std::cout << "  -h:      show help" << std::endl;
+    std::cout << "  -t NUM         specify the number of elements (default: 10)" << std::endl;
+    std::cout << "  -o OUTPUT.mpac output msgpack file" << std::endl;
+    std::cout << "  -q             quiet" << std::endl;
+    std::cout << "  -v             verbose output" << std::endl;
+    std::cout << "  -h             show help" << std::endl;
 }
 
 void check(const MatrixElement& me, std::vector<MatrixElement>* pRanking) {
@@ -62,33 +66,33 @@ void check(const MatrixElement& me, std::vector<MatrixElement>* pRanking) {
 }
 
 int main(int argc, char* argv[]) {
-    TlGetopt opt(argc, argv, "ht:v");
+    TlGetopt opt(argc, argv, "ho:t:v");
 
     if (opt["h"] == "defined") {
         showHelp(opt[0]);
         return EXIT_SUCCESS;
     }
 
+    bool isQuiet = (opt["q"] == "defined");
+    bool isVerbose = (opt["v"] == "defined");
+
     int numOfRanks = 10;
-    if (opt["t"].empty() == false) {
+    if (opt["t"].empty() != true) {
         numOfRanks = std::atoi(opt["t"].c_str());
     }
-    bool bVerbose = (opt["v"] == "defined");
+
+    std::string outputPath = "";
+    if (opt["o"].empty() != true) {
+        outputPath = opt["o"];
+    }
 
     const std::string path = opt[1];
-    if (bVerbose) {
+    if (isVerbose) {
         std::cerr << "ranking top " << numOfRanks << std::endl;
         std::cerr << "loading... " << path << std::endl;
     }
 
     int errorCode = 0;
-
-    // std::ifstream ifs;
-    // ifs.open(path.c_str());
-    // if (ifs.fail()) {
-    //     std::cerr << "could not open file. " << path << std::endl;
-    //     return 1;
-    // }
 
     std::vector<MatrixElement> ranking(numOfRanks);
     if (TlMatrixUtils::isLoadable(path, TlMatrixObject::RLHD) == true) {
@@ -117,12 +121,38 @@ int main(int argc, char* argv[]) {
         errorCode = 1;
     }
 
+    // output
+    if (outputPath.empty() != true) {
+        TlSerializeData data;
+        data.resize(numOfRanks);
+        for (int i = 0; i < numOfRanks; ++i) {
+            TlSerializeData line;
+            line.resize(3);
+
+            const MatrixElement me = ranking[i];
+            line.setAt(0, me.row);
+            line.setAt(1, me.col);
+            line.setAt(2, me.value);
+
+            data.setAt(i, line);
+        }
+
+        TlMsgPack mpac(data);
+        if (isVerbose) {
+            std::cerr << TlUtils::format("output: %s", outputPath.c_str())
+                      << std::endl;
+        }
+        mpac.save(outputPath);
+    }
+
     // display
-    for (int i = 0; i < numOfRanks; ++i) {
-        const MatrixElement me = ranking[i];
-        std::cout << TlUtils::format("No.%2d (%6d, %6d) = % 16.10e", i, me.row,
-                                     me.col, me.value)
-                  << std::endl;
+    if (isQuiet != true) {
+        for (int i = 0; i < numOfRanks; ++i) {
+            const MatrixElement me = ranking[i];
+            std::cout << TlUtils::format("No.%2d (%6d, %6d) = % 16.10e", i, me.row,
+                                         me.col, me.value)
+                      << std::endl;
+        }
     }
 
     return errorCode;
