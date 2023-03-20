@@ -15,6 +15,7 @@
 #include <iostream>
 
 #include "TlFile.h"
+#include "TlLogging.h"
 #include "TlSystem.h"
 #include "TlUtils.h"
 #include "tl_matrix_utils.h"
@@ -105,6 +106,12 @@ void TlDenseMatrixMmapObject::newMmap() {
 
     struct stat sb;
     fstat(fd, &sb);
+
+#ifndef NDEBUG
+    if (std::size_t(sb.st_size) != this->fileSize_) {
+        this->log_.critical(TlUtils::format("size mismatch: expect=%ld exact=%ld (%s@%d)", std::size_t(sb.st_size), this->fileSize_, __FILE__, __LINE__));
+    }
+#endif  // NDEBUG
     assert(std::size_t(sb.st_size) == this->fileSize_);
 
     this->mmapBegin_ = (char*)TlSystem::newMmap(this->fileSize_, fd);

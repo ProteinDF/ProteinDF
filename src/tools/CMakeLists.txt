@@ -23,6 +23,11 @@ add_executable(pdf-info-charge ${PDF_INFO_CHARGE_SOURCES})
 target_link_libraries(pdf-info-charge libpdf libpdftl)
 install(TARGETS pdf-info-charge RUNTIME DESTINATION bin)
 
+set(PDF_INFO_CORRESPONDING_ORBITAL_SOURCES main_info_corresponding_orbital.cc)
+add_executable(pdf-info-corresponding-orbital ${PDF_INFO_CORRESPONDING_ORBITAL_SOURCES})
+target_link_libraries(pdf-info-corresponding-orbital libpdf libpdftl)
+install(TARGETS pdf-info-corresponding-orbital RUNTIME DESTINATION bin)
+
 set(PDF_INFO_ECOMP_SOURCES main_info_ecomponents.cc)
 add_executable(pdf-info-ecomp ${PDF_INFO_ECOMP_SOURCES})
 target_link_libraries(pdf-info-ecomp libpdf libpdftl)

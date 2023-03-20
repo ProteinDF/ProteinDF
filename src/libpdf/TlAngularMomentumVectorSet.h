@@ -21,7 +21,9 @@
 
 #include <bitset>
 #include <vector>
+
 #include "TlAngularMomentumVector.h"
+#include "TlLogging.h"
 
 #define MAX_ANGULAR_MOMENTUM (17)  // 0~16までOK
 
@@ -29,7 +31,7 @@
 ///
 /// angular momentum
 class TlAngularMomentumVectorSet {
-   public:
+public:
     TlAngularMomentumVectorSet(const int angularMomentum);
 
     /// angular momentum vector の総数を返す
@@ -39,9 +41,9 @@ class TlAngularMomentumVectorSet {
     /// @ref count
     const TlAngularMomentumVector& get(const int index) const;
 
-   private:
+private:
     struct AMV_DB {
-       public:
+    public:
         AMV_DB() {
             this->data.resize(MAX_ANGULAR_MOMENTUM);
             for (int amv = 0; amv < MAX_ANGULAR_MOMENTUM; ++amv) {
@@ -61,11 +63,11 @@ class TlAngularMomentumVectorSet {
             }
         };
 
-       public:
+    public:
         std::vector<std::vector<TlAngularMomentumVector> > data;
     };
 
-   private:
+private:
     static const AMV_DB db_;
     int angularMomentum_;
 };
@@ -73,6 +75,12 @@ class TlAngularMomentumVectorSet {
 inline TlAngularMomentumVectorSet::TlAngularMomentumVectorSet(
     const int angularMomentum)
     : angularMomentum_(angularMomentum) {
+#ifndef NDEBUG
+    if (angularMomentum >= MAX_ANGULAR_MOMENTUM) {
+        TlLogging& log = TlLogging::getInstance();
+        log.critical(TlUtils::format("angularMomentum=%d/%d (%s@%d)", angularMomentum, MAX_ANGULAR_MOMENTUM, __FILE__, __LINE__));
+    }
+#endif  // NDEBUG
     assert((0 <= angularMomentum) && (angularMomentum < MAX_ANGULAR_MOMENTUM));
 }
 
