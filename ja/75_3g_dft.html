@@ -1,0 +1,250 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="ja" > <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" lang="ja">
+<!--<![endif]-->
+
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>9. 第3世代密度汎関数計算法 &mdash; ProteinDF User&#39;s Manual 2022.2.1 ドキュメント</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+  
+  <script type="text/javascript" id="documentation_options" data-url_root="./"
+    src="_static/documentation_options.js"></script>
+  <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+  <script src="_static/jquery.js"></script>
+  <script src="_static/underscore.js"></script>
+  <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+  <script src="_static/doctools.js"></script>
+  <script src="_static/sphinx_highlight.js"></script>
+  <script src="_static/translations.js"></script>
+  <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="index" title="索引" href="genindex.html" />
+  <link rel="search" title="検索" href="search.html" />
+  <link rel="next" title="10. ProteinDF計算結果の解析" href="80_analysis.html" />
+  <link rel="prev" title="8. 基底状態計算" href="70_ground_state_calc.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ProteinDF User's Manual
+              
+
+              
+            </a>
+
+            
+            
+            
+            <div class="version">
+              2022.2
+            </div>
+            
+            
+
+            
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            <div>
+              <select name="lang" onchange="location.href=value;">
+                <option value="../en/75_3g_dft.html">English</option>
+                <option value="../ja/75_3g_dft.html" selected>日本語</option>
+              </select>
+            </div>
+
+            
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+          
+          
+          
+          
+          
+          <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="10_preface.html">1. はじめに</a></li>
+<li class="toctree-l1"><a class="reference internal" href="20_introduction.html">2. 概要</a></li>
+<li class="toctree-l1"><a class="reference internal" href="30_installation.html">3. インストール</a></li>
+<li class="toctree-l1"><a class="reference internal" href="40_quick_start_guide.html">4. クイックスタートガイド</a></li>
+<li class="toctree-l1"><a class="reference internal" href="50_input.html">5. 入力ファイル</a></li>
+<li class="toctree-l1"><a class="reference internal" href="60_exec.html">6. 実行方法</a></li>
+<li class="toctree-l1"><a class="reference internal" href="60_exec.html#run-type">7. 動作形式</a></li>
+<li class="toctree-l1"><a class="reference internal" href="70_ground_state_calc.html">8. 基底状態計算</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">9. 第3世代密度汎関数計算法</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#outline">9.1. 概要</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#calculation-of-coulomb-and-exchange-terms-in-the-third-generation-density-functional-calculation-method">9.2. 第3世代密度汎関数計算法におけるクーロン項・交換項の計算</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#implementation-of-the-third-generation-density-functional-calculation-method-in-the-proteindf">9.3. ProteinDFにおける第3世代密度汎関数計算法の実装</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reference">9.4. Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="80_analysis.html">10. ProteinDF計算結果の解析</a></li>
+<li class="toctree-l1"><a class="reference internal" href="90_appendix.html">11. 付録</a></li>
+</ul>
+
+          
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">ProteinDF User's Manual</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+          <div class="rst-content">
+            
+            <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">9. </span>第3世代密度汎関数計算法</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/75_3g_dft.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+            <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+              <div itemprop="articleBody">
+                
+  <section id="the-third-generation-density-functional-calculation-method">
+<h1><span class="section-number">9. </span>第3世代密度汎関数計算法<a class="headerlink" href="#the-third-generation-density-functional-calculation-method" title="この見出しへのパーマリンク"></a></h1>
+<section id="outline">
+<h2><span class="section-number">9.1. </span>概要<a class="headerlink" href="#outline" title="この見出しへのパーマリンク"></a></h2>
+<p>ProteinDFにおいて大規模分子の正準分子軌道を達成する上で、欠かすことのでききない計算方法が第3世代密度汎関数計算法です。詳細は論文 <a class="reference internal" href="#ref-hirano" id="id1"><span>[ref:Hirano]</span></a> を参照してください。ここでは、概要を紹介します。</p>
+<p>大規模分子の正準分子軌道を効率的に行うためには、克服すべき課題があります。一つは膨大な計算量をどう克服するか、もう一つは必要な大容量メモリをどのように取り扱うか、です。</p>
+<p>一般に正準分子軌道計算の計算量は、基底関数の総数を <span class="math notranslate nohighlight">\(N\)</span> とすると、形式的に <span class="math notranslate nohighlight">\(O(N^{4})\)</span> とあらわされます。この計算サイズ依存性は、クーロン項・交換項の計算に必要な4中心2電子反発積分に起因するものです。</p>
+<p>あらかじめ微小な積分値を無視するcutoff法などを駆使すると、その計算量を <span class="math notranslate nohighlight">\(O(N^{2})\)</span> 程度に、さらに経験的パラメータを利用して <span class="math notranslate nohighlight">\(O(N)\)</span> に抑えることができます。しかし、さまざまな性質を示すタンパク質をはじめとする、あらゆる大規模分子の正準分子軌道計算を安定的に達成できる <span class="math notranslate nohighlight">\(O(N)\)</span> 計算法はまだ見つかっていません。</p>
+<p>現在主流の分子積分法はDIRECT法とUPDATE法です。CPUの性能が向上した現在は、SCF繰り返し計算時に必要な分子積分を逐次計算するDIRECT法は高速に計算できます。SCF繰り返し計算において更新された密度行列要素に関する分子積分のみを求めるUPDATE法は、DIRECT法と相性が抜群です。ただし、DIRECT法で計算が必要な分子積分をリストアップするためには、SCF繰り返し計算の各回においての密度行列の更新成分情報(差電子密度行列)が必要です。</p>
+<p>大規模分子の正準分子軌道計算をDIRECT法で行うためには、現在主流の分散メモリ型並列計算機は不向きです。まず、差電子密度行列のデータ量は計算ノードのメモリに収まらない可能性があります。大域メモリをPCクラスタに分散保持することも可能ですが、行列要素のアクセスがネットワークを介することで遅くなります。また、分散メモリ型並列計算機では、1つでも遅い計算ノードがあると全体の計算ノードが待たされるため、全ての計算ノードにおけるタスクの均等化が必須です。UPDATE法において、差電子密度行列の非ゼロ要素は予測不能です。さらに基底関数の軌道の種類(s, p, d, ...)に対する計算量は大幅に違います。したがって、膨大な分子積分計算の並列計算タスクの均等化は非常に困難です。</p>
+<p>第3世代密度汎関数計算法では、Cholesky分解を用いて数学的に厳密にcutoffすることで計算量を抑えるとともに、現在主流の分散型並列計算機でも効率的な並列計算を実現します。</p>
+<p>詳細は後述しますが、第3世代密度汎関数計算法では、SCF繰り返し計算前に分子積分をCholeskyベクトルとして蓄積し、SCF繰り返し計算中は(分子積分計算は行わず)に行列演算のみで計算を達成します。最適化されている線形演算ライブラリを用いることにより、大規模分子系における正準分子軌道計算において、分散メモリ型並列計算機の計算性能を引き出します。</p>
+<p>第3世代密度汎関数計算法はFile法における分子積分をCholesky ベクトルの形で効率的に保存したとも言えます。それでも大規模分子のCholesky ベクトルのデータサイズが大きくなるため、これが第3世代密度汎関数計算法の欠点になります。</p>
+</section>
+<section id="calculation-of-coulomb-and-exchange-terms-in-the-third-generation-density-functional-calculation-method">
+<h2><span class="section-number">9.2. </span>第3世代密度汎関数計算法におけるクーロン項・交換項の計算<a class="headerlink" href="#calculation-of-coulomb-and-exchange-terms-in-the-third-generation-density-functional-calculation-method" title="この見出しへのパーマリンク"></a></h2>
+<p>4中心積分 <span class="math notranslate nohighlight">\(\langle pq | rs \rangle\)</span> を行列要素とするスーパーマトリックス <span class="math notranslate nohighlight">\(\pmb{V}\)</span> を考えると、これは正定値対称行列なのでCholesky分解できます。</p>
+<div class="math notranslate nohighlight">
+\[V^{ERI}_{pq,rs} = \langle pq | rs \rangle \approx \sum_{K=1}^{M}{L^{ERI}_{K,pq} L^{ERI}_{K,rs}}\]</div>
+<p>得られたCholeskyベクトル <span class="math notranslate nohighlight">\(\pmb{L}\)</span> を使うとクーロン項、Fock交換項は以下のように求められます。</p>
+<div class="math notranslate nohighlight">
+\[J_{pq} = \sum_{rs}{P_{rs} \langle pq | rs \rangle} \approx \sum_{rs}\sum_{I}{L_{I,pq} L_{I,rs} P_{rs}}\]</div>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}K_{pq} &amp;= - \frac{1}{2} \sum_{rs}{P_{rs} \langle pr | qs \rangle} \approx - \frac{1}{2} \sum_{I}\sum_{i}{X_{I,pi} X_{I,qi}}\\X_{I,pi} &amp;= \sum_{r} {L^{ERI}_{I,pr} Q_{ri}}\\P_{rs} &amp;= \sum_{i}{Q_{ri} Q_{si}}\end{aligned}\end{align} \]</div>
+<p>このとき、Cholesky分解の計算精度 <span class="math notranslate nohighlight">\(\delta\)</span> は以下のように求めらます。ユーザーが決めた任意の計算精度で数学的に厳密に分解が可能であり、それに応じて行列のrankを下げることができます。すなわち、求める計算精度に応じてCholeskyベクトル <span class="math notranslate nohighlight">\(\pmb{L}\)</span> のサイズを削減することができます。</p>
+<div class="math notranslate nohighlight">
+\[\left| \langle pq | rs \rangle - \sum_{K=1}^{M}{L_{K,pq} L_{K,rs}} \right| \leq \delta\]</div>
+<p>また、スーパーマトリックス <span class="math notranslate nohighlight">\(\pmb{V}\)</span> の対角成分の値が閾値 :math:`        au` よりも大きなものを選別しておくことで、Choleskyベクトル <span class="math notranslate nohighlight">\(\pmb{L}\)</span> のサイズを削減することもできます。これは一般的に用いられるSchwarzの不等式によるcutoff法と等価です。</p>
+<div class="math notranslate nohighlight">
+\[\langle pq | pq \rangle \ge \tau\]</div>
+</section>
+<section id="implementation-of-the-third-generation-density-functional-calculation-method-in-the-proteindf">
+<h2><span class="section-number">9.3. </span>ProteinDFにおける第3世代密度汎関数計算法の実装<a class="headerlink" href="#implementation-of-the-third-generation-density-functional-calculation-method-in-the-proteindf" title="この見出しへのパーマリンク"></a></h2>
+<p>近年のコンピュータはキャッシュの利用によって大幅に性能を向上させています。Cholesky ベクトルのデータアクセス方向は、Cholesky ベクトルの生成時とCholesky ベクトルを使ったクーロン項・交換項の計算時で異なります。Cholesky ベクトルの生成時は行方向のデータアクセスになりますが、クーロン項・交換項の計算時は列方向のデータアクセスになります。コンピュータのキャッシュを有効活用するために、SCF繰り返し計算前と計算中でProteinDFではデータアクセス方向を切り替えます。</p>
+<p>Cholesky ベクトルのデータアクセス方向の切り替えと、クーロン項・交換項計算時において、ファイルI/Oがパフォーマンスに大きな影響を与えます。ProteinDFでは <cite>local_temp_path</cite> キーワードでCholesky ベクトルの保存領域を指定できます。SSDなど高速なファイルI/Oをもたらす機器を指定することで、パフォーマンスの良い計算が達成できます。</p>
+</section>
+<section id="reference">
+<h2><span class="section-number">9.4. </span>Reference<a class="headerlink" href="#reference" title="この見出しへのパーマリンク"></a></h2>
+<div role="list" class="citation-list">
+<div class="citation" id="ref-hirano" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">ref:Hirano</a><span class="fn-bracket">]</span></span>
+<ol class="upperalpha simple" start="20">
+<li><p>Hirano, F. Sato, &quot;A third-generation density-functional-theory-based method for calculating canonical molecular orbitals of large molecules&quot;, Phys. Chem. Chem. Phys., 16(28), 14496-14503 (2014); <a class="reference external" href="https://doi.org/10.1039/C3CP55514C">https://doi.org/10.1039/C3CP55514C</a></p></li>
+</ol>
+</div>
+</div>
+</section>
+</section>
+
+
+              </div>
+              
+            </div>
+            <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="70_ground_state_calc.html" class="btn btn-neutral float-left" title="8. 基底状態計算" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="80_analysis.html" class="btn btn-neutral float-right" title="10. ProteinDF計算結果の解析" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014-2022, Toshiyuki HIRANO.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+          </div>
+        </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+    jQuery(function () {
+      SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+  
+   
+
+</body>
+
+</html>

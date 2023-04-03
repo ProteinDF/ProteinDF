@@ -1,0 +1,290 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" lang="en">
+<!--<![endif]-->
+
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>9. The third-generation density functional calculation method &mdash; ProteinDF User&#39;s Manual 2022.2.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+  
+  <script type="text/javascript" id="documentation_options" data-url_root="./"
+    src="_static/documentation_options.js"></script>
+  <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+  <script src="_static/jquery.js"></script>
+  <script src="_static/underscore.js"></script>
+  <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+  <script src="_static/doctools.js"></script>
+  <script src="_static/sphinx_highlight.js"></script>
+  <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="index" title="Index" href="genindex.html" />
+  <link rel="search" title="Search" href="search.html" />
+  <link rel="next" title="10. Analysis of the ProteinDF Calculation Results" href="80_analysis.html" />
+  <link rel="prev" title="8. Ground State Calculation" href="70_ground_state_calc.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ProteinDF User's Manual
+              
+
+              
+            </a>
+
+            
+            
+            
+            <div class="version">
+              2022.2
+            </div>
+            
+            
+
+            
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            <div>
+              <select name="lang" onchange="location.href=value;">
+                <option value="../en/75_3g_dft.html" selected>English</option>
+                <option value="../ja/75_3g_dft.html">日本語</option>
+              </select>
+            </div>
+
+            
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+          
+          
+          
+          
+          
+          <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="10_preface.html">1. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="20_introduction.html">2. Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="30_installation.html">3. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="40_quick_start_guide.html">4. Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="50_input.html">5. Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="60_exec.html">6. Execution Procedure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="60_exec.html#run-type">7. Run Type</a></li>
+<li class="toctree-l1"><a class="reference internal" href="70_ground_state_calc.html">8. Ground State Calculation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">9. The third-generation density functional calculation method</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#outline">9.1. Outline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#calculation-of-coulomb-and-exchange-terms-in-the-third-generation-density-functional-calculation-method">9.2. Calculation of Coulomb and exchange terms in the third-generation density functional calculation method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#implementation-of-the-third-generation-density-functional-calculation-method-in-the-proteindf">9.3. Implementation of the third-generation density functional calculation method in the ProteinDF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reference">9.4. Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="80_analysis.html">10. Analysis of the ProteinDF Calculation Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="90_appendix.html">11. Appendix</a></li>
+</ul>
+
+          
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">ProteinDF User's Manual</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+          <div class="rst-content">
+            
+            <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">9. </span>The third-generation density functional calculation method</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/75_3g_dft.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+            <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+              <div itemprop="articleBody">
+                
+  <section id="the-third-generation-density-functional-calculation-method">
+<h1><span class="section-number">9. </span>The third-generation density functional calculation method<a class="headerlink" href="#the-third-generation-density-functional-calculation-method" title="Permalink to this heading"></a></h1>
+<section id="outline">
+<h2><span class="section-number">9.1. </span>Outline<a class="headerlink" href="#outline" title="Permalink to this heading"></a></h2>
+<p>The third-generation density functional theory is an indispensable method
+for achieving canonical molecular orbitals of large molecules in ProteinDF.
+Please refer to the paper <a class="reference internal" href="#ref-hirano" id="id1"><span>[ref:Hirano]</span></a> for details. Here is an overview.</p>
+<p>There are challenges that need to be overcome in order to efficiently perform canonical molecular orbitals of large molecules.
+One is how to overcome the huge amount of computation, and the other is how to handle the large amount of memory required.</p>
+<p>In general, the computational complexity of a canonical molecular orbital calculation is <span class="math notranslate nohighlight">\(N\)</span>, where N is the total number of basis functions.
+Formally, it is expressed as <span class="math notranslate nohighlight">\(O(N^{4})\)</span>.
+This calculation size dependence is due to the four-center two-electron repulsive integral required to calculate the Coulomb and exchange terms.</p>
+<p>By using the cutoff method to ignore small integrals in advance,
+the computational complexity can be reduced to <span class="math notranslate nohighlight">\(O(N^{2})\)</span> or even <span class="math notranslate nohighlight">\(O(N)\)</span> by using empirical parameters.
+However, no <span class="math notranslate nohighlight">\(O(N)\)</span> method has yet been found that can stably achieve canonical molecular orbital calculations for any large molecule,
+including proteins with a variety of properties.</p>
+<p>Currently, the mainstream molecular integration methods are the DIRECT method and the UPDATE method.
+As CPU performance has improved, the DIRECT method, which calculates the molecular integrals required for SCF iterations sequentially, is fast.
+And, the UPDATE method, which calculates only the molecular integrals for the updated density matrix elements in the SCF iterations, is a perfect match for the DIRECT method.
+However, in order to list the molecular integrals that need to be calculated by the DIRECT method, we need the information on the updated components of the density matrix (difference electron density matrix) for each iteration of the SCF calculation.</p>
+<p>In order to perform canonical molecular orbital calculations for large molecules using the DIRECT method,
+the current mainstream distributed memory parallel computers are not suitable.
+First of all, the amount of data in the difference electron density matrix may not fit into the memory of a computational node.
+It is possible to maintain a distributed global memory on a PC cluster, but access to the matrix elements will be slowed down by the network.
+Also, in a distributed-memory parallel computer, if there is even one slow compute node, the whole compute nodes will be forced to wait.
+Therefore, it is essential to equalize the tasks on all computation nodes.
+In the UPDATE method, the non-zero elements of the difference electron density matrix are unpredictable.
+In addition, the computational complexity for different types of basis function orbitals (s, p, d, …) is significantly different.
+Therefore, it is very difficult to equalize the parallel computing tasks for a huge number of molecular integration calculations.</p>
+<p>In the third-generation density functional theory, the computational complexity is reduced by mathematically exact cutoff using the Cholesky decomposition.
+The third-generation density functional method uses the Cholesky decomposition and mathematically exact cutoff to reduce the computational complexity and to achieve efficient parallel computation even on the current mainstream distributed parallel computers.</p>
+<p>As will hereinafter be described in detail,
+in the third-generation density functional calculation method,
+molecular integrals are stored as Cholesky vectors before the SCF iteration,
+and during the SCF iterations, the calculation is accomplished using only matrix operations (without molecular integrals).
+By using the optimized linear arithmetic library,
+we can exploit the computational performance of distributed-memory parallel computers
+for canonical molecular orbital calculations in large-scale molecular systems.</p>
+<p>The third-generation density functional theory can be said to be an efficient storage of the molecular integrals
+in the File method in the form of Cholesky vectors.
+Nevertheless, the data size of Cholesky vectors for large molecules is still large,
+which is a drawback of the third-generation density functional theory.</p>
+</section>
+<section id="calculation-of-coulomb-and-exchange-terms-in-the-third-generation-density-functional-calculation-method">
+<h2><span class="section-number">9.2. </span>Calculation of Coulomb and exchange terms in the third-generation density functional calculation method<a class="headerlink" href="#calculation-of-coulomb-and-exchange-terms-in-the-third-generation-density-functional-calculation-method" title="Permalink to this heading"></a></h2>
+<p>Consider the supermatrix <span class="math notranslate nohighlight">\(\pmb{V}\)</span> with the 4-center integral <span class="math notranslate nohighlight">\(\langle pq | rs \rangle\)</span> as its matrix element.
+Since this is a positive definite symmetric matrix, it can be Cholesky decomposed.</p>
+<div class="math notranslate nohighlight">
+\[V^{ERI}_{pq,rs} = \langle pq | rs \rangle \approx \sum_{K=1}^{M}{L^{ERI}_{K,pq} L^{ERI}_{K,rs}}\]</div>
+<p>Using the obtained Cholesky vector <span class="math notranslate nohighlight">\(\pmb{L}\)</span>, the Coulomb and Fock exchange terms can be obtained as follows</p>
+<div class="math notranslate nohighlight">
+\[J_{pq} = \sum_{rs}{P_{rs} \langle pq | rs \rangle} \approx \sum_{rs}\sum_{I}{L_{I,pq} L_{I,rs} P_{rs}}\]</div>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}K_{pq} &amp;= - \frac{1}{2} \sum_{rs}{P_{rs} \langle pr | qs \rangle} \approx - \frac{1}{2} \sum_{I}\sum_{i}{X_{I,pi} X_{I,qi}}\\X_{I,pi} &amp;= \sum_{r} {L^{ERI}_{I,pr} Q_{ri}}\\P_{rs} &amp;= \sum_{i}{Q_{ri} Q_{si}}\end{aligned}\end{align} \]</div>
+<p>The computational precision of the Cholesky decomposition, <span class="math notranslate nohighlight">\(\delta\)</span>, can then be obtained as follows
+The decomposition can be mathematically exact with any computational precision determined by the user, and the rank of the matrix can be reduced accordingly.
+In other words, the size of the Cholesky vector <span class="math notranslate nohighlight">\(\pmb{L}\)</span> can be reduced according to the desired computational precision.</p>
+<div class="math notranslate nohighlight">
+\[\left| \langle pq | rs \rangle - \sum_{K=1}^{M}{L_{K,pq} L_{K,rs}} \right| \leq \delta\]</div>
+<p>You can also reduce the size of the Cholesky vector <span class="math notranslate nohighlight">\(\pmb{L}\)</span> by sorting out the diagonal components of the supermatrix <span class="math notranslate nohighlight">\(\pmb{V}\)</span> that have values larger than the threshold <span class="math notranslate nohighlight">\(\tau\)</span>.
+We can also reduce the size of the Cholesky vector <span class="math notranslate nohighlight">\(\pmb{L}\)</span> by selecting those whose diagonal components are larger than the threshold <span class="math notranslate nohighlight">\(\pmb{V}\)</span>.
+This is equivalent to the commonly used cutoff method with Schwarz’s inequality.</p>
+<div class="math notranslate nohighlight">
+\[\langle pq | pq \rangle \ge \tau\]</div>
+</section>
+<section id="implementation-of-the-third-generation-density-functional-calculation-method-in-the-proteindf">
+<h2><span class="section-number">9.3. </span>Implementation of the third-generation density functional calculation method in the ProteinDF<a class="headerlink" href="#implementation-of-the-third-generation-density-functional-calculation-method-in-the-proteindf" title="Permalink to this heading"></a></h2>
+<p>In recent years, computers have greatly improved their performance through the use of caches.
+The direction of data access for Cholesky vectors differs between the generation of Cholesky vectors
+and the calculation of Coulomb and exchange terms using Cholesky vectors.
+When generating Cholesky vectors, the data is accessed in the line direction,
+while when calculating Coulomb and exchange terms, the data is accessed in the column direction.
+To make the best use of the computer cache, ProteinDF switches the data access direction before and during SCF iterations.</p>
+<p>When switching the data access direction for Cholesky vectors and when calculating Coulomb and exchange terms, file I/O is a major performance issue.
+ProteinDF allows you to specify the storage area of Cholesky vectors with the <cite>local_temp_path</cite> keyword.
+By specifying a device that provides fast file I/O, such as SSD, you can achieve a high-performance calculation.</p>
+</section>
+<section id="reference">
+<h2><span class="section-number">9.4. </span>Reference<a class="headerlink" href="#reference" title="Permalink to this heading"></a></h2>
+<div role="list" class="citation-list">
+<div class="citation" id="ref-hirano" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">ref:Hirano</a><span class="fn-bracket">]</span></span>
+<ol class="upperalpha simple" start="20">
+<li><p>Hirano, F. Sato, “A third-generation density-functional-theory-based method for calculating canonical molecular orbitals of large molecules”, Phys. Chem. Chem. Phys., 16(28), 14496-14503 (2014); <a class="reference external" href="https://doi.org/10.1039/C3CP55514C">https://doi.org/10.1039/C3CP55514C</a></p></li>
+</ol>
+</div>
+</div>
+</section>
+</section>
+
+
+              </div>
+              
+            </div>
+            <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="70_ground_state_calc.html" class="btn btn-neutral float-left" title="8. Ground State Calculation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="80_analysis.html" class="btn btn-neutral float-right" title="10. Analysis of the ProteinDF Calculation Results" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014-2022, Toshiyuki HIRANO.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+          </div>
+        </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+    jQuery(function () {
+      SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+  
+   
+
+</body>
+
+</html>
