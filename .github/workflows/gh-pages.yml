@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: "master"
+          ref: "main"
           submodules: true
           fetch-depth: 1
 
