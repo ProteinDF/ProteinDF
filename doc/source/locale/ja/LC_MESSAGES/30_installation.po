@@ -9,14 +9,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ProteinDF User's Manual 2020.06.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-07 22:02+0900\n"
+"POT-Creation-Date: 2023-04-03 22:28+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.9.1\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../source/30_installation.rst:3
 msgid "Installation"
@@ -57,7 +57,8 @@ msgid "MPI runtime environment (only for parallel version)"
 msgstr "MPI実行環境(並列版のみ)"
 
 #: ../../source/30_installation.rst:17
-msgid "Distributed matrix operation library (ScaLAPACK)"
+#, fuzzy
+msgid "Distributed matrix operation (ScaLAPACK) library  (optional)"
 msgstr "分散行列演算ライブラリ(ScaLAPACK)"
 
 #: ../../source/30_installation.rst:21
@@ -83,10 +84,14 @@ msgid "The program should also work on the x86 PC Linux system."
 msgstr "一般的なx86 PC Linuxでも動作します。"
 
 #: ../../source/30_installation.rst:32
+msgid "Assumed computing environment and operations"
+msgstr ""
+
+#: ../../source/30_installation.rst:39
 msgid "Memory and disk"
 msgstr "メモリとディスク"
 
-#: ../../source/30_installation.rst:34
+#: ../../source/30_installation.rst:41
 msgid ""
 "The required memory size depends on the scale of computation model. "
 "Furthermore, in parallel computation, the required memory size per node "
@@ -104,18 +109,18 @@ msgstr ""
 "一方、ScaLAPACKを使用する場合は、全ノードで計算領域を分散保持しますので、 全ノードのメモリ容量が計算可能サイズの上限になります。 "
 "ただし、この他にも計算可能サイズを決定する要因がありますので 目安としてください。"
 
-#: ../../source/30_installation.rst:38
+#: ../../source/30_installation.rst:45
 msgid ""
 "For a 32bit OS, ProteinDF may have some limitations in available memory "
 "size, file size, etc."
 msgstr "32bit OSでは扱えるメモリサイズ、ファイルサイズなど幾つかの制限事項がある場合があります。"
 
-#: ../../source/30_installation.rst:42
+#: ../../source/30_installation.rst:49
 #, fuzzy
 msgid "Python module"
 msgstr "Pythonモジュール"
 
-#: ../../source/30_installation.rst:44
+#: ../../source/30_installation.rst:51
 msgid ""
 "Several python scripts are prepared for ProteinDF. These scripts are not "
 "necessary for program execution, but for analysis of calculation results."
@@ -128,60 +133,60 @@ msgstr ""
 "これらpythonスクリプトの動作には以下のソフトウェア(モジュール)が必要です。 "
 "これらのソフトウェアの環境構築は、それぞれのシステムの方針に従って下さい。"
 
-#: ../../source/30_installation.rst:46
+#: ../../source/30_installation.rst:53
 msgid "Python(above version 3.5)"
 msgstr "python(version 3.5以上)"
 
-#: ../../source/30_installation.rst:47
+#: ../../source/30_installation.rst:54
 msgid "argparse module"
 msgstr "argparseモジュール"
 
-#: ../../source/30_installation.rst:48
+#: ../../source/30_installation.rst:55
 msgid "numpy module"
 msgstr "numpyモジュール"
 
-#: ../../source/30_installation.rst:49
+#: ../../source/30_installation.rst:56
 msgid "matplotlib module"
 msgstr "matplotlibモジュール"
 
-#: ../../source/30_installation.rst:50
+#: ../../source/30_installation.rst:57
 msgid "MessagePack module"
 msgstr "MessagePackモジュール"
 
-#: ../../source/30_installation.rst:51
+#: ../../source/30_installation.rst:58
 msgid "YAML module"
 msgstr "YAMLモジュール"
 
-#: ../../source/30_installation.rst:56
+#: ../../source/30_installation.rst:63
 msgid "Installation and setup"
 msgstr "インストールと準備"
 
-#: ../../source/30_installation.rst:58
+#: ../../source/30_installation.rst:65
 msgid ""
 "The installation procedure varies according to the distributed package. "
 "If a README file is provided, follow the README file instructions."
 msgstr "配布パッケージによって、インストールの形態が異なります。 READMEファイルが添付されている場合は、READMEファイルの指示に従って下さい。"
 
-#: ../../source/30_installation.rst:64
+#: ../../source/30_installation.rst:71
 msgid "Environment variables"
 msgstr "環境変数"
 
-#: ../../source/30_installation.rst:67
+#: ../../source/30_installation.rst:74
 msgid ""
 "ProteinDF requires the user to configure the following environment "
 "variables. Appropriately set the variables according to the user's "
 "environment."
 msgstr "ProteinDFの実行には、以下の環境変数を設定する必要があります。 利用する環境に応じて、適切に環境変数を設定してください。"
 
-#: ../../source/30_installation.rst:73
+#: ../../source/30_installation.rst:80
 msgid "PDF_HOME"
 msgstr ""
 
-#: ../../source/30_installation.rst:75
+#: ../../source/30_installation.rst:82
 msgid "Specify the directory where the ProteinDF package was copied."
 msgstr "ProteinDFパッケージをコピーしたディレクトリを指定します。"
 
-#: ../../source/30_installation.rst:77
+#: ../../source/30_installation.rst:84
 msgid ""
 "For example, when the package was copied to /usr/local/ProteinDF and when"
 " bash is used as the login shell, add the following to .bashrc:"
@@ -189,46 +194,47 @@ msgstr ""
 "例えば、/usr/local/ProteinDF に本パッケージをコピーしたとき、 "
 "ログインシェルにbashを利用している場合は.bashrcに以下を追加してください。"
 
-#: ../../source/30_installation.rst:87
+#: ../../source/30_installation.rst:94
 msgid "OMP_NUM_THREADS"
 msgstr ""
 
-#: ../../source/30_installation.rst:89
+#: ../../source/30_installation.rst:96
 msgid ""
 "Sets the maximum number of threads in OpenMP. OpenMP must be enabled at "
 "build time."
-msgstr ""
-"OpenMPにおける最大スレッド数を設定します。 ビルド時にOpenMPを有効にする必要があります。"
+msgstr "OpenMPにおける最大スレッド数を設定します。 ビルド時にOpenMPを有効にする必要があります。"
 
-#: ../../source/30_installation.rst:95
+#: ../../source/30_installation.rst:102
 msgid "OMP_SCHEDULE"
 msgstr ""
 
-#: ../../source/30_installation.rst:97
+#: ../../source/30_installation.rst:104
 msgid ""
 "When executing ProteinDF with the OpenMP multi-threading, specify the "
 "type and chunk size of the parallel schedule inside the OpenMP parallel "
 "region."
 msgstr "OpenMPにおける並列スケジュールのタイプとチャンクサイズを設定できます。 ビルド時にOpenMPを有効にする必要があります。"
 
-#: ../../source/30_installation.rst:101
+#: ../../source/30_installation.rst:108
 msgid "Build from the source"
 msgstr "ソースからのビルド"
 
-#: ../../source/30_installation.rst:106
+#: ../../source/30_installation.rst:113
 msgid "Executing CMake"
 msgstr "cmakeの実行"
 
-#: ../../source/30_installation.rst:108
+#: ../../source/30_installation.rst:115
 msgid ""
 "ProteinDF uses CMake to create the Makefile. You can execute cmake by "
 "specifying the source directory in an arbitrary directory. For example, "
 "to create a build directory directly under the source directory, you can "
 "execute cmake by specifying run as follows."
 msgstr ""
-"ProteinDFではMakefileの作成にcmakeを利用しています。 任意のディレクトリにて、ソースディレクトリを指定してcmakeを実行します。 例えばtarballを展開したディレクトリの直下にbuildディレクトリを作成する場合、 以下のように実行します。"
+"ProteinDFではMakefileの作成にcmakeを利用しています。 "
+"任意のディレクトリにて、ソースディレクトリを指定してcmakeを実行します。 "
+"例えばtarballを展開したディレクトリの直下にbuildディレクトリを作成する場合、 以下のように実行します。"
 
-#: ../../source/30_installation.rst:122
+#: ../../source/30_installation.rst:129
 msgid ""
 "CMake automatically surveys the build environment and sets the location "
 "of the library. The results are output when cmake is run. If you want to "
@@ -236,119 +242,123 @@ msgid ""
 "command to run it as follows: ``$ cmake .. 2>&1 | tee out.cmake``"
 msgstr ""
 "cmakeは自動的にビルド環境を調査し、ライブラリの場所を設定します。 調査結果はcmakeの実行時に出力されます。 "
-"出力結果をファイルに保存して後に参照したい場合は、teeコマンドを利用して ``$ cmake .. 2>&1 | tee out.cmake`` のように実行します。"
+"出力結果をファイルに保存して後に参照したい場合は、teeコマンドを利用して ``$ cmake .. 2>&1 | tee out.cmake``"
+" のように実行します。"
 
-#: ../../source/30_installation.rst:129
+#: ../../source/30_installation.rst:136
 msgid ""
 "Here are some common variables. Use ``cmake -L`` or ``cmake -LA``` for "
 "more information."
-msgstr ""
-"以下によく用いられる変数を示します。 詳しくは ``cmake -L`` または ``cmake -LA`` をご覧ください。"
+msgstr "以下によく用いられる変数を示します。 詳しくは ``cmake -L`` または ``cmake -LA`` をご覧ください。"
 
-#: ../../source/30_installation.rst:133
+#: ../../source/30_installation.rst:140
 msgid "``--DCMAKE_INSTALL_PREFIX=PATH``"
 msgstr ""
 
-#: ../../source/30_installation.rst:135
+#: ../../source/30_installation.rst:142
 msgid ""
 "Specify the installation location of the program. The default is "
 "/usr/local. This is used to install the program in the user's home "
 "directory."
 msgstr ""
-"プログラムのインストール先を指定します。 デフォルトは/usr/localです。 ユーザーのホームディレクトリなどにインストールするときに用いられます。"
+"プログラムのインストール先を指定します。 デフォルトは/usr/localです。 "
+"ユーザーのホームディレクトリなどにインストールするときに用いられます。"
 
-#: ../../source/30_installation.rst:140
+#: ../../source/30_installation.rst:147
 msgid "``--with-blas=location``"
 msgstr ""
 
-#: ../../source/30_installation.rst:142
+#: ../../source/30_installation.rst:149
 msgid "Specify the location of the BLAS library."
 msgstr "BLASライブラリの場所を指定します。"
 
-#: ../../source/30_installation.rst:145
+#: ../../source/30_installation.rst:152
 msgid "``--with-lapack=location``"
 msgstr ""
 
-#: ../../source/30_installation.rst:147
+#: ../../source/30_installation.rst:154
 msgid "Specify the location of the LAPACK library."
 msgstr ""
 
-#: ../../source/30_installation.rst:150
+#: ../../source/30_installation.rst:157
 msgid "``--with-scalapack=location``"
 msgstr ""
 
-#: ../../source/30_installation.rst:152
+#: ../../source/30_installation.rst:159
 msgid "Specify the location of the ScaLAPACK library."
 msgstr ""
 
-#: ../../source/30_installation.rst:155
+#: ../../source/30_installation.rst:162
 msgid "Environment variable CC,CXX,MPICXX"
 msgstr ""
 
-#: ../../source/30_installation.rst:157
+#: ../../source/30_installation.rst:164
 msgid ""
 "Specifies the options to pass to the C/C++ compiler. Use this variable to"
 " specify the options to the OpenMP compilers, etc."
 msgstr ""
 
-#: ../../source/30_installation.rst:159
+#: ../../source/30_installation.rst:166
 msgid "Environment variable CFLAGS,CXXFLAGS"
 msgstr ""
 
-#: ../../source/30_installation.rst:161
+#: ../../source/30_installation.rst:168
 msgid ""
 "Specify options for C/C++ compiler. Instructions to the compiler, such as"
 " OpenMP, should be specified in this environment variable."
 msgstr ""
 
-#: ../../source/30_installation.rst:167
+#: ../../source/30_installation.rst:174
 msgid "Executing \\\"make\\\""
 msgstr "\\\"make\\\" の実行"
 
-#: ../../source/30_installation.rst:169
+#: ../../source/30_installation.rst:176
 msgid ""
 "Execute the ``cmake`` command, and make sure the Makefile is created. "
 "Once the Makefile is created, execute the ``make`` command."
-msgstr ""
-"``cmake`` コマンドを実行すると、``Makefile`` が作成されます。"
-"``make`` コマンドを実行してプログラムをビルドします。"
+msgstr "``cmake`` コマンドを実行すると、``Makefile`` が作成されます。``make`` コマンドを実行してプログラムをビルドします。"
 
-#: ../../source/30_installation.rst:178
+#: ../../source/30_installation.rst:185
 msgid "Installing the program"
 msgstr "プログラムのインストール"
 
-#: ../../source/30_installation.rst:180
+#: ../../source/30_installation.rst:187
 msgid ""
 "After executing \\\"make\\\", install the execution file/data to the "
 "specified path."
 msgstr "\\\"make\\\"を実行した後、実行ファイル・データを所定のパスにインストールします。"
 
-#: ../../source/30_installation.rst:187
+#: ../../source/30_installation.rst:194
 msgid "After the execution above, the following files will be created:"
 msgstr "インストールが実行されると、以下のファイルがコピーされます。"
 
-#: ../../source/30_installation.rst:189
+#: ../../source/30_installation.rst:196
 msgid "${PDF_HOME}/bin/PDF.x"
 msgstr ""
 
-#: ../../source/30_installation.rst:190
+#: ../../source/30_installation.rst:197
 msgid "${PDF_HOME}/bin/PPDF.x"
 msgstr ""
 
-#: ../../source/30_installation.rst:191
+#: ../../source/30_installation.rst:198
 msgid "${PDF_HOME}/data/basis2"
 msgstr ""
 
-#: ../../source/30_installation.rst:195
+#: ../../source/30_installation.rst:202
 msgid "When trouble occurs..."
 msgstr "うまく行かない場合"
 
-#: ../../source/30_installation.rst:197
+#: ../../source/30_installation.rst:204
 msgid ""
 "In some environments, problems may occur such that no script can be "
 "executed, or no build is possible. In such cases, check the output of "
 "each script thoroughly (i.e. out.configure, out.make, and "
 "out.make_install in the case above)."
 msgstr ""
-"境によってはスクリプトが実行できない、ビルドできないなどの問題が発生するかもしれません。 その場合は、各スクリプトの出力(上記の操作の場合、out.configure, out.make, out.make_install)をよくチェックしてください。"
+"境によってはスクリプトが実行できない、ビルドできないなどの問題が発生するかもしれません。 "
+"その場合は、各スクリプトの出力(上記の操作の場合、out.configure, out.make, "
+"out.make_install)をよくチェックしてください。"
+
+#~ msgid "Assumed computing environment"
+#~ msgstr ""
 
