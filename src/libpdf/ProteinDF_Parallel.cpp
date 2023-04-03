@@ -37,6 +37,10 @@
 #include "tl_scalapack_context.h"
 #endif  // HAVE_SCALAPACK
 
+#ifdef HAVE_EIGEN
+#include "tl_system_eigen.h"
+#endif  // HAVE_EIGEN
+
 ProteinDF_Parallel::ProteinDF_Parallel() {
 }
 
@@ -131,6 +135,18 @@ void ProteinDF_Parallel::startlogo() {
 #ifdef _OPENMP
     info += TlUtils::format(" OpenMP threads: %d\n", omp_get_max_threads());
 #endif  // _OPENMP
+
+#ifdef HAVE_EIGEN
+    {
+        const std::string eigenInfo =
+            " Eigen SIMD instruction: " + TlSystem_Eigen::getSimdInstructionSetsInUse() + "\n";
+        info += eigenInfo;
+    }
+#else
+    {
+        info += " Eigen is disabled.\n";
+    }
+#endif  // HAVE_EIGEN
 
     ProteinDF::startlogo(version, info);
 }

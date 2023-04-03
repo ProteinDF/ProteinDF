@@ -43,7 +43,7 @@
 
 #ifdef HAVE_EIGEN
 #include "tl_system_eigen.h"
-#ifndef HAVE_EIGEN
+#endif  // HAVE_EIGEN
 
 ProteinDF::ProteinDF()
     : log_(TlLogging::getInstance()) {

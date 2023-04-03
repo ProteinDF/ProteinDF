@@ -21,6 +21,7 @@
 
 #include <mpi.h>
 #include <stdint.h>
+
 #include <map>
 #include <string>
 #include <valarray>
@@ -48,18 +49,18 @@ class TlSerializeData;
 
 // シングルトンパターンで実装
 class TlCommunicate {
-   public:
+public:
     static TlCommunicate& getInstance(int argc, char* argv[]);
     static TlCommunicate& getInstance();
 
-   private:
+private:
     // for Singleton
     TlCommunicate();
     TlCommunicate(const TlCommunicate& rhs);
     ~TlCommunicate();
     const TlCommunicate& operator=(const TlCommunicate& rhs);
 
-   public:
+public:
     /// 作業用メモリサイズを設定する
     ///
     /// @param workMemSize [in] 作業用メモリサイズ(byte単位)
@@ -73,11 +74,15 @@ class TlCommunicate {
     int getNumOfProcs() const;
 
     // absolute
-    int getNumOfProc() const { return this->getNumOfProcs(); }
+    int getNumOfProc() const {
+        return this->getNumOfProcs();
+    }
 
     int getRank() const;
 
     std::string getReport() const;
+
+    std::string getHostName() const;
 
     /**
      *  rank が 0 だったらtrueを返す
@@ -121,15 +126,15 @@ class TlCommunicate {
     int allReduce_MIN(int& rData);
     int allReduce_MAXLOC(double* pValue, int* pIndex);
 
-   public:
+public:
     int iAllReduce_SUM(const double* pSendBuf, double* pRecvBuf, int count);
 
-   protected:
+protected:
     template <typename T>
     int iAllReduce(const T* pSendBuf, T* pRecvBuf, int count,
                    const MPI_Datatype mpiType, const MPI_Op mpiOp);
 
-   public:
+public:
     /** master に保存されたデータをslaveにコピーします
      *
      *  @param[in/out] rData 送信(master)・受信(slave)オブジェクトの参照
@@ -390,14 +395,16 @@ class TlCommunicate {
     /// 非同期通信が残っていないかチェックする
     bool checkNonBlockingCommunications() const;
 
-   public:
+public:
     double getTime();
 
-   public:
+public:
     // for debug
-    unsigned long getBarrierCount() { return this->counter_barrier_; };
+    unsigned long getBarrierCount() {
+        return this->counter_barrier_;
+    };
 
-   protected:
+protected:
     template <typename T>
     int reduce(T* pData, const MPI_Datatype mpiType, const std::size_t start,
                const std::size_t end, const MPI_Op mpiOp, const int root);
@@ -512,21 +519,21 @@ class TlCommunicate {
     int iReceiveDataFromAnySourceAnyTag(T* pData, const MPI_Datatype mpiType,
                                         const int start, const int end);
 
-   private:
+private:
     int initialize(int argc, char* argv[]);
 
     bool test(void* pData, int* pSrc = NULL);
     int wait(void* pData, int* pSrc = NULL, int* pTag = NULL);
     bool cancel(void* pData);
 
-   private:
+private:
     void register_MatrixElement();
     void unregister_MatrixElement();
 
     void register_VectorElement();
     void unregister_VectorElement();
 
-   private:
+private:
     // ------------------------------------------------------------------------
     // template: broadcast
     // ------------------------------------------------------------------------
@@ -555,7 +562,7 @@ class TlCommunicate {
     template <class DenseVector>
     int broadcast_denseVector(DenseVector* pVector, int root = 0);
 
-   private:
+private:
     // ------------------------------------------------------------------------
     // variables
     // ------------------------------------------------------------------------
@@ -592,10 +599,10 @@ class TlCommunicate {
 
     TlLogging& log_;
 
-   private:
+private:
     // for non-blocking communication
     class NonBlockingCommParam {
-       public:
+    public:
         NonBlockingCommParam()
             : requests(std::vector<uintptr_t>()),
               requestStates(),
@@ -610,10 +617,12 @@ class TlCommunicate {
               property(in_property),
               source(-1) {}
 
-       public:
-        enum Property { RECV = 0, SEND = 1, COMPLETE = 2 };
+    public:
+        enum Property { RECV = 0,
+                        SEND = 1,
+                        COMPLETE = 2 };
 
-       public:
+    public:
         std::vector<uintptr_t> requests;
         std::vector<unsigned int> requestStates;
         int tag;
@@ -625,13 +634,13 @@ class TlCommunicate {
         NonBlockingCommParamTableType;
     static NonBlockingCommParamTableType nonBlockingCommParamTable_;
 
-   private:
+private:
     /// 非同期通信テーブルの衝突をチェックする
     bool checkNonBlockingTableCollision(uintptr_t key,
                                         const NonBlockingCommParam& param,
                                         int line) const;
 
-   private:
+private:
     // 通信用タグ
     enum {
         TLC_REDUCE_SUM_TLSPARSEMATRIX_SIZE = 50001,
