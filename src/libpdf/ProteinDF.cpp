@@ -40,7 +40,10 @@
 #include "TlStringTokenizer.h"
 #include "TlTime.h"
 #include "TlUtils.h"
+
+#ifdef HAVE_EIGEN
 #include "tl_system_eigen.h"
+#ifndef HAVE_EIGEN
 
 ProteinDF::ProteinDF()
     : log_(TlLogging::getInstance()) {
