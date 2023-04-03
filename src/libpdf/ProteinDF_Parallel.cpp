@@ -37,6 +37,10 @@
 #include "tl_scalapack_context.h"
 #endif  // HAVE_SCALAPACK
 
+#ifdef HAVE_EIGEN
+#include "tl_system_eigen.h"
+#endif  // HAVE_EIGEN
+
 ProteinDF_Parallel::ProteinDF_Parallel() {
 }
 
