@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
             info += ompInfo;
 
             {
-                std::string ompProcBindStr = "OMP_PROC_BIND: ";
+                std::string ompProcBindStr = " OMP_PROC_BIND: ";
                 const omp_proc_bind_t ompProcBind = omp_get_proc_bind();
                 switch (ompProcBind) {
                     case omp_proc_bind_false:
