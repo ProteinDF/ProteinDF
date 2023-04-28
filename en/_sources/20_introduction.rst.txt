@@ -1,14 +1,26 @@
 .. -*- coding: utf-8; -*-
 
-********
+*******************************************************************************
 Overview
-********
+*******************************************************************************
 
 ProteinDF is an application program focusing on precisely executing/analyzing all-electron canonical molecular orbital (CMO) calculations of proteins.
 
+Design Concept
+===============================================================================
+
+To achieve canonical (Kohn-Sham) molecular orbital calculations of large molecular systems,
+we maximize the use of limited computational resources.
+
+It is designed to (hopefully) run efficiently on everything from stand-alone PCs that are not connected to a network
+to supercomputers that rank in the `TOP500 <https://www.top500.org/>`_.
+It utilizes parallelization technologies such as MPI and OpenMP, but a single code can run in both single-process and multi-process mode.
+
+In general, physical memory is small and limited for large-scale molecular orbital calculations. Therefore, ProteinDF only places the data necessary for a given calculation in physical memory and avoids unnecessary data on disk storage. Although the extra file input/output makes the calculation speed slower than general molecular orbital calculation programs, it allows canonical molecular orbital calculations of large molecular systems with limited computational resources.
+
 
 Features
-========
+===============================================================================
 
 The ProteinDF features are as follows:
 
@@ -33,7 +45,7 @@ The ProteinDF features are as follows:
 
 
 Calculation method
-==================
+===============================================================================
 
 To handle the entire structure of a protein and to predict its functions quantitatively,
 it is appropriate to use a DFT method which solves Kohn-Sham equations,
@@ -66,18 +78,18 @@ See Appendix for details.
 
 
 Computation size
-================
+===============================================================================
 
 The most distinctive feature of ProteinDF is its computation size.
 The user can execute all-electron calculation of proteins with several dozens of residues in the current PC system without any difficulties. Among all of our efforts to make the program possible, the biggest contributing factor was our coding conventions for memory management. Utilizing dynamic memory management, ProteinDF calculates all matrices, with as many dimensions as basis sets, by using only a limited number of memory units. With this scheme, we can reversely calculate the maximum computation size from the memory size of the computing machine. When the number of basis sets is Norb, we can roughly estimate the memory size for each matrix to be 8 x Norb x Norb bytes. Note, however, that the OS or transferring processes also use some memory spaces. In particular, the OS may execute dynamic memory deletion on its own timing (even when the timing is expressly declared in the program). Note also that ProteinDF outputs intermediate files to disk storage in order to take full advantage of the memory. During computation, be sure to secure disk space sufficient for at least 200 matrices, each with the estimated computation size. ProteinDF saves all intermediate outputs for safe computation.
 
 Others
-======
+===============================================================================
 
 ProteinDF is optimized for all-electron calculation of proteins made up of peptide chains. However, the automatic calculation methods and GUI are not well supported for more complicated calculations, such as those involving hetero molecules. To perform such calculations, thoroughly familiarize yourself with the program as well as applied methods, and modify the program manually. Refer to separate reference manuals for details. Finally, the following sections explain the points which, based on our experience of all-electron calculation of peptide chain proteins, seem most important:
 
 Empirical rule on protein size
-------------------------------
+-------------------------------------------------------------------------------
 
 When performing DFT calculation of proteins, one of the most important first considerations is estimating the size of computation. In the Roothaan method, the eigenvalue problem of the Kohn-Sham equation is replaced with that of the matrix equation. This means that the size of the matrix can indicate the scale of computation. The following empirical rule traditionally defines the relationship between protein molecular mass and the total number of amino acid residues:
 
@@ -91,11 +103,11 @@ Here, it is empirically known that the half of Natom consists of hydrogen. This 
 
 
 Distortion in protein structure
--------------------------------
+-------------------------------------------------------------------------------
 
 In general, we can obtain protein conformations from the Protein Data Bank (PDB). The PDB collects three-dimensional coordinate data of protein atoms experimentally determined with X-ray structural analysis, neutron scattering method, multi-dimensional NMR, and other methods. In the PDB, however, there are a number of data structurally distorted due to the characteristics of the experiment itself or by later data tuning. This distortion may cause adverse effects especially on DFT calculations. Meanwhile, it is not yet practical under the current computer resources to optimize the entire structure of proteins using only the DFT calculations based on all-electron CMO method. To optimize the structure, therefore, we recommend using the MM method, semi-empirical MO method such as MOZYME, QM/MM method, ONIOM method, and FMO method, etc. To check the distortion in protein structure, refer to the PROCHECK, etc.
 
 Protein surface properties
---------------------------
+-------------------------------------------------------------------------------
 
 Isolated systems have been used as the standard method for simulating chemical molecules. In our experience, however, the DFT cannot solve water-soluble proteins containing a number of dissociable groups on their surface in a vacuum environment. This fact may prove the accuracy of DFT calculations, but also proves troublesome for the person performing the calculation. Elucidating the surface property of proteins features among the forefront of current research subjects. In the surface property case, the most ideal means will involve appropriately arranging a number of solvent molecules (i.e. water molecules or buffer ions) around the protein. However, handling all molecules quantum-mechanically will significantly increase the computation size. Although there is an attraction in attempting that kind of calculation, an alternative means should be applied in practical computation, such as arranging classically-handled water molecules or counter ions in droplets around the proteins.

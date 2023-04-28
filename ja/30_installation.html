@@ -107,8 +107,9 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">3. インストール</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#system-requirements">3.1. 動作環境</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#hardware-and-operating-system">3.1.1. ハードウェアとオペレーティングシステム</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#memory-and-disk">3.1.2. メモリとディスク</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#python-module">3.1.3. Python module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#assumed-computing-environment-and-operations">3.1.2. Assumed computing environment and operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#memory-and-disk">3.1.3. メモリとディスク</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#python-module">3.1.4. Python module</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#installation-and-setup">3.2. インストールと準備</a><ul>
@@ -185,7 +186,7 @@
 <li><p>bash</p></li>
 <li><p>BLAS, LAPACKライブラリ</p></li>
 <li><p>MPI実行環境(並列版のみ)</p></li>
-<li><p>分散行列演算ライブラリ(ScaLAPACK)</p></li>
+<li><p>Distributed matrix operation (ScaLAPACK) library  (optional)</p></li>
 </ul>
 <section id="hardware-and-operating-system">
 <h3><span class="section-number">3.1.1. </span>ハードウェアとオペレーティングシステム<a class="headerlink" href="#hardware-and-operating-system" title="この見出しへのパーマリンク"></a></h3>
@@ -196,8 +197,12 @@
 </ul>
 <p>一般的なx86 PC Linuxでも動作します。</p>
 </section>
+<section id="assumed-computing-environment-and-operations">
+<h3><span class="section-number">3.1.2. </span>Assumed computing environment and operations<a class="headerlink" href="#assumed-computing-environment-and-operations" title="この見出しへのパーマリンク"></a></h3>
+<img alt="_images/computer_system.drawio.png" src="_images/computer_system.drawio.png" />
+</section>
 <section id="memory-and-disk">
-<h3><span class="section-number">3.1.2. </span>メモリとディスク<a class="headerlink" href="#memory-and-disk" title="この見出しへのパーマリンク"></a></h3>
+<h3><span class="section-number">3.1.3. </span>メモリとディスク<a class="headerlink" href="#memory-and-disk" title="この見出しへのパーマリンク"></a></h3>
 <p>計算モデルの大きさに応じて必要なメモリ量が異なります。 また、並列計算を行う場合、 行列演算にLAPACKを使用する場合とScaLAPACKを使用する場合でも、 1ノードあたりに必要なメモリ量が変わります。 LAPACKを使用する場合は、各ノードに搭載されているメモリ容量が計算可能なサイズの上限です。 一方、ScaLAPACKを使用する場合は、全ノードで計算領域を分散保持しますので、 全ノードのメモリ容量が計算可能サイズの上限になります。 ただし、この他にも計算可能サイズを決定する要因がありますので 目安としてください。</p>
 <div class="admonition warning">
 <p class="admonition-title">警告</p>
@@ -205,7 +210,7 @@
 </div>
 </section>
 <section id="python-module">
-<h3><span class="section-number">3.1.3. </span>Python module<a class="headerlink" href="#python-module" title="この見出しへのパーマリンク"></a></h3>
+<h3><span class="section-number">3.1.4. </span>Python module<a class="headerlink" href="#python-module" title="この見出しへのパーマリンク"></a></h3>
 <p>ProteinDFの動作には、 いくつかのpythonスクリプトが用意されています。 これらpythonスクリプトは、ProteinDFの実行そのものには必要ありませんが、 計算結果の解析用として用意されています。 これらpythonスクリプトの動作には以下のソフトウェア(モジュール)が必要です。 これらのソフトウェアの環境構築は、それぞれのシステムの方針に従って下さい。</p>
 <ul class="simple">
 <li><p>python(version 3.5以上)</p></li>

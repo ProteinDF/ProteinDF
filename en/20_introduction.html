@@ -103,13 +103,14 @@
           <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="10_preface.html">1. Introduction</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">2. Overview</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#features">2.1. Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#calculation-method">2.2. Calculation method</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#computation-size">2.3. Computation size</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#others">2.4. Others</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#empirical-rule-on-protein-size">2.4.1. Empirical rule on protein size</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#distortion-in-protein-structure">2.4.2. Distortion in protein structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#protein-surface-properties">2.4.3. Protein surface properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#design-concept">2.1. Design Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#features">2.2. Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#calculation-method">2.3. Calculation method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#computation-size">2.4. Computation size</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#others">2.5. Others</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#empirical-rule-on-protein-size">2.5.1. Empirical rule on protein size</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#distortion-in-protein-structure">2.5.2. Distortion in protein structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protein-surface-properties">2.5.3. Protein surface properties</a></li>
 </ul>
 </li>
 </ul>
@@ -162,8 +163,17 @@
   <section id="overview">
 <h1><span class="section-number">2. </span>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h1>
 <p>ProteinDF is an application program focusing on precisely executing/analyzing all-electron canonical molecular orbital (CMO) calculations of proteins.</p>
+<section id="design-concept">
+<h2><span class="section-number">2.1. </span>Design Concept<a class="headerlink" href="#design-concept" title="Permalink to this heading"></a></h2>
+<p>To achieve canonical (Kohn-Sham) molecular orbital calculations of large molecular systems,
+we maximize the use of limited computational resources.</p>
+<p>It is designed to (hopefully) run efficiently on everything from stand-alone PCs that are not connected to a network
+to supercomputers that rank in the <a class="reference external" href="https://www.top500.org/">TOP500</a>.
+It utilizes parallelization technologies such as MPI and OpenMP, but a single code can run in both single-process and multi-process mode.</p>
+<p>In general, physical memory is small and limited for large-scale molecular orbital calculations. Therefore, ProteinDF only places the data necessary for a given calculation in physical memory and avoids unnecessary data on disk storage. Although the extra file input/output makes the calculation speed slower than general molecular orbital calculation programs, it allows canonical molecular orbital calculations of large molecular systems with limited computational resources.</p>
+</section>
 <section id="features">
-<h2><span class="section-number">2.1. </span>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h2>
+<h2><span class="section-number">2.2. </span>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h2>
 <p>The ProteinDF features are as follows:</p>
 <ul class="simple">
 <li><p>Density functional theory (DFT) program using Gaussian-type basis sets</p>
@@ -190,7 +200,7 @@
 </ul>
 </section>
 <section id="calculation-method">
-<h2><span class="section-number">2.2. </span>Calculation method<a class="headerlink" href="#calculation-method" title="Permalink to this heading"></a></h2>
+<h2><span class="section-number">2.3. </span>Calculation method<a class="headerlink" href="#calculation-method" title="Permalink to this heading"></a></h2>
 <p>To handle the entire structure of a protein and to predict its functions quantitatively,
 it is appropriate to use a DFT method which solves Kohn-Sham equations,
 where electron correlation can be incorporated effectively.
@@ -219,15 +229,15 @@ Default values are already set to most keywords, some of which were mentioned ab
 See Appendix for details.</p>
 </section>
 <section id="computation-size">
-<h2><span class="section-number">2.3. </span>Computation size<a class="headerlink" href="#computation-size" title="Permalink to this heading"></a></h2>
+<h2><span class="section-number">2.4. </span>Computation size<a class="headerlink" href="#computation-size" title="Permalink to this heading"></a></h2>
 <p>The most distinctive feature of ProteinDF is its computation size.
 The user can execute all-electron calculation of proteins with several dozens of residues in the current PC system without any difficulties. Among all of our efforts to make the program possible, the biggest contributing factor was our coding conventions for memory management. Utilizing dynamic memory management, ProteinDF calculates all matrices, with as many dimensions as basis sets, by using only a limited number of memory units. With this scheme, we can reversely calculate the maximum computation size from the memory size of the computing machine. When the number of basis sets is Norb, we can roughly estimate the memory size for each matrix to be 8 x Norb x Norb bytes. Note, however, that the OS or transferring processes also use some memory spaces. In particular, the OS may execute dynamic memory deletion on its own timing (even when the timing is expressly declared in the program). Note also that ProteinDF outputs intermediate files to disk storage in order to take full advantage of the memory. During computation, be sure to secure disk space sufficient for at least 200 matrices, each with the estimated computation size. ProteinDF saves all intermediate outputs for safe computation.</p>
 </section>
 <section id="others">
-<h2><span class="section-number">2.4. </span>Others<a class="headerlink" href="#others" title="Permalink to this heading"></a></h2>
+<h2><span class="section-number">2.5. </span>Others<a class="headerlink" href="#others" title="Permalink to this heading"></a></h2>
 <p>ProteinDF is optimized for all-electron calculation of proteins made up of peptide chains. However, the automatic calculation methods and GUI are not well supported for more complicated calculations, such as those involving hetero molecules. To perform such calculations, thoroughly familiarize yourself with the program as well as applied methods, and modify the program manually. Refer to separate reference manuals for details. Finally, the following sections explain the points which, based on our experience of all-electron calculation of peptide chain proteins, seem most important:</p>
 <section id="empirical-rule-on-protein-size">
-<h3><span class="section-number">2.4.1. </span>Empirical rule on protein size<a class="headerlink" href="#empirical-rule-on-protein-size" title="Permalink to this heading"></a></h3>
+<h3><span class="section-number">2.5.1. </span>Empirical rule on protein size<a class="headerlink" href="#empirical-rule-on-protein-size" title="Permalink to this heading"></a></h3>
 <p>When performing DFT calculation of proteins, one of the most important first considerations is estimating the size of computation. In the Roothaan method, the eigenvalue problem of the Kohn-Sham equation is replaced with that of the matrix equation. This means that the size of the matrix can indicate the scale of computation. The following empirical rule traditionally defines the relationship between protein molecular mass and the total number of amino acid residues:</p>
 <p>(Protein molecular mass) = 110 x (Number of amino acid residues)</p>
 <p>This relational expression is well matched to the actual cases, due to the fact that proteins are made of peptide chains, and that the composition ratios of atoms which make up amino acids, such as hydrogen, carbon, nitrogen, oxygen, and sulfur, are averaged in large molecules. By expanding this rule, we can derive a proportional relationship on a protein, among the number of the amino acid residues (Nres), number of the atoms (Natom), number of the electrons (Nele), and number of the orbitals (Norb) (i.e. matrix dimensions). For example, in the case of the ProteinDF default set (VD equivalent), the following relationship is approximately established:</p>
@@ -235,11 +245,11 @@ The user can execute all-electron calculation of proteins with several dozens of
 <p>Here, it is empirically known that the half of Natom consists of hydrogen. This relational expression is useful to estimate computation size. Although Norb is dependent on the size of basis set, we can easily derive a similar proportional relation for different basis sets. Obtain a good estimation of computation size before actual computation, by deriving the relational expression according to the basis set.</p>
 </section>
 <section id="distortion-in-protein-structure">
-<h3><span class="section-number">2.4.2. </span>Distortion in protein structure<a class="headerlink" href="#distortion-in-protein-structure" title="Permalink to this heading"></a></h3>
+<h3><span class="section-number">2.5.2. </span>Distortion in protein structure<a class="headerlink" href="#distortion-in-protein-structure" title="Permalink to this heading"></a></h3>
 <p>In general, we can obtain protein conformations from the Protein Data Bank (PDB). The PDB collects three-dimensional coordinate data of protein atoms experimentally determined with X-ray structural analysis, neutron scattering method, multi-dimensional NMR, and other methods. In the PDB, however, there are a number of data structurally distorted due to the characteristics of the experiment itself or by later data tuning. This distortion may cause adverse effects especially on DFT calculations. Meanwhile, it is not yet practical under the current computer resources to optimize the entire structure of proteins using only the DFT calculations based on all-electron CMO method. To optimize the structure, therefore, we recommend using the MM method, semi-empirical MO method such as MOZYME, QM/MM method, ONIOM method, and FMO method, etc. To check the distortion in protein structure, refer to the PROCHECK, etc.</p>
 </section>
 <section id="protein-surface-properties">
-<h3><span class="section-number">2.4.3. </span>Protein surface properties<a class="headerlink" href="#protein-surface-properties" title="Permalink to this heading"></a></h3>
+<h3><span class="section-number">2.5.3. </span>Protein surface properties<a class="headerlink" href="#protein-surface-properties" title="Permalink to this heading"></a></h3>
 <p>Isolated systems have been used as the standard method for simulating chemical molecules. In our experience, however, the DFT cannot solve water-soluble proteins containing a number of dissociable groups on their surface in a vacuum environment. This fact may prove the accuracy of DFT calculations, but also proves troublesome for the person performing the calculation. Elucidating the surface property of proteins features among the forefront of current research subjects. In the surface property case, the most ideal means will involve appropriately arranging a number of solvent molecules (i.e. water molecules or buffer ions) around the protein. However, handling all molecules quantum-mechanically will significantly increase the computation size. Although there is an attraction in attempting that kind of calculation, an alternative means should be applied in practical computation, such as arranging classically-handled water molecules or counter ions in droplets around the proteins.</p>
 </section>
 </section>
