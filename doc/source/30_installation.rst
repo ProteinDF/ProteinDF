@@ -1,9 +1,9 @@
-************
+*******************************************************************************
 Installation
-************
+*******************************************************************************
 
 System requirements
-===================
+===============================================================================
 
 ProteinDF has several distributions. If a README file is provided, first read the README file.
 
@@ -14,11 +14,11 @@ To execute ProteinDF, the following environment is required:
 * bash
 * BLAS, LAPACK library
 * MPI runtime environment (only for parallel version)
-* Distributed matrix operation library (ScaLAPACK)
+* Distributed matrix operation (ScaLAPACK) library  (optional)
 
 
 Hardware and operating system
------------------------------
+-------------------------------------------------------------------------------
 
 ProteinDF has been confirmed to operate on POSIX-compliant computer systems, as well on as the following computing systems:
 
@@ -28,8 +28,15 @@ ProteinDF has been confirmed to operate on POSIX-compliant computer systems, as 
 The program should also work on the x86 PC Linux system.
 
 
+Assumed computing environment and operations
+-------------------------------------------------------------------------------
+
+.. image:: ./figure/computer_system.drawio.png
+
+
+
 Memory and disk
-----------------
+-------------------------------------------------------------------------------
 
 The required memory size depends on the scale of computation model. Furthermore, in parallel computation, the required memory size per node varies depending on whether one uses LAPACK or ScaLAPACK for matrix operations. For LAPACK, the maximum computation scale is equal to the memory size on each node. For ScaLAPACK, the scale is equal to the total memory size on all nodes, since the computation area is distributed and stored in all nodes. Note that this estimation serves only as a guideline, since other factors also determine the available computation scale.
 
