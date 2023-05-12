@@ -29,10 +29,12 @@
 #include "TlMsgPack.h"
 #include "TlUtils.h"
 
-TlMsgPack::TlMsgPack(const TlSerializeData& data) : data_(data) {
+TlMsgPack::TlMsgPack(const TlSerializeData& data)
+    : data_(data) {
 }
 
-TlMsgPack::TlMsgPack(const TlMsgPack& rhs) : data_(rhs.data_) {
+TlMsgPack::TlMsgPack(const TlMsgPack& rhs)
+    : data_(rhs.data_) {
 }
 
 TlMsgPack::~TlMsgPack() {
@@ -76,6 +78,7 @@ TlSerializeData TlMsgPack::loadBinary(std::istream& ifs) {
         ifs.read((char*)&c, 1);
         ++(this->debugCurrentPos_);
 
+        // std::cout << TlUtils::format("load binary: %#x", c) << std::endl;
         switch (c) {
             case (unsigned char)(0xc0):
                 // do nothing
@@ -228,7 +231,7 @@ int TlMsgPack::unpack_positiveFixNum(unsigned char c) {
 }
 
 int TlMsgPack::unpack_negativeFixNum(unsigned char c) {
-    return -(c & 31);
+    return int(char(c));
 }
 
 TlSerializeData TlMsgPack::unpack_bin8(std::istream& ifs) {
