@@ -1,4 +1,4 @@
-set(PDF_COMPONENT_SOURCES main_component.cpp)
+set(PDF_COMPONENT_SOURCES main_component.cc)
 add_executable(pdf-component ${PDF_COMPONENT_SOURCES})
 target_link_libraries(pdf-component libpdf libpdftl)
 install(TARGETS pdf-component RUNTIME DESTINATION bin)
