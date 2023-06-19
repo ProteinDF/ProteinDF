@@ -19,6 +19,10 @@
 #include <omp.h>
 #endif  // _OPENMP
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif  // HAVE_CONFIG_H
+
 #include "CnError.h"
 #include "CnFile_parallel.h"
 #include "DfCD_Parallel.h"
@@ -1431,7 +1435,7 @@ void DfCD_Parallel::getK_S_woCD(const RUN_TYPE runType, TlDenseSymmetricMatrix_L
             cv = L.getVector(I);
             assert(cv.getSize() == cvSize);
 
-            const TlDenseSymmetricMatrix_Lapack l = this->getCholeskyVector(cv, I2PQ);
+            const TlDenseSymmetricMatrix_Lapack l = this->getCholeskyVector<TlDenseSymmetricMatrix_Lapack>(cv, I2PQ);
 
             TlDenseGeneralMatrix_Lapack X = l * P;
             X *= l;
@@ -1471,7 +1475,7 @@ void DfCD_Parallel::getK_S_woCD_mmap_DC(const RUN_TYPE runType, TlDenseSymmetric
         cv = L.getColVector(I);
         assert(cv.getSize() == cvSize);
 
-        const TlDenseSymmetricMatrix_Lapack l = this->getCholeskyVector(cv, I2PQ);
+        const TlDenseSymmetricMatrix_Lapack l = this->getCholeskyVector<TlDenseSymmetricMatrix_Lapack>(cv, I2PQ);
 
         TlDenseGeneralMatrix_Lapack X = l * P;
         X *= l;
@@ -1708,7 +1712,7 @@ void DfCD_Parallel::getM_S(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmet
             cv = L.getVector(I);
             assert(cv.getSize() == cvSize);
 
-            TlDenseSymmetricMatrix_Lapack LI = this->getCholeskyVector(cv, I2PQ);
+            TlDenseSymmetricMatrix_Lapack LI = this->getCholeskyVector<TlDenseSymmetricMatrix_Lapack>(cv, I2PQ);
             assert(LI.getNumOfRows() == this->m_nNumOfAOs);
             assert(LI.getNumOfCols() == this->m_nNumOfAOs);
 

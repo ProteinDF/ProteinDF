@@ -24,6 +24,10 @@
 #include <set>
 #include <valarray>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif  // HAVE_CONFIG_H
+
 #include "CnError.h"
 #include "CnFile.h"
 #include "DfCD.h"
@@ -722,9 +726,21 @@ DfTaskCtrl* DfCD::getDfTaskCtrlObject() const {
     return pDfTaskCtrl;
 }
 
+#ifdef HAVE_LAPACK
+void DfCD::finalize(TlDenseGeneralMatrix_Lapack* pMat) {
+    // do nothing
+}
+
 void DfCD::finalize(TlDenseSymmetricMatrix_Lapack* pMat) {
     // do nothing
 }
+#endif  // HAVE_LAPACK
+
+#ifdef HAVE_EIGEN
+void DfCD::finalize(TlDenseSymmetricMatrix_Eigen* pMat) {
+    // do nothing
+}
+#endif  // HAVE_EIGEN
 
 void DfCD::finalize(TlSparseSymmetricMatrix* pMat) {
     // do nothing
@@ -732,10 +748,6 @@ void DfCD::finalize(TlSparseSymmetricMatrix* pMat) {
 
 void DfCD::finalize_I2PQ(PQ_PairArray* pI2PQ) {
     std::sort(pI2PQ->begin(), pI2PQ->end());
-}
-
-void DfCD::finalize(TlDenseGeneralMatrix_Lapack* pMat) {
-    // do nothing
 }
 
 void DfCD::finalize(TlSparseMatrix* pMat) {
@@ -747,17 +759,18 @@ void DfCD::finalize(TlSparseMatrix* pMat) {
 //     std::sort(pI2PQ->begin(), pI2PQ->end());
 // }
 
-TlDenseSymmetricMatrix_Lapack DfCD::getCholeskyVector(const TlDenseVector_Lapack& L_col, const PQ_PairArray& I2PQ) {
-    const index_type numOfItilde = L_col.getSize();
-    assert(static_cast<std::size_t>(numOfItilde) == I2PQ.size());
+// template <class SymmetricMatrixType>
+// SymmetricMatrixType DfCD::getCholeskyVector(const std::vector<double>& L_col, const PQ_PairArray& I2PQ) {
+//     const index_type numOfItilde = L_col.size();
+//     assert(static_cast<std::size_t>(numOfItilde) == I2PQ.size());
 
-    TlDenseSymmetricMatrix_Lapack answer(this->m_nNumOfAOs);
-    for (index_type i = 0; i < numOfItilde; ++i) {
-        answer.set(I2PQ[i].index1(), I2PQ[i].index2(), L_col.get(i));
-    }
+//     SymmetricMatrixType answer(this->m_nNumOfAOs);
+//     for (index_type i = 0; i < numOfItilde; ++i) {
+//         answer.set(I2PQ[i].index1(), I2PQ[i].index2(), L_col[i]);
+//     }
 
-    return answer;
-}
+//     return answer;
+// }
 
 TlDenseGeneralMatrix_Lapack DfCD::getCholeskyVectorA(const TlOrbitalInfoObject& orbInfo_p,
                                                      const TlOrbitalInfoObject& orbInfo_q,
@@ -1054,7 +1067,7 @@ void DfCD::getK_S_woCD(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK
     index_type end_CholeskyBasis = 0;
     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-        const TlDenseSymmetricMatrix_Lapack l = this->getCholeskyVector(L.getColVector(I), I2PQ);
+        const TlDenseSymmetricMatrix_Lapack l = this->getCholeskyVector<TlDenseSymmetricMatrix_Lapack>(L.getColVector(I), I2PQ);
         assert(l.getNumOfRows() == this->m_nNumOfAOs);
 
         TlDenseGeneralMatrix_Lapack X = l * P;
@@ -1083,7 +1096,7 @@ void DfCD::getK_S_woCD_mmap(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapac
     index_type end_CholeskyBasis = 0;
     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-        const TlDenseSymmetricMatrix_Lapack l = this->getCholeskyVector(L.getColVector(I), I2PQ);
+        const TlDenseSymmetricMatrix_Lapack l = this->getCholeskyVector<TlDenseSymmetricMatrix_Lapack>(L.getColVector(I), I2PQ);
         assert(l.getNumOfRows() == this->m_nNumOfAOs);
 
         TlDenseGeneralMatrix_Lapack X = l * P;
@@ -1108,15 +1121,13 @@ void DfCD::getK_byLjk_defMatrix(const RUN_TYPE runType) {
             break;
 #endif  // HAVE_LAPACK
 
-            // #ifdef HAVE_EIGEN
-            //     case LAP_EIGEN:
-            //       this->log_.info("linear algebra package: Eigen");
-            //       this->getK_byLjk<TlDenseSymmetricMatrix_Eigen,
-            //       Ljk_MatrixType,
-            //                        TlDenseGeneralMatrix_Eigen,
-            //                        TlDenseSymmetricMatrix_Eigen>(runType);
-            //       break;
-            // #endif  // HAVE_EIGEN
+#ifdef HAVE_EIGEN
+        case LAP_EIGEN:
+            this->log_.info("linear algebra package: Eigen");
+            this->getK_byLjk<TlDenseSymmetricMatrix_Eigen, Ljk_MatrixType, TlDenseGeneralMatrix_Eigen,
+                             TlDenseSymmetricMatrix_Eigen>(runType);
+            break;
+#endif  // HAVE_EIGEN
 
             // #ifdef HAVE_VIENNACL
             //     case LAP_VIENNACL:
@@ -1161,7 +1172,7 @@ void DfCD::getK_byLjk(const RUN_TYPE runType) {
     while (hasTasks == true) {
         std::vector<std::size_t>::const_iterator itEnd = tasks.end();
         for (std::vector<std::size_t>::const_iterator it = tasks.begin(); it != itEnd; ++it) {
-            const SymmetricMatrixType l = this->getCholeskyVector(L.getColVector(*it), I2PQ);
+            const SymmetricMatrixType l = this->getCholeskyVector<SymmetricMatrixType>(L.getColVector(*it), I2PQ);
             assert(l.getNumOfRows() == this->m_nNumOfAOs);
 
             GeneralMatrixType X = l * P;
@@ -1301,7 +1312,7 @@ void DfCD::getM_S(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricMatrix
     index_type end_CholeskyBasis = 0;
     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-        TlDenseSymmetricMatrix_Lapack LI = this->getCholeskyVector(L.getColVector(I), I2PQ);
+        TlDenseSymmetricMatrix_Lapack LI = this->getCholeskyVector<TlDenseSymmetricMatrix_Lapack>(L.getColVector(I), I2PQ);
         assert(LI.getNumOfRows() == numOfAOs);
         assert(LI.getNumOfCols() == numOfAOs);
 
@@ -1334,7 +1345,7 @@ void DfCD::getM_S_mmap(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricM
     index_type end_CholeskyBasis = 0;
     this->divideCholeskyBasis(numOfCBs, &start_CholeskyBasis, &end_CholeskyBasis);
     for (index_type I = start_CholeskyBasis; I < end_CholeskyBasis; ++I) {
-        TlDenseSymmetricMatrix_Lapack LI = this->getCholeskyVector(L.getColVector(I), I2PQ);
+        TlDenseSymmetricMatrix_Lapack LI = this->getCholeskyVector<TlDenseSymmetricMatrix_Lapack>(L.getColVector(I), I2PQ);
         assert(LI.getNumOfRows() == numOfAOs);
         assert(LI.getNumOfCols() == numOfAOs);
 

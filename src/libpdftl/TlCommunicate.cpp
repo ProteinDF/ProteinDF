@@ -27,12 +27,19 @@
 #include <numeric>
 #include <typeinfo>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif  // HAVE_CONFIG_H
+
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
+
+#ifdef HAVE_LAPACK
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_dense_vector_impl_lapack.h"
 #include "tl_dense_vector_lapack.h"
+#endif  // HAVE_LAPACK
 
 #ifdef HAVE_EIGEN
 #include "tl_dense_general_matrix_eigen.h"
@@ -632,6 +639,7 @@ int TlCommunicate::iAllReduce_SUM(const double* pSendBuf, double* pRecvBuf,
 //   return this->allReduce_SUM(rMatrix.data_, rMatrix.getNumOfElements());
 // }
 
+#ifdef HAVE_LAPACK
 int TlCommunicate::allReduce_SUM(TlDenseGeneralMatrix_Lapack* pMatrix) {
     return this->allReduce_SUM(pMatrix->data(), pMatrix->getNumOfElements());
 }
@@ -645,6 +653,18 @@ int TlCommunicate::allReduce_SUM(TlDenseVector_Lapack* pVector) {
         pVector->data(),
         pVector->getSize());  // this class is friend class of TlVector_BLAS.
 }
+#endif  // HAVE_PAKACK
+
+#ifdef HAVE_EIGEN
+int TlCommunicate::allReduce_SUM(TlDenseGeneralMatrix_Eigen* pMatrix) {
+    return this->allReduce_SUM(pMatrix->data(), pMatrix->getNumOfElements());
+}
+
+int TlCommunicate::allReduce_SUM(TlDenseSymmetricMatrix_Eigen* pMatrix) {
+    return this->allReduce_SUM(pMatrix->data(), pMatrix->getNumOfElements());
+}
+
+#endif  // HAVE_EIGEN
 
 int TlCommunicate::allReduce_SUM(TlSparseMatrix& rMatrix) {
     int err = this->reduce_SUM(rMatrix);
@@ -3166,10 +3186,12 @@ int TlCommunicate::broadcast(TlDenseSymmetricMatrix_Eigen* pMatrix, int root) {
     }
     int answer = this->broadcast(dim, root);
 
-    std::vector<double> buf;
     if (answer == 0) {
+        std::vector<double> buf;
         if (myRank == root) {
             buf = *pMatrix;
+        } else {
+            pMatrix->resize(dim);
         }
         answer = this->broadcast(buf, root);
 

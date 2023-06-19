@@ -21,6 +21,10 @@
 
 #include <cstdlib>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif  // HAVE_CONFIG_H
+
 #include "DfCD.h"
 #include "tl_dense_general_matrix_arrays_coloriented.h"
 #include "tl_dense_general_matrix_arrays_mmap_roworiented.h"
@@ -28,11 +32,11 @@
 #include "tl_dense_symmetric_matrix_scalapack.h"
 
 class DfCD_Parallel : public DfCD {
-   public:
+public:
     DfCD_Parallel(TlSerializeData* pPdfParam);
     virtual ~DfCD_Parallel();
 
-   public:
+public:
     virtual void calcCholeskyVectorsForJK();
     virtual void calcCholeskyVectorsForK();
     virtual void calcCholeskyVectorsForGridFree();
@@ -48,7 +52,7 @@ class DfCD_Parallel : public DfCD {
     // void getK_distributed(const RUN_TYPE runType,
     //                       TlDenseSymmetricMatrix_Scalapack *pK);
 
-   protected:
+protected:
     // void makeSuperMatrix_distribute();
     // TlDenseSymmetricMatrix_Scalapack
     // getGMatrix_distribute(const TlOrbitalInfoObject& orbitalInfo,
@@ -80,30 +84,30 @@ class DfCD_Parallel : public DfCD {
                                                                    const PQ_PairArray& I2PQ);
 
     // -------------------------------------------------------------------------
-   protected:
+protected:
     void getJ_cvm(TlDenseSymmetricMatrix_Lapack* pJ);
     void getJ_mmap_DC(TlDenseSymmetricMatrix_Lapack* pJ);
 
-   protected:
+protected:
     virtual TlDenseSymmetricMatrix_Lapack getPMatrix(const RUN_TYPE runType, int itr);
 
-   protected:
+protected:
     virtual void getK_S_woCD(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
     virtual void getK_S_woCD_mmap_DC(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
 
     virtual void getK_byLk(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
 
-   public:
+public:
     void getK_D(const RUN_TYPE runType);
 
-   protected:
+protected:
     void getK_S_woCD_D(const RUN_TYPE runType, TlDenseSymmetricMatrix_Scalapack* pK);
 
-   protected:
+protected:
     TlDenseVector_Lapack getScreenedDensityMatrixD(const PQ_PairArray& I2PQ);
     void expandJMatrixD(const TlDenseVector_Lapack& vJ, const PQ_PairArray& I2PQ, TlDenseSymmetricMatrix_Scalapack* pJ);
 
-   protected:
+protected:
     virtual void getM_S(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricMatrix_Lapack* pM);
     virtual void getM_A(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricMatrix_Lapack* pM);
 
@@ -113,7 +117,7 @@ class DfCD_Parallel : public DfCD {
     // ----------------------------------------------------------------------------
     // [integral] calc Cholesky Vectors
     // ----------------------------------------------------------------------------
-   protected:
+protected:
     typedef void (DfCD_Parallel::*GetSuperMatrixElementsFuncP)(const TlOrbitalInfoObject&, const index_type,
                                                                const std::vector<index_type>&, const PQ_PairArray&,
                                                                std::vector<double>*);
@@ -144,7 +148,7 @@ class DfCD_Parallel : public DfCD {
                                       GetSuperMatrixElementsFunc getSuperMatrixElementsFunc,
                                       TlDenseGeneralMatrix_mmap* pL);
 
-   protected:
+protected:
     virtual TlDenseGeneralMatrix_arrays_RowOriented calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
                                                                                  const TlOrbitalInfoObject& orbInfo_q,
                                                                                  const std::string& I2PQ_path);
@@ -177,7 +181,7 @@ class DfCD_Parallel : public DfCD {
     TlDenseGeneralMatrix_Lapack mergeL(const TlDenseGeneralMatrix_arrays_RowOriented& L);
     TlDenseGeneralMatrix_Lapack mergeL(const TlDenseGeneralMatrix_arrays_ColOriented& L);
 
-   private:
+private:
     bool isDebugSaveL_;
 };
 
