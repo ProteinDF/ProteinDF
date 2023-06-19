@@ -62,6 +62,15 @@ if (HDF5_FOUND)
 endif(HDF5_FOUND)
 
 
+# objects using Lapack
+if (LAPACK_FOUND)
+  set(PDF_XTEST_MPI_SOURCES
+    ${PDF_XTEST_MPI_SOURCES}
+    tl_communicate_test_lapack.cc
+  )
+endif (LAPACK_FOUND)
+
+
 # objects using Eigen3
 if (EIGEN3_FOUND)
   set(PDF_XTEST_SOURCES
@@ -74,6 +83,11 @@ if (EIGEN3_FOUND)
     tl_sparse_symmetric_matrix_eigen_test.cc
     #tl_sparse_vector_eigen_test.cc
     )
+
+  set(PDF_XTEST_MPI_SOURCES
+    ${PDF_XTEST_MPI_SOURCES}
+    tl_communicate_test_eigen.cc
+  )
 endif(EIGEN3_FOUND)
 
 

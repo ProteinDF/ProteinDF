@@ -15,6 +15,7 @@
 #define VIENNACL_HAVE_EIGEN 1
 #include <viennacl/matrix.hpp>
 #include <viennacl/matrix_proxy.hpp>
+
 #include "tl_dense_general_matrix_impl_viennacl.h"
 #endif  //
 
@@ -247,6 +248,19 @@ void TlDenseGeneralMatrix_ImplEigen::vtr2mat(double const* const pBuf) {
 
     this->matrix_ = MapTypeConst(pBuf, row, col);
 }
+
+TlMatrixObject::size_type TlDenseGeneralMatrix_ImplEigen::getNumOfElements() const {
+    return this->matrix_.size();
+}
+
+double* TlDenseGeneralMatrix_ImplEigen::data() {
+    return this->matrix_.data();
+}
+
+const double* TlDenseGeneralMatrix_ImplEigen::data() const {
+    return this->matrix_.data();
+}
+
 // ---------------------------------------------------------------------------
 // others
 // ---------------------------------------------------------------------------

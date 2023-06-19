@@ -12,12 +12,11 @@ class TlSparseGeneralMatrix_Eigen;
 class TlSparseSymmetricMatrix_Eigen;
 
 class TlDenseVector_Eigen : public TlDenseVectorObject {
-   public:
+public:
     explicit TlDenseVector_Eigen(TlDenseVectorObject::index_type size = 0);
     TlDenseVector_Eigen(const TlDenseVector_Eigen& rhs);
     TlDenseVector_Eigen(const std::vector<double>& rhs);
-    //   TlDenseVector_Eigen(const double* p,
-    //                       const TlDenseVectorObject::size_type length);
+    //   TlDenseVector_Eigen(const double* p, const TlDenseVectorObject::size_type length);
     TlDenseVector_Eigen(const TlDenseVector_ImplEigen& rhs);
 
 #ifdef HAVE_VIENNACL
@@ -31,7 +30,7 @@ class TlDenseVector_Eigen : public TlDenseVectorObject {
     // ---------------------------------------------------------------------------
     // operators
     // ---------------------------------------------------------------------------
-   public:
+public:
     TlDenseVector_Eigen& operator=(const TlDenseVector_Eigen& rhs);
 
     TlDenseVector_Eigen& operator+=(const TlDenseVector_Eigen& rhs);

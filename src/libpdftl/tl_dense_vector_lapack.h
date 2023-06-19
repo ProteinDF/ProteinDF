@@ -3,6 +3,7 @@
 
 #include <valarray>
 #include <vector>
+
 #include "tl_dense_vector_object.h"
 
 class TlDenseGeneralMatrix_Lapack;
@@ -12,14 +13,12 @@ class TlDenseVector_Lapack : public TlDenseVectorObject {
     // ---------------------------------------------------------------------------
     // constructor & destructor
     // ---------------------------------------------------------------------------
-   public:
-    explicit TlDenseVector_Lapack(
-        const TlDenseVectorObject::index_type size = 0);
+public:
+    explicit TlDenseVector_Lapack(const TlDenseVectorObject::index_type size = 0);
     TlDenseVector_Lapack(const TlDenseVector_Lapack& rhs);
     TlDenseVector_Lapack(const std::vector<double>& rhs);
     TlDenseVector_Lapack(const std::valarray<double>& rhs);
-    // TlDenseVector_Lapack(const double* p,
-    //                      const TlDenseVectorObject::size_type length);
+    // TlDenseVector_Lapack(const double* p, const TlDenseVectorObject::size_type length);
 
     operator std::vector<double>() const;
 
@@ -28,7 +27,7 @@ class TlDenseVector_Lapack : public TlDenseVectorObject {
     // ---------------------------------------------------------------------------
     // operators
     // ---------------------------------------------------------------------------
-   public:
+public:
     TlDenseVector_Lapack& operator=(const TlDenseVector_Lapack& rhs);
 
     TlDenseVector_Lapack& operator+=(const TlDenseVector_Lapack& rhs);
@@ -41,11 +40,11 @@ class TlDenseVector_Lapack : public TlDenseVectorObject {
     // ---------------------------------------------------------------------------
     // operations
     // ---------------------------------------------------------------------------
-   public:
+public:
     double dot(const TlDenseVector_Lapack& rhs) const;
     TlDenseVector_Lapack& dotInPlace(const TlDenseVector_Lapack& rhs);
 
-   public:
+public:
     double* data();
     const double* data() const;
 

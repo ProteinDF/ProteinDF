@@ -1,6 +1,8 @@
-#include <Eigen/Dense>
-
 #include "tl_dense_symmetric_matrix_impl_eigen.h"
+
+#include <Eigen/Dense>
+#include <iostream>
+
 #include "tl_dense_vector_impl_eigen.h"
 #include "tl_sparse_symmetric_matrix_impl_eigen.h"
 
@@ -47,6 +49,7 @@ TlDenseSymmetricMatrix_ImplEigen::~TlDenseSymmetricMatrix_ImplEigen() {}
 TlDenseSymmetricMatrix_ImplEigen::operator std::vector<double>() const {
     const std::size_t dim = this->getNumOfRows();
     const std::size_t size = dim * (dim + 1) / 2;
+    std::cout << "TlDenseSymmetricMatrix_ImplEigen::operator std::vector<double>() const: size=" << size << std::endl;
     std::vector<double> buf(size);
 
     // column-major
@@ -54,11 +57,13 @@ TlDenseSymmetricMatrix_ImplEigen::operator std::vector<double>() const {
     for (std::size_t c = 0; c < dim; ++c) {
         for (std::size_t r = 0; r <= c; ++r) {
             const double v = this->get(r, c);
+            assert(i < size);
             buf[i] = v;
             ++i;
         }
     }
 
+    std::cout << "TlDenseSymmetricMatrix_ImplEigen::operator std::vector<double>() return" << std::endl;
     return buf;
 }
 
@@ -135,7 +140,7 @@ bool TlDenseSymmetricMatrix_ImplEigen::eig(
 }
 
 // ---------------------------------------------------------------------------
-// protected
+// I/O
 // ---------------------------------------------------------------------------
 void TlDenseSymmetricMatrix_ImplEigen::vtr2mat(double const* const pBuf) {
     const TlMatrixObject::index_type dim = this->getNumOfRows();
@@ -149,6 +154,18 @@ void TlDenseSymmetricMatrix_ImplEigen::vtr2mat(double const* const pBuf) {
             ++i;
         }
     }
+}
+
+TlMatrixObject::size_type TlDenseSymmetricMatrix_ImplEigen::getNumOfElements() const {
+    return this->matrix_.size();
+}
+
+double* TlDenseSymmetricMatrix_ImplEigen::data() {
+    return this->matrix_.data();
+}
+
+const double* TlDenseSymmetricMatrix_ImplEigen::data() const {
+    return this->matrix_.data();
 }
 
 // ---------------------------------------------------------------------------

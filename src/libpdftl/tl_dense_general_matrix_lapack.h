@@ -4,6 +4,7 @@
 #include "tl_dense_general_matrix_impl_lapack.h"
 #include "tl_dense_general_matrix_object.h"
 
+class TlCommunicate;
 class TlDenseSymmetricMatrix_Lapack;
 class TlDenseVector_Lapack;
 
@@ -25,8 +26,6 @@ public:
     // ---------------------------------------------------------------------------
     // properties
     // ---------------------------------------------------------------------------
-public:
-    virtual TlMatrixObject::size_type getNumOfElements() const;
 
     // ---------------------------------------------------------------------------
     // operators
@@ -85,16 +84,17 @@ public:
     // solve Ax = B
     TlDenseGeneralMatrix_Lapack getLeastSquaresSolution(const TlDenseGeneralMatrix_Lapack& B) const;
 
-public:
-    double* data();
-    const double* data() const;
-
     // ---------------------------------------------------------------------------
     // I/O
     // ---------------------------------------------------------------------------
 public:
     virtual void dump(TlDenseVector_Lapack* v) const;
     virtual void restore(const TlDenseVector_Lapack& v);
+
+protected:
+    virtual TlMatrixObject::size_type getNumOfElements() const;
+    virtual double* data();
+    virtual const double* data() const;
 
 private:
     using TlDenseGeneralMatrixObject::dump;
@@ -103,6 +103,7 @@ private:
     // ---------------------------------------------------------------------------
     // friends
     // ---------------------------------------------------------------------------
+    friend class TlCommunicate;
     friend class TlDenseSymmetricMatrix_Lapack;
 
     // matrix(sym) x matrix(gen)

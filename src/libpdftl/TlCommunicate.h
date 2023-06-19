@@ -27,15 +27,21 @@
 #include <valarray>
 #include <vector>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif  // HAVE_CONFIG_H
+
 #include "TlLogging.h"
 #include "TlTime.h"
 #include "tl_matrix_object.h"
 
 //#define ANY_TAG_OK
 
+#ifdef HAVE_LAPACK
 class TlDenseGeneralMatrix_Lapack;
 class TlDenseSymmetricMatrix_Lapack;
 class TlDenseVector_Lapack;
+#endif  // HAVE_LAPACK
 
 #ifdef HAVE_EIGEN
 class TlDenseGeneralMatrix_Eigen;
@@ -117,9 +123,18 @@ public:
     int allReduce_SUM(double* pData, std::size_t length);
     //  int allReduce_SUM(TlVector_BLAS& rVector);
     //  int allReduce_SUM(TlDenseGeneralMatrix_BLAS_old& rMatrix);
+
+#ifdef HAVE_LAPACK
     int allReduce_SUM(TlDenseGeneralMatrix_Lapack* pMatrix);
     int allReduce_SUM(TlDenseSymmetricMatrix_Lapack* pMatrix);
     int allReduce_SUM(TlDenseVector_Lapack* pVector);
+#endif  // HAVE_LAPACK
+
+#ifdef HAVE_EIGEN
+    int allReduce_SUM(TlDenseGeneralMatrix_Eigen* pMatrix);
+    int allReduce_SUM(TlDenseSymmetricMatrix_Eigen* pMatrix);
+#endif  // HAVE_EIGEN
+
     int allReduce_SUM(TlSparseMatrix& rMatrix);
     int allReduce_AND(bool& rData);
     int allReduce_MAX(int& rData);
