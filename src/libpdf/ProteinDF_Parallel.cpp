@@ -22,6 +22,8 @@
 #ifdef _OPENMP
 #include "omp.h"
 #endif  // _OPENMP
+
+#include "DfEda_Parallel.h"
 #include "DfForce_Parallel.h"
 #include "DfInitialGuess_Parallel.h"
 #include "DfInputdata_Parallel.h"
@@ -124,6 +126,11 @@ DfScf* ProteinDF_Parallel::createDfScfInstance() {
 DfForce* ProteinDF_Parallel::getDfForceObject() {
     DfForce* pDfForce = new DfForce_Parallel(&this->pdfParam_);
     return pDfForce;
+}
+
+DfEda* ProteinDF_Parallel::getDfEdaObject() {
+    DfEda* pDfEda = new DfEda_Parallel(&this->pdfParam_);
+    return pDfEda;
 }
 
 void ProteinDF_Parallel::startlogo() {
