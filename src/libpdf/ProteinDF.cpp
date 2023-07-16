@@ -28,6 +28,7 @@
 #include "omp.h"
 #endif  // _OPENMP
 
+#include "DfEda.h"
 #include "DfForce.h"
 #include "DfInitialGuess.h"
 #include "DfInputdata.h"
@@ -118,6 +119,9 @@ void ProteinDF::exec() {
             // [force]
             // this->loadParam();
             this->stepForce();
+            this->saveParam();
+        } else if (group == "eda") {
+            this->stepEda();
             this->saveParam();
         } else if (group != "") {
             // nothing
@@ -388,6 +392,18 @@ void ProteinDF::stepForce() {
     this->stepEndTitle();
 }
 
+void ProteinDF::stepEda() {
+    this->stepStartTitle("EDA");
+
+    DfEda* pDfEda = this->getDfEdaObject();
+    pDfEda->calc();
+
+    delete pDfEda;
+    pDfEda = NULL;
+
+    this->stepEndTitle();
+}
+
 void ProteinDF::loadParam(const std::string& requestFilePath) {
     std::string pdfParamPath = requestFilePath;
     if (requestFilePath.empty() == true) {
@@ -425,4 +441,9 @@ DfInitialGuess* ProteinDF::getDfInitialGuessObject() {
 DfForce* ProteinDF::getDfForceObject() {
     DfForce* pDfForce = new DfForce(&this->pdfParam_);
     return pDfForce;
+}
+
+DfEda* ProteinDF::getDfEdaObject() {
+    DfEda* pDfEda = new DfEda(&this->pdfParam_);
+    return pDfEda;
 }

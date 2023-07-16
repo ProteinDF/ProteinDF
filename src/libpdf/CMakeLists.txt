@@ -26,6 +26,7 @@ set(LIBPDF_HEADERS
   DfDiagonal.h
   DfDiffDensityMatrix.h
   DfDmatrix.h
+  DfEda.h
   DfEngineObject.h
   DfEriEngine.h
   DfEriObject.h
@@ -118,6 +119,7 @@ set(LIBPDF_SOURCES
   DfDiagonal.cpp
   DfDiffDensityMatrix.cpp
   DfDmatrix.cpp
+  DfEda.cc
   DfEriEngine.cpp
   DfEriX.cpp
   DfFockMatrix.cpp
@@ -205,6 +207,7 @@ set(LIBPPDF_HEADERS
   DfDiagonal_Parallel.h
   DfDiffDensityMatrix_Parallel.h
   DfDmatrix_Parallel.h
+  DfEda_Parallel.h
   DfEriX_Parallel.h
   DfFockMatrix_Parallel.h
   DfForce_Parallel.h
@@ -250,6 +253,7 @@ set(LIBPPDF_SOURCES
   DfDiagonal_Parallel.cpp
   DfDiffDensityMatrix_Parallel.cpp
   DfDmatrix_Parallel.cpp
+  DfEda_Parallel.cc
   DfEriX_Parallel.cpp
   DfFockMatrix_Parallel.cpp
   DfForce_Parallel.cpp
