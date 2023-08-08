@@ -677,11 +677,13 @@ std::string TlMsgPack::dump_scalar(const TlSerializeData& data) const {
 
         case TlSerializeData::STRING: {
             const std::string str = data.getStr();
+            // std::cerr << "msgpack output str: " << str << std::endl;
             os << this->pack(str.c_str(), str.size());
         } break;
 
         case TlSerializeData::INT: {
             int value = data.getInt();
+            // std::cerr << "msgpack output INT: " << value << std::endl;
 #if COMPILE_VALUE_SIZEOF_INT == 4
             os << this->pack_int32(value);
 #else
@@ -691,6 +693,7 @@ std::string TlMsgPack::dump_scalar(const TlSerializeData& data) const {
 
         case TlSerializeData::LONG: {
             long value = data.getLong();
+            // std::cerr << "msgpack output LONG: " << value << std::endl;
 #if COMPILE_VALUE_SIZEOF_LONG == 4
             os << this->pack_int32(value);
 #else
@@ -700,6 +703,7 @@ std::string TlMsgPack::dump_scalar(const TlSerializeData& data) const {
 
         case TlSerializeData::UINT: {
             unsigned int value = data.getUInt();
+            // std::cerr << "msgpack output UINT: " << value << std::endl;
 #if COMPILE_VALUE_SIZEOF_INT == 4
             os << this->pack_uint32(value);
 #else
@@ -709,6 +713,7 @@ std::string TlMsgPack::dump_scalar(const TlSerializeData& data) const {
 
         case TlSerializeData::ULONG: {
             unsigned long value = data.getULong();
+            // std::cerr << "msgpack output ULONG: " << value << std::endl;
 #if COMPILE_VALUE_SIZEOF_LONG == 4
             os << this->pack_uint32(value);
 #else
@@ -718,10 +723,12 @@ std::string TlMsgPack::dump_scalar(const TlSerializeData& data) const {
 
         case TlSerializeData::DOUBLE: {
             double value = data.getDouble();
+            // std::cerr << "msgpack output double: " << value << std::endl;
             os << this->pack(value);
         } break;
 
         case TlSerializeData::NONE: {
+            // std::cerr << "msgpack output NONE: " << std::endl;
             std::ostringstream os_tmp;
             this->write(os_tmp, char(0xc0));
             os << os_tmp.str();
@@ -741,7 +748,8 @@ std::string TlMsgPack::dump_array(const TlSerializeData& data) const {
     std::ostringstream os;
 
     assert(sizeof(int) == 4);
-    const int size = data.getSize();
+    const unsigned int size = data.getSize();
+    // std::cerr << "msgpack output ARRAY: " << size << std::endl;
     this->write(os, char(0xdd));
     this->write(os, TlUtils::toBigEndian(size));
 
@@ -757,7 +765,8 @@ std::string TlMsgPack::dump_map(const TlSerializeData& data) const {
     std::ostringstream os;
 
     assert(sizeof(int) == 4);
-    const int size = data.getSize();
+    const unsigned int size = data.getSize();
+    // std::cerr << "msgpack output MAP: " << size << std::endl;
     this->write(os, char(0xdf));
     this->write(os, TlUtils::toBigEndian(size));
 
