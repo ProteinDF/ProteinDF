@@ -320,8 +320,10 @@ int exec_atomgroup_mode(const TlDenseGeneralMatrix_Lapack& CS, const TlDenseGene
             std::set<int>::const_iterator itAtomEnd = groups[groupIndex].end();
             for (std::set<int>::const_iterator itAtom = groups[groupIndex].begin(); itAtom != itAtomEnd; ++itAtom) {
                 const int atomIndex = *itAtom;
-                const double w = atomContribMat.get(atomIndex, mo);
-                contrib_group += w;
+                if (atomIndex > 0) {  // skip dummy atom (atomIndex == -1)
+                    const double w = atomContribMat.get(atomIndex, mo);
+                    contrib_group += w;
+                }
             }
             if (contrib_group >= threshold) {
                 groupMOs[groupIndex].insert(mo);
@@ -503,8 +505,8 @@ int main(int argc, char* argv[]) {
             answer = exec_save_mode(CS, C, savePath, orbContributionMatrixPath, gValueVectorPath, isVerbose);
             break;
         case ATOMGROUP_MODE:
-            answer = exec_atomgroup_mode(CS, C, readOrbInfo, threshold, atomGroupPath,
-                                         orbContributionMatrixPath, gValueVectorPath, output, isVerbose);
+            answer = exec_atomgroup_mode(CS, C, readOrbInfo, threshold, atomGroupPath, output,
+                                         orbContributionMatrixPath, gValueVectorPath, isVerbose);
             break;
         default:
             std::cerr << "please specify mode: " << std::endl;
