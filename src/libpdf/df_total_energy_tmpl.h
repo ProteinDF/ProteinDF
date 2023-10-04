@@ -23,7 +23,7 @@ public:
     void calc(const int iteration);
     void output();
 
-    void get_IE(const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup) const;
+    void calcEDA(const std::vector<std::vector<TlMatrixObject::index_type> >& atomIndexGroup) const;
 
     // double get_IE(const std::vector<int>& indeces1) const;
     // double get_IE(const std::vector<int>& indeces1,
@@ -68,9 +68,11 @@ protected:
 
 protected:
     SymmetricMatrix get_IE_nuc(const SymmetricMatrix& matrix,
-                               const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup) const;
+                               const std::vector<std::vector<TlMatrixObject::index_type> >& atomIndexGroup) const;
     SymmetricMatrix get_IE(const SymmetricMatrix& matrix,
-                           const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup) const;
+                           const std::vector<std::vector<TlMatrixObject::index_type> >& atomIndexGroup) const;
+    GeneralMatrix getGroupEDA(const GeneralMatrix& matrix,
+                              const std::vector<std::vector<TlMatrixObject::index_type> >& atomIndexGroup) const;
 
     std::vector<int> atomArray2AoArray(const std::vector<int>& atomArray) const;
     double get_IE_matrix(const SymmetricMatrix& matrix, const std::vector<int>& atomIndexes1,
@@ -368,11 +370,13 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
 }
 
 // ----------------------------------------------------------------------------
-// IE
+// EDA
 // ----------------------------------------------------------------------------
 template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
-void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::get_IE(
-    const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup) const {
+void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcEDA(
+    const std::vector<std::vector<TlMatrixObject::index_type> >& atomIndexGroup) const {
+    this->log_.info("start calc EDA");
+
     // nuc
     SymmetricMatrix IE_nuc;
     {
@@ -389,57 +393,107 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
     {
         SymmetricMatrix E_K;
         E_K.load(DfObject::m_sWorkDirPath + "/" + "e_K.rks.mat");
+        {
+            GeneralMatrix eigvec;
+            Vector eigval;
+            E_K.eig(&eigval, &eigvec);
+            eigvec.save(DfObject::m_sWorkDirPath + "/" + "e_K.eigvec.rks.mat");
+            eigval.save(DfObject::m_sWorkDirPath + "/" + "e_K.eigval.rks.vtr");
+        }
         E_e += E_K;
 
         SymmetricMatrix IE_K = this->get_IE(E_K, atomIndexGroup);
-        IE_K.save(DfObject::m_sWorkDirPath + "/" + "IE_K.rks.mat");
+        IE_K.save(DfObject::m_sWorkDirPath + "/" + "grpEDA_K.rks.mat");
     }
     // XC
     {
         SymmetricMatrix E_XC;
         E_XC.load(DfObject::m_sWorkDirPath + "/" + "e_XC.rks.mat");
+        {
+            GeneralMatrix eigvec;
+            Vector eigval;
+            E_XC.eig(&eigval, &eigvec);
+            eigvec.save(DfObject::m_sWorkDirPath + "/" + "e_XC.eigvec.rks.mat");
+            eigval.save(DfObject::m_sWorkDirPath + "/" + "e_XC.eigval.rks.vtr");
+        }
         E_e += E_XC;
 
         SymmetricMatrix IE_K = this->get_IE(E_XC, atomIndexGroup);
-        IE_K.save(DfObject::m_sWorkDirPath + "/" + "IE_XC.rks.mat");
+        IE_K.save(DfObject::m_sWorkDirPath + "/" + "grpEDA_XC.rks.mat");
     }
 
     // h
     {
         SymmetricMatrix E_h;
         E_h.load(DfObject::m_sWorkDirPath + "/" + "e_h.mat");
+        {
+            GeneralMatrix eigvec;
+            Vector eigval;
+            E_h.eig(&eigval, &eigvec);
+            eigvec.save(DfObject::m_sWorkDirPath + "/" + "e_h.eigvec.mat");
+            eigval.save(DfObject::m_sWorkDirPath + "/" + "e_h.eigval.vtr");
+        }
         E_e += E_h;
 
         SymmetricMatrix IE_h = this->get_IE(E_h, atomIndexGroup);
-        IE_h.save(DfObject::m_sWorkDirPath + "/" + "IE_h.mat");
+        IE_h.save(DfObject::m_sWorkDirPath + "/" + "grpEDA_h.mat");
     }
     if (this->m_nNumOfDummyAtoms > 0) {
         SymmetricMatrix E_h_X;
         E_h_X.load(DfObject::m_sWorkDirPath + "/" + "e_h_X.mat");
+        {
+            GeneralMatrix eigvec;
+            Vector eigval;
+            E_h_X.eig(&eigval, &eigvec);
+            eigvec.save(DfObject::m_sWorkDirPath + "/" + "e_h_X.eigvec.mat");
+            eigval.save(DfObject::m_sWorkDirPath + "/" + "e_h_X.eigval.vtr");
+        }
         E_e += E_h_X;
 
         SymmetricMatrix IE_h_X = this->get_IE(E_h_X, atomIndexGroup);
-        IE_h_X.save(DfObject::m_sWorkDirPath + "/" + "IE_h_X.mat");
+        IE_h_X.save(DfObject::m_sWorkDirPath + "/" + "grpEDA_h_X.mat");
     }
 
     // J
     {
         SymmetricMatrix E_J;
         E_J.load(DfObject::m_sWorkDirPath + "/" + "e_J.mat");
+        {
+            GeneralMatrix eigvec;
+            Vector eigval;
+            E_J.eig(&eigval, &eigvec);
+            eigvec.save(DfObject::m_sWorkDirPath + "/" + "e_J.eigvec.mat");
+            eigval.save(DfObject::m_sWorkDirPath + "/" + "e_J.eigval.vtr");
+        }
         E_e += E_J;
 
         SymmetricMatrix IE_J = this->get_IE(E_J, atomIndexGroup);
-        IE_J.save(DfObject::m_sWorkDirPath + "/" + "IE_J.mat");
+        IE_J.save(DfObject::m_sWorkDirPath + "/" + "grpEDA_J.mat");
     }
 
     // electron-term
+    this->log_.info("calc EDA (electron-term)");
     {
+        E_e.save(DfObject::m_sWorkDirPath + "/" + "EDA_e.mat");
+        {
+            GeneralMatrix eigvec;
+            Vector eigval;
+            E_e.eig(&eigval, &eigvec);
+            eigvec.save(DfObject::m_sWorkDirPath + "/" + "EDA_e.eigvec.mat");
+            eigval.save(DfObject::m_sWorkDirPath + "/" + "EDA_e.eigval.vtr");
+
+            const GeneralMatrix grpEDA_e_eigvec = this->getGroupEDA(eigvec, atomIndexGroup);
+            grpEDA_e_eigvec.save(DfObject::m_sWorkDirPath + "/" + "grpEDA_e.eigvec.mat");
+        }
+
         IE_e = this->get_IE(E_e, atomIndexGroup);
-        IE_e.save(DfObject::m_sWorkDirPath + "/" + "IE_e.mat");
+        IE_e.save(DfObject::m_sWorkDirPath + "/" + "grpEDA_e.mat");
     }
 
     const SymmetricMatrix IE = IE_nuc + IE_e;
     IE.save(DfObject::m_sWorkDirPath + "/" + "IE.mat");
+
+    this->log_.info("end calc EDA");
 }
 
 template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
@@ -489,6 +543,40 @@ SymmetricMatrix DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOve
     }
 
     return IE;
+}
+
+template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
+GeneralMatrix DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::getGroupEDA(
+    const GeneralMatrix& matrix, const std::vector<std::vector<DfObject::index_type> >& atomIndexGroup) const {
+    const DfObject::index_type numOfRows = matrix.getNumOfRows();
+    const DfObject::index_type numOfCols = matrix.getNumOfCols();
+
+    const int numOfGroups = atomIndexGroup.size();
+    GeneralMatrix grpEDA(numOfGroups, numOfCols);
+    for (int groupID1 = 0; groupID1 < numOfGroups; ++groupID1) {
+        this->log_.info(TlUtils::format("group: %d", groupID1));
+        const std::vector<DfObject::index_type> aoIndeces1 = this->atomArray2AoArray(atomIndexGroup[groupID1]);
+        const int numOfAoIndeces1 = aoIndeces1.size();
+
+        // #pragma omp parallel
+        {
+            std::vector<double> cols(numOfCols);
+            // #pragma omp for
+            for (int i = 0; i < numOfAoIndeces1; ++i) {
+                const index_type ao = aoIndeces1[i];
+                for (DfObject::index_type col = 0; col < numOfCols; ++col) {
+                    cols[col] += matrix.get(ao, col);
+                }
+            }
+
+            // #pragma omp critical(DfTotalEnergy_tmpl__getGroupEDA)
+            for (DfObject::index_type col = 0; col < numOfCols; ++col) {
+                grpEDA.set(groupID1, col, cols[col]);
+            }
+        }
+    }
+
+    return grpEDA;
 }
 
 // template <class GeneralMatrix, class SymmetricMatrix, class Vector,
