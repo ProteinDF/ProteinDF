@@ -52,8 +52,8 @@
 /// Dfクラスの親クラス
 class DfObject {
 public:
-    typedef int index_type;
-    typedef long size_type;
+    typedef signed int index_type;  // = TlMatrixObject::index_type
+    typedef signed long size_type;  // = TlMatrixObject::size_type
 
 public:
     enum METHOD_TYPE {
