@@ -17,7 +17,6 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfScf_Parallel.h"
-#include "TlCommunicate.h"
 
 #include "DfCleanup_Parallel.h"
 #include "DfConvcheck_Parallel.h"
@@ -27,9 +26,7 @@
 #include "DfDensityFittingX_ScaLAPACK.h"
 #include "DfDiagonal_Parallel.h"
 #include "DfDiffDensityMatrix_Parallel.h"
-
 #include "DfDmatrix_Parallel.h"
-
 #include "DfFockMatrix_Parallel.h"
 #include "DfGridFreeXC_Parallel.h"
 #include "DfJMatrix_Parallel.h"
@@ -40,6 +37,7 @@
 #include "DfTransFmatrix_Parallel.h"
 #include "DfTransatob_Parallel.h"
 #include "DfXCFunctional_Parallel.h"
+#include "TlCommunicate.h"
 
 #ifdef HAVE_SCALAPACK
 #include "df_total_energy_scalapack.h"
@@ -50,7 +48,8 @@
 
 #define NUMBER_OF_CHECK 2
 
-DfScf_Parallel::DfScf_Parallel(TlSerializeData* pPdfParam) : DfScf(pPdfParam) {
+DfScf_Parallel::DfScf_Parallel(TlSerializeData* pPdfParam)
+    : DfScf(pPdfParam) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     DfObject::rank_ = rComm.getRank();
 }
@@ -72,24 +71,31 @@ void DfScf_Parallel::saveParam() const {
     rComm.broadcast(*(this->pPdfParam_));
 }
 
-void DfScf_Parallel::setScfParam() {
+void DfScf_Parallel::updateParam() {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
         DfScf::setScfParam();
     }
-
     rComm.broadcast(*(this->pPdfParam_));
-
-    int dampObject = this->m_nDampObject;
-    rComm.broadcast(dampObject);
-    this->m_nDampObject = (DfScf::DampObjectType)dampObject;
-
-    int scfAcceleration = this->m_nScfAcceleration;
-    rComm.broadcast(scfAcceleration);
-    this->m_nScfAcceleration = (DfScf::ScfAccelerationType)scfAcceleration;
-
-    rComm.broadcast(this->m_nConvergenceCounter);
 }
+
+// void DfScf_Parallel::setScfParam() {
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+//     if (rComm.isMaster() == true) {
+//         DfScf::setScfParam();
+//     }
+//     rComm.broadcast(*(this->pPdfParam_));
+
+//     int dampObject = this->m_nDampObject;
+//     rComm.broadcast(dampObject);
+//     this->m_nDampObject = (DfScf::DampObjectType)dampObject;
+
+//     int scfAcceleration = this->m_nScfAcceleration;
+//     rComm.broadcast(scfAcceleration);
+//     this->m_nScfAcceleration = (DfScf::ScfAccelerationType)scfAcceleration;
+
+//     rComm.broadcast(this->m_nConvergenceCounter);
+// }
 
 // =====================================================================
 // pre-SCF loop

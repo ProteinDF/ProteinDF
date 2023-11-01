@@ -367,7 +367,7 @@ void ProteinDF::stepScf() {
     this->stepStartTitle("SCF");
 
     DfScf* pDfScf = this->createDfScfInstance();
-    pDfScf->dfScfMain();
+    pDfScf->run();
 
     delete pDfScf;
     pDfScf = NULL;
