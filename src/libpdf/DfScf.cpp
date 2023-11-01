@@ -44,6 +44,7 @@
 #include "TlUtils.h"
 #include "common.h"
 #include "df_converge_damping_oda_lapack.h"
+#include "tl_matrix_utils.h"
 // #include "DfTotalEnergy.h"
 
 #ifdef HAVE_LAPACK
@@ -92,11 +93,11 @@ void DfScf::saveParam() const {
 
 // return  0 : not convergence
 //         1 : convergence
-int DfScf::dfScfMain() {
+int DfScf::run() {
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
-    this->setScfParam();
 
-    this->logger(" restart calculation is " + pdfParam["restart"].getStr() + "\n");
+    this->updateParam();
+    this->setScfParam();
 
     std::string sStepControl = pdfParam["step_control"].getStr();
     std::string group = "";
@@ -116,24 +117,46 @@ int DfScf::dfScfMain() {
         }
     }
 
-    // guess の作成
-    // preSCFに持って行くべき。
-    if ((this->m_nIteration == 0) || (this->isRestart_ == false)) {
-        this->m_nIteration = 1;
-    }
-
     // start SCF LOOP
     this->saveParam();
     return this->execScfLoop();
 }
 
+void DfScf::updateParam() {
+    // numOfMOs
+    DfObject::index_type X_cols = 0;
+    {
+        TlMatrixObject::HeaderInfo headerInfo;
+        const std::string XmatPath = this->getXMatrixPath();
+        const bool isLoadable = TlMatrixUtils::getHeaderInfo(XmatPath, &headerInfo);
+        if (isLoadable) {
+            X_cols = headerInfo.numOfCols;
+        } else {
+            CnErr.abort("cannot load X matrix.");
+        }
+    }
+
+    if (X_cols != this->m_nNumOfMOs) {
+        this->log_.warn("the number of MOs is not equal to the number of columns in the X matrix.");
+        this->log_.warn(TlUtils::format("  [#MOs=%d] != [X_cols=%d]", this->m_nNumOfMOs, X_cols));
+
+        this->log_.warn(TlUtils::format("force update of the number of MOs to %d.", X_cols));
+        this->m_nNumOfMOs = X_cols;
+        (*(this->pPdfParam_))["num_of_MOs"] = this->m_nNumOfMOs;
+    }
+}
+
 void DfScf::setScfParam() {
+    DfObject::setParam(*(this->pPdfParam_));
+
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
 
     // iteration number
-    this->m_nIteration = 0;
-    if (this->isRestart_ == true) {
+    this->m_nIteration = 1;
+    if (this->isRestart_) {
         this->m_nIteration = std::max<int>(1, pdfParam["num_of_iterations"].getInt());
+    } else {
+        (*(this->pPdfParam_))["num_of_iterations"] = this->m_nIteration;
     }
 
     // damping switch
@@ -154,7 +177,7 @@ void DfScf::setScfParam() {
         }
     }
 
-    // Damp Object Type
+    // damping object
     this->m_nDampObject = DAMP_DENSITY;
     {
         const std::string sDampObject = TlUtils::toUpper(pdfParam["scf_acceleration/damping/damping_type"].getStr());
@@ -169,11 +192,13 @@ void DfScf::setScfParam() {
             this->log_.warn(TlUtils::format("unknown acceleration method: %s", sDampObject.c_str()));
         }
     }
-    if (this->J_engine_ != J_ENGINE_RI_J) {
-        this->log_.warn("damping \"density\" is not supported except for the RI method. ");
-        this->log_.warn("\"density_matrix\" is used.");
-        (*this->pPdfParam_)["scf_acceleration/damping/damping_type"] = "density_matrix";
-        this->m_nDampObject = DAMP_DENSITY_MATRIX;
+    if (this->m_nDampObject == DAMP_DENSITY) {
+        if (this->J_engine_ != J_ENGINE_RI_J) {
+            this->log_.warn("damping \"density\" is not supported except for the RI method.");
+            this->log_.warn("\"density_matrix\" is used.");
+            (*this->pPdfParam_)["scf_acceleration/damping/damping_type"] = "density_matrix";
+            this->m_nDampObject = DAMP_DENSITY_MATRIX;
+        }
     }
 }
 
