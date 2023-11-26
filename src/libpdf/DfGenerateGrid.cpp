@@ -2356,15 +2356,16 @@ TlDenseVector_Lapack DfGenerateGrid::JGP_nablaB_PA(
 double DfGenerateGrid::JGP_t(const double myu) {
     static const double coef = -27.0 / 16.0;
     // static const double coef = - 81.0 / 32.0;
+
     double answer = 0.0;
+    if ((std::fabs(myu) - 1.0) > 1.0E-16) {
+        const double p1 = this->Becke_f1(myu);
+        const double p2 = this->Becke_f1(p1);
+        const double p3 = this->Becke_f1(p2);
+        const double s = 0.5 * (1.0 - p3);  // B4
 
-    const double p1 = this->Becke_f1(myu);
-    const double p2 = this->Becke_f1(p1);
-    const double p3 = this->Becke_f1(p2);
-    const double s = 0.5 * (1.0 - p3);  // B4
-
-    assert(std::fabs(s) > 1.0E-16);
-    answer = coef * (1.0 - p2 * p2) * (1.0 - p1 * p1) * (1 - myu * myu) / s;
+        answer = coef * (1.0 - p2 * p2) * (1.0 - p1 * p1) * (1 - myu * myu) / s;
+    }
 
     return answer;
 }
