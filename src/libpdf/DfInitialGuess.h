@@ -203,7 +203,7 @@ void DfInitialGuess::createInitialGuessUsingDensityMatrix(const RUN_TYPE runType
     if (this->isNormalizeDensityMatrix_) {
         P = this->normalizeDensityMatrix<SymmetricMatrixType, DfPopulationType>(runType, P);
     }
-    this->savePpqMatrix(runType, 0, P);
+    this->savePOutMatrix(runType, 0, P);
 
     // spin density matrix
     const int iteration = 0;

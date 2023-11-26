@@ -20,6 +20,7 @@
 #define DFFOCKMATRIX_H
 
 #include <cassert>
+
 #include "CnError.h"
 #include "DfObject.h"
 #include "DfXCFunctional.h"
@@ -27,14 +28,14 @@
 #include "tl_dense_vector_lapack.h"
 
 class DfFockMatrix : public DfObject {
-   public:
+public:
     DfFockMatrix(TlSerializeData* pPdfParam);
     virtual ~DfFockMatrix();
 
-   public:
+public:
     void DfFockMatrixMain();
 
-   protected:
+protected:
     virtual void mainDIRECT_RKS();
     virtual void mainDIRECT_UKS();
     virtual void mainDIRECT_ROKS();
@@ -53,7 +54,7 @@ class DfFockMatrix : public DfObject {
     // TlDenseSymmetricMatrix_Lapack&
     // F);
 
-   protected:
+protected:
     template <typename SymmetricMatrixType>
     void mainDIRECT_RKS();
 
@@ -78,7 +79,7 @@ class DfFockMatrix : public DfObject {
     template <typename SymmetricMatrixType>
     void setHpq(const RUN_TYPE nRunType, SymmetricMatrixType& F);
 
-   protected:
+protected:
     bool isUseNewEngine_;
 };
 
@@ -287,14 +288,9 @@ void DfFockMatrix::mainDIRECT_ROKS() {
     // -------------------------------------------------------------------------
     MatrixType SDc, DcS, SDo, DoS;
     {
-        const SymmetricMatrixType S =
-            DfObject::getSpqMatrix<SymmetricMatrixType>();
-        const SymmetricMatrixType Dc =
-            0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(
-                      RUN_ROKS_CLOSED, this->m_nIteration - 1);
-        const SymmetricMatrixType Do =
-            DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN,
-                                                        this->m_nIteration - 1);
+        const SymmetricMatrixType S = DfObject::getSpqMatrix<SymmetricMatrixType>();
+        const SymmetricMatrixType Dc = 0.5 * DfObject::getPInMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration);
+        const SymmetricMatrixType Do = DfObject::getPInMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, this->m_nIteration);
 
         SDc = S * Dc;
         DcS = SDc;

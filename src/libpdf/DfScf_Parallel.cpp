@@ -20,8 +20,8 @@
 
 #include "DfCleanup_Parallel.h"
 #include "DfConvcheck_Parallel.h"
-#include "DfConverge_Anderson_Parallel.h"
-#include "DfConverge_Damping_Parallel.h"
+// #include "DfConverge_Anderson_Parallel.h"
+// #include "DfConverge_Damping_Parallel.h"
 #include "DfDensityFittingX_Parallel.h"
 #include "DfDensityFittingX_ScaLAPACK.h"
 #include "DfDiagonal_Parallel.h"
@@ -38,6 +38,9 @@
 #include "DfTransatob_Parallel.h"
 #include "DfXCFunctional_Parallel.h"
 #include "TlCommunicate.h"
+#include "df_converge_damping_anderson_mpi_lapack.h"
+#include "df_converge_damping_mpi_lapack.h"
+#include "df_converge_damping_oda_mpi_lapack.h"
 
 #ifdef HAVE_SCALAPACK
 #include "df_total_energy_scalapack.h"
@@ -338,12 +341,12 @@ bool DfScf_Parallel::checkConverge() {
 DfConverge* DfScf_Parallel::getDfConverge() {
     DfConverge* pDfConverge = NULL;
     if (this->m_nScfAcceleration == SCF_ACCELERATION_SIMPLE) {
-        pDfConverge = new DfConverge_Damping_Parallel(this->pPdfParam_);
+        pDfConverge = new DfConverge_Damping_Mpi_Lapack(this->pPdfParam_);
     } else if (this->m_nScfAcceleration == SCF_ACCELERATION_ANDERSON) {
-        pDfConverge = new DfConverge_Anderson_Parallel(this->pPdfParam_);
+        pDfConverge = new DfConverge_Damping_Anderson_Mpi_Lapack(this->pPdfParam_);
     } else {
         // diis 法の最初のdampingなど
-        pDfConverge = new DfConverge_Damping_Parallel(this->pPdfParam_);
+        pDfConverge = new DfConverge_Damping_Mpi_Lapack(this->pPdfParam_);
     }
     return pDfConverge;
 }
