@@ -124,7 +124,11 @@ public:
     std::string getFpqMatrixPath(RUN_TYPE runType, int iteration) const;
     std::string getCMatrixPath(RUN_TYPE runType, int iteration,
                                const std::string& fragment = "") const;
-    std::string getPpqMatrixPath(RUN_TYPE runType, int iteration) const;
+    [[deprecated]] std::string getPpqMatrixPath(RUN_TYPE runType, int iteration) const;
+
+    std::string getPInMatrixPath(RUN_TYPE runType, int iteration) const;
+    std::string getPOutMatrixPath(RUN_TYPE runType, int iteration) const;
+
     std::string getEigenvaluesPath(const RUN_TYPE runType,
                                    const int iteration) const;
 
@@ -158,10 +162,12 @@ protected:
     std::string getGridDataFilePath() const;
     std::string getGridMatrixPath(const int iteration) const;
 
+    // density matrix
     std::string getDiffDensityMatrixPath(RUN_TYPE runType, int iteration) const;
     std::string getSpinDensityMatrixPath(RUN_TYPE runType, int iteration) const;
     std::string getP1pqMatrixPath(int iteration);
     std::string getP2pqMatrixPath(int iteration);
+
     std::string getHFxMatrixPath(RUN_TYPE runType, int iteration);
     std::string getFxcMatrixPath(RUN_TYPE runType, int iteration);
     std::string getExcMatrixPath(RUN_TYPE runType, int iteration);
@@ -172,6 +178,9 @@ protected:
                                     const std::string& fragment = "");
     std::string getCprimeMatrixPath(RUN_TYPE runType, int iteration,
                                     const std::string& fragment = "");
+
+    // DIIS
+    std::string getDiisResidualMatrixPath(const RUN_TYPE runType, int iteration) const;
 
     // GridFree
     std::string getGfSMatrixPath() const;
@@ -443,10 +452,22 @@ protected:
                           const std::string& fragment = "");
 
     template <class SymmetricMatrixType>
-    void savePpqMatrix(const RUN_TYPE runType, const int iteration,
+    [[deprecated]] void savePpqMatrix(const RUN_TYPE runType, const int iteration,
+                                      const SymmetricMatrixType& Ppq);
+    template <class SymmetricMatrixType>
+    [[deprecated]] SymmetricMatrixType getPpqMatrix(RUN_TYPE runType, int iteration) const;
+
+    template <class SymmetricMatrixType>
+    void savePInMatrix(const RUN_TYPE runType, const int iteration,
                        const SymmetricMatrixType& Ppq);
     template <class SymmetricMatrixType>
-    SymmetricMatrixType getPpqMatrix(RUN_TYPE runType, int iteration) const;
+    SymmetricMatrixType getPInMatrix(RUN_TYPE runType, int iteration) const;
+
+    template <class SymmetricMatrixType>
+    void savePOutMatrix(const RUN_TYPE runType, const int iteration,
+                        const SymmetricMatrixType& Ppq);
+    template <class SymmetricMatrixType>
+    SymmetricMatrixType getPOutMatrix(RUN_TYPE runType, int iteration) const;
 
     // template<class SymmetricMatrixType>
     // void savePCMatrix(const int iteration,
@@ -1297,6 +1318,40 @@ SymmetricMatrixType DfObject::getPpqMatrix(const RUN_TYPE runType,
     }
 
     return Ppq;
+}
+
+template <class SymmetricMatrixType>
+void DfObject::savePInMatrix(const RUN_TYPE runType, const int iteration,
+                             const SymmetricMatrixType& P) {
+    const std::string path = this->getPInMatrixPath(runType, iteration);
+    P.save(path);
+}
+
+template <class SymmetricMatrixType>
+SymmetricMatrixType DfObject::getPInMatrix(const RUN_TYPE runType,
+                                           const int iteration) const {
+    SymmetricMatrixType P;
+    const std::string path = this->getPInMatrixPath(runType, iteration);
+    P.load(path);
+
+    return P;
+}
+
+template <class SymmetricMatrixType>
+void DfObject::savePOutMatrix(const RUN_TYPE runType, const int iteration,
+                              const SymmetricMatrixType& P) {
+    const std::string path = this->getPOutMatrixPath(runType, iteration);
+    P.save(path);
+}
+
+template <class SymmetricMatrixType>
+SymmetricMatrixType DfObject::getPOutMatrix(const RUN_TYPE runType,
+                                            const int iteration) const {
+    SymmetricMatrixType P;
+    const std::string path = this->getPOutMatrixPath(runType, iteration);
+    P.load(path);
+
+    return P;
 }
 
 // template<class SymmetricMatrixType>

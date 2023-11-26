@@ -16,25 +16,25 @@ CnFile::~CnFile() {}
 //     case RUN_RKS:
 //     {
 //         P = 0.5 *
-//         this->locdMatrix<SymmetricMatrix>(DfObject::getPpqMatrixPath(RUN_RKS,
+//         this->locdMatrix<SymmetricMatrix>(DfObject::getPInMatrixPath(RUN_RKS,
 //         itr));
 //     }
 //     break;
 
 //       case RUN_UKS_ALPHA:
 //       case RUN_UKS_BETA:
-//         P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, itr);
+//         P = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType, itr);
 //         break;
 
 //       case RUN_ROKS_ALPHA: {
-//         P = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
+//         P = 0.5 * this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(
 //                       RUN_ROKS_CLOSED, itr);
-//         P += this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN,
+//         P += this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN,
 //                                                                itr);
 //       } break;
 
 //       case RUN_ROKS_BETA: {
-//         P = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
+//         P = 0.5 * this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(
 //                       RUN_ROKS_CLOSED, itr);
 //       } break;
 

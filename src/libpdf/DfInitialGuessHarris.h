@@ -153,7 +153,7 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
 
             P_high *= coef;
             // std::cerr << "calcInitialDensityMatrix(): save Ppq1" << std::endl;
-            this->savePpqMatrix(RUN_RKS, 0, P_high);
+            this->savePOutMatrix(RUN_RKS, 0, P_high);
             // std::cerr << "calcInitialDensityMatrix(): save Ppq2" << std::endl;
             this->saveSpinDensityMatrix(RUN_RKS, 0, 0.5 * P_high);
         } break;
@@ -169,8 +169,8 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
 
             const SymmetricMatrixType PA = coef_alpha * P_high;
             const SymmetricMatrixType PB = coef_beta * P_high;
-            this->savePpqMatrix(RUN_UKS_ALPHA, 0, PA);
-            this->savePpqMatrix(RUN_UKS_BETA, 0, PB);
+            this->savePOutMatrix(RUN_UKS_ALPHA, 0, PA);
+            this->savePOutMatrix(RUN_UKS_BETA, 0, PB);
             this->saveSpinDensityMatrix(RUN_UKS_ALPHA, 0, PA);
             this->saveSpinDensityMatrix(RUN_UKS_BETA, 0, PB);
         } break;
@@ -186,8 +186,8 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
 
             const SymmetricMatrixType PC = coef_close * P_high;
             const SymmetricMatrixType PO = coef_open * P_high;
-            this->savePpqMatrix(RUN_ROKS_CLOSED, 0, PC);
-            this->savePpqMatrix(RUN_ROKS_OPEN, 0, PO);
+            this->savePOutMatrix(RUN_ROKS_CLOSED, 0, PC);
+            this->savePOutMatrix(RUN_ROKS_OPEN, 0, PO);
             this->saveSpinDensityMatrix(RUN_ROKS_ALPHA, 0, PC + PO);
             this->saveSpinDensityMatrix(RUN_ROKS_BETA, 0, PC);
         } break;

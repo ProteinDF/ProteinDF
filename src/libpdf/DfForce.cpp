@@ -63,7 +63,7 @@ void DfForce::calcForce() {
     this->calcForceFromWS(runType);
 
     TlDenseSymmetricMatrix_Lapack P =
-        this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
+        this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
     this->calcForceFromHpq(P);
 
     this->calcForceFromCoulomb(runType);
@@ -311,7 +311,7 @@ void DfForce::calcForceFromCoulomb_exact(RUN_TYPE runType) {
     const int numOfAtoms = this->m_nNumOfAtoms;
 
     const TlDenseSymmetricMatrix_Lapack P =
-        this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
+        this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
 
     DfEriX dfEri(&(this->pdfParamForForce_));
 
@@ -336,7 +336,7 @@ void DfForce::calcForceFromCoulomb_RIJ(const RUN_TYPE runType) {
     const TlDenseVector_Lapack rho =
         this->getRho<TlDenseVector_Lapack>(runType, iteration);
     const TlDenseSymmetricMatrix_Lapack P =
-        this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
+        this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
 
     DfEriX dfEri(&(this->pdfParamForForce_));
 
@@ -373,9 +373,7 @@ void DfForce::calcForceFromPureXC(const RUN_TYPE runType) {
     TlDenseGeneralMatrix_Lapack Fxc(numOfAtoms, 3);
 
     // for RKS
-    const TlDenseSymmetricMatrix_Lapack P =
-        0.5 *
-        this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
+    const TlDenseSymmetricMatrix_Lapack P = 0.5 * this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
 
     DfCalcGridX* pCalcGrid = this->getCalcGridObj();
 
@@ -442,8 +440,7 @@ void DfForce::calcForceFromK(RUN_TYPE runType) {
         const int numOfAtoms = this->m_nNumOfAtoms;
 
         const TlDenseSymmetricMatrix_Lapack P =
-            this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType,
-                                                              iteration);
+            this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
 
         DfEriX dfEri(&(this->pdfParamForForce_));
 

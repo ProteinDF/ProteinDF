@@ -17,7 +17,9 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfJMatrix_Parallel.h"
+
 #include <cassert>
+
 #include "CnError.h"
 #include "DfCD_Parallel.h"
 #include "DfEriX_Parallel.h"
@@ -258,8 +260,7 @@ void DfJMatrix_Parallel::getJ_conventional_distributed(
     if (this->isUpdateMethod_ == true) {
         P = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_Scalapack>();
     } else {
-        P = DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(
-            RUN_RKS, this->m_nIteration - 1);
+        P = DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS, this->m_nIteration - 1);
     }
     assert(P.getNumOfRows() == this->m_nNumOfAOs);
 

@@ -17,6 +17,7 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfDiffDensityMatrix_Parallel.h"
+
 #include "TlCommunicate.h"
 #include "TlFile.h"
 #include "tl_dense_symmetric_matrix_scalapack.h"
@@ -83,12 +84,12 @@ void DfDiffDensityMatrix_Parallel::exec() {
 // {
 //     this->log_.info("(delta P) is build using ScaLAPACK.");
 //     TlDenseSymmetricMatrix_Scalapack P =
-//     DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(runType,
+//     DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(runType,
 //     iteration
 //     -1); P.save(TlUtils::format("diffP_%d.mat", iteration)); if
-//     (TlFile::isExist(this->getPpqMatrixPath(runType, iteration -2)) == true)
+//     (TlFile::isExist(this->getPInMatrixPath(runType, iteration -2)) == true)
 //     {
-//         P -= (this->getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(runType,
+//         P -= (this->getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(runType,
 //         iteration -2));
 //     }
 

@@ -378,7 +378,7 @@ DfGridFreeXC::ShellPairArrayTable DfGridFreeXC::getShellPairArrayTable(
 // TlDenseSymmetricMatrix_Lapack DfGridFreeXC::getPMatrix()
 // {
 //     TlDenseSymmetricMatrix_Lapack P =
-//     this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS,
+//     this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS,
 //     this->m_nIteration -1); return P;
 // }
 
@@ -457,7 +457,7 @@ void DfGridFreeXC::buildFxc_GGA() {
 
 //     // RKS
 //     const TlDenseSymmetricMatrix_Lapack PA = 0.5 *
-//     DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS,
+//     DfObject::getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS,
 //                                                                                  this->m_nIteration -1);
 //     assert(PA.getNumOfRows() == numOfAOs);
 
@@ -848,7 +848,7 @@ TlDenseGeneralMatrix_Lapack DfGridFreeXC::getForce() {
     Xt.transposeInPlace();
 
     // TlDenseSymmetricMatrix_Lapack P = 0.5 *
-    // this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS,
+    // this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS,
     // itr);
     const TlDenseGeneralMatrix_Lapack C =
         this->getCMatrix<TlDenseGeneralMatrix_Lapack>(runType, itr);

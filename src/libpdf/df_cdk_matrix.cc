@@ -11,7 +11,8 @@
 // ----------------------------------------------------------------------------
 // construct & destruct
 // ----------------------------------------------------------------------------
-DfCdkMatrix::DfCdkMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
+DfCdkMatrix::DfCdkMatrix(TlSerializeData* pPdfParam)
+    : DfObject(pPdfParam) {
     this->updateLinearAlgebraPackageParam(
         (*(this->pPdfParam_))["linear_algebra_package/K"].getStr());
 
@@ -218,14 +219,14 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
     bool hasTasks = pTaskCtrl->getQueue(numOfCBs, taskSize, &tasks, true);
     while (hasTasks == true) {
         const int numOfTasks = tasks.size();
-        //#pragma omp parallel for schedule(runtime)
+        // #pragma omp parallel for schedule(runtime)
         for (int i = 0; i < numOfTasks; ++i) {
             const SymmetricMatrix l =
                 this->getCholeskyVector<SymmetricMatrix, Vector>(
                     L.getColVector(tasks[i]), I2PQ);
             assert(l.getNumOfRows() == this->m_nNumOfAOs);
 
-            //#pragma omp critical
+            // #pragma omp critical
             { K += l * P * l; }
         }
         hasTasks = pTaskCtrl->getQueue(numOfCBs, taskSize, &tasks);
@@ -412,25 +413,25 @@ Vector DfCdkMatrix::getScreenedDensityMatrix(const RUN_TYPE runType,
     SymmetricMatrix P;
     switch (runType) {
         case RUN_RKS:
-            P = 0.5 * this->getPpqMatrix<SymmetricMatrix>(
+            P = 0.5 * this->getPInMatrix<SymmetricMatrix>(
                           RUN_RKS, this->m_nIteration - 1);
             break;
 
         case RUN_UKS_ALPHA:
         case RUN_UKS_BETA:
-            P = this->getPpqMatrix<SymmetricMatrix>(runType,
+            P = this->getPInMatrix<SymmetricMatrix>(runType,
                                                     this->m_nIteration - 1);
             break;
 
         case RUN_ROKS_ALPHA: {
-            P = 0.5 * this->getPpqMatrix<SymmetricMatrix>(
+            P = 0.5 * this->getPInMatrix<SymmetricMatrix>(
                           RUN_ROKS_CLOSED, this->m_nIteration - 1);
-            P += this->getPpqMatrix<SymmetricMatrix>(RUN_ROKS_OPEN,
+            P += this->getPInMatrix<SymmetricMatrix>(RUN_ROKS_OPEN,
                                                      this->m_nIteration - 1);
         } break;
 
         case RUN_ROKS_BETA: {
-            P = 0.5 * this->getPpqMatrix<SymmetricMatrix>(
+            P = 0.5 * this->getPInMatrix<SymmetricMatrix>(
                           RUN_ROKS_CLOSED, this->m_nIteration - 1);
         } break;
 

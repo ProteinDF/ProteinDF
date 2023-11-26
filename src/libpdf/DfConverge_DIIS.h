@@ -24,16 +24,16 @@
 #include "tl_dense_symmetric_matrix_lapack.h"
 
 class DfConverge_DIIS : public DfConverge_Damping {
-   public:
+public:
     DfConverge_DIIS(TlSerializeData* pPdfParam);
     virtual ~DfConverge_DIIS();
 
-   protected:
+protected:
     virtual void convergeRhoTilde();
     virtual void convergeKSMatrix();
     virtual void convergePMatrix();
 
-   protected:
+protected:
     // template <class MatrixType, class SymmetricMatrixType, class VectorType>
     // void convergeRhoTilde(const DfObject::RUN_TYPE runType);
 
@@ -43,7 +43,7 @@ class DfConverge_DIIS : public DfConverge_Damping {
     template <class MatrixType, class SymmetricMatrixType>
     void convergePMatrix(const DfObject::RUN_TYPE runType);
 
-   protected:
+protected:
     template <class MatrixType, class SymmetricMatrixType>
     MatrixType getResidual(const RUN_TYPE runType, const int itr);
 
@@ -55,7 +55,7 @@ class DfConverge_DIIS : public DfConverge_Damping {
     TlDenseGeneralMatrix_Lapack getCoef(const RUN_TYPE runType, const int itr,
                                         int last);
 
-   protected:
+protected:
     int startIterationOfDIIS_;
     int numOfLastItems_;
 };
@@ -76,13 +76,9 @@ MatrixType DfConverge_DIIS::getResidual(const RUN_TYPE runType, const int itr) {
         {
             MatrixType FP, PF;
             {
-                this->log_.info(
-                    TlUtils::format("residual: F(%d), P(%d)", itr, itr - 1));
-                const SymmetricMatrixType F =
-                    DfObject::getFpqMatrix<SymmetricMatrixType>(runType, itr);
-                SymmetricMatrixType P =
-                    0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(runType,
-                                                                      itr - 1);
+                this->log_.info(TlUtils::format("residual: F(%d), P(%d)", itr, itr - 1));
+                const SymmetricMatrixType F = DfObject::getFpqMatrix<SymmetricMatrixType>(runType, itr);
+                SymmetricMatrixType P = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(runType, itr - 1);
                 FP = F * P;
                 PF = P * F;
             }

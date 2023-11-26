@@ -17,6 +17,7 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfThreeindexintegrals.h"
+
 #include "CnError.h"
 #include "DfEriX.h"
 #include "DfOverlapX.h"
@@ -61,7 +62,7 @@ TlDenseSymmetricMatrix_Lapack DfThreeindexintegrals::getPMatrix(
     assert(iteration >= 0);
 
     TlDenseSymmetricMatrix_Lapack P;
-    P.load(this->getPpqMatrixPath(runType, iteration));
+    P.load(this->getPInMatrixPath(runType, iteration));
 
     return P;
 }
