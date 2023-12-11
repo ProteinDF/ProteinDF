@@ -27,6 +27,7 @@
 #include <iostream>
 #include <string>
 
+#include "CnError.h"
 #include "TlLogging.h"
 #include "TlMatrixCache.h"
 #include "TlSerializeData.h"
@@ -767,8 +768,13 @@ template <class MatrixType>
 MatrixType DfObject::getXInvMatrix() {
     MatrixType XInv;
     const std::string path = this->getXInvMatrixPath();
+
     // XInv = this->matrixCache_.get<MatrixType>(path);
-    XInv.load(path);
+    if (TlFile::isExistFile(path)) {
+        XInv.load(path);
+    } else {
+        CnErr.abort("XInv matrix file is not found: " + path);
+    }
 
     return XInv;
 }
@@ -916,9 +922,13 @@ SymmetricMatrixType DfObject::getDiffDensityMatrix(const RUN_TYPE runType,
                                                    const int iteration) {
     SymmetricMatrixType deltaP;
     const std::string path = this->getDiffDensityMatrixPath(runType, iteration);
+
     // deltaP = this->matrixCache_.get<SymmetricMatrixType>(path);
-    // deltaP.resize(this->m_nNumOfAOs);
-    deltaP.load(path);
+    if (TlFile::isExistFile(path)) {
+        deltaP.load(path);
+    } else {
+        CnErr.abort("DiffDensity matrix file is not found: " + path);
+    }
 
     return deltaP;
 }
@@ -936,7 +946,12 @@ SymmetricMatrixType DfObject::getSpinDensityMatrix(const RUN_TYPE runType,
                                                    const int iteration) {
     SymmetricMatrixType P;
     const std::string path = this->getSpinDensityMatrixPath(runType, iteration);
-    P.load(path);
+
+    if (TlFile::isExistFile(path)) {
+        P.load(path);
+    } else {
+        CnErr.abort("SpinDensity matrix file is not found: " + path);
+    }
 
     return P;
 }
@@ -952,8 +967,14 @@ template <class VectorType>
 VectorType DfObject::getRho(const RUN_TYPE runType, const int iteration) const {
     VectorType rho;
     const std::string path = this->getRhoPath(runType, iteration);
-    rho.load(path);
-    rho.resize(this->m_nNumOfAux);
+
+    if (TlFile::isExistFile(path)) {
+        rho.load(path);
+    } else {
+        CnErr.abort("Rho file is not found: " + path);
+    }
+    // rho.resize(this->m_nNumOfAux);
+
     return rho;
 }
 
@@ -973,12 +994,15 @@ SymmetricMatrixType DfObject::getHFxMatrix(const RUN_TYPE runType,
                                            const int iteration) {
     SymmetricMatrixType HFx;
     const std::string path = this->getHFxMatrixPath(runType, iteration);
-    // HFx = this->matrixCache_.get<SymmetricMatrixType>(path);
-    // HFx.resize(this->m_nNumOfAOs);
-    HFx.load(path);
 
-    // assert(HFx.getNumOfRows() == this->m_nNumOfAOs);
-    // assert(HFx.getNumOfCols() == this->m_nNumOfAOs);
+    // HFx = this->matrixCache_.get<SymmetricMatrixType>(path);
+    if (TlFile::isExistFile(path)) {
+        HFx.load(path);
+    } else {
+        CnErr.abort("HFx matrix file is not found: " + path);
+    }
+    // HFx.resize(this->m_nNumOfAOs);
+
     return HFx;
 }
 
@@ -998,9 +1022,14 @@ SymmetricMatrixType DfObject::getFxcMatrix(const RUN_TYPE runType,
                                            const int iteration) {
     SymmetricMatrixType Fxc;
     const std::string path = this->getFxcMatrixPath(runType, iteration);
+
     // Fxc = this->matrixCache_.get<SymmetricMatrixType>(path);
+    if (TlFile::isExistFile(path)) {
+        Fxc.load(path);
+    } else {
+        CnErr.abort("Fxc matrix file is not found: " + path);
+    }
     // Fxc.resize(this->m_nNumOfAOs);
-    Fxc.load(path);
 
     return Fxc;
 }
@@ -1021,11 +1050,14 @@ SymmetricMatrixType DfObject::getExcMatrix(const RUN_TYPE runType,
                                            const int iteration) {
     SymmetricMatrixType Exc;
     const std::string path = this->getExcMatrixPath(runType, iteration);
-    // Exc = this->matrixCache_.get<SymmetricMatrixType>(path);
-    Exc.load(path);
 
-    assert(Exc.getNumOfRows() == this->m_nNumOfAOs);
-    assert(Exc.getNumOfCols() == this->m_nNumOfAOs);
+    // Exc = this->matrixCache_.get<SymmetricMatrixType>(path);
+    if (TlFile::isExistFile(path)) {
+        Exc.load(path);
+    } else {
+        CnErr.abort("Exc matrix file is not found: " + path);
+    }
+
     return Exc;
 }
 
@@ -1066,9 +1098,14 @@ template <class SymmetricMatrixType>
 SymmetricMatrixType DfObject::getJMatrix(const int iteration) {
     SymmetricMatrixType J;
     const std::string path = this->getJMatrixPath(iteration);
+
     // J = this->matrixCache_.get<SymmetricMatrixType>(path);
+    if (TlFile::isExistFile(path)) {
+        J.load(path);
+    } else {
+        CnErr.abort("J matrix file is not found: " + path);
+    }
     // J.resize(this->m_nNumOfAOs);
-    J.load(path);
 
     return J;
 }
@@ -1112,9 +1149,14 @@ SymmetricMatrixType DfObject::getFpqMatrix(const RUN_TYPE runType,
                                            const int iteration) const {
     SymmetricMatrixType Fpq;
     const std::string path = this->getFpqMatrixPath(runType, iteration);
+
     // Fpq = this->matrixCache_.get<SymmetricMatrixType>(path);
+    if (TlFile::isExistFile(path)) {
+        Fpq.load(path);
+    } else {
+        CnErr.abort("Fpq matrix file is not found: " + path);
+    }
     // Fpq.resize(this->m_nNumOfAOs);
-    Fpq.load(path);
 
     return Fpq;
 }
@@ -1133,9 +1175,13 @@ template <class MatrixType>
 MatrixType DfObject::getXMatrix() {
     MatrixType X;
     const std::string path = this->getXMatrixPath();
+
     // X = this->matrixCache_.get<MatrixType>(path);
-    // X.reize();
-    X.load(path);
+    if (TlFile::isExistFile(path)) {
+        X.load(path);
+    } else {
+        CnErr.abort("X matrix file is not found: " + path);
+    }
 
     return X;
 }
@@ -1158,11 +1204,14 @@ SymmetricMatrixType DfObject::getFprimeMatrix(const RUN_TYPE runType,
                                               const int iteration,
                                               const std::string& fragment) {
     SymmetricMatrixType Fprime;
-    const std::string path =
-        this->getFprimeMatrixPath(runType, iteration, fragment);
+    const std::string path = this->getFprimeMatrixPath(runType, iteration, fragment);
+
     // Fprime = this->matrixCache_.get<SymmetricMatrixType>(path);
-    // Fprime.resize(this->m_nNumOfMOs);
-    Fprime.load(path);
+    if (TlFile::isExistFile(path)) {
+        Fprime.load(path);
+    } else {
+        CnErr.abort("Fprime matrix file is not found: " + path);
+    }
 
     return Fprime;
 }
@@ -1171,8 +1220,7 @@ template <class MatrixType>
 void DfObject::saveCprimeMatrix(const RUN_TYPE runType, const int iteration,
                                 const std::string& fragment,
                                 const MatrixType& Cprime) {
-    const std::string path =
-        this->getCprimeMatrixPath(runType, iteration, fragment);
+    const std::string path = this->getCprimeMatrixPath(runType, iteration, fragment);
     // if (this->isUseCache_ == true) {
     //   this->matrixCache_.set(path, Cprime, true);
     // } else {
@@ -1185,11 +1233,14 @@ MatrixType DfObject::getCprimeMatrix(const RUN_TYPE runType,
                                      const int iteration,
                                      const std::string& fragment) {
     MatrixType Cprime;
-    const std::string path =
-        this->getCprimeMatrixPath(runType, iteration, fragment);
+    const std::string path = this->getCprimeMatrixPath(runType, iteration, fragment);
+
     // Cprime = this->matrixCache_.get<MatrixType>(path);
-    // Cprime.resize(this->m_nNumOfAOs, this->m_nNumOfMOs);
-    Cprime.load(path);
+    if (TlFile::isExistFile(path)) {
+        Cprime.load(path);
+    } else {
+        CnErr.abort("Cprime matrix file is not found: " + path);
+    }
 
     return Cprime;
 }
@@ -1210,9 +1261,13 @@ MatrixType DfObject::getCMatrix(const RUN_TYPE runType, const int iteration,
                                 const std::string& fragment) {
     MatrixType C;
     const std::string path = this->getCMatrixPath(runType, iteration, "");
+
     // C = this->matrixCache_.get<MatrixType>(path);
-    // C.resize(this->m_nNumOfAOs, this->m_nNumOfMOs);
-    C.load(path);
+    if (TlFile::isExistFile(path)) {
+        C.load(path);
+    } else {
+        CnErr.abort("C matrix file is not found: " + path);
+    }
 
     return C;
 }
@@ -1233,9 +1288,13 @@ SymmetricMatrixType DfObject::getPpqMatrix(const RUN_TYPE runType,
                                            const int iteration) const {
     SymmetricMatrixType Ppq;
     const std::string path = this->getPpqMatrixPath(runType, iteration);
+
     // Ppq = this->matrixCache_.get<SymmetricMatrixType>(path);
-    // Ppq.resize(this->m_nNumOfAOs);
-    Ppq.load(path);
+    if (TlFile::isExistFile(path)) {
+        Ppq.load(path);
+    } else {
+        CnErr.abort("Ppq matrix file is not found: " + path);
+    }
 
     return Ppq;
 }
