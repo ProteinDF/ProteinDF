@@ -16,11 +16,12 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "DfDmatrix.h"
+
 #include <cassert>
 #include <cmath>
 #include <ios>
 
-#include "DfDmatrix.h"
 #include "TlFile.h"
 #include "TlStringTokenizer.h"
 #include "TlUtils.h"
@@ -31,7 +32,8 @@ MO_OVERLAP_ITER:
 軌道の重なりの対応を使用しはじめるiteration回数を指定する。
 **********************************************************/
 
-DfDmatrix::DfDmatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
+DfDmatrix::DfDmatrix(TlSerializeData* pPdfParam)
+    : DfObject(pPdfParam) {
     const TlSerializeData& pdfParam = *pPdfParam;
 
     this->orbitalCorrespondenceMethod_ = OCM_NONE;
@@ -53,6 +55,7 @@ DfDmatrix::DfDmatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
 DfDmatrix::~DfDmatrix() {}
 
 void DfDmatrix::run() {
+    this->log_.info("create density matrix (serial).");
     switch (this->linearAlgebraPackage_) {
         case LAP_LAPACK: {
             this->log_.info("Linear Algebra Package: LAPACK");

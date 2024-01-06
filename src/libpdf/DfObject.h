@@ -124,11 +124,14 @@ public:
     std::string getFpqMatrixPath(RUN_TYPE runType, int iteration) const;
     std::string getCMatrixPath(RUN_TYPE runType, int iteration,
                                const std::string& fragment = "") const;
+
+    // density matrix
     [[deprecated]] std::string getPpqMatrixPath(RUN_TYPE runType, int iteration) const;
 
     std::string getPInMatrixPath(RUN_TYPE runType, int iteration) const;
     std::string getPOutMatrixPath(RUN_TYPE runType, int iteration) const;
 
+    //
     std::string getEigenvaluesPath(const RUN_TYPE runType,
                                    const int iteration) const;
 
@@ -926,6 +929,7 @@ MatrixType DfObject::getGridMatrix(const int iteration) {
     return gridMatrix;
 }
 
+// diff density matrix
 template <class SymmetricMatrixType>
 void DfObject::saveDiffDensityMatrix(const RUN_TYPE runType,
                                      const int iteration,
@@ -954,6 +958,7 @@ SymmetricMatrixType DfObject::getDiffDensityMatrix(const RUN_TYPE runType,
     return deltaP;
 }
 
+// spin density matrix
 template <class SymmetricMatrixType>
 void DfObject::saveSpinDensityMatrix(const RUN_TYPE runType,
                                      const int iteration,
@@ -977,6 +982,7 @@ SymmetricMatrixType DfObject::getSpinDensityMatrix(const RUN_TYPE runType,
     return P;
 }
 
+// rho
 template <class VectorType>
 void DfObject::saveRho(const RUN_TYPE runType, const int iteration,
                        const VectorType& rho) {
@@ -1320,6 +1326,7 @@ SymmetricMatrixType DfObject::getPpqMatrix(const RUN_TYPE runType,
     return Ppq;
 }
 
+// density matrix (input)
 template <class SymmetricMatrixType>
 void DfObject::savePInMatrix(const RUN_TYPE runType, const int iteration,
                              const SymmetricMatrixType& P) {
@@ -1332,11 +1339,17 @@ SymmetricMatrixType DfObject::getPInMatrix(const RUN_TYPE runType,
                                            const int iteration) const {
     SymmetricMatrixType P;
     const std::string path = this->getPInMatrixPath(runType, iteration);
-    P.load(path);
+
+    if (TlFile::isExistFile(path)) {
+        P.load(path);
+    } else {
+        CnErr.abort("PIn matrix file is not found: " + path);
+    }
 
     return P;
 }
 
+// density matrix (output)
 template <class SymmetricMatrixType>
 void DfObject::savePOutMatrix(const RUN_TYPE runType, const int iteration,
                               const SymmetricMatrixType& P) {
@@ -1349,7 +1362,11 @@ SymmetricMatrixType DfObject::getPOutMatrix(const RUN_TYPE runType,
                                             const int iteration) const {
     SymmetricMatrixType P;
     const std::string path = this->getPOutMatrixPath(runType, iteration);
-    P.load(path);
+    if (TlFile::isExistFile(path)) {
+        P.load(path);
+    } else {
+        CnErr.abort("POut matrix file is not found: " + path);
+    }
 
     return P;
 }

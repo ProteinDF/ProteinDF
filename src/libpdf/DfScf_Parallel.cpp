@@ -77,7 +77,7 @@ void DfScf_Parallel::saveParam() const {
 void DfScf_Parallel::updateParam() {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
-        DfScf::setScfParam();
+        DfScf::updateParam();
     }
     rComm.broadcast(*(this->pPdfParam_));
 }
@@ -115,10 +115,15 @@ void DfScf_Parallel::updateParam() {
 // SCF loop
 // =====================================================================
 void DfScf_Parallel::diffDensityMatrix() {
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    this->saveParam();
     if (this->m_nDampObject == DfScf::DAMP_DENSITY_MATRIX) {
         this->converge();
     }
+    // std::cout << TlUtils::format("after converge(): %d/%d", rComm.getRank(), rComm.getNumOfProcs()) << std::endl;
 
+    this->saveParam();
     if (this->m_bDiskUtilization == false) {
         this->loggerStartTitle("diff density matrix (parallel)");
         DfDiffDensityMatrix_Parallel dfDiffDensityMatrix(this->pPdfParam_);
@@ -126,6 +131,8 @@ void DfScf_Parallel::diffDensityMatrix() {
 
         this->loggerEndTitle();
     }
+    this->saveParam();
+    // std::cout << TlUtils::format("after diff density(): %d/%d", rComm.getRank(), rComm.getNumOfProcs()) << std::endl;
 }
 
 DfDensityFittingObject* DfScf_Parallel::getDfDensityFittingObject() {

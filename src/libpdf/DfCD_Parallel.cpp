@@ -1560,8 +1560,7 @@ void DfCD_Parallel::getJ_D(TlDenseSymmetricMatrix_Scalapack* pJ) {
 TlDenseVector_Lapack DfCD_Parallel::getScreenedDensityMatrixD(const PQ_PairArray& I2PQ) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    const TlDenseSymmetricMatrix_Scalapack P =
-        DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS, this->m_nIteration - 1);
+    const TlDenseSymmetricMatrix_Scalapack P = DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS, this->m_nIteration);
     const std::size_t numOfI = I2PQ.size();
     TlDenseVector_Lapack answer(numOfI);
 
@@ -1571,7 +1570,7 @@ TlDenseVector_Lapack DfCD_Parallel::getScreenedDensityMatrixD(const PQ_PairArray
         const index_type c = pair.index2();
 
         const double coef = (r != c) ? 2.0 : 1.0;
-        // BeacuseThe elements of density matrix (P) are get by `getLocal()`.
+        // The elements of density matrix (P) are get by `getLocal()`.
         answer.set(i, coef * P.getLocal(r, c));
     }
     rComm.allReduce_SUM(&answer);

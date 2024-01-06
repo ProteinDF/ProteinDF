@@ -343,17 +343,12 @@ template <typename GeneralMatrix, typename SymmetricMatrix, typename Vector>
 inline void DfDmatrix::generateDensityMatrix(const DfObject::RUN_TYPE runType) {
     switch (runType) {
         case RUN_RKS: {
-            this->log_.info("gen density matrix");
             GeneralMatrix C = DfObject::getCMatrix<GeneralMatrix>(runType, this->m_nIteration);
-            this->log_.info("get C");
             SymmetricMatrix P = this->calcDensMatrix<GeneralMatrix, SymmetricMatrix, Vector>(runType, C, 2.0);
-            this->log_.info("P");
             this->saveSpinDensityMatrix(runType, this->m_nIteration, P);
-            this->log_.info("spin density");
 
             P *= 2.0;
             this->savePOutMatrix(runType, this->m_nIteration, P);
-            this->log_.info("save density");
         } break;
 
         case RUN_UKS_ALPHA:
@@ -380,7 +375,7 @@ inline void DfDmatrix::generateDensityMatrix(const DfObject::RUN_TYPE runType) {
         } break;
 
         default:
-            std::cerr << " DfDmatrix::generateDensityMatrix() program error." << __FILE__ << __LINE__ << std::endl;
+            CnErr.abort("program error.");
             break;
     }
 }

@@ -45,9 +45,7 @@ DfInitialGuessHarris::~DfInitialGuessHarris() {}
 void DfInitialGuessHarris::main() {
     this->loadHarrisDB();
 
-    DfInitialGuessHarris::calcInitialDensityMatrix<
-        TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack, DfOverlapX,
-        DfPopulation_Lapack>();
+    DfInitialGuessHarris::calcInitialDensityMatrix<TlDenseGeneralMatrix_Lapack, TlDenseSymmetricMatrix_Lapack, DfOverlapX, DfPopulation_Lapack>();
 }
 
 void DfInitialGuessHarris::loadHarrisDB() {

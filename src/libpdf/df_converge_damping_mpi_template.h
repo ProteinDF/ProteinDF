@@ -19,7 +19,7 @@ protected:
     virtual void convergePMatrix();
 
 protected:
-    virtual double getDampingFactor();
+    // virtual double getDampingFactor();
 };
 
 // ----------------------------------------------------------------------------
@@ -27,7 +27,9 @@ protected:
 // ----------------------------------------------------------------------------
 template <class SymmetricMatrix, class Vector>
 DfConverge_Damping_Mpi_Template<SymmetricMatrix, Vector>::DfConverge_Damping_Mpi_Template(TlSerializeData* pPdfParam)
-    : DfConverge_Damping_Template<SymmetricMatrix, Vector>(pPdfParam) {}
+    : DfConverge_Damping_Template<SymmetricMatrix, Vector>(pPdfParam) {
+    // this->log_.info("converge: damping method (MPI)");
+}
 
 template <class SymmetricMatrix, class Vector>
 DfConverge_Damping_Mpi_Template<SymmetricMatrix, Vector>::~DfConverge_Damping_Mpi_Template() {}
@@ -56,17 +58,17 @@ void DfConverge_Damping_Mpi_Template<SymmetricMatrix, Vector>::convergePMatrix()
     }
 }
 
-template <class SymmetricMatrix, class Vector>
-double DfConverge_Damping_Mpi_Template<SymmetricMatrix, Vector>::getDampingFactor() {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
+// template <class SymmetricMatrix, class Vector>
+// double DfConverge_Damping_Mpi_Template<SymmetricMatrix, Vector>::getDampingFactor() {
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    double dampingFactor = 0.0;
-    if (rComm.isMaster()) {
-        dampingFactor = DfConverge_Damping_Template<SymmetricMatrix, Vector>::getDampingFactor();
-    }
-    rComm.broadcast(dampingFactor);
+//     double dampingFactor = 0.0;
+//     if (rComm.isMaster()) {
+//         dampingFactor = DfConverge_Damping_Template<SymmetricMatrix, Vector>::getDampingFactor();
+//     }
+//     rComm.broadcast(dampingFactor);
 
-    return dampingFactor;
-}
+//     return dampingFactor;
+// }
 
 #endif  // DF_CONVERGE_DAMPING_MPI_TEMPLATE_H

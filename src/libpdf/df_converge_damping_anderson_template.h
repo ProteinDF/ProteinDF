@@ -20,8 +20,9 @@ protected:
 protected:
     Vector getVectorOfKSMatrix(const DfObject::RUN_TYPE runType, const int nIteration) const;
     void writeKSMatrixFromVector(const DfObject::RUN_TYPE runType, const int nIteration, const Vector& v) const;
-    Vector getVectorOfPMatrix(const DfObject::RUN_TYPE runType, const int nIteration) const;
-    void writePMatrixFromVector(const DfObject::RUN_TYPE runType, const int nIteration, const Vector& v) const;
+
+    Vector getVectorOfSymmetricMatrix(const std::string& path) const;
+    void saveSymmetricMatrixFromVector(const Vector& v, const std::string& path) const;
 
 protected:
     int startIterationOfAnderson_;
@@ -89,18 +90,14 @@ void DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::conv
 
     if (this->m_nIteration >= startIterationOfAnderson) {
         // do Anderson
-        Vector Y0;
-        Y0.load("fl_Work/fl_Vct_anderson." + TlUtils::xtos(nIteration));
+        const Vector X1 = this->getVectorOfSymmetricMatrix(DfObject::getFpqMatrixPath(runType, this->m_nIteration - 1));
+        const Vector Y1 = this->getVectorOfSymmetricMatrix(DfObject::getFpqMatrixPath(runType, this->m_nIteration - 1));
 
-        Vector X1 = this->getVectorOfKSMatrix(runType, nIteration - 1);
+        const Vector X2 = this->getVectorOfSymmetricMatrix(DfObject::getFpqMatrixPath(runType, this->m_nIteration - 2));
+        const Vector Y2 = this->getVectorOfSymmetricMatrix(DfObject::getFpqMatrixPath(runType, this->m_nIteration - 2));
 
-        Vector Y1;
-        Y1.load("fl_Work/fl_Vct_anderson." + TlUtils::xtos(nIteration - 1));
-
-        Vector X2 = this->getVectorOfKSMatrix(runType, nIteration - 2);
-
-        Vector X0 = this->anderson(X1, X2, Y0, Y1);
-        this->writeKSMatrixFromVector(runType, nIteration, X0);
+        const Vector X0 = this->anderson(X1, X2, Y1, Y2);
+        this->saveSymmetricMatrixFromVector(X0, DfObject::getFpqMatrixPath(runType, this->m_nIteration));
     } else {
         // do damping
         DfConverge_Damping_Template<SymmetricMatrix, Vector>::convergeKSMatrix(runType);
@@ -116,27 +113,16 @@ void DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::conv
     this->log_.info("Anderson's convergence method applied to P Matrix:");
     this->log_.info(TlUtils::format(" start-number = %2d", startIterationOfAnderson));
 
-    if (this->m_nIteration >= (startIterationOfAnderson - 1)) {
-        Vector nextY1 = this->getVectorOfPMatrix(runType, this->m_nIteration - 1);
-        nextY1.save("fl_Work/fl_Vct_anderson." + TlUtils::xtos(this->m_nIteration - 1));
-    }
-
     if (this->m_nIteration >= startIterationOfAnderson) {
         // do Anderson
-        Vector Y0;
-        Y0.load("fl_Work/fl_Vct_anderson." + TlUtils::xtos(this->m_nIteration - 1));
+        const Vector X1 = this->getVectorOfSymmetricMatrix(DfObject::getPInMatrixPath(runType, this->m_nIteration - 1));
+        const Vector Y1 = this->getVectorOfSymmetricMatrix(DfObject::getPOutMatrixPath(runType, this->m_nIteration - 1));
 
-        Vector X1 = this->getVectorOfPMatrix(runType, this->m_nIteration - 2);
-        X1.save("fl_Work/fl_Vct_andersonX1." + TlUtils::xtos(this->m_nIteration - 2));
+        const Vector X2 = this->getVectorOfSymmetricMatrix(DfObject::getPInMatrixPath(runType, this->m_nIteration - 2));
+        const Vector Y2 = this->getVectorOfSymmetricMatrix(DfObject::getPOutMatrixPath(runType, this->m_nIteration - 2));
 
-        Vector Y1;
-        Y1.load("fl_Work/fl_Vct_anderson." + TlUtils::xtos(this->m_nIteration - 2));
-
-        Vector X2 = this->getVectorOfPMatrix(runType, this->m_nIteration - 3);
-        X2.save("fl_Work/fl_Vct_andersonX2." + TlUtils::xtos(this->m_nIteration - 3));
-
-        Vector X0 = this->anderson(X1, X2, Y0, Y1);
-        this->writePMatrixFromVector(runType, this->m_nIteration - 1, X0);
+        const Vector X0 = this->anderson(X1, X2, Y1, Y2);
+        this->saveSymmetricMatrixFromVector(X0, DfObject::getPInMatrixPath(runType, this->m_nIteration));
     } else {
         // do damping
         DfConverge_Damping_Template<SymmetricMatrix, Vector>::convergePMatrix(runType);
@@ -156,8 +142,8 @@ void DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::conv
 template <class Matrix, class SymmetricMatrix, class Vector>
 Vector DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::anderson(const Vector& X1,
                                                                                        const Vector& X2,
-                                                                                       const Vector& Y0,
-                                                                                       const Vector& Y1) {
+                                                                                       const Vector& Y1,
+                                                                                       const Vector& Y2) {
     const double beta = this->dampingFactorOfAnderson_;  // damping factor of Anderson's method
     this->log_.info(TlUtils::format(" beta = %f", beta));
 
@@ -165,18 +151,18 @@ Vector DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::an
     double theta = 0.0;
     {
         // r^(n-1) = Y^(n) - X^(n-1)
-        const Vector r1 = Y0 - X1;
-        r1.save("fl_Work/fl_Vct_andersonr1." + TlUtils::xtos(this->m_nIteration));
+        const Vector r1 = Y1 - X1;
+        // r1.save("fl_Work/fl_Vct_andersonr1." + TlUtils::xtos(this->m_nIteration));
 
         // r^(n-2) = Y^(n-1) - X^(n-2)
-        const Vector r2 = Y1 - X2;
-        r2.save("fl_Work/fl_Vct_andersonr2." + TlUtils::xtos(this->m_nIteration));
+        const Vector r2 = Y2 - X2;
+        // r2.save("fl_Work/fl_Vct_andersonr2." + TlUtils::xtos(this->m_nIteration));
 
         const Vector r12 = r1 - r2;
-        r12.save("fl_Work/fl_Vct_andersonr12." + TlUtils::xtos(this->m_nIteration));
+        // r12.save("fl_Work/fl_Vct_andersonr12." + TlUtils::xtos(this->m_nIteration));
 
-        double t1 = r1 * r12;
-        double t2 = r12 * r12;
+        const double t1 = r1 * r12;
+        const double t2 = r12 * r12;
         this->log_.info(TlUtils::format(" t1 = %f", t1));
         this->log_.info(TlUtils::format(" t2 = %f", t2));
         theta = t1 / t2;
@@ -185,26 +171,24 @@ Vector DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::an
 
     const double theta_rest = 1.0 - theta;
     // U^(n-1) = (1-theta)*X^(n-1) + theta * X^(n-2)
-    // const TlDenseVector_Lapack U1 = theta_rest * X1 + theta * Y0;
+    // const TlDenseVector_Lapack U1 = theta_rest * X1 + theta * Y1;
     const Vector U1 = theta_rest * X1 + theta * X2;
 
     // V^(n) = (1-theta)*Y^(n) + theta*Y^(n-1)
-    const Vector V0 = theta_rest * Y0 + theta * Y1;
+    const Vector V1 = theta_rest * Y1 + theta * Y2;
 
     // X^(n) = (1-theta)*U^(n-1) + theta*V^(n)
-    const Vector X0 = (1.0 - beta) * U1 + beta * V0;
+    const Vector X0 = (1.0 - beta) * U1 + beta * V1;
 
     return X0;
 }
 
 template <class Matrix, class SymmetricMatrix, class Vector>
-Vector DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::getVectorOfKSMatrix(
-    const DfObject::RUN_TYPE runType, const int nIteration) const {
+Vector DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::getVectorOfKSMatrix(const DfObject::RUN_TYPE runType, const int nIteration) const {
     SymmetricMatrix KS;
     KS.load(this->getFpqMatrixPath(runType, nIteration));
     assert(KS.getNumOfRows() == this->m_nNumOfAOs);
 
-    // return KS.getVector();
     Vector v;
     KS.dump(&v);
 
@@ -212,35 +196,32 @@ Vector DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::ge
 }
 
 template <class Matrix, class SymmetricMatrix, class Vector>
-void DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::writeKSMatrixFromVector(
-    const DfObject::RUN_TYPE runType, const int nIteration,
-    const Vector& v) const {
+void DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::writeKSMatrixFromVector(const DfObject::RUN_TYPE runType, const int nIteration, const Vector& v) const {
     SymmetricMatrix KS(this->m_nNumOfAOs);
     KS.restore(v);
+
     KS.save(this->getFpqMatrixPath(runType, nIteration));
 }
 
 template <class Matrix, class SymmetricMatrix, class Vector>
-Vector DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::getVectorOfPMatrix(
-    const DfObject::RUN_TYPE runType, const int nIteration) const {
-    SymmetricMatrix P;
-    P.load(this->getPpqMatrixPath(runType, nIteration));
-    assert(P.getNumOfRows() == this->m_nNumOfAOs);
+Vector DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::getVectorOfSymmetricMatrix(const std::string& path) const {
+    SymmetricMatrix M;
+    M.load(path);
+    assert(M.getNumOfRows() == this->m_nNumOfAOs);
+    assert(M.getNumOfCols() == this->m_nNumOfAOs);
 
-    // return P.getVector();
     Vector v;
-    P.dump(&v);
+    M.dump(&v);
 
     return v;
 }
 
 template <class Matrix, class SymmetricMatrix, class Vector>
-void DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::writePMatrixFromVector(
-    const DfObject::RUN_TYPE runType, const int nIteration,
-    const Vector& v) const {
-    SymmetricMatrix P(this->m_nNumOfAOs);
-    P.restore(v);
-    P.save(this->getPpqMatrixPath(runType, nIteration));
+void DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::saveSymmetricMatrixFromVector(const Vector& v, const std::string& path) const {
+    SymmetricMatrix M(this->m_nNumOfAOs);
+    M.restore(v);
+
+    M.save(path);
 }
 
 #endif  // DF_CONVERGE_DAMPING_ANDERSON_TEMPLATE_H

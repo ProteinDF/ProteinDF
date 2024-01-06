@@ -22,12 +22,12 @@
 #include <fstream>
 #include <map>
 
-#include "DfConverge.h"
 #include "DfFockMatrix.h"
 #include "DfGridFreeXC.h"
 #include "DfObject.h"
 #include "DfXCFunctional.h"
 #include "TlTime.h"
+#include "df_converge.h"
 
 class DfDensityFittingObject;
 class DfJMatrix;

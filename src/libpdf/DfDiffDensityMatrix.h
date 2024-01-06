@@ -44,11 +44,10 @@ protected:
 };
 
 template <class SymmetricMatrixType>
-void DfDiffDensityMatrix::calc(const DfObject::RUN_TYPE runType,
-                               const int iteration) {
-    SymmetricMatrixType P = DfObject::getPInMatrix<SymmetricMatrixType>(runType, iteration - 1);
+void DfDiffDensityMatrix::calc(const DfObject::RUN_TYPE runType, const int iteration) {
+    SymmetricMatrixType P = DfObject::getPInMatrix<SymmetricMatrixType>(runType, iteration);
     if (iteration > 1) {
-        P -= (DfObject::getPInMatrix<SymmetricMatrixType>(runType, iteration - 2));
+        P -= (DfObject::getPInMatrix<SymmetricMatrixType>(runType, iteration - 1));
     }
 
     this->saveDiffDensityMatrix(runType, iteration, P);

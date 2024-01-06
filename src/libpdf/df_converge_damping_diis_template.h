@@ -17,11 +17,6 @@ protected:
     virtual void convergePMatrix(const DfObject::RUN_TYPE runType);
 
 protected:
-    //     virtual void convergeRhoTilde();
-    //     virtual void convergeKSMatrix();
-    //     virtual void convergePMatrix();
-
-protected:
     Matrix getResidual(const DfObject::RUN_TYPE runType, const int itr);
     Matrix buildBMatrix(const DfObject::RUN_TYPE runType, const int itr, int last);
     Matrix getCoef(const DfObject::RUN_TYPE runType, const int itr, int last);

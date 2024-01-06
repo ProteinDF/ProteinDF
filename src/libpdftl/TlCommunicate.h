@@ -35,7 +35,7 @@
 #include "TlTime.h"
 #include "tl_matrix_object.h"
 
-//#define ANY_TAG_OK
+// #define ANY_TAG_OK
 
 #ifdef HAVE_LAPACK
 class TlDenseGeneralMatrix_Lapack;
@@ -600,6 +600,7 @@ private:
     mutable unsigned long counter_wait_;
     mutable unsigned long counter_allreduce_;
     mutable unsigned long counter_iallreduce_;
+    mutable unsigned long counter_bcast_;
 
     /// 時間計測用変数(MPI_Barrier)
     mutable TlTime time_barrier_;
