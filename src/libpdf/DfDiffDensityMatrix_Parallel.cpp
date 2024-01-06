@@ -36,27 +36,21 @@ void DfDiffDensityMatrix_Parallel::exec() {
         // using ScaLAPACK
         switch (this->m_nMethodType) {
             case METHOD_RKS:
-                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
-                    RUN_RKS, this->m_nIteration);
+                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS, this->m_nIteration);
                 break;
 
             case METHOD_UKS:
-                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
-                    RUN_UKS_ALPHA, this->m_nIteration);
-                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
-                    RUN_UKS_BETA, this->m_nIteration);
+                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_ALPHA, this->m_nIteration);
+                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_BETA, this->m_nIteration);
                 break;
 
             case METHOD_ROKS:
-                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
-                    RUN_ROKS_CLOSED, this->m_nIteration);
-                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(
-                    RUN_ROKS_OPEN, this->m_nIteration);
+                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(RUN_ROKS_CLOSED, this->m_nIteration);
+                DfDiffDensityMatrix::calc<TlDenseSymmetricMatrix_Scalapack>(RUN_ROKS_OPEN, this->m_nIteration);
                 break;
 
             default:
-                std::cerr << "program error. " << __FILE__ << ":" << __LINE__
-                          << std::endl;
+                std::cerr << "program error. " << __FILE__ << ":" << __LINE__ << std::endl;
                 abort();
         }
 
@@ -65,7 +59,6 @@ void DfDiffDensityMatrix_Parallel::exec() {
         if (rComm.isMaster() == true) {
             DfDiffDensityMatrix::exec();
         }
-        rComm.barrier();
     }
 #else
     {
@@ -73,9 +66,9 @@ void DfDiffDensityMatrix_Parallel::exec() {
         if (rComm.isMaster() == true) {
             DfDiffDensityMatrix::exec();
         }
-        rComm.barrier();
     }
 #endif  // HAVE_SCALAPACK
+    rComm.barrier();
 }
 
 // void DfDiffDensityMatrix_Parallel::calc_usingScaLAPACK(const

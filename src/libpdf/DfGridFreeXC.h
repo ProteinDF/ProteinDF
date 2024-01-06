@@ -392,26 +392,21 @@ SymmetricMatrixType DfGridFreeXC::getPMatrix(const RUN_TYPE runType) {
     SymmetricMatrixType P;
     switch (runType) {
         case RUN_RKS: {
-            P = 0.5 * DfObject::getPInMatrix<SymmetricMatrixType>(
-                          RUN_RKS, this->m_nIteration - 1);
+            P = 0.5 * DfObject::getPInMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration);
         } break;
 
         case RUN_UKS_ALPHA:
         case RUN_UKS_BETA: {
-            P = DfObject::getPInMatrix<SymmetricMatrixType>(
-                runType, this->m_nIteration - 1);
+            P = DfObject::getPInMatrix<SymmetricMatrixType>(runType, this->m_nIteration);
         } break;
 
         case RUN_ROKS_ALPHA: {
-            P = 0.5 * DfObject::getPInMatrix<SymmetricMatrixType>(
-                          RUN_ROKS_CLOSED, this->m_nIteration - 1);
-            P += DfObject::getPInMatrix<SymmetricMatrixType>(
-                RUN_ROKS_OPEN, this->m_nIteration - 1);
+            P = 0.5 * DfObject::getPInMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration);
+            P += DfObject::getPInMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, this->m_nIteration);
         } break;
 
         case RUN_ROKS_BETA: {
-            P = 0.5 * DfObject::getPInMatrix<SymmetricMatrixType>(
-                          RUN_ROKS_CLOSED, this->m_nIteration - 1);
+            P = 0.5 * DfObject::getPInMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration);
         } break;
 
         default:

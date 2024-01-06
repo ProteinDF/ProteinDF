@@ -21,10 +21,6 @@ set(LIBPDF_HEADERS
   DfCalcGridX.h
   DfCleanup.h
   DfConvcheck.h
-  DfConverge.h
-  # DfConverge_Anderson.h
-  # DfConverge_DIIS.h
-  # DfConverge_Damping.h
   DfCqclomatrix.h
   DfDensityFittingObject.h
   DfDensityFittingX.h
@@ -105,6 +101,7 @@ set(LIBPDF_HEADERS
 
 set(LIBPDF_SOURCES
   df_cdk_matrix.cc
+  df_converge.cc
   df_converge_damping_anderson_lapack.cc
   df_converge_damping_diis_lapack.cc
   df_converge_damping_lapack.cc
@@ -118,10 +115,6 @@ set(LIBPDF_SOURCES
   DfCalcGridX.cpp
   DfCleanup.cpp
   DfConvcheck.cpp
-  DfConverge.cpp
-  # DfConverge_Anderson.cpp
-  # DfConverge_DIIS.cpp
-  # DfConverge_Damping.cpp
   DfCqclomatrix.cpp
   DfDensityFittingX.cpp
   DfDiagonal.cpp
@@ -216,8 +209,6 @@ set(LIBPPDF_HEADERS
   DfCalcGridX_Parallel.h
   DfCleanup_Parallel.h
   DfConvcheck_Parallel.h
-  # DfConverge_Anderson_Parallel.h
-  # DfConverge_Damping_Parallel.h
   DfDensityFittingX_Parallel.h
   DfDensityFittingX_ScaLAPACK.h
   DfDiagonal_Parallel.h
@@ -266,8 +257,6 @@ set(LIBPPDF_SOURCES
   DfCalcGridX_Parallel.cpp
   DfCleanup_Parallel.cpp
   DfConvcheck_Parallel.cpp
-  # DfConverge_Anderson_Parallel.cpp
-  # DfConverge_Damping_Parallel.cpp
   DfDensityFittingX_Parallel.cpp
   DfDensityFittingX_ScaLAPACK.cpp
   DfDiagonal_Parallel.cpp

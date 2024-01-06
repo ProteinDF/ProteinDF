@@ -97,10 +97,9 @@ void DfScf::saveParam() const {
 // return  0 : not convergence
 //         1 : convergence
 int DfScf::run() {
-    const TlSerializeData& pdfParam = *(this->pPdfParam_);
-
     this->updateParam();
     this->setScfParam();
+    const TlSerializeData& pdfParam = *(this->pPdfParam_);
 
     std::string sStepControl = pdfParam["step_control"].getStr();
     std::string group = "";
@@ -301,18 +300,23 @@ int DfScf::execScfLoop() {
                 break;
 
             case DIFF_DENSITY_MATRIX:
+                // this->log_.info("diff density matrix");
                 this->diffDensityMatrix();
-                this->setScfRestartPoint("DIFF_DENSITY_MATRIX");
+                // this->log_.info("diff density matrix: done");
+                // this->setScfRestartPoint("DIFF_DENSITY_MATRIX");
+                // this->log_.info("diff density matrix: done2");
                 nScfState = DENSITY_FITTING;
                 break;
 
             case DENSITY_FITTING:
+                this->log_.info("density fitting");
                 this->doDensityFitting();
                 this->setScfRestartPoint("DENSITY_FITTING");
                 nScfState = XC_INTEGRAL;
                 break;
 
             case XC_INTEGRAL:
+                this->log_.info("XC");
                 this->doXCIntegral();
                 this->setScfRestartPoint("XC_INTEGRAL");
                 nScfState = THREE_INDEX_INTEGRAL;

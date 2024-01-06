@@ -110,7 +110,7 @@ void DfJMatrix_Parallel::getJ_RI_local(TlDenseSymmetricMatrix_Lapack* pJ) {
             rho += this->getRho(RUN_UKS_BETA, this->m_nIteration);
             break;
         default:
-            std::cerr << "unsopported. sorry." << std::endl;
+            std::cerr << "unsupported. sorry." << std::endl;
             CnErr.abort();
             break;
     }
@@ -123,13 +123,11 @@ void DfJMatrix_Parallel::getJ_RI_local(TlDenseSymmetricMatrix_Lapack* pJ) {
                     prevRho = this->getRho(RUN_RKS, this->m_nIteration - 1);
                     break;
                 case METHOD_UKS:
-                    prevRho =
-                        this->getRho(RUN_UKS_ALPHA, this->m_nIteration - 1);
-                    prevRho +=
-                        this->getRho(RUN_UKS_BETA, this->m_nIteration - 1);
+                    prevRho = this->getRho(RUN_UKS_ALPHA, this->m_nIteration - 1);
+                    prevRho += this->getRho(RUN_UKS_BETA, this->m_nIteration - 1);
                     break;
                 default:
-                    std::cerr << "unsopported. sorry." << std::endl;
+                    std::cerr << "unsupported. sorry." << std::endl;
                     CnErr.abort();
                     break;
             }

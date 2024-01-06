@@ -3,7 +3,7 @@
 
 #include <cassert>
 
-#include "DfConverge.h"
+#include "df_converge.h"
 
 template <class SymmetricMatrix, class Vector>
 class DfConverge_Damping_Template : public DfConverge {
@@ -42,6 +42,7 @@ DfConverge_Damping_Template<SymmetricMatrix, Vector>::~DfConverge_Damping_Templa
 
 template <class SymmetricMatrix, class Vector>
 void DfConverge_Damping_Template<SymmetricMatrix, Vector>::convergeRhoTilde() {
+    this->log_.info("damping to the rho~");
     switch (this->m_nMethodType) {
         case METHOD_RKS:
             this->convergeRhoTilde(DfObject::RUN_RKS);
@@ -63,6 +64,7 @@ void DfConverge_Damping_Template<SymmetricMatrix, Vector>::convergeRhoTilde() {
 
 template <class SymmetricMatrix, class Vector>
 void DfConverge_Damping_Template<SymmetricMatrix, Vector>::convergeKSMatrix() {
+    this->log_.info("damping to the Fock(KS) matrix");
     switch (this->m_nMethodType) {
         case METHOD_RKS:
             this->convergeKSMatrix(DfObject::RUN_RKS);
@@ -85,6 +87,7 @@ void DfConverge_Damping_Template<SymmetricMatrix, Vector>::convergeKSMatrix() {
 
 template <class SymmetricMatrix, class Vector>
 void DfConverge_Damping_Template<SymmetricMatrix, Vector>::convergePMatrix() {
+    this->log_.info("damping to the density matrix");
     switch (this->m_nMethodType) {
         case METHOD_RKS:
             this->convergePMatrix(DfObject::RUN_RKS);
@@ -168,24 +171,25 @@ void DfConverge_Damping_Template<SymmetricMatrix, Vector>::convergePMatrix(const
     if (iteration >= this->startIteration_) {
         this->log_.info(" damping to density matrix");
 
-        SymmetricMatrix currPpq = DfObject::getPpqMatrix<SymmetricMatrix>(runType, iteration - 1);
-        SymmetricMatrix prevPpq = DfObject::getPpqMatrix<SymmetricMatrix>(runType, iteration - 2);
+        SymmetricMatrix P0_in = DfObject::getPInMatrix<SymmetricMatrix>(runType, iteration - 1);
+        SymmetricMatrix P0_out = DfObject::getPOutMatrix<SymmetricMatrix>(runType, iteration - 1);
 
-        SymmetricMatrix currP_spin = this->getSpinDensityMatrix<SymmetricMatrix>(runType, this->m_nIteration - 1);
-        SymmetricMatrix prevP_spin = this->getSpinDensityMatrix<SymmetricMatrix>(runType, this->m_nIteration - 2);
+        // SymmetricMatrix currP_spin = this->getSpinDensityMatrix<SymmetricMatrix>(runType, this->m_nIteration - 1);
+        // SymmetricMatrix prevP_spin = this->getSpinDensityMatrix<SymmetricMatrix>(runType, this->m_nIteration - 2);
 
         const double dampingFactor = this->getDampingFactor();
         this->log_.info(TlUtils::format(" damping factor = %f", dampingFactor));
-        currPpq *= (1.0 - dampingFactor);
-        prevPpq *= dampingFactor;
-        currPpq += prevPpq;
+        P0_in *= dampingFactor;
+        P0_out *= (1.0 - dampingFactor);
+        P0_in += P0_out;
 
-        currP_spin *= (1.0 - dampingFactor);
-        prevP_spin *= dampingFactor;
-        currP_spin += prevP_spin;
+        DfObject::savePInMatrix(runType, iteration, P0_in);
 
-        DfObject::savePpqMatrix(runType, iteration - 1, currPpq);
-        DfObject::saveSpinDensityMatrix<SymmetricMatrix>(runType, iteration - 1, currP_spin);
+        // currP_spin *= (1.0 - dampingFactor);
+        // prevP_spin *= dampingFactor;
+        // currP_spin += prevP_spin;
+
+        // DfObject::saveSpinDensityMatrix<SymmetricMatrix>(runType, iteration - 1, currP_spin);
     }
 }
 
