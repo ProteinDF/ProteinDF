@@ -162,38 +162,42 @@ void DfLevelshift::main(const RUN_TYPE runType, int iteration,
 
     // prepare "C'" matrix
     this->log_.info("prepare C' matrix");
-    TlDenseGeneralMatrix_Lapack Cprime(numOfMOs, numOfMOs);
+    TlDenseGeneralMatrix_Lapack Cprime;
     {
         if (iteration == 1 && ((this->initialGuessType_ != GUESS_LCAO) &&
                                (this->initialGuessType_ != GUESS_HUCKEL))) {
             this->log_.info("construct level shift operator with fukue's Rou at iteration==1");
             this->log_.info("level shift value is simply add to F' matrix (guess Rou is solution of DFT)");
 
-            // construct "C'" matrix for initial Rou
+            // construct "C'" matrix for initial rho
             const int numOfMOs = this->m_nNumOfMOs;
+            Cprime.resize(numOfMOs, numOfMOs);
             for (int k = 0; k < numOfMOs; ++k) {
                 Cprime.set(k, k, 1.0);
             }
         } else {
             // "read previous C' matrix"
             if (TlFile::isExistFile(DfObject::getCprimeMatrixPath(runType, iteration - 1)) == true) {
-                this->log_.info(TlUtils::format("load C' matrix: %d", iteration - 1));
+                this->log_.info(TlUtils::format("load C' matrix: iteration=%d", iteration - 1));
                 Cprime = DfObject::getCprimeMatrix<TlDenseGeneralMatrix_Lapack>(runType, iteration - 1);
             } else {
-                this->log_.info(TlUtils::format("load C matrix: %d", iteration - 1));
-                const TlDenseGeneralMatrix_Lapack C = DfObject::getCMatrix<TlDenseGeneralMatrix_Lapack>(runType, iteration - 1);
+                TlDenseGeneralMatrix_Lapack tmp;
+                this->log_.info(TlUtils::format("load C matrix: iteration=%d", iteration - 1));
+                tmp = DfObject::getCMatrix<TlDenseGeneralMatrix_Lapack>(runType, iteration - 1);
 
-                this->log_.info("load Xinv matrix");
-                const TlDenseGeneralMatrix_Lapack Xinv = DfObject::getXInvMatrix<TlDenseGeneralMatrix_Lapack>();
+                this->log_.info("load X matrix");
+                TlDenseGeneralMatrix_Lapack X = DfObject::getXMatrix<TlDenseGeneralMatrix_Lapack>();
 
+                // C' = X^T * C * X
                 this->log_.info("make C' matrix");
-                Cprime = Xinv * C;
+                tmp *= X;
+                X.transposeInPlace();
+                Cprime = X * tmp;
             }
 
-            if (Cprime.getNumOfCols() != numOfMOs) {
-                this->log_.warn(TlUtils::format("C' matrix size: (%d, %d)", Cprime.getNumOfRows(), Cprime.getNumOfCols()));
-                this->log_.warn(TlUtils::format("num of MOs = %d", numOfMOs));
-                this->log_.warn("the dimension is not consistency, but continue...");
+            if ((Cprime.getNumOfRows() != numOfMOs) || (Cprime.getNumOfCols() != numOfMOs)) {
+                CnErr.abort(TlUtils::format("The dimension of C' matrix, (%d, %d) is not equal to the number of MOs (%d)",
+                                            Cprime.getNumOfRows(), Cprime.getNumOfCols(), numOfMOs));
             }
         }
     }
