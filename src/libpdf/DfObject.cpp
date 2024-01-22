@@ -360,9 +360,9 @@ void DfObject::setParam(const TlSerializeData& data) {
     if (paramFileBaseName["Ppq_matrix"].getStr().empty() == true) {
         paramFileBaseName["Ppq_matrix"] = "Ppq.%s.mat";
     }
-    //   "P~" means input density matrix
-    if (paramFileBaseName["P~pq_matrix"].getStr().empty() == true) {
-        paramFileBaseName["P~pq_matrix"] = "P~pq.%s.mat";
+    //   "~P" means input density matrix
+    if (paramFileBaseName["~Ppq_matrix"].getStr().empty() == true) {
+        paramFileBaseName["~Ppq_matrix"] = "~Ppq.%s.mat";
     }
 
     paramFileBaseName["P1pq_matrix"] = "P1pq.%s.mat";
@@ -649,7 +649,7 @@ std::string DfObject::getPpqMatrixPath(const RUN_TYPE nRunType, const int nItera
 }
 
 std::string DfObject::getPInMatrixPath(const RUN_TYPE nRunType, const int nIteration) const {
-    return this->makeFilePath("P~pq_matrix", DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
+    return this->makeFilePath("~Ppq_matrix", DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
 std::string DfObject::getPOutMatrixPath(const RUN_TYPE nRunType, const int nIteration) const {
