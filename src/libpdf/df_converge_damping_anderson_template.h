@@ -32,6 +32,13 @@ protected:
 template <class Matrix, class SymmetricMatrix, class Vector>
 DfConverge_Damping_Anderson_Template<Matrix, SymmetricMatrix, Vector>::DfConverge_Damping_Anderson_Template(TlSerializeData* pPdfParam)
     : DfConverge_Damping_Template<SymmetricMatrix, Vector>(pPdfParam) {
+    // scf_acceleration/anderson/start_number
+    this->startIterationOfAnderson_ = (*this->pPdfParam_)["scf_acceleration/anderson/start_number"].getInt();
+    this->log_.info(TlUtils::format("scf_acceleration/anderson/start_number = %d", this->startIterationOfAnderson_));
+
+    // scf_acceleration/anderson/damping_factor
+    this->dampingFactorOfAnderson_ = (*this->pPdfParam_)["scf_acceleration/anderson/damping_factor"].getDouble();
+    this->log_.info(TlUtils::format("scf_acceleration/anderson/damping_factor = %f", this->dampingFactorOfAnderson_));
 }
 
 template <class Matrix, class SymmetricMatrix, class Vector>
