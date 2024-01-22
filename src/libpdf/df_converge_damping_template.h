@@ -12,14 +12,14 @@ public:
     virtual ~DfConverge_Damping_Template();
 
 protected:
-    virtual void convergeRhoTilde();
-    virtual void convergeKSMatrix();
-    virtual void convergePMatrix();
+    void convergeRhoTilde();
+    void convergeKSMatrix();
+    void convergePMatrix();
 
 protected:
-    void convergeRhoTilde(DfObject::RUN_TYPE runType);
-    void convergeKSMatrix(DfObject::RUN_TYPE runType);
-    void convergePMatrix(DfObject::RUN_TYPE runType);
+    virtual void convergeRhoTilde(DfObject::RUN_TYPE runType);
+    virtual void convergeKSMatrix(DfObject::RUN_TYPE runType);
+    virtual void convergePMatrix(DfObject::RUN_TYPE runType);
 
 protected:
     virtual double getDampingFactor();
