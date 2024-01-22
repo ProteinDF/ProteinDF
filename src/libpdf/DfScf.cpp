@@ -938,6 +938,7 @@ DfConverge* DfScf::getDfConverge() {
     } else if (this->m_nScfAcceleration == SCF_ACCELERATION_DIIS) {
         pDfConverge = new DfConverge_Damping_Diis_Lapack(this->pPdfParam_);
     } else {
+        this->log_.info("unknown acceleration method. use damping method.");
         pDfConverge = new DfConverge_Damping_Lapack(this->pPdfParam_);
     }
     return pDfConverge;

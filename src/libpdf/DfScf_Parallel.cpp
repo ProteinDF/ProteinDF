@@ -115,8 +115,6 @@ void DfScf_Parallel::updateParam() {
 // SCF loop
 // =====================================================================
 void DfScf_Parallel::diffDensityMatrix() {
-    TlCommunicate& rComm = TlCommunicate::getInstance();
-
     this->saveParam();
     if (this->m_nDampObject == DfScf::DAMP_DENSITY_MATRIX) {
         this->converge();
