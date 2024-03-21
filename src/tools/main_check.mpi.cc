@@ -31,6 +31,7 @@ int main(int argc, char** argv) {
     if (rComm.isMaster()) {
         std::string info = "";
 
+#ifdef _OPENMP
 #if (_OPENMP >= 201307)
         {
             const unsigned long ompVer = _OPENMP;
@@ -67,7 +68,7 @@ int main(int argc, char** argv) {
                 info += ompProcBindStr + "\n";
             }
         }
-#elif (_OPENMP < 201307)
+#else
         {
             const unsigned long ompVer = _OPENMP;
             info += TlUtils::format(" OpenMP ver: %ld\n", ompVer);
@@ -75,6 +76,7 @@ int main(int argc, char** argv) {
 
             info += "This OpenMP version is not supported the thread affinity policy.\n";
         }
+#endif // (_OPENMP >= 201307)
 #else
         {
             info += " OpenMP is disabled.\n";

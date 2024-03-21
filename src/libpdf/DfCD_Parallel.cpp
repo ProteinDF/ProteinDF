@@ -29,12 +29,21 @@
 #include "TlSystem.h"
 #include "TlTime.h"
 #include "TlUtils.h"
-#include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_general_matrix_mmap.h"
-#include "tl_dense_general_matrix_scalapack.h"
-#include "tl_dense_symmetric_matrix_eigen.h"
-#include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_matrix_utils.h"
+
+#ifdef HAVE_EIGEN
+#include "tl_dense_symmetric_matrix_eigen.h"
+#endif // HAVE_EIGEN
+
+#ifdef HAVE_LAPACK
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#endif // HAVE_LAPACK
+
+#ifdef HAVE_SCALAPACK
+#include "tl_dense_general_matrix_scalapack.h"
+#endif // HAVE_SCALAPACK
 
 #define TRANS_MEM_SIZE (1 * 1024 * 1024 * 1024)  // 1GB
 // #define CD_DEBUG
@@ -1998,7 +2007,13 @@ void DfCD_Parallel::transLMatrix2mmap(const TlDenseGeneralMatrix_arrays_RowOrien
                     TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks, numOfCols, &(transBuf[0]));
 
                     // write to matrix
+#if defined HAVE_EIGEN
                     TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
+#elif defined HAVE_LAPACK
+                    TlDenseGeneralMatrix_Lapack tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
+#else
+#error "not implemented matrix type"
+#endif //
                     output.block(row, 0, tmpMat);
                 }
             }
@@ -2026,7 +2041,13 @@ void DfCD_Parallel::transLMatrix2mmap(const TlDenseGeneralMatrix_arrays_RowOrien
                 assert(row == tag);
                 const index_type readRowChunks = std::min(sizeOfChunk, numOfRows - row);
                 {
+#if defined HAVE_EIGEN
                     TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols, &(recvBuf[0]));
+#elif defined HAVE_LAPACK
+                    TlDenseGeneralMatrix_Lapack tmpMat(readRowChunks, numOfCols, &(recvBuf[0]));
+#else
+#error "not implemented matrix type"
+#endif //
                     output.block(row, 0, tmpMat);
                 }
 

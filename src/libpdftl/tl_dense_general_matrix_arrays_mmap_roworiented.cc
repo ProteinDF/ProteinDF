@@ -10,8 +10,15 @@
 #include "TlFile.h"
 #include "TlSystem.h"
 #include "TlUtils.h"
+
+#if defined HAVE_EIGEN
 #include "tl_dense_general_matrix_eigen.h"
+#endif // HAVE_EIGEN
+
+#if defined HAVE_LAPACK
 #include "tl_dense_general_matrix_lapack.h"
+#endif // HAVE_LAPACK
+
 #include "tl_matrix_utils.h"
 
 // @todo use /tmp or equivalent dir to use tempCsfdMat.
@@ -164,7 +171,13 @@ void TlDenseGeneralMatrix_arrays_mmap_RowOriented::convertMemoryLayout(const std
                 const TlMatrixObject::index_type readRowChunks = std::min(sizeOfChunk, numOfRows - chunkStartRow);
                 TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks, numOfCols, &(transBuf[0]));
 
+#if defined HAVE_EIGEN
                 TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
+#elif defined HAVE_LAPACK
+                TlDenseGeneralMatrix_Lapack tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
+#else
+#error "no matrix library"
+#endif //
 
                 // std::cerr << TlUtils::format("row: %d/%d (%d)", chunkStartRow, numOfRows, sizeOfChunk) << std::endl;
                 // std::cerr << TlUtils::format("chunk=%d/%d; %d==%d -> %d", chunk, numOfLocalChunks, readRowChunks, tmpMat.getNumOfRows(), chunk * sizeOfChunk) << std::endl;
@@ -228,7 +241,13 @@ void TlDenseGeneralMatrix_arrays_mmap_RowOriented::set2csfd(TlDenseGeneralMatrix
             // chunk,
             //                              numOfLocalChunks - 1, chunkStartRow, numOfLocalRows, row, rowDistance)
             //           << std::endl;
+#if defined HAVE_EIGEN
             TlDenseGeneralMatrix_Eigen tmpMat;
+#elif defined HAVE_LAPACK
+            TlDenseGeneralMatrix_Lapack tmpMat;
+#else
+#error "no matrix library"
+#endif //
             inMat.block(row, 0, rowDistance, numOfCols, &tmpMat);
 
             // std::cerr << TlUtils::format("chunk: %d/%d, chunkStartRow=%d, numOfLocalRows=%d, row=%d, rowDistance=%d",
@@ -347,7 +366,13 @@ bool convert2csfd(const std::string& rvmBasePath, const int unit, const std::str
                 const TlMatrixObject::index_type readRowChunks = std::min(sizeOfChunk, numOfRows - chunkStartRow);
                 TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks, numOfCols, &(transBuf[0]));
 
+#if defined HAVE_EIGEN
                 TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
+#elif defined HAVE_LAPACK
+                TlDenseGeneralMatrix_Lapack tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
+#else
+#error "no matrix library"
+#endif //
                 // std::cerr << TlUtils::format("chunk=%d; %d, %d", chunk, readRowChunks, tmpMat.getNumOfRows())
                 //           << std::endl;
                 outMat.block(chunk * sizeOfChunk, 0, tmpMat);
@@ -376,7 +401,13 @@ void copy2csfd(const TlMatrixObject::index_type numOfRows, const TlMatrixObject:
     const int numOfLocalChunks =
         TlDenseMatrix_arrays_mmap_Object::getNumOfLocalChunks(numOfRows, numOfSubunits, sizeOfChunk);
 
+#if defined HAVE_EIGEN
     TlDenseGeneralMatrix_Eigen tmpMat;
+#elif defined HAVE_LAPACK
+    TlDenseGeneralMatrix_Lapack tmpMat;
+#else
+#error "no matrix library"
+#endif //
     for (int chunk = 0; chunk < numOfLocalChunks; ++chunk) {
         TlMatrixObject::index_type row = sizeOfChunk * chunk;
         const TlMatrixObject::index_type chunkStartRow = sizeOfChunk * (numOfSubunits * chunk + unit);
