@@ -5,8 +5,15 @@
 
 #include "TlFile.h"
 #include "TlUtils.h"
+
+#if defined HAVE_EIGEN
 #include "tl_dense_general_matrix_eigen.h"
+#endif // HAVE_EIGEN
+
+#if defined HAVE_LAPACK
 #include "tl_dense_general_matrix_lapack.h"
+#endif // HAVE_LAPACK
+
 #include "tl_dense_general_matrix_mmap.h"
 
 TlDenseGeneralMatrix_arrays_mmap_ColOriented::TlDenseGeneralMatrix_arrays_mmap_ColOriented(
