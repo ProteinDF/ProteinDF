@@ -18,29 +18,87 @@ protected:
 
 protected:
     Matrix getResidual(const DfObject::RUN_TYPE runType, const int itr);
+    Matrix getResidual_Pulay(const DfObject::RUN_TYPE runType, const int itr);
+    Matrix getResidual_Anderson(const DfObject::RUN_TYPE runType, const int itr);
+
     Matrix buildBMatrix(const DfObject::RUN_TYPE runType, const int itr, int last);
     Matrix getCoef(const DfObject::RUN_TYPE runType, const int itr, int last);
 
 protected:
+    enum RESIDUAL_TYPE { UNKNOWN = 0,
+                         PULAY,
+                         ANDERSON };
+
+protected:
     int startIterationOfDIIS_;
     int numOfLastItems_;
+    double e_max_;
+    RESIDUAL_TYPE residualType_;
 };
 
 template <class Matrix, class SymmetricMatrix, class Vector>
 DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::DfConverge_Damping_Diis_Template(TlSerializeData* pPdfParam)
     : DfConverge_Damping_Template<SymmetricMatrix, Vector>(pPdfParam) {
+    // start (DIIS)
+    this->startIterationOfDIIS_ = 2;
+    if (!(*pPdfParam)["scf_acceleration/diis/start"].getStr().empty()) {
+        this->startIterationOfDIIS_ = (*pPdfParam)["scf_acceleration/diis/start"].getInt();
+        this->log_.info(TlUtils::format("update start iteration (DIIS) = %d", this->startIterationOfDIIS_));
+    }
+
+    // numOfLastItems
+    this->numOfLastItems_ = 5;
+    if (!(*pPdfParam)["scf_acceleration/diis/last_items"].getStr().empty()) {
+        this->numOfLastItems_ = (*pPdfParam)["scf_acceleration/diis/last_items"].getInt();
+        this->log_.info(TlUtils::format("update DIIS items = %d", this->numOfLastItems_));
+    }
+
+    // e_max
+    this->e_max_ = 0.1;
+    if (!(*pPdfParam)["scf_acceleration/diis/e_max"].getStr().empty()) {
+        this->e_max_ = (*pPdfParam)["scf_acceleration/diis/e_max"].getInt();
+    }
+
+    // residual type
+    this->residualType_ = PULAY;
+    const std::string residual_type = TlUtils::toUpper((*pPdfParam)["scf_acceleration/diis/residual_type"].getStr());
+    if (residual_type == "ANDERSON") {
+        this->residualType_ = ANDERSON;
+    }
 }
 
 template <class Matrix, class SymmetricMatrix, class Vector>
 DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::~DfConverge_Damping_Diis_Template() {
 }
 
-/// 残差を計算
-///
-/// 与えられたイテレーション番号(n)に対して
-/// F(n)P(n-1)S - SP(n-1)F(n)を計算する
+// ----------------------------------------------------------------------------
+// 残差を計算
 template <class Matrix, class SymmetricMatrix, class Vector>
 Matrix DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::getResidual(const DfObject::RUN_TYPE runType, const int itr) {
+    Matrix answer;
+
+    switch (this->residualType_) {
+        case PULAY:
+            answer = this->getResidual_Pulay(runType, itr);
+            break;
+
+        case ANDERSON:
+            answer = this->getResidual_Anderson(runType, itr);
+            break;
+
+        default:
+            CnErr.abort("unknown residual type.");
+            break;
+    }
+
+    return answer;
+}
+
+// ----------------------------------------------------------------------------
+// 残差 (FPS-SPF)を計算
+//
+template <class Matrix, class SymmetricMatrix, class Vector>
+Matrix DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::getResidual_Pulay(const DfObject::RUN_TYPE runType, const int itr) {
     const std::string r_path = DfObject::getDiisResidualMatrixPath(runType, itr);
 
     Matrix r;
@@ -51,7 +109,7 @@ Matrix DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::getRes
         {
             Matrix FP, PF;
             {
-                this->log_.info(TlUtils::format("residual: F(%d), P(%d)", itr, itr - 1));
+                this->log_.info(TlUtils::format("residual(pulay): F(%d), P(%d)", itr, itr - 1));
                 const SymmetricMatrix F = DfObject::getFpqMatrix<SymmetricMatrix>(runType, itr);
                 SymmetricMatrix P = 0.5 * DfObject::getPInMatrix<SymmetricMatrix>(runType, itr);
                 FP = F * P;
@@ -71,7 +129,32 @@ Matrix DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::getRes
     return r;
 }
 
+// ----------------------------------------------------------------------------
+// 残差 (Anderson)を計算
+//
+template <class Matrix, class SymmetricMatrix, class Vector>
+Matrix DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::getResidual_Anderson(const DfObject::RUN_TYPE runType, const int itr) {
+    const std::string r_path = DfObject::getDiisResidualMatrixPath(runType, itr);
+
+    SymmetricMatrix r;
+    if (TlFile::isExistFile(r_path)) {
+        r.load(r_path);
+    } else {
+        this->log_.info(TlUtils::format("residual(Anderson): F(%d)", itr));
+        const SymmetricMatrix F0 = DfObject::getFpqMatrix<SymmetricMatrix>(runType, itr - 1);
+        const SymmetricMatrix F1 = DfObject::getFpqMatrix<SymmetricMatrix>(runType, itr);
+
+        r = F1 - F0;
+        this->log_.info(TlUtils::format("save %s", r_path.c_str()));
+        r.save(r_path);
+    }
+
+    return Matrix(r);
+}
+
+// ----------------------------------------------------------------------------
 /// B行列を作成する
+//
 template <class Matrix, class SymmetricMatrix, class Vector>
 Matrix DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::buildBMatrix(const DfObject::RUN_TYPE runType, const int startItr, const int cycles) {
     Matrix B(cycles + 1, cycles + 1);
@@ -101,7 +184,9 @@ Matrix DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::buildB
     return B;
 }
 
+// ----------------------------------------------------------------------------
 /// 係数cを求める
+//
 template <class Matrix, class SymmetricMatrix, class Vector>
 Matrix DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::getCoef(const DfObject::RUN_TYPE runType, const int startItr, int cycles) {
     const Matrix B = this->buildBMatrix(runType, startItr, cycles);
@@ -123,6 +208,9 @@ Matrix DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::getCoe
     return c;
 }
 
+// ----------------------------------------------------------------------------
+// rho
+//
 template <class Matrix, class SymmetricMatrix, class Vector>
 void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::convergeRhoTilde(const DfObject::RUN_TYPE runType) {
     this->log_.info(TlUtils::format("converge rho vector using DIIS. #%d", this->m_nIteration));
@@ -181,6 +269,9 @@ void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::converge
     }
 }
 
+// ----------------------------------------------------------------------------
+// Fock
+//
 template <class Matrix, class SymmetricMatrix, class Vector>
 void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::convergeKSMatrix(const DfObject::RUN_TYPE runType) {
     this->log_.info(TlUtils::format("converge KS matrix using DIIS. #%d", this->m_nIteration));
@@ -247,6 +338,9 @@ void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::converge
     }
 }
 
+// ----------------------------------------------------------------------------
+// density matrix
+//
 template <class Matrix, class SymmetricMatrix, class Vector>
 void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::convergePMatrix(const DfObject::RUN_TYPE runType) {
     this->log_.info(TlUtils::format("converge density matrix using DIIS. #%d/%d", this->m_nIteration, this->startIterationOfDIIS_));
@@ -259,126 +353,58 @@ void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::converge
 
         // 残差ベクトルの要素が閾値(0.1)よりも大きい場合はDIISは行わない
         const double maxError = r.getMaxAbsoluteElement();
-        this->log_.info(TlUtils::format("e_max = %e", maxError));
-        if (maxError < 0.1) {
-            int diis_e_max_pass_itr = (*this->pPdfParam_)["DIIS_e_max_pass_itr"].getInt();
-            if (diis_e_max_pass_itr == -1) {
-                (*this->pPdfParam_)["DIIS_e_max_pass_itr"] = itr;
-                diis_e_max_pass_itr = itr;
+        this->log_.info(TlUtils::format("e_max = %e (%e)", maxError, this->e_max_));
+        if (maxError < this->e_max_) {
+            int e_max_pass_itr = -1;
+            if (this->pPdfParam_->hasKey("internal/dfconverge_damping_diis/e_max_pass_itr")) {
+                e_max_pass_itr = (*this->pPdfParam_)["internal/dfconverge_damping_diis/e_max_pass_itr"].getInt();
             }
-            this->log_.info(TlUtils::format("e_max pass itr = %d", diis_e_max_pass_itr));
+            if (e_max_pass_itr == -1) {
+                (*this->pPdfParam_)["internal/dfconverge_damping_diis/e_max_pass_itr"] = itr;
+                e_max_pass_itr = itr;
+            }
+            this->log_.info(TlUtils::format("e_max_pass_itr = %d", e_max_pass_itr));
 
             int last = this->numOfLastItems_;
-            const int startItr = std::max(diis_e_max_pass_itr, itr - last + 1);
-            last = std::min(last, itr - startItr + 1);
+            const int startItr = std::max(e_max_pass_itr, itr - last);
+            last = std::min(last, itr - startItr);
             this->log_.info(TlUtils::format("itr=%d, start=%d, last=%d", itr, startItr, last));
 
-            // 係数行列の取得
-            const Matrix c = this->getCoef(runType, startItr - 1, last);
-            assert(c.getNumOfRows() == last + 1);  // +1 はラグランジュ未定乗数法のため
+            if (last > 0) {
+                // 係数行列の取得
+                const Matrix c = this->getCoef(runType, startItr, last);
+                assert(c.getNumOfRows() == last + 1);  // +1 はラグランジュ未定乗数法のため
 
-            this->log_.info("update density matrix using DIIS method.");
+                this->log_.info("update density matrix using DIIS method.");
 
-            SymmetricMatrix newP(this->m_nNumOfAOs);
-            SymmetricMatrix Pi;
-            for (int i = 0; i < last; ++i) {
-                const std::string inFilePath = DfObject::getPInMatrixPath(runType, startItr + i);
-                assert(TlFile::isExistFile(inFilePath));
-                Pi.load(inFilePath);
+                SymmetricMatrix newP(this->m_nNumOfAOs);
+                SymmetricMatrix Pi;
+                for (int i = 0; i < last; ++i) {
+                    const std::string inFilePath = DfObject::getPInMatrixPath(runType, startItr + i);
+                    assert(TlFile::isExistFile(inFilePath));
+                    Pi.load(inFilePath);
 
-                const double coef = c.get(i, 0);
-                this->log_.info(TlUtils::format("%d-th coef=% 8.3f", startItr + i - 1, coef));
-                newP += coef * Pi;
+                    const double coef = c.get(i, 0);
+                    this->log_.info(TlUtils::format("%d-th coef=% 8.3f", startItr + i, coef));
+                    newP += coef * Pi;
+                }
+
+                this->log_.info(TlUtils::format("save new P matrix: %d", itr - 1));
+                DfObject::savePInMatrix(runType, itr, newP);
+                updateByDIIS = true;
             }
-
-            this->log_.info(TlUtils::format("save new P matrix: %d", itr - 1));
-            DfObject::savePInMatrix(runType, itr, newP);
-            updateByDIIS = true;
         } else {
             this->log_.info("e_max has not been satisfied.");
-            (*this->pPdfParam_)["DIIS_e_max_pass_itr"] = -1;
+            (*this->pPdfParam_)["internal/dfconverge_damping_diis/e_max_pass_itr"] = -1;
         }
     } else {
         this->log_.info(TlUtils::format("the iteration, %d, is lower than start number, %d.", itr, this->startIterationOfDIIS_));
     }
 
     if (!updateByDIIS) {
+        this->log_.info("call damping algorithem.");
         DfConverge_Damping_Template<SymmetricMatrix, Vector>::convergePMatrix(runType);
     }
 }
-
-// template <class Matrix, class SymmetricMatrix, class Vector>
-// void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::convergeRhoTilde() {
-//     this->log_.critical("NOT support: DIIS for rho.");
-
-//     // switch (this->m_nMethodType) {
-//     // case METHOD_RKS:
-//     //     this->convergeRhoTilde<TlDenseGeneralMatrix_Lapack,
-//     //     TlDenseSymmetricMatrix_Lapack,
-//     //     TlDenseVector_Lapack>(DfObject::RUN_RKS); break;
-//     // case METHOD_UKS:
-//     //     this->convergeRhoTilde<TlDenseGeneralMatrix_Lapack,
-//     //     TlDenseSymmetricMatrix_Lapack,
-//     //     TlDenseVector_Lapack>(DfObject::RUN_UKS_ALPHA);
-//     //     this->convergeRhoTilde<TlDenseGeneralMatrix_Lapack,
-//     //     TlDenseSymmetricMatrix_Lapack,
-//     //     TlDenseVector_Lapack>(DfObject::RUN_UKS_BETA);
-//     //     break;
-//     // case METHOD_ROKS:
-//     //     this->convergeRhoTilde<TlDenseGeneralMatrix_Lapack,
-//     //     TlDenseSymmetricMatrix_Lapack,
-//     //     TlDenseVector_Lapack>(DfObject::RUN_UKS_ALPHA);
-//     //     this->convergeRhoTilde<TlDenseGeneralMatrix_Lapack,
-//     //     TlDenseSymmetricMatrix_Lapack,
-//     //     TlDenseVector_Lapack>(DfObject::RUN_UKS_BETA);
-//     //     break;
-//     // default:
-//     //     std::cerr << "program error. @DfConverge_Damping::convergeRhoTilde()"
-//     //     << std::endl; break;
-//     // }
-// }
-
-// template <class Matrix, class SymmetricMatrix, class Vector>
-// void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::convergeKSMatrix() {
-//     switch (this->m_nMethodType) {
-//         case DfObject::METHOD_RKS:
-//             this->convergeKSMatrix(DfObject::RUN_RKS);
-//             break;
-//         case DfObject::METHOD_UKS:
-//             this->convergeKSMatrix(DfObject::RUN_UKS_ALPHA);
-//             this->convergeKSMatrix(DfObject::RUN_UKS_BETA);
-//             break;
-//         case DfObject::METHOD_ROKS:
-//             this->convergeKSMatrix(DfObject::RUN_ROKS_CLOSED);
-//             this->convergeKSMatrix(DfObject::RUN_ROKS_OPEN);
-//             break;
-//         default:
-//             std::cerr
-//                 << "program error. @DfConverge_Damping::convergeKSMatrix()"
-//                 << std::endl;
-//             break;
-//     }
-// }
-
-// template <class Matrix, class SymmetricMatrix, class Vector>
-// void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::convergePMatrix() {
-//     switch (this->m_nMethodType) {
-//         case DfObject::METHOD_RKS:
-//             this->convergePMatrix(DfObject::RUN_RKS);
-//             break;
-//         case DfObject::METHOD_UKS:
-//             this->convergePMatrix(DfObject::RUN_UKS_ALPHA);
-//             this->convergePMatrix(DfObject::RUN_UKS_BETA);
-//             break;
-//         case DfObject::METHOD_ROKS:
-//             this->convergePMatrix(DfObject::RUN_ROKS_CLOSED);
-//             this->convergePMatrix(DfObject::RUN_ROKS_OPEN);
-//             break;
-//         default:
-//             std::cerr << "program error. @DfConverge_Damping::convergePMatrix()"
-//                       << std::endl;
-//             break;
-//     }
-// }
 
 #endif  // DF_CONVERGE_DIIS_TEMPL_H
