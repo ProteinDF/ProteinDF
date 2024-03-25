@@ -466,7 +466,7 @@ msgstr ""
 msgid ""
 "The damping method is applied before the Andarson's method is started. "
 "Specify the SCF iteration number starting the Anderson's method with "
-"``scf_acceleration/anderson/start_number``."
+"``scf_acceleration/anderson/start``."
 msgstr ""
 
 #: ../../source/ground_state_calc.rst:342
@@ -773,7 +773,7 @@ msgstr ""
 
 #~ msgid ""
 #~ "なお、Anderson法を開始するまではdamping法を用います。 Anderson法を開始するSCF回数は、 "
-#~ "``scf_acceleration/anderson/start_number`` で指定できます。"
+#~ "``scf_acceleration/anderson/start`` で指定できます。"
 #~ msgstr ""
 
 #~ msgid "DIIS法"

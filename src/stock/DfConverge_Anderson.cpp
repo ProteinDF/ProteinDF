@@ -23,7 +23,7 @@
 DfConverge_Anderson::DfConverge_Anderson(TlSerializeData* pPdfParam)
     : DfConverge_Damping(pPdfParam) {
     const TlSerializeData& pdfParam = *pPdfParam;
-    this->m_nStartIterationOfAnderson = std::max(pdfParam["scf_acceleration/anderson/start_number"].getInt(), 3);
+    this->m_nStartIterationOfAnderson = std::max(pdfParam["scf_acceleration/anderson/start"].getInt(), 3);
 
     this->m_dDampingFactorOfAnderson = pdfParam["scf_acceleration/anderson/damping_factor"].getDouble();
 }

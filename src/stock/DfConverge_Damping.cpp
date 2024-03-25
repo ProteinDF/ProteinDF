@@ -28,7 +28,7 @@ DfConverge_Damping::DfConverge_Damping(TlSerializeData* pPdfParam)
     : DfConverge(pPdfParam) {
     const TlSerializeData& pdfParam = *pPdfParam;
     this->m_nStartIteration = std::max(
-        pdfParam["scf_acceleration/damping/number_of_damping"].getInt(), 2);
+        pdfParam["scf_acceleration/damping/start"].getInt(), 2);
     this->m_dDampingFactor =
         pdfParam["scf_acceleration/damping/damping_factor"].getDouble();
 }
