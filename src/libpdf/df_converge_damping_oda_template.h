@@ -36,8 +36,6 @@ template <class SymmetricMatrix, class Vector>
 DfConverge_Damping_OdaTemplate<SymmetricMatrix, Vector>::DfConverge_Damping_OdaTemplate(TlSerializeData* pPdfParam)
     : DfConverge_Damping_Template<SymmetricMatrix, Vector>(pPdfParam) {
     this->odaStartIteration_ = std::max((*pPdfParam)["scf_acceleration/oda/start"].getInt(), 10);
-
-    this->getDampingFactor();
 }
 
 template <class SymmetricMatrix, class Vector>
@@ -62,14 +60,14 @@ double DfConverge_Damping_OdaTemplate<SymmetricMatrix, Vector>::getDampingFactor
 
     // lambda_m: l_m
     // f(l_m) = a*l_m^3 + b*l_m^2 + c*l_m + d
-    // f'(l_m) = a*l_m^2 + b*l_m + c
-    // l_m = (-b +- sqrt(b^2 - 4ac)) / 2a
+    // f'(l_m) = 3.0*a*l_m^2 + 2.0*b*l_m + c
+    // l_m = (-2.0*b +- sqrt((2.0*b)^2 - 4*3.0*ac)) / 2*(3.0*a)
     double l_m = 1.0;
     {
         double min_f = a + b + c + d;  // in case of "l_m = 1.0"
         std::vector<double> points;
-        points.push_back(1.0);
-        points.push_back(0.0);
+        // points.push_back(1.0);
+        // points.push_back(0.0);
         points.push_back(1.0 - stdDampingFactor);
 
         // 3a^2 + 2b +c
@@ -82,8 +80,7 @@ double DfConverge_Damping_OdaTemplate<SymmetricMatrix, Vector>::getDampingFactor
 
             const double l1 = (-b_ + root_D) * inv_a2;
             const double l2 = (-b_ - root_D) * inv_a2;
-            // this->log_.info(TlUtils::format("ODA candidate: %f", l1));
-            // this->log_.info(TlUtils::format("ODA candidate: %f", l2));
+            this->log_.info(TlUtils::format("ODA candidates: % 8.5f, % 8.5f", l1, l2));
             if ((0.0 < l1) && (l1 < 1.0)) {
                 points.push_back(l1);
             }
@@ -98,7 +95,7 @@ double DfConverge_Damping_OdaTemplate<SymmetricMatrix, Vector>::getDampingFactor
             const double l2 = l1 * l1;
             const double l3 = l2 * l1;
             const double f = a * l3 + b * l2 + c * l1 + d;
-            this->log_.info(TlUtils::format("ODA arginf info: lambda=%f, f(lambda)=%f", l1, f));
+            this->log_.info(TlUtils::format("ODA arginf info: lambda=% 8.5f, f(lambda)=% 8.5f", l1, f));
             if (f < min_f) {
                 min_f = f;
                 l_m = l1;
