@@ -205,7 +205,7 @@ void DfConvcheck::checkDensityMatrix(const RUN_TYPE runType,
     assert(pMax != NULL);
 
     SymmetricMatrixType deltaP = DfObject::getPInMatrix<SymmetricMatrixType>(runType, iteration);
-    deltaP -= DfObject::getPOutMatrix<SymmetricMatrixType>(runType, iteration - 1);
+    deltaP -= DfObject::getPOutMatrix<SymmetricMatrixType>(runType, iteration);
 
     *pRMS = deltaP.getRMS();
     index_type row, col;
