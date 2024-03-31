@@ -17,6 +17,7 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfXCFunctional_Parallel.h"
+
 #include "CnError.h"
 #include "DfCalcGridX_Parallel.h"
 #include "DfEriX_Parallel.h"
@@ -73,8 +74,7 @@ void DfXCFunctional_Parallel::buildXC_LAPACK() {
                                     RUN_RKS, this->m_nIteration);
                 } else {
                     Ppq =
-                        0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
-                                  RUN_RKS, this->m_nIteration - 1);
+                        0.5 * this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, this->m_nIteration);
                 }
             }
             rComm.broadcast(&Ppq);
@@ -110,10 +110,8 @@ void DfXCFunctional_Parallel::buildXC_LAPACK() {
                         TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA,
                                                        this->m_nIteration);
                 } else {
-                    PApq = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
-                        RUN_UKS_ALPHA, this->m_nIteration - 1);
-                    PBpq = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
-                        RUN_UKS_BETA, this->m_nIteration - 1);
+                    PApq = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA, this->m_nIteration);
+                    PBpq = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA, this->m_nIteration);
                 }
             }
             rComm.broadcast(&PApq);
@@ -169,9 +167,8 @@ void DfXCFunctional_Parallel::buildXC_ScaLAPACK() {
                                 TlDenseSymmetricMatrix_Scalapack>(
                                 RUN_RKS, this->m_nIteration);
             } else {
-                Ppq =
-                    0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(
-                              RUN_RKS, this->m_nIteration - 1);
+                Ppq = 0.5 * this->getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(
+                                RUN_RKS, this->m_nIteration);
             }
 
             TlDenseSymmetricMatrix_Scalapack Fxc(this->m_nNumOfAOs);
@@ -193,25 +190,18 @@ void DfXCFunctional_Parallel::buildXC_ScaLAPACK() {
         case METHOD_UKS: {
             TlDenseSymmetricMatrix_Scalapack PApq, PBpq;
             if (this->m_bIsUpdateXC == true) {
-                PApq = this->getDiffDensityMatrix<
-                    TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_ALPHA,
-                                                      this->m_nIteration);
-                PBpq = this->getDiffDensityMatrix<
-                    TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_BETA,
-                                                      this->m_nIteration);
+                PApq = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_ALPHA, this->m_nIteration);
+                PBpq = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_BETA, this->m_nIteration);
             } else {
-                PApq = this->getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(
-                    RUN_UKS_ALPHA, this->m_nIteration - 1);
-                PBpq = this->getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(
-                    RUN_UKS_BETA, this->m_nIteration - 1);
+                PApq = this->getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_ALPHA, this->m_nIteration);
+                PBpq = this->getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_UKS_BETA, this->m_nIteration);
             }
 
             TlDenseSymmetricMatrix_Scalapack FxcA(this->m_nNumOfAOs);
             TlDenseSymmetricMatrix_Scalapack FxcB(this->m_nNumOfAOs);
             DfXCFunctional::getFxc(PApq, PBpq, &dfCalcGrid, &FxcA, &FxcB);
             if (this->isSaveFxcPure_ == true) {
-                this->saveFxcPureMatrix(RUN_UKS_ALPHA, this->m_nIteration,
-                                        FxcA);
+                this->saveFxcPureMatrix(RUN_UKS_ALPHA, this->m_nIteration, FxcA);
                 this->saveFxcPureMatrix(RUN_UKS_BETA, this->m_nIteration, FxcB);
             }
 

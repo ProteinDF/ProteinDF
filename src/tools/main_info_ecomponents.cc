@@ -8,7 +8,6 @@
 #include "TlOrbitalInfo.h"
 #include "TlSerializeData.h"
 #include "TlUtils.h"
-
 #include "df_total_energy_lapack.h"
 
 int main(int argc, char* argv[]) {
@@ -130,7 +129,7 @@ int main(int argc, char* argv[]) {
     //     }
     // }
     // std::cout << TlUtils::format("IE (total) = %lf", IE_total) << std::endl;
-    dfTotalEnergy.get_IE(groups_atom);
+    dfTotalEnergy.calcEDA(groups_atom);
 
     return EXIT_SUCCESS;
 }

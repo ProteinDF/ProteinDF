@@ -1,4 +1,5 @@
 #include "tl_dense_symmetric_matrix_eigen.h"
+
 #include "tl_dense_general_matrix_eigen.h"
 #include "tl_dense_symmetric_matrix_impl_eigen.h"
 #include "tl_dense_vector_eigen.h"
@@ -150,10 +151,24 @@ bool TlDenseSymmetricMatrix_Eigen::eig(
 
 TlDenseSymmetricMatrix_Eigen TlDenseSymmetricMatrix_Eigen::inverse() const {
     TlDenseSymmetricMatrix_ImplEigen tmp =
-        dynamic_cast<const TlDenseSymmetricMatrix_ImplEigen*>(this->pImpl_)
-            ->inverse();
+        dynamic_cast<const TlDenseSymmetricMatrix_ImplEigen*>(this->pImpl_)->inverse();
     TlDenseSymmetricMatrix_Eigen answer(tmp);
     return answer;
+}
+
+// ---------------------------------------------------------------------------
+// I/O
+// ---------------------------------------------------------------------------
+TlMatrixObject::size_type TlDenseSymmetricMatrix_Eigen::getNumOfElements() const {
+    return dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(this->pImpl_)->getNumOfElements();
+}
+
+double* TlDenseSymmetricMatrix_Eigen::data() {
+    return dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(this->pImpl_)->data();
+}
+
+const double* TlDenseSymmetricMatrix_Eigen::data() const {
+    return dynamic_cast<TlDenseSymmetricMatrix_ImplEigen*>(this->pImpl_)->data();
 }
 
 // ---------------------------------------------------------------------------

@@ -1,3 +1,5 @@
+#include "tl_dense_symmetric_matrix_lapack.h"
+
 #include <limits>
 
 #include "TlSystem.h"
@@ -6,11 +8,41 @@
 #include "gtest/gtest.h"
 #include "matrix_common.h"
 #include "tl_dense_general_matrix_lapack.h"
-#include "tl_dense_symmetric_matrix_lapack.h"
 
 static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 static const std::string mat_save_load_path = "temp.sym.blas.save_load.mat";
 static const std::string mat_h5 = "temp.sym.h5";
+
+TEST(TlDenseSymmetricMatrix_Lapack, resize) {
+    const int dim1 = 100;
+    const int dim2 = 200;
+
+    TlDenseSymmetricMatrix_Lapack mat(dim1);
+
+    {
+        int index = 0;
+        for (int r = 0; r < dim1; ++r) {
+            for (int c = 0; c <= r; ++c) {
+                mat.set(r, c, index);
+                ++index;
+            }
+        }
+    }
+
+    mat.resize(dim2);
+
+    EXPECT_EQ(dim2, mat.getNumOfRows());
+    EXPECT_EQ(dim2, mat.getNumOfCols());
+    {
+        int index = 0;
+        for (int r = 0; r < dim1; ++r) {
+            for (int c = 0; c <= r; ++c) {
+                EXPECT_DOUBLE_EQ(double(index), mat.get(r, c));
+                ++index;
+            }
+        }
+    }
+}
 
 TEST(TlDenseSymmetricMatrix_Lapack, vtr2mat) {
     const int dim = 4;

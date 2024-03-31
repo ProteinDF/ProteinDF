@@ -19,6 +19,10 @@
 #include <omp.h>
 #endif  // _OPENMP
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif  // HAVE_CONFIG_H
+
 #include "CnError.h"
 #include "CnFile_parallel.h"
 #include "DfCD_Parallel.h"
@@ -29,12 +33,21 @@
 #include "TlSystem.h"
 #include "TlTime.h"
 #include "TlUtils.h"
-#include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_general_matrix_mmap.h"
-#include "tl_dense_general_matrix_scalapack.h"
-#include "tl_dense_symmetric_matrix_eigen.h"
-#include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_matrix_utils.h"
+
+#ifdef HAVE_EIGEN
+#include "tl_dense_symmetric_matrix_eigen.h"
+#endif // HAVE_EIGEN
+
+#ifdef HAVE_LAPACK
+#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#endif // HAVE_LAPACK
+
+#ifdef HAVE_SCALAPACK
+#include "tl_dense_general_matrix_scalapack.h"
+#endif // HAVE_SCALAPACK
 
 #define TRANS_MEM_SIZE (1 * 1024 * 1024 * 1024)  // 1GB
 // #define CD_DEBUG
@@ -1422,7 +1435,7 @@ void DfCD_Parallel::getK_S_woCD(const RUN_TYPE runType, TlDenseSymmetricMatrix_L
             cv = L.getVector(I);
             assert(cv.getSize() == cvSize);
 
-            const TlDenseSymmetricMatrix_Lapack l = this->getCholeskyVector(cv, I2PQ);
+            const TlDenseSymmetricMatrix_Lapack l = this->getCholeskyVector<TlDenseSymmetricMatrix_Lapack>(cv, I2PQ);
 
             TlDenseGeneralMatrix_Lapack X = l * P;
             X *= l;
@@ -1462,7 +1475,7 @@ void DfCD_Parallel::getK_S_woCD_mmap_DC(const RUN_TYPE runType, TlDenseSymmetric
         cv = L.getColVector(I);
         assert(cv.getSize() == cvSize);
 
-        const TlDenseSymmetricMatrix_Lapack l = this->getCholeskyVector(cv, I2PQ);
+        const TlDenseSymmetricMatrix_Lapack l = this->getCholeskyVector<TlDenseSymmetricMatrix_Lapack>(cv, I2PQ);
 
         TlDenseGeneralMatrix_Lapack X = l * P;
         X *= l;
@@ -1547,8 +1560,7 @@ void DfCD_Parallel::getJ_D(TlDenseSymmetricMatrix_Scalapack* pJ) {
 TlDenseVector_Lapack DfCD_Parallel::getScreenedDensityMatrixD(const PQ_PairArray& I2PQ) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    const TlDenseSymmetricMatrix_Scalapack P =
-        DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS, this->m_nIteration - 1);
+    const TlDenseSymmetricMatrix_Scalapack P = DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS, this->m_nIteration);
     const std::size_t numOfI = I2PQ.size();
     TlDenseVector_Lapack answer(numOfI);
 
@@ -1558,7 +1570,7 @@ TlDenseVector_Lapack DfCD_Parallel::getScreenedDensityMatrixD(const PQ_PairArray
         const index_type c = pair.index2();
 
         const double coef = (r != c) ? 2.0 : 1.0;
-        // BeacuseThe elements of density matrix (P) are get by `getLocal()`.
+        // The elements of density matrix (P) are get by `getLocal()`.
         answer.set(i, coef * P.getLocal(r, c));
     }
     rComm.allReduce_SUM(&answer);
@@ -1594,8 +1606,7 @@ void DfCD_Parallel::getK_S_woCD_D(const RUN_TYPE runType, TlDenseSymmetricMatrix
     const index_type numOfCVs = L.getNumOfCols();
 
     this->log_.info("load density matrix");
-    const TlDenseSymmetricMatrix_Scalapack P =
-        0.5 * DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(runType, this->m_nIteration - 1);  // RKS
+    const TlDenseSymmetricMatrix_Scalapack P = 0.5 * DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(runType, this->m_nIteration);  // RKS
 
     TlTime time_all;
     TlTime time_bcast;
@@ -1699,7 +1710,7 @@ void DfCD_Parallel::getM_S(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmet
             cv = L.getVector(I);
             assert(cv.getSize() == cvSize);
 
-            TlDenseSymmetricMatrix_Lapack LI = this->getCholeskyVector(cv, I2PQ);
+            TlDenseSymmetricMatrix_Lapack LI = this->getCholeskyVector<TlDenseSymmetricMatrix_Lapack>(cv, I2PQ);
             assert(LI.getNumOfRows() == this->m_nNumOfAOs);
             assert(LI.getNumOfCols() == this->m_nNumOfAOs);
 
@@ -1778,8 +1789,8 @@ void DfCD_Parallel::getM_S(const TlDenseSymmetricMatrix_Scalapack& P, TlDenseSym
     this->log_.info("calc M by CD method. (symmetric routine; parallel; distributed)");
 
     // const TlDenseSymmetricMatrix_Scalapack P =
-    //     DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS,
-    //     this->m_nIteration -1);
+    //     DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS,
+    //     this->m_nIteration);
 
     // cholesky vector
     TlDenseGeneralMatrix_arrays_ColOriented L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
@@ -1840,8 +1851,8 @@ void DfCD_Parallel::getM_A(const TlDenseSymmetricMatrix_Scalapack& P, TlDenseSym
     this->log_.info(TlUtils::format("epsilon = %8.3e", this->epsilon_));
     // TlDenseSymmetricMatrix_Scalapack P =
     //     0.5 *
-    //     DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS,
-    //     this->m_nIteration -1); // RKS
+    //     DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS,
+    //     this->m_nIteration); // RKS
     TlDenseGeneralMatrix_Scalapack C;
     P.pivotedCholeskyDecomposition(&C, this->epsilon_);
 
@@ -1998,7 +2009,13 @@ void DfCD_Parallel::transLMatrix2mmap(const TlDenseGeneralMatrix_arrays_RowOrien
                     TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks, numOfCols, &(transBuf[0]));
 
                     // write to matrix
+#if defined HAVE_EIGEN
                     TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
+#elif defined HAVE_LAPACK
+                    TlDenseGeneralMatrix_Lapack tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
+#else
+#error "not implemented matrix type"
+#endif //
                     output.block(row, 0, tmpMat);
                 }
             }
@@ -2026,7 +2043,13 @@ void DfCD_Parallel::transLMatrix2mmap(const TlDenseGeneralMatrix_arrays_RowOrien
                 assert(row == tag);
                 const index_type readRowChunks = std::min(sizeOfChunk, numOfRows - row);
                 {
+#if defined HAVE_EIGEN
                     TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols, &(recvBuf[0]));
+#elif defined HAVE_LAPACK
+                    TlDenseGeneralMatrix_Lapack tmpMat(readRowChunks, numOfCols, &(recvBuf[0]));
+#else
+#error "not implemented matrix type"
+#endif //
                     output.block(row, 0, tmpMat);
                 }
 

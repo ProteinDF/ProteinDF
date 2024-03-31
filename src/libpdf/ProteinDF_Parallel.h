@@ -40,6 +40,7 @@ protected:
     virtual DfIntegrals* getDfIntegralsObject();
     virtual DfInitialGuess* getDfInitialGuessObject();
     virtual DfForce* getDfForceObject();
+    virtual DfEda* getDfEdaObject();
 
     virtual void inputData();
 

@@ -17,10 +17,11 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfXCFunctional.h"
+
 #include <cassert>
+
 #include "DfCalcGridX.h"
 #include "DfEriX.h"
-
 #include "TlTime.h"
 #include "TlUtils.h"
 #include "tl_matrix_object.h"
@@ -108,7 +109,9 @@ DfXCFunctional::~DfXCFunctional() {
     (*this->pPdfParam_)["control"]["DFT_D_Energy"] = DfXCFunctional::E_disp_;
 }
 
-bool DfXCFunctional::isHybridFunctional() const { return this->m_bIsHybrid; }
+bool DfXCFunctional::isHybridFunctional() const {
+    return this->m_bIsHybrid;
+}
 
 double DfXCFunctional::getFockExchangeCoefficient() const {
     return this->m_dFockExchangeCoef;
@@ -130,11 +133,9 @@ void DfXCFunctional::buildXcMatrix() {
             TlDenseSymmetricMatrix_Lapack Ppq;
             if (this->m_bIsUpdateXC == true) {
                 Ppq = 0.5 *
-                      this->getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>(
-                          RUN_RKS, this->m_nIteration);
+                      this->getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, this->m_nIteration);
             } else {
-                Ppq = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
-                                RUN_RKS, this->m_nIteration - 1);
+                Ppq = 0.5 * this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, this->m_nIteration);
             }
 
             TlDenseSymmetricMatrix_Lapack Fxc(this->m_nNumOfAOs);
@@ -161,10 +162,8 @@ void DfXCFunctional::buildXcMatrix() {
                     this->getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>(
                         RUN_UKS_BETA, this->m_nIteration);
             } else {
-                PApq = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
-                    RUN_UKS_ALPHA, this->m_nIteration - 1);
-                PBpq = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
-                    RUN_UKS_BETA, this->m_nIteration - 1);
+                PApq = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA, this->m_nIteration);
+                PBpq = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA, this->m_nIteration);
             }
 
             TlDenseSymmetricMatrix_Lapack FxcA(this->m_nNumOfAOs);
@@ -197,11 +196,9 @@ void DfXCFunctional::buildXcMatrix() {
                     this->getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>(
                         RUN_ROKS_OPEN, this->m_nIteration);
             } else {
-                PApq = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
-                                 RUN_ROKS_CLOSED, this->m_nIteration - 1);
+                PApq = 0.5 * this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED, this->m_nIteration);
                 PBpq = PApq;
-                PApq += this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(
-                    RUN_ROKS_OPEN, this->m_nIteration - 1);
+                PApq += this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN, this->m_nIteration);
             }
 
             TlDenseSymmetricMatrix_Lapack FxcA(this->m_nNumOfAOs);

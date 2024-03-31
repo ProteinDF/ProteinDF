@@ -29,6 +29,8 @@
 #include "DfObject.h"
 #include "TlUtils.h"
 #include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_general_matrix_mmap.h"
+#include "tl_matrix_utils.h"
 
 class DfDmatrix;
 class TlDenseVector_Lapack;
@@ -55,7 +57,7 @@ protected:
     // virtual void createRho();
 
     void createOccupation();
-    virtual TlDenseVector_Lapack createOccupation(const RUN_TYPE runType);
+    void createOccupation(const RUN_TYPE runType);
 
     virtual void createInitialGuessUsingHuckel();
     virtual void createInitialGuessUsingCore();
@@ -78,28 +80,25 @@ protected:
     std::vector<int> getLevel(const std::string& level);
 
     /// 占有軌道情報を取得する
-    virtual TlDenseVector_Lapack getOccupation(const RUN_TYPE runType);
-
-    /// 占有軌道情報を保存する
-    virtual void saveOccupation(const RUN_TYPE runType,
-                                const TlDenseVector_Lapack& rOccupation);
+    virtual void createOccupationByFile(const RUN_TYPE runType);
 
 protected:
     /// LCAO行列を取得する
-    // template <typename MatrixType>
-    // MatrixType getLCAO(const RUN_TYPE runType);
+    void createLcaoByFile(const RUN_TYPE runType);
 
-    TlDenseGeneralMatrix_Lapack getLCAO_LAPACK(const RUN_TYPE runType);
     static std::string getLcaoPath_txt(const RUN_TYPE runType);
     static std::string getLcaoPath_bin(const RUN_TYPE runType);
 
+    void createLcaoByBinFile(const RUN_TYPE runType);
+    void createLcaoByTxtFile(const RUN_TYPE runType);
+
     /// 行列C0を保存する
-    template <typename MatrixType>
-    void saveC0(const RUN_TYPE runType, const MatrixType& C0);
+    // template <typename MatrixType>
+    // void saveC0(const RUN_TYPE runType, const MatrixType& C0);
 
     /// Cprime0 を作成し、保存する
-    template <typename MatrixType>
-    void buildCprime0(const RUN_TYPE runType, const MatrixType& C);
+    // template <typename MatrixType>
+    // void buildCprime0(const RUN_TYPE runType, const MatrixType& C);
 
     /// 密度行列を作成する
     ///
@@ -108,6 +107,9 @@ protected:
 
     /// DfDmatrixクラスオブジェクトを作成して返す
     virtual DfDmatrix* getDfDmatrixObject(TlSerializeData* param);
+
+    /// SCF 1回転用の密度行列を作成する
+    void copyDensityMatrix();
 
     /// 初期値用電子密度行列を返す
     template <typename SymmetricMatrixType>
@@ -203,7 +205,7 @@ void DfInitialGuess::createInitialGuessUsingDensityMatrix(const RUN_TYPE runType
     if (this->isNormalizeDensityMatrix_) {
         P = this->normalizeDensityMatrix<SymmetricMatrixType, DfPopulationType>(runType, P);
     }
-    this->savePpqMatrix(runType, 0, P);
+    this->savePOutMatrix(runType, 0, P);
 
     // spin density matrix
     const int iteration = 0;
@@ -218,17 +220,14 @@ void DfInitialGuess::createInitialGuessUsingDensityMatrix(const RUN_TYPE runType
 }
 
 template <typename SymmetricMatrixType>
-SymmetricMatrixType DfInitialGuess::getInitialDensityMatrix(
-    const RUN_TYPE runType) {
+SymmetricMatrixType DfInitialGuess::getInitialDensityMatrix(const RUN_TYPE runType) {
     SymmetricMatrixType lcaoMatrix;
-    const std::string binFile = TlUtils::format(
-        "./guess.density.%s.mat", this->m_sRunTypeSuffix[runType].c_str());
+    const std::string binFile = TlUtils::format("./guess.density.%s.mat", this->m_sRunTypeSuffix[runType].c_str());
 
     if (TlFile::isExistFile(binFile)) {
         lcaoMatrix.load(binFile);
     } else {
-        this->log_.warn(
-            TlUtils::format("file not found.: %s", binFile.c_str()));
+        this->log_.warn(TlUtils::format("file not found.: %s", binFile.c_str()));
     }
 
     return lcaoMatrix;
@@ -277,21 +276,6 @@ SymmetricMatrixType DfInitialGuess::normalizeDensityMatrix(const RUN_TYPE runTyp
     this->log_.info(TlUtils::format(" coef = % 8.3f", coef));
 
     return coef * P;
-}
-
-template <typename MatrixType>
-void DfInitialGuess::saveC0(const RUN_TYPE runType, const MatrixType& C0) {
-    DfObject::saveCMatrix(runType, 0, C0);
-}
-
-template <typename MatrixType>
-void DfInitialGuess::buildCprime0(const RUN_TYPE runType, const MatrixType& C) {
-    MatrixType Xinv = DfObject::getXInvMatrix<MatrixType>();
-
-    //  Xinv(RSFD) = Xinv(RSFD) * guess_lcao(RSFD)
-    Xinv *= C;
-
-    Xinv.save(this->getCprimeMatrixPath(runType, 0));
 }
 
 #endif  // DFINITIALGUESS_H

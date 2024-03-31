@@ -35,9 +35,9 @@
 #include "tl_sparse_symmetric_matrix.h"
 
 class DfGridFreeXC : public DfObject {
-   public:
+public:
     struct IndexPair2 {
-       public:
+    public:
         explicit IndexPair2(index_type i1 = 0, index_type i2 = 0)
             : index1_(i1), index2_(i2) {
             if (this->index1_ > this->index2_) {
@@ -55,17 +55,21 @@ class DfGridFreeXC : public DfObject {
             return (this->index() < rhs.index());
         }
 
-        index_type index1() const { return this->index1_; }
+        index_type index1() const {
+            return this->index1_;
+        }
 
-        index_type index2() const { return this->index2_; }
+        index_type index2() const {
+            return this->index2_;
+        }
 
-       private:
+    private:
         index_type index1_;
         index_type index2_;
     };
 
     struct IndexPair4 {
-       public:
+    public:
         explicit IndexPair4(index_type i1 = 0, index_type i2 = 0,
                             index_type i3 = 0, index_type i4 = 0)
             : indexPair1_(i1, i2), indexPair2_(i3, i4) {
@@ -89,30 +93,38 @@ class DfGridFreeXC : public DfObject {
             return (this->index() == rhs.index());
         }
 
-        index_type index1() const { return this->indexPair1_.index1(); }
+        index_type index1() const {
+            return this->indexPair1_.index1();
+        }
 
-        index_type index2() const { return this->indexPair1_.index2(); }
+        index_type index2() const {
+            return this->indexPair1_.index2();
+        }
 
-        index_type index3() const { return this->indexPair2_.index1(); }
+        index_type index3() const {
+            return this->indexPair2_.index1();
+        }
 
-        index_type index4() const { return this->indexPair2_.index2(); }
+        index_type index4() const {
+            return this->indexPair2_.index2();
+        }
 
-       private:
+    private:
         IndexPair2 indexPair1_;
         IndexPair2 indexPair2_;
     };
 
     typedef std::vector<IndexPair2> PQ_PairArray;
 
-   public:
+public:
     DfGridFreeXC(TlSerializeData* pPdfParam);
     virtual ~DfGridFreeXC();
 
-   public:
+public:
     virtual void preprocessBeforeSCF();
     void buildFxc();
 
-   protected:
+protected:
     DfOverlapX* getDfOverlapObject();
     DfXMatrix* getDfXMatrixObject();
 
@@ -124,24 +136,24 @@ class DfGridFreeXC : public DfObject {
 
     virtual void buildFxc_GGA();
 
-   protected:
+protected:
     static const int MAX_SHELL_TYPE;
     typedef std::vector<index_type> ShellArray;
     typedef std::vector<ShellArray> ShellArrayTable;
 
     struct ShellPair {
-       public:
+    public:
         ShellPair(index_type index1 = 0, index_type index2 = 0)
             : shellIndex1(index1), shellIndex2(index2) {}
 
-       public:
+    public:
         index_type shellIndex1;
         index_type shellIndex2;
     };
     typedef std::vector<ShellPair> ShellPairArray;
     typedef std::vector<ShellPairArray> ShellPairArrayTable;
 
-   protected:
+protected:
     // virtual void getM(const TlDenseSymmetricMatrix_Lapack& P,
     // TlDenseSymmetricMatrix_Lapack*
     // pM);
@@ -193,7 +205,7 @@ class DfGridFreeXC : public DfObject {
     ShellPairArrayTable getShellPairArrayTable(
         const ShellArrayTable& shellArrayTable);
 
-   protected:
+protected:
     template <class SymmetricMatrixType>
     SymmetricMatrixType getPMatrix(const RUN_TYPE runType);
 
@@ -213,12 +225,12 @@ class DfGridFreeXC : public DfObject {
               class MatrixType>
     void buildFxc_GGA_runtype(const RUN_TYPE runType);
 
-   public:
+public:
     TlDenseGeneralMatrix_Lapack getForce();
 
     // virtual void calcCholeskyVectors_onTheFly();
 
-   protected:
+protected:
     TlDenseGeneralMatrix_Lapack selectGradMat(
         const TlDenseGeneralMatrix_Lapack& input, const int atomIndex);
 
@@ -274,7 +286,7 @@ class DfGridFreeXC : public DfObject {
 
     DfFunctional_GGA* getFunctionalGGA();
 
-   protected:
+protected:
     static const double ONE_THIRD;  // = 1.0 / 3.0
 
     DfOverlapEngine* pOvpEngines_;
@@ -380,26 +392,21 @@ SymmetricMatrixType DfGridFreeXC::getPMatrix(const RUN_TYPE runType) {
     SymmetricMatrixType P;
     switch (runType) {
         case RUN_RKS: {
-            P = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(
-                          RUN_RKS, this->m_nIteration - 1);
+            P = 0.5 * DfObject::getPInMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration);
         } break;
 
         case RUN_UKS_ALPHA:
         case RUN_UKS_BETA: {
-            P = DfObject::getPpqMatrix<SymmetricMatrixType>(
-                runType, this->m_nIteration - 1);
+            P = DfObject::getPInMatrix<SymmetricMatrixType>(runType, this->m_nIteration);
         } break;
 
         case RUN_ROKS_ALPHA: {
-            P = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(
-                          RUN_ROKS_CLOSED, this->m_nIteration - 1);
-            P += DfObject::getPpqMatrix<SymmetricMatrixType>(
-                RUN_ROKS_OPEN, this->m_nIteration - 1);
+            P = 0.5 * DfObject::getPInMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration);
+            P += DfObject::getPInMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, this->m_nIteration);
         } break;
 
         case RUN_ROKS_BETA: {
-            P = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(
-                          RUN_ROKS_CLOSED, this->m_nIteration - 1);
+            P = 0.5 * DfObject::getPInMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration);
         } break;
 
         default:
@@ -597,7 +604,7 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType) {
 
     // RKS
     // const SymmetricMatrixType PA = 0.5 *
-    // DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_RKS,
+    // DfObject::getPInMatrix<SymmetricMatrixType>(RUN_RKS,
     //                                                                              this->m_nIteration -1);
     const SymmetricMatrixType P =
         this->getPMatrix<SymmetricMatrixType>(runType);

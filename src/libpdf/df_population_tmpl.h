@@ -125,7 +125,7 @@ DfPopulation_tmpl<SymmetricMatrix, Vector>::getGrossOrbPop(
     assert((runType == RUN_RKS) || (runType == RUN_UKS_ALPHA) ||
            (runType == RUN_UKS_BETA) || (runType == RUN_ROKS_CLOSED) ||
            (runType == RUN_ROKS_OPEN));
-    P = DfObject::getPpqMatrix<SymmetricMatrix>(runType, iteration);
+    P = DfObject::getPInMatrix<SymmetricMatrix>(runType, iteration);
 
     return this->getPS(P);
 }

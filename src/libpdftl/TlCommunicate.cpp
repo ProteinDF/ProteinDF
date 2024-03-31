@@ -27,12 +27,19 @@
 #include <numeric>
 #include <typeinfo>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif  // HAVE_CONFIG_H
+
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
+
+#ifdef HAVE_LAPACK
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_dense_vector_impl_lapack.h"
 #include "tl_dense_vector_lapack.h"
+#endif  // HAVE_LAPACK
 
 #ifdef HAVE_EIGEN
 #include "tl_dense_general_matrix_eigen.h"
@@ -109,6 +116,7 @@ std::string TlCommunicate::getReport() const {
     answer += TlUtils::format(" iall_reduce: %16.2f sec. %16ld times\n",
                               this->time_iallreduce_.getElapseTime(),
                               this->counter_iallreduce_);
+    answer += TlUtils::format(" bcast: %16ld times\n", this->counter_bcast_);
 
     return answer;
 }
@@ -632,6 +640,7 @@ int TlCommunicate::iAllReduce_SUM(const double* pSendBuf, double* pRecvBuf,
 //   return this->allReduce_SUM(rMatrix.data_, rMatrix.getNumOfElements());
 // }
 
+#ifdef HAVE_LAPACK
 int TlCommunicate::allReduce_SUM(TlDenseGeneralMatrix_Lapack* pMatrix) {
     return this->allReduce_SUM(pMatrix->data(), pMatrix->getNumOfElements());
 }
@@ -645,6 +654,18 @@ int TlCommunicate::allReduce_SUM(TlDenseVector_Lapack* pVector) {
         pVector->data(),
         pVector->getSize());  // this class is friend class of TlVector_BLAS.
 }
+#endif  // HAVE_PAKACK
+
+#ifdef HAVE_EIGEN
+int TlCommunicate::allReduce_SUM(TlDenseGeneralMatrix_Eigen* pMatrix) {
+    return this->allReduce_SUM(pMatrix->data(), pMatrix->getNumOfElements());
+}
+
+int TlCommunicate::allReduce_SUM(TlDenseSymmetricMatrix_Eigen* pMatrix) {
+    return this->allReduce_SUM(pMatrix->data(), pMatrix->getNumOfElements());
+}
+
+#endif  // HAVE_EIGEN
 
 int TlCommunicate::allReduce_SUM(TlSparseMatrix& rMatrix) {
     int err = this->reduce_SUM(rMatrix);
@@ -2825,10 +2846,13 @@ int TlCommunicate::initialize(int argc, char* argv[]) {
     this->counter_test_ = 0;
     this->counter_wait_ = 0;
     this->counter_allreduce_ = 0;
+    this->counter_bcast_ = 0;
+
     this->time_barrier_.stop();
     this->time_test_.stop();
     this->time_wait_.stop();
     this->time_allreduce_.stop();
+
     this->time_barrier_.reset();
     this->time_test_.reset();
     this->time_wait_.reset();
@@ -2978,6 +3002,7 @@ int TlCommunicate::broadcast(std::string& rData) {
     const int nRoot = 0;
 
     int nError = MPI_Bcast(pBuffer, nCount, MPI_CHAR, nRoot, MPI_COMM_WORLD);
+    ++(this->counter_bcast_);
 
     rData = std::string(pBuffer, nCount);
 
@@ -3166,10 +3191,12 @@ int TlCommunicate::broadcast(TlDenseSymmetricMatrix_Eigen* pMatrix, int root) {
     }
     int answer = this->broadcast(dim, root);
 
-    std::vector<double> buf;
     if (answer == 0) {
+        std::vector<double> buf;
         if (myRank == root) {
             buf = *pMatrix;
+        } else {
+            pMatrix->resize(dim);
         }
         answer = this->broadcast(buf, root);
 
@@ -3218,10 +3245,12 @@ int TlCommunicate::broadcast(TlSerializeData& data) {
 template <typename T>
 int TlCommunicate::broadcast(T& data, const MPI_Datatype mpiType,
                              const int root) {
-    this->log_.debug(
-        TlUtils::format("TlCommunicate::broadcast(): type=%s, root=%d",
-                        TlUtils::xtos(mpiType).c_str(), root));
-    return MPI_Bcast(&data, 1, mpiType, root, MPI_COMM_WORLD);
+    this->log_.debug(TlUtils::format("TlCommunicate::broadcast(): type=%s, root=%d",
+                                     TlUtils::xtos(mpiType).c_str(), root));
+    const int ret = MPI_Bcast(&data, 1, mpiType, root, MPI_COMM_WORLD);
+    ++(this->counter_bcast_);
+
+    return ret;
 }
 
 template <typename T>
@@ -3242,8 +3271,8 @@ int TlCommunicate::broadcast(std::vector<T>& data, const MPI_Datatype mpiType,
         for (long i = 0; i < tmp.quot; ++i) {
             std::size_t startIndex =
                 start + static_cast<std::size_t>(bufCount * i);
-            answer = MPI_Bcast(&(data[startIndex]), bufCount, mpiType, root,
-                               MPI_COMM_WORLD);
+            answer = MPI_Bcast(&(data[startIndex]), bufCount, mpiType, root, MPI_COMM_WORLD);
+            ++(this->counter_bcast_);
             if (answer != 0) {
                 std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
                           << " anwer=" << answer << std::endl;
@@ -3255,8 +3284,9 @@ int TlCommunicate::broadcast(std::vector<T>& data, const MPI_Datatype mpiType,
             const int remain = tmp.rem;
             std::size_t startIndex =
                 start + static_cast<std::size_t>(bufCount * tmp.quot);
-            answer = MPI_Bcast(&(data[startIndex]), remain, mpiType, root,
-                               MPI_COMM_WORLD);
+            answer = MPI_Bcast(&(data[startIndex]), remain, mpiType, root, MPI_COMM_WORLD);
+            ++(this->counter_bcast_);
+
             if (answer != 0) {
                 std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
                           << " anwer=" << answer << std::endl;
@@ -3265,8 +3295,8 @@ int TlCommunicate::broadcast(std::vector<T>& data, const MPI_Datatype mpiType,
     }
 #else
     {
-        answer =
-            MPI_Bcast(&(data[0]), end - start, mpiType, root, MPI_COMM_WORLD);
+        answer = MPI_Bcast(&(data[0]), end - start, mpiType, root, MPI_COMM_WORLD);
+        ++(this->counter_bcast_);
     }
 #endif  // DIV_COMM
 
@@ -3287,10 +3317,10 @@ int TlCommunicate::broadcast(std::valarray<T>& data, const MPI_Datatype mpiType,
 
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
-            const std::size_t startIndex =
-                start + static_cast<std::size_t>(bufCount * i);
-            answer = MPI_Bcast((void*)(&data[startIndex]), bufCount, mpiType,
-                               root, MPI_COMM_WORLD);
+            const std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Bcast((void*)(&data[startIndex]), bufCount, mpiType, root, MPI_COMM_WORLD);
+            ++(this->counter_bcast_);
+
             if (answer != 0) {
                 std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
                           << " anwer=" << answer << std::endl;
@@ -3300,10 +3330,10 @@ int TlCommunicate::broadcast(std::valarray<T>& data, const MPI_Datatype mpiType,
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
-            const std::size_t startIndex =
-                start + static_cast<std::size_t>(bufCount * tmp.quot);
-            answer = MPI_Bcast((void*)(&data[startIndex]), remain, mpiType,
-                               root, MPI_COMM_WORLD);
+            const std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Bcast((void*)(&data[startIndex]), remain, mpiType, root, MPI_COMM_WORLD);
+            ++(this->counter_bcast_);
+
             if (answer != 0) {
                 std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
                           << " anwer=" << answer << std::endl;
@@ -3312,8 +3342,8 @@ int TlCommunicate::broadcast(std::valarray<T>& data, const MPI_Datatype mpiType,
     }
 #else
     {
-        answer = MPI_Bcast((void*)(&data[0]), end - start, mpiType, root,
-                           MPI_COMM_WORLD);
+        answer = MPI_Bcast((void*)(&data[0]), end - start, mpiType, root, MPI_COMM_WORLD);
+        ++(this->counter_bcast_);
     }
 #endif  // DIV_COMM
 
@@ -3329,16 +3359,15 @@ int TlCommunicate::broadcast(T* pData, const MPI_Datatype mpiType,
 #ifdef DIV_COMM
     {
         const long length = static_cast<long>(end - start);
-        const int bufCount =
-            static_cast<int>(this->workMemSize_ / sizeof(double));
+        const int bufCount = static_cast<int>(this->workMemSize_ / sizeof(double));
         const ldiv_t tmp = std::ldiv(length, bufCount);
 
         // 作業用メモリ分のループ
         for (long i = 0; i < tmp.quot; ++i) {
-            const std::size_t startIndex =
-                start + static_cast<std::size_t>(bufCount * i);
-            answer = MPI_Bcast((void*)(pData + startIndex), bufCount, mpiType,
-                               root, MPI_COMM_WORLD);
+            const std::size_t startIndex = start + static_cast<std::size_t>(bufCount * i);
+            answer = MPI_Bcast((void*)(pData + startIndex), bufCount, mpiType, root, MPI_COMM_WORLD);
+            ++(this->counter_bcast_);
+
             if (answer != 0) {
                 std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
                           << " anwer=" << answer << std::endl;
@@ -3348,10 +3377,10 @@ int TlCommunicate::broadcast(T* pData, const MPI_Datatype mpiType,
         // 残り分のループ
         if (tmp.rem != 0) {
             const int remain = tmp.rem;
-            const std::size_t startIndex =
-                start + static_cast<std::size_t>(bufCount * tmp.quot);
-            answer = MPI_Bcast((void*)(pData + startIndex), remain, mpiType,
-                               root, MPI_COMM_WORLD);
+            const std::size_t startIndex = start + static_cast<std::size_t>(bufCount * tmp.quot);
+            answer = MPI_Bcast((void*)(pData + startIndex), remain, mpiType, root, MPI_COMM_WORLD);
+            ++(this->counter_bcast_);
+
             if (answer != 0) {
                 std::cerr << " MPI error. " << __FILE__ << ":" << __LINE__
                           << " anwer=" << answer << std::endl;
@@ -3360,8 +3389,8 @@ int TlCommunicate::broadcast(T* pData, const MPI_Datatype mpiType,
     }
 #else
     {
-        answer = MPI_Bcast((void*)(pData), end - start, mpiType, root,
-                           MPI_COMM_WORLD);
+        answer = MPI_Bcast((void*)(pData), end - start, mpiType, root, MPI_COMM_WORLD);
+        ++(this->counter_bcast_);
     }
 #endif  // DIV_COMM
 

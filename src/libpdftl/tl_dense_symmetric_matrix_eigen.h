@@ -3,6 +3,7 @@
 
 #include "tl_dense_symmetric_matrix_object.h"
 
+class TlCommunicate;
 class TlDenseGeneralMatrix_Eigen;
 class TlSparseSymmetricMatrix_Eigen;
 class TlDenseVector_Eigen;
@@ -12,7 +13,7 @@ class TlDenseSymmetricMatrix_Eigen : public TlDenseSymmetricMatrixObject {
     // ---------------------------------------------------------------------------
     // constructor & destructor
     // ---------------------------------------------------------------------------
-   public:
+public:
     explicit TlDenseSymmetricMatrix_Eigen(
         const TlMatrixObject::index_type dim = 1,
         double const* const pBuf = NULL);
@@ -31,7 +32,7 @@ class TlDenseSymmetricMatrix_Eigen : public TlDenseSymmetricMatrixObject {
     // ---------------------------------------------------------------------------
     // operators
     // ---------------------------------------------------------------------------
-   public:
+public:
     TlDenseSymmetricMatrix_Eigen& operator=(
         const TlDenseSymmetricMatrix_Eigen& rhs);
 
@@ -68,8 +69,17 @@ class TlDenseSymmetricMatrix_Eigen : public TlDenseSymmetricMatrixObject {
     TlDenseSymmetricMatrix_Eigen inverse() const;
 
     // ---------------------------------------------------------------------------
+    // I/O
+    // ---------------------------------------------------------------------------
+protected:
+    TlMatrixObject::size_type getNumOfElements() const;
+    double* data();
+    const double* data() const;
+
+    // ---------------------------------------------------------------------------
     // others
     // ---------------------------------------------------------------------------
+    friend class TlCommunicate;
     friend class TlDenseGeneralMatrix_Eigen;
     friend class TlSparseSymmetricMatrix_Eigen;
     friend class TlDenseSymmetricMatrix_ViennaCL;

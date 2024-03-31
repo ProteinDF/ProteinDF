@@ -22,22 +22,26 @@
 #include "DfScf.h"
 
 class DfScf_Parallel : public DfScf {
-   public:
+public:
     DfScf_Parallel(TlSerializeData* pPdfParam);
     virtual ~DfScf_Parallel();
 
-   protected:
+protected:
+    virtual void updateParam();
+    // virtual void setupScfParam();
+
+protected:
     virtual void logger(const std::string& str) const;
 
-   protected:
+protected:
     virtual DfGridFreeXC* getDfGridFreeXcObject();
     virtual DfXCFunctional* getDfXCFunctional();
 
-   protected:
+protected:
     virtual void saveParam() const;
-    virtual void setScfParam();
+    // virtual void setScfParam();
 
-   protected:
+protected:
     virtual void diffDensityMatrix();
 
     virtual DfDensityFittingObject* getDfDensityFittingObject();

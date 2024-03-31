@@ -17,10 +17,13 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfCleanup.h"
+
 #include <string>
+
 #include "TlFile.h"
 
-DfCleanup::DfCleanup(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {}
+DfCleanup::DfCleanup(TlSerializeData* pPdfParam)
+    : DfObject(pPdfParam) {}
 
 DfCleanup::~DfCleanup() {}
 
@@ -127,13 +130,18 @@ void DfCleanup::cleanupP(const RUN_TYPE runType, const int iteration) {
         --itr;
     }
     // current iterationの1つ前を削除(current iterationは次回のF作成に使用)
-    const std::string PpqPath = DfObject::getPpqMatrixPath(runType, itr);
+    const std::string PInPath = DfObject::getPInMatrixPath(runType, itr);
+    const std::string POutPath = DfObject::getPOutMatrixPath(runType, itr);
     const std::string P1pqPath = DfObject::getP1pqMatrixPath(itr);
     const std::string P2pqPath = DfObject::getP2pqMatrixPath(itr);
 
-    this->log_.info(TlUtils::format("remove: %s", PpqPath.c_str()));
-    this->matrixCache_.erase(PpqPath);
-    TlFile::remove(PpqPath);
+    this->log_.info(TlUtils::format("remove: %s", PInPath.c_str()));
+    this->matrixCache_.erase(PInPath);
+    TlFile::remove(PInPath);
+
+    this->log_.info(TlUtils::format("remove: %s", POutPath.c_str()));
+    this->matrixCache_.erase(POutPath);
+    TlFile::remove(POutPath);
 
     this->log_.info(TlUtils::format("remove: %s", P1pqPath.c_str()));
     this->matrixCache_.erase(P1pqPath);

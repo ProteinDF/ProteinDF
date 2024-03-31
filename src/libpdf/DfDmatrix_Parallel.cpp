@@ -29,7 +29,8 @@
 #include "tl_dense_vector_scalapack.h"
 
 DfDmatrix_Parallel::DfDmatrix_Parallel(TlSerializeData* pPdfParam)
-    : DfDmatrix(pPdfParam) {}
+    : DfDmatrix(pPdfParam) {
+}
 
 DfDmatrix_Parallel::~DfDmatrix_Parallel() {}
 
@@ -56,6 +57,7 @@ void DfDmatrix_Parallel::run() {
 }
 
 void DfDmatrix_Parallel::run_Scalapack() {
+    this->log_.info("create density matrix (ScaLAPACK).");
     switch (this->m_nMethodType) {
         case METHOD_RKS:
             this->makeOccupation<TlDenseGeneralMatrix_Scalapack,

@@ -33,20 +33,21 @@ struct THRESHOLD {
 
 /// 収束判定を行うクラス
 class DfConvcheck : public DfObject {
-   public:
+public:
     DfConvcheck(TlSerializeData* pPdfParam, int num_iter);
     virtual ~DfConvcheck();
 
     virtual bool isConverged();
 
-   protected:
-    enum TargetMatrix { CONV_TARGET_DENSITY, CONV_TARGET_FOCK };
+protected:
+    enum TargetMatrix { CONV_TARGET_DENSITY,
+                        CONV_TARGET_FOCK };
 
-   protected:
+protected:
     virtual void check();
     virtual void showResults();
 
-   protected:
+protected:
     /// convergence check
     template <class SymmetricMatrixType>
     void check(const int iteration);
@@ -69,11 +70,11 @@ class DfConvcheck : public DfObject {
     void checkFockMatrix(const RUN_TYPE runType, int iteration, double* pRMS,
                          double* pMax);
 
-   protected:
+protected:
     std::string getTargetMatrixStr(const RUN_TYPE runType) const;
     std::string getYN(bool yn) const;
 
-   protected:
+protected:
     bool isChecked_;
     bool isConverged_;
 
@@ -203,10 +204,8 @@ void DfConvcheck::checkDensityMatrix(const RUN_TYPE runType,
     assert(pRMS != NULL);
     assert(pMax != NULL);
 
-    SymmetricMatrixType deltaP =
-        DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration);
-    deltaP -=
-        DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration - 1);
+    SymmetricMatrixType deltaP = DfObject::getPInMatrix<SymmetricMatrixType>(runType, iteration);
+    deltaP -= DfObject::getPOutMatrix<SymmetricMatrixType>(runType, iteration);
 
     *pRMS = deltaP.getRMS();
     index_type row, col;

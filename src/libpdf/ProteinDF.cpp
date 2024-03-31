@@ -28,6 +28,7 @@
 #include "omp.h"
 #endif  // _OPENMP
 
+#include "DfEda.h"
 #include "DfForce.h"
 #include "DfInitialGuess.h"
 #include "DfInputdata.h"
@@ -118,6 +119,9 @@ void ProteinDF::exec() {
             // [force]
             // this->loadParam();
             this->stepForce();
+            this->saveParam();
+        } else if (group == "eda") {
+            this->stepEda();
             this->saveParam();
         } else if (group != "") {
             // nothing
@@ -363,7 +367,7 @@ void ProteinDF::stepScf() {
     this->stepStartTitle("SCF");
 
     DfScf* pDfScf = this->createDfScfInstance();
-    pDfScf->dfScfMain();
+    pDfScf->run();
 
     delete pDfScf;
     pDfScf = NULL;
@@ -384,6 +388,18 @@ void ProteinDF::stepForce() {
 
     delete pDfForce;
     pDfForce = NULL;
+
+    this->stepEndTitle();
+}
+
+void ProteinDF::stepEda() {
+    this->stepStartTitle("EDA");
+
+    DfEda* pDfEda = this->getDfEdaObject();
+    pDfEda->calc();
+
+    delete pDfEda;
+    pDfEda = NULL;
 
     this->stepEndTitle();
 }
@@ -425,4 +441,9 @@ DfInitialGuess* ProteinDF::getDfInitialGuessObject() {
 DfForce* ProteinDF::getDfForceObject() {
     DfForce* pDfForce = new DfForce(&this->pdfParam_);
     return pDfForce;
+}
+
+DfEda* ProteinDF::getDfEdaObject() {
+    DfEda* pDfEda = new DfEda(&this->pdfParam_);
+    return pDfEda;
 }

@@ -30,8 +30,9 @@
 
 class DfIntegrals;
 class DfInitialGuess;
-class DfForce;
 class DfScf;
+class DfForce;
+class DfEda;
 
 class ProteinDF {
 public:
@@ -66,6 +67,7 @@ protected:
     virtual DfScf* createDfScfInstance();
     void stepScf();
     virtual void stepForce();
+    void stepEda();
 
     virtual void endlogo();
     void endlogo(const std::string& reports);
@@ -74,6 +76,7 @@ protected:
     virtual DfIntegrals* getDfIntegralsObject();
     virtual DfInitialGuess* getDfInitialGuessObject();
     virtual DfForce* getDfForceObject();
+    virtual DfEda* getDfEdaObject();
 
 protected:
     virtual void stepStartTitle(const std::string& stepName);

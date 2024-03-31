@@ -186,7 +186,7 @@ std::valarray<double> DfPopulation::getGrossOrbPop(const DfObject::RUN_TYPE runT
     SymmetricMatrixType P;
     assert((runType == RUN_RKS) || (runType == RUN_UKS_ALPHA) || (runType == RUN_UKS_BETA) ||
            (runType == RUN_ROKS_CLOSED) || (runType == RUN_ROKS_OPEN));
-    P = DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration);
+    P = DfObject::getPInMatrix<SymmetricMatrixType>(runType, iteration);
 
     return this->getPS<SymmetricMatrixType>(P);
 }

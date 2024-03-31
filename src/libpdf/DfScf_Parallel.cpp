@@ -17,19 +17,16 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfScf_Parallel.h"
-#include "TlCommunicate.h"
 
 #include "DfCleanup_Parallel.h"
 #include "DfConvcheck_Parallel.h"
-#include "DfConverge_Anderson_Parallel.h"
-#include "DfConverge_Damping_Parallel.h"
+// #include "DfConverge_Anderson_Parallel.h"
+// #include "DfConverge_Damping_Parallel.h"
 #include "DfDensityFittingX_Parallel.h"
 #include "DfDensityFittingX_ScaLAPACK.h"
 #include "DfDiagonal_Parallel.h"
 #include "DfDiffDensityMatrix_Parallel.h"
-
 #include "DfDmatrix_Parallel.h"
-
 #include "DfFockMatrix_Parallel.h"
 #include "DfGridFreeXC_Parallel.h"
 #include "DfJMatrix_Parallel.h"
@@ -40,6 +37,10 @@
 #include "DfTransFmatrix_Parallel.h"
 #include "DfTransatob_Parallel.h"
 #include "DfXCFunctional_Parallel.h"
+#include "TlCommunicate.h"
+#include "df_converge_damping_anderson_mpi_lapack.h"
+#include "df_converge_damping_mpi_lapack.h"
+#include "df_converge_damping_oda_mpi_lapack.h"
 
 #ifdef HAVE_SCALAPACK
 #include "df_total_energy_scalapack.h"
@@ -50,7 +51,8 @@
 
 #define NUMBER_OF_CHECK 2
 
-DfScf_Parallel::DfScf_Parallel(TlSerializeData* pPdfParam) : DfScf(pPdfParam) {
+DfScf_Parallel::DfScf_Parallel(TlSerializeData* pPdfParam)
+    : DfScf(pPdfParam) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     DfObject::rank_ = rComm.getRank();
 }
@@ -72,24 +74,31 @@ void DfScf_Parallel::saveParam() const {
     rComm.broadcast(*(this->pPdfParam_));
 }
 
-void DfScf_Parallel::setScfParam() {
+void DfScf_Parallel::updateParam() {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster() == true) {
-        DfScf::setScfParam();
+        DfScf::updateParam();
     }
-
     rComm.broadcast(*(this->pPdfParam_));
-
-    int dampObject = this->m_nDampObject;
-    rComm.broadcast(dampObject);
-    this->m_nDampObject = (DfScf::DampObjectType)dampObject;
-
-    int scfAcceleration = this->m_nScfAcceleration;
-    rComm.broadcast(scfAcceleration);
-    this->m_nScfAcceleration = (DfScf::ScfAccelerationType)scfAcceleration;
-
-    rComm.broadcast(this->m_nConvergenceCounter);
 }
+
+// void DfScf_Parallel::setScfParam() {
+//     TlCommunicate& rComm = TlCommunicate::getInstance();
+//     if (rComm.isMaster() == true) {
+//         DfScf::setScfParam();
+//     }
+//     rComm.broadcast(*(this->pPdfParam_));
+
+//     int dampObject = this->m_nDampObject;
+//     rComm.broadcast(dampObject);
+//     this->m_nDampObject = (DfScf::DampObjectType)dampObject;
+
+//     int scfAcceleration = this->m_nScfAcceleration;
+//     rComm.broadcast(scfAcceleration);
+//     this->m_nScfAcceleration = (DfScf::ScfAccelerationType)scfAcceleration;
+
+//     rComm.broadcast(this->m_nConvergenceCounter);
+// }
 
 // =====================================================================
 // pre-SCF loop
@@ -106,10 +115,13 @@ void DfScf_Parallel::setScfParam() {
 // SCF loop
 // =====================================================================
 void DfScf_Parallel::diffDensityMatrix() {
+    this->saveParam();
     if (this->m_nDampObject == DfScf::DAMP_DENSITY_MATRIX) {
         this->converge();
     }
+    // std::cout << TlUtils::format("after converge(): %d/%d", rComm.getRank(), rComm.getNumOfProcs()) << std::endl;
 
+    this->saveParam();
     if (this->m_bDiskUtilization == false) {
         this->loggerStartTitle("diff density matrix (parallel)");
         DfDiffDensityMatrix_Parallel dfDiffDensityMatrix(this->pPdfParam_);
@@ -117,6 +129,8 @@ void DfScf_Parallel::diffDensityMatrix() {
 
         this->loggerEndTitle();
     }
+    this->saveParam();
+    // std::cout << TlUtils::format("after diff density(): %d/%d", rComm.getRank(), rComm.getNumOfProcs()) << std::endl;
 }
 
 DfDensityFittingObject* DfScf_Parallel::getDfDensityFittingObject() {
@@ -332,12 +346,12 @@ bool DfScf_Parallel::checkConverge() {
 DfConverge* DfScf_Parallel::getDfConverge() {
     DfConverge* pDfConverge = NULL;
     if (this->m_nScfAcceleration == SCF_ACCELERATION_SIMPLE) {
-        pDfConverge = new DfConverge_Damping_Parallel(this->pPdfParam_);
+        pDfConverge = new DfConverge_Damping_Mpi_Lapack(this->pPdfParam_);
     } else if (this->m_nScfAcceleration == SCF_ACCELERATION_ANDERSON) {
-        pDfConverge = new DfConverge_Anderson_Parallel(this->pPdfParam_);
+        pDfConverge = new DfConverge_Damping_Anderson_Mpi_Lapack(this->pPdfParam_);
     } else {
         // diis 法の最初のdampingなど
-        pDfConverge = new DfConverge_Damping_Parallel(this->pPdfParam_);
+        pDfConverge = new DfConverge_Damping_Mpi_Lapack(this->pPdfParam_);
     }
     return pDfConverge;
 }
