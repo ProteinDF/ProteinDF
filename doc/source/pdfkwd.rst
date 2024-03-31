@@ -706,13 +706,13 @@
   "values", "(int)"
 
 
-* scf_acceleration/anderson/start_number
+* scf_acceleration/anderson/start
 
 .. csv-table::
   :widths: 20,80
   :stub-columns: 1
 
-  "parameter", "scf_acceleration/anderson/start_number"
+  "parameter", "scf_acceleration/anderson/start"
   "explanation", ""
   "default", "3"
   "values", "(int)"

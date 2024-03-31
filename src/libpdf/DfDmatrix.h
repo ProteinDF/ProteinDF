@@ -32,14 +32,14 @@
 ///
 /// 収束させるための処理として、軌道の重なりの方法、射影演算子法を用いる
 class DfDmatrix : public DfObject {
-   public:
+public:
     DfDmatrix(TlSerializeData* pPdfParam);
     virtual ~DfDmatrix();
 
-   public:
+public:
     virtual void run();
 
-   protected:
+protected:
     template <typename GeneralMatrix, typename SymmetricMatrix, typename Vector>
     void run_impl();
 
@@ -71,10 +71,12 @@ class DfDmatrix : public DfObject {
                          int pnumcol);
 
     // --------------------------------------------------------------------------
-   protected:
-    enum ORBITAL_CORRESPONDENCE_METHOD { OCM_NONE, OCM_OVERLAP, OCM_PROJECTION };
+protected:
+    enum ORBITAL_CORRESPONDENCE_METHOD { OCM_NONE,
+                                         OCM_OVERLAP,
+                                         OCM_PROJECTION };
 
-   protected:
+protected:
     ORBITAL_CORRESPONDENCE_METHOD orbitalCorrespondenceMethod_;
 };
 
@@ -244,8 +246,8 @@ Vector DfDmatrix::getOccupationUsingProjection(const DfObject::RUN_TYPE runType)
     // calculation of projection diagonal
     std::vector<double> pd(numOfMOs);
 
-    // read density matrix of (n-1) SCF iteration
-    const SymmetricMatrix D = DfObject::getPpqMatrix<SymmetricMatrix>(runType, this->m_nIteration - 1);
+    // read input density matrix
+    const SymmetricMatrix D = DfObject::getPInMatrix<SymmetricMatrix>(runType, this->m_nIteration);
     const GeneralMatrix SDS = S * D * S;
 
     // diagonal
@@ -341,17 +343,12 @@ template <typename GeneralMatrix, typename SymmetricMatrix, typename Vector>
 inline void DfDmatrix::generateDensityMatrix(const DfObject::RUN_TYPE runType) {
     switch (runType) {
         case RUN_RKS: {
-            this->log_.info("gen density matrix");
             GeneralMatrix C = DfObject::getCMatrix<GeneralMatrix>(runType, this->m_nIteration);
-            this->log_.info("get C");
             SymmetricMatrix P = this->calcDensMatrix<GeneralMatrix, SymmetricMatrix, Vector>(runType, C, 2.0);
-            this->log_.info("P");
             this->saveSpinDensityMatrix(runType, this->m_nIteration, P);
-            this->log_.info("spin density");
 
             P *= 2.0;
-            this->savePpqMatrix(runType, this->m_nIteration, P);
-            this->log_.info("save density");
+            this->savePOutMatrix(runType, this->m_nIteration, P);
         } break;
 
         case RUN_UKS_ALPHA:
@@ -359,7 +356,7 @@ inline void DfDmatrix::generateDensityMatrix(const DfObject::RUN_TYPE runType) {
             GeneralMatrix C = DfObject::getCMatrix<GeneralMatrix>(runType, this->m_nIteration);
             SymmetricMatrix P = this->calcDensMatrix<GeneralMatrix, SymmetricMatrix, Vector>(runType, C, 1.0);
             this->saveSpinDensityMatrix(runType, this->m_nIteration, P);
-            this->savePpqMatrix(runType, this->m_nIteration, P);
+            this->savePOutMatrix(runType, this->m_nIteration, P);
         } break;
 
         case RUN_ROKS_CLOSED: {
@@ -367,18 +364,18 @@ inline void DfDmatrix::generateDensityMatrix(const DfObject::RUN_TYPE runType) {
             SymmetricMatrix P = this->calcDensMatrix<GeneralMatrix, SymmetricMatrix, Vector>(RUN_ROKS_CLOSED, C, 2.0);
             this->saveSpinDensityMatrix(runType, this->m_nIteration, P);
             P *= 2.0;
-            this->savePpqMatrix(runType, this->m_nIteration, P);
+            this->savePOutMatrix(runType, this->m_nIteration, P);
 
         } break;
 
         case RUN_ROKS_OPEN: {
             GeneralMatrix C = DfObject::getCMatrix<GeneralMatrix>(RUN_ROKS, this->m_nIteration);
             SymmetricMatrix P = this->calcDensMatrix<GeneralMatrix, SymmetricMatrix, Vector>(RUN_ROKS_OPEN, C, 1.0);
-            this->savePpqMatrix(runType, this->m_nIteration, P);
+            this->savePOutMatrix(runType, this->m_nIteration, P);
         } break;
 
         default:
-            std::cerr << " DfDmatrix::generateDensityMatrix() program error." << __FILE__ << __LINE__ << std::endl;
+            CnErr.abort("program error.");
             break;
     }
 }

@@ -17,7 +17,9 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfJMatrix_Parallel.h"
+
 #include <cassert>
+
 #include "CnError.h"
 #include "DfCD_Parallel.h"
 #include "DfEriX_Parallel.h"
@@ -108,7 +110,7 @@ void DfJMatrix_Parallel::getJ_RI_local(TlDenseSymmetricMatrix_Lapack* pJ) {
             rho += this->getRho(RUN_UKS_BETA, this->m_nIteration);
             break;
         default:
-            std::cerr << "unsopported. sorry." << std::endl;
+            std::cerr << "unsupported. sorry." << std::endl;
             CnErr.abort();
             break;
     }
@@ -121,13 +123,11 @@ void DfJMatrix_Parallel::getJ_RI_local(TlDenseSymmetricMatrix_Lapack* pJ) {
                     prevRho = this->getRho(RUN_RKS, this->m_nIteration - 1);
                     break;
                 case METHOD_UKS:
-                    prevRho =
-                        this->getRho(RUN_UKS_ALPHA, this->m_nIteration - 1);
-                    prevRho +=
-                        this->getRho(RUN_UKS_BETA, this->m_nIteration - 1);
+                    prevRho = this->getRho(RUN_UKS_ALPHA, this->m_nIteration - 1);
+                    prevRho += this->getRho(RUN_UKS_BETA, this->m_nIteration - 1);
                     break;
                 default:
-                    std::cerr << "unsopported. sorry." << std::endl;
+                    std::cerr << "unsupported. sorry." << std::endl;
                     CnErr.abort();
                     break;
             }
@@ -258,8 +258,7 @@ void DfJMatrix_Parallel::getJ_conventional_distributed(
     if (this->isUpdateMethod_ == true) {
         P = this->getDiffDensityMatrix<TlDenseSymmetricMatrix_Scalapack>();
     } else {
-        P = DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(
-            RUN_RKS, this->m_nIteration - 1);
+        P = DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS, this->m_nIteration - 1);
     }
     assert(P.getNumOfRows() == this->m_nNumOfAOs);
 

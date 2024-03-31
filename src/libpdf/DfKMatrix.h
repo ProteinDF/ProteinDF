@@ -23,14 +23,14 @@
 #include "tl_dense_symmetric_matrix_lapack.h"
 
 class DfKMatrix : public DfObject {
-   public:
+public:
     DfKMatrix(TlSerializeData* pPdfParam);
     virtual ~DfKMatrix();
 
-   public:
+public:
     void buildK();
 
-   protected:
+protected:
     // virtual void getK_RI();
     virtual void getK_CD();
     virtual void getK_conventional();
@@ -42,7 +42,7 @@ class DfKMatrix : public DfObject {
     void getK_conventional_local(const RUN_TYPE runType,
                                  TlDenseSymmetricMatrix_Lapack* pK);
 
-   protected:
+protected:
     virtual TlDenseSymmetricMatrix_Lapack getKMatrix(const RUN_TYPE runType,
                                                      const int iteration);
     virtual void saveKMatrix(const RUN_TYPE runType,
@@ -80,15 +80,13 @@ SymmetricMatrixType DfKMatrix::getDensityMatrix(const RUN_TYPE runType) {
     SymmetricMatrixType P;
     switch (runType) {
         case RUN_RKS:
-            P = DfObject::getPpqMatrix<SymmetricMatrixType>(
-                RUN_RKS, this->m_nIteration - 1);
+            P = DfObject::getPInMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration);
             P *= 0.5;
             break;
 
         default:
             // RUN_UKS_ALPHA, RUN_UKS_BETA, RUN_ROKS_CLOSE, RUN_ROKS_OPEN
-            P = DfObject::getPpqMatrix<SymmetricMatrixType>(
-                runType, this->m_nIteration - 1);
+            P = DfObject::getPInMatrix<SymmetricMatrixType>(runType, this->m_nIteration);
             break;
     }
 

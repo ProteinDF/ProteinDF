@@ -19,19 +19,18 @@
 #ifndef DFTOTALENERGY_H
 #define DFTOTALENERGY_H
 
-#include "DfObject.h"
-#include "tl_dense_vector_lapack.h"
-
 #include "CnError.h"
+#include "DfObject.h"
 #include "DfXCFunctional.h"
 #include "Fl_Geometry.h"
+#include "tl_dense_vector_lapack.h"
 
 class DfEriX;
 class DfOverlapX;
 
 /// 得られた密度行列、交換相関ポテンシャルをもとに全エネルギーの計算を行う
 class DfTotalEnergy : public DfObject {
-   public:
+public:
     DfTotalEnergy(TlSerializeData* pPdfParam);
     virtual ~DfTotalEnergy();
 
@@ -39,11 +38,11 @@ class DfTotalEnergy : public DfObject {
     /// の判断を行い、各エネルギーの計算ルーチンを呼び、全エネルギーの計算を行う
     virtual void exec();
 
-   public:
+public:
     /// ダミー原子を除いた時の全エネルギー計算を行う
     virtual void calculate_real_energy();
 
-   protected:
+protected:
     /// 核—核反発エネルギーの計算を行う
     double calculate_energy_nuclear_repulsion();
 
@@ -54,7 +53,7 @@ class DfTotalEnergy : public DfObject {
     /// 全エネルギーを出力する
     void write_total_energy(double E_Total) const;
 
-   protected:
+protected:
     template <typename DfOverlapType, typename DfEriType,
               typename SymmetricMatrixType, typename VectorType>
     void exec_template();
@@ -108,13 +107,13 @@ class DfTotalEnergy : public DfObject {
 
     double calcS2();
 
-   protected:
+protected:
     virtual void output();
 
     virtual DfEriX* getDfEriX() const;
     virtual DfOverlapX* getDfOverlapX() const;
 
-   protected:
+protected:
     double m_dE_OneElectronPart;
     double J_term_;
     double m_dE_J_Rho_RhoTilde;
@@ -140,22 +139,22 @@ void DfTotalEnergy::exec_template() {
     SymmetricMatrixType Ppq, PpqA, PpqB;
     switch (this->m_nMethodType) {
         case METHOD_RKS:
-            Ppq = DfObject::getPpqMatrix<SymmetricMatrixType>(
+            Ppq = DfObject::getPInMatrix<SymmetricMatrixType>(
                 RUN_RKS, this->m_nIteration);
             break;
 
         case METHOD_UKS:
-            PpqA = DfObject::getPpqMatrix<SymmetricMatrixType>(
+            PpqA = DfObject::getPInMatrix<SymmetricMatrixType>(
                 RUN_UKS_ALPHA, this->m_nIteration);
-            PpqB = DfObject::getPpqMatrix<SymmetricMatrixType>(
+            PpqB = DfObject::getPInMatrix<SymmetricMatrixType>(
                 RUN_UKS_BETA, this->m_nIteration);
             Ppq = PpqA + PpqB;
             break;
 
         case METHOD_ROKS:
-            PpqB = 0.5 * DfObject::getPpqMatrix<SymmetricMatrixType>(
+            PpqB = 0.5 * DfObject::getPInMatrix<SymmetricMatrixType>(
                              RUN_ROKS_CLOSED, this->m_nIteration);
-            PpqA = PpqB + DfObject::getPpqMatrix<SymmetricMatrixType>(
+            PpqA = PpqB + DfObject::getPInMatrix<SymmetricMatrixType>(
                               RUN_ROKS_OPEN, this->m_nIteration);
             Ppq = PpqA + PpqB;
             break;
@@ -320,7 +319,7 @@ SymmetricMatrixType DfTotalEnergy::getPpq(const METHOD_TYPE methodType) {
 
     switch (methodType) {
         case METHOD_RKS: {
-            Ppq = DfObject::getPpqMatrix<SymmetricMatrixType>(
+            Ppq = DfObject::getPInMatrix<SymmetricMatrixType>(
                 RUN_RKS, this->m_nIteration);
             if (Ppq.getNumOfRows() != this->m_nNumOfAOs ||
                 Ppq.getNumOfCols() != this->m_nNumOfAOs) {
@@ -330,7 +329,7 @@ SymmetricMatrixType DfTotalEnergy::getPpq(const METHOD_TYPE methodType) {
 
         case METHOD_UKS: {
             // Ppq matrix for alpha spin
-            Ppq = DfObject::getPpqMatrix<SymmetricMatrixType>(
+            Ppq = DfObject::getPInMatrix<SymmetricMatrixType>(
                 RUN_UKS_ALPHA, this->m_nIteration);
             if (Ppq.getNumOfRows() != this->m_nNumOfAOs ||
                 Ppq.getNumOfCols() != this->m_nNumOfAOs) {
@@ -338,7 +337,7 @@ SymmetricMatrixType DfTotalEnergy::getPpq(const METHOD_TYPE methodType) {
             }
             // Ppq matrix for beta spin
             SymmetricMatrixType Ppq_b;
-            Ppq_b = DfObject::getPpqMatrix<SymmetricMatrixType>(
+            Ppq_b = DfObject::getPInMatrix<SymmetricMatrixType>(
                 RUN_UKS_BETA, this->m_nIteration);
             if (Ppq_b.getNumOfRows() != this->m_nNumOfAOs ||
                 Ppq_b.getNumOfCols() != this->m_nNumOfAOs) {
@@ -352,7 +351,7 @@ SymmetricMatrixType DfTotalEnergy::getPpq(const METHOD_TYPE methodType) {
         case METHOD_ROKS: {
             SymmetricMatrixType P2pq;
             {
-                Ppq = DfObject::getPpqMatrix<SymmetricMatrixType>(
+                Ppq = DfObject::getPInMatrix<SymmetricMatrixType>(
                     RUN_ROKS_CLOSED, this->m_nIteration);
                 if (Ppq.getNumOfRows() != this->m_nNumOfAOs ||
                     Ppq.getNumOfCols() != this->m_nNumOfAOs) {
@@ -361,7 +360,7 @@ SymmetricMatrixType DfTotalEnergy::getPpq(const METHOD_TYPE methodType) {
                 }
             }
             {
-                P2pq = DfObject::getPpqMatrix<SymmetricMatrixType>(
+                P2pq = DfObject::getPInMatrix<SymmetricMatrixType>(
                     RUN_ROKS_OPEN, this->m_nIteration);
                 if (P2pq.getNumOfRows() != this->m_nNumOfAOs ||
                     P2pq.getNumOfCols() != this->m_nNumOfAOs) {
@@ -635,7 +634,7 @@ double DfTotalEnergy::calcEnergyFromDummy() {
     SymmetricMatrixType P;
     switch (this->m_nMethodType) {
         case METHOD_RKS:
-            P = DfObject::getPpqMatrix<SymmetricMatrixType>(RUN_RKS,
+            P = DfObject::getPInMatrix<SymmetricMatrixType>(RUN_RKS,
                                                             this->m_nIteration);
             break;
 

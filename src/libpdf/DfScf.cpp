@@ -25,9 +25,9 @@
 #include "DfCalcGrid.h"
 #include "DfCleanup.h"
 #include "DfConvcheck.h"
-#include "DfConverge_Anderson.h"
-#include "DfConverge_DIIS.h"
-#include "DfConverge_Damping.h"
+// #include "DfConverge_Anderson.h"
+// #include "DfConverge_DIIS.h"
+// #include "DfConverge_Damping.h"
 #include "DfDensityFittingX.h"
 #include "DfDiagonal.h"
 #include "DfDiffDensityMatrix.h"
@@ -43,6 +43,9 @@
 #include "DfThreeindexintegrals.h"
 #include "TlUtils.h"
 #include "common.h"
+#include "df_converge_damping_anderson_lapack.h"
+#include "df_converge_damping_diis_lapack.h"
+#include "df_converge_damping_lapack.h"
 #include "df_converge_damping_oda_lapack.h"
 #include "tl_matrix_utils.h"
 // #include "DfTotalEnergy.h"
@@ -94,10 +97,9 @@ void DfScf::saveParam() const {
 // return  0 : not convergence
 //         1 : convergence
 int DfScf::run() {
-    const TlSerializeData& pdfParam = *(this->pPdfParam_);
-
     this->updateParam();
     this->setScfParam();
+    const TlSerializeData& pdfParam = *(this->pPdfParam_);
 
     std::string sStepControl = pdfParam["step_control"].getStr();
     std::string group = "";
@@ -298,18 +300,23 @@ int DfScf::execScfLoop() {
                 break;
 
             case DIFF_DENSITY_MATRIX:
+                // this->log_.info("diff density matrix");
                 this->diffDensityMatrix();
-                this->setScfRestartPoint("DIFF_DENSITY_MATRIX");
+                // this->log_.info("diff density matrix: done");
+                // this->setScfRestartPoint("DIFF_DENSITY_MATRIX");
+                // this->log_.info("diff density matrix: done2");
                 nScfState = DENSITY_FITTING;
                 break;
 
             case DENSITY_FITTING:
+                this->log_.info("density fitting");
                 this->doDensityFitting();
                 this->setScfRestartPoint("DENSITY_FITTING");
                 nScfState = XC_INTEGRAL;
                 break;
 
             case XC_INTEGRAL:
+                this->log_.info("XC");
                 this->doXCIntegral();
                 this->setScfRestartPoint("XC_INTEGRAL");
                 nScfState = THREE_INDEX_INTEGRAL;
@@ -923,15 +930,16 @@ void DfScf::converge() {
 DfConverge* DfScf::getDfConverge() {
     DfConverge* pDfConverge = NULL;
     if (this->m_nScfAcceleration == SCF_ACCELERATION_SIMPLE) {
-        pDfConverge = new DfConverge_Damping(this->pPdfParam_);
+        pDfConverge = new DfConverge_Damping_Lapack(this->pPdfParam_);
     } else if (this->m_nScfAcceleration == SCF_ACCELERATION_ODA) {
         pDfConverge = new DfConverge_Damping_Oda_Lapack(this->pPdfParam_);
     } else if (this->m_nScfAcceleration == SCF_ACCELERATION_ANDERSON) {
-        pDfConverge = new DfConverge_Anderson(this->pPdfParam_);
+        pDfConverge = new DfConverge_Damping_Anderson_Lapack(this->pPdfParam_);
     } else if (this->m_nScfAcceleration == SCF_ACCELERATION_DIIS) {
-        pDfConverge = new DfConverge_DIIS(this->pPdfParam_);
+        pDfConverge = new DfConverge_Damping_Diis_Lapack(this->pPdfParam_);
     } else {
-        pDfConverge = new DfConverge_Damping(this->pPdfParam_);
+        this->log_.info("unknown acceleration method. use damping method.");
+        pDfConverge = new DfConverge_Damping_Lapack(this->pPdfParam_);
     }
     return pDfConverge;
 }

@@ -354,11 +354,20 @@ void DfObject::setParam(const TlSerializeData& data) {
     if (paramFileBaseName["occupation_vtr"].getStr().empty() == true) {
         paramFileBaseName["occupation_vtr"] = "occupation.%s.vtr";
     }
+
+    // density matrix
+    //   "P" means (output) density matrix
     if (paramFileBaseName["Ppq_matrix"].getStr().empty() == true) {
         paramFileBaseName["Ppq_matrix"] = "Ppq.%s.mat";
     }
+    //   "~P" means input density matrix
+    if (paramFileBaseName["~Ppq_matrix"].getStr().empty() == true) {
+        paramFileBaseName["~Ppq_matrix"] = "~Ppq.%s.mat";
+    }
+
     paramFileBaseName["P1pq_matrix"] = "P1pq.%s.mat";
     paramFileBaseName["P2pq_matrix"] = "P2pq.%s.mat";
+
     paramFileBaseName["HFx_matrix"] = "HFx.%s.mat";
     paramFileBaseName["Fpq_matrix"] = "Fpq.%s.mat";
     paramFileBaseName["Fprime_matrix"] = "Fprime.%s.mat";
@@ -370,6 +379,11 @@ void DfObject::setParam(const TlSerializeData& data) {
     paramFileBaseName["Cprime_matrix"] = "Cprime.%s.mat";
     paramFileBaseName["grid_matrix"] = "grid.mat";
     paramFileBaseName["T_alpha"] = "T_alpha.%s.vtr";
+
+    // DIIS
+    if (paramFileBaseName["DIIS_residual_matrix"].getStr().empty() == true) {
+        paramFileBaseName["DIIS_residual_matrix"] = "diis_r.%s.mat";
+    }
 
     // for GridFree
     if (paramFileBaseName["GF_S_matrix"].getStr().empty() == true) {
@@ -634,11 +648,21 @@ std::string DfObject::getPpqMatrixPath(const RUN_TYPE nRunType, const int nItera
     return this->makeFilePath("Ppq_matrix", DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
 }
 
+std::string DfObject::getPInMatrixPath(const RUN_TYPE nRunType, const int nIteration) const {
+    return this->makeFilePath("~Ppq_matrix", DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
+}
+
+std::string DfObject::getPOutMatrixPath(const RUN_TYPE nRunType, const int nIteration) const {
+    return this->makeFilePath("Ppq_matrix", DfObject::m_sRunTypeSuffix[nRunType] + TlUtils::xtos(nIteration));
+}
+
 std::string DfObject::getP1pqMatrixPath(const int iteration) {
+    std::cerr << "DfObject::getP1pqMatrixPath() called." << std::endl;
     return this->makeFilePath("P1pq_matrix", TlUtils::xtos(iteration));
 }
 
 std::string DfObject::getP2pqMatrixPath(const int iteration) {
+    std::cerr << "DfObject::getP2pqMatrixPath() called." << std::endl;
     return this->makeFilePath("P2pq_matrix", TlUtils::xtos(iteration));
 }
 
@@ -691,6 +715,10 @@ std::string DfObject::getCprimeMatrixPath(const RUN_TYPE runType, int iteration,
     }
     suffix += DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration);
     return this->makeFilePath("Cprime_matrix", suffix);
+}
+
+std::string DfObject::getDiisResidualMatrixPath(const RUN_TYPE runType, int iteration) const {
+    return this->makeFilePath("DIIS_residual_matrix", DfObject::m_sRunTypeSuffix[runType] + TlUtils::xtos(iteration));
 }
 
 std::string DfObject::getGfSMatrixPath() const {

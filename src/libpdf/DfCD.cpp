@@ -887,21 +887,21 @@ TlDenseVector_Lapack DfCD::getScreenedDensityMatrix(const RUN_TYPE runType, cons
     TlDenseSymmetricMatrix_Lapack P;
     switch (runType) {
         case RUN_RKS:
-            P = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, this->m_nIteration - 1);
+            P = 0.5 * this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, this->m_nIteration);
             break;
 
         case RUN_UKS_ALPHA:
         case RUN_UKS_BETA:
-            P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, this->m_nIteration - 1);
+            P = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType, this->m_nIteration);
             break;
 
         case RUN_ROKS_ALPHA: {
-            P = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED, this->m_nIteration - 1);
-            P += this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN, this->m_nIteration - 1);
+            P = 0.5 * this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED, this->m_nIteration);
+            P += this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN, this->m_nIteration);
         } break;
 
         case RUN_ROKS_BETA: {
-            P = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED, this->m_nIteration - 1);
+            P = 0.5 * this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED, this->m_nIteration);
         } break;
 
         default:
@@ -990,21 +990,21 @@ TlDenseSymmetricMatrix_Lapack DfCD::getPMatrix(const RUN_TYPE runType, int itr) 
         this->log_.info("use density matrix.");
         switch (runType) {
             case RUN_RKS:
-                P = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, itr);
+                P = 0.5 * this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, itr);
                 break;
 
             case RUN_UKS_ALPHA:
             case RUN_UKS_BETA:
-                P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType, itr);
+                P = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType, itr);
                 break;
 
             case RUN_ROKS_ALPHA: {
-                P = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED, itr);
-                P += this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN, itr);
+                P = 0.5 * this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED, itr);
+                P += this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN, itr);
             } break;
 
             case RUN_ROKS_BETA: {
-                P = 0.5 * this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED, itr);
+                P = 0.5 * this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED, itr);
             } break;
 
             default:
@@ -1445,17 +1445,17 @@ TlDenseSymmetricMatrix_Lapack DfCD::getPMatrix() {
     TlDenseSymmetricMatrix_Lapack P;
     switch (this->m_nMethodType) {
         case METHOD_RKS:
-            P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, this->m_nIteration - 1);
+            P = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, this->m_nIteration);
             break;
 
         case METHOD_UKS:
-            P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA, this->m_nIteration - 1);
-            P += this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA, this->m_nIteration - 1);
+            P = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA, this->m_nIteration);
+            P += this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA, this->m_nIteration);
             break;
 
         case METHOD_ROKS:
-            P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED, this->m_nIteration - 1);
-            P += this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN, this->m_nIteration - 1);
+            P = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED, this->m_nIteration);
+            P += this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN, this->m_nIteration);
             break;
 
         default:

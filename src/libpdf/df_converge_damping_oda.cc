@@ -30,8 +30,8 @@ double DfConverge_Damping_Oda::getDampingFactor_templ() const {
 
     SymmetricMatrixType dP;
     {
-        const SymmetricMatrixType P0 = 0.5 * this->getPpqMatrix<SymmetricMatrixType>(runType, prevIter);
-        const SymmetricMatrixType P1 = 0.5 * this->getPpqMatrix<SymmetricMatrixType>(runType, currIter);
+        const SymmetricMatrixType P0 = 0.5 * this->getPInMatrix<SymmetricMatrixType>(runType, prevIter);
+        const SymmetricMatrixType P1 = 0.5 * this->getPInMatrix<SymmetricMatrixType>(runType, currIter);
 
         dP = P1 - P0;
     }
