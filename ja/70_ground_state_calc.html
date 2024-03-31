@@ -379,7 +379,7 @@ scf_acceleration/damping/damping_type = density_matrix
 <div class="math notranslate nohighlight">
 \[ \begin{align}\begin{aligned}X^{\left(n\right)}=u^{\left(n-1\right)}+b^{\left(n-1\right)}\left(v^{\left(n\right)}-u^{\left(n-1\right)}\right)\\u^{\left(n-1\right)}=X^{\left(n-1\right)}+\theta^{\left(n-1\right)}\left(X^{\left(n-2\right)}-X^{\left(n-1\right)}\right)\\v^{\left(n\right)}=Y^{\left(n\right)}+\theta^{\left(n-1\right)}\left(Y^{\left(n-1\right)}-Y^{\left(n\right)}\right)\\\theta^{\left(n-1\right)}=\frac{\left(r^{\left(n-1\right)},r^{\left(n-1\right)}-r^{\left(n-2\right)}\right)}{\left(r^{\left(n-1\right)}-r^{\left(n-2\right)},r^{\left(n-1\right)}-r^{\left(n-2\right)}\right)}\\r^{\left(n-1\right)}=Y^{\left(n\right)}-X^{\left(n-1\right)}\\\left(u,v\right)=\sum_{i}u_{i}v_{i}w_{i}\end{aligned}\end{align} \]</div>
 <p>Here, specify the b(n-1) with <code class="docutils literal notranslate"><span class="pre">scf-acceleration/anderson/damping-factor</span></code>.</p>
-<p>なお、Anderson法を開始するまではdamping法を用います。 Anderson法を開始するSCF回数は、 <code class="docutils literal notranslate"><span class="pre">scf_acceleration/anderson/start_number</span></code> で指定できます。</p>
+<p>なお、Anderson法を開始するまではdamping法を用います。 Anderson法を開始するSCF回数は、 <code class="docutils literal notranslate"><span class="pre">scf_acceleration/anderson/start</span></code> で指定できます。</p>
 </section>
 <section id="diis-method">
 <h3><span class="section-number">8.8.3. </span>DIIS法<a class="headerlink" href="#diis-method" title="この見出しへのパーマリンク"></a></h3>

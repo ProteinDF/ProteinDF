@@ -329,7 +329,7 @@ Here, specify the b(n-1) with ``scf-acceleration/anderson/damping-factor``.
 
 The damping method is applied before the Andarson's method is started.
 Specify the SCF iteration number starting the Anderson's method
-with ``scf_acceleration/anderson/start_number``.
+with ``scf_acceleration/anderson/start``.
 
 
 DIIS method
