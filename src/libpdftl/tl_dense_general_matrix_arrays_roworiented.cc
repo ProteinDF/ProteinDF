@@ -23,8 +23,15 @@
 
 #include "TlFile.h"
 #include "TlUtils.h"
+
+#if defined HAVE_EIGEN
 #include "tl_dense_general_matrix_eigen.h"
+#endif // HAVE_EIGEN
+
+#if defined HAVE_LAPACK
 #include "tl_dense_general_matrix_lapack.h"
+#endif // HAVE_LAPACK
+
 #include "tl_dense_general_matrix_mmap.h"
 
 TlDenseGeneralMatrix_arrays_RowOriented::TlDenseGeneralMatrix_arrays_RowOriented(
@@ -223,7 +230,13 @@ bool RowVectorMatrix2CSFD(const std::string& rvmBasePath, const std::string& csf
                 const TlMatrixObject::index_type readRowChunks = std::min(sizeOfChunk, numOfRows - chunkStartRow);
                 TlUtils::changeMemoryLayout(&(chunkBuf[0]), readRowChunks, numOfCols, &(transBuf[0]));
 
+#if defined HAVE_EIGEN
                 TlDenseGeneralMatrix_Eigen tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
+#elif defined HAVE_LAPACK
+                TlDenseGeneralMatrix_Lapack tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
+#else
+#error "either HAVE_EIGEN or HAVE_LAPACK must be defined."
+#endif //
                 fileMat.block(chunkStartRow, 0, tmpMat);
             }
 

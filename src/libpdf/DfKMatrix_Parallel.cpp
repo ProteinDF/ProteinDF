@@ -17,7 +17,9 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfKMatrix_Parallel.h"
+
 #include <cassert>
+
 #include "CnError.h"
 #include "DfCD_Parallel.h"
 #include "DfEriX_Parallel.h"
@@ -132,14 +134,12 @@ void DfKMatrix_Parallel::getK_conventional_distributed(
 
     TlDenseSymmetricMatrix_Scalapack P;
     if (this->isUpdateMethod_ == true) {
-        P = DfObject::getDiffDensityMatrix<TlDenseSymmetricMatrix_Scalapack>(
-            runType, this->m_nIteration);
+        P = DfObject::getDiffDensityMatrix<TlDenseSymmetricMatrix_Scalapack>(runType, this->m_nIteration);
         if (runType == RUN_RKS) {
             P *= 0.5;
         }
     } else {
-        P = DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(
-            runType, this->m_nIteration - 1);
+        P = DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(runType, this->m_nIteration);
         if (runType == RUN_RKS) {
             P *= 0.5;
         }

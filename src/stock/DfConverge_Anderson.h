@@ -19,19 +19,19 @@
 #ifndef DFCONVERGE_ANDERSON_H
 #define DFCONVERGE_ANDERSON_H
 
-#include "DfConverge_Damping.h"
+#include "df_converge_damping_template.h"
 
 class DfConverge_Anderson : public DfConverge_Damping {
-   public:
+public:
     DfConverge_Anderson(TlSerializeData* pPdfParam);
     virtual ~DfConverge_Anderson();
 
-   protected:
+protected:
     virtual void convergeRhoTilde();
     virtual void convergeKSMatrix();
     virtual void convergePMatrix();
 
-   protected:
+protected:
     template <class VectorType>
     void convergeRhoTilde(const DfObject::RUN_TYPE runType);
 
@@ -41,12 +41,12 @@ class DfConverge_Anderson : public DfConverge_Damping {
     template <class SymmetricMatrixType, class VectorType>
     void convergePMatrix(const DfObject::RUN_TYPE runType);
 
-   protected:
+protected:
     template <class VectorType>
     VectorType anderson(const VectorType& X1, const VectorType& X2,
                         const VectorType& Y0, const VectorType& Y1);
 
-   protected:
+protected:
     template <class SymmetricMatrixType, class VectorType>
     VectorType getVectorOfKSMatrix(const DfObject::RUN_TYPE runType,
                                    const int nIteration) const;
@@ -65,7 +65,7 @@ class DfConverge_Anderson : public DfConverge_Damping {
                                 const int nIteration,
                                 const VectorType& v) const;
 
-   protected:
+protected:
     int m_nStartIterationOfAnderson;
     double m_dDampingFactorOfAnderson;
 };

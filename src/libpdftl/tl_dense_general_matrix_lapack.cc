@@ -42,9 +42,6 @@ TlDenseGeneralMatrix_Lapack::operator std::vector<double>() const {
 // ---------------------------------------------------------------------------
 // properties
 // ---------------------------------------------------------------------------
-TlMatrixObject::size_type TlDenseGeneralMatrix_Lapack::getNumOfElements() const {
-    return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->getNumOfElements();
-}
 
 // ---------------------------------------------------------------------------
 // operators
@@ -193,14 +190,6 @@ TlDenseGeneralMatrix_Lapack TlDenseGeneralMatrix_Lapack::getLeastSquaresSolution
             ->getLeastSquaresSolution(*(dynamic_cast<const TlDenseGeneralMatrix_ImplLapack*>(B.pImpl_))));
 }
 
-double* TlDenseGeneralMatrix_Lapack::data() {
-    return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->data();
-}
-
-const double* TlDenseGeneralMatrix_Lapack::data() const {
-    return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->data();
-}
-
 // ---------------------------------------------------------------------------
 // I/O
 // ---------------------------------------------------------------------------
@@ -212,6 +201,18 @@ void TlDenseGeneralMatrix_Lapack::dump(TlDenseVector_Lapack* v) const {
 void TlDenseGeneralMatrix_Lapack::restore(const TlDenseVector_Lapack& v) {
     dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)
         ->restore(*(dynamic_cast<TlDenseVector_ImplLapack*>(v.pImpl_)));
+}
+
+TlMatrixObject::size_type TlDenseGeneralMatrix_Lapack::getNumOfElements() const {
+    return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->getNumOfElements();
+}
+
+double* TlDenseGeneralMatrix_Lapack::data() {
+    return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->data();
+}
+
+const double* TlDenseGeneralMatrix_Lapack::data() const {
+    return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->data();
 }
 
 // ---------------------------------------------------------------------------

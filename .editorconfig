@@ -23,6 +23,6 @@ indent_style = space
 indent_size = 2
 
 # C/C++
-[*.{c,h,cpp,hpp}]
+[*.{c,h,cc,cpp,hpp}]
 indent_style = space
 indent_size = 4

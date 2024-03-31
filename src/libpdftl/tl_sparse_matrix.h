@@ -28,11 +28,11 @@
 #include <iostream>
 
 // -------------------------------------
-#ifdef HAVE_UNORDERED_MAP
+#if defined HAVE_UNORDERED_MAP
 #include <unordered_map>
-#elifdef HAVE_TR1_UNORDERED_MAP
+#elif defined HAVE_TR1_UNORDERED_MAP
 #include <tr1/unordered_map>
-#elifdef HAVE_GOOGLE_SPARSE_HASH_MAP
+#elif defined HAVE_GOOGLE_SPARSE_HASH_MAP
 #include <google/sparse_hash_map>
 #else
 #include <map>

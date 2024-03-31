@@ -16,21 +16,21 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "DfConverge.h"
+#include "df_converge.h"
+
 #include "CnError.h"
 #include "TlUtils.h"
 
 DfConverge::DfConverge(TlSerializeData* pPdfParam)
-    : DfObject(pPdfParam), m_nConvergeTarget(RHO_TILDE) {
+    : DfObject(pPdfParam), convergeTarget_(RHO_TILDE) {
     const TlSerializeData& pdfParam = *pPdfParam;
-    const std::string sDampingType = TlUtils::toUpper(
-        pdfParam["scf_acceleration/damping/damping_type"].getStr());
-    if (sDampingType == "DENSITY") {
-        this->m_nConvergeTarget = RHO_TILDE;
-    } else if (sDampingType == "FOCK") {
-        this->m_nConvergeTarget = KS_MATRIX;
-    } else if (sDampingType == "DENSITY_MATRIX") {
-        this->m_nConvergeTarget = DENSITY_MATRIX;
+    const std::string dampingType = TlUtils::toUpper(pdfParam["scf_acceleration/damping/damping_type"].getStr());
+    if (dampingType == "DENSITY") {
+        this->convergeTarget_ = RHO_TILDE;
+    } else if (dampingType == "FOCK") {
+        this->convergeTarget_ = KS_MATRIX;
+    } else if (dampingType == "DENSITY_MATRIX") {
+        this->convergeTarget_ = DENSITY_MATRIX;
     } else {
         CnErr.abort("unknown damping type. stop.");
     }
@@ -39,7 +39,7 @@ DfConverge::DfConverge(TlSerializeData* pPdfParam)
 DfConverge::~DfConverge() {}
 
 void DfConverge::doConverge() {
-    switch (this->m_nConvergeTarget) {
+    switch (this->convergeTarget_) {
         case RHO_TILDE:
             this->convergeRhoTilde();
             break;

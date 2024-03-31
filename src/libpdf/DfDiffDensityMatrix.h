@@ -22,35 +22,32 @@
 #include "DfObject.h"
 
 class DfDiffDensityMatrix : public DfObject {
-   public:
+public:
     DfDiffDensityMatrix(TlSerializeData* pPdfParam);
     virtual ~DfDiffDensityMatrix();
 
-   public:
+public:
     /// 差電子密度行列を求める
     ///
     virtual void exec();
 
-   protected:
+protected:
     template <class SymmetricMatrixType>
     void calc(DfObject::RUN_TYPE runType, int iteration);
 
     // template<class SymmetricMatrixType>
     // void calc_ROKS();
 
-   protected:
+protected:
     /// 差電子密度行列をディスクに保存する(true)かどうか
     bool isSaveDiffMatrix_;
 };
 
 template <class SymmetricMatrixType>
-void DfDiffDensityMatrix::calc(const DfObject::RUN_TYPE runType,
-                               const int iteration) {
-    SymmetricMatrixType P =
-        DfObject::getPpqMatrix<SymmetricMatrixType>(runType, iteration - 1);
+void DfDiffDensityMatrix::calc(const DfObject::RUN_TYPE runType, const int iteration) {
+    SymmetricMatrixType P = DfObject::getPInMatrix<SymmetricMatrixType>(runType, iteration);
     if (iteration > 1) {
-        P -= (DfObject::getPpqMatrix<SymmetricMatrixType>(runType,
-                                                          iteration - 2));
+        P -= (DfObject::getPInMatrix<SymmetricMatrixType>(runType, iteration - 1));
     }
 
     this->saveDiffDensityMatrix(runType, iteration, P);

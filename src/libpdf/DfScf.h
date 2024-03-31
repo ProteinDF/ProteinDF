@@ -22,12 +22,12 @@
 #include <fstream>
 #include <map>
 
-#include "DfConverge.h"
 #include "DfFockMatrix.h"
 #include "DfGridFreeXC.h"
 #include "DfObject.h"
 #include "DfXCFunctional.h"
 #include "TlTime.h"
+#include "df_converge.h"
 
 class DfDensityFittingObject;
 class DfJMatrix;
@@ -42,7 +42,7 @@ class DfSummary;
 
 /// SCF 繰り返し計算を行うクラス
 class DfScf : public DfObject {
-   protected:
+protected:
     enum ScfAccelerationType {
         SCF_ACCELERATION_SIMPLE = 0,
         SCF_ACCELERATION_ODA,
@@ -64,18 +64,23 @@ class DfScf : public DfObject {
         DIFF_DENSITY_MATRIX_BETA,
     };
 
-   public:
+public:
     DfScf(TlSerializeData* pPdfParam);
     virtual ~DfScf();
 
-   public:
-    int dfScfMain();
+public:
+    int run();
 
-   protected:
+protected:
+    /// @brief update parameter, pdfparam
+    virtual void updateParam();
+
+    void setupScfParam();
+
     /// メンバ変数へ値を設定する
     virtual void setScfParam();
 
-   protected:
+protected:
     int execScfLoop();
     virtual void setScfRestartPoint(const std::string& str);
 
@@ -153,10 +158,10 @@ class DfScf : public DfObject {
 
     virtual bool checkMaxIteration();
 
-   protected:
+protected:
     virtual void saveParam() const;
 
-   protected:
+protected:
     DampObjectType m_nDampObject;
     ScfAccelerationType m_nScfAcceleration;
 

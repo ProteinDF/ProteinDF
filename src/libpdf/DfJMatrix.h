@@ -24,14 +24,14 @@
 #include "tl_dense_vector_lapack.h"
 
 class DfJMatrix : public DfObject {
-   public:
+public:
     DfJMatrix(TlSerializeData* pPdfParam);
     virtual ~DfJMatrix();
 
-   public:
+public:
     virtual void buildJ();
 
-   protected:
+protected:
     virtual void getJ_RI();
     virtual void getJ_CD();
     virtual void getJ_conventional();
@@ -40,7 +40,7 @@ class DfJMatrix : public DfObject {
     virtual void getJ_CD_local(TlDenseSymmetricMatrix_Lapack* pJ);
     virtual void getJ_conventional_local(TlDenseSymmetricMatrix_Lapack* pJ);
 
-   protected:
+protected:
     virtual void saveJMatrix(const TlDenseSymmetricMatrix_Lapack& J);
     virtual TlDenseSymmetricMatrix_Lapack getJMatrix(const int iteration);
 
@@ -90,22 +90,17 @@ SymmetricMatrixType DfJMatrix::getDensityMatrix() {
     SymmetricMatrixType P;
     switch (this->m_nMethodType) {
         case METHOD_RKS:
-            P = DfObject::getPpqMatrix<SymmetricMatrixType>(
-                RUN_RKS, this->m_nIteration - 1);
+            P = DfObject::getPInMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration);
             break;
 
         case METHOD_UKS:
-            P = DfObject::getPpqMatrix<SymmetricMatrixType>(
-                RUN_UKS_ALPHA, this->m_nIteration - 1);
-            P += DfObject::getPpqMatrix<SymmetricMatrixType>(
-                RUN_UKS_BETA, this->m_nIteration - 1);
+            P = DfObject::getPInMatrix<SymmetricMatrixType>(RUN_UKS_ALPHA, this->m_nIteration);
+            P += DfObject::getPInMatrix<SymmetricMatrixType>(RUN_UKS_BETA, this->m_nIteration);
             break;
 
         case METHOD_ROKS:
-            P = DfObject::getPpqMatrix<SymmetricMatrixType>(
-                RUN_ROKS_CLOSED, this->m_nIteration - 1);
-            P += DfObject::getPpqMatrix<SymmetricMatrixType>(
-                RUN_ROKS_OPEN, this->m_nIteration - 1);
+            P = DfObject::getPInMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration);
+            P += DfObject::getPInMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, this->m_nIteration);
             break;
 
         default:

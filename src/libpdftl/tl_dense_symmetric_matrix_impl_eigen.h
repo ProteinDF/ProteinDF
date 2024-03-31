@@ -11,7 +11,7 @@ class TlDenseSymmetricMatrix_ImplEigen : public TlDenseGeneralMatrix_ImplEigen {
     // ---------------------------------------------------------------------------
     // constructor & destructor
     // ---------------------------------------------------------------------------
-   public:
+public:
     explicit TlDenseSymmetricMatrix_ImplEigen(
         const TlMatrixObject::index_type dim = 0,
         double const* const pBuf = NULL);
@@ -46,7 +46,7 @@ class TlDenseSymmetricMatrix_ImplEigen : public TlDenseGeneralMatrix_ImplEigen {
     // ---------------------------------------------------------------------------
     // operations
     // ---------------------------------------------------------------------------
-   public:
+public:
     // virtual double sum() const;
     // virtual double getRMS() const;
     // virtual double getMaxAbsoluteElement(
@@ -61,16 +61,24 @@ class TlDenseSymmetricMatrix_ImplEigen : public TlDenseGeneralMatrix_ImplEigen {
              TlDenseGeneralMatrix_ImplEigen* pEigVec) const;
 
     // ---------------------------------------------------------------------------
-    // protected:
+    // I/O
     // ---------------------------------------------------------------------------
-   protected:
+protected:
     virtual void vtr2mat(double const* const pBuf);
+
+protected:
+    virtual TlMatrixObject::size_type getNumOfElements() const;
+    double* data();
+    const double* data() const;
 
     // ---------------------------------------------------------------------------
     // others
     // ---------------------------------------------------------------------------
+    friend class TlDenseSymmetricMatrix_Eigen;
+
     friend class TlDenseGeneralMatrix_ImplEigen;
     friend class TlSparseSymmetricMatrix_ImplEigen;
+
     friend class TlDenseSymmetricMatrix_ImplViennaCL;
 
     // DM(G) * DM(S)
@@ -91,7 +99,7 @@ class TlDenseSymmetricMatrix_ImplEigen : public TlDenseGeneralMatrix_ImplEigen {
         const TlDenseVector_ImplEigen& dv,
         const TlDenseSymmetricMatrix_ImplEigen& dms);
 
-   public:
+public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // Eigen macro
 };
 

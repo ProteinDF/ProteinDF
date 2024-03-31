@@ -23,6 +23,10 @@
 #include <utility>
 #include <vector>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif  // HAVE_CONFIG_H
+
 #include "DfObject.h"
 #include "DfTaskCtrl.h"
 #include "TlOrbitalInfo.h"
@@ -36,8 +40,16 @@
 class TlOrbitalInfo;
 class DfEngineObject;
 class TlDenseSymmetricMatrixObject;
+
+#ifdef HAVE_LAPACK
 class TlDenseGeneralMatrix_Lapack;
 class TlDenseSymmetricMatrix_Lapack;
+#endif  // HAVE_LAPACK
+
+#ifdef HAVE_EIGEN
+class TlDenseSymmetricMatrix_Eigen;
+#endif  // HAVE_EIGEN
+
 class CnFile;
 
 // #define CHECK_LOOP // 計算ループ構造のチェック
@@ -212,9 +224,16 @@ protected:
 protected:
     virtual DfTaskCtrl* getDfTaskCtrlObject() const;
 
-    virtual void finalize(TlDenseSymmetricMatrix_Lapack* pMat);
-    virtual void finalize(TlSparseSymmetricMatrix* pMat);
+#ifdef HAVE_LAPACK
     virtual void finalize(TlDenseGeneralMatrix_Lapack* pMat);
+    virtual void finalize(TlDenseSymmetricMatrix_Lapack* pMat);
+#endif  // HAVE_LAPACK
+
+#ifdef HAVE_EIGEN
+    virtual void finalize(TlDenseSymmetricMatrix_Eigen* pMat);
+#endif  // HAVE_EIGEN
+
+    virtual void finalize(TlSparseSymmetricMatrix* pMat);
     virtual void finalize(TlSparseMatrix* pMat);
     virtual void finalize_I2PQ(PQ_PairArray* pI2PQ);
 
@@ -242,7 +261,8 @@ protected:
     virtual TlDenseGeneralMatrix_arrays_ColOriented getLk();
     virtual TlDenseGeneralMatrix_arrays_ColOriented getLxc();
 
-    TlDenseSymmetricMatrix_Lapack getCholeskyVector(const TlDenseVector_Lapack& L_col, const PQ_PairArray& I2PQ);
+    template <class SymmetricMatrixType>
+    SymmetricMatrixType getCholeskyVector(const std::vector<double>& L_col, const PQ_PairArray& I2PQ);
 
     // ----------------------------------------------------------------------------
     // [SCF] Density Matrix
@@ -820,6 +840,19 @@ void DfCD::createEngines() {
     for (int i = 0; i < numOfThreads; ++i) {
         this->pEngines_[i] = new EngineClass;
     }
+}
+
+template <class SymmetricMatrixType>
+SymmetricMatrixType DfCD::getCholeskyVector(const std::vector<double>& L_col, const PQ_PairArray& I2PQ) {
+    const index_type numOfItilde = L_col.size();
+    assert(static_cast<std::size_t>(numOfItilde) == I2PQ.size());
+
+    SymmetricMatrixType answer(this->m_nNumOfAOs);
+    for (index_type i = 0; i < numOfItilde; ++i) {
+        answer.set(I2PQ[i].index1(), I2PQ[i].index2(), L_col[i]);
+    }
+
+    return answer;
 }
 
 #endif  // DFCD_H

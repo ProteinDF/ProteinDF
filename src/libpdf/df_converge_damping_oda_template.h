@@ -1,21 +1,21 @@
-#ifndef DF_CONVERGE_ODA_H
-#define DF_CONVERGE_ODA_H
+#ifndef DF_CONVERGE_OdaTemplate_H
+#define DF_CONVERGE_OdaTemplate_H
 
 #include <cassert>
 
-#include "df_converge_damping_tmpl.h"
+#include "df_converge_damping_template.h"
 
 // ----------------------------------------------------------------------------
 // template class
 // ----------------------------------------------------------------------------
 template <class SymmetricMatrix, class Vector>
-class DfConverge_Damping_Oda_tmpl : public DfConverge_Damping_tmpl<SymmetricMatrix, Vector> {
+class DfConverge_Damping_OdaTemplate : public DfConverge_Damping_Template<SymmetricMatrix, Vector> {
 public:
-    DfConverge_Damping_Oda_tmpl(TlSerializeData* pPdfParam);
-    virtual ~DfConverge_Damping_Oda_tmpl();
+    DfConverge_Damping_OdaTemplate(TlSerializeData* pPdfParam);
+    virtual ~DfConverge_Damping_OdaTemplate();
 
 protected:
-    void getDampingFactor();
+    virtual double getDampingFactor();
     void getParameters();
 
 protected:
@@ -33,22 +33,19 @@ protected:
 ///////////////////////////////////////////////////////////////////////////////
 
 template <class SymmetricMatrix, class Vector>
-DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::DfConverge_Damping_Oda_tmpl(TlSerializeData* pPdfParam)
-    : DfConverge_Damping_tmpl<SymmetricMatrix, Vector>(pPdfParam) {
+DfConverge_Damping_OdaTemplate<SymmetricMatrix, Vector>::DfConverge_Damping_OdaTemplate(TlSerializeData* pPdfParam)
+    : DfConverge_Damping_Template<SymmetricMatrix, Vector>(pPdfParam) {
     this->odaStartIteration_ = std::max((*pPdfParam)["scf_acceleration/oda/start"].getInt(), 10);
-
-    this->getDampingFactor();
 }
 
 template <class SymmetricMatrix, class Vector>
-DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::~DfConverge_Damping_Oda_tmpl() {}
+DfConverge_Damping_OdaTemplate<SymmetricMatrix, Vector>::~DfConverge_Damping_OdaTemplate() {}
 
 template <class SymmetricMatrix, class Vector>
-void DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::getDampingFactor() {
+double DfConverge_Damping_OdaTemplate<SymmetricMatrix, Vector>::getDampingFactor() {
     this->log_.info(TlUtils::format("ODA start iteration: %d", this->odaStartIteration_));
     if (this->m_nIteration <= this->odaStartIteration_) {
-        DfConverge_Damping_tmpl<SymmetricMatrix, Vector>::getDampingFactor();
-        return;
+        return DfConverge_Damping_Template<SymmetricMatrix, Vector>::getDampingFactor();
     }
 
     const double stdDampingFactor = (*this->pPdfParam_)["scf_acceleration/damping/damping_factor"].getDouble();
@@ -63,14 +60,14 @@ void DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::getDampingFactor() {
 
     // lambda_m: l_m
     // f(l_m) = a*l_m^3 + b*l_m^2 + c*l_m + d
-    // f'(l_m) = a*l_m^2 + b*l_m + c
-    // l_m = (-b +- sqrt(b^2 - 4ac)) / 2a
+    // f'(l_m) = 3.0*a*l_m^2 + 2.0*b*l_m + c
+    // l_m = (-2.0*b +- sqrt((2.0*b)^2 - 4*3.0*ac)) / 2*(3.0*a)
     double l_m = 1.0;
     {
         double min_f = a + b + c + d;  // in case of "l_m = 1.0"
         std::vector<double> points;
-        points.push_back(1.0);
-        points.push_back(0.0);
+        // points.push_back(1.0);
+        // points.push_back(0.0);
         points.push_back(1.0 - stdDampingFactor);
 
         // 3a^2 + 2b +c
@@ -83,8 +80,7 @@ void DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::getDampingFactor() {
 
             const double l1 = (-b_ + root_D) * inv_a2;
             const double l2 = (-b_ - root_D) * inv_a2;
-            // this->log_.info(TlUtils::format("ODA candidate: %f", l1));
-            // this->log_.info(TlUtils::format("ODA candidate: %f", l2));
+            this->log_.info(TlUtils::format("ODA candidates: % 8.5f, % 8.5f", l1, l2));
             if ((0.0 < l1) && (l1 < 1.0)) {
                 points.push_back(l1);
             }
@@ -99,7 +95,7 @@ void DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::getDampingFactor() {
             const double l2 = l1 * l1;
             const double l3 = l2 * l1;
             const double f = a * l3 + b * l2 + c * l1 + d;
-            this->log_.info(TlUtils::format("ODA arginf info: lambda=%f, f(lambda)=%f", l1, f));
+            this->log_.info(TlUtils::format("ODA arginf info: lambda=% 8.5f, f(lambda)=% 8.5f", l1, f));
             if (f < min_f) {
                 min_f = f;
                 l_m = l1;
@@ -109,10 +105,12 @@ void DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::getDampingFactor() {
 
     this->dampingFactor_ = 1.0 - l_m;  // the damping parameter of the paper and implementation are reversed
     this->log_.info(TlUtils::format("ODA damping factor = %f", this->dampingFactor_));
+
+    return this->dampingFactor_;
 }
 
 template <class SymmetricMatrix, class Vector>
-void DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::getParameters() {
+void DfConverge_Damping_OdaTemplate<SymmetricMatrix, Vector>::getParameters() {
     std::vector<double> params(4);
 
     const int prevIter = this->m_nIteration - 2;
@@ -128,8 +126,8 @@ void DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::getParameters() {
         case DfObject::METHOD_RKS: {
             SymmetricMatrix dP;
             {
-                const SymmetricMatrix P0 = 0.5 * DfObject::getPpqMatrix<SymmetricMatrix>(DfObject::RUN_RKS, prevIter);
-                const SymmetricMatrix P1 = 0.5 * DfObject::getPpqMatrix<SymmetricMatrix>(DfObject::RUN_RKS, currIter);
+                const SymmetricMatrix P0 = 0.5 * DfObject::getPOutMatrix<SymmetricMatrix>(DfObject::RUN_RKS, prevIter);
+                const SymmetricMatrix P1 = 0.5 * DfObject::getPOutMatrix<SymmetricMatrix>(DfObject::RUN_RKS, currIter);
 
                 dP = P1 - P0;
             }
@@ -149,14 +147,14 @@ void DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::getParameters() {
         case DfObject::METHOD_UKS: {
             SymmetricMatrix dPa, dPb;
             {
-                const SymmetricMatrix P0 = 0.5 * DfObject::getPpqMatrix<SymmetricMatrix>(DfObject::RUN_UKS_ALPHA, prevIter);
-                const SymmetricMatrix P1 = 0.5 * DfObject::getPpqMatrix<SymmetricMatrix>(DfObject::RUN_UKS_ALPHA, currIter);
+                const SymmetricMatrix P0 = 0.5 * DfObject::getPOutMatrix<SymmetricMatrix>(DfObject::RUN_UKS_ALPHA, prevIter);
+                const SymmetricMatrix P1 = 0.5 * DfObject::getPOutMatrix<SymmetricMatrix>(DfObject::RUN_UKS_ALPHA, currIter);
 
                 dPa = P1 - P0;
             }
             {
-                const SymmetricMatrix P0 = 0.5 * DfObject::getPpqMatrix<SymmetricMatrix>(DfObject::RUN_UKS_BETA, prevIter);
-                const SymmetricMatrix P1 = 0.5 * DfObject::getPpqMatrix<SymmetricMatrix>(DfObject::RUN_UKS_BETA, currIter);
+                const SymmetricMatrix P0 = 0.5 * DfObject::getPOutMatrix<SymmetricMatrix>(DfObject::RUN_UKS_BETA, prevIter);
+                const SymmetricMatrix P1 = 0.5 * DfObject::getPOutMatrix<SymmetricMatrix>(DfObject::RUN_UKS_BETA, currIter);
 
                 dPb = P1 - P0;
             }
@@ -178,10 +176,10 @@ void DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::getParameters() {
         case DfObject::METHOD_ROKS: {
             SymmetricMatrix dPa, dPb;
             {
-                const SymmetricMatrix P0o = 0.5 * DfObject::getPpqMatrix<SymmetricMatrix>(DfObject::RUN_ROKS_OPEN, prevIter);
-                const SymmetricMatrix P1o = 0.5 * DfObject::getPpqMatrix<SymmetricMatrix>(DfObject::RUN_ROKS_OPEN, currIter);
-                const SymmetricMatrix P0c = 0.5 * DfObject::getPpqMatrix<SymmetricMatrix>(DfObject::RUN_ROKS_CLOSED, prevIter);
-                const SymmetricMatrix P1c = 0.5 * DfObject::getPpqMatrix<SymmetricMatrix>(DfObject::RUN_ROKS_CLOSED, currIter);
+                const SymmetricMatrix P0o = 0.5 * DfObject::getPOutMatrix<SymmetricMatrix>(DfObject::RUN_ROKS_OPEN, prevIter);
+                const SymmetricMatrix P1o = 0.5 * DfObject::getPOutMatrix<SymmetricMatrix>(DfObject::RUN_ROKS_OPEN, currIter);
+                const SymmetricMatrix P0c = 0.5 * DfObject::getPOutMatrix<SymmetricMatrix>(DfObject::RUN_ROKS_CLOSED, prevIter);
+                const SymmetricMatrix P1c = 0.5 * DfObject::getPOutMatrix<SymmetricMatrix>(DfObject::RUN_ROKS_CLOSED, currIter);
 
                 const SymmetricMatrix P0a = 0.5 * P0c + P0o;
                 const SymmetricMatrix P0b = 0.5 * P0c;
@@ -213,4 +211,4 @@ void DfConverge_Damping_Oda_tmpl<SymmetricMatrix, Vector>::getParameters() {
     this->oda_b_ = E1 - this->oda_a_ - this->oda_c_ - this->oda_d_;
 }
 
-#endif  // DF_CONVERGE_ODA_H
+#endif  // DF_CONVERGE_OdaTemplate_H

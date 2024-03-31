@@ -17,14 +17,13 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfDiffDensityMatrix.h"
+
 #include "TlFile.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 
 DfDiffDensityMatrix::DfDiffDensityMatrix(TlSerializeData* pPdfData)
     : DfObject(pPdfData) {
-    this->isSaveDiffMatrix_ =
-        (TlUtils::toUpper((*pPdfData)["save_diff_density_matrix"].getStr()) ==
-         "YES");
+    this->isSaveDiffMatrix_ = (TlUtils::toUpper((*pPdfData)["save_diff_density_matrix"].getStr()) == "YES");
 }
 
 DfDiffDensityMatrix::~DfDiffDensityMatrix() {}
@@ -41,24 +40,20 @@ void DfDiffDensityMatrix::exec() {
     //   memory."); TlMatrix::useMemManager(false);
     // }
 
+    this->log_.info("make diff matrix by using LAPACK");
     switch (this->m_nMethodType) {
         case METHOD_RKS:
-            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_RKS,
-                                                      this->m_nIteration);
+            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, this->m_nIteration);
             break;
 
         case METHOD_UKS:
-            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA,
-                                                      this->m_nIteration);
-            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA,
-                                                      this->m_nIteration);
+            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA, this->m_nIteration);
+            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA, this->m_nIteration);
             break;
 
         case METHOD_ROKS:
-            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED,
-                                                      this->m_nIteration);
-            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN,
-                                                      this->m_nIteration);
+            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED, this->m_nIteration);
+            this->calc<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN, this->m_nIteration);
             break;
 
         default:

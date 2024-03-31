@@ -1,4 +1,5 @@
 #include "tl_dense_general_matrix_eigen.h"
+
 #include "tl_dense_general_matrix_impl_eigen.h"
 #include "tl_dense_symmetric_matrix_eigen.h"
 #include "tl_dense_symmetric_matrix_impl_eigen.h"
@@ -131,7 +132,9 @@ TlDenseGeneralMatrix_Eigen& TlDenseGeneralMatrix_Eigen::operator*=(
 // ---------------------------------------------------------------------------
 // operations
 // ---------------------------------------------------------------------------
-double TlDenseGeneralMatrix_Eigen::sum() const { return this->pImpl_->sum(); }
+double TlDenseGeneralMatrix_Eigen::sum() const {
+    return this->pImpl_->sum();
+}
 
 double TlDenseGeneralMatrix_Eigen::getRMS() const {
     return this->pImpl_->getRMS();
@@ -164,6 +167,21 @@ TlDenseGeneralMatrix_Eigen TlDenseGeneralMatrix_Eigen::transpose() const {
 TlDenseGeneralMatrix_Eigen TlDenseGeneralMatrix_Eigen::inverse() const {
     return TlDenseGeneralMatrix_Eigen(
         dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)->inverse());
+}
+
+// ---------------------------------------------------------------------------
+// I/O
+// ---------------------------------------------------------------------------
+TlMatrixObject::size_type TlDenseGeneralMatrix_Eigen::getNumOfElements() const {
+    return dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)->getNumOfElements();
+}
+
+double* TlDenseGeneralMatrix_Eigen::data() {
+    return dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)->data();
+}
+
+const double* TlDenseGeneralMatrix_Eigen::data() const {
+    return dynamic_cast<TlDenseGeneralMatrix_ImplEigen*>(this->pImpl_)->data();
 }
 
 // ---------------------------------------------------------------------------

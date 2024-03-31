@@ -17,6 +17,7 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfForce_Parallel.h"
+
 #include "DfEriX_Parallel.h"
 #include "DfXCFunctional_Parallel.h"
 #include "TlCommunicate.h"
@@ -87,8 +88,7 @@ void DfForce_Parallel::calcForceFromCoulomb_exact_replicated(
 
     TlDenseSymmetricMatrix_Lapack P;
     if (rComm.isMaster() == true) {
-        P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType,
-                                                              iteration);
+        P = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
     }
     rComm.broadcast(&P);
 
@@ -128,8 +128,7 @@ void DfForce_Parallel::calcForceFromCoulomb_RIJ_DC(const RUN_TYPE runType) {
 
     TlDenseSymmetricMatrix_Lapack P;
     if (rComm.isMaster() == true) {
-        P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType,
-                                                              iteration);
+        P = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
     }
     rComm.broadcast(&P);
 
@@ -173,8 +172,7 @@ void DfForce_Parallel::calcForceFromK_replicated(const RUN_TYPE runType) {
 
         TlDenseSymmetricMatrix_Lapack P;
         if (rComm.isMaster() == true) {
-            P = this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(runType,
-                                                                  iteration);
+            P = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
         }
         rComm.broadcast(&P);
 
