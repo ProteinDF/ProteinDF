@@ -148,7 +148,9 @@ void DfInitialGuess::createInitialGuessUsingHarris() {
     }
 }
 
-// LCAO ================================================================
+// ----------------------------------------------------------------------------
+// LCAO
+// ----------------------------------------------------------------------------
 void DfInitialGuess::createInitialGuessUsingLCAO() {
     switch (this->m_nMethodType) {
         case METHOD_RKS:
@@ -172,86 +174,107 @@ void DfInitialGuess::createInitialGuessUsingLCAO() {
 }
 
 void DfInitialGuess::createInitialGuessUsingLCAO(const RUN_TYPE runType) {
-    // read guess lcao
-    const TlDenseGeneralMatrix_Lapack LCAO = this->getLCAO_LAPACK(runType);
-    this->saveC0(runType, LCAO);
+    this->createLcaoByFile(runType);
 
-    // read guess occupation
-    const TlDenseVector_Lapack aOccupation = this->getOccupation(runType);
-    this->saveOccupation(runType, aOccupation);
+    this->createOccupationByFile(runType);
 
-    {
-        TlSerializeData tmpParam = *(this->pPdfParam_);
-        tmpParam["orbital-correspondence"] = false;
-        tmpParam["orbital-overlap-correspondence-method"] = "simple";
-        tmpParam["num_of_iterations"] = 0;
-
-        // 密度行列の作成
-        DfDmatrix dfDmatrix(&tmpParam);
-        dfDmatrix.run();  // RKS only?
-    }
-}
-
-TlDenseGeneralMatrix_Lapack DfInitialGuess::getLCAO_LAPACK(
-    const RUN_TYPE runType) {
-    TlDenseGeneralMatrix_Lapack lcaoMatrix;
-    const std::string binFile = DfInitialGuess::getLcaoPath_bin(runType);
-    const std::string txtFile = DfInitialGuess::getLcaoPath_txt(runType);
-
-    this->log_.info("get LCAO");
-    if (TlFile::isExistFile(binFile)) {
-        // LCAO file is prepared by binary file.
-        this->log_.info(TlUtils::format("LCAO: loading: %s", binFile.c_str()));
-        lcaoMatrix.load(binFile);
-    } else if (TlFile::isExistFile(txtFile)) {
-        this->log_.info(TlUtils::format("LCAO: loading: %s", txtFile.c_str()));
-        // LCAO file is prepared by text file.
-        std::ifstream fi;
-        fi.open(txtFile.c_str(), std::ios::in);
-        if ((fi.rdstate() & std::ifstream::failbit) != 0) {
-            CnErr.abort(
-                TlUtils::format("cannot open file %s.\n", txtFile.c_str()));
-        }
-
-        std::string dummy_line;
-        fi >> dummy_line;
-
-        int row_dimension, col_dimension;
-        fi >> row_dimension >> col_dimension;
-        if (row_dimension != this->m_nNumOfAOs) {
-            CnErr.abort("DfInitialGuess", "", "prepare_occupation_and_or_mo",
-                        "inputted guess lcao has illegal dimension");
-        }
-        lcaoMatrix.resize(row_dimension, col_dimension);
-
-        const int maxRows = row_dimension;
-        const int maxCols = col_dimension;
-        for (int i = 0; i < maxRows; ++i) {
-            for (int j = 0; j < maxCols; ++j) {
-                double v;
-                fi >> v;
-                lcaoMatrix.set(i, j, v);
-            }
-        }
-    } else {
-        this->log_.warn(
-            TlUtils::format("file not found.: %s", binFile.c_str()));
-    }
-
-    return lcaoMatrix;
+    this->makeDensityMatrix();
 }
 
 std::string DfInitialGuess::getLcaoPath_txt(const RUN_TYPE runType) {
-    return TlUtils::format("./guess.lcao.%s.txt",
-                           DfObject::m_sRunTypeSuffix[runType].c_str());
+    return TlUtils::format("./guess.lcao.%s.txt", DfObject::m_sRunTypeSuffix[runType].c_str());
 }
 
 std::string DfInitialGuess::getLcaoPath_bin(const RUN_TYPE runType) {
-    return TlUtils::format("./guess.lcao.%s.mat",
-                           DfObject::m_sRunTypeSuffix[runType].c_str());
+    return TlUtils::format("./guess.lcao.%s.mat", DfObject::m_sRunTypeSuffix[runType].c_str());
 }
 
-// density matrix ======================================================
+void DfInitialGuess::createLcaoByFile(const RUN_TYPE runType) {
+    // MatrixType lcao;
+    const std::string binFile = DfInitialGuess::getLcaoPath_bin(runType);
+    const std::string txtFile = DfInitialGuess::getLcaoPath_txt(runType);
+
+    if (TlFile::isExistFile(binFile)) {
+        this->createLcaoByBinFile(runType);
+    } else if (TlFile::isExistFile(txtFile)) {
+        this->createLcaoByTxtFile(runType);
+    } else {
+        this->log_.warn(TlUtils::format("file not found.: %s", binFile.c_str()));
+    }
+}
+
+void DfInitialGuess::createLcaoByBinFile(const RUN_TYPE runType) {
+    const std::string binFile = DfInitialGuess::getLcaoPath_bin(runType);
+    this->log_.info(TlUtils::format("check LCAO file(bin): %s", binFile.c_str()));
+
+    TlMatrixObject::HeaderInfo headerInfo;
+    const bool isLoadable = TlMatrixUtils::getHeaderInfo(binFile, &headerInfo);
+    if (isLoadable == true) {
+        std::string matrixType = "";
+        switch (headerInfo.matrixType) {
+            case TlMatrixObject::RLHD:
+                matrixType = "symmetric";
+                break;
+
+            case TlMatrixObject::CSFD:
+                matrixType = "normal (column-major)";
+                break;
+
+            case TlMatrixObject::RSFD:
+                matrixType = "normal (row-major)";
+                break;
+
+            default:
+                this->log_.critical(TlUtils::format("unknown matrix type: %s", binFile.c_str()));
+        }
+        this->log_.info(TlUtils::format("size: %d x %d", headerInfo.numOfRows, headerInfo.numOfCols));
+    } else {
+        CnErr.abort(TlUtils::format("cannot open file: %s", binFile.c_str()));
+    }
+
+    const std::string path = DfObject::getCMatrixPath(runType, 0);
+    this->log_.info(TlUtils::format("copy the LCAO matrix: %s -> %s", binFile.c_str(), path.c_str()));
+    TlFile::copy(binFile, path);
+}
+
+void DfInitialGuess::createLcaoByTxtFile(const RUN_TYPE runType) {
+    const std::string txtFile = DfInitialGuess::getLcaoPath_txt(runType);
+
+    this->log_.info(TlUtils::format("LCAO: loading: %s", txtFile.c_str()));
+    std::ifstream fi;
+    fi.open(txtFile.c_str(), std::ios::in);
+    if ((fi.rdstate() & std::ifstream::failbit) != 0) {
+        CnErr.abort(TlUtils::format("cannot open file %s.", txtFile.c_str()));
+    }
+
+    std::string dummy_line;
+    fi >> dummy_line;
+
+    int row_dimension, col_dimension;
+    fi >> row_dimension >> col_dimension;
+    if (row_dimension != this->m_nNumOfAOs) {
+        CnErr.abort("DfInitialGuess", "", "prepare_occupation_and_or_mo",
+                    "inputted guess lcao has illegal dimension");
+    }
+
+    const std::string path = DfObject::getCMatrixPath(runType, 0);
+    TlDenseGeneralMatrix_mmap lcao(path);
+    lcao.resize(row_dimension, col_dimension);
+
+    const int maxRows = row_dimension;
+    const int maxCols = col_dimension;
+    for (int i = 0; i < maxRows; ++i) {
+        for (int j = 0; j < maxCols; ++j) {
+            double v;
+            fi >> v;
+            lcao.set(i, j, v);
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+// density matrix
+// ----------------------------------------------------------------------------
 void DfInitialGuess::createInitialGuessUsingDensityMatrix() {
     switch (this->linearAlgebraPackage_) {
         case LAP_VIENNACL:
@@ -306,23 +329,24 @@ void DfInitialGuess::createInitialGuessUsingDensityMatrix() {
 //     this->createOccupation();
 // }
 
-TlDenseVector_Lapack DfInitialGuess::getOccupation(const RUN_TYPE runType) {
+// ----------------------------------------------------------------------------
+// occupation
+// ----------------------------------------------------------------------------
+void DfInitialGuess::createOccupationByFile(const RUN_TYPE runType) {
     TlDenseVector_Lapack occupation;
-    const std::string binFile = TlUtils::format(
-        "./guess.occ.%s.vtr", this->m_sRunTypeSuffix[runType].c_str());
-    const std::string txtFile = TlUtils::format(
-        "./guess.occ.%s.txt", this->m_sRunTypeSuffix[runType].c_str());
+    const std::string binFile = TlUtils::format("./guess.occ.%s.vtr", this->m_sRunTypeSuffix[runType].c_str());
+    const std::string txtFile = TlUtils::format("./guess.occ.%s.txt", this->m_sRunTypeSuffix[runType].c_str());
 
     if (TlFile::isExistFile(binFile)) {
         occupation.load(binFile);
     } else if (TlFile::isExistFile(txtFile)) {
         occupation.loadText(txtFile);
     } else {
-        this->log_.warn(
-            TlUtils::format("file not found.: %s", binFile.c_str()));
+        this->log_.warn(TlUtils::format("file not found.: %s", binFile.c_str()));
     }
 
-    return occupation;
+    const std::string occFilePath = this->getOccupationPath(runType);
+    occupation.save(occFilePath);
 }
 
 void DfInitialGuess::createOccupation() {
@@ -347,7 +371,7 @@ void DfInitialGuess::createOccupation() {
     }
 }
 
-TlDenseVector_Lapack DfInitialGuess::createOccupation(const RUN_TYPE runType) {
+void DfInitialGuess::createOccupation(const RUN_TYPE runType) {
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
 
     // construct guess occupations
@@ -422,8 +446,6 @@ TlDenseVector_Lapack DfInitialGuess::createOccupation(const RUN_TYPE runType) {
     // output occupation number to a files in fl_Work directory
     const std::string sOccFileName = this->getOccupationPath(runType);
     guess_occ.save(sOccFileName);
-
-    return guess_occ;
 }
 
 std::vector<int> DfInitialGuess::getLevel(const std::string& inputStr) {
@@ -477,13 +499,12 @@ std::vector<int> DfInitialGuess::getLevel(const std::string& inputStr) {
     return answer;
 }
 
-void DfInitialGuess::saveOccupation(const RUN_TYPE runType,
-                                    const TlDenseVector_Lapack& rOccupation) {
-    const std::string sOccFileName = this->getOccupationPath(runType);
-    rOccupation.save(sOccFileName);
-}
-
+// ----------------------------------------------------------------------------
+// make density matrix
+// ----------------------------------------------------------------------------
 void DfInitialGuess::makeDensityMatrix() {
+    this->log_.info("make density matrix");
+
     TlSerializeData tmpParam = *(this->pPdfParam_);
     tmpParam["orbital-correspondence"] = false;
     tmpParam["orbital-overlap-correspondence-method"] = "simple";
@@ -491,11 +512,68 @@ void DfInitialGuess::makeDensityMatrix() {
 
     DfDmatrix* pDfDmat = getDfDmatrixObject(&tmpParam);
     pDfDmat->run();
+
     delete pDfDmat;
     pDfDmat = NULL;
+
+    this->log_.info("setup density matrix");
+    this->copyDensityMatrix();
 }
 
 DfDmatrix* DfInitialGuess::getDfDmatrixObject(TlSerializeData* param) {
     DfDmatrix* obj = new DfDmatrix(param);
     return obj;
+}
+
+void DfInitialGuess::copyDensityMatrix() {
+    switch (this->m_nMethodType) {
+        case METHOD_RKS: {
+            const std::string P0_path = DfObject::getPOutMatrixPath(RUN_RKS, 0);
+            if (TlFile::isExistFile(P0_path)) {
+                const std::string P1_path = DfObject::getPInMatrixPath(RUN_RKS, 1);
+                this->log_.info("copy density matrix: " + P0_path + " -> " + P1_path + ".");
+                TlFile::copy(P0_path, P1_path);
+            } else {
+                this->log_.warn("density matrix is not found: " + P0_path + ".");
+            }
+        } break;
+
+        case METHOD_UKS: {
+            {
+                const std::string P0_path = DfObject::getPOutMatrixPath(RUN_UKS_ALPHA, 0);
+                if (TlFile::isExistFile(P0_path)) {
+                    const std::string P1_path = DfObject::getPInMatrixPath(RUN_UKS_ALPHA, 1);
+                    TlFile::copy(P0_path, P1_path);
+                }
+            }
+            {
+                const std::string P0_path = DfObject::getPOutMatrixPath(RUN_UKS_BETA, 0);
+                if (TlFile::isExistFile(P0_path)) {
+                    const std::string P1_path = DfObject::getPInMatrixPath(RUN_UKS_BETA, 1);
+                    TlFile::copy(P0_path, P1_path);
+                }
+            }
+        } break;
+
+        case METHOD_ROKS: {
+            {
+                const std::string P0_path = DfObject::getPOutMatrixPath(RUN_ROKS_CLOSED, 0);
+                if (TlFile::isExistFile(P0_path)) {
+                    const std::string P1_path = DfObject::getPInMatrixPath(RUN_ROKS_CLOSED, 1);
+                    TlFile::copy(P0_path, P1_path);
+                }
+            }
+            {
+                const std::string P0_path = DfObject::getPOutMatrixPath(RUN_ROKS_OPEN, 0);
+                if (TlFile::isExistFile(P0_path)) {
+                    const std::string P1_path = DfObject::getPInMatrixPath(RUN_ROKS_OPEN, 1);
+                    TlFile::copy(P0_path, P1_path);
+                }
+            }
+        } break;
+
+        default:
+            CnErr.abort("program error.");
+            break;
+    }
 }

@@ -28,14 +28,14 @@
 
 /// 拡張Huckel法による初期値を作成する
 class DfInitialGuessHuckel : public DfInitialGuess {
-   public:
+public:
     DfInitialGuessHuckel(TlSerializeData* pPdfParam);
     virtual ~DfInitialGuessHuckel();
 
-   public:
+public:
     virtual void createGuess();
 
-   protected:
+protected:
     void initialize();
 
     template <typename SymmetricMatrixType, typename MatrixType>
@@ -50,7 +50,7 @@ class DfInitialGuessHuckel : public DfInitialGuess {
     void generatePMatrix(const MatrixType& C, const TlDenseVector_Lapack& occ,
                          SymmetricMatrixType& P1, SymmetricMatrixType& P2);
 
-   protected:
+protected:
     static const double EPS;
     std::map<std::string, std::map<int, double> >
         m_Hii;  // [atom_number][orbital_type] = value
@@ -90,26 +90,22 @@ void DfInitialGuessHuckel::createGuess() {
     // P
     switch (this->m_nMethodType) {
         case METHOD_RKS: {
-            const TlDenseVector_Lapack occ = this->createOccupation(RUN_RKS);
+            this->createOccupation(RUN_RKS);
             this->saveCMatrix(RUN_RKS, 0, C);
             this->makeDensityMatrix();
         } break;
 
         case METHOD_UKS: {
-            const TlDenseVector_Lapack occA =
-                this->createOccupation(RUN_UKS_ALPHA);
-            const TlDenseVector_Lapack occB =
-                this->createOccupation(RUN_UKS_BETA);
+            this->createOccupation(RUN_UKS_ALPHA);
+            this->createOccupation(RUN_UKS_BETA);
             this->saveCMatrix(RUN_UKS_ALPHA, 0, C);
             this->saveCMatrix(RUN_UKS_BETA, 0, C);
             this->makeDensityMatrix();
         } break;
 
         case METHOD_ROKS: {
-            const TlDenseVector_Lapack occA =
-                this->createOccupation(RUN_ROKS_CLOSED);
-            const TlDenseVector_Lapack occB =
-                this->createOccupation(RUN_ROKS_OPEN);
+            this->createOccupation(RUN_ROKS_CLOSED);
+            this->createOccupation(RUN_ROKS_OPEN);
             this->saveCMatrix(RUN_ROKS, 0, C);
             this->makeDensityMatrix();
         } break;

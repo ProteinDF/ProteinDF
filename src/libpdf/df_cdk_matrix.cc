@@ -11,7 +11,8 @@
 // ----------------------------------------------------------------------------
 // construct & destruct
 // ----------------------------------------------------------------------------
-DfCdkMatrix::DfCdkMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
+DfCdkMatrix::DfCdkMatrix(TlSerializeData* pPdfParam)
+    : DfObject(pPdfParam) {
     this->updateLinearAlgebraPackageParam(
         (*(this->pPdfParam_))["linear_algebra_package/K"].getStr());
 
@@ -218,14 +219,14 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
     bool hasTasks = pTaskCtrl->getQueue(numOfCBs, taskSize, &tasks, true);
     while (hasTasks == true) {
         const int numOfTasks = tasks.size();
-        //#pragma omp parallel for schedule(runtime)
+        // #pragma omp parallel for schedule(runtime)
         for (int i = 0; i < numOfTasks; ++i) {
             const SymmetricMatrix l =
                 this->getCholeskyVector<SymmetricMatrix, Vector>(
                     L.getColVector(tasks[i]), I2PQ);
             assert(l.getNumOfRows() == this->m_nNumOfAOs);
 
-            //#pragma omp critical
+            // #pragma omp critical
             { K += l * P * l; }
         }
         hasTasks = pTaskCtrl->getQueue(numOfCBs, taskSize, &tasks);
@@ -372,8 +373,7 @@ void DfCdkMatrix::getK_byLk(const RUN_TYPE runType) {
     const index_type numOfCBs = L.getNumOfCols();
 
     const PQ_PairArray I2PR = this->getI2PQ(this->getI2prVtrPath());
-    const Vector vP =
-        this->getScreenedDensityMatrix<SymmetricMatrix, Vector>(runType, I2PR);
+    const Vector vP = this->getScreenedDensityMatrix<SymmetricMatrix, Vector>(runType, I2PR);
 
     const index_type numOfI = I2PR.size();
     Vector vK(numOfI);
@@ -412,31 +412,25 @@ Vector DfCdkMatrix::getScreenedDensityMatrix(const RUN_TYPE runType,
     SymmetricMatrix P;
     switch (runType) {
         case RUN_RKS:
-            P = 0.5 * this->getPpqMatrix<SymmetricMatrix>(
-                          RUN_RKS, this->m_nIteration - 1);
+            P = 0.5 * this->getPInMatrix<SymmetricMatrix>(RUN_RKS, this->m_nIteration);
             break;
 
         case RUN_UKS_ALPHA:
         case RUN_UKS_BETA:
-            P = this->getPpqMatrix<SymmetricMatrix>(runType,
-                                                    this->m_nIteration - 1);
+            P = this->getPInMatrix<SymmetricMatrix>(runType, this->m_nIteration);
             break;
 
         case RUN_ROKS_ALPHA: {
-            P = 0.5 * this->getPpqMatrix<SymmetricMatrix>(
-                          RUN_ROKS_CLOSED, this->m_nIteration - 1);
-            P += this->getPpqMatrix<SymmetricMatrix>(RUN_ROKS_OPEN,
-                                                     this->m_nIteration - 1);
+            P = 0.5 * this->getPInMatrix<SymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
+            P += this->getPInMatrix<SymmetricMatrix>(RUN_ROKS_OPEN, this->m_nIteration);
         } break;
 
         case RUN_ROKS_BETA: {
-            P = 0.5 * this->getPpqMatrix<SymmetricMatrix>(
-                          RUN_ROKS_CLOSED, this->m_nIteration - 1);
+            P = 0.5 * this->getPInMatrix<SymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
         } break;
 
         default:
-            this->log_.critical(
-                TlUtils::format("Program Error: %s:%d", __FILE__, __LINE__));
+            this->log_.critical(TlUtils::format("Program Error: %s:%d", __FILE__, __LINE__));
             CnErr.abort();
     }
 

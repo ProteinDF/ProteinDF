@@ -88,8 +88,7 @@ void DfXMatrix::buildX() {
 #endif  // HAVE_VIENNACL
 
         default:
-            CnErr.abort(
-                TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
+            CnErr.abort(TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
     }
 }
 

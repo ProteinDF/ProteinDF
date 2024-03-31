@@ -17,14 +17,15 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfKMatrix.h"
+
 #include "CnError.h"
 #include "DfCD.h"
 #include "DfEriX.h"
-
 #include "common.h"
 #include "df_cdk_matrix.h"
 
-DfKMatrix::DfKMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {
+DfKMatrix::DfKMatrix(TlSerializeData* pPdfParam)
+    : DfObject(pPdfParam) {
     this->updateLinearAlgebraPackageParam(
         (*(this->pPdfParam_))["linear_algebra_package/K"].getStr());
 }

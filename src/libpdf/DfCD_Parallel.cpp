@@ -1560,8 +1560,7 @@ void DfCD_Parallel::getJ_D(TlDenseSymmetricMatrix_Scalapack* pJ) {
 TlDenseVector_Lapack DfCD_Parallel::getScreenedDensityMatrixD(const PQ_PairArray& I2PQ) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    const TlDenseSymmetricMatrix_Scalapack P =
-        DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS, this->m_nIteration - 1);
+    const TlDenseSymmetricMatrix_Scalapack P = DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS, this->m_nIteration);
     const std::size_t numOfI = I2PQ.size();
     TlDenseVector_Lapack answer(numOfI);
 
@@ -1571,7 +1570,7 @@ TlDenseVector_Lapack DfCD_Parallel::getScreenedDensityMatrixD(const PQ_PairArray
         const index_type c = pair.index2();
 
         const double coef = (r != c) ? 2.0 : 1.0;
-        // BeacuseThe elements of density matrix (P) are get by `getLocal()`.
+        // The elements of density matrix (P) are get by `getLocal()`.
         answer.set(i, coef * P.getLocal(r, c));
     }
     rComm.allReduce_SUM(&answer);
@@ -1607,8 +1606,7 @@ void DfCD_Parallel::getK_S_woCD_D(const RUN_TYPE runType, TlDenseSymmetricMatrix
     const index_type numOfCVs = L.getNumOfCols();
 
     this->log_.info("load density matrix");
-    const TlDenseSymmetricMatrix_Scalapack P =
-        0.5 * DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(runType, this->m_nIteration - 1);  // RKS
+    const TlDenseSymmetricMatrix_Scalapack P = 0.5 * DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(runType, this->m_nIteration);  // RKS
 
     TlTime time_all;
     TlTime time_bcast;
@@ -1791,8 +1789,8 @@ void DfCD_Parallel::getM_S(const TlDenseSymmetricMatrix_Scalapack& P, TlDenseSym
     this->log_.info("calc M by CD method. (symmetric routine; parallel; distributed)");
 
     // const TlDenseSymmetricMatrix_Scalapack P =
-    //     DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS,
-    //     this->m_nIteration -1);
+    //     DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS,
+    //     this->m_nIteration);
 
     // cholesky vector
     TlDenseGeneralMatrix_arrays_ColOriented L(1, 1, rComm.getNumOfProcs(), rComm.getRank());
@@ -1853,8 +1851,8 @@ void DfCD_Parallel::getM_A(const TlDenseSymmetricMatrix_Scalapack& P, TlDenseSym
     this->log_.info(TlUtils::format("epsilon = %8.3e", this->epsilon_));
     // TlDenseSymmetricMatrix_Scalapack P =
     //     0.5 *
-    //     DfObject::getPpqMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS,
-    //     this->m_nIteration -1); // RKS
+    //     DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS,
+    //     this->m_nIteration); // RKS
     TlDenseGeneralMatrix_Scalapack C;
     P.pivotedCholeskyDecomposition(&C, this->epsilon_);
 

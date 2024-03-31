@@ -17,9 +17,11 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfRLMO.h"
+
 #include "TlMatrix.h"
 
-DfRLMO::DfRLMO(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {}
+DfRLMO::DfRLMO(TlSerializeData* pPdfParam)
+    : DfObject(pPdfParam) {}
 
 DfRLMO::~DfRLMO() {}
 
@@ -27,7 +29,7 @@ void DfRLMO::exec(const std::vector<index_type>& startBlockAOs) {
     const int iteration = this->m_nIteration;
 
     const TlDenseSymmetricMatrix_Lapack D_AO =
-        this->getPpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, iteration);
+        this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, iteration);
     const index_type numOfAOs = D_AO.getNumOfRows();
     // D_AO.save("D_AO.mat");
 

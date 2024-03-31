@@ -57,10 +57,10 @@ protected:
 
 template <class MatrixType, class SymmetricMatrixType, class DfOverlapType, class DfPopulationType>
 void DfInitialGuessHarris::calcInitialDensityMatrix() {
-    // std::cerr << "calcInitialDensityMatrix()" << std::endl;
+    this->log_.info("initial guess by harris functional");
+
     const TlSerializeData& pdfParam = *(this->pPdfParam_);
-    const TlOrbitalInfo orbInfo_high(pdfParam["coordinates"],
-                                     pdfParam["basis_set"]);
+    const TlOrbitalInfo orbInfo_high(pdfParam["coordinates"], pdfParam["basis_set"]);
     const int numOfAOs_high = orbInfo_high.getNumOfOrbitals();
 
     TlSerializeData pdfParam_low;  // for low-level
@@ -79,8 +79,7 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
     }
 
     // create low-level density matrix
-    const TlOrbitalInfo orbInfo_low(pdfParam_low["coordinates"],
-                                    pdfParam_low["basis_set"]);
+    const TlOrbitalInfo orbInfo_low(pdfParam_low["coordinates"], pdfParam_low["basis_set"]);
     const int numOfAOs_low = orbInfo_low.getNumOfOrbitals();
     SymmetricMatrixType P_low(numOfAOs_low);
     TlCombineDensityMatrix combineDensMat;
@@ -138,7 +137,7 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
     }
 
     // normalize
-    // std::cerr << "calcInitialDensityMatrix(): normalize" << std::endl;
+    this->log_.info("normalize density matrix");
     switch (this->m_nMethodType) {
         case METHOD_RKS: {
             // double numOfElectrons = 0.0;
@@ -152,9 +151,12 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
             const double coef = this->m_nNumOfElectrons / numOfElectrons;
 
             P_high *= coef;
-            // std::cerr << "calcInitialDensityMatrix(): save Ppq1" << std::endl;
-            this->savePpqMatrix(RUN_RKS, 0, P_high);
-            // std::cerr << "calcInitialDensityMatrix(): save Ppq2" << std::endl;
+
+            this->log_.info("save density matrix");
+            // this->savePOutMatrix(RUN_RKS, 0, P_high);
+            this->savePInMatrix(RUN_RKS, 1, P_high);
+
+            this->log_.info("save spin density matrix");
             this->saveSpinDensityMatrix(RUN_RKS, 0, 0.5 * P_high);
         } break;
 
@@ -162,15 +164,17 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
             DfPopulationType dfPop(this->pPdfParam_);
             double numOfAlphaElectrons = dfPop.getSumOfElectrons(P_high);
             double numOfBetaElectrons = dfPop.getSumOfElectrons(P_high);
-            const double coef_alpha =
-                this->m_nNumOfAlphaElectrons / numOfAlphaElectrons;
-            const double coef_beta =
-                this->m_nNumOfBetaElectrons / numOfBetaElectrons;
+            const double coef_alpha = this->m_nNumOfAlphaElectrons / numOfAlphaElectrons;
+            const double coef_beta = this->m_nNumOfBetaElectrons / numOfBetaElectrons;
 
             const SymmetricMatrixType PA = coef_alpha * P_high;
             const SymmetricMatrixType PB = coef_beta * P_high;
-            this->savePpqMatrix(RUN_UKS_ALPHA, 0, PA);
-            this->savePpqMatrix(RUN_UKS_BETA, 0, PB);
+
+            this->log_.info("save density matrix");
+            this->savePOutMatrix(RUN_UKS_ALPHA, 0, PA);
+            this->savePOutMatrix(RUN_UKS_BETA, 0, PB);
+
+            this->log_.info("save spin density matrix");
             this->saveSpinDensityMatrix(RUN_UKS_ALPHA, 0, PA);
             this->saveSpinDensityMatrix(RUN_UKS_BETA, 0, PB);
         } break;
@@ -179,27 +183,28 @@ void DfInitialGuessHarris::calcInitialDensityMatrix() {
             DfPopulationType dfPop(this->pPdfParam_);
             double numOfCloseElectrons = dfPop.getSumOfElectrons(P_high);
             double numOfOpenElectrons = dfPop.getSumOfElectrons(P_high);
-            const double coef_close =
-                this->numOfClosedShellElectrons_ / numOfCloseElectrons;
-            const double coef_open =
-                this->numOfOpenShellElectrons_ / numOfOpenElectrons;
+            const double coef_close = this->numOfClosedShellElectrons_ / numOfCloseElectrons;
+            const double coef_open = this->numOfOpenShellElectrons_ / numOfOpenElectrons;
 
             const SymmetricMatrixType PC = coef_close * P_high;
             const SymmetricMatrixType PO = coef_open * P_high;
-            this->savePpqMatrix(RUN_ROKS_CLOSED, 0, PC);
-            this->savePpqMatrix(RUN_ROKS_OPEN, 0, PO);
+
+            this->log_.info("save density matrix");
+            this->savePOutMatrix(RUN_ROKS_CLOSED, 0, PC);
+            this->savePOutMatrix(RUN_ROKS_OPEN, 0, PO);
+
+            this->log_.info("save spin density matrix");
             this->saveSpinDensityMatrix(RUN_ROKS_ALPHA, 0, PC + PO);
             this->saveSpinDensityMatrix(RUN_ROKS_BETA, 0, PC);
         } break;
 
         default:
-            this->log_.critical(
-                TlUtils::format("program error: %s %s", __FILE__, __LINE__));
+            this->log_.critical(TlUtils::format("program error: %s %s", __FILE__, __LINE__));
             abort();
             break;
     }
 
-    this->logger(" initial density matrix is created using Harris functional.\n");
+    this->log_.info("initial density matrix is created using Harris functional");
 }
 
 #endif  // DFINITIALGUESSHARRIS_H
