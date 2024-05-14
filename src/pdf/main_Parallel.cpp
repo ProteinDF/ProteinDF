@@ -36,12 +36,6 @@
 #include "TlUtils.h"
 //#include "TlTime.h"
 
-#ifdef __FUJITSU
-#define PDF_MAIN MAIN__
-#else
-#define PDF_MAIN main
-#endif  // __FUJITSU
-
 #define HOSTNAME_LEN 256
 
 // signal(INT)を受け取ったときにMPI_Abort()を発行するため
@@ -61,7 +55,7 @@ void terminateHandler() {
     std::abort();
 }
 
-int PDF_MAIN(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
     // for MPI
     TlCommunicate& rComm = TlCommunicate::getInstance(argc, argv);
     std::set_terminate(terminateHandler);
