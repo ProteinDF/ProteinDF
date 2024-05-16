@@ -21,17 +21,20 @@
 
 #include <cassert>
 #include <iostream>
+
 #include "TlUtils.h"
 
 /// @class angular momentum vector
 ///   a = (a_x, a_y, a_z)
 ///   同じAngular Momentumのvector数は(L+1)*(L+2)/2
 class TlAngularMomentumVector {
-   private:
-    enum { X = 0, Y = 1, Z = 2 };
+private:
+    enum { X = 0,
+           Y = 1,
+           Z = 2 };
 
-   public:
-    TlAngularMomentumVector(char x = 0, char y = 0, char z = 0);
+public:
+    TlAngularMomentumVector(int x = 0, int y = 0, int z = 0);
 
     TlAngularMomentumVector(const TlAngularMomentumVector& rhs);
 
@@ -59,7 +62,7 @@ class TlAngularMomentumVector {
 
     std::string debugOut() const;
 
-   private:
+private:
     int v_[3];
 };
 
