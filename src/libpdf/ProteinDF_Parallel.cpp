@@ -137,7 +137,10 @@ void ProteinDF_Parallel::startlogo() {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
     const std::string version = TlUtils::format("%s (parallel)", PROJECT_VERSION);
+
     std::string info = "";
+    info += TlUtils::format(" build: %s\n", PROJECT_VERSION_BUILD);
+
     info += TlUtils::format(" MPI process: %d\n", rComm.getNumOfProc());
 #ifdef _OPENMP
     info += TlUtils::format(" OpenMP threads: %d\n", omp_get_max_threads());
