@@ -136,6 +136,7 @@ void ProteinDF::startlogo() {
     const std::string version = TlUtils::format("%s (serial)", PROJECT_VERSION);
 
     std::string info = "";
+    info += TlUtils::format(" build: %s\n", PROJECT_VERSION_BUILD);
 
 #ifdef _OPENMP
     {
