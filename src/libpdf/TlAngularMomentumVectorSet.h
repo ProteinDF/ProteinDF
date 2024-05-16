@@ -52,9 +52,9 @@ private:
                 temp.resize(numOfAMVs);
 
                 int index = 0;
-                for (char x = amv; x >= 0; --x) {
-                    for (char y = (amv - x); y >= 0; --y) {
-                        const char z = amv - (x + y);
+                for (int x = amv; x >= 0; --x) {
+                    for (int y = (amv - x); y >= 0; --y) {
+                        const int z = amv - (x + y);
                         temp[index] = TlAngularMomentumVector(x, y, z);
                         ++index;
                     }
