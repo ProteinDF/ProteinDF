@@ -22,7 +22,7 @@
 #include "TlAngularMomentumVector.h"
 #include "TlUtils.h"
 
-TlAngularMomentumVector::TlAngularMomentumVector(char x, char y, char z) {
+TlAngularMomentumVector::TlAngularMomentumVector(int x, int y, int z) {
     this->v_[X] = x;
     this->v_[Y] = y;
     this->v_[Z] = z;
