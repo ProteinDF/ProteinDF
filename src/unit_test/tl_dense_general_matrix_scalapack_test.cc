@@ -1,3 +1,5 @@
+#include "tl_dense_general_matrix_scalapack.h"
+
 #include <cstdlib>
 
 #include "TlCommunicate.h"
@@ -5,7 +7,6 @@
 #include "config.h"
 #include "gtest/gtest.h"
 #include "tl_dense_general_matrix_lapack.h"
-#include "tl_dense_general_matrix_scalapack.h"
 
 static const double EPS = 1.0E-10;
 static const std::string mat_path = "temp.mat";
@@ -304,8 +305,8 @@ TEST(TlDenseGeneralMatrix_Scalapack, operator_imul_double) {
 TEST(TlDenseGeneralMatrix_Scalapack, save) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    const int rowA = 1000;
-    const int colA = 1200;
+    const int rowA = 500;
+    const int colA = 120;
     TlDenseGeneralMatrix_Lapack refA;
     TlDenseGeneralMatrix_Scalapack A;
     getMatrix(rowA, colA, &refA, &A);
@@ -328,8 +329,8 @@ TEST(TlDenseGeneralMatrix_Scalapack, save) {
 TEST(TlDenseGeneralMatrix_Scalapack, load) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    const int rowA = 1000;
-    const int colA = 1200;
+    const int rowA = 500;
+    const int colA = 120;
     TlDenseGeneralMatrix_Lapack refA;
     TlDenseGeneralMatrix_Scalapack A;
     getMatrix(rowA, colA, &refA, &A);

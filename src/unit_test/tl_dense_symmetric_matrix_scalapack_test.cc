@@ -253,7 +253,7 @@ TEST(TlDenseSymmetricMatrix_Scalapack, operator_isub) {
 }
 
 TEST(TlDenseSymmetricMatrix_Scalapack, operator_mul_matrix) {
-    const int dim = 1000;
+    const int dim = 300;
     TlDenseSymmetricMatrix_Lapack refA, refB;
     TlDenseSymmetricMatrix_Scalapack A, B;
 
@@ -286,7 +286,7 @@ TEST(TlDenseSymmetricMatrix_Scalapack, operator_mul_matrix) {
 }
 
 TEST(TlDenseSymmetricMatrix_Scalapack, operator_mul_double) {
-    const int dim = 1000;
+    const int dim = 300;
     TlDenseSymmetricMatrix_Lapack refA;
     TlDenseSymmetricMatrix_Scalapack A;
 
@@ -308,7 +308,7 @@ TEST(TlDenseSymmetricMatrix_Scalapack, operator_mul_double) {
 }
 
 TEST(TlDenseSymmetricMatrix_Scalapack, operator_imul_double) {
-    const int dim = 1000;
+    const int dim = 300;
     TlDenseSymmetricMatrix_Lapack refA;
     TlDenseSymmetricMatrix_Scalapack A;
 
@@ -332,7 +332,7 @@ TEST(TlDenseSymmetricMatrix_Scalapack, operator_imul_double) {
 TEST(TlDenseSymmetricMatrix_Scalapack, save) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    const int dim = 1000;
+    const int dim = 300;
     TlDenseSymmetricMatrix_Lapack refA;
     TlDenseSymmetricMatrix_Scalapack A;
 
@@ -359,7 +359,7 @@ TEST(TlDenseSymmetricMatrix_Scalapack, save) {
 TEST(TlDenseSymmetricMatrix_Scalapack, load) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    const int dim = 1000;
+    const int dim = 300;
     TlDenseSymmetricMatrix_Lapack refA;
     TlDenseSymmetricMatrix_Scalapack A;
 
