@@ -23,27 +23,58 @@
 #include "tl_dense_general_matrix_scalapack.h"
 
 class DfInitialGuess_Parallel : public DfInitialGuess {
+    // ------------------------------------------------------------------------
+    // constructor & destructor
+    // ------------------------------------------------------------------------
 public:
     DfInitialGuess_Parallel(TlSerializeData* pPdfParam);
     virtual ~DfInitialGuess_Parallel();
 
+    // ------------------------------------------------------------------------
+    // state
+    // ------------------------------------------------------------------------
 protected:
     virtual unsigned int loadCalcState() const;
     virtual void saveCalcState(unsigned int cs);
 
+    // ------------------------------------------------------------------------
+    // create occupation
+    // ------------------------------------------------------------------------
+protected:
+    virtual void createOccupation(RUN_TYPE runType);
+
+    virtual void createOccupationByFile(const RUN_TYPE runType);
+
+    // ------------------------------------------------------------------------
+    // create initial guess (rho)
+    // ------------------------------------------------------------------------
 protected:
     // virtual void createRho();
 
-    virtual void createOccupation(RUN_TYPE runType);
-
+    // ------------------------------------------------------------------------
+    // create initial guess (Huckel/core)
+    // ------------------------------------------------------------------------
+protected:
     virtual void createInitialGuessUsingHuckel();
     virtual void createInitialGuessUsingCore();
+
+    // ------------------------------------------------------------------------
+    // create initial guess (Harris)
+    // ------------------------------------------------------------------------
+protected:
     virtual void createInitialGuessUsingHarris();
 
-    virtual void createInitialGuessUsingLCAO(RUN_TYPE runType);
+    // ------------------------------------------------------------------------
+    // create initial guess (density matrix)
+    // ------------------------------------------------------------------------
+protected:
 
-    /// 占有軌道情報を取得する
-    virtual void createOccupationByFile(const RUN_TYPE runType);
+    // ------------------------------------------------------------------------
+    // create initial guess (LCAO)
+    // ------------------------------------------------------------------------
+protected:
+    // void createInitialGuessUsingLCAO(); // used in parent class
+    virtual void createInitialGuessUsingLCAO(RUN_TYPE runType);
 
 protected:
     void createInitialGuessUsingLCAO_onLAPACK(const RUN_TYPE runType);
@@ -53,6 +84,7 @@ protected:
     // TlDenseGeneralMatrix_Scalapack getLCAO_onScaLAPACK_txt(const RUN_TYPE runType);
     // TlDenseGeneralMatrix_Scalapack getLCAO_onScaLAPACK_bin(const RUN_TYPE runType);
 
+protected:
     virtual DfDmatrix* getDfDmatrixObject(TlSerializeData* param);
 };
 

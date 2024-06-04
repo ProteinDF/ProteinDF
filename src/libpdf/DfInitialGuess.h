@@ -43,46 +43,75 @@ protected:
         GUESS_DONE = 1
     };
 
+    // ------------------------------------------------------------------------
+    // constructor & destructor
+    // ------------------------------------------------------------------------
 public:
     DfInitialGuess(TlSerializeData* pPdfParam);
     virtual ~DfInitialGuess();
 
+    // ------------------------------------------------------------------------
+    // exec
+    // ------------------------------------------------------------------------
+public:
     void exec();
 
+    // ------------------------------------------------------------------------
+    // state
+    // ------------------------------------------------------------------------
 protected:
     virtual unsigned int loadCalcState() const;
     virtual void saveCalcState(unsigned int cs);
 
+    // ------------------------------------------------------------------------
+    // create occupation
+    // ------------------------------------------------------------------------
+protected:
+    void createOccupation();
+    virtual void createOccupation(const RUN_TYPE runType);
+
+    virtual void createOccupationByFile(const RUN_TYPE runType);
+
+    std::vector<int> getLevel(const std::string& level);
+
+    // ------------------------------------------------------------------------
+    // create initial guess (rho)
+    // ------------------------------------------------------------------------
 protected:
     // virtual void createRho();
 
-    void createOccupation();
-    void createOccupation(const RUN_TYPE runType);
-
+    // ------------------------------------------------------------------------
+    // create initial guess (Huckel/core)
+    // ------------------------------------------------------------------------
+protected:
     virtual void createInitialGuessUsingHuckel();
     virtual void createInitialGuessUsingCore();
+
+    // ------------------------------------------------------------------------
+    // create initial guess (Harris)
+    // ------------------------------------------------------------------------
+protected:
     virtual void createInitialGuessUsingHarris();
 
-    void createInitialGuessUsingLCAO();
-    virtual void createInitialGuessUsingLCAO(const RUN_TYPE runType);
-
-    /// 初期値として電子密度行列を使用
+    // ------------------------------------------------------------------------
+    // create initial guess (density matrix)
+    // ------------------------------------------------------------------------
+protected:
     void createInitialGuessUsingDensityMatrix();
 
     template <typename SymmetricMatrixType, typename DfPopulationType>
     void createInitialGuessUsingDensityMatrix_tmpl();
 
-    /// 初期値として電子密度行列を使用(RUN_TYPE毎)
-    // void createInitialGuessUsingDensityMatrix(const RUN_TYPE runType);
     template <typename SymmetricMatrixType, typename DfPopulationType>
     void createInitialGuessUsingDensityMatrix(const RUN_TYPE runType);
 
-    std::vector<int> getLevel(const std::string& level);
-
-    /// 占有軌道情報を取得する
-    virtual void createOccupationByFile(const RUN_TYPE runType);
-
+    // ------------------------------------------------------------------------
+    // create initial guess (LCAO)
+    // ------------------------------------------------------------------------
 protected:
+    void createInitialGuessUsingLCAO();
+    virtual void createInitialGuessUsingLCAO(const RUN_TYPE runType);
+
     /// LCAO行列を取得する
     void createLcaoByFile(const RUN_TYPE runType);
 
@@ -116,9 +145,11 @@ protected:
     SymmetricMatrixType getInitialDensityMatrix(const RUN_TYPE runType);
 
     template <typename SymmetricMatrixType, class DfPopulationType>
-    SymmetricMatrixType normalizeDensityMatrix(const RUN_TYPE runType,
-                                               const SymmetricMatrixType& P);
+    SymmetricMatrixType normalizeDensityMatrix(const RUN_TYPE runType, const SymmetricMatrixType& P);
 
+    // ------------------------------------------------------------------------
+    // member variables
+    // ------------------------------------------------------------------------
 protected:
     bool isNormalizeDensityMatrix_;
 };
