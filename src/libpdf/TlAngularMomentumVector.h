@@ -19,6 +19,7 @@
 #ifndef TLANGULARMOMENTUMVECTOR_H
 #define TLANGULARMOMENTUMVECTOR_H
 
+#include <cstdint>
 #include <cassert>
 #include <iostream>
 
@@ -34,7 +35,7 @@ private:
            Z = 2 };
 
 public:
-    TlAngularMomentumVector(int x = 0, int y = 0, int z = 0);
+    TlAngularMomentumVector(int8_t x = 0, int8_t y = 0, int8_t z = 0);
 
     TlAngularMomentumVector(const TlAngularMomentumVector& rhs);
 
@@ -63,7 +64,7 @@ public:
     std::string debugOut() const;
 
 private:
-    int v_[3];
+    int8_t v_[3];
 };
 
 inline bool TlAngularMomentumVector::isExist() const {
@@ -76,8 +77,8 @@ inline int TlAngularMomentumVector::index() const {
 
     // const int y = this->v_[Y];
     const int z = this->v_[Z];
-    // const int yz = this->v_[Y] + z;
-    const int yz = this->v_[Y] + this->v_[Z];
+    const int yz = this->v_[Y] + z;
+    // const int yz = this->v_[Y] + this->v_[Z];
     return ((yz * (yz + 1)) >> 1) + z;
 }
 

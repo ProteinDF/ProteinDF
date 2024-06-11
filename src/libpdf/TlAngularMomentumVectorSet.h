@@ -19,6 +19,7 @@
 #ifndef TLANGULARMOMENTUMVECTORSET_H
 #define TLANGULARMOMENTUMVECTORSET_H
 
+#include <cstdint>
 #include <bitset>
 #include <vector>
 
@@ -46,15 +47,15 @@ private:
     public:
         AMV_DB() {
             this->data.resize(MAX_ANGULAR_MOMENTUM);
-            for (int amv = 0; amv < MAX_ANGULAR_MOMENTUM; ++amv) {
+            for (int8_t amv = 0; amv < MAX_ANGULAR_MOMENTUM; ++amv) {
                 std::vector<TlAngularMomentumVector> temp;
                 const int numOfAMVs = (amv + 1) * (amv + 2) / 2;
                 temp.resize(numOfAMVs);
 
                 int index = 0;
-                for (int x = amv; x >= 0; --x) {
-                    for (int y = (amv - x); y >= 0; --y) {
-                        const int z = amv - (x + y);
+                for (int8_t x = amv; x >= 0; --x) {
+                    for (int8_t y = (amv - x); y >= 0; --y) {
+                        const int8_t z = amv - (x + y);
                         temp[index] = TlAngularMomentumVector(x, y, z);
                         ++index;
                     }
