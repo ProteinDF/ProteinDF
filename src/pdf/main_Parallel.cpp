@@ -36,11 +36,11 @@
 #include "TlUtils.h"
 //#include "TlTime.h"
 
-#ifdef __FUJITSU
-#define PDF_MAIN MAIN__
-#else
+//#ifdef __FUJITSU
+//#define PDF_MAIN MAIN__
+//#else
 #define PDF_MAIN main
-#endif  // __FUJITSU
+//#endif  // __FUJITSU
 
 #define HOSTNAME_LEN 256
 
