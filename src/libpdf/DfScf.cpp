@@ -16,9 +16,9 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifdef __FUJITSU
-#include <fjcoll.h>
-#endif  // __FUJITSU
+//#ifdef __FUJITSU
+//#include <fjcoll.h>
+//#endif  // __FUJITSU
 
 #include <cmath>
 
@@ -496,9 +496,9 @@ void DfScf::diffDensityMatrix() {
 }
 
 void DfScf::doDensityFitting() {
-#ifdef __FUJITSU
-    start_collection("density_fitting");
-#endif  // __FUJITSU
+//#ifdef __FUJITSU
+//    start_collection("density_fitting");
+//#endif  // __FUJITSU
 
     if (this->J_engine_ == J_ENGINE_RI_J) {
         if (this->m_nIteration == 1) {
@@ -526,9 +526,9 @@ void DfScf::doDensityFitting() {
         }
     }
 
-#ifdef __FUJITSU
-    stop_collection("density_fitting");
-#endif  // __FUJITSU
+//#ifdef __FUJITSU
+//    stop_collection("density_fitting");
+//#endif  // __FUJITSU
 }
 
 DfDensityFittingObject* DfScf::getDfDensityFittingObject() {
@@ -634,9 +634,9 @@ DfKMatrix* DfScf::getDfKMatrixObject() {
 }
 
 void DfScf::buildFock() {
-#ifdef __FUJITSU
-    start_collection("Fock");
-#endif  // __FUJITSU
+//#ifdef __FUJITSU
+//    start_collection("Fock");
+//#endif  // __FUJITSU
 
     TlTime timer;
     this->loggerStartTitle("Fock matrix");
@@ -655,9 +655,9 @@ void DfScf::buildFock() {
     // flush
     this->matrixCache_.flush();
 
-#ifdef __FUJITSU
-    start_collection("Fock");
-#endif  // __FUJITSU
+//#ifdef __FUJITSU
+//    start_collection("Fock");
+//#endif  // __FUJITSU
 }
 
 DfFockMatrix* DfScf::getDfFockMatrixObject() {
