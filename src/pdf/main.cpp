@@ -34,11 +34,11 @@
 #include "tl_viennacl.h"
 #endif  // HAVE_VIENNACL
 
-#ifdef __FUJITSU
-#define PDF_MAIN MAIN__
-#else
+//#ifdef __FUJITSU
+//#define PDF_MAIN MAIN__
+//#else
 #define PDF_MAIN main
-#endif  // __FUJITSU
+//#endif  // __FUJITSU
 
 int PDF_MAIN(int argc, char* argv[]) {
     // setup parameters
