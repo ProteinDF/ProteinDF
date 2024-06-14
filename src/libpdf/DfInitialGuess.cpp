@@ -508,7 +508,7 @@ void DfInitialGuess::makeDensityMatrix() {
     TlSerializeData tmpParam = *(this->pPdfParam_);
     tmpParam["orbital-correspondence"] = false;
     tmpParam["orbital-overlap-correspondence-method"] = "simple";
-    tmpParam["control-iteration"] = 0;
+    tmpParam["num_of_iterations"] = 0;
 
     DfDmatrix* pDfDmat = getDfDmatrixObject(&tmpParam);
     pDfDmat->run();
