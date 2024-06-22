@@ -42,13 +42,6 @@ class DfJMatrix_Parallel : public DfJMatrix {
 
     virtual void getJ_conventional_local(TlDenseSymmetricMatrix_Lapack* pJ);
     void getJ_conventional_distributed(TlDenseSymmetricMatrix_Scalapack* pJ);
-
-   protected:
-    virtual void saveJMatrix(const TlDenseSymmetricMatrix_Lapack& J);
-    virtual TlDenseSymmetricMatrix_Lapack getJMatrix(const int iteration);
-
-    virtual TlDenseVector_Lapack getRho(const RUN_TYPE runType,
-                                        const int iteration);
 };
 
 #endif  // DFJMATRIX_PARALLEL_H

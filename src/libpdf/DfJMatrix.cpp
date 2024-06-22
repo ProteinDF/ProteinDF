@@ -17,13 +17,15 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfJMatrix.h"
+
 #include "CnError.h"
 #include "DfCD.h"
 #include "DfEriX.h"
 #include "TlUtils.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
 
-DfJMatrix::DfJMatrix(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {}
+DfJMatrix::DfJMatrix(TlSerializeData* pPdfParam)
+    : DfObject(pPdfParam) {}
 
 DfJMatrix::~DfJMatrix() {}
 
@@ -50,22 +52,18 @@ void DfJMatrix::buildJ() {
 void DfJMatrix::getJ_RI() {
     TlDenseSymmetricMatrix_Lapack J(this->m_nNumOfAOs);
     this->getJ_RI_local(&J);
-    this->saveJMatrix(J);
+    DfObject::saveJMatrix(this->m_nIteration, J);
 }
 
 void DfJMatrix::getJ_CD() {
     TlDenseSymmetricMatrix_Lapack J(this->m_nNumOfAOs);
     this->getJ_CD_local(&J);
-    this->saveJMatrix(J);
+    DfObject::saveJMatrix(this->m_nIteration, J);
 }
 
 void DfJMatrix::getJ_conventional() {
     TlDenseSymmetricMatrix_Lapack J(this->m_nNumOfAOs);
     this->getJ_conventional_local(&J);
-    this->saveJMatrix(J);
-}
-
-void DfJMatrix::saveJMatrix(const TlDenseSymmetricMatrix_Lapack& J) {
     DfObject::saveJMatrix(this->m_nIteration, J);
 }
 
@@ -117,19 +115,10 @@ void DfJMatrix::getJ_RI_local(TlDenseSymmetricMatrix_Lapack* pJ) {
 
     if (this->isUpdateMethod_ == true) {
         if (this->m_nIteration > 1) {
-            const TlDenseSymmetricMatrix_Lapack prevJ =
-                DfObject::getJMatrix<TlDenseSymmetricMatrix_Lapack>(
-                    this->m_nIteration - 1);
+            const TlDenseSymmetricMatrix_Lapack prevJ = DfObject::getJMatrix<TlDenseSymmetricMatrix_Lapack>(this->m_nIteration - 1);
             *pJ += prevJ;
         }
     }
-}
-
-TlDenseVector_Lapack DfJMatrix::getRho(const RUN_TYPE runType,
-                                       const int iteration) {
-    TlDenseVector_Lapack rho =
-        DfObject::getRho<TlDenseVector_Lapack>(runType, iteration);
-    return rho;
 }
 
 void DfJMatrix::getJ_CD_local(TlDenseSymmetricMatrix_Lapack* pJ) {
@@ -151,15 +140,8 @@ void DfJMatrix::getJ_conventional_local(TlDenseSymmetricMatrix_Lapack* pJ) {
 
     if (this->isUpdateMethod_ == true) {
         if (this->m_nIteration > 1) {
-            const TlDenseSymmetricMatrix_Lapack prevJ =
-                this->getJMatrix(this->m_nIteration - 1);
+            const TlDenseSymmetricMatrix_Lapack prevJ = DfObject::getJMatrix<TlDenseSymmetricMatrix_Lapack>(this->m_nIteration - 1);
             *pJ += prevJ;
         }
     }
-}
-
-TlDenseSymmetricMatrix_Lapack DfJMatrix::getJMatrix(const int iteration) {
-    const TlDenseSymmetricMatrix_Lapack J =
-        DfObject::getJMatrix<TlDenseSymmetricMatrix_Lapack>(iteration);
-    return J;
 }
