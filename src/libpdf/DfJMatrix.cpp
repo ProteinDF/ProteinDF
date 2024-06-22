@@ -30,9 +30,6 @@ DfJMatrix::DfJMatrix(TlSerializeData* pPdfParam)
 DfJMatrix::~DfJMatrix() {}
 
 void DfJMatrix::buildJ() {
-    const index_type numOfAOs = this->m_nNumOfAOs;
-    TlDenseSymmetricMatrix_Lapack J(numOfAOs);
-
     switch (this->J_engine_) {
         case J_ENGINE_RI_J:
             this->log_.info("use RI_J engine");
