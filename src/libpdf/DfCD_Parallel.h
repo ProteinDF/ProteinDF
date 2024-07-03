@@ -31,6 +31,8 @@
 #include "tl_dense_general_matrix_arrays_roworiented.h"
 #include "tl_dense_symmetric_matrix_scalapack.h"
 
+#include "TlCommunicate.h"
+
 class DfCD_Parallel : public DfCD {
 public:
     DfCD_Parallel(TlSerializeData* pPdfParam);
@@ -72,8 +74,9 @@ protected:
     // virtual void saveLjk(const TlDenseGeneralMatrix_Lapack& L);
     // virtual TlDenseGeneralMatrix_Lapack getLjk();
 
-    // virtual TlDenseSymmetricMatrix_Lapack getPMatrix();
-
+    // ----------------------------------------------------------------------------
+    //
+    // ----------------------------------------------------------------------------
     virtual void divideCholeskyBasis(const index_type numOfCBs, index_type* pStart, index_type* pEnd);
 
     TlDenseSymmetricMatrix_Scalapack getCholeskyVector_distribute(const TlDenseVector_Lapack& L_col,
@@ -83,15 +86,26 @@ protected:
                                                                    const TlDenseVector_Lapack& L_col,
                                                                    const PQ_PairArray& I2PQ);
 
-    // -------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------
+    // [SCF] J
+    // ----------------------------------------------------------------------------
 protected:
     void getJ_cvm(TlDenseSymmetricMatrix_Lapack* pJ);
     void getJ_mmap_DC(TlDenseSymmetricMatrix_Lapack* pJ);
 
 protected:
+    template <class SymmetricMatrixType>
+    SymmetricMatrixType getPMatrix() const;
+
+    template <class SymmetricMatrixType, class VectorType>
+    VectorType getScreenedDensityMatrix(const SymmetricMatrixType& P, const PQ_PairArray& I2PQ);
+
+    // ----------------------------------------------------------------------------
+    // [SCF] K
+    // ----------------------------------------------------------------------------
+protected:
     virtual TlDenseSymmetricMatrix_Lapack getPMatrix(const RUN_TYPE runType, int itr);
 
-protected:
     virtual void getK_S_woCD(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
     virtual void getK_S_woCD_mmap_DC(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
 
@@ -104,7 +118,11 @@ protected:
     void getK_S_woCD_D(const RUN_TYPE runType, TlDenseSymmetricMatrix_Scalapack* pK);
 
 protected:
+    template <class SymmetricMatrixType, class VectorType>
+    VectorType getScreenedDensityMatrix(const RUN_TYPE runType, const PQ_PairArray& I2PR);
+
     TlDenseVector_Lapack getScreenedDensityMatrixD(const PQ_PairArray& I2PQ);
+
     void expandJMatrixD(const TlDenseVector_Lapack& vJ, const PQ_PairArray& I2PQ, TlDenseSymmetricMatrix_Scalapack* pJ);
 
 protected:
@@ -184,5 +202,58 @@ protected:
 private:
     bool isDebugSaveL_;
 };
+
+// ----------------------------------------------------------------------------
+// template
+// ----------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------
+// [SCF] J
+// ----------------------------------------------------------------------------
+template <class SymmetricMatrixType>
+SymmetricMatrixType DfCD_Parallel::getPMatrix() const
+{
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    SymmetricMatrixType P;
+    if (rComm.isMaster()){
+        P = DfCD::getPMatrix<SymmetricMatrixType>();
+    }
+    rComm.broadcast(&P);
+
+    return P;
+}
+
+
+template <class SymmetricMatrixType, class VectorType>
+VectorType DfCD_Parallel::getScreenedDensityMatrix(const SymmetricMatrixType& P, const PQ_PairArray& I2PQ) {
+    // TODO: divide tasks
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    VectorType v;
+    if (rComm.isMaster()){
+        v = DfCD::getScreenedDensityMatrix<SymmetricMatrixType, VectorType>(P, I2PQ);
+    }
+    rComm.broadcast(&v);
+
+    return v;
+}
+
+// ----------------------------------------------------------------------------
+// [SCF] K
+// ----------------------------------------------------------------------------
+template <class SymmetricMatrixType, class VectorType>
+VectorType DfCD_Parallel::getScreenedDensityMatrix(const RUN_TYPE runType, const PQ_PairArray& I2PR) {
+    // TODO: divide tasks
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+
+    VectorType v;
+    if (rComm.isMaster()){
+        v = DfCD::getScreenedDensityMatrix<SymmetricMatrixType, VectorType>(runType, I2PR);
+    }
+    rComm.broadcast(&v);
+
+    return v;
+}
 
 #endif  // DFCD_PARALLEL_H

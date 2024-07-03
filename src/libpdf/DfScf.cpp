@@ -309,14 +309,12 @@ int DfScf::execScfLoop() {
                 break;
 
             case DENSITY_FITTING:
-                this->log_.info("density fitting");
                 this->doDensityFitting();
                 this->setScfRestartPoint("DENSITY_FITTING");
                 nScfState = XC_INTEGRAL;
                 break;
 
             case XC_INTEGRAL:
-                this->log_.info("XC");
                 this->doXCIntegral();
                 this->setScfRestartPoint("XC_INTEGRAL");
                 nScfState = THREE_INDEX_INTEGRAL;

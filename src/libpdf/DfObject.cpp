@@ -335,6 +335,9 @@ void DfObject::setParam(const TlSerializeData& data) {
     if (paramFileBaseName["Lxc_matrix"].getStr().empty() == true) {
         paramFileBaseName["Lxc_matrix"] = "Lxc.mat";
     }
+    if (paramFileBaseName["L_errors_vtr"].getStr().empty() == true) {
+        paramFileBaseName["L_errors_vtr"] = "Lerrors.vtr";
+    }
     if (paramFileBaseName["X_matrix"].getStr().empty() == true) {
         paramFileBaseName["X_matrix"] = "X.mat";
     }
@@ -606,6 +609,10 @@ std::string DfObject::getLkMatrixPath(const std::string& dir) {
 
 std::string DfObject::getLxcMatrixPath(const std::string& dir) {
     return this->makeFilePath("Lxc_matrix", "", dir);
+}
+
+std::string DfObject::getLerrorsVtrPath() {
+    return this->makeFilePath("L_errors_vtr");
 }
 
 std::string DfObject::getXMatrixPath() {
