@@ -16,30 +16,55 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "DfDiffDensityMatrix.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif  // HAVE_CONFIG_H
 
-#include "TlFile.h"
+#ifdef HAVE_LAPACK
 #include "tl_dense_symmetric_matrix_lapack.h"
+#endif  // HAVA_LAPACK
+
+#ifdef HAVE_EIGEN
+#include "tl_dense_symmetric_matrix_eigen.h"
+#endif  // HAVE_EIGEN
+
+#ifdef HAVE_VIENNACL
+#include "tl_dense_symmetric_matrix_viennacl.h"
+#endif  // HAVE_VIENNACL
+
+#include "DfDiffDensityMatrix.h"
+#include "TlFile.h"
 
 DfDiffDensityMatrix::DfDiffDensityMatrix(TlSerializeData* pPdfData)
     : DfObject(pPdfData) {
-    this->isSaveDiffMatrix_ = (TlUtils::toUpper((*pPdfData)["save_diff_density_matrix"].getStr()) == "YES");
 }
 
 DfDiffDensityMatrix::~DfDiffDensityMatrix() {}
 
 void DfDiffDensityMatrix::exec() {
-    // check memory
-    // const std::size_t needMem =
-    //     this->m_nNumOfAOs * (this->m_nNumOfAOs + 1) * sizeof(double);
-    // if ((this->isWorkOnDisk_ == true) || (this->procMaxMemSize_ < needMem)) {
-    //   this->log_.info(" The differencial density matrix is build on disk.");
-    //   TlMatrix::useMemManager(true);
-    // } else {
-    //   this->log_.info(" The differencial density matrix is build on
-    //   memory."); TlMatrix::useMemManager(false);
-    // }
+    switch (this->linearAlgebraPackage_) {
+#ifdef HAVE_LAPACK
+        case LAP_LAPACK:
+            this->exec_lapack();
+            break;
+#endif  // HAVE_LAPACK
 
+#ifdef HAVE_EIGEN
+        case LAP_EIGEN:
+            this->exec_eigen();
+            break;
+#endif  // HAVE_EIGEN
+
+        default:
+            this->log_.critical(TlUtils::format("program error: @%s,%d", __FILE__, __LINE__));
+            this->log_.critical(TlUtils::format("linear algebra package: %d", this->linearAlgebraPackage_));
+            CnErr.abort();
+            break;
+    }
+}
+
+#ifdef HAVE_LAPACK
+void DfDiffDensityMatrix::exec_lapack() {
     this->log_.info("make diff matrix by using LAPACK");
     switch (this->m_nMethodType) {
         case METHOD_RKS:
@@ -63,3 +88,31 @@ void DfDiffDensityMatrix::exec() {
             break;
     }
 }
+#endif // HAVE_LAPACK
+
+#ifdef HAVE_EIGEN
+void DfDiffDensityMatrix::exec_eigen() {
+    this->log_.info("make diff matrix by using LAPACK");
+    switch (this->m_nMethodType) {
+        case METHOD_RKS:
+            this->calc<TlDenseSymmetricMatrix_Eigen>(RUN_RKS, this->m_nIteration);
+            break;
+
+        case METHOD_UKS:
+            this->calc<TlDenseSymmetricMatrix_Eigen>(RUN_UKS_ALPHA, this->m_nIteration);
+            this->calc<TlDenseSymmetricMatrix_Eigen>(RUN_UKS_BETA, this->m_nIteration);
+            break;
+
+        case METHOD_ROKS:
+            this->calc<TlDenseSymmetricMatrix_Eigen>(RUN_ROKS_CLOSED, this->m_nIteration);
+            this->calc<TlDenseSymmetricMatrix_Eigen>(RUN_ROKS_OPEN, this->m_nIteration);
+            break;
+
+        default:
+            std::cerr << "program error. " << __FILE__ << ":" << __LINE__
+                      << std::endl;
+            abort();
+            break;
+    }
+}
+#endif // HAVE_EIGEN

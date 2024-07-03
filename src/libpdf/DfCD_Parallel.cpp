@@ -456,18 +456,6 @@ DfCD::PQ_PairArray DfCD_Parallel::getI2PQ(const std::string& filepath) {
     return I2PQ;
 }
 
-// TlDenseSymmetricMatrix_Lapack DfCD_Parallel::getPMatrix()
-// {
-//     TlCommunicate& rComm = TlCommunicate::getInstance();
-
-//     TlDenseGeneralMatrix_Lapack P;
-//     if (rComm.isMaster() == true) {
-//         P = DfCD::getPMatrix();
-//     }
-//     rComm.broadcast(P);
-//     return P;
-// }
-
 void DfCD_Parallel::divideCholeskyBasis(const index_type numOfCVs, index_type* pStart, index_type* pEnd) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     const int numOfProcs = rComm.getNumOfProcs();
@@ -1343,7 +1331,8 @@ void DfCD_Parallel::getJ_cvm(TlDenseSymmetricMatrix_Lapack* pJ) {
     assert(L.getNumOfSubunits() == rComm.getNumOfProcs());
 
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
-    const TlDenseVector_Lapack vP = this->getScreenedDensityMatrix(I2PQ);
+    const TlDenseVector_Lapack vP = DfCD_Parallel::getScreenedDensityMatrix<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack>(
+        DfCD_Parallel::getPMatrix<TlDenseSymmetricMatrix_Lapack>(), I2PQ);
 
     const index_type cvSize = L.getNumOfRows();
     assert(std::size_t(cvSize) == I2PQ.size());
@@ -1377,7 +1366,8 @@ void DfCD_Parallel::getJ_mmap_DC(TlDenseSymmetricMatrix_Lapack* pJ) {
     TlDenseGeneralMatrix_mmap L(DfObject::getLjkMatrixPath());
 
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
-    const TlDenseVector_Lapack vP = this->getScreenedDensityMatrix(I2PQ);
+    const TlDenseVector_Lapack vP = DfCD_Parallel::getScreenedDensityMatrix<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack>(
+        DfCD_Parallel::getPMatrix<TlDenseSymmetricMatrix_Lapack>(), I2PQ);
 
     const index_type cvSize = L.getNumOfRows();
     assert(std::size_t(cvSize) == I2PQ.size());
@@ -1498,7 +1488,7 @@ void DfCD_Parallel::getK_byLk(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lap
     assert(L.getNumOfSubunits() == rComm.getNumOfProcs());
 
     const PQ_PairArray I2PR = this->getI2PQ(this->getI2prVtrPath());
-    const TlDenseVector_Lapack vP = this->getScreenedDensityMatrix(runType, I2PR);
+    const TlDenseVector_Lapack vP = DfCD_Parallel::getScreenedDensityMatrix<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack>(runType, I2PR);
 
     const index_type cvSize = L.getNumOfRows();
     assert(std::size_t(cvSize) == I2PR.size());
