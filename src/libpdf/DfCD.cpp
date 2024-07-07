@@ -793,6 +793,7 @@ void DfCD::getJ(TlDenseSymmetricMatrix_Lapack* pJ) {
     switch (this->cdFileFormat_) {
         case CD_FILE_FORMAT_CSFD: {  // default
             this->getJ_S_mmap(this->CDAM_tau_, pJ);
+            // this->getJ_S_mmap(this->epsilon_, pJ);
         } break;
 
         case CD_FILE_FORMAT_ABGD: {
