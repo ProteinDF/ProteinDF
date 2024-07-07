@@ -201,8 +201,10 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
         TlUtils::format("L(K): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
     const index_type numOfCBs = L.getNumOfCols();
 
-    const SymmetricMatrix P = this->getSpinDensityMatrix<SymmetricMatrix>(
-        runType, this->m_nIteration - 1);
+    SymmetricMatrix P = this->getPInMatrix<SymmetricMatrix>(runType, this->m_nIteration);
+    if (runType == RUN_RKS) {
+        P *= 0.5;
+    }
 
     this->log_.info("start loop");
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
