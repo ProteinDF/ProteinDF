@@ -194,14 +194,37 @@ void DfCdkMatrix::getK_L(DfObject::RUN_TYPE runType) {
 template <typename Ljk_MatrixType, typename SymmetricMatrix, typename Vector>
 void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
     this->log_.info("calc K by CD method (serial).");
-    SymmetricMatrix K(this->m_nNumOfAOs);
 
     const Ljk_MatrixType L(DfObject::getLjkMatrixPath());
-    this->log_.info(
-        TlUtils::format("L(K): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
-    const index_type numOfCBs = L.getNumOfCols();
+    this->log_.info(TlUtils::format("L(K): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
+    index_type calcNumOfCVs = L.getNumOfCols();
 
-    SymmetricMatrix P = this->getPInMatrix<SymmetricMatrix>(runType, this->m_nIteration);
+    SymmetricMatrix P;
+    if ((this->isUpdateMethod_ == true) && (this->m_nIteration > 1)) {
+        this->log_.info("update method is used.");
+        P = DfObject::getDiffDensityMatrix<SymmetricMatrix>(runType, this->m_nIteration);
+
+        double threshold = 1.0E-10;
+        const double diffP = (*this->pPdfParam_)["DfDiffDensityMatrix"]["max_abs"][this->m_nIteration - 1].getDouble();
+        this->log_.info(TlUtils::format("dP max: %e", diffP));
+        if (diffP < 1.0) {
+            threshold /= diffP;
+            threshold = std::sqrt(threshold);
+        }
+        this->log_.info(TlUtils::format("threshold: %e", threshold));
+
+        std::vector<double> errors;
+        {
+            TlDenseVector_Lapack errs_vtr = DfObject::loadLerrorsVector<TlDenseVector_Lapack>();
+            errors = errs_vtr;
+        }
+        std::vector<double>::iterator it = std::find_if(errors.begin(), errors.end(),
+                                                        std::bind(std::less<double>(), std::placeholders::_1, threshold));
+        calcNumOfCVs = static_cast<index_type>(std::distance(errors.begin(), it));
+
+    } else {
+        P = this->getPInMatrix<SymmetricMatrix>(runType, this->m_nIteration);
+    }
     if (runType == RUN_RKS) {
         P *= 0.5;
     }
@@ -218,23 +241,30 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
 
     DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<std::size_t> tasks;
-    bool hasTasks = pTaskCtrl->getQueue(numOfCBs, taskSize, &tasks, true);
+    this->log_.info(TlUtils::format("calcNumOfCVs: %d / %d", calcNumOfCVs, L.getNumOfCols()));
+    bool hasTasks = pTaskCtrl->getQueue(calcNumOfCVs, taskSize, &tasks, true);
+
+    SymmetricMatrix K(this->m_nNumOfAOs);
     while (hasTasks == true) {
         const int numOfTasks = tasks.size();
         // #pragma omp parallel for schedule(runtime)
         for (int i = 0; i < numOfTasks; ++i) {
-            const SymmetricMatrix l =
-                this->getCholeskyVector<SymmetricMatrix, Vector>(
-                    L.getColVector(tasks[i]), I2PQ);
+            const SymmetricMatrix l = this->getCholeskyVector<SymmetricMatrix, Vector>(L.getColVector(tasks[i]), I2PQ);
             assert(l.getNumOfRows() == this->m_nNumOfAOs);
 
             // #pragma omp critical
             { K += l * P * l; }
         }
-        hasTasks = pTaskCtrl->getQueue(numOfCBs, taskSize, &tasks);
+        hasTasks = pTaskCtrl->getQueue(calcNumOfCVs, taskSize, &tasks);
     }
 
     K *= -1.0;
+
+    if ((this->isUpdateMethod_ == true) && (this->m_nIteration > 1)) {
+        SymmetricMatrix prevK = this->getHFxMatrix<SymmetricMatrix>(runType, this->m_nIteration - 1);
+        K += prevK;
+    }
+
     this->log_.info("finalize");
     // this->finalize(&K);
 
