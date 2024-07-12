@@ -163,11 +163,21 @@ if (EIGEN3_FOUND)
     tl_dense_symmetric_matrix_impl_eigen.h
     tl_dense_vector_eigen.h
     tl_dense_vector_impl_eigen.h
-
     tl_sparse_general_matrix_eigen.h
     tl_sparse_general_matrix_impl_eigen.h
     tl_sparse_symmetric_matrix_eigen.h
     tl_sparse_symmetric_matrix_impl_eigen.h
+
+    tl_dense_general_matrix_eigen_float.h
+    tl_dense_general_matrix_impl_eigen_float.h
+    tl_dense_symmetric_matrix_eigen_float.h
+    tl_dense_symmetric_matrix_impl_eigen_float.h
+    tl_dense_vector_eigen_float.h
+    tl_dense_vector_impl_eigen_float.h
+    tl_sparse_general_matrix_eigen_float.h
+    tl_sparse_general_matrix_impl_eigen_float.h
+    tl_sparse_symmetric_matrix_eigen_float.h
+    tl_sparse_symmetric_matrix_impl_eigen_float.h
 
     tl_system_eigen.h
     )
@@ -180,11 +190,21 @@ if (EIGEN3_FOUND)
     tl_dense_symmetric_matrix_impl_eigen.cc
     tl_dense_vector_eigen.cc
     tl_dense_vector_impl_eigen.cc
-
     tl_sparse_general_matrix_eigen.cc
     tl_sparse_general_matrix_impl_eigen.cc
     tl_sparse_symmetric_matrix_eigen.cc
     tl_sparse_symmetric_matrix_impl_eigen.cc
+
+    tl_dense_general_matrix_eigen_float.cc
+    tl_dense_general_matrix_impl_eigen_float.cc
+    tl_dense_symmetric_matrix_eigen_float.cc
+    tl_dense_symmetric_matrix_impl_eigen_float.cc
+    tl_dense_vector_eigen_float.cc
+    tl_dense_vector_impl_eigen_float.cc
+    tl_sparse_general_matrix_eigen_float.cc
+    tl_sparse_general_matrix_impl_eigen_float.cc
+    tl_sparse_symmetric_matrix_eigen_float.cc
+    tl_sparse_symmetric_matrix_impl_eigen_float.cc
     )
 endif(EIGEN3_FOUND)
 
