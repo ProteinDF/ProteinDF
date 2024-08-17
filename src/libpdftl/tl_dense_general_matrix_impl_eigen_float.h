@@ -14,7 +14,7 @@ class TlDenseGeneralMatrix_ImplEigenFloat;
 class TlDenseSymmetricMatrix_ImplEigenFloat;
 class TlSparseGeneralMatrix_ImplEigenFloat;
 class TlSparseSymmetricMatrix_ImplEigenFloat;
-class TlDenseGeneralMatrix_ImplViennaCL;
+class TlDenseGeneralMatrix_ImplViennaCLFloat;
 
 class TlDenseGeneralMatrix_ImplEigenFloat : public TlDenseMatrix_ImplObject {
 public:
@@ -36,8 +36,7 @@ public:
     TlDenseGeneralMatrix_ImplEigenFloat(const TlSparseGeneralMatrix_ImplEigenFloat& sm);
 
 #ifdef HAVE_VIENNACL
-    TlDenseGeneralMatrix_ImplEigenFloat(
-        const TlDenseGeneralMatrix_ImplViennaCL& rhs);
+    TlDenseGeneralMatrix_ImplEigenFloat(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs);
 #endif  // HAVE_VIENNACL
 
     virtual ~TlDenseGeneralMatrix_ImplEigenFloat();
@@ -125,11 +124,9 @@ protected:
     // others
     // ---------------------------------------------------------------------------
     friend class TlDenseGeneralMatrix_EigenFloat;
-
     friend class TlDenseSymmetricMatrix_ImplEigenFloat;
     friend class TlSparseGeneralMatrix_ImplEigenFloat;
-
-    friend class TlDenseGeneralMatrix_ImplViennaCL;
+    friend class TlDenseGeneralMatrix_ImplViennaCLFloat;
 
     // DM(G) = DM(G) * DM(S)
     friend TlDenseGeneralMatrix_ImplEigenFloat operator*(

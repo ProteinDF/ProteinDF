@@ -8,8 +8,8 @@
 #include "tl_sparse_general_matrix_eigen_float.h"
 
 #ifdef HAVE_VIENNACL
-#include "tl_dense_general_matrix_impl_viennacl.h"
-#include "tl_dense_general_matrix_viennacl.h"
+#include "tl_dense_general_matrix_impl_viennacl_float.h"
+#include "tl_dense_general_matrix_viennacl_float.h"
 #endif  // HAVE_VIENNACL
 
 TlDenseGeneralMatrix_EigenFloat::TlDenseGeneralMatrix_EigenFloat(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col, double const* const pBuf) {
@@ -33,8 +33,8 @@ TlDenseGeneralMatrix_EigenFloat::TlDenseGeneralMatrix_EigenFloat(const TlSparseG
 }
 
 #ifdef HAVE_VIENNACL
-TlDenseGeneralMatrix_EigenFloat::TlDenseGeneralMatrix_EigenFloat(const TlDenseGeneralMatrix_ViennaCL& rhs) {
-    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigenFloat(*(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCL*>(rhs.pImpl_)));
+TlDenseGeneralMatrix_EigenFloat::TlDenseGeneralMatrix_EigenFloat(const TlDenseGeneralMatrix_ViennaCLFloat& rhs) {
+    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigenFloat(*(dynamic_cast<TlDenseGeneralMatrix_ImplViennaCLFloat*>(rhs.pImpl_)));
 }
 #endif  // HAVE_VIENNACL
 

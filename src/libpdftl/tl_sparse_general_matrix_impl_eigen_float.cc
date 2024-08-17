@@ -6,94 +6,94 @@
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
-#include "tl_dense_general_matrix_impl_eigen.h"
-#include "tl_dense_vector_impl_eigen.h"
+#include "tl_dense_general_matrix_impl_eigen_float.h"
+#include "tl_dense_vector_impl_eigen_float.h"
 #include "tl_matrix_utils.h"
-#include "tl_sparse_general_matrix_impl_eigen.h"
-#include "tl_sparse_symmetric_matrix_impl_eigen.h"
+#include "tl_sparse_general_matrix_impl_eigen_float.h"
+#include "tl_sparse_symmetric_matrix_impl_eigen_float.h"
 
 #ifdef HAVE_VIENNACL
-#include "tl_sparse_general_matrix_impl_viennacl.h"
+#include "tl_sparse_general_matrix_impl_viennacl_float.h"
 #endif  // HAVE_VIENNACL
 
-const double TlSparseGeneralMatrix_ImplEigen::reference_ = 1.0;
-const double TlSparseGeneralMatrix_ImplEigen::epsilon_ = std::numeric_limits<double>::epsilon();
+const double TlSparseGeneralMatrix_ImplEigenFloat::reference_ = 1.0;
+const double TlSparseGeneralMatrix_ImplEigenFloat::epsilon_ = std::numeric_limits<double>::epsilon();
 
-TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_ImplEigen(const TlMatrixObject::index_type row,
-                                                                 const TlMatrixObject::index_type col)
-    : matrix_(row, col){};
+TlSparseGeneralMatrix_ImplEigenFloat::TlSparseGeneralMatrix_ImplEigenFloat(const TlMatrixObject::index_type row,
+                                                                           const TlMatrixObject::index_type col)
+    : matrix_(row, col) {};
 
-TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_ImplEigen(const TlSparseGeneralMatrix_ImplEigen& rhs) {
+TlSparseGeneralMatrix_ImplEigenFloat::TlSparseGeneralMatrix_ImplEigenFloat(const TlSparseGeneralMatrix_ImplEigenFloat& rhs) {
     this->matrix_ = rhs.matrix_;
 }
 
-TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_ImplEigen(const TlSparseSymmetricMatrix_ImplEigen& rhs) {
+TlSparseGeneralMatrix_ImplEigenFloat::TlSparseGeneralMatrix_ImplEigenFloat(const TlSparseSymmetricMatrix_ImplEigenFloat& rhs) {
     this->matrix_ = rhs.matrix_.selfadjointView<Eigen::Lower>();
 }
 
-TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_ImplEigen(const MatrixDataType& rhs) {
+TlSparseGeneralMatrix_ImplEigenFloat::TlSparseGeneralMatrix_ImplEigenFloat(const MatrixDataType& rhs) {
     this->matrix_ = rhs;
 }
 
-TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplEigen& rhs)
-    : matrix_(rhs.matrix_.sparseView(TlSparseGeneralMatrix_ImplEigen::reference_,
-                                     TlSparseGeneralMatrix_ImplEigen::epsilon_)) {
+TlSparseGeneralMatrix_ImplEigenFloat::TlSparseGeneralMatrix_ImplEigenFloat(const TlDenseGeneralMatrix_ImplEigenFloat& rhs)
+    : matrix_(rhs.matrix_.sparseView(TlSparseGeneralMatrix_ImplEigenFloat::reference_,
+                                     TlSparseGeneralMatrix_ImplEigenFloat::epsilon_)) {
 }
 
 #ifdef HAVE_VIENNACL
-TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_ImplEigen(const TlSparseGeneralMatrix_ImplViennaCL& rhs)
+TlSparseGeneralMatrix_ImplEigenFloat::TlSparseGeneralMatrix_ImplEigenFloat(const TlSparseGeneralMatrix_ImplViennaCLFloat& rhs)
     : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()) {
-    // std::cout << "TlSparseGeneralMatrix_ImplEigen::TlSparseGeneralMatrix_"
-    //              "ImplEigen(const TlSparseGeneralMatrix_ImplViennaCL& rhs)"
+    // std::cout << "TlSparseGeneralMatrix_ImplEigenFloat::TlSparseGeneralMatrix_"
+    //              "ImplEigen(const TlSparseGeneralMatrix_ImplViennaCLFloat& rhs)"
     //           << std::endl;
     viennacl::copy(rhs.matrix_, this->matrix_);
 }
 #endif  // HAVE_VIENNACL
 
-TlSparseGeneralMatrix_ImplEigen::~TlSparseGeneralMatrix_ImplEigen() {
+TlSparseGeneralMatrix_ImplEigenFloat::~TlSparseGeneralMatrix_ImplEigenFloat() {
 }
 
 // ----------------------------------------------------------------------------
 // properties
 // ----------------------------------------------------------------------------
-TlMatrixObject::index_type TlSparseGeneralMatrix_ImplEigen::getNumOfRows() const {
+TlMatrixObject::index_type TlSparseGeneralMatrix_ImplEigenFloat::getNumOfRows() const {
     return this->matrix_.rows();
 }
 
-TlMatrixObject::index_type TlSparseGeneralMatrix_ImplEigen::getNumOfCols() const {
+TlMatrixObject::index_type TlSparseGeneralMatrix_ImplEigenFloat::getNumOfCols() const {
     return this->matrix_.cols();
 }
 
-void TlSparseGeneralMatrix_ImplEigen::resize(const TlMatrixObject::index_type newRow,
-                                             const TlMatrixObject::index_type newCol) {
+void TlSparseGeneralMatrix_ImplEigenFloat::resize(const TlMatrixObject::index_type newRow,
+                                                  const TlMatrixObject::index_type newCol) {
     this->matrix_.resize(newRow, newCol);
 }
 
-double TlSparseGeneralMatrix_ImplEigen::get(const TlMatrixObject::index_type row,
-                                            const TlMatrixObject::index_type col) const {
+double TlSparseGeneralMatrix_ImplEigenFloat::get(const TlMatrixObject::index_type row,
+                                                 const TlMatrixObject::index_type col) const {
     return this->matrix_.coeff(row, col);
 }
 
-void TlSparseGeneralMatrix_ImplEigen::set(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
-                                          const double value) {
+void TlSparseGeneralMatrix_ImplEigenFloat::set(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+                                               const double value) {
     this->matrix_.coeffRef(row, col) = value;
 }
 
-void TlSparseGeneralMatrix_ImplEigen::add(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
-                                          const double value) {
+void TlSparseGeneralMatrix_ImplEigenFloat::add(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+                                               const double value) {
     this->matrix_.coeffRef(row, col) += value;
 }
 
-void TlSparseGeneralMatrix_ImplEigen::mul(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
-                                          const double value) {
+void TlSparseGeneralMatrix_ImplEigenFloat::mul(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+                                               const double value) {
     this->matrix_.coeffRef(row, col) *= value;
 }
 
 // ----------------------------------------------------------------------------
 // operators
 // ----------------------------------------------------------------------------
-TlSparseGeneralMatrix_ImplEigen& TlSparseGeneralMatrix_ImplEigen::operator=(
-    const TlSparseGeneralMatrix_ImplEigen& rhs) {
+TlSparseGeneralMatrix_ImplEigenFloat& TlSparseGeneralMatrix_ImplEigenFloat::operator=(
+    const TlSparseGeneralMatrix_ImplEigenFloat& rhs) {
     if (this != &rhs) {
         this->matrix_ = rhs.matrix_;
     }
@@ -101,19 +101,19 @@ TlSparseGeneralMatrix_ImplEigen& TlSparseGeneralMatrix_ImplEigen::operator=(
     return *this;
 }
 
-TlSparseGeneralMatrix_ImplEigen& TlSparseGeneralMatrix_ImplEigen::operator+=(
-    const TlSparseGeneralMatrix_ImplEigen& rhs) {
+TlSparseGeneralMatrix_ImplEigenFloat& TlSparseGeneralMatrix_ImplEigenFloat::operator+=(
+    const TlSparseGeneralMatrix_ImplEigenFloat& rhs) {
     this->matrix_ += rhs.matrix_;
     return *this;
 }
 
-TlSparseGeneralMatrix_ImplEigen& TlSparseGeneralMatrix_ImplEigen::operator-=(
-    const TlSparseGeneralMatrix_ImplEigen& rhs) {
+TlSparseGeneralMatrix_ImplEigenFloat& TlSparseGeneralMatrix_ImplEigenFloat::operator-=(
+    const TlSparseGeneralMatrix_ImplEigenFloat& rhs) {
     this->matrix_ -= rhs.matrix_;
     return *this;
 }
 
-TlSparseGeneralMatrix_ImplEigen& TlSparseGeneralMatrix_ImplEigen::operator*=(const double coef) {
+TlSparseGeneralMatrix_ImplEigenFloat& TlSparseGeneralMatrix_ImplEigenFloat::operator*=(const double coef) {
     this->matrix_ *= coef;
     return *this;
 }
@@ -121,7 +121,7 @@ TlSparseGeneralMatrix_ImplEigen& TlSparseGeneralMatrix_ImplEigen::operator*=(con
 // ----------------------------------------------------------------------------
 // I/O
 // ----------------------------------------------------------------------------
-bool TlSparseGeneralMatrix_ImplEigen::load(const std::string& path) {
+bool TlSparseGeneralMatrix_ImplEigenFloat::load(const std::string& path) {
     bool answer = false;
     TlMatrixObject::HeaderInfo headerInfo;
 
@@ -152,7 +152,7 @@ bool TlSparseGeneralMatrix_ImplEigen::load(const std::string& path) {
     return answer;
 }
 
-bool TlSparseGeneralMatrix_ImplEigen::save(const std::string& path) const {
+bool TlSparseGeneralMatrix_ImplEigenFloat::save(const std::string& path) const {
     bool answer = false;
 
     std::fstream fs;
@@ -190,53 +190,53 @@ bool TlSparseGeneralMatrix_ImplEigen::save(const std::string& path) const {
 // others
 // ----------------------------------------------------------------------------
 // DM(G) = DM(G) * SM(G)
-TlDenseGeneralMatrix_ImplEigen operator*(const TlDenseGeneralMatrix_ImplEigen& mat1,
-                                         const TlSparseGeneralMatrix_ImplEigen& mat2) {
+TlDenseGeneralMatrix_ImplEigenFloat operator*(const TlDenseGeneralMatrix_ImplEigenFloat& mat1,
+                                         const TlSparseGeneralMatrix_ImplEigenFloat& mat2) {
     assert(mat1.getNumOfCols() == mat2.getNumOfRows());
-    TlDenseGeneralMatrix_ImplEigen answer;
+    TlDenseGeneralMatrix_ImplEigenFloat answer;
     answer.matrix_ = mat1.matrix_ * mat2.matrix_;
 
     return answer;
 }
 
 // DM(G) = SM(G) * DM(G)
-TlDenseGeneralMatrix_ImplEigen operator*(const TlSparseGeneralMatrix_ImplEigen& mat1,
-                                         const TlDenseGeneralMatrix_ImplEigen& mat2) {
+TlDenseGeneralMatrix_ImplEigenFloat operator*(const TlSparseGeneralMatrix_ImplEigenFloat& mat1,
+                                         const TlDenseGeneralMatrix_ImplEigenFloat& mat2) {
     assert(mat1.getNumOfCols() == mat2.getNumOfRows());
-    TlDenseGeneralMatrix_ImplEigen answer;
+    TlDenseGeneralMatrix_ImplEigenFloat answer;
     answer.matrix_ = mat1.matrix_ * mat2.matrix_;
 
     return answer;
 }
 
 // SM(G) = SM(G) * SM(G)
-TlSparseGeneralMatrix_ImplEigen operator*(const TlSparseGeneralMatrix_ImplEigen& mat1,
-                                          const TlSparseGeneralMatrix_ImplEigen& mat2) {
-    TlSparseGeneralMatrix_ImplEigen answer;
+TlSparseGeneralMatrix_ImplEigenFloat operator*(const TlSparseGeneralMatrix_ImplEigenFloat& mat1,
+                                               const TlSparseGeneralMatrix_ImplEigenFloat& mat2) {
+    TlSparseGeneralMatrix_ImplEigenFloat answer;
     answer.matrix_ = mat1.matrix_ * mat2.matrix_;
 
     return answer;
 }
 
 // DV = SM(G) * DV
-TlDenseVector_ImplEigen operator*(const TlSparseGeneralMatrix_ImplEigen& mat, const TlDenseVector_ImplEigen& vtr) {
-    // std::cout << "TlDenseVector_ImplEigen operator*(const
-    // TlSparseGeneralMatrix_ImplEigen& mat, const TlDenseVector_ImplEigen& vtr)"
+TlDenseVector_ImplEigenFloat operator*(const TlSparseGeneralMatrix_ImplEigenFloat& mat, const TlDenseVector_ImplEigenFloat& vtr) {
+    // std::cout << "TlDenseVector_ImplEigenFloat operator*(const
+    // TlSparseGeneralMatrix_ImplEigenFloat& mat, const TlDenseVector_ImplEigenFloat& vtr)"
     // << std::endl;
     assert(mat.getNumOfCols() == vtr.getSize());
-    TlDenseVector_ImplEigen answer;
+    TlDenseVector_ImplEigenFloat answer;
     answer.vector_ = mat.matrix_ * vtr.vector_;
 
     return answer;
 }
 
 // DV = DV * SM(G)
-TlDenseVector_ImplEigen operator*(const TlDenseVector_ImplEigen& vtr, const TlSparseGeneralMatrix_ImplEigen& mat) {
-    // std::cout << "TlDenseVector_ImplEigen operator*(const
-    // TlDenseVector_ImplEigen& vtr, const TlSparseGeneralMatrix_ImplEigen& mat)"
+TlDenseVector_ImplEigenFloat operator*(const TlDenseVector_ImplEigenFloat& vtr, const TlSparseGeneralMatrix_ImplEigenFloat& mat) {
+    // std::cout << "TlDenseVector_ImplEigenFloat operator*(const
+    // TlDenseVector_ImplEigenFloat& vtr, const TlSparseGeneralMatrix_ImplEigenFloat& mat)"
     // << std::endl;
     assert(mat.getNumOfRows() == vtr.getSize());
-    TlDenseVector_ImplEigen answer;
+    TlDenseVector_ImplEigenFloat answer;
     answer.vector_ = mat.matrix_.transpose() * vtr.vector_;
 
     return answer;

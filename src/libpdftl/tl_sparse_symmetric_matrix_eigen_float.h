@@ -8,7 +8,7 @@ class TlDenseSymmetricMatrix_EigenFloat;
 class TlDenseVector_EigenFloat;
 class TlSparseGeneralMatrix_EigenFloat;
 class TlSparseGeneralMatrix_ImplEigenFloat;
-class TlSparseSymmetricMatrix_ViennaCL;
+class TlSparseSymmetricMatrix_ViennaCLFloat;
 
 class TlSparseSymmetricMatrix_EigenFloat : public TlSparseSymmetricMatrixObject {
     // ---------------------------------------------------------------------------
@@ -21,7 +21,7 @@ public:
     TlSparseSymmetricMatrix_EigenFloat(const TlDenseSymmetricMatrix_EigenFloat& rhs);
 
 #ifdef HAVE_VIENNACL
-    TlSparseSymmetricMatrix_EigenFloat(const TlSparseSymmetricMatrix_ViennaCL& rhs);
+    TlSparseSymmetricMatrix_EigenFloat(const TlSparseSymmetricMatrix_ViennaCLFloat& rhs);
 #endif  // HAVE_VIENNACL
 
     virtual ~TlSparseSymmetricMatrix_EigenFloat();
@@ -41,7 +41,7 @@ public:
     friend class TlDenseSymmetricMatrix_EigenFloat;
     friend class TlSparseGeneralMatrix_EigenFloat;
     friend class TlSparseGeneralMatrix_ImplEigenFloat;
-    friend class TlSparseSymmetricMatrix_ViennaCL;
+    friend class TlSparseSymmetricMatrix_ViennaCLFloat;
 
     // DM(G) = DM(G) * SM(S)
     friend TlDenseGeneralMatrix_EigenFloat operator*(const TlDenseGeneralMatrix_EigenFloat& mat1,

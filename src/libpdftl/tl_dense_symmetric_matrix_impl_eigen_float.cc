@@ -7,7 +7,7 @@
 #include "tl_sparse_symmetric_matrix_impl_eigen_float.h"
 
 #ifdef HAVE_VIENNACL
-#include "tl_dense_symmetric_matrix_impl_viennacl.h"
+#include "tl_dense_symmetric_matrix_impl_viennacl_float.h"
 #endif  // HAVE_VIENNACL
 
 TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(
@@ -37,8 +37,7 @@ TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(
 }
 
 #ifdef HAVE_VIENNACL
-TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(
-    const TlDenseSymmetricMatrix_ImplViennaCL& rhs)
+TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(const TlDenseSymmetricMatrix_ImplViennaCLFloat& rhs)
     : TlDenseGeneralMatrix_ImplEigenFloat(rhs.getNumOfRows(), rhs.getNumOfCols()) {
     viennacl::copy(rhs.matrix_, this->matrix_);
 }
@@ -189,7 +188,7 @@ TlDenseGeneralMatrix_ImplEigenFloat operator*(
 
 // DM(S) * DV
 TlDenseVector_ImplEigenFloat operator*(const TlDenseSymmetricMatrix_ImplEigenFloat& dms,
-                                  const TlDenseVector_ImplEigenFloat& dv) {
+                                       const TlDenseVector_ImplEigenFloat& dv) {
     TlDenseVector_ImplEigenFloat answer;
     answer.vector_ = dms.matrix_ * dv.vector_;
     return answer;
@@ -197,7 +196,7 @@ TlDenseVector_ImplEigenFloat operator*(const TlDenseSymmetricMatrix_ImplEigenFlo
 
 // DV * DM(S)
 TlDenseVector_ImplEigenFloat operator*(const TlDenseVector_ImplEigenFloat& dv,
-                                  const TlDenseSymmetricMatrix_ImplEigenFloat& dms) {
+                                       const TlDenseSymmetricMatrix_ImplEigenFloat& dms) {
     TlDenseVector_ImplEigenFloat answer;
     answer.vector_ = dv.vector_ * dms.matrix_;
     return answer;

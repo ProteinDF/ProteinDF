@@ -10,7 +10,7 @@ class TlSparseGeneralMatrix_EigenFloat;
 class TlSparseSymmetricMatrix_EigenFloat;
 
 class TlCommunicate;
-class TlDenseGeneralMatrix_ViennaCL;
+class TlDenseGeneralMatrix_ViennaCLFloat;
 
 class TlDenseGeneralMatrix_EigenFloat : public TlDenseGeneralMatrixObject {
     // ---------------------------------------------------------------------------
@@ -26,7 +26,7 @@ public:
     TlDenseGeneralMatrix_EigenFloat(const TlDenseGeneralMatrix_ImplEigenFloat& rhs);
     TlDenseGeneralMatrix_EigenFloat(const TlSparseGeneralMatrix_EigenFloat& sm);
 #ifdef HAVE_VIENNACL
-    TlDenseGeneralMatrix_EigenFloat(const TlDenseGeneralMatrix_ViennaCL& rhs);
+    TlDenseGeneralMatrix_EigenFloat(const TlDenseGeneralMatrix_ViennaCLFloat& rhs);
 #endif  // HAVE_VIENNACL
 
     operator std::vector<double>() const;
@@ -85,7 +85,7 @@ protected:
     friend class TlCommunicate;
 
     friend class TlDenseSymmetricMatrix_EigenFloat;
-    friend class TlDenseGeneralMatrix_ViennaCL;
+    friend class TlDenseGeneralMatrix_ViennaCLFloat;
     friend class TlSparseGeneralMatrix_EigenFloat;
 
     // DM(G) * DM(S)

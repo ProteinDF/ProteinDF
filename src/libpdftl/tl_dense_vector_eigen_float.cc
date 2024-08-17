@@ -3,8 +3,8 @@
 #include "tl_dense_vector_impl_eigen_float.h"
 
 #ifdef HAVE_VIENNACL
-#include "tl_dense_vector_impl_viennacl.h"
-#include "tl_dense_vector_viennacl.h"
+#include "tl_dense_vector_impl_viennacl_float.h"
+#include "tl_dense_vector_viennacl_float.h"
 #endif  // HAVE_VIENNACL
 
 // ---------------------------------------------------------------------------
@@ -35,9 +35,8 @@ TlDenseVector_EigenFloat::TlDenseVector_EigenFloat(const TlDenseVector_ImplEigen
 }
 
 #ifdef HAVE_VIENNACL
-TlDenseVector_EigenFloat::TlDenseVector_EigenFloat(const TlDenseVector_ViennaCL& rhs) {
-    this->pImpl_ = new TlDenseVector_ImplEigenFloat(
-        *dynamic_cast<const TlDenseVector_ImplViennaCL*>(rhs.pImpl_));
+TlDenseVector_EigenFloat::TlDenseVector_EigenFloat(const TlDenseVector_ViennaCLFloat& rhs) {
+    this->pImpl_ = new TlDenseVector_ImplEigenFloat(*dynamic_cast<const TlDenseVector_ImplViennaCLFloat*>(rhs.pImpl_));
 }
 #endif  // HAVE_VIENNACL
 

@@ -7,7 +7,7 @@
 #include "tl_dense_vector_impl_eigen_float.h"
 
 #ifdef HAVE_VIENNACL
-#include "tl_sparse_symmetric_matrix_impl_viennacl.h"
+#include "tl_sparse_symmetric_matrix_impl_viennacl_float.h"
 #endif  // HAVE_VIENNACL
 
 TlSparseSymmetricMatrix_ImplEigenFloat::TlSparseSymmetricMatrix_ImplEigenFloat(const TlMatrixObject::index_type dim)
@@ -30,8 +30,7 @@ TlSparseSymmetricMatrix_ImplEigenFloat::TlSparseSymmetricMatrix_ImplEigenFloat(c
 }
 
 #ifdef HAVE_VIENNACL
-TlSparseSymmetricMatrix_ImplEigenFloat::TlSparseSymmetricMatrix_ImplEigenFloat(
-    const TlSparseSymmetricMatrix_ImplViennaCL& rhs)
+TlSparseSymmetricMatrix_ImplEigenFloat::TlSparseSymmetricMatrix_ImplEigenFloat(const TlSparseSymmetricMatrix_ImplViennaCLFloat& rhs)
     : TlSparseGeneralMatrix_ImplEigenFloat(rhs.getNumOfRows(), rhs.getNumOfCols()) {
     viennacl::copy(rhs.matrix_, this->matrix_);
 }
@@ -160,7 +159,7 @@ TlSparseGeneralMatrix_ImplEigenFloat operator*(const TlSparseSymmetricMatrix_Imp
 }
 
 TlDenseVector_ImplEigenFloat operator*(const TlSparseSymmetricMatrix_ImplEigenFloat& mat,
-                                  const TlDenseVector_ImplEigenFloat& vtr) {
+                                       const TlDenseVector_ImplEigenFloat& vtr) {
     assert(mat.getNumOfCols() == vtr.getSize());
     TlDenseVector_ImplEigenFloat answer;
     answer.vector_ = mat.matrix_.selfadjointView<Eigen::Lower>() * vtr.vector_;

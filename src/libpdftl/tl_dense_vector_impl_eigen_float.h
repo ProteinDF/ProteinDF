@@ -14,7 +14,7 @@ class TlDenseGeneralMatrix_ImplEigenFloat;
 class TlDenseSymmetricMatrix_ImplEigenFloat;
 class TlSparseGeneralMatrix_ImplEigenFloat;
 class TlSparseSymmetricMatrix_ImplEigenFloat;
-class TlDenseVector_ImplViennaCL;
+class TlDenseVector_ImplViennaCLFloat;
 
 class TlDenseVector_ImplEigenFloat : public TlDenseVector_ImplObject {
 public:
@@ -29,12 +29,11 @@ public:
     explicit TlDenseVector_ImplEigenFloat(const TlDenseVectorObject::index_type size = 0);
     TlDenseVector_ImplEigenFloat(const TlDenseVector_ImplEigenFloat& rhs);
     TlDenseVector_ImplEigenFloat(const std::vector<double>& rhs);
-    TlDenseVector_ImplEigenFloat(const double* p,
-                            const TlDenseVectorObject::index_type size);
+    TlDenseVector_ImplEigenFloat(const double* p, const TlDenseVectorObject::index_type size);
     TlDenseVector_ImplEigenFloat(const VectorDataType& rhs);
 
 #ifdef HAVE_VIENNACL
-    TlDenseVector_ImplEigenFloat(const TlDenseVector_ImplViennaCL& rhs);
+    TlDenseVector_ImplEigenFloat(const TlDenseVector_ImplViennaCLFloat& rhs);
 #endif  // HAVE_VIENNACL
 
     operator std::vector<double>() const;
@@ -88,7 +87,7 @@ protected:
     // ---------------------------------------------------------------------------
     // others
     // ---------------------------------------------------------------------------
-    friend class TlDenseVector_ImplViennaCL;
+    friend class TlDenseVector_ImplViennaCLFloat;
 
     friend TlDenseVector_ImplEigenFloat operator+(
         const TlDenseVector_ImplEigenFloat& rhs1,

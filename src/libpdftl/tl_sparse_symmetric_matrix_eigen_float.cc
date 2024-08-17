@@ -11,8 +11,8 @@
 #include "tl_sparse_symmetric_matrix_impl_eigen_float.h"
 
 #ifdef HAVE_VIENNACL
-#include "tl_sparse_symmetric_matrix_impl_viennacl.h"
-#include "tl_sparse_symmetric_matrix_viennacl.h"
+#include "tl_sparse_symmetric_matrix_impl_viennacl_float.h"
+#include "tl_sparse_symmetric_matrix_viennacl_float.h"
 #endif  // HAVE_VIENNACL
 
 // ---------------------------------------------------------------------------
@@ -38,10 +38,8 @@ TlSparseSymmetricMatrix_EigenFloat::TlSparseSymmetricMatrix_EigenFloat(const TlD
 }
 
 #ifdef HAVE_VIENNACL
-TlSparseSymmetricMatrix_EigenFloat::TlSparseSymmetricMatrix_EigenFloat(
-    const TlSparseSymmetricMatrix_ViennaCL& rhs) {
-    this->pImpl_ = new TlSparseSymmetricMatrix_ImplEigenFloat(
-        *(dynamic_cast<TlSparseSymmetricMatrix_ImplViennaCL*>(rhs.pImpl_)));
+TlSparseSymmetricMatrix_EigenFloat::TlSparseSymmetricMatrix_EigenFloat(const TlSparseSymmetricMatrix_ViennaCLFloat& rhs) {
+    this->pImpl_ = new TlSparseSymmetricMatrix_ImplEigenFloat(*(dynamic_cast<TlSparseSymmetricMatrix_ImplViennaCLFloat*>(rhs.pImpl_)));
 }
 #endif  // HAVE_VIENNACL
 

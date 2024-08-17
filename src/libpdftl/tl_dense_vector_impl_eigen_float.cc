@@ -6,7 +6,7 @@
 #define VIENNACL_HAVE_EIGEN
 #include <viennacl/vector.hpp>
 
-#include "tl_dense_vector_impl_viennacl.h"
+#include "tl_dense_vector_impl_viennacl_float.h"
 #endif  // HAVE_VIENNACL
 
 // ---------------------------------------------------------------------------
@@ -34,7 +34,7 @@ TlDenseVector_ImplEigenFloat::TlDenseVector_ImplEigenFloat(const VectorDataType&
 }
 
 #ifdef HAVE_VIENNACL
-TlDenseVector_ImplEigenFloat::TlDenseVector_ImplEigenFloat(const TlDenseVector_ImplViennaCL& rhs)
+TlDenseVector_ImplEigenFloat::TlDenseVector_ImplEigenFloat(const TlDenseVector_ImplViennaCLFloat& rhs)
     : vector_(VectorDataType::Zero(rhs.getSize())) {
     viennacl::copy(rhs.vector_, this->vector_);
 }
