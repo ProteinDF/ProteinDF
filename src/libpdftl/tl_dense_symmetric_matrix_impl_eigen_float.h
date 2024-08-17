@@ -4,8 +4,8 @@
 #include "tl_dense_general_matrix_impl_eigen_float.h"
 #include "tl_dense_vector_impl_eigen_float.h"
 
-class TlSparseSymmetricMatrix_ImplEigen;
-class TlDenseSymmetricMatrix_ImplViennaCL;
+class TlSparseSymmetricMatrix_ImplEigenFloat;
+class TlDenseSymmetricMatrix_ImplViennaCLFloat;
 
 class TlDenseSymmetricMatrix_ImplEigenFloat : public TlDenseGeneralMatrix_ImplEigenFloat {
     // ---------------------------------------------------------------------------
@@ -19,8 +19,7 @@ public:
     TlDenseSymmetricMatrix_ImplEigenFloat(const TlSparseSymmetricMatrix_ImplEigenFloat& sm);
 
 #ifdef HAVE_VIENNACL
-    TlDenseSymmetricMatrix_ImplEigenFloat(
-        const TlDenseSymmetricMatrix_ImplViennaCL& rhs);
+    TlDenseSymmetricMatrix_ImplEigenFloat(const TlDenseSymmetricMatrix_ImplViennaCLFloat& rhs);
 #endif  // HAVE_VIENNACL
 
     virtual ~TlDenseSymmetricMatrix_ImplEigenFloat();
@@ -72,11 +71,9 @@ protected:
     // others
     // ---------------------------------------------------------------------------
     friend class TlDenseSymmetricMatrix_EigenFloat;
-
     friend class TlDenseGeneralMatrix_ImplEigenFloat;
     friend class TlSparseSymmetricMatrix_ImplEigenFloat;
-
-    friend class TlDenseSymmetricMatrix_ImplViennaCL;
+    friend class TlDenseSymmetricMatrix_ImplViennaCLFloat;
 
     // DM(G) * DM(S)
     friend TlDenseGeneralMatrix_ImplEigenFloat operator*(

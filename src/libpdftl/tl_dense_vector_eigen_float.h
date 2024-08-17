@@ -11,7 +11,7 @@ class TlDenseSymmetricMatrix_EigenFloat;
 class TlSparseGeneralMatrix_EigenFloat;
 class TlSparseSymmetricMatrix_EigenFloat;
 
-class TlDenseVector_ViennaCL;
+class TlDenseVector_ViennaCLFloat;
 
 class TlDenseVector_EigenFloat : public TlDenseVectorObject {
 public:
@@ -22,7 +22,7 @@ public:
     TlDenseVector_EigenFloat(const TlDenseVector_ImplEigenFloat& rhs);
 
 #ifdef HAVE_VIENNACL
-    TlDenseVector_EigenFloat(const TlDenseVector_ViennaCL& rhs);
+    TlDenseVector_EigenFloat(const TlDenseVector_ViennaCLFloat& rhs);
 #endif  // HAVE_VIENNACL
 
     operator std::vector<double>() const;
@@ -53,7 +53,7 @@ public:
     // ---------------------------------------------------------------------------
     friend class TlDenseGeneralMatrix_EigenFloat;
     friend class TlDenseSymmetricMatrix_EigenFloat;
-    friend class TlDenseVector_ViennaCL;
+    friend class TlDenseVector_ViennaCLFloat;
 
     friend TlDenseVector_EigenFloat operator+(const TlDenseVector_EigenFloat& rhs1,
                                               const TlDenseVector_EigenFloat& rhs2);

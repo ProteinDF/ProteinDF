@@ -14,7 +14,7 @@
 #include "tl_dense_vector_impl_eigen_float.h"
 #include "tl_sparse_symmetric_matrix_eigen_float.h"
 class TlSparseSymmetricMatrix_ImplEigenFloat;
-class TlSparseGeneralMatrix_ImplViennaCL;
+class TlSparseGeneralMatrix_ImplViennaCLFloat;
 
 class TlSparseGeneralMatrix_ImplEigenFloat : public TlSparseMatrix_ImplObject {
 public:
@@ -26,16 +26,15 @@ public:
     // constructor & destructor
     // ---------------------------------------------------------------------------
 public:
-    explicit TlSparseGeneralMatrix_ImplEigenFloat(
-        const TlMatrixObject::index_type row = 0,
-        const TlMatrixObject::index_type col = 0);
+    explicit TlSparseGeneralMatrix_ImplEigenFloat(const TlMatrixObject::index_type row = 0,
+                                                  const TlMatrixObject::index_type col = 0);
     TlSparseGeneralMatrix_ImplEigenFloat(const TlSparseGeneralMatrix_ImplEigenFloat& rhs);
     TlSparseGeneralMatrix_ImplEigenFloat(const TlSparseSymmetricMatrix_ImplEigenFloat& rhs);
     TlSparseGeneralMatrix_ImplEigenFloat(const MatrixDataType& rhs);
     TlSparseGeneralMatrix_ImplEigenFloat(const TlDenseGeneralMatrix_ImplEigenFloat& rhs);
 
 #ifdef HAVE_VIENNACL
-    TlSparseGeneralMatrix_ImplEigenFloat(const TlSparseGeneralMatrix_ImplViennaCL& rhs);
+    TlSparseGeneralMatrix_ImplEigenFloat(const TlSparseGeneralMatrix_ImplViennaCLFloat& rhs);
 #endif  // HAVE_VIENNACL
 
     virtual ~TlSparseGeneralMatrix_ImplEigenFloat();
@@ -99,7 +98,7 @@ protected:
     friend TlSparseSymmetricMatrix_EigenFloat;
     friend TlSparseSymmetricMatrix_ImplEigenFloat;
 
-    friend class TlSparseGeneralMatrix_ImplViennaCL;
+    friend class TlSparseGeneralMatrix_ImplViennaCLFloat;
 
     // DM(G) = DM(G) * SM(G)
     friend TlDenseGeneralMatrix_ImplEigenFloat operator*(

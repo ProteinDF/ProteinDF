@@ -224,6 +224,18 @@ if (VIENNACL_FOUND)
     tl_sparse_general_matrix_impl_viennacl.h
     tl_sparse_symmetric_matrix_viennacl.h
     tl_sparse_symmetric_matrix_impl_viennacl.h
+
+    tl_dense_general_matrix_viennacl_float.h
+    tl_dense_general_matrix_impl_viennacl_float.h
+    tl_dense_symmetric_matrix_viennacl_float.h
+    tl_dense_symmetric_matrix_impl_viennacl_float.h
+    tl_dense_vector_viennacl_float.h
+    tl_dense_vector_impl_viennacl_float.h
+
+    tl_sparse_general_matrix_viennacl_float.h
+    tl_sparse_general_matrix_impl_viennacl_float.h
+    tl_sparse_symmetric_matrix_viennacl_float.h
+    tl_sparse_symmetric_matrix_impl_viennacl_float.h
     )
 
   set(LIBPDFTL_SOURCES
@@ -240,6 +252,18 @@ if (VIENNACL_FOUND)
     tl_sparse_general_matrix_impl_viennacl.cc
     tl_sparse_symmetric_matrix_viennacl.cc
     tl_sparse_symmetric_matrix_impl_viennacl.cc
+
+    tl_dense_general_matrix_viennacl_float.cc
+    tl_dense_general_matrix_impl_viennacl_float.cc
+    tl_dense_symmetric_matrix_viennacl_float.cc
+    tl_dense_symmetric_matrix_impl_viennacl_float.cc
+    tl_dense_vector_viennacl_float.cc
+    tl_dense_vector_impl_viennacl_float.cc
+
+    tl_sparse_general_matrix_viennacl_float.cc
+    tl_sparse_general_matrix_impl_viennacl_float.cc
+    tl_sparse_symmetric_matrix_viennacl_float.cc
+    tl_sparse_symmetric_matrix_impl_viennacl_float.cc
     )
 
   set(LIBPDFTL_LIBRARIES

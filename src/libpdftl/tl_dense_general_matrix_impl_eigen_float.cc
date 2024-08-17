@@ -16,7 +16,7 @@
 #include <viennacl/matrix.hpp>
 #include <viennacl/matrix_proxy.hpp>
 
-#include "tl_dense_general_matrix_impl_viennacl.h"
+#include "tl_dense_general_matrix_impl_viennacl_float.h"
 #endif  //
 
 // ----------------------------------------------------------------------------
@@ -51,8 +51,7 @@ TlDenseGeneralMatrix_ImplEigenFloat::TlDenseGeneralMatrix_ImplEigenFloat(
     : matrix_(sm.matrix_) {}
 
 #ifdef HAVE_VIENNACL
-TlDenseGeneralMatrix_ImplEigenFloat::TlDenseGeneralMatrix_ImplEigenFloat(
-    const TlDenseGeneralMatrix_ImplViennaCL& rhs)
+TlDenseGeneralMatrix_ImplEigenFloat::TlDenseGeneralMatrix_ImplEigenFloat(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs)
     : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()) {
     viennacl::copy(rhs.matrix_, this->matrix_);
 }
