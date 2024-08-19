@@ -51,6 +51,7 @@ void DfDiffDensityMatrix::exec() {
 
 #ifdef HAVE_EIGEN
         case LAP_EIGEN:
+        case LAP_VIENNACL:
             this->exec_eigen();
             break;
 #endif  // HAVE_EIGEN
@@ -88,11 +89,11 @@ void DfDiffDensityMatrix::exec_lapack() {
             break;
     }
 }
-#endif // HAVE_LAPACK
+#endif  // HAVE_LAPACK
 
 #ifdef HAVE_EIGEN
 void DfDiffDensityMatrix::exec_eigen() {
-    this->log_.info("make diff matrix by using LAPACK");
+    this->log_.info("make diff matrix by using Eigen");
     switch (this->m_nMethodType) {
         case METHOD_RKS:
             this->calc<TlDenseSymmetricMatrix_Eigen>(RUN_RKS, this->m_nIteration);
@@ -115,4 +116,4 @@ void DfDiffDensityMatrix::exec_eigen() {
             break;
     }
 }
-#endif // HAVE_EIGEN
+#endif  // HAVE_EIGEN
