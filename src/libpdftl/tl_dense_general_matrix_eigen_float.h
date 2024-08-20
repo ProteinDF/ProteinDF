@@ -1,9 +1,14 @@
 #ifndef TL_DENSE_GENERAL_MATRIX_EIGEN_FLOAT_H
 #define TL_DENSE_GENERAL_MATRIX_EIGEN_FLOAT_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
+
 #include "tl_dense_general_matrix_impl_eigen_float.h"
 #include "tl_dense_general_matrix_object.h"
 
+class TlDenseGeneralMatrix_Eigen;
 class TlDenseSymmetricMatrix_EigenFloat;
 class TlDenseVector_EigenFloat;
 class TlSparseGeneralMatrix_EigenFloat;
@@ -17,11 +22,11 @@ class TlDenseGeneralMatrix_EigenFloat : public TlDenseGeneralMatrixObject {
     // constructor & destructor
     // ---------------------------------------------------------------------------
 public:
-    explicit TlDenseGeneralMatrix_EigenFloat(
-        const TlMatrixObject::index_type row = 1,
-        const TlMatrixObject::index_type col = 1,
-        double const* const pBuf = NULL);
+    explicit TlDenseGeneralMatrix_EigenFloat(const TlMatrixObject::index_type row = 1,
+                                             const TlMatrixObject::index_type col = 1,
+                                             double const* const pBuf = NULL);
     TlDenseGeneralMatrix_EigenFloat(const TlDenseGeneralMatrix_EigenFloat& rhs);
+    TlDenseGeneralMatrix_EigenFloat(const TlDenseGeneralMatrix_Eigen& rhs);
     TlDenseGeneralMatrix_EigenFloat(const TlDenseSymmetricMatrix_EigenFloat& rhs);
     TlDenseGeneralMatrix_EigenFloat(const TlDenseGeneralMatrix_ImplEigenFloat& rhs);
     TlDenseGeneralMatrix_EigenFloat(const TlSparseGeneralMatrix_EigenFloat& sm);
@@ -84,6 +89,7 @@ protected:
     // ---------------------------------------------------------------------------
     friend class TlCommunicate;
 
+    friend class TlDenseGeneralMatrix_Eigen;
     friend class TlDenseSymmetricMatrix_EigenFloat;
     friend class TlDenseGeneralMatrix_ViennaCLFloat;
     friend class TlSparseGeneralMatrix_EigenFloat;

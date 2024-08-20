@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "tl_dense_general_matrix_impl_eigen.h"
+#include "tl_dense_general_matrix_impl_eigen_float.h"
 #include "tl_dense_symmetric_matrix_impl_eigen.h"
 #include "tl_dense_vector_impl_eigen.h"
 #include "tl_sparse_general_matrix_impl_eigen.h"
@@ -22,37 +23,35 @@
 // ----------------------------------------------------------------------------
 // constructor & destructor
 // ----------------------------------------------------------------------------
-TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
-    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
-    double const* const pBuf)
+TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+                                                               double const* const pBuf)
     : matrix_(MatrixDataType::Zero(row, col)) {
     if (pBuf != NULL) {
         this->vtr2mat(pBuf);
     }
 };
 
-TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
-    const TlDenseGeneralMatrix_ImplEigen& rhs) {
+TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplEigen& rhs) {
     this->matrix_ = rhs.matrix_;
 }
 
-TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
-    const TlDenseSymmetricMatrix_ImplEigen& rhs) {
+TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplEigenFloat& rhs) {
+    this->matrix_ = rhs.matrix_.cast<double>();
+}
+
+TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplEigen& rhs) {
     this->matrix_ = rhs.matrix_;
 }
 
-TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
-    const MatrixDataType& rhs) {
+TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(const MatrixDataType& rhs) {
     this->matrix_ = rhs;
 }
 
-TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
-    const TlSparseGeneralMatrix_ImplEigen& sm)
+TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(const TlSparseGeneralMatrix_ImplEigen& sm)
     : matrix_(sm.matrix_) {}
 
 #ifdef HAVE_VIENNACL
-TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(
-    const TlDenseGeneralMatrix_ImplViennaCL& rhs)
+TlDenseGeneralMatrix_ImplEigen::TlDenseGeneralMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplViennaCL& rhs)
     : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()) {
     viennacl::copy(rhs.matrix_, this->matrix_);
 }

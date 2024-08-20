@@ -10,6 +10,7 @@
 #define VIENNACL_WITH_EIGEN 1
 
 #include <viennacl/matrix.hpp>
+
 #include "tl_dense_matrix_impl_object.h"
 
 #ifdef HAVE_EIGEN
@@ -22,7 +23,7 @@ class TlDenseGeneralMatrix_ImplEigen;
 class TlSparseGeneralMatrix_ImplViennaCL;
 
 class TlDenseGeneralMatrix_ImplViennaCL : public TlDenseMatrix_ImplObject {
-   public:
+public:
     typedef viennacl::vector<double> VectorDataType;
     typedef viennacl::matrix<double> MatrixDataType;
 
@@ -35,20 +36,15 @@ class TlDenseGeneralMatrix_ImplViennaCL : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // constructor & destructor
     // ---------------------------------------------------------------------------
-   public:
-    explicit TlDenseGeneralMatrix_ImplViennaCL(
-        const TlMatrixObject::index_type row = 0,
-        const TlMatrixObject::index_type col = 0,
-        double const* const pBuf = NULL);
-    TlDenseGeneralMatrix_ImplViennaCL(
-        const TlDenseGeneralMatrix_ImplViennaCL& rhs);
-    TlDenseGeneralMatrix_ImplViennaCL(
-        const TlDenseSymmetricMatrix_ImplViennaCL& rhs);
-    TlDenseGeneralMatrix_ImplViennaCL(
-        const TlSparseGeneralMatrix_ImplViennaCL& rhs);
+public:
+    explicit TlDenseGeneralMatrix_ImplViennaCL(const TlMatrixObject::index_type row = 0,
+                                               const TlMatrixObject::index_type col = 0,
+                                               double const* const pBuf = NULL);
+    TlDenseGeneralMatrix_ImplViennaCL(const TlDenseGeneralMatrix_ImplViennaCL& rhs);
+    TlDenseGeneralMatrix_ImplViennaCL(const TlDenseSymmetricMatrix_ImplViennaCL& rhs);
+    TlDenseGeneralMatrix_ImplViennaCL(const TlSparseGeneralMatrix_ImplViennaCL& rhs);
 #ifdef HAVE_EIGEN
-    TlDenseGeneralMatrix_ImplViennaCL(
-        const TlDenseGeneralMatrix_ImplEigen& rhs);
+    TlDenseGeneralMatrix_ImplViennaCL(const TlDenseGeneralMatrix_ImplEigen& rhs);
 #endif  // HAVE_EIGEN
 
     virtual ~TlDenseGeneralMatrix_ImplViennaCL();
@@ -58,7 +54,7 @@ class TlDenseGeneralMatrix_ImplViennaCL : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // properties
     // ---------------------------------------------------------------------------
-   public:
+public:
     virtual TlMatrixObject::index_type getNumOfRows() const;
     virtual TlMatrixObject::index_type getNumOfCols() const;
     virtual void resize(const TlMatrixObject::index_type row,
@@ -76,7 +72,7 @@ class TlDenseGeneralMatrix_ImplViennaCL : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // operators
     // ---------------------------------------------------------------------------
-   public:
+public:
     TlDenseGeneralMatrix_ImplViennaCL& operator=(
         const TlDenseGeneralMatrix_ImplViennaCL& rhs);
 
@@ -92,7 +88,7 @@ class TlDenseGeneralMatrix_ImplViennaCL : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // operations
     // ---------------------------------------------------------------------------
-   public:
+public:
     virtual double sum() const;
     // virtual double trace() const;
     virtual double getRMS() const;
@@ -111,13 +107,13 @@ class TlDenseGeneralMatrix_ImplViennaCL : public TlDenseMatrix_ImplObject {
     // ---------------------------------------------------------------------------
     // protected
     // ---------------------------------------------------------------------------
-   protected:
+protected:
     void vtr2mat(const double* pBuf);
 
     // ---------------------------------------------------------------------------
     // variables
     // ---------------------------------------------------------------------------
-   protected:
+protected:
     MatrixDataType matrix_;
 
     // ---------------------------------------------------------------------------

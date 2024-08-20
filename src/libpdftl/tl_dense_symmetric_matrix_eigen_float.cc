@@ -1,6 +1,11 @@
-#include "tl_dense_symmetric_matrix_eigen_float.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
 
 #include "tl_dense_general_matrix_eigen_float.h"
+#include "tl_dense_symmetric_matrix_eigen.h"
+#include "tl_dense_symmetric_matrix_impl_eigen.h"
+#include "tl_dense_symmetric_matrix_eigen_float.h"
 #include "tl_dense_symmetric_matrix_impl_eigen_float.h"
 #include "tl_dense_vector_eigen_float.h"
 #include "tl_dense_vector_impl_eigen_float.h"
@@ -12,27 +17,24 @@
 #include "tl_dense_symmetric_matrix_viennacl_float.h"
 #endif  // HAVE_VIENNACL
 
-TlDenseSymmetricMatrix_EigenFloat::TlDenseSymmetricMatrix_EigenFloat(
-    const TlMatrixObject::index_type dim, double const* const pBuf) {
+TlDenseSymmetricMatrix_EigenFloat::TlDenseSymmetricMatrix_EigenFloat(const TlMatrixObject::index_type dim, double const* const pBuf) {
     this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigenFloat(dim, pBuf);
 }
 
-TlDenseSymmetricMatrix_EigenFloat::TlDenseSymmetricMatrix_EigenFloat(
-    const TlDenseSymmetricMatrix_EigenFloat& rhs) {
-    this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigenFloat(
-        *(dynamic_cast<const TlDenseSymmetricMatrix_ImplEigenFloat*>(rhs.pImpl_)));
+TlDenseSymmetricMatrix_EigenFloat::TlDenseSymmetricMatrix_EigenFloat(const TlDenseSymmetricMatrix_EigenFloat& rhs) {
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigenFloat(*(dynamic_cast<const TlDenseSymmetricMatrix_ImplEigenFloat*>(rhs.pImpl_)));
 }
 
-TlDenseSymmetricMatrix_EigenFloat::TlDenseSymmetricMatrix_EigenFloat(
-    const TlDenseGeneralMatrix_EigenFloat& rhs) {
-    this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigenFloat(
-        *(dynamic_cast<const TlDenseGeneralMatrix_ImplEigenFloat*>(rhs.pImpl_)));
+TlDenseSymmetricMatrix_EigenFloat::TlDenseSymmetricMatrix_EigenFloat(const TlDenseSymmetricMatrix_Eigen& rhs) {
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigenFloat(*(dynamic_cast<const TlDenseSymmetricMatrix_ImplEigen*>(rhs.pImpl_)));
 }
 
-TlDenseSymmetricMatrix_EigenFloat::TlDenseSymmetricMatrix_EigenFloat(
-    const TlSparseSymmetricMatrix_EigenFloat& sm) {
-    this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigenFloat(
-        *(dynamic_cast<TlSparseSymmetricMatrix_ImplEigenFloat*>(sm.pImpl_)));
+TlDenseSymmetricMatrix_EigenFloat::TlDenseSymmetricMatrix_EigenFloat(const TlDenseGeneralMatrix_EigenFloat& rhs) {
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigenFloat(*(dynamic_cast<const TlDenseGeneralMatrix_ImplEigenFloat*>(rhs.pImpl_)));
+}
+
+TlDenseSymmetricMatrix_EigenFloat::TlDenseSymmetricMatrix_EigenFloat(const TlSparseSymmetricMatrix_EigenFloat& sm) {
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplEigenFloat(*(dynamic_cast<TlSparseSymmetricMatrix_ImplEigenFloat*>(sm.pImpl_)));
 }
 
 #ifdef HAVE_VIENNACL

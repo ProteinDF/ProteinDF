@@ -1,5 +1,11 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
+
 #include "tl_dense_general_matrix_eigen_float.h"
 
+#include "tl_dense_general_matrix_eigen.h"
+#include "tl_dense_general_matrix_impl_eigen.h"
 #include "tl_dense_general_matrix_impl_eigen_float.h"
 #include "tl_dense_symmetric_matrix_eigen_float.h"
 #include "tl_dense_symmetric_matrix_impl_eigen_float.h"
@@ -18,6 +24,10 @@ TlDenseGeneralMatrix_EigenFloat::TlDenseGeneralMatrix_EigenFloat(const TlMatrixO
 
 TlDenseGeneralMatrix_EigenFloat::TlDenseGeneralMatrix_EigenFloat(const TlDenseGeneralMatrix_EigenFloat& rhs) {
     this->pImpl_ = new TlDenseGeneralMatrix_ImplEigenFloat(*(dynamic_cast<const TlDenseGeneralMatrix_ImplEigenFloat*>(rhs.pImpl_)));
+}
+
+TlDenseGeneralMatrix_EigenFloat::TlDenseGeneralMatrix_EigenFloat(const TlDenseGeneralMatrix_Eigen& rhs) {
+    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigenFloat(*(dynamic_cast<const TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_)));
 }
 
 TlDenseGeneralMatrix_EigenFloat::TlDenseGeneralMatrix_EigenFloat(const TlDenseSymmetricMatrix_EigenFloat& rhs) {

@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
+
 #include "tl_dense_symmetric_matrix_impl_eigen_float.h"
 
 #include <Eigen/Dense>
@@ -10,27 +14,28 @@
 #include "tl_dense_symmetric_matrix_impl_viennacl_float.h"
 #endif  // HAVE_VIENNACL
 
-TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(
-    const TlMatrixObject::index_type dim, double const* const pBuf)
+TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(const TlMatrixObject::index_type dim, double const* const pBuf)
     : TlDenseGeneralMatrix_ImplEigenFloat(dim, dim) {
     if (pBuf != NULL) {
         this->vtr2mat(pBuf);
     }
 }
 
-TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(
-    const TlDenseSymmetricMatrix_ImplEigenFloat& rhs)
-    : TlDenseGeneralMatrix_ImplEigenFloat(rhs) {}
+TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(const TlDenseSymmetricMatrix_ImplEigenFloat& rhs)
+    : TlDenseGeneralMatrix_ImplEigenFloat(rhs) {
+}
 
-TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(
-    const TlDenseGeneralMatrix_ImplEigenFloat& rhs) {
+TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(const TlDenseSymmetricMatrix_ImplEigen& rhs)
+    : TlDenseGeneralMatrix_ImplEigenFloat(rhs) {
+}
+
+TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(const TlDenseGeneralMatrix_ImplEigenFloat& rhs) {
     this->matrix_ = rhs.matrix_;
     this->resize(rhs.getNumOfRows(), rhs.getNumOfRows());
     this->matrix_ = this->matrix_.selfadjointView<Eigen::Upper>();
 }
 
-TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(
-    const TlSparseSymmetricMatrix_ImplEigenFloat& sm)
+TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(const TlSparseSymmetricMatrix_ImplEigenFloat& sm)
     : TlDenseGeneralMatrix_ImplEigenFloat(sm.getNumOfRows(), sm.getNumOfCols()) {
     // this->matrix_ = sm.matrix_.selfadjointView<Eigen::Upper>();
     this->matrix_ = sm.matrix_;
@@ -48,7 +53,7 @@ TlDenseSymmetricMatrix_ImplEigenFloat::~TlDenseSymmetricMatrix_ImplEigenFloat() 
 TlDenseSymmetricMatrix_ImplEigenFloat::operator std::vector<double>() const {
     const std::size_t dim = this->getNumOfRows();
     const std::size_t size = dim * (dim + 1) / 2;
-    std::cout << "TlDenseSymmetricMatrix_ImplEigenFloat::operator std::vector<double>() const: size=" << size << std::endl;
+    // std::cout << "TlDenseSymmetricMatrix_ImplEigenFloat::operator std::vector<double>() const: size=" << size << std::endl;
     std::vector<double> buf(size);
 
     // column-major
@@ -62,7 +67,7 @@ TlDenseSymmetricMatrix_ImplEigenFloat::operator std::vector<double>() const {
         }
     }
 
-    std::cout << "TlDenseSymmetricMatrix_ImplEigenFloat::operator std::vector<double>() return" << std::endl;
+    // std::cout << "TlDenseSymmetricMatrix_ImplEigenFloat::operator std::vector<double>() return" << std::endl;
     return buf;
 }
 
