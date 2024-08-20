@@ -1,6 +1,11 @@
-#include "tl_dense_general_matrix_eigen.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
 
+#include "tl_dense_general_matrix_eigen.h"
+#include "tl_dense_general_matrix_eigen_float.h"
 #include "tl_dense_general_matrix_impl_eigen.h"
+#include "tl_dense_general_matrix_impl_eigen_float.h"
 #include "tl_dense_symmetric_matrix_eigen.h"
 #include "tl_dense_symmetric_matrix_impl_eigen.h"
 #include "tl_dense_vector_eigen.h"
@@ -12,26 +17,24 @@
 #include "tl_dense_general_matrix_viennacl.h"
 #endif  // HAVE_VIENNACL
 
-TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(
-    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
-    double const* const pBuf) {
+TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+                                                       double const* const pBuf) {
     this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(row, col, pBuf);
 }
 
-TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(
-    const TlDenseGeneralMatrix_Eigen& rhs) {
-    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(
-        *(dynamic_cast<const TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_)));
+TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(const TlDenseGeneralMatrix_Eigen& rhs) {
+    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(*(dynamic_cast<const TlDenseGeneralMatrix_ImplEigen*>(rhs.pImpl_)));
 }
 
-TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(
-    const TlDenseSymmetricMatrix_Eigen& rhs) {
-    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(
-        *(dynamic_cast<const TlDenseSymmetricMatrix_ImplEigen*>(rhs.pImpl_)));
+TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(const TlDenseGeneralMatrix_EigenFloat& rhs) {
+    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(*(dynamic_cast<const TlDenseGeneralMatrix_ImplEigenFloat*>(rhs.pImpl_)));
 }
 
-TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(
-    const TlDenseGeneralMatrix_ImplEigen& rhs) {
+TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(const TlDenseSymmetricMatrix_Eigen& rhs) {
+    this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(*(dynamic_cast<const TlDenseSymmetricMatrix_ImplEigen*>(rhs.pImpl_)));
+}
+
+TlDenseGeneralMatrix_Eigen::TlDenseGeneralMatrix_Eigen(const TlDenseGeneralMatrix_ImplEigen& rhs) {
     this->pImpl_ = new TlDenseGeneralMatrix_ImplEigen(rhs);
 }
 

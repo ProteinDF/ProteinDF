@@ -1,11 +1,19 @@
 #ifndef TL_DENSE_SYMMETRIC_MATRIX_IMPL_EIGEN_FLOAT_H
 #define TL_DENSE_SYMMETRIC_MATRIX_IMPL_EIGEN_FLOAT_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
+
 #include "tl_dense_general_matrix_impl_eigen_float.h"
 #include "tl_dense_vector_impl_eigen_float.h"
 
+class TlDenseSymmetricMatrix_ImplEigen;
 class TlSparseSymmetricMatrix_ImplEigenFloat;
+
+#ifdef HAVE_VIENNACL
 class TlDenseSymmetricMatrix_ImplViennaCLFloat;
+#endif  // HAVE_VIENNACL
 
 class TlDenseSymmetricMatrix_ImplEigenFloat : public TlDenseGeneralMatrix_ImplEigenFloat {
     // ---------------------------------------------------------------------------
@@ -15,6 +23,7 @@ public:
     explicit TlDenseSymmetricMatrix_ImplEigenFloat(const TlMatrixObject::index_type dim = 0,
                                                    double const* const pBuf = NULL);
     TlDenseSymmetricMatrix_ImplEigenFloat(const TlDenseSymmetricMatrix_ImplEigenFloat& rhs);
+    TlDenseSymmetricMatrix_ImplEigenFloat(const TlDenseSymmetricMatrix_ImplEigen& rhs);
     TlDenseSymmetricMatrix_ImplEigenFloat(const TlDenseGeneralMatrix_ImplEigenFloat& rhs);
     TlDenseSymmetricMatrix_ImplEigenFloat(const TlSparseSymmetricMatrix_ImplEigenFloat& sm);
 
@@ -71,6 +80,7 @@ protected:
     // others
     // ---------------------------------------------------------------------------
     friend class TlDenseSymmetricMatrix_EigenFloat;
+    friend class TlDenseSymmetricMatrix_ImplEigen;
     friend class TlDenseGeneralMatrix_ImplEigenFloat;
     friend class TlSparseSymmetricMatrix_ImplEigenFloat;
     friend class TlDenseSymmetricMatrix_ImplViennaCLFloat;

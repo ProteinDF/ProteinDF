@@ -27,10 +27,11 @@ protected:
 protected:
     template <typename SymmetricMatrix, typename Vector,
               typename SparseGeneralMatrix, typename SparseSymmetricMatrix,
-              typename TempSymmetricMatrix = SymmetricMatrix>
+              typename TempDenseSymmetricMatrix = SymmetricMatrix>
     void getK_runType();
 
-    template <typename SymmetricMatrix, typename Vector, typename SparseGeneralMatrix, typename SparseSymmetricMatrix, typename TempSymmetricMatrix = SymmetricMatrix>
+    template <typename DenseSymmetricMatrix, typename Vector, typename SparseGeneralMatrix, typename SparseSymmetricMatrix,
+              typename TempDenseSymmetricMatrix = DenseSymmetricMatrix>
     void getK_runType_L(DfObject::RUN_TYPE runType);
 
     // ---------------------------------------------------------------------------

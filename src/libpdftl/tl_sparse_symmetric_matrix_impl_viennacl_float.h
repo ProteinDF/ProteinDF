@@ -19,8 +19,7 @@ public:
     TlSparseSymmetricMatrix_ImplViennaCLFloat(const TlDenseSymmetricMatrix_ImplViennaCLFloat& rhs);
 
 #ifdef HAVE_EIGEN
-    TlSparseSymmetricMatrix_ImplViennaCLFloat(
-        const TlSparseSymmetricMatrix_ImplEigenFloat& rhs);
+    TlSparseSymmetricMatrix_ImplViennaCLFloat(const TlSparseSymmetricMatrix_ImplEigenFloat& rhs);
 #endif  // HAVE_EIGEN
 
     virtual ~TlSparseSymmetricMatrix_ImplViennaCLFloat();

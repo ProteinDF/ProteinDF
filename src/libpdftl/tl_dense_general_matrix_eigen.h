@@ -1,9 +1,14 @@
 #ifndef TL_DENSE_GENERAL_MATRIX_EIGEN_H
 #define TL_DENSE_GENERAL_MATRIX_EIGEN_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
+
 #include "tl_dense_general_matrix_object.h"
 
 class TlCommunicate;
+class TlDenseGeneralMatrix_EigenFloat;
 class TlDenseSymmetricMatrix_Eigen;
 class TlDenseVector_Eigen;
 class TlDenseGeneralMatrix_ImplEigen;
@@ -16,11 +21,11 @@ class TlDenseGeneralMatrix_Eigen : public TlDenseGeneralMatrixObject {
     // constructor & destructor
     // ---------------------------------------------------------------------------
 public:
-    explicit TlDenseGeneralMatrix_Eigen(
-        const TlMatrixObject::index_type row = 1,
-        const TlMatrixObject::index_type col = 1,
-        double const* const pBuf = NULL);
+    explicit TlDenseGeneralMatrix_Eigen(const TlMatrixObject::index_type row = 1,
+                                        const TlMatrixObject::index_type col = 1,
+                                        double const* const pBuf = NULL);
     TlDenseGeneralMatrix_Eigen(const TlDenseGeneralMatrix_Eigen& rhs);
+    TlDenseGeneralMatrix_Eigen(const TlDenseGeneralMatrix_EigenFloat& rhs);
     TlDenseGeneralMatrix_Eigen(const TlDenseSymmetricMatrix_Eigen& rhs);
     TlDenseGeneralMatrix_Eigen(const TlDenseGeneralMatrix_ImplEigen& rhs);
     TlDenseGeneralMatrix_Eigen(const TlSparseGeneralMatrix_Eigen& sm);
@@ -83,6 +88,7 @@ protected:
     // ---------------------------------------------------------------------------
     friend class TlCommunicate;
 
+    friend class TlDenseGeneralMatrix_EigenFloat;
     friend class TlDenseSymmetricMatrix_Eigen;
     friend class TlDenseGeneralMatrix_ViennaCL;
     friend class TlSparseGeneralMatrix_Eigen;
