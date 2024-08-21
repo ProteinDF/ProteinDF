@@ -1,16 +1,27 @@
 #ifndef TL_DENSE_SYMMETRIC_MATRIX_IMPL_VIENNACL_FLOAT_H
 #define TL_DENSE_SYMMETRIC_MATRIX_IMPL_VIENNACL_FLOAT_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
+
+#ifdef HAVE_EIGEN
 // IMPORTANT: Must be set prior to any ViennaCL includes if you want to use
 // ViennaCL algorithms on Eigen objects
 #define VIENNACL_WITH_EIGEN 1
 
+#endif  // HAVE_EIGEN
+
 #include "tl_dense_general_matrix_impl_viennacl_float.h"
 
 class TlDenseGeneralMatrix_ImplViennaCLFloat;
+class TlDenseSymmetricMatrix_ImplViennaCL;
 class TlDenseVector_ImplViennaCLFloat;
-class TlDenseSymmetricMatrix_ImplEigenFloat;
 class TlSparseSymmetricMatrix_ImplViennaCLFloat;
+
+#ifdef HAVE_EIGEN
+class TlDenseSymmetricMatrix_ImplEigenFloat;
+#endif  // HAVE_EIGEN
 
 class TlDenseSymmetricMatrix_ImplViennaCLFloat : public TlDenseGeneralMatrix_ImplViennaCLFloat {
     // ---------------------------------------------------------------------------
@@ -19,6 +30,7 @@ class TlDenseSymmetricMatrix_ImplViennaCLFloat : public TlDenseGeneralMatrix_Imp
 public:
     explicit TlDenseSymmetricMatrix_ImplViennaCLFloat(const TlMatrixObject::index_type dim = 0);
     TlDenseSymmetricMatrix_ImplViennaCLFloat(const TlDenseSymmetricMatrix_ImplViennaCLFloat& rhs);
+    TlDenseSymmetricMatrix_ImplViennaCLFloat(const TlDenseSymmetricMatrix_ImplViennaCL& rhs);
     TlDenseSymmetricMatrix_ImplViennaCLFloat(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs);
     TlDenseSymmetricMatrix_ImplViennaCLFloat(const TlSparseSymmetricMatrix_ImplViennaCLFloat& rhs);
 
@@ -71,6 +83,7 @@ public:
     // others
     // ---------------------------------------------------------------------------
     friend class TlDenseGeneralMatrix_ImplViennaCLFloat;
+    friend class TlDenseSymmetricMatrix_ImplViennaCL;
     friend class TlDenseSymmetricMatrix_ImplEigenFloat;
 
     friend TlDenseGeneralMatrix_ImplViennaCLFloat operator*(

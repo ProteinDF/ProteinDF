@@ -2,14 +2,10 @@
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
-#include "tl_dense_general_matrix_impl_viennacl_float.h"
-
 #ifdef HAVE_EIGEN
+#define VIENNACL_HAVE_EIGEN
 #include <Eigen/Core>
 #include <Eigen/LU>
-#define VIENNACL_HAVE_EIGEN
-#include "tl_dense_general_matrix_impl_eigen_float.h"
-#include "tl_sparse_general_matrix_impl_eigen_float.h"
 #endif  // HAVE_EIGEN
 
 #include <viennacl/linalg/cg.hpp>
@@ -20,10 +16,16 @@
 #include <viennacl/matrix.hpp>
 #include <viennacl/matrix_proxy.hpp>
 
-#include "tl_dense_general_matrix_impl_eigen_float.h"
+#include "tl_dense_general_matrix_impl_viennacl.h"
+#include "tl_dense_general_matrix_impl_viennacl_float.h"
 #include "tl_dense_symmetric_matrix_impl_viennacl_float.h"
 #include "tl_dense_vector_impl_viennacl_float.h"
 #include "tl_sparse_general_matrix_impl_viennacl_float.h"
+
+#ifdef HAVE_EIGEN
+#include "tl_dense_general_matrix_impl_eigen_float.h"
+#include "tl_sparse_general_matrix_impl_eigen_float.h"
+#endif  // HAVE_EIGEN
 
 // ---------------------------------------------------------------------------
 // constructor & destructor
@@ -38,6 +40,28 @@ TlDenseGeneralMatrix_ImplViennaCLFloat::TlDenseGeneralMatrix_ImplViennaCLFloat(c
 
 TlDenseGeneralMatrix_ImplViennaCLFloat::TlDenseGeneralMatrix_ImplViennaCLFloat(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs) {
     this->matrix_ = rhs.matrix_;
+}
+
+TlDenseGeneralMatrix_ImplViennaCLFloat::TlDenseGeneralMatrix_ImplViennaCLFloat(const TlDenseGeneralMatrix_ImplViennaCL& rhs)
+    : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()) {
+#ifdef HAVE_EIGEN
+    {
+        Eigen::MatrixXd eigenMd;
+        viennacl::copy(rhs.matrix_, eigenMd);
+        Eigen::MatrixXf eigenMf = eigenMd.cast<float>();
+        viennacl::copy(eigenMf, this->matrix_);
+    }
+#else
+    {
+        const TlMatrixObject::index_type row = rhs.getNumOfRows();
+        const TlMatrixObject::index_type col = rhs.getNumOfCols();
+        for (TlMatrixObject::index_type r = 0; r < row; ++r) {
+            for (TlMatrixObject::index_type c = 0; c < col; ++c) {
+                this->matrix_(r, c) = static_cast<float>(rhs.matrix_(r, c));
+            }
+        }
+    }
+#endif  // HAVE_EIGEN
 }
 
 TlDenseGeneralMatrix_ImplViennaCLFloat::TlDenseGeneralMatrix_ImplViennaCLFloat(const TlDenseSymmetricMatrix_ImplViennaCLFloat& rhs) {

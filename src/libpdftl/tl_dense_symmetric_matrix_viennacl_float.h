@@ -1,12 +1,20 @@
 #ifndef TL_DENSE_SYMMETRIC_MATRIX_VIENNACL_FLOAT_H
 #define TL_DENSE_SYMMETRIC_MATRIX_VIENNACL_FLOAT_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif  // HAVE_CONFIG_H
+
 #include "tl_dense_symmetric_matrix_object.h"
 
 class TlDenseGeneralMatrix_ViennaCLFloat;
+class TlDenseSymmetricMatrix_ViennaCL;
 class TlDenseVector_ViennaCLFloat;
-class TlDenseSymmetricMatrix_EigenFloat;
 class TlSparseSymmetricMatrix_ViennaCLFloat;
+
+#ifdef HAVE_EIGEN
+class TlDenseSymmetricMatrix_EigenFloat;
+#endif  // HAVE_EIGEN
 
 class TlDenseSymmetricMatrix_ViennaCLFloat : public TlDenseSymmetricMatrixObject {
     // ---------------------------------------------------------------------------
@@ -22,6 +30,7 @@ public:
 public:
     explicit TlDenseSymmetricMatrix_ViennaCLFloat(const TlMatrixObject::index_type dim = 1);
     TlDenseSymmetricMatrix_ViennaCLFloat(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs);
+    TlDenseSymmetricMatrix_ViennaCLFloat(const TlDenseSymmetricMatrix_ViennaCL& rhs);
     TlDenseSymmetricMatrix_ViennaCLFloat(const TlDenseGeneralMatrix_ViennaCLFloat& rhs);
     TlDenseSymmetricMatrix_ViennaCLFloat(const TlSparseSymmetricMatrix_ViennaCLFloat& rhs);
 #ifdef HAVE_EIGEN
@@ -86,8 +95,11 @@ protected:
     // Friends
     // ---------------------------------------------------------------------------
     friend class TlDenseGeneralMatrix_ViennaCLFloat;
-    friend class TlDenseSymmetricMatrix_EigenFloat;
+    friend class TlDenseSymmetricMatrix_ViennaCL;
     friend class TlSparseSymmetricMatrix_ViennaCLFloat;
+
+    friend class TlDenseSymmetricMatrix_Eigen;
+    friend class TlDenseSymmetricMatrix_EigenFloat;
 
     friend TlDenseGeneralMatrix_ViennaCLFloat operator*(
         const TlDenseGeneralMatrix_ViennaCLFloat& mat1,

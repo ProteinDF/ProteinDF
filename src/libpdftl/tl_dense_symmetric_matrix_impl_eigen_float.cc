@@ -2,11 +2,11 @@
 #include "config.h"  // this file created by autotools
 #endif               // HAVE_CONFIG_H
 
-#include "tl_dense_symmetric_matrix_impl_eigen_float.h"
-
 #include <Eigen/Dense>
 #include <iostream>
 
+#include "tl_dense_general_matrix_impl_eigen.h"
+#include "tl_dense_symmetric_matrix_impl_eigen_float.h"
 #include "tl_dense_vector_impl_eigen_float.h"
 #include "tl_sparse_symmetric_matrix_impl_eigen_float.h"
 
@@ -26,7 +26,8 @@ TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(con
 }
 
 TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(const TlDenseSymmetricMatrix_ImplEigen& rhs)
-    : TlDenseGeneralMatrix_ImplEigenFloat(rhs) {
+    : TlDenseGeneralMatrix_ImplEigenFloat(static_cast<TlDenseGeneralMatrix_ImplEigen>(rhs)) {
+    // std::cerr << "TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(const TlDenseSymmetricMatrix_ImplEigen& rhs)" << std::endl;
 }
 
 TlDenseSymmetricMatrix_ImplEigenFloat::TlDenseSymmetricMatrix_ImplEigenFloat(const TlDenseGeneralMatrix_ImplEigenFloat& rhs) {

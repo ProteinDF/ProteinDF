@@ -1,9 +1,11 @@
+#include "tl_dense_general_matrix_eigen.h"
+
 #include <iostream>
 
 #include "config.h"
 #include "gtest/gtest.h"
 #include "matrix_common.h"
-#include "tl_dense_general_matrix_eigen.h"
+#include "tl_dense_general_matrix_eigen_float.h"
 #include "tl_dense_vector_eigen.h"
 #include "tl_sparse_general_matrix_eigen.h"
 #include "vector_common.h"
@@ -20,6 +22,22 @@ static const std::string mat_load_path = "temp.gen.eigen.load.mat";
 // -----------------------------------------------------------------------------
 // test
 // -----------------------------------------------------------------------------
+TEST(TlDenseGeneralMatrix_Eigen, constructByGeneralMatrixFloat) {
+    const int row = 20;
+    const int col = 30;
+    TlDenseGeneralMatrix_EigenFloat Mf(row, col);
+    Mf.set(1, 0, 1.0);
+    Mf.set(2, 3, 4.0);
+    Mf.set(5, 8, -10.0);
+
+    TlDenseGeneralMatrix_Eigen M = Mf;
+    EXPECT_EQ(row, M.getNumOfRows());
+    EXPECT_EQ(col, M.getNumOfCols());
+    EXPECT_DOUBLE_EQ(1.0, M.get(1, 0));
+    EXPECT_DOUBLE_EQ(4.0, M.get(2, 3));
+    EXPECT_DOUBLE_EQ(-10.0, M.get(5, 8));
+}
+
 TEST(TlDenseGeneralMatrix_Eigen, constructBySparseGeneralMatrix) {
     const int row = 20;
     const int col = 30;
