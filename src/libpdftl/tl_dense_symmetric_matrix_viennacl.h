@@ -32,8 +32,7 @@ public:
     TlDenseSymmetricMatrix_ViennaCL(const TlDenseSymmetricMatrix_ViennaCL& rhs);
     TlDenseSymmetricMatrix_ViennaCL(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs);
     TlDenseSymmetricMatrix_ViennaCL(const TlDenseGeneralMatrix_ViennaCL& rhs);
-    TlDenseSymmetricMatrix_ViennaCL(
-        const TlSparseSymmetricMatrix_ViennaCL& rhs);
+    TlDenseSymmetricMatrix_ViennaCL(const TlSparseSymmetricMatrix_ViennaCL& rhs);
 #ifdef HAVE_EIGEN
     TlDenseSymmetricMatrix_ViennaCL(const TlDenseSymmetricMatrix_Eigen& rhs);
 #endif  // HAVE_EIGEN
@@ -46,35 +45,25 @@ public:
     // operators
     // ---------------------------------------------------------------------------
 public:
-    TlDenseSymmetricMatrix_ViennaCL& operator=(
-        const TlDenseSymmetricMatrix_ViennaCL& rhs);
-    TlDenseSymmetricMatrix_ViennaCL& operator=(
-        const TlDenseSymmetricMatrix_Eigen& rhs);
+    TlDenseSymmetricMatrix_ViennaCL& operator=(const TlDenseSymmetricMatrix_ViennaCL& rhs);
+    TlDenseSymmetricMatrix_ViennaCL& operator=(const TlDenseSymmetricMatrix_Eigen& rhs);
 
-    const TlDenseSymmetricMatrix_ViennaCL operator+(
-        const TlDenseSymmetricMatrix_ViennaCL& rhs) const;
-    const TlDenseSymmetricMatrix_ViennaCL operator-(
-        const TlDenseSymmetricMatrix_ViennaCL& rhs) const;
-    const TlDenseSymmetricMatrix_ViennaCL operator*(
-        const TlDenseSymmetricMatrix_ViennaCL& rhs) const;
+    const TlDenseSymmetricMatrix_ViennaCL operator+(const TlDenseSymmetricMatrix_ViennaCL& rhs) const;
+    const TlDenseSymmetricMatrix_ViennaCL operator-(const TlDenseSymmetricMatrix_ViennaCL& rhs) const;
+    const TlDenseSymmetricMatrix_ViennaCL operator*(const TlDenseSymmetricMatrix_ViennaCL& rhs) const;
 
-    TlDenseSymmetricMatrix_ViennaCL& operator+=(
-        const TlDenseSymmetricMatrix_ViennaCL& rhs);
-    TlDenseSymmetricMatrix_ViennaCL& operator-=(
-        const TlDenseSymmetricMatrix_ViennaCL& rhs);
+    TlDenseSymmetricMatrix_ViennaCL& operator+=(const TlDenseSymmetricMatrix_ViennaCL& rhs);
+    TlDenseSymmetricMatrix_ViennaCL& operator-=(const TlDenseSymmetricMatrix_ViennaCL& rhs);
     TlDenseSymmetricMatrix_ViennaCL& operator*=(const double coef);
     TlDenseSymmetricMatrix_ViennaCL& operator/=(const double coef);
-    TlDenseSymmetricMatrix_ViennaCL& operator*=(
-        const TlDenseSymmetricMatrix_ViennaCL& rhs);
+    TlDenseSymmetricMatrix_ViennaCL& operator*=(const TlDenseSymmetricMatrix_ViennaCL& rhs);
 
     // ---------------------------------------------------------------------------
     // operations
     // ---------------------------------------------------------------------------
-    const TlDenseSymmetricMatrix_ViennaCL& dotInPlace(
-        const TlDenseSymmetricMatrix_ViennaCL& rhs);
+    const TlDenseSymmetricMatrix_ViennaCL& dotInPlace(const TlDenseSymmetricMatrix_ViennaCL& rhs);
 
-    bool eig(TlDenseVector_ViennaCL* pEigVal,
-             TlDenseGeneralMatrix_ViennaCL* pEigVec,
+    bool eig(TlDenseVector_ViennaCL* pEigVal, TlDenseGeneralMatrix_ViennaCL* pEigVec,
              EIG_METHOD eigMethod = EIG_QR) const;
     TlDenseSymmetricMatrix_ViennaCL inverse() const;
 

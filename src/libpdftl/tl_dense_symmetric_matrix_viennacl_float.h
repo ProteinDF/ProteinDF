@@ -45,26 +45,18 @@ public:
     // operators
     // ---------------------------------------------------------------------------
 public:
-    TlDenseSymmetricMatrix_ViennaCLFloat& operator=(
-        const TlDenseSymmetricMatrix_ViennaCLFloat& rhs);
-    TlDenseSymmetricMatrix_ViennaCLFloat& operator=(
-        const TlDenseSymmetricMatrix_EigenFloat& rhs);
+    TlDenseSymmetricMatrix_ViennaCLFloat& operator=(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs);
+    TlDenseSymmetricMatrix_ViennaCLFloat& operator=(const TlDenseSymmetricMatrix_EigenFloat& rhs);
 
-    const TlDenseSymmetricMatrix_ViennaCLFloat operator+(
-        const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) const;
-    const TlDenseSymmetricMatrix_ViennaCLFloat operator-(
-        const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) const;
-    const TlDenseSymmetricMatrix_ViennaCLFloat operator*(
-        const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) const;
+    const TlDenseSymmetricMatrix_ViennaCLFloat operator+(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) const;
+    const TlDenseSymmetricMatrix_ViennaCLFloat operator-(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) const;
+    const TlDenseSymmetricMatrix_ViennaCLFloat operator*(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) const;
 
-    TlDenseSymmetricMatrix_ViennaCLFloat& operator+=(
-        const TlDenseSymmetricMatrix_ViennaCLFloat& rhs);
-    TlDenseSymmetricMatrix_ViennaCLFloat& operator-=(
-        const TlDenseSymmetricMatrix_ViennaCLFloat& rhs);
+    TlDenseSymmetricMatrix_ViennaCLFloat& operator+=(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs);
+    TlDenseSymmetricMatrix_ViennaCLFloat& operator-=(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs);
     TlDenseSymmetricMatrix_ViennaCLFloat& operator*=(const float coef);
     TlDenseSymmetricMatrix_ViennaCLFloat& operator/=(const float coef);
-    TlDenseSymmetricMatrix_ViennaCLFloat& operator*=(
-        const TlDenseSymmetricMatrix_ViennaCLFloat& rhs);
+    TlDenseSymmetricMatrix_ViennaCLFloat& operator*=(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs);
 
     // ---------------------------------------------------------------------------
     // operations

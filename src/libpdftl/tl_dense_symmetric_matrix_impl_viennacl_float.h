@@ -9,7 +9,6 @@
 // IMPORTANT: Must be set prior to any ViennaCL includes if you want to use
 // ViennaCL algorithms on Eigen objects
 #define VIENNACL_WITH_EIGEN 1
-
 #endif  // HAVE_EIGEN
 
 #include "tl_dense_general_matrix_impl_viennacl_float.h"
@@ -45,10 +44,10 @@ public:
     // properties
     // ---------------------------------------------------------------------------
     virtual void set(const TlMatrixObject::index_type row,
-                     const TlMatrixObject::index_type col, const float value);
+                     const TlMatrixObject::index_type col, const double value);
 
     virtual void add(const TlMatrixObject::index_type row,
-                     const TlMatrixObject::index_type col, const float value);
+                     const TlMatrixObject::index_type col, const double value);
 
     // ---------------------------------------------------------------------------
     // operators
@@ -68,12 +67,9 @@ public:
     TlDenseSymmetricMatrix_ImplViennaCLFloat transpose() const;
     TlDenseSymmetricMatrix_ImplViennaCLFloat inverse() const;
 
-    bool eig(TlDenseVector_ImplViennaCLFloat* pEigval,
-             TlDenseGeneralMatrix_ImplViennaCLFloat* pEigvec) const;
-    // bool eig_powerIteration(TlDenseVector_ImplViennaCLFloat* pEigval,
-    //                         TlDenseGeneralMatrix_ImplViennaCLFloat* pEigvec) const;
-    bool eig_QR(TlDenseVector_ImplViennaCLFloat* pEigval,
-                TlDenseGeneralMatrix_ImplViennaCLFloat* pEigvec) const;
+    bool eig(TlDenseVector_ImplViennaCLFloat* pEigval, TlDenseGeneralMatrix_ImplViennaCLFloat* pEigvec) const;
+    // bool eig_powerIteration(TlDenseVector_ImplViennaCLFloat* pEigval, TlDenseGeneralMatrix_ImplViennaCLFloat* pEigvec) const;
+    bool eig_QR(TlDenseVector_ImplViennaCLFloat* pEigval, TlDenseGeneralMatrix_ImplViennaCLFloat* pEigvec) const;
 
     // ---------------------------------------------------------------------------
     // private

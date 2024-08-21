@@ -47,12 +47,9 @@ TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(const T
     }
 }
 
-TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(
-    const TlSparseSymmetricMatrix_ImplViennaCL& rhs)
-    : TlDenseGeneralMatrix_ImplViennaCL(rhs.getNumOfRows(),
-                                        rhs.getNumOfCols()) {
-    TlDenseSymmetricMatrix_ImplEigen DM =
-        TlSparseSymmetricMatrix_ImplEigen(rhs);
+TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(const TlSparseSymmetricMatrix_ImplViennaCL& rhs)
+    : TlDenseGeneralMatrix_ImplViennaCL(rhs.getNumOfRows(), rhs.getNumOfCols()) {
+    TlDenseSymmetricMatrix_ImplEigen DM = TlSparseSymmetricMatrix_ImplEigen(rhs);
     viennacl::copy(DM.matrix_, this->matrix_);
 }
 
@@ -65,10 +62,10 @@ TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(
 }
 #endif  // HAVE_EIGEN
 
-TlDenseSymmetricMatrix_ImplViennaCL::~TlDenseSymmetricMatrix_ImplViennaCL() {}
+TlDenseSymmetricMatrix_ImplViennaCL::~TlDenseSymmetricMatrix_ImplViennaCL() {
+}
 
-void TlDenseSymmetricMatrix_ImplViennaCL::vtr2mat(
-    const std::vector<double>& vtr) {
+void TlDenseSymmetricMatrix_ImplViennaCL::vtr2mat(const std::vector<double>& vtr) {
     const std::size_t dim = this->getNumOfRows();
 
 #ifdef HAVE_EIGEN
@@ -111,18 +108,16 @@ void TlDenseSymmetricMatrix_ImplViennaCL::vtr2mat(
 // ---------------------------------------------------------------------------
 // properties
 // ---------------------------------------------------------------------------
-void TlDenseSymmetricMatrix_ImplViennaCL::set(
-    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
-    const double value) {
+void TlDenseSymmetricMatrix_ImplViennaCL::set(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+                                              const double value) {
     this->matrix_(row, col) = value;
     if (row != col) {
         this->matrix_(col, row) = value;
     }
 }
 
-void TlDenseSymmetricMatrix_ImplViennaCL::add(
-    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
-    const double value) {
+void TlDenseSymmetricMatrix_ImplViennaCL::add(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+                                              const double value) {
     this->matrix_(row, col) += value;
     if (row != col) {
         this->matrix_(col, row) += value;
@@ -150,9 +145,8 @@ TlDenseSymmetricMatrix_ImplViennaCL::inverse() const {
     return answer;
 }
 
-bool TlDenseSymmetricMatrix_ImplViennaCL::eig(
-    TlDenseVector_ImplViennaCL* pEigval,
-    TlDenseGeneralMatrix_ImplViennaCL* pEigvec) const {
+bool TlDenseSymmetricMatrix_ImplViennaCL::eig(TlDenseVector_ImplViennaCL* pEigval,
+                                              TlDenseGeneralMatrix_ImplViennaCL* pEigvec) const {
     // default is QR method
     return this->eig_QR(pEigval, pEigvec);
 }
@@ -171,9 +165,8 @@ bool TlDenseSymmetricMatrix_ImplViennaCL::eig(
 //     return true;
 // }
 
-bool TlDenseSymmetricMatrix_ImplViennaCL::eig_QR(
-    TlDenseVector_ImplViennaCL* pEigval,
-    TlDenseGeneralMatrix_ImplViennaCL* pEigvec) const {
+bool TlDenseSymmetricMatrix_ImplViennaCL::eig_QR(TlDenseVector_ImplViennaCL* pEigval,
+                                                 TlDenseGeneralMatrix_ImplViennaCL* pEigvec) const {
     const TlMatrixObject::index_type dim = this->getNumOfRows();
     pEigvec->resize(dim, dim);
     pEigval->resize(dim);
@@ -204,17 +197,15 @@ bool TlDenseSymmetricMatrix_ImplViennaCL::eig_QR(
 // ---------------------------------------------------------------------------
 // others
 // ---------------------------------------------------------------------------
-TlDenseGeneralMatrix_ImplViennaCL operator*(
-    const TlDenseGeneralMatrix_ImplViennaCL& mat1,
-    const TlDenseSymmetricMatrix_ImplViennaCL& mat2) {
+TlDenseGeneralMatrix_ImplViennaCL operator*(const TlDenseGeneralMatrix_ImplViennaCL& mat1,
+                                            const TlDenseSymmetricMatrix_ImplViennaCL& mat2) {
     TlDenseGeneralMatrix_ImplViennaCL answer;
     answer.matrix_ = viennacl::linalg::prod(mat1.matrix_, mat2.matrix_);
     return answer;
 }
 
-TlDenseGeneralMatrix_ImplViennaCL operator*(
-    const TlDenseSymmetricMatrix_ImplViennaCL& mat1,
-    const TlDenseGeneralMatrix_ImplViennaCL& mat2) {
+TlDenseGeneralMatrix_ImplViennaCL operator*(const TlDenseSymmetricMatrix_ImplViennaCL& mat1,
+                                            const TlDenseGeneralMatrix_ImplViennaCL& mat2) {
     TlDenseGeneralMatrix_ImplViennaCL answer;
     answer.matrix_ = viennacl::linalg::prod(mat1.matrix_, mat2.matrix_);
     return answer;

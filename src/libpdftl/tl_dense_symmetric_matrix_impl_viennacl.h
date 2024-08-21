@@ -34,8 +34,7 @@ public:
     TlDenseSymmetricMatrix_ImplViennaCL(const TlSparseSymmetricMatrix_ImplViennaCL& rhs);
 
 #ifdef HAVE_EIGEN
-    TlDenseSymmetricMatrix_ImplViennaCL(
-        const TlDenseSymmetricMatrix_ImplEigen& rhs);
+    TlDenseSymmetricMatrix_ImplViennaCL(const TlDenseSymmetricMatrix_ImplEigen& rhs);
 #endif  // HAVE_EIGEN
     virtual ~TlDenseSymmetricMatrix_ImplViennaCL();
 
