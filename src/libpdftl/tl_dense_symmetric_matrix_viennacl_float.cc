@@ -56,8 +56,7 @@ void TlDenseSymmetricMatrix_ViennaCLFloat::vtr2mat(const std::vector<double>& vt
 // ---------------------------------------------------------------------------
 // operators
 // ---------------------------------------------------------------------------
-TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator=(
-    const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
+TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator=(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
     if (this != &rhs) {
         delete this->pImpl_;
         this->pImpl_ = new TlDenseSymmetricMatrix_ImplViennaCLFloat(
@@ -67,8 +66,7 @@ TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::oper
     return *this;
 }
 
-TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator=(
-    const TlDenseSymmetricMatrix_EigenFloat& rhs) {
+TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator=(const TlDenseSymmetricMatrix_EigenFloat& rhs) {
     delete this->pImpl_;
     this->pImpl_ = new TlDenseSymmetricMatrix_ImplViennaCLFloat(
         *(dynamic_cast<TlDenseSymmetricMatrix_ImplEigenFloat*>(rhs.pImpl_)));
@@ -76,59 +74,51 @@ TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::oper
     return *this;
 }
 
-const TlDenseSymmetricMatrix_ViennaCLFloat TlDenseSymmetricMatrix_ViennaCLFloat::
-operator+(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) const {
+const TlDenseSymmetricMatrix_ViennaCLFloat TlDenseSymmetricMatrix_ViennaCLFloat::operator+(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) const {
     TlDenseSymmetricMatrix_ViennaCLFloat answer = *this;
     answer += rhs;
     return answer;
 }
 
-const TlDenseSymmetricMatrix_ViennaCLFloat TlDenseSymmetricMatrix_ViennaCLFloat::
-operator-(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) const {
+const TlDenseSymmetricMatrix_ViennaCLFloat TlDenseSymmetricMatrix_ViennaCLFloat::operator-(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) const {
     TlDenseSymmetricMatrix_ViennaCLFloat answer = *this;
     answer -= rhs;
     return answer;
 }
 
-const TlDenseSymmetricMatrix_ViennaCLFloat TlDenseSymmetricMatrix_ViennaCLFloat::
-operator*(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) const {
+const TlDenseSymmetricMatrix_ViennaCLFloat TlDenseSymmetricMatrix_ViennaCLFloat::operator*(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) const {
     TlDenseSymmetricMatrix_ViennaCLFloat answer = *this;
     answer *= rhs;
     return answer;
 }
 
-TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator+=(
-    const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
+TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator+=(    const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
     *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(this->pImpl_)) +=
         *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(rhs.pImpl_));
 
     return *this;
 }
 
-TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator-=(
-    const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
+TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator-=(    const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
     *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(this->pImpl_)) -=
         *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(rhs.pImpl_));
 
     return *this;
 }
 
-TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator*=(
-    const float coef) {
+TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator*=(    const float coef) {
     *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(this->pImpl_)) *= coef;
 
     return *this;
 }
 
-TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator/=(
-    const float coef) {
+TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator/=(    const float coef) {
     *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(this->pImpl_)) /= coef;
 
     return *this;
 }
 
-TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator*=(
-    const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
+TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator*=(    const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
     *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(this->pImpl_)) *=
         *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(rhs.pImpl_));
 

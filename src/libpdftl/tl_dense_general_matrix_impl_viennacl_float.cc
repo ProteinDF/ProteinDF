@@ -16,6 +16,7 @@
 #include <viennacl/matrix.hpp>
 #include <viennacl/matrix_proxy.hpp>
 
+#include "TlUtils.h"
 #include "tl_dense_general_matrix_impl_viennacl.h"
 #include "tl_dense_general_matrix_impl_viennacl_float.h"
 #include "tl_dense_symmetric_matrix_impl_viennacl_float.h"
@@ -81,7 +82,8 @@ TlDenseGeneralMatrix_ImplViennaCLFloat::TlDenseGeneralMatrix_ImplViennaCLFloat(c
 }
 #endif  // HAVE_EIGEN
 
-TlDenseGeneralMatrix_ImplViennaCLFloat::~TlDenseGeneralMatrix_ImplViennaCLFloat() {}
+TlDenseGeneralMatrix_ImplViennaCLFloat::~TlDenseGeneralMatrix_ImplViennaCLFloat() {
+}
 
 TlDenseGeneralMatrix_ImplViennaCLFloat::operator std::vector<double>() const {
     const std::size_t row = this->getNumOfRows();
@@ -147,8 +149,7 @@ void TlDenseGeneralMatrix_ImplViennaCLFloat::add(const TlMatrixObject::index_typ
 // ---------------------------------------------------------------------------
 // operators
 // ---------------------------------------------------------------------------
-TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::operator=(
-    const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs) {
+TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::operator=(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs) {
     if (this != &rhs) {
         this->matrix_ = rhs.matrix_;
     }
@@ -156,8 +157,7 @@ TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::
     return *this;
 }
 
-TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::
-operator+=(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs) {
+TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::operator+=(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs) {
     const TlMatrixObject::index_type row1 = this->getNumOfRows();
     const TlMatrixObject::index_type col1 = this->getNumOfCols();
     const TlMatrixObject::index_type row2 = rhs.getNumOfRows();
@@ -170,8 +170,7 @@ operator+=(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs) {
     return *this;
 }
 
-TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::
-operator-=(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs) {
+TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::operator-=(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs) {
     const TlMatrixObject::index_type row1 = this->getNumOfRows();
     const TlMatrixObject::index_type col1 = this->getNumOfCols();
     const TlMatrixObject::index_type row2 = rhs.getNumOfRows();
@@ -184,22 +183,19 @@ operator-=(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs) {
     return *this;
 }
 
-TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::
-operator*=(const float coef) {
+TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::operator*=(const float coef) {
     this->matrix_ *= coef;
 
     return *this;
 }
 
-TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::
-operator/=(const float coef) {
+TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::operator/=(const float coef) {
     this->matrix_ *= (1.0 / coef);
 
     return *this;
 }
 
-TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::
-operator*=(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs) {
+TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::operator*=(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs) {
     const TlMatrixObject::index_type row1 = this->getNumOfRows();
     const TlMatrixObject::index_type col1 = this->getNumOfCols();
     const TlMatrixObject::index_type row2 = rhs.getNumOfRows();
@@ -235,9 +231,8 @@ double TlDenseGeneralMatrix_ImplViennaCLFloat::getRMS() const {
     return static_cast<double>(rms);
 }
 
-double TlDenseGeneralMatrix_ImplViennaCLFloat::getMaxAbsoluteElement(
-    TlMatrixObject::index_type* outRow,
-    TlMatrixObject::index_type* outCol) const {
+double TlDenseGeneralMatrix_ImplViennaCLFloat::getMaxAbsoluteElement(TlMatrixObject::index_type* outRow,
+                                                                     TlMatrixObject::index_type* outCol) const {
     TlMatrixObject::index_type max_row = 0, max_col = 0;
     float answer = 0.0;
     const unsigned int numOfRows = this->getNumOfRows();
@@ -268,17 +263,14 @@ void TlDenseGeneralMatrix_ImplViennaCLFloat::transposeInPlace() {
     this->matrix_ = viennacl::trans(this->matrix_);
 }
 
-TlDenseGeneralMatrix_ImplViennaCLFloat&
-TlDenseGeneralMatrix_ImplViennaCLFloat::dotInPlace(
-    const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs) {
+TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::dotInPlace(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs) {
     const MatrixDataType tmp =
         viennacl::linalg::element_prod(this->matrix_, rhs.matrix_);
     this->matrix_ = tmp;
     return *this;
 }
 
-TlDenseGeneralMatrix_ImplViennaCLFloat TlDenseGeneralMatrix_ImplViennaCLFloat::transpose()
-    const {
+TlDenseGeneralMatrix_ImplViennaCLFloat TlDenseGeneralMatrix_ImplViennaCLFloat::transpose() const {
     TlDenseGeneralMatrix_ImplViennaCLFloat answer(this->getNumOfCols(),
                                                   this->getNumOfRows());
     answer.matrix_ = viennacl::trans(this->matrix_);
@@ -286,8 +278,7 @@ TlDenseGeneralMatrix_ImplViennaCLFloat TlDenseGeneralMatrix_ImplViennaCLFloat::t
     return answer;
 }
 
-TlDenseGeneralMatrix_ImplViennaCLFloat TlDenseGeneralMatrix_ImplViennaCLFloat::inverse()
-    const {
+TlDenseGeneralMatrix_ImplViennaCLFloat TlDenseGeneralMatrix_ImplViennaCLFloat::inverse() const {
     // const TlMatrixObject::index_type dim = this->getNumOfRows();
     // const VectorDataType v = viennacl::scalar_vector<float>(dim, 1.0);
     // MatrixDataType E = viennacl::diag(v);
@@ -304,8 +295,7 @@ TlDenseGeneralMatrix_ImplViennaCLFloat TlDenseGeneralMatrix_ImplViennaCLFloat::i
 
 #ifdef HAVE_EIGEN
     {
-        EigenMatrixDataType eigenMat(this->getNumOfRows(),
-                                     this->getNumOfCols());
+        EigenMatrixDataType eigenMat(this->getNumOfRows(), this->getNumOfCols());
         copy(this->matrix_, eigenMat);
         const EigenMatrixDataType eigenInvMat = eigenMat.inverse();
         answer.resize(eigenInvMat.rows(), eigenInvMat.cols());
@@ -316,8 +306,7 @@ TlDenseGeneralMatrix_ImplViennaCLFloat TlDenseGeneralMatrix_ImplViennaCLFloat::i
     return answer;
 }
 
-TlDenseGeneralMatrix_ImplViennaCLFloat&
-TlDenseGeneralMatrix_ImplViennaCLFloat::reverseColumns() {
+TlDenseGeneralMatrix_ImplViennaCLFloat& TlDenseGeneralMatrix_ImplViennaCLFloat::reverseColumns() {
     viennacl::slice sr(0, 1, this->getNumOfRows());
     viennacl::slice sc(this->getNumOfCols() - 1, -1, this->getNumOfCols());
 
