@@ -2,8 +2,6 @@
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
-#include "tl_dense_general_matrix_impl_viennacl.h"
-
 #ifdef HAVE_EIGEN
 #include <Eigen/Core>
 #include <Eigen/LU>
@@ -20,7 +18,8 @@
 #include <viennacl/matrix.hpp>
 #include <viennacl/matrix_proxy.hpp>
 
-#include "tl_dense_general_matrix_impl_eigen.h"
+#include "tl_dense_general_matrix_impl_viennacl.h"
+#include "tl_dense_general_matrix_impl_viennacl_float.h"
 #include "tl_dense_symmetric_matrix_impl_viennacl.h"
 #include "tl_dense_vector_impl_viennacl.h"
 #include "tl_sparse_general_matrix_impl_viennacl.h"
@@ -28,35 +27,52 @@
 // ---------------------------------------------------------------------------
 // constructor & destructor
 // ---------------------------------------------------------------------------
-TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(
-    const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
-    double const* const pBuf)
+TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+                                                                     double const* const pBuf)
     : matrix_(row, col) {
     if (pBuf != NULL) {
         this->vtr2mat(pBuf);
     }
 }
 
-TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(
-    const TlDenseGeneralMatrix_ImplViennaCL& rhs) {
+TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(const TlDenseGeneralMatrix_ImplViennaCL& rhs) {
     this->matrix_ = rhs.matrix_;
 }
 
-TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(
-    const TlDenseSymmetricMatrix_ImplViennaCL& rhs) {
+TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs)
+    : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()) {
+#ifdef HAVE_EIGEN
+    {
+        Eigen::MatrixXf eigenMf;
+        viennacl::copy(rhs.matrix_, eigenMf);
+        Eigen::MatrixXd eigenMd = eigenMf.cast<double>();
+        viennacl::copy(eigenMd, this->matrix_);
+    }
+#else
+    {
+        const TlMatrixObject::index_type row = rhs.getNumOfRows();
+        const TlMatrixObject::index_type col = rhs.getNumOfCols();
+        for (TlMatrixObject::index_type r = 0; r < row; ++r) {
+            for (TlMatrixObject::index_type c = 0; c < col; ++c) {
+                this->matrix_(r, c) = static_cast<double>(rhs.matrix_(r, c));
+            }
+        }
+    }
+#endif  // HAVE_EIGEN
+}
+
+TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(const TlDenseSymmetricMatrix_ImplViennaCL& rhs) {
     this->matrix_ = rhs.matrix_;
 }
 
-TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(
-    const TlSparseGeneralMatrix_ImplViennaCL& rhs)
+TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(const TlSparseGeneralMatrix_ImplViennaCL& rhs)
     : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()) {
     TlDenseGeneralMatrix_ImplEigen DM = TlSparseGeneralMatrix_ImplEigen(rhs);
     viennacl::copy(DM.matrix_, this->matrix_);
 }
 
 #ifdef HAVE_EIGEN
-TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(
-    const TlDenseGeneralMatrix_ImplEigen& rhs)
+TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(const TlDenseGeneralMatrix_ImplEigen& rhs)
     : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()) {
     viennacl::copy(rhs.matrix_, this->matrix_);
 }
@@ -289,10 +305,10 @@ TlDenseGeneralMatrix_ImplViennaCL TlDenseGeneralMatrix_ImplViennaCL::inverse()
     {
         EigenMatrixDataType eigenMat(this->getNumOfRows(),
                                      this->getNumOfCols());
-        copy(this->matrix_, eigenMat);
+        viennacl::copy(this->matrix_, eigenMat);
         const EigenMatrixDataType eigenInvMat = eigenMat.inverse();
         answer.resize(eigenInvMat.rows(), eigenInvMat.cols());
-        copy(eigenInvMat, answer.matrix_);
+        viennacl::copy(eigenInvMat, answer.matrix_);
     }
 #endif  // HAVE_EIGEN
 
@@ -320,8 +336,7 @@ void TlDenseGeneralMatrix_ImplViennaCL::vtr2mat(const double* pBuf) {
 
 #ifdef HAVE_EIGEN
     {
-        const Eigen::MatrixXd tmp =
-            Eigen::Map<const Eigen::MatrixXd>(pBuf, row, col);
+        const Eigen::MatrixXd tmp = Eigen::Map<const Eigen::MatrixXd>(pBuf, row, col);
         viennacl::copy(tmp, this->matrix_);
     }
 #else

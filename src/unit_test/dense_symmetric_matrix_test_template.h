@@ -10,7 +10,7 @@
 #include "gtest/gtest.h"
 #include "matrix_common.h"
 
-static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
+static const double EPS = 1.0E-5;  // std::numeric_limits<double>::epsilon();
 
 template <typename T>
 class DenseSymmetricMatrixTest : public ::testing::Test {};

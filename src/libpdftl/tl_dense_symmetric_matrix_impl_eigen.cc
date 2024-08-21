@@ -27,6 +27,7 @@ TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(const TlDense
 
 TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplEigenFloat& rhs)
     : TlDenseGeneralMatrix_ImplEigen(rhs) {
+    std::cerr << "TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplEigenFloat& rhs)" << std::endl;
 }
 
 TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplEigen& rhs) {

@@ -36,6 +36,7 @@ TlDenseGeneralMatrix_ImplEigenFloat::TlDenseGeneralMatrix_ImplEigenFloat(const T
 }
 
 TlDenseGeneralMatrix_ImplEigenFloat::TlDenseGeneralMatrix_ImplEigenFloat(const TlDenseGeneralMatrix_ImplEigen& rhs) {
+    // std::cerr << "TlDenseGeneralMatrix_ImplEigenFloat::TlDenseGeneralMatrix_ImplEigenFloat(const TlDenseGeneralMatrix_ImplEigen& rhs)" << std::endl;
     this->matrix_ = rhs.matrix_.cast<float>();
 }
 

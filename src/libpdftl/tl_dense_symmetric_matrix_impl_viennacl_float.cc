@@ -2,12 +2,11 @@
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
+#ifdef HAVE_EIGEN
 // IMPORTANT: Must be set prior to any ViennaCL includes if you want to use
 // ViennaCL algorithms on Eigen objects
 #define VIENNACL_WITH_EIGEN 1
 
-#ifdef HAVE_EIGEN
-#include "tl_sparse_symmetric_matrix_impl_eigen_float.h"
 #endif  // HAVE_EIGEN
 
 #include <viennacl/linalg/power_iter.hpp>
@@ -18,21 +17,28 @@
 #include "TlTime.h"
 #include "TlUtils.h"
 #include "tl_dense_general_matrix_impl_viennacl_float.h"
-#include "tl_dense_symmetric_matrix_impl_eigen_float.h"
 #include "tl_dense_symmetric_matrix_impl_viennacl_float.h"
 #include "tl_dense_vector_impl_viennacl_float.h"
 #include "tl_sparse_symmetric_matrix_impl_viennacl_float.h"
 
-TlDenseSymmetricMatrix_ImplViennaCLFloat::TlDenseSymmetricMatrix_ImplViennaCLFloat(
-    const TlMatrixObject::index_type dim)
-    : TlDenseGeneralMatrix_ImplViennaCLFloat(dim, dim) {}
+#ifdef HAVE_EIGEN
+#include "tl_dense_symmetric_matrix_impl_eigen_float.h"
+#include "tl_sparse_symmetric_matrix_impl_eigen_float.h"
+#endif  // HAVE_EIGEN
 
-TlDenseSymmetricMatrix_ImplViennaCLFloat::TlDenseSymmetricMatrix_ImplViennaCLFloat(
-    const TlDenseSymmetricMatrix_ImplViennaCLFloat& rhs)
-    : TlDenseGeneralMatrix_ImplViennaCLFloat(rhs) {}
+TlDenseSymmetricMatrix_ImplViennaCLFloat::TlDenseSymmetricMatrix_ImplViennaCLFloat(const TlMatrixObject::index_type dim)
+    : TlDenseGeneralMatrix_ImplViennaCLFloat(dim, dim) {
+}
 
-TlDenseSymmetricMatrix_ImplViennaCLFloat::TlDenseSymmetricMatrix_ImplViennaCLFloat(
-    const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs)
+TlDenseSymmetricMatrix_ImplViennaCLFloat::TlDenseSymmetricMatrix_ImplViennaCLFloat(const TlDenseSymmetricMatrix_ImplViennaCLFloat& rhs)
+    : TlDenseGeneralMatrix_ImplViennaCLFloat(rhs) {
+}
+
+TlDenseSymmetricMatrix_ImplViennaCLFloat::TlDenseSymmetricMatrix_ImplViennaCLFloat(const TlDenseSymmetricMatrix_ImplViennaCL& rhs)
+    : TlDenseGeneralMatrix_ImplViennaCLFloat(rhs) {
+}
+
+TlDenseSymmetricMatrix_ImplViennaCLFloat::TlDenseSymmetricMatrix_ImplViennaCLFloat(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs)
     : TlDenseGeneralMatrix_ImplViennaCLFloat() {
     const TlMatrixObject::index_type dim = rhs.getNumOfRows();
     this->matrix_.resize(dim, dim);
@@ -45,8 +51,7 @@ TlDenseSymmetricMatrix_ImplViennaCLFloat::TlDenseSymmetricMatrix_ImplViennaCLFlo
     }
 }
 
-TlDenseSymmetricMatrix_ImplViennaCLFloat::TlDenseSymmetricMatrix_ImplViennaCLFloat(
-    const TlSparseSymmetricMatrix_ImplViennaCLFloat& rhs)
+TlDenseSymmetricMatrix_ImplViennaCLFloat::TlDenseSymmetricMatrix_ImplViennaCLFloat(const TlSparseSymmetricMatrix_ImplViennaCLFloat& rhs)
     : TlDenseGeneralMatrix_ImplViennaCLFloat(rhs.getNumOfRows(),
                                              rhs.getNumOfCols()) {
     TlDenseSymmetricMatrix_ImplEigenFloat DM = TlSparseSymmetricMatrix_ImplEigenFloat(rhs);
@@ -54,10 +59,8 @@ TlDenseSymmetricMatrix_ImplViennaCLFloat::TlDenseSymmetricMatrix_ImplViennaCLFlo
 }
 
 #ifdef HAVE_EIGEN
-TlDenseSymmetricMatrix_ImplViennaCLFloat::TlDenseSymmetricMatrix_ImplViennaCLFloat(
-    const TlDenseSymmetricMatrix_ImplEigenFloat& rhs)
-    : TlDenseGeneralMatrix_ImplViennaCLFloat(rhs.getNumOfRows(),
-                                             rhs.getNumOfCols()) {
+TlDenseSymmetricMatrix_ImplViennaCLFloat::TlDenseSymmetricMatrix_ImplViennaCLFloat(const TlDenseSymmetricMatrix_ImplEigenFloat& rhs)
+    : TlDenseGeneralMatrix_ImplViennaCLFloat(rhs.getNumOfRows(), rhs.getNumOfCols()) {
     viennacl::copy(rhs.matrix_, this->matrix_);
 }
 #endif  // HAVE_EIGEN

@@ -1,14 +1,21 @@
 #ifndef TL_DENSE_GENERAL_MATRIX_VIENNACL_FLOAT_H
 #define TL_DENSE_GENERAL_MATRIX_VIENNACL_FLOAT_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
+
 #include "tl_dense_general_matrix_object.h"
 
+class TlDenseGeneralMatrix_ViennaCL;
 class TlDenseSymmetricMatrix_ViennaCLFloat;
 class TlDenseGeneralMatrix_ImplViennaCLFloat;
 class TlDenseVector_ViennaCLFloat;
 class TlSparseGeneralMatrix_ViennaCLFloat;
 
+#ifdef HAVE_EIGEN
 class TlDenseGeneralMatrix_EigenFloat;
+#endif  // HAVE_EIGEN
 
 class TlDenseGeneralMatrix_ViennaCLFloat : public TlDenseGeneralMatrixObject {
     // ---------------------------------------------------------------------------
@@ -19,6 +26,7 @@ public:
                                                 const TlMatrixObject::index_type col = 1,
                                                 double const* const pBuf = NULL);
     TlDenseGeneralMatrix_ViennaCLFloat(const TlDenseGeneralMatrix_ViennaCLFloat& rhs);
+    TlDenseGeneralMatrix_ViennaCLFloat(const TlDenseGeneralMatrix_ViennaCL& rhs);
     TlDenseGeneralMatrix_ViennaCLFloat(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs);
     TlDenseGeneralMatrix_ViennaCLFloat(const TlDenseGeneralMatrix_ImplViennaCLFloat& rhs);
     TlDenseGeneralMatrix_ViennaCLFloat(const TlSparseGeneralMatrix_ViennaCLFloat& rhs);
@@ -71,6 +79,7 @@ protected:
     // ---------------------------------------------------------------------------
     // others
     // ---------------------------------------------------------------------------
+    friend class TlDenseGeneralMatrix_ViennaCL;
     friend class TlDenseSymmetricMatrix_ViennaCLFloat;
     friend class TlSparseGeneralMatrix_ViennaCLFloat;
     friend class TlDenseGeneralMatrix_EigenFloat;
