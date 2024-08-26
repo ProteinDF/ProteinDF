@@ -1,6 +1,10 @@
 #ifndef TL_DENSE_GENERAL_MATRIX_IMPL_EIGEN_H
 #define TL_DENSE_GENERAL_MATRIX_IMPL_EIGEN_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
+
 #include <Eigen/Core>
 
 #include "tl_dense_matrix_impl_object.h"
@@ -10,6 +14,7 @@
 #endif  // __cplusplus
 
 class TlDenseGeneralMatrix_ImplEigen;
+class TlDenseGeneralMatrix_ImplEigenFloat;
 class TlDenseSymmetricMatrix_ImplEigen;
 class TlDenseVector_ImplEigen;
 class TlSparseGeneralMatrix_ImplEigen;
@@ -26,18 +31,17 @@ public:
     // constructor & destructor
     // ---------------------------------------------------------------------------
 public:
-    explicit TlDenseGeneralMatrix_ImplEigen(
-        const TlMatrixObject::index_type row = 0,
-        const TlMatrixObject::index_type col = 0,
-        double const* const pBuf = NULL);
+    explicit TlDenseGeneralMatrix_ImplEigen(const TlMatrixObject::index_type row = 0,
+                                            const TlMatrixObject::index_type col = 0,
+                                            double const* const pBuf = NULL);
     TlDenseGeneralMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplEigen& rhs);
+    TlDenseGeneralMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplEigenFloat& rhs);
     TlDenseGeneralMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplEigen& rhs);
     TlDenseGeneralMatrix_ImplEigen(const MatrixDataType& rhs);
     TlDenseGeneralMatrix_ImplEigen(const TlSparseGeneralMatrix_ImplEigen& sm);
 
 #ifdef HAVE_VIENNACL
-    TlDenseGeneralMatrix_ImplEigen(
-        const TlDenseGeneralMatrix_ImplViennaCL& rhs);
+    TlDenseGeneralMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplViennaCL& rhs);
 #endif  // HAVE_VIENNACL
 
     virtual ~TlDenseGeneralMatrix_ImplEigen();
@@ -125,6 +129,9 @@ protected:
     // others
     // ---------------------------------------------------------------------------
     friend class TlDenseGeneralMatrix_Eigen;
+
+    friend class TlDenseGeneralMatrix_EigenFloat;
+    friend class TlDenseGeneralMatrix_ImplEigenFloat;
 
     friend class TlDenseSymmetricMatrix_ImplEigen;
     friend class TlSparseGeneralMatrix_ImplEigen;

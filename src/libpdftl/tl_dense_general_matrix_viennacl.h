@@ -1,8 +1,13 @@
 #ifndef TL_DENSE_GENERAL_MATRIX_VIENNACL_H
 #define TL_DENSE_GENERAL_MATRIX_VIENNACL_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
+
 #include "tl_dense_general_matrix_object.h"
 
+class TlDenseGeneralMatrix_ViennaCLFloat;
 class TlDenseSymmetricMatrix_ViennaCL;
 class TlDenseGeneralMatrix_ImplViennaCL;
 class TlDenseVector_ViennaCL;
@@ -14,12 +19,12 @@ class TlDenseGeneralMatrix_ViennaCL : public TlDenseGeneralMatrixObject {
     // ---------------------------------------------------------------------------
     // constructor & destructor
     // ---------------------------------------------------------------------------
-   public:
-    explicit TlDenseGeneralMatrix_ViennaCL(
-        const TlMatrixObject::index_type row = 1,
-        const TlMatrixObject::index_type col = 1,
-        double const* const pBuf = NULL);
+public:
+    explicit TlDenseGeneralMatrix_ViennaCL(const TlMatrixObject::index_type row = 1,
+                                           const TlMatrixObject::index_type col = 1,
+                                           double const* const pBuf = NULL);
     TlDenseGeneralMatrix_ViennaCL(const TlDenseGeneralMatrix_ViennaCL& rhs);
+    TlDenseGeneralMatrix_ViennaCL(const TlDenseGeneralMatrix_ViennaCLFloat& rhs);
     TlDenseGeneralMatrix_ViennaCL(const TlDenseSymmetricMatrix_ViennaCL& rhs);
     TlDenseGeneralMatrix_ViennaCL(const TlDenseGeneralMatrix_ImplViennaCL& rhs);
     TlDenseGeneralMatrix_ViennaCL(const TlSparseGeneralMatrix_ViennaCL& rhs);
@@ -35,7 +40,7 @@ class TlDenseGeneralMatrix_ViennaCL : public TlDenseGeneralMatrixObject {
     // ---------------------------------------------------------------------------
     // operators
     // ---------------------------------------------------------------------------
-   public:
+public:
     TlDenseGeneralMatrix_ViennaCL& operator=(
         const TlDenseGeneralMatrix_ViennaCL& rhs);
 
@@ -58,7 +63,7 @@ class TlDenseGeneralMatrix_ViennaCL : public TlDenseGeneralMatrixObject {
     // ---------------------------------------------------------------------------
     // operations
     // ---------------------------------------------------------------------------
-   public:
+public:
     virtual double sum() const;
     // virtual double trace() const;
     virtual double getRMS() const;
@@ -76,10 +81,11 @@ class TlDenseGeneralMatrix_ViennaCL : public TlDenseGeneralMatrixObject {
     // ---------------------------------------------------------------------------
     // protected
     // ---------------------------------------------------------------------------
-   protected:
+protected:
     // ---------------------------------------------------------------------------
     // others
     // ---------------------------------------------------------------------------
+    friend class TlDenseGeneralMatrix_ViennaCLFloat;
     friend class TlDenseSymmetricMatrix_ViennaCL;
     friend class TlSparseGeneralMatrix_ViennaCL;
     friend class TlDenseGeneralMatrix_Eigen;

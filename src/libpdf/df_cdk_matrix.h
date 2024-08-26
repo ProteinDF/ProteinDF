@@ -8,14 +8,14 @@
 class DfTaskCtrl;
 
 class DfCdkMatrix : public DfObject {
-   public:
+public:
     DfCdkMatrix(TlSerializeData* pPdfParam);
     virtual ~DfCdkMatrix();
 
-   public:
+public:
     virtual void getK();
 
-   protected:
+protected:
     enum FastCDK_MODE {
         FASTCDK_NONE,
         FASTCDK_PRODUCTIVE,
@@ -24,50 +24,46 @@ class DfCdkMatrix : public DfObject {
         FASTCDK_DEBUG_SUPERMATRIX        // V_pr,qs = <pq|rs> + <ps|rq>
     };
 
-   protected:
+protected:
     template <typename SymmetricMatrix, typename Vector,
-              typename SparseGeneralMatrix, typename SparseSymmetricMatrix>
-    void getK_method();
+              typename SparseGeneralMatrix, typename SparseSymmetricMatrix,
+              typename TempDenseSymmetricMatrix = SymmetricMatrix>
+    void getK_runType();
 
-    template <typename SymmetricMatrix, typename Vector,
-              typename SparseGeneralMatrix, typename SparseSymmetricMatrix>
-    void getK_L(DfObject::RUN_TYPE runType);
+    template <typename DenseSymmetricMatrix, typename Vector, typename SparseGeneralMatrix, typename SparseSymmetricMatrix,
+              typename TempDenseSymmetricMatrix = DenseSymmetricMatrix>
+    void getK_runType_L(DfObject::RUN_TYPE runType);
 
     // ---------------------------------------------------------------------------
     // calc HFx by Ljk
     // ---------------------------------------------------------------------------
-   protected:
-    template <typename Ljk_MatrixType, typename SymmetricMatrix,
-              typename Vector>
+protected:
+    template <typename Ljk_MatrixType, typename SymmetricMatrix, typename Vector, typename TempSymmetricMatrix = SymmetricMatrix>
     void getK_byLjk_useDenseMatrix(const RUN_TYPE runType);
 
-    template <typename Ljk_MatrixType, typename SymmetricMatrix,
-              typename Vector, typename SparseGeneralMatrix>
+    template <typename Ljk_MatrixType, typename SymmetricMatrix, typename Vector, typename SparseGeneralMatrix>
     void getK_byLjk_useTransMatrix(const RUN_TYPE runType);
 
-    template <typename Ljk_MatrixType, typename SymmetricMatrix,
-              typename Vector, typename SparseGeneralMatrix,
-              typename SparseSymmetricMatrix>
+    template <typename Ljk_MatrixType, typename SymmetricMatrix, typename Vector, typename SparseGeneralMatrix, typename SparseSymmetricMatrix>
     void getK_byLjk_useSparseMatrix(const RUN_TYPE runType);
 
     // ---------------------------------------------------------------------------
     // calc HFx by Lk
     // ---------------------------------------------------------------------------
-   protected:
-    template <typename Ljk_MatrixType, typename SymmetricMatrix,
-              typename Vector>
+protected:
+    template <typename Ljk_MatrixType, typename SymmetricMatrix, typename Vector>
     void getK_byLk(const RUN_TYPE runType);
 
     // ---------------------------------------------------------------------------
     // task control
     // ---------------------------------------------------------------------------
-   protected:
+protected:
     DfTaskCtrl* getDfTaskCtrlObject() const;
 
     // ---------------------------------------------------------------------------
     // I/O
     // ---------------------------------------------------------------------------
-   protected:
+protected:
     PQ_PairArray getI2PQ(const std::string& filepath);
 
     template <typename SymmetricMatrix>
@@ -76,18 +72,15 @@ class DfCdkMatrix : public DfObject {
     // ---------------------------------------------------------------------------
     // others
     // ---------------------------------------------------------------------------
-   protected:
+protected:
     template <typename SymmetricMatrix, typename Vector>
-    SymmetricMatrix getCholeskyVector(const Vector& L_col,
-                                      const PQ_PairArray& I2PQ);
+    SymmetricMatrix getCholeskyVector(const Vector& L_col, const PQ_PairArray& I2PQ);
 
     template <typename SparseGeneralMatrix>
     SparseGeneralMatrix getTrans_I2PQ_Matrix(const PQ_PairArray& I2PQ);
 
-    template <typename SymmetricMatrix, typename Vector,
-              typename SparseGeneralMatrix>
-    SymmetricMatrix convert_I2PQ(const SparseGeneralMatrix& I2PQ_mat,
-                                 const Vector& L);
+    template <typename SymmetricMatrix, typename Vector, typename SparseGeneralMatrix>
+    SymmetricMatrix convert_I2PQ(const SparseGeneralMatrix& I2PQ_mat, const Vector& L);
 
     // ---------------------------------------------------------------------------
     template <typename SymmetricMatrix, typename Vector>
@@ -95,18 +88,19 @@ class DfCdkMatrix : public DfObject {
                                     const PQ_PairArray& I2PR);
 
     template <typename SymmetricMatrix, typename Vector>
-    void expandKMatrix(const Vector& vK, const PQ_PairArray& I2PR,
-                       SymmetricMatrix* pK);
+    void expandKMatrix(const Vector& vK, const PQ_PairArray& I2PR, SymmetricMatrix* pK);
 
     // ---------------------------------------------------------------------------
     // variables
     // ---------------------------------------------------------------------------
-   protected:
+protected:
     bool useMmapMatrix_;
     bool isCvSavedAsMmap_;
     int sparseMatrixLevel_;
 
     FastCDK_MODE fastCDK_mode_;
+
+    bool useFP32_;
 };
 
 #endif  // DF_CDK_MATRIX_H
