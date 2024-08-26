@@ -1,7 +1,8 @@
+#include "tl_sparse_symmetric_matrix_impl_viennacl.h"
+
 #include <map>
 
 #include "tl_dense_vector_impl_viennacl.h"
-#include "tl_sparse_symmetric_matrix_impl_viennacl.h"
 
 #ifdef HAVE_EIGEN
 #include "tl_dense_symmetric_matrix_impl_eigen.h"
@@ -50,8 +51,7 @@ TlSparseSymmetricMatrix_ImplViennaCL::TlSparseSymmetricMatrix_ImplViennaCL(
 
 TlSparseSymmetricMatrix_ImplViennaCL::TlSparseSymmetricMatrix_ImplViennaCL(
     const TlDenseSymmetricMatrix_ImplViennaCL& rhs) {
-    TlSparseSymmetricMatrix_ImplEigen eigenSM =
-        TlDenseSymmetricMatrix_ImplEigen(TlDenseSymmetricMatrix_ImplEigen(rhs));
+    TlSparseSymmetricMatrix_ImplEigen eigenSM = TlDenseSymmetricMatrix_ImplEigen(rhs);
     viennacl::copy(eigenSM.matrix_, this->matrix_);
 }
 

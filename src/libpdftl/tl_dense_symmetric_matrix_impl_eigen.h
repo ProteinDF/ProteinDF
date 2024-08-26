@@ -1,8 +1,13 @@
 #ifndef TL_DENSE_SYMMETRIC_MATRIX_IMPL_EIGEN_H
 #define TL_DENSE_SYMMETRIC_MATRIX_IMPL_EIGEN_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
+
 #include "tl_dense_general_matrix_impl_eigen.h"
 
+class TlDenseSymmetricMatrix_ImplEigenFloat;
 class TlDenseVector_ImplEigen;
 class TlSparseSymmetricMatrix_ImplEigen;
 class TlDenseSymmetricMatrix_ImplViennaCL;
@@ -12,18 +17,15 @@ class TlDenseSymmetricMatrix_ImplEigen : public TlDenseGeneralMatrix_ImplEigen {
     // constructor & destructor
     // ---------------------------------------------------------------------------
 public:
-    explicit TlDenseSymmetricMatrix_ImplEigen(
-        const TlMatrixObject::index_type dim = 0,
-        double const* const pBuf = NULL);
-    TlDenseSymmetricMatrix_ImplEigen(
-        const TlDenseSymmetricMatrix_ImplEigen& rhs);
+    explicit TlDenseSymmetricMatrix_ImplEigen(const TlMatrixObject::index_type dim = 0,
+                                              double const* const pBuf = NULL);
+    TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplEigen& rhs);
+    TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplEigenFloat& rhs);
     TlDenseSymmetricMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplEigen& rhs);
-    TlDenseSymmetricMatrix_ImplEigen(
-        const TlSparseSymmetricMatrix_ImplEigen& sm);
+    TlDenseSymmetricMatrix_ImplEigen(const TlSparseSymmetricMatrix_ImplEigen& sm);
 
 #ifdef HAVE_VIENNACL
-    TlDenseSymmetricMatrix_ImplEigen(
-        const TlDenseSymmetricMatrix_ImplViennaCL& rhs);
+    TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplViennaCL& rhs);
 #endif  // HAVE_VIENNACL
 
     virtual ~TlDenseSymmetricMatrix_ImplEigen();

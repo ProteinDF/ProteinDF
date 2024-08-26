@@ -14,9 +14,8 @@ class TlSparseSymmetricMatrix_Eigen : public TlSparseSymmetricMatrixObject {
     // ---------------------------------------------------------------------------
     // constructor & destructor
     // ---------------------------------------------------------------------------
-   public:
-    explicit TlSparseSymmetricMatrix_Eigen(
-        const TlMatrixObject::index_type dim = 1);
+public:
+    explicit TlSparseSymmetricMatrix_Eigen(const TlMatrixObject::index_type dim = 1);
     TlSparseSymmetricMatrix_Eigen(const TlSparseSymmetricMatrix_Eigen& rhs);
     TlSparseSymmetricMatrix_Eigen(const TlSparseGeneralMatrix_Eigen& rhs);
     TlSparseSymmetricMatrix_Eigen(const TlDenseSymmetricMatrix_Eigen& rhs);
@@ -30,7 +29,7 @@ class TlSparseSymmetricMatrix_Eigen : public TlSparseSymmetricMatrixObject {
     // ---------------------------------------------------------------------------
     // operators
     // ---------------------------------------------------------------------------
-   public:
+public:
     TlSparseSymmetricMatrix_Eigen& operator=(
         const TlSparseSymmetricMatrix_Eigen& rhs);
 

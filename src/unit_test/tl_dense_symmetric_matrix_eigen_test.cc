@@ -6,11 +6,31 @@
 #include "gtest/gtest.h"
 #include "matrix_common.h"
 #include "tl_dense_general_matrix_eigen.h"
+#include "tl_dense_symmetric_matrix_eigen.h"
+#include "tl_dense_symmetric_matrix_eigen_float.h"
 #include "tl_dense_vector_eigen.h"
 
 static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
 static const std::string mat_save_load_path = "temp.sym.eigen.save_load.mat";
 static const std::string mat_h5 = "temp.sym.h5";
+
+TEST(TlDenseSymmetricMatrix_Eigen, constructBySymmetricMatrixFloat) {
+    const int dim = 30;
+    TlDenseSymmetricMatrix_EigenFloat Mf(dim);
+    Mf.set(1, 0, 1.0);
+    Mf.set(2, 3, 4.0);
+    Mf.set(5, 8, -10.0);
+
+    TlDenseSymmetricMatrix_Eigen M = Mf;
+    EXPECT_EQ(dim, M.getNumOfRows());
+    EXPECT_EQ(dim, M.getNumOfCols());
+    EXPECT_DOUBLE_EQ(1.0, M.get(1, 0));
+    EXPECT_DOUBLE_EQ(1.0, M.get(0, 1));
+    EXPECT_DOUBLE_EQ(4.0, M.get(2, 3));
+    EXPECT_DOUBLE_EQ(4.0, M.get(3, 2));
+    EXPECT_DOUBLE_EQ(-10.0, M.get(5, 8));
+    EXPECT_DOUBLE_EQ(-10.0, M.get(8, 5));
+}
 
 TEST(TlDenseSymmetricMatrix_Eigen, resize) {
     const int dim1 = 100;
@@ -66,8 +86,7 @@ TEST(TlDenseSymmetricMatrix_Eigen, vtr2mat) {
 }
 
 TEST(TlDenseSymmetricMatrix_Eigen, sym2gen) {
-    TlDenseSymmetricMatrix_Eigen a =
-        getSymMatrixA<TlDenseSymmetricMatrix_Eigen>();
+    TlDenseSymmetricMatrix_Eigen a = getSymMatrixA<TlDenseSymmetricMatrix_Eigen>();
     TlDenseGeneralMatrix_Eigen b = a;
 
     ASSERT_EQ(3, b.getNumOfRows());

@@ -76,7 +76,9 @@ if (EIGEN3_FOUND)
   set(PDF_XTEST_SOURCES
     ${PDF_XTEST_SOURCES}
     tl_dense_general_matrix_eigen_test.cc
+    tl_dense_general_matrix_eigen_float_test.cc
     tl_dense_symmetric_matrix_eigen_test.cc
+    tl_dense_symmetric_matrix_eigen_float_test.cc
     #tl_dense_vector_eigen_test.cc
 
     tl_sparse_general_matrix_eigen_test.cc

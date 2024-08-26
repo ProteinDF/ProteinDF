@@ -10,7 +10,7 @@
 #include "gtest/gtest.h"
 #include "matrix_common.h"
 
-static const double EPS = 1.0E-10;  // std::numeric_limits<double>::epsilon();
+static const double EPS = 1.0E-5;  // std::numeric_limits<double>::epsilon();
 
 template <typename T>
 class DenseSymmetricMatrixTest : public ::testing::Test {};
@@ -33,9 +33,28 @@ TYPED_TEST_P(DenseSymmetricMatrixTest, doesConstructor) {
     EXPECT_DOUBLE_EQ(0.0, a.get(2, 2));
 }
 
+TYPED_TEST_P(DenseSymmetricMatrixTest, doesSetterGetter) {
+    TypeParam a(3);
+
+    ASSERT_EQ(3, a.getNumOfRows());
+    ASSERT_EQ(3, a.getNumOfCols());
+    a.set(0, 0, 1.0);
+    a.set(1, 2, 3.0);
+    a.set(2, 0, 5.0);
+    EXPECT_DOUBLE_EQ(1.0, a.get(0, 0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(0, 1));
+    EXPECT_DOUBLE_EQ(5.0, a.get(0, 2));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 0));
+    EXPECT_DOUBLE_EQ(0.0, a.get(1, 1));
+    EXPECT_DOUBLE_EQ(3.0, a.get(1, 2));
+    EXPECT_DOUBLE_EQ(5.0, a.get(2, 0));
+    EXPECT_DOUBLE_EQ(3.0, a.get(2, 1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2, 2));
+}
+
 TYPED_TEST_P(DenseSymmetricMatrixTest, doesCopyConstructor) {
     TypeParam a = getSymMatrixA<TypeParam>();
-    TypeParam c = a;
+    TypeParam c(a);
 
     ASSERT_EQ(3, c.getNumOfRows());
     ASSERT_EQ(3, c.getNumOfCols());
@@ -278,8 +297,11 @@ TYPED_TEST_P(DenseSymmetricMatrixTest, doesSum) {
 //   EXPECT_DOUBLE_EQ(A(3, 3), LL(3, 3));
 // }
 
-REGISTER_TYPED_TEST_SUITE_P(DenseSymmetricMatrixTest, doesConstructor,
-                            doesCopyConstructor, doesOperatorEq, doesOperatorAdd,
+REGISTER_TYPED_TEST_SUITE_P(DenseSymmetricMatrixTest,
+                            doesConstructor,
+                            doesSetterGetter,
+                            doesCopyConstructor, 
+                            doesOperatorEq, doesOperatorAdd,
                             doesOperatorIAdd, doesSaveAndLoad,
                             doesSaveAndLoadToHdf5, doesInverse, doesDotInPlace,
                             doesSum);

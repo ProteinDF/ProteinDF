@@ -11,19 +11,14 @@ class TlSparseSymmetricMatrix_ImplEigen
     // ---------------------------------------------------------------------------
     // constructor & destructor
     // ---------------------------------------------------------------------------
-   public:
-    explicit TlSparseSymmetricMatrix_ImplEigen(
-        const TlMatrixObject::index_type dim = 0);
-    TlSparseSymmetricMatrix_ImplEigen(
-        const TlSparseSymmetricMatrix_ImplEigen& rhs);
-    TlSparseSymmetricMatrix_ImplEigen(
-        const TlSparseGeneralMatrix_ImplEigen& rhs);
-    TlSparseSymmetricMatrix_ImplEigen(
-        const TlDenseSymmetricMatrix_ImplEigen& rhs);
+public:
+    explicit TlSparseSymmetricMatrix_ImplEigen(const TlMatrixObject::index_type dim = 0);
+    TlSparseSymmetricMatrix_ImplEigen(const TlSparseSymmetricMatrix_ImplEigen& rhs);
+    TlSparseSymmetricMatrix_ImplEigen(const TlSparseGeneralMatrix_ImplEigen& rhs);
+    TlSparseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplEigen& rhs);
 
 #ifdef HAVE_VIENNACL
-    TlSparseSymmetricMatrix_ImplEigen(
-        const TlSparseSymmetricMatrix_ImplViennaCL& rhs);
+    TlSparseSymmetricMatrix_ImplEigen(const TlSparseSymmetricMatrix_ImplViennaCL& rhs);
 #endif  // HAVE_VIENNACL
 
     virtual ~TlSparseSymmetricMatrix_ImplEigen();
@@ -83,7 +78,7 @@ class TlSparseSymmetricMatrix_ImplEigen
         const TlSparseSymmetricMatrix_ImplEigen& mat,
         const TlDenseVector_ImplEigen& vtr);
 
-   public:
+public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // Eigen macro
 };
 
