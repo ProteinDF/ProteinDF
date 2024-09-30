@@ -18,6 +18,7 @@
 #include <viennacl/matrix.hpp>
 #include <viennacl/matrix_proxy.hpp>
 
+#include "TlUtils.h"
 #include "tl_dense_general_matrix_impl_viennacl.h"
 #include "tl_dense_general_matrix_impl_viennacl_float.h"
 #include "tl_dense_symmetric_matrix_impl_viennacl.h"
@@ -43,7 +44,7 @@ TlDenseGeneralMatrix_ImplViennaCL::TlDenseGeneralMatrix_ImplViennaCL(const TlDen
     : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()) {
 #ifdef HAVE_EIGEN
     {
-        Eigen::MatrixXf eigenMf;
+        Eigen::MatrixXf eigenMf(rhs.getNumOfRows(), rhs.getNumOfCols());
         viennacl::copy(rhs.matrix_, eigenMf);
         Eigen::MatrixXd eigenMd = eigenMf.cast<double>();
         viennacl::copy(eigenMd, this->matrix_);

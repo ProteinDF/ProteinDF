@@ -2,6 +2,7 @@
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
+#include "TlUtils.h"
 #include "tl_dense_general_matrix_impl_viennacl_float.h"
 #include "tl_dense_general_matrix_viennacl_float.h"
 #include "tl_dense_symmetric_matrix_impl_viennacl.h"
@@ -92,33 +93,33 @@ const TlDenseSymmetricMatrix_ViennaCLFloat TlDenseSymmetricMatrix_ViennaCLFloat:
     return answer;
 }
 
-TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator+=(    const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
+TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator+=(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
     *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(this->pImpl_)) +=
         *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(rhs.pImpl_));
 
     return *this;
 }
 
-TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator-=(    const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
+TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator-=(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
     *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(this->pImpl_)) -=
         *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(rhs.pImpl_));
 
     return *this;
 }
 
-TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator*=(    const float coef) {
+TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator*=(const float coef) {
     *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(this->pImpl_)) *= coef;
 
     return *this;
 }
 
-TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator/=(    const float coef) {
+TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator/=(const float coef) {
     *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(this->pImpl_)) /= coef;
 
     return *this;
 }
 
-TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator*=(    const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
+TlDenseSymmetricMatrix_ViennaCLFloat& TlDenseSymmetricMatrix_ViennaCLFloat::operator*=(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
     *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(this->pImpl_)) *=
         *(dynamic_cast<TlDenseSymmetricMatrix_ImplViennaCLFloat*>(rhs.pImpl_));
 

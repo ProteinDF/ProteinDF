@@ -17,6 +17,7 @@
 #include "TlTime.h"
 #include "TlUtils.h"
 #include "tl_dense_general_matrix_impl_viennacl.h"
+#include "tl_dense_general_matrix_impl_viennacl_float.h"
 #include "tl_dense_symmetric_matrix_impl_eigen.h"
 #include "tl_dense_symmetric_matrix_impl_viennacl.h"
 #include "tl_dense_vector_impl_viennacl.h"
@@ -31,7 +32,7 @@ TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(const T
 }
 
 TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(const TlDenseSymmetricMatrix_ImplViennaCLFloat& rhs)
-    : TlDenseGeneralMatrix_ImplViennaCL(rhs) {
+    : TlDenseGeneralMatrix_ImplViennaCL(static_cast<TlDenseGeneralMatrix_ImplViennaCLFloat>(rhs)) {
 }
 
 TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(const TlDenseGeneralMatrix_ImplViennaCL& rhs)
@@ -54,10 +55,8 @@ TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(const T
 }
 
 #ifdef HAVE_EIGEN
-TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(
-    const TlDenseSymmetricMatrix_ImplEigen& rhs)
-    : TlDenseGeneralMatrix_ImplViennaCL(rhs.getNumOfRows(),
-                                        rhs.getNumOfCols()) {
+TlDenseSymmetricMatrix_ImplViennaCL::TlDenseSymmetricMatrix_ImplViennaCL(const TlDenseSymmetricMatrix_ImplEigen& rhs)
+    : TlDenseGeneralMatrix_ImplViennaCL(rhs.getNumOfRows(), rhs.getNumOfCols()) {
     viennacl::copy(rhs.matrix_, this->matrix_);
 }
 #endif  // HAVE_EIGEN
