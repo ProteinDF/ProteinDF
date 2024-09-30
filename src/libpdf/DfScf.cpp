@@ -16,9 +16,9 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
-//#ifdef __FUJITSU
-//#include <fjcoll.h>
-//#endif  // __FUJITSU
+// #ifdef __FUJITSU
+// #include <fjcoll.h>
+// #endif  // __FUJITSU
 
 #include <cmath>
 
@@ -291,6 +291,8 @@ int DfScf::execScfLoop() {
     }
 
     while (nScfState != END_SCF_LOOP) {
+        TlTime timer(true);
+
         switch (nScfState) {
             case BEGIN:
                 this->logger("// =====================================\n");
@@ -455,6 +457,8 @@ int DfScf::execScfLoop() {
                 exit(1);
                 break;
         }
+
+        (*this->pPdfParam_)["stat"]["elapsed_time"]["scf"][this->m_nIteration] = timer.getElapseTime();
     }
 
     // pupulation analysis
@@ -483,20 +487,21 @@ void DfScf::diffDensityMatrix() {
     }
 
     if (this->m_bDiskUtilization == false) {
-        TlTime timer;
+        TlTime timer(true);
         this->loggerStartTitle("diff density matrix");
         DfDiffDensityMatrix dddm(this->pPdfParam_);
         dddm.exec();
 
         this->loggerEndTitle();
         (*this->pPdfParam_)["stat"]["elapsed_time"]["diff_density_matrix"][this->m_nIteration] = timer.getElapseTime();
+        this->saveParam();
     }
 }
 
 void DfScf::doDensityFitting() {
-//#ifdef __FUJITSU
-//    start_collection("density_fitting");
-//#endif  // __FUJITSU
+    // #ifdef __FUJITSU
+    //     start_collection("density_fitting");
+    // #endif  // __FUJITSU
 
     if (this->J_engine_ == J_ENGINE_RI_J) {
         if (this->m_nIteration == 1) {
@@ -508,7 +513,7 @@ void DfScf::doDensityFitting() {
             }
         }
 
-        TlTime timer;
+        TlTime timer(true);
         this->loggerStartTitle("Density Fitting");
 
         DfDensityFittingObject* pDfDensityFitting = this->getDfDensityFittingObject();
@@ -518,15 +523,16 @@ void DfScf::doDensityFitting() {
 
         this->loggerEndTitle();
         (*this->pPdfParam_)["stat"]["elapsed_time"]["density_fitting"][this->m_nIteration] = timer.getElapseTime();
+        this->saveParam();
 
         if (this->m_nDampObject == DAMP_DENSITY) {
             this->converge();
         }
     }
 
-//#ifdef __FUJITSU
-//    stop_collection("density_fitting");
-//#endif  // __FUJITSU
+    // #ifdef __FUJITSU
+    //     stop_collection("density_fitting");
+    // #endif  // __FUJITSU
 }
 
 DfDensityFittingObject* DfScf::getDfDensityFittingObject() {
@@ -558,7 +564,7 @@ void DfScf::doThreeIndexIntegral() {
 
 void DfScf::buildXcMatrix() {
     if ((this->isDFT_ == true) && (this->m_bIsXCFitting == false)) {
-        TlTime timer;
+        TlTime timer(true);
         this->loggerStartTitle("generate XC matrix");
 
         if (this->XC_engine_ != XC_ENGINE_GRID) {
@@ -605,10 +611,15 @@ DfXCFunctional* DfScf::getDfXCFunctional() {
 }
 
 void DfScf::buildJMatrix() {
+    TlTime timer(true);
+
     this->loggerStartTitle("J matrix");
     DfJMatrix* pDfJMatrix = this->getDfJMatrixObject();
     pDfJMatrix->buildJ();
     this->loggerEndTitle();
+
+    (*this->pPdfParam_)["stat"]["elapsed_time"]["j_matrix"][this->m_nIteration] = timer.getElapseTime();
+    this->saveParam();
 }
 
 DfJMatrix* DfScf::getDfJMatrixObject() {
@@ -619,10 +630,15 @@ DfJMatrix* DfScf::getDfJMatrixObject() {
 void DfScf::buildKMatrix() {
     const DfXCFunctional dfXCFunctional(this->pPdfParam_);
     if (dfXCFunctional.isHybridFunctional() == true) {
+        TlTime timer(true);
+
         this->loggerStartTitle("K matrix");
         DfKMatrix* pDfKMatrix = this->getDfKMatrixObject();
         pDfKMatrix->buildK();
         this->loggerEndTitle();
+
+        (*this->pPdfParam_)["stat"]["elapsed_time"]["k_matrix"][this->m_nIteration] = timer.getElapseTime();
+        this->saveParam();
     }
 }
 
@@ -632,16 +648,19 @@ DfKMatrix* DfScf::getDfKMatrixObject() {
 }
 
 void DfScf::buildFock() {
-//#ifdef __FUJITSU
-//    start_collection("Fock");
-//#endif  // __FUJITSU
+    // #ifdef __FUJITSU
+    //     start_collection("Fock");
+    // #endif  // __FUJITSU
 
-    TlTime timer;
+    TlTime timer(true);
+
     this->loggerStartTitle("Fock matrix");
     DfFockMatrix* pDfFockMatrix = this->getDfFockMatrixObject();
     pDfFockMatrix->DfFockMatrixMain();
     this->loggerEndTitle();
+
     (*this->pPdfParam_)["stat"]["elapsed_time"]["fock_matrix"][this->m_nIteration] = timer.getElapseTime();
+    this->saveParam();
 
     if (this->m_nDampObject == DAMP_FOCK) {
         this->converge();
@@ -653,9 +672,9 @@ void DfScf::buildFock() {
     // flush
     this->matrixCache_.flush();
 
-//#ifdef __FUJITSU
-//    start_collection("Fock");
-//#endif  // __FUJITSU
+    // #ifdef __FUJITSU
+    //     start_collection("Fock");
+    // #endif  // __FUJITSU
 }
 
 DfFockMatrix* DfScf::getDfFockMatrixObject() {
@@ -665,7 +684,7 @@ DfFockMatrix* DfScf::getDfFockMatrixObject() {
 
 void DfScf::transformFock() {
     // transformed to orth. A.O. based Fock matrix
-    TlTime timer;
+    TlTime timer(true);
     this->loggerStartTitle("Transform KS matrix");
 
     DfTransFmatrix* pDfTransFmatrix = this->getDfTransFmatrixObject(false);
@@ -675,6 +694,7 @@ void DfScf::transformFock() {
 
     this->loggerEndTitle();
     (*this->pPdfParam_)["stat"]["elapsed_time"]["transform_F_matrix"][this->m_nIteration] = timer.getElapseTime();
+    this->saveParam();
 }
 
 DfTransFmatrix* DfScf::getDfTransFmatrixObject(bool isExecDiis) {
@@ -687,7 +707,7 @@ void DfScf::doLevelShift() {
     const int start_iter = (*(this->pPdfParam_))["level_shift/start_iteration"].getInt();
     const bool levelShift = (*(this->pPdfParam_))["level_shift"].getBoolean();
     if ((levelShift == true) && (this->m_nIteration >= start_iter)) {
-        TlTime timer;
+        TlTime timer(true);
         this->loggerStartTitle("Level shift");
 
         DfLevelshift LS(this->pPdfParam_, this->m_nIteration);
@@ -695,12 +715,13 @@ void DfScf::doLevelShift() {
 
         this->loggerEndTitle();
         (*this->pPdfParam_)["stat"]["elapsed_time"]["level_shift"][this->m_nIteration] = timer.getElapseTime();
+        this->saveParam();
     }
 }
 
 void DfScf::diagonal() {
     // Diagonarize Fock matrix
-    TlTime timer;
+    TlTime timer(true);
     this->loggerStartTitle("Diagonal");
 
     DfDiagonal* pDfDiagonal = this->getDfDiagonalObject();
@@ -744,6 +765,7 @@ void DfScf::diagonal() {
 
     this->loggerEndTitle();
     (*this->pPdfParam_)["stat"]["elapsed_time"]["diagonal"][this->m_nIteration] = timer.getElapseTime();
+    this->saveParam();
 
     // flush
     this->matrixCache_.flush();
@@ -756,14 +778,17 @@ DfDiagonal* DfScf::getDfDiagonalObject() {
 
 void DfScf::execScfLoop_EndFock_TransC() {
     // transformed to original nonorth. A.O.based space
-    TlTime timer;
+    TlTime timer(true);
+
     this->loggerStartTitle("Transform Matrix");
     DfTransatob* pDfTransAtoB = this->getDfTransatobObject();
     pDfTransAtoB->run();
     delete pDfTransAtoB;
     pDfTransAtoB = NULL;
     this->loggerEndTitle();
+
     (*this->pPdfParam_)["stat"]["elapsed_time"]["transform_C_matrix"][this->m_nIteration] = timer.getElapseTime();
+    this->saveParam();
 }
 
 DfTransatob* DfScf::getDfTransatobObject() {
@@ -773,7 +798,7 @@ DfTransatob* DfScf::getDfTransatobObject() {
 
 void DfScf::calcDensityMatrix() {
     // density matrix generation
-    TlTime timer;
+    TlTime timer(true);
     this->loggerStartTitle("Density Matirx");
 
     DfDmatrix dfDmatrix(this->pPdfParam_);
@@ -781,6 +806,7 @@ void DfScf::calcDensityMatrix() {
 
     this->loggerEndTitle();
     (*this->pPdfParam_)["stat"]["elapsed_time"]["density_matrix"][this->m_nIteration] = timer.getElapseTime();
+    this->saveParam();
 
     // flush
     this->matrixCache_.flush();
@@ -793,7 +819,7 @@ DfDmatrix* DfScf::getDfDmatrixObject() {
 
 // void DfScf::calcTotalEnergy() {
 //     // calculate total energy
-//     TlTime timer;
+//     TlTime timer(true);
 //     this->loggerStartTitle("Total Energy");
 //     DfTotalEnergy* pDfTotalEnergy = this->getDfTotalEnergyObject();
 //     pDfTotalEnergy->exec();
@@ -912,7 +938,7 @@ bool DfScf::checkConverge() {
 }
 
 void DfScf::converge() {
-    TlTime timer;
+    TlTime timer(true);
     this->loggerStartTitle("Converge");
 
     DfConverge* pDfConverge = this->getDfConverge();
