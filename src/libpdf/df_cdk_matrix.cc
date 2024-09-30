@@ -100,7 +100,9 @@ void DfCdkMatrix::getK() {
         case LAP_LAPACK: {
             this->log_.info("Linear Algebra Package: Lapack");
             this->getK_runType<TlDenseSymmetricMatrix_Lapack,
-                               TlDenseVector_Lapack, TlDenseGeneralMatrix_Lapack,
+                               TlDenseVector_Lapack,
+                               TlDenseGeneralMatrix_Lapack,
+                               TlDenseSymmetricMatrix_Lapack,
                                TlDenseSymmetricMatrix_Lapack>();
         } break;
 
@@ -118,6 +120,7 @@ void DfCdkMatrix::getK() {
                 this->getK_runType<TlDenseSymmetricMatrix_Eigen,
                                    TlDenseVector_Eigen,
                                    TlSparseGeneralMatrix_Eigen,
+                                   TlDenseSymmetricMatrix_Eigen,
                                    TlDenseSymmetricMatrix_Eigen>();
             }
         } break;
@@ -130,12 +133,14 @@ void DfCdkMatrix::getK() {
                 this->getK_runType<TlDenseSymmetricMatrix_ViennaCL,
                                    TlDenseVector_ViennaCL,
                                    TlSparseGeneralMatrix_ViennaCL,
+                                   TlDenseSymmetricMatrix_ViennaCL,
                                    TlDenseSymmetricMatrix_ViennaCLFloat>();
             } else {
                 this->log_.info("Linear Algebra Package: ViennaCL");
                 this->getK_runType<TlDenseSymmetricMatrix_ViennaCL,
                                    TlDenseVector_ViennaCL,
                                    TlSparseGeneralMatrix_ViennaCL,
+                                   TlDenseSymmetricMatrix_ViennaCL,
                                    TlDenseSymmetricMatrix_ViennaCL>();
             }
         } break;
@@ -177,8 +182,7 @@ void DfCdkMatrix::getK_runType() {
     }
 }
 
-template <typename DenseSymmetricMatrix, typename Vector, typename SparseGeneralMatrix, typename SparseSymmetricMatrix,
-          typename TempDenseSymmetricMatrix>
+template <typename DenseSymmetricMatrix, typename Vector, typename SparseGeneralMatrix, typename SparseSymmetricMatrix, typename TempDenseSymmetricMatrix>
 void DfCdkMatrix::getK_runType_L(DfObject::RUN_TYPE runType) {
     switch (this->fastCDK_mode_) {
         case FASTCDK_NONE:
@@ -263,7 +267,6 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
         P *= 0.5;
     }
 
-    this->log_.info("start loop");
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
 
     int numOfThreads = 1;
@@ -275,7 +278,6 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
 
     DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
     std::vector<std::size_t> tasks;
-    this->log_.info(TlUtils::format("calcNumOfCVs: %d / %d", calcNumOfCVs, L.getNumOfCols()));
     bool hasTasks = pTaskCtrl->getQueue(calcNumOfCVs, taskSize, &tasks, true);
 
     TempSymmetricMatrix K(this->m_nNumOfAOs);
@@ -284,6 +286,7 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
         // #pragma omp parallel for schedule(runtime)
         for (int i = 0; i < numOfTasks; ++i) {
             const TempSymmetricMatrix l = this->getCholeskyVector<SymmetricMatrix, Vector>(L.getColVector(tasks[i]), I2PQ);
+            // this->log_.info(TlUtils::format("l: %s", TlUtils::getTypeName(l).c_str()));
             assert(l.getNumOfRows() == this->m_nNumOfAOs);
 
             // #pragma omp critical

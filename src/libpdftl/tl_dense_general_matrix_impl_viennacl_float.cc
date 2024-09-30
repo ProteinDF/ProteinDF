@@ -47,7 +47,7 @@ TlDenseGeneralMatrix_ImplViennaCLFloat::TlDenseGeneralMatrix_ImplViennaCLFloat(c
     : matrix_(rhs.getNumOfRows(), rhs.getNumOfCols()) {
 #ifdef HAVE_EIGEN
     {
-        Eigen::MatrixXd eigenMd;
+        Eigen::MatrixXd eigenMd(rhs.getNumOfRows(), rhs.getNumOfCols());
         viennacl::copy(rhs.matrix_, eigenMd);
         Eigen::MatrixXf eigenMf = eigenMd.cast<float>();
         viennacl::copy(eigenMf, this->matrix_);
@@ -94,7 +94,7 @@ TlDenseGeneralMatrix_ImplViennaCLFloat::operator std::vector<double>() const {
     {
         std::vector<float> v_tmp(row * col);
         {
-            EigenMatrixDataType tmp;
+            EigenMatrixDataType tmp(row, col);
             viennacl::copy(this->matrix_, tmp);
             Eigen::Map<EigenMatrixDataType>(&(v_tmp[0]), row, col) = tmp;
         }

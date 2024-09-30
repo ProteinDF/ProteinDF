@@ -27,7 +27,7 @@ protected:
 protected:
     template <typename SymmetricMatrix, typename Vector,
               typename SparseGeneralMatrix, typename SparseSymmetricMatrix,
-              typename TempDenseSymmetricMatrix = SymmetricMatrix>
+              typename TempDenseSymmetricMatrix>
     void getK_runType();
 
     template <typename DenseSymmetricMatrix, typename Vector, typename SparseGeneralMatrix, typename SparseSymmetricMatrix,
@@ -38,7 +38,7 @@ protected:
     // calc HFx by Ljk
     // ---------------------------------------------------------------------------
 protected:
-    template <typename Ljk_MatrixType, typename SymmetricMatrix, typename Vector, typename TempSymmetricMatrix = SymmetricMatrix>
+    template <typename Ljk_MatrixType, typename SymmetricMatrix, typename Vector, typename TempSymmetricMatrix>
     void getK_byLjk_useDenseMatrix(const RUN_TYPE runType);
 
     template <typename Ljk_MatrixType, typename SymmetricMatrix, typename Vector, typename SparseGeneralMatrix>
