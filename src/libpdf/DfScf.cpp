@@ -440,7 +440,6 @@ int DfScf::execScfLoop() {
 
                 if (isExitScf == false) {
                     ++(this->m_nIteration);
-                    this->saveParam();
                     nScfState = BEGIN;
                 } else {
                     nScfState = END_OF_SCF_LOOP;
@@ -448,7 +447,6 @@ int DfScf::execScfLoop() {
             } break;
 
             case END_OF_SCF_LOOP:
-                this->saveParam();
                 nScfState = END_SCF_LOOP;
                 break;
 
@@ -459,6 +457,7 @@ int DfScf::execScfLoop() {
         }
 
         (*this->pPdfParam_)["stat"]["elapsed_time"]["scf"][this->m_nIteration] = timer.getElapseTime();
+        this->saveParam();
     }
 
     // pupulation analysis
@@ -494,7 +493,6 @@ void DfScf::diffDensityMatrix() {
 
         this->loggerEndTitle();
         (*this->pPdfParam_)["stat"]["elapsed_time"]["diff_density_matrix"][this->m_nIteration] = timer.getElapseTime();
-        this->saveParam();
     }
 }
 
@@ -523,7 +521,6 @@ void DfScf::doDensityFitting() {
 
         this->loggerEndTitle();
         (*this->pPdfParam_)["stat"]["elapsed_time"]["density_fitting"][this->m_nIteration] = timer.getElapseTime();
-        this->saveParam();
 
         if (this->m_nDampObject == DAMP_DENSITY) {
             this->converge();
@@ -593,7 +590,6 @@ void DfScf::buildXcMatrix() {
 
         this->loggerEndTitle();
         (*this->pPdfParam_)["stat"]["elapsed_time"]["xc_matrix"][this->m_nIteration] = timer.getElapseTime();
-        this->saveParam();
 
         // flush
         this->matrixCache_.flush();
@@ -619,7 +615,6 @@ void DfScf::buildJMatrix() {
     this->loggerEndTitle();
 
     (*this->pPdfParam_)["stat"]["elapsed_time"]["j_matrix"][this->m_nIteration] = timer.getElapseTime();
-    this->saveParam();
 }
 
 DfJMatrix* DfScf::getDfJMatrixObject() {
@@ -638,7 +633,6 @@ void DfScf::buildKMatrix() {
         this->loggerEndTitle();
 
         (*this->pPdfParam_)["stat"]["elapsed_time"]["k_matrix"][this->m_nIteration] = timer.getElapseTime();
-        this->saveParam();
     }
 }
 
@@ -660,7 +654,6 @@ void DfScf::buildFock() {
     this->loggerEndTitle();
 
     (*this->pPdfParam_)["stat"]["elapsed_time"]["fock_matrix"][this->m_nIteration] = timer.getElapseTime();
-    this->saveParam();
 
     if (this->m_nDampObject == DAMP_FOCK) {
         this->converge();
@@ -694,7 +687,6 @@ void DfScf::transformFock() {
 
     this->loggerEndTitle();
     (*this->pPdfParam_)["stat"]["elapsed_time"]["transform_F_matrix"][this->m_nIteration] = timer.getElapseTime();
-    this->saveParam();
 }
 
 DfTransFmatrix* DfScf::getDfTransFmatrixObject(bool isExecDiis) {
@@ -715,7 +707,6 @@ void DfScf::doLevelShift() {
 
         this->loggerEndTitle();
         (*this->pPdfParam_)["stat"]["elapsed_time"]["level_shift"][this->m_nIteration] = timer.getElapseTime();
-        this->saveParam();
     }
 }
 
@@ -765,7 +756,6 @@ void DfScf::diagonal() {
 
     this->loggerEndTitle();
     (*this->pPdfParam_)["stat"]["elapsed_time"]["diagonal"][this->m_nIteration] = timer.getElapseTime();
-    this->saveParam();
 
     // flush
     this->matrixCache_.flush();
@@ -788,7 +778,6 @@ void DfScf::execScfLoop_EndFock_TransC() {
     this->loggerEndTitle();
 
     (*this->pPdfParam_)["stat"]["elapsed_time"]["transform_C_matrix"][this->m_nIteration] = timer.getElapseTime();
-    this->saveParam();
 }
 
 DfTransatob* DfScf::getDfTransatobObject() {
@@ -806,7 +795,6 @@ void DfScf::calcDensityMatrix() {
 
     this->loggerEndTitle();
     (*this->pPdfParam_)["stat"]["elapsed_time"]["density_matrix"][this->m_nIteration] = timer.getElapseTime();
-    this->saveParam();
 
     // flush
     this->matrixCache_.flush();
