@@ -571,7 +571,7 @@ void DfHpqEngine::calcKin(const int a_bar, const int b_bar, const int a,
         abort();
     }
 
-    this->isCalcdNuc_[stateIndex] = true;
+    this->isCalcdKin_[stateIndex] = true;
 }
 
 void DfHpqEngine::calcNuc(const int a_bar, const int b_bar, const int a,
