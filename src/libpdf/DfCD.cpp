@@ -1520,33 +1520,54 @@ TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFlyS_new(
         assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
 
         // CD calc
-        const TlDenseVector_Lapack L_pm = L.getVector(pivot_m);
-        assert(L_pm.getSize() == numOfCDVcts + 1);
+        // output:
+        //   out_L_rows: row elements at the column numOfCDVcts(target) in L
+        {
+            // const TlDenseVector_Lapack L_pm = L.getVector(pivot_m);
+            // assert(L_pm.getSize() == numOfCDVcts + 1);
+            std::valarray<double> L_pm_x(0.0, numOfCDVcts + 1);
+            const index_type copyCount_m = L.getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
+            assert(copyCount_m == numOfCDVcts + 1);
 
-        const double l_m_pm = std::sqrt(diagonals[pivot_m]);
-        const double inv_l_m_pm = 1.0 / l_m_pm;
-        L.set(pivot_m, numOfCDVcts, l_m_pm); //
+            std::valarray<double> out_L_rows(0.0, numOfPQtilde);
+            const double l_m_pm = std::sqrt(diagonals[pivot_m]);
+            const double inv_l_m_pm = 1.0 / l_m_pm;
+            // L.set(pivot_m, numOfCDVcts, l_m_pm);
+            out_L_rows[pivot_m] = l_m_pm;
 
-        std::vector<double> L_xm(numOf_G_cols, 0.0);
-#pragma omp parallel for schedule(runtime)
-        for (index_type i = 0; i < numOf_G_cols; ++i) {
-            const index_type pivot_i = pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
-            TlDenseVector_Lapack L_pi = L.getVector(pivot_i);
-            // TlDenseVector_Lapack tmp = L_pi.dotInPlace(L_pm);
-            // const double sum_ll = tmp.sum();
-            const double sum_ll = L_pi.dotInPlace(L_pm).sum();
-            const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+#pragma omp parallel
+            {
+                // std::vector<double> L_xm(numOf_G_cols, 0.0);
+                std::valarray<double> L_pi_x(0.0, numOfCDVcts + 1);
+#pragma omp for schedule(runtime)
+                for (index_type i = 0; i < numOf_G_cols; ++i) {
+                    const index_type pivot_i = pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
 
-#pragma omp atomic
-            L_xm[i] += l_m_pi;
-#pragma omp atomic
-            diagonals[pivot_i] -= l_m_pi * l_m_pi;
+                    // TlDenseVector_Lapack L_pi = L.getVector(pivot_i);
+                    const index_type copyCount_i = L.getRowVector(pivot_i, &(L_pi_x[0]), numOfCDVcts + 1);
+                    assert(copyCount_i == numOfCDVcts + 1);
+
+                    // TlDenseVector_Lapack tmp = L_pi.dotInPlace(L_pm);
+                    // const double sum_ll = tmp.sum();
+                    // const double sum_ll = L_pi.dotInPlace(L_pm).sum();
+                    const double sum_ll = (L_pm_x * L_pi_x).sum();
+                    const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+
+                    // #pragma omp atomic
+                    //             L_xm[i] += l_m_pi;
+                    out_L_rows[pivot_i] = l_m_pi;
+                    // #pragma omp atomic
+                    //             diagonals[pivot_i] -= l_m_pi * l_m_pi;
+                    diagonals[pivot_i] -= l_m_pi * l_m_pi;
+                }
+            }
+            L.setColVector(numOfCDVcts, out_L_rows);
         }
 
-        for (index_type i = 0; i < numOf_G_cols; ++i) {
-            const index_type pivot_i = pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
-            L.set(pivot_i, numOfCDVcts, L_xm[i]);
-        }
+        // for (index_type i = 0; i < numOf_G_cols; ++i) {
+        //     const index_type pivot_i = pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
+        //     L.set(pivot_i, numOfCDVcts, L_xm[i]);
+        // }
 
         // error = diagonals[pivot[numOfCDVcts]];
         ++numOfCDVcts;
@@ -1658,7 +1679,6 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, cons
         // CD calc
         // output:
         //   out_L_rows: row elements at the column numOfCDVcts(target) in L
-        //   diagonals:
         {
             std::valarray<double> L_pm_x(0.0, numOfCDVcts + 1);
             const index_type copyCount_m = pL->getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
